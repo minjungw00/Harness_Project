@@ -59,6 +59,28 @@ Analytics can derive rates and latencies from `state.sqlite.task_events`, runs, 
 
 Later because metrics are derived values, not authority. Candidate metrics include approval turnaround, verification latency, evidence insufficiency rate, projection stale duration, reconcile volume, and same-session verification guard triggers.
 
+Candidate derived metrics from the legacy operations guide:
+
+- `direct_to_work_escalation_rate`
+- `approval_turnaround_time`
+- `verify_latency`
+- `reopen_within_7d`
+- `evaluator_blocked_due_to_missing_evidence`
+- `same_session_verify_guard_triggered`
+- `surface_fallback_rate`
+- `mcp_connection_failure_rate`
+- `projection_stale_duration`
+- `reconcile_pending_count`
+- `shaping_unresolved_decision_count`
+- `horizontal_exception_rate`
+- `tdd_red_missing_rate`
+- `manual_qa_pending_duration`
+- `architecture_drift_warning_count`
+- `domain_language_mismatch_count`
+- `interface_review_required_count`
+
+These metrics should become v1 or MVP only if a future decision assigns an owner, fixture coverage, retention behavior, and a user-facing interpretation rule.
+
 ## Team Profile Export And Import
 
 Team profile export/import can share policy defaults, connector profiles, surface capability assumptions, validator profiles, and project setup templates across a team.

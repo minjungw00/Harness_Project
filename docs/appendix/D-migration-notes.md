@@ -2,41 +2,23 @@
 
 ## Document Role
 
-Old-to-new migration notes, compatibility guidance, and version comparison during the v2 documentation rewrite.
+This appendix records old-to-new document mapping, removed or renamed sections, and compatibility guidance for the v2 documentation rewrite.
 
-## Owns
+It is migration context only. It does not own canonical runtime contracts, kernel state semantics, MCP schemas, projection templates, user procedure, or conformance rules.
 
-- old file to new file migration notes
-- removed/renamed sections
-- compatibility guidance for existing docs
-- version comparison and change rationale
+## Migration Scope
 
-## Does Not Own
+The active canonical docs are the v2 target files under `docs/` and `docs/appendix/`.
 
-- canonical runtime contracts
-- kernel state semantics
-- MCP schemas
-- projection templates
-- final user procedures
+Archived v1 files and rewrite manifests are source material for migration. They are not active canonical documentation, even when retained in the repository for traceability.
 
-## Migration Status
+`REWRITE-MANIFEST.md` is migration input. It records earlier simplification goals and confirms preservation themes such as three spaces, source-of-truth/projection separation, public MCP surface reduction, SQLite-centered runtime, MVP/later separation, four judgment separation, detached verification, and design-quality principles. It does not override the v2 owner docs.
 
-Legacy documentation is archived under `docs/legacy-v1/`, and v2 skeleton files live at the target paths under `docs/`. Content migration is in progress; archived legacy files are retained as source material and must not be treated as deleted or fully migrated yet.
+## Old-To-New Mapping
 
-## Sections
-
-### Migration Scope
-
-TODO_REWRITE: Track file and section migration as each later batch rewrites canonical content.
-
-### Old-To-New Mapping
-
-TODO_REWRITE: Keep the old-to-new file mapping aligned with `docs/rewrite-control/TARGET-DOC-TREE.md`.
-
-Current archive mapping:
-
-| Archived Legacy Source | v2 Target Destination |
+| Archived legacy source | v2 destination |
 |---|---|
+| `docs/legacy-v1/README.md` | `docs/README.md` |
 | `docs/legacy-v1/00-overview.md` | `docs/00-introduction.md` |
 | `docs/legacy-v1/01-project-charter.md` | `docs/01-project-charter.md` |
 | `docs/legacy-v1/02-strategy.md` | `docs/02-strategy.md`, `docs/03-kernel-spec.md`, `docs/08-design-quality-policy-pack.md` |
@@ -51,14 +33,48 @@ Current archive mapping:
 | `docs/legacy-v1/glossary.md` | `docs/glossary.md` |
 | `docs/legacy-v1/REWRITE-MANIFEST.md` | `docs/appendix/D-migration-notes.md` |
 
-### Removed Or Renamed Sections
+## Major Removed Or Renamed Sections
 
-TODO_CONTENT: Record removed, renamed, or stubbed sections after migration decisions are applied.
+| Legacy section or theme | v2 treatment |
+|---|---|
+| `05-user-guide.md` long work walkthroughs | shortened into conversation examples in `10-user-guide.md` |
+| detailed report-reading tables in user guide | removed from main user guide; projection ownership stays in `07-document-projection.md` |
+| user-facing setup internals | moved to operations or integration owner docs |
+| `08-operations-and-conformance.md` scenario tables | rewritten as fixture-based conformance in `11-operations-and-conformance.md` |
+| operational metrics list | moved to later analytics in `appendix/C-later-roadmap.md` |
+| CI as a broad operations owner | reduced to conformance entrypoints until an MVP CI contract is defined |
+| all-surface connector setup examples | moved or deferred to `appendix/B-surface-cookbook.md` |
+| surface-specific addenda in main integration docs | renamed as cookbook material |
+| `03-architecture.md` | renamed/split into `04-runtime-architecture.md` plus owner summaries elsewhere |
+| `04-reference-implementation.md` | split across kernel, API/schema, reference MVP, and later roadmap |
+| `07-document-and-artifact-contracts.md` | renamed/split into `07-document-projection.md` and `appendix/A-template-library.md` |
+| `09-design-quality-playbooks.md` | converted from playbook prose to policy contracts |
+| old 17-item invariant style | split into 7 core invariants plus policy defaults |
+| single-axis status model | replaced by lifecycle plus gates |
+| event log phrasing as a separate store | replaced by `state.sqlite.task_events` wording |
+| projection as canonical-looking document authority | replaced by state/artifact/projection authority boundaries |
 
-### Compatibility Guidance
+## Compatibility Guidance
 
-TODO_CONTENT: Add guidance for readers encountering legacy file names during the migration window.
+If a reader encounters an old file name, use the mapping above and prefer the v2 destination. Do not cite archived legacy documents as canonical docs.
 
-### Version Comparison
+If a legacy section contains a useful example that has not moved, treat it as source material only. The active owner doc decides whether the example belongs in main text, appendix, later roadmap, or migration notes.
 
-TODO_CONTENT: Record high-level differences between the old document set and the v2 target set.
+If a legacy term conflicts with the glossary, use `docs/glossary.md`.
+
+If a legacy behavior conflicts with rewrite-control kernel decisions or a v2 owner doc, use the v2 owner doc.
+
+## Version Comparison Summary
+
+v1 mixed strategy, state, implementation, template, connector, operations, and design-quality guidance across fewer documents. v2 separates them by ownership:
+
+- strategy owns why, failure model, core invariants, and policy defaults
+- kernel owns state and gate behavior
+- API owns public MCP schemas
+- reference MVP owns implementation detail and DDL
+- projection owns Markdown authority and template tiers
+- policy pack owns design-quality policy contracts
+- integration owns capability profiles
+- operations owns fixture-based conformance
+
+The migration keeps the original product intent but removes duplicated authority, long user examples, broad all-surface implications, and MVP/later ambiguity.
