@@ -155,6 +155,10 @@ ArtifactRef:
   retention_class: task | project | export | temporary
 ```
 
+For the reference MVP, `uri` uses `harness-artifact://{project_id}/{artifact_id}`. The local file path is resolved through the per-project `artifacts` registry row in `state.sqlite`, not by trusting an absolute path in the API payload.
+
+TODO_IMPLEMENT: Define the exact request-side staged artifact input shape for `record_run`, `launch_verify`, `record_eval`, and `record_manual_qa`. The committed response shape is `ArtifactRef`; the missing implementation detail is how a connector or operator supplies a staged file before Core registers it and returns the final `harness-artifact://` URI.
+
 Record or projection references use `StateRecordRef`, not `ArtifactRef`:
 
 ```yaml
@@ -451,25 +455,91 @@ RecordRunRequest:
   run_id: string | null
   baseline_ref: string | null
   summary: string
-  observed_changes:
-    changed_paths: string[]
-    created_paths: string[]
-    deleted_paths: string[]
-  command_results:
-    - command: string
-      exit_code: integer
-      artifact_refs: ArtifactRef[]
-      summary: string
   artifact_refs: ArtifactRef[]
-  evidence_updates:
-    acceptance_criteria:
-      - criteria_id: string
-        status: supported | unsupported | not_applicable
-        supporting_refs: StateRecordRef[]
-        artifact_refs: ArtifactRef[]
-  design_updates: object
-  tdd_trace_update: object | null
+  payload: RecordRunPayload
+
+RecordRunPayload:
+  shaping_update: ShapingUpdatePayload | null
+  implementation: ImplementationPayload | null
+  direct: DirectPayload | null
+  verification_input: VerificationInputPayload | null
+
+ShapingUpdatePayload:
+  task_summary_update: string | null
+  acceptance_criteria_updates:
+    - criteria_id: string | null
+      operation: add | update | remove
+      statement: string
+  change_unit_updates:
+    - operation: create | update | select_active | complete | defer | supersede
+      change_unit_id: string | null
+      title: string | null
+      purpose: string | null
+      non_goals: string[]
+      slice_type: vertical | enabling | cleanup | horizontal-exception | null
+      horizontal_exception_reason: string | null
+      follow_up_vertical_change_unit_id: string | null
+      allowed_paths: string[]
+      allowed_tools: string[]
+      allowed_commands: string[]
+      allowed_network_targets: string[]
+      secret_scope: string[]
+      sensitive_categories: string[]
+      validator_profile: string[]
+      completion_conditions: string[]
+      evaluator_focus: string[]
+  design_record_refs: StateRecordRef[]
+  pending_decision_refs: StateRecordRef[]
+
+ImplementationPayload:
+  observed_changes: ObservedChanges
+  command_results: CommandResult[]
+  evidence_updates: EvidenceUpdates
+  tdd_trace_update: TddTraceUpdate | null
+
+DirectPayload:
+  observed_changes: ObservedChanges
+  command_results: CommandResult[]
+  evidence_updates: EvidenceUpdates
+  self_check_summary: string
+  escalation:
+    value: none | escalate_to_work
+    reason: string | null
+
+VerificationInputPayload:
+  evaluator_bundle_ref: ArtifactRef | null
+  evaluator_focus: string[]
+  observed_changes: ObservedChanges
+  command_results: CommandResult[]
+
+ObservedChanges:
+  changed_paths: string[]
+  created_paths: string[]
+  deleted_paths: string[]
+
+CommandResult:
+  command: string
+  exit_code: integer
+  artifact_refs: ArtifactRef[]
+  summary: string
+
+EvidenceUpdates:
+  acceptance_criteria:
+    - criteria_id: string
+      status: supported | unsupported | not_applicable
+      supporting_refs: StateRecordRef[]
+      artifact_refs: ArtifactRef[]
+
+TddTraceUpdate:
+  tdd_trace_id: string | null
+  status: required | recorded | waived | not_required
+  red_refs: ArtifactRef[]
+  green_refs: ArtifactRef[]
+  refactor_refs: ArtifactRef[]
+  non_tdd_justification: string | null
 ```
+
+The `payload` branch must match `kind`; all other branches must be `null` or absent. Change Unit creation and update for MVP happens through `kind=shaping_update` with `change_unit_updates`; `operation=create` creates a `change_units` record, and `operation=select_active` updates the Task's `active_change_unit_id`.
 
 Response schema:
 

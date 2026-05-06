@@ -563,6 +563,31 @@ Artifact filenames should include enough stable identity to avoid collisions:
 
 Markdown reports in the Product Repository are not raw artifacts by default. If an export needs a report snapshot, it can store that snapshot as an export component artifact while preserving the distinction between the report projection and raw evidence.
 
+### Artifact Registration Contract
+
+Artifact registration is part of the Core transition that records the producing Run, Eval, Manual QA record, verification bundle, or export component.
+
+MVP registration steps:
+
+1. Accept a connector-captured or operator-supplied file only from a staging path under the project artifact `tmp/` directory or from an approved capture adapter.
+2. Apply redaction or omission before hashing. Raw secrets must not be copied into durable artifact storage.
+3. Move or copy the stored bytes into the artifact directory using `{task_id}/{run_id-or-record_id}/{artifact_id}-{kind}.{ext}` under the matching kind directory.
+4. Compute `sha256`, `size_bytes`, `content_type`, and `redaction_state` from the stored bytes.
+5. Insert the `artifacts` row in the same Core transaction that records the related state record and appends `task_events`.
+6. Return an `ArtifactRef` whose `uri` resolves through the artifact registry row.
+7. If the file move succeeds but the transaction fails, leave the file in `tmp/` or mark it orphaned for `recover`; do not create a committed artifact ref.
+
+`redaction_state` implementation:
+
+| State | Stored artifact bytes |
+|---|---|
+| `none` | original non-sensitive evidence |
+| `redacted` | redacted evidence; the unredacted original is not retained by the harness |
+| `secret_omitted` | evidence with secret values omitted or replaced by handles |
+| `blocked` | a small metadata-only notice artifact explaining that capture was blocked; no forbidden content is stored |
+
+Artifact integrity failures return `ARTIFACT_MISSING` or a validator failure and mark related evidence or projection freshness stale according to the kernel rules.
+
 ## Baseline Capture
 
 Baseline capture records the repository state used by write, approval, evidence, and verification checks.
@@ -590,6 +615,30 @@ BaselineCapture:
 
 Baseline is stale when relevant HEAD, dirty diff, allowed path contents, approval scope, or verification bundle inputs no longer match the captured baseline. Stale baseline can mark approval, evidence, or verification stale depending on the affected records.
 
+## Verification Bundle Shape
+
+`harness.launch_verify` creates a bundle artifact for detached verification or manual evaluator handoff. The bundle is raw evidence metadata, not an Eval verdict.
+
+Minimum bundle contents:
+
+```text
+verify-bundle/
+  manifest.json
+  task-summary.json
+  change-unit.json
+  baseline.json
+  evidence-manifest.json
+  approvals.json
+  run-refs.json
+  artifact-refs.json
+  design-refs.json
+  evaluator-instructions.md
+```
+
+The manifest records task id, Change Unit id, baseline ref, source state version, included artifact ids, redaction summary, evaluator focus, and the expected independence context. The bundle may include copied raw artifacts when retention and redaction policy allow it; otherwise it includes artifact refs that the evaluator can resolve through the harness.
+
+Launching verification sets or keeps `verification_gate=pending`. Only `harness.record_eval` can record the verdict and update assurance.
+
 ## Projection Jobs
 
 Projection jobs are the durable outbox between committed state and Product Repository Markdown files. The `projection_jobs` table above owns job persistence.
@@ -609,6 +658,23 @@ Rules:
 - compare managed hash before overwrite
 - create a reconcile item for managed drift
 - keep projection failure separate from Task result
+
+### Projection Worker Execution
+
+The reference projector executes pending jobs after the Core transaction commits.
+
+MVP worker steps:
+
+1. Select the oldest `pending` job for the target projection and acquire the projection-job lock.
+2. Mark the job `running` and read the latest state records, artifact refs, and previous managed hash.
+3. If the job's `projection_version` is older than the target's current projection version, mark it `skipped`.
+4. Render the managed block from committed records and artifact refs.
+5. If the existing managed block hash differs from the last recorded hash, create or update a `reconcile_items` row, mark the job `skipped`, and set the projection status to `stale`.
+6. Preserve human-editable sections and write the projection through a temporary file plus atomic rename.
+7. Record the new managed hash, output path, projected version, and `completed` status.
+8. On render or write failure, mark the job `failed`, keep state result unchanged, and surface projection freshness as `failed` or `stale`.
+
+Projection refresh retries `failed` jobs by creating or resetting a `pending` job with a newer attempt count. It must not overwrite a projection whose managed block has drifted until reconcile resolves the drift.
 
 ## Reference Surface Behavior
 

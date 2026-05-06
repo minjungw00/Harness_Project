@@ -205,6 +205,22 @@ expected_error: object | null
 
 Optional metadata such as `name`, `suite`, `tags`, and `notes` is allowed, but the required fields above must be present.
 
+## Conformance Execution
+
+`harness conformance run` executes fixtures through the same Core entrypoints used by MCP tools and operator commands. It must not assert behavior by inspecting prose output alone.
+
+MVP execution semantics:
+
+1. Load fixture YAML files and validate the required fixture shape.
+2. Create an isolated runtime home and temporary Product Repository for the fixture, unless the fixture explicitly targets an existing read-only sample.
+3. Seed `registry.sqlite`, `project.yaml`, `state.sqlite`, artifact files, projection files, and connector manifests from `initial_state`.
+4. Execute `action` through Core. MCP tool actions use the public request schema; operator actions such as `projection_refresh`, `doctor_surface`, `recover`, and `artifacts_check` use the operator semantics in this document.
+5. Capture resulting state summaries, appended `task_events`, validator results, artifact registry/file integrity, projection job status, reconcile items, and returned error code.
+6. Compare the captured results with `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error`.
+7. Report fixture id, pass/fail, observed state summary, observed events, artifact integrity result, projection freshness, and error comparison.
+
+Fixture execution should be deterministic. Network access, wall-clock-sensitive expiry, and external tool output must be stubbed or represented as seeded fixture inputs unless a suite explicitly declares itself an integration smoke.
+
 ## Core Fixture Examples
 
 ```yaml
