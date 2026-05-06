@@ -723,6 +723,7 @@ MVP validator set:
 | `baseline_freshness` | baseline still matches relevant repo state |
 | `artifact_integrity` | artifact files exist and match hash/size |
 | `evidence_sufficiency` | acceptance criteria map to supporting evidence |
+| `verification_independence` | Eval independence profile can support the requested assurance |
 | `same_session_verify_guard` | same-session review cannot upgrade assurance |
 | `manual_qa_required` | required QA is passed or validly waived |
 | `docs_consistency` | projection version and managed hash are consistent |
@@ -730,6 +731,23 @@ MVP validator set:
 | `vertical_slice_shape` | required vertical slice or exception is recorded |
 | `tdd_trace` | required TDD evidence or allowed waiver exists |
 | `module_boundary_review` | module/interface review requirement is met |
+
+### Evidence and Verification Profile Implementation Notes
+
+The `evidence_sufficiency` validator reads only committed records and registered artifacts. Inputs are: Task, `task_gates`, Change Units, Runs, approvals, Evidence Manifests, Evals, Manual QA records, artifacts, and the relevant baseline ref. It computes whether the applicable Evidence Profile is absent, partial, sufficient, stale, or blocked, then updates or blocks through Core according to the kernel rules.
+
+The `verification_independence` validator reads `evals.independence_json`, `evaluator_run_id`, `target_run_id`, evaluator and target `surface_id`, `baseline_ref`, bundle artifact refs, and `actor_kind`. It confirms whether the Eval profile is `same_session`, `subagent_context`, `fresh_session`, `fresh_worktree`, `sandbox`, or `manual_bundle`, and whether that profile can support detached assurance for the target close path.
+
+No DDL change is required for these profiles in MVP. Existing JSON fields hold profile metadata: `evidence_manifests.criteria_json`, `evidence_manifests.supporting_refs_json`, `evidence_manifests.stale_if_json`, `evals.evidence_reviewed_json`, `evals.independence_json`, `evals.artifact_refs_json`, `runs.observed_changes_json`, `runs.command_results_json`, `runs.artifact_refs_json`, `approvals.*_json`, `manual_qa_records.findings_json`, and `validator_runs.findings_json`.
+
+If an implementation cannot derive an input above from existing fields, add `TODO_IMPLEMENT` naming the exact table and field before changing DDL.
+
+| MVP stage | Hardening coverage |
+|---|---|
+| MVP-2 | `prepare_write`, scope, approval, baseline, artifact registration |
+| MVP-3 | `record_run`, evidence manifest, projection/reconcile |
+| MVP-4 | verification independence, Manual QA, acceptance, close blockers |
+| MVP-5 | conformance fixtures for the hardened rules |
 
 Validator failure must be visible as state, blocked reasons, or close blockers. It must not be hidden in prose-only agent output.
 

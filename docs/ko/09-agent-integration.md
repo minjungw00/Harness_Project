@@ -152,6 +152,25 @@ Integration은 enforcement strength를 정직하게 report해야 한다.
 
 Guarantee level은 risk context와 display다. Approval, verification, acceptance, kernel gate가 아니다.
 
+## Guarantee Display Requirements
+
+Surface behavior에 의존하는 모든 status 또는 `prepare_write` result는 actual guarantee level을 보여야 한다. Level은 surface name에서 추론한 약속이 아니라 connected profile과 current enforcement path의 property로 표시한다.
+
+User-visible examples:
+
+| Level | Example display text |
+|---|---|
+| `cooperative` | "This surface is expected to follow Harness decisions, but Harness may not physically block an out-of-scope write before it happens. Changed-path validation can detect violations afterward." |
+| `detective` | "Harness can observe changed paths or artifacts after action and mark scope/evidence/projection stale or blocked." |
+| `preventive` | "A hook, wrapper, permission layer, or sidecar can block a violating write before execution." |
+| `isolated` | "Risky work or verification runs in a separate worktree, sandbox, process, or equivalent boundary." |
+
+Rules:
+
+- Cooperative가 preventive라는 뜻으로 보이면 안 된다.
+- Surface name이 level을 보장한다는 뜻으로 보이면 안 된다.
+- Guarantee level은 approval, verification, QA, acceptance, kernel gate가 아니다.
+
 ## Generated Manifest Concept
 
 Connector는 rule, skill, MCP config snippet, prompt, local adapter file을 generate할 수 있다. 모든 generated 또는 managed path는 connector manifest에 기록해야 한다.

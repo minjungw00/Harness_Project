@@ -29,6 +29,27 @@ Manual QA가 필요한지 판단해줘.
 수용해. 이 작업 닫아.
 ```
 
+## 기본 진행 흐름
+
+기본 흐름은 work-management system이 아니라 짧은 대화처럼 느껴져야 한다. 사용자는 보통 모든 internal record가 아니라 compact status card와 다음 safe action을 본다.
+
+1. 상태 확인 또는 intake.
+2. `advisor`, `direct`, `work`로 분류.
+3. 범위와 Change Unit 확인.
+4. 쓰기 전 `prepare_write`.
+5. 변경 후 run/evidence 기록.
+6. 필요한 경우 verify, Manual QA, acceptance.
+7. Close.
+
+Gate는 "왜 지금 task가 안전하게 proceed 또는 close될 수 없는지"로 설명한다. Evidence insufficiency는 abstract database condition이 아니라 acceptance criterion별로 보여준다. Cooperative guarantee가 표시되면 surface가 Harness decision을 따를 것으로 기대되지만 모든 violating write를 실행 전에 물리적으로 막지는 못할 수 있다고 평이하게 설명한다.
+
+```text
+Close blocked:
+- AC-02 evidence missing
+- Manual QA pending for UI copy
+- Verification waived would close as risk accepted, not detached verified
+```
+
 ## 상태 카드 읽기
 
 좋은 하네스 세션은 먼저 짧은 상태 카드를 보여준다.

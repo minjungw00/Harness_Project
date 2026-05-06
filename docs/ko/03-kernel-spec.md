@@ -18,9 +18,10 @@ Kernel은 로컬 AI 지원 product work를 위한 canonical state machine이다.
 - 어떤 state event를 append할지
 - 어떤 projection을 refresh해야 하는지
 
-Operational state는 current record와 append-only event로 저장된다. MVP에서 event history는 `state.sqlite.task_events`이며, 별도의 event store가 아니다.
+Operational state is canonical in `state.sqlite` current records plus `state.sqlite.task_events`.
+Raw evidence is canonical in the artifact store. Markdown reports are projections generated from state records and artifact refs. Human-editable sections are input surfaces.
 
-Markdown document는 projection이자 proposal surface다. Raw evidence file은 artifact store에 있다. Kernel은 둘 모두에 대한 reference를 기록하지만, chat text도 generated Markdown도 canonical state를 대체하지 않는다.
+Kernel은 raw evidence와 projection에 대한 reference를 기록하지만, chat text도 generated Markdown도 canonical state를 대체하지 않는다.
 
 ## 작업 모드
 
@@ -176,6 +177,34 @@ not_required | none | partial | sufficient | stale | blocked
 
 Evidence가 required인 곳에서 successful completion에는 `evidence_gate=sufficient`가 필요하다.
 
+### Evidence Sufficiency Profiles
+
+Evidence sufficiency는 Evidence Manifest와 관련 state record 및 artifact ref로 판단한다. Chat text나 report prose만으로 판단하면 안 된다. Status card나 Markdown report는 evidence가 부족한 이유를 요약할 수 있지만, close decision은 manifest, Task, gates, Change Unit, Run, approval, Eval, Manual QA record, baseline relation, registered artifact를 사용한다.
+
+| Evidence Profile | 최소 sufficiency 지침 |
+|---|---|
+| `advisor` | 사용자나 policy가 recorded decision, review bundle, exportable artifact를 요구하지 않는 한 `evidence_gate`는 보통 `not_required`다. |
+| `direct docs-only` | 충분한 evidence는 changed path list, diff artifact 또는 recorded patch summary, self-check summary일 수 있다. |
+| `direct code` | 충분한 evidence는 changed path list, diff artifact, 관련 command/test/log artifact 또는 automated check가 적용되지 않는 명시적 이유, self-check summary일 수 있다. |
+| `work feature` | acceptance-criteria-to-evidence mapping, changed file coverage, run summary, 적용 가능한 diff/log/test/build artifact, `evidence_manifest.status=sufficient`가 필요하다. |
+| `UI/UX/copy work` | `work feature` evidence와 함께 QA가 required인 경우 Manual QA record 또는 유효한 QA waiver가 필요하다. |
+| `sensitive work` | 일반 task evidence에 approval ref, approval scope compatibility, baseline relation, approval drift 없음이 추가로 필요하다. |
+| `verification-required work` | Task가 `completed_verified`로 닫히려면 Evidence Manifest와 reviewed evidence 및 valid independence를 가진 Eval record가 필요하다. |
+
+Close impact:
+
+- Required evidence가 없으면 `evidence_gate=none`이다.
+- Required evidence가 incomplete이면 `evidence_gate=partial`이다.
+- Baseline, changed files, approval drift, missing artifact, 관련 design record change로 evidence가 invalidated되면 `evidence_gate=stale` 또는 `blocked`다.
+- Evidence가 required인 successful close에는 `evidence_gate=sufficient`가 필요하다.
+- Evidence가 required인데 missing인 경우 `evidence_gate=not_required`를 사용하면 안 된다.
+
+Examples:
+
+- Direct typo fix: changed path `docs/help.md`, diff artifact 또는 patch summary, self-check summary가 `direct docs-only` evidence를 뒷받침할 수 있다.
+- Work feature: AC-01은 passing test log와 changed path coverage에, AC-02는 build log와 run summary에 매핑하며 Evidence Manifest는 둘 다 supported로 기록한다.
+- UI copy change: changed copy path, diff artifact, self-check, required Manual QA record가 close를 뒷받침한다. Manual QA가 기록되거나 유효하게 waived될 때까지 close는 blocked로 남는다.
+
 ### Verification Gate
 
 ```text
@@ -183,6 +212,26 @@ not_required | required | pending | passed | failed | waived_by_user | blocked
 ```
 
 `verification_gate=waived_by_user`는 user가 remaining verification risk를 accepted했음을 기록한다. 이것이 `assurance_level=detached_verified`가 되어서는 안 된다.
+
+### Verification Independence Profiles
+
+Verification independence profile은 Eval이 detached assurance를 뒷받침하기 전에 필요한 최소 자격을 설명한다.
+
+| Profile | 최소 qualification |
+|---|---|
+| `same_session` | Detached가 아니다. Self-check 또는 review note를 기록할 수는 있다. `detached_verified`를 만들면 안 된다. |
+| `subagent_context` | 기본적으로 detached가 아니다. Implementation context, write authority, reviewed bundle이 더 엄격한 profile을 만족할 때만 qualify될 수 있으며, 그렇지 않으면 detached가 아닌 것으로 취급한다. |
+| `fresh_session` | Evaluator가 lead chat context를 이어받지 않고 task/evidence bundle을 받고, Evidence Manifest와 changed files를 검토하고, Eval을 기록하면 detached candidate다. |
+| `fresh_worktree` | Evaluator가 별도 worktree 또는 동등하게 isolated repository state에서 baseline, changed paths, artifacts, Evidence Manifest를 확인하면 detached candidate다. |
+| `sandbox` | Execution과 verification이 의미 있는 process/filesystem boundary를 사이에 두고 일어나며 artifacts가 capture되면 detached 또는 isolated candidate다. |
+| `manual_bundle` | Evaluator가 task summary, acceptance criteria, Change Unit scope, approval scope, diff/log/test artifacts, Evidence Manifest, known risks를 받고 verdict를 기록하면 detached candidate다. |
+
+Rules:
+
+- Eval verdict alone does not upgrade assurance.
+- Valid independence, passed verification, same-session self-review violation 부재가 모두 있어야 `assurance_level=detached_verified`가 된다.
+- User verification waiver는 `completed_verified`가 아니라 `completed_with_risk_accepted`로 닫혀야 한다.
+- Product file을 쓸 수 있는 verifier는 Eval independence context에 그 사실을 disclose해야 한다. Write capability는 confidence를 낮출 수 있고 additional guard 또는 bundle review가 필요할 수 있다.
 
 ### QA Gate
 

@@ -221,6 +221,278 @@ MVP execution semantics:
 
 Fixture execution should be deterministic. Network access, wall-clock-sensitive expiry, and external tool output must be stubbed or represented as seeded fixture inputs unless a suite explicitly declares itself an integration smoke.
 
+## Hardened MVP Fixture Coverage
+
+The hardened evidence, verification, and connector rules should be covered by fixtures with the required shape. Each fixture maps to the earliest MVP stage where the behavior must be implemented.
+
+```yaml
+scenario_id: CORE-evidence-direct-docs-only-sufficient
+mvp_stage: MVP-4
+initial_state:
+  active_task:
+    mode: direct
+    lifecycle_phase: executing
+    acceptance_criteria: ["AC-01 typo corrected"]
+    gates:
+      scope_gate: passed
+      evidence_gate: partial
+      verification_gate: not_required
+input:
+  evidence_profile: direct docs-only
+  changed_paths: ["docs/help.md"]
+  diff_artifact: ART-DIFF-001
+  self_check_summary: "Rendered Markdown heading and checked typo fix."
+action: close_task
+expected_state:
+  lifecycle_phase: completed
+  result: passed
+  close_reason: completed_self_checked
+  assurance_level: self_checked
+  gates:
+    evidence_gate: sufficient
+expected_events:
+  - evidence_manifest_updated
+  - close_requested
+  - task_closed
+expected_artifacts:
+  - artifact_id: ART-DIFF-001
+    kind: diff
+expected_projection:
+  TASK: enqueued
+  EVIDENCE-MANIFEST: enqueued
+expected_error: null
+```
+
+```yaml
+scenario_id: CORE-evidence-work-ac-missing-blocks-close
+mvp_stage: MVP-4
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: verifying
+    acceptance_criteria: ["AC-01 saves profile", "AC-02 shows validation error"]
+    gates:
+      scope_gate: passed
+      approval_gate: not_required
+      evidence_gate: partial
+      verification_gate: pending
+input:
+  evidence_profile: work feature
+  criteria:
+    AC-01:
+      status: supported
+      refs: [ART-TEST-001]
+    AC-02:
+      status: unsupported
+      refs: []
+action: close_task
+expected_state:
+  lifecycle_phase: blocked
+  gates:
+    evidence_gate: partial
+expected_events:
+  - close_requested
+  - close_blocked
+expected_artifacts:
+  - artifact_id: ART-TEST-001
+    kind: log
+expected_projection:
+  TASK: enqueued
+  EVIDENCE-MANIFEST: enqueued
+expected_error:
+  code: EVIDENCE_INSUFFICIENT
+```
+
+```yaml
+scenario_id: CORE-evidence-ui-manual-qa-pending-blocks-close
+mvp_stage: MVP-4
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: qa
+    acceptance_criteria: ["AC-01 button copy updated"]
+    gates:
+      scope_gate: passed
+      evidence_gate: sufficient
+      verification_gate: passed
+      qa_gate: pending
+input:
+  evidence_profile: UI/UX/copy work
+  manual_qa_record: null
+action: close_task
+expected_state:
+  lifecycle_phase: qa
+  gates:
+    qa_gate: pending
+expected_events:
+  - close_requested
+  - close_blocked
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error:
+  code: QA_REQUIRED
+```
+
+```yaml
+scenario_id: CORE-verify-manual-bundle-detached-passed
+mvp_stage: MVP-4
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: verifying
+    gates:
+      evidence_gate: sufficient
+      verification_gate: pending
+input:
+  eval:
+    verdict: passed
+    independence_context:
+      profile: manual_bundle
+      reviewed_bundle_ref: ART-BUNDLE-001
+      received_task_summary: true
+      received_acceptance_criteria: true
+      received_change_unit_scope: true
+      received_approval_scope: true
+      received_diff_log_test_artifacts: true
+      received_evidence_manifest: true
+      received_known_risks: true
+    evidence_reviewed: [ART-DIFF-001, ART-TEST-001, EVIDENCE-MANIFEST-001]
+action: record_eval
+expected_state:
+  lifecycle_phase: verifying
+  assurance_level: detached_verified
+  gates:
+    verification_gate: passed
+expected_events:
+  - eval_recorded
+  - verification_passed
+expected_artifacts:
+  - artifact_id: ART-BUNDLE-001
+    kind: bundle
+expected_projection:
+  EVAL: enqueued
+  TASK: enqueued
+expected_error: null
+```
+
+```yaml
+scenario_id: CORE-verify-subagent-context-not-detached-by-default
+mvp_stage: MVP-4
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: verifying
+    gates:
+      verification_gate: pending
+input:
+  eval:
+    verdict: passed
+    independence_context:
+      profile: subagent_context
+      stricter_profile_satisfied: false
+    evidence_reviewed: [EVIDENCE-MANIFEST-001]
+action: record_eval
+expected_state:
+  lifecycle_phase: verifying
+  assurance_level: none
+  gates:
+    verification_gate: pending
+expected_events:
+  - eval_recorded
+  - verify_not_detached_detected
+expected_artifacts: []
+expected_projection:
+  EVAL: enqueued
+  TASK: enqueued
+expected_error:
+  code: VERIFY_NOT_DETACHED
+```
+
+```yaml
+scenario_id: CORE-verify-waiver-risk-accepted-not-detached
+mvp_stage: MVP-4
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: waiting_user
+    assurance_level: self_checked
+    gates:
+      scope_gate: passed
+      evidence_gate: sufficient
+      verification_gate: waived_by_user
+      qa_gate: not_required
+      acceptance_gate: accepted
+input:
+  close_intent: accept_verification_risk
+  waiver_reason: "User accepts remaining verification risk for urgent local-only fix."
+action: close_task
+expected_state:
+  lifecycle_phase: completed
+  result: passed
+  close_reason: completed_with_risk_accepted
+  assurance_level: self_checked
+expected_events:
+  - close_requested
+  - risk_accepted_close_recorded
+  - task_closed
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error: null
+```
+
+```yaml
+scenario_id: CONN-cooperative-guarantee-display
+mvp_stage: MVP-2
+initial_state:
+  surface:
+    surface_id: SURF-0001
+    guarantee_level: cooperative
+    changed_path_detection: validator
+  active_task:
+    mode: direct
+    lifecycle_phase: ready
+input:
+  include:
+    guarantees: true
+action: status
+expected_state:
+  guarantee_display:
+    level: cooperative
+    notes:
+      - "This surface is expected to follow Harness decisions, but Harness may not physically block an out-of-scope write before it happens. Changed-path validation can detect violations afterward."
+expected_events: []
+expected_artifacts: []
+expected_projection: {}
+expected_error: null
+```
+
+```yaml
+scenario_id: CONN-mcp-unavailable-write-hold
+mvp_stage: MVP-5
+initial_state:
+  surface:
+    guarantee_level: cooperative
+    mcp_available: false
+  active_task:
+    mode: direct
+    lifecycle_phase: ready
+input:
+  intended_paths: ["src/profile/ProfileForm.tsx"]
+action: connector_prepare_write_attempt
+expected_state:
+  lifecycle_phase: blocked
+  write_held: true
+expected_events:
+  - mcp_unavailable_detected
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error:
+  code: MCP_UNAVAILABLE
+```
+
 ## Core Fixture Examples
 
 ```yaml
@@ -300,29 +572,6 @@ expected_error:
 ```
 
 ## Connector Fixture Examples
-
-```yaml
-scenario_id: CONN-mcp-unavailable-write-hold
-initial_state:
-  surface:
-    guarantee_level: cooperative
-    mcp_available: false
-  active_task:
-    mode: direct
-    lifecycle_phase: ready
-input:
-  intended_paths: ["src/profile/ProfileForm.tsx"]
-action: connector_prepare_write_attempt
-expected_state:
-  lifecycle_phase: blocked
-expected_events:
-  - mcp_unavailable_detected
-expected_artifacts: []
-expected_projection:
-  TASK: enqueued
-expected_error:
-  code: MCP_UNAVAILABLE
-```
 
 ```yaml
 scenario_id: CONN-generated-file-drift-reconcile

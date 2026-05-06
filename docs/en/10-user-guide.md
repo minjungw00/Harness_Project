@@ -29,6 +29,27 @@ Decide whether Manual QA is needed.
 Accepted. Close this task.
 ```
 
+## 기본 진행 흐름
+
+The normal path should feel like a short conversation, not a work-management system. Users usually see a compact status card and the next safe action, not every internal record.
+
+1. Check status or intake.
+2. Classify as `advisor`, `direct`, or `work`.
+3. Confirm scope and the Change Unit.
+4. Call `prepare_write` before writing.
+5. After changes, record run and evidence.
+6. Verify, record Manual QA, and ask for acceptance when needed.
+7. Close.
+
+Gates should be explained as why the task cannot safely proceed or close yet. Evidence insufficiency should be shown by acceptance criterion, not as an abstract database condition. If a cooperative guarantee is shown, explain plainly that the surface is expected to follow Harness decisions but may not physically block every violating write before it happens.
+
+```text
+Close blocked:
+- AC-02 evidence missing
+- Manual QA pending for UI copy
+- Verification waived would close as risk accepted, not detached verified
+```
+
 ## Reading A Status Card
 
 A good harness session first shows a short status card.

@@ -152,6 +152,25 @@ Integration must report enforcement strength honestly:
 
 Guarantee level is risk context and display. It is not approval, verification, acceptance, or a kernel gate.
 
+## Guarantee Display Requirements
+
+Every status or `prepare_write` result that relies on surface behavior should expose the actual guarantee level. Display the level as a property of the connected profile and current enforcement path, not as a promise inferred from a surface name.
+
+User-visible examples:
+
+| Level | Example display text |
+|---|---|
+| `cooperative` | "This surface is expected to follow Harness decisions, but Harness may not physically block an out-of-scope write before it happens. Changed-path validation can detect violations afterward." |
+| `detective` | "Harness can observe changed paths or artifacts after action and mark scope/evidence/projection stale or blocked." |
+| `preventive` | "A hook, wrapper, permission layer, or sidecar can block a violating write before execution." |
+| `isolated` | "Risky work or verification runs in a separate worktree, sandbox, process, or equivalent boundary." |
+
+Rules:
+
+- Do not imply cooperative means preventive.
+- Do not imply a surface name guarantees a level.
+- Guarantee level is not approval, verification, QA, acceptance, or a kernel gate.
+
 ## Generated Manifest Concept
 
 Connectors may generate rules, skills, MCP config snippets, prompts, or local adapter files. Every generated or managed path must be recorded in a connector manifest.

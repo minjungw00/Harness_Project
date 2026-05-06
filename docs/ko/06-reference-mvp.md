@@ -723,6 +723,7 @@ MVP validator set:
 | `baseline_freshness` | baseline이 relevant repo state와 여전히 match하는지 확인 |
 | `artifact_integrity` | artifact file이 존재하고 hash/size와 match하는지 확인 |
 | `evidence_sufficiency` | acceptance criteria가 supporting evidence에 map되는지 확인 |
+| `verification_independence` | Eval independence profile이 요청된 assurance를 뒷받침할 수 있는지 확인 |
 | `same_session_verify_guard` | same-session review가 assurance를 upgrade하지 못하게 함 |
 | `manual_qa_required` | required QA가 passed 또는 validly waived인지 확인 |
 | `docs_consistency` | projection version과 managed hash가 consistent한지 확인 |
@@ -730,6 +731,23 @@ MVP validator set:
 | `vertical_slice_shape` | required vertical slice 또는 exception이 recorded되었는지 확인 |
 | `tdd_trace` | required TDD evidence 또는 allowed waiver가 있는지 확인 |
 | `module_boundary_review` | module/interface review requirement가 충족됐는지 확인 |
+
+### Evidence and Verification Profile Implementation Notes
+
+`evidence_sufficiency` validator는 committed record와 registered artifact만 읽는다. Input은 Task, `task_gates`, Change Unit, Run, approval, Evidence Manifest, Eval, Manual QA record, artifact, 관련 baseline ref다. Validator는 적용되는 Evidence Profile이 absent, partial, sufficient, stale, blocked 중 무엇인지 계산하고 kernel rule에 따라 Core를 통해 update하거나 block한다.
+
+`verification_independence` validator는 `evals.independence_json`, `evaluator_run_id`, `target_run_id`, evaluator 및 target `surface_id`, `baseline_ref`, bundle artifact refs, `actor_kind`를 읽는다. Eval profile이 `same_session`, `subagent_context`, `fresh_session`, `fresh_worktree`, `sandbox`, `manual_bundle` 중 무엇인지, 그리고 해당 profile이 target close path의 detached assurance를 뒷받침할 수 있는지 확인한다.
+
+MVP에서 이 profile을 위해 DDL change는 필요하지 않다. Existing JSON fields가 profile metadata를 담는다: `evidence_manifests.criteria_json`, `evidence_manifests.supporting_refs_json`, `evidence_manifests.stale_if_json`, `evals.evidence_reviewed_json`, `evals.independence_json`, `evals.artifact_refs_json`, `runs.observed_changes_json`, `runs.command_results_json`, `runs.artifact_refs_json`, `approvals.*_json`, `manual_qa_records.findings_json`, `validator_runs.findings_json`.
+
+구현이 위 input을 existing fields에서 derivable하지 못하면 DDL을 바꾸기 전에 exact table과 field를 적은 `TODO_IMPLEMENT`를 추가한다.
+
+| MVP stage | Hardening coverage |
+|---|---|
+| MVP-2 | `prepare_write`, scope, approval, baseline, artifact registration |
+| MVP-3 | `record_run`, evidence manifest, projection/reconcile |
+| MVP-4 | verification independence, Manual QA, acceptance, close blockers |
+| MVP-5 | hardened rules를 위한 conformance fixtures |
 
 Validator failure는 state, blocked reason, close blocker로 visible해야 한다. Prose-only agent output 안에 숨기면 안 된다.
 

@@ -18,9 +18,10 @@ The kernel is the canonical state machine for local AI-assisted product work. It
 - which state events are appended
 - which projections need refresh
 
-Operational state is stored as current records plus append-only events. In the MVP, the event history is `state.sqlite.task_events`; it is not a separate event store.
+Operational state is canonical in `state.sqlite` current records plus `state.sqlite.task_events`.
+Raw evidence is canonical in the artifact store. Markdown reports are projections generated from state records and artifact refs. Human-editable sections are input surfaces.
 
-Markdown documents are projections and proposal surfaces. Raw evidence files live in the artifact store. The kernel records references to both, but neither chat text nor generated Markdown replaces canonical state.
+The kernel records references to raw evidence and projections, but neither chat text nor generated Markdown replaces canonical state.
 
 ## Work Modes
 
@@ -176,6 +177,34 @@ not_required | none | partial | sufficient | stale | blocked
 
 Where evidence is required, a successful completion requires `evidence_gate=sufficient`.
 
+### Evidence Sufficiency Profiles
+
+Evidence sufficiency is judged from the Evidence Manifest plus related state records and artifact refs. It must not be judged from chat text or report prose alone. A status card or Markdown report may summarize why evidence is missing, but the close decision uses the manifest, Task, gates, Change Units, Runs, approvals, Evals, Manual QA records, baseline relation, and registered artifacts.
+
+| Evidence Profile | Minimum sufficiency guidance |
+|---|---|
+| `advisor` | `evidence_gate` is usually `not_required` unless the user or policy asks for a recorded decision, review bundle, or exportable artifact. |
+| `direct docs-only` | Sufficient evidence may be changed path list, diff artifact or recorded patch summary, and self-check summary. |
+| `direct code` | Sufficient evidence may be changed path list, diff artifact, relevant command/test/log artifact or explicit reason no automated check applies, and self-check summary. |
+| `work feature` | Sufficient evidence requires acceptance-criteria-to-evidence mapping, changed file coverage, run summary, diff/log/test/build artifacts as applicable, and `evidence_manifest.status=sufficient`. |
+| `UI/UX/copy work` | Requires `work feature` evidence plus Manual QA record or valid QA waiver when QA is required. |
+| `sensitive work` | Requires normal task evidence plus approval ref, approval scope compatibility, baseline relation, and no approval drift. |
+| `verification-required work` | Requires Evidence Manifest plus Eval record with reviewed evidence and valid independence if the task is to close as `completed_verified`. |
+
+Close impact:
+
+- Required evidence absent means `evidence_gate=none`.
+- Required evidence incomplete means `evidence_gate=partial`.
+- Evidence invalidated by baseline, changed files, approval drift, missing artifact, or relevant design record change means `evidence_gate=stale` or `blocked`.
+- Successful close where evidence is required needs `evidence_gate=sufficient`.
+- `evidence_gate=not_required` must not be used when evidence is required but missing.
+
+Examples:
+
+- Direct typo fix: changed path `docs/help.md`, diff artifact or patch summary, and self-check summary can support `direct docs-only` evidence.
+- Work feature: AC-01 maps to passing test log and changed path coverage; AC-02 maps to build log plus run summary; the Evidence Manifest records both as supported.
+- UI copy change: changed copy path, diff artifact, self-check, and required Manual QA record support close; until Manual QA is recorded or validly waived, close remains blocked.
+
 ### Verification Gate
 
 ```text
@@ -183,6 +212,26 @@ not_required | required | pending | passed | failed | waived_by_user | blocked
 ```
 
 `verification_gate=waived_by_user` records that the user accepted remaining verification risk. It must not become `assurance_level=detached_verified`.
+
+### Verification Independence Profiles
+
+Verification independence profiles describe the minimum qualification needed before an Eval can support detached assurance.
+
+| Profile | Minimum qualification |
+|---|---|
+| `same_session` | Not detached. May record self-check or review notes. Must not produce `detached_verified`. |
+| `subagent_context` | Not detached by default. May qualify only if the implementation context, write authority, and reviewed bundle satisfy a stricter profile; otherwise treat as not detached. |
+| `fresh_session` | Detached candidate if the evaluator receives a task/evidence bundle rather than continuing lead chat context, reviews the Evidence Manifest and changed files, and records an Eval. |
+| `fresh_worktree` | Detached candidate if the evaluator checks baseline, changed paths, artifacts, and Evidence Manifest in a separate worktree or equivalent isolated repository state. |
+| `sandbox` | Detached or isolated candidate if execution and verification happen across a meaningful process/filesystem boundary and artifacts are captured. |
+| `manual_bundle` | Detached candidate if the evaluator receives task summary, acceptance criteria, Change Unit scope, approval scope, diff/log/test artifacts, Evidence Manifest, known risks, and records a verdict. |
+
+Rules:
+
+- Eval verdict alone does not upgrade assurance.
+- Valid independence plus passed verification plus absence of a same-session self-review violation is required for `assurance_level=detached_verified`.
+- User verification waiver must close as `completed_with_risk_accepted`, not `completed_verified`.
+- A verifier that can write product files must disclose that in Eval independence context; write capability may reduce confidence and may require an additional guard or bundle review.
 
 ### QA Gate
 

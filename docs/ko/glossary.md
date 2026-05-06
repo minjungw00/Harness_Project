@@ -34,7 +34,7 @@ Recorded check와 verification independence가 뒷받침하는 technical confide
 none | self_checked | detached_verified
 ```
 
-EVAL verdict만으로 assurance를 upgrade하지 않는다. `detached_verified`에는 valid independence가 있는 passed verification이 필요하다.
+Eval verdict alone does not upgrade assurance. `detached_verified`에는 valid independence가 있는 passed verification과 same-session self-review violation 없음이 필요하다.
 
 ### Baseline
 
@@ -94,7 +94,7 @@ Shared design, domain language, vertical slice, TDD trace, module/interface revi
 
 ### Detached Verification
 
-Fresh session, fresh worktree, sandbox, manual evaluator bundle 같은 의미 있는 independence boundary를 가로질러 수행되는 verification. Same-session self-review는 detached verification이 아니다.
+Fresh session, fresh worktree, sandbox, manual evaluator bundle 같은 meaningful independence boundary를 가로질러 수행되는 verification. Same-session self-review는 detached verification이 아니며, subagent context도 기본적으로 detached가 아니다.
 
 ### Detective Guarantee
 
@@ -130,9 +130,25 @@ not_required | none | partial | sufficient | stale | blocked
 
 Acceptance criteria 또는 completion condition을 supporting evidence reference에 mapping하는 state record.
 
+### Evidence Profile
+
+`advisor`, `direct docs-only`, `direct code`, `work feature`, `UI/UX/copy work`, `sensitive work`, `verification-required work` 같은 named evidence sufficiency profile. Task shape에 충분한 evidence가 무엇인지 validator에 알려준다.
+
+### Evidence Sufficiency
+
+Required acceptance criteria 또는 completion condition이 Evidence Manifest와 관련 state record 및 artifact ref로 support되는지에 대한 close-relevant judgment. Chat text나 Markdown report prose만으로 판단하지 않는다.
+
 ### Eval
 
 Verdict, performed check, reviewed evidence, independence qualifier, blocker, artifact reference가 있는 verification result record.
+
+### Fresh Session
+
+Evaluator가 lead chat context를 이어받지 않고 task/evidence bundle에서 시작해 Evidence Manifest와 changed files를 검토하고 Eval을 기록하는 verification independence profile.
+
+### Fresh Worktree
+
+Evaluator가 별도 worktree 또는 동등하게 isolated repository state에서 baseline, changed paths, artifacts, Evidence Manifest를 확인하는 verification independence profile.
 
 ### Gate
 
@@ -141,6 +157,10 @@ Task가 write, proceed, close할 수 있는지 control하는 canonical kernel fi
 ### Generated File
 
 Connector, projector, operator tool이 produced한 repository file 또는 managed block. Generated file이 canonical state에서 drift될 수 있으면 manifest 또는 projection job으로 track해야 한다.
+
+### Guarantee Display
+
+Status 또는 write decision에 대한 actual guarantee level의 user-facing 및 connector-facing display. Enforcement가 cooperative 또는 detective인 경우 limitation note를 포함한다.
 
 ### Guarantee Level
 
@@ -175,6 +195,10 @@ Module 또는 external boundary의 public interface, input, output, error, compa
 ### Manual QA
 
 UX, workflow, copy, visual output, accessibility, product fit 같은 experiential product quality에 대한 human inspection.
+
+### Manual Bundle
+
+Human 또는 separate evaluator에게 verification을 handoff하는 package. Task summary, acceptance criteria, Change Unit scope, approval scope, diff/log/test artifacts, Evidence Manifest, known risks, Eval verdict를 기록하기에 충분한 context를 포함한다.
 
 ### Manual QA Record
 
@@ -250,6 +274,10 @@ Task report, approval report, run summary, evidence manifest report, Eval report
 
 Named report projection kind는 기본적으로 projection 또는 record다. Evidence-file authority는 registered artifact file에 남는다.
 
+### Risk Accepted Close
+
+사용자가 남은 verification risk를 수용한 successful close. `close_reason=completed_with_risk_accepted`를 사용하며 `assurance_level=detached_verified`로 표시하면 안 된다.
+
 ### Run
 
 Agent, evaluator, operator, 기타 actor가 Task와 optional Change Unit에 대해 수행하는 execution attempt. Run은 baseline, surface, observed change, command, artifact, summary를 기록한다.
@@ -282,6 +310,10 @@ Connected agent surface가 required harness behavior를 satisfy할 수 있는지
 
 Surface-specific connector note, generated file detail, profile example을 담은 appendix. Common integration rule은 cookbook이 아니라 agent integration document에 둔다.
 
+### Subagent Context
+
+Subagent 또는 helper가 일부 inherited implementation context를 가지고 work를 review하는 verification independence profile. 기본적으로 detached가 아니며, stricter profile metadata가 real independence boundary를 prove할 때만 qualify될 수 있다.
+
 ### Task
 
 Kernel이 track하는 user value unit. Mode, lifecycle phase, gate, result, close reason, assurance, current summary, decision, evidence, projection status를 가진다.
@@ -297,6 +329,10 @@ Result가 relevant criteria를 satisfy하는지 check하는 process. Verificatio
 ### Verification Gate
 
 Required verification을 위한 kernel gate. User waiver는 `verification_gate=waived_by_user`를 set하며 `detached_verified` assurance를 만들지 않는다.
+
+### Verification Independence Profile
+
+`same_session`, `subagent_context`, `fresh_session`, `fresh_worktree`, `sandbox`, `manual_bundle` 같은 Eval independence context의 named minimum qualification. Passed Eval은 `detached_verified`를 뒷받침하기 전에 valid profile을 만족해야 한다.
 
 ### Validator Result
 

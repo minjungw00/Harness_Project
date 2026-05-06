@@ -48,7 +48,7 @@ Generated file에는 다음이 포함될 수 있다.
 - MCP config snippet
 - connector manifest entry
 
-Codex-specific connector work는 `AGENTS.md`를 짧게 유지하고 procedural workflow를 skill, command, MCP resource에 두어야 한다. Pre-tool blocking이 unavailable이면 `prepare_write`, detective changed-path validation, risk가 warrant할 경우 sidecar에 의존한다.
+Codex-specific connector work는 `AGENTS.md`를 짧게 유지해야 한다. 절차 workflow는 skill, command, MCP resource에 두는 편을 선호한다. Pre-tool blocking이 unavailable이면 cooperative `prepare_write` discipline과 changed-path validator를 사용하고, risk가 warrant할 경우 sidecar 또는 manual verification bundle을 사용한다.
 
 ## Claude Code Notes
 
@@ -205,9 +205,18 @@ description: Use this when the user asks to modify code, verify work, resume a t
 Use Harness to keep AI-assisted development visible, bounded, evidenced, verifiable, and aligned with product design.
 
 ## Core Rule
-Before changing product files, call the Harness MCP server.
+Before editing product files, call `harness.prepare_write`. If `prepare_write` is blocked, do not edit product files. If MCP is unavailable, hold product writes and report the guarantee limitation.
 
 ## Workflow
+
+### Minimal Happy Path
+1. 상태 확인 또는 intake.
+2. `advisor`, `direct`, `work`로 분류.
+3. 범위와 Change Unit 확인.
+4. Before editing product files, call `harness.prepare_write`.
+5. 변경 후 runs, changed paths, commands, artifacts, evidence 기록.
+6. 필요한 경우 verify, Manual QA, acceptance 요청.
+7. Close.
 
 ### 1. Status Or Intake
 - If the user asks for status, call `harness.status`.
@@ -227,6 +236,8 @@ Before changing product files, call the Harness MCP server.
 
 ### 4. Before Writing
 - Call `harness.prepare_write`.
+- If `prepare_write` is blocked, do not edit product files.
+- If MCP is unavailable, hold product writes and report that the surface cannot provide an authoritative write decision.
 - Respect allowed paths, tools, commands, network, and secret scope.
 - Stop when approval or scope confirmation is required.
 - Request approval through `harness.request_user_decision`.
@@ -237,10 +248,12 @@ Before changing product files, call the Harness MCP server.
 - Avoid changes outside the active Change Unit.
 
 ### 6. After Changing
-- Call `harness.record_run` with changed files, commands, logs, diff refs, TDD trace, evidence mapping, and design updates.
+- Call `harness.record_run` with changed paths, commands, logs, diff refs, artifacts, TDD trace, evidence mapping, and design updates.
+- Record evidence after changes; changed paths, commands, artifacts, evidence를 chat에만 남기면 안 된다.
 
 ### 7. Finish
 - For work verification, call `harness.launch_verify` or record a fresh evaluator result through `harness.record_eval`.
+- Work cannot self-certify detached verification.
 - For Manual QA, call `harness.record_manual_qa`.
 - Record user decisions through `harness.record_user_decision`.
 - Call `harness.close_task` after required verification, Manual QA, evidence, and acceptance are resolved.

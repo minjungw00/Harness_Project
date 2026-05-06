@@ -34,7 +34,7 @@ The technical confidence level supported by recorded checks and verification ind
 none | self_checked | detached_verified
 ```
 
-An EVAL verdict alone does not upgrade assurance. `detached_verified` requires passed verification with valid independence.
+An Eval verdict alone does not upgrade assurance. `detached_verified` requires passed verification with valid independence and no same-session self-review violation.
 
 ### Baseline
 
@@ -94,7 +94,7 @@ The set of policy contracts for shared design, domain language, vertical slice, 
 
 ### Detached Verification
 
-Verification performed across a meaningful independence boundary, such as a fresh session, fresh worktree, sandbox, or manual evaluator bundle. Same-session self-review is not detached verification.
+Verification performed across a meaningful independence boundary, such as a fresh session, fresh worktree, sandbox, or manual evaluator bundle. Same-session self-review is not detached verification, and subagent context is not detached by default.
 
 ### Detective Guarantee
 
@@ -130,9 +130,25 @@ not_required | none | partial | sufficient | stale | blocked
 
 A state record mapping acceptance criteria or completion conditions to supporting evidence references.
 
+### Evidence Profile
+
+A named evidence sufficiency profile, such as `advisor`, `direct docs-only`, `direct code`, `work feature`, `UI/UX/copy work`, `sensitive work`, or `verification-required work`, that tells validators what evidence is enough for the task shape.
+
+### Evidence Sufficiency
+
+The close-relevant judgment that required acceptance criteria or completion conditions are supported by the Evidence Manifest plus related state records and artifact refs. It is not judged from chat text or Markdown report prose alone.
+
 ### Eval
 
 A verification result record with verdict, checks performed, evidence reviewed, independence qualifier, blockers, and artifact references.
+
+### Fresh Session
+
+A verification independence profile where the evaluator starts from a task/evidence bundle rather than continuing the lead chat context, reviews the Evidence Manifest and changed files, and records an Eval.
+
+### Fresh Worktree
+
+A verification independence profile where the evaluator checks baseline, changed paths, artifacts, and Evidence Manifest in a separate worktree or equivalent isolated repository state.
 
 ### Gate
 
@@ -141,6 +157,10 @@ A canonical kernel field that controls whether a Task may write, proceed, or clo
 ### Generated File
 
 A repository file or managed block produced by a connector, projector, or operator tool. Generated files must be tracked by a manifest or projection job when they can drift from canonical state.
+
+### Guarantee Display
+
+The user-facing and connector-facing display of the actual guarantee level for a status or write decision, including limitation notes when enforcement is cooperative or detective.
 
 ### Guarantee Level
 
@@ -175,6 +195,10 @@ The canonical record of a module or external boundary's public interface, inputs
 ### Manual QA
 
 Human inspection of experiential product quality such as UX, workflow, copy, visual output, accessibility, and product fit.
+
+### Manual Bundle
+
+A verification handoff package for a human or separate evaluator. It includes task summary, acceptance criteria, Change Unit scope, approval scope, diff/log/test artifacts, Evidence Manifest, known risks, and enough context to record an Eval verdict.
 
 ### Manual QA Record
 
@@ -250,6 +274,10 @@ A Markdown report generated from state records and artifact references, such as 
 
 The named report projection kinds are projections or records by default; evidence-file authority stays with registered artifact files.
 
+### Risk Accepted Close
+
+A successful close where the user accepts remaining verification risk. It uses `close_reason=completed_with_risk_accepted` and must not display `assurance_level=detached_verified`.
+
 ### Run
 
 An execution attempt by an agent, evaluator, operator, or other actor against a Task and optionally a Change Unit. Runs record baseline, surface, observed changes, commands, artifacts, and summary.
@@ -282,6 +310,10 @@ A validator that reports whether a connected agent surface can satisfy required 
 
 The appendix that contains surface-specific connector notes, generated file details, and profile examples. Common integration rules belong in the agent integration document, not the cookbook.
 
+### Subagent Context
+
+A verification independence profile where a subagent or helper reviews work with some inherited implementation context. It is not detached by default and can qualify only when stricter profile metadata proves a real independence boundary.
+
 ### Task
 
 The user value unit tracked by the kernel. It carries mode, lifecycle phase, gates, result, close reason, assurance, current summary, decisions, evidence, and projection status.
@@ -297,6 +329,10 @@ The process of checking whether the result satisfies the relevant criteria. Veri
 ### Verification Gate
 
 The kernel gate for required verification. A user waiver sets `verification_gate=waived_by_user`; it does not create `detached_verified` assurance.
+
+### Verification Independence Profile
+
+A named minimum qualification for an Eval independence context, such as `same_session`, `subagent_context`, `fresh_session`, `fresh_worktree`, `sandbox`, or `manual_bundle`. A passed Eval must satisfy a valid profile before it can support `detached_verified`.
 
 ### Validator Result
 
