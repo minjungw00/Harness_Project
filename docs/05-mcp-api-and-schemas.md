@@ -137,7 +137,7 @@ policy_override
 
 ## Artifact Ref Schema
 
-An artifact ref points to a raw artifact file registered in the artifact store. Raw artifacts are durable evidence files. RUN-SUMMARY, EVAL, TDD-TRACE, MANUAL-QA, EVIDENCE-MANIFEST, and DIRECT-RESULT are projections or records, not raw artifacts by default.
+An artifact ref points to a durable evidence file registered in the artifact store. Report projections and record projections use artifact refs when they need evidence-file references; the projection itself is not the evidence file.
 
 ```yaml
 ArtifactRef:

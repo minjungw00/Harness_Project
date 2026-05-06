@@ -96,5 +96,5 @@ The following are also later unless a future batch promotes them with fixtures a
 - advanced architecture drift validator
 - advanced public interface validator
 - semantic domain language consistency checks
-- status/approval/acceptance/manual QA card UX expansion
+- status/approval/acceptance/Manual QA card UX expansion
 - multi-agent policy and scheduling

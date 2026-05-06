@@ -100,7 +100,7 @@ primary_strengths:
 common_fallbacks:
   - CLI wrapper
   - sidecar-controlled run
-  - manual QA note artifact
+  - Manual QA note artifact
 profile_risks:
   - extension context can become too large
   - capture and guard behavior varies by host

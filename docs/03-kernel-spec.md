@@ -52,7 +52,7 @@ An Approval is a scope-bound prior decision for sensitive change. It records wha
 
 ### Evidence Manifest
 
-An Evidence Manifest maps acceptance criteria or completion conditions to evidence references. It records whether each criterion is supported, unsupported, or not applicable, and it references durable artifacts, run summaries, evals, TDD traces, Manual QA records, or other recorded evidence. Evidence sufficiency is judged from this manifest and related records.
+An Evidence Manifest maps acceptance criteria or completion conditions to evidence references. It records whether each criterion is supported, unsupported, or not applicable, and it references durable artifacts, run summaries, Eval records, TDD traces, Manual QA records, or other recorded evidence. Evidence sufficiency is judged from this manifest and related records.
 
 ### Eval
 
@@ -202,7 +202,7 @@ not_required | required | pending | accepted | rejected
 
 ### Capability Boundary
 
-There is no `capability_gate`.
+Capability is deliberately excluded from the kernel gate enum.
 
 Surface capability belongs to:
 

@@ -73,7 +73,7 @@ MVP는 많은 agent surface를 동시에 지원하는 플랫폼이 아니라 cor
 
 MVP focuses on one reference surface, local state, artifacts, public MCP tools, write gating, evidence, verification, Manual QA, acceptance, projections, reconcile, recovery, export, and fixture-based conformance.
 
-Later automation such as dashboard, browser QA automatic capture, cross-surface verification, native hook expansion, advanced sidecar watching, parallel orchestration, long-term analytics, and team workflow lives in [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md).
+Later automation is cataloged in [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md) and must not read as part of MVP scope.
 
 ## Target Tree
 

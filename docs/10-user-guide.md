@@ -25,7 +25,7 @@
 작은 수정이면 direct로 처리하고, 커지면 work로 전환해.
 승인해. 범위는 방금 설명한 내용까지만.
 detached verify 시작해.
-manual QA가 필요한지 판단해줘.
+Manual QA가 필요한지 판단해줘.
 수용해. 이 작업 닫아.
 ```
 
@@ -140,13 +140,13 @@ detached verify 시작해.
 Manual QA는 UX, workflow, copy, accessibility, visual result처럼 사람이 봐야 하는 품질을 확인하는 절차다.
 
 ```text
-manual QA가 필요한지 판단해줘.
+Manual QA가 필요한지 판단해줘.
 ```
 
 QA가 실패하면 작업은 닫지 않고 rework나 block으로 돌아간다. QA를 생략하려면 이유를 남긴 waiver가 필요하다.
 
 ```text
-이번 내부 CLI 작업은 manual QA waived 처리해. 이유: 사용자 UI가 없고 test/log로 충분히 확인 가능.
+이번 내부 CLI 작업은 Manual QA waived 처리해. 이유: 사용자 UI가 없고 test/log로 충분히 확인 가능.
 ```
 
 ## Acceptance

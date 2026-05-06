@@ -54,7 +54,7 @@ The harness responds by separating self-checks from detached verification and by
 
 ### Human Judgment Failure
 
-Approval, technical assurance, manual QA, and acceptance collapse into one vague "looks good." The user cannot tell which question has been answered.
+Approval, technical assurance, Manual QA, and acceptance collapse into one vague "looks good." The user cannot tell which question has been answered.
 
 The harness responds by separating those judgments:
 
@@ -120,7 +120,7 @@ The human owns:
 - scope confirmation
 - sensitive-change approval
 - product trade-off decisions
-- manual QA results where human inspection is required
+- Manual QA results where human inspection is required
 - final acceptance or rejection
 
 The agent owns:
@@ -180,20 +180,18 @@ MVP includes:
 - artifact registry and artifact store
 - public MCP tool surface
 - `prepare_write` gatekeeping
-- approval, evidence, verification, manual QA, and acceptance gate enforcement
-- required MVP report projections for Task status, approval, runs, evidence, eval, and direct results
+- approval, evidence, verification, Manual QA, and acceptance gate enforcement
+- required MVP report projections for Task status, approval, runs, evidence, Eval, and direct results
 - detached verification bundle or manual evaluator instruction bundle
 - basic doctor, recover, reconcile, export, and conformance smoke paths
 
 MVP does not include:
 
-- all agent surface connectors
-- dashboard
-- browser QA automatic capture
-- cross-surface orchestration
-- native hook coverage for every surface
+- broad connector coverage beyond the reference surface
+- UI control plane and automatic capture features
+- native hook expansion beyond the reference surface
 - fully automatic parallel execution
 - long-term analytics
 - team workflow management
 
-Later automation can strengthen the guarantee level, but it must not weaken the core invariant model.
+These later automation items are owned by [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md). Later automation can strengthen the guarantee level, but it must not weaken the core invariant model.

@@ -140,7 +140,7 @@ An artifact has two parts:
 - the raw file in the artifact store
 - the artifact state record in `state.sqlite` that names its kind, path, hash, size, redaction state, task/run relation, and retention class
 
-Core records artifact refs in runs, evidence manifests, evals, manual QA records, projection reports, and exports. Large logs and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
+Core records artifact refs in runs, evidence manifests, Eval records, Manual QA records, projection reports, and exports. Large logs and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
 
 Raw secrets should not be stored as artifacts. If secret-related evidence is required, Core records a redacted artifact, a secret handle, or an operator note that passed the relevant validator.
 
@@ -154,7 +154,7 @@ The boundary is:
 | State record | Canonical structured record in `state.sqlite` | Task, Change Unit, Run, Approval, Eval, Manual QA record, Evidence Manifest, Artifact record |
 | Markdown report | Human-readable projection from records and artifact refs | TASK, APR, RUN-SUMMARY, EVAL, DIRECT-RESULT, EVIDENCE-MANIFEST |
 
-RUN-SUMMARY, EVAL, TDD-TRACE, MANUAL-QA, EVIDENCE-MANIFEST, and DIRECT-RESULT are projections or state-backed records, not raw artifacts by default. They may refer to raw artifacts, and an export may include snapshots of them, but that does not make the Markdown report the canonical evidence file.
+These named report kinds are projections or state-backed records by default. They may refer to evidence files in the artifact store, and an export may include snapshots of them, but that does not make the Markdown report the canonical evidence file.
 
 ## Projection And Reconcile Flow
 

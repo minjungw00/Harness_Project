@@ -25,7 +25,7 @@ MVP includes:
 - detached verification bundle or manual evaluator instruction bundle
 - doctor, recover, reconcile, export, and conformance smoke entrypoints
 
-MVP excludes dashboard, browser QA capture, cross-surface verification, native hook expansion, advanced sidecar watching, parallel orchestration, long-term analytics, and team profile export/import. Those items live in `appendix/C-later-roadmap.md`.
+MVP excludes the later automation cataloged in `appendix/C-later-roadmap.md`, including broader surface expansion, richer capture automation, advanced orchestration, analytics, and team profile export/import.
 
 ## Implementation Sequence
 

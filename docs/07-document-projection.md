@@ -59,7 +59,7 @@ The boundary is deliberately strict:
 | State record | Canonical structured record such as Task, Run, Approval, Eval, Manual QA record, Evidence Manifest, Artifact record, or Reconcile Item | `state.sqlite` |
 | Markdown report | Human-readable projection from records and artifact refs | projector output |
 
-`RUN-SUMMARY`, `EVAL`, `TDD-TRACE`, `MANUAL-QA`, `EVIDENCE-MANIFEST`, and `DIRECT-RESULT` are projections or state-backed records, not raw artifacts by default. They can link to raw artifacts, and an export can include snapshots of them, but that does not make the Markdown report canonical evidence.
+These report kinds are projections or state-backed records by default. They can link to evidence files in the artifact store, and an export can include snapshots of them, but that does not make the Markdown report canonical evidence.
 
 ## Managed Blocks
 
@@ -160,7 +160,7 @@ Boundary: raw logs and diffs stay as artifacts; the report links to them.
 
 Purpose: a readable map from acceptance criteria and completion conditions to supporting evidence.
 
-Sources: evidence manifest record, acceptance criteria, changed file coverage, design-quality coverage, approval refs, artifact refs, related run/eval/manual QA/TDD trace refs.
+Sources: evidence manifest record, acceptance criteria, changed file coverage, design-quality coverage, approval refs, artifact refs, related Run, Eval, Manual QA, and TDD trace refs.
 
 Boundary: where evidence is required, close depends on the canonical `evidence_gate`, not the report text alone.
 
@@ -235,7 +235,7 @@ Projection freshness is computed from state versions, projection job state, mana
 | `APR` | approval request or decision changes | approval status, scope, baseline, expiry, or decision note changes |
 | `RUN-SUMMARY` | run completes or is interrupted | run relation changes, artifact ref missing, artifact integrity fails |
 | `EVIDENCE-MANIFEST` | evidence coverage changes | baseline drift, changed files modified, required evidence missing/stale, approval expired |
-| `EVAL` | verification result recorded | baseline changes after eval, evidence becomes stale, independence relation invalidated |
+| `EVAL` | verification result recorded | baseline changes after Eval, evidence becomes stale, independence relation invalidated |
 | `DIRECT-RESULT` | direct run closes or escalates | changed file drift, escalation state changes, artifact ref missing |
 | `DOMAIN-LANGUAGE` | domain terms change | term conflict, accepted term record changes, related code representation moves |
 | `MODULE-MAP` | module map records change | module path, public interface, dependency direction, or test boundary changes |

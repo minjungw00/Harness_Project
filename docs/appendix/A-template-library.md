@@ -947,8 +947,8 @@ updated_at: 2026-05-06T10:30:00+09:00
 - runs:
 - approvals:
 - evidence manifests:
-- evals:
-- manual QA records:
+- Eval records:
+- Manual QA records:
 - reconcile items:
 
 ## Projection Snapshots
@@ -1078,4 +1078,4 @@ Record the QA result?
 - `DOMAIN-LANGUAGE`, `MODULE-MAP`, and `INTERFACE-CONTRACT` are projections from canonical records, not canonical documents.
 - `MANUAL-QA` is a record projection. The close-relevant gate remains `qa_gate`.
 - `EVAL` must show independence context because a passed verdict alone does not produce `detached_verified`.
-- `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, and `DIRECT-RESULT` link raw artifacts rather than embedding large evidence.
+- `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, and `DIRECT-RESULT` link evidence files by artifact ref rather than embedding large evidence.

@@ -242,13 +242,13 @@ The canonical candidate record created from human-editable input or projection d
 
 ### Reference Surface
 
-The single agent surface targeted by the MVP implementation. It demonstrates the kernel and connector contract without implying that all surfaces are supported in MVP.
+The single agent surface targeted by the MVP implementation. It demonstrates the kernel and connector contract without implying broad MVP surface support.
 
 ### Report Projection
 
 A Markdown report generated from state records and artifact references, such as a Task report, approval report, run summary, evidence manifest report, Eval report, or direct-result report.
 
-RUN-SUMMARY, EVAL, TDD-TRACE, MANUAL-QA, EVIDENCE-MANIFEST, and DIRECT-RESULT are projections or records, not raw artifacts by default.
+The named report projection kinds are projections or records by default; evidence-file authority stays with registered artifact files.
 
 ### Run
 

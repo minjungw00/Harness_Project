@@ -64,7 +64,7 @@ Use these labels consistently:
 Rules:
 
 - Main docs may mention later work only as non-MVP context and should point to `appendix/C-later-roadmap.md`.
-- Do not put dashboard, browser QA automatic capture, cross-surface verification, native hook expansion for every surface, advanced sidecar watching, parallel orchestration, long-term analytics, or team workflow into MVP requirements.
+- Do not put Appendix C later-automation items or team workflow expansion into MVP requirements.
 - If a later item becomes v1, add conformance expectations and an owner before changing main docs.
 - Derived metrics are analytics unless explicitly promoted as MVP-critical conformance signals.
 

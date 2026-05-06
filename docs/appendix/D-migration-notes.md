@@ -8,7 +8,7 @@ It is migration context only. It does not own canonical runtime contracts, kerne
 
 ## Migration Scope
 
-The active canonical docs are the v2 target files under `docs/` and `docs/appendix/`.
+The active canonical docs are the v2 target files under `docs/` plus appendices A-C. This appendix is migration context, not an active canonical owner.
 
 Legacy v1 files and rewrite manifests are source material for migration history only. After Batch H, replaced legacy files are no longer retained as active-tree Markdown documents; the old-to-new mapping in this appendix is the visible compatibility record.
 
