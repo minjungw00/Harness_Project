@@ -1,0 +1,128 @@
+# Harness Documentation Set
+
+Harness is a local kernel for running AI-assisted development work through explicit state, scope, evidence, verification, and human judgment.
+
+This file is `docs/README.md`, the entry point for the harness documentation set. The repository root `README.md` is the repository landing page.
+
+## Core Invariants
+
+The approved seven kernel invariants are owned by [02-strategy.md](02-strategy.md#core-invariants). They are distinct from design-quality policy defaults.
+
+## Reader Paths
+
+General users:
+
+```text
+00-introduction.md
+-> 10-user-guide.md
+```
+
+Implementers:
+
+```text
+00-introduction.md
+-> 02-strategy.md
+-> 03-kernel-spec.md
+-> 04-runtime-architecture.md
+-> 05-mcp-api-and-schemas.md
+-> 06-reference-mvp.md
+-> 11-operations-and-conformance.md
+```
+
+Connector authors:
+
+```text
+09-agent-integration.md
+-> appendix/B-surface-cookbook.md
+-> 11-operations-and-conformance.md
+```
+
+Projection maintainers:
+
+```text
+07-document-projection.md
+-> appendix/A-template-library.md
+-> 11-operations-and-conformance.md
+```
+
+Design-quality owners:
+
+```text
+02-strategy.md
+-> 08-design-quality-policy-pack.md
+-> 11-operations-and-conformance.md
+```
+
+Documentation authors:
+
+```text
+99-authoring-guide.md
+-> glossary.md
+```
+
+## MVP / v1 / Later
+
+MVP is a small local operating kernel that validates the core invariants, not a platform that supports many agent surfaces at once.
+
+MVP focuses on one reference surface, local state, artifacts, public MCP tools, write gating, evidence, verification, Manual QA, acceptance, projections, reconcile, recovery, export, and fixture-based conformance.
+
+Later automation is cataloged in [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md) and must not read as part of MVP scope.
+
+## Target Tree
+
+```text
+docs/
+  README.md
+  00-introduction.md
+  01-project-charter.md
+  02-strategy.md
+  03-kernel-spec.md
+  04-runtime-architecture.md
+  05-mcp-api-and-schemas.md
+  06-reference-mvp.md
+  07-document-projection.md
+  08-design-quality-policy-pack.md
+  09-agent-integration.md
+  10-user-guide.md
+  11-operations-and-conformance.md
+  99-authoring-guide.md
+  glossary.md
+
+  appendix/
+    A-template-library.md
+    B-surface-cookbook.md
+    C-later-roadmap.md
+    D-migration-notes.md
+```
+
+## Main Documents
+
+| Document | Owner role |
+|---|---|
+| [00-introduction.md](00-introduction.md) | shared mental model for users and implementers |
+| [01-project-charter.md](01-project-charter.md) | project purpose, audience, values, scope, and non-goals |
+| [02-strategy.md](02-strategy.md) | strategic thesis, failure model, core invariants, policy defaults |
+| [03-kernel-spec.md](03-kernel-spec.md) | operating kernel, entities, lifecycle, gates, transitions, close semantics |
+| [04-runtime-architecture.md](04-runtime-architecture.md) | three spaces, runtime home, Core, artifact, projection/reconcile architecture |
+| [05-mcp-api-and-schemas.md](05-mcp-api-and-schemas.md) | MCP resources/tools, schemas, errors, validators, artifact refs |
+| [06-reference-mvp.md](06-reference-mvp.md) | MVP implementation sequence, DDL, storage layout, validator skeleton |
+| [07-document-projection.md](07-document-projection.md) | Markdown projection, managed/human-editable areas, template tiers |
+| [08-design-quality-policy-pack.md](08-design-quality-policy-pack.md) | design-quality policies as policy contracts |
+| [09-agent-integration.md](09-agent-integration.md) | agent surface integration and capability profile |
+| [10-user-guide.md](10-user-guide.md) | user conversation phrases, status reading, judgments, resume |
+| [11-operations-and-conformance.md](11-operations-and-conformance.md) | operator procedures and fixture-based conformance |
+| [99-authoring-guide.md](99-authoring-guide.md) | document ownership and authoring rules |
+| [glossary.md](glossary.md) | official terms |
+
+## Appendices
+
+| Document | Owner role |
+|---|---|
+| [appendix/A-template-library.md](appendix/A-template-library.md) | full template library and expanded report variants |
+| [appendix/B-surface-cookbook.md](appendix/B-surface-cookbook.md) | surface-specific connector notes and profile examples |
+| [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md) | later automation and post-MVP roadmap |
+| [appendix/D-migration-notes.md](appendix/D-migration-notes.md) | migration context only; not an active canonical owner |
+
+## Rewrite Control
+
+`docs/rewrite-control/` is the coordination area for this rewrite. It records decisions and review checklists, but it is not runtime product documentation. Migration history and legacy mapping are summarized in [appendix/D-migration-notes.md](appendix/D-migration-notes.md).
