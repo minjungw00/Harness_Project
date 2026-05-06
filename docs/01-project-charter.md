@@ -23,7 +23,7 @@
 
 ### Purpose
 
-TODO_REWRITE: Migrate and tighten project purpose from `docs/legacy-v1/01-project-charter.md`.
+TODO_REWRITE: Migrate and tighten project purpose from the v2 migration notes.
 
 ### Target Users
 
@@ -44,4 +44,3 @@ TODO_REWRITE: Migrate current non-goals without mixing in later roadmap items.
 ### Automation Philosophy
 
 TODO_REWRITE: Migrate automation philosophy without duplicating implementation contracts.
-

@@ -10,7 +10,7 @@ It is migration context only. It does not own canonical runtime contracts, kerne
 
 The active canonical docs are the v2 target files under `docs/` and `docs/appendix/`.
 
-Archived v1 files and rewrite manifests are source material for migration. They are not active canonical documentation, even when retained in the repository for traceability.
+Legacy v1 files and rewrite manifests are source material for migration history only. After Batch H, replaced legacy files are no longer retained as active-tree Markdown documents; the old-to-new mapping in this appendix is the visible compatibility record.
 
 `REWRITE-MANIFEST.md` is migration input. It records earlier simplification goals and confirms preservation themes such as three spaces, source-of-truth/projection separation, public MCP surface reduction, SQLite-centered runtime, MVP/later separation, four judgment separation, detached verification, and design-quality principles. It does not override the v2 owner docs.
 
@@ -32,6 +32,23 @@ Archived v1 files and rewrite manifests are source material for migration. They 
 | `docs/legacy-v1/99-authoring-guide.md` | `docs/99-authoring-guide.md` |
 | `docs/legacy-v1/glossary.md` | `docs/glossary.md` |
 | `docs/legacy-v1/REWRITE-MANIFEST.md` | `docs/appendix/D-migration-notes.md` |
+
+## Legacy Path Cleanup Status
+
+Batch H removes replaced legacy documents from the active tree instead of keeping migration stubs. These paths are not canonical docs; use the v2 destination listed here.
+
+| Removed legacy path | v2 destination |
+|---|---|
+| `docs/00-overview.md` | `docs/00-introduction.md` |
+| `docs/03-architecture.md` | `docs/04-runtime-architecture.md` |
+| `docs/04-reference-implementation.md` | `docs/03-kernel-spec.md`, `docs/05-mcp-api-and-schemas.md`, `docs/06-reference-mvp.md`, `docs/appendix/C-later-roadmap.md` |
+| `docs/05-user-guide.md` | `docs/10-user-guide.md` |
+| `docs/06-agent-integration.md` | `docs/09-agent-integration.md`, `docs/appendix/B-surface-cookbook.md` |
+| `docs/07-document-and-artifact-contracts.md` | `docs/07-document-projection.md`, `docs/appendix/A-template-library.md` |
+| `docs/08-operations-and-conformance.md` | `docs/11-operations-and-conformance.md`, `docs/appendix/C-later-roadmap.md` |
+| `docs/09-design-quality-playbooks.md` | `docs/08-design-quality-policy-pack.md` |
+
+The archived `docs/legacy-v1/` copies of these files, plus the old charter, strategy, authoring guide, glossary, README, and rewrite manifest, were also removed from the active tree. Their compatibility mapping remains in `docs/appendix/D-migration-notes.md`.
 
 ## Major Removed Or Renamed Sections
 

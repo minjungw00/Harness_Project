@@ -24,7 +24,7 @@
 
 ### Why Harness Exists
 
-TODO_REWRITE: Migrate and rewrite introductory problem framing from `docs/legacy-v1/00-overview.md` and the relevant summary material in `docs/README.md`.
+TODO_REWRITE: Rewrite introductory problem framing from the v2 migration notes and the relevant summary material in `docs/README.md`.
 
 ### The Three Spaces
 
