@@ -1,30 +1,30 @@
-# Agent Integration
+# Agent 통합
 
-## Document Role
+## 문서 역할
 
-This document owns the common integration contract for connecting an agent surface to the harness. It defines capability tiers, capability profiles, generated manifest expectations, context push/pull principles, fallback semantics, the reference surface contract, and connector conformance overview.
+이 문서는 agent surface를 하네스에 연결하기 위한 common integration contract를 담당한다. Capability tier, capability profile, generated manifest expectation, context push/pull principle, fallback semantic, reference surface contract, connector conformance overview를 정의한다.
 
-The main body is product-name-neutral. Surface-specific recipes live in [Appendix B](appendix/B-surface-cookbook.md).
+본문은 product-name-neutral하다. Surface-specific recipe는 [Appendix B](appendix/B-surface-cookbook.md)에 있다.
 
-This document does not define kernel state transitions, MCP request/response schemas, SQLite DDL, a capability gate, operational fixture details, or surface-specific cookbooks.
+이 문서는 kernel state transition, MCP request/response schema, SQLite DDL, capability gate, operational fixture detail, surface-specific cookbook을 정의하지 않는다.
 
-## Integration Goal
+## 통합 목표
 
-The integration goal is that a user can talk naturally with an agent while the harness supplies bounded work, state recording, evidence, verification, Manual QA, acceptance, projection, and reconcile flow behind the scenes.
+Integration goal은 사용자가 agent와 자연스럽게 대화하는 동안 하네스가 bounded work, state recording, evidence, verification, Manual QA, acceptance, projection, reconcile flow를 뒤에서 제공하는 것이다.
 
-An integrated surface should help the agent:
+Integrated surface는 agent가 다음을 하도록 도와야 한다.
 
-- start with status or intake
-- classify advisor, direct, or work mode
-- shape work into scoped Change Units
-- check design-quality policies when they apply
-- call MCP tools for state changes
-- respect `prepare_write` before product writes
-- record runs, artifacts, evidence, decisions, QA, and acceptance
-- launch or package detached verification
-- refresh or reconcile projections
+- status 또는 intake로 시작
+- advisor, direct, work mode classify
+- work를 scoped Change Unit으로 shaping
+- design-quality policy가 적용될 때 check
+- state change를 위해 MCP tool call
+- product write 전에 `prepare_write` 존중
+- run, artifact, evidence, decision, QA, acceptance 기록
+- detached verification launch 또는 package
+- projection refresh 또는 reconcile
 
-## Common Integration Structure
+## 공통 통합 구조
 
 ```text
 user conversation surface
@@ -37,32 +37,32 @@ user conversation surface
 
 ### Always-On Rules
 
-Always-on rules should be short. They should tell the agent when to use the harness, where to read status, and that product writes require `prepare_write`.
+Always-on rule은 짧아야 한다. Agent에게 언제 harness를 사용하는지, status를 어디서 읽는지, product write에는 `prepare_write`가 필요하다는 점을 알려야 한다.
 
-They should not contain full state transition tables, MCP schemas, full templates, long design playbooks, or all historical project context.
+Full state transition table, MCP schema, full template, long design playbook, 모든 historical project context를 포함해서는 안 된다.
 
 ### Skill Or Playbook Layer
 
-The skill/playbook layer teaches procedure:
+Skill/playbook layer는 procedure를 가르친다.
 
-- when to call status, intake, and next
-- how to classify advisor/direct/work
-- how to ask shaping questions
-- how to form a Change Unit
-- how to request approval
-- how to record TDD trace, evidence, Manual QA, and acceptance
-- why work verification must be detached
-- how to handle stale projection and reconcile
+- status, intake, next를 언제 call할지
+- advisor/direct/work를 classify하는 법
+- shaping question을 묻는 법
+- Change Unit을 form하는 법
+- approval을 request하는 법
+- TDD trace, evidence, Manual QA, acceptance를 record하는 법
+- work verification이 detached되어야 하는 이유
+- stale projection과 reconcile을 처리하는 법
 
-Core and validators enforce policy. The skill is guidance, not authority.
+Core와 validator가 policy를 enforce한다. Skill은 guidance이지 authority가 아니다.
 
 ### MCP Layer
 
-MCP is the preferred state boundary. Public tool names and schemas are owned by the MCP API document. Integration docs may reference tool intent, but connectors must use the schemas from `05-mcp-api-and-schemas.md`.
+MCP는 preferred state boundary다. Public tool name과 schema는 MCP API document가 담당한다. Integration doc은 tool intent를 reference할 수 있지만, connector는 `05-mcp-api-and-schemas.md`의 schema를 사용해야 한다.
 
 ### Adapter, Hook, Sidecar, Validator, Isolation
 
-Adapters and sidecars translate surface behavior into observable facts or stronger enforcement:
+Adapter와 sidecar는 surface behavior를 observable fact 또는 stronger enforcement로 변환한다.
 
 - artifact capture
 - command output capture
@@ -74,25 +74,25 @@ Adapters and sidecars translate surface behavior into observable facts or strong
 - evaluator read-only or fresh-context support
 - Manual QA capture support
 
-These layers can improve guarantee level, but they do not create a kernel capability gate.
+이 layer는 guarantee level을 improve할 수 있지만 kernel capability gate를 만들지는 않는다.
 
-## Capability Tiers
+## Capability Tier
 
 | Tier | Meaning | Typical capability |
 |---|---|---|
-| `T0 Context` | Surface can read harness principles | rules/context file |
-| `T1 Skill` | Surface can follow a harness procedure | skill, command, prompt, playbook |
-| `T2 MCP` | Surface can call harness tools and resources | MCP server connection |
-| `T3 Capture` | Surface can return diffs, logs, and run output reliably | structured output, wrapper, adapter |
-| `T4 Guard` | Surface can block or interrupt out-of-scope files, commands, network, or secrets before execution | hook, permission system, policy engine, sidecar |
-| `T5 Isolation` | Surface can run verification or risky work in a separate boundary | worktree, sandbox, fresh process, isolated runner |
-| `T6 QA Capture` | Surface can structure browser, screenshot, walkthrough, or Manual QA artifacts | browser runner, screenshot capture, QA note capture |
+| `T0 Context` | Surface가 harness principle을 read할 수 있음 | rules/context file |
+| `T1 Skill` | Surface가 harness procedure를 follow할 수 있음 | skill, command, prompt, playbook |
+| `T2 MCP` | Surface가 harness tool과 resource를 call할 수 있음 | MCP server connection |
+| `T3 Capture` | Surface가 diff, log, run output을 reliably return할 수 있음 | structured output, wrapper, adapter |
+| `T4 Guard` | Surface가 execution 전에 out-of-scope file, command, network, secret을 block 또는 interrupt할 수 있음 | hook, permission system, policy engine, sidecar |
+| `T5 Isolation` | Surface가 verification 또는 risky work를 별도 boundary에서 run할 수 있음 | worktree, sandbox, fresh process, isolated runner |
+| `T6 QA Capture` | Surface가 browser, screenshot, walkthrough, Manual QA artifact를 structure할 수 있음 | browser runner, screenshot capture, QA note capture |
 
-Normal interactive harness use is most natural at `T2` or higher. Reliable detached verification usually needs `T3` capture plus a real independence boundary. High-risk work should use `T4` guard or `T5` isolation when available. `T6` improves UI/UX evidence but is not required for MVP when a human QA note can be recorded.
+일반 interactive harness use는 `T2` 이상에서 가장 자연스럽다. Reliable detached verification에는 보통 `T3` capture와 real independence boundary가 필요하다. High-risk work는 가능하면 `T4` guard 또는 `T5` isolation을 사용해야 한다. `T6`는 UI/UX evidence를 개선하지만, human QA note를 기록할 수 있다면 MVP에 required는 아니다.
 
 ## Capability Profile
 
-Harness connectors must use a capability profile rather than assuming behavior from a product or surface name.
+Harness connector는 product 또는 surface name에서 behavior를 가정하지 않고 capability profile을 사용해야 한다.
 
 ```yaml
 surface_id: SURF-0001
@@ -127,7 +127,7 @@ fallbacks:
   - manual verification bundle
 ```
 
-Target profile values may include:
+Target profile value 예시:
 
 - `local_cli`
 - `ide_chat`
@@ -137,102 +137,102 @@ Target profile values may include:
 - `custom_agent`
 - `manual_bundle`
 
-Capability profiles must be refreshed when version, MCP config, hooks, permissions, workspace policy, generated files, conformance result, capture method, or QA capture method changes.
+Capability profile은 version, MCP config, hook, permission, workspace policy, generated file, conformance result, capture method, QA capture method가 바뀌면 refresh해야 한다.
 
-## Guarantee Levels
+## Guarantee Level
 
-Integration must report enforcement strength honestly:
+Integration은 enforcement strength를 정직하게 report해야 한다.
 
 | Level | Integration meaning |
 |---|---|
-| `cooperative` | The surface is expected to follow harness instructions and MCP results. |
-| `detective` | The harness can observe violations after the fact and mark state blocked, stale, partial, or failed. |
-| `preventive` | The connector or runtime can block a violating action before execution. |
-| `isolated` | Risky work is separated by a worktree, sandbox, process boundary, or equivalent. |
+| `cooperative` | Surface가 harness instruction과 MCP result를 따를 것으로 기대된다. |
+| `detective` | 하네스가 사후 violation을 observe하고 state를 blocked, stale, partial, failed로 mark할 수 있다. |
+| `preventive` | Connector 또는 runtime이 violating action을 execution 전에 block할 수 있다. |
+| `isolated` | Risky work가 worktree, sandbox, process boundary 또는 동등한 수단으로 분리된다. |
 
-Guarantee level is risk context and display. It is not approval, verification, acceptance, or a kernel gate.
+Guarantee level은 risk context와 display다. Approval, verification, acceptance, kernel gate가 아니다.
 
 ## Generated Manifest Concept
 
-Connectors may generate rules, skills, MCP config snippets, prompts, or local adapter files. Every generated or managed path must be recorded in a connector manifest.
+Connector는 rule, skill, MCP config snippet, prompt, local adapter file을 generate할 수 있다. 모든 generated 또는 managed path는 connector manifest에 기록해야 한다.
 
-Manifest responsibilities:
+Manifest responsibility:
 
-- name generated paths
-- record managed block hashes
-- record capability profile used when generated
-- record surface target profile
-- record creation and update times
-- detect drift before overwriting human edits
-- route drift to reconcile when needed
+- generated path naming
+- managed block hash 기록
+- generated 시 사용한 capability profile 기록
+- surface target profile 기록
+- creation/update time 기록
+- human edit를 overwrite하기 전에 drift detect
+- 필요할 때 drift를 reconcile로 route
 
-The manifest concept is common. Surface-specific generated filenames belong in Appendix B.
+Manifest concept는 common하다. Surface-specific generated filename은 Appendix B에 둔다.
 
-## Push And Pull Context
+## Push/Pull Context
 
-Implementation agents should receive small current context and pull larger references only when needed.
+Implementation agent는 작은 current context를 받고, 큰 reference는 필요할 때만 pull해야 한다.
 
-Usually push:
+보통 push:
 
 - active Task status
 - next action
 - active Change Unit scope
 - acceptance criteria snapshot
-- allowed paths and tools
-- approval status when relevant
-- latest evidence manifest and run summary refs
-- relevant policy warnings
+- allowed path와 tool
+- relevant할 때 approval status
+- latest evidence manifest와 run summary ref
+- relevant policy warning
 
-Usually pull:
+보통 pull:
 
-- coding standards
+- coding standard
 - domain language
 - module map
-- interface contracts
+- interface contract
 - TDD guidance
-- architecture playbooks
-- old PRDs, old designs, closed issues
-- raw logs and large diffs
+- architecture playbook
+- old PRD, old design, closed issue
+- raw log와 large diff
 
-Evaluators should receive a tighter verification bundle that includes acceptance criteria, changed files, approval scope, relevant domain/module/interface records, evidence manifest, TDD trace if required, Manual QA requirement, artifact refs, and forbidden patterns.
+Evaluator는 acceptance criteria, changed file, approval scope, relevant domain/module/interface record, evidence manifest, required인 경우 TDD trace, Manual QA requirement, artifact ref, forbidden pattern을 포함한 더 tight한 verification bundle을 받아야 한다.
 
-This context model supports the Context Hygiene policy: current state and evidence are preferred over stale chat or old docs.
+이 context model은 Context Hygiene policy를 지원한다. Current state와 evidence는 stale chat이나 old doc보다 우선된다.
 
 ## Fallback Semantics
 
-Fallbacks are described by guarantee level and risk, not by surface name.
+Fallback은 surface name이 아니라 guarantee level과 risk로 설명한다.
 
 ### Cooperative Fallback
 
-Use when the surface can follow instructions but cannot enforce them. The connector tells the agent to call `prepare_write`, hold on blocked decisions, and record runs. Product writes must be paused if MCP is unavailable or the write scope cannot be checked.
+Surface가 instruction을 따를 수 있지만 enforce할 수 없을 때 사용한다. Connector는 agent에게 `prepare_write`를 call하고, blocked decision에서는 hold하고, run을 record하라고 알려준다. MCP가 unavailable이거나 write scope를 check할 수 없으면 product write를 pause해야 한다.
 
 ### Detective Fallback
 
-Use when the harness can observe changed files, logs, projection drift, or artifact gaps after the action. Validators may mark state stale, partial, blocked, or failed and require repair, reconcile, or fresh verification.
+Harness가 action 후 changed file, log, projection drift, artifact gap을 observe할 수 있을 때 사용한다. Validator는 state를 stale, partial, blocked, failed로 mark하고 repair, reconcile, fresh verification을 요구할 수 있다.
 
 ### Preventive Fallback
 
-Use when a hook, permission layer, wrapper, policy engine, or sidecar can block a violating edit, command, network call, or secret access before it happens.
+Hook, permission layer, wrapper, policy engine, sidecar가 violating edit, command, network call, secret access를 발생 전에 block할 수 있을 때 사용한다.
 
 ### Isolated Fallback
 
-Use when risk requires separation. The connector launches work or verification in a separate worktree, sandbox, process, or manual evaluator bundle. This is the preferred fallback for detached verification when same-session review would not qualify.
+Risk에 separation이 필요할 때 사용한다. Connector는 별도 worktree, sandbox, process, manual evaluator bundle에서 work 또는 verification을 launch한다. Same-session review가 qualify하지 않는 detached verification에는 이것이 preferred fallback이다.
 
 ### MCP Unavailable
 
-If MCP is unavailable, the connector must not claim authoritative state updates. For product writes, the safe behavior is to hold the write and direct the user/operator to reconnect or diagnose MCP. Stronger profiles may also enforce a preventive block.
+MCP가 unavailable이면 connector는 authoritative state update를 claim하면 안 된다. Product write의 safe behavior는 write를 hold하고 user/operator에게 MCP reconnect 또는 diagnose를 안내하는 것이다. Stronger profile은 preventive block도 enforce할 수 있다.
 
 ### Weak Guard
 
-If MCP works but pre-tool guard is weak, low-risk direct work may proceed with cooperative `prepare_write` and detective changed-path validation. Medium/high-risk work should require stricter validation, sidecar guard, explicit approval, detached verification, or isolation.
+MCP는 동작하지만 pre-tool guard가 weak하면 low-risk direct work는 cooperative `prepare_write`와 detective changed-path validation으로 진행할 수 있다. Medium/high-risk work에는 stricter validation, sidecar guard, explicit approval, detached verification, isolation이 필요해야 한다.
 
 ### Projection Stale
 
-Projection staleness is reported separately from state. A connector may continue from canonical state if it can read state directly, but actions that depend on the Markdown projection should refresh or reconcile first.
+Projection staleness는 state와 별도로 report된다. Connector가 canonical state를 직접 read할 수 있다면 계속 진행할 수 있지만, Markdown projection에 의존하는 action은 먼저 refresh 또는 reconcile해야 한다.
 
 ### Capability Insufficient
 
-The connector should name the missing capability, not the product name. Example:
+Connector는 product name이 아니라 missing capability를 말해야 한다. 예:
 
 ```text
 The connected profile does not provide pre-tool guard. This work needs sidecar guard, another profile, or a smaller approved Change Unit.
@@ -240,42 +240,42 @@ The connected profile does not provide pre-tool guard. This work needs sidecar g
 
 ## Reference Surface Contract
 
-The MVP targets one reference surface. The reference surface should demonstrate the kernel rather than broad ecosystem support.
+MVP는 하나의 reference surface를 target한다. Reference surface는 broad ecosystem support가 아니라 kernel을 demonstrate해야 한다.
 
-Minimum reference expectations:
+Minimum reference expectation:
 
-- `T2 MCP` available for public tools and resources
-- cooperative `prepare_write` before product writes
-- detective changed-path and artifact validation after runs
-- run summary and artifact capture sufficient for evidence manifests
-- manual verification bundle or fresh evaluator instructions
+- public tool과 resource를 위한 `T2 MCP` available
+- product write 전 cooperative `prepare_write`
+- run 후 detective changed-path와 artifact validation
+- evidence manifest에 충분한 run summary와 artifact capture
+- manual verification bundle 또는 fresh evaluator instruction
 - Manual QA note artifact support
-- connector manifest for generated files
-- conformance smoke covering common state and fallback paths
+- generated file을 위한 connector manifest
+- common state와 fallback path를 cover하는 conformance smoke
 
-Reference surface behavior details and product-specific setup belong in Appendix B only when they name a concrete surface.
+Reference surface behavior detail과 product-specific setup은 concrete surface를 name할 때만 Appendix B에 둔다.
 
 ## Connector Conformance Overview
 
-Connector conformance should prove that a profile can uphold the common contract at its declared capability tier.
+Connector conformance는 profile이 declared capability tier에서 common contract를 uphold할 수 있음을 prove해야 한다.
 
-Overview scenarios:
+Overview scenario:
 
-- status with and without an active Task
-- intake classification into advisor/direct/work
-- work shaping with shared design and decisions
-- Change Unit scope and vertical/horizontal exception handling
-- `prepare_write` allowed and blocked paths
-- sensitive approval request, granted, denied, and expired paths
-- `record_run` with artifacts and evidence update
+- active Task 유무에 따른 status
+- advisor/direct/work로 intake classification
+- shared design과 decision을 포함한 work shaping
+- Change Unit scope와 vertical/horizontal exception handling
+- `prepare_write` allowed 및 blocked path
+- sensitive approval request, granted, denied, expired path
+- artifact와 evidence update가 있는 `record_run`
 - direct result projection
-- verification launch or manual verification bundle
+- verification launch 또는 manual verification bundle
 - same-session verification guard
-- Manual QA required, passed, failed, and waived
-- acceptance required and recorded
-- stale projection and reconcile flow
+- Manual QA required, passed, failed, waived
+- acceptance required 및 recorded
+- stale projection과 reconcile flow
 - generated file drift detection
-- capability fallback when a required tier is missing
+- required tier가 missing일 때 capability fallback
 - MCP unavailable product-write hold
 
-Exact fixture format and operational commands are owned by operations and conformance docs.
+정확한 fixture format과 operational command는 operations/conformance doc이 담당한다.

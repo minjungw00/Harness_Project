@@ -1,16 +1,16 @@
-# Operations And Conformance
+# 운영과 Conformance
 
-## Document Role
+## 문서 역할
 
-This document owns operator procedures and fixture-based conformance for the harness: connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, and conformance suites.
+이 문서는 하네스의 operator procedure와 fixture-based conformance를 담당한다. Connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, conformance suite를 포함한다.
 
-It does not own daily user workflow, MCP request/response schemas, SQLite DDL, or long-term analytics as MVP requirements.
+Daily user workflow, MCP request/response schema, SQLite DDL, long-term analytics를 MVP requirement로 다루는 것은 담당하지 않는다.
 
 ## Operations Scope
 
-Every operator entrypoint is a surface over the same Core rules used by the agent. Operator tools may diagnose, repair, export, or run fixtures, but they must not create a second state model.
+모든 operator entrypoint는 agent가 사용하는 같은 Core rule 위의 surface다. Operator tool은 diagnose, repair, export, fixture 실행을 할 수 있지만, 두 번째 state model을 만들면 안 된다.
 
-Required MVP operator entrypoints:
+Required MVP operator entrypoint:
 
 ```text
 harness connect
@@ -24,30 +24,30 @@ harness artifacts check
 harness conformance run
 ```
 
-Exact command flags may vary by implementation, but the semantics below are required for the reference MVP.
+정확한 command flag는 구현마다 달라질 수 있지만, reference MVP에는 아래 semantics가 필요하다.
 
 ## Connect
 
-`connect` links a Product Repository, Harness Runtime Home, and one reference agent surface.
+`connect`는 Product Repository, Harness Runtime Home, 하나의 reference agent surface를 연결한다.
 
 Required behavior:
 
-- identify the repository root
-- register or reuse the local project
-- create or validate static project configuration
-- initialize per-project state and artifact storage
-- register the reference surface and capability profile
-- create or refresh connector-managed files through a manifest
-- confirm MCP configuration can reach the harness server
-- run a conformance smoke check or print the command to run it
+- repository root identify
+- local project register 또는 reuse
+- static project configuration create 또는 validate
+- per-project state와 artifact storage initialize
+- reference surface와 capability profile register
+- manifest를 통해 connector-managed file create 또는 refresh
+- MCP configuration이 harness server에 reach할 수 있는지 confirm
+- conformance smoke check를 run하거나 실행 command print
 
-Connect must report generated-file drift instead of overwriting human edits silently. Surface-specific generated file names belong in the surface cookbook.
+Connect는 human edit를 조용히 overwrite하지 않고 generated-file drift를 report해야 한다. Surface-specific generated file name은 surface cookbook에 둔다.
 
 ## Doctor
 
-`doctor` reports readiness, drift, and repair options.
+`doctor`는 readiness, drift, repair option을 report한다.
 
-Required categories:
+Required category:
 
 | Category | Checks |
 |---|---|
@@ -60,7 +60,7 @@ Required categories:
 | reconcile | pending human edits, managed block drift, generated-file drift |
 | validators | required core, artifact, projection, connector, and policy validators |
 
-Output levels:
+Output level:
 
 ```text
 OK
@@ -70,36 +70,36 @@ REPAIRABLE
 MANUAL
 ```
 
-Doctor must distinguish current state failures from projection stale or projection failed status.
+Doctor는 current state failure와 projection stale 또는 projection failed status를 구분해야 한다.
 
 ## Serve MCP
 
-`serve mcp` starts or prints connection information for the local MCP server.
+`serve mcp`는 local MCP server를 시작하거나 connection information을 print한다.
 
 Required behavior:
 
-- expose read resources without mutation
-- expose public tools through Core, not shell shortcuts
-- require state-changing calls to use Core conflict and idempotency behavior
-- report the active project and connected surface profile
-- fail clearly when the server cannot reach runtime state or artifact storage
+- mutation 없이 read resource expose
+- shell shortcut이 아니라 Core를 통해 public tool expose
+- state-changing call에 Core conflict와 idempotency behavior 요구
+- active project와 connected surface profile report
+- server가 runtime state 또는 artifact storage에 reach할 수 없으면 명확히 fail
 
-If MCP is unavailable, cooperative surfaces must hold product writes. Stronger profiles may enforce the hold preventively or through isolation, but operations must still report the actual guarantee level.
+MCP가 unavailable이면 cooperative surface는 product write를 hold해야 한다. Stronger profile은 hold를 preventively 또는 isolation으로 enforce할 수 있지만, operations는 실제 guarantee level을 report해야 한다.
 
 ## Projection Refresh
 
-Projection refresh regenerates Product Repository Markdown from committed state records and artifact refs.
+Projection refresh는 committed state record와 artifact ref에서 Product Repository Markdown을 regenerate한다.
 
 Required behavior:
 
-- render only the latest projection version for a target
-- preserve human-editable sections
-- compare managed block hashes before overwrite
-- create reconcile items for managed-block drift
-- mark projection jobs `completed`, `failed`, `pending`, or `skipped`
-- keep projection failure separate from Task result
+- target의 latest projection version만 render
+- human-editable section preserve
+- overwrite 전에 managed block hash compare
+- managed-block drift에는 reconcile item 생성
+- projection job을 `completed`, `failed`, `pending`, `skipped`로 mark
+- projection failure를 Task result와 분리
 
-Supported targets:
+Supported target:
 
 ```text
 one Task
@@ -110,9 +110,9 @@ design-quality projections when enabled
 
 ## Reconcile
 
-Reconcile turns human-editable input or generated/managed drift into an explicit decision.
+Reconcile은 human-editable input 또는 generated/managed drift를 explicit decision으로 바꾼다.
 
-Targets:
+Target:
 
 - Task user notes and proposals
 - managed block edits
@@ -122,74 +122,74 @@ Targets:
 - connector generated-file drift
 - stale projection references that affect current work
 
-Decision outcomes:
+Decision outcome:
 
 | Outcome | Meaning |
 |---|---|
-| merge | apply the proposal through Core and append state history |
-| reject | leave canonical state unchanged and refresh projection if needed |
-| convert_to_note | keep the content as a human note, not state |
-| create_decision | turn the proposal into a pending user decision |
-| defer | keep the reconcile item open |
+| merge | Core를 통해 proposal을 apply하고 state history append |
+| reject | canonical state를 unchanged로 두고 필요하면 projection refresh |
+| convert_to_note | content를 state가 아닌 human note로 keep |
+| create_decision | proposal을 pending user decision으로 전환 |
+| defer | reconcile item을 open 상태로 유지 |
 
-Reconcile must not treat edited Markdown as canonical state by itself.
+Reconcile은 edited Markdown 자체를 canonical state로 취급하면 안 된다.
 
 ## Recover
 
-Recover repairs interrupted or inconsistent operational state without rewriting history.
+Recover는 history를 rewrite하지 않고 interrupted 또는 inconsistent operational state를 repair한다.
 
-Required scenarios:
+Required scenario:
 
 | Scenario | Recovery behavior |
 |---|---|
-| agent crash during write | mark the run interrupted and capture diff/log artifacts when possible |
-| stale approval baseline | expire or re-request approval when scope is affected |
-| evaluator observes drift | mark verification blocked or evidence stale |
-| artifact registry mismatch | rescan files, mark missing artifacts stale, preserve hashes |
-| projection job failed | retry or mark failed and create reconcile guidance |
-| managed Markdown edited | create reconcile item |
-| lock expired | append recovery event and release or reacquire according to lock policy |
-| MCP unavailable | report write hold and next diagnosis step |
+| agent crash during write | run을 interrupted로 mark하고 가능하면 diff/log artifact capture |
+| stale approval baseline | scope가 affected되면 approval expire 또는 re-request |
+| evaluator observes drift | verification blocked 또는 evidence stale로 mark |
+| artifact registry mismatch | file rescan, missing artifact를 stale로 mark, hash preserve |
+| projection job failed | retry 또는 failed로 mark하고 reconcile guidance 생성 |
+| managed Markdown edited | reconcile item 생성 |
+| lock expired | recovery event append 후 lock policy에 따라 release 또는 reacquire |
+| MCP unavailable | write hold와 next diagnosis step report |
 
-Recovery may append compensating events. It must not silently delete evidence, rewrite event history, or make projections authoritative.
+Recovery는 compensating event를 append할 수 있다. Evidence를 조용히 delete하거나, event history를 rewrite하거나, projection을 authoritative하게 만들면 안 된다.
 
 ## Export
 
-Export creates a review or archival bundle for a Task.
+Export는 Task에 대한 review 또는 archival bundle을 만든다.
 
 Required contents:
 
-- export manifest with created time, task id, projection freshness, and redaction summary
-- state snapshots for the Task and related records
-- projection snapshots for relevant reports
-- artifact references and included raw artifact files when allowed
+- created time, task id, projection freshness, redaction summary가 있는 export manifest
+- Task와 related record의 state snapshot
+- relevant report의 projection snapshot
+- artifact reference와 허용되는 경우 included raw artifact file
 - artifact integrity manifest
-- redaction and omission notes for secrets, sensitive logs, and PII
+- secret, sensitive log, PII에 대한 redaction 및 omission note
 
-Exported projection snapshots may have hashes, but that does not make the Markdown projection the canonical evidence. Raw evidence remains the artifact files and their registered refs.
+Exported projection snapshot은 hash를 가질 수 있지만, 그렇다고 Markdown projection이 canonical evidence가 되지는 않는다. Raw evidence는 artifact file과 registered ref로 남는다.
 
 ## Artifact Integrity
 
-Artifact integrity check compares artifact records with stored files.
+Artifact integrity check는 artifact record와 stored file을 비교한다.
 
-Required checks:
+Required check:
 
 - file exists
 - hash matches
 - size matches
-- content type is known or explicitly `other`
-- redaction state is valid
-- task/run relation is valid
-- retention class is valid
-- projection or evidence refs resolve
+- content type이 known이거나 명시적으로 `other`
+- redaction state가 valid
+- task/run relation이 valid
+- retention class가 valid
+- projection 또는 evidence ref가 resolve됨
 
-Failures should mark related evidence, projection freshness, or close readiness stale/blocked according to Core rules. Missing artifacts are not fixed by editing Markdown reports.
+Failure는 Core rule에 따라 related evidence, projection freshness, close readiness를 stale/blocked로 mark해야 한다. Missing artifact는 Markdown report를 edit해서 고치는 것이 아니다.
 
 ## Conformance Fixture Format
 
-Conformance is fixture-based. A scenario table is not enough; each test fixture must drive an action and assert state, events, artifacts, projections, and errors.
+Conformance는 fixture-based다. Scenario table만으로는 충분하지 않다. 각 test fixture는 action을 drive하고 state, event, artifact, projection, error를 assert해야 한다.
 
-Each fixture must include this shape:
+각 fixture는 이 shape를 포함해야 한다.
 
 ```yaml
 scenario_id: string
@@ -203,23 +203,23 @@ expected_projection: object
 expected_error: object | null
 ```
 
-Optional metadata such as `name`, `suite`, `tags`, and `notes` is allowed, but the required fields above must be present.
+`name`, `suite`, `tags`, `notes` 같은 optional metadata는 허용되지만, 위 required field는 반드시 있어야 한다.
 
 ## Conformance Execution
 
-`harness conformance run` executes fixtures through the same Core entrypoints used by MCP tools and operator commands. It must not assert behavior by inspecting prose output alone.
+`harness conformance run`은 MCP tool과 operator command가 사용하는 같은 Core entrypoint를 통해 fixture를 실행한다. Prose output만 inspect해서 behavior를 assert하면 안 된다.
 
-MVP execution semantics:
+MVP execution semantic:
 
-1. Load fixture YAML files and validate the required fixture shape.
-2. Create an isolated runtime home and temporary Product Repository for the fixture, unless the fixture explicitly targets an existing read-only sample.
-3. Seed `registry.sqlite`, `project.yaml`, `state.sqlite`, artifact files, projection files, and connector manifests from `initial_state`.
-4. Execute `action` through Core. MCP tool actions use the public request schema; operator actions such as `projection_refresh`, `doctor_surface`, `recover`, and `artifacts_check` use the operator semantics in this document.
-5. Capture resulting state summaries, appended `task_events`, validator results, artifact registry/file integrity, projection job status, reconcile items, and returned error code.
-6. Compare the captured results with `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error`.
-7. Report fixture id, pass/fail, observed state summary, observed events, artifact integrity result, projection freshness, and error comparison.
+1. Fixture YAML file을 load하고 required fixture shape를 validate한다.
+2. Fixture가 existing read-only sample을 명시적으로 target하지 않는 한 isolated runtime home과 temporary Product Repository를 만든다.
+3. `initial_state`에서 `registry.sqlite`, `project.yaml`, `state.sqlite`, artifact file, projection file, connector manifest를 seed한다.
+4. Core를 통해 `action`을 execute한다. MCP tool action은 public request schema를 사용한다. `projection_refresh`, `doctor_surface`, `recover`, `artifacts_check` 같은 operator action은 이 문서의 operator semantics를 사용한다.
+5. Resulting state summary, appended `task_events`, validator result, artifact registry/file integrity, projection job status, reconcile item, returned error code를 capture한다.
+6. Captured result를 `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, `expected_error`와 compare한다.
+7. Fixture id, pass/fail, observed state summary, observed event, artifact integrity result, projection freshness, error comparison을 report한다.
 
-Fixture execution should be deterministic. Network access, wall-clock-sensitive expiry, and external tool output must be stubbed or represented as seeded fixture inputs unless a suite explicitly declares itself an integration smoke.
+Fixture execution은 deterministic해야 한다. Network access, wall-clock-sensitive expiry, external tool output은 suite가 integration smoke라고 명시적으로 선언하지 않는 한 stub하거나 seeded fixture input으로 표현해야 한다.
 
 ## Core Fixture Examples
 
@@ -395,14 +395,14 @@ expected_error:
 
 ## Fixture Suites
 
-Minimum MVP suites:
+Minimum MVP suite:
 
 - core: active status, advisor close, direct close, write gate, approval required, evidence insufficient, same-session verification guard, QA required, acceptance required, projection failure separation
 - connector: capability profile, MCP unavailable hold, generated manifest drift, changed-path detection, artifact capture, fallback guarantee display
 - design-quality: shared design required, vertical slice or exception, TDD trace required or waived, module/interface review, Manual QA policy, context hygiene stale projection
 
-Conformance output must include fixture id, pass/fail, observed state summary, observed events, artifact integrity result, projection freshness, and error code comparison.
+Conformance output은 fixture id, pass/fail, observed state summary, observed event, artifact integrity result, projection freshness, error code comparison을 포함해야 한다.
 
 ## Metrics Boundary
 
-Long-term operational metrics are derived analytics, not MVP-critical state or conformance requirements. Keep metrics such as approval turnaround, verification latency, projection stale duration, same-session guard frequency, and surface fallback rate in [Appendix C](appendix/C-later-roadmap.md) until a future version promotes them with fixtures and implementation ownership.
+Long-term operational metric은 derived analytics이지 MVP-critical state나 conformance requirement가 아니다. Approval turnaround, verification latency, projection stale duration, same-session guard frequency, surface fallback rate 같은 metric은 future version이 fixture와 implementation ownership으로 승격하기 전까지 [Appendix C](appendix/C-later-roadmap.md)에 둔다.

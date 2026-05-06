@@ -1,136 +1,136 @@
-# Design Quality Policy Pack
+# 설계 품질 정책 팩
 
-## Document Role
+## 문서 역할
 
-This document owns design-quality policies as policy contracts. These policies guide how AI-assisted work stays aligned with product design, domain language, module boundaries, testing discipline, human QA, and context hygiene.
+이 문서는 design-quality policy를 policy contract로 담당한다. 이 정책은 AI 지원 작업이 product design, domain language, module boundary, testing discipline, human QA, context hygiene와 정렬된 상태를 유지하도록 안내한다.
 
-Design-quality policies are not additional kernel invariants. The kernel owns lifecycle, gates, close semantics, and state transitions. This document tells policy evaluators when `design_gate`, `qa_gate`, evidence, or close blockers should be affected.
+Design-quality policy는 추가 kernel invariant가 아니다. Kernel은 lifecycle, gate, close semantic, state transition을 담당한다. 이 문서는 policy evaluator가 언제 `design_gate`, `qa_gate`, evidence, close blocker에 영향을 주어야 하는지 말한다.
 
-This document does not define MCP schemas, SQLite DDL, state transition tables, or full templates.
+이 문서는 MCP schema, SQLite DDL, state transition table, full template을 정의하지 않는다.
 
-## Policy Contract Shape
+## Policy Contract 형태
 
-Each policy uses the same fields:
+각 policy는 동일한 field를 사용한다.
 
 | Field | Meaning |
 |---|---|
 | `name` | Stable policy name. |
-| `applies_when` | Conditions that make the policy relevant. |
-| `default_requirement` | What should happen by default when it applies. |
-| `allowed_waiver` | Who may waive it and what must be recorded. |
-| `required_record` | Canonical state record or record family that stores the result. |
-| `validator` | Validator that reports compliance, warning, failure, or blocker. |
-| `evidence` | Evidence or projection refs expected by the policy. |
-| `close_impact` | How unmet requirements affect close or gates. |
+| `applies_when` | Policy가 relevant해지는 condition. |
+| `default_requirement` | 적용될 때 기본적으로 일어나야 하는 것. |
+| `allowed_waiver` | 누가 waive할 수 있고 무엇을 기록해야 하는지. |
+| `required_record` | Result를 저장하는 canonical state record 또는 record family. |
+| `validator` | Compliance, warning, failure, blocker를 report하는 validator. |
+| `evidence` | Policy가 기대하는 evidence 또는 projection ref. |
+| `close_impact` | Unmet requirement가 close 또는 gate에 미치는 영향. |
 
-Policy validators return the validator result schema owned by the MCP API document.
+Policy validator는 MCP API document가 담당하는 validator result schema를 반환한다.
 
-## Policy Contracts
+## Policy Contract
 
 ### Shared Design
 
 | Field | Contract |
 |---|---|
 | `name` | `shared_design` |
-| `applies_when` | Work request is ambiguous, scope/non-scope is unclear, user value needs alignment, public interface/schema/auth/UX/workflow is affected, or a `work` task needs shaping. |
-| `default_requirement` | Record goal, scope, non-goals, acceptance criteria, blocking decisions, assumptions, rejected options, domain-language impact, module/interface impact, and first Change Unit shape. Ask the most blocking questions one at a time and stop when the first safe Change Unit can be proposed. |
-| `allowed_waiver` | Allowed for small obvious `direct` work, docs-only edits, or emergency fixes when the user/operator records a reason and a follow-up if design risk remains. |
-| `required_record` | Shared Design record, Task shaping fields, decision records, and optionally `DESIGN` or `DEC` projections. |
+| `applies_when` | Work request가 ambiguous하거나, scope/non-scope가 unclear하거나, user value alignment가 필요하거나, public interface/schema/auth/UX/workflow가 affected되거나, `work` task가 shaping을 필요로 할 때. |
+| `default_requirement` | Goal, scope, non-goal, acceptance criteria, blocking decision, assumption, rejected option, domain-language impact, module/interface impact, first Change Unit shape를 기록한다. 가장 blocking한 question을 한 번에 하나씩 묻고, 첫 safe Change Unit을 propose할 수 있으면 멈춘다. |
+| `allowed_waiver` | User/operator가 reason과 design risk가 남을 때 follow-up을 기록하면 small obvious `direct` work, docs-only edit, emergency fix에 허용된다. |
+| `required_record` | Shared Design record, Task shaping field, decision record, optional `DESIGN` 또는 `DEC` projection. |
 | `validator` | `shared_design_alignment` |
-| `evidence` | Task summary, acceptance criteria, decision refs, rejected option refs, domain/module/interface impact refs. |
-| `close_impact` | If required and absent, set or keep `design_gate=pending` or `partial`. If risk is high and no waiver exists, block close. A valid waiver may allow `design_gate=waived`. |
+| `evidence` | Task summary, acceptance criteria, decision ref, rejected option ref, domain/module/interface impact ref. |
+| `close_impact` | Required인데 없으면 `design_gate=pending` 또는 `partial`로 set/keep한다. Risk가 high이고 waiver가 없으면 close를 block한다. Valid waiver는 `design_gate=waived`를 허용할 수 있다. |
 
 ### Domain Language
 
 | Field | Contract |
 |---|---|
 | `name` | `domain_language` |
-| `applies_when` | New product term appears, an existing term is used with a new meaning, code and product language diverge, multiple names refer to one concept, or reviewer/evaluator finds a term mismatch. |
-| `default_requirement` | Record or update affected terms with meaning, code representation, "not this" boundary, related terms, source, and status. Implementation agents pull only task-relevant terms; reviewers/evaluators receive relevant terms. |
-| `allowed_waiver` | Allowed when the work has no domain term impact or the term is intentionally local/temporary. Waiver must record why no canonical term update is needed. |
-| `required_record` | `domain_terms` records; `DOMAIN-LANGUAGE` is projection only. |
+| `applies_when` | New product term이 나타나거나, existing term이 new meaning으로 쓰이거나, code와 product language가 diverge하거나, multiple name이 하나의 concept를 가리키거나, reviewer/evaluator가 term mismatch를 발견할 때. |
+| `default_requirement` | Affected term의 meaning, code representation, "not this" boundary, related term, source, status를 record/update한다. Implementation agent는 task-relevant term만 pull하고, reviewer/evaluator는 relevant term을 받는다. |
+| `allowed_waiver` | Work에 domain term impact가 없거나 term이 intentionally local/temporary일 때 허용된다. Waiver는 canonical term update가 필요 없는 이유를 기록해야 한다. |
+| `required_record` | `domain_terms` record; `DOMAIN-LANGUAGE`는 projection only. |
 | `validator` | `domain_language_consistency` |
-| `evidence` | Domain term refs, code refs, test naming refs, reconcile item refs for proposals. |
-| `close_impact` | If required terms are missing or conflicting, mark `design_gate=partial` or `stale`; block close when the mismatch affects acceptance criteria, public behavior, or verification confidence. |
+| `evidence` | Domain term ref, code ref, test naming ref, proposal용 reconcile item ref. |
+| `close_impact` | Required term이 missing 또는 conflicting이면 `design_gate=partial` 또는 `stale`로 mark한다. Mismatch가 acceptance criteria, public behavior, verification confidence에 영향을 주면 close를 block한다. |
 
 ### Vertical Slice
 
 | Field | Contract |
 |---|---|
 | `name` | `vertical_slice` |
-| `applies_when` | Feature work, user-visible behavior, workflow change, integration behavior, or medium/large `work` task. |
-| `default_requirement` | Prefer a thin end-to-end Change Unit that connects trigger/input, domain logic, persistence or state, API/caller boundary, observable output, test evidence, and optional Manual QA. |
-| `allowed_waiver` | Horizontal/enabling Change Units are allowed when scaffold, test harness, deep module boundary, migration safety, or public interface decisions must come first. The Change Unit must record `horizontal_exception_reason` and a follow-up vertical Change Unit when applicable. |
-| `required_record` | Change Unit fields: `slice_type`, end-to-end path, completion conditions, follow-up vertical Change Unit, and validator results. |
+| `applies_when` | Feature work, user-visible behavior, workflow change, integration behavior, medium/large `work` task. |
+| `default_requirement` | Trigger/input, domain logic, persistence 또는 state, API/caller boundary, observable output, test evidence, optional Manual QA를 연결하는 thin end-to-end Change Unit을 선호한다. |
+| `allowed_waiver` | Scaffold, test harness, deep module boundary, migration safety, public interface decision이 먼저 필요할 때 horizontal/enabling Change Unit을 허용한다. Change Unit은 applicable할 때 `horizontal_exception_reason`과 follow-up vertical Change Unit을 기록해야 한다. |
+| `required_record` | Change Unit field: `slice_type`, end-to-end path, completion condition, follow-up vertical Change Unit, validator result. |
 | `validator` | `vertical_slice_shape` |
-| `evidence` | Change Unit record, run summary, evidence manifest, tests, Manual QA refs if user-visible. |
-| `close_impact` | If vertical slice is required and neither satisfied nor waived, set `design_gate=partial` or `blocked`. A justified horizontal exception may allow close only when the follow-up risk is recorded. |
+| `evidence` | Change Unit record, run summary, evidence manifest, test, user-visible인 경우 Manual QA ref. |
+| `close_impact` | Vertical slice가 required인데 satisfied 또는 waived가 아니면 `design_gate=partial` 또는 `blocked`를 set한다. Justified horizontal exception은 follow-up risk가 recorded된 경우에만 close를 허용할 수 있다. |
 
 ### TDD Trace
 
 | Field | Contract |
 |---|---|
 | `name` | `tdd_trace` |
-| `applies_when` | Domain logic, service module, bug fix, parser/validator, state transition, deep module internals, or edge-case-heavy behavior. Recommended for API/caller boundaries and integration behavior. |
-| `default_requirement` | Record red, green, and refactor evidence for at least one acceptance criterion or behavior slice. Link the trace to the evidence manifest. |
-| `allowed_waiver` | Allowed for docs, typos, throwaway prototypes, exploratory UI prototypes, initial scaffolds, or when the user/operator records a non-TDD justification and alternate feedback loop. |
-| `required_record` | `tdd_traces` records and `TDD-TRACE` projection when rendered. |
+| `applies_when` | Domain logic, service module, bug fix, parser/validator, state transition, deep module internal, edge-case-heavy behavior. API/caller boundary와 integration behavior에는 권장된다. |
+| `default_requirement` | 적어도 하나의 acceptance criterion 또는 behavior slice에 대해 red, green, refactor evidence를 기록한다. Trace를 evidence manifest에 link한다. |
+| `allowed_waiver` | Docs, typo, throwaway prototype, exploratory UI prototype, initial scaffold, 또는 user/operator가 non-TDD justification과 alternate feedback loop를 기록한 경우 허용된다. |
+| `required_record` | `tdd_traces` record와 rendered될 때 `TDD-TRACE` projection. |
 | `validator` | `tdd_trace_required` |
-| `evidence` | Failing test log, passing test log, refactor check log, diff refs, non-TDD justification when waived. |
-| `close_impact` | Missing required TDD trace makes `design_gate=partial` and may make evidence insufficient. A valid non-TDD justification may satisfy design policy but does not by itself prove behavior. |
+| `evidence` | Failing test log, passing test log, refactor check log, diff ref, waived 시 non-TDD justification. |
+| `close_impact` | Required TDD trace가 missing이면 `design_gate=partial`이 되고 evidence가 insufficient해질 수 있다. Valid non-TDD justification은 design policy를 satisfy할 수 있지만 그 자체로 behavior를 증명하지는 않는다. |
 
 ### Deep Module / Interface
 
 | Field | Contract |
 |---|---|
 | `name` | `deep_module_interface` |
-| `applies_when` | Public interface changes, module boundary changes, schema/data model changes, auth/security boundaries, compatibility impact, deep module internals, or shallow-module risk. |
-| `default_requirement` | Identify affected modules, current role, proposed public interface, internal complexity hidden behind the interface, callers impacted, compatibility impact, and test boundary. Prefer small simple public interfaces with enough internal capability behind them. |
-| `allowed_waiver` | Allowed for localized internal changes with no public boundary impact, no dependency direction change, and low compatibility risk. Must record why module/interface review is unnecessary. |
-| `required_record` | `module_map_items`, `interface_contracts`, decision records, and optionally `MODULE-MAP` / `INTERFACE-CONTRACT` projections. |
+| `applies_when` | Public interface change, module boundary change, schema/data model change, auth/security boundary, compatibility impact, deep module internal, shallow-module risk. |
+| `default_requirement` | Affected module, current role, proposed public interface, interface 뒤에 숨겨진 internal complexity, impacted caller, compatibility impact, test boundary를 identify한다. 충분한 internal capability를 뒤에 둔 작고 simple한 public interface를 선호한다. |
+| `allowed_waiver` | Public boundary impact, dependency direction change, compatibility risk가 없고 localized internal change일 때 허용된다. Module/interface review가 불필요한 이유를 기록해야 한다. |
+| `required_record` | `module_map_items`, `interface_contracts`, decision record, optional `MODULE-MAP` / `INTERFACE-CONTRACT` projection. |
 | `validator` | `module_interface_review` |
-| `evidence` | Module map refs, interface contract refs, caller impact list, boundary tests, design decisions, compatibility notes. |
-| `close_impact` | Missing required review keeps `design_gate=pending` or `partial`; public interface or compatibility risk without review can block close or require user acceptance of residual risk. |
+| `evidence` | Module map ref, interface contract ref, caller impact list, boundary test, design decision, compatibility note. |
+| `close_impact` | Required review가 missing이면 `design_gate=pending` 또는 `partial`로 남는다. Public interface 또는 compatibility risk가 있는데 review가 없으면 close를 block하거나 residual risk에 대한 user acceptance가 필요할 수 있다. |
 
 ### Manual QA
 
 | Field | Contract |
 |---|---|
 | `name` | `manual_qa` |
-| `applies_when` | UI change, UX flow change, copy/error message change, onboarding/checkout/auth/billing or other critical flow, accessibility impact, visual output, browser-only behavior, or any result that needs product taste judgment. |
-| `default_requirement` | Record a Manual QA profile, setup, checklist, result, findings, evidence refs, performer, and next action. Profiles include `ui_quality`, `workflow`, `copy`, `accessibility`, `browser_smoke`, and `performance_smoke`. |
-| `allowed_waiver` | Allowed when the user/operator explicitly waives QA and records a waiver reason. Not appropriate when legal, safety, privacy, or high-impact user harm requires inspection. |
-| `required_record` | `manual_qa_records`; `qa_gate` is the canonical aggregate gate. |
+| `applies_when` | UI change, UX flow change, copy/error message change, onboarding/checkout/auth/billing 또는 other critical flow, accessibility impact, visual output, browser-only behavior, product taste judgment가 필요한 result. |
+| `default_requirement` | Manual QA profile, setup, checklist, result, finding, evidence ref, performer, next action을 기록한다. Profile에는 `ui_quality`, `workflow`, `copy`, `accessibility`, `browser_smoke`, `performance_smoke`가 포함된다. |
+| `allowed_waiver` | User/operator가 명시적으로 QA를 waive하고 waiver reason을 기록할 때 허용된다. Legal, safety, privacy, high-impact user harm이 inspection을 요구하는 경우에는 적절하지 않다. |
+| `required_record` | `manual_qa_records`; `qa_gate`가 canonical aggregate gate. |
 | `validator` | `manual_qa_required` |
-| `evidence` | Manual QA record, screenshots, notes, browser logs, walkthrough refs, finding refs. |
-| `close_impact` | If Manual QA is required, `qa_gate=pending` or `failed` blocks successful close. `qa_gate=waived` requires a waiver reason. QA failed should create rework, block close, or require an explicit follow-up path. |
+| `evidence` | Manual QA record, screenshot, note, browser log, walkthrough ref, finding ref. |
+| `close_impact` | Manual QA가 required이면 `qa_gate=pending` 또는 `failed`가 successful close를 block한다. `qa_gate=waived`에는 waiver reason이 필요하다. QA failed는 rework를 만들거나 close를 block하거나 explicit follow-up path를 요구해야 한다. |
 
 ### Context Hygiene
 
 | Field | Contract |
 |---|---|
 | `name` | `context_hygiene` |
-| `applies_when` | Work resumes after interruption, old PRDs/design docs/issues exist, code paths have moved, acceptance criteria changed, module/interface/domain records changed, or evaluator/reviewer needs a focused bundle. |
-| `default_requirement` | Push current Task summary, rolling spine, latest run/eval/evidence refs, relevant policy refs, and current acceptance criteria. Pull older PRDs, closed issues, coding standards, and long logs only when needed. Mark stale docs and avoid treating chat as state. |
-| `allowed_waiver` | Allowed for short advisor-only work where no product state, design state, or evidence state is being changed. |
-| `required_record` | Task summary, projection freshness, reconcile items for drift, evidence manifest, and validator results. |
+| `applies_when` | Work가 interruption 후 resume되거나, old PRD/design doc/issue가 있거나, code path가 moved되었거나, acceptance criteria가 changed되었거나, module/interface/domain record가 changed되었거나, evaluator/reviewer가 focused bundle을 필요로 할 때. |
+| `default_requirement` | Current Task summary, rolling spine, latest run/eval/evidence ref, relevant policy ref, current acceptance criteria를 push한다. Older PRD, closed issue, coding standard, long log는 필요할 때만 pull한다. Stale doc을 mark하고 chat을 state로 취급하지 않는다. |
+| `allowed_waiver` | Product state, design state, evidence state가 바뀌지 않는 short advisor-only work에 허용된다. |
+| `required_record` | Task summary, projection freshness, drift에 대한 reconcile item, evidence manifest, validator result. |
 | `validator` | `context_hygiene_check` |
-| `evidence` | Current projection refs, freshness state, stale refs, reconcile item refs, bundle contents for evaluator. |
-| `close_impact` | Stale critical context may mark `design_gate=stale`, evidence stale, or projection stale. It can block write or close when the agent cannot safely determine scope, evidence, or current acceptance criteria. |
+| `evidence` | Current projection ref, freshness state, stale ref, reconcile item ref, evaluator용 bundle contents. |
+| `close_impact` | Stale critical context는 `design_gate=stale`, evidence stale, projection stale로 mark될 수 있다. Agent가 scope, evidence, current acceptance criteria를 safe하게 determine할 수 없으면 write 또는 close를 block할 수 있다. |
 
-## Waiver Rules
+## Waiver 규칙
 
-Waivers must be explicit, scoped, and recorded. A waiver should include:
+Waiver는 explicit, scoped, recorded여야 한다. Waiver에는 다음을 포함해야 한다.
 
 - policy name
-- task and Change Unit
+- task와 Change Unit
 - reason
 - accepted risk
-- actor who waived
-- expiry or follow-up when needed
-- affected gate or close impact
+- waived한 actor
+- 필요할 때 expiry 또는 follow-up
+- affected gate 또는 close impact
 
-Policy waivers can satisfy a design-quality requirement only where the policy contract allows it. They do not waive scope for product writes, sensitive-change approval, required evidence coverage, or required acceptance. Verification waivers are owned by the kernel close semantics and must not produce `assurance_level=detached_verified`.
+Policy waiver는 policy contract가 허용하는 곳에서만 design-quality requirement를 satisfy할 수 있다. Product write scope, sensitive-change approval, required evidence coverage, required acceptance를 waive하지 않는다. Verification waiver는 kernel close semantics가 담당하며 `assurance_level=detached_verified`를 만들면 안 된다.
 
 ## Policy-To-Validator Mapping
 
@@ -144,4 +144,4 @@ Policy waivers can satisfy a design-quality requirement only where the policy co
 | `manual_qa` | `manual_qa_required` | `qa_gate` pending/passed/failed/waived |
 | `context_hygiene` | `context_hygiene_check` | projection freshness, reconcile, evidence/design stale |
 
-The reference MVP may implement minimal validators first, but it should keep validator IDs stable so conformance fixtures can grow without changing policy names.
+Reference MVP는 minimal validator를 먼저 구현할 수 있지만, conformance fixture가 policy name을 바꾸지 않고 커질 수 있도록 validator ID는 stable하게 유지해야 한다.

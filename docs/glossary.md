@@ -1,67 +1,67 @@
-# Glossary
+# 용어집
 
-## Official Terms
+## 공식 용어
 
 ### Acceptance
 
-The user's judgment that the result and remaining trade-offs are acceptable. Acceptance is separate from approval, assurance, verification, and Manual QA.
+결과와 남은 trade-off가 acceptable하다는 사용자의 판단. Acceptance는 approval, assurance, verification, Manual QA와 구분된다.
 
 ### Acceptance Gate
 
-The kernel gate that records whether required user acceptance is not required, required, pending, accepted, or rejected. Acceptance cannot substitute for QA or verification.
+Required user acceptance가 not required, required, pending, accepted, rejected 중 어떤 상태인지 기록하는 kernel gate. Acceptance는 QA나 verification을 대신할 수 없다.
 
 ### Approval
 
-A prior user decision allowing a sensitive change to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions.
+정의된 scope 안에서 sensitive change를 진행할 수 있도록 허용하는 사전 user decision. Approval은 path, tool, command 또는 command class, network target, secret scope, baseline, sensitive category, expiry condition에 묶인다.
 
 ### Approval Gate
 
-The kernel gate for sensitive-change approval. It is required only when sensitive categories are present. Granted approval does not prove correctness or imply acceptance.
+Sensitive-change approval을 위한 kernel gate. Sensitive category가 있을 때만 required다. Granted approval은 correctness를 prove하거나 acceptance를 imply하지 않는다.
 
 ### Artifact
 
-A recorded output used for evidence, recovery, or audit. See Raw Artifact for the canonical evidence-file boundary.
+Evidence, recovery, audit에 사용되는 recorded output. Canonical evidence-file boundary는 Raw Artifact를 참고한다.
 
 ### Artifact Reference
 
-A structured pointer to a raw artifact file registered in the artifact store, including identity, kind, URI or path, hash, size, content type, redaction state, and task/run relationship.
+Artifact store에 registered된 raw artifact file을 가리키는 structured pointer. Identity, kind, URI 또는 path, hash, size, content type, redaction state, task/run relationship을 포함한다.
 
 ### Assurance
 
-The technical confidence level supported by recorded checks and verification independence.
+Recorded check와 verification independence가 뒷받침하는 technical confidence level.
 
 ```text
 none | self_checked | detached_verified
 ```
 
-An EVAL verdict alone does not upgrade assurance. `detached_verified` requires passed verification with valid independence.
+EVAL verdict만으로 assurance를 upgrade하지 않는다. `detached_verified`에는 valid independence가 있는 passed verification이 필요하다.
 
 ### Baseline
 
-A captured repository state used to judge scope, approval drift, evidence freshness, and verification validity.
+Scope, approval drift, evidence freshness, verification validity를 판단하는 데 사용하는 captured repository state.
 
 ### Capability Profile
 
-A declared and verified description of what a connected agent surface can actually do. It records target profile, support tier, guarantee level, supported features, risks, fallbacks, and last verification time. The harness does not infer capability from product name alone.
+Connected agent surface가 실제로 무엇을 할 수 있는지에 대한 declared and verified description. Target profile, support tier, guarantee level, supported feature, risk, fallback, last verification time을 기록한다. 하네스는 product name만으로 capability를 infer하지 않는다.
 
 ### Capability Tier
 
-A coarse integration level for a connected surface.
+Connected surface를 위한 coarse integration level.
 
 ```text
 T0 Context | T1 Skill | T2 MCP | T3 Capture |
 T4 Guard | T5 Isolation | T6 QA Capture
 ```
 
-Capability tiers describe available integration support; they are not kernel gates.
+Capability tier는 available integration support를 설명하며 kernel gate가 아니다.
 
 ### Change Unit
 
-The scoped implementation unit for product writes. A product write requires an active Change Unit whose scope covers the intended paths, tools, commands, network targets, and sensitive categories.
+Product write를 위한 scoped implementation unit. Product write에는 intended path, tool, command, network target, sensitive category를 cover하는 active Change Unit이 필요하다.
 
 ### Close Reason
 
-The canonical reason a Task reached a terminal close state.
+Task가 terminal close state에 도달한 canonical reason.
 
 ```text
 none | completed_verified | completed_self_checked |
@@ -70,242 +70,242 @@ completed_with_risk_accepted | cancelled | superseded
 
 ### Common Tool Envelope
 
-The shared fields carried by public MCP tool calls: `request_id`, `idempotency_key`, `expected_state_version`, `project_id`, optional `task_id`, `surface_id`, optional `run_id`, `actor_kind`, and `dry_run`.
+Public MCP tool call이 가진 shared field: `request_id`, `idempotency_key`, `expected_state_version`, `project_id`, optional `task_id`, `surface_id`, optional `run_id`, `actor_kind`, `dry_run`.
 
 ### Cooperative Guarantee
 
-A guarantee level where the agent surface is expected to follow harness instructions and MCP decisions. The harness can guide behavior, but the surface may not provide hard pre-execution enforcement.
+Agent surface가 harness instruction과 MCP decision을 따를 것으로 기대되는 guarantee level. Harness는 behavior를 guide할 수 있지만 surface가 hard pre-execution enforcement를 제공하지 않을 수 있다.
 
 ### Connector Manifest
 
-A generated manifest that records connector-managed files, managed block hashes, capability profile, surface target profile, and drift status. It prevents generated surface files from being silently overwritten.
+Connector-managed file, managed block hash, capability profile, surface target profile, drift status를 기록하는 generated manifest. Generated surface file이 조용히 overwrite되는 것을 막는다.
 
 ### Context Hygiene
 
-The policy of keeping current state, evidence, and relevant references in context while avoiding stale chat, old PRDs, closed issues, and oversized raw artifacts unless they are explicitly needed.
+Current state, evidence, relevant reference는 context에 유지하고, stale chat, old PRD, closed issue, oversized raw artifact는 명시적으로 필요할 때만 가져오는 policy.
 
 ### Design Gate
 
-The kernel gate for required design-quality preconditions such as shared design, domain language, TDD trace, module/interface review, or other policy-pack requirements.
+Shared design, domain language, TDD trace, module/interface review 또는 기타 policy-pack requirement 같은 required design-quality precondition을 위한 kernel gate.
 
 ### Design-Quality Policy Pack
 
-The set of policy contracts for shared design, domain language, vertical slice, TDD trace, module/interface review, Manual QA, and context hygiene. It influences design, QA, evidence, and close blockers but does not redefine the kernel state machine.
+Shared design, domain language, vertical slice, TDD trace, module/interface review, Manual QA, context hygiene를 위한 policy contract 모음. Design, QA, evidence, close blocker에 영향을 주지만 kernel state machine을 재정의하지 않는다.
 
 ### Detached Verification
 
-Verification performed across a meaningful independence boundary, such as a fresh session, fresh worktree, sandbox, or manual evaluator bundle. Same-session self-review is not detached verification.
+Fresh session, fresh worktree, sandbox, manual evaluator bundle 같은 의미 있는 independence boundary를 가로질러 수행되는 verification. Same-session self-review는 detached verification이 아니다.
 
 ### Detective Guarantee
 
-A guarantee level where the harness can detect violations and mark state blocked, stale, partial, or failed after observation.
+Harness가 violation을 detect하고 observation 후 state를 blocked, stale, partial, failed로 mark할 수 있는 guarantee level.
 
 ### Direct
 
-A work mode for small, low-risk changes with obvious scope and result. Direct product writes still require an active scoped Change Unit.
+Scope와 result가 명확한 작고 low-risk인 change를 위한 work mode. Direct product write에도 active scoped Change Unit이 필요하다.
 
 ### Domain Language
 
-The product's canonical vocabulary and meanings. The canonical source is `domain_terms`; Markdown domain-language documents are projections and proposal surfaces.
+Product의 canonical vocabulary와 meaning. Canonical source는 `domain_terms`이고 Markdown domain-language document는 projection이자 proposal surface다.
 
 ### Domain Term
 
-A canonical structured record in `domain_terms` that stores a product term, meaning, code representation, related terms, source, status, and boundaries such as "not this."
+Product term, meaning, code representation, related term, source, status, "not this" 같은 boundary를 저장하는 `domain_terms`의 canonical structured record.
 
 ### Evidence
 
-Recorded support for claims about the work, such as diffs, logs, tests, run summaries, screenshots, Eval records, or Manual QA records.
+Diff, log, test, run summary, screenshot, Eval record, Manual QA record처럼 work에 대한 claim을 뒷받침하는 recorded support.
 
 ### Evidence Gate
 
-The kernel gate for required evidence coverage.
+Required evidence coverage를 위한 kernel gate.
 
 ```text
 not_required | none | partial | sufficient | stale | blocked
 ```
 
-`not_required` means the evidence gate does not apply. `none` means evidence is required but no evidence has been recorded.
+`not_required`는 evidence gate가 적용되지 않음을 뜻한다. `none`은 evidence가 required이지만 evidence가 기록되지 않았음을 뜻한다.
 
 ### Evidence Manifest
 
-A state record mapping acceptance criteria or completion conditions to supporting evidence references.
+Acceptance criteria 또는 completion condition을 supporting evidence reference에 mapping하는 state record.
 
 ### Eval
 
-A verification result record with verdict, checks performed, evidence reviewed, independence qualifier, blockers, and artifact references.
+Verdict, performed check, reviewed evidence, independence qualifier, blocker, artifact reference가 있는 verification result record.
 
 ### Gate
 
-A canonical kernel field that controls whether a Task may write, proceed, or close. Gates are state, not display text.
+Task가 write, proceed, close할 수 있는지 control하는 canonical kernel field. Gate는 state이며 display text가 아니다.
 
 ### Generated File
 
-A repository file or managed block produced by a connector, projector, or operator tool. Generated files must be tracked by a manifest or projection job when they can drift from canonical state.
+Connector, projector, operator tool이 produced한 repository file 또는 managed block. Generated file이 canonical state에서 drift될 수 있으면 manifest 또는 projection job으로 track해야 한다.
 
 ### Guarantee Level
 
-The strength of enforcement available for a connected surface or runtime path.
+Connected surface 또는 runtime path에서 available한 enforcement strength.
 
 ```text
 cooperative | detective | preventive | isolated
 ```
 
-Capability affects validator results, blocked reasons, and display; it is not a kernel gate.
+Capability는 validator result, blocked reason, display에 영향을 주지만 kernel gate는 아니다.
 
 ### Harness Core
 
-The runtime component that owns state transitions, gate updates, validator interpretation, artifact registration, projection job enqueueing, and close decisions.
+State transition, gate update, validator interpretation, artifact registration, projection job enqueue, close decision을 담당하는 runtime component.
 
 ### Harness Runtime Home
 
-The local runtime storage area that contains `registry.sqlite`, per-project `project.yaml`, per-project `state.sqlite`, and artifact directories.
+`registry.sqlite`, per-project `project.yaml`, per-project `state.sqlite`, artifact directory를 포함하는 local runtime storage area.
 
 ### Human-editable 영역
 
-A Markdown area where a human can write notes, proposals, questions, or corrections. It is an input surface, not canonical state. Its authority path is `human-editable input -> reconcile_items -> accepted state event/record`.
+사람이 note, proposal, question, correction을 쓸 수 있는 Markdown area. Input surface이지 canonical state가 아니다. Authority path는 `human-editable input -> reconcile_items -> accepted state event/record`다.
 
 ### Isolated Guarantee
 
-A guarantee level where risky work is separated by a worktree, sandbox, process boundary, or equivalent isolation mechanism.
+Risky work가 worktree, sandbox, process boundary 또는 동등한 isolation mechanism으로 분리되는 guarantee level.
 
 ### Interface Contract
 
-The canonical record of a module or external boundary's public interface, inputs, outputs, errors, compatibility impact, callers, and boundary tests. The canonical source is `interface_contracts`.
+Module 또는 external boundary의 public interface, input, output, error, compatibility impact, caller, boundary test에 대한 canonical record. Canonical source는 `interface_contracts`다.
 
 ### Manual QA
 
-Human inspection of experiential product quality such as UX, workflow, copy, visual output, accessibility, and product fit.
+UX, workflow, copy, visual output, accessibility, product fit 같은 experiential product quality에 대한 human inspection.
 
 ### Manual QA Record
 
-A record-level Manual QA result, including performer, profile, result, artifacts, findings, waiver reason when applicable, and next action. It feeds `qa_gate` but is not itself the canonical gate.
+Performer, profile, result, artifact, finding, applicable한 경우 waiver reason, next action을 포함하는 record-level Manual QA result. `qa_gate`에 feed되지만 그 자체가 canonical gate는 아니다.
 
 ### Managed Block
 
-A Markdown block delimited by harness markers and regenerated by the projector from state records and artifact refs. Direct edits to a managed block create drift or reconcile candidates; they do not become state by themselves.
+Harness marker로 delimit되고 projector가 state record와 artifact ref에서 regenerate하는 Markdown block. Managed block에 대한 direct edit는 drift 또는 reconcile candidate를 만들며, 그 자체로 state가 되지 않는다.
 
 ### MCP Resource
 
-A read-only MCP surface for current project, task, design, policy, status, or bundle information. Resources do not mutate state.
+Current project, task, design, policy, status, bundle information을 위한 read-only MCP surface. Resource는 state를 mutate하지 않는다.
 
 ### MCP Tool
 
-A public MCP operation that asks Core to validate, record, transition, or close state. State changes must go through tools or reconcile actions, not resource reads.
+Core에 state를 validate, record, transition, close하도록 요청하는 public MCP operation. State change는 resource read가 아니라 tool 또는 reconcile action을 통해야 한다.
 
 ### Markdown Report
 
-A human-readable document generated from state records and artifact references. A Markdown report is not a raw artifact by default and does not become canonical state.
+State record와 artifact reference에서 generated된 human-readable document. Markdown report는 기본적으로 raw artifact가 아니며 canonical state가 되지 않는다.
 
 ### Module Map
 
-The product's map of modules, responsibilities, public interfaces, dependency direction, and test boundaries. The canonical source is `module_map_items`.
+Product의 module, responsibility, public interface, dependency direction, test boundary map. Canonical source는 `module_map_items`다.
 
 ### Module Map Item
 
-A canonical structured record in `module_map_items` that stores a module's role, public interface, dependencies, internal complexity, test boundary, owner decision, and watchpoints.
+Module role, public interface, dependency, internal complexity, test boundary, owner decision, watchpoint를 저장하는 `module_map_items`의 canonical structured record.
 
 ### Policy Contract
 
-The standard form used by design-quality policies: `name`, `applies_when`, `default_requirement`, `allowed_waiver`, `required_record`, `validator`, `evidence`, and `close_impact`.
+Design-quality policy가 사용하는 standard form: `name`, `applies_when`, `default_requirement`, `allowed_waiver`, `required_record`, `validator`, `evidence`, `close_impact`.
 
 ### Preventive Guarantee
 
-A guarantee level where the harness or connector can block a violating action before it executes.
+Harness 또는 connector가 violating action을 execution 전에 block할 수 있는 guarantee level.
 
 ### Projection
 
-A human-readable rendering of canonical state records and artifact references. Projection is useful for reading and decision-making, but it cannot override canonical state.
+Canonical state record와 artifact reference를 사람이 읽을 수 있게 rendering한 것. Projection은 reading과 decision-making에 유용하지만 canonical state를 override할 수 없다.
 
 ### Projection Freshness
 
-The relationship between a projection and its source records, managed hash, artifact refs, and projection job state. Freshness may be `current`, `stale`, `failed`, or `unknown`.
+Projection과 source record, managed hash, artifact ref, projection job state 사이의 관계. Freshness는 `current`, `stale`, `failed`, `unknown`일 수 있다.
 
 ### Projection Job
 
-A durable outbox record that asks the projector to render a Markdown projection from committed state records and artifact refs.
+Committed state record와 artifact ref에서 Markdown projection을 render하도록 projector에 요청하는 durable outbox record.
 
 ### QA Gate
 
-The canonical kernel gate for required Manual QA. `manual_qa_record.result` is record-level; `qa_gate` is the close-relevant aggregate state.
+Required Manual QA를 위한 canonical kernel gate. `manual_qa_record.result`는 record-level이고, `qa_gate`는 close-relevant aggregate state다.
 
 ### Raw Artifact
 
-A durable evidence file in the artifact store, such as a diff, log, bundle, screenshot, checkpoint, or manifest file. Raw artifacts are distinct from state records and Markdown reports.
+Diff, log, bundle, screenshot, checkpoint, manifest file처럼 artifact store에 있는 durable evidence file. Raw artifact는 state record와 Markdown report와 구분된다.
 
 ### Reconcile
 
-The process that turns human-editable input or projection drift into an accepted state change, rejected proposal, note, decision, or deferred item.
+Human-editable input 또는 projection drift를 accepted state change, rejected proposal, note, decision, deferred item으로 바꾸는 process.
 
 ### Reconcile Item
 
-The canonical candidate record created from human-editable input or projection drift before a reconcile decision accepts, rejects, converts, or defers it.
+Reconcile decision이 accept, reject, convert, defer하기 전에 human-editable input 또는 projection drift에서 생성되는 canonical candidate record.
 
 ### Reference Surface
 
-The single agent surface targeted by the MVP implementation. It demonstrates the kernel and connector contract without implying broad MVP surface support.
+MVP implementation이 target하는 단일 agent surface. Broad MVP surface support를 imply하지 않고 kernel과 connector contract를 demonstrate한다.
 
 ### Report Projection
 
-A Markdown report generated from state records and artifact references, such as a Task report, approval report, run summary, evidence manifest report, Eval report, or direct-result report.
+Task report, approval report, run summary, evidence manifest report, Eval report, direct-result report처럼 state record와 artifact reference에서 generated되는 Markdown report.
 
-The named report projection kinds are projections or records by default; evidence-file authority stays with registered artifact files.
+Named report projection kind는 기본적으로 projection 또는 record다. Evidence-file authority는 registered artifact file에 남는다.
 
 ### Run
 
-An execution attempt by an agent, evaluator, operator, or other actor against a Task and optionally a Change Unit. Runs record baseline, surface, observed changes, commands, artifacts, and summary.
+Agent, evaluator, operator, 기타 actor가 Task와 optional Change Unit에 대해 수행하는 execution attempt. Run은 baseline, surface, observed change, command, artifact, summary를 기록한다.
 
 ### Scope Gate
 
-The kernel gate requiring product writes to be covered by an active scoped Change Unit. Scope is required for write-capable direct and work modes even when approval is not required.
+Product write가 active scoped Change Unit으로 covered되어야 함을 요구하는 kernel gate. Approval이 required가 아니어도 write-capable direct와 work mode에는 scope가 required다.
 
 ### Shared Design
 
-A design-quality record or projection of the shared understanding for a task: goal, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain impact, module/interface impact, and first Change Unit shape.
+Task에 대한 shared understanding을 담은 design-quality record 또는 projection: goal, scope, non-goal, acceptance criteria, assumption, decision, rejected option, domain impact, module/interface impact, first Change Unit shape.
 
 ### Source-of-truth
 
-The authoritative source for a fact. In the harness, operational state is canonical in `state.sqlite` current records plus `state.sqlite.task_events`; raw evidence is canonical in the artifact store; Markdown documents are projections.
+어떤 fact에 대한 authoritative source. 하네스에서 operational state는 `state.sqlite` current record와 `state.sqlite.task_events`에서 canonical하고, raw evidence는 artifact store에서 canonical하며, Markdown document는 projection이다.
 
 ### `state.sqlite.task_events`
 
-The append-only event history table inside `state.sqlite`. MVP does not use a separate event store.
+`state.sqlite` 안의 append-only event history table. MVP는 별도의 event store를 사용하지 않는다.
 
 ### State Record
 
-A canonical structured record in kernel state, such as a Task, Change Unit, Run, Approval, Evidence Manifest, Eval, Manual QA record, Artifact record, or Reconcile Item.
+Task, Change Unit, Run, Approval, Evidence Manifest, Eval, Manual QA record, Artifact record, Reconcile Item 같은 kernel state의 canonical structured record.
 
 ### Surface Capability Check
 
-A validator that reports whether a connected agent surface can satisfy required harness behavior. It affects blocked reasons and guarantee display, but it is not a kernel gate.
+Connected agent surface가 required harness behavior를 satisfy할 수 있는지 report하는 validator. Blocked reason과 guarantee display에 영향을 주지만 kernel gate는 아니다.
 
 ### Surface Cookbook
 
-The appendix that contains surface-specific connector notes, generated file details, and profile examples. Common integration rules belong in the agent integration document, not the cookbook.
+Surface-specific connector note, generated file detail, profile example을 담은 appendix. Common integration rule은 cookbook이 아니라 agent integration document에 둔다.
 
 ### Task
 
-The user value unit tracked by the kernel. It carries mode, lifecycle phase, gates, result, close reason, assurance, current summary, decisions, evidence, and projection status.
+Kernel이 track하는 user value unit. Mode, lifecycle phase, gate, result, close reason, assurance, current summary, decision, evidence, projection status를 가진다.
 
 ### TDD Trace
 
-A record of red, green, and refactor evidence for a Change Unit, or a recorded non-TDD justification where policy allows it.
+Change Unit에 대한 red, green, refactor evidence record 또는 policy가 허용하는 recorded non-TDD justification.
 
 ### Verification
 
-The process of checking whether the result satisfies the relevant criteria. Verification is separate from approval, Manual QA, and acceptance.
+Result가 relevant criteria를 satisfy하는지 check하는 process. Verification은 approval, Manual QA, acceptance와 구분된다.
 
 ### Verification Gate
 
-The kernel gate for required verification. A user waiver sets `verification_gate=waived_by_user`; it does not create `detached_verified` assurance.
+Required verification을 위한 kernel gate. User waiver는 `verification_gate=waived_by_user`를 set하며 `detached_verified` assurance를 만들지 않는다.
 
 ### Validator Result
 
-A structured result from a validator, including status, guarantee level, target, findings, blocked reasons, and suggested next action.
+Status, guarantee level, target, finding, blocked reason, suggested next action을 포함하는 validator의 structured result.
 
 ### Vertical Slice
 
-A Change Unit shape that connects a thin path from trigger/input through domain logic, persistence or state, caller/API boundary, observable output, tests, and optional Manual QA.
+Trigger/input에서 domain logic, persistence 또는 state, caller/API boundary, observable output, test, optional Manual QA까지 얇은 경로를 연결하는 Change Unit shape.
 
 ### Waiver
 
-An explicit recorded exception to a gate requirement where policy allows it. Verification waiver, design waiver, and QA waiver are allowed under defined rules. Scope, sensitive approval, required evidence, and required acceptance are not waived for successful completion.
+Policy가 허용하는 곳에서 gate requirement에 대한 explicit recorded exception. Verification waiver, design waiver, QA waiver는 정의된 rule 아래 허용된다. Scope, sensitive approval, required evidence, required acceptance는 successful completion을 위해 waived되지 않는다.

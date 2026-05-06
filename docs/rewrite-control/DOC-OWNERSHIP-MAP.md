@@ -1,4 +1,4 @@
-# Document Ownership Map
+# 문서 Ownership Map
 
 이 문서는 하네스 문서 세트 v2의 canonical ownership을 고정한다. 같은 개념의 기준 설명은 하나의 문서만 소유한다. 다른 문서는 한 문장 요약과 링크만 둔다.
 
@@ -14,9 +14,9 @@
 7. Later 기능은 MVP 본문에서 구현 요구처럼 쓰지 않는다.
 ```
 
-Owner names in this file refer to the v2 target tree in `TARGET-DOC-TREE.md`. Current source files may have different names until the rewrite is executed.
+이 파일의 owner name은 `TARGET-DOC-TREE.md`의 v2 target tree를 가리킨다. Rewrite가 실행되기 전까지 current source file은 다른 이름을 가질 수 있다.
 
-Path convention:
+경로 규칙:
 
 ```text
 docs/README.md:
@@ -184,7 +184,7 @@ unless explicitly stated otherwise.
 
 ## 3. Source-of-Truth Ownership
 
-This table assigns exactly one concept owner. Storage DDL owner is listed separately and does not take conceptual ownership.
+이 table은 각 concept에 정확히 하나의 owner를 배정한다. Storage DDL owner는 별도로 listed되며 conceptual ownership을 갖지 않는다.
 
 | Fact Type | Canonical Source in System | Concept Owner | Storage DDL Owner |
 |---|---|---|---|
@@ -212,11 +212,11 @@ This table assigns exactly one concept owner. Storage DDL owner is listed separa
 | Verification verdict | `evals` + artifact refs | `03-kernel-spec.md` | `06-reference-mvp.md` |
 | Validator result | validator result payloads | `05-mcp-api-and-schemas.md` | n/a |
 
-## 4. Prohibited Duplicate Ownership Patterns
+## 4. 금지된 Duplicate Ownership Pattern
 
-### 4.1 Strategy Owning Implementation Detail
+### 4.1 Strategy가 Implementation Detail을 소유하는 경우
 
-Do not put these in `02-strategy.md`:
+다음 항목을 `02-strategy.md`에 두지 않는다.
 
 ```text
 - full gate enum
@@ -226,9 +226,9 @@ Do not put these in `02-strategy.md`:
 - full template text
 ```
 
-### 4.2 User Guide Owning Contracts
+### 4.2 User Guide가 Contract를 소유하는 경우
 
-Do not put these in `10-user-guide.md`:
+다음 항목을 `10-user-guide.md`에 두지 않는다.
 
 ```text
 - tool payload schema
@@ -237,19 +237,19 @@ Do not put these in `10-user-guide.md`:
 - artifact layout
 ```
 
-### 4.3 Integration Owning Surface Cookbooks
+### 4.3 Integration이 Surface Cookbook을 소유하는 경우
 
-Do not put repeated surface addenda in `09-agent-integration.md`. Use `appendix/B-surface-cookbook.md`.
+Repeated surface addenda를 `09-agent-integration.md`에 두지 않는다. `appendix/B-surface-cookbook.md`를 사용한다.
 
-### 4.4 Projection Owning State
+### 4.4 Projection이 State를 소유하는 경우
 
-Do not let `TASK`, `DOMAIN-LANGUAGE`, or `MODULE-MAP` documents become authoritative state. They are projection and proposal surfaces.
+`TASK`, `DOMAIN-LANGUAGE`, `MODULE-MAP` document가 authoritative state가 되게 하지 않는다. 이들은 projection이자 proposal surface다.
 
-### 4.5 Reference MVP Owning Strategy
+### 4.5 Reference MVP가 Strategy를 소유하는 경우
 
-`06-reference-mvp.md` implements decisions. It does not re-decide core invariants, policy defaults, or UX philosophy.
+`06-reference-mvp.md`는 decision을 implement한다. Core invariant, policy default, UX philosophy를 다시 결정하지 않는다.
 
-## 5. Minimal Cross-References Required
+## 5. 필요한 최소 Cross-Reference
 
 | From | Must Reference |
 |---|---|

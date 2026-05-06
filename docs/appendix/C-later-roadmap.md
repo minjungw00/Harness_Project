@@ -1,65 +1,65 @@
 # Appendix C: Later Roadmap
 
-## Document Role
+## 문서 역할
 
-This appendix collects later automation and post-MVP roadmap items so they do not read as MVP requirements.
+이 appendix는 later automation과 post-MVP roadmap item을 모아 MVP requirement처럼 읽히지 않게 한다.
 
-It does not own kernel invariants, public MCP schemas, MVP implementation requirements, or required conformance for MVP.
+Kernel invariant, public MCP schema, MVP implementation requirement, MVP에 required한 conformance는 담당하지 않는다.
 
 ## Roadmap Scope
 
-The MVP proves the local kernel: state, gates, artifacts, verification, projection, reconcile, and one reference surface. The items below are useful follow-ons after those basics are stable.
+MVP는 local kernel, 즉 state, gate, artifact, verification, projection, reconcile, one reference surface를 입증한다. 아래 항목은 이 기본 요소가 안정된 뒤의 유용한 follow-on이다.
 
-Later items may become v1 work only after they have:
+Later item은 다음을 갖춘 뒤에만 v1 work가 될 수 있다.
 
-- a clear capability profile requirement
-- a fixture or conformance target
-- a fallback behavior for unsupported surfaces
-- no dependency on treating projections as canonical state
+- clear capability profile requirement
+- fixture 또는 conformance target
+- unsupported surface에 대한 fallback behavior
+- projection을 canonical state로 취급하는 것에 대한 dependency 없음
 
 ## Dashboard
 
-A dashboard can visualize active Tasks, gates, approvals, evidence coverage, projection freshness, artifact integrity, and reconcile items.
+Dashboard는 active Task, gate, approval, evidence coverage, projection freshness, artifact integrity, reconcile item을 visualize할 수 있다.
 
-Later because MVP should first stabilize the records, projections, and conformance fixtures that the dashboard would display. The first version should be read-only over `state.sqlite`, artifact refs, and projection job status.
+MVP는 dashboard가 display할 record, projection, conformance fixture를 먼저 stabilize해야 하므로 later다. 첫 version은 `state.sqlite`, artifact ref, projection job status 위의 read-only여야 한다.
 
 ## Browser QA Capture
 
-Automatic browser QA capture can gather screenshots, console logs, network traces, accessibility snapshots, and workflow recordings for Manual QA records.
+Automatic browser QA capture는 Manual QA record를 위한 screenshot, console log, network trace, accessibility snapshot, workflow recording을 gather할 수 있다.
 
-Later because reliable browser capture requires additional surface capability, redaction policy, test environment setup, and artifact retention rules. MVP supports Manual QA records and artifact refs without requiring automated browser capture.
+Reliable browser capture에는 additional surface capability, redaction policy, test environment setup, artifact retention rule이 필요하므로 later다. MVP는 automated browser capture를 require하지 않고 Manual QA record와 artifact ref를 지원한다.
 
 ## Cross-Surface Verification
 
-Cross-surface verification can send a verification bundle to a different agent surface or evaluator environment.
+Cross-surface verification은 verification bundle을 다른 agent surface 또는 evaluator environment로 보낼 수 있다.
 
-Later because MVP only needs one reference surface plus detached verification bundles/manual evaluator instructions. Cross-surface verify should wait for connector conformance and capability profiles to be stable.
+MVP에는 one reference surface와 detached verification bundle/manual evaluator instruction이면 충분하므로 later다. Cross-surface verify는 connector conformance와 capability profile이 stable해진 뒤로 미뤄야 한다.
 
 ## Native Hook Expansion
 
-Native hooks can provide stronger pre-tool guards, command interception, file write blocking, or richer artifact capture in surfaces that support them.
+Native hook은 이를 지원하는 surface에서 stronger pre-tool guard, command interception, file write blocking, richer artifact capture를 제공할 수 있다.
 
-Later because hook APIs vary by surface. MVP may use a concrete hook only when the reference surface actually supports it; otherwise native hooks are a capability-dependent enhancement.
+Hook API가 surface마다 다르므로 later다. MVP는 reference surface가 실제로 지원할 때만 concrete hook을 사용할 수 있다. 그 외에는 native hook이 capability-dependent enhancement다.
 
 ## Advanced Sidecar Watcher
 
-An advanced sidecar watcher can observe file writes, command execution, generated-file drift, artifact capture opportunities, and repo baseline drift in near real time.
+Advanced sidecar watcher는 file write, command execution, generated-file drift, artifact capture opportunity, repo baseline drift를 near real time으로 observe할 수 있다.
 
-Later because MVP can start with cooperative `prepare_write`, git diff checks, artifact registration, and detective validators. Advanced watching should not be required for the core state model to work.
+MVP는 cooperative `prepare_write`, git diff check, artifact registration, detective validator로 시작할 수 있으므로 later다. Advanced watching이 core state model의 동작에 required여서는 안 된다.
 
 ## Parallel Orchestration
 
-Parallel Change Unit orchestration can split work into multiple active implementation lanes, manage dependency DAGs, isolate baselines, and reconcile concurrent evidence.
+Parallel Change Unit orchestration은 work를 여러 active implementation lane으로 split하고, dependency DAG를 manage하고, baseline을 isolate하고, concurrent evidence를 reconcile할 수 있다.
 
-Later because parallel execution depends on stable locks, baseline freshness, approval scope composition, artifact partitioning, and close semantics.
+Parallel execution은 stable lock, baseline freshness, approval scope composition, artifact partitioning, close semantics에 의존하므로 later다.
 
 ## Analytics
 
-Analytics can derive rates and latencies from `state.sqlite.task_events`, runs, validator results, projection jobs, and reconcile items.
+Analytics는 `state.sqlite.task_events`, run, validator result, projection job, reconcile item에서 rate와 latency를 derive할 수 있다.
 
-Later because metrics are derived values, not authority. Candidate metrics include approval turnaround, verification latency, evidence insufficiency rate, projection stale duration, reconcile volume, and same-session verification guard triggers.
+Metric은 authority가 아니라 derived value이므로 later다. Candidate metric에는 approval turnaround, verification latency, evidence insufficiency rate, projection stale duration, reconcile volume, same-session verification guard trigger가 있다.
 
-Candidate derived metrics from the legacy operations guide:
+Legacy operations guide의 candidate derived metric:
 
 - `direct_to_work_escalation_rate`
 - `approval_turnaround_time`
@@ -79,17 +79,17 @@ Candidate derived metrics from the legacy operations guide:
 - `domain_language_mismatch_count`
 - `interface_review_required_count`
 
-These metrics should become v1 or MVP only if a future decision assigns an owner, fixture coverage, retention behavior, and a user-facing interpretation rule.
+Future decision이 owner, fixture coverage, retention behavior, user-facing interpretation rule을 assign할 때만 이 metric은 v1 또는 MVP가 되어야 한다.
 
 ## Team Profile Export And Import
 
-Team profile export/import can share policy defaults, connector profiles, surface capability assumptions, validator profiles, and project setup templates across a team.
+Team profile export/import는 policy default, connector profile, surface capability assumption, validator profile, project setup template을 team에 공유할 수 있다.
 
-Later because MVP is a local kernel. Team sharing needs versioning, privacy review, secret handling, and conflict behavior before it should affect runtime state.
+MVP는 local kernel이므로 later다. Team sharing은 runtime state에 영향을 주기 전에 versioning, privacy review, secret handling, conflict behavior가 필요하다.
 
 ## Additional Later Candidates
 
-The following are also later unless a future batch promotes them with fixtures and implementation ownership:
+다음 항목도 future batch가 fixture와 implementation ownership으로 promote하기 전까지 later다.
 
 - artifact dashboard
 - worktree-based fresh verify automation

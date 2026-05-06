@@ -1,6 +1,6 @@
-# User Guide
+# 사용자 가이드
 
-## Document Role
+## 문서 역할
 
 이 문서는 사용자가 에이전트에게 어떻게 말하고, 상태를 어떻게 읽고, 어떤 판단을 언제 내려야 하는지 설명한다.
 
@@ -14,7 +14,7 @@
 이 작업 하네스 기준으로 진행해.
 ```
 
-이 말은 “상태를 확인하고, 범위를 잡고, 쓰기 전에 허용 범위를 확인하고, 근거와 검증과 사용자 판단을 남기면서 진행해”라는 뜻이다.
+이 말은 "상태를 확인하고, 범위를 잡고, 쓰기 전에 허용 범위를 확인하고, 근거와 검증과 사용자 판단을 남기면서 진행해"라는 뜻이다.
 
 자주 쓰는 말:
 
@@ -102,7 +102,7 @@ Assurance는 보통 `none`, `self_checked`, `detached_verified`로 보인다. `d
 
 ## Evidence 부족
 
-Evidence는 “했음”이라는 말이 아니라 acceptance criteria를 뒷받침하는 기록이다.
+Evidence는 "했음"이라는 말이 아니라 acceptance criteria를 뒷받침하는 기록이다.
 
 ```text
 Evidence: partial
@@ -151,7 +151,7 @@ QA가 실패하면 작업은 닫지 않고 rework나 block으로 돌아간다. Q
 
 ## Acceptance
 
-Acceptance는 “이 결과를 받아들인다”는 마지막 사용자 판단이다. 기술 검증이 통과하고 Manual QA가 끝나도, 남은 trade-off를 사용자가 받아들이지 않으면 닫지 않는다.
+Acceptance는 "이 결과를 받아들인다"는 마지막 사용자 판단이다. 기술 검증이 통과하고 Manual QA가 끝나도, 남은 trade-off를 사용자가 받아들이지 않으면 닫지 않는다.
 
 ```text
 수용해. 이 작업 닫아.

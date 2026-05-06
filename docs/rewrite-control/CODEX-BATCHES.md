@@ -2,7 +2,7 @@
 
 이 문서는 Codex에게 맡길 batch별 작업 지시를 정의한다. Codex는 저장소 파일을 실제로 편집하는 repo editor다. 새로운 아키텍처 결정은 하지 않는다.
 
-## 0. Path Convention
+## 0. 경로 규칙
 
 ```text
 docs/README.md:
@@ -17,7 +17,7 @@ unless explicitly stated otherwise.
 
 ## 1. Global Codex Rules
 
-All Codex tasks must follow these rules.
+모든 Codex task는 다음 rule을 따라야 한다.
 
 ```text
 - Read docs/rewrite-control/REWRITE-BRIEF.md first.
@@ -39,13 +39,13 @@ All Codex tasks must follow these rules.
 
 ## 2. Branch Setup
 
-Recommended branch:
+권장 branch:
 
 ```bash
 git checkout -b docs/harness-rewrite-v2
 ```
 
-Create control directory if not already present:
+아직 없으면 control directory를 만든다.
 
 ```text
 docs/rewrite-control/
@@ -59,21 +59,21 @@ docs/rewrite-control/
   REVIEW-CHECKLIST.md
 ```
 
-Legacy v1 source documents may be archived under:
+Legacy v1 source document는 다음 아래 archived될 수 있다.
 
 ```text
 docs/legacy-v1/
 ```
 
-When a batch asks for a pre-rewrite source file that has been archived, read the matching file from `docs/legacy-v1/` and use `docs/appendix/D-migration-notes.md` as the path map.
+Batch가 archived된 pre-rewrite source file을 요구하면 `docs/legacy-v1/`의 matching file을 읽고 `docs/appendix/D-migration-notes.md`를 path map으로 사용한다.
 
 ## 3. Batch 0 — Inventory and Conflict Confirmation
 
-### Goal
+### 목표
 
-Confirm existing content inventory before editing canonical docs.
+Canonical doc을 편집하기 전에 existing content inventory를 확인한다.
 
-### Files to Read
+### 읽을 파일
 
 ```text
 README.md
@@ -97,7 +97,7 @@ docs/legacy-v1/glossary.md
 docs/rewrite-control/*.md
 ```
 
-### Files to Edit
+### 편집할 파일
 
 ```text
 docs/rewrite-control/CONFLICT-LIST.md
@@ -144,11 +144,11 @@ Output a summary:
 
 ## 4. Batch A — Target Structure Skeleton
 
-### Goal
+### 목표
 
-Create the new target document structure without full rewrite.
+Full rewrite 없이 새 target document structure를 만든다.
 
-### Files to Create or Rename
+### 만들거나 이름을 바꿀 파일
 
 ```text
 docs/00-introduction.md
@@ -167,13 +167,13 @@ docs/appendix/C-later-roadmap.md
 docs/appendix/D-migration-notes.md
 ```
 
-### Files to Edit
+### 편집할 파일
 
 ```text
 docs/README.md
 ```
 
-Only update the doc list if skeleton files exist.
+Skeleton file이 존재할 때만 doc list를 update한다.
 
 ### Codex Prompt
 
@@ -211,11 +211,11 @@ Do not edit root README.md. Do not delete old files unless asked. If both old an
 
 ## 5. Batch B — Strategy and Kernel
 
-### Goal
+### 목표
 
-Rewrite strategy and create implementable kernel spec.
+Strategy를 rewrite하고 implementable kernel spec을 만든다.
 
-### Files to Edit
+### 편집할 파일
 
 ```text
 docs/02-strategy.md
@@ -223,7 +223,7 @@ docs/03-kernel-spec.md
 docs/glossary.md
 ```
 
-### Files to Read
+### 읽을 파일
 
 ```text
 docs/rewrite-control/KERNEL-DECISIONS.md
@@ -232,7 +232,7 @@ docs/rewrite-control/CONFLICT-LIST.md
 docs/01-project-charter.md
 ```
 
-Read current pre-rewrite content from the listed source files before editing:
+편집 전에 listed source file에서 current pre-rewrite content를 읽는다.
 
 ```text
 docs/legacy-v1/02-strategy.md
@@ -240,7 +240,7 @@ docs/legacy-v1/04-reference-implementation.md
 docs/legacy-v1/glossary.md
 ```
 
-If those files have already been replaced or archived, use `docs/legacy-v1/`, git history, or `docs/appendix/D-migration-notes.md`.
+해당 file이 이미 replaced 또는 archived되었으면 `docs/legacy-v1/`, git history, `docs/appendix/D-migration-notes.md`를 사용한다.
 
 ### Codex Prompt
 
@@ -288,11 +288,11 @@ Use exact decisions:
 
 ## 6. Batch C — Runtime, API, Reference MVP
 
-### Goal
+### 목표
 
-Split architecture, MCP schema, and reference implementation into closed implementation layers.
+Architecture, MCP schema, reference implementation을 닫힌 implementation layer로 분리한다.
 
-### Files to Edit
+### 편집할 파일
 
 ```text
 docs/04-runtime-architecture.md
@@ -345,11 +345,11 @@ STATE_CONFLICT, NO_ACTIVE_TASK, NO_ACTIVE_CHANGE_UNIT, SCOPE_REQUIRED, SCOPE_VIO
 
 ## 7. Batch D — Projection, Policy, Integration
 
-### Goal
+### 목표
 
-Separate projection contracts, design-quality policies, and connector contracts.
+Projection contract, design-quality policy, connector contract를 분리한다.
 
-### Files to Edit
+### 편집할 파일
 
 ```text
 docs/07-document-projection.md
@@ -393,11 +393,11 @@ Rules:
 
 ## 8. Batch E — User Guide, Operations, Authoring, README
 
-### Goal
+### 목표
 
-Finalize user-facing and operations-facing docs around the new kernel.
+새 kernel을 기준으로 user-facing 및 operations-facing doc을 finalize한다.
 
-### Files to Edit
+### 편집할 파일
 
 ```text
 docs/10-user-guide.md
@@ -435,9 +435,9 @@ Rules:
 
 ## 9. Batch H — Legacy File Cleanup
 
-### Goal
+### 목표
 
-Ensure legacy docs replaced by v2 docs do not remain as canonical docs.
+v2 doc으로 replaced된 legacy doc이 canonical doc으로 남지 않도록 한다.
 
 ### Legacy Files
 
@@ -457,7 +457,7 @@ docs/legacy-v1/glossary.md
 docs/legacy-v1/REWRITE-MANIFEST.md
 ```
 
-### Files to Edit
+### 편집할 파일
 
 ```text
 legacy files listed above, only for cleanup
@@ -491,13 +491,13 @@ Rules:
 
 ## 10. Batch F — Cross-Document Consistency QA
 
-### Goal
+### 목표
 
-Find and fix contradictions after rewrite and legacy cleanup.
+Rewrite와 legacy cleanup 후 contradiction을 찾아 수정한다.
 
-### Files to Edit
+### 편집할 파일
 
-Any main doc, but only to fix contradictions and references.
+모든 main doc 가능. 단 contradiction과 reference를 수정하는 경우에만.
 
 ### Codex Prompt
 
@@ -536,9 +536,9 @@ Summarize all edits.
 
 ## 11. Batch G — Implementability Review Patch
 
-### Goal
+### 목표
 
-Ensure implementation can start from the docs.
+Docs만으로 implementation을 시작할 수 있게 한다.
 
 ### Codex Prompt
 
@@ -576,7 +576,7 @@ Do not invent unresolved details unless already decided in KERNEL-DECISIONS.md.
 
 ## 12. Commit Strategy
 
-Recommended commits:
+권장 commit:
 
 ```text
 1. docs: add rewrite control documents

@@ -1,8 +1,8 @@
-# Target Document Tree
+# 대상 문서 트리
 
 이 문서는 하네스 문서 세트 v2의 목표 파일 구조와 각 문서의 소유 책임을 정의한다.
 
-## 0. Path Convention
+## 0. 경로 규칙
 
 ```text
 docs/README.md:
@@ -15,7 +15,7 @@ All target documentation paths in this file are relative to docs/
 unless explicitly stated otherwise.
 ```
 
-## 1. Target Tree
+## 1. 대상 트리
 
 ```text
 docs/
@@ -55,24 +55,24 @@ README.md
   repository landing page, not the harness documentation entrypoint
 ```
 
-## 2. Main Documents
+## 2. 주요 문서
 
 ### README.md
 
-Owner role:
+소유 역할:
 
 ```text
 문서 세트의 현관.
 하네스의 한 문장 정의, 핵심 원칙, 읽기 경로, target tree를 안내한다.
 ```
 
-Path:
+경로:
 
 ```text
 docs/README.md
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - one-sentence definition
@@ -81,7 +81,7 @@ Owns:
 - MVP/v1/later orientation summary
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - state machine
@@ -93,13 +93,13 @@ Does not own:
 
 ### 00-introduction.md
 
-Owner role:
+소유 역할:
 
 ```text
 사용자와 구현자가 공유하는 정신 모델.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - 하네스가 줄이는 문제 요약
@@ -110,7 +110,7 @@ Owns:
 - source-of-truth 요약
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - 구현 schema
@@ -121,13 +121,13 @@ Does not own:
 
 ### 01-project-charter.md
 
-Owner role:
+소유 역할:
 
 ```text
 프로젝트 목적, 대상, 가치, 범위, 비목표.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - project purpose
@@ -137,7 +137,7 @@ Owns:
 - automation philosophy
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - 전략 불변식 세부
@@ -148,13 +148,13 @@ Does not own:
 
 ### 02-strategy.md
 
-Owner role:
+소유 역할:
 
 ```text
 전략적 thesis, failure model, core invariants, policy defaults.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - strategic thesis
@@ -168,7 +168,7 @@ Owns:
 - MVP boundary summary
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - lifecycle transition table
@@ -181,13 +181,13 @@ Does not own:
 
 ### 03-kernel-spec.md
 
-Owner role:
+소유 역할:
 
 ```text
 하네스 운영 커널 사양.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - entity model
@@ -203,7 +203,7 @@ Owns:
 - invariant enforcement mapping
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - MCP wire schema
@@ -216,13 +216,13 @@ Does not own:
 
 ### 04-runtime-architecture.md
 
-Owner role:
+소유 역할:
 
 ```text
 세 공간, runtime home, Core 흐름, authority와 projection/reconcile 아키텍처.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - Product Repository / Harness Server / Runtime Home canonical explanation
@@ -239,7 +239,7 @@ Owns:
 - failure and recovery flow overview
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - tool별 schema
@@ -251,13 +251,13 @@ Does not own:
 
 ### 05-mcp-api-and-schemas.md
 
-Owner role:
+소유 역할:
 
 ```text
 MCP resource/tool, schema, errors, idempotency, validator result schema의 소유 문서.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - MCP resources
@@ -275,7 +275,7 @@ Owns:
 - artifact ref schema
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - why strategy
@@ -286,13 +286,13 @@ Does not own:
 
 ### 06-reference-mvp.md
 
-Owner role:
+소유 역할:
 
 ```text
 MVP 구현 순서와 참조 구현 세부.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - MVP-0 to MVP-5 implementation sequence
@@ -307,7 +307,7 @@ Owns:
 - minimal CLI implementation plan
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - strategic rationale
@@ -318,13 +318,13 @@ Does not own:
 
 ### 07-document-projection.md
 
-Owner role:
+소유 역할:
 
 ```text
 Markdown projection, managed/human-editable 영역, artifact refs, template tiers.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - projection principles
@@ -338,7 +338,7 @@ Owns:
 - projection freshness rules
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - DB schema
@@ -349,13 +349,13 @@ Does not own:
 
 ### 08-design-quality-policy-pack.md
 
-Owner role:
+소유 역할:
 
 ```text
 설계 품질 원칙을 policy contract로 정의한다.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - shared design policy
@@ -369,7 +369,7 @@ Owns:
 - policy-to-validator mapping
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - core state machine
@@ -380,13 +380,13 @@ Does not own:
 
 ### 09-agent-integration.md
 
-Owner role:
+소유 역할:
 
 ```text
 agent surface 공통 통합 계약과 capability profile.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - common integration structure
@@ -400,7 +400,7 @@ Owns:
 - connector conformance overview
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - surface별 detailed cookbook
@@ -412,13 +412,13 @@ Does not own:
 
 ### 10-user-guide.md
 
-Owner role:
+소유 역할:
 
 ```text
 사용자가 실제로 말하고 읽는 법.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - quick start
@@ -430,7 +430,7 @@ Owns:
 - evidence 부족, verification, QA, acceptance 상황 처리
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - DB schema
@@ -441,13 +441,13 @@ Does not own:
 
 ### 11-operations-and-conformance.md
 
-Owner role:
+소유 역할:
 
 ```text
 설치, 진단, 복구, export, fixture-based conformance.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - connect
@@ -464,7 +464,7 @@ Owns:
 - design-quality conformance fixtures
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - daily user workflow
@@ -474,13 +474,13 @@ Does not own:
 
 ### 99-authoring-guide.md
 
-Owner role:
+소유 역할:
 
 ```text
 앞으로 문서가 다시 비대해지지 않도록 하는 작성 규칙.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - document layer rules
@@ -492,7 +492,7 @@ Owns:
 - contradiction review checklist
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - runtime contract itself
@@ -502,13 +502,13 @@ Does not own:
 
 ### glossary.md
 
-Owner role:
+소유 역할:
 
 ```text
 공식 용어 정의.
 ```
 
-Owns:
+담당 범위:
 
 ```text
 - official definitions
@@ -516,7 +516,7 @@ Owns:
 - differences between confusing terms
 ```
 
-Does not own:
+담당하지 않는 범위:
 
 ```text
 - full policy or implementation contract
@@ -526,7 +526,7 @@ Does not own:
 
 ### appendix/A-template-library.md
 
-Owns:
+담당 범위:
 
 ```text
 - full DEC template
@@ -542,7 +542,7 @@ Owns:
 
 ### appendix/B-surface-cookbook.md
 
-Owns:
+담당 범위:
 
 ```text
 - Codex-specific notes
@@ -556,7 +556,7 @@ Owns:
 
 ### appendix/C-later-roadmap.md
 
-Owns:
+담당 범위:
 
 ```text
 - dashboard
@@ -571,7 +571,7 @@ Owns:
 
 ### appendix/D-migration-notes.md
 
-Owns:
+담당 범위:
 
 ```text
 - old file to new file migration notes

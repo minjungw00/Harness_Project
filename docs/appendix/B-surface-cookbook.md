@@ -1,23 +1,23 @@
 # Appendix B: Surface Cookbook
 
-## Document Role
+## 문서 역할
 
-This appendix owns surface-specific connector notes, generated file details, and profile examples. The common integration contract is owned by `09-agent-integration.md`.
+이 appendix는 surface-specific connector note, generated file detail, profile example을 담당한다. Common integration contract는 `09-agent-integration.md`가 담당한다.
 
-Use this cookbook only for local differences that depend on a concrete surface. Do not repeat kernel state rules, MCP schemas, or generic policy contracts here.
+Concrete surface에 의존하는 local difference에만 이 cookbook을 사용한다. Kernel state rule, MCP schema, generic policy contract를 여기서 반복하지 않는다.
 
 ## Cookbook Scope
 
-Each surface recipe should describe:
+각 surface recipe는 다음을 설명해야 한다.
 
-- target profiles that are plausible for the surface
-- generated files or instructions
-- MCP configuration hints
-- capture, guard, and isolation options
-- common fallbacks
-- conformance risks
+- surface에 plausible한 target profile
+- generated file 또는 instruction
+- MCP configuration hint
+- capture, guard, isolation option
+- common fallback
+- conformance risk
 
-The connector must still declare a capability profile. A surface name does not imply a guarantee level.
+Connector는 여전히 capability profile을 declare해야 한다. Surface name은 guarantee level을 imply하지 않는다.
 
 ## Codex Notes
 
@@ -41,14 +41,14 @@ profile_risks:
   - artifact capture may need wrapper or explicit record_run discipline
 ```
 
-Generated files may include:
+Generated file에는 다음이 포함될 수 있다.
 
-- `AGENTS.md` or a managed harness section inside it
-- local skill or command instructions when supported
+- `AGENTS.md` 또는 그 안의 managed harness section
+- 지원되는 경우 local skill 또는 command instruction
 - MCP config snippet
 - connector manifest entry
 
-Codex-specific connector work should keep `AGENTS.md` short and put the procedural workflow in a skill, command, or MCP resource. Where pre-tool blocking is unavailable, rely on `prepare_write`, detective changed-path validation, and a sidecar if risk warrants it.
+Codex-specific connector work는 `AGENTS.md`를 짧게 유지하고 procedural workflow를 skill, command, MCP resource에 두어야 한다. Pre-tool blocking이 unavailable이면 `prepare_write`, detective changed-path validation, risk가 warrant할 경우 sidecar에 의존한다.
 
 ## Claude Code Notes
 
@@ -71,18 +71,18 @@ profile_risks:
   - read-only verification profile must be tested by conformance
 ```
 
-Hook mapping candidates:
+Hook mapping candidate:
 
 | Hook point | Harness use |
 |---|---|
-| `SessionStart` | inject active Task and status card |
-| `UserPromptSubmit` | guide intake and shaping |
-| `PreToolUse` | check edit/write/bash/network/secret access against scope and approval |
-| `PostToolUse` | register changed files, command output, and log artifact candidates |
-| `Stop` | draft run summary and show verify/QA needs |
-| `PreCompact` | preserve Task summary and artifact refs |
+| `SessionStart` | active Task와 status card inject |
+| `UserPromptSubmit` | intake와 shaping 안내 |
+| `PreToolUse` | edit/write/bash/network/secret access를 scope와 approval에 대해 check |
+| `PostToolUse` | changed file, command output, log artifact candidate register |
+| `Stop` | run summary draft 및 verify/QA need 표시 |
+| `PreCompact` | Task summary와 artifact ref preserve |
 
-Evaluator profiles should be read-only by default. A profile may claim preventive or isolated guarantees only after the connector conformance proves those hooks or boundaries are active.
+Evaluator profile은 기본적으로 read-only여야 한다. Connector conformance가 해당 hook 또는 boundary가 active임을 prove한 뒤에만 profile이 preventive 또는 isolated guarantee를 claim할 수 있다.
 
 ## Gemini Notes
 
@@ -106,7 +106,7 @@ profile_risks:
   - capture and guard behavior varies by host
 ```
 
-Gemini connectors should keep extension context small. Push the active Task card and Change Unit scope, then let the agent pull longer standards, domain language, module maps, and interface contracts through MCP resources.
+Gemini connector는 extension context를 작게 유지해야 한다. Active Task card와 Change Unit scope를 push한 뒤 agent가 MCP resource를 통해 longer standard, domain language, module map, interface contract를 pull하게 한다.
 
 ## GitHub Copilot Notes
 
@@ -130,7 +130,7 @@ profile_risks:
   - write guard and artifact capture need profile-specific verification
 ```
 
-Copilot connectors should prioritize status card display, MCP tool invocation, approval card display, Manual QA card display, and acceptance prompts. For terminal/task execution, prefer wrappers that can capture output and associate it with the active Run.
+Copilot connector는 status card display, MCP tool invocation, approval card display, Manual QA card display, acceptance prompt를 우선해야 한다. Terminal/task execution에는 output을 capture하고 active Run에 associate할 수 있는 wrapper를 선호한다.
 
 ## Cursor Notes
 
@@ -153,13 +153,13 @@ profile_risks:
   - guard behavior depends on IDE profile and permissions
 ```
 
-Cursor connectors should keep project rules short and use the skill/playbook plus MCP for procedural depth. Generated project rules should be covered by the connector manifest so local edits become reconcile candidates instead of being overwritten silently.
+Cursor connector는 project rule을 짧게 유지하고 skill/playbook과 MCP로 procedural depth를 제공해야 한다. Generated project rule은 connector manifest로 cover해야 하며, local edit는 조용히 overwrite되지 않고 reconcile candidate가 되어야 한다.
 
 ## Generated File Details
 
 ### Always-On Rule File
 
-Use this shape for surface rule files such as `AGENTS.md`, `CLAUDE.md`, Gemini instructions, Copilot custom instructions, or Cursor rules. Keep only the lines that the specific surface needs.
+`AGENTS.md`, `CLAUDE.md`, Gemini instruction, Copilot custom instruction, Cursor rule 같은 surface rule file에는 이 shape를 사용한다. Specific surface에 필요한 line만 유지한다.
 
 ````md
 # Harness Rules
@@ -248,7 +248,7 @@ Before changing product files, call the Harness MCP server.
 
 ### MCP Config Snippet
 
-Each surface has its own config format. The connector manifest should record the generated path and managed hash. Local stdio is the default MVP transport; local HTTP may be allowed by profile.
+각 surface에는 자체 config format이 있다. Connector manifest는 generated path와 managed hash를 기록해야 한다. Local stdio가 default MVP transport다. Profile에 따라 local HTTP를 허용할 수 있다.
 
 ```yaml
 mcp_server:
@@ -366,4 +366,4 @@ fallbacks:
 
 ## Surface Conformance Notes
 
-Each connector recipe should be tested against the operations-owned fixtures for its declared capability tier. When a surface version or host profile changes, rerun conformance before reusing the previous guarantee level.
+각 connector recipe는 declared capability tier에 맞는 operations-owned fixture로 test되어야 한다. Surface version 또는 host profile이 바뀌면 previous guarantee level을 reuse하기 전에 conformance를 rerun한다.

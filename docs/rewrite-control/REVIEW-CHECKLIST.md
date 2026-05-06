@@ -2,7 +2,7 @@
 
 이 문서는 재작성된 하네스 문서 세트를 검토하기 위한 기준이다. 각 Codex batch 후 이 체크리스트로 semantic QA를 수행한다.
 
-## 0. Path Convention
+## 0. 경로 규칙
 
 ```text
 docs/README.md:
@@ -15,7 +15,7 @@ All target documentation paths are interpreted under docs/
 unless explicitly stated otherwise.
 ```
 
-## 1. Global Completion Checklist
+## 1. 전체 완료 Checklist
 
 ```text
 [ ] core invariant가 7개로 유지된다.
@@ -49,9 +49,9 @@ unless explicitly stated otherwise.
 [ ] legacy docs replaced by v2 docs no longer remain as canonical docs.
 ```
 
-## 2. Source-of-Truth Checks
+## 2. Source-of-Truth Check
 
-### Required Statements
+### 필수 Statement
 
 다음 의미가 모든 문서에서 일관되어야 한다.
 
@@ -67,7 +67,7 @@ Human-editable 영역은 입력 표면이다.
 상태 반영은 MCP tool 또는 reconcile action을 통해 수행한다.
 ```
 
-### Prohibited or Suspicious Phrases
+### 금지 또는 의심 표현
 
 다음 표현이 있으면 검토한다.
 
@@ -93,7 +93,7 @@ RUN-SUMMARY/EVAL/TDD-TRACE/MANUAL-QA/EVIDENCE-MANIFEST/DIRECT-RESULT are raw art
 exported projection hash makes a projection canonical raw evidence
 ```
 
-## 3. State and Gate Checks
+## 3. State and Gate Check
 
 ```text
 [ ] `03-kernel-spec.md`가 lifecycle_phase enum을 소유한다.
@@ -112,7 +112,7 @@ exported projection hash makes a projection canonical raw evidence
 [ ] Capability는 `surface_capability_check` validator, `prepare_write` blocked reason, guarantee display로 표현된다.
 ```
 
-## 4. Scope / Approval Checks
+## 4. Scope / Approval Check
 
 ```text
 [ ] Scope gate는 모든 write-capable run에 적용된다고 되어 있다.
@@ -123,7 +123,7 @@ exported projection hash makes a projection canonical raw evidence
 [ ] User Guide에서 approval이 검증이나 acceptance를 대체하지 않는다고 설명한다.
 ```
 
-## 5. Verification / QA / Acceptance Checks
+## 5. Verification / QA / Acceptance Check
 
 ```text
 [ ] Work는 same-session self-review를 detached verification으로 인정하지 않는다.
@@ -141,7 +141,7 @@ exported projection hash makes a projection canonical raw evidence
 [ ] QA failed는 rework 또는 blocked 상태로 이어진다.
 ```
 
-## 6. MCP API Checks
+## 6. MCP API Check
 
 `05-mcp-api-and-schemas.md`는 모든 public tool에 대해 다음을 제공해야 한다.
 
@@ -219,7 +219,7 @@ Required error codes:
 [ ] VALIDATOR_FAILED
 ```
 
-## 7. SQLite / Reference MVP Checks
+## 7. SQLite / Reference MVP Check
 
 `06-reference-mvp.md` must include DDL drafts or explicit TODO_IMPLEMENT for:
 
@@ -261,7 +261,7 @@ Implementation sequence:
 [ ] MVP-5 Reference Surface
 ```
 
-## 8. Projection Checks
+## 8. Projection Check
 
 ```text
 [ ] `07-document-projection.md` says projection is not source-of-truth.
@@ -278,9 +278,9 @@ Implementation sequence:
 [ ] Full templates are in docs/appendix/A.
 ```
 
-## 9. Design-Quality Policy Checks
+## 9. Design-Quality Policy Check
 
-Each policy in `08-design-quality-policy-pack.md` should have:
+`08-design-quality-policy-pack.md`의 각 policy는 다음을 가져야 한다.
 
 ```text
 [ ] name
@@ -305,7 +305,7 @@ Policies required:
 [ ] Context Hygiene
 ```
 
-## 10. Agent Integration Checks
+## 10. Agent Integration Check
 
 ```text
 [ ] `09-agent-integration.md` is product-name-neutral.
@@ -318,7 +318,7 @@ Policies required:
 [ ] Surface cookbook exists in docs/appendix/B.
 ```
 
-## 11. User Guide Checks
+## 11. User Guide Check
 
 ```text
 [ ] The user guide starts from conversation, not CLI.
@@ -331,7 +331,7 @@ Policies required:
 [ ] It is shorter than the old guide.
 ```
 
-## 12. Operations and Conformance Checks
+## 12. Operations and Conformance Check
 
 ```text
 [ ] Operations owns connect/doctor/serve/reconcile/recover/export/artifact check/conformance.
@@ -341,9 +341,9 @@ Policies required:
 [ ] Failure handling reports state current vs projection failed/stale separately.
 ```
 
-## 13. Later Boundary Checks
+## 13. Later Boundary Check
 
-Main docs must not treat these as MVP requirements:
+Main doc은 다음을 MVP requirement로 취급하면 안 된다.
 
 ```text
 [ ] dashboard
@@ -356,9 +356,9 @@ Main docs must not treat these as MVP requirements:
 [ ] team profile export/import
 ```
 
-If mentioned in main docs, they must be clearly labeled `later` and point to `docs/appendix/C-later-roadmap.md`.
+Main doc에서 언급한다면 `later`로 명확히 label하고 `docs/appendix/C-later-roadmap.md`를 가리켜야 한다.
 
-## 14. Legacy Cleanup Checks
+## 14. Legacy Cleanup Check
 
 Legacy docs replaced by v2 docs:
 
@@ -378,7 +378,7 @@ Legacy docs replaced by v2 docs:
 [ ] docs/legacy-v1/REWRITE-MANIFEST.md
 ```
 
-Required cleanup behavior:
+필수 cleanup behavior:
 
 ```text
 [ ] Each archived legacy doc is deleted, replaced by a short migration stub, or represented in docs/appendix/D-migration-notes.md.
@@ -388,9 +388,9 @@ Required cleanup behavior:
 [ ] Final consistency grep scans active canonical docs separately from docs/appendix/D-migration-notes.md.
 ```
 
-## 15. Glossary Checks
+## 15. Glossary Check
 
-New or updated terms:
+새로 추가하거나 갱신할 term:
 
 ```text
 [ ] Gate
@@ -422,9 +422,9 @@ New or updated terms:
 [ ] Assurance
 ```
 
-## 16. Suggested Grep Checks
+## 16. Suggested Grep Check
 
-Run these checks manually or through Codex.
+이 check는 수동 또는 Codex를 통해 실행한다.
 
 ```bash
 grep -R "state.sqlite + event log" .
@@ -441,7 +441,7 @@ grep -R "cross-surface" docs/README.md docs/00-introduction.md docs/01-project-c
 grep -R "docs/00-overview.md\\|docs/03-architecture.md\\|docs/04-reference-implementation.md\\|docs/05-user-guide.md\\|docs/06-agent-integration.md\\|docs/07-document-and-artifact-contracts.md\\|docs/08-operations-and-conformance.md\\|docs/09-design-quality-playbooks.md\\|docs/legacy-v1/" docs/README.md docs/00-introduction.md docs/01-project-charter.md docs/02-strategy.md docs/03-kernel-spec.md docs/04-runtime-architecture.md docs/05-mcp-api-and-schemas.md docs/06-reference-mvp.md docs/07-document-projection.md docs/08-design-quality-policy-pack.md docs/09-agent-integration.md docs/10-user-guide.md docs/11-operations-and-conformance.md docs/99-authoring-guide.md docs/glossary.md
 ```
 
-Interpretation:
+해석:
 
 ```text
 - Some hits may be allowed in migration notes or later roadmap.
@@ -452,7 +452,7 @@ Interpretation:
 
 ## 17. Review Output Format
 
-When reviewing a Codex batch, use this format.
+Codex batch를 review할 때 이 format을 사용한다.
 
 ```md
 # Batch Review
@@ -477,7 +477,7 @@ When reviewing a Codex batch, use this format.
 
 ## 18. Final Acceptance
 
-Final acceptance requires:
+Final acceptance에는 다음이 필요하다.
 
 ```text
 [ ] Semantic review passed.

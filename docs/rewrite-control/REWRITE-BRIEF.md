@@ -1,6 +1,6 @@
-# Harness Documentation Rewrite Brief
+# 하네스 문서 재작성 브리프
 
-## 1. Mission
+## 1. 미션
 
 하네스 문서 세트를 **구현 가능한 로컬 운영 커널 사양**으로 재구성한다.
 
@@ -18,7 +18,7 @@ small implementable harness kernel
 + fixture-based conformance
 ```
 
-## 2. Problem Being Fixed
+## 2. 해결하려는 문제
 
 현재 문서 세트는 하네스의 핵심 방향을 잘 담고 있다. 세 공간 실행 모델, source-of-truth/projection 분리, public MCP tool 표면 축소, SQLite runtime 중심화, MVP/later 분리, approval/assurance/manual QA/acceptance 분리는 보존해야 한다.
 
@@ -34,7 +34,7 @@ small implementable harness kernel
 - conformance가 fixture 기반 구현 테스트로 충분히 구체화되어 있지 않다.
 ```
 
-## 3. Primary Goal
+## 3. 핵심 목표
 
 새 문서 세트는 다음 질문에 정확히 답해야 한다.
 
@@ -55,7 +55,7 @@ connector 작성자:
   AI가 좋은 설계 경계 안에서 일하는지 어떻게 통제하는가?
 ```
 
-## 4. Non-negotiable Principles
+## 4. 양보할 수 없는 원칙
 
 새 문서 세트는 다음 원칙을 약화하지 않는다.
 
@@ -69,7 +69,7 @@ connector 작성자:
 7. Projection cannot override canonical state.
 ```
 
-## 5. Core Rewrite Thesis
+## 5. 핵심 재작성 논지
 
 현재 문서의 좋은 원칙을 모두 버리지 않는다. 대신 층위를 분리한다.
 
@@ -90,7 +90,7 @@ Operations:
   doctor, recover, reconcile, export, fixture-based conformance
 ```
 
-## 6. MVP Boundary
+## 6. MVP 경계
 
 MVP는 agent surface 통합 프로젝트가 아니라 **core invariant 검증 프로젝트**다.
 
@@ -123,7 +123,7 @@ MVP는 다음을 목표로 하지 않는다.
 - team workflow system
 ```
 
-## 7. Fixed Architectural Direction
+## 7. 고정된 Architecture 방향
 
 다음 방향은 고정한다.
 
@@ -140,7 +140,7 @@ Harness Runtime Home:
 
 `Product Repository` 문서는 사람이 읽는 projection이다. 운영 상태의 canonical source는 Runtime Home의 `state.sqlite`다. Raw evidence의 canonical source는 artifact store다.
 
-## 8. Fixed Rewrite Decisions
+## 8. 고정된 재작성 결정
 
 상세 결정은 `docs/rewrite-control/KERNEL-DECISIONS.md`가 소유한다. 요약은 다음이다.
 
@@ -157,7 +157,7 @@ Harness Runtime Home:
 - conformance는 fixture 기반이다.
 ```
 
-## 9. New Document Layers
+## 9. 새 문서 계층
 
 새 문서 세트는 다음 층위를 따른다.
 
@@ -185,7 +185,7 @@ appendix/
   D-migration-notes.md
 ```
 
-## 10. Editing Rules
+## 10. 편집 규칙
 
 문서 작성자는 다음 규칙을 따른다.
 
@@ -202,7 +202,7 @@ appendix/
 - full template 전문은 appendix/A-template-library.md로 보낸다.
 ```
 
-## 11. Output Quality Bar
+## 11. 산출물 품질 기준
 
 재작성된 문서 세트는 다음을 만족해야 한다.
 
@@ -214,7 +214,7 @@ appendix/
 - 설계 책임자는 core invariant와 design-quality policy default를 구분할 수 있다.
 ```
 
-## 12. Definition of Done
+## 12. 완료 정의
 
 ```text
 [ ] core invariant가 승인된 7개로 유지된다.

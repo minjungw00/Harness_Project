@@ -1,21 +1,21 @@
 # Appendix A: Template Library
 
-## Document Role
+## 문서 역할
 
-This appendix owns full Markdown projection template variants. The projection rules and template tiers are owned by `07-document-projection.md`; this appendix provides complete bodies that implement those rules.
+이 appendix는 전체 Markdown projection template variant를 담당한다. Projection rule과 template tier는 `07-document-projection.md`가 담당하며, 이 appendix는 그 rule을 구현하는 complete body를 제공한다.
 
-Templates are examples of rendered shape. They are not canonical state and must not redefine kernel fields, MCP schemas, or SQLite DDL.
+Template은 rendered shape의 예시다. Canonical state가 아니며 kernel field, MCP schema, SQLite DDL을 재정의하면 안 된다.
 
 ## Template Rules
 
-1. Keep front matter minimal: identity, task/project relation, projection version or status, and timestamp.
-2. Keep generated state inside managed blocks.
-3. Preserve human-editable sections across refreshes.
-4. Link raw evidence by artifact ref.
-5. Do not paste large logs, diffs, traces, bundles, screenshots, or secrets.
-6. Keep approval, verification, Manual QA, and acceptance visibly separate.
-7. Treat `qa_gate` as canonical even when a card says `Manual QA: pending/passed/failed/waived`.
-8. Version template changes as projection changes.
+1. Front matter는 identity, task/project relation, projection version 또는 status, timestamp로 최소화한다.
+2. Generated state는 managed block 안에 둔다.
+3. Refresh 사이에도 human-editable section을 preserve한다.
+4. Raw evidence는 artifact ref로 link한다.
+5. Large log, diff, trace, bundle, screenshot, secret을 paste하지 않는다.
+6. Approval, verification, Manual QA, acceptance를 visible하게 분리한다.
+7. Card가 `Manual QA: pending/passed/failed/waived`라고 말하더라도 `qa_gate`를 canonical로 취급한다.
+8. Template change는 projection change로 versioning한다.
 
 ## Required MVP Templates
 
@@ -33,7 +33,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 # TASK-0001 Task Title
 
 <!-- HARNESS:BEGIN managed -->
-## Current Summary
+## 현재 요약
 - mode:
 - lifecycle phase:
 - result:
@@ -53,14 +53,14 @@ updated_at: 2026-05-06T09:30:15+09:00
 - latest report:
 - projection freshness:
 
-## Goal
+## 목표
 -
 
-## Scope
-### In
+## 범위
+### 포함
 -
 
-### Out
+### 제외
 -
 
 ## Acceptance Criteria
@@ -92,18 +92,18 @@ updated_at: 2026-05-06T09:30:15+09:00
 -
 ````
 
-#### Expanded TASK Sections
+#### 확장 TASK Section
 
-Use these sections for long-running `work` tasks. Keep them managed unless explicitly marked human-editable.
+Long-running `work` task에는 이 section을 사용한다. 명시적으로 human-editable로 표시하지 않는 한 managed로 유지한다.
 
 ````md
 <!-- HARNESS:BEGIN managed -->
 ## Shared Design Concept
-### Questions Resolved
+### 해결된 질문
 | ID | Question | User Answer | Decision / Assumption |
 |---|---|---|---|
 
-### Remaining Ambiguity
+### 남은 모호함
 - item / owner / stop condition:
 
 ## Domain Language Refs
@@ -151,7 +151,7 @@ Use these sections for long-running `work` tasks. Keep them managed unless expli
 
 #### Change Unit Block
 
-This is a TASK sub-template, not a separate canonical projection tier.
+이는 별도의 canonical projection tier가 아니라 TASK sub-template이다.
 
 ````md
 ### CU-01 Title
@@ -1075,7 +1075,7 @@ Record the QA result?
 
 ## Template Change Notes
 
-- `DOMAIN-LANGUAGE`, `MODULE-MAP`, and `INTERFACE-CONTRACT` are projections from canonical records, not canonical documents.
-- `MANUAL-QA` is a record projection. The close-relevant gate remains `qa_gate`.
-- `EVAL` must show independence context because a passed verdict alone does not produce `detached_verified`.
-- `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, and `DIRECT-RESULT` link evidence files by artifact ref rather than embedding large evidence.
+- `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`는 canonical document가 아니라 canonical record에서 만든 projection이다.
+- `MANUAL-QA`는 record projection이다. Close-relevant gate는 `qa_gate`로 남는다.
+- `EVAL`은 independence context를 보여줘야 한다. Passed verdict만으로는 `detached_verified`가 생기지 않기 때문이다.
+- `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `DIRECT-RESULT`는 large evidence를 embed하지 않고 artifact ref로 evidence file에 link한다.

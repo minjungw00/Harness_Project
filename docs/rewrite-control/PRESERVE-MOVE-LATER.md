@@ -2,7 +2,7 @@
 
 이 문서는 기존 하네스 문서 세트의 내용을 새 문서 구조로 어떻게 처리할지 결정한다.
 
-## 1. Categories
+## 1. Category
 
 ```text
 PRESERVE:
@@ -21,7 +21,7 @@ DELETE:
   현재 기준 문서에는 남기지 않는다. 필요한 경우 migration note에만 둔다.
 ```
 
-Every content item must use exactly one of these disposition labels. Canonical ownership is controlled by `DOC-OWNERSHIP-MAP.md`; this file records treatment during rewrite.
+모든 content item은 이 disposition label 중 정확히 하나를 사용해야 한다. Canonical ownership은 `DOC-OWNERSHIP-MAP.md`가 control하며, 이 file은 rewrite 중의 treatment를 기록한다.
 
 ## 2. Preserve
 
@@ -134,7 +134,7 @@ Every content item must use exactly one of these disposition labels. Canonical o
 
 ## 7. Legacy File Cleanup
 
-After content migration, legacy docs replaced by v2 docs must not remain as canonical docs.
+Content migration 후 v2 doc으로 replaced된 legacy doc은 canonical doc으로 남으면 안 된다.
 
 | Legacy File | Disposition | Replacement / Notes |
 |---|---|---|
@@ -152,7 +152,7 @@ After content migration, legacy docs replaced by v2 docs must not remain as cano
 | `docs/legacy-v1/glossary.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/glossary.md`. |
 | `docs/legacy-v1/REWRITE-MANIFEST.md` | MOVE_TO_MIGRATION_NOTES | Historical rewrite summary moves to `docs/appendix/D-migration-notes.md`. |
 
-If repository history or user preference requires a visible file at a legacy path, replace the legacy file with a short migration stub. The stub is not canonical content and must point to the v2 owner doc or `docs/appendix/D-migration-notes.md`.
+Repository history 또는 user preference 때문에 legacy path에 visible file이 필요하면 legacy file을 short migration stub으로 replace한다. Stub은 canonical content가 아니며 v2 owner doc 또는 `docs/appendix/D-migration-notes.md`를 가리켜야 한다.
 
 ## 8. Source Document Treatment
 
@@ -162,9 +162,9 @@ Treatment: `MOVE_TO_APPENDIX`
 
 Destination: `appendix/D-migration-notes.md`
 
-Not part of final main tree. Use as control/migration input while writing migration notes.
+Final main tree의 일부가 아니다. Migration note를 작성하는 동안 control/migration input으로 사용한다.
 
-Use it to confirm original simplification goals:
+Original simplification goal을 confirm하는 데 사용한다.
 
 ```text
 - 세 공간 실행 모델
@@ -180,7 +180,7 @@ Use it to confirm original simplification goals:
 
 Treatment: `REWRITE`
 
-Path note: `docs/README.md` is the harness documentation entrypoint. Root `README.md` is the repository landing page.
+Path note: `docs/README.md`는 harness documentation entrypoint다. Root `README.md`는 repository landing page다.
 
 Keep:
 

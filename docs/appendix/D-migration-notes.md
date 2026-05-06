@@ -1,18 +1,18 @@
 # Appendix D: Migration Notes
 
-## Document Role
+## 문서 역할
 
-This appendix records old-to-new document mapping, removed or renamed sections, and compatibility guidance for the v2 documentation rewrite.
+이 appendix는 v2 documentation rewrite를 위한 old-to-new document mapping, removed 또는 renamed section, compatibility guidance를 기록한다.
 
-It is migration context only. It does not own canonical runtime contracts, kernel state semantics, MCP schemas, projection templates, user procedure, or conformance rules.
+Migration context 전용이다. Canonical runtime contract, kernel state semantic, MCP schema, projection template, user procedure, conformance rule은 담당하지 않는다.
 
 ## Migration Scope
 
-The active canonical docs are the v2 target files under `docs/` plus appendices A-C. This appendix is migration context, not an active canonical owner.
+Active canonical doc은 `docs/` 아래 v2 target file과 appendix A-C다. 이 appendix는 migration context이며 active canonical owner가 아니다.
 
-Legacy v1 files and rewrite manifests are source material for migration history only. After Batch H, replaced legacy files are no longer retained as active-tree Markdown documents; the old-to-new mapping in this appendix is the visible compatibility record.
+Legacy v1 file과 rewrite manifest는 migration history를 위한 source material일 뿐이다. Batch H 이후 replaced legacy file은 더 이상 active-tree Markdown document로 retain되지 않는다. 이 appendix의 old-to-new mapping이 visible compatibility record다.
 
-`REWRITE-MANIFEST.md` is migration input. It records earlier simplification goals and confirms preservation themes such as three spaces, source-of-truth/projection separation, public MCP surface reduction, SQLite-centered runtime, MVP/later separation, four judgment separation, detached verification, and design-quality principles. It does not override the v2 owner docs.
+`REWRITE-MANIFEST.md`는 migration input이다. Earlier simplification goal을 기록하고 three spaces, source-of-truth/projection separation, public MCP surface reduction, SQLite-centered runtime, MVP/later separation, four judgment separation, detached verification, design-quality principle 같은 preservation theme을 confirm한다. v2 owner doc을 override하지 않는다.
 
 ## Old-To-New Mapping
 
@@ -35,7 +35,7 @@ Legacy v1 files and rewrite manifests are source material for migration history 
 
 ## Legacy Path Cleanup Status
 
-Batch H removes replaced legacy documents from the active tree instead of keeping migration stubs. These paths are not canonical docs; use the v2 destination listed here.
+Batch H는 migration stub을 유지하는 대신 replaced legacy document를 active tree에서 제거한다. 이 path들은 canonical doc이 아니며, 여기 listed된 v2 destination을 사용한다.
 
 | Removed legacy path | v2 destination |
 |---|---|
@@ -48,50 +48,50 @@ Batch H removes replaced legacy documents from the active tree instead of keepin
 | `docs/08-operations-and-conformance.md` | `docs/11-operations-and-conformance.md`, `docs/appendix/C-later-roadmap.md` |
 | `docs/09-design-quality-playbooks.md` | `docs/08-design-quality-policy-pack.md` |
 
-The archived `docs/legacy-v1/` copies of these files, plus the old charter, strategy, authoring guide, glossary, README, and rewrite manifest, were also removed from the active tree. Their compatibility mapping remains in `docs/appendix/D-migration-notes.md`.
+Archived `docs/legacy-v1/` copy들과 old charter, strategy, authoring guide, glossary, README, rewrite manifest도 active tree에서 제거되었다. Compatibility mapping은 `docs/appendix/D-migration-notes.md`에 남아 있다.
 
-## Major Removed Or Renamed Sections
+## 주요 Removed 또는 Renamed Section
 
 | Legacy section or theme | v2 treatment |
 |---|---|
-| `05-user-guide.md` long work walkthroughs | shortened into conversation examples in `10-user-guide.md` |
-| detailed report-reading tables in user guide | removed from main user guide; projection ownership stays in `07-document-projection.md` |
-| user-facing setup internals | moved to operations or integration owner docs |
-| `08-operations-and-conformance.md` scenario tables | rewritten as fixture-based conformance in `11-operations-and-conformance.md` |
-| operational metrics list | moved to later analytics in `appendix/C-later-roadmap.md` |
-| CI as a broad operations owner | reduced to conformance entrypoints until an MVP CI contract is defined |
-| all-surface connector setup examples | moved or deferred to `appendix/B-surface-cookbook.md` |
-| surface-specific addenda in main integration docs | renamed as cookbook material |
-| `03-architecture.md` | renamed/split into `04-runtime-architecture.md` plus owner summaries elsewhere |
-| `04-reference-implementation.md` | split across kernel, API/schema, reference MVP, and later roadmap |
-| `07-document-and-artifact-contracts.md` | renamed/split into `07-document-projection.md` and `appendix/A-template-library.md` |
-| `09-design-quality-playbooks.md` | converted from playbook prose to policy contracts |
-| old 17-item invariant style | split into 7 core invariants plus policy defaults |
-| single-axis status model | replaced by lifecycle plus gates |
-| event log phrasing as a separate store | replaced by `state.sqlite.task_events` wording |
-| projection as canonical-looking document authority | replaced by state/artifact/projection authority boundaries |
+| `05-user-guide.md` long work walkthroughs | `10-user-guide.md`의 conversation example로 축약 |
+| detailed report-reading tables in user guide | main user guide에서 제거; projection ownership은 `07-document-projection.md`에 유지 |
+| user-facing setup internals | operations 또는 integration owner doc으로 이동 |
+| `08-operations-and-conformance.md` scenario tables | `11-operations-and-conformance.md`에서 fixture-based conformance로 재작성 |
+| operational metrics list | `appendix/C-later-roadmap.md`의 later analytics로 이동 |
+| CI as a broad operations owner | MVP CI contract가 정의될 때까지 conformance entrypoint로 축소 |
+| all-surface connector setup examples | `appendix/B-surface-cookbook.md`로 이동 또는 deferred |
+| surface-specific addenda in main integration docs | cookbook material로 renamed |
+| `03-architecture.md` | `04-runtime-architecture.md`와 elsewhere owner summary로 renamed/split |
+| `04-reference-implementation.md` | kernel, API/schema, reference MVP, later roadmap으로 split |
+| `07-document-and-artifact-contracts.md` | `07-document-projection.md`와 `appendix/A-template-library.md`로 renamed/split |
+| `09-design-quality-playbooks.md` | playbook prose에서 policy contract로 converted |
+| old 17-item invariant style | 7 core invariants와 policy defaults로 split |
+| single-axis status model | lifecycle plus gates로 replaced |
+| event log phrasing as a separate store | `state.sqlite.task_events` wording으로 replaced |
+| projection as canonical-looking document authority | state/artifact/projection authority boundary로 replaced |
 
 ## Compatibility Guidance
 
-If a reader encounters an old file name, use the mapping above and prefer the v2 destination. Do not cite archived legacy documents as canonical docs.
+Reader가 old file name을 만나면 위 mapping을 사용하고 v2 destination을 우선한다. Archived legacy document를 canonical doc으로 cite하지 않는다.
 
-If a legacy section contains a useful example that has not moved, treat it as source material only. The active owner doc decides whether the example belongs in main text, appendix, later roadmap, or migration notes.
+Legacy section에 아직 옮겨지지 않은 useful example이 있으면 source material로만 취급한다. Active owner doc이 그 example이 main text, appendix, later roadmap, migration notes 중 어디에 속하는지 결정한다.
 
-If a legacy term conflicts with the glossary, use `docs/glossary.md`.
+Legacy term이 glossary와 conflict하면 `docs/glossary.md`를 사용한다.
 
-If a legacy behavior conflicts with rewrite-control kernel decisions or a v2 owner doc, use the v2 owner doc.
+Legacy behavior가 rewrite-control kernel decision 또는 v2 owner doc과 conflict하면 v2 owner doc을 사용한다.
 
 ## Version Comparison Summary
 
-v1 mixed strategy, state, implementation, template, connector, operations, and design-quality guidance across fewer documents. v2 separates them by ownership:
+v1은 strategy, state, implementation, template, connector, operations, design-quality guidance를 더 적은 문서에 섞어 두었다. v2는 ownership에 따라 이를 분리한다.
 
-- strategy owns why, failure model, core invariants, and policy defaults
-- kernel owns state and gate behavior
-- API owns public MCP schemas
-- reference MVP owns implementation detail and DDL
-- projection owns Markdown authority and template tiers
-- policy pack owns design-quality policy contracts
-- integration owns capability profiles
-- operations owns fixture-based conformance
+- strategy는 why, failure model, core invariants, policy defaults를 담당한다
+- kernel은 state와 gate behavior를 담당한다
+- API는 public MCP schema를 담당한다
+- reference MVP는 implementation detail과 DDL을 담당한다
+- projection은 Markdown authority와 template tier를 담당한다
+- policy pack은 design-quality policy contract를 담당한다
+- integration은 capability profile을 담당한다
+- operations는 fixture-based conformance를 담당한다
 
-The migration keeps the original product intent but removes duplicated authority, long user examples, broad all-surface implications, and MVP/later ambiguity.
+Migration은 original product intent를 유지하되 duplicated authority, long user example, broad all-surface implication, MVP/later ambiguity를 제거한다.

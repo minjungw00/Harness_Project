@@ -1,24 +1,24 @@
-# MCP API And Schemas
+# MCP API와 스키마
 
-## Document Role
+## 문서 역할
 
-This document owns the public MCP resources, public tools, common envelope, request and response schemas, error taxonomy, idempotency behavior, state conflict behavior, validator result schema, and artifact ref schema.
+이 문서는 public MCP resource, public tool, common envelope, request/response schema, error taxonomy, idempotency behavior, state conflict behavior, validator result schema, artifact ref schema를 담당한다.
 
-It does not own SQLite DDL, the full kernel transition table, projection template text, CLI command semantics, or connector cookbook details.
+SQLite DDL, full kernel transition table, projection template text, CLI command semantic, connector cookbook detail은 담당하지 않는다.
 
-## API Scope
+## API 범위
 
-MCP resources are read-only. All state changes go through public tools and Core. A tool response may include projection paths and artifact refs, but those are references to state records or raw evidence files, not a replacement for canonical state.
+MCP resource는 read-only다. 모든 state change는 public tool과 Core를 통해 이뤄진다. Tool response는 projection path와 artifact ref를 포함할 수 있지만, 이는 state record 또는 raw evidence file에 대한 reference일 뿐 canonical state의 대체물이 아니다.
 
-Capability is not a first-class kernel gate. Surface capability appears through:
+Capability는 first-class kernel gate가 아니다. Surface capability는 다음을 통해 나타난다.
 
-- the `surface_capability_check` validator
+- `surface_capability_check` validator
 - `harness.prepare_write.response.blocked_reasons`
-- guarantee display in status and write decisions
+- status와 write decision의 guarantee display
 
-## MCP Resources
+## MCP Resource
 
-Resources expose current state and projection-oriented summaries without mutating state:
+Resource는 state를 mutate하지 않고 current state와 projection-oriented summary를 expose한다.
 
 ```text
 harness://project/current
@@ -37,11 +37,11 @@ harness://policy/sensitive-categories
 harness://status/card
 ```
 
-Resource reads must not create Task records, decisions, projection jobs, or reconcile items. If a resource detects stale projection, it reports freshness; it does not repair it.
+Resource read는 Task record, decision, projection job, reconcile item을 만들면 안 된다. Resource가 stale projection을 detect하면 freshness를 report할 뿐 repair하지 않는다.
 
 ## Common Tool Envelope
 
-Every public tool request carries an envelope. State-changing tools require a non-null `idempotency_key` and `expected_state_version`. Read-only tools accept the same envelope for tracing; they may set `expected_state_version` to `null`.
+모든 public tool request는 envelope을 가진다. State-changing tool에는 non-null `idempotency_key`와 `expected_state_version`이 필요하다. Read-only tool도 tracing을 위해 같은 envelope을 받을 수 있으며, `expected_state_version`을 `null`로 설정할 수 있다.
 
 ```yaml
 ToolEnvelope:
@@ -56,7 +56,7 @@ ToolEnvelope:
   dry_run: boolean
 ```
 
-Common response fields:
+공통 response field:
 
 ```yaml
 ToolResponseBase:
@@ -72,9 +72,9 @@ ToolResponseBase:
   projection_jobs: ProjectionJobRef[]
 ```
 
-`dry_run=true` validates and returns the transition plan but does not update current records, append to `state.sqlite.task_events`, register artifacts, or enqueue projection jobs.
+`dry_run=true`는 validate하고 transition plan을 반환하지만 current record update, `state.sqlite.task_events` append, artifact register, projection job enqueue는 수행하지 않는다.
 
-## Shared Schemas
+## Shared Schema
 
 ```yaml
 EventRef:
@@ -111,7 +111,7 @@ StateSummary:
     acceptance_gate: not_required | required | pending | accepted | rejected
 ```
 
-Sensitive categories:
+Sensitive category:
 
 ```text
 auth_change
@@ -137,7 +137,7 @@ policy_override
 
 ## Artifact Ref Schema
 
-An artifact ref points to a durable evidence file registered in the artifact store. Report projections and record projections use artifact refs when they need evidence-file references; the projection itself is not the evidence file.
+Artifact ref는 artifact store에 registered된 durable evidence file을 가리킨다. Report projection과 record projection은 evidence-file reference가 필요할 때 artifact ref를 사용한다. Projection 자체는 evidence file이 아니다.
 
 ```yaml
 ArtifactRef:
@@ -155,9 +155,9 @@ ArtifactRef:
   retention_class: task | project | export | temporary
 ```
 
-For the reference MVP, `uri` uses `harness-artifact://{project_id}/{artifact_id}`. The local file path is resolved through the per-project `artifacts` registry row in `state.sqlite`, not by trusting an absolute path in the API payload.
+Reference MVP에서 `uri`는 `harness-artifact://{project_id}/{artifact_id}`를 사용한다. Local file path는 API payload의 absolute path를 신뢰하는 것이 아니라 `state.sqlite`의 per-project `artifacts` registry row를 통해 resolve한다.
 
-Requests that create or attach evidence use `ArtifactInput`. A request may either reference an existing committed artifact or provide a staged file for Core to validate, register, and return as an `ArtifactRef`.
+Evidence를 create하거나 attach하는 request는 `ArtifactInput`을 사용한다. Request는 existing committed artifact를 reference하거나, Core가 validate, register, `ArtifactRef`로 반환할 staged file을 제공할 수 있다.
 
 ```yaml
 ArtifactInput:
@@ -184,17 +184,17 @@ StagedArtifactSource:
     expected_size_bytes: integer | null
 ```
 
-Rules:
+규칙:
 
-- `source_kind=existing_artifact` requires `existing_artifact_ref` and must set `staged` to `null`.
-- `source_kind=staged_file` requires `staged` and must set `existing_artifact_ref` to `null`.
-- When an existing artifact is attached to a new record, Core verifies the artifact's task relation and rejects incompatible reuse.
-- `staged_uri` must point to a harness staging location or an approved capture adapter, not an arbitrary absolute path supplied for trust.
-- If `expected_sha256` or `expected_size_bytes` is present, Core verifies the stored bytes before commit.
-- Core applies redaction rules before final storage and records the committed artifact as an `ArtifactRef`.
-- Tool responses return committed `ArtifactRef` values in `registered_artifacts`, `bundle_ref`, or other response fields.
+- `source_kind=existing_artifact`는 `existing_artifact_ref`가 필요하고 `staged`를 `null`로 설정해야 한다.
+- `source_kind=staged_file`은 `staged`가 필요하고 `existing_artifact_ref`를 `null`로 설정해야 한다.
+- Existing artifact를 new record에 attach할 때 Core는 artifact의 task relation을 verify하고 incompatible reuse를 reject한다.
+- `staged_uri`는 arbitrary absolute path가 아니라 harness staging location 또는 approved capture adapter를 가리켜야 한다.
+- `expected_sha256` 또는 `expected_size_bytes`가 있으면 Core는 commit 전에 stored bytes를 verify한다.
+- Core는 final storage 전에 redaction rule을 적용하고 committed artifact를 `ArtifactRef`로 기록한다.
+- Tool response는 committed `ArtifactRef` 값을 `registered_artifacts`, `bundle_ref`, 기타 response field에 반환한다.
 
-Record or projection references use `StateRecordRef`, not `ArtifactRef`:
+Record 또는 projection reference는 `ArtifactRef`가 아니라 `StateRecordRef`를 사용한다.
 
 ```yaml
 StateRecordRef:
@@ -228,47 +228,47 @@ ValidatorResult:
   suggested_next_action: string | null
 ```
 
-The `surface_capability_check` validator uses this schema with `validator_kind=capability`.
+`surface_capability_check` validator는 이 schema를 `validator_kind=capability`로 사용한다.
 
 ## Error Taxonomy
 
 | Code | Meaning |
 |---|---|
-| `STATE_CONFLICT` | `expected_state_version` is stale, lock ownership changed, or the same idempotency key was reused with a different payload |
-| `NO_ACTIVE_TASK` | a Task is required but none is active or addressed |
-| `NO_ACTIVE_CHANGE_UNIT` | a write-capable operation has no active scoped Change Unit |
-| `SCOPE_REQUIRED` | scope confirmation is required before the requested write can proceed |
-| `SCOPE_VIOLATION` | intended paths, tools, commands, network, secrets, or categories exceed scope |
-| `APPROVAL_REQUIRED` | sensitive change requires approval before proceeding |
-| `APPROVAL_DENIED` | the relevant approval was denied |
-| `APPROVAL_EXPIRED` | approval expired or drifted from baseline/scope |
-| `CAPABILITY_INSUFFICIENT` | the connected surface cannot satisfy a required validator or enforcement condition |
-| `MCP_UNAVAILABLE` | required MCP access is unavailable or stale |
-| `EVIDENCE_INSUFFICIENT` | required evidence coverage is absent, partial, stale, or blocked |
-| `VERIFY_NOT_DETACHED` | verification cannot count as detached verification |
-| `QA_REQUIRED` | required Manual QA is pending, failed, or missing |
-| `ACCEPTANCE_REQUIRED` | required user acceptance is pending or rejected |
-| `PROJECTION_STALE` | projection freshness is stale or failed for the requested action |
-| `RECONCILE_REQUIRED` | human-editable or managed-block drift requires reconcile |
-| `ARTIFACT_MISSING` | a referenced artifact file is missing or integrity check failed |
-| `BASELINE_STALE` | baseline no longer matches the repository state required by the operation |
-| `VALIDATOR_FAILED` | one or more required validators failed |
+| `STATE_CONFLICT` | `expected_state_version`이 stale이거나, lock ownership이 changed되었거나, 같은 idempotency key가 다른 payload로 reuse됨 |
+| `NO_ACTIVE_TASK` | Task가 required인데 active 또는 addressed Task가 없음 |
+| `NO_ACTIVE_CHANGE_UNIT` | write-capable operation에 active scoped Change Unit이 없음 |
+| `SCOPE_REQUIRED` | requested write 진행 전에 scope confirmation이 필요함 |
+| `SCOPE_VIOLATION` | intended path, tool, command, network, secret, category가 scope를 초과함 |
+| `APPROVAL_REQUIRED` | sensitive change 진행 전에 approval 필요 |
+| `APPROVAL_DENIED` | relevant approval이 denied됨 |
+| `APPROVAL_EXPIRED` | approval이 expired되었거나 baseline/scope에서 drift됨 |
+| `CAPABILITY_INSUFFICIENT` | connected surface가 required validator 또는 enforcement condition을 satisfy할 수 없음 |
+| `MCP_UNAVAILABLE` | required MCP access가 unavailable 또는 stale |
+| `EVIDENCE_INSUFFICIENT` | required evidence coverage가 absent, partial, stale, blocked |
+| `VERIFY_NOT_DETACHED` | verification이 detached verification으로 count될 수 없음 |
+| `QA_REQUIRED` | required Manual QA가 pending, failed, missing |
+| `ACCEPTANCE_REQUIRED` | required user acceptance가 pending 또는 rejected |
+| `PROJECTION_STALE` | requested action에 필요한 projection freshness가 stale 또는 failed |
+| `RECONCILE_REQUIRED` | human-editable 또는 managed-block drift에 reconcile 필요 |
+| `ARTIFACT_MISSING` | referenced artifact file이 missing이거나 integrity check failed |
+| `BASELINE_STALE` | baseline이 operation에 필요한 repository state와 더 이상 match하지 않음 |
+| `VALIDATOR_FAILED` | 하나 이상의 required validator failed |
 
 ## Idempotency And State Conflict Behavior
 
-Idempotency keys are scoped to `(project_id, tool_name, idempotency_key)`. Repeating the same payload with the same key returns the original committed response. Reusing a key with a different payload returns `STATE_CONFLICT`.
+Idempotency key는 `(project_id, tool_name, idempotency_key)` 범위에 속한다. 같은 key와 같은 payload를 반복하면 original committed response를 반환한다. 같은 key를 다른 payload로 reuse하면 `STATE_CONFLICT`를 반환한다.
 
-For state-changing tools, Core compares `expected_state_version` with current project/task state. A mismatch returns `STATE_CONFLICT` and includes the current state version and a status summary in `details`. The caller must refresh state and either retry with a new idempotency key or replay the exact previous request.
+State-changing tool에서 Core는 `expected_state_version`을 current project/task state와 비교한다. Mismatch는 `STATE_CONFLICT`를 반환하고 `details`에 current state version과 status summary를 포함한다. Caller는 state를 refresh한 뒤 새 idempotency key로 retry하거나 정확히 같은 previous request를 replay해야 한다.
 
-## Public Tools
+## Public Tool
 
 ### `harness.status`
 
-Purpose: return project, surface, active Task, gate, guarantee, projection, and pending-decision status.
+목적: project, surface, active Task, gate, guarantee, projection, pending-decision status를 반환한다.
 
-Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
+허용 actor: `user`, `lead_agent`, `evaluator`, `operator`.
 
-Request schema:
+요청 schema:
 
 ```yaml
 StatusRequest:
@@ -281,7 +281,7 @@ StatusRequest:
     guarantees: boolean
 ```
 
-Response schema:
+응답 schema:
 
 ```yaml
 StatusResponse:
@@ -297,25 +297,25 @@ StatusResponse:
     notes: string[]
 ```
 
-State transition summary: no state transition.
+State transition 요약: state transition 없음.
 
-Events emitted: none.
+발행 Event: 없음.
 
-Projection jobs enqueued: none.
+Projection job enqueue: 없음.
 
-Validators run: optional `surface_capability_check`, optional projection freshness read.
+실행 Validator: optional `surface_capability_check`, optional projection freshness read.
 
-Possible errors: `MCP_UNAVAILABLE`, `PROJECTION_STALE`.
+가능한 오류: `MCP_UNAVAILABLE`, `PROJECTION_STALE`.
 
-Idempotency behavior: read-only; repeated requests do not mutate state.
+Idempotency 동작: read-only; repeated request는 state를 mutate하지 않는다.
 
 ### `harness.intake`
 
-Purpose: create or resume a Task from user intent and classify it as advisor, direct, or work.
+목적: user intent에서 Task를 create 또는 resume하고 advisor, direct, work로 classify한다.
 
-Allowed actor: `user`, `lead_agent`, `operator`.
+허용 actor: `user`, `lead_agent`, `operator`.
 
-Request schema:
+요청 schema:
 
 ```yaml
 IntakeRequest:
@@ -331,7 +331,7 @@ IntakeRequest:
   initial_context_refs: StateRecordRef[]
 ```
 
-Response schema:
+응답 schema:
 
 ```yaml
 IntakeResponse:
@@ -344,25 +344,25 @@ IntakeResponse:
   change_unit_id: string | null
 ```
 
-State transition summary: creates or resumes a Task; sets `mode` and initial `lifecycle_phase`; may create an initial Change Unit for write-capable direct/work.
+State transition 요약: Task를 create 또는 resume한다. `mode`와 initial `lifecycle_phase`를 set한다. Write-capable direct/work에는 initial Change Unit을 만들 수 있다.
 
-Events emitted: `task_intake_recorded`, `task_created`, `task_resumed`, `task_superseded`, `change_unit_created`.
+발행 Event: `task_intake_recorded`, `task_created`, `task_resumed`, `task_superseded`, `change_unit_created`.
 
-Projection jobs enqueued: `TASK`; optionally `DOMAIN-LANGUAGE`, `MODULE-MAP`, or `INTERFACE-CONTRACT` if intake accepted design support records.
+Projection job enqueue: `TASK`; intake가 design support record를 accepted한 경우 optional `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`.
 
-Validators run: `state_envelope`, `active_task_policy`, `surface_capability_check`.
+실행 Validator: `state_envelope`, `active_task_policy`, `surface_capability_check`.
 
-Possible errors: `STATE_CONFLICT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`.
+가능한 오류: `STATE_CONFLICT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`.
 
-Idempotency behavior: same key returns the same Task/resume decision; different payload with same key returns `STATE_CONFLICT`.
+Idempotency 동작: same key는 same Task/resume decision을 반환한다. Same key with different payload는 `STATE_CONFLICT`를 반환한다.
 
 ### `harness.next`
 
-Purpose: return the next safe action, instruction bundle, and pending decisions for the current Task.
+목적: current Task의 next safe action, instruction bundle, pending decision을 반환한다.
 
-Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
+허용 actor: `user`, `lead_agent`, `evaluator`, `operator`.
 
-Request schema:
+요청 schema:
 
 ```yaml
 NextRequest:
@@ -372,7 +372,7 @@ NextRequest:
   include_instruction_bundle: boolean
 ```
 
-Response schema:
+응답 schema:
 
 ```yaml
 NextResponse:
@@ -390,25 +390,25 @@ NextResponse:
   pending_decisions: StateRecordRef[]
 ```
 
-State transition summary: no state transition.
+State transition 요약: state transition 없음.
 
-Events emitted: none.
+발행 Event: 없음.
 
-Projection jobs enqueued: none.
+Projection job enqueue: 없음.
 
-Validators run: optional `surface_capability_check`, optional `docs_consistency`.
+실행 Validator: optional `surface_capability_check`, optional `docs_consistency`.
 
-Possible errors: `NO_ACTIVE_TASK`, `MCP_UNAVAILABLE`, `PROJECTION_STALE`, `RECONCILE_REQUIRED`.
+가능한 오류: `NO_ACTIVE_TASK`, `MCP_UNAVAILABLE`, `PROJECTION_STALE`, `RECONCILE_REQUIRED`.
 
-Idempotency behavior: read-only; repeated requests do not mutate state.
+Idempotency 동작: read-only; repeated request는 state를 mutate하지 않는다.
 
 ### `harness.prepare_write`
 
-Purpose: decide whether an intended product write is allowed before the agent writes.
+목적: agent가 write하기 전에 intended product write가 allowed인지 결정한다.
 
-Allowed actor: `lead_agent`, `operator`.
+허용 actor: `lead_agent`, `operator`.
 
-Request schema:
+요청 schema:
 
 ```yaml
 PrepareWriteRequest:
@@ -432,7 +432,7 @@ PrepareWriteRequest:
   baseline_ref: string | null
 ```
 
-Response schema:
+응답 schema:
 
 ```yaml
 PrepareWriteResponse:
@@ -459,27 +459,27 @@ ApprovalRequestCandidate:
   baseline_ref: string | null
 ```
 
-`approval_request_candidate` is present only when `decision=approval_required` or when Core can suggest a new approval request. Otherwise it is `null`.
+`approval_request_candidate`는 `decision=approval_required`이거나 Core가 new approval request를 suggest할 수 있을 때만 present하다. 그 외에는 `null`이다.
 
-State transition summary: may move Task to `executing`, `waiting_user`, or `blocked`; may set `scope_gate=pending/blocked`, `approval_gate=pending/expired`, or stale evidence/approval markers.
+State transition 요약: Task를 `executing`, `waiting_user`, `blocked`로 이동시킬 수 있다. `scope_gate=pending/blocked`, `approval_gate=pending/expired`, stale evidence/approval marker를 set할 수 있다.
 
-Events emitted: `prepare_write_allowed`, `prepare_write_blocked`, `scope_required`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected`.
+발행 Event: `prepare_write_allowed`, `prepare_write_blocked`, `scope_required`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected`.
 
-Projection jobs enqueued: `TASK`; `APR` when approval is required.
+Projection job enqueue: `TASK`; approval required 시 `APR`.
 
-Validators run: `state_envelope`, `active_task`, `active_change_unit`, `scope_coverage`, `changed_paths_intent`, `baseline_freshness`, `approval_scope`, `surface_capability_check`, design precondition validators that apply before write.
+실행 Validator: `state_envelope`, `active_task`, `active_change_unit`, `scope_coverage`, `changed_paths_intent`, `baseline_freshness`, `approval_scope`, `surface_capability_check`, write 전에 적용되는 design precondition validator.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `BASELINE_STALE`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`.
+가능한 오류: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `BASELINE_STALE`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`.
 
-Idempotency behavior: repeated allowed/blocked decision with same payload returns the original decision and event refs; changed payload with same key returns `STATE_CONFLICT`.
+Idempotency 동작: 같은 payload의 repeated allowed/blocked decision은 original decision과 event ref를 반환한다. Same key with changed payload는 `STATE_CONFLICT`를 반환한다.
 
 ### `harness.record_run`
 
-Purpose: record shaping, implementation, direct-result, or verification-input run data, including artifacts and evidence updates.
+목적: artifact와 evidence update를 포함해 shaping, implementation, direct-result, verification-input run data를 기록한다.
 
-Allowed actor: `lead_agent`, `evaluator`, `operator`.
+허용 actor: `lead_agent`, `evaluator`, `operator`.
 
-Request schema:
+요청 schema:
 
 ```yaml
 RecordRunRequest:
@@ -574,9 +574,9 @@ TddTraceUpdate:
   non_tdd_justification: string | null
 ```
 
-The `payload` branch must match `kind`; all other branches must be `null` or absent. `ArtifactInput` values are resolved during the same Core transaction; response fields contain the committed `ArtifactRef` values. Change Unit creation and update for MVP happens through `kind=shaping_update` with `change_unit_updates`; `operation=create` creates a `change_units` record, and `operation=select_active` updates the Task's `active_change_unit_id`.
+`payload` branch는 `kind`와 match해야 하며, 다른 branch는 `null` 또는 absent여야 한다. `ArtifactInput` 값은 같은 Core transaction 중 resolve된다. Response field에는 committed `ArtifactRef` 값이 들어간다. MVP에서 Change Unit creation/update는 `kind=shaping_update`의 `change_unit_updates`를 통해 일어난다. `operation=create`는 `change_units` record를 만들고, `operation=select_active`는 Task의 `active_change_unit_id`를 update한다.
 
-Response schema:
+응답 schema:
 
 ```yaml
 RecordRunResponse:
@@ -590,25 +590,25 @@ RecordRunResponse:
   next_action: string
 ```
 
-State transition summary: shaping updates can keep `shaping`, move to `ready`, or move to `waiting_user`; implementation moves toward `verifying`; direct can become close-eligible or escalate to work; verification input records evaluator bundle context without proving detached verification.
+State transition 요약: shaping update는 `shaping`을 유지하거나 `ready`, `waiting_user`로 이동할 수 있다. Implementation은 `verifying`으로 향한다. Direct는 close-eligible이 되거나 work로 escalate될 수 있다. Verification input은 detached verification을 증명하지 않고 evaluator bundle context를 기록한다.
 
-Events emitted: `run_recorded`, `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `evidence_manifest_updated`, `artifact_registered`, `tdd_trace_updated`.
+발행 Event: `run_recorded`, `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `evidence_manifest_updated`, `artifact_registered`, `tdd_trace_updated`.
 
-Projection jobs enqueued: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `DIRECT-RESULT` for `kind=direct`; `TDD-TRACE` when updated.
+Projection job enqueue: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `kind=direct`에는 `DIRECT-RESULT`; updated 시 `TDD-TRACE`.
 
-Validators run: `state_envelope`, `changed_paths`, `scope_coverage`, `approval_scope`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`, applicable design-quality validators, `surface_capability_check`.
+실행 Validator: `state_envelope`, `changed_paths`, `scope_coverage`, `approval_scope`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`, applicable design-quality validators, `surface_capability_check`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_EXPIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
+가능한 오류: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_EXPIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
 
-Idempotency behavior: repeated request returns the same run, artifact records, evidence updates, events, and projection jobs; artifact inputs and resolved artifact refs must match the original payload.
+Idempotency 동작: repeated request는 same run, artifact record, evidence update, event, projection job을 반환한다. Artifact input과 resolved artifact ref는 original payload와 match해야 한다.
 
 ### `harness.request_user_decision`
 
-Purpose: create a structured user decision request.
+목적: structured user decision request를 생성한다.
 
-Allowed actor: `lead_agent`, `evaluator`, `operator`.
+허용 actor: `lead_agent`, `evaluator`, `operator`.
 
-Request schema:
+요청 schema:
 
 ```yaml
 RequestUserDecisionRequest:
@@ -636,9 +636,9 @@ ApprovalScope:
   baseline_ref: string | null
 ```
 
-`approval_scope` is required when `decision_kind=approval`. For all other `decision_kind` values it must be `null` or omitted.
+`decision_kind=approval`이면 `approval_scope`가 required다. 다른 모든 `decision_kind` 값에서는 `null` 또는 omitted여야 한다.
 
-Response schema:
+응답 schema:
 
 ```yaml
 RequestUserDecisionResponse:
@@ -650,27 +650,27 @@ RequestUserDecisionResponse:
   user_visible_summary: string
 ```
 
-`pending_decisions` returned by status and next-action responses contain `StateRecordRef` entries with `record_kind=decision_request`.
+Status와 next-action response가 반환하는 `pending_decisions`에는 `record_kind=decision_request`인 `StateRecordRef` entry가 들어간다.
 
-State transition summary: records a pending decision and usually moves Task to `waiting_user`; approval requests set `approval_gate=pending`; scope confirmation sets `scope_gate=pending`; acceptance sets `acceptance_gate=pending`.
+State transition 요약: pending decision을 기록하고 보통 Task를 `waiting_user`로 이동시킨다. Approval request는 `approval_gate=pending`을 set한다. Scope confirmation은 `scope_gate=pending`을 set한다. Acceptance는 `acceptance_gate=pending`을 set한다.
 
-Events emitted: `user_decision_requested`, `approval_requested`, `scope_confirmation_requested`, `design_choice_requested`, `qa_waiver_requested`, `acceptance_requested`, `reconcile_decision_requested`.
+발행 Event: `user_decision_requested`, `approval_requested`, `scope_confirmation_requested`, `design_choice_requested`, `qa_waiver_requested`, `acceptance_requested`, `reconcile_decision_requested`.
 
-Projection jobs enqueued: `TASK`; `APR` for approval; affected projection for reconcile.
+Projection job enqueue: `TASK`; approval에는 `APR`; reconcile에는 affected projection.
 
-Validators run: `state_envelope`, `decision_request_validity`, `approval_scope` for approval decisions, `reconcile_required` for reconcile decisions.
+실행 Validator: `state_envelope`, `decision_request_validity`, approval decision에는 `approval_scope`, reconcile decision에는 `reconcile_required`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `APPROVAL_REQUIRED`, `RECONCILE_REQUIRED`, `PROJECTION_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
+가능한 오류: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `APPROVAL_REQUIRED`, `RECONCILE_REQUIRED`, `PROJECTION_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
-Idempotency behavior: repeated request returns the same pending decision record; a different prompt/scope/options with the same key returns `STATE_CONFLICT`.
+Idempotency 동작: repeated request는 same pending decision record를 반환한다. Same key에서 prompt/scope/options가 다르면 `STATE_CONFLICT`를 반환한다.
 
 ### `harness.record_user_decision`
 
-Purpose: record the user's answer to a pending approval, scope, design, QA waiver, acceptance, or reconcile decision.
+목적: pending approval, scope, design, QA waiver, acceptance, reconcile decision에 대한 user answer를 기록한다.
 
-Allowed actor: `user`, `operator`.
+허용 actor: `user`, `operator`.
 
-Request schema:
+요청 schema:
 
 ```yaml
 RecordUserDecisionRequest:
@@ -697,9 +697,9 @@ RecordUserDecisionPayload:
     value: merge | reject | convert_to_note | create_decision | defer
 ```
 
-The payload branch must match `decision_kind`; other branches must be absent.
+Payload branch는 `decision_kind`와 match해야 하며, 다른 branch는 absent여야 한다.
 
-Response schema:
+응답 schema:
 
 ```yaml
 RecordUserDecisionResponse:
@@ -710,25 +710,25 @@ RecordUserDecisionResponse:
   next_action: string
 ```
 
-State transition summary: updates the targeted gate or reconcile item; approval grant/deny updates `approval_gate`; accepted scope updates `scope_gate`; QA waiver updates `qa_gate`; acceptance updates `acceptance_gate`; reconcile may create accepted state records.
+State transition 요약: targeted gate 또는 reconcile item을 update한다. Approval grant/deny는 `approval_gate`를 update한다. Accepted scope는 `scope_gate`를 update한다. QA waiver는 `qa_gate`를 update한다. Acceptance는 `acceptance_gate`를 update한다. Reconcile은 accepted state record를 만들 수 있다.
 
-Events emitted: `user_decision_recorded`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `reconcile_resolved`.
+발행 Event: `user_decision_recorded`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `reconcile_resolved`.
 
-Projection jobs enqueued: `TASK`; `APR` for approval; `MANUAL-QA` for QA waiver when represented as a QA record; affected design/task projections for reconcile.
+Projection job enqueue: `TASK`; approval에는 `APR`; QA waiver가 QA record로 represented되면 `MANUAL-QA`; reconcile에는 affected design/task projection.
 
-Validators run: `state_envelope`, `pending_decision_exists`, `approval_scope`, `qa_waiver_reason`, `reconcile_target_validity`.
+실행 Validator: `state_envelope`, `pending_decision_exists`, `approval_scope`, `qa_waiver_reason`, `reconcile_target_validity`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `SCOPE_VIOLATION`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RECONCILE_REQUIRED`, `PROJECTION_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
+가능한 오류: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `SCOPE_VIOLATION`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RECONCILE_REQUIRED`, `PROJECTION_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
-Idempotency behavior: repeated decision returns the same updated records and events; attempting to change an already-recorded decision with the same key returns `STATE_CONFLICT`.
+Idempotency 동작: repeated decision은 same updated record와 event를 반환한다. Same key로 already-recorded decision을 바꾸려 하면 `STATE_CONFLICT`를 반환한다.
 
 ### `harness.launch_verify`
 
-Purpose: create a detached verification run or manual evaluator bundle.
+목적: detached verification run 또는 manual evaluator bundle을 생성한다.
 
-Allowed actor: `lead_agent`, `operator`.
+허용 actor: `lead_agent`, `operator`.
 
-Request schema:
+요청 schema:
 
 ```yaml
 LaunchVerifyRequest:
@@ -743,9 +743,9 @@ LaunchVerifyRequest:
   evaluator_focus: string[]
 ```
 
-`include_artifacts` references already registered evidence to include in or link from the bundle. `bundle_artifact_input` is optional; when it is `null`, Core assembles and registers the verification bundle. When it is present, Core validates and registers the supplied staged bundle instead.
+`include_artifacts`는 bundle 안에 include하거나 bundle에서 link할 already registered evidence를 reference한다. `bundle_artifact_input`은 optional이다. `null`이면 Core가 verification bundle을 assemble/register한다. Present이면 Core가 supplied staged bundle을 validate/register한다.
 
-Response schema:
+응답 schema:
 
 ```yaml
 LaunchVerifyResponse:
@@ -759,25 +759,25 @@ LaunchVerifyResponse:
     write_capable: boolean
 ```
 
-State transition summary: records verification launch, sets or keeps `verification_gate=pending`, and creates evaluator run/bundle references.
+State transition 요약: verification launch를 기록하고, `verification_gate=pending`을 set/keep하며 evaluator run/bundle reference를 만든다.
 
-Events emitted: `verification_launched`, `verification_bundle_created`, `evaluator_run_created`.
+발행 Event: `verification_launched`, `verification_bundle_created`, `evaluator_run_created`.
 
-Projection jobs enqueued: `TASK`; optionally `EVIDENCE-MANIFEST`.
+Projection job enqueue: `TASK`; optional `EVIDENCE-MANIFEST`.
 
-Validators run: `state_envelope`, `evidence_sufficiency`, `baseline_freshness`, `artifact_integrity`, `surface_capability_check`, `same_session_verify_guard`.
+실행 Validator: `state_envelope`, `evidence_sufficiency`, `baseline_freshness`, `artifact_integrity`, `surface_capability_check`, `same_session_verify_guard`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `EVIDENCE_INSUFFICIENT`, `BASELINE_STALE`, `ARTIFACT_MISSING`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`.
+가능한 오류: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `EVIDENCE_INSUFFICIENT`, `BASELINE_STALE`, `ARTIFACT_MISSING`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`.
 
-Idempotency behavior: repeated request returns the same evaluator run and bundle ref; included artifact refs and bundle artifact input must match the original payload, and staged bundle contents must be byte-identical for the same key.
+Idempotency 동작: repeated request는 same evaluator run과 bundle ref를 반환한다. Included artifact ref와 bundle artifact input은 original payload와 match해야 하고, staged bundle content는 같은 key에 대해 byte-identical이어야 한다.
 
 ### `harness.record_eval`
 
-Purpose: record a verification result and update verification gate/assurance when independence is valid.
+목적: verification result를 기록하고 independence가 valid할 때 verification gate/assurance를 update한다.
 
-Allowed actor: `evaluator`, `operator`.
+허용 actor: `evaluator`, `operator`.
 
-Request schema:
+요청 schema:
 
 ```yaml
 RecordEvalRequest:
@@ -803,7 +803,7 @@ RecordEvalRequest:
   artifact_inputs: ArtifactInput[]
 ```
 
-Response schema:
+응답 schema:
 
 ```yaml
 RecordEvalResponse:
@@ -816,25 +816,25 @@ RecordEvalResponse:
   next_action: string
 ```
 
-State transition summary: records Eval; passed detached verification can set `verification_gate=passed` and `assurance_level=detached_verified`; failed or blocked Eval moves gate to failed/blocked; same-session or invalid independence cannot upgrade assurance.
+State transition 요약: Eval을 기록한다. Passed detached verification은 `verification_gate=passed`와 `assurance_level=detached_verified`를 set할 수 있다. Failed 또는 blocked Eval은 gate를 failed/blocked로 이동시킨다. Same-session 또는 invalid independence는 assurance를 upgrade할 수 없다.
 
-Events emitted: `eval_recorded`, `verification_passed`, `verification_failed`, `verification_blocked`, `assurance_updated`, `verify_not_detached_detected`.
+발행 Event: `eval_recorded`, `verification_passed`, `verification_failed`, `verification_blocked`, `assurance_updated`, `verify_not_detached_detected`.
 
-Projection jobs enqueued: `TASK`, `EVAL`; optionally `EVIDENCE-MANIFEST`.
+Projection job enqueue: `TASK`, `EVAL`; optional `EVIDENCE-MANIFEST`.
 
-Validators run: `state_envelope`, `same_session_verify_guard`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`, `approval_scope`, `surface_capability_check`.
+실행 Validator: `state_envelope`, `same_session_verify_guard`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`, `approval_scope`, `surface_capability_check`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `VERIFY_NOT_DETACHED`, `EVIDENCE_INSUFFICIENT`, `BASELINE_STALE`, `ARTIFACT_MISSING`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
+가능한 오류: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `VERIFY_NOT_DETACHED`, `EVIDENCE_INSUFFICIENT`, `BASELINE_STALE`, `ARTIFACT_MISSING`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
 
-Idempotency behavior: repeated request returns the same Eval and assurance decision; a changed verdict, independence payload, or artifact input with the same key returns `STATE_CONFLICT`.
+Idempotency 동작: repeated request는 same Eval과 assurance decision을 반환한다. Same key에 changed verdict, independence payload, artifact input이 있으면 `STATE_CONFLICT`를 반환한다.
 
 ### `harness.record_manual_qa`
 
-Purpose: record human QA result and update `qa_gate` when required QA is satisfied, failed, or waived.
+목적: human QA result를 기록하고 required QA가 satisfied, failed, waived일 때 `qa_gate`를 update한다.
 
-Allowed actor: `user`, `operator`, `evaluator`.
+허용 actor: `user`, `operator`, `evaluator`.
 
-Request schema:
+요청 schema:
 
 ```yaml
 RecordManualQaRequest:
@@ -852,7 +852,7 @@ RecordManualQaRequest:
   next_action: rework | accept | waive | block | none
 ```
 
-Response schema:
+응답 schema:
 
 ```yaml
 RecordManualQaResponse:
@@ -864,25 +864,25 @@ RecordManualQaResponse:
   next_action: string
 ```
 
-State transition summary: records Manual QA; `passed` can set `qa_gate=passed`; `failed` sets `qa_gate=failed` and routes to rework/blocked; `waived` requires waiver reason and sets `qa_gate=waived`.
+State transition 요약: Manual QA를 기록한다. `passed`는 `qa_gate=passed`를 set할 수 있다. `failed`는 `qa_gate=failed`를 set하고 rework/blocked로 route한다. `waived`는 waiver reason이 필요하며 `qa_gate=waived`를 set한다.
 
-Events emitted: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`.
+발행 Event: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`.
 
-Projection jobs enqueued: `TASK`, `MANUAL-QA`; optionally `EVIDENCE-MANIFEST`.
+Projection job enqueue: `TASK`, `MANUAL-QA`; optional `EVIDENCE-MANIFEST`.
 
-Validators run: `state_envelope`, `manual_qa_required`, `qa_waiver_reason`, `artifact_integrity`, `evidence_sufficiency`.
+실행 Validator: `state_envelope`, `manual_qa_required`, `qa_waiver_reason`, `artifact_integrity`, `evidence_sufficiency`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `QA_REQUIRED`, `ARTIFACT_MISSING`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
+가능한 오류: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `QA_REQUIRED`, `ARTIFACT_MISSING`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
-Idempotency behavior: repeated request returns the same Manual QA record and gate update; waiver reason and artifact inputs must match.
+Idempotency 동작: repeated request는 same Manual QA record와 gate update를 반환한다. Waiver reason과 artifact input은 match해야 한다.
 
 ### `harness.close_task`
 
-Purpose: close, cancel, or supersede a Task after Core checks all close-relevant gates.
+목적: Core가 close-relevant gate를 모두 확인한 뒤 Task를 close, cancel, supersede한다.
 
-Allowed actor: `user`, `lead_agent`, `operator`.
+허용 actor: `user`, `lead_agent`, `operator`.
 
-Request schema:
+요청 schema:
 
 ```yaml
 CloseTaskRequest:
@@ -894,7 +894,7 @@ CloseTaskRequest:
   superseded_by_task_id: string | null
 ```
 
-Response schema:
+응답 schema:
 
 ```yaml
 CloseTaskResponse:
@@ -909,14 +909,14 @@ CloseTaskResponse:
   artifact_refs: ArtifactRef[]
 ```
 
-State transition summary: successful completion moves Task to `completed` with result and close reason; cancellation/supersession moves Task to `cancelled`; failed close leaves Task non-terminal and reports blockers.
+State transition 요약: successful completion은 Task를 `completed`로 이동시키고 result와 close reason을 설정한다. Cancellation/supersession은 Task를 `cancelled`로 이동시킨다. Failed close는 Task를 non-terminal 상태로 남기고 blocker를 report한다.
 
-Events emitted: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `close_blocked`.
+발행 Event: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `close_blocked`.
 
-Projection jobs enqueued: `TASK`; latest required reports as needed for final freshness.
+Projection job enqueue: `TASK`; final freshness에 필요한 latest required report.
 
-Validators run: `state_envelope`, `active_run_absent`, `active_change_unit_complete`, `scope_coverage`, `approval_scope`, `design_gate_close`, `evidence_sufficiency`, `same_session_verify_guard`, `manual_qa_required`, `acceptance_required`, `projection_freshness`.
+실행 Validator: `state_envelope`, `active_run_absent`, `active_change_unit_complete`, `scope_coverage`, `approval_scope`, `design_gate_close`, `evidence_sufficiency`, `same_session_verify_guard`, `manual_qa_required`, `acceptance_required`, `projection_freshness`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `PROJECTION_STALE`, `RECONCILE_REQUIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
+가능한 오류: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `PROJECTION_STALE`, `RECONCILE_REQUIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
-Idempotency behavior: repeated successful close returns the same terminal state and report refs; a second close with a different intent or close reason returns `STATE_CONFLICT`.
+Idempotency 동작: repeated successful close는 same terminal state와 report ref를 반환한다. Different intent 또는 close reason으로 두 번째 close를 요청하면 `STATE_CONFLICT`를 반환한다.

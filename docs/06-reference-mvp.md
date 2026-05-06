@@ -1,103 +1,103 @@
 # Reference MVP
 
-## Document Role
+## 문서 역할
 
-This document owns the MVP implementation sequence and reference implementation details: SQLite DDL draft, migrations, lock policy, artifact directory layout, baseline capture format, projection job table, validator runner skeleton, reference surface behavior, and minimal operator tooling plan.
+이 문서는 MVP implementation sequence와 reference implementation detail을 담당한다. SQLite DDL draft, migration, lock policy, artifact directory layout, baseline capture format, projection job table, validator runner skeleton, reference surface behavior, minimal operator tooling plan을 포함한다.
 
-It does not own the public MCP schema source of truth. Implementers must use `05-mcp-api-and-schemas.md` for public request/response contracts.
+Public MCP schema source of truth는 담당하지 않는다. 구현자는 public request/response contract에 `05-mcp-api-and-schemas.md`를 사용해야 한다.
 
-## MVP Scope
+## MVP 범위
 
-The MVP is a core invariant validation project, not a broad agent-surface integration project.
+MVP는 broad agent-surface integration project가 아니라 core invariant validation project다.
 
-MVP includes:
+MVP 포함 항목:
 
-- one local project registration
-- one reference agent surface
-- MCP server exposing the public tools from the API document
-- `state.sqlite` current tables plus `state.sqlite.task_events`
-- artifact registry and durable artifact files
+- 하나의 local project registration
+- 하나의 reference agent surface
+- API document의 public tool을 expose하는 MCP server
+- `state.sqlite` current table과 `state.sqlite.task_events`
+- artifact registry와 durable artifact file
 - baseline capture
-- `prepare_write` gate with scope, approval, baseline, and capability checks
-- approval, evidence, verification, Manual QA, and acceptance gate support
-- TASK, APR, RUN-SUMMARY, EVIDENCE-MANIFEST, EVAL, DIRECT-RESULT projections
-- optional minimal TDD-TRACE and MANUAL-QA projections where policy requires them
-- detached verification bundle or manual evaluator instruction bundle
-- doctor, recover, reconcile, export, and conformance smoke entrypoints
+- scope, approval, baseline, capability check가 있는 `prepare_write` gate
+- approval, evidence, verification, Manual QA, acceptance gate support
+- TASK, APR, RUN-SUMMARY, EVIDENCE-MANIFEST, EVAL, DIRECT-RESULT projection
+- policy가 요구하는 경우 optional minimal TDD-TRACE 및 MANUAL-QA projection
+- detached verification bundle 또는 manual evaluator instruction bundle
+- doctor, recover, reconcile, export, conformance smoke entrypoint
 
-MVP excludes the later automation cataloged in `appendix/C-later-roadmap.md`, including broader surface expansion, richer capture automation, advanced orchestration, analytics, and team profile export/import.
+MVP는 broader surface expansion, richer capture automation, advanced orchestration, analytics, team profile export/import를 포함해 `appendix/C-later-roadmap.md`에 정리된 later automation을 제외한다.
 
-## Implementation Sequence
+## 구현 순서
 
 ### MVP-0: Runtime Bootstrap
 
-Create the runtime home, register one project, create `project.yaml`, initialize `registry.sqlite`, initialize `state.sqlite`, create artifact directories, and register the reference surface with a cooperative/detective capability profile.
+Runtime home을 만들고, 하나의 project를 register하고, `project.yaml`을 만들고, `registry.sqlite`와 `state.sqlite`를 initialize하고, artifact directory를 만들고, cooperative/detective capability profile로 reference surface를 register한다.
 
 Exit criteria:
 
-- project appears in `registry.sqlite.projects`
-- reference surface appears in `registry.sqlite.project_surfaces`
-- project runtime directory contains `project.yaml`, `state.sqlite`, and artifact directories
-- doctor can report project/runtime readiness
+- project가 `registry.sqlite.projects`에 나타남
+- reference surface가 `registry.sqlite.project_surfaces`에 나타남
+- project runtime directory가 `project.yaml`, `state.sqlite`, artifact directory를 포함함
+- doctor가 project/runtime readiness를 report할 수 있음
 
 ### MVP-1: Core State And MCP Facade
 
-Implement Core transaction wrapper, locks, state version checks, idempotency replay records, read resources, `harness.status`, `harness.intake`, and `harness.next`.
+Core transaction wrapper, lock, state version check, idempotency replay record, read resource, `harness.status`, `harness.intake`, `harness.next`를 구현한다.
 
 Exit criteria:
 
-- active Task absent status works
-- advisor Task can intake, run read-only, and close through Core
-- every state mutation updates current records and appends `state.sqlite.task_events` in one transaction
+- active Task absent status가 동작함
+- advisor Task가 Core를 통해 intake, read-only run, close될 수 있음
+- 모든 state mutation이 current record를 update하고 하나의 transaction 안에서 `state.sqlite.task_events`를 append함
 
 ### MVP-2: Write Gate, Approval, Baseline, Artifacts
 
-Implement Change Unit records, gate records, baseline capture, artifact registration, `harness.prepare_write`, approval request/decision flow, and minimal changed-path/scope/approval/baseline validators.
+Change Unit record, gate record, baseline capture, artifact registration, `harness.prepare_write`, approval request/decision flow, minimal changed-path/scope/approval/baseline validator를 구현한다.
 
 Exit criteria:
 
-- product write without active scoped Change Unit is blocked
-- sensitive dependency or schema change requires approval
-- approval scope drift can expire or block approval
-- raw artifacts are stored with hash and redaction metadata
+- active scoped Change Unit이 없는 product write가 blocked됨
+- sensitive dependency 또는 schema change에 approval이 필요함
+- approval scope drift가 approval을 expire 또는 block할 수 있음
+- raw artifact가 hash와 redaction metadata와 함께 저장됨
 
 ### MVP-3: Runs, Evidence, Projection, Reconcile
 
-Implement `harness.record_run`, run records, evidence manifest records, projection jobs, TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT renderers, managed block hashes, and reconcile item creation for managed drift or human-editable proposals.
+`harness.record_run`, run record, evidence manifest record, projection job, TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT renderer, managed block hash, managed drift 또는 human-editable proposal에 대한 reconcile item creation을 구현한다.
 
 Exit criteria:
 
-- implementation and direct runs register artifacts and update evidence
-- projection job failure is separate from state failure
-- managed Markdown edits create reconcile items instead of mutating state
+- implementation 및 direct run이 artifact를 register하고 evidence를 update함
+- projection job failure가 state failure와 분리됨
+- managed Markdown edit가 state를 mutate하지 않고 reconcile item을 생성함
 
 ### MVP-4: Verification, Manual QA, Close
 
-Implement `harness.launch_verify`, `harness.record_eval`, `harness.record_manual_qa`, `harness.close_task`, verification independence checks, Manual QA aggregation, and close blockers.
+`harness.launch_verify`, `harness.record_eval`, `harness.record_manual_qa`, `harness.close_task`, verification independence check, Manual QA aggregation, close blocker를 구현한다.
 
 Exit criteria:
 
-- work cannot close as `detached_verified` from same-session self-review
-- verification waiver closes with `completed_with_risk_accepted`, not `detached_verified`
-- required Manual QA and acceptance block close independently
-- direct work can close self-checked unless policy or user requested detached verification
+- work가 same-session self-review로 `detached_verified` close될 수 없음
+- verification waiver는 `detached_verified`가 아니라 `completed_with_risk_accepted`로 close됨
+- required Manual QA와 acceptance가 독립적으로 close를 block함
+- policy 또는 user가 detached verification을 요청하지 않는 한 direct work는 self-checked로 close될 수 있음
 
 ### MVP-5: Operator Smoke And Conformance
 
-Implement minimal doctor, recover, reconcile, export, artifact integrity check, and fixture-based conformance smoke.
+Minimal doctor, recover, reconcile, export, artifact integrity check, fixture-based conformance smoke를 구현한다.
 
 Exit criteria:
 
-- conformance smoke covers no-active-task status, advisor close, direct close, approval-required block, evidence-insufficient close block, same-session verification guard, projection failure separation, reconcile required, and MCP-unavailable write hold
-- export includes state snapshots, report projections, artifact refs, and redaction status
+- conformance smoke가 no-active-task status, advisor close, direct close, approval-required block, evidence-insufficient close block, same-session verification guard, projection failure separation, reconcile required, MCP-unavailable write hold를 cover함
+- export가 state snapshot, report projection, artifact ref, redaction status를 포함함
 
 ## Runtime Storage
 
-The reference storage uses SQLite for registry and per-project state. The DDL is a draft implementation contract; field names may gain indexes or migration helpers, but table ownership and authority boundaries should remain stable.
+Reference storage는 registry와 per-project state에 SQLite를 사용한다. DDL은 draft implementation contract다. Field name은 index나 migration helper를 얻을 수 있지만 table ownership과 authority boundary는 stable하게 유지되어야 한다.
 
 ### `project.yaml`
 
-`project.yaml` stores static project configuration only. It must not store current Task state.
+`project.yaml`은 static project configuration만 저장한다. Current Task state를 저장하면 안 된다.
 
 ```yaml
 project_id: PRJ-0001
@@ -484,9 +484,9 @@ CREATE TABLE locks (
 );
 ```
 
-`task_events` remains append-only event history. `tool_invocations` stores request replay metadata needed to return the original committed response. Reusing an idempotency key with a different `request_hash` returns `STATE_CONFLICT`.
+`task_events`는 append-only event history로 남는다. `tool_invocations`는 original committed response를 반환하는 데 필요한 request replay metadata를 저장한다. 같은 idempotency key를 다른 `request_hash`로 reuse하면 `STATE_CONFLICT`를 반환한다.
 
-Recommended indexes:
+권장 index:
 
 ```sql
 CREATE INDEX idx_task_events_task_version ON task_events(task_id, state_version);
@@ -497,11 +497,11 @@ CREATE INDEX idx_runs_task_status ON runs(task_id, status);
 CREATE INDEX idx_reconcile_items_status ON reconcile_items(status);
 ```
 
-`task_events` is append-only by application policy. Recovery may append compensating events; it should not rewrite historical rows.
+`task_events`는 application policy상 append-only다. Recovery는 compensating event를 append할 수 있지만 historical row를 rewrite해서는 안 된다.
 
 ## Migration And Versioning
 
-MVP uses integer schema versions recorded in a small internal migration ledger:
+MVP는 작은 internal migration ledger에 기록되는 integer schema version을 사용한다.
 
 ```sql
 CREATE TABLE schema_migrations (
@@ -513,11 +513,11 @@ CREATE TABLE schema_migrations (
 );
 ```
 
-Migrations must be forward-only for MVP. A failed migration leaves the project unavailable until doctor/recover reports whether the failure is repairable.
+MVP migration은 forward-only여야 한다. Migration이 실패하면 doctor/recover가 failure가 repairable인지 report할 때까지 project를 unavailable로 둔다.
 
 ## Lock Policy
 
-State-changing operations acquire a lock at the narrowest practical scope:
+State-changing operation은 실용적으로 가장 좁은 scope의 lock을 acquire한다.
 
 | Operation | Lock scope |
 |---|---|
@@ -529,7 +529,7 @@ State-changing operations acquire a lock at the narrowest practical scope:
 | artifact registration | artifact path |
 | reconcile decision | reconcile item and affected task/design record |
 
-If a lock is expired, the next operation may take it after appending a recovery event. If `expected_state_version` is stale, the operation returns `STATE_CONFLICT` before mutation.
+Lock이 expired되면 다음 operation은 recovery event를 append한 뒤 lock을 가져갈 수 있다. `expected_state_version`이 stale이면 operation은 mutation 전에 `STATE_CONFLICT`를 반환한다.
 
 ## Artifact Directory Layout
 
@@ -555,42 +555,42 @@ Reference layout:
         tmp/
 ```
 
-Artifact filenames should include enough stable identity to avoid collisions:
+Artifact filename은 collision을 피할 만큼 stable identity를 포함해야 한다.
 
 ```text
 {task_id}/{run_id-or-record_id}/{artifact_id}-{kind}.{ext}
 ```
 
-Markdown reports in the Product Repository are not raw artifacts by default. If an export needs a report snapshot, it can store that snapshot as an export component artifact while preserving the distinction between the report projection and raw evidence.
+Product Repository의 Markdown report는 기본적으로 raw artifact가 아니다. Export에 report snapshot이 필요하면 report projection과 raw evidence의 구분을 보존하면서 그 snapshot을 export component artifact로 저장할 수 있다.
 
 ### Artifact Registration Contract
 
-Artifact registration is part of the Core transition that records the producing Run, Eval, Manual QA record, verification bundle, or export component.
+Artifact registration은 producing Run, Eval, Manual QA record, verification bundle, export component를 기록하는 Core transition의 일부다.
 
-MVP registration steps:
+MVP registration step:
 
-1. Accept a connector-captured or operator-supplied file only from a staging path under the project artifact `tmp/` directory or from an approved capture adapter.
-2. Apply redaction or omission before hashing. Raw secrets must not be copied into durable artifact storage.
-3. Move or copy the stored bytes into the artifact directory using `{task_id}/{run_id-or-record_id}/{artifact_id}-{kind}.{ext}` under the matching kind directory.
-4. Compute `sha256`, `size_bytes`, `content_type`, and `redaction_state` from the stored bytes.
-5. Insert the `artifacts` row in the same Core transaction that records the related state record and appends `task_events`.
-6. Return an `ArtifactRef` whose `uri` resolves through the artifact registry row.
-7. If the file move succeeds but the transaction fails, leave the file in `tmp/` or mark it orphaned for `recover`; do not create a committed artifact ref.
+1. Project artifact `tmp/` directory 아래 staging path 또는 approved capture adapter에서만 connector-captured 또는 operator-supplied file을 accept한다.
+2. Hashing 전에 redaction 또는 omission을 적용한다. Raw secret은 durable artifact storage로 copy하면 안 된다.
+3. Matching kind directory 아래 `{task_id}/{run_id-or-record_id}/{artifact_id}-{kind}.{ext}`를 사용해 stored bytes를 artifact directory로 move 또는 copy한다.
+4. Stored bytes에서 `sha256`, `size_bytes`, `content_type`, `redaction_state`를 compute한다.
+5. Related state record를 기록하고 `task_events`를 append하는 같은 Core transaction 안에서 `artifacts` row를 insert한다.
+6. Artifact registry row를 통해 `uri`가 resolve되는 `ArtifactRef`를 반환한다.
+7. File move는 성공했지만 transaction이 실패하면 file을 `tmp/`에 남기거나 `recover`용 orphaned로 mark한다. Committed artifact ref는 만들지 않는다.
 
 `redaction_state` implementation:
 
 | State | Stored artifact bytes |
 |---|---|
 | `none` | original non-sensitive evidence |
-| `redacted` | redacted evidence; the unredacted original is not retained by the harness |
-| `secret_omitted` | evidence with secret values omitted or replaced by handles |
-| `blocked` | a small metadata-only notice artifact explaining that capture was blocked; no forbidden content is stored |
+| `redacted` | redacted evidence; unredacted original은 harness가 retain하지 않음 |
+| `secret_omitted` | secret value가 omitted되거나 handle로 대체된 evidence |
+| `blocked` | capture가 blocked되었음을 설명하는 small metadata-only notice artifact; forbidden content는 저장하지 않음 |
 
-Artifact integrity failures return `ARTIFACT_MISSING` or a validator failure and mark related evidence or projection freshness stale according to the kernel rules.
+Artifact integrity failure는 `ARTIFACT_MISSING` 또는 validator failure를 반환하고, kernel rule에 따라 related evidence 또는 projection freshness를 stale로 mark한다.
 
 ## Baseline Capture
 
-Baseline capture records the repository state used by write, approval, evidence, and verification checks.
+Baseline capture는 write, approval, evidence, verification check에 사용되는 repository state를 기록한다.
 
 ```yaml
 BaselineCapture:
@@ -613,13 +613,13 @@ BaselineCapture:
   captured_at: string
 ```
 
-Baseline is stale when relevant HEAD, dirty diff, allowed path contents, approval scope, or verification bundle inputs no longer match the captured baseline. Stale baseline can mark approval, evidence, or verification stale depending on the affected records.
+Relevant HEAD, dirty diff, allowed path content, approval scope, verification bundle input이 captured baseline과 더 이상 match하지 않으면 baseline은 stale이다. Stale baseline은 affected record에 따라 approval, evidence, verification을 stale로 mark할 수 있다.
 
 ## Verification Bundle Shape
 
-`harness.launch_verify` creates a bundle artifact for detached verification or manual evaluator handoff. The bundle is raw evidence metadata, not an Eval verdict.
+`harness.launch_verify`는 detached verification 또는 manual evaluator handoff를 위한 bundle artifact를 만든다. Bundle은 raw evidence metadata이지 Eval verdict가 아니다.
 
-Minimum bundle contents:
+최소 bundle contents:
 
 ```text
 verify-bundle/
@@ -635,13 +635,13 @@ verify-bundle/
   evaluator-instructions.md
 ```
 
-The manifest records task id, Change Unit id, baseline ref, source state version, included artifact ids, redaction summary, evaluator focus, and the expected independence context. The bundle may include copied raw artifacts when retention and redaction policy allow it; otherwise it includes artifact refs that the evaluator can resolve through the harness.
+Manifest는 task id, Change Unit id, baseline ref, source state version, included artifact id, redaction summary, evaluator focus, expected independence context를 기록한다. Retention과 redaction policy가 허용하면 bundle은 copied raw artifact를 포함할 수 있다. 아니면 evaluator가 harness를 통해 resolve할 수 있는 artifact ref를 포함한다.
 
-Launching verification sets or keeps `verification_gate=pending`. Only `harness.record_eval` can record the verdict and update assurance.
+Verification launch는 `verification_gate=pending`을 set 또는 keep한다. Verdict를 기록하고 assurance를 update할 수 있는 것은 `harness.record_eval`뿐이다.
 
 ## Projection Jobs
 
-Projection jobs are the durable outbox between committed state and Product Repository Markdown files. The `projection_jobs` table above owns job persistence.
+Projection job은 committed state와 Product Repository Markdown file 사이의 durable outbox다. 위의 `projection_jobs` table이 job persistence를 담당한다.
 
 MVP job lifecycle:
 
@@ -651,53 +651,53 @@ pending -> running -> failed -> pending
 pending -> skipped
 ```
 
-Rules:
+규칙:
 
-- never render an older projection version over a newer one
-- preserve human-editable sections
-- compare managed hash before overwrite
-- create a reconcile item for managed drift
-- keep projection failure separate from Task result
+- older projection version을 newer version 위에 render하지 않는다
+- human-editable section을 preserve한다
+- overwrite 전에 managed hash를 compare한다
+- managed drift에는 reconcile item을 생성한다
+- projection failure를 Task result와 분리해 둔다
 
 ### Projection Worker Execution
 
-The reference projector executes pending jobs after the Core transaction commits.
+Reference projector는 Core transaction commit 뒤 pending job을 실행한다.
 
-MVP worker steps:
+MVP worker step:
 
-1. Select the oldest `pending` job for the target projection and acquire the projection-job lock.
-2. Mark the job `running` and read the latest state records, artifact refs, and previous managed hash.
-3. If the job's `projection_version` is older than the target's current projection version, mark it `skipped`.
-4. Render the managed block from committed records and artifact refs.
-5. If the existing managed block hash differs from the last recorded hash, create or update a `reconcile_items` row, mark the job `skipped`, and set the projection status to `stale`.
-6. Preserve human-editable sections and write the projection through a temporary file plus atomic rename.
-7. Record the new managed hash, output path, projected version, and `completed` status.
-8. On render or write failure, mark the job `failed`, keep state result unchanged, and surface projection freshness as `failed` or `stale`.
+1. Target projection의 oldest `pending` job을 select하고 projection-job lock을 acquire한다.
+2. Job을 `running`으로 mark하고 latest state record, artifact ref, previous managed hash를 read한다.
+3. Job의 `projection_version`이 target의 current projection version보다 older이면 `skipped`로 mark한다.
+4. Committed record와 artifact ref에서 managed block을 render한다.
+5. Existing managed block hash가 last recorded hash와 다르면 `reconcile_items` row를 create/update하고, job을 `skipped`로 mark하고, projection status를 `stale`로 set한다.
+6. Human-editable section을 preserve하고 temporary file과 atomic rename으로 projection을 write한다.
+7. New managed hash, output path, projected version, `completed` status를 record한다.
+8. Render 또는 write failure에서는 job을 `failed`로 mark하고 state result를 unchanged로 유지하며 projection freshness를 `failed` 또는 `stale`로 surface한다.
 
-Projection refresh retries `failed` jobs by creating or resetting a `pending` job with a newer attempt count. It must not overwrite a projection whose managed block has drifted until reconcile resolves the drift.
+Projection refresh는 newer attempt count를 가진 `pending` job을 만들거나 reset해 `failed` job을 retry한다. Reconcile이 drift를 resolve할 때까지 managed block이 drifted된 projection을 overwrite하면 안 된다.
 
 ## Reference Surface Behavior
 
-The reference surface is the single MVP agent integration target. It demonstrates the kernel without claiming broad surface support.
+Reference surface는 단일 MVP agent integration target이다. Broad surface support를 주장하지 않고 kernel을 demonstrate한다.
 
 Required reference behavior:
 
-- can read repository rules and harness instructions
-- can call MCP tools and resources
-- calls `harness.intake` before tracked work
-- calls `harness.prepare_write` before product writes
-- records runs through `harness.record_run`
-- uses artifact refs for diffs/logs/bundles
-- requests approval/scope/user decisions through MCP
-- launches or prepares verification through `harness.launch_verify`
-- does not claim detached verification from same-session self-review
-- holds product writes when MCP is unavailable
+- repository rule과 harness instruction을 read할 수 있음
+- MCP tool과 resource를 call할 수 있음
+- tracked work 전에 `harness.intake`를 call함
+- product write 전에 `harness.prepare_write`를 call함
+- `harness.record_run`을 통해 run을 기록함
+- diff/log/bundle에 artifact ref를 사용함
+- MCP를 통해 approval/scope/user decision을 request함
+- `harness.launch_verify`를 통해 verification을 launch 또는 prepare함
+- same-session self-review로 detached verification을 claim하지 않음
+- MCP가 unavailable이면 product write를 hold함
 
-Default guarantee display is cooperative/detective. Preventive or isolated claims require an implemented guard or isolation path and a passing `surface_capability_check`.
+Default guarantee display는 cooperative/detective다. Preventive 또는 isolated claim에는 implemented guard 또는 isolation path와 passing `surface_capability_check`가 필요하다.
 
 ## Validator Runner Skeleton
 
-MVP validators use one shared result shape from the API document. The runner is intentionally small:
+MVP validator는 API document의 shared result shape를 사용한다. Runner는 의도적으로 작다.
 
 ```text
 run_validators(context, validator_ids):
@@ -716,43 +716,43 @@ MVP validator set:
 
 | Validator | Purpose |
 |---|---|
-| `active_task` | Task exists and is non-terminal where required |
-| `active_change_unit` | write-capable run has active scoped Change Unit |
-| `changed_paths` | observed or intended paths stay inside scope |
-| `approval_scope` | sensitive paths/tools/network/secrets fit granted approval |
-| `baseline_freshness` | baseline still matches relevant repo state |
-| `artifact_integrity` | artifact files exist and match hash/size |
-| `evidence_sufficiency` | acceptance criteria map to supporting evidence |
-| `same_session_verify_guard` | same-session review cannot upgrade assurance |
-| `manual_qa_required` | required QA is passed or validly waived |
-| `docs_consistency` | projection version and managed hash are consistent |
-| `surface_capability_check` | connected surface can satisfy required behavior |
-| `vertical_slice_shape` | required vertical slice or exception is recorded |
-| `tdd_trace` | required TDD evidence or allowed waiver exists |
-| `module_boundary_review` | module/interface review requirement is met |
+| `active_task` | required한 곳에서 Task가 exists하고 non-terminal인지 확인 |
+| `active_change_unit` | write-capable run에 active scoped Change Unit이 있는지 확인 |
+| `changed_paths` | observed 또는 intended path가 scope 안에 머무는지 확인 |
+| `approval_scope` | sensitive path/tool/network/secret이 granted approval에 맞는지 확인 |
+| `baseline_freshness` | baseline이 relevant repo state와 여전히 match하는지 확인 |
+| `artifact_integrity` | artifact file이 존재하고 hash/size와 match하는지 확인 |
+| `evidence_sufficiency` | acceptance criteria가 supporting evidence에 map되는지 확인 |
+| `same_session_verify_guard` | same-session review가 assurance를 upgrade하지 못하게 함 |
+| `manual_qa_required` | required QA가 passed 또는 validly waived인지 확인 |
+| `docs_consistency` | projection version과 managed hash가 consistent한지 확인 |
+| `surface_capability_check` | connected surface가 required behavior를 satisfy할 수 있는지 확인 |
+| `vertical_slice_shape` | required vertical slice 또는 exception이 recorded되었는지 확인 |
+| `tdd_trace` | required TDD evidence 또는 allowed waiver가 있는지 확인 |
+| `module_boundary_review` | module/interface review requirement가 충족됐는지 확인 |
 
-Validator failure must be visible as state, blocked reasons, or close blockers. It must not be hidden in prose-only agent output.
+Validator failure는 state, blocked reason, close blocker로 visible해야 한다. Prose-only agent output 안에 숨기면 안 된다.
 
 ## Minimal CLI Plan
 
-The MVP CLI is an operator/debug surface over the same Core logic. It should not become a second API with different state semantics.
+MVP CLI는 같은 Core logic 위의 operator/debug surface다. State semantic이 다른 두 번째 API가 되면 안 된다.
 
-Minimum entrypoints:
+Minimum entrypoint:
 
-- connect one local project and reference surface
-- start or print MCP server connection information
-- doctor project/runtime/MCP/artifacts/projections
-- refresh projections
-- reconcile pending items
-- recover interrupted runs, stale projections, and artifact registry mismatch
-- export a Task bundle
-- run conformance smoke fixtures
+- 하나의 local project와 reference surface connect
+- MCP server connection information을 start 또는 print
+- project/runtime/MCP/artifact/projection doctor
+- projection refresh
+- pending item reconcile
+- interrupted run, stale projection, artifact registry mismatch recover
+- Task bundle export
+- conformance smoke fixture run
 
-Detailed operator procedures are owned by the operations and conformance document.
+Detailed operator procedure는 operations and conformance document가 담당한다.
 
 ## Export Bundle Shape
 
-Exports package state snapshots, projection snapshots, and artifact refs for review or archival.
+Export는 review 또는 archival을 위해 state snapshot, projection snapshot, artifact ref를 package한다.
 
 ```text
 export/
@@ -775,4 +775,4 @@ export/
     ...
 ```
 
-Raw secret values, unredacted sensitive logs, and PII are omitted or redacted before export.
+Raw secret value, unredacted sensitive log, PII는 export 전에 omitted 또는 redacted된다.
