@@ -2,62 +2,77 @@
 
 ## Document Role
 
-Later automation and post-MVP roadmap items that must not read as MVP requirements.
+This appendix collects later automation and post-MVP roadmap items so they do not read as MVP requirements.
 
-## Owns
+It does not own kernel invariants, public MCP schemas, MVP implementation requirements, or required conformance for MVP.
 
-- dashboard
-- browser QA capture
-- cross-surface verify
-- native hook expansion
-- sidecar advanced watcher
-- parallel Change Unit orchestration
-- long-term analytics
-- team profile export/import
+## Roadmap Scope
 
-## Does Not Own
+The MVP proves the local kernel: state, gates, artifacts, verification, projection, reconcile, and one reference surface. The items below are useful follow-ons after those basics are stable.
 
-- MVP implementation requirements
-- kernel invariants
-- public MCP schemas
-- conformance required for MVP
-- user quick start
+Later items may become v1 work only after they have:
 
-## Sections
+- a clear capability profile requirement
+- a fixture or conformance target
+- a fallback behavior for unsupported surfaces
+- no dependency on treating projections as canonical state
 
-### Roadmap Scope
+## Dashboard
 
-TODO_REWRITE: Move later automation from current main docs so MVP requirements stay small.
+A dashboard can visualize active Tasks, gates, approvals, evidence coverage, projection freshness, artifact integrity, and reconcile items.
 
-### Dashboard
+Later because MVP should first stabilize the records, projections, and conformance fixtures that the dashboard would display. The first version should be read-only over `state.sqlite`, artifact refs, and projection job status.
 
-TODO_REWRITE: Collect dashboard ideas here.
+## Browser QA Capture
 
-### Browser QA Capture
+Automatic browser QA capture can gather screenshots, console logs, network traces, accessibility snapshots, and workflow recordings for Manual QA records.
 
-TODO_REWRITE: Collect automatic browser QA capture ideas here.
+Later because reliable browser capture requires additional surface capability, redaction policy, test environment setup, and artifact retention rules. MVP supports Manual QA records and artifact refs without requiring automated browser capture.
 
-### Cross-Surface Verification
+## Cross-Surface Verification
 
-TODO_REWRITE: Collect cross-surface verification ideas here.
+Cross-surface verification can send a verification bundle to a different agent surface or evaluator environment.
 
-### Native Hook Expansion
+Later because MVP only needs one reference surface plus detached verification bundles/manual evaluator instructions. Cross-surface verify should wait for connector conformance and capability profiles to be stable.
 
-TODO_REWRITE: Collect native hook expansion ideas here.
+## Native Hook Expansion
 
-### Advanced Sidecar Watcher
+Native hooks can provide stronger pre-tool guards, command interception, file write blocking, or richer artifact capture in surfaces that support them.
 
-TODO_REWRITE: Collect sidecar watcher ideas beyond MVP.
+Later because hook APIs vary by surface. MVP may use a concrete hook only when the reference surface actually supports it; otherwise native hooks are a capability-dependent enhancement.
 
-### Parallel Change Unit Orchestration
+## Advanced Sidecar Watcher
 
-TODO_REWRITE: Collect parallel orchestration ideas beyond MVP.
+An advanced sidecar watcher can observe file writes, command execution, generated-file drift, artifact capture opportunities, and repo baseline drift in near real time.
 
-### Long-Term Analytics
+Later because MVP can start with cooperative `prepare_write`, git diff checks, artifact registration, and detective validators. Advanced watching should not be required for the core state model to work.
 
-TODO_REWRITE: Collect long-term analytics ideas beyond MVP.
+## Parallel Orchestration
 
-### Team Profile Export And Import
+Parallel Change Unit orchestration can split work into multiple active implementation lanes, manage dependency DAGs, isolate baselines, and reconcile concurrent evidence.
 
-TODO_REWRITE: Collect team profile export and import ideas beyond MVP.
+Later because parallel execution depends on stable locks, baseline freshness, approval scope composition, artifact partitioning, and close semantics.
 
+## Analytics
+
+Analytics can derive rates and latencies from `state.sqlite.task_events`, runs, validator results, projection jobs, and reconcile items.
+
+Later because metrics are derived values, not authority. Candidate metrics include approval turnaround, verification latency, evidence insufficiency rate, projection stale duration, reconcile volume, and same-session verification guard triggers.
+
+## Team Profile Export And Import
+
+Team profile export/import can share policy defaults, connector profiles, surface capability assumptions, validator profiles, and project setup templates across a team.
+
+Later because MVP is a local kernel. Team sharing needs versioning, privacy review, secret handling, and conflict behavior before it should affect runtime state.
+
+## Additional Later Candidates
+
+The following are also later unless a future batch promotes them with fixtures and implementation ownership:
+
+- artifact dashboard
+- worktree-based fresh verify automation
+- advanced architecture drift validator
+- advanced public interface validator
+- semantic domain language consistency checks
+- status/approval/acceptance/manual QA card UX expansion
+- multi-agent policy and scheduling

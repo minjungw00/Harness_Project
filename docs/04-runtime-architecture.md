@@ -2,69 +2,231 @@
 
 ## Document Role
 
-세 공간, runtime home, Core 흐름, authority와 projection/reconcile 아키텍처.
+This document owns the local runtime architecture of the harness: the three spaces, runtime layers, Core process model, state transaction flow, artifact store architecture, projection/reconcile flow, guarantee levels, and failure/recovery overview.
 
-## Owns
+It does not define public MCP request/response schemas, SQLite DDL, full CLI command semantics, conformance fixtures, or surface-specific connector cookbooks.
 
-- Product Repository / Harness Server / Runtime Home canonical explanation
-- runtime layers
-- Core process model
-- state transaction model
-- artifact store architecture
-- raw artifact vs state record vs Markdown report boundary summary
-- projection outbox architecture
-- reconcile flow
-- validator runner placement
-- adapter/sidecar boundary
-- guarantee levels architecture
-- failure and recovery flow overview
+## Architecture Scope
 
-## Does Not Own
+The harness is a local operating kernel for AI-assisted product work. Its architecture keeps three concerns separate:
 
-- tool별 schema
-- DB DDL
-- full CLI commands
-- conformance fixtures
-- surface별 addendum
+```text
+Product Repository:
+  product code, tests, human-readable projections, and human-editable proposal areas
 
-## Sections
+Harness Server / Installation:
+  MCP server, Core, validators, connectors, projector, reconcile worker, and operator tools
 
-### Architecture Scope
+Harness Runtime Home:
+  registry.sqlite, project.yaml, state.sqlite, and the artifact store
+```
 
-TODO_REWRITE: Migrate the canonical three-space architecture from `docs/legacy-v1/03-architecture.md`.
+This split prevents chat, Markdown reports, generated connector files, and product source files from becoming accidental operational state. The canonical operational state is in `state.sqlite` current records plus `state.sqlite.task_events`. Raw evidence is canonical in the artifact store. Product Repository Markdown files are projections or proposal surfaces.
 
-### Product Repository
+## Product Repository
 
-TODO_REWRITE: Describe the repository role and projection placement without making documents canonical state.
+The Product Repository is the user's real product workspace. It contains product source code, tests, repository-level agent rules, and human-readable harness projections.
 
-### Harness Server / Installation
+Typical repository-owned paths are:
 
-TODO_REWRITE: Describe MCP server, Core, validator, connector, projector, and CLI placement.
+```text
+repo/
+  AGENTS.md
+  docs/
+    tasks/
+    approvals/
+    reports/
+    design/
+  .harness/
+    agent/generated/
+    reconcile/pending/
+```
 
-### Harness Runtime Home
+The repository may hold generated TASK, APR, RUN-SUMMARY, EVAL, DIRECT-RESULT, EVIDENCE-MANIFEST, TDD-TRACE, MANUAL-QA, DOMAIN-LANGUAGE, MODULE-MAP, and INTERFACE-CONTRACT Markdown reports. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; accepted changes flow through reconcile or an MCP tool before they become state records.
 
-TODO_REWRITE: Describe runtime home authority, including `registry.sqlite`, `project.yaml`, `state.sqlite`, and artifacts at architecture level only.
+## Harness Server / Installation
 
-### Core Process Model
+The Harness Server / Installation is the control plane. MVP can implement it as one local process with internal modules rather than a fleet of services.
 
-TODO_CONTENT: Add process and transaction flow after kernel and MVP details are rewritten.
+Core runtime responsibilities:
 
-### Artifact And Projection Boundaries
+- expose read resources and public tools through the MCP server
+- execute kernel state transitions in Core
+- run validators before writes, after runs, and before close
+- record artifacts and integrity metadata
+- enqueue and render projection jobs
+- detect reconcile candidates from human edits or managed-block drift
+- provide diagnostic, recovery, export, and conformance entrypoints
 
-TODO_REWRITE: Summarize raw artifact, state record, and Markdown report boundaries.
+The MCP server is not a thin wrapper around shell commands. It exposes high-level intent calls that Core translates into state transitions, validators, artifact records, and projection jobs.
 
-### Projection Outbox And Reconcile Flow
+## Harness Runtime Home
 
-TODO_REWRITE: Migrate projection job and reconcile architecture at high level.
+Harness Runtime Home stores local operational authority. The reference location is `~/.harness`, but the exact MVP layout is owned by the reference MVP document.
 
-### Validator And Adapter Placement
+Runtime Home contains:
 
-TODO_REWRITE: Summarize validator runner, adapter, and sidecar boundaries without surface-specific cookbooks.
+- `registry.sqlite` for project registration, connected surfaces, and connector manifests
+- one `project.yaml` per registered project for static project configuration
+- one `state.sqlite` per project for current operational records and `state.sqlite.task_events`
+- artifact directories for durable evidence files
 
-### Guarantee Levels
+Runtime Home must be sufficient to recover operational state even if chat history disappears or Product Repository projections are stale. Product Repository documents can be regenerated from state records plus artifact refs; they do not replace those records.
 
-TODO_REWRITE: Migrate cooperative, detective, preventive, and isolated guarantee architecture.
+## Runtime Layers
 
-### Failure And Recovery Overview
+```text
+User conversation surface
+  ↓
+Agent surface
+  ↓
+Harness rules / skill / local instructions
+  ↓
+Harness MCP server
+  ↓
+Harness Core
+  ↓
+state.sqlite / artifact store / validators / projector / reconcile worker
+```
 
-TODO_CONTENT: Add architecture-level recovery overview, leaving commands and fixtures to operations.
+The conversation surface gathers user intent, decisions, approvals, QA judgments, and acceptance. The agent surface performs reading, editing, and checking. Harness rules and skills keep the agent oriented. The MCP server provides the tool boundary. Core owns the state machine. Validators, artifact capture, projection, and reconcile attach evidence and readable output to state transitions.
+
+Native hooks, sidecars, command wrappers, file watchers, and worktree isolation are capability-dependent enforcement layers. MVP relies on cooperative/detective behavior for the reference surface unless a concrete capability profile proves stronger enforcement.
+
+## Core Process Model
+
+MVP Core can run as a single process with these internal modules:
+
+| Module | Runtime responsibility |
+|---|---|
+| State store | current records, state versions, locks, and `state.sqlite.task_events` |
+| Task workflow | intake, mode selection, next action, gate updates, close decisions |
+| Approval module | scope-bound approval request, decision, expiry, and drift handling |
+| Evidence module | run records, artifact refs, evidence manifests, and coverage checks |
+| Verification module | verification bundles, evaluator runs, Eval records, and independence checks |
+| Manual QA module | QA records and `qa_gate` aggregation |
+| Projection module | projection jobs, managed blocks, freshness, and report paths |
+| Reconcile module | human-editable proposals, managed drift, and accepted-state routing |
+| Validator runner | core, design-quality, artifact, projection, and connector checks |
+| Connector adapter | reference surface registration, capability reporting, and capture hints |
+
+Core is the only component that updates canonical operational state. Agents, CLI commands, projectors, and reconnect/recovery flows must enter through Core logic or use recovery code that preserves the same state compatibility rules.
+
+## State Transaction Flow
+
+Every state-changing operation uses one SQLite transaction for current records and event history:
+
+```text
+1. validate request envelope and expected state version
+2. acquire the project/task lock needed for the transition
+3. read current state records
+4. run pre-transition validators
+5. update current records
+6. append one or more rows to state.sqlite.task_events
+7. increment state/projection versions as needed
+8. enqueue projection jobs
+9. commit
+10. render Markdown projections after commit
+```
+
+Projection rendering happens after the transaction. A projection failure marks projection freshness as stale or failed and leaves the committed state intact. Projection cannot turn a passed task into a failed task, and it cannot repair canonical state without a later reconcile decision.
+
+## Artifact Store Architecture
+
+The artifact store holds durable evidence files. Raw artifacts include files such as diffs, logs, screenshots, checkpoints, bundles, captured manifests, exported bundle components, and other evidence files that are stored with integrity metadata.
+
+An artifact has two parts:
+
+- the raw file in the artifact store
+- the artifact state record in `state.sqlite` that names its kind, path, hash, size, redaction state, task/run relation, and retention class
+
+Core records artifact refs in runs, evidence manifests, evals, manual QA records, projection reports, and exports. Large logs and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
+
+Raw secrets should not be stored as artifacts. If secret-related evidence is required, Core records a redacted artifact, a secret handle, or an operator note that passed the relevant validator.
+
+## Raw Artifacts, State Records, And Markdown Reports
+
+The boundary is:
+
+| Item | Authority | Examples |
+|---|---|---|
+| Raw artifact | Durable evidence file in artifact store | diff, log, screenshot, checkpoint, bundle, manifest file |
+| State record | Canonical structured record in `state.sqlite` | Task, Change Unit, Run, Approval, Eval, Manual QA record, Evidence Manifest, Artifact record |
+| Markdown report | Human-readable projection from records and artifact refs | TASK, APR, RUN-SUMMARY, EVAL, DIRECT-RESULT, EVIDENCE-MANIFEST |
+
+RUN-SUMMARY, EVAL, TDD-TRACE, MANUAL-QA, EVIDENCE-MANIFEST, and DIRECT-RESULT are projections or state-backed records, not raw artifacts by default. They may refer to raw artifacts, and an export may include snapshots of them, but that does not make the Markdown report the canonical evidence file.
+
+## Projection And Reconcile Flow
+
+Projection is an outbox-style flow:
+
+```text
+state transition committed
+→ projection job queued
+→ managed block rendered from state records and artifact refs
+→ projected version and managed hash recorded
+→ human-editable area preserved
+```
+
+Projector writes only managed areas and preserves human-editable areas. If a managed area was edited directly, projector records a reconcile candidate instead of silently treating the edit as state. If a human-editable area contains a proposal, reconcile creates a candidate record and asks for an explicit decision.
+
+Reconcile authority path:
+
+```text
+human-editable input
+→ state.sqlite.reconcile_items
+→ accepted state event/record or rejected/deferred note
+```
+
+Reconcile can merge, reject, convert to note, create a decision, create or update a design support record, or defer. Accepted operational changes are recorded through Core and appended to `state.sqlite.task_events`.
+
+## Validators And Adapter Placement
+
+Validators sit beside Core and return structured results to Core. Core decides whether the result blocks a transition, marks a gate stale/partial/blocked, requests a user decision, or only affects display.
+
+MVP validator categories:
+
+- state and envelope validation
+- active Task and active Change Unit checks
+- changed path and scope checks
+- baseline freshness
+- approval scope
+- evidence sufficiency
+- same-session verification guard
+- projection freshness and managed-hash checks
+- minimal design-quality checks
+- `surface_capability_check`
+
+Adapters and sidecars translate surface capability into observable facts. They do not create a kernel gate for capability. Capability appears through validator results, `prepare_write` blocked reasons, and guarantee display.
+
+## Guarantee Levels
+
+The harness reports guarantee levels to make enforcement strength honest:
+
+| Level | Meaning |
+|---|---|
+| `cooperative` | the agent surface is expected to follow harness instructions and MCP decisions |
+| `detective` | the harness can detect violations and mark state blocked, stale, partial, or failed after observation |
+| `preventive` | the connector or runtime can block a violating action before it executes |
+| `isolated` | risky work is separated by a worktree, sandbox, process boundary, or equivalent isolation |
+
+MVP reference behavior is cooperative/detective unless the connected surface has a concrete pre-tool guard or isolation layer. Native hook expansion, advanced sidecar watching, and broad isolated execution are later roadmap items unless explicitly implemented for the MVP reference surface.
+
+Guarantee level is display and risk context. It is not approval, verification, acceptance, or a kernel gate.
+
+## Failure And Recovery Overview
+
+Failures are recorded rather than hidden:
+
+| Failure | Architecture-level handling |
+|---|---|
+| Agent crash during write | mark active run interrupted; capture diff/log snapshot when possible; register artifacts |
+| Baseline drift after approval | mark approval or evidence stale; require reconfirmation when scope is affected |
+| Evaluator observes repo drift | block or stale verification; require fresh baseline or new bundle |
+| Artifact file missing | mark artifact/evidence stale; rescan or restore through recovery |
+| Projection job failed | keep state current; mark projection failed and retry or reconcile |
+| Managed Markdown edited directly | create reconcile item; do not mutate state directly |
+| MCP unavailable | hold product writes by instruction on cooperative surfaces; stronger guards may enforce preventively |
+| Surface capability mismatch | record validator result, adjust guarantee display, and block unsafe writes when required checks cannot be satisfied |
+
+Recovery tools may repair projection freshness, rescan artifacts, interrupt stale runs, expire drifted approvals, or create reconcile items. They must preserve the same authority rules: `state.sqlite` is operational state, `state.sqlite.task_events` is the event history inside that state store, raw evidence lives in the artifact store, and Markdown reports remain projections.

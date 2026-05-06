@@ -22,6 +22,10 @@ The kernel gate for sensitive-change approval. It is required only when sensitiv
 
 A recorded output used for evidence, recovery, or audit. See Raw Artifact for the canonical evidence-file boundary.
 
+### Artifact Reference
+
+A structured pointer to a raw artifact file registered in the artifact store, including identity, kind, URI or path, hash, size, content type, redaction state, and task/run relationship.
+
 ### Assurance
 
 The technical confidence level supported by recorded checks and verification independence.
@@ -31,6 +35,10 @@ none | self_checked | detached_verified
 ```
 
 An EVAL verdict alone does not upgrade assurance. `detached_verified` requires passed verification with valid independence.
+
+### Baseline
+
+A captured repository state used to judge scope, approval drift, evidence freshness, and verification validity.
 
 ### Change Unit
 
@@ -44,6 +52,10 @@ The canonical reason a Task reached a terminal close state.
 none | completed_verified | completed_self_checked |
 completed_with_risk_accepted | cancelled | superseded
 ```
+
+### Common Tool Envelope
+
+The shared fields carried by public MCP tool calls: `request_id`, `idempotency_key`, `expected_state_version`, `project_id`, optional `task_id`, `surface_id`, optional `run_id`, `actor_kind`, and `dry_run`.
 
 ### Cooperative Guarantee
 
@@ -105,6 +117,14 @@ cooperative | detective | preventive | isolated
 
 Capability affects validator results, blocked reasons, and display; it is not a kernel gate.
 
+### Harness Core
+
+The runtime component that owns state transitions, gate updates, validator interpretation, artifact registration, projection job enqueueing, and close decisions.
+
+### Harness Runtime Home
+
+The local runtime storage area that contains `registry.sqlite`, per-project `project.yaml`, per-project `state.sqlite`, and artifact directories.
+
 ### Human-editable 영역
 
 A Markdown area where a human can write notes, proposals, questions, or corrections. It is an input surface, not canonical state. Its authority path is `human-editable input -> reconcile_items -> accepted state event/record`.
@@ -125,6 +145,14 @@ Human inspection of experiential product quality such as UX, workflow, copy, vis
 
 A record-level Manual QA result, including performer, profile, result, artifacts, findings, waiver reason when applicable, and next action. It feeds `qa_gate` but is not itself the canonical gate.
 
+### MCP Resource
+
+A read-only MCP surface for current project, task, design, policy, status, or bundle information. Resources do not mutate state.
+
+### MCP Tool
+
+A public MCP operation that asks Core to validate, record, transition, or close state. State changes must go through tools or reconcile actions, not resource reads.
+
 ### Markdown Report
 
 A human-readable document generated from state records and artifact references. A Markdown report is not a raw artifact by default and does not become canonical state.
@@ -140,6 +168,10 @@ A guarantee level where the harness or connector can block a violating action be
 ### Projection
 
 A human-readable rendering of canonical state records and artifact references. Projection is useful for reading and decision-making, but it cannot override canonical state.
+
+### Projection Job
+
+A durable outbox record that asks the projector to render a Markdown projection from committed state records and artifact refs.
 
 ### QA Gate
 
@@ -165,6 +197,8 @@ The single agent surface targeted by the MVP implementation. It demonstrates the
 
 A Markdown report generated from state records and artifact references, such as a Task report, approval report, run summary, evidence manifest report, Eval report, or direct-result report.
 
+RUN-SUMMARY, EVAL, TDD-TRACE, MANUAL-QA, EVIDENCE-MANIFEST, and DIRECT-RESULT are projections or records, not raw artifacts by default.
+
 ### Run
 
 An execution attempt by an agent, evaluator, operator, or other actor against a Task and optionally a Change Unit. Runs record baseline, surface, observed changes, commands, artifacts, and summary.
@@ -177,9 +211,17 @@ The kernel gate requiring product writes to be covered by an active scoped Chang
 
 The authoritative source for a fact. In the harness, operational state is canonical in `state.sqlite` current records plus `state.sqlite.task_events`; raw evidence is canonical in the artifact store; Markdown documents are projections.
 
+### `state.sqlite.task_events`
+
+The append-only event history table inside `state.sqlite`. MVP does not use a separate event store.
+
 ### State Record
 
 A canonical structured record in kernel state, such as a Task, Change Unit, Run, Approval, Evidence Manifest, Eval, Manual QA record, Artifact record, or Reconcile Item.
+
+### Surface Capability Check
+
+A validator that reports whether a connected agent surface can satisfy required harness behavior. It affects blocked reasons and guarantee display, but it is not a kernel gate.
 
 ### Task
 
@@ -196,6 +238,10 @@ The process of checking whether the result satisfies the relevant criteria. Veri
 ### Verification Gate
 
 The kernel gate for required verification. A user waiver sets `verification_gate=waived_by_user`; it does not create `detached_verified` assurance.
+
+### Validator Result
+
+A structured result from a validator, including status, guarantee level, target, findings, blocked reasons, and suggested next action.
 
 ### Waiver
 
