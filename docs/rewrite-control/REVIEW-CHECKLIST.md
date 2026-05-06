@@ -363,20 +363,25 @@ If mentioned in main docs, they must be clearly labeled `later` and point to `do
 Legacy docs replaced by v2 docs:
 
 ```text
-[ ] docs/00-overview.md
-[ ] docs/03-architecture.md
-[ ] docs/04-reference-implementation.md
-[ ] docs/05-user-guide.md
-[ ] docs/06-agent-integration.md
-[ ] docs/07-document-and-artifact-contracts.md
-[ ] docs/08-operations-and-conformance.md
-[ ] docs/09-design-quality-playbooks.md
+[ ] docs/legacy-v1/00-overview.md
+[ ] docs/legacy-v1/01-project-charter.md
+[ ] docs/legacy-v1/02-strategy.md
+[ ] docs/legacy-v1/03-architecture.md
+[ ] docs/legacy-v1/04-reference-implementation.md
+[ ] docs/legacy-v1/05-user-guide.md
+[ ] docs/legacy-v1/06-agent-integration.md
+[ ] docs/legacy-v1/07-document-and-artifact-contracts.md
+[ ] docs/legacy-v1/08-operations-and-conformance.md
+[ ] docs/legacy-v1/09-design-quality-playbooks.md
+[ ] docs/legacy-v1/99-authoring-guide.md
+[ ] docs/legacy-v1/glossary.md
+[ ] docs/legacy-v1/REWRITE-MANIFEST.md
 ```
 
 Required cleanup behavior:
 
 ```text
-[ ] Each legacy doc is deleted, replaced by a short migration stub, or represented in docs/appendix/D-migration-notes.md.
+[ ] Each archived legacy doc is deleted, replaced by a short migration stub, or represented in docs/appendix/D-migration-notes.md.
 [ ] docs/README.md does not link to legacy docs except migration notes.
 [ ] Active canonical docs are the v2 target docs.
 [ ] Archived migration notes are not treated as active canonical docs.
@@ -433,7 +438,7 @@ grep -R "모든 agent surface" .
 grep -R "dashboard" docs/README.md docs/00-introduction.md docs/01-project-charter.md docs/02-strategy.md docs/03-kernel-spec.md docs/04-runtime-architecture.md docs/05-mcp-api-and-schemas.md docs/06-reference-mvp.md docs/07-document-projection.md docs/08-design-quality-policy-pack.md docs/09-agent-integration.md docs/10-user-guide.md docs/11-operations-and-conformance.md
 grep -R "browser QA" docs/README.md docs/00-introduction.md docs/01-project-charter.md docs/02-strategy.md docs/03-kernel-spec.md docs/04-runtime-architecture.md docs/05-mcp-api-and-schemas.md docs/06-reference-mvp.md docs/07-document-projection.md docs/08-design-quality-policy-pack.md docs/09-agent-integration.md docs/10-user-guide.md docs/11-operations-and-conformance.md
 grep -R "cross-surface" docs/README.md docs/00-introduction.md docs/01-project-charter.md docs/02-strategy.md docs/03-kernel-spec.md docs/04-runtime-architecture.md docs/05-mcp-api-and-schemas.md docs/06-reference-mvp.md docs/07-document-projection.md docs/08-design-quality-policy-pack.md docs/09-agent-integration.md docs/10-user-guide.md docs/11-operations-and-conformance.md
-grep -R "docs/00-overview.md\\|docs/03-architecture.md\\|docs/04-reference-implementation.md\\|docs/05-user-guide.md\\|docs/06-agent-integration.md\\|docs/07-document-and-artifact-contracts.md\\|docs/08-operations-and-conformance.md\\|docs/09-design-quality-playbooks.md" docs/README.md docs/00-introduction.md docs/01-project-charter.md docs/02-strategy.md docs/03-kernel-spec.md docs/04-runtime-architecture.md docs/05-mcp-api-and-schemas.md docs/06-reference-mvp.md docs/07-document-projection.md docs/08-design-quality-policy-pack.md docs/09-agent-integration.md docs/10-user-guide.md docs/11-operations-and-conformance.md docs/99-authoring-guide.md docs/glossary.md
+grep -R "docs/00-overview.md\\|docs/03-architecture.md\\|docs/04-reference-implementation.md\\|docs/05-user-guide.md\\|docs/06-agent-integration.md\\|docs/07-document-and-artifact-contracts.md\\|docs/08-operations-and-conformance.md\\|docs/09-design-quality-playbooks.md\\|docs/legacy-v1/" docs/README.md docs/00-introduction.md docs/01-project-charter.md docs/02-strategy.md docs/03-kernel-spec.md docs/04-runtime-architecture.md docs/05-mcp-api-and-schemas.md docs/06-reference-mvp.md docs/07-document-projection.md docs/08-design-quality-policy-pack.md docs/09-agent-integration.md docs/10-user-guide.md docs/11-operations-and-conformance.md docs/99-authoring-guide.md docs/glossary.md
 ```
 
 Interpretation:

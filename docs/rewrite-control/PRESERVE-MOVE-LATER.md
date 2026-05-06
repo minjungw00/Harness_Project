@@ -138,14 +138,19 @@ After content migration, legacy docs replaced by v2 docs must not remain as cano
 
 | Legacy File | Disposition | Replacement / Notes |
 |---|---|---|
-| `docs/00-overview.md` | DELETE | Content rewritten into `docs/00-introduction.md`; optional migration note in `docs/appendix/D-migration-notes.md`. |
-| `docs/03-architecture.md` | DELETE | Content rewritten into `docs/04-runtime-architecture.md`; optional migration note in `docs/appendix/D-migration-notes.md`. |
-| `docs/04-reference-implementation.md` | DELETE | Content split into `docs/03-kernel-spec.md`, `docs/05-mcp-api-and-schemas.md`, `docs/06-reference-mvp.md`, and `docs/appendix/C-later-roadmap.md`. |
-| `docs/05-user-guide.md` | DELETE | Content rewritten into `docs/10-user-guide.md`; long examples may be deleted or summarized in migration notes. |
-| `docs/06-agent-integration.md` | DELETE | Content rewritten into `docs/09-agent-integration.md`; surface notes move to `docs/appendix/B-surface-cookbook.md`. |
-| `docs/07-document-and-artifact-contracts.md` | DELETE | Content rewritten into `docs/07-document-projection.md`; full templates move to `docs/appendix/A-template-library.md`. |
-| `docs/08-operations-and-conformance.md` | DELETE | Content rewritten into `docs/11-operations-and-conformance.md`; metrics move to `docs/appendix/C-later-roadmap.md` if not MVP. |
-| `docs/09-design-quality-playbooks.md` | DELETE | Content rewritten into `docs/08-design-quality-policy-pack.md`; examples retained only selectively. |
+| `docs/legacy-v1/00-overview.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/00-introduction.md`; optional migration note in `docs/appendix/D-migration-notes.md`. |
+| `docs/legacy-v1/01-project-charter.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/01-project-charter.md`. |
+| `docs/legacy-v1/02-strategy.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/02-strategy.md`, `docs/03-kernel-spec.md`, and `docs/08-design-quality-policy-pack.md`. |
+| `docs/legacy-v1/03-architecture.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/04-runtime-architecture.md`; optional migration note in `docs/appendix/D-migration-notes.md`. |
+| `docs/legacy-v1/04-reference-implementation.md` | DELETE_AFTER_MIGRATION | Content split into `docs/03-kernel-spec.md`, `docs/05-mcp-api-and-schemas.md`, `docs/06-reference-mvp.md`, and `docs/appendix/C-later-roadmap.md`. |
+| `docs/legacy-v1/05-user-guide.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/10-user-guide.md`; long examples may be deleted or summarized in migration notes. |
+| `docs/legacy-v1/06-agent-integration.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/09-agent-integration.md`; surface notes move to `docs/appendix/B-surface-cookbook.md`. |
+| `docs/legacy-v1/07-document-and-artifact-contracts.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/07-document-projection.md`; full templates move to `docs/appendix/A-template-library.md`. |
+| `docs/legacy-v1/08-operations-and-conformance.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/11-operations-and-conformance.md`; metrics move to `docs/appendix/C-later-roadmap.md` if not MVP. |
+| `docs/legacy-v1/09-design-quality-playbooks.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/08-design-quality-policy-pack.md`; examples retained only selectively. |
+| `docs/legacy-v1/99-authoring-guide.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/99-authoring-guide.md`. |
+| `docs/legacy-v1/glossary.md` | DELETE_AFTER_MIGRATION | Content rewritten into `docs/glossary.md`. |
+| `docs/legacy-v1/REWRITE-MANIFEST.md` | MOVE_TO_MIGRATION_NOTES | Historical rewrite summary moves to `docs/appendix/D-migration-notes.md`. |
 
 If repository history or user preference requires a visible file at a legacy path, replace the legacy file with a short migration stub. The stub is not canonical content and must point to the v2 owner doc or `docs/appendix/D-migration-notes.md`.
 

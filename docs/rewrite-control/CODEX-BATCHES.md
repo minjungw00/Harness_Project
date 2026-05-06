@@ -59,6 +59,14 @@ docs/rewrite-control/
   REVIEW-CHECKLIST.md
 ```
 
+Legacy v1 source documents may be archived under:
+
+```text
+docs/legacy-v1/
+```
+
+When a batch asks for a pre-rewrite source file that has been archived, read the matching file from `docs/legacy-v1/` and use `docs/appendix/D-migration-notes.md` as the path map.
+
 ## 3. Batch 0 — Inventory and Conflict Confirmation
 
 ### Goal
@@ -70,18 +78,22 @@ Confirm existing content inventory before editing canonical docs.
 ```text
 README.md
 docs/README.md
-docs/00-overview.md
+docs/legacy-v1/00-overview.md
 docs/01-project-charter.md
+docs/legacy-v1/01-project-charter.md
 docs/02-strategy.md
-docs/03-architecture.md
-docs/04-reference-implementation.md
-docs/05-user-guide.md
-docs/06-agent-integration.md
-docs/07-document-and-artifact-contracts.md
-docs/08-operations-and-conformance.md
-docs/09-design-quality-playbooks.md
+docs/legacy-v1/02-strategy.md
+docs/legacy-v1/03-architecture.md
+docs/legacy-v1/04-reference-implementation.md
+docs/legacy-v1/05-user-guide.md
+docs/legacy-v1/06-agent-integration.md
+docs/legacy-v1/07-document-and-artifact-contracts.md
+docs/legacy-v1/08-operations-and-conformance.md
+docs/legacy-v1/09-design-quality-playbooks.md
 docs/99-authoring-guide.md
+docs/legacy-v1/99-authoring-guide.md
 docs/glossary.md
+docs/legacy-v1/glossary.md
 docs/rewrite-control/*.md
 ```
 
@@ -223,12 +235,12 @@ docs/01-project-charter.md
 Read current pre-rewrite content from the listed source files before editing:
 
 ```text
-docs/02-strategy.md
-docs/04-reference-implementation.md
-docs/glossary.md
+docs/legacy-v1/02-strategy.md
+docs/legacy-v1/04-reference-implementation.md
+docs/legacy-v1/glossary.md
 ```
 
-If those files have already been replaced, use git history or `docs/appendix/D-migration-notes.md`.
+If those files have already been replaced or archived, use `docs/legacy-v1/`, git history, or `docs/appendix/D-migration-notes.md`.
 
 ### Codex Prompt
 
@@ -430,14 +442,19 @@ Ensure legacy docs replaced by v2 docs do not remain as canonical docs.
 ### Legacy Files
 
 ```text
-docs/00-overview.md
-docs/03-architecture.md
-docs/04-reference-implementation.md
-docs/05-user-guide.md
-docs/06-agent-integration.md
-docs/07-document-and-artifact-contracts.md
-docs/08-operations-and-conformance.md
-docs/09-design-quality-playbooks.md
+docs/legacy-v1/00-overview.md
+docs/legacy-v1/01-project-charter.md
+docs/legacy-v1/02-strategy.md
+docs/legacy-v1/03-architecture.md
+docs/legacy-v1/04-reference-implementation.md
+docs/legacy-v1/05-user-guide.md
+docs/legacy-v1/06-agent-integration.md
+docs/legacy-v1/07-document-and-artifact-contracts.md
+docs/legacy-v1/08-operations-and-conformance.md
+docs/legacy-v1/09-design-quality-playbooks.md
+docs/legacy-v1/99-authoring-guide.md
+docs/legacy-v1/glossary.md
+docs/legacy-v1/REWRITE-MANIFEST.md
 ```
 
 ### Files to Edit
@@ -451,7 +468,7 @@ docs/appendix/D-migration-notes.md
 ### Codex Prompt
 
 ```text
-Clean up legacy docs replaced by the v2 target docs.
+Clean up archived legacy docs replaced by the v2 target docs.
 
 Rules:
 - Legacy docs replaced by v2 docs must not remain as canonical docs.
