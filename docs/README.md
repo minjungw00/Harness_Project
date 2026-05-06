@@ -4,15 +4,9 @@
 
 이 파일은 `docs/README.md`이며 하네스 문서의 entrypoint다. 저장소 루트의 `README.md`는 repository landing page다.
 
-## Core Principles
+## Core Invariants
 
-1. Chat is not state.
-2. Product write requires an active scoped Change Unit.
-3. Sensitive change requires explicit approval.
-4. Completion requires evidence coverage where evidence is required.
-5. Work cannot self-certify detached verification.
-6. Required QA and acceptance are separate gates.
-7. Projection cannot override canonical state.
+The approved seven kernel invariants are owned by [02-strategy.md](02-strategy.md#core-invariants). They are distinct from design-quality policy defaults.
 
 ## Reader Paths
 
@@ -64,7 +58,6 @@ Projection 관리자:
 ```text
 99-authoring-guide.md
 -> glossary.md
--> appendix/D-migration-notes.md
 ```
 
 ## MVP / v1 / Later
@@ -128,7 +121,7 @@ docs/
 | [appendix/A-template-library.md](appendix/A-template-library.md) | full template library and expanded report variants |
 | [appendix/B-surface-cookbook.md](appendix/B-surface-cookbook.md) | surface-specific connector notes and profile examples |
 | [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md) | later automation and post-MVP roadmap |
-| [appendix/D-migration-notes.md](appendix/D-migration-notes.md) | old-to-new mapping and migration notes |
+| [appendix/D-migration-notes.md](appendix/D-migration-notes.md) | migration context only; not an active canonical owner |
 
 ## Rewrite Control
 

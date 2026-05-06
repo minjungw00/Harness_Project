@@ -157,7 +157,42 @@ ArtifactRef:
 
 For the reference MVP, `uri` uses `harness-artifact://{project_id}/{artifact_id}`. The local file path is resolved through the per-project `artifacts` registry row in `state.sqlite`, not by trusting an absolute path in the API payload.
 
-TODO_IMPLEMENT: Define the exact request-side staged artifact input shape for `record_run`, `launch_verify`, `record_eval`, and `record_manual_qa`. The committed response shape is `ArtifactRef`; the missing implementation detail is how a connector or operator supplies a staged file before Core registers it and returns the final `harness-artifact://` URI.
+Requests that create or attach evidence use `ArtifactInput`. A request may either reference an existing committed artifact or provide a staged file for Core to validate, register, and return as an `ArtifactRef`.
+
+```yaml
+ArtifactInput:
+  input_id: string
+  source_kind: staged_file | existing_artifact
+  existing_artifact_ref: ArtifactRef | null
+  staged: StagedArtifactSource | null
+  kind: diff | log | screenshot | checkpoint | bundle | manifest | qa_capture | export_component | other
+  redaction_state: none | redacted | secret_omitted | blocked
+  produced_by: lead_agent | evaluator | operator | harness
+  retention_class: task | project | export | temporary
+  relation:
+    task_id: string
+    run_id: string | null
+    record_kind: run | eval | manual_qa_record | verification_bundle | export | other
+    record_id_hint: string | null
+  description: string | null
+
+StagedArtifactSource:
+    staged_uri: string
+    display_name: string | null
+    content_type: string
+    expected_sha256: string | null
+    expected_size_bytes: integer | null
+```
+
+Rules:
+
+- `source_kind=existing_artifact` requires `existing_artifact_ref` and must set `staged` to `null`.
+- `source_kind=staged_file` requires `staged` and must set `existing_artifact_ref` to `null`.
+- When an existing artifact is attached to a new record, Core verifies the artifact's task relation and rejects incompatible reuse.
+- `staged_uri` must point to a harness staging location or an approved capture adapter, not an arbitrary absolute path supplied for trust.
+- If `expected_sha256` or `expected_size_bytes` is present, Core verifies the stored bytes before commit.
+- Core applies redaction rules before final storage and records the committed artifact as an `ArtifactRef`.
+- Tool responses return committed `ArtifactRef` values in `registered_artifacts`, `bundle_ref`, or other response fields.
 
 Record or projection references use `StateRecordRef`, not `ArtifactRef`:
 
@@ -455,7 +490,7 @@ RecordRunRequest:
   run_id: string | null
   baseline_ref: string | null
   summary: string
-  artifact_refs: ArtifactRef[]
+  artifact_inputs: ArtifactInput[]
   payload: RecordRunPayload
 
 RecordRunPayload:
@@ -507,7 +542,7 @@ DirectPayload:
     reason: string | null
 
 VerificationInputPayload:
-  evaluator_bundle_ref: ArtifactRef | null
+  evaluator_bundle_input: ArtifactInput | null
   evaluator_focus: string[]
   observed_changes: ObservedChanges
   command_results: CommandResult[]
@@ -520,7 +555,7 @@ ObservedChanges:
 CommandResult:
   command: string
   exit_code: integer
-  artifact_refs: ArtifactRef[]
+  artifact_inputs: ArtifactInput[]
   summary: string
 
 EvidenceUpdates:
@@ -528,18 +563,18 @@ EvidenceUpdates:
     - criteria_id: string
       status: supported | unsupported | not_applicable
       supporting_refs: StateRecordRef[]
-      artifact_refs: ArtifactRef[]
+      artifact_inputs: ArtifactInput[]
 
 TddTraceUpdate:
   tdd_trace_id: string | null
   status: required | recorded | waived | not_required
-  red_refs: ArtifactRef[]
-  green_refs: ArtifactRef[]
-  refactor_refs: ArtifactRef[]
+  red_inputs: ArtifactInput[]
+  green_inputs: ArtifactInput[]
+  refactor_inputs: ArtifactInput[]
   non_tdd_justification: string | null
 ```
 
-The `payload` branch must match `kind`; all other branches must be `null` or absent. Change Unit creation and update for MVP happens through `kind=shaping_update` with `change_unit_updates`; `operation=create` creates a `change_units` record, and `operation=select_active` updates the Task's `active_change_unit_id`.
+The `payload` branch must match `kind`; all other branches must be `null` or absent. `ArtifactInput` values are resolved during the same Core transaction; response fields contain the committed `ArtifactRef` values. Change Unit creation and update for MVP happens through `kind=shaping_update` with `change_unit_updates`; `operation=create` creates a `change_units` record, and `operation=select_active` updates the Task's `active_change_unit_id`.
 
 Response schema:
 
@@ -565,7 +600,7 @@ Validators run: `state_envelope`, `changed_paths`, `scope_coverage`, `approval_s
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_EXPIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
 
-Idempotency behavior: repeated request returns the same run, artifact records, evidence updates, events, and projection jobs; artifact refs must match the original payload.
+Idempotency behavior: repeated request returns the same run, artifact records, evidence updates, events, and projection jobs; artifact inputs and resolved artifact refs must match the original payload.
 
 ### `harness.request_user_decision`
 
@@ -704,8 +739,11 @@ LaunchVerifyRequest:
   evaluator_surface_id: string | null
   baseline_ref: string
   include_artifacts: ArtifactRef[]
+  bundle_artifact_input: ArtifactInput | null
   evaluator_focus: string[]
 ```
+
+`include_artifacts` references already registered evidence to include in or link from the bundle. `bundle_artifact_input` is optional; when it is `null`, Core assembles and registers the verification bundle. When it is present, Core validates and registers the supplied staged bundle instead.
 
 Response schema:
 
@@ -731,7 +769,7 @@ Validators run: `state_envelope`, `evidence_sufficiency`, `baseline_freshness`, 
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `EVIDENCE_INSUFFICIENT`, `BASELINE_STALE`, `ARTIFACT_MISSING`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`.
 
-Idempotency behavior: repeated request returns the same evaluator run and bundle ref; bundle contents must be byte-identical for the same key.
+Idempotency behavior: repeated request returns the same evaluator run and bundle ref; included artifact refs and bundle artifact input must match the original payload, and staged bundle contents must be byte-identical for the same key.
 
 ### `harness.record_eval`
 
@@ -762,7 +800,7 @@ RecordEvalRequest:
     evaluator_surface_id: string
     parent_run_id: string | null
   blockers: string[]
-  artifact_refs: ArtifactRef[]
+  artifact_inputs: ArtifactInput[]
 ```
 
 Response schema:
@@ -788,7 +826,7 @@ Validators run: `state_envelope`, `same_session_verify_guard`, `baseline_freshne
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `VERIFY_NOT_DETACHED`, `EVIDENCE_INSUFFICIENT`, `BASELINE_STALE`, `ARTIFACT_MISSING`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
 
-Idempotency behavior: repeated request returns the same Eval and assurance decision; a changed verdict or independence payload with the same key returns `STATE_CONFLICT`.
+Idempotency behavior: repeated request returns the same Eval and assurance decision; a changed verdict, independence payload, or artifact input with the same key returns `STATE_CONFLICT`.
 
 ### `harness.record_manual_qa`
 
@@ -809,7 +847,7 @@ RecordManualQaRequest:
     - severity: info | warning | error | blocker
       summary: string
       path: string | null
-  artifact_refs: ArtifactRef[]
+  artifact_inputs: ArtifactInput[]
   waiver_reason: string | null
   next_action: rework | accept | waive | block | none
 ```
@@ -836,7 +874,7 @@ Validators run: `state_envelope`, `manual_qa_required`, `qa_waiver_reason`, `art
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `QA_REQUIRED`, `ARTIFACT_MISSING`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
-Idempotency behavior: repeated request returns the same Manual QA record and gate update; waiver reason and artifacts must match.
+Idempotency behavior: repeated request returns the same Manual QA record and gate update; waiver reason and artifact inputs must match.
 
 ### `harness.close_task`
 
