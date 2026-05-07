@@ -33,7 +33,7 @@ Use exactly one canonical owner for each concept. Other documents may include a 
 
 ## Core Invariant vs Policy Default
 
-Core invariants are limited to the seven items owned by `02-strategy.md`. Do not promote helpful practices into kernel invariants unless the rewrite-control decisions are updated.
+Core invariants are limited to the seven items owned by `02-strategy.md`. Do not promote helpful practices into kernel invariants unless the owner doc is updated.
 
 Core invariant language should sound mandatory and structural:
 

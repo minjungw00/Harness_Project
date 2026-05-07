@@ -79,7 +79,7 @@ Legacy section에 아직 옮겨지지 않은 useful example이 있으면 source 
 
 Legacy term이 glossary와 conflict하면 `docs/glossary.md`를 사용한다.
 
-Legacy behavior가 rewrite-control kernel decision 또는 v2 owner doc과 conflict하면 v2 owner doc을 사용한다.
+Legacy behavior가 v2 owner doc과 conflict하면 v2 owner doc을 사용한다.
 
 ## Version Comparison Summary
 

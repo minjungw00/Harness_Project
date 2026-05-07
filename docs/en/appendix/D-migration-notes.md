@@ -79,7 +79,7 @@ If a legacy section contains a useful example that has not moved, treat it as so
 
 If a legacy term conflicts with the glossary, use `docs/glossary.md`.
 
-If a legacy behavior conflicts with rewrite-control kernel decisions or a v2 owner doc, use the v2 owner doc.
+If a legacy behavior conflicts with a v2 owner doc, use the v2 owner doc.
 
 ## Version Comparison Summary
 

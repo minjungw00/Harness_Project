@@ -122,7 +122,3 @@ docs/
 | [appendix/B-surface-cookbook.md](appendix/B-surface-cookbook.md) | surface-specific connector notes and profile examples |
 | [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md) | later automation and post-MVP roadmap |
 | [appendix/D-migration-notes.md](appendix/D-migration-notes.md) | migration context only; not an active canonical owner |
-
-## Rewrite Control
-
-`docs/rewrite-control/` is the coordination area for this rewrite. It records decisions and review checklists, but it is not runtime product documentation. Migration history and legacy mapping are summarized in [appendix/D-migration-notes.md](appendix/D-migration-notes.md).

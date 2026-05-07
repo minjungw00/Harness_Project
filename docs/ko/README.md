@@ -122,7 +122,3 @@ docs/
 | [appendix/B-surface-cookbook.md](appendix/B-surface-cookbook.md) | surface별 connector note와 profile 예시 |
 | [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md) | 이후 자동화와 post-MVP roadmap |
 | [appendix/D-migration-notes.md](appendix/D-migration-notes.md) | migration context 전용; 활성 canonical owner가 아님 |
-
-## 재작성 제어
-
-`docs/rewrite-control/`은 이번 재작성을 조율하는 영역이다. 결정 사항과 review checklist를 기록하지만 runtime product documentation은 아니다. Migration history와 legacy mapping은 [appendix/D-migration-notes.md](appendix/D-migration-notes.md)에 요약한다.
