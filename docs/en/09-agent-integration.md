@@ -17,10 +17,14 @@ An integrated surface should help the agent:
 - start with status or intake
 - classify advisor, direct, or work mode
 - shape work into scoped Change Units
+- shape and update the Autonomy Boundary for what the agent may do without another user decision
 - check design-quality policies when they apply
 - call MCP tools for state changes
 - respect `prepare_write` before product writes
-- record runs, artifacts, evidence, decisions, QA, and acceptance
+- request or show Decision Packets for blocking product judgment
+- record runs, artifacts, evidence, user decisions, QA, and acceptance
+- distinguish approval, product decision, QA waiver, verification waiver, residual-risk acceptance, and final acceptance
+- surface residual risk before acceptance or risk-accepted close
 - launch or package detached verification
 - refresh or reconcile projections
 
@@ -37,7 +41,18 @@ user conversation surface
 
 ### Always-On Rules
 
-Always-on rules should be short. They should tell the agent when to use the harness, where to read status, and that product writes require `prepare_write`.
+Always-on rules should be short. They should tell the agent when to use the harness, where to read status or the Journey Card, and that product writes require `prepare_write`.
+
+Always-on rules should also preserve user agency:
+
+- show the Journey Card before significant work resumes
+- do not ask for broad approval when a Decision Packet is required
+- ask one blocking question at a time, with a recommendation and uncertainty when available
+- allow AFK implementation only inside the approved Change Unit and Autonomy Boundary
+- treat the Autonomy Boundary as judgment latitude, not a scope grant
+- keep planning direction, product trade-offs, QA waiver, verification risk acceptance, and final acceptance human-held
+
+Autonomy Boundary is not a scope grant. Allowed paths, tools, commands, network targets, secret access, and sensitive approvals still come from Change Unit scope, approval, and `prepare_write`.
 
 They should not contain full state transition tables, MCP schemas, full templates, long design playbooks, or all historical project context.
 
@@ -49,8 +64,12 @@ The skill/playbook layer teaches procedure:
 - how to classify advisor/direct/work
 - how to ask shaping questions
 - how to form a Change Unit
-- how to request approval
+- how to shape or update the Autonomy Boundary
+- how to request or show Decision Packets for blocking product judgment
+- how to record user decisions
+- how to distinguish approval, product decision, QA waiver, verification waiver, residual-risk acceptance, and final acceptance
 - how to record TDD trace, evidence, Manual QA, and acceptance
+- how to surface residual risk before acceptance or risk-accepted close
 - why work verification must be detached
 - how to handle stale projection and reconcile
 
@@ -193,27 +212,44 @@ Implementation agents should receive small current context and pull larger refer
 
 Usually push:
 
-- active Task status
-- next action
+- Journey Card
+- active Decision Packet summary
+- Autonomy Boundary summary
+- active Task status and next action
 - active Change Unit scope
 - acceptance criteria snapshot
 - allowed paths and tools
 - approval status when relevant
 - latest evidence manifest and run summary refs
 - relevant policy warnings
+- residual risk summary when close or acceptance is near
 
 Usually pull:
 
-- coding standards
-- domain language
+- older PRDs, old designs, and closed issues
+- long logs and large diffs
 - module map
 - interface contracts
+- domain language
+- coding standards
 - TDD guidance
 - architecture playbooks
-- old PRDs, old designs, closed issues
-- raw logs and large diffs
 
-Evaluators should receive a tighter verification bundle that includes acceptance criteria, changed files, approval scope, relevant domain/module/interface records, evidence manifest, TDD trace if required, Manual QA requirement, artifact refs, and forbidden patterns.
+Evaluators should receive a tighter verification bundle that includes:
+
+- acceptance criteria
+- changed files
+- approval scope
+- Decision Packets relevant to the work, including resolved, pending, or close-relevant packets
+- residual risk summary
+- Autonomy Boundary
+- deferred decisions and follow-up constraints
+- codebase stewardship refs, including relevant domain, module, and interface records
+- evidence manifest
+- TDD trace if required
+- Manual QA requirement
+- artifact refs
+- forbidden patterns
 
 This context model supports the Context Hygiene policy: current state and evidence are preferred over stale chat or old docs.
 
@@ -281,9 +317,14 @@ Connector conformance should prove that a profile can uphold the common contract
 Overview scenarios:
 
 - status with and without an active Task
+- Journey Card shown before significant work resumes
 - intake classification into advisor/direct/work
 - work shaping with shared design and decisions
 - Change Unit scope and vertical/horizontal exception handling
+- one blocking question with recommendation and uncertainty when available
+- Decision Packet shown instead of broad approval for blocking product judgment
+- Autonomy Boundary breach stops or routes to Decision Packet
+- AFK work remains inside Change Unit and Autonomy Boundary
 - `prepare_write` allowed and blocked paths
 - sensitive approval request, granted, denied, and expired paths
 - `record_run` with artifacts and evidence update
@@ -291,7 +332,9 @@ Overview scenarios:
 - verification launch or manual verification bundle
 - same-session verification guard
 - Manual QA required, passed, failed, and waived
+- QA waiver with product/user risk routes through Decision Packet
 - acceptance required and recorded
+- residual risk shown before acceptance or risk-accepted close
 - stale projection and reconcile flow
 - generated file drift detection
 - capability fallback when a required tier is missing

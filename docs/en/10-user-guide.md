@@ -21,27 +21,32 @@ Common phrases:
 ```text
 Show me the status.
 Continue this work. Check harness state first.
+Show me the Journey Card before resuming.
 Start with the scope and questions.
 If this is small, handle it as direct; if it grows, move it to work.
+Show the Decision Packet with options, recommendation, and uncertainty.
 Approved. The scope is only what you just described.
+Proceed AFK only inside the approved Change Unit and Autonomy Boundary.
 Start detached verify.
 Decide whether Manual QA is needed.
+Show residual risk before I accept.
 Accepted. Close this task.
 ```
 
-## 기본 진행 흐름
+## Basic Flow
 
 The normal path should feel like a short conversation, not a work-management system. Users usually see a compact status card and the next safe action, not every internal record.
 
 1. Check status or intake.
 2. Classify as `advisor`, `direct`, or `work`.
 3. Confirm scope and the Change Unit.
-4. Call `prepare_write` before writing.
-5. After changes, record run and evidence.
-6. Verify, record Manual QA, and ask for acceptance when needed.
-7. Close.
+4. If product judgment blocks progress, read and answer the Decision Packet.
+5. Call `prepare_write` before writing.
+6. After changes, record run and evidence.
+7. Verify, record Manual QA, show residual risk, and ask for acceptance when needed.
+8. Close.
 
-Gates should be explained as why the task cannot safely proceed or close yet. Evidence insufficiency should be shown by acceptance criterion, not as an abstract database condition. If a cooperative guarantee is shown, explain plainly that the surface is expected to follow Harness decisions but may not physically block every violating write before it happens.
+Gates should be explained as why the task cannot safely proceed or close yet. Evidence insufficiency should be shown by acceptance criterion, not as an abstract internal condition. If a cooperative guarantee is shown, explain plainly that the surface is expected to follow Harness decisions but may not physically block every violating write before it happens.
 
 ```text
 Close blocked:
@@ -52,7 +57,7 @@ Close blocked:
 
 ## Reading A Status Card
 
-A good harness session first shows a short status card.
+A good harness session first shows a short status card. When significant work resumes, that card should be the Journey Card or an equivalent current-position view.
 
 ```text
 TASK-0044 Add email login flow
@@ -60,25 +65,73 @@ Mode: work
 State: shaping
 Next action: decide failed-login UX
 Scope: login form, login API call, session storage
+Decision Gate: pending
+Decision Packet: DEC-0012 failed-login UX
+Autonomy Boundary: may implement agreed login flow details only
 Approval: dependency_change required
 Evidence: none
 Verification: not started
 Manual QA: pending
 Acceptance: pending
+Residual risk: none recorded
 Projection: current
 ```
 
-Look for four things.
+Look for these things.
 
 - Does the request match the scope?
-- What decision do I need to answer?
-- What remains among approval, evidence, verification, Manual QA, and acceptance?
+- What Decision Packet, if any, do I need to answer?
+- What may the agent do inside the Autonomy Boundary?
+- What remains among approval, evidence, verification, Manual QA, residual risk, and acceptance?
 - Is the next action safe to proceed with?
 
 If the status looks wrong, say:
 
 ```text
 Show the current status and next action again from state.
+```
+
+## Following The Journey Card
+
+The Journey Card tells you where the work is right now. Use it before resuming, after long pauses, and near close.
+
+Look for these lines:
+
+- `Next action`: what the agent thinks is safe to do next
+- `Decision Packet`: whether a product judgment is waiting for you
+- `Autonomy Boundary`: what the agent may do without another question
+- `Evidence`, `Verification`, and `Manual QA`: what has been checked
+- `Residual risk`: what uncertainty or trade-off remains
+- `Projection`: whether the readable view is current enough to trust
+
+Useful phrases:
+
+```text
+Pause there. Show the Decision Packet first.
+That next action is fine. Continue inside that boundary.
+Refresh the Journey Card after this run.
+```
+
+## Reading A Decision Packet
+
+A Decision Packet is used when the work needs human judgment before it can safely proceed, close, waive QA, accept verification risk, or accept remaining risk. It is not a request for broad approval.
+
+Read it in this order:
+
+- Why is this decision needed now?
+- What exactly am I deciding?
+- What are the options and trade-offs?
+- What does the agent recommend, and how uncertain is it?
+- What may the agent decide without me?
+- What happens if I defer?
+- What residual risk or follow-up would remain?
+
+Good answers are specific:
+
+```text
+Choose Option A. Keep the failed-login message generic and record the security trade-off.
+Defer this decision until after the smoke test. Record the follow-up risk.
+I do not accept this trade-off. Propose a smaller Change Unit.
 ```
 
 ## advisor, direct, work
@@ -104,22 +157,50 @@ Add the email login flow. Run it under the harness.
 
 If the work starts small but grows, the agent should say that it is moving the same Task to `work`.
 
-## Four Judgments
+## User Judgments
 
-Approval, assurance, Manual QA, and acceptance answer different questions.
+Product judgment, approval, assurance, Manual QA, residual-risk acceptance, and final acceptance answer different questions.
 
 | Judgment | Question it answers | It cannot replace |
 |---|---|---|
-| Approval | May this sensitive change proceed? | verification, QA, acceptance |
+| Product judgment / Decision Packet | Which product direction, trade-off, waiver, or close-relevant decision should be taken? | approval, implementation, verification, QA, acceptance |
+| Approval | May this sensitive change proceed? | product judgment, verification, QA, acceptance |
 | Assurance | How far was this technically checked? | approval, QA, acceptance |
 | Manual QA | Did a human inspect the actual experience quality? | verification, acceptance |
-| Acceptance | Does the user accept the result and remaining trade-offs? | approval, verification, QA |
+| Residual-risk acceptance | Does the user accept a known remaining risk or limitation? | approval, evidence, verification, Manual QA, final acceptance |
+| Final acceptance | Does the user accept the result and remaining trade-offs? | approval, verification, QA |
 
-Examples that need approval include dependency additions, auth/permission changes, schema changes, public API changes, destructive writes, secret access, and production config changes. Approval does not mean correctness or acceptance.
+Examples that need approval include dependency additions, auth/permission changes, data model changes, public API changes, destructive writes, secret access, and production config changes. Approval does not mean correctness or acceptance.
+
+Product judgment should appear as a Decision Packet when it blocks progress. That packet should show options, trade-offs, recommendation, uncertainty, and what happens if the decision is deferred.
 
 Assurance usually appears as `none`, `self_checked`, or `detached_verified`. `detached_verified` means the result passed a separate verification boundary, not a same-session self-review.
 
-The user may accept verification risk and close the task, but that is a risk-accepted close, not `detached_verified`.
+The user may accept verification risk and close the task, but that is a risk-accepted close, not `detached_verified`. Residual-risk acceptance can make a known risk acceptable for close, but it does not replace approval, evidence, verification, Manual QA, or final acceptance.
+
+## What The Agent May Do AFK
+
+AFK implementation means the agent may continue while you are away. It is allowed only inside the approved Change Unit and Autonomy Boundary.
+
+The Autonomy Boundary is not a scope grant. The agent still needs `prepare_write`, active Change Unit scope, allowed paths, allowed tools, allowed commands, and sensitive approval where applicable.
+
+The agent may usually implement agreed details, run allowed checks, collect evidence, update summaries, and stop with a clear blocker.
+
+The agent must stop for human-held judgment:
+
+- planning direction
+- product trade-offs
+- scope expansion
+- sensitive-change approval
+- QA waiver
+- verification risk acceptance
+- final acceptance
+
+Useful phrase:
+
+```text
+Proceed AFK inside this boundary. Stop for product trade-offs, QA waiver, verification risk, or acceptance.
+```
 
 ## Missing Evidence
 
@@ -156,6 +237,20 @@ Accept the verification risk and close. Record the remaining risk.
 
 In that case, the task can close successfully, but assurance is not displayed as `detached_verified`.
 
+## Accepting Residual Risk
+
+Residual risk is known remaining uncertainty, limitation, unchecked condition, or trade-off. Before final acceptance or a risk-accepted close, the agent should show the close-relevant residual risk in plain language.
+
+Accepting residual risk can allow close, but it does not replace approval, evidence, verification, Manual QA, or acceptance.
+
+Useful phrases:
+
+```text
+Show close-relevant residual risk before acceptance.
+I accept the residual risk shown here. Close with risk accepted.
+I do not accept that risk. Rework or add verification.
+```
+
 ## Manual QA
 
 Manual QA is the process for checking qualities that a person needs to inspect, such as UX, workflow, copy, accessibility, and visual result.
@@ -168,6 +263,12 @@ If QA fails, the task does not close and returns to rework or blocked. Skipping 
 
 ```text
 Mark Manual QA waived for this internal CLI work. Reason: there is no user UI, and tests/logs are enough to verify it.
+```
+
+If skipping QA carries product or user risk, the waiver may require a Decision Packet; a waiver reason alone may not be enough.
+
+```text
+Show the QA waiver Decision Packet before I decide.
 ```
 
 ## Acceptance
@@ -184,7 +285,7 @@ The user can also reject it.
 I do not accept it. Rework the session-expiration UX.
 ```
 
-Acceptance is not approval or Manual QA.
+Acceptance is not approval, Manual QA, or residual-risk acceptance.
 
 ## Resuming Work
 

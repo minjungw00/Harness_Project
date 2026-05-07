@@ -28,17 +28,19 @@ target_profiles:
   - ide_chat
   - custom_agent
 primary_strengths:
-  - repository instruction files
-  - code editing workflow
+  - repository instruction files for short always-on rules
+  - code editing workflow with frequent user-visible updates
   - MCP-capable profiles can call harness tools directly
 common_fallbacks:
-  - cooperative prepare_write discipline
+  - cooperative prepare_write discipline unless pre-tool guard is proven
   - sidecar changed-file watcher
   - changed_paths validator
   - manual verification bundle
 profile_risks:
-  - pre-tool guard strength depends on host environment
+  - pre-tool guard strength depends on host environment and must be proven by conformance
   - artifact capture may need wrapper or explicit record_run discipline
+  - long AGENTS.md files can bury Journey Card and Decision Packet context
+  - document rewrite sessions can sprawl without batch boundaries
 ```
 
 Generated files may include:
@@ -48,7 +50,19 @@ Generated files may include:
 - MCP config snippet
 - connector manifest entry
 
-Codex-specific connector work should keep `AGENTS.md` short. Prefer a skill, command, or MCP resource for procedural workflow. If pre-tool blocking is unavailable, use cooperative `prepare_write` discipline plus changed-path validator and, when risk warrants, sidecar or manual verification bundle.
+Codex-specific connector work should keep `AGENTS.md` short. Treat it as an always-on reminder, not a procedure manual or project history. Prefer a skill, command, or MCP resource for procedural workflow.
+
+The Codex flow should preserve user agency:
+
+- show the Journey Card before significant work resumes
+- surface a Decision Packet instead of asking for broad approval when product judgment is required
+- ask one blocking question at a time, with a recommendation and uncertainty when available
+- continue AFK only inside the approved Change Unit and Autonomy Boundary
+- stop for planning direction, product trade-offs, QA waiver, verification risk acceptance, and final acceptance
+
+Unless the current profile has proven pre-tool blocking, treat Codex as cooperative: call `prepare_write`, respect the returned scope and decisions, record changed paths and evidence, and rely on changed-path validation, sidecar capture, or a manual verification bundle when risk warrants it.
+
+For document rewrite workflows, a connector may recommend one-batch-per-session so changed sections, added user-facing phrases, and surface-specific advice remain reviewable.
 
 ## Claude Code Notes
 
@@ -75,9 +89,9 @@ Hook mapping candidates:
 
 | Hook point | Harness use |
 |---|---|
-| `SessionStart` | inject active Task and status card |
+| `SessionStart` | inject Journey Card or status card |
 | `UserPromptSubmit` | guide intake and shaping |
-| `PreToolUse` | check edit/write/bash/network/secret access against scope and approval |
+| `PreToolUse` | check edit/write/bash/network/secret access against scope, approval, Decision Packet blockers, and Autonomy Boundary |
 | `PostToolUse` | register changed files, command output, and log artifact candidates |
 | `Stop` | draft run summary and show verify/QA needs |
 | `PreCompact` | preserve Task summary and artifact refs |
@@ -106,7 +120,7 @@ profile_risks:
   - capture and guard behavior varies by host
 ```
 
-Gemini connectors should keep extension context small. Push the active Task card and Change Unit scope, then let the agent pull longer standards, domain language, module maps, and interface contracts through MCP resources.
+Gemini connectors should keep extension context small. Push the Journey Card or status card, active Decision Packet summary, Autonomy Boundary summary, Change Unit scope, and residual-risk summary near close. Let the agent pull longer standards, domain language, module maps, and interface contracts through MCP resources.
 
 ## GitHub Copilot Notes
 
@@ -130,7 +144,7 @@ profile_risks:
   - write guard and artifact capture need profile-specific verification
 ```
 
-Copilot connectors should prioritize status card display, MCP tool invocation, approval card display, Manual QA card display, and acceptance prompts. For terminal/task execution, prefer wrappers that can capture output and associate it with the active Run.
+Copilot connectors should prioritize Journey Card or status card display, MCP tool invocation, Decision Packet display, Autonomy Boundary summary, approval card display for sensitive changes, Manual QA card display, residual-risk visibility near close, and acceptance prompts. For terminal/task execution, prefer wrappers that can capture output and associate it with the active Run.
 
 ## Cursor Notes
 
@@ -174,16 +188,24 @@ Use Harness for product code changes, verification, approval, Manual QA, accepta
 
 ## Working Rules
 - Read current Harness status before changing product files.
+- Show the Journey Card before significant work resumes.
 - Small low-risk changes may be `direct`.
 - Feature, structural, risky, or multi-file changes are `work`.
 - Work starts with enough shared design to define scope and acceptance criteria.
 - A product write requires `harness.prepare_write`.
 - Sensitive categories require approval before proceeding.
+- If a Decision Packet is required, present it instead of asking for broad approval.
+- Ask one blocking question at a time, with a recommendation and uncertainty when available.
 - Stay inside the active Change Unit.
+- AFK implementation is only allowed inside the approved Change Unit and Autonomy Boundary.
+- Autonomy Boundary is not a scope grant; still obey `prepare_write`, Change Unit scope, approvals, allowed paths/tools/commands/network/secrets.
+- Planning direction, product trade-offs, QA waiver, verification risk acceptance, and final acceptance are human-held.
 - Record runs, commands, changed files, artifacts, and evidence.
 - Work cannot self-certify detached verification.
 - Required Manual QA and acceptance are separate close checks.
+- Show close-relevant residual risk before acceptance or risk-accepted close.
 - Prefer current Harness state and evidence over chat memory.
+- For document rewrite workflows, prefer one batch per session when that keeps review clear.
 
 ## Default Checks
 - lint:
@@ -196,7 +218,7 @@ Use Harness for product code changes, verification, approval, Manual QA, accepta
 ````md
 ---
 name: harness
-description: Use this when the user asks to modify code, verify work, resume a task, request approval, perform QA, close a task, inspect project work state, or record a development decision.
+description: Use this when the user asks to modify code, verify work, resume a task, request a user decision, perform QA, close a task, inspect project work state, or record a development decision.
 ---
 
 # Harness Skill
@@ -212,11 +234,12 @@ Before editing product files, call `harness.prepare_write`. If `prepare_write` i
 ### Minimal Happy Path
 1. Check status or intake.
 2. Classify as `advisor`, `direct`, or `work`.
-3. Confirm scope and the Change Unit.
-4. Before editing product files, call `harness.prepare_write`.
-5. After changes, record runs, changed paths, commands, artifacts, and evidence.
-6. Verify, record Manual QA, and request acceptance when needed.
-7. Close.
+3. Show the Journey Card before significant work resumes, then confirm scope and the Change Unit.
+4. If product judgment blocks progress, request or show the Decision Packet.
+5. Before editing product files, call `harness.prepare_write`.
+6. After changes, record runs, changed paths, commands, artifacts, and evidence.
+7. Verify, record Manual QA, show residual risk, and request acceptance when needed.
+8. Close.
 
 ### 1. Status Or Intake
 - If the user asks for status, call `harness.status`.
@@ -229,8 +252,10 @@ Before editing product files, call `harness.prepare_write`. If `prepare_write` i
 - `work`: feature, structural change, non-local fix, refactor, or high-risk change.
 
 ### 3. Shape Work
-- Ask one blocking question at a time when requirements are ambiguous.
+- Ask one blocking question at a time when requirements are ambiguous, with a recommendation and uncertainty when available.
+- When product judgment blocks progress, request or show a Decision Packet instead of asking for broad approval.
 - Record decisions, assumptions, rejected options, scope, and acceptance criteria.
+- Record the Autonomy Boundary for what the agent may do without another user decision.
 - Check domain language and module/interface impact.
 - Propose Change Units, preferring vertical slices.
 
@@ -239,13 +264,17 @@ Before editing product files, call `harness.prepare_write`. If `prepare_write` i
 - If `prepare_write` is blocked, do not edit product files.
 - If MCP is unavailable, hold product writes and report that the surface cannot provide an authoritative write decision.
 - Respect allowed paths, tools, commands, network, and secret scope.
-- Stop when approval or scope confirmation is required.
-- Request approval through `harness.request_user_decision`.
+- Continue AFK only inside the approved Change Unit and Autonomy Boundary.
+- Autonomy Boundary is not a scope grant; `prepare_write`, Change Unit scope, allowed paths/tools/commands/network/secrets, and sensitive approval still control writes.
+- Stop when approval, scope confirmation, a Decision Packet, or human-held judgment is required.
+- Use `harness.request_user_decision` for blocking product judgment; approval is one decision kind for sensitive changes.
+- Do not collapse product trade-offs into approval.
 
 ### 5. During Implementation
 - Prefer TDD when suitable.
 - Keep feedback loops short.
 - Avoid changes outside the active Change Unit.
+- Do not decide planning direction, product trade-offs, QA waiver, verification risk acceptance, or final acceptance for the user.
 
 ### 6. After Changing
 - Call `harness.record_run` with changed paths, commands, logs, diff refs, artifacts, TDD trace, evidence mapping, and design updates.
@@ -256,6 +285,7 @@ Before editing product files, call `harness.prepare_write`. If `prepare_write` i
 - Work cannot self-certify detached verification.
 - For Manual QA, call `harness.record_manual_qa`.
 - Record user decisions through `harness.record_user_decision`.
+- Make close-relevant residual risk visible before requesting acceptance or risk-accepted close.
 - Call `harness.close_task` after required verification, Manual QA, evidence, and acceptance are resolved.
 ````
 
