@@ -32,7 +32,7 @@ A structured pointer to a raw artifact file registered in the artifact store, in
 
 ### Autonomy Boundary
 
-The recorded boundary inside which an agent may proceed without asking for additional product judgment. It is shaped by work mode, active Change Unit scope, approvals, policy requirements, Decision Gates, surface capability, and current blockers. It does not override `prepare_write`, Change Unit scope, sensitive approval, policy validators, QA, verification risk acceptance, or final acceptance.
+The Change Unit semantics that record the product-judgment boundary inside which an agent may proceed without asking for additional user judgment. It is not a scope grant and does not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A Decision Packet may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible scope and approval when sensitive categories apply.
 
 ### Assurance
 
@@ -98,11 +98,11 @@ The policy of keeping current state, evidence, and relevant references in contex
 
 ### Decision Gate
 
-A state-level blocker that requires product judgment before progress, write, or close can continue. A Decision Gate is resolved through a recorded decision path and does not substitute for approval, verification, Manual QA, or acceptance.
+The Task-level aggregate gate for blocking product judgment before progress, write, or close can continue. The canonical field is `decision_gate` with values `not_required`, `required`, `pending`, `resolved`, `deferred`, or `blocked`. It is recomputed from relevant blocking Decision Packets and detected blockers, and it does not substitute for approval, verification, Manual QA, or acceptance.
 
 ### Decision Packet
 
-A recorded decision-support packet for blocking product judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Its canonical form is kernel state; Markdown renderings are projections or proposal surfaces.
+A recorded decision-support packet for blocking product judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Its record-level status is `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, or `superseded`; relevant statuses feed the Task-level `decision_gate`. Its canonical form is kernel state, and Markdown renderings are projections or proposal surfaces.
 
 ### Design Gate
 
@@ -218,7 +218,11 @@ A compact human-readable projection of the current Task position: state, next ac
 
 ### Journey Spine
 
-The ordered, state-derived thread of a Task's work journey across Change Units, runs, decisions, Decision Packets, evidence, QA, acceptance, residual risk, and close status. It is reconstructed from kernel state and artifact references, not from chat memory.
+The state-derived continuity model for a Task's ordered work journey. It is reconstructed from Task, Change Unit, Run, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Residual Risk, Acceptance, Close, artifact references, and `state.sqlite.task_events`, not from chat memory. Journey Card and Journey Spine Markdown views are projections.
+
+### Journey Spine Entry
+
+A canonical support record for durable continuity annotations that cannot be fully reconstructed from existing state events or owner records. Journey Spine Entry records supplement the Journey Spine; they do not replace Task, Change Unit, Run, Decision Packet, Residual Risk, evidence, verification, QA, acceptance, close, artifact, or event authority.
 
 ### Interface Contract
 
@@ -308,11 +312,11 @@ The named report projection kinds are projections or records by default; evidenc
 
 ### Residual Risk
 
-Known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. Residual risk must remain visible when it affects close, and user acceptance of risk does not create detached verification.
+A canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact. Residual risk must remain visible when it affects close, and user acceptance of risk does not create detached verification.
 
 ### Risk Accepted Close
 
-A successful close where the user accepts remaining verification risk. It uses `close_reason=completed_with_risk_accepted` and must not display `assurance_level=detached_verified`.
+A successful close where the user accepts close-relevant residual risk, including verification risk when verification was waived. It uses `close_reason=completed_with_risk_accepted` and must not display `assurance_level=detached_verified`.
 
 ### Run
 
@@ -336,7 +340,7 @@ The append-only event history table inside `state.sqlite`. MVP does not use a se
 
 ### State Record
 
-A canonical structured record in kernel state, such as a Task, Change Unit, Run, Approval, Decision Packet, Shared Design or other design-support record, Evidence Manifest, Eval, Manual QA record, Artifact record, residual-risk record, or Reconcile Item.
+A canonical structured record in kernel state, such as a Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Evidence Manifest, Eval, Manual QA record, Artifact record, Shared Design record, Domain Term, Module Map Item, Interface Contract, TDD Trace, or Reconcile Item.
 
 ### Strategic Agency
 
