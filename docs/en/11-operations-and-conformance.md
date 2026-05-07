@@ -55,10 +55,11 @@ Required categories:
 | state | current state readability, locks, active Task consistency |
 | MCP | server reachability, read resource availability, public tool availability |
 | surface | capability profile, generated manifest, MCP config freshness |
-| artifacts | file existence, hash, size, redaction state, task/run relation |
+| artifacts | file existence, hash, size, redaction state, task/run or artifact-link relation |
 | projections | queued jobs, freshness, managed hash drift, failed renders |
 | reconcile | pending human edits, managed block drift, generated-file drift |
 | validators | required core, artifact, projection, connector, and policy validators |
+| agency/stewardship/context | Decision Packet and decision gate readiness, Autonomy Boundary readiness, residual-risk visibility, codebase stewardship, context freshness |
 
 Output levels:
 
@@ -107,6 +108,8 @@ all active Tasks
 approval/run/evidence/eval/direct reports for a Task
 design-quality projections when enabled
 ```
+
+For MVP, Decision Packet and Journey Card visibility is rendered through `TASK`, status, journey, and judgment-context resources. Dedicated `DEC` refresh and persisted `JOURNEY-CARD` refresh targets are optional extension targets when enabled, not required MVP targets.
 
 ## Reconcile
 
@@ -161,6 +164,7 @@ Required contents:
 
 - export manifest with created time, task id, projection freshness, and redaction summary
 - state snapshots for the Task and related records
+- Decision Packets, user decisions, residual risks, accepted-risk refs, Journey Spine entries or continuity refs, and relevant Change Unit Autonomy Boundary summaries
 - projection snapshots for relevant reports
 - artifact references and included raw artifact files when allowed
 - artifact integrity manifest
@@ -179,7 +183,9 @@ Required checks:
 - size matches
 - content type is known or explicitly `other`
 - redaction state is valid
-- task/run relation is valid
+- task/run or artifact-link relation is valid
+- linked state record exists
+- relation kind is compatible with artifact kind
 - retention class is valid
 - projection or evidence refs resolve
 
@@ -203,7 +209,18 @@ expected_projection: object
 expected_error: object | null
 ```
 
-Optional metadata such as `name`, `suite`, `tags`, and `notes` is allowed, but the required fields above must be present.
+Fixture files and suite catalogs may carry metadata outside the fixture body. The fixture body itself uses only the fields above so conformance runners can compare behavior consistently.
+
+Suite catalog metadata is not passed to Core and is not part of a fixture body. It can group exact-shape fixtures by suite, stage, and tags:
+
+```yaml
+suite: agency
+earliest_mvp_stage: MVP-4
+tags: [decision-gate, residual-risk, autonomy-boundary]
+fixtures:
+  - AGENCY-decision-packet-required-before-product-tradeoff-write
+  - AGENCY-residual-risk-visible-before-acceptance
+```
 
 ## Conformance Execution
 
@@ -211,7 +228,7 @@ Optional metadata such as `name`, `suite`, `tags`, and `notes` is allowed, but t
 
 MVP execution semantics:
 
-1. Load fixture YAML files and validate the required fixture shape.
+1. Load fixture YAML files and validate the exact fixture body shape.
 2. Create an isolated runtime home and temporary Product Repository for the fixture, unless the fixture explicitly targets an existing read-only sample.
 3. Seed `registry.sqlite`, `project.yaml`, `state.sqlite`, artifact files, projection files, and connector manifests from `initial_state`.
 4. Execute `action` through Core. MCP tool actions use the public request schema; operator actions such as `projection_refresh`, `doctor_surface`, `recover`, and `artifacts_check` use the operator semantics in this document.
@@ -221,13 +238,24 @@ MVP execution semantics:
 
 Fixture execution should be deterministic. Network access, wall-clock-sensitive expiry, and external tool output must be stubbed or represented as seeded fixture inputs unless a suite explicitly declares itself an integration smoke.
 
+## Agency, Stewardship, And Context Suites
+
+Agency, stewardship, and context hygiene are MVP conformance suites. They test state behavior through Core entrypoints such as `prepare_write`, `request_user_decision`, `record_user_decision`, `record_manual_qa`, `close_task`, `next`, and operator actions that call Core. They must not pass by matching Journey Card, Decision Packet, residual-risk, or status prose.
+
+Required suite responsibilities:
+
+| Suite | Required behavior |
+|---|---|
+| agency | Blocking product judgment requires a compatible Decision Packet before affected write or close; product trade-off writes are held; AFK Autonomy Boundary stop conditions block public commitments; residual risk is visible before acceptance or risk-accepted close; approval, QA, acceptance, and residual-risk acceptance remain distinct. |
+| stewardship | Design-quality and codebase-stewardship validators affect `design_gate`, `decision_gate`, `qa_gate`, close blockers, and waiver eligibility through canonical owner records and refs; public interface, module, domain, feedback-loop, TDD, Manual QA, and waiver checks do not duplicate schemas or DDL. |
+| context-hygiene | Current Task state, Journey refs, evidence refs, and freshness state are authoritative; stale PRDs, stale projections, closed issues, old design docs, and long logs are pull-only context until reconciled; stale context cannot authorize writes, close, acceptance, or current-state replacement. |
+
 ## Hardened MVP Fixture Coverage
 
-The hardened evidence, verification, and connector rules should be covered by fixtures with the required shape. Each fixture maps to the earliest MVP stage where the behavior must be implemented.
+The hardened evidence, verification, and connector rules should be covered by fixtures with the required shape. Suite catalogs may map scenario IDs to the earliest MVP stage where the behavior must be implemented, but stage metadata is not part of the fixture body.
 
 ```yaml
 scenario_id: CORE-evidence-direct-docs-only-sufficient
-mvp_stage: MVP-4
 initial_state:
   active_task:
     mode: direct
@@ -265,7 +293,6 @@ expected_error: null
 
 ```yaml
 scenario_id: CORE-evidence-work-ac-missing-blocks-close
-mvp_stage: MVP-4
 initial_state:
   active_task:
     mode: work
@@ -305,7 +332,6 @@ expected_error:
 
 ```yaml
 scenario_id: CORE-evidence-ui-manual-qa-pending-blocks-close
-mvp_stage: MVP-4
 initial_state:
   active_task:
     mode: work
@@ -336,7 +362,6 @@ expected_error:
 
 ```yaml
 scenario_id: CORE-verify-manual-bundle-detached-passed
-mvp_stage: MVP-4
 initial_state:
   active_task:
     mode: work
@@ -378,7 +403,6 @@ expected_error: null
 
 ```yaml
 scenario_id: CORE-verify-subagent-context-not-detached-by-default
-mvp_stage: MVP-4
 initial_state:
   active_task:
     mode: work
@@ -410,8 +434,7 @@ expected_error:
 ```
 
 ```yaml
-scenario_id: CORE-verify-waiver-risk-accepted-not-detached
-mvp_stage: MVP-4
+scenario_id: CORE-verify-waiver-risk-accepted-visible-succeeds
 initial_state:
   active_task:
     mode: work
@@ -419,19 +442,39 @@ initial_state:
     assurance_level: self_checked
     gates:
       scope_gate: passed
+      decision_gate: resolved
       evidence_gate: sufficient
       verification_gate: waived_by_user
       qa_gate: not_required
       acceptance_gate: accepted
+  residual_risks:
+    - risk_id: RISK-VERIFY-001
+      close_relevant: true
+      visibility: visible
+      accepted: true
+      accepted_risk_ref: ARISK-VERIFY-001
+  decision_packets:
+    - decision_packet_id: DEC-VERIFY-WAIVER-001
+      decision_kind: verification_waiver
+      status: resolved
+      accepted_risk_refs: [ARISK-VERIFY-001]
+    - decision_packet_id: DEC-RISK-ACCEPT-001
+      decision_kind: residual_risk_acceptance
+      status: resolved
+      residual_risk_refs: [RISK-VERIFY-001]
 input:
   close_intent: accept_verification_risk
   waiver_reason: "User accepts remaining verification risk for urgent local-only fix."
+  accepted_risk_refs: [ARISK-VERIFY-001]
 action: close_task
 expected_state:
   lifecycle_phase: completed
   result: passed
   close_reason: completed_with_risk_accepted
   assurance_level: self_checked
+  residual_risk_summary:
+    status: accepted
+    accepted_refs: [ARISK-VERIFY-001]
 expected_events:
   - close_requested
   - risk_accepted_close_recorded
@@ -443,8 +486,53 @@ expected_error: null
 ```
 
 ```yaml
+scenario_id: CORE-verify-waiver-risk-accepted-hidden-blocks-close
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: waiting_user
+    assurance_level: self_checked
+    gates:
+      scope_gate: passed
+      evidence_gate: sufficient
+      verification_gate: waived_by_user
+      qa_gate: not_required
+      acceptance_gate: accepted
+  residual_risks:
+    - risk_id: RISK-VERIFY-HIDDEN-001
+      close_relevant: true
+      visibility: not_visible
+      accepted: false
+  decision_packets:
+    - decision_packet_id: DEC-VERIFY-WAIVER-002
+      decision_kind: verification_waiver
+      status: resolved
+      accepted_risk_refs: []
+input:
+  close_intent: accept_verification_risk
+  waiver_reason: "User accepts remaining verification risk for urgent local-only fix."
+action: close_task
+expected_state:
+  lifecycle_phase: waiting_user
+  assurance_level: self_checked
+  gates:
+    verification_gate: waived_by_user
+    acceptance_gate: accepted
+  residual_risk_summary:
+    status: not_visible
+    not_visible_refs: [RISK-VERIFY-HIDDEN-001]
+expected_events:
+  - close_requested
+  - close_blocked
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error:
+  code: RESIDUAL_RISK_NOT_VISIBLE
+```
+
+```yaml
 scenario_id: CONN-cooperative-guarantee-display
-mvp_stage: MVP-2
 initial_state:
   surface:
     surface_id: SURF-0001
@@ -470,7 +558,6 @@ expected_error: null
 
 ```yaml
 scenario_id: CONN-mcp-unavailable-write-hold
-mvp_stage: MVP-5
 initial_state:
   surface:
     guarantee_level: cooperative
@@ -571,6 +658,206 @@ expected_error:
   code: PROJECTION_STALE
 ```
 
+## Agency Fixture Examples
+
+```yaml
+scenario_id: AGENCY-decision-packet-required-before-product-tradeoff-write
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: ready
+    active_change_unit_id: CU-TRADEOFF-001
+    gates:
+      scope_gate: passed
+      decision_gate: not_required
+      approval_gate: not_required
+      design_gate: passed
+  active_change_unit:
+    change_unit_id: CU-TRADEOFF-001
+    allowed_paths: ["src/pricing/checkout.ts"]
+    autonomy_boundary:
+      status: active
+      what_agent_may_do: ["Implement the selected checkout discount behavior."]
+      what_requires_user_judgment: ["Choose the revenue versus conversion trade-off."]
+    blocking_decision_requirements:
+      - decision_kind: product_tradeoff
+        status: absent
+        affected_paths: ["src/pricing/checkout.ts"]
+input:
+  intended_operation: "Change checkout discount precedence from margin-safe to conversion-optimized."
+  intended_paths: ["src/pricing/checkout.ts"]
+  intended_tools: ["edit"]
+  sensitive_categories: []
+  product_tradeoff:
+    topic: revenue_vs_conversion
+    options_known: true
+action: prepare_write
+expected_state:
+  lifecycle_phase: waiting_user
+  gates:
+    decision_gate: required
+  write_decision: decision_required
+  decision_packet_candidate:
+    decision_kind: product_tradeoff
+    affected_gates: [decision_gate]
+expected_events:
+  - prepare_write_blocked
+  - decision_required
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error:
+  code: DECISION_REQUIRED
+```
+
+```yaml
+scenario_id: AGENCY-residual-risk-visible-before-acceptance
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: waiting_user
+    gates:
+      evidence_gate: sufficient
+      verification_gate: passed
+      qa_gate: passed
+      acceptance_gate: pending
+  residual_risks:
+    - risk_id: RISK-ACCEPT-001
+      close_relevant: true
+      visibility: not_visible
+      accepted: false
+  decision_packets:
+    - decision_packet_id: DEC-ACCEPT-001
+      decision_kind: acceptance
+      status: pending_user
+      user_context:
+        minimum_context: ["acceptance criteria", "evidence summary"]
+input:
+  decision_packet_id: DEC-ACCEPT-001
+  decision_kind: acceptance
+  selected_option_id: accept
+  decision:
+    acceptance:
+      value: accepted
+  accepted_risks: []
+action: record_user_decision
+expected_state:
+  lifecycle_phase: waiting_user
+  gates:
+    acceptance_gate: pending
+  residual_risk_summary:
+    status: not_visible
+    not_visible_refs: [RISK-ACCEPT-001]
+  decision_packets:
+    DEC-ACCEPT-001: pending_user
+expected_events: []
+expected_artifacts: []
+expected_projection: {}
+expected_error:
+  code: RESIDUAL_RISK_NOT_VISIBLE
+```
+
+```yaml
+scenario_id: AGENCY-close-hidden-residual-risk-blocks-close
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: waiting_user
+    assurance_level: detached_verified
+    gates:
+      scope_gate: passed
+      decision_gate: resolved
+      approval_gate: not_required
+      design_gate: passed
+      evidence_gate: sufficient
+      verification_gate: passed
+      qa_gate: passed
+      acceptance_gate: accepted
+  residual_risks:
+    - risk_id: RISK-CLOSE-HIDDEN-001
+      close_relevant: true
+      visibility: not_visible
+      accepted: false
+input:
+  close_intent: complete
+  requested_close_reason: completed_verified
+action: close_task
+expected_state:
+  lifecycle_phase: waiting_user
+  result: none
+  assurance_level: detached_verified
+  gates:
+    evidence_gate: sufficient
+    verification_gate: passed
+    qa_gate: passed
+    acceptance_gate: accepted
+  residual_risk_summary:
+    status: not_visible
+    not_visible_refs: [RISK-CLOSE-HIDDEN-001]
+expected_events:
+  - close_requested
+  - close_blocked
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error:
+  code: RESIDUAL_RISK_NOT_VISIBLE
+```
+
+```yaml
+scenario_id: AGENCY-afk-boundary-blocks-public-api-change
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: ready
+    active_change_unit_id: CU-API-001
+    gates:
+      scope_gate: passed
+      decision_gate: not_required
+      approval_gate: granted
+      design_gate: passed
+  active_change_unit:
+    change_unit_id: CU-API-001
+    allowed_paths: ["src/api/public.ts"]
+    sensitive_categories: ["public_api_change"]
+    autonomy_boundary:
+      autonomy_profile: afk_eligible
+      status: active
+      what_agent_may_do: ["Refactor internal handler code."]
+      stop_conditions: ["public_api_change"]
+  approvals:
+    - approval_id: APR-API-001
+      sensitive_categories: ["public_api_change"]
+      allowed_paths: ["src/api/public.ts"]
+      status: granted
+input:
+  intended_operation: "Add a response field to the public API while the user is AFK."
+  intended_paths: ["src/api/public.ts"]
+  intended_tools: ["edit"]
+  sensitive_categories: ["public_api_change"]
+  afk: true
+  baseline_ref: BASE-API-001
+action: prepare_write
+expected_state:
+  lifecycle_phase: waiting_user
+  gates:
+    decision_gate: required
+    approval_gate: granted
+  autonomy_boundary_summary:
+    status: exceeded
+    triggered_stop_conditions: ["public_api_change"]
+  write_decision: decision_required
+expected_events:
+  - prepare_write_blocked
+  - autonomy_boundary_exceeded
+  - decision_required
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error:
+  code: AUTONOMY_BOUNDARY_EXCEEDED
+```
+
 ## Connector Fixture Examples
 
 ```yaml
@@ -591,6 +878,16 @@ expected_projection: {}
 expected_error:
   code: RECONCILE_REQUIRED
 ```
+
+### Connector Agency Catalog Entries
+
+These are catalog entries, not fixture bodies. When materialized as fixture files, each scenario uses the exact fixture shape and asserts Core state, events, projection refs, and errors rather than rendered prose.
+
+| Scenario ID | Core action | Required assertions |
+|---|---|---|
+| `CONN-journey-card-shown-before-significant-resume` | `next` | `next` returns current Task state version, current Journey Card or journey ref, active Change Unit ref, pending Decision Packet refs, residual-risk summary, and projection freshness before returning a significant resume instruction bundle; no state events are appended for the read. |
+| `CONN-decision-packet-not-broad-approval` | `prepare_write` | Product judgment outside the active Decision Packet returns `decision_required` with a `decision_packet_candidate`; it does not return `approval_required`, does not create a broad approval candidate, and does not set `approval_gate=granted`. |
+| `CONN-autonomy-boundary-breach-stops-or-routes-to-decision` | `prepare_write` | Exceeding the active Autonomy Boundary returns `blocked` or `decision_required`, appends `autonomy_boundary_exceeded`, keeps the write held, and either references an existing compatible Decision Packet or returns a candidate decision packet. |
 
 ## Design-Quality Fixture Examples
 
@@ -642,13 +939,176 @@ expected_error:
   code: QA_REQUIRED
 ```
 
+## Stewardship Fixture Examples
+
+```yaml
+scenario_id: STEWARDSHIP-qa-waiver-reason-required
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: qa
+    gates:
+      qa_gate: pending
+      decision_gate: not_required
+  manual_qa_policy:
+    required: true
+    waiver_decision_packet_required: false
+    waiver_reason_required: true
+input:
+  qa_profile: ui_quality
+  performed_by: user
+  result: waived
+  findings: []
+  waiver_reason: null
+  waiver_decision_packet_ref: null
+  next_action: waive
+action: record_manual_qa
+expected_state:
+  lifecycle_phase: qa
+  gates:
+    qa_gate: pending
+    decision_gate: not_required
+  manual_qa_record_created: false
+  validators:
+    qa_waiver_reason: blocked
+expected_events: []
+expected_artifacts: []
+expected_projection: {}
+expected_error:
+  code: QA_REQUIRED
+```
+
+```yaml
+scenario_id: STEWARDSHIP-qa-waiver-product-risk-requires-decision-packet
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: qa
+    gates:
+      qa_gate: pending
+      decision_gate: not_required
+  manual_qa_policy:
+    required: true
+    waiver_decision_packet_required: true
+    waiver_reason_required: true
+    product_or_user_risk: true
+input:
+  qa_profile: workflow
+  performed_by: user
+  result: waived
+  findings: []
+  waiver_reason: "Known workflow risk accepted for a time-sensitive release."
+  waiver_decision_packet_ref: null
+  next_action: waive
+action: record_manual_qa
+expected_state:
+  lifecycle_phase: qa
+  gates:
+    qa_gate: pending
+    decision_gate: required
+  manual_qa_record_created: false
+  validators:
+    decision_quality_check: blocked
+    qa_waiver_reason: passed
+expected_events: []
+expected_artifacts: []
+expected_projection: {}
+expected_error:
+  code: DECISION_REQUIRED
+```
+
+### Stewardship Catalog Entries
+
+These catalog entries are not fixture bodies. Each materialized fixture must drive the named Core action and assert validator results, gate changes, events, projections, and error code.
+
+| Scenario ID | Core action | Required assertions |
+|---|---|---|
+| `STEWARDSHIP-shared-design-required-for-ambiguous-work` | `prepare_write` | Ambiguous `work` without a Shared Design record keeps or sets `design_gate=pending` or `partial`, reports `shared_design_alignment` failed or blocked, and returns `VALIDATOR_FAILED` or `DECISION_REQUIRED` according to whether user judgment can resolve it. |
+| `STEWARDSHIP-feedback-loop-required-before-behavior-write` | `prepare_write` | Behavior-affecting write without a feedback-loop record keeps the write held, reports `feedback_loop_check` blocked, keeps `design_gate=pending` or `partial`, and does not rely on agent prose claiming a check will happen later. |
+| `STEWARDSHIP-public-interface-change-requires-module-interface-review` | `prepare_write` | A `public_api_change` with granted sensitive approval still fails design preconditions when module/interface review is absent; `module_interface_review` is blocked, `design_gate` is partial or blocked, and approval is not treated as review. |
+| `STEWARDSHIP-domain-language-conflict-marks-design-stale-or-partial` | `prepare_write` | Conflicting current domain terms mark `domain_language_consistency` failed and set `design_gate=stale` or `partial`; stale prose or local naming guesses do not update canonical terms. |
+| `STEWARDSHIP-close-blocked-by-public-interface-future-change-risk` | `close_task` | A close-relevant codebase stewardship finding about public interface or future-change risk blocks close, appends `close_blocked`, preserves the finding refs, and returns `VALIDATOR_FAILED` or `DECISION_REQUIRED` according to whether a Decision Packet can resolve the risk. |
+
+## Context Hygiene Fixture Examples
+
+```yaml
+scenario_id: CONTEXT-HYGIENE-stale-prd-not-treated-as-current-state
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: ready
+    active_change_unit_id: CU-SEARCH-001
+    acceptance_criteria:
+      - criteria_id: AC-01
+        statement: "Server-side search filters archived records."
+    gates:
+      scope_gate: passed
+      design_gate: passed
+  active_change_unit:
+    change_unit_id: CU-SEARCH-001
+    allowed_paths: ["src/search/serverFilter.ts"]
+    baseline_ref: BASE-CURRENT
+  context_refs:
+    - record_kind: projection
+      record_id: PRD-2025-OLD
+      label: "legacy search PRD"
+      freshness: stale
+      claims:
+        acceptance_criteria:
+          - "Client-side search filters archived records."
+        allowed_paths: ["src/search/clientFilter.ts"]
+input:
+  intended_operation: "Implement the stale PRD client-side filter."
+  intended_paths: ["src/search/clientFilter.ts"]
+  intended_tools: ["edit"]
+  sensitive_categories: []
+  context_ref_used: PRD-2025-OLD
+  baseline_ref: BASE-CURRENT
+action: prepare_write
+expected_state:
+  lifecycle_phase: blocked
+  gates:
+    scope_gate: blocked
+  write_decision: blocked
+  canonical_acceptance_criteria:
+    - criteria_id: AC-01
+      statement: "Server-side search filters archived records."
+  context_hygiene:
+    stale_refs: [PRD-2025-OLD]
+    stale_refs_treated_as: pull_only
+  validators:
+    context_hygiene_check: failed
+    scope_coverage: blocked
+expected_events:
+  - prepare_write_blocked
+  - scope_required
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error:
+  code: SCOPE_VIOLATION
+```
+
+### Context Hygiene Catalog Entries
+
+These catalog entries are not fixture bodies. Each materialized fixture must prove behavior through Core responses and captured state, not by matching resume, status, or evaluator prose.
+
+| Scenario ID | Core action | Required assertions |
+|---|---|---|
+| `CONTEXT-HYGIENE-stale-task-projection-cannot-authorize-write` | `prepare_write` | A stale `TASK` projection that lists broader paths or older acceptance criteria cannot authorize the write; current Change Unit scope and current Task state win, `context_hygiene_check` fails or warns, and the write returns `SCOPE_VIOLATION`, `BASELINE_STALE`, or `PROJECTION_STALE` according to the seeded state. |
+| `CONTEXT-HYGIENE-resume-uses-current-state-not-chat-memory` | `next` | Resume reads current state, Journey refs, evidence refs, active Decision Packets, and projection freshness from Core; stale chat-memory claims are treated as non-authoritative input and do not mutate state or satisfy gates. |
+| `CONTEXT-HYGIENE-evaluator-bundle-stale-evidence-blocks-verification` | `record_eval` | An evaluator bundle with stale or missing evidence refs cannot set detached verification passed; `verification_gate` remains pending or blocked, stale evidence refs are reported, and the fixture returns `EVIDENCE_INSUFFICIENT` or `VALIDATOR_FAILED`. |
+
 ## Fixture Suites
 
 Minimum MVP suites:
 
 - core: active status, advisor close, direct close, write gate, approval required, evidence insufficient, same-session verification guard, QA required, acceptance required, projection failure separation
-- connector: capability profile, MCP unavailable hold, generated manifest drift, changed-path detection, artifact capture, fallback guarantee display
-- design-quality: shared design required, vertical slice or exception, TDD trace required or waived, module/interface review, Manual QA policy, context hygiene stale projection
+- connector: capability profile, MCP unavailable hold, generated manifest drift, changed-path detection, artifact capture, fallback guarantee display, Journey Card before significant resume, Decision Packet not broad approval, Autonomy Boundary breach routing
+- agency: Decision Packet required for blocking product judgment, product trade-off write guard, AFK Autonomy Boundary stop conditions, residual-risk visibility before acceptance or risk-accepted close, distinct approval/QA/acceptance judgments
+- stewardship: shared design required, codebase stewardship close blockers, domain language conflicts, vertical slice or exception, feedback loop and TDD trace required or waived, public interface module/interface review, Manual QA policy and waiver checks
+- context-hygiene: current-state bundle, stale projection and stale PRD handling, stale `TASK` projection write guard, stale context pull-only behavior, evaluator bundle freshness, resume uses current state rather than chat memory
+- design-quality: policy-pack smoke coverage that composes agency, stewardship, context-hygiene, and close-impact validators without redefining kernel authority
 
 Conformance output must include fixture id, pass/fail, observed state summary, observed events, artifact integrity result, projection freshness, and error code comparison.
 
