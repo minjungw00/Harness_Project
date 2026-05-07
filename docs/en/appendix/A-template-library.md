@@ -16,6 +16,7 @@ Templates are examples of rendered shape. They are not canonical state and must 
 6. Keep approval, verification, Manual QA, and acceptance visibly separate.
 7. Treat `qa_gate` as canonical even when a card says `Manual QA: pending/passed/failed/waived`.
 8. Version template changes as projection changes.
+9. Treat Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Change Unit DAG, and Residual Risk text as projection output, not canonical state.
 
 ## Required MVP Templates
 
@@ -43,6 +44,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - pending decision:
 - risk:
 - scope gate:
+- decision gate:
 - approval gate:
 - design gate:
 - evidence gate:
@@ -52,6 +54,44 @@ updated_at: 2026-05-06T09:30:15+09:00
 - active change unit:
 - latest report:
 - projection freshness:
+
+## Where We Are
+- current position:
+- active path:
+- current blocker:
+- latest meaningful evidence:
+- next state transition:
+
+## Judgment Context
+- pending decision packets:
+- what user is deciding:
+- what agent may decide without user:
+- recommendation:
+- main trade-off:
+- reversibility:
+- uncertainty:
+- minimum context to judge:
+- affected gates:
+
+## Autonomy Boundary
+- profile:
+- agent may do:
+- user judgment required:
+- AFK stop conditions:
+- boundary status:
+
+## Next Evidence
+- next evidence action:
+- evidence needed for:
+- expected artifact refs:
+- stale or missing evidence:
+
+## Residual Risk
+- close-relevant risk:
+- visibility status:
+- accepted risk refs:
+- follow-up required:
+- close impact:
 
 ## Goal
 -
@@ -119,7 +159,7 @@ Use these sections for long-running `work` tasks. Keep them managed unless expli
 | ID | blocked_by | unblocks | parallelizable_with | merge risk |
 |---|---|---|---|---|
 
-## Rolling Spine
+## Journey Spine
 ### Facts in Force
 - fact / evidence ref:
 
@@ -127,7 +167,7 @@ Use these sections for long-running `work` tasks. Keep them managed unless expli
 - assumption / expiry condition:
 
 ### Decisions in Force
-- DEC-0001:
+- DP-0001:
 
 ### Domain Terms in Force
 - term / meaning / code representation:
@@ -160,6 +200,19 @@ This is a TASK sub-template, not a separate canonical projection tier.
 - slice type: vertical | enabling | cleanup | horizontal-exception
 - horizontal exception reason:
 - follow-up vertical CU:
+- autonomy profile:
+- agent may do:
+  - implementation detail:
+  - local refactor inside scope:
+  - evidence collection:
+- user judgment required:
+  - product direction:
+  - public interface or compatibility commitment:
+  - residual risk acceptance:
+- AFK stop conditions:
+  - boundary exceeded:
+  - evidence cannot be produced:
+  - close-relevant risk discovered:
 - end-to-end path:
   - trigger / input:
   - domain logic:
@@ -177,7 +230,13 @@ This is a TASK sub-template, not a separate canonical projection tier.
   - changed_paths
   - approval_scope
   - vertical_slice_shape
-  - tdd_trace
+  - decision_quality_check
+  - autonomy_boundary_check
+  - feedback_loop_check
+  - tdd_trace_required
+  - module_interface_review
+  - codebase_stewardship_check
+  - residual_risk_visibility_check
   - evidence_sufficiency
 - sensitive categories:
   - none
@@ -216,6 +275,11 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Request Summary
 - proposed action:
+
+## Related Decision Packet
+- decision packet:
+- decision gate impact:
+- approval gate impact:
 
 ## Requested Scope
 - sensitive categories:
@@ -311,8 +375,13 @@ npm test -- --runInBand
 - changed_paths:
 - approval_scope:
 - vertical_slice_shape:
-- tdd_trace:
-- module_boundary_review:
+- decision_quality_check:
+- autonomy_boundary_check:
+- feedback_loop_check:
+- tdd_trace_required:
+- module_interface_review:
+- codebase_stewardship_check:
+- residual_risk_visibility_check:
 - lint:
 - test:
 - build:
@@ -331,7 +400,7 @@ npm test -- --runInBand
 ## Issues And Follow-Ups
 -
 
-## Spine Updates
+## Journey Spine Updates
 - new facts:
 - rejected options:
 - domain language update:
@@ -391,8 +460,13 @@ updated_at: 2026-05-06T09:50:00+09:00
 | Item | Status | Evidence Refs | Notes |
 |---|---|---|---|
 | vertical_slice_shape | passed | CU-01 | |
-| tdd_trace | passed | TDD-0001 | |
-| module_boundary_review | passed | DESIGN-0001 | |
+| decision_quality_check | passed | DP-0001 | |
+| autonomy_boundary_check | passed | CU-01 | |
+| feedback_loop_check | passed | TDD-0001, LOG-0001 | |
+| tdd_trace_required | passed | TDD-0001 | |
+| module_interface_review | passed | DESIGN-0001 | |
+| codebase_stewardship_check | passed | DOMAIN-LANGUAGE, MODULE-MAP, INTERFACE-CONTRACT | |
+| residual_risk_visibility_check | pending | RR-0001 | |
 | manual_qa_required | pending | QA-0001 | |
 
 ## Approval Refs
@@ -462,8 +536,13 @@ updated_at: 2026-05-06T10:05:00+09:00
 - [ ] acceptance_review
 - [ ] baseline_freshness
 - [ ] vertical_slice_shape
-- [ ] tdd_trace
-- [ ] module_boundary_review
+- [ ] decision_quality_check
+- [ ] autonomy_boundary_check
+- [ ] feedback_loop_check
+- [ ] tdd_trace_required
+- [ ] module_interface_review
+- [ ] codebase_stewardship_check
+- [ ] residual_risk_visibility_check
 - [ ] public_interface_change_review
 - [ ] manual_qa_required
 - [ ] lint
@@ -472,7 +551,10 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Evidence Reviewed
 - task summary:
-- rolling spine:
+- Journey Spine:
+- Decision Packets:
+- Residual Risks:
+- Autonomy Boundary:
 - domain language:
 - module map:
 - interface contract:
@@ -492,6 +574,10 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Design Quality Review
 - vertical slice:
+- Decision Packets:
+- Autonomy Boundary:
+- Residual Risks:
+- feedback loop:
 - TDD trace:
 - module/interface:
 - architecture drift:
@@ -770,8 +856,15 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Result
 - result: pending | passed | failed | waived
+- qa_gate: pending | passed | failed | waived | not_required
+- qa_gate note: canonical close-relevant gate; this projection is display only
 - summary:
 - waiver reason:
+
+## Waiver And Risk
+- waiver Decision Packet:
+- residual risk refs:
+- accepted risk:
 
 ## Findings
 | Severity | Finding | Suggested Action | Follow-up CU |
@@ -791,56 +884,112 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ````md
 ---
-doc_type: decision
-decision_id: DEC-0001
+doc_type: decision_packet
+projection_kind: DEC
+projection_id: DEC-0001
+decision_packet_id: DP-0001
 task_id: TASK-0001
-status: proposed
+change_unit_id: CU-01
+decision_kind: product_tradeoff
+status: pending_user
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
-# DEC-0001 Decision Title
+# DEC-0001 Decision Packet Title
 
-## Problem
-- decision needed:
+## Why Now
+- trigger:
+- blocker:
+- affected operation:
+- why this cannot proceed under current state:
+
+## Current State
+- task state:
+- active change unit:
+- current gates:
+- latest evidence:
+- residual risk:
+- source refs:
+
+## What User Is Deciding
+- decision:
+- affected scope:
+- affected acceptance criteria:
+- affected gates:
+
+## What Agent May Decide Without User
+- implementation detail:
+- code organization inside approved scope:
+- evidence collection:
+- follow-up proposal:
+
+## Autonomy Boundary Impact, If Any
+- current boundary impact:
+- proposed boundary update:
+- user judgment required:
 
 ## Options
 ### Option A
-- suitable when:
+- choice:
 - benefits:
-- cost/risk:
+- costs:
+- risks:
+- reversibility: reversible | partially_reversible | irreversible | unknown
+- confidence: low | medium | high
+- evidence refs:
 
 ### Option B
-- suitable when:
+- choice:
 - benefits:
-- cost/risk:
+- costs:
+- risks:
+- reversibility: reversible | partially_reversible | irreversible | unknown
+- confidence: low | medium | high
+- evidence refs:
 
 ## Recommendation
 - recommendation:
 - reason:
+- uncertainty:
 
-## Final Decision
-- status:
-- decision:
-- decided at:
+## Consequence Of Deferring
+- consequence:
+- operation impact:
+- close impact:
+- residual risk or follow-up visibility:
+
+## Minimum Context To Judge
+- relevant facts:
+- assumptions:
+- constraints:
+- evidence refs:
+- residual risk refs:
+- related decisions:
+
+## User Decision And Accepted Risk
+- status: proposed | pending_user | resolved | deferred | rejected | blocked | superseded
+- selected option:
+- user decision:
+- decision note:
+- accepted risk:
+- accepted risk refs:
+- accepted consequence:
 - decided by:
-
-## Impact
-- code:
-- domain language:
-- module/interface:
-- docs:
-- operations:
-- tests:
-- user experience:
+- decided at:
 
 ## Follow-Up
 - [ ]
 
 ## References
 - TASK:
+- Change Unit:
 - DESIGN:
 - APR:
 - EVIDENCE-MANIFEST:
+- EVAL:
+- MANUAL-QA:
+- Residual Risk:
+- artifacts:
 ````
 
 ### DESIGN
@@ -977,6 +1126,46 @@ updated_at: 2026-05-06T10:30:00+09:00
 
 ## Expanded Cards
 
+### JOURNEY-CARD
+
+````text
+TASK-{id} {title}
+Where we are: {mode} / {lifecycle_phase} / {current_position}
+Next action: {next_action}
+
+Judgment context:
+- pending decision: {decision_packet_ref|none}
+- user deciding: {what_user_is_deciding|none}
+- agent may decide: {what_agent_may_decide_without_user}
+
+Autonomy boundary:
+- profile: {autonomy_profile}
+- agent may do: {agent_may_do}
+- user judgment required: {user_judgment_required}
+- AFK stop conditions: {afk_stop_conditions}
+
+Next evidence:
+- action: {next_evidence_action}
+- needed for: {evidence_needed_for}
+- latest evidence: {latest_evidence_ref|none}
+
+Residual risk:
+- status: {residual_risk_status}
+- close impact: {residual_risk_close_impact}
+- accepted risk: {accepted_risk_refs|none}
+
+Gates:
+- scope: {scope_gate}
+- decision: {decision_gate}
+- approval: {approval_gate}
+- evidence: {evidence_gate}
+- verification: {verification_gate}
+- Manual QA: {qa_gate display: pending|passed|failed|waived|not_required}
+- acceptance: {acceptance_gate}
+
+Projection freshness: {projection_freshness}
+````
+
 ### Compact Status Card
 
 ````text
@@ -1077,5 +1266,9 @@ Record the QA result?
 
 - `DOMAIN-LANGUAGE`, `MODULE-MAP`, and `INTERFACE-CONTRACT` are projections from canonical records, not canonical documents.
 - `MANUAL-QA` is a record projection. The close-relevant gate remains `qa_gate`.
+- `DEC` is the Decision Packet visibility projection. It does not resolve a decision unless Core records the user decision or reconcile action.
+- `JOURNEY-CARD` is a compact current-position projection. It does not authorize writes, resolve decisions, accept risk, or close work.
+- Autonomy Boundary text in `TASK`, `DEC`, `JOURNEY-CARD`, and Change Unit blocks describes judgment latitude only; scope and approval remain separate owner records and gates.
+- Residual-risk text is a projection from residual-risk records and accepted-risk refs; it does not create detached verification or acceptance.
 - `EVAL` must show independence context because a passed verdict alone does not produce `detached_verified`.
 - `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, and `DIRECT-RESULT` link evidence files by artifact ref rather than embedding large evidence.
