@@ -348,6 +348,7 @@ initial_state:
       qa_gate: pending
 input:
   evidence_profile: UI/UX/copy work
+  # qa_gate=pending means required QA has no satisfying Manual QA record yet.
   manual_qa_record: null
 action: close_task
 expected_state:
@@ -1444,6 +1445,7 @@ initial_state:
     qa_gate: pending
 input:
   changed_surface: ui
+  # qa_gate=pending means required QA has no satisfying Manual QA record yet.
   manual_qa_record: null
 action: close_task
 expected_state:

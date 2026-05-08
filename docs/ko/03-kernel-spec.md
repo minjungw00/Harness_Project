@@ -137,7 +137,7 @@ Eval은 verification result record입니다. verification target, verdict, check
 
 ### Manual QA
 
-Manual QA는 UX, workflow, copy, accessibility, visual output, product taste 또는 human judgment가 필요한 기타 result에 대한 human inspection record입니다. `qa_gate`가 canonical kernel gate입니다. `manual_qa_record.result`는 gate에 feed될 수 있는 individual record의 result입니다.
+Manual QA는 UX, workflow, copy, accessibility, visual output, product taste 또는 human judgment가 필요한 기타 result에 대한 human inspection record입니다. `manual_qa_record.result`는 실제 Manual QA record의 record-level result이며 `passed`, `failed`, `waived`로 제한됩니다. Pending required QA는 Manual QA record result로 표현하지 않고 aggregate `qa_gate=pending`으로 표현합니다.
 
 ### Residual Risk
 
@@ -359,7 +359,7 @@ Rules:
 not_required | required | pending | passed | failed | waived
 ```
 
-`qa_gate`는 required human QA를 위한 canonical kernel gate입니다. Individual Manual QA records에는 record-level results가 있고, gate는 close-relevant aggregate state입니다.
+`qa_gate`는 required human QA를 위한 canonical kernel gate입니다. Individual Manual QA records에는 record-level results가 있고, gate는 close-relevant aggregate state입니다. `qa_gate=pending`은 required QA가 satisfying Manual QA record를 아직 만들지 못했거나 latest relevant Manual QA record가 policy를 satisfy하지 못한다는 뜻입니다. `manual_qa_record.result=pending`을 뜻하지 않습니다.
 
 ### Acceptance Gate
 

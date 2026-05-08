@@ -506,7 +506,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 | module_interface_review | passed | DESIGN-0001 | |
 | codebase_stewardship_check | passed | DOMAIN-LANGUAGE, MODULE-MAP, INTERFACE-CONTRACT | |
 | residual_risk_visibility_check | pending | RR-0001 | |
-| manual_qa_required | pending | QA-0001 | |
+| manual_qa_required | pending | qa_gate; no satisfying Manual QA record yet | |
 
 ## Approval Refs
 - APR-0001:
@@ -876,16 +876,18 @@ updated_at: 2026-05-06T09:40:00+09:00
 ````md
 ---
 doc_type: manual_qa
-manual_qa_record_id: QA-0001
+manual_qa_record_id: null
 task_id: TASK-0001
 change_unit_id: CU-01
-result: pending
+qa_gate: pending
+result: null
 updated_at: 2026-05-06T10:05:00+09:00
 ---
 
-# QA-0001 Manual QA
+# Manual QA
 
 ## Identity
+- manual_qa_record_id: QA-0001 | null
 - task_id:
 - change_unit_id: CU-01 | null
 - qa_profile: ui_quality | workflow | copy | accessibility | browser_smoke | performance_smoke | other
@@ -905,7 +907,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - [ ] no obvious regression
 
 ## Result
-- result: pending | passed | failed | waived
+- record result: passed | failed | waived | null when no record exists
 - qa_gate: pending | passed | failed | waived | not_required
 - qa_gate note: canonical close-relevant gate; this projection is display only
 - summary:
@@ -1321,7 +1323,8 @@ User follow-up:
 ````text
 Manual QA is required.
 
-{manual_qa_record_id}
+Record: {manual_qa_record_id|none until recorded}
+Gate: {qa_gate display: pending|passed|failed|waived|not_required}
 Profile: {profile}
 Target: {screen_or_flow}
 Checklist:
@@ -1337,7 +1340,9 @@ Record the QA result?
 ## Template Change Notes
 
 - `DOMAIN-LANGUAGE`, `MODULE-MAP`, and `INTERFACE-CONTRACT` are projections from canonical records, not canonical documents.
-- `MANUAL-QA` is a record projection. The close-relevant gate remains `qa_gate`.
+- `MANUAL-QA` is a record or requirement projection.
+- When no record exists yet, use `manual_qa_record_id: null` and `result: null`.
+- The pending requirement is displayed through `qa_gate: pending`. Do not represent pending as a Manual QA record result. The close-relevant gate remains `qa_gate`.
 - `DEC` is the optional standalone Decision Packet visibility projection when enabled. MVP Decision Packet visibility still comes through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. It does not resolve a decision unless Core records the user decision or reconcile action.
 - `JOURNEY-CARD` is a compact current-position projection. It does not authorize writes, resolve decisions, accept risk, satisfy evidence, replace verification, replace Manual QA, or close work.
 - Autonomy Boundary text in `TASK`, `DEC`, `JOURNEY-CARD`, and Change Unit blocks describes judgment latitude only; Write Authority Summary and Write Authorization displays remain separate, and scope and approval remain separate owner records and gates.

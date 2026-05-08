@@ -47,7 +47,7 @@ It does not define canonical kernel state, MCP request/response schemas, SQLite 
 | Evidence coverage | `evidence_manifests` plus artifact refs | `EVIDENCE-MANIFEST` projection | evidence module update, then projector |
 | Verification verdict | `evals` plus artifact refs | `EVAL` projection and verification card | `record_eval`, then projector |
 | TDD trace | `tdd_traces` plus artifact refs | `TDD-TRACE` projection | `record_run` or reconcile, then projector |
-| Manual QA | `manual_qa_records` plus artifact refs; `qa_gate` is canonical gate | `MANUAL-QA` projection and QA card | `record_manual_qa`, then projector |
+| Manual QA | `manual_qa_records` plus artifact refs when a record exists; `qa_gate` is canonical gate for pending or satisfied QA | `MANUAL-QA` projection and QA card | `record_manual_qa`, then projector |
 | Raw evidence | artifact store plus `artifacts` records | artifact references in reports | artifact registry |
 | Projection freshness | `projection_jobs`, projected versions, managed hashes | front matter, status card, operations output | projector and recovery tools |
 
@@ -236,7 +236,7 @@ Source: `tdd_traces` plus artifact refs. Policy determines when the trace is req
 
 Purpose: a readable human inspection record for UX, workflow, copy, accessibility, visual output, or other experiential quality.
 
-Source: `manual_qa_records` plus artifact refs. User-facing cards may say `Manual QA: pending/passed/failed/waived`, but `qa_gate` remains the canonical close-relevant gate.
+Source: `manual_qa_records` plus artifact refs when a record exists, and `qa_gate` for the aggregate requirement state. User-facing cards may say `Manual QA: pending/passed/failed/waived`, but `pending` is a requirement/gate display from `qa_gate`, not `manual_qa_record.result=pending`.
 
 ## Appendix Variant Summaries
 
@@ -271,7 +271,7 @@ Manual QA: failed
 Manual QA: waived
 ```
 
-The card must not imply that card text is canonical. The canonical field is `qa_gate`.
+The card must not imply that card text is canonical. The canonical field is `qa_gate`; a pending display must point back to `qa_gate`, not to an individual Manual QA record result.
 
 ## Projection Freshness
 

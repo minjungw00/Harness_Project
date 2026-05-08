@@ -506,7 +506,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 | module_interface_review | passed | DESIGN-0001 | |
 | codebase_stewardship_check | passed | DOMAIN-LANGUAGE, MODULE-MAP, INTERFACE-CONTRACT | |
 | residual_risk_visibility_check | pending | RR-0001 | |
-| manual_qa_required | pending | QA-0001 | |
+| manual_qa_required | pending | qa_gate; no satisfying Manual QA record yet | |
 
 ## Approval Refs
 - APR-0001:
@@ -876,16 +876,18 @@ updated_at: 2026-05-06T09:40:00+09:00
 ````md
 ---
 doc_type: manual_qa
-manual_qa_record_id: QA-0001
+manual_qa_record_id: null
 task_id: TASK-0001
 change_unit_id: CU-01
-result: pending
+qa_gate: pending
+result: null
 updated_at: 2026-05-06T10:05:00+09:00
 ---
 
-# QA-0001 Manual QA
+# Manual QA
 
 ## Identity
+- manual_qa_record_id: QA-0001 | null
 - task_id:
 - change_unit_id: CU-01 | null
 - qa_profile: ui_quality | workflow | copy | accessibility | browser_smoke | performance_smoke | other
@@ -905,7 +907,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - [ ] no obvious regression
 
 ## Result
-- result: pending | passed | failed | waived
+- record result: passed | failed | waived | null when no record exists
 - qa_gate: pending | passed | failed | waived | not_required
 - qa_gate note: canonical close-relevant gate; this projection is display only
 - summary:
@@ -1321,7 +1323,8 @@ User follow-up:
 ````text
 Manual QA가 필요합니다.
 
-{manual_qa_record_id}
+Record: {manual_qa_record_id|none until recorded}
+Gate: {qa_gate display: pending|passed|failed|waived|not_required}
 Profile: {profile}
 Target: {screen_or_flow}
 Checklist:
@@ -1337,7 +1340,9 @@ QA result를 기록하시겠습니까?
 ## Template Change Notes
 
 - `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`는 canonical document가 아니라 canonical record에서 만든 projection이다.
-- `MANUAL-QA`는 record projection이다. Close-relevant gate는 `qa_gate`로 남는다.
+- `MANUAL-QA`는 record 또는 requirement projection이다.
+- 아직 record가 없을 때는 `manual_qa_record_id: null`과 `result: null`을 사용한다.
+- Pending requirement는 `qa_gate: pending`으로 표시한다. Pending을 Manual QA record result로 표현하지 않는다. Close-relevant gate는 `qa_gate`로 남는다.
 - `DEC`는 enabled일 때 사용하는 optional standalone Decision Packet visibility projection이다. MVP Decision Packet visibility는 여전히 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공된다. Core가 user decision 또는 reconcile action을 기록하기 전에는 decision을 resolve하지 않는다.
 - `JOURNEY-CARD`는 compact current-position projection이다. Write를 authorize하거나, decision을 resolve하거나, risk를 accept하거나, evidence를 satisfy하거나, verification 또는 Manual QA를 replace하거나, work를 close하지 않는다.
 - `TASK`, `DEC`, `JOURNEY-CARD`, Change Unit block의 Autonomy Boundary text는 judgment latitude만 설명한다. Write Authority Summary와 Write Authorization display는 별도로 남고, scope와 approval은 별도 owner record와 gate로 남는다.

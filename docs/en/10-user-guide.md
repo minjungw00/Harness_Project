@@ -285,6 +285,8 @@ I do not accept that risk. Rework or add verification.
 
 Manual QA is the user's judgment about qualities that a person needs to inspect, such as UX, workflow, copy, accessibility, and visual result.
 
+When a card says `Manual QA: pending`, that is the `qa_gate` display. It means the required QA has not yet produced a satisfying Manual QA record, not that there is a pending Manual QA record result.
+
 ```text
 Decide whether Manual QA is needed.
 ```

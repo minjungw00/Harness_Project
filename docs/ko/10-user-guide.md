@@ -285,6 +285,8 @@ Residual risk를 수용하면 close가 가능해질 수 있다. 하지만 approv
 
 Manual QA는 UX, workflow, copy, accessibility, visual result처럼 사람이 봐야 하는 품질에 대한 사용자 판단이다.
 
+Card가 `Manual QA: pending`이라고 표시할 때 그것은 `qa_gate` display다. Required QA가 아직 satisfying Manual QA record를 만들지 못했다는 뜻이지, pending Manual QA record result가 있다는 뜻은 아니다.
+
 ```text
 Manual QA가 필요한지 판단해줘.
 ```

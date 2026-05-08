@@ -137,7 +137,7 @@ An Eval is a verification result record. It records the verification target, ver
 
 ### Manual QA
 
-Manual QA is a human inspection record for UX, workflow, copy, accessibility, visual output, product taste, or any other result that needs human judgment. `qa_gate` is the canonical kernel gate. `manual_qa_record.result` is the result of an individual record that can feed the gate.
+Manual QA is a human inspection record for UX, workflow, copy, accessibility, visual output, product taste, or any other result that needs human judgment. `manual_qa_record.result` is the record-level result of an actual Manual QA record and is limited to `passed`, `failed`, or `waived`. Pending required QA is not represented as a Manual QA record result; it is represented by the aggregate `qa_gate=pending`.
 
 ### Residual Risk
 
@@ -359,7 +359,7 @@ Rules:
 not_required | required | pending | passed | failed | waived
 ```
 
-`qa_gate` is the canonical kernel gate for required human QA. Individual Manual QA records have record-level results; the gate is the aggregate close-relevant state.
+`qa_gate` is the canonical kernel gate for required human QA. Individual Manual QA records have record-level results; the gate is the aggregate close-relevant state. `qa_gate=pending` means required QA has not yet produced a satisfying Manual QA record, or the latest relevant Manual QA record does not satisfy policy. It does not mean `manual_qa_record.result=pending`.
 
 ### Acceptance Gate
 

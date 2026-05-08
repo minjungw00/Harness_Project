@@ -102,7 +102,7 @@ Policy validator는 MCP API document가 담당하는 validator result schema를 
 | `applies_when` | Implementation 시작 전, behavior-affecting write 전, TDD가 waived될 때, Manual QA가 expected될 때, 또는 agent가 change가 작동하는지 배울 credible한 방법이 필요할 때. |
 | `default_requirement` | Implementation 전에 feedback loop를 정의한다. Loop는 test, typecheck, lint, build, browser smoke, Manual QA, explicit alternate loop 중 하나일 수 있다. 선택된 loop는 risk에 대해 가장 작은 credible loop여야 한다. TDD trace는 이 policy의 구현 방식 중 하나일 뿐 유일한 구현 방식은 아니다. |
 | `allowed_waiver` | Implementation 또는 product behavior impact가 없는 docs-only edit, comment, formatting, advisory work에 허용된다. Waiver에는 executable, browser, Manual QA, alternate loop가 유용하지 않은 이유를 기록해야 한다. |
-| `required_record` | Task 또는 Change Unit feedback-loop field, selected-loop ref, validator result, TDD가 선택된 경우 `tdd_traces`, Manual QA가 선택된 경우 Manual QA record, 실행 후 evidence manifest ref. |
+| `required_record` | Task 또는 Change Unit feedback-loop field, selected-loop ref, validator result, TDD가 선택된 경우 `tdd_traces`, Manual QA가 선택되고 performed된 경우 Manual QA record, required QA가 아직 satisfying record를 갖지 못한 경우 `qa_gate=pending`, 실행 후 evidence manifest ref. |
 | `validator` | `feedback_loop_check` |
 | `evidence` | Planned loop ref, test/typecheck/lint/build/browser smoke log, Manual QA ref, alternate-loop justification, 사용된 경우 TDD trace ref. |
 | `close_impact` | Feedback loop definition이 없으면 `design_gate=pending` 또는 `partial`로 남는다. Execution evidence가 없으면 evidence가 insufficient해질 수 있다. Manual QA loop failure는 Manual QA policy를 통해 `qa_gate`에 영향을 준다. |

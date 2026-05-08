@@ -238,7 +238,7 @@ A verification handoff package for a human or separate evaluator. It includes ta
 
 ### Manual QA Record
 
-A record-level Manual QA result, including performer, profile, result, artifacts, findings, waiver reason when applicable, and next action. It feeds `qa_gate` but is not itself the canonical gate.
+A record-level Manual QA result, including performer, profile, result, artifacts, findings, waiver reason when applicable, and next action. Its result is `passed`, `failed`, or `waived`. Pending required QA is represented by `qa_gate=pending`; it is not a Manual QA record result.
 
 ### Managed Block
 
@@ -286,7 +286,7 @@ A durable outbox record that asks the projector to render a Markdown projection 
 
 ### QA Gate
 
-The canonical kernel gate for required Manual QA. `manual_qa_record.result` is record-level; `qa_gate` is the close-relevant aggregate state.
+The canonical kernel gate for required Manual QA. `manual_qa_record.result` is record-level; `qa_gate` is the close-relevant aggregate state. `qa_gate=pending` means required QA has not yet produced a satisfying Manual QA record, or the latest relevant Manual QA record does not satisfy policy.
 
 ### Raw Artifact
 

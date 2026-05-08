@@ -1161,7 +1161,7 @@ Idempotency behavior: repeated request returns the same Eval and assurance decis
 
 ### `harness.record_manual_qa`
 
-Purpose: record human QA result and update `qa_gate` when required QA is satisfied, failed, or waived.
+Purpose: record an individual human QA outcome and update `qa_gate` when required QA is satisfied, failed, or waived.
 
 Allowed actor: `user`, `operator`, `evaluator`.
 
@@ -1187,6 +1187,8 @@ RecordManualQaRequest:
 
 `change_unit_id` should be supplied when Manual QA applies to a Change Unit. It may be `null` for Task-level QA that is not scoped to a single Change Unit.
 
+`RecordManualQaRequest.result` is the record-level result for an actual Manual QA record and is limited to `passed`, `failed`, or `waived`. Pending required QA is represented by the aggregate `qa_gate=pending`, not by `RecordManualQaRequest.result=pending`.
+
 For `result=waived`, product/user risk or policy-required judgment requires a `qa_waiver` Decision Packet referenced by `waiver_decision_packet_ref`. `waiver_reason` alone is allowed only for a low-risk waiver when policy permits it.
 
 Response schema:
@@ -1201,7 +1203,7 @@ RecordManualQaResponse:
   next_action: string
 ```
 
-State transition summary: records Manual QA; `passed` can set `qa_gate=passed`; `failed` sets `qa_gate=failed` and routes to rework/blocked; `waived` requires either a compatible `qa_waiver` Decision Packet or a policy-permitted low-risk waiver reason and sets `qa_gate=waived`.
+State transition summary: records Manual QA; `passed` can set `qa_gate=passed`; `failed` sets `qa_gate=failed` and routes to rework/blocked; `waived` requires either a compatible `qa_waiver` Decision Packet or a policy-permitted low-risk waiver reason and sets `qa_gate=waived`. If required QA has not produced a satisfying record, or the latest relevant record does not satisfy policy, the aggregate gate remains `qa_gate=pending`.
 
 Events emitted: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`.
 
