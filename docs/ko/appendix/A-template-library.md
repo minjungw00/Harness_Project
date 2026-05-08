@@ -16,7 +16,7 @@ Template은 rendered shape의 예시다. Canonical state가 아니며 kernel fie
 6. Approval, verification, Manual QA, acceptance를 visible하게 분리한다.
 7. Card가 `Manual QA: pending/passed/failed/waived`라고 말하더라도 `qa_gate`를 canonical로 취급한다.
 8. Template change는 projection change로 versioning한다.
-9. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Change Unit DAG, Residual Risk text는 canonical state가 아니라 projection output으로 취급한다.
+9. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority, 표시된 Write Authorization ref, Change Unit DAG, Residual Risk text는 canonical state나 canonical Write Authorization record 자체가 아니라 projection output으로 취급한다.
 
 ## Required MVP Templates
 
@@ -52,6 +52,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Manual QA:
 - acceptance gate:
 - active change unit:
+- write authority:
 - latest report:
 - projection freshness:
 
@@ -80,6 +81,20 @@ updated_at: 2026-05-06T09:30:15+09:00
 - AFK stop conditions:
 - boundary status:
 
+## Write Authority
+- active Change Unit:
+- write authorization:
+- allowed paths:
+- allowed tools:
+- allowed commands:
+- allowed network targets:
+- secret scope:
+- sensitive categories:
+- approval status:
+- baseline:
+- guarantee:
+- note: Autonomy Boundary is judgment latitude, not write authority.
+
 ## Next Evidence
 - next evidence action:
 - evidence needed for:
@@ -91,6 +106,14 @@ updated_at: 2026-05-06T09:30:15+09:00
 - visibility status:
 - accepted risk refs:
 - follow-up required:
+- close impact:
+
+## Stewardship Impact
+- domain language:
+- module boundary:
+- interface contract:
+- feedback loop:
+- future-change risk:
 - close impact:
 
 ## Goal
@@ -329,6 +352,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 - decision note:
 - decided by:
 - decided at:
+
+## Boundary
+- approval은 product judgment를 resolve하지 않고, correctness를 prove하지 않고, verification이나 Manual QA를 replace하지 않고, acceptance를 imply하지 않으며, residual risk를 accept하지 않는다.
 ````
 
 ### RUN-SUMMARY
@@ -359,8 +385,13 @@ updated_at: 2026-05-06T09:45:10+09:00
 - task_id:
 - change_unit_id:
 - slice type:
+- write authorization:
 - allowed paths:
 - allowed tools:
+- allowed commands:
+- allowed network targets:
+- secret scope:
+- sensitive categories:
 - approval refs:
 
 ## Changed Files
@@ -507,6 +538,12 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 # EVAL-0001 Verification Result
 
+## Target
+- task_id:
+- change_unit_id: CU-01 | null
+- target_run_id:
+- evaluator_run_id:
+
 ## Verdict
 - verdict: passed | failed | blocked | inconclusive
 - assurance impact:
@@ -616,6 +653,11 @@ updated_at: 2026-05-06T09:40:00+09:00
 ## Scope
 - direct run scope:
 - limits:
+- write authorization:
+- allowed paths:
+- allowed tools:
+- allowed commands:
+- approval refs:
 
 ## Changed Files
 - `path/to/file`
@@ -625,7 +667,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 - approval_scope:
 - test:
 - build:
-- docs_consistency:
+- context_hygiene_check:
 
 ## Outcome
 - result summary:
@@ -837,8 +879,8 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Identity
 - task_id:
-- change_unit_id:
-- profile: ui_quality | workflow | copy | accessibility | browser_smoke | performance_smoke | none
+- change_unit_id: CU-01 | null
+- qa_profile: ui_quality | workflow | copy | accessibility | browser_smoke | performance_smoke | other
 - required: yes | no
 - performed by:
 
@@ -910,6 +952,12 @@ updated_at: 2026-05-06T09:30:15+09:00
 - latest evidence:
 - residual risk:
 - source refs:
+
+## Approval-Shaped Context, If Applicable
+- decision_kind=approval scope:
+- sensitive categories:
+- separate Decision Packet이 필요한 product judgment:
+- approval boundary:
 
 ## What User Is Deciding
 - decision:
@@ -1144,6 +1192,20 @@ Autonomy Boundary:
 - user judgment required: {user_judgment_required}
 - AFK stop conditions: {afk_stop_conditions}
 
+Write authority:
+- active Change Unit: {active_change_unit_ref|none}
+- write authorization: {write_authorization_ref|none}
+- allowed paths: {allowed_paths}
+- allowed tools: {allowed_tools}
+- allowed commands: {allowed_commands}
+- allowed network targets: {allowed_network_targets}
+- secret scope: {secret_scope}
+- sensitive categories: {sensitive_categories}
+- approval status: {approval_status}
+- baseline: {baseline_ref|none}
+- guarantee: {guarantee_display}
+- note: Autonomy Boundary is judgment latitude, not write authority.
+
 Next evidence:
 - action: {next_evidence_action}
 - needed for: {evidence_needed_for}
@@ -1267,8 +1329,9 @@ QA result를 기록하시겠습니까?
 - `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`는 canonical document가 아니라 canonical record에서 만든 projection이다.
 - `MANUAL-QA`는 record projection이다. Close-relevant gate는 `qa_gate`로 남는다.
 - `DEC`는 Decision Packet visibility projection이다. Core가 user decision 또는 reconcile action을 기록하기 전에는 decision을 resolve하지 않는다.
-- `JOURNEY-CARD`는 compact current-position projection이다. Write를 authorize하거나, decision을 resolve하거나, risk를 accept하거나, work를 close하지 않는다.
-- `TASK`, `DEC`, `JOURNEY-CARD`, Change Unit block의 Autonomy Boundary text는 judgment latitude만 설명한다. Scope와 approval은 별도 owner record와 gate로 남는다.
+- `JOURNEY-CARD`는 compact current-position projection이다. Write를 authorize하거나, decision을 resolve하거나, risk를 accept하거나, evidence를 satisfy하거나, verification 또는 Manual QA를 replace하거나, work를 close하지 않는다.
+- `TASK`, `DEC`, `JOURNEY-CARD`, Change Unit block의 Autonomy Boundary text는 judgment latitude만 설명한다. Write Authority와 Write Authorization display는 별도로 남고, scope와 approval은 별도 owner record와 gate로 남는다.
+- Write Authority text는 current scope, approval, baseline, guarantee, Write Authorization ref에서 만든 display다. Work를 authorize하거나, evidence를 prove하거나, verification 또는 Manual QA를 replace하거나, acceptance를 imply하거나, residual risk를 accept하지 않는다.
 - Residual-risk text는 residual-risk record와 accepted-risk ref에서 만든 projection이다. Detached verification이나 acceptance를 만들지 않는다.
 - `EVAL`은 independence context를 보여줘야 한다. Passed verdict만으로는 `detached_verified`가 생기지 않기 때문이다.
 - `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `DIRECT-RESULT`는 large evidence를 embed하지 않고 artifact ref로 evidence file에 link한다.

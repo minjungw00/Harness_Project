@@ -20,7 +20,7 @@ It does not define canonical kernel state, MCP request/response schemas, SQLite 
 10. Large logs, diffs, traces, screenshots, bundles, and checkpoints are linked by artifact refs instead of embedded.
 11. Projection failure or staleness never changes the underlying task result.
 12. User-facing cards may use friendly labels, but canonical gate names remain the kernel fields.
-13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Change Unit DAG, and Residual Risk displays are non-canonical projections from owner records and artifact refs.
+13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority, Change Unit DAG, and Residual Risk displays are non-canonical projections from owner records and artifact refs.
 
 ## Document Authority Matrix
 
@@ -30,8 +30,9 @@ It does not define canonical kernel state, MCP request/response schemas, SQLite 
 | Task continuity | `state.sqlite` Task, Change Unit, Run, Evidence Manifest, Eval, Manual QA, Decision Packet, Approval, Residual Risk, acceptance/close records, artifact refs, `journey_spine_entries` when needed, and `state.sqlite.task_events` | `TASK` Journey Spine | Core transition or reconcile, Journey reconstruction, then projector |
 | Decision Packet | `state.sqlite.decision_packets`, related `decision_gate` state, decision events, related approval or reconcile records, artifact refs, and linked `state.sqlite.residual_risks` when applicable | `DEC` / `DECISION-PACKET`, `TASK` Pending Decisions, Journey Card decision line | `request_user_decision` / `record_user_decision`, then projector |
 | Journey Spine | `state.sqlite` Task, Change Unit, Run, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Residual Risk, acceptance/close records, artifact refs, `journey_spine_entries` when needed, and `state.sqlite.task_events` | `TASK` Journey Spine section, resume views, Journey Spine-oriented cards | Core transition or reconcile, Journey reconstruction, then projector |
-| Journey Card | current `state.sqlite` Task state, gates, active Change Unit, Autonomy Boundary summary, active Decision Packet refs, residual-risk summary, latest evidence/eval/QA/report refs, and projection freshness | `JOURNEY-CARD`, status card, `harness.status` card text | Read or projection refresh from current state; never direct card edit |
+| Journey Card | current `state.sqlite` Task state, gates, active Change Unit, Autonomy Boundary summary, active Decision Packet refs, residual-risk summary, latest evidence/eval/QA/report refs, and projection freshness | `JOURNEY-CARD`, status card, `harness.status` card text, `harness.next` current-position text, significant resume output | Read or projection refresh from current state; never direct card edit |
 | Autonomy Boundary | active `state.sqlite.change_units` Autonomy Boundary fields plus related Decision Packet resolutions and events | `TASK` Autonomy Boundary, Change Unit block, Journey Card autonomy line, related `DEC` | shaping update or user Decision Packet resolution, then projector |
+| Write Authorization | `state.sqlite.write_authorizations` plus related Task, Change Unit, approval, Decision Packet, baseline, and consumed Run refs | `TASK` write authority summary, Journey Card write authority line, `RUN-SUMMARY` relation | `prepare_write` creates or returns it; `record_run` consumes it, then projector |
 | Change Unit DAG | `state.sqlite.change_units`, `state.sqlite.change_unit_dependencies`, dependency-related events, and active Task state | `TASK` Change Unit Dependencies / DAG summary | shaping update or reconcile, then projector |
 | Residual Risk | `state.sqlite.residual_risks`, accepted-risk events/refs, related Decision Packets, evidence/QA/eval refs, and artifact refs | `TASK` Residual Risk, `DEC` accepted-risk context, Journey Card residual-risk line | Core transition from decision, evidence, QA, Eval, reconcile, or close flow, then projector |
 | User Notes | human-editable input -> `reconcile_items` -> accepted state event/record | `TASK` User Notes and Proposals | human edit, reconcile decision, Core event |
@@ -59,6 +60,8 @@ Required authority statements:
 - Journey Spine: reconstructed from owner records, artifact refs, `journey_spine_entries` supplements, and `state.sqlite.task_events`; it is not its own authority record
 - Journey Card: derived display from current state and refs; it is never canonical state
 - Autonomy Boundary: active `state.sqlite.change_units` boundary fields -> projection surfaces; it is judgment latitude, not scope authority
+- Write Authority: derived display from active scope, approval, Write Authorization, baseline, and guarantee refs; it is never canonical state and cannot authorize work
+- Write Authorization: `state.sqlite.write_authorizations` records a specific allowed write attempt; it is not scope, approval, evidence, verification, QA, acceptance, or residual-risk acceptance
 - Change Unit DAG: `state.sqlite.change_unit_dependencies` and Change Unit refs -> dependency projection; it is not a scheduler or authorization surface
 - Residual Risk: `state.sqlite.residual_risks` and accepted-risk refs -> residual-risk displays
 
@@ -69,7 +72,7 @@ The boundary is deliberately strict:
 | Item | What it is | Authority |
 |---|---|---|
 | Raw artifact | Durable evidence file such as a diff, log, screenshot, checkpoint, bundle, or manifest file | artifact store |
-| State record | Canonical structured record such as Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Eval, Manual QA record, Evidence Manifest, Artifact record, or Reconcile Item | `state.sqlite` |
+| State record | Canonical structured record such as Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Write Authorization, Eval, Manual QA record, Evidence Manifest, Artifact record, or Reconcile Item | `state.sqlite` |
 | Markdown report | Human-readable projection from records and artifact refs | projector output |
 
 These report kinds are projections or state-backed records by default. They can link to evidence files in the artifact store, and an export can include snapshots of them, but that does not make the Markdown report canonical evidence.
@@ -143,13 +146,15 @@ Projection templates have three tiers.
 
 Main docs define each template's purpose and source records only. Full template bodies live in [Appendix A](appendix/A-template-library.md).
 
+Persisted `JOURNEY-CARD` Markdown is optional. Current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows is required for agency conformance.
+
 ## Required MVP Templates
 
 ### TASK
 
-Purpose: the continuity projection for the active work. It summarizes where the work is, judgment context, Autonomy Boundary, next evidence, residual risk, mode, lifecycle phase, next action, current gates, active Change Unit, pending decisions, evidence, report refs, and projection freshness.
+Purpose: the continuity projection for the active work. It summarizes where the work is, judgment context, Autonomy Boundary, Write Authority, Stewardship Impact, next evidence, residual risk, mode, lifecycle phase, next action, current gates, active Change Unit, pending decisions, evidence, report refs, and projection freshness.
 
-Sources: `state.sqlite` Task, task gates, active Change Unit, Change Unit dependencies, Decision Packets, Residual Risks, latest Run, latest Evidence Manifest, latest Eval, latest Manual QA record, approval records, Journey Spine source records, artifact refs, projection freshness.
+Sources: `state.sqlite` Task, task gates, active Change Unit, Change Unit dependencies, Write Authorization records, Write Authority display inputs, Decision Packets, Residual Risks, latest Run, latest Evidence Manifest, latest Eval, latest Manual QA record, approval records, Journey Spine source records, Domain Language, Module Map, Interface Contract, design-quality validator results, artifact refs, projection freshness.
 
 Human-editable area: User Notes and Proposals.
 
@@ -159,13 +164,13 @@ Purpose: a readable approval request and decision record for sensitive change.
 
 Sources: approval record, related Decision Packet, optional decision request routing record if implementation keeps one, Change Unit scope, sensitive categories, allowed paths/tools/commands/network/secrets, baseline, expiry, alternatives, decision note.
 
-Boundary: approval does not prove correctness, satisfy evidence, replace verification, replace Manual QA, or imply acceptance.
+Boundary: approval does not resolve product judgment, prove correctness, satisfy evidence, replace verification, replace Manual QA, imply acceptance, or accept residual risk.
 
 ### RUN-SUMMARY
 
 Purpose: a readable summary of an execution run.
 
-Sources: run record, actor/surface identity, baseline, Change Unit, changed paths, command results, validator results, artifact refs, evidence updates, follow-ups.
+Sources: run record, actor/surface identity, baseline, Change Unit, consumed Write Authorization ref when present, changed paths, command results, validator results, artifact refs, evidence updates, follow-ups.
 
 Boundary: raw logs and diffs stay as artifacts; the report links to them.
 
@@ -189,9 +194,9 @@ Boundary: an Eval verdict alone does not upgrade assurance. `detached_verified` 
 
 Purpose: a compact result report for small direct work.
 
-Sources: direct run record, changed paths, checks performed, artifact refs, escalation flag, close assurance.
+Sources: direct run record, consumed Write Authorization ref when present for direct product writes, changed paths, checks performed, artifact refs, escalation flag, close assurance.
 
-Boundary: direct work may close self-checked by default, unless policy or the user requires detached verification or other gates.
+Boundary: direct work may close self-checked by default, unless policy or the user requires detached verification or other gates. A consumed Write Authorization ref may be displayed, but the projection does not become the canonical authorization record.
 
 ## Optional Template Summaries
 
@@ -239,11 +244,11 @@ Boundary: the Markdown packet is not the decision authority. Only the canonical 
 
 Purpose: a compact current-position card for status and resume surfaces. It answers where the Task is, what blocks or guides judgment, what the agent may do now, what evidence is next, what residual risk remains, and whether the projection is fresh.
 
-Sources: current `state.sqlite` Task state and gates, active Change Unit, Autonomy Boundary summary, active Decision Packet refs, Journey Spine source records, latest Run/Evidence Manifest/Eval/Manual QA/report refs, Residual Risks, artifact refs, and projection freshness.
+Sources: current `state.sqlite` Task state and gates, active Change Unit, Autonomy Boundary summary, Write Authorization records, Write Authority display inputs, approval status, baseline refs, guarantee refs, active Decision Packet refs, Journey Spine source records, latest Run/Evidence Manifest/Eval/Manual QA/report refs, Residual Risks, artifact refs, and projection freshness.
 
 Boundary: the card is derived display. It cannot authorize work, resolve decisions, accept risk, satisfy evidence, replace verification, replace Manual QA, or close the Task.
 
-Rendering note: `harness.status` may return a Journey Card ephemerally without creating a projection job. Freshness metadata applies when the card is rendered or persisted as a projection.
+Rendering note: `harness.status` and `harness.next` may return a Journey Card ephemerally without creating a projection job. Significant resume flows must show current-position Journey Card output for agency conformance. Freshness metadata applies when the card is rendered or persisted as a projection.
 
 ## Status Cards
 
@@ -271,7 +276,7 @@ Projection freshness is computed from state versions, projection job state, mana
 | `EVAL` | verification result recorded | baseline changes after Eval, evidence becomes stale, independence relation invalidated |
 | `DIRECT-RESULT` | direct run closes or escalates | changed file drift, escalation state changes, artifact ref missing |
 | `DEC` / `DECISION-PACKET` | Decision Packet created, requested, resolved, deferred, rejected, blocked, or superseded | packet status, affected scope, current-state context, related approval/reconcile state, residual-risk refs, or evidence refs change |
-| `JOURNEY-CARD` | card is rendered or persisted as a projection; `harness.status` may also return it ephemerally without a projection job | any displayed Task/gate/Change Unit/Decision Packet/Residual Risk/evidence/report/freshness source moves ahead of the rendered card |
+| `JOURNEY-CARD` | card is rendered or persisted as a projection; `harness.status` and `harness.next` may also return it ephemerally without a projection job | any displayed Task/gate/Change Unit/Autonomy Boundary/Write Authorization/approval/baseline/guarantee/Decision Packet/Residual Risk/evidence/report/freshness source moves ahead of the rendered card |
 | `DOMAIN-LANGUAGE` | domain terms change | term conflict, accepted term record changes, related code representation moves |
 | `MODULE-MAP` | module map records change | module path, public interface, dependency direction, or test boundary changes |
 | `INTERFACE-CONTRACT` | interface contract records change | linked interface, caller, compatibility impact, or boundary tests change |

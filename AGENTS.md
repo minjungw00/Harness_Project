@@ -10,3 +10,18 @@ This repo is in documentation redesign mode. Keep this file as a short operating
 - Before product writes, call `prepare_write`; if MCP is unavailable, hold product writes.
 - Use Decision Packets, not broad approval, for blocking product judgment.
 - Use small batches and report changed files.
+
+## Harness Write Gate
+
+Default:
+- Before editing product/runtime/code files, read current Harness status/next and call `harness.prepare_write`.
+- If MCP is unavailable, hold product/runtime/code writes.
+
+Pre-MVP docs-authoring exception:
+- When this repository is being edited to author the Harness documentation itself before a working Harness MCP is available, the user may grant a one-time `DOCS_AUTHORING_OVERRIDE`.
+- The override must list exact allowed paths.
+- It permits only documentation edits in those paths.
+- It is not `prepare_write`, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, task close, or canonical state transition.
+- Do not present a state-derived Journey Card when MCP is unavailable; use “Preflight status.”
+- Do not use this exception for runtime code, product implementation code, generated operational files, secrets, destructive writes, or broad refactors.
+- If no explicit override is present, hold writes.

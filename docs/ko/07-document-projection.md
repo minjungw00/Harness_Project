@@ -20,7 +20,7 @@ Canonical kernel state, MCP request/response schema, SQLite DDL, design-quality 
 10. Large log, diff, trace, screenshot, bundle, checkpoint는 embed하지 않고 artifact ref로 link한다.
 11. Projection failure 또는 staleness는 underlying task result를 절대 바꾸지 않는다.
 12. User-facing card는 friendly label을 사용할 수 있지만 canonical gate name은 kernel field로 남는다.
-13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Change Unit DAG, Residual Risk 표시는 owner record와 artifact ref에서 만든 non-canonical projection이다.
+13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority, Change Unit DAG, Residual Risk 표시는 owner record와 artifact ref에서 만든 non-canonical projection이다.
 
 ## Document Authority Matrix
 
@@ -30,8 +30,9 @@ Canonical kernel state, MCP request/response schema, SQLite DDL, design-quality 
 | Task continuity | `state.sqlite` Task, Change Unit, Run, Evidence Manifest, Eval, Manual QA, Decision Packet, Approval, Residual Risk, acceptance/close record, artifact ref, 필요할 때 `journey_spine_entries`, `state.sqlite.task_events` | `TASK` Journey Spine | Core transition 또는 reconcile, Journey reconstruction, then projector |
 | Decision Packet | `state.sqlite.decision_packets`, 관련 `decision_gate` state, decision event, 관련 approval 또는 reconcile record, artifact ref, 필요할 때 연결된 `state.sqlite.residual_risks` | `DEC` / `DECISION-PACKET`, `TASK` Pending Decisions, Journey Card decision line | `request_user_decision` / `record_user_decision`, then projector |
 | Journey Spine | `state.sqlite` Task, Change Unit, Run, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Residual Risk, acceptance/close record, artifact ref, 필요할 때 `journey_spine_entries`, `state.sqlite.task_events` | `TASK` Journey Spine section, resume view, Journey Spine-oriented card | Core transition 또는 reconcile, Journey reconstruction, then projector |
-| Journey Card | current `state.sqlite` Task state, gate, active Change Unit, Autonomy Boundary summary, active Decision Packet ref, residual-risk summary, latest evidence/eval/QA/report ref, projection freshness | `JOURNEY-CARD`, status card, `harness.status` card text | current state에서 read 또는 projection refresh; card를 직접 edit하지 않음 |
+| Journey Card | current `state.sqlite` Task state, gate, active Change Unit, Autonomy Boundary summary, active Decision Packet ref, residual-risk summary, latest evidence/eval/QA/report ref, projection freshness | `JOURNEY-CARD`, status card, `harness.status` card text, `harness.next` current-position text, significant resume output | current state에서 read 또는 projection refresh; card를 직접 edit하지 않음 |
 | Autonomy Boundary | active `state.sqlite.change_units` Autonomy Boundary field와 관련 Decision Packet resolution/event | `TASK` Autonomy Boundary, Change Unit block, Journey Card autonomy line, related `DEC` | shaping update 또는 user Decision Packet resolution, then projector |
+| Write Authorization | `state.sqlite.write_authorizations`와 관련 Task, Change Unit, approval, Decision Packet, baseline, consumed Run ref | `TASK` write authority summary, Journey Card write authority line, `RUN-SUMMARY` relation | `prepare_write`가 create 또는 return하고, `record_run`이 consume한 뒤 projector |
 | Change Unit DAG | `state.sqlite.change_units`, `state.sqlite.change_unit_dependencies`, dependency 관련 event, active Task state | `TASK` Change Unit Dependencies / DAG summary | shaping update 또는 reconcile, then projector |
 | Residual Risk | `state.sqlite.residual_risks`, accepted-risk event/ref, related Decision Packet, evidence/QA/eval ref, artifact ref | `TASK` Residual Risk, `DEC` accepted-risk context, Journey Card residual-risk line | decision, evidence, QA, Eval, reconcile 또는 close flow에서 Core transition, then projector |
 | User Notes | human-editable input -> `reconcile_items` -> accepted state event/record | `TASK` User Notes and Proposals | human edit, reconcile decision, Core event |
@@ -59,6 +60,8 @@ Required authority statements:
 - Journey Spine: owner record, artifact ref, `journey_spine_entries` supplement, `state.sqlite.task_events`에서 재구성한다. 자체 authority record가 아니다.
 - Journey Card: current state와 ref에서 만든 derived display다. 절대 canonical state가 아니다.
 - Autonomy Boundary: active `state.sqlite.change_units` boundary field -> projection surface. 판단 재량이지 scope authority가 아니다.
+- Write Authority: active scope, approval, Write Authorization, baseline, guarantee ref에서 만든 derived display다. 절대 canonical state가 아니며 work를 authorize할 수 없다.
+- Write Authorization: `state.sqlite.write_authorizations`는 specific allowed write attempt를 기록한다. Scope, approval, evidence, verification, QA, acceptance, residual-risk acceptance가 아니다.
 - Change Unit DAG: `state.sqlite.change_unit_dependencies`와 Change Unit ref -> dependency projection. scheduler 또는 authorization surface가 아니다.
 - Residual Risk: `state.sqlite.residual_risks`와 accepted-risk ref -> residual-risk display
 
@@ -69,7 +72,7 @@ Required authority statements:
 | Item | What it is | Authority |
 |---|---|---|
 | Raw artifact | diff, log, screenshot, checkpoint, bundle, manifest file 같은 durable evidence file | artifact store |
-| State record | Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Eval, Manual QA record, Evidence Manifest, Artifact record, Reconcile Item 같은 canonical structured record | `state.sqlite` |
+| State record | Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Write Authorization, Eval, Manual QA record, Evidence Manifest, Artifact record, Reconcile Item 같은 canonical structured record | `state.sqlite` |
 | Markdown report | record와 artifact ref에서 만든 human-readable projection | projector output |
 
 이 report kind는 기본적으로 projection 또는 state-backed record다. Artifact store의 evidence file에 link할 수 있고 export가 snapshot을 포함할 수 있지만, 그렇다고 Markdown report가 canonical evidence가 되지는 않는다.
@@ -143,13 +146,15 @@ Projection template에는 세 tier가 있다.
 
 Main doc은 각 template의 purpose와 source record만 정의한다. Full template body는 [Appendix A](appendix/A-template-library.md)에 있다.
 
+Persisted `JOURNEY-CARD` Markdown은 optional이다. `harness.status`, `harness.next`, significant resume flow의 current-position Journey Card output은 agency conformance에 required다.
+
 ## Required MVP Templates
 
 ### TASK
 
-목적: active work를 위한 continuity projection이다. 작업이 어디에 있는지, judgment context, Autonomy Boundary, next evidence, residual risk, mode, lifecycle phase, next action, current gate, active Change Unit, pending decision, evidence, report ref, projection freshness를 요약한다.
+목적: active work를 위한 continuity projection이다. 작업이 어디에 있는지, judgment context, Autonomy Boundary, Write Authority, Stewardship Impact, next evidence, residual risk, mode, lifecycle phase, next action, current gate, active Change Unit, pending decision, evidence, report ref, projection freshness를 요약한다.
 
-Source: `state.sqlite` Task, task gate, active Change Unit, Change Unit dependency, Decision Packet, Residual Risk, latest Run, latest Evidence Manifest, latest Eval, latest Manual QA record, approval record, Journey Spine source record, artifact ref, projection freshness.
+Source: `state.sqlite` Task, task gate, active Change Unit, Change Unit dependency, Write Authorization record, Write Authority display input, Decision Packet, Residual Risk, latest Run, latest Evidence Manifest, latest Eval, latest Manual QA record, approval record, Journey Spine source record, Domain Language, Module Map, Interface Contract, design-quality validator result, artifact ref, projection freshness.
 
 Human-editable area: User Notes and Proposals.
 
@@ -159,13 +164,13 @@ Human-editable area: User Notes and Proposals.
 
 Source: approval record, related Decision Packet, 구현이 별도 routing record를 둔다면 optional decision request routing record, Change Unit scope, sensitive category, allowed path/tool/command/network/secret, baseline, expiry, alternative, decision note.
 
-Boundary: approval은 correctness를 prove하지 않고, evidence를 satisfy하지 않으며, verification이나 Manual QA를 replace하지 않고, acceptance를 imply하지 않는다.
+Boundary: approval은 product judgment를 resolve하지 않고, correctness를 prove하지 않고, evidence를 satisfy하지 않으며, verification이나 Manual QA를 replace하지 않고, acceptance를 imply하지 않으며, residual risk를 accept하지 않는다.
 
 ### RUN-SUMMARY
 
 목적: execution run의 readable summary다.
 
-Source: run record, actor/surface identity, baseline, Change Unit, changed path, command result, validator result, artifact ref, evidence update, follow-up.
+Source: run record, actor/surface identity, baseline, Change Unit, 있는 경우 consumed Write Authorization ref, changed path, command result, validator result, artifact ref, evidence update, follow-up.
 
 Boundary: raw log와 diff는 artifact로 남고 report는 link한다.
 
@@ -189,9 +194,9 @@ Boundary: Eval verdict alone은 assurance를 upgrade하지 않는다. `detached_
 
 목적: 작은 direct work를 위한 compact result report다.
 
-Source: direct run record, changed path, performed check, artifact ref, escalation flag, close assurance.
+Source: direct run record, direct product write에서 있는 경우 consumed Write Authorization ref, changed path, performed check, artifact ref, escalation flag, close assurance.
 
-Boundary: policy 또는 user가 detached verification이나 다른 gate를 요구하지 않는 한 direct work는 기본적으로 self-checked로 close될 수 있다.
+Boundary: policy 또는 user가 detached verification이나 다른 gate를 요구하지 않는 한 direct work는 기본적으로 self-checked로 close될 수 있다. Consumed Write Authorization ref를 표시할 수 있지만, projection이 canonical authorization record가 되지는 않는다.
 
 ## Optional Template Summaries
 
@@ -239,11 +244,11 @@ Boundary: Markdown packet은 decision authority가 아니다. Canonical Decision
 
 목적: status와 resume surface를 위한 compact current-position card다. Task가 어디에 있는지, 무엇이 judgment를 block하거나 guide하는지, agent가 지금 무엇을 할 수 있는지, 다음 evidence가 무엇인지, 남은 residual risk가 무엇인지, projection이 fresh한지를 답한다.
 
-Source: current `state.sqlite` Task state와 gate, active Change Unit, Autonomy Boundary summary, active Decision Packet ref, Journey Spine source record, latest Run/Evidence Manifest/Eval/Manual QA/report ref, Residual Risk, artifact ref, projection freshness.
+Source: current `state.sqlite` Task state와 gate, active Change Unit, Autonomy Boundary summary, Write Authorization records, Write Authority display inputs, approval status, baseline refs, guarantee refs, active Decision Packet ref, Journey Spine source record, latest Run/Evidence Manifest/Eval/Manual QA/report ref, Residual Risk, artifact ref, projection freshness.
 
 Boundary: card는 derived display다. Work를 authorize하거나, decision을 resolve하거나, risk를 accept하거나, evidence를 satisfy하거나, verification 또는 Manual QA를 replace하거나, Task를 close할 수 없다.
 
-Rendering note: `harness.status`는 projection job을 만들지 않고 Journey Card를 ephemeral하게 반환할 수 있다. Freshness metadata는 card가 projection으로 rendered 또는 persisted될 때 적용된다.
+Rendering note: `harness.status`와 `harness.next`는 projection job을 만들지 않고 Journey Card를 ephemeral하게 반환할 수 있다. Significant resume flow는 agency conformance를 위해 current-position Journey Card output을 보여줘야 한다. Freshness metadata는 card가 projection으로 rendered 또는 persisted될 때 적용된다.
 
 ## Status Cards
 
@@ -271,7 +276,7 @@ Projection freshness는 state version, projection job state, managed hash, artif
 | `EVAL` | verification result가 recorded될 때 | Eval 후 baseline changes, evidence becomes stale, independence relation invalidated |
 | `DIRECT-RESULT` | direct run이 closes 또는 escalates될 때 | changed file drift, escalation state changes, artifact ref missing |
 | `DEC` / `DECISION-PACKET` | Decision Packet이 created, requested, resolved, deferred, rejected, blocked, superseded될 때 | packet status, affected scope, current-state context, related approval/reconcile state, residual-risk ref, evidence ref가 바뀔 때 |
-| `JOURNEY-CARD` | card가 rendered 또는 projection으로 persisted될 때. `harness.status`가 projection job 없이 ephemeral하게 반환할 수도 있음 | 표시된 Task/gate/Change Unit/Decision Packet/Residual Risk/evidence/report/freshness source가 rendered card보다 앞서 이동할 때 |
+| `JOURNEY-CARD` | card가 rendered 또는 projection으로 persisted될 때. `harness.status`와 `harness.next`가 projection job 없이 ephemeral하게 반환할 수도 있음 | 표시된 Task/gate/Change Unit/Autonomy Boundary/Write Authorization/approval/baseline/guarantee/Decision Packet/Residual Risk/evidence/report/freshness source가 rendered card보다 앞서 이동할 때 |
 | `DOMAIN-LANGUAGE` | domain terms change | term conflict, accepted term record changes, related code representation moves |
 | `MODULE-MAP` | module map records change | module path, public interface, dependency direction, test boundary changes |
 | `INTERFACE-CONTRACT` | interface contract records change | linked interface, caller, compatibility impact, boundary tests change |
