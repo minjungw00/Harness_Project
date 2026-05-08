@@ -215,7 +215,7 @@ StateRecordRef:
   projection_path: string | null
 ```
 
-Evidence references, approval scope, write authorization, write authority display, and end-to-end paths use these shared shapes:
+Evidence references, approval scope, write authorization, Write Authority Summary display, and end-to-end paths use these shared shapes:
 
 ```yaml
 EvidenceRefs:
@@ -283,11 +283,11 @@ EndToEndPath:
   ui_or_observable_output: string | null
 ```
 
-`WriteAuthorizationSummary` and `WriteAuthoritySummary` are API payload shapes only. This document does not define SQLite DDL for Write Authorization records. `WriteAuthoritySummary` is the display/read shape clients use to show write authority beside Autonomy Boundary judgment latitude.
+`WriteAuthorizationSummary` and `WriteAuthoritySummary` are API payload shapes only. This document does not define SQLite DDL for Write Authorization records. `WriteAuthoritySummary` is the display/read shape clients use to show the Write Authority Summary beside Autonomy Boundary judgment latitude.
 
 `DEC` is the Decision Packet visibility projection job kind. Full DEC and Decision Packet template text is owned by Appendix A, not this API schema file.
 
-Decision Packet, Write Authorization, write authority, Journey Card, Judgment Context, Autonomy Boundary, acceptance visibility, and residual-risk summaries are public MCP schemas. They describe API payloads only; owner docs define the canonical kernel records.
+Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, acceptance visibility, and residual-risk summaries are public MCP schemas. They describe API payloads only; owner docs define the canonical kernel records.
 
 ```yaml
 DecisionPacket:
@@ -502,7 +502,7 @@ For state-changing tools, Core compares `expected_state_version` with current pr
 
 ### `harness.status`
 
-Purpose: return project, surface, active Task, Journey Card, gate, guarantee, projection, active Decision Packet, Autonomy Boundary, write authority, residual-risk, and pending-decision status.
+Purpose: return project, surface, active Task, Journey Card, gate, guarantee, projection, active Decision Packet, Autonomy Boundary, Write Authority Summary, residual-risk, and pending-decision status.
 
 Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
 
@@ -553,7 +553,7 @@ Projection jobs enqueued: none.
 
 `pending_decisions` contains unresolved user-action Decision Packets. `active_decision_packet_refs` contains all Decision Packets relevant to the current phase or requested action, including pending, deferred, blocked, or recently resolved packets. Both fields use `StateRecordRef` entries with `record_kind=decision_packet`.
 
-`write_authority_summary` is returned when `include.write_authority=true`. When `include.journey_card=true`, the same current write authority display may also appear in `journey_card.write_authority_summary`.
+`write_authority_summary` is returned when `include.write_authority=true`. When `include.journey_card=true`, the same current Write Authority Summary display may also appear in `journey_card.write_authority_summary`.
 
 Validators run: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional residual-risk visibility read, optional projection freshness read.
 

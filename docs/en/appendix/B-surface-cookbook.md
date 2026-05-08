@@ -39,7 +39,7 @@ common_fallbacks:
 profile_risks:
   - pre-tool guard strength depends on host environment and must be proven by conformance
   - artifact capture may need wrapper or explicit record_run discipline
-  - long AGENTS.md files can bury Journey Card, Decision Packet, Write Authority, and Autonomy Boundary context
+  - long AGENTS.md files can bury Journey Card, Decision Packet, Write Authority Summary, and Autonomy Boundary context
   - document rewrite sessions can sprawl without batch boundaries
 ```
 
@@ -50,16 +50,16 @@ Generated files may include:
 - MCP config snippet
 - connector manifest entry
 
-Codex-specific connector work should keep `AGENTS.md` short enough to scan every turn. Treat it as an always-on compass, not a procedure manual, schema reference, or project history. Put procedural workflow in a skill, command, or MCP resource so the Journey Card, Decision Packet, Write Authority summary, and Autonomy Boundary do not get buried.
+Codex-specific connector work should keep `AGENTS.md` short enough to scan every turn. Treat it as an always-on compass, not a procedure manual, schema reference, or project history. Put procedural workflow in a skill, command, or MCP resource so the Journey Card, Decision Packet, Write Authority Summary, and Autonomy Boundary do not get buried.
 
 The Codex flow should preserve user agency:
 
 - show the Journey Card before significant work resumes
 - surface a Decision Packet instead of asking for broad approval when product judgment is required
 - ask one blocking question at a time, with a recommendation and uncertainty when available
-- continue AFK only inside the active scoped Change Unit, Autonomy Boundary, and any granted sensitive approval that applies
+- continue AFK only when active Change Unit scope, Autonomy Boundary latitude, and any granted sensitive approval all apply
 - treat the Autonomy Boundary as judgment latitude, not write authority
-- show the Write Authority summary before product writes
+- show the Write Authority Summary before product writes
 - hold product writes if MCP is unavailable
 - stop for planning direction, product trade-offs, QA waiver, verification risk acceptance, and final acceptance
 
@@ -101,7 +101,7 @@ Hook mapping candidates:
 | `Stop` | draft run summary and show verify/QA needs |
 | `PreCompact` | preserve Task summary and artifact refs |
 
-Write-capable Claude Code profiles should show Write Authority before product writes, respect the returned Write Authorization, and record write-capable runs so `record_run` consumes the compatible authorization.
+Write-capable Claude Code profiles should show the Write Authority Summary before product writes, respect the returned Write Authorization, and record write-capable runs so `record_run` consumes the compatible authorization.
 
 Evaluator profiles should be read-only by default. A profile may claim preventive or isolated guarantees only after the connector conformance proves those hooks or boundaries are active.
 
@@ -127,7 +127,7 @@ profile_risks:
   - capture and guard behavior varies by host
 ```
 
-Gemini connectors should keep extension context small. Push the Journey Card or status card, active Decision Packet summary, Autonomy Boundary summary, Change Unit scope, and residual-risk summary near close. Let the agent pull longer standards, domain language, module maps, and interface contracts through MCP resources. Write-capable profiles should show Write Authority before product writes, respect the returned Write Authorization, and ensure `record_run` consumes it.
+Gemini connectors should keep extension context small. Push the Journey Card or status card, active Decision Packet summary, Autonomy Boundary summary, Change Unit scope, and residual-risk summary near close. Let the agent pull longer standards, domain language, module maps, and interface contracts through MCP resources. Write-capable profiles should show the Write Authority Summary before product writes, respect the returned Write Authorization, and ensure `record_run` consumes it.
 
 ## GitHub Copilot Notes
 
@@ -151,7 +151,7 @@ profile_risks:
   - write guard and artifact capture need profile-specific verification
 ```
 
-Copilot connectors should prioritize Journey Card or status card display, MCP tool invocation, Decision Packet display, Autonomy Boundary summary, approval card display for sensitive changes, Manual QA card display, residual-risk visibility near close, and acceptance prompts. For product writes, show Write Authority, respect the returned Write Authorization, and consume it through `record_run`. For terminal/task execution, prefer wrappers that can capture output and associate it with the active Run.
+Copilot connectors should prioritize Journey Card or status card display, MCP tool invocation, Decision Packet display, Autonomy Boundary summary, approval card display for sensitive changes, Manual QA card display, residual-risk visibility near close, and acceptance prompts. For product writes, show the Write Authority Summary, respect the returned Write Authorization, and consume it through `record_run`. For terminal/task execution, prefer wrappers that can capture output and associate it with the active Run.
 
 ## Cursor Notes
 
@@ -174,7 +174,7 @@ profile_risks:
   - guard behavior depends on IDE profile and permissions
 ```
 
-Cursor connectors should keep project rules short and use the skill/playbook plus MCP for procedural depth. Write-capable profiles should show Write Authority before product writes, respect the returned Write Authorization, and record write-capable runs so `record_run` consumes the compatible authorization. Generated project rules should be covered by the connector manifest so local edits become reconcile candidates instead of being overwritten silently.
+Cursor connectors should keep project rules short and use the skill/playbook plus MCP for procedural depth. Write-capable profiles should show the Write Authority Summary before product writes, respect the returned Write Authorization, and record write-capable runs so `record_run` consumes the compatible authorization. Generated project rules should be covered by the connector manifest so local edits become reconcile candidates instead of being overwritten silently.
 
 ## Generated File Details
 
@@ -201,13 +201,13 @@ Use Harness for product code changes, verification, approval, Manual QA, accepta
 - Direct Fast Path: for small direct work, keep Harness mostly invisible with narrow scope, `prepare_write`, changed paths, self-check evidence, and close if no blocker appears; if scope or risk grows, move the same Task to `work`.
 - Work starts with enough shared design to define scope and acceptance criteria.
 - A product write requires `harness.prepare_write`.
-- Show the Write Authority summary before product writes.
+- Show the Write Authority Summary before product writes.
 - If MCP is unavailable, hold product writes.
 - Sensitive categories require approval before proceeding.
 - If a Decision Packet is required, present it instead of asking for broad approval.
 - Ask one blocking question at a time, with a recommendation and uncertainty when available.
 - Stay inside the active scoped Change Unit.
-- AFK implementation is only allowed inside the active scoped Change Unit, Autonomy Boundary, and any granted sensitive approval that applies.
+- AFK implementation is only allowed when active Change Unit scope, Autonomy Boundary latitude, and any granted sensitive approval all apply.
 - Autonomy Boundary is not write authority; still obey `prepare_write`, Change Unit scope, approvals, allowed paths/tools/commands/network/secrets.
 - Planning direction, product trade-offs, QA waiver, verification risk acceptance, and final acceptance are human-held.
 - Record runs, commands, changed files, artifacts, and evidence.
@@ -248,7 +248,7 @@ Before editing product files, call `harness.prepare_write`. An allowed response 
 2. Classify as `advisor`, `direct`, or `work`.
 3. Show the Journey Card before significant work resumes, then confirm scope and the Change Unit.
 4. If product judgment blocks progress, request or show the Decision Packet.
-5. Before editing product files, call `harness.prepare_write`, show the Write Authority summary, and keep the returned Write Authorization for the run.
+5. Before editing product files, call `harness.prepare_write`, show the Write Authority Summary, and keep the returned Write Authorization for the run.
 6. After changes, record runs, changed paths, commands, artifacts, and evidence; write-capable runs consume the compatible Write Authorization.
 7. Verify, record Manual QA, make close-relevant residual risk visible, and request acceptance when needed.
 8. Close.
@@ -276,11 +276,11 @@ For small direct work, keep Harness mostly invisible: use narrow scope, call `ha
 
 ### 4. Before Writing
 - Call `harness.prepare_write`.
-- If allowed, show the Write Authority summary and carry the returned Write Authorization into `harness.record_run`.
+- If allowed, show the Write Authority Summary and carry the returned Write Authorization into `harness.record_run`.
 - If `prepare_write` is blocked, do not edit product files.
 - If MCP is unavailable, hold product writes and report that the surface cannot provide an authoritative write decision.
 - Respect allowed paths, tools, commands, network, and secret scope.
-- Continue AFK only inside the active scoped Change Unit, Autonomy Boundary, and any granted sensitive approval that applies.
+- Continue AFK only when active Change Unit scope, Autonomy Boundary latitude, and any granted sensitive approval all apply.
 - Autonomy Boundary is not write authority; `prepare_write`, Change Unit scope, allowed paths/tools/commands/network/secrets, and sensitive approval still control writes.
 - Stop when approval, scope confirmation, a Decision Packet, or human-held judgment is required.
 - Use `harness.request_user_decision` for blocking product judgment; approval is one decision kind for sensitive changes.

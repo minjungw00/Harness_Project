@@ -26,7 +26,7 @@ Start with the scope and questions.
 If this is small, handle it as direct; if it grows, move it to work.
 Show the Decision Packet with options, recommendation, and uncertainty.
 Approved. The scope is only what you just described.
-Proceed AFK only inside the active scoped Change Unit and Autonomy Boundary; sensitive categories still need granted approval.
+Proceed AFK only when active Change Unit scope and Autonomy Boundary latitude both apply; sensitive categories still need granted approval.
 Start detached verify.
 Decide whether Manual QA is needed.
 Show residual risk before I accept.
@@ -200,7 +200,7 @@ The user may accept verification risk and close the task, but that is a risk-acc
 
 ## What The Agent May Do AFK
 
-AFK implementation means the agent may continue while you are away. It is allowed only inside the active scoped Change Unit and Autonomy Boundary, with granted approval separately required when sensitive categories apply.
+AFK implementation means the agent may continue while you are away. It is allowed only when active Change Unit scope and Autonomy Boundary latitude both apply, with granted approval separately required when sensitive categories apply.
 
 The Autonomy Boundary is not a scope grant. The agent still needs `prepare_write`, active Change Unit scope, allowed paths, allowed tools, allowed commands, and sensitive approval where applicable.
 

@@ -80,7 +80,7 @@ The harness responds by separating those judgments:
 
 Generated documents, stale summaries, or human-edited notes are treated as canonical state. A document change silently changes the operational truth.
 
-The harness responds by treating Markdown reports as projections. Human-editable areas are input surfaces; they become state only through reconcile and accepted state events.
+The harness responds by treating Markdown reports as projections. Human-editable areas are input surfaces; accepted human edits become state only through reconcile or a Core state-changing action.
 
 ## Minimal Harness Kernel
 

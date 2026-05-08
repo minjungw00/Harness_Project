@@ -80,7 +80,7 @@ Harness는 판단을 분리해 대응합니다.
 
 생성된 documents, stale summaries, human-edited notes가 canonical state처럼 취급될 수 있습니다. Document change가 조용히 operational truth를 바꿉니다.
 
-Harness는 Markdown reports를 projections로 취급해 대응합니다. Human-editable areas는 input surfaces이며, reconcile과 accepted state events를 통해서만 state가 됩니다.
+Harness는 Markdown reports를 projections로 취급해 대응합니다. Human-editable areas는 input surfaces이며, 수용된 human edits만 reconcile 또는 Core state-changing action을 통해 state가 됩니다.
 
 ## Minimal Harness Kernel
 

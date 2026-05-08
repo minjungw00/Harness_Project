@@ -308,7 +308,7 @@ MVP implementation이 target하는 단일 agent surface입니다. Kernel과 conn
 
 Task report, approval report, run summary, evidence manifest report, Eval report, direct-result report처럼 state records와 artifact references에서 generated되는 Markdown report입니다.
 
-Named report projection kinds는 기본적으로 projections 또는 records입니다. Evidence-file authority는 registered artifact files에 남습니다.
+Named report projection kinds는 state records와 artifact refs에서 generated되는 projections입니다. Evidence-file authority는 registered artifact files에 남습니다.
 
 ### Residual Risk
 
@@ -340,7 +340,7 @@ Implementation이 plan으로 굳어지기 전에 Task에 대해 최소한으로 
 
 ### State Record
 
-Kernel state 안의 canonical structured record입니다. Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Evidence Manifest, Eval, Manual QA record, Artifact record, Shared Design record, Domain Term, Module Map Item, Interface Contract, TDD Trace, Reconcile Item 등이 있습니다.
+Kernel state 안의 canonical structured record입니다. Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Write Authorization, Evidence Manifest, Eval, Manual QA record, Artifact record, Shared Design record, Domain Term, Module Map Item, Interface Contract, TDD Trace, Reconcile Item 등이 있습니다.
 
 ### Strategic Agency
 
@@ -389,3 +389,11 @@ Trigger/input에서 domain logic, persistence 또는 state, caller/API boundary,
 ### Waiver
 
 Policy가 허용하는 곳에서 gate requirement에 대한 explicit recorded exception입니다. Verification waiver, design waiver, QA waiver는 정의된 rules 아래 허용됩니다. Scope, sensitive approval, required evidence, required acceptance는 successful completion을 위해 waived되지 않습니다.
+
+### Write Authorization
+
+`prepare_write`가 특정 allowed write attempt에 대해 create 또는 return하는 durable state record입니다. Idempotent replay를 제외하면 committed implementation 또는 direct run에 single-use이며, scope, approval, evidence, verification, Manual QA, acceptance, residual-risk visibility를 대체하지 않습니다.
+
+### Write Authority Summary
+
+Intended operation의 current write authority를 보여주는 user-facing display summary입니다. Active Change Unit scope, `prepare_write`, approval, baseline, guarantee, Decision Packet refs, Write Authorization ref에서 derive됩니다. 별도 authority record가 아닌 display이며 그 자체로 work를 authorize하지 않습니다.

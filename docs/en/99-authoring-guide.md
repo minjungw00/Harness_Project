@@ -102,14 +102,14 @@ phrases that put state.sqlite beside a separate event log
 
 If historical comparison needs that idea, immediately clarify that MVP event history is `state.sqlite.task_events`.
 
-Do not write:
+Do not use wording that treats:
 
 ```text
-TASK is canonical state.
-Projection updates state.
-User Notes are the source-of-truth.
-Domain Language is canonical in the Markdown document.
-Report projections are raw artifacts by default.
+TASK, Journey, Markdown, or report text as the state authority.
+Rendering output as if it mutates state.
+User Notes as more than human-editable input.
+DOMAIN-LANGUAGE Markdown as the vocabulary owner.
+Report projections as raw evidence files by default.
 ```
 
 Preferred authority paths:

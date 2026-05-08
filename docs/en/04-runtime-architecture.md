@@ -42,7 +42,7 @@ repo/
     reconcile/pending/
 ```
 
-The repository may hold generated TASK, APR, RUN-SUMMARY, EVAL, DIRECT-RESULT, EVIDENCE-MANIFEST, TDD-TRACE, MANUAL-QA, DOMAIN-LANGUAGE, MODULE-MAP, and INTERFACE-CONTRACT Markdown reports. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; accepted changes flow through reconcile or an MCP tool before they become state records.
+The repository may hold generated TASK, APR, RUN-SUMMARY, EVAL, DIRECT-RESULT, EVIDENCE-MANIFEST, TDD-TRACE, MANUAL-QA, DOMAIN-LANGUAGE, MODULE-MAP, and INTERFACE-CONTRACT Markdown reports. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; accepted changes become state only through reconcile or a Core state-changing action.
 
 ## Harness Server / Installation
 
@@ -159,7 +159,7 @@ The boundary is:
 | State record | Canonical structured record in `state.sqlite` | Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Eval, Manual QA record, Evidence Manifest, Shared Design, Artifact record |
 | Markdown report | Human-readable projection from records and artifact refs | TASK, Journey Card/Spine views, Decision Packet views, APR, RUN-SUMMARY, EVAL, DIRECT-RESULT, EVIDENCE-MANIFEST |
 
-These named report kinds are projections or state-backed records by default. They may refer to evidence files in the artifact store, and an export may include snapshots of them, but that does not make the Markdown report the canonical evidence file.
+These named report kinds are projections generated from state records and artifact refs by default. They may refer to evidence files in the artifact store, and an export may include snapshots of them, but that does not make the Markdown report the canonical evidence file.
 
 ## Projection And Reconcile Flow
 

@@ -1005,6 +1005,8 @@ Compatibility aliases:
 | `docs_consistency` | `context_hygiene_check` |
 | `projection_freshness` | `context_hygiene_check` |
 
+These aliases are old compatibility inputs only; MVP conformance must emit the stable IDs above.
+
 ### Evidence and Verification Profile Implementation Notes
 
 The evidence sufficiency precondition reads only committed records and registered artifacts. Inputs are: Task, `task_gates`, Change Units, Decision Packets, Residual Risks, Shared Designs, Journey Spine Entries, Runs, approvals, Evidence Manifests, Evals, Manual QA records, artifacts, artifact links, and the relevant baseline ref. It computes whether the applicable Evidence Profile is absent, partial, sufficient, stale, or blocked, then updates or blocks through Core according to the kernel rules.

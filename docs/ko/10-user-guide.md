@@ -26,7 +26,7 @@
 작은 수정이면 direct로 처리하고, 커지면 work로 전환해.
 Decision Packet을 옵션, 추천안, 불확실성까지 보여줘.
 승인해. 범위는 방금 설명한 내용까지만이야.
-Active scoped Change Unit과 Autonomy Boundary 안에서만 AFK로 진행해. Sensitive categories에는 별도 granted approval이 필요해.
+Active Change Unit scope와 Autonomy Boundary latitude가 모두 맞을 때만 AFK로 진행해. Sensitive categories에는 별도 granted approval이 필요해.
 detached verify 시작해.
 Manual QA가 필요한지 판단해줘.
 수용하기 전에 residual risk를 보여줘.
@@ -200,7 +200,7 @@ Assurance는 보통 `none`, `self_checked`, `detached_verified`로 보인다. `d
 
 ## AFK로 진행하게 할 때
 
-AFK로 진행한다는 말은 사용자가 자리를 비워도 agent가 계속 진행해도 된다는 뜻이다. 하지만 AFK는 active scoped Change Unit과 Autonomy Boundary 안에서만 허용되며, sensitive categories에는 별도 granted approval이 필요하다.
+AFK로 진행한다는 말은 사용자가 자리를 비워도 agent가 계속 진행해도 된다는 뜻이다. 하지만 AFK는 active Change Unit scope와 Autonomy Boundary latitude가 모두 맞을 때만 허용되며, sensitive categories에는 별도 granted approval이 필요하다.
 
 Autonomy Boundary는 scope grant가 아니다. Agent는 여전히 `prepare_write`, active Change Unit scope, allowed paths, allowed tools, allowed commands, network targets, secret access, applicable한 sensitive approval을 따라야 한다.
 

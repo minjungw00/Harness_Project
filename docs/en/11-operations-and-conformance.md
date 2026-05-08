@@ -718,7 +718,7 @@ input:
       command_results: []
       evidence_updates:
         acceptance_criteria: []
-      self_check_summary: "Self-check cannot count because write authority is missing."
+      self_check_summary: "Self-check cannot count because Write Authorization is missing."
       escalation:
         value: none
         reason: null

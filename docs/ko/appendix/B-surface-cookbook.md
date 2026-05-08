@@ -39,7 +39,7 @@ common_fallbacks:
 profile_risks:
   - pre-tool guard strength depends on host environment and must be proven by conformance
   - artifact capture may need wrapper or explicit record_run discipline
-  - long AGENTS.md files can bury Journey Card, Decision Packet, Write Authority, and Autonomy Boundary context
+  - long AGENTS.md files can bury Journey Card, Decision Packet, Write Authority Summary, and Autonomy Boundary context
   - document rewrite sessions can sprawl without batch boundaries
 ```
 
@@ -50,16 +50,16 @@ Generated file에는 다음이 포함될 수 있다.
 - MCP config snippet
 - connector manifest entry
 
-Codex connector는 `AGENTS.md`를 매 turn 훑을 수 있을 만큼 짧게 유지해야 한다. `AGENTS.md`는 항상 켜져 있는 compass로 두고, 절차 매뉴얼, schema reference, project history로 만들지 않는다. 자세한 workflow는 skill, command, MCP resource에 두어 Journey Card, Decision Packet, Write Authority summary, Autonomy Boundary가 묻히지 않게 한다.
+Codex connector는 `AGENTS.md`를 매 turn 훑을 수 있을 만큼 짧게 유지해야 한다. `AGENTS.md`는 항상 켜져 있는 compass로 두고, 절차 매뉴얼, schema reference, project history로 만들지 않는다. 자세한 workflow는 skill, command, MCP resource에 두어 Journey Card, Decision Packet, Write Authority Summary, Autonomy Boundary가 묻히지 않게 한다.
 
 Codex flow는 user agency를 보존해야 한다.
 
 - 중요한 work를 재개하기 전에 Journey Card를 보여준다.
 - Product judgment가 필요하면 포괄적인 승인을 묻지 말고 Decision Packet을 보여준다.
 - 한 번에 하나의 blocking question만 묻고, 가능하면 recommendation과 uncertainty를 함께 제시한다.
-- AFK 진행은 active scoped Change Unit, Autonomy Boundary, 적용되는 granted sensitive approval 안에서만 허용한다.
+- AFK 진행은 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive approval이 모두 맞을 때만 허용한다.
 - Autonomy Boundary는 judgment latitude이지 write authority가 아니다.
-- Product write 전 Write Authority summary를 보여준다.
+- Product write 전 Write Authority Summary를 보여준다.
 - MCP가 unavailable이면 product write를 hold한다.
 - Planning direction, product trade-off, QA waiver, verification risk acceptance, final acceptance가 필요하면 멈춘다.
 
@@ -101,7 +101,7 @@ Hook mapping candidate:
 | `Stop` | run summary draft 및 verify/QA need 표시 |
 | `PreCompact` | Task summary와 artifact ref preserve |
 
-Write-capable Claude Code profile은 product write 전에 Write Authority를 보여주고, 반환된 Write Authorization을 존중하며, write-capable run을 기록해 `record_run`이 compatible authorization을 consume하게 해야 한다.
+Write-capable Claude Code profile은 product write 전에 Write Authority Summary를 보여주고, 반환된 Write Authorization을 존중하며, write-capable run을 기록해 `record_run`이 compatible authorization을 consume하게 해야 한다.
 
 Evaluator profile은 기본적으로 read-only여야 한다. Connector conformance가 해당 hook 또는 boundary가 active임을 prove한 뒤에만 profile이 preventive 또는 isolated guarantee를 claim할 수 있다.
 
@@ -127,7 +127,7 @@ profile_risks:
   - capture and guard behavior varies by host
 ```
 
-Gemini connector는 extension context를 작게 유지해야 한다. Journey Card 또는 status card, active Decision Packet summary, Autonomy Boundary summary, Change Unit scope, close 근처의 residual-risk summary만 push하고, longer standard, domain language, module map, interface contract는 agent가 MCP resource로 pull하게 한다. Write-capable profile은 product write 전에 Write Authority를 보여주고, 반환된 Write Authorization을 존중하며, `record_run`이 이를 consume하게 해야 한다.
+Gemini connector는 extension context를 작게 유지해야 한다. Journey Card 또는 status card, active Decision Packet summary, Autonomy Boundary summary, Change Unit scope, close 근처의 residual-risk summary만 push하고, longer standard, domain language, module map, interface contract는 agent가 MCP resource로 pull하게 한다. Write-capable profile은 product write 전에 Write Authority Summary를 보여주고, 반환된 Write Authorization을 존중하며, `record_run`이 이를 consume하게 해야 한다.
 
 ## GitHub Copilot Notes
 
@@ -151,7 +151,7 @@ profile_risks:
   - write guard and artifact capture need profile-specific verification
 ```
 
-Copilot connector는 Journey Card 또는 status card display, MCP tool invocation, Decision Packet display, Autonomy Boundary summary, sensitive change용 approval card display, Manual QA card display, close 근처의 residual-risk visibility, acceptance prompt를 우선해야 한다. Product write에는 Write Authority를 보여주고, 반환된 Write Authorization을 존중하며, `record_run`으로 consume한다. Terminal/task execution에는 output을 capture하고 active Run에 associate할 수 있는 wrapper를 선호한다.
+Copilot connector는 Journey Card 또는 status card display, MCP tool invocation, Decision Packet display, Autonomy Boundary summary, sensitive change용 approval card display, Manual QA card display, close 근처의 residual-risk visibility, acceptance prompt를 우선해야 한다. Product write에는 Write Authority Summary를 보여주고, 반환된 Write Authorization을 존중하며, `record_run`으로 consume한다. Terminal/task execution에는 output을 capture하고 active Run에 associate할 수 있는 wrapper를 선호한다.
 
 ## Cursor Notes
 
@@ -174,7 +174,7 @@ profile_risks:
   - guard behavior depends on IDE profile and permissions
 ```
 
-Cursor connector는 project rule을 짧게 유지하고, 절차의 깊이는 skill/playbook과 MCP로 제공해야 한다. Write-capable profile은 product write 전에 Write Authority를 보여주고, 반환된 Write Authorization을 존중하며, write-capable run을 기록해 `record_run`이 compatible authorization을 consume하게 해야 한다. Generated project rule은 connector manifest로 cover해야 하며, local edit는 조용히 overwrite되지 않고 reconcile candidate가 되어야 한다.
+Cursor connector는 project rule을 짧게 유지하고, 절차의 깊이는 skill/playbook과 MCP로 제공해야 한다. Write-capable profile은 product write 전에 Write Authority Summary를 보여주고, 반환된 Write Authorization을 존중하며, write-capable run을 기록해 `record_run`이 compatible authorization을 consume하게 해야 한다. Generated project rule은 connector manifest로 cover해야 하며, local edit는 조용히 overwrite되지 않고 reconcile candidate가 되어야 한다.
 
 ## Generated File Details
 
@@ -201,13 +201,13 @@ Product code change, verification, approval, Manual QA, acceptance, resume, clos
 - Direct Fast Path: 작은 direct work는 narrow scope, `prepare_write`, changed path, self-check evidence, blocker가 없을 때 close로 Harness를 대부분 보이지 않게 유지한다. Scope 또는 risk가 커지면 같은 Task를 `work`로 옮긴다.
 - Work는 scope와 acceptance criteria를 정할 만큼의 shared design에서 시작한다.
 - Product write에는 `harness.prepare_write`가 필요하다.
-- Product write 전 Write Authority summary를 보여준다.
+- Product write 전 Write Authority Summary를 보여준다.
 - MCP가 unavailable이면 product write를 hold한다.
 - Sensitive category는 진행 전에 approval이 필요하다.
 - Decision Packet이 필요하면 포괄적인 승인을 묻지 말고 packet을 보여준다.
 - 한 번에 하나의 blocking question만 묻고, 가능하면 recommendation과 uncertainty를 함께 제시한다.
 - Active scoped Change Unit 안에 머문다.
-- AFK implementation은 active scoped Change Unit, Autonomy Boundary, 적용되는 granted sensitive approval 안에서만 허용된다.
+- AFK implementation은 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive approval이 모두 맞을 때만 허용된다.
 - Autonomy Boundary는 write authority가 아니다. `prepare_write`, Change Unit scope, approval, allowed path/tool/command/network/secret을 계속 따른다.
 - Planning direction, product trade-off, QA waiver, verification risk acceptance, final acceptance는 사람이 판단한다.
 - Run, command, changed file, artifact, evidence를 기록한다.
@@ -248,7 +248,7 @@ Product file을 edit하기 전에 `harness.prepare_write`를 call한다. Allowed
 2. `advisor`, `direct`, `work`로 분류한다.
 3. 중요한 work를 재개하기 전에 Journey Card를 보여주고, scope와 Change Unit을 확인한다.
 4. Product judgment가 진행을 막으면 Decision Packet을 request 또는 display한다.
-5. Product file을 edit하기 전에 `harness.prepare_write`를 call하고, Write Authority summary를 보여주며, 반환된 Write Authorization을 run에 사용한다.
+5. Product file을 edit하기 전에 `harness.prepare_write`를 call하고, Write Authority Summary를 보여주며, 반환된 Write Authorization을 run에 사용한다.
 6. 변경 후 run, changed path, command, artifact, evidence를 기록한다. Write-capable run은 compatible Write Authorization을 consume한다.
 7. 필요할 때 verify, Manual QA 기록, close-relevant residual risk visibility, acceptance 요청을 진행한다.
 8. Close한다.
@@ -276,11 +276,11 @@ Product file을 edit하기 전에 `harness.prepare_write`를 call한다. Allowed
 
 ### 4. Before Writing
 - `harness.prepare_write`를 call한다.
-- Allowed이면 Write Authority summary를 보여주고 반환된 Write Authorization을 `harness.record_run`으로 넘긴다.
+- Allowed이면 Write Authority Summary를 보여주고 반환된 Write Authorization을 `harness.record_run`으로 넘긴다.
 - `prepare_write`가 blocked이면 product file을 edit하지 않는다.
 - MCP가 unavailable이면 product write를 hold하고, surface가 authoritative write decision을 제공할 수 없다고 보고한다.
 - Allowed path, tool, command, network, secret scope를 존중한다.
-- AFK는 active scoped Change Unit, Autonomy Boundary, 적용되는 granted sensitive approval 안에서만 계속한다.
+- AFK는 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive approval이 모두 맞을 때만 계속한다.
 - Autonomy Boundary는 write authority가 아니다. `prepare_write`, Change Unit scope, allowed path/tool/command/network/secret, sensitive approval이 여전히 write를 control한다.
 - Approval, scope confirmation, Decision Packet, human-held judgment가 필요하면 멈춘다.
 - Blocking product judgment에는 `harness.request_user_decision`을 사용한다. Approval은 sensitive change를 위한 decision kind 중 하나다.

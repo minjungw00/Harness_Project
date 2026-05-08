@@ -16,11 +16,11 @@ Canonical kernel state, MCP request/response schema, SQLite DDL, design-quality 
 6. Front matter는 identity, projection version, status summary, freshness metadata만 가진다.
 7. Managed block은 projector가 생성하며 regenerate될 수 있다.
 8. Human-editable section은 note와 proposal을 위한 input surface다.
-9. Human edit는 reconcile 또는 MCP tool이 accepted state event나 record를 기록한 뒤에만 state를 바꾼다.
+9. 수용된 human edits만 reconcile 또는 Core state-changing action을 통해 state가 된다.
 10. Large log, diff, trace, screenshot, bundle, checkpoint는 embed하지 않고 artifact ref로 link한다.
 11. Projection failure 또는 staleness는 underlying task result를 절대 바꾸지 않는다.
 12. User-facing card는 friendly label을 사용할 수 있지만 canonical gate name은 kernel field로 남는다.
-13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority, Change Unit DAG, Residual Risk, Stewardship Impact 표시는 owner record와 artifact ref에서 만든 non-canonical projection이다.
+13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Change Unit DAG, Residual Risk, Stewardship Impact 표시는 owner record와 artifact ref에서 만든 non-canonical projection이다.
 
 ## Document Authority Matrix
 
@@ -32,7 +32,7 @@ Canonical kernel state, MCP request/response schema, SQLite DDL, design-quality 
 | Journey Spine | `state.sqlite` Task, Change Unit, Run, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Residual Risk, acceptance/close record, artifact ref, 필요할 때 `journey_spine_entries`, `state.sqlite.task_events` | `TASK` Journey Spine section, resume view, Journey Spine-oriented card | Core transition 또는 reconcile, Journey reconstruction, then projector |
 | Journey Card | current `state.sqlite` Task state, gate, active Change Unit, Autonomy Boundary summary, active Decision Packet ref, residual-risk summary, latest evidence/eval/QA/report ref, projection freshness | `JOURNEY-CARD`, status card, `harness.status` card text, `harness.next` current-position text, significant resume output | current state에서 read 또는 projection refresh; card를 직접 edit하지 않음 |
 | Autonomy Boundary | active `state.sqlite.change_units` Autonomy Boundary field와 관련 Decision Packet resolution/event | `TASK` Autonomy Boundary, Change Unit block, Journey Card autonomy line, related `DEC` | shaping update 또는 user Decision Packet resolution, then projector |
-| Write Authorization | `state.sqlite.write_authorizations`와 관련 Task, Change Unit, approval, Decision Packet, baseline, consumed Run ref | `TASK` write authority summary, Journey Card write authority line, `RUN-SUMMARY` relation | `prepare_write`가 create 또는 return하고, `record_run`이 consume한 뒤 projector |
+| Write Authorization | `state.sqlite.write_authorizations`와 관련 Task, Change Unit, approval, Decision Packet, baseline, consumed Run ref | `TASK` Write Authority Summary, Journey Card Write Authority Summary line, `RUN-SUMMARY` relation | `prepare_write`가 create 또는 return하고, `record_run`이 consume한 뒤 projector |
 | Change Unit DAG | `state.sqlite.change_units`, `state.sqlite.change_unit_dependencies`, dependency 관련 event, active Task state | `TASK` Change Unit Dependencies / DAG summary | shaping update 또는 reconcile, then projector |
 | Residual Risk | `state.sqlite.residual_risks`, accepted-risk event/ref, related Decision Packet, evidence/QA/eval ref, artifact ref | `TASK` Residual Risk, `DEC` accepted-risk context, Journey Card residual-risk line | decision, evidence, QA, Eval, reconcile 또는 close flow에서 Core transition, then projector |
 | Stewardship Impact Summary | `domain_terms`, `module_map_items`, `interface_contracts`, feedback loop/TDD record, `state.sqlite.residual_risks`, `state.sqlite.decision_packets`, policy validator result, related ref | `TASK` Stewardship Impact와 status/resume stewardship display | Owner record update, validator result, reconcile, close flow, then projector |
@@ -61,7 +61,7 @@ Required authority statements:
 - Journey Spine: owner record, artifact ref, `journey_spine_entries` supplement, `state.sqlite.task_events`에서 재구성한다. 자체 authority record가 아니다.
 - Journey Card: current state와 ref에서 만든 derived display다. 절대 canonical state가 아니다.
 - Autonomy Boundary: active `state.sqlite.change_units` boundary field -> projection surface. 판단 재량이지 scope authority가 아니다.
-- Write Authority: active scope, approval, Write Authorization, baseline, guarantee ref에서 만든 derived display다. 절대 canonical state가 아니며 work를 authorize할 수 없다.
+- Write Authority Summary: active scope, approval, Write Authorization, baseline, guarantee ref에서 만든 derived display다. 절대 canonical state가 아니며 work를 authorize할 수 없다.
 - Write Authorization: `state.sqlite.write_authorizations`는 specific allowed write attempt를 기록한다. Scope, approval, evidence, verification, QA, acceptance, residual-risk acceptance가 아니다.
 - Change Unit DAG: `state.sqlite.change_unit_dependencies`와 Change Unit ref -> dependency projection. scheduler 또는 authorization surface가 아니다.
 - Residual Risk: `state.sqlite.residual_risks`와 accepted-risk ref -> residual-risk display
@@ -77,7 +77,7 @@ Required authority statements:
 | State record | Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Write Authorization, Eval, Manual QA record, Evidence Manifest, Artifact record, Reconcile Item 같은 canonical structured record | `state.sqlite` |
 | Markdown report | record와 artifact ref에서 만든 human-readable projection | projector output |
 
-이 report kind는 기본적으로 projection 또는 state-backed record다. Artifact store의 evidence file에 link할 수 있고 export가 snapshot을 포함할 수 있지만, 그렇다고 Markdown report가 canonical evidence가 되지는 않는다.
+이 report kind는 기본적으로 state record와 artifact ref에서 생성되는 projection이다. Artifact store의 evidence file에 link할 수 있고 export가 snapshot을 포함할 수 있지만, 그렇다고 Markdown report가 canonical evidence가 되지는 않는다.
 
 ## Managed Blocks
 
@@ -154,9 +154,9 @@ Persisted `JOURNEY-CARD` Markdown은 optional이다. `harness.status`, `harness.
 
 ### TASK
 
-목적: active work를 위한 continuity projection이다. 작업이 어디에 있는지, judgment context, Autonomy Boundary, Write Authority, Stewardship Impact, next evidence, residual risk, mode, lifecycle phase, next action, current gate, active Change Unit, pending decision, evidence, report ref, projection freshness를 요약한다.
+목적: active work를 위한 continuity projection이다. 작업이 어디에 있는지, judgment context, Autonomy Boundary, Write Authority Summary, Stewardship Impact, next evidence, residual risk, mode, lifecycle phase, next action, current gate, active Change Unit, pending decision, evidence, report ref, projection freshness를 요약한다.
 
-Source: `state.sqlite` Task, task gate, active Change Unit, Change Unit dependency, Write Authorization record, Write Authority display input, Decision Packet, Residual Risk, latest Run, latest Evidence Manifest, latest Eval, latest Manual QA record, approval record, Journey Spine source record, `domain_terms`, `module_map_items`, `interface_contracts`, feedback loop/TDD record, design-quality validator result, artifact ref, projection freshness.
+Source: `state.sqlite` Task, task gate, active Change Unit, Change Unit dependency, Write Authorization record, Write Authority Summary display input, Decision Packet, Residual Risk, latest Run, latest Evidence Manifest, latest Eval, latest Manual QA record, approval record, Journey Spine source record, `domain_terms`, `module_map_items`, `interface_contracts`, feedback loop/TDD record, design-quality validator result, artifact ref, projection freshness.
 
 Boundary: `TASK`의 Stewardship Impact는 owner record, validator result, ref에서 derive되는 `StewardshipImpactSummary` display다. Domain Language, Module Map, Interface Contract, feedback loop/TDD, residual-risk, Decision Packet owner record를 replace하지 않는다.
 
@@ -248,7 +248,7 @@ Boundary: Markdown packet은 decision authority가 아니다. Canonical Decision
 
 목적: status와 resume surface를 위한 compact current-position card다. Task가 어디에 있는지, 무엇이 judgment를 block하거나 guide하는지, agent가 지금 무엇을 할 수 있는지, 다음 evidence가 무엇인지, 남은 residual risk가 무엇인지, projection이 fresh한지를 답한다.
 
-Source: current `state.sqlite` Task state와 gate, active Change Unit, Autonomy Boundary summary, Write Authorization records, Write Authority display inputs, approval status, baseline refs, guarantee refs, active Decision Packet ref, Journey Spine source record, latest Run/Evidence Manifest/Eval/Manual QA/report ref, Residual Risk, artifact ref, projection freshness.
+Source: current `state.sqlite` Task state와 gate, active Change Unit, Autonomy Boundary summary, Write Authorization records, Write Authority Summary display inputs, approval status, baseline refs, guarantee refs, active Decision Packet ref, Journey Spine source record, latest Run/Evidence Manifest/Eval/Manual QA/report ref, Residual Risk, artifact ref, projection freshness.
 
 Boundary: card는 derived display다. Work를 authorize하거나, decision을 resolve하거나, risk를 accept하거나, evidence를 satisfy하거나, verification 또는 Manual QA를 replace하거나, Task를 close할 수 없다.
 

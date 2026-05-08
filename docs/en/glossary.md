@@ -308,7 +308,7 @@ The single agent surface targeted by the MVP implementation. It demonstrates the
 
 A Markdown report generated from state records and artifact references, such as a Task report, approval report, run summary, evidence manifest report, Eval report, or direct-result report.
 
-The named report projection kinds are projections or records by default; evidence-file authority stays with registered artifact files.
+The named report projection kinds are projections generated from state records and artifact refs; evidence-file authority stays with registered artifact files.
 
 ### Residual Risk
 
@@ -340,7 +340,7 @@ The append-only event history table inside `state.sqlite`. MVP does not use a se
 
 ### State Record
 
-A canonical structured record in kernel state, such as a Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Evidence Manifest, Eval, Manual QA record, Artifact record, Shared Design record, Domain Term, Module Map Item, Interface Contract, TDD Trace, or Reconcile Item.
+A canonical structured record in kernel state, such as a Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Write Authorization, Evidence Manifest, Eval, Manual QA record, Artifact record, Shared Design record, Domain Term, Module Map Item, Interface Contract, TDD Trace, or Reconcile Item.
 
 ### Strategic Agency
 
@@ -389,3 +389,11 @@ A Change Unit shape that connects a thin path from trigger/input through domain 
 ### Waiver
 
 An explicit recorded exception to a gate requirement where policy allows it. Verification waiver, design waiver, and QA waiver are allowed under defined rules. Scope, sensitive approval, required evidence, and required acceptance are not waived for successful completion.
+
+### Write Authorization
+
+A durable state record created or returned by `prepare_write` for a specific allowed write attempt. It is single-use for a committed implementation or direct run, except for idempotent replay, and it does not replace scope, approval, evidence, verification, Manual QA, acceptance, or residual-risk visibility.
+
+### Write Authority Summary
+
+A user-facing display summary of current write authority for an intended operation, derived from active Change Unit scope, `prepare_write`, approval, baseline, guarantee, Decision Packet refs, and any Write Authorization ref. It is display, not a separate authority record, and it does not authorize work by itself.

@@ -16,7 +16,7 @@ Templates are examples of rendered shape. They are not canonical state and must 
 6. Keep approval, verification, Manual QA, and acceptance visibly separate.
 7. Treat `qa_gate` as canonical even when a card says `Manual QA: pending/passed/failed/waived`.
 8. Version template changes as projection changes.
-9. Treat Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority, displayed Write Authorization refs, Change Unit DAG, Residual Risk text, and Stewardship Impact text as projection output, not canonical state or the canonical Write Authorization record itself.
+9. Treat Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, displayed Write Authorization refs, Change Unit DAG, Residual Risk text, and Stewardship Impact text as projection output, not canonical state or the canonical Write Authorization record itself.
 
 ## Required MVP Templates
 
@@ -52,7 +52,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Manual QA:
 - acceptance gate:
 - active change unit:
-- write authority:
+- write authority summary:
 - latest report:
 - projection freshness:
 
@@ -81,7 +81,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - AFK stop conditions:
 - boundary status:
 
-## Write Authority
+## Write Authority Summary
 - active Change Unit:
 - write authorization:
 - allowed paths:
@@ -1200,7 +1200,7 @@ Autonomy boundary:
 - user judgment required: {user_judgment_required}
 - AFK stop conditions: {afk_stop_conditions}
 
-Write authority:
+Write Authority Summary:
 - active Change Unit: {active_change_unit_ref|none}
 - write authorization: {write_authorization_ref|none}
 - allowed paths: {allowed_paths}
@@ -1338,8 +1338,8 @@ Record the QA result?
 - `MANUAL-QA` is a record projection. The close-relevant gate remains `qa_gate`.
 - `DEC` is the Decision Packet visibility projection. It does not resolve a decision unless Core records the user decision or reconcile action.
 - `JOURNEY-CARD` is a compact current-position projection. It does not authorize writes, resolve decisions, accept risk, satisfy evidence, replace verification, replace Manual QA, or close work.
-- Autonomy Boundary text in `TASK`, `DEC`, `JOURNEY-CARD`, and Change Unit blocks describes judgment latitude only; Write Authority and Write Authorization displays remain separate, and scope and approval remain separate owner records and gates.
-- Write Authority text is display from current scope, approval, baseline, guarantee, and Write Authorization refs. It does not authorize work, prove evidence, replace verification or Manual QA, imply acceptance, or accept residual risk.
+- Autonomy Boundary text in `TASK`, `DEC`, `JOURNEY-CARD`, and Change Unit blocks describes judgment latitude only; Write Authority Summary and Write Authorization displays remain separate, and scope and approval remain separate owner records and gates.
+- Write Authority Summary text is display from current scope, approval, baseline, guarantee, and Write Authorization refs. It does not authorize work, prove evidence, replace verification or Manual QA, imply acceptance, or accept residual risk.
 - Residual-risk text is a projection from residual-risk records and accepted-risk refs; it does not create detached verification or acceptance.
 - `EVAL` must show independence context because a passed verdict alone does not produce `detached_verified`.
 - `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, and `DIRECT-RESULT` link evidence files by artifact ref rather than embedding large evidence.

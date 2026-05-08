@@ -21,7 +21,7 @@ Integrated surface는 agent가 다음을 할 수 있게 도와야 한다.
 - design-quality policy가 적용될 때 check
 - state change에는 MCP tool call 사용
 - product write 전 `prepare_write`와 반환된 Write Authorization 존중
-- Write Authority를 Autonomy Boundary와 별도로 표시
+- Write Authority Summary를 Autonomy Boundary와 별도로 표시
 - blocking product judgment에는 Decision Packet을 request 또는 display
 - run, artifact, evidence, user decision, QA, acceptance 기록
 - approval, product decision, QA waiver, verification waiver, residual-risk acceptance, final acceptance 구분
@@ -49,13 +49,13 @@ Always-on rule은 user agency도 보존해야 한다.
 - 중요한 work를 재개하기 전에 현재 Journey Card를 보여준다.
 - Decision Packet이 필요한 상황을 포괄적인 승인 질문으로 뭉개지 않는다.
 - 한 번에 하나의 blocking question만 묻고, 가능하면 recommendation과 uncertainty를 함께 제시한다.
-- AFK implementation은 active scoped Change Unit, Autonomy Boundary, 적용되는 granted sensitive approval 안에서만 허용한다.
+- AFK implementation은 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive approval이 모두 맞을 때만 허용한다.
 - Autonomy Boundary는 judgment latitude이지 write authority가 아니다.
-- Work가 write를 시작하려 할 때 Write Authority summary를 보여준다.
+- Work가 write를 시작하려 할 때 Write Authority Summary를 보여준다.
 - MCP가 unavailable이면 product write를 hold한다.
 - Planning direction, product trade-off, QA waiver, verification risk acceptance, final acceptance는 사용자가 쥔다.
 
-Write Authority는 active scoped Change Unit의 scope, `prepare_write`, approval, allowed path/tool/command/network/secret, product-judgment blocker를 제거하는 compatible Decision Packet ref에서 나온 현재 write boundary다. Decision Packet은 그 자체로 write를 authorize하지 않는다. Autonomy Boundary는 agent가 추가 user decision 없이 행사할 수 있는 judgment만 설명한다.
+Write Authority Summary는 active scoped Change Unit의 scope, `prepare_write`, approval, allowed path/tool/command/network/secret, product-judgment blocker를 제거하는 compatible Decision Packet ref에서 나온 current write boundary display다. Decision Packet은 그 자체로 write를 authorize하지 않는다. Autonomy Boundary는 agent가 추가 user decision 없이 행사할 수 있는 judgment만 설명한다.
 
 Always-on rule에는 full state transition table, MCP schema, full template, 긴 design playbook, 모든 historical project context를 넣지 않는다.
 
@@ -69,7 +69,7 @@ Skill/playbook layer는 절차를 가르친다.
 - Change Unit을 어떻게 form할지
 - Autonomy Boundary를 어떻게 shaping/update할지
 - blocking product judgment에 Decision Packet을 어떻게 request 또는 display할지
-- write 전 Write Authority를 어떻게 보여주고 compatible Write Authorization을 run과 함께 기록할지
+- write 전 Write Authority Summary를 어떻게 보여주고 compatible Write Authorization을 run과 함께 기록할지
 - user decision을 어떻게 기록할지
 - approval, product decision, QA waiver, verification waiver, residual-risk acceptance, final acceptance를 어떻게 구분할지
 - TDD trace, evidence, Manual QA, acceptance를 어떻게 record할지
@@ -219,7 +219,7 @@ Implementation agent에게는 작은 current context를 push하고, 큰 referenc
 - Journey Card
 - active Decision Packet summary
 - Autonomy Boundary summary
-- Write Authority summary
+- Write Authority Summary
 - active scoped Change Unit
 - acceptance criteria snapshot
 - approval status
@@ -335,9 +335,9 @@ Overview scenarios:
 - 가능할 때 recommendation과 uncertainty가 있는 one blocking question
 - blocking product judgment에 포괄적인 승인 대신 Decision Packet 표시
 - Autonomy Boundary breach가 stop되거나 Decision Packet으로 route되는지
-- AFK work가 active scoped Change Unit, Autonomy Boundary, 적용되는 granted sensitive approval 안에 머무는지
+- AFK work가 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive approval로 모두 cover되는지
 - `prepare_write` allowed 및 blocked path
-- allowed write에 Write Authorization이 생성되고 Write Authority summary로 노출되는지
+- allowed write에 Write Authorization이 생성되고 Write Authority Summary로 노출되는지
 - write-capable `record_run`이 compatible Write Authorization을 consume하는지
 - sensitive approval request, granted, denied, expired path
 - artifact와 evidence update가 있는 `record_run`

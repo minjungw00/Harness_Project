@@ -102,14 +102,14 @@ state.sqlite와 별도의 event log를 나란히 두는 표현
 
 Historical comparison에 이 개념이 필요하면 MVP event history가 `state.sqlite.task_events`임을 즉시 명확히 합니다.
 
-다음처럼 쓰지 않습니다.
+다음처럼 취급하는 표현을 쓰지 않습니다.
 
 ```text
-TASK는 canonical state다.
-Projection은 state를 update한다.
-User Notes가 source-of-truth다.
-Domain Language는 Markdown document에서 canonical하다.
-Report projections는 기본적으로 raw artifacts다.
+TASK, Journey, Markdown, report text를 state authority로 취급.
+Rendering output이 state를 mutate하는 것처럼 취급.
+User Notes를 human-editable input 이상으로 취급.
+DOMAIN-LANGUAGE Markdown을 vocabulary owner로 취급.
+Report projections를 기본 raw evidence file로 취급.
 ```
 
 선호하는 authority paths:

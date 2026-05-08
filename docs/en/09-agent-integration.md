@@ -21,7 +21,7 @@ An integrated surface should help the agent:
 - check design-quality policies when they apply
 - call MCP tools for state changes
 - respect `prepare_write` and returned Write Authorization before product writes
-- show Write Authority separately from Autonomy Boundary
+- show the Write Authority Summary separately from Autonomy Boundary
 - request or show Decision Packets for blocking product judgment
 - record runs, artifacts, evidence, user decisions, QA, and acceptance
 - distinguish approval, product decision, QA waiver, verification waiver, residual-risk acceptance, and final acceptance
@@ -49,13 +49,13 @@ Always-on rules should also preserve user agency:
 - show the current Journey Card before significant work resumes
 - do not ask for broad approval when a Decision Packet is required
 - ask one blocking question at a time, with a recommendation and uncertainty when available
-- allow AFK implementation only inside the active scoped Change Unit, Autonomy Boundary, and any granted sensitive approval that applies
+- allow AFK implementation only when active Change Unit scope, Autonomy Boundary latitude, and any granted sensitive approval all apply
 - treat the Autonomy Boundary as judgment latitude, not write authority
-- show the Write Authority summary when work is about to write
+- show the Write Authority Summary when work is about to write
 - hold product writes if MCP is unavailable
 - keep planning direction, product trade-offs, QA waiver, verification risk acceptance, and final acceptance human-held
 
-Write Authority is the current write boundary from the active scoped Change Unit's scope, `prepare_write`, approval, allowed paths/tools/commands/network/secrets, and compatible Decision Packet refs that remove product-judgment blockers. Decision Packets do not authorize writes by themselves. The Autonomy Boundary only says what judgment the agent may exercise without another user decision.
+Write Authority Summary displays the current write boundary from the active scoped Change Unit's scope, `prepare_write`, approval, allowed paths/tools/commands/network/secrets, and compatible Decision Packet refs that remove product-judgment blockers. Decision Packets do not authorize writes by themselves. The Autonomy Boundary only says what judgment the agent may exercise without another user decision.
 
 They should not contain full state transition tables, MCP schemas, full templates, long design playbooks, or all historical project context.
 
@@ -69,7 +69,7 @@ The skill/playbook layer teaches procedure:
 - how to form a Change Unit
 - how to shape or update the Autonomy Boundary
 - how to request or show Decision Packets for blocking product judgment
-- how to show Write Authority before writes and record the compatible Write Authorization with the run
+- how to show the Write Authority Summary before writes and record the compatible Write Authorization with the run
 - how to record user decisions
 - how to distinguish approval, product decision, QA waiver, verification waiver, residual-risk acceptance, and final acceptance
 - how to record TDD trace, evidence, Manual QA, and acceptance
@@ -219,7 +219,7 @@ Usually push:
 - Journey Card
 - active Decision Packet summary
 - Autonomy Boundary summary
-- Write Authority summary
+- Write Authority Summary
 - active scoped Change Unit
 - acceptance criteria snapshot
 - approval status
@@ -335,9 +335,9 @@ Overview scenarios:
 - one blocking question with recommendation and uncertainty when available
 - Decision Packet shown instead of broad approval for blocking product judgment
 - Autonomy Boundary breach stops or routes to Decision Packet
-- AFK work remains inside active scoped Change Unit, Autonomy Boundary, and any granted sensitive approval that applies
+- AFK work remains covered by active Change Unit scope, Autonomy Boundary latitude, and any granted sensitive approval that applies
 - `prepare_write` allowed and blocked paths
-- Write Authorization created for allowed writes and exposed through Write Authority summary
+- Write Authorization created for allowed writes and exposed through Write Authority Summary
 - write-capable `record_run` consumes a compatible Write Authorization
 - sensitive approval request, granted, denied, and expired paths
 - `record_run` with artifacts and evidence update

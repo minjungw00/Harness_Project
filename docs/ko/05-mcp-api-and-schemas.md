@@ -215,7 +215,7 @@ StateRecordRef:
   projection_path: string | null
 ```
 
-Evidence references, approval scope, write authorization, write authority display, end-to-end paths는 다음 shared shapes를 사용합니다.
+Evidence references, approval scope, write authorization, Write Authority Summary display, end-to-end paths는 다음 shared shapes를 사용합니다.
 
 ```yaml
 EvidenceRefs:
@@ -283,11 +283,11 @@ EndToEndPath:
   ui_or_observable_output: string | null
 ```
 
-`WriteAuthorizationSummary`와 `WriteAuthoritySummary`는 API payload shapes일 뿐입니다. 이 문서는 Write Authorization records에 대한 SQLite DDL을 정의하지 않습니다. `WriteAuthoritySummary`는 clients가 write authority를 Autonomy Boundary judgment latitude 옆에 표시하기 위해 사용하는 display/read shape입니다.
+`WriteAuthorizationSummary`와 `WriteAuthoritySummary`는 API payload shapes일 뿐입니다. 이 문서는 Write Authorization records에 대한 SQLite DDL을 정의하지 않습니다. `WriteAuthoritySummary`는 clients가 Write Authority Summary를 Autonomy Boundary judgment latitude 옆에 표시하기 위해 사용하는 display/read shape입니다.
 
 `DEC`는 Decision Packet visibility projection job kind입니다. Full DEC와 Decision Packet template text는 Appendix A가 담당하며, 이 API schema file이 담당하지 않습니다.
 
-Decision Packet, Write Authorization, write authority, Journey Card, Judgment Context, Autonomy Boundary, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. Canonical kernel records는 owner docs가 정의합니다.
+Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. Canonical kernel records는 owner docs가 정의합니다.
 
 ```yaml
 DecisionPacket:
@@ -502,7 +502,7 @@ State-changing tools에서 Core는 `expected_state_version`을 current project/t
 
 ### `harness.status`
 
-Purpose: project, surface, active Task, Journey Card, gate, guarantee, projection, active Decision Packet, Autonomy Boundary, write authority, residual-risk, pending-decision status를 반환합니다.
+Purpose: project, surface, active Task, Journey Card, gate, guarantee, projection, active Decision Packet, Autonomy Boundary, Write Authority Summary, residual-risk, pending-decision status를 반환합니다.
 
 Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
 
@@ -553,7 +553,7 @@ Projection jobs enqueued: 없음.
 
 `pending_decisions`는 unresolved user-action Decision Packets를 포함합니다. `active_decision_packet_refs`는 pending, deferred, blocked, recently resolved packets를 포함해 current phase 또는 requested action과 relevant한 모든 Decision Packets를 포함합니다. 두 fields는 모두 `record_kind=decision_packet`인 `StateRecordRef` entries를 사용합니다.
 
-`write_authority_summary`는 `include.write_authority=true`일 때 반환됩니다. `include.journey_card=true`이면 같은 current write authority display가 `journey_card.write_authority_summary`에도 나타날 수 있습니다.
+`write_authority_summary`는 `include.write_authority=true`일 때 반환됩니다. `include.journey_card=true`이면 같은 current Write Authority Summary display가 `journey_card.write_authority_summary`에도 나타날 수 있습니다.
 
 Validators run: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional residual-risk visibility read, optional projection freshness read.
 

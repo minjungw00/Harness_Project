@@ -338,7 +338,7 @@ Verification independence profiles는 Eval이 detached assurance를 support하�
 | Profile | Minimum qualification |
 |---|---|
 | `same_session` | Not detached. May record self-check or review notes. Must not produce `detached_verified`. |
-| `subagent_context` | Not detached by default. May qualify only if the implementation context, write authority, and reviewed bundle satisfy a stricter profile; otherwise treat as not detached. |
+| `subagent_context` | Not detached by default. May qualify only if the implementation context, Write Authorization context, and reviewed bundle satisfy a stricter profile; otherwise treat as not detached. |
 | `fresh_session` | Detached candidate if the evaluator receives a task/evidence bundle rather than continuing lead chat context, reviews the Evidence Manifest and changed files, and records an Eval. |
 | `fresh_worktree` | Detached candidate if the evaluator checks baseline, changed paths, artifacts, and Evidence Manifest in a separate worktree or equivalent isolated repository state. |
 | `sandbox` | Detached or isolated candidate if execution and verification happen across a meaningful process/filesystem boundary and artifacts are captured. |
