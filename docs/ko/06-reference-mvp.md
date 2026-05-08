@@ -60,7 +60,7 @@ Exit criteria:
 
 ### MVP-2: Shaping Kernel, Write Gate, Approval, Baseline, Artifacts
 
-Change Unit records, Change Unit dependency metadata, gate records, baseline capture, artifact registration, `harness.prepare_write`, Write Authorization records, approval request/decision flow, shaping updates, autonomy boundary fields, minimal changed-path/scope/approval/baseline/decision/autonomy validators를 구현합니다.
+Change Unit records, Change Unit dependency metadata, gate records, baseline capture, artifact registration, `harness.prepare_write`, Write Authorization records, approval request/decision flow, shaping updates, autonomy boundary fields, minimal changed-path/scope/approval/baseline Core checks와 decision/autonomy validators를 구현합니다.
 
 Exit criteria:
 
@@ -1028,8 +1028,9 @@ Stable MVP validator IDs:
 | `module_interface_review` | module/interface review requirement is met |
 | `manual_qa_required` | required QA is passed or validly waived |
 | `context_hygiene_check` | required context, projection freshness, managed hashes, and user-visible summaries are consistent enough for the requested operation |
+| `surface_capability_check` | connected surface capability is sufficient for the requested operation or reported honestly through capability findings |
 
-Active Task, active Change Unit, changed paths, approval scope, baseline freshness, artifact integrity, evidence sufficiency, verification independence, same-session verification guard, projection freshness, surface capability 같은 Core precondition checks는 이 validators 전이나 옆에서 여전히 실행될 수 있습니다. MVP conformance에서 alternate design/agency validator IDs로 emit하면 안 됩니다.
+Active Task, active Change Unit, changed paths, approval scope, baseline freshness, artifact integrity, evidence sufficiency, verification independence, same-session verification guard, projection freshness 같은 Core precondition checks는 이 validators 전이나 옆에서 여전히 실행될 수 있습니다. MVP conformance에서 alternate design/agency validator IDs로 emit하면 안 됩니다. `ValidatorResult`를 emit하는 capability checks는 stable `surface_capability_check` ID를 사용합니다. Capability는 additional validator IDs를 만들지 않고 blocked reasons와 guarantee display에도 나타날 수 있습니다.
 
 Compatibility aliases:
 
@@ -1040,7 +1041,7 @@ Compatibility aliases:
 | `docs_consistency` | `context_hygiene_check` |
 | `projection_freshness` | `context_hygiene_check` |
 
-이 aliases는 old compatibility inputs일 뿐이며, MVP conformance는 위 stable IDs를 emit해야 합니다.
+이 aliases는 legacy validator outputs 또는 legacy validator IDs를 위한 old compatibility inputs일 뿐이며, MVP conformance는 위 stable IDs를 emit해야 합니다. `projection_freshness` alias는 older validator output을 `context_hygiene_check`로 mapping합니다. Mechanical projection freshness에 대한 새 MVP fixture assertions는 `expected_state.checks.projection_freshness`를 사용해야 합니다.
 
 ### Evidence and Verification Profile Implementation Notes
 

@@ -206,10 +206,11 @@ Stable MVP validator IDs:
 - `module_interface_review`
 - `manual_qa_required`
 - `context_hygiene_check`
+- `surface_capability_check`
 
-Core preconditions such as state/envelope validation, active Task, active Change Unit, changed paths, baseline freshness, approval scope, evidence sufficiency, artifact integrity, verification independence, same-session verification guard, projection freshness, and surface capability may run beside these validators.
+Core preconditions and mechanical checks such as state/envelope validation, active Task, active Change Unit, changed paths, baseline freshness, approval scope, evidence sufficiency, artifact integrity, verification independence, same-session verification guard, and projection freshness may run before or beside these validators. They are not alternate validator IDs unless this section, the MCP API, or the Reference MVP explicitly promotes them into the stable ValidatorResult-emitting set. Surface capability is intentionally modeled as the `surface_capability_check` capability validator when emitted as a `ValidatorResult`.
 
-Adapters and sidecars translate surface capability into observable facts. They do not create a kernel gate for capability. Capability appears through precondition results, `prepare_write` blocked reasons, and guarantee display.
+Adapters and sidecars translate surface capability into observable facts. They do not create a kernel gate for capability. Capability appears through the `surface_capability_check` validator, `prepare_write` blocked reasons, and guarantee display.
 
 ## Guarantee Levels
 

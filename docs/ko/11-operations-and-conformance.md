@@ -58,7 +58,7 @@ Connect는 사람이 편집한 내용을 조용히 덮어쓰지 않고 generated
 | artifacts | file existence, hash, size, redaction state, task/run or artifact-link relation |
 | projections | queued jobs, freshness, managed hash drift, failed renders |
 | reconcile | pending human edits, managed block drift, generated-file drift |
-| validators | required core, artifact, projection, connector, and policy validators |
+| validators/checks | required stable ValidatorResult-emitting validators와 별도로 capture되는 Core check/precondition categories |
 | agency/stewardship/context | Decision Packet and decision gate readiness, Autonomy Boundary readiness, residual-risk visibility, codebase stewardship, context freshness |
 
 Output level:
@@ -264,6 +264,10 @@ Default comparison modes:
 | `expected_error` | `expected_error: null`은 action이 error를 반환하지 않았음을 assert합니다. `expected_error`가 object이면 `expected_error.code`는 required이며 exact match합니다. `expected_error.details`는 optional입니다. Omitted이면 details field는 assert하지 않습니다. `details`가 present이면 suite metadata가 `expected_error.details: exact`로 설정하지 않는 한 `partial_deep`으로 match합니다. |
 
 `expected_state.validators` 아래의 validator assertion은 validator ID로 keyed됩니다. 나열된 각 validator ID는 captured validator results에 존재해야 하며 나열된 field를 partially match해야 합니다. 나열되지 않은 validator ID와 나열되지 않은 validator field는 assert하지 않습니다.
+
+`expected_state.checks` 아래의 Core check와 precondition assertion은 check/precondition name으로 keyed됩니다. 이 entries는 captured Core check output, blocked reasons, response summaries, 또는 runner가 관찰한 equivalent check status와 비교합니다. MCP API 또는 Reference MVP가 해당 ID를 stable ValidatorResult로 명시적으로 promote하지 않는 한 이 값들은 validator IDs가 아니며 `expected_state.validators` 아래에 두면 안 됩니다.
+
+`expected_state.checks.projection_freshness`는 Core mechanical projection freshness check를 assert합니다. `expected_state.validators.context_hygiene_check`는 higher-level context hygiene에 대한 stable ValidatorResult를 assert합니다. 그 validator가 projection freshness를 고려할 수는 있지만, mechanical check 자체의 fixture assertion 위치는 아닙니다.
 
 모든 `expected_*` value 안에서 nested field가 없다는 것은 "not asserted"이지 "expected null"이 아닙니다. `expected_events: []`, `expected_artifacts: []`, `expected_projection: {}` 같은 empty default-mode collection은 valid하며 required entry가 없음을 뜻합니다. Extra entry가 없음을 assert해야 하는 suite는 fixture body 밖의 compatible exact-mode metadata를 사용해야 합니다.
 
@@ -736,7 +740,7 @@ expected_state:
     change_unit_id: CU-WRITE-001
     intended_paths: ["src/a.ts"]
     consumed_by_run_id: null
-  validators:
+  checks:
     scope_coverage: passed
     changed_paths_intent: passed
 expected_events:
@@ -792,7 +796,7 @@ expected_state:
     evidence_gate: none
   run_recorded: false
   write_authorization_ref: null
-  validators:
+  checks:
     changed_paths: blocked
     scope_coverage: passed
 expected_events: []
@@ -868,7 +872,7 @@ expected_state:
     consumed_by_run_id: null
   observed_change_violation:
     outside_authorized_paths: ["src/b.ts"]
-  validators:
+  checks:
     changed_paths: blocked
     scope_coverage: blocked
 expected_events:
@@ -936,7 +940,7 @@ expected_state:
     write_authorization_id: WA-WRITE-004
     status: consumed
     consumed_by_run_id: RUN-WRITE-PREV-004
-  validators:
+  checks:
     changed_paths: passed
     scope_coverage: passed
   invalid_authorization_reason: already_consumed
@@ -1552,7 +1556,7 @@ expected_state:
     qa_gate: pending
     decision_gate: not_required
   manual_qa_record_created: false
-  validators:
+  checks:
     qa_waiver_reason: blocked
 expected_events: []
 expected_artifacts: []
@@ -1592,6 +1596,7 @@ expected_state:
   manual_qa_record_created: false
   validators:
     decision_quality_check: blocked
+  checks:
     qa_waiver_reason: passed
 expected_events: []
 expected_artifacts: []
@@ -1654,8 +1659,9 @@ expected_state:
     decision_gate: resolved
     design_gate: partial
   write_decision: blocked
-  validators:
+  checks:
     approval_scope: passed
+  validators:
     codebase_stewardship_check:
       status: blocked
       findings:
@@ -1916,6 +1922,7 @@ expected_state:
     stale_refs_treated_as: pull_only
   validators:
     context_hygiene_check: failed
+  checks:
     scope_coverage: blocked
 expected_events:
   - prepare_write_blocked

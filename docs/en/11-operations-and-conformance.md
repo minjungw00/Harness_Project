@@ -58,7 +58,7 @@ Required categories:
 | artifacts | file existence, hash, size, redaction state, task/run or artifact-link relation |
 | projections | queued jobs, freshness, managed hash drift, failed renders |
 | reconcile | pending human edits, managed block drift, generated-file drift |
-| validators | required core, artifact, projection, connector, and policy validators |
+| validators/checks | required stable ValidatorResult-emitting validators, plus separately captured Core check/precondition categories |
 | agency/stewardship/context | Decision Packet and decision gate readiness, Autonomy Boundary readiness, residual-risk visibility, codebase stewardship, context freshness |
 
 Output levels:
@@ -262,6 +262,10 @@ Default comparison modes:
 | `expected_error` | `expected_error: null` asserts that the action returned no error. When `expected_error` is an object, `expected_error.code` is required and matched exactly. `expected_error.details` is optional; when omitted, no details fields are asserted. When `details` is present, it is matched with `partial_deep` unless suite metadata sets `expected_error.details: exact`. |
 
 Validator assertions nested under `expected_state.validators` are keyed by validator ID. Each listed validator ID must exist in the captured validator results and match the listed fields partially; unlisted validator IDs and unlisted validator fields are not asserted.
+
+Core check and precondition assertions nested under `expected_state.checks` are keyed by check/precondition name. These entries are compared against captured Core check output, blocked reasons, response summaries, or equivalent runner-observed check status. They are not validator IDs and must not be nested under `expected_state.validators` unless the MCP API or Reference MVP explicitly promotes that ID to a stable ValidatorResult.
+
+`expected_state.checks.projection_freshness` asserts the Core mechanical projection freshness check. `expected_state.validators.context_hygiene_check` asserts the stable ValidatorResult for higher-level context hygiene; that validator may consider projection freshness, but it is not the fixture assertion location for the mechanical check itself.
 
 Absence of a nested field inside any `expected_*` value means "not asserted", not "expected null". Empty default-mode collections such as `expected_events: []`, `expected_artifacts: []`, or `expected_projection: {}` are valid and assert no required entries; a suite that needs to assert no extra entries must use compatible exact-mode metadata outside the fixture body.
 
@@ -734,7 +738,7 @@ expected_state:
     change_unit_id: CU-WRITE-001
     intended_paths: ["src/a.ts"]
     consumed_by_run_id: null
-  validators:
+  checks:
     scope_coverage: passed
     changed_paths_intent: passed
 expected_events:
@@ -790,7 +794,7 @@ expected_state:
     evidence_gate: none
   run_recorded: false
   write_authorization_ref: null
-  validators:
+  checks:
     changed_paths: blocked
     scope_coverage: passed
 expected_events: []
@@ -866,7 +870,7 @@ expected_state:
     consumed_by_run_id: null
   observed_change_violation:
     outside_authorized_paths: ["src/b.ts"]
-  validators:
+  checks:
     changed_paths: blocked
     scope_coverage: blocked
 expected_events:
@@ -934,7 +938,7 @@ expected_state:
     write_authorization_id: WA-WRITE-004
     status: consumed
     consumed_by_run_id: RUN-WRITE-PREV-004
-  validators:
+  checks:
     changed_paths: passed
     scope_coverage: passed
   invalid_authorization_reason: already_consumed
@@ -1550,7 +1554,7 @@ expected_state:
     qa_gate: pending
     decision_gate: not_required
   manual_qa_record_created: false
-  validators:
+  checks:
     qa_waiver_reason: blocked
 expected_events: []
 expected_artifacts: []
@@ -1590,6 +1594,7 @@ expected_state:
   manual_qa_record_created: false
   validators:
     decision_quality_check: blocked
+  checks:
     qa_waiver_reason: passed
 expected_events: []
 expected_artifacts: []
@@ -1652,8 +1657,9 @@ expected_state:
     decision_gate: resolved
     design_gate: partial
   write_decision: blocked
-  validators:
+  checks:
     approval_scope: passed
+  validators:
     codebase_stewardship_check:
       status: blocked
       findings:
@@ -1914,6 +1920,7 @@ expected_state:
     stale_refs_treated_as: pull_only
   validators:
     context_hygiene_check: failed
+  checks:
     scope_coverage: blocked
 expected_events:
   - prepare_write_blocked

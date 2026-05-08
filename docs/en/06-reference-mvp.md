@@ -60,7 +60,7 @@ Exit criteria:
 
 ### MVP-2: Shaping Kernel, Write Gate, Approval, Baseline, Artifacts
 
-Implement Change Unit records, Change Unit dependency metadata, gate records, baseline capture, artifact registration, `harness.prepare_write`, Write Authorization records, approval request/decision flow, shaping updates, autonomy boundary fields, and minimal changed-path/scope/approval/baseline/decision/autonomy validators.
+Implement Change Unit records, Change Unit dependency metadata, gate records, baseline capture, artifact registration, `harness.prepare_write`, Write Authorization records, approval request/decision flow, shaping updates, autonomy boundary fields, minimal changed-path/scope/approval/baseline Core checks, and decision/autonomy validators.
 
 Exit criteria:
 
@@ -1026,8 +1026,9 @@ Stable MVP validator IDs:
 | `module_interface_review` | module/interface review requirement is met |
 | `manual_qa_required` | required QA is passed or validly waived |
 | `context_hygiene_check` | required context, projection freshness, managed hashes, and user-visible summaries are consistent enough for the requested operation |
+| `surface_capability_check` | connected surface capability is sufficient for the requested operation or reported honestly through capability findings |
 
-Core precondition checks such as active Task, active Change Unit, changed paths, approval scope, baseline freshness, artifact integrity, evidence sufficiency, verification independence, same-session verification guard, projection freshness, and surface capability may still run before or beside these validators. They should not be emitted as alternate design/agency validator IDs in MVP conformance.
+Core precondition checks such as active Task, active Change Unit, changed paths, approval scope, baseline freshness, artifact integrity, evidence sufficiency, verification independence, same-session verification guard, and projection freshness may still run before or beside these validators. They should not be emitted as alternate design/agency validator IDs in MVP conformance. Capability checks that emit `ValidatorResult` use the stable `surface_capability_check` ID; capability may also appear in blocked reasons and guarantee display without creating additional validator IDs.
 
 Compatibility aliases:
 
@@ -1038,7 +1039,7 @@ Compatibility aliases:
 | `docs_consistency` | `context_hygiene_check` |
 | `projection_freshness` | `context_hygiene_check` |
 
-These aliases are old compatibility inputs only; MVP conformance must emit the stable IDs above.
+These aliases are old compatibility inputs for legacy validator outputs or legacy validator IDs only; MVP conformance must emit the stable IDs above. The `projection_freshness` alias maps older validator output to `context_hygiene_check`; new MVP fixture assertions for mechanical projection freshness should use `expected_state.checks.projection_freshness`.
 
 ### Evidence and Verification Profile Implementation Notes
 

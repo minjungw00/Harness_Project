@@ -18,6 +18,8 @@ Capability is not a first-class kernel gate. Surface capability appears through:
 - `harness.prepare_write.response.blocked_reasons`
 - guarantee display in status and write decisions
 
+Core preconditions and mechanical checks may run before or beside validators. Only stable IDs emitted as `ValidatorResult` and persisted in `validator_runs` are validator IDs; checks such as `scope_coverage`, `changed_paths`, `changed_paths_intent`, `approval_scope`, `baseline_freshness`, `qa_waiver_reason`, and `projection_freshness` remain Core checks unless an owning docs section explicitly promotes them.
+
 ## MCP Resources
 
 Resources expose current state and projection-oriented summaries without mutating state:
@@ -471,7 +473,24 @@ ValidatorResult:
 
 The `surface_capability_check` validator uses this schema with `validator_kind=capability`.
 
-Stable design and agency validator ids used by this API are:
+Stable MVP validator IDs emitted through `ValidatorResult` are:
+
+- `decision_gate_check`
+- `decision_quality_check`
+- `autonomy_boundary_check`
+- `feedback_loop_check`
+- `tdd_trace_required`
+- `codebase_stewardship_check`
+- `residual_risk_visibility_check`
+- `shared_design_alignment`
+- `vertical_slice_shape`
+- `domain_language_consistency`
+- `module_interface_review`
+- `manual_qa_required`
+- `context_hygiene_check`
+- `surface_capability_check`
+
+The agency-critical subset commonly surfaced by status, next, write, and close flows is:
 
 - `decision_quality_check`
 - `autonomy_boundary_check`
@@ -480,6 +499,10 @@ Stable design and agency validator ids used by this API are:
 - `codebase_stewardship_check`
 - `residual_risk_visibility_check`
 - `context_hygiene_check`
+
+Design-quality validators omitted from this smaller subset, including `shared_design_alignment`, `vertical_slice_shape`, `domain_language_consistency`, and `module_interface_review`, remain part of the full stable MVP ValidatorResult-emitting set above.
+
+Tool descriptions below separate `ValidatorResults emitted` from Core checks/preconditions. Core checks may still block transitions, update gates, populate blocked reasons, or appear in fixture assertions, but they are not validator IDs unless listed above.
 
 ## Error Taxonomy
 
@@ -589,7 +612,9 @@ Projection jobs enqueued: none.
 
 `write_authority_summary` is returned when `include.write_authority=true`. When `include.journey_card=true`, the same current Write Authority Summary display may also appear in `journey_card.write_authority_summary`.
 
-Validators run: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional residual-risk visibility read, optional projection freshness read.
+ValidatorResults emitted: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`.
+
+Core checks/preconditions: optional residual-risk visibility read, optional projection freshness read.
 
 Possible errors: `MCP_UNAVAILABLE`, `PROJECTION_STALE`.
 
@@ -636,7 +661,9 @@ Events emitted: `task_intake_recorded`, `task_created`, `task_resumed`, `task_su
 
 Projection jobs enqueued: `TASK`; optionally `DOMAIN-LANGUAGE`, `MODULE-MAP`, or `INTERFACE-CONTRACT` if intake accepted design support records.
 
-Validators run: `state_envelope`, `active_task_policy`, `surface_capability_check`.
+ValidatorResults emitted: `surface_capability_check`.
+
+Core checks/preconditions: `state_envelope`, `active_task_policy`.
 
 Possible errors: `STATE_CONFLICT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`.
 
@@ -688,7 +715,7 @@ Projection jobs enqueued: none.
 
 When `focus=acceptance`, `judgment_context.acceptance_visibility` must be non-null. It must include the residual-risk summary, unaccepted close-relevant risk refs, evidence summary refs, verification status, QA status, acceptance status, and what acceptance does not replace. The context must make clear before any acceptance request that acceptance does not replace evidence sufficiency, verification, Manual QA, approval, scope, or residual-risk visibility.
 
-Validators run: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional `context_hygiene_check`.
+ValidatorResults emitted: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional `context_hygiene_check`.
 
 Possible errors: `NO_ACTIVE_TASK`, `MCP_UNAVAILABLE`, `PROJECTION_STALE`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RECONCILE_REQUIRED`.
 
@@ -779,7 +806,9 @@ Events emitted: `prepare_write_allowed`, `write_authorization_created`, `write_a
 
 Projection jobs enqueued: `TASK`; `APR` when approval is required.
 
-Validators run: `state_envelope`, `active_task`, `active_change_unit`, `scope_coverage`, `changed_paths_intent`, `autonomy_boundary_check`, `baseline_freshness`, `approval_scope`, `decision_gate_check`, `decision_quality_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, `surface_capability_check`, design precondition validators that apply before write.
+ValidatorResults emitted: `autonomy_boundary_check`, `decision_gate_check`, `decision_quality_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
+
+Core checks/preconditions: `state_envelope`, `active_task`, `active_change_unit`, `scope_coverage`, `changed_paths_intent`, `baseline_freshness`, `approval_scope`, and design preconditions that apply before write.
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `BASELINE_STALE`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`.
 
@@ -938,7 +967,9 @@ Violation or audit Runs may emit `write_authorization_violation_detected`, `writ
 
 Projection jobs enqueued: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `DIRECT-RESULT` for `kind=direct`; `TDD-TRACE` when updated.
 
-Validators run: `state_envelope`, `changed_paths`, `scope_coverage`, `approval_scope`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
+ValidatorResults emitted: `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
+
+Core checks/preconditions: `state_envelope`, `changed_paths`, `scope_coverage`, `approval_scope`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`.
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_EXPIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
 
@@ -1003,7 +1034,9 @@ Events emitted: `decision_packet_created`, `user_decision_requested`, `approval_
 
 Projection jobs enqueued: `TASK`; `DEC` when standalone Decision Packet projection is enabled; `APR` for approval where applicable; affected projection for reconcile.
 
-Validators run: `state_envelope`, `decision_packet_validity`, `decision_quality_check`, `autonomy_boundary_check` when the packet affects the active Change Unit boundary, `approval_scope` for approval decisions, `reconcile_required` for reconcile decisions, `residual_risk_visibility_check` for risk-acceptance decisions.
+ValidatorResults emitted: `decision_quality_check`, `autonomy_boundary_check` when the packet affects the active Change Unit boundary, `residual_risk_visibility_check` for risk-acceptance decisions.
+
+Core checks/preconditions: `state_envelope`, `decision_packet_validity`, `approval_scope` for approval decisions, `reconcile_required` for reconcile decisions.
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `DECISION_REQUIRED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `RECONCILE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `PROJECTION_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
@@ -1083,7 +1116,9 @@ Events emitted: `user_decision_recorded`, `decision_packet_resolved`, `decision_
 
 Projection jobs enqueued: `TASK`; `DEC` when standalone Decision Packet projection is enabled; `APR` for approval where applicable; `MANUAL-QA` for QA waiver when represented as a QA record; affected design/task projections for reconcile. Decision Packet visibility still appears through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
 
-Validators run: `state_envelope`, `pending_decision_packet_exists`, `decision_quality_check`, `autonomy_boundary_check`, `approval_scope`, `qa_waiver_reason`, `residual_risk_visibility_check`, `reconcile_target_validity`.
+ValidatorResults emitted: `decision_quality_check`, `autonomy_boundary_check`, `residual_risk_visibility_check`.
+
+Core checks/preconditions: `state_envelope`, `pending_decision_packet_exists`, `approval_scope`, `qa_waiver_reason`, `reconcile_target_validity`.
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `SCOPE_VIOLATION`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `RECONCILE_REQUIRED`, `PROJECTION_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
@@ -1132,7 +1167,9 @@ Events emitted: `verification_launched`, `verification_bundle_created`, `evaluat
 
 Projection jobs enqueued: `TASK`; optionally `EVIDENCE-MANIFEST`.
 
-Validators run: `state_envelope`, `evidence_sufficiency`, `baseline_freshness`, `artifact_integrity`, `surface_capability_check`, `same_session_verify_guard`.
+ValidatorResults emitted: `surface_capability_check`.
+
+Core checks/preconditions: `state_envelope`, `evidence_sufficiency`, `baseline_freshness`, `artifact_integrity`, `same_session_verify_guard`.
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `EVIDENCE_INSUFFICIENT`, `BASELINE_STALE`, `ARTIFACT_MISSING`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`.
 
@@ -1192,7 +1229,9 @@ Events emitted: `eval_recorded`, `verification_passed`, `verification_failed`, `
 
 Projection jobs enqueued: `TASK`, `EVAL`; optionally `EVIDENCE-MANIFEST`.
 
-Validators run: `state_envelope`, `same_session_verify_guard`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`, `approval_scope`, `surface_capability_check`.
+ValidatorResults emitted: `surface_capability_check`.
+
+Core checks/preconditions: `state_envelope`, `same_session_verify_guard`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`, `approval_scope`.
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `VERIFY_NOT_DETACHED`, `EVIDENCE_INSUFFICIENT`, `BASELINE_STALE`, `ARTIFACT_MISSING`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
 
@@ -1248,7 +1287,9 @@ Events emitted: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `ar
 
 Projection jobs enqueued: `TASK`, `MANUAL-QA`; `DEC` when standalone Decision Packet projection is enabled and a waiver Decision Packet affects visibility; optionally `EVIDENCE-MANIFEST`. Waiver Decision Packet visibility still appears through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
 
-Validators run: `state_envelope`, `manual_qa_required`, `decision_quality_check`, `residual_risk_visibility_check`, `qa_waiver_reason`, `artifact_integrity`, `evidence_sufficiency`.
+ValidatorResults emitted: `manual_qa_required`, `decision_quality_check`, `residual_risk_visibility_check`.
+
+Core checks/preconditions: `state_envelope`, `qa_waiver_reason`, `artifact_integrity`, `evidence_sufficiency`.
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `QA_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `ARTIFACT_MISSING`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
@@ -1296,7 +1337,9 @@ Events emitted: `close_requested`, `task_closed`, `task_cancelled`, `task_supers
 
 Projection jobs enqueued: `TASK`; latest required reports as needed for final freshness.
 
-Validators run: `state_envelope`, `active_run_absent`, `active_change_unit_complete`, `scope_coverage`, `decision_gate_check`, `decision_quality_check`, `autonomy_boundary_check`, `approval_scope`, `design_gate_close`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, `evidence_sufficiency`, `same_session_verify_guard`, `manual_qa_required`, `residual_risk_visibility_check`, `acceptance_required`, `projection_freshness`.
+ValidatorResults emitted: `decision_gate_check`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, `manual_qa_required`, `residual_risk_visibility_check`, `context_hygiene_check` when projection or context hygiene must be emitted as a ValidatorResult.
+
+Core checks/preconditions: `state_envelope`, `active_run_absent`, `active_change_unit_complete`, `scope_coverage`, `approval_scope`, `design_gate_close`, `evidence_sufficiency`, `same_session_verify_guard`, `acceptance_required`, `projection_freshness`.
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `PROJECTION_STALE`, `RECONCILE_REQUIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
