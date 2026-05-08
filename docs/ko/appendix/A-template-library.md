@@ -2,7 +2,7 @@
 
 ## 문서 역할
 
-이 appendix는 전체 Markdown projection template variant를 담당한다. Projection rule과 template tier는 `07-document-projection.md`가 담당하며, 이 appendix는 그 rule을 구현하는 complete body를 제공한다.
+이 appendix는 전체 Markdown projection template variant를 담당한다. Projection rule과 template tier는 `07-document-projection.md`가 담당하며, 이 appendix는 그 rule을 구현하는 complete body를 제공한다. Template body가 여기에 있다고 해서 그 `ProjectionKind`가 enable되거나 required가 되지는 않는다.
 
 Template은 rendered shape의 예시다. Canonical state가 아니며 kernel field, MCP schema, SQLite DDL을 재정의하면 안 된다.
 
@@ -19,6 +19,8 @@ Template은 rendered shape의 예시다. Canonical state가 아니며 kernel fie
 9. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, 표시된 Write Authorization ref, Change Unit DAG, Residual Risk text, Stewardship Impact text는 canonical state나 canonical Write Authorization record 자체가 아니라 projection output으로 취급한다.
 
 ## Required MVP Templates
+
+이 bodies는 MVP-required `ProjectionKind` tier에 해당한다: `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`.
 
 ### TASK
 
@@ -697,6 +699,8 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 ## Optional Design-Quality Templates
 
+이 bodies는 MVP-optional `ProjectionKind` tier에 해당한다: `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `TDD-TRACE`, `MANUAL-QA`. Policy가 적용되거나, records가 있거나, user/operator가 projection을 enable할 때만 render한다.
+
 ### DOMAIN-LANGUAGE
 
 ````md
@@ -932,7 +936,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Appendix Templates
 
-Appendix templates는 명시적으로 enabled되지 않는 한 optional variants입니다. `DEC` template은 optional standalone Decision Packet Markdown variant이며, Appendix A에 존재한다고 해서 standalone `DEC`가 MVP-required projection이 되지는 않습니다.
+Appendix templates는 extension / appendix `ProjectionKind` tier에 해당하며 명시적으로 enabled되지 않는 한 optional입니다. `DEC` template은 optional standalone Decision Packet Markdown variant이며, Appendix A에 존재한다고 해서 standalone `DEC`가 MVP-required projection이 되지는 않습니다. `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD` Markdown도 optional extension / appendix projections입니다.
 
 ### DEC
 
@@ -1343,6 +1347,7 @@ QA result를 기록하시겠습니까?
 - `MANUAL-QA`는 record 또는 requirement projection이다.
 - 아직 record가 없을 때는 `manual_qa_record_id: null`과 `result: null`을 사용한다.
 - Pending requirement는 `qa_gate: pending`으로 표시한다. Pending을 Manual QA record result로 표현하지 않는다. Close-relevant gate는 `qa_gate`로 남는다.
+- `ProjectionKind` tiers는 implementation support와 conformance expectations만 control한다. Markdown projection을 canonical state로 만들지는 않는다.
 - `DEC`는 enabled일 때 사용하는 optional standalone Decision Packet visibility projection이다. MVP Decision Packet visibility는 여전히 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공된다. Core가 user decision 또는 reconcile action을 기록하기 전에는 decision을 resolve하지 않는다.
 - `JOURNEY-CARD`는 compact current-position projection이다. Write를 authorize하거나, decision을 resolve하거나, risk를 accept하거나, evidence를 satisfy하거나, verification 또는 Manual QA를 replace하거나, work를 close하지 않는다.
 - `TASK`, `DEC`, `JOURNEY-CARD`, Change Unit block의 Autonomy Boundary text는 judgment latitude만 설명한다. Write Authority Summary와 Write Authorization display는 별도로 남고, scope와 approval은 별도 owner record와 gate로 남는다.

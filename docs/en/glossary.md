@@ -296,6 +296,10 @@ A guarantee level where the harness or connector can block a violating action be
 
 A human-readable rendering of canonical state records and artifact references. Projection is useful for reading and decision-making, but it cannot override canonical state.
 
+### ProjectionKind
+
+The API enum for projection job and template kinds. MVP-required values are `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`; MVP-optional values are `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, and `INTERFACE-CONTRACT`; extension / appendix values are `DEC`, `DESIGN`, `EXPORT`, and `JOURNEY-CARD`. Extension values are valid only when enabled, and no ProjectionKind makes a projection canonical state.
+
 ### Projection Freshness
 
 The relationship between a projection and its source records, managed hash, artifact refs, and projection job state. Freshness may be `current`, `stale`, `failed`, or `unknown`.

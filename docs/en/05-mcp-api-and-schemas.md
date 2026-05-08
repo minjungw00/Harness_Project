@@ -102,14 +102,22 @@ EventRef:
 
 ProjectionJobRef:
   projection_job_id: string
-  projection_kind: TASK | APR | DEC | RUN-SUMMARY | EVIDENCE-MANIFEST | EVAL | DIRECT-RESULT | MANUAL-QA | TDD-TRACE | DOMAIN-LANGUAGE | MODULE-MAP | INTERFACE-CONTRACT
+  projection_kind: ProjectionKind
   target_ref: string
   projection_version: integer
 ```
 
 `EventRef.state_version` is the resulting version for the event's affected scope. Task events use `tasks.state_version`; project-level events with `task_id=null` use `project_state.state_version`.
 
-ProjectionJobRef note: DEC is a valid projection_kind only for standalone Decision Packet Markdown when that feature is enabled. `DEC` is not an MVP-required projection job. Absence of a standalone `DEC` job must not reduce MVP Decision Packet visibility, which is required through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
+`ProjectionKind` is an extensible enum with API-owned MVP tiering:
+
+| Tier | Values | Requirement |
+|---|---|---|
+| MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Reference MVP implementations must support these kinds and enqueue/render them when their source records change. |
+| MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Implementations support or enqueue these when policy applies, a source record exists, or the user/operator enables the projection. |
+| Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Implementations may support these only when the corresponding extension or appendix projection is enabled. |
+
+ProjectionKind extensibility does not make projections canonical state. Every projection job still renders a derived view from owner records and artifact refs. `DEC` is valid only for standalone Decision Packet Markdown when that feature is enabled, and it is not an MVP-required projection job. Absence of a standalone `DEC` job must not reduce MVP Decision Packet visibility, which is required through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows remains required for agency conformance.
 
 ```yaml
 ToolError:
@@ -297,7 +305,7 @@ EndToEndPath:
 
 `WriteAuthorizationSummary` and `WriteAuthoritySummary` are API payload shapes only. This document does not define SQLite DDL for Write Authorization records. `WriteAuthoritySummary` is the display/read shape clients use to show the Write Authority Summary beside Autonomy Boundary judgment latitude.
 
-`DEC` remains a valid projection job kind for standalone Decision Packet Markdown when that projection feature is enabled. MVP-required Decision Packet visibility is provided through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Full DEC and Decision Packet template text is owned by Appendix A, not this API schema file.
+Extension / appendix `ProjectionKind` values such as `DEC`, `DESIGN`, `EXPORT`, and `JOURNEY-CARD` are valid projection job kinds only when their projection feature is enabled. MVP-required Decision Packet visibility is provided through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Persisted `JOURNEY-CARD` Markdown remains optional even though current-position Journey Card output is required in status, next, and significant resume flows. Full extension template text is owned by Appendix A, not this API schema file.
 
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, acceptance visibility, and residual-risk summaries are public MCP schemas. They describe API payloads only; owner docs define the canonical kernel records.
 

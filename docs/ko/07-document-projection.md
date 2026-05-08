@@ -28,7 +28,7 @@ Canonical kernel state, MCP request/response schema, SQLite DDL, design-quality 
 |---|---|---|---|
 | Current Task state | `state.sqlite.tasks`, `task_gates`, `state.sqlite.task_events` | `TASK` Current Summary와 status card | Core transition, then projector |
 | Task continuity | `state.sqlite` Task, Change Unit, Run, Evidence Manifest, Eval, Manual QA, Decision Packet, Approval, Residual Risk, acceptance/close record, artifact ref, 필요할 때 `journey_spine_entries`, `state.sqlite.task_events` | `TASK` Journey Spine | Core transition 또는 reconcile, Journey reconstruction, then projector |
-| Decision Packet | `state.sqlite.decision_packets`, 관련 `decision_gate` state, decision event, 관련 approval 또는 reconcile record, artifact ref, 필요할 때 연결된 `state.sqlite.residual_risks` | `TASK` Pending Decisions, Journey Card decision line, status/next responses, judgment-context resources, decision-packet resources; standalone projection이 enabled일 때 optional `DEC` / `DECISION-PACKET` | `request_user_decision` / `record_user_decision`, then projector |
+| Decision Packet | `state.sqlite.decision_packets`, 관련 `decision_gate` state, decision event, 관련 approval 또는 reconcile record, artifact ref, 필요할 때 연결된 `state.sqlite.residual_risks` | `TASK` Pending Decisions, Journey Card decision line, status/next responses, judgment-context resources, decision-packet resources; standalone projection이 enabled일 때 optional `DEC` | `request_user_decision` / `record_user_decision`, then projector |
 | Journey Spine | `state.sqlite` Task, Change Unit, Run, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Residual Risk, acceptance/close record, artifact ref, 필요할 때 `journey_spine_entries`, `state.sqlite.task_events` | `TASK` Journey Spine section, resume view, Journey Spine-oriented card | Core transition 또는 reconcile, Journey reconstruction, then projector |
 | Journey Card | current `state.sqlite` Task state, gate, active Change Unit, Autonomy Boundary summary, active Decision Packet ref, residual-risk summary, latest evidence/eval/QA/report ref, projection freshness | `JOURNEY-CARD`, status card, `harness.status` card text, `harness.next` current-position text, significant resume output | current state에서 read 또는 projection refresh; card를 직접 edit하지 않음 |
 | Autonomy Boundary | active `state.sqlite.change_units` Autonomy Boundary field와 관련 Decision Packet resolution/event | `TASK` Autonomy Boundary, Change Unit block, Journey Card autonomy line, standalone projection이 enabled일 때 optional related `DEC` | shaping update 또는 user Decision Packet resolution, then projector |
@@ -57,7 +57,7 @@ Required authority statements:
 - Domain Language: `domain_terms` table -> `DOMAIN-LANGUAGE` projection
 - Module Map: `module_map_items` table -> `MODULE-MAP` projection
 - Interface Contract: `interface_contracts` table -> `INTERFACE-CONTRACT` projection
-- Decision Packet: `state.sqlite.decision_packets`와 관련 ref -> `TASK` Pending Decisions, status/next responses, judgment-context resources, decision-packet resources; standalone projection이 enabled일 때 optional `DEC` / `DECISION-PACKET` projection
+- Decision Packet: `state.sqlite.decision_packets`와 관련 ref -> `TASK` Pending Decisions, status/next responses, judgment-context resources, decision-packet resources; standalone projection이 enabled일 때 optional `DEC` projection
 - Journey Spine: owner record, artifact ref, `journey_spine_entries` supplement, `state.sqlite.task_events`에서 재구성한다. 자체 authority record가 아니다.
 - Journey Card: current state와 ref에서 만든 derived display다. 절대 canonical state가 아니다.
 - Autonomy Boundary: active `state.sqlite.change_units` boundary field -> projection surface. 판단 재량이지 scope authority가 아니다.
@@ -140,19 +140,19 @@ Markdown report는 artifact reference를 compact하고 consistent하게 render�
 
 ## Template Tiers
 
-Projection template에는 세 tier가 있다.
+Projection template은 API `ProjectionKind` tier와 일치한다.
 
 | Tier | Templates | Rule |
 |---|---|---|
-| Required MVP | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | MVP projector는 이를 render해야 한다. |
-| Optional design-quality | `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `TDD-TRACE`, `MANUAL-QA` | Policy가 적용되거나, record가 있거나, user/operator가 projection을 enable할 때 render한다. |
-| Appendix variants | `DEC` / `DECISION-PACKET`, `DESIGN`, `EXPORT`, `JOURNEY-CARD`, expanded cards, connector context templates | Full text는 Appendix A 또는 surface cookbook에 있다. |
+| MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | MVP projector는 이를 render해야 한다. |
+| MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, record가 있거나, user/operator가 projection을 enable할 때 render한다. |
+| Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Corresponding extension 또는 appendix projection이 enabled일 때만 render한다. Full text는 Appendix A에 있다. |
 
 Main doc은 각 template의 purpose와 source record만 정의한다. Full template body는 [Appendix A](appendix/A-template-library.md)에 있다.
 
 Persisted `JOURNEY-CARD` Markdown은 optional이다. `harness.status`, `harness.next`, significant resume flow의 current-position Journey Card output은 agency conformance에 required다.
 
-MVP Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 required다. Standalone `DEC` / `DECISION-PACKET` Markdown은 standalone Decision Packet projection feature가 enabled인 경우가 아니면 optional이다.
+MVP Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 required다. Standalone `DEC` Markdown은 standalone Decision Packet projection feature가 enabled인 경우가 아니면 optional이다.
 
 Decision Packet record ID는 `DEC-*`를 사용한다. `projection_kind`의 `DEC`는 projection kind label일 뿐이다. Standalone projection에 별도 identity가 필요하면 `DEC-PROJ-0001` 같은 별도 `projection_id`를 사용한다.
 
@@ -242,7 +242,7 @@ Source: record가 있을 때 `manual_qa_records` plus artifact refs, 그리고 a
 
 ## Appendix Variant Summaries
 
-### DEC / DECISION-PACKET
+### DEC
 
 목적: standalone Decision Packet projection이 enabled일 때 product judgment, approval-shaped judgment, waiver, acceptance, residual-risk acceptance, reconcile decision을 위한 optional readable Decision Packet projection이다. 왜 지금 결정이 필요한지, 사용자가 무엇을 결정하는지, 사용자의 추가 판단 없이 agent가 무엇을 결정할 수 있는지, option, trade-off, recommendation, uncertainty, deferral consequence, minimum context, final user decision, accepted risk를 보여줘야 한다.
 
@@ -287,7 +287,7 @@ Projection freshness는 state version, projection job state, managed hash, artif
 | `EVIDENCE-MANIFEST` | evidence coverage가 changed될 때 | baseline drift, changed files modified, required evidence missing/stale, approval expired |
 | `EVAL` | verification result가 recorded될 때 | Eval 후 baseline changes, evidence becomes stale, independence relation invalidated |
 | `DIRECT-RESULT` | direct run이 closes 또는 escalates될 때 | changed file drift, escalation state changes, artifact ref missing |
-| `DEC` / `DECISION-PACKET` | standalone Decision Packet projection이 enabled되어 있고 Decision Packet이 created, requested, resolved, deferred, rejected, blocked, superseded될 때 | packet status, affected scope, current-state context, related approval/reconcile state, residual-risk ref, evidence ref가 바뀔 때 |
+| `DEC` | standalone Decision Packet projection이 enabled되어 있고 Decision Packet이 created, requested, resolved, deferred, rejected, blocked, superseded될 때 | packet status, affected scope, current-state context, related approval/reconcile state, residual-risk ref, evidence ref가 바뀔 때 |
 | `JOURNEY-CARD` | card가 rendered 또는 projection으로 persisted될 때. `harness.status`와 `harness.next`가 projection job 없이 ephemeral하게 반환할 수도 있음 | 표시된 Task/gate/Change Unit/Autonomy Boundary/Write Authorization/approval/baseline/guarantee/Decision Packet/Residual Risk/evidence/report/freshness source가 rendered card보다 앞서 이동할 때 |
 | `DOMAIN-LANGUAGE` | domain terms change | term conflict, accepted term record changes, related code representation moves |
 | `MODULE-MAP` | module map records change | module path, public interface, dependency direction, test boundary changes |

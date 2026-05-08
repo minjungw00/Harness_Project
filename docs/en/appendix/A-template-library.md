@@ -2,7 +2,7 @@
 
 ## Document Role
 
-This appendix owns full Markdown projection template variants. The projection rules and template tiers are owned by `07-document-projection.md`; this appendix provides complete bodies that implement those rules.
+This appendix owns full Markdown projection template variants. The projection rules and template tiers are owned by `07-document-projection.md`; this appendix provides complete bodies that implement those rules. A template body appearing here does not by itself enable or require its `ProjectionKind`.
 
 Templates are examples of rendered shape. They are not canonical state and must not redefine kernel fields, MCP schemas, or SQLite DDL.
 
@@ -19,6 +19,8 @@ Templates are examples of rendered shape. They are not canonical state and must 
 9. Treat Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, displayed Write Authorization refs, Change Unit DAG, Residual Risk text, and Stewardship Impact text as projection output, not canonical state or the canonical Write Authorization record itself.
 
 ## Required MVP Templates
+
+These bodies correspond to the MVP-required `ProjectionKind` tier: `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`.
 
 ### TASK
 
@@ -697,6 +699,8 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 ## Optional Design-Quality Templates
 
+These bodies correspond to the MVP-optional `ProjectionKind` tier: `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `TDD-TRACE`, and `MANUAL-QA`. Render them only when policy applies, records exist, or the user/operator enables the projection.
+
 ### DOMAIN-LANGUAGE
 
 ````md
@@ -932,7 +936,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Appendix Templates
 
-Appendix templates are optional variants unless explicitly enabled. The `DEC` template is an optional standalone Decision Packet Markdown variant; its presence in Appendix A does not make standalone `DEC` an MVP-required projection.
+Appendix templates correspond to the extension / appendix `ProjectionKind` tier and are optional unless explicitly enabled. The `DEC` template is an optional standalone Decision Packet Markdown variant; its presence in Appendix A does not make standalone `DEC` an MVP-required projection. `DESIGN`, `EXPORT`, and persisted `JOURNEY-CARD` Markdown are also optional extension / appendix projections.
 
 ### DEC
 
@@ -1343,6 +1347,7 @@ Record the QA result?
 - `MANUAL-QA` is a record or requirement projection.
 - When no record exists yet, use `manual_qa_record_id: null` and `result: null`.
 - The pending requirement is displayed through `qa_gate: pending`. Do not represent pending as a Manual QA record result. The close-relevant gate remains `qa_gate`.
+- `ProjectionKind` tiers control implementation support and conformance expectations only; they do not make Markdown projections canonical state.
 - `DEC` is the optional standalone Decision Packet visibility projection when enabled. MVP Decision Packet visibility still comes through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. It does not resolve a decision unless Core records the user decision or reconcile action.
 - `JOURNEY-CARD` is a compact current-position projection. It does not authorize writes, resolve decisions, accept risk, satisfy evidence, replace verification, replace Manual QA, or close work.
 - Autonomy Boundary text in `TASK`, `DEC`, `JOURNEY-CARD`, and Change Unit blocks describes judgment latitude only; Write Authority Summary and Write Authorization displays remain separate, and scope and approval remain separate owner records and gates.
