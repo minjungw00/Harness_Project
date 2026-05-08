@@ -565,16 +565,35 @@ initial_state:
     guarantee_level: cooperative
     mcp_available: false
   active_task:
+    task_id: TASK-MCP-HOLD-001
     mode: direct
     lifecycle_phase: ready
+    active_change_unit_id: CU-MCP-HOLD-001
+    gates:
+      scope_gate: passed
+  active_change_unit:
+    change_unit_id: CU-MCP-HOLD-001
+    allowed_paths: ["src/profile/ProfileForm.tsx"]
+    allowed_tools: ["edit"]
 input:
+  intended_operation: "Edit the profile form through a cooperative surface while MCP is unavailable."
   intended_paths: ["src/profile/ProfileForm.tsx"]
-action: connector_prepare_write_attempt
+  intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
+  sensitive_categories: []
+  baseline_ref: BASE-MCP-HOLD-001
+action: prepare_write
 expected_state:
   lifecycle_phase: blocked
   write_held: true
+  write_decision: blocked
+  validators:
+    surface_capability_check: blocked
 expected_events:
-  - mcp_unavailable_detected
+  - prepare_write_blocked
+  - capability_insufficient_detected
 expected_artifacts: []
 expected_projection:
   TASK: enqueued
@@ -583,6 +602,8 @@ expected_error:
 ```
 
 ## Core Fixture 예시
+
+`prepare_write` allowed 예시는 Task가 `ready`에서 `executing`으로 이동한다고 기대합니다. 이 transition은 kernel transition table이 소유하고 정의합니다.
 
 ```yaml
 scenario_id: CORE-prepare-write-no-change-unit
@@ -606,6 +627,258 @@ expected_projection:
   TASK: stale_or_enqueued
 expected_error:
   code: NO_ACTIVE_CHANGE_UNIT
+```
+
+```yaml
+scenario_id: CORE-prepare-write-allowed-creates-write-authorization
+initial_state:
+  active_task:
+    task_id: TASK-WRITE-001
+    mode: direct
+    lifecycle_phase: ready
+    active_change_unit_id: CU-WRITE-001
+    gates:
+      scope_gate: passed
+      decision_gate: not_required
+      approval_gate: not_required
+      design_gate: passed
+  active_change_unit:
+    change_unit_id: CU-WRITE-001
+    allowed_paths: ["src/a.ts"]
+    allowed_tools: ["edit"]
+    allowed_commands: []
+    baseline_ref: BASE-WRITE-001
+input:
+  intended_operation: "Edit the scoped direct file."
+  intended_paths: ["src/a.ts"]
+  intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
+  sensitive_categories: []
+  baseline_ref: BASE-WRITE-001
+action: prepare_write
+expected_state:
+  lifecycle_phase: executing
+  gates:
+    scope_gate: passed
+    decision_gate: not_required
+    approval_gate: not_required
+  write_decision: allowed
+  write_authorization_ref:
+    record_kind: write_authorization
+    record_id: WA-WRITE-001
+  write_authorization:
+    write_authorization_id: WA-WRITE-001
+    status: allowed
+    change_unit_id: CU-WRITE-001
+    intended_paths: ["src/a.ts"]
+    consumed_by_run_id: null
+  validators:
+    scope_coverage: passed
+    changed_paths_intent: passed
+expected_events:
+  - prepare_write_allowed
+  - write_authorization_created
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error: null
+```
+
+```yaml
+scenario_id: CORE-record-run-without-write-authorization-blocked
+initial_state:
+  active_task:
+    task_id: TASK-WRITE-002
+    mode: direct
+    lifecycle_phase: executing
+    active_change_unit_id: CU-WRITE-002
+    gates:
+      scope_gate: passed
+      evidence_gate: none
+  active_change_unit:
+    change_unit_id: CU-WRITE-002
+    allowed_paths: ["src/a.ts"]
+    allowed_tools: ["edit"]
+    baseline_ref: BASE-WRITE-002
+input:
+  kind: direct
+  task_id: TASK-WRITE-002
+  change_unit_id: CU-WRITE-002
+  baseline_ref: BASE-WRITE-002
+  write_authorization_id: null
+  summary: "Direct edit was attempted without a prepare_write authorization."
+  payload:
+    direct:
+      observed_changes:
+        changed_paths: ["src/a.ts"]
+        created_paths: []
+        deleted_paths: []
+      command_results: []
+      evidence_updates:
+        acceptance_criteria: []
+      self_check_summary: "Self-check cannot count because write authority is missing."
+      escalation:
+        value: none
+        reason: null
+action: record_run
+expected_state:
+  lifecycle_phase: executing
+  gates:
+    scope_gate: passed
+    evidence_gate: none
+  run_recorded: false
+  write_authorization_ref: null
+  validators:
+    changed_paths: blocked
+    scope_coverage: passed
+expected_events: []
+expected_artifacts: []
+expected_projection: {}
+expected_error:
+  code: WRITE_AUTHORIZATION_REQUIRED
+```
+
+```yaml
+scenario_id: CORE-record-run-observed-path-outside-authorization-blocks-or-stales
+initial_state:
+  active_task:
+    task_id: TASK-WRITE-003
+    mode: work
+    lifecycle_phase: executing
+    active_change_unit_id: CU-WRITE-003
+    gates:
+      scope_gate: passed
+      approval_gate: not_required
+      evidence_gate: partial
+  active_change_unit:
+    change_unit_id: CU-WRITE-003
+    allowed_paths: ["src/a.ts"]
+    allowed_tools: ["edit"]
+    baseline_ref: BASE-WRITE-003
+  write_authorizations:
+    - write_authorization_id: WA-WRITE-003
+      status: allowed
+      change_unit_id: CU-WRITE-003
+      intended_paths: ["src/a.ts"]
+      consumed_by_run_id: null
+input:
+  kind: implementation
+  task_id: TASK-WRITE-003
+  change_unit_id: CU-WRITE-003
+  baseline_ref: BASE-WRITE-003
+  write_authorization_id: WA-WRITE-003
+  summary: "Implementation touched an observed path outside the authorization."
+  observed_product_write_persisted: true
+  payload:
+    implementation:
+      observed_changes:
+        changed_paths: ["src/a.ts", "src/b.ts"]
+        created_paths: []
+        deleted_paths: []
+      command_results: []
+      evidence_updates:
+        acceptance_criteria: []
+      tdd_trace_update: null
+action: record_run
+expected_state:
+  lifecycle_phase: blocked
+  gates:
+    scope_gate: blocked
+    evidence_gate: stale
+  close_readiness: blocked
+  projection_status: stale
+  run_recorded: true
+  run:
+    run_id: RUN-WRITE-003
+    kind: implementation
+    status: violation
+    observed_changes:
+      changed_paths: ["src/a.ts", "src/b.ts"]
+    evidence_sufficiency_allowed: false
+  write_authorization:
+    write_authorization_id: WA-WRITE-003
+    status: stale
+    consumed_by_run_id: null
+  observed_change_violation:
+    outside_authorized_paths: ["src/b.ts"]
+  validators:
+    changed_paths: blocked
+    scope_coverage: blocked
+expected_events:
+  - run_recorded
+  - write_authorization_violation_detected
+  - write_authorization_staled
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error:
+  code: SCOPE_VIOLATION
+```
+
+```yaml
+scenario_id: CORE-record-run-consumed-write-authorization-invalid
+initial_state:
+  active_task:
+    task_id: TASK-WRITE-004
+    mode: direct
+    lifecycle_phase: executing
+    active_change_unit_id: CU-WRITE-004
+    gates:
+      scope_gate: passed
+      evidence_gate: none
+  active_change_unit:
+    change_unit_id: CU-WRITE-004
+    allowed_paths: ["src/a.ts"]
+    allowed_tools: ["edit"]
+    baseline_ref: BASE-WRITE-004
+  write_authorizations:
+    - write_authorization_id: WA-WRITE-004
+      status: consumed
+      change_unit_id: CU-WRITE-004
+      intended_paths: ["src/a.ts"]
+      consumed_by_run_id: RUN-WRITE-PREV-004
+input:
+  kind: direct
+  task_id: TASK-WRITE-004
+  change_unit_id: CU-WRITE-004
+  baseline_ref: BASE-WRITE-004
+  write_authorization_id: WA-WRITE-004
+  summary: "Direct run tried to reuse a consumed Write Authorization."
+  payload:
+    direct:
+      observed_changes:
+        changed_paths: ["src/a.ts"]
+        created_paths: []
+        deleted_paths: []
+      command_results: []
+      evidence_updates:
+        acceptance_criteria: []
+      self_check_summary: "Path scope matches, but the authorization is already consumed."
+      escalation:
+        value: none
+        reason: null
+action: record_run
+expected_state:
+  lifecycle_phase: executing
+  gates:
+    scope_gate: passed
+    evidence_gate: none
+  run_recorded: false
+  write_authorization:
+    write_authorization_id: WA-WRITE-004
+    status: consumed
+    consumed_by_run_id: RUN-WRITE-PREV-004
+  validators:
+    changed_paths: passed
+    scope_coverage: passed
+  invalid_authorization_reason: already_consumed
+expected_events: []
+expected_artifacts: []
+expected_projection: {}
+expected_error:
+  code: WRITE_AUTHORIZATION_INVALID
 ```
 
 ```yaml
@@ -881,9 +1154,217 @@ expected_error:
   code: RECONCILE_REQUIRED
 ```
 
+```yaml
+scenario_id: CONN-journey-card-shown-before-significant-resume
+initial_state:
+  active_task:
+    task_id: TASK-RESUME-001
+    state_version: 42
+    mode: work
+    lifecycle_phase: executing
+    active_change_unit_id: CU-RESUME-001
+    gates:
+      scope_gate: passed
+      decision_gate: pending
+      evidence_gate: partial
+  active_change_unit:
+    change_unit_id: CU-RESUME-001
+    allowed_paths: ["src/resume/current.ts"]
+  journey_refs:
+    journey_card_ref:
+      record_kind: projection
+      record_id: JOURNEY-CARD-RESUME-001
+    journey_spine_entry_refs:
+      - record_kind: journey_spine_entry
+        record_id: JSE-RESUME-001
+  evidence_refs:
+    state_refs:
+      - record_kind: evidence_manifest
+        record_id: EVIDENCE-RESUME-001
+    artifact_refs:
+      - artifact_id: ART-DIFF-RESUME-001
+        kind: diff
+  decision_packets:
+    - decision_packet_id: DEC-RESUME-001
+      decision_kind: product_tradeoff
+      status: pending_user
+  residual_risks:
+    - risk_id: RISK-RESUME-001
+      close_relevant: true
+      visibility: visible
+      accepted: false
+  projection_freshness:
+    status: current
+input:
+  task_id: TASK-RESUME-001
+  focus: implementation
+  include_instruction_bundle: true
+  resume_kind: significant
+action: next
+expected_state:
+  state_version: 42
+  no_state_mutation: true
+  next_response:
+    state:
+      lifecycle_phase: executing
+    judgment_context:
+      journey_card:
+        task_id: TASK-RESUME-001
+        active_change_unit_ref:
+          record_kind: change_unit
+          record_id: CU-RESUME-001
+        active_decision_packet_refs:
+          - record_kind: decision_packet
+            record_id: DEC-RESUME-001
+        residual_risk_summary:
+          status: visible
+          close_relevant_count: 1
+          unaccepted_refs:
+            - record_kind: residual_risk
+              record_id: RISK-RESUME-001
+        projection_freshness:
+          status: current
+      evidence_refs:
+        state_refs:
+          - record_kind: evidence_manifest
+            record_id: EVIDENCE-RESUME-001
+        artifact_refs:
+          - artifact_id: ART-DIFF-RESUME-001
+      active_decision_packet_refs:
+        - record_kind: decision_packet
+          record_id: DEC-RESUME-001
+    instruction_bundle:
+      relevant_refs:
+        - record_kind: journey_spine_entry
+          record_id: JSE-RESUME-001
+        - record_kind: evidence_manifest
+          record_id: EVIDENCE-RESUME-001
+      artifact_refs:
+        - artifact_id: ART-DIFF-RESUME-001
+    pending_decisions:
+      - record_kind: decision_packet
+        record_id: DEC-RESUME-001
+expected_events: []
+expected_artifacts: []
+expected_projection: {}
+expected_error: null
+```
+
+```yaml
+scenario_id: CONN-decision-packet-not-broad-approval
+initial_state:
+  active_task:
+    task_id: TASK-CONN-DEC-001
+    mode: work
+    lifecycle_phase: ready
+    active_change_unit_id: CU-CONN-DEC-001
+    gates:
+      scope_gate: passed
+      decision_gate: not_required
+      approval_gate: not_required
+  active_change_unit:
+    change_unit_id: CU-CONN-DEC-001
+    allowed_paths: ["src/pricing/discount.ts"]
+    autonomy_boundary:
+      status: active
+      what_agent_may_do: ["Implement the already selected pricing rule."]
+      what_requires_user_judgment: ["Choose a margin versus conversion trade-off."]
+input:
+  intended_operation: "Choose and implement a new discount priority."
+  intended_paths: ["src/pricing/discount.ts"]
+  intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
+  sensitive_categories: []
+  baseline_ref: BASE-CONN-DEC-001
+  product_judgment_detected:
+    decision_kind: product_tradeoff
+    broad_approval_requested: false
+action: prepare_write
+expected_state:
+  lifecycle_phase: waiting_user
+  gates:
+    decision_gate: required
+    approval_gate: not_required
+  write_decision: decision_required
+  approval_request_candidate: null
+  write_authorization_ref: null
+  decision_packet_candidate:
+    decision_kind: product_tradeoff
+    affected_gates: [decision_gate]
+  validators:
+    decision_quality_check: blocked
+expected_events:
+  - prepare_write_blocked
+  - decision_required
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error:
+  code: DECISION_REQUIRED
+```
+
+```yaml
+scenario_id: CONN-autonomy-boundary-breach-stops-or-routes-to-decision
+initial_state:
+  active_task:
+    task_id: TASK-CONN-AB-001
+    mode: work
+    lifecycle_phase: ready
+    active_change_unit_id: CU-CONN-AB-001
+    gates:
+      scope_gate: passed
+      decision_gate: not_required
+      approval_gate: not_required
+  active_change_unit:
+    change_unit_id: CU-CONN-AB-001
+    allowed_paths: ["src/onboarding/copy.ts"]
+    autonomy_boundary:
+      autonomy_profile: afk_eligible
+      status: active
+      what_agent_may_do: ["Edit onboarding copy within the approved tone."]
+      what_requires_user_judgment: ["Change the onboarding promise or product positioning."]
+      stop_conditions: ["product_positioning_change"]
+input:
+  intended_operation: "Change the onboarding promise from guided setup to automatic migration."
+  intended_paths: ["src/onboarding/copy.ts"]
+  intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
+  sensitive_categories: []
+  baseline_ref: BASE-CONN-AB-001
+  triggered_stop_conditions: ["product_positioning_change"]
+action: prepare_write
+expected_state:
+  lifecycle_phase: waiting_user
+  gates:
+    decision_gate: required
+  autonomy_boundary_summary:
+    status: exceeded
+    triggered_stop_conditions: ["product_positioning_change"]
+  write_decision: decision_required
+  write_held: true
+  decision_packet_candidate:
+    decision_kind: autonomy_boundary
+    affected_gates: [decision_gate]
+  validators:
+    autonomy_boundary_check: blocked
+expected_events:
+  - prepare_write_blocked
+  - autonomy_boundary_exceeded
+  - decision_required
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error:
+  code: AUTONOMY_BOUNDARY_EXCEEDED
+```
+
 ### Connector Agency Catalog Entries
 
-이 항목들은 catalog entry이지 fixture body가 아닙니다. Fixture file로 materialize될 때 각 scenario는 exact fixture shape를 사용하고, rendered prose가 아니라 Core state, events, projection ref, error를 assert합니다. Autonomy Boundary connector fixture는 이 catalog entry에서 Core behavior로 검증됩니다.
+이 항목들은 catalog entry이지 fixture body가 아닙니다. 위 concrete fixture 예시는 priority가 가장 높은 entry를 exact fixture shape로 materialize하며, rendered prose가 아니라 Core state, events, projection ref, error를 assert합니다.
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
@@ -897,17 +1378,37 @@ expected_error:
 scenario_id: DESIGN-horizontal-feature-without-exception
 initial_state:
   active_task:
+    task_id: TASK-DESIGN-HORIZONTAL-001
     mode: work
-    lifecycle_phase: shaping
-input:
-  change_unit:
+    lifecycle_phase: ready
+    active_change_unit_id: CU-DESIGN-HORIZONTAL-001
+    gates:
+      scope_gate: passed
+      design_gate: pending
+  active_change_unit:
+    change_unit_id: CU-DESIGN-HORIZONTAL-001
     slice_type: horizontal-exception
     horizontal_exception_reason: null
-action: validate_design_policy
+    allowed_paths: ["src/shared/crossCutting.ts"]
+input:
+  intended_operation: "Apply a horizontal exception without the required exception reason."
+  intended_paths: ["src/shared/crossCutting.ts"]
+  intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
+  sensitive_categories: []
+  baseline_ref: BASE-DESIGN-HORIZONTAL-001
+action: prepare_write
 expected_state:
+  lifecycle_phase: blocked
   gates:
     design_gate: partial
+  write_decision: blocked
+  validators:
+    codebase_stewardship_check: blocked
 expected_events:
+  - prepare_write_blocked
   - design_validator_failed
 expected_artifacts: []
 expected_projection:
@@ -1075,8 +1576,11 @@ expected_state:
   write_decision: blocked
   validators:
     approval_scope: passed
-    module_interface_review: blocked
-    codebase_stewardship_check: blocked
+    codebase_stewardship_check:
+      status: blocked
+      findings:
+        - MODULE_INTERFACE_REVIEW_REQUIRED
+        - INTERFACE_CONTRACT_REVIEW_REQUIRED
   derived:
     stewardship_impact:
       domain_language_impact: none
@@ -1147,8 +1651,10 @@ expected_state:
     design_gate: stale
   write_decision: blocked
   validators:
-    domain_language_consistency: failed
-    codebase_stewardship_check: failed
+    codebase_stewardship_check:
+      status: failed
+      findings:
+        - DOMAIN_LANGUAGE_CONFLICT
   canonical_terms_unchanged:
     - TERM-CUSTOMER-001
     - TERM-CUSTOMER-002
@@ -1235,8 +1741,10 @@ expected_state:
     verification_gate: passed
     acceptance_gate: accepted
   validators:
-    codebase_stewardship_check: blocked
-    module_interface_review: passed
+    codebase_stewardship_check:
+      status: blocked
+      findings:
+        - STEWARDSHIP_FUTURE_CHANGE_RISK
     residual_risk_visibility_check: passed
   residual_risk_summary:
     status: visible
@@ -1276,7 +1784,7 @@ expected_error:
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
-| `STEWARDSHIP-shared-design-required-for-ambiguous-work` | `prepare_write` | Shared Design record 없는 ambiguous `work`는 `design_gate=pending` 또는 `partial`을 유지하거나 set하고, `shared_design_alignment` failed 또는 blocked를 보고하며, user judgment로 해결 가능한지에 따라 `VALIDATOR_FAILED` 또는 `DECISION_REQUIRED`를 반환합니다. |
+| `STEWARDSHIP-shared-design-required-for-ambiguous-work` | `prepare_write` | Shared Design record 없는 ambiguous `work`는 `design_gate=pending` 또는 `partial`을 유지하거나 set하고, shared-design finding이 있는 `codebase_stewardship_check` failed 또는 blocked를 보고하며, user judgment로 해결 가능한지에 따라 `VALIDATOR_FAILED` 또는 `DECISION_REQUIRED`를 반환합니다. |
 | `STEWARDSHIP-feedback-loop-required-before-behavior-write` | `prepare_write` | Feedback-loop record 없는 behavior-affecting write는 write를 held 상태로 유지하고, `feedback_loop_check` blocked를 보고하며, `design_gate=pending` 또는 `partial`을 유지합니다. 나중에 check하겠다는 agent prose에 의존하지 않습니다. |
 
 ## Context Hygiene Fixture 예시
@@ -1339,9 +1847,131 @@ expected_error:
   code: SCOPE_VIOLATION
 ```
 
+```yaml
+scenario_id: CONTEXT-HYGIENE-resume-uses-current-state-not-chat-memory
+initial_state:
+  active_task:
+    task_id: TASK-CONTEXT-001
+    state_version: 88
+    mode: work
+    lifecycle_phase: verifying
+    active_change_unit_id: CU-CONTEXT-001
+    acceptance_criteria:
+      - criteria_id: AC-CURRENT-001
+        statement: "Server-side export preserves account filters."
+    gates:
+      scope_gate: passed
+      decision_gate: pending
+      evidence_gate: sufficient
+      verification_gate: pending
+  active_change_unit:
+    change_unit_id: CU-CONTEXT-001
+    allowed_paths: ["src/export/serverExport.ts"]
+    baseline_ref: BASE-CURRENT-CTX
+  journey_refs:
+    journey_card_ref:
+      record_kind: projection
+      record_id: JOURNEY-CARD-CONTEXT-001
+    journey_spine_entry_refs:
+      - record_kind: journey_spine_entry
+        record_id: JSE-CONTEXT-001
+  evidence_refs:
+    state_refs:
+      - record_kind: evidence_manifest
+        record_id: EVIDENCE-CONTEXT-001
+      - record_kind: run
+        record_id: RUN-CONTEXT-001
+    artifact_refs:
+      - artifact_id: ART-CONTEXT-TEST-001
+        kind: log
+  decision_packets:
+    - decision_packet_id: DEC-CONTEXT-001
+      decision_kind: verification_waiver
+      status: pending_user
+  projection_freshness:
+    status: stale
+    stale_refs:
+      - record_kind: projection
+        record_id: TASK-PROJECTION-OLD-001
+  chat_memory_claims:
+    - claim_id: CHAT-MEM-OLD-001
+      freshness: stale
+      claims:
+        lifecycle_phase: executing
+        active_change_unit_id: CU-OLD-CHAT-001
+        allowed_paths: ["src/export/clientExport.ts"]
+        evidence_gate: partial
+input:
+  task_id: TASK-CONTEXT-001
+  focus: verification
+  include_instruction_bundle: true
+  supplied_context_refs:
+    - CHAT-MEM-OLD-001
+action: next
+expected_state:
+  state_version: 88
+  no_state_mutation: true
+  current_state_authority: current_task_record
+  next_response:
+    state:
+      lifecycle_phase: verifying
+      gates:
+        evidence_gate: sufficient
+        verification_gate: pending
+    judgment_context:
+      task_ref:
+        record_kind: task
+        record_id: TASK-CONTEXT-001
+      journey_card:
+        task_id: TASK-CONTEXT-001
+        projection_freshness:
+          status: stale
+      relevant_refs:
+        - record_kind: journey_spine_entry
+          record_id: JSE-CONTEXT-001
+        - record_kind: change_unit
+          record_id: CU-CONTEXT-001
+      evidence_refs:
+        state_refs:
+          - record_kind: evidence_manifest
+            record_id: EVIDENCE-CONTEXT-001
+          - record_kind: run
+            record_id: RUN-CONTEXT-001
+        artifact_refs:
+          - artifact_id: ART-CONTEXT-TEST-001
+      active_decision_packet_refs:
+        - record_kind: decision_packet
+          record_id: DEC-CONTEXT-001
+      stale_or_missing_refs:
+        - record_kind: projection
+          record_id: TASK-PROJECTION-OLD-001
+    instruction_bundle:
+      relevant_refs:
+        - record_kind: change_unit
+          record_id: CU-CONTEXT-001
+        - record_kind: evidence_manifest
+          record_id: EVIDENCE-CONTEXT-001
+      artifact_refs:
+        - artifact_id: ART-CONTEXT-TEST-001
+    pending_decisions:
+      - record_kind: decision_packet
+        record_id: DEC-CONTEXT-001
+  context_hygiene:
+    stale_chat_claim_refs: [CHAT-MEM-OLD-001]
+    stale_chat_claim_treated_as: pull_only_non_authoritative
+    did_not_replace_current_task_state: true
+    did_not_satisfy_gates: true
+  validators:
+    context_hygiene_check: warning
+expected_events: []
+expected_artifacts: []
+expected_projection: {}
+expected_error: null
+```
+
 ### Context Hygiene Catalog Entries
 
-이 항목들은 fixture body가 아닙니다. Materialize된 각 fixture는 resume, status, evaluator prose의 문구 matching이 아니라 Core response와 captured state를 통해 behavior를 증명해야 합니다.
+이 항목들은 fixture body가 아닙니다. 위 resume fixture를 포함한 materialized fixture는 resume, status, evaluator prose의 문구 matching이 아니라 Core response와 captured state를 통해 behavior를 증명해야 합니다.
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
@@ -1353,11 +1983,11 @@ expected_error:
 
 최소 MVP suite:
 
-- core: active status, advisor close, direct close, write gate, approval required, evidence insufficient, same-session verification guard, QA required, acceptance required, projection failure separation
-- connector: capability profile, MCP unavailable hold, generated manifest drift, changed-path detection, artifact capture, fallback guarantee display, Journey Card before significant resume, Decision Packet not broad approval, Autonomy Boundary breach routing
+- core: active status, advisor close, direct close, write gate, Write Authorization creation/required/invalid coverage, approval required, evidence insufficient, same-session verification guard, QA required, acceptance required, projection failure separation
+- connector: capability profile, MCP unavailable hold, generated manifest drift, changed-path detection, artifact capture, fallback guarantee display, current Journey Card before significant resume, Decision Packet not broad approval, Autonomy Boundary breach routing
 - agency: Decision Packet required for blocking product judgment, product trade-off write guard, AFK Autonomy Boundary stop conditions, known close-relevant residual-risk visibility before any successful close, accepted Residual Risk refs for risk-accepted close, distinct approval/QA/acceptance judgments
-- stewardship: shared design required, codebase stewardship close blockers, domain language conflicts, vertical slice or exception, feedback loop and TDD trace required or waived, public interface module/interface review, Manual QA policy and waiver checks
-- context-hygiene: current-state bundle, stale projection and stale PRD handling, stale `TASK` projection write guard, stale context pull-only behavior, evaluator bundle freshness, resume uses current state rather than chat memory
+- stewardship: shared design required, codebase stewardship close blockers, domain language conflicts, vertical slice or exception, feedback loop and TDD trace required or waived, public interface module/interface review, public interface stewardship close blocker, Manual QA policy and waiver checks
+- context-hygiene: current-state bundle, stale projection and stale PRD handling, stale `TASK` projection write guard, stale context pull-only behavior, evaluator bundle freshness, resume from current state rather than chat memory
 - design-quality: kernel authority를 다시 정의하지 않으면서 agency, stewardship, context-hygiene, close-impact validator를 compose하는 policy-pack smoke coverage
 
 Conformance output은 fixture id, pass/fail, observed state summary, observed events, artifact integrity result, projection freshness, error code comparison을 포함해야 합니다.
