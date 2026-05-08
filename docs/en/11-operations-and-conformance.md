@@ -109,7 +109,7 @@ approval/run/evidence/eval/direct reports for a Task
 design-quality projections when enabled
 ```
 
-For MVP, Decision Packet and Journey Card visibility is rendered through `TASK`, status, journey, and judgment-context resources. Dedicated `DEC` refresh and persisted `JOURNEY-CARD` refresh targets are optional extension targets when enabled, not required MVP targets.
+For MVP, Decision Packet visibility is rendered through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources; Journey Card visibility is rendered through status, journey, and next surfaces. Dedicated `DEC` refresh and persisted `JOURNEY-CARD` refresh targets are optional extension targets when enabled, not required MVP targets.
 
 ## Reconcile
 

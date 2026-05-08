@@ -930,6 +930,8 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Appendix Templates
 
+Appendix templates는 명시적으로 enabled되지 않는 한 optional variants입니다. `DEC` template은 optional standalone Decision Packet Markdown variant이며, Appendix A에 존재한다고 해서 standalone `DEC`가 MVP-required projection이 되지는 않습니다.
+
 ### DEC
 
 ````md
@@ -1336,7 +1338,7 @@ QA result를 기록하시겠습니까?
 
 - `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`는 canonical document가 아니라 canonical record에서 만든 projection이다.
 - `MANUAL-QA`는 record projection이다. Close-relevant gate는 `qa_gate`로 남는다.
-- `DEC`는 Decision Packet visibility projection이다. Core가 user decision 또는 reconcile action을 기록하기 전에는 decision을 resolve하지 않는다.
+- `DEC`는 enabled일 때 사용하는 optional standalone Decision Packet visibility projection이다. MVP Decision Packet visibility는 여전히 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공된다. Core가 user decision 또는 reconcile action을 기록하기 전에는 decision을 resolve하지 않는다.
 - `JOURNEY-CARD`는 compact current-position projection이다. Write를 authorize하거나, decision을 resolve하거나, risk를 accept하거나, evidence를 satisfy하거나, verification 또는 Manual QA를 replace하거나, work를 close하지 않는다.
 - `TASK`, `DEC`, `JOURNEY-CARD`, Change Unit block의 Autonomy Boundary text는 judgment latitude만 설명한다. Write Authority Summary와 Write Authorization display는 별도로 남고, scope와 approval은 별도 owner record와 gate로 남는다.
 - Write Authority Summary text는 current scope, approval, baseline, guarantee, Write Authorization ref에서 만든 display다. Work를 authorize하거나, evidence를 prove하거나, verification 또는 Manual QA를 replace하거나, acceptance를 imply하거나, residual risk를 accept하지 않는다.

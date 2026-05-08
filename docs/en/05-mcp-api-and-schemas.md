@@ -99,7 +99,11 @@ ProjectionJobRef:
   projection_kind: TASK | APR | DEC | RUN-SUMMARY | EVIDENCE-MANIFEST | EVAL | DIRECT-RESULT | MANUAL-QA | TDD-TRACE | DOMAIN-LANGUAGE | MODULE-MAP | INTERFACE-CONTRACT
   target_ref: string
   projection_version: integer
+```
 
+ProjectionJobRef note: DEC is a valid projection_kind only for standalone Decision Packet Markdown when that feature is enabled. `DEC` is not an MVP-required projection job. Absence of a standalone `DEC` job must not reduce MVP Decision Packet visibility, which is required through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
+
+```yaml
 ToolError:
   code: ErrorCode
   message: string
@@ -285,7 +289,7 @@ EndToEndPath:
 
 `WriteAuthorizationSummary` and `WriteAuthoritySummary` are API payload shapes only. This document does not define SQLite DDL for Write Authorization records. `WriteAuthoritySummary` is the display/read shape clients use to show the Write Authority Summary beside Autonomy Boundary judgment latitude.
 
-`DEC` is the Decision Packet visibility projection job kind. Full DEC and Decision Packet template text is owned by Appendix A, not this API schema file.
+`DEC` remains a valid projection job kind for standalone Decision Packet Markdown when that projection feature is enabled. MVP-required Decision Packet visibility is provided through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Full DEC and Decision Packet template text is owned by Appendix A, not this API schema file.
 
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, acceptance visibility, and residual-risk summaries are public MCP schemas. They describe API payloads only; owner docs define the canonical kernel records.
 
@@ -950,7 +954,7 @@ State transition summary: records a pending Decision Packet and usually moves Ta
 
 Events emitted: `decision_packet_created`, `user_decision_requested`, `approval_requested`, `scope_confirmation_requested`, `design_choice_requested`, `architecture_choice_requested`, `autonomy_boundary_decision_requested`, `verification_waiver_requested`, `qa_waiver_requested`, `acceptance_requested`, `residual_risk_acceptance_requested`, `reconcile_decision_requested`.
 
-Projection jobs enqueued: `TASK`, `DEC`; `APR` for approval; affected projection for reconcile.
+Projection jobs enqueued: `TASK`; `DEC` when standalone Decision Packet projection is enabled; `APR` for approval where applicable; affected projection for reconcile.
 
 Validators run: `state_envelope`, `decision_packet_validity`, `decision_quality_check`, `autonomy_boundary_check` when the packet affects the active Change Unit boundary, `approval_scope` for approval decisions, `reconcile_required` for reconcile decisions, `residual_risk_visibility_check` for risk-acceptance decisions.
 
@@ -1030,7 +1034,7 @@ State transition summary: resolves, defers, rejects, or blocks the targeted Deci
 
 Events emitted: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
 
-Projection jobs enqueued: `TASK`, `DEC`; `APR` for approval; `MANUAL-QA` for QA waiver when represented as a QA record; affected design/task projections for reconcile and Decision Packet visibility.
+Projection jobs enqueued: `TASK`; `DEC` when standalone Decision Packet projection is enabled; `APR` for approval where applicable; `MANUAL-QA` for QA waiver when represented as a QA record; affected design/task projections for reconcile. Decision Packet visibility still appears through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
 
 Validators run: `state_envelope`, `pending_decision_packet_exists`, `decision_quality_check`, `autonomy_boundary_check`, `approval_scope`, `qa_waiver_reason`, `residual_risk_visibility_check`, `reconcile_target_validity`.
 
@@ -1193,7 +1197,7 @@ State transition summary: records Manual QA; `passed` can set `qa_gate=passed`; 
 
 Events emitted: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`.
 
-Projection jobs enqueued: `TASK`, `MANUAL-QA`; `DEC` when a waiver Decision Packet affects visibility; optionally `EVIDENCE-MANIFEST`.
+Projection jobs enqueued: `TASK`, `MANUAL-QA`; `DEC` when standalone Decision Packet projection is enabled and a waiver Decision Packet affects visibility; optionally `EVIDENCE-MANIFEST`. Waiver Decision Packet visibility still appears through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
 
 Validators run: `state_envelope`, `manual_qa_required`, `decision_quality_check`, `residual_risk_visibility_check`, `qa_waiver_reason`, `artifact_integrity`, `evidence_sufficiency`.
 

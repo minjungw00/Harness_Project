@@ -930,6 +930,8 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Appendix Templates
 
+Appendix templates are optional variants unless explicitly enabled. The `DEC` template is an optional standalone Decision Packet Markdown variant; its presence in Appendix A does not make standalone `DEC` an MVP-required projection.
+
 ### DEC
 
 ````md
@@ -1336,7 +1338,7 @@ Record the QA result?
 
 - `DOMAIN-LANGUAGE`, `MODULE-MAP`, and `INTERFACE-CONTRACT` are projections from canonical records, not canonical documents.
 - `MANUAL-QA` is a record projection. The close-relevant gate remains `qa_gate`.
-- `DEC` is the Decision Packet visibility projection. It does not resolve a decision unless Core records the user decision or reconcile action.
+- `DEC` is the optional standalone Decision Packet visibility projection when enabled. MVP Decision Packet visibility still comes through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. It does not resolve a decision unless Core records the user decision or reconcile action.
 - `JOURNEY-CARD` is a compact current-position projection. It does not authorize writes, resolve decisions, accept risk, satisfy evidence, replace verification, replace Manual QA, or close work.
 - Autonomy Boundary text in `TASK`, `DEC`, `JOURNEY-CARD`, and Change Unit blocks describes judgment latitude only; Write Authority Summary and Write Authorization displays remain separate, and scope and approval remain separate owner records and gates.
 - Write Authority Summary text is display from current scope, approval, baseline, guarantee, and Write Authorization refs. It does not authorize work, prove evidence, replace verification or Manual QA, imply acceptance, or accept residual risk.

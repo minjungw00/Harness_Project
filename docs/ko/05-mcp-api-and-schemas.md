@@ -99,7 +99,11 @@ ProjectionJobRef:
   projection_kind: TASK | APR | DEC | RUN-SUMMARY | EVIDENCE-MANIFEST | EVAL | DIRECT-RESULT | MANUAL-QA | TDD-TRACE | DOMAIN-LANGUAGE | MODULE-MAP | INTERFACE-CONTRACT
   target_ref: string
   projection_version: integer
+```
 
+ProjectionJobRef note: `DEC`는 해당 feature가 enabled일 때 standalone Decision Packet Markdown에만 사용하는 valid `projection_kind`입니다. `DEC`는 MVP-required projection job이 아닙니다. Standalone `DEC` job이 없어도 MVP Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 required입니다.
+
+```yaml
 ToolError:
   code: ErrorCode
   message: string
@@ -285,7 +289,7 @@ EndToEndPath:
 
 `WriteAuthorizationSummary`와 `WriteAuthoritySummary`는 API payload shapes일 뿐입니다. 이 문서는 Write Authorization records에 대한 SQLite DDL을 정의하지 않습니다. `WriteAuthoritySummary`는 clients가 Write Authority Summary를 Autonomy Boundary judgment latitude 옆에 표시하기 위해 사용하는 display/read shape입니다.
 
-`DEC`는 Decision Packet visibility projection job kind입니다. Full DEC와 Decision Packet template text는 Appendix A가 담당하며, 이 API schema file이 담당하지 않습니다.
+`DEC`는 standalone Decision Packet Markdown projection feature가 enabled일 때 사용하는 valid projection job kind로 남습니다. MVP-required Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공됩니다. Full DEC와 Decision Packet template text는 Appendix A가 담당하며, 이 API schema file이 담당하지 않습니다.
 
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. Canonical kernel records는 owner docs가 정의합니다.
 
@@ -950,7 +954,7 @@ State transition summary: pending Decision Packet을 record하고 보통 Task를
 
 Events emitted: `decision_packet_created`, `user_decision_requested`, `approval_requested`, `scope_confirmation_requested`, `design_choice_requested`, `architecture_choice_requested`, `autonomy_boundary_decision_requested`, `verification_waiver_requested`, `qa_waiver_requested`, `acceptance_requested`, `residual_risk_acceptance_requested`, `reconcile_decision_requested`.
 
-Projection jobs enqueued: `TASK`, `DEC`; approval에는 `APR`; reconcile에는 affected projection.
+Projection jobs enqueued: `TASK`; standalone Decision Packet projection이 enabled일 때 `DEC`; applicable한 approval에는 `APR`; reconcile에는 affected projection.
 
 Validators run: `state_envelope`, `decision_packet_validity`, `decision_quality_check`, `autonomy_boundary_check` when the packet affects the active Change Unit boundary, `approval_scope` for approval decisions, `reconcile_required` for reconcile decisions, `residual_risk_visibility_check` for risk-acceptance decisions.
 
@@ -1030,7 +1034,7 @@ State transition summary: targeted Decision Packet을 resolve, defer, reject, bl
 
 Events emitted: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
 
-Projection jobs enqueued: `TASK`, `DEC`; approval에는 `APR`; QA waiver가 QA record로 represented될 때 `MANUAL-QA`; reconcile과 Decision Packet visibility에는 affected design/task projections.
+Projection jobs enqueued: `TASK`; standalone Decision Packet projection이 enabled일 때 `DEC`; applicable한 approval에는 `APR`; QA waiver가 QA record로 represented될 때 `MANUAL-QA`; reconcile에는 affected design/task projections. Decision Packet visibility는 여전히 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 나타납니다.
 
 Validators run: `state_envelope`, `pending_decision_packet_exists`, `decision_quality_check`, `autonomy_boundary_check`, `approval_scope`, `qa_waiver_reason`, `residual_risk_visibility_check`, `reconcile_target_validity`.
 
@@ -1193,7 +1197,7 @@ State transition summary: Manual QA를 record합니다. `passed`는 `qa_gate=pas
 
 Events emitted: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`.
 
-Projection jobs enqueued: `TASK`, `MANUAL-QA`; waiver Decision Packet이 visibility에 영향을 주면 `DEC`; optional `EVIDENCE-MANIFEST`.
+Projection jobs enqueued: `TASK`, `MANUAL-QA`; standalone Decision Packet projection이 enabled되어 있고 waiver Decision Packet이 visibility에 영향을 주면 `DEC`; optional `EVIDENCE-MANIFEST`. Waiver Decision Packet visibility는 여전히 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 나타납니다.
 
 Validators run: `state_envelope`, `manual_qa_required`, `decision_quality_check`, `residual_risk_visibility_check`, `qa_waiver_reason`, `artifact_integrity`, `evidence_sufficiency`.
 

@@ -102,7 +102,7 @@ The Task-level aggregate gate for blocking product judgment before progress, wri
 
 ### Decision Packet
 
-A recorded decision-support packet for blocking product judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Its record-level status is `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, or `superseded`; relevant statuses feed the Task-level `decision_gate`. Its canonical form is kernel state, and Markdown renderings are projections or proposal surfaces.
+A recorded decision-support packet for blocking product judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Its record-level status is `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, or `superseded`; relevant statuses feed the Task-level `decision_gate`. Its canonical form is kernel state. MVP visibility is required through Task/status/next/judgment-context and decision-packet surfaces; standalone `DEC` Markdown renderings are optional projections or proposal surfaces unless enabled.
 
 ### Design Gate
 

@@ -28,16 +28,16 @@ It does not define canonical kernel state, MCP request/response schemas, SQLite 
 |---|---|---|---|
 | Current Task state | `state.sqlite.tasks`, `task_gates`, and `state.sqlite.task_events` | `TASK` Current Summary and status card | Core transition, then projector |
 | Task continuity | `state.sqlite` Task, Change Unit, Run, Evidence Manifest, Eval, Manual QA, Decision Packet, Approval, Residual Risk, acceptance/close records, artifact refs, `journey_spine_entries` when needed, and `state.sqlite.task_events` | `TASK` Journey Spine | Core transition or reconcile, Journey reconstruction, then projector |
-| Decision Packet | `state.sqlite.decision_packets`, related `decision_gate` state, decision events, related approval or reconcile records, artifact refs, and linked `state.sqlite.residual_risks` when applicable | `DEC` / `DECISION-PACKET`, `TASK` Pending Decisions, Journey Card decision line | `request_user_decision` / `record_user_decision`, then projector |
+| Decision Packet | `state.sqlite.decision_packets`, related `decision_gate` state, decision events, related approval or reconcile records, artifact refs, and linked `state.sqlite.residual_risks` when applicable | `TASK` Pending Decisions, Journey Card decision line, status/next responses, judgment-context resources, and decision-packet resources; optional `DEC` / `DECISION-PACKET` when standalone projection is enabled | `request_user_decision` / `record_user_decision`, then projector |
 | Journey Spine | `state.sqlite` Task, Change Unit, Run, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Residual Risk, acceptance/close records, artifact refs, `journey_spine_entries` when needed, and `state.sqlite.task_events` | `TASK` Journey Spine section, resume views, Journey Spine-oriented cards | Core transition or reconcile, Journey reconstruction, then projector |
 | Journey Card | current `state.sqlite` Task state, gates, active Change Unit, Autonomy Boundary summary, active Decision Packet refs, residual-risk summary, latest evidence/eval/QA/report refs, and projection freshness | `JOURNEY-CARD`, status card, `harness.status` card text, `harness.next` current-position text, significant resume output | Read or projection refresh from current state; never direct card edit |
-| Autonomy Boundary | active `state.sqlite.change_units` Autonomy Boundary fields plus related Decision Packet resolutions and events | `TASK` Autonomy Boundary, Change Unit block, Journey Card autonomy line, related `DEC` | shaping update or user Decision Packet resolution, then projector |
+| Autonomy Boundary | active `state.sqlite.change_units` Autonomy Boundary fields plus related Decision Packet resolutions and events | `TASK` Autonomy Boundary, Change Unit block, Journey Card autonomy line, optional related `DEC` when standalone projection is enabled | shaping update or user Decision Packet resolution, then projector |
 | Write Authorization | `state.sqlite.write_authorizations` plus related Task, Change Unit, approval, Decision Packet, baseline, and consumed Run refs | `TASK` Write Authority Summary, Journey Card Write Authority Summary line, `RUN-SUMMARY` relation | `prepare_write` creates it; idempotent replay returns the already committed response; `record_run` consumes the authorization, then projector |
 | Change Unit DAG | `state.sqlite.change_units`, `state.sqlite.change_unit_dependencies`, dependency-related events, and active Task state | `TASK` Change Unit Dependencies / DAG summary | shaping update or reconcile, then projector |
-| Residual Risk | `state.sqlite.residual_risks`, accepted-risk events/refs, related Decision Packets, evidence/QA/eval refs, and artifact refs | `TASK` Residual Risk, `DEC` accepted-risk context, Journey Card residual-risk line | Core transition from decision, evidence, QA, Eval, reconcile, or close flow, then projector |
+| Residual Risk | `state.sqlite.residual_risks`, accepted-risk events/refs, related Decision Packets, evidence/QA/eval refs, and artifact refs | `TASK` Residual Risk, optional `DEC` accepted-risk context when standalone projection is enabled, Journey Card residual-risk line | Core transition from decision, evidence, QA, Eval, reconcile, or close flow, then projector |
 | Stewardship Impact Summary | `domain_terms`, `module_map_items`, `interface_contracts`, feedback loop/TDD records, `state.sqlite.residual_risks`, `state.sqlite.decision_packets`, policy validator results, and related refs | `TASK` Stewardship Impact and status/resume stewardship displays | Owner record update, validator result, reconcile, or close flow, then projector |
 | User Notes | human-editable input -> `reconcile_items` -> accepted state event/record | `TASK` User Notes and Proposals | human edit, reconcile decision, Core event |
-| Shared Design | shared design records and events | `TASK` summary, `DESIGN`, `DEC` | Core transition or reconcile, then projector |
+| Shared Design | shared design records and events | `TASK` summary, `DESIGN`, optional `DEC` when standalone projection is enabled | Core transition or reconcile, then projector |
 | Domain Language | `domain_terms` table | `DOMAIN-LANGUAGE` projection | Core transition or reconcile, then projector |
 | Module Map | `module_map_items` table | `MODULE-MAP` projection | Core transition or reconcile, then projector |
 | Interface Contract | `interface_contracts` table | `INTERFACE-CONTRACT` projection | Core transition or reconcile, then projector |
@@ -57,7 +57,7 @@ Required authority statements:
 - Domain Language: `domain_terms` table -> `DOMAIN-LANGUAGE` projection
 - Module Map: `module_map_items` table -> `MODULE-MAP` projection
 - Interface Contract: `interface_contracts` table -> `INTERFACE-CONTRACT` projection
-- Decision Packet: `state.sqlite.decision_packets` and related refs -> `DEC` / `DECISION-PACKET` projection
+- Decision Packet: `state.sqlite.decision_packets` and related refs -> `TASK` Pending Decisions, status/next responses, judgment-context resources, and decision-packet resources; optional `DEC` / `DECISION-PACKET` projection when standalone projection is enabled
 - Journey Spine: reconstructed from owner records, artifact refs, `journey_spine_entries` supplements, and `state.sqlite.task_events`; it is not its own authority record
 - Journey Card: derived display from current state and refs; it is never canonical state
 - Autonomy Boundary: active `state.sqlite.change_units` boundary fields -> projection surfaces; it is judgment latitude, not scope authority
@@ -150,6 +150,8 @@ Main docs define each template's purpose and source records only. Full template 
 
 Persisted `JOURNEY-CARD` Markdown is optional. Current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows is required for agency conformance.
 
+MVP Decision Packet visibility is required through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Standalone `DEC` / `DECISION-PACKET` Markdown is optional unless the standalone Decision Packet projection feature is enabled.
+
 ## Required MVP Templates
 
 ### TASK
@@ -238,7 +240,7 @@ Source: `manual_qa_records` plus artifact refs. User-facing cards may say `Manua
 
 ### DEC / DECISION-PACKET
 
-Purpose: a readable projection of a Decision Packet for product judgment, approval-shaped judgment, waiver, acceptance, residual-risk acceptance, or reconcile decision. It should make why the decision is needed now, what the user is deciding, what the agent may decide without the user, options, trade-offs, recommendation, uncertainty, deferral consequence, minimum context, final user decision, and accepted risk visible.
+Purpose: an optional readable projection of a Decision Packet for product judgment, approval-shaped judgment, waiver, acceptance, residual-risk acceptance, or reconcile decision when standalone Decision Packet projection is enabled. It should make why the decision is needed now, what the user is deciding, what the agent may decide without the user, options, trade-offs, recommendation, uncertainty, deferral consequence, minimum context, final user decision, and accepted risk visible.
 
 Sources: `state.sqlite.decision_packets`, related Task and Change Unit refs, affected gates, related approval or reconcile records, residual-risk refs, evidence refs, artifact refs, and decision events.
 
@@ -279,7 +281,7 @@ Projection freshness is computed from state versions, projection job state, mana
 | `EVIDENCE-MANIFEST` | evidence coverage changes | baseline drift, changed files modified, required evidence missing/stale, approval expired |
 | `EVAL` | verification result recorded | baseline changes after Eval, evidence becomes stale, independence relation invalidated |
 | `DIRECT-RESULT` | direct run closes or escalates | changed file drift, escalation state changes, artifact ref missing |
-| `DEC` / `DECISION-PACKET` | Decision Packet created, requested, resolved, deferred, rejected, blocked, or superseded | packet status, affected scope, current-state context, related approval/reconcile state, residual-risk refs, or evidence refs change |
+| `DEC` / `DECISION-PACKET` | standalone Decision Packet projection is enabled and a Decision Packet is created, requested, resolved, deferred, rejected, blocked, or superseded | packet status, affected scope, current-state context, related approval/reconcile state, residual-risk refs, or evidence refs change |
 | `JOURNEY-CARD` | card is rendered or persisted as a projection; `harness.status` and `harness.next` may also return it ephemerally without a projection job | any displayed Task/gate/Change Unit/Autonomy Boundary/Write Authorization/approval/baseline/guarantee/Decision Packet/Residual Risk/evidence/report/freshness source moves ahead of the rendered card |
 | `DOMAIN-LANGUAGE` | domain terms change | term conflict, accepted term record changes, related code representation moves |
 | `MODULE-MAP` | module map records change | module path, public interface, dependency direction, or test boundary changes |

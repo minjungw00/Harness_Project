@@ -904,7 +904,7 @@ Launching verification sets or keeps `verification_gate=pending`. Only `harness.
 
 Projection jobs are the durable outbox between committed state and Product Repository Markdown files. The `projection_jobs` table above owns job persistence.
 
-For MVP, Decision Packet visibility is rendered through TASK projections, status/next responses, and decision-packet read resources. A standalone DEC projection is optional until the projection/template batch enables it. This document does not define DEC template text.
+For MVP, Decision Packet visibility is rendered through `TASK` projections, status/next responses, judgment-context resources, and decision-packet read resources. A standalone `DEC` projection is optional unless the standalone Decision Packet projection feature is enabled. This document does not define DEC template text.
 
 MVP job lifecycle:
 
