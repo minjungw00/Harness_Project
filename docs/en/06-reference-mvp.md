@@ -18,7 +18,7 @@ MVP includes:
 - `state.sqlite` current tables plus `state.sqlite.task_events`
 - artifact registry and durable artifact files
 - baseline capture
-- `prepare_write` gate with scope, approval, baseline, and capability checks
+- `prepare_write` gate with scope, approval, baseline, capability checks, and durable Write Authorization records
 - Journey/Decision skeleton for task continuity, Decision Packets, and user judgment routing
 - shaping kernel support for Change Units, autonomy boundaries, dependency metadata, and end-to-end path intent
 - approval, evidence, verification, Manual QA, and acceptance gate support
@@ -59,7 +59,7 @@ Exit criteria:
 
 ### MVP-2: Shaping Kernel, Write Gate, Approval, Baseline, Artifacts
 
-Implement Change Unit records, Change Unit dependency metadata, gate records, baseline capture, artifact registration, `harness.prepare_write`, approval request/decision flow, shaping updates, autonomy boundary fields, and minimal changed-path/scope/approval/baseline/decision/autonomy validators.
+Implement Change Unit records, Change Unit dependency metadata, gate records, baseline capture, artifact registration, `harness.prepare_write`, Write Authorization records, approval request/decision flow, shaping updates, autonomy boundary fields, and minimal changed-path/scope/approval/baseline/decision/autonomy validators.
 
 Exit criteria:
 
@@ -67,17 +67,19 @@ Exit criteria:
 - sensitive dependency or schema change requires approval
 - intended work outside the active Autonomy Boundary is blocked or routed to a Decision Packet
 - unresolved or incompatible blocking Decision Packets block affected writes
+- allowed `prepare_write` creates or returns a durable Write Authorization ref
 - approval scope drift can expire or block approval
 - Change Unit shaping records end-to-end path intent, user-judgment requirements, AFK stop conditions, and dependency metadata when needed
 - raw artifacts are stored with hash and redaction metadata
 
 ### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
 
-Implement `harness.record_run`, run records, evidence manifest records, feedback loop checks, codebase stewardship checks, projection jobs, TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT renderers, managed block hashes, and reconcile item creation for managed drift or human-editable proposals.
+Implement `harness.record_run`, run records, Write Authorization consumption, evidence manifest records, feedback loop checks, codebase stewardship checks, projection jobs, TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT renderers, managed block hashes, and reconcile item creation for managed drift or human-editable proposals.
 
 Exit criteria:
 
 - implementation and direct runs register artifacts and update evidence
+- implementation and direct runs consume a compatible Write Authorization and detect observed changes outside the authorization
 - findings from runs, checks, QA inputs, or evaluator notes route back into state, evidence, a Decision Packet, a Change Unit update, or a close blocker
 - codebase stewardship issues that affect scope, design, module boundaries, or user judgment are visible as validator results or blockers
 - projection job failure is separate from state failure
@@ -92,7 +94,9 @@ Exit criteria:
 - work cannot close as `detached_verified` from same-session self-review
 - verification waiver closes with `completed_with_risk_accepted`, not `detached_verified`
 - required Manual QA and acceptance block close independently
-- close-relevant residual risk is visible before acceptance or risk-accepted close
+- known close-relevant residual risk is visible before any successful close
+- risk-accepted close additionally requires accepted Residual Risk refs
+- acceptance, when required, can be recorded only after close-relevant residual risk is visible
 - unresolved, stale, incompatible, or deferred-without-coverage blocking Decision Packets block close
 - direct work can close self-checked unless policy or user requested detached verification
 
@@ -102,7 +106,7 @@ Implement minimal doctor, recover, reconcile, export, artifact integrity check, 
 
 Exit criteria:
 
-- conformance smoke covers no-active-task status, advisor close, direct close, approval-required block, decision-required block, autonomy-boundary block, evidence-insufficient close block, same-session verification guard, residual-risk visibility, feedback-loop routing, codebase-stewardship finding visibility, projection failure separation, reconcile required, and MCP-unavailable write hold
+- conformance smoke covers no-active-task status, advisor close, direct close, approval-required block, decision-required block, autonomy-boundary block, Write Authorization required and invalid cases, evidence-insufficient close block, same-session verification guard, residual-risk visibility, feedback-loop routing, codebase-stewardship finding visibility, projection failure separation, reconcile required, and MCP-unavailable write hold
 - agency conformance checks verify the user can follow the Journey, see unresolved decisions, see what the agent may do without asking, and see close-relevant residual risk before acceptance
 - parallel orchestration automation remains later; any MVP dependency DAG support is metadata-only
 - export includes state snapshots, report projections, artifact refs, and redaction status
@@ -274,6 +278,29 @@ CREATE TABLE baselines (
   updated_at TEXT NOT NULL
 );
 
+CREATE TABLE write_authorizations (
+  write_authorization_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT NOT NULL REFERENCES change_units(change_unit_id),
+  baseline_ref TEXT REFERENCES baselines(baseline_ref),
+  intended_operation TEXT NOT NULL,
+  intended_paths_json TEXT NOT NULL DEFAULT '[]',
+  intended_tools_json TEXT NOT NULL DEFAULT '[]',
+  intended_commands_json TEXT NOT NULL DEFAULT '[]',
+  intended_network_json TEXT NOT NULL DEFAULT '[]',
+  intended_secrets_json TEXT NOT NULL DEFAULT '[]',
+  sensitive_categories_json TEXT NOT NULL DEFAULT '[]',
+  approval_refs_json TEXT NOT NULL DEFAULT '[]',
+  decision_packet_refs_json TEXT NOT NULL DEFAULT '[]',
+  guarantee_level TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  expires_at TEXT,
+  consumed_by_run_id TEXT,
+  consumed_at TEXT
+);
+
 CREATE TABLE runs (
   run_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
@@ -282,6 +309,7 @@ CREATE TABLE runs (
   actor_kind TEXT NOT NULL,
   surface_id TEXT NOT NULL,
   baseline_ref TEXT,
+  write_authorization_id TEXT REFERENCES write_authorizations(write_authorization_id),
   summary TEXT NOT NULL DEFAULT '',
   observed_changes_json TEXT NOT NULL DEFAULT '{}',
   command_results_json TEXT NOT NULL DEFAULT '[]',
@@ -449,6 +477,7 @@ CREATE TABLE evidence_manifests (
 CREATE TABLE evals (
   eval_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
   evaluator_run_id TEXT,
   target_run_id TEXT,
   verdict TEXT NOT NULL,
@@ -463,6 +492,7 @@ CREATE TABLE evals (
 CREATE TABLE manual_qa_records (
   manual_qa_record_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
   qa_profile TEXT NOT NULL,
   performed_by TEXT NOT NULL,
   result TEXT NOT NULL,
@@ -640,7 +670,15 @@ CREATE TABLE locks (
 
 `task_events` remains append-only event history. `tool_invocations` stores request replay metadata needed to return the original committed response. Reusing an idempotency key with a different `request_hash` returns `STATE_CONFLICT`.
 
-`decision_packets` is the canonical state table for blocking product judgment and the authority path for `decision_gate`. `decision_requests` is only an interaction/routing compatibility table for implementation handoff, replay, or legacy request flow. A `decision_request` alone never satisfies `decision_gate`; Core must create or associate a compatible Decision Packet. Approval decisions link to Decision Packets through `approvals.decision_packet_id`; `decision_request_id` may remain as routing metadata but is not the approval authority path.
+`tasks.projection_status` is the TASK projection status summary. Per-kind projection freshness is tracked through `projection_jobs` and through the relevant projection records or artifact refs for APR, RUN-SUMMARY, EVIDENCE-MANIFEST, EVAL, DIRECT-RESULT, optional MANUAL-QA, optional TDD-TRACE, and other enabled projection kinds. Do not treat one Task field as owning all projection freshness.
+
+`write_authorizations` stores durable allow decisions from `prepare_write`. When `dry_run=false` and `prepare_write` returns `allowed`, Core creates or returns a compatible `write_authorizations` row and returns its ref. `updated_at` changes whenever authorization status changes; status history remains in `task_events`.
+
+Implementation and direct `record_run` calls consume a compatible unexpired authorization by recording `runs.write_authorization_id` and marking the authorization consumed with `consumed_by_run_id` and `consumed_at`. The reciprocal links `write_authorizations.consumed_by_run_id` and `runs.write_authorization_id` must point to each other in the same Core transaction. A mismatch is invalid state; `recover` must repair it or block affected close. Consuming an authorization does not make observed changes valid by itself; changed-path, tool, command, network, secret, Change Unit, approval, baseline, and Decision Packet validation still verifies the committed Run.
+
+Write Authorizations are single-use for storage. The unique partial index on `runs.write_authorization_id` prevents more than one committed Run row from consuming the same authorization. Idempotent replay returns the original Run and response metadata; it does not insert a second Run row.
+
+`decision_packets` is the canonical state table for blocking product judgment and the authority path for `decision_gate`. `decision_requests` is only an interaction/routing compatibility table for implementation handoff, replay, or legacy request flow. A `decision_request` alone never satisfies `decision_gate`, and `decision_gate` is never recomputed from `decision_requests` alone. Only compatible `decision_packets` plus currently detected blockers feed the `decision_gate` authority path. Core must create or associate a compatible Decision Packet when blocking product judgment exists. Approval decisions link to Decision Packets through `approvals.decision_packet_id`; `decision_request_id` may remain as routing metadata but is not the approval authority path.
 
 `residual_risks` is the canonical table for close-relevant remaining uncertainty, accepted risk, follow-up requirements, and close impact. Decision Packets may reference residual risks through `decision_packets.residual_risk_refs_json`; they must not bury the only canonical residual-risk payload inside the Decision Packet.
 
@@ -663,16 +701,36 @@ CREATE INDEX idx_shared_designs_task_status ON shared_designs(task_id, status);
 CREATE INDEX idx_task_spine_entries_task_seq ON task_spine_entries(task_id, sequence_no);
 CREATE INDEX idx_change_unit_dependencies_task ON change_unit_dependencies(task_id, change_unit_id);
 CREATE INDEX idx_baselines_task_change_unit ON baselines(task_id, change_unit_id);
+CREATE INDEX idx_write_authorizations_task_status ON write_authorizations(task_id, status);
+CREATE INDEX idx_write_authorizations_change_unit ON write_authorizations(change_unit_id);
 CREATE INDEX idx_approvals_decision_packet ON approvals(decision_packet_id);
 CREATE INDEX idx_projection_jobs_status ON projection_jobs(status, projection_version);
 CREATE INDEX idx_artifacts_task_run ON artifacts(task_id, run_id);
 CREATE INDEX idx_artifact_links_artifact ON artifact_links(artifact_id);
 CREATE INDEX idx_artifact_links_record ON artifact_links(record_kind, record_id);
 CREATE INDEX idx_runs_task_status ON runs(task_id, status);
+CREATE INDEX idx_runs_write_authorization ON runs(write_authorization_id);
+CREATE UNIQUE INDEX uq_runs_write_authorization_consumed
+ON runs(write_authorization_id)
+WHERE write_authorization_id IS NOT NULL;
+CREATE INDEX idx_evals_task_change_unit ON evals(task_id, change_unit_id);
+CREATE INDEX idx_manual_qa_records_task_change_unit ON manual_qa_records(task_id, change_unit_id);
 CREATE INDEX idx_reconcile_items_status ON reconcile_items(status);
 ```
 
 `task_events` is append-only by application policy. Recovery may append compensating events; it should not rewrite historical rows.
+
+Reference MVP Write Authorization event vocabulary:
+
+```text
+write_authorization_created
+write_authorization_returned
+write_authorization_consumed
+write_authorization_expired
+write_authorization_staled
+write_authorization_revoked
+write_authorization_violation_detected
+```
 
 ## Migration And Versioning
 
@@ -702,8 +760,8 @@ State-changing operations acquire a lock at the narrowest practical scope:
 | decision packet create/resolve | task and affected Decision Packet |
 | residual risk create/update/accept | task and affected residual risk |
 | baseline capture | task and affected Change Unit |
-| prepare_write | task and active Change Unit |
-| record_run | task and run |
+| prepare_write | task and active Change Unit; write authorization when allowed |
+| record_run | task and run; write authorization when one is consumed |
 | projection render | projection job |
 | artifact registration | artifact path |
 | artifact link registration | artifact and target record |
@@ -960,10 +1018,10 @@ If an implementation cannot derive an input above from existing fields, add `TOD
 | MVP stage | Hardening coverage |
 |---|---|
 | MVP-1 | Journey/Decision skeleton, Decision Packet records, `decision_gate` aggregation |
-| MVP-2 | shaping kernel, `prepare_write`, scope, approval, baseline, decision/autonomy write checks, artifact registration |
-| MVP-3 | `record_run`, evidence manifest, `feedback_loop_check`, `codebase_stewardship_check`, projection/reconcile |
+| MVP-2 | shaping kernel, `prepare_write`, Write Authorization creation, scope, approval, baseline, decision/autonomy write checks, artifact registration |
+| MVP-3 | `record_run`, Write Authorization consumption and violation detection, evidence manifest, `feedback_loop_check`, `codebase_stewardship_check`, projection/reconcile |
 | MVP-4 | verification independence, Manual QA, `residual_risk_visibility_check`, acceptance, close blockers |
-| MVP-5 | conformance and agency conformance fixtures for the hardened rules |
+| MVP-5 | conformance and agency conformance fixtures for the hardened rules, including write authorization required and invalid cases |
 
 Validator failure must be visible as state, blocked reasons, or close blockers. It must not be hidden in prose-only agent output.
 
