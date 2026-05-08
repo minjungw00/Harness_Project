@@ -690,7 +690,7 @@ Projection jobs enqueued: 없음.
 
 Validators run: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional `context_hygiene_check`.
 
-Possible errors: `NO_ACTIVE_TASK`, `MCP_UNAVAILABLE`, `PROJECTION_STALE`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RECONCILE_REQUIRED`.
+Possible errors: `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `NO_ACTIVE_TASK`, `MCP_UNAVAILABLE`, `PROJECTION_STALE`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RECONCILE_REQUIRED`.
 
 Idempotency behavior: read-only입니다. Repeated requests는 state를 mutate하지 않습니다.
 
@@ -781,7 +781,7 @@ Projection jobs enqueued: `TASK`; approval required일 때 `APR`.
 
 Validators run: `state_envelope`, `active_task`, `active_change_unit`, `scope_coverage`, `changed_paths_intent`, `autonomy_boundary_check`, `baseline_freshness`, `approval_scope`, `decision_gate_check`, `decision_quality_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, `surface_capability_check`, design precondition validators that apply before write.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `BASELINE_STALE`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`.
+Possible errors: `STATE_CONFLICT`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `BASELINE_STALE`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, `VALIDATOR_FAILED`.
 
 Idempotency behavior: 같은 payload로 repeated allowed/blocked decision은 original decision과 event refs를 반환합니다. 같은 key에 changed payload를 사용하면 `STATE_CONFLICT`입니다.
 
@@ -1001,11 +1001,13 @@ State transition summary: pending Decision Packet을 record하고 보통 Task를
 
 Events emitted: `decision_packet_created`, `user_decision_requested`, `approval_requested`, `scope_confirmation_requested`, `design_choice_requested`, `architecture_choice_requested`, `autonomy_boundary_decision_requested`, `verification_waiver_requested`, `qa_waiver_requested`, `acceptance_requested`, `residual_risk_acceptance_requested`, `reconcile_decision_requested`.
 
-Projection jobs enqueued: `TASK`; standalone Decision Packet projection이 enabled일 때 `DEC`; applicable한 approval에는 `APR`; reconcile에는 affected projection.
+Projection jobs enqueued: `TASK`; applicable한 approval에는 `APR`; reconcile에는 affected projection.
+
+Standalone Decision Packet projection이 enabled일 때만 optional `DEC` job을 enqueue합니다.
 
 Validators run: `state_envelope`, `decision_packet_validity`, `decision_quality_check`, `autonomy_boundary_check` when the packet affects the active Change Unit boundary, `approval_scope` for approval decisions, `reconcile_required` for reconcile decisions, `residual_risk_visibility_check` for risk-acceptance decisions.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `DECISION_REQUIRED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `RECONCILE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `PROJECTION_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
+Possible errors: `STATE_CONFLICT`, `DECISION_REQUIRED`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `RECONCILE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `PROJECTION_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
 Idempotency behavior: repeated request는 같은 Decision Packet, related records, events, projection jobs를 반환합니다. 같은 key에 다른 packet payload를 사용하면 `STATE_CONFLICT`입니다.
 
@@ -1081,11 +1083,13 @@ State transition summary: targeted Decision Packet을 resolve, defer, reject, bl
 
 Events emitted: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
 
-Projection jobs enqueued: `TASK`; standalone Decision Packet projection이 enabled일 때 `DEC`; applicable한 approval에는 `APR`; QA waiver가 QA record로 represented될 때 `MANUAL-QA`; reconcile에는 affected design/task projections. Decision Packet visibility는 여전히 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 나타납니다.
+Projection jobs enqueued: `TASK`; applicable한 approval에는 `APR`; QA waiver가 QA record로 represented될 때 `MANUAL-QA`; reconcile에는 affected design/task projections. Decision Packet visibility는 여전히 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 나타납니다.
+
+Standalone Decision Packet projection이 enabled일 때만 optional `DEC` job을 enqueue합니다.
 
 Validators run: `state_envelope`, `pending_decision_packet_exists`, `decision_quality_check`, `autonomy_boundary_check`, `approval_scope`, `qa_waiver_reason`, `residual_risk_visibility_check`, `reconcile_target_validity`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `SCOPE_VIOLATION`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `RECONCILE_REQUIRED`, `PROJECTION_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
+Possible errors: `STATE_CONFLICT`, `DECISION_UNRESOLVED`, `NO_ACTIVE_TASK`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `SCOPE_VIOLATION`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `RECONCILE_REQUIRED`, `PROJECTION_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
 Idempotency behavior: repeated decision은 같은 Decision Packet resolution, accepted-risk refs, updated records, events를 반환합니다. 같은 key로 이미 recorded decision을 바꾸려 하면 `STATE_CONFLICT`를 반환합니다.
 
@@ -1246,11 +1250,13 @@ State transition summary: Manual QA를 record합니다. `passed`는 `qa_gate=pas
 
 Events emitted: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`.
 
-Projection jobs enqueued: `TASK`, `MANUAL-QA`; standalone Decision Packet projection이 enabled되어 있고 waiver Decision Packet이 visibility에 영향을 주면 `DEC`; optional `EVIDENCE-MANIFEST`. Waiver Decision Packet visibility는 여전히 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 나타납니다.
+Projection jobs enqueued: `TASK`, `MANUAL-QA`; optional `EVIDENCE-MANIFEST`. Waiver Decision Packet visibility는 여전히 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 나타납니다.
+
+Standalone Decision Packet projection이 enabled되어 있고 waiver Decision Packet이 visibility에 영향을 줄 때만 optional `DEC` job을 enqueue합니다.
 
 Validators run: `state_envelope`, `manual_qa_required`, `decision_quality_check`, `residual_risk_visibility_check`, `qa_waiver_reason`, `artifact_integrity`, `evidence_sufficiency`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `QA_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `ARTIFACT_MISSING`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
+Possible errors: `STATE_CONFLICT`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `NO_ACTIVE_TASK`, `QA_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `ARTIFACT_MISSING`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
 Idempotency behavior: repeated request는 같은 Manual QA record와 gate update를 반환합니다. Waiver reason과 artifact inputs는 match해야 합니다.
 
@@ -1298,6 +1304,6 @@ Projection jobs enqueued: `TASK`; final freshness에 필요한 latest required r
 
 Validators run: `state_envelope`, `active_run_absent`, `active_change_unit_complete`, `scope_coverage`, `decision_gate_check`, `decision_quality_check`, `autonomy_boundary_check`, `approval_scope`, `design_gate_close`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, `evidence_sufficiency`, `same_session_verify_guard`, `manual_qa_required`, `residual_risk_visibility_check`, `acceptance_required`, `projection_freshness`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `PROJECTION_STALE`, `RECONCILE_REQUIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
+Possible errors: `STATE_CONFLICT`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `PROJECTION_STALE`, `RECONCILE_REQUIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 
 Idempotency behavior: repeated successful close는 같은 terminal state와 report refs를 반환합니다. 다른 intent 또는 close reason으로 두 번째 close를 시도하면 `STATE_CONFLICT`입니다.

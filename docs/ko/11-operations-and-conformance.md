@@ -111,7 +111,9 @@ Task의 approval/run/evidence/eval/direct reports
 활성화된 design-quality projections
 ```
 
-MVP에서 Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 render합니다. Journey Card visibility는 status, journey, next, significant resume surface를 통해 render합니다. `DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`를 위한 dedicated extension / appendix refresh targets는 enabled일 때 optional이며, required MVP smoke target이 아닙니다.
+MVP에서 Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 render합니다. Journey Card visibility는 status, journey, next, significant resume surface를 통해 render합니다.
+
+`DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`를 위한 dedicated extension / appendix refresh targets는 enabled일 때 optional이며, required MVP smoke target이 아닙니다.
 
 ## Reconcile
 
