@@ -166,6 +166,10 @@ A verification result record with verdict, checks performed, evidence reviewed, 
 
 A recorded path from checks and findings back into state, scope, design, evidence, follow-up work, or close status. Inputs can include tests, typecheck, lint, build, browser smoke, TDD red/green/refactor traces, Manual QA, Eval findings, user decisions, operational findings, and residual-risk decisions. Feedback loops keep findings from vanishing into chat.
 
+### Fixture Assertion Semantics
+
+The conformance comparison rules that say how `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error` are matched against captured Core results. They are owned by operations and conformance, live outside the fixture body, and do not allow prose-only matching to pass a fixture.
+
 ### Fresh Session
 
 A verification independence profile where the evaluator starts from a task/evidence bundle rather than continuing the lead chat context, reviews the Evidence Manifest and changed files, and records an Eval.

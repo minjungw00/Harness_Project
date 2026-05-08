@@ -166,6 +166,10 @@ Verification result record입니다. verdict, checks performed, evidence reviewe
 
 Checks와 findings가 state, scope, design, evidence, follow-up work, close status로 되돌아가는 recorded path입니다. Inputs에는 tests, typecheck, lint, build, browser smoke, TDD red/green/refactor traces, Manual QA, Eval findings, user decisions, operational findings, residual-risk decisions가 포함될 수 있습니다. Feedback loops는 findings가 chat 속에서 사라지지 않게 합니다.
 
+### Fixture Assertion Semantics
+
+`expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, `expected_error`를 captured Core results와 어떻게 match하는지 정하는 conformance comparison rules입니다. Operations and conformance가 담당하며 fixture body 밖에 있고, prose-only matching으로 fixture를 pass시키는 것을 허용하지 않습니다.
+
 ### Fresh Session
 
 Evaluator가 lead chat context를 이어받지 않고 task/evidence bundle에서 시작해 Evidence Manifest와 changed files를 검토하고 Eval을 기록하는 verification independence profile입니다.

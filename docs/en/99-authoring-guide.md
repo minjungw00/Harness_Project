@@ -137,6 +137,8 @@ SQLite DDL, migration/versioning, lock policy, artifact directory layout, and re
 
 Projection rules and template tiers belong in `07-document-projection.md`. Full template bodies and expanded report variants belong in `appendix/A-template-library.md`.
 
+Conformance fixture bodies, suite catalog assertion-mode metadata, and fixture assertion semantics belong in `11-operations-and-conformance.md`. Other docs may point to that owner, but must not redefine the comparison mini-language.
+
 User-facing examples may show Journey Cards or short report snippets, but they must not become schema definitions.
 
 ## Current-State Writing
@@ -194,7 +196,7 @@ Do not use `TODO_REWRITE` in finished v2 canonical sections. A remaining `TODO_R
 [ ] Are semantic changes mirrored across `docs/en` and `docs/ko` in the same batch?
 [ ] Do user-facing docs expose judgment context without teaching unnecessary internal gates?
 [ ] Does the user guide avoid DB/API/connector internals?
-[ ] Does operations use fixture-based conformance?
+[ ] Does operations use fixture-based conformance with executable assertions instead of prose-only matching?
 [ ] Are legacy names confined to migration notes?
 [ ] Are official terms aligned with glossary?
 ```

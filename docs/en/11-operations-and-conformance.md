@@ -242,6 +242,52 @@ When a fixture action includes `expected_state_version`, the runner compares it 
 
 Fixture execution should be deterministic. Network access, wall-clock-sensitive expiry, and external tool output must be stubbed or represented as seeded fixture inputs unless a suite explicitly declares itself an integration smoke.
 
+## Fixture Assertion Semantics
+
+Fixture assertion modes are runner defaults or suite catalog metadata. They are not Core input, are not passed to MCP tools, and must not add fields to the fixture body. The fixture body remains exactly `scenario_id`, `initial_state`, `input`, `action`, `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error`.
+
+Default comparison modes:
+
+| Fixture field | Default assertion mode |
+|---|---|
+| `expected_state` | `partial_deep`; listed fields must match recursively and unlisted fields are not asserted. Suite metadata may set `expected_state: exact`. |
+| `expected_events` | `contains_ordered`; listed events must appear in appended `task_events` order, with unrelated events allowed before, between, or after them. Suite metadata may set `expected_events: exact`. |
+| `expected_artifacts` | `contains_by_identity`; each listed artifact must match a registered artifact with the same `artifact_id` and `kind`, then any other listed artifact fields are matched recursively. |
+| `expected_projection` | `partial_by_kind`; each listed projection kind must satisfy the listed status assertion or partial object assertion for that kind. |
+| `expected_error` | `expected_error: null` asserts that the action returned no error. When `expected_error` is an object, `expected_error.code` is required and matched exactly. `expected_error.details` is optional; when omitted, no details fields are asserted. When `details` is present, it is matched with `partial_deep` unless suite metadata sets `expected_error.details: exact`. |
+
+Validator assertions nested under `expected_state.validators` are keyed by validator ID. Each listed validator ID must exist in the captured validator results and match the listed fields partially; unlisted validator IDs and unlisted validator fields are not asserted.
+
+Absence of a nested field inside any `expected_*` value means "not asserted", not "expected null". Empty default-mode collections such as `expected_events: []`, `expected_artifacts: []`, or `expected_projection: {}` are valid and assert no required entries; a suite that needs to assert no extra entries must use compatible exact-mode metadata outside the fixture body.
+
+Allowed `expected_projection` status assertions:
+
+| Assertion | Meaning |
+|---|---|
+| `enqueued` | A refresh job or equivalent projection outbox entry for the projection kind is pending after the action. |
+| `current` | The projection kind is current for the committed state version and managed hash. |
+| `stale` | The projection kind is stale because state, evidence, or managed content moved ahead of the rendered projection. |
+| `failed` | The latest applicable projection refresh for the kind failed. |
+| `skipped` | The latest applicable projection job for the kind was skipped, for example because it was superseded or blocked by managed-block drift. |
+| `stale_or_enqueued` | Either `stale` or `enqueued` is acceptable. Use this when the scenario proves projection invalidation or enqueueing and the runner may observe either side of the refresh boundary. |
+| `stale_or_failed` | Either `stale` or `failed` is acceptable. Use this when a render failure may be surfaced as failed freshness or as stale freshness with a failed job. |
+
+Projection shorthand such as `TASK: stale_or_enqueued` is a scalar status assertion for the `TASK` projection kind. Object form may assert additional captured projection fields while still using `partial_by_kind`, for example `TASK: {status: current}`. These assertion operators are fixture-comparison semantics, not new projection DDL or API enum values unless the owning schema documents define them.
+
+Suite catalogs may override assertion modes without changing fixtures:
+
+```yaml
+suite: core
+assertion_modes:
+  expected_state: exact
+  expected_events: exact
+  expected_error.details: exact
+fixtures:
+  - CORE-active-status-no-task
+```
+
+Conformance must prove behavior through captured Core state, `task_events`, validator results, artifact registry/file integrity, projection job or freshness state, and returned error codes. Matching rendered Markdown, Journey Card prose, status prose, or agent prose alone cannot pass a fixture.
+
 ## Agency, Stewardship, And Context Suites
 
 Agency, stewardship, and context hygiene are MVP conformance suites. They test state behavior through Core entrypoints such as `prepare_write`, `request_user_decision`, `record_user_decision`, `record_manual_qa`, `close_task`, `next`, and operator actions that call Core. They must not pass by matching Journey Card, Decision Packet, residual-risk, or status prose.

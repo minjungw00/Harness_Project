@@ -1042,6 +1042,8 @@ If an implementation cannot derive an input above from existing fields, add `TOD
 
 Validator failure must be visible as state, blocked reasons, or close blockers. It must not be hidden in prose-only agent output.
 
+Conformance fixture assertion semantics are owned by [Operations And Conformance](11-operations-and-conformance.md#fixture-assertion-semantics). The reference runner must implement those assertion modes against captured Core state, `task_events`, validator results, artifact registry/file integrity, projection job or freshness state, and returned error codes; it must not pass fixtures by matching rendered Markdown or agent prose alone.
+
 ## Minimal CLI Plan
 
 The MVP CLI is an operator/debug surface over the same Core logic. It should not become a second API with different state semantics.

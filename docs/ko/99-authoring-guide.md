@@ -137,6 +137,8 @@ SQLite DDL, migration/versioning, lock policy, artifact directory layout, refere
 
 Projection rules와 template tiers는 `07-document-projection.md`에 둡니다. Full template bodies와 expanded report variants는 `appendix/A-template-library.md`에 둡니다.
 
+Conformance fixture body, suite catalog assertion-mode metadata, fixture assertion semantics는 `11-operations-and-conformance.md`에 둡니다. 다른 문서는 그 owner를 가리킬 수 있지만 comparison mini-language를 다시 정의하면 안 됩니다.
+
 User-facing examples는 Journey Cards나 짧은 report snippets를 보여줄 수 있지만, schema definitions가 되면 안 됩니다.
 
 ## Current-State Writing
@@ -194,7 +196,7 @@ Decision은 이미 내려졌지만 implementation detail, DDL, fixture coverage,
 [ ] semantic changes가 `docs/en`과 `docs/ko`에 같은 batch로 mirrored되었는가?
 [ ] user-facing docs가 불필요한 internal gates를 가르치지 않고 judgment context를 드러내는가?
 [ ] user guide가 DB/API/connector internals를 피하는가?
-[ ] operations가 fixture-based conformance를 사용하는가?
+[ ] operations가 prose-only matching 대신 executable assertion이 있는 fixture-based conformance를 사용하는가?
 [ ] legacy names가 migration notes에만 있는가?
 [ ] official terms가 glossary와 aligned되어 있는가?
 ```
