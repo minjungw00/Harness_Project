@@ -52,7 +52,7 @@ Connect는 사람이 편집한 내용을 조용히 덮어쓰지 않고 generated
 | Category | Checks |
 |---|---|
 | project | registered project, repo root, static config validity |
-| state | current state readability, locks, active Task consistency |
+| state | current state readability, JSON field parse and shape validity, locks, active Task consistency |
 | MCP | server reachability, read resource availability, public tool availability |
 | surface | capability profile, generated manifest, MCP config freshness |
 | artifacts | file existence, hash, size, redaction state, task/run or artifact-link relation |
@@ -72,6 +72,8 @@ MANUAL
 ```
 
 Doctor는 current state failure와 projection stale 또는 projection failed status를 구분해야 합니다.
+
+State checks는 `registry.sqlite`와 `state.sqlite`의 JSON `TEXT` fields를 포함합니다. Malformed JSON은 state failure입니다. Schema-incompatible JSON도 state failure입니다. Core가 product judgment를 새로 만들지 않고 다른 canonical state 또는 raw artifacts에서 expected value를 안전하게 reconstruct할 수 있을 때만 doctor가 이를 `REPAIRABLE`로 mark할 수 있으며, 그렇지 않으면 `FAIL` 또는 `MANUAL`을 report합니다.
 
 ## Serve MCP
 
@@ -151,6 +153,7 @@ Recover는 history를 rewrite하지 않고 interrupted 또는 inconsistent opera
 | artifact registry mismatch | file을 rescan하고 missing artifact를 stale로 mark하며 hash를 보존합니다 |
 | projection job failed | retry하거나 failed로 mark하고 reconcile guidance를 생성합니다 |
 | managed Markdown edited | reconcile item을 생성합니다 |
+| malformed or schema-incompatible storage JSON | Core가 canonical state 또는 raw artifacts에서 expected shape를 reconstruct할 수 있을 때만 repair합니다. 그렇지 않으면 fail하거나 manual recovery를 요구합니다 |
 | lock expired | recovery event를 append하고 lock policy에 따라 release하거나 reacquire합니다 |
 | MCP unavailable | write hold와 next diagnosis step을 보고합니다 |
 
@@ -241,6 +244,8 @@ MVP execution semantic:
 Fixture action이 `expected_state_version`을 포함하면 runner는 `ToolEnvelope.task_id`만이 아니라 Core-resolved primary Task에 따라 비교합니다. Task-scoped actions는 seeded 또는 Core-resolved primary Task State Version과 비교하고, resolved primary Task가 없는 project-scoped actions는 Project State Version과 비교합니다. Captured response와 `task_events`의 `state_version` values는 resulting affected-scope versions로 비교합니다. Read-only fixtures는 primary read scope의 unchanged version을 assert할 수 있습니다. 이 설명은 fixture body shape를 바꾸지 않고 comparison semantics만 명확히 합니다.
 
 Fixture execution은 deterministic해야 합니다. Network access, wall-clock-sensitive expiry, external tool output은 suite가 integration smoke라고 명시적으로 선언하지 않는 한 stub하거나 seeded fixture input으로 표현해야 합니다.
+
+Conformance runner는 MCP tools와 operator commands가 사용하는 동일한 Core storage loader를 통해 JSON `TEXT` fields를 seed하고 inspect해야 합니다. `initial_state`에 malformed JSON 또는 schema-incompatible JSON이 있는 fixture는 invalid state를 surface해야 하며, fixture action이 recovery path이고 safe reconstruction이 가능한 경우에는 repairable state issue를 surface해야 합니다. Runner는 JSON fields를 opaque strings로 취급해서 shape validation을 건너뛰면 안 되며, 이 expectation은 fixture body shape를 바꾸지 않습니다.
 
 ## Fixture Assertion Semantics
 

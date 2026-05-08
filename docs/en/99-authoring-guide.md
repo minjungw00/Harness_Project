@@ -135,6 +135,8 @@ MCP tool request/response schemas, common envelope, error taxonomy, validator re
 
 SQLite DDL, migration/versioning, lock policy, artifact directory layout, and reference implementation storage details belong only in `06-reference-mvp.md`.
 
+When documenting JSON `TEXT` fields, keep the split explicit: API payload validation shapes stay in `05-mcp-api-and-schemas.md`, SQLite column and storage details stay in `06-reference-mvp.md`, and doctor/recover/conformance expectations stay in `11-operations-and-conformance.md`. A boundary note that Core validates storage JSON before commit may be repeated, but do not duplicate schema bodies or DDL.
+
 Projection rules and template tiers belong in `07-document-projection.md`. Full template bodies and expanded report variants belong in `appendix/A-template-library.md`.
 
 Conformance fixture bodies, suite catalog assertion-mode metadata, and fixture assertion semantics belong in `11-operations-and-conformance.md`. Other docs may point to that owner, but must not redefine the comparison mini-language.

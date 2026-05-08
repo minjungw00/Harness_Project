@@ -240,6 +240,10 @@ A canonical support record for durable continuity annotations that cannot be ful
 
 The canonical record of a module or external boundary's public interface, inputs, outputs, errors, compatibility impact, callers, and boundary tests. The canonical source is `interface_contracts`.
 
+### JSON `TEXT` Field
+
+A SQLite `TEXT` column whose stored value is JSON. The `TEXT` type is MVP storage flexibility only; Core must validate the value before commit against the API-owned or storage-owned shape, and malformed or schema-incompatible JSON is invalid state.
+
 ### Manual QA
 
 Human inspection of experiential product quality such as UX, workflow, copy, visual output, accessibility, and product fit.

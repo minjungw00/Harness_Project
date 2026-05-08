@@ -240,6 +240,10 @@ Existing state events나 owner records만으로 완전히 재구성하기 어려
 
 Module 또는 external boundary의 public interface, inputs, outputs, errors, compatibility impact, callers, boundary tests에 대한 canonical record입니다. Canonical source는 `interface_contracts`입니다.
 
+### JSON `TEXT` Field
+
+저장된 값이 JSON인 SQLite `TEXT` column입니다. `TEXT` type은 MVP storage flexibility일 뿐입니다. Core는 commit 전에 API-owned 또는 storage-owned shape에 맞게 값을 validate해야 하며, malformed JSON 또는 schema-incompatible JSON은 invalid state입니다.
+
 ### Manual QA
 
 UX, workflow, copy, visual output, accessibility, product fit 같은 experiential product quality에 대한 human inspection입니다.

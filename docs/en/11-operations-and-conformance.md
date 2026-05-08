@@ -52,7 +52,7 @@ Required categories:
 | Category | Checks |
 |---|---|
 | project | registered project, repo root, static config validity |
-| state | current state readability, locks, active Task consistency |
+| state | current state readability, JSON field parse and shape validity, locks, active Task consistency |
 | MCP | server reachability, read resource availability, public tool availability |
 | surface | capability profile, generated manifest, MCP config freshness |
 | artifacts | file existence, hash, size, redaction state, task/run or artifact-link relation |
@@ -72,6 +72,8 @@ MANUAL
 ```
 
 Doctor must distinguish current state failures from projection stale or projection failed status.
+
+State checks include JSON `TEXT` fields in `registry.sqlite` and `state.sqlite`. Malformed JSON is a state failure. Schema-incompatible JSON is a state failure; doctor may mark it `REPAIRABLE` only when Core can safely reconstruct the expected value from other canonical state or raw artifacts without inventing product judgment, otherwise it reports `FAIL` or `MANUAL`.
 
 ## Serve MCP
 
@@ -151,6 +153,7 @@ Required scenarios:
 | artifact registry mismatch | rescan files, mark missing artifacts stale, preserve hashes |
 | projection job failed | retry or mark failed and create reconcile guidance |
 | managed Markdown edited | create reconcile item |
+| malformed or schema-incompatible storage JSON | repair only if Core can reconstruct the expected shape from canonical state or raw artifacts; otherwise fail or require manual recovery |
 | lock expired | append recovery event and release or reacquire according to lock policy |
 | MCP unavailable | report write hold and next diagnosis step |
 
@@ -241,6 +244,8 @@ MVP execution semantics:
 When a fixture action includes `expected_state_version`, the runner compares it according to the Core-resolved primary Task, not only `ToolEnvelope.task_id`. Task-scoped actions compare against the seeded or Core-resolved primary Task State Version; project-scoped actions with no resolved primary Task compare against the Project State Version. Captured response and `task_events` `state_version` values are compared as resulting affected-scope versions. Read-only fixtures may assert the unchanged version for the primary read scope. This clarifies comparison semantics without changing fixture body shape.
 
 Fixture execution should be deterministic. Network access, wall-clock-sensitive expiry, and external tool output must be stubbed or represented as seeded fixture inputs unless a suite explicitly declares itself an integration smoke.
+
+Conformance runners must seed and inspect JSON `TEXT` fields through the same Core storage loaders used by MCP tools and operator commands. A fixture with malformed JSON or schema-incompatible JSON in `initial_state` must surface invalid state, or a repairable state issue when the fixture action is a recovery path and safe reconstruction is possible. The runner must not skip shape validation by treating JSON fields as opaque strings, and this expectation does not change the fixture body shape.
 
 ## Fixture Assertion Semantics
 

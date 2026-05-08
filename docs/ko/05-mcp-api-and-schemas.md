@@ -10,6 +10,8 @@ SQLite DDL, full kernel transition table, projection template text, CLI command 
 
 MCP resource는 읽기 전용입니다. 모든 state change는 public tools와 Core를 거칩니다. Tool response는 projection paths와 artifact refs를 포함할 수 있지만, 이 값들은 state records 또는 raw evidence files에 대한 references일 뿐 canonical state를 대신하지 않습니다.
 
+이 문서의 public request와 response schemas는 API payload의 validation source입니다. 여기에는 Core가 나중에 저장하는 API-shaped payload도 포함됩니다. Storage JSON `TEXT` fields는 Reference MVP storage concern으로 남지만, Core는 모든 storage JSON value를 commit 전에 이 문서의 API-owned shape 또는 [Reference MVP](06-reference-mvp.md)의 storage-owned shape에 맞게 validate해야 합니다. Malformed JSON 또는 schema-incompatible JSON은 invalid state입니다.
+
 Capability는 first-class kernel gate가 아닙니다. Surface capability는 다음 경로로 나타납니다.
 
 - the `surface_capability_check` validator

@@ -116,6 +116,16 @@ Exit criteria:
 
 Reference storage는 registry와 per-project state에 SQLite를 사용합니다. DDL은 draft implementation contract입니다. Field names에 indexes나 migration helpers가 추가될 수 있지만 table ownership과 authority boundaries는 stable해야 합니다.
 
+### JSON Field Validation Boundary
+
+Reference DDL의 JSON `TEXT` column은 MVP storage flexibility이지 arbitrary JSON이나 partially parsed JSON을 persist해도 된다는 뜻이 아닙니다. Core commit이 JSON `TEXT` field를 write 또는 update하기 전에 Core는 값을 parse하고, malformed JSON을 reject하며, parsed value를 해당 field의 owning shape에 맞게 validate해야 합니다.
+
+Public API payload와 API-shaped stored payload의 owning shape는 [MCP API와 스키마](05-mcp-api-and-schemas.md)의 schema입니다. Storage-only field의 owning shape는 이 문서의 reference storage contract 또는 이 문서가 named하는 specific owner document입니다. 이 boundary는 public schemas를 `05-mcp-api-and-schemas.md`에, SQLite DDL을 `06-reference-mvp.md`에 유지합니다.
+
+Malformed JSON은 invalid state입니다. Schema-incompatible JSON도 invalid state입니다. `'[]'` 또는 `'{}'` 같은 default를 가진 field는 SQLite가 column을 `TEXT`로 저장한다는 이유만으로 다른 JSON kind를 저장하면 안 되며, expected array 또는 object shape의 valid JSON을 계속 저장해야 합니다.
+
+Recommended hardening: 배포된 SQLite build가 JSON functions를 지원하는 경우 migration은 JSON `TEXT` column에 `CHECK (json_valid(column_name))` 또는 equivalent generated checks를 추가해야 합니다. 이 checks는 defense in depth이며 Core의 before-commit shape validation을 대체하지 않습니다. 아래 MVP DDL은 모든 check를 inline으로 보여 주기 위해 full rewrite될 필요가 없습니다.
+
 ### `project.yaml`
 
 `project.yaml`은 static project configuration만 저장합니다. Current Task state를 저장하면 안 됩니다.

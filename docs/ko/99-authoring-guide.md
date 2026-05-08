@@ -135,6 +135,8 @@ MCP tool request/response schemas, common envelope, error taxonomy, validator re
 
 SQLite DDL, migration/versioning, lock policy, artifact directory layout, reference implementation storage details는 `06-reference-mvp.md`에만 둡니다.
 
+JSON `TEXT` fields를 문서화할 때는 split을 명시적으로 유지합니다. API payload validation shapes는 `05-mcp-api-and-schemas.md`에, SQLite column과 storage details는 `06-reference-mvp.md`에, doctor/recover/conformance expectations는 `11-operations-and-conformance.md`에 둡니다. Core가 commit 전에 storage JSON을 validate한다는 boundary note는 반복할 수 있지만, schema bodies나 DDL을 duplicate하면 안 됩니다.
+
 Projection rules와 template tiers는 `07-document-projection.md`에 둡니다. Full template bodies와 expanded report variants는 `appendix/A-template-library.md`에 둡니다.
 
 Conformance fixture body, suite catalog assertion-mode metadata, fixture assertion semantics는 `11-operations-and-conformance.md`에 둡니다. 다른 문서는 그 owner를 가리킬 수 있지만 comparison mini-language를 다시 정의하면 안 됩니다.

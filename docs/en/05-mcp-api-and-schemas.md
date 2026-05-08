@@ -10,6 +10,8 @@ It does not own SQLite DDL, the full kernel transition table, projection templat
 
 MCP resources are read-only. All state changes go through public tools and Core. A tool response may include projection paths and artifact refs, but those are references to state records or raw evidence files, not a replacement for canonical state.
 
+The public request and response schemas in this document are the validation source for API payloads, including API-shaped payloads that Core later stores. Storage JSON `TEXT` fields remain a Reference MVP storage concern, but Core must validate every storage JSON value before commit against either the API-owned shape here or the storage-owned shape in [Reference MVP](06-reference-mvp.md). Malformed or schema-incompatible JSON is invalid state.
+
 Capability is not a first-class kernel gate. Surface capability appears through:
 
 - the `surface_capability_check` validator

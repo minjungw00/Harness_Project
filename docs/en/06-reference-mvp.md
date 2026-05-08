@@ -118,6 +118,16 @@ The reference storage uses SQLite for registry and per-project state. The DDL is
 
 `task_spine_entries` is the physical MVP table for public `journey_spine_entry` records and Journey Spine Entry wording. Public MCP/API naming remains `journey_spine_entry`; the table name preserves the task-local implementation shape.
 
+### JSON Field Validation Boundary
+
+JSON `TEXT` columns in the reference DDL are MVP storage flexibility, not permission to persist arbitrary or partially parsed JSON. Before any Core commit writes or updates a JSON `TEXT` field, Core must parse the value, reject malformed JSON, and validate the parsed value against the field's owning shape.
+
+For public API payloads and API-shaped stored payloads, the owning shape is the schema in [MCP API And Schemas](05-mcp-api-and-schemas.md). For storage-only fields, the owning shape is the reference storage contract in this document or the specific owner document named by this document. This boundary keeps public schemas in `05-mcp-api-and-schemas.md` and SQLite DDL in `06-reference-mvp.md`.
+
+Malformed JSON is invalid state. Schema-incompatible JSON is invalid state. Fields with defaults such as `'[]'` or `'{}'` must continue to store valid JSON of the expected array or object shape, not a different JSON kind just because SQLite stores the column as `TEXT`.
+
+Recommended hardening: where the deployed SQLite build supports JSON functions, migrations should add `CHECK (json_valid(column_name))` or equivalent generated checks for JSON `TEXT` columns. These checks are defense in depth and do not replace Core's shape validation before commit; the MVP DDL below does not need a full rewrite to show every check inline.
+
 ### `project.yaml`
 
 `project.yaml` stores static project configuration only. It must not store current Task state.
