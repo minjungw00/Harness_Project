@@ -491,6 +491,21 @@ write_authorization_violation_detected
 
 `scope_violation_detected` is a general observed scope event, not a Write Authorization lifecycle event.
 
+### Stable Event Catalog
+
+Stable event names are the `event_type` values that MVP conformance fixtures may require in `expected_events`. Events remain rows in `state.sqlite.task_events`; this catalog does not introduce a separate event store, stream, or payload schema. A name outside this catalog may appear in prose, tool descriptions, fixture seed shorthand, validator/check names, or future extensions, but it is not a stable MVP conformance assertion unless this catalog promotes it. Fixtures should assert validator outcomes under `expected_state.validators` and projection freshness under `expected_projection` or `expected_state.checks`, not by inventing event names.
+
+| Area | Stable event names |
+|---|---|
+| Write Authorization lifecycle | `write_authorization_created`, `write_authorization_returned`, `write_authorization_consumed`, `write_authorization_expired`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_violation_detected` |
+| `prepare_write` and write gates | `prepare_write_allowed`, `prepare_write_blocked`, `scope_required`, `decision_required`, `autonomy_boundary_exceeded`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected` |
+| Run, evidence, and scope observation | `run_recorded`, `evidence_manifest_updated`, `scope_violation_detected` |
+| Verification | `eval_recorded`, `verification_passed`, `verify_not_detached_detected` |
+| Close and risk-accepted close | `close_requested`, `close_blocked`, `risk_accepted_close_recorded`, `task_closed`, `task_cancelled`, `task_superseded` |
+| Projection, connector, and reconcile operations | `projection_refresh_failed`, `generated_file_drift_detected`, `reconcile_item_created` |
+
+The catalog is deliberately compact. Optional detail events, implementation-local audit events, and future extension events may still be recorded in `task_events`, but MVP fixture authors must not require them in `expected_events` until they are added here.
+
 | Trigger | From | To | Gate or record effect |
 |---|---|---|---|
 | User request is accepted | no active Task | `lifecycle_phase=intake`, `result=none` | create Task |

@@ -493,6 +493,21 @@ write_authorization_violation_detected
 
 `scope_violation_detected`는 general observed scope event이며 Write Authorization lifecycle event가 아닙니다.
 
+### Stable Event Catalog
+
+Stable event names는 MVP conformance fixtures가 `expected_events`에서 요구할 수 있는 `event_type` 값입니다. Events는 계속 `state.sqlite.task_events`의 rows입니다. 이 catalog는 별도 event store, stream, payload schema를 도입하지 않습니다. 이 catalog 밖의 이름은 prose, tool descriptions, fixture seed shorthand, validator/check names, future extensions에 나타날 수 있지만, 이 catalog가 promote하기 전에는 stable MVP conformance assertion이 아닙니다. Fixtures는 validator outcomes를 `expected_state.validators` 아래에, projection freshness를 `expected_projection` 또는 `expected_state.checks` 아래에 assert해야 하며, event names를 새로 만들어 assert하면 안 됩니다.
+
+| Area | Stable event names |
+|---|---|
+| Write Authorization lifecycle | `write_authorization_created`, `write_authorization_returned`, `write_authorization_consumed`, `write_authorization_expired`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_violation_detected` |
+| `prepare_write` and write gates | `prepare_write_allowed`, `prepare_write_blocked`, `scope_required`, `decision_required`, `autonomy_boundary_exceeded`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected` |
+| Run, evidence, and scope observation | `run_recorded`, `evidence_manifest_updated`, `scope_violation_detected` |
+| Verification | `eval_recorded`, `verification_passed`, `verify_not_detached_detected` |
+| Close and risk-accepted close | `close_requested`, `close_blocked`, `risk_accepted_close_recorded`, `task_closed`, `task_cancelled`, `task_superseded` |
+| Projection, connector, and reconcile operations | `projection_refresh_failed`, `generated_file_drift_detected`, `reconcile_item_created` |
+
+이 catalog는 의도적으로 compact합니다. Optional detail events, implementation-local audit events, future extension events는 여전히 `task_events`에 기록될 수 있지만, MVP fixture authors는 이 이름들이 여기 추가되기 전까지 `expected_events`에서 요구하면 안 됩니다.
+
 | Trigger | From | To | Gate or record effect |
 |---|---|---|---|
 | User request is accepted | no active Task | `lifecycle_phase=intake`, `result=none` | create Task |

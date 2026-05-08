@@ -745,7 +745,7 @@ CREATE INDEX idx_reconcile_items_status ON reconcile_items(status);
 
 `task_events` is append-only by application policy. Recovery may append compensating events; it should not rewrite historical rows.
 
-Reference MVP Write Authorization event vocabulary:
+Reference MVP event storage follows the [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog). Stable events remain rows in `state.sqlite.task_events`; no separate event store is introduced. The Write Authorization lifecycle vocabulary remains:
 
 ```text
 write_authorization_created
@@ -757,7 +757,7 @@ write_authorization_revoked
 write_authorization_violation_detected
 ```
 
-`scope_violation_detected` may be appended when a Run observes a general scope violation; it is not part of the Write Authorization lifecycle vocabulary.
+`scope_violation_detected` may be appended when a Run observes a general scope violation; it is stable for conformance assertions but is not part of the Write Authorization lifecycle vocabulary. Tool-specific event names that are not in the kernel catalog are optional or illustrative extension events and must not be required by MVP fixtures.
 
 ## Migration And Versioning
 
@@ -1063,7 +1063,7 @@ If an implementation cannot derive an input above from existing fields, add `TOD
 
 Validator failure must be visible as state, blocked reasons, or close blockers. It must not be hidden in prose-only agent output.
 
-Conformance fixture assertion semantics are owned by [Operations And Conformance](11-operations-and-conformance.md#fixture-assertion-semantics). The reference runner must implement those assertion modes against captured Core state, `task_events`, validator results, artifact registry/file integrity, projection job or freshness state, and returned error codes; it must not pass fixtures by matching rendered Markdown or agent prose alone.
+Conformance fixture assertion semantics are owned by [Operations And Conformance](11-operations-and-conformance.md#fixture-assertion-semantics), and stable `expected_events` names are owned by the [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog). The reference runner must implement those assertion modes against captured Core state, `task_events`, validator results, artifact registry/file integrity, projection job or freshness state, and returned error codes; it must not pass fixtures by matching rendered Markdown or agent prose alone.
 
 ## Minimal CLI Plan
 

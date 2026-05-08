@@ -374,6 +374,10 @@ The authoritative source for a fact. In the harness, operational state is canoni
 
 The append-only event history table inside `state.sqlite`. MVP does not use a separate event store.
 
+### Stable Event Catalog
+
+The kernel-owned compact list of `task_events.event_type` names that MVP conformance fixtures may assert in `expected_events`. It classifies stable event names separately from prose examples, fixture shorthand, validator IDs, Core check names, projection status shorthands, and future extension events.
+
 ### State Record
 
 A canonical structured record in kernel state, such as a Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Write Authorization, Evidence Manifest, Eval, Manual QA record, Artifact record, Shared Design record, Domain Term, Module Map Item, Interface Contract, TDD Trace, or Reconcile Item.
@@ -444,7 +448,7 @@ A durable state record created by `prepare_write` for a specific allowed write a
 
 ### Write Authorization Lifecycle Events
 
-The stable Write Authorization lifecycle event vocabulary is `write_authorization_created`, `write_authorization_returned`, `write_authorization_consumed`, `write_authorization_expired`, `write_authorization_staled`, `write_authorization_revoked`, and `write_authorization_violation_detected`. `scope_violation_detected` is a general observed scope event, not a Write Authorization lifecycle event.
+The stable Write Authorization lifecycle event vocabulary is `write_authorization_created`, `write_authorization_returned`, `write_authorization_consumed`, `write_authorization_expired`, `write_authorization_staled`, `write_authorization_revoked`, and `write_authorization_violation_detected`. These names are also listed in the Stable Event Catalog. `scope_violation_detected` is a general observed scope event, not a Write Authorization lifecycle event.
 
 ### Write Authority Summary
 

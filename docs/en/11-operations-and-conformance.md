@@ -261,6 +261,8 @@ Default comparison modes:
 | `expected_projection` | `partial_by_kind`; each listed projection kind must satisfy the listed status assertion or partial object assertion for that kind. |
 | `expected_error` | `expected_error: null` asserts that the action returned no error. When `expected_error` is an object, `expected_error.code` is required and matched exactly. `expected_error.details` is optional; when omitted, no details fields are asserted. When `details` is present, it is matched with `partial_deep` unless suite metadata sets `expected_error.details: exact`. |
 
+`expected_events` may require only names from the [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog). Validator IDs, Core check names, projection status shorthands, fixture seed shorthand, and scenario catalog IDs are not event names. Prose examples may mention non-catalog event names as illustrative or future extension ideas, but executable MVP fixtures must not require them until the kernel catalog promotes them.
+
 Validator assertions nested under `expected_state.validators` are keyed by validator ID. Each listed validator ID must exist in the captured validator results and match the listed fields partially; unlisted validator IDs and unlisted validator fields are not asserted.
 
 Core check and precondition assertions nested under `expected_state.checks` are keyed by check/precondition name. These entries are compared against captured Core check output, blocked reasons, response summaries, or equivalent runner-observed check status. They are not validator IDs and must not be nested under `expected_state.validators` unless the MCP API or Reference MVP explicitly promotes that ID to a stable ValidatorResult.
@@ -1490,7 +1492,6 @@ expected_state:
     codebase_stewardship_check: blocked
 expected_events:
   - prepare_write_blocked
-  - design_validator_failed
 expected_artifacts: []
 expected_projection:
   TASK: enqueued
@@ -1675,7 +1676,6 @@ expected_state:
       close_impact: blocks_close
 expected_events:
   - prepare_write_blocked
-  - design_validator_failed
 expected_artifacts: []
 expected_projection:
   TASK: enqueued
@@ -1752,7 +1752,6 @@ expected_state:
       close_impact: blocks_close
 expected_events:
   - prepare_write_blocked
-  - design_validator_failed
 expected_artifacts: []
 expected_projection:
   TASK: enqueued

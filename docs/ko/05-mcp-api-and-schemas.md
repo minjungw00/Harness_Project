@@ -111,6 +111,8 @@ ProjectionJobRef:
 
 `EventRef.state_version`은 event의 affected scope에 대한 resulting version입니다. Task events는 `tasks.state_version`을 사용하고, `task_id=null`인 project-level events는 `project_state.state_version`을 사용합니다.
 
+Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog)가 담당합니다. 아래 tool sections는 해당 tool이 반환할 수 있는 `EventRef.event_type` 값을 나열합니다. Stable catalog에 없는 이름은 optional 또는 illustrative extension events이며 MVP `expected_events` fixtures가 요구하면 안 됩니다. ValidatorResult IDs, Core check names, projection status shorthands, fixture seed shorthand는 kernel catalog가 명시적으로 나열하지 않는 한 event names가 아닙니다.
+
 `ProjectionKind`는 API가 MVP tier를 담당하는 extensible enum입니다.
 
 | Tier | Values | Requirement |
@@ -1339,7 +1341,7 @@ Close blockers에는 unresolved, missing, deferred-without-coverage, blocked, re
 
 State transition summary: successful completion은 Task를 result와 close reason이 있는 `completed`로 옮깁니다. Cancellation/supersession은 Task를 `cancelled`로 옮깁니다. Failed close는 Task를 non-terminal로 남기고 blockers를 report합니다.
 
-Events emitted: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `close_blocked`.
+Events emitted: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `risk_accepted_close_recorded`, `close_blocked`.
 
 Projection jobs enqueued: `TASK`; final freshness에 필요한 latest required reports.
 

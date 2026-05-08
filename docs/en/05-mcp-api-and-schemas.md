@@ -111,6 +111,8 @@ ProjectionJobRef:
 
 `EventRef.state_version` is the resulting version for the event's affected scope. Task events use `tasks.state_version`; project-level events with `task_id=null` use `project_state.state_version`.
 
+Event stability for fixture assertions is owned by the [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog). Tool sections below list possible `EventRef.event_type` values returned by that tool; names not present in the stable catalog are optional or illustrative extension events and must not be required by MVP `expected_events` fixtures. ValidatorResult IDs, Core check names, projection status shorthands, and fixture seed shorthand are not event names unless the kernel catalog explicitly lists them.
+
 `ProjectionKind` is an extensible enum with API-owned MVP tiering:
 
 | Tier | Values | Requirement |
@@ -1333,7 +1335,7 @@ Close blockers include unresolved, missing, deferred-without-coverage, blocked, 
 
 State transition summary: successful completion moves Task to `completed` with result and close reason; cancellation/supersession moves Task to `cancelled`; failed close leaves Task non-terminal and reports blockers.
 
-Events emitted: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `close_blocked`.
+Events emitted: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `risk_accepted_close_recorded`, `close_blocked`.
 
 Projection jobs enqueued: `TASK`; latest required reports as needed for final freshness.
 

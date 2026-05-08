@@ -263,6 +263,8 @@ Default comparison modes:
 | `expected_projection` | `partial_by_kind`; 나열된 각 projection kind는 해당 kind에 대해 나열된 status assertion 또는 partial object assertion을 만족해야 합니다. |
 | `expected_error` | `expected_error: null`은 action이 error를 반환하지 않았음을 assert합니다. `expected_error`가 object이면 `expected_error.code`는 required이며 exact match합니다. `expected_error.details`는 optional입니다. Omitted이면 details field는 assert하지 않습니다. `details`가 present이면 suite metadata가 `expected_error.details: exact`로 설정하지 않는 한 `partial_deep`으로 match합니다. |
 
+`expected_events`는 [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog)의 names만 요구할 수 있습니다. Validator IDs, Core check names, projection status shorthands, fixture seed shorthand, scenario catalog IDs는 event names가 아닙니다. Prose examples는 non-catalog event names를 illustrative 또는 future extension ideas로 언급할 수 있지만, executable MVP fixtures는 kernel catalog가 promote하기 전까지 이를 요구하면 안 됩니다.
+
 `expected_state.validators` 아래의 validator assertion은 validator ID로 keyed됩니다. 나열된 각 validator ID는 captured validator results에 존재해야 하며 나열된 field를 partially match해야 합니다. 나열되지 않은 validator ID와 나열되지 않은 validator field는 assert하지 않습니다.
 
 `expected_state.checks` 아래의 Core check와 precondition assertion은 check/precondition name으로 keyed됩니다. 이 entries는 captured Core check output, blocked reasons, response summaries, 또는 runner가 관찰한 equivalent check status와 비교합니다. MCP API 또는 Reference MVP가 해당 ID를 stable ValidatorResult로 명시적으로 promote하지 않는 한 이 값들은 validator IDs가 아니며 `expected_state.validators` 아래에 두면 안 됩니다.
@@ -1492,7 +1494,6 @@ expected_state:
     codebase_stewardship_check: blocked
 expected_events:
   - prepare_write_blocked
-  - design_validator_failed
 expected_artifacts: []
 expected_projection:
   TASK: enqueued
@@ -1677,7 +1678,6 @@ expected_state:
       close_impact: blocks_close
 expected_events:
   - prepare_write_blocked
-  - design_validator_failed
 expected_artifacts: []
 expected_projection:
   TASK: enqueued
@@ -1754,7 +1754,6 @@ expected_state:
       close_impact: blocks_close
 expected_events:
   - prepare_write_blocked
-  - design_validator_failed
 expected_artifacts: []
 expected_projection:
   TASK: enqueued

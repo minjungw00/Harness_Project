@@ -378,6 +378,10 @@ Implementation이 plan으로 굳어지기 전에 Task에 대해 최소한으로 
 
 `state.sqlite` 안의 append-only event history table입니다. MVP는 별도의 event store를 사용하지 않습니다.
 
+### Stable Event Catalog
+
+MVP conformance fixtures가 `expected_events`에서 assert할 수 있는 `task_events.event_type` names에 대한 kernel-owned compact list입니다. Stable event names를 prose examples, fixture shorthand, validator IDs, Core check names, projection status shorthands, future extension events와 구분합니다.
+
 ### State Record
 
 Kernel state 안의 canonical structured record입니다. Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Write Authorization, Evidence Manifest, Eval, Manual QA record, Artifact record, Shared Design record, Domain Term, Module Map Item, Interface Contract, TDD Trace, Reconcile Item 등이 있습니다.
@@ -448,7 +452,7 @@ Policy가 허용하는 곳에서 gate requirement에 대한 explicit recorded ex
 
 ### Write Authorization Lifecycle Events
 
-Stable Write Authorization lifecycle event vocabulary는 `write_authorization_created`, `write_authorization_returned`, `write_authorization_consumed`, `write_authorization_expired`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_violation_detected`입니다. `scope_violation_detected`는 general observed scope event이며 Write Authorization lifecycle event가 아닙니다.
+Stable Write Authorization lifecycle event vocabulary는 `write_authorization_created`, `write_authorization_returned`, `write_authorization_consumed`, `write_authorization_expired`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_violation_detected`입니다. 이 names는 Stable Event Catalog에도 listed됩니다. `scope_violation_detected`는 general observed scope event이며 Write Authorization lifecycle event가 아닙니다.
 
 ### Write Authority Summary
 
