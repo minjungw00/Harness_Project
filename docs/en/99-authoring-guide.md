@@ -31,6 +31,12 @@ Use exactly one canonical owner for each concept. Other documents may include a 
 | old-to-new mapping and migration notes | `appendix/D-migration-notes.md` |
 | official term definitions | `glossary.md` |
 
+## Bilingual Sync
+
+The English and Korean documentation sets mirror the same file structure and heading structure.
+
+Any semantic change to `docs/en` must be reflected in `docs/ko` in the same batch. Translation may be idiomatic, but authority boundaries, stable terms, schema names, DDL names, error codes, and validator IDs must match.
+
 ## Principle Group Language
 
 The strategy owns three principle groups: Strategic Invariants, Kernel Authority Invariants, and Design Stewardship Defaults. Do not promote helpful practices into Kernel Authority Invariants unless the owner doc is updated.
@@ -115,6 +121,14 @@ Module Map: module_map_items -> MODULE-MAP projection
 Interface Contract: interface_contracts -> INTERFACE-CONTRACT projection
 ```
 
+## Judgment Surface, Not Lecture
+
+User-facing docs should reveal the context, choices, trade-offs, evidence, risk, recommendation, uncertainty, and next action needed for judgment.
+
+Do not teach every internal gate. Name a gate only when it explains why progress, write, close, QA, acceptance, or risk acceptance is blocked.
+
+The user owns the work judgment. The agent and harness expose current state and options; they do not replace the user's decision.
+
 ## Schema And Template Ownership
 
 MCP tool request/response schemas, common envelope, error taxonomy, validator result schema, and artifact ref shape belong only in `05-mcp-api-and-schemas.md`.
@@ -177,6 +191,8 @@ Do not use `TODO_REWRITE` in finished v2 canonical sections. A remaining `TODO_R
 [ ] Are MVP, v1, and later labels clear?
 [ ] Are long-term analytics kept out of MVP requirements?
 [ ] Does source-of-truth phrasing preserve state/artifact/projection boundaries?
+[ ] Are semantic changes mirrored across `docs/en` and `docs/ko` in the same batch?
+[ ] Do user-facing docs expose judgment context without teaching unnecessary internal gates?
 [ ] Does the user guide avoid DB/API/connector internals?
 [ ] Does operations use fixture-based conformance?
 [ ] Are legacy names confined to migration notes?

@@ -31,6 +31,12 @@ Runtime behavior, user procedure, conformance fixture content, MCP schemas, SQLi
 | old-to-new mapping and migration notes | `appendix/D-migration-notes.md` |
 | official term definitions | `glossary.md` |
 
+## Bilingual Sync
+
+English and Korean documentation sets는 같은 file structure와 heading structure를 mirror합니다.
+
+`docs/en`에 semantic change가 있으면 같은 batch에서 `docs/ko`에 반영합니다. Translation은 idiomatic할 수 있지만 authority boundaries, stable terms, schema names, DDL names, error codes, validator IDs는 일치해야 합니다.
+
 ## Principle Group Language
 
 Strategy는 세 원칙 그룹을 담당합니다. Strategic Invariants, Kernel Authority Invariants, Design Stewardship Defaults입니다. Owner doc이 업데이트되지 않았다면 helpful practices를 Kernel Authority Invariants로 승격하지 않습니다.
@@ -115,6 +121,14 @@ Module Map: module_map_items -> MODULE-MAP projection
 Interface Contract: interface_contracts -> INTERFACE-CONTRACT projection
 ```
 
+## Judgment Surface, Not Lecture
+
+User-facing docs는 사용자가 판단하는 데 필요한 context, choices, trade-offs, evidence, risk, recommendation, uncertainty, next action을 드러냅니다.
+
+모든 internal gate를 설명하려 들지 않습니다. Gate는 progress, write, close, QA, acceptance, risk acceptance가 왜 blocked인지 설명할 때만 이름 붙입니다.
+
+작업 판단의 owner는 사용자입니다. Agent와 Harness는 current state와 options를 드러내며, 사용자의 decision을 대신하지 않습니다.
+
 ## Schema와 Template 담당 경계
 
 MCP tool request/response schemas, common envelope, error taxonomy, validator result schema, artifact ref shape는 `05-mcp-api-and-schemas.md`에만 둡니다.
@@ -177,6 +191,8 @@ Decision은 이미 내려졌지만 implementation detail, DDL, fixture coverage,
 [ ] MVP, v1, later labels가 명확한가?
 [ ] long-term analytics가 MVP requirements 밖에 있는가?
 [ ] source-of-truth 표현이 state/artifact/projection boundaries를 보존하는가?
+[ ] semantic changes가 `docs/en`과 `docs/ko`에 같은 batch로 mirrored되었는가?
+[ ] user-facing docs가 불필요한 internal gates를 가르치지 않고 judgment context를 드러내는가?
 [ ] user guide가 DB/API/connector internals를 피하는가?
 [ ] operations가 fixture-based conformance를 사용하는가?
 [ ] legacy names가 migration notes에만 있는가?
