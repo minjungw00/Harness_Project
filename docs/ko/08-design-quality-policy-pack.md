@@ -208,7 +208,7 @@ Verification, QA, public API/interface commitment, scope expansion, architecture
 | Policy | Validator | Primary gate or state impact |
 |---|---|---|
 | `shared_design` | `shared_design_alignment` | `design_gate` pending/partial/passed/waived |
-| `decision_quality` | `decision_quality_check` | `decision_gate` required/pending/blocked/passed; applicable한 경우 `design_gate` |
+| `decision_quality` | `decision_quality_check` | `decision_gate` required/pending/blocked/resolved; applicable한 경우 `design_gate` |
 | `autonomy_boundary` | `autonomy_boundary_check` | `prepare_write` blockers, `decision_gate`, `design_gate` |
 | `domain_language` | `domain_language_consistency` | `design_gate` partial/stale/passed |
 | `vertical_slice` | `vertical_slice_shape` | `design_gate` partial/blocked/passed |
