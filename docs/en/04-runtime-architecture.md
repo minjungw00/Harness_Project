@@ -238,7 +238,7 @@ Failures are recorded rather than hidden:
 | Artifact file missing | mark artifact/evidence stale; rescan or restore through recovery |
 | Projection job failed | keep state current; mark projection failed and retry or reconcile |
 | Managed Markdown edited directly | create reconcile item; do not mutate state directly |
-| MCP unavailable | hold product writes by instruction on cooperative surfaces; stronger guards may enforce preventively |
+| MCP unavailable | distinguish `MCP_SERVER_UNAVAILABLE`, where the tool call cannot reach Core and no authoritative Core response is possible, from `SURFACE_MCP_UNAVAILABLE`, where Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools; product/runtime/code writes are held by instruction on cooperative surfaces or blocked by stronger guards when available |
 | Surface capability mismatch | record validator result, adjust guarantee display, and block unsafe writes when required checks cannot be satisfied |
 
 Recovery tools may repair projection freshness, rescan artifacts, interrupt stale runs, expire drifted approvals, or create reconcile items. They must preserve the same authority rules: `state.sqlite` is operational state, `state.sqlite.task_events` is the event history inside that state store, raw evidence lives in the artifact store, and Markdown reports remain projections.

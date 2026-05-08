@@ -52,7 +52,7 @@ Always-on rule은 user agency도 보존해야 한다.
 - AFK implementation은 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive approval, 실제 product write 전 compatible `prepare_write` / Write Authorization이 모두 맞을 때만 허용한다.
 - Autonomy Boundary는 judgment latitude이지 write authority가 아니다.
 - Work가 write를 시작하려 할 때 Write Authority Summary를 보여준다.
-- MCP가 unavailable이면 product write를 hold한다.
+- Authoritative MCP가 unavailable이면 product write를 hold한다.
 - Planning direction, product trade-off, QA waiver, verification risk acceptance, final acceptance는 사용자가 쥔다.
 
 Write Authority Summary는 active scoped Change Unit의 scope, `prepare_write`, approval, allowed path/tool/command/network/secret, product-judgment blocker를 제거하는 compatible Decision Packet ref에서 나온 current write boundary display다. Decision Packet은 그 자체로 write를 authorize하지 않는다. Autonomy Boundary는 agent가 추가 user decision 없이 행사할 수 있는 judgment만 설명한다.
@@ -268,7 +268,7 @@ Fallback은 surface name이 아니라 guarantee level과 risk로 설명한다.
 
 ### Cooperative Fallback
 
-Surface가 instruction을 따를 수 있지만 enforce할 수 없을 때 사용한다. Connector는 agent에게 `prepare_write`를 call하고, blocked decision에서는 hold하고, run을 record하라고 알려준다. MCP가 unavailable이거나 write scope를 check할 수 없으면 product write를 pause해야 한다.
+Surface가 instruction을 따를 수 있지만 enforce할 수 없을 때 사용한다. Connector는 agent에게 `prepare_write`를 call하고, blocked decision에서는 hold하고, run을 record하라고 알려준다. Authoritative MCP가 unavailable이거나 write scope를 check할 수 없으면 product write를 pause해야 한다.
 
 ### Detective Fallback
 
@@ -284,9 +284,9 @@ Risk에 separation이 필요할 때 사용한다. Connector는 별도 worktree, 
 
 ### MCP Unavailable
 
-MCP가 unavailable이면 connector는 authoritative state update를 claim하면 안 된다. Product/runtime/code write의 safe behavior는 write를 hold하고 user/operator에게 MCP reconnect 또는 diagnose를 안내하는 것이다. Stronger profile은 preventive block도 enforce할 수 있다.
+MCP가 unavailable이면 connector는 authoritative state update를 claim하면 안 된다. `MCP_SERVER_UNAVAILABLE`은 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능하다는 뜻이다. Caller는 state change를 claim하기 전에 reconnect 또는 diagnose해야 한다. `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 connected surface에 usable MCP가 없거나, MCP configuration이 stale이거나, required MCP tools를 call할 수 없음을 observe할 수 있다는 뜻이다. Product/runtime/code write의 safe behavior는 write를 hold하고 user/operator에게 MCP reconnect 또는 diagnose를 안내하는 것이다. Stronger profile은 preventive block도 enforce할 수 있다.
 
-Pre-MVP Harness documentation-authoring batch는 exact path allowlist가 있는 명시적 `DOCS_AUTHORING_OVERRIDE` 아래에서만 진행할 수 있다. Connector는 이를 documentation-maintainer override로 label해야 하며, Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, canonical state transition으로 label하면 안 된다.
+Pre-MVP Harness documentation-authoring batch는 exact path allowlist가 있는 명시적 `DOCS_AUTHORING_OVERRIDE` 아래에서만 진행할 수 있다. Connector는 이를 documentation-maintainer override로 label해야 하며, Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, canonical state transition으로 label하면 안 된다. Authoritative MCP가 unavailable이면 product/runtime/code write는 계속 hold한다.
 
 ### Weak Guard
 

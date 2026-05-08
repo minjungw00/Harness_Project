@@ -67,6 +67,8 @@ Harness should handle state recording, `prepare_write` checks, artifact registra
 
 Harness should translate your judgments into recorded state and clear blockers so you can stay focused on ownership, not bookkeeping.
 
+If Harness or the connected surface cannot use MCP reliably, product/runtime/code changes should pause until the connection or surface setup is diagnosed. A documentation-only bootstrap override, when explicitly granted for exact paths, is not the same thing as Harness authorization.
+
 ## Reading A Status Card
 
 A good harness session first shows a short status card. When significant work resumes, that card should be the Journey Card or an equivalent current-position view.

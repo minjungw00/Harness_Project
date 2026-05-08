@@ -53,8 +53,8 @@ Required categories:
 |---|---|
 | project | registered project, repo root, static config validity |
 | state | current state readability, JSON field parse and shape validity, locks, active Task consistency |
-| MCP | server reachability, read resource availability, public tool availability |
-| surface | capability profile, generated manifest, MCP config freshness |
+| MCP | server reachability, Core reachability, read resource availability, public tool availability |
+| surface | capability profile, generated manifest, MCP config freshness, required MCP tool-call ability |
 | artifacts | file existence, hash, size, redaction state, task/run or artifact-link relation |
 | projections | queued jobs, freshness, managed hash drift, failed renders |
 | reconcile | pending human edits, managed block drift, generated-file drift |
@@ -87,7 +87,7 @@ Required behavior:
 - report the active project and connected surface profile
 - fail clearly when the server cannot reach runtime state or artifact storage
 
-If MCP is unavailable, cooperative surfaces must hold product writes. Stronger profiles may enforce the hold preventively or through isolation, but operations must still report the actual guarantee level.
+If MCP is unavailable, operations must distinguish `MCP_SERVER_UNAVAILABLE` from `SURFACE_MCP_UNAVAILABLE`. With `MCP_SERVER_UNAVAILABLE`, a tool call cannot reach Core and no authoritative Core response is possible; the next action is server diagnosis or reconnect before any state-change claim. With `SURFACE_MCP_UNAVAILABLE`, Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools. Cooperative surfaces must hold product/runtime/code writes by instruction; stronger profiles may enforce the hold preventively or through isolation. Operations must still report the actual guarantee level.
 
 ## Projection Refresh
 
@@ -155,7 +155,7 @@ Required scenarios:
 | managed Markdown edited | create reconcile item |
 | malformed or schema-incompatible storage JSON | repair only if Core can reconstruct the expected shape from canonical state or raw artifacts; otherwise fail or require manual recovery |
 | lock expired | append recovery event and release or reacquire according to lock policy |
-| MCP unavailable | report write hold and next diagnosis step |
+| MCP unavailable | report `MCP_SERVER_UNAVAILABLE` or `SURFACE_MCP_UNAVAILABLE`, keep product/runtime/code writes held, and give the next diagnosis or reconnect step |
 
 Recovery may append compensating events. It must not silently delete evidence, rewrite event history, or make projections authoritative.
 
@@ -655,6 +655,8 @@ expected_projection:
   TASK: enqueued
 expected_error:
   code: MCP_UNAVAILABLE
+  details:
+    mcp_unavailable_kind: surface_mcp_unavailable
 ```
 
 ## Core Fixture Examples

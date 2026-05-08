@@ -67,6 +67,8 @@ Harness가 맡아야 할 것은 state recording, `prepare_write` checks, artifac
 
 Harness는 사용자의 판단을 recorded state와 clear blockers로 바꾸어, 사용자가 bookkeeping이 아니라 ownership에 집중하게 해야 합니다.
 
+Harness 또는 connected surface가 MCP를 reliable하게 사용할 수 없으면 product/runtime/code 변경은 connection 또는 surface setup이 diagnose될 때까지 pause해야 합니다. Exact path에 대해 명시적으로 granted된 documentation-only bootstrap override는 Harness authorization과 같지 않습니다.
+
 ## 상태 카드 읽기
 
 좋은 하네스 세션은 먼저 짧은 상태 카드를 보여준다. 중요한 작업을 재개할 때는 일반 status card보다 Journey Card 또는 그에 준하는 current-position view가 먼저 나와야 한다.

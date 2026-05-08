@@ -60,12 +60,12 @@ Codex flow는 user agency를 보존해야 한다.
 - AFK 진행은 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive approval, 실제 product write 전 compatible `prepare_write` / Write Authorization이 모두 맞을 때만 허용한다.
 - Autonomy Boundary는 judgment latitude이지 write authority가 아니다.
 - Product write 전 Write Authority Summary를 보여준다.
-- MCP가 unavailable이면 product write를 hold한다.
+- Authoritative MCP가 unavailable이면 product write를 hold한다.
 - Planning direction, product trade-off, QA waiver, verification risk acceptance, final acceptance가 필요하면 멈춘다.
 
 Pre-tool blocking이 prove되지 않은 Codex profile에는 cooperative fallback을 사용한다. `prepare_write`를 call하고, allowed write에 반환된 Write Authorization을 존중하고, `record_run`으로 changed path와 evidence를 기록하며, risk가 warrant하면 changed-path validation, sidecar capture, manual verification bundle에 의존한다.
 
-Docs-authoring bootstrap fallback: MCP가 unavailable이면 product/runtime/code write는 여전히 hold한다. Pre-MVP Harness documentation-authoring batch는 exact path allowlist가 있는 명시적 `DOCS_AUTHORING_OVERRIDE` 아래에서만 진행할 수 있으며, documentation-maintainer override로 label해야 한다. Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, canonical state transition으로 label하면 안 된다.
+Docs-authoring bootstrap fallback: authoritative MCP가 unavailable이면 product/runtime/code write는 여전히 hold한다. `MCP_SERVER_UNAVAILABLE`은 reachable Core response가 없는 경우로, `SURFACE_MCP_UNAVAILABLE`은 connected surface에 usable MCP가 없거나 MCP configuration이 stale이거나 required tools를 call할 수 없는 경우로 취급한다. Pre-MVP Harness documentation-authoring batch는 exact path allowlist가 있는 명시적 `DOCS_AUTHORING_OVERRIDE` 아래에서만 진행할 수 있으며, documentation-maintainer override로 label해야 한다. Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, canonical state transition으로 label하면 안 된다.
 
 문서 rewrite workflow에서는 connector가 one-batch-per-session을 권장할 수 있다. 그래야 changed section, 추가된 user-facing phrase, surface-specific advice가 review 가능한 크기로 남는다.
 
@@ -202,7 +202,7 @@ Product code change, verification, approval, Manual QA, acceptance, resume, clos
 - Work는 scope와 acceptance criteria를 정할 만큼의 shared design에서 시작한다.
 - Product write에는 `harness.prepare_write`가 필요하다.
 - Product write 전 Write Authority Summary를 보여준다.
-- MCP가 unavailable이면 product write를 hold한다.
+- Authoritative MCP가 unavailable이면 product write를 hold한다.
 - Sensitive category는 진행 전에 approval이 필요하다.
 - Decision Packet이 필요하면 포괄적인 승인을 묻지 말고 packet을 보여준다.
 - 한 번에 하나의 blocking question만 묻고, 가능하면 recommendation과 uncertainty를 함께 제시한다.
@@ -239,7 +239,7 @@ description: 사용자가 code 수정, verification, task resume, user decision 
 Harness를 사용해 AI-assisted development가 visible, bounded, evidenced, verifiable 상태로 product design과 정렬되게 한다.
 
 ## Core Rule
-Product file을 edit하기 전에 `harness.prepare_write`를 call한다. Allowed response는 intended write에 대한 Write Authorization을 반환하고, `harness.record_run`이 이를 consume한다. `prepare_write`가 blocked이면 product file을 edit하지 않는다. MCP가 unavailable이면 product write를 hold하고 guarantee limitation을 보고한다. Autonomy Boundary는 judgment latitude이지 write authority가 아니다.
+Product file을 edit하기 전에 `harness.prepare_write`를 call한다. Allowed response는 intended write에 대한 Write Authorization을 반환하고, `harness.record_run`이 이를 consume한다. `prepare_write`가 blocked이면 product file을 edit하지 않는다. Authoritative MCP가 unavailable이면 product write를 hold하고 guarantee limitation을 보고한다. Autonomy Boundary는 judgment latitude이지 write authority가 아니다.
 
 ## Workflow
 
@@ -278,7 +278,7 @@ Product file을 edit하기 전에 `harness.prepare_write`를 call한다. Allowed
 - `harness.prepare_write`를 call한다.
 - Allowed이면 Write Authority Summary를 보여주고 반환된 Write Authorization을 `harness.record_run`으로 넘긴다.
 - `prepare_write`가 blocked이면 product file을 edit하지 않는다.
-- MCP가 unavailable이면 product write를 hold하고, surface가 authoritative write decision을 제공할 수 없다고 보고한다.
+- Authoritative MCP가 unavailable이면 product write를 hold하고, surface가 authoritative write decision을 제공할 수 없다고 보고한다.
 - Allowed path, tool, command, network, secret scope를 존중한다.
 - AFK는 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive approval, 실제 product write 전 compatible `prepare_write` / Write Authorization이 모두 맞을 때만 계속한다.
 - Autonomy Boundary는 write authority가 아니다. `prepare_write`, Change Unit scope, allowed path/tool/command/network/secret, sensitive approval이 여전히 write를 control한다.

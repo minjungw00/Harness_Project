@@ -52,7 +52,7 @@ Always-on rules should also preserve user agency:
 - allow AFK implementation only when active Change Unit scope, Autonomy Boundary latitude, any granted sensitive approval, and compatible `prepare_write` / Write Authorization before actual product writes all apply
 - treat the Autonomy Boundary as judgment latitude, not write authority
 - show the Write Authority Summary when work is about to write
-- hold product writes if MCP is unavailable
+- hold product writes if authoritative MCP is unavailable
 - keep planning direction, product trade-offs, QA waiver, verification risk acceptance, and final acceptance human-held
 
 Write Authority Summary displays the current write boundary from the active scoped Change Unit's scope, `prepare_write`, approval, allowed paths/tools/commands/network/secrets, and compatible Decision Packet refs that remove product-judgment blockers. Decision Packets do not authorize writes by themselves. The Autonomy Boundary only says what judgment the agent may exercise without another user decision.
@@ -268,7 +268,7 @@ Fallbacks are described by guarantee level and risk, not by surface name.
 
 ### Cooperative Fallback
 
-Use when the surface can follow instructions but cannot enforce them. The connector tells the agent to call `prepare_write`, hold on blocked decisions, and record runs. Product writes must be paused if MCP is unavailable or the write scope cannot be checked.
+Use when the surface can follow instructions but cannot enforce them. The connector tells the agent to call `prepare_write`, hold on blocked decisions, and record runs. Product writes must be paused if authoritative MCP is unavailable or the write scope cannot be checked.
 
 ### Detective Fallback
 
@@ -284,9 +284,9 @@ Use when risk requires separation. The connector launches work or verification i
 
 ### MCP Unavailable
 
-If MCP is unavailable, the connector must not claim authoritative state updates. For product/runtime/code writes, the safe behavior is to hold the write and direct the user/operator to reconnect or diagnose MCP. Stronger profiles may also enforce a preventive block.
+If MCP is unavailable, the connector must not claim authoritative state updates. `MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible; the caller must reconnect or diagnose before claiming state changes. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools. For product/runtime/code writes, the safe behavior is to hold the write and direct the user/operator to reconnect or diagnose MCP. Stronger profiles may also enforce a preventive block.
 
-A pre-MVP Harness documentation-authoring batch may proceed only under an explicit `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. The connector must label this as a documentation-maintainer override, not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition.
+A pre-MVP Harness documentation-authoring batch may proceed only under an explicit `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. The connector must label this as a documentation-maintainer override, not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition. Product/runtime/code writes still hold when authoritative MCP is unavailable.
 
 ### Weak Guard
 

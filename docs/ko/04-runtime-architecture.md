@@ -238,7 +238,7 @@ Failures는 숨기지 않고 기록합니다.
 | Artifact file missing | mark artifact/evidence stale; rescan or restore through recovery |
 | Projection job failed | keep state current; mark projection failed and retry or reconcile |
 | Managed Markdown edited directly | create reconcile item; do not mutate state directly |
-| MCP unavailable | hold product writes by instruction on cooperative surfaces; stronger guards may enforce preventively |
+| MCP unavailable | `MCP_SERVER_UNAVAILABLE`은 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능한 경우이고, `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 connected surface에 usable MCP가 없거나 MCP configuration이 stale이거나 required tools를 call할 수 없음을 observe할 수 있는 경우입니다. Product/runtime/code writes는 cooperative surface에서는 instruction으로 hold되고 available한 stronger guard에서는 block됩니다 |
 | Surface capability mismatch | record validator result, adjust guarantee display, and block unsafe writes when required checks cannot be satisfied |
 
 Recovery tools는 projection freshness repair, artifact rescan, stale runs interrupt, drifted approvals expire, reconcile items create를 수행할 수 있습니다. 다만 같은 authority rules를 보존해야 합니다. `state.sqlite`는 operational state이고, `state.sqlite.task_events`는 그 state store 안의 event history이며, raw evidence는 artifact store에 있고, Markdown reports는 projections로 남습니다.

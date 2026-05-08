@@ -126,6 +126,9 @@ ToolError:
   retryable: boolean
   details: object
 
+ToolErrorMcpUnavailableDetails:
+  mcp_unavailable_kind: server_unavailable | surface_mcp_unavailable | stale_connection | unknown
+
 StateSummary:
   mode: advisor | direct | work
   lifecycle_phase: intake | shaping | ready | executing | verifying | qa | waiting_user | blocked | completed | cancelled
@@ -496,7 +499,7 @@ Stable design and agency validator ids used by this API are:
 | `APPROVAL_DENIED` | the relevant approval was denied |
 | `APPROVAL_EXPIRED` | approval expired or drifted from baseline/scope |
 | `CAPABILITY_INSUFFICIENT` | the connected surface cannot satisfy a required validator or enforcement condition |
-| `MCP_UNAVAILABLE` | required MCP access is unavailable or stale |
+| `MCP_UNAVAILABLE` | required MCP access is unavailable, stale, or unreachable |
 | `EVIDENCE_INSUFFICIENT` | required evidence coverage is absent, partial, stale, or blocked |
 | `VERIFY_NOT_DETACHED` | verification cannot count as detached verification |
 | `QA_REQUIRED` | required Manual QA is pending, failed, or missing |
@@ -510,7 +513,14 @@ Stable design and agency validator ids used by this API are:
 
 `WRITE_AUTHORIZATION_REQUIRED` and `WRITE_AUTHORIZATION_INVALID` are used only for missing or invalid Write Authorization. Scope violations still use `SCOPE_VIOLATION` when observed paths, tools, commands, network targets, secrets, or sensitive categories exceed authorized or active scope.
 
-`DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `AUTONOMY_BOUNDARY_EXCEEDED`, and `RESIDUAL_RISK_NOT_VISIBLE` are stable public `ErrorCode` values. Validator-specific detail still belongs in `ValidatorResult.findings`.
+`MCP_UNAVAILABLE` remains the stable public `ErrorCode`. Diagnostic detail distinguishes `MCP_SERVER_UNAVAILABLE` from `SURFACE_MCP_UNAVAILABLE` without adding public error codes:
+
+- `MCP_SERVER_UNAVAILABLE`: the tool call cannot reach Core, so no authoritative Core response is possible. The caller must diagnose or reconnect before claiming state changes.
+- `SURFACE_MCP_UNAVAILABLE`: Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools. Product writes are held by instruction on cooperative surfaces or blocked by stronger guards when available. Core responses may use `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` with `details.mcp_unavailable_kind` depending on context.
+
+When a `ToolError` object is available for an MCP availability problem, `details.mcp_unavailable_kind` may be `server_unavailable`, `surface_mcp_unavailable`, `stale_connection`, or `unknown`.
+
+`DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RESIDUAL_RISK_NOT_VISIBLE`, and `MCP_UNAVAILABLE` are stable public `ErrorCode` values. Validator-specific detail still belongs in `ValidatorResult.findings`.
 
 ## Idempotency And State Conflict Behavior
 

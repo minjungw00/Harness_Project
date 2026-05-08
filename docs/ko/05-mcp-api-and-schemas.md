@@ -126,6 +126,9 @@ ToolError:
   retryable: boolean
   details: object
 
+ToolErrorMcpUnavailableDetails:
+  mcp_unavailable_kind: server_unavailable | surface_mcp_unavailable | stale_connection | unknown
+
 StateSummary:
   mode: advisor | direct | work
   lifecycle_phase: intake | shaping | ready | executing | verifying | qa | waiting_user | blocked | completed | cancelled
@@ -496,7 +499,7 @@ ValidatorResult:
 | `APPROVAL_DENIED` | the relevant approval was denied |
 | `APPROVAL_EXPIRED` | approval expired or drifted from baseline/scope |
 | `CAPABILITY_INSUFFICIENT` | the connected surface cannot satisfy a required validator or enforcement condition |
-| `MCP_UNAVAILABLE` | required MCP access is unavailable or stale |
+| `MCP_UNAVAILABLE` | required MCP access is unavailable, stale, or unreachable |
 | `EVIDENCE_INSUFFICIENT` | required evidence coverage is absent, partial, stale, or blocked |
 | `VERIFY_NOT_DETACHED` | verification cannot count as detached verification |
 | `QA_REQUIRED` | required Manual QA is pending, failed, or missing |
@@ -510,7 +513,14 @@ ValidatorResult:
 
 `WRITE_AUTHORIZATION_REQUIRED`와 `WRITE_AUTHORIZATION_INVALID`는 missing 또는 invalid Write Authorization에만 사용합니다. Observed paths, tools, commands, network targets, secrets, sensitive categories가 authorized 또는 active scope를 넘는 경우 scope violations는 계속 `SCOPE_VIOLATION`을 사용합니다.
 
-`DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RESIDUAL_RISK_NOT_VISIBLE`는 stable public `ErrorCode` values입니다. Validator-specific detail은 여전히 `ValidatorResult.findings`에 속합니다.
+`MCP_UNAVAILABLE`은 stable public `ErrorCode`로 유지합니다. Diagnostic detail은 public error code를 추가하지 않고 `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`을 구분합니다.
+
+- `MCP_SERVER_UNAVAILABLE`: tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능합니다. Caller는 state change를 claim하기 전에 diagnose 또는 reconnect해야 합니다.
+- `SURFACE_MCP_UNAVAILABLE`: Core 또는 operator가 connected surface에 usable MCP가 없거나, MCP configuration이 stale이거나, required MCP tools를 call할 수 없음을 observe할 수 있습니다. Product writes는 cooperative surface에서는 instruction으로 hold되고, available한 stronger guard에서는 block됩니다. Core response는 context에 따라 `details.mcp_unavailable_kind`와 함께 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`를 사용할 수 있습니다.
+
+MCP availability problem에 대해 `ToolError` object가 available한 경우 `details.mcp_unavailable_kind`는 `server_unavailable`, `surface_mcp_unavailable`, `stale_connection`, `unknown` 중 하나일 수 있습니다.
+
+`DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RESIDUAL_RISK_NOT_VISIBLE`, `MCP_UNAVAILABLE`은 stable public `ErrorCode` values입니다. Validator-specific detail은 여전히 `ValidatorResult.findings`에 속합니다.
 
 ## Idempotency And State Conflict Behavior
 

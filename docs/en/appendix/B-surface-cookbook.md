@@ -60,12 +60,12 @@ The Codex flow should preserve user agency:
 - continue AFK only when active Change Unit scope, Autonomy Boundary latitude, any granted sensitive approval, and compatible `prepare_write` / Write Authorization before actual product writes all apply
 - treat the Autonomy Boundary as judgment latitude, not write authority
 - show the Write Authority Summary before product writes
-- hold product writes if MCP is unavailable
+- hold product writes if authoritative MCP is unavailable
 - stop for planning direction, product trade-offs, QA waiver, verification risk acceptance, and final acceptance
 
 For any Codex profile without proven pre-tool blocking, use the cooperative fallback: call `prepare_write`, respect the returned Write Authorization for allowed writes, record changed paths and evidence through `record_run`, and rely on changed-path validation, sidecar capture, or a manual verification bundle when risk warrants it.
 
-Docs-authoring bootstrap fallback: if MCP is unavailable, product/runtime/code writes still hold. A pre-MVP Harness documentation-authoring batch may proceed only under explicit `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist, and must be labeled as a documentation-maintainer override, not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition.
+Docs-authoring bootstrap fallback: if authoritative MCP is unavailable, product/runtime/code writes still hold. Treat `MCP_SERVER_UNAVAILABLE` as no reachable Core response, and `SURFACE_MCP_UNAVAILABLE` as a connected surface that lacks usable MCP, has stale MCP configuration, or cannot call required tools. A pre-MVP Harness documentation-authoring batch may proceed only under explicit `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist, and must be labeled as a documentation-maintainer override, not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition.
 
 For document rewrite workflows, a connector may recommend one-batch-per-session so changed sections, added user-facing phrases, and surface-specific advice remain reviewable.
 
@@ -202,7 +202,7 @@ Use Harness for product code changes, verification, approval, Manual QA, accepta
 - Work starts with enough shared design to define scope and acceptance criteria.
 - A product write requires `harness.prepare_write`.
 - Show the Write Authority Summary before product writes.
-- If MCP is unavailable, hold product writes.
+- If authoritative MCP is unavailable, hold product writes.
 - Sensitive categories require approval before proceeding.
 - If a Decision Packet is required, present it instead of asking for broad approval.
 - Ask one blocking question at a time, with a recommendation and uncertainty when available.
@@ -239,7 +239,7 @@ description: Use this when the user asks to modify code, verify work, resume a t
 Use Harness to keep AI-assisted development visible, bounded, evidenced, verifiable, and aligned with product design.
 
 ## Core Rule
-Before editing product files, call `harness.prepare_write`. An allowed response returns a Write Authorization for that intended write, and `harness.record_run` consumes it. If `prepare_write` is blocked, do not edit product files. If MCP is unavailable, hold product writes and report the guarantee limitation. The Autonomy Boundary is judgment latitude, not write authority.
+Before editing product files, call `harness.prepare_write`. An allowed response returns a Write Authorization for that intended write, and `harness.record_run` consumes it. If `prepare_write` is blocked, do not edit product files. If authoritative MCP is unavailable, hold product writes and report the guarantee limitation. The Autonomy Boundary is judgment latitude, not write authority.
 
 ## Workflow
 
@@ -278,7 +278,7 @@ For small direct work, keep Harness mostly invisible: use narrow scope, call `ha
 - Call `harness.prepare_write`.
 - If allowed, show the Write Authority Summary and carry the returned Write Authorization into `harness.record_run`.
 - If `prepare_write` is blocked, do not edit product files.
-- If MCP is unavailable, hold product writes and report that the surface cannot provide an authoritative write decision.
+- If authoritative MCP is unavailable, hold product writes and report that the surface cannot provide an authoritative write decision.
 - Respect allowed paths, tools, commands, network, and secret scope.
 - Continue AFK only when active Change Unit scope, Autonomy Boundary latitude, any granted sensitive approval, and compatible `prepare_write` / Write Authorization before actual product writes all apply.
 - Autonomy Boundary is not write authority; `prepare_write`, Change Unit scope, allowed paths/tools/commands/network/secrets, and sensitive approval still control writes.

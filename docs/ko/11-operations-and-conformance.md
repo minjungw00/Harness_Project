@@ -53,8 +53,8 @@ Connect는 사람이 편집한 내용을 조용히 덮어쓰지 않고 generated
 |---|---|
 | project | registered project, repo root, static config validity |
 | state | current state readability, JSON field parse and shape validity, locks, active Task consistency |
-| MCP | server reachability, read resource availability, public tool availability |
-| surface | capability profile, generated manifest, MCP config freshness |
+| MCP | server reachability, Core reachability, read resource availability, public tool availability |
+| surface | capability profile, generated manifest, MCP config freshness, required MCP tool-call ability |
 | artifacts | file existence, hash, size, redaction state, task/run or artifact-link relation |
 | projections | queued jobs, freshness, managed hash drift, failed renders |
 | reconcile | pending human edits, managed block drift, generated-file drift |
@@ -87,7 +87,7 @@ State checks는 `registry.sqlite`와 `state.sqlite`의 JSON `TEXT` fields를 포
 - active project와 connected surface profile을 보고합니다
 - server가 runtime state 또는 artifact storage에 닿을 수 없으면 명확히 실패합니다
 
-MCP를 사용할 수 없으면 cooperative surface는 product write를 hold해야 합니다. Stronger profile은 hold를 예방적으로 또는 isolation으로 enforce할 수 있지만, operations는 실제 guarantee level을 그대로 보고해야 합니다.
+MCP를 사용할 수 없으면 operations는 `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`을 구분해야 합니다. `MCP_SERVER_UNAVAILABLE`에서는 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능하므로, state-change claim 전에 server diagnosis 또는 reconnect가 next action입니다. `SURFACE_MCP_UNAVAILABLE`에서는 Core 또는 operator가 connected surface에 usable MCP가 없거나 MCP configuration이 stale이거나 required MCP tools를 call할 수 없음을 observe할 수 있습니다. Cooperative surface는 product/runtime/code write를 instruction으로 hold해야 하며, stronger profile은 hold를 예방적으로 또는 isolation으로 enforce할 수 있습니다. Operations는 실제 guarantee level을 그대로 보고해야 합니다.
 
 ## Projection Refresh
 
@@ -155,7 +155,7 @@ Recover는 history를 rewrite하지 않고 interrupted 또는 inconsistent opera
 | managed Markdown edited | reconcile item을 생성합니다 |
 | malformed or schema-incompatible storage JSON | Core가 canonical state 또는 raw artifacts에서 expected shape를 reconstruct할 수 있을 때만 repair합니다. 그렇지 않으면 fail하거나 manual recovery를 요구합니다 |
 | lock expired | recovery event를 append하고 lock policy에 따라 release하거나 reacquire합니다 |
-| MCP unavailable | write hold와 next diagnosis step을 보고합니다 |
+| MCP unavailable | `MCP_SERVER_UNAVAILABLE` 또는 `SURFACE_MCP_UNAVAILABLE`을 보고하고, product/runtime/code write를 계속 hold하며, next diagnosis 또는 reconnect step을 제시합니다 |
 
 Recovery는 compensating event를 append할 수 있습니다. Evidence를 조용히 delete하거나, event history를 rewrite하거나, projection을 authoritative하게 만들면 안 됩니다.
 
@@ -655,6 +655,8 @@ expected_projection:
   TASK: enqueued
 expected_error:
   code: MCP_UNAVAILABLE
+  details:
+    mcp_unavailable_kind: surface_mcp_unavailable
 ```
 
 ## Core Fixture 예시
