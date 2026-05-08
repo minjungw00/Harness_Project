@@ -83,7 +83,7 @@ ToolResponseBase:
   projection_jobs: ProjectionJobRef[]
 ```
 
-`dry_run=true` validates and returns the transition plan but does not update current records, append to `state.sqlite.task_events`, register artifacts, or enqueue projection jobs.
+`dry_run=true` validates and returns the transition plan but does not update current records, append to `state.sqlite.task_events`, register artifacts, create consumable Write Authorization records, or enqueue projection jobs.
 
 ## Shared Schemas
 
@@ -210,12 +210,12 @@ Record or projection references use `StateRecordRef`, not `ArtifactRef`:
 
 ```yaml
 StateRecordRef:
-  record_kind: task | change_unit | change_unit_dependency | run | approval | decision_packet | journey_spine_entry | shared_design | residual_risk | evidence_manifest | eval | manual_qa_record | tdd_trace | reconcile_item | projection
+  record_kind: task | change_unit | change_unit_dependency | run | approval | write_authorization | decision_packet | journey_spine_entry | shared_design | residual_risk | evidence_manifest | eval | manual_qa_record | tdd_trace | reconcile_item | projection
   record_id: string
   projection_path: string | null
 ```
 
-Evidence references and approval scope use these shared shapes:
+Evidence references, approval scope, write authorization, write authority display, and end-to-end paths use these shared shapes:
 
 ```yaml
 EvidenceRefs:
@@ -231,6 +231,50 @@ ApprovalScope:
   secret_scope: string[]
   baseline_ref: string | null
 
+WriteAuthorizationSummary:
+  write_authorization_id: string
+  task_id: string
+  change_unit_id: string
+  intended_operation: string
+  intended_paths: string[]
+  intended_tools: string[]
+  intended_commands:
+    - command: string
+      command_class: string
+      writes_product_files: boolean
+  intended_network:
+    - target: string
+      direction: read | write
+  intended_secrets:
+    - secret_handle: string
+      access_kind: read | write
+  sensitive_categories: string[]
+  baseline_ref: string | null
+  approval_refs: StateRecordRef[]
+  decision_packet_refs: StateRecordRef[]
+  guarantee_level: cooperative | detective | preventive | isolated
+  status: allowed | consumed | expired | stale | revoked
+  consumed_by_run_id: string | null
+  created_at: string
+  consumed_at: string | null
+
+WriteAuthoritySummary:
+  active_change_unit_ref: StateRecordRef | null
+  write_authorization_ref: StateRecordRef | null
+  allowed_paths: string[]
+  allowed_tools: string[]
+  allowed_commands: string[]
+  allowed_command_classes: string[]
+  allowed_network_targets: string[]
+  secret_scope: string[]
+  sensitive_categories: string[]
+  approval_status: not_required | required | pending | granted | denied | expired | unknown
+  baseline_ref: string | null
+  guarantee_display:
+    level: cooperative | detective | preventive | isolated
+    notes: string[]
+  note: "Autonomy Boundary is judgment latitude, not write authority."
+
 EndToEndPath:
   trigger_or_input: string | null
   domain_logic: string | null
@@ -239,9 +283,11 @@ EndToEndPath:
   ui_or_observable_output: string | null
 ```
 
-`DEC` is the Decision Packet visibility projection job kind. Full DEC and Decision Packet template text is owned by Appendix A and Batch 6, not this API schema file.
+`WriteAuthorizationSummary` and `WriteAuthoritySummary` are API payload shapes only. This document does not define SQLite DDL for Write Authorization records. `WriteAuthoritySummary` is the display/read shape clients use to show write authority beside Autonomy Boundary judgment latitude.
 
-Decision Packet, Journey Card, Judgment Context, Autonomy Boundary, and residual-risk summaries are public MCP schemas. They describe API payloads only; owner docs define the canonical kernel records.
+`DEC` is the Decision Packet visibility projection job kind. Full DEC and Decision Packet template text is owned by Appendix A, not this API schema file.
+
+Decision Packet, Write Authorization, write authority, Journey Card, Judgment Context, Autonomy Boundary, acceptance visibility, and residual-risk summaries are public MCP schemas. They describe API payloads only; owner docs define the canonical kernel records.
 
 ```yaml
 DecisionPacket:
@@ -322,6 +368,7 @@ JourneyCardSummary:
   current_position: string
   next_action: string
   active_change_unit_ref: StateRecordRef | null
+  write_authority_summary: WriteAuthoritySummary | null
   active_decision_packet_refs: StateRecordRef[]
   blocker_refs: StateRecordRef[]
   residual_risk_summary: ResidualRiskSummary | null
@@ -339,6 +386,7 @@ JudgmentContext:
   active_decision_packet_refs: StateRecordRef[]
   optional_pull_refs: StateRecordRef[]
   stale_or_missing_refs: StateRecordRef[]
+  acceptance_visibility: AcceptanceVisibilityContext | null
 
 AutonomyBoundarySummary:
   change_unit_id: string | null
@@ -358,9 +406,20 @@ ResidualRiskSummary:
   unaccepted_refs: StateRecordRef[]
   accepted_refs: StateRecordRef[]
   summary: string
+
+AcceptanceVisibilityContext:
+  residual_risk_summary: ResidualRiskSummary | null
+  unaccepted_close_relevant_risk_refs: StateRecordRef[]
+  evidence_summary_refs: StateRecordRef[]
+  verification_status: not_required | required | pending | passed | failed | waived_by_user | blocked
+  qa_status: not_required | required | pending | passed | failed | waived
+  acceptance_status: not_required | required | pending | accepted | rejected
+  what_acceptance_does_not_replace: string[]
 ```
 
 Autonomy Boundary summaries describe judgment latitude, not scope authority. They do not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit scope and any required approval.
+
+`decision_kind=approval` is retained as a stable public enum value. In both `DecisionPacket` and `DecisionPacketCandidate`, it means an approval-shaped judgment context for sensitive-change approval only. It cannot resolve product trade-offs, design direction, QA waiver, verification risk, final acceptance, or residual-risk acceptance unless those decisions are separately represented by compatible Decision Packets and gate updates.
 
 ## Validator Result Schema
 
@@ -397,6 +456,7 @@ Stable design and agency validator ids used by this API are:
 - `tdd_trace_required`
 - `codebase_stewardship_check`
 - `residual_risk_visibility_check`
+- `context_hygiene_check`
 
 ## Error Taxonomy
 
@@ -407,6 +467,8 @@ Stable design and agency validator ids used by this API are:
 | `NO_ACTIVE_CHANGE_UNIT` | a write-capable operation has no active scoped Change Unit |
 | `SCOPE_REQUIRED` | scope confirmation is required before the requested write can proceed |
 | `SCOPE_VIOLATION` | intended paths, tools, commands, network, secrets, or categories exceed scope |
+| `WRITE_AUTHORIZATION_REQUIRED` | a write-capable run is missing a required Write Authorization from `prepare_write` |
+| `WRITE_AUTHORIZATION_INVALID` | the supplied Write Authorization is absent, expired, stale, revoked, already consumed outside idempotent replay, or incompatible with the Task, Change Unit, baseline, intended operation, approval refs, or Decision Packet refs |
 | `DECISION_REQUIRED` | blocking product judgment requires a Decision Packet before the requested action can proceed |
 | `DECISION_UNRESOLVED` | a relevant Decision Packet is pending, deferred without coverage, rejected, blocked, stale, or incompatible with the requested action |
 | `AUTONOMY_BOUNDARY_EXCEEDED` | the intended operation exceeds the active Change Unit Autonomy Boundary |
@@ -421,12 +483,14 @@ Stable design and agency validator ids used by this API are:
 | `ACCEPTANCE_REQUIRED` | required user acceptance is pending or rejected |
 | `PROJECTION_STALE` | projection freshness is stale or failed for the requested action |
 | `RECONCILE_REQUIRED` | human-editable or managed-block drift requires reconcile |
-| `RESIDUAL_RISK_NOT_VISIBLE` | close-relevant residual risk has not been made visible before acceptance or risk-accepted close |
+| `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk has not been made visible before a successful close |
 | `ARTIFACT_MISSING` | a referenced artifact file is missing or integrity check failed |
 | `BASELINE_STALE` | baseline no longer matches the repository state required by the operation |
 | `VALIDATOR_FAILED` | one or more required validators failed |
 
-`DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, and `RESIDUAL_RISK_NOT_VISIBLE` are stable public `ErrorCode` values. Validator-specific detail still belongs in `ValidatorResult.findings`.
+`WRITE_AUTHORIZATION_REQUIRED` and `WRITE_AUTHORIZATION_INVALID` are used only for missing or invalid Write Authorization. Scope violations still use `SCOPE_VIOLATION` when observed paths, tools, commands, network targets, secrets, or sensitive categories exceed authorized or active scope.
+
+`DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `AUTONOMY_BOUNDARY_EXCEEDED`, and `RESIDUAL_RISK_NOT_VISIBLE` are stable public `ErrorCode` values. Validator-specific detail still belongs in `ValidatorResult.findings`.
 
 ## Idempotency And State Conflict Behavior
 
@@ -438,7 +502,7 @@ For state-changing tools, Core compares `expected_state_version` with current pr
 
 ### `harness.status`
 
-Purpose: return project, surface, active Task, Journey Card, gate, guarantee, projection, active Decision Packet, Autonomy Boundary, residual-risk, and pending-decision status.
+Purpose: return project, surface, active Task, Journey Card, gate, guarantee, projection, active Decision Packet, Autonomy Boundary, write authority, residual-risk, and pending-decision status.
 
 Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
 
@@ -456,6 +520,7 @@ StatusRequest:
     journey_card: boolean
     decision_packets: boolean
     autonomy_boundary: boolean
+    write_authority: boolean
     residual_risk: boolean
 ```
 
@@ -470,6 +535,7 @@ StatusResponse:
   pending_decisions: StateRecordRef[]
   active_decision_packet_refs: StateRecordRef[]
   autonomy_boundary_summary: AutonomyBoundarySummary | null
+  write_authority_summary: WriteAuthoritySummary | null
   residual_risk_summary: ResidualRiskSummary | null
   projection_freshness:
     status: current | stale | failed | unknown
@@ -486,6 +552,8 @@ Events emitted: none.
 Projection jobs enqueued: none.
 
 `pending_decisions` contains unresolved user-action Decision Packets. `active_decision_packet_refs` contains all Decision Packets relevant to the current phase or requested action, including pending, deferred, blocked, or recently resolved packets. Both fields use `StateRecordRef` entries with `record_kind=decision_packet`.
+
+`write_authority_summary` is returned when `include.write_authority=true`. When `include.journey_card=true`, the same current write authority display may also appear in `journey_card.write_authority_summary`.
 
 Validators run: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional residual-risk visibility read, optional projection freshness read.
 
@@ -584,7 +652,9 @@ Projection jobs enqueued: none.
 
 `pending_decisions` contains unresolved user-action Decision Packets. Deferred, blocked, or recently resolved packets that still affect the current phase or requested action appear through `judgment_context.active_decision_packet_refs`.
 
-Validators run: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional `docs_consistency`.
+When `focus=acceptance`, `judgment_context.acceptance_visibility` must be non-null. It must include the residual-risk summary, unaccepted close-relevant risk refs, evidence summary refs, verification status, QA status, acceptance status, and what acceptance does not replace. The context must make clear before any acceptance request that acceptance does not replace evidence sufficiency, verification, Manual QA, approval, scope, or residual-risk visibility.
+
+Validators run: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional `context_hygiene_check`.
 
 Possible errors: `NO_ACTIVE_TASK`, `MCP_UNAVAILABLE`, `PROJECTION_STALE`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RECONCILE_REQUIRED`.
 
@@ -629,6 +699,9 @@ PrepareWriteResponse:
   state: StateSummary | null
   change_unit_id: string | null
   baseline_ref: string | null
+  write_authorization_ref: StateRecordRef | null
+  write_authorization: WriteAuthorizationSummary | null
+  authorization_effect: none | would_create | created | returned
   active_decision_packet_refs: StateRecordRef[]
   blocked_reasons:
     - code: string
@@ -644,6 +717,7 @@ ApprovalRequestCandidate:
   sensitive_categories: string[]
   allowed_paths: string[]
   allowed_tools: string[]
+  allowed_commands: string[]
   allowed_network_targets: string[]
   secret_scope: string[]
   baseline_ref: string | null
@@ -651,13 +725,21 @@ ApprovalRequestCandidate:
 
 `approval_request_candidate` is present only when `decision=approval_required` or when Core can suggest a new approval request. Otherwise it is `null`.
 
+When `dry_run=false` and `decision=allowed`, the response must include a non-null `write_authorization_ref`; the `write_authorization` summary may also be returned when the caller requests expanded payloads or the implementation supports it. `authorization_effect` is `created` when Core creates a new authorization and `returned` when idempotency or compatibility returns an existing unconsumed authorization.
+
+When `dry_run=true` and the write would otherwise be allowed, Core returns `decision=allowed` with `authorization_effect=would_create`, but `write_authorization_ref` and `write_authorization` must be `null`, and no Write Authorization record, event, artifact, or projection job is created.
+
+For `decision=blocked`, `decision=approval_required`, `decision=decision_required`, and `decision=state_conflict`, both authorization fields must be `null` and `authorization_effect=none`.
+
+The returned authorization is specific to the intended operation and the current state, baseline, active Change Unit scope, approval refs, Decision Packet refs, sensitive categories, and guarantee level. It is consumed by `harness.record_run` through `write_authorization_id`; it is not a reusable grant.
+
 `active_decision_packet_refs` contains all Decision Packets relevant to the intended write, including pending, deferred, blocked, or recently resolved packets.
 
 `decision_packet_candidate` is present when `decision=decision_required` and no compatible Decision Packet already exists. Its fields match `RequestUserDecisionRequest` after the envelope. It is a non-mutating candidate payload for a later `harness.request_user_decision` call; returning it from `prepare_write` does not create or update a Decision Packet.
 
-State transition summary: may move Task to `executing`, `waiting_user`, or `blocked`; may set `scope_gate=pending/blocked`, `decision_gate=required/pending/blocked`, `approval_gate=pending/expired`, or stale evidence/approval markers.
+State transition summary: may move Task to `executing`, `waiting_user`, or `blocked`; may create or return a compatible Write Authorization when allowed; may set `scope_gate=pending/blocked`, `decision_gate=required/pending/blocked`, `approval_gate=pending/expired`, or stale evidence/approval markers.
 
-Events emitted: `prepare_write_allowed`, `prepare_write_blocked`, `scope_required`, `decision_required`, `autonomy_boundary_exceeded`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected`.
+Events emitted: `prepare_write_allowed`, `write_authorization_created`, `write_authorization_returned`, `prepare_write_blocked`, `scope_required`, `decision_required`, `autonomy_boundary_exceeded`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected`.
 
 Projection jobs enqueued: `TASK`; `APR` when approval is required.
 
@@ -683,6 +765,7 @@ RecordRunRequest:
   change_unit_id: string | null
   run_id: string | null
   baseline_ref: string | null
+  write_authorization_id: string | null
   summary: string
   artifact_inputs: ArtifactInput[]
   payload: RecordRunPayload
@@ -775,6 +858,8 @@ TddTraceUpdate:
 
 The `payload` branch must match `kind`; all other branches must be `null` or absent. `ArtifactInput` values are resolved during the same Core transaction; response fields contain the committed `ArtifactRef` values. Change Unit creation and update for MVP happens through `kind=shaping_update` with `change_unit_updates`; `operation=create` creates a `change_units` record, and `operation=select_active` updates the Task's `active_change_unit_id`. `allowed_paths`, `allowed_tools`, `allowed_commands`, `allowed_network_targets`, `secret_scope`, and `sensitive_categories` are scope fields. `autonomy_profile`, `agent_may_do`, `user_judgment_required`, and `afk_stop_conditions` describe Autonomy Boundary judgment latitude only.
 
+`write_authorization_id` references the compatible Write Authorization returned by `harness.prepare_write`. For `kind=implementation` and `kind=direct`, `write_authorization_id` is required unless the Run records no product write and Core classifies it as read-only evidence or shaping. For `kind=shaping_update`, `write_authorization_id` must be `null`; MVP does not support shaping updates that also record observed product writes, so those writes must be recorded as `kind=implementation` or `kind=direct` with a compatible authorization. For `kind=verification_input`, keep `write_authorization_id` `null`; verification input that creates product writes should normally be disallowed in MVP.
+
 Response schema:
 
 ```yaml
@@ -782,6 +867,7 @@ RecordRunResponse:
   base: ToolResponseBase
   run_id: string
   state: StateSummary
+  write_authorization_ref: StateRecordRef | null
   evidence_manifest_ref: StateRecordRef | null
   run_summary_ref: StateRecordRef | null
   direct_result_ref: StateRecordRef | null
@@ -789,15 +875,17 @@ RecordRunResponse:
   next_action: string
 ```
 
+`write_authorization_ref` is non-null when the committed Run consumes a Write Authorization.
+
 State transition summary: shaping updates can keep `shaping`, move to `ready`, or move to `waiting_user`; implementation moves toward `verifying`; direct can become close-eligible or escalate to work; verification input records evaluator bundle context without proving detached verification.
 
-Events emitted: `run_recorded`, `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `evidence_manifest_updated`, `artifact_registered`, `tdd_trace_updated`.
+Events emitted: `run_recorded`, `write_authorization_consumed`, `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `evidence_manifest_updated`, `artifact_registered`, `tdd_trace_updated`.
 
 Projection jobs enqueued: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `DIRECT-RESULT` for `kind=direct`; `TDD-TRACE` when updated.
 
 Validators run: `state_envelope`, `changed_paths`, `scope_coverage`, `approval_scope`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_EXPIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
+Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_EXPIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
 
 Idempotency behavior: repeated request returns the same run, artifact records, evidence updates, events, and projection jobs; artifact inputs and resolved artifact refs must match the original payload.
 
@@ -836,7 +924,7 @@ RequestUserDecisionRequest:
   reconcile_item_id: string | null
 ```
 
-Core stores a canonical `DecisionPacket`. If `state_summary_at_request` is `null`, Core derives it from current state during the same transaction. The stored `state_summary_at_request` is a request-time snapshot and is not updated by later Task transitions. `approval_scope` is required when `decision_kind=approval`; for all other `decision_kind` values it must be `null` or omitted. A `residual_risk_acceptance` packet must include the risk visibility context in `user_context.minimum_context` and relevant risk refs in `context.source_refs`.
+Core stores a canonical `DecisionPacket`. If `state_summary_at_request` is `null`, Core derives it from current state during the same transaction. The stored `state_summary_at_request` is a request-time snapshot and is not updated by later Task transitions. `approval_scope` is required when `decision_kind=approval`; for all other `decision_kind` values it must be `null` or omitted. `decision_kind=approval` is only the approval-shaped sensitive-change context and cannot resolve product trade-offs, design direction, QA waiver, verification risk, final acceptance, or residual-risk acceptance without separate compatible Decision Packets and gate updates. A `residual_risk_acceptance` packet must include the risk visibility context in `user_context.minimum_context` and relevant risk refs in `context.source_refs`.
 
 Response schema:
 
@@ -1007,6 +1095,7 @@ Request schema:
 RecordEvalRequest:
   envelope: ToolEnvelope
   task_id: string
+  change_unit_id: string | null
   evaluator_run_id: string | null
   target_run_id: string | null
   verdict: passed | failed | blocked | inconclusive
@@ -1026,6 +1115,8 @@ RecordEvalRequest:
   blockers: string[]
   artifact_inputs: ArtifactInput[]
 ```
+
+Core may derive `change_unit_id` from `target_run_id` or the evidence bundle when it is omitted, but supplying it explicitly improves projection and template alignment when the Eval applies to a Change Unit.
 
 Response schema:
 
@@ -1064,6 +1155,7 @@ Request schema:
 RecordManualQaRequest:
   envelope: ToolEnvelope
   task_id: string
+  change_unit_id: string | null
   qa_profile: ui_quality | workflow | copy | accessibility | browser_smoke | performance_smoke | other
   performed_by: string
   result: passed | failed | waived
@@ -1076,6 +1168,8 @@ RecordManualQaRequest:
   waiver_decision_packet_ref: StateRecordRef | null
   next_action: rework | accept | waive | block | none
 ```
+
+`change_unit_id` should be supplied when Manual QA applies to a Change Unit. It may be `null` for Task-level QA that is not scoped to a single Change Unit.
 
 For `result=waived`, product/user risk or policy-required judgment requires a `qa_waiver` Decision Packet referenced by `waiver_decision_packet_ref`. `waiver_reason` alone is allowed only for a low-risk waiver when policy permits it.
 
@@ -1137,7 +1231,7 @@ CloseTaskResponse:
   artifact_refs: ArtifactRef[]
 ```
 
-Close blockers include unresolved, missing, deferred-without-coverage, blocked, rejected, stale, or incompatible blocking Decision Packets, and close-relevant residual risk that is not visible before acceptance or a risk-accepted close.
+Close blockers include unresolved, missing, deferred-without-coverage, blocked, rejected, stale, or incompatible blocking Decision Packets, and known close-relevant residual risk that is not visible before any successful close. A risk-accepted close additionally requires visible and accepted Residual Risk refs. Acceptance, when required, can be recorded only after close-relevant residual risk is visible.
 
 State transition summary: successful completion moves Task to `completed` with result and close reason; cancellation/supersession moves Task to `cancelled`; failed close leaves Task non-terminal and reports blockers.
 

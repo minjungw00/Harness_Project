@@ -83,7 +83,7 @@ ToolResponseBase:
   projection_jobs: ProjectionJobRef[]
 ```
 
-`dry_run=true`는 validate하고 transition plan을 반환하지만 current records update, `state.sqlite.task_events` append, artifact registration, projection job enqueue를 하지 않습니다.
+`dry_run=true`는 validate하고 transition plan을 반환하지만 current records update, `state.sqlite.task_events` append, artifact registration, consumable Write Authorization records create, projection job enqueue를 하지 않습니다.
 
 ## Shared Schemas
 
@@ -210,12 +210,12 @@ Record 또는 projection references는 `ArtifactRef`가 아니라 `StateRecordRe
 
 ```yaml
 StateRecordRef:
-  record_kind: task | change_unit | change_unit_dependency | run | approval | decision_packet | journey_spine_entry | shared_design | residual_risk | evidence_manifest | eval | manual_qa_record | tdd_trace | reconcile_item | projection
+  record_kind: task | change_unit | change_unit_dependency | run | approval | write_authorization | decision_packet | journey_spine_entry | shared_design | residual_risk | evidence_manifest | eval | manual_qa_record | tdd_trace | reconcile_item | projection
   record_id: string
   projection_path: string | null
 ```
 
-Evidence references와 approval scope는 다음 shared shapes를 사용합니다.
+Evidence references, approval scope, write authorization, write authority display, end-to-end paths는 다음 shared shapes를 사용합니다.
 
 ```yaml
 EvidenceRefs:
@@ -231,6 +231,50 @@ ApprovalScope:
   secret_scope: string[]
   baseline_ref: string | null
 
+WriteAuthorizationSummary:
+  write_authorization_id: string
+  task_id: string
+  change_unit_id: string
+  intended_operation: string
+  intended_paths: string[]
+  intended_tools: string[]
+  intended_commands:
+    - command: string
+      command_class: string
+      writes_product_files: boolean
+  intended_network:
+    - target: string
+      direction: read | write
+  intended_secrets:
+    - secret_handle: string
+      access_kind: read | write
+  sensitive_categories: string[]
+  baseline_ref: string | null
+  approval_refs: StateRecordRef[]
+  decision_packet_refs: StateRecordRef[]
+  guarantee_level: cooperative | detective | preventive | isolated
+  status: allowed | consumed | expired | stale | revoked
+  consumed_by_run_id: string | null
+  created_at: string
+  consumed_at: string | null
+
+WriteAuthoritySummary:
+  active_change_unit_ref: StateRecordRef | null
+  write_authorization_ref: StateRecordRef | null
+  allowed_paths: string[]
+  allowed_tools: string[]
+  allowed_commands: string[]
+  allowed_command_classes: string[]
+  allowed_network_targets: string[]
+  secret_scope: string[]
+  sensitive_categories: string[]
+  approval_status: not_required | required | pending | granted | denied | expired | unknown
+  baseline_ref: string | null
+  guarantee_display:
+    level: cooperative | detective | preventive | isolated
+    notes: string[]
+  note: "Autonomy Boundary is judgment latitude, not write authority."
+
 EndToEndPath:
   trigger_or_input: string | null
   domain_logic: string | null
@@ -239,9 +283,11 @@ EndToEndPath:
   ui_or_observable_output: string | null
 ```
 
-`DEC`는 Decision Packet visibility projection job kind입니다. Full DEC와 Decision Packet template text는 Appendix A와 Batch 6이 담당하며, 이 API schema file이 담당하지 않습니다.
+`WriteAuthorizationSummary`와 `WriteAuthoritySummary`는 API payload shapes일 뿐입니다. 이 문서는 Write Authorization records에 대한 SQLite DDL을 정의하지 않습니다. `WriteAuthoritySummary`는 clients가 write authority를 Autonomy Boundary judgment latitude 옆에 표시하기 위해 사용하는 display/read shape입니다.
 
-Decision Packet, Journey Card, Judgment Context, Autonomy Boundary, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. Canonical kernel records는 owner docs가 정의합니다.
+`DEC`는 Decision Packet visibility projection job kind입니다. Full DEC와 Decision Packet template text는 Appendix A가 담당하며, 이 API schema file이 담당하지 않습니다.
+
+Decision Packet, Write Authorization, write authority, Journey Card, Judgment Context, Autonomy Boundary, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. Canonical kernel records는 owner docs가 정의합니다.
 
 ```yaml
 DecisionPacket:
@@ -322,6 +368,7 @@ JourneyCardSummary:
   current_position: string
   next_action: string
   active_change_unit_ref: StateRecordRef | null
+  write_authority_summary: WriteAuthoritySummary | null
   active_decision_packet_refs: StateRecordRef[]
   blocker_refs: StateRecordRef[]
   residual_risk_summary: ResidualRiskSummary | null
@@ -339,6 +386,7 @@ JudgmentContext:
   active_decision_packet_refs: StateRecordRef[]
   optional_pull_refs: StateRecordRef[]
   stale_or_missing_refs: StateRecordRef[]
+  acceptance_visibility: AcceptanceVisibilityContext | null
 
 AutonomyBoundarySummary:
   change_unit_id: string | null
@@ -358,9 +406,20 @@ ResidualRiskSummary:
   unaccepted_refs: StateRecordRef[]
   accepted_refs: StateRecordRef[]
   summary: string
+
+AcceptanceVisibilityContext:
+  residual_risk_summary: ResidualRiskSummary | null
+  unaccepted_close_relevant_risk_refs: StateRecordRef[]
+  evidence_summary_refs: StateRecordRef[]
+  verification_status: not_required | required | pending | passed | failed | waived_by_user | blocked
+  qa_status: not_required | required | pending | passed | failed | waived
+  acceptance_status: not_required | required | pending | accepted | rejected
+  what_acceptance_does_not_replace: string[]
 ```
 
 Autonomy Boundary summaries는 scope authority가 아니라 judgment latitude를 설명합니다. Active Change Unit scope와 required approval 밖의 paths, tools, commands, network targets, secret access, sensitive categories를 authorize하지 않습니다.
+
+`decision_kind=approval`은 stable public enum value로 유지됩니다. `DecisionPacket`과 `DecisionPacketCandidate` 모두에서 이 값은 sensitive-change approval만을 위한 approval-shaped judgment context를 뜻합니다. Product trade-offs, design direction, QA waiver, verification risk, final acceptance, residual-risk acceptance는 별도의 compatible Decision Packets와 gate updates로 표현되지 않는 한 이 값으로 resolve할 수 없습니다.
 
 ## Validator Result Schema
 
@@ -397,6 +456,7 @@ ValidatorResult:
 - `tdd_trace_required`
 - `codebase_stewardship_check`
 - `residual_risk_visibility_check`
+- `context_hygiene_check`
 
 ## Error Taxonomy
 
@@ -407,6 +467,8 @@ ValidatorResult:
 | `NO_ACTIVE_CHANGE_UNIT` | a write-capable operation has no active scoped Change Unit |
 | `SCOPE_REQUIRED` | scope confirmation is required before the requested write can proceed |
 | `SCOPE_VIOLATION` | intended paths, tools, commands, network, secrets, or categories exceed scope |
+| `WRITE_AUTHORIZATION_REQUIRED` | write-capable run에 `prepare_write`가 반환한 required Write Authorization이 없습니다 |
+| `WRITE_AUTHORIZATION_INVALID` | supplied Write Authorization이 absent, expired, stale, revoked, idempotent replay 밖에서 already consumed, 또는 Task, Change Unit, baseline, intended operation, approval refs, Decision Packet refs와 incompatible합니다 |
 | `DECISION_REQUIRED` | blocking product judgment requires a Decision Packet before the requested action can proceed |
 | `DECISION_UNRESOLVED` | a relevant Decision Packet is pending, deferred without coverage, rejected, blocked, stale, or incompatible with the requested action |
 | `AUTONOMY_BOUNDARY_EXCEEDED` | the intended operation exceeds the active Change Unit Autonomy Boundary |
@@ -421,12 +483,14 @@ ValidatorResult:
 | `ACCEPTANCE_REQUIRED` | required user acceptance is pending or rejected |
 | `PROJECTION_STALE` | projection freshness is stale or failed for the requested action |
 | `RECONCILE_REQUIRED` | human-editable or managed-block drift requires reconcile |
-| `RESIDUAL_RISK_NOT_VISIBLE` | close-relevant residual risk has not been made visible before acceptance or risk-accepted close |
+| `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk has not been made visible before a successful close |
 | `ARTIFACT_MISSING` | a referenced artifact file is missing or integrity check failed |
 | `BASELINE_STALE` | baseline no longer matches the repository state required by the operation |
 | `VALIDATOR_FAILED` | one or more required validators failed |
 
-`DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RESIDUAL_RISK_NOT_VISIBLE`는 stable public `ErrorCode` values입니다. Validator-specific detail은 여전히 `ValidatorResult.findings`에 속합니다.
+`WRITE_AUTHORIZATION_REQUIRED`와 `WRITE_AUTHORIZATION_INVALID`는 missing 또는 invalid Write Authorization에만 사용합니다. Observed paths, tools, commands, network targets, secrets, sensitive categories가 authorized 또는 active scope를 넘는 경우 scope violations는 계속 `SCOPE_VIOLATION`을 사용합니다.
+
+`DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RESIDUAL_RISK_NOT_VISIBLE`는 stable public `ErrorCode` values입니다. Validator-specific detail은 여전히 `ValidatorResult.findings`에 속합니다.
 
 ## Idempotency And State Conflict Behavior
 
@@ -438,7 +502,7 @@ State-changing tools에서 Core는 `expected_state_version`을 current project/t
 
 ### `harness.status`
 
-Purpose: project, surface, active Task, Journey Card, gate, guarantee, projection, active Decision Packet, Autonomy Boundary, residual-risk, pending-decision status를 반환합니다.
+Purpose: project, surface, active Task, Journey Card, gate, guarantee, projection, active Decision Packet, Autonomy Boundary, write authority, residual-risk, pending-decision status를 반환합니다.
 
 Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
 
@@ -456,6 +520,7 @@ StatusRequest:
     journey_card: boolean
     decision_packets: boolean
     autonomy_boundary: boolean
+    write_authority: boolean
     residual_risk: boolean
 ```
 
@@ -470,6 +535,7 @@ StatusResponse:
   pending_decisions: StateRecordRef[]
   active_decision_packet_refs: StateRecordRef[]
   autonomy_boundary_summary: AutonomyBoundarySummary | null
+  write_authority_summary: WriteAuthoritySummary | null
   residual_risk_summary: ResidualRiskSummary | null
   projection_freshness:
     status: current | stale | failed | unknown
@@ -486,6 +552,8 @@ Events emitted: 없음.
 Projection jobs enqueued: 없음.
 
 `pending_decisions`는 unresolved user-action Decision Packets를 포함합니다. `active_decision_packet_refs`는 pending, deferred, blocked, recently resolved packets를 포함해 current phase 또는 requested action과 relevant한 모든 Decision Packets를 포함합니다. 두 fields는 모두 `record_kind=decision_packet`인 `StateRecordRef` entries를 사용합니다.
+
+`write_authority_summary`는 `include.write_authority=true`일 때 반환됩니다. `include.journey_card=true`이면 같은 current write authority display가 `journey_card.write_authority_summary`에도 나타날 수 있습니다.
 
 Validators run: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional residual-risk visibility read, optional projection freshness read.
 
@@ -584,7 +652,9 @@ Projection jobs enqueued: 없음.
 
 `pending_decisions`는 unresolved user-action Decision Packets를 포함합니다. Current phase 또는 requested action에 아직 영향을 주는 deferred, blocked, recently resolved packets는 `judgment_context.active_decision_packet_refs`를 통해 나타납니다.
 
-Validators run: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional `docs_consistency`.
+`focus=acceptance`일 때 `judgment_context.acceptance_visibility`는 non-null이어야 합니다. 이 context는 residual-risk summary, unaccepted close-relevant risk refs, evidence summary refs, verification status, QA status, acceptance status, what acceptance does not replace를 포함해야 합니다. Acceptance request 전에 acceptance가 evidence sufficiency, verification, Manual QA, approval, scope, residual-risk visibility를 대체하지 않는다는 점을 명확히 보여줘야 합니다.
+
+Validators run: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional `context_hygiene_check`.
 
 Possible errors: `NO_ACTIVE_TASK`, `MCP_UNAVAILABLE`, `PROJECTION_STALE`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RECONCILE_REQUIRED`.
 
@@ -629,6 +699,9 @@ PrepareWriteResponse:
   state: StateSummary | null
   change_unit_id: string | null
   baseline_ref: string | null
+  write_authorization_ref: StateRecordRef | null
+  write_authorization: WriteAuthorizationSummary | null
+  authorization_effect: none | would_create | created | returned
   active_decision_packet_refs: StateRecordRef[]
   blocked_reasons:
     - code: string
@@ -644,6 +717,7 @@ ApprovalRequestCandidate:
   sensitive_categories: string[]
   allowed_paths: string[]
   allowed_tools: string[]
+  allowed_commands: string[]
   allowed_network_targets: string[]
   secret_scope: string[]
   baseline_ref: string | null
@@ -651,13 +725,21 @@ ApprovalRequestCandidate:
 
 `approval_request_candidate`는 `decision=approval_required`이거나 Core가 new approval request를 suggest할 수 있을 때만 present합니다. 그 외에는 `null`입니다.
 
+`dry_run=false`이고 `decision=allowed`일 때 response는 non-null `write_authorization_ref`를 포함해야 합니다. Caller가 expanded payload를 request하거나 implementation이 support하면 `write_authorization` summary도 반환할 수 있습니다. `authorization_effect`는 Core가 새 authorization을 create하면 `created`, idempotency 또는 compatibility로 existing unconsumed authorization을 반환하면 `returned`입니다.
+
+`dry_run=true`이고 write가 otherwise allowed라면 Core는 `decision=allowed`와 `authorization_effect=would_create`를 반환합니다. 하지만 `write_authorization_ref`와 `write_authorization`은 반드시 `null`이어야 하고, Write Authorization record, event, artifact, projection job은 create되지 않습니다.
+
+`decision=blocked`, `decision=approval_required`, `decision=decision_required`, `decision=state_conflict`에서는 두 authorization fields가 모두 `null`이고 `authorization_effect=none`이어야 합니다.
+
+Returned authorization은 intended operation과 current state, baseline, active Change Unit scope, approval refs, Decision Packet refs, sensitive categories, guarantee level에 specific합니다. 이는 `write_authorization_id`를 통해 `harness.record_run`이 consume하며 reusable grant가 아닙니다.
+
 `active_decision_packet_refs`는 intended write와 relevant한 모든 Decision Packets를 포함합니다. Pending, deferred, blocked, recently resolved packets가 포함됩니다.
 
 `decision_packet_candidate`는 `decision=decision_required`이고 compatible Decision Packet이 아직 없을 때 present합니다. Fields는 envelope 이후의 `RequestUserDecisionRequest`와 match합니다. 이는 나중에 `harness.request_user_decision`을 호출하기 위한 non-mutating candidate payload입니다. `prepare_write`가 이를 반환해도 Decision Packet이 create 또는 update되지는 않습니다.
 
-State transition summary: Task를 `executing`, `waiting_user`, `blocked`로 옮길 수 있습니다. `scope_gate=pending/blocked`, `decision_gate=required/pending/blocked`, `approval_gate=pending/expired`, stale evidence/approval markers를 set할 수 있습니다.
+State transition summary: Task를 `executing`, `waiting_user`, `blocked`로 옮길 수 있습니다. Allowed일 때 compatible Write Authorization을 create 또는 return할 수 있습니다. `scope_gate=pending/blocked`, `decision_gate=required/pending/blocked`, `approval_gate=pending/expired`, stale evidence/approval markers를 set할 수 있습니다.
 
-Events emitted: `prepare_write_allowed`, `prepare_write_blocked`, `scope_required`, `decision_required`, `autonomy_boundary_exceeded`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected`.
+Events emitted: `prepare_write_allowed`, `write_authorization_created`, `write_authorization_returned`, `prepare_write_blocked`, `scope_required`, `decision_required`, `autonomy_boundary_exceeded`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected`.
 
 Projection jobs enqueued: `TASK`; approval required일 때 `APR`.
 
@@ -683,6 +765,7 @@ RecordRunRequest:
   change_unit_id: string | null
   run_id: string | null
   baseline_ref: string | null
+  write_authorization_id: string | null
   summary: string
   artifact_inputs: ArtifactInput[]
   payload: RecordRunPayload
@@ -775,6 +858,8 @@ TddTraceUpdate:
 
 `payload` branch는 `kind`와 match해야 하며, 다른 branches는 `null`이거나 absent여야 합니다. `ArtifactInput` values는 같은 Core transaction에서 resolve되고, response fields에는 committed `ArtifactRef` values가 들어갑니다. MVP에서 Change Unit creation과 update는 `kind=shaping_update`와 `change_unit_updates`를 통해 이뤄집니다. `operation=create`는 `change_units` record를 만들고, `operation=select_active`는 Task의 `active_change_unit_id`를 update합니다. `allowed_paths`, `allowed_tools`, `allowed_commands`, `allowed_network_targets`, `secret_scope`, `sensitive_categories`는 scope fields입니다. `autonomy_profile`, `agent_may_do`, `user_judgment_required`, `afk_stop_conditions`는 Autonomy Boundary judgment latitude만 설명합니다.
 
+`write_authorization_id`는 `harness.prepare_write`가 반환한 compatible Write Authorization을 reference합니다. `kind=implementation`과 `kind=direct`에서는 Run이 product write를 기록하지 않고 Core가 read-only evidence 또는 shaping으로 classify하는 경우를 제외하면 `write_authorization_id`가 required입니다. `kind=shaping_update`에서는 `write_authorization_id`가 `null`이어야 합니다. MVP는 observed product writes도 함께 기록하는 shaping update를 support하지 않으므로, 그런 writes는 compatible authorization과 함께 `kind=implementation` 또는 `kind=direct`로 record해야 합니다. `kind=verification_input`에서는 `write_authorization_id`를 `null`로 둡니다. Product writes를 create하는 verification input은 MVP에서 보통 disallowed여야 합니다.
+
 Response schema:
 
 ```yaml
@@ -782,6 +867,7 @@ RecordRunResponse:
   base: ToolResponseBase
   run_id: string
   state: StateSummary
+  write_authorization_ref: StateRecordRef | null
   evidence_manifest_ref: StateRecordRef | null
   run_summary_ref: StateRecordRef | null
   direct_result_ref: StateRecordRef | null
@@ -789,15 +875,17 @@ RecordRunResponse:
   next_action: string
 ```
 
+`write_authorization_ref`는 committed Run이 Write Authorization을 consume할 때 non-null입니다.
+
 State transition summary: shaping updates는 `shaping`을 유지하거나 `ready` 또는 `waiting_user`로 이동할 수 있습니다. Implementation은 `verifying` 쪽으로 이동합니다. Direct는 close-eligible이 되거나 work로 escalate할 수 있습니다. Verification input은 detached verification을 증명하지 않고 evaluator bundle context를 기록합니다.
 
-Events emitted: `run_recorded`, `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `evidence_manifest_updated`, `artifact_registered`, `tdd_trace_updated`.
+Events emitted: `run_recorded`, `write_authorization_consumed`, `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `evidence_manifest_updated`, `artifact_registered`, `tdd_trace_updated`.
 
 Projection jobs enqueued: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `kind=direct`일 때 `DIRECT-RESULT`; TDD trace가 update되면 `TDD-TRACE`.
 
 Validators run: `state_envelope`, `changed_paths`, `scope_coverage`, `approval_scope`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
 
-Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_EXPIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
+Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_EXPIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
 
 Idempotency behavior: repeated request는 같은 run, artifact records, evidence updates, events, projection jobs를 반환합니다. Artifact inputs와 resolved artifact refs는 original payload와 match해야 합니다.
 
@@ -836,7 +924,7 @@ RequestUserDecisionRequest:
   reconcile_item_id: string | null
 ```
 
-Core는 canonical `DecisionPacket`을 store합니다. `state_summary_at_request`가 `null`이면 Core가 같은 transaction 안에서 current state로부터 derive합니다. Stored `state_summary_at_request`는 request-time snapshot이며 이후 Task transitions로 update되지 않습니다. `approval_scope`는 `decision_kind=approval`일 때 required이며, 다른 `decision_kind` values에서는 `null` 또는 omitted여야 합니다. `residual_risk_acceptance` packet은 `user_context.minimum_context`에 risk visibility context를 포함하고 `context.source_refs`에 relevant risk refs를 포함해야 합니다.
+Core는 canonical `DecisionPacket`을 store합니다. `state_summary_at_request`가 `null`이면 Core가 같은 transaction 안에서 current state로부터 derive합니다. Stored `state_summary_at_request`는 request-time snapshot이며 이후 Task transitions로 update되지 않습니다. `approval_scope`는 `decision_kind=approval`일 때 required이며, 다른 `decision_kind` values에서는 `null` 또는 omitted여야 합니다. `decision_kind=approval`은 approval-shaped sensitive-change context일 뿐이며, 별도의 compatible Decision Packets와 gate updates 없이 product trade-offs, design direction, QA waiver, verification risk, final acceptance, residual-risk acceptance를 resolve할 수 없습니다. `residual_risk_acceptance` packet은 `user_context.minimum_context`에 risk visibility context를 포함하고 `context.source_refs`에 relevant risk refs를 포함해야 합니다.
 
 Response schema:
 
@@ -1007,6 +1095,7 @@ Request schema:
 RecordEvalRequest:
   envelope: ToolEnvelope
   task_id: string
+  change_unit_id: string | null
   evaluator_run_id: string | null
   target_run_id: string | null
   verdict: passed | failed | blocked | inconclusive
@@ -1026,6 +1115,8 @@ RecordEvalRequest:
   blockers: string[]
   artifact_inputs: ArtifactInput[]
 ```
+
+`change_unit_id`가 omitted되면 Core가 `target_run_id` 또는 evidence bundle에서 derive할 수 있습니다. 하지만 Eval이 Change Unit에 적용되는 경우 explicit `change_unit_id`를 제공하면 projection과 template alignment가 더 좋아집니다.
 
 Response schema:
 
@@ -1064,6 +1155,7 @@ Request schema:
 RecordManualQaRequest:
   envelope: ToolEnvelope
   task_id: string
+  change_unit_id: string | null
   qa_profile: ui_quality | workflow | copy | accessibility | browser_smoke | performance_smoke | other
   performed_by: string
   result: passed | failed | waived
@@ -1076,6 +1168,8 @@ RecordManualQaRequest:
   waiver_decision_packet_ref: StateRecordRef | null
   next_action: rework | accept | waive | block | none
 ```
+
+Manual QA가 Change Unit에 적용되는 경우 `change_unit_id`를 supplied해야 합니다. 단일 Change Unit에 scoped되지 않는 Task-level QA에서는 `null`일 수 있습니다.
 
 `result=waived`에서 product/user risk 또는 policy-required judgment가 있으면 `waiver_decision_packet_ref`가 reference하는 `qa_waiver` Decision Packet이 필요합니다. `waiver_reason`만으로 가능한 경우는 policy가 허용한 low-risk waiver에 한정됩니다.
 
@@ -1137,7 +1231,7 @@ CloseTaskResponse:
   artifact_refs: ArtifactRef[]
 ```
 
-Close blockers에는 unresolved, missing, deferred-without-coverage, blocked, rejected, stale, incompatible blocking Decision Packets와, acceptance 또는 risk-accepted close 전에 visible하지 않은 close-relevant residual risk가 포함됩니다.
+Close blockers에는 unresolved, missing, deferred-without-coverage, blocked, rejected, stale, incompatible blocking Decision Packets와, successful close 전에 visible하지 않은 known close-relevant residual risk가 포함됩니다. Risk-accepted close에는 visible and accepted Residual Risk refs가 추가로 필요합니다. Acceptance가 required인 경우 close-relevant residual risk가 visible한 뒤에만 acceptance를 record할 수 있습니다.
 
 State transition summary: successful completion은 Task를 result와 close reason이 있는 `completed`로 옮깁니다. Cancellation/supersession은 Task를 `cancelled`로 옮깁니다. Failed close는 Task를 non-terminal로 남기고 blockers를 report합니다.
 
