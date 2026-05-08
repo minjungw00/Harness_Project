@@ -8,7 +8,7 @@ A shared mental model for users and implementers.
 
 - summary of the problems the harness reduces
 - summary of the three-space model
-- basic concepts for Task, Change Unit, Strategic Agency, Decision Gate, Decision Packet, Evidence, Journey Card, Journey Spine, Residual Risk, and Projection
+- basic concepts for Task, Change Unit, Strategic Agency, Shared Design, Decision Gate, Decision Packet, Evidence, Journey Card, Journey Spine, Residual Risk, and Projection
 - introduction to advisor/direct/work
 - Journey Card example
 - source-of-truth summary
@@ -49,8 +49,9 @@ This separation keeps product files, generated Markdown, chat text, and operatio
 ### Core Concepts
 
 - A Task is the user value unit: the thing the user wants done or answered.
-- A Change Unit is the scoped implementation unit that authorizes product writes.
+- A Change Unit bounds product writes; Core still decides whether a write may proceed through `prepare_write` and applicable gates.
 - Strategic Agency is the user's retained authority to understand the work journey and make or withhold judgment over goals, scope, design, trade-offs, codebase stewardship, QA, acceptance, and residual risk.
+- Shared Design is the minimum recorded shared understanding of goal, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain/module/interface impact, and first Change Unit shape before implementation hardens into a plan.
 - A Decision Gate is a point where progress is blocked until product judgment is recorded.
 - A Decision Packet records the decision needed, options, trade-offs, evidence, affected scope, residual risk, and next action for a blocking product judgment.
 - Evidence is recorded support for claims about the work, such as diffs, logs, tests, screenshots, run summaries, Eval records, or Manual QA records.
@@ -69,8 +70,8 @@ Harness uses three work modes:
 | Mode | Use it for | Product writes |
 |---|---|---|
 | `advisor` | Explanation, comparison, review, planning, or decision support. | Not allowed. |
-| `direct` | Small, low-risk changes with obvious scope and result. | Allowed only inside an active scoped Change Unit. |
-| `work` | Feature work, structural change, risky work, or multi-step implementation. | Allowed only inside an active scoped Change Unit and normally requires stronger evidence and verification. |
+| `direct` | Small, low-risk changes with obvious scope and result. | Checked through `prepare_write` and applicable gates inside an active scoped Change Unit. |
+| `work` | Feature work, structural change, risky work, or multi-step implementation. | Checked through `prepare_write` and applicable gates inside an active scoped Change Unit, and normally requires stronger evidence and verification. |
 
 A task can start small. If the scope grows, the harness should make that visible and move the work into the shape needed for safe execution.
 

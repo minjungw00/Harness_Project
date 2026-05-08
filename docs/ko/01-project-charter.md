@@ -82,6 +82,8 @@ Reference MVP는 하나의 project, 하나의 reference agent surface, local run
 
 자동화는 작업을 더 이해하기 어렵게 만드는 것이 아니라 더 신뢰하기 쉽게 만들어야 합니다.
 
+Harness는 agent를 기본적으로 autonomous하게 만들지 않습니다. Harness는 autonomy를 읽을 수 있고, 범위가 있으며, evidence가 있고, 중단 가능한 것으로 만듭니다.
+
 Harness는 state recording, write checks, artifact registration, projection refresh, validator execution, recovery, export, conformance처럼 충분히 deterministic해서 test할 수 있는 actions를 자동화해야 합니다. 질문이 intent, sensitive permission, design direction, Codebase Stewardship, product taste, trade-off acceptance, QA, acceptance, Residual Risk에 관한 것이라면 사람의 판단을 요청해야 합니다.
 
 어떤 rule을 preventively enforce할 수 없을 때는 실제 guarantee level을 보고하고, 더 강한 enforcement가 있는 척하지 말고 cooperative 또는 detective behavior로 fallback해야 합니다.

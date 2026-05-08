@@ -26,7 +26,7 @@ Start with the scope and questions.
 If this is small, handle it as direct; if it grows, move it to work.
 Show the Decision Packet with options, recommendation, and uncertainty.
 Approved. The scope is only what you just described.
-Proceed AFK only inside the approved Change Unit and Autonomy Boundary.
+Proceed AFK only inside the active scoped Change Unit and Autonomy Boundary; sensitive categories still need granted approval.
 Start detached verify.
 Decide whether Manual QA is needed.
 Show residual risk before I accept.
@@ -41,8 +41,8 @@ The normal path should feel like a short conversation, not a work-management sys
 2. Classify as `advisor`, `direct`, or `work`.
 3. Confirm scope and the Change Unit.
 4. If product judgment blocks progress, read and answer the Decision Packet.
-5. Call `prepare_write` before writing.
-6. After changes, record run and evidence.
+5. Before writing, the agent or Harness checks `prepare_write`.
+6. After changes, the agent records run and evidence.
 7. Verify, record Manual QA, show residual risk, and ask for acceptance when needed.
 8. Close.
 
@@ -54,6 +54,18 @@ Close blocked:
 - Manual QA pending for UI copy
 - Verification waived would close as risk accepted, not detached verified
 ```
+
+## What You Usually Decide
+
+Most sessions should reserve your attention for scope when it is not obvious, product or design trade-offs, sensitive approval, and QA, risk, or acceptance judgment.
+
+You own the work direction and acceptable risk; you should not need to operate internal records by hand.
+
+## What Harness Should Handle
+
+Harness should handle state recording, `prepare_write` checks, artifact registration, evidence mapping, projection freshness, and close blockers.
+
+Harness should translate your judgments into recorded state and clear blockers so you can stay focused on ownership, not bookkeeping.
 
 ## Reading A Status Card
 
@@ -114,6 +126,8 @@ Refresh the Journey Card after this run.
 
 ## Reading A Decision Packet
 
+Start from the user question: "Given this context, do I choose this direction, defer it, or ask for a smaller Change Unit?"
+
 A Decision Packet is used when the work needs human judgment before it can safely proceed, close, waive QA, accept verification risk, or accept remaining risk. It is not a request for broad approval.
 
 Read it in this order:
@@ -143,7 +157,7 @@ Explain this module's role.
 Summarize the trade-offs of this design choice.
 ```
 
-`direct` handles small, low-risk changes quickly. Direct still needs a defined scope before writing product files, and its default assurance is `self_checked`.
+`direct` handles small, low-risk changes quickly. Direct still needs an active scoped Change Unit before writing product files, and its default assurance is `self_checked`.
 
 ```text
 Fix the typo on the profile save button. If it is small, handle it as direct.
@@ -156,6 +170,12 @@ Add the email login flow. Run it under the harness.
 ```
 
 If the work starts small but grows, the agent should say that it is moving the same Task to `work`.
+
+## Small Direct Work Should Stay Light
+
+For small obvious work, Harness should define narrow scope as an active Change Unit, check write permission with `prepare_write`, record changed paths and self-check evidence, and close when no blockers appear.
+
+If the work grows, the same Task should move to `work` and show scope, decisions, evidence, and risk instead of turning direct mode into silent broad autonomy.
 
 ## User Judgments
 
@@ -180,7 +200,7 @@ The user may accept verification risk and close the task, but that is a risk-acc
 
 ## What The Agent May Do AFK
 
-AFK implementation means the agent may continue while you are away. It is allowed only inside the approved Change Unit and Autonomy Boundary.
+AFK implementation means the agent may continue while you are away. It is allowed only inside the active scoped Change Unit and Autonomy Boundary, with granted approval separately required when sensitive categories apply.
 
 The Autonomy Boundary is not a scope grant. The agent still needs `prepare_write`, active Change Unit scope, allowed paths, allowed tools, allowed commands, and sensitive approval where applicable.
 
@@ -253,13 +273,13 @@ I do not accept that risk. Rework or add verification.
 
 ## Manual QA
 
-Manual QA is the process for checking qualities that a person needs to inspect, such as UX, workflow, copy, accessibility, and visual result.
+Manual QA is the user's judgment about qualities that a person needs to inspect, such as UX, workflow, copy, accessibility, and visual result.
 
 ```text
 Decide whether Manual QA is needed.
 ```
 
-If QA fails, the task does not close and returns to rework or blocked. Skipping QA requires a waiver with a reason.
+If the Manual QA judgment is "not acceptable yet," the task does not close and returns to rework or blocked. If Manual QA is not useful for this task shape, record the waiver reason.
 
 ```text
 Mark Manual QA waived for this internal CLI work. Reason: there is no user UI, and tests/logs are enough to verify it.

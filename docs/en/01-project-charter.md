@@ -82,6 +82,8 @@ Later automation belongs in [appendix/C-later-roadmap.md](appendix/C-later-roadm
 
 Automation should make the work easier to trust, not harder to understand.
 
+Harness does not make the agent autonomous by default. Harness makes autonomy legible, scoped, evidenced, and interruptible.
+
 The harness should automate state recording, write checks, artifact registration, projection refresh, validator execution, recovery, export, and conformance where those actions are deterministic enough to test. It should ask for human judgment when the question is about intent, sensitive permission, design direction, codebase stewardship, product taste, trade-off acceptance, QA, acceptance, or residual risk.
 
 When automation cannot enforce a rule preventively, it should report the actual guarantee level and fall back to cooperative or detective behavior instead of pretending enforcement is stronger than it is.

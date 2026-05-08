@@ -174,6 +174,16 @@ Kernel이 담당합니다.
 - evidence, verification, QA, acceptance states의 compatibility 여부
 - projections가 display로 믿을 만큼 최신인지 여부
 
+### Decision Packets와 Approval은 대체재가 아니라 형제 관계입니다
+
+Approval은 정의된 scope 안에서 sensitive action을 진행해도 되는지에 답합니다. Decision Packet은 사용자가 어떤 product judgment를 내리고 있는지에 답합니다.
+
+Approval은 product trade-off, design direction, QA waiver, verification risk, acceptance, residual risk를 해결하지 않습니다. 그런 판단은 compatible authority path를 통해 별도로 기록되어야 합니다.
+
+Missing scope, missing approval, stale baseline, MCP unavailable 같은 mechanical write blockers는 각자의 gate 또는 error path를 사용합니다. Decision Packet은 blocker가 product judgment이거나 user-owned waiver, risk, acceptance decision일 때만 필요합니다.
+
+모든 implementation choice에 Decision Packet이 필요한 것은 아닙니다. 선택이 progress, write, close, waiver, acceptance, residual-risk acceptance, product direction, scope, design trade-off, stewardship judgment, public commitment를 막을 때 Decision Packet이 필요합니다. Active Change Unit과 Autonomy Boundary 안의 평범하고 되돌릴 수 있는 implementation choices는 run notes나 evidence로 기록할 수 있습니다.
+
 이 모델은 사용자가 모든 file write나 status claim을 직접 감시하지 않아도 사용자의 판단권을 유지합니다.
 
 ## Source-Of-Truth 요약

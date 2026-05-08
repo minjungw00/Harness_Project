@@ -65,7 +65,7 @@ Capability tiers describe available integration support; they are not kernel gat
 
 ### Change Unit
 
-The scoped implementation unit for product writes. A product write requires an active Change Unit whose scope covers the intended paths, tools, commands, network targets, and sensitive categories.
+The scoped implementation unit that bounds product writes. A product write requires an active Change Unit whose scope covers the intended paths, tools, commands, network targets, and sensitive categories, but the Change Unit does not itself authorize the write. Core allows the write through `prepare_write` and applicable gates.
 
 ### Close Reason
 
@@ -328,7 +328,7 @@ The kernel gate requiring product writes to be covered by an active scoped Chang
 
 ### Shared Design
 
-A canonical design-support record of the shared understanding for a task: goal, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain impact, module/interface impact, and first Change Unit shape. Markdown renderings of Shared Design are projections and proposal surfaces.
+The minimum recorded shared understanding of a task before implementation hardens into a plan: goal, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain/module/interface impact, and first Change Unit shape. Markdown renderings of Shared Design are projections and proposal surfaces.
 
 ### Source-of-truth
 

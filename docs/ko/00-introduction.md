@@ -8,7 +8,7 @@
 
 - Harness가 줄이는 문제 요약
 - 세 공간 모델 요약
-- Task, Change Unit, Strategic Agency, Decision Gate, Decision Packet, Evidence, Journey Card, Journey Spine, Residual Risk, Projection의 기본 개념
+- Task, Change Unit, Strategic Agency, Shared Design, Decision Gate, Decision Packet, Evidence, Journey Card, Journey Spine, Residual Risk, Projection의 기본 개념
 - `advisor`, `direct`, `work` 소개
 - Journey Card 예시
 - source-of-truth 경계 요약
@@ -49,8 +49,9 @@ Harness는 세 공간을 분리합니다.
 ### 핵심 개념
 
 - Task는 사용자 가치 단위입니다. 사용자가 끝내거나 답을 얻고 싶은 일입니다.
-- Change Unit은 product writes를 허가하는 범위 지정 구현 단위입니다.
+- Change Unit은 product writes의 범위를 정합니다. Write를 진행해도 되는지는 Core가 `prepare_write`와 applicable gates를 통해 판단합니다.
 - Strategic Agency는 사용자가 작업 여정을 이해하고 목표, 범위, 설계, 트레이드오프, Codebase Stewardship, QA, acceptance, Residual Risk에 대해 판단하거나 보류할 수 있는 지속적인 권한입니다.
+- Shared Design은 implementation이 plan으로 굳어지기 전에 goal, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain/module/interface impact, first Change Unit shape에 대해 최소한으로 기록한 shared understanding입니다.
 - Decision Gate는 제품 판단이 기록될 때까지 진행이 막히는 지점입니다.
 - Decision Packet은 blocking product judgment에 필요한 결정, options, trade-offs, evidence, affected scope, Residual Risk, next action을 기록합니다.
 - Evidence는 작업에 대한 주장을 뒷받침하는 기록입니다. 예를 들어 diffs, logs, tests, screenshots, run summaries, Eval records, Manual QA records가 있습니다.
@@ -69,8 +70,8 @@ Harness는 세 가지 작업 모드를 사용합니다.
 | 모드 | 사용 대상 | Product writes |
 |---|---|---|
 | `advisor` | 설명, 비교, review, planning, decision support. | 허용되지 않습니다. |
-| `direct` | 범위와 결과가 명확한 작고 위험이 낮은 변경. | 활성 scoped Change Unit 안에서만 허용됩니다. |
-| `work` | feature work, structural change, risky work, multi-step implementation. | 활성 scoped Change Unit 안에서만 허용되며 보통 더 강한 evidence와 verification이 필요합니다. |
+| `direct` | 범위와 결과가 명확한 작고 위험이 낮은 변경. | Active scoped Change Unit 안에서 `prepare_write`와 applicable gates를 통해 확인됩니다. |
+| `work` | feature work, structural change, risky work, multi-step implementation. | Active scoped Change Unit 안에서 `prepare_write`와 applicable gates를 통해 확인되며 보통 더 강한 evidence와 verification이 필요합니다. |
 
 Task는 작게 시작할 수 있습니다. 범위가 커지면 Harness는 그 사실을 보이게 하고, 안전하게 실행할 수 있는 형태로 작업을 옮겨야 합니다.
 

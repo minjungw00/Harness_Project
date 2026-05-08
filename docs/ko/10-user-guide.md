@@ -26,7 +26,7 @@
 작은 수정이면 direct로 처리하고, 커지면 work로 전환해.
 Decision Packet을 옵션, 추천안, 불확실성까지 보여줘.
 승인해. 범위는 방금 설명한 내용까지만이야.
-승인된 Change Unit과 Autonomy Boundary 안에서만 AFK로 진행해.
+Active scoped Change Unit과 Autonomy Boundary 안에서만 AFK로 진행해. Sensitive categories에는 별도 granted approval이 필요해.
 detached verify 시작해.
 Manual QA가 필요한지 판단해줘.
 수용하기 전에 residual risk를 보여줘.
@@ -41,8 +41,8 @@ Manual QA가 필요한지 판단해줘.
 2. `advisor`, `direct`, `work` 중 하나로 분류.
 3. 범위와 Change Unit 확인.
 4. 제품 판단이 진행을 막고 있으면 Decision Packet을 읽고 답하기.
-5. 제품 파일을 쓰기 전에 `prepare_write`.
-6. 변경 후 run과 evidence 기록.
+5. 제품 파일을 쓰기 전에 agent 또는 Harness가 `prepare_write`를 확인.
+6. 변경 후 agent가 run과 evidence를 기록.
 7. Verify, Manual QA 기록, residual risk 표시, 필요한 경우 acceptance 요청.
 8. Close.
 
@@ -54,6 +54,18 @@ Close blocked:
 - UI copy에 대한 Manual QA가 pending입니다.
 - Verification을 waive하면 detached verified가 아니라 risk accepted close로 닫힙니다.
 ```
+
+## 보통 사용자가 결정하는 것 (What You Usually Decide)
+
+대부분의 session에서 사용자가 주로 결정할 것은 명확하지 않은 scope, product 또는 design trade-off, sensitive approval, QA/risk/acceptance judgment입니다.
+
+사용자는 작업 방향과 받아들일 수 있는 risk의 owner이지, internal records를 직접 조작하는 operator가 아닙니다.
+
+## Harness가 맡아야 할 것 (What Harness Should Handle)
+
+Harness가 맡아야 할 것은 state recording, `prepare_write` checks, artifact registration, evidence mapping, projection freshness, close blockers입니다.
+
+Harness는 사용자의 판단을 recorded state와 clear blockers로 바꾸어, 사용자가 bookkeeping이 아니라 ownership에 집중하게 해야 합니다.
 
 ## 상태 카드 읽기
 
@@ -114,7 +126,9 @@ Journey Card는 일이 지금 어디에 있는지 보여주는 카드다. 오래
 
 ## Decision Packet 읽기
 
-Decision Packet은 넓은 의미의 "승인해도 돼요?"가 아니다. 진행, close, QA waiver, verification risk acceptance, residual-risk acceptance에 사람 판단이 필요할 때 쓰는 결정 문서다.
+먼저 사용자 질문에서 시작한다: "이 맥락에서 이 방향을 선택할까, 미룰까, 더 작은 Change Unit을 요청할까?"
+
+Decision Packet은 넓은 의미의 "승인해도 돼요?"가 아니다. 진행, close, QA waiver, verification risk acceptance, residual-risk acceptance에 사람 판단이 필요할 때 쓰는 판단 단위다.
 
 읽는 순서:
 
@@ -143,7 +157,7 @@ Option A로 가자. 실패 메시지는 일반적으로 유지하고, 보안 tra
 이 설계 선택의 trade-off를 정리해줘.
 ```
 
-`direct`는 작고 저위험인 변경을 빠르게 처리하는 모드다. Direct도 제품 파일을 쓰려면 범위가 잡혀 있어야 하며, 기본 assurance는 `self_checked`다.
+`direct`는 작고 저위험인 변경을 빠르게 처리하는 모드다. Direct도 제품 파일을 쓰려면 active scoped Change Unit이 있어야 하며, 기본 assurance는 `self_checked`다.
 
 ```text
 프로필 저장 버튼 오타 고쳐줘. 작으면 direct로 처리해.
@@ -156,6 +170,12 @@ Option A로 가자. 실패 메시지는 일반적으로 유지하고, 보안 tra
 ```
 
 작게 시작했지만 범위가 커지면 agent는 같은 Task를 `work`로 전환한다고 알려야 한다.
+
+## Small Direct Work Should Stay Light
+
+작고 명확한 작업에서는 Harness가 좁은 scope를 active Change Unit으로 정하고, `prepare_write`로 write permission을 확인하고, changed paths와 self-check evidence를 기록한 뒤 blocker가 없으면 close해야 한다.
+
+작업이 커지면 같은 Task를 `work`로 옮기고 scope, decisions, evidence, risk를 보여야 한다. Direct mode가 조용한 broad autonomy로 바뀌면 안 된다.
 
 ## 사용자 판단 (User Judgments)
 
@@ -180,7 +200,7 @@ Assurance는 보통 `none`, `self_checked`, `detached_verified`로 보인다. `d
 
 ## AFK로 진행하게 할 때
 
-AFK로 진행한다는 말은 사용자가 자리를 비워도 agent가 계속 진행해도 된다는 뜻이다. 하지만 AFK는 approved Change Unit과 Autonomy Boundary 안에서만 허용된다.
+AFK로 진행한다는 말은 사용자가 자리를 비워도 agent가 계속 진행해도 된다는 뜻이다. 하지만 AFK는 active scoped Change Unit과 Autonomy Boundary 안에서만 허용되며, sensitive categories에는 별도 granted approval이 필요하다.
 
 Autonomy Boundary는 scope grant가 아니다. Agent는 여전히 `prepare_write`, active Change Unit scope, allowed paths, allowed tools, allowed commands, network targets, secret access, applicable한 sensitive approval을 따라야 한다.
 
@@ -253,13 +273,13 @@ Residual risk를 수용하면 close가 가능해질 수 있다. 하지만 approv
 
 ## Manual QA
 
-Manual QA는 UX, workflow, copy, accessibility, visual result처럼 사람이 봐야 하는 품질을 확인하는 절차다.
+Manual QA는 UX, workflow, copy, accessibility, visual result처럼 사람이 봐야 하는 품질에 대한 사용자 판단이다.
 
 ```text
 Manual QA가 필요한지 판단해줘.
 ```
 
-QA가 실패하면 작업은 닫지 않고 rework나 blocked 상태로 돌아간다. QA를 생략하려면 이유를 남긴 waiver가 필요하다.
+Manual QA 판단이 "아직 수용할 수 없음"이면 작업은 닫지 않고 rework나 blocked 상태로 돌아간다. 이 Task shape에서 Manual QA가 유용하지 않다면 waiver reason을 기록한다.
 
 ```text
 이번 내부 CLI 작업은 Manual QA waived 처리해. 이유: 사용자 UI가 없고 test/log로 충분히 확인 가능.

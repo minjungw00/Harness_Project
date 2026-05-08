@@ -65,7 +65,7 @@ Capability tiers는 available integration support를 설명할 뿐 kernel gates�
 
 ### Change Unit
 
-Product writes를 위한 scoped implementation unit입니다. Product write에는 intended paths, tools, commands, network targets, sensitive categories를 cover하는 active Change Unit이 필요합니다.
+Product writes의 범위를 정하는 scoped implementation unit입니다. Product write에는 intended paths, tools, commands, network targets, sensitive categories를 cover하는 active Change Unit이 필요하지만, Change Unit 자체가 write를 authorize하지는 않습니다. Core가 `prepare_write`와 applicable gates를 통해 write 허용 여부를 판단합니다.
 
 ### Close Reason
 
@@ -328,7 +328,7 @@ Product writes가 active scoped Change Unit으로 covered되어야 함을 요구
 
 ### Shared Design
 
-Task에 대한 shared understanding을 담은 canonical design-support record입니다. goal, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain impact, module/interface impact, first Change Unit shape를 포함합니다. Shared Design의 Markdown renderings는 projections이자 proposal surfaces입니다.
+Implementation이 plan으로 굳어지기 전에 Task에 대해 최소한으로 기록한 shared understanding입니다. goal, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain/module/interface impact, first Change Unit shape를 포함합니다. Shared Design의 Markdown renderings는 projections이자 proposal surfaces입니다.
 
 ### Source-of-truth
 

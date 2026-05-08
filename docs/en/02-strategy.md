@@ -174,6 +174,16 @@ The kernel owns:
 - whether evidence, verification, QA, and acceptance states are compatible
 - whether projections are fresh enough to trust as display
 
+### Decision Packets And Approval Are Siblings, Not Substitutes
+
+Approval answers whether a sensitive action may proceed inside a defined scope. A Decision Packet answers what product judgment the user is making.
+
+Approval never resolves product trade-off, design direction, QA waiver, verification risk, acceptance, or residual risk unless those judgments are separately recorded through the compatible authority path.
+
+Mechanical write blockers such as missing scope, missing approval, stale baseline, or MCP unavailable use their own gate or error path. A Decision Packet is required only when the blocker is product judgment or a user-owned waiver, risk, or acceptance decision.
+
+Not every implementation choice requires a Decision Packet. A Decision Packet is required when the choice blocks progress, write, close, waiver, acceptance, residual-risk acceptance, product direction, scope, design trade-off, stewardship judgment, or public commitment. Ordinary reversible implementation choices inside the active Change Unit and Autonomy Boundary can be recorded as run notes or evidence.
+
 This model keeps the user in charge without requiring the user to manually police every file write or status claim.
 
 ## Source-Of-Truth Summary
