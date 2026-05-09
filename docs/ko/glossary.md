@@ -324,7 +324,7 @@ Current project, task, design, policy, status, bundle information을 위한 read
 
 ### Surface MCP Unavailable
 
-`SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 connected surface에 usable MCP가 없거나, MCP configuration이 stale이거나, required MCP tools를 call할 수 없음을 observe할 수 있는 diagnostic condition입니다. Product writes는 cooperative surface에서는 instruction으로 hold되고 available한 stronger guard에서는 block됩니다. Core responses는 details와 함께 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`를 사용할 수 있습니다.
+`SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 connected surface에 usable MCP가 없거나, MCP configuration이 stale이거나, required MCP tools를 call할 수 없음을 observe할 수 있는 diagnostic condition입니다. Product writes는 cooperative surface에서는 instruction으로 hold되고 available한 stronger guard에서는 block됩니다. Core responses는 `details.mcp_unavailable_kind`와 함께 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`를 사용할 수 있으며, 이 diagnostic label은 public `ErrorCode` value가 아닙니다.
 
 ### MCP Tool
 

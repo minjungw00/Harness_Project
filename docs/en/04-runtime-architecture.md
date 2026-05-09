@@ -459,7 +459,7 @@ Failures are recorded rather than hidden:
 | Artifact file missing | mark artifact/evidence stale; rescan or restore through recovery |
 | Projection job failed | keep state current; mark projection failed and retry or reconcile |
 | Managed Markdown edited directly | create reconcile item; do not mutate state directly |
-| MCP unavailable | distinguish `MCP_SERVER_UNAVAILABLE`, where the tool call cannot reach Core and no authoritative Core response is possible, from `SURFACE_MCP_UNAVAILABLE`, where Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools; product/runtime/code writes are held by instruction on cooperative surfaces or blocked by stronger guards when available |
+| MCP unavailable | distinguish diagnostic condition `MCP_SERVER_UNAVAILABLE`, where the tool call cannot reach Core and no authoritative Core response is possible, from diagnostic condition `SURFACE_MCP_UNAVAILABLE`, where Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools; `MCP_UNAVAILABLE` remains the stable public availability code; product/runtime/code writes are held by instruction on cooperative surfaces or blocked by stronger guards when available |
 | Surface capability mismatch | record validator result, adjust guarantee display, and block unsafe writes when required checks cannot be satisfied |
 
 ```mermaid

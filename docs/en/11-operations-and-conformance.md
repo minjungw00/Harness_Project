@@ -302,7 +302,7 @@ Required scenarios:
 | managed Markdown edited | create reconcile item |
 | malformed or schema-incompatible storage JSON | repair only if Core can reconstruct the expected shape from canonical state or raw artifacts; otherwise fail or require manual recovery |
 | lock expired | append recovery event and release or reacquire according to lock policy |
-| MCP unavailable | report `MCP_SERVER_UNAVAILABLE` or `SURFACE_MCP_UNAVAILABLE`, keep product/runtime/code writes held, and give the next diagnosis or reconnect step |
+| MCP unavailable | report diagnostic condition `MCP_SERVER_UNAVAILABLE` or `SURFACE_MCP_UNAVAILABLE`, keep product/runtime/code writes held, and give the next diagnosis or reconnect step |
 
 ```mermaid
 flowchart TD

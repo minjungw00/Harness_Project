@@ -324,7 +324,7 @@ A read-only MCP surface for current project, task, design, policy, status, or bu
 
 ### Surface MCP Unavailable
 
-`SURFACE_MCP_UNAVAILABLE` is the diagnostic condition where Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools. Product writes are held by instruction on cooperative surfaces or blocked by stronger guards when available. Core responses may use `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` with details.
+`SURFACE_MCP_UNAVAILABLE` is the diagnostic condition where Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools. Product writes are held by instruction on cooperative surfaces or blocked by stronger guards when available. Core responses may use `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` with `details.mcp_unavailable_kind`; the diagnostic label is not a public `ErrorCode` value.
 
 ### MCP Tool
 

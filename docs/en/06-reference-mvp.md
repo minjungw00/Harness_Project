@@ -186,36 +186,36 @@ This ER diagram is an overview of the DDL relationships below. Relationship labe
 
 ```mermaid
 erDiagram
-  PROJECTS ||--o{ PROJECT_SURFACES : registers
-  PROJECTS ||--o{ CONNECTOR_MANIFESTS : has
-  PROJECT_SURFACES ||--o{ CONNECTOR_MANIFESTS : describes
-  PROJECTS ||--|| PROJECT_STATE : has
-  TASKS ||--|| TASK_GATES : has
-  TASKS ||--o{ CHANGE_UNITS : has
-  TASKS ||--o{ BASELINES : tracks
-  TASKS ||--o{ WRITE_AUTHORIZATIONS : tracks
-  CHANGE_UNITS ||--o{ WRITE_AUTHORIZATIONS : scopes
-  WRITE_AUTHORIZATIONS ||--o| RUNS : consumed_by
-  TASKS ||--o{ RUNS : has
-  TASKS ||--o{ APPROVALS : tracks
-  DECISION_PACKETS ||--o{ APPROVALS : links
-  TASKS ||--o{ DECISION_PACKETS : has
-  TASKS ||--o{ RESIDUAL_RISKS : tracks
-  DECISION_PACKETS ||--o{ RESIDUAL_RISKS : links
-  TASKS ||--o{ SHARED_DESIGNS : tracks
-  TASKS ||--o{ TASK_SPINE_ENTRIES : has
-  CHANGE_UNITS ||--o{ CHANGE_UNIT_DEPENDENCIES : depends
-  TASKS ||--o{ EVIDENCE_MANIFESTS : has
-  TASKS ||--o{ EVALS : has
-  TASKS ||--o{ MANUAL_QA_RECORDS : has
-  DECISION_PACKETS ||--o{ MANUAL_QA_RECORDS : links
-  TASKS ||--o{ ARTIFACTS : links
-  ARTIFACTS ||--o{ ARTIFACT_LINKS : links
-  TASKS ||--o{ TASK_EVENTS : has
-  TASKS ||--o{ PROJECTION_JOBS : tracks
-  TASKS ||--o{ RECONCILE_ITEMS : tracks
-  TASKS ||--o{ TDD_TRACES : has
-  TASKS ||--o{ VALIDATOR_RUNS : has
+  projects ||--o{ project_surfaces : registers
+  projects ||--o{ connector_manifests : has
+  project_surfaces ||--o{ connector_manifests : describes
+  projects ||--|| project_state : has
+  tasks ||--|| task_gates : has
+  tasks ||--o{ change_units : has
+  tasks ||--o{ baselines : tracks
+  tasks ||--o{ write_authorizations : tracks
+  change_units ||--o{ write_authorizations : scopes
+  write_authorizations ||--o| runs : consumed_by
+  tasks ||--o{ runs : has
+  tasks ||--o{ approvals : tracks
+  decision_packets ||--o{ approvals : links
+  tasks ||--o{ decision_packets : has
+  tasks ||--o{ residual_risks : tracks
+  decision_packets ||--o{ residual_risks : links
+  tasks ||--o{ shared_designs : tracks
+  tasks ||--o{ task_spine_entries : has
+  change_units ||--o{ change_unit_dependencies : depends
+  tasks ||--o{ evidence_manifests : has
+  tasks ||--o{ evals : has
+  tasks ||--o{ manual_qa_records : has
+  decision_packets ||--o{ manual_qa_records : links
+  tasks ||--o{ artifacts : links
+  artifacts ||--o{ artifact_links : links
+  tasks ||--o{ task_events : has
+  tasks ||--o{ projection_jobs : tracks
+  tasks ||--o{ reconcile_items : tracks
+  tasks ||--o{ tdd_traces : has
+  tasks ||--o{ validator_runs : has
 ```
 
 ### JSON Field Validation Boundary

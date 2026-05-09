@@ -304,7 +304,7 @@ Recover는 history를 rewrite하지 않고 interrupted 또는 inconsistent opera
 | managed Markdown edited | reconcile item을 생성합니다 |
 | malformed or schema-incompatible storage JSON | Core가 canonical state 또는 raw artifacts에서 expected shape를 reconstruct할 수 있을 때만 repair합니다. 그렇지 않으면 fail하거나 manual recovery를 요구합니다 |
 | lock expired | recovery event를 append하고 lock policy에 따라 release하거나 reacquire합니다 |
-| MCP unavailable | `MCP_SERVER_UNAVAILABLE` 또는 `SURFACE_MCP_UNAVAILABLE`을 보고하고, product/runtime/code write를 계속 hold하며, next diagnosis 또는 reconnect step을 제시합니다 |
+| MCP unavailable | diagnostic condition인 `MCP_SERVER_UNAVAILABLE` 또는 `SURFACE_MCP_UNAVAILABLE`을 보고하고, product/runtime/code write를 계속 hold하며, next diagnosis 또는 reconnect step을 제시합니다 |
 
 ```mermaid
 flowchart TD
