@@ -1029,7 +1029,11 @@ Default guarantee display is cooperative/detective. Preventive or isolated claim
 
 ## Validator Runner Skeleton
 
-MVP validators use one shared result shape from the API document. The runner is intentionally small:
+MVP validators use one shared result shape from the API document. The runner is intentionally small.
+
+Minimal validator rollout uses the [MVP Severity Defaults](08-design-quality-policy-pack.md#mvp-severity-defaults) matrix as the default severity router. The runner may initially implement shallow checks for each stable ID, but when the matrix marks an applicable policy as `blocking before write`, `close blocker`, or `Decision Packet required`, it must emit a gate/blocker-compatible result instead of downgrading the finding to `warning`. `warning` and `not_required` defaults remain valid only while the policy contract, user request, sensitive category, public commitment, residual risk, and conformance fixture do not raise severity.
+
+Minimal runner shape:
 
 ```text
 run_validators(context, validator_ids):
