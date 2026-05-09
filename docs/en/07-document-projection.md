@@ -257,8 +257,8 @@ Rules:
 - Every raw artifact ref must carry integrity metadata and redaction state.
 - Large or sensitive evidence is linked, not pasted into Markdown.
 - Missing or hash-mismatched artifacts mark related evidence or projection freshness stale.
-- State record refs use record identity and optional projection path; they are not rendered as raw artifact refs.
-- `artifact_links.record_kind` must resolve to an existing state owner or projection ref. `EXPORT` is a `ProjectionKind` only; export snapshots and components remain artifacts linked to their owner records or to `record_kind=projection`, not to `record_kind=export`.
+- State record refs use record identity and optional projection path; for `record_kind=projection`, identity is `projection_jobs.projection_job_id` and the path is only a locator. They are not rendered as raw artifact refs.
+- `artifact_links.record_kind` must resolve to an existing state owner or projection ref. `record_kind=projection` resolves to a completed `projection_jobs` row; the link's `record_id` is `projection_jobs.projection_job_id`, while path display uses `StateRecordRef.projection_path` or `projection_jobs.output_path`. `EXPORT` is a `ProjectionKind` only; export snapshots and components remain artifacts linked to their owner records or to `record_kind=projection`, not to `record_kind=export`.
 
 Source-of-truth caption: Markdown renders compact artifact refs from artifact records; large or sensitive evidence remains outside the report body.
 

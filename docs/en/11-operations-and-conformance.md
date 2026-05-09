@@ -366,8 +366,9 @@ Required checks:
 - content type is known or explicitly `other`
 - redaction state is valid
 - task/run or artifact-link relation is valid
-- linked state owner or projection record exists
+- linked state owner exists, or `record_kind=projection` resolves to a completed `projection_jobs` row
 - owner-link relation semantics are compatible with the artifact's kind, including artifacts whose kind is `bundle`, `manifest`, or `export_component`
+- for projection artifact links, `artifact_links.record_id` must equal `projection_jobs.projection_job_id`; integrity validates that job/output identity through compatible task or project scope, `target_ref`, `status=completed`, and `output_path` or a documented projection ref instead of looking for a separate `projections` table
 - bundle, manifest, and export-component artifacts are validated through their artifact row and owner links; the check must not look for nonexistent `verification_bundle` or `export` state tables
 - retention class is valid
 - projection or evidence refs resolve

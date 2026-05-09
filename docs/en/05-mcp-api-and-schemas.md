@@ -326,6 +326,7 @@ Rules:
 - Core applies redaction rules before final storage and records the committed artifact as an `ArtifactRef`.
 - Tool responses return committed `ArtifactRef` values in `registered_artifacts`, `bundle_ref`, or other response fields.
 - `relation.record_kind` must name an existing canonical owner record or rendered projection ref that Core can validate. Verification bundles use `ArtifactRef.kind=bundle` or `manifest`; export outputs use `ArtifactRef.kind=export_component` or `retention_class=export`. Neither `verification_bundle` nor `export` is an MVP artifact relation record kind.
+- `relation.record_kind=projection` is valid only for an already rendered or committed projection output that Core can resolve through `projection_jobs`. In MVP, `record_id_hint` names `projection_jobs.projection_job_id`; Core may use `target_ref` and `output_path` to validate the hint, but those values do not replace the job id as identity.
 
 Record or projection references use `StateRecordRef`, not `ArtifactRef`:
 
@@ -336,9 +337,11 @@ StateRecordRef:
   projection_path: string | null
 ```
 
+For `record_kind=projection`, `record_id` is the MVP projection identity: `projection_jobs.projection_job_id`. `projection_path` is optional display and recovery metadata; when present, it mirrors or narrows the job's `output_path` and must resolve under the same job. It is not an alternate key and does not imply a separate `projections` table.
+
 MVP has no `accepted_risk` `StateRecordRef.record_kind`. Public fields named `accepted_risk_refs`, `accepted_refs`, or accepted-risk equivalents must use `StateRecordRef` entries with `record_kind=residual_risk`; accepted risk is metadata/state on those Residual Risk records.
 
-Public refs to canonical design-support records use `record_kind=domain_term`, `record_kind=module_map_item`, or `record_kind=interface_contract` with the corresponding storage record id. Use `record_kind=projection` only when the ref targets a rendered Markdown projection such as `DOMAIN-LANGUAGE`, `MODULE-MAP`, or `INTERFACE-CONTRACT`.
+Public refs to canonical design-support records use `record_kind=domain_term`, `record_kind=module_map_item`, or `record_kind=interface_contract` with the corresponding storage record id. Use `record_kind=projection` only when the ref targets a rendered Markdown projection such as `DOMAIN-LANGUAGE`, `MODULE-MAP`, or `INTERFACE-CONTRACT`, with `record_id=projection_jobs.projection_job_id`.
 
 Public refs to canonical feedback-loop records use `record_kind=feedback_loop` with the `feedback_loops.feedback_loop_id`. Use `record_kind=tdd_trace` only for the red/green/refactor TDD evidence row; a Feedback Loop may cite a TDD Trace as execution evidence, but the TDD Trace does not replace the selected-loop definition.
 

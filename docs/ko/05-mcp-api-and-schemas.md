@@ -326,6 +326,7 @@ Rules:
 - Core는 final storage 전에 redaction rules를 적용하고 committed artifact를 `ArtifactRef`로 기록합니다.
 - Tool responses는 committed `ArtifactRef` values를 `registered_artifacts`, `bundle_ref`, 기타 response fields로 반환합니다.
 - `relation.record_kind`는 Core가 validate할 수 있는 existing canonical owner record 또는 rendered projection ref를 이름으로 지정해야 합니다. Verification bundles는 `ArtifactRef.kind=bundle` 또는 `manifest`를 사용합니다. Export outputs는 `ArtifactRef.kind=export_component` 또는 `retention_class=export`를 사용합니다. `verification_bundle`과 `export`는 MVP artifact relation record kind가 아닙니다.
+- `relation.record_kind=projection`은 Core가 `projection_jobs`를 통해 resolve할 수 있는 already rendered 또는 committed projection output에만 valid합니다. MVP에서 `record_id_hint`는 `projection_jobs.projection_job_id`를 이름으로 지정합니다. Core는 hint를 validate할 때 `target_ref`와 `output_path`를 사용할 수 있지만, 이 값들이 identity에서 job id를 대체하지 않습니다.
 
 Record 또는 projection references는 `ArtifactRef`가 아니라 `StateRecordRef`를 사용합니다.
 
@@ -336,9 +337,11 @@ StateRecordRef:
   projection_path: string | null
 ```
 
+`record_kind=projection`에서 `record_id`는 MVP projection identity인 `projection_jobs.projection_job_id`입니다. `projection_path`는 optional display and recovery metadata입니다. Present하면 job의 `output_path`를 mirror하거나 narrow해야 하며 같은 job 아래에서 resolve되어야 합니다. Alternate key가 아니며 separate `projections` table을 imply하지 않습니다.
+
 MVP에는 `accepted_risk` `StateRecordRef.record_kind`가 없습니다. `accepted_risk_refs`, `accepted_refs`, 또는 accepted-risk equivalent로 이름 붙은 public fields는 `record_kind=residual_risk`인 `StateRecordRef` entries를 사용해야 합니다. Accepted risk는 그 Residual Risk records의 metadata/state입니다.
 
-Canonical design-support records에 대한 public refs는 해당 storage record id와 함께 `record_kind=domain_term`, `record_kind=module_map_item`, 또는 `record_kind=interface_contract`를 사용합니다. `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` 같은 rendered Markdown projection 자체를 가리킬 때만 `record_kind=projection`을 사용합니다.
+Canonical design-support records에 대한 public refs는 해당 storage record id와 함께 `record_kind=domain_term`, `record_kind=module_map_item`, 또는 `record_kind=interface_contract`를 사용합니다. `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` 같은 rendered Markdown projection 자체를 가리키고 `record_id=projection_jobs.projection_job_id`를 사용할 때만 `record_kind=projection`을 사용합니다.
 
 Canonical feedback-loop records에 대한 public refs는 `feedback_loops.feedback_loop_id`와 함께 `record_kind=feedback_loop`를 사용합니다. Red/green/refactor TDD evidence row에는 `record_kind=tdd_trace`만 사용합니다. Feedback Loop는 execution evidence로 TDD Trace를 cite할 수 있지만, TDD Trace가 selected-loop definition을 대체하지는 않습니다.
 

@@ -896,6 +896,8 @@ Core must validate every JSON ref array before commit. `selected_loop_refs_json`
 
 `artifact_links` is the queryable many-to-many attachment table for artifacts. Use it to attach artifacts to existing owner records such as `task`, `change_unit`, `run`, `decision_packet`, `shared_design`, `residual_risk`, `evidence_manifest`, `feedback_loop`, `tdd_trace`, `manual_qa_record`, `eval`, `journey_spine_entry`, and `projection`. Exported files use artifact kinds or retention classes such as `export_component` and `retention_class=export`; they do not attach to an `export` state record unless a future extension deliberately adds a matching table, `StateRecordRef` value, and integrity semantics. Existing `artifact_refs_json` fields may preserve ordered or record-local context, but multi-record artifact reuse and artifact integrity checks should use `artifact_links`.
 
+For `artifact_links.record_kind=projection`, `artifact_links.record_id` stores `projection_jobs.projection_job_id`. The link is valid only when Core can resolve that job to the rendered projection output it links: compatible task or project scope, matching `projection_kind` and `target_ref`, `status=completed`, and an `output_path` or documented projection ref for the rendered output. `projection_jobs.target_ref` and `output_path` are validation and locator metadata, not replacements for `artifact_links.record_id`. This keeps MVP storage on `projection_jobs` and does not introduce a `projections` table.
+
 `manual_qa_records.waiver_decision_packet_id` and `manual_qa_records.residual_risk_refs_json` are the storage hooks for QA waiver decisions and close-relevant risk refs. The waiver contract is owned by [Kernel Waiver Semantics](03-kernel-spec.md#waiver-semantics) and the Manual QA policy in [08-design-quality-policy-pack.md](08-design-quality-policy-pack.md#manual-qa).
 
 `change_unit_dependencies` is MVP DAG metadata for shaping, ordering, and close visibility. It is not a parallel orchestration scheduler and does not authorize multiple active implementation lanes.
@@ -1256,6 +1258,8 @@ Launching verification sets or keeps `verification_gate=pending`. Only `harness.
 ## Projection Jobs
 
 Projection jobs are the durable outbox between committed state and Product Repository Markdown files. The `projection_jobs` table above owns job persistence and the canonical per-projection `source_state_version` metadata.
+
+MVP does not define a separate `projections` table. A rendered projection ref resolves through `projection_jobs.projection_job_id` plus the row's `projection_kind`, `target_ref`, and `output_path` metadata.
 
 `projection_jobs.projection_version` is the projection/template/job version; it is not an affected-scope state clock. `projection_jobs.source_state_version` is the affected-scope state clock used as the render source for that projection job. It may be null for pending jobs and jobs that fail before the source state is resolved; completed successful renders must record it.
 
