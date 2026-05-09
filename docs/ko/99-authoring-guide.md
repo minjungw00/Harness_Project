@@ -4,6 +4,8 @@
 
 이 문서는 Harness 문서 세트를 작고, 구현 가능하고, 올바르게 계층화된 상태로 유지하는 규칙을 담당합니다.
 
+또한 documentation drift를 찾기 위한 docs-maintenance conformance checklist를 담당합니다.
+
 Runtime behavior, user procedure, conformance fixture content, MCP schemas, SQLite DDL, projection templates는 담당하지 않습니다.
 
 ## 담당 경계와 owner boundary
@@ -24,11 +26,12 @@ Runtime behavior, user procedure, conformance fixture content, MCP schemas, SQLi
 | shared design, decision quality, autonomy boundary, domain language, vertical slice, feedback loop/TDD, module/interface, codebase stewardship, Manual QA, context hygiene policies | `08-design-quality-policy-pack.md` |
 | agent surface capability profile, common connector contract, fallback semantics | `09-agent-integration.md` |
 | user-facing conversation, status reading, resume procedure, approval/assurance/QA/acceptance explanation | `10-user-guide.md` |
-| connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, conformance | `11-operations-and-conformance.md` |
+| connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, runtime conformance, docs-maintenance smoke reporting | `11-operations-and-conformance.md` |
 | full templates and expanded variants | `appendix/A-template-library.md` |
 | surface-specific cookbooks | `appendix/B-surface-cookbook.md` |
 | later automation and derived analytics | `appendix/C-later-roadmap.md` |
 | old-to-new mapping and migration notes | `appendix/D-migration-notes.md` |
+| document ownership, authoring rules, docs-maintenance conformance checklist | `99-authoring-guide.md` |
 | official term definitions | `glossary.md` |
 
 ## Bilingual Sync
@@ -177,6 +180,39 @@ Contracts를 중복하지 말고 links로 owner를 가리킵니다.
 - Integration은 API와 Appendix B를 참조합니다.
 - Operations는 API와 reference MVP를 참조합니다.
 
+## Docs-Maintenance Conformance
+
+Docs-maintenance conformance는 이 documentation corpus를 대상으로 하는 read-only review/check suite입니다. Core fixture conformance, runtime validator, canonical state transition, projection refresh, generated operational report, QA result, acceptance record, evidence artifact, residual-risk acceptance가 아닙니다.
+
+Rule body는 이 guide에 둡니다. [Operations And Conformance](11-operations-and-conformance.md#docs-maintenance-smoke-profile)는 operator-maintenance profile이 이 checks를 어떻게 report하는지 설명할 수 있지만, full rule body를 duplicate하지 말고 여기로 link해야 합니다.
+
+나중의 automated checker는 check category, file path, 가능한 경우 heading 또는 anchor, canonical owner document, observed drift, suggested fix를 report해야 합니다. Drift는 먼저 canonical owner를 update해서 해결하고, 그다음 non-owner duplicate를 summary plus link로 바꿉니다. 올바른 product 또는 architecture rule을 알 수 없으면 `TODO_DECISION`을 사용합니다. Rule은 알려져 있지만 checker wiring, fixture coverage, CLI behavior, implementation detail이 빠졌으면 `TODO_IMPLEMENT`를 사용합니다.
+
+Report severity guidance:
+
+| Severity | Meaning |
+|---|---|
+| `FAIL` | Broken owner links, schema/DDL/enum/stable event/`ValidatorResult`/`ProjectionKind` mismatch, English/Korean paired active file 누락, paired heading structure의 material difference, owner contract를 다시 정의하는 non-owner text처럼 active docs를 contradictory하거나 non-actionable하게 만들 수 있는 drift입니다. |
+| `WARN` | Minor glossary phrasing drift, normative하지 않은 duplicate explanatory prose, stale하지만 non-blocking인 cross-reference wording, incomplete하지만 still understandable한 TODO metadata처럼 정리해야 하지만 아직 owner contract와 모순되지는 않는 drift입니다. |
+| `PASS` | 해당 category에서 relevant drift가 발견되지 않았습니다. |
+
+필수 check categories:
+
+| Category | Required check |
+|---|---|
+| English/Korean file structure parity | 명시적인 예외가 이 guide에 문서화되지 않는 한 `docs/en`과 `docs/ko`는 같은 active document paths와 appendix paths를 유지합니다. |
+| English/Korean heading parity | Paired files는 같은 heading order와 depth를 유지합니다. Heading text는 idiomatic할 수 있지만 stable names, IDs, enum values, schema names, DDL names, owner section links는 semantic하게 aligned되어야 합니다. |
+| Broken cross-reference detection | Markdown links, heading anchors, appendix links, paired-language entry links가 active docs로 resolve됩니다. Owner section link는 subject가 migration context일 때가 아니면 migration notes를 가리키면 안 됩니다. |
+| Owner-boundary drift | Public schemas는 `05-mcp-api-and-schemas.md`에, SQLite DDL과 reference storage details는 `06-reference-mvp.md`에, kernel transitions와 stable events는 `03-kernel-spec.md`에, projection rules와 template tiers는 `07-document-projection.md`에, full template bodies는 `appendix/A-template-library.md`에, fixture body shape와 fixture assertion semantics와 fixture suite behavior는 `11-operations-and-conformance.md`에, official definitions는 `glossary.md`에 둡니다. |
+| Enum drift across owners | State, gate, result, close, assurance, error, projection, validator, storage enum values는 이를 정의하는 owner doc과 일치해야 합니다. Non-owner docs는 필요할 때만 값을 summarize하고 owner로 link해야 합니다. |
+| Stable Event Catalog drift | Operations fixtures, API tool descriptions, Reference MVP conformance text가 fixture-stable로 요구하는 event name은 Kernel Stable Event Catalog에 있어야 합니다. Non-catalog names는 illustrative, implementation-local detail/audit, future extension으로 표시하거나 kernel owner를 통해 promote해야 합니다. |
+| Stable ValidatorResult ID drift | Stable `ValidatorResult` IDs는 API-owned list와 Reference MVP validator runner text와 일치해야 합니다. Core checks와 preconditions는 API 또는 Reference MVP owner가 promote하지 않는 한 validator IDs로 drift하면 안 됩니다. |
+| ProjectionKind tier drift | `ProjectionKind` values와 tiers는 API, Document Projection, Reference MVP, Appendix A, Operations, Glossary에서 일치해야 합니다. Extension / appendix values는 owner docs 밖에서 반복되면서 MVP-required가 되면 안 됩니다. |
+| Glossary term drift | Official terms, capitalization, record ID prefixes, source-of-truth meanings는 `glossary.md`와 일치해야 합니다. 반복해서 쓰이는 새 term에는 glossary entry를 추가하거나 local로 유지한다는 explicit decision이 필요합니다. |
+| Source-of-truth phrasing drift | State, raw evidence, Markdown projections, human-editable sections, reconcile, accepted human edits는 이 guide의 phrasing family를 사용하고 separate state authority를 암시하지 않아야 합니다. |
+| `TODO_DECISION` and `TODO_IMPLEMENT` compliance | TODO는 allowed labels를 사용하고, 필요한 decision 또는 알려진 implementation gap을 포함하며, 유용하면 affected docs를 이름 붙이고, finished canonical sections에 `TODO_REWRITE`를 남기지 않습니다. |
+| Non-owner duplicate full contracts | Owner doc 밖에서 full schemas, DDL, transition tables, fixture mini-languages, template bodies, glossary definitions를 restate하는 paragraphs는 one-sentence summary plus owner link로 바꾸어야 합니다. |
+
 ## TODO Rules
 
 실제 product 또는 architecture decision이 미해결일 때만 `TODO_DECISION`을 사용합니다. 필요한 decision, affected docs, likely owner를 포함합니다.
@@ -199,6 +235,9 @@ Decision은 이미 내려졌지만 implementation detail, DDL, fixture coverage,
 [ ] user-facing docs가 불필요한 internal gates를 가르치지 않고 judgment context를 드러내는가?
 [ ] user guide가 DB/API/connector internals를 피하는가?
 [ ] operations가 prose-only matching 대신 executable assertion이 있는 fixture-based conformance를 사용하는가?
+[ ] docs-maintenance conformance 관점에서 bilingual parity, links, owner boundaries, stable catalogs, glossary terms, source-of-truth phrasing, TODO rules를 검토했는가?
+[ ] docs-maintenance conformance references가 runtime validators나 canonical state transitions가 아니라 read-only documentation maintenance로 쓰였는가?
+[ ] non-owner full-contract paragraphs가 summaries plus owner links로 줄었는가?
 [ ] legacy names가 migration notes에만 있는가?
 [ ] official terms가 glossary와 aligned되어 있는가?
 ```

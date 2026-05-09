@@ -2,7 +2,7 @@
 
 ## 문서 역할
 
-이 문서는 하네스의 운영자 절차와 fixture 기반 conformance를 담당합니다. 범위에는 connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, conformance suite가 포함됩니다.
+이 문서는 하네스의 운영자 절차, fixture 기반 conformance, docs-maintenance smoke reporting을 담당합니다. 범위에는 connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, conformance suite가 포함됩니다.
 
 일상적인 사용자 workflow, MCP 요청/응답 schema, SQLite DDL, 장기 analytics를 MVP 요구사항으로 소유하지 않습니다.
 
@@ -33,6 +33,25 @@ Conformance는 incremental하게 실행할 수 있지만, staged execution이 fi
 Kernel Smoke는 MVP-0부터 early MVP-3 capabilities까지를 가로지르는 selected smoke slice에서 나온 첫 runnable conformance target입니다. Project와 Task state, scoped Change Unit behavior, `prepare_write` allow/block behavior, durable Write Authorization creation, `record_run` authorization consumption, artifact와 evidence manifest basics, minimal projection enqueue/current behavior, write authority가 없을 때 blocked writes 또는 runs, evidence 또는 decision requirement가 없을 때 blocked close, basic Core fixture execution을 증명해야 합니다. Kernel Smoke 통과는 첫 runnable kernel authority path를 증명하지만 final MVP conformance를 주장하지 않습니다.
 
 Agency-Hardened MVP는 final reference conformance target입니다. Decision Packet quality, sensitive approval lifecycle separation, acceptance와 close 전 residual-risk visibility, detached verification guards, Manual QA, stewardship 및 context-hygiene validators, full feedback-loop checks, codebase stewardship coverage, projection/reconcile completeness, recover/export/artifact integrity behavior, later-boundary checks, broader fixture coverage를 추가로 증명해야 합니다. Suite catalog metadata는 scenario를 earliest MVP stage에 mapping할 수 있지만, executable fixtures는 여전히 Core state, events, artifacts, projections, errors를 통해 assert해야 합니다.
+
+## Docs-Maintenance Smoke Profile
+
+Docs-maintenance smoke profile은 operator가 실행하거나 사람이 수동 review해서 documentation set의 drift를 잡을 수 있습니다. 이는 Markdown docs에 대한 read-only maintenance check이지 Core fixture conformance가 아니며 canonical state transition도 아닙니다. `task_events`를 append하거나, artifacts를 만들거나, projections를 refresh하거나, QA 또는 acceptance state를 바꾸거나, runtime implementation readiness를 claim하면 안 됩니다.
+
+[Authoring Guide](99-authoring-guide.md#docs-maintenance-conformance)가 rule bodies, pass/warn/fail interpretation, checklist를 담당합니다. 이 문서는 profile reporting에 대한 operator-maintenance expectation만 담당합니다. `TODO_IMPLEMENT`: reference MVP가 이 profile을 `harness conformance run` 또는 다른 operator entrypoint로 expose한다면 separate docs-only profile로 유지합니다. Runtime conformance run은 operator가 docs profile을 명시적으로 select하지 않는 한 이를 포함하면 안 됩니다. 명시적으로 select하더라도 별도로 report하고 runtime Core fixture conformance로 count하지 않습니다. Task state, MVP runtime validator IDs, runtime fixture pass/fail, projection freshness, QA, acceptance, close readiness에 영향을 주면 안 됩니다.
+
+Docs-maintenance profile의 console output 또는 ephemeral report는 허용됩니다. 이 documentation batch는 이 check를 위한 generated operational report files, stored artifacts, projection jobs, DDL, state records를 정의하지 않습니다.
+
+Minimum report fields:
+
+- profile name and documentation revision
+- category별 pass, warn, fail
+- 가능한 경우 affected file path와 heading 또는 anchor
+- canonical owner doc과 expected source section
+- suggested fix class: update owner, replace duplicate with summary plus link, mirror translation, repair link, 또는 `TODO_DECISION` / `TODO_IMPLEMENT` 추가
+- canonical state transition이 수행되지 않았다는 statement
+
+Smoke categories는 Authoring Guide checks를 restate하지 말고 reference해야 합니다. Categories는 bilingual file and heading parity, broken cross references, owner-boundary drift, enum drift, Stable Event Catalog drift, stable `ValidatorResult` ID drift, `ProjectionKind` tier drift, glossary and source-of-truth phrasing drift, TODO rule compliance, non-owner duplicate full-contract paragraphs입니다.
 
 ## Connect
 

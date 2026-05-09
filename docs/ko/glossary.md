@@ -134,6 +134,10 @@ Harness가 observation 후 violations를 detect하고 state를 `blocked`, `stale
 
 Scope와 result가 명확한 작고 low-risk인 changes를 위한 work mode입니다. Direct product writes에도 active scoped Change Unit이 필요합니다.
 
+### Docs-Maintenance Conformance
+
+Bilingual parity, links, owner boundaries, stable catalogs, glossary terms, source-of-truth phrasing, TODO usage, non-owner duplicate contracts의 drift를 detect하는 read-only documentation maintenance check profile입니다. Rule bodies는 Authoring Guide가 담당하고, operator smoke reporting은 Operations And Conformance가 담당합니다. Core fixture conformance, runtime validator, canonical state transition이 아니며, operator command로 expose되더라도 console 또는 ephemeral result가 runtime conformance나 Task readiness에 영향을 주지 않는 separate docs-only profile입니다.
+
 ### Domain Language
 
 Product의 canonical vocabulary와 meanings입니다. Canonical source는 `domain_terms`이며 Markdown domain-language documents는 projections이자 proposal surfaces입니다.

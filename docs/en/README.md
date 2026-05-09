@@ -114,8 +114,8 @@ docs/en/
 | [08-design-quality-policy-pack.md](08-design-quality-policy-pack.md) | design-quality policies as policy contracts |
 | [09-agent-integration.md](09-agent-integration.md) | agent surface integration and capability profile |
 | [10-user-guide.md](10-user-guide.md) | user conversation phrases, status reading, judgments, resume |
-| [11-operations-and-conformance.md](11-operations-and-conformance.md) | operator procedures and fixture-based conformance |
-| [99-authoring-guide.md](99-authoring-guide.md) | document ownership and authoring rules |
+| [11-operations-and-conformance.md](11-operations-and-conformance.md) | operator procedures, fixture-based conformance, and docs-maintenance smoke reporting |
+| [99-authoring-guide.md](99-authoring-guide.md) | document ownership, authoring rules, and docs-maintenance conformance checklist |
 | [glossary.md](glossary.md) | official terms |
 
 ## Appendices

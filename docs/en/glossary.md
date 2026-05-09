@@ -134,6 +134,10 @@ A guarantee level where the harness can detect violations and mark state blocked
 
 A work mode for small, low-risk changes with obvious scope and result. Direct product writes still require an active scoped Change Unit.
 
+### Docs-Maintenance Conformance
+
+A read-only documentation maintenance check profile that detects drift in bilingual parity, links, owner boundaries, stable catalogs, glossary terms, source-of-truth phrasing, TODO usage, and non-owner duplicate contracts. Its rule bodies are owned by the Authoring Guide, and any operator smoke reporting is owned by Operations And Conformance. It is not Core fixture conformance, a runtime validator, or a canonical state transition; if exposed through an operator command, it is a separate docs-only profile whose console or ephemeral result does not affect runtime conformance or Task readiness.
+
 ### Domain Language
 
 The product's canonical vocabulary and meanings. The canonical source is `domain_terms`; Markdown domain-language documents are projections and proposal surfaces.

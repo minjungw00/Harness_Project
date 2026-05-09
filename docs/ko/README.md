@@ -114,8 +114,8 @@ docs/ko/
 | [08-design-quality-policy-pack.md](08-design-quality-policy-pack.md) | policy contract로 정리한 design-quality policies |
 | [09-agent-integration.md](09-agent-integration.md) | agent surface integration과 capability profile |
 | [10-user-guide.md](10-user-guide.md) | user conversation phrases, status reading, judgments, resume |
-| [11-operations-and-conformance.md](11-operations-and-conformance.md) | operator procedures와 fixture 기반 conformance |
-| [99-authoring-guide.md](99-authoring-guide.md) | 문서 담당 경계와 authoring rules |
+| [11-operations-and-conformance.md](11-operations-and-conformance.md) | operator procedures, fixture 기반 conformance, docs-maintenance smoke reporting |
+| [99-authoring-guide.md](99-authoring-guide.md) | 문서 담당 경계, authoring rules, docs-maintenance conformance checklist |
 | [glossary.md](glossary.md) | 공식 용어 |
 
 ## 부록

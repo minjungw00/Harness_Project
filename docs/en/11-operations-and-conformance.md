@@ -2,7 +2,7 @@
 
 ## Document Role
 
-This document owns operator procedures and fixture-based conformance for the harness: connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, and conformance suites.
+This document owns operator procedures, fixture-based conformance, and docs-maintenance smoke reporting for the harness: connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, and conformance suites.
 
 It does not own daily user workflow, MCP request/response schemas, SQLite DDL, or long-term analytics as MVP requirements.
 
@@ -33,6 +33,25 @@ Conformance can run incrementally, but staged execution must not change the fixt
 Kernel Smoke is the first runnable conformance target, drawn from a selected smoke slice across MVP-0 through early MVP-3 capabilities. It should prove project and Task state, scoped Change Unit behavior, `prepare_write` allow/block behavior, durable Write Authorization creation, `record_run` authorization consumption, artifact and evidence manifest basics, minimal projection enqueue/current behavior, writes or runs blocked when write authority is missing, close blocked when evidence or decision requirements are missing, and basic Core fixture execution. Passing Kernel Smoke proves the first runnable kernel authority path; it does not claim final MVP conformance.
 
 Agency-Hardened MVP is the final reference conformance target. It must add Decision Packet quality, sensitive approval lifecycle separation, residual-risk visibility before acceptance and close, detached verification guards, Manual QA, stewardship and context-hygiene validators, full feedback-loop checks, codebase stewardship coverage, projection/reconcile completeness, recover/export/artifact integrity behavior, later-boundary checks, and broader fixture coverage. Suite catalog metadata may map scenarios to the earliest MVP stage, but executable fixtures still assert through Core state, events, artifacts, projections, and errors.
+
+## Docs-Maintenance Smoke Profile
+
+A docs-maintenance smoke profile may be run by an operator or reviewed manually to catch drift in the documentation set. It is a read-only maintenance check over Markdown docs, not Core fixture conformance and not a canonical state transition. It must not append `task_events`, create artifacts, refresh projections, change QA or acceptance state, or claim runtime implementation readiness.
+
+The [Authoring Guide](99-authoring-guide.md#docs-maintenance-conformance) owns the rule bodies, pass/warn/fail interpretation, and checklist. This document owns only the operator-maintenance expectation for reporting the profile. `TODO_IMPLEMENT`: if the reference MVP exposes the profile through `harness conformance run` or another operator entrypoint, keep it a separate docs-only profile. Runtime conformance runs must not include it unless an operator explicitly selects the docs profile; even then, report it separately and do not count it toward runtime Core fixture conformance. It must not affect Task state, MVP runtime validator IDs, runtime fixture pass/fail, projection freshness, QA, acceptance, or close readiness.
+
+Console output or an ephemeral report from the docs-maintenance profile is allowed. This documentation batch does not define generated operational report files, stored artifacts, projection jobs, DDL, or state records for this check.
+
+Minimum report fields:
+
+- profile name and documentation revision
+- pass, warn, or fail per category
+- affected file path and heading or anchor when available
+- canonical owner doc and expected source section
+- suggested fix class: update owner, replace duplicate with summary plus link, mirror translation, repair link, or add `TODO_DECISION` / `TODO_IMPLEMENT`
+- statement that no canonical state transition was performed
+
+Smoke categories should reference, not restate, the Authoring Guide checks: bilingual file and heading parity, broken cross references, owner-boundary drift, enum drift, Stable Event Catalog drift, stable `ValidatorResult` ID drift, `ProjectionKind` tier drift, glossary and source-of-truth phrasing drift, TODO rule compliance, and non-owner duplicate full-contract paragraphs.
 
 ## Connect
 

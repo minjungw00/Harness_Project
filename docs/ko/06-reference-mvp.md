@@ -1085,6 +1085,8 @@ Stable MVP validator IDs:
 
 Active Task, active Change Unit, changed paths, approval scope, baseline freshness, artifact integrity, evidence sufficiency, verification independence, same-session verification guard, projection freshness 같은 Core precondition checks는 이 validators 전이나 옆에서 여전히 실행될 수 있습니다. MVP conformance에서 alternate design/agency validator IDs로 emit하면 안 됩니다. `ValidatorResult`를 emit하는 capability checks는 stable `surface_capability_check` ID를 사용합니다. Capability는 additional validator IDs를 만들지 않고 blocked reasons와 guarantee display에도 나타날 수 있습니다.
 
+Docs-maintenance conformance는 이 runtime validator runner 밖에 있습니다. `TODO_IMPLEMENT`: reference MVP가 docs-maintenance smoke profile을 `harness conformance run` 또는 다른 operator entrypoint로 expose한다면 [Authoring Guide](99-authoring-guide.md#docs-maintenance-conformance) rules와 [Operations And Conformance](11-operations-and-conformance.md#docs-maintenance-smoke-profile) reporting expectations를 사용해 Markdown docs에 대한 separate docs-only, read-only operator-maintenance check로 구현합니다. Runtime conformance run은 operator가 docs profile을 명시적으로 select하지 않는 한 이를 포함하면 안 됩니다. 명시적으로 select하더라도 별도로 report하고 runtime Core fixture conformance로 count하지 않습니다. Console output 또는 ephemeral report는 허용되지만, 이 batch는 이 check를 위한 generated operational report files, stored artifacts, projection jobs, DDL, state records를 정의하지 않습니다. 이 profile은 MVP runtime `ValidatorResult` IDs를 emit하거나, `task_events`를 append하거나, artifacts를 만들거나, projection jobs를 enqueue하거나, state를 modify하거나, DDL을 추가하거나, Task state, runtime fixture pass/fail, projection freshness, QA, acceptance, close readiness에 영향을 주면 안 됩니다.
+
 Compatibility aliases:
 
 | Older ID | Stable ID |
