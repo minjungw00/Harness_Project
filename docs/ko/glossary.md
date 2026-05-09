@@ -382,7 +382,7 @@ Implementation이 plan으로 굳어지기 전에 Task에 대해 최소한으로 
 
 ### Stable Event Catalog
 
-MVP conformance fixtures가 `expected_events`에서 assert할 수 있는 `task_events.event_type` names에 대한 kernel-owned compact list입니다. Stable event names를 prose examples, fixture shorthand, validator IDs, Core check names, projection status shorthands, future extension events와 구분합니다.
+MVP conformance fixtures가 `expected_events`에서 assert할 수 있는 `task_events.event_type` names에 대한 kernel-owned compact list입니다. Stable event names를 prose examples, fixture shorthand, non-stable implementation-local detail 또는 audit events, validator IDs, Core check names, projection status shorthands, future extension events와 구분합니다.
 
 ### State Record
 

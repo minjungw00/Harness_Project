@@ -751,7 +751,7 @@ Write Authorizations는 storage상 single-use입니다. `runs.write_authorizatio
 
 `residual_risks`는 close-relevant remaining uncertainty, accepted risk, follow-up requirements, close impact를 위한 canonical table입니다. MVP에서 accepted-risk identity는 `residual_risk_id`입니다. 별도의 `accepted_risks` table이나 `ARISK-*` canonical record는 없습니다. `residual_risks.accepted_risk_json`, `status`, `accepted_at`은 residual-risk row에 accepted-risk metadata/state를 저장합니다. Decision Packets는 `decision_packets.residual_risk_refs_json`을 통해 residual risks를 reference할 수 있지만, 유일한 canonical residual-risk payload를 Decision Packet 안에 묻어 두면 안 됩니다.
 
-MVP final acceptance에는 `acceptance_records` table이 없습니다. `record_user_decision(decision_kind=acceptance)`는 user answer를 `decision_packets.decision_json`, `decided_at`을 포함한 canonical Decision Packet path에 저장하고, `task_gates.acceptance_gate`를 update하며, `acceptance_recorded` 같은 `state.sqlite.task_events`를 append합니다. Close는 그 gate와 관련 Decision Packet, event history를 읽으며 별도 acceptance row를 찾지 않습니다.
+MVP final acceptance에는 `acceptance_records` table이 없습니다. `record_user_decision(decision_kind=acceptance)`는 user answer를 `decision_packets.decision_json`, `decided_at`을 포함한 canonical Decision Packet path에 저장하고, `task_gates.acceptance_gate`를 update하며, `state.sqlite.task_events`를 append합니다. 구현은 `acceptance_recorded` 같은 non-stable detail 또는 local-audit events를 포함할 수 있지만, fixture가 assert할 수 있는 names는 [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog)가 계속 담당합니다. Close는 그 gate와 관련 Decision Packet, event history를 읽으며 별도 acceptance row를 찾지 않습니다.
 
 `artifact_links`는 artifacts를 위한 queryable many-to-many attachment table입니다. `run`, `decision_packet`, `shared_design`, `residual_risk`, `evidence_manifest`, `tdd_trace`, `manual_qa_record`, `eval`, `export` records에 artifacts를 attach할 때 사용합니다. Existing `artifact_refs_json` fields는 ordered 또는 record-local context를 보존할 수 있지만, multi-record artifact reuse와 artifact integrity checks에는 `artifact_links`를 사용해야 합니다.
 
@@ -795,7 +795,7 @@ CREATE INDEX idx_reconcile_items_status ON reconcile_items(status);
 
 Deterministic event order는 ascending `task_events.event_seq`입니다. `state_version`은 affected-scope concurrency/result clock이고 `created_at`은 audit metadata입니다. 여러 events가 같은 state version이나 timestamp를 공유할 수 있으므로 어느 field도 conformance ordering에는 충분하지 않습니다.
 
-Reference MVP event storage는 [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog)를 따릅니다. Stable events는 계속 `state.sqlite.task_events` rows이며, 별도 event store는 도입하지 않습니다. Write Authorization lifecycle vocabulary는 그대로 다음과 같습니다.
+Reference MVP event storage는 stable events와 non-stable detail 또는 local-audit events를 `state.sqlite.task_events` rows로 유지하며, 별도 event store는 도입하지 않습니다. Fixture가 assert할 수 있는 stable names는 [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog)가 담당합니다. Write Authorization lifecycle vocabulary는 그대로 다음과 같습니다.
 
 ```text
 write_authorization_created

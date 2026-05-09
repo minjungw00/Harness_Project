@@ -114,7 +114,7 @@ ProjectionJobRef:
 
 `EventRef.event_seq`는 `task_events.event_seq`를 mirror합니다. Responses는 events를 ascending `event_seq`로 나열합니다. Timestamps와 `event_id` lexical order는 deterministic event ordering에 사용하지 않습니다.
 
-Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog)가 담당합니다. 아래 tool sections는 해당 tool이 반환할 수 있는 `EventRef.event_type` 값을 나열합니다. Stable catalog에 없는 이름은 optional 또는 illustrative extension events이며 MVP `expected_events` fixtures가 요구하면 안 됩니다. ValidatorResult IDs, Core check names, projection status shorthands, fixture seed shorthand는 kernel catalog가 명시적으로 나열하지 않는 한 event names가 아닙니다.
+Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog)가 담당합니다. 아래 tool sections는 response가 반환하거나 implementation이 저장할 수 있는 `EventRef.event_type` 값을 설명하지만, 두 번째 event taxonomy를 정의하지 않습니다. Stable로 label된 names는 catalog names입니다. Stable catalog에 없는 이름은 implementation-local detail 또는 audit events로 나타날 수 있지만 fixture-stable이 아니며 MVP `expected_events` fixtures가 요구하면 안 됩니다. ValidatorResult IDs, Core check names, projection status shorthands, fixture seed shorthand는 kernel catalog가 명시적으로 나열하지 않는 한 event names가 아닙니다.
 
 `ProjectionKind`는 API가 MVP tier를 담당하는 extensible enum입니다.
 
@@ -656,7 +656,7 @@ StatusResponse:
 
 State transition summary: state transition 없음.
 
-Events emitted: 없음.
+반환될 수 있는 EventRef values: 없음.
 
 Projection jobs enqueued: 없음.
 
@@ -709,7 +709,9 @@ IntakeResponse:
 
 State transition summary: Task를 create 또는 resume합니다. `mode`와 initial `lifecycle_phase`를 set하고, write-capable direct/work에는 initial Change Unit을 만들 수 있습니다.
 
-Events emitted: `task_intake_recorded`, `task_created`, `task_resumed`, `task_superseded`, `change_unit_created`.
+반환될 수 있는 stable EventRef values: 기존 Task가 superseded될 때 `task_superseded`.
+
+implementation-local detail/audit를 위해 반환될 수 있는 non-stable EventRef values: `task_intake_recorded`, `task_created`, `task_resumed`, `change_unit_created`.
 
 Projection jobs enqueued: `TASK`; intake가 design support records를 accepted했다면 optional `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`.
 
@@ -759,7 +761,7 @@ NextResponse:
 
 State transition summary: state transition 없음.
 
-Events emitted: 없음.
+반환될 수 있는 EventRef values: 없음.
 
 Projection jobs enqueued: 없음.
 
@@ -856,7 +858,7 @@ Write Authorization은 intended operation과 current state, baseline, active Cha
 
 State transition summary: Task를 `executing`, `waiting_user`, `blocked`로 옮길 수 있습니다. Allowed일 때 Write Authorization을 create하거나 idempotent replay에 대해 already committed response를 반환할 수 있습니다. `scope_gate=pending/blocked`, `decision_gate=required/pending/blocked`, `approval_gate=required/expired`, stale evidence/approval markers를 set할 수 있습니다. `approval_gate=pending`은 `harness.request_user_decision(decision_kind=approval)`이 approval-shaped Decision Packet과 linked pending Approval record를 create할 때 시작됩니다.
 
-Events emitted: `prepare_write_allowed`, `write_authorization_created`, `write_authorization_returned`, `prepare_write_blocked`, `scope_required`, `decision_required`, `autonomy_boundary_exceeded`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected`.
+반환될 수 있는 stable EventRef values: `prepare_write_allowed`, `write_authorization_created`, `write_authorization_returned`, `prepare_write_blocked`, `scope_required`, `decision_required`, `autonomy_boundary_exceeded`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected`.
 
 Projection jobs enqueued: `TASK`. `prepare_write`는 `decision=approval_required` 또는 `approval_request_candidate`를 반환했다는 이유만으로 `APR`을 enqueue하면 안 됩니다. `APR`은 committed Approval record와 approval-shaped Decision Packet lifecycle에만 reserved됩니다.
 
@@ -1015,7 +1017,9 @@ RecordRunResponse:
 
 State transition summary: shaping updates는 `shaping`을 유지하거나 `ready` 또는 `waiting_user`로 이동할 수 있습니다. Implementation은 `verifying` 쪽으로 이동합니다. Direct는 close-eligible이 되거나 work로 escalate할 수 있습니다. Verification input은 detached verification을 증명하지 않고 evaluator bundle context를 기록합니다.
 
-Events emitted: `run_recorded`, `write_authorization_consumed`, `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, `scope_violation_detected`, `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `evidence_manifest_updated`, `artifact_registered`, `tdd_trace_updated`.
+반환될 수 있는 stable EventRef values: `run_recorded`, `write_authorization_consumed`, `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, `scope_violation_detected`, `evidence_manifest_updated`.
+
+implementation-local detail/audit를 위해 반환될 수 있는 non-stable EventRef values: `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `artifact_registered`, `tdd_trace_updated`.
 
 Violation 또는 audit Runs는 audit 및 recovery를 위해 `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, `scope_violation_detected`를 emit할 수 있습니다. 그런 Runs는 evidence sufficiency, detached verification, QA, acceptance, close readiness를 satisfy할 수 없습니다.
 
@@ -1084,7 +1088,7 @@ Status와 next-action responses가 반환하는 `pending_decisions`는 `record_k
 
 State transition summary: pending Decision Packet을 record하고 보통 Task를 `waiting_user`로 옮깁니다. Product judgment는 `decision_gate=pending`을 set합니다. Approval requests는 pending Approval record를 create하고 `approval_gate=pending`을 set하며, scope confirmation은 `scope_gate=pending`을 set합니다. Acceptance와 residual-risk acceptance는 acceptance가 required일 때 `acceptance_gate=pending`을 set하거나 유지합니다.
 
-Events emitted: `decision_packet_created`, `user_decision_requested`, `approval_requested`, `scope_confirmation_requested`, `design_choice_requested`, `architecture_choice_requested`, `autonomy_boundary_decision_requested`, `verification_waiver_requested`, `qa_waiver_requested`, `acceptance_requested`, `residual_risk_acceptance_requested`, `reconcile_decision_requested`.
+implementation-local detail/audit를 위해 반환될 수 있는 non-stable EventRef values: `decision_packet_created`, `user_decision_requested`, `approval_requested`, `scope_confirmation_requested`, `design_choice_requested`, `architecture_choice_requested`, `autonomy_boundary_decision_requested`, `verification_waiver_requested`, `qa_waiver_requested`, `acceptance_requested`, `residual_risk_acceptance_requested`, `reconcile_decision_requested`.
 
 Projection jobs enqueued: `TASK`; Core가 canonical approval-shaped Decision Packet과 linked pending Approval record를 create한 뒤 `decision_kind=approval`에 대해서만 `APR`; reconcile에는 affected projection.
 
@@ -1168,7 +1172,7 @@ RecordUserDecisionResponse:
 
 State transition summary: targeted Decision Packet을 resolve, defer, reject, block합니다. Affected gates 또는 reconcile item을 update합니다. Approval grant/deny는 linked Approval record와 `approval_gate`를 update하지만 Write Authorization을 create하지 않습니다. Accepted scope는 `scope_gate`를 update하고, user-resolved product judgment는 `decision_gate`를 update합니다. Accepted Autonomy Boundary decisions는 active Change Unit boundary를 update할 수 있습니다. Verification waiver는 `verification_gate=waived_by_user`를 update하고, QA waiver는 `qa_gate`를 update합니다. Acceptance는 user decision을 Decision Packet에 record하고 `acceptance_gate`를 update합니다. Accepted residual risk는 assurance를 upgrade하지 않고 Residual Risk records를 update하며 그 refs를 반환합니다. Reconcile은 accepted state records를 create할 수 있습니다.
 
-Events emitted: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
+implementation-local detail/audit를 위해 반환될 수 있는 non-stable EventRef values: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
 
 Projection jobs enqueued: `TASK`; targeted Decision Packet이 approval-shaped이고 linked Approval record가 update될 때 `APR`; QA waiver가 QA record로 represented될 때 `MANUAL-QA`; reconcile에는 affected design/task projections. Decision Packet visibility는 여전히 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 나타납니다.
 
@@ -1221,7 +1225,7 @@ LaunchVerifyResponse:
 
 State transition summary: verification launch를 record하고, `verification_gate=pending`을 set 또는 keep하며, evaluator run/bundle references를 create합니다.
 
-Events emitted: `verification_launched`, `verification_bundle_created`, `evaluator_run_created`.
+implementation-local detail/audit를 위해 반환될 수 있는 non-stable EventRef values: `verification_launched`, `verification_bundle_created`, `evaluator_run_created`.
 
 Projection jobs enqueued: `TASK`; optional `EVIDENCE-MANIFEST`.
 
@@ -1283,7 +1287,9 @@ RecordEvalResponse:
 
 State transition summary: Eval을 record합니다. Passed detached verification은 `verification_gate=passed`와 `assurance_level=detached_verified`를 set할 수 있습니다. Failed 또는 blocked Eval은 gate를 failed/blocked로 옮깁니다. Same-session 또는 invalid independence는 assurance를 upgrade할 수 없습니다.
 
-Events emitted: `eval_recorded`, `verification_passed`, `verification_failed`, `verification_blocked`, `assurance_updated`, `verify_not_detached_detected`.
+반환될 수 있는 stable EventRef values: `eval_recorded`, `verification_passed`, `verify_not_detached_detected`.
+
+implementation-local detail/audit를 위해 반환될 수 있는 non-stable EventRef values: `verification_failed`, `verification_blocked`, `assurance_updated`.
 
 Projection jobs enqueued: `TASK`, `EVAL`; optional `EVIDENCE-MANIFEST`.
 
@@ -1341,7 +1347,7 @@ RecordManualQaResponse:
 
 State transition summary: Manual QA를 record합니다. `passed`는 `qa_gate=passed`를 set할 수 있습니다. `failed`는 `qa_gate=failed`를 set하고 rework/blocked로 route합니다. `waived`는 compatible `qa_waiver` Decision Packet 또는 policy-permitted low-risk waiver reason을 요구하고 `qa_gate=waived`를 set합니다. Required QA가 satisfying record를 아직 만들지 못했거나 latest relevant record가 policy를 satisfy하지 못하면 aggregate gate는 `qa_gate=pending`으로 남습니다.
 
-Events emitted: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`.
+implementation-local detail/audit를 위해 반환될 수 있는 non-stable EventRef values: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`.
 
 Projection jobs enqueued: `TASK`, `MANUAL-QA`; optional `EVIDENCE-MANIFEST`. Waiver Decision Packet visibility는 여전히 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 나타납니다.
 
@@ -1393,7 +1399,7 @@ Close blockers에는 unresolved, missing, deferred-without-coverage, blocked, re
 
 State transition summary: successful completion은 Task를 result와 close reason이 있는 `completed`로 옮깁니다. Cancellation/supersession은 Task를 `cancelled`로 옮깁니다. Failed close는 Task를 non-terminal로 남기고 blockers를 report합니다.
 
-Events emitted: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `risk_accepted_close_recorded`, `close_blocked`.
+반환될 수 있는 stable EventRef values: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `risk_accepted_close_recorded`, `close_blocked`.
 
 Projection jobs enqueued: `TASK`; final freshness에 필요한 latest required reports.
 

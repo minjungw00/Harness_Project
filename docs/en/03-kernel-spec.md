@@ -512,7 +512,7 @@ Stable event names are the `event_type` values that MVP conformance fixtures may
 | Close and risk-accepted close | `close_requested`, `close_blocked`, `risk_accepted_close_recorded`, `task_closed`, `task_cancelled`, `task_superseded` |
 | Projection, connector, and reconcile operations | `projection_refresh_failed`, `generated_file_drift_detected`, `reconcile_item_created` |
 
-The catalog is deliberately compact. Optional detail events, implementation-local audit events, and future extension events may still be recorded in `task_events`, but MVP fixture authors must not require them in `expected_events` until they are added here.
+The catalog is deliberately compact. Non-stable implementation-local detail or audit events, plus future extension events, may still be recorded in `task_events`, but MVP fixture authors must not require them in `expected_events` until they are added here.
 
 | Trigger | From | To | Gate or record effect |
 |---|---|---|---|

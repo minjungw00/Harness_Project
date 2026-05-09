@@ -514,7 +514,7 @@ Stable event names는 MVP conformance fixtures가 `expected_events`에서 요구
 | Close and risk-accepted close | `close_requested`, `close_blocked`, `risk_accepted_close_recorded`, `task_closed`, `task_cancelled`, `task_superseded` |
 | Projection, connector, and reconcile operations | `projection_refresh_failed`, `generated_file_drift_detected`, `reconcile_item_created` |
 
-이 catalog는 의도적으로 compact합니다. Optional detail events, implementation-local audit events, future extension events는 여전히 `task_events`에 기록될 수 있지만, MVP fixture authors는 이 이름들이 여기 추가되기 전까지 `expected_events`에서 요구하면 안 됩니다.
+이 catalog는 의도적으로 compact합니다. Non-stable implementation-local detail 또는 audit events와 future extension events는 여전히 `task_events`에 기록될 수 있지만, MVP fixture authors는 이 이름들이 여기 추가되기 전까지 `expected_events`에서 요구하면 안 됩니다.
 
 | Trigger | From | To | Gate or record effect |
 |---|---|---|---|

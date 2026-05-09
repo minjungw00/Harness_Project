@@ -378,7 +378,7 @@ The append-only event history table inside `state.sqlite`. MVP does not use a se
 
 ### Stable Event Catalog
 
-The kernel-owned compact list of `task_events.event_type` names that MVP conformance fixtures may assert in `expected_events`. It classifies stable event names separately from prose examples, fixture shorthand, validator IDs, Core check names, projection status shorthands, and future extension events.
+The kernel-owned compact list of `task_events.event_type` names that MVP conformance fixtures may assert in `expected_events`. It classifies stable event names separately from prose examples, fixture shorthand, non-stable implementation-local detail or audit events, validator IDs, Core check names, projection status shorthands, and future extension events.
 
 ### State Record
 

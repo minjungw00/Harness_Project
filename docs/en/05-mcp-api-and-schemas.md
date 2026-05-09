@@ -114,7 +114,7 @@ ProjectionJobRef:
 
 `EventRef.event_seq` mirrors `task_events.event_seq`. Responses list events in ascending `event_seq`; timestamps and `event_id` lexical order are never used for deterministic event ordering.
 
-Event stability for fixture assertions is owned by the [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog). Tool sections below list possible `EventRef.event_type` values returned by that tool; names not present in the stable catalog are optional or illustrative extension events and must not be required by MVP `expected_events` fixtures. ValidatorResult IDs, Core check names, projection status shorthands, and fixture seed shorthand are not event names unless the kernel catalog explicitly lists them.
+Event stability for fixture assertions is owned by the [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog). Tool sections below describe possible `EventRef.event_type` values that a response may return or an implementation may store; they do not define a second event taxonomy. Names labeled as stable are catalog names. Names outside the stable catalog may appear as implementation-local detail or audit events, but they are not fixture-stable and must not be required by MVP `expected_events` fixtures. ValidatorResult IDs, Core check names, projection status shorthands, and fixture seed shorthand are not event names unless the kernel catalog explicitly lists them.
 
 `ProjectionKind` is an extensible enum with API-owned MVP tiering:
 
@@ -656,7 +656,7 @@ StatusResponse:
 
 State transition summary: no state transition.
 
-Events emitted: none.
+EventRef values that may be returned: none.
 
 Projection jobs enqueued: none.
 
@@ -709,7 +709,9 @@ IntakeResponse:
 
 State transition summary: creates or resumes a Task; sets `mode` and initial `lifecycle_phase`; may create an initial Change Unit for write-capable direct/work.
 
-Events emitted: `task_intake_recorded`, `task_created`, `task_resumed`, `task_superseded`, `change_unit_created`.
+Stable EventRef values that may be returned: `task_superseded` when an existing Task is superseded.
+
+Non-stable EventRef values that may be returned for implementation-local detail/audit: `task_intake_recorded`, `task_created`, `task_resumed`, `change_unit_created`.
 
 Projection jobs enqueued: `TASK`; optionally `DOMAIN-LANGUAGE`, `MODULE-MAP`, or `INTERFACE-CONTRACT` if intake accepted design support records.
 
@@ -759,7 +761,7 @@ NextResponse:
 
 State transition summary: no state transition.
 
-Events emitted: none.
+EventRef values that may be returned: none.
 
 Projection jobs enqueued: none.
 
@@ -856,7 +858,7 @@ A Write Authorization is specific to the intended operation and the current stat
 
 State transition summary: may move Task to `executing`, `waiting_user`, or `blocked`; may create a Write Authorization when allowed or return the already committed response for idempotent replay; may set `scope_gate=pending/blocked`, `decision_gate=required/pending/blocked`, `approval_gate=required/expired`, or stale evidence/approval markers. `approval_gate=pending` starts when an approval-shaped Decision Packet and linked pending Approval record are created by `harness.request_user_decision(decision_kind=approval)`.
 
-Events emitted: `prepare_write_allowed`, `write_authorization_created`, `write_authorization_returned`, `prepare_write_blocked`, `scope_required`, `decision_required`, `autonomy_boundary_exceeded`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected`.
+Stable EventRef values that may be returned: `prepare_write_allowed`, `write_authorization_created`, `write_authorization_returned`, `prepare_write_blocked`, `scope_required`, `decision_required`, `autonomy_boundary_exceeded`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected`.
 
 Projection jobs enqueued: `TASK`. `prepare_write` must not enqueue `APR` merely because it returned `decision=approval_required` or an `approval_request_candidate`; `APR` is reserved for the committed Approval record and approval-shaped Decision Packet lifecycle.
 
@@ -1015,7 +1017,9 @@ RecordRunResponse:
 
 State transition summary: shaping updates can keep `shaping`, move to `ready`, or move to `waiting_user`; implementation moves toward `verifying`; direct can become close-eligible or escalate to work; verification input records evaluator bundle context without proving detached verification.
 
-Events emitted: `run_recorded`, `write_authorization_consumed`, `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, `scope_violation_detected`, `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `evidence_manifest_updated`, `artifact_registered`, `tdd_trace_updated`.
+Stable EventRef values that may be returned: `run_recorded`, `write_authorization_consumed`, `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, `scope_violation_detected`, `evidence_manifest_updated`.
+
+Non-stable EventRef values that may be returned for implementation-local detail/audit: `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `artifact_registered`, `tdd_trace_updated`.
 
 Violation or audit Runs may emit `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, or `scope_violation_detected` for audit and recovery. Those Runs cannot satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness.
 
@@ -1084,7 +1088,7 @@ RequestUserDecisionResponse:
 
 State transition summary: records a pending Decision Packet and usually moves Task to `waiting_user`; product judgment sets `decision_gate=pending`; approval requests create a pending Approval record and set `approval_gate=pending`; scope confirmation sets `scope_gate=pending`; acceptance and residual-risk acceptance set or keep `acceptance_gate=pending` when acceptance is required.
 
-Events emitted: `decision_packet_created`, `user_decision_requested`, `approval_requested`, `scope_confirmation_requested`, `design_choice_requested`, `architecture_choice_requested`, `autonomy_boundary_decision_requested`, `verification_waiver_requested`, `qa_waiver_requested`, `acceptance_requested`, `residual_risk_acceptance_requested`, `reconcile_decision_requested`.
+Non-stable EventRef values that may be returned for implementation-local detail/audit: `decision_packet_created`, `user_decision_requested`, `approval_requested`, `scope_confirmation_requested`, `design_choice_requested`, `architecture_choice_requested`, `autonomy_boundary_decision_requested`, `verification_waiver_requested`, `qa_waiver_requested`, `acceptance_requested`, `residual_risk_acceptance_requested`, `reconcile_decision_requested`.
 
 Projection jobs enqueued: `TASK`; `DEC` when standalone Decision Packet projection is enabled; `APR` only for `decision_kind=approval` after Core creates the canonical approval-shaped Decision Packet and linked pending Approval record; affected projection for reconcile.
 
@@ -1166,7 +1170,7 @@ RecordUserDecisionResponse:
 
 State transition summary: resolves, defers, rejects, or blocks the targeted Decision Packet; updates affected gates or reconcile item; approval grant/deny updates the linked Approval record and `approval_gate`, but does not create a Write Authorization; accepted scope updates `scope_gate`; user-resolved product judgment updates `decision_gate`; accepted Autonomy Boundary decisions may update the active Change Unit boundary; verification waiver updates `verification_gate=waived_by_user`; QA waiver updates `qa_gate`; acceptance records the user decision on the Decision Packet and updates `acceptance_gate`; accepted residual risk updates Residual Risk records and returns their refs without upgrading assurance; reconcile may create accepted state records.
 
-Events emitted: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
+Non-stable EventRef values that may be returned for implementation-local detail/audit: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
 
 Projection jobs enqueued: `TASK`; `DEC` when standalone Decision Packet projection is enabled; `APR` when the targeted Decision Packet is approval-shaped and the linked Approval record is updated; `MANUAL-QA` for QA waiver when represented as a QA record; affected design/task projections for reconcile. Decision Packet visibility still appears through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
 
@@ -1217,7 +1221,7 @@ LaunchVerifyResponse:
 
 State transition summary: records verification launch, sets or keeps `verification_gate=pending`, and creates evaluator run/bundle references.
 
-Events emitted: `verification_launched`, `verification_bundle_created`, `evaluator_run_created`.
+Non-stable EventRef values that may be returned for implementation-local detail/audit: `verification_launched`, `verification_bundle_created`, `evaluator_run_created`.
 
 Projection jobs enqueued: `TASK`; optionally `EVIDENCE-MANIFEST`.
 
@@ -1279,7 +1283,9 @@ RecordEvalResponse:
 
 State transition summary: records Eval; passed detached verification can set `verification_gate=passed` and `assurance_level=detached_verified`; failed or blocked Eval moves gate to failed/blocked; same-session or invalid independence cannot upgrade assurance.
 
-Events emitted: `eval_recorded`, `verification_passed`, `verification_failed`, `verification_blocked`, `assurance_updated`, `verify_not_detached_detected`.
+Stable EventRef values that may be returned: `eval_recorded`, `verification_passed`, `verify_not_detached_detected`.
+
+Non-stable EventRef values that may be returned for implementation-local detail/audit: `verification_failed`, `verification_blocked`, `assurance_updated`.
 
 Projection jobs enqueued: `TASK`, `EVAL`; optionally `EVIDENCE-MANIFEST`.
 
@@ -1337,7 +1343,7 @@ RecordManualQaResponse:
 
 State transition summary: records Manual QA; `passed` can set `qa_gate=passed`; `failed` sets `qa_gate=failed` and routes to rework/blocked; `waived` requires either a compatible `qa_waiver` Decision Packet or a policy-permitted low-risk waiver reason and sets `qa_gate=waived`. If required QA has not produced a satisfying record, or the latest relevant record does not satisfy policy, the aggregate gate remains `qa_gate=pending`.
 
-Events emitted: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`.
+Non-stable EventRef values that may be returned for implementation-local detail/audit: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`.
 
 Projection jobs enqueued: `TASK`, `MANUAL-QA`; `DEC` when standalone Decision Packet projection is enabled and a waiver Decision Packet affects visibility; optionally `EVIDENCE-MANIFEST`. Waiver Decision Packet visibility still appears through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
 
@@ -1387,7 +1393,7 @@ Close blockers include unresolved, missing, deferred-without-coverage, blocked, 
 
 State transition summary: successful completion moves Task to `completed` with result and close reason; cancellation/supersession moves Task to `cancelled`; failed close leaves Task non-terminal and reports blockers.
 
-Events emitted: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `risk_accepted_close_recorded`, `close_blocked`.
+Stable EventRef values that may be returned: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `risk_accepted_close_recorded`, `close_blocked`.
 
 Projection jobs enqueued: `TASK`; latest required reports as needed for final freshness.
 

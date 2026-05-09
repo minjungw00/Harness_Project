@@ -751,7 +751,7 @@ Write Authorizations are single-use for storage. The unique partial index on `ru
 
 `residual_risks` is the canonical table for close-relevant remaining uncertainty, accepted risk, follow-up requirements, and close impact. Accepted-risk identity in MVP is the `residual_risk_id`; there is no separate `accepted_risks` table or `ARISK-*` canonical record. `residual_risks.accepted_risk_json`, `status`, and `accepted_at` store accepted-risk metadata/state on the residual-risk row. Decision Packets may reference residual risks through `decision_packets.residual_risk_refs_json`; they must not bury the only canonical residual-risk payload inside the Decision Packet.
 
-MVP final acceptance has no `acceptance_records` table. `record_user_decision(decision_kind=acceptance)` stores the user answer in the canonical Decision Packet path, including `decision_packets.decision_json` and `decided_at`, updates `task_gates.acceptance_gate`, and appends `state.sqlite.task_events` such as `acceptance_recorded`. Close reads that gate plus the relevant Decision Packet and event history; it does not look for a separate acceptance row.
+MVP final acceptance has no `acceptance_records` table. `record_user_decision(decision_kind=acceptance)` stores the user answer in the canonical Decision Packet path, including `decision_packets.decision_json` and `decided_at`, updates `task_gates.acceptance_gate`, and appends `state.sqlite.task_events`; implementations may include non-stable detail or local-audit events such as `acceptance_recorded`, but fixture-assertable names remain owned by the [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog). Close reads that gate plus the relevant Decision Packet and event history; it does not look for a separate acceptance row.
 
 `artifact_links` is the queryable many-to-many attachment table for artifacts. Use it to attach artifacts to `run`, `decision_packet`, `shared_design`, `residual_risk`, `evidence_manifest`, `tdd_trace`, `manual_qa_record`, `eval`, and `export` records. Existing `artifact_refs_json` fields may preserve ordered or record-local context, but multi-record artifact reuse and artifact integrity checks should use `artifact_links`.
 
@@ -795,7 +795,7 @@ CREATE INDEX idx_reconcile_items_status ON reconcile_items(status);
 
 Deterministic event order is ascending `task_events.event_seq`. `state_version` is an affected-scope concurrency/result clock, and `created_at` is audit metadata; neither field is sufficient for conformance ordering when several events share a state version or timestamp.
 
-Reference MVP event storage follows the [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog). Stable events remain rows in `state.sqlite.task_events`; no separate event store is introduced. The Write Authorization lifecycle vocabulary remains:
+Reference MVP event storage keeps stable events and non-stable detail or local-audit events as rows in `state.sqlite.task_events`; no separate event store is introduced. Fixture-assertable stable names are owned by the [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog). The Write Authorization lifecycle vocabulary remains:
 
 ```text
 write_authorization_created
