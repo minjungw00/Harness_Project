@@ -195,15 +195,15 @@ State checks는 `registry.sqlite`와 `state.sqlite`의 JSON `TEXT` fields를 포
 ```mermaid
 flowchart TD
   Start["harness serve mcp"] --> Server["server가 runtime state와 artifact storage에 닿을 수 있음?"]
-  Server -- "no" --> ServerFail["MCP_SERVER_UNAVAILABLE<br/>authoritative Core response 없음"]
+  Server -- "no" --> ServerFail["diagnostic<br/>MCP_SERVER_UNAVAILABLE<br/>authoritative Core response 없음"]
   Server -- "yes" --> Core["public tool을 위한 Core reachable"]
   Core --> Resources["mutation 없이 read resource expose"]
   Resources --> Surface["connected surface가 required MCP tools를 사용할 수 있음?"]
   Surface -- "yes" --> Ready["이 surface에 대해 MCP server ready"]
-  Surface -- "no" --> SurfaceFail["SURFACE_MCP_UNAVAILABLE<br/>surface가 required MCP tools를 사용할 수 없음"]
+  Surface -- "no" --> SurfaceFail["diagnostic<br/>SURFACE_MCP_UNAVAILABLE<br/>surface가 required MCP tools를 사용할 수 없음"]
 ```
 
-MCP를 사용할 수 없으면 operations는 `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`을 구분해야 합니다. `MCP_SERVER_UNAVAILABLE`에서는 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능하므로, state-change claim 전에 server diagnosis 또는 reconnect가 next action입니다. `SURFACE_MCP_UNAVAILABLE`에서는 Core 또는 operator가 connected surface에 usable MCP가 없거나 MCP configuration이 stale이거나 required MCP tools를 call할 수 없음을 observe할 수 있습니다. Cooperative surface는 product/runtime/code write를 instruction으로 hold해야 하며, stronger profile은 hold를 예방적으로 또는 isolation으로 enforce할 수 있습니다. Operations는 실제 guarantee level을 그대로 보고해야 합니다.
+MCP를 사용할 수 없으면 operations는 diagnostic condition인 `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`을 구분해야 합니다. 이 labels는 추가 public `ErrorCode` values가 아닙니다. 이 conditions를 `ToolError`로 surface할 때 operations는 API-owned error selection과 details shape를 사용해야 합니다. `MCP_UNAVAILABLE`은 stable public availability code로 남고, surface-side availability 또는 capability cases는 문맥에 따라 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`와 `details.mcp_unavailable_kind`로 표현될 수 있습니다. `MCP_SERVER_UNAVAILABLE`에서는 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능하므로, state-change claim 전에 server diagnosis 또는 reconnect가 next action입니다. `SURFACE_MCP_UNAVAILABLE`에서는 Core 또는 operator가 connected surface에 usable MCP가 없거나 MCP configuration이 stale이거나 required MCP tools를 call할 수 없음을 observe할 수 있습니다. Cooperative surface는 product/runtime/code write를 instruction으로 hold해야 하며, stronger profile은 hold를 예방적으로 또는 isolation으로 enforce할 수 있습니다. Operations는 실제 guarantee level을 그대로 보고해야 합니다.
 
 ## Projection Refresh
 

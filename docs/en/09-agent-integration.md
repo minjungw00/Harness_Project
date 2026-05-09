@@ -390,15 +390,15 @@ Use when risk requires separation. The connector launches work or verification i
 
 ### MCP Unavailable
 
-If MCP is unavailable, the connector must not claim authoritative state updates. `MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible; the caller must reconnect or diagnose before claiming state changes. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools. For product/runtime/code writes, the safe behavior is to hold the write and direct the user/operator to reconnect or diagnose MCP. Stronger profiles may also enforce a preventive block.
+If MCP is unavailable, the connector must not claim authoritative state updates. `MCP_SERVER_UNAVAILABLE` and `SURFACE_MCP_UNAVAILABLE` are diagnostic conditions, not additional public `ErrorCode` values. When either condition is surfaced through `ToolError`, use the API-owned error selection and details shape: `MCP_UNAVAILABLE` remains the stable public availability code, while surface-side availability or capability cases may use `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` with `details.mcp_unavailable_kind` according to context. `MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible; the caller must reconnect or diagnose before claiming state changes. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools. For product/runtime/code writes, the safe behavior is to hold the write and direct the user/operator to reconnect or diagnose MCP. Stronger profiles may also enforce a preventive block.
 
 A pre-MVP Harness documentation-authoring batch may proceed only under an explicit `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. The connector must label this as a documentation-maintainer override, not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition. Product/runtime/code writes still hold when authoritative MCP is unavailable.
 
 ```mermaid
 flowchart TD
   Problem["MCP unavailable condition"] --> ReachCore{"tool call can reach Core?"}
-  ReachCore -- no --> Server["MCP_SERVER_UNAVAILABLE"]
-  ReachCore -- yes --> Surface["SURFACE_MCP_UNAVAILABLE"]
+  ReachCore -- no --> Server["diagnostic<br/>MCP_SERVER_UNAVAILABLE"]
+  ReachCore -- yes --> Surface["diagnostic<br/>SURFACE_MCP_UNAVAILABLE"]
   Server --> NoState["no authoritative Core response"]
   Surface --> Diagnosed["Core or operator can observe unusable or stale surface MCP"]
   NoState --> Hold["hold product/runtime/code writes"]

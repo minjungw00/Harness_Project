@@ -195,15 +195,15 @@ Required behavior:
 ```mermaid
 flowchart TD
   Start["harness serve mcp"] --> Server["server can reach runtime state and artifact storage?"]
-  Server -- "no" --> ServerFail["MCP_SERVER_UNAVAILABLE<br/>no authoritative Core response"]
+  Server -- "no" --> ServerFail["diagnostic<br/>MCP_SERVER_UNAVAILABLE<br/>no authoritative Core response"]
   Server -- "yes" --> Core["Core reachable for public tools"]
   Core --> Resources["read resources exposed without mutation"]
   Resources --> Surface["connected surface can use required MCP tools?"]
   Surface -- "yes" --> Ready["MCP server ready for this surface"]
-  Surface -- "no" --> SurfaceFail["SURFACE_MCP_UNAVAILABLE<br/>surface cannot use required MCP tools"]
+  Surface -- "no" --> SurfaceFail["diagnostic<br/>SURFACE_MCP_UNAVAILABLE<br/>surface cannot use required MCP tools"]
 ```
 
-If MCP is unavailable, operations must distinguish `MCP_SERVER_UNAVAILABLE` from `SURFACE_MCP_UNAVAILABLE`. With `MCP_SERVER_UNAVAILABLE`, a tool call cannot reach Core and no authoritative Core response is possible; the next action is server diagnosis or reconnect before any state-change claim. With `SURFACE_MCP_UNAVAILABLE`, Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools. Cooperative surfaces must hold product/runtime/code writes by instruction; stronger profiles may enforce the hold preventively or through isolation. Operations must still report the actual guarantee level.
+If MCP is unavailable, operations must distinguish diagnostic condition `MCP_SERVER_UNAVAILABLE` from diagnostic condition `SURFACE_MCP_UNAVAILABLE`. These labels are not additional public `ErrorCode` values. When either condition is surfaced through `ToolError`, operations must use the API-owned error selection and details shape: `MCP_UNAVAILABLE` remains the stable public availability code, while surface-side availability or capability cases may use `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` with `details.mcp_unavailable_kind` according to context. With `MCP_SERVER_UNAVAILABLE`, a tool call cannot reach Core and no authoritative Core response is possible; the next action is server diagnosis or reconnect before any state-change claim. With `SURFACE_MCP_UNAVAILABLE`, Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools. Cooperative surfaces must hold product/runtime/code writes by instruction; stronger profiles may enforce the hold preventively or through isolation. Operations must still report the actual guarantee level.
 
 ## Projection Refresh
 

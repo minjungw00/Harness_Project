@@ -390,15 +390,15 @@ Risk에 separation이 필요할 때 사용한다. Connector는 별도 worktree, 
 
 ### MCP Unavailable
 
-MCP가 unavailable이면 connector는 authoritative state update를 claim하면 안 된다. `MCP_SERVER_UNAVAILABLE`은 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능하다는 뜻이다. Caller는 state change를 claim하기 전에 reconnect 또는 diagnose해야 한다. `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 connected surface에 usable MCP가 없거나, MCP configuration이 stale이거나, required MCP tools를 call할 수 없음을 observe할 수 있다는 뜻이다. Product/runtime/code write의 safe behavior는 write를 hold하고 user/operator에게 MCP reconnect 또는 diagnose를 안내하는 것이다. Stronger profile은 preventive block도 enforce할 수 있다.
+MCP가 unavailable이면 connector는 authoritative state update를 claim하면 안 된다. `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`은 diagnostic conditions이며, 추가 public `ErrorCode` values가 아니다. 이 conditions를 `ToolError`로 surface할 때는 API-owned error selection과 details shape를 사용한다. `MCP_UNAVAILABLE`은 stable public availability code로 남고, surface-side availability 또는 capability cases는 문맥에 따라 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`와 `details.mcp_unavailable_kind`로 표현될 수 있다. `MCP_SERVER_UNAVAILABLE`은 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능하다는 뜻이다. Caller는 state change를 claim하기 전에 reconnect 또는 diagnose해야 한다. `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 connected surface에 usable MCP가 없거나, MCP configuration이 stale이거나, required MCP tools를 call할 수 없음을 observe할 수 있다는 뜻이다. Product/runtime/code write의 safe behavior는 write를 hold하고 user/operator에게 MCP reconnect 또는 diagnose를 안내하는 것이다. Stronger profile은 preventive block도 enforce할 수 있다.
 
 Pre-MVP Harness documentation-authoring batch는 exact path allowlist가 있는 명시적 `DOCS_AUTHORING_OVERRIDE` 아래에서만 진행할 수 있다. Connector는 이를 documentation-maintainer override로 label해야 하며, Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, canonical state transition으로 label하면 안 된다. Authoritative MCP가 unavailable이면 product/runtime/code write는 계속 hold한다.
 
 ```mermaid
 flowchart TD
   Problem["MCP unavailable condition"] --> ReachCore{"tool call이 Core에 닿는가?"}
-  ReachCore -- no --> Server["MCP_SERVER_UNAVAILABLE"]
-  ReachCore -- yes --> Surface["SURFACE_MCP_UNAVAILABLE"]
+  ReachCore -- no --> Server["diagnostic<br/>MCP_SERVER_UNAVAILABLE"]
+  ReachCore -- yes --> Surface["diagnostic<br/>SURFACE_MCP_UNAVAILABLE"]
   Server --> NoState["authoritative Core response 없음"]
   Surface --> Diagnosed["Core 또는 operator가 unusable/stale surface MCP를 observe"]
   NoState --> Hold["product/runtime/code write hold"]
