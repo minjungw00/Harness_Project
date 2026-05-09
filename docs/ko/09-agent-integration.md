@@ -164,16 +164,9 @@ Capability profile은 version, MCP config, hook, permission, workspace policy, g
 
 ## Guarantee Level
 
-Integration은 enforcement strength를 정직하게 report해야 한다.
+Integration은 [04-runtime-architecture.md](04-runtime-architecture.md#guarantee-levels)에 정의된 guarantee level을 사용하고, 이를 connected surface profile, current enforcement path, fallback choice에 적용한다.
 
-| Level | Integration meaning |
-|---|---|
-| `cooperative` | Surface가 harness instruction과 MCP result를 따를 것으로 기대된다. |
-| `detective` | Harness가 사후 violation을 observe하고 state를 blocked, stale, partial, failed로 mark할 수 있다. |
-| `preventive` | Connector 또는 runtime이 violating action을 execution 전에 block할 수 있다. |
-| `isolated` | Risky work가 worktree, sandbox, process boundary 또는 동등한 수단으로 분리된다. |
-
-Guarantee level은 risk context와 display다. Approval, verification, acceptance, kernel gate가 아니다.
+이 문서는 connector profile이 그 level을 report하고 display하는 방식을 담당한다. Surface name에서 더 강한 level을 추론하면 안 되며, guarantee level을 approval, verification, QA, acceptance, kernel gate로 취급하면 안 된다.
 
 ## Guarantee Display Requirements
 

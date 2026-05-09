@@ -688,7 +688,18 @@ expected_error:
 
 `prepare_write` allowed 예시는 Task가 `ready`에서 `executing`으로 이동한다고 기대합니다. 이 transition은 kernel transition table이 소유하고 정의합니다.
 
-Approval lifecycle coverage는 fixture body field를 추가하지 말고 separate exact-shape fixtures 또는 suite catalog sequencing으로 materialize해야 합니다. 이 sequence는 uncovered sensitive categories가 있는 첫 `prepare_write`가 `approval_required`를 반환하고 `approval_request_candidate`를 포함하며 Write Authorization을 반환하지 않고 `approval_gate=required`를 set하는 것을 assert해야 합니다. Approval-required blocker state를 record하는 committed non-dry-run fixture에서는 `TASK`가 enqueue되고 `APR`은 enqueue되지 않음을 assert합니다. Dry-run 또는 candidate-display-only path에서는 blocker state가 committed된 경우가 아니면 `TASK`를 assert하지 말고, non-mutating candidate에는 절대 `APR`을 assert하지 않습니다. `request_user_decision(decision_kind=approval)`은 canonical approval-shaped Decision Packet과 pending Approval record를 create하고 `approval_gate=pending`을 set하며 `APR`을 enqueue합니다. `record_user_decision`은 Approval record와 `approval_gate`를 update하고 updated decision을 위해 `APR`을 enqueue하지만 여전히 Write Authorization을 create하지 않습니다. Fresh idempotency key와 current `expected_state_version`을 사용한 retry `prepare_write`만 scope, baseline, sensitive categories, paths/tools/commands/network/secrets, Decision Packet refs, Approval refs, capability checks가 compatible할 때 Write Authorization을 create할 수 있음을 assert해야 합니다. 첫 `prepare_write` payload에 대한 UI 또는 status assertion은 이를 candidate display라고 불러야 하며 `APR` projection이라고 부르면 안 됩니다.
+Approval lifecycle coverage는 fixture body field를 추가하지 말고 separate exact-shape fixtures 또는 suite catalog sequencing으로 materialize해야 합니다. 이 fixtures는 lifecycle을 다시 정의하지 않고 [Kernel `prepare_write` State Logic](03-kernel-spec.md#prepare_write-state-logic), [`harness.prepare_write`](05-mcp-api-and-schemas.md#harnessprepare_write), [APR projection summary](07-document-projection.md#apr)가 정의한 observable effects를 assert합니다.
+
+Fixture authors는 다음 observable assertions를 유지해야 합니다.
+
+- 첫 uncovered sensitive `prepare_write`는 `approval_required`를 반환하고, approval candidate를 포함하며, Write Authorization을 반환하지 않고, blocker state가 committed된 경우 `approval_gate=required`를 set 또는 keep합니다.
+- Committed blocker state는 `TASK`를 enqueue할 수 있지만, non-mutating candidate는 `APR`을 enqueue하면 안 됩니다.
+- Dry-run 또는 candidate-display-only paths는 blocker state가 실제로 committed되지 않았다면 committed `TASK` changes를 assert하면 안 됩니다.
+- `request_user_decision(decision_kind=approval)`은 approval-shaped Decision Packet과 pending Approval state를 만들고, `approval_gate=pending`을 set하며, `APR`을 enqueue합니다.
+- `record_user_decision`은 Approval/Decision Packet state와 `approval_gate`를 update하고, `APR`을 enqueue할 수 있지만, 여전히 Write Authorization을 만들지 않습니다.
+- Fresh idempotency key와 current `expected_state_version`을 사용한 later compatible `prepare_write` retry만 Write Authorization을 만들 수 있습니다.
+
+첫 payload에 대한 UI 또는 status assertion은 이를 candidate display라고 불러야 하며 `APR` projection이라고 부르면 안 됩니다.
 
 ```yaml
 scenario_id: CORE-prepare-write-no-change-unit

@@ -454,7 +454,7 @@ Policy가 허용하는 곳에서 gate requirement에 대한 explicit recorded ex
 
 ### Write Authorization Lifecycle Events
 
-Stable Write Authorization lifecycle event vocabulary는 `write_authorization_created`, `write_authorization_returned`, `write_authorization_consumed`, `write_authorization_expired`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_violation_detected`입니다. 이 names는 Stable Event Catalog에도 listed됩니다. `scope_violation_detected`는 general observed scope event이며 Write Authorization lifecycle event가 아닙니다.
+Write Authorization creation, return, consumption, expiry, staling, revocation, violation detection을 위한 stable event-name set입니다. Exact vocabulary와 `scope_violation_detected`와의 관계는 [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog)가 담당합니다.
 
 ### Write Authority Summary
 

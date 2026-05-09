@@ -164,16 +164,9 @@ Capability profiles must be refreshed when version, MCP config, hooks, permissio
 
 ## Guarantee Levels
 
-Integration must report enforcement strength honestly:
+Integration uses the guarantee levels defined in [04-runtime-architecture.md](04-runtime-architecture.md#guarantee-levels) and applies them to connected surface profiles, current enforcement paths, and fallback choices.
 
-| Level | Integration meaning |
-|---|---|
-| `cooperative` | The surface is expected to follow harness instructions and MCP results. |
-| `detective` | The harness can observe violations after the fact and mark state blocked, stale, partial, or failed. |
-| `preventive` | The connector or runtime can block a violating action before execution. |
-| `isolated` | Risky work is separated by a worktree, sandbox, process boundary, or equivalent. |
-
-Guarantee level is risk context and display. It is not approval, verification, acceptance, or a kernel gate.
+This document owns how connector profiles report and display those levels. It must not infer a stronger level from a surface name, and it must not treat guarantee level as approval, verification, QA, acceptance, or a kernel gate.
 
 ## Guarantee Display Requirements
 

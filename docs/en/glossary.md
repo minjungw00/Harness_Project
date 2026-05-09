@@ -450,7 +450,7 @@ A durable state record created by `prepare_write` for a specific allowed write a
 
 ### Write Authorization Lifecycle Events
 
-The stable Write Authorization lifecycle event vocabulary is `write_authorization_created`, `write_authorization_returned`, `write_authorization_consumed`, `write_authorization_expired`, `write_authorization_staled`, `write_authorization_revoked`, and `write_authorization_violation_detected`. These names are also listed in the Stable Event Catalog. `scope_violation_detected` is a general observed scope event, not a Write Authorization lifecycle event.
+The stable event-name set for Write Authorization creation, return, consumption, expiry, staling, revocation, and violation detection. The exact vocabulary and its relationship to `scope_violation_detected` are owned by the [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog).
 
 ### Write Authority Summary
 

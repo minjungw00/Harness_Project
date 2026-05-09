@@ -188,32 +188,15 @@ Missing scope, missing approval, stale baseline, MCP unavailable 같은 mechanic
 
 ## Source-Of-Truth 요약
 
-Canonical operating state는 `state.sqlite`입니다. 여기에는 current state records와 append-only `state.sqlite.task_events` table이 포함됩니다. MVP에는 별도의 event store가 없습니다.
+Strategy 수준의 규칙은 generated 또는 human-edited Markdown이 우연히 operational truth가 되면 안 된다는 것입니다. Operational state, raw evidence, projection authority, reconcile behavior의 canonical contracts는 owner docs에 둡니다. [03-kernel-spec.md](03-kernel-spec.md#authority-rules), [04-runtime-architecture.md](04-runtime-architecture.md#raw-artifacts-state-records-and-markdown-reports), [06-reference-mvp.md](06-reference-mvp.md#statesqlite), [07-document-projection.md](07-document-projection.md#document-authority-matrix)를 봅니다.
 
-Raw evidence는 artifact store 안에서 canonical합니다. Artifact records와 references는 durable files를 Tasks, Runs, Evidence Manifests, Evals, Manual QA records, projections에 연결합니다.
-
-Markdown reports는 state records와 artifact references에서 생성되는 projections입니다. Projection은 유용할 수도, stale일 수도, failed일 수도 있지만 canonical state를 override하지 않습니다.
-
-Human-editable sections는 input surfaces입니다. User Notes는 다음 authority path를 따릅니다.
-
-```text
-human-editable input -> reconcile_items -> accepted state event/record
-```
-
-Domain Language, Module Map, Interface Contract projections도 같은 source-of-truth 경계를 따릅니다. Canonical records는 kernel state 안에 있고, Markdown forms는 human-readable projections이자 proposal surfaces입니다.
-
-Decision Packets, decisions, gate states, residual-risk records도 같은 authority boundary를 따릅니다. Canonical form은 kernel state이고, Markdown rendering은 projection 또는 proposal surface입니다.
+요약하면 `state.sqlite` current records와 `state.sqlite.task_events`가 operational record이고, raw evidence는 artifact store에 있으며, Markdown reports는 projections이고, human-editable areas는 reconcile 또는 다른 Core state-changing action을 통해서만 state가 됩니다.
 
 ## Guarantee Level 요약
 
-Guarantee level은 연결된 agent surface에서 Harness rules를 얼마나 강하게 enforce할 수 있는지 설명합니다.
+Guarantee level은 연결된 surface가 무엇을 enforce할 수 있는지 strategy가 과장하지 않게 해 줍니다. Level 정의는 [04-runtime-architecture.md](04-runtime-architecture.md#guarantee-levels)가 담당하고, profile/fallback behavior는 [09-agent-integration.md](09-agent-integration.md#capability-profile)이 담당합니다.
 
-- Cooperative guarantee: Harness instructions와 MCP results를 따르는 cooperative integration을 기대하는 수준입니다.
-- Detective guarantee: 관찰 후 violations를 detect하고 state를 blocked, stale, partial로 mark할 수 있는 수준입니다.
-- Preventive guarantee: execution 전에 guard가 violation을 block할 수 있는 수준입니다.
-- Isolated guarantee: separate worktree, sandbox, process boundaries로 risky work를 isolate하는 수준입니다.
-
-MVP reference surface는 주로 cooperative 및 detective 수준입니다. Preventive와 isolated guarantees에는 더 강한 connector 또는 runtime capabilities가 필요합니다. Capability는 kernel gate가 아닙니다. Surface capability validation, `prepare_write` blocked reasons, user-facing guarantee display에 나타납니다.
+MVP reference surface는 주로 cooperative 및 detective 수준입니다. Capability는 kernel gate가 아니며, kernel boundary는 [03-kernel-spec.md](03-kernel-spec.md#capability-boundary)에 정의됩니다.
 
 ## MVP 경계
 

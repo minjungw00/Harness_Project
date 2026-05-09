@@ -188,32 +188,15 @@ This model keeps the user in charge without requiring the user to manually polic
 
 ## Source-Of-Truth Summary
 
-The canonical operating state is `state.sqlite`. It contains current state records and the append-only `state.sqlite.task_events` table. There is no separate MVP event store.
+The strategy-level rule is that generated or human-edited Markdown must never become operational truth by accident. Operational state, raw evidence, projection authority, and reconcile behavior keep their canonical contracts in the owner docs: [03-kernel-spec.md](03-kernel-spec.md#authority-rules), [04-runtime-architecture.md](04-runtime-architecture.md#raw-artifacts-state-records-and-markdown-reports), [06-reference-mvp.md](06-reference-mvp.md#statesqlite), and [07-document-projection.md](07-document-projection.md#document-authority-matrix).
 
-Raw evidence is canonical in the artifact store. Artifact records and references connect durable files to Tasks, Runs, Evidence Manifests, Evals, Manual QA records, and projections.
-
-Markdown reports are projections generated from state records and artifact references. A projection may be useful, stale, or failed, but it does not override canonical state.
-
-Human-editable sections are input surfaces. User Notes follow this authority path:
-
-```text
-human-editable input -> reconcile_items -> accepted state event/record
-```
-
-Domain Language, Module Map, and Interface Contract projections follow the same source-of-truth principle: their canonical records live in kernel state, and their Markdown forms are human-readable projections and proposal surfaces.
-
-Decision Packets, decisions, gate states, and residual-risk records follow the same authority boundary: their canonical form is kernel state, and any Markdown rendering is a projection or proposal surface.
+In short: `state.sqlite` current records plus `state.sqlite.task_events` are the operational record, raw evidence lives in the artifact store, Markdown reports are projections, and human-editable areas become state only through reconcile or another Core state-changing action.
 
 ## Guarantee Level Summary
 
-Guarantee level describes how strongly a connected agent surface can help enforce harness rules.
+Guarantee levels keep the strategy honest about what a connected surface can enforce. The level definitions are owned by [04-runtime-architecture.md](04-runtime-architecture.md#guarantee-levels), and profile/fallback behavior is owned by [09-agent-integration.md](09-agent-integration.md#capability-profile).
 
-- Cooperative guarantee: the surface is expected to follow harness instructions and MCP results.
-- Detective guarantee: the harness can detect violations and mark state blocked, stale, or partial after observation.
-- Preventive guarantee: a guard can block a violation before execution.
-- Isolated guarantee: separate worktree, sandbox, or process boundaries isolate risky work.
-
-The MVP reference surface is primarily cooperative and detective. Preventive and isolated guarantees require stronger connector or runtime capabilities. Capability is not a kernel gate; it appears in surface capability validation, `prepare_write` blocked reasons, and user-facing guarantee display.
+The MVP reference surface is primarily cooperative and detective. Capability is not a kernel gate; the kernel boundary is defined in [03-kernel-spec.md](03-kernel-spec.md#capability-boundary).
 
 ## MVP Boundary
 

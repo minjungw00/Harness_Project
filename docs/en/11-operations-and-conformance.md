@@ -686,7 +686,18 @@ expected_error:
 
 `prepare_write` allowed examples expect the Task to move from `ready` to `executing` because the kernel transition table owns and defines that transition.
 
-Approval lifecycle coverage should be materialized as separate exact-shape fixtures or as suite catalog sequencing, not by adding fixture body fields. The sequence must assert that the first `prepare_write` with uncovered sensitive categories returns `approval_required`, includes `approval_request_candidate`, returns no Write Authorization, and sets `approval_gate=required`. For a committed non-dry-run fixture that records approval-required blocker state, assert `TASK` is enqueued and `APR` is not; for dry-run or candidate-display-only paths, do not assert `TASK` unless blocker state was committed, and never assert `APR` for the non-mutating candidate. `request_user_decision(decision_kind=approval)` creates a canonical approval-shaped Decision Packet plus pending Approval record, sets `approval_gate=pending`, and enqueues `APR`; `record_user_decision` updates the Approval record and `approval_gate`, enqueues `APR` for the updated decision, but still creates no Write Authorization; and only a retry `prepare_write` with a fresh idempotency key and current `expected_state_version` may create the Write Authorization when scope, baseline, sensitive categories, paths/tools/commands/network/secrets, Decision Packet refs, Approval refs, and capability checks remain compatible. Any UI or status assertion for the first `prepare_write` payload must call it candidate display, not an `APR` projection.
+Approval lifecycle coverage should be materialized as separate exact-shape fixtures or as suite catalog sequencing, not by adding fixture body fields. These fixtures assert owner-defined observable effects from [Kernel `prepare_write` State Logic](03-kernel-spec.md#prepare_write-state-logic), [`harness.prepare_write`](05-mcp-api-and-schemas.md#harnessprepare_write), and the [APR projection summary](07-document-projection.md#apr), rather than redefining the lifecycle.
+
+Fixture authors should keep these observable assertions:
+
+- the first uncovered sensitive `prepare_write` returns `approval_required`, includes an approval candidate, returns no Write Authorization, and sets or keeps `approval_gate=required` when blocker state is committed
+- committed blocker state may enqueue `TASK`, but the non-mutating candidate must not enqueue `APR`
+- dry-run or candidate-display-only paths must not assert committed `TASK` changes unless blocker state was actually committed
+- `request_user_decision(decision_kind=approval)` creates the approval-shaped Decision Packet plus pending Approval state, sets `approval_gate=pending`, and enqueues `APR`
+- `record_user_decision` updates Approval/Decision Packet state and `approval_gate`, may enqueue `APR`, but still creates no Write Authorization
+- only a later compatible `prepare_write` retry with a fresh idempotency key and current `expected_state_version` may create the Write Authorization
+
+UI or status assertions for the first payload must call it candidate display, not an `APR` projection.
 
 ```yaml
 scenario_id: CORE-prepare-write-no-change-unit
