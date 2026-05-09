@@ -691,7 +691,17 @@ not_required | required | pending | accepted | rejected
 
 MVP final acceptance는 canonical Decision Packet user-decision path, Task의 `acceptance_gate`, `state.sqlite.task_events`를 통해 저장됩니다. Kernel은 MVP에서 별도의 Acceptance state record를 정의하지 않습니다.
 
-Residual-risk visibility는 두 가지 방식으로 satisfied됩니다. Known close-relevant Residual Risk가 없으면 current judgment context가 `ResidualRiskSummary.status=none`을 report합니다. Known close-relevant Residual Risk가 있으면 successful close 전에 그 risk가 current judgment context에서 visible해야 합니다. Acceptance가 required라면 close-relevant residual risk가 visible하거나 `ResidualRiskSummary.status=none`으로 confirmed된 뒤에만 record될 수 있습니다. Risk-accepted close에는 additionally visible하고 accepted된 Residual Risk refs가 필요하며, residual-risk acceptance는 assurance를 `detached_verified`로 upgrade하지 않습니다. `ResidualRiskSummary.status=none`은 known close-relevant risk를 숨기거나 대체하면 안 됩니다.
+Residual-risk visibility는 두 가지 방식으로 satisfied됩니다. Known close-relevant Residual Risk가 없으면 current judgment context가 `ResidualRiskSummary.status=none`을 report합니다. Known close-relevant Residual Risk가 있으면 successful close 전에 그 risk가 current judgment context에서 visible해야 합니다. Acceptance가 required라면 close-relevant residual risk가 visible하거나 `ResidualRiskSummary.status=none`으로 confirmed된 뒤에만 record될 수 있습니다. Risk-accepted close에는 acceptance 전에 user에게 visible했던 risk를 가리키는 accepted Residual Risk refs가 추가로 필요하며, residual-risk acceptance는 assurance를 `detached_verified`로 upgrade하지 않습니다. `ResidualRiskSummary.status=none`은 known close-relevant risk를 숨기거나 대체하면 안 됩니다.
+
+Kernel은 `ResidualRiskSummary.status`를 다음과 같이 해석합니다.
+
+| Status | Meaning |
+|---|---|
+| `none` | Core가 current Task와 requested action에 대해 close-relevant Residual Risk를 알지 못합니다. 모든 risk-ref arrays는 비어 있습니다. |
+| `not_visible` | Known close-relevant risk가 있지만 current judgment context에서 visible하지 않습니다. `not_visible_refs`가 이를 나열합니다. |
+| `visible` | Known close-relevant risk가 user에게 visible합니다. `visible_refs`가 visible risk refs를 나열합니다. Risk acceptance가 필요하면 일부 또는 전체가 `unaccepted_refs`에도 나타날 수 있습니다. |
+| `accepted` | Risk-accepted close에 필요한 close-relevant risk가 accepted되었습니다. `accepted_refs`가 해당 `residual_risk` refs를 나열합니다. |
+| `blocked` | Risk visibility 또는 acceptance를 현재 resolve할 수 없습니다. 가능하면 risk-ref arrays가 relevant `residual_risk` records를 식별해야 합니다. |
 
 ### Capability Boundary
 
@@ -728,7 +738,7 @@ Capability는 kernel이 write를 허용할지, rule을 얼마나 강하게 enfor
 
 ### Completion Compatibility
 
-모든 successful close path에는 close 전 residual-risk visibility가 필요합니다. Known close-relevant Residual Risk가 없으면 `ResidualRiskSummary.status=none`이 이 check를 satisfy합니다. Known close-relevant Residual Risk가 있으면 current judgment context에서 visible해야 합니다. Risk-accepted close에는 additionally accepted Residual Risk refs가 필요합니다.
+모든 successful close path에는 close 전 residual-risk visibility가 필요합니다. Known close-relevant Residual Risk가 없으면 `ResidualRiskSummary.status=none`이 이 check를 satisfy합니다. Known close-relevant Residual Risk가 있으면 current judgment context에서 visible해야 합니다. Risk-accepted close에는 acceptance 전에 user에게 visible했던 risk를 가리키는 accepted Residual Risk refs가 추가로 필요합니다.
 
 | Close path | Required compatible state |
 |---|---|
@@ -1032,7 +1042,7 @@ Decision algorithm은 다음과 같습니다.
 9. `evidence_gate`를 확인합니다. Evidence가 required인 곳에서는 `sufficient`만 successful close를 허용합니다.
 10. `verification_gate`를 확인합니다. Work에는 passed detached verification 또는 explicit user verification waiver가 필요합니다. Direct work는 기본적으로 not required이지만 optional passed detached verification은 assurance를 upgrade할 수 있습니다. Same-session review는 detached assurance를 만들 수 없습니다. Verification waiver는 detached verification과 별개이며 `assurance_level=detached_verified`에 기여할 수 없습니다.
 11. `qa_gate`를 확인합니다. Required QA는 passed이거나 validly waived되어야 합니다. Manual QA record result만으로는 kernel이 `qa_gate`에 aggregate하지 않는 한 gate를 close하지 않습니다.
-12. Close-relevant residual risk를 확인합니다. Known close-relevant Residual Risk가 없으면 `ResidualRiskSummary.status=none`이 residual-risk visibility를 satisfy합니다. Known close-relevant Residual Risk가 있으면 successful close 전에 current judgment context에서 visible해야 합니다. Risk-accepted close에는 additionally visible하고 accepted된 Residual Risk refs가 필요합니다. Verification risk acceptance는 추가로 `verification_gate=waived_by_user`를 set합니다.
+12. Close-relevant residual risk를 확인합니다. Known close-relevant Residual Risk가 없으면 `ResidualRiskSummary.status=none`이 residual-risk visibility를 satisfy합니다. Known close-relevant Residual Risk가 있으면 successful close 전에 current judgment context에서 visible해야 합니다. Risk-accepted close에는 acceptance 전에 user에게 visible했던 risk를 가리키는 accepted Residual Risk refs가 추가로 필요합니다. Verification risk acceptance는 추가로 `verification_gate=waived_by_user`를 set합니다.
 13. `acceptance_gate`를 확인합니다. Required acceptance는 close-relevant residual risk가 current judgment context에서 visible하거나 `ResidualRiskSummary.status=none`으로 confirmed된 뒤에만 record될 수 있습니다. Rejection은 Task를 shaping, execution, cancellation로 돌립니다.
 14. `assurance_level`, `result`, `close_reason`을 assign합니다.
     - advisor completion: `result=advice_only`, `assurance_level=none`, `close_reason=completed_self_checked`

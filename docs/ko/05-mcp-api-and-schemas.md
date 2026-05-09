@@ -547,6 +547,7 @@ AutonomyBoundarySummary:
 ResidualRiskSummary:
   status: none | visible | not_visible | accepted | blocked
   close_relevant_count: integer
+  visible_refs: StateRecordRef[]
   not_visible_refs: StateRecordRef[]
   unaccepted_refs: StateRecordRef[]
   accepted_refs: StateRecordRef[]
@@ -613,7 +614,7 @@ classDiagram
 
 `ResidualRiskSummary.status=none`은 current Task와 requested action에 대해 Core가 알고 있는 close-relevant Residual Risk가 없다는 뜻입니다. 이는 acceptance와 ordinary successful close에서 residual-risk visibility를 satisfy하며, 이때 `close_relevant_count=0`이고 risk-ref arrays는 비어 있습니다. Core가 hidden, blocked, 또는 표시되지 않은 close-relevant risk를 알고 있다면 이 status를 반환하면 안 되며, 그런 경우 `not_visible` 또는 `blocked`를 사용합니다.
 
-`ResidualRiskSummary.accepted_refs`, `unaccepted_refs`, related acceptance visibility risk-ref arrays는 `record_kind=residual_risk`인 `StateRecordRef` entries를 포함합니다.
+`ResidualRiskSummary.visible_refs`, `not_visible_refs`, `unaccepted_refs`, `accepted_refs`, related acceptance visibility risk-ref arrays는 `record_kind=residual_risk`인 `StateRecordRef` entries를 포함합니다. `visible_refs`는 current judgment context에서 visible한 close-relevant Residual Risk records를 나열하며, risk acceptance가 아직 필요하면 `unaccepted_refs`가 visible risk와 overlap될 수 있습니다. Accepted risk는 Residual Risk records의 metadata/state로 남습니다.
 
 Autonomy Boundary summaries는 scope authority가 아니라 judgment latitude를 설명합니다. Active Change Unit scope와 required approval 밖의 paths, tools, commands, network targets, secret access, sensitive categories를 authorize하지 않습니다.
 

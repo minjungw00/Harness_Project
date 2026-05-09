@@ -691,6 +691,16 @@ MVP final acceptance is stored through the canonical Decision Packet user-decisi
 
 Residual-risk visibility is satisfied in either of two ways. If no known close-relevant Residual Risk exists, the current judgment context reports `ResidualRiskSummary.status=none`. If known close-relevant Residual Risk exists, that risk must be visible in the current judgment context before any successful close. Acceptance, when required, can be recorded only after close-relevant residual risk is visible or confirmed as `ResidualRiskSummary.status=none`. A risk-accepted close additionally requires visible and accepted Residual Risk refs, and residual-risk acceptance never upgrades assurance to `detached_verified`. `ResidualRiskSummary.status=none` must not hide or replace known close-relevant risk.
 
+The kernel interprets `ResidualRiskSummary.status` as follows:
+
+| Status | Meaning |
+|---|---|
+| `none` | Core knows of no close-relevant Residual Risk for the current Task and requested action; all risk-ref arrays are empty. |
+| `not_visible` | Known close-relevant risk exists but is not visible in the current judgment context; `not_visible_refs` lists it. |
+| `visible` | Known close-relevant risk is visible to the user; `visible_refs` lists the visible risk refs. Some or all may also appear in `unaccepted_refs` if risk acceptance is needed. |
+| `accepted` | Close-relevant risk required for risk-accepted close has been accepted; `accepted_refs` lists those `residual_risk` refs. |
+| `blocked` | Risk visibility or acceptance cannot currently be resolved; risk-ref arrays should identify the relevant `residual_risk` records where possible. |
+
 ### Capability Boundary
 
 Capability is deliberately excluded from the kernel gate enum.
@@ -726,7 +736,7 @@ Capability can affect whether the kernel allows a write, how strongly it can enf
 
 ### Completion Compatibility
 
-All successful close paths require residual-risk visibility before close. If no known close-relevant Residual Risk exists, `ResidualRiskSummary.status=none` satisfies this check. If known close-relevant Residual Risk exists, it must be visible in the current judgment context. Risk-accepted close additionally requires accepted Residual Risk refs.
+All successful close paths require residual-risk visibility before close. If no known close-relevant Residual Risk exists, `ResidualRiskSummary.status=none` satisfies this check. If known close-relevant Residual Risk exists, it must be visible in the current judgment context. Risk-accepted close additionally requires accepted Residual Risk refs whose risks were visible before acceptance.
 
 | Close path | Required compatible state |
 |---|---|

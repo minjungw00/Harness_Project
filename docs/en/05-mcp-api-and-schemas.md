@@ -547,6 +547,7 @@ AutonomyBoundarySummary:
 ResidualRiskSummary:
   status: none | visible | not_visible | accepted | blocked
   close_relevant_count: integer
+  visible_refs: StateRecordRef[]
   not_visible_refs: StateRecordRef[]
   unaccepted_refs: StateRecordRef[]
   accepted_refs: StateRecordRef[]
@@ -613,7 +614,7 @@ classDiagram
 
 `ResidualRiskSummary.status=none` means Core has no known close-relevant Residual Risk for the current Task and requested action. It satisfies residual-risk visibility for acceptance and ordinary successful close, with `close_relevant_count=0` and empty risk-ref arrays. It must not be returned when Core knows of hidden, blocked, or otherwise undisplayed close-relevant risk; those cases use `not_visible` or `blocked`.
 
-`ResidualRiskSummary.accepted_refs`, `unaccepted_refs`, and related acceptance visibility risk-ref arrays contain `StateRecordRef` entries with `record_kind=residual_risk`.
+`ResidualRiskSummary.visible_refs`, `not_visible_refs`, `unaccepted_refs`, `accepted_refs`, and related acceptance visibility risk-ref arrays contain `StateRecordRef` entries with `record_kind=residual_risk`. `visible_refs` lists close-relevant Residual Risk records visible in the current judgment context; `unaccepted_refs` may overlap with visible risk when risk acceptance is still needed. Accepted risk remains metadata/state on Residual Risk records.
 
 Autonomy Boundary summaries describe judgment latitude, not scope authority. They do not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit scope and any required approval.
 
