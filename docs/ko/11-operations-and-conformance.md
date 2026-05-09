@@ -261,9 +261,11 @@ Default comparison modes:
 | `expected_events` | `contains_ordered`; 나열된 event는 appended `task_events` 순서대로 나타나야 하며 unrelated event가 앞, 사이, 뒤에 있어도 됩니다. Suite metadata가 `expected_events: exact`로 설정할 수 있습니다. |
 | `expected_artifacts` | `contains_by_identity`; 나열된 각 artifact는 같은 `artifact_id`와 `kind`를 가진 registered artifact와 match해야 하며, 그 밖에 나열된 artifact field는 recursively match합니다. |
 | `expected_projection` | `partial_by_kind`; 나열된 각 projection kind는 해당 kind에 대해 나열된 status assertion 또는 partial object assertion을 만족해야 합니다. |
-| `expected_error` | `expected_error: null`은 action이 error를 반환하지 않았음을 assert합니다. `expected_error`가 object이면 `expected_error.code`는 required이며 exact match합니다. `expected_error.details`는 optional입니다. Omitted이면 details field는 assert하지 않습니다. `details`가 present이면 suite metadata가 `expected_error.details: exact`로 설정하지 않는 한 `partial_deep`으로 match합니다. |
+| `expected_error` | `expected_error: null`은 action이 error를 반환하지 않았음을 assert합니다. `expected_error`가 object이면 `expected_error.code`는 required이며 API가 소유한 [Primary Error Code Precedence](05-mcp-api-and-schemas.md#primary-error-code-precedence)에 따라 선택된 primary `ToolError.code`, 즉 response에 errors가 있으면 `ToolResponseBase.errors[0].code`와 exact match합니다. Arbitrary secondary error와 match하면 안 됩니다. `expected_error.details`는 optional입니다. Omitted이면 details field는 assert하지 않습니다. `details`가 present이면 suite metadata가 `expected_error.details: exact`로 설정하지 않는 한 `partial_deep`으로 match합니다. |
 
 `expected_events`는 [Kernel Stable Event Catalog](03-kernel-spec.md#stable-event-catalog)의 names만 요구할 수 있습니다. Validator IDs, Core check names, projection status shorthands, fixture seed shorthand, scenario catalog IDs는 event names가 아닙니다. Prose examples는 non-catalog event names를 illustrative 또는 future extension ideas로 언급할 수 있지만, executable MVP fixtures는 kernel catalog가 promote하기 전까지 이를 요구하면 안 됩니다.
+
+Fixture authors는 API precedence가 generic validator fallback을 선택할 때만 `VALIDATOR_FAILED`를 `expected_error.code`로 사용해야 합니다. `EVIDENCE_INSUFFICIENT`, `QA_REQUIRED`, `PROJECTION_STALE`, `ARTIFACT_MISSING` 같은 더 specific한 typed blocker가 적용되면 그 code가 primary입니다.
 
 `expected_state.validators` 아래의 validator assertion은 validator ID로 keyed됩니다. 나열된 각 validator ID는 captured validator results에 존재해야 하며 나열된 field를 partially match해야 합니다. 나열되지 않은 validator ID와 나열되지 않은 validator field는 assert하지 않습니다.
 

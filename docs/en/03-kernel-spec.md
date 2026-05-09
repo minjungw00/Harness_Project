@@ -577,6 +577,8 @@ Decision deferral is not a waiver. A deferred Decision Packet must record the af
 allowed | blocked | approval_required | decision_required | state_conflict
 ```
 
+These state-level decisions do not define public `ErrorCode` selection. Public tool responses derived from this logic select the primary `ToolError.code` using API-owned [Primary Error Code Precedence](05-mcp-api-and-schemas.md#primary-error-code-precedence).
+
 The decision algorithm is:
 
 1. Check state version expectations. If the caller is acting on stale state, return `state_conflict`.
@@ -624,6 +626,8 @@ Read-only Runs may be recorded without consuming Write Authorization, but they m
 ## `close_task` State Logic
 
 `close_task` is the single completion decision point. Agent reports, Eval reports, QA notes, and acceptance messages may provide inputs, but they do not close the Task by themselves.
+
+When multiple close blockers exist, public responses select the primary `ToolError.code` using API-owned [Primary Error Code Precedence](05-mcp-api-and-schemas.md#primary-error-code-precedence); this section owns the kernel checks and state transitions.
 
 The decision algorithm is:
 

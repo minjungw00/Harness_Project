@@ -534,7 +534,7 @@ Status, next, write, close flows에서 흔히 surface되는 agency-critical subs
 | `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk has not been made visible before a successful close |
 | `ARTIFACT_MISSING` | a referenced artifact file is missing or integrity check failed |
 | `BASELINE_STALE` | baseline no longer matches the repository state required by the operation |
-| `VALIDATOR_FAILED` | one or more required validators failed |
+| `VALIDATOR_FAILED` | 하나 이상의 required validators가 failed이고 더 specific한 typed `ErrorCode`가 적용되지 않을 때 사용하는 generic fallback |
 
 `WRITE_AUTHORIZATION_REQUIRED`와 `WRITE_AUTHORIZATION_INVALID`는 missing 또는 invalid Write Authorization에만 사용합니다. Observed paths, tools, commands, network targets, secrets, sensitive categories가 authorized 또는 active scope를 넘는 경우 scope violations는 계속 `SCOPE_VIOLATION`을 사용합니다.
 
@@ -546,6 +546,46 @@ Status, next, write, close flows에서 흔히 surface되는 agency-critical subs
 MCP availability problem에 대해 `ToolError` object가 available한 경우 `details.mcp_unavailable_kind`는 `server_unavailable`, `surface_mcp_unavailable`, `stale_connection`, `unknown` 중 하나일 수 있습니다.
 
 `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RESIDUAL_RISK_NOT_VISIBLE`, `MCP_UNAVAILABLE`은 stable public `ErrorCode` values입니다. Validator-specific detail은 여전히 `ValidatorResult.findings`에 속합니다.
+
+### Primary Error Code Precedence
+
+Public tool response는 Core가 여러 blockers를 동시에 observe해도 하나의 primary `ToolError.code`만 가집니다. `ToolResponseBase.errors`가 non-empty이면 `errors[0]`가 이 precedence table로 선택된 primary `ToolError`이고, remaining entries는 secondary blockers를 나타낼 수 있습니다. Tool subsection이 더 좁은 order를 정의하지 않는 한 primary code는 아래 precedence list에서 처음 applicable한 code입니다. Secondary blockers는 `blocked_reasons`, `CloseTaskResponse.blockers`, validator results, `ToolError.details`, state summaries 같은 tool-specific fields에 유지합니다.
+
+`Possible errors` lists는 tool에서 사용할 수 있는 codes를 enumerate합니다. 이는 per-tool precedence table이 아닙니다.
+
+MCP server 또는 caller가 Core에 전혀 닿을 수 없으면 surface 또는 operator가 `MCP_UNAVAILABLE`을 report할 수 있지만 authoritative Core response나 state mutation을 claim할 수 없습니다. Core가 request를 evaluate할 수 있으면 다음 order를 적용합니다.
+
+| Precedence | Primary `ErrorCode` | Selection note |
+|---:|---|---|
+| 1 | `STATE_CONFLICT` | stale `expected_state_version`, state lock conflict, 또는 같은 idempotency key가 다른 payload로 reused됨 |
+| 2 | `MCP_UNAVAILABLE` | Core 또는 operator가 availability problem을 classify한 뒤 required MCP access가 unavailable, stale, unreachable임 |
+| 3 | `NO_ACTIVE_TASK` | operation에 Task가 필요하지만 active 또는 addressed Task가 없음 |
+| 4 | `NO_ACTIVE_CHANGE_UNIT` | operation이 write-capable 또는 close-relevant인데 active scoped Change Unit이 적용되지 않음 |
+| 5 | `BASELINE_STALE` | requested operation이 stale baseline에 의존함 |
+| 6 | `SCOPE_REQUIRED` | requested operation이 proceed하기 전에 scope confirmation이 필요함 |
+| 7 | `SCOPE_VIOLATION` | intended 또는 observed paths, tools, commands, network, secrets, categories가 active 또는 authorized scope를 초과함 |
+| 8 | `WRITE_AUTHORIZATION_REQUIRED` | write-capable Run에 required Write Authorization이 없음 |
+| 9 | `WRITE_AUTHORIZATION_INVALID` | supplied Write Authorization이 stale, expired, revoked, replay 밖에서 consumed, 또는 incompatible함 |
+| 10 | `APPROVAL_DENIED` | relevant sensitive-change approval이 denied됨 |
+| 11 | `APPROVAL_EXPIRED` | relevant sensitive-change approval이 expired되었거나 scope 또는 baseline에서 drift됨 |
+| 12 | `APPROVAL_REQUIRED` | sensitive change에 approval이 필요하지만 compatible granted approval이 없음 |
+| 13 | `DECISION_UNRESOLVED` | existing relevant Decision Packet이 pending, deferred without coverage, rejected, blocked, stale, 또는 incompatible함 |
+| 14 | `AUTONOMY_BOUNDARY_EXCEEDED` | intended operation이 active Change Unit Autonomy Boundary를 초과하며, next step이 Decision Packet이어도 이 code를 사용함 |
+| 15 | `DECISION_REQUIRED` | blocking product judgment가 action 진행 전에 Decision Packet을 필요로 함 |
+| 16 | `CAPABILITY_INSUFFICIENT` | connected surface가 required capability 또는 enforcement condition을 satisfy할 수 없음 |
+| 17 | `EVIDENCE_INSUFFICIENT` | required evidence coverage가 absent, partial, stale, 또는 blocked임 |
+| 18 | `VERIFY_NOT_DETACHED` | verification이 detached verification으로 count될 수 없음 |
+| 19 | `QA_REQUIRED` | required Manual QA가 pending, failed, missing, 또는 validly waived되지 않음 |
+| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk가 acceptance 또는 close 전에 visible하지 않음 |
+| 21 | `ACCEPTANCE_REQUIRED` | residual-risk visibility가 satisfied된 뒤에도 required user acceptance가 pending 또는 rejected임 |
+| 22 | `PROJECTION_STALE` | requested action에 필요한 projection freshness가 stale 또는 failed임 |
+| 23 | `RECONCILE_REQUIRED` | human-editable 또는 managed-block drift에 reconcile이 필요함 |
+| 24 | `ARTIFACT_MISSING` | referenced artifact file이 missing이거나 integrity check에 failed함 |
+| 25 | `VALIDATOR_FAILED` | 위의 더 specific한 typed blocker가 적용되지 않을 때만 선택되는 generic validator fallback |
+
+#### `harness.close_task` Close Blockers
+
+`harness.close_task`는 여러 close blockers를 반환할 수 있습니다. `CloseTaskResponse.base.errors`의 primary `ToolError`는 위 precedence를 사용합니다. Present하면 `CloseTaskResponse.base.errors[0].code`가 primary close error code입니다. `CloseTaskResponse.blockers`는 observed close blockers를 같은 relative order로 포함해야 합니다. Required acceptance는 close-relevant residual risk가 visible한 뒤에만 record하거나 rely할 수 있으므로 close 및 acceptance flows에서 residual-risk visibility는 `ACCEPTANCE_REQUIRED`보다 앞에 둡니다.
 
 ## Idempotency And State Conflict Behavior
 

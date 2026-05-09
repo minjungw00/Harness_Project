@@ -534,7 +534,7 @@ Tool descriptions below separate `ValidatorResults emitted` from Core checks/pre
 | `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk has not been made visible before a successful close |
 | `ARTIFACT_MISSING` | a referenced artifact file is missing or integrity check failed |
 | `BASELINE_STALE` | baseline no longer matches the repository state required by the operation |
-| `VALIDATOR_FAILED` | one or more required validators failed |
+| `VALIDATOR_FAILED` | generic fallback when one or more required validators failed and no more specific typed `ErrorCode` applies |
 
 `WRITE_AUTHORIZATION_REQUIRED` and `WRITE_AUTHORIZATION_INVALID` are used only for missing or invalid Write Authorization. Scope violations still use `SCOPE_VIOLATION` when observed paths, tools, commands, network targets, secrets, or sensitive categories exceed authorized or active scope.
 
@@ -546,6 +546,46 @@ Tool descriptions below separate `ValidatorResults emitted` from Core checks/pre
 When a `ToolError` object is available for an MCP availability problem, `details.mcp_unavailable_kind` may be `server_unavailable`, `surface_mcp_unavailable`, `stale_connection`, or `unknown`.
 
 `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RESIDUAL_RISK_NOT_VISIBLE`, and `MCP_UNAVAILABLE` are stable public `ErrorCode` values. Validator-specific detail still belongs in `ValidatorResult.findings`.
+
+### Primary Error Code Precedence
+
+Public tool responses carry one primary `ToolError.code` even when Core observes multiple blockers. When `ToolResponseBase.errors` is non-empty, `errors[0]` is the primary `ToolError` selected by this precedence table; any remaining entries may represent secondary blockers. Unless a tool subsection defines a narrower order, the primary code is the first applicable code in the precedence list below. Secondary blockers remain in tool-specific fields such as `blocked_reasons`, `CloseTaskResponse.blockers`, validator results, `ToolError.details`, and state summaries.
+
+`Possible errors` lists enumerate admissible codes for a tool. They are not per-tool precedence tables.
+
+If an MCP server or caller cannot reach Core at all, the surface or operator may report `MCP_UNAVAILABLE`, but no authoritative Core response or state mutation can be claimed. Once Core can evaluate the request, apply this order:
+
+| Precedence | Primary `ErrorCode` | Selection note |
+|---:|---|---|
+| 1 | `STATE_CONFLICT` | stale `expected_state_version`, state lock conflict, or idempotency key reused with a different payload |
+| 2 | `MCP_UNAVAILABLE` | required MCP access is unavailable, stale, or unreachable after Core or the operator can classify the availability problem |
+| 3 | `NO_ACTIVE_TASK` | the operation requires a Task and none is active or addressed |
+| 4 | `NO_ACTIVE_CHANGE_UNIT` | the operation is write-capable or close-relevant and no active scoped Change Unit applies |
+| 5 | `BASELINE_STALE` | the requested operation depends on a stale baseline |
+| 6 | `SCOPE_REQUIRED` | scope must be confirmed before the requested operation can proceed |
+| 7 | `SCOPE_VIOLATION` | the intended or observed paths, tools, commands, network, secrets, or categories exceed active or authorized scope |
+| 8 | `WRITE_AUTHORIZATION_REQUIRED` | a write-capable Run is missing a required Write Authorization |
+| 9 | `WRITE_AUTHORIZATION_INVALID` | the supplied Write Authorization is stale, expired, revoked, consumed outside replay, or incompatible |
+| 10 | `APPROVAL_DENIED` | a relevant sensitive-change approval was denied |
+| 11 | `APPROVAL_EXPIRED` | a relevant sensitive-change approval expired or drifted from scope or baseline |
+| 12 | `APPROVAL_REQUIRED` | a sensitive change needs approval and no compatible granted approval exists |
+| 13 | `DECISION_UNRESOLVED` | an existing relevant Decision Packet is pending, deferred without coverage, rejected, blocked, stale, or incompatible |
+| 14 | `AUTONOMY_BOUNDARY_EXCEEDED` | the intended operation exceeds the active Change Unit Autonomy Boundary, even when the next step is a Decision Packet |
+| 15 | `DECISION_REQUIRED` | blocking product judgment needs a Decision Packet before the action can proceed |
+| 16 | `CAPABILITY_INSUFFICIENT` | the connected surface cannot satisfy a required capability or enforcement condition |
+| 17 | `EVIDENCE_INSUFFICIENT` | required evidence coverage is absent, partial, stale, or blocked |
+| 18 | `VERIFY_NOT_DETACHED` | verification cannot count as detached verification |
+| 19 | `QA_REQUIRED` | required Manual QA is pending, failed, missing, or not validly waived |
+| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk has not been made visible before acceptance or close |
+| 21 | `ACCEPTANCE_REQUIRED` | required user acceptance is pending or rejected after residual-risk visibility is satisfied |
+| 22 | `PROJECTION_STALE` | projection freshness is stale or failed for the requested action |
+| 23 | `RECONCILE_REQUIRED` | human-editable or managed-block drift requires reconcile |
+| 24 | `ARTIFACT_MISSING` | a referenced artifact file is missing or failed integrity checks |
+| 25 | `VALIDATOR_FAILED` | generic validator fallback selected only when no more specific typed blocker above applies |
+
+#### `harness.close_task` Close Blockers
+
+`harness.close_task` may return multiple close blockers. The primary `ToolError` in `CloseTaskResponse.base.errors` uses the precedence above; when present, `CloseTaskResponse.base.errors[0].code` is the primary close error code. `CloseTaskResponse.blockers` should include the observed close blockers in the same relative order. Residual-risk visibility remains before `ACCEPTANCE_REQUIRED` for close and acceptance flows because required acceptance can be recorded or relied on only after close-relevant residual risk is visible.
 
 ## Idempotency And State Conflict Behavior
 
