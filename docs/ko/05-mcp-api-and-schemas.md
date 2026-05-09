@@ -45,6 +45,38 @@ harness://policy/sensitive-categories
 harness://status/card
 ```
 
+이 tree는 read-only resource surface를 group합니다. Reads는 current state와 projection freshness를 report할 수 있지만 state를 mutate하지 않습니다.
+
+```mermaid
+flowchart TD
+  Resources["MCP Resources<br/>read-only"] --> Project["project"]
+  Project --> ProjectCurrent["harness://project/current"]
+  Project --> ProjectSurfaces["harness://project/surfaces"]
+
+  Resources --> Task["task"]
+  Task --> TaskActive["harness://task/active"]
+  Task --> TaskRecord["harness://task/{task_id}"]
+  Task --> TaskSummary["harness://task/{task_id}/summary"]
+  Task --> TaskSpine["harness://task/{task_id}/spine"]
+  Task --> TaskJourney["harness://task/{task_id}/journey"]
+  Task --> TaskPackets["harness://task/{task_id}/decision-packets"]
+  Task --> TaskDag["harness://task/{task_id}/change-unit-dag"]
+  Task --> TaskJudgment["harness://task/{task_id}/judgment-context"]
+  Task --> TaskReports["harness://task/{task_id}/reports/latest"]
+  Task --> TaskEvidence["harness://task/{task_id}/evidence-manifest"]
+  Task --> TaskBundle["harness://task/{task_id}/bundle/current"]
+
+  Resources --> Design["design"]
+  Design --> DomainLanguage["harness://design/domain-language"]
+  Design --> ModuleMap["harness://design/module-map"]
+  Design --> InterfaceContracts["harness://design/interface-contracts"]
+
+  Resources --> Policy["policy"]
+  Policy --> SensitiveCategories["harness://policy/sensitive-categories"]
+  Resources --> Status["harness://status/card"]
+  Resources --> NoMutation["must not create Tasks, decisions, projection jobs, or reconcile items"]
+```
+
 Resource reads는 Task records, decisions, projection jobs, reconcile items를 만들면 안 됩니다. Resource가 stale projection을 detect하면 freshness를 report할 뿐 repair하지 않습니다.
 
 Journey resources는 canonical state 위의 projection-oriented reads입니다.
@@ -93,6 +125,55 @@ ToolResponseBase:
 
 `ToolResponseBase.state_version`은 primary affected scope의 resulting version을 반환합니다. State-changing operations에서는 Core가 primary Task를 resolve하면 Task State Version이고, 그렇지 않으면 Project State Version입니다. Read-only responses는 primary read scope의 current `state_version`을 반환하며 increment하지 않습니다. `dry_run=true`가 mutation 없이 validate하거나 plan할 때 `state_version`은 current primary affected 또는 read scope version을 report합니다. Virtual resulting version, idempotency-key consumption, replay row, appended event, would-be clock increment를 뜻하지 않습니다.
 
+이 다이어그램은 high-level envelope map일 뿐입니다. Exact schema contract는 이 문서의 YAML blocks입니다.
+
+```mermaid
+classDiagram
+  class ToolEnvelope {
+    +request_id
+    +idempotency_key
+    +expected_state_version
+    +project_id
+    +task_id
+    +actor_kind
+    +dry_run
+  }
+  class ToolResponseBase {
+    +request_id
+    +state_version
+    +dry_run
+    +errors
+    +validator_results
+    +events
+    +projection_jobs
+  }
+  class EventRef {
+    +event_type
+    +event_seq
+    +state_version
+  }
+  class ProjectionJobRef {
+    +projection_kind
+    +target_ref
+  }
+  class ToolError {
+    +code
+    +retryable
+    +details
+  }
+  class ValidatorResult {
+    +validator_id
+    +status
+    +guarantee_level
+  }
+
+  ToolEnvelope --> ToolResponseBase : request context
+  ToolResponseBase "1" o-- "0..*" ToolError : errors
+  ToolResponseBase "1" o-- "0..*" ValidatorResult : validator_results
+  ToolResponseBase "1" o-- "0..*" EventRef : events
+  ToolResponseBase "1" o-- "0..*" ProjectionJobRef : projection_jobs
+```
+
 ## Shared Schemas
 
 ```yaml
@@ -123,6 +204,15 @@ Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](03
 | MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Reference MVP implementation은 이 kinds를 support하고 source record가 변경될 때 enqueue/render해야 합니다. |
 | MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, source record가 있거나, user/operator가 projection을 enable할 때 support 또는 enqueue합니다. |
 | Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Corresponding extension 또는 appendix projection이 enabled인 경우에만 support할 수 있습니다. |
+
+이 tier diagram은 `ProjectionKind` support expectations를 요약합니다. Projection을 canonical state로 만들지는 않습니다.
+
+```mermaid
+flowchart LR
+  ProjectionKind["ProjectionKind"] --> Required["MVP-required<br/>TASK<br/>APR<br/>RUN-SUMMARY<br/>EVIDENCE-MANIFEST<br/>EVAL<br/>DIRECT-RESULT"]
+  ProjectionKind --> Optional["MVP-optional<br/>MANUAL-QA<br/>TDD-TRACE<br/>DOMAIN-LANGUAGE<br/>MODULE-MAP<br/>INTERFACE-CONTRACT"]
+  ProjectionKind --> Extension["Extension / appendix<br/>DEC<br/>DESIGN<br/>EXPORT<br/>JOURNEY-CARD"]
+```
 
 ProjectionKind extensibility가 projection을 canonical state로 만들지는 않습니다. 모든 projection job은 여전히 owner record와 artifact ref에서 derived view를 render합니다. `DEC`는 해당 feature가 enabled일 때 standalone Decision Packet Markdown에만 valid하며, MVP-required projection job이 아닙니다. Standalone `DEC` job이 없어도 MVP Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 required입니다. Persisted `JOURNEY-CARD` Markdown은 optional입니다. `harness.status`, `harness.next`, significant resume flows의 current-position Journey Card output은 agency conformance에 계속 required입니다.
 
@@ -246,6 +336,23 @@ StateRecordRef:
 ```
 
 MVP에는 `accepted_risk` `StateRecordRef.record_kind`가 없습니다. `accepted_risk_refs`, `accepted_refs`, 또는 accepted-risk equivalent로 이름 붙은 public fields는 `record_kind=residual_risk`인 `StateRecordRef` entries를 사용해야 합니다. Accepted risk는 그 Residual Risk records의 metadata/state입니다.
+
+이 다이어그램은 raw evidence registration과 state-record references를 구분합니다. `ArtifactInput`은 Core validation과 registration을 거쳐야만 `ArtifactRef`가 되며, state 또는 projection records는 `StateRecordRef`를 사용합니다.
+
+```mermaid
+flowchart TD
+  ArtifactInput["ArtifactInput"] --> Source{"source_kind"}
+  Source --> Existing["existing_artifact"]
+  Source --> Staged["staged_file"]
+  Existing --> ValidateExisting["verify task relation and reuse compatibility"]
+  Staged --> ValidateStaged["verify staged_uri, bytes, redaction, and relation"]
+  ValidateExisting --> Register["Core validation / registration"]
+  ValidateStaged --> Register
+  Register --> ArtifactRef["ArtifactRef<br/>durable evidence file"]
+
+  StateRecordRef["StateRecordRef<br/>state or projection record"] --> RecordKind["record_kind"]
+  ArtifactRef -. "not a StateRecordRef" .-> StateRecordRef
+```
 
 Evidence references, approval scope, write authorization, Write Authority Summary display, end-to-end paths는 다음 shared shapes를 사용합니다.
 
@@ -450,6 +557,55 @@ AcceptanceVisibilityContext:
   what_acceptance_does_not_replace: string[]
 ```
 
+이 composition diagram은 API responses를 위한 current judgment context가 어떻게 assemble되는지 보여 줍니다. 위 YAML schema보다 의도적으로 high level입니다.
+
+```mermaid
+classDiagram
+  class DecisionPacket {
+    +status
+    +decision_kind
+    +affected_gates
+  }
+  class JourneyCardSummary {
+    +state
+    +current_position
+    +next_action
+  }
+  class JudgmentContext {
+    +current_state_summary
+    +minimum_context
+    +relevant_refs
+  }
+  class AutonomyBoundarySummary {
+    +status
+    +autonomy_profile
+    +triggered_stop_conditions
+  }
+  class ResidualRiskSummary {
+    +status
+    +close_relevant_count
+  }
+  class AcceptanceVisibilityContext {
+    +verification_status
+    +qa_status
+    +acceptance_status
+  }
+  class WriteAuthoritySummary
+  class EvidenceRefs
+  class StateRecordRef
+
+  JudgmentContext "1" o-- "0..1" JourneyCardSummary : journey_card
+  JudgmentContext "1" o-- "0..*" StateRecordRef : relevant_refs
+  JudgmentContext "1" o-- "1" EvidenceRefs : evidence_refs
+  JudgmentContext "1" o-- "0..1" AcceptanceVisibilityContext : acceptance_visibility
+  JourneyCardSummary "1" o-- "0..1" WriteAuthoritySummary : write_authority_summary
+  JourneyCardSummary "1" o-- "0..1" ResidualRiskSummary : residual_risk_summary
+  AcceptanceVisibilityContext "1" o-- "0..1" ResidualRiskSummary : residual_risk_summary
+  DecisionPacket "1" o-- "1" EvidenceRefs : context evidence
+  DecisionPacket "1" o-- "0..*" StateRecordRef : source_refs
+  AutonomyBoundarySummary "1" o-- "0..*" StateRecordRef : related_decision_packet_refs
+```
+
 `ResidualRiskSummary.status=none`은 current Task와 requested action에 대해 Core가 알고 있는 close-relevant Residual Risk가 없다는 뜻입니다. 이는 acceptance와 ordinary successful close에서 residual-risk visibility를 satisfy하며, 이때 `close_relevant_count=0`이고 risk-ref arrays는 비어 있습니다. Core가 hidden, blocked, 또는 표시되지 않은 close-relevant risk를 알고 있다면 이 status를 반환하면 안 되며, 그런 경우 `not_visible` 또는 `blocked`를 사용합니다.
 
 `ResidualRiskSummary.accepted_refs`, `unaccepted_refs`, related acceptance visibility risk-ref arrays는 `record_kind=residual_risk`인 `StateRecordRef` entries를 포함합니다.
@@ -593,6 +749,25 @@ MCP server 또는 caller가 Core에 전혀 닿을 수 없으면 surface 또는 o
 | 24 | `ARTIFACT_MISSING` | referenced artifact file이 missing이거나 integrity check에 failed함 |
 | 25 | `VALIDATOR_FAILED` | 위의 더 specific한 typed blocker가 적용되지 않을 때만 선택되는 generic validator fallback |
 
+이 flowchart는 precedence table을 selection order로 group합니다. Exact public `ErrorCode` contract는 위 table입니다.
+
+```mermaid
+flowchart TD
+  Start["Core can evaluate request"] --> Conflict["1 STATE_CONFLICT"]
+  Conflict --> Availability["2 MCP_UNAVAILABLE"]
+  Availability --> Active["3 NO_ACTIVE_TASK<br/>4 NO_ACTIVE_CHANGE_UNIT"]
+  Active --> Baseline["5 BASELINE_STALE"]
+  Baseline --> Scope["6 SCOPE_REQUIRED<br/>7 SCOPE_VIOLATION"]
+  Scope --> WriteAuth["8 WRITE_AUTHORIZATION_REQUIRED<br/>9 WRITE_AUTHORIZATION_INVALID"]
+  WriteAuth --> Approval["10 APPROVAL_DENIED<br/>11 APPROVAL_EXPIRED<br/>12 APPROVAL_REQUIRED"]
+  Approval --> Decision["13 DECISION_UNRESOLVED<br/>14 AUTONOMY_BOUNDARY_EXCEEDED<br/>15 DECISION_REQUIRED"]
+  Decision --> Capability["16 CAPABILITY_INSUFFICIENT"]
+  Capability --> Evidence["17 EVIDENCE_INSUFFICIENT<br/>18 VERIFY_NOT_DETACHED"]
+  Evidence --> Human["19 QA_REQUIRED<br/>20 RESIDUAL_RISK_NOT_VISIBLE<br/>21 ACCEPTANCE_REQUIRED"]
+  Human --> Projection["22 PROJECTION_STALE<br/>23 RECONCILE_REQUIRED<br/>24 ARTIFACT_MISSING"]
+  Projection --> Fallback["25 VALIDATOR_FAILED"]
+```
+
 #### `harness.close_task` Close Blockers
 
 `harness.close_task`는 여러 close blockers를 반환할 수 있습니다. `CloseTaskResponse.base.errors`의 primary `ToolError`는 위 precedence를 사용합니다. Present하면 `CloseTaskResponse.base.errors[0].code`가 primary close error code입니다. `CloseTaskResponse.blockers`는 observed close blockers를 같은 relative order로 포함해야 합니다. Required acceptance는 close-relevant residual risk가 visible한 뒤에만 record하거나 rely할 수 있으므로 close 및 acceptance flows에서 residual-risk visibility는 `ACCEPTANCE_REQUIRED`보다 앞에 둡니다.
@@ -608,6 +783,55 @@ State-changing tools에서 Core는 `expected_state_version`을 current project/t
 State conflict 비교는 scope-specific입니다. Core는 먼저 `ToolEnvelope.task_id`, tool-specific `task_id`, 또는 active Task resolution에서 primary addressed Task를 resolve합니다. Task-scoped tools는 해당 Task의 `tasks.state_version`과 비교하고, resolved primary Task가 없는 project-scoped tools는 `project_state.state_version`과 비교합니다. `STATE_CONFLICT.details`에는 `scope`(`task` 또는 `project`), `current_state_version`, `expected_state_version`, relevant `project_id`, 그리고 `scope=task`일 때 `task_id`를 포함해야 합니다. Refresh guidance를 위한 compact status summary도 포함할 수 있습니다.
 
 ## Public Tools
+
+이 sequence는 `harness.prepare_write` branch를 명시한 public tool write path 요약입니다. Product write와 `harness.record_run`은 `prepare_write`가 `allowed`를 반환한 뒤에만 진행되며, blocker paths는 write를 중단하고 blocking decision이 resolved된 뒤 fresh retry를 요구합니다.
+
+```mermaid
+sequenceDiagram
+  participant Caller
+  participant Core
+  participant User
+  Caller->>Core: harness.intake / harness.status / harness.next
+  Core-->>Caller: StateSummary, JourneyCardSummary, next_action
+  Caller->>Core: harness.prepare_write
+  alt decision=allowed
+    Core-->>Caller: Write Authorization
+    Caller->>Core: harness.record_run
+    Core-->>Caller: Run, artifacts, evidence refs
+  else decision=blocked
+    Core-->>Caller: blocker; no product write; no record_run
+  else decision=approval_required or decision_required
+    Core-->>Caller: candidate or Decision Packet refs; no product write; no record_run
+    Caller->>Core: harness.request_user_decision
+    Core-->>Caller: DecisionPacket
+    User->>Core: harness.record_user_decision
+    Core-->>Caller: updated gates and state_version
+    Note over Caller: refresh state; use fresh expected_state_version and fresh idempotency key
+    Caller->>Core: harness.prepare_write retry
+    alt retry decision=allowed
+      Core-->>Caller: Write Authorization
+      Caller->>Core: harness.record_run
+      Core-->>Caller: Run, artifacts, evidence refs
+    else retry still blocked
+      Core-->>Caller: blocker; no product write; no record_run
+    end
+  end
+  Note over Caller,Core: remaining steps apply only after harness.record_run
+  opt verification required
+    Caller->>Core: harness.launch_verify / harness.record_eval
+    Core-->>Caller: verification state
+  end
+  opt Manual QA required
+    Caller->>Core: harness.record_manual_qa
+    Core-->>Caller: Manual QA state
+  end
+  opt acceptance required
+    Caller->>Core: harness.request_user_decision / harness.record_user_decision
+    Core-->>Caller: acceptance state
+  end
+  Caller->>Core: harness.close_task
+  Core-->>Caller: terminal state or blockers
+```
 
 ### `harness.status`
 
@@ -883,6 +1107,24 @@ Sensitive-change approval은 다음 recipe를 따릅니다.
 7. Approval이 granted이면 caller는 fresh idempotency key와 current `expected_state_version`으로 `harness.prepare_write`를 다시 호출합니다.
 8. 그 retry만 Write Authorization을 create할 수 있습니다. Approved scope, baseline, sensitive categories, paths, tools, commands, network targets, secret scope, Decision Packet refs, Approval refs, capability checks가 current intended write와 compatible할 때만 성공합니다.
 
+이 sequence diagram은 authority boundaries를 바꾸지 않고 approval lifecycle을 요약합니다. Approval은 product judgment 및 Write Authorization과 분리됩니다.
+
+```mermaid
+sequenceDiagram
+  participant Caller
+  participant Core
+  participant User
+  Caller->>Core: harness.prepare_write
+  Core-->>Caller: decision=approval_required, approval_request_candidate
+  Caller->>Core: harness.request_user_decision decision_kind=approval
+  Core-->>Caller: DecisionPacket + pending Approval
+  Core-->>User: approval-shaped judgment context
+  User->>Core: harness.record_user_decision
+  Core-->>Caller: approval_gate=granted, denied, or expired
+  Caller->>Core: harness.prepare_write retry
+  Core-->>Caller: Write Authorization only if still compatible
+```
+
 Approval은 defined scope 안의 sensitive categories를 authorize합니다. Approval은 product trade-offs, design direction, verification risk, QA waiver, final acceptance, residual-risk acceptance를 resolve하지 않습니다. Sensitive action이 product judgment도 포함하면 Core는 `prepare_write`가 `allowed`를 반환하기 전에 separate compatible Decision Packet을 요구해야 합니다. Approval은 Write Authorization이 아닙니다. Actual product writes에는 여전히 allowed `prepare_write` result와 반환된 Write Authorization을 compatible하게 consume하는 `harness.record_run`이 필요합니다.
 
 ### `harness.record_run`
@@ -997,6 +1239,34 @@ TddTraceUpdate:
 `write_authorization_id`는 `harness.prepare_write`가 반환한 compatible Write Authorization을 reference합니다. `kind=implementation`과 `kind=direct`에서는 Run이 product write를 기록하지 않고 Core가 read-only evidence 또는 shaping으로 classify하는 경우를 제외하면 `write_authorization_id`가 required입니다. `kind=shaping_update`에서는 `write_authorization_id`가 `null`이어야 합니다. MVP는 observed product writes도 함께 기록하는 shaping update를 support하지 않으므로, 그런 writes는 compatible authorization과 함께 `kind=implementation` 또는 `kind=direct`로 record해야 합니다. `kind=verification_input`에서는 `write_authorization_id`를 `null`로 둡니다. Product writes를 create하는 verification input은 MVP에서 보통 disallowed여야 합니다.
 
 `runs.write_authorization_id`는 Run이 compatible Write Authorization을 성공적으로 consume할 때만 populated됩니다. Invalid, stale, missing, consumed, scope-exceeded authorization을 사용하려 한 violation 또는 audit Run은 `runs.write_authorization_id`를 consumed authorization으로 populate하면 안 됩니다. Audit에 유용한 attempted authorization ref는 validator findings, run violation payload, 또는 `task_events.payload_json`에 기록해야 합니다. Observed product write가 이미 발생했다면 audit 또는 recovery를 위해 이런 violation Run을 record할 수 있지만, evidence sufficiency, detached verification, QA, acceptance, close readiness를 satisfy하면 안 됩니다. Corresponding Write Authorization은 unconsumed로 남아야 하며 violation과 compatibility basis에 따라 stale, revoked, expired로 mark될 수 있습니다.
+
+이 branch diagram은 `harness.record_run`의 API-level `kind` handling을 보여 줍니다. Exact payload branches는 request schema가 계속 소유합니다.
+
+```mermaid
+flowchart TD
+  Start["harness.record_run"] --> Kind{"kind"}
+  Kind --> Shaping["shaping_update"]
+  Kind --> Implementation["implementation"]
+  Kind --> Direct["direct"]
+  Kind --> VerificationInput["verification_input"]
+
+  Shaping --> ShapingPayload["ShapingUpdatePayload only"]
+  ShapingPayload --> ShapingWrites{"observed product writes?"}
+  ShapingWrites -- yes --> RejectShaping["reject; write path must be implementation or direct"]
+  ShapingWrites -- no --> RecordShaping["record shaping updates and Change Unit updates"]
+
+  Implementation --> ImplAuth{"compatible write_authorization_id?"}
+  Direct --> ImplAuth
+  ImplAuth -- yes --> Consume["consume Write Authorization"]
+  Consume --> RecordEvidence["record Run, artifacts, and EvidenceUpdates"]
+  ImplAuth -- missing --> Required["WRITE_AUTHORIZATION_REQUIRED when required"]
+  ImplAuth -- invalid --> Invalid["WRITE_AUTHORIZATION_INVALID or SCOPE_VIOLATION"]
+
+  VerificationInput --> VerifyPayload["VerificationInputPayload only"]
+  VerifyPayload --> VerifyWrites{"product writes?"}
+  VerifyWrites -- yes --> Invalid
+  VerifyWrites -- no --> RecordBundle["record evaluator bundle context"]
+```
 
 Response schema:
 
@@ -1173,6 +1443,31 @@ RecordUserDecisionResponse:
 `RecordUserDecisionResponse.accepted_risk_refs`는 `record_kind=residual_risk`인 `StateRecordRef` entries만 포함합니다. Standalone accepted-risk record kind는 없습니다.
 
 State transition summary: targeted Decision Packet을 resolve, defer, reject, block합니다. Affected gates 또는 reconcile item을 update합니다. Approval grant/deny는 linked Approval record와 `approval_gate`를 update하지만 Write Authorization을 create하지 않습니다. Accepted scope는 `scope_gate`를 update하고, user-resolved product judgment는 `decision_gate`를 update합니다. Accepted Autonomy Boundary decisions는 active Change Unit boundary를 update할 수 있습니다. Verification waiver는 `verification_gate=waived_by_user`를 update하고, QA waiver는 `qa_gate`를 update합니다. Acceptance는 user decision을 Decision Packet에 record하고 `acceptance_gate`를 update합니다. Accepted residual risk는 assurance를 upgrade하지 않고 Residual Risk records를 update하며 그 refs를 반환합니다. Reconcile은 accepted state records를 create할 수 있습니다.
+
+이 flowchart는 `decision_kind` outcomes를 group합니다. 각 branch는 여전히 위 schema의 exact payload branch와 match해야 합니다.
+
+```mermaid
+flowchart TD
+  Start["harness.record_user_decision"] --> Kind{"decision_kind"}
+  Kind --> Approval["approval"]
+  Approval --> ApprovalOutcome["update linked Approval and approval_gate"]
+  Kind --> Scope["scope_confirmation"]
+  Scope --> ScopeOutcome["update scope_gate or request revised scope"]
+  Kind --> ProductJudgment["design_choice, architecture_choice, product_tradeoff"]
+  ProductJudgment --> DecisionOutcome["update decision_gate and affected records"]
+  Kind --> Autonomy["autonomy_boundary"]
+  Autonomy --> AutonomyOutcome["update Autonomy Boundary or keep blocker"]
+  Kind --> VerificationWaiver["verification_waiver"]
+  VerificationWaiver --> VerificationOutcome["verification_gate=waived_by_user or blocker"]
+  Kind --> QAWaiver["qa_waiver"]
+  QAWaiver --> QAOutcome["qa_gate=waived when compatible"]
+  Kind --> Acceptance["acceptance"]
+  Acceptance --> AcceptanceOutcome["update acceptance_gate after residual-risk visibility"]
+  Kind --> RiskAcceptance["residual_risk_acceptance"]
+  RiskAcceptance --> RiskOutcome["update Residual Risk records and accepted_risk_refs"]
+  Kind --> Reconcile["reconcile"]
+  Reconcile --> ReconcileOutcome["merge, reject, convert_to_note, create_decision, or defer"]
+```
 
 implementation-local detail/audit를 위해 반환될 수 있는 non-stable EventRef values: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
 
@@ -1400,6 +1695,40 @@ CloseTaskResponse:
 ```
 
 Close blockers에는 unresolved, missing, deferred-without-coverage, blocked, rejected, stale, incompatible blocking Decision Packets와, successful close 전에 visible하지 않은 known close-relevant residual risk가 포함됩니다. Known close-relevant residual risk가 없으면 `ResidualRiskSummary.status=none`이 residual-risk visibility를 satisfy하며 close blocker가 아닙니다. Risk-accepted close에는 visible and accepted Residual Risk refs가 추가로 필요합니다. Acceptance가 required인 경우 close-relevant residual risk가 visible하거나 `ResidualRiskSummary.status=none`으로 confirmed된 뒤에만 acceptance를 record할 수 있습니다.
+
+이 flowchart는 `harness.close_task`의 terminal outcomes와 close blockers를 요약합니다. `requested_close_reason`은 input intent일 뿐입니다. Core는 close-relevant state를 확인한 뒤 final `result`와 `close_reason`을 assign합니다. Blocker codes는 위에서 정의한 primary error precedence를 계속 사용합니다.
+
+```mermaid
+flowchart TD
+  Start["harness.close_task"] --> Request["intent + requested_close_reason<br/>input intent only"]
+  Request --> Intent{"intent"}
+  Intent --> Complete["complete"]
+  Intent --> Cancel["cancel"]
+  Intent --> Supersede["supersede"]
+  Cancel --> Unsafe{"unsafe write in progress?"}
+  Supersede --> Unsafe
+  Unsafe -- yes --> Blocked["closed=false with blockers"]
+  Unsafe -- no --> Cancelled["lifecycle_phase=cancelled"]
+
+  Complete --> ActiveRun{"active Run open?"}
+  ActiveRun -- yes --> Blocked
+  ActiveRun -- no --> Gates{"scope, decision, approval, design, evidence, verification, QA compatible?"}
+  Gates -- no --> Blocked
+  Gates -- yes --> Risk{"residual risk visible or status=none?"}
+  Risk -- no --> Blocked
+  Risk -- yes --> Acceptance{"acceptance_gate compatible where required?"}
+  Acceptance -- no --> Blocked
+  Acceptance -- yes --> Assign["Core checks assurance, evidence, verification, QA, acceptance, residual-risk visibility, and accepted Residual Risk refs"]
+  Assign --> Classification{"Core assigns result and close_reason"}
+  Classification --> Verified["result=passed<br/>close_reason=completed_verified"]
+  Classification --> SelfChecked["result=passed<br/>close_reason=completed_self_checked"]
+  Classification --> RiskAccepted["result=passed<br/>close_reason=completed_with_risk_accepted"]
+  Verified --> Closed["closed=true; lifecycle_phase=completed"]
+  SelfChecked --> Closed
+  RiskAccepted --> RiskRefs{"visible accepted Residual Risk refs?"}
+  RiskRefs -- yes --> Closed
+  RiskRefs -- no --> Blocked
+```
 
 State transition summary: successful completion은 Task를 result와 close reason이 있는 `completed`로 옮깁니다. Cancellation/supersession은 Task를 `cancelled`로 옮깁니다. Failed close는 Task를 non-terminal로 남기고 blockers를 report합니다.
 

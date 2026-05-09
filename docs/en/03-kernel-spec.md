@@ -31,6 +31,25 @@ The kernel records references to raw evidence and projections, but neither chat 
 
 `work` is for structured implementation, non-local change, riskier change, or work that needs independent verification. It is write-capable, requires an active scoped Change Unit before product writes, and cannot be marked `detached_verified` by same-session self-review.
 
+This diagram summarizes mode selection and write eligibility. The mode prose above remains the canonical contract for when writes, evidence, verification, QA, and acceptance apply.
+
+```mermaid
+flowchart LR
+  Classify["Task classified"] --> Advisor["mode=advisor"]
+  Classify --> Direct["mode=direct"]
+  Classify --> Work["mode=work"]
+
+  Advisor --> AdvisorRead["read-only product work"]
+  AdvisorRead --> AdviceClose["usually result=advice_only"]
+
+  Direct --> DirectScope["active scoped Change Unit required for product writes"]
+  Work --> WorkScope["active scoped Change Unit required for product writes"]
+  DirectScope --> PrepareWrite["prepare_write"]
+  WorkScope --> PrepareWrite
+  PrepareWrite --> WriteAuth["Write Authorization for one allowed write attempt"]
+  PrepareWrite --> WriteBlocked["blocked, approval_required, decision_required, or state_conflict"]
+```
+
 ### Direct Fast Path
 
 Direct still needs an active scoped Change Unit before product writes. For small obvious requests, the Change Unit may be minimal and derived from the user's request, as long as it records the intended operation and scoped write surface clearly enough for `prepare_write` and `record_run` compatibility checks.
@@ -40,6 +59,132 @@ No Decision Packet is created unless blocking product judgment is detected. Evid
 Manual QA, detached verification, and residual-risk acceptance are not required for direct work unless policy, changed surface, user request, or detected risk requires them. If scope, risk, affected interface, or evidence expectations grow beyond the direct assumptions, the same Task escalates to `work` rather than continuing as direct.
 
 ## Entity Model
+
+These diagrams show the record relationships at a navigation level. They do not add fields or storage contracts; the entity subsections and Reference MVP DDL remain authoritative.
+
+```mermaid
+classDiagram
+  class Task {
+    +mode
+    +lifecycle_phase
+    +result
+    +close_reason
+    +assurance_level
+    +gate_states
+    +state_version
+  }
+  class ChangeUnit {
+    +scope
+    +autonomy_boundary
+    +sensitive_categories
+    +completion_conditions
+  }
+  class DecisionPacket {
+    +status
+    +decision_kind
+    +affected_gates
+  }
+  class Run {
+    +actor
+    +baseline
+    +intended_operation
+    +observed_changes
+  }
+  class Approval {
+    +sensitive_categories
+    +scope
+    +expiry
+  }
+  class WriteAuthorization {
+    +basis_state_version
+    +status
+    +guarantee_level
+  }
+  class EvidenceManifest {
+    +criterion_support
+    +status
+  }
+  class Eval {
+    +verdict
+    +independence_qualifier
+  }
+  class ManualQA {
+    +result
+  }
+  class ResidualRisk {
+    +visibility_status
+    +accepted_risk_metadata
+  }
+  class Artifact {
+    +kind
+    +sha256
+    +uri
+  }
+
+  Task "1" o-- "0..*" ChangeUnit : owns
+  Task "1" o-- "0..*" DecisionPacket : has
+  Task "1" o-- "0..*" Run : records
+  Task "1" o-- "0..*" Approval : links
+  Task "1" o-- "0..*" WriteAuthorization : links
+  Task "1" o-- "0..*" EvidenceManifest : uses
+  Task "1" o-- "0..*" Eval : verifies
+  Task "1" o-- "0..*" ManualQA : checks
+  Task "1" o-- "0..*" ResidualRisk : tracks
+  Run "0..1" --> "0..1" WriteAuthorization : consumes
+  ChangeUnit "1" --> "0..*" WriteAuthorization : bounds
+  EvidenceManifest "1" --> "0..*" Artifact : cites
+  Run "1" --> "0..*" Artifact : produces
+  Eval "1" --> "0..*" Artifact : reviews
+  ManualQA "1" --> "0..*" Artifact : captures
+  ResidualRisk "0..*" --> "0..1" DecisionPacket : may relate
+```
+
+Design and continuity support records are kernel-owned support records, while their policy and storage details stay in their owning documents.
+
+```mermaid
+classDiagram
+  class Task
+  class JourneySpineEntry {
+    +annotation_kind
+    +source_refs
+  }
+  class ReconcileItem {
+    +candidate_change
+    +decision
+  }
+  class SharedDesign {
+    +goals
+    +assumptions
+    +decisions
+  }
+  class DomainTerm {
+    +term
+    +meaning
+  }
+  class ModuleMapItem {
+    +module
+    +boundary
+  }
+  class InterfaceContract {
+    +provider
+    +consumer
+  }
+  class TddTrace {
+    +red
+    +green
+    +refactor
+  }
+  class EvidenceManifest
+
+  Task "1" o-- "0..*" JourneySpineEntry : continuity
+  Task "1" o-- "0..*" ReconcileItem : drift candidates
+  Task "1" o-- "0..*" SharedDesign : design support
+  Task "1" o-- "0..*" TddTrace : test discipline
+  SharedDesign "1" --> "0..*" DomainTerm : uses
+  SharedDesign "1" --> "0..*" ModuleMapItem : maps
+  ModuleMapItem "1" --> "0..*" InterfaceContract : constrains
+  TddTrace "0..*" --> "0..1" EvidenceManifest : supports
+```
 
 ### Task
 
@@ -193,6 +338,29 @@ Journey Spine is derived from kernel state, registered artifact references, and 
 
 Approval and Decision Packet authority are separate. Approval authorizes sensitive categories inside defined scope; it is not the authority path for product judgment. If a sensitive action also includes a product trade-off, architecture choice, QA waiver, verification risk, acceptance, residual-risk acceptance, or public interface commitment, the Approval may authorize only the sensitive category. The product judgment still requires a compatible Decision Packet.
 
+This diagram summarizes source-of-truth boundaries for common human-readable surfaces. Arrows point from canonical or accepted inputs toward derived views or authority records.
+
+```mermaid
+flowchart TD
+  UserNotes["User Notes"] --> Reconcile["reconcile_items"]
+  HumanEditable["human-editable projection surface"] --> Reconcile
+  Reconcile --> AcceptedState["accepted state event/record"]
+
+  DomainTerms["domain_terms"] --> DomainLanguage["DOMAIN-LANGUAGE projection"]
+  ModuleMapItems["module_map_items"] --> ModuleMap["MODULE-MAP projection"]
+  InterfaceContracts["interface_contracts"] --> InterfaceProjection["INTERFACE-CONTRACT projection"]
+
+  KernelState["kernel state"] --> DecisionPacket["Decision Packet"]
+  KernelState --> ResidualRisk["Residual Risk"]
+  KernelState --> JourneySpineEntry["Journey Spine Entry when needed"]
+  KernelState --> JourneyViews["Journey Card and Journey Spine projections"]
+  ArtifactRefs["registered artifact references"] --> JourneyViews
+  TaskEvents["state.sqlite.task_events"] --> JourneyViews
+
+  Approval["Approval"] --> SensitiveScope["sensitive scope only"]
+  DecisionPacket --> ProductJudgment["product judgment authority path"]
+```
+
 ## Lifecycle Model
 
 The kernel uses lifecycle fields plus gates. Compact display states are derived from these canonical fields.
@@ -231,9 +399,79 @@ none | self_checked | detached_verified
 
 Assurance is not approval, QA, or acceptance. It summarizes the technical checking level supported by runs, evidence, Eval records, and verification independence.
 
+This state diagram orients the major `lifecycle_phase` values. The transition table below remains the canonical source for gate effects and detailed transition conditions.
+
+```mermaid
+stateDiagram-v2
+  [*] --> intake
+  intake --> executing: advisor
+  intake --> ready: direct
+  intake --> shaping: work
+  shaping --> ready: scope confirmed
+  ready --> executing: prepare_write allowed
+  executing --> verifying: work implementation recorded
+  executing --> waiting_user: decision, approval, or acceptance needed
+  verifying --> qa: verification passed
+  verifying --> executing: rework
+  qa --> waiting_user: acceptance requested
+  waiting_user --> shaping: decision changes shape
+  waiting_user --> ready: blocker resolved
+  waiting_user --> executing: runnable again
+  waiting_user --> blocked: unresolved blocker
+  blocked --> waiting_user: user decision needed
+  blocked --> shaping: repair or rescope
+  ready --> completed: close_task succeeds
+  executing --> completed: close_task succeeds
+  verifying --> completed: close_task succeeds
+  qa --> completed: close_task succeeds
+  intake --> cancelled: cancel or supersede
+  shaping --> cancelled: cancel or supersede
+  ready --> cancelled: cancel or supersede
+  executing --> cancelled: cancel or supersede
+  verifying --> cancelled: cancel or supersede
+  qa --> cancelled: cancel or supersede
+```
+
 ## Gate Model
 
 Gates are canonical kernel fields used by `prepare_write`, `close_task`, status display, and conformance fixtures.
+
+This map shows where gates are consumed by the two main kernel decision points. It is a navigation aid; each gate subsection below owns its enum values and compatibility meaning.
+
+```mermaid
+flowchart LR
+  Prepare["prepare_write"] --> PState["state version and baseline"]
+  Prepare --> PScope["scope_gate and active Change Unit"]
+  Prepare --> PDecision["decision_gate and Decision Packets"]
+  Prepare --> PApproval["approval_gate"]
+  Prepare --> PDesign["design_gate"]
+  Prepare --> PCapability["surface capability check"]
+  PState --> WriteAuth["Write Authorization or blocker"]
+  PScope --> WriteAuth
+  PDecision --> WriteAuth
+  PApproval --> WriteAuth
+  PDesign --> WriteAuth
+  PCapability --> WriteAuth
+
+  Close["close_task"] --> CScope["scope_gate"]
+  Close --> CDecision["decision_gate"]
+  Close --> CApproval["approval_gate"]
+  Close --> CDesign["design_gate"]
+  Close --> CEvidence["evidence_gate"]
+  Close --> CVerify["verification_gate"]
+  Close --> CQA["qa_gate"]
+  Close --> CRisk["residual-risk visibility"]
+  Close --> CAcceptance["acceptance_gate"]
+  CScope --> CloseResult["completed, cancelled, superseded, or close_blocked"]
+  CDecision --> CloseResult
+  CApproval --> CloseResult
+  CDesign --> CloseResult
+  CEvidence --> CloseResult
+  CVerify --> CloseResult
+  CQA --> CloseResult
+  CRisk --> CloseResult
+  CAcceptance --> CloseResult
+```
 
 ### Scope Gate
 
@@ -274,6 +512,24 @@ Recompute precedence is:
 6. `not_required` when no blocking product judgment applies to the current operation or close intent.
 
 A stored `decision_gate` value that disagrees with recomputation is stale state and must be repaired before write or close decisions rely on it.
+
+The recompute flow applies the precedence above from highest to lowest. `decision_requests` metadata is not an input unless it is linked back to a compatible `decision_packet_id`.
+
+```mermaid
+flowchart TD
+  Start["Relevant blocking Decision Packets + detected blockers"] --> Applies{"Any blocking product judgment applies?"}
+  Applies -- no --> GateNotRequired["decision_gate=not_required"]
+  Applies -- yes --> Blocked{"Any blocked, rejected without replacement, or incompatible?"}
+  Blocked -- yes --> GateBlocked["decision_gate=blocked"]
+  Blocked -- no --> Pending{"Any pending_user packet?"}
+  Pending -- yes --> GatePending["decision_gate=pending"]
+  Pending -- no --> Required{"Detected blocker with no relevant packet or only proposed packets?"}
+  Required -- yes --> GateRequired["decision_gate=required"]
+  Required -- no --> Deferred{"Relevant blocking packets exist and all are deferred with coverage and residual risk or follow-up visibility?"}
+  Deferred -- yes --> GateDeferred["decision_gate=deferred"]
+  Deferred -- no --> Resolved{"All relevant packets resolved or superseded by compatible replacement state?"}
+  Resolved -- yes --> GateResolved["decision_gate=resolved"]
+```
 
 ### Approval Gate
 
@@ -338,6 +594,33 @@ Examples:
 - Work feature: AC-01 maps to passing test log and changed path coverage; AC-02 maps to build log plus run summary; the Evidence Manifest records both as supported.
 - UI copy change: changed copy path, diff artifact, self-check, and required Manual QA record support close; until Manual QA is recorded or validly waived, close remains blocked.
 
+This profile selector is only a summary of the table above. Evidence sufficiency is still judged from the Evidence Manifest plus related records and artifacts.
+
+```mermaid
+flowchart TD
+  Shape["Task shape"] --> AdvisorProfile{"advisor mode?"}
+  AdvisorProfile -- yes --> AdvisorEvidence["profile=advisor"]
+  AdvisorProfile -- no --> DirectDocs{"direct docs-only?"}
+  DirectDocs -- yes --> DirectDocsEvidence["profile=direct docs-only"]
+  DirectDocs -- no --> DirectCode{"direct code?"}
+  DirectCode -- yes --> DirectCodeEvidence["profile=direct code"]
+  DirectCode -- no --> WorkFeature["profile=work feature"]
+
+  WorkFeature --> UIWork{"UI/UX/copy work?"}
+  UIWork -- yes --> UIEvidence["add profile=UI/UX/copy work requirements"]
+  UIWork -- no --> SensitiveWork{"sensitive work?"}
+  UIEvidence --> SensitiveWork
+  SensitiveWork -- yes --> SensitiveEvidence["add profile=sensitive work requirements"]
+  SensitiveWork -- no --> VerifyWork{"verification-required work?"}
+  SensitiveEvidence --> VerifyWork
+  VerifyWork -- yes --> VerifyEvidence["add profile=verification-required work requirements"]
+  VerifyWork -- no --> Manifest["Evidence Manifest decides sufficient, partial, none, stale, or blocked"]
+  AdvisorEvidence --> Manifest
+  DirectDocsEvidence --> Manifest
+  DirectCodeEvidence --> Manifest
+  VerifyEvidence --> Manifest
+```
+
 ### Verification Gate
 
 ```text
@@ -365,6 +648,27 @@ Rules:
 - Valid independence plus passed verification plus absence of a same-session self-review violation is required for `assurance_level=detached_verified`.
 - User verification waiver must close as `completed_with_risk_accepted`, not `completed_verified`.
 - A verifier that can write product files must disclose that in Eval independence context; write capability may reduce confidence and may require an additional guard or bundle review.
+
+This diagram separates non-detached profiles from detached candidates. Assurance upgrades only when the final checks at the bottom also pass.
+
+```mermaid
+flowchart TD
+  EvalCandidate["Eval independence context"] --> SameSession{"same_session?"}
+  SameSession -- yes --> NotDetached["not detached"]
+  SameSession -- no --> Subagent{"subagent_context?"}
+  Subagent -- yes --> StrictProfile{"stricter profile satisfied?"}
+  StrictProfile -- no --> NotDetached
+  StrictProfile -- yes --> DetachedCandidate["detached candidate"]
+  Subagent -- no --> Fresh{"fresh_session, fresh_worktree, sandbox, or manual_bundle?"}
+  Fresh -- no --> NotDetached
+  Fresh -- yes --> DetachedCandidate
+  DetachedCandidate --> Passed{"verdict=passed?"}
+  Passed -- no --> NoUpgrade["no detached_verified upgrade"]
+  Passed -- yes --> Independence{"valid independence and no same-session self-review violation?"}
+  Independence -- yes --> DetachedVerified["assurance_level=detached_verified"]
+  Independence -- no --> NoUpgrade
+  Waiver["verification_gate=waived_by_user"] --> RiskAccepted["close as completed_with_risk_accepted, not completed_verified"]
+```
 
 ### QA Gate
 
@@ -514,6 +818,18 @@ Stable event names are the `event_type` values that MVP conformance fixtures may
 
 The catalog is deliberately compact. Non-stable implementation-local detail or audit events, plus future extension events, may still be recorded in `task_events`, but MVP fixture authors must not require them in `expected_events` until they are added here.
 
+This grouping diagram contains only the stable names listed in the catalog. It is a visual index, not a second event taxonomy.
+
+```mermaid
+flowchart TD
+  Catalog["Stable Event Catalog"] --> WALifecycle["Write Authorization lifecycle<br/>write_authorization_created<br/>write_authorization_returned<br/>write_authorization_consumed<br/>write_authorization_expired<br/>write_authorization_staled<br/>write_authorization_revoked<br/>write_authorization_violation_detected"]
+  Catalog --> PrepareEvents["prepare_write and write gates<br/>prepare_write_allowed<br/>prepare_write_blocked<br/>scope_required<br/>decision_required<br/>autonomy_boundary_exceeded<br/>approval_required<br/>baseline_stale_detected<br/>capability_insufficient_detected"]
+  Catalog --> RunEvidence["Run, evidence, and scope observation<br/>run_recorded<br/>evidence_manifest_updated<br/>scope_violation_detected"]
+  Catalog --> VerificationEvents["Verification<br/>eval_recorded<br/>verification_passed<br/>verify_not_detached_detected"]
+  Catalog --> CloseEvents["Close and risk-accepted close<br/>close_requested<br/>close_blocked<br/>risk_accepted_close_recorded<br/>task_closed<br/>task_cancelled<br/>task_superseded"]
+  Catalog --> ProjectionEvents["Projection, connector, and reconcile operations<br/>projection_refresh_failed<br/>generated_file_drift_detected<br/>reconcile_item_created"]
+```
+
 | Trigger | From | To | Gate or record effect |
 |---|---|---|---|
 | User request is accepted | no active Task | `lifecycle_phase=intake`, `result=none` | create Task |
@@ -603,6 +919,37 @@ The decision algorithm is:
 12. Run surface capability checks. Capability failures are recorded as validator results, blocked reasons, and guarantee display changes; they do not create capability as a first-class kernel gate.
 13. If all required checks pass, create a compatible unexpired Write Authorization for the intended operation, or return the already committed response for idempotent replay of the same request, record the decision, and return `allowed`.
 
+This flowchart summarizes the write decision path. The numbered algorithm remains the source of truth for ordering and side effects.
+
+```mermaid
+flowchart TD
+  Start["prepare_write request"] --> StateVersion{"expected_state_version fresh?"}
+  StateVersion -- no --> StateConflict["decision=state_conflict"]
+  StateVersion -- yes --> ActiveTask{"Active Task?"}
+  ActiveTask -- no --> Blocked["decision=blocked"]
+  ActiveTask -- yes --> WriteMode{"mode write-eligible?"}
+  WriteMode -- no --> Blocked
+  WriteMode -- yes --> ActiveCU{"Active Change Unit scopes write?"}
+  ActiveCU -- no --> Blocked
+  ActiveCU -- yes --> Autonomy{"Inside Autonomy Boundary?"}
+  Autonomy -- no --> DecisionRequired["decision=decision_required when user judgment can resolve; otherwise blocked"]
+  Autonomy -- yes --> Scope{"Paths, tools, commands, network, and secrets in scope?"}
+  Scope -- no --> Blocked
+  Scope -- yes --> Baseline{"Baseline fresh?"}
+  Baseline -- no --> Blocked
+  Baseline -- yes --> Sensitive{"Sensitive categories present?"}
+  Sensitive -- yes --> Approval{"Compatible approval granted?"}
+  Approval -- no --> ApprovalRequired["decision=approval_required; no Approval, Decision Packet, Write Authorization, or APR"]
+  Approval -- yes --> Design
+  Sensitive -- no --> Design{"Design policy preconditions pass?"}
+  Design -- no --> PolicyBlocker["decision=blocked or decision_required according to policy"]
+  Design -- yes --> Decisions{"Blocking Decision Packets compatible or not required?"}
+  Decisions -- no --> DecisionBlocker["decision_required when user judgment can resolve; otherwise blocked"]
+  Decisions -- yes --> Capability{"Surface capability sufficient?"}
+  Capability -- no --> Blocked
+  Capability -- yes --> Allowed["decision=allowed; create or return Write Authorization"]
+```
+
 Required checks include active Task, active Change Unit, mode write eligibility, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, surface capability profile, and design policy preconditions.
 
 An `allowed` decision must create or reference a Write Authorization with `status=allowed` and a recorded `basis_state_version` for the affected scope used by the allow decision. `authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request with the same idempotency key, request hash, and `basis_state_version`, or for returning the already committed response. A distinct compatible request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Blocked, approval-required, decision-required, or state-conflict results must not create a consumable Write Authorization for the attempted write. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes.
@@ -630,6 +977,35 @@ The Task cannot rely on a blocked or violation Run for close until the state is 
 MVP `shaping_update` is not a product-write recording path. Shaping-only Runs may be recorded without consuming Write Authorization, but they must not include product file changes. If a `shaping_update` also reports observed product writes, Core rejects it and requires `kind=implementation` or `kind=direct` with a compatible Write Authorization.
 
 Read-only Runs may be recorded without consuming Write Authorization, but they must not include product file changes. If such a Run observes product changes, Core treats it as an implementation/direct compatibility failure.
+
+This flowchart shows how `record_run` treats Write Authorization compatibility. It does not create retroactive write authority.
+
+```mermaid
+flowchart TD
+  Start["record_run request"] --> Kind{"kind"}
+  Kind --> Shaping["shaping_update"]
+  Kind --> Implementation["implementation or direct"]
+  Kind --> VerificationInput["verification_input"]
+
+  Shaping --> ShapingWrites{"Reports product writes?"}
+  ShapingWrites -- yes --> RejectShaping["reject; use implementation or direct with compatible Write Authorization"]
+  ShapingWrites -- no --> RecordShaping["record shaping-only Run"]
+
+  VerificationInput --> VerificationWrites{"Creates product writes?"}
+  VerificationWrites -- yes --> RejectVerification["disallow or treat as compatibility failure"]
+  VerificationWrites -- no --> RecordVerification["record evaluator bundle context"]
+
+  Implementation --> ProductWrites{"Reports product writes?"}
+  ProductWrites -- no --> AuthStillRequired{"Write Authorization still required by kind, Change Unit, or intended operation?"}
+  AuthStillRequired -- yes --> MissingReject["reject when authorization is missing"]
+  AuthStillRequired -- no --> RecordReadonly["record read-only evidence Run"]
+  ProductWrites -- yes --> AuthCheck{"Compatible unexpired unconsumed Write Authorization?"}
+  AuthCheck -- yes --> Consume["consume authorization and populate runs.write_authorization_id"]
+  Consume --> RecordRun["record Run, artifacts, and evidence"]
+  AuthCheck -- no --> Violation["reject or record blocked or violation Run for audit"]
+  Violation --> NoConsumption["do not populate runs.write_authorization_id"]
+  Violation --> StaleState["mark affected scope, evidence, approval, verification, and projection state stale or blocked"]
+```
 
 ## `close_task` State Logic
 
@@ -660,6 +1036,42 @@ The decision algorithm is:
 15. Report projection freshness. Projection stale or failed status is shown to the user and export, but it does not by itself make the Task failed.
 16. Update current records, append a close event, and enqueue projection refresh.
 
+This flowchart summarizes close blockers and terminal assignment. Public API responses still choose the primary `ToolError.code` using the API precedence table.
+
+```mermaid
+flowchart TD
+  Start["close_task request"] --> ActiveTask{"Active Task and close intent resolved?"}
+  ActiveTask -- no --> BlockClose["close blocked"]
+  ActiveTask -- yes --> CancelIntent{"intent=cancel or supersede?"}
+  CancelIntent -- yes --> UnsafeWrite{"Unsafe write in progress?"}
+  UnsafeWrite -- yes --> BlockClose
+  UnsafeWrite -- no --> Cancelled["lifecycle_phase=cancelled; result=cancelled"]
+  CancelIntent -- no --> ActiveRun{"Active Run still open?"}
+  ActiveRun -- yes --> BlockClose
+  ActiveRun -- no --> ChangeUnit{"Write-capable Task Change Unit complete, deferred, superseded, or not needed?"}
+  ChangeUnit -- no --> BlockClose
+  ChangeUnit -- yes --> Scope{"scope_gate compatible where required?"}
+  Scope -- no --> BlockClose
+  Scope -- yes --> Decision{"decision_gate and blocking Decision Packets compatible?"}
+  Decision -- no --> BlockClose
+  Decision -- yes --> Approval{"approval_gate compatible?"}
+  Approval -- no --> BlockClose
+  Approval -- yes --> Design{"design_gate passed or validly waived?"}
+  Design -- no --> BlockClose
+  Design -- yes --> Evidence{"evidence_gate sufficient where required?"}
+  Evidence -- no --> BlockClose
+  Evidence -- yes --> Verification{"verification compatible with requested close?"}
+  Verification -- no --> BlockClose
+  Verification -- yes --> QA{"qa_gate passed, waived, or not_required?"}
+  QA -- no --> BlockClose
+  QA -- yes --> Risk{"Residual risk visible or status=none?"}
+  Risk -- no --> BlockClose
+  Risk -- yes --> Acceptance{"acceptance_gate compatible where required?"}
+  Acceptance -- no --> BlockClose
+  Acceptance -- yes --> Assign["assign assurance_level, result, and close_reason"]
+  Assign --> Completed["lifecycle_phase=completed"]
+```
+
 ## Close Semantics
 
 `completed_verified` means detached verification actually passed and the independence qualifier is valid.
@@ -688,3 +1100,32 @@ Residual-risk acceptance means known remaining risk was made visible and accepte
 | Work cannot self-certify detached verification. | Eval plus valid independence is required for `detached_verified`; same-session review and verification waiver cannot upgrade assurance. |
 | Required QA and acceptance are separate gates. | `qa_gate` and `acceptance_gate` are checked independently; Manual QA records do not imply acceptance, and acceptance does not imply QA. |
 | Projection cannot override canonical state. | Projection edits create reconcile items; projection freshness affects display and delivery, not canonical result by itself. |
+
+This graph maps each Kernel Authority Invariant to the main enforcement points named in the table. It is a visual index over the table, not an additional invariant set.
+
+```mermaid
+flowchart TD
+  ChatState["Chat is not state"] --> StateActions["state-changing actions create records and task_events"]
+  ChatState --> Reconcile["projection edits route through reconcile items"]
+
+  WriteScope["Product write requires an active scoped Change Unit"] --> PrepareWrite["prepare_write"]
+  WriteScope --> RecordRun["record_run consumes compatible Write Authorization"]
+
+  SensitiveApproval["Sensitive change requires explicit approval"] --> ApprovalGate["approval_gate and approval scope checks"]
+  SensitiveApproval --> PrepareApproval["prepare_write approval checks"]
+
+  ProductJudgment["Blocking product judgment requires a recorded Decision Packet"] --> DecisionGate["decision_gate aggregate"]
+  ProductJudgment --> DecisionPacket["Decision Packet compatibility"]
+
+  EvidenceCoverage["Completion requires evidence coverage where evidence is required"] --> EvidenceGate["evidence_gate=sufficient"]
+  EvidenceCoverage --> CloseTask["close_task"]
+
+  DetachedVerification["Work cannot self-certify detached verification"] --> EvalIndependence["Eval plus valid independence"]
+  DetachedVerification --> SameSessionGuard["same-session guard"]
+
+  QAAndAcceptance["Required QA and acceptance are separate gates"] --> QAGate["qa_gate"]
+  QAAndAcceptance --> AcceptanceGate["acceptance_gate"]
+
+  ProjectionState["Projection cannot override canonical state"] --> ProjectionFreshness["projection freshness affects display"]
+  ProjectionState --> Reconcile
+```

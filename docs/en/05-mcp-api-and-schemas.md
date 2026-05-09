@@ -45,6 +45,38 @@ harness://policy/sensitive-categories
 harness://status/card
 ```
 
+This tree groups the read-only resource surface. Reads may report current state and projection freshness, but they do not mutate state.
+
+```mermaid
+flowchart TD
+  Resources["MCP Resources<br/>read-only"] --> Project["project"]
+  Project --> ProjectCurrent["harness://project/current"]
+  Project --> ProjectSurfaces["harness://project/surfaces"]
+
+  Resources --> Task["task"]
+  Task --> TaskActive["harness://task/active"]
+  Task --> TaskRecord["harness://task/{task_id}"]
+  Task --> TaskSummary["harness://task/{task_id}/summary"]
+  Task --> TaskSpine["harness://task/{task_id}/spine"]
+  Task --> TaskJourney["harness://task/{task_id}/journey"]
+  Task --> TaskPackets["harness://task/{task_id}/decision-packets"]
+  Task --> TaskDag["harness://task/{task_id}/change-unit-dag"]
+  Task --> TaskJudgment["harness://task/{task_id}/judgment-context"]
+  Task --> TaskReports["harness://task/{task_id}/reports/latest"]
+  Task --> TaskEvidence["harness://task/{task_id}/evidence-manifest"]
+  Task --> TaskBundle["harness://task/{task_id}/bundle/current"]
+
+  Resources --> Design["design"]
+  Design --> DomainLanguage["harness://design/domain-language"]
+  Design --> ModuleMap["harness://design/module-map"]
+  Design --> InterfaceContracts["harness://design/interface-contracts"]
+
+  Resources --> Policy["policy"]
+  Policy --> SensitiveCategories["harness://policy/sensitive-categories"]
+  Resources --> Status["harness://status/card"]
+  Resources --> NoMutation["must not create Tasks, decisions, projection jobs, or reconcile items"]
+```
+
 Resource reads must not create Task records, decisions, projection jobs, or reconcile items. If a resource detects stale projection, it reports freshness; it does not repair it.
 
 The Journey resources are projection-oriented reads over canonical state:
@@ -93,6 +125,55 @@ ToolResponseBase:
 
 `ToolResponseBase.state_version` returns the resulting version for the primary affected scope. For state-changing operations this is the Task State Version when Core resolves a primary Task, otherwise the Project State Version. Read-only responses return the current `state_version` for the primary read scope and do not increment it. When `dry_run=true` validates or plans without mutation, `state_version` reports the current primary affected or read scope version; it does not imply a virtual resulting version, idempotency-key consumption, replay row, appended event, or would-be clock increment.
 
+This diagram is a high-level envelope map only. The YAML blocks in this document remain the exact schema contract.
+
+```mermaid
+classDiagram
+  class ToolEnvelope {
+    +request_id
+    +idempotency_key
+    +expected_state_version
+    +project_id
+    +task_id
+    +actor_kind
+    +dry_run
+  }
+  class ToolResponseBase {
+    +request_id
+    +state_version
+    +dry_run
+    +errors
+    +validator_results
+    +events
+    +projection_jobs
+  }
+  class EventRef {
+    +event_type
+    +event_seq
+    +state_version
+  }
+  class ProjectionJobRef {
+    +projection_kind
+    +target_ref
+  }
+  class ToolError {
+    +code
+    +retryable
+    +details
+  }
+  class ValidatorResult {
+    +validator_id
+    +status
+    +guarantee_level
+  }
+
+  ToolEnvelope --> ToolResponseBase : request context
+  ToolResponseBase "1" o-- "0..*" ToolError : errors
+  ToolResponseBase "1" o-- "0..*" ValidatorResult : validator_results
+  ToolResponseBase "1" o-- "0..*" EventRef : events
+  ToolResponseBase "1" o-- "0..*" ProjectionJobRef : projection_jobs
+```
+
 ## Shared Schemas
 
 ```yaml
@@ -123,6 +204,15 @@ Event stability for fixture assertions is owned by the [Kernel Stable Event Cata
 | MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Reference MVP implementations must support these kinds and enqueue/render them when their source records change. |
 | MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Implementations support or enqueue these when policy applies, a source record exists, or the user/operator enables the projection. |
 | Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Implementations may support these only when the corresponding extension or appendix projection is enabled. |
+
+This tier diagram summarizes support expectations for `ProjectionKind`. It does not make any projection canonical state.
+
+```mermaid
+flowchart LR
+  ProjectionKind["ProjectionKind"] --> Required["MVP-required<br/>TASK<br/>APR<br/>RUN-SUMMARY<br/>EVIDENCE-MANIFEST<br/>EVAL<br/>DIRECT-RESULT"]
+  ProjectionKind --> Optional["MVP-optional<br/>MANUAL-QA<br/>TDD-TRACE<br/>DOMAIN-LANGUAGE<br/>MODULE-MAP<br/>INTERFACE-CONTRACT"]
+  ProjectionKind --> Extension["Extension / appendix<br/>DEC<br/>DESIGN<br/>EXPORT<br/>JOURNEY-CARD"]
+```
 
 ProjectionKind extensibility does not make projections canonical state. Every projection job still renders a derived view from owner records and artifact refs. `DEC` is valid only for standalone Decision Packet Markdown when that feature is enabled, and it is not an MVP-required projection job. Absence of a standalone `DEC` job must not reduce MVP Decision Packet visibility, which is required through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows remains required for agency conformance.
 
@@ -246,6 +336,23 @@ StateRecordRef:
 ```
 
 MVP has no `accepted_risk` `StateRecordRef.record_kind`. Public fields named `accepted_risk_refs`, `accepted_refs`, or accepted-risk equivalents must use `StateRecordRef` entries with `record_kind=residual_risk`; accepted risk is metadata/state on those Residual Risk records.
+
+This diagram separates raw evidence registration from state-record references. `ArtifactInput` becomes an `ArtifactRef` only through Core validation and registration; state or projection records use `StateRecordRef`.
+
+```mermaid
+flowchart TD
+  ArtifactInput["ArtifactInput"] --> Source{"source_kind"}
+  Source --> Existing["existing_artifact"]
+  Source --> Staged["staged_file"]
+  Existing --> ValidateExisting["verify task relation and reuse compatibility"]
+  Staged --> ValidateStaged["verify staged_uri, bytes, redaction, and relation"]
+  ValidateExisting --> Register["Core validation / registration"]
+  ValidateStaged --> Register
+  Register --> ArtifactRef["ArtifactRef<br/>durable evidence file"]
+
+  StateRecordRef["StateRecordRef<br/>state or projection record"] --> RecordKind["record_kind"]
+  ArtifactRef -. "not a StateRecordRef" .-> StateRecordRef
+```
 
 Evidence references, approval scope, write authorization, Write Authority Summary display, and end-to-end paths use these shared shapes:
 
@@ -450,6 +557,55 @@ AcceptanceVisibilityContext:
   what_acceptance_does_not_replace: string[]
 ```
 
+This composition diagram shows how the current judgment context is assembled for API responses. It is intentionally higher level than the YAML schema above.
+
+```mermaid
+classDiagram
+  class DecisionPacket {
+    +status
+    +decision_kind
+    +affected_gates
+  }
+  class JourneyCardSummary {
+    +state
+    +current_position
+    +next_action
+  }
+  class JudgmentContext {
+    +current_state_summary
+    +minimum_context
+    +relevant_refs
+  }
+  class AutonomyBoundarySummary {
+    +status
+    +autonomy_profile
+    +triggered_stop_conditions
+  }
+  class ResidualRiskSummary {
+    +status
+    +close_relevant_count
+  }
+  class AcceptanceVisibilityContext {
+    +verification_status
+    +qa_status
+    +acceptance_status
+  }
+  class WriteAuthoritySummary
+  class EvidenceRefs
+  class StateRecordRef
+
+  JudgmentContext "1" o-- "0..1" JourneyCardSummary : journey_card
+  JudgmentContext "1" o-- "0..*" StateRecordRef : relevant_refs
+  JudgmentContext "1" o-- "1" EvidenceRefs : evidence_refs
+  JudgmentContext "1" o-- "0..1" AcceptanceVisibilityContext : acceptance_visibility
+  JourneyCardSummary "1" o-- "0..1" WriteAuthoritySummary : write_authority_summary
+  JourneyCardSummary "1" o-- "0..1" ResidualRiskSummary : residual_risk_summary
+  AcceptanceVisibilityContext "1" o-- "0..1" ResidualRiskSummary : residual_risk_summary
+  DecisionPacket "1" o-- "1" EvidenceRefs : context evidence
+  DecisionPacket "1" o-- "0..*" StateRecordRef : source_refs
+  AutonomyBoundarySummary "1" o-- "0..*" StateRecordRef : related_decision_packet_refs
+```
+
 `ResidualRiskSummary.status=none` means Core has no known close-relevant Residual Risk for the current Task and requested action. It satisfies residual-risk visibility for acceptance and ordinary successful close, with `close_relevant_count=0` and empty risk-ref arrays. It must not be returned when Core knows of hidden, blocked, or otherwise undisplayed close-relevant risk; those cases use `not_visible` or `blocked`.
 
 `ResidualRiskSummary.accepted_refs`, `unaccepted_refs`, and related acceptance visibility risk-ref arrays contain `StateRecordRef` entries with `record_kind=residual_risk`.
@@ -593,6 +749,25 @@ If an MCP server or caller cannot reach Core at all, the surface or operator may
 | 24 | `ARTIFACT_MISSING` | a referenced artifact file is missing or failed integrity checks |
 | 25 | `VALIDATOR_FAILED` | generic validator fallback selected only when no more specific typed blocker above applies |
 
+This flowchart groups the precedence table into its selection order. The table above remains the exact public `ErrorCode` contract.
+
+```mermaid
+flowchart TD
+  Start["Core can evaluate request"] --> Conflict["1 STATE_CONFLICT"]
+  Conflict --> Availability["2 MCP_UNAVAILABLE"]
+  Availability --> Active["3 NO_ACTIVE_TASK<br/>4 NO_ACTIVE_CHANGE_UNIT"]
+  Active --> Baseline["5 BASELINE_STALE"]
+  Baseline --> Scope["6 SCOPE_REQUIRED<br/>7 SCOPE_VIOLATION"]
+  Scope --> WriteAuth["8 WRITE_AUTHORIZATION_REQUIRED<br/>9 WRITE_AUTHORIZATION_INVALID"]
+  WriteAuth --> Approval["10 APPROVAL_DENIED<br/>11 APPROVAL_EXPIRED<br/>12 APPROVAL_REQUIRED"]
+  Approval --> Decision["13 DECISION_UNRESOLVED<br/>14 AUTONOMY_BOUNDARY_EXCEEDED<br/>15 DECISION_REQUIRED"]
+  Decision --> Capability["16 CAPABILITY_INSUFFICIENT"]
+  Capability --> Evidence["17 EVIDENCE_INSUFFICIENT<br/>18 VERIFY_NOT_DETACHED"]
+  Evidence --> Human["19 QA_REQUIRED<br/>20 RESIDUAL_RISK_NOT_VISIBLE<br/>21 ACCEPTANCE_REQUIRED"]
+  Human --> Projection["22 PROJECTION_STALE<br/>23 RECONCILE_REQUIRED<br/>24 ARTIFACT_MISSING"]
+  Projection --> Fallback["25 VALIDATOR_FAILED"]
+```
+
 #### `harness.close_task` Close Blockers
 
 `harness.close_task` may return multiple close blockers. The primary `ToolError` in `CloseTaskResponse.base.errors` uses the precedence above; when present, `CloseTaskResponse.base.errors[0].code` is the primary close error code. `CloseTaskResponse.blockers` should include the observed close blockers in the same relative order. Residual-risk visibility remains before `ACCEPTANCE_REQUIRED` for close and acceptance flows because required acceptance can be recorded or relied on only after close-relevant residual risk is visible.
@@ -608,6 +783,55 @@ For state-changing tools, Core compares `expected_state_version` with current pr
 State conflict comparison is scope-specific. Core first resolves the primary addressed Task from `ToolEnvelope.task_id`, any tool-specific `task_id`, or active Task resolution. Task-scoped tools compare against that Task's `tasks.state_version`; project-scoped tools with no resolved primary Task compare against `project_state.state_version`. `STATE_CONFLICT.details` should include `scope` (`task` or `project`), `current_state_version`, `expected_state_version`, and the relevant `project_id` plus `task_id` when `scope=task`; it may also include a compact status summary for refresh guidance.
 
 ## Public Tools
+
+This sequence summarizes the public tool write path with the `harness.prepare_write` branch made explicit. A product write and `harness.record_run` proceed only after `prepare_write` returns `allowed`; blocker paths stop the write and require a fresh retry after the blocking decision is resolved.
+
+```mermaid
+sequenceDiagram
+  participant Caller
+  participant Core
+  participant User
+  Caller->>Core: harness.intake / harness.status / harness.next
+  Core-->>Caller: StateSummary, JourneyCardSummary, next_action
+  Caller->>Core: harness.prepare_write
+  alt decision=allowed
+    Core-->>Caller: Write Authorization
+    Caller->>Core: harness.record_run
+    Core-->>Caller: Run, artifacts, evidence refs
+  else decision=blocked
+    Core-->>Caller: blocker; no product write; no record_run
+  else decision=approval_required or decision_required
+    Core-->>Caller: candidate or Decision Packet refs; no product write; no record_run
+    Caller->>Core: harness.request_user_decision
+    Core-->>Caller: DecisionPacket
+    User->>Core: harness.record_user_decision
+    Core-->>Caller: updated gates and state_version
+    Note over Caller: refresh state; use fresh expected_state_version and fresh idempotency key
+    Caller->>Core: harness.prepare_write retry
+    alt retry decision=allowed
+      Core-->>Caller: Write Authorization
+      Caller->>Core: harness.record_run
+      Core-->>Caller: Run, artifacts, evidence refs
+    else retry still blocked
+      Core-->>Caller: blocker; no product write; no record_run
+    end
+  end
+  Note over Caller,Core: remaining steps apply only after harness.record_run
+  opt verification required
+    Caller->>Core: harness.launch_verify / harness.record_eval
+    Core-->>Caller: verification state
+  end
+  opt Manual QA required
+    Caller->>Core: harness.record_manual_qa
+    Core-->>Caller: Manual QA state
+  end
+  opt acceptance required
+    Caller->>Core: harness.request_user_decision / harness.record_user_decision
+    Core-->>Caller: acceptance state
+  end
+  Caller->>Core: harness.close_task
+  Core-->>Caller: terminal state or blockers
+```
 
 ### `harness.status`
 
@@ -883,6 +1107,24 @@ Sensitive-change approval follows this recipe:
 7. If the approval was granted, the caller retries `harness.prepare_write` with a fresh idempotency key and the current `expected_state_version`.
 8. Only that retry may create a Write Authorization. It succeeds only if the approved scope, baseline, sensitive categories, paths, tools, commands, network targets, secret scope, Decision Packet refs, Approval refs, and capability checks remain compatible with the current intended write.
 
+This sequence diagram summarizes the approval lifecycle without changing the authority boundaries: approval is separate from product judgment and from Write Authorization.
+
+```mermaid
+sequenceDiagram
+  participant Caller
+  participant Core
+  participant User
+  Caller->>Core: harness.prepare_write
+  Core-->>Caller: decision=approval_required, approval_request_candidate
+  Caller->>Core: harness.request_user_decision decision_kind=approval
+  Core-->>Caller: DecisionPacket + pending Approval
+  Core-->>User: approval-shaped judgment context
+  User->>Core: harness.record_user_decision
+  Core-->>Caller: approval_gate=granted, denied, or expired
+  Caller->>Core: harness.prepare_write retry
+  Core-->>Caller: Write Authorization only if still compatible
+```
+
 Approval authorizes sensitive categories inside the defined scope. Approval does not resolve product trade-offs, design direction, verification risk, QA waiver, final acceptance, or residual-risk acceptance. If the sensitive action also includes product judgment, Core must require a separate compatible Decision Packet before `prepare_write` can return `allowed`. Approval is not Write Authorization; actual product writes still require an allowed `prepare_write` result and compatible `harness.record_run` consumption of the returned Write Authorization.
 
 ### `harness.record_run`
@@ -997,6 +1239,34 @@ The `payload` branch must match `kind`; all other branches must be `null` or abs
 `write_authorization_id` references the compatible Write Authorization returned by `harness.prepare_write`. For `kind=implementation` and `kind=direct`, `write_authorization_id` is required unless the Run records no product write and Core classifies it as read-only evidence or shaping. For `kind=shaping_update`, `write_authorization_id` must be `null`; MVP does not support shaping updates that also record observed product writes, so those writes must be recorded as `kind=implementation` or `kind=direct` with a compatible authorization. For `kind=verification_input`, keep `write_authorization_id` `null`; verification input that creates product writes should normally be disallowed in MVP.
 
 `runs.write_authorization_id` is populated only when a Run successfully consumes a compatible Write Authorization. A violation or audit Run that attempted to use an invalid, stale, missing, consumed, or scope-exceeded authorization must not populate `runs.write_authorization_id` as a consumed authorization. The attempted authorization ref, when useful for audit, should be recorded in validator findings, run violation payload, or `task_events.payload_json`. Such a violation Run may be recorded for audit or recovery if an observed product write already happened, but it must not satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness. The corresponding Write Authorization should remain unconsumed and may be marked stale, revoked, or expired according to the violation and compatibility basis.
+
+This branch diagram shows the API-level `kind` handling for `harness.record_run`. The request schema still owns the exact payload branches.
+
+```mermaid
+flowchart TD
+  Start["harness.record_run"] --> Kind{"kind"}
+  Kind --> Shaping["shaping_update"]
+  Kind --> Implementation["implementation"]
+  Kind --> Direct["direct"]
+  Kind --> VerificationInput["verification_input"]
+
+  Shaping --> ShapingPayload["ShapingUpdatePayload only"]
+  ShapingPayload --> ShapingWrites{"observed product writes?"}
+  ShapingWrites -- yes --> RejectShaping["reject; write path must be implementation or direct"]
+  ShapingWrites -- no --> RecordShaping["record shaping updates and Change Unit updates"]
+
+  Implementation --> ImplAuth{"compatible write_authorization_id?"}
+  Direct --> ImplAuth
+  ImplAuth -- yes --> Consume["consume Write Authorization"]
+  Consume --> RecordEvidence["record Run, artifacts, and EvidenceUpdates"]
+  ImplAuth -- missing --> Required["WRITE_AUTHORIZATION_REQUIRED when required"]
+  ImplAuth -- invalid --> Invalid["WRITE_AUTHORIZATION_INVALID or SCOPE_VIOLATION"]
+
+  VerificationInput --> VerifyPayload["VerificationInputPayload only"]
+  VerifyPayload --> VerifyWrites{"product writes?"}
+  VerifyWrites -- yes --> Invalid
+  VerifyWrites -- no --> RecordBundle["record evaluator bundle context"]
+```
 
 Response schema:
 
@@ -1171,6 +1441,31 @@ RecordUserDecisionResponse:
 `RecordUserDecisionResponse.accepted_risk_refs` contains only `StateRecordRef` entries with `record_kind=residual_risk`; there is no standalone accepted-risk record kind.
 
 State transition summary: resolves, defers, rejects, or blocks the targeted Decision Packet; updates affected gates or reconcile item; approval grant/deny updates the linked Approval record and `approval_gate`, but does not create a Write Authorization; accepted scope updates `scope_gate`; user-resolved product judgment updates `decision_gate`; accepted Autonomy Boundary decisions may update the active Change Unit boundary; verification waiver updates `verification_gate=waived_by_user`; QA waiver updates `qa_gate`; acceptance records the user decision on the Decision Packet and updates `acceptance_gate`; accepted residual risk updates Residual Risk records and returns their refs without upgrading assurance; reconcile may create accepted state records.
+
+This flowchart groups `decision_kind` outcomes. Each branch must still match the exact payload branch in the schema above.
+
+```mermaid
+flowchart TD
+  Start["harness.record_user_decision"] --> Kind{"decision_kind"}
+  Kind --> Approval["approval"]
+  Approval --> ApprovalOutcome["update linked Approval and approval_gate"]
+  Kind --> Scope["scope_confirmation"]
+  Scope --> ScopeOutcome["update scope_gate or request revised scope"]
+  Kind --> ProductJudgment["design_choice, architecture_choice, product_tradeoff"]
+  ProductJudgment --> DecisionOutcome["update decision_gate and affected records"]
+  Kind --> Autonomy["autonomy_boundary"]
+  Autonomy --> AutonomyOutcome["update Autonomy Boundary or keep blocker"]
+  Kind --> VerificationWaiver["verification_waiver"]
+  VerificationWaiver --> VerificationOutcome["verification_gate=waived_by_user or blocker"]
+  Kind --> QAWaiver["qa_waiver"]
+  QAWaiver --> QAOutcome["qa_gate=waived when compatible"]
+  Kind --> Acceptance["acceptance"]
+  Acceptance --> AcceptanceOutcome["update acceptance_gate after residual-risk visibility"]
+  Kind --> RiskAcceptance["residual_risk_acceptance"]
+  RiskAcceptance --> RiskOutcome["update Residual Risk records and accepted_risk_refs"]
+  Kind --> Reconcile["reconcile"]
+  Reconcile --> ReconcileOutcome["merge, reject, convert_to_note, create_decision, or defer"]
+```
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
 
@@ -1394,6 +1689,40 @@ CloseTaskResponse:
 ```
 
 Close blockers include unresolved, missing, deferred-without-coverage, blocked, rejected, stale, or incompatible blocking Decision Packets, and known close-relevant residual risk that is not visible before any successful close. If no known close-relevant residual risk exists, `ResidualRiskSummary.status=none` satisfies residual-risk visibility and is not a close blocker. A risk-accepted close additionally requires visible and accepted Residual Risk refs. Acceptance, when required, can be recorded only after close-relevant residual risk is visible or confirmed as `ResidualRiskSummary.status=none`.
+
+This flowchart summarizes terminal outcomes and close blockers for `harness.close_task`. `requested_close_reason` is an input intent; Core assigns the final `result` and `close_reason` only after checking the close-relevant state. The blocker codes still use the primary error precedence defined above.
+
+```mermaid
+flowchart TD
+  Start["harness.close_task"] --> Request["intent + requested_close_reason<br/>input intent only"]
+  Request --> Intent{"intent"}
+  Intent --> Complete["complete"]
+  Intent --> Cancel["cancel"]
+  Intent --> Supersede["supersede"]
+  Cancel --> Unsafe{"unsafe write in progress?"}
+  Supersede --> Unsafe
+  Unsafe -- yes --> Blocked["closed=false with blockers"]
+  Unsafe -- no --> Cancelled["lifecycle_phase=cancelled"]
+
+  Complete --> ActiveRun{"active Run open?"}
+  ActiveRun -- yes --> Blocked
+  ActiveRun -- no --> Gates{"scope, decision, approval, design, evidence, verification, QA compatible?"}
+  Gates -- no --> Blocked
+  Gates -- yes --> Risk{"residual risk visible or status=none?"}
+  Risk -- no --> Blocked
+  Risk -- yes --> Acceptance{"acceptance_gate compatible where required?"}
+  Acceptance -- no --> Blocked
+  Acceptance -- yes --> Assign["Core checks assurance, evidence, verification, QA, acceptance, residual-risk visibility, and accepted Residual Risk refs"]
+  Assign --> Classification{"Core assigns result and close_reason"}
+  Classification --> Verified["result=passed<br/>close_reason=completed_verified"]
+  Classification --> SelfChecked["result=passed<br/>close_reason=completed_self_checked"]
+  Classification --> RiskAccepted["result=passed<br/>close_reason=completed_with_risk_accepted"]
+  Verified --> Closed["closed=true; lifecycle_phase=completed"]
+  SelfChecked --> Closed
+  RiskAccepted --> RiskRefs{"visible accepted Residual Risk refs?"}
+  RiskRefs -- yes --> Closed
+  RiskRefs -- no --> Blocked
+```
 
 State transition summary: successful completion moves Task to `completed` with result and close reason; cancellation/supersession moves Task to `cancelled`; failed close leaves Task non-terminal and reports blockers.
 
