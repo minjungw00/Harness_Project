@@ -66,6 +66,8 @@ MVP is a small local operating kernel that validates Kernel Authority Invariants
 
 MVP focuses on one reference surface, local state, artifacts, public MCP tools, write gating, evidence, verification, Manual QA, acceptance, projections, reconcile, recovery, export, and fixture-based conformance.
 
+Read MVP delivery in two stages that map onto the existing MVP-0 through MVP-5 sequence without reducing final scope. The short contract for Kernel Smoke and Agency-Hardened MVP is in [06-reference-mvp.md](06-reference-mvp.md#staged-delivery-interpretation).
+
 Later automation is cataloged in [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md) and must not read as part of MVP scope.
 
 ## Target Tree

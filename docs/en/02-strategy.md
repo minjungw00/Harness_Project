@@ -219,6 +219,8 @@ The MVP reference surface is primarily cooperative and detective. Preventive and
 
 MVP is a kernel authority and agency-conformance validation project, not a broad agent-integration platform.
 
+MVP delivery is staged without changing final MVP scope. Kernel Smoke is the first runnable proof of the kernel authority path; Agency-Hardened MVP is the complete reference MVP that satisfies the agency, stewardship, verification, operations, and fixture-conformance requirements. The staged reading maps onto the existing MVP-0 through MVP-5 sequence and does not move MVP-critical authority or agency requirements to later. See [Reference MVP staging](06-reference-mvp.md#staged-delivery-interpretation) for the compact contract.
+
 MVP includes:
 
 - one local project registration

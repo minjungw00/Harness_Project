@@ -219,6 +219,8 @@ MVP reference surface는 주로 cooperative 및 detective 수준입니다. Preve
 
 MVP는 broad agent-integration platform이 아니라 kernel authority와 Agency Conformance를 검증하는 project입니다.
 
+MVP delivery는 final MVP scope를 바꾸지 않고 staged로 진행합니다. Kernel Smoke는 kernel authority path의 첫 runnable proof이고, Agency-Hardened MVP는 agency, stewardship, verification, operations, fixture-conformance 요구사항을 만족하는 complete reference MVP입니다. 이 staged reading은 기존 MVP-0부터 MVP-5까지의 sequence에 mapping되며, MVP-critical authority 또는 agency requirement를 later로 옮기지 않습니다. Compact contract는 [Reference MVP staging](06-reference-mvp.md#단계적-delivery-해석)을 봅니다.
+
 MVP 포함 항목:
 
 - 하나의 local project registration

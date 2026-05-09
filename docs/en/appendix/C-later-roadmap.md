@@ -10,6 +10,8 @@ It does not own kernel invariants, public MCP schemas, MVP implementation requir
 
 The MVP proves the local kernel: state, gates, artifacts, verification, projection, reconcile, and one reference surface. The items below are useful follow-ons after those basics are stable.
 
+Kernel Smoke and Agency-Hardened MVP are both MVP delivery stages, not Appendix C scope. This appendix must not absorb kernel authority, Decision Packet, residual-risk visibility, detached verification, Manual QA, recover/export, or fixture-conformance behavior that the MVP owner documents require.
+
 Later items may become v1 work only after they have:
 
 - a clear capability profile requirement

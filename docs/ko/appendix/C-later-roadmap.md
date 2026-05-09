@@ -10,6 +10,8 @@ Kernel invariant, public MCP schema, MVP implementation requirement, MVP에 requ
 
 MVP는 local kernel을 입증합니다. 즉 state, gate, artifact, verification, projection, reconcile, one reference surface가 안정적으로 동작하는지를 먼저 증명합니다. 아래 항목들은 이 기본 요소가 안정된 뒤에 이어갈 수 있는 follow-on입니다.
 
+Kernel Smoke와 Agency-Hardened MVP는 모두 MVP delivery stage이지 Appendix C scope가 아닙니다. 이 appendix는 MVP owner docs가 요구하는 kernel authority, Decision Packet, residual-risk visibility, detached verification, Manual QA, recover/export, fixture-conformance behavior를 흡수하면 안 됩니다.
+
 Later item은 다음을 갖춘 뒤에만 v1 work가 될 수 있습니다.
 
 - clear capability profile requirement

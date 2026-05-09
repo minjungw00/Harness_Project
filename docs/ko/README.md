@@ -66,6 +66,8 @@ MVP는 여러 agent surface를 동시에 지원하는 플랫폼이 아닙니다.
 
 MVP는 하나의 reference surface, 로컬 상태, artifact, public MCP tools, write gating, evidence, verification, Manual QA, acceptance, projections, reconcile, recovery, export, fixture 기반 conformance에 집중합니다.
 
+MVP delivery는 final scope를 줄이지 않고 기존 MVP-0부터 MVP-5까지의 sequence에 mapping되는 두 단계로 읽습니다. Kernel Smoke와 Agency-Hardened MVP의 짧은 contract는 [06-reference-mvp.md](06-reference-mvp.md#단계적-delivery-해석)에 있습니다.
+
 이후 자동화는 [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md)에 정리합니다. 그 항목들이 MVP 범위의 일부처럼 읽히면 안 됩니다.
 
 ## 대상 트리

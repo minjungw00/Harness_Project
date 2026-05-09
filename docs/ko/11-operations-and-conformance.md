@@ -26,6 +26,14 @@ harness conformance run
 
 정확한 command flag는 구현마다 달라질 수 있지만, reference MVP에는 아래 semantics가 필요합니다.
 
+## Conformance Staging
+
+Conformance는 incremental하게 실행할 수 있지만, staged execution이 fixture body shape를 바꾸거나 final MVP requirement를 줄이면 안 됩니다.
+
+Kernel Smoke는 MVP-0부터 early MVP-3 capabilities까지를 가로지르는 selected smoke slice에서 나온 첫 runnable conformance target입니다. Project와 Task state, scoped Change Unit behavior, `prepare_write` allow/block behavior, durable Write Authorization creation, `record_run` authorization consumption, artifact와 evidence manifest basics, minimal projection enqueue/current behavior, write authority가 없을 때 blocked writes 또는 runs, evidence 또는 decision requirement가 없을 때 blocked close, basic Core fixture execution을 증명해야 합니다. Kernel Smoke 통과는 첫 runnable kernel authority path를 증명하지만 final MVP conformance를 주장하지 않습니다.
+
+Agency-Hardened MVP는 final reference conformance target입니다. Decision Packet quality, sensitive approval lifecycle separation, acceptance와 close 전 residual-risk visibility, detached verification guards, Manual QA, stewardship 및 context-hygiene validators, full feedback-loop checks, codebase stewardship coverage, projection/reconcile completeness, recover/export/artifact integrity behavior, later-boundary checks, broader fixture coverage를 추가로 증명해야 합니다. Suite catalog metadata는 scenario를 earliest MVP stage에 mapping할 수 있지만, executable fixtures는 여전히 Core state, events, artifacts, projections, errors를 통해 assert해야 합니다.
+
 ## Connect
 
 `connect`는 Product Repository, Harness Runtime Home, 하나의 reference agent surface를 연결합니다.

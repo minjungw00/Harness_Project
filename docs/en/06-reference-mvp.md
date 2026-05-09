@@ -32,6 +32,17 @@ MVP excludes the later automation cataloged in `appendix/C-later-roadmap.md`, in
 
 Parallel orchestration automation remains later. MVP may store Change Unit dependency DAG metadata only when it is needed for serial shaping, write checks, close blockers, or visibility; it does not schedule parallel lanes, isolate concurrent baselines, or reconcile concurrent execution.
 
+## Staged Delivery Interpretation
+
+The implementation sequence remains MVP-0 through MVP-5. The stage names below are delivery lenses, not new scope labels or replacements for the exit criteria.
+
+| Stage | Existing sequence map | Required proof |
+|---|---|---|
+| Kernel Smoke | Selected smoke slice crossing MVP-0 through early MVP-3 capabilities | Project and Task state, scoped Change Unit, `prepare_write`, durable Write Authorization creation, `record_run` consumption of that authorization, artifact registration, evidence manifest basics, minimal required projection freshness or enqueueing, blocked writes or runs when write authority is missing, blocked close when evidence or decision requirements are missing, and basic Core fixture execution. |
+| Agency-Hardened MVP | Completion of the remaining MVP-3 exit criteria plus MVP-4 and MVP-5 on top of the smoke slice | Decision Packet quality, approval/Decision Packet/Write Authorization separation, residual-risk visibility before acceptance and close, detached verification independence, Manual QA, stewardship and context-hygiene validators, full feedback-loop checks, codebase stewardship coverage, projection/reconcile completeness, recover/export/artifact integrity behavior, later-boundary checks, and fixture coverage for required agency conformance. |
+
+Kernel Smoke is useful because it gives implementers the smallest runnable proof of authority. It does not complete every MVP-3 exit criterion, is not an acceptable final MVP, and does not defer any agency-critical behavior to later automation. Full feedback-loop checks, codebase stewardship coverage, projection/reconcile completeness, and broader fixture coverage remain final MVP work unless explicitly required by the Kernel Smoke proof above.
+
 ## Implementation Sequence
 
 ### MVP-0: Runtime Bootstrap
