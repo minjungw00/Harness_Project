@@ -444,7 +444,7 @@ An explicit recorded exception to a gate requirement where policy allows it. Ver
 
 ### Write Authorization
 
-A durable state record created by `prepare_write` for a specific allowed write attempt. Distinct compatible `prepare_write` requests create distinct authorizations; idempotent replay may return the committed response. It is single-use for a committed implementation or direct run, and it does not replace scope, approval, evidence, verification, Manual QA, acceptance, or residual-risk visibility.
+A durable state record created by `prepare_write` for a specific allowed write attempt. It records `basis_state_version`, the affected-scope state version used as the compatibility basis for replay, stale detection, and audit. Distinct compatible `prepare_write` requests create distinct authorizations; idempotent replay may return the committed response. It is single-use for a committed implementation or direct run, and it does not replace scope, approval, evidence, verification, Manual QA, acceptance, or residual-risk visibility.
 
 ### Write Authorization Lifecycle Events
 

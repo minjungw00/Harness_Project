@@ -109,13 +109,15 @@ If a sensitive action also includes a product trade-off, architecture choice, QA
 
 A Write Authorization is the durable state record created when `prepare_write` allows a product write.
 
-It records the Task, active Change Unit, intended operation, intended paths, intended tools, intended commands, intended network targets, intended secret access, sensitive categories, baseline, approval refs, relevant Decision Packet refs, guarantee level, status, created time, and consumption by a Run.
+It records the Task, active Change Unit, `basis_state_version`, intended operation, intended paths, intended tools, intended commands, intended network targets, intended secret access, sensitive categories, baseline, approval refs, relevant Decision Packet refs, guarantee level, status, created time, and consumption by a Run.
+
+`basis_state_version` is the affected-scope state version Core used as the compatibility basis for the allowed write attempt after stale-state checks and before creating the authorization. For MVP Write Authorizations this is the Task State Version for the authorization's Task. It supports idempotent replay audit, stale detection, and explaining why older unconsumed authorizations became stale, expired, or revoked.
 
 A Write Authorization is not scope by itself. It is evidence that Core allowed a specific write attempt under the active scope and gates.
 
 A Write Authorization does not replace approval, evidence, verification, QA, acceptance, or residual-risk visibility.
 
-`authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request with the same idempotency key, request hash, and state basis, or for returning the already committed response. A distinct compatible `prepare_write` request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes.
+`authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request with the same idempotency key, request hash, and `basis_state_version`, or for returning the already committed response. A distinct compatible `prepare_write` request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes.
 
 Write Authorization status is record-level:
 
@@ -597,7 +599,7 @@ The decision algorithm is:
 
 Required checks include active Task, active Change Unit, mode write eligibility, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, surface capability profile, and design policy preconditions.
 
-An `allowed` decision must create or reference a Write Authorization with `status=allowed`. `authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request with the same idempotency key, request hash, and state basis, or for returning the already committed response. A distinct compatible request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Blocked, approval-required, decision-required, or state-conflict results must not create a consumable Write Authorization for the attempted write. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes.
+An `allowed` decision must create or reference a Write Authorization with `status=allowed` and a recorded `basis_state_version` for the affected scope used by the allow decision. `authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request with the same idempotency key, request hash, and `basis_state_version`, or for returning the already committed response. A distinct compatible request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Blocked, approval-required, decision-required, or state-conflict results must not create a consumable Write Authorization for the attempted write. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes.
 
 When product judgment is needed, `prepare_write` requests a user decision through a Decision Packet. It must not convert product judgment into broad approval. `approval_required` is reserved for sensitive-change approval.
 

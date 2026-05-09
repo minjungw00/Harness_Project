@@ -128,6 +128,36 @@ Malformed JSON is invalid state. Schema-incompatible JSON is invalid state. Fiel
 
 Recommended hardening: where the deployed SQLite build supports JSON functions, migrations should add `CHECK (json_valid(column_name))` or equivalent generated checks for JSON `TEXT` columns. These checks are defense in depth and do not replace Core's shape validation before commit; the MVP DDL below does not need a full rewrite to show every check inline.
 
+### Canonical Enum Hardening
+
+Canonical enum columns use `TEXT` in the reference DDL for readability, but they are not open strings. Core validation remains authoritative. Database checks, lookup-table validation, generated checks, and migration assertions are defense in depth and should first cover the state fields that drive write, close, replay, and projection behavior.
+
+Minimum enum hardening targets:
+
+| Field(s) | Values to harden |
+| --- | --- |
+| `tasks.mode` | `advisor`, `direct`, `work` |
+| `tasks.lifecycle_phase` | `intake`, `shaping`, `ready`, `executing`, `verifying`, `qa`, `waiting_user`, `blocked`, `completed`, `cancelled` |
+| `tasks.result` | `none`, `advice_only`, `passed`, `failed`, `cancelled` |
+| `tasks.close_reason` | `none`, `completed_verified`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` |
+| `tasks.assurance_level` | `none`, `self_checked`, `detached_verified` |
+| `tasks.projection_status` | `current`, `stale`, `failed`, `unknown` |
+| `task_gates.scope_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `blocked` |
+| `task_gates.decision_gate` | `not_required`, `required`, `pending`, `resolved`, `deferred`, `blocked` |
+| `task_gates.approval_gate` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired` |
+| `task_gates.design_gate` | `not_required`, `required`, `pending`, `passed`, `partial`, `waived`, `stale`, `blocked` |
+| `task_gates.evidence_gate` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
+| `task_gates.verification_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `waived_by_user`, `blocked` |
+| `task_gates.qa_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `waived` |
+| `task_gates.acceptance_gate` | `not_required`, `required`, `pending`, `accepted`, `rejected` |
+| `write_authorizations.status` | `allowed`, `consumed`, `expired`, `stale`, `revoked` |
+| `decision_packets.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` |
+| `manual_qa_records.result` | `passed`, `failed`, `waived` |
+| `evals.verdict` | `passed`, `failed`, `blocked`, `inconclusive` |
+| `projection_jobs.status` | `pending`, `running`, `completed`, `failed`, `skipped` |
+
+For new tables or rebuild migrations, representative inline hardening is `status TEXT NOT NULL CHECK (status IN (...))`. Existing SQLite tables may need a table rebuild, a small lookup table checked by Core before commit, or a migration-time assertion that rejects unknown values before tightening. Apply the same pattern to other status-like state fields as their owner enums are finalized, especially `approvals.status`, `runs.kind`, `runs.status`, `evidence_manifests.status`, `residual_risks.visibility_status`, `residual_risks.status`, `reconcile_items.status`, `validator_runs.status`, `validator_runs.guarantee_level`, and design-quality status columns. Do not invent database-only enum values; bind storage hardening to the kernel/API owner enum.
+
 ### `project.yaml`
 
 `project.yaml` stores static project configuration only. It must not store current Task state.
@@ -299,6 +329,7 @@ CREATE TABLE write_authorizations (
   write_authorization_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
   change_unit_id TEXT NOT NULL REFERENCES change_units(change_unit_id),
+  basis_state_version INTEGER NOT NULL,
   baseline_ref TEXT REFERENCES baselines(baseline_ref),
   intended_operation TEXT NOT NULL,
   intended_paths_json TEXT NOT NULL DEFAULT '[]',
@@ -695,7 +726,9 @@ CREATE TABLE locks (
 
 `tasks.projection_status` is the TASK projection status summary. Per-kind projection freshness is tracked through `projection_jobs` and through the relevant projection records or artifact refs for MVP-required `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`; MVP-optional `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, and `INTERFACE-CONTRACT`; and enabled extension / appendix kinds such as `DEC`, `DESIGN`, `EXPORT`, and `JOURNEY-CARD`. `APR` freshness starts from committed Approval records and their approval-shaped Decision Packets, not from non-mutating `approval_request_candidate` payloads. Do not treat one Task field as owning all projection freshness.
 
-`write_authorizations` stores durable allow decisions from `prepare_write`. When `dry_run=false` and `prepare_write` returns `allowed`, Core creates a distinct `write_authorizations` row for a distinct compatible request and returns its ref. `authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request and response with the same idempotency key, request hash, and state basis. A distinct compatible request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes. `updated_at` changes whenever authorization status changes; status history remains in `task_events`.
+`write_authorizations` stores durable allow decisions from `prepare_write`. When `dry_run=false` and `prepare_write` returns `allowed`, Core creates a distinct `write_authorizations` row for a distinct compatible request and returns its ref. `write_authorizations.basis_state_version` stores the affected-scope state version Core used as the compatibility basis for the allowed write attempt; for MVP this is the Task State Version for `task_id`. It is audit metadata for idempotent replay, stale detection, and state-basis explanations, and it is not necessarily the resulting response `state_version` after the transaction appends events. `authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request and response with the same idempotency key, request hash, and `basis_state_version`. A distinct compatible request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes. `updated_at` changes whenever authorization status changes; status history remains in `task_events`.
+
+Stored `write_authorizations` rows require non-null `basis_state_version`, including rows inserted from conformance fixture seeds. A fixture runner may derive the field from the seeded affected-scope state version before insert, but the stored row must still contain the value and must not treat it as the post-transaction `ToolResponseBase.state_version`.
 
 Implementation and direct `record_run` calls consume a compatible unexpired authorization by recording `runs.write_authorization_id` and marking the authorization consumed with `consumed_by_run_id` and `consumed_at`. The reciprocal links `write_authorizations.consumed_by_run_id` and `runs.write_authorization_id` must point to each other in the same Core transaction. A mismatch is invalid state; `recover` must repair it or block affected close. Consuming an authorization does not make observed changes valid by itself; changed-path, tool, command, network, secret, Change Unit, approval, baseline, and Decision Packet validation still verifies the committed Run.
 

@@ -126,6 +126,36 @@ Malformed JSON은 invalid state입니다. Schema-incompatible JSON도 invalid st
 
 Recommended hardening: 배포된 SQLite build가 JSON functions를 지원하는 경우 migration은 JSON `TEXT` column에 `CHECK (json_valid(column_name))` 또는 equivalent generated checks를 추가해야 합니다. 이 checks는 defense in depth이며 Core의 before-commit shape validation을 대체하지 않습니다. 아래 MVP DDL은 모든 check를 inline으로 보여 주기 위해 full rewrite될 필요가 없습니다.
 
+### Canonical Enum Hardening
+
+Canonical enum column은 reference DDL에서 readability를 위해 `TEXT`를 사용하지만 open string이 아닙니다. Core validation이 authoritative입니다. Database checks, lookup-table validation, generated checks, migration assertions는 defense in depth이며, write, close, replay, projection behavior를 좌우하는 state fields부터 적용해야 합니다.
+
+Minimum enum hardening targets:
+
+| Field(s) | Values to harden |
+| --- | --- |
+| `tasks.mode` | `advisor`, `direct`, `work` |
+| `tasks.lifecycle_phase` | `intake`, `shaping`, `ready`, `executing`, `verifying`, `qa`, `waiting_user`, `blocked`, `completed`, `cancelled` |
+| `tasks.result` | `none`, `advice_only`, `passed`, `failed`, `cancelled` |
+| `tasks.close_reason` | `none`, `completed_verified`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` |
+| `tasks.assurance_level` | `none`, `self_checked`, `detached_verified` |
+| `tasks.projection_status` | `current`, `stale`, `failed`, `unknown` |
+| `task_gates.scope_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `blocked` |
+| `task_gates.decision_gate` | `not_required`, `required`, `pending`, `resolved`, `deferred`, `blocked` |
+| `task_gates.approval_gate` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired` |
+| `task_gates.design_gate` | `not_required`, `required`, `pending`, `passed`, `partial`, `waived`, `stale`, `blocked` |
+| `task_gates.evidence_gate` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
+| `task_gates.verification_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `waived_by_user`, `blocked` |
+| `task_gates.qa_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `waived` |
+| `task_gates.acceptance_gate` | `not_required`, `required`, `pending`, `accepted`, `rejected` |
+| `write_authorizations.status` | `allowed`, `consumed`, `expired`, `stale`, `revoked` |
+| `decision_packets.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` |
+| `manual_qa_records.result` | `passed`, `failed`, `waived` |
+| `evals.verdict` | `passed`, `failed`, `blocked`, `inconclusive` |
+| `projection_jobs.status` | `pending`, `running`, `completed`, `failed`, `skipped` |
+
+New table 또는 rebuild migration에서는 representative inline hardening으로 `status TEXT NOT NULL CHECK (status IN (...))`를 사용할 수 있습니다. Existing SQLite tables는 table rebuild, Core가 commit 전에 확인하는 small lookup table, 또는 tightening 전에 unknown values를 reject하는 migration-time assertion이 필요할 수 있습니다. Owner enum이 finalized되는 대로 같은 pattern을 다른 status-like state fields에도 적용합니다. 특히 `approvals.status`, `runs.kind`, `runs.status`, `evidence_manifests.status`, `residual_risks.visibility_status`, `residual_risks.status`, `reconcile_items.status`, `validator_runs.status`, `validator_runs.guarantee_level`, design-quality status columns가 대상입니다. Database-only enum values를 만들지 말고 storage hardening은 kernel/API owner enum에 묶어야 합니다.
+
 ### `project.yaml`
 
 `project.yaml`은 static project configuration만 저장합니다. Current Task state를 저장하면 안 됩니다.
@@ -297,6 +327,7 @@ CREATE TABLE write_authorizations (
   write_authorization_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
   change_unit_id TEXT NOT NULL REFERENCES change_units(change_unit_id),
+  basis_state_version INTEGER NOT NULL,
   baseline_ref TEXT REFERENCES baselines(baseline_ref),
   intended_operation TEXT NOT NULL,
   intended_paths_json TEXT NOT NULL DEFAULT '[]',
@@ -695,7 +726,9 @@ CREATE TABLE locks (
 
 이 tracking에는 MVP-required `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`; MVP-optional `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`; 그리고 enabled extension / appendix kinds인 `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD`가 포함됩니다. `APR` freshness는 committed Approval records와 그 approval-shaped Decision Packets에서 시작하며, non-mutating `approval_request_candidate` payload에서 시작하지 않습니다. 하나의 Task field가 모든 projection freshness를 소유한다고 취급하면 안 됩니다.
 
-`write_authorizations`는 `prepare_write`의 durable allow decisions를 저장합니다. `dry_run=false`이고 `prepare_write`가 `allowed`를 반환하면 Core는 distinct compatible request마다 distinct `write_authorizations` row를 create하고 그 ref를 반환합니다. `authorization_effect=returned`는 같은 idempotency key, request hash, state basis를 가진 동일한 committed `prepare_write` request와 response의 idempotent replay에만 reserved됩니다. Distinct compatible request는 distinct Write Authorization을 create합니다. Compatibility가 authorizations를 reusable하게 만들지는 않습니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 stale, expire, revoke할 수 있습니다. `updated_at`은 authorization status가 바뀔 때마다 변경됩니다. Status history는 `task_events`에 남습니다.
+`write_authorizations`는 `prepare_write`의 durable allow decisions를 저장합니다. `dry_run=false`이고 `prepare_write`가 `allowed`를 반환하면 Core는 distinct compatible request마다 distinct `write_authorizations` row를 create하고 그 ref를 반환합니다. `write_authorizations.basis_state_version`은 Core가 allowed write attempt의 compatibility basis로 사용한 affected-scope state version을 저장합니다. MVP에서는 `task_id`의 Task State Version입니다. 이 field는 idempotent replay, stale detection, state-basis explanations를 위한 audit metadata이며, transaction이 events를 append한 뒤의 resulting response `state_version`과 반드시 같지는 않습니다. `authorization_effect=returned`는 같은 idempotency key, request hash, `basis_state_version`을 가진 동일한 committed `prepare_write` request와 response의 idempotent replay에만 reserved됩니다. Distinct compatible request는 distinct Write Authorization을 create합니다. Compatibility가 authorizations를 reusable하게 만들지는 않습니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 stale, expire, revoke할 수 있습니다. `updated_at`은 authorization status가 바뀔 때마다 변경됩니다. Status history는 `task_events`에 남습니다.
+
+Stored `write_authorizations` rows는 conformance fixture seeds에서 insert되는 rows를 포함해 non-null `basis_state_version`을 요구합니다. Fixture runner는 insert 전에 seeded affected-scope state version에서 이 field를 derive할 수 있지만, stored row는 여전히 이 값을 포함해야 하며 이를 post-transaction `ToolResponseBase.state_version`으로 취급하면 안 됩니다.
 
 Implementation 및 direct `record_run` calls는 `runs.write_authorization_id`를 기록하고 authorization을 `consumed_by_run_id`, `consumed_at`과 함께 consumed로 mark하여 compatible unexpired authorization을 consume합니다. Reciprocal links인 `write_authorizations.consumed_by_run_id`와 `runs.write_authorization_id`는 같은 Core transaction 안에서 서로를 가리켜야 합니다. Mismatch는 invalid state이며, `recover`가 이를 repair하거나 affected close를 block해야 합니다. Authorization을 consume했다고 observed changes가 그 자체로 valid해지는 것은 아닙니다. Changed-path, tool, command, network, secret, Change Unit, approval, baseline, Decision Packet validation이 committed Run을 계속 verify합니다.
 

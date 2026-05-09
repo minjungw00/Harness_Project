@@ -262,6 +262,7 @@ WriteAuthorizationSummary:
   write_authorization_id: string
   task_id: string
   change_unit_id: string
+  basis_state_version: integer
   intended_operation: string
   intended_paths: string[]
   intended_tools: string[]
@@ -830,7 +831,9 @@ ApprovalRequestCandidate:
 
 When `dry_run=false` and `decision=allowed`, the response must include a non-null `write_authorization_ref`; the `write_authorization` summary may also be returned when the caller requests expanded payloads or the implementation supports it. `authorization_effect` is `created` when Core creates a new authorization.
 
-`authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request and response with the same idempotency key, request hash, and state basis. A distinct compatible request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes.
+`WriteAuthorizationSummary.basis_state_version` is the affected-scope state version Core used as the compatibility basis for the allowed write attempt. For MVP prepare-write product writes this is the Task State Version for `task_id`. It is replay and stale-detection audit metadata, not the resulting response `base.state_version`.
+
+`authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request and response with the same idempotency key, request hash, and `basis_state_version`. A distinct compatible request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes.
 
 When `dry_run=true` and the write would otherwise be allowed, Core returns `decision=allowed` with `authorization_effect=would_create`, but `write_authorization_ref` and `write_authorization` must be `null`, and no Write Authorization record, event, artifact, or projection job is created.
 

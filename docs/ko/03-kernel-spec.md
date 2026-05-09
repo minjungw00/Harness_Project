@@ -109,13 +109,15 @@ Sensitive action이 product trade-off, architecture choice, QA waiver, verificat
 
 Write Authorization은 `prepare_write`가 product write를 허용할 때 create되는 durable state record입니다.
 
-Task, active Change Unit, intended operation, intended paths, intended tools, intended commands, intended network targets, intended secret access, sensitive categories, baseline, approval refs, relevant Decision Packet refs, guarantee level, status, created time, Run에 의한 consumption을 기록합니다.
+Task, active Change Unit, `basis_state_version`, intended operation, intended paths, intended tools, intended commands, intended network targets, intended secret access, sensitive categories, baseline, approval refs, relevant Decision Packet refs, guarantee level, status, created time, Run에 의한 consumption을 기록합니다.
+
+`basis_state_version`은 Core가 stale-state checks 이후 authorization을 create하기 전에 allowed write attempt의 compatibility basis로 사용한 affected-scope state version입니다. MVP Write Authorization에서는 authorization의 Task에 대한 Task State Version입니다. 이 field는 idempotent replay audit, stale detection, 오래된 unconsumed authorization이 stale, expired, revoked가 된 이유를 설명하는 데 사용됩니다.
 
 Write Authorization은 그 자체로 scope가 아닙니다. Active scope와 gates 아래에서 Core가 specific write attempt를 허용했다는 evidence입니다.
 
 Write Authorization은 approval, evidence, verification, QA, acceptance, residual-risk visibility를 대체하지 않습니다.
 
-`authorization_effect=returned`는 같은 idempotency key, request hash, state basis를 가진 동일한 committed `prepare_write` request의 idempotent replay 또는 already committed response 반환에만 reserved됩니다. Distinct compatible `prepare_write` request는 distinct Write Authorization을 create합니다. Compatibility가 authorization을 reusable하게 만들지는 않습니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 stale, expire, revoke할 수 있습니다.
+`authorization_effect=returned`는 같은 idempotency key, request hash, `basis_state_version`을 가진 동일한 committed `prepare_write` request의 idempotent replay 또는 already committed response 반환에만 reserved됩니다. Distinct compatible `prepare_write` request는 distinct Write Authorization을 create합니다. Compatibility가 authorization을 reusable하게 만들지는 않습니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 stale, expire, revoke할 수 있습니다.
 
 Write Authorization status는 record-level입니다.
 
@@ -599,7 +601,7 @@ Decision algorithm은 다음과 같습니다.
 
 Required checks에는 active Task, active Change Unit, mode write eligibility, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, surface capability profile, design policy preconditions가 포함됩니다.
 
-`allowed` decision은 `status=allowed`인 Write Authorization을 create하거나 reference해야 합니다. `authorization_effect=returned`는 같은 idempotency key, request hash, state basis를 가진 동일한 committed `prepare_write` request의 idempotent replay 또는 already committed response 반환에만 reserved됩니다. Distinct compatible request는 distinct Write Authorization을 create합니다. Compatibility가 authorization을 reusable하게 만들지는 않습니다. Blocked, approval-required, decision-required, state-conflict result는 attempted write에 대해 consumable Write Authorization을 만들면 안 됩니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 stale, expire, revoke할 수 있습니다.
+`allowed` decision은 `status=allowed`이고 allow decision이 사용한 affected scope의 `basis_state_version`이 기록된 Write Authorization을 create하거나 reference해야 합니다. `authorization_effect=returned`는 같은 idempotency key, request hash, `basis_state_version`을 가진 동일한 committed `prepare_write` request의 idempotent replay 또는 already committed response 반환에만 reserved됩니다. Distinct compatible request는 distinct Write Authorization을 create합니다. Compatibility가 authorization을 reusable하게 만들지는 않습니다. Blocked, approval-required, decision-required, state-conflict result는 attempted write에 대해 consumable Write Authorization을 만들면 안 됩니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 stale, expire, revoke할 수 있습니다.
 
 Product judgment가 필요하면 `prepare_write`는 Decision Packet을 통해 user decision을 요청합니다. Product judgment를 broad approval로 바꾸면 안 됩니다. `approval_required`는 sensitive-change approval에만 사용합니다.
 

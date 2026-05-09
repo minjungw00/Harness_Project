@@ -216,6 +216,8 @@ Fixture files and suite catalogs may carry metadata outside the fixture body. Th
 
 Fixture seed shorthand: examples may use compact `owner_records`, `stewardship_findings`, or feedback-loop shorthand to keep the document readable. Executable fixture files must map that shorthand to owner records, validator runs, residual risks, or other records owned by DDL/API docs. The shorthand must not create a second state model. `StewardshipImpactSummary` assertions are derived display, not canonical current records, and should appear under `expected_state.derived` or projection assertions.
 
+Executable fixtures that seed `write_authorizations` must produce valid stored rows. Each seeded authorization row must include `basis_state_version` explicitly, or the runner must derive it from the seeded affected-scope state version for the row's Task before inserting into `state.sqlite`. This is a storage-loader derivation rule only; it does not add fixture top-level fields or change the fixture body shape. Partial `expected_state.write_authorization` assertions may omit `basis_state_version` unless the fixture is testing idempotent replay, stale detection, expiry, or audit behavior. `basis_state_version` is the allow-decision basis, not the resulting `ToolResponseBase.state_version`.
+
 Suite catalog metadata is not passed to Core and is not part of a fixture body. It can group exact-shape fixtures by suite, stage, and tags:
 
 ```yaml
@@ -829,6 +831,7 @@ initial_state:
     - write_authorization_id: WA-WRITE-003
       status: allowed
       change_unit_id: CU-WRITE-003
+      basis_state_version: 1
       intended_paths: ["src/a.ts"]
       consumed_by_run_id: null
 input:
@@ -909,6 +912,7 @@ initial_state:
     - write_authorization_id: WA-WRITE-004
       status: consumed
       change_unit_id: CU-WRITE-004
+      basis_state_version: 1
       intended_paths: ["src/a.ts"]
       consumed_by_run_id: RUN-WRITE-PREV-004
 input:
