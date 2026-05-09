@@ -1268,7 +1268,7 @@ Next evidence:
 Residual risk:
 - status: {residual_risk_status}
 - close impact: {residual_risk_close_impact}
-- accepted residual-risk refs: {accepted_residual_risk_refs|none}
+- accepted residual-risk record refs: {accepted_residual_risk_record_refs|none}
 
 Gates:
 - scope: {scope_gate}

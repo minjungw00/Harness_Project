@@ -243,7 +243,7 @@ expected_error: object | null
 
 Fixture file과 suite catalog는 fixture body 밖에 metadata를 가질 수 있습니다. Fixture body 자체는 위 field만 사용해야 conformance runner가 behavior를 일관되게 비교할 수 있습니다.
 
-Fixture seed shorthand: 예시는 문서 가독성을 위해 compact `owner_records`, `stewardship_findings`, feedback-loop shorthand를 사용할 수 있습니다. 실행 가능한 fixture file은 이 shorthand를 owner record, validator run, residual risk, 또는 DDL/API 문서가 소유하는 다른 record로 mapping해야 합니다. Shorthand는 두 번째 state model을 만들면 안 됩니다. `StewardshipImpactSummary` assertion은 derived display이지 canonical current record가 아니며 `expected_state.derived` 또는 projection assertion 아래에 두어야 합니다. Fixture shorthand의 accepted residual-risk refs는 accepted-risk metadata/state를 가진 `residual_risk` records에 대한 refs입니다. Executable MVP fixtures는 standalone `ARISK-*` records를 요구하면 안 됩니다.
+Fixture seed shorthand: 예시는 문서 가독성을 위해 compact `owner_records`, `stewardship_findings`, feedback-loop shorthand를 사용할 수 있습니다. 실행 가능한 fixture file은 이 shorthand를 owner record, validator run, residual risk, 또는 DDL/API 문서가 소유하는 다른 record로 mapping해야 합니다. Shorthand는 두 번째 state model을 만들면 안 됩니다. `StewardshipImpactSummary` assertion은 derived display이지 canonical current record가 아니며 `expected_state.derived` 또는 projection assertion 아래에 두어야 합니다. Fixture shorthand의 accepted residual risk는 seeded `residual_risk` records의 state이며 standalone accepted-risk record가 아닙니다. Fixture examples가 `accepted_refs`, `not_visible_refs`, `unaccepted_refs`, `residual_risk_refs` 같은 risk-ref arrays에 bare `RISK-*` values를 사용할 때, executable fixtures는 이를 `StateRecordRef { record_kind: residual_risk, record_id: ... }`로 mapping해야 합니다. 이 bare IDs는 fixture shorthand일 뿐이며 DDL/API fields가 아닙니다. Executable MVP fixtures는 standalone `ARISK-*` records를 요구하면 안 됩니다.
 
 `write_authorizations`를 seed하는 executable fixtures는 valid stored rows를 만들어야 합니다. 각 seeded authorization row는 `basis_state_version`을 명시적으로 포함하거나, runner가 `state.sqlite`에 insert하기 전에 row의 Task에 대한 seeded affected-scope state version에서 이를 derive해야 합니다. 이는 storage-loader derivation rule일 뿐이며 fixture top-level field를 추가하거나 fixture body shape를 바꾸지 않습니다. Partial `expected_state.write_authorization` assertions는 idempotent replay, stale detection, expiry, audit behavior를 test하지 않는 한 `basis_state_version`을 생략할 수 있습니다. `basis_state_version`은 allow-decision basis이지 resulting `ToolResponseBase.state_version`이 아닙니다.
 
@@ -556,20 +556,18 @@ initial_state:
       close_relevant: true
       visibility: visible
       accepted: true
-      accepted_residual_risk_ref: RISK-VERIFY-001
   decision_packets:
     - decision_packet_id: DEC-VERIFY-WAIVER-001
       decision_kind: verification_waiver
       status: resolved
-      accepted_residual_risk_refs: [RISK-VERIFY-001]
     - decision_packet_id: DEC-RISK-ACCEPT-001
       decision_kind: residual_risk_acceptance
       status: resolved
       residual_risk_refs: [RISK-VERIFY-001]
 input:
-  close_intent: accept_verification_risk
-  waiver_reason: "User accepts remaining verification risk for urgent local-only fix."
-  accepted_residual_risk_refs: [RISK-VERIFY-001]
+  intent: complete
+  requested_close_reason: completed_with_risk_accepted
+  user_note: "User accepts remaining verification risk for urgent local-only fix."
 action: close_task
 expected_state:
   lifecycle_phase: completed
@@ -611,10 +609,10 @@ initial_state:
     - decision_packet_id: DEC-VERIFY-WAIVER-002
       decision_kind: verification_waiver
       status: resolved
-      accepted_residual_risk_refs: []
 input:
-  close_intent: accept_verification_risk
-  waiver_reason: "User accepts remaining verification risk for urgent local-only fix."
+  intent: complete
+  requested_close_reason: completed_with_risk_accepted
+  user_note: "User accepts remaining verification risk for urgent local-only fix."
 action: close_task
 expected_state:
   lifecycle_phase: waiting_user
@@ -1220,7 +1218,7 @@ initial_state:
       visibility: not_visible
       accepted: false
 input:
-  close_intent: complete
+  intent: complete
   requested_close_reason: completed_verified
 action: close_task
 expected_state:
@@ -1907,7 +1905,7 @@ initial_state:
       accepted: false
       source_refs: [STEW-FIND-PUBLIC-RISK-001, IFACE-PUBLIC-EXPORT-001]
 input:
-  close_intent: complete
+  intent: complete
   requested_close_reason: completed_verified
 action: close_task
 expected_state:

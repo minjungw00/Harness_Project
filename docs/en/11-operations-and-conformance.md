@@ -241,7 +241,7 @@ expected_error: object | null
 
 Fixture files and suite catalogs may carry metadata outside the fixture body. The fixture body itself uses only the fields above so conformance runners can compare behavior consistently.
 
-Fixture seed shorthand: examples may use compact `owner_records`, `stewardship_findings`, or feedback-loop shorthand to keep the document readable. Executable fixture files must map that shorthand to owner records, validator runs, residual risks, or other records owned by DDL/API docs. The shorthand must not create a second state model. `StewardshipImpactSummary` assertions are derived display, not canonical current records, and should appear under `expected_state.derived` or projection assertions. Accepted residual-risk refs in fixture shorthand are refs to `residual_risk` records with accepted-risk metadata/state; executable MVP fixtures must not require standalone `ARISK-*` records.
+Fixture seed shorthand: examples may use compact `owner_records`, `stewardship_findings`, or feedback-loop shorthand to keep the document readable. Executable fixture files must map that shorthand to owner records, validator runs, residual risks, or other records owned by DDL/API docs. The shorthand must not create a second state model. `StewardshipImpactSummary` assertions are derived display, not canonical current records, and should appear under `expected_state.derived` or projection assertions. Accepted residual risk in fixture shorthand is state on seeded `residual_risk` records, not a standalone accepted-risk record. When fixture examples use bare `RISK-*` values in risk-ref arrays such as `accepted_refs`, `not_visible_refs`, `unaccepted_refs`, or `residual_risk_refs`, executable fixtures must map them to `StateRecordRef { record_kind: residual_risk, record_id: ... }`. These bare IDs are fixture shorthand only, not DDL/API fields. Executable MVP fixtures must not require standalone `ARISK-*` records.
 
 Executable fixtures that seed `write_authorizations` must produce valid stored rows. Each seeded authorization row must include `basis_state_version` explicitly, or the runner must derive it from the seeded affected-scope state version for the row's Task before inserting into `state.sqlite`. This is a storage-loader derivation rule only; it does not add fixture top-level fields or change the fixture body shape. Partial `expected_state.write_authorization` assertions may omit `basis_state_version` unless the fixture is testing idempotent replay, stale detection, expiry, or audit behavior. `basis_state_version` is the allow-decision basis, not the resulting `ToolResponseBase.state_version`.
 
@@ -554,20 +554,18 @@ initial_state:
       close_relevant: true
       visibility: visible
       accepted: true
-      accepted_residual_risk_ref: RISK-VERIFY-001
   decision_packets:
     - decision_packet_id: DEC-VERIFY-WAIVER-001
       decision_kind: verification_waiver
       status: resolved
-      accepted_residual_risk_refs: [RISK-VERIFY-001]
     - decision_packet_id: DEC-RISK-ACCEPT-001
       decision_kind: residual_risk_acceptance
       status: resolved
       residual_risk_refs: [RISK-VERIFY-001]
 input:
-  close_intent: accept_verification_risk
-  waiver_reason: "User accepts remaining verification risk for urgent local-only fix."
-  accepted_residual_risk_refs: [RISK-VERIFY-001]
+  intent: complete
+  requested_close_reason: completed_with_risk_accepted
+  user_note: "User accepts remaining verification risk for urgent local-only fix."
 action: close_task
 expected_state:
   lifecycle_phase: completed
@@ -609,10 +607,10 @@ initial_state:
     - decision_packet_id: DEC-VERIFY-WAIVER-002
       decision_kind: verification_waiver
       status: resolved
-      accepted_residual_risk_refs: []
 input:
-  close_intent: accept_verification_risk
-  waiver_reason: "User accepts remaining verification risk for urgent local-only fix."
+  intent: complete
+  requested_close_reason: completed_with_risk_accepted
+  user_note: "User accepts remaining verification risk for urgent local-only fix."
 action: close_task
 expected_state:
   lifecycle_phase: waiting_user
@@ -1218,7 +1216,7 @@ initial_state:
       visibility: not_visible
       accepted: false
 input:
-  close_intent: complete
+  intent: complete
   requested_close_reason: completed_verified
 action: close_task
 expected_state:
@@ -1905,7 +1903,7 @@ initial_state:
       accepted: false
       source_refs: [STEW-FIND-PUBLIC-RISK-001, IFACE-PUBLIC-EXPORT-001]
 input:
-  close_intent: complete
+  intent: complete
   requested_close_reason: completed_verified
 action: close_task
 expected_state:

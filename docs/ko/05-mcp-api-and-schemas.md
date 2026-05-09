@@ -1170,6 +1170,8 @@ RecordUserDecisionResponse:
   next_action: string
 ```
 
+`RecordUserDecisionResponse.accepted_risk_refs`는 `record_kind=residual_risk`인 `StateRecordRef` entries만 포함합니다. Standalone accepted-risk record kind는 없습니다.
+
 State transition summary: targeted Decision Packet을 resolve, defer, reject, block합니다. Affected gates 또는 reconcile item을 update합니다. Approval grant/deny는 linked Approval record와 `approval_gate`를 update하지만 Write Authorization을 create하지 않습니다. Accepted scope는 `scope_gate`를 update하고, user-resolved product judgment는 `decision_gate`를 update합니다. Accepted Autonomy Boundary decisions는 active Change Unit boundary를 update할 수 있습니다. Verification waiver는 `verification_gate=waived_by_user`를 update하고, QA waiver는 `qa_gate`를 update합니다. Acceptance는 user decision을 Decision Packet에 record하고 `acceptance_gate`를 update합니다. Accepted residual risk는 assurance를 upgrade하지 않고 Residual Risk records를 update하며 그 refs를 반환합니다. Reconcile은 accepted state records를 create할 수 있습니다.
 
 implementation-local detail/audit를 위해 반환될 수 있는 non-stable EventRef values: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
@@ -1378,6 +1380,8 @@ CloseTaskRequest:
   user_note: string | null
   superseded_by_task_id: string | null
 ```
+
+`CloseTaskRequest`는 accepted-risk refs를 전달하지 않습니다. `completed_with_risk_accepted`에서는 Core가 close-relevant Residual Risk records에 이미 기록된 accepted state를 읽으며, visible accepted residual-risk state가 없으면 block합니다.
 
 Response schema:
 

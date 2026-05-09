@@ -1168,6 +1168,8 @@ RecordUserDecisionResponse:
   next_action: string
 ```
 
+`RecordUserDecisionResponse.accepted_risk_refs` contains only `StateRecordRef` entries with `record_kind=residual_risk`; there is no standalone accepted-risk record kind.
+
 State transition summary: resolves, defers, rejects, or blocks the targeted Decision Packet; updates affected gates or reconcile item; approval grant/deny updates the linked Approval record and `approval_gate`, but does not create a Write Authorization; accepted scope updates `scope_gate`; user-resolved product judgment updates `decision_gate`; accepted Autonomy Boundary decisions may update the active Change Unit boundary; verification waiver updates `verification_gate=waived_by_user`; QA waiver updates `qa_gate`; acceptance records the user decision on the Decision Packet and updates `acceptance_gate`; accepted residual risk updates Residual Risk records and returns their refs without upgrading assurance; reconcile may create accepted state records.
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
@@ -1372,6 +1374,8 @@ CloseTaskRequest:
   user_note: string | null
   superseded_by_task_id: string | null
 ```
+
+`CloseTaskRequest` does not carry accepted-risk refs. For `completed_with_risk_accepted`, Core reads already-recorded accepted state from close-relevant Residual Risk records and blocks if visible accepted residual-risk state is missing.
 
 Response schema:
 
