@@ -14,7 +14,13 @@ If you only want to run one task under Harness, start with one phrase:
 Run this work under the harness.
 ```
 
-Expect the agent to show a compact status or Journey Card, the current scope, the next safe action, and any blocker that needs your judgment. It should name approval, Decision Packet, Write Authority, Autonomy Boundary, evidence, verification, Manual QA, acceptance, and residual risk separately when they matter.
+Expect the agent to first answer three everyday questions, preferably in a compact status or Journey Card:
+
+- What is the scope: what is included, and what is out of bounds?
+- What evidence exists: what changed, if anything, what was checked, and what is still missing?
+- What judgment is needed now: choose a direction, approve a sensitive step, inspect QA, accept shown residual risk, or accept the result when acceptance is required?
+
+Only when one of those answers matters should the agent use the deeper labels: Decision Packet, Write Authority, Autonomy Boundary, Manual QA, acceptance, residual risk, approval, evidence, or verification.
 
 Most of the time, you only decide a few things:
 
@@ -22,7 +28,7 @@ Most of the time, you only decide a few things:
 - which product direction or trade-off to choose when a Decision Packet appears
 - whether a sensitive change is approved
 - whether Manual QA is needed, completed/passed, or validly waived
-- whether remaining residual risk is acceptable before final acceptance
+- whether shown residual risk is acceptable before close or before final acceptance when acceptance is required
 
 When blocked, ask for the smallest next unblocker:
 
@@ -30,7 +36,7 @@ When blocked, ask for the smallest next unblocker:
 What is blocking this task now, and what one decision or check would unblock it?
 ```
 
-Before accepting or closing, check that the result matches scope, evidence covers the acceptance criteria, verification passed or was explicitly waived with recorded risk, Manual QA passed/completed or was validly waived, close-relevant residual risk has been shown or the agent reports `ResidualRiskSummary.status=none`, and your final acceptance is separate from approval.
+Near close, check that the result matches scope, evidence is not required or covers the acceptance criteria, verification is not required, passed, or explicitly waived with recorded risk, Manual QA is not required, passed/completed, or validly waived, close-relevant residual risk has been shown or the agent reports `ResidualRiskSummary.status=none`, and any final acceptance request is separate from approval.
 
 Use the rest of this guide as deeper reference when the task stops on a specific gate or judgment.
 
@@ -42,7 +48,7 @@ Everyday work starts as a conversation, not as a command.
 Run this work under the harness.
 ```
 
-This means: check state, shape the scope, confirm allowed boundaries before writing, and proceed while recording evidence, verification, and user judgment.
+This means: check state, shape the scope, confirm allowed boundaries before writing, and proceed while recording relevant evidence, checks, and user judgment when they apply.
 
 Common phrases:
 
@@ -57,8 +63,9 @@ Approved. The scope is only what you just described.
 Proceed AFK only when active Change Unit scope and Autonomy Boundary latitude both apply; sensitive categories still need granted approval, and actual product writes still need a compatible `prepare_write` Write Authorization.
 Start detached verify.
 Decide whether Manual QA is needed.
-Show residual risk before I accept.
-Accepted. Close this task.
+Show close-relevant residual risk before I accept.
+Accepted. Close this task after final acceptance is requested.
+Final acceptance is not required here; close once applicable blockers are clear.
 ```
 
 ## Basic Flow
@@ -70,9 +77,11 @@ The normal path should feel like a short conversation, not a work-management sys
 3. Confirm scope and the Change Unit.
 4. If product judgment blocks progress, read and answer the Decision Packet.
 5. Before writing, the agent or Harness checks `prepare_write`.
-6. After changes, the agent records run and evidence.
-7. Verify, record Manual QA, show residual risk, and ask for acceptance when needed.
+6. After any changes or advice, the agent records the relevant result and evidence when evidence applies.
+7. When the task path calls for it, verify, record Manual QA, show close-relevant residual risk, and ask for acceptance.
 8. Close.
+
+Many advisor or direct tasks skip some later checks. If final acceptance is not required, the status should say so or simply close after the applicable blockers are clear and residual risk has been shown or confirmed as none.
 
 Gates should be explained as why the task cannot safely proceed or close yet. Evidence insufficiency should be shown by acceptance criterion, not as an abstract internal condition. If a cooperative guarantee is shown, explain plainly that the surface is expected to follow Harness decisions but may not physically block every violating write before it happens.
 
@@ -85,7 +94,7 @@ Close blocked:
 
 ## What You Usually Decide
 
-Most sessions should reserve your attention for scope when it is not obvious, product or design trade-offs, sensitive approval, and QA, risk, or acceptance judgment.
+Most sessions should reserve your attention for scope when it is not obvious, product or design trade-offs, sensitive approval, QA, shown residual risk, and final acceptance when the task path requires it.
 
 You own the work direction and acceptable risk; you should not need to operate internal records by hand.
 
@@ -228,7 +237,7 @@ Product judgment, approval, assurance, Manual QA, residual-risk acceptance, and 
 | Assurance | How far was this technically checked? | approval, QA, acceptance |
 | Manual QA | Did a human inspect the actual experience quality? | verification, acceptance |
 | Residual-risk acceptance | Does the user accept a known remaining risk or limitation? | approval, evidence, verification, Manual QA, final acceptance |
-| Final acceptance | Does the user accept the result and remaining trade-offs? | approval, verification, QA |
+| Final acceptance | Does the user accept the result and remaining trade-offs? | approval, evidence, verification, Manual QA, residual-risk acceptance |
 
 Examples that need approval include dependency additions, auth/permission changes, data model changes, public API changes, destructive writes, secret access, and production config changes. Approval does not mean correctness or acceptance.
 
@@ -337,7 +346,9 @@ Show the QA waiver Decision Packet before I decide.
 
 ## Acceptance
 
-Acceptance is the final user judgment that says, "I accept this result." Even if technical verification passes and Manual QA is complete, the task does not close unless the user accepts the remaining trade-offs.
+Acceptance is the final user judgment that says, "I accept this result." It appears only when the task path requires final acceptance.
+
+When acceptance is required, the task does not close until the user accepts the result and remaining trade-offs after close-relevant residual risk has been shown or reported as none. Passing verification, completing Manual QA, granting approval, or accepting a specific residual risk does not by itself count as final acceptance.
 
 ```text
 Accepted. Close this task.
@@ -349,7 +360,7 @@ The user can also reject it.
 I do not accept it. Rework the session-expiration UX.
 ```
 
-Acceptance is not approval, Manual QA, or residual-risk acceptance.
+Acceptance is not approval, verification, Manual QA, or residual-risk acceptance.
 
 ## Resuming Work
 
