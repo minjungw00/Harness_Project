@@ -1299,7 +1299,7 @@ Response schema:
 ```yaml
 RecordRunResponse:
   base: ToolResponseBase
-  run_id: string
+  run_id: string | null
   state: StateSummary
   write_authorization_ref: StateRecordRef | null
   evidence_manifest_ref: StateRecordRef | null
@@ -1310,7 +1310,11 @@ RecordRunResponse:
   next_action: string
 ```
 
+`run_id`는 Core가 Run을 record했을 때 committed Run ID입니다. Core가 어떤 Run도 commit하기 전에 request를 reject하면, 예를 들어 write-capable implementation 또는 direct Run에 Write Authorization이 missing이면 `run_id`는 `null`입니다. 이런 pre-commit rejection response에서는 `write_authorization_ref`, `evidence_manifest_ref`, `run_summary_ref`, `direct_result_ref`가 `null`로 남고, `registered_artifacts`와 `updated_feedback_loop_refs`는 empty로 남습니다.
+
 `write_authorization_ref`는 committed Run이 compatible Write Authorization을 성공적으로 consume할 때만 non-null입니다.
+
+Violation 또는 audit Run은 Core가 그런 Run을 deliberate하게 record할 때, 예를 들어 observed product write가 이미 happened한 뒤에만 non-null `run_id`를 가질 수 있습니다. Rejected pre-commit cases는 Run ID를 fabricate하면 안 됩니다.
 
 State transition summary: shaping updates는 `shaping`을 유지하거나 `ready` 또는 `waiting_user`로 이동할 수 있습니다. Implementation은 `verifying` 쪽으로 이동합니다. Direct는 close-eligible이 되거나 work로 escalate할 수 있습니다. Verification input은 detached verification을 증명하지 않고 evaluator bundle context를 기록합니다.
 
@@ -1318,9 +1322,9 @@ State transition summary: shaping updates는 `shaping`을 유지하거나 `ready
 
 implementation-local detail/audit를 위해 반환될 수 있는 non-stable EventRef values: `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `artifact_registered`, `feedback_loop_updated`, `tdd_trace_updated`.
 
-Violation 또는 audit Runs는 audit 및 recovery를 위해 `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, `scope_violation_detected`를 emit할 수 있습니다. 그런 Runs는 evidence sufficiency, detached verification, QA, acceptance, close readiness를 satisfy할 수 없습니다.
+Violation 또는 audit Runs는 audit 및 recovery를 위해 `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, `scope_violation_detected`를 emit할 수 있습니다. 그런 Runs는 evidence sufficiency, detached verification, QA, acceptance, close readiness를 satisfy할 수 없습니다. Pre-commit rejection responses는 `record_run`에서 stable EventRef values를 반환하지 않습니다.
 
-Projection jobs enqueued: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `kind=direct`일 때 `DIRECT-RESULT`; TDD trace가 update되면 `TDD-TRACE`.
+Committed Run responses에서 enqueued되는 projection jobs: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `kind=direct`일 때 `DIRECT-RESULT`; TDD trace가 update되면 `TDD-TRACE`. Pre-commit rejection responses는 projection jobs를 enqueue하지 않습니다.
 
 ValidatorResults emitted: `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
 

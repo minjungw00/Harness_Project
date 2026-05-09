@@ -1299,7 +1299,7 @@ Response schema:
 ```yaml
 RecordRunResponse:
   base: ToolResponseBase
-  run_id: string
+  run_id: string | null
   state: StateSummary
   write_authorization_ref: StateRecordRef | null
   evidence_manifest_ref: StateRecordRef | null
@@ -1310,7 +1310,11 @@ RecordRunResponse:
   next_action: string
 ```
 
+`run_id` is the committed Run ID when Core records a Run. It is `null` when Core rejects the request before any Run is committed, such as a missing Write Authorization for a write-capable implementation or direct Run. In those pre-commit rejection responses, `write_authorization_ref`, `evidence_manifest_ref`, `run_summary_ref`, and `direct_result_ref` remain `null`, while `registered_artifacts` and `updated_feedback_loop_refs` remain empty.
+
 `write_authorization_ref` is non-null only when the committed Run successfully consumes a compatible Write Authorization.
+
+Violation or audit Runs may have a non-null `run_id` only when Core deliberately records such a Run, for example after an observed product write already happened. Rejected pre-commit cases must not fabricate a Run ID.
 
 State transition summary: shaping updates can keep `shaping`, move to `ready`, or move to `waiting_user`; implementation moves toward `verifying`; direct can become close-eligible or escalate to work; verification input records evaluator bundle context without proving detached verification.
 
@@ -1318,9 +1322,9 @@ Stable EventRef values that may be returned: `run_recorded`, `write_authorizatio
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `artifact_registered`, `feedback_loop_updated`, `tdd_trace_updated`.
 
-Violation or audit Runs may emit `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, or `scope_violation_detected` for audit and recovery. Those Runs cannot satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness.
+Violation or audit Runs may emit `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, or `scope_violation_detected` for audit and recovery. Those Runs cannot satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness. Pre-commit rejection responses return no stable EventRef values from `record_run`.
 
-Projection jobs enqueued: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `DIRECT-RESULT` for `kind=direct`; `TDD-TRACE` when updated.
+Projection jobs enqueued for committed Run responses: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `DIRECT-RESULT` for `kind=direct`; `TDD-TRACE` when updated. Pre-commit rejection responses enqueue no projection jobs.
 
 ValidatorResults emitted: `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
 

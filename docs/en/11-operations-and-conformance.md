@@ -1085,6 +1085,8 @@ expected_error:
   code: WRITE_AUTHORIZATION_REQUIRED
 ```
 
+This fixture intentionally has `run_recorded: false`, no stable events, no artifacts, and no projection changes. The corresponding `RecordRunResponse.run_id` is `null`; no fabricated Run ID is required or allowed.
+
 ```yaml
 scenario_id: CORE-record-run-observed-path-outside-authorization-blocks-or-stales
 initial_state:

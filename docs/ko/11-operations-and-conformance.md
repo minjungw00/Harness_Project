@@ -1087,6 +1087,8 @@ expected_error:
   code: WRITE_AUTHORIZATION_REQUIRED
 ```
 
+이 fixture는 의도적으로 `run_recorded: false`, stable events 없음, artifacts 없음, projection changes 없음 상태를 유지합니다. Corresponding `RecordRunResponse.run_id`는 `null`이며, fabricated Run ID는 required도 allowed도 아닙니다.
+
 ```yaml
 scenario_id: CORE-record-run-observed-path-outside-authorization-blocks-or-stales
 initial_state:

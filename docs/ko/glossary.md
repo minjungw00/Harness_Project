@@ -410,7 +410,7 @@ Evidence, verification, QA, acceptance work 이후에도 남는 known uncertaint
 
 ### Run
 
-Agent, evaluator, operator, 기타 actor가 Task와 optional Change Unit에 대해 수행하는 execution attempt입니다. Run은 baseline, surface, observed changes, commands, artifacts, summary를 기록합니다.
+Agent, evaluator, operator, 기타 actor가 Task와 optional Change Unit에 대해 수행하는 execution attempt입니다. Run은 baseline, surface, observed changes, commands, artifacts, summary를 기록합니다. Rejected pre-commit `record_run` request는 Run이 아니며 fabricated Run ID를 받으면 안 됩니다. Audit 또는 violation attempt는 Core가 deliberate하게 commit할 때만 Run이 됩니다.
 
 ### Scope Gate
 

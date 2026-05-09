@@ -971,7 +971,7 @@ Implementation and direct `record_run` calls that report product writes must con
 
 Core must verify observed changed paths against both the consumed Write Authorization and the active Change Unit. It also verifies recorded tools, commands, network targets, and secret access against the authorization when those observations are available from command results, artifacts, surface telemetry, or declared run data.
 
-If no product writes are reported and Write Authorization is still required by the Run kind, active Change Unit, or intended operation, Core rejects `record_run` when authorization is missing. If observed product writes already occurred but authorization is missing or exceeded, Core may record a blocked or violation Run for recovery and audit. That Run must not satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness, and Core marks affected scope, evidence, approval, verification, and projection state stale or blocked. The corresponding Write Authorization, if any, remains unconsumed and may be marked stale, revoked, or expired according to the violation and compatibility basis. When the observed behavior asserts a general scope violation, Core may also append `scope_violation_detected`.
+When Write Authorization is required by the Run kind, active Change Unit, intended operation, or reported product-write observations, Core rejects `record_run` if authorization is missing before any Run is committed. A rejected pre-commit request has no Run ID, emits no stable `record_run` events, registers no artifacts, and enqueues no projection changes. If observed product writes already occurred but authorization is missing or exceeded, Core may instead record a blocked or violation Run for recovery and audit. Core assigns a Run ID only for such deliberately committed audit or violation Runs; it must not fabricate one for rejected pre-commit cases. That Run must not satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness, and Core marks affected scope, evidence, approval, verification, and projection state stale or blocked. The corresponding Write Authorization, if any, remains unconsumed and may be marked stale, revoked, or expired according to the violation and compatibility basis. When the observed behavior asserts a general scope violation, Core may also append `scope_violation_detected`.
 
 The Task cannot rely on a blocked or violation Run for close until the state is repaired through compatible scope, approval, Decision Packet resolution, evidence update, verification, or a new write authorization and Run.
 
@@ -1003,7 +1003,10 @@ flowchart TD
   ProductWrites -- yes --> AuthCheck{"Compatible unexpired unconsumed Write Authorization?"}
   AuthCheck -- yes --> Consume["consume authorization and populate runs.write_authorization_id"]
   Consume --> RecordRun["record Run, artifacts, and evidence"]
-  AuthCheck -- no --> Violation["reject or record blocked or violation Run for audit"]
+  AuthCheck -- no --> Persisted{"Observed product write already happened?"}
+  Persisted -- no --> RejectPrecommit["reject before committing Run"]
+  RejectPrecommit --> NoRunId["run_id=null; no artifacts, stable events, or projections"]
+  Persisted -- yes --> Violation["record blocked or violation Run for audit"]
   Violation --> NoConsumption["do not populate runs.write_authorization_id"]
   Violation --> StaleState["mark affected scope, evidence, approval, verification, and projection state stale or blocked"]
 ```

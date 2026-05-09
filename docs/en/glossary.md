@@ -406,7 +406,7 @@ A successful close where the user accepts close-relevant residual risk, includin
 
 ### Run
 
-An execution attempt by an agent, evaluator, operator, or other actor against a Task and optionally a Change Unit. Runs record baseline, surface, observed changes, commands, artifacts, and summary.
+An execution attempt by an agent, evaluator, operator, or other actor against a Task and optionally a Change Unit. Runs record baseline, surface, observed changes, commands, artifacts, and summary. A rejected pre-commit `record_run` request is not a Run and must not receive a fabricated Run ID; an audit or violation attempt becomes a Run only when Core deliberately commits it.
 
 ### Scope Gate
 
