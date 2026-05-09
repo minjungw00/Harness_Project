@@ -19,6 +19,47 @@ Each surface recipe should describe:
 
 The connector must still declare a capability profile. A surface name does not imply a guarantee level.
 
+```mermaid
+flowchart TB
+  Recipe["surface recipe"] --> Profiles["target profiles"]
+  Recipe --> Generated["generated files or instructions"]
+  Recipe --> MCP["MCP configuration hints"]
+  Recipe --> Capture["capture, guard, and isolation options"]
+  Recipe --> Fallbacks["common fallbacks"]
+  Recipe --> Risks["conformance risks"]
+  Recipe --> Profile["declared capability profile"]
+  Profile --> Guarantee["reported guarantee_level"]
+  SurfaceName["surface name"] --> SurfaceRule["must not infer guarantee_level from name"]
+```
+
+```mermaid
+flowchart TB
+  Codex["codex"] --> CodexProfiles["profiles: local_cli, ide_chat, custom_agent"]
+  Codex --> CodexStrengths["strengths: repository rules, editing workflow, MCP-capable profiles"]
+  Codex --> CodexFallbacks["fallbacks: cooperative prepare_write, sidecar watcher, changed_paths validator"]
+  Codex --> CodexRisks["risks: guard proof, artifact capture, long rules"]
+
+  Claude["claude_code"] --> ClaudeProfiles["profiles: local_cli, ide_chat, custom_agent"]
+  Claude --> ClaudeStrengths["strengths: CLAUDE.md, hooks, evaluator candidates"]
+  Claude --> ClaudeFallbacks["fallbacks: read-only evaluator, fresh worktree, stop-hook report"]
+  Claude --> ClaudeRisks["risks: versioned hooks, read-only proof"]
+
+  Gemini["gemini"] --> GeminiProfiles["profiles: local_cli, extension, ide_chat, custom_agent"]
+  Gemini --> GeminiStrengths["strengths: extension/prompt package, MCP-capable profiles, sidecar workflows"]
+  Gemini --> GeminiFallbacks["fallbacks: CLI wrapper, sidecar-controlled run, Manual QA note"]
+  Gemini --> GeminiRisks["risks: large extension context, host-varying capture and guard"]
+
+  Copilot["github_copilot"] --> CopilotProfiles["profiles: vscode_chat, vscode_agent, cloud_agent, custom_agent"]
+  Copilot --> CopilotStrengths["strengths: custom instructions, VS Code task/terminal, MCP-capable profiles"]
+  Copilot --> CopilotFallbacks["fallbacks: VS Code task wrapper, sidecar adapter, approval card"]
+  Copilot --> CopilotRisks["risks: cloud/IDE differences, profile-specific guard proof"]
+
+  Cursor["cursor"] --> CursorProfiles["profiles: ide_agent, local_cli, custom_agent"]
+  Cursor --> CursorStrengths["strengths: project rules, MCP-capable profiles, sidecar support"]
+  Cursor --> CursorFallbacks["fallbacks: sidecar changed-file detection, generated drift detection, manual bundle"]
+  Cursor --> CursorRisks["risks: verbose rules, IDE permission differences"]
+```
+
 ## Codex Notes
 
 ```yaml
@@ -101,6 +142,16 @@ Hook mapping candidates:
 | `Stop` | draft run summary and show verify/QA needs |
 | `PreCompact` | preserve Task summary and artifact refs |
 
+```mermaid
+flowchart TD
+  SessionStart["SessionStart"] --> Status["inject Journey Card or status card"]
+  UserPromptSubmit["UserPromptSubmit"] --> Intake["guide intake and shaping"]
+  PreToolUse["PreToolUse"] --> Guard["check scope, approval, Decision Packet blockers, Autonomy Boundary"]
+  PostToolUse["PostToolUse"] --> Capture["register changed files, command output, log artifact candidates"]
+  Stop["Stop"] --> Summary["draft run summary and show verify/QA needs"]
+  PreCompact["PreCompact"] --> Preserve["preserve Task summary and artifact refs"]
+```
+
 Write-capable Claude Code profiles should show the Write Authority Summary before product writes, respect the returned Write Authorization, and record write-capable runs so `record_run` consumes the compatible authorization.
 
 Evaluator profiles should be read-only by default. A profile may claim preventive or isolated guarantees only after the connector conformance proves those hooks or boundaries are active.
@@ -181,6 +232,14 @@ Cursor connectors should keep project rules short and use the skill/playbook plu
 ### Always-On Rule File
 
 Use this shape for surface rule files such as `AGENTS.md`, `CLAUDE.md`, Gemini instructions, Copilot custom instructions, or Cursor rules. Keep only the lines that the specific surface needs.
+
+```mermaid
+flowchart LR
+  RuleFile["generated rule file"] --> Manifest["connector manifest"]
+  Manifest --> Hash["managed path and block hash"]
+  Hash --> Drift["drift detection before overwrite"]
+  Drift --> Reconcile["reconcile candidate"]
+```
 
 ````md
 # Harness Rules
@@ -325,6 +384,16 @@ mcp_server:
 
 ## Profile Examples
 
+```mermaid
+flowchart TB
+  Examples["conformance-proven profile examples"]
+  Examples --> Cooperative["Cooperative MCP example: T2 / cooperative"]
+  Examples --> Detective["Detective Capture example: T3 / detective"]
+  Examples --> Guarded["Guarded Local example: T4 / preventive"]
+  Examples --> Isolated["Isolated Verification example: T5 / isolated"]
+  Examples --> Note["examples are not automatic tier-to-guarantee upgrades"]
+```
+
 ### Cooperative MCP Profile
 
 ```yaml
@@ -429,3 +498,11 @@ fallbacks:
 ## Surface Conformance Notes
 
 Each connector recipe should be tested against the operations-owned fixtures for its declared capability tier. When a surface version or host profile changes, rerun conformance before reusing the previous guarantee level.
+
+```mermaid
+flowchart LR
+  Change["surface version or host profile change"] --> Rerun["rerun connector conformance"]
+  Rerun --> Result{"declared tier fixtures pass?"}
+  Result -- yes --> Reuse["reuse or report guarantee_level"]
+  Result -- no --> Adjust["adjust profile, fallback, or guarantee_level"]
+```

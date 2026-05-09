@@ -19,6 +19,47 @@ Concrete surface에 따라 달라지는 local 차이만 이 cookbook에 둔다. 
 
 Connector는 여전히 capability profile을 declare해야 한다. Surface name은 guarantee level을 imply하지 않는다.
 
+```mermaid
+flowchart TB
+  Recipe["surface recipe"] --> Profiles["target profiles"]
+  Recipe --> Generated["generated files or instructions"]
+  Recipe --> MCP["MCP configuration hints"]
+  Recipe --> Capture["capture, guard, and isolation options"]
+  Recipe --> Fallbacks["common fallbacks"]
+  Recipe --> Risks["conformance risks"]
+  Recipe --> Profile["declared capability profile"]
+  Profile --> Guarantee["reported guarantee_level"]
+  SurfaceName["surface name"] --> SurfaceRule["name에서 guarantee_level을 infer하면 안 됨"]
+```
+
+```mermaid
+flowchart TB
+  Codex["codex"] --> CodexProfiles["profiles: local_cli, ide_chat, custom_agent"]
+  Codex --> CodexStrengths["strengths: repository rules, editing workflow, MCP-capable profiles"]
+  Codex --> CodexFallbacks["fallbacks: cooperative prepare_write, sidecar watcher, changed_paths validator"]
+  Codex --> CodexRisks["risks: guard proof, artifact capture, long rules"]
+
+  Claude["claude_code"] --> ClaudeProfiles["profiles: local_cli, ide_chat, custom_agent"]
+  Claude --> ClaudeStrengths["strengths: CLAUDE.md, hooks, evaluator candidates"]
+  Claude --> ClaudeFallbacks["fallbacks: read-only evaluator, fresh worktree, stop-hook report"]
+  Claude --> ClaudeRisks["risks: versioned hooks, read-only proof"]
+
+  Gemini["gemini"] --> GeminiProfiles["profiles: local_cli, extension, ide_chat, custom_agent"]
+  Gemini --> GeminiStrengths["strengths: extension/prompt package, MCP-capable profiles, sidecar workflows"]
+  Gemini --> GeminiFallbacks["fallbacks: CLI wrapper, sidecar-controlled run, Manual QA note"]
+  Gemini --> GeminiRisks["risks: large extension context, host-varying capture and guard"]
+
+  Copilot["github_copilot"] --> CopilotProfiles["profiles: vscode_chat, vscode_agent, cloud_agent, custom_agent"]
+  Copilot --> CopilotStrengths["strengths: custom instructions, VS Code task/terminal, MCP-capable profiles"]
+  Copilot --> CopilotFallbacks["fallbacks: VS Code task wrapper, sidecar adapter, approval card"]
+  Copilot --> CopilotRisks["risks: cloud/IDE differences, profile-specific guard proof"]
+
+  Cursor["cursor"] --> CursorProfiles["profiles: ide_agent, local_cli, custom_agent"]
+  Cursor --> CursorStrengths["strengths: project rules, MCP-capable profiles, sidecar support"]
+  Cursor --> CursorFallbacks["fallbacks: sidecar changed-file detection, generated drift detection, manual bundle"]
+  Cursor --> CursorRisks["risks: verbose rules, IDE permission differences"]
+```
+
 ## Codex Notes
 
 ```yaml
@@ -101,6 +142,16 @@ Hook mapping candidate:
 | `Stop` | run summary draft 및 verify/QA need 표시 |
 | `PreCompact` | Task summary와 artifact ref preserve |
 
+```mermaid
+flowchart TD
+  SessionStart["SessionStart"] --> Status["Journey Card 또는 status card inject"]
+  UserPromptSubmit["UserPromptSubmit"] --> Intake["intake와 shaping 안내"]
+  PreToolUse["PreToolUse"] --> Guard["scope, approval, Decision Packet blocker, Autonomy Boundary 확인"]
+  PostToolUse["PostToolUse"] --> Capture["changed file, command output, log artifact candidate register"]
+  Stop["Stop"] --> Summary["run summary draft 및 verify/QA need 표시"]
+  PreCompact["PreCompact"] --> Preserve["Task summary와 artifact ref preserve"]
+```
+
 Write-capable Claude Code profile은 product write 전에 Write Authority Summary를 보여주고, 반환된 Write Authorization을 존중하며, write-capable run을 기록해 `record_run`이 compatible authorization을 consume하게 해야 한다.
 
 Evaluator profile은 기본적으로 read-only여야 한다. Connector conformance가 해당 hook 또는 boundary가 active임을 prove한 뒤에만 profile이 preventive 또는 isolated guarantee를 claim할 수 있다.
@@ -181,6 +232,14 @@ Cursor connector는 project rule을 짧게 유지하고, 절차의 깊이는 ski
 ### Always-On Rule File
 
 `AGENTS.md`, `CLAUDE.md`, Gemini instruction, Copilot custom instruction, Cursor rule 같은 surface rule file에는 이 shape를 사용한다. Specific surface에 필요한 line만 유지한다. 특히 `AGENTS.md`는 짧게 유지한다.
+
+```mermaid
+flowchart LR
+  RuleFile["generated rule file"] --> Manifest["connector manifest"]
+  Manifest --> Hash["managed path and block hash"]
+  Hash --> Drift["overwrite 전 drift detection"]
+  Drift --> Reconcile["reconcile candidate"]
+```
 
 ````md
 # Harness Rules
@@ -325,6 +384,16 @@ mcp_server:
 
 ## Profile Examples
 
+```mermaid
+flowchart TB
+  Examples["conformance-proven profile examples"]
+  Examples --> Cooperative["Cooperative MCP example: T2 / cooperative"]
+  Examples --> Detective["Detective Capture example: T3 / detective"]
+  Examples --> Guarded["Guarded Local example: T4 / preventive"]
+  Examples --> Isolated["Isolated Verification example: T5 / isolated"]
+  Examples --> Note["example이며 automatic tier-to-guarantee upgrade가 아님"]
+```
+
 ### Cooperative MCP Profile
 
 ```yaml
@@ -429,3 +498,11 @@ fallbacks:
 ## Surface Conformance Notes
 
 각 connector recipe는 declared capability tier에 맞는 operations-owned fixture로 test되어야 한다. Surface version 또는 host profile이 바뀌면 previous guarantee level을 reuse하기 전에 conformance를 rerun한다.
+
+```mermaid
+flowchart LR
+  Change["surface version 또는 host profile change"] --> Rerun["connector conformance rerun"]
+  Rerun --> Result{"declared tier fixtures pass?"}
+  Result -- yes --> Reuse["guarantee_level reuse 또는 report"]
+  Result -- no --> Adjust["profile, fallback, guarantee_level 조정"]
+```

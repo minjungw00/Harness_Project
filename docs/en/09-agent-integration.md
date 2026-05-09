@@ -12,6 +12,19 @@ This document does not define kernel state transitions, MCP request/response sch
 
 The integration goal is that a user can talk naturally with an agent while the harness supplies bounded work, state recording, evidence, verification, Manual QA, acceptance, projection, and reconcile flow behind the scenes.
 
+```mermaid
+flowchart TB
+  Conversation["natural conversation"] --> Bounded["bounded work"]
+  Bounded --> Harness["harness-supported flows"]
+  Harness --> State["state recording"]
+  Harness --> Evidence["evidence"]
+  Harness --> Verification["verification"]
+  Harness --> ManualQA["Manual QA"]
+  Harness --> Acceptance["acceptance"]
+  Harness --> Projection["projection"]
+  Harness --> Reconcile["reconcile"]
+```
+
 An integrated surface should help the agent:
 
 - start with status or intake
@@ -40,9 +53,39 @@ user conversation surface
   -> adapter, hook, sidecar, validator, or isolation layer
 ```
 
+```mermaid
+flowchart LR
+  Surface["user surface"] --> Rules["rules / skill / playbook"]
+  Rules --> MCP["harness MCP"]
+  MCP --> Core["harness Core"]
+  Core --> Layer["adapter / hook / sidecar / validator / isolation"]
+  Layer --> Facts["observable facts or stronger enforcement"]
+```
+
 ### Always-On Rules
 
 Always-on rules should be short. They should tell the agent when to use the harness, where to read status or the Journey Card, and that product writes require `prepare_write`.
+
+```mermaid
+flowchart TD
+  Start["agent receives work"] --> Resume{"significant work resumes?"}
+  Resume -- yes --> Card["show status or Journey Card"]
+  Resume -- no --> Classify["classify advisor / direct / work"]
+  Card --> Classify
+  Classify --> Judgment{"blocking product judgment?"}
+  Judgment -- yes --> Packet["show or request Decision Packet"]
+  Judgment -- no --> Write{"product write intended?"}
+  Packet --> Resolved{"compatible user judgment resolved for affected operation?"}
+  Resolved -- no --> HoldJudgment["hold or ask one blocking question"]
+  Resolved -- yes --> Write
+  Write -- no --> Proceed["continue within current contract"]
+  Write -- yes --> MCPAvailable{"authoritative MCP available?"}
+  MCPAvailable -- no --> Hold["hold product writes"]
+  MCPAvailable -- yes --> Prepare["call prepare_write and show Write Authority Summary"]
+  Prepare --> Allowed{"compatible Write Authorization?"}
+  Allowed -- yes --> ProductWrite["write within authorized scope"]
+  Allowed -- no --> Hold
+```
 
 Always-on rules should also preserve user agency:
 
@@ -113,9 +156,33 @@ These layers can improve guarantee level, but they do not create a kernel capabi
 
 Normal interactive harness use is most natural at `T2` or higher. Reliable detached verification usually needs `T3` capture plus a real independence boundary. High-risk work should use `T4` guard or `T5` isolation when available. `T6` improves UI/UX evidence but is not required for MVP when a human QA note can be recorded.
 
+```mermaid
+flowchart TB
+  T0["T0 Context"] --> T1["T1 Skill"]
+  T1 --> T2["T2 MCP"]
+  T2 --> T3["T3 Capture"]
+  T3 --> T4["T4 Guard"]
+  T4 --> T5["T5 Isolation"]
+  T5 --> T6["T6 QA Capture"]
+```
+
 ## Capability Profile
 
 Harness connectors must use a capability profile rather than assuming behavior from a product or surface name.
+
+```mermaid
+flowchart TB
+  Profile["Capability Profile"]
+  Profile --> Identity["surface_id, surface_kind, target_profile"]
+  Profile --> Support["support_tier"]
+  Profile --> Guarantee["guarantee_level"]
+  Profile --> Caps["capabilities"]
+  Profile --> Risks["risks"]
+  Profile --> Fallbacks["fallbacks"]
+  Profile --> Verified["last_verified_at"]
+  Caps --> CapabilityCheck["surface_capability_check"]
+  Guarantee --> Display["guarantee display"]
+```
 
 ```yaml
 surface_id: SURF-0001
@@ -172,6 +239,20 @@ This document owns how connector profiles report and display those levels. It mu
 
 Every status or `prepare_write` result that relies on surface behavior should expose the actual guarantee level. Display the level as a property of the connected profile and current enforcement path, not as a promise inferred from a surface name.
 
+```mermaid
+flowchart TD
+  Result["status or prepare_write result"] --> Profile["connected capability profile"]
+  Result --> Enforcement["current enforcement path"]
+  Profile --> Level{"actual guarantee_level"}
+  Enforcement --> Level
+  Level --> Cooperative["cooperative: show instruction-following limitation"]
+  Level --> Detective["detective: show after-action detection limitation"]
+  Level --> Preventive["preventive: show blocking path"]
+  Level --> Isolated["isolated: show separation boundary"]
+  Level --> Rule["not approval, verification, QA, acceptance, or a kernel gate"]
+  SurfaceName["surface name"] --> SurfaceRule["must not infer guarantee_level from name"]
+```
+
 User-visible examples:
 
 | Level | Example display text |
@@ -203,9 +284,28 @@ Manifest responsibilities:
 
 The manifest concept is common. Surface-specific generated filenames belong in Appendix B.
 
+```mermaid
+flowchart LR
+  Generated["generated or managed paths"] --> Manifest["connector manifest"]
+  Manifest --> Hashes["managed block hashes"]
+  Manifest --> Profile["capability profile and target profile"]
+  Manifest --> Drift["drift detection before overwrite"]
+  Drift --> Reconcile["reconcile item when needed"]
+```
+
 ## Push And Pull Context
 
 Implementation agents should receive small current context and pull larger references only when needed.
+
+```mermaid
+flowchart LR
+  Current["current state and evidence"] --> Push["usually pushed"]
+  LongRefs["longer references"] --> Pull["usually pulled"]
+  Push --> Agent["implementation agent"]
+  Pull --> Agent
+  Agent --> Bundle["tighter evaluator bundle"]
+  Bundle --> Evaluator["detached evaluator"]
+```
 
 Usually push:
 
@@ -259,6 +359,19 @@ If scope, risk, uncertainty, or file spread grows, escalate the same Task to `wo
 
 Fallbacks are described by guarantee level and risk, not by surface name.
 
+```mermaid
+flowchart TD
+  Need["fallback needed"] --> PreBlock{"pre-execution block available?"}
+  PreBlock -- yes --> Preventive["preventive fallback"]
+  PreBlock -- no --> Observe{"reliable after-action observation?"}
+  Observe -- yes --> Detective["detective fallback"]
+  Observe -- no --> Follow{"surface can follow instructions?"}
+  Follow -- yes --> Cooperative["cooperative fallback"]
+  Follow -- no --> Insufficient["capability insufficient"]
+  Need --> Separation{"risk requires separation?"}
+  Separation -- yes --> Isolated["isolated fallback"]
+```
+
 ### Cooperative Fallback
 
 Use when the surface can follow instructions but cannot enforce them. The connector tells the agent to call `prepare_write`, hold on blocked decisions, and record runs. Product writes must be paused if authoritative MCP is unavailable or the write scope cannot be checked.
@@ -280,6 +393,20 @@ Use when risk requires separation. The connector launches work or verification i
 If MCP is unavailable, the connector must not claim authoritative state updates. `MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible; the caller must reconnect or diagnose before claiming state changes. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools. For product/runtime/code writes, the safe behavior is to hold the write and direct the user/operator to reconnect or diagnose MCP. Stronger profiles may also enforce a preventive block.
 
 A pre-MVP Harness documentation-authoring batch may proceed only under an explicit `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. The connector must label this as a documentation-maintainer override, not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition. Product/runtime/code writes still hold when authoritative MCP is unavailable.
+
+```mermaid
+flowchart TD
+  Problem["MCP unavailable condition"] --> ReachCore{"tool call can reach Core?"}
+  ReachCore -- no --> Server["MCP_SERVER_UNAVAILABLE"]
+  ReachCore -- yes --> Surface["SURFACE_MCP_UNAVAILABLE"]
+  Server --> NoState["no authoritative Core response"]
+  Surface --> Diagnosed["Core or operator can observe unusable or stale surface MCP"]
+  NoState --> Hold["hold product/runtime/code writes"]
+  Diagnosed --> Hold
+  Hold --> DocsOverride{"explicit DOCS_AUTHORING_OVERRIDE with exact allowlist?"}
+  DocsOverride -- yes --> DocsOnly["documentation-maintainer override for listed docs only"]
+  DocsOverride -- no --> Reconnect["reconnect or diagnose MCP"]
+```
 
 ### Weak Guard
 
@@ -319,6 +446,19 @@ Reference surface behavior details and product-specific setup belong in Appendix
 Connector conformance should prove that a profile can uphold the common contract at its declared capability tier.
 
 Overview scenarios:
+
+```mermaid
+flowchart TB
+  Conformance["connector conformance"]
+  Conformance --> Status["status, intake, Journey Card"]
+  Conformance --> Shaping["shared design, scope, one blocking question"]
+  Conformance --> Decisions["Decision Packets and Autonomy Boundary"]
+  Conformance --> Writes["prepare_write, Write Authority Summary, record_run authorization"]
+  Conformance --> Evidence["artifacts, evidence, verification, same-session guard"]
+  Conformance --> QA["Manual QA, acceptance, residual-risk visibility"]
+  Conformance --> Drift["projection, generated file drift, reconcile"]
+  Conformance --> Fallbacks["capability fallback and MCP unavailable hold"]
+```
 
 - status with and without an active Task
 - current Journey Card shown before significant work resumes as required

@@ -27,7 +27,41 @@ Each policy uses the same fields:
 
 Policy validators return the validator result schema owned by the MCP API document.
 
+```mermaid
+flowchart LR
+  Applies["applies_when"] --> Requirement["default_requirement"]
+  Requirement --> Waiver["allowed_waiver"]
+  Waiver --> Record["required_record"]
+  Record --> Validator["validator"]
+  Validator --> Evidence["evidence"]
+  Evidence --> CloseImpact["close_impact"]
+```
+
 ## Policy Contracts
+
+```mermaid
+flowchart TB
+  Pack["Design Quality Policy Pack"]
+  Pack --> Design["design and decision"]
+  Pack --> Discipline["implementation discipline"]
+  Pack --> Stewardship["stewardship and context"]
+  Pack --> Human["human inspection"]
+
+  Design --> Shared["shared_design"]
+  Design --> Decision["decision_quality"]
+  Design --> Autonomy["autonomy_boundary"]
+
+  Discipline --> Slice["vertical_slice"]
+  Discipline --> Feedback["feedback_loop"]
+  Discipline --> TDD["tdd_trace"]
+
+  Stewardship --> Domain["domain_language"]
+  Stewardship --> Interface["deep_module_interface"]
+  Stewardship --> Codebase["codebase_stewardship"]
+  Stewardship --> Context["context_hygiene"]
+
+  Human --> ManualQA["manual_qa"]
+```
 
 ### Shared Design
 
@@ -67,6 +101,22 @@ Policy validators return the validator result schema owned by the MCP API docume
 | `validator` | `autonomy_boundary_check` |
 | `evidence` | User request refs, task constraints, policy refs, Decision Packet refs, stop-condition events, user response refs. |
 | `close_impact` | At `prepare_write`, triggered stop conditions or boundary gaps block the write. Product-judgment gaps should request or reference a Decision Packet and affect `decision_gate`; design-quality gaps may affect `design_gate`. Scope, approval, and capability gaps remain visible as their own blockers. Unresolved stop conditions can block close until resolved, deferred, or accepted with recorded risk. |
+
+```mermaid
+flowchart TD
+  Intent["agent work intent"] --> Boundary["active Change Unit Autonomy Boundary"]
+  Boundary --> MayDo["agent may do: low-risk implementation details inside scope"]
+  Boundary --> UserJudgment["requires user judgment: product direction, risk acceptance, public commitments, policy waivers"]
+  Boundary --> Stops["stop conditions"]
+  Boundary --> Prepare["prepare_write"]
+
+  UserJudgment --> Packet["Decision Packet path"]
+  Stops --> StopTriggered{"triggered?"}
+  StopTriggered -- yes --> Hold["hold, resolve, defer, or accept with recorded risk"]
+  StopTriggered -- no --> Prepare
+  Prepare --> Blockers["blockers: scope gap, approval gap, capability gap, boundary gap"]
+  Prepare --> WriteAuth["compatible Write Authorization when all write checks pass"]
+```
 
 ### Domain Language
 
@@ -146,11 +196,38 @@ Policy validators return the validator result schema owned by the MCP API docume
 | `evidence` | Domain language refs, module map refs, interface contract refs, feedback loop refs, TDD trace refs when used, Task/Change Unit watchpoints, Journey Spine Entry refs, deep-module notes, reconcile item refs, and dedicated architecture watchpoint refs only if later defined. |
 | `close_impact` | Missing required stewardship review keeps `design_gate=pending`, `partial`, or `stale`; unresolved drift can block close when it affects public behavior, module boundaries, acceptance criteria, or verification confidence. |
 
+```mermaid
+flowchart LR
+  DomainTerms["domain_terms"] --> Summary["StewardshipImpactSummary display"]
+  ModuleMap["module_map_items"] --> Summary
+  InterfaceContracts["interface_contracts"] --> Summary
+  FeedbackRefs["feedback loop / tdd_traces"] --> Summary
+  DecisionPackets["Decision Packets"] --> Summary
+  ResidualRisks["residual risks"] --> Summary
+  Validator["codebase_stewardship_check"] --> Summary
+  Summary --> Display["close-relevant stewardship impact"]
+```
+
 ### StewardshipImpactSummary Display Shape
 
 `StewardshipImpactSummary` is a derived display/summary shape for the Design Stewardship Default and the `codebase_stewardship` policy contract. It is not a Kernel Authority Invariant. It is a derived display, not a canonical current record. It is derived from owner records, validator results, and refs; it does not create a new canonical source of truth.
 
 Domain terms, module map items, interface contracts, feedback loop/TDD records, residual risk, and Decision Packets remain the owner records. The summary renders compact close-relevant status and refs back to those owners.
+
+```mermaid
+flowchart TB
+  Owners["owner records"] --> Derived["StewardshipImpactSummary"]
+  ValidatorResults["validator results"] --> Derived
+  Refs["Task / Change Unit refs"] --> Derived
+  Derived --> DomainImpact["domain_language_impact"]
+  Derived --> ModuleImpact["module_boundary_impact"]
+  Derived --> InterfaceImpact["interface_contract_impact"]
+  Derived --> FeedbackStatus["feedback_loop_status"]
+  Derived --> FutureRisk["future_change_risk"]
+  Derived --> CloseImpact["close_impact"]
+  Derived --> DisplayNote["display only, not canonical state"]
+  Derived -.-> Owners
+```
 
 | Field | Values |
 |---|---|
@@ -203,6 +280,22 @@ Policy waivers can satisfy a design-quality requirement only where the policy co
 
 Waivers that involve verification, QA, public API/interface commitment, scope expansion, architecture direction, or acceptance with known risk should also satisfy `decision_quality` and respect any active `autonomy_boundary`.
 
+```mermaid
+flowchart TD
+  Gap["policy requirement unmet"] --> Allowed{"policy contract allows waiver?"}
+  Allowed -- no --> KeepImpact["keep gate, write, close, or decision impact"]
+  Allowed -- yes --> Record["record policy, Task/Change Unit, reason, accepted risk, actor, expiry/follow-up, affected impact"]
+  Record --> Kernel["kernel authority blockers still apply"]
+  Record --> Decision{"verification, QA, public API/interface, scope, architecture, or known risk?"}
+  Decision -- yes --> Quality["decision_quality_check required"]
+  Decision -- yes --> Boundary["respect active autonomy_boundary"]
+  Decision -- no --> Waived["policy-owned impact may be waived"]
+  Quality --> Conditions["all required waiver conditions satisfied together"]
+  Boundary --> Conditions
+  Kernel --> Separate["not waived by policy waiver"]
+  Conditions --> Waived
+```
+
 ## MVP Severity Defaults
 
 This matrix is the default MVP severity router for policy validators. It tells the reference runner which findings are advisory and which findings affect gates for common task shapes. It does not weaken `applies_when`, `default_requirement`, `allowed_waiver`, or `close_impact`; if a policy contract applies more strongly than this matrix, the policy contract wins.
@@ -218,11 +311,31 @@ Default impact vocabulary:
 
 This is policy impact vocabulary, not the API `ValidatorResult.findings.severity` enum. Validator findings still use `info`, `warning`, `error`, or `blocker`; merged policy impact is exposed through gates, blocked reasons, close blockers, Decision Packet needs, waiver eligibility, or fixture-observed derived state.
 
+```mermaid
+flowchart TB
+  Docs["Direct docs-only"] --> DocsImpact["usually not_required or warning unless commitments, policy contracts, domain terms, public behavior, or interfaces change"]
+  Code["Direct code"] --> CodeImpact["feedback loop and applicable policy contracts shape design_gate or evidence sufficiency"]
+  Feature["Ordinary work feature"] --> FeatureImpact["shared design, slice, feedback, stewardship default to gate impact until records exist"]
+  UI["UI/UX/copy work"] --> UIImpact["manual_qa_required may set qa_gate and close impact"]
+  Sensitive["Sensitive work"] --> SensitiveImpact["applicable policies can become blocking before write"]
+  PublicAPI["Public API/interface work"] --> PublicImpact["interface, decision, autonomy, and stewardship gaps can block write or close"]
+  Structural["Broad structural/refactor work"] --> StructuralImpact["architecture, horizontal exception, stewardship, and feedback gaps may require Decision Packet"]
+```
+
 ### Severity Composition Rule
 
 When more than one task shape, policy contract, or validator finding applies, policy evaluators compose impacts by keeping the strongest applicable impact for the same affected concern, not the weakest. "Same affected concern" is not the whole Task and not merely the same validator ID. It means the same policy-relevant target, including the affected gate, check, or blocker target; affected operation phase; affected scope or record refs; and close, write, or decision concern. Different concerns are preserved by union; only competing impacts for the same concern use the strongest-impact rule. The default policy-impact order is:
 
 `not_required` < `warning` < gate impact such as `design_gate=pending`, `design_gate=partial`, `design_gate=stale`, or `qa_gate=pending` < `blocking before write` < `close blocker` < `Decision Packet required`.
+
+```mermaid
+flowchart LR
+  NotRequired["not_required"] --> Warning["warning"]
+  Warning --> Gate["gate impact"]
+  Gate --> WriteBlock["blocking before write"]
+  WriteBlock --> CloseBlock["close blocker"]
+  CloseBlock --> DecisionPacket["Decision Packet required"]
+```
 
 This order decides whether a weaker default can be ignored for the same concern. It does not collapse different affected gates. If one finding affects `design_gate` and another affects `qa_gate`, `decision_gate`, evidence sufficiency, or residual-risk visibility, the merged result keeps all affected gates, blockers, and refs. `Decision Packet required` is a judgment-routing impact, not a replacement for write blockers, close blockers, evidence sufficiency, required QA, required approval, or residual-risk visibility. A Decision Packet may resolve the user-judgment part of a finding, while any independent write blocker or close blocker remains until its own policy or kernel condition is satisfied.
 
@@ -255,5 +368,27 @@ Severity can be raised above the matrix default by explicit user request, sensit
 | `codebase_stewardship` | `codebase_stewardship_check` | `design_gate` pending/partial/stale/passed and close blockers |
 | `manual_qa` | `manual_qa_required` | `qa_gate` pending/passed/failed/waived |
 | `context_hygiene` | `context_hygiene_check` | projection freshness, reconcile, evidence/design stale |
+
+```mermaid
+flowchart LR
+  PShared["shared_design"] --> VShared["shared_design_alignment"] --> IDesign["design_gate"]
+  PDecision["decision_quality"] --> VDecision["decision_quality_check"] --> IDecision["decision_gate"]
+  VDecision --> IDesign
+  PAutonomy["autonomy_boundary"] --> VAutonomy["autonomy_boundary_check"] --> IPrepare["prepare_write blockers"]
+  VAutonomy --> IDecision
+  VAutonomy --> IDesign
+  PDomain["domain_language"] --> VDomain["domain_language_consistency"] --> IDesign
+  PSlice["vertical_slice"] --> VSlice["vertical_slice_shape"] --> IDesign
+  PFeedback["feedback_loop"] --> VFeedback["feedback_loop_check"] --> IEvidence["evidence sufficiency"]
+  VFeedback --> IDesign
+  PTDD["tdd_trace"] --> VTDD["tdd_trace_required"] --> IEvidence
+  VTDD --> IDesign
+  PInterface["deep_module_interface"] --> VInterface["module_interface_review"] --> IDesign
+  PCodebase["codebase_stewardship"] --> VCodebase["codebase_stewardship_check"] --> IClose["close blockers"]
+  VCodebase --> IDesign
+  PManualQA["manual_qa"] --> VManualQA["manual_qa_required"] --> IQA["qa_gate"]
+  PContext["context_hygiene"] --> VContext["context_hygiene_check"] --> IProjection["projection freshness / reconcile"]
+  VContext --> IEvidence
+```
 
 The reference MVP may implement minimal validators first, but it should use the MVP severity defaults as the task-shape router for warning versus blocker behavior and keep validator IDs stable so conformance fixtures can grow without changing policy names.
