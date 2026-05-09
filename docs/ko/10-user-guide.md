@@ -6,7 +6,35 @@
 
 구현 내부, 설치 절차, 서버 동작 방식은 다루지 않는다.
 
-## 시작 문장
+## 5분 시작 경로
+
+Harness로 작업 하나만 진행하고 싶다면 한 문장으로 시작한다.
+
+```text
+이 작업 하네스 기준으로 진행해.
+```
+
+Agent는 compact status 또는 Journey Card, 현재 scope, 다음 safe action, 사용자의 판단이 필요한 blocker를 보여줘야 한다. 필요한 경우 approval, Decision Packet, Write Authority, Autonomy Boundary, evidence, verification, Manual QA, acceptance, residual risk를 서로 다른 항목으로 구분해야 한다.
+
+대부분의 경우 사용자가 결정하는 것은 몇 가지뿐이다.
+
+- scope가 원하는 작업과 맞는지
+- Decision Packet이 나오면 어떤 product direction 또는 trade-off를 택할지
+- sensitive change를 approval할지
+- Manual QA가 필요한지, 완료/통과되었는지, 또는 validly waived되었는지
+- final acceptance 전에 남은 residual risk를 받아들일지
+
+막혔을 때는 가장 작은 다음 unblocker를 물어본다.
+
+```text
+지금 무엇 때문에 막혀 있고, 어떤 결정 하나나 check 하나가 있으면 풀릴까?
+```
+
+수용하거나 close하기 전에는 결과가 scope와 맞는지, evidence가 acceptance criteria를 뒷받침하는지, verification이 통과했거나 recorded risk와 함께 명시적으로 waived되었는지, Manual QA가 통과/완료되었거나 validly waived되었는지, close-relevant residual risk가 표시되었는지, final acceptance가 approval과 별도인지 확인한다.
+
+작업이 특정 gate나 judgment에서 멈췄을 때는 아래 상세 내용을 reference로 사용하면 된다.
+
+## 문장 Reference
 
 일상적인 작업은 명령어가 아니라 대화로 시작한다.
 

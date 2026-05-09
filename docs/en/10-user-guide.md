@@ -6,7 +6,35 @@ This document explains how users talk to the agent, how to read state, and which
 
 It does not cover implementation internals or installation details.
 
-## Starting Phrase
+## 5-Minute Path
+
+If you only want to run one task under Harness, start with one phrase:
+
+```text
+Run this work under the harness.
+```
+
+Expect the agent to show a compact status or Journey Card, the current scope, the next safe action, and any blocker that needs your judgment. It should name approval, Decision Packet, Write Authority, Autonomy Boundary, evidence, verification, Manual QA, acceptance, and residual risk separately when they matter.
+
+Most of the time, you only decide a few things:
+
+- whether the scope matches what you want
+- which product direction or trade-off to choose when a Decision Packet appears
+- whether a sensitive change is approved
+- whether Manual QA is needed, completed/passed, or validly waived
+- whether remaining residual risk is acceptable before final acceptance
+
+When blocked, ask for the smallest next unblocker:
+
+```text
+What is blocking this task now, and what one decision or check would unblock it?
+```
+
+Before accepting or closing, check that the result matches scope, evidence covers the acceptance criteria, verification passed or was explicitly waived with recorded risk, Manual QA passed/completed or was validly waived, close-relevant residual risk has been shown, and your final acceptance is separate from approval.
+
+Use the rest of this guide as deeper reference when the task stops on a specific gate or judgment.
+
+## Phrase Reference
 
 Everyday work starts as a conversation, not as a command.
 
