@@ -620,6 +620,7 @@ CREATE TABLE projection_jobs (
   projection_kind TEXT NOT NULL,
   target_ref TEXT NOT NULL,
   projection_version INTEGER NOT NULL,
+  source_state_version INTEGER,
   status TEXT NOT NULL,
   attempts INTEGER NOT NULL DEFAULT 0,
   output_path TEXT,
@@ -731,7 +732,9 @@ CREATE TABLE locks (
 
 `tool_invocations` stores request replay metadata needed to return the original committed response. `tool_invocations.request_hash` stores the canonical request hash defined by the MCP API idempotency rules: canonical JSON, UTF-8, `tool_name`, schema-normalized request body and optional fields, sorted object keys, schema-ordered arrays unless explicitly order-insignificant, NFC Unicode strings, and envelope coverage that excludes only `request_id` and `idempotency_key`. `tool_invocations.state_version` stores the same primary affected-scope version returned in `ToolResponseBase.state_version`: Task State Version when Core resolves a primary Task, otherwise Project State Version. Reusing an idempotency key with a different `request_hash` returns `STATE_CONFLICT`.
 
-`tasks.projection_status` is the TASK projection status summary. Per-kind projection freshness is tracked through `projection_jobs` and through the relevant projection records or artifact refs for MVP-required `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`; MVP-optional `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, and `INTERFACE-CONTRACT`; and enabled extension / appendix kinds such as `DEC`, `DESIGN`, `EXPORT`, and `JOURNEY-CARD`. `APR` freshness starts from committed Approval records and their approval-shaped Decision Packets, not from non-mutating `approval_request_candidate` payloads. Do not treat one Task field as owning all projection freshness.
+`tasks.projection_version` is the TASK projection/template/job version used to prevent older TASK renders from replacing newer ones. It is not a state clock. `tasks.projected_version`, if retained, is only the TASK projection summary cache of the last rendered source state version. It must not be treated as the storage location for every task-related `ProjectionKind`.
+
+`tasks.projection_status` is the TASK projection status summary. Per-kind projection freshness is tracked through `projection_jobs.source_state_version`, job status, managed hashes, and the relevant projection records or artifact refs for MVP-required `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`; MVP-optional `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, and `INTERFACE-CONTRACT`; and enabled extension / appendix kinds such as `DEC`, `DESIGN`, `EXPORT`, and `JOURNEY-CARD`. `APR` freshness starts from committed Approval records and their approval-shaped Decision Packets, not from non-mutating `approval_request_candidate` payloads. Do not treat one Task field as owning all projection freshness.
 
 `write_authorizations` stores durable allow decisions from `prepare_write`. When `dry_run=false` and `prepare_write` returns `allowed`, Core creates a distinct `write_authorizations` row for a distinct compatible request and returns its ref. `write_authorizations.basis_state_version` stores the affected-scope state version Core used as the compatibility basis for the allowed write attempt; for MVP this is the Task State Version for `task_id`. It is audit metadata for idempotent replay, stale detection, and state-basis explanations, and it is not necessarily the resulting response `state_version` after the transaction appends events. `authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request and response with the same idempotency key, request hash, and `basis_state_version`. A distinct compatible request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes. `updated_at` changes whenever authorization status changes; status history remains in `task_events`.
 
@@ -970,7 +973,9 @@ Launching verification sets or keeps `verification_gate=pending`. Only `harness.
 
 ## Projection Jobs
 
-Projection jobs are the durable outbox between committed state and Product Repository Markdown files. The `projection_jobs` table above owns job persistence.
+Projection jobs are the durable outbox between committed state and Product Repository Markdown files. The `projection_jobs` table above owns job persistence and the canonical per-projection `source_state_version` metadata.
+
+`projection_jobs.projection_version` is the projection/template/job version; it is not an affected-scope state clock. `projection_jobs.source_state_version` is the affected-scope state clock used as the render source for that projection job. It may be null for pending jobs and jobs that fail before the source state is resolved; completed successful renders must record it.
 
 For sensitive approvals, `prepare_write` with `decision=approval_required` may enqueue `TASK` for changed task state or blockers, but it must not enqueue `APR` for the returned `approval_request_candidate`. The `APR` job is enqueued by `harness.request_user_decision(decision_kind=approval)` after it creates the canonical approval-shaped Decision Packet and linked pending Approval record, and by `harness.record_user_decision` when it updates that Approval decision.
 
@@ -1003,12 +1008,12 @@ The reference projector executes pending jobs after the Core transaction commits
 MVP worker steps:
 
 1. Select the oldest `pending` job for the target projection and acquire the projection-job lock.
-2. Mark the job `running` and read the latest state records, artifact refs, and previous managed hash.
-3. If the job's `projection_version` is older than the target's current projection version, mark it `skipped`.
-4. Render the managed block from committed records and artifact refs.
+2. Mark the job `running`, read the latest state records, artifact refs, and previous managed hash, and resolve `source_state_version` from the affected-scope state clock.
+3. If the job's `projection_version` is older than the target's current projection/template/job version, mark it `skipped`.
+4. Render the front matter and managed block from committed records and artifact refs, including `source_state_version`.
 5. If the existing managed block hash differs from the last recorded hash, create or update a `reconcile_items` row, mark the job `skipped`, and set the projection status to `stale`.
 6. Preserve human-editable sections and write the projection through a temporary file plus atomic rename.
-7. Record the new managed hash, output path, projected version, and `completed` status.
+7. Record the new managed hash, output path, `projection_jobs.projection_version`, `projection_jobs.source_state_version`, and `completed` status. For the `TASK` projection summary only, update `tasks.projected_version` with that same source state version as a Task-level summary cache.
 8. On render or write failure, mark the job `failed`, keep state result unchanged, and surface projection freshness as `failed` or `stale`.
 
 Projection refresh retries `failed` jobs by creating or resetting a `pending` job with a newer attempt count. It must not overwrite a projection whose managed block has drifted until reconcile resolves the drift.

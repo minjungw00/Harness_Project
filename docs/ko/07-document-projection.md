@@ -13,7 +13,7 @@ Canonical kernel state, MCP request/response schema, SQLite DDL, design-quality 
 3. Raw evidence는 artifact store에서 canonical하다.
 4. Markdown report는 state record와 artifact reference에서 render된다.
 5. Markdown report는 기본적으로 raw artifact가 아니다.
-6. Front matter는 identity, projection version, status summary, freshness metadata만 가진다.
+6. Front matter는 identity, projection version 또는 status, `source_state_version`, timestamp/freshness metadata만 가진다.
 7. Managed block은 projector가 생성하며 regenerate될 수 있다.
 8. Human-editable section은 note와 proposal을 위한 input surface다.
 9. 수용된 human edits만 reconcile 또는 Core state-changing action을 통해 state가 된다.
@@ -49,7 +49,7 @@ Canonical kernel state, MCP request/response schema, SQLite DDL, design-quality 
 | TDD trace | `tdd_traces` plus artifact refs | `TDD-TRACE` projection | `record_run` 또는 reconcile, then projector |
 | Manual QA | Aggregate QA requirement state에는 `qa_gate`; record가 있을 때 `manual_qa_records` plus artifact refs | `MANUAL-QA` projection과 QA card | `record_manual_qa`, then projector |
 | Raw evidence | artifact store plus `artifacts` records | report 안의 artifact reference | artifact registry |
-| Projection freshness | `projection_jobs`, projected versions, managed hashes | front matter, status card, operations output | projector and recovery tools |
+| Projection freshness | `projection_jobs.source_state_version`, `projection_jobs.projection_version`, job status, managed hashes, artifact records | front matter mirror, status card, operations output | projector and recovery tools |
 
 Required authority statements:
 
@@ -80,6 +80,14 @@ Required authority statements:
 
 이 report kind는 기본적으로 state record와 artifact ref에서 생성되는 projection이다. Artifact store의 evidence file에 link할 수 있고 export가 snapshot을 포함할 수 있지만, 그렇다고 Markdown report가 canonical evidence가 되지는 않는다.
 
+## Front Matter Metadata
+
+Projection front matter는 diagnostic 용도로 compact하게 유지한다. Rendered object를 identify하고, projection version 또는 status를 표시하며, `source_state_version`을 mirror하고, rendered timestamp를 포함할 수 있다. Large state summary, evidence body, gate rollup, artifact inventory는 포함하면 안 된다.
+
+`projection_version`은 projection/template/job version이다. State clock이 아니며 source-state freshness basis로 사용하면 안 된다. `source_state_version`은 render source로 사용한 affected-scope state clock 값이다. Projection이 task-scoped이면 Task State Version이고, 그렇지 않으면 Project State Version 또는 extension-defined owner state clock이다.
+
+Canonical per-projection value는 successful render job의 `projection_jobs.source_state_version`이다. Front matter `source_state_version`은 operator diagnosis를 위해 그 값을 mirror할 뿐이다. Markdown에 기록되어도 Markdown이 canonical state가 되지 않으며, stale detection은 계속 canonical state records, projection job state, managed hash, artifact availability를 비교한다.
+
 ## Managed Blocks
 
 Managed block은 projector가 overwrite할 수 있는 유일한 Markdown area다.
@@ -93,7 +101,7 @@ Managed block은 projector가 overwrite할 수 있는 유일한 Markdown area다
 규칙:
 
 - Managed block content는 committed state record와 artifact ref에서 생성된다.
-- Projector는 state version, projection version, rendered timestamp, managed hash를 기록한다.
+- Projector는 `projection_jobs.source_state_version`, projection version, rendered timestamp, managed hash를 기록한다. Front matter는 operator를 위해 recorded source state version을 mirror한다.
 - Managed hash는 `HARNESS:BEGIN`과 `HARNESS:END` marker lines를 제외한 projector-owned managed block body에서 계산하며, line endings를 LF로 normalize하고 projector rules가 요구하는 meaningful whitespace를 preserve한다.
 - Rendering 전에 managed block hash가 last projected hash와 다르면 projector는 reconcile item을 create/update한다.
 - Managed hash는 drift detection에만 사용하며 rendered Markdown을 canonical state로 만들지 않는다.
@@ -282,11 +290,11 @@ Card는 card text가 canonical임을 imply하면 안 된다. Canonical field는 
 
 ## Projection Freshness
 
-Projection freshness는 state version, projection job state, managed hash, artifact availability, known stale trigger에서 compute된다.
+Projection freshness는 current owner 또는 affected-scope state clock, canonical `projection_jobs.source_state_version`, projection job state, managed hash, artifact availability, known stale trigger에서 compute된다. Front matter `source_state_version`은 마지막 successful render의 canonical value를 mirror하여, operator가 Markdown을 canonical로 취급하지 않고도 stale projection을 diagnose할 수 있게 한다.
 
 | Projection | Generated when | Stale when |
 |---|---|---|
-| `TASK` | Task가 created, resumed, changed, refreshed될 때 | `state_version > projected_version`, managed block drift, unresolved reconcile required, stewardship owner ref 또는 design-quality validator result changed |
+| `TASK` | Task가 created, resumed, changed, refreshed될 때 | current `tasks.state_version > projection_jobs.source_state_version` for the `TASK` projection, managed block drift, unresolved reconcile required, stewardship owner ref 또는 design-quality validator result changed |
 | `APR` | `request_user_decision(decision_kind=approval)`이 committed approval request를 create하거나, `record_user_decision`을 통해 approval decision이 changed될 때 | approval-shaped Decision Packet, linked Approval record status, scope, baseline, expiry, decision note가 changed |
 | `RUN-SUMMARY` | run이 completes 또는 interrupted될 때 | run relation changed, artifact ref missing, artifact integrity fails |
 | `EVIDENCE-MANIFEST` | evidence coverage가 changed될 때 | baseline drift, changed files modified, required evidence missing/stale, approval expired |
@@ -304,7 +312,7 @@ Freshness state:
 
 | State | Meaning |
 |---|---|
-| `current` | projected content가 committed state version과 managed hash에 match함 |
+| `current` | projected content가 canonical `projection_jobs.source_state_version`에 기록된 committed state version 및 managed hash에 match함 |
 | `stale` | state 또는 referenced evidence가 projection보다 앞서 이동함 |
 | `failed` | projector가 refresh를 attempted했고 failed함 |
 | `unknown` | freshness를 compute할 수 없음. 보통 recovery 또는 migration 중 |

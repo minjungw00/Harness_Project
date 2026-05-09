@@ -8,7 +8,7 @@ Templates are examples of rendered shape. They are not canonical state and must 
 
 ## Template Rules
 
-1. Keep front matter minimal: identity, task/project relation, projection version or status, and timestamp.
+1. Keep front matter minimal: identity, task/project relation, projection version or status, `source_state_version`, and timestamp.
 2. Keep generated state inside managed blocks.
 3. Preserve human-editable sections across refreshes.
 4. Link raw evidence by artifact ref.
@@ -16,7 +16,7 @@ Templates are examples of rendered shape. They are not canonical state and must 
 6. Keep approval, verification, Manual QA, and acceptance visibly separate.
 7. Treat `qa_gate` as canonical even when a card says `Manual QA: pending/passed/failed/waived`.
 8. Version template changes as projection changes.
-9. Treat Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, displayed Write Authorization refs, Change Unit DAG, Residual Risk text, and Stewardship Impact text as projection output, not canonical state or the canonical Write Authorization record itself.
+9. Treat Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, displayed Write Authorization refs, Change Unit DAG, Residual Risk text, Stewardship Impact text, and `source_state_version` as projection output, not canonical state or the canonical Write Authorization record itself.
 
 ## Required MVP Templates
 
@@ -30,6 +30,7 @@ doc_type: task
 task_id: TASK-0001
 display_state: executing
 projection_version: 7
+source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -301,6 +302,7 @@ approval_id: APR-0001
 task_id: TASK-0001
 category: dependency_change
 status: pending
+source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -380,6 +382,7 @@ change_unit_id: CU-01
 profile: lead
 kind: implementation
 surface_id: reference
+source_state_version: 43
 updated_at: 2026-05-06T09:45:10+09:00
 ---
 
@@ -470,6 +473,7 @@ evidence_manifest_id: EM-0001
 task_id: TASK-0001
 change_unit_id: CU-01
 status: partial
+source_state_version: 44
 updated_at: 2026-05-06T09:50:00+09:00
 ---
 
@@ -545,6 +549,7 @@ task_id: TASK-0001
 change_unit_id: CU-01
 verdict: passed
 surface_id: reference
+source_state_version: 45
 updated_at: 2026-05-06T10:05:00+09:00
 ---
 
@@ -654,6 +659,7 @@ run_id: RUN-20260506-093015-LEAD-01
 result: passed
 assurance_level: self_checked
 surface_id: reference
+source_state_version: 41
 updated_at: 2026-05-06T09:40:00+09:00
 ---
 
@@ -711,6 +717,7 @@ doc_type: domain_language
 project_id: PRJ-0001
 status: active
 projection_version: 1
+source_state_version: 12
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -748,6 +755,7 @@ doc_type: module_map
 project_id: PRJ-0001
 status: active
 projection_version: 1
+source_state_version: 12
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -787,6 +795,7 @@ interface_contract_id: IFACE-0001
 task_id: TASK-0001
 status: proposed
 projection_version: 1
+source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -839,6 +848,7 @@ tdd_trace_id: TDD-0001
 task_id: TASK-0001
 change_unit_id: CU-01
 status: recorded
+source_state_version: 43
 updated_at: 2026-05-06T09:40:00+09:00
 ---
 
@@ -887,6 +897,7 @@ task_id: TASK-0001
 change_unit_id: CU-01
 qa_gate: pending
 result: null
+source_state_version: 45
 updated_at: 2026-05-06T10:05:00+09:00
 ---
 
@@ -952,6 +963,7 @@ task_id: TASK-0001
 change_unit_id: CU-01
 decision_kind: product_tradeoff
 status: pending_user
+source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -1068,6 +1080,7 @@ doc_type: design
 design_id: DESIGN-0001
 task_id: TASK-0001
 status: draft
+source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -1145,6 +1158,7 @@ doc_type: export_manifest
 export_id: EXPORT-0001
 project_id: PRJ-0001
 status: complete
+source_state_version: 50
 updated_at: 2026-05-06T10:30:00+09:00
 ---
 

@@ -8,7 +8,7 @@ Template은 rendered shape의 예시다. Canonical state가 아니며 kernel fie
 
 ## Template Rules
 
-1. Front matter는 identity, task/project relation, projection version 또는 status, timestamp로 최소화한다.
+1. Front matter는 identity, task/project relation, projection version 또는 status, `source_state_version`, timestamp로 최소화한다.
 2. Generated state는 managed block 안에 둔다.
 3. Refresh 사이에도 human-editable section을 preserve한다.
 4. Raw evidence는 artifact ref로 link한다.
@@ -16,7 +16,7 @@ Template은 rendered shape의 예시다. Canonical state가 아니며 kernel fie
 6. Approval, verification, Manual QA, acceptance를 visible하게 분리한다.
 7. Card가 `Manual QA: pending/passed/failed/waived`라고 말하더라도 `qa_gate`를 canonical로 취급한다.
 8. Template change는 projection change로 versioning한다.
-9. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, 표시된 Write Authorization ref, Change Unit DAG, Residual Risk text, Stewardship Impact text는 canonical state나 canonical Write Authorization record 자체가 아니라 projection output으로 취급한다.
+9. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, 표시된 Write Authorization ref, Change Unit DAG, Residual Risk text, Stewardship Impact text, `source_state_version`은 canonical state나 canonical Write Authorization record 자체가 아니라 projection output으로 취급한다.
 
 ## Required MVP Templates
 
@@ -30,6 +30,7 @@ doc_type: task
 task_id: TASK-0001
 display_state: executing
 projection_version: 7
+source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -301,6 +302,7 @@ approval_id: APR-0001
 task_id: TASK-0001
 category: dependency_change
 status: pending
+source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -380,6 +382,7 @@ change_unit_id: CU-01
 profile: lead
 kind: implementation
 surface_id: reference
+source_state_version: 43
 updated_at: 2026-05-06T09:45:10+09:00
 ---
 
@@ -470,6 +473,7 @@ evidence_manifest_id: EM-0001
 task_id: TASK-0001
 change_unit_id: CU-01
 status: partial
+source_state_version: 44
 updated_at: 2026-05-06T09:50:00+09:00
 ---
 
@@ -545,6 +549,7 @@ task_id: TASK-0001
 change_unit_id: CU-01
 verdict: passed
 surface_id: reference
+source_state_version: 45
 updated_at: 2026-05-06T10:05:00+09:00
 ---
 
@@ -654,6 +659,7 @@ run_id: RUN-20260506-093015-LEAD-01
 result: passed
 assurance_level: self_checked
 surface_id: reference
+source_state_version: 41
 updated_at: 2026-05-06T09:40:00+09:00
 ---
 
@@ -711,6 +717,7 @@ doc_type: domain_language
 project_id: PRJ-0001
 status: active
 projection_version: 1
+source_state_version: 12
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -748,6 +755,7 @@ doc_type: module_map
 project_id: PRJ-0001
 status: active
 projection_version: 1
+source_state_version: 12
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -787,6 +795,7 @@ interface_contract_id: IFACE-0001
 task_id: TASK-0001
 status: proposed
 projection_version: 1
+source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -839,6 +848,7 @@ tdd_trace_id: TDD-0001
 task_id: TASK-0001
 change_unit_id: CU-01
 status: recorded
+source_state_version: 43
 updated_at: 2026-05-06T09:40:00+09:00
 ---
 
@@ -887,6 +897,7 @@ task_id: TASK-0001
 change_unit_id: CU-01
 qa_gate: pending
 result: null
+source_state_version: 45
 updated_at: 2026-05-06T10:05:00+09:00
 ---
 
@@ -952,6 +963,7 @@ task_id: TASK-0001
 change_unit_id: CU-01
 decision_kind: product_tradeoff
 status: pending_user
+source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -1068,6 +1080,7 @@ doc_type: design
 design_id: DESIGN-0001
 task_id: TASK-0001
 status: draft
+source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
@@ -1145,6 +1158,7 @@ doc_type: export_manifest
 export_id: EXPORT-0001
 project_id: PRJ-0001
 status: complete
+source_state_version: 50
 updated_at: 2026-05-06T10:30:00+09:00
 ---
 
