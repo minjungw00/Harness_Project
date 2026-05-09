@@ -313,7 +313,7 @@ Required suite responsibilities:
 
 | Suite | Required behavior |
 |---|---|
-| agency | Blocking product judgment requires a compatible Decision Packet before affected write or close; decision request routing metadata is optional compatibility data and alone must not satisfy `decision_gate`; product trade-off writes are held; sensitive approval lifecycle keeps approval, Decision Packet, and Write Authorization distinct; AFK Autonomy Boundary stop conditions block public commitments; known close-relevant residual risk must be visible before any successful close; risk-accepted close additionally requires accepted Residual Risk refs; approval, QA, acceptance, and residual-risk acceptance remain distinct. |
+| agency | Blocking product judgment requires a compatible Decision Packet before affected write or close; decision request routing metadata is optional compatibility data and alone must not satisfy `decision_gate`; product trade-off writes are held; sensitive approval lifecycle keeps approval, Decision Packet, and Write Authorization distinct; AFK Autonomy Boundary stop conditions block public commitments; known close-relevant residual risk must be visible before any successful close; if no known close-relevant risk exists, `ResidualRiskSummary.status=none` satisfies residual-risk visibility; risk-accepted close additionally requires accepted Residual Risk refs; approval, QA, acceptance, and residual-risk acceptance remain distinct. |
 | stewardship | Design-quality and codebase-stewardship validators affect `design_gate`, `decision_gate`, `qa_gate`, close blockers, and waiver eligibility through canonical owner records and refs; public interface, module, domain, feedback-loop, TDD, Manual QA, and waiver checks do not duplicate schemas or DDL. |
 | context-hygiene | Current Task state, Journey refs, evidence refs, and freshness state are authoritative; stale PRDs, stale projections, closed issues, old design docs, and long logs are pull-only context until reconciled; stale context cannot authorize writes, close, acceptance, or current-state replacement. |
 
@@ -345,6 +345,9 @@ expected_state:
   assurance_level: self_checked
   gates:
     evidence_gate: sufficient
+  residual_risk_summary:
+    status: none
+    close_relevant_count: 0
 expected_events:
   - evidence_manifest_updated
   - close_requested
@@ -1106,6 +1109,49 @@ expected_artifacts: []
 expected_projection: {}
 expected_error:
   code: RESIDUAL_RISK_NOT_VISIBLE
+```
+
+```yaml
+scenario_id: AGENCY-acceptance-no-known-residual-risk-none-succeeds
+initial_state:
+  active_task:
+    mode: work
+    lifecycle_phase: waiting_user
+    gates:
+      evidence_gate: sufficient
+      verification_gate: passed
+      qa_gate: passed
+      acceptance_gate: pending
+  residual_risks: []
+  decision_packets:
+    - decision_packet_id: DEC-ACCEPT-NONE-001
+      decision_kind: acceptance
+      status: pending_user
+      user_context:
+        minimum_context: ["acceptance criteria", "evidence summary", "ResidualRiskSummary.status=none"]
+input:
+  decision_packet_id: DEC-ACCEPT-NONE-001
+  decision_kind: acceptance
+  selected_option_id: accept
+  decision:
+    acceptance:
+      value: accepted
+  accepted_risks: []
+action: record_user_decision
+expected_state:
+  lifecycle_phase: waiting_user
+  gates:
+    acceptance_gate: accepted
+  residual_risk_summary:
+    status: none
+    close_relevant_count: 0
+  decision_packets:
+    DEC-ACCEPT-NONE-001: resolved
+expected_events: []
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error: null
 ```
 
 ```yaml
@@ -2075,7 +2121,7 @@ Minimum MVP suites:
 
 - core: active status, advisor close, direct close, write gate, Write Authorization creation/required/invalid coverage, approval required and approval lifecycle retry, evidence insufficient, same-session verification guard, QA required, acceptance required, projection failure separation
 - connector: capability profile, MCP unavailable hold, generated manifest drift, changed-path detection, artifact capture, fallback guarantee display, current Journey Card before significant resume, Decision Packet not broad approval, Autonomy Boundary breach routing
-- agency: Decision Packet required for blocking product judgment, product trade-off write guard, AFK Autonomy Boundary stop conditions, known close-relevant residual-risk visibility before any successful close, accepted Residual Risk refs for risk-accepted close, distinct approval/QA/acceptance judgments
+- agency: Decision Packet required for blocking product judgment, product trade-off write guard, AFK Autonomy Boundary stop conditions, known close-relevant residual-risk visibility before any successful close, `ResidualRiskSummary.status=none` for no known close-relevant risk, accepted Residual Risk refs for risk-accepted close, distinct approval/QA/acceptance judgments
 - stewardship: shared design required, codebase stewardship close blockers, domain language conflicts, vertical slice or exception, feedback loop and TDD trace required or waived, public interface module/interface review, public interface stewardship close blocker, Manual QA policy and waiver checks
 - context-hygiene: current-state bundle, stale projection and stale PRD handling, stale `TASK` projection write guard, stale context pull-only behavior, evaluator bundle freshness, resume from current state rather than chat memory
 - design-quality: policy-pack smoke coverage that composes agency, stewardship, context-hygiene, and close-impact validators without redefining kernel authority

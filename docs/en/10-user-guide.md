@@ -30,7 +30,7 @@ When blocked, ask for the smallest next unblocker:
 What is blocking this task now, and what one decision or check would unblock it?
 ```
 
-Before accepting or closing, check that the result matches scope, evidence covers the acceptance criteria, verification passed or was explicitly waived with recorded risk, Manual QA passed/completed or was validly waived, close-relevant residual risk has been shown, and your final acceptance is separate from approval.
+Before accepting or closing, check that the result matches scope, evidence covers the acceptance criteria, verification passed or was explicitly waived with recorded risk, Manual QA passed/completed or was validly waived, close-relevant residual risk has been shown or the agent reports `ResidualRiskSummary.status=none`, and your final acceptance is separate from approval.
 
 Use the rest of this guide as deeper reference when the task stops on a specific gate or judgment.
 
@@ -301,7 +301,7 @@ In that case, the task can close successfully, but assurance is not displayed as
 
 ## Accepting Residual Risk
 
-Residual risk is known remaining uncertainty, limitation, unchecked condition, or trade-off. Before final acceptance or a risk-accepted close, the agent should show the close-relevant residual risk in plain language.
+Residual risk is known remaining uncertainty, limitation, unchecked condition, or trade-off. Before final acceptance or a risk-accepted close, the agent should show the close-relevant residual risk in plain language. If there is no known close-relevant residual risk, the agent should say so with `ResidualRiskSummary.status=none`; that is different from known risk being hidden. A risk-accepted close still needs visible and accepted Residual Risk refs.
 
 Accepting residual risk can allow close, but it does not replace approval, evidence, verification, Manual QA, or acceptance.
 

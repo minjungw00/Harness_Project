@@ -380,7 +380,7 @@ not_required | required | pending | accepted | rejected
 
 `acceptance_gate` records the user's final acceptance judgment where acceptance is required. It does not replace QA or verification.
 
-Known close-relevant Residual Risk must be visible in the current judgment context before any successful close. Acceptance, when required, can be recorded only after that visibility exists. A risk-accepted close additionally requires visible and accepted Residual Risk refs, and residual-risk acceptance never upgrades assurance to `detached_verified`.
+Residual-risk visibility is satisfied in either of two ways. If no known close-relevant Residual Risk exists, the current judgment context reports `ResidualRiskSummary.status=none`. If known close-relevant Residual Risk exists, that risk must be visible in the current judgment context before any successful close. Acceptance, when required, can be recorded only after close-relevant residual risk is visible or confirmed as `ResidualRiskSummary.status=none`. A risk-accepted close additionally requires visible and accepted Residual Risk refs, and residual-risk acceptance never upgrades assurance to `detached_verified`. `ResidualRiskSummary.status=none` must not hide or replace known close-relevant risk.
 
 ### Capability Boundary
 
@@ -417,14 +417,14 @@ Capability can affect whether the kernel allows a write, how strongly it can enf
 
 ### Completion Compatibility
 
-All successful close paths require known close-relevant Residual Risk to be visible in the current judgment context before close. Risk-accepted close additionally requires accepted Residual Risk refs.
+All successful close paths require residual-risk visibility before close. If no known close-relevant Residual Risk exists, `ResidualRiskSummary.status=none` satisfies this check. If known close-relevant Residual Risk exists, it must be visible in the current judgment context. Risk-accepted close additionally requires accepted Residual Risk refs.
 
 | Close path | Required compatible state |
 |---|---|
 | Advisor completed | no active Run; no product write pending; no blocking unresolved Decision Packet; `result=advice_only`; `close_reason=completed_self_checked` |
 | Direct self-checked | no active Run; active Change Unit completed or not needed for non-write direct; scope passed for writes; blocking Decision Packets resolved or validly deferred for close; required approval granted; required evidence sufficient; `assurance_level=self_checked`; `close_reason=completed_self_checked` |
 | Direct verified | direct self-checked requirements plus valid passed detached verification; `assurance_level=detached_verified`; `close_reason=completed_verified` |
-| Work verified | no active Run; Change Unit complete or explicitly deferred; scope passed; blocking Decision Packets resolved; approval not required or granted; design passed or waived; evidence sufficient; verification passed with valid independence; QA passed or waived if required; residual risk visible before acceptance; acceptance accepted if required; `close_reason=completed_verified` |
+| Work verified | no active Run; Change Unit complete or explicitly deferred; scope passed; blocking Decision Packets resolved; approval not required or granted; design passed or waived; evidence sufficient; verification passed with valid independence; QA passed or waived if required; residual risk visible or confirmed as `ResidualRiskSummary.status=none` before acceptance; acceptance accepted if required; `close_reason=completed_verified` |
 | Work risk accepted | work close requirements for scope, approval, design, evidence, QA, and acceptance are satisfied; verification may be `waived_by_user`; blocking decisions are resolved or validly deferred with residual risk visibility; visible and accepted Residual Risk refs are recorded; assurance must be `none` or `self_checked`; `close_reason=completed_with_risk_accepted` |
 | Cancelled | no active write in progress; `result=cancelled`; `close_reason=cancelled` or `superseded` |
 
@@ -464,7 +464,7 @@ The following combinations are invalid and must be rejected or repaired by the k
 | Completed passed result with required `qa_gate=pending` or `failed` | block close |
 | Completed passed result with required `acceptance_gate=pending` or `rejected` | block close |
 | Completed passed result with blocking Decision Packet unresolved or incompatible with close intent | block close |
-| Acceptance or risk-accepted close recorded while close-relevant residual risk is hidden, unrecorded, or absent from the current judgment context | reject close until residual risk is visible and risk-accepted close has accepted Residual Risk refs |
+| Acceptance or risk-accepted close recorded while known close-relevant residual risk is hidden, unrecorded, or absent from the current judgment context | reject close until residual risk is visible, or until no known close-relevant risk is confirmed with `ResidualRiskSummary.status=none`; risk-accepted close still requires accepted Residual Risk refs |
 | Projection stale or failed recorded as state failure by itself | repair display/projection status; do not change result solely for projection freshness |
 | A Markdown projection used as canonical state | create reconcile item or reject as state mutation |
 | A capability field introduced as a canonical lifecycle gate | reject schema/state mutation |
@@ -644,8 +644,8 @@ The decision algorithm is:
 9. Check `evidence_gate`. Where evidence is required, only `sufficient` can close successfully.
 10. Check `verification_gate`. Work requires passed detached verification or explicit user verification waiver. Direct work defaults to not required, but optional passed detached verification may upgrade assurance. Same-session review cannot produce detached assurance. Verification waiver is separate from detached verification and cannot contribute to `assurance_level=detached_verified`.
 11. Check `qa_gate`. Required QA must be passed or validly waived. A Manual QA record result alone does not close the gate unless the kernel aggregates it into `qa_gate`.
-12. Check close-relevant residual risk. Known close-relevant Residual Risk must be visible in the current judgment context before any successful close. Risk-accepted close additionally requires visible and accepted Residual Risk refs. Verification risk acceptance additionally sets `verification_gate=waived_by_user`.
-13. Check `acceptance_gate`. Required acceptance can be recorded only after close-relevant residual risk is visible in the current judgment context. Rejection routes the Task back to shaping, execution, or cancellation.
+12. Check close-relevant residual risk. If no known close-relevant Residual Risk exists, `ResidualRiskSummary.status=none` satisfies residual-risk visibility. If known close-relevant Residual Risk exists, it must be visible in the current judgment context before any successful close. Risk-accepted close additionally requires visible and accepted Residual Risk refs. Verification risk acceptance additionally sets `verification_gate=waived_by_user`.
+13. Check `acceptance_gate`. Required acceptance can be recorded only after close-relevant residual risk is visible in the current judgment context or confirmed as `ResidualRiskSummary.status=none`. Rejection routes the Task back to shaping, execution, or cancellation.
 14. Assign `assurance_level`, `result`, and `close_reason`:
     - advisor completion: `result=advice_only`, `assurance_level=none`, `close_reason=completed_self_checked`
     - direct self-check: `result=passed`, `assurance_level=self_checked`, `close_reason=completed_self_checked`
@@ -663,6 +663,8 @@ The decision algorithm is:
 `completed_with_risk_accepted` means the user accepted close-relevant residual risk, including verification risk when verification was waived. This is a successful close with explicit risk, not detached verification.
 
 Residual-risk acceptance means known remaining risk was made visible and accepted for the requested close. It never upgrades assurance to `detached_verified`, and it does not imply detached verification, Manual QA, sensitive approval, or final acceptance unless those separate gates are also satisfied.
+
+`ResidualRiskSummary.status=none` means there is no known close-relevant residual risk to accept. It satisfies visibility for ordinary close and acceptance, but it is not accepted risk and cannot support `completed_with_risk_accepted`.
 
 `cancelled` means the Task stopped without a passed result.
 

@@ -445,6 +445,8 @@ AcceptanceVisibilityContext:
   what_acceptance_does_not_replace: string[]
 ```
 
+`ResidualRiskSummary.status=none`은 current Task와 requested action에 대해 Core가 알고 있는 close-relevant Residual Risk가 없다는 뜻입니다. 이는 acceptance와 ordinary successful close에서 residual-risk visibility를 satisfy하며, 이때 `close_relevant_count=0`이고 risk-ref arrays는 비어 있습니다. Core가 hidden, blocked, 또는 표시되지 않은 close-relevant risk를 알고 있다면 이 status를 반환하면 안 되며, 그런 경우 `not_visible` 또는 `blocked`를 사용합니다.
+
 Autonomy Boundary summaries는 scope authority가 아니라 judgment latitude를 설명합니다. Active Change Unit scope와 required approval 밖의 paths, tools, commands, network targets, secret access, sensitive categories를 authorize하지 않습니다.
 
 `decision_kind=approval`은 stable public enum value로 유지됩니다. `DecisionPacket`과 `DecisionPacketCandidate` 모두에서 이 값은 sensitive-change approval만을 위한 approval-shaped judgment context를 뜻합니다. Product trade-offs, design direction, QA waiver, verification risk, final acceptance, residual-risk acceptance는 별도의 compatible Decision Packets와 gate updates로 표현되지 않는 한 이 값으로 resolve할 수 없습니다.
@@ -532,7 +534,7 @@ Status, next, write, close flows에서 흔히 surface되는 agency-critical subs
 | `ACCEPTANCE_REQUIRED` | required user acceptance is pending or rejected |
 | `PROJECTION_STALE` | projection freshness is stale or failed for the requested action |
 | `RECONCILE_REQUIRED` | human-editable or managed-block drift requires reconcile |
-| `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk has not been made visible before a successful close |
+| `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk has not been made visible before acceptance or successful close |
 | `ARTIFACT_MISSING` | a referenced artifact file is missing or integrity check failed |
 | `BASELINE_STALE` | baseline no longer matches the repository state required by the operation |
 | `VALIDATOR_FAILED` | 하나 이상의 required validators가 failed이고 더 specific한 typed `ErrorCode`가 적용되지 않을 때 사용하는 generic fallback |
@@ -577,7 +579,7 @@ MCP server 또는 caller가 Core에 전혀 닿을 수 없으면 surface 또는 o
 | 17 | `EVIDENCE_INSUFFICIENT` | required evidence coverage가 absent, partial, stale, 또는 blocked임 |
 | 18 | `VERIFY_NOT_DETACHED` | verification이 detached verification으로 count될 수 없음 |
 | 19 | `QA_REQUIRED` | required Manual QA가 pending, failed, missing, 또는 validly waived되지 않음 |
-| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk가 acceptance 또는 close 전에 visible하지 않음 |
+| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk가 acceptance 또는 close 전에 visible하지 않음. `ResidualRiskSummary.status=none`이 no known close-relevant risk를 confirm한 경우에는 선택하지 않음 |
 | 21 | `ACCEPTANCE_REQUIRED` | residual-risk visibility가 satisfied된 뒤에도 required user acceptance가 pending 또는 rejected임 |
 | 22 | `PROJECTION_STALE` | requested action에 필요한 projection freshness가 stale 또는 failed임 |
 | 23 | `RECONCILE_REQUIRED` | human-editable 또는 managed-block drift에 reconcile이 필요함 |
@@ -756,7 +758,7 @@ Projection jobs enqueued: 없음.
 
 `pending_decisions`는 unresolved user-action Decision Packets를 포함합니다. Current phase 또는 requested action에 아직 영향을 주는 deferred, blocked, recently resolved packets는 `judgment_context.active_decision_packet_refs`를 통해 나타납니다.
 
-`focus=acceptance`일 때 `judgment_context.acceptance_visibility`는 non-null이어야 합니다. 이 context는 residual-risk summary, unaccepted close-relevant risk refs, evidence summary refs, verification status, QA status, acceptance status, what acceptance does not replace를 포함해야 합니다. Acceptance request 전에 acceptance가 evidence sufficiency, verification, Manual QA, approval, scope, residual-risk visibility를 대체하지 않는다는 점을 명확히 보여줘야 합니다.
+`focus=acceptance`일 때 `judgment_context.acceptance_visibility`는 non-null이어야 합니다. 이 context는 residual-risk summary, unaccepted close-relevant risk refs, evidence summary refs, verification status, QA status, acceptance status, what acceptance does not replace를 포함해야 합니다. 이 context는 known close-relevant risk가 없다는 뜻의 `ResidualRiskSummary.status=none`과, known close-relevant risk가 아직 hidden이라는 뜻의 `not_visible`을 구분해야 합니다. Acceptance request 전에 acceptance가 evidence sufficiency, verification, Manual QA, approval, scope, residual-risk visibility를 대체하지 않는다는 점을 명확히 보여줘야 합니다.
 
 ValidatorResults emitted: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional `context_hygiene_check`.
 
@@ -1142,7 +1144,7 @@ AcceptedRiskInput:
   evidence_refs: EvidenceRefs
 ```
 
-Payload branch는 `decision_kind`와 match해야 하며, 다른 branches는 absent여야 합니다. `accepted_risks`는 Decision Packet과 current Judgment Context가 user decision 전에 close-relevant residual risk를 visible하게 만든 경우에만 allowed입니다. Core는 `decision_packet_id`가 식별하는 canonical `DecisionPacket`에 answer를 record합니다. 모든 `decision_requests` row는 routing/replay metadata로만 update되며 linked compatible Decision Packet과 owner-record updates 없이는 `decision_gate`, approval, acceptance, waiver, residual-risk acceptance, close를 satisfy할 수 없습니다. Core는 accepted risk를 residual-risk state refs로 기록하며, risk acceptance를 detached verification으로 취급하지 않습니다.
+Payload branch는 `decision_kind`와 match해야 하며, 다른 branches는 absent여야 합니다. `accepted_risks`는 Decision Packet과 current Judgment Context가 user decision 전에 close-relevant residual risk를 visible하게 만든 경우에만 allowed입니다. `decision_kind=acceptance`에서 Core는 close-relevant residual risk가 visible하거나 `ResidualRiskSummary.status=none`이 no known close-relevant risk를 confirm한 경우에만 acceptance를 record할 수 있습니다. Core는 `decision_packet_id`가 식별하는 canonical `DecisionPacket`에 answer를 record합니다. 모든 `decision_requests` row는 routing/replay metadata로만 update되며 linked compatible Decision Packet과 owner-record updates 없이는 `decision_gate`, approval, acceptance, waiver, residual-risk acceptance, close를 satisfy할 수 없습니다. Core는 accepted risk를 residual-risk state refs로 기록하며, risk acceptance를 detached verification으로 취급하지 않습니다.
 
 Response schema:
 
@@ -1380,7 +1382,7 @@ CloseTaskResponse:
   artifact_refs: ArtifactRef[]
 ```
 
-Close blockers에는 unresolved, missing, deferred-without-coverage, blocked, rejected, stale, incompatible blocking Decision Packets와, successful close 전에 visible하지 않은 known close-relevant residual risk가 포함됩니다. Risk-accepted close에는 visible and accepted Residual Risk refs가 추가로 필요합니다. Acceptance가 required인 경우 close-relevant residual risk가 visible한 뒤에만 acceptance를 record할 수 있습니다.
+Close blockers에는 unresolved, missing, deferred-without-coverage, blocked, rejected, stale, incompatible blocking Decision Packets와, successful close 전에 visible하지 않은 known close-relevant residual risk가 포함됩니다. Known close-relevant residual risk가 없으면 `ResidualRiskSummary.status=none`이 residual-risk visibility를 satisfy하며 close blocker가 아닙니다. Risk-accepted close에는 visible and accepted Residual Risk refs가 추가로 필요합니다. Acceptance가 required인 경우 close-relevant residual risk가 visible하거나 `ResidualRiskSummary.status=none`으로 confirmed된 뒤에만 acceptance를 record할 수 있습니다.
 
 State transition summary: successful completion은 Task를 result와 close reason이 있는 `completed`로 옮깁니다. Cancellation/supersession은 Task를 `cancelled`로 옮깁니다. Failed close는 Task를 non-terminal로 남기고 blockers를 report합니다.
 

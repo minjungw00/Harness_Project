@@ -382,7 +382,7 @@ not_required | required | pending | accepted | rejected
 
 `acceptance_gate`는 acceptance가 required인 곳에서 사용자의 final acceptance judgment를 기록합니다. QA나 verification을 대체하지 않습니다.
 
-Known close-relevant Residual Risk는 successful close 전에 current judgment context에서 visible해야 합니다. Acceptance가 required라면 그 visibility가 생긴 뒤에만 record될 수 있습니다. Risk-accepted close에는 additionally visible하고 accepted된 Residual Risk refs가 필요하며, residual-risk acceptance는 assurance를 `detached_verified`로 upgrade하지 않습니다.
+Residual-risk visibility는 두 가지 방식으로 satisfied됩니다. Known close-relevant Residual Risk가 없으면 current judgment context가 `ResidualRiskSummary.status=none`을 report합니다. Known close-relevant Residual Risk가 있으면 successful close 전에 그 risk가 current judgment context에서 visible해야 합니다. Acceptance가 required라면 close-relevant residual risk가 visible하거나 `ResidualRiskSummary.status=none`으로 confirmed된 뒤에만 record될 수 있습니다. Risk-accepted close에는 additionally visible하고 accepted된 Residual Risk refs가 필요하며, residual-risk acceptance는 assurance를 `detached_verified`로 upgrade하지 않습니다. `ResidualRiskSummary.status=none`은 known close-relevant risk를 숨기거나 대체하면 안 됩니다.
 
 ### Capability Boundary
 
@@ -419,14 +419,14 @@ Capability는 kernel이 write를 허용할지, rule을 얼마나 강하게 enfor
 
 ### Completion Compatibility
 
-모든 successful close path에서는 known close-relevant Residual Risk가 close 전에 current judgment context에서 visible해야 합니다. Risk-accepted close에는 additionally accepted Residual Risk refs가 필요합니다.
+모든 successful close path에는 close 전 residual-risk visibility가 필요합니다. Known close-relevant Residual Risk가 없으면 `ResidualRiskSummary.status=none`이 이 check를 satisfy합니다. Known close-relevant Residual Risk가 있으면 current judgment context에서 visible해야 합니다. Risk-accepted close에는 additionally accepted Residual Risk refs가 필요합니다.
 
 | Close path | Required compatible state |
 |---|---|
 | Advisor completed | no active Run; no product write pending; no blocking unresolved Decision Packet; `result=advice_only`; `close_reason=completed_self_checked` |
 | Direct self-checked | no active Run; active Change Unit completed or not needed for non-write direct; scope passed for writes; blocking Decision Packets resolved or validly deferred for close; required approval granted; required evidence sufficient; `assurance_level=self_checked`; `close_reason=completed_self_checked` |
 | Direct verified | direct self-checked requirements plus valid passed detached verification; `assurance_level=detached_verified`; `close_reason=completed_verified` |
-| Work verified | no active Run; Change Unit complete or explicitly deferred; scope passed; blocking Decision Packets resolved; approval not required or granted; design passed or waived; evidence sufficient; verification passed with valid independence; QA passed or waived if required; residual risk visible before acceptance; acceptance accepted if required; `close_reason=completed_verified` |
+| Work verified | no active Run; Change Unit complete or explicitly deferred; scope passed; blocking Decision Packets resolved; approval not required or granted; design passed or waived; evidence sufficient; verification passed with valid independence; QA passed or waived if required; residual risk visible 또는 `ResidualRiskSummary.status=none` confirmed before acceptance; acceptance accepted if required; `close_reason=completed_verified` |
 | Work risk accepted | work close requirements for scope, approval, design, evidence, QA, and acceptance are satisfied; verification may be `waived_by_user`; blocking decisions are resolved or validly deferred with residual risk visibility; visible and accepted Residual Risk refs are recorded; assurance must be `none` or `self_checked`; `close_reason=completed_with_risk_accepted` |
 | Cancelled | no active write in progress; `result=cancelled`; `close_reason=cancelled` or `superseded` |
 
@@ -466,7 +466,7 @@ Capability는 kernel이 write를 허용할지, rule을 얼마나 강하게 enfor
 | Completed passed result with required `qa_gate=pending` or `failed` | block close |
 | Completed passed result with required `acceptance_gate=pending` or `rejected` | block close |
 | Completed passed result with blocking Decision Packet unresolved or incompatible with close intent | block close |
-| Acceptance or risk-accepted close recorded while close-relevant residual risk is hidden, unrecorded, or absent from the current judgment context | reject close until residual risk is visible and risk-accepted close has accepted Residual Risk refs |
+| Acceptance or risk-accepted close recorded while known close-relevant residual risk is hidden, unrecorded, or absent from the current judgment context | residual risk가 visible해지거나 no known close-relevant risk가 `ResidualRiskSummary.status=none`으로 confirmed될 때까지 close를 reject합니다. Risk-accepted close에는 여전히 accepted Residual Risk refs가 필요합니다 |
 | Projection stale or failed recorded as state failure by itself | repair display/projection status; do not change result solely for projection freshness |
 | A Markdown projection used as canonical state | create reconcile item or reject as state mutation |
 | A capability field introduced as a canonical lifecycle gate | reject schema/state mutation |
@@ -646,8 +646,8 @@ Decision algorithm은 다음과 같습니다.
 9. `evidence_gate`를 확인합니다. Evidence가 required인 곳에서는 `sufficient`만 successful close를 허용합니다.
 10. `verification_gate`를 확인합니다. Work에는 passed detached verification 또는 explicit user verification waiver가 필요합니다. Direct work는 기본적으로 not required이지만 optional passed detached verification은 assurance를 upgrade할 수 있습니다. Same-session review는 detached assurance를 만들 수 없습니다. Verification waiver는 detached verification과 별개이며 `assurance_level=detached_verified`에 기여할 수 없습니다.
 11. `qa_gate`를 확인합니다. Required QA는 passed이거나 validly waived되어야 합니다. Manual QA record result만으로는 kernel이 `qa_gate`에 aggregate하지 않는 한 gate를 close하지 않습니다.
-12. Close-relevant residual risk를 확인합니다. Known close-relevant Residual Risk는 successful close 전에 current judgment context에서 visible해야 합니다. Risk-accepted close에는 additionally visible하고 accepted된 Residual Risk refs가 필요합니다. Verification risk acceptance는 추가로 `verification_gate=waived_by_user`를 set합니다.
-13. `acceptance_gate`를 확인합니다. Required acceptance는 close-relevant residual risk가 current judgment context에서 visible해진 뒤에만 record될 수 있습니다. Rejection은 Task를 shaping, execution, cancellation로 돌립니다.
+12. Close-relevant residual risk를 확인합니다. Known close-relevant Residual Risk가 없으면 `ResidualRiskSummary.status=none`이 residual-risk visibility를 satisfy합니다. Known close-relevant Residual Risk가 있으면 successful close 전에 current judgment context에서 visible해야 합니다. Risk-accepted close에는 additionally visible하고 accepted된 Residual Risk refs가 필요합니다. Verification risk acceptance는 추가로 `verification_gate=waived_by_user`를 set합니다.
+13. `acceptance_gate`를 확인합니다. Required acceptance는 close-relevant residual risk가 current judgment context에서 visible하거나 `ResidualRiskSummary.status=none`으로 confirmed된 뒤에만 record될 수 있습니다. Rejection은 Task를 shaping, execution, cancellation로 돌립니다.
 14. `assurance_level`, `result`, `close_reason`을 assign합니다.
     - advisor completion: `result=advice_only`, `assurance_level=none`, `close_reason=completed_self_checked`
     - direct self-check: `result=passed`, `assurance_level=self_checked`, `close_reason=completed_self_checked`
@@ -665,6 +665,8 @@ Decision algorithm은 다음과 같습니다.
 `completed_with_risk_accepted`는 verification risk가 waived된 경우를 포함해 사용자가 close-relevant residual risk를 accepted했다는 뜻입니다. 이는 explicit risk가 있는 successful close이지 detached verification이 아닙니다.
 
 Residual-risk acceptance는 known remaining risk가 requested close를 위해 visible해졌고 accepted되었다는 뜻입니다. Assurance를 `detached_verified`로 upgrade하지 않으며, 별도 gates가 함께 satisfied되지 않는 한 detached verification, Manual QA, sensitive approval, final acceptance를 뜻하지 않습니다.
+
+`ResidualRiskSummary.status=none`은 accept할 known close-relevant residual risk가 없다는 뜻입니다. Ordinary close와 acceptance의 visibility는 satisfy하지만 accepted risk가 아니며 `completed_with_risk_accepted`를 support할 수 없습니다.
 
 `cancelled`는 Task가 passed result 없이 중단되었다는 뜻입니다.
 
