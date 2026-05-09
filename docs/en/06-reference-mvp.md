@@ -30,6 +30,26 @@ MVP includes:
 
 MVP excludes the later automation cataloged in `appendix/C-later-roadmap.md`, including broader surface expansion, richer capture automation, advanced orchestration, analytics, and team profile export/import.
 
+```mermaid
+flowchart TD
+  Scope["MVP Scope"]
+  Includes["Includes<br/>kernel authority and agency conformance"]
+  Excludes["Excludes<br/>later automation and broad integration"]
+
+  Scope --> Includes
+  Scope --> Excludes
+  Includes --> LocalProject["one local project registration"]
+  Includes --> ReferenceSurface["one reference agent surface"]
+  Includes --> Core["MCP server, Core state, gates, validators"]
+  Includes --> Storage["state.sqlite current records plus state.sqlite.task_events, artifacts, baselines"]
+  Includes --> Projection["MVP-required ProjectionKind renderers"]
+  Includes --> Ops["doctor, recover, reconcile, export, conformance smoke"]
+  Excludes --> SurfaceExpansion["broader surface expansion"]
+  Excludes --> CaptureAutomation["richer capture automation"]
+  Excludes --> Orchestration["advanced orchestration and parallel automation"]
+  Excludes --> Analytics["analytics and team profile export/import"]
+```
+
 Parallel orchestration automation remains later. MVP may store Change Unit dependency DAG metadata only when it is needed for serial shaping, write checks, close blockers, or visibility; it does not schedule parallel lanes, isolate concurrent baselines, or reconcile concurrent execution.
 
 ## Staged Delivery Interpretation
@@ -41,9 +61,42 @@ The implementation sequence remains MVP-0 through MVP-5. The stage names below a
 | Kernel Smoke | Selected smoke slice crossing MVP-0 through early MVP-3 capabilities | Project and Task state, scoped Change Unit, `prepare_write`, durable Write Authorization creation, `record_run` consumption of that authorization, artifact registration, evidence manifest basics, minimal required projection freshness or enqueueing, blocked writes or runs when write authority is missing, blocked close when evidence or decision requirements are missing, and basic Core fixture execution. |
 | Agency-Hardened MVP | Completion of the remaining MVP-3 exit criteria plus MVP-4 and MVP-5 on top of the smoke slice | Decision Packet quality, approval/Decision Packet/Write Authorization separation, residual-risk visibility before acceptance and close, detached verification independence, Manual QA, stewardship and context-hygiene validators, full feedback-loop checks, codebase stewardship coverage, projection/reconcile completeness, recover/export/artifact integrity behavior, later-boundary checks, and fixture coverage for required agency conformance. |
 
+```mermaid
+flowchart LR
+  MVP0["MVP-0<br/>Runtime Bootstrap"]
+  MVP1["MVP-1<br/>Core State and MCP Facade"]
+  MVP2["MVP-2<br/>Write Gate, Approval, Baseline, Artifacts"]
+  MVP3["MVP-3<br/>Runs, Evidence, Projection, Reconcile"]
+  MVP4["MVP-4<br/>Verification, Manual QA, Close"]
+  MVP5["MVP-5<br/>Operator Smoke and Agency Conformance"]
+
+  MVP0 --> MVP1 --> MVP2 --> MVP3 --> MVP4 --> MVP5
+  KernelSmoke["Kernel Smoke<br/>selected smoke slice through early MVP-3"]
+  Hardened["Agency-Hardened MVP<br/>remaining MVP-3 plus MVP-4 and MVP-5"]
+  KernelSmoke -.-> MVP0
+  KernelSmoke -.-> MVP1
+  KernelSmoke -.-> MVP2
+  KernelSmoke -.-> MVP3
+  Hardened -.-> MVP3
+  Hardened -.-> MVP4
+  Hardened -.-> MVP5
+```
+
 Kernel Smoke is useful because it gives implementers the smallest runnable proof of authority. It does not complete every MVP-3 exit criterion, is not an acceptable final MVP, and does not defer any agency-critical behavior to later automation. Full feedback-loop checks, codebase stewardship coverage, projection/reconcile completeness, and broader fixture coverage remain final MVP work unless explicitly required by the Kernel Smoke proof above.
 
 ## Implementation Sequence
+
+```mermaid
+flowchart LR
+  MVP0["MVP-0<br/>bootstrap runtime home and project"]
+  MVP1["MVP-1<br/>transaction wrapper, Journey/Decision skeleton, MCP facade"]
+  MVP2["MVP-2<br/>Change Units, prepare_write, approvals, baselines, artifacts"]
+  MVP3["MVP-3<br/>record_run, evidence, projection jobs, reconcile"]
+  MVP4["MVP-4<br/>verification, Manual QA, residual risk, close"]
+  MVP5["MVP-5<br/>doctor, recover, export, conformance smoke"]
+
+  MVP0 --> MVP1 --> MVP2 --> MVP3 --> MVP4 --> MVP5
+```
 
 ### MVP-0: Runtime Bootstrap
 
@@ -128,6 +181,42 @@ Exit criteria:
 The reference storage uses SQLite for registry and per-project state. The DDL is a draft implementation contract; field names may gain indexes or migration helpers, but table ownership and authority boundaries should remain stable.
 
 `task_spine_entries` is the physical MVP table for public `journey_spine_entry` records and Journey Spine Entry wording. Public MCP/API naming remains `journey_spine_entry`; the table name preserves the task-local implementation shape.
+
+This ER diagram is an overview of the DDL relationships below. Relationship labels describe storage links, not authority to grant or mutate records. The SQL DDL remains the exact implementation contract.
+
+```mermaid
+erDiagram
+  PROJECTS ||--o{ PROJECT_SURFACES : registers
+  PROJECTS ||--o{ CONNECTOR_MANIFESTS : has
+  PROJECT_SURFACES ||--o{ CONNECTOR_MANIFESTS : describes
+  PROJECTS ||--|| PROJECT_STATE : has
+  TASKS ||--|| TASK_GATES : has
+  TASKS ||--o{ CHANGE_UNITS : has
+  TASKS ||--o{ BASELINES : tracks
+  TASKS ||--o{ WRITE_AUTHORIZATIONS : tracks
+  CHANGE_UNITS ||--o{ WRITE_AUTHORIZATIONS : scopes
+  WRITE_AUTHORIZATIONS ||--o| RUNS : consumed_by
+  TASKS ||--o{ RUNS : has
+  TASKS ||--o{ APPROVALS : tracks
+  DECISION_PACKETS ||--o{ APPROVALS : links
+  TASKS ||--o{ DECISION_PACKETS : has
+  TASKS ||--o{ RESIDUAL_RISKS : tracks
+  DECISION_PACKETS ||--o{ RESIDUAL_RISKS : links
+  TASKS ||--o{ SHARED_DESIGNS : tracks
+  TASKS ||--o{ TASK_SPINE_ENTRIES : has
+  CHANGE_UNITS ||--o{ CHANGE_UNIT_DEPENDENCIES : depends
+  TASKS ||--o{ EVIDENCE_MANIFESTS : has
+  TASKS ||--o{ EVALS : has
+  TASKS ||--o{ MANUAL_QA_RECORDS : has
+  DECISION_PACKETS ||--o{ MANUAL_QA_RECORDS : links
+  TASKS ||--o{ ARTIFACTS : links
+  ARTIFACTS ||--o{ ARTIFACT_LINKS : links
+  TASKS ||--o{ TASK_EVENTS : has
+  TASKS ||--o{ PROJECTION_JOBS : tracks
+  TASKS ||--o{ RECONCILE_ITEMS : tracks
+  TASKS ||--o{ TDD_TRACES : has
+  TASKS ||--o{ VALIDATOR_RUNS : has
+```
 
 ### JSON Field Validation Boundary
 
@@ -740,6 +829,26 @@ CREATE TABLE locks (
 
 `tasks.state_version` is the task-scoped state clock. Task-scoped mutations compare `expected_state_version` with the Core-resolved primary Task's `tasks.state_version`; project-scoped mutations with no resolved primary Task compare it with `project_state.state_version`.
 
+```mermaid
+flowchart TD
+  Request["state-changing request<br/>expected_state_version"]
+  Scope{"Primary affected scope?"}
+  TaskClock["Task State Version<br/>tasks.state_version"]
+  ProjectClock["Project State Version<br/>project_state.state_version"]
+  CompareTask{"expected matches task clock?"}
+  CompareProject{"expected matches project clock?"}
+  Conflict["STATE_CONFLICT<br/>before mutation"]
+  Commit["Core transaction<br/>update records, append state.sqlite.task_events, increment affected clock"]
+
+  Request --> Scope
+  Scope -->|primary Task resolved| TaskClock --> CompareTask
+  Scope -->|project-scoped, task_id=null| ProjectClock --> CompareProject
+  CompareTask -->|no| Conflict
+  CompareProject -->|no| Conflict
+  CompareTask -->|yes| Commit
+  CompareProject -->|yes| Commit
+```
+
 `task_events` remains append-only event history inside `state.sqlite`; MVP does not introduce a separate event store. `task_events.event_seq` is the deterministic global append sequence for all events in the database. Core allocates it under the same write transaction as the state change, and Journey reconstruction, API event lists, and conformance ordering use ascending `event_seq`, never timestamps. `task_events.state_version` records the resulting version for the affected scope. For task events this is `tasks.state_version`; for project-level events with `task_id=null` this is `project_state.state_version`. Multiple events may share an affected-scope `state_version`; `event_seq` still defines their order.
 
 `tool_invocations` stores request replay metadata needed to return the original committed response. Only committed, non-dry-run tool calls create or update `tool_invocations`; `dry_run=true` creates no replay row and does not consume the idempotency key for authoritative replay. Non-authoritative diagnostics, if an implementation keeps them, must not be stored in `tool_invocations` or used to replay state-changing responses. `tool_invocations.request_hash` stores the canonical request hash defined by the MCP API idempotency rules: canonical JSON, UTF-8, `tool_name`, schema-normalized request body and optional fields, sorted object keys, schema-ordered arrays unless explicitly order-insignificant, NFC Unicode strings, and envelope coverage that excludes only `request_id` and `idempotency_key`. `tool_invocations.state_version` stores the same primary affected-scope version returned in `ToolResponseBase.state_version`: Task State Version when Core resolves a primary Task, otherwise Project State Version. Reusing an idempotency key with a different `request_hash` returns `STATE_CONFLICT`.
@@ -839,6 +948,26 @@ State-changing operations acquire a lock at the narrowest practical scope:
 | artifact link registration | artifact and target record |
 | reconcile decision | reconcile item and affected task/design record |
 
+```mermaid
+flowchart LR
+  Operation["state-changing operation"]
+  Project["project<br/>registration"]
+  Task["task<br/>intake, close, shaping, decisions"]
+  ChangeUnit["task + affected Change Unit<br/>prepare_write, baseline, shaping"]
+  Run["task + run + Write Authorization<br/>record_run"]
+  Projection["projection job<br/>projection render"]
+  Artifact["artifact path / artifact + target record<br/>artifact registration and links"]
+  Reconcile["reconcile item + affected task/design record"]
+
+  Operation --> Project
+  Operation --> Task
+  Operation --> ChangeUnit
+  Operation --> Run
+  Operation --> Projection
+  Operation --> Artifact
+  Operation --> Reconcile
+```
+
 If a lock is expired, the next operation may take it after appending a recovery event. If `expected_state_version` is stale for the relevant task or project scope, the operation returns `STATE_CONFLICT` before mutation.
 
 ## Artifact Directory Layout
@@ -867,6 +996,51 @@ Reference layout:
         decisions/
         exports/
         tmp/
+```
+
+```mermaid
+flowchart TD
+  Home["~/.harness/"]
+  Registry["registry.sqlite"]
+  Projects["projects/"]
+  Project["PRJ-0001/"]
+  ProjectYaml["project.yaml"]
+  State["state.sqlite"]
+  Artifacts["artifacts/"]
+  Bundles["bundles/"]
+  Diffs["diffs/"]
+  Logs["logs/"]
+  Screenshots["screenshots/"]
+  Checkpoints["checkpoints/"]
+  Manifests["manifests/"]
+  QA["qa/"]
+  TDD["tdd/"]
+  Designs["designs/"]
+  Prototypes["prototypes/"]
+  Architecture["architecture/"]
+  Decisions["decisions/"]
+  Exports["exports/"]
+  Tmp["tmp/"]
+
+  Home --> Registry
+  Home --> Projects --> Project
+  Project --> ProjectYaml
+  Project --> State
+  Project --> Artifacts
+  Artifacts --> Bundles
+  Artifacts --> Diffs
+  Artifacts --> Logs
+  Artifacts --> Screenshots
+  Artifacts --> Checkpoints
+  Artifacts --> Manifests
+  Artifacts --> QA
+  Artifacts --> TDD
+  Artifacts --> Designs
+  Artifacts --> Prototypes
+  Artifacts --> Architecture
+  Artifacts --> Decisions
+  Artifacts --> Exports
+  Artifacts --> Tmp
 ```
 
 Artifact filenames should include enough stable identity to avoid collisions:
@@ -901,6 +1075,28 @@ MVP registration steps:
 5. Insert the `artifacts` row and required `artifact_links` rows in the same Core transaction that records the related state record and appends `task_events`.
 6. Return an `ArtifactRef` whose `uri` resolves through the artifact registry row.
 7. If the file move succeeds but the transaction fails, leave the file in `tmp/` or mark it orphaned for `recover`; do not create a committed artifact ref or artifact link.
+
+```mermaid
+sequenceDiagram
+  participant Capture as staging path or capture adapter
+  participant Core as Core
+  participant Store as artifact directory
+  participant State as state.sqlite
+  participant Events as state.sqlite.task_events
+
+  Capture->>Core: staged file for registration
+  Core->>Core: validate source path and apply redaction or omission
+  Core->>Store: move or copy stored bytes
+  Store-->>Core: sha256, size_bytes, content_type, redaction_state
+  Core->>State: insert artifacts row
+  Core->>State: insert artifact_links rows
+  Core->>Events: append related event rows
+  Core->>State: commit related Core transaction
+  Core-->>Capture: ArtifactRef
+  alt transaction fails after file move
+    Core->>Store: leave in tmp or mark orphaned for recover
+  end
+```
 
 `redaction_state` implementation:
 
@@ -942,6 +1138,28 @@ BaselineCapture:
 
 Baseline is stale when relevant HEAD, dirty diff, allowed path contents, approval scope, or verification bundle inputs no longer match the captured baseline. Stale baseline can mark approval, evidence, or verification stale depending on the affected records.
 
+```mermaid
+flowchart LR
+  Repo["git HEAD, branch, dirty flag"]
+  Files["included and ignored path snapshot"]
+  Diff["optional dirty diff artifact"]
+  Manifest["deterministic tree manifest"]
+  Baseline["baselines row<br/>baseline_ref"]
+  Write["prepare_write and Write Authorization"]
+  Approval["approval scope drift checks"]
+  Evidence["evidence freshness"]
+  Verify["verification bundle inputs"]
+
+  Repo --> Manifest
+  Files --> Manifest
+  Diff --> Baseline
+  Manifest --> Baseline
+  Baseline --> Write
+  Baseline --> Approval
+  Baseline --> Evidence
+  Baseline --> Verify
+```
+
 `tree_hash` is computed from a deterministic tree manifest after ignore rules have excluded ignored paths. Each entry uses a normalized relative POSIX path with no leading `./`. Path strings are normalized to Unicode NFC before sorting and hashing, and paths are sorted after normalization. Regular file content is hashed as bytes exactly as stored, without line-ending normalization, and the entry includes the content hash, file size, and executable bit where available. Symlink entries hash the link target rather than dereferenced content unless the implementation explicitly disallows symlinks and records that exclusion or block. The final manifest is serialized canonically before hashing so equivalent snapshots produce the same `tree_hash`.
 
 ## Verification Bundle Shape
@@ -968,6 +1186,40 @@ verify-bundle/
   evaluator-instructions.md
 ```
 
+```mermaid
+flowchart TD
+  Bundle["verify-bundle/"]
+  Manifest["manifest.json"]
+  Task["task-summary.json"]
+  CU["change-unit.json"]
+  Baseline["baseline.json"]
+  Evidence["evidence-manifest.json"]
+  Approvals["approvals.json"]
+  Decisions["decision-packets.json"]
+  Risks["residual-risks.json"]
+  Runs["run-refs.json"]
+  ArtifactRefs["artifact-refs.json"]
+  ArtifactLinks["artifact-links.json"]
+  Designs["design-refs.json"]
+  Spine["journey-spine-entries.json"]
+  Instructions["evaluator-instructions.md"]
+
+  Bundle --> Manifest
+  Bundle --> Task
+  Bundle --> CU
+  Bundle --> Baseline
+  Bundle --> Evidence
+  Bundle --> Approvals
+  Bundle --> Decisions
+  Bundle --> Risks
+  Bundle --> Runs
+  Bundle --> ArtifactRefs
+  Bundle --> ArtifactLinks
+  Bundle --> Designs
+  Bundle --> Spine
+  Bundle --> Instructions
+```
+
 The manifest records task id, Change Unit id, baseline ref, source state version, included artifact ids, redaction summary, evaluator focus, and the expected independence context. The bundle may include copied raw artifacts when retention and redaction policy allow it; otherwise it includes artifact refs that the evaluator can resolve through the harness.
 
 Launching verification sets or keeps `verification_gate=pending`. Only `harness.record_eval` can record the verdict and update assurance.
@@ -992,6 +1244,18 @@ pending -> running -> failed -> pending
 pending -> skipped
 ```
 
+```mermaid
+stateDiagram-v2
+  [*] --> pending
+  pending --> running: worker acquires job
+  running --> completed: render and write succeed
+  running --> failed: render or write fails
+  failed --> pending: retry with newer attempt
+  pending --> skipped: obsolete version or managed drift
+  completed --> [*]
+  skipped --> [*]
+```
+
 Rules:
 
 - never render an older projection version over a newer one
@@ -1007,6 +1271,33 @@ Rules:
 The reference projector executes pending jobs after the Core transaction commits.
 
 MVP worker steps:
+
+```mermaid
+sequenceDiagram
+  participant Worker as projection worker
+  participant Jobs as projection_jobs
+  participant Lock as projection-job lock
+  participant State as state records and artifact refs
+  participant Repo as Product Repository Markdown
+  participant Reconcile as reconcile_items
+
+  Worker->>Jobs: select oldest pending job
+  Worker->>Lock: acquire projection-job lock
+  Worker->>Jobs: mark running
+  Worker->>State: read latest records, refs, previous managed_hash
+  Worker->>Worker: resolve source_state_version
+  alt older projection_version
+    Worker->>Jobs: mark skipped
+  else managed block drift detected
+    Worker->>Reconcile: create or update reconcile item
+    Worker->>Jobs: mark skipped and set stale
+  else render succeeds
+    Worker->>Repo: write front matter and managed block atomically
+    Worker->>Jobs: record output_path, managed_hash, source_state_version, completed
+  else render or write fails
+    Worker->>Jobs: mark failed
+  end
+```
 
 1. Select the oldest `pending` job for the target projection and acquire the projection-job lock.
 2. Mark the job `running`, read the latest state records, artifact refs, and previous managed hash, and resolve `source_state_version` from the affected-scope state clock.
@@ -1060,6 +1351,20 @@ run_validators(context, validator_ids):
     persist result in validator_runs
     results.append(result)
   return results
+```
+
+```mermaid
+flowchart TD
+  Start["run_validators(context, validator_ids)"]
+  Load["load validator definition"]
+  Inputs["read declared state, artifact, and repo inputs"]
+  Execute["execute validator"]
+  Normalize["normalize output to ValidatorResult"]
+  Persist["persist result in validator_runs"]
+  Return["return results to Core"]
+
+  Start --> Load --> Inputs --> Execute --> Normalize --> Persist --> Return
+  Return -->|Core applies blocker, gate, or display consequence| CoreOutcome["Core transition outcome"]
 ```
 
 Stable MVP validator IDs:
@@ -1165,6 +1470,58 @@ export/
     DIRECT-RESULT-*.md
   artifacts/
     ...
+```
+
+```mermaid
+flowchart TD
+  Export["export/"]
+  Manifest["manifest.json"]
+  State["state/"]
+  Projections["projections/"]
+  Artifacts["artifacts/"]
+  Task["task.json"]
+  Decisions["decision-packets.json"]
+  Risks["residual-risks.json"]
+  SharedDesigns["shared-designs.json"]
+  Spine["task-spine-entries.json"]
+  Dependencies["change-unit-dependencies.json"]
+  Baselines["baselines.json"]
+  Links["artifact-links.json"]
+  Runs["runs.json"]
+  Approvals["approvals.json"]
+  Evidence["evidence-manifest.json"]
+  Evals["evals.json"]
+  QA["manual-qa.json"]
+  TaskProjection["TASK.md"]
+  AprProjection["APR-*.md"]
+  RunProjection["RUN-SUMMARY-*.md"]
+  EvidenceProjection["EVIDENCE-MANIFEST-*.md"]
+  EvalProjection["EVAL-*.md"]
+  DirectProjection["DIRECT-RESULT-*.md"]
+
+  Export --> Manifest
+  Export --> State
+  Export --> Projections
+  Export --> Artifacts
+  State --> Task
+  State --> Decisions
+  State --> Risks
+  State --> SharedDesigns
+  State --> Spine
+  State --> Dependencies
+  State --> Baselines
+  State --> Links
+  State --> Runs
+  State --> Approvals
+  State --> Evidence
+  State --> Evals
+  State --> QA
+  Projections --> TaskProjection
+  Projections --> AprProjection
+  Projections --> RunProjection
+  Projections --> EvidenceProjection
+  Projections --> EvalProjection
+  Projections --> DirectProjection
 ```
 
 Raw secret values, unredacted sensitive logs, and PII are omitted or redacted before export.

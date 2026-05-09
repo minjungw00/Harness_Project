@@ -8,7 +8,7 @@ Public MCP schema의 source of truth는 이 문서가 담당하지 않습니다.
 
 ## MVP 범위
 
-MVP는 broad agent-surface integration project가 아니라 core invariant validation project입니다.
+MVP는 broad agent-surface integration project가 아니라 kernel-authority and agency-conformance validation project입니다.
 
 MVP 포함 항목:
 
@@ -30,6 +30,26 @@ MVP 포함 항목:
 
 MVP는 `appendix/C-later-roadmap.md`에 정리된 later automation을 제외합니다. 여기에는 broader surface expansion, richer capture automation, advanced orchestration, analytics, team profile export/import가 포함됩니다.
 
+```mermaid
+flowchart TD
+  Scope["MVP 범위"]
+  Includes["Includes<br/>kernel authority and agency conformance"]
+  Excludes["Excludes<br/>later automation and broad integration"]
+
+  Scope --> Includes
+  Scope --> Excludes
+  Includes --> LocalProject["one local project registration"]
+  Includes --> ReferenceSurface["one reference agent surface"]
+  Includes --> Core["MCP server, Core state, gates, validators"]
+  Includes --> Storage["state.sqlite current records plus state.sqlite.task_events, artifacts, baselines"]
+  Includes --> Projection["MVP-required ProjectionKind renderers"]
+  Includes --> Ops["doctor, recover, reconcile, export, conformance smoke"]
+  Excludes --> SurfaceExpansion["broader surface expansion"]
+  Excludes --> CaptureAutomation["richer capture automation"]
+  Excludes --> Orchestration["advanced orchestration and parallel automation"]
+  Excludes --> Analytics["analytics and team profile export/import"]
+```
+
 Parallel orchestration automation은 later로 남습니다. MVP는 serial shaping, write checks, close blockers, visibility에 필요할 때만 Change Unit dependency DAG metadata를 저장할 수 있습니다. Parallel lanes를 schedule하거나, concurrent baselines를 isolate하거나, concurrent execution을 reconcile하지 않습니다.
 
 ## 단계적 Delivery 해석
@@ -41,9 +61,42 @@ Parallel orchestration automation은 later로 남습니다. MVP는 serial shapin
 | Kernel Smoke | MVP-0부터 early MVP-3 capabilities까지를 가로지르는 selected smoke slice | Project와 Task state, scoped Change Unit, `prepare_write`, durable Write Authorization creation, 해당 authorization을 consume하는 `record_run`, artifact registration, evidence manifest basics, minimal required projection freshness 또는 enqueueing, write authority가 없을 때 blocked writes 또는 runs, evidence 또는 decision requirement가 없을 때 blocked close, basic Core fixture execution. |
 | Agency-Hardened MVP | Smoke slice 위에서 remaining MVP-3 exit criteria와 MVP-4, MVP-5를 완료 | Decision Packet quality, approval/Decision Packet/Write Authorization separation, acceptance와 close 전 residual-risk visibility, detached verification independence, Manual QA, stewardship 및 context-hygiene validators, full feedback-loop checks, codebase stewardship coverage, projection/reconcile completeness, recover/export/artifact integrity behavior, later-boundary checks, required agency conformance를 위한 fixture coverage. |
 
+```mermaid
+flowchart LR
+  MVP0["MVP-0<br/>Runtime Bootstrap"]
+  MVP1["MVP-1<br/>Core State and MCP Facade"]
+  MVP2["MVP-2<br/>Write Gate, Approval, Baseline, Artifacts"]
+  MVP3["MVP-3<br/>Runs, Evidence, Projection, Reconcile"]
+  MVP4["MVP-4<br/>Verification, Manual QA, Close"]
+  MVP5["MVP-5<br/>Operator Smoke and Agency Conformance"]
+
+  MVP0 --> MVP1 --> MVP2 --> MVP3 --> MVP4 --> MVP5
+  KernelSmoke["Kernel Smoke<br/>selected smoke slice through early MVP-3"]
+  Hardened["Agency-Hardened MVP<br/>remaining MVP-3 plus MVP-4 and MVP-5"]
+  KernelSmoke -.-> MVP0
+  KernelSmoke -.-> MVP1
+  KernelSmoke -.-> MVP2
+  KernelSmoke -.-> MVP3
+  Hardened -.-> MVP3
+  Hardened -.-> MVP4
+  Hardened -.-> MVP5
+```
+
 Kernel Smoke는 implementer에게 가장 작은 runnable authority proof를 제공하기 때문에 유용합니다. 하지만 모든 MVP-3 exit criterion을 완료하지 않고, final MVP로 인정될 수 없으며, agency-critical behavior를 later automation으로 defer하지 않습니다. Full feedback-loop checks, codebase stewardship coverage, projection/reconcile completeness, broader fixture coverage는 위 Kernel Smoke proof가 명시적으로 요구하는 경우를 제외하고 final MVP work로 남습니다.
 
 ## 구현 순서
+
+```mermaid
+flowchart LR
+  MVP0["MVP-0<br/>bootstrap runtime home and project"]
+  MVP1["MVP-1<br/>transaction wrapper, Journey/Decision skeleton, MCP facade"]
+  MVP2["MVP-2<br/>Change Units, prepare_write, approvals, baselines, artifacts"]
+  MVP3["MVP-3<br/>record_run, evidence, projection jobs, reconcile"]
+  MVP4["MVP-4<br/>verification, Manual QA, residual risk, close"]
+  MVP5["MVP-5<br/>doctor, recover, export, conformance smoke"]
+
+  MVP0 --> MVP1 --> MVP2 --> MVP3 --> MVP4 --> MVP5
+```
 
 ### MVP-0: Runtime Bootstrap
 
@@ -126,6 +179,44 @@ Exit criteria:
 ## Runtime Storage
 
 Reference storage는 registry와 per-project state에 SQLite를 사용합니다. DDL은 draft implementation contract입니다. Field names에 indexes나 migration helpers가 추가될 수 있지만 table ownership과 authority boundaries는 stable해야 합니다.
+
+`task_spine_entries`는 public `journey_spine_entry` records와 Journey Spine Entry wording을 위한 physical MVP table입니다. Public MCP/API naming은 `journey_spine_entry`로 유지하며, table name은 task-local implementation shape를 보존합니다.
+
+이 ER diagram은 아래 DDL relationships의 overview입니다. Relationship labels는 storage links를 설명할 뿐 records를 grant하거나 mutate하는 authority를 뜻하지 않습니다. Exact implementation contract는 SQL DDL입니다.
+
+```mermaid
+erDiagram
+  PROJECTS ||--o{ PROJECT_SURFACES : registers
+  PROJECTS ||--o{ CONNECTOR_MANIFESTS : has
+  PROJECT_SURFACES ||--o{ CONNECTOR_MANIFESTS : describes
+  PROJECTS ||--|| PROJECT_STATE : has
+  TASKS ||--|| TASK_GATES : has
+  TASKS ||--o{ CHANGE_UNITS : has
+  TASKS ||--o{ BASELINES : tracks
+  TASKS ||--o{ WRITE_AUTHORIZATIONS : tracks
+  CHANGE_UNITS ||--o{ WRITE_AUTHORIZATIONS : scopes
+  WRITE_AUTHORIZATIONS ||--o| RUNS : consumed_by
+  TASKS ||--o{ RUNS : has
+  TASKS ||--o{ APPROVALS : tracks
+  DECISION_PACKETS ||--o{ APPROVALS : links
+  TASKS ||--o{ DECISION_PACKETS : has
+  TASKS ||--o{ RESIDUAL_RISKS : tracks
+  DECISION_PACKETS ||--o{ RESIDUAL_RISKS : links
+  TASKS ||--o{ SHARED_DESIGNS : tracks
+  TASKS ||--o{ TASK_SPINE_ENTRIES : has
+  CHANGE_UNITS ||--o{ CHANGE_UNIT_DEPENDENCIES : depends
+  TASKS ||--o{ EVIDENCE_MANIFESTS : has
+  TASKS ||--o{ EVALS : has
+  TASKS ||--o{ MANUAL_QA_RECORDS : has
+  DECISION_PACKETS ||--o{ MANUAL_QA_RECORDS : links
+  TASKS ||--o{ ARTIFACTS : links
+  ARTIFACTS ||--o{ ARTIFACT_LINKS : links
+  TASKS ||--o{ TASK_EVENTS : has
+  TASKS ||--o{ PROJECTION_JOBS : tracks
+  TASKS ||--o{ RECONCILE_ITEMS : tracks
+  TASKS ||--o{ TDD_TRACES : has
+  TASKS ||--o{ VALIDATOR_RUNS : has
+```
 
 ### JSON Field Validation Boundary
 
@@ -738,6 +829,26 @@ CREATE TABLE locks (
 
 `tasks.state_version`은 task-scoped state clock입니다. Task-scoped mutations는 `expected_state_version`을 Core-resolved primary Task의 `tasks.state_version`과 비교하고, resolved primary Task가 없는 project-scoped mutations는 `project_state.state_version`과 비교합니다.
 
+```mermaid
+flowchart TD
+  Request["state-changing request<br/>expected_state_version"]
+  Scope{"Primary affected scope?"}
+  TaskClock["Task State Version<br/>tasks.state_version"]
+  ProjectClock["Project State Version<br/>project_state.state_version"]
+  CompareTask{"expected matches task clock?"}
+  CompareProject{"expected matches project clock?"}
+  Conflict["STATE_CONFLICT<br/>before mutation"]
+  Commit["Core transaction<br/>update records, append state.sqlite.task_events, increment affected clock"]
+
+  Request --> Scope
+  Scope -->|primary Task resolved| TaskClock --> CompareTask
+  Scope -->|project-scoped, task_id=null| ProjectClock --> CompareProject
+  CompareTask -->|no| Conflict
+  CompareProject -->|no| Conflict
+  CompareTask -->|yes| Commit
+  CompareProject -->|yes| Commit
+```
+
 `task_events`는 `state.sqlite` 안의 append-only event history로 남습니다. MVP는 별도의 event store를 도입하지 않습니다. `task_events.event_seq`는 database 안 모든 events의 deterministic global append sequence입니다. Core는 state change와 같은 write transaction 안에서 이를 allocate하며, Journey reconstruction, API event lists, conformance ordering은 timestamps가 아니라 ascending `event_seq`를 사용합니다. `task_events.state_version`은 affected scope의 resulting version을 기록합니다. Task events에서는 `tasks.state_version`이고, `task_id=null`인 project-level events에서는 `project_state.state_version`입니다. 여러 events가 같은 affected-scope `state_version`을 공유할 수 있지만 `event_seq`가 여전히 순서를 정의합니다.
 
 `tool_invocations`는 original committed response를 반환하는 데 필요한 request replay metadata를 저장합니다. Committed non-dry-run tool calls만 `tool_invocations`를 create 또는 update합니다. `dry_run=true`는 replay row를 만들지 않고 authoritative replay를 위한 idempotency key를 consume하지 않습니다. 구현이 non-authoritative diagnostics를 보관하더라도 `tool_invocations`에 저장하거나 state-changing responses replay에 사용하면 안 됩니다. `tool_invocations.request_hash`는 MCP API idempotency rules가 정의한 canonical request hash를 저장합니다. 즉 canonical JSON, UTF-8, `tool_name`, schema-normalized request body와 optional fields, sorted object keys, schema가 명시적으로 order-insignificant라고 하지 않는 한 schema-ordered arrays, NFC Unicode strings, 그리고 `request_id`와 `idempotency_key`만 제외하는 envelope coverage를 사용합니다. `tool_invocations.state_version`은 `ToolResponseBase.state_version`에 반환되는 것과 같은 primary affected-scope version을 저장합니다. Core가 primary Task를 resolve하면 Task State Version이고, 그렇지 않으면 Project State Version입니다. 다른 `request_hash`로 idempotency key를 reuse하면 `STATE_CONFLICT`를 반환합니다.
@@ -839,6 +950,26 @@ State-changing operations는 가능한 가장 좁은 scope에서 lock을 acquire
 | artifact link registration | artifact and target record |
 | reconcile decision | reconcile item and affected task/design record |
 
+```mermaid
+flowchart LR
+  Operation["state-changing operation"]
+  Project["project<br/>registration"]
+  Task["task<br/>intake, close, shaping, decisions"]
+  ChangeUnit["task + affected Change Unit<br/>prepare_write, baseline, shaping"]
+  Run["task + run + Write Authorization<br/>record_run"]
+  Projection["projection job<br/>projection render"]
+  Artifact["artifact path / artifact + target record<br/>artifact registration and links"]
+  Reconcile["reconcile item + affected task/design record"]
+
+  Operation --> Project
+  Operation --> Task
+  Operation --> ChangeUnit
+  Operation --> Run
+  Operation --> Projection
+  Operation --> Artifact
+  Operation --> Reconcile
+```
+
 Lock이 expired되면 다음 operation은 recovery event를 append한 뒤 lock을 가져갈 수 있습니다. `expected_state_version`이 relevant task 또는 project scope에서 stale이면 mutation 전에 `STATE_CONFLICT`를 반환합니다.
 
 ## Artifact Directory Layout
@@ -867,6 +998,51 @@ Reference layout:
         decisions/
         exports/
         tmp/
+```
+
+```mermaid
+flowchart TD
+  Home["~/.harness/"]
+  Registry["registry.sqlite"]
+  Projects["projects/"]
+  Project["PRJ-0001/"]
+  ProjectYaml["project.yaml"]
+  State["state.sqlite"]
+  Artifacts["artifacts/"]
+  Bundles["bundles/"]
+  Diffs["diffs/"]
+  Logs["logs/"]
+  Screenshots["screenshots/"]
+  Checkpoints["checkpoints/"]
+  Manifests["manifests/"]
+  QA["qa/"]
+  TDD["tdd/"]
+  Designs["designs/"]
+  Prototypes["prototypes/"]
+  Architecture["architecture/"]
+  Decisions["decisions/"]
+  Exports["exports/"]
+  Tmp["tmp/"]
+
+  Home --> Registry
+  Home --> Projects --> Project
+  Project --> ProjectYaml
+  Project --> State
+  Project --> Artifacts
+  Artifacts --> Bundles
+  Artifacts --> Diffs
+  Artifacts --> Logs
+  Artifacts --> Screenshots
+  Artifacts --> Checkpoints
+  Artifacts --> Manifests
+  Artifacts --> QA
+  Artifacts --> TDD
+  Artifacts --> Designs
+  Artifacts --> Prototypes
+  Artifacts --> Architecture
+  Artifacts --> Decisions
+  Artifacts --> Exports
+  Artifacts --> Tmp
 ```
 
 Artifact filenames는 collision을 피할 만큼 stable identity를 포함해야 합니다.
@@ -901,6 +1077,28 @@ MVP registration steps:
 5. Related state record를 record하고 `task_events`를 append하는 같은 Core transaction에서 `artifacts` row와 required `artifact_links` rows를 insert합니다.
 6. Artifact registry row를 통해 resolve되는 `uri`를 가진 `ArtifactRef`를 반환합니다.
 7. File move는 성공했지만 transaction이 실패했다면 file을 `tmp/`에 남기거나 `recover`를 위해 orphaned로 mark합니다. Committed artifact ref나 artifact link를 만들면 안 됩니다.
+
+```mermaid
+sequenceDiagram
+  participant Capture as staging path or capture adapter
+  participant Core as Core
+  participant Store as artifact directory
+  participant State as state.sqlite
+  participant Events as state.sqlite.task_events
+
+  Capture->>Core: staged file for registration
+  Core->>Core: validate source path and apply redaction or omission
+  Core->>Store: move or copy stored bytes
+  Store-->>Core: sha256, size_bytes, content_type, redaction_state
+  Core->>State: insert artifacts row
+  Core->>State: insert artifact_links rows
+  Core->>Events: append related event rows
+  Core->>State: commit related Core transaction
+  Core-->>Capture: ArtifactRef
+  alt transaction fails after file move
+    Core->>Store: leave in tmp or mark orphaned for recover
+  end
+```
 
 `redaction_state` implementation:
 
@@ -942,6 +1140,28 @@ BaselineCapture:
 
 Relevant HEAD, dirty diff, allowed path contents, approval scope, verification bundle inputs가 captured baseline과 더 이상 match하지 않으면 baseline은 stale입니다. Stale baseline은 affected records에 따라 approval, evidence, verification을 stale로 mark할 수 있습니다.
 
+```mermaid
+flowchart LR
+  Repo["git HEAD, branch, dirty flag"]
+  Files["included and ignored path snapshot"]
+  Diff["optional dirty diff artifact"]
+  Manifest["deterministic tree manifest"]
+  Baseline["baselines row<br/>baseline_ref"]
+  Write["prepare_write and Write Authorization"]
+  Approval["approval scope drift checks"]
+  Evidence["evidence freshness"]
+  Verify["verification bundle inputs"]
+
+  Repo --> Manifest
+  Files --> Manifest
+  Diff --> Baseline
+  Manifest --> Baseline
+  Baseline --> Write
+  Baseline --> Approval
+  Baseline --> Evidence
+  Baseline --> Verify
+```
+
 `tree_hash`는 ignore rules가 ignored paths를 제외한 뒤 deterministic tree manifest에서 계산합니다. 각 entry는 leading `./`가 없는 normalized relative POSIX path를 사용합니다. Path strings는 sorting과 hashing 전에 Unicode NFC로 normalize하며 paths는 normalization 후 sort합니다. Regular file content는 저장된 bytes 그대로 hash하고 line-ending normalization을 하지 않으며, entry에는 content hash, file size, available한 경우 executable bit를 포함합니다. Symlink entry는 implementation이 symlink를 명시적으로 disallow하고 그 exclusion 또는 block을 record하지 않는 한 dereferenced content가 아니라 link target을 hash합니다. Equivalent snapshots가 같은 `tree_hash`를 만들도록 final manifest는 hashing 전에 canonical하게 serialize합니다.
 
 ## Verification Bundle Shape
@@ -966,6 +1186,40 @@ verify-bundle/
   design-refs.json
   journey-spine-entries.json
   evaluator-instructions.md
+```
+
+```mermaid
+flowchart TD
+  Bundle["verify-bundle/"]
+  Manifest["manifest.json"]
+  Task["task-summary.json"]
+  CU["change-unit.json"]
+  Baseline["baseline.json"]
+  Evidence["evidence-manifest.json"]
+  Approvals["approvals.json"]
+  Decisions["decision-packets.json"]
+  Risks["residual-risks.json"]
+  Runs["run-refs.json"]
+  ArtifactRefs["artifact-refs.json"]
+  ArtifactLinks["artifact-links.json"]
+  Designs["design-refs.json"]
+  Spine["journey-spine-entries.json"]
+  Instructions["evaluator-instructions.md"]
+
+  Bundle --> Manifest
+  Bundle --> Task
+  Bundle --> CU
+  Bundle --> Baseline
+  Bundle --> Evidence
+  Bundle --> Approvals
+  Bundle --> Decisions
+  Bundle --> Risks
+  Bundle --> Runs
+  Bundle --> ArtifactRefs
+  Bundle --> ArtifactLinks
+  Bundle --> Designs
+  Bundle --> Spine
+  Bundle --> Instructions
 ```
 
 Manifest는 task id, Change Unit id, baseline ref, source state version, included artifact ids, redaction summary, evaluator focus, expected independence context를 기록합니다. Bundle은 retention과 redaction policy가 허용하면 copied raw artifacts를 포함할 수 있고, 그렇지 않으면 evaluator가 Harness를 통해 resolve할 수 있는 artifact refs를 포함합니다.
@@ -994,6 +1248,18 @@ pending -> running -> failed -> pending
 pending -> skipped
 ```
 
+```mermaid
+stateDiagram-v2
+  [*] --> pending
+  pending --> running: worker acquires job
+  running --> completed: render and write succeed
+  running --> failed: render or write fails
+  failed --> pending: retry with newer attempt
+  pending --> skipped: obsolete version or managed drift
+  completed --> [*]
+  skipped --> [*]
+```
+
 Rules:
 
 - never render an older projection version over a newer one
@@ -1009,6 +1275,33 @@ Rules:
 Reference projector는 Core transaction이 commit된 뒤 pending jobs를 실행합니다.
 
 MVP worker steps:
+
+```mermaid
+sequenceDiagram
+  participant Worker as projection worker
+  participant Jobs as projection_jobs
+  participant Lock as projection-job lock
+  participant State as state records and artifact refs
+  participant Repo as Product Repository Markdown
+  participant Reconcile as reconcile_items
+
+  Worker->>Jobs: select oldest pending job
+  Worker->>Lock: acquire projection-job lock
+  Worker->>Jobs: mark running
+  Worker->>State: read latest records, refs, previous managed_hash
+  Worker->>Worker: resolve source_state_version
+  alt older projection_version
+    Worker->>Jobs: mark skipped
+  else managed block drift detected
+    Worker->>Reconcile: create or update reconcile item
+    Worker->>Jobs: mark skipped and set stale
+  else render succeeds
+    Worker->>Repo: write front matter and managed block atomically
+    Worker->>Jobs: record output_path, managed_hash, source_state_version, completed
+  else render or write fails
+    Worker->>Jobs: mark failed
+  end
+```
 
 1. Target projection의 oldest `pending` job을 select하고 projection-job lock을 acquire합니다.
 2. Job을 `running`으로 mark하고 latest state records, artifact refs, previous managed hash를 read하며 affected-scope state clock에서 `source_state_version`을 resolve합니다.
@@ -1062,6 +1355,20 @@ run_validators(context, validator_ids):
     persist result in validator_runs
     results.append(result)
   return results
+```
+
+```mermaid
+flowchart TD
+  Start["run_validators(context, validator_ids)"]
+  Load["load validator definition"]
+  Inputs["read declared state, artifact, and repo inputs"]
+  Execute["execute validator"]
+  Normalize["normalize output to ValidatorResult"]
+  Persist["persist result in validator_runs"]
+  Return["return results to Core"]
+
+  Start --> Load --> Inputs --> Execute --> Normalize --> Persist --> Return
+  Return -->|Core applies blocker, gate, or display consequence| CoreOutcome["Core transition outcome"]
 ```
 
 Stable MVP validator IDs:
@@ -1167,6 +1474,58 @@ export/
     DIRECT-RESULT-*.md
   artifacts/
     ...
+```
+
+```mermaid
+flowchart TD
+  Export["export/"]
+  Manifest["manifest.json"]
+  State["state/"]
+  Projections["projections/"]
+  Artifacts["artifacts/"]
+  Task["task.json"]
+  Decisions["decision-packets.json"]
+  Risks["residual-risks.json"]
+  SharedDesigns["shared-designs.json"]
+  Spine["task-spine-entries.json"]
+  Dependencies["change-unit-dependencies.json"]
+  Baselines["baselines.json"]
+  Links["artifact-links.json"]
+  Runs["runs.json"]
+  Approvals["approvals.json"]
+  Evidence["evidence-manifest.json"]
+  Evals["evals.json"]
+  QA["manual-qa.json"]
+  TaskProjection["TASK.md"]
+  AprProjection["APR-*.md"]
+  RunProjection["RUN-SUMMARY-*.md"]
+  EvidenceProjection["EVIDENCE-MANIFEST-*.md"]
+  EvalProjection["EVAL-*.md"]
+  DirectProjection["DIRECT-RESULT-*.md"]
+
+  Export --> Manifest
+  Export --> State
+  Export --> Projections
+  Export --> Artifacts
+  State --> Task
+  State --> Decisions
+  State --> Risks
+  State --> SharedDesigns
+  State --> Spine
+  State --> Dependencies
+  State --> Baselines
+  State --> Links
+  State --> Runs
+  State --> Approvals
+  State --> Evidence
+  State --> Evals
+  State --> QA
+  Projections --> TaskProjection
+  Projections --> AprProjection
+  Projections --> RunProjection
+  Projections --> EvidenceProjection
+  Projections --> EvalProjection
+  Projections --> DirectProjection
 ```
 
 Raw secret values, unredacted sensitive logs, PII는 export 전에 omitted 또는 redacted됩니다.

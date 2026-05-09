@@ -22,6 +22,28 @@ It does not define canonical kernel state, MCP request/response schemas, SQLite 
 12. User-facing cards may use friendly labels, but canonical gate names remain the kernel fields.
 13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Change Unit DAG, Residual Risk, and Stewardship Impact displays are non-canonical projections from owner records and artifact refs.
 
+Source-of-truth caption: canonical operational state is `state.sqlite` current records plus `state.sqlite.task_events`; raw evidence stays in the artifact store; Markdown is a derived view.
+
+```mermaid
+flowchart TD
+  Principles["Projection Principles"]
+  State["state.sqlite current records plus state.sqlite.task_events<br/>canonical operational state"]
+  Artifacts["artifact store<br/>canonical raw evidence"]
+  Markdown["Markdown reports<br/>derived projections"]
+  FrontMatter["front matter<br/>diagnostic metadata only"]
+  Managed["managed blocks<br/>projector-owned and regenerable"]
+  Human["human-editable sections<br/>input surfaces"]
+  OwnerUpdate["Core or reconcile owner update<br/>only path for accepted edits"]
+
+  Principles --> State
+  Principles --> Artifacts
+  State --> Markdown
+  Artifacts --> Markdown
+  Markdown --> FrontMatter
+  Markdown --> Managed
+  Markdown --> Human --> OwnerUpdate --> State
+```
+
 ## Document Authority Matrix
 
 | Fact or surface | Canonical source | Projection or display surface | Update path |
@@ -51,6 +73,27 @@ It does not define canonical kernel state, MCP request/response schemas, SQLite 
 | Raw evidence | artifact store plus `artifacts` records | artifact references in reports | artifact registry |
 | Projection freshness | `projection_jobs.source_state_version`, `projection_jobs.projection_version`, job status, managed hashes, artifact records | front matter mirror, status card, operations output | projector and recovery tools |
 
+Source-of-truth caption: owner update paths write canonical owner state; the projector records projection job/freshness metadata and renders Markdown afterward.
+
+```mermaid
+flowchart LR
+  OwnerUpdate["Canonical owner update path<br/>Core transition, reconcile decision, artifact registry"]
+  Canonical["Canonical owner sources<br/>state.sqlite current records plus state.sqlite.task_events<br/>and artifact store"]
+  Projector["Projector<br/>render from committed owner sources"]
+  Metadata["projection job/freshness metadata<br/>projection_jobs, managed hashes, output path"]
+  Projection["Projection or display surface<br/>TASK, APR, reports, cards, front matter"]
+  HumanEdit["Human-editable input"]
+  Reconcile["reconcile_items<br/>candidate state change"]
+  Boundary["does not mutate canonical state directly"]
+
+  OwnerUpdate --> Canonical
+  Canonical --> Projector
+  Projector --> Metadata
+  Projector --> Projection
+  HumanEdit --> Reconcile --> OwnerUpdate
+  Projection -.-> Boundary
+```
+
 Required authority statements:
 
 - User Notes: human-editable input -> `reconcile_items` -> accepted state event/record
@@ -78,6 +121,23 @@ The boundary is deliberately strict:
 | State record | Canonical structured record such as Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Write Authorization, Eval, Manual QA record, Evidence Manifest, Artifact record, or Reconcile Item | `state.sqlite` |
 | Markdown report | Human-readable projection from records and artifact refs | projector output |
 
+Source-of-truth caption: a Markdown report can link to evidence and summarize state, but it is neither the raw artifact nor the state record.
+
+```mermaid
+flowchart LR
+  Raw["Raw artifact<br/>artifact store authority"]
+  ArtifactRecord["artifacts record<br/>metadata and integrity"]
+  State["State record<br/>state.sqlite authority"]
+  Report["Markdown report<br/>projector output"]
+  Boundary["not source-of-truth"]
+
+  Raw --> ArtifactRecord
+  ArtifactRecord --> State
+  State --> Report
+  ArtifactRecord --> Report
+  Report -.-> Boundary
+```
+
 These report kinds are projections generated from state records and artifact refs by default. They can link to evidence files in the artifact store, and an export can include snapshots of them, but that does not make the Markdown report canonical evidence.
 
 ## Front Matter Metadata
@@ -87,6 +147,21 @@ Projection front matter stays diagnostic and compact. It may identify the render
 `projection_version` is the projection/template/job version. It is not a state clock and must not be used as the source-state freshness basis. `source_state_version` is the affected-scope state clock value used as the render source: the Task State Version when the projection is task-scoped, otherwise the Project State Version or extension-defined owner state clock.
 
 The canonical per-projection value is `projection_jobs.source_state_version` for the successful render job. Front matter `source_state_version` only mirrors that value for operator diagnosis. Recording it in Markdown does not make the Markdown canonical state, and stale detection still compares canonical state records, projection job state, managed hashes, and artifact availability.
+
+Source-of-truth caption: `projection_jobs.source_state_version` is authoritative for projection freshness metadata; front matter only mirrors it and is not owner state.
+
+```mermaid
+flowchart LR
+  Job["projection_jobs.source_state_version<br/>projection freshness metadata"]
+  Front["front matter source_state_version<br/>mirror"]
+  Operator["operator diagnostic<br/>readable clue"]
+  Freshness["freshness computation<br/>state records + job state + managed hash + artifact availability"]
+  Boundary["front matter is not source-state authority"]
+
+  Job --> Front --> Operator
+  Job --> Freshness
+  Front -.-> Boundary
+```
 
 ## Managed Blocks
 
@@ -109,6 +184,25 @@ Rules:
 - Re-rendering a managed block must preserve unrelated human-editable sections.
 - A failed render marks projection freshness `failed` or `stale`; it does not roll back state.
 
+Source-of-truth caption: managed hashes detect projection drift; they do not make rendered Markdown canonical state or update owner records.
+
+```mermaid
+flowchart TD
+  Source["state.sqlite current records plus state.sqlite.task_events<br/>and artifact refs"]
+  Render["projector render"]
+  Managed["managed block body"]
+  Hash["managed_hash<br/>projector-owned body only"]
+  Compare{"existing hash differs<br/>from last recorded hash?"}
+  Reconcile["reconcile_items row"]
+  Preserve["preserve human-editable sections"]
+  Fresh["record projection job/freshness metadata<br/>source_state_version, projection_version, timestamp, managed_hash"]
+
+  Source --> Render --> Compare
+  Compare -->|yes| Reconcile
+  Compare -->|no| Managed --> Hash --> Fresh
+  Render --> Preserve
+```
+
 ## Human-Editable Sections
 
 Human-editable sections give users a place to leave notes, questions, corrections, and proposals:
@@ -126,6 +220,22 @@ Rules:
 - Rejected proposals remain notes or rejected reconcile items.
 - The projector must preserve human-editable content across refreshes.
 - Human-editable proposals may target Task summary, acceptance criteria, Domain Language, Module Map, Interface Contract, Manual QA notes, or other state-backed records, but the proposal itself is not the target record.
+
+Source-of-truth caption: human-editable text is input; accepted changes become state only through reconcile or a Core state-changing action.
+
+```mermaid
+flowchart TD
+  Edit["human-editable text<br/>note, question, correction, proposal"]
+  Candidate["reconcile_items candidate"]
+  Decision{"explicit reconcile decision"}
+  Accept["accepted<br/>Core transition + task_events"]
+  Reject["rejected or deferred<br/>note or reconcile status"]
+  State["state.sqlite owner record"]
+
+  Edit --> Candidate --> Decision
+  Decision -- accept --> Accept --> State
+  Decision -- reject or defer --> Reject
+```
 
 ## Artifact References In Markdown
 
@@ -147,6 +257,20 @@ Rules:
 - Missing or hash-mismatched artifacts mark related evidence or projection freshness stale.
 - State record refs use record identity and optional projection path; they are not rendered as raw artifact refs.
 
+Source-of-truth caption: Markdown renders compact artifact refs from artifact records; large or sensitive evidence remains outside the report body.
+
+```mermaid
+flowchart LR
+  Raw["raw artifact bytes<br/>artifact store"]
+  Record["artifacts row<br/>artifact_id, kind, sha256, redaction_state"]
+  Link["artifact_links<br/>record_kind, record_id, relation_kind"]
+  Ref["compact Markdown artifact ref"]
+  Stale["missing or hash mismatch<br/>marks evidence/projection stale"]
+
+  Raw --> Record --> Link --> Ref
+  Record --> Stale
+```
+
 ## Template Tiers
 
 Projection templates match the API `ProjectionKind` tiers.
@@ -157,6 +281,22 @@ Projection templates match the API `ProjectionKind` tiers.
 | MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. |
 | Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Render only when the corresponding extension or appendix projection is enabled. Full text lives in Appendix A. |
 
+Source-of-truth caption: `ProjectionKind` tiering controls renderer support expectations; no tier makes a projection canonical state.
+
+```mermaid
+flowchart TD
+  Kind["ProjectionKind tiers"]
+  Required["MVP-required<br/>TASK<br/>APR<br/>RUN-SUMMARY<br/>EVIDENCE-MANIFEST<br/>EVAL<br/>DIRECT-RESULT"]
+  Optional["MVP-optional<br/>MANUAL-QA<br/>TDD-TRACE<br/>DOMAIN-LANGUAGE<br/>MODULE-MAP<br/>INTERFACE-CONTRACT"]
+  Extension["Extension / appendix<br/>DEC<br/>DESIGN<br/>EXPORT<br/>JOURNEY-CARD"]
+  Boundary["projection remains derived<br/>never canonical state"]
+
+  Kind --> Required
+  Kind --> Optional
+  Kind --> Extension
+  Kind --> Boundary
+```
+
 Main docs define each template's purpose and source records only. Full template bodies live in [Appendix A](appendix/A-template-library.md).
 
 Persisted `JOURNEY-CARD` Markdown is optional. Current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows is required for agency conformance.
@@ -166,6 +306,25 @@ MVP Decision Packet visibility is required through `TASK` projections, status/ne
 Decision Packet record IDs use `DEC-*`. `DEC` as a `projection_kind` is only the projection kind label; when a standalone projection needs its own identity, use a separate `projection_id` such as `DEC-PROJ-0001`.
 
 ## Required MVP Templates
+
+Source-of-truth caption: required MVP templates render from owner record families and artifact refs; the templates do not replace those owners.
+
+```mermaid
+flowchart LR
+  TaskSources["Task, gates, Change Unit, Journey, decisions, risks, latest refs"]
+  ApprovalSources["approvals + approval-shaped Decision Packet"]
+  RunSources["runs + Write Authorization refs + artifacts"]
+  EvidenceSources["evidence_manifests + criteria + artifact refs"]
+  EvalSources["evals + independence context + artifact refs"]
+  DirectSources["direct run record + close context + artifact refs"]
+
+  TaskSources --> TASK["TASK"]
+  ApprovalSources --> APR["APR"]
+  RunSources --> RunSummary["RUN-SUMMARY"]
+  EvidenceSources --> EvidenceManifest["EVIDENCE-MANIFEST"]
+  EvalSources --> EVAL["EVAL"]
+  DirectSources --> DirectResult["DIRECT-RESULT"]
+```
 
 ### TASK
 
@@ -312,5 +471,17 @@ Freshness states:
 | `stale` | state or referenced evidence moved ahead of the projection |
 | `failed` | projector attempted refresh and failed |
 | `unknown` | freshness cannot be computed, usually during recovery or migration |
+
+```mermaid
+stateDiagram-v2
+  [*] --> unknown
+  unknown --> current: freshness computed
+  current --> stale: state, artifact, hash, or reconcile source moves ahead
+  stale --> current: successful projection refresh
+  current --> failed: projector attempt fails
+  stale --> failed: projector attempt fails
+  failed --> stale: retry queued or stale trigger remains
+  failed --> current: retry succeeds
+```
 
 Projection staleness can block actions that require current readable context, but it does not change lifecycle result, gate values, or assurance by itself.
