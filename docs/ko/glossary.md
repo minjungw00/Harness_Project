@@ -188,7 +188,7 @@ Product의 canonical vocabulary와 meanings입니다. Canonical source는 `domai
 
 ### Domain Term
 
-Product term, meaning, code representation, related terms, source, status, `"not this"` 같은 boundaries를 저장하는 `domain_terms`의 canonical structured record입니다.
+Product term, meaning, code representation, related terms, source, status, `"not this"` 같은 boundaries를 저장하는 `domain_terms`의 canonical structured record입니다. Public state refs는 `record_kind=domain_term`을 사용합니다.
 
 ### Evidence
 
@@ -288,7 +288,7 @@ Existing state events나 owner records만으로 완전히 재구성하기 어려
 
 ### Interface Contract
 
-Module 또는 external boundary의 public interface, inputs, outputs, errors, compatibility impact, callers, boundary tests에 대한 canonical record입니다. Canonical source는 `interface_contracts`입니다.
+Module 또는 external boundary의 public interface, inputs, outputs, errors, compatibility impact, callers, boundary tests에 대한 canonical record입니다. Canonical source는 `interface_contracts`입니다. Public state refs는 `record_kind=interface_contract`를 사용합니다.
 
 ### JSON `TEXT` Field
 
@@ -340,7 +340,7 @@ Product의 modules, responsibilities, public interfaces, dependency direction, t
 
 ### Module Map Item
 
-Module role, public interface, dependencies, internal complexity, test boundary, owner decision, watchpoints를 저장하는 `module_map_items`의 canonical structured record입니다.
+Module role, public interface, dependencies, internal complexity, test boundary, owner decision, watchpoints를 저장하는 `module_map_items`의 canonical structured record입니다. Public state refs는 `record_kind=module_map_item`을 사용합니다.
 
 ### Policy Contract
 

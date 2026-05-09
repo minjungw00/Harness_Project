@@ -126,7 +126,7 @@ flowchart TD
 | `applies_when` | New product term이 나타나거나, existing term이 new meaning으로 쓰이거나, code와 product language가 diverge하거나, multiple name이 하나의 concept를 가리키거나, reviewer/evaluator가 term mismatch를 발견할 때. |
 | `default_requirement` | Affected term의 meaning, code representation, "not this" boundary, related term, source, status를 record/update한다. Implementation agent는 task-relevant term만 pull하고, reviewer/evaluator는 relevant term을 받는다. |
 | `allowed_waiver` | Work에 domain term impact가 없거나 term이 intentionally local/temporary일 때 허용된다. Waiver는 canonical term update가 필요 없는 이유를 기록해야 한다. |
-| `required_record` | `domain_terms` record; `DOMAIN-LANGUAGE`는 projection only. |
+| `required_record` | `record_kind=domain_term`으로 reference되는 `domain_terms` record; `DOMAIN-LANGUAGE`는 projection/proposal surface일 뿐이다. |
 | `validator` | `domain_language_consistency` |
 | `evidence` | Domain term ref, code ref, test naming ref, proposal용 reconcile item ref. |
 | `close_impact` | Required term이 missing 또는 conflicting이면 `design_gate=partial` 또는 `stale`로 mark한다. Mismatch가 acceptance criteria, public behavior, verification confidence에 영향을 주면 close를 block한다. |
@@ -178,9 +178,9 @@ flowchart TD
 | `applies_when` | Public interface change, module boundary change, schema/data model change, auth/security boundary, compatibility impact, deep module internal, shallow-module risk. |
 | `default_requirement` | Affected module, current role, proposed public interface, interface 뒤에 숨겨진 internal complexity, impacted caller, compatibility impact, test boundary를 identify한다. 충분한 internal capability를 뒤에 둔 작고 simple한 public interface를 선호한다. Public interface, compatibility, architecture choice에는 Decision Packet을 사용한다. |
 | `allowed_waiver` | Public boundary impact, dependency direction change, compatibility risk가 없고 localized internal change일 때 허용된다. Module/interface review가 불필요한 이유를 기록해야 한다. |
-| `required_record` | `module_map_items`, `interface_contracts`, decision record, optional `MODULE-MAP` / `INTERFACE-CONTRACT` projection. |
+| `required_record` | `record_kind=module_map_item`과 `record_kind=interface_contract`로 reference되는 `module_map_items` 및 `interface_contracts` records, decision record, optional `MODULE-MAP` / `INTERFACE-CONTRACT` projection. |
 | `validator` | `module_interface_review` |
-| `evidence` | Module map ref, interface contract ref, caller impact list, boundary test, design decision, compatibility note. |
+| `evidence` | Module map item ref, interface contract ref, caller impact list, boundary test, design decision, compatibility note. |
 | `close_impact` | Required review가 missing이면 `design_gate=pending` 또는 `partial`로 남는다. Public interface 또는 compatibility risk가 있는데 review가 없으면 close를 block하거나 residual risk에 대한 user acceptance가 필요할 수 있다. |
 
 ### Codebase Stewardship
@@ -191,9 +191,9 @@ flowchart TD
 | `applies_when` | Work가 durable code structure, domain concept, module ownership, interface contract, architecture direction, deep-module boundary, testing strategy, cross-cutting exception을 touch할 때. |
 | `default_requirement` | Change Unit의 stewardship view를 domain language, module map, interface contract, TDD/feedback loop, architecture watchpoint, deep-module boundary로 묶어 본다. Stewardship review는 general code review checklist가 아니라, local task completion이 domain language, module boundary, interface contract, feedback loop, testability, maintainability, future-change cost의 degradation을 숨기지 못하게 하는 장치다. Owner record를 source of truth로 사용하고, task-relevant ref만 기록하며, schema나 DDL을 duplicate하지 않고 drift에는 reconcile item을 만든다. |
 | `allowed_waiver` | Durable structure, domain, interface, feedback-loop impact가 없는 isolated docs, comment, formatting, leaf edit에 허용된다. Waiver에는 stewardship review가 필요 없는 이유를 기록해야 한다. |
-| `required_record` | Task 또는 Change Unit stewardship ref, `domain_terms`, `module_map_items`, `interface_contracts`, feedback loop 또는 `tdd_traces` ref, decision record, Task/Change Unit watchpoint, Journey Spine Entry ref, drift에 대한 reconcile item. Dedicated architecture watchpoint ref는 later DDL batch가 정의한 경우에만 사용할 수 있다. |
+| `required_record` | Task 또는 Change Unit stewardship ref, `domain_terms`, `module_map_items`, `interface_contracts` records, feedback loop 또는 `tdd_traces` ref, decision record, Task/Change Unit watchpoint, Journey Spine Entry ref, drift에 대한 reconcile item. Dedicated architecture watchpoint ref는 later DDL batch가 정의한 경우에만 사용할 수 있다. Canonical design-support refs는 `record_kind=domain_term`, `record_kind=module_map_item`, `record_kind=interface_contract`를 사용하며, Markdown projection refs는 optional display/proposal refs이다. |
 | `validator` | `codebase_stewardship_check` |
-| `evidence` | Domain language ref, module map ref, interface contract ref, feedback loop ref, 사용된 경우 TDD trace ref, Task/Change Unit watchpoint, Journey Spine Entry ref, deep-module note, reconcile item ref, later DDL에서 정의된 경우에만 dedicated architecture watchpoint ref. |
+| `evidence` | Domain term ref, module map item ref, interface contract ref, feedback loop ref, 사용된 경우 TDD trace ref, Task/Change Unit watchpoint, Journey Spine Entry ref, deep-module note, reconcile item ref, later DDL에서 정의된 경우에만 dedicated architecture watchpoint ref. |
 | `close_impact` | Required stewardship review가 없으면 `design_gate=pending`, `partial`, 또는 `stale`로 남는다. Unresolved drift가 public behavior, module boundary, acceptance criteria, verification confidence에 영향을 주면 close를 block할 수 있다. |
 
 ```mermaid

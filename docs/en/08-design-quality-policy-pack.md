@@ -126,7 +126,7 @@ flowchart TD
 | `applies_when` | New product term appears, an existing term is used with a new meaning, code and product language diverge, multiple names refer to one concept, or reviewer/evaluator finds a term mismatch. |
 | `default_requirement` | Record or update affected terms with meaning, code representation, "not this" boundary, related terms, source, and status. Implementation agents pull only task-relevant terms; reviewers/evaluators receive relevant terms and any active terminology uncertainty. |
 | `allowed_waiver` | Allowed when the work has no domain term impact or the term is intentionally local/temporary. Waiver must record why no canonical term update is needed. |
-| `required_record` | `domain_terms` records; `DOMAIN-LANGUAGE` is projection only. |
+| `required_record` | `domain_terms` records referenced with `record_kind=domain_term`; `DOMAIN-LANGUAGE` is only a projection/proposal surface. |
 | `validator` | `domain_language_consistency` |
 | `evidence` | Domain term refs, code refs, test naming refs, reconcile item refs for proposals. |
 | `close_impact` | If required terms are missing or conflicting, mark `design_gate=partial` or `stale`; block close when the mismatch affects acceptance criteria, public behavior, or verification confidence. |
@@ -178,9 +178,9 @@ flowchart TD
 | `applies_when` | Public interface changes, module boundary changes, schema/data model changes, auth/security boundaries, compatibility impact, deep module internals, or shallow-module risk. |
 | `default_requirement` | Identify affected modules, current role, proposed public interface, internal complexity hidden behind the interface, callers impacted, compatibility impact, and test boundary. Prefer small simple public interfaces with enough internal capability behind them. Use Decision Packets for public interface, compatibility, or architecture choices. |
 | `allowed_waiver` | Allowed for localized internal changes with no public boundary impact, no dependency direction change, and low compatibility risk. Must record why module/interface review is unnecessary. |
-| `required_record` | `module_map_items`, `interface_contracts`, decision records, and optionally `MODULE-MAP` / `INTERFACE-CONTRACT` projections. |
+| `required_record` | `module_map_items` and `interface_contracts` records referenced with `record_kind=module_map_item` and `record_kind=interface_contract`, decision records, and optionally `MODULE-MAP` / `INTERFACE-CONTRACT` projections. |
 | `validator` | `module_interface_review` |
-| `evidence` | Module map refs, interface contract refs, caller impact list, boundary tests, design decisions, compatibility notes. |
+| `evidence` | Module map item refs, interface contract refs, caller impact list, boundary tests, design decisions, compatibility notes. |
 | `close_impact` | Missing required review keeps `design_gate=pending` or `partial`; public interface or compatibility risk without review can block close or require user acceptance of residual risk. |
 
 ### Codebase Stewardship
@@ -191,9 +191,9 @@ flowchart TD
 | `applies_when` | Work touches durable code structure, domain concepts, module ownership, interface contracts, architecture direction, deep-module boundaries, testing strategy, or cross-cutting exceptions. |
 | `default_requirement` | Group the stewardship view for the Change Unit: domain language, module map, interface contracts, TDD/feedback loops, architecture watchpoints, and deep-module boundaries. Stewardship review is not a general code review checklist. It prevents local task completion from hiding degradation in domain language, module boundary, interface contract, feedback loop, testability, maintainability, or future-change cost. Use owner records as source of truth, record only task-relevant refs, and create reconcile items for drift instead of duplicating schemas or DDL. |
 | `allowed_waiver` | Allowed for isolated docs, comments, formatting, or leaf edits with no durable structure, domain, interface, or feedback-loop impact. Waiver must record why stewardship review is unnecessary. |
-| `required_record` | Task or Change Unit stewardship refs, `domain_terms`, `module_map_items`, `interface_contracts`, feedback loop or `tdd_traces` refs, decision records, Task/Change Unit watchpoints, Journey Spine Entry refs, and reconcile items for drift. Dedicated architecture watchpoint refs may be used only if a later DDL batch defines them. |
+| `required_record` | Task or Change Unit stewardship refs, `domain_terms`, `module_map_items`, `interface_contracts` records, feedback loop or `tdd_traces` refs, decision records, Task/Change Unit watchpoints, Journey Spine Entry refs, and reconcile items for drift. Dedicated architecture watchpoint refs may be used only if a later DDL batch defines them. Canonical design-support refs use `record_kind=domain_term`, `record_kind=module_map_item`, and `record_kind=interface_contract`; Markdown projection refs are optional display/proposal refs. |
 | `validator` | `codebase_stewardship_check` |
-| `evidence` | Domain language refs, module map refs, interface contract refs, feedback loop refs, TDD trace refs when used, Task/Change Unit watchpoints, Journey Spine Entry refs, deep-module notes, reconcile item refs, and dedicated architecture watchpoint refs only if later defined. |
+| `evidence` | Domain term refs, module map item refs, interface contract refs, feedback loop refs, TDD trace refs when used, Task/Change Unit watchpoints, Journey Spine Entry refs, deep-module notes, reconcile item refs, and dedicated architecture watchpoint refs only if later defined. |
 | `close_impact` | Missing required stewardship review keeps `design_gate=pending`, `partial`, or `stale`; unresolved drift can block close when it affects public behavior, module boundaries, acceptance criteria, or verification confidence. |
 
 ```mermaid

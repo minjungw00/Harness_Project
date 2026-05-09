@@ -188,7 +188,7 @@ The product's canonical vocabulary and meanings. The canonical source is `domain
 
 ### Domain Term
 
-A canonical structured record in `domain_terms` that stores a product term, meaning, code representation, related terms, source, status, and boundaries such as "not this."
+A canonical structured record in `domain_terms` that stores a product term, meaning, code representation, related terms, source, status, and boundaries such as "not this." Public state refs use `record_kind=domain_term`.
 
 ### Evidence
 
@@ -288,7 +288,7 @@ A canonical support record for durable continuity annotations that cannot be ful
 
 ### Interface Contract
 
-The canonical record of a module or external boundary's public interface, inputs, outputs, errors, compatibility impact, callers, and boundary tests. The canonical source is `interface_contracts`.
+The canonical record of a module or external boundary's public interface, inputs, outputs, errors, compatibility impact, callers, and boundary tests. The canonical source is `interface_contracts`. Public state refs use `record_kind=interface_contract`.
 
 ### JSON `TEXT` Field
 
@@ -340,7 +340,7 @@ The product's map of modules, responsibilities, public interfaces, dependency di
 
 ### Module Map Item
 
-A canonical structured record in `module_map_items` that stores a module's role, public interface, dependencies, internal complexity, test boundary, owner decision, and watchpoints.
+A canonical structured record in `module_map_items` that stores a module's role, public interface, dependencies, internal complexity, test boundary, owner decision, and watchpoints. Public state refs use `record_kind=module_map_item`.
 
 ### Policy Contract
 

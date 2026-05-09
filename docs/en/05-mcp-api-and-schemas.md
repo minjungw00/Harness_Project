@@ -330,12 +330,14 @@ Record or projection references use `StateRecordRef`, not `ArtifactRef`:
 
 ```yaml
 StateRecordRef:
-  record_kind: task | change_unit | change_unit_dependency | run | approval | write_authorization | decision_packet | journey_spine_entry | shared_design | residual_risk | evidence_manifest | eval | manual_qa_record | tdd_trace | reconcile_item | projection
+  record_kind: task | change_unit | change_unit_dependency | run | approval | write_authorization | decision_packet | journey_spine_entry | shared_design | domain_term | module_map_item | interface_contract | residual_risk | evidence_manifest | eval | manual_qa_record | tdd_trace | reconcile_item | projection
   record_id: string
   projection_path: string | null
 ```
 
 MVP has no `accepted_risk` `StateRecordRef.record_kind`. Public fields named `accepted_risk_refs`, `accepted_refs`, or accepted-risk equivalents must use `StateRecordRef` entries with `record_kind=residual_risk`; accepted risk is metadata/state on those Residual Risk records.
+
+Public refs to canonical design-support records use `record_kind=domain_term`, `record_kind=module_map_item`, or `record_kind=interface_contract` with the corresponding storage record id. Use `record_kind=projection` only when the ref targets a rendered Markdown projection such as `DOMAIN-LANGUAGE`, `MODULE-MAP`, or `INTERFACE-CONTRACT`.
 
 This diagram separates raw evidence registration from state-record references. `ArtifactInput` becomes an `ArtifactRef` only through Core validation and registration; state or projection records use `StateRecordRef`.
 

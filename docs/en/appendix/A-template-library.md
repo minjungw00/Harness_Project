@@ -155,9 +155,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 - future_change_risk: none | visible | accepted | unresolved
 - close_impact: none | blocks_close | requires_decision | residual_risk
 - refs:
-  - domain terms:
-  - module map:
-  - interface contracts:
+  - domain term refs:
+  - module map item refs:
+  - interface contract refs:
   - feedback loop / TDD:
   - residual risk:
   - Decision Packets:
@@ -215,13 +215,14 @@ Use these sections for long-running `work` tasks. Keep them managed unless expli
 ### Remaining Ambiguity
 - item / owner / stop condition:
 
-## Domain Language Refs
+## Domain Term Refs
 - Terms in force:
   - Term:
 
 ## Module and Interface Refs
-- MODULE-MAP:
-- INTERFACE-CONTRACT:
+- module map item refs:
+- interface contract refs:
+- rendered projection refs, if shown: MODULE-MAP, INTERFACE-CONTRACT
 - DESIGN:
 
 ## Change Unit Dependencies
@@ -556,8 +557,8 @@ updated_at: 2026-05-06T09:50:00+09:00
 | autonomy_boundary_check | passed | CU-01 | |
 | feedback_loop_check | passed | TDD-0001, LOG-0001 | |
 | tdd_trace_required | passed | TDD-0001 | |
-| module_interface_review | passed | DESIGN-0001 | |
-| codebase_stewardship_check | passed | DOMAIN-LANGUAGE, MODULE-MAP, INTERFACE-CONTRACT | |
+| module_interface_review | passed | module_map_item: MMI-0001, interface_contract: IFACE-0001, DEC-0001 | |
+| codebase_stewardship_check | passed | domain_term: TERM-0001, module_map_item: MMI-0001, interface_contract: IFACE-0001 | |
 | residual_risk_visibility_check | pending | RR-0001 | |
 | manual_qa_required | pending | qa_gate; no satisfying Manual QA record yet | |
 
@@ -580,8 +581,8 @@ updated_at: 2026-05-06T09:50:00+09:00
 - changed files are modified after eval
 - approval scope expires
 - relevant config changes
-- domain language changes
-- interface contract changes
+- domain term records change
+- interface contract records change
 ````
 
 ### EVAL
@@ -660,9 +661,9 @@ updated_at: 2026-05-06T10:05:00+09:00
 - Decision Packets:
 - Residual Risks:
 - Autonomy Boundary:
-- domain language:
-- module map:
-- interface contract:
+- domain term refs:
+- module map item refs:
+- interface contract refs:
 - run summary:
 - TDD trace:
 - Manual QA:
@@ -772,7 +773,7 @@ flowchart LR
   Policy --> TDD["TDD-TRACE"]
   Policy --> ManualQA["MANUAL-QA"]
   DomainSources["domain term records and proposals"] --> Domain
-  ModuleSources["module boundary records and reviews"] --> Module
+  ModuleSources["module map item records and reviews"] --> Module
   InterfaceSources["interface contract records"] --> Interface
   TDDSources["feedback-loop and test evidence refs"] --> TDD
   QASources["Manual QA records and artifact refs"] --> ManualQA
@@ -1225,9 +1226,14 @@ updated_at: 2026-05-06T09:30:15+09:00
 - TASK:
 - DEC:
 - APR:
-- DOMAIN-LANGUAGE:
-- MODULE-MAP:
-- INTERFACE-CONTRACT:
+- design-support owner refs:
+  - domain term refs:
+  - module map item refs:
+  - interface contract refs:
+- rendered projection refs, if shown:
+  - DOMAIN-LANGUAGE:
+  - MODULE-MAP:
+  - INTERFACE-CONTRACT:
 - EVIDENCE-MANIFEST:
 ````
 

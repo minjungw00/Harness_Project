@@ -330,12 +330,14 @@ Record 또는 projection references는 `ArtifactRef`가 아니라 `StateRecordRe
 
 ```yaml
 StateRecordRef:
-  record_kind: task | change_unit | change_unit_dependency | run | approval | write_authorization | decision_packet | journey_spine_entry | shared_design | residual_risk | evidence_manifest | eval | manual_qa_record | tdd_trace | reconcile_item | projection
+  record_kind: task | change_unit | change_unit_dependency | run | approval | write_authorization | decision_packet | journey_spine_entry | shared_design | domain_term | module_map_item | interface_contract | residual_risk | evidence_manifest | eval | manual_qa_record | tdd_trace | reconcile_item | projection
   record_id: string
   projection_path: string | null
 ```
 
 MVP에는 `accepted_risk` `StateRecordRef.record_kind`가 없습니다. `accepted_risk_refs`, `accepted_refs`, 또는 accepted-risk equivalent로 이름 붙은 public fields는 `record_kind=residual_risk`인 `StateRecordRef` entries를 사용해야 합니다. Accepted risk는 그 Residual Risk records의 metadata/state입니다.
+
+Canonical design-support records에 대한 public refs는 해당 storage record id와 함께 `record_kind=domain_term`, `record_kind=module_map_item`, 또는 `record_kind=interface_contract`를 사용합니다. `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` 같은 rendered Markdown projection 자체를 가리킬 때만 `record_kind=projection`을 사용합니다.
 
 이 다이어그램은 raw evidence registration과 state-record references를 구분합니다. `ArtifactInput`은 Core validation과 registration을 거쳐야만 `ArtifactRef`가 되며, state 또는 projection records는 `StateRecordRef`를 사용합니다.
 

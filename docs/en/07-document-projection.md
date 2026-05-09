@@ -97,9 +97,9 @@ flowchart LR
 Required authority statements:
 
 - User Notes: human-editable input -> `reconcile_items` -> accepted state event/record
-- Domain Language: `domain_terms` table -> `DOMAIN-LANGUAGE` projection
-- Module Map: `module_map_items` table -> `MODULE-MAP` projection
-- Interface Contract: `interface_contracts` table -> `INTERFACE-CONTRACT` projection
+- Domain Language: `domain_terms` table -> `DOMAIN-LANGUAGE` projection; public refs to canonical term rows use `StateRecordRef.record_kind=domain_term`
+- Module Map: `module_map_items` table -> `MODULE-MAP` projection; public refs to canonical module rows use `StateRecordRef.record_kind=module_map_item`
+- Interface Contract: `interface_contracts` table -> `INTERFACE-CONTRACT` projection; public refs to canonical contract rows use `StateRecordRef.record_kind=interface_contract`
 - Decision Packet: `state.sqlite.decision_packets` and related refs -> `TASK` Pending Decisions, status/next responses, judgment-context resources, and decision-packet resources; optional `DEC` projection when standalone projection is enabled
 - Journey Spine: reconstructed from owner records, artifact refs, `journey_spine_entries` supplements, and `state.sqlite.task_events`; it is not its own authority record
 - Journey Card: derived display from current state and refs; it is never canonical state
@@ -382,19 +382,19 @@ Boundary: direct work may close self-checked by default, unless policy or the us
 
 Purpose: a readable projection of canonical product vocabulary.
 
-Source: `domain_terms` table. Human edits are proposals that reconcile into `domain_terms`.
+Source: `domain_terms` table. Human edits are proposals that reconcile into `domain_terms`. Public refs to canonical term rows use `StateRecordRef.record_kind=domain_term`; projection refs target only the rendered `DOMAIN-LANGUAGE` document.
 
 ### MODULE-MAP
 
 Purpose: a readable projection of modules, responsibilities, public interfaces, dependencies, test boundaries, and watchpoints.
 
-Source: `module_map_items` table. Human edits are proposals that reconcile into module map records.
+Source: `module_map_items` table. Human edits are proposals that reconcile into module map records. Public refs to canonical module map rows use `StateRecordRef.record_kind=module_map_item`; projection refs target only the rendered `MODULE-MAP` document.
 
 ### INTERFACE-CONTRACT
 
 Purpose: a readable projection of public interface expectations, compatibility impact, callers, and boundary tests.
 
-Source: `interface_contracts` table. Human edits are proposals that reconcile into interface contract records.
+Source: `interface_contracts` table. Human edits are proposals that reconcile into interface contract records. Public refs to canonical interface contract rows use `StateRecordRef.record_kind=interface_contract`; projection refs target only the rendered `INTERFACE-CONTRACT` document.
 
 ### TDD-TRACE
 
