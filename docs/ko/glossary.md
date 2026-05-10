@@ -336,7 +336,7 @@ State records와 artifact references에서 generated된 human-readable document�
 
 ### Module Map
 
-Product의 modules, responsibilities, public interfaces, dependency direction, test boundaries를 정리한 map입니다. Canonical source는 `module_map_items`입니다.
+Product의 modules, responsibilities, public interfaces, dependency direction, internal complexity, test boundaries, owner decisions, watchpoints를 정리한 map입니다. Canonical source는 `module_map_items`입니다.
 
 ### Module Map Item
 

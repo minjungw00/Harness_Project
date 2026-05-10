@@ -391,7 +391,7 @@ Source: `domain_terms` table. Human edits are proposals that reconcile into `dom
 
 ### MODULE-MAP
 
-Purpose: a readable projection of modules, responsibilities, public interfaces, dependencies, test boundaries, and watchpoints.
+Purpose: a readable projection of modules, responsibilities, public interfaces, dependencies, internal complexity, test boundaries, owner decisions, and watchpoints.
 
 Source: `module_map_items` table. Human edits are proposals that reconcile into module map records. Public refs to canonical module map rows use `StateRecordRef.record_kind=module_map_item`; projection refs target only the rendered `MODULE-MAP` document.
 
@@ -463,7 +463,7 @@ Projection freshness is computed from the current owner or affected-scope state 
 | `DEC` | standalone Decision Packet projection is enabled and a Decision Packet is created, requested, resolved, deferred, rejected, blocked, or superseded | packet status, affected scope, current-state context, related approval/reconcile state, residual-risk refs, or evidence refs change |
 | `JOURNEY-CARD` | card is rendered or persisted as a projection; `harness.status` and `harness.next` may also return it ephemerally without a projection job | any displayed Task/gate/Change Unit/Autonomy Boundary/Write Authorization/approval/baseline/guarantee/Decision Packet/Residual Risk/evidence/report/freshness source moves ahead of the rendered card |
 | `DOMAIN-LANGUAGE` | domain terms change | term conflict, accepted term record changes, related code representation moves |
-| `MODULE-MAP` | module map records change | module path, public interface, dependency direction, or test boundary changes |
+| `MODULE-MAP` | module map records change | module path, public interface, dependency direction, internal complexity, test boundary, owner decision, or watchpoint changes |
 | `INTERFACE-CONTRACT` | interface contract records change | linked interface, caller, compatibility impact, or boundary tests change |
 | `TDD-TRACE` | trace recorded or updated | red/green log missing, baseline drift, linked test file changes |
 | `MANUAL-QA` | QA record created or updated | linked UI/code changes, required capture missing, finding unresolved |

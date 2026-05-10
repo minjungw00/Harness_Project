@@ -841,15 +841,17 @@ updated_at: 2026-05-06T09:30:15+09:00
 - stale conditions:
 
 ## Modules
-| Module | Role | Public Interface | Internal Complexity | Dependencies | Test Boundary | Owner Decision |
-|---|---|---|---|---|---|---|
-| AuthService | verifies auth and issues sessions | `login`, `logout` | credential validation, session issue | UserRepo, SessionStore | service interface tests | human_reviewed |
+| Module | Role | Public Interface | Internal Complexity | Dependencies | Test Boundary | Owner Decision | Watchpoints |
+|---|---|---|---|---|---|---|---|
+| AuthService | verifies auth and issues sessions | `login`, `logout` | credential validation, session issue | UserRepo, SessionStore | service interface tests | human_reviewed | session expiry drift |
 
 ## Deep Module Candidates
 | Candidate | Current Pain | Proposed Boundary | Expected Test Boundary | Priority |
 |---|---|---|---|---|
 
-## Architecture Watchpoints
+## Module Watchpoint Rollup
+- source: `module_map_items.watchpoints_json`
+- canonical owner: Module Map Item; dedicated architecture watchpoint refs는 later DDL batch가 정의한 경우에만 사용한다
 - shallow module growth:
 - dependency direction risk:
 - public interface drift:

@@ -336,7 +336,7 @@ A human-readable document generated from state records and artifact references. 
 
 ### Module Map
 
-The product's map of modules, responsibilities, public interfaces, dependency direction, and test boundaries. The canonical source is `module_map_items`.
+The product's map of modules, responsibilities, public interfaces, dependency direction, internal complexity, test boundaries, owner decisions, and watchpoints. The canonical source is `module_map_items`.
 
 ### Module Map Item
 

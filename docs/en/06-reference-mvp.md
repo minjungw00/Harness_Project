@@ -225,7 +225,7 @@ JSON `TEXT` columns in the reference DDL are MVP storage flexibility, not permis
 
 For public API payloads and API-shaped stored payloads, the owning shape is the schema in [MCP API And Schemas](05-mcp-api-and-schemas.md). For storage-only fields, the owning shape is the reference storage contract in this document or the specific owner document named by this document. This boundary keeps public schemas in `05-mcp-api-and-schemas.md` and SQLite DDL in `06-reference-mvp.md`.
 
-Malformed JSON is invalid state. Schema-incompatible JSON is invalid state. Fields with defaults such as `'[]'` or `'{}'` must continue to store valid JSON of the expected array or object shape, not a different JSON kind just because SQLite stores the column as `TEXT`.
+Malformed JSON is invalid state. Schema-incompatible JSON is invalid state. Fields with defaults such as `'[]'` or `'{}'` must continue to store valid JSON of the expected array or object shape, not a different JSON kind just because SQLite stores the column as `TEXT`. This includes storage-owned arrays such as `module_map_items.watchpoints_json`.
 
 Recommended hardening: where the deployed SQLite build supports JSON functions, migrations should add `CHECK (json_valid(column_name))` or equivalent generated checks for JSON `TEXT` columns. These checks are defense in depth and do not replace Core's shape validation before commit; the MVP DDL below does not need a full rewrite to show every check inline.
 
@@ -766,7 +766,10 @@ CREATE TABLE module_map_items (
   responsibility TEXT NOT NULL,
   public_interface_json TEXT NOT NULL DEFAULT '[]',
   dependencies_json TEXT NOT NULL DEFAULT '[]',
+  internal_complexity TEXT NOT NULL DEFAULT '',
   test_boundary TEXT,
+  owner_decision TEXT,
+  watchpoints_json TEXT NOT NULL DEFAULT '[]',
   status TEXT NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
@@ -889,6 +892,8 @@ Stored `write_authorizations` rows require non-null `basis_state_version`, inclu
 `residual_risks` stores residual-risk rows. MVP accepted-risk identity is `residual_risk_id`; there is no separate `accepted_risks` table or `ARISK-*` canonical record. Accepted-risk metadata/state stays on `residual_risks.accepted_risk_json`, `status`, and `accepted_at`, while Decision Packets may reference rows through `decision_packets.residual_risk_refs_json`. Visibility and close semantics stay in [Close Semantics](03-kernel-spec.md#close-semantics).
 
 MVP final acceptance has no `acceptance_records` table. Acceptance is stored through the Decision Packet path, `task_gates.acceptance_gate`, and `state.sqlite.task_events`; the transition and payload rules are owned by [Kernel `close_task` State Logic](03-kernel-spec.md#close_task-state-logic) and [`harness.record_user_decision`](05-mcp-api-and-schemas.md#harnessrecord_user_decision). Close does not look for a separate acceptance row.
+
+`module_map_items` stores the canonical Module Map Item: module role/responsibility, public interface, dependencies, internal complexity, test boundary, owner decision, and module-local watchpoints. `watchpoints_json` is a Core-validated JSON array of non-empty module-local watchpoint strings under the JSON field validation boundary above. Interface-specific caller impact and compatibility details stay in `interface_contracts`.
 
 `feedback_loops` stores the selected Feedback Loop definition and its execution routing. `loop_kind` values are `test`, `typecheck`, `lint`, `build`, `browser_smoke`, `manual_qa`, `tdd`, `eval`, `operational`, or `alternate`. `loop_profile` classifies the chosen loop within that kind, and `planned_loop` describes the intended check. `status` values are `defined`, `executed`, `waived`, `blocked`, or `stale`. Create/update payloads come from `FeedbackLoopUpdate` in the MCP schema; `record_manual_qa` may update execution refs for an existing Manual QA feedback loop.
 

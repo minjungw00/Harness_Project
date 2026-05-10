@@ -393,7 +393,7 @@ Source: `domain_terms` table. Human edit는 `domain_terms`로 reconcile되는 pr
 
 ### MODULE-MAP
 
-목적: module, responsibility, public interface, dependency, test boundary, watchpoint의 readable projection이다.
+목적: module, responsibility, public interface, dependency, internal complexity, test boundary, owner decision, watchpoint의 readable projection이다.
 
 Source: `module_map_items` table. Human edit는 module map record로 reconcile되는 proposal이다. Canonical module map row에 대한 public ref는 `StateRecordRef.record_kind=module_map_item`을 사용한다. Projection ref는 rendered `MODULE-MAP` document 자체만 가리킨다.
 
@@ -467,7 +467,7 @@ Projection freshness는 current owner 또는 affected-scope state clock, canonic
 | `DEC` | standalone Decision Packet projection이 enabled되어 있고 Decision Packet이 created, requested, resolved, deferred, rejected, blocked, superseded될 때 | packet status, affected scope, current-state context, related approval/reconcile state, residual-risk ref, evidence ref가 바뀔 때 |
 | `JOURNEY-CARD` | card가 rendered 또는 projection으로 persisted될 때. `harness.status`와 `harness.next`가 projection job 없이 ephemeral하게 반환할 수도 있음 | 표시된 Task/gate/Change Unit/Autonomy Boundary/Write Authorization/approval/baseline/guarantee/Decision Packet/Residual Risk/evidence/report/freshness source가 rendered card보다 앞서 이동할 때 |
 | `DOMAIN-LANGUAGE` | domain terms change | term conflict, accepted term record changes, related code representation moves |
-| `MODULE-MAP` | module map records change | module path, public interface, dependency direction, test boundary changes |
+| `MODULE-MAP` | module map records change | module path, public interface, dependency direction, internal complexity, test boundary, owner decision, watchpoint changes |
 | `INTERFACE-CONTRACT` | interface contract records change | linked interface, caller, compatibility impact, boundary tests change |
 | `TDD-TRACE` | trace recorded 또는 updated | red/green log missing, baseline drift, linked test file changes |
 | `MANUAL-QA` | QA record created 또는 updated | linked UI/code changes, required capture missing, finding unresolved |
