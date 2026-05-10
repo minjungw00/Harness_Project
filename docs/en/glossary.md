@@ -74,7 +74,7 @@ A recorded output used for evidence, recovery, or audit. See Raw Artifact for th
 
 ### Artifact Reference
 
-A structured pointer to a raw artifact file registered in the artifact store, including identity, kind, URI or path, hash, size, content type, redaction state, and task/run relationship. Artifact kinds such as `bundle`, `manifest`, or `export_component` describe files; owner links still point to existing state or projection records.
+A structured pointer to a raw artifact file registered in the artifact store, including identity, kind, URI or path, hash, size, content type, redaction state, and task/run relationship. In the reference MVP, artifact refs and `artifact_links` are Task-scoped. Artifact kinds such as `bundle`, `manifest`, or `export_component` describe files; owner links still point to existing state or Task-scoped projection records.
 
 ### Autonomy Boundary
 
@@ -358,7 +358,7 @@ The relationship between a projection and its source records, managed hash, arti
 
 ### Projection Job
 
-A durable outbox record that asks the projector to render a Markdown projection from committed state records and artifact refs.
+A durable outbox record that asks the projector to render a Markdown projection from committed state records and artifact refs. `record_kind=projection` identity is `projection_jobs.projection_job_id`; project-level projection jobs do not by themselves create project-scoped artifact links in the MVP artifact DDL.
 
 ### QA Gate
 

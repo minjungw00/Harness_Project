@@ -370,9 +370,9 @@ Artifact integrity check는 artifact record와 stored file을 비교합니다.
 - content type이 known이거나 명시적으로 `other`입니다
 - redaction state가 valid입니다
 - task/run 또는 artifact-link relation이 valid입니다
-- linked state owner가 존재하거나, `record_kind=projection`이 completed `projection_jobs` row로 resolve됩니다
+- linked state owner가 artifact link와 같은 Task scope에 존재하거나, `record_kind=projection`이 completed same-Task `projection_jobs` row로 resolve됩니다
 - owner-link relation semantics가 artifact kind와 호환됩니다. 여기에는 kind가 `bundle`, `manifest`, `export_component`인 artifacts가 포함됩니다
-- projection artifact links에서는 `artifact_links.record_id`가 `projection_jobs.projection_job_id`와 같아야 합니다. Integrity는 separate `projections` table을 찾지 않고 compatible task 또는 project scope, `target_ref`, `status=completed`, `output_path` 또는 documented projection ref를 통해 해당 job/output identity를 validate합니다
+- projection artifact links에서는 `artifact_links.record_id`가 `projection_jobs.projection_job_id`와 같아야 합니다. Integrity는 separate `projections` table을 찾지 않고 artifact link와 같은 Task scope, `target_ref`, `status=completed`, `output_path` 또는 documented projection ref를 통해 해당 job/output identity를 validate합니다. Project-level projection jobs는 current MVP에서 project-scoped artifact links가 아닙니다
 - bundle, manifest, export-component artifacts는 artifact row와 owner links를 통해 validate합니다. Check가 존재하지 않는 `verification_bundle` 또는 `export` state table을 찾으면 안 됩니다
 - retention class가 valid입니다
 - projection 또는 evidence ref가 resolve됩니다

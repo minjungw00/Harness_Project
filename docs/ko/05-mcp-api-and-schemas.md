@@ -271,6 +271,8 @@ policy_override
 
 Artifact ref는 artifact store에 registered된 durable evidence file을 가리킵니다. Report projections와 record projections는 evidence-file references가 필요할 때 artifact refs를 사용합니다. Projection 자체는 evidence file이 아닙니다.
 
+Reference MVP에서 artifact registration은 Task-scoped입니다. `ArtifactRef.task_id`와 `ArtifactInput.relation.task_id`는 required이며 `artifacts.task_id`와 `artifact_links.task_id`에 대응합니다. `retention_class=project`는 retention policy에 영향을 줄 뿐 artifact ownership scope를 바꾸지 않습니다.
+
 ```yaml
 ArtifactRef:
   artifact_id: string
@@ -325,8 +327,8 @@ Rules:
 - `expected_sha256` 또는 `expected_size_bytes`가 있으면 Core는 commit 전에 stored bytes를 verify합니다.
 - Core는 final storage 전에 redaction rules를 적용하고 committed artifact를 `ArtifactRef`로 기록합니다.
 - Tool responses는 committed `ArtifactRef` values를 `registered_artifacts`, `bundle_ref`, 기타 response fields로 반환합니다.
-- `relation.record_kind`는 Core가 validate할 수 있는 existing canonical owner record 또는 rendered projection ref를 이름으로 지정해야 합니다. Verification bundles는 `ArtifactRef.kind=bundle` 또는 `manifest`를 사용합니다. Export outputs는 `ArtifactRef.kind=export_component` 또는 `retention_class=export`를 사용합니다. `verification_bundle`과 `export`는 MVP artifact relation record kind가 아닙니다.
-- `relation.record_kind=projection`은 Core가 `projection_jobs`를 통해 resolve할 수 있는 already rendered 또는 committed projection output에만 valid합니다. MVP에서 `record_id_hint`는 `projection_jobs.projection_job_id`를 이름으로 지정합니다. Core는 hint를 validate할 때 `target_ref`와 `output_path`를 사용할 수 있지만, 이 값들이 identity에서 job id를 대체하지 않습니다.
+- `relation.record_kind`는 Core가 validate할 수 있는 existing canonical owner record 또는 rendered projection ref를 이름으로 지정해야 합니다. MVP의 non-projection owners에서는 concrete owner row가 `relation.task_id`와 같은 Task scope여야 합니다. 같은 owner kind의 project-scoped rows는 future extension이 project-scoped artifact storage/API를 추가하기 전까지 artifact-link targets가 아닙니다. Verification bundles는 `ArtifactRef.kind=bundle` 또는 `manifest`를 사용합니다. Export outputs는 `ArtifactRef.kind=export_component` 또는 `retention_class=export`를 사용합니다. `verification_bundle`과 `export`는 MVP artifact relation record kind가 아닙니다.
+- `relation.record_kind=projection`은 Core가 `projection_jobs`를 통해 resolve할 수 있는 already rendered 또는 committed Task-scoped projection output에만 valid합니다. MVP에서 `record_id_hint`는 `projection_jobs.projection_job_id`를 이름으로 지정하고, job의 `task_id`는 `relation.task_id`와 match해야 합니다. Core는 hint를 validate할 때 `target_ref`와 `output_path`를 사용할 수 있지만, 이 값들이 identity에서 job id를 대체하지 않습니다. Project-level projection jobs는 owner docs가 허용하는 곳에서 존재할 수 있지만, current MVP artifact API는 이를 위한 project-scoped artifact links를 register하지 않습니다.
 
 Record 또는 projection references는 `ArtifactRef`가 아니라 `StateRecordRef`를 사용합니다.
 
@@ -1541,7 +1543,7 @@ LaunchVerifyRequest:
 
 `include_artifacts`는 bundle에 include하거나 link할 already registered evidence를 reference합니다. `bundle_artifact_input`은 optional입니다. `null`이면 Core가 verification bundle을 assemble하고 register합니다. Present하면 Core가 supplied staged bundle을 validate하고 register합니다.
 
-Returned `bundle_ref`는 보통 `kind=bundle` 또는 `kind=manifest`를 가진 `ArtifactRef`입니다. Artifact link는 Task, launching Run, Evidence Manifest, Eval, rendered projection 같은 existing owner record를 가리켜야 하며 `verification_bundle` state record를 만들지 않습니다.
+Returned `bundle_ref`는 보통 `kind=bundle` 또는 `kind=manifest`를 가진 `ArtifactRef`입니다. Artifact link는 Task, launching Run, Evidence Manifest, Eval, rendered Task-scoped projection 같은 existing owner record를 가리켜야 하며 `verification_bundle` state record를 만들지 않습니다.
 
 Response schema:
 

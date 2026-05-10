@@ -271,6 +271,8 @@ policy_override
 
 An artifact ref points to a durable evidence file registered in the artifact store. Report projections and record projections use artifact refs when they need evidence-file references; the projection itself is not the evidence file.
 
+In the reference MVP, artifact registration is Task-scoped. `ArtifactRef.task_id` and `ArtifactInput.relation.task_id` are required and map to `artifacts.task_id` and `artifact_links.task_id`; `retention_class=project` affects retention policy, not artifact ownership scope.
+
 ```yaml
 ArtifactRef:
   artifact_id: string
@@ -325,8 +327,8 @@ Rules:
 - If `expected_sha256` or `expected_size_bytes` is present, Core verifies the stored bytes before commit.
 - Core applies redaction rules before final storage and records the committed artifact as an `ArtifactRef`.
 - Tool responses return committed `ArtifactRef` values in `registered_artifacts`, `bundle_ref`, or other response fields.
-- `relation.record_kind` must name an existing canonical owner record or rendered projection ref that Core can validate. Verification bundles use `ArtifactRef.kind=bundle` or `manifest`; export outputs use `ArtifactRef.kind=export_component` or `retention_class=export`. Neither `verification_bundle` nor `export` is an MVP artifact relation record kind.
-- `relation.record_kind=projection` is valid only for an already rendered or committed projection output that Core can resolve through `projection_jobs`. In MVP, `record_id_hint` names `projection_jobs.projection_job_id`; Core may use `target_ref` and `output_path` to validate the hint, but those values do not replace the job id as identity.
+- `relation.record_kind` must name an existing canonical owner record or rendered projection ref that Core can validate. For non-projection owners in MVP, the concrete owner row must be Task-scoped to `relation.task_id`; project-scoped rows of the same owner kind are not artifact-link targets until a future extension adds project-scoped artifact storage/API. Verification bundles use `ArtifactRef.kind=bundle` or `manifest`; export outputs use `ArtifactRef.kind=export_component` or `retention_class=export`. Neither `verification_bundle` nor `export` is an MVP artifact relation record kind.
+- `relation.record_kind=projection` is valid only for an already rendered or committed Task-scoped projection output that Core can resolve through `projection_jobs`. In MVP, `record_id_hint` names `projection_jobs.projection_job_id`, and the job's `task_id` must match `relation.task_id`; Core may use `target_ref` and `output_path` to validate the hint, but those values do not replace the job id as identity. Project-level projection jobs may still exist where owner docs allow them, but the current MVP artifact API does not register project-scoped artifact links for them.
 
 Record or projection references use `StateRecordRef`, not `ArtifactRef`:
 
@@ -1537,7 +1539,7 @@ LaunchVerifyRequest:
 
 `include_artifacts` references already registered evidence to include in or link from the bundle. `bundle_artifact_input` is optional; when it is `null`, Core assembles and registers the verification bundle. When it is present, Core validates and registers the supplied staged bundle instead.
 
-The returned `bundle_ref` is an `ArtifactRef`, usually with `kind=bundle` or `kind=manifest`. Its artifact link must point to an existing owner record such as the Task, launching Run, Evidence Manifest, Eval, or a rendered projection; it does not create a `verification_bundle` state record.
+The returned `bundle_ref` is an `ArtifactRef`, usually with `kind=bundle` or `kind=manifest`. Its artifact link must point to an existing owner record such as the Task, launching Run, Evidence Manifest, Eval, or a rendered Task-scoped projection; it does not create a `verification_bundle` state record.
 
 Response schema:
 

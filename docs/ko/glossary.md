@@ -74,7 +74,7 @@ Evidence, recovery, audit에 사용하는 recorded output입니다. Canonical ev
 
 ### Artifact Reference
 
-Artifact store에 registered된 raw artifact file을 가리키는 structured pointer입니다. identity, kind, URI 또는 path, hash, size, content type, redaction state, task/run relationship을 포함합니다. `bundle`, `manifest`, `export_component` 같은 artifact kind는 file을 설명합니다. Owner link는 여전히 existing state 또는 projection record를 가리킵니다.
+Artifact store에 registered된 raw artifact file을 가리키는 structured pointer입니다. identity, kind, URI 또는 path, hash, size, content type, redaction state, task/run relationship을 포함합니다. Reference MVP에서 artifact refs와 `artifact_links`는 Task-scoped입니다. `bundle`, `manifest`, `export_component` 같은 artifact kind는 file을 설명합니다. Owner link는 여전히 existing state 또는 Task-scoped projection record를 가리킵니다.
 
 ### Autonomy Boundary
 
@@ -358,7 +358,7 @@ Projection과 source records, managed hash, artifact refs, projection job state 
 
 ### Projection Job
 
-Committed state records와 artifact refs에서 Markdown projection을 render하도록 projector에 요청하는 durable outbox record입니다.
+Committed state records와 artifact refs에서 Markdown projection을 render하도록 projector에 요청하는 durable outbox record입니다. `record_kind=projection` identity는 `projection_jobs.projection_job_id`입니다. Project-level projection jobs는 MVP artifact DDL에서 그 자체로 project-scoped artifact links를 만들지 않습니다.
 
 ### QA Gate
 
