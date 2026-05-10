@@ -438,7 +438,7 @@ Fixture files and suite catalogs may carry metadata outside the fixture body. Th
 
 For an MCP tool action, executable fixture `input` is the tool's public request payload as defined by the API docs. The runner must validate `input` against the request schema for `action`, including `envelope: ToolEnvelope` when that schema requires it. Examples in this document may omit `ToolEnvelope` only under this envelope-expansion convention: before validation, canonicalization, request hashing, or Core execution, the runner supplies a deterministic valid envelope from `initial_state`, suite defaults, and fixture metadata. The expanded request is what Core receives. This convention does not add fixture fields, change the fixture body shape, or create an alternate request schema.
 
-Fixture shorthand is intentionally narrow. It is allowed for `initial_state` seeding, suite catalog metadata, and documented seed-loader expansion of compact examples such as `owner_records`, `stewardship_findings`, or feedback-loop shorthand. Executable fixture files must map that shorthand to owner records, validator runs, residual risks, or other records owned by DDL/API docs. The shorthand must not create a second API or state model. Public mutation must not be encoded as scenario-only shorthand inside `input`; fixtures must use the public request branch for `record_run`, `record_eval`, `record_manual_qa`, `record_user_decision`, or else seed owner records in `initial_state` when the scenario is about preexisting state. `StewardshipImpactSummary` assertions are derived display, not canonical current records, and should appear under `expected_state.derived` or projection assertions. `owner_records.feedback_loops` seeds canonical `feedback_loops` rows. Bare `FBL-*` values in example fields such as `feedback_loop_refs` map to `StateRecordRef { record_kind: feedback_loop, record_id: ... }` in executable fixtures. Fixture bodies that exercise public mutation instead of seeded state must express definition changes as `FeedbackLoopUpdate` under `record_run.payload.shaping_update.feedback_loop_updates`, execution/status changes under `evidence_updates.feedback_loop_updates`, or Manual QA execution through `record_manual_qa.feedback_loop_ref`. When an example shows only `feedback_loop_id` and `status`, the fixture runner must derive or supply the remaining required `feedback_loops` storage fields from the surrounding Task, Change Unit, selected-loop, and evidence shorthand before inserting or building the corresponding `FeedbackLoopUpdate`. Accepted residual risk in fixture shorthand is state on seeded `residual_risk` records, not a standalone accepted-risk record. When fixture examples use bare `RISK-*` values in risk-ref arrays such as `visible_refs`, `accepted_refs`, `not_visible_refs`, `unaccepted_refs`, or `residual_risk_refs`, executable fixtures must map them to `StateRecordRef { record_kind: residual_risk, record_id: ... }`. These bare IDs are fixture shorthand only, not DDL/API fields. Executable MVP fixtures must not require standalone `ARISK-*` records.
+Fixture shorthand is intentionally narrow. It is allowed for `initial_state` seeding, suite catalog metadata, and documented seed-loader expansion of compact examples such as `owner_records`, `stewardship_findings`, or feedback-loop shorthand. Executable fixture files must map that shorthand to owner records, validator runs, residual risks, or other records owned by DDL/API docs. The shorthand must not create a second API or state model. Public mutation must not be encoded as scenario-only shorthand inside `input`; fixtures must use the public request branch for `record_run`, `record_eval`, `record_manual_qa`, `record_user_decision`, or else seed owner records in `initial_state` when the scenario is about preexisting state. `close_task` fixture `input` is only `CloseTaskRequest` after any documented envelope expansion; evidence profiles, changed paths, artifact refs, acceptance-criteria support, self-check summaries, and Manual QA records must be seeded in `initial_state` or recorded by a preceding public mutation fixture. `StewardshipImpactSummary` assertions are derived display, not canonical current records, and should appear under `expected_state.derived` or projection assertions. `owner_records.feedback_loops` seeds canonical `feedback_loops` rows. Bare `FBL-*` values in example fields such as `feedback_loop_refs` map to `StateRecordRef { record_kind: feedback_loop, record_id: ... }` in executable fixtures. Fixture bodies that exercise public mutation instead of seeded state must express definition changes as `FeedbackLoopUpdate` under `record_run.payload.shaping_update.feedback_loop_updates`, execution/status changes under `evidence_updates.feedback_loop_updates`, or Manual QA execution through `record_manual_qa.feedback_loop_ref`. When an example shows only `feedback_loop_id` and `status`, the fixture runner must derive or supply the remaining required `feedback_loops` storage fields from the surrounding Task, Change Unit, selected-loop, and evidence shorthand before inserting or building the corresponding `FeedbackLoopUpdate`. Accepted residual risk in fixture shorthand is state on seeded `residual_risk` records, not a standalone accepted-risk record. When fixture examples use bare `RISK-*` values in risk-ref arrays such as `visible_refs`, `accepted_refs`, `not_visible_refs`, `unaccepted_refs`, or `residual_risk_refs`, executable fixtures must map them to `StateRecordRef { record_kind: residual_risk, record_id: ... }`. These bare IDs are fixture shorthand only, not DDL/API fields. Executable MVP fixtures must not require standalone `ARISK-*` records.
 
 Executable fixtures that seed `write_authorizations` must produce valid stored rows. Each seeded authorization row must include `basis_state_version` explicitly, or the runner must derive it from the seeded affected-scope state version for the row's Task before inserting into `state.sqlite`. This is a storage-loader derivation rule only; it does not add fixture top-level fields or change the fixture body shape. Partial `expected_state.write_authorization` assertions may omit `basis_state_version` unless the fixture is testing idempotent replay, stale detection, expiry, or audit behavior. `basis_state_version` is the allow-decision basis, not the resulting `ToolResponseBase.state_version`.
 
@@ -593,18 +593,40 @@ The hardened evidence, verification, and connector rules should be covered by fi
 scenario_id: CORE-evidence-direct-docs-only-sufficient
 initial_state:
   active_task:
+    task_id: TASK-DOCS-001
     mode: direct
     lifecycle_phase: executing
     acceptance_criteria: ["AC-01 typo corrected"]
     gates:
       scope_gate: passed
-      evidence_gate: partial
+      evidence_gate: sufficient
       verification_gate: not_required
+  runs:
+    - run_id: RUN-DOCS-001
+      kind: direct
+      status: completed
+      summary: "Rendered Markdown heading and checked typo fix."
+      observed_changes:
+        changed_paths: ["docs/help.md"]
+      artifact_refs: [ART-DIFF-001]
+  evidence_manifests:
+    - evidence_manifest_id: EM-DOCS-001
+      status: sufficient
+      criteria:
+        AC-01:
+          status: supported
+          refs: [ART-DIFF-001]
+      changed_files: ["docs/help.md"]
+      supporting_refs: [RUN-DOCS-001, ART-DIFF-001]
+  artifacts:
+    - artifact_id: ART-DIFF-001
+      kind: diff
 input:
-  evidence_profile: direct docs-only
-  changed_paths: ["docs/help.md"]
-  diff_artifact: ART-DIFF-001
-  self_check_summary: "Rendered Markdown heading and checked typo fix."
+  task_id: TASK-DOCS-001
+  intent: complete
+  requested_close_reason: completed_self_checked
+  user_note: "Self-check recorded in RUN-DOCS-001."
+  superseded_by_task_id: null
 action: close_task
 expected_state:
   lifecycle_phase: completed
@@ -617,7 +639,6 @@ expected_state:
     status: none
     close_relevant_count: 0
 expected_events:
-  - evidence_manifest_updated
   - close_requested
   - task_closed
 expected_artifacts:
@@ -625,7 +646,6 @@ expected_artifacts:
     kind: diff
 expected_projection:
   TASK: enqueued
-  EVIDENCE-MANIFEST: enqueued
 expected_error: null
 ```
 
@@ -633,6 +653,7 @@ expected_error: null
 scenario_id: CORE-evidence-work-ac-missing-blocks-close
 initial_state:
   active_task:
+    task_id: TASK-WORK-AC-001
     mode: work
     lifecycle_phase: verifying
     acceptance_criteria: ["AC-01 saves profile", "AC-02 shows validation error"]
@@ -641,15 +662,26 @@ initial_state:
       approval_gate: not_required
       evidence_gate: partial
       verification_gate: pending
+  evidence_manifests:
+    - evidence_manifest_id: EM-WORK-AC-001
+      status: partial
+      criteria:
+        AC-01:
+          status: supported
+          refs: [ART-TEST-001]
+        AC-02:
+          status: unsupported
+          refs: []
+      supporting_refs: [ART-TEST-001]
+  artifacts:
+    - artifact_id: ART-TEST-001
+      kind: log
 input:
-  evidence_profile: work feature
-  criteria:
-    AC-01:
-      status: supported
-      refs: [ART-TEST-001]
-    AC-02:
-      status: unsupported
-      refs: []
+  task_id: TASK-WORK-AC-001
+  intent: complete
+  requested_close_reason: completed_verified
+  user_note: null
+  superseded_by_task_id: null
 action: close_task
 expected_state:
   lifecycle_phase: blocked
@@ -663,7 +695,6 @@ expected_artifacts:
     kind: log
 expected_projection:
   TASK: enqueued
-  EVIDENCE-MANIFEST: enqueued
 expected_error:
   code: EVIDENCE_INSUFFICIENT
 ```
@@ -672,6 +703,7 @@ expected_error:
 scenario_id: CORE-evidence-ui-manual-qa-pending-blocks-close
 initial_state:
   active_task:
+    task_id: TASK-UI-QA-001
     mode: work
     lifecycle_phase: qa
     acceptance_criteria: ["AC-01 button copy updated"]
@@ -680,10 +712,13 @@ initial_state:
       evidence_gate: sufficient
       verification_gate: passed
       qa_gate: pending
+  manual_qa_records: []
 input:
-  evidence_profile: UI/UX/copy work
-  # qa_gate=pending means required QA has no satisfying Manual QA record yet.
-  manual_qa_record: null
+  task_id: TASK-UI-QA-001
+  intent: complete
+  requested_close_reason: completed_verified
+  user_note: null
+  superseded_by_task_id: null
 action: close_task
 expected_state:
   lifecycle_phase: qa
@@ -776,6 +811,7 @@ expected_error:
 scenario_id: CORE-verify-waiver-risk-accepted-visible-succeeds
 initial_state:
   active_task:
+    task_id: TASK-VERIFY-RISK-001
     mode: work
     lifecycle_phase: waiting_user
     assurance_level: self_checked
@@ -800,9 +836,11 @@ initial_state:
       status: resolved
       residual_risk_refs: [RISK-VERIFY-001]
 input:
+  task_id: TASK-VERIFY-RISK-001
   intent: complete
   requested_close_reason: completed_with_risk_accepted
   user_note: "User accepts remaining verification risk for urgent local-only fix."
+  superseded_by_task_id: null
 action: close_task
 expected_state:
   lifecycle_phase: completed
@@ -826,6 +864,7 @@ expected_error: null
 scenario_id: CORE-verify-waiver-risk-accepted-hidden-blocks-close
 initial_state:
   active_task:
+    task_id: TASK-VERIFY-RISK-HIDDEN-001
     mode: work
     lifecycle_phase: waiting_user
     assurance_level: self_checked
@@ -845,9 +884,11 @@ initial_state:
       decision_kind: verification_waiver
       status: resolved
 input:
+  task_id: TASK-VERIFY-RISK-HIDDEN-001
   intent: complete
   requested_close_reason: completed_with_risk_accepted
   user_note: "User accepts remaining verification risk for urgent local-only fix."
+  superseded_by_task_id: null
 action: close_task
 expected_state:
   lifecycle_phase: waiting_user
@@ -1437,6 +1478,7 @@ expected_error: null
 scenario_id: AGENCY-close-hidden-residual-risk-blocks-close
 initial_state:
   active_task:
+    task_id: TASK-CLOSE-HIDDEN-RISK-001
     mode: work
     lifecycle_phase: waiting_user
     assurance_level: detached_verified
@@ -1455,8 +1497,11 @@ initial_state:
       visibility: not_visible
       accepted: false
 input:
+  task_id: TASK-CLOSE-HIDDEN-RISK-001
   intent: complete
   requested_close_reason: completed_verified
+  user_note: null
+  superseded_by_task_id: null
 action: close_task
 expected_state:
   lifecycle_phase: waiting_user
@@ -1837,13 +1882,18 @@ expected_error:
 scenario_id: DESIGN-manual-qa-required-missing
 initial_state:
   active_task:
+    task_id: TASK-DESIGN-QA-001
     mode: work
     lifecycle_phase: qa
-    qa_gate: pending
+    gates:
+      qa_gate: pending
+  manual_qa_records: []
 input:
-  changed_surface: ui
-  # qa_gate=pending means required QA has no satisfying Manual QA record yet.
-  manual_qa_record: null
+  task_id: TASK-DESIGN-QA-001
+  intent: complete
+  requested_close_reason: completed_verified
+  user_note: null
+  superseded_by_task_id: null
 action: close_task
 expected_state:
   lifecycle_phase: qa
@@ -2098,6 +2148,7 @@ expected_error:
 scenario_id: STEWARDSHIP-close-blocked-by-public-interface-future-change-risk
 initial_state:
   active_task:
+    task_id: TASK-PUBLIC-RISK-001
     mode: work
     lifecycle_phase: verifying
     active_change_unit_id: CU-PUBLIC-RISK-001
@@ -2145,8 +2196,11 @@ initial_state:
       accepted: false
       source_refs: [STEW-FIND-PUBLIC-RISK-001, IFACE-PUBLIC-EXPORT-001]
 input:
+  task_id: TASK-PUBLIC-RISK-001
   intent: complete
   requested_close_reason: completed_verified
+  user_note: null
+  superseded_by_task_id: null
 action: close_task
 expected_state:
   lifecycle_phase: waiting_user
