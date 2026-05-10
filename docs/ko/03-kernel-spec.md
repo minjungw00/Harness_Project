@@ -679,7 +679,7 @@ flowchart TD
 not_required | required | pending | passed | failed | waived
 ```
 
-`qa_gate`는 required human QA를 위한 canonical kernel gate입니다. Individual Manual QA records에는 record-level results가 있고, gate는 close-relevant aggregate state입니다. `qa_gate=pending`은 required QA가 satisfying Manual QA record를 아직 만들지 못했거나 latest relevant Manual QA record가 policy를 satisfy하지 못한다는 뜻입니다. 이 상태를 Manual QA record result로 저장하면 안 됩니다.
+`qa_gate`는 required human QA를 위한 canonical kernel gate입니다. Individual Manual QA records에는 record-level results가 있고, gate는 close-relevant aggregate state입니다. `qa_gate=pending`은 required QA가 satisfying Manual QA record를 아직 만들지 못했거나 latest relevant Manual QA record가 policy를 satisfy하지 못한다는 뜻입니다. 이는 `manual_qa_record.result=pending`이라는 뜻이 아니며, 이 상태를 Manual QA record result로 저장하면 안 됩니다.
 
 ### Acceptance Gate
 
