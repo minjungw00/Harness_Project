@@ -740,25 +740,127 @@ expected_error:
 scenario_id: CORE-verify-manual-bundle-detached-passed
 initial_state:
   active_task:
+    task_id: TASK-VERIFY-BUNDLE-001
     mode: work
     lifecycle_phase: verifying
+    active_change_unit_id: CU-VERIFY-BUNDLE-001
     gates:
       evidence_gate: sufficient
       verification_gate: pending
+  active_change_unit:
+    change_unit_id: CU-VERIFY-BUNDLE-001
+    allowed_paths: ["src/profile/editor.ts"]
+  runs:
+    - run_id: RUN-VERIFY-BUNDLE-TARGET-001
+      kind: implementation
+      status: completed
+      artifact_refs: [ART-DIFF-001, ART-TEST-001]
+  evidence_manifests:
+    - evidence_manifest_id: EM-VERIFY-BUNDLE-001
+      status: sufficient
+      supporting_refs: [RUN-VERIFY-BUNDLE-TARGET-001, ART-DIFF-001, ART-TEST-001]
+  artifacts:
+    - artifact_id: ART-BUNDLE-001
+      kind: bundle
+    - artifact_id: ART-DIFF-001
+      kind: diff
+    - artifact_id: ART-TEST-001
+      kind: log
 input:
-  eval:
-    verdict: passed
-    independence_context:
-      profile: manual_bundle
-      reviewed_bundle_ref: ART-BUNDLE-001
-      received_task_summary: true
-      received_acceptance_criteria: true
-      received_change_unit_scope: true
-      received_approval_scope: true
-      received_diff_log_test_artifacts: true
-      received_evidence_manifest: true
-      received_known_risks: true
-    evidence_reviewed: [ART-DIFF-001, ART-TEST-001, EVIDENCE-MANIFEST-001]
+  task_id: TASK-VERIFY-BUNDLE-001
+  change_unit_id: CU-VERIFY-BUNDLE-001
+  evaluator_run_id: null
+  target_run_id: RUN-VERIFY-BUNDLE-TARGET-001
+  verdict: passed
+  checks_performed:
+    - check_id: manual-bundle-review
+      result: passed
+      summary: "Manual bundle에서 task summary, acceptance criteria, Change Unit scope, approval scope, diff, test log, evidence manifest, known risks를 review했습니다."
+  evidence_reviewed:
+    state_refs:
+      - record_kind: task
+        record_id: TASK-VERIFY-BUNDLE-001
+        projection_path: null
+      - record_kind: change_unit
+        record_id: CU-VERIFY-BUNDLE-001
+        projection_path: null
+      - record_kind: run
+        record_id: RUN-VERIFY-BUNDLE-TARGET-001
+        projection_path: null
+      - record_kind: evidence_manifest
+        record_id: EM-VERIFY-BUNDLE-001
+        projection_path: null
+    artifact_refs:
+      - artifact_id: ART-BUNDLE-001
+        kind: bundle
+        uri: harness-artifact://PROJECT-VERIFY/ART-BUNDLE-001
+        sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+        size_bytes: 4096
+        content_type: application/json
+        redaction_state: none
+        task_id: TASK-VERIFY-BUNDLE-001
+        run_id: RUN-VERIFY-BUNDLE-TARGET-001
+        created_at: "2026-05-10T00:00:00Z"
+        produced_by: harness
+        retention_class: task
+      - artifact_id: ART-DIFF-001
+        kind: diff
+        uri: harness-artifact://PROJECT-VERIFY/ART-DIFF-001
+        sha256: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+        size_bytes: 2048
+        content_type: text/x-diff
+        redaction_state: none
+        task_id: TASK-VERIFY-BUNDLE-001
+        run_id: RUN-VERIFY-BUNDLE-TARGET-001
+        created_at: "2026-05-10T00:00:00Z"
+        produced_by: lead_agent
+        retention_class: task
+      - artifact_id: ART-TEST-001
+        kind: log
+        uri: harness-artifact://PROJECT-VERIFY/ART-TEST-001
+        sha256: 7777777777777777777777777777777777777777777777777777777777777777
+        size_bytes: 3072
+        content_type: text/plain
+        redaction_state: none
+        task_id: TASK-VERIFY-BUNDLE-001
+        run_id: RUN-VERIFY-BUNDLE-TARGET-001
+        created_at: "2026-05-10T00:00:00Z"
+        produced_by: lead_agent
+        retention_class: task
+  independence:
+    context: manual_bundle
+    write_capable: false
+    baseline_reverified: true
+    evaluator_surface_id: SURFACE-EVAL-MANUAL-BUNDLE-001
+    parent_run_id: null
+  blockers: []
+  artifact_inputs:
+    - input_id: ART-IN-BUNDLE-001
+      source_kind: existing_artifact
+      existing_artifact_ref:
+        artifact_id: ART-BUNDLE-001
+        kind: bundle
+        uri: harness-artifact://PROJECT-VERIFY/ART-BUNDLE-001
+        sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+        size_bytes: 4096
+        content_type: application/json
+        redaction_state: none
+        task_id: TASK-VERIFY-BUNDLE-001
+        run_id: RUN-VERIFY-BUNDLE-TARGET-001
+        created_at: "2026-05-10T00:00:00Z"
+        produced_by: harness
+        retention_class: task
+      staged: null
+      kind: bundle
+      redaction_state: none
+      produced_by: harness
+      retention_class: task
+      relation:
+        task_id: TASK-VERIFY-BUNDLE-001
+        run_id: null
+        record_kind: eval
+        record_id_hint: EVAL-VERIFY-BUNDLE-001
+      description: "Evaluator가 review한 manual verification bundle입니다."
 action: record_eval
 expected_state:
   lifecycle_phase: verifying
@@ -781,17 +883,46 @@ expected_error: null
 scenario_id: CORE-verify-subagent-context-not-detached-by-default
 initial_state:
   active_task:
+    task_id: TASK-VERIFY-SUBAGENT-001
     mode: work
     lifecycle_phase: verifying
     gates:
       verification_gate: pending
+  evidence_manifests:
+    - evidence_manifest_id: EM-VERIFY-SUBAGENT-001
+      status: sufficient
+      supporting_refs: [RUN-VERIFY-SUBAGENT-TARGET-001]
+  runs:
+    - run_id: RUN-VERIFY-SUBAGENT-TARGET-001
+      kind: implementation
+      status: completed
 input:
-  eval:
-    verdict: passed
-    independence_context:
-      profile: subagent_context
-      stricter_profile_satisfied: false
-    evidence_reviewed: [EVIDENCE-MANIFEST-001]
+  task_id: TASK-VERIFY-SUBAGENT-001
+  change_unit_id: null
+  evaluator_run_id: null
+  target_run_id: RUN-VERIFY-SUBAGENT-TARGET-001
+  verdict: passed
+  checks_performed:
+    - check_id: inherited-subagent-context
+      result: passed
+      summary: "Evidence checks는 passed였지만 evaluator가 parent run의 subagent context를 inherited했고 detached verification profile을 satisfy하지 못했습니다."
+  evidence_reviewed:
+    state_refs:
+      - record_kind: run
+        record_id: RUN-VERIFY-SUBAGENT-TARGET-001
+        projection_path: null
+      - record_kind: evidence_manifest
+        record_id: EM-VERIFY-SUBAGENT-001
+        projection_path: null
+    artifact_refs: []
+  independence:
+    context: subagent_context
+    write_capable: false
+    baseline_reverified: false
+    evaluator_surface_id: SURFACE-EVAL-SUBAGENT-001
+    parent_run_id: RUN-VERIFY-SUBAGENT-TARGET-001
+  blockers: []
+  artifact_inputs: []
 action: record_eval
 expected_state:
   lifecycle_phase: verifying
@@ -1286,13 +1417,39 @@ expected_error:
 scenario_id: CORE-same-session-verify-not-detached
 initial_state:
   active_task:
+    task_id: TASK-SAME-SESSION-VERIFY-001
     mode: work
     lifecycle_phase: verifying
-    verification_gate: pending
+    gates:
+      verification_gate: pending
+  runs:
+    - run_id: RUN-SAME-SESSION-TARGET-001
+      kind: implementation
+      status: completed
 input:
-  eval:
-    verdict: passed
-    independence_context: same_session
+  task_id: TASK-SAME-SESSION-VERIFY-001
+  change_unit_id: null
+  evaluator_run_id: null
+  target_run_id: RUN-SAME-SESSION-TARGET-001
+  verdict: passed
+  checks_performed:
+    - check_id: same-session-review
+      result: passed
+      summary: "Same session이 자체 target run을 review했습니다. Checks는 passed였지만 evaluator는 detached가 아닙니다."
+  evidence_reviewed:
+    state_refs:
+      - record_kind: run
+        record_id: RUN-SAME-SESSION-TARGET-001
+        projection_path: null
+    artifact_refs: []
+  independence:
+    context: same_session
+    write_capable: true
+    baseline_reverified: false
+    evaluator_surface_id: SURFACE-SAME-SESSION-001
+    parent_run_id: RUN-SAME-SESSION-TARGET-001
+  blockers: []
+  artifact_inputs: []
 action: record_eval
 expected_state:
   assurance_level: none
