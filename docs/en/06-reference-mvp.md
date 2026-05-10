@@ -139,7 +139,7 @@ Exit criteria:
 
 ### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
 
-Implement `harness.record_run`, run records, Write Authorization consumption, evidence manifest records, Feedback Loop support records and checks, codebase stewardship checks, projection jobs, MVP-required TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT renderers, managed block hashes, and reconcile item creation for managed drift or human-editable proposals.
+Implement `harness.record_run`, run records, Write Authorization consumption, evidence manifest records, Feedback Loop support records and checks, codebase stewardship checks, projection jobs, and the pre-verification MVP-required renderers whose source records exist at this stage: TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT. `EVAL` remains an MVP-required `ProjectionKind`, but its executable enqueue/render path is completed with MVP-4 once `harness.record_eval` can create Eval source records. Also implement managed block hashes and reconcile item creation for managed drift or human-editable proposals.
 
 Exit criteria:
 
@@ -1307,7 +1307,7 @@ Sensitive-approval projection jobs follow the APR source rule owned by [07-docum
 
 For MVP, Decision Packet visibility is rendered through `TASK` projections, status/next responses, judgment-context resources, and decision-packet read resources. A standalone `DEC` projection is optional unless the standalone Decision Packet projection feature is enabled. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains an agency-conformance requirement. This document does not define extension template text.
 
-The job lifecycle below applies to every enqueued `ProjectionKind`. MVP smoke must cover the API-owned MVP-required tier; MVP-optional jobs are covered when policy, records, or operator settings enable them. Extension / appendix jobs named by the API docs are not required for MVP smoke unless the corresponding feature is enabled.
+The job lifecycle below applies to every enqueued `ProjectionKind`. Kernel Smoke covers projection plumbing and the pre-verification MVP-required kinds whose source records exist by early MVP-3. The final Agency-Hardened MVP must cover the full API-owned MVP-required tier, including `EVAL` enqueue/render behavior when Eval records change after MVP-4 `record_eval` implementation. MVP-optional jobs are covered when policy, records, or operator settings enable them. Extension / appendix jobs named by the API docs are not required unless the corresponding feature is enabled.
 
 MVP job lifecycle:
 

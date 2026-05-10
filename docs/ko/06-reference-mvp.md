@@ -139,7 +139,7 @@ Exit criteria:
 
 ### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
 
-`harness.record_run`, run records, Write Authorization consumption, evidence manifest records, Feedback Loop support records and checks, codebase stewardship checks, projection jobs, MVP-required TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT renderers, managed block hashes, managed drift 또는 human-editable proposals를 위한 reconcile item creation을 구현합니다.
+`harness.record_run`, run records, Write Authorization consumption, evidence manifest records, Feedback Loop support records and checks, codebase stewardship checks, projection jobs, 그리고 이 stage에서 source record가 존재하는 pre-verification MVP-required renderers인 TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT를 구현합니다. `EVAL`은 MVP-required `ProjectionKind`로 남지만, executable enqueue/render path는 `harness.record_eval`이 Eval source records를 만들 수 있는 MVP-4에서 완료됩니다. 또한 managed block hashes와 managed drift 또는 human-editable proposals를 위한 reconcile item creation을 구현합니다.
 
 Exit criteria:
 
@@ -1309,7 +1309,7 @@ MVP에서 Decision Packet visibility는 `TASK` projections, status/next response
 
 Standalone `DEC` projection은 standalone Decision Packet projection feature가 enabled인 경우가 아니면 optional입니다. Persisted `JOURNEY-CARD` Markdown은 optional입니다. Status, next, significant resume flows의 current-position Journey Card output은 agency-conformance requirement로 남습니다. 이 문서는 extension template text를 정의하지 않습니다.
 
-아래 job lifecycle은 enqueued된 모든 `ProjectionKind`에 적용됩니다. MVP smoke는 API-owned MVP-required tier를 cover해야 합니다. MVP-optional jobs는 policy, records, operator settings가 enable할 때 cover합니다. API docs가 이름 붙이는 Extension / appendix jobs는 corresponding feature가 enabled된 경우가 아니면 MVP smoke에 required가 아닙니다.
+아래 job lifecycle은 enqueued된 모든 `ProjectionKind`에 적용됩니다. Kernel Smoke는 projection plumbing과 early MVP-3까지 source record가 존재하는 pre-verification MVP-required kinds를 cover합니다. Final Agency-Hardened MVP는 MVP-4 `record_eval` implementation 이후 Eval records가 변경될 때의 `EVAL` enqueue/render behavior를 포함하여 전체 API-owned MVP-required tier를 cover해야 합니다. MVP-optional jobs는 policy, records, operator settings가 enable할 때 cover합니다. API docs가 이름 붙이는 Extension / appendix jobs는 corresponding feature가 enabled된 경우가 아니면 required가 아닙니다.
 
 MVP job lifecycle:
 
