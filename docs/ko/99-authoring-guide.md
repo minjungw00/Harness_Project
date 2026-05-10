@@ -211,7 +211,7 @@ Report severity guidance:
 | ProjectionKind tier drift | `ProjectionKind` values와 tiers는 API, Document Projection, Reference MVP, Appendix A, Operations, Glossary에서 일치해야 합니다. Extension / appendix values는 owner docs 밖에서 반복되면서 MVP-required가 되면 안 됩니다. |
 | Glossary term drift | Official terms, capitalization, record ID prefixes, source-of-truth meanings는 `glossary.md`와 일치해야 합니다. 반복해서 쓰이는 새 term에는 glossary entry를 추가하거나 local로 유지한다는 explicit decision이 필요합니다. |
 | Source-of-truth phrasing drift | State, raw evidence, Markdown projections, human-editable sections, reconcile, accepted human edits는 이 guide의 phrasing family를 사용하고 separate state authority를 암시하지 않아야 합니다. |
-| `TODO_DECISION` and `TODO_IMPLEMENT` compliance | TODO는 allowed labels를 사용하고, 필요한 decision 또는 알려진 implementation gap을 포함하며, 유용하면 affected docs를 이름 붙이고, finished canonical sections에 `TODO_REWRITE`를 남기지 않습니다. |
+| `TODO_DECISION` and `TODO_IMPLEMENT` compliance | TODO는 allowed labels를 사용하고, 필요한 decision 또는 알려진 implementation gap을 포함하며, 유용하면 affected docs를 이름 붙이고, finished canonical sections에 실제 `TODO_REWRITE` markers를 남기지 않습니다. |
 | Non-owner duplicate full contracts | Owner doc 밖에서 full schemas, DDL, transition tables, fixture mini-languages, template bodies, glossary definitions를 restate하는 paragraphs는 one-sentence summary plus owner link로 바꾸어야 합니다. |
 
 ## TODO Rules
@@ -220,7 +220,7 @@ Report severity guidance:
 
 Decision은 이미 내려졌지만 implementation detail, DDL, fixture coverage, CLI behavior가 아직 채워지지 않았을 때만 `TODO_IMPLEMENT`를 사용합니다.
 
-완성된 v2 canonical sections에는 `TODO_REWRITE`를 사용하지 않습니다. 남아 있는 `TODO_REWRITE`는 해당 section이 아직 migration stub이라는 뜻입니다.
+완성된 v2 canonical sections에는 `TODO_REWRITE`를 사용하지 않습니다. 남아 있는 `TODO_REWRITE` marker는 해당 section이 아직 migration stub이라는 뜻입니다. 이 Authoring Guide rule text에서 `TODO_REWRITE`를 설명적으로 언급하는 것은 허용되며 leftover migration stub으로 세면 안 됩니다.
 
 ## Authoring Checklist
 

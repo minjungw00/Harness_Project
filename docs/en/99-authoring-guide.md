@@ -211,7 +211,7 @@ Required check categories:
 | ProjectionKind tier drift | `ProjectionKind` values and tiers match across API, Document Projection, Reference MVP, Appendix A, Operations, and Glossary. Extension / appendix values must not become MVP-required by repetition outside the owner docs. |
 | Glossary term drift | Official terms, capitalization, record ID prefixes, and source-of-truth meanings match `glossary.md`. A recurring new term needs a glossary entry or an explicit decision to keep it local. |
 | Source-of-truth phrasing drift | State, raw evidence, Markdown projections, human-editable sections, reconcile, and accepted human edits use the phrasing family in this guide and do not imply separate state authorities. |
-| `TODO_DECISION` and `TODO_IMPLEMENT` compliance | TODOs use the allowed labels, include the needed decision or known implementation gap, name affected docs when useful, and do not leave `TODO_REWRITE` in finished canonical sections. |
+| `TODO_DECISION` and `TODO_IMPLEMENT` compliance | TODOs use the allowed labels, include the needed decision or known implementation gap, name affected docs when useful, and do not leave actual `TODO_REWRITE` markers in finished canonical sections. |
 | Non-owner duplicate full contracts | Paragraphs that restate full schemas, DDL, transition tables, fixture mini-languages, template bodies, or glossary definitions outside the owner doc should be replaced with a one-sentence summary plus owner link. |
 
 ## TODO Rules
@@ -220,7 +220,7 @@ Use `TODO_DECISION` only when a real product or architecture decision is unresol
 
 Use `TODO_IMPLEMENT` only when the decision is already made but implementation detail, DDL, fixture coverage, or CLI behavior is not yet filled in.
 
-Do not use `TODO_REWRITE` in finished v2 canonical sections. A remaining `TODO_REWRITE` means the section is still a migration stub.
+Do not use `TODO_REWRITE` in finished v2 canonical sections. A remaining `TODO_REWRITE` marker means the section is still a migration stub. Explanatory mentions of `TODO_REWRITE` in this Authoring Guide rule text are allowed and should not be counted as leftover migration stubs.
 
 ## Authoring Checklist
 
