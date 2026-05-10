@@ -2205,8 +2205,10 @@ expected_state:
     codebase_stewardship_check:
       status: blocked
       findings:
-        - MODULE_INTERFACE_REVIEW_REQUIRED
-        - INTERFACE_CONTRACT_REVIEW_REQUIRED
+        - code: MODULE_INTERFACE_REVIEW_REQUIRED
+          severity: blocker
+        - code: INTERFACE_CONTRACT_REVIEW_REQUIRED
+          severity: blocker
   derived:
     stewardship_impact:
       domain_language_impact: none
@@ -2279,7 +2281,8 @@ expected_state:
     codebase_stewardship_check:
       status: failed
       findings:
-        - DOMAIN_LANGUAGE_CONFLICT
+        - code: DOMAIN_LANGUAGE_CONFLICT
+          severity: error
   canonical_terms_unchanged:
     - TERM-CUSTOMER-001
     - TERM-CUSTOMER-002
@@ -2372,7 +2375,8 @@ expected_state:
     codebase_stewardship_check:
       status: blocked
       findings:
-        - STEWARDSHIP_FUTURE_CHANGE_RISK
+        - code: STEWARDSHIP_FUTURE_CHANGE_RISK
+          severity: blocker
     residual_risk_visibility_check: passed
   residual_risk_summary:
     status: visible
@@ -2401,7 +2405,6 @@ expected_state:
 expected_events:
   - close_requested
   - close_blocked
-  - decision_required
 expected_artifacts: []
 expected_projection:
   TASK: enqueued
