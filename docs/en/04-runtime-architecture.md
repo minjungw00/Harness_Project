@@ -283,7 +283,7 @@ flowchart LR
   Bytes["stored artifact bytes<br/>artifact directory"]
   Row["artifacts row<br/>kind, path, sha256, size, redaction_state"]
   Links["artifact_links rows"]
-  Records["owner records / rendered projection refs"]
+  Records["same-Task owners<br/>or Task-scoped projection refs"]
   Reports["Markdown reports<br/>compact artifact refs"]
 
   Staged --> Redaction --> Bytes
@@ -293,7 +293,7 @@ flowchart LR
   Records --> Reports
 ```
 
-Core records artifact refs on existing owner records such as runs, evidence manifests, Eval records, Manual QA records, Decision Packets, and rendered projection refs. Export snapshots and components remain artifact files linked back to those owners or projections. Large logs and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
+Core records artifact refs on existing Task-scoped owner records such as runs, evidence manifests, Eval records, Manual QA records, Decision Packets, and rendered Task-scoped projection refs. In MVP, `artifact_links` to rendered projection refs stay within the artifact's `task_id`; project-level projection jobs may still be tracked by `projection_jobs` metadata where owner docs allow them, but they are not project-scoped artifact links. Export snapshots and components remain artifact files linked back to valid owners or Task-scoped projections. The API, Reference MVP, Document Projection, and Operations docs own the exact relation rules. Large logs and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
 
 Raw secrets should not be stored as artifacts. If secret-related evidence is required, Core records a redacted artifact, a secret handle, or an operator note that passed the relevant validator.
 

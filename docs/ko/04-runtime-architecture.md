@@ -283,7 +283,7 @@ flowchart LR
   Bytes["stored artifact bytes<br/>artifact directory"]
   Row["artifacts row<br/>kind, path, sha256, size, redaction_state"]
   Links["artifact_links rows"]
-  Records["owner records / rendered projection refs"]
+  Records["same-Task owners<br/>or Task-scoped projection refs"]
   Reports["Markdown reports<br/>compact artifact refs"]
 
   Staged --> Redaction --> Bytes
@@ -293,7 +293,7 @@ flowchart LR
   Records --> Reports
 ```
 
-Core는 runs, evidence manifests, Eval records, Manual QA records, Decision Packets, rendered projection refs 같은 existing owner records에 artifact refs를 기록합니다. Export snapshots와 components는 그 owners 또는 projections로 다시 link되는 artifact files로 남습니다. Large logs와 patches는 raw artifacts로 두고, Markdown reports는 unbounded evidence를 embed하는 대신 artifact refs로 link해야 합니다.
+Core는 runs, evidence manifests, Eval records, Manual QA records, Decision Packets, rendered Task-scoped projection refs 같은 existing Task-scoped owner records에 artifact refs를 기록합니다. MVP에서 rendered projection refs로 향하는 `artifact_links`는 artifact의 `task_id` 안에 머뭅니다. Project-level projection jobs는 owner docs가 허용하는 곳에서 `projection_jobs` metadata로 track될 수 있지만, current MVP에서는 project-scoped artifact links가 아닙니다. Export snapshots와 components는 valid owners 또는 Task-scoped projections로 다시 link되는 artifact files로 남습니다. Exact relation rules는 API, Reference MVP, Document Projection, Operations owner docs가 담당합니다. Large logs와 patches는 raw artifacts로 두고, Markdown reports는 unbounded evidence를 embed하는 대신 artifact refs로 link해야 합니다.
 
 Raw secrets는 artifacts로 저장하면 안 됩니다. Secret-related evidence가 required라면 Core는 redacted artifact, secret handle, relevant validator를 통과한 operator note를 기록합니다.
 
