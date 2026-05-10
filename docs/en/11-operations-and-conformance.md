@@ -1052,7 +1052,16 @@ initial_state:
     lifecycle_phase: ready
 input:
   include:
+    task: false
+    gates: false
+    projections: false
+    pending_decisions: false
     guarantees: true
+    journey_card: false
+    decision_packets: false
+    autonomy_boundary: false
+    write_authority: false
+    residual_risk: false
 action: status
 expected_state:
   guarantee_display:
@@ -1083,6 +1092,8 @@ initial_state:
     allowed_paths: ["src/profile/ProfileForm.tsx"]
     allowed_tools: ["edit"]
 input:
+  task_id: TASK-MCP-HOLD-001
+  change_unit_id: CU-MCP-HOLD-001
   intended_operation: "Edit the profile form through a cooperative surface while MCP is unavailable."
   intended_paths: ["src/profile/ProfileForm.tsx"]
   intended_tools: ["edit"]
@@ -1131,12 +1142,21 @@ UI or status assertions for the first payload must call it candidate display, no
 scenario_id: CORE-prepare-write-no-change-unit
 initial_state:
   active_task:
+    task_id: TASK-NO-CU-001
     mode: work
     lifecycle_phase: ready
     active_change_unit: null
 input:
+  task_id: TASK-NO-CU-001
+  change_unit_id: null
+  intended_operation: "Edit login without an active Change Unit."
   intended_paths: ["src/auth/login.ts"]
+  intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
   sensitive_categories: []
+  baseline_ref: null
 action: prepare_write
 expected_state:
   lifecycle_phase: blocked
@@ -1171,6 +1191,8 @@ initial_state:
     allowed_commands: []
     baseline_ref: BASE-WRITE-001
 input:
+  task_id: TASK-WRITE-001
+  change_unit_id: CU-WRITE-001
   intended_operation: "Edit the scoped direct file."
   intended_paths: ["src/a.ts"]
   intended_tools: ["edit"]
@@ -1228,9 +1250,11 @@ input:
   kind: direct
   task_id: TASK-WRITE-002
   change_unit_id: CU-WRITE-002
+  run_id: null
   baseline_ref: BASE-WRITE-002
   write_authorization_id: null
   summary: "Direct edit was attempted without a prepare_write authorization."
+  artifact_inputs: []
   payload:
     direct:
       observed_changes:
@@ -1240,6 +1264,7 @@ input:
       command_results: []
       evidence_updates:
         acceptance_criteria: []
+        feedback_loop_updates: []
       self_check_summary: "Self-check cannot count because Write Authorization is missing."
       escalation:
         value: none
@@ -1292,10 +1317,11 @@ input:
   kind: implementation
   task_id: TASK-WRITE-003
   change_unit_id: CU-WRITE-003
+  run_id: RUN-WRITE-003
   baseline_ref: BASE-WRITE-003
   write_authorization_id: WA-WRITE-003
   summary: "Implementation touched an observed path outside the authorization."
-  observed_product_write_persisted: true
+  artifact_inputs: []
   payload:
     implementation:
       observed_changes:
@@ -1305,6 +1331,7 @@ input:
       command_results: []
       evidence_updates:
         acceptance_criteria: []
+        feedback_loop_updates: []
       tdd_trace_update: null
 action: record_run
 expected_state:
@@ -1373,9 +1400,11 @@ input:
   kind: direct
   task_id: TASK-WRITE-004
   change_unit_id: CU-WRITE-004
+  run_id: null
   baseline_ref: BASE-WRITE-004
   write_authorization_id: WA-WRITE-004
   summary: "Direct run tried to reuse a consumed Write Authorization."
+  artifact_inputs: []
   payload:
     direct:
       observed_changes:
@@ -1385,6 +1414,7 @@ input:
       command_results: []
       evidence_updates:
         acceptance_criteria: []
+        feedback_loop_updates: []
       self_check_summary: "Path scope matches, but the authorization is already consumed."
       escalation:
         value: none
@@ -1495,6 +1525,7 @@ expected_error:
 scenario_id: AGENCY-decision-packet-required-before-product-tradeoff-write
 initial_state:
   active_task:
+    task_id: TASK-TRADEOFF-001
     mode: work
     lifecycle_phase: ready
     active_change_unit_id: CU-TRADEOFF-001
@@ -1506,6 +1537,7 @@ initial_state:
   active_change_unit:
     change_unit_id: CU-TRADEOFF-001
     allowed_paths: ["src/pricing/checkout.ts"]
+    baseline_ref: BASE-TRADEOFF-001
     autonomy_boundary:
       status: active
       what_agent_may_do: ["Implement the selected checkout discount behavior."]
@@ -1514,14 +1546,19 @@ initial_state:
       - decision_kind: product_tradeoff
         status: absent
         affected_paths: ["src/pricing/checkout.ts"]
+        topic: revenue_vs_conversion
+        options_known: true
 input:
+  task_id: TASK-TRADEOFF-001
+  change_unit_id: CU-TRADEOFF-001
   intended_operation: "Change checkout discount precedence from margin-safe to conversion-optimized."
   intended_paths: ["src/pricing/checkout.ts"]
   intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
   sensitive_categories: []
-  product_tradeoff:
-    topic: revenue_vs_conversion
-    options_known: true
+  baseline_ref: BASE-TRADEOFF-001
 action: prepare_write
 expected_state:
   lifecycle_phase: waiting_user
@@ -1570,6 +1607,8 @@ input:
   decision:
     acceptance:
       value: accepted
+  note: "Acceptance attempted before close-relevant residual risk was visible."
+  waiver_reason: null
   accepted_risks: []
 action: record_user_decision
 expected_state:
@@ -1613,6 +1652,8 @@ input:
   decision:
     acceptance:
       value: accepted
+  note: "Acceptance recorded after confirming no known close-relevant residual risk."
+  waiver_reason: null
   accepted_risks: []
 action: record_user_decision
 expected_state:
@@ -1686,6 +1727,7 @@ expected_error:
 scenario_id: AGENCY-afk-boundary-blocks-public-api-change
 initial_state:
   active_task:
+    task_id: TASK-API-001
     mode: work
     lifecycle_phase: ready
     active_change_unit_id: CU-API-001
@@ -1709,11 +1751,15 @@ initial_state:
       allowed_paths: ["src/api/public.ts"]
       status: granted
 input:
+  task_id: TASK-API-001
+  change_unit_id: CU-API-001
   intended_operation: "Add a response field to the public API while the user is AFK."
   intended_paths: ["src/api/public.ts"]
   intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
   sensitive_categories: ["public_api_change"]
-  afk: true
   baseline_ref: BASE-API-001
 action: prepare_write
 expected_state:
@@ -1801,11 +1847,12 @@ initial_state:
       accepted: false
   projection_freshness:
     status: current
+  resume_context:
+    kind: significant
 input:
   task_id: TASK-RESUME-001
   focus: implementation
   include_instruction_bundle: true
-  resume_kind: significant
 action: next
 expected_state:
   state_version: 42
@@ -1884,11 +1931,17 @@ initial_state:
   active_change_unit:
     change_unit_id: CU-CONN-DEC-001
     allowed_paths: ["src/pricing/discount.ts"]
+    baseline_ref: BASE-CONN-DEC-001
     autonomy_boundary:
       status: active
       what_agent_may_do: ["Implement the already selected pricing rule."]
       what_requires_user_judgment: ["Choose a margin versus conversion trade-off."]
+    blocking_decision_requirements:
+      - decision_kind: product_tradeoff
+        broad_approval_requested: false
 input:
+  task_id: TASK-CONN-DEC-001
+  change_unit_id: CU-CONN-DEC-001
   intended_operation: "Choose and implement a new discount priority."
   intended_paths: ["src/pricing/discount.ts"]
   intended_tools: ["edit"]
@@ -1897,9 +1950,6 @@ input:
   intended_secrets: []
   sensitive_categories: []
   baseline_ref: BASE-CONN-DEC-001
-  product_judgment_detected:
-    decision_kind: product_tradeoff
-    broad_approval_requested: false
 action: prepare_write
 expected_state:
   lifecycle_phase: waiting_user
@@ -1939,6 +1989,7 @@ initial_state:
   active_change_unit:
     change_unit_id: CU-CONN-AB-001
     allowed_paths: ["src/onboarding/copy.ts"]
+    baseline_ref: BASE-CONN-AB-001
     autonomy_boundary:
       autonomy_profile: afk_eligible
       status: active
@@ -1946,6 +1997,8 @@ initial_state:
       what_requires_user_judgment: ["Change the onboarding promise or product positioning."]
       stop_conditions: ["product_positioning_change"]
 input:
+  task_id: TASK-CONN-AB-001
+  change_unit_id: CU-CONN-AB-001
   intended_operation: "Change the onboarding promise from guided setup to automatic migration."
   intended_paths: ["src/onboarding/copy.ts"]
   intended_tools: ["edit"]
@@ -1954,7 +2007,6 @@ input:
   intended_secrets: []
   sensitive_categories: []
   baseline_ref: BASE-CONN-AB-001
-  triggered_stop_conditions: ["product_positioning_change"]
 action: prepare_write
 expected_state:
   lifecycle_phase: waiting_user
@@ -2009,7 +2061,10 @@ initial_state:
     slice_type: horizontal-exception
     horizontal_exception_reason: null
     allowed_paths: ["src/shared/crossCutting.ts"]
+    baseline_ref: BASE-DESIGN-HORIZONTAL-001
 input:
+  task_id: TASK-DESIGN-HORIZONTAL-001
+  change_unit_id: CU-DESIGN-HORIZONTAL-001
   intended_operation: "Apply a horizontal exception without the required exception reason."
   intended_paths: ["src/shared/crossCutting.ts"]
   intended_tools: ["edit"]
@@ -2072,6 +2127,7 @@ expected_error:
 scenario_id: STEWARDSHIP-qa-waiver-reason-required
 initial_state:
   active_task:
+    task_id: TASK-QA-WAIVER-001
     mode: work
     lifecycle_phase: qa
     gates:
@@ -2082,12 +2138,16 @@ initial_state:
     waiver_decision_packet_required: false
     waiver_reason_required: true
 input:
+  task_id: TASK-QA-WAIVER-001
+  change_unit_id: null
   qa_profile: ui_quality
   performed_by: user
   result: waived
   findings: []
+  artifact_inputs: []
   waiver_reason: null
   waiver_decision_packet_ref: null
+  feedback_loop_ref: null
   next_action: waive
 action: record_manual_qa
 expected_state:
@@ -2109,6 +2169,7 @@ expected_error:
 scenario_id: STEWARDSHIP-qa-waiver-product-risk-requires-decision-packet
 initial_state:
   active_task:
+    task_id: TASK-QA-WAIVER-RISK-001
     mode: work
     lifecycle_phase: qa
     gates:
@@ -2120,12 +2181,16 @@ initial_state:
     waiver_reason_required: true
     product_or_user_risk: true
 input:
+  task_id: TASK-QA-WAIVER-RISK-001
+  change_unit_id: null
   qa_profile: workflow
   performed_by: user
   result: waived
   findings: []
+  artifact_inputs: []
   waiver_reason: "Known workflow risk accepted for a time-sensitive release."
   waiver_decision_packet_ref: null
+  feedback_loop_ref: null
   next_action: waive
 action: record_manual_qa
 expected_state:
@@ -2149,6 +2214,7 @@ expected_error:
 scenario_id: STEWARDSHIP-public-interface-change-requires-module-interface-review
 initial_state:
   active_task:
+    task_id: TASK-PUBLIC-IFACE-001
     mode: work
     lifecycle_phase: ready
     active_change_unit_id: CU-PUBLIC-IFACE-001
@@ -2161,6 +2227,7 @@ initial_state:
     change_unit_id: CU-PUBLIC-IFACE-001
     allowed_paths: ["src/api/public.ts"]
     sensitive_categories: ["public_api_change"]
+    baseline_ref: BASE-PUBLIC-API-001
     stewardship_refs:
       domain_terms: [TERM-API-RESOURCE-001]
       module_map_items: []
@@ -2186,9 +2253,14 @@ initial_state:
       - feedback_loop_id: FBL-PUBLIC-API-001
         status: defined
 input:
+  task_id: TASK-PUBLIC-IFACE-001
+  change_unit_id: CU-PUBLIC-IFACE-001
   intended_operation: "Change exported response fields on the public API."
   intended_paths: ["src/api/public.ts"]
   intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
   sensitive_categories: ["public_api_change"]
   baseline_ref: BASE-PUBLIC-API-001
 action: prepare_write
@@ -2230,6 +2302,7 @@ expected_error:
 scenario_id: STEWARDSHIP-domain-language-conflict-marks-design-stale-or-partial
 initial_state:
   active_task:
+    task_id: TASK-DOMAIN-TERM-001
     mode: work
     lifecycle_phase: ready
     active_change_unit_id: CU-DOMAIN-TERM-001
@@ -2241,6 +2314,7 @@ initial_state:
   active_change_unit:
     change_unit_id: CU-DOMAIN-TERM-001
     allowed_paths: ["src/billing/customer.ts"]
+    baseline_ref: BASE-DOMAIN-TERM-001
     stewardship_refs:
       domain_terms: [TERM-CUSTOMER-001, TERM-CUSTOMER-002]
       module_map_items: [MOD-BILLING-001]
@@ -2262,15 +2336,25 @@ initial_state:
     feedback_loops:
       - feedback_loop_id: FBL-BILLING-001
         status: defined
+  context_refs:
+    - record_kind: projection
+      record_id: NOTE-STALE-001
+      freshness: stale
+      claims:
+        proposed_local_term:
+          term: Customer
+          meaning_id: billing_contact
 input:
+  task_id: TASK-DOMAIN-TERM-001
+  change_unit_id: CU-DOMAIN-TERM-001
   intended_operation: "Use Customer in billing code based on an unreconciled note."
   intended_paths: ["src/billing/customer.ts"]
   intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
   sensitive_categories: []
-  proposed_local_term:
-    term: Customer
-    meaning_id: billing_contact
-    source_ref: NOTE-STALE-001
+  baseline_ref: BASE-DOMAIN-TERM-001
 action: prepare_write
 expected_state:
   lifecycle_phase: blocked
@@ -2427,6 +2511,7 @@ These remaining catalog entries are not fixture bodies. Each materialized fixtur
 scenario_id: CONTEXT-HYGIENE-stale-prd-not-treated-as-current-state
 initial_state:
   active_task:
+    task_id: TASK-SEARCH-001
     mode: work
     lifecycle_phase: ready
     active_change_unit_id: CU-SEARCH-001
@@ -2450,11 +2535,15 @@ initial_state:
           - "Client-side search filters archived records."
         allowed_paths: ["src/search/clientFilter.ts"]
 input:
+  task_id: TASK-SEARCH-001
+  change_unit_id: CU-SEARCH-001
   intended_operation: "Implement the stale PRD client-side filter."
   intended_paths: ["src/search/clientFilter.ts"]
   intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
   sensitive_categories: []
-  context_ref_used: PRD-2025-OLD
   baseline_ref: BASE-CURRENT
 action: prepare_write
 expected_state:
@@ -2540,8 +2629,6 @@ input:
   task_id: TASK-CONTEXT-001
   focus: verification
   include_instruction_bundle: true
-  supplied_context_refs:
-    - CHAT-MEM-OLD-001
 action: next
 expected_state:
   state_version: 88
