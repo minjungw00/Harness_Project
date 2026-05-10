@@ -23,7 +23,7 @@ MVP includes:
 - shaping kernel support for Change Units, autonomy boundaries, dependency metadata, and end-to-end path intent
 - approval, evidence, verification, Manual QA, and acceptance gate support
 - decision, autonomy boundary, feedback loop, codebase stewardship, residual-risk visibility, and agency conformance checks
-- MVP-required `ProjectionKind` renderers for `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`
+- MVP-required `ProjectionKind` renderers named by [MCP API And Schemas](05-mcp-api-and-schemas.md#shared-schemas)
 - MVP-optional `ProjectionKind` renderers only where policy requires them, source records exist, or the user/operator enables them
 - detached verification bundle or manual evaluator instruction bundle
 - doctor, recover, reconcile, export, and conformance smoke entrypoints
@@ -235,29 +235,47 @@ Canonical enum columns use `TEXT` in the reference DDL for readability, but they
 
 Minimum enum hardening targets:
 
-| Field(s) | Values to harden |
+| Field(s) | Owner/value source for hardening |
 | --- | --- |
-| `tasks.mode` | `advisor`, `direct`, `work` |
-| `tasks.lifecycle_phase` | `intake`, `shaping`, `ready`, `executing`, `verifying`, `qa`, `waiting_user`, `blocked`, `completed`, `cancelled` |
-| `tasks.result` | `none`, `advice_only`, `passed`, `failed`, `cancelled` |
-| `tasks.close_reason` | `none`, `completed_verified`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` |
-| `tasks.assurance_level` | `none`, `self_checked`, `detached_verified` |
-| `tasks.projection_status` | `current`, `stale`, `failed`, `unknown` |
-| `task_gates.scope_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `blocked` |
-| `task_gates.decision_gate` | `not_required`, `required`, `pending`, `resolved`, `deferred`, `blocked` |
-| `task_gates.approval_gate` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired` |
-| `task_gates.design_gate` | `not_required`, `required`, `pending`, `passed`, `partial`, `waived`, `stale`, `blocked` |
-| `task_gates.evidence_gate` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
-| `task_gates.verification_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `waived_by_user`, `blocked` |
-| `task_gates.qa_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `waived` |
-| `task_gates.acceptance_gate` | `not_required`, `required`, `pending`, `accepted`, `rejected` |
-| `write_authorizations.status` | `allowed`, `consumed`, `expired`, `stale`, `revoked` |
-| `decision_packets.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` |
-| `manual_qa_records.result` | `passed`, `failed`, `waived` |
-| `evals.verdict` | `passed`, `failed`, `blocked`, `inconclusive` |
-| `projection_jobs.status` | `pending`, `running`, `completed`, `failed`, `skipped` |
+| `tasks.mode` | [Mode](03-kernel-spec.md#mode). |
+| `tasks.lifecycle_phase` | [Lifecycle Phase](03-kernel-spec.md#lifecycle-phase) and the kernel transition table. |
+| `tasks.result` | [Result](03-kernel-spec.md#result) and [Close Semantics](03-kernel-spec.md#close-semantics). |
+| `tasks.close_reason` | [Close Reason](03-kernel-spec.md#close-reason) and [Close Semantics](03-kernel-spec.md#close-semantics). |
+| `tasks.assurance_level` | [Assurance Level](03-kernel-spec.md#assurance-level) and [Verification Gate](03-kernel-spec.md#verification-gate). |
+| `tasks.projection_status` | TASK projection freshness semantics in this document and [Document Projection](07-document-projection.md). |
+| `task_gates.scope_gate` | [Scope Gate](03-kernel-spec.md#scope-gate). |
+| `task_gates.decision_gate` | [Decision Gate](03-kernel-spec.md#decision-gate). |
+| `task_gates.approval_gate` | [Approval Gate](03-kernel-spec.md#approval-gate). |
+| `task_gates.design_gate` | [Design Gate](03-kernel-spec.md#design-gate). |
+| `task_gates.evidence_gate` | [Evidence Gate](03-kernel-spec.md#evidence-gate). |
+| `task_gates.verification_gate` | [Verification Gate](03-kernel-spec.md#verification-gate). |
+| `task_gates.qa_gate` | [QA Gate](03-kernel-spec.md#qa-gate). |
+| `task_gates.acceptance_gate` | [Acceptance Gate](03-kernel-spec.md#acceptance-gate). |
+| `write_authorizations.status` | [Kernel `prepare_write` State Logic](03-kernel-spec.md#prepare_write-state-logic) and public `WriteAuthorizationSummary` in [MCP API And Schemas](05-mcp-api-and-schemas.md). |
+| `decision_packets.status` | [Decision Gate Aggregate Recompute](03-kernel-spec.md#decision-gate-aggregate-recompute) and public `DecisionPacket` in [MCP API And Schemas](05-mcp-api-and-schemas.md). |
+| `manual_qa_records.result` | [QA Gate](03-kernel-spec.md#qa-gate) and [`harness.record_manual_qa`](05-mcp-api-and-schemas.md#harnessrecord_manual_qa). |
+| `evals.verdict` | [Verification Gate](03-kernel-spec.md#verification-gate) and [`harness.record_eval`](05-mcp-api-and-schemas.md#harnessrecord_eval). |
+| `projection_jobs.status` | Projection job/freshness semantics in this document and [Document Projection](07-document-projection.md). |
 
-For new tables or rebuild migrations, representative inline hardening is `status TEXT NOT NULL CHECK (status IN (...))`. Existing SQLite tables may need a table rebuild, a small lookup table checked by Core before commit, or a migration-time assertion that rejects unknown values before tightening. Apply the same pattern to other status-like state fields as their owner enums are finalized, especially `approvals.status`, `runs.kind`, `runs.status`, `evidence_manifests.status`, `residual_risks.visibility_status`, `residual_risks.status`, `reconcile_items.status`, `validator_runs.status`, `validator_runs.guarantee_level`, and design-quality status columns. Do not invent database-only enum values; bind storage hardening to the kernel/API owner enum.
+For new tables or rebuild migrations, representative inline hardening is `status TEXT NOT NULL CHECK (status IN (...))`. Existing SQLite tables may need a table rebuild, a small lookup table checked by Core before commit, or a migration-time assertion that rejects unknown values before tightening. Do not invent database-only enum values; bind storage hardening to the owner value source.
+
+The table below is an owner map for additional status-like `TEXT` fields in the DDL. It names where storage validators, fixture seed loaders, and migration assertions must get the allowed values; it is not a second enum definition.
+
+| Field(s) | Owner/value source for hardening |
+| --- | --- |
+| `project_surfaces.guarantee_level`, `write_authorizations.guarantee_level`, `validator_runs.guarantee_level` | Semantic meaning is owned by [Runtime Architecture Guarantee Levels](04-runtime-architecture.md#guarantee-levels); connector/profile reporting is owned by [Agent Integration Guarantee Levels](09-agent-integration.md#guarantee-levels); public payload shape is reflected in [MCP API And Schemas](05-mcp-api-and-schemas.md). |
+| `runs.kind` | `RecordRunRequest.kind` in [`harness.record_run`](05-mcp-api-and-schemas.md#harnessrecord_run). |
+| `approvals.status` | Approval lifecycle semantics in [Approval Gate](03-kernel-spec.md#approval-gate), plus the approval decision payload in [`harness.record_user_decision`](05-mcp-api-and-schemas.md#harnessrecord_user_decision). |
+| `decision_requests.decision_kind`, `decision_packets.decision_kind` | Decision Packet public schemas and decision payload branches in [MCP API And Schemas](05-mcp-api-and-schemas.md). |
+| `evidence_manifests.status` | Evidence sufficiency semantics in [Evidence Gate](03-kernel-spec.md#evidence-gate) and [Evidence Sufficiency Profiles](03-kernel-spec.md#evidence-sufficiency-profiles). |
+| `residual_risks.visibility_status` | Residual-risk visibility semantics in [Acceptance Gate](03-kernel-spec.md#acceptance-gate) and public `ResidualRiskSummary` in [MCP API And Schemas](05-mcp-api-and-schemas.md). A summary-only `none` state must not be persisted on an existing residual-risk row unless the kernel owner explicitly allows it. |
+| `validator_runs.status` | `ValidatorResult.status` in [Validator Result Schema](05-mcp-api-and-schemas.md#validator-result-schema). |
+| `projection_jobs.projection_kind` | API-owned `ProjectionKind` in [Shared Schemas](05-mcp-api-and-schemas.md#shared-schemas). |
+| Projection fixture assertions such as `expected_projection` statuses | Operations fixture comparison semantics; these are not storage enum values unless the owning projection schema also defines them. |
+| `feedback_loops.loop_kind`, `feedback_loops.status`, `tdd_traces.status` | `FeedbackLoopUpdate` and `TddTraceUpdate` in [`harness.record_run`](05-mcp-api-and-schemas.md#harnessrecord_run), plus the storage-specific Feedback Loop notes below. |
+| `tool_invocations.status` | Reference MVP idempotency/replay storage semantics in this document; it must describe committed replay state only, not surface diagnostics. The exact durable value set remains covered by the `TODO_DECISION` below. |
+
+`TODO_DECISION`: before implementing storage `CHECK`s or seed-loader enum maps for `runs.status`, `decision_requests.status`, `residual_risks.status`, `reconcile_items.status`, `connector_manifests.status`, `baselines.status`, `change_units.status`, `task_spine_entries.status`, `change_unit_dependencies.status`, `tool_invocations.status`, and design-support owner-record statuses such as `shared_designs.status`, `domain_terms.status`, `module_map_items.status`, and `interface_contracts.review_status`, the named owner section must promote the exact durable value set and compatibility meaning. Until then, Core and fixture loaders must reject unknown values rather than accepting arbitrary strings or inventing database-only values.
 
 ### `project.yaml`
 
@@ -879,7 +897,7 @@ flowchart TD
 
 `tasks.projection_version` is the TASK projection/template/job version used to prevent older TASK renders from replacing newer ones. It is not a state clock. `tasks.projected_version`, if retained, is only the TASK projection summary cache of the last rendered source state version. It must not be treated as the storage location for every task-related `ProjectionKind`.
 
-`tasks.projection_status` is the TASK projection status summary. Per-kind projection freshness is tracked through `projection_jobs.source_state_version`, job status, managed hashes, and the relevant projection records or artifact refs for MVP-required `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`; MVP-optional `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, and `INTERFACE-CONTRACT`; and enabled extension / appendix kinds such as `DEC`, `DESIGN`, `EXPORT`, and `JOURNEY-CARD`. `APR` freshness starts from committed Approval records and their approval-shaped Decision Packets, not from non-mutating `approval_request_candidate` payloads. Do not treat one Task field as owning all projection freshness.
+`tasks.projection_status` is the TASK projection status summary. Per-kind projection freshness is tracked through `projection_jobs.source_state_version`, job status, managed hashes, and the relevant projection records or artifact refs for the API-owned MVP-required, MVP-optional, and enabled extension / appendix projection kinds. `APR` freshness starts from committed Approval records and their approval-shaped Decision Packets, not from non-mutating `approval_request_candidate` payloads. Do not treat one Task field as owning all projection freshness.
 
 `write_authorizations` stores durable `prepare_write` allow decisions. The allow/block contract is owned by [Kernel `prepare_write` State Logic](03-kernel-spec.md#prepare_write-state-logic) and the public response shape by [`harness.prepare_write`](05-mcp-api-and-schemas.md#harnessprepare_write). Storage-specific requirements are: each distinct committed non-dry-run allowed request inserts a distinct row; idempotent return is only replay of the same committed request under the same idempotency key, request hash, and compatible basis; `basis_state_version` stores the affected-scope state version used as the compatibility basis; `updated_at` changes whenever authorization status changes; and status history remains in `task_events`.
 
@@ -1272,7 +1290,7 @@ Sensitive-approval projection jobs follow the APR source rule owned by [07-docum
 
 For MVP, Decision Packet visibility is rendered through `TASK` projections, status/next responses, judgment-context resources, and decision-packet read resources. A standalone `DEC` projection is optional unless the standalone Decision Packet projection feature is enabled. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains an agency-conformance requirement. This document does not define extension template text.
 
-The job lifecycle below applies to every enqueued `ProjectionKind`. MVP smoke must cover the MVP-required tier; MVP-optional jobs are covered when policy, records, or operator settings enable them. Extension / appendix jobs such as `DEC`, `DESIGN`, `EXPORT`, and `JOURNEY-CARD` are not required for MVP smoke unless the corresponding feature is enabled.
+The job lifecycle below applies to every enqueued `ProjectionKind`. MVP smoke must cover the API-owned MVP-required tier; MVP-optional jobs are covered when policy, records, or operator settings enable them. Extension / appendix jobs named by the API docs are not required for MVP smoke unless the corresponding feature is enabled.
 
 MVP job lifecycle:
 

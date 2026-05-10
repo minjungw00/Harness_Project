@@ -23,7 +23,7 @@ MVP 포함 항목:
 - Change Units, autonomy boundaries, dependency metadata, end-to-end path intent를 위한 shaping kernel support
 - approval, evidence, verification, Manual QA, acceptance gate support
 - decision, autonomy boundary, feedback loop, codebase stewardship, residual-risk visibility, agency conformance checks
-- `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`를 위한 MVP-required `ProjectionKind` renderers
+- [MCP API와 스키마](05-mcp-api-and-schemas.md#shared-schemas)가 이름 붙이는 MVP-required `ProjectionKind` renderers
 - policy가 요구하거나, source record가 있거나, user/operator가 enable할 때만 사용하는 MVP-optional `ProjectionKind` renderers
 - detached verification bundle 또는 manual evaluator instruction bundle
 - doctor, recover, reconcile, export, conformance smoke entrypoints
@@ -235,29 +235,47 @@ Canonical enum column은 reference DDL에서 readability를 위해 `TEXT`를 사
 
 Minimum enum hardening targets:
 
-| Field(s) | Values to harden |
+| Field(s) | Hardening을 위한 owner/value source |
 | --- | --- |
-| `tasks.mode` | `advisor`, `direct`, `work` |
-| `tasks.lifecycle_phase` | `intake`, `shaping`, `ready`, `executing`, `verifying`, `qa`, `waiting_user`, `blocked`, `completed`, `cancelled` |
-| `tasks.result` | `none`, `advice_only`, `passed`, `failed`, `cancelled` |
-| `tasks.close_reason` | `none`, `completed_verified`, `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` |
-| `tasks.assurance_level` | `none`, `self_checked`, `detached_verified` |
-| `tasks.projection_status` | `current`, `stale`, `failed`, `unknown` |
-| `task_gates.scope_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `blocked` |
-| `task_gates.decision_gate` | `not_required`, `required`, `pending`, `resolved`, `deferred`, `blocked` |
-| `task_gates.approval_gate` | `not_required`, `required`, `pending`, `granted`, `denied`, `expired` |
-| `task_gates.design_gate` | `not_required`, `required`, `pending`, `passed`, `partial`, `waived`, `stale`, `blocked` |
-| `task_gates.evidence_gate` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` |
-| `task_gates.verification_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `waived_by_user`, `blocked` |
-| `task_gates.qa_gate` | `not_required`, `required`, `pending`, `passed`, `failed`, `waived` |
-| `task_gates.acceptance_gate` | `not_required`, `required`, `pending`, `accepted`, `rejected` |
-| `write_authorizations.status` | `allowed`, `consumed`, `expired`, `stale`, `revoked` |
-| `decision_packets.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` |
-| `manual_qa_records.result` | `passed`, `failed`, `waived` |
-| `evals.verdict` | `passed`, `failed`, `blocked`, `inconclusive` |
-| `projection_jobs.status` | `pending`, `running`, `completed`, `failed`, `skipped` |
+| `tasks.mode` | [Mode](03-kernel-spec.md#mode). |
+| `tasks.lifecycle_phase` | [Lifecycle Phase](03-kernel-spec.md#lifecycle-phase)와 kernel transition table. |
+| `tasks.result` | [Result](03-kernel-spec.md#result)와 [Close Semantics](03-kernel-spec.md#close-semantics). |
+| `tasks.close_reason` | [Close Reason](03-kernel-spec.md#close-reason)과 [Close Semantics](03-kernel-spec.md#close-semantics). |
+| `tasks.assurance_level` | [Assurance Level](03-kernel-spec.md#assurance-level)과 [Verification Gate](03-kernel-spec.md#verification-gate). |
+| `tasks.projection_status` | 이 문서와 [Document Projection](07-document-projection.md)의 TASK projection freshness semantics. |
+| `task_gates.scope_gate` | [Scope Gate](03-kernel-spec.md#scope-gate). |
+| `task_gates.decision_gate` | [Decision Gate](03-kernel-spec.md#decision-gate). |
+| `task_gates.approval_gate` | [Approval Gate](03-kernel-spec.md#approval-gate). |
+| `task_gates.design_gate` | [Design Gate](03-kernel-spec.md#design-gate). |
+| `task_gates.evidence_gate` | [Evidence Gate](03-kernel-spec.md#evidence-gate). |
+| `task_gates.verification_gate` | [Verification Gate](03-kernel-spec.md#verification-gate). |
+| `task_gates.qa_gate` | [QA Gate](03-kernel-spec.md#qa-gate). |
+| `task_gates.acceptance_gate` | [Acceptance Gate](03-kernel-spec.md#acceptance-gate). |
+| `write_authorizations.status` | [Kernel `prepare_write` State Logic](03-kernel-spec.md#prepare_write-state-logic)와 [MCP API와 스키마](05-mcp-api-and-schemas.md)의 public `WriteAuthorizationSummary`. |
+| `decision_packets.status` | [Decision Gate Aggregate Recompute](03-kernel-spec.md#decision-gate-aggregate-recompute)와 [MCP API와 스키마](05-mcp-api-and-schemas.md)의 public `DecisionPacket`. |
+| `manual_qa_records.result` | [QA Gate](03-kernel-spec.md#qa-gate)와 [`harness.record_manual_qa`](05-mcp-api-and-schemas.md#harnessrecord_manual_qa). |
+| `evals.verdict` | [Verification Gate](03-kernel-spec.md#verification-gate)와 [`harness.record_eval`](05-mcp-api-and-schemas.md#harnessrecord_eval). |
+| `projection_jobs.status` | 이 문서와 [Document Projection](07-document-projection.md)의 projection job/freshness semantics. |
 
-New table 또는 rebuild migration에서는 representative inline hardening으로 `status TEXT NOT NULL CHECK (status IN (...))`를 사용할 수 있습니다. Existing SQLite tables는 table rebuild, Core가 commit 전에 확인하는 small lookup table, 또는 tightening 전에 unknown values를 reject하는 migration-time assertion이 필요할 수 있습니다. Owner enum이 finalized되는 대로 같은 pattern을 다른 status-like state fields에도 적용합니다. 특히 `approvals.status`, `runs.kind`, `runs.status`, `evidence_manifests.status`, `residual_risks.visibility_status`, `residual_risks.status`, `reconcile_items.status`, `validator_runs.status`, `validator_runs.guarantee_level`, design-quality status columns가 대상입니다. Database-only enum values를 만들지 말고 storage hardening은 kernel/API owner enum에 묶어야 합니다.
+New table 또는 rebuild migration에서는 representative inline hardening으로 `status TEXT NOT NULL CHECK (status IN (...))`를 사용할 수 있습니다. Existing SQLite tables는 table rebuild, Core가 commit 전에 확인하는 small lookup table, 또는 tightening 전에 unknown values를 reject하는 migration-time assertion이 필요할 수 있습니다. Database-only enum values를 만들지 말고 storage hardening은 owner value source에 묶어야 합니다.
+
+아래 table은 DDL의 추가 status-like `TEXT` fields에 대한 owner map입니다. Storage validator, fixture seed loader, migration assertion이 allowed values를 어디서 가져와야 하는지 이름 붙이는 것이며, 두 번째 enum definition이 아닙니다.
+
+| Field(s) | Hardening을 위한 owner/value source |
+| --- | --- |
+| `project_surfaces.guarantee_level`, `write_authorizations.guarantee_level`, `validator_runs.guarantee_level` | Semantic meaning은 [Runtime Architecture Guarantee Levels](04-runtime-architecture.md#guarantee-levels)가 담당합니다. Connector/profile reporting은 [Agent Integration Guarantee Levels](09-agent-integration.md#guarantee-levels)가 담당합니다. Public payload shape는 [MCP API와 스키마](05-mcp-api-and-schemas.md)에 반영됩니다. |
+| `runs.kind` | [`harness.record_run`](05-mcp-api-and-schemas.md#harnessrecord_run)의 `RecordRunRequest.kind`. |
+| `approvals.status` | [Approval Gate](03-kernel-spec.md#approval-gate)의 Approval lifecycle semantics와 [`harness.record_user_decision`](05-mcp-api-and-schemas.md#harnessrecord_user_decision)의 approval decision payload. |
+| `decision_requests.decision_kind`, `decision_packets.decision_kind` | [MCP API와 스키마](05-mcp-api-and-schemas.md)의 Decision Packet public schemas와 decision payload branches. |
+| `evidence_manifests.status` | [Evidence Gate](03-kernel-spec.md#evidence-gate)와 [Evidence Sufficiency Profiles](03-kernel-spec.md#evidence-sufficiency-profiles)의 evidence sufficiency semantics. |
+| `residual_risks.visibility_status` | [Acceptance Gate](03-kernel-spec.md#acceptance-gate)의 residual-risk visibility semantics와 [MCP API와 스키마](05-mcp-api-and-schemas.md)의 public `ResidualRiskSummary`. Summary-only `none` state는 kernel owner가 명시적으로 허용하지 않는 한 existing residual-risk row에 persist하면 안 됩니다. |
+| `validator_runs.status` | [Validator Result Schema](05-mcp-api-and-schemas.md#validator-result-schema)의 `ValidatorResult.status`. |
+| `projection_jobs.projection_kind` | [Shared Schemas](05-mcp-api-and-schemas.md#shared-schemas)의 API-owned `ProjectionKind`. |
+| `expected_projection` statuses 같은 projection fixture assertions | Operations fixture comparison semantics입니다. Owning projection schema가 함께 정의하지 않는 한 storage enum values가 아닙니다. |
+| `feedback_loops.loop_kind`, `feedback_loops.status`, `tdd_traces.status` | [`harness.record_run`](05-mcp-api-and-schemas.md#harnessrecord_run)의 `FeedbackLoopUpdate`와 `TddTraceUpdate`, 그리고 아래의 storage-specific Feedback Loop notes. |
+| `tool_invocations.status` | 이 문서의 Reference MVP idempotency/replay storage semantics. Surface diagnostic이 아니라 committed replay state만 설명해야 합니다. Exact durable value set은 아래 `TODO_DECISION`이 계속 cover합니다. |
+
+`TODO_DECISION`: `runs.status`, `decision_requests.status`, `residual_risks.status`, `reconcile_items.status`, `connector_manifests.status`, `baselines.status`, `change_units.status`, `task_spine_entries.status`, `change_unit_dependencies.status`, `tool_invocations.status`, 그리고 `shared_designs.status`, `domain_terms.status`, `module_map_items.status`, `interface_contracts.review_status` 같은 design-support owner-record statuses에 대해 storage `CHECK`나 seed-loader enum map을 구현하기 전에 named owner section이 exact durable value set과 compatibility meaning을 promote해야 합니다. 그전까지 Core와 fixture loader는 arbitrary string을 받아들이거나 database-only value를 invent하지 말고 unknown values를 reject해야 합니다.
 
 ### `project.yaml`
 
@@ -879,9 +897,7 @@ flowchart TD
 
 `tasks.projection_version`은 older TASK render가 newer render를 replace하지 못하게 하는 TASK projection/template/job version입니다. State clock이 아닙니다. `tasks.projected_version`은 retained되는 경우 TASK projection summary의 last rendered source state version cache일 뿐입니다. 모든 task-related `ProjectionKind`의 storage location으로 취급하면 안 됩니다.
 
-`tasks.projection_status`는 TASK projection status summary입니다. Per-kind projection freshness는 `projection_jobs.source_state_version`, job status, managed hashes, relevant projection records 또는 artifact refs를 통해 tracked됩니다.
-
-이 tracking에는 MVP-required `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`; MVP-optional `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`; 그리고 enabled extension / appendix kinds인 `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD`가 포함됩니다. `APR` freshness는 committed Approval records와 그 approval-shaped Decision Packets에서 시작하며, non-mutating `approval_request_candidate` payload에서 시작하지 않습니다. 하나의 Task field가 모든 projection freshness를 소유한다고 취급하면 안 됩니다.
+`tasks.projection_status`는 TASK projection status summary입니다. Per-kind projection freshness는 API-owned MVP-required, MVP-optional, enabled extension / appendix projection kinds에 대한 `projection_jobs.source_state_version`, job status, managed hashes, relevant projection records 또는 artifact refs를 통해 tracked됩니다. `APR` freshness는 committed Approval records와 그 approval-shaped Decision Packets에서 시작하며, non-mutating `approval_request_candidate` payload에서 시작하지 않습니다. 하나의 Task field가 모든 projection freshness를 소유한다고 취급하면 안 됩니다.
 
 `write_authorizations`는 durable `prepare_write` allow decisions를 저장합니다. Allow/block contract는 [Kernel `prepare_write` State Logic](03-kernel-spec.md#prepare_write-state-logic)이 담당하고, public response shape는 [`harness.prepare_write`](05-mcp-api-and-schemas.md#harnessprepare_write)가 담당합니다. Storage-specific requirements는 distinct committed non-dry-run allowed request마다 distinct row를 insert하고, idempotent return은 같은 idempotency key, request hash, compatible basis를 가진 same committed request replay에만 사용하며, `basis_state_version`이 compatibility basis로 사용된 affected-scope state version을 저장하고, authorization status가 바뀔 때마다 `updated_at`을 변경하며, status history를 `task_events`에 남기는 것입니다.
 
@@ -1276,7 +1292,7 @@ MVP에서 Decision Packet visibility는 `TASK` projections, status/next response
 
 Standalone `DEC` projection은 standalone Decision Packet projection feature가 enabled인 경우가 아니면 optional입니다. Persisted `JOURNEY-CARD` Markdown은 optional입니다. Status, next, significant resume flows의 current-position Journey Card output은 agency-conformance requirement로 남습니다. 이 문서는 extension template text를 정의하지 않습니다.
 
-아래 job lifecycle은 enqueued된 모든 `ProjectionKind`에 적용됩니다. MVP smoke는 MVP-required tier를 cover해야 합니다. MVP-optional jobs는 policy, records, operator settings가 enable할 때 cover합니다. `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` 같은 Extension / appendix jobs는 corresponding feature가 enabled된 경우가 아니면 MVP smoke에 required가 아닙니다.
+아래 job lifecycle은 enqueued된 모든 `ProjectionKind`에 적용됩니다. MVP smoke는 API-owned MVP-required tier를 cover해야 합니다. MVP-optional jobs는 policy, records, operator settings가 enable할 때 cover합니다. API docs가 이름 붙이는 Extension / appendix jobs는 corresponding feature가 enabled된 경우가 아니면 MVP smoke에 required가 아닙니다.
 
 MVP job lifecycle:
 

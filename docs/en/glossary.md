@@ -56,7 +56,7 @@ The user's judgment that the result and remaining trade-offs are acceptable. Acc
 
 ### Acceptance Gate
 
-The kernel gate that records whether required user acceptance is not required, required, pending, accepted, or rejected. Acceptance cannot substitute for QA or verification.
+The kernel gate for required user acceptance. Its value set and compatibility meaning are owned by [Acceptance Gate](03-kernel-spec.md#acceptance-gate). Acceptance cannot substitute for QA or verification.
 
 MVP final acceptance is recorded through a Decision Packet user decision, `task_gates.acceptance_gate`, and `state.sqlite.task_events`; there is no separate acceptance record or table.
 
@@ -148,11 +148,11 @@ The policy of keeping current state, evidence, and relevant references in contex
 
 ### Decision Gate
 
-The Task-level aggregate gate for blocking product judgment before progress, write, or close can continue. The canonical field is `decision_gate` with values `not_required`, `required`, `pending`, `resolved`, `deferred`, or `blocked`. It is recomputed from relevant blocking Decision Packets and detected blockers, and it does not substitute for approval, verification, Manual QA, or acceptance.
+The Task-level aggregate gate for blocking product judgment before progress, write, or close can continue. The canonical field is `decision_gate`; its value set and recompute rule are owned by [Decision Gate](03-kernel-spec.md#decision-gate). It is recomputed from relevant blocking Decision Packets and detected blockers, and it does not substitute for approval, verification, Manual QA, or acceptance.
 
 ### Decision Packet
 
-A recorded decision-support packet for blocking product judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Decision Packet record IDs use `DEC-*`. Its record-level status is `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, or `superseded`; relevant statuses feed the Task-level `decision_gate`. Its canonical form is kernel state. MVP visibility is required through Task/status/next/judgment-context and decision-packet surfaces; standalone `DEC` Markdown renderings are optional projections or proposal surfaces unless enabled.
+A recorded decision-support packet for blocking product judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Decision Packet record IDs use `DEC-*`. Its record-level status is owned by [Decision Gate Aggregate Recompute](03-kernel-spec.md#decision-gate-aggregate-recompute) and the public `DecisionPacket` schema; relevant statuses feed the Task-level `decision_gate`. Its canonical form is kernel state. MVP visibility is required through Task/status/next/judgment-context and decision-packet surfaces; standalone `DEC` Markdown renderings are optional projections or proposal surfaces unless enabled.
 
 ### Decision Request
 
@@ -196,13 +196,7 @@ Recorded support for claims about the work, such as diffs, logs, tests, run summ
 
 ### Evidence Gate
 
-The kernel gate for required evidence coverage.
-
-```text
-not_required | none | partial | sufficient | stale | blocked
-```
-
-`not_required` means the evidence gate does not apply. `none` means evidence is required but no evidence has been recorded.
+The kernel gate for required evidence coverage. Its value set and close meaning are owned by [Evidence Gate](03-kernel-spec.md#evidence-gate).
 
 ### Evidence Manifest
 
@@ -304,7 +298,7 @@ A verification handoff package for a human or separate evaluator. It includes ta
 
 ### Manual QA Record
 
-A record-level Manual QA result, including performer, profile, result, artifacts, findings, waiver reason when applicable, and next action. Its result is `passed`, `failed`, or `waived`. Pending required QA is represented by `qa_gate=pending`; it is not a Manual QA record result.
+A record-level Manual QA result, including performer, profile, result, artifacts, findings, waiver reason when applicable, and next action. Its result value set is owned by [QA Gate](03-kernel-spec.md#qa-gate) and [`harness.record_manual_qa`](05-mcp-api-and-schemas.md#harnessrecord_manual_qa). Pending required QA is represented by `qa_gate=pending`; it is not a Manual QA record result.
 
 ### `managed_hash`
 
@@ -356,11 +350,11 @@ A human-readable rendering of canonical state records and artifact references. P
 
 ### ProjectionKind
 
-The API enum for projection job and template kinds. MVP-required values are `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`; MVP-optional values are `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, and `INTERFACE-CONTRACT`; extension / appendix values are `DEC`, `DESIGN`, `EXPORT`, and `JOURNEY-CARD`. Extension values are valid only when enabled, and no ProjectionKind makes a projection canonical state.
+The API enum for projection job and template kinds. Tiers, values, and extension rules are owned by [Shared Schemas](05-mcp-api-and-schemas.md#shared-schemas). No ProjectionKind makes a projection canonical state.
 
 ### Projection Freshness
 
-The relationship between a projection and its source records, managed hash, artifact refs, and projection job state. Freshness may be `current`, `stale`, `failed`, or `unknown`.
+The relationship between a projection and its source records, managed hash, artifact refs, and projection job state. Its value set is owned by [MCP API And Schemas](05-mcp-api-and-schemas.md) and [Document Projection](07-document-projection.md).
 
 ### Projection Job
 
