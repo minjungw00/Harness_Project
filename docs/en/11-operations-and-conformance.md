@@ -1108,7 +1108,8 @@ expected_state:
   write_held: true
   write_decision: blocked
   validators:
-    surface_capability_check: blocked
+    surface_capability_check:
+      status: blocked
 expected_events:
   - prepare_write_blocked
   - capability_insufficient_detected
@@ -1963,7 +1964,8 @@ expected_state:
     decision_kind: product_tradeoff
     affected_gates: [decision_gate]
   validators:
-    decision_quality_check: blocked
+    decision_quality_check:
+      status: blocked
 expected_events:
   - prepare_write_blocked
   - decision_required
@@ -2021,7 +2023,8 @@ expected_state:
     decision_kind: autonomy_boundary
     affected_gates: [decision_gate]
   validators:
-    autonomy_boundary_check: blocked
+    autonomy_boundary_check:
+      status: blocked
 expected_events:
   - prepare_write_blocked
   - autonomy_boundary_exceeded
@@ -2080,7 +2083,8 @@ expected_state:
     design_gate: partial
   write_decision: blocked
   validators:
-    codebase_stewardship_check: blocked
+    codebase_stewardship_check:
+      status: blocked
 expected_events:
   - prepare_write_blocked
 expected_artifacts: []
@@ -2200,7 +2204,8 @@ expected_state:
     decision_gate: required
   manual_qa_record_created: false
   validators:
-    decision_quality_check: blocked
+    decision_quality_check:
+      status: blocked
   checks:
     qa_waiver_reason: passed
 expected_events: []
@@ -2461,7 +2466,8 @@ expected_state:
       findings:
         - code: STEWARDSHIP_FUTURE_CHANGE_RISK
           severity: blocker
-    residual_risk_visibility_check: passed
+    residual_risk_visibility_check:
+      status: passed
   residual_risk_summary:
     status: visible
     visible_refs: [RISK-PUBLIC-FUTURE-001]
@@ -2558,7 +2564,8 @@ expected_state:
     stale_refs: [PRD-2025-OLD]
     stale_refs_treated_as: pull_only
   validators:
-    context_hygiene_check: failed
+    context_hygiene_check:
+      status: failed
   checks:
     scope_coverage: blocked
 expected_events:
@@ -2684,7 +2691,8 @@ expected_state:
     did_not_replace_current_task_state: true
     did_not_satisfy_gates: true
   validators:
-    context_hygiene_check: warning
+    context_hygiene_check:
+      status: warning
 expected_events: []
 expected_artifacts: []
 expected_projection: {}
