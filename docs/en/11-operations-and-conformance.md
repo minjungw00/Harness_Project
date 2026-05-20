@@ -2240,8 +2240,13 @@ expected_state:
           record_id: EM-REVIEW-SPEC-001
         - record_kind: run
           record_id: RUN-REVIEW-SPEC-001
-expected_response:
-  display:
+expected_events:
+  - close_requested
+  - close_blocked
+expected_artifacts: []
+expected_projection:
+  TASK:
+    status: enqueued
     review_stages:
       display_only: true
       canonical_state_record_created: false
@@ -2258,12 +2263,6 @@ expected_response:
         accepts_risk: false
         closes_task: false
         creates_detached_assurance: false
-expected_events:
-  - close_requested
-  - close_blocked
-expected_artifacts: []
-expected_projection:
-  TASK: enqueued
 expected_error:
   code: EVIDENCE_INSUFFICIENT
 ```
