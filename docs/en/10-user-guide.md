@@ -70,6 +70,7 @@ Show me the Journey Card before resuming.
 Start with the scope and questions.
 If this is small, handle it as direct; if it grows, move it to work.
 Show the Decision Packet with options, recommendation, and uncertainty.
+Use the product-review lens for trade-offs; use eng-review, design-review, security-review, qa-review, or release-handoff when that review is the useful next step.
 Approved. The scope is only what you just described.
 Proceed AFK only when active Change Unit scope and Autonomy Boundary latitude both apply; sensitive categories still need granted approval, and actual product writes still need a compatible `prepare_write` Write Authorization.
 Start detached verify.
@@ -133,7 +134,18 @@ Harness should handle state recording, `prepare_write` checks, artifact registra
 
 Harness should translate your judgments into recorded state and clear blockers so you can stay focused on ownership, not bookkeeping.
 
-Recommended playbooks are optional procedure hints. They can help the agent choose a review, TDD, QA, guard-check, release-handoff, or browser-QA path, but they are not approvals, write authority, evidence, verification, QA results, acceptance, or close.
+Recommended playbooks are optional procedure hints. They can help the agent choose a review, TDD, QA, guard-check, release-handoff, browser-QA path, or role lens, but they are not approvals, write authority, evidence, verification, QA results, acceptance, or close.
+
+## Using Role Lenses
+
+A Role Lens asks the agent to review from a familiar posture such as product, engineering, design, security, QA, or release handoff.
+
+```text
+Use the security-review lens on this auth change.
+Use release-handoff and show what is still blocking close.
+```
+
+The lens can recommend a Decision Packet, evidence, Manual QA, residual risk, validator route, release handoff input, or another playbook. It cannot approve anything, authorize writes, waive checks, accept risk, accept the result, upgrade assurance, or close the task by itself.
 
 The TASK document may also show an Implementation Micro-Plan: a readable view of what the agent plans to do next in small steps. It is there to make execution easier to follow. You do not need to manage it by hand, and it does not authorize writes; active Change Unit scope and `prepare_write` still control product writes.
 

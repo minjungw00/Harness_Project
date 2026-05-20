@@ -2,7 +2,7 @@
 
 ## Document Role
 
-This document owns the common integration contract for connecting an agent surface to the harness. It defines capability tiers, capability profiles, generated manifest expectations, context push/pull principles, fallback semantics, the reference surface contract, and connector conformance overview.
+This document owns the common integration contract for connecting an agent surface to the harness. It defines capability tiers, capability profiles, generated manifest expectations, context push/pull principles, fallback semantics, role-lens behavior, the reference surface contract, and connector conformance overview.
 
 The main body is product-name-neutral. Surface-specific recipes live in [Appendix B](appendix/B-surface-cookbook.md).
 
@@ -36,6 +36,7 @@ An integrated surface should help the agent:
 - respect `prepare_write` and returned Write Authorization before product writes
 - show the Write Authority Summary separately from Autonomy Boundary
 - request or show Decision Packets for blocking product judgment
+- offer role-based review lenses when they help steer the agent without creating authority
 - record runs, artifacts, evidence, user decisions, QA, and acceptance
 - distinguish approval, product decision, QA waiver, verification waiver, residual-risk acceptance, and final acceptance
 - make known close-relevant residual risk visible before any successful close
@@ -118,11 +119,37 @@ The skill/playbook layer teaches procedure:
 - how to distinguish approval, product decision, QA waiver, verification waiver, residual-risk acceptance, and final acceptance
 - how to record TDD trace, evidence, Manual QA, and acceptance
 - how to run the two review stages: Spec Compliance Review first, then Code Quality / Stewardship Review
+- how to expose Role Lens commands or prompts as non-authoritative playbook guidance
 - how to make known close-relevant residual risk visible before any successful close, require accepted Residual Risk refs for risk-accepted close, and record acceptance only after close-relevant residual risk is visible
 - why work verification must be detached
 - how to handle stale projection and reconcile
 
-Stage routing may use recommended playbooks such as shared-design, product-review, eng-review, tdd-loop, spec-review, code-quality-review, qa-review, guard-check, release-handoff, or browser-qa-candidate. These recommendations live inside the skill/playbook layer. They are display guidance only: they do not mutate state, authorize writes, satisfy gates, create evidence, verify work, waive QA, accept risk, or close a Task. If a recommended playbook proposes product judgment, the surface should route to an existing Decision Packet or the normal Decision Packet request path.
+Stage routing may use recommended playbooks such as shared-design, product-review, eng-review, design-review, security-review, tdd-loop, spec-review, code-quality-review, qa-review, guard-check, release-handoff, or browser-qa-candidate. These recommendations live inside the skill/playbook layer. They are display guidance only: they do not mutate state, authorize writes, satisfy gates, create evidence, verify work, waive QA, accept risk, or close a Task. If a recommended playbook proposes product judgment, the surface should route to an existing Decision Packet or the normal Decision Packet request path.
+
+#### Role Lens
+
+Role Lens is a non-authoritative skill or playbook surface that helps the user steer the agent from a familiar review posture. Initial lenses are:
+
+- `product-review`
+- `eng-review`
+- `design-review`
+- `security-review`
+- `qa-review`
+- `release-handoff`
+
+A connector may expose these as slash commands, buttons, prompt snippets, or recommended playbooks. The lens name selects a review posture; it does not select an authority path. Role Lens output should reuse existing display and routing shapes rather than inventing parallel records. It may produce:
+
+- a `DecisionPacketCandidate` or a route to an existing Decision Packet
+- a validator finding candidate or suggested `ValidatorResult` route for an actual validator/check to emit
+- an evidence requirement
+- a Manual QA requirement
+- a residual-risk candidate
+- release handoff report input
+- a recommended next playbook
+
+Role Lens output must not mutate canonical state by itself, authorize writes, grant approval, satisfy a Decision Packet, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. When the lens identifies work that needs state change, the surface routes through the normal MCP tool and Core path: request a Decision Packet, record evidence, record Manual QA, launch or record verification, request acceptance, or close only when the relevant gates and blockers permit it.
+
+`recommended_playbooks` is the normal status/next integration point for Role Lens suggestions. For example, status may recommend `security-review` when sensitive authentication scope is active, `design-review` when UI/UX or visual policy is relevant, `qa-review` when Manual QA is likely, or `release-handoff` near close. These recommendations remain display guidance even when they are useful and well named.
 
 Two-stage review procedure should keep the stages visibly separate:
 

@@ -24,6 +24,7 @@ MVP includes:
 - approval, evidence, verification, Manual QA, and acceptance gate support
 - decision, autonomy boundary, feedback loop, codebase stewardship, residual-risk visibility, and agency conformance checks
 - two-stage review display support for Spec Compliance Review and Code Quality / Stewardship Review, sourced from existing state, validators, evidence, and refs
+- Role Lens display support for product, engineering, design, security, QA, and release-handoff review postures, routed through recommended playbooks and existing Decision Packet/validator/evidence/QA/risk paths
 - MVP-required `ProjectionKind` renderers named by [MCP API And Schemas](05-mcp-api-and-schemas.md#shared-schemas)
 - MVP-optional `ProjectionKind` renderers only where policy requires them, source records exist, or the user/operator enables them
 - detached verification bundle or manual evaluator instruction bundle
@@ -113,14 +114,14 @@ Exit criteria:
 
 ### MVP-1: Core State, Journey/Decision Skeleton, MCP Facade
 
-Implement Core transaction wrapper, locks, state version checks, idempotency replay records, read resources, Journey Spine reconstruction, Decision Packet records, `decision_gate` aggregation, `harness.status`, `harness.intake`, and `harness.next`. `harness.status` and `harness.next` may compute `recommended_playbooks` from current state for API/display guidance, but those recommendations are not stored as authority records and do not require separate DDL.
+Implement Core transaction wrapper, locks, state version checks, idempotency replay records, read resources, Journey Spine reconstruction, Decision Packet records, `decision_gate` aggregation, `harness.status`, `harness.intake`, and `harness.next`. `harness.status` and `harness.next` may compute `recommended_playbooks`, including Role Lens recommendations, from current state for API/display guidance, but those recommendations are not stored as authority records and do not require separate DDL.
 
 Exit criteria:
 
 - active Task absent status works
 - advisor Task can intake, run read-only, and close through Core
 - Task status can expose current Journey/Decision state from committed records
-- status/next can expose non-authoritative recommended playbooks without mutating state, satisfying gates, authorizing writes, or creating evidence
+- status/next can expose non-authoritative recommended playbooks and Role Lens recommendations while keeping state unchanged: they do not satisfy gates, authorize writes, create evidence, waive QA or verification, accept risk, accept the result, close a Task, or upgrade assurance
 - blocking user judgment can create or associate a Decision Packet and update `decision_gate`
 - every state mutation updates current records and appends `state.sqlite.task_events` in one transaction
 

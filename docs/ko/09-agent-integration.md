@@ -2,7 +2,7 @@
 
 ## 문서 역할
 
-이 문서는 agent surface를 하네스에 연결할 때 지켜야 하는 공통 integration contract를 설명한다. Capability tier, capability profile, generated manifest expectation, push/pull context 원칙, fallback semantic, reference surface contract, connector conformance 개요를 정의한다.
+이 문서는 agent surface를 하네스에 연결할 때 지켜야 하는 공통 integration contract를 설명한다. Capability tier, capability profile, generated manifest expectation, push/pull context 원칙, fallback semantic, Role Lens behavior, reference surface contract, connector conformance 개요를 정의한다.
 
 본문은 product name에 중립적이다. Surface별 recipe는 [Appendix B](appendix/B-surface-cookbook.md)에 둔다.
 
@@ -36,6 +36,7 @@ Integrated surface는 agent가 다음을 할 수 있게 도와야 한다.
 - product write 전 `prepare_write`와 반환된 Write Authorization 존중
 - Write Authority Summary를 Autonomy Boundary와 별도로 표시
 - blocking product judgment에는 Decision Packet을 request 또는 display
+- agent를 더 쉽게 steer할 수 있을 때 role-based review lens를 non-authoritative guidance로 제공
 - run, artifact, evidence, user decision, QA, acceptance 기록
 - approval, product decision, QA waiver, verification waiver, residual-risk acceptance, final acceptance 구분
 - successful close 전에 알려진 close-relevant residual risk를 visible하게 표시
@@ -118,11 +119,37 @@ Skill/playbook layer는 절차를 가르친다.
 - approval, product decision, QA waiver, verification waiver, residual-risk acceptance, final acceptance를 어떻게 구분할지
 - TDD trace, evidence, Manual QA, acceptance를 어떻게 record할지
 - two review stages를 어떻게 실행할지: 먼저 Spec Compliance Review, 그 다음 Code Quality / Stewardship Review
+- Role Lens command 또는 prompt를 non-authoritative playbook guidance로 어떻게 expose할지
 - successful close 전에 알려진 close-relevant residual risk를 visible하게 하고, risk-accepted close에는 accepted Residual Risk refs를 요구하며, required acceptance는 close-relevant residual risk가 visible한 뒤에만 record하는 방법
 - work verification이 왜 detached되어야 하는지
 - stale projection과 reconcile을 어떻게 처리할지
 
-Stage routing은 shared-design, product-review, eng-review, tdd-loop, spec-review, code-quality-review, qa-review, guard-check, release-handoff, browser-qa-candidate 같은 recommended playbooks를 사용할 수 있습니다. 이 recommendations는 skill/playbook layer 안에 있습니다. Display guidance일 뿐이며 state를 mutate하거나, write를 authorize하거나, gate를 satisfy하거나, evidence를 만들거나, work를 verify하거나, QA를 waive하거나, risk를 accept하거나, Task를 close하지 않습니다. Recommended playbook이 product judgment를 제안하면 surface는 existing Decision Packet 또는 normal Decision Packet request path로 route해야 합니다.
+Stage routing은 shared-design, product-review, eng-review, design-review, security-review, tdd-loop, spec-review, code-quality-review, qa-review, guard-check, release-handoff, browser-qa-candidate 같은 recommended playbooks를 사용할 수 있습니다. 이 recommendations는 skill/playbook layer 안에 있습니다. Display guidance일 뿐이며 state를 mutate하거나, write를 authorize하거나, gate를 satisfy하거나, evidence를 만들거나, work를 verify하거나, QA를 waive하거나, risk를 accept하거나, Task를 close하지 않습니다. Recommended playbook이 product judgment를 제안하면 surface는 existing Decision Packet 또는 normal Decision Packet request path로 route해야 합니다.
+
+#### Role Lens
+
+Role Lens는 사용자가 익숙한 review posture로 agent를 steer할 수 있게 하는 non-authoritative skill 또는 playbook surface입니다. Initial lenses는 다음과 같습니다.
+
+- `product-review`
+- `eng-review`
+- `design-review`
+- `security-review`
+- `qa-review`
+- `release-handoff`
+
+Connector는 이를 slash command, button, prompt snippet, recommended playbook으로 expose할 수 있습니다. Lens name은 review posture를 고를 뿐 authority path를 고르지 않습니다. Role Lens output은 parallel record를 만들지 말고 existing display와 routing shape를 재사용해야 합니다. 다음을 낼 수 있습니다.
+
+- `DecisionPacketCandidate` 또는 existing Decision Packet route
+- 실제 validator/check가 emit할 validator finding candidate 또는 suggested `ValidatorResult` route
+- evidence requirement
+- Manual QA requirement
+- residual-risk candidate
+- release handoff report input
+- recommended next playbook
+
+Role Lens output은 그 자체로 canonical state를 mutate하거나, write를 authorize하거나, approval을 grant하거나, Decision Packet을 satisfy하거나, QA 또는 verification을 waive하거나, residual risk를 accept하거나, result를 accept하거나, Task를 close하거나, assurance를 upgrade하면 안 됩니다. Lens가 state change가 필요한 일을 찾아내면 surface는 normal MCP tool과 Core path로 route합니다. 즉 Decision Packet request, evidence record, Manual QA record, verification launch/record, acceptance request, 또는 relevant gate와 blocker가 허용하는 close path를 사용합니다.
+
+`recommended_playbooks`는 Role Lens suggestion의 normal status/next integration point입니다. 예를 들어 sensitive authentication scope가 active이면 status가 `security-review`를, UI/UX 또는 visual policy가 relevant하면 `design-review`를, Manual QA가 likely하면 `qa-review`를, close가 가까우면 `release-handoff`를 recommend할 수 있습니다. 이 recommendations는 유용하고 이름이 명확해도 display guidance로 남습니다.
 
 Two-stage review procedure는 stages를 visible하게 분리해야 합니다.
 

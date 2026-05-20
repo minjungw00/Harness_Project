@@ -24,6 +24,7 @@ MVP 포함 항목:
 - approval, evidence, verification, Manual QA, acceptance gate support
 - decision, autonomy boundary, feedback loop, codebase stewardship, residual-risk visibility, agency conformance checks
 - 기존 state, validators, evidence, refs에서 source되는 Spec Compliance Review와 Code Quality / Stewardship Review의 two-stage review display support
+- product, engineering, design, security, QA, release-handoff review posture를 위한 Role Lens display support. 이는 recommended playbooks와 existing Decision Packet/validator/evidence/QA/risk paths로 route됩니다.
 - [MCP API와 스키마](05-mcp-api-and-schemas.md#shared-schemas)가 이름 붙이는 MVP-required `ProjectionKind` renderers
 - policy가 요구하거나, source record가 있거나, user/operator가 enable할 때만 사용하는 MVP-optional `ProjectionKind` renderers
 - detached verification bundle 또는 manual evaluator instruction bundle
@@ -113,14 +114,14 @@ Exit criteria:
 
 ### MVP-1: Core State, Journey/Decision Skeleton, MCP Facade
 
-Core transaction wrapper, locks, state version checks, idempotency replay records, read resources, Journey Spine reconstruction, Decision Packet records, `decision_gate` aggregation, `harness.status`, `harness.intake`, `harness.next`를 구현합니다. `harness.status`와 `harness.next`는 current state에서 API/display guidance용 `recommended_playbooks`를 compute할 수 있지만, 이 recommendations는 authority records로 저장되지 않으며 별도 DDL이 필요하지 않습니다.
+Core transaction wrapper, locks, state version checks, idempotency replay records, read resources, Journey Spine reconstruction, Decision Packet records, `decision_gate` aggregation, `harness.status`, `harness.intake`, `harness.next`를 구현합니다. `harness.status`와 `harness.next`는 current state에서 Role Lens recommendations를 포함한 API/display guidance용 `recommended_playbooks`를 compute할 수 있지만, 이 recommendations는 authority records로 저장되지 않으며 별도 DDL이 필요하지 않습니다.
 
 Exit criteria:
 
 - active Task absent status가 동작함
 - advisor Task가 intake, read-only run, Core를 통한 close를 수행할 수 있음
 - Task status가 committed records에서 current Journey/Decision state를 expose할 수 있음
-- status/next가 state를 mutate하거나 gate를 satisfy하거나 write를 authorize하거나 evidence를 만들지 않고 non-authoritative recommended playbooks를 expose할 수 있음
+- status/next가 state를 mutate하거나 gate를 satisfy하거나 write를 authorize하거나 evidence를 만들거나 QA 또는 verification을 waive하거나 risk를 accept하거나 result를 accept하거나 Task를 close하거나 assurance를 upgrade하지 않고 non-authoritative recommended playbooks와 Role Lens recommendations를 expose할 수 있음
 - blocking user judgment가 Decision Packet을 create 또는 associate하고 `decision_gate`를 update할 수 있음
 - 모든 state mutation이 current records를 update하고 같은 transaction에서 `state.sqlite.task_events`를 append함
 

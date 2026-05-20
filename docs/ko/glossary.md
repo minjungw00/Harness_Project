@@ -390,6 +390,10 @@ MVP implementation이 target하는 단일 agent surface입니다. Kernel과 conn
 
 Current state와 policy/playbook context에서 compute되는 non-authoritative status/next display guidance입니다. Current stage에 맞는 procedure를 suggest하며 review, TDD, QA, guard check, release handoff, browser-QA candidacy 같은 항목을 제안할 수 있습니다. `playbook_id`는 stable display/routing string identifier이지 Core-owned closed enum이나 DDL-backed value set이 아닙니다. Canonical kernel record가 아니고 자체 DDL table, task event, projection job이 없으며 write를 authorize하거나 gate를 satisfy하지 않고 product judgment는 Decision Packet path로 route합니다.
 
+### Role Lens
+
+사용자가 product, engineering, design, security, QA, release-handoff review posture를 요청할 수 있게 하는 non-authoritative skill 또는 playbook surface입니다. Role Lens output은 `RecommendedPlaybook`, `DecisionPacketCandidate`, validator/evidence/Manual QA/residual-risk candidates, release handoff input 같은 existing route를 재사용합니다. Write authority, approval, evidence, verification, QA waiver, risk acceptance, final acceptance, close, assurance upgrade가 아닙니다.
+
 ### Report Projection
 
 Task report, approval report, run summary, evidence manifest report, Eval report, direct-result report처럼 state records와 artifact references에서 generated되는 Markdown report입니다.
