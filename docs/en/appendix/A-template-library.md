@@ -16,14 +16,16 @@ Templates are examples of rendered shape. They are not canonical state and must 
 6. Keep approval, verification, Manual QA, and acceptance visibly separate.
 7. Treat `qa_gate` as canonical even when a card says `Manual QA: pending/passed/failed/waived`.
 8. Version template changes as projection changes.
-9. Treat Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, displayed Write Authorization refs, Change Unit DAG, Residual Risk text, Stewardship Impact text, and `source_state_version` as projection output, not canonical state or the canonical Write Authorization record itself.
+9. Treat Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, displayed Write Authorization refs, Change Unit DAG, Residual Risk text, Stewardship Impact text, and `source_state_version` as projection output, not canonical state or the canonical Write Authorization record itself.
 
 ```mermaid
 flowchart TD
   FrontMatter["front matter<br/>identity and source_state_version"] --> Managed["managed block<br/>generated state display"]
+  Managed --> MicroPlan["implementation micro-plan<br/>execution aid only"]
   Managed --> Human["human-editable sections<br/>preserved across refresh"]
   Human --> Artifacts["artifact refs<br/>raw evidence by reference"]
   Artifacts --> Versioning["template versioning<br/>projection changes"]
+  MicroPlan --> Boundary
   Versioning --> Boundary["projection output<br/>not canonical state"]
 ```
 
@@ -50,6 +52,7 @@ flowchart TD
   TASK --> Judgment["Judgment Context"]
   TASK --> Autonomy["Autonomy Boundary"]
   TASK --> Write["Write Authority Summary"]
+  TASK --> MicroPlan["Implementation Micro-Plan"]
   TASK --> Evidence["Next Evidence"]
   TASK --> Risk["Residual Risk"]
   TASK --> Stewardship["Stewardship Impact"]
@@ -132,6 +135,13 @@ updated_at: 2026-05-06T09:30:15+09:00
 - baseline:
 - guarantee:
 - note: Autonomy Boundary is judgment latitude, not write authority.
+
+## Implementation Micro-Plan
+- note: execution aid only; active Change Unit scope bounds writes and `prepare_write` creates Write Authorization.
+
+| Step / Slice | Purpose | Active Change Unit Scope / Likely Paths | Feedback Loop / TDD | Expected Evidence | Stop / Ask User When |
+|---|---|---|---|---|---|
+| 1 | | | | | |
 
 ## Next Evidence
 - next evidence action:
@@ -229,6 +239,14 @@ Use these sections for long-running `work` tasks. Keep them managed unless expli
 ## Change Unit Dependencies
 | ID | blocked_by | unblocks | parallelizable_with | merge risk |
 |---|---|---|---|---|
+
+## Implementation Micro-Plan Details
+- source alignment: current Task, active Change Unit, gates, related refs
+- boundary: not canonical state, not scope authority, not approval, not Write Authorization; active Change Unit remains the scope source
+
+### Step Queue
+| Step | State Alignment | Scope Alignment / Likely Paths | Feedback Loop / TDD Status | Evidence Target | Stop Condition |
+|---|---|---|---|---|---|
 
 ## Journey Spine
 ### Facts in Force

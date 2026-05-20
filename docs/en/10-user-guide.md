@@ -135,6 +135,8 @@ Harness should translate your judgments into recorded state and clear blockers s
 
 Recommended playbooks are optional procedure hints. They can help the agent choose a review, TDD, QA, guard-check, release-handoff, or browser-QA path, but they are not approvals, write authority, evidence, verification, QA results, acceptance, or close.
 
+The TASK document may also show an Implementation Micro-Plan: a readable view of what the agent plans to do next in small steps. It is there to make execution easier to follow. You do not need to manage it by hand, and it does not authorize writes; active Change Unit scope and `prepare_write` still control product writes.
+
 If Harness or the connected surface cannot use MCP reliably, product/runtime/code changes should pause until the connection or surface setup is diagnosed. A documentation-only bootstrap override, when explicitly granted for exact paths, is not the same thing as Harness authorization.
 
 ## Reading A Status Card
@@ -168,6 +170,7 @@ Look for these things.
 - What may the agent do inside the Autonomy Boundary?
 - Is Write Authority not yet requested, blocked, or allowed for the intended write?
 - Are any recommended playbooks useful for the next safe action?
+- Does the Implementation Micro-Plan, if shown, match the next small step you expect?
 - What remains among approval, evidence, verification, Manual QA, residual risk, and acceptance?
 - Is the next action safe to proceed with?
 

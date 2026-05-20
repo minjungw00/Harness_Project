@@ -135,6 +135,8 @@ Harness는 사용자의 판단을 recorded state와 clear blockers로 바꾸어,
 
 Recommended playbooks는 optional procedure hints입니다. Agent가 review, TDD, QA, guard-check, release-handoff, browser-QA path를 고르는 데 도움을 줄 수 있지만 approval, write authority, evidence, verification, QA result, acceptance, close가 아닙니다.
 
+TASK 문서는 Implementation Micro-Plan도 보여줄 수 있습니다. 이는 agent가 다음에 무엇을 하려는지 작은 step으로 읽기 쉽게 보여주는 view입니다. 실행을 따라가기 쉽게 하기 위한 것이며, 사용자가 손으로 관리할 필요는 없습니다. 또한 write를 authorize하지 않습니다. Product write는 여전히 active Change Unit scope와 `prepare_write`가 control합니다.
+
 Harness 또는 connected surface가 MCP를 reliable하게 사용할 수 없으면 product/runtime/code 변경은 connection 또는 surface setup이 diagnose될 때까지 pause해야 합니다. Exact path에 대해 명시적으로 granted된 documentation-only bootstrap override는 Harness authorization과 같지 않습니다.
 
 ## 상태 카드 읽기
@@ -168,6 +170,7 @@ Projection: current
 - Autonomy Boundary 안에서 agent가 어디까지 진행할 수 있는가.
 - Write Authority가 아직 요청 전인지, blocked인지, intended write에 allowed인지.
 - 다음 safe action에 유용한 recommended playbook이 있는가.
+- 표시된 경우 Implementation Micro-Plan이 기대하는 다음 작은 step과 맞는가.
 - approval, evidence, verification, Manual QA, residual risk, acceptance 중 무엇이 남았는가.
 - 다음 행동이 안전하게 진행 가능한가.
 

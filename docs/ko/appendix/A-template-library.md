@@ -16,14 +16,16 @@ Template은 rendered shape의 예시다. Canonical state가 아니며 kernel fie
 6. Approval, verification, Manual QA, acceptance를 visible하게 분리한다.
 7. Card가 `Manual QA: pending/passed/failed/waived`라고 말하더라도 `qa_gate`를 canonical로 취급한다.
 8. Template change는 projection change로 versioning한다.
-9. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, 표시된 Write Authorization ref, Change Unit DAG, Residual Risk text, Stewardship Impact text, `source_state_version`은 canonical state나 canonical Write Authorization record 자체가 아니라 projection output으로 취급한다.
+9. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, 표시된 Write Authorization ref, Change Unit DAG, Residual Risk text, Stewardship Impact text, `source_state_version`은 canonical state나 canonical Write Authorization record 자체가 아니라 projection output으로 취급한다.
 
 ```mermaid
 flowchart TD
   FrontMatter["front matter<br/>identity와 source_state_version"] --> Managed["managed block<br/>generated state display"]
+  Managed --> MicroPlan["implementation micro-plan<br/>execution aid only"]
   Managed --> Human["human-editable sections<br/>refresh 사이 preserve"]
   Human --> Artifacts["artifact refs<br/>raw evidence by reference"]
   Artifacts --> Versioning["template versioning<br/>projection changes"]
+  MicroPlan --> Boundary
   Versioning --> Boundary["projection output<br/>canonical state 아님"]
 ```
 
@@ -50,6 +52,7 @@ flowchart TD
   TASK --> Judgment["Judgment Context"]
   TASK --> Autonomy["Autonomy Boundary"]
   TASK --> Write["Write Authority Summary"]
+  TASK --> MicroPlan["Implementation Micro-Plan"]
   TASK --> Evidence["Next Evidence"]
   TASK --> Risk["Residual Risk"]
   TASK --> Stewardship["Stewardship Impact"]
@@ -132,6 +135,13 @@ updated_at: 2026-05-06T09:30:15+09:00
 - baseline:
 - guarantee:
 - note: Autonomy Boundary is judgment latitude, not write authority.
+
+## Implementation Micro-Plan
+- note: execution aid only; active Change Unit scope bounds writes and `prepare_write` creates Write Authorization.
+
+| Step / Slice | Purpose | Active Change Unit Scope / Likely Paths | Feedback Loop / TDD | Expected Evidence | Stop / Ask User When |
+|---|---|---|---|---|---|
+| 1 | | | | | |
 
 ## Next Evidence
 - next evidence action:
@@ -229,6 +239,14 @@ Long-running `work` task에는 이 section을 사용한다. 명시적으로 huma
 ## Change Unit Dependencies
 | ID | blocked_by | unblocks | parallelizable_with | merge risk |
 |---|---|---|---|---|
+
+## Implementation Micro-Plan Details
+- source alignment: current Task, active Change Unit, gates, related refs
+- boundary: not canonical state, not scope authority, not approval, not Write Authorization; active Change Unit remains the scope source
+
+### Step Queue
+| Step | State Alignment | Scope Alignment / Likely Paths | Feedback Loop / TDD Status | Evidence Target | Stop Condition |
+|---|---|---|---|---|---|
 
 ## Journey Spine
 ### Facts in Force

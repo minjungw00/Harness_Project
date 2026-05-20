@@ -20,7 +20,7 @@ Canonical kernel state, MCP request/response schema, SQLite DDL, design-quality 
 10. Large log, diff, trace, screenshot, bundle, checkpoint는 embed하지 않고 artifact ref로 link한다.
 11. Projection failure 또는 staleness는 underlying task result를 절대 바꾸지 않는다.
 12. User-facing card는 friendly label을 사용할 수 있지만 canonical gate name은 kernel field로 남는다.
-13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Change Unit DAG, Residual Risk, Stewardship Impact 표시는 owner record와 artifact ref에서 만든 non-canonical projection이다.
+13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Change Unit DAG, Residual Risk, Stewardship Impact 표시는 owner record와 artifact ref에서 만든 non-canonical projection이다.
 
 Source-of-truth caption: canonical operational state는 `state.sqlite` current records plus `state.sqlite.task_events`이며 raw evidence는 artifact store에 있고 Markdown은 derived view다.
 
@@ -55,6 +55,7 @@ flowchart TD
 | Journey Card | current `state.sqlite` Task state, gate, active Change Unit, Autonomy Boundary summary, active Decision Packet ref, residual-risk summary, latest evidence/eval/QA/report ref, projection freshness | `JOURNEY-CARD`, status card, `harness.status` card text, `harness.next` current-position text, significant resume output | current state에서 read 또는 projection refresh; card를 직접 edit하지 않음 |
 | Autonomy Boundary | active `state.sqlite.change_units` Autonomy Boundary field와 관련 Decision Packet resolution/event | `TASK` Autonomy Boundary, Change Unit block, Journey Card autonomy line, standalone projection이 enabled일 때 optional related standalone packet projection | shaping update 또는 user Decision Packet resolution, then projector |
 | Write Authorization | `state.sqlite.write_authorizations`와 관련 Task, Change Unit, approval, Decision Packet, baseline, consumed Run ref | `TASK` Write Authority Summary, Journey Card Write Authority Summary line, `RUN-SUMMARY` relation | `prepare_write`가 create함; idempotent replay는 already committed response를 반환함; `record_run`이 authorization을 consume한 뒤 projector |
+| Implementation Micro-Plan | current `state.sqlite` Task state와 gate, active Change Unit scope와 Autonomy Boundary, Change Unit dependency summary, selected feedback-loop records, TDD가 selected된 경우 TDD traces, expected evidence needs, Decision Packet blockers, latest report refs | `TASK` Implementation Micro-Plan managed section | Accepted reconcile outcome 또는 Core state-changing action이 owner record를 update한 뒤 projector |
 | Change Unit DAG | `state.sqlite.change_units`, `state.sqlite.change_unit_dependencies`, dependency 관련 event, active Task state | `TASK` Change Unit Dependencies / DAG summary | shaping update 또는 reconcile, then projector |
 | Residual Risk | `state.sqlite.residual_risks`, accepted-risk metadata와 residual-risk refs, related Decision Packet, evidence/QA/eval ref, artifact ref | `TASK` Residual Risk, standalone projection이 enabled일 때 optional accepted-risk context, Journey Card residual-risk line | decision, evidence, QA, Eval, reconcile 또는 close flow에서 Core transition, then projector |
 | Stewardship Impact Summary | `domain_terms`, `module_map_items`, `interface_contracts`, `feedback_loops`, TDD가 selected된 경우 TDD records, `state.sqlite.residual_risks`, `state.sqlite.decision_packets`, policy validator results, related refs | `TASK` Stewardship Impact와 status/resume stewardship display | Owner record update, validator result, reconcile, close flow, then projector |
@@ -108,6 +109,7 @@ Required authority statements:
 - Autonomy Boundary: active `state.sqlite.change_units` boundary field -> projection surface. 판단 재량이지 scope authority가 아니다.
 - Write Authority Summary: active scope, approval, Write Authorization, baseline, guarantee ref에서 만든 derived display다. 절대 canonical state가 아니며 work를 authorize할 수 없다.
 - Write Authorization: `state.sqlite.write_authorizations`는 specific allowed write attempt를 기록한다. Scope, approval, evidence, verification, QA, acceptance, residual-risk acceptance가 아니다.
+- Implementation Micro-Plan: current Task와 Change Unit owner record plus related refs -> `TASK` managed execution-aid section. Canonical state가 아니고, 새 `ProjectionKind`도 아니며, scope authority, approval, Write Authorization이 아니다. Active Change Unit scope가 여전히 write를 bound하고, `prepare_write`가 여전히 specific Write Authorization을 만들며, micro-plan text를 edit해도 accepted reconcile outcome 또는 Core state-changing action을 통하지 않으면 state를 mutate하지 않는다.
 - Approval: `approvals`와 approval-shaped Decision Packet -> Approval record가 존재하거나 변경된 뒤에만 `APR` projection을 만든다. `prepare_write`가 반환한 `approval_request_candidate`는 candidate display로 표시할 수 있지만 `APR` source가 아니다.
 - Change Unit DAG: `state.sqlite.change_unit_dependencies`와 Change Unit ref -> dependency projection. scheduler 또는 authorization surface가 아니다.
 - Residual Risk: accepted-risk metadata/refs를 포함한 `state.sqlite.residual_risks` -> residual-risk display
@@ -335,11 +337,13 @@ flowchart LR
 
 ### TASK
 
-목적: active work를 위한 continuity projection이다. 작업이 어디에 있는지, judgment context, Autonomy Boundary, Write Authority Summary, Stewardship Impact, next evidence, residual risk, mode, lifecycle phase, next action, current gate, active Change Unit, pending decision, evidence, report ref, projection freshness를 요약한다.
+목적: active work를 위한 continuity projection이다. 작업이 어디에 있는지, judgment context, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Stewardship Impact, next evidence, residual risk, mode, lifecycle phase, next action, current gate, active Change Unit, pending decision, evidence, report ref, projection freshness를 요약한다.
 
-Source: `state.sqlite` Task, task gate, active Change Unit, Change Unit dependency, Write Authorization record, Write Authority Summary display input, Decision Packet, Residual Risk, latest Run, latest Evidence Manifest, latest Eval, latest Manual QA record, approval record, Journey Spine source record, `domain_terms`, `module_map_items`, `interface_contracts`, `feedback_loops`, TDD가 selected된 경우 `tdd_traces`, design-quality validator result, artifact ref, projection freshness.
+Source: `state.sqlite` Task, task gate, active Change Unit, Change Unit dependency, Write Authorization record, Write Authority Summary display input, Decision Packet, Residual Risk, latest Run, latest Evidence Manifest, latest Eval, latest Manual QA record, approval record, Journey Spine source record, `domain_terms`, `module_map_items`, `interface_contracts`, `feedback_loops`, TDD가 selected된 경우 `tdd_traces`, design-quality validator result, expected evidence needs, artifact ref, projection freshness.
 
 Boundary: `TASK`의 Stewardship Impact는 owner record, validator result, ref에서 derive되는 `StewardshipImpactSummary` display다. Domain Language, Module Map, Interface Contract, Feedback Loop, TDD Trace, residual-risk, Decision Packet owner record를 replace하지 않는다.
+
+Boundary: `TASK`의 Implementation Micro-Plan은 current Task와 Change Unit state에서 render되거나 그 state와 aligned된 lightweight execution aid다. 작은 step 또는 slice, purpose, active Change Unit scope alignment 또는 likely paths, relevant한 경우 selected feedback loop 또는 TDD status, expected evidence, stop condition을 보여줄 수 있다. Product write를 authorize하거나, scope를 넓히거나, approval을 satisfy하거나, evidence를 만들거나, edit만으로 state를 mutate하거나, `prepare_write`를 replace하지 않는다. 이에 대한 human-editable proposal도 accepted reconcile outcome 또는 Core state-changing action을 통해서만 state가 된다.
 
 Human-editable area: User Notes and Proposals.
 

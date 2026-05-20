@@ -264,6 +264,10 @@ The local runtime storage area that contains `registry.sqlite`, per-project `pro
 
 A Markdown area where a human can write notes, proposals, questions, or corrections. It is an input surface, not canonical state. Its authority path is `human-editable input -> reconcile_items -> accepted state event/record`.
 
+### Implementation Micro-Plan
+
+A managed `TASK` projection section that shows small execution steps or slices, their purpose, active Change Unit scope alignment or likely paths, selected feedback loop or TDD status when relevant, expected evidence, and stop conditions. It is an execution aid, not canonical state, not a `ProjectionKind`, not scope authority, not approval, and not Write Authorization. Editing its text does not mutate state except through an accepted reconcile outcome or Core state-changing action.
+
 ### Isolated Guarantee
 
 A guarantee level where risky work is separated by a worktree, sandbox, process boundary, or equivalent isolation mechanism.

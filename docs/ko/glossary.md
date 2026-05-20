@@ -264,6 +264,10 @@ State transitions, gate updates, validator interpretation, artifact registration
 
 사람이 notes, proposals, questions, corrections를 쓸 수 있는 Markdown area입니다. Input surface이지 canonical state가 아닙니다. Authority path는 `human-editable input -> reconcile_items -> accepted state event/record`입니다.
 
+### Implementation Micro-Plan
+
+작은 execution step 또는 slice, purpose, active Change Unit scope alignment 또는 likely paths, relevant한 경우 selected feedback loop 또는 TDD status, expected evidence, stop condition을 보여주는 managed `TASK` projection section입니다. Execution aid이지 canonical state, `ProjectionKind`, scope authority, approval, Write Authorization이 아닙니다. 이 text를 edit해도 accepted reconcile outcome 또는 Core state-changing action을 통하지 않으면 state를 mutate하지 않습니다.
+
 ### Isolated Guarantee
 
 Risky work가 worktree, sandbox, process boundary 또는 동등한 isolation mechanism으로 분리되는 guarantee level입니다.
