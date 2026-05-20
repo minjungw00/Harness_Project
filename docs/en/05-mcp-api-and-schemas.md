@@ -437,7 +437,7 @@ EndToEndPath:
 
 Extension / appendix `ProjectionKind` values such as `DEC`, `DESIGN`, `EXPORT`, and `JOURNEY-CARD` are valid projection job kinds only when their projection feature is enabled. MVP-required Decision Packet visibility is provided through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Persisted `JOURNEY-CARD` Markdown remains optional even though current-position Journey Card output is required in status, next, and significant resume flows. Full extension template text is owned by Appendix A, not this API schema file.
 
-Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, acceptance visibility, and residual-risk summaries are public MCP schemas. They describe API payloads only; owner docs define the canonical kernel records.
+Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, Recommended Playbook, acceptance visibility, and residual-risk summaries are public MCP schemas. They describe API payloads only; owner docs define the canonical kernel records. `RecommendedPlaybook` is the display-only exception in this list: it has no canonical kernel record, DDL table, task event, or projection job of its own.
 
 ```yaml
 DecisionPacket:
@@ -512,11 +512,26 @@ DecisionPacketCandidate:
   approval_scope: ApprovalScope | null
   reconcile_item_id: string | null
 
+RecommendedPlaybook:
+  playbook_id: string
+  label: string
+  reason: string
+  applies_to:
+    focus: status | shaping | decision | implementation | verification | qa | acceptance | reconcile
+    state_refs: StateRecordRef[]
+  route:
+    display_route: continue_guidance | show_existing_decision_packet | propose_decision_packet_request | write_readiness_guidance | evidence_guidance | verification_guidance | manual_qa_guidance | close_readiness_guidance | reconcile_guidance
+    decision_packet_ref: StateRecordRef | null
+    decision_packet_route: none | existing_decision_packet | decision_packet_candidate_or_request_path
+  guidance_refs: StateRecordRef[]
+  authority_note: string
+
 JourneyCardSummary:
   task_id: string
   state: StateSummary
   current_position: string
   next_action: string
+  recommended_playbooks: RecommendedPlaybook[]
   active_change_unit_ref: StateRecordRef | null
   write_authority_summary: WriteAuthoritySummary | null
   active_decision_packet_refs: StateRecordRef[]
@@ -866,6 +881,7 @@ StatusRequest:
     autonomy_boundary: boolean
     write_authority: boolean
     residual_risk: boolean
+    recommended_playbooks: boolean
 ```
 
 Response schema:
@@ -878,6 +894,7 @@ StatusResponse:
   journey_card: JourneyCardSummary | null
   pending_decisions: StateRecordRef[]
   active_decision_packet_refs: StateRecordRef[]
+  recommended_playbooks: RecommendedPlaybook[]
   autonomy_boundary_summary: AutonomyBoundarySummary | null
   write_authority_summary: WriteAuthoritySummary | null
   residual_risk_summary: ResidualRiskSummary | null
@@ -896,6 +913,10 @@ EventRef values that may be returned: none.
 Projection jobs enqueued: none.
 
 `pending_decisions` contains unresolved user-action Decision Packets. `active_decision_packet_refs` contains all Decision Packets relevant to the current phase or requested action, including pending, deferred, blocked, or recently resolved packets. Both fields use `StateRecordRef` entries with `record_kind=decision_packet`.
+
+`recommended_playbooks` is non-authoritative display guidance for the surface or agent stage router, computed from current state and policy/playbook context for status/next display. It may suggest procedures such as shared design, review, TDD, QA, guard checks, release handoff, or browser-QA candidacy. `RecommendedPlaybook.playbook_id` is a stable display/routing string identifier, not a Core-owned closed enum or DDL-backed value set. Known initial IDs include `shared-design`, `product-review`, `eng-review`, `tdd-loop`, `spec-review`, `code-quality-review`, `qa-review`, `guard-check`, `release-handoff`, and `browser-qa-candidate`; this list is not exhaustive for future display/playbook documentation. Recommended Playbook has no canonical kernel record, DDL table, `task_events` entry, or projection job by itself. It never mutates state, authorizes writes, satisfies gates, creates evidence, performs verification, records QA, accepts risk, accepts the result, or closes a Task. If following a recommendation would require product judgment, the route must point to an existing Decision Packet or to the normal Decision Packet candidate/request path before any affected write or close proceeds. `route.display_route` values are display routes, not public tool names and not instructions to call a state-changing tool.
+
+When both `StatusResponse.recommended_playbooks` and `StatusResponse.journey_card.recommended_playbooks` are present, they are the same computed guidance rendered at different display levels. The top-level field is for status surfaces that do not render the full Journey Card; the Journey Card field keeps the same guidance with the current-position summary.
 
 `write_authority_summary` is returned when `include.write_authority=true`. When `include.journey_card=true`, the same current Write Authority Summary display may also appear in `journey_card.write_authority_summary`.
 
@@ -984,6 +1005,7 @@ NextResponse:
     action_kind: ask_user | prepare_write | implement | launch_verify | record_eval | record_manual_qa | request_acceptance | close_task | reconcile | idle
     summary: string
     required_tool: string | null
+  recommended_playbooks: RecommendedPlaybook[]
   instruction_bundle:
     summary: string
     constraints: string[]
@@ -1001,6 +1023,8 @@ EventRef values that may be returned: none.
 Projection jobs enqueued: none.
 
 `pending_decisions` contains unresolved user-action Decision Packets. Deferred, blocked, or recently resolved packets that still affect the current phase or requested action appear through `judgment_context.active_decision_packet_refs`.
+
+`recommended_playbooks` helps the caller choose a procedure for the returned next safe action. It is API/display guidance only, computed from current state and policy/playbook context. `playbook_id` remains a display/routing string identifier, not a canonical kernel enum. It must not update canonical state, append a `task_events` entry, enqueue projection jobs, satisfy `decision_gate`, `approval_gate`, `evidence_gate`, `verification_gate`, `qa_gate`, or `acceptance_gate`, or replace `prepare_write`, evidence, verification, QA, risk acceptance, result acceptance, or close. A playbook recommendation that would introduce product judgment must route to a Decision Packet candidate/request path or existing Decision Packet before any affected write or close proceeds. `route.display_route` values are display routes, not public tool names and not instructions to call a state-changing tool.
 
 When `focus=acceptance`, `judgment_context.acceptance_visibility` must be non-null. It must include the residual-risk summary, unaccepted close-relevant risk refs, evidence summary refs, verification status, QA status, acceptance status, and what acceptance does not replace. The context must distinguish `ResidualRiskSummary.status=none`, meaning no known close-relevant risk exists, from `not_visible`, meaning known close-relevant risk is still hidden. The context must make clear before any acceptance request that acceptance does not replace evidence sufficiency, verification, Manual QA, approval, scope, or residual-risk visibility.
 

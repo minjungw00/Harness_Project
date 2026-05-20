@@ -112,13 +112,14 @@ Exit criteria:
 
 ### MVP-1: Core State, Journey/Decision Skeleton, MCP Facade
 
-Core transaction wrapper, locks, state version checks, idempotency replay records, read resources, Journey Spine reconstruction, Decision Packet records, `decision_gate` aggregation, `harness.status`, `harness.intake`, `harness.next`를 구현합니다.
+Core transaction wrapper, locks, state version checks, idempotency replay records, read resources, Journey Spine reconstruction, Decision Packet records, `decision_gate` aggregation, `harness.status`, `harness.intake`, `harness.next`를 구현합니다. `harness.status`와 `harness.next`는 current state에서 API/display guidance용 `recommended_playbooks`를 compute할 수 있지만, 이 recommendations는 authority records로 저장되지 않으며 별도 DDL이 필요하지 않습니다.
 
 Exit criteria:
 
 - active Task absent status가 동작함
 - advisor Task가 intake, read-only run, Core를 통한 close를 수행할 수 있음
 - Task status가 committed records에서 current Journey/Decision state를 expose할 수 있음
+- status/next가 state를 mutate하거나 gate를 satisfy하거나 write를 authorize하거나 evidence를 만들지 않고 non-authoritative recommended playbooks를 expose할 수 있음
 - blocking user judgment가 Decision Packet을 create 또는 associate하고 `decision_gate`를 update할 수 있음
 - 모든 state mutation이 current records를 update하고 같은 transaction에서 `state.sqlite.task_events`를 append함
 

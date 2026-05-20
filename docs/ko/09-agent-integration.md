@@ -107,6 +107,7 @@ Always-on rule에는 full state transition table, MCP schema, full template, 긴
 Skill/playbook layer는 절차를 가르친다.
 
 - status, intake, next를 언제 call할지
+- status/next의 `recommended_playbooks`를 optional stage-router guidance로 어떻게 사용할지
 - `advisor`/`direct`/`work`를 어떻게 분류할지
 - shaping question을 어떻게 물을지
 - Change Unit을 어떻게 form할지
@@ -119,6 +120,8 @@ Skill/playbook layer는 절차를 가르친다.
 - successful close 전에 알려진 close-relevant residual risk를 visible하게 하고, risk-accepted close에는 accepted Residual Risk refs를 요구하며, required acceptance는 close-relevant residual risk가 visible한 뒤에만 record하는 방법
 - work verification이 왜 detached되어야 하는지
 - stale projection과 reconcile을 어떻게 처리할지
+
+Stage routing은 shared-design, product-review, eng-review, tdd-loop, spec-review, code-quality-review, qa-review, guard-check, release-handoff, browser-qa-candidate 같은 recommended playbooks를 사용할 수 있습니다. 이 recommendations는 skill/playbook layer 안에 있습니다. Display guidance일 뿐이며 state를 mutate하거나, write를 authorize하거나, gate를 satisfy하거나, evidence를 만들거나, work를 verify하거나, QA를 waive하거나, risk를 accept하거나, Task를 close하지 않습니다. Recommended playbook이 product judgment를 제안하면 surface는 existing Decision Packet 또는 normal Decision Packet request path로 route해야 합니다.
 
 Core와 validator가 policy를 enforce한다. Skill은 guidance이지 authority가 아니다.
 

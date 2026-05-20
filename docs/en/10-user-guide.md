@@ -81,16 +81,17 @@ Final acceptance is not required here; close once applicable blockers are clear.
 
 ## Basic Flow
 
-The normal path should feel like a short conversation, not a work-management system. Users usually see a compact status card and the next safe action, not every internal record.
+The normal path should feel like a short conversation, not a work-management system. Users usually see a compact status card, the next safe action, and sometimes optional recommended playbooks, not every internal record.
 
 1. Check status or intake.
 2. Classify as `advisor`, `direct`, or `work`.
 3. Confirm scope and the Change Unit.
 4. If product judgment blocks progress, read and answer the Decision Packet.
-5. Before writing, the agent or Harness checks `prepare_write`.
-6. After any changes or advice, the agent records the relevant result and evidence when evidence applies.
-7. When the task path calls for it, verify, record Manual QA, show close-relevant residual risk, and ask for acceptance.
-8. Close.
+5. Let optional recommended playbooks guide the procedure when useful.
+6. Before writing, the agent or Harness checks `prepare_write`.
+7. After any changes or advice, the agent records the relevant result and evidence when evidence applies.
+8. When the task path calls for it, verify, record Manual QA, show close-relevant residual risk, and ask for acceptance.
+9. Close.
 
 ```mermaid
 flowchart LR
@@ -132,6 +133,8 @@ Harness should handle state recording, `prepare_write` checks, artifact registra
 
 Harness should translate your judgments into recorded state and clear blockers so you can stay focused on ownership, not bookkeeping.
 
+Recommended playbooks are optional procedure hints. They can help the agent choose a review, TDD, QA, guard-check, release-handoff, or browser-QA path, but they are not approvals, write authority, evidence, verification, QA results, acceptance, or close.
+
 If Harness or the connected surface cannot use MCP reliably, product/runtime/code changes should pause until the connection or surface setup is diagnosed. A documentation-only bootstrap override, when explicitly granted for exact paths, is not the same thing as Harness authorization.
 
 ## Reading A Status Card
@@ -148,6 +151,7 @@ Decision Gate: pending
 Decision Packet: DEC-0012 failed-login UX
 Autonomy Boundary: may implement agreed login flow details only
 Write Authority: not yet requested
+Recommended playbooks: product-review, guard-check
 Approval: dependency_change required
 Evidence: none
 Verification: not started
@@ -163,6 +167,7 @@ Look for these things.
 - What Decision Packet, if any, do I need to answer?
 - What may the agent do inside the Autonomy Boundary?
 - Is Write Authority not yet requested, blocked, or allowed for the intended write?
+- Are any recommended playbooks useful for the next safe action?
 - What remains among approval, evidence, verification, Manual QA, residual risk, and acceptance?
 - Is the next action safe to proceed with?
 

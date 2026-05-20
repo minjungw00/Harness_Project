@@ -112,13 +112,14 @@ Exit criteria:
 
 ### MVP-1: Core State, Journey/Decision Skeleton, MCP Facade
 
-Implement Core transaction wrapper, locks, state version checks, idempotency replay records, read resources, Journey Spine reconstruction, Decision Packet records, `decision_gate` aggregation, `harness.status`, `harness.intake`, and `harness.next`.
+Implement Core transaction wrapper, locks, state version checks, idempotency replay records, read resources, Journey Spine reconstruction, Decision Packet records, `decision_gate` aggregation, `harness.status`, `harness.intake`, and `harness.next`. `harness.status` and `harness.next` may compute `recommended_playbooks` from current state for API/display guidance, but those recommendations are not stored as authority records and do not require separate DDL.
 
 Exit criteria:
 
 - active Task absent status works
 - advisor Task can intake, run read-only, and close through Core
 - Task status can expose current Journey/Decision state from committed records
+- status/next can expose non-authoritative recommended playbooks without mutating state, satisfying gates, authorizing writes, or creating evidence
 - blocking user judgment can create or associate a Decision Packet and update `decision_gate`
 - every state mutation updates current records and appends `state.sqlite.task_events` in one transaction
 

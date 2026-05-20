@@ -380,6 +380,10 @@ The canonical candidate record created from human-editable input or projection d
 
 The single agent surface targeted by the MVP implementation. It demonstrates the kernel and connector contract without implying broad MVP surface support.
 
+### Recommended Playbook
+
+Non-authoritative status/next display guidance computed from current state and policy/playbook context. It suggests a procedure for the current stage, such as review, TDD, QA, guard check, release handoff, or browser-QA candidacy. Its `playbook_id` is a stable display/routing string identifier, not a Core-owned closed enum or DDL-backed value set. It is not a canonical kernel record, has no DDL table, task event, or projection job of its own, does not authorize writes or satisfy gates, and routes product judgment to Decision Packet paths.
+
 ### Report Projection
 
 A Markdown report generated from state records and artifact references, such as a Task report, approval report, run summary, evidence manifest report, Eval report, or direct-result report.

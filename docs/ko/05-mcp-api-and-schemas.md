@@ -437,7 +437,7 @@ EndToEndPath:
 
 `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` 같은 Extension / appendix `ProjectionKind` values는 해당 projection feature가 enabled일 때만 valid projection job kind입니다. MVP-required Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공됩니다. Persisted `JOURNEY-CARD` Markdown은 optional로 남지만 current-position Journey Card output은 status, next, significant resume flows에서 required입니다. Full extension template text는 Appendix A가 담당하며, 이 API schema file이 담당하지 않습니다.
 
-Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. Canonical kernel records는 owner docs가 정의합니다.
+Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, Recommended Playbook, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. Canonical kernel records는 owner docs가 정의합니다. 이 목록에서 `RecommendedPlaybook`은 display-only 예외입니다. 자체 canonical kernel record, DDL table, task event, projection job이 없습니다.
 
 ```yaml
 DecisionPacket:
@@ -512,11 +512,26 @@ DecisionPacketCandidate:
   approval_scope: ApprovalScope | null
   reconcile_item_id: string | null
 
+RecommendedPlaybook:
+  playbook_id: string
+  label: string
+  reason: string
+  applies_to:
+    focus: status | shaping | decision | implementation | verification | qa | acceptance | reconcile
+    state_refs: StateRecordRef[]
+  route:
+    display_route: continue_guidance | show_existing_decision_packet | propose_decision_packet_request | write_readiness_guidance | evidence_guidance | verification_guidance | manual_qa_guidance | close_readiness_guidance | reconcile_guidance
+    decision_packet_ref: StateRecordRef | null
+    decision_packet_route: none | existing_decision_packet | decision_packet_candidate_or_request_path
+  guidance_refs: StateRecordRef[]
+  authority_note: string
+
 JourneyCardSummary:
   task_id: string
   state: StateSummary
   current_position: string
   next_action: string
+  recommended_playbooks: RecommendedPlaybook[]
   active_change_unit_ref: StateRecordRef | null
   write_authority_summary: WriteAuthoritySummary | null
   active_decision_packet_refs: StateRecordRef[]
@@ -866,6 +881,7 @@ StatusRequest:
     autonomy_boundary: boolean
     write_authority: boolean
     residual_risk: boolean
+    recommended_playbooks: boolean
 ```
 
 Response schema:
@@ -878,6 +894,7 @@ StatusResponse:
   journey_card: JourneyCardSummary | null
   pending_decisions: StateRecordRef[]
   active_decision_packet_refs: StateRecordRef[]
+  recommended_playbooks: RecommendedPlaybook[]
   autonomy_boundary_summary: AutonomyBoundarySummary | null
   write_authority_summary: WriteAuthoritySummary | null
   residual_risk_summary: ResidualRiskSummary | null
@@ -896,6 +913,10 @@ State transition summary: state transition 없음.
 Projection jobs enqueued: 없음.
 
 `pending_decisions`는 unresolved user-action Decision Packets를 포함합니다. `active_decision_packet_refs`는 pending, deferred, blocked, recently resolved packets를 포함해 current phase 또는 requested action과 relevant한 모든 Decision Packets를 포함합니다. 두 fields는 모두 `record_kind=decision_packet`인 `StateRecordRef` entries를 사용합니다.
+
+`recommended_playbooks`는 surface 또는 agent stage router를 위한 non-authoritative display guidance이며, status/next display를 위해 current state와 policy/playbook context에서 compute됩니다. Shared design, review, TDD, QA, guard check, release handoff, browser-QA candidacy 같은 절차를 suggest할 수 있습니다. `RecommendedPlaybook.playbook_id`는 stable display/routing string identifier이지 Core-owned closed enum이나 DDL-backed value set이 아닙니다. Known initial IDs에는 `shared-design`, `product-review`, `eng-review`, `tdd-loop`, `spec-review`, `code-quality-review`, `qa-review`, `guard-check`, `release-handoff`, `browser-qa-candidate`가 포함되며, 이 목록은 future display/playbook documentation에 대해 exhaustive하지 않습니다. Recommended Playbook은 자체 canonical kernel record, DDL table, `task_events` entry, projection job이 없습니다. State를 mutate하거나, write를 authorize하거나, gate를 satisfy하거나, evidence를 create하거나, verification을 perform하거나, QA를 record하거나, risk를 accept하거나, result를 accept하거나, Task를 close하지 않습니다. Recommendation을 따르려면 product judgment가 필요한 경우 route는 affected write 또는 close가 진행되기 전에 existing Decision Packet 또는 normal Decision Packet candidate/request path를 가리켜야 합니다. `route.display_route` values는 display routes이지 public tool names가 아니며 state-changing tool call 지시가 아닙니다.
+
+`StatusResponse.recommended_playbooks`와 `StatusResponse.journey_card.recommended_playbooks`가 둘 다 present이면, 둘은 같은 computed guidance를 다른 display level에 render한 것입니다. Top-level field는 full Journey Card를 render하지 않는 status surface용이고, Journey Card field는 같은 guidance를 current-position summary와 함께 유지합니다.
 
 `write_authority_summary`는 `include.write_authority=true`일 때 반환됩니다. `include.journey_card=true`이면 같은 current Write Authority Summary display가 `journey_card.write_authority_summary`에도 나타날 수 있습니다.
 
@@ -984,6 +1005,7 @@ NextResponse:
     action_kind: ask_user | prepare_write | implement | launch_verify | record_eval | record_manual_qa | request_acceptance | close_task | reconcile | idle
     summary: string
     required_tool: string | null
+  recommended_playbooks: RecommendedPlaybook[]
   instruction_bundle:
     summary: string
     constraints: string[]
@@ -1001,6 +1023,8 @@ State transition summary: state transition 없음.
 Projection jobs enqueued: 없음.
 
 `pending_decisions`는 unresolved user-action Decision Packets를 포함합니다. Current phase 또는 requested action에 아직 영향을 주는 deferred, blocked, recently resolved packets는 `judgment_context.active_decision_packet_refs`를 통해 나타납니다.
+
+`recommended_playbooks`는 반환된 next safe action에 맞는 절차를 caller가 선택하도록 돕습니다. 이는 current state와 policy/playbook context에서 compute되는 API/display guidance일 뿐입니다. `playbook_id`는 display/routing string identifier로 남으며 canonical kernel enum이 아닙니다. Canonical state를 update하거나, `task_events` entry를 append하거나, projection jobs를 enqueue하거나, `decision_gate`, `approval_gate`, `evidence_gate`, `verification_gate`, `qa_gate`, `acceptance_gate`를 satisfy하거나, `prepare_write`, evidence, verification, QA, risk acceptance, result acceptance, close를 대체하면 안 됩니다. Product judgment를 새로 요구하는 playbook recommendation은 affected write 또는 close가 진행되기 전에 Decision Packet candidate/request path 또는 existing Decision Packet으로 route해야 합니다. `route.display_route` values는 display routes이지 public tool names가 아니며 state-changing tool call 지시가 아닙니다.
 
 `focus=acceptance`일 때 `judgment_context.acceptance_visibility`는 non-null이어야 합니다. 이 context는 residual-risk summary, unaccepted close-relevant risk refs, evidence summary refs, verification status, QA status, acceptance status, what acceptance does not replace를 포함해야 합니다. 이 context는 known close-relevant risk가 없다는 뜻의 `ResidualRiskSummary.status=none`과, known close-relevant risk가 아직 hidden이라는 뜻의 `not_visible`을 구분해야 합니다. Acceptance request 전에 acceptance가 evidence sufficiency, verification, Manual QA, approval, scope, residual-risk visibility를 대체하지 않는다는 점을 명확히 보여줘야 합니다.
 

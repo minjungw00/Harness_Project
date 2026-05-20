@@ -107,6 +107,7 @@ They should not contain full state transition tables, MCP schemas, full template
 The skill/playbook layer teaches procedure:
 
 - when to call status, intake, and next
+- how to use `recommended_playbooks` from status/next as optional stage-router guidance
 - how to classify advisor/direct/work
 - how to ask shaping questions
 - how to form a Change Unit
@@ -119,6 +120,8 @@ The skill/playbook layer teaches procedure:
 - how to make known close-relevant residual risk visible before any successful close, require accepted Residual Risk refs for risk-accepted close, and record acceptance only after close-relevant residual risk is visible
 - why work verification must be detached
 - how to handle stale projection and reconcile
+
+Stage routing may use recommended playbooks such as shared-design, product-review, eng-review, tdd-loop, spec-review, code-quality-review, qa-review, guard-check, release-handoff, or browser-qa-candidate. These recommendations live inside the skill/playbook layer. They are display guidance only: they do not mutate state, authorize writes, satisfy gates, create evidence, verify work, waive QA, accept risk, or close a Task. If a recommended playbook proposes product judgment, the surface should route to an existing Decision Packet or the normal Decision Packet request path.
 
 Core and validators enforce policy. The skill is guidance, not authority.
 

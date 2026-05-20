@@ -578,6 +578,8 @@ Agency, stewardship, context hygiene는 MVP conformance suite입니다. 이 suit
 | stewardship | Design-quality와 codebase-stewardship validator는 canonical owner record, ref, policy-owned severity composition을 통해 `design_gate`, `decision_gate`, `qa_gate`, close blocker, waiver eligibility에 영향을 줍니다. Public interface, module, domain, feedback-loop, TDD, Manual QA, waiver check는 schema나 DDL을 duplicate하지 않습니다. |
 | context-hygiene | Current Task state, Journey ref, evidence ref, freshness state가 authoritative합니다. Stale PRD, stale projection, closed issue, old design doc, long log는 reconcile되기 전까지 pull-only context입니다. Stale context는 write, close, acceptance, current-state replacement를 authorize할 수 없습니다. |
 
+Status/next recommendations는 read response로만 fixture-observable합니다. Fixture는 관련 있을 때 `recommended_playbooks`를 assert할 수 있지만, recommendation 자체로 state event, gate satisfaction, projection enqueue, artifact, evidence, verification, QA, acceptance, close가 발생하지 않았다는 점도 증명해야 합니다. Recommendation이 product judgment를 imply하면 expected behavior는 Decision Packet ref 또는 Decision Packet request path이지 satisfied `decision_gate`가 아닙니다.
+
 ```mermaid
 flowchart LR
   Suites["MVP conformance suites"] --> Agency["agency"]
@@ -2049,6 +2051,7 @@ expected_error:
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
 | `CONN-journey-card-shown-before-significant-resume` | `next` | `next`는 significant resume instruction bundle을 반환하기 전에 current Task state version, current Journey Card 또는 journey ref, active Change Unit ref, pending Decision Packet ref, residual-risk summary, projection freshness를 반환합니다. read에는 state event가 append되지 않습니다. |
+| `CONN-recommended-playbooks-read-only-guidance` | `next` | `next`는 current stage에 대한 `recommended_playbooks`를 반환할 수 있지만, 이 read는 state event를 append하지 않고, projection을 enqueue하지 않고, artifact나 evidence를 만들지 않고, gate를 바꾸지 않으며, write를 authorize하지 않습니다. Product judgment가 필요한 playbook은 existing Decision Packet 또는 Decision Packet request path로 route합니다. |
 | `CONN-decision-packet-not-broad-approval` | `prepare_write` | Active Decision Packet 밖의 product judgment는 `decision_packet_candidate`와 함께 `decision_required`를 반환합니다. Decision request metadata는 optional routing/replay compatibility data이며 compatible Decision Packet 없이는 `decision_gate`를 satisfy할 수 없습니다. `approval_required`를 반환하지 않고 broad approval candidate를 만들지 않으며 `approval_gate=granted`를 set하지 않습니다. |
 | `CONN-autonomy-boundary-breach-stops-or-routes-to-decision` | `prepare_write` | Active Autonomy Boundary를 넘으면 `blocked` 또는 `decision_required`를 반환하고, `autonomy_boundary_exceeded`를 append하며, write를 held 상태로 유지하고, 기존 compatible Decision Packet을 reference하거나 candidate decision packet을 반환합니다. |
 
