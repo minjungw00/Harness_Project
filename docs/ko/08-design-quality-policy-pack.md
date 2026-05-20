@@ -150,12 +150,12 @@ flowchart TD
 |---|---|
 | `name` | `feedback_loop` |
 | `applies_when` | Implementation 시작 전, behavior-affecting write 전, TDD가 waived될 때, Manual QA가 expected될 때, 또는 agent가 change가 작동하는지 배울 credible한 방법이 필요할 때. |
-| `default_requirement` | Implementation 전에 feedback loop를 정의한다. Loop는 test, typecheck, lint, build, browser smoke, Manual QA, explicit alternate loop 중 하나일 수 있다. 선택된 loop는 risk에 대해 가장 작은 credible loop여야 한다. TDD trace는 이 policy의 구현 방식 중 하나일 뿐 유일한 구현 방식은 아니다. |
+| `default_requirement` | Implementation 전에 feedback loop를 정의한다. Loop는 test, typecheck, lint, build, browser smoke, Manual QA, explicit alternate loop 중 하나일 수 있다. 선택된 loop는 risk에 대해 가장 작은 credible loop여야 한다. Change Unit 또는 behavior slice에 TDD가 required이면 non-test implementation을 시작하기 전에 loop와 intended RED check를 정의한다. TDD trace는 이 policy의 구현 방식 중 하나일 뿐 유일한 구현 방식은 아니다. |
 | `allowed_waiver` | Implementation 또는 product behavior impact가 없는 docs-only edit, comment, formatting, advisory work에 허용된다. Waiver에는 executable, browser, Manual QA, alternate loop가 유용하지 않은 이유를 기록해야 한다. |
 | `required_record` | `record_kind=feedback_loop`으로 reference되는 canonical `feedback_loops` record, selected-loop refs, validator results, TDD가 선택된 경우 `tdd_traces`, Manual QA가 선택되고 performed된 경우 Manual QA record, required QA가 아직 satisfying record를 갖지 못한 경우 `qa_gate=pending`, 실행 후 evidence manifest refs. |
 | `validator` | `feedback_loop_check` |
 | `evidence` | Feedback Loop refs, planned loop refs, test/typecheck/lint/build/browser smoke logs, Manual QA refs, alternate-loop justification, 사용된 경우 TDD trace refs. |
-| `close_impact` | Feedback loop definition이 없으면 `design_gate=pending` 또는 `partial`로 남는다. Execution evidence가 없으면 evidence가 insufficient해질 수 있다. Manual QA loop failure는 Manual QA policy를 통해 `qa_gate`에 영향을 준다. |
+| `close_impact` | Feedback loop definition이 없으면 `design_gate=pending` 또는 `partial`로 남는다. Execution evidence가 없으면 evidence가 insufficient해질 수 있다. Manual QA loop failure는 Manual QA policy를 통해 `qa_gate`에 영향을 준다. Required TDD RED/GREEN/refactor coverage가 missing이면 `tdd_trace_required`를 통해 처리되고 Evidence Manifest coverage도 insufficient해질 수 있다. |
 
 Public mutation path: selected-loop definitions와 waivers는 `record_run(kind=shaping_update)` 중 `FeedbackLoopUpdate`로 기록합니다. Execution refs와 status는 implementation/direct runs 중 `EvidenceUpdates.feedback_loop_updates`로 update하거나, Manual QA가 selected loop일 때 `record_manual_qa.feedback_loop_ref`로 update합니다.
 
@@ -165,12 +165,23 @@ Public mutation path: selected-loop definitions와 waivers는 `record_run(kind=s
 |---|---|
 | `name` | `tdd_trace` |
 | `applies_when` | Domain logic, service module, bug fix, parser/validator, state transition, deep module internal, edge-case-heavy behavior. API/caller boundary와 integration behavior에는 권장된다. |
-| `default_requirement` | TDD가 가장 알맞은 selected feedback loop일 때 TDD를 사용한다. 적어도 하나의 acceptance criterion 또는 behavior slice에 대해 red, green, refactor evidence를 기록한다. Trace를 evidence manifest에 link한다. |
-| `allowed_waiver` | Docs, typo, throwaway prototype, exploratory UI prototype, initial scaffold, 또는 user/operator가 non-TDD justification과 alternate feedback loop를 기록한 경우 허용된다. |
+| `default_requirement` | TDD가 가장 알맞은 selected feedback loop이거나 Change Unit, behavior slice, policy, user/operator가 `tdd_trace_required`로 표시한 경우 TDD를 사용한다. Normal execution order는 feedback loop와 RED target 정의, RED check 작성 또는 실행, actual RED evidence 기록, actual RED evidence 또는 valid waiver가 있을 때만 non-test implementation 수행, GREEN evidence 기록, relevant한 경우 refactor/check evidence 기록, TDD trace를 Evidence Manifest coverage에 link하는 순서다. |
+| `allowed_waiver` | Docs, typo, throwaway prototype, exploratory UI prototype, initial scaffold, 또는 user/operator가 non-TDD justification과 alternate feedback loop를 기록한 경우 허용된다. Waiver는 이 slice에 TDD가 유용하지 않거나 proportionate하지 않은 이유를 명시하고 credible feedback을 제공할 alternate loop를 reference하거나 define해야 한다. |
 | `required_record` | `tdd_traces` record와 rendered될 때 `TDD-TRACE` projection. |
 | `validator` | `tdd_trace_required` |
-| `evidence` | Failing test log, passing test log, refactor check log, diff ref, waived 시 non-TDD justification. |
-| `close_impact` | Required TDD trace가 missing이면 `design_gate=partial`이 되고 evidence가 insufficient해질 수 있다. Valid non-TDD justification은 design policy를 satisfy할 수 있지만 그 자체로 behavior를 증명하지는 않는다. |
+| `evidence` | Actual failing test artifact/log/result 또는 policy가 명시적으로 인정한 failing-check evidence, passing test log, relevant한 경우 refactor check log, diff refs, Evidence Manifest coverage refs, waived 시 non-TDD justification과 alternate feedback loop. RED target 또는 RED plan은 planning record이지 evidence가 아니다. |
+| `close_impact` | Required TDD trace가 missing이면 `design_gate=partial`이 되고 evidence가 insufficient해질 수 있다. Non-test implementation 전 RED evidence가 missing이면 `prepare_write`를 block할 수 있다. GREEN 또는 relevant한 refactor/check evidence가 missing이면 evidence sufficiency 또는 design-quality blockers를 통해 close를 block할 수 있다. Valid non-TDD justification은 design policy를 satisfy할 수 있지만 그 자체로 behavior를 증명하지는 않는다. |
+
+TDD execution loop:
+
+1. Implementation 전에 selected feedback loop를 정의한다. Required TDD에서는 Feedback Loop record가 behavior slice 또는 acceptance criterion, RED target 또는 plan, expected GREEN check를 identify해야 한다.
+2. Non-test implementation write 전에 RED evidence를 기록한다. RED evidence는 actual failing test artifact/log/result 또는 policy가 명시적으로 인정한 failing-check evidence를 뜻한다. RED target 또는 plan은 이 precondition을 satisfy하지 않고 Evidence Manifest coverage도 satisfy하지 않는다.
+3. Active Change Unit scope, baseline, approval, Autonomy Boundary, other gates가 허용하면 RED check를 만드는 test-path write는 허용한다. RED target 또는 plan은 이 scoped test-path write를 support할 수 있다. 이 write가 product files를 touch하면 여전히 product write이지만, actual RED evidence가 아직 기록되지 않았다는 이유만으로 `tdd_trace_required` policy가 block해서는 안 된다.
+4. TDD가 required인데 RED evidence도 valid TDD waiver도 없으면 non-test implementation write를 block한다. `prepare_write`는 `tdd_trace_required` failed 또는 blocked 상태의 design-policy blocker를 반환할 수 있으며, public error selection은 계속 API precedence를 따른다.
+5. Implementation 후 GREEN evidence를 기록하고, refactor step을 수행했거나 slice risk가 additional check를 요구하면 refactor/check evidence를 기록한다.
+6. TDD trace, Feedback Loop, run logs, artifacts를 Evidence Manifest의 acceptance-criteria 및 changed-file coverage에 link한다.
+
+이는 policy와 write-check behavior이지 Kernel Authority Invariant가 아니다. Kernel authority는 여전히 owner documents의 active Task, active Change Unit scope, `prepare_write`, Write Authorization, approvals, Decision Packets, evidence, verification, QA, acceptance, close semantics에서 나온다.
 
 ### Deep Module / Interface
 

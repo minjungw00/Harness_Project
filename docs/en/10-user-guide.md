@@ -137,6 +137,8 @@ Recommended playbooks are optional procedure hints. They can help the agent choo
 
 The TASK document may also show an Implementation Micro-Plan: a readable view of what the agent plans to do next in small steps. It is there to make execution easier to follow. You do not need to manage it by hand, and it does not authorize writes; active Change Unit scope and `prepare_write` still control product writes.
 
+When TDD is required, expect the agent to name the feedback loop and RED target before implementation, write or run the failing RED check, then implement until the GREEN check passes. A plan for the RED check helps the agent create the test, but it is not RED evidence by itself. If the agent needs to skip TDD, Harness should record why and what alternate feedback loop will prove the behavior. A non-test implementation write may be blocked until actual RED evidence or that waiver exists.
+
 If Harness or the connected surface cannot use MCP reliably, product/runtime/code changes should pause until the connection or surface setup is diagnosed. A documentation-only bootstrap override, when explicitly granted for exact paths, is not the same thing as Harness authorization.
 
 ## Reading A Status Card

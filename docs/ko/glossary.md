@@ -474,7 +474,7 @@ Kernel이 track하는 user value unit입니다. mode, lifecycle phase, gates, re
 
 ### TDD Trace
 
-Change Unit에 대한 red, green, refactor evidence record 또는 policy가 허용하는 recorded non-TDD justification입니다. TDD Trace는 Feedback Loop의 execution evidence가 될 수 있지만 canonical selected-loop record는 아닙니다.
+Change Unit 또는 behavior slice에 대한 red, green, refactor evidence record 또는 policy가 허용하는 recorded non-TDD justification입니다. RED target 또는 plan은 intended failing check를 설명하고, RED evidence는 actual failing test artifact/log/result 또는 policy가 명시적으로 인정한 failing-check evidence를 뜻합니다. Required인 경우 normal path는 non-test implementation write 전에 RED evidence를 기록하고, implementation 후 GREEN evidence를 기록하며, relevant한 경우 refactor/check evidence를 기록한 뒤 trace를 Evidence Manifest coverage에 link합니다. TDD Trace는 Feedback Loop의 execution evidence가 될 수 있지만 canonical selected-loop record는 아닙니다. Waiver는 behavior를 증명할 alternate Feedback Loop로 돌아가는 ref를 가져야 합니다.
 
 ### Verification
 

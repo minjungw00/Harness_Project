@@ -138,6 +138,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Implementation Micro-Plan
 - note: execution aid only; active Change Unit scope bounds writes and `prepare_write` creates Write Authorization.
+- TDD note: when required, show the selected feedback loop, RED target, GREEN target, and whether non-test implementation is waiting on actual RED evidence or a waiver.
 
 | Step / Slice | Purpose | Active Change Unit Scope / Likely Paths | Feedback Loop / TDD | Expected Evidence | Stop / Ask User When |
 |---|---|---|---|---|---|
@@ -146,6 +147,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Next Evidence
 - next evidence action:
 - evidence needed for:
+- TDD RED target / plan:
+- TDD RED evidence:
+- TDD GREEN evidence:
+- TDD refactor/check evidence:
 - expected artifact refs:
 - stale or missing evidence:
 
@@ -190,7 +195,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Active Change Unit
 | ID | Purpose | Status | Slice Type | TDD | Manual QA | Core Verification |
 |---|---|---|---|---|---|---|
-| CU-01 | | | vertical | required | pending | |
+| CU-01 | | | vertical | required: red_pending \| red_recorded \| green_recorded \| waived | pending | |
 
 ## Pending Decisions
 -
@@ -335,7 +340,8 @@ This is a TASK sub-template, not a separate canonical projection tier.
   - none
 - TDD:
   - required: yes | no | recommended
-  - red evidence:
+  - RED target / plan:
+  - RED evidence (actual):
   - green evidence:
   - non-TDD justification:
 - Manual QA:
@@ -500,9 +506,12 @@ npm test -- --runInBand
 
 ## TDD Trace Summary
 - required:
-- red evidence:
+- feedback loop ref:
+- RED target / plan:
+- RED evidence (actual):
 - green evidence:
 - refactor notes:
+- waiver / alternate loop:
 - trace ref:
 
 ## Key Changes
@@ -575,7 +584,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 | decision_quality_check | passed | DEC-0001 | |
 | autonomy_boundary_check | passed | CU-01 | |
 | feedback_loop_check | passed | FBL-0001, TDD-0001, LOG-0001 | |
-| tdd_trace_required | passed | TDD-0001 | |
+| tdd_trace_required | passed | TDD-0001, RED-LOG-0001, GREEN-LOG-0001 | RED, GREEN, and relevant refactor/check coverage link back to acceptance criteria and changed files. |
 | module_interface_review | passed | module_map_item: MMI-0001, interface_contract: IFACE-0001, DEC-0001 | |
 | codebase_stewardship_check | passed | domain_term: TERM-0001, module_map_item: MMI-0001, interface_contract: IFACE-0001, feedback_loop: FBL-0001 | |
 | residual_risk_visibility_check | pending | RR-0001 | |
@@ -588,6 +597,10 @@ updated_at: 2026-05-06T09:50:00+09:00
 - run summary:
 - feedback loop:
 - TDD trace:
+- TDD RED target / plan:
+- TDD red:
+- TDD green:
+- TDD refactor/check:
 - Manual QA:
 - diff:
 - logs:
@@ -951,12 +964,17 @@ updated_at: 2026-05-06T09:40:00+09:00
 - task_id:
 - change_unit_id:
 - required: yes | no | recommended
+- feedback loop ref:
+- evidence manifest coverage ref:
 
 ## Red
+- target / plan:
 - failing test ref:
 - command:
 - result: failed_as_expected | failed_unexpectedly | missing
 - log ref:
+- recorded before non-test implementation: yes | no | waived
+- target / plan counts as Evidence Manifest coverage: no
 
 ## Green
 - command:
@@ -973,11 +991,14 @@ updated_at: 2026-05-06T09:40:00+09:00
 - reason:
 - feedback loop ref:
 - alternate feedback loop:
+- waiver recorded before non-test implementation: yes | no
 
 ## Evidence Refs
 - test:
 - red log:
 - green log:
+- refactor/check log:
+- Evidence Manifest:
 - diff:
 ````
 

@@ -137,6 +137,8 @@ Recommended playbooks는 optional procedure hints입니다. Agent가 review, TDD
 
 TASK 문서는 Implementation Micro-Plan도 보여줄 수 있습니다. 이는 agent가 다음에 무엇을 하려는지 작은 step으로 읽기 쉽게 보여주는 view입니다. 실행을 따라가기 쉽게 하기 위한 것이며, 사용자가 손으로 관리할 필요는 없습니다. 또한 write를 authorize하지 않습니다. Product write는 여전히 active Change Unit scope와 `prepare_write`가 control합니다.
 
+TDD가 required이면 agent가 implementation 전에 feedback loop와 RED target을 먼저 말하고, failing RED check를 작성하거나 실행한 뒤 GREEN check가 pass할 때까지 구현한다고 보면 됩니다. RED check에 대한 plan은 test를 만드는 데 도움이 되지만 그 자체가 RED evidence는 아닙니다. Agent가 TDD를 생략해야 한다면 Harness는 이유와 behavior를 증명할 alternate feedback loop를 기록해야 합니다. Actual RED evidence 또는 그 waiver가 없으면 non-test implementation write가 block될 수 있습니다.
+
 Harness 또는 connected surface가 MCP를 reliable하게 사용할 수 없으면 product/runtime/code 변경은 connection 또는 surface setup이 diagnose될 때까지 pause해야 합니다. Exact path에 대해 명시적으로 granted된 documentation-only bootstrap override는 Harness authorization과 같지 않습니다.
 
 ## 상태 카드 읽기

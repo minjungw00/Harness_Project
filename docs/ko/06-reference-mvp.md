@@ -140,7 +140,7 @@ Exit criteria:
 
 ### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
 
-`harness.record_run`, run records, Write Authorization consumption, evidence manifest records, Feedback Loop support records and checks, codebase stewardship checks, projection jobs, 그리고 이 stage에서 source record가 존재하는 pre-verification MVP-required renderers인 TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT를 구현합니다. `EVAL`은 MVP-required `ProjectionKind`로 남지만, executable enqueue/render path는 `harness.record_eval`이 Eval source records를 만들 수 있는 MVP-4에서 완료됩니다. 또한 managed block hashes와 managed drift 또는 human-editable proposals를 위한 reconcile item creation을 구현합니다.
+`harness.record_run`, run records, Write Authorization consumption, evidence manifest records, Feedback Loop support records and checks, TDD trace red/green/refactor records and checks, codebase stewardship checks, projection jobs, 그리고 이 stage에서 source record가 존재하는 pre-verification MVP-required renderers인 TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT를 구현합니다. `EVAL`은 MVP-required `ProjectionKind`로 남지만, executable enqueue/render path는 `harness.record_eval`이 Eval source records를 만들 수 있는 MVP-4에서 완료됩니다. 또한 managed block hashes와 managed drift 또는 human-editable proposals를 위한 reconcile item creation을 구현합니다.
 
 Exit criteria:
 
@@ -148,6 +148,8 @@ Exit criteria:
 - implementation과 direct runs가 compatible Write Authorization을 consume하고 authorization 밖의 observed changes를 detect함
 - runs, checks, QA inputs, evaluator notes의 findings가 state, evidence, Decision Packet, Change Unit update, close blocker 중 하나로 route됨
 - scope, design, module boundaries, user judgment에 영향을 주는 codebase stewardship issues가 validator results 또는 blockers로 visible함
+- `tdd_trace_required`가 적용될 때 failing RED check를 만들기 위한 test-path writes는 normal scope와 authority checks를 통해 proceed할 수 있고, non-test implementation writes는 actual RED evidence가 있거나 valid TDD waiver가 non-TDD justification과 alternate feedback loop를 기록할 때까지 blocked됨
+- TDD trace refs, Feedback Loop refs, run logs, artifacts를 Evidence Manifest acceptance-criteria 및 changed-file coverage에 link할 수 있음
 - projection job failure가 state failure와 분리됨
 - managed Markdown edits가 state를 mutate하지 않고 reconcile items를 생성함
 
@@ -884,6 +886,8 @@ CREATE TABLE locks (
   heartbeat_at TEXT NOT NULL
 );
 ```
+
+MVP TDD discipline은 existing `feedback_loops`와 `tdd_traces` tables를 사용합니다. `feedback_loops`는 selected feedback loop와 waiver를 위한 alternate loop의 owner이고, `tdd_traces`는 RED, GREEN, refactor/check artifacts 및 non-TDD justification의 owner입니다. Evidence Manifest rows는 계속 acceptance criteria와 changed files에 대한 coverage owner입니다.
 
 `project_state.state_version`은 project-scoped state clock입니다. Core는 runtime bootstrap 중 registered project를 위한 `project_state` row를 정확히 하나 initialize하며, 이는 어떤 project-scoped mutation이 `expected_state_version`을 `project_state.state_version`과 비교하기 전이어야 합니다.
 

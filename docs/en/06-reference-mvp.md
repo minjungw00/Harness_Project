@@ -140,7 +140,7 @@ Exit criteria:
 
 ### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
 
-Implement `harness.record_run`, run records, Write Authorization consumption, evidence manifest records, Feedback Loop support records and checks, codebase stewardship checks, projection jobs, and the pre-verification MVP-required renderers whose source records exist at this stage: TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT. `EVAL` remains an MVP-required `ProjectionKind`, but its executable enqueue/render path is completed with MVP-4 once `harness.record_eval` can create Eval source records. Also implement managed block hashes and reconcile item creation for managed drift or human-editable proposals.
+Implement `harness.record_run`, run records, Write Authorization consumption, evidence manifest records, Feedback Loop support records and checks, TDD trace red/green/refactor records and checks, codebase stewardship checks, projection jobs, and the pre-verification MVP-required renderers whose source records exist at this stage: TASK/APR/RUN-SUMMARY/EVIDENCE-MANIFEST/DIRECT-RESULT. `EVAL` remains an MVP-required `ProjectionKind`, but its executable enqueue/render path is completed with MVP-4 once `harness.record_eval` can create Eval source records. Also implement managed block hashes and reconcile item creation for managed drift or human-editable proposals.
 
 Exit criteria:
 
@@ -148,6 +148,8 @@ Exit criteria:
 - implementation and direct runs consume a compatible Write Authorization and detect observed changes outside the authorization
 - findings from runs, checks, QA inputs, or evaluator notes route back into state, evidence, a Decision Packet, a Change Unit update, or a close blocker
 - codebase stewardship issues that affect scope, design, module boundaries, or user judgment are visible as validator results or blockers
+- when `tdd_trace_required` applies, test-path writes to create the failing RED check can proceed through normal scope and authority checks, while non-test implementation writes are blocked until actual RED evidence exists or a valid TDD waiver records the non-TDD justification and alternate feedback loop
+- TDD trace refs, Feedback Loop refs, run logs, and artifacts can be linked into Evidence Manifest acceptance-criteria and changed-file coverage
 - projection job failure is separate from state failure
 - managed Markdown edits create reconcile items instead of mutating state
 
@@ -884,6 +886,8 @@ CREATE TABLE locks (
   heartbeat_at TEXT NOT NULL
 );
 ```
+
+MVP TDD discipline uses the existing `feedback_loops` and `tdd_traces` tables. `feedback_loops` owns the selected feedback loop and any alternate loop for a waiver; `tdd_traces` owns RED, GREEN, refactor/check artifacts, and non-TDD justification. Evidence Manifest rows remain the coverage owner for acceptance criteria and changed files.
 
 `project_state.state_version` is the project-scoped state clock. Core initializes exactly one `project_state` row for the registered project during runtime bootstrap, before any project-scoped mutation can compare `expected_state_version` with `project_state.state_version`.
 

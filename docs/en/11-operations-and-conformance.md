@@ -2132,6 +2132,80 @@ expected_error:
   code: QA_REQUIRED
 ```
 
+```yaml
+scenario_id: DESIGN-tdd-required-non-test-write-blocked-before-red
+initial_state:
+  active_task:
+    task_id: TASK-TDD-RED-001
+    mode: work
+    lifecycle_phase: ready
+    active_change_unit_id: CU-TDD-RED-001
+    gates:
+      scope_gate: passed
+      approval_gate: not_required
+      decision_gate: not_required
+      design_gate: pending
+  active_change_unit:
+    change_unit_id: CU-TDD-RED-001
+    allowed_paths: ["src/auth/login.ts", "test/auth/login.test.ts"]
+    baseline_ref: BASE-TDD-RED-001
+    stewardship_refs:
+      feedback_loop_refs: [FBL-TDD-RED-001]
+      tdd_trace_refs: [TDD-RED-001]
+  tdd_policy:
+    required: true
+    behavior_slice: "Reject locked account login."
+    red_evidence_required_before_non_test_write: true
+  owner_records:
+    feedback_loops:
+      - feedback_loop_id: FBL-TDD-RED-001
+        loop_kind: tdd
+        planned_loop: "Add failing locked-account login test, implement, then pass."
+        status: defined
+        tdd_trace_refs: [TDD-RED-001]
+    tdd_traces:
+      - tdd_trace_id: TDD-RED-001
+        status: required
+        red_refs: []
+        green_refs: []
+        refactor_refs: []
+        non_tdd_justification: null
+input:
+  task_id: TASK-TDD-RED-001
+  change_unit_id: CU-TDD-RED-001
+  intended_operation: "Implement locked-account login handling before recording the RED test."
+  intended_paths: ["src/auth/login.ts"]
+  intended_tools: ["edit"]
+  intended_commands: []
+  intended_network: []
+  intended_secrets: []
+  sensitive_categories: []
+  baseline_ref: BASE-TDD-RED-001
+action: prepare_write
+expected_state:
+  lifecycle_phase: blocked
+  gates:
+    design_gate: partial
+  write_decision: blocked
+  validators:
+    feedback_loop_check:
+      status: passed
+    tdd_trace_required:
+      status: blocked
+      findings:
+        - code: TDD_RED_REQUIRED_BEFORE_NON_TEST_WRITE
+          severity: blocker
+  evidence_manifest_coverage:
+    tdd_trace: missing_red
+expected_events:
+  - prepare_write_blocked
+expected_artifacts: []
+expected_projection:
+  TASK: enqueued
+expected_error:
+  code: VALIDATOR_FAILED
+```
+
 ## Stewardship Fixture Examples
 
 ```yaml
@@ -2517,6 +2591,7 @@ These remaining catalog entries are not fixture bodies. Each materialized fixtur
 |---|---|---|
 | `STEWARDSHIP-shared-design-required-for-ambiguous-work` | `prepare_write` | Ambiguous `work` without a Shared Design record keeps or sets `design_gate=pending` or `partial`, reports `codebase_stewardship_check` failed or blocked with a shared-design finding, and returns `VALIDATOR_FAILED` or `DECISION_REQUIRED` according to whether user judgment can resolve it. |
 | `STEWARDSHIP-feedback-loop-required-before-behavior-write` | `prepare_write` | Behavior-affecting write without a feedback-loop record keeps the write held, reports `feedback_loop_check` blocked, keeps `design_gate=pending` or `partial`, and does not rely on agent prose claiming a check will happen later. |
+| `STEWARDSHIP-tdd-required-test-path-write-can-create-red-check` | `prepare_write` | When `tdd_trace_required` applies and the intended write is limited to the scoped test path that creates the failing RED check described by the RED target or plan, `prepare_write` may allow the write if all other scope, baseline, approval, autonomy, decision, and capability checks pass; the fixture must still assert the RED target or plan does not satisfy Evidence Manifest coverage and no GREEN evidence is credited until a later run records it. |
 
 ## Context Hygiene Fixture Examples
 

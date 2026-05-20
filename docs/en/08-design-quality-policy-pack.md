@@ -150,12 +150,12 @@ flowchart TD
 |---|---|
 | `name` | `feedback_loop` |
 | `applies_when` | Before implementation starts, before a behavior-affecting write, when TDD is waived, when Manual QA is expected, or when the agent needs a credible way to learn whether the change works. |
-| `default_requirement` | Define the feedback loop before implementation: test, typecheck, lint, build, browser smoke, Manual QA, or an explicit alternate loop. The selected loop should be the smallest credible loop for the risk. TDD trace is one implementation of this policy, not the only implementation. |
+| `default_requirement` | Define the feedback loop before implementation: test, typecheck, lint, build, browser smoke, Manual QA, or an explicit alternate loop. The selected loop should be the smallest credible loop for the risk. When TDD is required for a Change Unit or behavior slice, define the loop and the intended RED check before non-test implementation begins. TDD trace is one implementation of this policy, not the only implementation. |
 | `allowed_waiver` | Allowed for docs-only edits, comments, formatting, or advisory work with no implementation or product behavior impact. Waiver must record why no executable, browser, Manual QA, or alternate loop is useful. |
 | `required_record` | A canonical `feedback_loops` record referenced with `record_kind=feedback_loop`, selected-loop refs, validator results, `tdd_traces` when TDD is selected, Manual QA record when Manual QA is selected and performed, `qa_gate=pending` when required QA has no satisfying record yet, and evidence manifest refs when executed. |
 | `validator` | `feedback_loop_check` |
 | `evidence` | Feedback Loop refs, planned loop refs, test/typecheck/lint/build/browser smoke logs, Manual QA refs, alternate-loop justification, TDD trace refs when used. |
-| `close_impact` | Missing feedback loop definition keeps `design_gate=pending` or `partial`. Missing execution evidence can make evidence insufficient. Manual QA loop failures affect `qa_gate` through the Manual QA policy. |
+| `close_impact` | Missing feedback loop definition keeps `design_gate=pending` or `partial`. Missing execution evidence can make evidence insufficient. Manual QA loop failures affect `qa_gate` through the Manual QA policy. Missing required TDD RED/GREEN/refactor coverage is handled through `tdd_trace_required` and can also make evidence manifest coverage insufficient. |
 
 Public mutation path: selected-loop definitions and waivers are recorded with `FeedbackLoopUpdate` during `record_run(kind=shaping_update)`. Execution refs and status are updated with `EvidenceUpdates.feedback_loop_updates` during implementation/direct runs, or with `record_manual_qa.feedback_loop_ref` when Manual QA is the selected loop.
 
@@ -165,12 +165,23 @@ Public mutation path: selected-loop definitions and waivers are recorded with `F
 |---|---|
 | `name` | `tdd_trace` |
 | `applies_when` | Domain logic, service module, bug fix, parser/validator, state transition, deep module internals, or edge-case-heavy behavior. Recommended for API/caller boundaries and integration behavior. |
-| `default_requirement` | Use TDD as the selected feedback loop when it is the best fit. Record red, green, and refactor evidence for at least one acceptance criterion or behavior slice. Link the trace to the evidence manifest. |
-| `allowed_waiver` | Allowed for docs, typos, throwaway prototypes, exploratory UI prototypes, initial scaffolds, or when the user/operator records a non-TDD justification and alternate feedback loop. |
+| `default_requirement` | Use TDD as the selected feedback loop when it is the best fit or when the Change Unit, behavior slice, policy, or user/operator marks `tdd_trace_required`. Normal execution order is: define the feedback loop and RED target, write or run the RED check, record actual RED evidence, perform non-test implementation only after actual RED evidence exists or a valid waiver exists, record GREEN evidence, record refactor/check evidence when relevant, and link the TDD trace to Evidence Manifest coverage. |
+| `allowed_waiver` | Allowed for docs, typos, throwaway prototypes, exploratory UI prototypes, initial scaffolds, or when the user/operator records a non-TDD justification and alternate feedback loop. A waiver must name why TDD is not useful or proportionate for this slice and must reference or define the alternate loop that will provide credible feedback. |
 | `required_record` | `tdd_traces` records and `TDD-TRACE` projection when rendered. |
 | `validator` | `tdd_trace_required` |
-| `evidence` | Failing test log, passing test log, refactor check log, diff refs, non-TDD justification when waived. |
-| `close_impact` | Missing required TDD trace makes `design_gate=partial` and may make evidence insufficient. A valid non-TDD justification may satisfy design policy but does not by itself prove behavior. |
+| `evidence` | Actual failing test artifact/log/result or another explicit policy-recognized failing-check evidence, passing test log, refactor check log when relevant, diff refs, Evidence Manifest coverage refs, non-TDD justification and alternate feedback loop when waived. RED targets or RED plans are planning records, not evidence. |
+| `close_impact` | Missing required TDD trace makes `design_gate=partial` and may make evidence insufficient. Missing RED evidence before non-test implementation can block `prepare_write`. Missing GREEN or relevant refactor/check evidence can block close through evidence sufficiency or design-quality blockers. A valid non-TDD justification may satisfy design policy but does not by itself prove behavior. |
+
+TDD execution loop:
+
+1. Define the selected feedback loop before implementation. For required TDD, the Feedback Loop record should identify the behavior slice or acceptance criterion, the RED target or plan, and the expected GREEN check.
+2. Record RED evidence before non-test implementation writes. RED evidence means an actual failing test artifact/log/result or another explicit policy-recognized failing-check evidence. A RED target or plan does not satisfy this precondition and does not satisfy Evidence Manifest coverage.
+3. Allow test-path writes that create the RED check when active Change Unit scope, baseline, approval, Autonomy Boundary, and other gates allow. A RED target or plan may support this scoped test-path write. These writes are still product writes when they touch product files, but the `tdd_trace_required` policy should not block them merely because actual RED evidence is not recorded yet.
+4. Block non-test implementation writes when TDD is required and neither RED evidence nor a valid TDD waiver exists. `prepare_write` may return a design-policy blocker with `tdd_trace_required` failed or blocked; public error selection still follows API precedence.
+5. Record GREEN evidence after implementation, then record refactor/check evidence when a refactor step is performed or when the slice risk requires an additional check.
+6. Link the TDD trace, Feedback Loop, run logs, and artifacts to Evidence Manifest acceptance-criteria and changed-file coverage.
+
+This is policy and write-check behavior, not a Kernel Authority Invariant. Kernel authority still comes from active Task, active Change Unit scope, `prepare_write`, Write Authorization, approvals, Decision Packets, evidence, verification, QA, acceptance, and close semantics in the owner documents.
 
 ### Deep Module / Interface
 

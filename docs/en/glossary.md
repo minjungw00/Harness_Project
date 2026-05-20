@@ -472,7 +472,7 @@ The user value unit tracked by the kernel. It carries mode, lifecycle phase, gat
 
 ### TDD Trace
 
-A record of red, green, and refactor evidence for a Change Unit, or a recorded non-TDD justification where policy allows it. TDD Trace can be execution evidence for a Feedback Loop, but it is not the canonical selected-loop record.
+A record of red, green, and refactor evidence for a Change Unit or behavior slice, or a recorded non-TDD justification where policy allows it. A RED target or plan describes the intended failing check; RED evidence means an actual failing test artifact/log/result or another explicit policy-recognized failing-check evidence. When required, the normal path records RED evidence before non-test implementation writes, GREEN evidence after implementation, and refactor/check evidence when relevant, then links the trace to Evidence Manifest coverage. TDD Trace can be execution evidence for a Feedback Loop, but it is not the canonical selected-loop record; a waiver must point back to the alternate Feedback Loop that will prove behavior.
 
 ### Verification
 
