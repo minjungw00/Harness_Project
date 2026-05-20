@@ -35,6 +35,7 @@ Integrated surface는 agent가 다음을 할 수 있게 도와야 한다.
 - state change에는 MCP tool call 사용
 - product write 전 `prepare_write`와 반환된 Write Authorization 존중
 - Write Authority Summary를 Autonomy Boundary와 별도로 표시
+- guard, freeze, careful-mode 요청을 optimistic authority claim이 아니라 capability-scoped safety control로 표현
 - blocking product judgment에는 Decision Packet을 request 또는 display
 - agent를 더 쉽게 steer할 수 있을 때 role-based review lens를 non-authoritative guidance로 제공
 - run, artifact, evidence, user decision, QA, acceptance 기록
@@ -305,6 +306,41 @@ Rules:
 - Cooperative가 preventive라는 뜻으로 보이면 안 된다.
 - Surface name이 level을 보장한다는 뜻으로 보이면 안 된다.
 - Guarantee level은 approval, verification, QA, acceptance, kernel gate가 아니다.
+
+## Guard And Freeze Safety Controls
+
+Guard, freeze, careful-mode language는 user-facing safety-control language다. Connector는 이를 slash command, button, prompt snippet, status action, recommended playbook으로 expose할 수 있지만, display는 그 control 뒤에 있는 실제 capability와 guarantee level을 이름 붙여야 한다.
+
+```mermaid
+flowchart TD
+  Request["user safety-control request"] --> Freeze["freeze<br/>hold 또는 narrowed posture 요청"]
+  Request --> Guard["guard<br/>detect 또는 enforce"]
+  Request --> Careful["careful mode<br/>stricter posture"]
+  Freeze --> Scope["display, next action, prepare_write hold, 또는 routed owner update"]
+  Guard --> Capability["connected capability profile과 current enforcement path"]
+  Careful --> Discipline["prepare_write, scope checks, evidence, user questions"]
+  Capability --> Guarantee["actual guarantee level 표시"]
+  Guarantee --> Limitation["limitation 표시; command name은 guarantee가 아님"]
+```
+
+`Freeze`는 current work 주변의 user-visible hold 또는 narrowed posture를 뜻한다. Freeze request는 product write를 hold하거나, next action을 더 strict하게 만들거나, resume 전에 fresh Journey Card를 요구하거나, existing scope가 requested posture와 맞지 않을 때 `prepare_write`가 block 또는 hold하게 만들 수 있다. 그 자체로 active Change Unit, allowed paths, Autonomy Boundary, AFK stop conditions, related owner records를 mutate하지 않으며, Write Authorization, approval, acceptance, evidence, QA, verification, canonical close transition을 만들지도 않는다.
+
+Freeze가 active Change Unit scope, allowed paths, Autonomy Boundary, AFK stop conditions, related owner records를 persistently narrow해야 한다면, connector는 해당 record에 대해 이미 정의된 existing public Core state-changing path, Decision Packet route, owner-record update path로 route해야 한다. "freeze"라는 command label은 direct mutation path가 아니다.
+
+`Guard`는 proven capability profile에 따라 surface가 enforcement 또는 detection layer를 추가한다는 뜻이다. Guard는 cooperative, detective, preventive, isolated일 수 있다. Connected profile이 requested operation에 대해 proven pre-execution blocking path를 갖고 있지 않다면, "guard"라는 단어가 out-of-scope write를 물리적으로 block한다는 뜻으로 보이면 안 된다.
+
+`Careful mode`는 existing authority checks 주변의 stricter posture다. 더 명시적인 `prepare_write`, 더 좁은 scope check, 더 조심스러운 evidence mapping, 더 빠른 Journey Card refresh, 사용자에게 one blocking question을 더 잘 묻는 태도를 뜻해야 한다. New authority tier가 아니며, approval도 verification도 아니고 `prepare_write`를 우회하는 shortcut도 아니다.
+
+User-facing guarantee boundaries:
+
+| User wording | Actual guarantee boundary |
+|---|---|
+| `T2` / `cooperative`에서 Freeze | Agent가 hold하거나 narrower posture를 사용하라는 instruction을 받는다. Persistent owner-record change에는 여전히 normal Core path가 필요하다. Preventive claim은 없다. |
+| `T3` / `detective`에서 Guard | Changed-path, log, artifact, projection validation이 사후 위반을 detect하고 state를 stale, blocked, partial, failed로 mark할 수 있다. |
+| `T4` / `preventive`에서 Guard | Hook, wrapper, permission layer, policy engine, sidecar가 covered operation의 out-of-scope write 또는 command를 실행 전에 block할 수 있다. |
+| `T5` / `isolated`에서 Guard 또는 verify | Risky work 또는 verification이 별도 worktree, sandbox, process, 또는 동등한 boundary 안에서 실행된다. |
+
+Surface name과 command name은 label일 뿐이다. Connector가 button을 "Freeze"라고 부르거나 playbook을 "guard-check"라고 불러도, status, next, `prepare_write` display는 current path가 cooperative, detective, preventive, isolated 중 무엇인지와 그 level이 무엇을 guarantee할 수 있고 없는지를 계속 보여야 한다.
 
 ## Generated Manifest Concept
 

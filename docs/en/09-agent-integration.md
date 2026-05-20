@@ -35,6 +35,7 @@ An integrated surface should help the agent:
 - call MCP tools for state changes
 - respect `prepare_write` and returned Write Authorization before product writes
 - show the Write Authority Summary separately from Autonomy Boundary
+- express guard, freeze, and careful-mode requests as capability-scoped safety controls, not as optimistic authority claims
 - request or show Decision Packets for blocking product judgment
 - offer role-based review lenses when they help steer the agent without creating authority
 - record runs, artifacts, evidence, user decisions, QA, and acceptance
@@ -305,6 +306,41 @@ Rules:
 - Do not imply cooperative means preventive.
 - Do not imply a surface name guarantees a level.
 - Guarantee level is not approval, verification, QA, acceptance, or a kernel gate.
+
+## Guard And Freeze Safety Controls
+
+Guard, freeze, and careful-mode language is user-facing safety-control language. Connectors may expose it as slash commands, buttons, prompt snippets, status actions, or recommended playbooks, but the display must name the actual capability and guarantee level behind the control.
+
+```mermaid
+flowchart TD
+  Request["user safety-control request"] --> Freeze["freeze<br/>hold or request narrowed posture"]
+  Request --> Guard["guard<br/>detect or enforce"]
+  Request --> Careful["careful mode<br/>stricter posture"]
+  Freeze --> Scope["display, next action, prepare_write hold, or routed owner update"]
+  Guard --> Capability["connected capability profile and current enforcement path"]
+  Careful --> Discipline["prepare_write, scope checks, evidence, and user questions"]
+  Capability --> Guarantee["display actual guarantee level"]
+  Guarantee --> Limitation["show limitation; command name is not the guarantee"]
+```
+
+`Freeze` means a user-visible hold or narrowed posture around current work. A freeze request may hold product writes, make the next action stricter, require a fresh Journey Card before resuming, or cause `prepare_write` to block or hold when the existing scope is incompatible with the requested posture. It does not by itself mutate the active Change Unit, allowed paths, Autonomy Boundary, AFK stop conditions, or related owner records, and it does not create Write Authorization, approval, acceptance, evidence, QA, verification, or a canonical close transition.
+
+If a freeze needs to persistently narrow active Change Unit scope, allowed paths, Autonomy Boundary, AFK stop conditions, or related owner records, the connector must route through the existing public Core state-changing path, Decision Packet route, or owner-record update path already defined for that record. The command label "freeze" is not a direct mutation path.
+
+`Guard` means the surface adds an enforcement or detection layer according to its proven capability profile. A guard may be cooperative, detective, preventive, or isolated. The word "guard" must not imply that out-of-scope writes are physically blocked unless the connected profile has a proven pre-execution blocking path for the requested operation.
+
+`Careful mode` is a stricter posture around existing authority checks. It should mean more explicit `prepare_write` use, narrower scope checks, more cautious evidence mapping, earlier Journey Card refreshes, and more willingness to ask the user one blocking question. It is not a new authority tier, not approval, not verification, and not a shortcut around `prepare_write`.
+
+User-facing guarantee boundaries:
+
+| User wording | Actual guarantee boundary |
+|---|---|
+| Freeze on `T2` / `cooperative` | The agent is instructed to hold or use a narrower posture; any persistent owner-record change still needs the normal Core path. There is no preventive claim. |
+| Guard on `T3` / `detective` | Changed-path, log, artifact, or projection validation can detect violations after the fact and mark state stale, blocked, partial, or failed. |
+| Guard on `T4` / `preventive` | A hook, wrapper, permission layer, policy engine, or sidecar can block the out-of-scope write or command before execution for the covered operation. |
+| Guard or verify on `T5` / `isolated` | Risky work or verification happens inside a separate worktree, sandbox, process, or equivalent boundary. |
+
+Surface and command names are labels only. A connector may call a button "Freeze" or a playbook "guard-check", but status, next, and `prepare_write` displays must still show whether the current path is cooperative, detective, preventive, or isolated and what that level can and cannot guarantee.
 
 ## Generated Manifest Concept
 

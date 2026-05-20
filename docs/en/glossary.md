@@ -230,6 +230,10 @@ A verification independence profile where the evaluator starts from a task/evide
 
 A verification independence profile where the evaluator checks baseline, changed paths, artifacts, and Evidence Manifest in a separate worktree or equivalent isolated repository state.
 
+### Freeze
+
+A user-facing safety control that requests a hold or narrower posture around current work. Freeze can hold product writes, make the next action stricter, or cause `prepare_write` to block or hold when existing scope is incompatible. It does not directly mutate Change Unit scope, allowed paths, Autonomy Boundary, AFK stop conditions, or related owner records; persistent owner-record changes still use the existing Core state-changing path, Decision Packet route, or owner-record update path. Freeze does not create Write Authorization, approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a new authority tier.
+
 ### Gate
 
 A canonical kernel field that controls whether a Task may write, proceed, or close. Gates are state, not display text.
@@ -251,6 +255,10 @@ cooperative | detective | preventive | isolated
 ```
 
 Capability affects validator results, blocked reasons, and display; it is not a kernel gate.
+
+### Guard
+
+A user-facing safety control that applies the connected profile's actual enforcement or detection layer. Guard may be cooperative, detective, preventive, or isolated; the name does not imply pre-execution blocking unless a proven `T4` path covers the operation.
 
 ### Harness Core
 

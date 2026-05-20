@@ -19,6 +19,7 @@ MVP 포함 항목:
 - artifact registry와 durable artifact files
 - baseline capture
 - scope, approval, baseline, capability checks와 durable Write Authorization records가 있는 `prepare_write` gate
+- reference surface의 guard/freeze status display. MVP behavior는 concrete blocking path가 implemented and proven되지 않는 한 cooperative/detective guarantee로 제한됩니다.
 - task continuity, Decision Packets, user judgment routing을 위한 Journey/Decision skeleton
 - Change Units, autonomy boundaries, dependency metadata, end-to-end path intent를 위한 shaping kernel support
 - approval, evidence, verification, Manual QA, acceptance gate support
@@ -31,6 +32,8 @@ MVP 포함 항목:
 - doctor, recover, reconcile, export, conformance smoke entrypoints
 
 MVP는 `appendix/C-later-roadmap.md`에 정리된 later automation을 제외합니다. 여기에는 broader surface expansion, richer capture automation, advanced orchestration, analytics, team profile export/import가 포함됩니다.
+
+Guard/freeze UX에서 MVP는 reference surface에 대해 cooperative 또는 detective guard status를 보여줄 수 있고, existing Change Unit, Autonomy Boundary, `prepare_write` behavior를 통해 work를 hold하거나 narrow할 수 있습니다. v1 또는 later는 surface가 covered write 또는 command에 대한 pre-tool blocking을 prove한 뒤에만 preventive `T4` fixtures를 추가할 수 있습니다. Surface name, command name, UI label은 stored `guarantee_level`을 upgrade하지 않습니다.
 
 ```mermaid
 flowchart TD
@@ -1412,6 +1415,7 @@ Required reference behavior:
 - launches or prepares verification through `harness.launch_verify`
 - does not claim detached verification from same-session self-review
 - keeps feedback findings and close-relevant residual risk visible through state-backed records or validator results
+- freeze 또는 guard status를 actual guarantee level로 report하며, cooperative/detective를 default MVP behavior로 둔다
 - holds product writes when MCP is unavailable
 
 Default guarantee display는 cooperative/detective입니다. Preventive 또는 isolated claims에는 implemented guard 또는 isolation path와 passing capability precondition이 필요합니다.

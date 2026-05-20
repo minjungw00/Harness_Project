@@ -435,6 +435,8 @@ EndToEndPath:
 
 `WriteAuthorizationSummary`와 `WriteAuthoritySummary`는 API payload shapes일 뿐입니다. 이 문서는 Write Authorization records에 대한 SQLite DDL을 정의하지 않습니다. `WriteAuthoritySummary`는 clients가 Write Authority Summary를 Autonomy Boundary judgment latitude 옆에 표시하기 위해 사용하는 display/read shape입니다.
 
+Client가 guard, freeze, careful-mode control을 render할 때는 authority field를 추가하지 않고 이 existing display shape를 사용합니다. `guarantee_display.level`과 `guarantee_display.notes`는 actual connected capability와 current enforcement path를 설명해야 합니다. `blocked_reasons[].message`는 scope, MCP availability, approval, baseline, capability 같은 concrete held 또는 blocked condition을 이름 붙여야 하며, "guard"나 "freeze" 같은 command label만으로 더 강한 guarantee를 imply하면 안 됩니다.
+
 `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` 같은 Extension / appendix `ProjectionKind` values는 해당 projection feature가 enabled일 때만 valid projection job kind입니다. MVP-required Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공됩니다. Persisted `JOURNEY-CARD` Markdown은 optional로 남지만 current-position Journey Card output은 status, next, significant resume flows에서 required입니다. Full extension template text는 Appendix A가 담당하며, 이 API schema file이 담당하지 않습니다.
 
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, Recommended Playbook, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. Canonical kernel records는 owner docs가 정의합니다. 이 목록에서 `RecommendedPlaybook`은 display-only 예외입니다. 자체 canonical kernel record, DDL table, task event, projection job이 없습니다.

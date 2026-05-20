@@ -78,6 +78,10 @@ Manual QA가 필요한지 판단해줘.
 수용하기 전에 close-relevant residual risk를 보여줘.
 Final acceptance 요청이 있으면 수용해. 이 작업 닫아.
 Final acceptance가 required가 아니면 applicable blockers가 clear된 뒤 닫아.
+이 task를 current Change Unit으로 freeze하고, Decision Packet 없이 scope를 넓히지 마.
+이 task를 docs/en/09-agent-integration.md와 docs/ko/09-agent-integration.md로 freeze해.
+현재 guard level과 실제로 prevent할 수 있는 것을 보여줘.
+이 change에는 careful mode를 사용해. Scope를 좁히고, write 전 write authority를 보여주고, product trade-off 전에는 물어봐.
 ```
 
 ## 기본 흐름
@@ -135,6 +139,26 @@ Harness가 맡아야 할 것은 state recording, `prepare_write` checks, artifac
 Harness는 사용자의 판단을 recorded state와 clear blockers로 바꾸어, 사용자가 bookkeeping이 아니라 ownership에 집중하게 해야 합니다.
 
 Recommended playbooks는 optional procedure hints입니다. Agent가 review, TDD, QA, guard-check, release-handoff, browser-QA path, role lens를 고르는 데 도움을 줄 수 있지만 approval, write authority, evidence, verification, QA result, acceptance, close가 아닙니다.
+
+## Freeze And Guard 사용하기
+
+Freeze와 guard는 plain-language safety control입니다. Agent에게 얼마나 조심해야 하는지 알려주기 때문에 유용하지만, 그 강도는 connected surface에 달려 있습니다.
+
+`Freeze`는 "여기서 hold" 또는 "더 좁은 posture를 사용하라"라는 뜻입니다. Agent에게 task를 current Change Unit, specific paths, read-only advice, 또는 Journey Card refresh 전까지 freeze하라고 요청할 수 있습니다. Freeze는 product write를 hold하거나, next action을 더 strict하게 만들거나, existing scope가 request와 맞지 않을 때 `prepare_write`가 block 또는 hold하게 만들 수 있습니다. 그 자체로 work를 authorize하거나 scope를 직접 rewrite하지 않습니다. Change Unit scope, allowed paths, Autonomy Boundary, AFK stop conditions의 persistent change는 여전히 normal Core state-changing path 또는 Decision Packet route를 거칩니다.
+
+`Guard`는 "이 work 주변의 available protection을 보여주거나 사용하라"라는 뜻입니다. Cooperative surface에서는 agent가 boundary 안에 머물도록 instruction을 받습니다. Detective surface에서는 Harness가 changed-path, log, artifact, projection violation을 사후 detect할 수 있습니다. Preventive surface에서는 hook, wrapper, permission layer, sidecar가 covered violation을 실행 전에 block할 수 있습니다. Isolated path에서는 risky work 또는 verification이 별도 boundary에서 실행됩니다.
+
+`Careful mode`는 stricter posture이지 new authority tier가 아닙니다. Narrower scope, 더 명시적인 `prepare_write` checks, 더 clear한 evidence mapping, 더 fresh한 status, user judgment에 대한 더 많은 one-question stop을 기대하면 됩니다.
+
+Useful phrases:
+
+```text
+이 task를 current Change Unit으로 freeze해.
+Decision Packet에 답할 때까지 writes를 freeze해.
+현재 guard level과 limitation을 보여줘.
+이 surface에서 가능한 가장 강한 guard를 사용하고, cooperative/detective/preventive/isolated 중 무엇인지 말해줘.
+Careful mode를 사용하되, approval이나 write authority로 취급하지 마.
+```
 
 ## Role Lens 사용하기
 

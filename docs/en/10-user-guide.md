@@ -78,6 +78,10 @@ Decide whether Manual QA is needed.
 Show close-relevant residual risk before I accept.
 Accepted. Close this task after final acceptance is requested.
 Final acceptance is not required here; close once applicable blockers are clear.
+Freeze this task to the current Change Unit and do not expand scope without a Decision Packet.
+Freeze this task to docs/en/09-agent-integration.md and docs/ko/09-agent-integration.md.
+Show the current guard level and what it can actually prevent.
+Use careful mode for this change: narrow scope, show write authority before writes, and ask before product trade-offs.
 ```
 
 ## Basic Flow
@@ -135,6 +139,26 @@ Harness should handle state recording, `prepare_write` checks, artifact registra
 Harness should translate your judgments into recorded state and clear blockers so you can stay focused on ownership, not bookkeeping.
 
 Recommended playbooks are optional procedure hints. They can help the agent choose a review, TDD, QA, guard-check, release-handoff, browser-QA path, or role lens, but they are not approvals, write authority, evidence, verification, QA results, acceptance, or close.
+
+## Using Freeze And Guard
+
+Freeze and guard are plain-language safety controls. They are useful because they tell the agent how cautious to be, but their strength depends on the connected surface.
+
+`Freeze` means "hold here" or "use a narrower posture." You can ask the agent to freeze a task to the current Change Unit, to specific paths, to read-only advice, or until the Journey Card is refreshed. A freeze can hold product writes, make the next action stricter, or cause `prepare_write` to block or hold when existing scope does not match the request. It does not authorize work or directly rewrite scope by itself; persistent changes to Change Unit scope, allowed paths, Autonomy Boundary, or AFK stop conditions still go through the normal Core state-changing path or Decision Packet route.
+
+`Guard` means "show or use the available protection around this work." On a cooperative surface, the agent is instructed to stay inside the boundary. On a detective surface, Harness can detect changed-path, log, artifact, or projection violations after the fact. On a preventive surface, a hook, wrapper, permission layer, or sidecar can block covered violations before execution. On an isolated path, risky work or verification happens in a separate boundary.
+
+`Careful mode` means stricter posture, not a new authority tier. Expect narrower scope, more explicit `prepare_write` checks, clearer evidence mapping, fresher status, and more one-question stops for user judgment.
+
+Useful phrases:
+
+```text
+Freeze this task to the current Change Unit.
+Freeze writes until I answer the Decision Packet.
+Show current guard level and limitation.
+Use the strongest available guard for this surface, and say whether it is cooperative, detective, preventive, or isolated.
+Use careful mode, but do not treat it as approval or write authority.
+```
 
 ## Using Role Lenses
 

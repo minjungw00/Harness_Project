@@ -19,6 +19,7 @@ MVP includes:
 - artifact registry and durable artifact files
 - baseline capture
 - `prepare_write` gate with scope, approval, baseline, capability checks, and durable Write Authorization records
+- guard/freeze status display for the reference surface, with MVP behavior limited to cooperative/detective guarantees unless a concrete blocking path is implemented and proven
 - Journey/Decision skeleton for task continuity, Decision Packets, and user judgment routing
 - shaping kernel support for Change Units, autonomy boundaries, dependency metadata, and end-to-end path intent
 - approval, evidence, verification, Manual QA, and acceptance gate support
@@ -31,6 +32,8 @@ MVP includes:
 - doctor, recover, reconcile, export, and conformance smoke entrypoints
 
 MVP excludes the later automation cataloged in `appendix/C-later-roadmap.md`, including broader surface expansion, richer capture automation, advanced orchestration, analytics, and team profile export/import.
+
+For guard/freeze UX, MVP may show cooperative or detective guard status for the reference surface and may hold or narrow work through existing Change Unit, Autonomy Boundary, and `prepare_write` behavior. v1 or later may add preventive `T4` fixtures only after a surface proves pre-tool blocking for the covered writes or commands. Surface names, command names, and UI labels do not upgrade the stored `guarantee_level`.
 
 ```mermaid
 flowchart TD
@@ -1410,6 +1413,7 @@ Required reference behavior:
 - launches or prepares verification through `harness.launch_verify`
 - does not claim detached verification from same-session self-review
 - keeps feedback findings and close-relevant residual risk visible through state-backed records or validator results
+- reports freeze or guard status by actual guarantee level, with cooperative/detective as the default MVP behavior
 - holds product writes when MCP is unavailable
 
 Default guarantee display is cooperative/detective. Preventive or isolated claims require an implemented guard or isolation path and a passing capability precondition.

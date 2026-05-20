@@ -19,6 +19,8 @@ Each surface recipe should describe:
 
 The connector must still declare a capability profile. A surface name does not imply a guarantee level.
 
+Surface recipes may mention user-facing guard or freeze controls, but only as labels over the connected profile's actual capability. "Freeze" should mean a visible hold or narrowed boundary. "Guard" should mean cooperative instruction, detective validation, preventive blocking, or isolation according to the profile. "Careful mode" should mean stricter `prepare_write`, scope, evidence, and user-question posture, not a new authority tier.
+
 ```mermaid
 flowchart TB
   Recipe["surface recipe"] --> Profiles["target profiles"]
@@ -93,6 +95,8 @@ Generated files may include:
 
 Codex-specific connector work should keep `AGENTS.md` short enough to scan every turn. Treat it as an always-on compass, not a procedure manual, schema reference, or project history. Put procedural workflow in a skill, command, or MCP resource so the Journey Card, Decision Packet, Write Authority Summary, and Autonomy Boundary do not get buried.
 
+Codex-facing wording may expose phrases such as "freeze this task to these paths" or "show current guard level." For profiles without proven pre-tool blocking, Codex must describe that as cooperative freeze plus detective changed-path validation when available, not as a preventive guard.
+
 The Codex flow should preserve user agency:
 
 - show the Journey Card before significant work resumes
@@ -156,6 +160,8 @@ Write-capable Claude Code profiles should show the Write Authority Summary befor
 
 Evaluator profiles should be read-only by default. A profile may claim preventive or isolated guarantees only after the connector conformance proves those hooks or boundaries are active.
 
+Claude Code recipes may map "guard" to `PreToolUse` only when that hook is configured and conformance proves it can block the covered edit, command, network, or secret access before execution. Otherwise, "freeze" and "careful mode" remain cooperative instructions plus any available post-tool capture.
+
 ## Gemini Notes
 
 ```yaml
@@ -179,6 +185,8 @@ profile_risks:
 ```
 
 Gemini connectors should keep extension context small. Push the Journey Card or status card, active Decision Packet summary, Autonomy Boundary summary, Change Unit scope, and residual-risk summary near close. Let the agent pull longer standards, domain language, module maps, and interface contracts through MCP resources. Write-capable profiles should show the Write Authority Summary before product writes, respect the returned Write Authorization, and ensure `record_run` consumes it.
+
+Gemini recipes should avoid implying that extension wording alone is a guard. If a local CLI wrapper or sidecar controls execution, the recipe may report detective or preventive behavior only for the covered paths and commands; otherwise freeze requests are cooperative holds or narrowed boundaries.
 
 ## GitHub Copilot Notes
 
@@ -204,6 +212,8 @@ profile_risks:
 
 Copilot connectors should prioritize Journey Card or status card display, MCP tool invocation, Decision Packet display, Autonomy Boundary summary, approval card display for sensitive changes, Manual QA card display, residual-risk visibility near close, and acceptance prompts. For product writes, show the Write Authority Summary, respect the returned Write Authorization, and consume it through `record_run`. For terminal/task execution, prefer wrappers that can capture output and associate it with the active Run.
 
+Copilot recipes should distinguish IDE or cloud profiles. A VS Code task wrapper may support detective capture or preventive blocking for tasks it owns, while chat instructions alone are cooperative. User-facing "freeze" cards should show the allowed paths and the current guarantee level.
+
 ## Cursor Notes
 
 ```yaml
@@ -226,6 +236,8 @@ profile_risks:
 ```
 
 Cursor connectors should keep project rules short and use the skill/playbook plus MCP for procedural depth. Write-capable profiles should show the Write Authority Summary before product writes, respect the returned Write Authorization, and record write-capable runs so `record_run` consumes the compatible authorization. Generated project rules should be covered by the connector manifest so local edits become reconcile candidates instead of being overwritten silently.
+
+Cursor recipes may expose guard/freeze through project rules, IDE permissions, or sidecar support, but the recipe must report the actual profile. Project-rule wording alone is cooperative; IDE permission or sidecar proof is required before claiming preventive guard behavior.
 
 ## Generated File Details
 
@@ -258,6 +270,8 @@ Use Harness for product code changes, verification, approval, Manual QA, accepta
 - Small low-risk changes may be `direct`.
 - Feature, structural, risky, or multi-file changes are `work`.
 - Direct Fast Path: for small direct work, keep Harness mostly invisible with narrow scope, `prepare_write`, changed paths, self-check evidence, and close if no blocker appears; if scope or risk grows, move the same Task to `work`.
+- Freeze means hold or narrow the current task boundary; Guard means use the available cooperative, detective, preventive, or isolated protection and show its limitation.
+- Careful mode means stricter `prepare_write`, scope, evidence, and user-question posture; it is not approval or write authority.
 - Work starts with enough shared design to define scope and acceptance criteria.
 - A product write requires `harness.prepare_write`.
 - Show the Write Authority Summary before product writes.
@@ -299,6 +313,8 @@ Use Harness to keep AI-assisted development visible, bounded, evidenced, verifia
 
 ## Core Rule
 Before editing product files, call `harness.prepare_write`. An allowed response returns a Write Authorization for that intended write, and `harness.record_run` consumes it. If `prepare_write` is blocked, do not edit product files. If authoritative MCP is unavailable, hold product writes and report the guarantee limitation. The Autonomy Boundary is judgment latitude, not write authority.
+
+Guard, freeze, and careful-mode phrases are safety controls over this same rule. Freeze holds or narrows the current boundary. Guard uses the connected profile's actual cooperative, detective, preventive, or isolated protection. Careful mode tightens posture around `prepare_write`, scope, evidence, and user questions; it does not add authority.
 
 ## Workflow
 

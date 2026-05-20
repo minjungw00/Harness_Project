@@ -19,6 +19,8 @@ Concrete surface에 따라 달라지는 local 차이만 이 cookbook에 둔다. 
 
 Connector는 여전히 capability profile을 declare해야 한다. Surface name은 guarantee level을 imply하지 않는다.
 
+Surface recipe는 user-facing guard 또는 freeze control을 언급할 수 있지만, connected profile의 actual capability 위에 얹힌 label로만 다뤄야 한다. "Freeze"는 visible hold 또는 narrowed boundary를 뜻해야 한다. "Guard"는 profile에 따라 cooperative instruction, detective validation, preventive blocking, isolation을 뜻해야 한다. "Careful mode"는 더 엄격한 `prepare_write`, scope, evidence, user-question posture이지 new authority tier가 아니다.
+
 ```mermaid
 flowchart TB
   Recipe["surface recipe"] --> Profiles["target profiles"]
@@ -93,6 +95,8 @@ Generated file에는 다음이 포함될 수 있다.
 
 Codex connector는 `AGENTS.md`를 매 turn 훑을 수 있을 만큼 짧게 유지해야 한다. `AGENTS.md`는 항상 켜져 있는 compass로 두고, 절차 매뉴얼, schema reference, project history로 만들지 않는다. 자세한 workflow는 skill, command, MCP resource에 두어 Journey Card, Decision Packet, Write Authority Summary, Autonomy Boundary가 묻히지 않게 한다.
 
+Codex-facing wording은 "이 task를 이 paths로 freeze해" 또는 "current guard level을 보여줘" 같은 phrase를 expose할 수 있다. Proven pre-tool blocking이 없는 profile에서는 이를 cooperative freeze와, 가능할 때 detective changed-path validation으로 설명해야 하며 preventive guard로 설명하면 안 된다.
+
 Codex flow는 user agency를 보존해야 한다.
 
 - 중요한 work를 재개하기 전에 Journey Card를 보여준다.
@@ -156,6 +160,8 @@ Write-capable Claude Code profile은 product write 전에 Write Authority Summar
 
 Evaluator profile은 기본적으로 read-only여야 한다. Connector conformance가 해당 hook 또는 boundary가 active임을 prove한 뒤에만 profile이 preventive 또는 isolated guarantee를 claim할 수 있다.
 
+Claude Code recipe는 해당 hook이 configured되어 있고 conformance가 covered edit, command, network, secret access를 실행 전에 block할 수 있음을 prove한 경우에만 "guard"를 `PreToolUse`에 map할 수 있다. 그렇지 않으면 "freeze"와 "careful mode"는 cooperative instructions와 available post-tool capture로 남는다.
+
 ## Gemini Notes
 
 ```yaml
@@ -179,6 +185,8 @@ profile_risks:
 ```
 
 Gemini connector는 extension context를 작게 유지해야 한다. Journey Card 또는 status card, active Decision Packet summary, Autonomy Boundary summary, Change Unit scope, close 근처의 residual-risk summary만 push하고, longer standard, domain language, module map, interface contract는 agent가 MCP resource로 pull하게 한다. Write-capable profile은 product write 전에 Write Authority Summary를 보여주고, 반환된 Write Authorization을 존중하며, `record_run`이 이를 consume하게 해야 한다.
+
+Gemini recipe는 extension wording만으로 guard가 생긴다는 인상을 주지 않아야 한다. Local CLI wrapper 또는 sidecar가 execution을 control한다면, 그 recipe는 covered paths와 commands에 대해서만 detective 또는 preventive behavior를 report할 수 있다. 그렇지 않으면 freeze request는 cooperative hold 또는 narrowed boundary다.
 
 ## GitHub Copilot Notes
 
@@ -204,6 +212,8 @@ profile_risks:
 
 Copilot connector는 Journey Card 또는 status card display, MCP tool invocation, Decision Packet display, Autonomy Boundary summary, sensitive change용 approval card display, Manual QA card display, close 근처의 residual-risk visibility, acceptance prompt를 우선해야 한다. Product write에는 Write Authority Summary를 보여주고, 반환된 Write Authorization을 존중하며, `record_run`으로 consume한다. Terminal/task execution에는 output을 capture하고 active Run에 associate할 수 있는 wrapper를 선호한다.
 
+Copilot recipe는 IDE profile과 cloud profile을 구분해야 한다. VS Code task wrapper는 자신이 소유하는 task에 대해 detective capture 또는 preventive blocking을 support할 수 있지만, chat instructions만으로는 cooperative다. User-facing "freeze" card는 allowed paths와 current guarantee level을 보여야 한다.
+
 ## Cursor Notes
 
 ```yaml
@@ -226,6 +236,8 @@ profile_risks:
 ```
 
 Cursor connector는 project rule을 짧게 유지하고, 절차의 깊이는 skill/playbook과 MCP로 제공해야 한다. Write-capable profile은 product write 전에 Write Authority Summary를 보여주고, 반환된 Write Authorization을 존중하며, write-capable run을 기록해 `record_run`이 compatible authorization을 consume하게 해야 한다. Generated project rule은 connector manifest로 cover해야 하며, local edit는 조용히 overwrite되지 않고 reconcile candidate가 되어야 한다.
+
+Cursor recipe는 project rule, IDE permission, sidecar support를 통해 guard/freeze를 expose할 수 있지만, actual profile을 report해야 한다. Project-rule wording만으로는 cooperative이며, preventive guard behavior를 claim하려면 IDE permission 또는 sidecar proof가 필요하다.
 
 ## Generated File Details
 
@@ -258,6 +270,8 @@ Product code change, verification, approval, Manual QA, acceptance, resume, clos
 - 작고 low-risk인 변경은 `direct`일 수 있다.
 - Feature, structural, risky, multi-file change는 `work`다.
 - Direct Fast Path: 작은 direct work는 narrow scope, `prepare_write`, changed path, self-check evidence, blocker가 없을 때 close로 Harness를 대부분 보이지 않게 유지한다. Scope 또는 risk가 커지면 같은 Task를 `work`로 옮긴다.
+- Freeze는 current task boundary를 hold하거나 narrow한다는 뜻이다. Guard는 available cooperative, detective, preventive, isolated protection을 사용하고 limitation을 보여준다는 뜻이다.
+- Careful mode는 더 엄격한 `prepare_write`, scope, evidence, user-question posture라는 뜻이며 approval 또는 write authority가 아니다.
 - Work는 scope와 acceptance criteria를 정할 만큼의 shared design에서 시작한다.
 - Product write에는 `harness.prepare_write`가 필요하다.
 - Product write 전 Write Authority Summary를 보여준다.
@@ -299,6 +313,8 @@ Harness를 사용해 AI-assisted development가 visible, bounded, evidenced, ver
 
 ## Core Rule
 Product file을 edit하기 전에 `harness.prepare_write`를 call한다. Allowed response는 intended write에 대한 Write Authorization을 반환하고, `harness.record_run`이 이를 consume한다. `prepare_write`가 blocked이면 product file을 edit하지 않는다. Authoritative MCP가 unavailable이면 product write를 hold하고 guarantee limitation을 보고한다. Autonomy Boundary는 judgment latitude이지 write authority가 아니다.
+
+Guard, freeze, careful-mode phrase는 이 same rule 위의 safety control이다. Freeze는 current boundary를 hold하거나 narrow한다. Guard는 connected profile의 actual cooperative, detective, preventive, isolated protection을 사용한다. Careful mode는 `prepare_write`, scope, evidence, user question 주변의 posture를 강화하지만 authority를 추가하지 않는다.
 
 ## Workflow
 

@@ -230,6 +230,10 @@ Evaluator가 lead chat context를 이어받지 않고 task/evidence bundle에서
 
 Evaluator가 별도 worktree 또는 동등하게 isolated repository state에서 baseline, changed paths, artifacts, Evidence Manifest를 확인하는 verification independence profile입니다.
 
+### Freeze
+
+Current work 주변의 hold 또는 narrower posture를 request하는 user-facing safety control입니다. Freeze는 product write를 hold하거나, next action을 더 strict하게 만들거나, existing scope가 incompatible할 때 `prepare_write`가 block 또는 hold하게 만들 수 있습니다. Change Unit scope, allowed paths, Autonomy Boundary, AFK stop conditions, related owner records를 직접 mutate하지 않습니다. Persistent owner-record change는 existing Core state-changing path, Decision Packet route, owner-record update path를 사용합니다. Freeze는 Write Authorization, approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, new authority tier를 만들지 않습니다.
+
 ### Gate
 
 Task가 write, proceed, close할 수 있는지 control하는 canonical kernel field입니다. Gates는 state이며 display text가 아닙니다.
@@ -251,6 +255,10 @@ cooperative | detective | preventive | isolated
 ```
 
 Capability는 validator results, blocked reasons, display에 영향을 주지만 kernel gate는 아닙니다.
+
+### Guard
+
+Connected profile의 actual enforcement 또는 detection layer를 적용하는 user-facing safety control입니다. Guard는 cooperative, detective, preventive, isolated일 수 있습니다. Proven `T4` path가 operation을 cover하지 않는 한 이름만으로 pre-execution blocking을 imply하지 않습니다.
 
 ### Harness Core
 
