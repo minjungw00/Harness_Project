@@ -22,7 +22,7 @@ Use this path when you want to run an AI-assisted development session under Harn
 
 ## Build
 
-Use this path only after the redesigned documentation is accepted and implementation work is ready to begin.
+Use this path for implementation planning and review. These pages do not authorize starting Harness server or runtime implementation; actual implementation starts only after the redesigned documentation is accepted. Start here before the full reference specs to see what to build first, what the first runnable proof must show, and how the MVP stages fit together.
 
 - [Implementation Overview](build/implementation-overview.md)
 - [First Runnable Slice](build/first-runnable-slice.md)
