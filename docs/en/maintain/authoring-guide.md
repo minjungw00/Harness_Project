@@ -161,8 +161,8 @@ After a target reference file exists, that target is the active owner; the numbe
 | Strategic thesis, failure model, MVP boundary, principle groups | `learn/purpose-and-principles.md` for reader explanation; `reference/design-quality-policies.md` and `reference/kernel.md` for exact contract impact | `02-strategy.md` |
 | Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` | `03-kernel-spec.md` as previous source material |
 | Runtime architecture, three spaces in implementation detail, Core process model, artifact architecture, projection/reconcile architecture, guarantee levels | `reference/runtime-architecture.md` | `04-runtime-architecture.md` as previous source material |
-| MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `reference/mcp-api-and-schemas.md` | `05-mcp-api-and-schemas.md` |
-| SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` | `06-reference-mvp.md` |
+| MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `reference/mcp-api-and-schemas.md` | `05-mcp-api-and-schemas.md` as previous source material |
+| SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` | `06-reference-mvp.md` as previous source material |
 | MVP implementation order and stage exit criteria | `build/mvp-plan.md` | `06-reference-mvp.md` |
 | First runnable implementation slice | `build/first-runnable-slice.md` | `06-reference-mvp.md` |
 | Markdown projection principles, managed blocks, human-editable sections, template tiers, projection freshness | `reference/document-projection.md` | `07-document-projection.md` |

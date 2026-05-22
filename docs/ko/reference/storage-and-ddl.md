@@ -1,0 +1,1378 @@
+# Storage와 DDL
+
+## 이 문서가 도와주는 일
+
+이 참조 문서는 Harness runtime의 storage model을 구현하거나 검토할 때 사용합니다. runtime home layout, `registry.sqlite`, `project.yaml`, `state.sqlite`, `task_events`, DDL draft, JSON `TEXT` validation, migration, lock policy, artifact directory layout, baseline capture format, projection job table, validator runner skeleton을 다룹니다.
+
+이 문서는 storage 관련 reference입니다. MVP stage sequencing은 이 문서가 정의하지 않습니다. Stage 순서와 exit criteria는 [Build: MVP 계획](../build/mvp-plan.md)을 봅니다.
+
+## 이런 때 읽기
+
+- 정확한 reference storage layout 또는 DDL draft가 필요할 때.
+- 어떤 table이 persisted state record를 담당하는지 확인할 때.
+- JSON `TEXT` field, enum-like `TEXT` field, lock, migration, artifact, baseline, projection job을 검증할 때.
+- API schema와 storage implementation detail을 분리해서 유지할 때.
+
+## Storage model 요약
+
+Harness는 등록된 project 전체를 관리하는 전역 runtime registry 하나와 project별 local state database 하나를 둡니다. Registry는 어떤 project와 surface가 있는지 기록합니다. `project.yaml`은 정적 프로젝트 설정을 저장합니다. `state.sqlite`는 기준 current record와 append-only task event를 저장합니다. 또한 idempotency replay용 row, artifact registry row, projection job, validator run result를 저장합니다.
+
+Public API shape는 [MCP API와 스키마](mcp-api-and-schemas.md)가 담당합니다. Storage-owned DDL과 storage-only JSON validation은 이 문서가 담당합니다.
+
+## 담당하는 참조 범위
+
+이 문서는 다음 항목을 담당합니다.
+
+- runtime home layout
+- `registry.sqlite`
+- `project.yaml`
+- `state.sqlite`
+- `task_events`
+- DDL draft
+- storage-owned field를 위한 JSON `TEXT` validation
+- canonical enum hardening
+- migrations
+- lock policy
+- artifact directory layout
+- baseline capture format
+- projection job table
+- validator-run storage
+- DDL과 fixture seed loader에 필요한 storage-owned compatibility details
+
+## 여기서 다루지 않는 것
+
+이 문서는 다음 항목을 담당하지 않습니다.
+
+- public MCP request/response schema. [MCP API와 스키마](mcp-api-and-schemas.md)를 봅니다.
+- public API error taxonomy. [MCP API와 스키마](mcp-api-and-schemas.md)를 봅니다.
+- 전체 kernel lifecycle transition table. [커널 참조](kernel.md)를 봅니다.
+- design-quality policy contracts. [설계 품질 정책 팩](../08-design-quality-policy-pack.md)이 현재 담당하며, 이후 경로는 `reference/design-quality-policies.md`입니다.
+- projection template body. [문서 Projection](../07-document-projection.md)이 현재 담당하며, 이후 경로는 `reference/document-projection.md`입니다.
+- MVP stage sequencing과 exit criteria. [Build: MVP 계획](../build/mvp-plan.md)을 봅니다.
+- operator command semantics. [운영과 Conformance](../11-operations-and-conformance.md)가 현재 담당하며, 이후 경로는 `reference/operations-and-conformance.md`입니다.
+- connector capability profile 또는 surface recipe. [Agent 통합](../09-agent-integration.md)이 현재 담당하며, 이후 경로는 `reference/agent-integration.md`입니다.
+
+## Runtime home layout
+
+기준 layout:
+
+```text
+~/.harness/
+  registry.sqlite
+  projects/
+    PRJ-0001/
+      project.yaml
+      state.sqlite
+      artifacts/
+        bundles/
+        diffs/
+        logs/
+        screenshots/
+        checkpoints/
+        manifests/
+        qa/
+        tdd/
+        designs/
+        prototypes/
+        architecture/
+        decisions/
+        exports/
+        tmp/
+```
+
+## DDL draft
+
+Reference storage는 registry와 project별 state를 저장하기 위해 SQLite를 사용합니다. DDL은 초안 상태의 구현 계약입니다. index나 migration helper가 field name에 추가될 수 있습니다. 하지만 table ownership과 authority boundary는 안정적으로 유지되어야 합니다.
+
+`task_spine_entries`는 MVP에서 public `journey_spine_entry` record를 저장하는 physical table입니다. Journey Spine Entry wording은 public MCP/API naming에서 유지됩니다. table name은 task-local implementation shape를 보존하기 위해 유지합니다.
+
+이 ER diagram은 아래 DDL 관계의 개요입니다. 관계 label은 storage link를 설명할 뿐, record를 부여하거나 변경할 권한을 뜻하지 않습니다. 정확한 구현 계약은 SQL DDL입니다.
+
+```mermaid
+erDiagram
+  projects ||--o{ project_surfaces : registers
+  projects ||--o{ connector_manifests : has
+  project_surfaces ||--o{ connector_manifests : describes
+  projects ||--|| project_state : has
+  tasks ||--|| task_gates : has
+  tasks ||--o{ change_units : has
+  tasks ||--o{ baselines : tracks
+  tasks ||--o{ write_authorizations : tracks
+  change_units ||--o{ write_authorizations : scopes
+  write_authorizations ||--o| runs : consumed_by
+  tasks ||--o{ runs : has
+  tasks ||--o{ approvals : tracks
+  decision_packets ||--o{ approvals : links
+  tasks ||--o{ decision_packets : has
+  tasks ||--o{ residual_risks : tracks
+  decision_packets ||--o{ residual_risks : links
+  tasks ||--o{ shared_designs : tracks
+  tasks ||--o{ task_spine_entries : has
+  change_units ||--o{ change_unit_dependencies : depends
+  tasks ||--o{ evidence_manifests : has
+  tasks ||--o{ evals : has
+  tasks ||--o{ manual_qa_records : has
+  decision_packets ||--o{ manual_qa_records : links
+  tasks ||--o{ artifacts : links
+  artifacts ||--o{ artifact_links : links
+  tasks ||--o{ task_events : has
+  tasks ||--o{ projection_jobs : tracks
+  tasks ||--o{ reconcile_items : tracks
+  tasks ||--o{ feedback_loops : has
+  tasks ||--o{ tdd_traces : has
+  tasks ||--o{ validator_runs : has
+```
+
+### JSON TEXT validation
+
+Reference DDL의 JSON `TEXT` column은 MVP에서 storage flexibility를 주기 위한 장치입니다. 그렇다고 arbitrary JSON이나 partially parsed JSON을 그대로 저장해도 된다는 뜻은 아닙니다. Core는 commit 전에 JSON `TEXT` field 값을 parse하고, 잘못된 JSON을 거부하며, parsed value를 해당 field의 owning shape에 맞게 검증해야 합니다.
+
+Public API payload와 API-shaped stored payload의 owning shape는 [MCP API와 스키마](mcp-api-and-schemas.md)의 schema입니다. Storage-only field의 owning shape는 이 문서의 reference storage contract 또는 이 문서가 이름 붙인 specific owner document입니다. 이 boundary는 public schema를 [MCP API와 스키마](mcp-api-and-schemas.md)에, SQLite DDL을 이 문서에 둡니다.
+
+잘못된 JSON은 유효하지 않은 state입니다. Schema와 맞지 않는 JSON도 유효하지 않은 state입니다. `'[]'` 또는 `'{}'` 같은 default를 가진 field는 SQLite가 column을 `TEXT`로 저장한다는 이유만으로 다른 JSON kind를 저장하면 안 되며, expected array 또는 object shape의 valid JSON을 계속 저장해야 합니다. 여기에는 `module_map_items.watchpoints_json` 같은 storage-owned array도 포함됩니다.
+
+Recommended hardening: 배포된 SQLite build가 JSON functions를 지원하는 경우 migration은 JSON `TEXT` column에 `CHECK (json_valid(column_name))` 또는 equivalent generated check를 추가해야 합니다. 이 check는 방어적 보강이며 Core의 before-commit shape validation을 대체하지 않습니다. 아래 MVP DDL은 모든 check를 inline으로 보여 주기 위해 full rewrite될 필요가 없습니다.
+
+### Canonical enum hardening
+
+Canonical enum column은 reference DDL에서 readability를 위해 `TEXT`를 사용하지만 open string이 아닙니다. Core validation이 기준입니다. Database check, lookup-table validation, generated check, migration assertion은 방어적 보강이며, write, close, replay, projection behavior를 좌우하는 state field부터 적용해야 합니다.
+
+최소 enum hardening 대상:
+
+| Field(s) | Hardening을 위한 owner/value source |
+| --- | --- |
+| `tasks.mode` | [Mode](kernel.md#mode). |
+| `tasks.lifecycle_phase` | [Lifecycle Phase](kernel.md#lifecycle-phase)와 kernel transition table. |
+| `tasks.result` | [Result](kernel.md#result)와 [Close Semantics](kernel.md#close-semantics). |
+| `tasks.close_reason` | [Close Reason](kernel.md#close-reason)과 [Close Semantics](kernel.md#close-semantics). |
+| `tasks.assurance_level` | [Assurance Level](kernel.md#assurance-level)과 [Verification Gate](kernel.md#verification-gate). |
+| `tasks.projection_status` | 이 문서와 [Document Projection](../07-document-projection.md)의 TASK projection freshness semantics. |
+| `task_gates.scope_gate` | [Scope Gate](kernel.md#scope-gate). |
+| `task_gates.decision_gate` | [Decision Gate](kernel.md#decision-gate). |
+| `task_gates.approval_gate` | [Approval Gate](kernel.md#approval-gate). |
+| `task_gates.design_gate` | [Design Gate](kernel.md#design-gate). |
+| `task_gates.evidence_gate` | [Evidence Gate](kernel.md#evidence-gate). |
+| `task_gates.verification_gate` | [Verification Gate](kernel.md#verification-gate). |
+| `task_gates.qa_gate` | [QA Gate](kernel.md#qa-gate). |
+| `task_gates.acceptance_gate` | [Acceptance Gate](kernel.md#acceptance-gate). |
+| `write_authorizations.status` | [Kernel `prepare_write` State Logic](kernel.md#prepare_write-state-logic)와 [MCP API와 스키마](mcp-api-and-schemas.md)의 public `WriteAuthorizationSummary`. |
+| `decision_packets.status` | [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute)와 [MCP API와 스키마](mcp-api-and-schemas.md)의 public `DecisionPacket`. |
+| `manual_qa_records.result` | [QA Gate](kernel.md#qa-gate)와 [`harness.record_manual_qa`](mcp-api-and-schemas.md#harnessrecord_manual_qa). |
+| `evals.verdict` | [Verification Gate](kernel.md#verification-gate)와 [`harness.record_eval`](mcp-api-and-schemas.md#harnessrecord_eval). |
+| `projection_jobs.status` | 이 문서와 [Document Projection](../07-document-projection.md)의 projection job/freshness semantics. |
+
+새 table이나 rebuild migration에서는 representative inline hardening으로 `status TEXT NOT NULL CHECK (status IN (...))`를 사용할 수 있습니다. Existing SQLite table에는 table rebuild, Core가 commit 전에 확인하는 small lookup table, 또는 tightening 전에 unknown value를 reject하는 migration-time assertion이 필요할 수 있습니다. DB에만 존재하는 enum value를 만들지 말고 storage hardening은 owner value source에 묶어야 합니다.
+
+아래 table은 DDL의 추가 status-like `TEXT` field에 대한 owner map입니다. Storage validator, fixture seed loader, migration assertion이 allowed value를 어디서 가져와야 하는지 이름 붙이는 것이며, 두 번째 enum definition이 아닙니다.
+
+| Field(s) | Hardening을 위한 owner/value source |
+| --- | --- |
+| `project_surfaces.guarantee_level`, `write_authorizations.guarantee_level`, `validator_runs.guarantee_level` | Semantic meaning은 [Runtime Architecture Guarantee Levels](runtime-architecture.md#guarantee-levels)가 담당합니다. Connector/profile reporting은 [Agent Integration Guarantee Levels](../09-agent-integration.md#guarantee-levels)가 담당합니다. Public payload shape는 [MCP API와 스키마](mcp-api-and-schemas.md)에 반영됩니다. |
+| `runs.kind` | [`harness.record_run`](mcp-api-and-schemas.md#harnessrecord_run)의 `RecordRunRequest.kind`. |
+| `approvals.status` | [Approval Gate](kernel.md#approval-gate)의 Approval lifecycle semantics와 [`harness.record_user_decision`](mcp-api-and-schemas.md#harnessrecord_user_decision)의 approval decision payload. |
+| `decision_requests.decision_kind`, `decision_packets.decision_kind` | [MCP API와 스키마](mcp-api-and-schemas.md)의 Decision Packet public schemas와 decision payload branches. |
+| `evidence_manifests.status` | [Evidence Gate](kernel.md#evidence-gate)와 [Evidence Sufficiency Profiles](kernel.md#evidence-sufficiency-profiles)의 evidence sufficiency semantics. |
+| `residual_risks.visibility_status` | [Acceptance Gate](kernel.md#acceptance-gate)의 residual-risk visibility semantics와 [MCP API와 스키마](mcp-api-and-schemas.md)의 public `ResidualRiskSummary`. Summary-only `none` state는 kernel owner가 명시적으로 허용하지 않는 한 existing residual-risk row에 persist하면 안 됩니다. |
+| `validator_runs.status` | [ValidatorResult](mcp-api-and-schemas.md#validatorresult)의 `ValidatorResult.status`. |
+| `projection_jobs.projection_kind` | [Shared Schemas](mcp-api-and-schemas.md#shared-schemas)의 API-owned `ProjectionKind`. |
+| `expected_projection` statuses 같은 projection fixture assertions | Operations fixture comparison semantics입니다. Owning projection schema가 함께 정의하지 않는 한 storage enum values가 아닙니다. |
+| `feedback_loops.loop_kind`, `feedback_loops.status`, `tdd_traces.status` | [`harness.record_run`](mcp-api-and-schemas.md#harnessrecord_run)의 `FeedbackLoopUpdate`와 `TddTraceUpdate`, 그리고 아래의 storage-specific Feedback Loop notes. |
+| `tool_invocations.status` | 이 문서의 reference idempotency/replay storage semantics. Surface diagnostic이 아니라 committed replay state만 설명합니다. Storage value는 아래에서 promote됩니다. |
+
+다음 MVP storage-owned value set은 existing owner docs와 fixture example이 이미 stable meaning을 암시하는 field와, 이곳에서 owner-bound compatibility meaning을 resolve하는 formerly unresolved storage status field에 대해 promote됩니다. 이 value는 storage hardening value이며 API payload enum, kernel gate value, lifecycle phase, projection status, optional-table requirement를 다시 정의하지 않습니다.
+
+| Field(s) | Durable values | Compatibility meaning |
+| --- | --- | --- |
+| `runs.status` | `completed`, `interrupted`, `blocked`, `violation` | `completed`는 committed Run record이며 normal owner refs와 gates를 통해서만 evidence, verification, QA, acceptance, close를 support할 수 있습니다. Command failure는 별도 Run status가 아니라 `runs.command_results_json`과 related evidence에 남습니다. `interrupted`는 agent crash, session 또는 tool interruption, abandoned session, equivalent recovery condition 때문에 started 또는 observed되었지만 정상 완료되지 않은 execution attempt에 대한 committed recovery Run입니다. Interrupted Run에 captured된 diff/log artifacts는 recovery evidence이지 successful completion의 proof가 아닙니다. `interrupted`, `blocked`, `violation`은 deliberate하게 committed된 recovery/audit Runs입니다. Compatible authorization이 실제로 consumed된 경우가 아니면 `runs.write_authorization_id`를 consumed로 채우면 안 되며, evidence sufficiency, detached verification, QA, acceptance, close readiness를 satisfy할 수 없습니다. |
+| `change_units.status` | `planned`, `active`, `completed`, `deferred`, `superseded` | `planned`는 shaped되었지만 Task의 current active unit은 아닌 Change Unit입니다. `active`는 unit이 current writes를 scope할 때 `tasks.active_change_unit_id`와 일치해야 합니다. `completed`, `deferred`, `superseded`는 더 이상 new writes를 scope하지 않으며, completed, explicitly deferred, superseded Change Unit에 대한 kernel close rules 아래에서만 close-compatible합니다. |
+| `baselines.status` | `captured`, `stale` | `captured`는 Core freshness checks가 계속 pass하는 동안에만 사용할 수 있는 baseline snapshot입니다. `stale`은 baseline이 해당 operation이 의존하는 repository state 또는 related approval/evidence/verification inputs와 더 이상 match하지 않는다는 뜻입니다. |
+| `connector_manifests.status` | `current`, `drifted` | `current`는 connector-managed file list와 hashes가 manifest와 match한다는 뜻입니다. `drifted`는 generated file 또는 managed-block drift가 detect되어 overwrite 전에 reconcile로 route되어야 한다는 뜻입니다. Missing manifest는 existing row의 status value가 아니라 doctor/connect가 absent state로 report합니다. |
+| `tool_invocations.status` | `committed` | Row는 idempotency key와 request hash로 replay할 수 있는 committed non-dry-run Core response에 대해서만 존재합니다. Dry run, malformed request, pre-commit state conflict, changed request-hash replay는 new replay row를 만들지 않습니다. Idempotent replay는 이 status를 바꾸지 않고 committed row를 반환합니다. |
+| `decision_requests.status` | `open`, `linked`, `closed`, `expired`, `cancelled`, `superseded` | Optional routing/replay/handoff lifecycle일 뿐입니다. `open`은 request metadata가 routing 또는 staging을 위해 아직 current하다는 뜻입니다. `linked`는 row가 compatible canonical `decision_packet_id`를 가리킨다는 뜻이며, gate aggregation은 linked Decision Packet을 통해서만 request를 고려할 수 있습니다. `closed`, `expired`, `cancelled`, `superseded`는 decision authority를 만들지 않고 routing lifecycle을 끝냅니다. `decision_requests` row 자체는 `decision_gate`, approval, acceptance, waiver, residual-risk acceptance, close를 절대 satisfy하지 않습니다. |
+| `residual_risks.status` | `open`, `accepted`, `mitigated`, `deferred`, `superseded` | Residual Risk row의 risk lifecycle 및 accepted-risk metadata status입니다. `open`은 current known risk입니다. `accepted`는 user risk acceptance metadata가 이 row에 recorded되었다는 뜻이며, acceptance는 standalone accepted-risk record가 아니라 `residual_risks` 위의 state/metadata로 남습니다. `mitigated`는 다른 owner ref가 다시 열지 않는 한 current close-relevant risk로 취급하지 않아야 할 만큼 risk가 addressed되었다는 뜻입니다. `deferred`는 later handling을 위한 follow-up visibility와 close impact를 보존합니다. `superseded`는 newer compatible risk record가 이를 대체할 때 history를 보존합니다. `visibility_status`는 별도의 residual-risk visibility field로 남습니다. |
+| `task_spine_entries.status` | `current`, `superseded` | Journey Spine Entry records는 reconstruction을 보완합니다. `current` entries는 continuity views에서 current annotations로 표시될 수 있습니다. `superseded` entries는 historical support records로 남지만 current journey facts로 제시하면 안 됩니다. |
+| `change_unit_dependencies.status` | `open`, `satisfied`, `blocked`, `deferred`, `superseded` | Shaping, ordering, merge-risk visibility, close impact를 위한 dependency metadata입니다. `open`은 dependency가 아직 적용된다는 뜻입니다. `satisfied`는 dependency condition이 충족되었다는 뜻입니다. `blocked`는 dependency가 현재 compatible ordering 또는 close readiness를 막는다는 뜻입니다. `deferred`는 지금 resolve되지 않고 visible follow-up 또는 close impact가 남아 있다는 뜻입니다. `superseded`는 다른 dependency 또는 Change Unit shape가 이를 대체한다는 뜻입니다. 이 values는 scheduler를 만들지 않고 parallel implementation lanes를 authorize하지 않습니다. |
+| `shared_designs.status` | `proposed`, `active`, `stale`, `deferred`, `superseded` | Shared Design은 design-support record입니다. `active`는 affected scope의 current design basis입니다. `proposed`는 draft 또는 shaping input이며 그 자체로 design policy를 satisfy하기에 충분하지 않습니다. `stale`은 relying하기 전에 refresh, reconcile, 또는 new compatible design basis가 필요합니다. `deferred`와 `superseded`는 final acceptance, approval, residual-risk acceptance를 뜻하지 않고 visibility를 보존합니다. |
+| `reconcile_items.status` | `pending`, `merged`, `rejected`, `converted_to_note`, `decision_created`, `deferred` | `pending`은 human-editable input 또는 generated/projection drift에서 생성된 unresolved candidate입니다. 다른 values는 reconcile decision path의 durable outcomes입니다. 즉 accepted state로 merge, proposal reject, note로 preserve, Decision Packet create, 또는 visible follow-up/close impact와 함께 defer하는 상태입니다. |
+| `domain_terms.status` | `active`, `conflict` | `active`는 usable canonical term입니다. `conflict`는 competing meanings 또는 unresolved terminology를 기록하며 stewardship/design checks에 계속 드러나야 하고 그 자체로 product use of the term을 authorize할 수 없습니다. |
+| `module_map_items.status` | `active` | `active`는 canonical Module Map Item의 MVP usable state입니다. Missing, stale, conflicting module knowledge는 extra MVP row status가 아니라 reconcile items, projection freshness, validator findings, gates로 표현합니다. |
+| `interface_contracts.review_status` | `pending`, `reviewed` | `pending`은 contract row가 있지만 required review/evidence가 아직 module/interface policy를 satisfy하지 못했다는 뜻입니다. `reviewed`는 callers, compatibility impact, boundary tests, related review evidence가 recorded되었다는 뜻입니다. 이 값만으로 residual risk를 waive하거나 kernel gates를 override하지 않습니다. |
+
+### `project.yaml`
+
+`project.yaml`은 static project configuration만 저장합니다. Current Task state를 저장하면 안 됩니다.
+
+```yaml
+project_id: PRJ-0001
+display_name: my-app
+repo_root: /abs/path/to/my-app
+default_agent_surface: reference
+
+agent_surfaces:
+  reference:
+    enabled: true
+    capability_profile_id: SURF-PROFILE-0001
+
+default_checks:
+  lint: []
+  test: []
+  build: []
+
+design_quality:
+  vertical_slice_default: true
+  tdd_required_for: []
+  manual_qa_default_for: []
+
+network_policy:
+  default_write: deny
+  allowed_read_domains: []
+  allowed_write_targets: []
+
+secret_policy:
+  env_allowlist: []
+  allow_secret_access_without_approval: false
+```
+
+### `registry.sqlite`
+
+```sql
+CREATE TABLE projects (
+  project_id TEXT PRIMARY KEY,
+  display_name TEXT NOT NULL,
+  repo_root TEXT NOT NULL,
+  repo_fingerprint TEXT NOT NULL,
+  runtime_path TEXT NOT NULL,
+  project_yaml_path TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE project_surfaces (
+  surface_id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(project_id),
+  surface_kind TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  capability_profile_id TEXT NOT NULL,
+  guarantee_level TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  mcp_config_ref TEXT,
+  last_seen_at TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE connector_manifests (
+  manifest_id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(project_id),
+  surface_id TEXT NOT NULL REFERENCES project_surfaces(surface_id),
+  manifest_version INTEGER NOT NULL,
+  generated_paths_json TEXT NOT NULL,
+  managed_hash TEXT NOT NULL,
+  capability_profile_json TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+```
+
+### `state.sqlite`
+
+```sql
+CREATE TABLE project_state (
+  project_id TEXT PRIMARY KEY,
+  state_version INTEGER NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE tasks (
+  task_id TEXT PRIMARY KEY,
+  state_version INTEGER NOT NULL,
+  mode TEXT NOT NULL,
+  lifecycle_phase TEXT NOT NULL,
+  result TEXT NOT NULL,
+  close_reason TEXT NOT NULL,
+  assurance_level TEXT NOT NULL,
+  title TEXT NOT NULL,
+  current_summary TEXT NOT NULL DEFAULT '',
+  acceptance_criteria_json TEXT NOT NULL DEFAULT '[]',
+  active_change_unit_id TEXT,
+  active_run_id TEXT,
+  latest_evidence_manifest_id TEXT,
+  latest_eval_id TEXT,
+  latest_manual_qa_record_id TEXT,
+  projection_version INTEGER NOT NULL DEFAULT 0,
+  projected_version INTEGER NOT NULL DEFAULT 0,
+  projection_status TEXT NOT NULL DEFAULT 'unknown',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE task_gates (
+  task_id TEXT PRIMARY KEY REFERENCES tasks(task_id),
+  scope_gate TEXT NOT NULL,
+  decision_gate TEXT NOT NULL,
+  approval_gate TEXT NOT NULL,
+  design_gate TEXT NOT NULL,
+  evidence_gate TEXT NOT NULL,
+  verification_gate TEXT NOT NULL,
+  qa_gate TEXT NOT NULL,
+  acceptance_gate TEXT NOT NULL,
+  waiver_json TEXT NOT NULL DEFAULT '{}',
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE change_units (
+  change_unit_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  title TEXT NOT NULL,
+  purpose TEXT NOT NULL,
+  non_goals_json TEXT NOT NULL DEFAULT '[]',
+  slice_type TEXT NOT NULL,
+  autonomy_profile TEXT NOT NULL,
+  agent_may_do_json TEXT NOT NULL DEFAULT '[]',
+  user_judgment_required_json TEXT NOT NULL DEFAULT '[]',
+  afk_stop_conditions_json TEXT NOT NULL DEFAULT '[]',
+  end_to_end_path_json TEXT NOT NULL DEFAULT '{}',
+  horizontal_exception_reason TEXT,
+  follow_up_vertical_change_unit_id TEXT,
+  allowed_paths_json TEXT NOT NULL DEFAULT '[]',
+  allowed_tools_json TEXT NOT NULL DEFAULT '[]',
+  allowed_commands_json TEXT NOT NULL DEFAULT '[]',
+  allowed_network_json TEXT NOT NULL DEFAULT '[]',
+  secret_scope_json TEXT NOT NULL DEFAULT '[]',
+  sensitive_categories_json TEXT NOT NULL DEFAULT '[]',
+  validator_profile_json TEXT NOT NULL DEFAULT '[]',
+  completion_conditions_json TEXT NOT NULL DEFAULT '[]',
+  evaluator_focus_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE baselines (
+  baseline_ref TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  repo_head TEXT NOT NULL,
+  branch TEXT NOT NULL,
+  dirty INTEGER NOT NULL,
+  tree_hash TEXT NOT NULL,
+  included_paths_json TEXT NOT NULL DEFAULT '[]',
+  ignored_paths_json TEXT NOT NULL DEFAULT '[]',
+  diff_artifact_id TEXT REFERENCES artifacts(artifact_id),
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE write_authorizations (
+  write_authorization_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT NOT NULL REFERENCES change_units(change_unit_id),
+  basis_state_version INTEGER NOT NULL,
+  baseline_ref TEXT REFERENCES baselines(baseline_ref),
+  intended_operation TEXT NOT NULL,
+  intended_paths_json TEXT NOT NULL DEFAULT '[]',
+  intended_tools_json TEXT NOT NULL DEFAULT '[]',
+  intended_commands_json TEXT NOT NULL DEFAULT '[]',
+  intended_network_json TEXT NOT NULL DEFAULT '[]',
+  intended_secrets_json TEXT NOT NULL DEFAULT '[]',
+  sensitive_categories_json TEXT NOT NULL DEFAULT '[]',
+  approval_refs_json TEXT NOT NULL DEFAULT '[]',
+  decision_packet_refs_json TEXT NOT NULL DEFAULT '[]',
+  guarantee_level TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  expires_at TEXT,
+  consumed_by_run_id TEXT,
+  consumed_at TEXT
+);
+
+CREATE TABLE runs (
+  run_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  kind TEXT NOT NULL,
+  actor_kind TEXT NOT NULL,
+  surface_id TEXT NOT NULL,
+  baseline_ref TEXT,
+  write_authorization_id TEXT REFERENCES write_authorizations(write_authorization_id),
+  summary TEXT NOT NULL DEFAULT '',
+  observed_changes_json TEXT NOT NULL DEFAULT '{}',
+  command_results_json TEXT NOT NULL DEFAULT '[]',
+  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  completed_at TEXT
+);
+
+CREATE TABLE approvals (
+  approval_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  -- Optional compatibility ref; leave null when decision_requests is omitted.
+  decision_request_id TEXT,
+  decision_packet_id TEXT REFERENCES decision_packets(decision_packet_id),
+  status TEXT NOT NULL,
+  sensitive_categories_json TEXT NOT NULL DEFAULT '[]',
+  allowed_paths_json TEXT NOT NULL DEFAULT '[]',
+  allowed_tools_json TEXT NOT NULL DEFAULT '[]',
+  allowed_commands_json TEXT NOT NULL DEFAULT '[]',
+  allowed_network_targets_json TEXT NOT NULL DEFAULT '[]',
+  secret_scope_json TEXT NOT NULL DEFAULT '[]',
+  baseline_ref TEXT,
+  expires_at TEXT,
+  decision_note TEXT,
+  created_at TEXT NOT NULL,
+  decided_at TEXT
+);
+
+-- Optional compatibility/routing table for routing, interaction, replay, or legacy handoff metadata only.
+-- Minimal MVP implementations may omit this table.
+-- decision_packet_id may remain null for routing/replay staging; unlinked rows are non-authoritative.
+-- Gate aggregation may consider a row only through a linked compatible decision_packet_id.
+CREATE TABLE decision_requests (
+  decision_request_id TEXT PRIMARY KEY,
+  decision_packet_id TEXT REFERENCES decision_packets(decision_packet_id),
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  decision_kind TEXT NOT NULL,
+  status TEXT NOT NULL,
+  prompt TEXT NOT NULL,
+  options_json TEXT NOT NULL DEFAULT '[]',
+  recommendation TEXT,
+  approval_scope_json TEXT NOT NULL DEFAULT '{}',
+  reconcile_item_id TEXT,
+  expires_at TEXT,
+  decided_option_id TEXT,
+  decision_json TEXT NOT NULL DEFAULT '{}',
+  note TEXT,
+  waiver_reason TEXT,
+  created_at TEXT NOT NULL,
+  decided_at TEXT
+);
+
+CREATE TABLE decision_packets (
+  decision_packet_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  -- Optional compatibility ref; leave null when decision_requests is omitted.
+  decision_request_id TEXT,
+  decision_kind TEXT NOT NULL,
+  status TEXT NOT NULL,
+  question TEXT NOT NULL,
+  options_json TEXT NOT NULL DEFAULT '[]',
+  recommendation_json TEXT NOT NULL DEFAULT '{}',
+  affected_scope_json TEXT NOT NULL DEFAULT '{}',
+  autonomy_boundary_json TEXT NOT NULL DEFAULT '{}',
+  context_refs_json TEXT NOT NULL DEFAULT '[]',
+  context_artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  residual_risk_refs_json TEXT NOT NULL DEFAULT '[]',
+  decision_json TEXT NOT NULL DEFAULT '{}',
+  superseded_by_decision_packet_id TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  decided_at TEXT
+);
+
+CREATE TABLE residual_risks (
+  residual_risk_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  source_record_kind TEXT NOT NULL,
+  source_record_id TEXT NOT NULL,
+  related_decision_packet_id TEXT REFERENCES decision_packets(decision_packet_id),
+  affected_scope_json TEXT NOT NULL DEFAULT '{}',
+  affected_acceptance_criteria_json TEXT NOT NULL DEFAULT '[]',
+  visibility_status TEXT NOT NULL,
+  accepted_risk_json TEXT NOT NULL DEFAULT '{}',
+  follow_up_requirement_json TEXT NOT NULL DEFAULT '{}',
+  close_impact TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  accepted_at TEXT
+);
+
+CREATE TABLE shared_designs (
+  shared_design_id TEXT PRIMARY KEY,
+  task_id TEXT REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  first_change_unit_id TEXT REFERENCES change_units(change_unit_id),
+  title TEXT NOT NULL,
+  design_kind TEXT NOT NULL,
+  goal TEXT NOT NULL,
+  non_goals_json TEXT NOT NULL DEFAULT '[]',
+  acceptance_criteria_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL,
+  scope_json TEXT NOT NULL DEFAULT '{}',
+  assumptions_json TEXT NOT NULL DEFAULT '[]',
+  resolved_questions_json TEXT NOT NULL DEFAULT '[]',
+  domain_impact_refs_json TEXT NOT NULL DEFAULT '[]',
+  module_impact_refs_json TEXT NOT NULL DEFAULT '[]',
+  interface_impact_refs_json TEXT NOT NULL DEFAULT '[]',
+  options_json TEXT NOT NULL DEFAULT '[]',
+  selected_option_json TEXT NOT NULL DEFAULT '{}',
+  rejected_options_json TEXT NOT NULL DEFAULT '[]',
+  decision_packet_refs_json TEXT NOT NULL DEFAULT '[]',
+  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE task_spine_entries (
+  task_spine_entry_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  sequence_no INTEGER NOT NULL,
+  entry_kind TEXT NOT NULL,
+  lifecycle_phase TEXT,
+  actor_kind TEXT NOT NULL,
+  source_record_kind TEXT,
+  source_record_id TEXT,
+  summary TEXT NOT NULL DEFAULT '',
+  refs_json TEXT NOT NULL DEFAULT '[]',
+  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(task_id, sequence_no)
+);
+
+CREATE TABLE change_unit_dependencies (
+  change_unit_dependency_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT NOT NULL REFERENCES change_units(change_unit_id),
+  depends_on_change_unit_id TEXT NOT NULL REFERENCES change_units(change_unit_id),
+  dependency_kind TEXT NOT NULL,
+  status TEXT NOT NULL,
+  merge_risk TEXT NOT NULL,
+  visibility_note TEXT NOT NULL DEFAULT '',
+  close_impact TEXT NOT NULL,
+  rationale TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE evidence_manifests (
+  evidence_manifest_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  baseline_ref TEXT,
+  criteria_json TEXT NOT NULL DEFAULT '[]',
+  changed_files_json TEXT NOT NULL DEFAULT '[]',
+  supporting_refs_json TEXT NOT NULL DEFAULT '[]',
+  stale_if_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE evals (
+  eval_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  evaluator_run_id TEXT,
+  target_run_id TEXT,
+  verdict TEXT NOT NULL,
+  checks_json TEXT NOT NULL DEFAULT '[]',
+  evidence_reviewed_json TEXT NOT NULL DEFAULT '[]',
+  independence_json TEXT NOT NULL DEFAULT '{}',
+  blockers_json TEXT NOT NULL DEFAULT '[]',
+  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE manual_qa_records (
+  manual_qa_record_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  qa_profile TEXT NOT NULL,
+  performed_by TEXT NOT NULL,
+  result TEXT NOT NULL,
+  findings_json TEXT NOT NULL DEFAULT '[]',
+  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  waiver_reason TEXT,
+  waiver_decision_packet_id TEXT REFERENCES decision_packets(decision_packet_id),
+  residual_risk_refs_json TEXT NOT NULL DEFAULT '[]',
+  next_action TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE artifacts (
+  artifact_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  run_id TEXT,
+  kind TEXT NOT NULL,
+  relative_path TEXT NOT NULL,
+  sha256 TEXT NOT NULL,
+  size_bytes INTEGER NOT NULL,
+  content_type TEXT NOT NULL,
+  redaction_state TEXT NOT NULL,
+  produced_by TEXT NOT NULL,
+  retention_class TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE artifact_links (
+  artifact_link_id TEXT PRIMARY KEY,
+  artifact_id TEXT NOT NULL REFERENCES artifacts(artifact_id),
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  record_kind TEXT NOT NULL,
+  record_id TEXT NOT NULL,
+  relation_kind TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE task_events (
+  event_id TEXT PRIMARY KEY,
+  event_seq INTEGER NOT NULL UNIQUE,
+  task_id TEXT,
+  state_version INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  actor_kind TEXT NOT NULL,
+  surface_id TEXT,
+  request_id TEXT,
+  idempotency_key TEXT,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE tool_invocations (
+  invocation_id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL,
+  task_id TEXT,
+  tool_name TEXT NOT NULL,
+  request_id TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  response_json TEXT NOT NULL DEFAULT '{}',
+  state_version INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  completed_at TEXT,
+  UNIQUE(project_id, tool_name, idempotency_key)
+);
+
+CREATE TABLE projection_jobs (
+  projection_job_id TEXT PRIMARY KEY,
+  task_id TEXT,
+  projection_kind TEXT NOT NULL,
+  target_ref TEXT NOT NULL,
+  projection_version INTEGER NOT NULL,
+  source_state_version INTEGER,
+  status TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  output_path TEXT,
+  managed_hash TEXT,
+  error_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE reconcile_items (
+  reconcile_item_id TEXT PRIMARY KEY,
+  task_id TEXT,
+  source_kind TEXT NOT NULL,
+  source_path TEXT,
+  source_hash TEXT,
+  target_record_kind TEXT,
+  target_record_id TEXT,
+  proposed_change_json TEXT NOT NULL DEFAULT '{}',
+  status TEXT NOT NULL,
+  decision_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  resolved_at TEXT
+);
+
+CREATE TABLE domain_terms (
+  domain_term_id TEXT PRIMARY KEY,
+  term TEXT NOT NULL,
+  meaning TEXT NOT NULL,
+  code_representation TEXT,
+  not_this_json TEXT NOT NULL DEFAULT '[]',
+  related_terms_json TEXT NOT NULL DEFAULT '[]',
+  source_ref TEXT,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE module_map_items (
+  module_map_item_id TEXT PRIMARY KEY,
+  module_path TEXT NOT NULL,
+  responsibility TEXT NOT NULL,
+  public_interface_json TEXT NOT NULL DEFAULT '[]',
+  dependencies_json TEXT NOT NULL DEFAULT '[]',
+  internal_complexity TEXT NOT NULL DEFAULT '',
+  test_boundary TEXT,
+  owner_decision TEXT,
+  watchpoints_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE interface_contracts (
+  interface_contract_id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  owner_module TEXT NOT NULL,
+  change_type TEXT NOT NULL,
+  inputs_json TEXT NOT NULL DEFAULT '[]',
+  outputs_json TEXT NOT NULL DEFAULT '[]',
+  errors_json TEXT NOT NULL DEFAULT '[]',
+  compatibility_impact TEXT NOT NULL,
+  callers_impacted_json TEXT NOT NULL DEFAULT '[]',
+  boundary_tests_json TEXT NOT NULL DEFAULT '[]',
+  review_status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE feedback_loops (
+  feedback_loop_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  loop_kind TEXT NOT NULL,
+  loop_profile TEXT NOT NULL,
+  planned_loop TEXT NOT NULL,
+  selected_loop_refs_json TEXT NOT NULL DEFAULT '[]',
+  execution_refs_json TEXT NOT NULL DEFAULT '[]',
+  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  tdd_trace_refs_json TEXT NOT NULL DEFAULT '[]',
+  manual_qa_record_refs_json TEXT NOT NULL DEFAULT '[]',
+  evidence_manifest_refs_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL,
+  waiver_reason TEXT,
+  alternate_loop TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE tdd_traces (
+  tdd_trace_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  status TEXT NOT NULL,
+  red_refs_json TEXT NOT NULL DEFAULT '[]',
+  green_refs_json TEXT NOT NULL DEFAULT '[]',
+  refactor_refs_json TEXT NOT NULL DEFAULT '[]',
+  non_tdd_justification TEXT,
+  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE validator_runs (
+  validator_run_id TEXT PRIMARY KEY,
+  task_id TEXT,
+  change_unit_id TEXT,
+  run_id TEXT,
+  validator_id TEXT NOT NULL,
+  validator_kind TEXT NOT NULL,
+  status TEXT NOT NULL,
+  guarantee_level TEXT NOT NULL,
+  findings_json TEXT NOT NULL DEFAULT '[]',
+  blocked_reasons_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE locks (
+  lock_id TEXT PRIMARY KEY,
+  scope TEXT NOT NULL,
+  owner TEXT NOT NULL,
+  acquired_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  heartbeat_at TEXT NOT NULL
+);
+```
+
+MVP TDD discipline은 existing `feedback_loops`와 `tdd_traces` tables를 사용합니다. `feedback_loops`는 selected feedback loop와 waiver를 위한 alternate loop의 owner이고, `tdd_traces`는 RED, GREEN, refactor/check artifacts 및 non-TDD justification의 owner입니다. Evidence Manifest rows는 계속 acceptance criteria와 changed files에 대한 coverage owner입니다.
+
+`project_state.state_version`은 project-scoped state clock입니다. Core는 runtime bootstrap 중 registered project를 위한 `project_state` row를 정확히 하나 initialize하며, 이는 어떤 project-scoped mutation이 `expected_state_version`을 `project_state.state_version`과 비교하기 전이어야 합니다.
+
+`tasks.state_version`은 task-scoped state clock입니다. `Task` 범위의 mutation은 `expected_state_version`을 Core-resolved primary Task의 `tasks.state_version`과 비교하고, resolved primary Task가 없는 project-scoped mutation은 `project_state.state_version`과 비교합니다.
+
+```mermaid
+flowchart TD
+  Request["state-changing request<br/>expected_state_version"]
+  Scope{"Primary affected scope?"}
+  TaskClock["Task State Version<br/>tasks.state_version"]
+  ProjectClock["Project State Version<br/>project_state.state_version"]
+  CompareTask{"expected matches task clock?"}
+  CompareProject{"expected matches project clock?"}
+  Conflict["STATE_CONFLICT<br/>before mutation"]
+  Commit["Core transaction<br/>update records, append state.sqlite.task_events, increment affected clock"]
+
+  Request --> Scope
+  Scope -->|primary Task resolved| TaskClock --> CompareTask
+  Scope -->|project-scoped, task_id=null| ProjectClock --> CompareProject
+  CompareTask -->|no| Conflict
+  CompareProject -->|no| Conflict
+  CompareTask -->|yes| Commit
+  CompareProject -->|yes| Commit
+```
+
+`task_events`는 `state.sqlite` 안의 append-only event history로 남습니다. MVP는 별도의 event store를 도입하지 않습니다. `task_events.event_seq`는 database 안 모든 events의 deterministic global append sequence입니다. Core는 state change와 같은 write transaction 안에서 이를 allocate하며, Journey reconstruction, API event lists, conformance ordering은 timestamps가 아니라 ascending `event_seq`를 사용합니다. `task_events.state_version`은 affected scope의 resulting version을 기록합니다. Task events에서는 `tasks.state_version`이고, `task_id=null`인 project-level events에서는 `project_state.state_version`입니다. 여러 events가 같은 affected-scope `state_version`을 공유할 수 있지만 `event_seq`가 여전히 순서를 정의합니다.
+
+`tool_invocations`는 original committed response를 반환하는 데 필요한 request replay metadata를 저장합니다. Committed non-dry-run tool call만 `tool_invocations`를 생성하거나 update합니다. `dry_run=true`는 replay row를 만들지 않고 authoritative replay를 위한 idempotency key를 소비하지 않습니다. 구현이 권한을 만들지 않는 진단 정보를 보관하더라도 `tool_invocations`에 저장하거나 state-changing response replay에 사용하면 안 됩니다. `tool_invocations.request_hash`는 MCP API idempotency rule이 정의한 canonical request hash를 저장합니다. 즉 canonical JSON, UTF-8, `tool_name`, schema-normalized request body와 optional field, sorted object key, schema가 명시적으로 order-insignificant라고 하지 않는 한 schema-ordered array, NFC Unicode string, 그리고 `request_id`와 `idempotency_key`만 제외하는 envelope coverage를 사용합니다. `tool_invocations.state_version`은 `ToolResponseBase.state_version`에 반환되는 것과 같은 primary affected-scope version을 저장합니다. Core가 primary Task를 resolve하면 Task State Version이고, 그렇지 않으면 Project State Version입니다. 다른 `request_hash`로 idempotency key를 재사용하면 `STATE_CONFLICT`를 반환합니다.
+
+`tasks.projection_version`은 older TASK render가 newer render를 replace하지 못하게 하는 TASK projection/template/job version입니다. State clock이 아닙니다. `tasks.projected_version`은 retained되는 경우 TASK projection summary의 last rendered source state version cache일 뿐입니다. 모든 task-related `ProjectionKind`의 storage location으로 취급하면 안 됩니다.
+
+`tasks.projection_status`는 TASK projection status summary입니다. Per-kind projection freshness는 API-owned MVP-required, MVP-optional, enabled extension / appendix projection kinds에 대한 `projection_jobs.source_state_version`, job status, managed hashes, relevant projection records 또는 artifact refs를 통해 tracked됩니다. `APR` freshness는 committed Approval records와 그 approval-shaped Decision Packets에서 시작하며, non-mutating `approval_request_candidate` payload에서 시작하지 않습니다. 하나의 Task field가 모든 projection freshness를 소유한다고 취급하면 안 됩니다.
+
+`write_authorizations`는 durable `prepare_write` allow decisions를 저장합니다. Allow/block contract는 [Kernel `prepare_write` State Logic](kernel.md#prepare_write-state-logic)이 담당하고, public response shape는 [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write)가 담당합니다. Storage-specific requirements는 distinct committed non-dry-run allowed request마다 distinct row를 insert하고, idempotent return은 같은 idempotency key, request hash, compatible basis를 가진 same committed request replay에만 사용하며, `basis_state_version`이 compatibility basis로 사용된 affected-scope state version을 저장하고, authorization status가 바뀔 때마다 `updated_at`을 변경하며, status history를 `task_events`에 남기는 것입니다.
+
+Stored `write_authorizations` rows는 conformance fixture seeds에서 insert되는 rows를 포함해 non-null `basis_state_version`을 요구합니다. Fixture runner는 insert 전에 seeded affected-scope state version에서 이 field를 도출할 수 있지만, stored row는 여전히 이 값을 포함해야 하며 이를 post-transaction `ToolResponseBase.state_version`으로 취급하면 안 됩니다.
+
+`record_run` consumption은 `write_authorizations.consumed_by_run_id`와 `runs.write_authorization_id` reciprocal links를 한 Core transaction 안에서 set하여 저장합니다. `runs.write_authorization_id`의 unique partial index는 committed Runs에 대한 storage single-use를 enforce합니다. Idempotent replay는 다른 Run row를 insert하지 않고 original Run과 response metadata를 반환합니다. 어떤 Run도 commit하기 전에 Write Authorization이 missing된 경우처럼 rejected pre-commit `record_run` calls는 `runs` row를 insert하지 않으므로 반환할 storage Run ID가 없습니다. Nullable API `run_id`는 placeholder를 invent하지 않고 그 absence를 표현합니다. Invalid, stale, missing, consumed, scope-exceeded authorization을 attempt한 Run은 `runs.write_authorization_id`를 비워 둡니다. Attempted refs는 audit를 위해 validator findings, run violation payload, `task_events.payload_json`에 남길 수 있습니다. Kernel-owned close/evidence consequences는 [Kernel `record_run` State Logic](kernel.md#record_run-state-logic)에 둡니다.
+
+`decision_packets`는 Decision Packet state record를 저장합니다. `decision_requests`는 implementation handoff, replay, legacy request flow를 위한 optional interaction/routing compatibility table이며, minimal MVP 구현은 그 optional index와 nullable compatibility field까지 함께 생략할 수 있습니다. 유지한다면 unlinked `decision_requests` row는 non-authoritative routing metadata로 남고, approval link는 `approvals.decision_packet_id`를 사용하며, gate aggregation은 linked compatible `decision_packet_id`를 통해서만 `decision_requests`를 고려해야 합니다. Decision gate와 approval/acceptance/risk authority rule은 [Kernel Decision Gate](kernel.md#decision-gate)와 [MCP API와 스키마](mcp-api-and-schemas.md#public-tools)의 related public tool이 담당합니다.
+
+`residual_risks`는 residual-risk rows를 저장합니다. MVP accepted-risk identity는 `residual_risk_id`이며, 별도의 `accepted_risks` table이나 `ARISK-*` canonical record는 없습니다. Accepted-risk metadata/state는 `residual_risks.accepted_risk_json`, `status`, `accepted_at`에 남고, Decision Packets는 `decision_packets.residual_risk_refs_json`을 통해 rows를 reference할 수 있습니다. Visibility와 close semantics는 [Close Semantics](kernel.md#close-semantics)에 둡니다.
+
+MVP final acceptance에는 `acceptance_records` table이 없습니다. Acceptance는 Decision Packet path, `task_gates.acceptance_gate`, `state.sqlite.task_events`를 통해 저장됩니다. Transition과 payload rules는 [Kernel `close_task` State Logic](kernel.md#close_task-state-logic)과 [`harness.record_user_decision`](mcp-api-and-schemas.md#harnessrecord_user_decision)이 담당합니다. Close는 별도의 acceptance row를 찾지 않습니다.
+
+`module_map_items`는 canonical Module Map Item을 저장합니다. 여기에는 module role/responsibility, public interface, dependencies, internal complexity, test boundary, owner decision, module-local watchpoints가 포함됩니다. `watchpoints_json`은 위 JSON field validation boundary를 따르는 non-empty module-local watchpoint string의 Core-validated JSON array입니다. Interface-specific caller impact와 compatibility detail은 `interface_contracts`에 둡니다.
+
+`feedback_loops`는 selected Feedback Loop definition과 execution routing을 저장합니다. `loop_kind` value는 `test`, `typecheck`, `lint`, `build`, `browser_smoke`, `manual_qa`, `tdd`, `eval`, `operational`, `alternate`입니다. `loop_profile`은 chosen loop를 그 kind 안에서 classify하고, `planned_loop`는 intended check를 설명합니다. `status` value는 `defined`, `executed`, `waived`, `blocked`, `stale`입니다. Create/update payload는 MCP schema의 `FeedbackLoopUpdate`에서 오며, `record_manual_qa`는 existing Manual QA feedback loop의 execution ref를 update할 수 있습니다.
+
+Core는 commit 전에 모든 JSON ref array를 검증해야 합니다. `selected_loop_refs_json`과 `execution_refs_json`은 `StateRecordRef` array를 저장합니다. `tdd_trace_refs_json`, `manual_qa_record_refs_json`, `evidence_manifest_refs_json`은 matching record kind로 제한됩니다. `artifact_refs_json`은 public update payload 또는 related tool request에서 resolve된 committed `ArtifactRef` 값을 저장합니다. `operation=create`는 non-empty `loop_kind`, `loop_profile`, `planned_loop`, valid `status`를 요구합니다. `feedback_loop_id`는 Core-assigned이거나 deterministic fixture/import creation을 위해 caller-supplied일 수 있으며 unique해야 합니다. `operation=update`는 같은 `task_id`와 compatible `change_unit_id`를 가진 existing row를 요구합니다. Nullable scalar payload field는 stored value를 unchanged로 두고, ref array와 artifact ref는 additive입니다. `status=waived`는 `waiver_reason` 또는 referenced compatible waiver/decision record를 요구합니다. `status=executed`는 resulting execution, artifact, TDD trace, Manual QA, evidence manifest ref 중 적어도 하나를 요구합니다. TDD가 selected된 경우에도 `tdd_traces`는 canonical red/green/refactor evidence record로 남으며 `feedback_loops` row를 대체하지 않습니다. `feedback_loop_check`는 이 record를 읽는 validator이며 새 kernel gate를 추가하지 않습니다.
+
+`artifact_links`는 artifact를 위한 queryable many-to-many attachment table입니다. MVP에서는 Task-scoped이며, 각 row는 registered artifact 및 owner record의 Task와 일치하는 non-null `task_id`를 가집니다. `task`, `change_unit`, `run`, `decision_packet`, `shared_design`, `residual_risk`, `evidence_manifest`, `feedback_loop`, `tdd_trace`, `manual_qa_record`, `eval`, `journey_spine_entry`, `projection` 같은 existing owner record 중 같은 `task_id`로 Task-scoped인 owner record에만 artifact를 attach할 때 사용합니다. 어떤 owner kind가 project-scoped row도 가질 수 있다면, 그 row는 future extension이 project-scoped artifact storage/API를 추가하기 전까지 자체 state/projection metadata를 사용하며 artifact-link target이 아닙니다. Exported file은 `export_component`, `retention_class=export` 같은 artifact kind 또는 retention class를 사용합니다. Future extension이 matching table, `StateRecordRef` value, integrity semantics를 deliberate하게 추가하지 않는 한 `export` state record에 attach하지 않습니다. Existing `artifact_refs_json` field는 ordered 또는 record-local context를 보존할 수 있지만, multi-record artifact reuse와 artifact integrity check에는 `artifact_links`를 사용해야 합니다.
+
+`artifact_links.record_kind=projection`에서 `artifact_links.record_id`는 `projection_jobs.projection_job_id`를 저장합니다. 이 link는 Core가 해당 job을 linked rendered projection output으로 resolve할 수 있을 때만 valid합니다. 즉 job이 artifact link와 같은 `task_id`로 Task-scoped이고, matching `projection_kind`와 `target_ref`, `status=completed`, 그리고 rendered output을 위한 `output_path` 또는 documented projection ref가 필요합니다. `projection_jobs.target_ref`와 `output_path`는 validation and locator metadata이며 `artifact_links.record_id`를 대체하지 않습니다. Project-level projection job은 projection owner docs가 허용하는 곳에서 여전히 `projection_jobs`에 track될 수 있지만, current MVP artifact DDL은 그 job을 위한 project-scoped artifact row 또는 artifact link를 만들지 않습니다. 이 contract는 MVP storage를 `projection_jobs`에 유지하며 `projections` table을 도입하지 않습니다.
+
+`manual_qa_records.waiver_decision_packet_id`와 `manual_qa_records.residual_risk_refs_json`은 QA waiver decisions와 close-relevant risk refs를 위한 storage hooks입니다. Waiver contract는 [Kernel Waiver Semantics](kernel.md#waiver-semantics)와 [설계 품질 정책 팩](../08-design-quality-policy-pack.md#manual-qa)의 Manual QA policy가 담당합니다.
+
+`change_unit_dependencies`는 shaping, ordering, close visibility를 위한 MVP DAG metadata입니다. Parallel orchestration scheduler가 아니며 multiple active implementation lanes를 authorize하지 않습니다.
+
+`baselines`는 repo head, branch, dirty flag, tree hash, included/ignored paths, optional diff artifact, status를 가진 BaselineCapture record를 state에 저장합니다. 다른 table의 `baseline_ref` field는 `baselines.baseline_ref`를 refer합니다.
+
+Recommended indexes:
+
+```sql
+CREATE INDEX idx_task_events_task_version ON task_events(task_id, state_version);
+CREATE INDEX idx_task_events_task_seq ON task_events(task_id, event_seq);
+CREATE INDEX idx_decision_requests_task_status ON decision_requests(task_id, status); -- optional; omit when decision_requests is omitted
+CREATE INDEX idx_decision_requests_packet ON decision_requests(decision_packet_id); -- optional; omit when decision_requests is omitted
+CREATE INDEX idx_decision_packets_task_status ON decision_packets(task_id, status);
+CREATE INDEX idx_residual_risks_task_status ON residual_risks(task_id, status);
+CREATE INDEX idx_shared_designs_task_status ON shared_designs(task_id, status);
+CREATE INDEX idx_feedback_loops_task_status ON feedback_loops(task_id, status);
+CREATE INDEX idx_feedback_loops_change_unit ON feedback_loops(change_unit_id);
+CREATE INDEX idx_task_spine_entries_task_seq ON task_spine_entries(task_id, sequence_no);
+CREATE INDEX idx_change_unit_dependencies_task ON change_unit_dependencies(task_id, change_unit_id);
+CREATE INDEX idx_baselines_task_change_unit ON baselines(task_id, change_unit_id);
+CREATE INDEX idx_write_authorizations_task_status ON write_authorizations(task_id, status);
+CREATE INDEX idx_write_authorizations_change_unit ON write_authorizations(change_unit_id);
+CREATE INDEX idx_approvals_decision_packet ON approvals(decision_packet_id);
+CREATE INDEX idx_projection_jobs_status ON projection_jobs(status, projection_version);
+CREATE INDEX idx_artifacts_task_run ON artifacts(task_id, run_id);
+CREATE INDEX idx_artifact_links_artifact ON artifact_links(artifact_id);
+CREATE INDEX idx_artifact_links_record ON artifact_links(record_kind, record_id);
+CREATE INDEX idx_runs_task_status ON runs(task_id, status);
+CREATE INDEX idx_runs_write_authorization ON runs(write_authorization_id);
+CREATE UNIQUE INDEX uq_runs_write_authorization_consumed
+ON runs(write_authorization_id)
+WHERE write_authorization_id IS NOT NULL;
+CREATE INDEX idx_evals_task_change_unit ON evals(task_id, change_unit_id);
+CREATE INDEX idx_manual_qa_records_task_change_unit ON manual_qa_records(task_id, change_unit_id);
+CREATE INDEX idx_reconcile_items_status ON reconcile_items(status);
+```
+
+### `task_events`
+
+`task_events`는 application policy상 append-only입니다. `event_seq`는 monotonically allocated되며 절대 reused되지 않습니다. Recovery는 새 `event_seq` value를 가진 compensating event를 append하며 historical row나 historical order를 rewrite하면 안 됩니다.
+
+Deterministic event order는 ascending `task_events.event_seq`입니다. `state_version`은 affected-scope concurrency/result clock이고 `created_at`은 audit metadata입니다. 여러 events가 같은 state version이나 timestamp를 공유할 수 있으므로 어느 field도 conformance ordering에는 충분하지 않습니다.
+
+Reference event storage는 stable events와 non-stable detail 또는 local-audit events를 `state.sqlite.task_events` rows로 유지하며, 별도 event store는 도입하지 않습니다. Write Authorization lifecycle names와 `scope_violation_detected`와의 관계를 포함해 fixture가 assert할 수 있는 stable names는 [Kernel Stable Event Catalog](kernel.md#stable-event-catalog)가 담당합니다. Kernel catalog 밖의 tool-specific event names는 optional 또는 illustrative extension events이며 MVP fixtures가 요구하면 안 됩니다.
+
+## Migrations
+
+MVP는 작은 internal migration ledger에 기록된 integer schema versions를 사용합니다.
+
+```sql
+CREATE TABLE schema_migrations (
+  database_name TEXT NOT NULL,
+  version INTEGER NOT NULL,
+  applied_at TEXT NOT NULL,
+  checksum TEXT NOT NULL,
+  PRIMARY KEY (database_name, version)
+);
+```
+
+MVP migrations는 forward-only여야 합니다. Migration failure가 발생하면 doctor/recover가 repair 가능성을 report할 때까지 project는 unavailable 상태로 남습니다.
+
+## Lock policy
+
+State-changing operations는 가능한 가장 좁은 scope에서 lock을 acquire합니다.
+
+| Operation | Lock scope |
+|---|---|
+| project registration | project |
+| task intake/close | task |
+| shaping update | task and affected Change Unit |
+| decision packet create/resolve | task and affected Decision Packet |
+| residual risk create/update/accept | task and affected residual risk |
+| baseline capture | task and affected Change Unit |
+| prepare_write | task and active Change Unit; allowed일 때 write authorization |
+| record_run | task and run; consumed되는 write authorization이 있으면 해당 authorization |
+| projection render | projection job |
+| artifact registration | artifact path |
+| artifact link registration | artifact and target record |
+| reconcile decision | reconcile item and affected task/design record |
+
+```mermaid
+flowchart LR
+  Operation["state-changing operation"]
+  Project["project<br/>registration"]
+  Task["task<br/>intake, close, shaping, decisions"]
+  ChangeUnit["task + affected Change Unit<br/>prepare_write, baseline, shaping"]
+  Run["task + run + Write Authorization<br/>record_run"]
+  Projection["projection job<br/>projection render"]
+  Artifact["artifact path / artifact + target record<br/>artifact registration and links"]
+  Reconcile["reconcile item + affected task/design record"]
+
+  Operation --> Project
+  Operation --> Task
+  Operation --> ChangeUnit
+  Operation --> Run
+  Operation --> Projection
+  Operation --> Artifact
+  Operation --> Reconcile
+```
+
+Lock이 expired되면 다음 operation은 recovery event를 append한 뒤 lock을 가져갈 수 있습니다. `expected_state_version`이 relevant task 또는 project scope에서 stale이면 mutation 전에 `STATE_CONFLICT`를 반환합니다.
+
+## Artifact directory layout
+
+기준 layout:
+
+```text
+~/.harness/
+  registry.sqlite
+  projects/
+    PRJ-0001/
+      project.yaml
+      state.sqlite
+      artifacts/
+        bundles/
+        diffs/
+        logs/
+        screenshots/
+        checkpoints/
+        manifests/
+        qa/
+        tdd/
+        designs/
+        prototypes/
+        architecture/
+        decisions/
+        exports/
+        tmp/
+```
+
+```mermaid
+flowchart TD
+  Home["~/.harness/"]
+  Registry["registry.sqlite"]
+  Projects["projects/"]
+  Project["PRJ-0001/"]
+  ProjectYaml["project.yaml"]
+  State["state.sqlite"]
+  Artifacts["artifacts/"]
+  Bundles["bundles/"]
+  Diffs["diffs/"]
+  Logs["logs/"]
+  Screenshots["screenshots/"]
+  Checkpoints["checkpoints/"]
+  Manifests["manifests/"]
+  QA["qa/"]
+  TDD["tdd/"]
+  Designs["designs/"]
+  Prototypes["prototypes/"]
+  Architecture["architecture/"]
+  Decisions["decisions/"]
+  Exports["exports/"]
+  Tmp["tmp/"]
+
+  Home --> Registry
+  Home --> Projects --> Project
+  Project --> ProjectYaml
+  Project --> State
+  Project --> Artifacts
+  Artifacts --> Bundles
+  Artifacts --> Diffs
+  Artifacts --> Logs
+  Artifacts --> Screenshots
+  Artifacts --> Checkpoints
+  Artifacts --> Manifests
+  Artifacts --> QA
+  Artifacts --> TDD
+  Artifacts --> Designs
+  Artifacts --> Prototypes
+  Artifacts --> Architecture
+  Artifacts --> Decisions
+  Artifacts --> Exports
+  Artifacts --> Tmp
+```
+
+Artifact filenames는 collision을 피할 만큼 stable identity를 포함해야 합니다.
+
+```text
+{task_id}/{run_id-or-record_id}/{artifact_id}-{kind}.{ext}
+```
+
+Product Repository의 Markdown reports는 기본적으로 raw artifacts가 아닙니다. Export에 report snapshot이 필요하면 그 snapshot을 export component artifact로 저장할 수 있지만, report projection과 raw evidence의 구분은 유지해야 합니다.
+
+### Artifact Kind Storage Notes
+
+`artifacts.kind` field는 durable evidence files의 이름을 붙입니다. 그렇다고 artifact file이 대응하는 state record를 담당하는 것은 아닙니다.
+
+| Artifact kind | Reference storage note |
+|---|---|
+| `design_probe` | Store exploratory design findings, sketches, or probe outputs under `artifacts/designs/`; accepted structure belongs in `shared_designs`, design support records, or Task/Change Unit state. |
+| `prototype` | Store prototype diffs, screenshots, logs, or throwaway proof artifacts under `artifacts/prototypes/`; product code remains in the Product Repository and committed harness meaning remains in state records. |
+| `architecture_scan` | Store module scans, dependency snapshots, boundary findings, or stewardship evidence under `artifacts/architecture/`; accepted module/interface facts remain in their owner records. |
+| `decision_context` | Store compact context bundles for user judgment under `artifacts/decisions/`; Decision Packet status and outcome remain in `state.sqlite`. |
+| `screenshot` / `qa_capture` / `log` | Manual QA screenshot, browser QA capture bundle, console log, network trace, accessibility snapshot, workflow recording은 matching artifact area에 저장합니다. Manual QA record, Feedback Loop, Run, Evidence Manifest는 owner record로 남습니다. Automated browser capture는 MVP에 required가 아닙니다. |
+| `bundle` / `manifest` | Verification bundle, evaluator instruction bundle, artifact manifest는 `artifacts/bundles/` 또는 `artifacts/manifests/` 아래 저장합니다. Owner는 existing Task, Run, Evidence Manifest, Eval, 또는 Task-scoped projection record로 남습니다. |
+| `export_component` | Export manifest file, projection snapshot, state snapshot, 허용된 raw-file copy는 `artifacts/exports/` 아래 저장합니다. 이 artifacts는 `export` state table이 아니라 describe하는 existing owner record로 다시 link합니다. |
+
+### Artifact Registration Contract
+
+Artifact 등록은 Task, Run, Decision Packet context, Shared Design, Journey Spine Entry, Evidence Manifest, Eval, Manual QA record, Feedback Loop, TDD Trace, rendered Task-scoped projection 같은 owner record를 record하는 Core transition의 일부입니다. Verification bundle과 export component는 그 owner record에 link되는 artifact file이며 canonical `verification_bundle` 또는 `export` state record가 아닙니다.
+
+MVP registration steps:
+
+1. Connector-captured 또는 operator-supplied file은 project artifact `tmp/` directory 아래 staging path나 approved capture adapter에서만 accept합니다.
+2. Hashing 전에 redaction 또는 omission을 적용합니다. Raw secrets는 durable artifact storage로 copy하면 안 됩니다.
+3. Stored bytes를 matching kind directory 아래 `{task_id}/{run_id-or-record_id}/{artifact_id}-{kind}.{ext}` 형식으로 artifact directory에 move 또는 copy합니다.
+4. Stored bytes에서 `sha256`, `size_bytes`, `content_type`, `redaction_state`를 compute합니다.
+5. Related state record를 record하고 `task_events`를 append하는 같은 Core transaction에서 `artifacts` row와 required `artifact_links` row를 insert합니다.
+6. Artifact registry row를 통해 resolve되는 `uri`를 가진 `ArtifactRef`를 반환합니다.
+7. File move는 성공했지만 transaction이 실패했다면 file을 `tmp/`에 남기거나 `recover`를 위해 orphaned로 mark합니다. Committed artifact ref나 artifact link를 만들면 안 됩니다.
+
+```mermaid
+sequenceDiagram
+  participant Capture as staging path or capture adapter
+  participant Core as Core
+  participant Store as artifact directory
+  participant State as state.sqlite
+  participant Events as state.sqlite.task_events
+
+  Capture->>Core: staged file for registration
+  Core->>Core: validate source path and apply redaction or omission
+  Core->>Store: move or copy stored bytes
+  Store-->>Core: sha256, size_bytes, content_type, redaction_state
+  Core->>State: insert artifacts row
+  Core->>State: insert artifact_links rows
+  Core->>Events: append related event rows
+  Core->>State: commit related Core transaction
+  Core-->>Capture: ArtifactRef
+  alt transaction fails after file move
+    Core->>Store: leave in tmp or mark orphaned for recover
+  end
+```
+
+`redaction_state` implementation:
+
+| State | Stored artifact bytes |
+|---|---|
+| `none` | original non-sensitive evidence |
+| `redacted` | redacted evidence; the unredacted original is not retained by the harness |
+| `secret_omitted` | evidence with secret values omitted or replaced by handles |
+| `blocked` | a small metadata-only notice artifact explaining that capture was blocked; no forbidden content is stored |
+
+Artifact integrity failures는 `ARTIFACT_MISSING` 또는 validator failure를 반환하고, kernel rules에 따라 related evidence 또는 projection freshness를 stale로 mark합니다.
+
+## Baseline capture format
+
+Baseline capture는 write, approval, evidence, verification checks가 사용하는 repository state를 기록합니다.
+
+MVP는 각 capture를 `baselines`에 저장합니다. `baseline_ref`는 Run, approval, evidence manifest, verification bundle, validator가 사용하는 primary key입니다. Dirty diff가 capture되면 `baselines.diff_artifact_id`가 registered diff artifact를 가리키고, `artifact_links` row가 이를 baseline context에 attach합니다.
+
+```yaml
+BaselineCapture:
+  baseline_ref: BASE-0001
+  project_id: PRJ-0001
+  task_id: TASK-0001
+  change_unit_id: CU-0001
+  repo_root: /abs/path/to/repo
+  vcs:
+    kind: git
+    head: string
+    branch: string
+    dirty: boolean
+    diff_artifact_ref: ArtifactRef | null
+  file_snapshot:
+    included_paths: string[]
+    ignored_paths: string[]
+    tree_hash: string
+  approval_scope_refs: string[]
+  captured_at: string
+```
+
+Relevant HEAD, dirty diff, allowed path contents, approval scope, verification bundle inputs가 captured baseline과 더 이상 match하지 않으면 baseline은 stale입니다. Stale baseline은 affected records에 따라 approval, evidence, verification을 stale로 mark할 수 있습니다.
+
+```mermaid
+flowchart LR
+  Repo["git HEAD, branch, dirty flag"]
+  Files["included and ignored path snapshot"]
+  Diff["optional dirty diff artifact"]
+  Manifest["deterministic tree manifest"]
+  Baseline["baselines row<br/>baseline_ref"]
+  Write["prepare_write and Write Authorization"]
+  Approval["approval scope drift checks"]
+  Evidence["evidence freshness"]
+  Verify["verification bundle inputs"]
+
+  Repo --> Manifest
+  Files --> Manifest
+  Diff --> Baseline
+  Manifest --> Baseline
+  Baseline --> Write
+  Baseline --> Approval
+  Baseline --> Evidence
+  Baseline --> Verify
+```
+
+`tree_hash`는 ignore rules가 ignored paths를 제외한 뒤 deterministic tree manifest에서 계산합니다. 각 entry는 leading `./`가 없는 normalized relative POSIX path를 사용합니다. Path strings는 sorting과 hashing 전에 Unicode NFC로 normalize하며 paths는 normalization 후 sort합니다. Regular file content는 저장된 bytes 그대로 hash하고 line-ending normalization을 하지 않으며, entry에는 content hash, file size, available한 경우 executable bit를 포함합니다. Symlink entry는 implementation이 symlink를 명시적으로 disallow하고 그 exclusion 또는 block을 record하지 않는 한 dereferenced content가 아니라 link target을 hash합니다. Equivalent snapshots가 같은 `tree_hash`를 만들도록 final manifest는 hashing 전에 canonical하게 serialize합니다.
+
+## Verification Bundle Shape
+
+`harness.launch_verify`는 detached verification 또는 manual evaluator handoff를 위한 bundle artifact를 만듭니다. Bundle은 raw evidence metadata이지 Eval verdict가 아닙니다.
+
+Minimum bundle contents:
+
+```text
+verify-bundle/
+  manifest.json
+  task-summary.json
+  change-unit.json
+  baseline.json
+  evidence-manifest.json
+  approvals.json
+  decision-packets.json
+  residual-risks.json
+  run-refs.json
+  artifact-refs.json
+  artifact-links.json
+  design-refs.json
+  journey-spine-entries.json
+  evaluator-instructions.md
+```
+
+```mermaid
+flowchart TD
+  Bundle["verify-bundle/"]
+  Manifest["manifest.json"]
+  Task["task-summary.json"]
+  CU["change-unit.json"]
+  Baseline["baseline.json"]
+  Evidence["evidence-manifest.json"]
+  Approvals["approvals.json"]
+  Decisions["decision-packets.json"]
+  Risks["residual-risks.json"]
+  Runs["run-refs.json"]
+  ArtifactRefs["artifact-refs.json"]
+  ArtifactLinks["artifact-links.json"]
+  Designs["design-refs.json"]
+  Spine["journey-spine-entries.json"]
+  Instructions["evaluator-instructions.md"]
+
+  Bundle --> Manifest
+  Bundle --> Task
+  Bundle --> CU
+  Bundle --> Baseline
+  Bundle --> Evidence
+  Bundle --> Approvals
+  Bundle --> Decisions
+  Bundle --> Risks
+  Bundle --> Runs
+  Bundle --> ArtifactRefs
+  Bundle --> ArtifactLinks
+  Bundle --> Designs
+  Bundle --> Spine
+  Bundle --> Instructions
+```
+
+Manifest는 task id, Change Unit id, baseline ref, source state version, included artifact ids, redaction summary, evaluator focus, expected independence context를 기록합니다. Bundle은 retention과 redaction policy가 허용하면 copied raw artifacts를 포함할 수 있고, 그렇지 않으면 evaluator가 Harness를 통해 resolve할 수 있는 artifact refs를 포함합니다.
+
+Launching verification은 `verification_gate=pending`을 set하거나 유지합니다. Verdict를 record하고 assurance를 update할 수 있는 것은 `harness.record_eval`뿐입니다.
+
+## Projection job table
+
+Projection jobs는 committed state와 Product Repository Markdown files 사이의 durable outbox입니다. 위의 `projection_jobs` table이 job persistence와 canonical per-projection `source_state_version` metadata를 담당합니다.
+
+MVP는 separate `projections` table을 정의하지 않습니다. Rendered projection ref는 `projection_jobs.projection_job_id`와 해당 row의 `projection_kind`, `target_ref`, `output_path` metadata를 통해 resolve됩니다.
+
+`projection_jobs.projection_version`은 projection/template/job version입니다. Affected-scope state clock이 아닙니다. `projection_jobs.source_state_version`은 해당 projection job의 render source로 사용한 affected-scope state clock입니다. Pending jobs와 source state가 resolve되기 전에 failed된 jobs에서는 null일 수 있고, completed successful renders에서는 반드시 기록해야 합니다.
+
+Sensitive-approval projection jobs는 [문서 Projection](../07-document-projection.md#apr)이 담당하는 APR source rule과 [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write)가 담당하는 non-mutating candidate contract를 따릅니다. `approval_request_candidate`는 `TASK` display 또는 blockers에 영향을 줄 수 있지만 `APR` source는 절대 아닙니다. `APR` jobs는 committed approval state changes에서 시작합니다.
+
+MVP에서 Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet read resources를 통해 render됩니다.
+
+Standalone `DEC` projection은 standalone Decision Packet projection feature가 enabled인 경우가 아니면 optional입니다. Persisted `JOURNEY-CARD` Markdown은 optional입니다. Status, next, significant resume flows의 current-position Journey Card output은 agency-conformance requirement로 남습니다. 이 문서는 extension template text를 정의하지 않습니다.
+
+아래 job lifecycle은 enqueue된 모든 `ProjectionKind`에 적용됩니다. Stage sequencing과 proof scope는 [Build: MVP 계획](../build/mvp-plan.md)이 담당합니다.
+
+MVP job lifecycle:
+
+```text
+pending -> running -> completed
+pending -> running -> failed -> pending
+pending -> skipped
+```
+
+```mermaid
+stateDiagram-v2
+  [*] --> pending
+  pending --> running: worker acquires job
+  running --> completed: render and write succeed
+  running --> failed: render or write fails
+  failed --> pending: retry with newer attempt
+  pending --> skipped: obsolete version or managed drift
+  completed --> [*]
+  skipped --> [*]
+```
+
+Rules:
+
+- never render an older projection version over a newer one
+- preserve human-editable sections
+- overwrite 전에 managed hash를 비교
+- create a reconcile item for managed drift
+- keep projection failure separate from Task result
+
+`managed_hash`는 projector canonicalization 후 projector가 소유하는 managed block body에서만 계산합니다. `HARNESS:BEGIN`과 `HARNESS:END` marker lines는 hash input에서 제외합니다. Projector는 hashing 전에 line endings를 LF로 normalize하고 해당 block의 projection rules에 따라 meaningful whitespace를 preserve합니다. `managed_hash`는 drift detection value일 뿐이며 Markdown projection을 canonical state로 만들지 않습니다.
+
+### Projection Worker Execution
+
+Reference projector는 Core transaction이 commit된 뒤 pending job을 실행합니다.
+
+MVP worker steps:
+
+```mermaid
+sequenceDiagram
+  participant Worker as projection worker
+  participant Jobs as projection_jobs
+  participant Lock as projection-job lock
+  participant State as state records and artifact refs
+  participant Repo as Product Repository Markdown
+  participant Reconcile as reconcile_items
+
+  Worker->>Jobs: select oldest pending job
+  Worker->>Lock: acquire projection-job lock
+  Worker->>Jobs: mark running
+  Worker->>State: read latest records, refs, previous managed_hash
+  Worker->>Worker: resolve source_state_version
+  alt older projection_version
+    Worker->>Jobs: mark skipped
+  else managed block drift detected
+    Worker->>Reconcile: create or update reconcile item
+    Worker->>Jobs: mark skipped and set stale
+  else render succeeds
+    Worker->>Repo: write front matter and managed block atomically
+    Worker->>Jobs: record output_path, managed_hash, source_state_version, completed
+  else render or write fails
+    Worker->>Jobs: mark failed
+  end
+```
+
+1. Target projection의 oldest `pending` job을 select하고 projection-job lock을 acquire합니다.
+2. Job을 `running`으로 mark하고 latest state records, artifact refs, previous managed hash를 read하며 affected-scope state clock에서 `source_state_version`을 resolve합니다.
+3. Job의 `projection_version`이 target의 current projection/template/job version보다 오래되었으면 `skipped`로 mark합니다.
+4. Committed records와 artifact refs에서 front matter와 managed block을 render하며 `source_state_version`을 포함합니다.
+5. Existing managed block hash가 last recorded hash와 다르면 `reconcile_items` row를 create 또는 update하고, job을 `skipped`로 mark하고, projection status를 `stale`로 set합니다.
+6. Human-editable sections를 preserve하고 temporary file plus atomic rename으로 projection을 write합니다.
+7. New managed hash, output path, `projection_jobs.projection_version`, `projection_jobs.source_state_version`, `completed` status를 record합니다. `TASK` projection summary에 한해서만 `tasks.projected_version`을 같은 source state version으로 update하여 Task-level summary cache로 둡니다.
+8. Render 또는 write failure가 발생하면 job을 `failed`로 mark하고 state result는 그대로 두며 projection freshness를 `failed` 또는 `stale`로 surface합니다.
+
+Projection refresh는 newer attempt count를 가진 `pending` job을 create하거나 reset해 `failed` job을 retry합니다. Reconcile이 drift를 resolve하기 전까지 managed block이 drift된 projection을 overwrite하면 안 됩니다.
+
+
+## Validator runner skeleton
+
+MVP validators는 API 문서의 shared result shape를 사용합니다. Runner는 의도적으로 작습니다.
+
+Minimal validator rollout은 [MVP Severity Defaults](../08-design-quality-policy-pack.md#mvp-severity-defaults) matrix와 그 [Severity Composition Rule](../08-design-quality-policy-pack.md#severity-composition-rule)을 default severity router로 사용합니다. Runner는 처음에는 각 stable ID에 대해 shallow check를 구현할 수 있지만, 모든 relevant finding을 visible하게 유지하고, policy-owned rule을 통해 policy impact를 merge하며, API finding severity를 rewrite하는 대신 merged outcome을 gate/blocker-compatible result로 expose해야 합니다. Public primary `ToolError` 선택은 여전히 API가 소유한 [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence)를 따릅니다.
+
+Minimal runner shape:
+
+```text
+run_validators(context, validator_ids):
+  results = []
+  for validator_id in validator_ids:
+    load validator definition
+    read only the state/artifact/repo inputs declared by the validator
+    execute validator
+    normalize output to ValidatorResult
+    persist result in validator_runs
+    results.append(result)
+  return results
+```
+
+```mermaid
+flowchart TD
+  Start["run_validators(context, validator_ids)"]
+  Load["load validator definition"]
+  Inputs["read declared state, artifact, and repo inputs"]
+  Execute["execute validator"]
+  Normalize["normalize output to ValidatorResult"]
+  Persist["persist result in validator_runs"]
+  Return["return results to Core"]
+
+  Start --> Load --> Inputs --> Execute --> Normalize --> Persist --> Return
+  Return -->|Core applies blocker, gate, or display consequence| CoreOutcome["Core transition outcome"]
+```
+
+Stable MVP validator IDs:
+
+| Validator | Purpose |
+|---|---|
+| `decision_gate_check` | blocking Decision Packets are present, compatible, and resolved or validly deferred for the requested operation |
+| `decision_quality_check` | Decision Packets include enough context, options, recommendation status, trade-offs, and affected-scope refs for user judgment |
+| `autonomy_boundary_check` | intended work stays inside the active Change Unit Autonomy Boundary or routes to user judgment |
+| `feedback_loop_check` | test, eval, QA, or operational findings have an explicit state route to rework, decision, risk, evidence, or close |
+| `tdd_trace_required` | required TDD evidence or allowed waiver exists |
+| `codebase_stewardship_check` | codebase health, module boundary, dependency, or maintainability concerns that need judgment are visible before write or close |
+| `residual_risk_visibility_check` | close-relevant residual risks are recorded and visible before acceptance or risk-accepted close |
+| `shared_design_alignment` | active Change Unit and runs align with the Shared Design contract or record a compatible decision |
+| `vertical_slice_shape` | required vertical slice or exception is recorded |
+| `domain_language_consistency` | domain-language terms that affect the change are consistent or routed to design judgment |
+| `module_interface_review` | module/interface review requirement is met |
+| `manual_qa_required` | required QA is passed or validly waived |
+| `context_hygiene_check` | required context, projection freshness, managed hashes, and user-visible summaries are consistent enough for the requested operation |
+| `surface_capability_check` | connected surface capability is sufficient for the requested operation or reported honestly through capability findings |
+
+Active Task, active Change Unit, changed paths, approval scope, baseline freshness, artifact integrity, evidence sufficiency, verification independence, same-session verification guard, projection freshness 같은 Core precondition checks는 이 validators 전이나 옆에서 여전히 실행될 수 있습니다. MVP conformance에서 alternate design/agency validator IDs로 emit하면 안 됩니다. `ValidatorResult`를 emit하는 capability checks는 stable `surface_capability_check` ID를 사용합니다. Capability는 additional validator IDs를 만들지 않고 blocked reasons와 guarantee display에도 나타날 수 있습니다.
+
+
+Compatibility aliases:
+
+| Older ID | Stable ID |
+|---|---|
+| `tdd_trace` | `tdd_trace_required` |
+| `module_boundary_review` | `module_interface_review` |
+| `docs_consistency` | `context_hygiene_check` |
+| `projection_freshness` | `context_hygiene_check` |
+
+이 aliases는 legacy validator outputs 또는 legacy validator IDs를 위한 old compatibility inputs일 뿐이며, MVP conformance는 위 stable IDs를 emit해야 합니다. `projection_freshness` alias는 older validator output을 `context_hygiene_check`로 mapping합니다. Mechanical projection freshness에 대한 새 MVP fixture assertions는 `expected_state.checks.projection_freshness`를 사용해야 합니다.
+
+### Evidence and Verification Profile Implementation Notes
+
+Evidence sufficiency precondition은 committed record와 registered artifact만 읽습니다. Input은 Task, `task_gates`, Change Unit, Decision Packet, Residual Risk, Shared Design, Journey Spine Entry, Run, approval, Evidence Manifest, Eval, Manual QA record, artifact, artifact link, relevant baseline ref입니다. Applicable Evidence Profile이 absent, partial, sufficient, stale, blocked 중 무엇인지 compute한 뒤 kernel rule에 따라 Core를 통해 update하거나 block합니다.
+
+Verification independence precondition은 `evals.independence_json`, `evaluator_run_id`, `target_run_id`, evaluator 및 target `surface_id`, `baseline_ref`, bundle artifact refs, `actor_kind`를 읽습니다. Eval profile이 `same_session`, `subagent_context`, `fresh_session`, `fresh_worktree`, `sandbox`, `manual_bundle` 중 무엇인지, 그리고 그 profile이 target close path의 detached assurance를 support할 수 있는지 확인합니다.
+
+위 MVP table 외에 별도의 evidence/verification profile DDL은 필요하지 않습니다. 기존 JSON field가 profile metadata를 보관합니다: `change_units.autonomy_profile`, `change_units.agent_may_do_json`, `change_units.user_judgment_required_json`, `change_units.afk_stop_conditions_json`, `change_units.end_to_end_path_json`, `decision_packets.context_refs_json`, `decision_packets.context_artifact_refs_json`, `decision_packets.residual_risk_refs_json`, `residual_risks.accepted_risk_json`, `residual_risks.follow_up_requirement_json`, `evidence_manifests.criteria_json`, `evidence_manifests.supporting_refs_json`, `evidence_manifests.stale_if_json`, `evals.evidence_reviewed_json`, `evals.independence_json`, `evals.artifact_refs_json`, `runs.observed_changes_json`, `runs.command_results_json`, `runs.artifact_refs_json`, `approvals.*_json`, `manual_qa_records.findings_json`, `manual_qa_records.residual_risk_refs_json`, `validator_runs.findings_json`이 여기에 해당합니다.
+
+구현이 위 입력 중 하나를 기존 field에서 도출할 수 없다면 DDL을 바꾸기 전에 정확한 table과 field를 명시한 `TODO_IMPLEMENT`를 추가합니다.
+
+Validator failure는 상태, blocked reason, close blocker 중 하나로 드러나야 합니다. prose-only agent output 안에만 숨기면 안 됩니다.
+
+fixture assertion semantics는 [Operations And Conformance](../11-operations-and-conformance.md#fixture-assertion-semantics)가 담당합니다. stable `expected_events` name은 [Kernel Stable Event Catalog](kernel.md#stable-event-catalog)가 담당합니다. Reference runner는 captured Core state, `task_events`, validator result, artifact registry/file integrity, projection job 또는 freshness state, returned error code를 대상으로 해당 assertion mode를 구현해야 합니다. rendered Markdown이나 agent prose만 맞춰서는 fixture를 통과시킬 수 없습니다.

@@ -22,7 +22,7 @@ This document does not define SQLite DDL, public MCP schemas, projection templat
 
 ## Before you read
 
-You should already understand the basic Harness concepts from the Learn path. For exact behavior, use the current numbered owner docs linked at the end of this page.
+You should already understand the basic Harness concepts from the Learn path. For exact behavior, use the Reference docs linked at the end of this page.
 
 ## Main idea
 
@@ -56,7 +56,7 @@ Agents, operator commands, projectors, and recovery flows must either enter thro
 
 The state store keeps canonical operational state: project state, Tasks, gates, Change Units, Decision Packets, approvals, Write Authorizations, Runs, evidence manifests, Eval records, Manual QA records, residual risks, projection jobs, reconcile items, and task events.
 
-Do not design this from scratch in the Build layer. Current storage and DDL owner during redesign: [Reference MVP](../06-reference-mvp.md). Future reference path: `reference/storage-and-ddl.md`.
+Do not design this from scratch in the Build layer. Storage details and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
 ### Artifact Store
 
@@ -79,7 +79,7 @@ For the first build path, prioritize:
 - evidence manifest updates
 - `close_task` blocker behavior
 
-The public request and response contracts belong to [MCP API And Schemas](../05-mcp-api-and-schemas.md).
+The public request and response contracts belong to [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
 
 ### Projections
 
@@ -166,6 +166,6 @@ Then use the reference docs and current owners for exact behavior:
 
 - [Kernel Reference](../reference/kernel.md) for entities, gates, state logic, `prepare_write`, and `close_task`.
 - [Runtime Architecture Reference](../reference/runtime-architecture.md) for runtime spaces, Core flow, artifacts, projection/reconcile, and guarantee levels.
-- [MCP API And Schemas](../05-mcp-api-and-schemas.md) for public resources, tools, schemas, errors, and artifact refs.
+- [MCP API And Schemas](../reference/mcp-api-and-schemas.md) for public resources, tools, schemas, errors, and artifact refs.
+- [Storage And DDL](../reference/storage-and-ddl.md) for runtime layout, DDL, migrations, locks, artifacts, baselines, projection jobs, and validator-run storage.
 - [Operations And Conformance](../11-operations-and-conformance.md) for operator semantics and fixture expectations.
-- Current storage and DDL owner during redesign: [Reference MVP](../06-reference-mvp.md). Future reference path: `reference/storage-and-ddl.md`.

@@ -152,17 +152,17 @@ Rename 뒤에는 old path, old anchor, old heading, old title text를 검색합�
 
 Target reference file이 생기면 그 파일이 active owner입니다. 구 번호 문서는 final cleanup 전까지 migration source material로만 남습니다.
 
-| Subject | 재설계 구조의 owner | 재설계 중 previous/current source |
+| Subject | 재설계 구조의 owner | 재설계 중 출처 자료 |
 |---|---|---|
 | Entrypoint, reader paths, document list, target tree summary | `README.md` | `README.md` |
 | Shared reader mental model and three-space overview | `learn/overview.md` | `00-introduction.md` |
 | Small core concept introduction | `learn/concepts.md` | `00-introduction.md`, `glossary.md` |
 | Project purpose, target users, values, scope, non-goals, automation philosophy | `learn/purpose-and-principles.md` | `01-project-charter.md` |
 | Strategic thesis, failure model, MVP boundary, principle groups | 독자 설명은 `learn/purpose-and-principles.md`; exact contract impact는 `reference/design-quality-policies.md`와 `reference/kernel.md` | `02-strategy.md` |
-| Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` | previous source material: `03-kernel-spec.md` |
-| Runtime architecture, three spaces in implementation detail, Core process model, artifact architecture, projection/reconcile architecture, guarantee levels | `reference/runtime-architecture.md` | previous source material: `04-runtime-architecture.md` |
-| MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `reference/mcp-api-and-schemas.md` | `05-mcp-api-and-schemas.md` |
-| SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` | `06-reference-mvp.md` |
+| Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` | 이전 출처 자료: `03-kernel-spec.md` |
+| Runtime architecture, three spaces in implementation detail, Core process model, artifact architecture, projection/reconcile architecture, guarantee levels | `reference/runtime-architecture.md` | 이전 출처 자료: `04-runtime-architecture.md` |
+| MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `reference/mcp-api-and-schemas.md` | 이전 출처 자료: `05-mcp-api-and-schemas.md` |
+| SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` | 이전 출처 자료: `06-reference-mvp.md` |
 | MVP implementation order and stage exit criteria | `build/mvp-plan.md` | `06-reference-mvp.md` |
 | First runnable implementation slice | `build/first-runnable-slice.md` | `06-reference-mvp.md` |
 | Markdown projection principles, managed blocks, human-editable sections, template tiers, projection freshness | `reference/document-projection.md` | `07-document-projection.md` |

@@ -60,8 +60,8 @@ This document owns:
 
 This document does not own:
 
-- public MCP request/response schemas; see [MCP API And Schemas](../05-mcp-api-and-schemas.md), future path `reference/mcp-api-and-schemas.md`
-- SQLite DDL and storage layout; see [Reference MVP](../06-reference-mvp.md), future path `reference/storage-and-ddl.md`
+- public MCP request/response schemas; see [MCP API And Schemas](mcp-api-and-schemas.md)
+- SQLite DDL and storage layout; see [Storage And DDL](storage-and-ddl.md)
 - full projection template text
 - document projection rules; see [Document Projection](../07-document-projection.md), future path `reference/document-projection.md`
 - design-quality policy contract tables; see [Design Quality Policy Pack](../08-design-quality-policy-pack.md), future path `reference/design-quality-policies.md`
@@ -87,7 +87,7 @@ Manual QA, detached verification, and residual-risk acceptance are not required 
 
 ## Entity model
 
-These diagrams show the record relationships at a navigation level. They do not add fields or storage contracts; the entity subsections and Reference MVP DDL remain authoritative.
+These diagrams show the record relationships at a navigation level. They do not add fields or storage contracts; the entity subsections and [Storage And DDL](storage-and-ddl.md) remain authoritative.
 
 ```mermaid
 classDiagram
@@ -342,7 +342,7 @@ The kernel also owns the entity meaning for design support records:
 - Feedback Loop records are the canonical support records for selected feedback-loop definitions, planned loops, execution refs, waivers, and alternate loops.
 - TDD Trace records capture red, green, refactor evidence or a recorded non-TDD justification. TDD is one possible Feedback Loop implementation, not the Feedback Loop record itself.
 
-Their policy requirements are owned by the design-quality policy pack. Their storage DDL is owned by the reference MVP document.
+Their policy requirements are owned by the design-quality policy pack. Their storage DDL is owned by [Storage And DDL](storage-and-ddl.md).
 
 ## Boundaries and non-substitutions
 
@@ -758,7 +758,7 @@ The catalog is deliberately compact. Non-stable implementation-local detail or a
 allowed | blocked | approval_required | decision_required | state_conflict
 ```
 
-These state-level decisions do not define public `ErrorCode` selection. Public tool responses derived from this logic select the primary `ToolError.code` using API-owned [Primary Error Code Precedence](../05-mcp-api-and-schemas.md#primary-error-code-precedence).
+These state-level decisions do not define public `ErrorCode` selection. Public tool responses derived from this logic select the primary `ToolError.code` using API-owned [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence).
 
 The decision algorithm is:
 
@@ -811,7 +811,7 @@ Read-only Runs may be recorded without consuming Write Authorization, but they m
 
 `close_task` is the single completion decision point. Agent reports, Eval reports, QA notes, and acceptance messages may provide inputs, but they do not close the Task by themselves.
 
-When multiple close blockers exist, public responses select the primary `ToolError.code` using API-owned [Primary Error Code Precedence](../05-mcp-api-and-schemas.md#primary-error-code-precedence); this section owns the kernel checks and state transitions.
+When multiple close blockers exist, public responses select the primary `ToolError.code` using API-owned [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence); this section owns the kernel checks and state transitions.
 
 The decision algorithm is:
 

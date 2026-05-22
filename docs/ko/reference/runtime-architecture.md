@@ -36,8 +36,8 @@ Harness는 사용자의 Product Repository 옆에서 실행되는 로컬 권한 
 
 이 문서는 다음 항목을 담당하지 않습니다.
 
-- public MCP request/response schema. 현재 담당 문서는 [MCP API와 스키마](../05-mcp-api-and-schemas.md)이고, 이후 경로는 `reference/mcp-api-and-schemas.md`입니다.
-- SQLite DDL. 현재 담당 문서는 [Reference MVP](../06-reference-mvp.md)이고, 이후 경로는 `reference/storage-and-ddl.md`입니다.
+- public MCP request/response schema. [MCP API와 스키마](mcp-api-and-schemas.md)를 봅니다.
+- SQLite DDL. [Storage와 DDL](storage-and-ddl.md)을 봅니다.
 - full CLI command semantics. 현재 담당 문서는 [운영과 Conformance](../11-operations-and-conformance.md)이고, 이후 경로는 `reference/operations-and-conformance.md`입니다.
 - conformance fixture format. 현재 담당 문서는 [운영과 Conformance](../11-operations-and-conformance.md)이고, 이후 경로는 `reference/operations-and-conformance.md`입니다.
 - surface-specific connector cookbooks. 현재 담당 문서는 [Agent 통합](../09-agent-integration.md)이고, 이후 경로는 `reference/agent-integration.md`입니다.
@@ -111,7 +111,7 @@ MCP server는 shell command를 감싼 얇은 wrapper가 아닙니다. MCP server
 
 ## Harness Runtime Home
 
-Harness Runtime Home은 로컬 운영 권한을 저장합니다. Reference location은 `~/.harness`이지만 정확한 MVP layout은 Reference MVP 문서가 담당합니다.
+Harness Runtime Home은 로컬 운영 권한을 저장합니다. Reference location은 `~/.harness`이지만 정확한 layout은 [Storage와 DDL](storage-and-ddl.md)이 담당합니다.
 
 Runtime Home에는 다음이 있습니다.
 
@@ -196,7 +196,7 @@ Stable MVP validator IDs:
 
 `feedback_loop_check`는 Feedback Loop support records와 related execution evidence를 읽습니다. 별도의 kernel gate를 도입하지 않습니다. 그 consequence는 다른 design-quality checks와 같은 validator placement model 안에서 `design_gate`, evidence sufficiency, blockers, display로 흘러갑니다.
 
-State/envelope validation, active Task, active Change Unit, changed paths, baseline freshness, approval scope, evidence sufficiency, artifact integrity, verification independence, same-session verification guard, projection 최신성 같은 Core preconditions와 mechanical checks는 이 validators 전이나 옆에서 실행될 수 있습니다. 이 값들은 이 section, MCP API, Reference MVP가 stable ValidatorResult-emitting set으로 명시적으로 promote하지 않는 한 alternate validator IDs가 아닙니다. Surface capability는 `ValidatorResult`로 emit될 때 의도적으로 `surface_capability_check` capability validator로 model됩니다.
+State/envelope validation, active Task, active Change Unit, changed paths, baseline freshness, approval scope, evidence sufficiency, artifact integrity, verification independence, same-session verification guard, projection 최신성 같은 Core preconditions와 mechanical checks는 이 validators 전이나 옆에서 실행될 수 있습니다. 이 값들은 이 section, MCP API, [Storage와 DDL](storage-and-ddl.md)이 stable ValidatorResult-emitting set으로 명시적으로 promote하지 않는 한 alternate validator IDs가 아닙니다. Surface capability는 `ValidatorResult`로 emit될 때 의도적으로 `surface_capability_check` capability validator로 model됩니다.
 
 
 Adapters와 sidecars는 surface capability를 observable facts로 번역합니다. Capability에 대한 kernel gate를 만들지는 않습니다. Capability는 `surface_capability_check` validator, `prepare_write` blocked reasons, guarantee display를 통해 나타납니다.
@@ -233,7 +233,7 @@ Artifact는 두 부분으로 이루어집니다.
 - kind, path, hash, size, redaction state, task/run relation, retention class를 naming하는 `state.sqlite`의 artifact 상태 기록
 
 
-Core는 runs, evidence manifests, Eval records, Manual QA records, Decision Packets, rendered Task-scoped projection refs 같은 기존 Task-scoped owner record에 artifact refs를 기록합니다. MVP에서 rendered projection ref로 향하는 `artifact_links`는 artifact의 `task_id` 안에 머뭅니다. Project-level projection job은 owner docs가 허용하는 곳에서 `projection_jobs` metadata로 track될 수 있지만, current MVP에서는 project-scoped artifact links가 아닙니다. Export snapshots와 components는 valid owners 또는 Task-scoped projections로 다시 link되는 artifact files로 남습니다. Exact relation rules는 API, Reference MVP, Document Projection, Operations owner docs가 담당합니다. Large logs와 patches는 raw artifacts로 두고, Markdown reports는 unbounded evidence를 embed하는 대신 artifact refs로 link해야 합니다.
+Core는 runs, evidence manifests, Eval records, Manual QA records, Decision Packets, rendered Task-scoped projection refs 같은 기존 Task-scoped owner record에 artifact refs를 기록합니다. MVP에서 rendered projection ref로 향하는 `artifact_links`는 artifact의 `task_id` 안에 머뭅니다. Project-level projection job은 owner docs가 허용하는 곳에서 `projection_jobs` metadata로 track될 수 있지만, current MVP에서는 project-scoped artifact links가 아닙니다. Export snapshots와 components는 valid owners 또는 Task-scoped projections로 다시 link되는 artifact files로 남습니다. Exact relation rules는 MCP API, Storage와 DDL, Document Projection, Operations owner docs가 담당합니다. Large logs와 patches는 raw artifacts로 두고, Markdown reports는 unbounded evidence를 embed하는 대신 artifact refs로 link해야 합니다.
 
 Raw secrets는 artifacts로 저장하면 안 됩니다. Secret-related evidence가 required라면 Core는 redacted artifact, secret handle, relevant validator를 통과한 operator note를 기록합니다.
 

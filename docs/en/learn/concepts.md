@@ -4,7 +4,7 @@
 
 This document introduces the smallest concept set you need before reading Harness reference specs. Each concept starts with a plain example, then gives a tighter definition.
 
-The kernel and runtime references now live in the reference path. Other owner documents remain in the top-level spec files until they move, such as [07-document-projection.md](../07-document-projection.md).
+The kernel, runtime, and MCP API references now live in the reference path. Other owner documents remain in the top-level spec files until they move, such as [07-document-projection.md](../07-document-projection.md).
 
 ## Read this when
 
@@ -31,7 +31,7 @@ Harness is easiest to understand if you start with the work journey:
 - Remaining uncertainty is Residual Risk.
 - Readable documents are Projections, and human edits become state through Reconcile.
 
-These concepts are intentionally small here. Strict kernel definitions live in [Kernel Reference](../reference/kernel.md). Other strict definitions remain with current owners until they move: [MCP API and Schemas](../05-mcp-api-and-schemas.md) for `reference/mcp-api-and-schemas.md`, and [Document Projection](../07-document-projection.md) for `reference/document-projection.md`.
+These concepts are intentionally small here. Strict kernel definitions live in [Kernel Reference](../reference/kernel.md), and public API definitions live in [MCP API and Schemas](../reference/mcp-api-and-schemas.md). Other strict definitions remain with current owners until they move, such as [Document Projection](../07-document-projection.md) for `reference/document-projection.md`.
 
 ## Task
 
@@ -79,7 +79,7 @@ The agent is ready to edit the login code. Harness needs to check whether there 
 
 Write Authorization is the Harness decision that a product write may proceed now. In the current spec language, `prepare_write` is the product-write decision point.
 
-Current owner: [MCP API and Schemas](../05-mcp-api-and-schemas.md). Future reference path: `reference/mcp-api-and-schemas.md`.
+Reference: [MCP API and Schemas](../reference/mcp-api-and-schemas.md).
 
 ## Verification
 

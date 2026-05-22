@@ -22,7 +22,7 @@
 
 ## 읽기 전에
 
-Learn 경로에서 Harness의 기본 개념을 먼저 이해해 두는 것이 좋습니다. 정확한 동작은 이 문서 끝에 연결된 현재 번호 문서들을 봅니다.
+Learn 경로에서 Harness의 기본 개념을 먼저 이해해 두는 것이 좋습니다. 정확한 동작은 이 문서 끝에 연결된 reference 문서들을 봅니다.
 
 ## 핵심 생각
 
@@ -56,7 +56,7 @@ Agent, 운영자 명령, projector, recovery flow는 Core를 통하거나 같은
 
 State store는 운영 상태의 기준 기록을 보관합니다. 여기에는 project state, Task, gate, Change Unit, Decision Packet, approval, Write Authorization, Run, Evidence Manifest, Eval record, Manual QA record, Residual Risk, projection job, reconcile item, task_events가 포함됩니다.
 
-Build 계층에서 이를 새로 설계하지 않습니다. 재설계 중 storage와 DDL의 현재 담당 문서: [Reference MVP](../06-reference-mvp.md). 이후 reference 경로: `reference/storage-and-ddl.md`.
+Build 계층에서 이를 새로 설계하지 않습니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)이 담당합니다.
 
 ### Artifact Store
 
@@ -79,7 +79,7 @@ MCP server는 read resource와 public tool을 제공합니다. MCP resource는 r
 - Evidence Manifest 갱신
 - `close_task` 차단 조건 동작
 
-Public request와 response 규칙은 [MCP API와 스키마](../05-mcp-api-and-schemas.md)가 담당합니다.
+Public request와 response 규칙은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)가 담당합니다.
 
 ### Projections
 
@@ -166,6 +166,6 @@ Build 계층은 다음 순서로 읽습니다.
 
 - [커널 참조](../reference/kernel.md): entity, gate, state logic, `prepare_write`, `close_task`.
 - [런타임 아키텍처 참조](../reference/runtime-architecture.md): runtime space, Core flow, artifact, projection/reconcile, guarantee level.
-- [MCP API와 스키마](../05-mcp-api-and-schemas.md): public resource, tool, schema, error, artifact ref.
+- [MCP API와 스키마](../reference/mcp-api-and-schemas.md): public resource, tool, schema, error, artifact ref.
+- [Storage와 DDL](../reference/storage-and-ddl.md): runtime layout과 DDL, migration, lock, artifact, baseline, projection job, validator-run storage를 다룹니다.
 - [운영과 Conformance](../11-operations-and-conformance.md): operator semantics와 fixture expectation.
-- 재설계 중 storage와 DDL의 현재 담당 문서: [Reference MVP](../06-reference-mvp.md). 이후 reference 경로: `reference/storage-and-ddl.md`.

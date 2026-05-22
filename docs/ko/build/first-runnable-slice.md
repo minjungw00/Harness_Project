@@ -14,7 +14,7 @@
 
 ## 읽기 전에
 
-[구현 개요](implementation-overview.md)를 먼저 읽습니다. 재설계 중 storage와 DDL의 현재 담당 문서: [Reference MVP](../06-reference-mvp.md). 이후 reference 경로: `reference/storage-and-ddl.md`.
+[구현 개요](implementation-overview.md)를 먼저 읽습니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다.
 
 ## 핵심 생각
 
@@ -26,7 +26,7 @@
 
 이 문서는 특정 command에 묶이지 않는 구현 안내서입니다. CLI 문법이 아니라 기능과 관찰 가능한 동작을 설명합니다.
 
-여기에 full DDL을 포함하거나 반복하지 않습니다. 재설계 중 storage와 DDL의 현재 담당 문서: [Reference MVP](../06-reference-mvp.md). 이후 reference 경로: `reference/storage-and-ddl.md`.
+여기에 full DDL을 포함하거나 반복하지 않습니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)이 담당합니다.
 
 ## 성공 이야기
 
@@ -302,6 +302,6 @@ Fixture shape와 비교 규칙은 [운영과 Conformance](../11-operations-and-c
 
 - [커널 참조](../reference/kernel.md): Task, Change Unit, Decision Packet, gate, `prepare_write`, Write Authorization, `record_run` semantics, `close_task`.
 - [런타임 아키텍처 참조](../reference/runtime-architecture.md): 세 공간, Core process model, transaction flow, artifact store, projection/reconcile, guarantee level, failure handling.
-- [MCP API와 스키마](../05-mcp-api-and-schemas.md): public resource, tool envelope, request/response schema, error taxonomy, artifact ref, `ProjectionKind`.
+- [MCP API와 스키마](../reference/mcp-api-and-schemas.md): public resource, tool envelope, request/response schema, error taxonomy, artifact ref, `ProjectionKind`.
+- [Storage와 DDL](../reference/storage-and-ddl.md): runtime layout과 DDL, migration, lock, artifact, baseline, projection job, validator-run storage를 다룹니다.
 - [운영과 Conformance](../11-operations-and-conformance.md): operator semantics, conformance staging, fixture format, execution, assertion rule.
-- 재설계 중 storage와 DDL의 현재 담당 문서: [Reference MVP](../06-reference-mvp.md). 이후 reference 경로: `reference/storage-and-ddl.md`.

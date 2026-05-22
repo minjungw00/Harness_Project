@@ -2,7 +2,7 @@
 
 ## 이 문서가 도와주는 일
 
-이 문서는 Reference MVP의 내용을 구현 순서로 다시 정리합니다. 구현 단계는 저장소 스키마, DDL, projection 템플릿 본문, 운영자 명령 문법과 분리해서 설명합니다.
+이 문서는 MVP scope 내용을 구현 순서로 다시 정리합니다. 구현 단계는 저장소 스키마, DDL, projection 템플릿 본문, 운영자 명령 문법과 분리해서 설명합니다.
 
 이 문서는 구현 계획 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현을 시작하라는 뜻이 아닙니다.
 
@@ -16,7 +16,7 @@
 
 ## 읽기 전에
 
-[구현 개요](implementation-overview.md)와 [첫 실행 가능한 조각](first-runnable-slice.md)을 먼저 읽습니다. 정확한 규칙은 아직 존재하지 않는 이후 reference 경로가 아니라 현재 번호 문서에서 확인합니다.
+[구현 개요](implementation-overview.md)와 [첫 실행 가능한 조각](first-runnable-slice.md)을 먼저 읽습니다. 정확한 API 규칙은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 보고, Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다.
 
 ## 핵심 생각
 

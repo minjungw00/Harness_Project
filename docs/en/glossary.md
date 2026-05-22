@@ -74,7 +74,7 @@ A recorded output used for evidence, recovery, or audit. See Raw Artifact for th
 
 ### Artifact Reference
 
-A structured pointer to a raw artifact file registered in the artifact store, including identity, kind, URI or path, hash, size, content type, redaction state, and task/run relationship. In the reference MVP, artifact refs and `artifact_links` are Task-scoped. Artifact kinds such as `bundle`, `manifest`, or `export_component` describe files; owner links still point to existing state or Task-scoped projection records.
+A structured pointer to a raw artifact file registered in the artifact store, including identity, kind, URI or path, hash, size, content type, redaction state, and task/run relationship. In [Storage And DDL](reference/storage-and-ddl.md), artifact refs and `artifact_links` are Task-scoped. Artifact kinds such as `bundle`, `manifest`, or `export_component` describe files; owner links still point to existing state or Task-scoped projection records.
 
 ### Autonomy Boundary
 
@@ -96,7 +96,7 @@ A captured repository state used to judge scope, approval drift, evidence freshn
 
 ### `tree_hash`
 
-The deterministic hash of a baseline file snapshot, computed from sorted NFC-normalized relative POSIX paths after ignored paths are excluded, with file bytes, size, executable bit, and symlink target handling defined by the Reference MVP.
+The deterministic hash of a baseline file snapshot, computed from sorted NFC-normalized relative POSIX paths after ignored paths are excluded, with file bytes, size, executable bit, and symlink target handling defined by [Storage And DDL](reference/storage-and-ddl.md).
 
 ### Capability Profile
 
@@ -318,7 +318,7 @@ A verification handoff package for a human or separate evaluator. It includes ta
 
 ### Manual QA Record
 
-A record-level Manual QA result, including performer, profile, result, artifacts, findings, waiver reason when applicable, and next action. Its result value set is owned by [QA Gate](03-kernel-spec.md#qa-gate) and [`harness.record_manual_qa`](05-mcp-api-and-schemas.md#harnessrecord_manual_qa). Pending required QA is represented by `qa_gate=pending`; it is not a Manual QA record result.
+A record-level Manual QA result, including performer, profile, result, artifacts, findings, waiver reason when applicable, and next action. Its result value set is owned by [QA Gate](reference/kernel.md#qa-gate) and [`harness.record_manual_qa`](reference/mcp-api-and-schemas.md#harnessrecord_manual_qa). Pending required QA is represented by `qa_gate=pending`; it is not a Manual QA record result.
 
 ### `managed_hash`
 
@@ -370,11 +370,11 @@ A human-readable rendering of canonical state records and artifact references. P
 
 ### ProjectionKind
 
-The API enum for projection job and template kinds. Tiers, values, and extension rules are owned by [Shared Schemas](05-mcp-api-and-schemas.md#shared-schemas). No ProjectionKind makes a projection canonical state.
+The API enum for projection job and template kinds. Tiers, values, and extension rules are owned by [Shared schemas](reference/mcp-api-and-schemas.md#shared-schemas). No ProjectionKind makes a projection canonical state.
 
 ### Projection Freshness
 
-The relationship between a projection and its source records, managed hash, artifact refs, and projection job state. Its value set is owned by [MCP API And Schemas](05-mcp-api-and-schemas.md) and [Document Projection](07-document-projection.md).
+The relationship between a projection and its source records, managed hash, artifact refs, and projection job state. Its value set is owned by [MCP API And Schemas](reference/mcp-api-and-schemas.md) and [Document Projection](07-document-projection.md).
 
 ### Projection Job
 

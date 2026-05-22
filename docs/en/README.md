@@ -34,6 +34,8 @@ Use this path to look up detailed contracts, schemas, policies, and definitions.
 
 - [Kernel Reference](reference/kernel.md)
 - [Runtime Architecture Reference](reference/runtime-architecture.md)
+- [MCP API And Schemas](reference/mcp-api-and-schemas.md)
+- [Storage And DDL](reference/storage-and-ddl.md)
 - More reference files will move here as the redesign continues.
 
 ## Maintain

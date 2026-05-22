@@ -4,7 +4,7 @@
 
 이 문서는 Harness 참고 사양을 읽기 전에 필요한 가장 작은 개념 묶음을 소개합니다. 각 개념은 먼저 쉬운 예시로 시작하고, 그 뒤에 조금 더 엄밀한 설명을 붙입니다.
 
-커널과 런타임 reference는 이제 reference 경로에 있습니다. 다른 담당 문서는 옮겨지기 전까지 [07-document-projection.md](../07-document-projection.md) 같은 상위 사양 파일에 남아 있습니다.
+커널, 런타임, MCP API reference는 이제 reference 경로에 있습니다. 다른 담당 문서는 옮겨지기 전까지 [07-document-projection.md](../07-document-projection.md) 같은 상위 사양 파일에 남아 있습니다.
 
 ## 이런 때 읽기
 
@@ -31,7 +31,7 @@ Harness는 작업 흐름에서 시작하면 이해하기 쉽습니다.
 - 남은 불확실성은 남은 위험으로 기록합니다.
 - 읽기용 문서는 Projection이고, 사람이 문서를 고친 내용은 Reconcile을 거쳐야 상태가 됩니다.
 
-이 문서에서는 일부러 개념을 작게 다룹니다. 엄격한 kernel 정의는 [커널 참조](../reference/kernel.md)에 있습니다. 다른 엄밀한 정의는 옮겨지기 전까지 현재 담당 문서에 남아 있습니다. `reference/mcp-api-and-schemas.md`는 [MCP API와 스키마](../05-mcp-api-and-schemas.md), `reference/document-projection.md`는 [문서 Projection](../07-document-projection.md)이 담당합니다.
+이 문서에서는 일부러 개념을 작게 다룹니다. 엄격한 kernel 정의는 [커널 참조](../reference/kernel.md)에 있고, public API 정의는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)에 있습니다. 다른 엄밀한 정의는 옮겨지기 전까지 현재 담당 문서에 남아 있습니다. 예를 들어 `reference/document-projection.md`는 [문서 Projection](../07-document-projection.md)이 담당합니다.
 
 ## Task
 
@@ -79,7 +79,7 @@ Decision Packet은 사용자가 해야 하는 결정이 진행, 쓰기, 닫기, 
 
 Write Authorization은 지금 제품 파일 쓰기를 진행해도 되는지에 대한 Harness의 판단입니다. 현재 사양 용어로는 `prepare_write`가 제품 파일 쓰기 판단 지점입니다.
 
-현재 담당 문서: [MCP API와 스키마](../05-mcp-api-and-schemas.md). 이후 reference 경로: `reference/mcp-api-and-schemas.md`.
+참조: [MCP API와 스키마](../reference/mcp-api-and-schemas.md).
 
 ## 검증
 

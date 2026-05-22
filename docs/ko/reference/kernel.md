@@ -60,8 +60,8 @@
 
 이 문서는 다음 항목을 담당하지 않습니다.
 
-- public MCP request/response schema. 현재 담당 문서는 [MCP API와 스키마](../05-mcp-api-and-schemas.md)이고, 이후 경로는 `reference/mcp-api-and-schemas.md`입니다.
-- SQLite DDL과 storage layout. 현재 담당 문서는 [Reference MVP](../06-reference-mvp.md)이고, 이후 경로는 `reference/storage-and-ddl.md`입니다.
+- public MCP request/response schema. [MCP API와 스키마](mcp-api-and-schemas.md)를 봅니다.
+- SQLite DDL과 storage layout. [Storage와 DDL](storage-and-ddl.md)을 봅니다.
 - 전체 projection template text
 - document projection rules. 현재 담당 문서는 [문서 Projection](../07-document-projection.md)이고, 이후 경로는 `reference/document-projection.md`입니다.
 - design-quality policy contract table. 현재 담당 문서는 [설계 품질 정책 팩](../08-design-quality-policy-pack.md)이고, 이후 경로는 `reference/design-quality-policies.md`입니다.
@@ -87,7 +87,7 @@ Manual QA, detached verification, 남은 위험 수용은 policy, changed surfac
 
 ## Entity model
 
-이 다이어그램들은 record 관계를 탐색 수준에서 보여 줍니다. field나 storage contract를 추가하지 않으며, entity subsections와 Reference MVP DDL이 기준입니다.
+이 다이어그램들은 record 관계를 탐색 수준에서 보여 줍니다. field나 storage contract를 추가하지 않으며, entity subsections와 [Storage와 DDL](storage-and-ddl.md)이 기준입니다.
 
 ```mermaid
 classDiagram
@@ -344,7 +344,7 @@ Kernel은 design support records의 entity meaning도 담당합니다.
 - Feedback Loop records는 selected feedback-loop definitions, planned loops, execution refs, waivers, alternate loops를 위한 canonical support records입니다.
 - TDD Trace records는 red, green, refactor 근거 또는 recorded non-TDD justification을 capture합니다. TDD는 가능한 Feedback Loop 구현 중 하나이지 Feedback Loop record 자체가 아닙니다.
 
-Policy requirements는 design-quality policy pack이 담당합니다. Storage DDL은 Reference MVP 문서가 담당합니다.
+Policy requirements는 design-quality policy pack이 담당합니다. Storage DDL은 [Storage와 DDL](storage-and-ddl.md)이 담당합니다.
 
 ## Boundaries and non-substitutions
 
@@ -758,7 +758,7 @@ Stable event names는 MVP conformance fixtures가 `expected_events`에서 요구
 allowed | blocked | approval_required | decision_required | state_conflict
 ```
 
-이 state-level decisions는 public `ErrorCode` selection을 정의하지 않습니다. 이 로직에서 파생된 public tool responses는 API가 소유한 [Primary Error Code Precedence](../05-mcp-api-and-schemas.md#primary-error-code-precedence)에 따라 primary `ToolError.code`를 선택합니다.
+이 state-level decisions는 public `ErrorCode` selection을 정의하지 않습니다. 이 로직에서 파생된 public tool responses는 API가 소유한 [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence)에 따라 primary `ToolError.code`를 선택합니다.
 
 Decision algorithm은 다음과 같습니다.
 
@@ -811,7 +811,7 @@ Read-only Runs는 Write Authorization을 사용한 것으로 기록하지 않고
 
 `close_task`는 단일 완료 판단 지점입니다. Agent reports, Eval reports, QA notes, acceptance messages는 inputs를 제공할 수 있지만 그 자체로 Task를 close하지 않습니다.
 
-여러 close blockers가 동시에 존재하면 public responses는 API가 소유한 [Primary Error Code Precedence](../05-mcp-api-and-schemas.md#primary-error-code-precedence)에 따라 primary `ToolError.code`를 선택합니다. 이 section은 kernel checks와 상태 전이를 소유합니다.
+여러 close blockers가 동시에 존재하면 public responses는 API가 소유한 [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence)에 따라 primary `ToolError.code`를 선택합니다. 이 section은 kernel checks와 상태 전이를 소유합니다.
 
 Decision algorithm은 다음과 같습니다.
 

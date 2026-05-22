@@ -14,7 +14,7 @@ This is planning documentation; it does not authorize runtime or server implemen
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md) first. Current storage and DDL owner during redesign: [Reference MVP](../06-reference-mvp.md). Future reference path: `reference/storage-and-ddl.md`.
+Read [Implementation Overview](implementation-overview.md) first. For storage and DDL details, use [Storage And DDL](../reference/storage-and-ddl.md).
 
 ## Main idea
 
@@ -26,7 +26,7 @@ Build the smallest Harness slice that can prove authority over one local Task. T
 
 This is a command-independent implementation guide. It describes capabilities and observable behavior, not CLI syntax.
 
-Do not include or duplicate full DDL here. Current storage and DDL owner during redesign: [Reference MVP](../06-reference-mvp.md). Future reference path: `reference/storage-and-ddl.md`.
+Do not include or duplicate full DDL here. Storage details and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
 ## Success story
 
@@ -302,6 +302,6 @@ Use the fixture shape and comparison rules in [Operations And Conformance](../11
 
 - [Kernel Reference](../reference/kernel.md): Task, Change Unit, Decision Packet, gates, `prepare_write`, Write Authorization, `record_run` semantics, and `close_task`.
 - [Runtime Architecture Reference](../reference/runtime-architecture.md): three spaces, Core process model, transaction flow, artifact store, projection/reconcile, guarantee levels, and failure handling.
-- [MCP API And Schemas](../05-mcp-api-and-schemas.md): public resources, tool envelopes, request/response schemas, error taxonomy, artifact refs, and `ProjectionKind`.
+- [MCP API And Schemas](../reference/mcp-api-and-schemas.md): public resources, tool envelopes, request/response schemas, error taxonomy, artifact refs, and `ProjectionKind`.
+- [Storage And DDL](../reference/storage-and-ddl.md): runtime layout, DDL, migrations, locks, artifacts, baselines, projection jobs, and validator-run storage.
 - [Operations And Conformance](../11-operations-and-conformance.md): operator semantics, conformance staging, fixture format, execution, and assertion rules.
-- Current storage and DDL owner during redesign: [Reference MVP](../06-reference-mvp.md). Future reference path: `reference/storage-and-ddl.md`.
