@@ -164,7 +164,7 @@ MVP Core는 다음 내부 모듈을 가진 단일 프로세스로 실행할 수 
 | Projection module | projection jobs, managed blocks, freshness, and report paths |
 | Reconcile module | human-editable proposals, managed drift, and accepted-state routing |
 | Validator runner | core, decision, autonomy/boundary, design-quality, artifact, projection, and connector checks |
-| Autonomy/Boundary validator responsibility | Autonomy Boundary compatibility, agent latitude, user-judgment requirements, AFK stop conditions, and boundary drift findings |
+| Autonomy/Boundary validator responsibility | Autonomy Boundary compatibility, agent latitude, user-judgment 요구사항, AFK stop conditions, and boundary drift findings |
 | Connector adapter | reference surface registration, capability reporting, and capture hints |
 
 
@@ -194,7 +194,7 @@ Stable MVP validator IDs:
 - `context_hygiene_check`
 - `surface_capability_check`
 
-`feedback_loop_check`는 Feedback Loop support records와 related execution evidence를 읽습니다. 별도의 kernel gate를 도입하지 않습니다. 그 consequence는 다른 design-quality checks와 같은 validator placement model 안에서 `design_gate`, evidence sufficiency, blockers, display로 흘러갑니다.
+`feedback_loop_check`는 Feedback Loop support records와 related execution evidence를 읽습니다. 별도의 kernel gate를 도입하지 않습니다. 그 consequence는 다른 설계 품질 check와 같은 validator placement model 안에서 `design_gate`, evidence sufficiency, blockers, display로 흘러갑니다.
 
 State/envelope validation, active Task, active Change Unit, changed paths, baseline freshness, approval scope, evidence sufficiency, artifact integrity, verification independence, same-session verification guard, projection 최신성 같은 Core preconditions와 mechanical checks는 이 validators 전이나 옆에서 실행될 수 있습니다. 이 값들은 이 section, MCP API, [Storage와 DDL](storage-and-ddl.md)이 stable ValidatorResult-emitting set으로 명시적으로 promote하지 않는 한 alternate validator IDs가 아닙니다. Surface capability는 `ValidatorResult`로 emit될 때 의도적으로 `surface_capability_check` capability validator로 model됩니다.
 

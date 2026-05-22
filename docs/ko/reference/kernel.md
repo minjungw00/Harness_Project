@@ -319,7 +319,7 @@ Manual QA는 UX, workflow, copy, accessibility, visual output, product taste 또
 
 ### Residual Risk
 
-Residual Risk는 알려진 남은 불확실성, trade-off, limitation, unchecked condition을 위한 기준 close-relevant support record입니다. source ref, affected scope, applicable한 경우 related Decision Packet, visibility status, accepted risk, follow-up requirement, close 영향을 기록합니다.
+Residual Risk는 알려진 남은 불확실성, trade-off, limitation, unchecked condition을 위한 기준 close-relevant support record입니다. source ref, affected scope, applicable한 경우 related Decision Packet, visibility status, accepted risk, follow-up 요구사항, close 영향을 기록합니다.
 
 Residual Risk records는 수용 또는 risk-accepted close 전에 남은 위험을 보이게 합니다. 이 records는 detached verification을 만들지 않고, 근거를 대체하지 않고, QA를 waive하지 않고, sensitive approval을 grant하지 않고, final acceptance를 뜻하지도 않습니다.
 
@@ -451,7 +451,7 @@ not_required | required | pending | granted | denied | expired
 not_required | required | pending | passed | partial | waived | stale | blocked
 ```
 
-`design_gate`는 required design-quality preconditions를 반영합니다. 언제 적용되고 waiver가 언제 허용되는지는 policy가 결정합니다.
+`design_gate`는 필수 설계 품질 preconditions를 반영합니다. 언제 적용되고 waiver가 언제 허용되는지는 policy가 결정합니다.
 
 ### Evidence Gate
 
@@ -665,9 +665,9 @@ stateDiagram-v2
 |---|---|
 | Advisor completed | no active Run; no product write pending; no blocking unresolved Decision Packet; `result=advice_only`; `close_reason=completed_self_checked` |
 | Direct self-checked | no active Run; active Change Unit completed or not needed for non-write direct; scope passed for writes; blocking Decision Packets resolved or validly deferred for close; required approval granted; required evidence sufficient; `assurance_level=self_checked`; `close_reason=completed_self_checked` |
-| Direct verified | direct self-checked requirements plus valid passed detached verification; `assurance_level=detached_verified`; `close_reason=completed_verified` |
+| Direct verified | direct self-checked 요구사항과 valid passed detached verification; `assurance_level=detached_verified`; `close_reason=completed_verified` |
 | Work verified | no active Run; Change Unit complete or explicitly deferred; scope passed; blocking Decision Packets resolved; approval not required or granted; design passed or waived; evidence sufficient; verification passed with valid independence; QA passed or waived if required; residual risk가 표시되었거나 `ResidualRiskSummary.status=none`이 acceptance 전에 confirmed; acceptance accepted if required; `close_reason=completed_verified` |
-| Work risk accepted | work close requirements for scope, approval, design, evidence, QA, and acceptance are satisfied; verification may be `waived_by_user`; blocking decisions are resolved or validly deferred with residual-risk 표시; 표시되고 accepted된 Residual Risk refs are recorded; assurance must be `none` or `self_checked`; `close_reason=completed_with_risk_accepted` |
+| Work risk accepted | scope, approval, design, evidence, QA, acceptance에 대한 work close 요구사항이 satisfied; verification may be `waived_by_user`; blocking decisions are resolved or validly deferred with residual-risk 표시; 표시되고 accepted된 Residual Risk refs are recorded; assurance must be `none` or `self_checked`; `close_reason=completed_with_risk_accepted` |
 | Cancelled | no active write in progress; `result=cancelled`; `close_reason=cancelled` or `superseded` |
 
 ### Transition table
@@ -777,7 +777,7 @@ Decision algorithm은 다음과 같습니다.
 13. 모든 필수 확인이 pass하면 의도한 작업에 대한 호환되는 unexpired Write Authorization을 만들거나 같은 request의 idempotent replay에 대해 이미 commit된 response를 반환하고, decision을 기록한 뒤 `allowed`를 반환합니다.
 
 
-필수 확인에는 active Task, active Change Unit, mode의 쓰기 가능 여부, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, surface capability profile 정보, design policy 사전 조건이 포함됩니다. Design policy 사전 조건은 intended write가 permitted RED-test write인지, blocked non-test implementation write인지, alternate feedback loop가 있는 explicit TDD waiver로 allowed되는 write인지에 영향을 줄 수 있지만, 새로운 kernel invariant를 만들지는 않습니다.
+필수 확인에는 active Task, active Change Unit, mode의 쓰기 가능 여부, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, surface capability profile 정보, design policy 사전 조건이 포함됩니다. Design policy 사전 조건은 intended write가 permitted RED-test write인지, blocked non-test implementation write인지, alternate feedback loop가 있는 explicit TDD waiver로 allowed되는 write인지에 영향을 줄 수 있지만, 새로운 커널 불변 규칙을 만들지는 않습니다.
 
 `allowed` decision은 `status=allowed`이고 allow decision이 사용한 affected scope의 `basis_state_version`이 기록된 Write Authorization을 만들거나 reference해야 합니다. `authorization_effect=returned`는 같은 idempotency key, request hash, `basis_state_version`을 가진 동일한 committed `prepare_write` request의 idempotent replay 또는 이미 commit된 response 반환에만 reserved됩니다. 서로 다른 호환 가능한 request는 각각 별도의 Write Authorization을 만듭니다. Compatibility가 authorization을 재사용 가능하게 만들지는 않습니다. Blocked, approval-required, decision-required, state-conflict result는 attempted write에 대해 사용 가능한 Write Authorization을 만들면 안 됩니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 stale, expire, revoke할 수 있습니다.
 
@@ -860,7 +860,7 @@ Waivers는 reason, actor, time, 영향받는 gate와 함께 기록해야 하는 
 
 허용되는 waivers:
 
-- Policy가 design-quality waiver를 허용할 때 `design_gate=waived`.
+- Policy가 설계 품질 waiver를 허용할 때 `design_gate=waived`.
 - 사용자가 remaining verification risk를 받아들일 때 `verification_gate=waived_by_user`.
 - Required QA가 reason과 함께 waived될 때 `qa_gate=waived`.
 

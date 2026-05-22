@@ -4,7 +4,7 @@
 
 이 참조 문서는 설계 품질 정책이 언제 적용되는지, 필요한 기록과 근거가 무엇인지, 결과를 보고하는 안정적인 validator ID가 무엇인지, 그리고 충족되지 않은 요구사항이 쓰기 gate나 close에 어떤 영향을 주는지 확인할 때 사용합니다.
 
-이 정책들은 AI 지원 작업이 제품 설계, 도메인 언어, 모듈 경계, 테스트 규율, 사람의 QA, 맥락 관리와 어긋나지 않도록 돕습니다. 동시에 모든 품질 선호를 kernel invariant로 승격하지는 않습니다.
+이 정책들은 AI 지원 작업이 제품 설계, 도메인 언어, 모듈 경계, 테스트 규율, 사람의 QA, 맥락 관리와 어긋나지 않도록 돕습니다. 동시에 모든 품질 선호를 커널 불변 규칙으로 승격하지는 않습니다.
 
 이 문서는 MCP schema, SQLite DDL, 상태 전이 표, runtime/server 동작, 전체 projection template을 정의하지 않습니다.
 
@@ -40,7 +40,7 @@
 - 설계 품질 정책 계약
 - policy-to-validator mapping
 - 안정적인 설계 품질 validator ID
-- severity composition rule
+- severity composition 규칙
 - 정책 waiver 의미
 - 정책이 기대하는 근거
 - 정책이 close에 미치는 영향
@@ -60,7 +60,7 @@
 - connector capability profile 또는 surface recipe. [Agent 통합](../09-agent-integration.md)을 보고, 이후 경로는 `reference/agent-integration.md`입니다.
 - 사용자가 읽는 session 절차
 
-## 정책이 kernel invariant가 되지 않고 gate에 영향을 주는 방식
+## 정책이 커널 불변 규칙이 되지 않고 gate에 영향을 주는 방식
 
 Kernel은 lifecycle, gate transition, close semantics, blocker mechanics, state transition, `prepare_write`, `close_task`를 담당합니다.
 
@@ -250,7 +250,7 @@ Public mutation path: selected-loop definition과 waiver는 `record_run(kind=sha
 | `required_record` | `tdd_traces` 기록과 렌더링될 때 `TDD-TRACE` projection. |
 | `validator` | `tdd_trace_required` |
 | `evidence` | Actual failing test artifact/log/result 또는 policy가 명시적으로 인정한 failing-check evidence, passing test log, relevant한 경우 refactor check log, diff refs, Evidence Manifest coverage refs, waived 시 non-TDD justification과 대체 feedback loop. RED target 또는 RED plan은 planning record이지 evidence가 아니다. |
-| `close_impact` | Required TDD trace가 missing이면 `design_gate=partial`이 되고 evidence가 insufficient해질 수 있다. Non-test implementation 전 RED 근거가 missing이면 `prepare_write`를 차단할 수 있다. GREEN 근거 또는 relevant한 refactor/check evidence가 missing이면 근거 충분성 또는 design-quality blocker를 통해 close를 차단할 수 있다. Valid non-TDD justification은 design policy를 충족할 수 있지만 그 자체로 behavior를 증명하지는 않는다. |
+| `close_impact` | Required TDD trace가 missing이면 `design_gate=partial`이 되고 evidence가 insufficient해질 수 있다. Non-test implementation 전 RED 근거가 missing이면 `prepare_write`를 차단할 수 있다. GREEN 근거 또는 relevant한 refactor/check evidence가 missing이면 근거 충분성 또는 설계 품질 blocker를 통해 close를 차단할 수 있다. Valid non-TDD justification은 design policy를 충족할 수 있지만 그 자체로 behavior를 증명하지는 않는다. |
 
 TDD execution loop:
 

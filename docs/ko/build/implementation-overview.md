@@ -132,7 +132,7 @@ MVP는 cooperative 또는 detective guard/freeze 상태를 표시할 수 있고,
 - artifact를 등록하고 Run 또는 근거에 연결할 수 있음
 - 최소 Evidence Manifest가 support 또는 insufficiency를 기록함
 - 최소 `TASK` projection이 최신이거나 적어도 durably enqueued됨
-- 근거 또는 decision requirement가 없으면 `close_task`가 차단함
+- 근거 또는 decision 요구사항이 없으면 `close_task`가 차단함
 - 같은 동작이 basic Core fixture로 실행 가능함
 
 Kernel Smoke는 최종 MVP가 아닙니다. 쓰기 권한 경로가 살아 있음을 증명하는 단계입니다.
