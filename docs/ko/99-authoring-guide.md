@@ -22,12 +22,13 @@ Runtime behavior, user procedure, conformance fixture content, MCP schemas, SQLi
 | three spaces, runtime authority flow, artifact architecture, projection/reconcile architecture, guarantee levels | `04-runtime-architecture.md` |
 | MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `05-mcp-api-and-schemas.md` |
 | reference MVP implementation order, SQLite DDL, migrations, storage layout, validator runner skeleton | `06-reference-mvp.md` |
-| Markdown projection principles, managed blocks, human-editable sections, template tiers, template summaries | `07-document-projection.md` |
+| Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md` |
 | shared design, decision quality, autonomy boundary, domain language, vertical slice, feedback loop/TDD, module/interface, codebase stewardship, Manual QA, context hygiene policies | `08-design-quality-policy-pack.md` |
 | agent surface capability profile, common connector contract, fallback semantics | `09-agent-integration.md` |
 | user-facing conversation, status reading, resume procedure, approval/assurance/QA/acceptance explanation | `10-user-guide.md` |
 | connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, runtime conformance, docs-maintenance smoke reporting | `11-operations-and-conformance.md` |
-| full templates and expanded variants | `appendix/A-template-library.md` |
+| `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`의 MVP-required full template body | `reference/templates/*.md` |
+| migration 중 optional 및 extension template body | 이동 전까지 `appendix/A-template-library.md` |
 | surface-specific cookbooks | `appendix/B-surface-cookbook.md` |
 | later automation and derived analytics | `appendix/C-later-roadmap.md` |
 | old-to-new mapping and migration notes | `appendix/D-migration-notes.md` |
@@ -141,7 +142,7 @@ SQLite DDL, migration/versioning, lock policy, artifact directory layout, refere
 
 JSON `TEXT` fields를 문서화할 때는 split을 명시적으로 유지합니다. API payload validation shapes는 `05-mcp-api-and-schemas.md`에, SQLite column과 storage details는 `06-reference-mvp.md`에, doctor/recover/conformance expectations는 `11-operations-and-conformance.md`에 둡니다. Core가 commit 전에 storage JSON을 validate한다는 boundary note는 반복할 수 있지만, schema bodies나 DDL을 duplicate하면 안 됩니다.
 
-Projection rules와 template tiers는 `07-document-projection.md`에 둡니다. Full template bodies와 expanded report variants는 `appendix/A-template-library.md`에 둡니다.
+Projection rules와 template tiers는 `reference/document-projection.md`에 둡니다. MVP-required full template bodies는 `reference/templates/*.md`에 두고, optional 및 extension body는 이동하기 전까지 `appendix/A-template-library.md`에 둡니다.
 
 Conformance fixture body, suite catalog assertion-mode metadata, fixture assertion semantics는 `11-operations-and-conformance.md`에 둡니다. 다른 문서는 그 owner를 가리킬 수 있지만 comparison mini-language를 다시 정의하면 안 됩니다.
 
@@ -176,7 +177,7 @@ Contracts를 중복하지 말고 links로 owner를 가리킵니다.
 - Runtime architecture는 kernel, projection, integration을 참조합니다.
 - API는 kernel과 reference MVP를 참조합니다.
 - Reference MVP는 kernel, API, operations를 참조합니다.
-- Projection은 kernel과 Appendix A를 참조합니다.
+- Projection은 kernel, Template Reference, 그리고 optional 및 extension template이 남아 있는 동안 Appendix A를 참조합니다.
 - Policy pack은 kernel과 projection을 참조합니다.
 - Integration은 API와 Appendix B를 참조합니다.
 - Operations는 API와 reference MVP를 참조합니다.
@@ -204,7 +205,7 @@ Report severity guidance:
 | English/Korean file structure parity | 명시적인 예외가 이 guide에 문서화되지 않는 한 `docs/en`과 `docs/ko`는 같은 active document paths와 appendix paths를 유지합니다. |
 | English/Korean heading parity | Paired files는 같은 heading order와 depth를 유지합니다. Heading text는 idiomatic할 수 있지만 stable names, IDs, enum values, schema names, DDL names, owner section links는 semantic하게 aligned되어야 합니다. |
 | Broken cross-reference detection | Markdown links, heading anchors, appendix links, paired-language entry links가 active docs로 resolve됩니다. Owner section link는 subject가 migration context일 때가 아니면 migration notes를 가리키면 안 됩니다. |
-| Owner-boundary drift | Public schemas는 `05-mcp-api-and-schemas.md`에, SQLite DDL과 reference storage details는 `06-reference-mvp.md`에, kernel transitions와 stable events는 `03-kernel-spec.md`에, projection rules와 template tiers는 `07-document-projection.md`에, full template bodies는 `appendix/A-template-library.md`에, fixture body shape와 fixture assertion semantics와 fixture suite behavior는 `11-operations-and-conformance.md`에, official definitions는 `glossary.md`에 둡니다. |
+| Owner-boundary drift | Public schemas는 `05-mcp-api-and-schemas.md`에, SQLite DDL과 reference storage details는 `06-reference-mvp.md`에, kernel transitions와 stable events는 `03-kernel-spec.md`에, projection rules와 template tiers는 `reference/document-projection.md`에, MVP-required full template bodies는 `reference/templates/*.md`에, optional 및 extension template bodies는 이동하기 전까지 `appendix/A-template-library.md`에, fixture body shape와 fixture assertion semantics와 fixture suite behavior는 `11-operations-and-conformance.md`에, official definitions는 `glossary.md`에 둡니다. |
 | Fixture/action schema and code drift | Operations fixture examples의 `action`과 executable `input`은 `05-mcp-api-and-schemas.md`의 public MCP request schemas와 `11-operations-and-conformance.md`의 `ToolEnvelope` expansion convention에 aligned되어야 합니다. Required fixture events는 Kernel Stable Event Catalog names로 유지하고, `expected_error.code`와 `CloseTaskResponse.blockers[].code`는 API `ErrorCode` values여야 합니다. Finding code는 validator findings 또는 equivalent expected validator output에 남깁니다. 이 check는 fixture semantics를 여기서 restate하지 않고 Operations, API, Kernel owner로 link합니다. |
 | Enum drift across owners | State, gate, result, close, assurance, error, projection, validator, storage enum values는 이를 정의하는 owner doc과 일치해야 합니다. Non-owner docs는 필요할 때만 값을 summarize하고 owner로 link해야 합니다. |
 | Stable Event Catalog drift | Operations fixtures, API tool descriptions, Reference MVP conformance text가 fixture-stable로 요구하는 event name은 Kernel Stable Event Catalog에 있어야 합니다. Non-catalog names는 illustrative, implementation-local detail/audit, future extension으로 표시하거나 kernel owner를 통해 promote해야 합니다. |

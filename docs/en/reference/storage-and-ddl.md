@@ -47,7 +47,7 @@ This document does not own:
 - public API error taxonomy; see [MCP API And Schemas](mcp-api-and-schemas.md)
 - full kernel lifecycle transition table; see [Kernel Reference](kernel.md)
 - design-quality policy contracts; see [Design Quality Policy Pack](../08-design-quality-policy-pack.md), future path `reference/design-quality-policies.md`
-- projection template bodies; see [Document Projection](../07-document-projection.md), future path `reference/document-projection.md`
+- projection template bodies; see [Template Reference](templates/README.md); projection rules live in [Document Projection Reference](document-projection.md)
 - MVP stage sequencing and exit criteria; see [Build: MVP Plan](../build/mvp-plan.md)
 - operator command semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
 - connector capability profiles or surface recipes; see [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
@@ -146,7 +146,7 @@ Minimum enum hardening targets:
 | `tasks.result` | [Result](kernel.md#result) and [Close Semantics](kernel.md#close-semantics). |
 | `tasks.close_reason` | [Close Reason](kernel.md#close-reason) and [Close Semantics](kernel.md#close-semantics). |
 | `tasks.assurance_level` | [Assurance Level](kernel.md#assurance-level) and [Verification Gate](kernel.md#verification-gate). |
-| `tasks.projection_status` | TASK projection freshness semantics in this document and [Document Projection](../07-document-projection.md). |
+| `tasks.projection_status` | TASK projection freshness semantics in this document and [Document Projection Reference](document-projection.md). |
 | `task_gates.scope_gate` | [Scope Gate](kernel.md#scope-gate). |
 | `task_gates.decision_gate` | [Decision Gate](kernel.md#decision-gate). |
 | `task_gates.approval_gate` | [Approval Gate](kernel.md#approval-gate). |
@@ -159,7 +159,7 @@ Minimum enum hardening targets:
 | `decision_packets.status` | [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute) and public `DecisionPacket` in [MCP API And Schemas](mcp-api-and-schemas.md). |
 | `manual_qa_records.result` | [QA Gate](kernel.md#qa-gate) and [`harness.record_manual_qa`](mcp-api-and-schemas.md#harnessrecord_manual_qa). |
 | `evals.verdict` | [Verification Gate](kernel.md#verification-gate) and [`harness.record_eval`](mcp-api-and-schemas.md#harnessrecord_eval). |
-| `projection_jobs.status` | Projection job/freshness semantics in this document and [Document Projection](../07-document-projection.md). |
+| `projection_jobs.status` | Projection job/freshness semantics in this document and [Document Projection Reference](document-projection.md). |
 
 For new tables or rebuild migrations, representative inline hardening is `status TEXT NOT NULL CHECK (status IN (...))`. Existing SQLite tables may need a table rebuild, a small lookup table checked by Core before commit, or a migration-time assertion that rejects unknown values before tightening. Do not invent database-only enum values; bind storage hardening to the owner value source.
 
@@ -1212,7 +1212,7 @@ MVP does not define a separate `projections` table. A rendered projection ref re
 
 `projection_jobs.projection_version` is the projection/template/job version; it is not an affected-scope state clock. `projection_jobs.source_state_version` is the affected-scope state clock used as the render source for that projection job. It may be null for pending jobs and jobs that fail before the source state is resolved; completed successful renders must record it.
 
-Sensitive-approval projection jobs follow the APR source rule owned by [Document Projection](../07-document-projection.md#apr) and the non-mutating candidate contract owned by [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write): an `approval_request_candidate` may affect `TASK` display or blockers, but it is never an `APR` source. `APR` jobs start from committed approval state changes.
+Sensitive-approval projection jobs follow the APR source rule owned by the [APR Template](templates/approval.md#source-records) and [Document Projection Reference](document-projection.md#document-authority-matrix), plus the non-mutating candidate contract owned by [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write): an `approval_request_candidate` may affect `TASK` display or blockers, but it is never an `APR` source. `APR` jobs start from committed approval state changes.
 
 For MVP, Decision Packet visibility is rendered through `TASK` projections, status/next responses, judgment-context resources, and decision-packet read resources. A standalone `DEC` projection is optional unless the standalone Decision Packet projection feature is enabled. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains an agency-conformance requirement. This document does not define extension template text.
 

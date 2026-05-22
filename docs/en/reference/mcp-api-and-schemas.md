@@ -48,7 +48,7 @@ This document does not own:
 - baseline capture storage format; see [Storage And DDL](storage-and-ddl.md)
 - projection job table; see [Storage And DDL](storage-and-ddl.md)
 - full kernel transition table; see [Kernel Reference](kernel.md)
-- projection template bodies; see [Document Projection](../07-document-projection.md), future path `reference/document-projection.md`
+- projection template bodies; see [Template Reference](templates/README.md); projection rules live in [Document Projection Reference](document-projection.md)
 - operator command syntax; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
 - connector cookbook recipes; see [Runtime Architecture Reference](runtime-architecture.md) and [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
 

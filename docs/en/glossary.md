@@ -374,7 +374,7 @@ The API enum for projection job and template kinds. Tiers, values, and extension
 
 ### Projection Freshness
 
-The relationship between a projection and its source records, managed hash, artifact refs, and projection job state. Its value set is owned by [MCP API And Schemas](reference/mcp-api-and-schemas.md) and [Document Projection](07-document-projection.md).
+The relationship between a projection and its source records, managed hash, artifact refs, and projection job state. Its value set is owned by [MCP API And Schemas](reference/mcp-api-and-schemas.md) and [Document Projection Reference](reference/document-projection.md).
 
 ### Projection Job
 

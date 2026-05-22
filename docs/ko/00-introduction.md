@@ -95,7 +95,7 @@ flowchart LR
   Reconcile --> State
 ```
 
-자세한 entity와 gate 모델은 [03-kernel-spec.md](03-kernel-spec.md)가 담당합니다. Projection rules는 [07-document-projection.md](07-document-projection.md)가 담당합니다.
+자세한 entity와 gate 모델은 [03-kernel-spec.md](03-kernel-spec.md)가 담당합니다. Projection rules는 [문서 Projection 참조](reference/document-projection.md)가 담당합니다.
 
 ### 작업 모드
 
@@ -188,4 +188,4 @@ flowchart TD
 
 Human-editable input은 reconcile 또는 Core state-changing action이 accepted state event나 record를 기록한 뒤에만 operational truth가 됩니다.
 
-정식 규칙은 [03-kernel-spec.md](03-kernel-spec.md), [04-runtime-architecture.md](04-runtime-architecture.md), [07-document-projection.md](07-document-projection.md)를 참고합니다.
+정식 규칙은 [03-kernel-spec.md](03-kernel-spec.md), [04-runtime-architecture.md](04-runtime-architecture.md), [문서 Projection 참조](reference/document-projection.md)를 참고합니다.

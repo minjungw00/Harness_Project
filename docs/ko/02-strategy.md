@@ -251,7 +251,7 @@ Missing scope, missing approval, stale baseline, MCP unavailable 같은 mechanic
 
 ## Source-Of-Truth 요약
 
-Strategy 수준의 규칙은 generated 또는 human-edited Markdown이 우연히 operational truth가 되면 안 된다는 것입니다. Operational state, raw evidence, projection authority, reconcile behavior의 canonical contracts는 owner docs에 둡니다. [03-kernel-spec.md](03-kernel-spec.md#authority-rules), [04-runtime-architecture.md](04-runtime-architecture.md#raw-artifacts-state-records-and-markdown-reports), [06-reference-mvp.md](06-reference-mvp.md#statesqlite), [07-document-projection.md](07-document-projection.md#document-authority-matrix)를 봅니다.
+Strategy 수준의 규칙은 generated 또는 human-edited Markdown이 우연히 operational truth가 되면 안 된다는 것입니다. Operational state, raw evidence, projection authority, reconcile behavior의 canonical contracts는 owner docs에 둡니다. [03-kernel-spec.md](03-kernel-spec.md#authority-rules), [04-runtime-architecture.md](04-runtime-architecture.md#raw-artifacts-state-records-and-markdown-reports), [06-reference-mvp.md](06-reference-mvp.md#statesqlite), [문서 Projection 참조](reference/document-projection.md#document-authority-matrix)를 봅니다.
 
 요약하면 `state.sqlite`의 current records와 `state.sqlite.task_events`가 함께 operational record를 이루고, raw evidence는 artifact store에 있으며, Markdown reports는 projections이고, human-editable areas는 reconcile 또는 다른 Core state-changing action을 통해서만 state가 됩니다.
 

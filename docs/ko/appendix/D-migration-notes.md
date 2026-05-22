@@ -26,7 +26,7 @@ Legacy v1 file과 rewrite manifest는 migration history를 위한 source materia
 | `docs/legacy-v1/04-reference-implementation.md` | `docs/03-kernel-spec.md`, `docs/05-mcp-api-and-schemas.md`, `docs/06-reference-mvp.md`, `docs/appendix/C-later-roadmap.md` |
 | `docs/legacy-v1/05-user-guide.md` | `docs/10-user-guide.md` |
 | `docs/legacy-v1/06-agent-integration.md` | `docs/09-agent-integration.md`, `docs/appendix/B-surface-cookbook.md` |
-| `docs/legacy-v1/07-document-and-artifact-contracts.md` | `docs/07-document-projection.md`, `docs/appendix/A-template-library.md` |
+| `docs/legacy-v1/07-document-and-artifact-contracts.md` | `docs/reference/document-projection.md`, `docs/reference/templates/*.md`; migration source material은 `docs/07-document-projection.md`, `docs/appendix/A-template-library.md`에 남아 있음 |
 | `docs/legacy-v1/08-operations-and-conformance.md` | `docs/11-operations-and-conformance.md`, `docs/appendix/C-later-roadmap.md` |
 | `docs/legacy-v1/09-design-quality-playbooks.md` | `docs/08-design-quality-policy-pack.md` |
 | `docs/legacy-v1/99-authoring-guide.md` | `docs/99-authoring-guide.md` |
@@ -38,7 +38,7 @@ flowchart LR
   Intro["legacy README, overview, charter"] --> NewIntro["docs/README.md, 00-introduction.md, 01-project-charter.md"]
   Strategy["legacy strategy and playbooks"] --> NewStrategy["02-strategy.md, 03-kernel-spec.md, 08-design-quality-policy-pack.md"]
   Architecture["legacy architecture and reference implementation"] --> NewRuntime["04-runtime-architecture.md, 05-mcp-api-and-schemas.md, 06-reference-mvp.md"]
-  Projection["legacy document and artifact contracts"] --> NewProjection["07-document-projection.md, appendix/A-template-library.md"]
+  Projection["legacy document and artifact contracts"] --> NewProjection["reference/document-projection.md, reference/templates/*.md"]
   Integration["legacy agent integration"] --> NewIntegration["09-agent-integration.md, appendix/B-surface-cookbook.md"]
   Operations["legacy operations and conformance"] --> NewOperations["11-operations-and-conformance.md, appendix/C-later-roadmap.md"]
   Migration["REWRITE-MANIFEST.md"] --> ThisDoc["appendix/D-migration-notes.md"]
@@ -55,7 +55,7 @@ Batch H는 migration stub을 유지하는 대신 replaced legacy document를 act
 | `docs/04-reference-implementation.md` | `docs/03-kernel-spec.md`, `docs/05-mcp-api-and-schemas.md`, `docs/06-reference-mvp.md`, `docs/appendix/C-later-roadmap.md` |
 | `docs/05-user-guide.md` | `docs/10-user-guide.md` |
 | `docs/06-agent-integration.md` | `docs/09-agent-integration.md`, `docs/appendix/B-surface-cookbook.md` |
-| `docs/07-document-and-artifact-contracts.md` | `docs/07-document-projection.md`, `docs/appendix/A-template-library.md` |
+| `docs/07-document-and-artifact-contracts.md` | `docs/reference/document-projection.md`, `docs/reference/templates/*.md`; migration source material은 `docs/07-document-projection.md`, `docs/appendix/A-template-library.md`에 남아 있음 |
 | `docs/08-operations-and-conformance.md` | `docs/11-operations-and-conformance.md`, `docs/appendix/C-later-roadmap.md` |
 | `docs/09-design-quality-playbooks.md` | `docs/08-design-quality-policy-pack.md` |
 
@@ -66,7 +66,7 @@ Archived `docs/legacy-v1/` copy들과 old charter, strategy, authoring guide, gl
 | Legacy section or theme | v2 treatment |
 |---|---|
 | `05-user-guide.md` long work walkthroughs | `10-user-guide.md`의 conversation example로 축약 |
-| detailed report-reading tables in user guide | main user guide에서 제거; projection ownership은 `07-document-projection.md`에 유지 |
+| detailed report-reading tables in user guide | main user guide에서 제거; projection ownership은 이제 `reference/document-projection.md`에 있음 |
 | user-facing setup internals | operations 또는 integration owner doc으로 이동 |
 | `08-operations-and-conformance.md` scenario tables | `11-operations-and-conformance.md`에서 fixture-based conformance로 재작성 |
 | operational metrics list | `appendix/C-later-roadmap.md`의 later analytics로 이동 |
@@ -75,7 +75,7 @@ Archived `docs/legacy-v1/` copy들과 old charter, strategy, authoring guide, gl
 | surface-specific addenda in main integration docs | cookbook material로 renamed |
 | `03-architecture.md` | `04-runtime-architecture.md`와 elsewhere owner summary로 renamed/split |
 | `04-reference-implementation.md` | kernel, API/schema, reference MVP, later roadmap으로 split |
-| `07-document-and-artifact-contracts.md` | `07-document-projection.md`와 `appendix/A-template-library.md`로 renamed/split |
+| `07-document-and-artifact-contracts.md` | `reference/document-projection.md`와 `reference/templates/*.md`로 이동; legacy numbered files는 migration source material로 남음 |
 | `09-design-quality-playbooks.md` | playbook prose에서 policy contract로 converted |
 | old 17-item invariant style | 7 core invariants와 policy defaults로 split |
 | single-axis status model | lifecycle plus gates로 replaced |

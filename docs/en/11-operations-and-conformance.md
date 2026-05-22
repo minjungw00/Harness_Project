@@ -1168,7 +1168,7 @@ expected_error:
 
 `prepare_write` allowed examples expect the Task to move from `ready` to `executing` because the kernel transition table owns and defines that transition.
 
-Approval lifecycle coverage should be materialized as separate exact-shape fixtures or as suite catalog sequencing, not by adding fixture body fields. These fixtures assert owner-defined observable effects from [Kernel `prepare_write` State Logic](03-kernel-spec.md#prepare_write-state-logic), [`harness.prepare_write`](reference/mcp-api-and-schemas.md#harnessprepare_write), and the [APR projection summary](07-document-projection.md#apr), rather than redefining the lifecycle.
+Approval lifecycle coverage should be materialized as separate exact-shape fixtures or as suite catalog sequencing, not by adding fixture body fields. These fixtures assert owner-defined observable effects from [Kernel `prepare_write` State Logic](03-kernel-spec.md#prepare_write-state-logic), [`harness.prepare_write`](reference/mcp-api-and-schemas.md#harnessprepare_write), and the [APR Template source records](reference/templates/approval.md#source-records), rather than redefining the lifecycle.
 
 Fixture authors should keep these observable assertions:
 

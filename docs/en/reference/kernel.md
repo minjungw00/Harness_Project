@@ -63,7 +63,7 @@ This document does not own:
 - public MCP request/response schemas; see [MCP API And Schemas](mcp-api-and-schemas.md)
 - SQLite DDL and storage layout; see [Storage And DDL](storage-and-ddl.md)
 - full projection template text
-- document projection rules; see [Document Projection](../07-document-projection.md), future path `reference/document-projection.md`
+- document projection rules; see [Document Projection Reference](document-projection.md)
 - design-quality policy contract tables; see [Design Quality Policy Pack](../08-design-quality-policy-pack.md), future path `reference/design-quality-policies.md`
 - connector capability profiles and surface recipes; see [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
 - operator command syntax; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`

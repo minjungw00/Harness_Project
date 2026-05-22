@@ -1,0 +1,299 @@
+# Document Projection Reference
+
+## What this document helps you do
+
+Use this reference to check how Harness renders human-readable Markdown projections from canonical state records and artifact references.
+
+It defines projection authority boundaries, managed block behavior, human-editable sections, artifact reference rendering, template tiers, and projection freshness rules. It does not define canonical kernel state, MCP request/response schemas, SQLite DDL, design-quality policy requirements, or full template bodies. Full template bodies for MVP-required projections live in the [Template Reference](templates/README.md). Optional and extension template bodies remain in [Appendix A](../appendix/A-template-library.md) until they move.
+
+## Read this when
+
+- You need to implement or review Markdown projection behavior.
+- You are checking whether a report, status card, or Journey Card is canonical state.
+- You are deciding how a human edit to projected Markdown can become state.
+- You need the source records for `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, or `DIRECT-RESULT`.
+- You are diagnosing stale, failed, or drifted projections.
+
+## Projection in plain language
+
+A Harness projection is a readable view of work that already exists in canonical state or artifact storage. The projector reads `state.sqlite` records, `state.sqlite.task_events`, and registered artifact references, then renders Markdown such as `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`.
+
+Markdown helps humans understand the work, resume context, inspect evidence, and propose corrections. Markdown does not own the work. A report can summarize a gate, link evidence, display a Write Authorization ref, or show a Decision Packet, but the report text is not the gate, evidence, authorization, or decision.
+
+The strict boundary is:
+
+| Item | What it is | Authority |
+|---|---|---|
+| Raw artifact | Durable evidence file such as a diff, log, screenshot, checkpoint, bundle, or manifest file | artifact store |
+| State record | Canonical structured record such as Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Write Authorization, Eval, Manual QA record, Evidence Manifest, Artifact record, or Reconcile Item | `state.sqlite` |
+| Markdown report | Human-readable projection from records and artifact refs | projector output |
+
+A Markdown report can link to evidence and summarize state, but it is neither the raw artifact nor the state record.
+
+## Reference scope
+
+This document owns:
+
+- projection principles
+- document authority matrix
+- managed block rules
+- human-editable section rules
+- artifact reference rendering rules
+- template tiers
+- projection source-record rules
+- projection freshness and failure rules
+- source-state-version and managed-hash interpretation at the projection-rule level
+
+## Not covered here
+
+This document does not own:
+
+- canonical kernel state and transition rules; see [Kernel Reference](kernel.md)
+- public MCP request/response schemas; see [MCP API And Schemas](mcp-api-and-schemas.md)
+- SQLite DDL and storage layout; see [Storage And DDL](storage-and-ddl.md)
+- design-quality policy contracts; see [Design Quality Policy Pack](../08-design-quality-policy-pack.md), future path `reference/design-quality-policies.md`
+- operator command semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
+- conformance fixture assertion semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
+- full template bodies for optional or extension projections; see [Appendix A](../appendix/A-template-library.md) until they move
+- connector capability profiles or surface recipes; see [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
+- MVP-required full template bodies; see [Template Reference](templates/README.md)
+
+## One generated TASK example
+
+This is intentionally tiny. The full rendered shape lives in the [TASK template](templates/task.md).
+
+```md
+---
+doc_type: task
+task_id: TASK-0001
+display_state: executing
+projection_version: 7
+source_state_version: 42
+updated_at: 2026-05-06T09:30:15+09:00
+---
+
+# TASK-0001 Add Import Preview
+
+<!-- HARNESS:BEGIN managed -->
+## Current Summary
+- mode: work
+- lifecycle phase: executing
+- next action: record evidence for CU-01
+- evidence gate: pending
+- verification gate: pending
+- Manual QA: pending
+- active change unit: CU-01
+- projection freshness: current
+
+## Evidence And Reports
+- Run Summary: RUN-20260506-093015-LEAD-01
+- Diff: DIFF-0001 (`artifact_id=ART-0001`, sha256:abc123..., redaction:none)
+<!-- HARNESS:END managed -->
+
+## User Notes and Proposals
+-
+```
+
+## What humans may edit
+
+Humans may edit explicitly human-editable sections, such as:
+
+```md
+## User Notes and Proposals
+-
+```
+
+Human-editable text is input. It can contain notes, questions, corrections, and proposals. Reconcile reads those edits and may create `reconcile_items` candidates. Accepted proposals become state only through a Core state-changing action and an appended `state.sqlite.task_events` row. Rejected proposals remain notes or rejected reconcile items.
+
+Human-editable proposals may target Task summary, acceptance criteria, Domain Language, Module Map, Interface Contract, Manual QA notes, or other state-backed records, but the proposal itself is not the target record.
+
+## What humans may not edit into state directly
+
+Humans may not directly edit the following projection text into canonical state:
+
+- managed block content
+- front matter fields such as `source_state_version`
+- current gate values, lifecycle phase, result, close reason, or assurance level
+- approval, verification, Manual QA, acceptance, or residual-risk status
+- Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Change Unit DAG, Residual Risk, Stewardship Impact, Review Stage, or Write Authorization display text
+- artifact reference identity, hash, redaction state, or artifact availability
+- status cards, Journey Cards, or other generated display surfaces
+- template bodies
+
+Direct edits inside managed blocks are drift, not accepted state. Direct edits to displayed authority text do not authorize writes, resolve decisions, satisfy evidence, replace verification or Manual QA, accept residual risk, upgrade assurance, close work, or mutate owner records.
+
+## Projection principles
+
+1. Projection is not source-of-truth.
+2. Canonical operational state is `state.sqlite` current records plus `state.sqlite.task_events`.
+3. Raw evidence is canonical in the artifact store.
+4. Markdown reports are rendered from state records and artifact references.
+5. Markdown reports are not raw artifacts by default.
+6. Front matter carries only identity, projection version or status, `source_state_version`, and timestamp/freshness metadata.
+7. Managed blocks are generated by the projector and may be regenerated.
+8. Human-editable sections are input surfaces for notes and proposals.
+9. Accepted human edits become state only through reconcile or a Core state-changing action.
+10. Large logs, diffs, traces, screenshots, bundles, and checkpoints are linked by artifact refs instead of embedded.
+11. Projection failure or staleness never changes the underlying task result.
+12. User-facing cards may use friendly labels, but canonical gate names remain the kernel fields.
+13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Change Unit DAG, Residual Risk, and Stewardship Impact displays are non-canonical projections from owner records and artifact refs.
+
+## Document authority matrix
+
+| Fact or surface | Canonical source | Projection or display surface | Update path |
+|---|---|---|---|
+| Current Task state | `state.sqlite.tasks`, `task_gates`, and `state.sqlite.task_events` | `TASK` Current Summary and status card | Core transition, then projector |
+| Task continuity | `state.sqlite` Task, Change Unit, Run, Evidence Manifest, Eval, Manual QA, Decision Packet, Approval, Residual Risk, `task_gates.acceptance_gate`, acceptance Decision Packet user-decision state, close events, artifact refs, `journey_spine_entries` when needed, and `state.sqlite.task_events` | `TASK` Journey Spine | Core transition or reconcile, Journey reconstruction, then projector |
+| Decision Packet | `state.sqlite.decision_packets`, related `decision_gate` state, decision events, related approval or reconcile records, artifact refs, and linked `state.sqlite.residual_risks` when applicable | `TASK` Pending Decisions, Journey Card decision line, status/next responses, judgment-context resources, and decision-packet resources; optional `DEC` when standalone projection is enabled | `request_user_decision` / `record_user_decision`, then projector |
+| Journey Spine | `state.sqlite` Task, Change Unit, Run, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Residual Risk, `task_gates.acceptance_gate`, acceptance Decision Packet user-decision state, close events, artifact refs, `journey_spine_entries` when needed, and `state.sqlite.task_events` | `TASK` Journey Spine section, resume views, Journey Spine-oriented cards | Core transition or reconcile, Journey reconstruction, then projector |
+| Journey Card | current `state.sqlite` Task state, gates, active Change Unit, Autonomy Boundary summary, active Decision Packet refs, residual-risk summary, latest evidence/eval/QA/report refs, and projection freshness | `JOURNEY-CARD`, status card, `harness.status` card text, `harness.next` current-position text, significant resume output | Read or projection refresh from current state; never direct card edit |
+| Autonomy Boundary | active `state.sqlite.change_units` Autonomy Boundary fields plus related Decision Packet resolutions and events | `TASK` Autonomy Boundary, Change Unit block, Journey Card autonomy line, optional related `DEC` when standalone projection is enabled | shaping update or user Decision Packet resolution, then projector |
+| Write Authorization | `state.sqlite.write_authorizations` plus related Task, Change Unit, approval, Decision Packet, baseline, and consumed Run refs | `TASK` Write Authority Summary, Journey Card Write Authority Summary line, `RUN-SUMMARY` relation | `prepare_write` creates it; idempotent replay returns the already committed response; `record_run` consumes the authorization, then projector |
+| Implementation Micro-Plan | current `state.sqlite` Task state and gates, active Change Unit scope and Autonomy Boundary, Change Unit dependency summary, selected feedback-loop records, TDD traces when selected, expected evidence needs, Decision Packet blockers, and latest report refs | `TASK` Implementation Micro-Plan managed section | Accepted reconcile outcome or Core state-changing action updates owner records, then projector |
+| Change Unit DAG | `state.sqlite.change_units`, `state.sqlite.change_unit_dependencies`, dependency-related events, and active Task state | `TASK` Change Unit Dependencies / DAG summary | shaping update or reconcile, then projector |
+| Residual Risk | `state.sqlite.residual_risks`, accepted-risk metadata and residual-risk refs, related Decision Packets, evidence/QA/eval refs, and artifact refs | `TASK` Residual Risk, optional `DEC` accepted-risk context when standalone projection is enabled, Journey Card residual-risk line | Core transition from decision, evidence, QA, Eval, reconcile, or close flow, then projector |
+| Stewardship Impact Summary | `domain_terms`, `module_map_items`, `interface_contracts`, `feedback_loops`, TDD records when TDD is selected, `state.sqlite.residual_risks`, `state.sqlite.decision_packets`, policy validator results, and related refs | `TASK` Stewardship Impact and status/resume stewardship displays | Owner record update, validator result, reconcile, or close flow, then projector |
+| User Notes | human-editable input -> `reconcile_items` -> accepted state event/record | `TASK` User Notes and Proposals | human edit, reconcile decision, Core event |
+| Shared Design | shared design records and events | `TASK` summary, `DESIGN`, optional `DEC` when standalone projection is enabled | Core transition or reconcile, then projector |
+| Domain Language | `domain_terms` table | `DOMAIN-LANGUAGE` projection | Core transition or reconcile, then projector |
+| Module Map | `module_map_items` table | `MODULE-MAP` projection | Core transition or reconcile, then projector |
+| Interface Contract | `interface_contracts` table | `INTERFACE-CONTRACT` projection | Core transition or reconcile, then projector |
+| Feedback Loop | `feedback_loops` table plus refs to runs, artifacts, TDD traces, Manual QA, and evidence manifests | `TASK` Stewardship Impact and Evidence Manifest design-quality coverage; no standalone Feedback Loop projection in MVP | `FeedbackLoopUpdate` through `record_run` shaping or evidence update, `record_manual_qa` via `feedback_loop_ref`, or reconcile, then projector |
+| Approval | `approvals`, approval-shaped Decision Packet, optional decision request routing/replay record if implementation keeps one, and events; never `approval_request_candidate` alone | `APR` projection and approval card | `request_user_decision(decision_kind=approval)` creates the pending Approval record, `record_user_decision` updates the approval decision, then projector |
+| Run summary | `runs` table plus artifact refs | `RUN-SUMMARY` projection | `record_run`, then projector |
+| Direct result | direct run record plus artifact refs | `DIRECT-RESULT` projection | `record_run` / `close_task`, then projector |
+| Evidence coverage | `evidence_manifests` plus artifact refs | `EVIDENCE-MANIFEST` projection | evidence module update, then projector |
+| Verification verdict | `evals` plus artifact refs | `EVAL` projection and verification card | `record_eval`, then projector |
+| TDD trace | `tdd_traces` plus artifact refs | `TDD-TRACE` projection | `record_run` or reconcile, then projector |
+| Manual QA | `manual_qa_records` plus artifact refs when a record exists; `qa_gate` is canonical gate for pending or satisfied QA | `MANUAL-QA` projection and QA card | `record_manual_qa`, then projector |
+| Raw evidence | artifact store plus `artifacts` records | artifact references in reports | artifact registry |
+| Projection freshness | `projection_jobs.source_state_version`, `projection_jobs.projection_version`, job status, managed hashes, artifact records | front matter mirror, status card, operations output | projector and recovery tools |
+
+Required authority statements:
+
+- User Notes: human-editable input -> `reconcile_items` -> accepted state event/record
+- Domain Language: `domain_terms` table -> `DOMAIN-LANGUAGE` projection; public refs to canonical term rows use `StateRecordRef.record_kind=domain_term`
+- Module Map: `module_map_items` table -> `MODULE-MAP` projection; public refs to canonical module rows use `StateRecordRef.record_kind=module_map_item`
+- Interface Contract: `interface_contracts` table -> `INTERFACE-CONTRACT` projection; public refs to canonical contract rows use `StateRecordRef.record_kind=interface_contract`
+- Feedback Loop: `feedback_loops` table -> `TASK` and Evidence Manifest display; public refs to canonical feedback-loop rows use `StateRecordRef.record_kind=feedback_loop`; TDD Trace refs remain separate execution evidence refs
+- Decision Packet: `state.sqlite.decision_packets` and related refs -> `TASK` Pending Decisions, status/next responses, judgment-context resources, and decision-packet resources; optional `DEC` projection when standalone projection is enabled
+- Journey Spine: reconstructed from owner records, artifact refs, `journey_spine_entries` supplements, and `state.sqlite.task_events`; it is not its own authority record
+- Journey Card: derived display from current state and refs; it is never canonical state
+- Autonomy Boundary: active `state.sqlite.change_units` boundary fields -> projection surfaces; it is judgment latitude, not scope authority
+- Write Authority Summary: derived display from active scope, approval, Write Authorization, baseline, and guarantee refs; it is never canonical state and cannot authorize work
+- Write Authorization: `state.sqlite.write_authorizations` records a specific allowed write attempt; it is not scope, approval, evidence, verification, QA, acceptance, or residual-risk acceptance
+- Implementation Micro-Plan: current Task and Change Unit owner records plus related refs -> `TASK` managed execution-aid section; it is not canonical state, not a new `ProjectionKind`, not scope authority, not approval, and not Write Authorization
+- Approval: `approvals` plus the approval-shaped Decision Packet -> `APR` projection only after the Approval record exists or changes; an `approval_request_candidate` from `prepare_write` may appear as candidate display, but it is not an `APR` source
+- Change Unit DAG: `state.sqlite.change_unit_dependencies` and Change Unit refs -> dependency projection; it is not a scheduler or authorization surface
+- Residual Risk: `state.sqlite.residual_risks` including accepted-risk metadata/refs -> residual-risk displays
+- Stewardship Impact Summary: derived from owner records, validator results, and refs -> `StewardshipImpactSummary` display; it is not a canonical record
+- Review Stages: Task, Change Unit, gates, evidence, validator results, residual-risk refs, and stewardship owner refs -> managed `TASK` or `RUN-SUMMARY` display sections named Spec Compliance Review and Code Quality / Stewardship Review; they are not canonical records, not new `ProjectionKind` values, and not detached verification
+
+## Managed block rules
+
+Managed blocks are the only Markdown areas the projector may overwrite:
+
+```md
+<!-- HARNESS:BEGIN managed -->
+...
+<!-- HARNESS:END managed -->
+```
+
+Rules:
+
+- Managed block content is generated from committed state records and artifact refs.
+- The projector records `projection_jobs.source_state_version`, projection version, rendered timestamp, and managed hash. Front matter mirrors the recorded source state version for operators.
+- The managed hash is computed from the projector-owned managed block body, excluding the `HARNESS:BEGIN` and `HARNESS:END` marker lines, after normalizing line endings to LF and preserving meaningful whitespace required by the projector rules.
+- If the managed block hash differs from the last projected hash before rendering, the projector creates or updates a reconcile item.
+- The managed hash is used only for drift detection; it never makes the rendered Markdown canonical state.
+- The projector does not silently treat a direct edit inside a managed block as accepted state.
+- Re-rendering a managed block must preserve unrelated human-editable sections.
+- A failed render marks projection freshness `failed` or `stale`; it does not roll back state.
+
+Front matter stays diagnostic and compact. It may identify the rendered object, show the projection version or status, mirror `source_state_version`, and include the rendered timestamp. It must not contain large state summaries, evidence bodies, gate rollups, or artifact inventories.
+
+`projection_version` is the projection/template/job version. It is not a state clock and must not be used as the source-state freshness basis. `source_state_version` is the affected-scope state clock value used as the render source: the Task State Version when the projection is task-scoped, otherwise the Project State Version or extension-defined owner state clock.
+
+The canonical per-projection value is `projection_jobs.source_state_version` for the successful render job. Front matter `source_state_version` only mirrors that value for operator diagnosis.
+
+## Human-editable section rules
+
+- Human-editable text is input, not canonical state.
+- Reconcile reads the edit and creates a `reconcile_items` candidate when state may need to change.
+- Accepted proposals become state only through a Core transition and appended `state.sqlite.task_events` row.
+- Rejected proposals remain notes or rejected reconcile items.
+- The projector must preserve human-editable content across refreshes.
+- Human-editable proposals may target Task summary, acceptance criteria, Domain Language, Module Map, Interface Contract, Manual QA notes, or other state-backed records, but the proposal itself is not the target record.
+
+## Artifact reference rendering
+
+Markdown reports render artifact references compactly and consistently. The payload shape is owned by the MCP API document; projection owns only presentation rules.
+
+Recommended display:
+
+```text
+- Diff: DIFF-0001 (`artifact_id=ART-0001`, sha256:abc123..., redaction:none)
+- Test log: LOG-0002 (`artifact_id=ART-0002`, sha256:def456..., redaction:redacted)
+- Bundle: BUNDLE-0001 (`artifact_id=ART-0003`, sha256:789abc..., redaction:secret_omitted)
+```
+
+Rules:
+
+- Every artifact ref must resolve to an artifact record.
+- Every raw artifact ref must carry integrity metadata and redaction state.
+- Large or sensitive evidence is linked, not pasted into Markdown.
+- Missing or hash-mismatched artifacts mark related evidence or projection freshness stale.
+- State record refs use record identity and optional projection path; for `record_kind=projection`, identity is `projection_jobs.projection_job_id` and the path is only a locator. They are not rendered as raw artifact refs.
+- `artifact_links.record_kind` must resolve to an existing same-Task state owner or projection ref. MVP artifact links are Task-scoped; `record_kind=projection` resolves to a completed `projection_jobs` row with the same `task_id`, and the link's `record_id` is `projection_jobs.projection_job_id`, while path display uses `StateRecordRef.projection_path` or `projection_jobs.output_path`. Project-level owner rows and project-level projection jobs use state or projection job freshness/output metadata unless a future extension adds project-scoped artifact linking. `EXPORT` is a `ProjectionKind` only; export snapshots and components remain artifacts linked to their owner records or to `record_kind=projection`, not to `record_kind=export`.
+
+## Template tiers
+
+Projection templates match the API `ProjectionKind` tiers.
+
+| Tier | Templates | Rule | Template reference |
+|---|---|---|---|
+| MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | MVP projector must render these. | [TASK](templates/task.md), [APR](templates/approval.md), [RUN-SUMMARY](templates/run-summary.md), [EVIDENCE-MANIFEST](templates/evidence-manifest.md), [EVAL](templates/eval.md), [DIRECT-RESULT](templates/direct-result.md) |
+| MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. | Consolidated legacy bodies remain in [Appendix A](../appendix/A-template-library.md) until those optional templates move. |
+| Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Render only when the corresponding extension or appendix projection is enabled. | Consolidated legacy bodies remain in [Appendix A](../appendix/A-template-library.md) until those extension templates move. |
+
+`ProjectionKind` tiering controls renderer support expectations; no tier makes a projection canonical state.
+
+The `EXPORT` template is an optional projection output. It does not introduce an `export` state record for artifact links.
+
+Persisted `JOURNEY-CARD` Markdown is optional. Current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows is required for agency conformance.
+
+MVP Decision Packet visibility is required through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Standalone `DEC` Markdown is optional unless the standalone Decision Packet projection feature is enabled.
+
+Decision Packet record IDs use `DEC-*`. `DEC` as a `projection_kind` is only the projection kind label; when a standalone projection needs its own identity, use a separate `projection_id` such as `DEC-PROJ-0001`.
+
+## Freshness and failure rules
+
+Projection freshness is computed from the current owner or affected-scope state clock, canonical `projection_jobs.source_state_version`, projection job state, managed hashes, artifact availability, and known stale triggers. Front matter `source_state_version` mirrors the canonical value from the last successful render so operators can diagnose stale projections without treating the Markdown as canonical.
+
+| Projection | Generated when | Stale when |
+|---|---|---|
+| `TASK` | Task created, resumed, changed, or refreshed | current `tasks.state_version > projection_jobs.source_state_version` for the `TASK` projection, managed block drift, unresolved reconcile required, stewardship owner refs or design-quality validator results changed |
+| `APR` | committed approval request is created by `request_user_decision(decision_kind=approval)`, or approval decision changes through `record_user_decision` | approval-shaped Decision Packet, linked Approval record status, scope, baseline, expiry, or decision note changes |
+| `RUN-SUMMARY` | `record_run` commits a Run, including `runs.status=completed`, `interrupted`, `blocked`, or `violation` | run relation changes, artifact ref missing, artifact integrity fails |
+| `EVIDENCE-MANIFEST` | evidence coverage changes | baseline drift, changed files modified, required evidence missing/stale, approval expired |
+| `EVAL` | verification result recorded | baseline changes after Eval, evidence becomes stale, independence relation invalidated |
+| `DIRECT-RESULT` | direct run closes or escalates | changed file drift, escalation state changes, artifact ref missing |
+| `EXPORT` | export/report projection is generated, including a Release Handoff profile when enabled | any included Task/gate/Change Unit/Decision Packet/Residual Risk/evidence/verification/Manual QA/artifact/projection/redaction/checklist source changes or becomes unavailable |
+| `DEC` | standalone Decision Packet projection is enabled and a Decision Packet is created, requested, resolved, deferred, rejected, blocked, or superseded | packet status, affected scope, current-state context, related approval/reconcile state, residual-risk refs, or evidence refs change |
+| `JOURNEY-CARD` | card is rendered or persisted as a projection; `harness.status` and `harness.next` may also return it ephemerally without a projection job | any displayed Task/gate/Change Unit/Autonomy Boundary/Write Authorization/approval/baseline/guarantee/Decision Packet/Residual Risk/evidence/report/freshness source moves ahead of the rendered card |
+| `DOMAIN-LANGUAGE` | domain terms change | term conflict, accepted term record changes, related code representation moves |
+| `MODULE-MAP` | module map records change | module path, public interface, dependency direction, internal complexity, test boundary, owner decision, or watchpoint changes |
+| `INTERFACE-CONTRACT` | interface contract records change | linked interface, caller, compatibility impact, or boundary tests change |
+| `TDD-TRACE` | trace recorded or updated | red/green log missing, baseline drift, linked test file changes |
+| `MANUAL-QA` | QA record created or updated | linked UI/code changes, required capture missing, finding unresolved |
+
+Freshness states:
+
+| State | Meaning |
+|---|---|
+| `current` | projected content matches the committed state version recorded in canonical `projection_jobs.source_state_version` and the managed hash |
+| `stale` | state or referenced evidence moved ahead of the projection |
+| `failed` | projector attempted refresh and failed |
+| `unknown` | freshness cannot be computed, usually during recovery or migration |
+
+Projection staleness can block actions that require current readable context, but it does not change lifecycle result, gate values, or assurance by itself. Projection failure or staleness never changes the underlying task result.

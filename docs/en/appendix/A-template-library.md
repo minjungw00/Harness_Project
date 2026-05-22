@@ -1,8 +1,10 @@
 # Appendix A: Template Library
 
+Split reference: MVP-required template bodies now live as separate files in the [Template Reference](../reference/templates/README.md). This appendix remains as the legacy consolidated library during the redesign.
+
 ## Document Role
 
-This appendix owns full Markdown projection template variants. The projection rules and template tiers are owned by `07-document-projection.md`; this appendix provides complete bodies that implement those rules. A template body appearing here does not by itself enable or require its `ProjectionKind`.
+This appendix owns legacy consolidated Markdown projection template variants. The projection rules and template tiers are owned by [Document Projection Reference](../reference/document-projection.md); this appendix keeps complete bodies during migration. A template body appearing here does not by itself enable or require its `ProjectionKind`.
 
 Templates are examples of rendered shape. They are not canonical state and must not redefine kernel fields, MCP schemas, or SQLite DDL.
 

@@ -374,7 +374,7 @@ Projection job과 template kind를 나타내는 API enum입니다. Tier, values,
 
 ### Projection Freshness
 
-Projection과 source record, managed hash, artifact ref, projection job state 사이의 관계입니다. Value set은 [MCP API와 스키마](reference/mcp-api-and-schemas.md)와 [Document Projection](07-document-projection.md)이 담당합니다.
+Projection과 source record, managed hash, artifact ref, projection job state 사이의 관계입니다. Value set은 [MCP API와 스키마](reference/mcp-api-and-schemas.md)와 [문서 Projection 참조](reference/document-projection.md)가 담당합니다.
 
 ### Projection Job
 

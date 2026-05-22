@@ -79,4 +79,4 @@ Harness is the local record and decision path around AI-assisted work. It helps 
 - Read [Purpose and Principles](purpose-and-principles.md) for the values and boundaries behind the system.
 - For strict kernel behavior, read [Kernel Reference](../reference/kernel.md).
 - For runtime architecture, read [Runtime Architecture Reference](../reference/runtime-architecture.md).
-- For document projection during the redesign, current owner: [Document Projection](../07-document-projection.md). Future reference path: `reference/document-projection.md`.
+- For document projection, read [Document Projection Reference](../reference/document-projection.md).

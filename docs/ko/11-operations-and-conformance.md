@@ -1170,7 +1170,7 @@ expected_error:
 
 `prepare_write` allowed 예시는 Task가 `ready`에서 `executing`으로 이동한다고 기대합니다. 이 transition은 kernel transition table이 소유하고 정의합니다.
 
-Approval lifecycle coverage는 fixture body field를 추가하지 말고 별도의 exact-shape fixture 또는 suite catalog sequencing으로 구체화해야 합니다. 이러한 fixture는 lifecycle을 다시 정의하지 않고 [Kernel `prepare_write` State Logic](03-kernel-spec.md#prepare_write-state-logic), [`harness.prepare_write`](reference/mcp-api-and-schemas.md#harnessprepare_write), [APR projection summary](07-document-projection.md#apr)가 정의한 observable effect를 검증합니다.
+Approval lifecycle coverage는 fixture body field를 추가하지 말고 별도의 exact-shape fixture 또는 suite catalog sequencing으로 구체화해야 합니다. 이러한 fixture는 lifecycle을 다시 정의하지 않고 [Kernel `prepare_write` State Logic](03-kernel-spec.md#prepare_write-state-logic), [`harness.prepare_write`](reference/mcp-api-and-schemas.md#harnessprepare_write), [APR Template source records](reference/templates/approval.md#source-records)가 정의한 observable effect를 검증합니다.
 
 Fixture authors는 다음 observable assertions를 유지해야 합니다.
 

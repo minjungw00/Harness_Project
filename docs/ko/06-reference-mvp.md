@@ -254,7 +254,7 @@ Minimum enum hardening targets:
 | `tasks.result` | [Result](03-kernel-spec.md#result)와 [Close Semantics](03-kernel-spec.md#close-semantics). |
 | `tasks.close_reason` | [Close Reason](03-kernel-spec.md#close-reason)과 [Close Semantics](03-kernel-spec.md#close-semantics). |
 | `tasks.assurance_level` | [Assurance Level](03-kernel-spec.md#assurance-level)과 [Verification Gate](03-kernel-spec.md#verification-gate). |
-| `tasks.projection_status` | 이 문서와 [Document Projection](07-document-projection.md)의 TASK projection freshness semantics. |
+| `tasks.projection_status` | 이 문서와 [문서 Projection 참조](reference/document-projection.md)의 TASK projection freshness semantics. |
 | `task_gates.scope_gate` | [Scope Gate](03-kernel-spec.md#scope-gate). |
 | `task_gates.decision_gate` | [Decision Gate](03-kernel-spec.md#decision-gate). |
 | `task_gates.approval_gate` | [Approval Gate](03-kernel-spec.md#approval-gate). |
@@ -267,7 +267,7 @@ Minimum enum hardening targets:
 | `decision_packets.status` | [Decision Gate Aggregate Recompute](03-kernel-spec.md#decision-gate-aggregate-recompute)와 [MCP API와 스키마](05-mcp-api-and-schemas.md)의 public `DecisionPacket`. |
 | `manual_qa_records.result` | [QA Gate](03-kernel-spec.md#qa-gate)와 [`harness.record_manual_qa`](05-mcp-api-and-schemas.md#harnessrecord_manual_qa). |
 | `evals.verdict` | [Verification Gate](03-kernel-spec.md#verification-gate)와 [`harness.record_eval`](05-mcp-api-and-schemas.md#harnessrecord_eval). |
-| `projection_jobs.status` | 이 문서와 [Document Projection](07-document-projection.md)의 projection job/freshness semantics. |
+| `projection_jobs.status` | 이 문서와 [문서 Projection 참조](reference/document-projection.md)의 projection job/freshness semantics. |
 
 New table 또는 rebuild migration에서는 representative inline hardening으로 `status TEXT NOT NULL CHECK (status IN (...))`를 사용할 수 있습니다. Existing SQLite tables는 table rebuild, Core가 commit 전에 확인하는 small lookup table, 또는 tightening 전에 unknown values를 reject하는 migration-time assertion이 필요할 수 있습니다. Database-only enum values를 만들지 말고 storage hardening은 owner value source에 묶어야 합니다.
 
@@ -1318,7 +1318,7 @@ MVP는 separate `projections` table을 정의하지 않습니다. Rendered proje
 
 `projection_jobs.projection_version`은 projection/template/job version입니다. Affected-scope state clock이 아닙니다. `projection_jobs.source_state_version`은 해당 projection job의 render source로 사용한 affected-scope state clock입니다. Pending jobs와 source state가 resolve되기 전에 failed된 jobs에서는 null일 수 있고, completed successful renders에서는 반드시 기록해야 합니다.
 
-Sensitive-approval projection jobs는 [07-document-projection.md](07-document-projection.md#apr)가 담당하는 APR source rule과 [`harness.prepare_write`](05-mcp-api-and-schemas.md#harnessprepare_write)가 담당하는 non-mutating candidate contract를 따릅니다. `approval_request_candidate`는 `TASK` display 또는 blockers에 영향을 줄 수 있지만 `APR` source는 절대 아닙니다. `APR` jobs는 committed approval state changes에서 시작합니다.
+Sensitive-approval projection jobs는 [APR Template](reference/templates/approval.md#source-records)과 [문서 Projection 참조](reference/document-projection.md#document-authority-matrix)가 담당하는 APR source rule, 그리고 [`harness.prepare_write`](05-mcp-api-and-schemas.md#harnessprepare_write)가 담당하는 non-mutating candidate contract를 따릅니다. `approval_request_candidate`는 `TASK` display 또는 blockers에 영향을 줄 수 있지만 `APR` source는 절대 아닙니다. `APR` jobs는 committed approval state changes에서 시작합니다.
 
 MVP에서 Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet read resources를 통해 render됩니다.
 

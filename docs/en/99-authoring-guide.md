@@ -22,12 +22,13 @@ Use exactly one canonical owner for each concept. Other documents may include a 
 | three spaces, runtime authority flow, artifact architecture, projection/reconcile architecture, guarantee levels | `04-runtime-architecture.md` |
 | MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `05-mcp-api-and-schemas.md` |
 | reference MVP implementation order, SQLite DDL, migrations, storage layout, validator runner skeleton | `06-reference-mvp.md` |
-| Markdown projection principles, managed blocks, human-editable sections, template tiers, template summaries | `07-document-projection.md` |
+| Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md` |
 | shared design, decision quality, autonomy boundary, domain language, vertical slice, feedback loop/TDD, module/interface, codebase stewardship, Manual QA, context hygiene policies | `08-design-quality-policy-pack.md` |
 | agent surface capability profile, common connector contract, fallback semantics | `09-agent-integration.md` |
 | user-facing conversation, status reading, resume procedure, approval/assurance/QA/acceptance explanation | `10-user-guide.md` |
 | connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, runtime conformance, docs-maintenance smoke reporting | `11-operations-and-conformance.md` |
-| full templates and expanded variants | `appendix/A-template-library.md` |
+| MVP-required full template bodies for `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | `reference/templates/*.md` |
+| optional and extension template bodies during migration | `appendix/A-template-library.md` |
 | surface-specific cookbooks | `appendix/B-surface-cookbook.md` |
 | later automation and derived analytics | `appendix/C-later-roadmap.md` |
 | old-to-new mapping and migration notes | `appendix/D-migration-notes.md` |
@@ -141,7 +142,7 @@ SQLite DDL, migration/versioning, lock policy, artifact directory layout, and re
 
 When documenting JSON `TEXT` fields, keep the split explicit: API payload validation shapes stay in `05-mcp-api-and-schemas.md`, SQLite column and storage details stay in `06-reference-mvp.md`, and doctor/recover/conformance expectations stay in `11-operations-and-conformance.md`. A boundary note that Core validates storage JSON before commit may be repeated, but do not duplicate schema bodies or DDL.
 
-Projection rules and template tiers belong in `07-document-projection.md`. Full template bodies and expanded report variants belong in `appendix/A-template-library.md`.
+Projection rules and template tiers belong in `reference/document-projection.md`. MVP-required full template bodies belong in `reference/templates/*.md`; optional and extension bodies remain in `appendix/A-template-library.md` until they move.
 
 Conformance fixture bodies, suite catalog assertion-mode metadata, and fixture assertion semantics belong in `11-operations-and-conformance.md`. Other docs may point to that owner, but must not redefine the comparison mini-language.
 
@@ -176,7 +177,7 @@ Minimum references:
 - Runtime architecture references kernel, projection, and integration.
 - API references kernel and reference MVP.
 - Reference MVP references kernel, API, and operations.
-- Projection references kernel and Appendix A.
+- Projection references kernel, Template Reference, and Appendix A while optional and extension templates remain there.
 - Policy pack references kernel and projection.
 - Integration references API and Appendix B.
 - Operations references API and reference MVP.
@@ -204,7 +205,7 @@ Required check categories:
 | English/Korean file structure parity | `docs/en` and `docs/ko` keep the same active document paths and appendix paths unless an exception is explicitly documented in this guide. |
 | English/Korean heading parity | Paired files keep the same heading order and depth. Heading text may be idiomatic, but stable names, IDs, enum values, schema names, DDL names, and links to owner sections must stay semantically aligned. |
 | Broken cross-reference detection | Markdown links, heading anchors, appendix links, and paired-language entry links resolve to active docs. Links to owner sections should not point to migration notes unless the subject is migration context. |
-| Owner-boundary drift | Public schemas stay in `05-mcp-api-and-schemas.md`; SQLite DDL and reference storage details stay in `06-reference-mvp.md`; kernel transitions and stable events stay in `03-kernel-spec.md`; projection rules and template tiers stay in `07-document-projection.md`; full template bodies stay in `appendix/A-template-library.md`; fixture body shape, fixture assertion semantics, and fixture suite behavior stay in `11-operations-and-conformance.md`; official definitions stay in `glossary.md`. |
+| Owner-boundary drift | Public schemas stay in `05-mcp-api-and-schemas.md`; SQLite DDL and reference storage details stay in `06-reference-mvp.md`; kernel transitions and stable events stay in `03-kernel-spec.md`; projection rules and template tiers stay in `reference/document-projection.md`; MVP-required full template bodies stay in `reference/templates/*.md`; optional and extension template bodies remain in `appendix/A-template-library.md` until they move; fixture body shape, fixture assertion semantics, and fixture suite behavior stay in `11-operations-and-conformance.md`; official definitions stay in `glossary.md`. |
 | Fixture/action schema and code drift | Operations fixture examples keep `action` and executable `input` aligned with public MCP request schemas in `05-mcp-api-and-schemas.md` and the `ToolEnvelope` expansion convention in `11-operations-and-conformance.md`. Required fixture events remain Kernel Stable Event Catalog names, and `expected_error.code` plus `CloseTaskResponse.blockers[].code` remain API `ErrorCode` values; finding codes stay in validator findings or equivalent expected validator output. The check links to the Operations, API, and Kernel owners instead of restating fixture semantics here. |
 | Enum drift across owners | State, gate, result, close, assurance, error, projection, validator, and storage enum values match the owner doc that defines them. Non-owner docs may summarize values only when needed and must link to the owner. |
 | Stable Event Catalog drift | Any event name required by Operations fixtures, API tool descriptions, or Reference MVP conformance text as fixture-stable appears in the Kernel Stable Event Catalog. Non-catalog names must be marked as illustrative, implementation-local detail/audit, future extension, or promoted through the kernel owner. |

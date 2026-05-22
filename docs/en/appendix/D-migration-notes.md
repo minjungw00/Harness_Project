@@ -26,7 +26,7 @@ Legacy v1 files and rewrite manifests are source material for migration history 
 | `docs/legacy-v1/04-reference-implementation.md` | `docs/03-kernel-spec.md`, `docs/05-mcp-api-and-schemas.md`, `docs/06-reference-mvp.md`, `docs/appendix/C-later-roadmap.md` |
 | `docs/legacy-v1/05-user-guide.md` | `docs/10-user-guide.md` |
 | `docs/legacy-v1/06-agent-integration.md` | `docs/09-agent-integration.md`, `docs/appendix/B-surface-cookbook.md` |
-| `docs/legacy-v1/07-document-and-artifact-contracts.md` | `docs/07-document-projection.md`, `docs/appendix/A-template-library.md` |
+| `docs/legacy-v1/07-document-and-artifact-contracts.md` | `docs/reference/document-projection.md`, `docs/reference/templates/*.md`; migration source material remains in `docs/07-document-projection.md`, `docs/appendix/A-template-library.md` |
 | `docs/legacy-v1/08-operations-and-conformance.md` | `docs/11-operations-and-conformance.md`, `docs/appendix/C-later-roadmap.md` |
 | `docs/legacy-v1/09-design-quality-playbooks.md` | `docs/08-design-quality-policy-pack.md` |
 | `docs/legacy-v1/99-authoring-guide.md` | `docs/99-authoring-guide.md` |
@@ -38,7 +38,7 @@ flowchart LR
   Intro["legacy README, overview, charter"] --> NewIntro["docs/README.md, 00-introduction.md, 01-project-charter.md"]
   Strategy["legacy strategy and playbooks"] --> NewStrategy["02-strategy.md, 03-kernel-spec.md, 08-design-quality-policy-pack.md"]
   Architecture["legacy architecture and reference implementation"] --> NewRuntime["04-runtime-architecture.md, 05-mcp-api-and-schemas.md, 06-reference-mvp.md"]
-  Projection["legacy document and artifact contracts"] --> NewProjection["07-document-projection.md, appendix/A-template-library.md"]
+  Projection["legacy document and artifact contracts"] --> NewProjection["reference/document-projection.md, reference/templates/*.md"]
   Integration["legacy agent integration"] --> NewIntegration["09-agent-integration.md, appendix/B-surface-cookbook.md"]
   Operations["legacy operations and conformance"] --> NewOperations["11-operations-and-conformance.md, appendix/C-later-roadmap.md"]
   Migration["REWRITE-MANIFEST.md"] --> ThisDoc["appendix/D-migration-notes.md"]
@@ -55,7 +55,7 @@ Batch H removes replaced legacy documents from the active tree instead of keepin
 | `docs/04-reference-implementation.md` | `docs/03-kernel-spec.md`, `docs/05-mcp-api-and-schemas.md`, `docs/06-reference-mvp.md`, `docs/appendix/C-later-roadmap.md` |
 | `docs/05-user-guide.md` | `docs/10-user-guide.md` |
 | `docs/06-agent-integration.md` | `docs/09-agent-integration.md`, `docs/appendix/B-surface-cookbook.md` |
-| `docs/07-document-and-artifact-contracts.md` | `docs/07-document-projection.md`, `docs/appendix/A-template-library.md` |
+| `docs/07-document-and-artifact-contracts.md` | `docs/reference/document-projection.md`, `docs/reference/templates/*.md`; migration source material remains in `docs/07-document-projection.md`, `docs/appendix/A-template-library.md` |
 | `docs/08-operations-and-conformance.md` | `docs/11-operations-and-conformance.md`, `docs/appendix/C-later-roadmap.md` |
 | `docs/09-design-quality-playbooks.md` | `docs/08-design-quality-policy-pack.md` |
 
@@ -66,7 +66,7 @@ The archived `docs/legacy-v1/` copies of these files, plus the old charter, stra
 | Legacy section or theme | v2 treatment |
 |---|---|
 | `05-user-guide.md` long work walkthroughs | shortened into conversation examples in `10-user-guide.md` |
-| detailed report-reading tables in user guide | removed from main user guide; projection ownership stays in `07-document-projection.md` |
+| detailed report-reading tables in user guide | removed from main user guide; projection ownership now lives in `reference/document-projection.md` |
 | user-facing setup internals | moved to operations or integration owner docs |
 | `08-operations-and-conformance.md` scenario tables | rewritten as fixture-based conformance in `11-operations-and-conformance.md` |
 | operational metrics list | moved to later analytics in `appendix/C-later-roadmap.md` |
@@ -75,7 +75,7 @@ The archived `docs/legacy-v1/` copies of these files, plus the old charter, stra
 | surface-specific addenda in main integration docs | renamed as cookbook material |
 | `03-architecture.md` | renamed/split into `04-runtime-architecture.md` plus owner summaries elsewhere |
 | `04-reference-implementation.md` | split across kernel, API/schema, reference MVP, and later roadmap |
-| `07-document-and-artifact-contracts.md` | renamed/split into `07-document-projection.md` and `appendix/A-template-library.md` |
+| `07-document-and-artifact-contracts.md` | moved into `reference/document-projection.md` and `reference/templates/*.md`; legacy numbered files remain as migration source material |
 | `09-design-quality-playbooks.md` | converted from playbook prose to policy contracts |
 | old 17-item invariant style | split into Strategic Invariants, Kernel Authority Invariants, and Design Stewardship Defaults |
 | single-axis status model | replaced by lifecycle plus gates |

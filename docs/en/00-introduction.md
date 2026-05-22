@@ -95,7 +95,7 @@ flowchart LR
   Reconcile --> State
 ```
 
-The detailed entity and gate model is owned by [03-kernel-spec.md](03-kernel-spec.md). Projection rules are owned by [07-document-projection.md](07-document-projection.md).
+The detailed entity and gate model is owned by [03-kernel-spec.md](03-kernel-spec.md). Projection rules are owned by [Document Projection Reference](reference/document-projection.md).
 
 ### Work Modes
 
@@ -188,4 +188,4 @@ flowchart TD
 
 Human-editable input becomes operational truth only after reconcile or a Core state-changing action records an accepted state event or record.
 
-For the canonical rules, read [03-kernel-spec.md](03-kernel-spec.md), [04-runtime-architecture.md](04-runtime-architecture.md), and [07-document-projection.md](07-document-projection.md).
+For the canonical rules, read [03-kernel-spec.md](03-kernel-spec.md), [04-runtime-architecture.md](04-runtime-architecture.md), and [Document Projection Reference](reference/document-projection.md).

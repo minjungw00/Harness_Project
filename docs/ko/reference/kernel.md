@@ -63,7 +63,7 @@
 - public MCP request/response schema. [MCP API와 스키마](mcp-api-and-schemas.md)를 봅니다.
 - SQLite DDL과 storage layout. [Storage와 DDL](storage-and-ddl.md)을 봅니다.
 - 전체 projection template text
-- document projection rules. 현재 담당 문서는 [문서 Projection](../07-document-projection.md)이고, 이후 경로는 `reference/document-projection.md`입니다.
+- document projection rules. [문서 Projection 참조](document-projection.md)를 봅니다.
 - design-quality policy contract table. 현재 담당 문서는 [설계 품질 정책 팩](../08-design-quality-policy-pack.md)이고, 이후 경로는 `reference/design-quality-policies.md`입니다.
 - connector capability profile과 surface recipe. 현재 담당 문서는 [Agent 통합](../09-agent-integration.md)이고, 이후 경로는 `reference/agent-integration.md`입니다.
 - 운영자 command syntax. 현재 담당 문서는 [운영과 Conformance](../11-operations-and-conformance.md)이고, 이후 경로는 `reference/operations-and-conformance.md`입니다.

@@ -4,7 +4,7 @@
 
 This document introduces the smallest concept set you need before reading Harness reference specs. Each concept starts with a plain example, then gives a tighter definition.
 
-The kernel, runtime, and MCP API references now live in the reference path. Other owner documents remain in the top-level spec files until they move, such as [07-document-projection.md](../07-document-projection.md).
+The kernel, runtime, MCP API, and document projection references now live in the reference path.
 
 ## Read this when
 
@@ -31,7 +31,7 @@ Harness is easiest to understand if you start with the work journey:
 - Remaining uncertainty is Residual Risk.
 - Readable documents are Projections, and human edits become state through Reconcile.
 
-These concepts are intentionally small here. Strict kernel definitions live in [Kernel Reference](../reference/kernel.md), and public API definitions live in [MCP API and Schemas](../reference/mcp-api-and-schemas.md). Other strict definitions remain with current owners until they move, such as [Document Projection](../07-document-projection.md) for `reference/document-projection.md`.
+These concepts are intentionally small here. Strict kernel definitions live in [Kernel Reference](../reference/kernel.md), public API definitions live in [MCP API and Schemas](../reference/mcp-api-and-schemas.md), and projection rules live in [Document Projection Reference](../reference/document-projection.md).
 
 ## Task
 
@@ -119,7 +119,7 @@ Harness can generate a readable task report or Journey Card from recorded state.
 
 A Projection is a human-readable rendering of Harness state records and artifact references. Markdown reports, Journey Cards, and Journey Spine views are projections; they display state but do not replace it.
 
-Current owner: [Document Projection](../07-document-projection.md). Future reference path: `reference/document-projection.md`.
+Current owner: [Document Projection Reference](../reference/document-projection.md).
 
 ## Reconcile
 
@@ -127,4 +127,4 @@ A user edits a notes section in a generated report and proposes a different next
 
 Reconcile is the explicit path for turning human-editable notes, proposals, or projection drift into accepted state changes, rejected proposals, notes, decisions, or deferred items.
 
-Current owner: [Document Projection](../07-document-projection.md). Future reference path: `reference/document-projection.md`.
+Current owner: [Document Projection Reference](../reference/document-projection.md).

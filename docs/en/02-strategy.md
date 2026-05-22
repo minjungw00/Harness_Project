@@ -251,7 +251,7 @@ This model keeps the user in charge without requiring the user to manually polic
 
 ## Source-Of-Truth Summary
 
-The strategy-level rule is that generated or human-edited Markdown must never become operational truth by accident. Operational state, raw evidence, projection authority, and reconcile behavior keep their canonical contracts in the owner docs: [03-kernel-spec.md](03-kernel-spec.md#authority-rules), [04-runtime-architecture.md](04-runtime-architecture.md#raw-artifacts-state-records-and-markdown-reports), [06-reference-mvp.md](06-reference-mvp.md#statesqlite), and [07-document-projection.md](07-document-projection.md#document-authority-matrix).
+The strategy-level rule is that generated or human-edited Markdown must never become operational truth by accident. Operational state, raw evidence, projection authority, and reconcile behavior keep their canonical contracts in the owner docs: [03-kernel-spec.md](03-kernel-spec.md#authority-rules), [04-runtime-architecture.md](04-runtime-architecture.md#raw-artifacts-state-records-and-markdown-reports), [06-reference-mvp.md](06-reference-mvp.md#statesqlite), and [Document Projection Reference](reference/document-projection.md#document-authority-matrix).
 
 In short: `state.sqlite` current records plus `state.sqlite.task_events` are the operational record, raw evidence lives in the artifact store, Markdown reports are projections, and human-editable areas become state only through reconcile or another Core state-changing action.
 

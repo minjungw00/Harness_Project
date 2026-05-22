@@ -1,8 +1,10 @@
 # Appendix A: Template Library
 
+Split reference: MVP-required template body의 위치는 이제 [Template 참조](../reference/templates/README.md)의 별도 파일입니다. 이 appendix는 redesign 중 legacy consolidated library로 남겨둡니다.
+
 ## 문서 역할
 
-이 appendix는 전체 Markdown projection template variant를 담당한다. Projection rule과 template tier는 `07-document-projection.md`가 담당하며, 이 appendix는 그 rule을 구현하는 complete body를 제공한다. Template body가 여기에 있다고 해서 그 `ProjectionKind`가 enable되거나 required가 되지는 않는다.
+이 appendix는 legacy consolidated Markdown projection template variant를 담당한다. Projection rule과 template tier는 [문서 Projection 참조](../reference/document-projection.md)가 담당하며, 이 appendix는 migration 중 complete body를 보존한다. Template body가 여기에 있다고 해서 그 `ProjectionKind`가 enable되거나 required가 되지는 않는다.
 
 Template은 rendered shape의 예시다. Canonical state가 아니며 kernel field, MCP schema, SQLite DDL을 재정의하면 안 된다.
 

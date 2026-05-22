@@ -1,10 +1,12 @@
 # 문서 Projection
 
+Reference copy: 재설계된 reference version은 [문서 Projection 참조](reference/document-projection.md)에 있습니다. Split된 MVP-required template body는 [Template 참조](reference/templates/README.md)에 있습니다. 이 legacy chapter는 migration 중 그대로 둡니다.
+
 ## 문서 역할
 
-이 문서는 Product Repository 안의 사람이 읽는 Markdown projection 규칙을 담당한다. Projection principle, document authority boundary, managed block rule, human-editable rule, artifact reference rendering, template tier, required MVP template summary, optional design-quality 및 appendix variant template summary, projection freshness rule을 정의한다.
+이 legacy chapter는 reference 이동 전 projection rule을 migration source material로 보존한다. 사람이 읽는 Markdown projection rule의 active owner는 이제 [문서 Projection 참조](reference/document-projection.md)이며, 이 reference가 projection principle, document authority boundary, managed block rule, human-editable rule, artifact reference rendering, template tier, required MVP template summary, optional design-quality 및 appendix variant template summary, projection freshness rule을 정의한다.
 
-Canonical kernel state, MCP request/response schema, SQLite DDL, design-quality policy requirement, full template text는 정의하지 않는다. Full template은 [Appendix A](appendix/A-template-library.md)에 있다.
+Canonical kernel state, MCP request/response schema, SQLite DDL, design-quality policy requirement, full template text는 정의하지 않는다. MVP-required template body는 [Template 참조](reference/templates/README.md)에 있고, legacy consolidated template library는 [Appendix A](appendix/A-template-library.md)에 남아 있다.
 
 ## Projection Principles
 
@@ -287,7 +289,7 @@ Projection template은 API `ProjectionKind` tier와 일치한다.
 |---|---|---|
 | MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | MVP projector는 이를 render해야 한다. |
 | MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, record가 있거나, user/operator가 projection을 enable할 때 render한다. |
-| Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Corresponding extension 또는 appendix projection이 enabled일 때만 render한다. Full text는 Appendix A에 있다. |
+| Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Corresponding extension 또는 appendix projection이 enabled일 때만 render한다. 해당 template이 이동하기 전까지 full text는 [Appendix A](appendix/A-template-library.md)에 남아 있다. |
 
 Source-of-truth caption: `ProjectionKind` tiering은 renderer support expectations를 정하지만 projection을 canonical state로 만들지 않는다.
 
@@ -307,7 +309,7 @@ flowchart TD
   Kind --> Boundary
 ```
 
-Main doc은 각 template의 purpose와 source record만 정의한다. Full template body는 [Appendix A](appendix/A-template-library.md)에 있다.
+Main doc은 각 template의 purpose와 source record만 정의한다. MVP-required full template body는 [Template 참조](reference/templates/README.md)에 있고, optional 및 extension body는 이동하기 전까지 [Appendix A](appendix/A-template-library.md)에 남아 있다.
 
 Persisted `JOURNEY-CARD` Markdown은 optional이다. `harness.status`, `harness.next`, significant resume flow의 current-position Journey Card output은 agency conformance에 required다.
 
