@@ -1,0 +1,344 @@
+# 하나의 작업으로 보는 Harness
+
+## 이 문서로 알 수 있는 것
+
+이 문서는 엄격한 참고 정의를 읽기 전에, 두 개의 구체적인 작업 흐름으로 Harness를 설명합니다.
+
+읽고 나면 Task, Change Unit, Decision Packet, Approval, Write Authorization, Evidence, Verification, Manual QA, Acceptance, Residual Risk, Close가 왜 필요한지 감을 잡을 수 있습니다. 내부 기록 세부사항을 몰라도 흐름을 따라갈 수 있어야 합니다.
+
+## 이런 때 읽기
+
+엄격한 용어를 배우기 전에, 구체적인 작업 흐름으로 Harness를 이해하고 싶을 때 읽습니다.
+
+## 읽기 전에
+
+[개요](overview.md)를 먼저 읽는 것을 권장하지만 필수는 아닙니다. 이 문서는 Harness가 중요한 작업 사실을 대화 밖에 오래 남기는 시스템이라는 점만 알고 있다고 가정합니다.
+
+## 왜 예시를 먼저 보는가
+
+Harness는 용어부터 보면 실제보다 무겁게 느껴질 수 있습니다. 참고 문서는 로컬 시스템이 상태를 기록하고 gate를 확인하는 방식을 정확히 정의해야 하므로 엄격합니다. 하지만 사용자가 Harness를 만날 때는 보통 몇 가지 실용적인 질문으로 보입니다.
+
+1. 무엇을 하려는가?
+2. 어디까지 바꿔도 되는가?
+3. 지금 사용자의 판단이 필요한가?
+4. 무엇이 바뀌었고, 무엇이 그것을 뒷받침하는가?
+5. 아직 어떤 불확실성이 남았는가?
+6. 이 Task를 닫아도 되는가?
+
+아래 예시는 여기서 시작합니다. 작은 작업은 가볍게 유지하고, 큰 작업은 따라갈 수 있을 만큼 구조화하는 방식을 보여 줍니다.
+
+## 예시 A: Direct task
+
+### 사용자 요청: "버튼 문구를 바꿔줘."
+
+사용자가 작은 UI 문구 문제를 가리키며 말합니다.
+
+```text
+버튼 문구를 바꿔줘.
+```
+
+주변 맥락상 대상이 분명하다고 가정합니다. 예를 들어 프로필 페이지의 버튼이 지금 "저장"이고, 이를 "프로필 업데이트"로 바꿔야 합니다.
+
+### 접수
+
+Agent는 요청을 쉬운 말의 Task로 바꿉니다.
+
+```text
+Task: 프로필 페이지 버튼 문구를 "저장"에서 "프로필 업데이트"로 바꾼다.
+예상 mode: direct.
+```
+
+Task가 있어야 작업이 하나의 오래 남는 단위가 됩니다. Task가 없으면 변경, 확인, 닫기 판단이 모두 대화 안에만 남습니다.
+
+### 범위
+
+Agent는 파일을 건드리기 전에 범위를 좁힙니다.
+
+```text
+포함: 프로필 페이지 버튼 문구, 그리고 그 문구만 직접 확인하는 snapshot 또는 copy test.
+제외: 프로필 페이지 재설계, 저장 동작 변경, localization 전략 변경.
+```
+
+작은 작업에서도 범위는 중요합니다. 버튼 문구가 여러 화면에서 공유되는 디자인 token으로 만들어진다는 사실이 드러나면, 이 작업은 더 이상 단순한 문구 수정이 아닐 수 있습니다.
+
+### Direct로 분류하기
+
+Harness는 이 작업을 `direct`로 봅니다. 변경이 작고, 위험이 낮고, 자체 확인이 쉽기 때문입니다. Direct는 "기록하지 않는다"는 뜻이 아닙니다. 필요한 기록을 가볍게 유지한다는 뜻입니다.
+
+Agent가 이 문구가 checkout, billing, profile 화면에 모두 영향을 준다는 사실을 발견하면 멈춰야 합니다. 그때는 같은 Task를 `work`로 옮기는 편이 맞습니다.
+
+### 최소 Change Unit
+
+Change Unit은 요청을 끝내는 데 필요한 가장 작은 제품 쓰기 경계입니다.
+
+```text
+Change Unit: 프로필 버튼 문구만.
+예상 경로: 프로필 화면 파일, 직접 관련된 copy test가 있으면 그 test.
+```
+
+Change Unit은 작은 요청이 조용히 전체 UI 정리로 커지는 것을 막습니다.
+
+### 제품 파일을 쓰기 전에 prepare_write 확인하기
+
+수정하기 전에 agent는 이 쓰기가 지금 허용되는지 Harness에 확인합니다. 사용자가 보는 요약은 구체적이어야 합니다.
+
+```text
+Write Authorization: 프로필 화면 파일과 관련 copy test에 대해 allowed.
+```
+
+수정하려는 파일이 Change Unit 밖이면 쓰기는 멈춰야 합니다. 사용자는 예상 밖의 수정 대신 범위 질문을 봐야 합니다.
+
+### 변경 기록
+
+수정 뒤 agent는 실제로 일어난 일을 기록합니다.
+
+```text
+변경: 프로필 페이지 버튼 문구.
+변경 경로: 프로필 화면 파일, 필요한 경우 copy test.
+```
+
+이 기록은 구현을 Task와 Change Unit에 연결합니다. 나중에 전체 대화를 다시 읽지 않아도 상태 요약을 만들 수 있게 해 줍니다.
+
+### 가벼운 Evidence
+
+Direct 작업의 Evidence는 단순할 수 있습니다.
+
+```text
+Evidence: diff에서 문구 변경 확인, copy test 통과 또는 component render 자체 확인.
+```
+
+목표는 절차를 늘리는 것이 아닙니다. "끝났다"는 말을 나중에도 확인할 수 있을 정도의 근거를 남기는 것입니다.
+
+### 자체 확인
+
+Agent는 좁은 결과를 확인합니다.
+
+```text
+Self-check: 프로필 버튼이 이제 "프로필 업데이트"로 표시된다.
+```
+
+Self-check는 유용하지만 독립 검증은 아닙니다. Direct task는 보통 사용자가 추가 검증을 요청하지 않는 한 self-checked 수준으로 닫힙니다.
+
+### 닫기
+
+범위가 좁게 유지되었고, 쓰기가 허용되었고, 변경 경로가 Change Unit과 맞고, 가벼운 Evidence가 있으며, 알려진 close-relevant risk가 없다면 Harness는 Task를 닫을 수 있습니다.
+
+닫기 요약은 간단해야 합니다.
+
+```text
+Direct task로 닫음. Self-checked.
+```
+
+### 사용자가 보는 것
+
+사용자는 내부 장치가 아니라 짧은 결과를 봐야 합니다.
+
+```text
+프로필 버튼 문구를 "프로필 업데이트"로 바꿨습니다.
+렌더링된 문구를 확인했습니다.
+작은 direct task로 닫았습니다.
+```
+
+### 참고 문서가 더 엄격하게 정의하는 것
+
+참고 문서는 이 단순한 흐름 뒤의 정확한 규칙을 정의합니다. Direct mode와 work mode의 차이, active Change Unit의 조건, `prepare_write`가 Write Authorization을 만드는 방식, 변경 경로 기록 방식, direct task가 self-checked로 닫힐 수 있는 조건을 더 엄격하게 다룹니다.
+
+이 튜토리얼에서는 일부러 그 세부 규칙을 펼치지 않습니다.
+
+## 예시 B: Work task
+
+### 사용자 요청: "로그인 플로우에 remember me를 추가해줘."
+
+사용자가 말합니다.
+
+```text
+로그인 플로우에 remember me를 추가해줘.
+```
+
+겉으로는 간단해 보이지만 이 작업은 인증 동작, 세션 유지 시간, UI 문구, 저장 방식, 테스트, 보안 정책에 닿을 수 있습니다. Harness는 구현 전에 작업의 모양을 보이게 만들어야 합니다.
+
+### 접수
+
+Agent는 Task를 시작합니다.
+
+```text
+Task: 로그인 플로우에 remember me 동작을 추가한다.
+예상 mode: work.
+```
+
+그리고 가장 먼저 도움이 되는 질문을 쉬운 말로 묻습니다.
+
+```text
+"remember me"가 이 기기에서 로그인 세션을 더 오래 유지한다는 뜻인가요, 이메일 주소를 기억한다는 뜻인가요, 아니면 둘 다인가요?
+```
+
+### 범위 잡기
+
+Agent는 첫 범위를 제안합니다.
+
+```text
+포함: 로그인 폼 checkbox, 선택된 remember-me 동작, 해당 동작의 test, 사용자에게 보이는 문구.
+제외: passwordless login, account recovery, 전체 session-management 재설계.
+```
+
+이 범위가 Change Unit의 출발점이 됩니다. Change Unit은 단순한 파일 목록이 아닙니다. Task를 만족시키기 위해 agent가 바꿀 수 있는 제한된 제품 조각입니다.
+
+### Trade-off가 드러나는 순간
+
+Agent는 두 가지 해석이 모두 그럴듯하다는 것을 발견합니다.
+
+1. 사용자의 이메일만 기억한다. 위험은 낮고 편의성은 좋아지지만, 로그인 상태를 유지하지는 않는다.
+2. 현재 기기에서 세션을 더 오래 유지한다. 많은 사용자가 기대하는 remember me에 가깝지만, 세션 유지 시간과 저장 방식에 대한 보안 판단이 필요하다.
+
+이 선택이 제품 동작이나 위험을 바꾼다면 agent가 조용히 고르면 안 됩니다.
+
+### Decision Packet
+
+사용자 판단이 진행을 막을 때 Harness는 Decision Packet을 사용합니다. Packet은 읽기 쉬워야 합니다.
+
+```text
+필요한 결정: 이 제품에서 "remember me"는 무엇을 의미해야 하는가?
+Option A: 이메일만 기억한다.
+Option B: 현재 기기에서 세션을 더 오래 유지한다.
+추천: 제품이 세션 유지 위험을 받아들이고 그 선택을 기록할 수 있을 때만 Option B를 선택한다.
+```
+
+Decision Packet이 필요한 이유는 이것이 단순한 수정 승인 문제가 아니기 때문입니다. 제품과 보안의 trade-off이며, 그 선택은 사용자가 소유합니다.
+
+### Change Unit
+
+사용자가 선택하면 agent는 그 결정에 맞게 Change Unit을 정리합니다.
+
+```text
+Change Unit: 로그인 폼 checkbox, 선택된 remember-me 동작, test, 직접 관련된 문구.
+```
+
+사용자가 세션 연장을 선택하면 Change Unit에 세션 유지 코드와 보안 관련 test가 포함될 수 있습니다. 이메일만 기억하는 선택이라면 범위는 더 좁게 유지됩니다.
+
+### Write Authorization
+
+제품 파일을 쓰기 전에 agent는 의도한 수정이 active Task, Change Unit, approval, 해결된 decision과 맞는지 Harness에 확인합니다.
+
+사용자에게 보이는 요약은 무엇이 허용되고 무엇이 아닌지 말해야 합니다.
+
+```text
+Write Authorization: 로그인 폼, 세션 유지 코드, 관련 test에 대해 allowed.
+Not allowed: 관련 없는 account recovery 또는 전체 auth 재설계.
+```
+
+선택한 동작에 민감한 승인이 필요하면 Harness는 쓰기 전에 멈추고 별도 Approval을 요청해야 합니다. Approval은 "이 민감한 행동을 진행해도 되는가?"에 답합니다. Decision Packet, test, QA, risk acceptance, final acceptance를 대신하지 않습니다.
+
+### 구현
+
+Agent는 허용된 경계 안에서 구현합니다.
+
+1. Checkbox와 문구를 추가한다.
+2. 선택된 persistence 동작을 추가한다.
+3. 선택된 동작을 확인하는 test를 추가하거나 수정한다.
+4. 새 범위 결정 없이 관련 없는 auth 정리를 하지 않는다.
+
+현재 session system이 더 큰 재설계 없이는 선택된 동작을 지원할 수 없다는 사실이 드러나면, agent는 멈추고 더 작은 Change Unit 또는 새 Decision Packet을 제안해야 합니다.
+
+### Evidence
+
+Evidence는 주장과 기록을 연결합니다.
+
+```text
+Evidence: 로그인 폼과 session code의 diff, remember-me 동작 test output, implementation run note.
+```
+
+Evidence 덕분에 사용자는 나중에 "remember me가 동작한다는 주장을 무엇이 뒷받침하지?"라고 물을 수 있습니다. 답은 대화 기억이 아니라 구체적인 기록이어야 합니다.
+
+### Verification
+
+Work mode에서는 사용자가 검증 위험을 명시적으로 받아들이지 않는 한 direct self-check보다 더 강한 확인이 기대됩니다.
+
+유용한 Verification은 이런 모양일 수 있습니다.
+
+```text
+Detached verification: 별도 check가 remembered session은 browser restart 후에도 유지되고, non-remembered session은 유지되지 않음을 확인한다.
+```
+
+Detached verification을 실행할 수 없다면 agent는 그 사실을 분명히 말하고 남은 검증 위험을 보여야 합니다. 검증 없이 닫는 것은 risk-accepted close이지 detached verification이 아닙니다.
+
+### Manual QA
+
+Manual QA는 사람이 실제 경험을 확인했는지 묻습니다.
+
+```text
+Manual QA: 로그인 화면의 checkbox가 분명히 보이고, 문구가 이해 가능하며, keyboard와 screen-reader 흐름이 유지되고, remembered-session 동작이 선택한 option과 맞는다.
+```
+
+Manual QA가 필요한 이유는 test가 통과해도 경험이 혼란스럽거나, 화면에서 잘리거나, 접근성이 나쁘거나, 사용자의 기대와 다를 수 있기 때문입니다.
+
+### Residual risk
+
+Acceptance 또는 risk-accepted close 전에 agent는 알려진 남은 불확실성을 보여 줍니다.
+
+```text
+Residual risk: session 동작은 local browser path에서 확인했지만, 지원하는 모든 browser policy 조합에서는 확인하지 않았다.
+```
+
+알려진 close-relevant residual risk가 없다면 agent는 그 사실을 분명히 말해야 합니다. 알려진 위험을 숨기는 것과 알려진 위험이 없는 것은 다릅니다.
+
+### Acceptance
+
+Final acceptance가 필요한 경로라면 사용자는 Evidence, Verification 또는 accepted verification risk, Manual QA 상태, Residual Risk를 본 뒤 결과를 받아들입니다.
+
+```text
+수용합니다. remember-me 동작은 선택한 option과 맞고, 표시된 residual risk도 받아들일 수 있습니다.
+```
+
+Acceptance는 Approval과 다릅니다. Approval은 민감한 단계를 진행하게 할 수 있지만, Acceptance는 완료된 결과가 충분히 좋은지 판단합니다.
+
+### 닫기
+
+Harness는 관련 blocker가 처리된 뒤에만 닫습니다. Scope가 맞고, decision이 해결되었거나 유효하게 미뤄졌고, 쓰기가 허용되었고, Evidence가 Task에 충분하고, Verification과 QA가 통과했거나 명시적으로 처리되었고, Residual Risk가 보였고, 필요한 Acceptance가 기록되어야 합니다.
+
+닫기 요약은 짧아야 합니다.
+
+```text
+Work task로 닫음. Evidence 기록됨. Verification과 Manual QA 처리됨. 필요한 경우 Residual Risk를 표시하고 수용함.
+```
+
+### 사용자가 보는 것
+
+사용자는 참고 문서가 아니라 작업의 흐름을 봐야 합니다.
+
+```text
+remember me를 현재 기기의 세션 연장으로 구현했습니다.
+로그인 폼, 세션 유지 코드, test를 변경했습니다.
+Remembered session과 non-remembered session에 대한 verification이 통과했습니다.
+로그인 화면 흐름에 대한 Manual QA가 통과했습니다.
+남은 위험 표시 및 수락: 지원하는 모든 browser policy 조합에서는 확인하지 않았습니다.
+Acceptance가 기록되어 work task로 닫았습니다.
+```
+
+### 참고 문서가 더 엄격하게 정의하는 것
+
+참고 문서는 mode 규칙, Decision Packet compatibility, approval 처리, Write Authorization 동작, evidence sufficiency, verification independence, QA gate, residual-risk visibility, acceptance timing, close semantics를 정확히 정의합니다.
+
+이 튜토리얼은 그 조각들이 왜 존재하는지만 보여 줍니다.
+
+## 같은 개념을 한 표로 보기
+
+| 일상적인 말 | Harness term | 왜 필요한가 | 더 읽을 곳 |
+|---|---|---|---|
+| "무엇을 하는 중이지?" | Task | 사용자가 원하는 결과, 상태, blocker, evidence, close 판단을 하나로 묶는다. | [사용: 사용자 가이드](../use/user-guide.md), [참고: Kernel](../reference/kernel.md) |
+| "어디까지 바꿔도 되지?" | Change Unit | 제품 쓰기 범위를 제한해 작업이 조용히 커지지 않게 한다. | [사용: 사용자 가이드](../use/user-guide.md), [참고: Kernel](../reference/kernel.md) |
+| "이건 사용자가 결정해야 해." | Decision Packet | 사용자가 소유한 제품 판단을 넓은 Approval과 분리한다. | [사용: 사용자 가이드](../use/user-guide.md), [참고: Kernel](../reference/kernel.md) |
+| "이 민감한 단계를 진행해도 되나?" | Approval | 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답한다. 제품 판단이나 최종 Acceptance를 대신하지 않는다. | [참고: Kernel](../reference/kernel.md) |
+| "지금 이 파일을 수정해도 되나?" | Write Authorization | 의도한 쓰기가 현재 Task, Change Unit, decision, Approval과 맞는지 확인한다. | [참고: Kernel](../reference/kernel.md), [참고: Agent Integration](../reference/agent-integration.md) |
+| "이 주장을 뒷받침하는 것은 이것이다." | Evidence | diff, log, check, screenshot 같은 기록으로 "끝났다"는 말을 확인 가능하게 만든다. | [사용: 사용자 가이드](../use/user-guide.md), [참고: Operations and Conformance](../reference/operations-and-conformance.md) |
+| "독립적으로 확인했나?" | Verification | 자체 확인과 분리된 검증을 구분한다. | [사용: 사용자 가이드](../use/user-guide.md), [참고: Kernel](../reference/kernel.md) |
+| "사람이 실제 경험을 봤나?" | Manual QA | test가 놓칠 수 있는 UX, copy, accessibility, visual quality, workflow 판단을 다룬다. | [사용: 사용자 가이드](../use/user-guide.md), [참고: Design Quality Policies](../reference/design-quality-policies.md) |
+| "이 결과를 받아들일 수 있나?" | Acceptance | Task 경로가 요구할 때 사용자의 최종 판단을 기록한다. | [사용: 사용자 가이드](../use/user-guide.md), [참고: Kernel](../reference/kernel.md) |
+| "아직 어떤 불확실성이 남았나?" | Residual Risk | 닫기나 수락 전에 알려진 제한과 위험을 보이게 한다. | [사용: 사용자 가이드](../use/user-guide.md), [참고: Kernel](../reference/kernel.md) |
+| "이제 끝났다고 해도 되나?" | Close | 관련 blocker가 처리된 뒤에만 Task를 완료한다. | [참고: Kernel](../reference/kernel.md), [참고: Agent Integration](../reference/agent-integration.md) |
+
+## 다음에 읽을 문서
+
+- [핵심 개념](concepts.md)에서 예시를 읽은 뒤 필요한 더 단단한 어휘를 봅니다.
+- [사용자 가이드](../use/user-guide.md)에서 Harness 세션 중 사용자가 자연스럽게 말할 수 있는 표현을 봅니다.
+- Task, Change Unit, Decision Packet, Approval, Write Authorization, Acceptance, Residual Risk, Close의 엄격한 동작이 필요하면 [참고: Kernel](../reference/kernel.md)을 봅니다.
+- Agent가 이 흐름을 불필요한 내부 세부사항 없이 어떻게 보여줘야 하는지 알고 싶다면 [Agent 세션 흐름](../use/agent-session-flow.md)을 봅니다.

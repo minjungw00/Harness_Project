@@ -6,7 +6,7 @@
 
 ## Learn
 
-Harness를 사용하거나 구현하기 전에 전체 그림과 핵심 개념을 이해하는 경로입니다.
+Harness를 사용하거나 구현하기 전에 전체 그림과 핵심 개념을 이해하는 경로입니다. 권장 순서는 [개요](learn/overview.md)를 먼저 읽고, 이어서 [하나의 작업으로 보는 Harness](learn/harness-in-one-task.md)를 읽는 것입니다.
 
 - [개요](learn/overview.md)
 - [하나의 작업으로 보는 Harness](learn/harness-in-one-task.md)

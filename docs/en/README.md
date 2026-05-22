@@ -6,7 +6,7 @@ Redesign in progress: the links below define the target reader paths for upcomin
 
 ## Learn
 
-Start here to understand Harness before using or building it.
+Start here to understand Harness before using or building it. The recommended path is [Overview](learn/overview.md) first, then [Harness in One Task](learn/harness-in-one-task.md).
 
 - [Overview](learn/overview.md)
 - [Harness in One Task](learn/harness-in-one-task.md)
