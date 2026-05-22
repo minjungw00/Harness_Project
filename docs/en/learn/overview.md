@@ -8,6 +8,10 @@ This document gives you the first mental model for Harness. After reading it, yo
 
 Read this when you are new to Harness, when an AI-assisted task has become hard to follow, or when you want to understand why Harness separates conversation, operational state, evidence, and readable documents.
 
+## Before you read
+
+No Harness background is required. If you want a concrete story after this page, read [Harness in One Task](harness-in-one-task.md).
+
 ## Main idea
 
 Important work facts get trapped in chat.
@@ -73,4 +77,6 @@ Harness is the local record and decision path around AI-assisted work. It helps 
 
 - Read [Concepts](concepts.md) for the smallest vocabulary you need before reference specs.
 - Read [Purpose and Principles](purpose-and-principles.md) for the values and boundaries behind the system.
-- Later in the redesign path, use the reference docs for strict contracts: [Kernel](../reference/kernel.md), [Runtime Architecture](../reference/runtime-architecture.md), and [Document Projection](../reference/document-projection.md).
+- For strict kernel behavior during the redesign, current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`.
+- For runtime architecture during the redesign, current owner: [Runtime Architecture](../04-runtime-architecture.md). Future reference path: `reference/runtime-architecture.md`.
+- For document projection during the redesign, current owner: [Document Projection](../07-document-projection.md). Future reference path: `reference/document-projection.md`.

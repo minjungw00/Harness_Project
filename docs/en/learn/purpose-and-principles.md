@@ -4,6 +4,18 @@
 
 This document explains why Harness exists, who it is for, what it values, how it thinks about common AI-assisted development failures, and what belongs inside the MVP boundary.
 
+## Read this when
+
+Read this when you want the values and boundaries behind Harness before reading strict contracts or implementation plans.
+
+## Before you read
+
+[Overview](overview.md) is useful first if Harness is new to you. No implementation background is required.
+
+## Main idea
+
+Harness preserves user agency by making AI-assisted work followable from local state, durable evidence, and readable projections.
+
 ## Purpose
 
 Harness exists to make AI-assisted development followable without taking strategic judgment away from the user.
@@ -89,4 +101,3 @@ Harness does not promise preventive enforcement where a connected agent surface 
 Harness does not make a dashboard, team workflow platform, long-term analytics layer, broad connector ecosystem, or automatic parallel execution system part of the MVP.
 
 Harness does not hide approval, QA, verification, acceptance, or remaining risk behind a single "done" label.
-

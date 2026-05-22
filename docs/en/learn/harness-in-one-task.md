@@ -14,6 +14,10 @@ Read this when you want to understand Harness through concrete task flow before 
 
 [Overview](overview.md) is recommended first, but not required. This page assumes only that you know Harness keeps durable work facts outside the chat.
 
+## Main idea
+
+Harness is easiest to understand as a task story: name what is being attempted, bound what may change, ask for user judgment at the right time, record support, and close only when visible blockers are handled.
+
 ## Why examples come first
 
 Harness can sound heavier than it feels in use. The strict reference docs need exact rules because they define how a local system records state and checks gates. A user, though, usually experiences Harness as a few practical questions:
@@ -324,21 +328,21 @@ This tutorial only shows why those pieces exist.
 
 | everyday phrase | Harness term | why it exists | where to read more |
 |---|---|---|---|
-| "What are we doing?" | Task | Keeps the user's desired outcome, status, blockers, evidence, and close decision connected. | [Use: User Guide](../use/user-guide.md), [Reference: Kernel](../reference/kernel.md) |
-| "What may change?" | Change Unit | Bounds product writes so the task does not silently expand. | [Use: User Guide](../use/user-guide.md), [Reference: Kernel](../reference/kernel.md) |
-| "This needs your call." | Decision Packet | Separates user-owned product judgment from broad approval. | [Use: User Guide](../use/user-guide.md), [Reference: Kernel](../reference/kernel.md) |
-| "May this sensitive step proceed?" | Approval | Allows a sensitive action inside a defined scope without replacing product judgment or final acceptance. | [Reference: Kernel](../reference/kernel.md) |
-| "May I edit these files now?" | Write Authorization | Checks that the intended write fits the current Task, Change Unit, decisions, and approvals. | [Reference: Kernel](../reference/kernel.md), [Reference: Agent Integration](../reference/agent-integration.md) |
-| "Here is what supports the claim." | Evidence | Makes "done" inspectable through diffs, logs, checks, screenshots, or other records. | [Use: User Guide](../use/user-guide.md), [Reference: Operations and Conformance](../reference/operations-and-conformance.md) |
-| "Was it checked independently?" | Verification | Distinguishes self-checks from detached checks. | [Use: User Guide](../use/user-guide.md), [Reference: Kernel](../reference/kernel.md) |
-| "Did a person inspect the experience?" | Manual QA | Covers UX, copy, accessibility, visual quality, and workflow judgment that tests may miss. | [Use: User Guide](../use/user-guide.md), [Reference: Design Quality Policies](../reference/design-quality-policies.md) |
-| "Is the result good enough?" | Acceptance | Records the user's final judgment when the task path requires it. | [Use: User Guide](../use/user-guide.md), [Reference: Kernel](../reference/kernel.md) |
-| "What uncertainty remains?" | Residual Risk | Makes known limitations visible before close or acceptance. | [Use: User Guide](../use/user-guide.md), [Reference: Kernel](../reference/kernel.md) |
-| "Can we call this done?" | Close | Finishes the Task only when the relevant blockers have been handled. | [Reference: Kernel](../reference/kernel.md), [Reference: Agent Integration](../reference/agent-integration.md) |
+| "What are we doing?" | Task | Keeps the user's desired outcome, status, blockers, evidence, and close decision connected. | [Use: User Guide](../use/user-guide.md); current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`. |
+| "What may change?" | Change Unit | Bounds product writes so the task does not silently expand. | [Use: User Guide](../use/user-guide.md); current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`. |
+| "This needs your call." | Decision Packet | Separates user-owned product judgment from broad approval. | [Use: User Guide](../use/user-guide.md); current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`. |
+| "May this sensitive step proceed?" | Approval | Allows a sensitive action inside a defined scope without replacing product judgment or final acceptance. | Current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`. |
+| "May I edit these files now?" | Write Authorization | Checks that the intended write fits the current Task, Change Unit, decisions, and approvals. | Current owners: [Kernel Spec](../03-kernel-spec.md) and [Agent Integration](../09-agent-integration.md). Future reference paths: `reference/kernel.md`, `reference/agent-integration.md`. |
+| "Here is what supports the claim." | Evidence | Makes "done" inspectable through diffs, logs, checks, screenshots, or other records. | [Use: User Guide](../use/user-guide.md); current owner: [Operations and Conformance](../11-operations-and-conformance.md). Future reference path: `reference/operations-and-conformance.md`. |
+| "Was it checked independently?" | Verification | Distinguishes self-checks from detached checks. | [Use: User Guide](../use/user-guide.md); current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`. |
+| "Did a person inspect the experience?" | Manual QA | Covers UX, copy, accessibility, visual quality, and workflow judgment that tests may miss. | [Use: User Guide](../use/user-guide.md); current owner: [Design Quality Policy Pack](../08-design-quality-policy-pack.md). Future reference path: `reference/design-quality-policies.md`. |
+| "Is the result good enough?" | Acceptance | Records the user's final judgment when the task path requires it. | [Use: User Guide](../use/user-guide.md); current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`. |
+| "What uncertainty remains?" | Residual Risk | Makes known limitations visible before close or acceptance. | [Use: User Guide](../use/user-guide.md); current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`. |
+| "Can we call this done?" | Close | Finishes the Task only when the relevant blockers have been handled. | Current owners: [Kernel Spec](../03-kernel-spec.md) and [Agent Integration](../09-agent-integration.md). Future reference paths: `reference/kernel.md`, `reference/agent-integration.md`. |
 
 ## Where to go next
 
 - Read [Concepts](concepts.md) for a tighter vocabulary after the examples.
 - Read [User Guide](../use/user-guide.md) to learn the phrases users can say during a Harness session.
-- Read [Reference: Kernel](../reference/kernel.md) when you need strict behavior for Task, Change Unit, Decision Packet, Approval, Write Authorization, Acceptance, Residual Risk, and Close.
+- For strict behavior for Task, Change Unit, Decision Packet, Approval, Write Authorization, Acceptance, Residual Risk, and Close during the redesign, current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`.
 - Read [Agent Session Flow](../use/agent-session-flow.md) to understand how an agent should present these flows without exposing unnecessary internals.
