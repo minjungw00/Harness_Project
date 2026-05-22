@@ -38,7 +38,8 @@ Use this path to look up detailed contracts, schemas, policies, and definitions.
 
 Use this path to keep the docs and future Harness system coherent over time.
 
-- `maintain/*`
+- [Authoring Guide](maintain/authoring-guide.md)
+- [Translation Guide](maintain/translation-guide.md)
 
 ## Roadmap
 

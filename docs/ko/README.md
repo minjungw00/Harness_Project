@@ -38,7 +38,8 @@ AI 지원 개발 세션에서 사용자가 Harness를 어떻게 따라가면 되
 
 문서와 이후 Harness 시스템의 일관성을 유지하기 위한 경로입니다.
 
-- `maintain/*`
+- [문서 작성 가이드](maintain/authoring-guide.md)
+- [번역 가이드](maintain/translation-guide.md)
 
 ## Roadmap
 
