@@ -1,0 +1,109 @@
+# 핵심 개념
+
+## 이 문서로 알 수 있는 것
+
+이 문서는 Harness 참고 사양을 읽기 전에 필요한 가장 작은 개념 묶음을 소개합니다. 각 개념은 먼저 쉬운 예시로 시작하고, 그 뒤에 조금 더 엄밀한 설명을 붙입니다.
+
+아래 참고 링크는 문서 재설계 경로의 일부입니다. 참고 문서 트리가 완전히 옮겨지기 전까지 현재 담당 문서는 [03-kernel-spec.md](../03-kernel-spec.md), [04-runtime-architecture.md](../04-runtime-architecture.md), [07-document-projection.md](../07-document-projection.md) 같은 상위 사양 파일입니다.
+
+## 가장 작은 개념 묶음
+
+Harness는 작업 흐름에서 시작하면 이해하기 쉽습니다. 사용자가 Task를 요청하고, 제품 파일 쓰기는 Change Unit 안에서 일어나며, 중요한 주장은 Evidence로 남고, 민감한 행동에는 Approval이 필요합니다. 쓰기 전에 Write Authorization이 필요하고, 확인 결과는 Verification으로 남습니다. 사람이 직접 봐야 하는 부분은 Manual QA가 될 수 있고, 사용자는 Acceptance를 남깁니다. 남은 불확실성은 Residual Risk로 기록됩니다. 읽기용 문서는 Projection이고, 사람이 문서를 고친 내용은 Reconcile을 거쳐야 상태가 됩니다.
+
+이 문서에서는 일부러 개념을 작게 다룹니다. 엄밀한 정의의 재설계 경로는 [참고: Kernel](../reference/kernel.md), [참고: MCP API and Schemas](../reference/mcp-api-and-schemas.md), [참고: Document Projection](../reference/document-projection.md)입니다.
+
+## Task
+
+사용자가 "이메일 로그인을 추가하고 비밀번호가 틀렸을 때 도움이 되는 오류를 보여 주세요"라고 말합니다. 대화는 여러 번 오갈 수 있지만, 오래 남는 단위 하나가 필요합니다. 그 단위는 사용자가 원하는 일이 무엇인지, 지금 작업이 어떤 상태인지 말해 줍니다.
+
+Task는 사용자가 얻고 싶은 가치의 단위입니다. 완료하고 싶은 일, 답을 얻고 싶은 질문, 조사하거나 결정하고 싶은 대상이 될 수 있습니다. Harness는 Task를 중심으로 상태, 다음 행동, 막힌 지점, 증거, QA, 수락, 닫기 판단을 연결합니다.
+
+재설계 경로: [참고: Kernel](../reference/kernel.md).
+
+## Change Unit
+
+이메일 로그인 작업에는 로그인 폼, API 호출 하나, 세션 처리 변경이 필요할 수 있습니다. 이것은 제한된 한 조각입니다. 작업이 갑자기 인증 시스템 전체 재작성으로 커진다면 범위가 바뀐 것이고, 그 사실이 보여야 합니다.
+
+Change Unit은 Task에서 제품 파일을 쓸 수 있는 제한된 범위입니다. 어느 부분을 바꿀 수 있는지 이름 붙여서, 에이전트와 사용자와 Harness가 쓰기가 합의된 작업 안에 있는지 판단할 수 있게 합니다.
+
+재설계 경로: [참고: Kernel](../reference/kernel.md).
+
+## Decision Packet
+
+에이전트가 실패한 로그인에 대해 두 가지 괜찮은 방식을 찾았습니다. 하나는 보안에 유리한 일반 메시지이고, 다른 하나는 사용자에게 더 친절하지만 정보를 더 드러낼 수 있는 메시지입니다. 이 선택이 진행을 막는 제품 판단이라면 에이전트가 조용히 골라서는 안 됩니다.
+
+Decision Packet은 사용자가 해야 하는 결정이 진행, 쓰기, 닫기, 예외 허용, 수락, 남은 위험 수락, 제품 방향, 범위, 설계 절충, 코드베이스 돌봄 판단, 공개 약속을 막을 때 기록하는 묶음입니다. 필요한 결정, 선택지, 장단점, 증거, 영향을 받는 범위, 남은 위험, 다음 행동을 적습니다.
+
+재설계 경로: [참고: Kernel](../reference/kernel.md).
+
+## Evidence
+
+에이전트가 로그인 흐름이 동작한다고 말합니다. 도움이 되는 근거로는 diff, 테스트 출력, 오류 상태 스크린샷, 브라우저에서 직접 확인했다는 기록이 있을 수 있습니다. 이런 기록이 없으면 "동작한다"는 말은 대화 속 주장일 뿐입니다.
+
+Evidence는 작업에 대한 주장을 뒷받침하는 기록입니다. diff, 로그, 테스트, 스크린샷, 실행 요약, 평가 기록, Manual QA 기록, 작업과 연결된 오래 보관할 파일이 여기에 포함될 수 있습니다.
+
+재설계 경로: [참고: Operations and Conformance](../reference/operations-and-conformance.md).
+
+## Approval
+
+작업에 새 의존성, 네트워크 호출, 민감한 파일 접근이 필요할 수 있습니다. 유용한 변경이라도 그 종류의 행동을 진행하기 전에 사용자의 승인이 필요할 수 있습니다.
+
+Approval은 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답합니다. Approval은 최종 결과 수락, 설계 절충 선택, 남은 위험 수락과 다릅니다.
+
+재설계 경로: [참고: Kernel](../reference/kernel.md).
+
+## Write Authorization
+
+에이전트가 로그인 코드를 수정할 준비가 되었습니다. Harness는 활성 Change Unit이 있는지, 대상 경로가 범위 안인지, 필요한 승인이 있는지, 먼저 풀어야 하는 결정이 있는지 확인해야 합니다.
+
+Write Authorization은 지금 제품 파일 쓰기를 진행해도 되는지에 대한 Harness의 판단입니다. 현재 사양 용어로는 `prepare_write`가 제품 파일 쓰기 판단 지점입니다.
+
+재설계 경로: [참고: MCP API and Schemas](../reference/mcp-api-and-schemas.md).
+
+## Verification
+
+에이전트가 로그인 흐름을 수정한 뒤 테스트를 실행합니다. 이것은 유용하지만, 다른 세션이나 다른 도구 경로 또는 평가 묶음이 확인한 독립적인 검증과 같지는 않습니다.
+
+Verification은 결과를 어떻게 확인했는지, 그 확인이 얼마나 분리되어 있었는지 기록합니다. Harness는 자체 확인과 분리된 검증을 구분해서 확신과 독립성을 혼동하지 않게 합니다.
+
+재설계 경로: [참고: Operations and Conformance](../reference/operations-and-conformance.md).
+
+## Manual QA
+
+테스트가 통과해도 오류 문구가 헷갈리거나, 모바일에서 잘리거나, 화면의 다른 부분과 어울리지 않을 수 있습니다. 사람이 결과를 보고 무엇을 확인했는지 남겨야 할 때가 있습니다.
+
+Manual QA는 사람이 경험적 결과를 직접 확인하는 기록입니다. 특히 UI, UX, 문구, 접근성, 시각 결과, 제품 취향처럼 사람의 판단이 중요한 곳에서 필요합니다.
+
+재설계 경로: [참고: 설계 품질 정책](../reference/design-quality-policies.md).
+
+## Acceptance
+
+작업이 구현되고 확인까지 되었더라도, 사용자는 결과가 요청을 만족하는지와 남은 절충을 받아들일 수 있는지 판단해야 합니다.
+
+Acceptance는 작업 결과를 받아들일 수 있다는 사용자의 판단입니다. Approval, Verification, Manual QA, Residual Risk와 별개입니다.
+
+재설계 경로: [참고: Kernel](../reference/kernel.md).
+
+## Residual Risk
+
+로그인 흐름은 끝났지만 이번 작업에 속도 제한은 넣지 않았을 수 있습니다. 또는 현재 환경에서 분리된 검증을 실행하지 못했을 수 있습니다. 이런 남은 불확실성은 "완료" 뒤로 사라지면 안 됩니다.
+
+Residual Risk는 작업 뒤에 남는 알려진 불확실성, 제한, 절충입니다. 작업을 닫는 데 그 위험을 받아들이는 판단이 필요하다면, 사용자의 수락이 명시적으로 기록되어야 합니다.
+
+재설계 경로: [참고: Kernel](../reference/kernel.md).
+
+## Projection
+
+Harness는 기록된 상태에서 읽기 쉬운 작업 보고서나 Journey Card를 만들 수 있습니다. 사용자는 그것을 빠르게 읽을 수 있지만, 보고서를 편집했다고 해서 운영 기록이 조용히 바뀌어서는 안 됩니다.
+
+Projection은 Harness 상태 기록과 증거 참조를 사람이 읽을 수 있게 보여 주는 결과입니다. Markdown 보고서, Journey Card, Journey Spine은 Projection입니다. 상태를 보여 주지만 상태를 대체하지는 않습니다.
+
+재설계 경로: [참고: Document Projection](../reference/document-projection.md).
+
+## Reconcile
+
+사용자가 생성된 보고서의 메모 영역을 고쳐서 다른 다음 행동을 제안합니다. Markdown 한 줄이 바뀌었다고 운영 상태가 바뀐 것처럼 취급하면 안 됩니다. 제안은 의도적인 경로를 거쳐 상태로 들어가야 합니다.
+
+Reconcile은 사람이 편집한 메모, 제안, 읽기용 문서와 실제 상태의 차이를 받아들인 상태 변경, 거절된 제안, 메모, 결정, 나중으로 미룬 항목으로 정리하는 명시적 경로입니다.
+
+재설계 경로: [참고: Document Projection](../reference/document-projection.md).

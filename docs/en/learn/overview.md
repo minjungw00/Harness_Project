@@ -1,0 +1,76 @@
+# Overview
+
+## What this document helps you do
+
+This document gives you the first mental model for Harness. After reading it, you should understand why Harness exists, what the three Harness spaces are, what it records, and why those records matter before you read the reference specs.
+
+## Read this when
+
+Read this when you are new to Harness, when an AI-assisted task has become hard to follow, or when you want to understand why Harness separates conversation, operational state, evidence, and readable documents.
+
+## Main idea
+
+Important work facts get trapped in chat.
+
+In an AI-assisted development session, the conversation can move quickly. The user asks for something, scope changes, the agent makes choices, tests run, screenshots appear, a risk is mentioned, and then everyone says the work is done. Later, it can be hard to answer basic questions: what did we agree to change, what actually changed, what was checked, what still needs a human decision, and what risk did we accept?
+
+Harness keeps those work facts outside the chat in a local operating record. The chat can stay natural, but the durable facts of the task become followable, resumable, checkable, and closeable from current state.
+
+```mermaid
+flowchart LR
+  Chat["Chat<br/>requests, choices, claims"] --> Harness["Harness<br/>local work record"]
+  Harness --> State["state"]
+  Harness --> Evidence["evidence"]
+  Harness --> Views["readable views"]
+```
+
+## The problem Harness solves
+
+AI agents can help with development, but the work journey often becomes blurry. A small request may turn into a larger change. A design choice may happen inside implementation without being named. A test may be mentioned in chat but not tied to the task. A user may accept the result without seeing which risks remain.
+
+Harness solves this by making the work journey explicit. It records the task, the bounded change being attempted, decisions that need user judgment, approvals for sensitive actions, evidence, verification, Manual QA, acceptance, and residual risk. It does not make every task heavy. It makes the important facts visible when they matter.
+
+The goal is not to replace conversation. The goal is to stop relying on conversation as the only memory of the work.
+
+## The three spaces, explained in plain language
+
+Harness keeps three spaces separate so product files, operational records, and human-readable summaries do not get confused with each other.
+
+| Space | Plain-language meaning |
+|---|---|
+| Product Repository | Your real project workspace. This is where your source code, tests, product docs, and generated readable reports live. Harness may coordinate work here, but the repository remains your product workspace. |
+| Harness Server / Installation | The local Harness program and tools. This is the installed system that receives agent requests, checks whether writes are allowed, records work facts, runs validators, and produces readable projections. |
+| Harness Runtime Home | The local Harness data home. This is where Harness keeps project registration, operational state, and durable evidence artifacts for the registered project. |
+
+The separation matters because a Markdown report should not silently become operational truth, a chat transcript should not be treated as durable state, and product files should not be mixed with Harness's internal operating record.
+
+## What Harness records
+
+Harness records the parts of the work journey that must survive the conversation:
+
+- the Task the user wants done or answered
+- the Change Unit that bounds product writes
+- decisions and Decision Packets when user judgment blocks progress
+- approvals for sensitive actions
+- evidence such as diffs, logs, checks, screenshots, run summaries, evaluation records, or Manual QA records
+- verification status, including whether a check was self-checking or detached from the implementation session
+- Manual QA when human inspection is needed
+- acceptance or rejection of the result
+- residual risk that remains after the work
+- projections such as readable Markdown reports, Journey Cards, or Journey Spine views derived from recorded state
+
+These records let a reader ask: where are we, what happened, what was checked, what is blocked, what decision is needed, and can this task close?
+
+## What Harness does not replace
+
+Harness does not replace the user's product repository, version control system, test runner, code review process, or product judgment.
+
+Harness also does not treat chat history as the source of truth. It does not treat generated Markdown as the operating record. It does not turn the agent into the owner of product direction. The user still owns goals, scope, design judgment, sensitive approvals, QA judgment, acceptance, and residual-risk acceptance.
+
+Harness is the local record and decision path around AI-assisted work. It helps the user and agent work faster without losing the shape of the work.
+
+## Where to go next
+
+- Read [Concepts](concepts.md) for the smallest vocabulary you need before reference specs.
+- Read [Purpose and Principles](purpose-and-principles.md) for the values and boundaries behind the system.
+- Later in the redesign path, use the reference docs for strict contracts: [Kernel](../reference/kernel.md), [Runtime Architecture](../reference/runtime-architecture.md), and [Document Projection](../reference/document-projection.md).
