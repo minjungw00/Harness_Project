@@ -1,25 +1,25 @@
 # TASK Template
 
-## Used when
+## 사용 시점
 
-진행 중인 작업을 이어서 파악할 수 있는 projection이 필요할 때 `TASK`를 사용합니다. 이 template은 작업의 현재 위치와 판단 맥락을 보여줍니다. 또한 Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, Residual Risk, gate, active Change Unit, pending decision을 요약합니다. 다음 evidence, 관련 report ref, projection freshness도 함께 보여줍니다.
+진행 중인 작업을 이어서 파악할 수 있는 projection이 필요할 때 `TASK`를 사용합니다. 이 template은 작업의 현재 위치와 판단 맥락을 보여줍니다. 또한 Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, Residual Risk, gate, active Change Unit, 대기 중인 decision을 요약합니다. 다음 evidence, 관련 report 참조, projection 최신성도 함께 보여줍니다.
 
-## Source records
+## 기준 기록
 
 - `state.sqlite` Task와 task gate
 - active Change Unit과 Change Unit dependency
-- Write Authorization record와 Write Authority Summary 표시 input
+- Write Authorization 기록과 Write Authority Summary 표시 input
 - Decision Packet과 Residual Risk
-- latest Run, Evidence Manifest, Eval, Manual QA record, approval record
-- Journey Spine source record
+- 최신 Run, Evidence Manifest, Eval, Manual QA 기록, approval 기록
+- Journey Spine 기준 기록
 - `domain_terms`, `module_map_items`, `interface_contracts`, `feedback_loops`
 - TDD가 선택된 경우 `tdd_traces`
-- design-quality validator result
+- design-quality validator 결과
 - 예상되는 evidence 필요 항목
 - Review Stage 표시 input
-- artifact ref와 projection freshness
+- artifact ref 및 projection 최신성
 
-## Rendered sections
+## 렌더링 섹션
 
 - Current Summary
 - Where We Are
@@ -41,7 +41,7 @@
 
 장기 `work` Task는 shared design, domain term ref, module/interface ref, Change Unit dependency, implementation detail, Journey Spine을 위한 expanded managed section을 표시할 수 있습니다.
 
-## Full template
+## 전체 템플릿
 
 ````md
 ---
@@ -357,10 +357,10 @@ Change Unit block sub-template:
   - item:
 ````
 
-## Notes
+## 메모
 
-`TASK`의 Stewardship Impact는 owner record, validator result, ref에서 derive되는 `StewardshipImpactSummary` display입니다. Domain Language, Module Map, Interface Contract, Feedback Loop, TDD Trace, residual-risk, Decision Packet owner record를 replace하지 않습니다.
+`TASK`의 Stewardship Impact는 owner 기록, validator 결과, 참조에서 파생되는 `StewardshipImpactSummary` 표시입니다. Domain Language, Module Map, Interface Contract, Feedback Loop, TDD Trace, residual risk, Decision Packet owner 기록을 대체하지 않습니다.
 
-`TASK`의 Implementation Micro-Plan은 current Task와 Change Unit state에서 생성되거나 그 state와 aligned된 lightweight execution aid입니다. Product write를 authorize하거나, scope를 넓히거나, approval을 satisfy하거나, evidence를 만들거나, edit만으로 state를 변경하거나, `prepare_write`를 replace하지 않습니다.
+`TASK`의 Implementation Micro-Plan은 현재 Task와 Change Unit 상태에서 생성되거나 그 상태와 정렬된 가벼운 실행 보조 정보입니다. Product write를 허가하거나, scope를 넓히거나, approval을 충족하거나, 근거를 만들거나, edit만으로 상태를 변경하거나, `prepare_write`를 대체하지 않습니다.
 
-`TASK`의 Review Stages는 managed display section입니다. Gates를 satisfy하거나, writes를 authorize하거나, risk를 accept하거나, Task를 close하거나, `detached_verified` assurance를 만들지 않습니다.
+`TASK`의 Review Stages는 관리되는 표시 섹션입니다. Gates를 충족하거나, write를 허가하거나, 위험을 수용하거나, Task를 닫거나, `detached_verified` assurance를 만들 수 없습니다.

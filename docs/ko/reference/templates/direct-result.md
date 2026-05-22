@@ -1,20 +1,20 @@
 # DIRECT-RESULT Template
 
-## Used when
+## 사용 시점
 
 작은 direct work가 close되었거나 `work`로 escalation된 뒤 결과를 간단히 보여줘야 할 때 `DIRECT-RESULT`를 사용합니다.
 
-## Source records
+## 기준 기록
 
-- direct run record
-- direct product write에 있는 경우 consumed Write Authorization ref
+- direct run 기록
+- direct product write에 있는 경우 consumed Write Authorization 참조
 - changed path
 - performed check
-- artifact ref
+- artifact 참조
 - escalation flag
 - close assurance
 
-## Rendered sections
+## 렌더링 섹션
 
 - Request
 - Scope
@@ -25,7 +25,7 @@
 - Escalation
 - Evidence Refs
 
-## Full template
+## 전체 템플릿
 
 ````md
 ---
@@ -85,6 +85,6 @@ updated_at: 2026-05-06T09:40:00+09:00
 - follow-up report:
 ````
 
-## Notes
+## 메모
 
-Policy 또는 user가 detached verification이나 다른 gate를 요구하지 않으면 direct work는 기본적으로 self-checked 상태로 close될 수 있습니다. Consumed Write Authorization ref를 표시할 수 있지만, projection이 canonical authorization record가 되는 것은 아닙니다.
+Policy 또는 user가 detached verification 또는 다른 gate를 요구하지 않으면 direct work는 기본적으로 self-checked 상태로 close될 수 있습니다. Consumed Write Authorization 참조를 표시할 수 있지만, projection이 기준 authorization 기록이 되는 것은 아닙니다.

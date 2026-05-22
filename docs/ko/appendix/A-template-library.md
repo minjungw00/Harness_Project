@@ -1,24 +1,24 @@
 # Appendix A: Template Library
 
-Split reference: MVP-required template body의 위치는 이제 [Template 참조](../reference/templates/README.md)의 별도 파일입니다. 이 appendix는 redesign 중 legacy consolidated library로 남겨둡니다.
+Reference copy: active projection template 본문과 표시 카드 형태는 이제 [Template 참조](../reference/templates/README.md)의 별도 파일에 있습니다. 이 appendix는 최종 정리 전까지 마이그레이션 참고 자료로만 남습니다.
 
 ## 문서 역할
 
-이 appendix는 legacy consolidated Markdown projection template variant를 담당한다. Projection rule과 template tier는 [문서 Projection 참조](../reference/document-projection.md)가 담당하며, 이 appendix는 migration 중 complete body를 보존한다. Template body가 여기에 있다고 해서 그 `ProjectionKind`가 enable되거나 required가 되지는 않는다.
+이 appendix는 legacy consolidated Markdown projection template variant를 마이그레이션 참고 자료로 보존한다. Active template 본문은 [Template 참조](../reference/templates/README.md)에 있고, projection rule과 template tier는 [문서 Projection 참조](../reference/document-projection.md)가 담당한다. Template body가 여기에 있다고 해서 그 `ProjectionKind`가 enable되거나 required가 되지는 않는다.
 
-Template은 rendered shape의 예시다. Canonical state가 아니며 kernel field, MCP schema, SQLite DDL을 재정의하면 안 된다.
+Template은 렌더링 결과의 예시다. 기준 상태가 아니며 kernel field, MCP schema, SQLite DDL을 재정의하면 안 된다.
 
 ## Template Rules
 
 1. Front matter는 identity, task/project relation, projection version 또는 status, `source_state_version`, timestamp로 최소화한다.
 2. Generated state는 managed block 안에 둔다.
-3. Refresh 사이에도 human-editable section을 preserve한다.
+3. Refresh 사이에도 human-editable section을 보존한다.
 4. Raw evidence는 artifact ref로 link한다.
 5. Large log, diff, trace, bundle, screenshot, secret을 paste하지 않는다.
 6. Approval, verification, Manual QA, acceptance를 visible하게 분리한다.
-7. Card가 `Manual QA: pending/passed/failed/waived`라고 말하더라도 `qa_gate`를 canonical로 취급한다.
+7. Card가 `Manual QA: pending/passed/failed/waived`라고 말하더라도 `qa_gate`를 기준으로 취급한다.
 8. Template change는 projection change로 versioning한다.
-9. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, 표시된 Write Authorization ref, Change Unit DAG, Residual Risk text, Stewardship Impact text, `source_state_version`은 canonical state나 canonical Write Authorization record 자체가 아니라 projection output으로 취급한다.
+9. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, 표시된 Write Authorization ref, Change Unit DAG, Residual Risk text, Stewardship Impact text, `source_state_version`은 기준 상태나 기준 Write Authorization 기록 자체가 아니라 projection output으로 취급한다.
 
 ```mermaid
 flowchart TD
@@ -33,7 +33,7 @@ flowchart TD
 
 ## Required MVP Templates
 
-이 bodies는 MVP-required `ProjectionKind` tier에 해당한다: `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`.
+이 legacy body는 MVP-required `ProjectionKind` tier에 해당한다: `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`. 분리된 active 본문은 [Template 참조](../reference/templates/README.md)에 있다.
 
 ```mermaid
 flowchart LR
@@ -844,7 +844,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 ## Optional Design-Quality Templates
 
-이 bodies는 MVP-optional `ProjectionKind` tier에 해당한다: `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `TDD-TRACE`, `MANUAL-QA`. Policy가 적용되거나, records가 있거나, user/operator가 projection을 enable할 때만 render한다.
+이 legacy body는 MVP-optional `ProjectionKind` tier에 해당한다: `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `TDD-TRACE`, `MANUAL-QA`. 분리된 active 본문은 [Template 참조](../reference/templates/README.md)에 있다.
 
 ```mermaid
 flowchart LR
@@ -1111,7 +1111,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Appendix Templates
 
-Appendix templates는 extension / appendix `ProjectionKind` tier에 해당하며 명시적으로 enabled되지 않는 한 optional입니다. `DEC` template은 optional standalone Decision Packet Markdown variant이며, Appendix A에 존재한다고 해서 standalone `DEC`가 MVP-required projection이 되지는 않습니다. `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD` Markdown도 optional extension / appendix projections입니다. `EXPORT` manifest는 projection output입니다. 그 `export_id`는 manifest identity이며 public `StateRecordRef.record_kind`가 아닙니다.
+이 legacy appendix template은 extension / appendix `ProjectionKind` tier에 해당하며 명시적으로 enabled되지 않는 한 선택 사항입니다. 분리된 active 본문은 [Template 참조](../reference/templates/README.md)에 있습니다. `DEC` template은 선택적 standalone Decision Packet Markdown variant이며, Appendix A에 존재한다고 해서 standalone `DEC`가 MVP-required projection이 되지는 않습니다. `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD` Markdown도 선택적 extension / appendix projections입니다. `EXPORT` manifest는 projection output입니다. 그 `export_id`는 manifest identity이며 public `StateRecordRef.record_kind`가 아닙니다.
 
 ### DEC
 

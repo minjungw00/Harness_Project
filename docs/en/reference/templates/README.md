@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use these files when you need the rendered Markdown shape for MVP-required projection templates. The projection rules, authority boundaries, and freshness behavior are defined in [Document Projection Reference](../document-projection.md).
+Use these files when you need the rendered Markdown shape for projection templates and display cards. The projection rules, authority boundaries, and freshness behavior are defined in [Document Projection Reference](../document-projection.md).
 
 ## Template tiering
 
@@ -25,6 +25,30 @@ Templates are rendered shapes, not canonical state. They must not redefine kerne
 - [EVAL](eval.md)
 - [DIRECT-RESULT](direct-result.md)
 
+## MVP-optional templates
+
+- [MANUAL-QA](manual-qa.md)
+- [TDD-TRACE](tdd-trace.md)
+- [DOMAIN-LANGUAGE](domain-language.md)
+- [MODULE-MAP](module-map.md)
+- [INTERFACE-CONTRACT](interface-contract.md)
+
+## Extension templates
+
+- [DEC](decision-packet.md)
+- [DESIGN](design.md)
+- [EXPORT](export.md)
+- [JOURNEY-CARD](journey-card.md)
+
+## Display cards
+
+- [Compact Status Card](compact-status-card.md)
+- [Approval Card](approval-card.md)
+- [Verification Result Card](verification-result-card.md)
+- [Manual QA Card](manual-qa-card.md)
+
 ## Notes
 
-This directory is the active reference location for split MVP-required template bodies. Optional and extension template bodies remain in the legacy consolidated [Appendix A](../../appendix/A-template-library.md) until they move.
+This directory is the active reference location for projection template bodies and display card shapes.
+
+[Appendix A](../../appendix/A-template-library.md) remains migration source material only until final cleanup.

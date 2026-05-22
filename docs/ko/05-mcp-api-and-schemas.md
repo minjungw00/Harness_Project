@@ -201,11 +201,11 @@ Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](03
 
 | Tier | Values | Requirement |
 |---|---|---|
-| MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Reference MVP implementation은 이 kinds를 support하고 source record가 변경될 때 enqueue/render해야 합니다. |
-| MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, source record가 있거나, user/operator가 projection을 enable할 때 support 또는 enqueue합니다. |
+| MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Reference MVP implementation은 이 kinds를 support하고 source 기록이 변경될 때 enqueue하고 렌더링해야 합니다. |
+| MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, source 기록이 있거나, user/operator가 projection을 enable할 때 support 또는 enqueue합니다. |
 | Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Corresponding extension 또는 appendix projection이 enabled인 경우에만 support할 수 있습니다. |
 
-이 tier diagram은 `ProjectionKind` support expectations를 요약합니다. Projection을 canonical state로 만들지는 않습니다.
+이 tier diagram은 `ProjectionKind` support expectations를 요약합니다. Projection을 기준 상태로 만들지는 않습니다.
 
 ```mermaid
 flowchart LR
@@ -214,7 +214,7 @@ flowchart LR
   ProjectionKind --> Extension["Extension / appendix<br/>DEC<br/>DESIGN<br/>EXPORT<br/>JOURNEY-CARD"]
 ```
 
-ProjectionKind extensibility가 projection을 canonical state로 만들지는 않습니다. 모든 projection job은 여전히 owner record와 artifact ref에서 derived view를 render합니다. `DEC`는 해당 feature가 enabled일 때 standalone Decision Packet Markdown에만 valid하며, MVP-required projection job이 아닙니다. Standalone `DEC` job이 없어도 MVP Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 required입니다. Persisted `JOURNEY-CARD` Markdown은 optional입니다. `harness.status`, `harness.next`, significant resume flows의 current-position Journey Card output은 agency conformance에 계속 required입니다.
+ProjectionKind extensibility가 projection을 기준 상태로 만들지는 않습니다. 모든 projection job은 여전히 owner record 및 artifact ref에서 derived view를 렌더링합니다. `DEC`는 해당 feature가 enabled일 때 standalone Decision Packet Markdown에만 valid하며, MVP-required projection job이 아닙니다. Standalone `DEC` job이 없어도 MVP Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공되어야 합니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `harness.status`, `harness.next`, significant resume flows의 current-position Journey Card output은 agency conformance에 계속 필요합니다.
 
 `EXPORT`는 export feature가 enabled일 때 Release Handoff 같은 report profile을 포함할 수 있습니다. 이런 profile은 projection/report surface일 뿐입니다. Deployment authority, merge authority, production-monitoring authority, final acceptance, residual-risk acceptance, assurance upgrade, Task close authority를 만들지 않습니다.
 
@@ -441,7 +441,7 @@ EndToEndPath:
 
 Client가 guard, freeze, careful-mode control을 render할 때는 authority field를 추가하지 않고 이 existing display shape를 사용합니다. `guarantee_display.level`과 `guarantee_display.notes`는 actual connected capability와 current enforcement path를 설명해야 합니다. `blocked_reasons[].message`는 scope, MCP availability, approval, baseline, capability 같은 concrete held 또는 blocked condition을 이름 붙여야 하며, "guard"나 "freeze" 같은 command label만으로 더 강한 guarantee를 imply하면 안 됩니다.
 
-`DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` 같은 Extension / appendix `ProjectionKind` values는 해당 projection feature가 enabled일 때만 valid projection job kind입니다. MVP-required Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공됩니다. Persisted `JOURNEY-CARD` Markdown은 optional로 남지만 current-position Journey Card output은 status, next, significant resume flows에서 required입니다. Full extension template text는 Appendix A가 담당하며, 이 API schema file이 담당하지 않습니다.
+`DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` 같은 Extension / appendix `ProjectionKind` values는 해당 projection feature가 enabled일 때만 valid projection job kind입니다. MVP-required Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공됩니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항으로 남지만 current-position Journey Card output은 status, next, significant resume flows에서 필요합니다. Full projection template text는 [Template 참조](reference/templates/README.md)에 있으며, 이 API schema file이 담당하지 않습니다.
 
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, Recommended Playbook, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. Canonical kernel records는 owner docs가 정의합니다. 이 목록에서 `RecommendedPlaybook`은 display-only 예외입니다. 자체 canonical kernel record, DDL table, task event, projection job이 없습니다.
 

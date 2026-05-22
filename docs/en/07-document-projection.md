@@ -1,12 +1,14 @@
 # Document Projection
 
-Reference copy: the redesigned reference version now lives at [Document Projection Reference](reference/document-projection.md). Split MVP-required template bodies live in the [Template Reference](reference/templates/README.md). This legacy chapter remains in place during the migration.
+Reference copy: the redesigned reference version now lives at [Document Projection Reference](reference/document-projection.md). Split template bodies now live in the [Template Reference](reference/templates/README.md). This legacy chapter remains in place as migration source material until final cleanup.
 
 ## Document Role
 
 This legacy chapter preserves the pre-reference projection rules as migration source material. The active owner for human-readable Markdown projection rules is now [Document Projection Reference](reference/document-projection.md), which defines projection principles, document authority boundaries, managed block rules, human-editable rules, artifact reference rendering, template tiers, required MVP template summaries, optional design-quality and appendix variant template summaries, and projection freshness rules.
 
-It does not define canonical kernel state, MCP request/response schemas, SQLite DDL, design-quality policy requirements, or full template text. MVP-required template bodies live in the [Template Reference](reference/templates/README.md); the legacy consolidated template library remains in [Appendix A](appendix/A-template-library.md).
+It does not define canonical kernel state, MCP request/response schemas, SQLite DDL, design-quality policy requirements, or active full template text. Projection template bodies live in the [Template Reference](reference/templates/README.md).
+
+The legacy consolidated [Appendix A](appendix/A-template-library.md) remains migration source material only until final cleanup.
 
 ## Projection Principles
 
@@ -289,7 +291,7 @@ Projection templates match the API `ProjectionKind` tiers.
 |---|---|---|
 | MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | MVP projector must render these. |
 | MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. |
-| Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Render only when the corresponding extension or appendix projection is enabled. Full text remains in [Appendix A](appendix/A-template-library.md) until those templates move. |
+| Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Render only when the corresponding extension or appendix projection is enabled. Full text now lives in the [Template Reference](reference/templates/README.md). |
 
 Source-of-truth caption: `ProjectionKind` tiering controls renderer support expectations; no tier makes a projection canonical state.
 
@@ -309,7 +311,9 @@ flowchart TD
   Kind --> Boundary
 ```
 
-Main docs define each template's purpose and source records only. MVP-required full template bodies live in the [Template Reference](reference/templates/README.md); optional and extension bodies remain in [Appendix A](appendix/A-template-library.md) until they move.
+Main docs define each template's purpose and source records only. All active projection template bodies live in the [Template Reference](reference/templates/README.md).
+
+[Appendix A](appendix/A-template-library.md) remains migration source material only until final cleanup.
 
 Persisted `JOURNEY-CARD` Markdown is optional. Current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows is required for agency conformance.
 

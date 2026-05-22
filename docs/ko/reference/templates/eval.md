@@ -1,22 +1,22 @@
 # EVAL Template
 
-## Used when
+## 사용 시점
 
 검증 결과와 독립성 맥락을 함께 읽기 쉽게 보여줘야 할 때 `EVAL`을 사용합니다.
 
-## Source records
+## 기준 기록
 
-- Eval record
+- Eval 기록
 - verification target
 - verdict
 - independence qualifier
 - baseline relationship
 - performed check
-- reviewed evidence
+- 검토한 evidence
 - blocker
 - artifact ref
 
-## Rendered sections
+## 렌더링 섹션
 
 - Target
 - Verdict
@@ -29,7 +29,7 @@
 - Blockers Or Rework
 - User Follow-Up
 
-## Full template
+## 전체 템플릿
 
 ````md
 ---
@@ -146,6 +146,6 @@ updated_at: 2026-05-06T10:05:00+09:00
 - Manual QA need:
 ````
 
-## Notes
+## 메모
 
-Eval verdict alone으로는 assurance가 upgrade되지 않습니다. `detached_verified`에는 valid independence와 passed verification, same-session self-review violation 부재가 필요합니다.
+Eval verdict만으로는 assurance를 높일 수 없습니다. `detached_verified`에는 valid independence, passed verification, same-session self-review violation 부재가 필요합니다.

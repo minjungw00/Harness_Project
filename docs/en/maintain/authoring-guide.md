@@ -166,8 +166,7 @@ After a target reference file exists, that target is the active owner; the numbe
 | MVP implementation order and stage exit criteria | `build/mvp-plan.md` | `06-reference-mvp.md` |
 | First runnable implementation slice | `build/first-runnable-slice.md` | `06-reference-mvp.md` |
 | Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md` | `07-document-projection.md` as migration source material |
-| MVP-required full template bodies for `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | `reference/templates/*.md` | `appendix/A-template-library.md` as migration source material |
-| Optional and extension template bodies | `appendix/A-template-library.md` during migration | Future split may move them later |
+| All projection template bodies and display card shapes | `reference/templates/*.md` | `appendix/A-template-library.md` as migration source material until final cleanup |
 | Design-quality policy contracts, validators, severity composition, waiver semantics, evidence expectations, close impact | `reference/design-quality-policies.md` | `08-design-quality-policy-pack.md` as previous source material |
 | User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` | `10-user-guide.md` |
 | User/agent session procedure | `use/agent-session-flow.md` | `09-agent-integration.md`, `10-user-guide.md` |

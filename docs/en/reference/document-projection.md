@@ -4,7 +4,9 @@
 
 Use this reference to check how Harness renders human-readable Markdown projections from canonical state records and artifact references.
 
-It defines projection authority boundaries, managed block behavior, human-editable sections, artifact reference rendering, template tiers, and projection freshness rules. It does not define canonical kernel state, MCP request/response schemas, SQLite DDL, design-quality policy requirements, or full template bodies. Full template bodies for MVP-required projections live in the [Template Reference](templates/README.md). Optional and extension template bodies remain in [Appendix A](../appendix/A-template-library.md) until they move.
+It defines projection authority boundaries, managed block behavior, human-editable sections, artifact reference rendering, template tiers, and projection freshness rules. It does not define canonical kernel state, MCP request/response schemas, SQLite DDL, design-quality policy requirements, or full template bodies. Full template bodies and display card shapes live in the [Template Reference](templates/README.md).
+
+Appendix A remains migration source material until final cleanup.
 
 ## Read this when
 
@@ -54,9 +56,8 @@ This document does not own:
 - design-quality policy contracts; see [Design Quality Policies](design-quality-policies.md)
 - operator command semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
 - conformance fixture assertion semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
-- full template bodies for optional or extension projections; see [Appendix A](../appendix/A-template-library.md) until they move
 - connector capability profiles or surface recipes; see [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
-- MVP-required full template bodies; see [Template Reference](templates/README.md)
+- full template bodies and display card shapes; see [Template Reference](templates/README.md)
 
 ## One generated TASK example
 
@@ -253,8 +254,8 @@ Projection templates match the API `ProjectionKind` tiers.
 | Tier | Templates | Rule | Template reference |
 |---|---|---|---|
 | MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | MVP projector must render these. | [TASK](templates/task.md), [APR](templates/approval.md), [RUN-SUMMARY](templates/run-summary.md), [EVIDENCE-MANIFEST](templates/evidence-manifest.md), [EVAL](templates/eval.md), [DIRECT-RESULT](templates/direct-result.md) |
-| MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. | Consolidated legacy bodies remain in [Appendix A](../appendix/A-template-library.md) until those optional templates move. |
-| Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Render only when the corresponding extension or appendix projection is enabled. | Consolidated legacy bodies remain in [Appendix A](../appendix/A-template-library.md) until those extension templates move. |
+| MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. | [MANUAL-QA](templates/manual-qa.md), [TDD-TRACE](templates/tdd-trace.md), [DOMAIN-LANGUAGE](templates/domain-language.md), [MODULE-MAP](templates/module-map.md), [INTERFACE-CONTRACT](templates/interface-contract.md) |
+| Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Render only when the corresponding extension or appendix projection is enabled. | [DEC](templates/decision-packet.md), [DESIGN](templates/design.md), [EXPORT](templates/export.md), [JOURNEY-CARD](templates/journey-card.md) |
 
 `ProjectionKind` tiering controls renderer support expectations; no tier makes a projection canonical state.
 
@@ -265,6 +266,8 @@ Persisted `JOURNEY-CARD` Markdown is optional. Current-position Journey Card out
 MVP Decision Packet visibility is required through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Standalone `DEC` Markdown is optional unless the standalone Decision Packet projection feature is enabled.
 
 Decision Packet record IDs use `DEC-*`. `DEC` as a `projection_kind` is only the projection kind label; when a standalone projection needs its own identity, use a separate `projection_id` such as `DEC-PROJ-0001`.
+
+Display card shapes live in the [Template Reference](templates/README.md): [Compact Status Card](templates/compact-status-card.md), [Approval Card](templates/approval-card.md), [Verification Result Card](templates/verification-result-card.md), and [Manual QA Card](templates/manual-qa-card.md).
 
 ## Freshness and failure rules
 

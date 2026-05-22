@@ -1,20 +1,20 @@
 # EVIDENCE-MANIFEST Template
 
-## Used when
+## 사용 시점
 
 acceptance criteria와 completion condition이 어떤 supporting evidence로 뒷받침되는지 보여줘야 할 때 `EVIDENCE-MANIFEST`를 사용합니다.
 
-## Source records
+## 기준 기록
 
-- evidence manifest record
+- evidence manifest 기록
 - acceptance criteria
 - changed file coverage
 - design-quality coverage
-- approval ref
-- artifact ref
-- related Run, Eval, Feedback Loop, Manual QA, TDD trace ref
+- approval 참조
+- artifact 참조
+- 관련 Run, Eval, Feedback Loop, Manual QA, TDD trace 참조
 
-## Rendered sections
+## 렌더링 섹션
 
 - Identity
 - Summary
@@ -25,7 +25,7 @@ acceptance criteria와 completion condition이 어떤 supporting evidence로 뒷
 - Evidence Refs
 - Stale If
 
-## Full template
+## 전체 템플릿
 
 ````md
 ---
@@ -105,6 +105,6 @@ updated_at: 2026-05-06T09:50:00+09:00
 - interface contract records change
 ````
 
-## Notes
+## 메모
 
-Evidence가 required인 곳에서 close는 report text alone이 아니라 canonical `evidence_gate`를 기준으로 결정됩니다.
+Evidence가 필요한 경우 close 판단은 report 문장만이 아니라 기준 `evidence_gate`를 따릅니다.

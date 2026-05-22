@@ -1,24 +1,24 @@
 # RUN-SUMMARY Template
 
-## Used when
+## 사용 시점
 
 `record_run`으로 execution Run이 기록된 뒤, 무엇을 실행했고 무엇이 바뀌었는지, check 또는 validator가 무엇을 보고했는지, raw evidence가 어떤 artifact에 남았는지 요약해야 할 때 `RUN-SUMMARY`를 사용합니다.
 
-## Source records
+## 기준 기록
 
-- run record
+- run 기록
 - actor/surface identity
 - baseline
 - Change Unit
-- 있는 경우 consumed Write Authorization ref
+- 있는 경우 consumed Write Authorization 참조
 - changed path
 - command result
-- validator result
+- validator 결과
 - 기록된 Review Stage finding이 있는 경우
-- artifact ref
+- artifact 참조
 - evidence update와 follow-up
 
-## Rendered sections
+## 렌더링 섹션
 
 - Run Identity
 - Scope
@@ -32,7 +32,7 @@
 - Journey Spine Updates
 - Evidence Refs
 
-## Full template
+## 전체 템플릿
 
 ````md
 ---
@@ -156,6 +156,6 @@ npm test -- --runInBand
 - checkpoint:
 ````
 
-## Notes
+## 메모
 
 Raw log와 diff는 artifact로 남기고, report에는 link만 둡니다. `RUN-SUMMARY`에 담긴 same-session review content에 해당하는 내용은 self-check 또는 stewardship signal로만 취급합니다. Detached verification으로 표시하면 안 됩니다.

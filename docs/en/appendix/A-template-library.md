@@ -1,10 +1,10 @@
 # Appendix A: Template Library
 
-Split reference: MVP-required template bodies now live as separate files in the [Template Reference](../reference/templates/README.md). This appendix remains as the legacy consolidated library during the redesign.
+Reference copy: active projection template bodies and display card shapes now live as separate files in the [Template Reference](../reference/templates/README.md). This appendix remains migration source material only until final cleanup.
 
 ## Document Role
 
-This appendix owns legacy consolidated Markdown projection template variants. The projection rules and template tiers are owned by [Document Projection Reference](../reference/document-projection.md); this appendix keeps complete bodies during migration. A template body appearing here does not by itself enable or require its `ProjectionKind`.
+This appendix preserves legacy consolidated Markdown projection template variants as migration source material. Active template bodies live in the [Template Reference](../reference/templates/README.md), and projection rules and template tiers are owned by [Document Projection Reference](../reference/document-projection.md). A template body appearing here does not by itself enable or require its `ProjectionKind`.
 
 Templates are examples of rendered shape. They are not canonical state and must not redefine kernel fields, MCP schemas, or SQLite DDL.
 
@@ -33,7 +33,7 @@ flowchart TD
 
 ## Required MVP Templates
 
-These bodies correspond to the MVP-required `ProjectionKind` tier: `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`.
+These legacy bodies correspond to the MVP-required `ProjectionKind` tier: `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`. The active split bodies live in the [Template Reference](../reference/templates/README.md).
 
 ```mermaid
 flowchart LR
@@ -844,7 +844,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 ## Optional Design-Quality Templates
 
-These bodies correspond to the MVP-optional `ProjectionKind` tier: `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `TDD-TRACE`, and `MANUAL-QA`. Render them only when policy applies, records exist, or the user/operator enables the projection.
+These legacy bodies correspond to the MVP-optional `ProjectionKind` tier: `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `TDD-TRACE`, and `MANUAL-QA`. The active split bodies live in the [Template Reference](../reference/templates/README.md).
 
 ```mermaid
 flowchart LR
@@ -1111,7 +1111,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Appendix Templates
 
-Appendix templates correspond to the extension / appendix `ProjectionKind` tier and are optional unless explicitly enabled. The `DEC` template is an optional standalone Decision Packet Markdown variant; its presence in Appendix A does not make standalone `DEC` an MVP-required projection. `DESIGN`, `EXPORT`, and persisted `JOURNEY-CARD` Markdown are also optional extension / appendix projections. The `EXPORT` manifest is a projection output; its `export_id` is manifest identity, not a public `StateRecordRef.record_kind`.
+These legacy appendix templates correspond to the extension / appendix `ProjectionKind` tier and are optional unless explicitly enabled. Active split bodies live in the [Template Reference](../reference/templates/README.md). The `DEC` template is an optional standalone Decision Packet Markdown variant; its presence in Appendix A does not make standalone `DEC` an MVP-required projection. `DESIGN`, `EXPORT`, and persisted `JOURNEY-CARD` Markdown are also optional extension / appendix projections. The `EXPORT` manifest is a projection output; its `export_id` is manifest identity, not a public `StateRecordRef.record_kind`.
 
 ### DEC
 

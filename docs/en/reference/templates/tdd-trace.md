@@ -1,0 +1,86 @@
+# TDD-TRACE Template
+
+## Used when
+
+Use `TDD-TRACE` when TDD is required, selected, or recorded for a Change Unit and the RED, GREEN, refactor/check, waiver, and evidence refs need a readable projection.
+
+## Source records
+
+- `tdd_traces`
+- selected `feedback_loops`
+- Task and Change Unit refs
+- RED, GREEN, and refactor/check artifact refs
+- Evidence Manifest coverage refs
+- waiver or non-TDD justification refs
+- design-quality validator results related to `tdd_trace`
+- projection freshness inputs
+
+## Rendered sections
+
+- Identity
+- Red
+- Green
+- Refactor
+- Non-TDD Justification
+- Evidence Refs
+
+## Full template
+
+````md
+---
+doc_type: tdd_trace
+tdd_trace_id: TDD-0001
+task_id: TASK-0001
+change_unit_id: CU-01
+status: recorded
+source_state_version: 43
+updated_at: 2026-05-06T09:40:00+09:00
+---
+
+# TDD-0001 Trace Title
+
+## Identity
+- task_id:
+- change_unit_id:
+- required: yes | no | recommended
+- feedback loop ref:
+- evidence manifest coverage ref:
+
+## Red
+- target / plan:
+- failing test ref:
+- command:
+- result: failed_as_expected | failed_unexpectedly | missing
+- log ref:
+- recorded before non-test implementation: yes | no | waived
+- target / plan counts as Evidence Manifest coverage: no
+
+## Green
+- command:
+- result: passed | failed | missing
+- log ref:
+
+## Refactor
+- performed: yes | no
+- notes:
+- verification command:
+- log ref:
+
+## Non-TDD Justification
+- reason:
+- feedback loop ref:
+- alternate feedback loop:
+- waiver recorded before non-test implementation: yes | no
+
+## Evidence Refs
+- test:
+- red log:
+- green log:
+- refactor/check log:
+- Evidence Manifest:
+- diff:
+````
+
+## Notes
+
+This template is a rendered shape, not canonical state. RED target or plan text is planning context; actual RED evidence must still come from recorded artifact or result refs.
