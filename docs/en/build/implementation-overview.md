@@ -162,10 +162,10 @@ Read the Build layer in this order:
 2. [First Runnable Slice](first-runnable-slice.md) for the smallest proof to implement first.
 3. [MVP Plan](mvp-plan.md) for staged delivery from MVP-0 through MVP-5.
 
-Then use the current reference owners for exact behavior:
+Then use the reference docs and current owners for exact behavior:
 
-- [Kernel Spec](../03-kernel-spec.md) for entities, gates, state logic, `prepare_write`, and `close_task`.
-- [Runtime Architecture](../04-runtime-architecture.md) for runtime spaces, Core flow, artifacts, projection/reconcile, and guarantee levels.
+- [Kernel Reference](../reference/kernel.md) for entities, gates, state logic, `prepare_write`, and `close_task`.
+- [Runtime Architecture Reference](../reference/runtime-architecture.md) for runtime spaces, Core flow, artifacts, projection/reconcile, and guarantee levels.
 - [MCP API And Schemas](../05-mcp-api-and-schemas.md) for public resources, tools, schemas, errors, and artifact refs.
 - [Operations And Conformance](../11-operations-and-conformance.md) for operator semantics and fixture expectations.
 - Current storage and DDL owner during redesign: [Reference MVP](../06-reference-mvp.md). Future reference path: `reference/storage-and-ddl.md`.

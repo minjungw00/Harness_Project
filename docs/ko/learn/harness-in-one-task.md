@@ -328,21 +328,21 @@ Remembered session과 non-remembered session에 대한 검증이 통과했습니
 
 | 일상적인 말 | Harness term | 왜 필요한가 | 더 읽을 곳 |
 |---|---|---|---|
-| "무엇을 하는 중이지?" | Task | 사용자가 원하는 결과, 상태, blocker, 근거, 닫기 판단을 하나로 묶는다. | [사용자 가이드](../use/user-guide.md); 현재 담당 문서: [커널 명세](../03-kernel-spec.md). 이후 reference 경로: `reference/kernel.md`. |
-| "어디까지 바꿔도 되지?" | Change Unit | 제품 쓰기 범위를 제한해 작업이 조용히 커지지 않게 한다. | [사용자 가이드](../use/user-guide.md); 현재 담당 문서: [커널 명세](../03-kernel-spec.md). 이후 reference 경로: `reference/kernel.md`. |
-| "이건 사용자가 결정해야 해." | Decision Packet | 사용자가 소유한 제품 판단을 넓은 승인과 분리한다. | [사용자 가이드](../use/user-guide.md); 현재 담당 문서: [커널 명세](../03-kernel-spec.md). 이후 reference 경로: `reference/kernel.md`. |
-| "이 민감한 단계를 진행해도 되나?" | 승인 | 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답한다. 제품 판단이나 최종 수용을 대신하지 않는다. | 현재 담당 문서: [커널 명세](../03-kernel-spec.md). 이후 reference 경로: `reference/kernel.md`. |
-| "지금 이 파일을 수정해도 되나?" | Write Authorization | 의도한 쓰기가 현재 Task, Change Unit, 결정, 승인과 맞는지 확인한다. | 현재 담당 문서: [커널 명세](../03-kernel-spec.md), [Agent 통합](../09-agent-integration.md). 이후 reference 경로: `reference/kernel.md`, `reference/agent-integration.md`. |
+| "무엇을 하는 중이지?" | Task | 사용자가 원하는 결과, 상태, blocker, 근거, 닫기 판단을 하나로 묶는다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
+| "어디까지 바꿔도 되지?" | Change Unit | 제품 쓰기 범위를 제한해 작업이 조용히 커지지 않게 한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
+| "이건 사용자가 결정해야 해." | Decision Packet | 사용자가 소유한 제품 판단을 넓은 승인과 분리한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
+| "이 민감한 단계를 진행해도 되나?" | 승인 | 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답한다. 제품 판단이나 최종 수용을 대신하지 않는다. | [커널 참조](../reference/kernel.md). |
+| "지금 이 파일을 수정해도 되나?" | Write Authorization | 의도한 쓰기가 현재 Task, Change Unit, 결정, 승인과 맞는지 확인한다. | [커널 참조](../reference/kernel.md); agent surface 세부 담당: [Agent 통합](../09-agent-integration.md). |
 | "이 주장을 뒷받침하는 것은 이것이다." | 근거 | diff, log, check, screenshot 같은 기록으로 "끝났다"는 말을 확인 가능하게 만든다. | [사용자 가이드](../use/user-guide.md); 현재 담당 문서: [운영과 적합성](../11-operations-and-conformance.md). 이후 reference 경로: `reference/operations-and-conformance.md`. |
-| "독립적으로 확인했나?" | 검증 | 자체 확인과 분리된 검증을 구분한다. | [사용자 가이드](../use/user-guide.md); 현재 담당 문서: [커널 명세](../03-kernel-spec.md). 이후 reference 경로: `reference/kernel.md`. |
+| "독립적으로 확인했나?" | 검증 | 자체 확인과 분리된 검증을 구분한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "사람이 실제 경험을 봤나?" | Manual QA | 테스트가 놓칠 수 있는 UX, 문구, 접근성, 시각 품질, 작업 흐름 판단을 다룬다. | [사용자 가이드](../use/user-guide.md); 현재 담당 문서: [설계 품질 정책 팩](../08-design-quality-policy-pack.md). 이후 reference 경로: `reference/design-quality-policies.md`. |
-| "이 결과를 받아들일 수 있나?" | 수용 | Task 경로가 요구할 때 사용자의 최종 판단을 기록한다. | [사용자 가이드](../use/user-guide.md); 현재 담당 문서: [커널 명세](../03-kernel-spec.md). 이후 reference 경로: `reference/kernel.md`. |
-| "아직 어떤 불확실성이 남았나?" | 남은 위험 | 닫기나 수용 전에 알려진 제한과 위험을 보이게 한다. | [사용자 가이드](../use/user-guide.md); 현재 담당 문서: [커널 명세](../03-kernel-spec.md). 이후 reference 경로: `reference/kernel.md`. |
-| "이제 끝났다고 해도 되나?" | 닫기 | 관련 blocker가 처리된 뒤에만 Task를 완료한다. | 현재 담당 문서: [커널 명세](../03-kernel-spec.md), [Agent 통합](../09-agent-integration.md). 이후 reference 경로: `reference/kernel.md`, `reference/agent-integration.md`. |
+| "이 결과를 받아들일 수 있나?" | 수용 | Task 경로가 요구할 때 사용자의 최종 판단을 기록한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
+| "아직 어떤 불확실성이 남았나?" | 남은 위험 | 닫기나 수용 전에 알려진 제한과 위험을 보이게 한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
+| "이제 끝났다고 해도 되나?" | 닫기 | 관련 blocker가 처리된 뒤에만 Task를 완료한다. | [커널 참조](../reference/kernel.md); agent surface 세부 담당: [Agent 통합](../09-agent-integration.md). |
 
 ## 다음에 읽을 문서
 
 - [핵심 개념](concepts.md)에서 예시를 읽은 뒤 필요한 더 단단한 어휘를 봅니다.
 - [사용자 가이드](../use/user-guide.md)에서 Harness 세션 중 사용자가 자연스럽게 말할 수 있는 표현을 봅니다.
-- Task, Change Unit, Decision Packet, 승인, Write Authorization, 수용, 남은 위험, 닫기의 엄격한 동작이 필요하면 현재 담당 문서인 [커널 명세](../03-kernel-spec.md)를 봅니다. 이후 reference 경로: `reference/kernel.md`.
+- Task, Change Unit, Decision Packet, 승인, Write Authorization, 수용, 남은 위험, 닫기의 엄격한 동작이 필요하면 [커널 참조](../reference/kernel.md)를 봅니다.
 - 에이전트가 이 흐름을 불필요한 내부 세부사항 없이 어떻게 보여줘야 하는지 알고 싶다면 [에이전트 세션 흐름](../use/agent-session-flow.md)을 봅니다.

@@ -32,7 +32,9 @@ Use this path for implementation planning and review. These pages do not authori
 
 Use this path to look up detailed contracts, schemas, policies, and definitions.
 
-- `reference/*`
+- [Kernel Reference](reference/kernel.md)
+- [Runtime Architecture Reference](reference/runtime-architecture.md)
+- More reference files will move here as the redesign continues.
 
 ## Maintain
 

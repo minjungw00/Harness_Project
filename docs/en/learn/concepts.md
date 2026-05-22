@@ -4,7 +4,7 @@
 
 This document introduces the smallest concept set you need before reading Harness reference specs. Each concept starts with a plain example, then gives a tighter definition.
 
-The reference links below are part of the documentation redesign path. Until the reference tree is fully moved, the current owner documents remain in the top-level spec files such as [03-kernel-spec.md](../03-kernel-spec.md), [04-runtime-architecture.md](../04-runtime-architecture.md), and [07-document-projection.md](../07-document-projection.md).
+The kernel and runtime references now live in the reference path. Other owner documents remain in the top-level spec files until they move, such as [07-document-projection.md](../07-document-projection.md).
 
 ## Read this when
 
@@ -31,7 +31,7 @@ Harness is easiest to understand if you start with the work journey:
 - Remaining uncertainty is Residual Risk.
 - Readable documents are Projections, and human edits become state through Reconcile.
 
-These concepts are intentionally small here. During the redesign, strict definitions remain with the current owners: [Kernel Spec](../03-kernel-spec.md) for `reference/kernel.md`, [MCP API and Schemas](../05-mcp-api-and-schemas.md) for `reference/mcp-api-and-schemas.md`, and [Document Projection](../07-document-projection.md) for `reference/document-projection.md`.
+These concepts are intentionally small here. Strict kernel definitions live in [Kernel Reference](../reference/kernel.md). Other strict definitions remain with current owners until they move: [MCP API and Schemas](../05-mcp-api-and-schemas.md) for `reference/mcp-api-and-schemas.md`, and [Document Projection](../07-document-projection.md) for `reference/document-projection.md`.
 
 ## Task
 
@@ -39,7 +39,7 @@ A user says, "Add email login and show a helpful error when the password is wron
 
 A Task is the user value unit: the thing the user wants completed, answered, investigated, or decided. Harness uses the Task to keep status, next action, blockers, evidence, QA, acceptance, and close behavior connected.
 
-Current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`.
+Reference: [Kernel Reference](../reference/kernel.md).
 
 ## Change Unit
 
@@ -47,7 +47,7 @@ The email login task may require changes to the login form, one API call, and se
 
 A Change Unit is the bounded product-write scope for a Task. It names the part of the product that may change so the agent, user, and Harness can tell whether a write is inside the agreed work.
 
-Current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`.
+Reference: [Kernel Reference](../reference/kernel.md).
 
 ## Decision Packet
 
@@ -55,7 +55,7 @@ The agent finds two reasonable failed-login behaviors: a generic security-safe m
 
 A Decision Packet records a user-owned decision that blocks progress, write, close, waiver, acceptance, residual-risk acceptance, product direction, scope, design trade-off, stewardship judgment, or public commitment. It names the decision, options, trade-offs, evidence, affected scope, residual risk, and next action.
 
-Current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`.
+Reference: [Kernel Reference](../reference/kernel.md).
 
 ## Evidence
 
@@ -71,7 +71,7 @@ The task needs a new dependency, a network call, or access to a sensitive file. 
 
 Approval answers whether a sensitive action may proceed inside a defined scope. Approval is not the same as accepting the final result, choosing a design trade-off, or accepting residual risk.
 
-Current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`.
+Reference: [Kernel Reference](../reference/kernel.md).
 
 ## Write Authorization
 
@@ -103,7 +103,7 @@ The work may be implemented and checked, but the user still needs to decide whet
 
 Acceptance is the user's judgment that the task result can be accepted. It is separate from Approval, Verification, Manual QA, and Residual Risk.
 
-Current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`.
+Reference: [Kernel Reference](../reference/kernel.md).
 
 ## Residual Risk
 
@@ -111,7 +111,7 @@ The login flow is done, but rate limiting was not added in this task, or the det
 
 Residual Risk is known remaining uncertainty, limitation, or trade-off after the work. When task close depends on accepting that risk, the user's residual-risk acceptance must be explicit.
 
-Current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`.
+Reference: [Kernel Reference](../reference/kernel.md).
 
 ## Projection
 

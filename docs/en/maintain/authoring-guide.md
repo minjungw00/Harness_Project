@@ -150,15 +150,17 @@ Use this map when deciding where exact detail belongs. The map preserves the old
 
 During the redesign, some target reader-path files may not exist yet. Until a target file exists, keep the current numbered source document as the owner and update this map when the migration lands.
 
-| Subject | Owner in redesigned structure | Current source owner during redesign |
+After a target reference file exists, that target is the active owner; the numbered file becomes migration source material until final cleanup.
+
+| Subject | Owner in redesigned structure | Previous/current source during redesign |
 |---|---|---|
 | Entrypoint, reader paths, document list, target tree summary | `README.md` | `README.md` |
 | Shared reader mental model and three-space overview | `learn/overview.md` | `00-introduction.md` |
 | Small core concept introduction | `learn/concepts.md` | `00-introduction.md`, `glossary.md` |
 | Project purpose, target users, values, scope, non-goals, automation philosophy | `learn/purpose-and-principles.md` | `01-project-charter.md` |
 | Strategic thesis, failure model, MVP boundary, principle groups | `learn/purpose-and-principles.md` for reader explanation; `reference/design-quality-policies.md` and `reference/kernel.md` for exact contract impact | `02-strategy.md` |
-| Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` | `03-kernel-spec.md` |
-| Runtime architecture, three spaces in implementation detail, Core process model, artifact architecture, projection/reconcile architecture, guarantee levels | `reference/runtime-architecture.md` | `04-runtime-architecture.md` |
+| Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` | `03-kernel-spec.md` as previous source material |
+| Runtime architecture, three spaces in implementation detail, Core process model, artifact architecture, projection/reconcile architecture, guarantee levels | `reference/runtime-architecture.md` | `04-runtime-architecture.md` as previous source material |
 | MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `reference/mcp-api-and-schemas.md` | `05-mcp-api-and-schemas.md` |
 | SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` | `06-reference-mvp.md` |
 | MVP implementation order and stage exit criteria | `build/mvp-plan.md` | `06-reference-mvp.md` |

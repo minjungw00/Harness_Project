@@ -300,8 +300,8 @@ Fixture shape와 비교 규칙은 [운영과 Conformance](../11-operations-and-c
 
 ## 참고할 Reference 문서
 
-- [커널 명세](../03-kernel-spec.md): Task, Change Unit, Decision Packet, gate, `prepare_write`, Write Authorization, `record_run` semantics, `close_task`.
-- [런타임 아키텍처](../04-runtime-architecture.md): 세 공간, Core process model, transaction flow, artifact store, projection/reconcile, guarantee level, failure handling.
+- [커널 참조](../reference/kernel.md): Task, Change Unit, Decision Packet, gate, `prepare_write`, Write Authorization, `record_run` semantics, `close_task`.
+- [런타임 아키텍처 참조](../reference/runtime-architecture.md): 세 공간, Core process model, transaction flow, artifact store, projection/reconcile, guarantee level, failure handling.
 - [MCP API와 스키마](../05-mcp-api-and-schemas.md): public resource, tool envelope, request/response schema, error taxonomy, artifact ref, `ProjectionKind`.
 - [운영과 Conformance](../11-operations-and-conformance.md): operator semantics, conformance staging, fixture format, execution, assertion rule.
 - 재설계 중 storage와 DDL의 현재 담당 문서: [Reference MVP](../06-reference-mvp.md). 이후 reference 경로: `reference/storage-and-ddl.md`.

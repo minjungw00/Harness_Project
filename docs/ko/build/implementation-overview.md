@@ -162,10 +162,10 @@ Build 계층은 다음 순서로 읽습니다.
 2. [첫 실행 가능한 조각](first-runnable-slice.md): 가장 먼저 계획할 최소 증명을 확인합니다.
 3. [MVP 계획](mvp-plan.md): MVP-0부터 MVP-5까지 단계별 구현을 확인합니다.
 
-그다음 정확한 동작은 현재 담당 문서를 봅니다.
+그다음 정확한 동작은 reference 문서와 현재 담당 문서를 봅니다.
 
-- [커널 명세](../03-kernel-spec.md): entity, gate, state logic, `prepare_write`, `close_task`.
-- [런타임 아키텍처](../04-runtime-architecture.md): runtime space, Core flow, artifact, projection/reconcile, guarantee level.
+- [커널 참조](../reference/kernel.md): entity, gate, state logic, `prepare_write`, `close_task`.
+- [런타임 아키텍처 참조](../reference/runtime-architecture.md): runtime space, Core flow, artifact, projection/reconcile, guarantee level.
 - [MCP API와 스키마](../05-mcp-api-and-schemas.md): public resource, tool, schema, error, artifact ref.
 - [운영과 Conformance](../11-operations-and-conformance.md): operator semantics와 fixture expectation.
 - 재설계 중 storage와 DDL의 현재 담당 문서: [Reference MVP](../06-reference-mvp.md). 이후 reference 경로: `reference/storage-and-ddl.md`.

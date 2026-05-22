@@ -1,0 +1,311 @@
+# 런타임 아키텍처 참조
+
+## 이 문서가 도와주는 일
+
+이 문서는 Harness가 어디에서 실행되는지, 기준 상태가 어디에 있는지, Core가 상태 전이를 어떻게 기록하는지, artifact와 projection이 어떻게 연결되고 갱신되는지, runtime이 어떤 집행 강도를 정직하게 말할 수 있는지 확인하기 위한 참조 문서입니다.
+
+구현자와 운영자가 찾아보는 참조 문서이며, Learn overview 전체를 다시 설명하지 않습니다.
+
+## 이런 때 읽기
+
+- 제품 저장소 파일과 Harness runtime의 상태 관계를 매핑할 때.
+- Core, artifact capture, projection, reconcile, 검증, 복구, export가 어떻게 동작하는지 구현할 때.
+- 실패가 기준 상태, artifact, projection, 표시 영역 중 어디에 영향을 주는지 판단해야 할 때.
+- 연결된 접점이 cooperative, detective, preventive, isolated 중 어디에 해당하는지 설명해야 할 때.
+
+## 런타임 아키텍처를 쉬운 말로
+
+Harness는 사용자의 Product Repository 옆에서 실행되는 로컬 권한 계층입니다. Product Repository는 실제 제품 작업이 일어나는 곳이고, Runtime Home은 운영 권한을 저장하며, Harness Server / Installation은 Core, validators, projection, reconcile, 공개 MCP tool을 통해 둘을 연결합니다.
+
+중요한 규칙은 분리입니다. 제품 소스 파일, 대화 텍스트, 생성된 Markdown, connector 파일은 system에 정보를 줄 수 있지만 기준 운영 상태는 `state.sqlite` 현재 기록과 `state.sqlite.task_events`에 있고, 원본 근거는 artifact store에 있습니다.
+
+## 담당하는 참조 범위
+
+이 문서가 담당합니다.
+
+- 구현 세부 관점의 세 공간
+- Product Repository / Harness Server 또는 Installation / Harness Runtime Home 분리
+- Core process model
+- state transaction flow
+- artifact store architecture
+- projection과 reconcile architecture
+- guarantee levels
+- failure와 recovery overview
+
+## 여기서 다루지 않는 것
+
+이 문서는 다음 항목을 담당하지 않습니다.
+
+- public MCP request/response schema. 현재 담당 문서는 [MCP API와 스키마](../05-mcp-api-and-schemas.md)이고, 이후 경로는 `reference/mcp-api-and-schemas.md`입니다.
+- SQLite DDL. 현재 담당 문서는 [Reference MVP](../06-reference-mvp.md)이고, 이후 경로는 `reference/storage-and-ddl.md`입니다.
+- full CLI command semantics. 현재 담당 문서는 [운영과 Conformance](../11-operations-and-conformance.md)이고, 이후 경로는 `reference/operations-and-conformance.md`입니다.
+- conformance fixture format. 현재 담당 문서는 [운영과 Conformance](../11-operations-and-conformance.md)이고, 이후 경로는 `reference/operations-and-conformance.md`입니다.
+- surface-specific connector cookbooks. 현재 담당 문서는 [Agent 통합](../09-agent-integration.md)이고, 이후 경로는 `reference/agent-integration.md`입니다.
+- kernel transition table. 자세한 내용은 [커널 참조](kernel.md)를 봅니다.
+- projection template body
+
+## 세 공간, 짧은 요약
+
+```text
+Product Repository:
+  product code, tests, human-readable projections, and human-editable proposal areas
+
+Harness Server / Installation:
+  MCP server, Core, validators, connectors, projector, reconcile worker, and operator tools
+
+Harness Runtime Home:
+  registry.sqlite, project.yaml, state.sqlite, and the artifact store
+```
+
+```mermaid
+flowchart LR
+  Repo["Product Repository<br/>product code, tests, projections, proposal areas"]
+  Server["Harness Server / Installation<br/>MCP server, Core, validators, connectors, projector, reconcile worker"]
+  Home["Harness Runtime Home<br/>registry.sqlite, project.yaml, state.sqlite, artifact store"]
+
+  Repo -->|user intent, repo facts, human edits| Server
+  Server -->|managed projections and reconcile candidates| Repo
+  Server -->|Core 상태 전이와 artifact 등록| Home
+  Home -->|현재 기록, events, 원본 근거 refs| Server
+```
+
+이 분리는 대화, Markdown report, 생성된 connector 파일, 제품 소스 파일이 우연히 운영 상태가 되는 일을 막습니다.
+
+## Product Repository
+
+Product Repository는 사용자의 실제 제품 작업 공간입니다. 제품 소스 코드, tests, repository-level agent rules, 사람이 읽는 Harness projection이 여기에 있습니다.
+
+대표적인 repository-owned paths는 다음과 같습니다.
+
+```text
+repo/
+  AGENTS.md
+  docs/
+    tasks/
+    approvals/
+    reports/
+    design/
+  .harness/
+    agent/generated/
+    reconcile/pending/
+```
+
+
+Repository는 생성된 TASK, APR, RUN-SUMMARY, EVAL, DIRECT-RESULT, EVIDENCE-MANIFEST, TDD-TRACE, MANUAL-QA, DOMAIN-LANGUAGE, MODULE-MAP, INTERFACE-CONTRACT Markdown report를 담을 수 있습니다. 이 파일들은 사람과 agent가 작업을 읽는 데 도움을 주지만 기준 상태가 아닙니다. 사람이 편집할 수 있는 영역은 입력 접점입니다. Accepted changes는 reconcile 또는 Core 상태 변경 action을 통해서만 상태 기록이 됩니다.
+
+## Harness Server / Installation
+
+Harness Server / Installation은 제어 계층입니다. MVP는 여러 service의 fleet 대신 내부 모듈을 가진 하나의 로컬 프로세스로 구현할 수 있습니다.
+
+Core runtime의 책임:
+
+- MCP server를 통해 읽기 resource와 public tool을 제공합니다.
+- Core에서 커널 상태 전이를 실행합니다.
+- write 전, Run 기록 후, close 전에 validator를 실행합니다.
+- artifact와 무결성 metadata를 기록합니다.
+- projection job을 enqueue하고 render합니다.
+- 사람의 편집이나 managed-block drift에서 reconcile candidate를 감지합니다.
+- 진단, 복구, export, conformance 진입점을 제공합니다.
+
+MCP server는 shell command를 감싼 얇은 wrapper가 아닙니다. MCP server는 높은 수준의 의도 호출을 제공하고, Core는 이를 상태 전이, validator, artifact 기록, projection job으로 변환합니다.
+
+## Harness Runtime Home
+
+Harness Runtime Home은 로컬 운영 권한을 저장합니다. Reference location은 `~/.harness`이지만 정확한 MVP layout은 Reference MVP 문서가 담당합니다.
+
+Runtime Home에는 다음이 있습니다.
+
+- project registration, connected surface, connector manifest를 위한 `registry.sqlite`
+- 정적 프로젝트 설정을 위한 registered project별 `project.yaml`
+- 현재 운영 기록과 `state.sqlite.task_events`를 위한 project별 `state.sqlite`
+- 지속 보관되는 근거 파일을 위한 artifact directories
+
+
+Runtime Home은 대화 기록이 사라지거나 Product Repository projection이 stale이어도 운영 상태를 복구할 수 있을 만큼 충분해야 합니다. Product Repository 문서는 상태 기록과 artifact refs에서 다시 생성될 수 있으며, 그 기록을 대체하지 않습니다.
+
+## Core process model
+
+### Runtime layers
+
+```text
+사용자 대화 surface
+  ↓
+Agent surface
+  ↓
+Harness 규칙 / skill / local instructions
+  ↓
+Harness MCP server
+  ↓
+Harness Core
+  ↓
+state.sqlite / artifact store / validators / projector / reconcile worker
+```
+
+
+Conversation surface는 사용자 의도, decision, approval, QA 판단, acceptance를 모읍니다. Agent surface는 읽기, 편집, 확인을 수행합니다. Harness rules와 skills는 agent가 현재 상태를 놓치지 않게 합니다. MCP server는 tool 경계를 제공합니다. Core는 상태 모델을 담당합니다. Validator, artifact capture, projection, reconcile은 evidence와 readable output을 상태 전이에 붙입니다.
+
+Native hooks, sidecars, command wrappers, file watchers, worktree isolation은 capability에 따라 달라지는 집행 계층입니다. 구체적인 capability profile이 더 강한 enforcement를 증명하지 않는 한 MVP는 reference surface에서 cooperative/detective behavior에 의존합니다.
+
+
+### Core modules
+
+MVP Core는 다음 내부 모듈을 가진 단일 프로세스로 실행할 수 있습니다.
+
+| Module | Runtime responsibility |
+|---|---|
+| State store | 현재 기록, state version, locks, and `state.sqlite.task_events` |
+| Task workflow | intake, mode selection, next action, gate 갱신, close 판단 |
+| Journey module | Journey Spine reconstruction, Journey Spine Entry support records, Journey Card inputs, and continuity refs |
+| Decision module | Decision Packet lifecycle, `decision_gate` aggregation, 사용자 판단 연결, and residual-risk visibility inputs |
+| Approval module | scope-bound approval request, decision, expiry, and drift handling |
+| Evidence module | run records, artifact refs, evidence manifests, and coverage checks |
+| Verification module | verification bundles, evaluator runs, Eval records, and independence checks |
+| Manual QA module | QA records and `qa_gate` aggregation |
+| Projection module | projection jobs, managed blocks, freshness, and report paths |
+| Reconcile module | human-editable proposals, managed drift, and accepted-state routing |
+| Validator runner | core, decision, autonomy/boundary, design-quality, artifact, projection, and connector checks |
+| Autonomy/Boundary validator responsibility | Autonomy Boundary compatibility, agent latitude, user-judgment requirements, AFK stop conditions, and boundary drift findings |
+| Connector adapter | reference surface registration, capability reporting, and capture hints |
+
+
+Core만 기준 운영 상태를 업데이트합니다. Agents, CLI commands, projectors, reconnect/recovery flows는 Core 로직을 거치거나 같은 state compatibility rules를 보존하는 recovery code를 사용해야 합니다.
+
+Decision, Journey, Autonomy/Boundary modules는 새로운 authority tier를 만들지 않습니다. 기준 기록은 `state.sqlite` 현재 기록과 `state.sqlite.task_events`에 있고, 원본 근거는 artifact store에 있으며, Markdown views는 projections 또는 proposal surfaces로 남습니다.
+
+
+### Validators and adapter placement
+
+Validator는 Core 옆에 위치하고 구조화된 result를 Core에 반환합니다. Core는 그 result가 transition을 차단할지, gate를 stale/partial/blocked로 mark할지, 사용자 판단을 요청할지, 표시에만 영향을 줄지 결정합니다.
+
+Stable MVP validator IDs:
+
+- `decision_gate_check`
+- `decision_quality_check`
+- `autonomy_boundary_check`
+- `feedback_loop_check`
+- `tdd_trace_required`
+- `codebase_stewardship_check`
+- `residual_risk_visibility_check`
+- `shared_design_alignment`
+- `vertical_slice_shape`
+- `domain_language_consistency`
+- `module_interface_review`
+- `manual_qa_required`
+- `context_hygiene_check`
+- `surface_capability_check`
+
+`feedback_loop_check`는 Feedback Loop support records와 related execution evidence를 읽습니다. 별도의 kernel gate를 도입하지 않습니다. 그 consequence는 다른 design-quality checks와 같은 validator placement model 안에서 `design_gate`, evidence sufficiency, blockers, display로 흘러갑니다.
+
+State/envelope validation, active Task, active Change Unit, changed paths, baseline freshness, approval scope, evidence sufficiency, artifact integrity, verification independence, same-session verification guard, projection 최신성 같은 Core preconditions와 mechanical checks는 이 validators 전이나 옆에서 실행될 수 있습니다. 이 값들은 이 section, MCP API, Reference MVP가 stable ValidatorResult-emitting set으로 명시적으로 promote하지 않는 한 alternate validator IDs가 아닙니다. Surface capability는 `ValidatorResult`로 emit될 때 의도적으로 `surface_capability_check` capability validator로 model됩니다.
+
+
+Adapters와 sidecars는 surface capability를 observable facts로 번역합니다. Capability에 대한 kernel gate를 만들지는 않습니다. Capability는 `surface_capability_check` validator, `prepare_write` blocked reasons, guarantee display를 통해 나타납니다.
+
+## State transaction flow
+
+상태를 변경하는 모든 operation은 현재 기록과 event history에 대해 하나의 SQLite transaction을 사용합니다.
+
+```text
+1. request envelope와 expected state version을 검증
+2. transition에 필요한 project/task lock을 acquire
+3. 현재 상태 기록을 read
+4. pre-transition validator를 실행
+5. 현재 기록 업데이트
+6. state.sqlite.task_events에 하나 이상의 row를 append
+7. 필요한 경우 state/projection version을 증가시키거나 갱신
+8. projection job을 enqueue
+9. commit
+10. commit 이후 Markdown projections를 render
+```
+
+
+이 transaction 안에서 Core는 affected scope clock을 증가시킵니다. Task-scoped changes는 `tasks.state_version`을 증가시키고, `task_id=null`인 project-scoped changes는 `project_state.state_version`을 증가시킵니다. Event rows는 각 affected scope의 resulting state version을 기록합니다.
+
+Projection rendering은 transaction 이후에 일어납니다. Projection failure는 projection 최신성을 stale 또는 failed로 표시하고 committed state는 그대로 둡니다. Projection은 passed task를 failed task로 바꿀 수 없고, 나중의 reconcile decision 없이 기준 상태를 repair할 수도 없습니다.
+
+## Artifact store architecture
+
+Artifact store는 지속 보관되는 근거 파일을 보관합니다. Raw artifacts에는 diffs, logs, screenshots, checkpoints, bundles, captured manifests, exported bundle components, 기타 integrity metadata와 함께 저장되는 evidence file이 포함됩니다.
+
+Artifact는 두 부분으로 이루어집니다.
+
+- artifact store 안의 raw file
+- kind, path, hash, size, redaction state, task/run relation, retention class를 naming하는 `state.sqlite`의 artifact 상태 기록
+
+
+Core는 runs, evidence manifests, Eval records, Manual QA records, Decision Packets, rendered Task-scoped projection refs 같은 기존 Task-scoped owner record에 artifact refs를 기록합니다. MVP에서 rendered projection ref로 향하는 `artifact_links`는 artifact의 `task_id` 안에 머뭅니다. Project-level projection job은 owner docs가 허용하는 곳에서 `projection_jobs` metadata로 track될 수 있지만, current MVP에서는 project-scoped artifact links가 아닙니다. Export snapshots와 components는 valid owners 또는 Task-scoped projections로 다시 link되는 artifact files로 남습니다. Exact relation rules는 API, Reference MVP, Document Projection, Operations owner docs가 담당합니다. Large logs와 patches는 raw artifacts로 두고, Markdown reports는 unbounded evidence를 embed하는 대신 artifact refs로 link해야 합니다.
+
+Raw secrets는 artifacts로 저장하면 안 됩니다. Secret-related evidence가 required라면 Core는 redacted artifact, secret handle, relevant validator를 통과한 operator note를 기록합니다.
+
+
+### Raw artifacts, 상태 기록, Markdown report
+
+경계는 다음과 같습니다.
+
+| Item | Authority | Examples |
+|---|---|---|
+| Raw artifact | Durable evidence file in artifact store | diff, log, screenshot, checkpoint, bundle, manifest file |
+| State record | Canonical structured record in `state.sqlite` | Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Eval, Manual QA record, Evidence Manifest, Shared Design, Artifact record |
+| Markdown report | Human-readable projection from records and artifact refs | TASK, Journey Card/Spine views, Decision Packet views, APR, RUN-SUMMARY, EVAL, DIRECT-RESULT, EVIDENCE-MANIFEST |
+
+
+이 named report kind는 기본적으로 상태 기록과 artifact refs에서 생성되는 projections입니다. Artifact store의 evidence file을 refer할 수 있고 export가 snapshots를 포함할 수 있지만, 그렇다고 Markdown report가 기준 근거 파일이 되지는 않습니다.
+
+## Projection and reconcile flow
+
+Projection은 outbox-style flow입니다.
+
+```text
+상태 전이 commit 완료
+→ projection job queue됨
+→ 상태 기록과 artifact refs에서 managed block render
+→ projected version과 managed hash 기록
+→ human-editable area 보존
+```
+
+Projector는 managed area만 write하고 사람이 편집할 수 있는 영역은 보존합니다. Managed area가 직접 edit되었다면 projector는 그 edit를 state로 조용히 받아들이지 않고 reconcile candidate를 기록합니다. Human-editable area에 proposal이 있으면 reconcile은 candidate record를 만들고 명시적 decision을 요청합니다.
+
+Reconcile authority path:
+
+```text
+human-editable input
+→ state.sqlite.reconcile_items
+→ accepted state event/record 또는 rejected/deferred note
+```
+
+
+Reconcile은 merge, reject, note로 convert, decision 생성, design support record 생성 또는 갱신, defer를 할 수 있습니다. Accepted operational changes는 Core를 통해 기록되고 `state.sqlite.task_events`에 append됩니다.
+
+## Guarantee levels
+
+Harness는 집행 강도를 솔직하게 보여주기 위해 guarantee levels를 report합니다.
+
+| Level | Meaning |
+|---|---|
+| `cooperative` | the agent surface is expected to follow harness instructions and MCP decisions |
+| `detective` | the harness can detect violations and mark state blocked, stale, partial, or failed after observation |
+| `preventive` | the connector or runtime can block a violating action before it executes |
+| `isolated` | risky work is separated by a worktree, sandbox, process boundary, or equivalent isolation |
+
+
+MVP reference behavior는 connected surface가 concrete pre-tool guard나 isolation layer를 갖는 경우가 아니라면 cooperative/detective입니다. Native hook expansion, advanced sidecar watching, broad isolated execution은 MVP reference surface를 위해 명시적으로 구현되지 않는 한 later roadmap items입니다.
+
+Guarantee level은 display와 risk context입니다. Approval, verification, acceptance, kernel gate가 아닙니다.
+
+## Failure and recovery overview
+
+Failures는 숨기지 않고 기록합니다.
+
+| Failure | Architecture-level handling |
+|---|---|
+| Agent crash during write | active Run을 `runs.status=interrupted`로 mark하거나 equivalent interrupted recovery Run을 commit합니다. 가능하면 diff/log snapshots를 capture하고 successful completion의 proof가 아닌 recovery artifacts로 register합니다 |
+| Baseline drift after approval | approval 또는 evidence를 stale로 mark합니다. Scope가 영향을 받으면 reconfirmation을 요구합니다 |
+| Evaluator observes repo drift | verification을 block하거나 stale로 mark합니다. Fresh baseline 또는 new bundle을 요구합니다 |
+| Artifact file missing | artifact/evidence를 stale로 mark합니다. Recovery를 통해 rescan하거나 restore합니다 |
+| Projection job failed | state는 current로 유지하고 projection을 failed로 mark한 뒤 retry 또는 reconcile합니다 |
+| Managed Markdown edited directly | reconcile item을 만들고 기준 상태를 직접 바꾸지 않습니다 |
+| MCP unavailable | `MCP_SERVER_UNAVAILABLE`은 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능한 diagnostic condition이고, `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 connected surface에 usable MCP가 없거나 MCP configuration이 stale이거나 required tools를 call할 수 없음을 observe할 수 있는 diagnostic condition입니다. `MCP_UNAVAILABLE`은 stable public availability code로 남습니다. Product/runtime/code writes는 cooperative surface에서는 instruction으로 hold되고 available한 stronger guard에서는 차단됩니다 |
+| Surface capability mismatch | validator result를 기록하고 guarantee display를 조정하며, required checks를 satisfy할 수 없으면 unsafe writes를 차단합니다 |
+
+
+Recovery tools는 projection 최신성 repair, artifact rescan, stale runs interrupt, drifted approvals expire, reconcile items create를 수행할 수 있습니다. 다만 같은 권한 규칙을 보존해야 합니다. `state.sqlite`는 운영 상태이고, `state.sqlite.task_events`는 그 state store 안의 event 이력이며, 원본 근거는 artifact store에 있고, Markdown report는 projection으로 남습니다.

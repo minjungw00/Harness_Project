@@ -77,6 +77,6 @@ Harness is the local record and decision path around AI-assisted work. It helps 
 
 - Read [Concepts](concepts.md) for the smallest vocabulary you need before reference specs.
 - Read [Purpose and Principles](purpose-and-principles.md) for the values and boundaries behind the system.
-- For strict kernel behavior during the redesign, current owner: [Kernel Spec](../03-kernel-spec.md). Future reference path: `reference/kernel.md`.
-- For runtime architecture during the redesign, current owner: [Runtime Architecture](../04-runtime-architecture.md). Future reference path: `reference/runtime-architecture.md`.
+- For strict kernel behavior, read [Kernel Reference](../reference/kernel.md).
+- For runtime architecture, read [Runtime Architecture Reference](../reference/runtime-architecture.md).
 - For document projection during the redesign, current owner: [Document Projection](../07-document-projection.md). Future reference path: `reference/document-projection.md`.
