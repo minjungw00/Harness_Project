@@ -49,7 +49,7 @@ This document does not own:
 - projection job table; see [Storage And DDL](storage-and-ddl.md)
 - full kernel transition table; see [Kernel Reference](kernel.md)
 - projection template bodies; see [Template Reference](templates/README.md); projection rules live in [Document Projection Reference](document-projection.md)
-- operator command syntax; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
+- operator command syntax; see [Operations And Conformance Reference](operations-and-conformance.md)
 - connector capability profiles; see [Agent Integration Reference](agent-integration.md)
 - connector cookbook recipes; see [Surface Cookbook](surface-cookbook.md)
 

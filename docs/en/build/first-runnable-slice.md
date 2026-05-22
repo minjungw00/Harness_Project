@@ -296,7 +296,7 @@ Minimum first-slice fixtures:
 - `close_task` blocks evidence-insufficient close
 - `close_task` blocks unresolved decision close
 
-Use the fixture shape and comparison rules in [Operations And Conformance](../11-operations-and-conformance.md#conformance-fixture-format).
+Use the fixture shape and comparison rules in [Operations And Conformance Reference](../reference/operations-and-conformance.md#conformance-fixture-format).
 
 ## Reference docs to consult
 
@@ -304,4 +304,4 @@ Use the fixture shape and comparison rules in [Operations And Conformance](../11
 - [Runtime Architecture Reference](../reference/runtime-architecture.md): three spaces, Core process model, transaction flow, artifact store, projection/reconcile, guarantee levels, and failure handling.
 - [MCP API And Schemas](../reference/mcp-api-and-schemas.md): public resources, tool envelopes, request/response schemas, error taxonomy, artifact refs, and `ProjectionKind`.
 - [Storage And DDL](../reference/storage-and-ddl.md): runtime layout, DDL, migrations, locks, artifacts, baselines, projection jobs, and validator-run storage.
-- [Operations And Conformance](../11-operations-and-conformance.md): operator semantics, conformance staging, fixture format, execution, and assertion rules.
+- [Operations And Conformance Reference](../reference/operations-and-conformance.md): operator semantics, conformance staging, fixture format, execution, and assertion rules.

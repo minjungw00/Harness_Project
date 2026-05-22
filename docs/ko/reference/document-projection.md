@@ -54,8 +54,8 @@ Markdown report는 evidence link를 제공하고 상태를 요약할 수 있지�
 - public MCP request/response schemas. [MCP API And Schemas](mcp-api-and-schemas.md)를 봅니다.
 - SQLite DDL과 storage layout. [Storage And DDL](storage-and-ddl.md)를 봅니다.
 - 설계 품질 정책 계약. [설계 품질 정책](design-quality-policies.md)을 봅니다.
-- operator command semantics. [Operations And Conformance](../11-operations-and-conformance.md)를 보고, 이후 경로는 `reference/operations-and-conformance.md`입니다.
-- conformance fixture assertion semantics. [Operations And Conformance](../11-operations-and-conformance.md)를 보고, 이후 경로는 `reference/operations-and-conformance.md`입니다.
+- operator command semantics. [Operations And Conformance](operations-and-conformance.md)를 봅니다.
+- conformance fixture assertion semantics. [Operations And Conformance](operations-and-conformance.md)를 봅니다.
 - connector capability profile. [Agent 통합 참조](agent-integration.md)를 봅니다.
 - surface recipe. [Surface Cookbook](surface-cookbook.md)을 봅니다.
 - 전체 template 본문과 표시 카드 형태. [Template 참조](templates/README.md)를 봅니다.

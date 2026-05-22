@@ -54,8 +54,8 @@ This document does not own:
 - public MCP request/response schemas; see [MCP API And Schemas](mcp-api-and-schemas.md)
 - SQLite DDL and storage layout; see [Storage And DDL](storage-and-ddl.md)
 - design-quality policy contracts; see [Design Quality Policies](design-quality-policies.md)
-- operator command semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
-- conformance fixture assertion semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
+- operator command semantics; see [Operations And Conformance Reference](operations-and-conformance.md)
+- conformance fixture assertion semantics; see [Operations And Conformance Reference](operations-and-conformance.md)
 - connector capability profiles; see [Agent Integration Reference](agent-integration.md)
 - surface recipes; see [Surface Cookbook](surface-cookbook.md)
 - full template bodies and display card shapes; see [Template Reference](templates/README.md)

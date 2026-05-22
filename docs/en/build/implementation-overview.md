@@ -168,4 +168,4 @@ Then use the reference docs and current owners for exact behavior:
 - [Runtime Architecture Reference](../reference/runtime-architecture.md) for runtime spaces, Core flow, artifacts, projection/reconcile, and guarantee levels.
 - [MCP API And Schemas](../reference/mcp-api-and-schemas.md) for public resources, tools, schemas, errors, and artifact refs.
 - [Storage And DDL](../reference/storage-and-ddl.md) for runtime layout, DDL, migrations, locks, artifacts, baselines, projection jobs, and validator-run storage.
-- [Operations And Conformance](../11-operations-and-conformance.md) for operator semantics and fixture expectations.
+- [Operations And Conformance Reference](../reference/operations-and-conformance.md) for operator semantics and fixture expectations.

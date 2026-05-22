@@ -114,9 +114,9 @@ Every diagram should have nearby prose that explains what to notice. If a diagra
 
 ## English/Korean semantic parity rule
 
-English and Korean docs must preserve the same meaning, file map, and contractual detail.
+English and Korean docs must preserve the same active file map, semantic section coverage, and contractual detail.
 
-Korean headings and prose may be natural Korean. They do not need to preserve English word order or sentence structure. Official identifiers, API names, schema names, enum values, DDL names, file names, error codes, validator IDs, and product terms listed in the translation guide must remain exact.
+Paired English/Korean files keep the same active file map and semantic section coverage. Heading text and minor grouping may be idiomatic when owner links, stable identifiers, and reviewability remain clear. Korean headings and prose may be natural Korean; different but semantically equivalent Korean headings are not an automatic docs-maintenance failure. Official identifiers, API names, schema names, enum values, DDL names, file names, error codes, validator IDs, code identifiers, and product terms listed in the translation guide must remain exact.
 
 Any semantic change in `docs/en` must be mirrored in `docs/ko` in the same batch, and the reverse is also true.
 
@@ -127,6 +127,34 @@ When you rename, move, split, or merge a document, update links in both language
 Prefer links to the owner document or owner section instead of links to secondary summaries. Do not point active owner links to migration notes unless the subject is migration history.
 
 After a rename, search for old paths, old anchors, old headings, and old title text. Update the README path, nearby cross-references, appendix links, and paired-language links together.
+
+## Docs-maintenance checks
+
+Docs-maintenance checks are read-only documentation maintenance. They are not Core fixture conformance, runtime validators, canonical state transitions, projection refresh, generated operational reports, QA results, acceptance records, evidence artifacts, residual-risk acceptance, close readiness, or implementation readiness.
+
+A docs-maintenance review or future checker should report the category, file path, heading or anchor when available, owner document, observed drift, suggested fix, and a statement that no canonical state transition was performed. Resolve drift by updating the owner first, then replacing non-owner duplicates with a short summary plus owner link.
+
+Use these result meanings:
+
+| Result | Meaning |
+|---|---|
+| `FAIL` | Drift can make active docs contradictory or non-actionable, such as broken owner links, schema/DDL/enum/stable event/`ValidatorResult`/`ProjectionKind` mismatch, missing paired active files, missing semantic section coverage, or non-owner text redefining an owner contract. Idiomatic heading text or minor grouping differences are not failures when owner links, stable identifiers, and reviewability remain clear. |
+| `WARN` | Drift should be cleaned up but does not yet contradict an owner contract, such as minor glossary phrasing drift, duplicate explanatory prose that is not normative, stale but non-blocking cross-reference wording, or incomplete TODO metadata that is still understandable. |
+| `PASS` | No relevant drift is found for the category. |
+
+Required check categories:
+
+| Category | Required check |
+|---|---|
+| English/Korean file structure parity | `docs/en` and `docs/ko` keep the same active document paths unless an exception is explicitly documented. |
+| English/Korean semantic section parity | Paired files keep the same active file map and semantic section coverage. Heading text and minor grouping may be idiomatic when owner links, stable identifiers, schema names, enum values, DDL names, validator IDs, code identifiers, and reviewability remain clear. |
+| Broken cross-reference detection | Markdown links, heading anchors, appendix links, and paired-language entry links resolve to active docs. |
+| Owner-boundary drift | Exact contracts stay in their active owners, including `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, and `reference/glossary.md`. |
+| Fixture/action schema drift | Operations fixture examples keep `action` and executable `input` aligned with public MCP request schemas and the `ToolEnvelope` expansion convention; fixture semantics are linked, not restated here. |
+| Enum, event, validator, and projection drift | State/gate/result/error/storage values, Kernel Stable Event Catalog names, stable `ValidatorResult` IDs, and `ProjectionKind` tiers match their owner docs. |
+| Glossary and source-of-truth phrasing drift | Official terms, capitalization, record ID prefixes, and source-of-truth boundaries match `reference/glossary.md` and do not imply extra state authorities. |
+| TODO compliance | `TODO_DECISION` and `TODO_IMPLEMENT` use the allowed meanings, name the gap clearly, and do not leave `TODO_REWRITE` markers in finished canonical sections. |
+| Non-owner duplicate full contracts | Full schemas, DDL, transition tables, fixture mini-languages, template bodies, or glossary definitions outside the owner doc are replaced with a short summary plus owner link. |
 
 ## Review checklist
 
@@ -152,11 +180,11 @@ During the redesign, some target reader-path files may not exist yet. Until a ta
 
 After a target reference file exists, that target is the active owner; the numbered file becomes migration source material until final cleanup.
 
-| Subject | Owner in redesigned structure | Previous/current source during redesign |
+| Subject | Owner in redesigned structure | Previous source / migration source material |
 |---|---|---|
 | Entrypoint, reader paths, document list, target tree summary | `README.md` | `README.md` |
 | Shared reader mental model and three-space overview | `learn/overview.md` | `00-introduction.md` |
-| Small core concept introduction | `learn/concepts.md` | `00-introduction.md`, `glossary.md` |
+| Small core concept introduction | `learn/concepts.md` | `00-introduction.md` and `glossary.md` as migration source material |
 | Project purpose, target users, values, scope, non-goals, automation philosophy | `learn/purpose-and-principles.md` | `01-project-charter.md` |
 | Strategic thesis, failure model, MVP boundary, principle groups | `learn/purpose-and-principles.md` for reader explanation; `reference/design-quality-policies.md` and `reference/kernel.md` for exact contract impact | `02-strategy.md` |
 | Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` | `03-kernel-spec.md` as previous source material |
@@ -173,8 +201,8 @@ After a target reference file exists, that target is the active owner; the numbe
 | Agent surface capability profiles, common connector contract, fallback semantics, Role Lens, connector conformance overview | `reference/agent-integration.md` | `09-agent-integration.md` as migration source material |
 | Surface-specific recipes | `reference/surface-cookbook.md` | `appendix/B-surface-cookbook.md` as migration source material |
 | Generic capability profile examples | `reference/agent-integration.md` | `appendix/B-surface-cookbook.md` as migration source material |
-| Operator procedures, conformance, doctor/recover/reconcile/export/artifact integrity | `reference/operations-and-conformance.md` | `11-operations-and-conformance.md` |
-| Official term definitions | `reference/glossary.md` | `glossary.md` |
+| Operator procedures, conformance fixture bodies, fixture assertion semantics, doctor/recover/reconcile/export/artifact integrity, docs-maintenance reporting | `reference/operations-and-conformance.md` | `11-operations-and-conformance.md` as migration source material |
+| Official term definitions and capitalization | `reference/glossary.md` | `glossary.md` as migration source material |
 | Post-MVP roadmap | `roadmap.md` | `appendix/C-later-roadmap.md` |
 | Documentation authoring rules | `maintain/authoring-guide.md` | `99-authoring-guide.md` |
 | Translation and bilingual prose rules | `maintain/translation-guide.md` | none; new in redesign |

@@ -168,4 +168,4 @@ Build 계층은 다음 순서로 읽습니다.
 - [런타임 아키텍처 참조](../reference/runtime-architecture.md): runtime space, Core flow, artifact, projection/reconcile, guarantee level.
 - [MCP API와 스키마](../reference/mcp-api-and-schemas.md): public resource, tool, schema, error, artifact ref.
 - [Storage와 DDL](../reference/storage-and-ddl.md): runtime layout과 DDL, migration, lock, artifact, baseline, projection job, validator-run storage를 다룹니다.
-- [운영과 Conformance](../11-operations-and-conformance.md): operator semantics와 fixture expectation.
+- [운영과 Conformance 참조](../reference/operations-and-conformance.md): operator semantics와 fixture expectation.

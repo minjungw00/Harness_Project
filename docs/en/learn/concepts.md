@@ -63,7 +63,7 @@ The agent says the login flow works. Useful support might include the diff, the 
 
 Evidence is recorded support for claims about the work. It can include diffs, logs, tests, screenshots, run summaries, evaluation records, Manual QA records, or other durable artifacts tied to the task.
 
-Current owner: [Operations and Conformance](../11-operations-and-conformance.md). Future reference path: `reference/operations-and-conformance.md`.
+Current owner: [Operations and Conformance Reference](../reference/operations-and-conformance.md).
 
 ## Approval
 
@@ -87,7 +87,7 @@ The agent runs tests after editing the login flow. That is useful, but it is not
 
 Verification records how the result was checked and how independent that check was. Harness separates self-checks from detached verification so confidence is not confused with independence.
 
-Current owner: [Operations and Conformance](../11-operations-and-conformance.md). Future reference path: `reference/operations-and-conformance.md`.
+Current owner: [Operations and Conformance Reference](../reference/operations-and-conformance.md).
 
 ## Manual QA
 

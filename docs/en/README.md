@@ -40,6 +40,8 @@ Use this path to look up detailed contracts, schemas, policies, and definitions.
 - [Design Quality Policies](reference/design-quality-policies.md)
 - [Agent Integration Reference](reference/agent-integration.md)
 - [Surface Cookbook](reference/surface-cookbook.md)
+- [Operations And Conformance Reference](reference/operations-and-conformance.md)
+- [Glossary Reference](reference/glossary.md)
 - [Template Reference](reference/templates/README.md)
 - More reference files will move here as the redesign continues.
 
@@ -53,6 +55,8 @@ Use this path to keep the docs and future Harness system coherent over time.
 ## Roadmap
 
 - [Roadmap](roadmap.md)
+
+The target roadmap path is `roadmap.md`; until task 13, Appendix C remains migration source material.
 
 ## Language Parity
 

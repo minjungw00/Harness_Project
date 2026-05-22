@@ -63,7 +63,7 @@ Decision Packet은 사용자가 해야 하는 결정이 진행, 쓰기, 닫기, 
 
 근거는 작업에 대한 주장을 뒷받침하는 기록입니다. diff, 로그, 테스트, 스크린샷, 실행 요약, 평가 기록, Manual QA 기록, 작업과 연결된 오래 보관할 파일이 여기에 포함될 수 있습니다.
 
-현재 담당 문서: [운영과 적합성](../11-operations-and-conformance.md). 이후 reference 경로: `reference/operations-and-conformance.md`.
+담당 문서: [운영과 Conformance 참조](../reference/operations-and-conformance.md).
 
 ## 승인
 
@@ -87,7 +87,7 @@ Write Authorization은 지금 제품 파일 쓰기를 진행해도 되는지에 
 
 검증은 결과를 어떻게 확인했는지, 그 확인이 얼마나 분리되어 있었는지 기록합니다. Harness는 자체 확인과 분리된 검증을 구분해서 확신과 독립성을 혼동하지 않게 합니다.
 
-현재 담당 문서: [운영과 적합성](../11-operations-and-conformance.md). 이후 reference 경로: `reference/operations-and-conformance.md`.
+담당 문서: [운영과 Conformance 참조](../reference/operations-and-conformance.md).
 
 ## Manual QA
 

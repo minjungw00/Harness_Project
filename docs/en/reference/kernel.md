@@ -67,7 +67,7 @@ This document does not own:
 - design-quality policy contract tables; see [Design Quality Policies](design-quality-policies.md)
 - connector capability profiles; see [Agent Integration Reference](agent-integration.md)
 - surface recipes; see [Surface Cookbook](surface-cookbook.md)
-- operator command syntax; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
+- operator command syntax; see [Operations And Conformance Reference](operations-and-conformance.md)
 - template bodies
 
 ## Work modes
