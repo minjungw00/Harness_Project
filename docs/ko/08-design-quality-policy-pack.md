@@ -1,5 +1,7 @@
 # 설계 품질 정책 팩
 
+Reference copy: 재설계된 reference 문서는 [설계 품질 정책](reference/design-quality-policies.md)에 있습니다. 이 legacy chapter는 final cleanup 전까지 migration source material로 남아 있습니다.
+
 ## 문서 역할
 
 이 문서는 design-quality policy를 policy contract로 담당한다. 이 정책은 AI 지원 작업이 product design, domain language, module boundary, testing discipline, human QA, context hygiene와 정렬된 상태를 유지하도록 안내한다.

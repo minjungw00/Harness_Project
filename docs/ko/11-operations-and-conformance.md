@@ -561,7 +561,7 @@ Fixture authors는 API precedence가 generic validator fallback을 선택할 때
 
 `expected_state.validators` 아래의 validator assertion은 validator ID로 keyed됩니다. 나열된 각 validator ID는 captured validator results에 존재해야 하며 나열된 field를 partially match해야 합니다. 나열되지 않은 validator ID와 나열되지 않은 validator field는 assert하지 않습니다.
 
-Fixture가 design-quality severity를 assert할 때는 모든 relevant validator finding을 `expected_state.validators` 아래 visible하게 유지하고, policy-owned [Severity Composition Rule](08-design-quality-policy-pack.md#severity-composition-rule)이 만든 merged gate, write-blocker, close-blocker, waiver, Decision Packet outcome을 assert해야 합니다. Fixture는 policy schema를 추가하거나 더 강한 merged blocker가 있다는 이유만으로 lower-severity finding을 suppress하면 안 됩니다.
+Fixture가 design-quality severity를 assert할 때는 모든 relevant validator finding을 `expected_state.validators` 아래 보이게 유지하고, policy-owned [Severity Composition Rule](reference/design-quality-policies.md#severity-composition-rule)이 산출한 merged gate, write-blocker, close-blocker, waiver, Decision Packet outcome도 assert해야 합니다. Fixture는 policy schema를 추가하거나 더 강한 merged blocker가 있다는 이유만으로 lower-severity finding을 숨기면 안 됩니다.
 
 `expected_state.checks` 아래의 Core check와 precondition assertion은 check/precondition name을 key로 사용합니다. 이 entry는 captured Core check output, blocked reason, response summary, 또는 runner가 관찰한 equivalent check status와 비교합니다. MCP API 또는 Storage와 DDL이 해당 ID를 stable ValidatorResult로 명시적으로 승격하지 않는 한 이 값들은 validator ID가 아니며 `expected_state.validators` 아래에 두면 안 됩니다.
 

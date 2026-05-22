@@ -16,7 +16,7 @@ Use this when you need to plan what to build after the first runnable slice. Use
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md) and [First Runnable Slice](first-runnable-slice.md). For exact API contracts, use [MCP API And Schemas](../reference/mcp-api-and-schemas.md). For storage details and DDL, use [Storage And DDL](../reference/storage-and-ddl.md).
+Read [Implementation Overview](implementation-overview.md) and [First Runnable Slice](first-runnable-slice.md). For exact API contracts, use [MCP API And Schemas](../reference/mcp-api-and-schemas.md). For storage details and DDL, use [Storage And DDL](../reference/storage-and-ddl.md). For design-quality gate and validator behavior, use [Design Quality Policies](../reference/design-quality-policies.md).
 
 ## Main idea
 

@@ -1,18 +1,87 @@
-# Design Quality Policy Pack
+# Design Quality Policies
 
-Reference copy: the redesigned reference version now lives at [Design Quality Policies](reference/design-quality-policies.md). This legacy chapter remains in place during the migration as source material until final cleanup.
+## What this document helps you do
 
-## Document Role
+Use this reference to decide when a design-quality policy applies, what record or evidence it expects, which stable validator reports it, and how an unmet requirement can affect write gates or close.
 
-This document owns design-quality policies as policy contracts. These policies guide how AI-assisted work stays aligned with product design, domain language, module boundaries, testing discipline, human QA, and context hygiene.
+These policies help AI-assisted work stay aligned with product design, domain language, module boundaries, testing discipline, human QA, and context hygiene without turning every quality preference into a kernel rule.
 
-The policy strategy is agency-preserving: agents should move independently inside clear boundaries, surface meaningful choices as decisions, and stop for user judgment when product direction, risk acceptance, or public commitments are at stake.
+This document does not define MCP schemas, SQLite DDL, state transition tables, runtime behavior, server behavior, or full projection templates.
 
-Design-quality policies are not additional kernel invariants. The kernel owns lifecycle, gate transitions, close semantics, blocker mechanics, and state transitions. This document tells policy evaluators when `decision_gate`, `design_gate`, `qa_gate`, evidence sufficiency, `prepare_write` blockers, or close blockers may be affected. It does not define kernel transitions.
+## Read this when
 
-This document does not define MCP schemas, SQLite DDL, state transition tables, or full templates.
+- You are shaping work and need to know which design-quality records matter.
+- You are writing or reviewing conformance fixtures that assert design-quality validator results.
+- You need to understand why a task has `design_gate`, `decision_gate`, or `qa_gate` impact.
+- You are deciding whether a policy waiver is allowed.
+- You are reviewing close blockers, Decision Packet needs, Manual QA requirements, or stewardship findings.
 
-## Policy Contract Shape
+## Policies in plain language
+
+| Policy area | Plain-language question |
+|---|---|
+| `shared_design` | Do we agree on the goal, scope, non-goals, assumptions, and first safe Change Unit? |
+| `decision_quality` | Is this a product, design, architecture, waiver, or risk choice that needs a recorded judgment path? |
+| `autonomy_boundary` | What may the agent do alone, and where must it stop for user judgment? |
+| `vertical_slice` | Is the work shaped as a thin end-to-end slice, or is a horizontal exception recorded? |
+| `feedback_loop` | How will the agent learn whether the change works before and after writing? |
+| `tdd_trace` | When TDD is required or best fit, is RED, GREEN, and related check evidence recorded? |
+| `domain_language` | Are product terms and code terms still aligned? |
+| `deep_module_interface` | Are module roles, public interfaces, compatibility, and callers understood? |
+| `codebase_stewardship` | Does local task completion hide future maintenance, testability, domain, or boundary damage? |
+| `manual_qa` | Does a human need to inspect UX, workflow, copy, accessibility, visual output, or product taste? |
+| `context_hygiene` | Is the agent using current, focused context instead of stale chat or old documents? |
+| `two_stage_review_display` | Are spec compliance and code stewardship shown separately without creating new gates? |
+
+## Reference scope
+
+This document owns:
+
+- design-quality policy contracts
+- policy-to-validator mapping
+- stable design-quality validator IDs
+- severity composition rule
+- policy waiver semantics
+- policy evidence expectations
+- policy close impact
+- two-stage review display relationship to policy validators
+- when design-quality policies affect `decision_gate`, `design_gate`, `qa_gate`, evidence sufficiency, `prepare_write` blockers, or close blockers
+
+## Not covered here
+
+This document does not own:
+
+- kernel lifecycle transitions; see [Kernel Reference](kernel.md)
+- gate enum definitions; see [Kernel Reference](kernel.md) and [MCP API And Schemas](mcp-api-and-schemas.md)
+- public MCP request/response schemas; see [MCP API And Schemas](mcp-api-and-schemas.md)
+- SQLite DDL or storage layout; see [Storage And DDL](storage-and-ddl.md)
+- projection template bodies; see [Document Projection Reference](document-projection.md) and [Template Reference](templates/README.md)
+- operator command semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
+- connector capability profiles or surface recipes; see [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
+- user-facing session procedure
+
+## How policies affect gates without becoming kernel invariants
+
+The kernel owns lifecycle, gate transitions, close semantics, blocker mechanics, state transitions, `prepare_write`, and `close_task`.
+
+Design-quality policies are policy contracts layered on top of that kernel. A policy can say when `decision_gate`, `design_gate`, `qa_gate`, evidence sufficiency, `prepare_write` blockers, or close blockers may be affected. It does not create a new kernel transition, a new canonical source of truth, or a substitute for scope, approval, evidence, verification, acceptance, or residual-risk rules.
+
+Policy waivers are also limited. They can satisfy a design-quality requirement only where the policy contract allows it. They do not waive product-write scope, sensitive-change approval, required evidence coverage, required acceptance, or verification independence.
+
+## Two-stage review model
+
+Review guidance is displayed in two stages so agents and users can separate "did we build the requested thing?" from "is the implementation maintainable?" The stages are procedure and display, not new kernel gates, schemas, or canonical records.
+
+| Stage | Question | Typical coverage |
+|---|---|---|
+| Spec Compliance Review | Did the work satisfy the requested task under the current Harness authority? | Acceptance criteria coverage, Change Unit completion conditions, scope and Write Authority compatibility, Decision Packet compatibility, evidence coverage, and residual-risk visibility. |
+| Code Quality / Stewardship Review | Is the implementation maintainable inside this codebase? | Domain language, module/interface boundary, vertical slice shape, feedback loop or TDD trace, codebase stewardship, context hygiene, and follow-up risk. |
+
+Review stages may summarize validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, and close blockers. They do not by themselves satisfy evidence, QA, verification, acceptance, residual-risk acceptance, approval, scope, or Write Authorization.
+
+Same-session review is not detached verification. A passed two-stage review may support `self_checked` confidence and may route findings into state, but it must not produce `assurance_level=detached_verified`. Detached verification still requires a valid independence boundary and Eval path.
+
+## Policy contract shape
 
 Each policy uses the same fields:
 
@@ -39,49 +108,18 @@ flowchart LR
   Evidence --> CloseImpact["close_impact"]
 ```
 
-## Policy Contracts
+## Policy contracts
 
-```mermaid
-flowchart TB
-  Pack["Design Quality Policy Pack"]
-  Pack --> Design["design and decision"]
-  Pack --> Discipline["implementation discipline"]
-  Pack --> Stewardship["stewardship and context"]
-  Pack --> Human["human inspection"]
+### Shared Design (`shared_design`)
 
-  Design --> Shared["shared_design"]
-  Design --> Decision["decision_quality"]
-  Design --> Autonomy["autonomy_boundary"]
+Use this when:
 
-  Discipline --> Slice["vertical_slice"]
-  Discipline --> Feedback["feedback_loop"]
-  Discipline --> TDD["tdd_trace"]
+- The request is ambiguous or the first safe Change Unit is not obvious.
+- Scope, non-scope, acceptance criteria, or user value needs alignment.
+- Public interface, schema, auth, UX, or workflow behavior may change.
+- A `work` task needs shaping before implementation.
 
-  Stewardship --> Domain["domain_language"]
-  Stewardship --> Interface["deep_module_interface"]
-  Stewardship --> Codebase["codebase_stewardship"]
-  Stewardship --> Context["context_hygiene"]
-
-  Human --> ManualQA["manual_qa"]
-  Pack --> Review["two-stage review display"]
-  Review --> SpecReview["Spec Compliance Review"]
-  Review --> StewardshipReview["Code Quality / Stewardship Review"]
-```
-
-## Two-Stage Review Model
-
-Review guidance is displayed in two stages so agents and users can separate "did we build the requested thing?" from "is the implementation maintainable?" The stages are procedure and display, not new kernel gates, schemas, or canonical records.
-
-| Stage | Question | Typical coverage |
-|---|---|---|
-| Spec Compliance Review | Did the work satisfy the requested task under the current Harness authority? | Acceptance criteria coverage, Change Unit completion conditions, scope and Write Authority compatibility, Decision Packet compatibility, evidence coverage, and residual-risk visibility. |
-| Code Quality / Stewardship Review | Is the implementation maintainable inside this codebase? | Domain language, module/interface boundary, vertical slice shape, feedback loop or TDD trace, codebase stewardship, context hygiene, and follow-up risk. |
-
-Review stages may summarize validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, and close blockers. They do not by themselves satisfy evidence, QA, verification, acceptance, residual-risk acceptance, approval, scope, or Write Authorization.
-
-Same-session review is not detached verification. A passed two-stage review may support `self_checked` confidence and may route findings into state, but it must not produce `assurance_level=detached_verified`. Detached verification still requires a valid independence boundary and Eval path.
-
-### Shared Design
+Example: A user asks for "better onboarding." Before writing, record the goal, non-goals, acceptance criteria, rejected options, and the first thin onboarding Change Unit.
 
 | Field | Contract |
 |---|---|
@@ -94,7 +132,16 @@ Same-session review is not detached verification. A passed two-stage review may 
 | `evidence` | Task summary, acceptance criteria, decision refs, rejected option refs, domain/module/interface impact refs. |
 | `close_impact` | If required and absent, set or keep `design_gate=pending` or `partial`. If risk is high and no waiver exists, block close. A valid waiver may allow `design_gate=waived`. |
 
-### Decision Quality
+### Decision Quality (`decision_quality`)
+
+Use this when:
+
+- A choice changes product direction, scope, architecture, public API, interface, or compatibility.
+- A waiver accepts known risk, including QA or verification waiver risk.
+- A horizontal exception is a design or architecture choice.
+- The agent has a recommendation but the user owns the judgment.
+
+Example: A breaking API change looks simpler. Record the options, trade-offs, compatibility risk, recommendation, and user decision before acting on it.
 
 | Field | Contract |
 |---|---|
@@ -107,7 +154,16 @@ Same-session review is not detached verification. A passed two-stage review may 
 | `evidence` | Decision Packet refs, option refs, evidence manifest refs, risk/waiver refs, residual-risk state refs when risk acceptance is involved, and user acceptance refs when user judgment is required. |
 | `close_impact` | Missing required decision quality for blocking product judgment sets or keeps `decision_gate=required`, `pending`, or `blocked`. Keep `design_gate` impact only when the decision affects design quality. Unresolved user judgment, invalid deferral, or unaccepted residual risk blocks affected writes or close. Valid recorded acceptance may allow close with residual risk preserved in state refs. |
 
-### Autonomy Boundary
+### Autonomy Boundary (`autonomy_boundary`)
+
+Use this when:
+
+- The agent may proceed on implementation details but must stop on product judgment.
+- A task has ambiguous authority, user constraints, sensitive actions, external side effects, or irreversible edits.
+- Scope expansion, public commitment, or known stop conditions may appear.
+- The active Change Unit needs a clear "agent may do" and "ask first" boundary.
+
+Example: The agent may refactor local helper names inside scope, but must stop before changing the public CLI flag contract or accepting risk on behalf of the user.
 
 | Field | Contract |
 |---|---|
@@ -136,20 +192,16 @@ flowchart TD
   Prepare --> WriteAuth["compatible Write Authorization when all write checks pass"]
 ```
 
-### Domain Language
+### Vertical Slice (`vertical_slice`)
 
-| Field | Contract |
-|---|---|
-| `name` | `domain_language` |
-| `applies_when` | New product term appears, an existing term is used with a new meaning, code and product language diverge, multiple names refer to one concept, or reviewer/evaluator finds a term mismatch. |
-| `default_requirement` | Record or update affected terms with meaning, code representation, "not this" boundary, related terms, source, and status. Implementation agents pull only task-relevant terms; reviewers/evaluators receive relevant terms and any active terminology uncertainty. |
-| `allowed_waiver` | Allowed when the work has no domain term impact or the term is intentionally local/temporary. Waiver must record why no canonical term update is needed. |
-| `required_record` | `domain_terms` records referenced with `record_kind=domain_term`; `DOMAIN-LANGUAGE` is only a projection/proposal surface. |
-| `validator` | `domain_language_consistency` |
-| `evidence` | Domain term refs, code refs, test naming refs, reconcile item refs for proposals. |
-| `close_impact` | If required terms are missing or conflicting, mark `design_gate=partial` or `stale`; block close when the mismatch affects acceptance criteria, public behavior, or verification confidence. |
+Use this when:
 
-### Vertical Slice
+- The task adds or changes a feature, user-visible behavior, workflow, or integration path.
+- A medium or large `work` task needs a small end-to-end delivery shape.
+- A horizontal enabling slice is proposed and needs a recorded exception.
+- Follow-up vertical risk must stay visible.
+
+Example: For a notification feature, prefer a slice from trigger through domain logic and persistence to observable output and test evidence, even if the UI is minimal.
 
 | Field | Contract |
 |---|---|
@@ -162,7 +214,16 @@ flowchart TD
 | `evidence` | Change Unit record, run summary, evidence manifest, tests, Manual QA refs if user-visible. |
 | `close_impact` | If vertical slice is required and neither satisfied nor waived, set `design_gate=partial` or `blocked`. A justified horizontal exception may allow close only when the follow-up risk is recorded. |
 
-### Feedback Loop
+### Feedback Loop (`feedback_loop`)
+
+Use this when:
+
+- Implementation is about to start.
+- A behavior-affecting write needs a credible check path.
+- TDD is waived and an alternate loop must carry confidence.
+- Manual QA, browser smoke, tests, typecheck, lint, or build output should become evidence.
+
+Example: Before changing parser behavior, define a small loop: failing parser fixture, implementation, passing fixture, and evidence manifest refs.
 
 | Field | Contract |
 |---|---|
@@ -177,7 +238,16 @@ flowchart TD
 
 Public mutation path: selected-loop definitions and waivers are recorded with `FeedbackLoopUpdate` during `record_run(kind=shaping_update)`. Execution refs and status are updated with `EvidenceUpdates.feedback_loop_updates` during implementation/direct runs, or with `record_manual_qa.feedback_loop_ref` when Manual QA is the selected loop.
 
-### TDD Trace
+### TDD Trace (`tdd_trace`)
+
+Use this when:
+
+- The change touches domain logic, service behavior, parser/validator behavior, state transitions, or edge-heavy internals.
+- A bug fix needs a failing check before implementation.
+- TDD is selected by policy, task, Change Unit, user, or operator.
+- RED and GREEN evidence should prove the behavior path rather than just describe it.
+
+Example: For a state transition bug, record a failing transition test before non-test implementation, then record the passing test and any refactor/check evidence.
 
 | Field | Contract |
 |---|---|
@@ -201,7 +271,38 @@ TDD execution loop:
 
 This is policy and write-check behavior, not a Kernel Authority Invariant. Kernel authority still comes from active Task, active Change Unit scope, `prepare_write`, Write Authorization, approvals, Decision Packets, evidence, verification, QA, acceptance, and close semantics in the owner documents.
 
-### Deep Module / Interface
+### Domain Language (`domain_language`)
+
+Use this when:
+
+- A new product term appears or an existing term gets a new meaning.
+- Product language and code language diverge.
+- Multiple names refer to one concept.
+- A reviewer or evaluator finds terminology drift.
+
+Example: If the product calls a concept "Journey Card" but code introduces `sessionSummary`, record or update the term boundary before the mismatch spreads.
+
+| Field | Contract |
+|---|---|
+| `name` | `domain_language` |
+| `applies_when` | New product term appears, an existing term is used with a new meaning, code and product language diverge, multiple names refer to one concept, or reviewer/evaluator finds a term mismatch. |
+| `default_requirement` | Record or update affected terms with meaning, code representation, "not this" boundary, related terms, source, and status. Implementation agents pull only task-relevant terms; reviewers/evaluators receive relevant terms and any active terminology uncertainty. |
+| `allowed_waiver` | Allowed when the work has no domain term impact or the term is intentionally local/temporary. Waiver must record why no canonical term update is needed. |
+| `required_record` | `domain_terms` records referenced with `record_kind=domain_term`; `DOMAIN-LANGUAGE` is only a projection/proposal surface. |
+| `validator` | `domain_language_consistency` |
+| `evidence` | Domain term refs, code refs, test naming refs, reconcile item refs for proposals. |
+| `close_impact` | If required terms are missing or conflicting, mark `design_gate=partial` or `stale`; block close when the mismatch affects acceptance criteria, public behavior, or verification confidence. |
+
+### Deep Module / Interface (`deep_module_interface`)
+
+Use this when:
+
+- A public interface, module boundary, schema, data model, auth boundary, or compatibility contract may change.
+- A deep module hides complexity behind a simpler public surface.
+- Caller impact, boundary tests, or dependency direction need review.
+- A shallow-module risk may make future changes harder.
+
+Example: Before changing an evidence manifest schema, record the interface contract, impacted callers, compatibility risk, and boundary tests.
 
 | Field | Contract |
 |---|---|
@@ -214,7 +315,16 @@ This is policy and write-check behavior, not a Kernel Authority Invariant. Kerne
 | `evidence` | Module map item refs, including module-local watchpoints when relevant; interface contract refs, caller impact list, boundary tests, design decisions, compatibility notes. |
 | `close_impact` | Missing required review keeps `design_gate=pending` or `partial`; public interface or compatibility risk without review can block close or require user acceptance of residual risk. |
 
-### Codebase Stewardship
+### Codebase Stewardship (`codebase_stewardship`)
+
+Use this when:
+
+- Work touches durable code structure, domain concepts, ownership, interfaces, architecture, or testing strategy.
+- A local fix could increase future-change cost.
+- Drift appears between owner records and implementation reality.
+- Review needs a focused stewardship summary instead of a generic code-review checklist.
+
+Example: A task passes tests but spreads a domain concept across three modules with inconsistent names. Record the affected owner refs and reconcile the drift instead of treating the task as cleanly done.
 
 | Field | Contract |
 |---|---|
@@ -239,7 +349,7 @@ flowchart LR
   Summary --> Display["close-relevant stewardship impact"]
 ```
 
-### StewardshipImpactSummary Display Shape
+#### StewardshipImpactSummary display shape
 
 `StewardshipImpactSummary` is a derived display/summary shape for the Design Stewardship Default and the `codebase_stewardship` policy contract. It is not a Kernel Authority Invariant. It is a derived display, not a canonical current record. It is derived from owner records, validator results, and refs; it does not create a new canonical source of truth.
 
@@ -271,7 +381,16 @@ flowchart TB
 
 `feedback_loop_status` is derived from referenced `feedback_loops` rows and validator results. A referenced `tdd_traces` row can satisfy execution evidence when TDD is selected, but it is not the canonical owner of the selected loop.
 
-### Manual QA
+### Manual QA (`manual_qa`)
+
+Use this when:
+
+- The change affects UI, UX flow, copy, error messages, accessibility, visual output, or browser-only behavior.
+- A critical flow such as onboarding, checkout, auth, or billing needs inspection.
+- Product taste judgment is required.
+- Automated checks cannot see the user experience well enough.
+
+Example: A settings page copy change passes tests, but a person still needs to inspect the real screen for clarity, layout, accessibility, and product tone.
 
 | Field | Contract |
 |---|---|
@@ -284,7 +403,16 @@ flowchart TB
 | `evidence` | Manual QA record, screenshots, notes, browser logs, walkthrough refs, finding refs. |
 | `close_impact` | If Manual QA is required, `qa_gate=pending` or `failed` blocks successful close. `qa_gate=waived` requires a waiver reason. QA failed should create rework, block close, or require an explicit follow-up path. |
 
-### Context Hygiene
+### Context Hygiene (`context_hygiene`)
+
+Use this when:
+
+- Work resumes after interruption or after related docs, issues, records, or code paths changed.
+- The agent may be relying on stale chat, stale PRDs, old design docs, or moved code paths.
+- An evaluator or reviewer needs a focused current-state bundle.
+- Projection freshness, reconcile items, or acceptance criteria changed.
+
+Example: A task resumes after a week. Push the current Task summary, latest evidence, Journey refs, policy refs, and acceptance criteria; pull old PRDs only if needed and mark stale inputs.
 
 | Field | Contract |
 |---|---|
@@ -297,7 +425,29 @@ flowchart TB
 | `evidence` | Current projection refs, freshness state, stale refs, reconcile item refs, bundle contents for evaluator. |
 | `close_impact` | Stale critical context may mark `design_gate=stale`, evidence stale, or projection stale. It can block write or close when the agent cannot safely determine scope, evidence, or current acceptance criteria. |
 
-## Waiver Rules
+### Two-stage Review Display
+
+Use this when:
+
+- A user needs to see spec compliance separately from maintainability.
+- A same-session review should route findings without claiming detached verification.
+- Review output needs to summarize existing policy validators without adding new validator IDs.
+- Close readiness needs a readable split between "requested thing satisfied" and "codebase stewardship acceptable."
+
+Example: A final review can pass Spec Compliance because acceptance criteria and evidence are covered, while Code Quality / Stewardship still reports a `domain_language_consistency` warning and a follow-up Change Unit recommendation.
+
+| Field | Contract |
+|---|---|
+| `name` | `two_stage_review_display` |
+| `applies_when` | Review guidance is shown for spec compliance, code quality, stewardship, evidence gaps, Decision Packet candidates, residual-risk candidates, or close blockers. |
+| `default_requirement` | Display Spec Compliance Review and Code Quality / Stewardship Review separately. Summarize relevant owner records, validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, and close blockers without creating new gates, schemas, canonical records, or assurance upgrades. |
+| `allowed_waiver` | Display may be omitted for narrow direct/advisor work where no review display is useful. Omission does not waive any underlying policy, evidence, QA, verification, acceptance, scope, approval, or close requirement. |
+| `required_record` | Existing owner records, validator results, evidence refs, Decision Packet refs, residual-risk refs, and close blocker refs. The review display itself is derived display, not canonical state. |
+| `validator` | No standalone validator ID. Spec Compliance Review reads acceptance/evidence state plus `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, and close-related residual-risk checks where applicable. Code Quality / Stewardship Review reads `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, and `context_hygiene_check`. |
+| `evidence` | Existing validator result refs, evidence manifest refs, run/eval/manual QA refs, owner-record refs, residual-risk refs, and close blocker refs. |
+| `close_impact` | Review display does not by itself satisfy or block close. Underlying policy validators, evidence sufficiency, QA, verification, acceptance, residual-risk visibility, approval, scope, and Write Authorization determine the actual close impact. |
+
+## Waiver rules
 
 Waivers must be explicit, scoped, and recorded. A waiver should include:
 
@@ -329,7 +479,7 @@ flowchart TD
   Conditions --> Waived
 ```
 
-## MVP Severity Defaults
+## MVP severity defaults
 
 This matrix is the default MVP severity router for policy validators. It tells the reference runner which findings are advisory and which findings affect gates for common task shapes. It does not weaken `applies_when`, `default_requirement`, `allowed_waiver`, or `close_impact`; if a policy contract applies more strongly than this matrix, the policy contract wins.
 
@@ -344,18 +494,7 @@ Default impact vocabulary:
 
 This is policy impact vocabulary, not the API `ValidatorResult.findings.severity` enum. Validator findings still use `info`, `warning`, `error`, or `blocker`; merged policy impact is exposed through gates, blocked reasons, close blockers, Decision Packet needs, waiver eligibility, or fixture-observed derived state.
 
-```mermaid
-flowchart TB
-  Docs["Direct docs-only"] --> DocsImpact["usually not_required or warning unless commitments, policy contracts, domain terms, public behavior, or interfaces change"]
-  Code["Direct code"] --> CodeImpact["feedback loop and applicable policy contracts shape design_gate or evidence sufficiency"]
-  Feature["Ordinary work feature"] --> FeatureImpact["shared design, slice, feedback, stewardship default to gate impact until records exist"]
-  UI["UI/UX/copy work"] --> UIImpact["manual_qa_required may set qa_gate and close impact"]
-  Sensitive["Sensitive work"] --> SensitiveImpact["applicable policies can become blocking before write"]
-  PublicAPI["Public API/interface work"] --> PublicImpact["interface, decision, autonomy, and stewardship gaps can block write or close"]
-  Structural["Broad structural/refactor work"] --> StructuralImpact["architecture, horizontal exception, stewardship, and feedback gaps may require Decision Packet"]
-```
-
-### Severity Composition Rule
+### Severity composition rule
 
 When more than one task shape, policy contract, or validator finding applies, policy evaluators compose impacts by keeping the strongest applicable impact for the same affected concern, not the weakest. "Same affected concern" is not the whole Task and not merely the same validator ID. It means the same policy-relevant target, including the affected gate, check, or blocker target; affected operation phase; affected scope or record refs; and close, write, or decision concern. Different concerns are preserved by union; only competing impacts for the same concern use the strongest-impact rule. The default policy-impact order is:
 
@@ -372,7 +511,7 @@ flowchart LR
 
 This order decides whether a weaker default can be ignored for the same concern. It does not collapse different affected gates. If one finding affects `design_gate` and another affects `qa_gate`, `decision_gate`, evidence sufficiency, or residual-risk visibility, the merged result keeps all affected gates, blockers, and refs. `Decision Packet required` is a judgment-routing impact, not a replacement for write blockers, close blockers, evidence sufficiency, required QA, required approval, or residual-risk visibility. A Decision Packet may resolve the user-judgment part of a finding, while any independent write blocker or close blocker remains until its own policy or kernel condition is satisfied.
 
-Validators should report all relevant findings. The composition rule decides the merged gate, write-blocker, close-blocker, waiver, and Decision Packet impact; it must not hide weaker findings from validator results, evidence, status, or conformance output. Primary public `ToolError` selection remains owned by API [Primary Error Code Precedence](05-mcp-api-and-schemas.md#primary-error-code-precedence); this policy rule does not redefine error-code precedence or suppress secondary errors.
+Validators should report all relevant findings. The composition rule decides the merged gate, write-blocker, close-blocker, waiver, and Decision Packet impact; it must not hide weaker findings from validator results, evidence, status, or conformance output. Primary public `ToolError` selection remains owned by API [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence); this policy rule does not redefine error-code precedence or suppress secondary errors.
 
 Severity can be raised above the matrix default by explicit user request, sensitive category, public commitment, public API/interface or schema impact, acceptance with known risk, residual-risk visibility, stale critical context, or a conformance fixture that asserts the case as blocking. Severity can be lowered only through an allowed waiver recorded under the relevant policy contract, and only for policy-owned impacts that the contract permits waiving. Policy waivers do not lower Kernel Authority blockers such as missing scope, missing sensitive approval, required evidence insufficiency, required acceptance, or Write Authorization requirements. They also do not change API primary error precedence. This rule affects policy-contract interpretation, validators, gates, write blockers, close blockers, and Decision Packet needs; it does not make Design Stewardship Defaults into Kernel Authority Invariants.
 
@@ -386,7 +525,7 @@ Severity can be raised above the matrix default by explicit user request, sensit
 | Public API/interface work | `manual_qa_required` is `not_required` unless UI/workflow docs or browser-visible behavior are affected. `tdd_trace_required` may warn unless behavior, domain, compatibility, or edge-heavy logic is involved. | `shared_design_alignment`, `module_interface_review`, `feedback_loop_check`, `codebase_stewardship_check`, and relevant `domain_language_consistency` default to `design_gate=pending` or `design_gate=partial`. `decision_quality_check`, `module_interface_review`, and `autonomy_boundary_check` are `blocking before write` for public commitments, compatibility risk, breaking change, or boundary ambiguity. | Unresolved compatibility, interface review, public commitment, or evidence gap is a `close blocker`. `Decision Packet required` for breaking, irreversible, compatibility, or residual-risk choices. |
 | Broad structural/refactor work | `manual_qa_required` is `not_required` unless user-visible behavior is affected. `tdd_trace_required` may use an alternate loop only with justification and evidence. | `shared_design_alignment`, `vertical_slice_shape` or a recorded horizontal exception, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, and relevant `domain_language_consistency` default to `design_gate=pending` or `design_gate=partial`. `decision_quality_check` and `autonomy_boundary_check` are `blocking before write` for architecture direction, dependency direction, scope expansion, or unclear authority. | Stewardship drift, missing follow-up vertical slice, missing evidence, unresolved module/interface risk, or unaccepted residual risk can be a `close blocker`. `Decision Packet required` for architecture choices, horizontal exceptions, and accepted residual risk. |
 
-## Policy-To-Validator Mapping
+## Policy-to-validator mapping
 
 | Policy | Validator | Primary gate or state impact |
 |---|---|---|
@@ -408,27 +547,5 @@ Review-stage displays compose these existing policy validators; they do not intr
 |---|---|---|
 | Spec Compliance Review | Reads acceptance/evidence state plus `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, and close-related residual-risk checks where applicable. | Validator result refs, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, or close blockers. |
 | Code Quality / Stewardship Review | Reads `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, and `context_hygiene_check`. | Stewardship validator findings, reconcile items, owner-record update recommendations, follow-up Change Unit recommendations, residual-risk candidates, or close blockers. |
-
-```mermaid
-flowchart LR
-  PShared["shared_design"] --> VShared["shared_design_alignment"] --> IDesign["design_gate"]
-  PDecision["decision_quality"] --> VDecision["decision_quality_check"] --> IDecision["decision_gate"]
-  VDecision --> IDesign
-  PAutonomy["autonomy_boundary"] --> VAutonomy["autonomy_boundary_check"] --> IPrepare["prepare_write blockers"]
-  VAutonomy --> IDecision
-  VAutonomy --> IDesign
-  PDomain["domain_language"] --> VDomain["domain_language_consistency"] --> IDesign
-  PSlice["vertical_slice"] --> VSlice["vertical_slice_shape"] --> IDesign
-  PFeedback["feedback_loop"] --> VFeedback["feedback_loop_check"] --> IEvidence["evidence sufficiency"]
-  VFeedback --> IDesign
-  PTDD["tdd_trace"] --> VTDD["tdd_trace_required"] --> IEvidence
-  VTDD --> IDesign
-  PInterface["deep_module_interface"] --> VInterface["module_interface_review"] --> IDesign
-  PCodebase["codebase_stewardship"] --> VCodebase["codebase_stewardship_check"] --> IClose["close blockers"]
-  VCodebase --> IDesign
-  PManualQA["manual_qa"] --> VManualQA["manual_qa_required"] --> IQA["qa_gate"]
-  PContext["context_hygiene"] --> VContext["context_hygiene_check"] --> IProjection["projection freshness / reconcile"]
-  VContext --> IEvidence
-```
 
 The reference MVP may implement minimal validators first, but it should use the MVP severity defaults as the task-shape router for warning versus blocker behavior and keep validator IDs stable so conformance fixtures can grow without changing policy names.

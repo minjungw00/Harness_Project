@@ -51,7 +51,7 @@ Markdown report는 evidence를 link하고 state를 요약할 수 있지만 raw a
 - canonical kernel state와 transition rules. [Kernel Reference](kernel.md)를 봅니다.
 - public MCP request/response schemas. [MCP API And Schemas](mcp-api-and-schemas.md)를 봅니다.
 - SQLite DDL과 storage layout. [Storage And DDL](storage-and-ddl.md)를 봅니다.
-- design-quality policy contracts. [Design Quality Policy Pack](../08-design-quality-policy-pack.md)을 보고, 이후 경로는 `reference/design-quality-policies.md`입니다.
+- design-quality policy contracts. [설계 품질 정책](design-quality-policies.md)을 봅니다.
 - operator command semantics. [Operations And Conformance](../11-operations-and-conformance.md)를 보고, 이후 경로는 `reference/operations-and-conformance.md`입니다.
 - conformance fixture assertion semantics. [Operations And Conformance](../11-operations-and-conformance.md)를 보고, 이후 경로는 `reference/operations-and-conformance.md`입니다.
 - optional 또는 extension projection의 full template body. 이동하기 전까지 [Appendix A](../appendix/A-template-library.md)를 봅니다.

@@ -64,7 +64,7 @@ This document does not own:
 - SQLite DDL and storage layout; see [Storage And DDL](storage-and-ddl.md)
 - full projection template text
 - document projection rules; see [Document Projection Reference](document-projection.md)
-- design-quality policy contract tables; see [Design Quality Policy Pack](../08-design-quality-policy-pack.md), future path `reference/design-quality-policies.md`
+- design-quality policy contract tables; see [Design Quality Policies](design-quality-policies.md)
 - connector capability profiles and surface recipes; see [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
 - operator command syntax; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
 - template bodies

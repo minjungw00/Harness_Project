@@ -42,6 +42,8 @@ Harness preserves strategic agency. The user keeps judgment over goals, scope, d
 
 Harness keeps the work journey followable. A reader should be able to reconstruct current state, next action, decisions, evidence, and blockers without relying on chat memory.
 
+Harness keeps design-quality policy visible without turning stewardship defaults into kernel invariants. The exact policy contracts live in [Design Quality Policies](../reference/design-quality-policies.md).
+
 Harness prefers a small, buildable MVP. The first implementation should prove the authority and agency model with concrete fixtures before growing into broader automation.
 
 Harness treats projections with humility. Markdown reports help humans read status and propose changes, but they do not silently become operational truth.

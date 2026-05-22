@@ -16,7 +16,7 @@
 
 ## 읽기 전에
 
-[구현 개요](implementation-overview.md)와 [첫 실행 가능한 조각](first-runnable-slice.md)을 먼저 읽습니다. 정확한 API 규칙은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 보고, Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다.
+[구현 개요](implementation-overview.md)와 [첫 실행 가능한 조각](first-runnable-slice.md)을 먼저 읽습니다. 정확한 API 규칙은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 보고, Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다. Design-quality gate와 validator behavior는 [설계 품질 정책](../reference/design-quality-policies.md)을 봅니다.
 
 ## 핵심 생각
 

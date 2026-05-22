@@ -95,7 +95,7 @@ Write Authorization은 지금 제품 파일 쓰기를 진행해도 되는지에 
 
 Manual QA는 사람이 경험적 결과를 직접 확인하는 기록입니다. 특히 UI, UX, 문구, 접근성, 시각 결과, 제품 취향처럼 사람의 판단이 중요한 곳에서 필요합니다.
 
-현재 담당 문서: [설계 품질 정책 팩](../08-design-quality-policy-pack.md). 이후 reference 경로: `reference/design-quality-policies.md`.
+현재 담당 문서: [설계 품질 정책](../reference/design-quality-policies.md).
 
 ## 수용
 

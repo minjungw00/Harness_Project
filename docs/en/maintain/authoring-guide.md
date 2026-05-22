@@ -168,7 +168,7 @@ After a target reference file exists, that target is the active owner; the numbe
 | Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md` | `07-document-projection.md` as migration source material |
 | MVP-required full template bodies for `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | `reference/templates/*.md` | `appendix/A-template-library.md` as migration source material |
 | Optional and extension template bodies | `appendix/A-template-library.md` during migration | Future split may move them later |
-| Design-quality policy contracts, validators, close impact | `reference/design-quality-policies.md` | `08-design-quality-policy-pack.md` |
+| Design-quality policy contracts, validators, severity composition, waiver semantics, evidence expectations, close impact | `reference/design-quality-policies.md` | `08-design-quality-policy-pack.md` as previous source material |
 | User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` | `10-user-guide.md` |
 | User/agent session procedure | `use/agent-session-flow.md` | `09-agent-integration.md`, `10-user-guide.md` |
 | Agent surface capability profile, common connector contract, fallback semantics, Role Lens, connector conformance overview | `reference/agent-integration.md` | `09-agent-integration.md` |

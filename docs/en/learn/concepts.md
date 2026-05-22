@@ -95,7 +95,7 @@ A test can pass while the error message is confusing, clipped on mobile, or visu
 
 Manual QA is human inspection of the experiential result where that matters, especially UI, UX, copy, accessibility, visual output, product taste, and other judgment-heavy outcomes.
 
-Current owner: [Design Quality Policy Pack](../08-design-quality-policy-pack.md). Future reference path: `reference/design-quality-policies.md`.
+Current owner: [Design Quality Policies](../reference/design-quality-policies.md).
 
 ## Acceptance
 

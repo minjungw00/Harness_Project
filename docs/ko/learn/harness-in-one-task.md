@@ -335,7 +335,7 @@ Remembered session과 non-remembered session에 대한 검증이 통과했습니
 | "지금 이 파일을 수정해도 되나?" | Write Authorization | 의도한 쓰기가 현재 Task, Change Unit, 결정, 승인과 맞는지 확인한다. | [커널 참조](../reference/kernel.md); agent surface 세부 담당: [Agent 통합](../09-agent-integration.md). |
 | "이 주장을 뒷받침하는 것은 이것이다." | 근거 | diff, log, check, screenshot 같은 기록으로 "끝났다"는 말을 확인 가능하게 만든다. | [사용자 가이드](../use/user-guide.md); 현재 담당 문서: [운영과 적합성](../11-operations-and-conformance.md). 이후 reference 경로: `reference/operations-and-conformance.md`. |
 | "독립적으로 확인했나?" | 검증 | 자체 확인과 분리된 검증을 구분한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
-| "사람이 실제 경험을 봤나?" | Manual QA | 테스트가 놓칠 수 있는 UX, 문구, 접근성, 시각 품질, 작업 흐름 판단을 다룬다. | [사용자 가이드](../use/user-guide.md); 현재 담당 문서: [설계 품질 정책 팩](../08-design-quality-policy-pack.md). 이후 reference 경로: `reference/design-quality-policies.md`. |
+| "사람이 실제 경험을 봤나?" | Manual QA | 테스트가 놓칠 수 있는 UX, 문구, 접근성, 시각 품질, 작업 흐름 판단을 다룬다. | [사용자 가이드](../use/user-guide.md); [설계 품질 정책](../reference/design-quality-policies.md). |
 | "이 결과를 받아들일 수 있나?" | 수용 | Task 경로가 요구할 때 사용자의 최종 판단을 기록한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "아직 어떤 불확실성이 남았나?" | 남은 위험 | 닫기나 수용 전에 알려진 제한과 위험을 보이게 한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "이제 끝났다고 해도 되나?" | 닫기 | 관련 blocker가 처리된 뒤에만 Task를 완료한다. | [커널 참조](../reference/kernel.md); agent surface 세부 담당: [Agent 통합](../09-agent-integration.md). |

@@ -51,7 +51,7 @@ This document does not own:
 - canonical kernel state and transition rules; see [Kernel Reference](kernel.md)
 - public MCP request/response schemas; see [MCP API And Schemas](mcp-api-and-schemas.md)
 - SQLite DDL and storage layout; see [Storage And DDL](storage-and-ddl.md)
-- design-quality policy contracts; see [Design Quality Policy Pack](../08-design-quality-policy-pack.md), future path `reference/design-quality-policies.md`
+- design-quality policy contracts; see [Design Quality Policies](design-quality-policies.md)
 - operator command semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
 - conformance fixture assertion semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
 - full template bodies for optional or extension projections; see [Appendix A](../appendix/A-template-library.md) until they move

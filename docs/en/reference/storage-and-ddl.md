@@ -46,7 +46,7 @@ This document does not own:
 - public MCP request/response schema; see [MCP API And Schemas](mcp-api-and-schemas.md)
 - public API error taxonomy; see [MCP API And Schemas](mcp-api-and-schemas.md)
 - full kernel lifecycle transition table; see [Kernel Reference](kernel.md)
-- design-quality policy contracts; see [Design Quality Policy Pack](../08-design-quality-policy-pack.md), future path `reference/design-quality-policies.md`
+- design-quality policy contracts; see [Design Quality Policies](design-quality-policies.md)
 - projection template bodies; see [Template Reference](templates/README.md); projection rules live in [Document Projection Reference](document-projection.md)
 - MVP stage sequencing and exit criteria; see [Build: MVP Plan](../build/mvp-plan.md)
 - operator command semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
@@ -844,7 +844,7 @@ Core must validate every JSON ref array before commit. `selected_loop_refs_json`
 
 For `artifact_links.record_kind=projection`, `artifact_links.record_id` stores `projection_jobs.projection_job_id`. The link is valid only when Core can resolve that job to the rendered projection output it links: the job is Task-scoped to the same `task_id` as the artifact link, has matching `projection_kind` and `target_ref`, has `status=completed`, and has an `output_path` or documented projection ref for the rendered output. `projection_jobs.target_ref` and `output_path` are validation and locator metadata, not replacements for `artifact_links.record_id`. Project-level projection jobs may still be tracked in `projection_jobs` where projection owner docs allow them, but the current MVP artifact DDL does not create project-scoped artifact rows or artifact links for those jobs. This keeps MVP storage on `projection_jobs` and does not introduce a `projections` table.
 
-`manual_qa_records.waiver_decision_packet_id` and `manual_qa_records.residual_risk_refs_json` are the storage hooks for QA waiver decisions and close-relevant risk refs. The waiver contract is owned by [Kernel Waiver Semantics](kernel.md#waiver-semantics) and the Manual QA policy in [Design Quality Policy Pack](../08-design-quality-policy-pack.md#manual-qa).
+`manual_qa_records.waiver_decision_packet_id` and `manual_qa_records.residual_risk_refs_json` are the storage hooks for QA waiver decisions and close-relevant risk refs. The waiver contract is owned by [Kernel Waiver Semantics](kernel.md#waiver-semantics) and the Manual QA policy in [Design Quality Policies](design-quality-policies.md#manual-qa-manual_qa).
 
 `change_unit_dependencies` is MVP DAG metadata for shaping, ordering, and close visibility. It is not a parallel orchestration scheduler and does not authorize multiple active implementation lanes.
 
@@ -1297,7 +1297,7 @@ Projection refresh retries `failed` jobs by creating or resetting a `pending` jo
 
 MVP validators use one shared result shape from the API document. The runner is intentionally small.
 
-Minimal validator rollout uses the [MVP Severity Defaults](../08-design-quality-policy-pack.md#mvp-severity-defaults) matrix and its [Severity Composition Rule](../08-design-quality-policy-pack.md#severity-composition-rule) as the default severity router. The runner may initially implement shallow checks for each stable ID, but it must keep all relevant findings visible, merge their policy impacts through the policy-owned rule, and expose the merged outcome through gate/blocker-compatible results rather than by rewriting API finding severity. Public primary `ToolError` selection still follows API-owned [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence).
+Minimal validator rollout uses the [MVP Severity Defaults](design-quality-policies.md#mvp-severity-defaults) matrix and its [Severity Composition Rule](design-quality-policies.md#severity-composition-rule) as the default severity router. The runner may initially implement shallow checks for each stable ID, but it must keep all relevant findings visible, merge their policy impacts through the policy-owned rule, and expose the merged outcome through gate/blocker-compatible results rather than by rewriting API finding severity. Public primary `ToolError` selection still follows API-owned [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence).
 
 Minimal runner shape:
 
