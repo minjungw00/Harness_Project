@@ -257,7 +257,7 @@ Strategy 수준의 규칙은 generated 또는 human-edited Markdown이 우연히
 
 ## Guarantee Level 요약
 
-Guarantee level은 연결된 surface가 무엇을 enforce할 수 있는지 strategy가 과장하지 않게 해 줍니다. Level 정의는 [04-runtime-architecture.md](04-runtime-architecture.md#guarantee-levels)가 담당하고, profile/fallback behavior는 [09-agent-integration.md](09-agent-integration.md#capability-profile)이 담당합니다.
+Guarantee level은 연결된 surface가 무엇을 enforce할 수 있는지 strategy가 과장하지 않게 해 줍니다. Level 정의는 [04-runtime-architecture.md](04-runtime-architecture.md#guarantee-levels)가 담당하고, profile/fallback behavior는 [Agent 통합 참조](reference/agent-integration.md#capability-profiles)가 담당합니다.
 
 MVP reference surface는 주로 cooperative 및 detective 수준입니다. Capability는 kernel gate가 아니며, kernel boundary는 [03-kernel-spec.md](03-kernel-spec.md#capability-boundary)에 정의됩니다.
 

@@ -24,11 +24,11 @@ Runtime behavior, user procedure, conformance fixture content, MCP schemas, SQLi
 | reference MVP implementation order, SQLite DDL, migrations, storage layout, validator runner skeleton | `06-reference-mvp.md` |
 | Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md` |
 | shared design, decision quality, autonomy boundary, domain language, vertical slice, feedback loop/TDD, module/interface, codebase stewardship, Manual QA, context hygiene policies | `08-design-quality-policy-pack.md` |
-| agent surface capability profile, common connector contract, fallback semantics | `09-agent-integration.md` |
+| agent surface capability profile, common connector contract, fallback semantics | `reference/agent-integration.md` |
 | user-facing conversation, status reading, resume procedure, approval/assurance/QA/acceptance explanation | `10-user-guide.md` |
 | connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, runtime conformance, docs-maintenance smoke reporting | `11-operations-and-conformance.md` |
 | 모든 projection template 본문과 표시 카드 형태 | `reference/templates/*.md` |
-| surface-specific cookbooks | `appendix/B-surface-cookbook.md` |
+| surface-specific cookbooks | `reference/surface-cookbook.md` |
 | later automation and derived analytics | `appendix/C-later-roadmap.md` |
 | old-to-new mapping and migration notes | `appendix/D-migration-notes.md` |
 | document ownership, authoring rules, docs-maintenance conformance checklist | `99-authoring-guide.md` |

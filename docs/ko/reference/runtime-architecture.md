@@ -40,7 +40,8 @@ Harness는 사용자의 Product Repository 옆에서 실행되는 로컬 권한 
 - SQLite DDL. [Storage와 DDL](storage-and-ddl.md)을 봅니다.
 - full CLI command semantics. 현재 담당 문서는 [운영과 Conformance](../11-operations-and-conformance.md)이고, 이후 경로는 `reference/operations-and-conformance.md`입니다.
 - conformance fixture format. 현재 담당 문서는 [운영과 Conformance](../11-operations-and-conformance.md)이고, 이후 경로는 `reference/operations-and-conformance.md`입니다.
-- surface-specific connector cookbooks. 현재 담당 문서는 [Agent 통합](../09-agent-integration.md)이고, 이후 경로는 `reference/agent-integration.md`입니다.
+- surface-specific connector cookbook. [Surface Cookbook](surface-cookbook.md)을 봅니다.
+- connector capability profile. [Agent 통합 참조](agent-integration.md)를 봅니다.
 - kernel transition table. 자세한 내용은 [커널 참조](kernel.md)를 봅니다.
 - projection template body
 

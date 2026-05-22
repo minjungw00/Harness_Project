@@ -50,7 +50,8 @@ MCP resource는 읽기 전용 view로 동작합니다. 현재 상태, projection
 - 전체 kernel transition table. [커널 참조](kernel.md)를 봅니다.
 - projection template 본문. [Template 참조](templates/README.md)를 봅니다. Projection rule은 [문서 Projection 참조](document-projection.md)가 담당합니다.
 - operator command syntax. [운영과 Conformance](../11-operations-and-conformance.md)가 현재 담당하며, 이후 경로는 `reference/operations-and-conformance.md`입니다.
-- connector cookbook recipe. [런타임 아키텍처 참조](runtime-architecture.md)와 [Agent 통합](../09-agent-integration.md)을 보고, 이후 경로는 `reference/agent-integration.md`입니다.
+- connector capability profile. [Agent 통합 참조](agent-integration.md)를 봅니다.
+- connector cookbook recipe. [Surface Cookbook](surface-cookbook.md)을 봅니다.
 
 ## 최소 호출 흐름
 

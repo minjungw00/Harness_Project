@@ -4,7 +4,7 @@
 
 This document describes how an agent session should behave for users. It is procedural: what to show, when to ask, when to continue, and when to stop.
 
-It does not define connector contracts, full capability profiles, MCP schemas, or surface cookbooks. During the redesign, those currently belong in [Agent Integration](../09-agent-integration.md). Future reference path: `reference/agent-integration.md`.
+It does not define connector contracts, full capability profiles, MCP schemas, or surface cookbooks. Those belong in [Agent Integration Reference](../reference/agent-integration.md) and [Surface Cookbook](../reference/surface-cookbook.md).
 
 ## Read this when
 

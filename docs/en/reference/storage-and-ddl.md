@@ -50,7 +50,8 @@ This document does not own:
 - projection template bodies; see [Template Reference](templates/README.md); projection rules live in [Document Projection Reference](document-projection.md)
 - MVP stage sequencing and exit criteria; see [Build: MVP Plan](../build/mvp-plan.md)
 - operator command semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
-- connector capability profiles or surface recipes; see [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
+- connector capability profiles; see [Agent Integration Reference](agent-integration.md)
+- surface recipes; see [Surface Cookbook](surface-cookbook.md)
 
 ## Runtime home layout
 
@@ -167,7 +168,7 @@ The table below is an owner map for additional status-like `TEXT` fields in the 
 
 | Field(s) | Owner/value source for hardening |
 | --- | --- |
-| `project_surfaces.guarantee_level`, `write_authorizations.guarantee_level`, `validator_runs.guarantee_level` | Semantic meaning is owned by [Runtime Architecture Guarantee Levels](runtime-architecture.md#guarantee-levels); connector/profile reporting is owned by [Agent Integration Guarantee Levels](../09-agent-integration.md#guarantee-levels); public payload shape is reflected in [MCP API And Schemas](mcp-api-and-schemas.md). |
+| `project_surfaces.guarantee_level`, `write_authorizations.guarantee_level`, `validator_runs.guarantee_level` | Semantic meaning is owned by [Runtime Architecture Guarantee Levels](runtime-architecture.md#guarantee-levels); connector/profile reporting is owned by [Agent Integration Guarantee Levels](agent-integration.md#guarantee-levels); public payload shape is reflected in [MCP API And Schemas](mcp-api-and-schemas.md). |
 | `runs.kind` | `RecordRunRequest.kind` in [`harness.record_run`](mcp-api-and-schemas.md#harnessrecord_run). |
 | `approvals.status` | Approval lifecycle semantics in [Approval Gate](kernel.md#approval-gate), plus the approval decision payload in [`harness.record_user_decision`](mcp-api-and-schemas.md#harnessrecord_user_decision). |
 | `decision_requests.decision_kind`, `decision_packets.decision_kind` | Decision Packet public schemas and decision payload branches in [MCP API And Schemas](mcp-api-and-schemas.md). |

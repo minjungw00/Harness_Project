@@ -169,9 +169,10 @@ After a target reference file exists, that target is the active owner; the numbe
 | All projection template bodies and display card shapes | `reference/templates/*.md` | `appendix/A-template-library.md` as migration source material until final cleanup |
 | Design-quality policy contracts, validators, severity composition, waiver semantics, evidence expectations, close impact | `reference/design-quality-policies.md` | `08-design-quality-policy-pack.md` as previous source material |
 | User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` | `10-user-guide.md` |
-| User/agent session procedure | `use/agent-session-flow.md` | `09-agent-integration.md`, `10-user-guide.md` |
-| Agent surface capability profile, common connector contract, fallback semantics, Role Lens, connector conformance overview | `reference/agent-integration.md` | `09-agent-integration.md` |
-| Surface-specific recipes | `reference/surface-cookbook.md` | `appendix/B-surface-cookbook.md` |
+| User/agent session procedure | `use/agent-session-flow.md` | `09-agent-integration.md` and `10-user-guide.md` as migration source material |
+| Agent surface capability profiles, common connector contract, fallback semantics, Role Lens, connector conformance overview | `reference/agent-integration.md` | `09-agent-integration.md` as migration source material |
+| Surface-specific recipes | `reference/surface-cookbook.md` | `appendix/B-surface-cookbook.md` as migration source material |
+| Generic capability profile examples | `reference/agent-integration.md` | `appendix/B-surface-cookbook.md` as migration source material |
 | Operator procedures, conformance, doctor/recover/reconcile/export/artifact integrity | `reference/operations-and-conformance.md` | `11-operations-and-conformance.md` |
 | Official term definitions | `reference/glossary.md` | `glossary.md` |
 | Post-MVP roadmap | `roadmap.md` | `appendix/C-later-roadmap.md` |

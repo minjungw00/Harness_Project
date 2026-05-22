@@ -50,7 +50,8 @@ This document does not own:
 - full kernel transition table; see [Kernel Reference](kernel.md)
 - projection template bodies; see [Template Reference](templates/README.md); projection rules live in [Document Projection Reference](document-projection.md)
 - operator command syntax; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
-- connector cookbook recipes; see [Runtime Architecture Reference](runtime-architecture.md) and [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
+- connector capability profiles; see [Agent Integration Reference](agent-integration.md)
+- connector cookbook recipes; see [Surface Cookbook](surface-cookbook.md)
 
 ## Minimal call flow
 

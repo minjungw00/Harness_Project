@@ -332,13 +332,13 @@ This tutorial only shows why those pieces exist.
 | "What may change?" | Change Unit | Bounds product writes so the task does not silently expand. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "This needs your call." | Decision Packet | Separates user-owned product judgment from broad approval. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "May this sensitive step proceed?" | Approval | Allows a sensitive action inside a defined scope without replacing product judgment or final acceptance. | [Kernel Reference](../reference/kernel.md). |
-| "May I edit these files now?" | Write Authorization | Checks that the intended write fits the current Task, Change Unit, decisions, and approvals. | [Kernel Reference](../reference/kernel.md); current agent-surface owner: [Agent Integration](../09-agent-integration.md). |
+| "May I edit these files now?" | Write Authorization | Checks that the intended write fits the current Task, Change Unit, decisions, and approvals. | [Kernel Reference](../reference/kernel.md); agent-surface owner: [Agent Integration Reference](../reference/agent-integration.md). |
 | "Here is what supports the claim." | Evidence | Makes "done" inspectable through diffs, logs, checks, screenshots, or other records. | [Use: User Guide](../use/user-guide.md); current owner: [Operations and Conformance](../11-operations-and-conformance.md). Future reference path: `reference/operations-and-conformance.md`. |
 | "Was it checked independently?" | Verification | Distinguishes self-checks from detached checks. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "Did a person inspect the experience?" | Manual QA | Covers UX, copy, accessibility, visual quality, and workflow judgment that tests may miss. | [Use: User Guide](../use/user-guide.md); [Design Quality Policies](../reference/design-quality-policies.md). |
 | "Is the result good enough?" | Acceptance | Records the user's final judgment when the task path requires it. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "What uncertainty remains?" | Residual Risk | Makes known limitations visible before close or acceptance. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
-| "Can we call this done?" | Close | Finishes the Task only when the relevant blockers have been handled. | [Kernel Reference](../reference/kernel.md); current agent-surface owner: [Agent Integration](../09-agent-integration.md). |
+| "Can we call this done?" | Close | Finishes the Task only when the relevant blockers have been handled. | [Kernel Reference](../reference/kernel.md); agent-surface owner: [Agent Integration Reference](../reference/agent-integration.md). |
 
 ## Where to go next
 

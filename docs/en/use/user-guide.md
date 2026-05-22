@@ -243,4 +243,4 @@ For the agent-side procedure, read [Agent Session Flow](agent-session-flow.md).
 
 For deeper concepts before using Harness, read [Harness in One Task](../learn/harness-in-one-task.md) and [Concepts](../learn/concepts.md).
 
-Detailed connector contracts, capability profiles, and schema references currently belong in [Agent Integration](../09-agent-integration.md). Future reference path: `reference/agent-integration.md`.
+Detailed connector contracts and capability profiles belong in [Agent Integration Reference](../reference/agent-integration.md). Surface-specific setup belongs in [Surface Cookbook](../reference/surface-cookbook.md).

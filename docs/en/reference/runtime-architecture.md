@@ -40,7 +40,8 @@ This document does not own:
 - SQLite DDL; see [Storage And DDL](storage-and-ddl.md)
 - full CLI command semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
 - conformance fixture format; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
-- surface-specific connector cookbooks; see [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
+- surface-specific connector cookbooks; see [Surface Cookbook](surface-cookbook.md)
+- connector capability profiles; see [Agent Integration Reference](agent-integration.md)
 - kernel transition table; see [Kernel Reference](kernel.md)
 - projection template bodies
 

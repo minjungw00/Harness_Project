@@ -65,7 +65,8 @@
 - 전체 projection template text
 - document projection rules. [문서 Projection 참조](document-projection.md)를 봅니다.
 - 설계 품질 정책 계약 표. [설계 품질 정책](design-quality-policies.md)을 봅니다.
-- connector capability profile과 surface recipe. 현재 담당 문서는 [Agent 통합](../09-agent-integration.md)이고, 이후 경로는 `reference/agent-integration.md`입니다.
+- connector capability profile. [Agent 통합 참조](agent-integration.md)를 봅니다.
+- surface recipe. [Surface Cookbook](surface-cookbook.md)을 봅니다.
 - 운영자 command syntax. 현재 담당 문서는 [운영과 Conformance](../11-operations-and-conformance.md)이고, 이후 경로는 `reference/operations-and-conformance.md`입니다.
 - template body
 

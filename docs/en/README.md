@@ -38,6 +38,8 @@ Use this path to look up detailed contracts, schemas, policies, and definitions.
 - [Storage And DDL](reference/storage-and-ddl.md)
 - [Document Projection Reference](reference/document-projection.md)
 - [Design Quality Policies](reference/design-quality-policies.md)
+- [Agent Integration Reference](reference/agent-integration.md)
+- [Surface Cookbook](reference/surface-cookbook.md)
 - [Template Reference](reference/templates/README.md)
 - More reference files will move here as the redesign continues.
 

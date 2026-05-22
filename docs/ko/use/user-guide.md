@@ -243,4 +243,4 @@ flowchart LR
 
 Harness를 쓰기 전에 전체 그림을 보고 싶다면 [하나의 작업으로 보는 Harness](../learn/harness-in-one-task.md)와 [핵심 개념](../learn/concepts.md)을 봅니다.
 
-자세한 커넥터 계약, 능력 프로필, 스키마 참고 문서는 현재 [Agent 통합](../09-agent-integration.md)에서 다룹니다. 이후 reference 경로: `reference/agent-integration.md`.
+자세한 커넥터 계약과 능력 프로필은 [Agent 통합 참조](../reference/agent-integration.md)가 담당합니다. 접점별 설정은 [Surface Cookbook](../reference/surface-cookbook.md)을 봅니다.

@@ -4,7 +4,7 @@
 
 이 문서는 Harness를 쓰는 에이전트 세션이 사용자에게 어떻게 보여야 하는지 설명합니다. 무엇을 보여주고, 언제 묻고, 언제 계속하고, 언제 멈춰야 하는지를 다룹니다.
 
-커넥터 계약, 전체 능력 프로필, MCP 스키마, 접점별 cookbook은 여기서 정의하지 않습니다. 그런 내용은 현재 [Agent 통합](../09-agent-integration.md)에서 다룹니다. 이후 reference 경로: `reference/agent-integration.md`.
+커넥터 계약, 전체 능력 프로필, MCP 스키마, 접점별 cookbook은 여기서 정의하지 않습니다. 그런 내용은 [Agent 통합 참조](../reference/agent-integration.md)와 [Surface Cookbook](../reference/surface-cookbook.md)이 담당합니다.
 
 ## 이런 때 읽기
 

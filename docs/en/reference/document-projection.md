@@ -56,7 +56,8 @@ This document does not own:
 - design-quality policy contracts; see [Design Quality Policies](design-quality-policies.md)
 - operator command semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
 - conformance fixture assertion semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
-- connector capability profiles or surface recipes; see [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
+- connector capability profiles; see [Agent Integration Reference](agent-integration.md)
+- surface recipes; see [Surface Cookbook](surface-cookbook.md)
 - full template bodies and display card shapes; see [Template Reference](templates/README.md)
 
 ## One generated TASK example

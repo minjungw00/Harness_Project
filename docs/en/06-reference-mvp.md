@@ -275,7 +275,7 @@ The table below is an owner map for additional status-like `TEXT` fields in the 
 
 | Field(s) | Owner/value source for hardening |
 | --- | --- |
-| `project_surfaces.guarantee_level`, `write_authorizations.guarantee_level`, `validator_runs.guarantee_level` | Semantic meaning is owned by [Runtime Architecture Guarantee Levels](04-runtime-architecture.md#guarantee-levels); connector/profile reporting is owned by [Agent Integration Guarantee Levels](09-agent-integration.md#guarantee-levels); public payload shape is reflected in [MCP API And Schemas](05-mcp-api-and-schemas.md). |
+| `project_surfaces.guarantee_level`, `write_authorizations.guarantee_level`, `validator_runs.guarantee_level` | Semantic meaning is owned by [Runtime Architecture Guarantee Levels](04-runtime-architecture.md#guarantee-levels); connector/profile reporting is owned by [Agent Integration Guarantee Levels](reference/agent-integration.md#guarantee-levels); public payload shape is reflected in [MCP API And Schemas](05-mcp-api-and-schemas.md). |
 | `runs.kind` | `RecordRunRequest.kind` in [`harness.record_run`](05-mcp-api-and-schemas.md#harnessrecord_run). |
 | `approvals.status` | Approval lifecycle semantics in [Approval Gate](03-kernel-spec.md#approval-gate), plus the approval decision payload in [`harness.record_user_decision`](05-mcp-api-and-schemas.md#harnessrecord_user_decision). |
 | `decision_requests.decision_kind`, `decision_packets.decision_kind` | Decision Packet public schemas and decision payload branches in [MCP API And Schemas](05-mcp-api-and-schemas.md). |

@@ -257,7 +257,7 @@ In short: `state.sqlite` current records plus `state.sqlite.task_events` are the
 
 ## Guarantee Level Summary
 
-Guarantee levels keep the strategy honest about what a connected surface can enforce. The level definitions are owned by [04-runtime-architecture.md](04-runtime-architecture.md#guarantee-levels), and profile/fallback behavior is owned by [09-agent-integration.md](09-agent-integration.md#capability-profile).
+Guarantee levels keep the strategy honest about what a connected surface can enforce. The level definitions are owned by [04-runtime-architecture.md](04-runtime-architecture.md#guarantee-levels), and profile/fallback behavior is owned by [Agent Integration Reference](reference/agent-integration.md#capability-profiles).
 
 The MVP reference surface is primarily cooperative and detective. Capability is not a kernel gate; the kernel boundary is defined in [03-kernel-spec.md](03-kernel-spec.md#capability-boundary).
 

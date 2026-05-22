@@ -57,7 +57,8 @@ This document does not own:
 - SQLite DDL or storage layout; see [Storage And DDL](storage-and-ddl.md)
 - projection template bodies; see [Document Projection Reference](document-projection.md) and [Template Reference](templates/README.md)
 - operator command semantics; see [Operations And Conformance](../11-operations-and-conformance.md), future path `reference/operations-and-conformance.md`
-- connector capability profiles or surface recipes; see [Agent Integration](../09-agent-integration.md), future path `reference/agent-integration.md`
+- connector capability profiles; see [Agent Integration Reference](agent-integration.md)
+- surface recipes; see [Surface Cookbook](surface-cookbook.md)
 - user-facing session procedure
 
 ## How policies affect gates without becoming kernel invariants
