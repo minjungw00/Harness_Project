@@ -81,7 +81,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - mode: work
 - lifecycle phase: executing
 - next action: record evidence for CU-01
-- evidence gate: pending
+- evidence gate: partial
 - verification gate: pending
 - Manual QA: pending
 - active change unit: CU-01
