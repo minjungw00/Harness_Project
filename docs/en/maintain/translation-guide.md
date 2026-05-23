@@ -66,6 +66,19 @@ Prefer natural phrases that preserve the technical meaning:
 - `화면에 보여준다`
 - `projection이 최신인지 표시한다`
 
+## Before / After examples
+
+Use patterns like these when polishing Korean prose:
+
+| Before | After |
+|---|---|
+| `Core가 state 변경을 수행한다.` | `Core가 상태를 변경한다.` |
+| `Agent는 authority boundary 유지가 필요하다.` | `Agent는 권한 경계를 유지해야 한다.` |
+| `이 surface는 blocker 표시를 담당한다.` | `이 화면은 blocker를 보여준다.` |
+| `Operations는 projection freshness를 report한다.` | `Operations는 projection이 최신인지 표시한다.` |
+| `canonical source를 update한다.` | `기준 기록을 업데이트한다.` |
+| `context를 잃지 않도록 한다.` | In ordinary prose, use `맥락을 잃지 않도록 한다.` |
+
 ## Korean heading policy
 
 Korean headings should be natural Korean headings, not mechanical English-heading copies.
