@@ -460,7 +460,7 @@ A validator that reports whether a connected agent surface can satisfy required 
 
 ### Surface Cookbook
 
-The appendix that contains surface-specific connector notes, generated file details, and profile examples. Common integration rules belong in the agent integration document, not the cookbook.
+The reference document that contains surface-specific connector notes, generated file details, and profile examples. Common integration rules belong in the agent integration document, not the cookbook.
 
 ### Subagent Context
 

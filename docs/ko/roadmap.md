@@ -50,19 +50,6 @@ flowchart TD
 
 ## 로드맵 항목
 
-```mermaid
-flowchart TD
-  LaterItems["Roadmap items overview"] --> Dashboard["Dashboard"]
-  LaterItems --> BrowserQA["Browser QA Capture"]
-  LaterItems --> CrossSurface["Cross-Surface Verification"]
-  LaterItems --> Hooks["Native Hook Expansion"]
-  LaterItems --> Watcher["Advanced Sidecar Watcher"]
-  LaterItems --> Parallel["Parallel Orchestration"]
-  LaterItems --> ContextIndex["Context Index"]
-  LaterItems --> LocalMetrics["Local Derived Metrics"]
-  LaterItems --> TeamProfiles["Team Profile 내보내기와 가져오기"]
-```
-
 ### Dashboard
 
 Dashboard는 active Task, gate, approval, 근거 coverage, projection 최신성, artifact 무결성, reconcile item을 시각화할 수 있습니다.

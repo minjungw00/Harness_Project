@@ -177,7 +177,7 @@ Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](ke
 |---|---|---|
 | MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Reference implementation은 이 kind들을 지원하고 source 기록이 변경될 때 대기열에 넣고 렌더링해야 합니다. |
 | MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, source 기록이 있거나, user/operator가 projection을 enable할 때 지원하거나 대기열에 넣습니다. |
-| Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | 대응하는 extension 또는 appendix projection이 enabled인 경우에만 지원할 수 있습니다. |
+| Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | 대응하는 optional projection이 enabled인 경우에만 지원할 수 있습니다. |
 
 ProjectionKind extensibility가 projection을 기준 상태로 만들지는 않습니다. 모든 projection job은 여전히 owner 기록 및 artifact 참조에서 파생된 보기를 렌더링합니다. `DEC`는 해당 feature가 enabled일 때 standalone Decision Packet Markdown에만 valid하며, MVP-required projection job이 아닙니다. Standalone `DEC` job이 없어도 MVP Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공되어야 합니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `harness.status`, `harness.next`, significant resume flow의 현재 위치 Journey Card output은 agency conformance에 계속 필요합니다.
 
@@ -389,7 +389,7 @@ EndToEndPath:
 
 Client가 guard, freeze, careful-mode control을 렌더링할 때는 authority field를 추가하지 않고 이 existing display shape를 사용합니다. `guarantee_display.level`과 `guarantee_display.notes`는 actual connected capability와 current enforcement path를 설명해야 합니다. `blocked_reasons[].message`는 scope, MCP availability, approval, baseline, capability 같은 구체적인 held 또는 blocked condition을 이름 붙여야 하며, "guard"나 "freeze" 같은 command label만으로 더 강한 guarantee를 암시하면 안 됩니다.
 
-`DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` 같은 Extension / appendix `ProjectionKind` values는 해당 projection feature가 enabled일 때만 valid projection job kind입니다. MVP-required Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공됩니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항으로 남지만 현재 위치 Journey Card output은 status, next, significant resume flows에서 필요합니다. 전체 projection template text는 [Template 참조](templates/README.md)에 있으며, 이 API schema file이 담당하지 않습니다.
+`DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` 같은 Extension / optional `ProjectionKind` values는 해당 projection feature가 enabled일 때만 valid projection job kind입니다. MVP-required Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공됩니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항으로 남지만 현재 위치 Journey Card output은 status, next, significant resume flows에서 필요합니다. 전체 projection template text는 [Template 참조](templates/README.md)에 있으며, 이 API schema file이 담당하지 않습니다.
 
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, Recommended Playbook, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. 기준 kernel records는 owner docs가 정의합니다. 이 목록에서 `RecommendedPlaybook`은 display-only 예외입니다. 자체 기준 kernel record, DDL table, task event, projection job이 없습니다.
 
@@ -622,7 +622,7 @@ Status, next, write, close flow에서 자주 드러나는 agency-critical subset
 | `APPROVAL_REQUIRED` | sensitive change requires approval before proceeding |
 | `APPROVAL_DENIED` | the relevant approval was denied |
 | `APPROVAL_EXPIRED` | approval expired or drifted from baseline/scope |
-| `CAPABILITY_INSUFFICIENT` | connected surface가 required validator 또는 enforcement condition을 충족할 수 없음 |
+| `CAPABILITY_INSUFFICIENT` | 연결된 접점이 required validator 또는 enforcement condition을 충족할 수 없음 |
 | `MCP_UNAVAILABLE` | required MCP access is unavailable, stale, or unreachable |
 | `EVIDENCE_INSUFFICIENT` | required evidence coverage is absent, partial, stale, or blocked |
 | `VERIFY_NOT_DETACHED` | verification cannot count as detached verification |
@@ -640,7 +640,7 @@ Status, next, write, close flow에서 자주 드러나는 agency-critical subset
 `MCP_UNAVAILABLE`은 stable public `ErrorCode`로 유지합니다. Diagnostic detail은 public error code를 추가하지 않고 `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`을 구분합니다.
 
 - `MCP_SERVER_UNAVAILABLE`: tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능합니다. Caller는 상태 변경을 주장하기 전에 진단하거나 reconnect해야 합니다.
-- `SURFACE_MCP_UNAVAILABLE`: Core 또는 operator는 연결된 surface에서 사용할 수 있는 MCP가 없거나, MCP configuration이 오래되었거나, required MCP tool을 호출할 수 없는 상태를 관찰할 수 있습니다. 제품 파일 쓰기는 cooperative surface에서는 지시로 보류되고, 사용할 수 있는 더 강한 guard가 있으면 차단됩니다. Core response는 상황에 따라 `details.mcp_unavailable_kind`와 함께 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`를 사용할 수 있습니다.
+- `SURFACE_MCP_UNAVAILABLE`: Core 또는 operator는 연결된 접점에서 사용할 수 있는 MCP가 없거나, MCP configuration이 오래되었거나, required MCP tool을 호출할 수 없는 상태를 관찰할 수 있습니다. 제품 파일 쓰기는 cooperative 접점에서는 지시로 보류되고, 사용할 수 있는 더 강한 guard가 있으면 차단됩니다. Core response는 상황에 따라 `details.mcp_unavailable_kind`와 함께 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`를 사용할 수 있습니다.
 
 MCP availability problem에 대해 `ToolError` object를 사용할 수 있는 경우 `details.mcp_unavailable_kind`는 `server_unavailable`, `surface_mcp_unavailable`, `stale_connection`, `unknown` 중 하나일 수 있습니다.
 
@@ -671,7 +671,7 @@ MCP server나 caller가 Core에 전혀 닿을 수 없으면 surface 또는 opera
 | 13 | `DECISION_UNRESOLVED` | existing relevant Decision Packet이 pending, deferred without coverage, rejected, blocked, stale, 또는 incompatible함 |
 | 14 | `AUTONOMY_BOUNDARY_EXCEEDED` | intended operation이 active Change Unit Autonomy Boundary를 초과하며, next step이 Decision Packet이어도 이 code를 사용함 |
 | 15 | `DECISION_REQUIRED` | blocking product judgment가 action 진행 전에 Decision Packet을 필요로 함 |
-| 16 | `CAPABILITY_INSUFFICIENT` | connected surface가 required capability 또는 enforcement condition을 충족할 수 없음 |
+| 16 | `CAPABILITY_INSUFFICIENT` | 연결된 접점이 required capability 또는 enforcement condition을 충족할 수 없음 |
 | 17 | `EVIDENCE_INSUFFICIENT` | required evidence coverage가 absent, partial, stale, 또는 blocked임 |
 | 18 | `VERIFY_NOT_DETACHED` | verification이 detached verification으로 count될 수 없음 |
 | 19 | `QA_REQUIRED` | required Manual QA가 pending, failed, missing, 또는 validly waived되지 않음 |
@@ -1300,7 +1300,7 @@ RecordUserDecisionResponse:
 
 `RecordUserDecisionResponse.accepted_risk_refs`는 `record_kind=residual_risk`인 `StateRecordRef` entries만 포함합니다. Standalone accepted-risk record kind는 없습니다.
 
-State transition summary: targeted Decision Packet은 resolve, defer, reject, block 상태로 처리합니다. Affected gate 또는 reconcile item을 업데이트합니다. Approval grant/deny는 linked Approval 기록과 `approval_gate`를 업데이트하지만 Write Authorization을 생성하지 않습니다. Accepted scope는 `scope_gate`를 업데이트하고, 사용자가 해소한 product judgment는 `decision_gate`를 업데이트합니다. Accepted Autonomy Boundary decision은 active Change Unit boundary를 업데이트할 수 있습니다. Verification 면제는 `verification_gate=waived_by_user`를 업데이트하고, QA 면제는 `qa_gate`를 업데이트합니다. Acceptance는 user decision을 Decision Packet에 기록하고 `acceptance_gate`를 업데이트합니다. Accepted Residual Risk는 assurance를 높이지 않고 Residual Risk record를 업데이트하며 그 참조를 반환합니다. Reconcile은 accepted state 기록을 생성할 수 있습니다.
+State transition summary: targeted Decision Packet은 resolve, defer, reject, block 상태로 처리합니다. Affected gate 또는 reconcile item을 업데이트합니다. Approval grant/deny는 linked Approval 기록과 `approval_gate`를 업데이트하지만 Write Authorization을 생성하지 않습니다. Accepted scope는 `scope_gate`를 업데이트하고, 사용자가 해소한 product judgment는 `decision_gate`를 업데이트합니다. Accepted Autonomy Boundary decision은 active Change Unit의 경계를 업데이트할 수 있습니다. Verification 면제는 `verification_gate=waived_by_user`를 업데이트하고, QA 면제는 `qa_gate`를 업데이트합니다. Acceptance는 user decision을 Decision Packet에 기록하고 `acceptance_gate`를 업데이트합니다. Accepted Residual Risk는 assurance를 높이지 않고 Residual Risk record를 업데이트하며 그 참조를 반환합니다. Reconcile은 accepted state 기록을 생성할 수 있습니다.
 
 implementation-local detail/audit를 위해 반환될 수 있는 non-stable EventRef values: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
 

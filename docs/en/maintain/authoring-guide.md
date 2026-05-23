@@ -126,7 +126,7 @@ When you rename, move, split, or merge a document, update links in both language
 
 Prefer links to the owner document or owner section instead of links to secondary summaries. Do not point active owner links to removed migration context.
 
-After a rename, search for old paths, old anchors, old headings, and old title text. Update the README path, nearby cross-references, appendix links, and paired-language links together.
+After a rename, search for old paths, old anchors, old headings, and old title text. Update the README path, nearby cross-references, template/reference links, and paired-language links together.
 
 ## Docs-maintenance checks
 
@@ -148,7 +148,7 @@ Required check categories:
 |---|---|
 | English/Korean file structure parity | `docs/en` and `docs/ko` keep the same active document paths unless an exception is explicitly documented. |
 | English/Korean semantic section parity | Paired files keep the same active file map and semantic section coverage. Heading text and minor grouping may be idiomatic when owner links, stable identifiers, schema names, enum values, DDL names, validator IDs, code identifiers, and reviewability remain clear. |
-| Broken cross-reference detection | Markdown links, heading anchors, appendix links, and paired-language entry links resolve to active docs. |
+| Broken cross-reference detection | Markdown links, heading anchors, template/reference links, and paired-language entry links resolve to active docs. |
 | Owner-boundary drift | Exact contracts stay in their active owners, including `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, and `reference/glossary.md`. |
 | Fixture/action schema drift | Operations fixture examples keep `action` and executable `input` aligned with public MCP request schemas in `reference/mcp-api-and-schemas.md` and the `ToolEnvelope` expansion convention in `reference/operations-and-conformance.md`; fixture semantics are linked, not restated here. |
 | Enum, event, validator, and projection drift | State/gate/result values and Kernel Stable Event Catalog names match `reference/kernel.md`; error and stable `ValidatorResult` IDs match `reference/mcp-api-and-schemas.md`; storage values match `reference/storage-and-ddl.md`; `ProjectionKind` tiers match `reference/document-projection.md` and `reference/templates/*.md`. |

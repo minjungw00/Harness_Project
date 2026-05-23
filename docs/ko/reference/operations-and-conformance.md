@@ -2,7 +2,7 @@
 
 ## 이 문서로 할 수 있는 일
 
-Harness 운영자 절차, Conformance staging, fixture assertion rule, docs-maintenance reporting boundary를 찾아볼 때 이 참조 문서를 사용합니다.
+Harness 운영자 절차, Conformance staging, fixture assertion rule, docs-maintenance reporting 경계를 찾아볼 때 이 참조 문서를 사용합니다.
 
 이 문서는 operator, implementer, conformance author, maintainer를 위한 lookup 문서입니다. 온보딩 경로가 아니므로 처음 읽는 사람은 Learn 또는 Build 문서에서 전체 흐름을 잡고, 정확한 운영 또는 Conformance 의미가 필요할 때 여기로 돌아옵니다.
 
@@ -220,7 +220,7 @@ State checks는 `registry.sqlite`와 `state.sqlite`의 JSON `TEXT` fields를 포
 - 변경 없이 read resource를 제공합니다
 - shell shortcut이 아니라 Core를 통해 public tool을 제공합니다
 - state-changing call이 Core conflict와 idempotency behavior를 사용하게 합니다
-- active project와 connected surface profile을 보고합니다
+- active project와 연결된 접점 profile을 보고합니다
 - server가 runtime state 또는 artifact storage에 닿을 수 없으면 명확히 실패합니다
 
 ```mermaid
@@ -229,12 +229,12 @@ flowchart TD
   Server -- "no" --> ServerFail["diagnostic<br/>MCP_SERVER_UNAVAILABLE<br/>authoritative Core response 없음"]
   Server -- "yes" --> Core["public tool을 위한 Core reachable"]
   Core --> Resources["변경 없이 read resource 제공"]
-  Resources --> Surface["connected surface가 required MCP tools를 사용할 수 있음?"]
-  Surface -- "yes" --> Ready["이 surface에 대해 MCP server ready"]
-  Surface -- "no" --> SurfaceFail["diagnostic<br/>SURFACE_MCP_UNAVAILABLE<br/>surface가 required MCP tools를 사용할 수 없음"]
+  Resources --> Surface["연결된 접점이 required MCP tools를 사용할 수 있음?"]
+  Surface -- "yes" --> Ready["이 접점에 대해 MCP server ready"]
+  Surface -- "no" --> SurfaceFail["diagnostic<br/>SURFACE_MCP_UNAVAILABLE<br/>접점이 required MCP tools를 사용할 수 없음"]
 ```
 
-MCP를 사용할 수 없으면 operations는 diagnostic condition인 `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`을 구분해야 합니다. 이 labels는 추가 public `ErrorCode` values가 아닙니다. 이 conditions를 `ToolError`로 surface할 때 operations는 API-owned error selection과 details shape를 사용해야 합니다. `MCP_UNAVAILABLE`은 stable public availability code로 남고, surface-side availability 또는 capability cases는 문맥에 따라 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`와 `details.mcp_unavailable_kind`로 표현될 수 있습니다. `MCP_SERVER_UNAVAILABLE`에서는 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능하므로, 상태 변경 주장 전에 server diagnosis 또는 reconnect가 next action입니다. `SURFACE_MCP_UNAVAILABLE`에서는 Core 또는 operator가 connected surface에 usable MCP가 없거나 MCP configuration이 stale이거나 required MCP tools를 호출할 수 없음을 관찰할 수 있습니다. Cooperative surface는 product/runtime/code write를 instruction으로 보류해야 하며, stronger profile은 보류를 예방적으로 또는 isolation으로 강제할 수 있습니다. Operations는 실제 guarantee level을 그대로 보고해야 합니다.
+MCP를 사용할 수 없으면 operations는 diagnostic condition인 `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`을 구분해야 합니다. 이 labels는 추가 public `ErrorCode` values가 아닙니다. 이 conditions를 `ToolError`로 드러낼 때 operations는 API-owned error selection과 details shape를 사용해야 합니다. `MCP_UNAVAILABLE`은 stable public availability code로 남고, surface-side availability 또는 capability cases는 문맥에 따라 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`와 `details.mcp_unavailable_kind`로 표현될 수 있습니다. `MCP_SERVER_UNAVAILABLE`에서는 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능하므로, 상태 변경 주장 전에 server diagnosis 또는 reconnect가 next action입니다. `SURFACE_MCP_UNAVAILABLE`에서는 Core 또는 operator가 연결된 접점에서 사용할 수 있는 MCP가 없거나 MCP configuration이 stale이거나 required MCP tools를 호출할 수 없음을 관찰할 수 있습니다. Cooperative 접점은 product/runtime/code write를 instruction으로 보류해야 하며, stronger profile은 보류를 예방적으로 또는 isolation으로 강제할 수 있습니다. Operations는 실제 guarantee level을 그대로 보고해야 합니다.
 
 ## projection refresh
 
@@ -275,7 +275,7 @@ flowchart TD
 
 MVP에서 Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 렌더링합니다. Journey Card visibility는 status, journey, next, significant resume 접점을 통해 렌더링합니다.
 
-`DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`를 위한 dedicated extension / appendix refresh targets는 enabled일 때 optional이며, required MVP smoke target이 아닙니다.
+`DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`를 위한 dedicated extension 또는 optional refresh targets는 enabled일 때 optional이며, required MVP smoke target이 아닙니다.
 
 ## reconcile
 
@@ -570,16 +570,6 @@ Default comparison modes:
 | `expected_projection` | `partial_by_kind`; 나열된 각 projection kind는 해당 kind에 대해 나열된 status assertion 또는 partial object assertion을 만족해야 합니다. |
 | `expected_error` | `expected_error: null`은 action이 error를 반환하지 않았음을 검증합니다. `expected_error`가 object이면 `expected_error.code`는 required이며 API가 소유한 [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence)에 따라 선택된 primary API `ErrorCode`인 `ToolError.code`, 즉 response에 errors가 있으면 `ToolResponseBase.errors[0].code`와 exact match합니다. Arbitrary secondary error, validator finding code, policy finding code, local diagnostic label과 match하면 안 됩니다. `expected_error.details`는 optional입니다. Omitted이면 details field는 검증하지 않습니다. `details`가 present이면 suite metadata가 `expected_error.details: exact`로 설정하지 않는 한 `partial_deep`으로 match합니다. |
 
-```mermaid
-flowchart TD
-  Modes["runner default 또는 suite catalog metadata"] --> State["expected_state<br/>default partial_deep"]
-  Modes --> Events["expected_events<br/>contains_ordered stable events"]
-  Modes --> Artifacts["expected_artifacts<br/>contains_by_identity"]
-  Modes --> Projection["expected_projection<br/>partial_by_kind"]
-  Modes --> Error["expected_error<br/>primary ToolError.code exact"]
-  Modes --> Boundary["comparison mode는 Core input, API enum, DDL, fixture body field가 아님"]
-```
-
 `expected_events` comparisons는 captured `task_events`의 [Kernel Stable Event Catalog](kernel.md#stable-event-catalog) projection을 대상으로 합니다. API tool detail/audit event lists는 이 set을 확장하지 않습니다. `task_events`에 capture된 non-catalog detail 또는 local-audit events는 normal MVP fixture를 fail하게 만들면 안 됩니다. Suite metadata가 `expected_events: exact`로 설정하면, future non-MVP/local suite가 implementation-specific detail-event assertions를 명시적으로 opt in하지 않는 한 exactness는 captured stream의 stable-event projection에 적용됩니다. Validator IDs, Core check names, projection status shorthands, fixture seed shorthand, scenario catalog IDs는 event names가 아닙니다. Prose examples는 non-catalog event names를 illustrative 또는 future extension ideas로 언급할 수 있지만, executable MVP fixtures는 kernel catalog가 승격하기 전까지 이를 요구하면 안 됩니다.
 
 Conformance runner는 captured `task_events`를 `event_seq`로 order합니다. `state_version`, `created_at`, `event_id`는 `expected_events` ordering의 tie-breaker가 아닙니다.
@@ -642,7 +632,7 @@ Agency, stewardship, context hygiene는 MVP conformance suite입니다. 이 suit
 
 Status/next recommendations는 Role Lens recommendations를 포함해 read response로만 fixture-observable합니다. Fixture는 관련 있을 때 `recommended_playbooks`를 검증할 수 있지만, recommendation 자체로 state event, gate 충족, projection 대기열 추가, artifact, evidence, verification, QA, acceptance, Residual Risk 수용, close, assurance level 상승이 발생하지 않았다는 점도 증명해야 합니다. Recommendation 또는 role lens가 product judgment를 암시하면 expected behavior는 Decision Packet ref 또는 Decision Packet request path이지 satisfied `decision_gate`가 아닙니다. Validator, evidence, Manual QA, residual-risk, release-handoff work를 식별하면 expected behavior는 routed recommendation 또는 candidate이지, 이후 public mutation fixture가 Core를 통해 record하기 전까지 committed owner record가 아닙니다.
 
-`browser-qa-candidate` recommendation도 같은 read-only rule을 따릅니다. Recommendation은 `T6 QA Capture` surface에서 Browser QA Capture가 유용하다고 이름 붙일 수 있지만, recommendation alone으로 상태를 변경하거나, projection을 대기열에 넣거나, artifact를 만들거나, evidence를 만들거나 충족하거나, verification을 수행 또는 기록하거나, QA를 기록하거나, QA 또는 verification을 면제하거나, residual risk를 수용하거나, result를 받아들이거나, Task를 닫거나, assurance를 올리면 안 됩니다. Actual artifacts, Manual QA records, QA gate updates, Eval results, close effects에는 이후 Core를 통한 public mutation이 필요합니다.
+`browser-qa-candidate` recommendation도 같은 read-only rule을 따릅니다. Recommendation은 `T6 QA Capture` 접점에서 Browser QA Capture가 유용하다고 이름 붙일 수 있지만, recommendation alone으로 상태를 변경하거나, projection을 대기열에 넣거나, artifact를 만들거나, evidence를 만들거나 충족하거나, verification을 수행 또는 기록하거나, QA를 기록하거나, QA 또는 verification을 면제하거나, residual risk를 수용하거나, result를 받아들이거나, Task를 닫거나, assurance를 올리면 안 됩니다. Actual artifacts, Manual QA records, QA gate updates, Eval results, close effects에는 이후 Core를 통한 public mutation이 필요합니다.
 
 ```mermaid
 flowchart LR

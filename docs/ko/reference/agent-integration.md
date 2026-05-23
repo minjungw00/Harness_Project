@@ -224,7 +224,7 @@ fallbacks:
 
 ## Guarantee Levels
 
-Integration은 [런타임 아키텍처 참조](runtime-architecture.md#guarantee-levels)의 guarantee level 정의를 사용하고, 이를 connected surface profile, current enforcement path, fallback choice에 적용합니다.
+Integration은 [런타임 아키텍처 참조](runtime-architecture.md#guarantee-levels)의 guarantee level 정의를 사용하고, 이를 연결된 접점 profile, current enforcement path, fallback choice에 적용합니다.
 
 이 참조는 connector 프로필이 그 level을 어떻게 보고하고 표시하는지 담당합니다. 접점 이름에서 더 강한 level을 추론하면 안 되며, guarantee level을 approval, verification, QA, acceptance, kernel gate로 취급하면 안 됩니다.
 
@@ -233,7 +233,7 @@ Integration은 [런타임 아키텍처 참조](runtime-architecture.md#guarantee
 | `cooperative` | Surface가 Harness 결정을 따르도록 지시받지만, Harness가 violation을 실행 전에 물리적으로 막지 못할 수 있음을 보여줍니다. |
 | `detective` | Harness가 action 뒤에 changed path, log, artifact, projection drift를 관찰하고 상태를 stale, blocked, partial, failed로 표시할 수 있음을 보여줍니다. |
 | `preventive` | Covered violation을 실행 전에 차단할 수 있는 hook, wrapper, permission layer, policy engine, sidecar path를 보여줍니다. |
-| `isolated` | Risky work 또는 verification에 쓰는 별도 worktree, sandbox, process, evaluator bundle 또는 equivalent boundary를 보여줍니다. |
+| `isolated` | Risky work 또는 verification에 쓰는 별도 worktree, sandbox, process, evaluator bundle 또는 동등한 경계를 보여줍니다. |
 
 Guard, freeze, careful-mode label은 실제 profile 위에 얹힌 safety-control label입니다.
 
@@ -304,7 +304,7 @@ Fallback은 surface name이 아니라 guarantee level과 risk로 설명합니다
 
 MCP가 unavailable이면 connector는 권한 있는 상태 업데이트를 주장하면 안 됩니다. `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`은 diagnostic condition이지 추가 public `ErrorCode` 값이 아닙니다. `MCP_UNAVAILABLE`은 stable public availability code로 남습니다.
 
-`MCP_SERVER_UNAVAILABLE`은 tool call이 Core에 닿지 못해 authoritative Core response가 없다는 뜻입니다. `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 connected surface에 usable MCP가 없거나 MCP configuration이 stale이거나 required tool을 호출할 수 없다고 관찰할 수 있다는 뜻입니다. Product/runtime/code write는 MCP가 다시 연결되거나 진단될 때까지 보류합니다. 예외는 exact path allowlist가 있는 명시적 pre-MVP documentation-authoring batch인 `DOCS_AUTHORING_OVERRIDE`뿐입니다. 이 override는 documentation-maintainer override일 뿐이며 Core authorization, Write Authorization, evidence, verification, QA, acceptance, Residual Risk 수용, close, 기준 상태 전이가 아닙니다.
+`MCP_SERVER_UNAVAILABLE`은 tool call이 Core에 닿지 못해 authoritative Core response가 없다는 뜻입니다. `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 연결된 접점에서 사용할 수 있는 MCP가 없거나 MCP configuration이 stale이거나 required tool을 호출할 수 없다고 관찰할 수 있다는 뜻입니다. Product/runtime/code write는 MCP가 다시 연결되거나 진단될 때까지 보류합니다. 예외는 exact path allowlist가 있는 명시적 pre-MVP documentation-authoring batch인 `DOCS_AUTHORING_OVERRIDE`뿐입니다. 이 override는 documentation-maintainer override일 뿐이며 Core authorization, Write Authorization, evidence, verification, QA, acceptance, Residual Risk 수용, close, 기준 상태 전이가 아닙니다.
 
 MCP는 동작하지만 pre-tool guard가 약하면 low-risk direct work는 cooperative `prepare_write`와 detective changed-path validation으로 진행할 수 있습니다. Medium/high-risk work에는 stricter validation, sidecar guard, explicit approval, detached verification, isolation을 요구해야 합니다.
 

@@ -126,7 +126,7 @@ Diagram은 인지 부담을 줄일 때만 사용합니다.
 
 2차 요약보다 owner 문서나 owner section으로 링크합니다. Active owner link가 제거된 migration context를 가리키면 안 됩니다.
 
-이름 변경 뒤에는 이전 path, 이전 anchor, 이전 heading, 이전 title text를 검색합니다. README path, 주변 cross-reference, appendix link, paired-language link를 함께 업데이트합니다.
+이름 변경 뒤에는 이전 path, 이전 anchor, 이전 heading, 이전 title text를 검색합니다. README path, 주변 cross-reference, template/reference link, paired-language link를 함께 업데이트합니다.
 
 ## Docs-maintenance checks
 
@@ -148,7 +148,7 @@ Result 의미:
 |---|---|
 | 영어/한국어 파일 구조 일치 | 명시적인 예외가 문서화되지 않는 한 `docs/en`과 `docs/ko`는 같은 활성 문서 경로를 유지합니다. |
 | 영어/한국어 의미 섹션 일치 | 대응 파일은 같은 활성 파일 맵과 의미상 같은 섹션 범위를 유지합니다. Owner 링크, stable identifier, schema name, enum value, DDL name, validator ID, code identifier, 검토 가능성이 분명하다면 heading text와 작은 묶음 방식은 자연스럽게 조정할 수 있습니다. |
-| 깨진 교차 참조 탐지 | Markdown links, heading anchors, appendix links, paired-language entry links가 활성 문서로 연결됩니다. |
+| 깨진 교차 참조 탐지 | Markdown links, heading anchors, template/reference links, paired-language entry links가 활성 문서로 연결됩니다. |
 | Owner 경계 불일치 | 정확한 계약은 활성 owner 문서에 머뭅니다. 여기에는 `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, `reference/glossary.md`가 포함됩니다. |
 | Fixture/action schema 불일치 | Operations fixture examples의 `action`과 실행 가능한 `input`은 `reference/mcp-api-and-schemas.md`의 public MCP request schemas 및 `reference/operations-and-conformance.md`의 `ToolEnvelope` expansion convention과 일치해야 합니다. Fixture 의미는 여기서 다시 설명하지 않고 링크합니다. |
 | Enum, event, validator, projection 불일치 | State/gate/result values와 Kernel Stable Event Catalog names는 `reference/kernel.md`, error와 stable `ValidatorResult` IDs는 `reference/mcp-api-and-schemas.md`, storage values는 `reference/storage-and-ddl.md`, `ProjectionKind` tiers는 `reference/document-projection.md` 및 `reference/templates/*.md`와 일치해야 합니다. |

@@ -50,19 +50,6 @@ flowchart TD
 
 ## Roadmap Items
 
-```mermaid
-flowchart TD
-  LaterItems["Roadmap items overview"] --> Dashboard["Dashboard"]
-  LaterItems --> BrowserQA["Browser QA Capture"]
-  LaterItems --> CrossSurface["Cross-Surface Verification"]
-  LaterItems --> Hooks["Native Hook Expansion"]
-  LaterItems --> Watcher["Advanced Sidecar Watcher"]
-  LaterItems --> Parallel["Parallel Orchestration"]
-  LaterItems --> ContextIndex["Context Index"]
-  LaterItems --> LocalMetrics["Local Derived Metrics"]
-  LaterItems --> TeamProfiles["Team Profile Export And Import"]
-```
-
 ### Dashboard
 
 A dashboard can visualize active Tasks, gates, approvals, evidence coverage, projection freshness, artifact integrity, and reconcile items.

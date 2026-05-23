@@ -6,7 +6,7 @@
 
 Projection의 권한 경계, managed block 동작, 사람이 편집할 수 있는 영역, artifact 참조 표시 방식, template tier, projection 최신성 규칙을 정의합니다. 기준 kernel state, MCP request/response schema, SQLite DDL, 설계 품질 정책 요구사항, 전체 template 본문은 이 문서가 정의하지 않습니다. 전체 template 본문과 표시 카드 형태는 [Template 참조](templates/README.md)에 있습니다.
 
-Appendix A는 최종 정리 전까지 마이그레이션 참고 자료로만 남습니다.
+마이그레이션 참고 자료는 이 참조 문서에 반영되었습니다. 이제 이 파일이 활성 projection 계약입니다.
 
 ## 읽는 시점
 
@@ -256,7 +256,7 @@ Projection template은 API `ProjectionKind` tier와 일치합니다.
 |---|---|---|---|
 | MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | MVP projector는 이를 렌더링해야 합니다. | [TASK](templates/task.md), [APR](templates/approval.md), [RUN-SUMMARY](templates/run-summary.md), [EVIDENCE-MANIFEST](templates/evidence-manifest.md), [EVAL](templates/eval.md), [DIRECT-RESULT](templates/direct-result.md) |
 | MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, 관련 기록이 있거나, user/operator가 projection을 켰을 때 렌더링합니다. | [MANUAL-QA](templates/manual-qa.md), [TDD-TRACE](templates/tdd-trace.md), [DOMAIN-LANGUAGE](templates/domain-language.md), [MODULE-MAP](templates/module-map.md), [INTERFACE-CONTRACT](templates/interface-contract.md) |
-| Extension / appendix | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | 해당 extension 또는 appendix projection이 켜져 있을 때만 렌더링합니다. | [DEC](templates/decision-packet.md), [DESIGN](templates/design.md), [EXPORT](templates/export.md), [JOURNEY-CARD](templates/journey-card.md) |
+| Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | 해당 optional projection이 켜져 있을 때만 렌더링합니다. | [DEC](templates/decision-packet.md), [DESIGN](templates/design.md), [EXPORT](templates/export.md), [JOURNEY-CARD](templates/journey-card.md) |
 
 `ProjectionKind` tiering은 렌더러 지원 기대사항을 정하지만 projection을 기준 상태로 만들지 않습니다.
 

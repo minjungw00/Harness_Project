@@ -1,8 +1,6 @@
 # Harness Documentation
 
-This is the English entrypoint for the reader-centered Harness documentation redesign.
-
-Redesign in progress: the links below define the target reader paths for upcoming commits. Some files are intentionally not created yet.
+This is the English entrypoint for the reader-centered Harness documentation set.
 
 ## Learn
 
@@ -43,7 +41,6 @@ Use this path to look up detailed contracts, schemas, policies, and definitions.
 - [Operations And Conformance Reference](reference/operations-and-conformance.md)
 - [Glossary Reference](reference/glossary.md)
 - [Template Reference](reference/templates/README.md)
-- More reference files will move here as the redesign continues.
 
 ## Maintain
 

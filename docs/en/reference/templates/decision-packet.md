@@ -155,17 +155,3 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Notes
 
 This template is a rendered shape, not canonical state. MVP Decision Packet visibility still comes through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources unless standalone `DEC` projection is enabled.
-
-Reader map preserved from migration source material:
-
-```mermaid
-flowchart TD
-  DEC["DEC reader map<br/>projection display only"] --> Why["Why Now"]
-  Why --> Current["Current State"]
-  Current --> Options["Options"]
-  Options --> Recommendation["Recommendation"]
-  Recommendation --> Deferral["Consequence Of Deferring"]
-  Deferral --> Context["Minimum Context To Judge"]
-  Context --> Decision["User Decision And Accepted Risk"]
-  Decision --> FollowUp["Follow-Up and References"]
-```

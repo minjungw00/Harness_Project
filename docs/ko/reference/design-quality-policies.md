@@ -273,7 +273,7 @@ TDD execution loop:
 - 여러 이름이 하나의 concept를 가리킬 때.
 - Reviewer 또는 evaluator가 terminology drift를 발견할 때.
 
-예시: Product에서는 "Journey Card"라고 부르는데 code가 `sessionSummary`를 도입한다면, mismatch가 퍼지기 전에 term boundary를 기록하거나 갱신합니다.
+예시: Product에서는 "Journey Card"라고 부르는데 code가 `sessionSummary`를 도입한다면, mismatch가 퍼지기 전에 용어 경계를 기록하거나 갱신합니다.
 
 | Field | Contract |
 |---|---|
@@ -301,7 +301,7 @@ TDD execution loop:
 |---|---|
 | `name` | `deep_module_interface` |
 | `applies_when` | 공개 interface change, module boundary change, schema/data model change, auth/security boundary, compatibility impact, deep module internal, shallow-module risk. |
-| `default_requirement` | 영향을 받는 module, current role, proposed 공개 interface, interface 뒤에 숨겨진 internal complexity, 모듈 단위 watchpoints, 영향을 받는 caller, compatibility impact, test boundary를 식별한다. 충분한 internal capability를 뒤에 둔 작고 simple한 공개 interface를 선호한다. 공개 interface, compatibility, architecture choice에는 Decision Packet을 사용한다. |
+| `default_requirement` | 영향을 받는 module, current role, proposed 공개 interface, interface 뒤에 숨겨진 internal complexity, 모듈 단위 watchpoints, 영향을 받는 caller, compatibility impact, 테스트 경계를 식별한다. 충분한 internal capability를 뒤에 둔 작고 simple한 공개 interface를 선호한다. 공개 interface, compatibility, architecture choice에는 Decision Packet을 사용한다. |
 | `allowed_waiver` | Public boundary impact, dependency direction change, 호환성 위험이 없고 localized internal change일 때 허용된다. Module/interface review가 불필요한 이유를 기록해야 한다. |
 | `required_record` | `record_kind=module_map_item`과 `record_kind=interface_contract`로 참조되는 `module_map_items` 및 `interface_contracts` records, decision record, 선택적 `MODULE-MAP` / `INTERFACE-CONTRACT` projection. |
 | `validator` | `module_interface_review` |

@@ -83,17 +83,3 @@ Projection freshness: {projection_freshness}
 ## Notes
 
 This template is a rendered shape, not canonical state. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains a read/display surface.
-
-Reader map preserved from migration source material:
-
-```mermaid
-flowchart TD
-  Card["JOURNEY-CARD reader map<br/>projection display only"] --> Position["current position and next action"]
-  Card --> Judgment["judgment context"]
-  Card --> Autonomy["Autonomy Boundary"]
-  Card --> Write["Write Authority Summary"]
-  Card --> Evidence["next evidence"]
-  Card --> Risk["residual risk"]
-  Card --> Gates["gates and close blockers"]
-  Card --> Freshness["freshness and continuity refs"]
-```

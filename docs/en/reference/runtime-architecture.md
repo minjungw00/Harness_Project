@@ -178,22 +178,7 @@ Decision, Journey, and Autonomy/Boundary modules do not create a new authority t
 
 Validators sit beside Core and return structured results to Core. Core decides whether the result blocks a transition, marks a gate stale/partial/blocked, requests a user decision, or only affects display.
 
-Stable MVP validator IDs:
-
-- `decision_gate_check`
-- `decision_quality_check`
-- `autonomy_boundary_check`
-- `feedback_loop_check`
-- `tdd_trace_required`
-- `codebase_stewardship_check`
-- `residual_risk_visibility_check`
-- `shared_design_alignment`
-- `vertical_slice_shape`
-- `domain_language_consistency`
-- `module_interface_review`
-- `manual_qa_required`
-- `context_hygiene_check`
-- `surface_capability_check`
+The stable MVP ValidatorResult ID set is API-owned and listed in [MCP API And Schemas](mcp-api-and-schemas.md#validatorresult). This runtime reference owns where those validators sit relative to Core and adapters, not a second copy of the ID registry.
 
 `feedback_loop_check` reads Feedback Loop support records and related execution evidence; it does not introduce a separate kernel gate. Its consequences flow through `design_gate`, evidence sufficiency, blockers, or display in the same validator placement model as the other design-quality checks.
 

@@ -83,17 +83,3 @@ Projection freshness: {projection_freshness}
 ## 메모
 
 이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `status`, `next`, 중요한 resume flow에서 보여주는 현재 위치 Journey Card output도 읽기/표시용 surface입니다.
-
-마이그레이션 참고 자료에서 보존한 reader map:
-
-```mermaid
-flowchart TD
-  Card["JOURNEY-CARD reader map<br/>projection display only"] --> Position["current position and next action"]
-  Card --> Judgment["judgment context"]
-  Card --> Autonomy["Autonomy Boundary"]
-  Card --> Write["Write Authority Summary"]
-  Card --> Evidence["next evidence"]
-  Card --> Risk["residual risk"]
-  Card --> Gates["gates and close blockers"]
-  Card --> Freshness["freshness and continuity refs"]
-```

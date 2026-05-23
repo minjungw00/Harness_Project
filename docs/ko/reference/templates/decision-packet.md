@@ -155,17 +155,3 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## 메모
 
 이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Standalone `DEC` projection이 켜져 있지 않다면 MVP Decision Packet visibility는 여전히 `TASK` projection, status/next response, judgment-context resource, decision-packet resource를 통해 제공됩니다.
-
-마이그레이션 참고 자료에서 보존한 reader map:
-
-```mermaid
-flowchart TD
-  DEC["DEC reader map<br/>projection display only"] --> Why["Why Now"]
-  Why --> Current["Current State"]
-  Current --> Options["Options"]
-  Options --> Recommendation["Recommendation"]
-  Recommendation --> Deferral["Consequence Of Deferring"]
-  Deferral --> Context["Minimum Context To Judge"]
-  Context --> Decision["User Decision And Accepted Risk"]
-  Decision --> FollowUp["Follow-Up and References"]
-```
