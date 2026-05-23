@@ -4,6 +4,8 @@
 
 Projection template과 표시 카드가 렌더링하는 Markdown 형태를 확인할 때 이 파일들을 사용합니다. Projection rule과 권한 경계는 [문서 Projection 참조](../document-projection.md)가 정의합니다. Freshness behavior도 같은 문서가 담당합니다.
 
+이 디렉터리 index는 [README](README.md)입니다.
+
 ## Template tiering
 
 Projection template은 API `ProjectionKind` tier와 일치합니다.

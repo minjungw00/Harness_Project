@@ -275,7 +275,7 @@ flowchart TD
 
 MVP에서 Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 렌더링합니다. Journey Card visibility는 status, journey, next, significant resume 접점을 통해 렌더링합니다.
 
-`DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`를 위한 dedicated extension 또는 optional refresh targets는 enabled일 때 optional이며, required MVP smoke target이 아닙니다.
+`DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`를 위한 dedicated Extension / optional refresh targets는 enabled일 때 optional이며, required MVP smoke target이 아닙니다.
 
 ## reconcile
 
