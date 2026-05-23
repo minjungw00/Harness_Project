@@ -113,10 +113,10 @@ Current non-goals:
 flowchart LR
   MVP["Current MVP boundary"] --> In["local kernel proof"]
   MVP -->|not MVP| Out["dashboard, broad connectors, analytics, team workflow"]
-  Out --> Later["appendix/C-later-roadmap.md"]
+  Out --> Later["roadmap.md"]
 ```
 
-Later automation belongs in [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md) until a future version assigns ownership, fixtures, fallback behavior, and implementation scope.
+Later automation belongs in [roadmap.md](roadmap.md) until a future version assigns ownership, fixtures, fallback behavior, and implementation scope.
 
 ### Automation Philosophy
 

@@ -29,8 +29,7 @@ Use exactly one canonical owner for each concept. Other documents may include a 
 | connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, runtime conformance, docs-maintenance smoke reporting | `11-operations-and-conformance.md` |
 | all projection template bodies and display card shapes | `reference/templates/*.md` |
 | surface-specific cookbooks | `reference/surface-cookbook.md` |
-| later automation and derived analytics | `appendix/C-later-roadmap.md` |
-| old-to-new mapping and migration notes | `appendix/D-migration-notes.md` |
+| later automation and derived analytics | `roadmap.md` |
 | document ownership, authoring rules, docs-maintenance conformance checklist | `99-authoring-guide.md` |
 | official term definitions | `glossary.md` |
 
@@ -80,8 +79,8 @@ Use these labels consistently:
 
 Rules:
 
-- Main docs may mention later work only as non-MVP context and should point to `appendix/C-later-roadmap.md`.
-- Do not put Appendix C later-automation items or team workflow expansion into MVP requirements.
+- Main docs may mention later work only as non-MVP context and should point to `roadmap.md`.
+- Do not put roadmap later-automation items or team workflow expansion into MVP requirements.
 - Treat Browser QA Capture, preventive `T4` guard expansion, Context Index, analytics or derived metrics, deployment/canary/rollback automation, team workflow, and parallel orchestration as v1-or-later unless an owner document explicitly promotes them with fixture coverage and implementation ownership.
 - If a later item becomes v1, add conformance expectations and an owner before changing main docs.
 - Derived metrics are analytics unless explicitly promoted as MVP-critical conformance signals.
@@ -163,7 +162,7 @@ Avoid in main docs:
 Unlike the old version, the harness now uses lifecycle fields plus gates.
 ```
 
-Version comparison, removed sections, and old file names belong in `appendix/D-migration-notes.md`.
+Keep version comparison, removed sections, and old file names out of current-state docs. Git history is sufficient for old migration mapping.
 
 ## Cross-Reference Rules
 
@@ -193,7 +192,7 @@ Report severity guidance:
 
 | Severity | Meaning |
 |---|---|
-| `FAIL` | Drift can make active docs contradictory or non-actionable, such as broken owner links, schema/DDL/enum/stable event/`ValidatorResult`/`ProjectionKind` mismatch, missing English/Korean paired active files, materially different paired heading structure, or non-owner text redefining an owner contract. |
+| `FAIL` | Drift can make active docs contradictory or non-actionable, such as broken owner links, schema/DDL/enum/stable event/`ValidatorResult`/`ProjectionKind` mismatch, missing English/Korean paired active files, missing semantic section coverage, or non-owner text redefining an owner contract. Idiomatic heading text or minor grouping differences are not failures when owner links, stable identifiers, and reviewability remain clear. |
 | `WARN` | Drift should be cleaned up but does not yet contradict an owner contract, such as minor glossary phrasing drift, duplicate explanatory prose that is not normative, stale but non-blocking cross-reference wording, or incomplete TODO metadata that is still understandable. |
 | `PASS` | No relevant drift is found for the category. |
 
@@ -201,16 +200,16 @@ Required check categories:
 
 | Category | Required check |
 |---|---|
-| English/Korean file structure parity | `docs/en` and `docs/ko` keep the same active document paths and appendix paths unless an exception is explicitly documented in this guide. |
-| English/Korean heading parity | Paired files keep the same heading order and depth. Heading text may be idiomatic, but stable names, IDs, enum values, schema names, DDL names, and links to owner sections must stay semantically aligned. |
-| Broken cross-reference detection | Markdown links, heading anchors, appendix links, and paired-language entry links resolve to active docs. Links to owner sections should not point to migration notes unless the subject is migration context. |
-| Owner-boundary drift | Public schemas stay in `05-mcp-api-and-schemas.md`; SQLite DDL and reference storage details stay in `06-reference-mvp.md`; kernel transitions and stable events stay in `03-kernel-spec.md`; projection rules and template tiers stay in `reference/document-projection.md`; all projection template bodies and display card shapes stay in `reference/templates/*.md`; fixture body shape, fixture assertion semantics, and fixture suite behavior stay in `11-operations-and-conformance.md`; official definitions stay in `glossary.md`. |
-| Fixture/action schema and code drift | Operations fixture examples keep `action` and executable `input` aligned with public MCP request schemas in `05-mcp-api-and-schemas.md` and the `ToolEnvelope` expansion convention in `11-operations-and-conformance.md`. Required fixture events remain Kernel Stable Event Catalog names, and `expected_error.code` plus `CloseTaskResponse.blockers[].code` remain API `ErrorCode` values; finding codes stay in validator findings or equivalent expected validator output. The check links to the Operations, API, and Kernel owners instead of restating fixture semantics here. |
-| Enum drift across owners | State, gate, result, close, assurance, error, projection, validator, and storage enum values match the owner doc that defines them. Non-owner docs may summarize values only when needed and must link to the owner. |
-| Stable Event Catalog drift | Any event name required by Operations fixtures, API tool descriptions, or Reference MVP conformance text as fixture-stable appears in the Kernel Stable Event Catalog. Non-catalog names must be marked as illustrative, implementation-local detail/audit, future extension, or promoted through the kernel owner. |
-| Stable ValidatorResult ID drift | Stable `ValidatorResult` IDs match the API-owned list and the Reference MVP validator runner text. Core checks and preconditions must not drift into validator IDs unless the API or Reference MVP owner promotes them. |
-| ProjectionKind tier drift | `ProjectionKind` values and tiers match across API, Document Projection, Template Reference, Reference MVP, Operations, and Glossary. Extension / appendix values must not become MVP-required by repetition outside the owner docs. |
-| Glossary term drift | Official terms, capitalization, record ID prefixes, and source-of-truth meanings match `glossary.md`. A recurring new term needs a glossary entry or an explicit decision to keep it local. |
+| English/Korean file structure parity | `docs/en` and `docs/ko` keep the same active document paths unless an exception is explicitly documented in this guide. |
+| English/Korean semantic section parity | Paired English/Korean files keep the same active file map and semantic section coverage. Heading text and minor grouping may be idiomatic when owner links, stable identifiers, schema names, enum values, DDL names, validator IDs, code identifiers, and reviewability remain clear. |
+| Broken cross-reference detection | Markdown links, heading anchors, appendix links, and paired-language entry links resolve to active docs. Links to owner sections should not point to removed migration context. |
+| Owner-boundary drift | Exact contracts stay in their active owners, including `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, and `reference/glossary.md`. |
+| Fixture/action schema and code drift | Operations fixture examples keep `action` and executable `input` aligned with public MCP request schemas in `reference/mcp-api-and-schemas.md` and the `ToolEnvelope` expansion convention in `reference/operations-and-conformance.md`. Required fixture events remain Kernel Stable Event Catalog names from `reference/kernel.md`, and `expected_error.code` plus `CloseTaskResponse.blockers[].code` remain API `ErrorCode` values. The check links to Operations, API, and Kernel owners instead of restating fixture semantics here. |
+| Enum drift across owners | State/gate/result values match `reference/kernel.md`; error and stable `ValidatorResult` IDs match `reference/mcp-api-and-schemas.md`; storage values match `reference/storage-and-ddl.md`; projection values match `reference/document-projection.md` and `reference/templates/*.md`. Non-owner docs may summarize values only when needed and must link to the owner. |
+| Stable Event Catalog drift | Any event name required by Operations fixtures, API tool descriptions, or storage/conformance text as fixture-stable appears in the Kernel Stable Event Catalog in `reference/kernel.md`. Non-catalog names must be marked as illustrative, implementation-local detail/audit, future extension, or promoted through the kernel owner. |
+| Stable ValidatorResult ID drift | Stable `ValidatorResult` IDs match the API-owned list in `reference/mcp-api-and-schemas.md` and any validator-runner references in `reference/storage-and-ddl.md`. Core checks and preconditions must not drift into validator IDs unless the API or storage owner promotes them. |
+| ProjectionKind tier drift | `ProjectionKind` values and tiers match across `reference/mcp-api-and-schemas.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/storage-and-ddl.md`, `reference/operations-and-conformance.md`, and `reference/glossary.md`. Extension / appendix values must not become MVP-required by repetition outside the owner docs. |
+| Glossary term drift | Official terms, capitalization, record ID prefixes, and source-of-truth meanings match `reference/glossary.md`. A recurring new term needs a glossary entry or an explicit decision to keep it local. |
 | Source-of-truth phrasing drift | State, raw evidence, Markdown projections, human-editable sections, reconcile, and accepted human edits use the phrasing family in this guide and do not imply separate state authorities. |
 | `TODO_DECISION` and `TODO_IMPLEMENT` compliance | TODOs use the allowed labels, include the needed decision or known implementation gap, name affected docs when useful, and do not leave actual `TODO_REWRITE` markers in finished canonical sections. |
 | Non-owner duplicate full contracts | Paragraphs that restate full schemas, DDL, transition tables, fixture mini-languages, template bodies, or glossary definitions outside the owner doc should be replaced with a one-sentence summary plus owner link. |
@@ -241,6 +240,6 @@ Do not use `TODO_REWRITE` in finished v2 canonical sections. A remaining `TODO_R
 [ ] Has docs-maintenance conformance been considered for bilingual parity, links, owner boundaries, stable catalogs, glossary terms, source-of-truth phrasing, and TODO rules?
 [ ] Are docs-maintenance conformance references read-only documentation maintenance, not runtime validators or canonical state transitions?
 [ ] Are non-owner full-contract paragraphs reduced to summaries plus owner links?
-[ ] Are legacy names confined to migration notes?
+[ ] Are legacy names absent from current-state docs unless they are needed as source-material labels?
 [ ] Are official terms aligned with glossary?
 ```

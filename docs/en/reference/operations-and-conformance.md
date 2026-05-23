@@ -406,7 +406,7 @@ Boundary:
 - Release Handoff does not close a Task, deploy, merge, approve, accept residual risk, accept the result, waive QA or verification, upgrade assurance, or satisfy gates by itself.
 - Suggested checklist items are advisory. If they reveal blocking product judgment, risk acceptance, Manual QA, evidence, verification, or approval needs, those needs route to the existing Decision Packet, evidence, Manual QA, Eval, residual-risk, approval, or close paths.
 
-Diagnostic and reporting boundary: future [Local Derived Metrics](../appendix/C-later-roadmap.md#local-derived-metrics) may appear in reports or operator diagnostics, but Appendix C owns them as later, diagnostic-only analytics. A metric readout must not mutate state, satisfy gates, authorize writes, grant approval, create evidence, enqueue or refresh projections, change projection freshness, change close readiness or implementation readiness, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, or close a Task.
+Diagnostic and reporting boundary: future [Local Derived Metrics](../roadmap.md#local-derived-metrics) may appear in reports or operator diagnostics, but the roadmap keeps them as later, diagnostic-only analytics. A metric readout must not mutate state, satisfy gates, authorize writes, grant approval, create evidence, enqueue or refresh projections, change projection freshness, change close readiness or implementation readiness, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, or close a Task.
 
 Release Handoff catalog entry:
 
@@ -2986,4 +2986,4 @@ Conformance output must include fixture id, pass/fail, observed state summary, o
 
 ### Metrics Boundary
 
-Long-term operational metrics are derived analytics, not MVP-critical state or conformance requirements. Keep metrics such as approval turnaround, verification latency, projection stale duration, same-session guard frequency, and surface fallback rate in [Appendix C](../appendix/C-later-roadmap.md) until a future version promotes them with fixtures and implementation ownership.
+Long-term operational metrics are derived analytics, not MVP-critical state or conformance requirements. Keep metrics such as approval turnaround, verification latency, projection stale duration, same-session guard frequency, and surface fallback rate in the [roadmap](../roadmap.md) until a future version promotes them with fixtures and implementation ownership.

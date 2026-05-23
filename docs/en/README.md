@@ -56,7 +56,7 @@ Use this path to keep the docs and future Harness system coherent over time.
 
 - [Roadmap](roadmap.md)
 
-The target roadmap path is `roadmap.md`; until task 13, Appendix C remains migration source material.
+Post-MVP items live in the roadmap. The roadmap is not part of the MVP implementation contract unless a future owner explicitly promotes an item with scope, fixtures, and fallback behavior.
 
 ## Language Parity
 

@@ -29,8 +29,7 @@ Runtime behavior, user procedure, conformance fixture content, MCP schemas, SQLi
 | connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifact integrity, runtime conformance, docs-maintenance smoke reporting | `11-operations-and-conformance.md` |
 | 모든 projection template 본문과 표시 카드 형태 | `reference/templates/*.md` |
 | surface-specific cookbooks | `reference/surface-cookbook.md` |
-| later automation and derived analytics | `appendix/C-later-roadmap.md` |
-| old-to-new mapping and migration notes | `appendix/D-migration-notes.md` |
+| later automation and derived analytics | `roadmap.md` |
 | document ownership, authoring rules, docs-maintenance conformance checklist | `99-authoring-guide.md` |
 | official term definitions | `glossary.md` |
 
@@ -80,8 +79,8 @@ Horizontal exception은 reason과 follow-up을 남겨 기록할 수 있습니다
 
 규칙:
 
-- Main docs는 later work를 non-MVP context로만 언급할 수 있으며 `appendix/C-later-roadmap.md`를 가리켜야 합니다.
-- Appendix C의 later-automation items나 team workflow expansion을 MVP requirements에 넣지 않습니다.
+- Main docs는 later work를 non-MVP context로만 언급할 수 있으며 `roadmap.md`를 가리켜야 합니다.
+- Roadmap의 later-automation items나 team workflow expansion을 MVP requirements에 넣지 않습니다.
 - Browser QA Capture, preventive `T4` guard expansion, Context Index, analytics 또는 derived metrics, deployment/canary/rollback automation, team workflow, parallel orchestration은 owner document가 fixture coverage와 implementation ownership으로 명시적으로 promote하지 않는 한 v1-or-later로 취급합니다.
 - later item이 v1이 되면 main docs를 바꾸기 전에 conformance expectations와 owner를 추가합니다.
 - Derived metrics는 MVP-critical conformance signals로 명시적으로 승격되지 않는 한 analytics입니다.
@@ -163,7 +162,7 @@ Main docs에서 피할 표현:
 이전 버전과 달리 Harness는 이제 lifecycle fields와 gates를 사용합니다.
 ```
 
-Version comparison, removed sections, old file names는 `appendix/D-migration-notes.md`에 둡니다.
+Version comparison, removed sections, old file names는 current-state docs에서 제외합니다. Old migration mapping은 Git history로 충분합니다.
 
 ## Cross-Reference Rules
 
@@ -193,7 +192,7 @@ Report severity guidance:
 
 | Severity | Meaning |
 |---|---|
-| `FAIL` | Broken owner links, schema/DDL/enum/stable event/`ValidatorResult`/`ProjectionKind` mismatch, English/Korean paired active file 누락, paired heading structure의 material difference, owner contract를 다시 정의하는 non-owner text처럼 active docs를 contradictory하거나 non-actionable하게 만들 수 있는 drift입니다. |
+| `FAIL` | Broken owner links, schema/DDL/enum/stable event/`ValidatorResult`/`ProjectionKind` mismatch, English/Korean paired active file 누락, semantic section coverage 누락, owner contract를 다시 정의하는 non-owner text처럼 active docs를 contradictory하거나 non-actionable하게 만들 수 있는 drift입니다. Owner link, stable identifier, reviewability가 분명하다면 idiomatic heading text나 minor grouping difference는 실패가 아닙니다. |
 | `WARN` | Minor glossary phrasing drift, normative하지 않은 duplicate explanatory prose, stale하지만 non-blocking인 cross-reference wording, incomplete하지만 still understandable한 TODO metadata처럼 정리해야 하지만 아직 owner contract와 모순되지는 않는 drift입니다. |
 | `PASS` | 해당 category에서 relevant drift가 발견되지 않았습니다. |
 
@@ -201,16 +200,16 @@ Report severity guidance:
 
 | Category | Required check |
 |---|---|
-| English/Korean file structure parity | 명시적인 예외가 이 guide에 문서화되지 않는 한 `docs/en`과 `docs/ko`는 같은 active document paths와 appendix paths를 유지합니다. |
-| English/Korean heading parity | Paired files는 같은 heading order와 depth를 유지합니다. Heading text는 idiomatic할 수 있지만 stable names, IDs, enum values, schema names, DDL names, owner section links는 semantic하게 aligned되어야 합니다. |
-| Broken cross-reference detection | Markdown links, heading anchors, appendix links, paired-language entry links가 active docs로 resolve됩니다. Owner section link는 subject가 migration context일 때가 아니면 migration notes를 가리키면 안 됩니다. |
-| Owner-boundary drift | Public schemas는 `05-mcp-api-and-schemas.md`에, SQLite DDL과 reference storage details는 `06-reference-mvp.md`에, kernel transitions와 stable events는 `03-kernel-spec.md`에, projection rules와 template tiers는 `reference/document-projection.md`에, 모든 projection template 본문과 표시 카드 형태는 `reference/templates/*.md`에, fixture body shape와 fixture assertion semantics와 fixture suite behavior는 `11-operations-and-conformance.md`에, official definitions는 `glossary.md`에 둡니다. |
-| Fixture/action schema and code drift | Operations fixture examples의 `action`과 executable `input`은 `05-mcp-api-and-schemas.md`의 public MCP request schemas와 `11-operations-and-conformance.md`의 `ToolEnvelope` expansion convention에 aligned되어야 합니다. Required fixture events는 Kernel Stable Event Catalog names로 유지하고, `expected_error.code`와 `CloseTaskResponse.blockers[].code`는 API `ErrorCode` values여야 합니다. Finding code는 validator findings 또는 equivalent expected validator output에 남깁니다. 이 check는 fixture semantics를 여기서 restate하지 않고 Operations, API, Kernel owner로 link합니다. |
-| Enum drift across owners | State, gate, result, close, assurance, error, projection, validator, storage enum values는 이를 정의하는 owner doc과 일치해야 합니다. Non-owner docs는 필요할 때만 값을 summarize하고 owner로 link해야 합니다. |
-| Stable Event Catalog drift | Operations fixtures, API tool descriptions, Reference MVP conformance text가 fixture-stable로 요구하는 event name은 Kernel Stable Event Catalog에 있어야 합니다. Non-catalog names는 illustrative, implementation-local detail/audit, future extension으로 표시하거나 kernel owner를 통해 promote해야 합니다. |
-| Stable ValidatorResult ID drift | Stable `ValidatorResult` IDs는 API-owned list와 Reference MVP validator runner text와 일치해야 합니다. Core checks와 preconditions는 API 또는 Reference MVP owner가 promote하지 않는 한 validator IDs로 drift하면 안 됩니다. |
-| ProjectionKind tier drift | `ProjectionKind` values와 tiers는 API, Document Projection, Template Reference, Reference MVP, Operations, Glossary에서 일치해야 합니다. Extension / appendix values는 owner docs 밖에서 반복되면서 MVP-required가 되면 안 됩니다. |
-| Glossary term drift | Official terms, capitalization, record ID prefixes, source-of-truth meanings는 `glossary.md`와 일치해야 합니다. 반복해서 쓰이는 새 term에는 glossary entry를 추가하거나 local로 유지한다는 explicit decision이 필요합니다. |
+| English/Korean file structure parity | 명시적인 예외가 이 guide에 문서화되지 않는 한 `docs/en`과 `docs/ko`는 같은 active document paths를 유지합니다. |
+| English/Korean semantic section parity | 영어/한국어 대응 문서는 같은 active file map과 의미상 같은 section coverage를 유지합니다. Owner link, stable identifier, schema name, enum value, DDL name, validator ID, code identifier, reviewability가 분명하다면 한국어 heading과 minor grouping은 자연스럽게 조정할 수 있습니다. |
+| Broken cross-reference detection | Markdown links, heading anchors, appendix links, paired-language entry links가 active docs로 resolve됩니다. Owner section link가 제거된 migration context를 가리키면 안 됩니다. |
+| Owner-boundary drift | Exact contract는 active owner에 머뭅니다. 여기에는 `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, `reference/glossary.md`가 포함됩니다. |
+| Fixture/action schema and code drift | Operations fixture examples의 `action`과 executable `input`은 `reference/mcp-api-and-schemas.md`의 public MCP request schemas와 `reference/operations-and-conformance.md`의 `ToolEnvelope` expansion convention에 aligned되어야 합니다. Required fixture events는 `reference/kernel.md`의 Kernel Stable Event Catalog names로 유지하고, `expected_error.code`와 `CloseTaskResponse.blockers[].code`는 API `ErrorCode` values여야 합니다. 이 check는 fixture semantics를 여기서 restate하지 않고 Operations, API, Kernel owner로 link합니다. |
+| Enum drift across owners | State/gate/result values는 `reference/kernel.md`, error와 stable `ValidatorResult` IDs는 `reference/mcp-api-and-schemas.md`, storage values는 `reference/storage-and-ddl.md`, projection values는 `reference/document-projection.md` 및 `reference/templates/*.md`와 일치해야 합니다. Non-owner docs는 필요할 때만 값을 summarize하고 owner로 link해야 합니다. |
+| Stable Event Catalog drift | Operations fixtures, API tool descriptions, storage/conformance text가 fixture-stable로 요구하는 event name은 `reference/kernel.md`의 Kernel Stable Event Catalog에 있어야 합니다. Non-catalog names는 illustrative, implementation-local detail/audit, future extension으로 표시하거나 kernel owner를 통해 promote해야 합니다. |
+| Stable ValidatorResult ID drift | Stable `ValidatorResult` IDs는 `reference/mcp-api-and-schemas.md`의 API-owned list 및 `reference/storage-and-ddl.md`의 validator-runner references와 일치해야 합니다. Core checks와 preconditions는 API 또는 storage owner가 promote하지 않는 한 validator IDs로 drift하면 안 됩니다. |
+| ProjectionKind tier drift | `ProjectionKind` values와 tiers는 `reference/mcp-api-and-schemas.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/storage-and-ddl.md`, `reference/operations-and-conformance.md`, `reference/glossary.md`에서 일치해야 합니다. Extension / appendix values는 owner docs 밖에서 반복되면서 MVP-required가 되면 안 됩니다. |
+| Glossary term drift | Official terms, capitalization, record ID prefixes, source-of-truth meanings는 `reference/glossary.md`와 일치해야 합니다. 반복해서 쓰이는 새 term에는 glossary entry를 추가하거나 local로 유지한다는 explicit decision이 필요합니다. |
 | Source-of-truth phrasing drift | State, raw evidence, Markdown projections, human-editable sections, reconcile, accepted human edits는 이 guide의 phrasing family를 사용하고 separate state authority를 암시하지 않아야 합니다. |
 | `TODO_DECISION` and `TODO_IMPLEMENT` compliance | TODO는 allowed labels를 사용하고, 필요한 decision 또는 알려진 implementation gap을 포함하며, 유용하면 affected docs를 이름 붙이고, finished canonical sections에 실제 `TODO_REWRITE` markers를 남기지 않습니다. |
 | Non-owner duplicate full contracts | Owner doc 밖에서 full schemas, DDL, transition tables, fixture mini-languages, template bodies, glossary definitions를 restate하는 paragraphs는 one-sentence summary plus owner link로 바꾸어야 합니다. |
@@ -241,6 +240,6 @@ Decision은 이미 내려졌지만 implementation detail, DDL, fixture coverage,
 [ ] docs-maintenance conformance 관점에서 bilingual parity, links, owner boundaries, stable catalogs, glossary terms, source-of-truth phrasing, TODO rules를 검토했는가?
 [ ] docs-maintenance conformance references가 runtime validators나 canonical state transitions가 아니라 read-only documentation maintenance로 쓰였는가?
 [ ] non-owner full-contract paragraphs가 summaries plus owner links로 줄었는가?
-[ ] legacy names가 migration notes에만 있는가?
+[ ] legacy names가 source-material label로 필요할 때를 제외하고 current-state docs에서 빠져 있는가?
 [ ] official terms가 glossary와 aligned되어 있는가?
 ```

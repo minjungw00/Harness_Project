@@ -124,7 +124,7 @@ Any semantic change in `docs/en` must be mirrored in `docs/ko` in the same batch
 
 When you rename, move, split, or merge a document, update links in both languages in the same batch.
 
-Prefer links to the owner document or owner section instead of links to secondary summaries. Do not point active owner links to migration notes unless the subject is migration history.
+Prefer links to the owner document or owner section instead of links to secondary summaries. Do not point active owner links to removed migration context.
 
 After a rename, search for old paths, old anchors, old headings, and old title text. Update the README path, nearby cross-references, appendix links, and paired-language links together.
 
@@ -150,8 +150,8 @@ Required check categories:
 | English/Korean semantic section parity | Paired files keep the same active file map and semantic section coverage. Heading text and minor grouping may be idiomatic when owner links, stable identifiers, schema names, enum values, DDL names, validator IDs, code identifiers, and reviewability remain clear. |
 | Broken cross-reference detection | Markdown links, heading anchors, appendix links, and paired-language entry links resolve to active docs. |
 | Owner-boundary drift | Exact contracts stay in their active owners, including `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, and `reference/glossary.md`. |
-| Fixture/action schema drift | Operations fixture examples keep `action` and executable `input` aligned with public MCP request schemas and the `ToolEnvelope` expansion convention; fixture semantics are linked, not restated here. |
-| Enum, event, validator, and projection drift | State/gate/result/error/storage values, Kernel Stable Event Catalog names, stable `ValidatorResult` IDs, and `ProjectionKind` tiers match their owner docs. |
+| Fixture/action schema drift | Operations fixture examples keep `action` and executable `input` aligned with public MCP request schemas in `reference/mcp-api-and-schemas.md` and the `ToolEnvelope` expansion convention in `reference/operations-and-conformance.md`; fixture semantics are linked, not restated here. |
+| Enum, event, validator, and projection drift | State/gate/result values and Kernel Stable Event Catalog names match `reference/kernel.md`; error and stable `ValidatorResult` IDs match `reference/mcp-api-and-schemas.md`; storage values match `reference/storage-and-ddl.md`; `ProjectionKind` tiers match `reference/document-projection.md` and `reference/templates/*.md`. |
 | Glossary and source-of-truth phrasing drift | Official terms, capitalization, record ID prefixes, and source-of-truth boundaries match `reference/glossary.md` and do not imply extra state authorities. |
 | TODO compliance | `TODO_DECISION` and `TODO_IMPLEMENT` use the allowed meanings, name the gap clearly, and do not leave `TODO_REWRITE` markers in finished canonical sections. |
 | Non-owner duplicate full contracts | Full schemas, DDL, transition tables, fixture mini-languages, template bodies, or glossary definitions outside the owner doc are replaced with a short summary plus owner link. |
@@ -203,6 +203,6 @@ After a target reference file exists, that target is the active owner; the numbe
 | Generic capability profile examples | `reference/agent-integration.md` | `appendix/B-surface-cookbook.md` as migration source material |
 | Operator procedures, conformance fixture bodies, fixture assertion semantics, doctor/recover/reconcile/export/artifact integrity, docs-maintenance reporting | `reference/operations-and-conformance.md` | `11-operations-and-conformance.md` as migration source material |
 | Official term definitions and capitalization | `reference/glossary.md` | `glossary.md` as migration source material |
-| Post-MVP roadmap | `roadmap.md` | `appendix/C-later-roadmap.md` |
+| Post-MVP roadmap | `roadmap.md` | `appendix/C-later-roadmap.md` as migration source material until final cleanup |
 | Documentation authoring rules | `maintain/authoring-guide.md` | `99-authoring-guide.md` |
 | Translation and bilingual prose rules | `maintain/translation-guide.md` | none; new in redesign |

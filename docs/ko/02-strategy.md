@@ -270,7 +270,7 @@ flowchart LR
   MVP["MVP boundary"] --> Includes["includes<br/>one project, one reference surface, local kernel"]
   MVP --> Authority["validates<br/>Kernel Authority + Agency Conformance"]
   MVP -->|does not include| Excludes["broad connectors, UI control plane, analytics, team workflow"]
-  Excludes --> Later["appendix/C-later-roadmap.md"]
+  Excludes --> Later["roadmap.md"]
 ```
 
 MVP delivery는 final MVP scope를 바꾸지 않고 staged로 진행합니다. Kernel Smoke는 kernel authority path의 첫 runnable proof이고, Agency-Hardened MVP는 agency, stewardship, verification, operations, fixture-conformance 요구사항을 만족하는 complete reference MVP입니다. 이 staged reading은 기존 MVP-0부터 MVP-5까지의 sequence에 mapping되며, MVP-critical authority 또는 agency requirement를 later로 옮기지 않습니다. Compact contract는 [Reference MVP staging](06-reference-mvp.md#단계적-delivery-해석)을 봅니다.
@@ -300,4 +300,4 @@ MVP 제외 항목:
 - long-term analytics
 - team workflow management
 
-이후 자동화 항목은 [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md)가 담당합니다. 이후 자동화는 guarantee level을 강화할 수 있지만 Strategic Agency model이나 Kernel Authority Invariant model을 약화해서는 안 됩니다.
+이후 자동화 항목은 [roadmap.md](roadmap.md)가 담당합니다. 이후 자동화는 guarantee level을 강화할 수 있지만 Strategic Agency model이나 Kernel Authority Invariant model을 약화해서는 안 됩니다.

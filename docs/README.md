@@ -33,6 +33,12 @@ The redesigned documentation is organized around five reader paths:
 | Reference | 안정적인 계약, schema, 운영/Conformance 규칙, 용어 정의, 설계 품질 정책을 찾아봅니다. |
 | Maintain | 문서와 이후 Harness 시스템의 일관성을 유지합니다. |
 
+## Roadmap / 로드맵
+
+Post-MVP items live in each language tree's roadmap: [English](en/roadmap.md), [Korean](ko/roadmap.md). The roadmap is not part of the MVP implementation contract unless a future owner explicitly promotes an item with scope, fixtures, and fallback behavior.
+
+Post-MVP 항목은 각 언어 트리의 Roadmap에 둡니다. [English](en/roadmap.md), [Korean](ko/roadmap.md)를 봅니다. 향후 담당자가 범위, fixture, fallback 동작을 정해 항목을 명시적으로 승격하기 전까지 Roadmap 항목은 MVP 구현 계약에 포함되지 않습니다.
+
 ## Parity / 문서 Parity
 
 English and Korean docs keep the same file map and semantic content. Semantic parity must be maintained across `docs/en` and `docs/ko`.

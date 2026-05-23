@@ -113,10 +113,10 @@ flowchart LR
 flowchart LR
   MVP["Current MVP boundary"] --> In["local kernel proof"]
   MVP -->|not MVP| Out["dashboard, broad connectors, analytics, team workflow"]
-  Out --> Later["appendix/C-later-roadmap.md"]
+  Out --> Later["roadmap.md"]
 ```
 
-이후 자동화는 future version이 담당 문서, fixtures, fallback behavior, implementation scope를 부여하기 전까지 [appendix/C-later-roadmap.md](appendix/C-later-roadmap.md)에 둡니다.
+이후 자동화는 future version이 담당 문서, fixtures, fallback behavior, implementation scope를 부여하기 전까지 [roadmap.md](roadmap.md)에 둡니다.
 
 ### 자동화 철학
 
