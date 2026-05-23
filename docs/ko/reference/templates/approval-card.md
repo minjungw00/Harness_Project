@@ -9,7 +9,7 @@
 - approval 기록
 - approval 형태의 Decision Packet
 - sensitive category와 요청 범위
-- 허용된 path, tool, network target, secret
+- 허용된 path, tool, command, network target, secret
 - baseline 참조
 - 위험, 대안, 추천안
 
@@ -20,6 +20,7 @@
 - purpose
 - allowed paths
 - allowed tools
+- allowed commands (`allowed_commands`)
 - network
 - required secrets
 - baseline
@@ -41,6 +42,9 @@ Approval이 필요합니다.
 
 허용 tool:
 {allowed_tools}
+
+허용 command:
+{allowed_commands}
 
 Network:
 {allowed_network}
@@ -66,3 +70,5 @@ Recommendation:
 ## 메모
 
 이 template은 렌더링 결과인 카드 형태일 뿐 approval 권한 자체가 아닙니다. Approval은 여전히 기준 approval decision path를 거쳐야 합니다.
+
+Approval은 product judgment를 resolve하지 않고, correctness를 prove하지 않으며, verification이나 Manual QA를 replace하지 않고, acceptance를 imply하지 않으며, residual risk를 accept하거나 Write Authorization을 만들지 않습니다.
