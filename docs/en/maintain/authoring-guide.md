@@ -174,35 +174,31 @@ Required check categories:
 
 ## Reference ownership map
 
-Use this map when deciding where exact detail belongs. The map preserves the old one-owner discipline, but it is a backstop for maintainers rather than the first principle a reader should meet.
+Use this map when deciding where exact detail belongs. It identifies the active owner in the redesigned documentation structure, so retired paths do not remain part of the authoring workflow.
 
-During the redesign, some target reader-path files may not exist yet. Until a target file exists, keep the current numbered source document as the owner and update this map when the migration lands.
-
-After a target reference file exists, that target is the active owner; the numbered file becomes migration source material until final cleanup.
-
-| Subject | Owner in redesigned structure | Previous source / migration source material |
-|---|---|---|
-| Entrypoint, reader paths, document list, target tree summary | `README.md` | `README.md` |
-| Shared reader mental model and three-space overview | `learn/overview.md` | `00-introduction.md` |
-| Small core concept introduction | `learn/concepts.md` | `00-introduction.md` and `glossary.md` as migration source material |
-| Project purpose, target users, values, scope, non-goals, automation philosophy | `learn/purpose-and-principles.md` | `01-project-charter.md` |
-| Strategic thesis, failure model, MVP boundary, principle groups | `learn/purpose-and-principles.md` for reader explanation; `reference/design-quality-policies.md` and `reference/kernel.md` for exact contract impact | `02-strategy.md` |
-| Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` | `03-kernel-spec.md` as previous source material |
-| Runtime architecture, three spaces in implementation detail, Core process model, artifact architecture, projection/reconcile architecture, guarantee levels | `reference/runtime-architecture.md` | `04-runtime-architecture.md` as previous source material |
-| MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `reference/mcp-api-and-schemas.md` | `05-mcp-api-and-schemas.md` as previous source material |
-| SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` | `06-reference-mvp.md` as previous source material |
-| MVP implementation order and stage exit criteria | `build/mvp-plan.md` | `06-reference-mvp.md` |
-| First runnable implementation slice | `build/first-runnable-slice.md` | `06-reference-mvp.md` |
-| Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md` | `07-document-projection.md` as migration source material |
-| All projection template bodies and display card shapes | `reference/templates/*.md` | `appendix/A-template-library.md` as migration source material until final cleanup |
-| Design-quality policy contracts, validators, severity composition, waiver semantics, evidence expectations, close impact | `reference/design-quality-policies.md` | `08-design-quality-policy-pack.md` as previous source material |
-| User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` | `10-user-guide.md` |
-| User/agent session procedure | `use/agent-session-flow.md` | `09-agent-integration.md` and `10-user-guide.md` as migration source material |
-| Agent surface capability profiles, common connector contract, fallback semantics, Role Lens, connector conformance overview | `reference/agent-integration.md` | `09-agent-integration.md` as migration source material |
-| Surface-specific recipes | `reference/surface-cookbook.md` | `appendix/B-surface-cookbook.md` as migration source material |
-| Generic capability profile examples | `reference/agent-integration.md` | `appendix/B-surface-cookbook.md` as migration source material |
-| Operator procedures, conformance fixture bodies, fixture assertion semantics, doctor/recover/reconcile/export/artifact integrity, docs-maintenance reporting | `reference/operations-and-conformance.md` | `11-operations-and-conformance.md` as migration source material |
-| Official term definitions and capitalization | `reference/glossary.md` | `glossary.md` as migration source material |
-| Post-MVP roadmap | `roadmap.md` | `appendix/C-later-roadmap.md` as migration source material until final cleanup |
-| Documentation authoring rules | `maintain/authoring-guide.md` | `99-authoring-guide.md` |
-| Translation and bilingual prose rules | `maintain/translation-guide.md` | none; new in redesign |
+| Subject | Active owner |
+|---|---|
+| Entrypoint, reader paths, document list, target tree summary | `README.md` |
+| Shared reader mental model and three-space overview | `learn/overview.md` |
+| Small core concept introduction | `learn/concepts.md` |
+| Project purpose, target users, values, scope, non-goals, automation philosophy | `learn/purpose-and-principles.md` |
+| Strategic thesis, failure model, MVP boundary, principle groups | `learn/purpose-and-principles.md` for reader explanation; `reference/design-quality-policies.md` and `reference/kernel.md` for exact contract impact |
+| Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` |
+| Runtime architecture, three spaces in implementation detail, Core process model, artifact architecture, projection/reconcile architecture, guarantee levels | `reference/runtime-architecture.md` |
+| MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `reference/mcp-api-and-schemas.md` |
+| SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` |
+| MVP implementation order and stage exit criteria | `build/mvp-plan.md` |
+| First runnable implementation slice | `build/first-runnable-slice.md` |
+| Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md` |
+| All projection template bodies and display card shapes | `reference/templates/*.md` |
+| Design-quality policy contracts, validators, severity composition, waiver semantics, evidence expectations, close impact | `reference/design-quality-policies.md` |
+| User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` |
+| User/agent session procedure | `use/agent-session-flow.md` |
+| Agent surface capability profiles, common connector contract, fallback semantics, Role Lens, connector conformance overview | `reference/agent-integration.md` |
+| Surface-specific recipes | `reference/surface-cookbook.md` |
+| Generic capability profile examples | `reference/agent-integration.md` |
+| Operator procedures, conformance fixture bodies, fixture assertion semantics, doctor/recover/reconcile/export/artifact integrity, docs-maintenance reporting | `reference/operations-and-conformance.md` |
+| Official term definitions and capitalization | `reference/glossary.md` |
+| Post-MVP roadmap | `roadmap.md` |
+| Documentation authoring rules | `maintain/authoring-guide.md` |
+| Translation and bilingual prose rules | `maintain/translation-guide.md` |

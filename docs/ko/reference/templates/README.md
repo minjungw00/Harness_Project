@@ -50,5 +50,3 @@ Template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Kernel field,
 ## 메모
 
 이 디렉터리는 projection template 본문과 표시 카드 형태의 기준 참조 위치입니다.
-
-[Appendix A](../../appendix/A-template-library.md)는 최종 정리 전까지 마이그레이션 참고 자료로만 남습니다.

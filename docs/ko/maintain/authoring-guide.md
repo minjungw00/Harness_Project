@@ -174,35 +174,31 @@ Result 의미:
 
 ## Reference ownership map
 
-정확한 세부사항을 어디에 둘지 판단할 때 이 map을 사용합니다. 예전의 one-owner discipline은 보존하되, 독자가 처음 만나는 원칙이 아니라 maintainer를 위한 뒤쪽 참고 자료로 둡니다.
+정확한 세부사항을 어디에 둘지 판단할 때 이 map을 사용합니다. 이 map은 재설계된 문서 구조의 active owner를 식별하며, retired paths가 authoring workflow에 남지 않게 합니다.
 
-재설계 중에는 target reader-path file이 아직 없을 수 있습니다. Target file이 생기기 전까지는 current numbered source document를 owner로 유지하고, migration이 들어갈 때 이 map을 갱신합니다.
-
-Target reference file이 생기면 그 파일이 active owner입니다. 구 번호 문서는 final cleanup 전까지 migration source material로만 남습니다.
-
-| Subject | 재설계 구조의 owner | 이전 출처 / 마이그레이션 출처 자료 |
-|---|---|---|
-| Entrypoint, reader paths, document list, target tree summary | `README.md` | `README.md` |
-| Shared reader mental model and three-space overview | `learn/overview.md` | `00-introduction.md` |
-| Small core concept introduction | `learn/concepts.md` | `00-introduction.md`와 `glossary.md`는 마이그레이션 출처 자료 |
-| Project purpose, target users, values, scope, non-goals, automation philosophy | `learn/purpose-and-principles.md` | `01-project-charter.md` |
-| Strategic thesis, failure model, MVP boundary, principle groups | 독자 설명은 `learn/purpose-and-principles.md`; exact contract impact는 `reference/design-quality-policies.md`와 `reference/kernel.md` | `02-strategy.md` |
-| Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` | 이전 출처 자료: `03-kernel-spec.md` |
-| Runtime architecture, three spaces in implementation detail, Core process model, artifact architecture, projection/reconcile architecture, guarantee levels | `reference/runtime-architecture.md` | 이전 출처 자료: `04-runtime-architecture.md` |
-| MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `reference/mcp-api-and-schemas.md` | 이전 출처 자료: `05-mcp-api-and-schemas.md` |
-| SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` | 이전 출처 자료: `06-reference-mvp.md` |
-| MVP implementation order and stage exit criteria | `build/mvp-plan.md` | `06-reference-mvp.md` |
-| First runnable implementation slice | `build/first-runnable-slice.md` | `06-reference-mvp.md` |
-| Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md`가 active owner입니다. | `07-document-projection.md`는 final cleanup 전까지 migration source material입니다. |
-| 모든 projection template 본문과 표시 카드 형태 | `reference/templates/*.md`가 active owner입니다. | `appendix/A-template-library.md`는 final cleanup 전까지 migration source material입니다. |
-| 설계 품질 정책 계약, validator ID, severity composition 규칙, 정책 waiver 의미, 근거 기대사항, close 영향 | `reference/design-quality-policies.md`가 active owner입니다. | `08-design-quality-policy-pack.md`는 final cleanup 전까지 migration source material로 남아 있는 이전 출처 자료입니다. |
-| User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` | `10-user-guide.md` |
-| User/agent session procedure | `use/agent-session-flow.md` | `09-agent-integration.md` and `10-user-guide.md` as migration source material |
-| Agent surface capability profiles, common connector contract, fallback semantics, Role Lens, connector conformance overview | `reference/agent-integration.md` | `09-agent-integration.md` as migration source material |
-| Surface-specific recipes | `reference/surface-cookbook.md` | `appendix/B-surface-cookbook.md` as migration source material |
-| Generic capability profile examples | `reference/agent-integration.md` | `appendix/B-surface-cookbook.md` as migration source material |
-| Operator procedures, conformance fixture bodies, fixture assertion semantics, doctor/recover/reconcile/export/artifact integrity, docs-maintenance reporting | `reference/operations-and-conformance.md` | `11-operations-and-conformance.md`는 마이그레이션 출처 자료 |
-| Official term definitions and capitalization | `reference/glossary.md` | `glossary.md`는 마이그레이션 출처 자료 |
-| Post-MVP roadmap | `roadmap.md` | `appendix/C-later-roadmap.md`는 final cleanup 전까지 마이그레이션 출처 자료 |
-| Documentation authoring rules | `maintain/authoring-guide.md` | `99-authoring-guide.md` |
-| Translation and bilingual prose rules | `maintain/translation-guide.md` | none; new in redesign |
+| Subject | Active owner |
+|---|---|
+| Entrypoint, reader paths, document list, target tree summary | `README.md` |
+| Shared reader mental model and three-space overview | `learn/overview.md` |
+| Small core concept introduction | `learn/concepts.md` |
+| Project purpose, target users, values, scope, non-goals, automation philosophy | `learn/purpose-and-principles.md` |
+| Strategic thesis, failure model, MVP boundary, principle groups | 독자 설명은 `learn/purpose-and-principles.md`; exact contract impact는 `reference/design-quality-policies.md`와 `reference/kernel.md` |
+| Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` |
+| Runtime architecture, three spaces in implementation detail, Core process model, artifact architecture, projection/reconcile architecture, guarantee levels | `reference/runtime-architecture.md` |
+| MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `reference/mcp-api-and-schemas.md` |
+| SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` |
+| MVP implementation order and stage exit criteria | `build/mvp-plan.md` |
+| First runnable implementation slice | `build/first-runnable-slice.md` |
+| Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md` |
+| 모든 projection template 본문과 표시 카드 형태 | `reference/templates/*.md` |
+| 설계 품질 정책 계약, validator ID, severity composition 규칙, 정책 waiver 의미, 근거 기대사항, close 영향 | `reference/design-quality-policies.md` |
+| User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` |
+| User/agent session procedure | `use/agent-session-flow.md` |
+| Agent surface capability profiles, common connector contract, fallback semantics, Role Lens, connector conformance overview | `reference/agent-integration.md` |
+| Surface-specific recipes | `reference/surface-cookbook.md` |
+| Generic capability profile examples | `reference/agent-integration.md` |
+| Operator procedures, conformance fixture bodies, fixture assertion semantics, doctor/recover/reconcile/export/artifact integrity, docs-maintenance reporting | `reference/operations-and-conformance.md` |
+| Official term definitions and capitalization | `reference/glossary.md` |
+| Post-MVP roadmap | `roadmap.md` |
+| Documentation authoring rules | `maintain/authoring-guide.md` |
+| Translation and bilingual prose rules | `maintain/translation-guide.md` |

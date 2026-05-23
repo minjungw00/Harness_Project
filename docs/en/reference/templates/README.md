@@ -50,5 +50,3 @@ Templates are rendered shapes, not canonical state. They must not redefine kerne
 ## Notes
 
 This directory is the active reference location for projection template bodies and display card shapes.
-
-[Appendix A](../../appendix/A-template-library.md) remains migration source material only until final cleanup.
