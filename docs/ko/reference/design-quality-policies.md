@@ -30,7 +30,7 @@
 | `deep_module_interface` | 모듈 역할, 공개 interface, 호환성, 호출자 영향이 이해되었는가? |
 | `codebase_stewardship` | 로컬 Task 완료가 향후 유지보수성, 테스트 용이성, 도메인 언어, 경계 손상을 숨기고 있지 않은가? |
 | `manual_qa` | UX, workflow, copy, accessibility, visual output, product taste를 사람이 직접 봐야 하는가? |
-| `context_hygiene` | Agent가 stale chat이나 old document가 아니라 현재의 집중된 맥락을 쓰고 있는가? |
+| `context_hygiene` | Agent가 오래된 chat이나 오래된 document가 아니라 현재의 집중된 맥락을 쓰고 있는가? |
 | `two_stage_review_display` | Spec compliance와 code stewardship을 새 gate 없이 분리해 보여 주는가? |
 
 ## 담당하는 참조 범위
@@ -145,7 +145,7 @@ Policy validator는 MCP API document가 담당하는 validator 결과 형식에 
 | `required_record` | Decision Packet 기록과 렌더링될 때 선택적 `DEC` projection. |
 | `validator` | `decision_quality_check` |
 | `evidence` | Decision Packet ref, option ref, evidence manifest ref, risk/waiver ref, 위험 수용이 포함될 때 residual-risk state ref, 사용자 판단이 필요할 때 user acceptance ref. |
-| `close_impact` | 차단하는 제품 판단에 필요한 decision quality가 없으면 `decision_gate=required`, `pending`, 또는 `blocked`로 설정하거나 유지한다. Design quality에 영향을 주는 decision일 때만 `design_gate`에 반영한다. Unresolved 사용자 판단, invalid deferral, unaccepted residual risk는 영향받는 write 또는 close를 차단한다. 유효하게 기록된 acceptance는 residual risk를 state ref에 보존한 채 close를 허용할 수 있다. |
+| `close_impact` | 차단하는 제품 판단에 필요한 decision quality가 없으면 `decision_gate=required`, `pending`, 또는 `blocked`로 설정하거나 유지한다. Design quality에 영향을 주는 decision일 때만 `design_gate`에 반영한다. 해소되지 않은 사용자 판단, invalid deferral, unaccepted residual risk는 영향받는 write 또는 close를 차단한다. 유효하게 기록된 acceptance는 residual risk를 state ref에 보존한 채 close를 허용할 수 있다. |
 
 ### Autonomy Boundary (`autonomy_boundary`)
 
@@ -162,12 +162,12 @@ Policy validator는 MCP API document가 담당하는 validator 결과 형식에 
 |---|---|
 | `name` | `autonomy_boundary` |
 | `applies_when` | Agent가 authority가 모호하거나, user constraint, external side effect, irreversible edit, 범위 확장, sensitive action, 제품 판단, 공개 약속, 알려진 중지 조건이 있는 작업을 shaping하거나 실행할 때. |
-| `default_requirement` | Agent가 user input 없이 할 수 있는 것, 사용자 판단이 필요한 것, 중지 조건을 기록한다. 기준 boundary는 active Change Unit에 둔다. Change Unit이 아직 없으면 Task 또는 Shared Design이 shaping/proposed boundary ref를 가질 수 있다. Boundary는 low-risk implementation detail에서는 agent가 진행하게 하되, 제품 방향, 위험 수용, 공개 interface 약속, 사람의 판단이 필요한 정책 waiver에서는 멈추게 해야 한다. Autonomy Boundary는 scope grant가 아니며 active Change Unit 밖의 path, tool, command, network, secret, sensitive category를 허가하지 않는다. |
+| `default_requirement` | Agent가 user input 없이 할 수 있는 것, 사용자 판단이 필요한 것, 중지 조건을 기록한다. 기준 경계는 active Change Unit에 둔다. Change Unit이 아직 없으면 Task 또는 Shared Design이 shaping/proposed boundary ref를 가질 수 있다. 경계는 low-risk implementation detail에서는 agent가 진행하게 하되, 제품 방향, 위험 수용, 공개 interface 약속, 사람의 판단이 필요한 정책 waiver에서는 멈추게 해야 한다. Autonomy Boundary는 scope grant가 아니며 active Change Unit 밖의 path, tool, command, network, secret, sensitive category를 허가하지 않는다. |
 | `allowed_waiver` | 요청에서 authority가 명확하고 중지 조건이 현실적으로 발생할 수 없는 좁은 `direct` work에 허용된다. Waiver에는 autonomy boundary가 필요 없는 이유를 기록해야 한다. |
 | `required_record` | Active Change Unit의 기준 Autonomy Boundary record, Change Unit 생성 전 Task 또는 Shared Design shaping/proposed boundary ref, 사용자 판단 item에 대한 Decision Packet record, trigger된 stop-condition ref. |
 | `validator` | `autonomy_boundary_check` |
 | `evidence` | User request ref, task constraint, policy ref, Decision Packet ref, stop-condition event, user response ref. |
-| `close_impact` | `prepare_write`에서 발생한 중지 조건 또는 경계 공백은 write를 차단한다. 제품 판단 gap은 Decision Packet을 요청하거나 참조해야 하며 `decision_gate`에 영향을 준다. Design-quality gap은 `design_gate`에 영향을 줄 수 있다. Scope, approval, capability gap은 각자의 blocker로 남는다. Unresolved 중지 조건은 resolved, deferred, 또는 recorded risk로 accepted될 때까지 close를 차단할 수 있다. |
+| `close_impact` | `prepare_write`에서 발생한 중지 조건 또는 경계 공백은 write를 차단한다. 제품 판단 gap은 Decision Packet을 요청하거나 참조해야 하며 `decision_gate`에 영향을 준다. Design-quality gap은 `design_gate`에 영향을 줄 수 있다. Scope, approval, capability gap은 각자의 blocker로 남는다. 해소되지 않은 중지 조건은 해소되거나, deferred되거나, recorded risk로 accepted될 때까지 close를 차단할 수 있다. |
 
 ```mermaid
 flowchart TD
@@ -179,7 +179,7 @@ flowchart TD
 
   UserJudgment --> Packet["Decision Packet path"]
   Stops --> StopTriggered{"triggered?"}
-  StopTriggered -- yes --> Hold["hold, resolve, defer, 또는 recorded risk로 accept"]
+  StopTriggered -- yes --> Hold["보류, 해소, defer, 또는 recorded risk로 accept"]
   StopTriggered -- no --> Prepare
   Prepare --> Blockers["blockers: scope gap, approval gap, capability gap, boundary gap"]
   Prepare --> WriteAuth["write check가 모두 통과하면 compatible Write Authorization"]
@@ -279,7 +279,7 @@ TDD execution loop:
 |---|---|
 | `name` | `domain_language` |
 | `applies_when` | New product term이 나타나거나, existing term이 new meaning으로 쓰이거나, code와 product language가 diverge하거나, 여러 이름이 하나의 concept를 가리키거나, reviewer/evaluator가 term mismatch를 발견할 때. |
-| `default_requirement` | 영향을 받는 term의 meaning, code representation, "not this" boundary, related term, source, status를 기록하거나 갱신한다. Implementation agent는 task-relevant term만 가져오고, reviewer/evaluator는 relevant term을 받는다. |
+| `default_requirement` | 영향을 받는 term의 meaning, code representation, "not this" 경계, related term, source, status를 기록하거나 갱신한다. Implementation agent는 task-relevant term만 가져오고, reviewer/evaluator는 relevant term을 받는다. |
 | `allowed_waiver` | Work에 domain term impact가 없거나 term이 의도적으로 local/temporary일 때 허용된다. Waiver는 기준 term update가 필요 없는 이유를 기록해야 한다. |
 | `required_record` | `record_kind=domain_term`으로 참조되는 `domain_terms` record; `DOMAIN-LANGUAGE`는 projection/proposal 접점일 뿐이다. |
 | `validator` | `domain_language_consistency` |
@@ -290,7 +290,7 @@ TDD execution loop:
 
 이럴 때 사용합니다:
 
-- 공개 interface, module boundary, schema, data model, auth boundary, compatibility contract가 바뀔 수 있을 때.
+- 공개 interface, module 경계, schema, data model, auth 경계, compatibility contract가 바뀔 수 있을 때.
 - Deep module이 더 단순한 public 접점 뒤에 complexity를 숨길 때.
 - 호출자 영향, 경계 테스트, dependency direction 검토가 필요할 때.
 - Shallow-module risk가 future change를 어렵게 만들 수 있을 때.
@@ -300,9 +300,9 @@ TDD execution loop:
 | Field | Contract |
 |---|---|
 | `name` | `deep_module_interface` |
-| `applies_when` | 공개 interface change, module boundary change, schema/data model change, auth/security boundary, compatibility impact, deep module internal, shallow-module risk. |
+| `applies_when` | 공개 interface change, module 경계 change, schema/data model change, auth/security 경계, compatibility impact, deep module internal, shallow-module risk. |
 | `default_requirement` | 영향을 받는 module, current role, proposed 공개 interface, interface 뒤에 숨겨진 internal complexity, 모듈 단위 watchpoints, 영향을 받는 caller, compatibility impact, 테스트 경계를 식별한다. 충분한 internal capability를 뒤에 둔 작고 simple한 공개 interface를 선호한다. 공개 interface, compatibility, architecture choice에는 Decision Packet을 사용한다. |
-| `allowed_waiver` | Public boundary impact, dependency direction change, 호환성 위험이 없고 localized internal change일 때 허용된다. Module/interface review가 불필요한 이유를 기록해야 한다. |
+| `allowed_waiver` | Public 경계 impact, dependency direction change, 호환성 위험이 없고 localized internal change일 때 허용된다. Module/interface review가 불필요한 이유를 기록해야 한다. |
 | `required_record` | `record_kind=module_map_item`과 `record_kind=interface_contract`로 참조되는 `module_map_items` 및 `interface_contracts` records, decision record, 선택적 `MODULE-MAP` / `INTERFACE-CONTRACT` projection. |
 | `validator` | `module_interface_review` |
 | `evidence` | Module map item ref, relevant한 경우 모듈 단위 watchpoints, interface contract ref, 호출자 영향 list, 경계 테스트, design decision, compatibility note. |
@@ -322,13 +322,13 @@ TDD execution loop:
 | Field | Contract |
 |---|---|
 | `name` | `codebase_stewardship` |
-| `applies_when` | Work가 durable code structure, domain concept, module ownership, interface contract, architecture direction, deep-module boundary, testing strategy, cross-cutting exception을 건드릴 때. |
-| `default_requirement` | Change Unit의 stewardship 관점을 domain language, module map, interface contract, TDD/feedback loop, architecture watchpoint, deep-module boundary로 묶어 본다. Module-local watchpoints는 `module_map_items`에 두고, Task/Change Unit watchpoints는 delivery-level stewardship risk를 다룬다. Stewardship review는 일반 코드 리뷰 checklist가 아니라, 로컬 task completion이 domain language, module boundary, interface contract, feedback loop, 테스트 용이성, 유지보수성, 향후 변경 비용의 저하를 숨기지 못하게 하는 장치다. owner 기록을 기준 정보로 사용하고, Task와 관련된 참조만 기록하며, schema나 DDL을 중복하지 않고 drift에는 reconcile item을 만든다. |
+| `applies_when` | Work가 durable code structure, domain concept, module ownership, interface contract, architecture direction, deep-module 경계, testing strategy, cross-cutting exception을 건드릴 때. |
+| `default_requirement` | Change Unit의 stewardship 관점을 domain language, module map, interface contract, TDD/feedback loop, architecture watchpoint, deep-module 경계로 묶어 본다. Module-local watchpoints는 `module_map_items`에 두고, Task/Change Unit watchpoints는 delivery-level stewardship risk를 다룬다. Stewardship review는 일반 코드 리뷰 checklist가 아니라, 로컬 task completion이 domain language, module 경계, interface contract, feedback loop, 테스트 용이성, 유지보수성, 향후 변경 비용의 저하를 숨기지 못하게 하는 장치다. owner 기록을 기준 정보로 사용하고, Task와 관련된 참조만 기록하며, schema나 DDL을 중복하지 않고 drift에는 reconcile item을 만든다. |
 | `allowed_waiver` | Durable structure, domain, interface, feedback-loop impact가 없는 isolated docs, comment, formatting, leaf edit에 허용된다. Waiver에는 stewardship review가 필요 없는 이유를 기록해야 한다. |
 | `required_record` | Task 또는 Change Unit stewardship refs, `domain_terms`, relevant한 경우 모듈 단위 watchpoints를 포함하는 `module_map_items` records, `interface_contracts` records, `feedback_loops` records, TDD가 사용된 경우 `tdd_traces` refs, decision records, Task/Change Unit watchpoints, Journey Spine Entry refs, drift에 대한 reconcile items. Dedicated architecture watchpoint ref는 later DDL batch가 정의한 경우에만 사용할 수 있다. 기준 design-support refs는 `record_kind=domain_term`, `record_kind=module_map_item`, `record_kind=interface_contract`, `record_kind=feedback_loop`을 사용하며, Markdown projection refs는 optional display/proposal refs이다. |
 | `validator` | `codebase_stewardship_check` |
 | `evidence` | Domain term ref, 모듈 단위 watchpoints를 포함하는 module map item ref, interface contract ref, feedback loop ref, 사용된 경우 TDD trace ref, Task/Change Unit watchpoint, Journey Spine Entry ref, deep-module note, reconcile item ref, later DDL에서 정의된 경우에만 dedicated architecture watchpoint ref. |
-| `close_impact` | Required stewardship review가 없으면 `design_gate=pending`, `partial`, 또는 `stale`로 남는다. Unresolved drift가 public behavior, module boundary, acceptance criteria, verification confidence에 영향을 주면 close를 차단할 수 있다. |
+| `close_impact` | Required stewardship review가 없으면 `design_gate=pending`, `partial`, 또는 `stale`로 남는다. 해소되지 않은 drift가 public behavior, module 경계, acceptance criteria, verification confidence에 영향을 주면 close를 차단할 수 있다. |
 
 #### StewardshipImpactSummary display shape
 
@@ -376,22 +376,22 @@ Domain term, module map item, interface contract, Feedback Loop records, TDD가 
 이럴 때 사용합니다:
 
 - Work가 interruption 후 resume되거나 관련 docs, issue, record, code path가 바뀌었을 때.
-- Agent가 stale chat, stale PRD, old design doc, moved code path에 기대고 있을 수 있을 때.
+- Agent가 오래된 chat, 오래된 PRD, old design doc, moved code path에 기대고 있을 수 있을 때.
 - Evaluator 또는 reviewer에게 focused current-state bundle이 필요할 때.
 - Projection freshness, reconcile item, acceptance criteria가 바뀌었을 때.
 
-예시: Task가 일주일 뒤 resume되면 current Task summary, latest evidence, Journey refs, policy refs, acceptance criteria를 전달합니다. Old PRD는 필요할 때만 가져오고 stale input으로 표시합니다.
+예시: Task가 일주일 뒤 resume되면 current Task summary, latest evidence, Journey refs, policy refs, acceptance criteria를 전달합니다. Old PRD는 필요할 때만 가져오고 최신이 아닌 input으로 표시합니다.
 
 | Field | Contract |
 |---|---|
 | `name` | `context_hygiene` |
 | `applies_when` | Work가 interruption 후 resume되거나, old PRD/design doc/issue가 있거나, code path가 moved되었거나, acceptance criteria가 changed되었거나, module/interface/domain 기록이 바뀌었거나, evaluator/reviewer가 focused bundle을 필요로 할 때. |
-| `default_requirement` | Current Task summary, Journey Card와 relevant Journey Spine ref, latest run/eval/evidence ref, relevant policy ref, current acceptance criteria를 전달한다. Stale PRD, closed issue, old design doc, coding standard, long log는 필요할 때만 pull-only reference로 가져온다. Stale doc을 표시하고 chat을 state로 취급하지 않는다. |
+| `default_requirement` | Current Task summary, Journey Card와 relevant Journey Spine ref, latest run/eval/evidence ref, relevant policy ref, current acceptance criteria를 전달한다. 오래된 PRD, closed issue, old design doc, coding standard, long log는 필요할 때만 pull-only reference로 가져온다. 최신이 아닌 doc을 표시하고 chat을 state로 취급하지 않는다. |
 | `allowed_waiver` | Product state, design state, evidence state가 바뀌지 않는 short advisor-only work에 허용된다. |
 | `required_record` | Task summary, projection freshness, drift에 대한 reconcile item, evidence manifest, validator 결과. |
 | `validator` | `context_hygiene_check` |
-| `evidence` | Current projection ref, freshness state, stale ref, reconcile item ref, evaluator용 bundle contents. |
-| `close_impact` | Stale critical context는 `design_gate=stale`, evidence stale, projection stale로 표시될 수 있다. Agent가 scope, evidence, current acceptance criteria를 안전하게 판단할 수 없으면 write 또는 close를 차단할 수 있다. |
+| `evidence` | Current projection ref, freshness state, 최신이 아닌 ref, reconcile item ref, evaluator용 bundle contents. |
+| `close_impact` | 최신이 아닌 critical context는 `design_gate=stale`, evidence `stale`, projection `stale`로 표시될 수 있다. Agent가 scope, evidence, current acceptance criteria를 안전하게 판단할 수 없으면 write 또는 close를 차단할 수 있다. |
 
 ### Two-stage Review Display
 
@@ -456,11 +456,11 @@ Default impact vocabulary:
 - `not_required`: 해당 policy의 `applies_when`이 독립적으로 true가 아니면 발견 사항을 내보낼 필요가 없다.
 - `warning`: visible validator 발견 사항을 내보내되 default로 write 또는 close를 차단하지 않는다.
 - `design_gate=pending` 또는 `design_gate=partial`: shaping, owner 기록, evidence, waiver가 incomplete하다. `prepare_write`는 이 matrix 또는 정책 계약이 gap을 write-blocking이라고 말할 때만 차단한다.
-- `blocking before write`: issue가 unresolved인 동안 `prepare_write`는 영향받는 product write를 허가하면 안 된다. Decision Packet 또는 approval request를 만들거나 연결하는 것은 blocker path를 기록할 뿐이며 write를 허가하지 않는다. Authorization에는 issue가 resolved 또는 validly waived되고, relevant Decision Packet이 영향받는 operation에 대해 resolved 또는 otherwise compatible이며, 필요한 sensitive approval이 granted된 뒤 later compatible `prepare_write`가 Write Authorization을 만들어야 한다.
+- `blocking before write`: issue가 해소되지 않은 동안 `prepare_write`는 영향받는 product write를 허가하면 안 된다. Decision Packet 또는 approval request를 만들거나 연결하는 것은 blocker path를 기록할 뿐이며 write를 허가하지 않는다. Authorization에는 issue가 해소되거나 validly waived되고, relevant Decision Packet이 영향받는 operation에 대해 해소되었거나 otherwise compatible이며, 필요한 sensitive approval이 granted된 뒤 later compatible `prepare_write`가 Write Authorization을 만들어야 한다.
 - `close blocker`: successful close는 pass 또는 compatible waiver를 기다린다. 수용한 residual risk는 kernel과 관련 정책 계약이 risk-accepted close path를 허용하는 경우에만 도움이 되며, 근거 충분성, required QA, sensitive approval, final acceptance를 대체하지 않는다.
 - `Decision Packet required`: Decision Packet state path를 사용하고 applicable한 경우 `decision_gate=required`, `pending`, 또는 `blocked`로 설정하거나 유지한다.
 
-이것은 정책 영향 vocabulary이며 API `ValidatorResult.findings.severity` enum이 아닙니다. Validator 발견 사항은 계속 `info`, `warning`, `error`, `blocker`를 사용합니다. 합성된 정책 영향은 gates, blocked reasons, close blockers, Decision Packet needs, waiver eligibility, fixture-observed 파생 state를 통해 드러납니다.
+이것은 정책 영향 vocabulary이며 API `ValidatorResult.findings.severity` enum이 아닙니다. Validator 발견 사항은 계속 `info`, `warning`, `error`, `blocker`를 사용합니다. 합성된 정책 영향은 gates, blocked reasons, close blockers, Decision Packet needs, waiver eligibility, fixture-observed 파생 상태를 통해 드러납니다.
 
 ### Severity composition rule
 
@@ -474,17 +474,17 @@ Default impact vocabulary:
 
 Validator는 모든 관련 발견 사항을 보고해야 합니다. Composition rule은 합성된 gate, write-blocker, close-blocker, waiver, Decision Packet impact를 결정하지만, 더 약한 발견 사항을 validator 결과, evidence, status, conformance output에서 숨기면 안 됩니다. Primary public `ToolError` 선택은 API가 소유한 [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence)를 따릅니다. 이 policy rule은 error-code precedence를 재정의하거나 secondary error를 숨기지 않습니다.
 
-Severity는 explicit user request, sensitive category, 공개 약속, public API/interface 또는 schema impact, 알려진 위험이 있는 acceptance, Residual Risk 표시, stale critical context, 해당 case가 blocking임을 검증하는 conformance fixture에 의해 matrix default보다 올라갈 수 있습니다. Severity는 관련 정책 계약에 따라 기록된 allowed waiver가 있을 때만 낮아질 수 있으며, 해당 contract가 waiver를 허용하는 policy가 소유한 impact에만 적용됩니다. 정책 waiver는 missing scope, missing sensitive approval, 필요한 근거 불충분, 필수 acceptance, Write Authorization 요구사항 같은 Kernel Authority blocker를 낮추지 않습니다. 또한 API primary error precedence를 바꾸지 않습니다. 이 rule은 정책 계약 interpretation, validators, gates, write blockers, close blockers, Decision Packet needs에 영향을 주지만 Design Stewardship Defaults를 Kernel Authority Invariants로 만들지는 않습니다.
+Severity는 explicit user request, sensitive category, 공개 약속, public API/interface 또는 schema impact, 알려진 위험이 있는 acceptance, Residual Risk 표시, 최신이 아닌 critical context, 해당 case가 blocking임을 검증하는 conformance fixture에 의해 matrix default보다 올라갈 수 있습니다. Severity는 관련 정책 계약에 따라 기록된 allowed waiver가 있을 때만 낮아질 수 있으며, 해당 contract가 waiver를 허용하는 policy가 소유한 impact에만 적용됩니다. 정책 waiver는 missing scope, missing sensitive approval, 필요한 근거 불충분, 필수 acceptance, Write Authorization 요구사항 같은 Kernel Authority blocker를 낮추지 않습니다. 또한 API primary error precedence를 바꾸지 않습니다. 이 rule은 정책 계약 interpretation, validators, gates, write blockers, close blockers, Decision Packet needs에 영향을 주지만 Design Stewardship Defaults를 Kernel Authority Invariants로 만들지는 않습니다.
 
 | Task shape | Warning 또는 `not_required` default | Gate/write default | Close/decision default |
 |---|---|---|---|
-| Direct docs-only | Docs가 제품 약속, 정책 계약, domain term, public behavior, interface meaning을 바꾸지 않는 한 `vertical_slice_shape`, `tdd_trace_required`, `manual_qa_required`, `module_interface_review`, `codebase_stewardship_check`는 `not_required`다. `context_hygiene_check`와 `domain_language_consistency`는 stale projection 또는 terminology drift에 대해 warning일 수 있다. | Default로 설계 품질 write blocker는 없다. Scope가 ambiguous하거나 design/정책 계약 edit이면 `shared_design_alignment`가 `design_gate=pending`이 된다. 사용자 판단, sensitive content, 공개 약속, residual risk가 있을 때만 `autonomy_boundary_check` 또는 `decision_quality_check`가 block한다. | 기본 close blocker는 없다. Docs drift가 acceptance, verification confidence, 공개 약속, required projection freshness에 영향을 주면 close가 block될 수 있다. Policy commitment change, 공개 약속, 알려진 위험 acceptance에는 `Decision Packet required`다. |
-| Direct code | Obvious leaf/internal edit에는 `shared_design_alignment`, `vertical_slice_shape`, `manual_qa_required`가 `not_required`다. Minor maintainability concern에는 `codebase_stewardship_check`가 warning일 수 있다. | 동작에 영향을 주는 write 전에는 `feedback_loop_check`가 `design_gate=pending`이다. `tdd_trace_required`, `domain_language_consistency`, `module_interface_review`는 각 정책 계약이 적용될 때만 `design_gate=partial`이 된다. Scope 또는 authority gap은 `autonomy_boundary_check`가 block하고, 동작에 영향을 주는 write에 신뢰할 수 있는 feedback loop가 없으면 `feedback_loop_check`가 block한다. | Run evidence가 missing이거나, 필요한 TDD/domain/interface record 또는 unresolved behavior risk가 acceptance 또는 verification confidence에 영향을 주면 `close blocker`가 될 수 있다. 제품 판단, 알려진 위험이 있는 waiver, 범위 확장에는 `Decision Packet required`다. |
-| Ordinary work feature | Feature가 user-visible, workflow-affecting, browser/product-taste dependent가 아니면 `manual_qa_required`는 `not_required`다. Domain logic, service behavior, bug repair, state transition, edge-heavy behavior가 아니면 `tdd_trace_required`는 warning일 수 있다. | 기록이 생기기 전까지 `shared_design_alignment`, `vertical_slice_shape`, `feedback_loop_check`, `codebase_stewardship_check`는 default로 `design_gate=pending` 또는 `design_gate=partial`이다. 정책 계약이 적용되면 `domain_language_consistency`와 `module_interface_review`도 design gate에 들어온다. Missing Autonomy Boundary, unresolved decision, missing feedback loop는 `blocking before write`가 될 수 있다. | Required vertical-slice, feedback, stewardship, 근거 공백은 `close blocker`가 될 수 있다. 범위 확장, 수평 예외, 제품 장단점 판단, Residual Risk 수용에는 `Decision Packet required`다. |
+| Direct docs-only | Docs가 제품 약속, 정책 계약, domain term, public behavior, interface meaning을 바꾸지 않는 한 `vertical_slice_shape`, `tdd_trace_required`, `manual_qa_required`, `module_interface_review`, `codebase_stewardship_check`는 `not_required`다. `context_hygiene_check`와 `domain_language_consistency`는 최신이 아닌 projection 또는 terminology drift에 대해 warning일 수 있다. | Default로 설계 품질 write blocker는 없다. Scope가 ambiguous하거나 design/정책 계약 edit이면 `shared_design_alignment`가 `design_gate=pending`이 된다. 사용자 판단, sensitive content, 공개 약속, residual risk가 있을 때만 `autonomy_boundary_check` 또는 `decision_quality_check`가 block한다. | 기본 close blocker는 없다. Docs drift가 acceptance, verification confidence, 공개 약속, required projection freshness에 영향을 주면 close가 block될 수 있다. Policy commitment change, 공개 약속, 알려진 위험 acceptance에는 `Decision Packet required`다. |
+| Direct code | Obvious leaf/internal edit에는 `shared_design_alignment`, `vertical_slice_shape`, `manual_qa_required`가 `not_required`다. Minor maintainability concern에는 `codebase_stewardship_check`가 warning일 수 있다. | 동작에 영향을 주는 write 전에는 `feedback_loop_check`가 `design_gate=pending`이다. `tdd_trace_required`, `domain_language_consistency`, `module_interface_review`는 각 정책 계약이 적용될 때만 `design_gate=partial`이 된다. Scope 또는 authority gap은 `autonomy_boundary_check`가 block하고, 동작에 영향을 주는 write에 신뢰할 수 있는 feedback loop가 없으면 `feedback_loop_check`가 block한다. | Run evidence가 missing이거나, 필요한 TDD/domain/interface record 또는 해소되지 않은 behavior risk가 acceptance 또는 verification confidence에 영향을 주면 `close blocker`가 될 수 있다. 제품 판단, 알려진 위험이 있는 waiver, 범위 확장에는 `Decision Packet required`다. |
+| Ordinary work feature | Feature가 user-visible, workflow-affecting, browser/product-taste dependent가 아니면 `manual_qa_required`는 `not_required`다. Domain logic, service behavior, bug repair, state transition, edge-heavy behavior가 아니면 `tdd_trace_required`는 warning일 수 있다. | 기록이 생기기 전까지 `shared_design_alignment`, `vertical_slice_shape`, `feedback_loop_check`, `codebase_stewardship_check`는 default로 `design_gate=pending` 또는 `design_gate=partial`이다. 정책 계약이 적용되면 `domain_language_consistency`와 `module_interface_review`도 design gate에 들어온다. Missing Autonomy Boundary, 해소되지 않은 decision, missing feedback loop는 `blocking before write`가 될 수 있다. | Required vertical-slice, feedback, stewardship, 근거 공백은 `close blocker`가 될 수 있다. 범위 확장, 수평 예외, 제품 장단점 판단, Residual Risk 수용에는 `Decision Packet required`다. |
 | UI/UX/copy work | 신뢰할 수 있는 대체 feedback loop가 있으면 `tdd_trace_required`는 default로 `not_required`다. Schema, auth, 공개 interface, compatibility를 touch하지 않으면 `module_interface_review`는 warning이다. | `shared_design_alignment`, `feedback_loop_check`, copy-relevant `domain_language_consistency`는 default로 `design_gate=pending` 또는 `design_gate=partial`이다. `manual_qa_required`는 QA path를 선택하고 `qa_gate=pending`을 set할 수 있다. Product-taste authority 또는 중지 조건이 unclear하면 `autonomy_boundary_check`가 block한다. | `manual_qa_required`는 `qa_gate=pending` 또는 `failed`를 set하며, validly waived되지 않으면 `close blocker`다. 중요한 UX/copy 장단점 판단, 알려진 user/product 위험이 있는 QA 면제, 공개 약속에는 `Decision Packet required`다. |
-| Sensitive work | Unrelated policy는 `not_required`로 남지만, sensitive category가 scope, approval, user harm, privacy, legal, safety, security, secret, irreversible action, external side effect에 영향을 주면 applicable policy는 warning-only가 아니다. | Applicable design policy는 record, approval, waiver가 생길 때까지 `design_gate=pending`에서 시작한다. 영향받는 sensitive path에서는 `autonomy_boundary_check`, `decision_quality_check`, approval/scope Core check, 필요한 `feedback_loop_check` 또는 `manual_qa_required`가 `blocking before write`다. | Evidence, QA, Residual Risk 표시, unresolved approval, unaccepted risk는 `close blocker`다. Approval context, 제품 판단, waiver, 위험 수용에는 `Decision Packet required`다. |
-| Public API/interface work | UI/workflow docs 또는 browser-visible behavior가 affected되지 않으면 `manual_qa_required`는 `not_required`다. Behavior, domain, compatibility, edge-heavy logic이 involved되지 않으면 `tdd_trace_required`는 warning일 수 있다. | `shared_design_alignment`, `module_interface_review`, `feedback_loop_check`, `codebase_stewardship_check`, relevant `domain_language_consistency`는 default로 `design_gate=pending` 또는 `design_gate=partial`이다. 공개 약속, 호환성 위험, breaking change, 경계 모호성에는 `decision_quality_check`, `module_interface_review`, `autonomy_boundary_check`가 `blocking before write`다. | Unresolved compatibility, interface review, 공개 약속, 근거 공백은 `close blocker`다. Breaking, irreversible, compatibility, residual-risk choice에는 `Decision Packet required`다. |
-| Broad structural/refactor work | User-visible behavior가 영향을 받지 않으면 `manual_qa_required`는 `not_required`다. `tdd_trace_required`는 justification과 evidence가 있을 때만 대체 feedback loop를 사용할 수 있다. | `shared_design_alignment`, `vertical_slice_shape` 또는 기록된 수평 예외, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, relevant `domain_language_consistency`는 default로 `design_gate=pending` 또는 `design_gate=partial`이다. 아키텍처 방향, dependency direction, 범위 확장, unclear authority에는 `decision_quality_check`와 `autonomy_boundary_check`가 `blocking before write`다. | Stewardship drift, missing follow-up vertical slice, missing evidence, unresolved module/interface risk, unaccepted residual risk는 `close blocker`가 될 수 있다. Architecture choice, 수평 예외, 수용한 residual risk에는 `Decision Packet required`다. |
+| Sensitive work | Unrelated policy는 `not_required`로 남지만, sensitive category가 scope, approval, user harm, privacy, legal, safety, security, secret, irreversible action, external side effect에 영향을 주면 applicable policy는 warning-only가 아니다. | Applicable design policy는 record, approval, waiver가 생길 때까지 `design_gate=pending`에서 시작한다. 영향받는 sensitive path에서는 `autonomy_boundary_check`, `decision_quality_check`, approval/scope Core check, 필요한 `feedback_loop_check` 또는 `manual_qa_required`가 `blocking before write`다. | Evidence, QA, Residual Risk 표시, 해소되지 않은 approval, unaccepted risk는 `close blocker`다. Approval context, 제품 판단, waiver, 위험 수용에는 `Decision Packet required`다. |
+| Public API/interface work | UI/workflow docs 또는 browser-visible behavior가 affected되지 않으면 `manual_qa_required`는 `not_required`다. Behavior, domain, compatibility, edge-heavy logic이 involved되지 않으면 `tdd_trace_required`는 warning일 수 있다. | `shared_design_alignment`, `module_interface_review`, `feedback_loop_check`, `codebase_stewardship_check`, relevant `domain_language_consistency`는 default로 `design_gate=pending` 또는 `design_gate=partial`이다. 공개 약속, 호환성 위험, breaking change, 경계 모호성에는 `decision_quality_check`, `module_interface_review`, `autonomy_boundary_check`가 `blocking before write`다. | 해소되지 않은 compatibility, interface review, 공개 약속, 근거 공백은 `close blocker`다. Breaking, irreversible, compatibility, residual-risk choice에는 `Decision Packet required`다. |
+| Broad structural/refactor work | User-visible behavior가 영향을 받지 않으면 `manual_qa_required`는 `not_required`다. `tdd_trace_required`는 justification과 evidence가 있을 때만 대체 feedback loop를 사용할 수 있다. | `shared_design_alignment`, `vertical_slice_shape` 또는 기록된 수평 예외, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, relevant `domain_language_consistency`는 default로 `design_gate=pending` 또는 `design_gate=partial`이다. 아키텍처 방향, dependency direction, 범위 확장, unclear authority에는 `decision_quality_check`와 `autonomy_boundary_check`가 `blocking before write`다. | Stewardship drift, missing follow-up vertical slice, missing evidence, 해소되지 않은 module/interface risk, unaccepted residual risk는 `close blocker`가 될 수 있다. Architecture choice, 수평 예외, 수용한 residual risk에는 `Decision Packet required`다. |
 
 ## Policy-to-validator mapping
 

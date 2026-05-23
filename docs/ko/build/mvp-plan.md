@@ -36,7 +36,7 @@ MVP는 하나의 로컬 프로젝트와 하나의 기준 agent 접점이 Harness
 - Run, artifact ref, Evidence Manifest
 - verification, Manual QA, 남은 위험 표시, acceptance, 닫기 차단 조건
 - Core 위에서 동작하는 MCP resource와 tool
-- projection job과 MVP 필수 projection renderer
+- projection job과 MVP 필수 projection 렌더러
 - human-editable input 또는 managed-block drift를 위한 reconcile
 - doctor, recover, export, artifact integrity, conformance smoke 진입점
 
@@ -55,7 +55,7 @@ Kernel Smoke는 첫 실행 가능한 conformance 목표입니다. MVP-0부터 ea
 - `record_run`의 Write Authorization 사용 기록
 - artifact 등록
 - 기본 Evidence Manifest
-- 최소 required projection 최신성 또는 enqueueing
+- 최소 required projection 최신성 또는 대기열 추가
 - 쓰기 권한이 없을 때 차단되는 쓰기 또는 Run
 - 근거 또는 decision 요구사항이 없을 때 차단되는 close
 - 기본 Core fixture 실행
@@ -145,11 +145,11 @@ Approval을 제품 판단으로 취급하지 않습니다. 제품 절충점, 아
 - Evidence Manifest 기록과 evidence gate 갱신
 - policy가 요구할 때 Feedback Loop와 TDD 뒷받침 기록
 - codebase stewardship 확인
-- verification 전에 원천 기록이 존재하는 MVP 필수 renderer와 projection job
+- verification 전에 원천 기록이 존재하는 MVP 필수 렌더러와 projection job
 - managed block hash
 - managed drift와 human-editable proposal을 위한 reconcile item 생성
 
-이 단계에서는 원천 기록이 존재할 때 `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `DIRECT-RESULT`를 만들 수 있습니다. `EVAL`은 MVP-required로 남지만 Eval 원천 기록이 생기는 MVP-4에서 실행 가능한 render 경로가 완료됩니다.
+이 단계에서는 원천 기록이 존재할 때 `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `DIRECT-RESULT`를 만들 수 있습니다. `EVAL`은 MVP-required로 남지만 Eval 원천 기록이 생기는 MVP-4에서 실행 가능한 렌더링 경로가 완료됩니다.
 
 Projection failure는 Core 상태 failure와 분리됩니다.
 
@@ -195,11 +195,11 @@ MVP에서 자동 Browser QA Capture를 요구하지 않습니다. screenshot, co
 | Stage | 완료 기준 |
 |---|---|
 | MVP-0 | 프로젝트 하나가 등록되고, expected state version을 사용하는 상태 변경 전에 project state가 존재해야 한다. 기준 agent 접점이 등록되어 있고, runtime 파일과 artifact 저장소가 있으며, doctor/readiness가 프로젝트와 runtime 상태를 표시할 수 있어야 한다. |
-| MVP-1 | No-active-Task 상태 표시가 동작해야 한다. advisor Task는 Core를 통해 intake와 close를 할 수 있어야 하며, Task 상태는 Journey/Decision state를 보여 줘야 한다. 읽기 안내는 권한을 만들지 않아야 하고, 진행을 막는 사용자 판단은 Decision Packet을 만들거나 연결할 수 있어야 한다. 모든 상태 변경은 현재 기록과 task_events를 하나의 transaction에서 갱신해야 한다. |
-| MVP-2 | Active scoped Change Unit이 없는 제품 파일 쓰기는 차단되어야 한다. Sensitive change는 approval을 요구해야 하며, Autonomy Boundary violation은 차단되거나 Decision Packet으로 라우팅되어야 한다. Unresolved blocking Decision Packet은 영향받는 쓰기를 차단해야 한다. 허용된 `prepare_write`는 durable Write Authorization ref를 만들고, idempotent replay가 동작해야 한다. Approval drift는 approval을 차단하거나 만료시킬 수 있어야 하며, shaping은 필요한 경계를 기록해야 한다. Raw artifact는 integrity/redaction metadata를 저장해야 한다. |
+| MVP-1 | No-active-Task 상태 표시가 동작해야 한다. advisor Task는 Core를 통해 intake와 close를 할 수 있어야 하며, Task 상태는 Journey/Decision 상태를 보여 줘야 한다. 읽기 안내는 권한을 만들지 않아야 하고, 진행을 막는 사용자 판단은 Decision Packet을 만들거나 연결할 수 있어야 한다. 모든 상태 변경은 현재 기록과 task_events를 하나의 transaction에서 갱신해야 한다. |
+| MVP-2 | Active scoped Change Unit이 없는 제품 파일 쓰기는 차단되어야 한다. Sensitive change는 approval을 요구해야 하며, Autonomy Boundary violation은 차단되거나 Decision Packet으로 라우팅되어야 한다. 해소되지 않은 blocking Decision Packet은 영향받는 쓰기를 차단해야 한다. 허용된 `prepare_write`는 durable Write Authorization ref를 만들고, idempotent replay가 동작해야 한다. Approval drift는 approval을 차단하거나 만료시킬 수 있어야 하며, shaping은 필요한 경계를 기록해야 한다. Raw artifact는 integrity/redaction metadata를 저장해야 한다. |
 | MVP-3 | `direct` 및 구현 Run은 artifact를 등록하고 근거를 갱신해야 한다. Run은 compatible Write Authorization을 한 번 사용한 것으로 기록해야 하며, authorization 밖의 observed change는 감지되어야 한다. 발견된 사항은 상태, 근거, Decision Packet, Change Unit, 차단 조건 중 적절한 경로로 연결되어야 한다. Stewardship issue가 보여야 하고, 검증 전 MVP 필수 projection은 대기열에 넣거나 렌더링할 수 있어야 한다. Projection failure는 상태와 분리되어 처리되어야 하며, managed Markdown edit는 reconcile item을 만들어야 한다. |
 | MVP-4 | work는 같은 세션의 self-review만으로 detached verified 상태로 닫힐 수 없어야 한다. Verification waiver는 accepted risk로만 닫을 수 있어야 하며, required Manual QA와 acceptance는 독립적으로 차단해야 한다. Close-relevant residual risk는 successful close 전에 보여야 한다. Risk-accepted close에는 accepted Residual Risk refs가 필요하고, acceptance는 risk visibility 뒤에 와야 한다. Blocking Decision Packet은 close를 차단해야 하며, policy 또는 사용자가 detached verification을 요구하지 않는 한 direct work는 self-checked로 닫힐 수 있어야 한다. |
-| MVP-5 | Conformance smoke는 core, connector, agency, stewardship, context-hygiene, 설계 품질 경로를 포괄해야 한다. Agency 점검은 Journey 표시, unresolved decisions, agent latitude, 남은 위험 표시를 증명해야 한다. Dependency DAG 지원은 metadata만 남아야 하며, export는 state snapshots, report projections, artifact refs, redaction status를 포함해야 한다. |
+| MVP-5 | Conformance smoke는 core, connector, agency, stewardship, context-hygiene, 설계 품질 경로를 포괄해야 한다. Agency 점검은 Journey 표시, 해소되지 않은 결정, agent latitude, 남은 위험 표시를 증명해야 한다. Dependency DAG 지원은 metadata만 남아야 하며, export는 state snapshots, 보고서 projection, artifact refs, redaction status를 포함해야 한다. |
 
 ## Later 경계
 

@@ -158,4 +158,4 @@ npm test -- --runInBand
 
 ## 메모
 
-Raw log와 diff는 artifact로 남기고, report에는 link만 둡니다. `RUN-SUMMARY`에 담긴 same-session review content에 해당하는 내용은 self-check 또는 stewardship signal로만 취급합니다. Detached verification으로 표시하면 안 됩니다.
+Raw log와 diff는 artifact로 남기고, 보고서에는 link만 둡니다. `RUN-SUMMARY`에 담긴 same-session review content에 해당하는 내용은 self-check 또는 stewardship signal로만 취급합니다. Detached verification으로 표시하면 안 됩니다.

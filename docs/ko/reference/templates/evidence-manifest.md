@@ -107,4 +107,4 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 ## 메모
 
-Evidence가 필요한 경우 close 판단은 report 문장만이 아니라 기준 `evidence_gate`를 따릅니다.
+Evidence가 필요한 경우 close 판단은 보고서 문장만이 아니라 기준 `evidence_gate`를 따릅니다.

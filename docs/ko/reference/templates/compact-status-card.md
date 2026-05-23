@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-Task 상태, 다음 action, 대기 중인 user decision, 위험, gate, Manual QA, 최신 report를 짧은 현재 상태 표시로 보여줄 때 Compact Status Card를 사용합니다.
+Task 상태, 다음 action, 대기 중인 user decision, 위험, gate, Manual QA, 최신 보고서를 짧은 현재 상태 표시로 보여줄 때 Compact Status Card를 사용합니다.
 
 ## 기준 기록
 
@@ -10,7 +10,7 @@ Task 상태, 다음 action, 대기 중인 user decision, 위험, gate, Manual QA
 - 대기 중인 Decision Packet summary
 - 위험 summary
 - evidence, design, QA gate
-- 최신 report 참조
+- 최신 보고서 참조
 
 ## 렌더링 섹션
 
@@ -22,7 +22,7 @@ Task 상태, 다음 action, 대기 중인 user decision, 위험, gate, Manual QA
 - evidence gate
 - design gate
 - Manual QA
-- 최신 report
+- 최신 보고서
 
 ## 전체 템플릿
 
@@ -35,7 +35,7 @@ Risk: {risk_summary}
 Evidence gate: {evidence_gate}
 Design gate: {design_gate}
 Manual QA: {qa_gate display: pending|passed|failed|waived|not_required}
-최신 report: {latest_report|none}
+최신 보고서: {latest_report|none}
 ````
 
 ## 메모

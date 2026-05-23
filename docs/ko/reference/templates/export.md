@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-리뷰, 보관, 마이그레이션, Release Handoff를 위한 선택적 export/report projection을 만들 때 `EXPORT`를 사용합니다.
+리뷰, 보관, 마이그레이션, Release Handoff를 위한 선택적 export/보고서 projection을 만들 때 `EXPORT`를 사용합니다.
 
 ## 기준 기록
 
@@ -96,7 +96,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 - suggested PR checklist:
 - suggested deploy checklist:
 - suggested rollback 또는 monitoring notes:
-- external authority reminder: Deployment, merge, approval, production monitoring, QA 또는 verification waiver, gate satisfaction, final acceptance, residual-risk acceptance, assurance upgrade, Task close는 이 report 밖에 남는다.
+- external authority reminder: Deployment, merge, approval, production monitoring, QA 또는 verification waiver, gate satisfaction, final acceptance, residual-risk acceptance, assurance upgrade, Task close는 이 보고서 밖에 남는다.
 ````
 
 ## 메모

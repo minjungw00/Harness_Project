@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-진행 중인 작업을 이어서 파악할 수 있는 projection이 필요할 때 `TASK`를 사용합니다. 이 template은 작업의 현재 위치와 판단 맥락을 보여줍니다. 또한 Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, Residual Risk, gate, active Change Unit, 대기 중인 decision을 요약합니다. 다음 evidence, 관련 report 참조, projection 최신성도 함께 보여줍니다.
+진행 중인 작업을 이어서 파악할 수 있는 projection이 필요할 때 `TASK`를 사용합니다. 이 template은 작업의 현재 위치와 판단 맥락을 보여줍니다. 또한 Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, Residual Risk, gate, active Change Unit, 대기 중인 decision을 요약합니다. 다음 evidence, 관련 보고서 참조, projection 최신성도 함께 보여줍니다.
 
 ## 기준 기록
 

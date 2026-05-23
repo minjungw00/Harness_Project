@@ -12,7 +12,7 @@
 - Write Authorization, approval, baseline, guarantee 참조
 - active Decision Packet 참조
 - residual-risk summary와 참조
-- 최신 evidence, Eval, Manual QA, report 참조
+- 최신 evidence, Eval, Manual QA, 보고서 참조
 - projection 최신성 입력
 
 ## 렌더링 섹션
@@ -82,4 +82,4 @@ Projection freshness: {projection_freshness}
 
 ## 메모
 
-이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `status`, `next`, 중요한 resume flow에서 보여주는 현재 위치 Journey Card output도 읽기/표시용 surface입니다.
+이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `status`, `next`, 중요한 resume flow에서 보여주는 현재 위치 Journey Card output도 읽기/표시용 접점입니다.

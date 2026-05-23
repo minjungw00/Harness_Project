@@ -130,7 +130,7 @@ Diagram은 인지 부담을 줄일 때만 사용합니다.
 
 ## Docs-maintenance checks
 
-Docs-maintenance checks는 읽기 전용 문서 유지보수입니다. Core fixture conformance, runtime validator, 기준 상태 전이, projection 새로고침, 생성된 operational report, QA result, acceptance record, evidence artifact, Residual Risk 수용, close readiness, implementation readiness가 아닙니다.
+Docs-maintenance checks는 읽기 전용 문서 유지보수입니다. Core fixture conformance, runtime validator, 기준 상태 전이, projection 새로고침, 생성된 운영 보고서, QA result, acceptance record, evidence artifact, Residual Risk 수용, close readiness, 구현 준비 상태가 아닙니다.
 
 Docs-maintenance review 또는 future checker는 category, file path, 가능한 경우 heading 또는 anchor, owner 문서, observed drift, suggested fix, 기준 상태 전이가 수행되지 않았다는 statement를 보고해야 합니다. Drift는 먼저 owner 문서를 업데이트해서 해결하고, 그다음 owner가 아닌 중복 설명을 짧은 요약과 owner 링크로 바꿉니다.
 
@@ -189,7 +189,7 @@ Result 의미:
 | SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` |
 | MVP implementation order and stage exit criteria | `build/mvp-plan.md` |
 | First runnable implementation slice | `build/first-runnable-slice.md` |
-| Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md` |
+| Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact 참조 표시, template tiers, projection freshness/failure rules | `reference/document-projection.md` |
 | 모든 projection template 본문과 표시 카드 형태 | `reference/templates/*.md` |
 | 설계 품질 정책 계약, validator ID, severity composition 규칙, 정책 waiver 의미, 근거 기대사항, close 영향 | `reference/design-quality-policies.md` |
 | User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` |
@@ -197,7 +197,7 @@ Result 의미:
 | Agent 접점 capability profiles, 공통 커넥터 계약, fallback 의미, Role Lens, connector conformance 개요 | `reference/agent-integration.md` |
 | 접점별 recipes | `reference/surface-cookbook.md` |
 | Generic capability profile examples | `reference/agent-integration.md` |
-| Operator procedures, conformance fixture bodies, fixture assertion 의미, doctor/recover/reconcile/export/artifact integrity, docs-maintenance reporting | `reference/operations-and-conformance.md` |
+| Operator procedures, conformance fixture bodies, fixture assertion 의미, doctor/recover/reconcile/export/artifact integrity, docs-maintenance 보고 | `reference/operations-and-conformance.md` |
 | Official term definitions and capitalization | `reference/glossary.md` |
 | Post-MVP roadmap | `roadmap.md` |
 | Documentation authoring rules | `maintain/authoring-guide.md` |
