@@ -54,7 +54,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 - next evidence action:
 
 ## Acceptance Criteria Coverage
-| AC ID | Statement | Status | Supporting Evidence | Notes |
+| AC ID | Statement | Coverage State | Supporting Evidence | Notes |
 |---|---|---|---|---|
 | AC-01 | | supported | test:, tdd:, log:, diff: | |
 | AC-02 | | unsupported | | |
@@ -65,7 +65,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 | `src/...` | AC-01 | DIFF-0001, LOG-0001 |
 
 ## Design Quality Coverage
-| Item | Status | Evidence Refs | Notes |
+| Item | Coverage / Gate Display | Evidence Refs | Notes |
 |---|---|---|---|
 | vertical_slice_shape | passed | CU-01 | |
 | decision_quality_check | passed | DEC-0001 | |
@@ -76,6 +76,8 @@ updated_at: 2026-05-06T09:50:00+09:00
 | codebase_stewardship_check | passed | domain_term: TERM-0001, module_map_item: MMI-0001, interface_contract: IFACE-0001, feedback_loop: FBL-0001 | |
 | residual_risk_visibility_check | pending | RR-0001 | |
 | manual_qa_required | pending | qa_gate; no satisfying Manual QA record yet | |
+
+`Coverage / Gate Display` is the evidence coverage or close-relevant gate display state for this manifest. Values such as `pending` in this column are not `ValidatorResult.status` values.
 
 ## Approval Refs
 - APR-0001:
