@@ -2,7 +2,7 @@
 
 ## 이 문서가 도와주는 일
 
-이 문서는 MVP scope 내용을 구현 순서로 다시 정리합니다. 구현 단계는 저장소 스키마, DDL, projection 템플릿 본문, 운영자 명령 문법과 분리해서 설명합니다.
+이 문서는 MVP 범위를 구현 순서로 다시 정리합니다. 구현 단계는 저장소 스키마, DDL, projection 템플릿 본문, 운영자 명령 문법과 분리해서 설명합니다.
 
 이 문서는 구현 계획 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현을 시작하라는 뜻이 아닙니다.
 
@@ -107,7 +107,7 @@ Core 상태 전이 기반과 첫 MCP-facing read/tool을 계획합니다.
 중점:
 
 - transaction wrapper, lock, state version 확인, idempotency replay
-- 현재 기록 갱신과 task_events append 동작
+- 현재 기록 갱신과 task_events 추가 동작
 - active Task가 없는 상태
 - advisor Task intake, read-only progress, close
 - Journey Spine 재구성과 Journey Card input
@@ -115,7 +115,7 @@ Core 상태 전이 기반과 첫 MCP-facing read/tool을 계획합니다.
 - `harness.status`, `harness.intake`, `harness.next`
 - 권한을 만들지 않는 읽기 전용 추천 playbook과 Role Lens 추천
 
-표시 안내가 gate를 충족시키거나, 쓰기를 허가하거나, 근거를 만들거나, QA 또는 verification을 waive하거나, 위험을 수용하거나, 결과를 accept하거나, Task를 close하거나, assurance를 upgrade하게 만들면 안 됩니다.
+표시 안내가 gate를 충족시키거나, 쓰기를 허가하거나, 근거를 만들거나, QA 또는 verification을 면제하거나, 위험을 수용하거나, 결과를 받아들이거나, Task를 닫거나, assurance를 올리게 만들면 안 됩니다.
 
 ### MVP-2: Shaping Kernel, Write Gate, Approval, Baseline, Artifacts
 
@@ -132,18 +132,18 @@ Core 상태 전이 기반과 첫 MCP-facing read/tool을 계획합니다.
 - 최소 changed-path, scope, approval, baseline, decision, autonomy, 능력 확인
 - integrity와 redaction metadata를 가진 raw artifact 등록
 
-Approval을 제품 판단으로 취급하지 않습니다. 제품 절충점, 아키텍처 선택, QA waiver, 검증 위험, acceptance, residual-risk acceptance에는 적용될 때 compatible Decision Packet이 여전히 필요합니다.
+Approval을 제품 판단으로 취급하지 않습니다. 제품 절충점, 아키텍처 선택, QA 면제, 검증 위험, acceptance, Residual Risk 수용에는 적용될 때 compatible Decision Packet이 여전히 필요합니다.
 
 ### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
 
-쓰기 이후의 기록과 읽을 수 있는 output 경로를 계획합니다.
+쓰기 이후의 기록과 읽을 수 있는 출력 경로를 계획합니다.
 
 중점:
 
 - `harness.record_run`
 - Run 기록과 Write Authorization 사용 기록
 - Evidence Manifest 기록과 evidence gate 갱신
-- policy가 요구할 때 Feedback Loop와 TDD support 기록
+- policy가 요구할 때 Feedback Loop와 TDD 뒷받침 기록
 - codebase stewardship 확인
 - verification 전에 원천 기록이 존재하는 MVP 필수 renderer와 projection job
 - managed block hash
@@ -196,12 +196,12 @@ MVP에서 자동 Browser QA Capture를 요구하지 않습니다. screenshot, co
 |---|---|
 | MVP-0 | 프로젝트 하나가 등록되고, expected state version을 사용하는 상태 변경 전에 project state가 존재해야 한다. 기준 agent 접점이 등록되어 있고, runtime 파일과 artifact 저장소가 있으며, doctor/readiness가 프로젝트와 runtime 상태를 표시할 수 있어야 한다. |
 | MVP-1 | No-active-Task 상태 표시가 동작해야 한다. advisor Task는 Core를 통해 intake와 close를 할 수 있어야 하며, Task 상태는 Journey/Decision state를 보여 줘야 한다. 읽기 안내는 권한을 만들지 않아야 하고, 진행을 막는 사용자 판단은 Decision Packet을 만들거나 연결할 수 있어야 한다. 모든 상태 변경은 현재 기록과 task_events를 하나의 transaction에서 갱신해야 한다. |
-| MVP-2 | Active scoped Change Unit이 없는 제품 파일 쓰기는 차단되어야 한다. Sensitive change는 approval을 요구해야 하며, Autonomy Boundary violation은 차단되거나 Decision Packet으로 라우팅되어야 한다. Unresolved blocking Decision Packet은 영향받는 쓰기를 차단해야 한다. 허용된 `prepare_write`는 durable Write Authorization ref를 만들고, idempotent replay가 동작해야 한다. Approval drift는 approval을 차단하거나 expire할 수 있어야 하며, shaping은 필요한 boundary를 기록해야 한다. Raw artifact는 integrity/redaction metadata를 저장해야 한다. |
-| MVP-3 | `direct` 및 구현 Run은 artifact를 등록하고 근거를 갱신해야 한다. Run은 compatible Write Authorization을 한 번 사용한 것으로 기록해야 하며, authorization 밖의 observed change는 감지되어야 한다. 발견된 사항은 상태, 근거, Decision Packet, Change Unit, 차단 조건 중 적절한 경로로 연결되어야 한다. Stewardship issue가 보여야 하고, 검증 전 MVP 필수 projection은 enqueue 또는 render될 수 있어야 한다. Projection failure는 상태와 분리되어 처리되어야 하며, managed Markdown edit는 reconcile item을 만들어야 한다. |
-| MVP-4 | work는 같은 세션의 self-review만으로 detached verified 상태로 닫힐 수 없어야 한다. Verification waiver는 accepted risk로만 close되어야 하며, required Manual QA와 acceptance는 독립적으로 차단해야 한다. Close-relevant residual risk는 successful close 전에 보여야 한다. Risk-accepted close에는 accepted Residual Risk refs가 필요하고, acceptance는 risk visibility 뒤에 와야 한다. Blocking Decision Packet은 close를 차단해야 하며, policy 또는 사용자가 detached verification을 요구하지 않는 한 direct work는 self-checked로 close될 수 있어야 한다. |
-| MVP-5 | Conformance smoke는 core, connector, agency, stewardship, context-hygiene, 설계 품질 경로를 포괄해야 한다. Agency 점검은 Journey 표시, unresolved decisions, agent latitude, 남은 위험 표시를 증명해야 한다. Dependency DAG support는 metadata만 남아야 하며, export는 state snapshots, report projections, artifact refs, redaction status를 포함해야 한다. |
+| MVP-2 | Active scoped Change Unit이 없는 제품 파일 쓰기는 차단되어야 한다. Sensitive change는 approval을 요구해야 하며, Autonomy Boundary violation은 차단되거나 Decision Packet으로 라우팅되어야 한다. Unresolved blocking Decision Packet은 영향받는 쓰기를 차단해야 한다. 허용된 `prepare_write`는 durable Write Authorization ref를 만들고, idempotent replay가 동작해야 한다. Approval drift는 approval을 차단하거나 만료시킬 수 있어야 하며, shaping은 필요한 경계를 기록해야 한다. Raw artifact는 integrity/redaction metadata를 저장해야 한다. |
+| MVP-3 | `direct` 및 구현 Run은 artifact를 등록하고 근거를 갱신해야 한다. Run은 compatible Write Authorization을 한 번 사용한 것으로 기록해야 하며, authorization 밖의 observed change는 감지되어야 한다. 발견된 사항은 상태, 근거, Decision Packet, Change Unit, 차단 조건 중 적절한 경로로 연결되어야 한다. Stewardship issue가 보여야 하고, 검증 전 MVP 필수 projection은 대기열에 넣거나 렌더링할 수 있어야 한다. Projection failure는 상태와 분리되어 처리되어야 하며, managed Markdown edit는 reconcile item을 만들어야 한다. |
+| MVP-4 | work는 같은 세션의 self-review만으로 detached verified 상태로 닫힐 수 없어야 한다. Verification waiver는 accepted risk로만 닫을 수 있어야 하며, required Manual QA와 acceptance는 독립적으로 차단해야 한다. Close-relevant residual risk는 successful close 전에 보여야 한다. Risk-accepted close에는 accepted Residual Risk refs가 필요하고, acceptance는 risk visibility 뒤에 와야 한다. Blocking Decision Packet은 close를 차단해야 하며, policy 또는 사용자가 detached verification을 요구하지 않는 한 direct work는 self-checked로 닫힐 수 있어야 한다. |
+| MVP-5 | Conformance smoke는 core, connector, agency, stewardship, context-hygiene, 설계 품질 경로를 포괄해야 한다. Agency 점검은 Journey 표시, unresolved decisions, agent latitude, 남은 위험 표시를 증명해야 한다. Dependency DAG 지원은 metadata만 남아야 하며, export는 state snapshots, report projections, artifact refs, redaction status를 포함해야 한다. |
 
-## Later boundary
+## Later 경계
 
 다음은 향후 계획이 정확한 규칙과 fixture로 승격하기 전까지 MVP 밖에 둡니다.
 
@@ -209,10 +209,10 @@ MVP에서 자동 Browser QA Capture를 요구하지 않습니다. screenshot, co
 - broad connector marketplace 또는 접점 ecosystem
 - 필수 자동화로서의 Browser QA Capture
 - 증명된 pre-tool blocking 경로가 없는 preventive `T4` guard expansion
-- Context Index와 derived analytics
+- Context Index와 파생 analytics
 - deployment, canary, rollback, production monitoring automation
 - parallel orchestration과 concurrent lane scheduling
 - team workflow, permissions, team profile export/import
 - MVP-critical 상태로서의 long-term operational metrics
 
-구현 중 later feature가 유용해 보이더라도 owner docs가 권한 경로를 정의하기 전까지는 표시, metadata, 선택적 첨부, fixture candidate로 유지합니다.
+구현 중 later feature가 유용해 보이더라도 담당 문서가 권한 경로를 정의하기 전까지는 표시, metadata, 선택적 첨부, fixture candidate로 유지합니다.

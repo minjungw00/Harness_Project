@@ -8,7 +8,7 @@
 
 - `domain_terms`
 - domain term 변경을 제안하는 reconcile item
-- term을 도입하거나 reconcile한 Task 참조
+- term을 도입하거나 reconcile로 조정한 Task 참조
 - `domain_language` 관련 design-quality validator 결과
 - projection 최신성 입력
 

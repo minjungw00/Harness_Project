@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-작은 direct work가 close되었거나 `work`로 escalation된 뒤 결과를 간단히 보여줘야 할 때 `DIRECT-RESULT`를 사용합니다.
+작은 direct work가 닫혔거나 `work`로 전환된 뒤 결과를 간단히 보여줘야 할 때 `DIRECT-RESULT`를 사용합니다.
 
 ## 기준 기록
 
