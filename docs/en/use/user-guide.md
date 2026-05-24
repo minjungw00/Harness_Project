@@ -2,21 +2,25 @@
 
 ## What this document helps you do
 
-Use this guide when you want an AI-assisted task to run under Harness without turning the conversation into a work-management ritual.
+Use this guide when you want to understand how an AI-assisted task runs under Harness without turning the conversation into a work-management ritual.
 
-Harness should help the agent keep scope, evidence, checks, decisions, QA, risk, and close state visible. You should still be able to talk normally. Most of the time, the session should feel like a short conversation:
+Harness should help the agent keep scope, evidence, checks, decisions, QA, risk, and close state visible. You should still be able to talk normally. When Harness is connected, you do not need a special startup phrase. Describe the work you want, and the agent should decide from the task shape whether Harness applies.
+
+Harness is usually appropriate when product files may change, scope may drift, user judgment is needed, evidence, verification, QA, acceptance, or residual risk must be tracked, or sensitive categories may apply. For tiny questions or clearly read-only advice, the agent may handle the request directly.
+
+If you want to be explicit, you can still say:
 
 ```text
 Run this work under the harness.
 ```
 
-The agent should translate that into the right Harness steps. You should not need to operate internal records by hand.
+The agent should translate your request into the right Harness steps. You should not need to operate internal records by hand.
 
 Use deeper Harness labels only when they help explain a real stop, boundary, or close condition.
 
 ## Read this when
 
-Read this when you want to run one AI-assisted task under Harness.
+Read this when Harness is connected and you want to understand how one AI-assisted task should be handled.
 
 ## Before you read
 
@@ -24,17 +28,17 @@ Read this when you want to run one AI-assisted task under Harness.
 
 ## Main idea
 
-Speak normally. The agent should translate your request into the right Harness flow.
+Speak normally. No startup phrase is required. The agent should translate your request into the right Harness flow when the task calls for it.
 
 ## 5-minute path
 
-Start with one phrase:
+Start by describing the work in ordinary language:
 
 ```text
-Run this work under the harness.
+Add email login flow. Keep password reset and account creation out of scope.
 ```
 
-The agent should answer three plain questions before it gets deep into the work:
+The agent should decide whether the request is read-only advice, small direct work, or tracked work. When tracking is useful, it should answer three plain questions before it gets deep into the work:
 
 - What is in scope, and what is out of bounds?
 - What evidence or checks already exist, and what is still missing?
@@ -122,7 +126,7 @@ When product judgment blocks progress, the agent should show a Decision Packet w
 
 ## Phrase reference
 
-Everyday work starts as a conversation, not as a command language.
+Everyday work starts as a conversation, not as a command language. These phrases are optional shortcuts, not required startup phrases.
 
 ```text
 Run this work under the harness.
