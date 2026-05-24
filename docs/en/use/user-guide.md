@@ -94,9 +94,11 @@ Useful phrases:
 
 ```text
 Start with the scope and questions.
-Approved. The scope is only what you just described.
-Freeze this task to the current Change Unit and do not expand scope without a Decision Packet.
+That scope works. Do not expand beyond what we just agreed.
+If scope needs to grow, show me the options and impact first.
 ```
+
+Harness may describe those boundaries as the active Change Unit, and it may use a Decision Packet when a scope change needs your judgment. You do not need to lead with those labels.
 
 ### evidence
 
@@ -126,35 +128,48 @@ When product judgment blocks progress, the agent should show a Decision Packet w
 
 ## Phrase reference
 
-Everyday work starts as a conversation, not as a command language. These phrases are optional shortcuts, not required startup phrases.
+Everyday work starts as a conversation, not as a command language. Use ordinary language first. Harness terms are there so the agent can explain a real stop, boundary, or close condition when precision helps.
+
+| You can say | Harness term the agent may use |
+|---|---|
+| Add email login flow. Keep password reset out of scope. | Tracked Harness work, if the task shape calls for it. |
+| Show me the status. | Journey Card or current Task status. |
+| Continue this work. Check harness state first. | Resume from Harness state. |
+| Show me the Journey Card before resuming. | Resume status before more work. |
+| If this is small, just handle it; if it grows, use the tracked flow. | `direct` or `work` classification. |
+| Start with the scope and questions. | Task scope; active Change Unit when product writes may happen. |
+| Do not expand beyond the scope we just agreed. | Change Unit boundary. |
+| If scope needs to grow, show me the options and impact first. | Decision Packet for scope or product judgment. |
+| Show what you can actually block and what you can only detect later. | guarantee level or surface capability. |
+| Check your work independently if possible. | detached verification. |
+| Decide whether Manual QA is needed. | Manual QA requirement or waiver. |
+| Show the remaining risks before I accept. | residual risk and close-relevant risk status. |
+| If final acceptance is required, ask me for it before close. | final acceptance before task close. |
+| No separate final acceptance is needed here; close once the relevant blockers are clear. | final acceptance not required for this task path. |
+| Accepted. Close this task. | task close, when blockers are clear. |
+
+You may also say "Run this work under the harness" when you want to be explicit, but it is not required.
+
+For review help, stay plain unless the label is useful:
 
 ```text
-Run this work under the harness.
-Show me the status.
-Continue this work. Check harness state first.
-Show me the Journey Card before resuming.
-Start with the scope and questions.
-If this is small, handle it as direct; if it grows, move it to work.
-Show the Decision Packet with options, recommendation, and uncertainty.
-Use the product-review lens for trade-offs.
-Use eng-review, design-review, security-review, qa-review, or release-handoff when that is the useful next step.
-Approved. The scope is only what you just described.
-Start detached verify.
-Decide whether Manual QA is needed.
-Show close-relevant residual risk before I accept.
-If final acceptance is required, ask me for it before close.
-Accepted. Close this task.
-Final acceptance is not required here; close once applicable blockers are clear.
+Look at the product trade-offs before choosing.
+Check this from engineering, design, security, QA, or release-handoff perspective.
 ```
+
+Power-user labels for those review requests include product-review, eng-review, design-review, security-review, qa-review, and release-handoff.
 
 For cautious work:
 
 ```text
-Freeze this task to the current Change Unit.
-Freeze writes until I answer the Decision Packet.
-Show the current guard level and what it can actually prevent.
+Do not expand beyond the scope we just agreed.
+If scope needs to grow, show me the options and impact first.
+Pause writes until I answer the open decision.
+Show what you can actually block and what you can only detect later.
 Use careful mode for this change: narrow scope, show write authority before writes, and ask before product trade-offs.
 ```
+
+Power-user equivalents for the same requests include Change Unit, Decision Packet, guarantee level, detached verification, residual risk, `prepare_write`, and Write Authorization. They are useful labels for explaining blocks and close conditions; they are not words you must memorize before using Harness.
 
 ## Basic flow
 
