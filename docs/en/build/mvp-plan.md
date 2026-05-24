@@ -32,7 +32,7 @@ The MVP should let one local project and one reference agent surface operate thr
 - scoped Change Units for product writes
 - `prepare_write` and durable Write Authorizations
 - approvals for sensitive categories
-- Decision Packets for user-owned product judgment
+- Decision Packets for user-owned product judgment or material technical judgment
 - Runs, artifact refs, and Evidence Manifests
 - verification, Manual QA, residual-risk visibility, acceptance, and close blockers
 - MCP resources and tools over Core
@@ -132,7 +132,7 @@ Focus on:
 - minimal changed-path, scope, approval, baseline, decision, autonomy, and capability checks
 - raw artifact registration with integrity and redaction metadata
 
-Do not treat approval as product judgment. Product trade-offs, architecture choices, QA waivers, verification risk, acceptance, and residual-risk acceptance still require compatible Decision Packets when they apply.
+Do not treat approval as user-owned judgment. Product trade-offs, architecture choices, material technical choices, unresolved security or product-security judgment, QA waivers, verification risk, acceptance, and residual-risk acceptance still require compatible Decision Packets when they apply.
 
 ### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
 

@@ -71,4 +71,4 @@ Recommendation:
 
 이 template은 렌더링 결과인 카드 형태일 뿐 approval 권한 자체가 아닙니다. Approval은 여전히 기준 approval decision path를 거쳐야 합니다.
 
-Approval은 product judgment를 resolve하지 않고, correctness를 prove하지 않으며, verification이나 Manual QA를 replace하지 않고, acceptance를 imply하지 않으며, residual risk를 accept하거나 Write Authorization을 만들지 않습니다.
+Approval은 사용자 소유의 제품 판단이나 중요한 기술 판단을 resolve하지 않고, correctness를 prove하지 않으며, verification이나 Manual QA를 replace하지 않고, acceptance를 imply하지 않으며, residual risk를 accept하거나 Write Authorization을 만들지 않습니다.

@@ -71,4 +71,4 @@ Do you approve this scope?
 
 This template is a rendered card shape, not approval authority. Approval still requires the canonical approval decision path.
 
-Approval does not resolve product judgment, prove correctness, replace verification, replace Manual QA, imply acceptance, accept residual risk, or create Write Authorization.
+Approval does not resolve user-owned product or material technical judgment, prove correctness, replace verification, replace Manual QA, imply acceptance, accept residual risk, or create Write Authorization.

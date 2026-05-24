@@ -20,7 +20,7 @@ Keep it as a lookup aid. For a first explanation of Harness concepts, use the Le
 
 ### Agency Conformance
 
-The degree to which harness behavior, projections, validators, and close decisions preserve the user's Strategic Agency. Agency conformance checks whether the work journey is followable, product judgment is explicit, autonomy boundaries are respected, Decision Packets exist for blocking product judgment, and residual risk is visible before acceptance.
+The degree to which harness behavior, projections, validators, and close decisions preserve the user's Strategic Agency. Agency conformance checks whether the work journey is followable, user-owned judgment is explicit, autonomy boundaries are respected, Decision Packets exist for blocking user-owned judgment, and residual risk is visible before acceptance.
 
 ### Acceptance
 
@@ -38,7 +38,7 @@ A prior user decision allowing a sensitive change to proceed within a defined sc
 
 ### Approval Gate
 
-The kernel gate for sensitive-change approval. It is required only when sensitive categories are present. Granted approval does not prove correctness, imply acceptance, resolve product judgment, or create Write Authorization.
+The kernel gate for sensitive-change approval. It is required only when sensitive categories are present. Granted approval does not prove correctness, imply acceptance, resolve user-owned judgment, or create Write Authorization.
 
 ### Artifact
 
@@ -50,7 +50,9 @@ A structured pointer to a raw artifact file registered in the artifact store, in
 
 ### Autonomy Boundary
 
-The Change Unit semantics that record the product-judgment boundary inside which an agent may proceed without asking for additional user judgment. It is not a scope grant and does not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A Decision Packet may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible scope and approval when sensitive categories apply.
+The Change Unit semantics that record the user-owned judgment boundary inside which an agent may proceed without asking for additional user judgment. In plain terms, it says what the agent may decide alone inside the active Change Unit. Routine implementation details may be inside the boundary; public API or module contract changes, security or privacy trade-offs, UX or product behavior trade-offs, material dependency or migration direction, scope expansion, and residual-risk acceptance require explicit user judgment and must not be inferred from broad autonomy.
+
+It is not a scope grant or write authority and does not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A Decision Packet may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible scope and approval when sensitive categories apply.
 
 ### Assurance
 
@@ -124,11 +126,11 @@ A later read-only context provider that may surface relevant projections, artifa
 
 ### Decision Gate
 
-The Task-level aggregate gate for blocking product judgment before progress, write, or close can continue. The canonical field is `decision_gate`; its value set and recompute rule are owned by [Decision Gate](kernel.md#decision-gate). It is recomputed from relevant blocking Decision Packets and detected blockers, and it does not substitute for approval, verification, Manual QA, or acceptance.
+The Task-level aggregate gate for blocking user-owned judgment before progress, write, or close can continue. The canonical field is `decision_gate`; its value set and recompute rule are owned by [Decision Gate](kernel.md#decision-gate). It is recomputed from relevant blocking Decision Packets and detected blockers, and it does not substitute for approval, verification, Manual QA, or acceptance.
 
 ### Decision Packet
 
-A recorded decision-support packet for blocking product judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Decision Packet record IDs use `DEC-*`. Its record-level status is owned by [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute) and the public `DecisionPacket` schema; relevant statuses feed the Task-level `decision_gate`. Its canonical form is kernel state. MVP visibility is required through Task/status/next/judgment-context and decision-packet surfaces; standalone `DEC` Markdown renderings are optional projections or proposal surfaces unless enabled.
+A recorded decision-support packet for blocking user-owned judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Decision Packet record IDs use `DEC-*`. Its record-level status is owned by [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute) and the public `DecisionPacket` schema; relevant statuses feed the Task-level `decision_gate`. Its canonical form is kernel state. MVP visibility is required through Task/status/next/judgment-context and decision-packet surfaces; standalone `DEC` Markdown renderings are optional projections or proposal surfaces unless enabled.
 
 ### Decision Request
 
@@ -374,7 +376,7 @@ The single agent surface targeted by the MVP implementation. It demonstrates the
 
 ### Recommended Playbook
 
-Non-authoritative status/next display guidance computed from current state and policy/playbook context. It suggests a procedure for the current stage, such as review, TDD, QA, guard check, release handoff, or browser-QA candidacy. Its `playbook_id` is a stable display/routing string identifier, not a Core-owned closed enum or DDL-backed value set. It is not a canonical kernel record, has no DDL table, task event, or projection job of its own, does not authorize writes or satisfy gates, and routes product judgment to Decision Packet paths.
+Non-authoritative status/next display guidance computed from current state and policy/playbook context. It suggests a procedure for the current stage, such as review, TDD, QA, guard check, release handoff, or browser-QA candidacy. Its `playbook_id` is a stable display/routing string identifier, not a Core-owned closed enum or DDL-backed value set. It is not a canonical kernel record, has no DDL table, task event, or projection job of its own, does not authorize writes or satisfy gates, and routes user-owned judgment to Decision Packet paths.
 
 ### Release Handoff
 

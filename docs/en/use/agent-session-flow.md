@@ -99,6 +99,17 @@ Enough is known to propose the first safe Change Unit when the agent can state t
 
 Autonomy Boundary is not write authority. It only describes what judgment the agent may exercise without asking again. Actual product writes still require a compatible write check.
 
+Use this distinction when explaining stops and permissions:
+
+| Concept | Plain question | Allows | Does not allow |
+|---|---|---|---|
+| Change Unit scope | What work area is in bounds? | Names the behavior, files, paths, tools, commands, network targets, and sensitive categories the work is scoped around. | Does not decide user-owned product or material technical trade-offs or create Write Authorization by itself. |
+| Autonomy Boundary | What may the agent decide alone inside that scope? | Lets the agent choose covered implementation details without another user decision. | Does not grant paths, tools, commands, network, secrets, sensitive categories, approval, or write authority. |
+| Approval | May this sensitive step proceed? | Allows a named sensitive action within its recorded scope and expiry. | Does not decide user-owned judgment, prove correctness, accept risk, or create Write Authorization. |
+| Write Authorization | May this exact write attempt happen now? | Records that Core allowed one compatible write attempt after the required checks. | Is not reusable and does not expand scope, Autonomy Boundary, or Approval. |
+
+Inside the Autonomy Boundary, the agent may decide ordinary implementation details: whether to reuse an existing helper, how to split a private function, where to place focused tests, or which conservative internal approach best fits the agreed result. The agent must stop for user judgment before public API or module contract changes, security or privacy trade-offs, UX or product trade-offs, material dependency or migration choices, scope expansion, or residual-risk acceptance.
+
 ## Blocking user-owned judgment
 
 When product judgment or a user-owned technical choice blocks progress, show or request a Decision Packet. Do not replace it with broad approval or a vague "continue?" prompt.

@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use `DEC` when standalone Decision Packet projection is enabled for product judgment, approval-shaped judgment, waiver, acceptance, residual-risk acceptance, or reconcile decisions.
+Use `DEC` when standalone Decision Packet projection is enabled for user-owned product or material technical judgment, approval-shaped judgment, waiver, acceptance, residual-risk acceptance, or reconcile decisions.
 
 ## Source records
 
@@ -77,7 +77,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - decision_kind=approval scope:
 - linked approval record:
 - sensitive categories:
-- product judgment requiring separate Decision Packet:
+- user-owned judgment requiring separate Decision Packet:
 - approval boundary:
 - write authorization boundary:
 

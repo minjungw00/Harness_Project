@@ -330,8 +330,8 @@ Remembered session과 non-remembered session에 대한 검증이 통과했습니
 |---|---|---|---|
 | "무엇을 하는 중이지?" | Task | 사용자가 원하는 결과, 상태, blocker, 근거, 닫기 판단을 하나로 묶는다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "어디까지 바꿔도 되지?" | Change Unit | 제품 쓰기 범위를 제한해 작업이 조용히 커지지 않게 한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
-| "이건 사용자가 결정해야 해." | Decision Packet | 사용자가 소유한 제품 판단을 넓은 승인과 분리한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
-| "이 민감한 단계를 진행해도 되나?" | 승인 | 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답한다. 제품 판단이나 최종 수용을 대신하지 않는다. | [커널 참조](../reference/kernel.md). |
+| "이건 사용자가 결정해야 해." | Decision Packet | 사용자가 소유한 제품 판단이나 중요한 기술 판단을 넓은 승인과 분리한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
+| "이 민감한 단계를 진행해도 되나?" | 승인 | 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답한다. 사용자 소유 판단이나 최종 수용을 대신하지 않는다. | [커널 참조](../reference/kernel.md). |
 | "지금 이 파일을 수정해도 되나?" | Write Authorization | 의도한 쓰기가 현재 Task, Change Unit, 결정, 승인과 맞는지 확인한다. | [커널 참조](../reference/kernel.md); agent 접점 세부 담당: [Agent 통합 참조](../reference/agent-integration.md). |
 | "이 주장을 뒷받침하는 것은 이것이다." | 근거 | diff, log, check, screenshot 같은 기록으로 "끝났다"는 말을 확인 가능하게 만든다. | [사용자 가이드](../use/user-guide.md); 담당 문서: [운영과 Conformance 참조](../reference/operations-and-conformance.md). |
 | "독립적으로 확인했나?" | 검증 | 자체 확인과 분리된 검증을 구분한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |

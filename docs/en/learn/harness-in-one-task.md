@@ -330,8 +330,8 @@ This tutorial only shows why those pieces exist.
 |---|---|---|---|
 | "What are we doing?" | Task | Keeps the user's desired outcome, status, blockers, evidence, and close decision connected. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "What may change?" | Change Unit | Bounds product writes so the task does not silently expand. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
-| "This needs your call." | Decision Packet | Separates user-owned product judgment from broad approval. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
-| "May this sensitive step proceed?" | Approval | Allows a sensitive action inside a defined scope without replacing product judgment or final acceptance. | [Kernel Reference](../reference/kernel.md). |
+| "This needs your call." | Decision Packet | Separates user-owned product or material technical judgment from broad approval. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
+| "May this sensitive step proceed?" | Approval | Allows a sensitive action inside a defined scope without replacing user-owned judgment or final acceptance. | [Kernel Reference](../reference/kernel.md). |
 | "May I edit these files now?" | Write Authorization | Checks that the intended write fits the current Task, Change Unit, decisions, and approvals. | [Kernel Reference](../reference/kernel.md); agent-surface owner: [Agent Integration Reference](../reference/agent-integration.md). |
 | "Here is what supports the claim." | Evidence | Makes "done" inspectable through diffs, logs, checks, screenshots, or other records. | [Use: User Guide](../use/user-guide.md); owner: [Operations and Conformance Reference](../reference/operations-and-conformance.md). |
 | "Was it checked independently?" | Verification | Distinguishes self-checks from detached checks. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |

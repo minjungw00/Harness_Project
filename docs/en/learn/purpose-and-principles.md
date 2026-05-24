@@ -56,7 +56,7 @@ Harness describes capability by actual guarantee level, not by product name. If 
 
 Harness is an agency-preserving local authority kernel for AI-assisted product work.
 
-In plain terms: AI agents can move quickly without pushing the user out of the driver's seat when the system keeps the work journey explicit, keeps durable truth small, and records product judgment at the moments where judgment matters.
+In plain terms: AI agents can move quickly without pushing the user out of the driver's seat when the system keeps the work journey explicit, keeps durable truth small, and records user-owned product or material technical judgment at the moments where judgment matters.
 
 This thesis has three practical consequences.
 
@@ -76,7 +76,7 @@ Without Harness, evidence can be too weak or too temporary. Tests, logs, screens
 
 Without Harness, verification can overstate independence. The same agent that made a change can review its own work, and the system may treat that as independent assurance. Harness responds by separating self-checks from detached verification.
 
-Without Harness, product judgment can move from the user to the agent without anyone noticing. Design direction, trade-offs, codebase stewardship, QA judgment, acceptance, and risk acceptance can be hidden inside implementation. Harness responds with Decision Packets when user-owned judgment blocks progress.
+Without Harness, product judgment or material technical judgment can move from the user to the agent without anyone noticing. Design direction, trade-offs, codebase stewardship, QA judgment, acceptance, and risk acceptance can be hidden inside implementation. Harness responds with Decision Packets when user-owned judgment blocks progress.
 
 Without Harness, local completion can hide long-term product damage. A task may pass tests while blurring domain language, crossing module boundaries, weakening interfaces, or leaving follow-up risk unnamed. Harness responds by keeping codebase stewardship, design trade-offs, QA findings, and residual risk visible in the work journey.
 

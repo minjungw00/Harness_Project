@@ -73,7 +73,7 @@ Harness는 MCP 도구/connector, hook, guardrail, adapter, sidecar, isolation la
 
 Harness 권한은 Core와 기준 로컬 상태에서 나옵니다. Task 상태, Change Unit 범위, Decision Packet, Approval, Write Authorization, 근거, 검증, QA, 수용, 남은 위험, 닫기를 기준으로 작업을 조율합니다.
 
-Harness는 사용자의 제품 저장소, 버전 관리 시스템, 테스트 실행기, 코드 리뷰 절차, 제품 판단도 대체하지 않습니다.
+Harness는 사용자의 제품 저장소, 버전 관리 시스템, 테스트 실행기, 코드 리뷰 절차, 제품 판단, 중요한 기술 판단도 대체하지 않습니다.
 
 Harness는 대화 기록을 진실의 기준으로 삼지 않습니다. 생성된 Markdown을 운영 기록으로 삼지도 않습니다. 에이전트가 제품 방향의 주인이 되게 하지도 않습니다. 목표, 범위, 설계 판단, 민감한 승인, QA 판단, 수용, 남은 위험 수용은 여전히 사용자가 판단합니다.
 

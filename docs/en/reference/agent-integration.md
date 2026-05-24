@@ -33,7 +33,7 @@ user conversation surface
   -> adapter, hook, sidecar, validator, or isolation layer
 ```
 
-Always-on rules should stay short. They should say when to use Harness, where to read status or the Journey Card, that product writes require `prepare_write`, that product judgment routes through Decision Packets, that the current guarantee level must be shown honestly, and that product writes hold when authoritative MCP is unavailable. The session procedure itself belongs in [Agent Session Flow](../use/agent-session-flow.md).
+Always-on rules should stay short. They should say when to use Harness, where to read status or the Journey Card, that product writes require `prepare_write`, that user-owned judgment routes through Decision Packets, that the current guarantee level must be shown honestly, and that product writes hold when authoritative MCP is unavailable. The session procedure itself belongs in [Agent Session Flow](../use/agent-session-flow.md).
 
 ## What belongs in Use docs vs this Reference doc
 
@@ -373,7 +373,7 @@ Overview scenarios:
 - work shaping with shared design and decisions
 - Change Unit scope and vertical/horizontal exception handling
 - one blocking question with recommendation and uncertainty when available
-- Decision Packet shown instead of broad approval for blocking product judgment
+- Decision Packet shown instead of broad approval for blocking user-owned judgment
 - Autonomy Boundary breach stops or routes to Decision Packet
 - AFK work remains covered by active Change Unit scope, Autonomy Boundary latitude, any granted sensitive approval that applies, and compatible `prepare_write` / Write Authorization before actual product writes
 - `prepare_write` allowed and blocked paths

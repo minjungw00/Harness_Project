@@ -33,7 +33,7 @@ user conversation surface
   -> adapter, hook, sidecar, validator, or isolation layer
 ```
 
-Always-on rule은 짧게 둡니다. 언제 Harness를 쓰는지, status 또는 Journey Card를 어디서 읽는지, product write에는 `prepare_write`가 필요하다는 점, product judgment는 Decision Packet으로 라우팅한다는 점, 현재 guarantee level을 정직하게 보여야 한다는 점, authoritative MCP를 사용할 수 없으면 product write를 보류한다는 점만 알려주면 충분합니다. 세션 절차 자체는 [에이전트 세션 흐름](../use/agent-session-flow.md)이 담당합니다.
+Always-on rule은 짧게 둡니다. 언제 Harness를 쓰는지, status 또는 Journey Card를 어디서 읽는지, product write에는 `prepare_write`가 필요하다는 점, 사용자 소유 판단은 Decision Packet으로 라우팅한다는 점, 현재 guarantee level을 정직하게 보여야 한다는 점, authoritative MCP를 사용할 수 없으면 product write를 보류한다는 점만 알려주면 충분합니다. 세션 절차 자체는 [에이전트 세션 흐름](../use/agent-session-flow.md)이 담당합니다.
 
 ## Use 문서와 이 Reference 문서의 경계
 
@@ -373,7 +373,7 @@ Overview scenario:
 - shared design과 decision을 포함한 work shaping
 - Change Unit scope와 vertical/horizontal exception handling
 - 가능할 때 recommendation과 uncertainty가 있는 one blocking question
-- blocking product judgment에 broad approval 대신 Decision Packet 표시
+- 차단하는 사용자 소유 판단에 broad approval 대신 Decision Packet 표시
 - Autonomy Boundary breach가 stop하거나 Decision Packet으로 route
 - AFK work가 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive approval, 실제 product write 전 compatible `prepare_write` / Write Authorization 안에 머무름
 - `prepare_write` allowed/blocked path

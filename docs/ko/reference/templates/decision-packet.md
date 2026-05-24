@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-Standalone Decision Packet projection이 켜져 있고 제품 판단, approval 형태의 judgment, waiver, acceptance, residual-risk acceptance, reconcile decision을 보여줘야 할 때 `DEC`를 사용합니다.
+Standalone Decision Packet projection이 켜져 있고 사용자 소유의 제품 판단 또는 중요한 기술 판단, approval 형태의 judgment, waiver, acceptance, residual-risk acceptance, reconcile decision을 보여줘야 할 때 `DEC`를 사용합니다.
 
 ## 기준 기록
 
@@ -77,7 +77,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - decision_kind=approval scope:
 - linked approval record:
 - sensitive categories:
-- separate Decision Packet이 필요한 product judgment:
+- separate Decision Packet이 필요한 사용자 소유 판단:
 - approval boundary:
 - write authorization boundary:
 

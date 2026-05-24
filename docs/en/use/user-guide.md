@@ -92,6 +92,19 @@ Scope answers: "What work are we doing, and what are we not doing?"
 
 Good scope is narrow enough that the agent can avoid accidental expansion. It should name affected areas, important exclusions, and any path or behavior boundaries that matter.
 
+Once scope is clear, the agent may decide routine implementation details inside it without asking every tiny question. Examples include using an existing helper, splitting a private function, adding focused tests, or choosing the conservative internal approach that best fits the agreed result.
+
+The agent should stop and ask when the choice changes what users or other code can rely on: public API or module contracts, security or privacy trade-offs, UX or product behavior, material dependency or migration direction, scope expansion, or accepting known residual risk.
+
+Harness may use four related labels for this:
+
+| Label | Plain meaning |
+|---|---|
+| Change Unit scope | The work area that is in bounds. It does not authorize writes by itself. |
+| Autonomy Boundary | The judgment the agent may exercise alone inside that scope. It is not write authority and does not grant paths, tools, commands, network, secrets, or sensitive categories. |
+| Approval | Permission for a sensitive step. It is not acceptance, correctness, or user-owned judgment. |
+| Write Authorization | A one-attempt write allowance from `prepare_write`. It does not expand the scope or Autonomy Boundary. |
+
 Useful phrases:
 
 ```text

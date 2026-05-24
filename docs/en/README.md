@@ -10,7 +10,7 @@ It can integrate with MCP tools/connectors, hooks, guardrails, adapters, sidecar
 
 Harness authority comes from Core and canonical local state: Task and Change Unit scope, Decision Packets, Approval, Write Authorization, evidence, verification, QA, acceptance, residual risk, and close.
 
-Harness also does not replace the user's product repository, version control system, test runner, code review process, or product judgment.
+Harness also does not replace the user's product repository, version control system, test runner, code review process, product judgment, or material technical judgment.
 
 ## Learn
 

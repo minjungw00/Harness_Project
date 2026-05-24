@@ -92,6 +92,19 @@ Manual QA: 필요할 가능성 있음
 
 좋은 범위는 에이전트가 실수로 일을 넓히지 않을 만큼 좁고 분명합니다. 영향을 받는 영역, 중요한 제외 사항, 필요한 파일이나 동작 경계를 말해야 합니다.
 
+범위가 분명해지면 에이전트는 그 안의 일상적인 구현 세부사항을 매번 묻지 않고 판단할 수 있습니다. 예를 들면 기존 helper를 쓸지, private function을 나눌지, focused tests를 추가할지, 합의된 결과에 맞는 보수적인 내부 접근을 고를지 같은 일입니다.
+
+대신 사용자나 다른 코드가 기대하는 약속을 바꾸는 선택에서는 멈춰야 합니다. Public API나 module contract, security 또는 privacy trade-off, UX나 제품 동작, 중요한 dependency 또는 migration 방향, scope expansion, 알려진 남은 위험 수용이 여기에 해당합니다.
+
+Harness는 이 구분을 설명할 때 네 가지 관련 라벨을 쓸 수 있습니다.
+
+| 라벨 | 쉬운 뜻 |
+|---|---|
+| Change Unit scope | 범위 안에 있는 작업 영역입니다. 그 자체로 쓰기를 허가하지는 않습니다. |
+| Autonomy Boundary | 그 범위 안에서 agent가 혼자 행사할 수 있는 판단입니다. 쓰기 권한이 아니며 paths, tools, commands, network, secrets, sensitive categories를 부여하지 않습니다. |
+| Approval | 민감한 단계에 대한 허가입니다. 수용, correctness, 사용자 소유 판단이 아닙니다. |
+| Write Authorization | `prepare_write`가 한 번의 write attempt에 부여한 쓰기 허용입니다. Scope나 Autonomy Boundary를 넓히지 않습니다. |
+
 자주 쓰는 말:
 
 ```text

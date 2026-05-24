@@ -32,7 +32,7 @@ MVP는 하나의 로컬 프로젝트와 하나의 기준 agent 접점이 Harness
 - 제품 파일 쓰기의 범위를 정하는 Change Unit
 - `prepare_write`와 durable Write Authorization
 - sensitive category를 위한 approval
-- 사용자가 소유한 제품 판단을 위한 Decision Packet
+- 사용자가 소유한 제품 판단 또는 중요한 기술 판단을 위한 Decision Packet
 - Run, artifact ref, Evidence Manifest
 - verification, Manual QA, 남은 위험 표시, acceptance, 닫기 차단 조건
 - Core 위에서 동작하는 MCP resource와 tool
@@ -132,7 +132,7 @@ Core 상태 전이 기반과 첫 MCP-facing read/tool을 계획합니다.
 - 최소 changed-path, scope, approval, baseline, decision, autonomy, 능력 확인
 - integrity와 redaction metadata를 가진 raw artifact 등록
 
-Approval을 제품 판단으로 취급하지 않습니다. 제품 절충점, 아키텍처 선택, QA 면제, 검증 위험, acceptance, Residual Risk 수용에는 적용될 때 compatible Decision Packet이 여전히 필요합니다.
+Approval을 사용자 소유 판단으로 취급하지 않습니다. 제품 절충점, 아키텍처 선택, 중요한 기술 선택, 해결되지 않은 security 또는 product-security 판단, QA 면제, 검증 위험, acceptance, Residual Risk 수용에는 적용될 때 compatible Decision Packet이 여전히 필요합니다.
 
 ### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
 
