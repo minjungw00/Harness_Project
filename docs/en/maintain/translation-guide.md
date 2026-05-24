@@ -77,7 +77,7 @@ Use patterns like these when polishing Korean prose:
 | `이 surface는 blocker 표시를 담당한다.` | `이 화면은 blocker를 보여준다.` |
 | `Operations는 projection freshness를 report한다.` | `Operations는 projection이 최신인지 표시한다.` |
 | `canonical source를 update한다.` | `기준 기록을 업데이트한다.` |
-| `context를 잃지 않도록 한다.` | In ordinary prose, use `맥락을 잃지 않도록 한다.` |
+| `context를 잃지 않도록 한다.` | `맥락을 잃지 않도록 한다.` |
 
 ## Korean heading policy
 
