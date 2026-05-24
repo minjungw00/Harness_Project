@@ -63,6 +63,12 @@ Listen for the same task-shape triggers used at session start: product writes, s
 
 Ask only questions that change the next safe action. Prefer one blocking question with a recommendation instead of a long form.
 
+Before asking, inspect repo, codebase, docs, and Harness state that are available and current for answers the agent can discover safely. Do not ask the user to restate existing file paths, behavior, terminology, or constraints that are already visible from current context. If a source is unavailable or stale, say so rather than relying on it as authority.
+
+One blocking question at a time does not mean one clarification round total. Broad or design-heavy requests may need several short turns until the goal, scope, non-goals, acceptance criteria, affected product areas, user-facing screens or flows, modules, interfaces, sensitive categories, user-owned trade-offs, verification or Manual QA expectations, and known product, implementation, verification, QA, or follow-up risks are shaped enough to propose the first safe Change Unit.
+
+Each blocking question should name the uncertainty, offer realistic options, include the agent's recommendation, and say what can continue if the decision is deferred, or why nothing should continue until the decision is made. Record assumptions the agent makes separately from choices, approvals, QA judgment, acceptance, or risk acceptance that belong to the user.
+
 Good intake:
 
 ```text
@@ -89,6 +95,8 @@ Before product writes, shape the active scope into a Change Unit. The user-facin
 - known sensitive areas
 - when the agent must stop and ask
 
+Enough is known to propose the first safe Change Unit when the agent can state those items without hiding unresolved user judgment. If that cannot be done yet, continue intake with the next blocking question or propose a smaller Change Unit that avoids the unresolved area.
+
 Autonomy Boundary is not write authority. It only describes what judgment the agent may exercise without asking again. Actual product writes still require a compatible write check.
 
 ## Blocking product judgment
@@ -101,7 +109,7 @@ A user-facing Decision Packet should include:
 - the exact question
 - options and trade-offs
 - recommendation and uncertainty
-- what can continue if the decision is deferred
+- what can continue if the decision is deferred, or why nothing should continue until it is made
 - residual risk or follow-up
 
 Ask one blocking question at a time when possible.

@@ -20,7 +20,7 @@ This document does not define MCP schemas, SQLite DDL, state transition tables, 
 
 | Policy area | Plain-language question |
 |---|---|
-| `shared_design` | Do we agree on the goal, scope, non-goals, assumptions, and first safe Change Unit? |
+| `shared_design` | Do we know enough about goal, scope, non-goals, assumptions, product, implementation, verification, QA, or follow-up risks, and user-owned judgments to propose the first safe Change Unit? |
 | `decision_quality` | Is this a product, design, architecture, waiver, or risk choice that needs a recorded judgment path? |
 | `autonomy_boundary` | What may the agent do alone, and where must it stop for user judgment? |
 | `vertical_slice` | Is the work shaped as a thin end-to-end slice, or is a horizontal exception recorded? |
@@ -109,6 +109,7 @@ Use this when:
 
 - The request is ambiguous or the first safe Change Unit is not obvious.
 - Scope, non-scope, acceptance criteria, or user value needs alignment.
+- Affected product areas, user-facing screens or flows, modules, interfaces, sensitive categories, verification expectations, Manual QA expectations, user-owned trade-offs, or known product, implementation, verification, QA, or follow-up risks need shaping before writes.
 - Public interface, schema, auth, UX, or workflow behavior may change.
 - A `work` task needs shaping before implementation.
 
@@ -117,12 +118,12 @@ Example: A user asks for "better onboarding." Before writing, record the goal, n
 | Field | Contract |
 |---|---|
 | `name` | `shared_design` |
-| `applies_when` | Work request is ambiguous, scope/non-scope is unclear, user value needs alignment, public interface/schema/auth/UX/workflow is affected, or a `work` task needs shaping. |
-| `default_requirement` | Record goal, scope, non-goals, acceptance criteria, blocking decisions, assumptions, rejected options, domain-language impact, module/interface impact, and first Change Unit shape. Separate agent assumptions from choices that need user judgment, ask the most blocking questions one at a time, and stop when the first safe Change Unit can be proposed. |
+| `applies_when` | Work request is ambiguous, scope/non-scope is unclear, user value needs alignment, affected product areas, user-facing screens or flows, modules, interfaces, sensitive categories, verification or Manual QA expectations, user-owned trade-offs, or known product, implementation, verification, QA, or follow-up risks need shaping, public interface/schema/auth/UX/workflow is affected, or a `work` task needs shaping. |
+| `default_requirement` | Record: goal, scope, non-goals, acceptance criteria, affected product areas, user-facing screens or flows, modules, interfaces, sensitive categories, user-owned trade-offs, verification and Manual QA expectations, known product, implementation, verification, QA, or follow-up risks, blocking decisions, assumptions, rejected options, domain-language impact, module/interface impact, and first Change Unit shape. Inspect before asking: use repo, codebase, docs, and Harness state that are available and current for answers the agent can discover safely; if a source is unavailable or stale, record that uncertainty rather than treating it as authority. Clarify: multiple rounds may be needed; ask the most blocking question one at a time when possible; each blocking question should include options, recommendation, uncertainty, and what can continue if deferred, or why nothing should continue until the decision is made. Separate agent assumptions from choices, approvals, QA judgment, acceptance, or risk acceptance that need user judgment. Stop shaping when the first safe Change Unit can be proposed without hiding unresolved user judgment. |
 | `allowed_waiver` | Allowed for small obvious `direct` work, docs-only edits, or emergency fixes when the user/operator records a reason and a follow-up if design risk remains. |
 | `required_record` | Shared Design record, Task shaping fields, decision records, and optionally `DESIGN` or `DEC` projections. |
 | `validator` | `shared_design_alignment` |
-| `evidence` | Task summary, acceptance criteria, decision refs, rejected option refs, domain/module/interface impact refs. |
+| `evidence` | Task summary, acceptance criteria, decision refs, rejected option refs, product-area, user-facing-flow, module, interface, and sensitive-category notes, verification or Manual QA expectation refs, risk notes, risk candidates, residual-risk refs where applicable, and domain/module/interface impact refs. |
 | `close_impact` | If required and absent, set or keep `design_gate=pending` or `partial`. If risk is high and no waiver exists, block close. A valid waiver may allow `design_gate=waived`. |
 
 ### Decision Quality (`decision_quality`)

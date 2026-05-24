@@ -20,7 +20,7 @@
 
 | 정책 영역 | 쉬운 질문 |
 |---|---|
-| `shared_design` | 목표, 범위, 비목표, 가정, 첫 번째 안전한 Change Unit에 합의했는가? |
+| `shared_design` | 목표, 범위, 비목표, 가정, 제품·구현·검증·QA·후속 위험, 사용자 판단이 첫 번째 안전한 Change Unit을 제안할 만큼 구체화됐는가? |
 | `decision_quality` | 제품, 설계, 아키텍처, waiver, risk 선택에 기록된 판단 경로가 필요한가? |
 | `autonomy_boundary` | Agent가 혼자 할 수 있는 일과 사용자 판단을 위해 멈춰야 하는 지점은 무엇인가? |
 | `vertical_slice` | 작업이 얇은 end-to-end slice로 잡혔는가, 아니면 수평 예외가 기록됐는가? |
@@ -108,21 +108,22 @@ Policy validator는 MCP API document가 담당하는 validator 결과 형식에 
 이럴 때 사용합니다:
 
 - 요청이 모호하거나 첫 번째 안전한 Change Unit이 분명하지 않을 때.
-- 범위, 범위 밖 항목, acceptance criteria, 사용자 가치 정렬이 필요할 때.
+- 범위, 범위 밖 항목, 수용 기준, 사용자 가치 정렬이 필요할 때.
+- 영향받는 제품 영역, 사용자 화면/흐름, 모듈, interface, 민감 카테고리(sensitive categories), 검증 기대 수준, Manual QA 기대 수준, 사용자가 소유하는 절충 판단, 알려진 제품·구현·검증·QA·후속 위험을 쓰기 전에 구체화해야 할 때.
 - 공개 interface, schema, auth, UX, workflow가 바뀔 수 있을 때.
-- `work` task가 implementation 전에 구체화가 필요할 때.
+- `work` task를 구현 전에 구체화해야 할 때.
 
-예시: 사용자가 "onboarding을 더 좋게" 해 달라고 요청하면, 쓰기 전에 goal, 비목표, acceptance criteria, rejected option, 첫 얇은 onboarding Change Unit을 기록합니다.
+예시: 사용자가 "onboarding을 더 좋게" 해 달라고 요청하면, 쓰기 전에 목표, 비목표, 수용 기준, 기각한 선택지, 첫 얇은 onboarding Change Unit을 기록합니다.
 
 | Field | Contract |
 |---|---|
 | `name` | `shared_design` |
-| `applies_when` | 작업 요청이 모호하거나, 범위와 범위 밖 항목이 분명하지 않거나, 사용자 가치 정렬이 필요하거나, 공개 interface, schema, auth, UX, workflow가 영향을 받거나, `work` task에 shaping이 필요할 때. |
-| `default_requirement` | Goal, scope, non-goal, acceptance criteria, blocking decision, assumption, rejected option, domain-language impact, module/interface impact, first Change Unit shape를 기록한다. Agent assumption과 사용자 판단이 필요한 선택을 구분하고, 가장 blocking한 question을 한 번에 하나씩 묻고, 첫 번째 안전한 Change Unit을 제안할 수 있으면 멈춘다. |
+| `applies_when` | 작업 요청이 모호하거나, 범위와 범위 밖 항목이 분명하지 않거나, 사용자 가치 정렬이 필요하거나, 영향받는 제품 영역, 사용자 화면/흐름, 모듈, interface, 민감 카테고리(sensitive categories), 검증 또는 Manual QA 기대 수준, 사용자가 소유하는 절충 판단, 알려진 제품·구현·검증·QA·후속 위험을 구체화해야 하거나, 공개 interface, schema, auth, UX, workflow가 영향을 받거나, `work` task를 구체화해야 할 때. |
+| `default_requirement` | 기록할 것: 목표, 범위, 비목표, 수용 기준, 영향받는 제품 영역, 사용자 화면/흐름, 모듈, interface, 민감 카테고리(sensitive categories), 사용자가 소유하는 절충 판단, 검증 및 Manual QA 기대 수준, 알려진 제품·구현·검증·QA·후속 위험, 진행을 막는 결정, 가정, 기각한 선택지, domain-language 영향, module/interface 영향, 첫 Change Unit 모양. 사용자에게 묻기 전 확인할 것: agent가 안전하게 직접 확인할 수 있는 답을 사용 가능한 최신 저장소, 코드베이스, 문서, Harness state에서 먼저 살핀다. 소스가 없거나 오래됐으면 권위 있는 현재 사실로 취급하지 말고 그 불확실성을 기록한다. 구체화 방식: 여러 차례 이어질 수 있으며, 가능하면 가장 막힘이 큰 질문을 한 번에 하나씩 묻는다. 각 막힘 질문에는 선택지, 추천안, 불확실성, 미뤄졌을 때 계속할 수 있는 일 또는 결정 전에는 진행하면 안 되는 이유를 포함해야 한다. Agent가 둔 가정은 사용자 판단이 필요한 선택, Approval, QA 판단, 수용, 위험 수용과 분리한다. 해소되지 않은 사용자 판단을 숨기지 않고 첫 번째 안전한 Change Unit을 제안할 수 있을 때 구체화를 멈춘다. |
 | `allowed_waiver` | User/operator가 reason과, design risk가 남는 경우 follow-up을 기록하면 작고 명확한 `direct` work, docs-only edit, emergency fix에 허용된다. |
 | `required_record` | Shared Design record, Task shaping field, decision record, 선택적 `DESIGN` 또는 `DEC` projection. |
 | `validator` | `shared_design_alignment` |
-| `evidence` | Task summary, acceptance criteria, decision ref, rejected option ref, domain/module/interface impact ref. |
+| `evidence` | Task 요약, 수용 기준, decision ref, 기각한 선택지 ref, 제품 영역, 사용자 화면/흐름, 모듈, interface, 민감 카테고리(sensitive category) 메모, 검증 또는 Manual QA 기대 수준 ref, 위험 메모, 위험 후보, 필요한 경우 residual-risk ref, domain/module/interface impact ref. |
 | `close_impact` | Required인데 없으면 `design_gate=pending` 또는 `partial`로 설정하거나 유지한다. Risk가 높고 waiver가 없으면 close를 차단한다. Valid waiver는 `design_gate=waived`를 허용할 수 있다. |
 
 ### Decision Quality (`decision_quality`)
