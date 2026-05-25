@@ -75,7 +75,7 @@ Harness authority comes from Core and canonical local state around Task state, C
 
 Harness also does not replace the user's product repository, version control system, test runner, code review process, user-owned product judgment, or material technical judgment.
 
-Harness also does not treat chat history as the source of truth. It does not treat generated Markdown as the operating record. It does not turn the agent into the owner of product direction. The user still owns goals, scope, design judgment, sensitive approvals, QA judgment, acceptance, and residual-risk acceptance.
+Harness also does not treat chat history as the source of truth. It does not treat generated Markdown as the operating record. It does not turn the agent into the owner of product or material technical direction. The user still owns goals, scope, design judgment, product and material technical judgment, sensitive approvals, QA judgment, acceptance, and residual-risk acceptance.
 
 Harness keeps a local record and decision path around AI-assisted work. It helps the user and agent work faster without losing the shape of the work.
 

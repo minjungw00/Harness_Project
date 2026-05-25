@@ -49,7 +49,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Related Decision Packet
 - approval-shaped Decision Packet:
-- separate product-judgment Decision Packet, if required:
+- 필요한 경우 제품 또는 중요한 기술 판단을 위한 별도 Decision Packet:
 - decision gate impact:
 - approval gate impact:
 

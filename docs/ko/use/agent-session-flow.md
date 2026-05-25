@@ -28,7 +28,7 @@ Harness가 연결되어 있으면 사용자가 Harness 사용을 명시적으로
 - 범위가 흐트러질 위험이나 모호한 요구사항
 - 여러 파일 변경, 구조 변경, migration, 경계를 넘는 작업
 - auth, security, billing, destructive/data-loss risk, privacy, compliance처럼 민감하거나, accessibility, design quality처럼 정책·품질 판단이 필요한 영역
-- 사용자가 소유하는 제품 판단, 비용·호환성·보안·유지보수·migration·interface·dependency·위험 영향이 큰 중요한 기술 방향, 관련 trade-off
+- 사용자가 소유하는 제품 판단 또는 비용·호환성·보안·유지보수·migration·interface·dependency·위험 영향이 큰 중요한 기술 판단
 - 근거, 검증, Manual QA, 수용, 남은 위험이 필요한 작업
 
 작은 direct 작업은 가볍게 유지합니다. 질문에 답하거나, 코드를 살펴보거나, 결과를 설명하거나, 이미 좁은 모양이 분명한 작고 위험이 낮은 변경을 처리하는 데 불필요한 절차를 덧붙이지 않습니다.

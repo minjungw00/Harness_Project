@@ -54,7 +54,7 @@ Harness describes capability by actual guarantee level, not by product name. If 
 
 ## Strategic thesis
 
-Harness is an agency-preserving local authority kernel for AI-assisted product work.
+The strategic thesis is simple: AI-assisted work can move quickly while the user keeps meaningful judgment.
 
 In plain terms: AI agents can move quickly without pushing the user out of the driver's seat when the system keeps the work journey explicit, keeps durable truth small, and records user-owned product or material technical judgment at the moments where judgment matters.
 

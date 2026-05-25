@@ -28,7 +28,7 @@ Track ordinary-language requests when their shape suggests scope, judgment, evid
 - scope drift risk or ambiguous requirements
 - multi-file, structural, migration, or cross-boundary work
 - sensitive or policy-relevant areas such as auth, security, billing, destructive/data-loss risk, privacy, compliance, accessibility, or design quality
-- user-owned product judgment, material technical direction with cost, compatibility, security, maintenance, migration, interface, dependency, or risk impact, or related trade-off decisions
+- user-owned product judgment or material technical judgment with cost, compatibility, security, maintenance, migration, interface, dependency, or risk impact
 - evidence, verification, Manual QA, acceptance, or residual-risk needs
 
 Keep small direct tasks light. Do not add ceremony just to answer a question, inspect code, explain a result, or handle a tiny low-risk change with an already narrow shape.
