@@ -40,6 +40,7 @@ Show:
 - what is out of bounds
 - the next safe action
 - any question that blocks progress
+- when guard, freeze, or careful mode is relevant, what can actually be blocked before execution and what can only be detected after action
 
 Do not begin product writes from a broad natural-language request alone. First establish scope and compatible write authority for the intended change.
 
@@ -148,6 +149,8 @@ Write authority: allowed for src/auth/login.ts and tests/auth/login.test.ts
 Scope basis: email login Change Unit
 Limitation: cooperative surface; changed-path validation detects violations after the fact
 ```
+
+Do not describe a cooperative or detective hold as if it blocks execution. Say that writes are held by instruction, or that violations can be detected after action when the connected profile supports that validation. Use preventive wording only for proven pre-execution blocking on the covered operation.
 
 If write authority is blocked, unavailable, stale, or incompatible with the intended change, hold product writes and explain the smallest unblocker.
 

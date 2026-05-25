@@ -298,13 +298,15 @@ Harness는 집행 강도를 솔직하게 보여주기 위해 guarantee levels를
 
 | Level | Meaning |
 |---|---|
-| `cooperative` | agent 접점이 Harness 지시와 MCP 결정을 따를 것으로 기대됩니다 |
-| `detective` | Harness가 violation을 감지하고 관찰 뒤 상태를 `blocked`, `stale`, `partial`, `failed`로 표시할 수 있습니다 |
-| `preventive` | connector 또는 runtime이 위반 action을 실행 전에 차단할 수 있습니다 |
+| `cooperative` | agent 접점이 Harness 지시와 MCP 결정을 따를 것으로 기대되지만, Harness가 실행 전 차단을 주장하지는 않습니다 |
+| `detective` | Harness가 실행 뒤에 위반을 관찰하고 상태를 `blocked`, `stale`, `partial`, `failed`로 표시할 수 있습니다 |
+| `preventive` | 입증된 connector 또는 runtime path가 covered operation을 실행 전에 차단할 수 있습니다 |
 | `isolated` | risky work가 worktree, sandbox, process 경계 또는 동등한 isolation으로 분리됩니다 |
 
 
-MVP reference behavior는 연결된 접점이 concrete pre-tool guard나 isolation layer를 갖는 경우가 아니라면 cooperative/detective입니다. Native hook expansion, advanced sidecar watching, broad isolated execution은 MVP 기준 접점을 위해 명시적으로 구현되지 않는 한 later roadmap items입니다.
+Guarantee display는 경계의 양쪽을 모두 이름 붙여야 합니다. 연결된 profile이 실행 전에 실제로 막을 수 있는 것과, 실행 뒤에만 감지할 수 있는 것을 나눠 보여줘야 합니다. Guard, freeze, careful-mode label은 이 connected-profile guarantee를 그대로 따르며, cooperative 또는 detective profile을 preventive blocking으로 올려 주지 않습니다.
+
+MVP reference behavior는 연결된 접점이 covered operation에 대해 구체적으로 입증된 pre-tool guard나 isolation layer를 갖는 경우가 아니라면 cooperative/detective입니다. Native hook expansion, advanced sidecar watching, broad isolated execution은 MVP 기준 접점을 위해 명시적으로 구현되지 않는 한 later roadmap items입니다.
 
 Guarantee level은 표시와 risk context입니다. Approval, verification, acceptance, kernel gate가 아닙니다.
 
@@ -320,8 +322,8 @@ Failures는 숨기지 않고 기록합니다.
 | artifact file missing | artifact/evidence를 `stale`로 표시합니다. Recovery를 통해 다시 scan하거나 restore합니다 |
 | Projection job failed | state는 current로 유지하고 projection을 failed로 표시한 뒤 retry 또는 reconcile합니다 |
 | Managed Markdown edited directly | reconcile item을 만들고 기준 상태를 직접 바꾸지 않습니다 |
-| MCP unavailable | `MCP_SERVER_UNAVAILABLE`은 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능한 diagnostic condition이고, `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 연결된 접점에서 사용할 수 있는 MCP가 없거나 MCP configuration이 최신이 아니거나 required tools를 호출할 수 없음을 관찰할 수 있는 diagnostic condition입니다. `MCP_UNAVAILABLE`은 stable public availability code로 남습니다. Product/runtime/code writes는 cooperative 접점에서는 instruction으로 보류되고 available한 stronger guard에서는 차단됩니다 |
-| Surface capability mismatch | validator result를 기록하고 guarantee display를 조정하며, required checks를 충족할 수 없으면 unsafe writes를 차단합니다 |
+| MCP unavailable | `MCP_SERVER_UNAVAILABLE`은 tool call이 Core에 닿을 수 없어 authoritative Core response가 불가능한 diagnostic condition이고, `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 연결된 접점에서 사용할 수 있는 MCP가 없거나 MCP configuration이 최신이 아니거나 required tools를 호출할 수 없음을 관찰할 수 있는 diagnostic condition입니다. `MCP_UNAVAILABLE`은 stable public availability code로 남습니다. Product/runtime/code writes는 cooperative 접점에서는 instruction으로 보류되고, 가능한 detective path에서는 실행 뒤에 감지되며, covered operation에 대해 입증된 preventive guard가 있을 때만 실행 전에 차단됩니다 |
+| Surface capability mismatch | validator result를 기록하고 guarantee display를 조정하며, required checks를 충족할 수 없으면 Write Authorization을 거부하거나 unsafe writes를 보류합니다. 실행 전 차단은 여전히 입증된 connected profile에 달려 있습니다 |
 
 
 Recovery tools는 projection 최신성 repair, artifact rescan, 최신이 아닌 runs interrupt, drifted approvals expire, reconcile items create를 수행할 수 있습니다. 다만 같은 권한 규칙을 보존해야 합니다. `state.sqlite`는 운영 상태이고, `state.sqlite.task_events`는 그 state store 안의 event 이력이며, 원본 근거는 artifact store에 있고, Markdown 보고서는 projection으로 남습니다.

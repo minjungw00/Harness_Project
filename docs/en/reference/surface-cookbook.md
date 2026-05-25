@@ -23,7 +23,7 @@ Each recipe should keep only surface-specific material:
 - common fallbacks
 - conformance risks
 
-Do not repeat generic kernel rules, public API schemas, or policy contracts here. Guard, freeze, and careful-mode labels may appear only as labels over the connected profile's actual cooperative, detective, preventive, or isolated capability.
+Do not repeat generic kernel rules, public API schemas, or policy contracts here. Guard, freeze, and careful-mode labels may appear only as labels over the connected profile's actual cooperative, detective, preventive, or isolated capability. When a recipe uses one of those labels, it must say whether the behavior is a scope hold, a post-action detector, a proven pre-execution block, or isolation.
 
 ## Codex
 
@@ -60,7 +60,7 @@ conformance_risks:
 
 Codex connector work should keep `AGENTS.md` short enough to scan every turn. Treat it as an always-on compass, not a procedure manual, schema reference, or project history. Put procedural depth in a skill, command, or MCP resource.
 
-Codex-facing wording may expose phrases such as "freeze this task to these paths" or "show current guard level." For profiles without proven pre-tool blocking, describe that as cooperative freeze plus detective changed-path validation when available, not as preventive guard.
+Codex-facing wording may expose phrases such as "freeze this task to these paths" or "show what can actually be blocked and what can only be detected later." For profiles without proven pre-tool blocking, describe freeze as a cooperative scope hold or stricter next-action posture plus detective changed-path validation when available, not as preventive guard.
 
 ## Claude Code
 
@@ -82,7 +82,7 @@ mcp_configuration_hints:
 capture_guard_isolation_options:
   - SessionStart hook for Journey Card or status card injection
   - UserPromptSubmit hook for intake and shaping guidance
-  - PreToolUse hook for covered edit, command, network, or secret guard
+  - PreToolUse hook for covered edit, command, network, or secret guard when configured and proven
   - PostToolUse hook for changed files, command output, and log artifact candidates
   - Stop hook for run summary and verify/QA needs
   - PreCompact hook for Task summary and artifact refs
@@ -91,14 +91,14 @@ common_fallbacks:
   - read-only evaluator profile
   - fresh worktree evaluator
   - stop-hook report draft
-  - cooperative freeze or careful-mode instruction when hooks are absent or unproven
+  - cooperative scope hold or careful-mode instruction when hooks are absent or unproven
 conformance_risks:
   - hook behavior is version and configuration dependent
   - read-only verification profile must be tested by conformance
-  - PreToolUse can claim preventive guard only for covered operations it actually blocks
+  - PreToolUse can claim preventive guard only for covered operations it is proven to block
 ```
 
-Claude Code recipes may map "guard" to `PreToolUse` only when that hook is configured and conformance proves it can block the covered operation before execution. Otherwise, freeze and careful mode remain cooperative instructions plus any available post-tool capture.
+Claude Code recipes may map "guard" to `PreToolUse` only when that hook is configured and conformance proves it can block the covered operation before execution. Otherwise, freeze and careful mode remain cooperative scope-hold or stricter next-action instructions plus any available post-tool capture.
 
 ## Gemini
 
@@ -130,7 +130,7 @@ common_fallbacks:
   - cooperative hold or narrowed boundary when only extension wording is available
 conformance_risks:
   - extension context can become too large
-  - capture and guard behavior varies by host
+  - capture and guard behavior varies by host profile and must be proven for covered operations
   - extension wording alone must not be reported as a guard
 ```
 
@@ -158,7 +158,7 @@ mcp_configuration_hints:
 capture_guard_isolation_options:
   - VS Code task wrapper for owned task capture
   - sidecar adapter for changed-file or command observation
-  - profile-specific guard only when the host can block covered operations
+  - profile-specific guard only when the host is proven to block covered operations
   - explicit approval card display for sensitive changes
 common_fallbacks:
   - VS Code task wrapper
@@ -167,11 +167,11 @@ common_fallbacks:
   - cooperative chat instruction for profiles without wrapper or sidecar support
 conformance_risks:
   - cloud and IDE profiles may differ materially
-  - write guard and artifact capture need profile-specific verification
-  - user-facing freeze cards must show allowed paths and actual guarantee level
+  - write guard coverage and artifact capture need profile-specific verification
+  - user-facing freeze cards must show allowed paths and what can actually be blocked versus detected later
 ```
 
-Copilot recipes should not blur IDE and cloud behavior. A VS Code task wrapper may support detective capture or preventive blocking for tasks it owns, while chat instructions alone remain cooperative.
+Copilot recipes should not blur IDE and cloud behavior. A VS Code task wrapper may support detective capture or preventive blocking for tasks it owns when the profile proves that behavior, while chat instructions alone remain cooperative.
 
 ## Cursor
 
@@ -202,7 +202,7 @@ common_fallbacks:
   - cooperative project-rule instruction when IDE permissions are unproven
 conformance_risks:
   - project rules can become too verbose
-  - guard behavior depends on IDE profile and permissions
+  - guard coverage depends on IDE profile and proven permissions
   - generated project rules must become reconcile candidates when locally edited
 ```
 

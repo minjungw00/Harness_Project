@@ -40,6 +40,7 @@ Harness가 연결되어 있으면 사용자가 Harness 사용을 명시적으로
 - 범위 밖
 - 다음 안전한 행동
 - 진행을 막는 질문이 있다면 그 질문
+- guard, freeze, careful mode가 관련될 때 실행 전에 실제로 막을 수 있는 것과 실행 뒤에만 감지할 수 있는 것
 
 넓은 자연어 요청만으로 바로 제품 파일을 쓰기 시작하면 안 됩니다. 먼저 범위와 의도한 변경에 맞는 쓰기 권한을 확정해야 합니다.
 
@@ -148,6 +149,8 @@ Autonomy Boundary 안에서는 agent가 기존 helper를 재사용할지, privat
 범위 근거: email login Change Unit
 한계: 협조형 접점이라서 범위를 벗어난 쓰기는 사후 changed-path validation으로만 감지합니다.
 ```
+
+Cooperative 또는 detective hold를 실행 전에 막는 것처럼 설명하면 안 됩니다. 지시로 write를 보류한다고 말하거나, connected profile이 해당 validation을 지원할 때 실행 뒤에 위반을 감지할 수 있다고 말합니다. Preventive 표현은 해당 operation에 대해 입증된 실행 전 차단이 있을 때만 씁니다.
 
 쓰기 권한이 막혔거나, 확인할 수 없거나, 최신이 아니거나, 의도한 변경과 맞지 않으면 제품 파일 쓰기를 멈추고 가장 작은 해소 방법을 설명합니다.
 

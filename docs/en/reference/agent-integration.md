@@ -33,7 +33,7 @@ user conversation surface
   -> adapter, hook, sidecar, validator, or isolation layer
 ```
 
-Always-on rules should stay short. They should say when to use Harness, where to read status or the Journey Card, that product writes require `prepare_write`, that user-owned judgment routes through Decision Packets, that the current guarantee level must be shown honestly, and that product writes hold when authoritative MCP is unavailable. The session procedure itself belongs in [Agent Session Flow](../use/agent-session-flow.md).
+Always-on rules should stay short. They should say when to use Harness, where to read status or the Journey Card, that product writes require `prepare_write`, that user-owned judgment routes through Decision Packets, that status must show what can actually be blocked and what can only be detected later, and that product writes hold when authoritative MCP is unavailable. The session procedure itself belongs in [Agent Session Flow](../use/agent-session-flow.md).
 
 ## What belongs in Use docs vs this Reference doc
 
@@ -55,11 +55,11 @@ Always-on rules should stay short. They should say when to use Harness, where to
 | `T1 Skill` | Surface can follow a Harness procedure. | skill, command, prompt, playbook |
 | `T2 MCP` | Surface can call Harness tools and resources. | MCP server connection |
 | `T3 Capture` | Surface can return diffs, logs, and run output reliably. | structured output, wrapper, adapter |
-| `T4 Guard` | Surface can block or interrupt out-of-scope files, commands, network, or secrets before execution. | hook, permission system, policy engine, sidecar |
+| `T4 Guard` | Surface can block or interrupt covered out-of-scope files, commands, network, or secrets before execution when the profile proves that path. | hook, permission system, policy engine, sidecar |
 | `T5 Isolation` | Surface can run verification or risky work in a separate boundary. | worktree, sandbox, fresh process, isolated runner |
 | `T6 QA Capture` | Surface can structure browser, screenshot, walkthrough, workflow-recording, or Manual QA artifacts. | browser runner, screenshot capture, console/network capture, accessibility snapshot, QA note capture |
 
-Normal interactive Harness use is most natural at `T2` or higher. Reliable detached verification usually needs `T3` capture plus a real independence boundary. High-risk work should use `T4` guard or `T5` isolation when available. `T6` improves UI/UX evidence, but it does not replace Manual QA judgment and is not required for MVP when a human QA note can be recorded.
+Normal interactive Harness use is most natural at `T2` or higher. Reliable detached verification usually needs `T3` capture plus a real independence boundary. High-risk work should use a proven `T4` guard or `T5` isolation when available. `T6` improves UI/UX evidence, but it does not replace Manual QA judgment and is not required for MVP when a human QA note can be recorded.
 
 `T6 QA Capture` profiles must name supported capture types and fallback behavior. Candidate capture types include screenshot, console log, network trace, accessibility snapshot, and workflow recording. Captured files must follow redaction and secret/PII handling before durable storage and should be registered as artifact refs attached to the Manual QA record or feedback loop execution.
 
@@ -195,7 +195,7 @@ capabilities:
   fresh_verify: fresh_session
   worktree_isolation: optional
 fallbacks:
-  - sidecar guard
+  - sidecar guard for proven covered operations
   - approval card
   - fresh evaluator profile
 ```
@@ -230,18 +230,18 @@ This reference owns how connector profiles report and display those levels. It m
 
 | Level | Display responsibility |
 |---|---|
-| `cooperative` | Show that the surface is expected to follow Harness decisions, but Harness may not physically block a violation before it happens. |
-| `detective` | Show that Harness can observe changed paths, logs, artifacts, or projection drift after action and mark state stale, blocked, partial, or failed. |
-| `preventive` | Show the hook, wrapper, permission layer, policy engine, or sidecar path that can block a covered violation before execution. |
+| `cooperative` | Show that the surface is expected to follow Harness decisions, but Harness does not claim physical blocking before execution. |
+| `detective` | Show that Harness can observe changed paths, logs, artifacts, or projection drift after action and mark state stale, blocked, partial, or failed; display this as detection, not prevention. |
+| `preventive` | Show the proven hook, wrapper, permission layer, policy engine, or sidecar path and the covered operations it can block before execution. |
 | `isolated` | Show the separate worktree, sandbox, process, evaluator bundle, or equivalent boundary used for risky work or verification. |
 
-Guard, freeze, and careful-mode labels are safety-control labels over the actual profile.
+Guard, freeze, and careful-mode labels are safety-control labels over the actual profile. Their display must say what can actually be blocked before execution and what can only be detected later.
 
 | User wording | Actual boundary |
 |---|---|
-| Freeze | A visible hold or narrowed posture around current work. Persistent owner-record changes still route through the normal Core path. |
-| Guard | Cooperative, detective, preventive, or isolated protection according to the proven profile and current enforcement path. |
-| Careful mode | Stricter `prepare_write`, scope, evidence, status refresh, and user-question posture. It is not a new authority tier. |
+| Freeze | A visible scope hold or stricter next-action posture around current work. On cooperative or detective profiles it is not hard prevention; persistent owner-record changes still route through the normal Core path. |
+| Guard | Cooperative, detective, preventive, or isolated protection according to the proven profile and current enforcement path. Use preventive wording only for covered operations with proven pre-execution blocking. |
+| Careful mode | Stricter `prepare_write`, scope, evidence, status refresh, and user-question posture. It is not a new authority tier and does not block by itself. |
 
 ## Generated Manifest Expectations
 
@@ -299,14 +299,14 @@ Fallbacks are described by guarantee level and risk, not by surface name.
 |---|---|---|
 | Cooperative | The surface can follow instructions but cannot enforce them. | Tell the agent to use `prepare_write`, hold on blocked decisions, and record runs. Product writes pause if authoritative MCP is unavailable or write scope cannot be checked. |
 | Detective | Harness can observe changed files, logs, projection drift, or artifact gaps after action. | Validators may mark state stale, partial, blocked, or failed and require repair, reconcile, or fresh verification. |
-| Preventive | A hook, permission layer, wrapper, policy engine, or sidecar can block before execution. | Claim only the operations that the blocking path actually covers. |
+| Preventive | A proven hook, permission layer, wrapper, policy engine, or sidecar can block before execution. | Claim only the operations that the proven blocking path actually covers. |
 | Isolated | Risk requires separation. | Launch work or verification in a separate worktree, sandbox, process, or manual evaluator bundle. |
 
 If MCP is unavailable, the connector must not claim authoritative state updates. `MCP_SERVER_UNAVAILABLE` and `SURFACE_MCP_UNAVAILABLE` are diagnostic conditions, not additional public `ErrorCode` values. `MCP_UNAVAILABLE` remains the stable public availability code.
 
 `MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools. Product/runtime/code writes hold until MCP is reconnected or diagnosed, unless the work is an explicit pre-MVP documentation-authoring batch under `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. That override is a documentation-maintainer override only; it is not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition.
 
-If MCP works but pre-tool guard is weak, low-risk direct work may proceed with cooperative `prepare_write` and detective changed-path validation. Medium/high-risk work should require stricter validation, sidecar guard, explicit approval, detached verification, or isolation.
+If MCP works but pre-tool guard is weak, low-risk direct work may proceed with cooperative `prepare_write` and detective changed-path validation. Medium/high-risk work should require stricter validation, a proven sidecar guard, explicit approval, detached verification, or isolation.
 
 Projection staleness is reported separately from state. A connector may continue from canonical state if it can read state directly, but actions that depend on Markdown projection should refresh or reconcile first.
 
@@ -357,6 +357,7 @@ Minimum reference expectations:
 - manual verification bundle or fresh evaluator instructions
 - Manual QA note artifact support
 - connector manifest for generated files
+- actual block-vs-detect status when guard, freeze, or careful-mode labels are shown
 - conformance smoke covering common state and fallback paths
 
 Reference surface behavior details and surface-specific setup belong in [Surface Cookbook](surface-cookbook.md) only when they name a concrete surface.

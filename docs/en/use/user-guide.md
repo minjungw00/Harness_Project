@@ -76,6 +76,7 @@ Evidence: none yet
 Verification: not started
 Manual QA: likely needed
 Residual risk: none recorded
+Surface protection: cooperative; no pre-execution blocking is claimed. If changed-path validation is available, out-of-scope writes may be detected after action.
 ```
 
 Look for the next safe action. If the status looks stale or wrong, say:
@@ -83,6 +84,8 @@ Look for the next safe action. If the status looks stale or wrong, say:
 ```text
 Show the current status and next action again from state.
 ```
+
+If the agent uses words like guard, freeze, or careful mode, it should explain them in ordinary terms: what can actually be blocked before execution, and what can only be detected later. A freeze on a cooperative or detective surface means a scope hold or stricter next-action posture, not hard prevention.
 
 ## The three everyday questions
 
@@ -195,6 +198,8 @@ Pause writes until I answer the open decision.
 Show what you can actually block and what you can only detect later.
 Use careful mode for this change: narrow scope, show write authority before writes, and ask before user-owned product or material technical trade-offs.
 ```
+
+If the connected surface cannot block before execution, careful mode means a narrower posture, clearer status, and later validation where available. It should not be described as hard prevention.
 
 Power-user equivalents for the same requests include Change Unit, Decision Packet, guarantee level, detached verification, residual risk, `prepare_write`, and Write Authorization. They are useful labels for explaining blocks and close conditions; they are not words you must memorize before using Harness.
 

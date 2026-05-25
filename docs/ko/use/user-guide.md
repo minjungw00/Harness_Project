@@ -76,6 +76,7 @@ Harness가 연결된 상태에서 AI와 함께 하는 작업 하나가 어떻게
 검증: 시작하지 않음
 Manual QA: 필요할 가능성 있음
 남은 위험: 기록 없음
+접점 보호: cooperative; 실행 전 차단을 주장하지 않음. changed-path validation이 있으면 범위를 벗어난 쓰기를 실행 뒤에 감지할 수 있음
 ```
 
 핵심은 다음 안전한 행동입니다. 상태가 오래됐거나 이상해 보이면 이렇게 말합니다.
@@ -83,6 +84,8 @@ Manual QA: 필요할 가능성 있음
 ```text
 상태 보여줘.
 ```
+
+에이전트가 guard, freeze, careful mode 같은 말을 쓴다면 쉬운 말로 풀어야 합니다. 무엇을 실행 전에 실제로 막을 수 있고, 무엇은 실행 뒤에만 감지할 수 있는지 구분해야 합니다. Cooperative 또는 detective 접점에서 freeze는 범위 보류나 다음 행동을 더 엄격하게 제한하는 상태이지 실행 전 강제 차단이 아닙니다.
 
 ## 세 가지 일상 질문
 
@@ -167,7 +170,7 @@ Harness는 이런 경계를 활성 Change Unit 안에서 작업을 유지하는 
 | 범위와 질문부터 잡아줘. | Task 범위, 제품 파일을 쓸 수 있으면 활성 Change Unit. |
 | 방금 합의한 범위를 넘기지 마. | Change Unit 경계. |
 | 범위가 커져야 한다면, 먼저 선택지와 영향을 보여줘. | 범위나 사용자 소유 판단을 위한 Decision Packet. |
-| 실제로 막을 수 있는 것과 나중에 발견만 할 수 있는 것을 나눠서 보여줘. | guarantee level 또는 surface capability. |
+| 실행 전에 실제로 막을 수 있는 것과 실행 뒤에만 감지할 수 있는 것을 나눠서 보여줘. | guarantee level 또는 surface capability. |
 | 가능하면 독립적으로 확인해줘. | detached verification. |
 | Manual QA가 필요한지 판단해줘. | Manual QA 필요 여부 또는 waiver. |
 | 수용하기 전에 남은 위험을 보여줘. | residual risk와 닫기에 영향을 주는 위험 상태. |
@@ -192,9 +195,11 @@ Harness는 이런 경계를 활성 Change Unit 안에서 작업을 유지하는 
 방금 합의한 범위를 넘기지 마.
 범위가 커져야 한다면, 먼저 선택지와 영향을 보여줘.
 열려 있는 결정에 답할 때까지 쓰기는 멈춰.
-실제로 막을 수 있는 것과 나중에 발견만 할 수 있는 것을 나눠서 보여줘.
+실행 전에 실제로 막을 수 있는 것과 실행 뒤에만 감지할 수 있는 것을 나눠서 보여줘.
 이 변경은 조심해서 진행해. 범위를 좁게 유지하고, 쓰기 전에는 쓰기 권한을 보여주고, 사용자가 소유하는 제품 판단이나 중요한 기술 판단 전에는 물어봐.
 ```
+
+연결된 접점이 실행 전에 실제로 막을 수 없다면 careful mode는 더 좁은 작업 태도, 더 분명한 상태 표시, 가능한 경우의 사후 감지를 뜻합니다. 실행 전 강제 차단처럼 설명하면 안 됩니다.
 
 같은 요청을 더 정확히 설명해야 할 때는 Change Unit, Decision Packet, guarantee level, detached verification, residual risk, `prepare_write`, Write Authorization 같은 용어가 등장할 수 있습니다. 이 용어들은 실제 block이나 close 조건을 설명할 때 쓰는 이름이지, 사용자가 먼저 입력해야 하는 명령어가 아닙니다.
 
