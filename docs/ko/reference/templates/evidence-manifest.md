@@ -11,13 +11,15 @@ acceptance criteria와 completion condition이 어떤 supporting evidence로 뒷
 - changed file coverage
 - design-quality coverage
 - approval 참조
-- artifact 참조와 redaction state, downstream evidence impact
+- artifact 참조와 `redaction_state`, 후속 evidence 영향
 - 관련 Run, Eval, Feedback Loop, Manual QA, TDD trace 참조
+- close 맥락으로 렌더링할 때 close에 영향을 주는 검증, Manual QA, 수용, Residual Risk 요약
 
 ## 렌더링 섹션
 
 - Identity
 - Summary
+- close 영향 요약
 - Acceptance Criteria Coverage
 - Changed File Coverage
 - Design Quality Coverage
@@ -53,9 +55,18 @@ updated_at: 2026-05-06T09:50:00+09:00
 ## Summary
 - evidence state:
 - unsupported criteria:
-- omitted or blocked evidence impact:
+- 생략/차단 evidence 영향:
 - stale conditions:
 - next evidence action:
+
+## close 영향 요약
+- 근거가 뒷받침하는 것:
+- 근거가 대체하지 않는 것: 검증, Manual QA, 수용, Residual Risk 수용
+- 검증 상태:
+- Manual QA 상태:
+- 수용 상태:
+- Residual Risk:
+- 다음 close 조치:
 
 ## Acceptance Criteria Coverage
 | AC ID | Statement | Coverage 상태 | Supporting Evidence | Notes |
@@ -120,5 +131,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 ## 메모
 
 Evidence가 필요한 경우 close 판단은 보고서 문장만이 아니라 기준 `evidence_gate`를 따릅니다.
+
+Evidence Manifest는 주장을 뒷받침하지만 그 자체로 correctness를 증명하거나 detached verification을 만들거나 Manual QA를 기록하거나 수용을 암시하거나 Residual Risk를 수용하지 않습니다. 이 template에서 close 영향 요약을 렌더링할 때는 테스트 통과, self-check, 사용자 수용이 서로 다른 close 조건으로 오해되지 않도록 각 줄을 분리해 보여줘야 합니다.
 
 `secret_omitted` artifact는 secret이 아닌 evidence가 visible한 주장만 뒷받침할 수 있으며, omitted value가 필요한 주장은 뒷받침하지 못합니다. `blocked` artifact는 committed metadata-only notice이지 사용 가능한 원본 근거가 아닙니다. Dependent criteria는 replacement, waiver, Decision Packet outcome, accepted risk, documented fallback이 evidence path를 해소할 때까지 unsupported, insufficient, blocked 중 적절한 상태로 남습니다. 이 template은 omitted secret/PII value 또는 blocked payload bytes를 포함하면 안 됩니다.

@@ -72,8 +72,8 @@ Change Unit: login form, login API call, session storage
 Out of bounds: password reset, account creation
 Decision needed: failed-login message
 Write authority: not requested yet
-Gates: scope=pending; decision=required; design=pending; evidence=none; verification=not_required; QA=pending
-Refs: evidence=none; run/eval/QA=none
+Close checks: scope not confirmed; decision needed; design not checked; evidence not recorded; verification not needed yet; QA still open
+Refs: no evidence yet; no run/eval/QA refs yet
 Manual QA: likely needed
 Residual risk: none recorded
 Surface protection: cooperative; no pre-execution blocking is claimed. If changed-path validation is available, out-of-scope writes may be detected after action.
@@ -265,21 +265,31 @@ Defer that decision and propose a smaller Change Unit.
 
 ## Decisions, approvals, QA, acceptance, and residual risk
 
-These words answer different questions.
+These words answer different questions. Keep them separate near close, even when the same artifact or conversation mentions more than one of them.
 
-| Judgment | Question it answers |
-|---|---|
-| Decision | Which user-owned product direction, material technical direction, trade-off, waiver, or close-relevant choice should we take? |
-| Approval | May this sensitive action proceed? |
-| Manual QA | Did a person inspect the experience where human judgment matters? |
-| Residual-risk acceptance | Do you accept a known remaining limitation, uncertainty, or trade-off? |
-| Final acceptance | Do you accept the result when the task requires final acceptance? |
+| Item | Plain job | Do not substitute it with |
+|---|---|---|
+| Evidence | Supports the claim that a criterion or result was met. | The agent saying "done", a report sentence, or final acceptance. |
+| Verification | Checks correctness from an appropriate review boundary. Detached verification needs independence. | Same-session self-review, passing tests alone, or Manual QA. |
+| Manual QA | Records human inspection of UX, workflow, copy, accessibility interpretation, visual result, or product feel. | Automated tests, browser smoke, verification, or acceptance. |
+| Acceptance | Records the user's judgment that the result is acceptable when the task requires it. | Correctness proof, QA, verification, or approval. |
+| Residual Risk | Names known remaining uncertainty, limitation, unchecked condition, or trade-off. | Evidence, verification, QA, or acceptance. |
+| Decision | Records the user-owned product direction, material technical direction, waiver, or close-relevant choice. | Broad approval or chat agreement that does not answer the actual trade-off. |
+| Approval | Allows a named sensitive action to proceed. | Acceptance, correctness, evidence, verification, QA, or risk acceptance. |
 
-Approval is not acceptance. Passing checks is not Manual QA. Accepting residual risk is not proof that the work is correct. Final acceptance, when required, should come after close-relevant residual risk has been shown or reported as none.
+Approval is not acceptance. Tests passing do not mean Manual QA happened. Same-session self-review can be a useful self-check, but it is not detached verification. Accepting a result does not prove it is correct. Accepting residual risk is not proof either; it means the known uncertainty was visible and accepted for this Task. Final acceptance, when required, should come after close-relevant residual risk has been shown or reported as no known close-relevant risk.
 
 Examples that may need approval include dependency additions, auth or permission changes, data model changes, public API changes, destructive writes, secret access, and production configuration changes. Approval only answers whether a sensitive step may proceed; a separate Decision Packet may still be needed for the dependency, migration, interface, module-boundary, product, material technical, QA, or risk choice itself.
 
-If the agent asks for a QA or verification waiver, it should say what is not being checked, what risk you would accept, and what follow-up remains. If it asks to close with residual risk, it should show the remaining limitation first, then ask whether you accept that risk for this Task.
+If the agent asks for a QA or verification waiver, it should use the Decision Packet or required recorded judgment path for the task. That prompt should say what is not being checked, what risk you would accept, what follow-up remains, which refs matter, and how close is affected. A casual chat statement should not be treated as a close-relevant waiver when accepted risk is involved. If the agent asks to close with residual risk, it should show the remaining limitation first, then ask whether you accept that risk for this Task.
+
+Applied examples:
+
+- Direct docs or copy fix: a changed path, diff or patch summary, and self-check can support the claim. It should not be described as detached verification, and it does not need Manual QA unless the changed surface needs human inspection.
+- UI/UX work: tests and browser smoke can support rendering or behavior claims. Manual QA is still the human check for layout, interaction feel, copy, and accessibility interpretation. A QA waiver should name the skipped surface, accepted risk, follow-up, relevant refs, and close impact.
+- Auth or security work: approval may allow secret access, permission changes, or auth-file writes. The security or product choice still needs a Decision Packet when roles, redaction, audit trail, session model, lockout behavior, or user notice are being decided.
+- Public API work: passing tests support behavior, but compatibility, caller impact, migration path, and documentation promises may need a Decision Packet and independent verification.
+- Risk-accepted close: the agent should show the evidence that exists, the verification or QA that is missing or waived, the remaining limitation, and the follow-up. Closing with accepted risk is not the same as closing as detached verified.
 
 ## Close checklist
 
@@ -287,9 +297,9 @@ Before close, the agent should make these points clear in everyday language:
 
 - The result matches the agreed scope.
 - Required evidence is present, or evidence is not required for this task shape.
-- Verification is not required, passed, or explicitly waived with recorded risk.
-- Manual QA is not required, passed, completed, or validly waived.
-- Known close-relevant residual risk has been shown, or the agent reports `ResidualRiskSummary.status=none`.
+- Verification is either not expected for this task path, completed, or explicitly waived with recorded risk.
+- Manual QA is either not needed, completed, or validly waived.
+- Known close-relevant residual risk has been shown, or the agent reports that there is no known close-relevant residual risk.
 - Final acceptance is requested separately from approval when final acceptance is required.
 
 Useful close phrases:

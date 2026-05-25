@@ -13,11 +13,13 @@ Use `EVIDENCE-MANIFEST` when Harness needs a readable map from acceptance criter
 - approval refs
 - artifact refs with redaction state and downstream evidence impact
 - related Run, Eval, Feedback Loop, Manual QA, and TDD trace refs
+- close-relevant verification, Manual QA, acceptance, and Residual Risk summaries when rendered with close context
 
 ## Rendered sections
 
 - Identity
 - Summary
+- Close Summary
 - Acceptance Criteria Coverage
 - Changed File Coverage
 - Design Quality Coverage
@@ -56,6 +58,15 @@ updated_at: 2026-05-06T09:50:00+09:00
 - omitted or blocked evidence impact:
 - stale conditions:
 - next evidence action:
+
+## Close Summary
+- evidence supports:
+- evidence does not replace: verification, Manual QA, acceptance, or residual-risk acceptance
+- verification status:
+- Manual QA status:
+- acceptance status:
+- residual risk:
+- next close action:
 
 ## Acceptance Criteria Coverage
 | AC ID | Statement | Coverage State | Supporting Evidence | Notes |
@@ -120,5 +131,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 ## Notes
 
 Where evidence is required, close depends on the canonical `evidence_gate`, not the report text alone.
+
+Evidence Manifest supports claims; it does not prove correctness by itself, create detached verification, record Manual QA, imply acceptance, or accept residual risk. When a close summary is rendered from this template, it should keep those lines separate so a passing test, a self-check, or user acceptance is not mistaken for another close condition.
 
 `secret_omitted` artifacts may support claims whose nonsecret evidence remains visible, but not claims that require omitted values. `blocked` artifacts are committed metadata-only notices, not available raw evidence; dependent criteria remain unsupported, insufficient, or blocked until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the evidence path. This template must not include omitted secret/PII values or blocked payload bytes.

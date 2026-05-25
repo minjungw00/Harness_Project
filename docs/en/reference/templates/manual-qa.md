@@ -11,7 +11,7 @@ Use `MANUAL-QA` when Manual QA is required, performed, waived, pending, or repre
 - `qa_gate`
 - Manual QA profile, setup, checklist, result, waiver, and findings
 - screenshot, browser log, video, or note artifact refs with redaction state
-- residual risk and Decision Packet refs related to QA waiver or failure
+- residual risk and Decision Packet or required judgment-path refs related to QA waiver or failure
 - design-quality validator results related to `manual_qa`
 - projection freshness inputs
 
@@ -42,7 +42,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 # Manual QA
 
-> Projection view: rendered from `source_state_version` at `updated_at`; displays Manual QA records and `qa_gate`. QA results, waivers, and risk acceptance must be recorded through the QA, Decision Packet, or residual-risk paths.
+> Projection view: rendered from `source_state_version` at `updated_at`; displays Manual QA records and `qa_gate`. QA results, waivers, and risk acceptance must be recorded through the QA path, required judgment path, or residual-risk path as applicable.
 
 ## Identity
 - manual_qa_record_id: QA-0001 | null
@@ -72,9 +72,13 @@ updated_at: 2026-05-06T10:05:00+09:00
 - waiver reason:
 
 ## Waiver And Risk
-- waiver Decision Packet:
+- waiver judgment path:
+- skipped check or surface:
+- accepted risk:
+- follow-up:
 - residual risk refs:
 - accepted residual-risk summary:
+- close impact:
 
 ## Findings
 | Severity | Finding | Suggested Action | Follow-up CU |

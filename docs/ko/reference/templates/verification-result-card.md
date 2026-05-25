@@ -8,10 +8,11 @@ Eval 결과의 verdict, assurance 영향, 검토한 evidence, 남은 작업, 사
 
 - Eval 기록
 - assurance 영향과 verification independence 상태
-- Manual QA와 acceptance 영향
+- Manual QA와 수용 영향
 - 검토된 task, run, Evidence Manifest, TDD trace, diff, log, approval, design 참조
 - blocker 또는 rework
 - 사용자 후속 조치
+- close 맥락이 렌더링될 때 Manual QA, 수용, Residual Risk, waiver 판단 참조
 
 ## 렌더링 섹션
 
@@ -21,8 +22,9 @@ Eval 결과의 verdict, assurance 영향, 검토한 evidence, 남은 작업, 사
 - assurance
 - verification independence
 - Manual QA
-- acceptance
+- 수용
 - 검토한 evidence
+- close 맥락
 - 남은 작업
 - 사용자 후속 조치
 
@@ -48,17 +50,29 @@ Acceptance: {acceptance_impact}
 - logs: {logs_ref}
 - approvals: {approval_refs}
 - design refs: {design_refs}
-- redaction or blocked input: {redaction_availability_summary|none}
+- redaction 또는 차단 입력: {redaction_availability_summary|none}
+
+close 맥락:
+- 검증한 내용:
+- 검증하지 않은 내용:
+- Manual QA: {manual_qa_status_or_needed}
+- 수용: {acceptance_status_or_needed}
+- Residual Risk: {residual_risk_summary|none}
+- 판단 경로: {verification_waiver_required_judgment_ref|none}
+- 관련 refs: {verification_waiver_refs|none}
+- close 영향: {verification_waiver_close_impact|none}
 
 남은 작업:
 {blockers_or_rework}
 
-User follow-up:
+사용자 후속 작업:
 {user_followup}
 ````
 
 ## 메모
 
 이 template은 렌더링 결과인 카드 형태일 뿐 verification 권한 자체가 아닙니다. Eval 기록과 gate 상태가 기준입니다.
+
+Verification은 기록된 review boundary에서 correctness를 확인합니다. Manual QA를 기록하거나, 사용자 수용을 암시하거나, Residual Risk를 수용하지 않습니다. 같은 세션의 self-review는 self-check 또는 review note로 보여줄 수 있지만 detached verification으로 렌더링하면 안 됩니다. Verification waiver는 필요한 판단 경로, 생략한 확인, 수용하는 위험, 후속 작업, 관련 refs, close 영향을 보여줘야 하며, detached verification을 만들거나 assurance를 높이지 않습니다.
 
 이 card는 omitted 또는 blocked raw bytes를 검토한 것처럼 암시하면 안 됩니다. `secret_omitted`는 visible nonsecret claim만 뒷받침할 수 있고, `blocked`는 documented resolution이 없는 한 unavailable input입니다.

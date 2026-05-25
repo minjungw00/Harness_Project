@@ -146,7 +146,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - feedback loop / TDD:
 - codebase stewardship:
 - context hygiene:
-- follow-up risk:
+- 후속 위험:
 - routed outcome:
 
 ## Next Evidence
@@ -157,15 +157,15 @@ updated_at: 2026-05-06T09:30:15+09:00
 - TDD GREEN evidence:
 - TDD refactor/check evidence:
 - expected artifact refs:
-- omitted or blocked artifact impact:
+- 생략/차단 artifact 영향:
 - stale or missing evidence:
 
 ## Residual Risk
 - close-relevant risk:
 - visibility status:
 - accepted residual-risk refs:
-- follow-up required:
-- close impact:
+- 후속 작업 필요:
+- close 영향:
 
 ## Stewardship Impact
 - summary shape: StewardshipImpactSummary
@@ -296,7 +296,7 @@ Change Unit block sub-template:
 - non-goals:
 - slice type: vertical | enabling | cleanup | horizontal-exception
 - horizontal exception reason:
-- follow-up vertical CU:
+- 후속 vertical CU:
 - autonomy profile:
 - agent may do:
   - implementation detail:
@@ -370,4 +370,6 @@ Change Unit block sub-template:
 
 `TASK`의 Review Stages는 관리되는 표시 섹션입니다. Gates를 충족하거나, write를 허가하거나, 위험을 수용하거나, Task를 닫거나, `detached_verified` assurance를 만들 수 없습니다.
 
-`TASK`, Journey, evidence, report section에 표시되는 artifact ref는 redaction state를 보존해야 합니다. `secret_omitted` ref는 visible nonsecret evidence만 뒷받침할 수 있고, `blocked` ref는 raw content가 아니라 committed metadata-only notice와 unavailable input을 보여줍니다.
+`TASK`의 waiver 표시는 요약일 뿐입니다. close에 영향을 주는 QA 또는 verification waiver는 Decision Packet 또는 필요한 판단 경로, 생략한 확인이나 대상, 수용하는 위험, 후속 작업, 관련 refs, close 영향을 가리켜야 합니다. QA waiver는 Manual QA가 되지 않고, verification waiver는 detached verification을 만들지 않습니다.
+
+`TASK`, Journey, evidence, report section에 표시되는 artifact ref는 `redaction_state`를 보존해야 합니다. `secret_omitted` ref는 visible nonsecret evidence만 뒷받침할 수 있고, `blocked` ref는 raw content가 아니라 committed metadata-only notice와 unavailable input을 보여줍니다.

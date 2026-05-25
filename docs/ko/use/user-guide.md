@@ -72,8 +72,8 @@ Change Unit: 로그인 폼, 로그인 API 호출, 세션 저장
 범위 밖: 비밀번호 재설정, 계정 생성
 필요한 결정: 로그인 실패 메시지
 쓰기 권한: 아직 요청하지 않음
-Gates: scope=pending; decision=required; design=pending; evidence=none; verification=not_required; QA=pending
-Refs: evidence=none; run/eval/QA=none
+닫기 확인: 범위 미확정; 결정 필요; 설계 미확인; 근거 미기록; 검증은 아직 불필요; QA 열림
+Refs: 아직 evidence 없음; 아직 run/eval/QA refs 없음
 Manual QA: 필요할 가능성 있음
 남은 위험: 기록 없음
 접점 보호: cooperative; 실행 전 차단을 주장하지 않음. changed-path validation이 있으면 범위를 벗어난 쓰기를 실행 뒤에 감지할 수 있음
@@ -265,21 +265,31 @@ flowchart LR
 
 ## 결정, 승인, QA, 수용, 남은 위험
 
-이 단어들은 서로 다른 질문에 답합니다.
+이 단어들은 서로 다른 질문에 답합니다. 닫기 직전에는 같은 artifact나 같은 대화에 여러 항목이 함께 나오더라도 서로 섞지 않아야 합니다.
 
-| 판단 | 답하는 질문 |
-|---|---|
-| 결정 | 어떤 사용자 소유 제품 방향, 중요한 기술 방향, 장단점, 생략, 닫기 관련 선택을 할 것인가? |
-| 승인 | 이 민감한 행동을 진행해도 되는가? |
-| Manual QA | 사람이 봐야 하는 경험 품질을 실제로 확인했는가? |
-| 남은 위험 수용 | 알려진 한계, 불확실성, 장단점을 받아들이는가? |
-| 최종 수용 | 작업이 최종 수용을 요구할 때 결과를 받아들이는가? |
+| 항목 | 쉬운 역할 | 대신 쓰면 안 되는 것 |
+|---|---|---|
+| 근거 | 기준이나 결과가 충족됐다는 주장을 뒷받침합니다. | 에이전트의 "완료" 말, 보고서 문장, 최종 수용. |
+| 검증 | 적절한 검토 경계에서 correctness를 확인합니다. Detached verification에는 독립성이 필요합니다. | 같은 세션의 자체 검토, 테스트 통과만 있는 상태, Manual QA. |
+| Manual QA | UX, workflow, copy, accessibility 해석, 시각 결과, product feel처럼 사람이 봐야 하는 품질을 기록합니다. | 자동 테스트, browser smoke, 검증, 수용. |
+| 수용 | Task가 요구할 때 사용자가 결과를 받아들인다는 판단을 기록합니다. | correctness 증명, QA, 검증, approval. |
+| 남은 위험 | 알려진 불확실성, 한계, 확인하지 못한 조건, 장단점을 이름 붙입니다. | 근거, 검증, QA, 수용. |
+| Decision | 사용자 소유 제품 방향, 중요한 기술 방향, waiver, 닫기 관련 선택을 기록합니다. | 실제 trade-off에 답하지 않는 넓은 approval이나 채팅 동의. |
+| Approval | 이름 붙은 민감한 행동을 진행해도 된다는 허가입니다. | 수용, correctness, 근거, 검증, QA, 위험 수용. |
 
-승인은 수용이 아닙니다. 확인을 통과했다고 Manual QA가 끝난 것도 아닙니다. 남은 위험을 수용해도 일이 맞게 끝났다는 근거가 되지는 않습니다. 최종 수용이 필요한 경우에는 닫기에 영향을 주는 남은 위험이 표시되었거나 없다고 보고된 뒤에 따로 요청되어야 합니다.
+승인은 수용이 아닙니다. 테스트를 통과했다고 Manual QA가 끝난 것도 아닙니다. 같은 세션의 자체 검토는 유용한 self-check일 수 있지만 detached verification은 아닙니다. 결과를 수용해도 그 자체가 correctness를 증명하지 않습니다. 남은 위험을 수용하는 것도 증명이 아니라, 알려진 불확실성이 이 Task에서 보였고 받아들여졌다는 뜻입니다. 최종 수용이 필요한 경우에는 닫기에 영향을 주는 남은 위험이 표시되었거나 알려진 close-relevant risk가 없다고 보고된 뒤에 따로 요청되어야 합니다.
 
 의존성 추가, 인증이나 권한 변경, 데이터 모델 변경, 공개 API 변경, 파괴적 쓰기, secret 접근, 운영 설정 변경은 승인이 필요할 수 있습니다. Approval은 민감한 단계를 진행해도 되는지만 답합니다. Dependency, migration, interface, module boundary, 제품, 중요한 기술, QA, risk 선택 자체에는 별도의 Decision Packet이 여전히 필요할 수 있습니다.
 
-에이전트가 QA 또는 verification waiver를 요청한다면 무엇을 확인하지 않는지, 사용자가 어떤 위험을 받아들이는지, 어떤 후속 작업이 남는지 말해야 합니다. 남은 위험을 안고 close하자고 요청한다면 먼저 남은 한계를 보여준 뒤, 그 위험을 이 Task에서 수용하는지 물어야 합니다.
+에이전트가 QA 또는 verification waiver를 요청한다면 해당 Task의 Decision Packet 또는 필요한 기록된 판단 경로를 사용해야 합니다. 그 판단 prompt는 무엇을 확인하지 않는지, 사용자가 어떤 위험을 받아들이는지, 어떤 후속 작업이 남는지, 어떤 refs가 관련되는지, close에 어떤 영향을 주는지 말해야 합니다. close에 영향을 주는 waiver나 위험 수용이 있다면 가벼운 채팅 문장만으로 waiver가 기록된 것처럼 다루면 안 됩니다. 남은 위험을 안고 close하자고 요청한다면 먼저 남은 한계를 보여준 뒤, 그 위험을 이 Task에서 수용하는지 물어야 합니다.
+
+적용 예시:
+
+- Direct 문서 또는 copy 수정: 변경 경로, diff 또는 patch summary, self-check가 주장을 뒷받침할 수 있습니다. 이를 detached verification이라고 부르면 안 되며, 변경된 surface가 사람의 확인을 필요로 하지 않는 한 Manual QA가 필요한 것은 아닙니다.
+- UI/UX 작업: 테스트와 browser smoke는 렌더링이나 동작 주장을 뒷받침할 수 있습니다. Layout, interaction feel, copy, accessibility 해석은 여전히 Manual QA가 확인하는 영역입니다. QA waiver는 생략한 대상, 수용하는 위험, 후속 작업, 관련 refs, close 영향을 이름 붙여야 합니다.
+- Auth 또는 security 작업: Approval은 secret 접근, 권한 변경, auth 파일 쓰기를 허용할 수 있습니다. 하지만 role, redaction, audit trail, session model, lockout behavior, user notice를 결정한다면 security 또는 product 선택에는 여전히 Decision Packet이 필요합니다.
+- Public API 작업: 테스트 통과는 동작을 뒷받침하지만 compatibility, caller impact, migration path, documentation promise에는 Decision Packet과 independent verification이 필요할 수 있습니다.
+- Risk-accepted close: 에이전트는 존재하는 근거, 빠졌거나 면제된 verification 또는 QA, 남은 한계, 수용된 위험, 후속 작업을 보여줘야 합니다. 위험 수용으로 닫는 것은 detached verified로 닫는 것과 다릅니다.
 
 ## 닫기 체크리스트
 
@@ -287,9 +297,9 @@ flowchart LR
 
 - 결과가 합의한 범위와 맞습니다.
 - 필요한 근거가 있거나, 이 작업에는 근거가 필요하지 않습니다.
-- 검증이 필요 없거나, 통과했거나, 기록된 위험과 함께 명시적으로 면제되었습니다.
-- Manual QA가 필요 없거나, 통과/완료되었거나, 타당하게 면제되었습니다.
-- 알려진 닫기에 영향을 주는 남은 위험이 표시되었거나, 에이전트가 `ResidualRiskSummary.status=none`이라고 보고했습니다.
+- 검증이 이 작업 경로에서 기대되지 않거나, 완료되었거나, 기록된 위험과 함께 명시적으로 면제되었습니다.
+- Manual QA가 필요 없거나, 완료되었거나, 타당하게 면제되었습니다.
+- 알려진 닫기에 영향을 주는 남은 위험이 표시되었거나, 에이전트가 알려진 close-relevant residual risk가 없다고 보고했습니다.
 - 최종 수용이 필요한 경우 승인이 아니라 별도 수용으로 요청되었습니다.
 
 닫을 때 쓸 수 있는 말:

@@ -13,6 +13,7 @@
 - artifact 참조
 - escalation flag
 - close assurance
+- 해당되는 경우 근거, 검증, Manual QA, 수용, Residual Risk 관련 close 영향 요약
 
 ## 렌더링 섹션
 
@@ -22,6 +23,7 @@
 - Checks And Validator Outcomes
 - Outcome
 - Assurance
+- close 영향 요약
 - Escalation
 - Evidence Refs
 
@@ -77,6 +79,14 @@ updated_at: 2026-05-06T09:40:00+09:00
 - meaning:
 - detached verify needed:
 
+## close 영향 요약
+- 근거:
+- 검증:
+- Manual QA:
+- 수용:
+- Residual Risk:
+- 후속 작업:
+
 ## Escalation
 - escalated_to_work: yes | no
 - reason:
@@ -84,12 +94,14 @@ updated_at: 2026-05-06T09:40:00+09:00
 ## Evidence Refs
 - logs:
 - diff:
-- follow-up report:
-- omitted or blocked artifact impact:
+- 후속 보고서:
+- 생략/차단 artifact 영향:
 ````
 
 ## 메모
 
-Policy 또는 user가 detached verification 또는 다른 gate를 요구하지 않으면 direct work는 기본적으로 self-checked 상태로 close될 수 있습니다. Consumed Write Authorization 참조를 표시할 수 있지만, projection이 기준 authorization 기록이 되는 것은 아닙니다.
+정책 또는 사용자가 detached verification 또는 다른 gate를 요구하지 않으면 direct work는 기본적으로 self-checked 상태로 close될 수 있습니다. Consumed Write Authorization 참조를 표시할 수 있지만, projection이 기준 authorization 기록이 되는 것은 아닙니다.
 
-Direct result artifact ref는 redaction state를 visible하게 유지해야 합니다. `secret_omitted`는 visible nonsecret evidence만 뒷받침하고, `blocked`는 replacement, waiver, Decision Packet outcome, accepted risk, documented fallback으로 해소될 때까지 raw input이 unavailable하다는 뜻입니다.
+Direct Result의 checks와 tests는 evidence 또는 self-check 맥락입니다. 조건을 충족하는 Eval 없이는 detached verification이 되지 않고, Manual QA 결과 또는 유효한 waiver 없이는 Manual QA가 되지 않으며, 최종 수용을 암시하지도 않습니다. Direct work가 위험 수용으로 close된다면 close 영향 요약은 결과를 detached verified처럼 보여주는 대신 필요한 판단 경로, Residual Risk refs, 후속 작업을 가리켜야 합니다.
+
+Direct Result의 ArtifactRef는 `redaction_state`를 보이게 유지해야 합니다. `secret_omitted`는 visible nonsecret evidence만 뒷받침하고, `blocked`는 replacement, waiver, Decision Packet outcome, accepted risk, documented fallback으로 해소될 때까지 raw input이 unavailable하다는 뜻입니다.

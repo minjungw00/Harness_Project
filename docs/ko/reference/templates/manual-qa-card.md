@@ -12,6 +12,8 @@
 - 대상 screen 또는 flow
 - checklist item
 - 예상 screenshot, walkthrough note, browser log 근거
+- QA가 면제되거나 미뤄질 때 Decision Packet 또는 필요한 판단 경로 참조와 Residual Risk 참조
+- 검증, 수용, close 영향 요약
 
 ## 렌더링 섹션
 
@@ -22,6 +24,8 @@
 - 대상
 - checklist
 - 기록할 근거
+- close 맥락
+- 면제 경로
 - 결과 안내
 
 ## 전체 템플릿
@@ -42,11 +46,27 @@ Checklist:
 - browser log when relevant
 - redaction/omission/block note when evidence cannot be recorded as raw content
 
-QA result를 기록하시겠습니까?
+close 맥락:
+- 자동 검사: {check_refs|none; Manual QA 결과 아님}
+- 검증 영향: {verification_impact}
+- 수용 영향: {acceptance_impact}
+- Residual Risk 또는 후속 작업: {residual_risk_or_follow_up|none}
+
+면제 경로:
+- 생략한 Manual QA 대상:
+- 수용하는 위험:
+- 후속 작업:
+- 관련 refs:
+- close 영향:
+- 판단 경로: {decision_packet_or_required_judgment_ref|면제를 사용자 소유 판단으로 다루기 전에 필요}
+
+Manual QA 결과를 기록하거나, QA waiver를 필요한 판단 경로로 처리하시겠습니까?
 ````
 
 ## 메모
 
 이 template은 렌더링 결과인 카드 형태일 뿐 기준 QA 상태가 아닙니다. `qa_gate`는 close-relevant gate로 남습니다.
 
-Artifact가 `secret_omitted` 또는 `blocked`라면 이 card는 replacement evidence 또는 waiver path를 요청할 수 있지만, omitted value 또는 blocked raw capture content를 표시하면 안 됩니다.
+Manual QA는 사람이 확인한 기록입니다. 테스트 통과, browser smoke, screenshot capture, 검증, 사용자 수용은 close 맥락을 뒷받침할 수 있지만, Manual QA 결과가 기록되었거나 필요한 판단 경로를 통해 유효한 QA waiver가 수용된 경우가 아니면 Manual QA가 되지 않습니다. Waiver에 close 영향이나 위험 수용이 걸려 있는 경우 가벼운 채팅 문장만으로는 충분하지 않습니다.
+
+Artifact가 `secret_omitted` 또는 `blocked`라면 이 card는 replacement evidence 또는 면제 경로를 요청할 수 있지만, omitted value 또는 blocked raw capture content를 표시하면 안 됩니다.

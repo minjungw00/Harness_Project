@@ -140,7 +140,7 @@ Useful examples:
 - Dependency or migration choice: compare adding a dependency, using existing utilities, or postponing the capability; for schema/data-model migration, compare additive migration, compatibility shim, and breaking cleanup. Explain blast radius, rollback, test boundary, and maintenance cost.
 - Public API/interface or module boundary: compare preserving the current interface, adding a narrow extension, or moving responsibility across a module boundary. Explain caller impact, compatibility risk, boundary tests, and future-change cost.
 - Security-sensitive change: approval to access a secret, change permissions, or export data is only an approval boundary. Separate product or security judgment may still be needed for roles, fields, redaction, audit logging, retention, rollback, and user notice.
-- QA or verification waiver: name the skipped check, accepted risk, and follow-up. Example: waive mobile Safari Manual QA for a copy-only change, accept wrapping risk, and keep a browser pass as release follow-up.
+- QA or verification waiver: use the Decision Packet or required recorded judgment path for the task, and name the skipped check or surface, accepted risk, follow-up, relevant refs, and close impact. Example: waive mobile Safari Manual QA for a copy-only change, accept wrapping risk, and keep a browser pass as release follow-up.
 - Residual-risk acceptance before close: show the remaining limitation, the evidence that does exist, why close can still be acceptable, and the follow-up that remains.
 
 Ask one blocking question at a time when possible.
@@ -184,13 +184,29 @@ Use refs-first evidence display. Cite Evidence, Run, Eval, Manual QA, artifact, 
 
 Keep these separate in the agent response.
 
-Verification answers how the work was technically checked. Same-session self-review is useful, but it is not detached verification.
+| Item | What the user should understand |
+|---|---|
+| Evidence | What supports the claim that a result or acceptance criterion was met. |
+| Verification | What checked correctness, and whether the verifier was independent enough for detached assurance. |
+| Manual QA | What a person inspected because human judgment matters. |
+| Acceptance | Whether the user accepts the result when that judgment is required. |
+| Residual risk | What uncertainty, limitation, unchecked condition, or trade-off remains. |
 
-Manual QA answers whether a person inspected qualities that need human judgment, such as UX, workflow, visual result, copy, or accessibility interpretation.
+Verification answers how the work was technically checked. Same-session self-review is useful, but it is not detached verification. Passing tests can be evidence and can support verification, but tests alone do not prove Manual QA happened.
 
-Residual risk is a known remaining limitation, uncertainty, unchecked condition, or trade-off. It must be visible before risk-accepted close or final acceptance.
+Manual QA answers whether a person inspected qualities that need human judgment, such as UX, workflow, visual result, copy, or accessibility interpretation. Do not present a browser smoke run, screenshot capture, or verifier note as Manual QA unless a Manual QA result was actually recorded or validly waived.
 
-Final acceptance is the user's acceptance of the result when the task path requires it. It is not the same as approval, verification, QA, or residual-risk acceptance.
+Residual risk is a known remaining limitation, uncertainty, unchecked condition, or trade-off. It must be visible before risk-accepted close or final acceptance. Risk acceptance does not upgrade assurance and does not replace verification or QA.
+
+Final acceptance is the user's acceptance of the result when the task path requires it. It is not the same as approval, verification, QA, residual-risk acceptance, or proof of correctness.
+
+Applied close examples:
+
+- Direct work: show changed files, evidence refs, self-check, and whether anything escalated. Do not call it detached verified without a qualifying Eval.
+- UI/UX work: keep tests, browser smoke, Manual QA, and acceptance on separate lines. If Manual QA is waived, show the skipped surface, accepted risk, and follow-up.
+- Auth or security work: show approval separately from the security or product decision, then show evidence and verification. Approval to touch a secret or permission does not settle redaction, audit, role, retention, or user-notice choices.
+- Public API work: show caller compatibility, migration or documentation impact, evidence, and verification separately. Passing tests does not by itself settle the API contract decision.
+- Risk-accepted close: show the limitation, existing evidence, missing or waived verification or QA, accepted risk, and follow-up. Do not present the result as detached verified.
 
 ## Close
 
@@ -202,7 +218,7 @@ Before successful close, show or confirm:
 - evidence coverage or no evidence requirement
 - verification status or accepted verification risk
 - Manual QA status or valid waiver
-- close-relevant residual risk shown or `ResidualRiskSummary.status=none`
+- close-relevant residual risk shown or no known close-relevant residual risk reported
 - final acceptance recorded when required
 
 If close is blocked, say exactly why and name the smallest next unblocker.
@@ -236,13 +252,19 @@ Need approval to continue.
 Good close block:
 
 ```text
-Close is blocked by Manual QA for the onboarding copy and missing AC-02 evidence. Smallest unblocker: run the browser smoke check and record whether the copy is acceptable.
+Close is blocked by Manual QA for the onboarding copy and missing AC-02 evidence. Smallest unblocker: run the browser smoke check and record a Manual QA result for whether the copy is acceptable.
 ```
 
 Bad close block:
 
 ```text
 The state model does not satisfy gates.
+```
+
+Bad close claim:
+
+```text
+Tests passed, so Manual QA and acceptance are complete.
 ```
 
 Good write hold:
