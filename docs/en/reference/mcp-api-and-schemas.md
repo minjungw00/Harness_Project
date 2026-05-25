@@ -283,7 +283,9 @@ For the reference implementation, `uri` uses `harness-artifact://{project_id}/{a
 | `none` | No redaction, omission, or blocking was applied because the registered bytes are allowed evidence under the current policy. |
 | `redacted` | Sensitive content was removed before storage; the unredacted original is not available through Harness. |
 | `secret_omitted` | Secret values or PII are intentionally omitted or replaced by handles. The artifact may support claims whose nonsecret evidence remains visible, but it cannot prove the omitted values themselves. |
-| `blocked` | Capture or registration was blocked for forbidden content. Only a metadata notice may be exposed; evidence, QA, verification, projection, and export displays must show the block instead of implying the raw artifact is available. |
+| `blocked` | Capture or raw-payload storage was blocked for forbidden content. When Core records a blocked artifact ref, only a metadata notice may be exposed; evidence, QA, verification, projection, and export displays must show the block instead of implying the raw artifact is available. |
+
+For `redacted`, `secret_omitted`, and `blocked`, `sha256`, `size_bytes`, and `content_type` describe the committed safe stored bytes, not a hidden original. For `blocked`, those bytes are the metadata-only notice that Core committed for audit and downstream display; they are never the forbidden raw payload.
 
 Requests that create or attach evidence use `ArtifactInput`. A request may either reference an existing committed artifact or provide a staged file for Core to validate, register, and return as an `ArtifactRef`.
 
@@ -319,13 +321,16 @@ Rules:
 - When an existing artifact is attached to a new record, Core verifies the artifact's task relation and rejects incompatible reuse.
 - `staged_uri` is a locator for a Harness staging location or an approved capture adapter output, not permission to read an arbitrary file. Absolute paths, parent traversal, symlink escapes, repo-local paths, and caller-supplied URIs are untrusted unless the staging or capture adapter has already canonicalized them into an approved source.
 - `staged_uri`, `display_name`, and supplied `content_type` are untrusted input until Core has validated the staging or capture source, stored bytes, redaction state, and owner relation.
-- If `expected_sha256` or `expected_size_bytes` is present, Core verifies the stored bytes before commit. Whether or not those fields are supplied, Core records committed `sha256`, `size_bytes`, and `content_type` from the stored bytes.
+- If `expected_sha256` or `expected_size_bytes` is present, Core verifies the stored bytes before commit. Whether or not those fields are supplied, Core records committed `sha256`, `size_bytes`, and `content_type` from the safe stored bytes after any redaction, omission, or blocking.
 - Core applies redaction, omission, or blocking policy before final storage and records the committed artifact as an `ArtifactRef`.
 - Logs, screenshots, network traces, export snapshots, and other captured evidence that may contain secrets or PII must be redacted, omitted, or blocked before registration when policy requires it.
 - If policy requires omission or blocking, the committed ref records `redaction_state=secret_omitted` or `redaction_state=blocked`; callers must not treat omitted or blocked bytes as available evidence, QA material, verification input, projection body text, or export payload.
+- A `blocked` metadata-only notice is still a committed registered artifact record when Core records it. The artifact ref, hash, size, content type, owner relation, and retention class apply to the safe notice bytes and preserve audit/display continuity without making forbidden raw bytes available.
 - Tool responses return committed `ArtifactRef` values in `registered_artifacts`, `bundle_ref`, or other response fields. Responses must not echo `staged_uri` as authority or as a durable evidence URI.
 - `relation.record_kind` must name an existing canonical owner record or rendered projection ref that Core can validate. For non-projection owners in MVP, the concrete owner row must be Task-scoped to `relation.task_id`; project-scoped rows of the same owner kind are not artifact-link targets until a future extension adds project-scoped artifact storage/API. Verification bundles use `ArtifactRef.kind=bundle` or `manifest`; export outputs use `ArtifactRef.kind=export_component` or `retention_class=export`. Neither `verification_bundle` nor `export` is an MVP artifact relation record kind.
 - `relation.record_kind=projection` is valid only for an already rendered or committed Task-scoped projection output that Core can resolve through `projection_jobs`. In MVP, `record_id_hint` names `projection_jobs.projection_job_id`, and the job's `task_id` must match `relation.task_id`; Core may use `target_ref` and `output_path` to validate the hint, but those values do not replace the job id as identity. Project-level projection jobs may still exist where owner docs allow them, but the current MVP artifact API does not register project-scoped artifact links for them.
+
+Downstream consumers must carry the same meaning. Evidence Manifest, Manual QA, Eval, projection, export, Release Handoff, doctor, and artifact integrity displays may show refs, hashes, safe omission notes, handles, or blocked notices, but they must not inline, reconstruct, summarize, or export omitted or blocked raw values. `secret_omitted` may satisfy claims whose nonsecret evidence remains visible; it must leave claims that require omitted values unsupported or insufficient. `blocked` means the attempted input is unavailable for evidence, QA, verification, projection, export, or Release Handoff until a replacement artifact, compatible waiver, Decision Packet outcome, accepted risk, or other documented resolution closes that path.
 
 Record or projection references use `StateRecordRef`, not `ArtifactRef`:
 
@@ -1143,6 +1148,8 @@ TddTraceUpdate:
 
 The `payload` branch must match `kind`; all other branches must be `null` or absent. `ArtifactInput` values are resolved during the same Core transaction; response fields contain the committed `ArtifactRef` values. Change Unit creation and update for MVP happens through `kind=shaping_update` with `change_unit_updates`; `operation=create` creates a `change_units` record, and `operation=select_active` updates the Task's `active_change_unit_id`. `allowed_paths`, `allowed_tools`, `allowed_commands`, `allowed_network_targets`, `secret_scope`, and `sensitive_categories` are scope fields. `autonomy_profile`, `agent_may_do`, `user_judgment_required`, and `afk_stop_conditions` describe Autonomy Boundary judgment latitude only.
 
+Evidence updates that attach `secret_omitted` artifacts may support only the acceptance criteria or completion conditions proven by the remaining visible nonsecret evidence. Evidence updates that attach `blocked` artifacts preserve the attempted capture as a committed safe notice, but the blocked ref does not satisfy evidence that requires the forbidden raw payload; the related Evidence Manifest or gate remains unsupported, partial, blocked, or insufficient until a documented resolution supplies a valid path.
+
 Feedback Loop creation and definition happen through `ShapingUpdatePayload.feedback_loop_updates`. Execution evidence and status updates happen through `EvidenceUpdates.feedback_loop_updates`, or through `harness.record_manual_qa` when Manual QA is the selected loop. `operation=create` creates a canonical `feedback_loops` row and returns a `StateRecordRef` with `record_kind=feedback_loop`; public callers normally leave `feedback_loop_id` null for Core assignment, while executable fixture/import runners may supply a deterministic collision-free `FBL-*` ID. `operation=update` requires `feedback_loop_id` to name an existing feedback-loop row for the same Task and compatible Change Unit. On update, null scalar fields leave stored values unchanged, and ref arrays plus artifact inputs are additive. A TDD Trace may be listed in `tdd_trace_refs` when TDD is selected, but it remains execution evidence and does not replace the Feedback Loop row. If a TDD waiver is recorded, `TddTraceUpdate.non_tdd_justification` records the reason and the related `FeedbackLoopUpdate.alternate_loop` or selected-loop refs record the alternate feedback loop that will supply evidence.
 
 `write_authorization_id` references the compatible Write Authorization returned by `harness.prepare_write`. For `kind=implementation` and `kind=direct`, `write_authorization_id` is required unless the Run records no product write and Core classifies it as read-only evidence or shaping. For `kind=shaping_update`, `write_authorization_id` must be `null`; MVP does not support shaping updates that also record observed product writes, so those writes must be recorded as `kind=implementation` or `kind=direct` with a compatible authorization. For `kind=verification_input`, keep `write_authorization_id` `null`; verification input that creates product writes should normally be disallowed in MVP.
@@ -1361,7 +1368,7 @@ LaunchVerifyRequest:
   evaluator_focus: string[]
 ```
 
-`include_artifacts` references already registered evidence to include in or link from the bundle. `bundle_artifact_input` is optional; when it is `null`, Core assembles and registers the verification bundle. When it is present, Core validates and registers the supplied staged bundle instead.
+`include_artifacts` references already registered evidence to include in or link from the bundle. `bundle_artifact_input` is optional; when it is `null`, Core assembles and registers the verification bundle. When it is present, Core validates and registers the supplied staged bundle instead. `secret_omitted` entries are included as refs plus omission notes or handles; `blocked` entries are included only as unavailable-input notices and may cause `EVIDENCE_INSUFFICIENT` unless the verification path records a replacement, waiver, Decision Packet outcome, accepted risk, or other documented resolution.
 
 The returned `bundle_ref` is an `ArtifactRef`, usually with `kind=bundle` or `kind=manifest`. Its artifact link must point to an existing owner record such as the Task, launching Run, Evidence Manifest, Eval, or a rendered Task-scoped projection; it does not create a `verification_bundle` state record.
 
@@ -1428,6 +1435,8 @@ RecordEvalRequest:
 
 Core may derive `change_unit_id` from `target_run_id` or the evidence bundle when it is omitted, but supplying it explicitly improves projection and template alignment when the Eval applies to a Change Unit.
 
+Eval evidence review must preserve artifact redaction semantics. A `secret_omitted` artifact can support an Eval finding only for visible nonsecret facts. A `blocked` artifact is reviewed as an unavailable input notice, not as raw evidence; an Eval that depends on the blocked payload must be `blocked` or `inconclusive`, or return `EVIDENCE_INSUFFICIENT`, until a valid replacement or documented resolution exists.
+
 Response schema:
 
 ```yaml
@@ -1491,6 +1500,8 @@ RecordManualQaRequest:
 For `result=waived`, product/user risk or policy-required judgment requires a `qa_waiver` Decision Packet referenced by `waiver_decision_packet_ref`. `waiver_reason` alone is allowed only for a low-risk waiver when policy permits it.
 
 When Manual QA is the selected Feedback Loop, `feedback_loop_ref` should reference the canonical `feedback_loops` row with `record_kind=feedback_loop`. Core records the Manual QA row, appends the resulting Manual QA ref and registered artifacts to that Feedback Loop, and updates its status to `executed`, `blocked`, or `waived` according to the QA result. This link updates execution evidence only; it does not create the selected-loop definition.
+
+Manual QA artifact refs follow the same downstream rule as other evidence. `secret_omitted` QA artifacts may support observable workflow or UI findings while leaving omitted values unproven. `blocked` QA capture artifacts mark the screenshot, log, trace, or recording input unavailable; the QA record or aggregate `qa_gate` must show blocked, failed, pending, waived, or otherwise unresolved impact unless a replacement capture, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the QA path.
 
 Response schema:
 

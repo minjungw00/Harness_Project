@@ -83,8 +83,11 @@ updated_at: 2026-05-06T09:40:00+09:00
 - logs:
 - diff:
 - follow-up report:
+- omitted or blocked artifact impact:
 ````
 
 ## 메모
 
 Policy 또는 user가 detached verification 또는 다른 gate를 요구하지 않으면 direct work는 기본적으로 self-checked 상태로 close될 수 있습니다. Consumed Write Authorization 참조를 표시할 수 있지만, projection이 기준 authorization 기록이 되는 것은 아닙니다.
+
+Direct result artifact ref는 redaction state를 visible하게 유지해야 합니다. `secret_omitted`는 visible nonsecret evidence만 뒷받침하고, `blocked`는 replacement, waiver, Decision Packet outcome, accepted risk, documented fallback으로 해소될 때까지 raw input이 unavailable하다는 뜻입니다.

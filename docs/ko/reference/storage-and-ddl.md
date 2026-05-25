@@ -616,7 +616,7 @@ CREATE TABLE artifacts (
   sha256 TEXT NOT NULL,
   size_bytes INTEGER NOT NULL,
   content_type TEXT NOT NULL,
-  redaction_state TEXT NOT NULL,
+  redaction_state TEXT NOT NULL CHECK (redaction_state IN ('none', 'redacted', 'secret_omitted', 'blocked')),
   produced_by TEXT NOT NULL,
   retention_class TEXT NOT NULL,
   created_at TEXT NOT NULL
@@ -1064,7 +1064,7 @@ MVP registration steps:
 1. Connector-captured 또는 operator-supplied file은 project artifact `tmp/` directory 아래 canonical staging path나 approved capture adapter에서만 받습니다.
 2. Hashing 전에 redaction, omission, blocking을 적용합니다. Raw secrets와 허용되지 않은 PII는 durable artifact storage로 복사하면 안 됩니다.
 3. Stored bytes를 matching kind directory 아래 `{task_id}/{run_id-or-record_id}/{artifact_id}-{kind}.{ext}` 형식으로 artifact directory에 move 또는 copy합니다.
-4. Stored bytes에서 `sha256`, `size_bytes`, `content_type`, `redaction_state`를 계산합니다.
+4. Safe stored bytes에서 `sha256`, `size_bytes`, `content_type`, `redaction_state`를 계산합니다. `blocked`에서는 이 bytes가 금지된 capture payload가 아니라 metadata-only notice입니다.
 5. Related state record를 기록하고 `task_events`에 추가하는 같은 Core transaction에서 `artifacts` row와 required `artifact_links` row를 insert합니다.
 6. Artifact registry row를 통해 해석되는 `uri`를 가진 `ArtifactRef`를 반환합니다.
 7. File move는 성공했지만 transaction이 실패했다면 file을 `tmp/`에 남기거나 `recover`를 위해 orphaned로 표시합니다. Committed artifact ref나 artifact link를 만들면 안 됩니다.
@@ -1097,8 +1097,8 @@ sequenceDiagram
 |---|---|---|
 | `none` | original non-sensitive evidence | Hash와 size는 등록된 bytes를 기준으로 합니다. Export 또는 verification bundle에 raw로 포함할 수 있는지는 여전히 retention과 export policy가 결정합니다. |
 | `redacted` | redacted evidence; the unredacted original is not retained by the harness | Hash와 size는 redacted bytes만 기준으로 합니다. |
-| `secret_omitted` | secret value 또는 PII를 생략하거나 handle로 대체한 evidence | Omission note 또는 handle만 저장합니다. 생략된 raw value는 artifact storage, projection snapshot, verification bundle, export bundle로 복사하지 않습니다. |
-| `blocked` | capture가 차단되었음을 설명하는 작은 metadata-only notice artifact | 금지된 내용은 저장하지 않습니다. Owner 기록은 audit을 위해 blocked ref를 유지할 수 있지만, artifact bytes는 available evidence가 아닙니다. |
+| `secret_omitted` | secret value 또는 PII를 생략하거나 handle로 대체한 evidence | Omission note 또는 handle만 저장합니다. 생략된 raw value는 artifact storage, projection snapshot, verification bundle, export bundle로 복사하지 않습니다. Hash, size, content type은 safe stored bytes만 기준으로 합니다. |
+| `blocked` | capture가 차단되었음을 설명하는 작은 metadata-only notice artifact | 금지된 내용은 저장하지 않습니다. Core가 이를 기록했다면 notice는 여전히 committed registered artifact record입니다. `sha256`, `size_bytes`, `content_type`은 notice bytes를 기준으로 합니다. Owner 기록은 audit을 위해 blocked ref를 유지할 수 있지만, artifact bytes는 available evidence가 아닙니다. |
 
 Evidence sufficiency, Manual QA, verification, projection, export reader는 committed `ArtifactRef`와 `redaction_state`를 함께 사용합니다. `secret_omitted`는 secret이 아닌 evidence가 남아 있는 주장을 뒷받침할 수 있지만 생략된 bytes가 필요한 주장은 뒷받침할 수 없습니다. `blocked`는 시도된 capture를 audit용으로 보이게 하되, owner flow가 replacement, waiver, Decision Packet outcome, 또는 다른 documented resolution을 기록하기 전까지 related evidence, QA, verification, projection display, export component를 blocked 또는 insufficient 상태로 남깁니다.
 

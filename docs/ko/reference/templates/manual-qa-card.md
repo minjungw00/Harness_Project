@@ -39,6 +39,7 @@ Checklist:
 기록할 evidence:
 - screenshot or walkthrough note
 - browser log when relevant
+- redaction/omission/block note when evidence cannot be recorded as raw content
 
 QA result를 기록하시겠습니까?
 ````
@@ -46,3 +47,5 @@ QA result를 기록하시겠습니까?
 ## 메모
 
 이 template은 렌더링 결과인 카드 형태일 뿐 기준 QA 상태가 아닙니다. `qa_gate`는 close-relevant gate로 남습니다.
+
+Artifact가 `secret_omitted` 또는 `blocked`라면 이 card는 replacement evidence 또는 waiver path를 요청할 수 있지만, omitted value 또는 blocked raw capture content를 표시하면 안 됩니다.

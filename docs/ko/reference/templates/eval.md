@@ -14,7 +14,7 @@
 - performed check
 - 검토한 evidence
 - blocker
-- artifact ref
+- artifact ref와 redaction state, input availability
 
 ## 렌더링 섹션
 
@@ -27,6 +27,7 @@
 - Design Quality Review
 - Rationale
 - Blockers Or Rework
+- Redaction And Availability
 - User Follow-Up
 
 ## 전체 템플릿
@@ -67,7 +68,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - product file write allowed:
 - baseline verified:
 - repo drift observed:
-- source input: chat_history | task_summary | bundle | raw_artifacts
+- source input: chat_history | task_summary | bundle | allowed_raw_artifacts | refs_with_redaction_notes
 - source bundle:
 - parent run:
 
@@ -119,6 +120,12 @@ updated_at: 2026-05-06T10:05:00+09:00
 - approvals:
 - decisions:
 
+## Redaction And Availability
+| Artifact Ref | Redaction State | Verification Effect | Note |
+|---|---|---|---|
+| ART-EVAL-0001 | secret_omitted | visible nonsecret fact 검토; omitted value는 증명 안 됨 | |
+| ART-EVAL-0002 | blocked | unavailable input; verdict가 raw payload에 의존하면 안 됨 | |
+
 ## Acceptance Criteria Review
 | AC ID | Statement | Evidence Reviewed | Result | Notes |
 |---|---|---|---|---|
@@ -149,3 +156,5 @@ updated_at: 2026-05-06T10:05:00+09:00
 ## 메모
 
 Eval verdict만으로는 assurance를 높일 수 없습니다. `detached_verified`에는 valid independence, passed verification, same-session self-review violation 부재가 필요합니다.
+
+Eval projection은 omitted 또는 blocked raw bytes를 검토한 것처럼 암시하면 안 됩니다. `secret_omitted` evidence는 visible nonsecret claim만 뒷받침할 수 있습니다. Eval이 `blocked` payload에 의존한다면 replacement, waiver, Decision Packet outcome, accepted risk, documented fallback이 verification path를 해소할 때까지 result는 `blocked` 또는 `inconclusive`로 남거나 `EVIDENCE_INSUFFICIENT`를 surface해야 합니다.

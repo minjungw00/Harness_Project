@@ -155,6 +155,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - TDD GREEN evidence:
 - TDD refactor/check evidence:
 - expected artifact refs:
+- omitted or blocked artifact impact:
 - stale or missing evidence:
 
 ## Residual Risk
@@ -365,3 +366,5 @@ Stewardship Impact in `TASK` is the `StewardshipImpactSummary` display derived f
 Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from or aligned with current Task and Change Unit state. It does not authorize product writes, expand scope, satisfy approval, create evidence, mutate state when edited, or replace `prepare_write`.
 
 Review Stages in `TASK` are managed display sections. They do not satisfy gates, authorize writes, accept risk, close the task, or create `detached_verified` assurance.
+
+Artifact refs shown in `TASK`, Journey, evidence, and report sections must preserve redaction state. `secret_omitted` refs may support only visible nonsecret evidence; `blocked` refs show committed safe notices and unavailable input rather than raw content.

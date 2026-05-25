@@ -11,7 +11,7 @@ acceptance criteria와 completion condition이 어떤 supporting evidence로 뒷
 - changed file coverage
 - design-quality coverage
 - approval 참조
-- artifact 참조
+- artifact 참조와 redaction state, downstream evidence impact
 - 관련 Run, Eval, Feedback Loop, Manual QA, TDD trace 참조
 
 ## 렌더링 섹션
@@ -23,6 +23,7 @@ acceptance criteria와 completion condition이 어떤 supporting evidence로 뒷
 - Design Quality Coverage
 - Approval Refs
 - Evidence Refs
+- Redaction And Availability
 - Stale If
 
 ## 전체 템플릿
@@ -50,6 +51,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 ## Summary
 - evidence state:
 - unsupported criteria:
+- omitted or blocked evidence impact:
 - stale conditions:
 - next evidence action:
 
@@ -98,6 +100,12 @@ updated_at: 2026-05-06T09:50:00+09:00
 - tests:
 - build:
 
+## Redaction And Availability
+| Artifact Ref | Redaction State | Evidence Effect | Note |
+|---|---|---|---|
+| ART-0001 | secret_omitted | visible nonsecret fact만 지원 | |
+| ART-0002 | blocked | unavailable input; claim은 해소 전까지 insufficient | |
+
 ## Stale If
 - baseline head changes
 - changed files are modified after eval
@@ -110,3 +118,5 @@ updated_at: 2026-05-06T09:50:00+09:00
 ## 메모
 
 Evidence가 필요한 경우 close 판단은 보고서 문장만이 아니라 기준 `evidence_gate`를 따릅니다.
+
+`secret_omitted` artifact는 secret이 아닌 evidence가 visible한 주장만 뒷받침할 수 있으며, omitted value가 필요한 주장은 뒷받침하지 못합니다. `blocked` artifact는 committed safe notice이지 available raw evidence가 아닙니다. Dependent criteria는 replacement, waiver, Decision Packet outcome, accepted risk, documented fallback이 evidence path를 해소할 때까지 unsupported, insufficient, blocked 중 적절한 상태로 남습니다. 이 template은 omitted secret/PII value 또는 blocked payload bytes를 포함하면 안 됩니다.

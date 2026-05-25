@@ -285,7 +285,9 @@ Reference implementation에서 `uri`는 `harness-artifact://{project_id}/{artifa
 | `none` | 현재 policy에서 등록된 bytes를 evidence로 사용할 수 있어 redaction, omission, blocking을 적용하지 않았다는 뜻입니다. |
 | `redacted` | 저장 전에 민감한 내용이 제거되었습니다. Harness를 통해 unredacted original에 접근할 수 없습니다. |
 | `secret_omitted` | Secret value 또는 PII를 의도적으로 생략하거나 handle로 대체했습니다. Secret이 아닌 evidence가 남아 있는 주장에는 도움이 될 수 있지만, 생략된 값 자체를 증명하는 evidence는 아닙니다. |
-| `blocked` | 금지된 내용 때문에 capture 또는 등록이 차단되었습니다. Metadata notice만 노출될 수 있으며 evidence, QA, verification, projection, export display는 raw artifact가 available한 것처럼 보이지 않게 차단 상태를 표시해야 합니다. |
+| `blocked` | 금지된 내용 때문에 capture 또는 raw payload 저장이 차단되었습니다. Core가 blocked artifact ref를 기록했다면 metadata notice만 노출될 수 있으며 evidence, QA, verification, projection, export display는 raw artifact가 available한 것처럼 보이지 않게 차단 상태를 표시해야 합니다. |
+
+`redacted`, `secret_omitted`, `blocked`에서 `sha256`, `size_bytes`, `content_type`은 숨겨진 원본이 아니라 committed safe stored bytes를 설명합니다. `blocked`의 경우 이 bytes는 Core가 audit과 downstream display를 위해 commit한 metadata-only notice이며, 금지된 raw payload가 아닙니다.
 
 Evidence를 만들거나 연결하는 request는 `ArtifactInput`을 사용합니다. Request는 기존 committed artifact를 reference하거나, Core가 검증하고 등록한 뒤 `ArtifactRef`로 반환할 staged file을 제공할 수 있습니다.
 
@@ -321,13 +323,16 @@ Rules:
 - Existing artifact를 새 record에 attach할 때 Core는 artifact의 task relation을 verify하고 incompatible reuse를 reject합니다.
 - `staged_uri`는 Harness staging location 또는 approved capture adapter output을 가리키는 locator이지, 임의 파일을 읽어도 된다는 권한이 아닙니다. Absolute path, parent traversal, symlink escape, repo-local path, caller-supplied URI는 staging 또는 capture adapter가 approved source로 canonicalize하기 전까지 신뢰하지 않습니다.
 - `staged_uri`, `display_name`, supplied `content_type`은 Core가 staging 또는 capture source, stored bytes, redaction state, owner relation을 검증하기 전까지 trusted input이 아닙니다.
-- `expected_sha256` 또는 `expected_size_bytes`가 있으면 Core는 commit 전에 stored bytes를 확인합니다. 이 field가 제공되었는지와 무관하게 Core는 stored bytes에서 committed `sha256`, `size_bytes`, `content_type`을 기록합니다.
+- `expected_sha256` 또는 `expected_size_bytes`가 있으면 Core는 commit 전에 stored bytes를 확인합니다. 이 field가 제공되었는지와 무관하게 Core는 redaction, omission, blocking이 적용된 뒤의 safe stored bytes에서 committed `sha256`, `size_bytes`, `content_type`을 기록합니다.
 - Core는 final storage 전에 redaction, omission, blocking policy를 적용하고 committed artifact를 `ArtifactRef`로 기록합니다.
 - Secret 또는 PII를 포함할 수 있는 log, screenshot, network trace, export snapshot, 기타 captured evidence는 policy가 요구할 때 registration 전에 redacted, omitted, 또는 blocked 상태가 되어야 합니다.
 - Policy가 omission 또는 blocking을 요구하면 committed ref는 `redaction_state=secret_omitted` 또는 `redaction_state=blocked`를 기록합니다. Caller는 생략되었거나 차단된 bytes를 available evidence, QA material, verification input, projection body text, export payload로 취급하면 안 됩니다.
+- Core가 기록한 `blocked` metadata-only notice는 여전히 committed registered artifact record입니다. Artifact ref, hash, size, content type, owner relation, retention class는 safe notice bytes에 적용되며, 금지된 raw bytes를 사용할 수 있게 만들지 않고 audit/display continuity를 보존합니다.
 - Tool response는 기록된 `ArtifactRef` 값을 `registered_artifacts`, `bundle_ref`, 기타 response field로 반환합니다. Response는 `staged_uri`를 권한이나 durable evidence URI처럼 다시 노출하면 안 됩니다.
 - `relation.record_kind`는 Core가 검증할 수 있는 기존 기준 owner 기록 또는 렌더링된 projection 참조를 이름으로 지정해야 합니다. MVP의 non-projection owner에서는 concrete owner row가 `relation.task_id`와 같은 Task scope여야 합니다. 같은 owner kind의 project-scoped row는 future extension이 project-scoped artifact storage/API를 추가하기 전까지 artifact-link target이 아닙니다. Verification bundle은 `ArtifactRef.kind=bundle` 또는 `manifest`를 사용합니다. Export output은 `ArtifactRef.kind=export_component` 또는 `retention_class=export`를 사용합니다. `verification_bundle`과 `export`는 MVP artifact relation record kind가 아닙니다.
 - `relation.record_kind=projection`은 Core가 `projection_jobs`를 통해 찾을 수 있는, 이미 렌더링되었거나 기록된 Task-scoped projection output에만 valid합니다. MVP에서 `record_id_hint`는 `projection_jobs.projection_job_id`를 이름으로 지정하고, job의 `task_id`는 `relation.task_id`와 일치해야 합니다. Core는 hint를 검증할 때 `target_ref`와 `output_path`를 사용할 수 있지만, 이 값들이 identity에서 job id를 대체하지 않습니다. Project-level projection job은 owner docs가 허용하는 곳에서 존재할 수 있지만, 현재 MVP artifact API는 이를 위한 project-scoped artifact link를 등록하지 않습니다.
+
+Downstream consumer도 같은 의미를 유지해야 합니다. Evidence Manifest, Manual QA, Eval, projection, export, Release Handoff, doctor, artifact integrity display는 ref, hash, safe omission note, handle, blocked notice를 보여줄 수 있지만 생략되었거나 차단된 raw value를 inline, reconstruct, summarize, export하면 안 됩니다. `secret_omitted`는 secret이 아닌 evidence가 visible한 주장만 충족할 수 있으며, 생략된 값이 필요한 주장은 unsupported 또는 insufficient로 남겨야 합니다. `blocked`는 replacement artifact, compatible waiver, Decision Packet outcome, accepted risk, 또는 다른 documented resolution이 그 경로를 해소하기 전까지 evidence, QA, verification, projection, export, Release Handoff에서 attempted input을 unavailable로 취급한다는 뜻입니다.
 
 Record 또는 projection references는 `ArtifactRef`가 아니라 `StateRecordRef`를 사용합니다.
 
@@ -1145,6 +1150,8 @@ TddTraceUpdate:
 
 `payload` branch는 `kind`와 일치해야 하며, 다른 branch는 `null`이거나 absent여야 합니다. `ArtifactInput` 값은 같은 Core transaction에서 찾고, response field에는 committed `ArtifactRef` 값이 들어갑니다. MVP에서 Change Unit creation과 update는 `kind=shaping_update`와 `change_unit_updates`를 통해 이뤄집니다. `operation=create`는 `change_units` record를 만들고, `operation=select_active`는 Task의 `active_change_unit_id`를 update합니다. `allowed_paths`, `allowed_tools`, `allowed_commands`, `allowed_network_targets`, `secret_scope`, `sensitive_categories`는 scope field입니다. `autonomy_profile`, `agent_may_do`, `user_judgment_required`, `afk_stop_conditions`는 Autonomy Boundary judgment latitude만 설명합니다.
 
+`secret_omitted` artifact를 attach하는 Evidence update는 남아 있는 visible nonsecret evidence로 증명되는 acceptance criteria 또는 completion condition만 지원할 수 있습니다. `blocked` artifact를 attach하는 Evidence update는 attempted capture를 committed safe notice로 보존하지만, forbidden raw payload가 필요한 evidence를 충족하지 않습니다. 관련 Evidence Manifest 또는 gate는 documented resolution이 valid path를 제공할 때까지 unsupported, partial, blocked, insufficient 중 적절한 상태로 남습니다.
+
 Feedback Loop creation과 definition은 `ShapingUpdatePayload.feedback_loop_updates`를 통해 이뤄집니다. Execution evidence와 status update는 `EvidenceUpdates.feedback_loop_updates` 또는 Manual QA가 selected loop일 때 `harness.record_manual_qa`를 통해 이뤄집니다. `operation=create`는 기준 `feedback_loops` row를 만들고 `record_kind=feedback_loop`인 `StateRecordRef`를 반환합니다. Public caller는 일반적으로 Core 할당을 위해 `feedback_loop_id`를 null로 두며, executable fixture/import runner는 deterministic collision-free `FBL-*` ID를 supply할 수 있습니다. `operation=update`는 `feedback_loop_id`가 같은 Task와 compatible Change Unit에 속한 existing feedback-loop row를 가리켜야 합니다. Update에서는 null scalar field가 stored value를 unchanged로 두고, ref array와 artifact input은 additive입니다. TDD가 selected되면 TDD Trace를 `tdd_trace_refs`에 둘 수 있지만, 이는 execution evidence로 남으며 Feedback Loop row를 대체하지 않습니다. TDD waiver가 기록되면 `TddTraceUpdate.non_tdd_justification`은 reason을 기록하고, 관련 `FeedbackLoopUpdate.alternate_loop` 또는 selected-loop ref는 evidence를 제공할 alternate feedback loop를 기록합니다.
 
 `write_authorization_id`는 `harness.prepare_write`가 반환한 compatible Write Authorization을 reference합니다. `kind=implementation`과 `kind=direct`에서는 Run이 product write를 기록하지 않고 Core가 read-only evidence 또는 shaping으로 classify하는 경우를 제외하면 `write_authorization_id`가 required입니다. `kind=shaping_update`에서는 `write_authorization_id`가 `null`이어야 합니다. MVP는 observed product write도 함께 기록하는 shaping update를 지원하지 않으므로, 그런 write는 compatible authorization과 함께 `kind=implementation` 또는 `kind=direct`로 record해야 합니다. `kind=verification_input`에서는 `write_authorization_id`를 `null`로 둡니다. Product write를 만드는 verification input은 MVP에서 보통 disallowed여야 합니다.
@@ -1367,7 +1374,7 @@ LaunchVerifyRequest:
   evaluator_focus: string[]
 ```
 
-`include_artifacts`는 bundle에 포함하거나 link할 already registered evidence를 reference합니다. `bundle_artifact_input`은 optional입니다. `null`이면 Core가 verification bundle을 assemble하고 등록합니다. 값이 있으면 Core가 supplied staged bundle을 검증하고 등록합니다.
+`include_artifacts`는 bundle에 포함하거나 link할 already registered evidence를 reference합니다. `bundle_artifact_input`은 optional입니다. `null`이면 Core가 verification bundle을 assemble하고 등록합니다. 값이 있으면 Core가 supplied staged bundle을 검증하고 등록합니다. `secret_omitted` entry는 ref와 omission note 또는 handle로 포함하고, `blocked` entry는 unavailable-input notice로만 포함합니다. Verification path가 replacement, waiver, Decision Packet outcome, accepted risk, 또는 다른 documented resolution을 기록하지 않는 한 이는 `EVIDENCE_INSUFFICIENT`로 이어질 수 있습니다.
 
 Returned `bundle_ref`는 보통 `kind=bundle` 또는 `kind=manifest`를 가진 `ArtifactRef`입니다. Artifact link는 Task, launching Run, Evidence Manifest, Eval, 렌더링된 Task-scoped projection 같은 existing owner 기록을 가리켜야 하며 `verification_bundle` state 기록을 만들지 않습니다.
 
@@ -1434,6 +1441,8 @@ RecordEvalRequest:
 
 `change_unit_id`가 omitted되면 Core가 `target_run_id` 또는 evidence bundle에서 도출할 수 있습니다. 하지만 Eval이 Change Unit에 적용되는 경우 explicit `change_unit_id`를 제공하면 projection과 template alignment가 더 좋아집니다.
 
+Eval evidence review는 artifact redaction semantics를 보존해야 합니다. `secret_omitted` artifact는 visible nonsecret fact에 대해서만 Eval finding을 뒷받침할 수 있습니다. `blocked` artifact는 raw evidence가 아니라 unavailable input notice로 검토됩니다. Blocked payload에 의존하는 Eval은 valid replacement 또는 documented resolution이 생길 때까지 `blocked` 또는 `inconclusive`여야 하거나 `EVIDENCE_INSUFFICIENT`를 반환해야 합니다.
+
 Response schema:
 
 ```yaml
@@ -1497,6 +1506,8 @@ Manual QA가 Change Unit에 적용되는 경우 `change_unit_id`를 제공해야
 `result=waived`에서 product/user risk 또는 policy-required judgment가 있으면 `waiver_decision_packet_ref`가 reference하는 `qa_waiver` Decision Packet이 필요합니다. `waiver_reason`만으로 가능한 경우는 policy가 허용한 low-risk waiver에 한정됩니다.
 
 Manual QA가 selected Feedback Loop인 경우 `feedback_loop_ref`는 `record_kind=feedback_loop`인 기준 `feedback_loops` row를 reference해야 합니다. Core는 Manual QA row를 record하고, resulting Manual QA 참조와 registered artifact를 그 Feedback Loop에 추가하며, QA result에 따라 status를 `executed`, `blocked`, 또는 `waived`로 업데이트합니다. 이 link는 execution evidence만 업데이트하며 selected-loop definition을 생성하지 않습니다.
+
+Manual QA artifact ref도 다른 evidence와 같은 downstream rule을 따릅니다. `secret_omitted` QA artifact는 omitted value를 증명하지 않고 visible workflow 또는 UI finding을 뒷받침할 수 있습니다. `blocked` QA capture artifact는 screenshot, log, trace, recording input이 unavailable하다는 표시입니다. Replacement capture, waiver, Decision Packet outcome, accepted risk, 또는 documented fallback이 QA path를 해소하지 않는 한 QA record 또는 aggregate `qa_gate`는 blocked, failed, pending, waived, 또는 unresolved impact를 보여야 합니다.
 
 Response schema:
 

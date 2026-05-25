@@ -47,6 +47,7 @@ Evidence reviewed:
 - logs: {logs_ref}
 - approvals: {approval_refs}
 - design refs: {design_refs}
+- redaction or blocked input: {redaction_availability_summary|none}
 
 Remaining work:
 {blockers_or_rework}
@@ -58,3 +59,5 @@ User follow-up:
 ## Notes
 
 This template is a rendered card shape, not verification authority. Eval records and gate state remain canonical.
+
+The card must not imply omitted or blocked raw bytes were reviewed. `secret_omitted` can support only visible nonsecret claims; `blocked` is unavailable input unless a documented resolution exists.

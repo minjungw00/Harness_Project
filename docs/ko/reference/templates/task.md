@@ -155,6 +155,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - TDD GREEN evidence:
 - TDD refactor/check evidence:
 - expected artifact refs:
+- omitted or blocked artifact impact:
 - stale or missing evidence:
 
 ## Residual Risk
@@ -365,3 +366,5 @@ Change Unit block sub-template:
 `TASK`의 Implementation Micro-Plan은 현재 Task와 Change Unit 상태에서 생성되거나 그 상태와 정렬된 가벼운 실행 보조 정보입니다. Product write를 허가하거나, scope를 넓히거나, approval을 충족하거나, 근거를 만들거나, edit만으로 상태를 변경하거나, `prepare_write`를 대체하지 않습니다.
 
 `TASK`의 Review Stages는 관리되는 표시 섹션입니다. Gates를 충족하거나, write를 허가하거나, 위험을 수용하거나, Task를 닫거나, `detached_verified` assurance를 만들 수 없습니다.
+
+`TASK`, Journey, evidence, report section에 표시되는 artifact ref는 redaction state를 보존해야 합니다. `secret_omitted` ref는 visible nonsecret evidence만 뒷받침할 수 있고, `blocked` ref는 raw content가 아니라 committed safe notice와 unavailable input을 보여줍니다.

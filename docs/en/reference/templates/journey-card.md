@@ -62,6 +62,7 @@ Next evidence:
 - action: {next_evidence_action}
 - needed for: {evidence_needed_for}
 - latest evidence: {latest_evidence_ref|none}
+- omitted or blocked impact: {redaction_availability_summary|none}
 
 Residual risk:
 - status: {residual_risk_status}
@@ -83,3 +84,5 @@ Projection freshness: {projection_freshness}
 ## Notes
 
 This template is a rendered shape, not canonical state. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains a read/display surface.
+
+When latest or next evidence includes `secret_omitted` or `blocked` artifact refs, this card should show only the availability impact. It must not include omitted values or blocked raw payload content.

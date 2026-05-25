@@ -14,7 +14,7 @@ Use `EVAL` when Harness needs a readable verification result with independence c
 - checks performed
 - evidence reviewed
 - blockers
-- artifact refs
+- artifact refs with redaction state and input availability
 
 ## Rendered sections
 
@@ -27,6 +27,7 @@ Use `EVAL` when Harness needs a readable verification result with independence c
 - Design Quality Review
 - Rationale
 - Blockers Or Rework
+- Redaction And Availability
 - User Follow-Up
 
 ## Full template
@@ -67,7 +68,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - product file write allowed:
 - baseline verified:
 - repo drift observed:
-- source input: chat_history | task_summary | bundle | raw_artifacts
+- source input: chat_history | task_summary | bundle | allowed_raw_artifacts | refs_with_redaction_notes
 - source bundle:
 - parent run:
 
@@ -119,6 +120,12 @@ updated_at: 2026-05-06T10:05:00+09:00
 - approvals:
 - decisions:
 
+## Redaction And Availability
+| Artifact Ref | Redaction State | Verification Effect | Note |
+|---|---|---|---|
+| ART-EVAL-0001 | secret_omitted | visible nonsecret facts reviewed; omitted value not proven | |
+| ART-EVAL-0002 | blocked | unavailable input; verdict cannot depend on raw payload | |
+
 ## Acceptance Criteria Review
 | AC ID | Statement | Evidence Reviewed | Result | Notes |
 |---|---|---|---|---|
@@ -149,3 +156,5 @@ updated_at: 2026-05-06T10:05:00+09:00
 ## Notes
 
 An Eval verdict alone does not upgrade assurance. `detached_verified` requires a passed verification with valid independence and no same-session self-review violation.
+
+Eval projections must not imply omitted or blocked raw bytes were reviewed. `secret_omitted` evidence can support only visible nonsecret claims. If the Eval depends on a `blocked` payload, the result must remain `blocked` or `inconclusive`, or surface `EVIDENCE_INSUFFICIENT`, until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the verification path.

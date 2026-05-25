@@ -39,6 +39,7 @@ Checklist:
 Evidence to record:
 - screenshot or walkthrough note
 - browser log when relevant
+- redaction/omission/block note when evidence cannot be recorded as raw content
 
 Record the QA result?
 ````
@@ -46,3 +47,5 @@ Record the QA result?
 ## Notes
 
 This template is a rendered card shape, not canonical QA state. `qa_gate` remains the close-relevant gate.
+
+The card may ask for replacement evidence or a waiver path when an artifact is `secret_omitted` or `blocked`, but it must not display omitted values or blocked raw capture content.

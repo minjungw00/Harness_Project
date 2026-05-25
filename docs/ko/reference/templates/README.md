@@ -16,6 +16,8 @@ Projection template은 API `ProjectionKind` tier와 일치합니다.
 
 Template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Kernel field, MCP schema, SQLite DDL, gate behavior, artifact integrity rule을 재정의하면 안 됩니다.
 
+Artifact ref를 렌더링하는 모든 template은 `redaction_state`를 보존해야 합니다. Large 또는 sensitive artifact body는 기본적으로 embed하지 않습니다. `secret_omitted` entry는 safe note 또는 handle을 보여줄 수 있고 visible nonsecret evidence만 뒷받침할 수 있습니다. `blocked` entry는 committed metadata-only notice를 unavailable input으로 보여줍니다. Template은 생략된 secret/PII value 또는 blocked raw payload bytes를 inline, reconstruct, summarize, export하면 안 됩니다.
+
 ## MVP-required templates
 
 - [TASK](task.md)

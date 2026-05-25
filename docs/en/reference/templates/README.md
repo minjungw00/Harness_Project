@@ -16,6 +16,8 @@ Projection templates match the API `ProjectionKind` tiers:
 
 Templates are rendered shapes, not canonical state. They must not redefine kernel fields, MCP schemas, SQLite DDL, gate behavior, or artifact integrity rules.
 
+Any template that renders artifact refs must preserve `redaction_state`. Large or sensitive artifact bodies are not embedded by default. `secret_omitted` entries may show safe notes or handles and may support only visible nonsecret evidence; `blocked` entries show the committed metadata-only notice as unavailable input. Templates must not inline, reconstruct, summarize, or export omitted secret/PII values or blocked raw payload bytes.
+
 ## MVP-required templates
 
 - [TASK](task.md)

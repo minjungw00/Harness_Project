@@ -47,6 +47,7 @@ Acceptance: {acceptance_impact}
 - logs: {logs_ref}
 - approvals: {approval_refs}
 - design refs: {design_refs}
+- redaction or blocked input: {redaction_availability_summary|none}
 
 남은 작업:
 {blockers_or_rework}
@@ -58,3 +59,5 @@ User follow-up:
 ## 메모
 
 이 template은 렌더링 결과인 카드 형태일 뿐 verification 권한 자체가 아닙니다. Eval 기록과 gate 상태가 기준입니다.
+
+이 card는 omitted 또는 blocked raw bytes를 검토한 것처럼 암시하면 안 됩니다. `secret_omitted`는 visible nonsecret claim만 뒷받침할 수 있고, `blocked`는 documented resolution이 없는 한 unavailable input입니다.

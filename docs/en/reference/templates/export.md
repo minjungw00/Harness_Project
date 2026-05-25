@@ -83,8 +83,8 @@ updated_at: 2026-05-06T10:30:00+09:00
 - raw files excluded by policy:
 
 ## Omitted Or Blocked Content
-| Artifact ID | Affected Owner Or Display | Redaction State | Note |
-|---|---|---|---|
+| Artifact ID | Affected Owner Or Display | Redaction State | Downstream Effect | Note |
+|---|---|---|---|---|
 
 ## Integrity
 - export hash:
@@ -112,3 +112,5 @@ updated_at: 2026-05-06T10:30:00+09:00
 This template is a rendered shape, not canonical state. `EXPORT` is a `ProjectionKind` only; export snapshots and components remain artifacts linked to owner records or projection refs.
 
 `EXPORT` must not embed raw secrets, PII, sensitive logs, network traces, screenshots, or other sensitive artifact bodies by default. Large or sensitive artifacts are listed by `ArtifactRef`; raw files are included only when policy and retention allow them, and `secret_omitted` or `blocked` entries stay represented by refs and notes.
+
+For `secret_omitted`, export may include safe omission notes or handles and hashes over safe stored bytes, but not omitted values. For `blocked`, export may include the committed metadata-only notice artifact and its hash, size, and content type; those fields describe the notice bytes, never the forbidden raw payload. Release Handoff sections must show the same omission or block impact as unavailable, insufficient, or unresolved input unless a documented replacement, waiver, Decision Packet outcome, accepted risk, or fallback resolved it before export.

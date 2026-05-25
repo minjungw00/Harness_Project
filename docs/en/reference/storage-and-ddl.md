@@ -616,7 +616,7 @@ CREATE TABLE artifacts (
   sha256 TEXT NOT NULL,
   size_bytes INTEGER NOT NULL,
   content_type TEXT NOT NULL,
-  redaction_state TEXT NOT NULL,
+  redaction_state TEXT NOT NULL CHECK (redaction_state IN ('none', 'redacted', 'secret_omitted', 'blocked')),
   produced_by TEXT NOT NULL,
   retention_class TEXT NOT NULL,
   created_at TEXT NOT NULL
@@ -1064,7 +1064,7 @@ MVP registration steps:
 1. Accept a connector-captured or operator-supplied file only from a canonical staging path under the project artifact `tmp/` directory or from an approved capture adapter.
 2. Apply redaction, omission, or blocking before hashing. Raw secrets and disallowed PII must not be copied into durable artifact storage.
 3. Move or copy the stored bytes into the artifact directory using `{task_id}/{run_id-or-record_id}/{artifact_id}-{kind}.{ext}` under the matching kind directory.
-4. Compute `sha256`, `size_bytes`, `content_type`, and `redaction_state` from the stored bytes.
+4. Compute `sha256`, `size_bytes`, `content_type`, and `redaction_state` from the safe stored bytes. For `blocked`, those bytes are the metadata-only notice, not the forbidden capture payload.
 5. Insert the `artifacts` row and required `artifact_links` rows in the same Core transaction that records the related state record and appends `task_events`.
 6. Return an `ArtifactRef` whose `uri` resolves through the artifact registry row.
 7. If the file move succeeds but the transaction fails, leave the file in `tmp/` or mark it orphaned for `recover`; do not create a committed artifact ref or artifact link.
@@ -1097,8 +1097,8 @@ sequenceDiagram
 |---|---|---|
 | `none` | original non-sensitive evidence | The hash and size cover the registered bytes. Raw inclusion in export or verification bundles still depends on retention and export policy. |
 | `redacted` | redacted evidence; the unredacted original is not retained by the harness | The hash and size cover the redacted bytes only. |
-| `secret_omitted` | evidence with secret values or PII omitted or replaced by handles | Omission notes or handles are stored; raw omitted values are not copied into artifact storage, projection snapshots, verification bundles, or export bundles. |
-| `blocked` | a small metadata-only notice artifact explaining that capture was blocked | No forbidden content is stored. Owner records may keep the blocked ref for audit, but the artifact bytes are not available evidence. |
+| `secret_omitted` | evidence with secret values or PII omitted or replaced by handles | Omission notes or handles are stored; raw omitted values are not copied into artifact storage, projection snapshots, verification bundles, or export bundles. The hash, size, and content type cover only the safe stored bytes. |
+| `blocked` | a small metadata-only notice artifact explaining that capture was blocked | No forbidden content is stored. The notice is still a committed registered artifact record when Core records it; `sha256`, `size_bytes`, and `content_type` cover the notice bytes. Owner records may keep the blocked ref for audit, but the artifact bytes are not available evidence. |
 
 Evidence sufficiency, Manual QA, verification, projection, and export readers consume the committed `ArtifactRef` plus `redaction_state`. `secret_omitted` can support claims whose nonsecret evidence remains visible, but it cannot support claims that require the omitted bytes. `blocked` keeps the attempted capture visible for audit while leaving the related evidence, QA, verification, projection display, or export component blocked or insufficient until the owner flow records a replacement, waiver, Decision Packet outcome, or other documented resolution.
 

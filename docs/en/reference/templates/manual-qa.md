@@ -10,7 +10,7 @@ Use `MANUAL-QA` when Manual QA is required, performed, waived, pending, or repre
 - Task and Change Unit refs
 - `qa_gate`
 - Manual QA profile, setup, checklist, result, waiver, and findings
-- screenshot, browser log, video, or note artifact refs
+- screenshot, browser log, video, or note artifact refs with redaction state
 - residual risk and Decision Packet refs related to QA waiver or failure
 - design-quality validator results related to `manual_qa`
 - projection freshness inputs
@@ -24,6 +24,7 @@ Use `MANUAL-QA` when Manual QA is required, performed, waived, pending, or repre
 - Waiver And Risk
 - Findings
 - Evidence Refs
+- Redaction And Availability
 
 ## Full template
 
@@ -83,8 +84,16 @@ updated_at: 2026-05-06T10:05:00+09:00
 - browser log:
 - video:
 - note:
+
+## Redaction And Availability
+| Artifact Ref | Redaction State | QA Effect | Note |
+|---|---|---|---|
+| ART-QA-0001 | secret_omitted | supports observable finding only | |
+| ART-QA-0002 | blocked | capture unavailable; QA remains pending/failed/waived/blocking until resolved | |
 ````
 
 ## Notes
 
 This template is a rendered shape, not canonical state. `qa_gate` is the canonical close-relevant gate; this projection only displays it.
+
+Manual QA projections may show safe omission notes, handles, and blocked artifact notices, but must not embed omitted secret/PII values or blocked capture payloads. A `secret_omitted` artifact can support visible workflow, UI, copy, accessibility, or smoke-test observations; a `blocked` capture is unavailable QA input unless a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the QA path.

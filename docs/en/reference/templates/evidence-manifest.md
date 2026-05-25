@@ -11,7 +11,7 @@ Use `EVIDENCE-MANIFEST` when Harness needs a readable map from acceptance criter
 - changed file coverage
 - design-quality coverage
 - approval refs
-- artifact refs
+- artifact refs with redaction state and downstream evidence impact
 - related Run, Eval, Feedback Loop, Manual QA, and TDD trace refs
 
 ## Rendered sections
@@ -23,6 +23,7 @@ Use `EVIDENCE-MANIFEST` when Harness needs a readable map from acceptance criter
 - Design Quality Coverage
 - Approval Refs
 - Evidence Refs
+- Redaction And Availability
 - Stale If
 
 ## Full template
@@ -50,6 +51,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 ## Summary
 - evidence state:
 - unsupported criteria:
+- omitted or blocked evidence impact:
 - stale conditions:
 - next evidence action:
 
@@ -98,6 +100,12 @@ updated_at: 2026-05-06T09:50:00+09:00
 - tests:
 - build:
 
+## Redaction And Availability
+| Artifact Ref | Redaction State | Evidence Effect | Note |
+|---|---|---|---|
+| ART-0001 | secret_omitted | supports visible nonsecret facts only | |
+| ART-0002 | blocked | unavailable input; claim remains insufficient until resolved | |
+
 ## Stale If
 - baseline head changes
 - changed files are modified after eval
@@ -110,3 +118,5 @@ updated_at: 2026-05-06T09:50:00+09:00
 ## Notes
 
 Where evidence is required, close depends on the canonical `evidence_gate`, not the report text alone.
+
+`secret_omitted` artifacts may support claims whose nonsecret evidence remains visible, but not claims that require omitted values. `blocked` artifacts are committed safe notices, not available raw evidence; dependent criteria remain unsupported, insufficient, or blocked until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the evidence path. This template must not include omitted secret/PII values or blocked payload bytes.

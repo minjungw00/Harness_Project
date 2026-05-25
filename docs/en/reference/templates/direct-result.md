@@ -83,8 +83,11 @@ updated_at: 2026-05-06T09:40:00+09:00
 - logs:
 - diff:
 - follow-up report:
+- omitted or blocked artifact impact:
 ````
 
 ## Notes
 
 Direct work may close self-checked by default unless policy or the user requires detached verification or other gates. A consumed Write Authorization ref may be displayed, but the projection does not become the canonical authorization record.
+
+Direct result artifact refs must keep redaction state visible. `secret_omitted` supports only visible nonsecret evidence, and `blocked` means the raw input is unavailable until resolved by a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback.
