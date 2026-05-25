@@ -2,31 +2,15 @@
 
 This directory contains the Harness documentation in parallel English and Korean trees.
 
-Harness is an agency-preserving local authority kernel for AI-assisted product work.
+Harness is an agency-preserving local authority kernel for AI-assisted product work. It keeps a local operating record of scope, user-owned judgment, write authority, evidence, verification, QA, acceptance, residual risk, and close.
 
-It keeps a local operating record of scope, user judgment, write authority, evidence, verification, QA, acceptance, residual risk, and close.
-
-Harness is not merely a chat workflow, prompt skill bundle, test harness, or evaluation harness.
-
-It can integrate with MCP tools/connectors, hooks, guardrails, adapters, sidecars, and isolation layers, but those surfaces are not the source of Harness authority.
-
-Those surfaces may help agents read context, call Harness tools, capture evidence, or enforce/detect boundaries; authority remains in Core and canonical local state.
-
-It also does not replace the product repository, version control system, test runner, code review process, or product judgment.
+For the full identity, authority model, integration-surface boundaries, and non-goals, start with [English Overview](en/learn/overview.md), [English Purpose and Principles](en/learn/purpose-and-principles.md), [Korean Overview](ko/learn/overview.md), or [Korean Purpose and Principles](ko/learn/purpose-and-principles.md).
 
 이 디렉터리는 Harness 문서를 영어와 한국어 트리로 나누어 담고 있습니다.
 
-Harness는 AI 지원 제품 작업을 위한, 사용자 판단권을 보존하는 로컬 권한 커널입니다.
+Harness는 AI 지원 제품 작업을 위한, 사용자 판단권을 보존하는 로컬 권한 커널입니다. 범위, 사용자 소유 판단, 쓰기 권한, 근거, 검증, QA, 수용, 남은 위험, 닫기 상태를 로컬 운영 기록으로 유지합니다.
 
-범위, 사용자 판단, 쓰기 권한, 근거, 검증, QA, 수용, 남은 위험, 닫기 상태를 로컬 운영 기록으로 유지합니다.
-
-Harness는 단순한 대화 흐름, prompt skill 묶음, test harness, evaluation harness가 아닙니다.
-
-MCP 도구/connector, hook, guardrail, adapter, sidecar, isolation layer와 통합될 수 있지만, 이런 접점과 장치는 Harness 권한의 출처가 아닙니다.
-
-이런 접점과 장치는 에이전트가 맥락을 읽고, Harness 도구를 호출하고, 근거를 캡처하고, 경계를 차단하거나 사후 감지하도록 도울 수 있습니다. 권한은 Core와 기준 로컬 상태에 남습니다.
-
-제품 저장소, 버전 관리 시스템, 테스트 실행기, 코드 리뷰 절차, 제품 판단도 대체하지 않습니다.
+정체성, 권한 모델, 통합 접점 경계, 비목표의 전체 설명은 [영어 개요](en/learn/overview.md), [영어 목적과 원칙](en/learn/purpose-and-principles.md), [한국어 개요](ko/learn/overview.md), [한국어 목적과 원칙](ko/learn/purpose-and-principles.md)에서 시작합니다.
 
 ## Choose a Language / 언어 선택
 

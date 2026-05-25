@@ -40,7 +40,7 @@ Harness makes boundaries explicit. Scope, approval, decisions, evidence, verific
 
 Harness is honest about assurance. It should say what was checked and how independent that check was, instead of treating every review as equally strong.
 
-Harness preserves strategic agency. The user keeps judgment over goals, scope, design direction, product trade-offs, codebase stewardship, QA, acceptance, and residual-risk acceptance.
+Harness preserves strategic agency. The user keeps judgment over goals, scope, design direction, product trade-offs, material technical trade-offs, codebase stewardship, QA, acceptance, and residual-risk acceptance.
 
 Harness keeps the work journey followable. A reader should be able to reconstruct current state, next action, decisions, evidence, and blockers without relying on chat memory.
 
@@ -76,7 +76,7 @@ Without Harness, evidence can be too weak or too temporary. Tests, logs, screens
 
 Without Harness, verification can overstate independence. The same agent that made a change can review its own work, and the system may treat that as independent assurance. Harness responds by separating self-checks from detached verification.
 
-Without Harness, product judgment or material technical judgment can move from the user to the agent without anyone noticing. Design direction, trade-offs, codebase stewardship, QA judgment, acceptance, and risk acceptance can be hidden inside implementation. Harness responds with Decision Packets when user-owned judgment blocks progress.
+Without Harness, user-owned product judgment or material technical judgment can move from the user to the agent without anyone noticing. Design direction, trade-offs, codebase stewardship, QA judgment, acceptance, and risk acceptance can be hidden inside implementation. Harness responds with Decision Packets when user-owned judgment blocks progress.
 
 Without Harness, local completion can hide long-term product damage. A task may pass tests while blurring domain language, crossing module boundaries, weakening interfaces, or leaving follow-up risk unnamed. Harness responds by keeping codebase stewardship, design trade-offs, QA findings, and residual risk visible in the work journey.
 

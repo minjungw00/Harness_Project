@@ -132,7 +132,7 @@ Core 상태 전이 기반과 첫 MCP-facing read/tool을 계획합니다.
 - 최소 changed-path, scope, approval, baseline, decision, autonomy, 능력 확인
 - integrity와 redaction metadata를 가진 raw artifact 등록
 
-Approval을 사용자 소유 판단으로 취급하지 않습니다. 제품 절충점, 아키텍처 선택, 중요한 기술 선택, 해결되지 않은 security 또는 product-security 판단, QA 면제, 검증 위험, acceptance, Residual Risk 수용에는 적용될 때 compatible Decision Packet이 여전히 필요합니다.
+Approval을 사용자 소유 판단으로 취급하지 않습니다. 사용자 소유 제품 절충점, 아키텍처 선택, 중요한 기술 선택, 해결되지 않은 security 또는 product-security 판단, QA 면제, 검증 위험, acceptance, Residual Risk 수용에는 적용될 때 compatible Decision Packet이 여전히 필요합니다.
 
 ### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
 

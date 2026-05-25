@@ -109,7 +109,7 @@ Policy validator는 MCP API document가 담당하는 validator 결과 형식에 
 
 - 요청이 모호하거나 첫 번째 안전한 Change Unit이 분명하지 않을 때.
 - 범위, 범위 밖 항목, 수용 기준, 사용자 가치 정렬이 필요할 때.
-- 영향받는 제품 영역, 사용자 화면/흐름, 모듈, interface, 민감 카테고리(sensitive categories), 검증 기대 수준, Manual QA 기대 수준, 사용자가 소유하는 절충 판단, 알려진 제품·구현·검증·QA·후속 위험을 쓰기 전에 구체화해야 할 때.
+- 영향받는 제품 영역, 사용자 화면/흐름, 모듈, interface, 민감 카테고리(sensitive categories), 검증 기대 수준, Manual QA 기대 수준, 사용자가 소유하는 제품 또는 중요한 기술 절충 판단, 알려진 제품·구현·검증·QA·후속 위험을 쓰기 전에 구체화해야 할 때.
 - 공개 interface, schema, auth, UX, workflow가 바뀔 수 있을 때.
 - `work` task를 구현 전에 구체화해야 할 때.
 
@@ -118,8 +118,8 @@ Policy validator는 MCP API document가 담당하는 validator 결과 형식에 
 | Field | Contract |
 |---|---|
 | `name` | `shared_design` |
-| `applies_when` | 작업 요청이 모호하거나, 범위와 범위 밖 항목이 분명하지 않거나, 사용자 가치 정렬이 필요하거나, 영향받는 제품 영역, 사용자 화면/흐름, 모듈, interface, 민감 카테고리(sensitive categories), 검증 또는 Manual QA 기대 수준, 사용자가 소유하는 절충 판단, 알려진 제품·구현·검증·QA·후속 위험을 구체화해야 하거나, 공개 interface, schema, auth, UX, workflow가 영향을 받거나, `work` task를 구체화해야 할 때. |
-| `default_requirement` | 기록할 것: 목표, 범위, 비목표, 수용 기준, 영향받는 제품 영역, 사용자 화면/흐름, 모듈, interface, 민감 카테고리(sensitive categories), 사용자가 소유하는 절충 판단, 검증 및 Manual QA 기대 수준, 알려진 제품·구현·검증·QA·후속 위험, 진행을 막는 결정, 가정, 기각한 선택지, domain-language 영향, module/interface 영향, 첫 Change Unit 모양. 사용자에게 묻기 전 확인할 것: agent가 안전하게 직접 확인할 수 있는 답을 사용 가능한 최신 저장소, 코드베이스, 문서, Harness state에서 먼저 살핀다. 소스가 없거나 오래됐으면 권위 있는 현재 사실로 취급하지 말고 그 불확실성을 기록한다. 구체화 방식: 여러 차례 이어질 수 있으며, 가능하면 가장 막힘이 큰 질문을 한 번에 하나씩 묻는다. 각 막힘 질문에는 선택지, 추천안, 불확실성, 미뤄졌을 때 계속할 수 있는 일 또는 결정 전에는 진행하면 안 되는 이유를 포함해야 한다. Agent가 둔 가정은 사용자 판단이 필요한 선택, Approval, QA 판단, 수용, 위험 수용과 분리한다. 해소되지 않은 사용자 판단을 숨기지 않고 첫 번째 안전한 Change Unit을 제안할 수 있을 때 구체화를 멈춘다. |
+| `applies_when` | 작업 요청이 모호하거나, 범위와 범위 밖 항목이 분명하지 않거나, 사용자 가치 정렬이 필요하거나, 영향받는 제품 영역, 사용자 화면/흐름, 모듈, interface, 민감 카테고리(sensitive categories), 검증 또는 Manual QA 기대 수준, 사용자가 소유하는 제품 또는 중요한 기술 절충 판단, 알려진 제품·구현·검증·QA·후속 위험을 구체화해야 하거나, 공개 interface, schema, auth, UX, workflow가 영향을 받거나, `work` task를 구체화해야 할 때. |
+| `default_requirement` | 기록할 것: 목표, 범위, 비목표, 수용 기준, 영향받는 제품 영역, 사용자 화면/흐름, 모듈, interface, 민감 카테고리(sensitive categories), 사용자가 소유하는 제품 또는 중요한 기술 절충 판단, 검증 및 Manual QA 기대 수준, 알려진 제품·구현·검증·QA·후속 위험, 진행을 막는 결정, 가정, 기각한 선택지, domain-language 영향, module/interface 영향, 첫 Change Unit 모양. 사용자에게 묻기 전 확인할 것: agent가 안전하게 직접 확인할 수 있는 답을 사용 가능한 최신 저장소, 코드베이스, 문서, Harness state에서 먼저 살핀다. 소스가 없거나 오래됐으면 권위 있는 현재 사실로 취급하지 말고 그 불확실성을 기록한다. 구체화 방식: 여러 차례 이어질 수 있으며, 가능하면 가장 막힘이 큰 질문을 한 번에 하나씩 묻는다. 각 막힘 질문에는 선택지, 추천안, 불확실성, 미뤄졌을 때 계속할 수 있는 일 또는 결정 전에는 진행하면 안 되는 이유를 포함해야 한다. Agent가 둔 가정은 사용자 판단이 필요한 선택, Approval, QA 판단, 수용, 위험 수용과 분리한다. 해소되지 않은 사용자 판단을 숨기지 않고 첫 번째 안전한 Change Unit을 제안할 수 있을 때 구체화를 멈춘다. |
 | `allowed_waiver` | User/operator가 reason과, design risk가 남는 경우 follow-up을 기록하면 작고 명확한 `direct` work, docs-only edit, emergency fix에 허용된다. |
 | `required_record` | Shared Design record, Task shaping field, decision record, 선택적 `DESIGN` 또는 `DEC` projection. |
 | `validator` | `shared_design_alignment` |
@@ -130,7 +130,7 @@ Policy validator는 MCP API document가 담당하는 validator 결과 형식에 
 
 이럴 때 사용합니다:
 
-- 선택이 제품 방향, 비용·보안·유지보수 영향이 큰 기술 방향, scope, 아키텍처, dependency direction, schema/data model, public API, interface, module boundary, compatibility를 바꿀 때.
+- 선택이 사용자가 소유하는 제품 방향, 비용·호환성·보안·유지보수·migration·interface·dependency·위험 영향이 큰 중요한 기술 방향, scope, 아키텍처, schema/data model, public API, module boundary, compatibility를 바꿀 때.
 - Waiver가 QA 또는 verification 면제 risk를 포함한 알려진 위험을 수용할 때.
 - 수평 예외가 design, technical, 또는 architecture choice일 때.
 - Agent 추천안은 있지만 판단은 user가 소유할 때.
@@ -150,9 +150,9 @@ Policy validator는 MCP API document가 담당하는 validator 결과 형식에 
 | Field | Contract |
 |---|---|
 | `name` | `decision_quality` |
-| `applies_when` | Design choice, 제품 장단점 판단, product taste 판단, Manual QA 필요 여부가 사용자 소유의 제품·UX·접근성·릴리스 위험·product taste 판단에 달린 경우, Manual QA waiver 선택, 범위 확장, durable impact가 있는 dependency addition, schema/data-model migration, public API/interface change, module boundary change, architecture choice, 수평 예외, verification 면제, QA 면제, 알려진 위험이 있는 acceptance가 있을 때. |
+| `applies_when` | Design choice, 사용자 소유의 제품 장단점 판단, product taste 판단, 중요한 기술 선택, Manual QA 필요 여부가 사용자 소유의 제품·UX·접근성·릴리스 위험·product taste 판단에 달린 경우, Manual QA waiver 선택, 범위 확장, durable impact가 있는 dependency addition, schema/data-model migration, public API/interface change, module boundary change, architecture choice, 수평 예외, verification 면제, QA 면제, 알려진 위험이 있는 acceptance가 있을 때. |
 | `default_requirement` | Decision이 실제 행동으로 이어지기 전에 Decision Packet을 기록한다. Packet에는 context, 검토한 선택지, 장단점, 추천안, uncertainty, reversibility, evidence ref, 결정을 미룰 때의 결과, residual risk가 포함되어야 한다. Agent 추천안과 사용자 판단 또는 위험 수용을 분리해 둔다. `decision_kind=approval`에서는 sensitive-change scope와 boundary가 명확한지 평가하고, approval 형태의 맥락을 제품, 기술, 보안, QA, verification, acceptance, residual-risk 판단의 해결로 취급하지 않는다. |
-| `allowed_waiver` | 공개 interface, 제품, 기술, 아키텍처, 유지보수, verification, QA, 알려진 위험 impact가 없고 사소하며 되돌리기 쉬운 선택에만 허용된다. Waiver에는 Decision Packet이 judgment를 개선하지 않는 이유를 기록해야 한다. |
+| `allowed_waiver` | 공개 interface, 제품, 중요한 기술, 아키텍처, 유지보수, verification, QA, 알려진 위험 impact가 없고 사소하며 되돌리기 쉬운 선택에만 허용된다. Waiver에는 Decision Packet이 judgment를 개선하지 않는 이유를 기록해야 한다. |
 | `required_record` | Decision Packet 기록과 렌더링될 때 선택적 `DEC` projection. |
 | `validator` | `decision_quality_check` |
 | `evidence` | Decision Packet ref, option ref, evidence manifest ref, risk/waiver ref, 위험 수용이 포함될 때 residual-risk state ref, 사용자 판단이 필요할 때 user acceptance ref. |
@@ -173,7 +173,7 @@ Policy validator는 MCP API document가 담당하는 validator 결과 형식에 
 |---|---|
 | `name` | `autonomy_boundary` |
 | `applies_when` | Agent가 authority가 모호하거나, user constraint, external side effect, irreversible edit, 범위 확장, sensitive action, 사용자 소유의 제품 판단 또는 중요한 기술 판단, public API/module contract 약속, 중요한 dependency 또는 migration 방향, security 또는 privacy trade-off, 남은 위험 수용, 알려진 중지 조건이 있는 작업을 shaping하거나 실행할 때. |
-| `default_requirement` | Agent가 user input 없이 할 수 있는 것, 사용자 판단이 필요한 것, 중지 조건을 기록한다. 기준 경계는 active Change Unit에 둔다. Change Unit이 아직 없으면 Task 또는 Shared Design이 shaping/proposed boundary ref를 가질 수 있다. 경계는 low-risk 구현 세부사항에서는 agent가 진행하게 하되, 제품 방향, 사용자 소유 기술 방향, 위험 수용, public interface/module 약속, 중요한 dependency/migration 방향, security 또는 privacy trade-off, 사람의 판단이 필요한 정책 waiver에서는 멈추게 해야 한다. Autonomy Boundary는 scope grant가 아니며 active Change Unit 밖의 path, tool, command, network, secret, sensitive category를 허가하지 않는다. |
+| `default_requirement` | Agent가 user input 없이 할 수 있는 것, 사용자 판단이 필요한 것, 중지 조건을 기록한다. 기준 경계는 active Change Unit에 둔다. Change Unit이 아직 없으면 Task 또는 Shared Design이 shaping/proposed boundary ref를 가질 수 있다. 경계는 low-risk 구현 세부사항에서는 agent가 진행하게 하되, 사용자 소유 제품 방향, 중요한 기술 방향, 위험 수용, public interface/module 약속, 중요한 dependency/migration 방향, security 또는 privacy trade-off, 사람의 판단이 필요한 정책 waiver에서는 멈추게 해야 한다. Autonomy Boundary는 scope grant가 아니며 active Change Unit 밖의 path, tool, command, network, secret, sensitive category를 허가하지 않는다. |
 | `allowed_waiver` | 요청에서 authority가 명확하고 중지 조건이 현실적으로 발생할 수 없는 좁은 `direct` work에 허용된다. Waiver에는 autonomy boundary가 필요 없는 이유를 기록해야 한다. |
 | `required_record` | Active Change Unit의 기준 Autonomy Boundary record, Change Unit 생성 전 Task 또는 Shared Design shaping/proposed boundary ref, 사용자 판단 item에 대한 Decision Packet record, trigger된 stop-condition ref. |
 | `validator` | `autonomy_boundary_check` |
@@ -184,7 +184,7 @@ Policy validator는 MCP API document가 담당하는 validator 결과 형식에 
 flowchart TD
   Intent["agent work intent"] --> Boundary["active Change Unit Autonomy Boundary"]
   Boundary --> MayDo["agent may do: scope 안의 low-risk 구현 세부사항"]
-  Boundary --> UserJudgment["requires user judgment: 제품/기술 방향, 위험 수용, public/module 약속, 중요한 migration/dependency 방향, 정책 waiver"]
+  Boundary --> UserJudgment["requires user judgment: 제품/중요한 기술 방향, 위험 수용, public/module 약속, 중요한 migration/dependency 방향, 정책 waiver"]
   Boundary --> Stops["stop condition"]
   Boundary --> Prepare["prepare_write"]
 
@@ -491,7 +491,7 @@ Severity는 explicit user request, sensitive category, 공개 약속, public API
 |---|---|---|---|
 | Direct docs-only | Docs가 제품 약속, 정책 계약, domain term, public behavior, interface meaning을 바꾸지 않는 한 `vertical_slice_shape`, `tdd_trace_required`, `manual_qa_required`, `module_interface_review`, `codebase_stewardship_check`는 `not_required`다. `context_hygiene_check`와 `domain_language_consistency`는 최신이 아닌 projection 또는 terminology drift에 대해 warning일 수 있다. | Default로 설계 품질 write blocker는 없다. Scope가 ambiguous하거나 design/정책 계약 edit이면 `shared_design_alignment`가 `design_gate=pending`이 된다. 사용자 판단, sensitive content, 공개 약속, residual risk가 있을 때만 `autonomy_boundary_check` 또는 `decision_quality_check`가 block한다. | 기본 close blocker는 없다. Docs drift가 acceptance, verification confidence, 공개 약속, required projection freshness에 영향을 주면 close가 block될 수 있다. Policy commitment change, 공개 약속, 알려진 위험 acceptance에는 `Decision Packet required`다. |
 | Direct code | Obvious leaf/internal edit에는 `shared_design_alignment`, `vertical_slice_shape`, `manual_qa_required`가 `not_required`다. Minor maintainability concern에는 `codebase_stewardship_check`가 warning일 수 있다. | 동작에 영향을 주는 write 전에는 `feedback_loop_check`가 `design_gate=pending`이다. `tdd_trace_required`, `domain_language_consistency`, `module_interface_review`는 각 정책 계약이 적용될 때만 `design_gate=partial`이 된다. Scope 또는 authority gap은 `autonomy_boundary_check`가 block하고, 동작에 영향을 주는 write에 신뢰할 수 있는 feedback loop가 없으면 `feedback_loop_check`가 block한다. | Run evidence가 missing이거나, 필요한 TDD/domain/interface record 또는 해소되지 않은 behavior risk가 acceptance 또는 verification confidence에 영향을 주면 `close blocker`가 될 수 있다. 사용자 소유 판단, 알려진 위험이 있는 waiver, 범위 확장에는 `Decision Packet required`다. |
-| Ordinary work feature | Feature가 user-visible, workflow-affecting, browser/product-taste dependent가 아니면 `manual_qa_required`는 `not_required`다. Domain logic, service behavior, bug repair, state transition, edge-heavy behavior가 아니면 `tdd_trace_required`는 warning일 수 있다. | 기록이 생기기 전까지 `shared_design_alignment`, `vertical_slice_shape`, `feedback_loop_check`, `codebase_stewardship_check`는 default로 `design_gate=pending` 또는 `design_gate=partial`이다. 정책 계약이 적용되면 `domain_language_consistency`와 `module_interface_review`도 design gate에 들어온다. Missing Autonomy Boundary, 해소되지 않은 decision, missing feedback loop는 `blocking before write`가 될 수 있다. | Required vertical-slice, feedback, stewardship, 근거 공백은 `close blocker`가 될 수 있다. 범위 확장, 수평 예외, 제품 장단점 판단, Residual Risk 수용에는 `Decision Packet required`다. |
+| Ordinary work feature | Feature가 user-visible, workflow-affecting, browser/product-taste dependent가 아니면 `manual_qa_required`는 `not_required`다. Domain logic, service behavior, bug repair, state transition, edge-heavy behavior가 아니면 `tdd_trace_required`는 warning일 수 있다. | 기록이 생기기 전까지 `shared_design_alignment`, `vertical_slice_shape`, `feedback_loop_check`, `codebase_stewardship_check`는 default로 `design_gate=pending` 또는 `design_gate=partial`이다. 정책 계약이 적용되면 `domain_language_consistency`와 `module_interface_review`도 design gate에 들어온다. Missing Autonomy Boundary, 해소되지 않은 decision, missing feedback loop는 `blocking before write`가 될 수 있다. | Required vertical-slice, feedback, stewardship, 근거 공백은 `close blocker`가 될 수 있다. 범위 확장, 수평 예외, 사용자 소유 제품 또는 중요한 기술 장단점 판단, Residual Risk 수용에는 `Decision Packet required`다. |
 | UI/UX/copy work | 신뢰할 수 있는 대체 feedback loop가 있으면 `tdd_trace_required`는 default로 `not_required`다. Schema, auth, 공개 interface, compatibility를 touch하지 않으면 `module_interface_review`는 warning이다. | `shared_design_alignment`, `feedback_loop_check`, copy-relevant `domain_language_consistency`는 default로 `design_gate=pending` 또는 `design_gate=partial`이다. `manual_qa_required`는 QA path를 선택하고 `qa_gate=pending`을 set할 수 있다. Product-taste authority 또는 중지 조건이 unclear하면 `autonomy_boundary_check`가 block한다. | `manual_qa_required`는 `qa_gate=pending` 또는 `failed`를 set하며, validly waived되지 않으면 `close blocker`다. 중요한 UX/copy 장단점 판단, 알려진 user/product 위험이 있는 QA 면제, 공개 약속에는 `Decision Packet required`다. |
 | Sensitive work | Unrelated policy는 `not_required`로 남지만, sensitive category가 scope, approval, user harm, privacy, legal, safety, security, secret, irreversible action, external side effect에 영향을 주면 applicable policy는 warning-only가 아니다. | Applicable design policy는 record, approval, waiver가 생길 때까지 `design_gate=pending`에서 시작한다. 영향받는 sensitive path에서는 `autonomy_boundary_check`, `decision_quality_check`, approval/scope Core check, 필요한 `feedback_loop_check` 또는 `manual_qa_required`가 `blocking before write`다. | Evidence, QA, Residual Risk 표시, 해소되지 않은 approval, unaccepted risk는 `close blocker`다. Approval context, 사용자 소유 판단, waiver, 위험 수용에는 `Decision Packet required`다. |
 | Public API/interface work | UI/workflow docs 또는 browser-visible behavior가 affected되지 않으면 `manual_qa_required`는 `not_required`다. Behavior, domain, compatibility, edge-heavy logic이 involved되지 않으면 `tdd_trace_required`는 warning일 수 있다. | `shared_design_alignment`, `module_interface_review`, `feedback_loop_check`, `codebase_stewardship_check`, relevant `domain_language_consistency`는 default로 `design_gate=pending` 또는 `design_gate=partial`이다. 공개 약속, 호환성 위험, breaking change, 경계 모호성에는 `decision_quality_check`, `module_interface_review`, `autonomy_boundary_check`가 `blocking before write`다. | 해소되지 않은 compatibility, interface review, 공개 약속, 근거 공백은 `close blocker`다. Breaking, irreversible, compatibility, residual-risk choice에는 `Decision Packet required`다. |

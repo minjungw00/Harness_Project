@@ -2,15 +2,9 @@
 
 이 문서는 독자 중심 Harness 한국어 문서 세트의 진입점입니다.
 
-Harness는 AI 지원 제품 작업을 위한, 사용자 판단권을 보존하는 로컬 권한 커널입니다.
+Harness는 AI 지원 제품 작업을 위한, 사용자 판단권을 보존하는 로컬 권한 커널입니다. 범위, 사용자 소유 판단, 쓰기 권한, 근거, 검증, QA, 수용, 남은 위험, 닫기 상태를 로컬 운영 기록으로 유지합니다.
 
-Harness는 단순한 대화 흐름, prompt skill 묶음, test harness, evaluation harness가 아닙니다.
-
-MCP 도구/connector, hook, guardrail, adapter, sidecar, isolation layer와 통합될 수 있지만, 이런 접점과 장치는 Harness 권한의 출처가 아닙니다. 이들은 에이전트가 맥락을 읽고, Harness 도구를 호출하고, 근거를 캡처하고, 연결된 profile이 지원하는 범위에서 경계를 차단하거나 사후 감지하도록 돕습니다.
-
-Harness 권한은 Core와 기준 로컬 상태에서 나옵니다. Task와 Change Unit 범위, Decision Packet, Approval, Write Authorization, 근거, 검증, QA, 수용, 남은 위험, 닫기를 기준으로 합니다.
-
-Harness는 사용자의 제품 저장소, 버전 관리 시스템, 테스트 실행기, 코드 리뷰 절차, 제품 판단, 중요한 기술 판단도 대체하지 않습니다.
+정체성, 권한 모델, 통합 접점 경계, 비목표의 전체 설명은 [개요](learn/overview.md)와 [목적과 원칙](learn/purpose-and-principles.md)을 봅니다.
 
 ## Learn
 

@@ -28,7 +28,7 @@ Track ordinary-language requests when their shape suggests scope, judgment, evid
 - scope drift risk or ambiguous requirements
 - multi-file, structural, migration, or cross-boundary work
 - sensitive or policy-relevant areas such as auth, security, billing, destructive/data-loss risk, privacy, compliance, accessibility, or design quality
-- user-owned product judgment, technical direction with material cost, compatibility, security, maintenance, migration, interface, or risk impact, or trade-off decisions
+- user-owned product judgment, material technical direction with cost, compatibility, security, maintenance, migration, interface, dependency, or risk impact, or related trade-off decisions
 - evidence, verification, Manual QA, acceptance, or residual-risk needs
 
 Keep small direct tasks light. Do not add ceremony just to answer a question, inspect code, explain a result, or handle a tiny low-risk change with an already narrow shape.
@@ -65,7 +65,7 @@ Ask only questions that change the next safe action. Prefer one blocking questio
 
 Before asking, inspect repo, codebase, docs, and Harness state that are available and current for answers the agent can discover safely. Do not ask the user to restate existing file paths, behavior, terminology, or constraints that are already visible from current context. If a source is unavailable or stale, say so rather than relying on it as authority.
 
-One blocking question at a time does not mean one clarification round total. Broad or design-heavy requests may need several short turns until the goal, scope, non-goals, acceptance criteria, affected product areas, user-facing screens or flows, modules, interfaces, sensitive categories, user-owned trade-offs, verification or Manual QA expectations, and known product, implementation, verification, QA, or follow-up risks are shaped enough to propose the first safe Change Unit.
+One blocking question at a time does not mean one clarification round total. Broad or design-heavy requests may need several short turns until the goal, scope, non-goals, acceptance criteria, affected product areas, user-facing screens or flows, modules, interfaces, sensitive categories, user-owned product or material technical trade-offs, verification or Manual QA expectations, and known product, implementation, verification, QA, or follow-up risks are shaped enough to propose the first safe Change Unit.
 
 Each blocking question should name the uncertainty, offer realistic options, include the agent's recommendation, and say what can continue if the decision is deferred, or why nothing should continue until the decision is made. Record assumptions the agent makes separately from choices, approvals, QA judgment, acceptance, or risk acceptance that belong to the user.
 
@@ -103,16 +103,16 @@ Use this distinction when explaining stops and permissions:
 
 | Concept | Plain question | Allows | Does not allow |
 |---|---|---|---|
-| Change Unit scope | What work area is in bounds? | Names the behavior, files, paths, tools, commands, network targets, and sensitive categories the work is scoped around. | Does not decide user-owned product or material technical trade-offs or create Write Authorization by itself. |
+| Change Unit scope | What work area is in bounds? | Names the behavior, files, paths, tools, commands, network targets, and sensitive categories the work is scoped around. | Does not decide user-owned product or material technical judgment or create Write Authorization by itself. |
 | Autonomy Boundary | What may the agent decide alone inside that scope? | Lets the agent choose covered implementation details without another user decision. | Does not grant paths, tools, commands, network, secrets, sensitive categories, approval, or write authority. |
 | Approval | May this sensitive step proceed? | Allows a named sensitive action within its recorded scope and expiry. | Does not decide user-owned judgment, prove correctness, accept risk, or create Write Authorization. |
 | Write Authorization | May this exact write attempt happen now? | Records that Core allowed one compatible write attempt after the required checks. | Is not reusable and does not expand scope, Autonomy Boundary, or Approval. |
 
-Inside the Autonomy Boundary, the agent may decide ordinary implementation details: whether to reuse an existing helper, how to split a private function, where to place focused tests, or which conservative internal approach best fits the agreed result. The agent must stop for user judgment before public API or module contract changes, security or privacy trade-offs, UX or product trade-offs, material dependency or migration choices, scope expansion, or residual-risk acceptance.
+Inside the Autonomy Boundary, the agent may decide ordinary implementation details: whether to reuse an existing helper, how to split a private function, where to place focused tests, or which conservative internal approach best fits the agreed result. The agent must stop for user judgment before public API or module contract changes, security or privacy trade-offs, UX or product trade-offs, material technical direction such as dependency or migration choices, scope expansion, or residual-risk acceptance.
 
 ## Blocking user-owned judgment
 
-When product judgment or a user-owned technical choice blocks progress, show or request a Decision Packet. Do not replace it with broad approval or a vague "continue?" prompt.
+When user-owned product or material technical judgment blocks progress, show or request a Decision Packet. Do not replace it with broad approval or a vague "continue?" prompt.
 
 A user-facing Decision Packet should include:
 
@@ -212,7 +212,7 @@ Approved, I will update whatever is needed and close the task.
 Good decision stop:
 
 ```text
-Blocked on product judgment: the empty state can either invite setup now or keep the page quiet until data exists. Recommendation: invite setup now, low uncertainty. If you defer, I can finish the data-loading refactor but not the empty-state UX.
+Blocked on user-owned product judgment: the empty state can either invite setup now or keep the page quiet until data exists. Recommendation: invite setup now, low uncertainty. If you defer, I can finish the data-loading refactor but not the empty-state UX.
 ```
 
 Bad decision stop:

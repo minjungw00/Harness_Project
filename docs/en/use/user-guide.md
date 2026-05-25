@@ -18,7 +18,7 @@ The agent should translate your request into the right Harness steps. You should
 
 Use deeper Harness labels only when they help explain a real stop, boundary, or close condition.
 
-Harness is neither just a technical gate system nor just a planning checklist. It is decision support for product and technical judgment, while keeping approval, Write Authorization, verification, Manual QA, risk, and acceptance separate.
+Harness is neither just a technical gate system nor just a planning checklist. It supports user-owned product and material technical judgment, while keeping approval, Write Authorization, verification, Manual QA, risk, and acceptance separate.
 
 ## Read this when
 
@@ -133,14 +133,14 @@ Judgment answers: "What do I need to decide before the work can safely continue 
 
 Most judgment is one of these:
 
-- choose a product direction or trade-off
-- choose a technical direction whose cost, compatibility, security, or maintenance impact you own
+- choose a product direction or trade-off you own
+- choose a material technical direction whose cost, compatibility, security, migration, interface, or maintenance impact you own
 - approve a sensitive step
 - decide whether Manual QA is needed or whether a waiver is acceptable
 - accept a known residual risk
 - accept the final result when final acceptance is required
 
-When product judgment or a user-owned technical choice blocks progress, the agent should show a Decision Packet with options, trade-offs, recommendation, uncertainty, and deferral effect. It should not flatten that into a vague "approve everything?" question.
+When user-owned product or material technical judgment blocks progress, the agent should show a Decision Packet with options, trade-offs, recommendation, uncertainty, and deferral effect. It should not flatten that into a vague "approve everything?" question.
 
 A good Decision Packet should feel like decision support, not a permission slip. It should name the real choice, compare realistic paths, recommend one, and say what can safely continue if you defer, or why nothing should continue until you decide.
 
@@ -180,7 +180,7 @@ You may also say "Run this work under the harness" when you want to be explicit,
 For review help, stay plain unless the label is useful:
 
 ```text
-Look at the product trade-offs before choosing.
+Look at the product or technical trade-offs before choosing.
 Check this from engineering, design, security, QA, or release-handoff perspective.
 ```
 
@@ -193,7 +193,7 @@ Do not expand beyond the scope we just agreed.
 If scope needs to grow, show me the options and impact first.
 Pause writes until I answer the open decision.
 Show what you can actually block and what you can only detect later.
-Use careful mode for this change: narrow scope, show write authority before writes, and ask before product trade-offs.
+Use careful mode for this change: narrow scope, show write authority before writes, and ask before user-owned product or material technical trade-offs.
 ```
 
 Power-user equivalents for the same requests include Change Unit, Decision Packet, guarantee level, detached verification, residual risk, `prepare_write`, and Write Authorization. They are useful labels for explaining blocks and close conditions; they are not words you must memorize before using Harness.
@@ -216,7 +216,7 @@ Typical flow:
 1. The agent checks status or starts intake.
 2. The agent classifies the request as `advisor`, `direct`, or `work`.
 3. The agent confirms scope and the active Change Unit when product writes may happen.
-4. If product or technical judgment blocks progress, you answer a Decision Packet.
+4. If user-owned product or material technical judgment blocks progress, you answer a Decision Packet.
 5. Before product writes, the agent checks write authority.
 6. After changes or advice, the agent records the relevant result and evidence when evidence applies.
 7. When needed, verification, Manual QA, residual risk, and acceptance are handled before close.
@@ -253,7 +253,7 @@ These words answer different questions.
 
 | Judgment | Question it answers |
 |---|---|
-| Decision | Which product direction, technical direction, trade-off, waiver, or close-relevant choice should we take? |
+| Decision | Which user-owned product direction, material technical direction, trade-off, waiver, or close-relevant choice should we take? |
 | Approval | May this sensitive action proceed? |
 | Manual QA | Did a person inspect the experience where human judgment matters? |
 | Residual-risk acceptance | Do you accept a known remaining limitation, uncertainty, or trade-off? |
@@ -261,7 +261,7 @@ These words answer different questions.
 
 Approval is not acceptance. Passing checks is not Manual QA. Accepting residual risk is not proof that the work is correct. Final acceptance, when required, should come after close-relevant residual risk has been shown or reported as none.
 
-Examples that may need approval include dependency additions, auth or permission changes, data model changes, public API changes, destructive writes, secret access, and production configuration changes. Approval only answers whether a sensitive step may proceed; a separate Decision Packet may still be needed for the dependency, migration, interface, module-boundary, product, QA, or risk choice itself.
+Examples that may need approval include dependency additions, auth or permission changes, data model changes, public API changes, destructive writes, secret access, and production configuration changes. Approval only answers whether a sensitive step may proceed; a separate Decision Packet may still be needed for the dependency, migration, interface, module-boundary, product, material technical, QA, or risk choice itself.
 
 If the agent asks for a QA or verification waiver, it should say what is not being checked, what risk you would accept, and what follow-up remains. If it asks to close with residual risk, it should show the remaining limitation first, then ask whether you accept that risk for this Task.
 

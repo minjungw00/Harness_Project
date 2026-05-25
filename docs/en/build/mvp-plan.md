@@ -132,7 +132,7 @@ Focus on:
 - minimal changed-path, scope, approval, baseline, decision, autonomy, and capability checks
 - raw artifact registration with integrity and redaction metadata
 
-Do not treat approval as user-owned judgment. Product trade-offs, architecture choices, material technical choices, unresolved security or product-security judgment, QA waivers, verification risk, acceptance, and residual-risk acceptance still require compatible Decision Packets when they apply.
+Do not treat approval as user-owned judgment. User-owned product trade-offs, architecture choices, material technical choices, unresolved security or product-security judgment, QA waivers, verification risk, acceptance, and residual-risk acceptance still require compatible Decision Packets when they apply.
 
 ### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
 

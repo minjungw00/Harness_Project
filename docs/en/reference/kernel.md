@@ -38,7 +38,7 @@ It is a lookup document for implementers, conformance authors, and maintainers. 
 
 3. What user judgment is still blocking progress?
 
-   Blocking user-owned judgment is represented by `decision_gate` and compatible Decision Packets. This includes product judgment and technical judgment with material cost, compatibility, security, maintenance, migration, interface, dependency, or risk impact. Sensitive permission is represented separately by `approval_gate` and Approval records.
+   Blocking user-owned judgment is represented by `decision_gate` and compatible Decision Packets. This includes user-owned product judgment and material technical judgment with cost, compatibility, security, maintenance, migration, interface, dependency, or risk impact. Sensitive permission is represented separately by `approval_gate` and Approval records.
 
 4. Can this Task close?
 
@@ -226,7 +226,7 @@ Every product write requires an active Change Unit whose scope covers the intend
 
 ### Autonomy Boundary
 
-An Autonomy Boundary is part of Change Unit semantics. It records the user-owned judgment boundary inside which the agent may proceed without asking the user for another decision. In ordinary terms, it answers: within this Change Unit, what may the agent decide alone, and what must stop for user judgment? It may include explicitly recorded latitude for how to carry out the agreed goal and scope, such as local implementation choices, conservative design details, codebase stewardship trade-offs, and low-risk execution choices. It must not be read as permission to change the goal, expand scope, choose material product or technical direction, or accept residual risk for the user.
+An Autonomy Boundary is part of Change Unit semantics. It records the user-owned judgment boundary inside which the agent may proceed without asking the user for another decision. In ordinary terms, it answers: within this Change Unit, what may the agent decide alone, and what must stop for user judgment? It may include explicitly recorded latitude for how to carry out the agreed goal and scope, such as local implementation choices, conservative design details, codebase stewardship trade-offs, and low-risk execution choices. It must not be read as permission to change the goal, expand scope, choose user-owned product direction or material technical direction, or accept residual risk for the user.
 
 When the recorded latitude covers it, the agent may choose implementation details such as local helper shape, test organization, non-public naming, or a conservative code path that stays inside the agreed result. The agent must stop for user judgment when the choice changes public API or module contracts, security or privacy trade-offs, UX or product behavior, material dependency or migration direction, scope expansion, or residual-risk acceptance.
 
@@ -278,7 +278,7 @@ Implementation and direct Runs must consume a compatible, unexpired, unconsumed 
 
 An Approval is a scope-bound prior decision for sensitive change. It records what was approved: paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, expiry conditions, and user decision. Approval authorizes sensitive categories inside defined scope. It does not prove correctness, replace evidence, satisfy QA, imply acceptance, or provide the authority path for user-owned judgment.
 
-If a sensitive action also includes a product trade-off, architecture choice, QA waiver, verification risk, acceptance, residual-risk acceptance, or public interface commitment, the Approval record may authorize the sensitive category only. The user-owned judgment still requires a compatible Decision Packet.
+If a sensitive action also includes user-owned product or material technical judgment, such as a product trade-off, architecture choice, material technical choice, QA waiver, verification risk, acceptance, residual-risk acceptance, or public interface commitment, the Approval record may authorize the sensitive category only. The user-owned judgment still requires a compatible Decision Packet.
 
 ### Write Authorization
 
@@ -382,7 +382,7 @@ Decision Packet and Residual Risk canonical source is kernel state. Decision Pac
 
 Journey Spine is derived from kernel state, registered artifact references, and `state.sqlite.task_events`. Journey Spine Entry canonical source is kernel state when durable continuity annotations are needed. Journey Cards and Journey Spine Markdown views are projections and cannot repair, close, or mutate state by themselves.
 
-Approval and Decision Packet authority are separate. Approval authorizes sensitive categories inside defined scope; it is not the authority path for user-owned product judgment or material technical judgment. If a sensitive action also includes a product trade-off, architecture choice, QA waiver, verification risk, acceptance, residual-risk acceptance, or public interface commitment, the Approval may authorize only the sensitive category. The user-owned judgment still requires a compatible Decision Packet.
+Approval and Decision Packet authority are separate. Approval authorizes sensitive categories inside defined scope; it is not the authority path for user-owned product judgment or material technical judgment. If a sensitive action also includes user-owned product or material technical judgment, such as a product trade-off, architecture choice, material technical choice, QA waiver, verification risk, acceptance, residual-risk acceptance, or public interface commitment, the Approval may authorize only the sensitive category. The user-owned judgment still requires a compatible Decision Packet.
 
 ## Gates
 

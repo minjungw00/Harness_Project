@@ -300,6 +300,7 @@ Change Unit block sub-template:
   - evidence collection:
 - user judgment required:
   - product direction:
+  - material technical direction:
   - public interface or compatibility commitment:
   - residual risk acceptance:
 - AFK stop conditions:

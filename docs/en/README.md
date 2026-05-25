@@ -2,15 +2,9 @@
 
 This is the English entrypoint for the reader-centered Harness documentation set.
 
-Harness is an agency-preserving local authority kernel for AI-assisted product work.
+Harness is an agency-preserving local authority kernel for AI-assisted product work. It keeps a local operating record of scope, user-owned judgment, write authority, evidence, verification, QA, acceptance, residual risk, and close.
 
-Harness is not merely a chat workflow, prompt skill bundle, test harness, or evaluation harness.
-
-It can integrate with MCP tools/connectors, hooks, guardrails, adapters, sidecars, and isolation layers, but those surfaces are not the source of Harness authority. They help agents read context, call Harness tools, capture evidence, or enforce/detect boundaries when the connected profile supports it.
-
-Harness authority comes from Core and canonical local state: Task and Change Unit scope, Decision Packets, Approval, Write Authorization, evidence, verification, QA, acceptance, residual risk, and close.
-
-Harness also does not replace the user's product repository, version control system, test runner, code review process, product judgment, or material technical judgment.
+For the full identity, authority model, integration-surface boundaries, and non-goals, read [Overview](learn/overview.md) and [Purpose and Principles](learn/purpose-and-principles.md).
 
 ## Learn
 

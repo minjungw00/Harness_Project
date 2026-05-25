@@ -53,7 +53,7 @@ Reference: [Kernel Reference](../reference/kernel.md).
 
 The agent finds two reasonable failed-login behaviors: a generic security-safe message or a detailed message that is easier for users but leaks more information. The agent should not quietly choose the product trade-off if that choice blocks progress.
 
-A Decision Packet records a user-owned decision that blocks progress, write, close, waiver, acceptance, residual-risk acceptance, product direction, scope, design trade-off, stewardship judgment, or public commitment. It names the decision, options, trade-offs, evidence, affected scope, residual risk, and next action.
+A Decision Packet records a user-owned decision that blocks progress, write, close, waiver, acceptance, residual-risk acceptance, product direction, material technical direction, scope, design trade-off, stewardship judgment, or public commitment. It names the decision, options, trade-offs, evidence, affected scope, residual risk, and next action.
 
 Reference: [Kernel Reference](../reference/kernel.md).
 
