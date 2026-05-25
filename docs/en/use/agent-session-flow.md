@@ -63,6 +63,40 @@ If projection, `source_state_version`, or readable status is stale or unknown, s
 
 Keep display failures separate. A stale projection means the readable card/report may lag and needs refresh or reconcile before it becomes dependable context. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient and may block writes or close. MCP unavailable means the agent cannot reach the required Harness/Core capability; do not claim authoritative state changes, approvals, gate updates, projection repairs, or close until that capability is available again.
 
+If Core itself is unreachable, the display issue is `MCP_SERVER_UNAVAILABLE`: say Core cannot be reached and reconnect or diagnose before claiming state changed. If Core or the operator can tell that the current surface lacks usable MCP, the display issue is `SURFACE_MCP_UNAVAILABLE`: say this surface cannot use the required Harness tools, then hold writes by instruction or switch to a capable surface. Only say execution was blocked before action when a proven preventive guard covered that operation.
+
+## Reading status and blockers
+
+Use MCP results as the source, then speak in user terms.
+
+The exact error taxonomy, complete mapping, and precedence stay in [MCP API And Schemas](../reference/mcp-api-and-schemas.md). This section gives short display examples for common session responses; it is intentionally not exhaustive.
+
+- `harness.status` means "where are we now?"
+- `harness.next` means "what is the next safe action or smallest unblocker?"
+- `harness.prepare_write` means "may this exact product write happen now?"
+- `harness.record_run` means "what happened, what evidence changed, and what is next?"
+- `harness.close_task` means "can this Task finish or cancel now?"
+
+When a response contains errors or blockers, lead with one primary blocker. Use the first `ToolError` chosen by API precedence, or the first `close_task` blocker when close returned blockers. Then show the smallest unblocker in ordinary language. Keep secondary blockers visible only when they will still matter after the primary blocker is resolved.
+
+Common display examples:
+
+| Raw condition | Say first | Smallest unblocker |
+|---|---|---|
+| `STATE_CONFLICT` | State changed since this view. | Refresh status and retry with the current state version. |
+| `MCP_UNAVAILABLE` with `details.mcp_unavailable_kind=server_unavailable`, or diagnostic `MCP_SERVER_UNAVAILABLE` | Core cannot be reached. | Reconnect or diagnose Core access before claiming state changes. |
+| `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` with `details.mcp_unavailable_kind=surface_mcp_unavailable`, or diagnostic `SURFACE_MCP_UNAVAILABLE` | This surface cannot use the required Harness tools. | Repair the surface or switch to a capable surface; hold writes by instruction unless a proven guard blocks execution. |
+| `MCP_UNAVAILABLE` with no useful detail | Harness/Core capability is unavailable. | Reconnect, repair the surface, or switch to a capable surface before claiming state changes. |
+| `CAPABILITY_INSUFFICIENT` | This surface cannot provide the needed guarantee. | Use a capable profile, reduce the operation, or choose a path that does not need that capability. |
+| `NO_ACTIVE_TASK` | No active Task is selected. | Select or create the Task before continuing. |
+| `WRITE_AUTHORIZATION_REQUIRED` or `WRITE_AUTHORIZATION_INVALID` | Write authority is missing or stale. | Retry `harness.prepare_write` for the exact intended write. |
+| `DECISION_REQUIRED` or `DECISION_UNRESOLVED` | User judgment is needed. | Show the Decision Packet or a focused decision prompt. |
+| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, or `APPROVAL_EXPIRED` | Sensitive-action Approval is needed or unusable. | Request, resolve, or renew the Approval, then retry the write check. |
+| `PROJECTION_STALE` | The readable status view is stale. | Refresh or reconcile the projection before relying on that view. |
+| `ARTIFACT_MISSING` | An artifact is missing or failed integrity. | Reattach, regenerate, or replace the artifact before using it as evidence. |
+
+Prefer the plain phrase first and the exact Harness term in parentheses only when it helps: "Write authority is stale (`WRITE_AUTHORIZATION_INVALID`). Smallest unblocker: rerun `harness.prepare_write` for the current file list."
+
 ## Intake
 
 Intake turns an everyday request into a usable task shape without forcing the user to speak Harness.

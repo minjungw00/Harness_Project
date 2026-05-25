@@ -9,8 +9,9 @@
 - 현재 Task 상태와 gate
 - active Change Unit
 - Autonomy Boundary summary
-- Write Authorization, approval, baseline, guarantee 참조
+- Write Authorization, approval, baseline, 보장 수준 참조
 - active Decision Packet 참조
+- 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 summary
 - residual-risk summary와 참조
 - 최신 evidence, Eval, Manual QA, 보고서 참조
 - projection 최신성 입력
@@ -20,6 +21,7 @@ Judgment, write-authority, close-impact, residual-risk, freshness placeholder는
 ## 렌더링 섹션
 
 - 현재 위치와 next action
+- 현재 막는 것
 - 판단 context
 - Autonomy boundary
 - Write Authority Summary
@@ -36,20 +38,25 @@ TASK-{id} {title}
 현재 위치: {mode} / {lifecycle_phase} / {current_position}
 다음 action: {next_action}
 
+현재 막는 것:
+- 가장 먼저 해소할 막힘: {primary_blocker_label|none}
+- 가장 작은 해소 방법: {smallest_unblocker|none}
+- 추가로 막는 것: {secondary_blockers_summary|none}
+
 판단 context:
-- pending decision: {decision_packet_ref|none}
-- user deciding: {what_user_is_deciding|none}
-- agent may decide: {what_agent_may_decide_without_user}
+- 대기 중인 Decision: {decision_packet_ref|none}
+- 사용자가 판단할 것: {what_user_is_deciding|none}
+- agent가 판단해도 되는 것: {what_agent_may_decide_without_user}
 
 Autonomy Boundary:
 - profile: {autonomy_profile}
-- agent may do: {agent_may_do}
-- user judgment required: {user_judgment_required}
+- agent가 할 수 있는 일: {agent_may_do}
+- 필요한 사용자 판단: {user_judgment_required}
 - AFK stop conditions: {afk_stop_conditions}
 
 Write Authority Summary:
 - active Change Unit: {active_change_unit_ref|none}
-- write authorization: {write_authorization_ref|none}
+- Write Authorization: {write_authorization_ref|none}
 - allowed paths: {allowed_paths}
 - allowed tools: {allowed_tools}
 - allowed commands: {allowed_commands}
@@ -58,17 +65,17 @@ Write Authority Summary:
 - sensitive categories: {sensitive_categories}
 - approval status: {approval_status}
 - baseline: {baseline_ref|none}
-- guarantee: {guarantee_display}
+- 보장 수준: {guarantee_display}
 - note: Autonomy Boundary는 판단 재량이지 쓰기 권한이 아니다.
 
-Next evidence:
-- action: {next_evidence_action}
-- needed for: {evidence_needed_for}
-- latest evidence: {latest_evidence_ref|none}
+다음 근거:
+- 행동: {next_evidence_action}
+- 필요한 이유: {evidence_needed_for}
+- 최신 evidence: {latest_evidence_ref|none}
 - 생략/차단된 근거 영향: {redaction_availability_summary|none}
 
-Residual risk:
-- status: {residual_risk_status}
+남은 위험:
+- 상태: {residual_risk_status}
 - 닫기 영향: {residual_risk_close_impact}
 - accepted residual-risk record refs: {accepted_residual_risk_record_refs|none}
 
@@ -87,5 +94,7 @@ Projection freshness: {projection_freshness}; source_state_version={source_state
 ## 메모
 
 이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `status`, `next`, 중요한 resume flow에서 보여주는 현재 위치 Journey Card output도 읽기/표시용 접점입니다.
+
+Blocker 줄은 API와 state record를 사용자에게 보이는 status로 바꿔 보여줍니다. 가장 먼저 해소할 막힘은 next action이 먼저 해소해야 하는 blocker여야 합니다. 추가 막힘은 후속 경로에 영향을 줄 때만 계속 보여줍니다. Raw `ErrorCode` 값만으로 설명을 끝내면 안 됩니다.
 
 Latest 또는 next evidence에 `secret_omitted`나 `blocked` artifact ref가 포함되면 이 card는 사용 가능성 영향만 표시해야 합니다. 생략된 값 또는 차단된 원본 payload 내용을 포함하면 안 됩니다.

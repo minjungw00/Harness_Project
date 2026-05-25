@@ -11,6 +11,7 @@ Use `JOURNEY-CARD` when a current-position card needs to show where the work is,
 - Autonomy Boundary summary
 - Write Authorization, approval, baseline, and guarantee refs
 - active Decision Packet refs
+- primary blocker, secondary blocker, and smallest unblocker display summaries
 - residual-risk summary and refs
 - latest evidence, Eval, Manual QA, and report refs
 - projection freshness inputs
@@ -20,6 +21,7 @@ Judgment, write-authority, close-impact, residual-risk, and freshness placeholde
 ## Rendered sections
 
 - current position and next action
+- blocking now
 - Judgment context
 - Autonomy boundary
 - Write Authority Summary
@@ -35,6 +37,11 @@ TASK-{id} {title}
 Display only: current-position view, not canonical state or write authority.
 Where we are: {mode} / {lifecycle_phase} / {current_position}
 Next action: {next_action}
+
+Blocking now:
+- primary: {primary_blocker_label|none}
+- smallest unblocker: {smallest_unblocker|none}
+- also blocking: {secondary_blockers_summary|none}
 
 Judgment context:
 - pending decision: {decision_packet_ref|none}
@@ -87,5 +94,7 @@ Projection freshness: {projection_freshness}; source_state_version={source_state
 ## Notes
 
 This template is a rendered shape, not canonical state. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains a read/display surface.
+
+The blocker lines translate API and state records into user-facing status. The primary blocker should be the first blocker the next action must resolve; secondary blockers stay visible only when they affect the follow-on path. Do not expose raw `ErrorCode` values as the only explanation.
 
 When latest or next evidence includes `secret_omitted` or `blocked` artifact refs, this card should show only the availability impact. It must not include omitted values or blocked raw payload content.

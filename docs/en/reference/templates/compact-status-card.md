@@ -14,6 +14,7 @@ Use the compact status card when a short current-state display needs to show the
 - risk summary
 - scope, approval, decision, design, evidence, verification, QA, and acceptance gates
 - close blocker and Manual QA summary
+- primary blocker, secondary blocker, and smallest unblocker display summaries derived from API errors, close blockers, gates, and refs
 - projection freshness and `source_state_version`
 - latest report, Evidence Manifest, Run, Eval, Manual QA, and ArtifactRef refs
 
@@ -24,6 +25,8 @@ Summary placeholders in this card are display bindings derived from the records 
 - task identity
 - mode and lifecycle phase
 - next safe action
+- primary blocker and smallest unblocker
+- secondary blockers
 - active Change Unit
 - user decision
 - write authority
@@ -41,6 +44,8 @@ TASK-{id} {title}
 Display only: current-state view, not canonical state or write authority.
 Mode: {mode} / {lifecycle_phase}
 Next safe action: {next_safe_action}
+Primary blocker: {primary_blocker_label|none}; smallest unblocker: {smallest_unblocker|none}
+Also blocking: {secondary_blockers_summary|none}
 Change Unit: {active_change_unit_summary|none}
 Blocking decision: {blocking_decision_summary|none}
 Write authority: {write_authority_status}
@@ -57,6 +62,8 @@ Latest refs: report={latest_report_ref|none}; evidence={evidence_manifest_ref|no
 ## Notes
 
 This template is a rendered card shape, not canonical state. Gate values remain owned by canonical state, and projection freshness is readable-view freshness only; it is not Task result, state freshness, evidence freshness, approval, acceptance, or write authority.
+
+The primary blocker should come from the primary `ToolError` when an API response supplies one, or from the first close blocker when rendering a failed `harness.close_task` response. Secondary blockers should be grouped compactly and shown only when they change the next action, close readiness, or user judgment. These labels are display text, not new schema values or error codes.
 
 This is not judgment-context. If user judgment is needed, render a separate decision prompt with options, recommendation, uncertainty, deferral effect, and relevant refs.
 

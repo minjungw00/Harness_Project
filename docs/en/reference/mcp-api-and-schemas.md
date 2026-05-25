@@ -19,6 +19,8 @@ MCP resources are read-only views. They can report current state, projection fre
 
 All state changes go through public tools and Core. A tool response may include projection paths and artifact refs, but those are references to canonical state records or durable evidence files, not replacements for canonical state.
 
+Status and next-action displays should translate public MCP concepts into ordinary user language before showing them. A user should see what is blocking, the smallest unblocker, and any important secondary blockers. Raw `ToolError`, `ErrorCode`, and schema field names may appear as optional detail for implementers, logs, or conformance output, but they should not be the only user-facing explanation.
+
 The public request and response schemas in this document are the validation source for API payloads, including API-shaped payloads that Core later stores. Core must validate every storage JSON value before commit against either the API-owned shape here or the storage-owned shape in [Storage And DDL](storage-and-ddl.md). Malformed or schema-incompatible JSON is invalid state.
 
 ## Reference scope
@@ -63,6 +65,14 @@ This document does not own:
 6. Record evidence/eval/QA/acceptance when applicable through the matching public tool or Decision Packet path.
 7. Close when blockers clear with `harness.close_task`.
 
+In user terms:
+
+- `harness.status` answers "where are we, what matters now, and is the display current?"
+- `harness.next` answers "what is the next safe action or smallest unblocker?"
+- `harness.prepare_write` answers "may this exact product write happen now?"
+- `harness.record_run` answers "what happened, what evidence or artifacts were recorded, and what is next?"
+- `harness.close_task` answers "can this Task finish or cancel now, and if not, what blocks it?"
+
 Capability is not a first-class kernel gate. Surface capability appears through:
 
 - the `surface_capability_check` validator
@@ -97,6 +107,8 @@ harness://status/card
 ```
 
 Resource reads must not create Task records, decisions, projection jobs, or reconcile items. If a resource detects stale projection, it reports freshness; it does not repair it.
+
+Read-only resources may render a primary blocker, secondary blockers, and smallest unblocker when the source records already support those summaries. That rendering is still a read-only view; it must not create authority, clear gates, enqueue projection repair, or mutate canonical state.
 
 The Journey resources are projection-oriented reads over canonical state:
 
@@ -685,11 +697,32 @@ Tool descriptions below separate `ValidatorResults emitted` from Core checks/pre
 
 When a `ToolError` object is available for an MCP availability problem, `details.mcp_unavailable_kind` may be `server_unavailable`, `surface_mcp_unavailable`, `stale_connection`, or `unknown`.
 
+User-facing displays should map `ErrorCode` values to display labels and next-action language, not only echo the raw code. These labels are display guidance, not new public error codes:
+
+| API condition | User-facing label | Smallest unblocker language |
+|---|---|---|
+| `STATE_CONFLICT` | state conflict | Refresh the current Task or project status, then retry with the current state version or replay the original idempotent request. |
+| `MCP_UNAVAILABLE` (`details.mcp_unavailable_kind=server_unavailable`), or diagnostic `MCP_SERVER_UNAVAILABLE` | MCP unavailable: Core unreachable | Reconnect or diagnose Core access before claiming state changes, approvals, gate updates, projection repair, or close. |
+| `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` (`details.mcp_unavailable_kind=surface_mcp_unavailable`), or diagnostic `SURFACE_MCP_UNAVAILABLE` | MCP unavailable on this surface | Switch to or repair a surface that can call the required MCP tools; hold product writes by instruction unless a stronger guard actually blocks execution. |
+| `CAPABILITY_INSUFFICIENT` | capability insufficient | Use a capable surface/profile, reduce the operation, or choose a path that does not require the missing enforcement or validator capability. |
+| `NO_ACTIVE_TASK` | no active Task | Select or create a Task before using a Task-scoped action. |
+| `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | missing or stale write authority | Call or retry `harness.prepare_write` for the exact intended operation, current scope, and current state before any product write. |
+| `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | scope, boundary, or baseline issue | Confirm or narrow scope, update the Change Unit or baseline, or request the needed Decision Packet before the operation proceeds. |
+| `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | judgment needed | Show the relevant Decision Packet or decision prompt with options, recommendation, uncertainty, deferral effect, and refs. |
+| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | approval needed or not usable | Request, resolve, or renew the sensitive-action Approval; do not treat Approval as Write Authorization or product judgment. |
+| `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE` | evidence, verification, QA, acceptance, or risk visibility needed | Record or rerun the missing check, show residual risk, request acceptance, or record a valid waiver through the owning path. |
+| `PROJECTION_STALE` | stale status view | Refresh or reconcile the projection before relying on that readable view; canonical state remains the authority when directly available. |
+| `RECONCILE_REQUIRED` | reconcile needed | Reconcile human-editable or managed-block drift before using the affected projection or close path. |
+| `ARTIFACT_MISSING` | artifact issue | Reattach, regenerate, or replace the missing or failed artifact before relying on it as evidence. |
+| `VALIDATOR_FAILED` | check failed | Show the specific validator finding when available and name the smallest concrete fix; use this fallback only when no more specific typed blocker applies. |
+
 `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RESIDUAL_RISK_NOT_VISIBLE`, and `MCP_UNAVAILABLE` are stable public `ErrorCode` values. Validator-specific detail still belongs in `ValidatorResult.findings`.
 
 ### Primary Error Code Precedence
 
 Public tool responses carry one primary `ToolError.code` even when Core observes multiple blockers. When `ToolResponseBase.errors` is non-empty, `errors[0]` is the primary `ToolError` selected by this precedence table; any remaining entries may represent secondary blockers. Unless a tool subsection defines a narrower order, the primary code is the first applicable code in the precedence list below. Secondary blockers remain in tool-specific fields such as `blocked_reasons`, `CloseTaskResponse.blockers`, validator results, `ToolError.details`, and state summaries.
+
+For display, the primary error answers "what blocks the next step first?" Secondary blockers should remain visible when they change the plan, close readiness, user judgment, or evidence work, but they should be grouped as "also blocking" or "after that" rather than competing with the primary blocker. The smallest unblocker should follow the primary blocker unless a tool-specific field such as `CloseTaskResponse.blockers[].required_next_action` gives a more precise action for the same blocker.
 
 `Possible errors` lists enumerate admissible codes for a tool. They are not per-tool precedence tables.
 
@@ -749,6 +782,8 @@ A stale `expected_state_version` is reported as concurrency drift, not as proof 
 
 Purpose: return project, surface, active Task, Journey Card, gate, guarantee, projection, active Decision Packet, Autonomy Boundary, Write Authority Summary, residual-risk, and pending-decision status.
 
+User-facing meaning: show the current position. A status display should lead with active Task, current phase, primary blocker when one exists, smallest unblocker, write authority status, guarantee level, and projection freshness. It may include refs and secondary blockers, but it should not make the user read raw schema fields to understand whether work can continue.
+
 Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
 
 Request schema:
@@ -805,6 +840,8 @@ Projection jobs enqueued: none.
 When both `StatusResponse.recommended_playbooks` and `StatusResponse.journey_card.recommended_playbooks` are present, they are the same computed guidance rendered at different display levels. The top-level field is for status surfaces that do not render the full Journey Card; the Journey Card field keeps the same guidance with the current-position summary.
 
 `write_authority_summary` is returned when `include.write_authority=true`. When `include.journey_card=true`, the same current Write Authority Summary display may also appear in `journey_card.write_authority_summary`.
+
+When `projection_freshness.status` is `stale`, `failed`, or `unknown`, `status_card` may still help the user orient, but it must label the readable view as stale, failed, or unknown and should point to refresh or reconcile as the smallest unblocker before the view is treated as dependable context.
 
 ValidatorResults emitted: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`.
 
@@ -869,6 +906,8 @@ Idempotency behavior: same key returns the same Task/resume decision; different 
 
 Purpose: return the next safe action, instruction bundle, and pending decisions for the current Task.
 
+User-facing meaning: show what should happen next. `next_action.summary` should be ordinary action language such as ask the user, prepare this write, record evidence, run verification, record Manual QA, request acceptance, refresh or reconcile, or close. `next_action.required_tool` is a caller hint, not a command the user must see unless power-user detail is useful.
+
 Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
 
 Request schema:
@@ -914,6 +953,8 @@ Projection jobs enqueued: none.
 
 When `focus=acceptance`, `judgment_context.acceptance_visibility` must be non-null. It must include the residual-risk summary, unaccepted close-relevant risk refs, evidence summary refs, verification status, QA status, acceptance status, and what acceptance does not replace. The context must distinguish `ResidualRiskSummary.status=none`, meaning no known close-relevant risk exists, from `not_visible`, meaning known close-relevant risk is still hidden. The context must make clear before any acceptance request that acceptance does not replace evidence sufficiency, verification, Manual QA, approval, scope, or residual-risk visibility.
 
+When the next action is blocked, display the primary blocker and smallest unblocker first. Secondary blockers should appear as follow-on context when they would still block the same close, write, verification, QA, or acceptance path after the primary blocker is resolved.
+
 ValidatorResults emitted: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`, optional `context_hygiene_check`.
 
 Possible errors: `NO_ACTIVE_TASK`, `MCP_UNAVAILABLE`, `PROJECTION_STALE`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RECONCILE_REQUIRED`.
@@ -923,6 +964,8 @@ Idempotency behavior: read-only; repeated requests do not mutate state.
 ### `harness.prepare_write`
 
 Purpose: decide whether an intended product write is allowed before the agent writes.
+
+User-facing meaning: answer whether this exact product write may happen now. If `decision=allowed`, show the allowed operation, scope basis, Write Authorization ref or summary, guarantee limit, and any detective/cooperative limitation. If the write is blocked, show the primary reason and smallest unblocker; candidate approval or Decision Packet payloads are only candidates until committed by their owning tool path.
 
 Allowed actor: `lead_agent`, `operator`.
 
@@ -1035,6 +1078,8 @@ Approval authorizes sensitive categories inside the defined scope. Approval does
 ### `harness.record_run`
 
 Purpose: record shaping, implementation, direct-result, or verification-input run data, including artifacts and evidence updates.
+
+User-facing meaning: say what happened and what changed in evidence, artifacts, or next action. If Core rejects the request before committing a Run, do not claim a Run exists. If Core records a violation or audit Run after an observed product write, label it as audit/recovery context and do not present it as satisfying evidence, detached verification, QA, acceptance, or close readiness.
 
 Allowed actor: `lead_agent`, `evaluator`, `operator`.
 
@@ -1579,6 +1624,8 @@ CloseTaskResponse:
 ```
 
 Close blockers include unresolved, missing, deferred-without-coverage, blocked, rejected, stale, or incompatible blocking Decision Packets, and known close-relevant residual risk that is not visible before any successful close. If no known close-relevant residual risk exists, `ResidualRiskSummary.status=none` satisfies residual-risk visibility and is not a close blocker. A risk-accepted close additionally requires visible and accepted Residual Risk refs. Acceptance, when required, can be recorded only after close-relevant residual risk is visible or confirmed as `ResidualRiskSummary.status=none`.
+
+User-facing meaning: answer whether the Task can finish or cancel now. If close is blocked, display the first close blocker as the primary close blocker, use `required_next_action` as the smallest unblocker when present, and show remaining blockers as secondary close blockers with refs. Do not summarize a failed close as a generic gate failure when a concrete blocker is available.
 
 State transition summary: successful completion moves Task to `completed` with result and close reason; cancellation/supersession moves Task to `cancelled`; failed close leaves Task non-terminal and reports blockers.
 

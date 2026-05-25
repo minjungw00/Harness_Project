@@ -61,7 +61,41 @@ Harness가 연결되어 있으면 사용자가 Harness 사용을 명시적으로
 
 Projection, `source_state_version`, 읽기용 상태가 stale이거나 unknown이면 그 사실을 말하고, 거기에 의존하기 전에 refresh 또는 reconcile합니다. 기준 상태를 직접 읽을 수 있으면 그 상태에서 계속할 수 있지만, 읽기용 projection은 권한의 출처가 아니라고 알려야 합니다.
 
-표시 문제는 구분해서 말합니다. Stale projection은 읽기용 card/report가 뒤처졌을 수 있으므로 신뢰할 수 있는 context로 쓰기 전에 refresh 또는 reconcile이 필요하다는 뜻입니다. Stale state, stale baseline, stale evidence는 실제 입력이 이동했거나 부족해져 write나 close를 막을 수 있다는 뜻입니다. MCP unavailable은 에이전트가 필요한 Harness/Core capability에 닿지 못한다는 뜻입니다. 그 capability가 다시 사용 가능해지기 전에는 기준 상태 변경, approval, gate update, projection repair, close를 주장하면 안 됩니다.
+표시 문제는 구분해서 말합니다. Stale projection은 읽기용 card/report가 뒤처졌을 수 있으므로 신뢰할 수 있는 context로 쓰기 전에 refresh 또는 reconcile이 필요하다는 뜻입니다. Stale state, stale baseline, stale evidence는 실제 입력이 이동했거나 부족해져 write나 close를 막을 수 있다는 뜻입니다. MCP unavailable은 에이전트가 필요한 Harness/Core 기능에 닿지 못한다는 뜻입니다. 그 기능이 다시 사용 가능해지기 전에는 기준 상태 변경, approval, gate update, projection repair, close를 주장하면 안 됩니다.
+
+Core 자체에 닿을 수 없으면 표시 문제는 `MCP_SERVER_UNAVAILABLE`입니다. Core에 닿지 않는다고 말하고, 상태가 바뀌었다고 주장하기 전에 다시 연결하거나 진단합니다. Core 또는 operator가 현재 접점에서 MCP를 사용할 수 없다고 알 수 있으면 표시 문제는 `SURFACE_MCP_UNAVAILABLE`입니다. 이 접점이 필요한 Harness 도구를 사용할 수 없다고 말한 뒤, 제품 파일 쓰기는 지시로 보류하거나 필요한 기능을 가진 접점으로 전환합니다. 해당 작업에 실행 전 차단을 입증한 guard가 적용된 경우에만 실행 전에 차단됐다고 말합니다.
+
+## 상태와 blocker 읽기
+
+MCP 결과를 기준으로 삼되, 사용자에게는 사용자 언어로 말합니다.
+
+정확한 error taxonomy, 전체 mapping, precedence는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)가 담당합니다. 여기는 세션 응답에서 자주 쓰는 짧은 표시 예시만 제공하며, 전체 목록이 아닙니다.
+
+- `harness.status`는 "지금 어디에 있는가?"라는 뜻입니다.
+- `harness.next`는 "다음 안전한 행동 또는 가장 작은 해소 방법은 무엇인가?"라는 뜻입니다.
+- `harness.prepare_write`는 "지금 이 정확한 제품 파일 쓰기를 해도 되는가?"라는 뜻입니다.
+- `harness.record_run`은 "무슨 일이 일어났고, 어떤 evidence가 바뀌었으며, 다음은 무엇인가?"라는 뜻입니다.
+- `harness.close_task`는 "이 Task를 지금 끝내거나 취소할 수 있는가?"라는 뜻입니다.
+
+응답에 error나 blocker가 있으면 가장 먼저 해소할 막힘 하나를 먼저 말합니다. API precedence로 선택된 첫 `ToolError`를 쓰거나, `harness.close_task`가 blockers를 반환했다면 첫 close blocker를 사용합니다. 그다음 가장 작은 해소 방법을 평범한 말로 보여줍니다. 추가 막힘은 가장 먼저 해소할 막힘이 해소된 뒤에도 의미가 있을 때만 계속 보여줍니다.
+
+자주 쓰는 표시 예시:
+
+| 원래 조건 | 먼저 말할 내용 | 가장 작은 해소 방법 |
+|---|---|---|
+| `STATE_CONFLICT` | 이 보기 이후 상태가 바뀌었습니다. | 상태를 새로 읽고 현재 state version으로 다시 시도합니다. |
+| `MCP_UNAVAILABLE`(`details.mcp_unavailable_kind=server_unavailable`) 또는 진단상 `MCP_SERVER_UNAVAILABLE` | Core에 닿을 수 없습니다. | 기준 상태 변경을 주장하기 전에 Core 연결을 복구하거나 진단합니다. |
+| `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`(`details.mcp_unavailable_kind=surface_mcp_unavailable`) 또는 진단상 `SURFACE_MCP_UNAVAILABLE` | 이 접점은 필요한 Harness 도구를 사용할 수 없습니다. | 접점을 복구하거나 사용할 수 있는 접점으로 전환합니다. 실행을 막는 guard가 입증된 경우가 아니면 제품 파일 쓰기는 지시로 보류합니다. |
+| 유용한 detail이 없는 `MCP_UNAVAILABLE` | Harness/Core 기능을 사용할 수 없습니다. | 기준 상태 변경을 주장하기 전에 다시 연결하거나 접점을 복구하거나 사용할 수 있는 접점으로 전환합니다. |
+| `CAPABILITY_INSUFFICIENT` | 이 접점은 필요한 보장 수준을 제공할 수 없습니다. | 필요한 profile을 쓰거나, 작업을 줄이거나, 그 기능이 필요 없는 경로를 선택합니다. |
+| `NO_ACTIVE_TASK` | 선택된 active Task가 없습니다. | 계속하기 전에 Task를 선택하거나 만듭니다. |
+| `WRITE_AUTHORIZATION_REQUIRED` 또는 `WRITE_AUTHORIZATION_INVALID` | 쓰기 권한이 없거나 최신이 아닙니다. | 정확한 의도한 쓰기에 대해 `harness.prepare_write`를 다시 시도합니다. |
+| `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED` | 사용자 판단이 필요합니다. | Decision Packet 또는 간결한 decision prompt를 보여줍니다. |
+| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, 또는 `APPROVAL_EXPIRED` | Sensitive-action Approval이 필요하거나 사용할 수 없습니다. | Approval을 요청, 해소, 갱신한 뒤 쓰기 확인을 다시 시도합니다. |
+| `PROJECTION_STALE` | 읽기용 상태 보기가 오래됐습니다. | 그 보기에 의존하기 전에 projection을 refresh 또는 reconcile합니다. |
+| `ARTIFACT_MISSING` | Artifact가 없거나 integrity check에 실패했습니다. | Artifact를 evidence로 쓰기 전에 다시 첨부하거나, 생성하거나, 교체합니다. |
+
+정확한 Harness 용어는 도움이 될 때만 괄호 안에 붙이고, 평범한 문장을 먼저 둡니다. 예: "쓰기 권한이 최신이 아닙니다(`WRITE_AUTHORIZATION_INVALID`). 가장 작은 해소 방법: 현재 file list로 `harness.prepare_write`를 다시 실행합니다."
 
 ## 요청 정리
 
