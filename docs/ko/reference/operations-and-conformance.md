@@ -219,6 +219,16 @@ Doctor는 runtime-home file trust posture도 documentation-contract level에서 
 
 Artifact에 대해서 doctor는 redaction, omission, block metadata가 빠진 상태를 단순 report formatting 문제가 아니라 security finding으로 취급합니다. Core가 artifact 등록 contract를 통해 검증하고 등록할 수 없는 한, raw staged file을 그대로 제자리에 복사하라는 repair를 추천하면 안 됩니다. Doctor가 `secret_omitted` 또는 `blocked`를 보고할 때는 committed artifact ref와 safe metadata만 보고합니다. `blocked`에서는 hash, size, content type이 registered metadata notice bytes를 설명하며, doctor가 Harness에서 forbidden payload를 복구할 수 있다고 말하면 안 됩니다.
 
+Security diagnostic display examples:
+
+| Observed condition | Category and level guidance | Report content |
+|---|---|---|
+| MCP가 matching connector profile 없이 local process/localhost 밖에 노출되었거나, forwarded, tunneled, stale, unknown으로 보입니다. | `security/threat model`과 `MCP`; read-only guarantee만 줄어든 경우 `WARN`, state-changing 또는 close-relevant path가 그 노출에 의존하면 `FAIL`. | Observed bind 또는 access mode, active project, expected surface profile, reduced guarantee, next diagnosis 또는 reconnect action. |
+| Runtime Home permission이 unknown이거나 documented local control profile보다 약합니다. | `security/threat model`; platform observability에 따라 `WARN` 또는 `MANUAL`. | Affected path class, 확인 가능한 owner/mode fact, file permission은 diagnostic이지 canonical state가 아니라는 reminder. |
+| Runtime Home에 broad write access가 있습니다. | Affected 영역에 따라 `security/threat model`과 `state`, `surface`, 또는 `artifacts`; write-capable readiness에서는 보통 `FAIL`. | `state.sqlite`, `registry.sqlite`, `project.yaml`, connector manifest, artifact storage, staging file, generated operational file에 대한 tampering risk. Direct edit는 Core/recover/artifact check가 검증하기 전까지 invalid입니다. |
+| Artifact directory에 broad read access가 있습니다. | `security/threat model`과 `artifacts`; sensitivity에 따라 `WARN` 또는 `FAIL`. | Raw value를 노출하지 않고 log, screenshot, token, PII, verification bundle, export에 대한 confidentiality risk를 설명하며 artifact ref, redaction state, path class를 보고합니다. |
+| Registered project, Task, surface가 caller claim과 맞지 않습니다. | `security/threat model`, `MCP`, `surface`; affected operation은 `FAIL`. | 안전하게 표시할 수 있는 claimed/registered identifier, affected tool 또는 surface, claim을 authority로 보지 말고 refresh/reconnect하라는 guidance. |
+
 ## serve mcp
 
 `serve mcp`는 local MCP server를 시작하거나 connection information을 출력합니다.
@@ -249,6 +259,8 @@ MCP를 사용할 수 없으면 operations는 diagnostic condition인 `MCP_SERVER
 `serve mcp`는 예상되지 않은 caller, documented local process/localhost expectation 또는 connector access contract 밖의 caller, weak socket or config permissions, forwarded 또는 tunneled endpoint, stale connector configuration을 threat-model issue로 다뤄야 합니다. 사용자가 접점이 Core가 기대하는 접점인지 볼 수 있도록 access mode, active project, surface identity, capability profile을 보고합니다. Spoofed `surface_id`, `actor_kind`, project/task selection을 authority의 proof처럼 보여주면 안 됩니다. Public tool contract는 여전히 Core를 통해 이 claims를 해석하고 검증합니다.
 
 Access mode가 unknown이거나 registered profile보다 약하면 operations는 노출된 권한에 맞는 diagnostic severity를 선택해야 합니다. Read-only resource exposure는 사용자가 reduced guarantee를 이해할 수 있으면 warning일 수 있습니다. State-changing tool, product/runtime/code write path, close-relevant flow는 overstated guarantee로 조용히 계속 진행하지 말고 fail, hold, 또는 `CAPABILITY_INSUFFICIENT`/`MCP_UNAVAILABLE` 보고로 처리해야 합니다.
+
+`serve mcp` display는 접점이 의존하기 전에 local boundary를 보이게 해야 합니다. 예를 들어 `0.0.0.0`에 bind된 endpoint, detected forwarded port, registered profile보다 넓은 filesystem permission을 가진 socket, stale per-project token은 off-profile access condition으로 표시하고 active `project_id`, `surface_id`, guarantee level, held capabilities를 함께 보여줍니다. 이것은 diagnostic display fact입니다. Public tool call은 계속 Core envelope validation, idempotency, state-version check, API-owned `ToolError` taxonomy에 의존합니다.
 
 ## projection refresh
 
@@ -478,6 +490,8 @@ flowchart TD
 Failure는 Core rule에 따라 related evidence, projection freshness, close readiness를 `stale`/blocked로 표시해야 합니다. Missing artifact는 Markdown 보고서를 edit해서 고치는 것이 아닙니다.
 
 Artifact check가 `secret_omitted` 또는 `blocked`를 관찰하면 이후 operation은 그 영향을 숨기지 않고 보고합니다. Evidence Manifest와 QA view는 omitted 또는 blocked ref를 표시하고, detached verification은 Eval path가 omission을 받아들이거나 다른 documented resolution이 적용되지 않는 한 unavailable 원본 bytes를 missing input으로 취급합니다. Projection display는 embedded content 대신 redaction state를 보여주고, export/Release Handoff summary는 값을 노출하지 않고 omission 또는 block을 나열합니다. `secret_omitted`는 secret이 아닌 evidence가 보이는 주장만 뒷받침할 수 있습니다. `blocked`는 attempted capture를 audit 가능하게 보존하지만, replacement, waiver, Decision Packet outcome, accepted risk, documented fallback이 path를 해소하기 전까지 dependent evidence, QA, Eval, projection, export, Release Handoff input을 blocked, insufficient, unavailable, unresolved 중 적절한 상태로 남깁니다.
+
+Artifact check diagnostic은 staged input의 boundary failure도 보여야 합니다. `staged_uri`가 project `artifacts/tmp/` 밖으로 resolve되거나, symlink로 escape하거나, parent traversal을 사용하거나, arbitrary absolute path를 이름으로 지정하거나, approved capture adapter 밖의 repo-local file을 가리키면 approved staging/capture boundary 밖으로 보고합니다. Report는 안전한 경우 affected locator와 owner relation을 이름 붙이고, existing artifact/check result를 통해 artifact input을 invalid 또는 unavailable로 표시하며, 금지된 target을 Harness evidence로 copy, hash, display, export하면 안 됩니다.
 
 ## conformance run
 

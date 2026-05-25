@@ -100,6 +100,16 @@ MCP를 local-process 또는 localhost 범위 밖으로 노출하려면 documente
 
 Access mode가 더 약하거나 unknown이거나 documented profile 밖에 있으면 Harness는 이를 솔직하게 보고합니다. `doctor` 또는 `serve mcp`는 risk에 따라 warn 또는 fail할 수 있고, status와 write decision은 guarantee display를 낮추거나 `surface_capability_check` finding을 emit해야 하며, cooperative 접점은 product/runtime/code write를 보류합니다. API에 보이는 failure는 MCP API owner가 허용하는 곳에서 existing `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT` path를 사용합니다. 약한 access mode 자체가 existing state의 corruption을 증명하지는 않지만, write-capable 또는 close-relevant path를 진단 전까지 capability-insufficient로 만들 수 있습니다.
 
+Diagnostic examples는 documentation contract의 일부이며 새 state model이 아닙니다.
+
+| Observed posture | Honest report |
+|---|---|
+| MCP가 non-local interface에 bind되었거나, forwarded/tunneled 되었거나, registered connector profile 밖 caller에게 reachable합니다. | `doctor`와 `serve mcp`는 observed access mode, active project, surface profile, weaker guarantee를 이름 붙입니다. State-changing 또는 close-relevant path는 hold, fail, 또는 existing `MCP_UNAVAILABLE` / `CAPABILITY_INSUFFICIENT` response를 사용하며 새 public `ErrorCode`를 추가하지 않습니다. |
+| Runtime Home permission이 unknown이거나 owner-only expectation보다 약합니다. | `doctor`는 platform observability와 remediation guidance가 포함된 security/threat-model finding을 보고합니다. File permission을 canonical state로 취급하거나 direct file edit를 authority로 받아들이지 않습니다. |
+| Runtime Home에 broad write access가 있습니다. | Report는 `state.sqlite`, `registry.sqlite`, `project.yaml`, connector manifest, artifact file, staging file, generated operational file에 대한 local tampering risk라고 설명합니다. Core는 shape, owner, event, integrity, recovery, artifact-registration check를 통해서만 의미를 받아들입니다. |
+| Artifact directory에 broad read access가 있습니다. | Report는 log, screenshot, token, PII, verification bundle, export, 기타 민감 evidence에 대한 confidentiality risk라고 설명합니다. Redaction, omission, block note, retention, export rule이 Harness가 표시하거나 복사할 수 있는 내용을 계속 정의합니다. |
+| Envelope claim이 잘못된 project, Task, surface, Run, actor role을 이름으로 지정합니다. | Public tool은 registered record와 tool scope에 대해 claim을 검증합니다. `actor_kind`는 routing을 도울 수 있지만, 그 자체로 Approval, user acceptance, Manual QA, detached verification을 충족할 수 없습니다. |
+
 ## Product Repository
 
 Product Repository는 사용자의 실제 제품 작업 공간입니다. 제품 소스 코드, tests, repository-level agent rules, 사람이 읽는 Harness projection이 여기에 있습니다.

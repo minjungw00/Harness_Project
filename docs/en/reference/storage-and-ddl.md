@@ -87,6 +87,14 @@ Runtime Home should be treated as user-private local control data. At the docume
 
 File permissions are defense in depth, not a second state model. A database row, artifact file, connector manifest, or generated file is authoritative only through Core validation, storage shape checks, owner/link checks, artifact integrity checks, or the documented `doctor`, `recover`, and `artifacts check` paths. Broad write access to Runtime Home is a local tampering risk; broad read access can expose secrets, PII, tokens, private logs, screenshots, verification bundles, and exported state.
 
+Permission diagnostics should be concrete enough for an operator to act on:
+
+| Observation | Diagnostic meaning |
+|---|---|
+| Platform cannot determine owner or mode for Runtime Home, a project directory, or `artifacts/tmp/`. | `doctor` reports unknown or weak local file posture with the affected path class. This is not a state failure by itself, but it lowers the security guarantee until the posture is understood. |
+| Runtime Home or project storage is writable by unrelated users, groups, shared containers, or broad local processes. | `doctor` reports a tampering risk and may fail write-capable readiness. Core still validates rows, events, owner links, hashes, and artifact registration before accepting meaning. |
+| Artifact storage is readable by unrelated users, groups, shared containers, or broad local processes. | `doctor`, export, and operation reports describe the confidentiality risk for logs, screenshots, tokens, PII, verification bundles, and exports without echoing sensitive values. |
+
 ## DDL draft
 
 The reference storage uses SQLite for registry and per-project state. The DDL is a draft implementation contract; field names may gain indexes or migration helpers, but table ownership and authority boundaries should remain stable.
@@ -1058,6 +1066,8 @@ The `artifacts.kind` field names durable evidence files. It does not make the ar
 Artifact registration is part of the Core transition that records the owner record, such as a Task, Run, Decision Packet context, Shared Design, Journey Spine Entry, Evidence Manifest, Eval, Manual QA record, Feedback Loop, TDD Trace, or rendered Task-scoped projection. Verification bundles and export components are artifact files linked to those owner records, not canonical `verification_bundle` or `export` state records.
 
 Artifact registration is the storage boundary for artifact poisoning. A staged path, capture adapter output, file name, extension, declared content type, and requested owner relation are untrusted until registration validates the source, applies redaction, omission, or blocking, computes stored-byte integrity, and links the artifact to an existing Task-scoped owner record. A `staged_uri` from the API is only a locator into approved staging or capture output; it cannot bypass this boundary by naming an arbitrary absolute path, symlink target, parent traversal, or repo-local file.
+
+For example, a staged path such as `../../repo/.env`, an absolute path under a user's home directory, or a symlink that escapes `artifacts/tmp/` is reported as outside the approved staging/capture boundary. The response or `artifacts check` report should identify the affected staged locator and boundary class, reject registration or mark the artifact input invalid through existing artifact/check/error paths, and avoid copying or hashing the forbidden target as Harness evidence.
 
 MVP registration steps:
 

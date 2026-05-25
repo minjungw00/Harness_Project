@@ -100,6 +100,16 @@ Exposing MCP beyond local-process or localhost scope requires a documented conne
 
 When the access mode is weaker, unknown, or outside the documented profile, Harness reports that honestly. `doctor` or `serve mcp` may warn or fail according to the risk, status and write decisions should reduce the guarantee display or emit `surface_capability_check` findings, cooperative surfaces hold product/runtime/code writes, and API-visible failures use existing `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` paths where the MCP API owner allows them. A weak access mode does not by itself prove existing state is corrupt, but it can make write-capable or close-relevant paths capability-insufficient until diagnosed.
 
+Diagnostic examples are part of the documentation contract, not a new state model:
+
+| Observed posture | Honest report |
+|---|---|
+| MCP is bound to a non-local interface, forwarded, tunneled, or reachable by a caller outside the registered connector profile. | `doctor` and `serve mcp` name the observed access mode, active project, surface profile, and weaker guarantee; state-changing or close-relevant paths hold, fail, or use existing `MCP_UNAVAILABLE` / `CAPABILITY_INSUFFICIENT` responses instead of adding a new public `ErrorCode`. |
+| Runtime Home permissions are unknown or weaker than owner-only expectations. | `doctor` reports a security/threat-model finding with platform observability and remediation guidance. It does not treat file permissions as canonical state or accept direct file edits as authority. |
+| Runtime Home has broad write access. | Reports call this a local tampering risk for `state.sqlite`, `registry.sqlite`, `project.yaml`, connector manifests, artifact files, staging files, and generated operational files. Core still accepts meaning only through shape, owner, event, integrity, recovery, or artifact-registration checks. |
+| Artifact directories have broad read access. | Reports call this a confidentiality risk for logs, screenshots, tokens, PII, verification bundles, exports, and other sensitive evidence. Redaction, omission, block notes, retention, and export rules still define what Harness may display or copy. |
+| Envelope claims name the wrong project, Task, surface, Run, or actor role. | Public tools validate the claims against registered records and tool scope. `actor_kind` may guide routing, but it cannot by itself satisfy Approval, user acceptance, Manual QA, or detached verification. |
+
 ## Product Repository
 
 The Product Repository is the user's real product workspace. It contains product source code, tests, repository-level agent rules, and human-readable harness projections.

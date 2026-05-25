@@ -140,6 +140,14 @@ Envelope fields are routing and audit claims:
 - `expected_state_version` is the caller's concurrency claim. A stale or wrong version returns `STATE_CONFLICT`; it must not be used to force an older Task or project view to win.
 - `dry_run=true` returns diagnostics only. It does not reserve an idempotency key, create a Write Authorization, attach artifacts, or prove that a later write is safe.
 
+Public tool responses should make local-security claim failures visible through existing response shapes:
+
+| Condition | Response guidance |
+|---|---|
+| `project_id`, `task_id`, or `surface_id` does not resolve, resolves outside the addressed project, or conflicts with a tool-specific Task or owner record. | Reject before mutation. Select the primary `ErrorCode` from the existing precedence table, and place the concrete claim mismatch in `ToolError.details`, blocked reasons, state summaries, or validator/check output. Do not add a public spoofing-specific code. |
+| `actor_kind` claims `user`, `operator`, or `evaluator` but the request path cannot satisfy user acceptance, Manual QA, Approval, or detached verification independence. | Keep the relevant gate unsatisfied and use the existing blocker, such as `ACCEPTANCE_REQUIRED`, `QA_REQUIRED`, `APPROVAL_REQUIRED`, `DECISION_REQUIRED`, `VERIFY_NOT_DETACHED`, `CAPABILITY_INSUFFICIENT`, or a validator result, according to the tool. The actor claim is audit context, not proof of judgment. |
+| The MCP endpoint is reachable only through an off-profile, weak, stale, forwarded, tunneled, or unknown access mode. | If Core or the operator can classify the condition, use existing `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` and include the available access-mode facts in `details` or guarantee display. If Core cannot be reached, no authoritative Core response or mutation can be claimed. |
+
 ## Common response
 
 Common response fields:
@@ -725,11 +733,15 @@ Idempotency keys are scoped to `(project_id, tool_name, idempotency_key)`. Repea
 
 `request_hash` is computed from canonical JSON encoded as UTF-8. The canonical input includes `tool_name`, the schema-normalized request body, and every `ToolEnvelope` field except `request_id` and `idempotency_key`; the included envelope fields are `expected_state_version`, `project_id`, `task_id`, `surface_id`, `run_id`, `actor_kind`, and `dry_run`. Before hashing, optional fields are normalized according to their request schema defaults and null/empty-field rules, object keys are sorted, arrays remain in schema-defined order unless a schema explicitly marks the array as order-insignificant, and Unicode strings are normalized consistently using NFC.
 
+When the same key is reused with a different canonical request payload, the `STATE_CONFLICT` response should make the replay problem diagnosable without exposing sensitive request bodies. `ToolError.details` may include the idempotency scope, the stored and received request hashes or an equivalent opaque comparison, and the fact that the caller must replay the original request or retry with a fresh key.
+
 ## State conflict behavior
 
 For state-changing tools, Core compares `expected_state_version` with current project/task state. A mismatch returns `STATE_CONFLICT` and includes the current state version and a status summary in `details`. The caller must refresh state and either retry with a new idempotency key or replay the exact previous request.
 
 State conflict comparison is scope-specific. Core first resolves the primary addressed Task from `ToolEnvelope.task_id`, any tool-specific `task_id`, or active Task resolution. Task-scoped tools compare against that Task's `tasks.state_version`; project-scoped tools with no resolved primary Task compare against `project_state.state_version`. `STATE_CONFLICT.details` should include `scope` (`task` or `project`), `current_state_version`, `expected_state_version`, and the relevant `project_id` plus `task_id` when `scope=task`; it may also include a compact status summary for refresh guidance.
+
+A stale `expected_state_version` is reported as concurrency drift, not as proof of caller identity. The diagnostic display should say which scope was stale, which current version Core observed, and that the caller must refresh before retrying; it must not accept an older Task or project view because the caller supplied it.
 
 ## Public tools
 

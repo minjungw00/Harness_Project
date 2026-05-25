@@ -87,6 +87,14 @@ Runtime Home은 user-private local control data로 취급해야 합니다. Docum
 
 File permission은 방어적 보강이지 두 번째 state model이 아닙니다. Database row, artifact file, connector manifest, generated file은 Core validation, storage shape check, owner/link check, artifact integrity check, 또는 documented `doctor`, `recover`, `artifacts check` path를 통해서만 authoritative합니다. Runtime Home에 broad write access가 있으면 local tampering risk이고, broad read access는 secret, PII, token, private log, screenshot, verification bundle, exported state를 노출할 수 있습니다.
 
+Permission diagnostic은 operator가 조치할 수 있을 만큼 구체적이어야 합니다.
+
+| Observation | Diagnostic meaning |
+|---|---|
+| Platform이 Runtime Home, project directory, 또는 `artifacts/tmp/`의 owner나 mode를 확인할 수 없습니다. | `doctor`는 affected path class와 함께 unknown 또는 weak local file posture를 보고합니다. 이것만으로 state failure는 아니지만 posture를 이해하기 전까지 security guarantee를 낮춥니다. |
+| Runtime Home 또는 project storage가 unrelated user, group, shared container, broad local process에게 writable입니다. | `doctor`는 tampering risk를 보고하고 write-capable readiness를 fail할 수 있습니다. Core는 row, event, owner link, hash, artifact registration을 검증한 뒤에만 의미를 받아들입니다. |
+| Artifact storage가 unrelated user, group, shared container, broad local process에게 readable입니다. | `doctor`, export, operation report는 민감한 값을 echo하지 않고 log, screenshot, token, PII, verification bundle, export에 대한 confidentiality risk를 설명합니다. |
+
 ## DDL draft
 
 Reference storage는 registry와 project별 상태를 저장하기 위해 SQLite를 사용합니다. DDL은 초안 상태의 구현 계약입니다. index나 migration helper가 field name에 추가될 수 있습니다. 하지만 table ownership과 권한 경계는 안정적으로 유지되어야 합니다.
@@ -1058,6 +1066,8 @@ Local layout 자체도 trust boundary입니다. `state.sqlite`, `registry.sqlite
 Artifact 등록은 Task, Run, Decision Packet context, Shared Design, Journey Spine Entry, Evidence Manifest, Eval, Manual QA record, Feedback Loop, TDD Trace, 렌더링된 Task-scoped projection 같은 owner 기록을 기록하는 Core transition의 일부입니다. Verification bundle과 export component는 그 owner 기록에 link되는 artifact file이며 기준 `verification_bundle` 또는 `export` 상태 기록은 아닙니다.
 
 Artifact 등록은 artifact poisoning을 막는 storage boundary입니다. Staged path, capture adapter output, file name, extension, declared content type, requested owner relation은 source 검증, redaction, omission, blocking 적용, stored-byte integrity 계산, 기존 Task-scoped owner record와의 link validation이 끝나기 전까지 신뢰 입력이 아닙니다. API의 `staged_uri`는 approved staging 또는 capture output을 가리키는 locator일 뿐입니다. 임의 absolute path, symlink target, parent traversal, repo-local file을 이름으로 지정해 이 boundary를 우회할 수 없습니다.
+
+예를 들어 `../../repo/.env` 같은 staged path, 사용자 home directory 아래 absolute path, 또는 `artifacts/tmp/`를 벗어나는 symlink는 approved staging/capture boundary 밖으로 보고합니다. Response 또는 `artifacts check` report는 affected staged locator와 boundary class를 식별하고, existing artifact/check/error path를 통해 registration을 reject하거나 artifact input을 invalid로 표시하며, 금지된 target을 Harness evidence로 copy하거나 hash하지 않습니다.
 
 MVP registration steps:
 
