@@ -92,6 +92,14 @@ Sensitive category는 side effect, security, compliance, product-contract, polic
 
 Log, screenshot, artifact, projection, export, run summary에는 secret, PII, credential, token, private customer data, 민감한 운영 세부 정보가 들어갈 수 있습니다. 따라서 runtime architecture에서 redaction과 omission은 보기 좋은 보고서 formatting이 아니라 evidence handling의 일부입니다. Raw secrets는 durable artifact가 되면 안 되며, exported bundle은 내용이 제거되었거나 blocked되었을 때 redaction 또는 omission note를 포함해야 합니다.
 
+### 로컬 접근 기대사항
+
+기본으로 지원하는 MCP 접근 전제는 registered project surface를 위한 local-process 또는 localhost access입니다. 이것은 로컬 운영 전제이지, 같은 machine의 모든 process를 신뢰한다는 뜻이 아닙니다. 구체적인 local risk에는 다른 local process의 tool call, forwarded 또는 tunneled port, 오래된 connector configuration, spoofed `project_id`, `task_id`, `surface_id`, `actor_kind` claim, Runtime Home data를 unrelated user나 process가 읽거나 바꿀 수 있게 하는 IPC 또는 file permission이 포함됩니다.
+
+MCP를 local-process 또는 localhost 범위 밖으로 노출하려면 documented connector capability profile, access-control contract, guarantee display가 필요합니다. 허용 가능한 access-control contract 예시는 localhost-only binding, owner-only filesystem permission으로 제한된 Unix-domain socket, per-project token, process-scoped configuration material, 또는 equivalent local control입니다. 이 참조 문서는 하나의 mechanism을 요구하지 않습니다. 다만 profile은 unrelated caller가 endpoint를 사용하는 일을 무엇이 막는지, 그리고 Core가 여전히 무엇을 검증하는지 이름 붙여야 합니다.
+
+Access mode가 더 약하거나 unknown이거나 documented profile 밖에 있으면 Harness는 이를 솔직하게 보고합니다. `doctor` 또는 `serve mcp`는 risk에 따라 warn 또는 fail할 수 있고, status와 write decision은 guarantee display를 낮추거나 `surface_capability_check` finding을 emit해야 하며, cooperative 접점은 product/runtime/code write를 보류합니다. API에 보이는 failure는 MCP API owner가 허용하는 곳에서 existing `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT` path를 사용합니다. 약한 access mode 자체가 existing state의 corruption을 증명하지는 않지만, write-capable 또는 close-relevant path를 진단 전까지 capability-insufficient로 만들 수 있습니다.
+
 ## Product Repository
 
 Product Repository는 사용자의 실제 제품 작업 공간입니다. 제품 소스 코드, tests, repository-level agent rules, 사람이 읽는 Harness projection이 여기에 있습니다.
@@ -143,6 +151,8 @@ Runtime Home에는 다음이 있습니다.
 
 
 Runtime Home은 대화 기록이 사라지거나 Product Repository projection이 최신이 아니어도 운영 상태를 복구할 수 있을 만큼 충분해야 합니다. Product Repository 문서는 상태 기록과 artifact refs에서 다시 생성될 수 있으며, 그 기록을 대체하지 않습니다.
+
+Runtime Home file은 user-private local control data로 취급해야 합니다. Unrelated user나 process가 secret/PII를 읽거나 `state.sqlite`, `registry.sqlite`, `project.yaml`, connector manifest, artifact file, staging file, generated operational file을 수정할 수 있게 하는 file permission 또는 storage location은 local tampering 또는 confidentiality risk입니다. Harness는 operating-system permission을 스스로 enforce한다고 주장하지 않습니다. 이러한 file은 Core, `doctor`, `recover`, artifact-integrity validation path를 통해서만 authoritative하게 취급합니다.
 
 ## Core process model
 

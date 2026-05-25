@@ -130,6 +130,10 @@ ToolEnvelope:
 
 Public MCP contract는 registered project surface를 위한 local process 또는 localhost connection을 전제로 합니다. MCP server를 이 local boundary 밖에 노출하면 threat model이 달라지므로, documented connector capability profile, access-control contract, guarantee display가 필요합니다. 그런 stronger profile이 없다면 MCP endpoint에 닿을 수 있는 caller도 Core가 검증해야 하는 claim의 출처일 뿐, 자동으로 신뢰되는 권한이 아닙니다.
 
+Access-control contract는 localhost-only binding, local file permission으로 제한된 Unix-domain socket, per-project token, process-scoped configuration material, 또는 equivalent local control 같은 여러 방식으로 구현될 수 있습니다. 이 예시는 schema enum이 아니며 하나의 CLI syntax를 요구하지 않습니다. Public API contract에서 중요한 점은 caller의 access mode가 registered surface profile과 맞아야 하고, mutation 전에 Core가 모든 envelope claim을 계속 검증한다는 것입니다.
+
+Unauthorized 또는 off-profile caller는 endpoint에 닿을 수 있다는 이유만으로 권한으로 승격되면 안 됩니다. API는 local-access profile mismatch를 위해 MVP `UNAUTHORIZED` error code를 추가하지 않습니다. Call이 Core에 닿을 수 없으면 authoritative Core response는 존재하지 않습니다. Core 또는 operator가 문제를 classify할 수 있으면 response는 existing `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT` path를 사용하며, access problem을 더 구체적으로 classify할 수 없을 때는 `details.mcp_unavailable_kind=unknown`을 사용합니다. Project, Task, surface, Run, actor claim mismatch는 addressed tool에 대한 normal record-compatibility, state-conflict, scope, capability, validator checks로 해석합니다.
+
 Envelope field는 routing과 audit claim입니다.
 
 - `project_id`, `task_id`, `surface_id`, `run_id`는 addressed operation과 호환되는 record로 해석되어야 합니다. Caller가 다른 project, Task, surface, Run을 이름으로 지정한다고 authority가 생기지 않습니다.

@@ -128,6 +128,10 @@ ToolEnvelope:
 
 The public MCP contract assumes a local process or localhost connection for a registered project surface. Exposing the MCP server beyond that local boundary changes the threat model and requires a documented connector capability profile, access-control contract, and guarantee display. Without that stronger profile, a caller that can reach the MCP endpoint is still treated as a source of claims that Core must validate, not as automatically trusted authority.
 
+The access-control contract can be implemented in different ways, such as localhost-only binding, a Unix-domain socket constrained by local file permissions, a per-project token, process-scoped configuration material, or an equivalent local control. These examples are not a schema enum and do not require one CLI syntax. What matters for the public API contract is that the caller's access mode matches the registered surface profile and that Core still validates every envelope claim before any mutation.
+
+Unauthorized or off-profile callers must not be upgraded into authority because they can reach an endpoint. The API does not add an MVP `UNAUTHORIZED` error code for local-access profile mismatches. If the call cannot reach Core, no authoritative Core response exists. If Core or the operator can classify the problem, responses use existing `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` paths, with `details.mcp_unavailable_kind=unknown` when the access problem cannot be classified more specifically. Mismatched project, Task, surface, Run, or actor claims are resolved through the normal record-compatibility, state-conflict, scope, capability, and validator checks for the addressed tool.
+
 Envelope fields are routing and audit claims:
 
 - `project_id`, `task_id`, `surface_id`, and `run_id` must resolve to records compatible with the addressed operation. A caller cannot create authority by naming another project, Task, surface, or Run.

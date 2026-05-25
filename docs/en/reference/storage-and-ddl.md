@@ -81,6 +81,12 @@ Reference layout:
         tmp/
 ```
 
+### Runtime home permissions and tampering
+
+Runtime Home should be treated as user-private local control data. At the documentation-contract level, implementations should prefer owner-only access for the runtime root, project directories, `registry.sqlite`, `project.yaml`, `state.sqlite`, connector manifests, artifact directories, `artifacts/tmp/`, and generated operational files when the platform supports it. If a platform or deployment cannot express those permissions, `doctor` should report the weaker or unknown posture instead of implying an OS-level guarantee.
+
+File permissions are defense in depth, not a second state model. A database row, artifact file, connector manifest, or generated file is authoritative only through Core validation, storage shape checks, owner/link checks, artifact integrity checks, or the documented `doctor`, `recover`, and `artifacts check` paths. Broad write access to Runtime Home is a local tampering risk; broad read access can expose secrets, PII, tokens, private logs, screenshots, verification bundles, and exported state.
+
 ## DDL draft
 
 The reference storage uses SQLite for registry and per-project state. The DDL is a draft implementation contract; field names may gain indexes or migration helpers, but table ownership and authority boundaries should remain stable.
