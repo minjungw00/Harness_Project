@@ -2,18 +2,24 @@
 
 ## Used when
 
-Use the compact status card when a short current-state display needs to show the always-on Harness context envelope: task state, next safe action, active Change Unit, pending user decision, write authority, guarantee level, gates, Manual QA, residual risk, projection freshness, and latest refs.
+Use the compact status card when a short current-state display needs to show the always-on Harness context envelope: Task, mode, scope, out of bounds, next safe action, blocker status, pending user decision, write authority, evidence, verification, Manual QA, residual risk, guarantee level, projection freshness, and latest refs.
 
 ## Source records
 
 - current Task state and lifecycle phase
+- scope and out-of-bounds summaries
 - active Change Unit summary
 - pending Decision Packet summary
 - Write Authority summary
 - connected profile guarantee level
 - risk summary
+- design-quality or stewardship summary
+- evidence coverage summary
+- verification summary
+- Manual QA summary
+- acceptance summary
 - scope, approval, decision, design, evidence, verification, QA, and acceptance gates
-- close blocker and Manual QA summary
+- close blocker, close reason, and Manual QA summary
 - primary blocker, secondary blocker, and smallest unblocker display summaries derived from API errors, close blockers, gates, and refs
 - projection freshness and `source_state_version`
 - latest report, Evidence Manifest, Run, Eval, Manual QA, and ArtifactRef refs
@@ -24,16 +30,19 @@ Summary placeholders in this card are display bindings derived from the records 
 
 - task identity
 - mode and lifecycle phase
+- scope and out of bounds
 - next safe action
-- primary blocker and smallest unblocker
+- primary blocker, owner, and smallest unblocker
 - secondary blockers
 - active Change Unit
 - user decision
 - write authority
 - guarantee level
-- gate summary
+- design and stewardship
+- evidence and verification
 - Manual QA
 - residual risk
+- acceptance and close status
 - projection freshness
 - latest refs
 
@@ -43,18 +52,25 @@ Summary placeholders in this card are display bindings derived from the records 
 TASK-{id} {title}
 Display only: current-state view, not canonical state or write authority.
 Mode: {mode} / {lifecycle_phase}
+Scope: {scope_summary|none}
+Out of bounds: {out_of_bounds_summary|none}
 Next safe action: {next_safe_action}
-Primary blocker: {primary_blocker_label|none}; smallest unblocker: {smallest_unblocker|none}
-Also blocking: {secondary_blockers_summary|none}
+Primary blocker: {primary_blocker_label|none}
+Blocker owner: {primary_blocker_owner_label|none}
+Smallest unblocker: {smallest_unblocker|none}
+Secondary blockers: {secondary_blockers_summary|none}
 Change Unit: {active_change_unit_summary|none}
-Blocking decision: {blocking_decision_summary|none}
+Decision needed: {blocking_decision_summary|none}
 Write authority: {write_authority_status}
 Guarantee: {guarantee_level}; {guard_or_detection_summary}
 Authority gates: scope={scope_gate}; approval={approval_gate}; decision={decision_gate}
-Quality gates: design={design_gate}; evidence={evidence_gate}; verification={verification_gate}; QA={qa_gate}; acceptance={acceptance_gate}
-Manual QA: {manual_qa_summary|not_required}
-Close blockers: {close_blockers|none}
+Design/stewardship: {design_summary|none}; gate={design_gate}
+Evidence: {evidence_summary|none}; gate={evidence_gate}
+Verification: {verification_summary|none}; gate={verification_gate}
+Manual QA: {manual_qa_summary|not_required}; gate={qa_gate}
 Residual risk: {residual_risk_summary|none}
+Acceptance: {acceptance_summary|not_required}; gate={acceptance_gate}
+Close status: blockers={close_blockers|none}; reason={close_reason|none}
 Projection freshness (view only): {current|stale|failed|unknown}; source_state_version={source_state_version|unknown}; {refresh_or_reconcile_needed|none}
 Latest refs: report={latest_report_ref|none}; evidence={evidence_manifest_ref|none}; run/eval/QA={latest_check_refs|none}
 ````
@@ -63,7 +79,9 @@ Latest refs: report={latest_report_ref|none}; evidence={evidence_manifest_ref|no
 
 This template is a rendered card shape, not canonical state. Gate values remain owned by canonical state, and projection freshness is readable-view freshness only; it is not Task result, state freshness, evidence freshness, approval, acceptance, or write authority.
 
-The primary blocker should come from the primary `ToolError` when an API response supplies one, or from the first close blocker when rendering a failed `harness.close_task` response. Secondary blockers should be grouped compactly and shown only when they change the next action, close readiness, or user judgment. These labels are display text, not new schema values or error codes.
+The primary blocker should come from the primary `ToolError` when an API response supplies one, or from the first close blocker when rendering a failed `harness.close_task` response. The owner label should say whether the next move is user-owned, agent-resolvable, or surface/system-owned, and should render as `none` or be omitted when there is no primary blocker. Secondary blockers should be grouped compactly and shown only when they change the next action, close readiness, or user judgment. These labels are display text, not new schema values or error codes.
+
+Design/stewardship is separate from Close status. It may affect shaping, write blockers, close blockers, or Decision Packet needs, but it is not merely a close-status field.
 
 This is not judgment-context. If user judgment is needed, render a separate decision prompt with options, recommendation, uncertainty, deferral effect, and relevant refs.
 

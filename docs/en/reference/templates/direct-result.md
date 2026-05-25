@@ -2,13 +2,14 @@
 
 ## Used when
 
-Use `DIRECT-RESULT` for a compact result report after small direct work closes or escalates.
+Use `DIRECT-RESULT` for a compact, low-ceremony result report after small direct work closes or escalates.
 
 ## Source records
 
 - direct run record
 - consumed Write Authorization ref, when present for direct product writes
 - changed paths
+- out-of-bounds or unchanged scope summary
 - checks performed
 - artifact refs
 - escalation flag
@@ -21,9 +22,9 @@ Close Summary lines are derived display summaries from existing gate and owner-r
 
 - Request
 - Scope
-- Changed Files
-- Checks And Validator Outcomes
 - Outcome
+- Changed Scope
+- Checks
 - Assurance
 - Close Summary
 - Escalation
@@ -55,26 +56,22 @@ updated_at: 2026-05-06T09:40:00+09:00
 - limits:
 - write authorization:
 - allowed paths:
-- allowed tools:
-- allowed commands:
 - approval refs:
-
-## Changed Files
-- `path/to/file`
-
-## Checks And Validator Outcomes
-### Core Checks And Command Checks
-- changed_paths:
-- approval_scope:
-- test:
-- build:
-
-### ValidatorResult IDs
-- context_hygiene_check:
-- surface_capability_check:
 
 ## Outcome
 - result summary:
+- close reason:
+
+## Changed Scope
+- changed files: `path/to/file`
+- no-file result:
+- out of bounds kept:
+
+## Checks
+- self-check:
+- tests/build:
+- validator outcomes:
+- artifact availability:
 
 ## Assurance
 - assurance_level:
@@ -104,6 +101,8 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 Direct work may close self-checked by default unless policy or the user requires detached verification or other gates. A consumed Write Authorization ref may be displayed, but the projection does not become the canonical authorization record.
 
-Checks and tests in a Direct Result are evidence or self-check context. They do not become detached verification without a qualifying Eval, do not become Manual QA without a Manual QA result or valid waiver, and do not imply final acceptance. If direct work closes with accepted risk, the close summary should point to accepted Residual Risk refs, the Decision Packet that recorded the risk acceptance when one was required, and follow-up instead of presenting the result as detached verified.
+Checks and tests in a Direct Result are evidence or self-check context. They do not become detached verification without a qualifying Eval, do not become Manual QA without a Manual QA result or valid waiver, and do not imply final acceptance. If direct work closes with accepted risk, the Close Summary should point to accepted Residual Risk refs, the Decision Packet that recorded the risk acceptance when one was required, and follow-up instead of presenting the result as detached verified. If no close-relevant risk is known, say that directly rather than adding gate inventory.
+
+`DIRECT-RESULT` is the low-ceremony close impact display for direct work. `TASK` owns continuity Close Summary display for active or recently closed `work` tasks, and Journey Card close context is compact status/resume display. These displays do not create close state, acceptance, QA, verification, residual-risk acceptance, or Write Authorization.
 
 Direct result artifact refs must keep redaction state visible. `secret_omitted` supports only visible nonsecret evidence, and `blocked` means the raw input is unavailable until resolved by a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback.

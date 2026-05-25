@@ -18,7 +18,7 @@ Read [User Guide](user-guide.md) first if you want the user-facing version.
 
 Show only the state, blocker, judgment, and next action that affect the user's next decision.
 
-The always-on turn context should be a compact Harness envelope: active Task id and mode, next safe action, active Change Unit summary, blocking decisions, write authority status, guarantee level, gate summary, and projection freshness. Evidence, Run, Eval, Manual QA, artifacts, logs, screenshots, diffs, and large traces should appear as refs and short outcomes by default, then be pulled only when the next action requires inspecting them.
+The always-on turn context should be a compact Harness envelope: active Task id and mode, scope, out of bounds, next safe action, primary blocker, smallest unblocker, active Change Unit summary, blocking decisions, write authority status, evidence, verification, Manual QA, residual risk, guarantee level, gate summary, and projection freshness. Evidence, Run, Eval, Manual QA, artifacts, logs, screenshots, diffs, and large traces should appear as refs and short outcomes by default, then be pulled only when the next action requires inspecting them.
 
 ## Session start
 
@@ -42,9 +42,12 @@ Show:
 - what is out of bounds
 - the next safe action
 - any question that blocks progress
+- the primary blocker, who owns the next move, and the smallest unblocker
+- secondary blockers only when they still affect the follow-on path
 - write authority status when writes are possible or near
+- evidence, verification, Manual QA, residual-risk, and acceptance status when those affect the next decision or close readiness
 - guarantee level and what the surface can actually block or only detect
-- compact gate, Manual QA, residual-risk, and projection freshness status
+- compact gate and projection freshness status
 - when guard, freeze, or careful mode is relevant, what can actually be blocked before execution and what can only be detected after action
 
 Do not begin product writes from a broad natural-language request alone. First establish scope and compatible write authority for the intended change.
@@ -78,6 +81,14 @@ The exact error taxonomy, complete mapping, and precedence stay in [MCP API And 
 - `harness.close_task` means "can this Task finish or cancel now?"
 
 When a response contains errors or blockers, lead with one primary blocker. Use the first `ToolError` chosen by API precedence, or the first `close_task` blocker when close returned blockers. Then show the smallest unblocker in ordinary language. Keep secondary blockers visible only when they will still matter after the primary blocker is resolved.
+
+Every blocker display should also name ownership in user-facing terms:
+
+- User-owned: product direction, material technical direction, sensitive-action Approval, Manual QA judgment or waiver, residual-risk acceptance, final acceptance, or another choice the user must make.
+- Agent-resolvable: refresh or reconcile status, retry `prepare_write`, collect missing evidence, run an in-scope check, repair or replace an artifact, or narrow the Change Unit without changing user-owned judgment.
+- Surface or system: Core unavailable, surface MCP unavailable, capability insufficient, or another condition that needs reconnection, a different surface, or operator repair.
+
+Do not ask the user to resolve an agent-resolvable blocker. Say what the agent will do next, unless that action would change scope, require Approval, or create new user-owned risk.
 
 Common display examples:
 
@@ -256,6 +267,12 @@ Applied close examples:
 
 Close only when blockers are clear for the active task path.
 
+For small `direct` work, keep the result low-ceremony: request, scope, changed files or no-file outcome, checks, escalation status, and any close-relevant risk or follow-up.
+
+For `work` tasks, the close summary must make the close basis visible. Show changed scope, evidence coverage, verification, Manual QA, residual risk, acceptance, and close reason when applicable. If a gate is waived, `not_required`, failed, pending, or blocked, the close display should say so instead of folding it into a generic success line.
+
+Use the close display that matches the task shape: `DIRECT-RESULT` is the compact result display for direct work, `TASK` Close Summary is continuity display for active or recently closed `work` tasks, and Journey Card close context is compact status/resume display. None of these displays creates state, gates, acceptance, QA, verification, residual-risk acceptance, close, or write authority.
+
 Before successful close, show or confirm:
 
 - scope match
@@ -308,7 +325,7 @@ Approved, so I will finish the auth design, implement it, deploy it, and close.
 Good close block:
 
 ```text
-Close is blocked by Manual QA for the onboarding copy and missing AC-02 evidence. Smallest unblocker: run the browser smoke check and record a Manual QA result for whether the copy is acceptable.
+Close is blocked by a user-owned Manual QA judgment for the onboarding copy. Smallest unblocker: record whether the copy is acceptable. Secondary blocker: AC-02 evidence is still missing, which the agent can collect after Manual QA.
 ```
 
 Bad close block:
@@ -321,6 +338,18 @@ Bad close claim:
 
 ```text
 Tests passed, so Manual QA and acceptance are complete.
+```
+
+Good direct result:
+
+```text
+Done as direct. Scope was one settings label; account behavior stayed out of bounds. Changed `src/settings/Profile.tsx`. Self-check passed with the existing copy test. No escalation, no known close-relevant residual risk.
+```
+
+Good work close summary:
+
+```text
+Close summary: changed scope stayed inside login form, login API call, and session storage. Evidence covers AC-01 and AC-02 via RUN-018 and EVIDENCE-009. Verification is self-checked only; no detached Eval was required for this path. Manual QA passed for final copy and layout. Residual risk: mobile Safari was not checked, accepted in DEC-022 with follow-up. Final acceptance recorded. Close reason: completed with accepted residual risk.
 ```
 
 Good write hold:

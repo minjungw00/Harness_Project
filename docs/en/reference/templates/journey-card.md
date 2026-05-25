@@ -2,17 +2,21 @@
 
 ## Used when
 
-Use `JOURNEY-CARD` when a current-position card needs to show where the work is, what judgment is pending, the Autonomy Boundary, Write Authority Summary, next evidence, residual risk, gates, and projection freshness.
+Use `JOURNEY-CARD` when a current-position card needs to show where the work is, what is in and out of scope, what is blocking the next move, what judgment is pending, the Autonomy Boundary, Write Authority Summary, evidence and checks, residual risk, close context, gates, and projection freshness.
 
 ## Source records
 
 - current Task state and gates
+- scope and out-of-bounds summaries
 - active Change Unit
 - Autonomy Boundary summary
 - Write Authorization, approval, baseline, and guarantee refs
 - active Decision Packet refs
 - primary blocker, secondary blocker, and smallest unblocker display summaries
+- blocker owner display summary
+- evidence coverage, verification, and Manual QA summaries
 - residual-risk summary and refs
+- acceptance and close-reason summaries
 - latest evidence, Eval, Manual QA, and report refs
 - projection freshness inputs
 
@@ -21,12 +25,14 @@ Judgment, write-authority, close-impact, residual-risk, and freshness placeholde
 ## Rendered sections
 
 - current position and next action
+- scope and out of bounds
 - blocking now
 - Judgment context
 - Autonomy boundary
 - Write Authority Summary
-- Next evidence
+- Evidence and checks
 - Residual risk
+- Close context
 - Gates
 - Projection freshness
 
@@ -36,10 +42,13 @@ Judgment, write-authority, close-impact, residual-risk, and freshness placeholde
 TASK-{id} {title}
 Display only: current-position view, not canonical state or write authority.
 Where we are: {mode} / {lifecycle_phase} / {current_position}
+Scope: {scope_summary|none}
+Out of bounds: {out_of_bounds_summary|none}
 Next action: {next_action}
 
 Blocking now:
 - primary: {primary_blocker_label|none}
+- owner: {primary_blocker_owner_label|none}
 - smallest unblocker: {smallest_unblocker|none}
 - also blocking: {secondary_blockers_summary|none}
 
@@ -68,16 +77,23 @@ Write Authority Summary:
 - guarantee: {guarantee_display}
 - note: Autonomy Boundary is judgment latitude, not write authority.
 
-Next evidence:
+Evidence and checks:
 - action: {next_evidence_action}
 - needed for: {evidence_needed_for}
 - latest evidence: {latest_evidence_ref|none}
+- verification: {verification_summary|none}
+- Manual QA: {manual_qa_summary|not_required}
 - omitted or blocked impact: {redaction_availability_summary|none}
 
 Residual risk:
 - status: {residual_risk_status}
 - close impact: {residual_risk_close_impact}
 - accepted residual-risk record refs: {accepted_residual_risk_record_refs|none}
+
+Close context:
+- blockers: {close_blockers|none}
+- acceptance: {acceptance_summary|not_required}
+- close reason: {close_reason|none}
 
 Gates:
 - scope: {scope_gate}
@@ -95,6 +111,8 @@ Projection freshness: {projection_freshness}; source_state_version={source_state
 
 This template is a rendered shape, not canonical state. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains a read/display surface.
 
-The blocker lines translate API and state records into user-facing status. The primary blocker should be the first blocker the next action must resolve; secondary blockers stay visible only when they affect the follow-on path. Do not expose raw `ErrorCode` values as the only explanation.
+Close context in a Journey Card is compact status/resume display. `TASK` owns the continuity Close Summary for active or recently closed `work` tasks, while `DIRECT-RESULT` owns the low-ceremony close impact summary for direct work. These displays do not create close state, acceptance, QA, verification, residual-risk acceptance, or Write Authorization.
+
+The blocker lines translate API and state records into user-facing status. The primary blocker should be the first blocker the next action must resolve, and the owner label should make clear whether the next move is user-owned, agent-resolvable, or surface/system-owned. The owner may render as `none` or be omitted when there is no primary blocker. Secondary blockers stay visible only when they affect the follow-on path. Do not expose raw `ErrorCode` values as the only explanation.
 
 When latest or next evidence includes `secret_omitted` or `blocked` artifact refs, this card should show only the availability impact. It must not include omitted values or blocked raw payload content.

@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use `TASK` as the continuity projection for active work. It summarizes where the work is, current judgment context, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, next evidence, residual risk, gates, active Change Unit, pending decisions, evidence, report refs, and projection freshness.
+Use `TASK` as the continuity projection for active work. It summarizes where the work is, current judgment context, blocker ownership, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, next evidence, residual risk, close summary, gates, active Change Unit, pending decisions, evidence, report refs, and projection freshness.
 
 ## Source records
 
@@ -11,6 +11,8 @@ Use `TASK` as the continuity projection for active work. It summarizes where the
 - Write Authorization records and Write Authority Summary display inputs
 - Decision Packets and Residual Risks
 - latest Run, Evidence Manifest, Eval, Manual QA record, and approval records
+- primary blocker, secondary blocker, and smallest unblocker display summaries
+- close summary display inputs, including changed scope, evidence, verification, Manual QA, residual risk, acceptance, and close reason
 - Journey Spine source records
 - `domain_terms`, `module_map_items`, `interface_contracts`, and `feedback_loops`
 - `tdd_traces` when TDD is selected
@@ -32,6 +34,7 @@ Generated judgment, close, waiver, review-stage, stewardship, and projection-fre
 - Review Stages
 - Next Evidence
 - Residual Risk
+- Close Summary
 - Stewardship Impact
 - Goal
 - Scope
@@ -66,7 +69,13 @@ updated_at: 2026-05-06T09:30:15+09:00
 - result:
 - close reason:
 - assurance:
+- scope summary:
+- out of bounds:
 - next action:
+- primary blocker:
+- blocker owner:
+- smallest unblocker:
+- secondary blockers:
 - pending decision:
 - risk:
 - scope gate:
@@ -85,7 +94,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Where We Are
 - current position:
 - active path:
-- current blocker:
+- primary blocker:
+- blocker owner:
+- smallest unblocker:
+- secondary blockers:
 - latest meaningful evidence:
 - next state transition:
 
@@ -168,6 +180,16 @@ updated_at: 2026-05-06T09:30:15+09:00
 - accepted residual-risk refs:
 - follow-up required:
 - close impact:
+
+## Close Summary
+- changed scope:
+- evidence:
+- verification:
+- Manual QA:
+- residual risk:
+- acceptance:
+- close reason:
+- remaining follow-up:
 
 ## Stewardship Impact
 - summary shape: StewardshipImpactSummary
@@ -286,7 +308,8 @@ Expanded TASK sections for long-running `work` tasks:
 
 ### Resume Notes
 - next session should know:
-- current blocker:
+- primary blocker:
+- smallest unblocker:
 <!-- HARNESS:END managed -->
 ````
 
@@ -373,5 +396,9 @@ Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from
 Review Stages in `TASK` are managed display sections. They do not satisfy gates, authorize writes, accept risk, close the task, or create `detached_verified` assurance.
 
 Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the skipped check or surface, accepted risk, follow-up, relevant refs, and close impact. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
+
+Close Summary in `TASK` is a continuity display summary for active or recently closed `work` tasks. It must not hide gate status or residual risk. When close is successful, blocked, canceled, or risk-accepted, the summary should show changed scope, evidence, verification, Manual QA, residual risk, acceptance, close reason, and follow-up as applicable, with refs back to owner records.
+
+Direct work uses `DIRECT-RESULT` for its low-ceremony close impact summary, and Journey Card close context is compact status/resume display. `TASK` Close Summary remains a continuity display; it does not create close state, acceptance, QA, verification, residual-risk acceptance, or Write Authorization.
 
 Artifact refs shown in `TASK`, Journey, evidence, and report sections must preserve redaction state. `secret_omitted` refs may support only visible nonsecret evidence; `blocked` refs show committed metadata-only notices and unavailable input rather than raw content.

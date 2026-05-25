@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-진행 중인 작업을 이어서 파악할 수 있는 projection이 필요할 때 `TASK`를 사용합니다. 이 template은 작업의 현재 위치와 판단 맥락을 보여줍니다. 또한 Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, Residual Risk, gate, active Change Unit, 대기 중인 decision을 요약합니다. 다음 evidence, 관련 보고서 참조, projection 최신성도 함께 보여줍니다.
+진행 중인 작업을 이어서 파악할 수 있는 projection이 필요할 때 `TASK`를 사용합니다. 이 template은 작업의 현재 위치, 판단 맥락, 막힘 소유자를 보여줍니다. 또한 Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, 다음 evidence, Residual Risk, Close Summary, gate, active Change Unit, 대기 중인 decision을 요약합니다. 관련 보고서 참조와 projection 최신성도 함께 보여줍니다.
 
 ## 기준 기록
 
@@ -11,6 +11,8 @@
 - Write Authorization 기록과 Write Authority Summary 표시 input
 - Decision Packet과 Residual Risk
 - 최신 Run, Evidence Manifest, Eval, Manual QA 기록, approval 기록
+- 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 summary
+- changed scope, evidence, verification, Manual QA, residual risk, acceptance, close reason을 포함하는 close summary 표시 input
 - Journey Spine 기준 기록
 - `domain_terms`, `module_map_items`, `interface_contracts`, `feedback_loops`
 - TDD가 선택된 경우 `tdd_traces`
@@ -32,6 +34,7 @@
 - Review Stages
 - Next Evidence
 - Residual Risk
+- Close Summary
 - Stewardship Impact
 - Goal
 - Scope
@@ -66,7 +69,13 @@ updated_at: 2026-05-06T09:30:15+09:00
 - result:
 - close reason:
 - assurance:
+- scope summary:
+- out of bounds:
 - next action:
+- primary blocker:
+- blocker owner:
+- smallest unblocker:
+- secondary blockers:
 - pending decision:
 - risk:
 - scope gate:
@@ -85,7 +94,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Where We Are
 - current position:
 - active path:
-- current blocker:
+- primary blocker:
+- blocker owner:
+- smallest unblocker:
+- secondary blockers:
 - latest meaningful evidence:
 - next state transition:
 
@@ -168,6 +180,16 @@ updated_at: 2026-05-06T09:30:15+09:00
 - accepted residual-risk refs:
 - 후속 작업 필요:
 - 닫기 영향:
+
+## Close Summary
+- changed scope:
+- evidence:
+- verification:
+- Manual QA:
+- residual risk:
+- acceptance:
+- close reason:
+- remaining follow-up:
 
 ## Stewardship Impact
 - summary shape: StewardshipImpactSummary
@@ -286,7 +308,8 @@ Long-running `work` task를 위한 expanded TASK section:
 
 ### Resume Notes
 - next session should know:
-- current blocker:
+- primary blocker:
+- smallest unblocker:
 <!-- HARNESS:END managed -->
 ````
 
@@ -308,7 +331,7 @@ Change Unit block sub-template:
   - 제품 방향:
   - 중요한 기술 방향:
   - public interface 또는 호환성 약속:
-  - 남은 위험 수용:
+  - 남은 위험을 받아들이는 판단:
 - AFK stop conditions:
   - boundary exceeded:
   - evidence cannot be produced:
@@ -370,8 +393,12 @@ Change Unit block sub-template:
 
 `TASK`의 Implementation Micro-Plan은 현재 Task와 Change Unit 상태에서 생성되거나 그 상태와 정렬된 가벼운 실행 보조 정보입니다. Product write를 허가하거나, scope를 넓히거나, Approval을 충족하거나, 근거를 만들거나, edit만으로 상태를 변경하거나, `prepare_write`를 대체하지 않습니다.
 
-`TASK`의 Review Stages는 관리되는 표시 섹션입니다. Gates를 충족하거나, write를 허가하거나, 위험을 수용하거나, Task를 닫거나, `detached_verified` assurance를 만들 수 없습니다.
+`TASK`의 Review Stages는 관리되는 표시 섹션입니다. Gates를 충족하거나, write를 허가하거나, 남은 위험을 받아들이거나, Task를 닫거나, `detached_verified` assurance를 만들 수 없습니다.
 
-`TASK`의 waiver 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 또는 verification waiver는 waiver를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA waiver는 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA waiver Decision Packet을, verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을 가리킵니다. 생략한 확인이나 대상, 수용하는 위험, 후속 작업, 관련 refs, 닫기 영향도 함께 보여줘야 합니다. QA waiver는 Manual QA가 되지 않고, verification waiver는 detached verification을 만들지 않습니다.
+`TASK`의 waiver 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 또는 verification waiver는 waiver를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA waiver는 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA waiver Decision Packet을, verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을 가리킵니다. 생략한 확인이나 대상, 받아들이는 위험, 후속 작업, 관련 refs, 닫기 영향도 함께 보여줘야 합니다. QA waiver는 Manual QA가 되지 않고, verification waiver는 detached verification을 만들지 않습니다.
+
+`TASK`의 Close Summary는 진행 중이거나 최근 닫힌 `work` Task를 위한 continuity 표시 요약입니다. Gate 상태나 남은 위험을 숨기면 안 됩니다. 닫기가 성공했거나, 막혔거나, 취소됐거나, 남은 위험을 받아들이고 닫혔을 때 changed scope, evidence, verification, Manual QA, residual risk, acceptance, close reason, follow-up을 해당되는 만큼 보여주고 owner record로 돌아가는 ref를 포함해야 합니다.
+
+Direct work는 `DIRECT-RESULT`에서 가벼운 close impact summary를 보여주고, Journey Card close context는 compact status/resume 표시입니다. `TASK` Close Summary는 continuity 표시일 뿐이며 close state, 수락, QA, verification, 남은 위험을 받아들이는 판단, Write Authorization을 만들지 않습니다.
 
 `TASK`, Journey, evidence, report section에 표시되는 artifact ref는 `redaction_state`를 보존해야 합니다. `secret_omitted` ref는 보이는 nonsecret evidence만 뒷받침할 수 있고, `blocked` ref는 원본 content가 아니라 committed metadata-only notice와 사용할 수 없는 입력을 보여줍니다.

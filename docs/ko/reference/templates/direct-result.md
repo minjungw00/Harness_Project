@@ -2,18 +2,19 @@
 
 ## 사용 시점
 
-작은 direct work가 닫혔거나 `work`로 전환된 뒤 결과를 간단히 보여줘야 할 때 `DIRECT-RESULT`를 사용합니다.
+작은 direct work가 닫혔거나 `work`로 전환된 뒤 결과를 간결하고 부담 없이 보여줘야 할 때 `DIRECT-RESULT`를 사용합니다.
 
 ## 기준 기록
 
 - direct run 기록
 - direct product write에 있는 경우 consumed Write Authorization 참조
 - changed path
+- out-of-bounds 또는 unchanged scope summary
 - performed check
 - artifact 참조
 - escalation flag
 - close assurance
-- 해당되는 경우 근거, 검증, Manual QA, 수용, Residual Risk 관련 닫기 영향 요약
+- 해당되는 경우 근거, 검증, Manual QA, 수락, Residual Risk 관련 닫기 영향 요약
 
 Close Summary line은 기존 gate와 owner-record ref에서 파생한 표시 전용 요약입니다. Direct work는 자신이 요약하는 기록 밖에 별도의 close field를 만들지 않습니다.
 
@@ -21,9 +22,9 @@ Close Summary line은 기존 gate와 owner-record ref에서 파생한 표시 전
 
 - Request
 - Scope
-- Changed Files
-- Checks And Validator Outcomes
 - Outcome
+- Changed Scope
+- Checks
 - Assurance
 - 닫기 영향 요약
 - Escalation
@@ -55,26 +56,22 @@ updated_at: 2026-05-06T09:40:00+09:00
 - limits:
 - write authorization:
 - allowed paths:
-- allowed tools:
-- allowed commands:
 - approval refs:
-
-## Changed Files
-- `path/to/file`
-
-## Checks And Validator Outcomes
-### Core Checks And Command Checks
-- changed_paths:
-- approval_scope:
-- test:
-- build:
-
-### ValidatorResult IDs
-- context_hygiene_check:
-- surface_capability_check:
 
 ## Outcome
 - result summary:
+- close reason:
+
+## Changed Scope
+- changed files: `path/to/file`
+- no-file result:
+- 범위 밖 유지:
+
+## Checks
+- self-check:
+- tests/build:
+- validator outcomes:
+- artifact availability:
 
 ## Assurance
 - assurance_level:
@@ -85,7 +82,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 - 근거:
 - 검증:
 - Manual QA:
-- 수용:
+- 수락:
 - Residual Risk:
 - 후속 작업:
 
@@ -104,6 +101,8 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 정책 또는 사용자가 detached verification 또는 다른 gate를 요구하지 않으면 direct work는 기본적으로 self-checked 상태로 닫힐 수 있습니다. Consumed Write Authorization 참조를 표시할 수 있지만, projection이 기준 authorization 기록이 되는 것은 아닙니다.
 
-Direct Result의 checks와 tests는 evidence 또는 self-check 맥락입니다. 조건을 충족하는 Eval 없이는 detached verification이 되지 않고, Manual QA 결과 또는 유효한 waiver 없이는 Manual QA가 되지 않으며, 최종 수용을 암시하지도 않습니다. Direct work가 위험 수용으로 닫힌다면 닫기 영향 요약은 결과를 detached verified처럼 보여주는 대신 accepted Residual Risk refs, 필요한 경우 risk acceptance를 기록한 Decision Packet, 후속 작업을 가리켜야 합니다.
+Direct Result의 checks와 tests는 evidence 또는 self-check 맥락입니다. 조건을 충족하는 Eval 없이는 detached verification이 되지 않고, Manual QA 결과 또는 유효한 waiver 없이는 Manual QA가 되지 않으며, 최종 수락을 암시하지도 않습니다. Direct work가 남은 위험을 받아들이는 판단으로 닫힌다면 닫기 영향 요약은 결과를 detached verified처럼 보여주는 대신 accepted Residual Risk refs, 필요한 경우 risk acceptance를 기록한 Decision Packet, 후속 작업을 가리켜야 합니다. 알려진 close-relevant risk가 없다면 gate 목록을 덧붙이기보다 그 사실을 직접 말합니다.
+
+`DIRECT-RESULT`는 direct work를 위한 가벼운 close impact 표시입니다. `TASK`는 진행 중이거나 최근 닫힌 `work` Task의 continuity Close Summary 표시를 담당하고, Journey Card close context는 compact status/resume 표시입니다. 이 표시들은 close state, 수락, QA, verification, 남은 위험을 받아들이는 판단, Write Authorization을 만들지 않습니다.
 
 Direct Result의 ArtifactRef는 `redaction_state`를 보이게 유지해야 합니다. `secret_omitted`는 보이는 nonsecret evidence만 뒷받침하고, `blocked`는 replacement, waiver, Decision Packet outcome, accepted risk, documented fallback으로 해소될 때까지 원본 입력을 사용할 수 없다는 뜻입니다.

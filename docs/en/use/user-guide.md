@@ -62,25 +62,30 @@ Show close-relevant residual risk before I accept.
 
 ## What the agent should show first
 
-At the start, or before significant resume, the agent should show a compact status or Journey Card. It should be short enough to scan and specific enough to act on, while still showing authority-relevant status: task, mode, next action, Change Unit, blocking decisions, write authority, guarantee level, gate summary, and projection freshness.
+At the start, or before significant resume, the agent should show a compact status or Journey Card. It should be short enough to scan and specific enough to act on. Show only what affects the next decision or safe action, while keeping the authority context visible: Task, mode, scope, out of bounds, next safe action, decision needed, blocker status, write authority, evidence, verification, Manual QA, residual risk, guarantee level, and projection freshness.
 
 ```text
 Task: TASK-123 Add email login flow
 Mode: work
-Next action: decide failed-login UX
-Change Unit: login form, login API call, session storage
+Scope: login form, login API call, session storage
 Out of bounds: password reset, account creation
+Next safe action: decide failed-login UX before wiring final UI behavior
 Decision needed: failed-login message
+Primary blocker: user-owned decision about failed-login feedback
+Smallest unblocker: choose one option from DEC-014
+Secondary blockers: evidence collection after implementation; Manual QA before close if UI copy changes
 Write authority: not requested yet
-Close checks: scope not confirmed; decision needed; design not checked; evidence not recorded; verification not needed yet; QA still open
-Refs: no evidence yet; no run/eval/QA refs yet
-Manual QA: likely needed
+Evidence: none yet; needed later for login submission and failed-login handling
+Verification: not run yet; detached verification not expected until implementation exists
+Manual QA: likely needed for final copy and layout
 Residual risk: none recorded
-Surface protection: cooperative; no pre-execution blocking is claimed. If changed-path validation is available, out-of-scope writes may be detected after action.
+Guarantee level: cooperative; no pre-execution blocking is claimed. If changed-path validation is available, out-of-scope writes may be detected after action.
 Projection freshness: current as of source_state_version v42
 ```
 
-Look for the next safe action. If the status looks stale or wrong, say:
+Look for the next safe action and the smallest unblocker. A primary blocker should say who owns the next move: user-owned when it needs your product, material technical, Approval, QA, risk, or acceptance judgment; agent-resolvable when the agent can refresh state, collect evidence, rerun a check, retry `prepare_write`, or narrow the scope without changing your decision. Secondary blockers should stay visible only when they will still matter after the primary blocker is resolved.
+
+If the status looks stale or wrong, say:
 
 ```text
 Show the current status and next action again from state.
@@ -242,19 +247,21 @@ Typical flow:
 
 Many small direct tasks skip some later checks. Bigger work should not hide those checks; it should show them only when they matter.
 
+A direct task result should stay compact and low-ceremony: what was requested, what stayed in scope, what changed, what was checked, whether it escalated, and any close-relevant risk or follow-up. It should not restate every gate when those gates did not affect the result.
+
 ## When the task is blocked
 
-A block should be explained as a concrete reason the task cannot safely continue or close.
+A block should be explained as a concrete reason the task cannot safely continue or close. The display should lead with the primary blocker, name the smallest unblocker, and keep secondary blockers visible only when they will still matter. It should also distinguish user-owned blockers from agent-resolvable blockers.
 
 Good blocked status:
 
 ```text
 Blocked:
-- AC-02 evidence is missing.
-- Manual QA is still needed for the updated onboarding copy.
-- A product decision is needed before choosing the empty-state behavior.
+- Primary blocker (user-owned): empty-state behavior is not chosen.
+- Smallest unblocker: choose the empty-state behavior from DEC-021.
+- Secondary blockers: agent-resolvable AC-02 evidence after the behavior is chosen; user-owned Manual QA before close for the updated onboarding copy.
 
-Smallest unblocker: choose the empty-state behavior from the Decision Packet.
+Next safe action: answer DEC-021, or ask the agent to propose a smaller Change Unit that avoids the empty state.
 ```
 
 Useful phrases:
@@ -305,6 +312,8 @@ Applied examples:
 ## Close checklist
 
 Before close, the agent should make these points clear in everyday language:
+
+For a `work` task, the close summary should show the changed scope, evidence, verification, Manual QA, residual risk, acceptance, and close reason when those apply. If a check was waived, pending, or not required, say that directly. Do not bury close-relevant residual risk inside a general "done" statement.
 
 - The result matches the agreed scope.
 - Required evidence is present, or evidence is not required for this task shape.
