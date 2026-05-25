@@ -121,7 +121,7 @@ The Journey resources are projection-oriented reads over canonical state:
 
 Every public tool request carries an envelope. State-changing tools require a non-null `idempotency_key` and `expected_state_version`. Read-only tools accept the same envelope for tracing; they may set `expected_state_version` to `null`.
 
-State version scope is resolved by Core from the operation's primary addressed Task. The resolved primary Task may come from `ToolEnvelope.task_id`, a tool-specific `task_id`, or active Task resolution. Task-scoped mutations compare `expected_state_version` with that Task's `tasks.state_version`. If Core resolves no primary Task and the operation is project-scoped, it compares `expected_state_version` with `project_state.state_version`.
+State version scope is resolved by Core from the operation's primary addressed Task. The resolved primary Task may come from `ToolEnvelope.task_id`, a tool-specific `task_id`, or active Task resolution. After exact idempotent replay has been ruled out, task-scoped mutations compare `expected_state_version` with that Task's `tasks.state_version`. If Core resolves no primary Task and the operation is project-scoped, it compares `expected_state_version` with `project_state.state_version`.
 
 ```yaml
 ToolEnvelope:
@@ -148,8 +148,8 @@ Envelope fields are routing and audit claims:
 
 - `project_id`, `task_id`, `surface_id`, and `run_id` must resolve to records compatible with the addressed operation. A caller cannot create authority by naming another project, Task, surface, or Run.
 - `actor_kind` describes the claimed actor role for routing and policy checks. It must not by itself satisfy approval, user acceptance, Decision Packet resolution, Manual QA judgment, or detached verification independence.
-- `idempotency_key` prevents duplicate committed mutations. It is not an authorization token, and replay is valid only for the same canonical request payload in the same `(project_id, tool_name, idempotency_key)` scope.
-- `expected_state_version` is the caller's concurrency claim. A stale or wrong version returns `STATE_CONFLICT`; it must not be used to force an older Task or project view to win.
+- `idempotency_key` prevents duplicate committed mutations. It is not an authorization token, and replay is valid only for the same canonical request payload in the same `(project_id, tool_name, idempotency_key)` scope. Reusing the key with a changed payload, artifact input set, or envelope authority basis returns `STATE_CONFLICT` and must not merge new effects into the original committed response.
+- `expected_state_version` is the caller's freshness and concurrency claim for a new mutation attempt. A stale or wrong version returns `STATE_CONFLICT` before mutation; this prevents an older Task or project view, approval basis, evidence context, artifact relation, projection summary, or user-judgment context from becoming write authority.
 - `dry_run=true` returns diagnostics only. It does not reserve an idempotency key, create a Write Authorization, attach artifacts, or prove that a later write is safe.
 
 Public tool responses should make local-security claim failures visible through existing response shapes:
@@ -768,11 +768,13 @@ Idempotency keys are scoped to `(project_id, tool_name, idempotency_key)`. Repea
 
 When the same key is reused with a different canonical request payload, the `STATE_CONFLICT` response should make the replay problem diagnosable without exposing sensitive request bodies. `ToolError.details` may include the idempotency scope, the stored and received request hashes or an equivalent opaque comparison, and the fact that the caller must replay the original request or retry with a fresh key.
 
+For state-changing tools, Core checks an existing committed replay row before treating the call as a new mutation attempt. If a committed `tool_invocations` row exists for `(project_id, tool_name, idempotency_key)`, Core compares the canonical `request_hash` first. A matching hash returns the original committed response without re-running current `expected_state_version` freshness checks, appending events, registering artifacts, enqueueing projections, or updating the replay row. A different hash returns `STATE_CONFLICT` as an idempotency replay mismatch and preserves the original replay row. If no committed replay row exists, Core then evaluates `expected_state_version` against the resolved affected scope before mutation.
+
 ## State conflict behavior
 
-For state-changing tools, Core compares `expected_state_version` with current project/task state. A mismatch returns `STATE_CONFLICT` and includes the current state version and a status summary in `details`. The caller must refresh state and either retry with a new idempotency key or replay the exact previous request.
+For state-changing tools with no committed replay row for the supplied idempotency scope, Core compares `expected_state_version` with current project/task state before mutation. A mismatch returns `STATE_CONFLICT` and includes the current state version and a status summary in `details`. No current records, events, artifacts, projection jobs, or replay rows are created for that conflicting new attempt. The caller must refresh state and either retry with a new idempotency key or replay the exact previous request.
 
-State conflict comparison is scope-specific. Core first resolves the primary addressed Task from `ToolEnvelope.task_id`, any tool-specific `task_id`, or active Task resolution. Task-scoped tools compare against that Task's `tasks.state_version`; project-scoped tools with no resolved primary Task compare against `project_state.state_version`. `STATE_CONFLICT.details` should include `scope` (`task` or `project`), `current_state_version`, `expected_state_version`, and the relevant `project_id` plus `task_id` when `scope=task`; it may also include a compact status summary for refresh guidance.
+In that new-attempt path, state conflict comparison is scope-specific. Core first resolves the primary addressed Task from `ToolEnvelope.task_id`, any tool-specific `task_id`, or active Task resolution. Task-scoped tools compare against that Task's `tasks.state_version`; project-scoped tools with no resolved primary Task compare against `project_state.state_version`. `STATE_CONFLICT.details` should include `scope` (`task` or `project`), `current_state_version`, `expected_state_version`, and the relevant `project_id` plus `task_id` when `scope=task`; it may also include a compact status summary for refresh guidance.
 
 A stale `expected_state_version` is reported as concurrency drift, not as proof of caller identity. The diagnostic display should say which scope was stale, which current version Core observed, and that the caller must refresh before retrying; it must not accept an older Task or project view because the caller supplied it.
 

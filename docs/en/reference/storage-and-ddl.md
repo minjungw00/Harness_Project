@@ -138,6 +138,12 @@ erDiagram
   tasks ||--o{ validator_runs : has
 ```
 
+### Storage hardening as an authority boundary
+
+Storage hardening is part of the Harness authority and security model. A row is not authoritative just because SQLite can store it; it must still match its owner schema, owner value set, state-version basis, idempotency replay key, and artifact owner/link contract.
+
+`doctor`, `recover`, `artifacts check`, and conformance runners use these checks to decide whether state is current, invalid, repairable, or unsafe to trust. Malformed JSON, schema-incompatible JSON, unknown owner-bound status values, mismatched replay rows, stale state-version claims, connector manifest drift, projection status inconsistency, and artifact links outside the Task-scoped owner contract are storage integrity findings, not presentation issues. Recovery may repair only from canonical state, registered artifacts, or managed output already allowed by owner docs; otherwise it must fail or require manual intervention.
+
 ### JSON TEXT validation
 
 JSON `TEXT` columns in the reference DDL are MVP storage flexibility, not permission to persist arbitrary or partially parsed JSON. Before any Core commit writes or updates a JSON `TEXT` field, Core must parse the value, reject malformed JSON, and validate the parsed value against the field's owning shape.
@@ -145,6 +151,8 @@ JSON `TEXT` columns in the reference DDL are MVP storage flexibility, not permis
 For public API payloads and API-shaped stored payloads, the owning shape is the schema in [MCP API And Schemas](mcp-api-and-schemas.md). For storage-only fields, the owning shape is the reference storage contract in this document or the specific owner document named by this document. This boundary keeps public schemas in [MCP API And Schemas](mcp-api-and-schemas.md) and SQLite DDL in this document.
 
 Malformed JSON is invalid state. Schema-incompatible JSON is invalid state. Fields with defaults such as `'[]'` or `'{}'` must continue to store valid JSON of the expected array or object shape, not a different JSON kind just because SQLite stores the column as `TEXT`. This includes storage-owned arrays such as `module_map_items.watchpoints_json`.
+
+`doctor` should report malformed or schema-incompatible JSON as a state failure, not projection staleness or report drift. `recover` may rewrite that field only when the expected value can be reconstructed from other canonical state or registered raw artifacts without inventing user-owned judgment. Conformance seed loaders should reject such rows unless the fixture explicitly exercises invalid-state recovery.
 
 Recommended hardening: where the deployed SQLite build supports JSON functions, migrations should add `CHECK (json_valid(column_name))` or equivalent generated checks for JSON `TEXT` columns. These checks are defense in depth and do not replace Core's shape validation before commit; the MVP DDL below does not need a full rewrite to show every check inline.
 
@@ -177,6 +185,8 @@ Minimum enum hardening targets:
 | `projection_jobs.status` | Projection job/freshness semantics in this document and [Document Projection Reference](document-projection.md). |
 
 For new tables or rebuild migrations, representative inline hardening is `status TEXT NOT NULL CHECK (status IN (...))`. Existing SQLite tables may need a table rebuild, a small lookup table checked by Core before commit, or a migration-time assertion that rejects unknown values before tightening. Do not invent database-only enum values; bind storage hardening to the owner value source.
+
+Unknown owner-bound status values are invalid state or invalid fixture seed data unless a fixture explicitly tests recovery from invalid state. `doctor` reports them under the affected state, surface, projection, or connector category. Migrations must stop before tightening when unknown values are present instead of mapping them to fallback values that Kernel, API, or Storage does not own.
 
 The table below is an owner map for additional status-like `TEXT` fields in the DDL. It names where storage validators, fixture seed loaders, and migration assertions must get the allowed values; it is not a second enum definition.
 
@@ -807,7 +817,9 @@ MVP TDD discipline uses the existing `feedback_loops` and `tdd_traces` tables. `
 
 `project_state.state_version` is the project-scoped state clock. Core initializes exactly one `project_state` row for the registered project during runtime bootstrap, before any project-scoped mutation can compare `expected_state_version` with `project_state.state_version`.
 
-`tasks.state_version` is the task-scoped state clock. Task-scoped mutations compare `expected_state_version` with the Core-resolved primary Task's `tasks.state_version`; project-scoped mutations with no resolved primary Task compare it with `project_state.state_version`.
+`tasks.state_version` is the task-scoped state clock. After exact idempotent replay has been ruled out, Task-scoped mutations compare `expected_state_version` with the Core-resolved primary Task's `tasks.state_version`; project-scoped mutations with no resolved primary Task compare it with `project_state.state_version`.
+
+For a new mutation attempt with no committed replay row for the supplied idempotency scope, the state-version check prevents stale authority, not just concurrent writes. A stale `expected_state_version` means the request is based on an older Task or project view; accepting it could let outdated scope, approval, evidence, projection, artifact, or user-judgment context override newer authority. Core returns `STATE_CONFLICT` before mutation, before artifact registration, before projection enqueue, and before creating a `tool_invocations` replay row for that conflicting new request.
 
 ```mermaid
 flowchart TD
@@ -833,11 +845,15 @@ flowchart TD
 
 `tool_invocations` stores request replay metadata needed to return the original committed response. Only committed, non-dry-run tool calls create or update `tool_invocations`; `dry_run=true` creates no replay row and does not consume the idempotency key for authoritative replay. Non-authoritative diagnostics, if an implementation keeps them, must not be stored in `tool_invocations` or used to replay state-changing responses. `tool_invocations.request_hash` stores the canonical request hash defined by the MCP API idempotency rules: canonical JSON, UTF-8, `tool_name`, schema-normalized request body and optional fields, sorted object keys, schema-ordered arrays unless explicitly order-insignificant, NFC Unicode strings, and envelope coverage that excludes only `request_id` and `idempotency_key`. `tool_invocations.state_version` stores the same primary affected-scope version returned in `ToolResponseBase.state_version`: Task State Version when Core resolves a primary Task, otherwise Project State Version. Reusing an idempotency key with a different `request_hash` returns `STATE_CONFLICT`.
 
+Replay lookup uses the committed row before current state-version freshness for the same idempotency scope. If the stored `request_hash` matches, Core returns the original committed response as replay of an already committed result; it does not re-run current `expected_state_version` checks, append events, register artifacts, enqueue projections, alter owner relations, or update the replay row even if current state has advanced. If the hash differs, the mismatch is a storage safety signal: the caller is trying to reuse a mutation key for a different request body, artifact input set, envelope authority basis, or owner relation. Core must return `STATE_CONFLICT`, preserve the original committed replay row, and avoid merging the new payload into the old response.
+
 `tasks.projection_version` is the TASK projection/template/job version used to prevent older TASK renders from replacing newer ones. It is not a state clock. `tasks.projected_version`, if retained, is only the TASK projection summary cache of the last rendered source state version. It must not be treated as the storage location for every task-related `ProjectionKind`.
 
 `tasks.projection_status` is the TASK projection status summary. Per-kind projection freshness is tracked through `projection_jobs.source_state_version`, job status, managed hashes, and the relevant projection records or artifact refs for API-owned MVP-required kinds, MVP-optional kinds, and enabled projection kinds in the Extension / optional tier. `APR` freshness starts from committed Approval records and their approval-shaped Decision Packets, not from non-mutating `approval_request_candidate` payloads. Do not treat one Task field as owning all projection freshness.
 
 `write_authorizations` stores durable `prepare_write` allow decisions. The allow/block contract is owned by [Kernel `prepare_write` State Logic](kernel.md#prepare_write) and the public response shape by [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write). Storage-specific requirements are: each distinct committed non-dry-run allowed request inserts a distinct row; idempotent return is only replay of the same committed request under the same idempotency key, request hash, and compatible basis; `basis_state_version` stores the affected-scope state version used as the compatibility basis; `updated_at` changes whenever authorization status changes; and status history remains in `task_events`.
+
+`basis_state_version` is stale-authority protection for writes. A Write Authorization created against one Task or project state version cannot be treated as permission after the affected scope, approval basis, evidence context, artifact refs, or user-judgment context changes. Kernel rules may stale, expire, or revoke old authorizations, but storage must not silently rebase an existing authorization onto a newer state version.
 
 Stored `write_authorizations` rows require non-null `basis_state_version`, including rows inserted from conformance fixture seeds. A fixture runner may derive the field from the seeded affected-scope state version before insert, but the stored row must still contain the value and must not treat it as the post-transaction `ToolResponseBase.state_version`.
 
@@ -856,6 +872,8 @@ MVP final acceptance has no `acceptance_records` table. Acceptance is stored thr
 Core must validate every JSON ref array before commit. `selected_loop_refs_json` and `execution_refs_json` store `StateRecordRef` arrays; `tdd_trace_refs_json`, `manual_qa_record_refs_json`, and `evidence_manifest_refs_json` are restricted to their matching record kinds. `artifact_refs_json` stores committed `ArtifactRef` values resolved from the public update payload or related tool request. `operation=create` requires a non-empty `loop_kind`, `loop_profile`, `planned_loop`, and valid `status`; `feedback_loop_id` may be Core-assigned or caller-supplied for deterministic fixture/import creation and must be unique. `operation=update` requires an existing row with the same `task_id` and compatible `change_unit_id`; nullable scalar payload fields leave stored values unchanged, while ref arrays and artifact refs are additive. `status=waived` requires `waiver_reason` or a referenced compatible waiver/decision record. `status=executed` requires at least one resulting execution, artifact, TDD trace, Manual QA, or evidence manifest ref. `tdd_traces` remains the canonical red/green/refactor evidence record when TDD is selected; it does not replace the `feedback_loops` row. `feedback_loop_check` reads these records as a validator and does not add a new kernel gate.
 
 `artifact_links` is the queryable many-to-many attachment table for artifacts. In MVP it is Task-scoped: each row has a non-null `task_id` matching the registered artifact and the owner record's Task. Use it to attach artifacts only to existing owner records that are Task-scoped for the same `task_id`, such as `task`, `change_unit`, `run`, `decision_packet`, `shared_design`, `residual_risk`, `evidence_manifest`, `feedback_loop`, `tdd_trace`, `manual_qa_record`, `eval`, `journey_spine_entry`, and `projection`. If an owner kind can also have project-scoped rows, those rows use their own state/projection metadata and are not artifact-link targets until a future extension adds project-scoped artifact storage/API. Exported files use artifact kinds or retention classes such as `export_component` and `retention_class=export`; they do not attach to an `export` state record unless a future extension deliberately adds a matching table, `StateRecordRef` value, and integrity semantics. Existing `artifact_refs_json` fields may preserve ordered or record-local context, but multi-record artifact reuse and artifact integrity checks should use `artifact_links`.
+
+This Task-scoped link is an artifact-poisoning control. An `artifacts` registry row without the required compatible `artifact_links` row is not enough to satisfy evidence, QA, verification, projection, export, or close-related checks. A link that crosses Task scope, points at a missing owner, or uses an owner kind incompatible with the artifact kind must be rejected; ordered `artifact_refs_json` display context cannot override the registry plus owner-link checks.
 
 For `artifact_links.record_kind=projection`, `artifact_links.record_id` stores `projection_jobs.projection_job_id`. The link is valid only when Core can resolve that job to the rendered projection output it links: the job is Task-scoped to the same `task_id` as the artifact link, has matching `projection_kind` and `target_ref`, has `status=completed`, and has an `output_path` or documented projection ref for the rendered output. `projection_jobs.target_ref` and `output_path` are validation and locator metadata, not replacements for `artifact_links.record_id`. Project-level projection jobs may still be tracked in `projection_jobs` where projection owner docs allow them, but the current MVP artifact DDL does not create project-scoped artifact rows or artifact links for those jobs. This keeps MVP storage on `projection_jobs` and does not introduce a `projections` table.
 
@@ -921,6 +939,14 @@ CREATE TABLE schema_migrations (
 
 Migrations must be forward-only for MVP. A failed migration leaves the project unavailable until doctor/recover reports whether the failure is repairable.
 
+Storage hardening migrations should use this checklist before tightening tables or accepting imported fixture data:
+
+- Validate every JSON `TEXT` field by parsing and checking the owner shape before adding SQLite JSON checks. Malformed or schema-incompatible values block the migration unless a documented recovery path can reconstruct the value without user-owned judgment.
+- Assert owner-bound enum and status-like `TEXT` values before adding `CHECK` constraints, generated checks, or lookup validation. Cover write/close/replay/projection-driving fields first, and do not create database-only fallback values outside Kernel, API, or Storage ownership.
+- Reconcile projection fields and jobs before tightening. `tasks.projection_status` is only the `TASK` summary; `projection_jobs.status`, `projection_jobs.projection_kind`, and `projection_jobs.source_state_version` carry per-job freshness and identity. Successful completed renders must have the source state version required by the projection contract.
+- Check `connector_manifests.status` as an existing-row status only. Valid existing rows are `current` or `drifted`; a missing manifest remains absent connector state for `doctor` or connect diagnostics, not a new database enum value.
+- Run fixture seed and import loaders through the same JSON, enum/status, state-version, idempotency, projection, connector-manifest, artifact registry, and artifact-link validation used by Core storage. Compact fixture shorthand must expand to valid owner records before insert.
+
 ## Lock policy
 
 State-changing operations acquire a lock at the narrowest practical scope:
@@ -960,7 +986,7 @@ flowchart LR
   Operation --> Reconcile
 ```
 
-If a lock is expired, the next operation may take it after appending a recovery event. If `expected_state_version` is stale for the relevant task or project scope, the operation returns `STATE_CONFLICT` before mutation.
+If a lock is expired, the next operation may take it after appending a recovery event. For a non-replayed mutation attempt, if `expected_state_version` is stale for the relevant task or project scope, the operation returns `STATE_CONFLICT` before mutation.
 
 ## Artifact directory layout
 

@@ -190,7 +190,7 @@ Required categories:
 | Category | Checks |
 |---|---|
 | project | registered project, repo root, static config validity |
-| state | current state readability, JSON field parse and shape validity, locks, active Task consistency |
+| state | current state readability, JSON field parse and shape validity, owner-bound status values, state-version and idempotency consistency, locks, active Task consistency |
 | MCP | server reachability, Core reachability, read resource availability, public tool availability |
 | surface | capability profile, generated manifest, MCP config freshness, required MCP tool-call ability |
 | artifacts | file existence, hash, size, redaction state, task/run or artifact-link relation |
@@ -239,7 +239,7 @@ Levels are operator report levels, not gate values:
 
 Doctor must distinguish current state failures from projection stale or projection failed status.
 
-State checks include JSON `TEXT` fields in `registry.sqlite` and `state.sqlite`. Malformed JSON is a state failure. Schema-incompatible JSON is a state failure; doctor may mark it `REPAIRABLE` only when Core can safely reconstruct the expected value from other canonical state or raw artifacts without inventing user-owned judgment, otherwise it reports `FAIL` or `MANUAL`.
+State checks include JSON `TEXT` fields in `registry.sqlite` and `state.sqlite`, owner-bound status-like `TEXT` values, state-version bases, and idempotency replay rows. Malformed JSON and schema-incompatible JSON are state failures. Unknown owner-bound status values are state failures; conformance runners may report the same condition as invalid fixture/import seed data before Core execution. Replay rows that cannot verify their canonical request hash and stored response linkage are state/security findings, not display drift. Doctor may mark these findings `REPAIRABLE` only when Core can safely reconstruct the expected value from other canonical state or raw artifacts without inventing user-owned judgment; otherwise it reports `FAIL` or `MANUAL`.
 
 Compact doctor examples:
 
@@ -414,6 +414,7 @@ Required scenarios:
 | projection job failed | retry or mark failed and create reconcile guidance |
 | managed Markdown edited | create reconcile item |
 | malformed or schema-incompatible storage JSON | repair only if Core can reconstruct the expected shape from canonical state or raw artifacts; otherwise fail or require manual recovery |
+| idempotency replay mismatch | preserve the original committed replay row, report `STATE_CONFLICT` for the changed request, and do not merge new artifacts, events, projection jobs, or response fields into the old result |
 | lock expired | append recovery event and release or reacquire according to lock policy |
 | MCP unavailable | report diagnostic condition `MCP_SERVER_UNAVAILABLE` or `SURFACE_MCP_UNAVAILABLE`, keep product/runtime/code writes held, and give the next diagnosis or reconnect step |
 
@@ -425,6 +426,7 @@ flowchart TD
   Classify --> Evidence["evaluator drift or artifact mismatch"]
   Classify --> Projection["projection job failed or managed Markdown edited"]
   Classify --> Storage["malformed or schema-incompatible storage JSON"]
+  Classify --> Replay["idempotency replay mismatch"]
   Classify --> Lock["lock expired"]
   Classify --> MCP["MCP unavailable"]
   Interrupted --> Event["append compensating event"]
@@ -432,6 +434,7 @@ flowchart TD
   Evidence --> Stale["mark evidence or verification stale/blocked"]
   Projection --> Recon["retry, fail, or create reconcile guidance"]
   Storage --> Repair["repair only from canonical state or raw artifacts"]
+  Replay --> Conflict["preserve original replay and report STATE_CONFLICT"]
   Lock --> Release["release or reacquire by policy"]
   MCP --> Hold["hold product/runtime/code writes and diagnose"]
 ```
@@ -695,6 +698,8 @@ sequenceDiagram
 ```
 
 When a fixture action includes `expected_state_version`, the runner compares it according to the Core-resolved primary Task, not only `ToolEnvelope.task_id`. Task-scoped actions compare against the seeded or Core-resolved primary Task State Version; project-scoped actions with no resolved primary Task compare against the Project State Version. Captured response and `task_events` `state_version` values are compared as resulting affected-scope versions. Read-only fixtures may assert the unchanged version for the primary read scope. This clarifies comparison semantics without changing fixture body shape.
+
+A stale `expected_state_version` fixture is a stale-authority test, not only a concurrent-write test. Exact idempotent replay is the exception: when a committed replay row exists and the canonical request hash matches, the fixture should assert the original committed response is returned and no current state-version freshness check is re-run. When no replay row exists and a state-changing action conflicts before commit, the fixture should assert that no current records changed, no `task_events` were appended, no artifacts were registered, no projection jobs were enqueued, and no `tool_invocations` replay row was created for the conflicting request unless an owner document explicitly defines a different recovery action. When the same key is reused with a changed canonical request hash, the fixture should assert `STATE_CONFLICT`, preserved original replay row, and no merged artifacts, events, projection jobs, response fields, or owner relations.
 
 Fixture execution should be deterministic. Network access, wall-clock-sensitive expiry, and external tool output must be stubbed or represented as seeded fixture inputs unless a suite explicitly declares itself an integration smoke.
 
