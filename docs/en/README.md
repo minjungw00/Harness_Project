@@ -6,9 +6,29 @@ Harness is an agency-preserving local authority kernel for AI-assisted product w
 
 For the full identity, authority model, integration-surface boundaries, and non-goals, read [Overview](learn/overview.md) and [Purpose and Principles](learn/purpose-and-principles.md).
 
+## What Harness Is / Is Not
+
+Harness is meant to make AI-assisted work followable from local state, durable evidence, and readable projections. This repository is still in documentation review; it does not contain the Harness server or runtime implementation.
+
+Harness is not a chat script, prompt bundle, test harness, evaluation harness, dashboard, or replacement for the user's product repository, version control, tests, code review, or product and technical judgment.
+
+## Quick Routes
+
+| If you need to... | Start with | Then read |
+|---|---|---|
+| Understand Harness for the first time | [Overview](learn/overview.md) | [Harness in One Task](learn/harness-in-one-task.md) |
+| Use Harness during assisted development | [User Guide](use/user-guide.md) | [Agent Session Flow](use/agent-session-flow.md) |
+| Prepare implementation after doc acceptance | [Implementation Overview](build/implementation-overview.md) | [First Runnable Slice](build/first-runnable-slice.md), [MVP Plan](build/mvp-plan.md), then Reference |
+| Look up exact behavior or stable names | [Reference](#reference) | The owner page for the contract you need |
+| Maintain or review the docs | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md) |
+
+## Ownership Rule
+
+Reference docs own exact contracts: schemas, DDL, gates, state transitions, enum values, fixture semantics, template bodies, and official definitions. Learn, Use, and Build docs explain the idea for their reader and link to Reference instead of copying strict contract blocks.
+
 ## Learn
 
-Start here to understand Harness before using or building it. The recommended path is [Overview](learn/overview.md) first, then [Harness in One Task](learn/harness-in-one-task.md).
+Start here to understand Harness before using or building it. Learn docs explain the mental model with concrete examples; strict contracts stay in Reference. The recommended path is [Overview](learn/overview.md) first, then [Harness in One Task](learn/harness-in-one-task.md).
 
 - [Overview](learn/overview.md)
 - [Harness in One Task](learn/harness-in-one-task.md)
@@ -17,14 +37,14 @@ Start here to understand Harness before using or building it. The recommended pa
 
 ## Use
 
-Use this path when you want to run an AI-assisted development session under Harness. Start with the user guide, then use the agent-session flow when you need to understand how the agent should proceed.
+Use this path when you want to run an AI-assisted development session under Harness. Use docs prioritize user-facing flow, status interpretation, decisions, and recovery paths. Start with the user guide, then use the agent-session flow when you need to understand how the agent should proceed.
 
 - [User Guide](use/user-guide.md)
 - [Agent Session Flow](use/agent-session-flow.md)
 
 ## Build
 
-Use this path for implementation planning and review. These pages do not authorize starting Harness server or runtime implementation; actual implementation starts only after the redesigned documentation is accepted. Start here before the full reference specs to see what to build first, what the first runnable proof must show, and how the MVP stages fit together.
+Use this path for implementation planning and review. These pages do not authorize starting Harness server or runtime implementation; actual implementation starts only after the redesigned documentation is accepted. Build docs explain order, module boundaries, runnable slices, and verification strategy without duplicating exact schemas or DDL.
 
 - [Implementation Overview](build/implementation-overview.md)
 - [First Runnable Slice](build/first-runnable-slice.md)
@@ -32,7 +52,7 @@ Use this path for implementation planning and review. These pages do not authori
 
 ## Reference
 
-Use this path to look up detailed contracts, schemas, policies, and definitions.
+Use this path to look up detailed contracts, schemas, policies, and definitions. If another path summarizes a strict rule, the Reference owner is the source to update first.
 
 - [Kernel Reference](reference/kernel.md)
 - [Runtime Architecture Reference](reference/runtime-architecture.md)
@@ -48,7 +68,7 @@ Use this path to look up detailed contracts, schemas, policies, and definitions.
 
 ## Maintain
 
-Use this path to keep the docs and future Harness system coherent over time.
+Use this path to keep the docs and future Harness system coherent over time. Maintain docs govern documentation maintenance, not runtime behavior.
 
 - [Authoring Guide](maintain/authoring-guide.md)
 - [Translation Guide](maintain/translation-guide.md)

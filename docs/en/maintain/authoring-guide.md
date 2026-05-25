@@ -52,6 +52,14 @@ Maintain docs govern the documentation system itself.
 
 They define authoring rules, translation policy, review checklists, link hygiene, ownership maps, and documentation-maintenance expectations. They must not become runtime conformance specs or product implementation plans.
 
+## Entrypoint rule
+
+README pages are routing pages before they are explanations. They should briefly say what Harness is and is not, then route first-time readers, users, implementers, reference readers, and maintainers to the right owner docs.
+
+Keep entrypoints current and compact. Do not use them to preserve migration history, removed names, retired paths, or old structures unless a section is clearly labeled as a non-active migration record.
+
+README pages may summarize path ownership, but they should not copy strict contracts. Link to Reference owners for exact schemas, DDL, gates, state transitions, fixture semantics, template bodies, and official definitions.
+
 ## Standard opening pattern
 
 Every redesigned document should begin with a short, predictable opening. Keep it compact, but make the reader's path clear.
@@ -104,6 +112,22 @@ When another document needs the same idea, write a short local summary and link 
 
 Repeated explanatory examples are allowed when they serve different readers, but repeated normative contract language is a drift risk.
 
+## Owner-link summary pattern
+
+When you find duplicated normative language outside its owner, do not polish the duplicate in place. First decide which document owns the exact contract. Update that owner if the contract needs to change, then replace non-owner copies with:
+
+- one ordinary-language sentence naming what the reader needs to know now
+- one link to the owner document or owner section for exact rules
+- any local consequence for the current reader path
+
+Example:
+
+```text
+Product writes need current Change Unit scope and Write Authorization. Exact write-gate behavior is owned by [Kernel Reference](../reference/kernel.md), and the public request shape is owned by [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
+```
+
+Do not paste the gate matrix, request schema, DDL block, fixture body, template body, enum table, or glossary definition into Learn, Use, Build, or Maintain docs.
+
 ## Diagram rule
 
 Use diagrams only when they reduce cognitive load.
@@ -125,6 +149,8 @@ Any semantic change in `docs/en` must be mirrored in `docs/ko` in the same batch
 When you rename, move, split, or merge a document, update links in both languages in the same batch.
 
 Prefer links to the owner document or owner section instead of links to secondary summaries. Do not point active owner links to removed migration context.
+
+If old names, old structures, or migration decisions must be retained for review, keep them in a clearly labeled non-active migration record. Active docs should describe the current structure and link to current owners.
 
 After a rename, search for old paths, old anchors, old headings, and old title text. Update the README path, nearby cross-references, template/reference links, and paired-language links together.
 
@@ -160,10 +186,11 @@ Required check categories:
 
 ```text
 [ ] Does the document serve a clear reader situation?
+[ ] Do README entrypoints route first-time readers, users, implementers, reference readers, and maintainers quickly?
 [ ] Does the opening follow the standard pattern?
 [ ] Are concepts introduced through examples before strict definitions?
 [ ] Are strict schemas, gates, DDL, enums, and invariants kept in Reference docs?
-[ ] Are long source-of-truth paragraphs summarized and linked instead of repeated?
+[ ] Are long source-of-truth paragraphs and duplicated normative contract blocks summarized and linked instead of repeated?
 [ ] Do diagrams reduce cognitive load?
 [ ] Are English and Korean files semantically aligned?
 [ ] Are official identifiers preserved exactly?
@@ -178,7 +205,7 @@ Use this map when deciding where exact detail belongs. It identifies the active 
 
 | Subject | Active owner |
 |---|---|
-| Entrypoint, reader paths, document list, target tree summary | `README.md` |
+| Repo and docs entrypoints, reader routes, language choice, document list, target tree summary | repo root `README.md`; docs root `docs/README.md`; language entrypoints `docs/en/README.md` and `docs/ko/README.md` |
 | Shared reader mental model and three-space overview | `learn/overview.md` |
 | Small core concept introduction | `learn/concepts.md` |
 | Project purpose, target users, values, scope, non-goals, automation philosophy | `learn/purpose-and-principles.md` |
