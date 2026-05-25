@@ -92,7 +92,7 @@ Agency-Hardened MVP는 final reference conformance target입니다. Decision Pac
 
 MVP의 guard/freeze conformance는 cooperative/detective level에서 honest display와 behavior를 검증합니다. Freeze request는 work를 보류하거나, next action을 더 엄격하게 만들거나, existing scope가 incompatible할 때 `prepare_write`가 차단 또는 보류하게 만들 수 있습니다. Persistent owner-record change는 기존 Core 상태 변경 경로, Decision Packet route, owner-record update path를 통해 일어날 때만 검증해야 합니다. Guard display는 현재 경로가 cooperative인지 detective인지, 그리고 어떤 위반이 사후에만 감지될 수 있는지 보고합니다. Preventive `T4` guard fixture는 기준 접점이 covered operation에 대한 pre-tool blocking을 구현하고 증명하지 않는 한 v1-or-later입니다.
 
-Browser QA Capture conformance는 v1 priority candidate이지 MVP smoke 요구사항이 아닙니다. Future fixtures는 capability profile fields, redaction 및 secret/PII handling, browser test environment, artifact 보존, capture artifact mapping, unsupported 접점 fallback 동작이 정의된 뒤에만 declared `T6 QA Capture` 동작을 증명해야 합니다. MVP fixtures는 automated browser capture를 요구하지 않고 Manual QA records, artifact refs, QA 면제 동작, close blockers를 계속 증명합니다.
+Browser QA Capture conformance는 v1 priority candidate이지 MVP smoke 요구사항이 아닙니다. [로드맵 승격 규칙](../roadmap.md#승격-규칙)을 통해 승격되기 전까지는 권한 없는 capture support일 뿐입니다. Future fixtures는 capability profile fields, redaction 및 secret/PII handling, browser test environment, artifact 보존, capture artifact mapping, unsupported 접점 fallback 동작, projection-as-canonical 의존성 없음이 정의된 뒤에만 declared `T6 QA Capture` 동작을 증명해야 합니다. MVP fixtures는 automated browser capture를 요구하지 않고 Manual QA records, artifact refs, QA 면제 동작, acceptance 경계, close blockers를 계속 증명합니다.
 
 ```mermaid
 flowchart LR
@@ -542,7 +542,7 @@ Boundary:
 - Release Handoff는 그 자체로 Task close, deploy, merge, approve, Residual Risk 수용, 결과 수용, QA 또는 verification 면제, assurance level 상승, gate 충족을 하지 않습니다.
 - Suggested checklist item은 advisory입니다. 차단하는 사용자 소유 판단, risk acceptance, Manual QA, evidence, verification, Approval 필요성을 드러내면, 그 need는 기존 Decision Packet, evidence, Manual QA, Eval, residual-risk, Approval, close path로 라우팅됩니다.
 
-진단 및 보고 경계: future [Local Derived Metrics](../roadmap.md#local-derived-metrics)는 보고서 또는 operator diagnostic에 나타날 수 있지만, roadmap은 이를 later diagnostic-only analytics로 유지합니다. Metric 표시는 상태 변경, gate 충족, 쓰기 권한, 승인 부여, 근거 생성, projection 대기열 추가 또는 새로고침, projection 최신성 변경, close readiness 또는 구현 준비 상태 변경, verification 수행 또는 기록, QA 기록, QA 또는 verification 면제, Residual Risk 수용, 결과 수용, assurance level 상승, Task 닫기를 하면 안 됩니다.
+진단 및 보고 경계: future [Local Derived Metrics](../roadmap.md#local-derived-metrics)는 보고서 또는 operator diagnostic에 나타날 수 있지만, roadmap은 owner 문서가 승격하기 전까지 이를 later 읽기 전용 진단 표시로 유지합니다. Metric 표시는 상태 변경, gate 충족, 쓰기 권한, 승인 부여, 근거 생성, projection 대기열 추가 또는 새로고침, projection 최신성 변경, close readiness 또는 구현 준비 상태 변경, verification 수행 또는 기록, QA 기록, QA 또는 verification 면제, Residual Risk 수용, 결과 수용, assurance level 상승, Task 닫기를 하면 안 됩니다.
 
 Release Handoff catalog entry:
 
@@ -3146,7 +3146,7 @@ expected_error: null
 
 #### V1 Browser QA Capture Candidate Entries
 
-이 catalog entries는 future candidates이지 MVP fixture bodies 또는 MVP smoke 요구사항이 아닙니다. Browser QA Capture capability profile, redaction policy, test environment, artifact retention, fixture target, fallback 의미가 정의된 뒤에만 executable이 됩니다.
+이 catalog entries는 future candidates이지 MVP fixture bodies 또는 MVP smoke 요구사항이 아닙니다. Browser QA Capture capability profile, redaction 및 secret/PII policy, test environment, artifact retention, fixture 또는 conformance target, fallback 의미, projection-as-canonical 의존성 없음이 정의된 뒤에만 executable이 됩니다.
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
@@ -3175,4 +3175,4 @@ Conformance output은 fixture id, pass/fail, observed state summary, observed ev
 
 ### Metrics Boundary
 
-Long-term operational metric은 파생 analytics이지 MVP-critical state나 conformance 요구사항이 아닙니다. Approval turnaround, verification latency, projection `stale` duration, same-session guard frequency, 접점 fallback rate 같은 metric은 future version이 fixture와 implementation ownership으로 승격하기 전까지 [roadmap](../roadmap.md)에 둡니다.
+Long-term operational metric은 파생 analytics이지 MVP-critical state나 conformance 요구사항이 아닙니다. Approval turnaround, verification latency, projection `stale` duration, same-session guard frequency, 접점 fallback rate 같은 metric은 future version이 owner 문서, fixture 또는 conformance target, fallback 동작, 필요한 redaction/retention policy, projection-as-canonical 의존성 없음, implementation ownership으로 승격하기 전까지 읽기 전용 진단으로 [roadmap](../roadmap.md)에 둡니다.

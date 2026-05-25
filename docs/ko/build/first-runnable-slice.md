@@ -14,7 +14,7 @@
 
 ## 읽기 전에
 
-[구현 개요](implementation-overview.md)를 먼저 읽습니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다.
+[구현 개요](implementation-overview.md)를 먼저 읽습니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다. Post-MVP 후보는 [로드맵](../roadmap.md)을 봅니다.
 
 ## 핵심 생각
 
@@ -28,7 +28,7 @@
 
 여기에 전체 DDL을 포함하거나 반복하지 않습니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)이 담당합니다.
 
-첫 조각은 projection template을 다듬는 단계도, dashboard를 만드는 단계도, 넓은 connector ecosystem이나 marketplace를 만드는 단계도, multi-surface connector expansion도, Context Index, Browser QA Capture system, hook expansion, parallel automation path도 아닙니다. Kernel Smoke에 필요한 기준 agent 접점 하나와 최소 MCP reachability는 여전히 포함합니다. 제외된 항목은 Core record와 transition이 실제로 존재한 뒤 권한 루프를 감싸거나 확장할 수 있을 뿐입니다.
+첫 조각은 projection template을 다듬는 단계도, dashboard를 만드는 단계도, 넓은 connector ecosystem이나 marketplace를 만드는 단계도, multi-surface connector expansion도, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, parallel automation path도 아닙니다. Kernel Smoke에 필요한 기준 agent 접점 하나와 최소 MCP reachability는 여전히 포함합니다. 제외된 항목은 Core record와 transition이 실제로 존재한 뒤 권한 루프를 읽거나, 표시하거나, 기존 owner path를 위한 artifact 후보를 제공하거나, 감쌀 수 있을 뿐입니다. 지속 artifact 등록이나 연결은 여전히 기존 Core/MCP owner path 또는 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따른 향후 승격 owner contract를 따릅니다.
 
 ## 성공 이야기
 
@@ -274,10 +274,11 @@ Required authority 또는 근거가 없을 때 close가 work를 끝내지 못하
 - projection template 완성도
 - recover, export, artifact integrity, broad operator smoke
 - dashboard, Context Index, connector marketplace, Browser QA Capture 동작
+- Cross-Surface Verification, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics 동작
 - preventive guard 동작
 - parallel orchestration 또는 team workflow
 
-이 내용은 [MVP 계획](mvp-plan.md)의 Agency-Hardened MVP 경로에 속합니다.
+이 내용은 항목에 따라 [MVP 계획](mvp-plan.md)의 이후 Agency-Hardened MVP 경로 또는 post-MVP [로드맵](../roadmap.md)에 속합니다.
 
 ## 작성할 Fixture
 

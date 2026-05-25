@@ -92,7 +92,7 @@ Agency-Hardened MVP is the final reference conformance target. It must add Decis
 
 Guard/freeze conformance for MVP asserts honest display and behavior at cooperative/detective levels: freeze requests can hold work, make the next action stricter, or cause `prepare_write` to block or hold when existing scope is incompatible; persistent owner-record changes must be asserted only when they happen through an existing Core state-changing path, Decision Packet route, or owner-record update path. Guard displays report whether the current path is cooperative or detective and what violations can only be detected after the fact. Preventive `T4` guard fixtures are v1-or-later unless a reference surface implements and proves pre-tool blocking for the covered operation.
 
-Browser QA Capture conformance is a v1 priority candidate, not an MVP smoke requirement. Future fixtures should prove declared `T6 QA Capture` behavior only after capability profile fields, redaction and secret/PII handling, browser test environment, artifact retention, capture artifact mapping, and unsupported-surface fallback behavior are defined. MVP fixtures still prove Manual QA records, artifact refs, QA waiver behavior, and close blockers without requiring automated browser capture.
+Browser QA Capture conformance is a v1 priority candidate, not an MVP smoke requirement. Until promoted through the [Roadmap promotion rule](../roadmap.md#promotion-rule), it is non-authoritative capture support only. Future fixtures should prove declared `T6 QA Capture` behavior only after capability profile fields, redaction and secret/PII handling, browser test environment, artifact retention, capture artifact mapping, unsupported-surface fallback behavior, and no projection-as-canonical dependency are defined. MVP fixtures still prove Manual QA records, artifact refs, QA waiver behavior, acceptance boundaries, and close blockers without requiring automated browser capture.
 
 ```mermaid
 flowchart LR
@@ -540,7 +540,7 @@ Boundary:
 - Release Handoff does not close a Task, deploy, merge, approve, accept residual risk, accept the result, waive QA or verification, upgrade assurance, or satisfy gates by itself.
 - Suggested checklist items are advisory. If they reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, or approval needs, those needs route to the existing Decision Packet, evidence, Manual QA, Eval, residual-risk, approval, or close paths.
 
-Diagnostic and reporting boundary: future [Local Derived Metrics](../roadmap.md#local-derived-metrics) may appear in reports or operator diagnostics, but the roadmap keeps them as later, diagnostic-only analytics. A metric readout must not mutate state, satisfy gates, authorize writes, grant approval, create evidence, enqueue or refresh projections, change projection freshness, change close readiness or implementation readiness, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, or close a Task.
+Diagnostic and reporting boundary: future [Local Derived Metrics](../roadmap.md#local-derived-metrics) may appear in reports or operator diagnostics, but the roadmap keeps them as later, read-only diagnostic displays until owner docs promote them. A metric readout must not mutate state, satisfy gates, authorize writes, grant approval, create evidence, enqueue or refresh projections, change projection freshness, change close readiness or implementation readiness, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, or close a Task.
 
 Release Handoff catalog entry:
 
@@ -3144,7 +3144,7 @@ These catalog entries are not fixture bodies. They make projection, reconcile, a
 
 #### V1 Browser QA Capture Candidate Entries
 
-These catalog entries are future candidates, not MVP fixture bodies or MVP smoke requirements. They become executable only after the Browser QA Capture capability profile, redaction policy, test environment, artifact retention, fixture target, and fallback semantics are defined.
+These catalog entries are future candidates, not MVP fixture bodies or MVP smoke requirements. They become executable only after the Browser QA Capture capability profile, redaction and secret/PII policy, test environment, artifact retention, fixture or conformance target, fallback semantics, and no projection-as-canonical dependency are defined.
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
@@ -3173,4 +3173,4 @@ Conformance output must include fixture id, pass/fail, observed state summary, o
 
 ### Metrics Boundary
 
-Long-term operational metrics are derived analytics, not MVP-critical state or conformance requirements. Keep metrics such as approval turnaround, verification latency, projection stale duration, same-session guard frequency, and surface fallback rate in the [roadmap](../roadmap.md) until a future version promotes them with fixtures and implementation ownership.
+Long-term operational metrics are derived analytics, not MVP-critical state or conformance requirements. Keep metrics such as approval turnaround, verification latency, projection stale duration, same-session guard frequency, and surface fallback rate in the [roadmap](../roadmap.md) as read-only diagnostics until a future version promotes them with owner docs, fixtures or a conformance target, fallback behavior, relevant redaction/retention policy, no projection-as-canonical dependency, and implementation ownership.

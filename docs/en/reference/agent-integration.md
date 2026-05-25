@@ -302,7 +302,7 @@ The compact status card renders the envelope for "where are we and what happens 
 
 Evaluators should receive a tighter verification bundle: acceptance criteria, changed files, approval scope, relevant Decision Packets, residual risk summary, Autonomy Boundary, deferred decisions, codebase stewardship refs, evidence manifest refs, required TDD trace refs, Manual QA requirement, artifact refs, freshness state, and forbidden patterns.
 
-A later Context Index may help retrieve relevant projections, artifact refs, repo files, docs, or notes. It is a read-only context provider, not a connector authority path.
+A later Context Index may help retrieve relevant projections, artifact refs, repo files, docs, or notes. Until owner docs promote it, it is a read-only context provider, not a connector authority path, and retrieved context does not authorize writes or satisfy gates.
 
 ## Fallback Semantics
 

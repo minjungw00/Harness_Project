@@ -2,21 +2,21 @@
 
 ## What this document helps you do
 
-This document collects post-MVP automation candidates and capability expansions so readers can see what may come later without treating it as first-implementation work.
+This document collects post-MVP automation candidates and capability expansions so readers can see what may come later without treating it as first-implementation work, current authority, or MVP-required behavior.
 
 Use it to understand:
 
 - which ideas are intentionally outside the MVP implementation contract
 - which future capabilities need policy, fixture, and fallback decisions before promotion
-- which roadmap items must remain non-authoritative until an owner explicitly scopes them
+- which roadmap items must remain non-authoritative until an owner explicitly scopes and promotes them
 
 ## This is not MVP scope
 
 This document is not part of the MVP implementation contract.
 
-It does not own kernel invariants, public MCP schemas, MVP implementation requirements, or required MVP conformance. The MVP proves the local kernel: state, gates, artifacts, verification, projection, reconcile, and one reference surface. The items below are useful follow-ons after those basics are stable.
+It does not own kernel invariants, public MCP schemas, MVP implementation requirements, or required MVP conformance. The MVP proves the local kernel: state, gates, artifacts, verification, projection, reconcile, and one reference surface. The items below are useful follow-ons after those basics are stable. For the MVP implementation order, use [Build: MVP Plan](build/mvp-plan.md); for strict API, storage, projection, and fixture contracts, use the Reference docs.
 
-This roadmap starts after the first proof and final proof have clear owner-doc coverage. It is not an alternate route around Kernel Smoke, Agency-Hardened MVP, or the Core state/`task_events`/artifact path. Dashboard, Browser QA Capture, Context Index, native hook expansion, connector marketplaces, and orchestration can collect, display, or extend Harness behavior later; they do not replace the first runnable authority loop.
+This roadmap starts after the first proof and final proof have clear owner-doc coverage. It is not an alternate route around Kernel Smoke, Agency-Hardened MVP, or the Core state/`task_events`/artifact path. Dashboard, Browser QA Capture, Cross-Surface Verification, Context Index, Native Hook Expansion, Advanced Sidecar Watcher, Local Derived Metrics, connector marketplaces, and orchestration can collect, display, or extend Harness behavior later; they do not replace the first runnable authority loop.
 
 ```mermaid
 flowchart LR
@@ -26,11 +26,11 @@ flowchart LR
   Later --> Promote["future version only after owner decision"]
 ```
 
-Kernel Smoke and Agency-Hardened MVP are both MVP delivery stages, not roadmap scope. This roadmap must not absorb kernel authority, Decision Packet, residual-risk visibility, detached verification, Manual QA, recover/export, or fixture-conformance behavior that the MVP owner documents require.
+Kernel Smoke and Agency-Hardened MVP are both MVP delivery stages, not roadmap scope. This roadmap must not absorb kernel authority, Decision Packet, residual-risk visibility, detached verification, Manual QA, recover/export, or fixture-conformance behavior that the MVP owner documents require. A roadmap item may read, display, recommend, provide artifact candidates, or act as a fixture candidate only when an owner doc allows that limited use. Any durable artifact registration or attachment must still go through an existing Core/MCP artifact owner path or a future promoted owner contract. Being listed here is never an authority path.
 
 ## Promotion rule
 
-A roadmap candidate can become v1 or later scoped work only after a future owner decision gives it:
+A roadmap candidate can become v1 or later scoped work only after a future owner decision gives it all of the following:
 
 - an explicit future-version owner decision; usefulness during MVP implementation is not promotion
 - a clear capability profile requirement
@@ -39,6 +39,8 @@ A roadmap candidate can become v1 or later scoped work only after a future owner
 - a fixture or conformance target
 - a fallback behavior for unsupported surfaces
 - no dependency on treating projections as canonical state
+
+The same rule applies to Dashboard, Browser QA Capture, Cross-Surface Verification, Native Hook Expansion, Advanced Sidecar Watcher, Context Index, Local Derived Metrics, and every other item below. Item-specific notes may add constraints, but they do not relax this promotion rule.
 
 ```mermaid
 flowchart TD
@@ -57,15 +59,15 @@ flowchart TD
 
 A dashboard can visualize active Tasks, gates, approvals, evidence coverage, projection freshness, artifact integrity, and reconcile items.
 
-Later because MVP should first stabilize the records, projections, and conformance fixtures that the dashboard would display. A future first version should be read-only over `state.sqlite`, artifact refs, and projection job status. A dashboard must not become the source of truth for Task state, evidence, acceptance, or close readiness.
+Later because MVP should first stabilize the records, projections, and conformance fixtures that the dashboard would display. Until explicitly promoted through owner docs, a dashboard is a read-only diagnostic display over `state.sqlite`, artifact refs, and projection job status. It must not become the source of truth for Task state, evidence, acceptance, close readiness, projection freshness, or metric interpretation.
 
 ### Browser QA Capture
 
 Browser QA Capture is a v1 priority candidate, not an MVP requirement. Automatic or assisted capture can gather screenshots, console logs, network traces, accessibility snapshots, and workflow recordings for Manual QA records where the connected surface supports it.
 
-Promotion requires a declared `T6 QA Capture` capability profile, redaction and secret/PII handling policy, test environment setup, artifact retention rules, fixture or conformance target, and fallback behavior for unsupported surfaces.
+Promotion requires a declared `T6 QA Capture` capability profile, redaction and secret/PII handling policy, test environment setup, artifact retention rules, fixture or conformance target, fallback behavior for unsupported surfaces, and no projection-as-canonical dependency.
 
-Captured browser QA material should attach to Manual QA records through artifact refs, commonly `qa_capture`, `screenshot`, `log`, or `other` when the captured file is a console log, network trace, accessibility snapshot, or workflow recording. It can improve QA evidence, but it is not final acceptance, does not replace Manual QA judgment when human taste or experience judgment is required, and does not replace detached verification unless the verification independence requirements are also met.
+Until explicitly promoted through owner docs, Browser QA Capture may be discussed as a candidate, prototype, manual capture aid, or artifact-candidate source. Captured browser QA material can improve QA evidence only when it is registered and linked through existing Manual QA/artifact paths or through a promoted owner contract, commonly as `qa_capture`, `screenshot`, `log`, or `other` when the captured file is a console log, network trace, accessibility snapshot, or workflow recording. It is not acceptance, does not replace Manual QA judgment when human taste or experience judgment is required, does not replace detached verification unless the verification independence requirements are also met, and does not replace the existing Manual QA/artifact flow.
 
 Unsupported surfaces should fall back to human Manual QA notes and manually supplied artifacts. MVP supports Manual QA records and artifact refs without requiring automated browser capture.
 
@@ -73,19 +75,19 @@ Unsupported surfaces should fall back to human Manual QA notes and manually supp
 
 Cross-surface verification can send a verification bundle to a different agent surface or evaluator environment.
 
-Later because MVP only needs one reference surface plus detached verification bundles/manual evaluator instructions. Cross-surface verify should wait for connector conformance and capability profiles to be stable.
+Later because MVP only needs one reference surface plus detached verification bundles/manual evaluator instructions. Until explicitly promoted through owner docs, Cross-Surface Verification is non-authoritative: sending a bundle to another surface must not record an Eval, satisfy verification, raise assurance, accept a result, or close a Task by itself. Promotion must satisfy the rule above and define how any resulting Eval or finding returns through Core without depending on projections as canonical state.
 
 ### Native Hook Expansion
 
 Native hooks can provide stronger pre-tool guards, command interception, file write blocking, or richer artifact capture in surfaces that support them.
 
-Later because hook APIs vary by surface. MVP may use a concrete hook only when the reference surface actually supports it; otherwise native hooks are a capability-dependent enhancement. A hook can support `prepare_write`, but it must not replace the Core authority path or make unsupported surfaces fail the MVP by default.
+Later because hook APIs vary by surface. MVP may use a concrete hook only when the reference surface actually supports it; otherwise native hooks are a capability-dependent enhancement. Until explicitly promoted through owner docs, Native Hook Expansion is non-authoritative: a hook can support `prepare_write`, capture artifacts, or improve guard display, but it must not replace the Core authority path, grant approval, satisfy gates, or make unsupported surfaces fail the MVP by default.
 
 ### Advanced Sidecar Watcher
 
 An advanced sidecar watcher can observe file writes, command execution, generated-file drift, artifact capture opportunities, and repo baseline drift in near real time.
 
-Later because MVP can start with cooperative `prepare_write`, git diff checks, artifact registration, and detective validators. Advanced watching should not be required for the core state model to work.
+Later because MVP can start with cooperative `prepare_write`, git diff checks, artifact registration, and detective validators. Until explicitly promoted through owner docs, an Advanced Sidecar Watcher is a non-authoritative observer. Its observations must route through Core records, validators, artifact registration, or reconcile before they affect Harness state, and it should not be required for the core state model to work.
 
 ### Parallel Orchestration
 
@@ -97,7 +99,7 @@ Later because parallel execution depends on stable locks, baseline freshness, ap
 
 A Context Index is a read-only context provider that may help an agent find relevant projections, artifact refs, repo files, docs, or user notes without treating indexed knowledge as Harness state.
 
-Later because indexed memory can blur local authority if introduced before the kernel and source-of-truth boundaries are stable. A future Context Index may rank, summarize, or retrieve context, but indexed or retrieved context must not authorize writes, resolve Decision Packets, grant approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, enqueue or refresh projections, change projection freshness, declare implementation readiness, or close Tasks.
+Later because indexed memory can blur local authority if introduced before the kernel and source-of-truth boundaries are stable. Until explicitly promoted through owner docs, a Context Index is non-authoritative retrieval only. A future Context Index may rank, summarize, or retrieve context, but indexed or retrieved context must not authorize writes, resolve Decision Packets, grant approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, enqueue or refresh projections, change projection freshness, declare implementation readiness, or close Tasks.
 
 ```mermaid
 flowchart LR
@@ -109,13 +111,13 @@ flowchart LR
   Index --> Boundary["non-authoritative context only"]
 ```
 
-A Context Index should become v1 work only if a future decision assigns an owner, freshness and staleness rules, privacy/redaction behavior, connector capability expectations, fixture coverage, and a display rule that distinguishes retrieved context from canonical state.
+In addition to the promotion rule, a Context Index should become v1 work only if a future decision assigns freshness and staleness rules, privacy/redaction behavior, connector capability expectations, fixture coverage, and a display rule that distinguishes retrieved context from canonical state.
 
 ### Local Derived Metrics
 
 Local Derived Metrics can derive diagnostic rates, counts, durations, and guard-trigger summaries from `state.sqlite.task_events`, runs, validator results, projection jobs, and reconcile items.
 
-Later because metrics are derived values, not authority. They may help users spot process bottlenecks, reporting gaps, and recurring operational patterns, but they are diagnostic only. Metric readouts must not mutate state, satisfy gates, authorize writes, grant approval, create evidence, enqueue or refresh projections, change projection freshness, change close readiness or implementation readiness, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, or close Tasks.
+Later because metrics are derived values, not authority. Until explicitly promoted through owner docs, local metrics are read-only diagnostic displays. They may help users spot process bottlenecks, reporting gaps, and recurring operational patterns, but they are diagnostic only. Metric readouts must not mutate state, satisfy gates, authorize writes, grant approval, create evidence, enqueue or refresh projections, change projection freshness, change close readiness or implementation readiness, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, or close Tasks.
 
 ```mermaid
 flowchart LR
@@ -149,7 +151,7 @@ Candidate derived metrics from the legacy operations guide:
 - `domain_language_mismatch_count`
 - `interface_review_required_count`
 
-These metrics should become v1 work only if a future decision assigns an owner, fixture coverage, retention behavior, privacy/redaction behavior when needed, and a user-facing interpretation rule. Even then, the metric value remains derived; any state change must still go through the normal Core owner path.
+In addition to the promotion rule, these metrics should become v1 work only if a future decision assigns fixture coverage or conformance target, retention behavior, privacy/redaction behavior when needed, fallback behavior for unsupported inputs, and a user-facing interpretation rule. Even then, the metric value remains derived; any state change must still go through the normal Core owner path.
 
 ### Team Profile Export And Import
 
@@ -159,7 +161,7 @@ Later because MVP is a local kernel. Team sharing needs versioning, privacy revi
 
 ## Additional Later Candidates
 
-The following are also later unless a future batch promotes them with fixtures and implementation ownership:
+The following are also later and non-authoritative unless a future batch promotes them with owner docs, fixtures, fallback behavior, retention/redaction decisions where relevant, and implementation ownership:
 
 - deployment, canary, rollback, merge, and production-monitoring automation; Release Handoff may exist earlier only as a v1 report/export profile that leaves those authorities external
 - artifact dashboard

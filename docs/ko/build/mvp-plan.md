@@ -16,11 +16,11 @@
 
 ## 읽기 전에
 
-[구현 개요](implementation-overview.md)와 [첫 실행 가능한 조각](first-runnable-slice.md)을 먼저 읽습니다. 정확한 API 규칙은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 보고, Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다. 설계 품질 gate와 validator 동작은 [설계 품질 정책](../reference/design-quality-policies.md)을 봅니다.
+[구현 개요](implementation-overview.md)와 [첫 실행 가능한 조각](first-runnable-slice.md)을 먼저 읽습니다. 정확한 API 규칙은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 보고, Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다. 설계 품질 gate와 validator 동작은 [설계 품질 정책](../reference/design-quality-policies.md)을 봅니다. Post-MVP 후보와 승격 기준은 [로드맵](../roadmap.md)을 봅니다.
 
 ## 핵심 생각
 
-MVP 구현은 좁은 Kernel Smoke 경로에서 시작해 Agency-Hardened MVP로 확장됩니다. Later automation은 별도 명세와 증명이 생기기 전까지 경계 밖에 둡니다.
+MVP 구현은 좁은 Kernel Smoke 경로에서 시작해 Agency-Hardened MVP로 확장됩니다. Later automation은 future owner가 [로드맵 승격 규칙](../roadmap.md#승격-규칙)을 통해 승격하고 별도로 증명하기 전까지 경계 밖에 둡니다.
 
 이 계획의 중심은 Core state, `task_events`, artifact refs, 근거, blocker, 그리고 그 권한 경로를 실행해 볼 최소 reference surface와 MCP reachability입니다. Projection template 다듬기, dashboard, index, hook expansion, 넓은 connector ecosystem 또는 marketplace, 접점별 connector automation, broad automation은 그 경로가 존재한 뒤에 유용해집니다. 첫 구축 대상이 아닙니다.
 
@@ -181,7 +181,7 @@ Projection failure는 Core 상태 failure와 분리됩니다.
 - Decision Packet 닫기 확인
 - 닫기 차단 조건 표시
 
-MVP에서 자동 Browser QA Capture를 요구하지 않습니다. screenshot, console log, network trace, accessibility snapshot, workflow recording은 제공될 때 연결할 수 있지만, MVP 요구사항은 Manual QA 기록과 artifact ref입니다.
+MVP에서 자동 Browser QA Capture를 요구하지 않습니다. screenshot, console log, network trace, accessibility snapshot, workflow recording은 기존 Manual QA/artifact path를 통해 등록되고 연결될 때만 QA evidence를 보강할 수 있지만, MVP 요구사항은 Manual QA 기록과 artifact ref입니다. 캡처 자료는 Manual QA judgment나 acceptance를 대체하지 않습니다.
 
 ### MVP-5: Operator Smoke, Agency Conformance, Later-Boundary Checks
 
@@ -196,7 +196,7 @@ MVP에서 자동 Browser QA Capture를 요구하지 않습니다. screenshot, co
 - artifact 무결성 확인
 - fixture 기반 conformance smoke
 - Journey 표시, 사용자 판단, Autonomy Boundary 준수, 남은 위험 표시를 대상으로 하는 agency conformance
-- parallel orchestration, broad connector automation, preventive guard expansion을 별도 증명 없이는 MVP 밖에 두는 later 경계 확인
+- Dashboard, Browser QA Capture, Cross-Surface Verification, Context Index, parallel orchestration, broad connector automation, native hook 또는 sidecar expansion, derived metrics, preventive guard expansion을 별도 증명과 승격 없이는 MVP 밖에 두는 later 경계 확인
 
 운영자 명령을 위해 두 번째 상태 모델을 만들지 않습니다. Operator는 같은 Core 상태 모델 위에서 진단, 복구, export, fixture 실행을 수행합니다.
 
@@ -224,16 +224,18 @@ MVP에서 자동 Browser QA Capture를 요구하지 않습니다. screenshot, co
 
 ## Later 경계
 
-다음은 향후 계획이 정확한 규칙과 fixture로 승격하기 전까지 MVP 밖에 둡니다.
+다음은 향후 계획이 owner 문서, capability profile, 정확한 계약, redaction/secret/PII policy, runtime 접점을 capture할 때의 artifact retention과 test-environment rule, fixture 또는 conformance target, fallback 동작, projection-as-canonical 의존성 없음으로 승격하기 전까지 MVP 밖에 둡니다.
 
-- dashboard 또는 hosted workflow UI
+- 권한 또는 close-readiness 기준으로 쓰이는 dashboard, hosted workflow UI, local metric
 - broad connector marketplace 또는 접점 ecosystem
-- 필수 자동화로서의 Browser QA Capture
+- 필수 자동화 또는 acceptance 대체물로서의 Browser QA Capture
+- 필수 assurance 경로로서의 Cross-Surface Verification
 - 증명된 pre-tool blocking 경로가 없는 preventive `T4` guard expansion
-- Context Index와 파생 analytics
+- 기준 agent 접점의 구체적인 capability를 넘어서는 native hook expansion 또는 Advanced Sidecar Watcher
+- 권한 또는 읽기/쓰기 선행 조건으로 쓰이는 Context Index
 - deployment, canary, rollback, production monitoring automation
 - parallel orchestration과 concurrent lane scheduling
 - team workflow, permissions, team profile export/import
-- MVP-critical 상태로서의 long-term operational metrics
+- MVP-critical 상태로서의 Local Derived Metrics 또는 long-term operational metrics
 
-구현 중 later feature가 유용해 보이더라도 담당 문서가 권한 경로를 정의하기 전까지는 표시, metadata, 선택적 첨부, fixture candidate로 유지합니다.
+구현 중 later feature가 유용해 보이더라도 owner 문서가 권한 경로를 정의하고 증명하기 전까지는 읽기 전용 표시, metadata, 기존 owner path를 위한 artifact 후보, fixture candidate로 유지합니다.

@@ -316,7 +316,7 @@ The harness reports guarantee levels to make enforcement strength honest:
 
 Guarantee display should name both sides of the boundary: what the connected profile can actually block before execution, and what it can only detect after action. Guard, freeze, and careful-mode labels inherit this connected-profile guarantee; they do not upgrade a cooperative or detective profile into preventive blocking.
 
-MVP reference behavior is cooperative/detective unless the connected surface has a concrete, proven pre-tool guard for covered operations or an isolation layer. Native hook expansion, advanced sidecar watching, and broad isolated execution are later roadmap items unless explicitly implemented for the MVP reference surface.
+MVP reference behavior is cooperative/detective unless the connected surface has a concrete, proven pre-tool guard for covered operations or an isolation layer. Native hook expansion, advanced sidecar watching, and broad isolated execution are later roadmap items unless explicitly implemented for the MVP reference surface. Until promoted through owner docs, they may improve observation or display only; they do not authorize writes, satisfy gates, grant approval, or replace Core authority.
 
 Guarantee level is display and risk context. It is not approval, verification, acceptance, or a kernel gate.
 

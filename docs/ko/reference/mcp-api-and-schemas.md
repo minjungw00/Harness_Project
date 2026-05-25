@@ -278,7 +278,7 @@ Artifact 등록은 임의 파일을 쌓아 두는 느슨한 파일 덤프가 아
 
 Reference implementation에서 artifact 등록은 Task-scoped입니다. `ArtifactRef.task_id`와 `ArtifactInput.relation.task_id`는 required이며 `artifacts.task_id`와 `artifact_links.task_id`에 대응합니다. `retention_class=project`는 retention policy에 영향을 줄 뿐 artifact ownership scope를 바꾸지 않습니다.
 
-Later Browser QA Capture는 새 MVP schema가 아니라 이 artifact 경계를 사용합니다. 화면 capture는 보통 `screenshot`을 사용하고, 묶음 QA output은 `qa_capture`를 사용할 수 있습니다. Console log와 network trace는 `log` 또는 `qa_capture`를 사용할 수 있고, accessibility snapshot과 workflow recording은 명확한 description과 함께 `qa_capture` 또는 `other`를 사용할 수 있습니다. 이러한 artifact는 모두 redaction, secret/PII handling, Task-scoped ownership, Manual QA record 또는 Feedback Loop attachment rules를 따라야 합니다.
+Later Browser QA Capture는 새 MVP schema가 아니라 이 artifact 경계를 사용합니다. 화면 capture는 보통 `screenshot`을 사용하고, 묶음 QA output은 `qa_capture`를 사용할 수 있습니다. Console log와 network trace는 `log` 또는 `qa_capture`를 사용할 수 있고, accessibility snapshot과 workflow recording은 명확한 description과 함께 `qa_capture` 또는 `other`를 사용할 수 있습니다. 이러한 artifact는 모두 redaction, secret/PII handling, Task-scoped ownership, Manual QA record 또는 Feedback Loop attachment rules를 따라야 합니다. Capture artifact는 evidence를 보강할 수 있지만 acceptance를 만들거나, Manual QA judgment를 대체하거나, detached verification을 충족하거나, MVP-required capture schema를 추가하지 않습니다.
 
 ```yaml
 ArtifactRef:

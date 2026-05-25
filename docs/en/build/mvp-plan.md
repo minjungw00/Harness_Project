@@ -16,11 +16,11 @@ Use this when you need to plan what to build after the first runnable slice. Use
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md) and [First Runnable Slice](first-runnable-slice.md). For exact API contracts, use [MCP API And Schemas](../reference/mcp-api-and-schemas.md). For storage details and DDL, use [Storage And DDL](../reference/storage-and-ddl.md). For design-quality gate and validator behavior, use [Design Quality Policies](../reference/design-quality-policies.md).
+Read [Implementation Overview](implementation-overview.md) and [First Runnable Slice](first-runnable-slice.md). For exact API contracts, use [MCP API And Schemas](../reference/mcp-api-and-schemas.md). For storage details and DDL, use [Storage And DDL](../reference/storage-and-ddl.md). For design-quality gate and validator behavior, use [Design Quality Policies](../reference/design-quality-policies.md). For post-MVP candidates and promotion criteria, use the [Roadmap](../roadmap.md).
 
 ## Main idea
 
-MVP delivery moves from a narrow Kernel Smoke path to an Agency-Hardened MVP, while later automation stays outside the boundary unless it is separately specified and proven.
+MVP delivery moves from a narrow Kernel Smoke path to an Agency-Hardened MVP, while later automation stays outside the boundary unless a future owner promotes it through the [Roadmap promotion rule](../roadmap.md#promotion-rule) and proves it separately.
 
 The center of the plan is Core state, `task_events`, artifact refs, evidence, blockers, and the minimal reference surface and MCP reachability needed to exercise them. Projection-template polish, dashboards, indexes, hook expansion, broad connector ecosystems or marketplaces, surface-specific connector automation, and broad automation become useful after that path exists; they are not the first build target.
 
@@ -181,7 +181,7 @@ Focus on:
 - Decision Packet close checks
 - close blocker reporting
 
-Do not require automated Browser QA Capture for MVP. Browser screenshots, console logs, network traces, accessibility snapshots, or workflow recordings may be attached when supplied, but Manual QA records and artifact refs are the MVP requirement.
+Do not require automated Browser QA Capture for MVP. Browser screenshots, console logs, network traces, accessibility snapshots, or workflow recordings may support QA evidence only when registered and linked through existing Manual QA/artifact paths, but Manual QA records and artifact refs are the MVP requirement. Captured material does not replace Manual QA judgment or acceptance.
 
 ### MVP-5: Operator Smoke, Agency Conformance, Later-Boundary Checks
 
@@ -196,7 +196,7 @@ Focus on:
 - artifact integrity check
 - fixture-based conformance smoke
 - agency conformance for Journey visibility, user judgment, Autonomy Boundary respect, and residual-risk visibility
-- later-boundary checks that keep parallel orchestration, broad connector automation, and preventive guard expansion out of MVP unless separately proven
+- later-boundary checks that keep Dashboard, Browser QA Capture, Cross-Surface Verification, Context Index, parallel orchestration, broad connector automation, native hook or sidecar expansion, derived metrics, and preventive guard expansion out of MVP unless separately proven and promoted
 
 Do not create a second state model for operator commands. Operators diagnose, repair, export, or run fixtures over the same Core state model.
 
@@ -224,16 +224,18 @@ Do not create a second state model for operator commands. Operators diagnose, re
 
 ## Later boundary
 
-Keep these outside MVP unless a future plan promotes them with exact contracts and fixtures:
+Keep these outside MVP unless a future plan promotes them through owner docs with a capability profile, exact contracts, redaction/secret/PII policy, artifact retention and test-environment rules when runtime surfaces are captured, fixtures or a conformance target, fallback behavior, and no projection-as-canonical dependency:
 
-- dashboard or hosted workflow UI
+- dashboard, hosted workflow UI, or local metrics as authority or close-readiness surfaces
 - broad connector marketplace or surface ecosystem
-- Browser QA Capture as required automation
+- Browser QA Capture as required automation or acceptance replacement
+- Cross-Surface Verification as a required assurance path
 - preventive `T4` guard expansion without a proven pre-tool blocking path
-- Context Index and derived analytics
+- native hook expansion or Advanced Sidecar Watcher beyond a concrete reference-surface capability
+- Context Index as authority or read/write prerequisite
 - deployment, canary, rollback, or production monitoring automation
 - parallel orchestration and concurrent lane scheduling
 - team workflow, permissions, and team profile export/import
-- long-term operational metrics as MVP-critical state
+- Local Derived Metrics or long-term operational metrics as MVP-critical state
 
-If a later feature is useful during implementation, keep it as display, metadata, optional attachment, or fixture candidate until the owner docs define its authority path.
+If a later feature is useful during implementation, keep it as read-only display, metadata, artifact candidates for existing owner paths, or fixture candidate until owner docs define and prove its authority path.

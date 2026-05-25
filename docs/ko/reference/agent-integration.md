@@ -302,7 +302,7 @@ Compact status card는 "현재 어디이고 다음은 무엇인가?"를 위해 e
 
 Evaluator는 더 좁은 verification bundle을 받아야 합니다. 여기에는 acceptance criteria, changed file, approval scope, relevant Decision Packet, residual risk summary, Autonomy Boundary, deferred decision, codebase stewardship ref, evidence manifest ref, required TDD trace ref, Manual QA requirement, artifact ref, freshness state, forbidden pattern이 포함됩니다.
 
-이후 Context Index는 relevant projection, artifact ref, repo file, docs, note를 찾아오는 데 도움을 줄 수 있습니다. 하지만 읽기 전용 context provider일 뿐 connector 권한 경로가 아닙니다.
+이후 Context Index는 relevant projection, artifact ref, repo file, docs, note를 찾아오는 데 도움을 줄 수 있습니다. 하지만 owner 문서가 승격하기 전까지는 읽기 전용 context provider일 뿐 connector 권한 경로가 아니며, 가져온 context가 write를 authorize하거나 gate를 충족하지 않습니다.
 
 ## Fallback Semantics
 

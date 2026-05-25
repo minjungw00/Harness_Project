@@ -14,7 +14,7 @@ This is planning documentation; it does not authorize runtime or server implemen
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md) first. For storage and DDL details, use [Storage And DDL](../reference/storage-and-ddl.md).
+Read [Implementation Overview](implementation-overview.md) first. For storage and DDL details, use [Storage And DDL](../reference/storage-and-ddl.md). For post-MVP candidates, use the [Roadmap](../roadmap.md).
 
 ## Main idea
 
@@ -28,7 +28,7 @@ This is a command-independent implementation guide. It describes capabilities an
 
 Do not include or duplicate full DDL here. Storage details and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
-The first slice is deliberately not a projection-template-polish milestone, dashboard milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, hook expansion, or parallel automation path. It still includes the one reference surface and minimal MCP reachability needed for Kernel Smoke. The excluded items can only wrap or extend the authority loop after the Core records and transitions are real.
+The first slice is deliberately not a projection-template-polish milestone, dashboard milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, or parallel automation path. It still includes the one reference surface and minimal MCP reachability needed for Kernel Smoke. The excluded items can only read from, display, provide artifact candidates for existing owner paths, or wrap the authority loop after the Core records and transitions are real. Any durable artifact registration or attachment still follows existing Core/MCP owner paths or a future promoted owner contract under the [Roadmap promotion rule](../roadmap.md#promotion-rule).
 
 ## Success story
 
@@ -274,10 +274,11 @@ This slice does not prove:
 - projection template completeness
 - recover, export, artifact integrity, and broad operator smoke
 - dashboard, Context Index, connector marketplace, or Browser QA Capture behavior
+- Cross-Surface Verification, native hook expansion, Advanced Sidecar Watcher, or Local Derived Metrics behavior
 - preventive guard behavior
 - parallel orchestration or team workflow
 
-Those belong to the Agency-Hardened MVP path in [MVP Plan](mvp-plan.md).
+Those belong either to the later Agency-Hardened MVP path in [MVP Plan](mvp-plan.md) or to the post-MVP [Roadmap](../roadmap.md), depending on the item.
 
 ## Fixtures to write
 

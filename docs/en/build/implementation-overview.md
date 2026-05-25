@@ -22,13 +22,13 @@ This document does not define SQLite DDL, public MCP schemas, projection templat
 
 ## Before you read
 
-You should already understand the basic Harness concepts from the Learn path. For exact behavior, use the Reference docs linked at the end of this page.
+You should already understand the basic Harness concepts from the Learn path. For exact behavior, use the Reference docs linked at the end of this page. For post-MVP candidates and promotion criteria, use the [Roadmap](../roadmap.md).
 
 ## Main idea
 
 Build the smallest local Core authority path first, then harden it through evidence, projections, conformance, and operator recovery.
 
-Start with canonical state, `task_events`, artifact refs, Core tool behavior, and the minimal reference surface and MCP reachability needed to exercise that path. Treat projection-template polish, dashboards, indexes, broad connector ecosystems or marketplaces, surface-specific connector automation, hook expansion, Browser QA automation, and broad automation as things that read from or wrap that authority loop after it exists.
+Start with canonical state, `task_events`, artifact refs, Core tool behavior, and the minimal reference surface and MCP reachability needed to exercise that path. Treat projection-template polish, dashboards, indexes, broad connector ecosystems or marketplaces, surface-specific connector automation, hook expansion, Browser QA automation, and broad automation as non-authoritative things that read from or wrap that authority loop after it exists.
 
 If a proposed implementation starts with projection template polish, a dashboard, a Context Index, a connector marketplace, hook expansion, or broad automation lanes, it is starting in the wrong place.
 
@@ -38,7 +38,7 @@ If a proposed implementation starts with projection template polish, a dashboard
 |---|---|---|
 | Kernel Smoke | One local Task can go through the Core authority loop: scoped write decision, Write Authorization, `record_run`, artifact-backed evidence, status, minimal projection freshness, and close blockers. | Status shows the active Task, gates, Change Unit, evidence, blockers, and projection freshness. Out-of-scope work is blocked, compatible scoped work is authorized and consumed once, and close refuses missing evidence or required decisions. |
 | Agency-Hardened MVP | The local reference MVP handles user judgment, approvals, detached verification, Manual QA, residual risk, reconcile, recovery, export, and conformance with honest boundaries. | Fixtures and operator entrypoints show why work can or cannot continue, verify, accept, export, recover, or close through the same Core records and errors. |
-| Post-MVP roadmap | Later surfaces or automation can be considered only after the local kernel and agency proof are stable. | Optional capabilities remain read-only, display-only, metadata-only, or attachment-only until an owner promotes them with exact contracts and fixtures. |
+| Post-MVP roadmap | Later surfaces or automation can be considered only after the local kernel and agency proof are stable. | Optional capabilities remain read-only, display-only, metadata-only, or artifact-candidate-only until an owner promotes them through the [Roadmap promotion rule](../roadmap.md#promotion-rule) with exact contracts and fixtures. |
 
 ## What you are building
 
@@ -123,16 +123,21 @@ Exact command names and flags can come later. The important part is that operato
 
 Keep the first implementation narrow. Do not build these as MVP prerequisites:
 
-- dashboard or rich hosted UI
+- dashboard or rich hosted UI as an authority path
 - broad connector ecosystem
-- Context Index or derived analytics
-- Browser QA Capture as required automation
+- Context Index as authority or read/write prerequisite
+- Browser QA Capture as required automation or acceptance replacement
+- Cross-Surface Verification as a required assurance path
 - native hook expansion beyond a concrete reference-surface capability
+- Advanced Sidecar Watcher as required enforcement
+- Local Derived Metrics as MVP-critical state
 - team workflow, shared workspaces, permissions, or profile import/export
 - parallel orchestration automation
 - preventive guard expansion unless the reference surface proves a concrete pre-tool blocking path
 
 MVP may display cooperative or detective guard/freeze status and may hold or narrow work through existing Change Unit, Autonomy Boundary, and `prepare_write` behavior. Surface labels do not upgrade the stored guarantee level.
+
+Useful later capabilities can appear only as read-only displays, metadata, artifact candidates for existing owner paths, or fixture candidates until their owner docs define capability profile, redaction/secret/PII policy, retention or test-environment rules when needed, fixture coverage, fallback behavior, and no projection-as-canonical dependency.
 
 ## The first proof
 
