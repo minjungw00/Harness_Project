@@ -208,6 +208,17 @@ Markdown 보고서는 이런 근거를 보여주는 유용한 보기(view)이지
 
 이런 검토 요청을 더 정확히 부를 때는 product-review, eng-review, design-review, security-review, qa-review, release-handoff 같은 라벨을 쓸 수 있습니다.
 
+이 라벨들은 Role Lens, playbook, display 요청을 나타냅니다. 무엇을 볼지 좁히는 신호이지 새 gate가 아니며, 그 자체로 권한, Write Authorization, evidence, verification, Manual QA, Approval, 결과 수락, 남은 위험을 받아들이는 판단, Task 닫기를 만들지 않습니다. Lens가 문제를 찾으면 기존 경로로 연결합니다. Decision Packet, evidence, Eval 또는 verification 필요, Manual QA, Residual Risk, Approval, Change Unit update recommendation, close blocker가 그 경로입니다.
+
+유용한 최종 검토는 보통 두 질문을 분리합니다.
+
+```text
+Spec Compliance Review: 현재 scope와 권한 안에서 요청한 것을 만들었는가?
+Code Quality / Stewardship Review: 결과가 codebase 안에서 유지보수 가능하고 일관적인가?
+```
+
+같은 세션에서 하는 review는 유용한 self-check 또는 stewardship signal이 될 수 있지만 detached verification은 아닙니다.
+
 더 조심해서 진행하고 싶을 때:
 
 ```text

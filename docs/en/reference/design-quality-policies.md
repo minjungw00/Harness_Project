@@ -78,9 +78,9 @@ Review guidance is displayed in two stages so agents and users can separate "did
 | Spec Compliance Review | Did the work satisfy the requested task under the current Harness authority? | Acceptance criteria coverage, Change Unit completion conditions, scope and Write Authority compatibility, Decision Packet compatibility, evidence coverage, and residual-risk visibility. |
 | Code Quality / Stewardship Review | Is the implementation maintainable inside this codebase? | Domain language, module/interface boundary, vertical slice shape, feedback loop or TDD trace, codebase stewardship, context hygiene, and follow-up risk. |
 
-Review stages may summarize validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, and close blockers. They do not by themselves satisfy evidence, QA, verification, acceptance, residual-risk acceptance, approval, scope, or Write Authorization.
+Review stages may summarize validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, Eval or verification needs, Manual QA needs, residual-risk candidates, Approval needs, and close blockers. Role Lens or recommended playbook labels may select this review posture, but they do not create another authority path. Review displays do not by themselves satisfy evidence, QA, verification, acceptance, residual-risk acceptance, Approval, scope, or Write Authorization.
 
-Same-session review is not detached verification. A passed two-stage review may support `self_checked` confidence and may route findings into state, but it must not produce `assurance_level=detached_verified`. Detached verification still requires a valid independence boundary and Eval path.
+Same-session review is not detached verification. A passed two-stage review may support `self_checked` confidence and may route findings through existing state paths, but it must not produce `assurance_level=detached_verified`. Detached verification still requires a valid independence boundary and Eval path.
 
 ## Policy contract shape
 
@@ -412,6 +412,7 @@ Use this when:
 - A same-session review should route findings without claiming detached verification.
 - Review output needs to summarize existing policy validators without adding new validator IDs.
 - Close readiness needs a readable split between "requested thing satisfied" and "codebase stewardship acceptable."
+- Role Lens or recommended playbook output needs to stay display-only while still pointing to the next real path.
 
 Example: A final review can pass Spec Compliance because acceptance criteria and evidence are covered, while Code Quality / Stewardship still reports a `domain_language_consistency` warning and a follow-up Change Unit recommendation.
 
@@ -419,12 +420,14 @@ Example: A final review can pass Spec Compliance because acceptance criteria and
 |---|---|
 | `name` | `two_stage_review_display` |
 | `applies_when` | Review guidance is shown for spec compliance, code quality, stewardship, evidence gaps, Decision Packet candidates, residual-risk candidates, or close blockers. |
-| `default_requirement` | Display Spec Compliance Review and Code Quality / Stewardship Review separately. Summarize relevant owner records, validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, and close blockers without creating new gates, schemas, canonical records, or assurance upgrades. |
-| `allowed_waiver` | Display may be omitted for narrow direct/advisor work where no review display is useful. Omission does not waive any underlying policy, evidence, QA, verification, acceptance, scope, approval, or close requirement. |
-| `required_record` | Existing owner records, validator results, evidence refs, Decision Packet refs, residual-risk refs, and close blocker refs. The review display itself is derived display, not canonical state. |
+| `default_requirement` | Display Spec Compliance Review and Code Quality / Stewardship Review separately. Treat Role Lens and playbook labels such as `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, and `release-handoff` as review posture only. Summarize relevant owner records, validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, Approval needs, Manual QA needs, Eval or verification needs, and close blockers without creating new gates, schemas, canonical records, or assurance upgrades. |
+| `allowed_waiver` | Display may be omitted for narrow direct/advisor work where no review display is useful. Omission waives only the display; it does not waive underlying policy or state requirements, including Decision Packet needs, evidence, QA, verification, acceptance, residual-risk visibility or acceptance, scope, Approval, Write Authorization, or close. |
+| `required_record` | Existing owner records, validator results, evidence refs, Decision Packet refs, Eval or verification refs, Manual QA refs, Approval refs, residual-risk refs, and close blocker refs. The review display itself is derived display, not canonical state. |
 | `validator` | No standalone validator ID. Spec Compliance Review reads acceptance/evidence state plus `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, and close-related residual-risk checks where applicable. Code Quality / Stewardship Review reads `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, and `context_hygiene_check`. |
-| `evidence` | Existing validator result refs, evidence manifest refs, run/eval/manual QA refs, owner-record refs, residual-risk refs, and close blocker refs. |
-| `close_impact` | Review display does not by itself satisfy or block close. Underlying policy validators, evidence sufficiency, QA, verification, acceptance, residual-risk visibility, approval, scope, and Write Authorization determine the actual close impact. |
+| `evidence` | Existing validator result refs, evidence manifest refs, run/eval/manual QA refs, owner-record refs, Approval refs, residual-risk refs, and close blocker refs. |
+| `close_impact` | Review display does not by itself satisfy or block close. Underlying policy validators, evidence sufficiency, QA, verification, acceptance, residual-risk visibility, Approval, scope, and Write Authorization determine the actual close impact. |
+
+Review display findings route to existing paths: Decision Packet, evidence, Eval or verification, Manual QA, residual risk, Approval, Change Unit update recommendation, or close blocker. They are not new canonical records. Same-session review content is self-check or stewardship signal unless a qualifying independent Eval or verification record provides detached assurance.
 
 ## Waiver rules
 
@@ -517,7 +520,7 @@ Review-stage displays compose these existing policy validators; they do not intr
 
 | Review stage | Validator relationship | Possible routed outcomes |
 |---|---|---|
-| Spec Compliance Review | Reads acceptance/evidence state plus `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, and close-related residual-risk checks where applicable. | Validator result refs, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, or close blockers. |
-| Code Quality / Stewardship Review | Reads `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, and `context_hygiene_check`. | Stewardship validator findings, reconcile items, owner-record update recommendations, follow-up Change Unit recommendations, residual-risk candidates, or close blockers. |
+| Spec Compliance Review | Reads acceptance/evidence state plus `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, and close-related residual-risk checks where applicable. | Validator result refs, evidence gaps, Decision Packet candidates, Eval or verification needs, Manual QA needs, Approval needs, Change Unit update recommendations, residual-risk candidates, or close blockers. |
+| Code Quality / Stewardship Review | Reads `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, and `context_hygiene_check`. | Stewardship validator findings, reconcile items, owner-record update recommendations, Eval or verification needs, Manual QA needs where relevant, Approval needs where relevant, follow-up Change Unit recommendations, residual-risk candidates, or close blockers. |
 
 The reference MVP may implement minimal validators first, but it should use the MVP severity defaults as the task-shape router for warning versus blocker behavior and keep validator IDs stable so conformance fixtures can grow without changing policy names.

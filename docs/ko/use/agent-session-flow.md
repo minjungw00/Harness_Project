@@ -200,6 +200,17 @@ Autonomy Boundary 안에서는 에이전트가 기존 helper를 재사용할지,
 
 가능하면 한 번에 하나의 막힘 질문만 묻습니다.
 
+## Review Lens와 display
+
+사용자가 product, engineering, design, security, QA, release-handoff 관점으로 봐 달라고 하면 `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, `release-handoff`를 Role Lens 또는 recommended playbook display로 다룹니다. 라벨은 검토 관점을 고를 뿐이며 새 mode, gate, Approval, Write Authorization, evidence, verification, Manual QA, 결과 수락, 남은 위험을 받아들이는 판단, Task 닫기가 아닙니다.
+
+Review output에서는 두 질문을 분리합니다.
+
+- Spec Compliance Review: 현재 scope와 권한 안에서 요청한 것을 만들었는가?
+- Code Quality / Stewardship Review: 결과가 codebase 안에서 유지보수 가능하고 일관적인가?
+
+같은 세션에서 하는 review는 조건을 충족하는 independent Eval 또는 verification record가 없는 한 self-check 또는 stewardship signal입니다. Decision Packet 후보, evidence gap, Eval 또는 verification 필요, Manual QA 필요, Residual Risk 후보, Approval 필요, Change Unit update recommendation, close blocker를 찾을 수는 있지만, 영향받는 write나 Task 닫기가 진행되기 전에 이런 발견 사항은 기존 경로로 연결해야 합니다.
+
 ## 제품 파일 쓰기
 
 제품 파일을 쓰기 전에는 에이전트가 의도한 작업에 대한 쓰기 권한을 확인해야 합니다.

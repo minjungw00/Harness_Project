@@ -386,7 +386,7 @@ External PR, review, deployment, rollback, monitoring process를 위한 release 
 
 ### Role Lens
 
-사용자가 product, engineering, design, security, QA, release-handoff review posture를 요청할 수 있게 하는 non-authoritative skill 또는 playbook 접점입니다. Role Lens output은 `RecommendedPlaybook`, `DecisionPacketCandidate`, validator/evidence/Manual QA/residual-risk candidates, release handoff input 같은 existing route를 재사용합니다. Write authority, approval, evidence, verification, QA 면제, risk acceptance, final acceptance, close, assurance level 상승이 아닙니다.
+사용자가 product, engineering, design, security, QA, release-handoff 검토 관점을 요청할 수 있게 하는 non-authoritative skill 또는 playbook 접점입니다. Role Lens output은 `RecommendedPlaybook`, `DecisionPacketCandidate`, validator/check route, evidence, Eval 또는 verification, Manual QA, Approval, residual-risk, Change Unit update, release handoff route 같은 existing route를 재사용합니다. Schema, 기준 기록, `ProjectionKind` value, gate, Approval, evidence, verification, QA, 결과 수락, 남은 위험을 받아들이는 판단, Task 닫기, Write Authorization, assurance level 상승이 아닙니다.
 
 ### Report Projection
 
@@ -396,7 +396,7 @@ Task 보고서, approval 보고서, run summary, evidence manifest 보고서, Ev
 
 ### Review Stages
 
-Spec Compliance Review와 Code Quality / Stewardship Review를 분리하는 managed display/procedure split입니다. Spec Compliance Review는 current Harness authority 안에서 requested work가 complete한지 묻습니다. Code Quality / Stewardship Review는 implementation이 codebase 안에서 유지보수하기 좋은지 묻습니다. Review Stages는 findings를 validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, close blockers로 라우팅할 수 있지만 기준 records, 새 `ProjectionKind` values, approval, evidence, verification, QA, acceptance, risk acceptance, close, Write Authorization이 아닙니다. Same-session Review Stages는 `detached_verified` assurance를 만들지 않습니다.
+Spec Compliance Review와 Code Quality / Stewardship Review를 분리하는 managed display/procedure split입니다. Spec Compliance Review는 현재 Harness 권한 안에서 requested work가 complete한지 묻습니다. Code Quality / Stewardship Review는 implementation이 codebase 안에서 유지보수하기 좋은지 묻습니다. Review Stages는 findings를 validator results, evidence gaps, Decision Packet candidates, Eval 또는 verification 필요, Manual QA 필요, Approval 필요, residual-risk candidates, Change Unit update recommendations, close blockers로 라우팅할 수 있습니다. 하지만 schema, 기준 records, 새 `ProjectionKind` values, gate, Approval, evidence, verification, QA, 결과 수락, 남은 위험을 받아들이는 판단, Task 닫기, Write Authorization, assurance level 상승이 아닙니다. Same-session Review Stages는 `assurance_level=detached_verified`를 만들지 않습니다.
 
 ### `request_hash`
 

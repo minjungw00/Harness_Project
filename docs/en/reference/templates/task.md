@@ -142,7 +142,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 | 1 | | | | | |
 
 ## Review Stages
-- note: managed display only; same-session review is not detached verification.
+- note: managed display only; Role Lens/playbook labels do not create gates; same-session review is not detached verification. Route findings to existing owner records, refs, or blockers.
 
 ### Spec Compliance Review
 - acceptance criteria coverage:
@@ -151,7 +151,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Decision Packet compatibility:
 - evidence coverage:
 - residual-risk visibility:
-- routed outcome:
+- routed outcome (existing path/ref only):
 
 ### Code Quality / Stewardship Review
 - domain language:
@@ -161,7 +161,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - codebase stewardship:
 - context hygiene:
 - follow-up risk:
-- routed outcome:
+- routed outcome (existing path/ref only):
 
 ## Next Evidence
 - next evidence action:
@@ -391,9 +391,9 @@ Change Unit block sub-template:
 
 Stewardship Impact in `TASK` is the `StewardshipImpactSummary` display derived from owner records, validator results, and refs. It does not replace Domain Language, Module Map, Interface Contract, Feedback Loop, TDD Trace, residual-risk, or Decision Packet owner records.
 
-Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from or aligned with current Task and Change Unit state. It does not authorize product writes, expand scope, satisfy approval, create evidence, mutate state when edited, or replace `prepare_write`.
+Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from or aligned with current Task and Change Unit state. It does not authorize product writes, expand scope, satisfy Approval, create evidence, mutate state when edited, or replace `prepare_write`.
 
-Review Stages in `TASK` are managed display sections. They do not satisfy gates, authorize writes, accept risk, close the task, or create `detached_verified` assurance.
+Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. They do not satisfy gates, authorize writes, accept risk, close the task, create owner records, or create `assurance_level=detached_verified`. Findings must route to existing Decision Packet, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit update, or close-blocker paths.
 
 Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the skipped check or surface, accepted risk, follow-up, relevant refs, and close impact. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
 

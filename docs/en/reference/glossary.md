@@ -384,7 +384,7 @@ An optional report/export profile that summarizes release readiness for external
 
 ### Role Lens
 
-A non-authoritative skill or playbook surface that lets a user ask for a product, engineering, design, security, QA, or release-handoff review posture. Role Lens output reuses existing routes such as `RecommendedPlaybook`, `DecisionPacketCandidate`, validator/evidence/Manual QA/residual-risk candidates, and release handoff input. It is not write authority, approval, evidence, verification, QA waiver, risk acceptance, final acceptance, close, or assurance upgrade.
+A non-authoritative skill or playbook surface that lets a user ask for a product, engineering, design, security, QA, or release-handoff review posture. Role Lens output reuses existing routes such as `RecommendedPlaybook`, `DecisionPacketCandidate`, validator/check routes, evidence, Eval or verification, Manual QA, Approval, residual-risk, Change Unit update, and release handoff routes. It is not a schema, canonical record, `ProjectionKind` value, gate, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization, or assurance upgrade.
 
 ### Report Projection
 
@@ -394,7 +394,7 @@ The named report projection kinds are projections generated from state records a
 
 ### Review Stages
 
-A managed display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages can route findings to validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, or close blockers, but they are not canonical records, new `ProjectionKind` values, approval, evidence, verification, QA, acceptance, risk acceptance, close, or Write Authorization. Same-session Review Stages do not create `detached_verified` assurance.
+A managed display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages can route findings to validator results, evidence gaps, Decision Packet candidates, Eval or verification needs, Manual QA needs, Approval needs, residual-risk candidates, Change Unit update recommendations, or close blockers. They are not schemas, canonical records, new `ProjectionKind` values, gates, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization, or assurance upgrade. Same-session Review Stages do not create `assurance_level=detached_verified`.
 
 ### `request_hash`
 

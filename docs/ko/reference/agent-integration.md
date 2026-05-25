@@ -321,7 +321,7 @@ Projection `stale` 상태는 상태와 별도로 보고합니다. `source_state_
 
 ## Role Lens 동작
 
-Role Lens는 사용자가 익숙한 review posture로 agent를 이끌 수 있게 하는 non-authoritative skill 또는 playbook 접점입니다. Initial lenses는 다음과 같습니다.
+Role Lens는 사용자가 익숙한 검토 관점으로 agent를 이끌 수 있게 하는 non-authoritative skill 또는 playbook 접점입니다. Initial lenses는 다음과 같습니다.
 
 - `product-review`
 - `eng-review`
@@ -330,28 +330,31 @@ Role Lens는 사용자가 익숙한 review posture로 agent를 이끌 수 있게
 - `qa-review`
 - `release-handoff`
 
-Connector는 이를 slash command, button, prompt snippet, recommended playbook으로 보여줄 수 있습니다. Lens name은 review posture를 고를 뿐 권한 경로를 고르지 않습니다.
+Connector는 이를 slash command, button, prompt snippet, recommended playbook으로 보여줄 수 있습니다. Lens name은 검토 관점을 고를 뿐 권한 경로를 고르지 않습니다.
 
-Role Lens output은 다음을 만들 수 있습니다.
+Role Lens output은 다음 항목을 표시하거나 경로로 추천할 수 있습니다.
 
 - `DecisionPacketCandidate` 또는 existing Decision Packet route
 - 실제 validator/check가 낼 validator finding candidate 또는 suggested `ValidatorResult` route
 - evidence requirement
+- Eval 또는 verification 필요
 - Manual QA requirement
+- Approval 필요
 - residual-risk candidate
+- 필요한 경우 Change Unit update recommendation
 - release handoff 보고서 input
 - recommended next playbook
 
-Role Lens output은 그 자체로 기준 상태를 변경하거나, write를 허가하거나, approval을 부여하거나, Decision Packet을 충족하거나, QA 또는 verification을 면제하거나, residual risk를 수용하거나, result를 받아들이거나, Task를 닫거나, assurance를 올리면 안 됩니다. Lens가 상태 변경이 필요한 일을 찾아내면 접점은 normal MCP tool과 Core path로 라우팅합니다.
+이 항목들은 기존 Core/MCP state-changing path가 실제 동작을 기록하기 전까지 display 및 routing output일 뿐입니다. Role Lens output은 schema나 기준 record를 도입하거나, 그 자체로 기준 상태를 변경하거나, write를 허가하거나, Approval을 부여하거나, Decision Packet을 충족하거나, QA 또는 verification을 면제하거나, 남은 위험을 받아들이거나, 결과를 수락하거나, Task를 닫거나, assurance를 올리면 안 됩니다. Lens가 상태 변경이 필요한 일을 찾아내면 접점은 normal MCP tool과 Core path로 라우팅합니다.
 
-Two-stage review display는 stage가 분명히 분리되어 보이게 유지해야 합니다.
+Two-stage review display는 두 stage가 분명히 분리되어 보이게 해야 합니다.
 
 | Stage | 질문 |
 |---|---|
-| Spec Compliance Review | Requested work가 current Harness authority 안에서 완료되었는가: acceptance criteria, Change Unit completion condition, scope/write authority compatibility, Decision Packet compatibility, evidence coverage, residual-risk visibility? |
-| Code Quality / Stewardship Review | Implementation이 유지보수하기 좋은가: domain language, module/interface boundary, vertical slice shape, feedback loop 또는 TDD trace, codebase stewardship, context hygiene, follow-up risk? |
+| Spec Compliance Review | 현재 Harness 권한 안에서 요청한 작업이 완료되었는가: acceptance criteria 충족, Change Unit completion condition, scope/write authority 호환성, Decision Packet compatibility, evidence coverage, Residual Risk 표시? |
+| Code Quality / Stewardship Review | implementation이 codebase 안에서 유지보수하기 좋은가: domain language, module/interface boundary, vertical slice shape, feedback loop 또는 TDD trace, codebase stewardship, context hygiene, follow-up risk? |
 
-Same-session review는 useful self-checking일 수 있지만 detached verification이 아니며 `assurance_level=detached_verified`로 표시하면 안 됩니다.
+Same-session review는 유용한 self-check일 수 있지만 detached verification이 아니며 `assurance_level=detached_verified`로 표시하면 안 됩니다.
 
 ## 기준 접점 계약
 

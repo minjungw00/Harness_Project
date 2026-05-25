@@ -103,7 +103,7 @@ npm test -- --runInBand
 - manual_qa_required:
 
 ## Review Stages
-- note: run-local review display only; same-session review는 `detached_verified` assurance를 만들 수 없다.
+- note: run-local review display only; Role Lens/playbook 라벨은 gate를 만들지 않는다. Same-session review는 `assurance_level=detached_verified`를 만들 수 없다. 발견 사항은 기존 ref 또는 blocker로 연결한다.
 
 ### Spec Compliance Review
 - acceptance criteria coverage:
@@ -112,7 +112,7 @@ npm test -- --runInBand
 - Decision Packet compatibility:
 - evidence coverage:
 - residual-risk visibility:
-- outcome refs:
+- outcome refs (existing path/ref only):
 
 ### Code Quality / Stewardship Review
 - domain language:
@@ -122,7 +122,7 @@ npm test -- --runInBand
 - codebase stewardship:
 - context hygiene:
 - follow-up risk:
-- outcome refs:
+- outcome refs (existing path/ref only):
 
 ## TDD Trace Summary
 - required:
@@ -161,6 +161,6 @@ npm test -- --runInBand
 
 ## 메모
 
-Raw log와 diff는 artifact로 남기고, 보고서에는 link만 둡니다. `RUN-SUMMARY`에 담긴 same-session review content에 해당하는 내용은 self-check 또는 stewardship signal로만 취급합니다. Detached verification으로 표시하면 안 됩니다.
+Raw log와 diff는 artifact로 남기고, 보고서에는 link만 둡니다. `RUN-SUMMARY`에 담긴 same-session review content는 self-check 또는 stewardship signal로만 취급합니다. Detached verification으로 표시하면 안 됩니다. 발견 사항은 기존 Decision Packet, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit 업데이트, close-blocker ref로 연결하며, report 자체가 그 record를 만들지는 않습니다.
 
 이 report의 evidence ref는 `redaction_state`를 보존해야 합니다. `secret_omitted` ref는 보이는 nonsecret evidence만 뒷받침할 수 있고, `blocked` ref는 원본 log, diff, screenshot, bundle이 아니라 사용할 수 없는 입력을 표시하는 committed metadata-only notice입니다.

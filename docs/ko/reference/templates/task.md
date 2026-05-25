@@ -142,7 +142,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 | 1 | | | | | |
 
 ## Review Stages
-- note: managed display only; same-session review는 detached verification이 아니다.
+- note: managed display only; Role Lens/playbook 라벨은 gate를 만들지 않는다. Same-session review는 detached verification이 아니다. 발견 사항은 기존 owner record, ref, blocker로 연결한다.
 
 ### Spec Compliance Review
 - acceptance criteria coverage:
@@ -151,7 +151,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Decision Packet compatibility:
 - evidence coverage:
 - residual-risk visibility:
-- routed outcome:
+- routed outcome (existing path/ref only):
 
 ### Code Quality / Stewardship Review
 - domain language:
@@ -161,7 +161,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - codebase stewardship:
 - context hygiene:
 - 후속 위험:
-- routed outcome:
+- routed outcome (existing path/ref only):
 
 ## Next Evidence
 - next evidence action:
@@ -393,7 +393,7 @@ Change Unit block sub-template:
 
 `TASK`의 Implementation Micro-Plan은 현재 Task와 Change Unit 상태에서 생성되거나 그 상태와 정렬된 가벼운 실행 보조 정보입니다. Product write를 허가하거나, scope를 넓히거나, Approval을 충족하거나, 근거를 만들거나, edit만으로 상태를 변경하거나, `prepare_write`를 대체하지 않습니다.
 
-`TASK`의 Review Stages는 관리되는 표시 섹션입니다. Gates를 충족하거나, write를 허가하거나, 남은 위험을 받아들이거나, Task를 닫거나, `detached_verified` assurance를 만들 수 없습니다.
+`TASK`의 Review Stages는 Role Lens, playbook, two-stage review guidance를 위한 관리되는 표시 섹션입니다. Gate를 충족하거나, write를 허가하거나, 남은 위험을 받아들이거나, Task를 닫거나, owner record를 만들거나, `assurance_level=detached_verified`를 만들 수 없습니다. 발견 사항은 기존 Decision Packet, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit 업데이트, close-blocker 경로로 연결해야 합니다.
 
 `TASK`의 waiver 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 또는 verification waiver는 waiver를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA waiver는 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA waiver Decision Packet을, verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을 가리킵니다. 생략한 확인이나 대상, 받아들이는 위험, 후속 작업, 관련 refs, 닫기 영향도 함께 보여줘야 합니다. QA waiver는 Manual QA가 되지 않고, verification waiver는 detached verification을 만들지 않습니다.
 

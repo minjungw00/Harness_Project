@@ -200,6 +200,17 @@ Useful examples:
 
 Ask one blocking question at a time when possible.
 
+## Review lenses and displays
+
+When the user asks for a product, engineering, design, security, QA, or release-handoff perspective, treat `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, and `release-handoff` as Role Lens or recommended playbook displays. The label chooses a review posture; it is not a new mode, gate, Approval, Write Authorization, evidence, verification, Manual QA, acceptance, residual-risk acceptance, or close.
+
+For review output, keep the two questions separate:
+
+- Spec Compliance Review: did we build the requested thing under current scope and authority?
+- Code Quality / Stewardship Review: is the result maintainable and coherent in the codebase?
+
+Same-session review is self-check or stewardship signal unless a qualifying independent Eval or verification record exists. It may find Decision Packet candidates, evidence gaps, Eval or verification needs, Manual QA needs, residual-risk candidates, Approval needs, Change Unit update recommendations, or close blockers, but those findings must route through the existing paths before affected writes or close proceed.
+
 ## Product writes
 
 Before writing product files, the agent must check write authority for the intended operation.

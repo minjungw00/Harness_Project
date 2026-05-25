@@ -332,17 +332,20 @@ Role Lens is a non-authoritative skill or playbook surface that helps the user s
 
 A connector may expose these as slash commands, buttons, prompt snippets, or recommended playbooks. The lens name selects a review posture; it does not select an authority path.
 
-Role Lens output may produce:
+Role Lens output may surface or recommend routes for:
 
 - a `DecisionPacketCandidate` or a route to an existing Decision Packet
 - a validator finding candidate or suggested `ValidatorResult` route for an actual validator/check to emit
 - an evidence requirement
+- an Eval or verification need
 - a Manual QA requirement
+- an Approval need
 - a residual-risk candidate
+- a Change Unit update recommendation when appropriate
 - release handoff report input
 - a recommended next playbook
 
-Role Lens output must not mutate canonical state by itself, authorize writes, grant approval, satisfy a Decision Packet, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. When a lens identifies work that needs a state change, the surface routes through the normal MCP tool and Core path.
+These are display and routing outputs until an existing Core/MCP state-changing path records the underlying action. Role Lens output must not introduce schemas or canonical records, mutate canonical state by itself, authorize writes, grant Approval, satisfy a Decision Packet, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. When a lens identifies work that needs a state change, the surface routes through the normal MCP tool and Core path.
 
 Two-stage review display should keep the stages visibly separate:
 
