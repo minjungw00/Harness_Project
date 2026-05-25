@@ -39,6 +39,8 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 # TDD-0001 Trace Title
 
+> Projection view: rendered from `source_state_version` at `updated_at`; displays TDD records and refs. Plan text is not RED evidence until recorded artifact or result refs support it.
+
 ## Identity
 - task_id:
 - change_unit_id:

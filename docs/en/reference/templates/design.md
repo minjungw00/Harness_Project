@@ -44,6 +44,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # DESIGN-0001 Design Title
 
+> Projection view: rendered from `source_state_version` at `updated_at`; summarizes owner records and proposals. Editing it does not replace Domain Language, Module Map, Interface Contract, Decision Packet, or Task state.
+
 ## Problem
 - design problem:
 

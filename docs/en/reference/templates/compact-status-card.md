@@ -36,6 +36,7 @@ Use the compact status card when a short current-state display needs to show the
 
 ````text
 TASK-{id} {title}
+Display only: current-state view, not canonical state or write authority.
 Mode: {mode} / {lifecycle_phase}
 Next safe action: {next_safe_action}
 Change Unit: {active_change_unit_summary|none}
@@ -47,7 +48,7 @@ Quality gates: design={design_gate}; evidence={evidence_gate}; verification={ver
 Manual QA: {manual_qa_summary|not_required}
 Close blockers: {close_blockers|none}
 Residual risk: {residual_risk_summary|none}
-Projection freshness: {current|stale|failed|unknown}; source_state_version={source_state_version|unknown}; {refresh_or_reconcile_needed|none}
+Projection freshness (view only): {current|stale|failed|unknown}; source_state_version={source_state_version|unknown}; {refresh_or_reconcile_needed|none}
 Latest refs: report={latest_report_ref|none}; evidence={evidence_manifest_ref|none}; run/eval/QA={latest_check_refs|none}
 ````
 
@@ -56,6 +57,8 @@ Latest refs: report={latest_report_ref|none}; evidence={evidence_manifest_ref|no
 This template is a rendered card shape, not canonical state. Gate values remain owned by canonical state.
 
 Projection freshness values are rendered from owner state; this template does not redefine their semantics.
+
+Projection freshness is readable-view freshness only. It is not Task result, state freshness, evidence freshness, approval, acceptance, or write authority.
 
 This is not judgment-context. If user judgment is needed, render a separate decision prompt with options, recommendation, uncertainty, deferral effect, and relevant refs.
 

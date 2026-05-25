@@ -46,6 +46,8 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 # EVAL-0001 Verification Result
 
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 Eval state와 검토한 ref를 표시합니다. Verdict, assurance, gate effect는 Eval과 Core gate record를 통해서만 바뀝니다.
+
 ## Target
 - task_id:
 - change_unit_id: CU-01 | null

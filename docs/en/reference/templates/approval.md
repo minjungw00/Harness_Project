@@ -44,6 +44,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # APR-0001 Approval Request
 
+> Projection view: rendered from `source_state_version` at `updated_at`; displays the approval request and boundary. Approval still requires the canonical approval decision path, and writes still require compatible `prepare_write`.
+
 ## Request Summary
 - proposed action:
 

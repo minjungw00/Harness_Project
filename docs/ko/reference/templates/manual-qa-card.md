@@ -28,6 +28,7 @@
 
 ````text
 Manual QA가 필요합니다.
+표시 전용: `qa_gate`와 QA record가 기준으로 남습니다.
 
 Record: {manual_qa_record_id|none until recorded}
 Gate: {qa_gate display: pending|passed|failed|waived|not_required}

@@ -33,6 +33,7 @@ Use the approval card when a pending approval needs a compact user-facing displa
 
 ````text
 Approval is required.
+Display only: approval must still be recorded through the canonical approval decision path.
 
 {approval_id} {category}
 Request: {summary}

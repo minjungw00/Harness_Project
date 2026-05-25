@@ -34,6 +34,8 @@ The strict boundary is:
 
 A Markdown report can link to evidence and summarize state, but it is neither the raw artifact nor the state record.
 
+Generated reports should make this visible without requiring the reader to know this reference first. In examples and templates, `source_state_version` names the state clock used for the render, `projection_version` or projection status names the rendered view, `updated_at` names when the view was produced, and freshness lines say whether the view still matches its source records. None of those fields make Markdown the owner of Task state, gates, approvals, evidence, QA, verification, Decision Packets, or acceptance.
+
 ## Reference scope
 
 This document owns:
@@ -78,6 +80,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # TASK-0001 Add Import Preview
 
+> Projection view: rendered from `state.sqlite` `source_state_version` 42 at `updated_at`. `projection_version` describes the view, not Task state. Managed edits become drift/reconcile candidates; user proposals become state only through Core and `state.sqlite.task_events`.
+
 <!-- HARNESS:BEGIN managed -->
 ## Current Summary
 - mode: work
@@ -95,6 +99,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 <!-- HARNESS:END managed -->
 
 ## User Notes and Proposals
+<!-- Human-editable: notes and proposals here are input for reconcile, not state changes by themselves. -->
 -
 ```
 
@@ -213,12 +218,19 @@ Rules:
 - The projector does not silently treat a direct edit inside a managed block as accepted state.
 - Re-rendering a managed block must preserve unrelated human-editable sections.
 - A failed render marks projection freshness `failed` or `stale`; it does not roll back state.
+- Rendered templates should include a short projection boundary notice near the top or in the managed summary so readers can tell that the report is a view, managed blocks are projector-owned, and human-editable sections are proposal input.
 
 Front matter stays diagnostic and compact. It may identify the rendered object, show the projection version or status, mirror `source_state_version`, and include the rendered timestamp. It must not contain large state summaries, evidence bodies, gate rollups, or artifact inventories.
 
 `projection_version` is the projection/template/job version. It is not a state clock and must not be used as the source-state freshness basis. `source_state_version` is the affected-scope state clock value used as the render source: the Task State Version when the projection is task-scoped, otherwise the Project State Version or extension-defined owner state clock.
 
 The canonical per-projection value is `projection_jobs.source_state_version` for the successful render job. Front matter `source_state_version` only mirrors that value for operator diagnosis.
+
+Do not collapse display problems into one status:
+
+- A stale projection means the readable Markdown or card may lag behind the owner records or artifact refs.
+- Stale state, stale baseline, or stale evidence means the underlying state or evidence inputs have moved or are no longer sufficient; the projection may be current while still displaying that blocker.
+- MCP unavailable means the surface or caller cannot reach the required Harness/Core capability. If Core cannot be reached, no authoritative Core state mutation, projection repair, approval, close, or gate update can be claimed from the display alone.
 
 ## Human-editable section rules
 

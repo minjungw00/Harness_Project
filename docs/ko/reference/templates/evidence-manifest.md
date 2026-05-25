@@ -41,6 +41,8 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 # EM-0001 Evidence Manifest
 
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 owner record와 artifact ref의 대응을 표시합니다. Close는 Markdown edit가 아니라 기준 `evidence_gate`와 관련 state를 따릅니다.
+
 ## Identity
 - task_id:
 - change_unit_id:

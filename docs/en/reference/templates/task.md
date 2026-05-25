@@ -55,6 +55,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # TASK-0001 Task Title
 
+> Projection view: rendered from `source_state_version` at `updated_at`. Managed sections are generated display; edits inside them are drift/reconcile candidates, not state changes.
+
 <!-- HARNESS:BEGIN managed -->
 ## Current Summary
 - mode:
@@ -218,6 +220,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 <!-- HARNESS:END managed -->
 
 ## User Notes and Proposals
+<!-- Human-editable: notes and proposals here are reconcile input and do not change state until accepted through Core. -->
 -
 ````
 

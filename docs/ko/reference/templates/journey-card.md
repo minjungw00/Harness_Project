@@ -30,6 +30,7 @@
 
 ````text
 TASK-{id} {title}
+표시 전용: 현재 위치를 보여주는 읽기용 view이며 기준 상태나 write authority가 아닙니다.
 현재 위치: {mode} / {lifecycle_phase} / {current_position}
 다음 action: {next_action}
 
@@ -78,7 +79,7 @@ Gates:
 - Manual QA: {qa_gate display: pending|passed|failed|waived|not_required}
 - acceptance: {acceptance_gate}
 
-Projection freshness: {projection_freshness}
+Projection freshness: {projection_freshness}; source_state_version={source_state_version|unknown} (읽기용 view의 최신성, Task result 아님)
 ````
 
 ## 메모

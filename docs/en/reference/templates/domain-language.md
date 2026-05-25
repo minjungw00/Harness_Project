@@ -34,6 +34,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # Domain Language
 
+> Projection view: rendered from `domain_terms` and related refs at `source_state_version` / `updated_at`. Managed sections are generated display; use `User Notes and Proposals` for reconcile input.
+
 <!-- HARNESS:BEGIN managed -->
 ## Summary
 - current status:
@@ -55,6 +57,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 <!-- HARNESS:END managed -->
 
 ## User Notes and Proposals
+<!-- Human-editable: term proposals here are not canonical domain terms until accepted through reconcile/Core. -->
 -
 ````
 

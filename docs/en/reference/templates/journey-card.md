@@ -30,6 +30,7 @@ Use `JOURNEY-CARD` when a current-position card needs to show where the work is,
 
 ````text
 TASK-{id} {title}
+Display only: current-position view, not canonical state or write authority.
 Where we are: {mode} / {lifecycle_phase} / {current_position}
 Next action: {next_action}
 
@@ -78,7 +79,7 @@ Gates:
 - Manual QA: {qa_gate display: pending|passed|failed|waived|not_required}
 - acceptance: {acceptance_gate}
 
-Projection freshness: {projection_freshness}
+Projection freshness: {projection_freshness}; source_state_version={source_state_version|unknown} (view freshness, not task result)
 ````
 
 ## Notes

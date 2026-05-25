@@ -49,6 +49,8 @@ updated_at: 2026-05-06T09:45:10+09:00
 
 # RUN-SUMMARY
 
+> Projection view: rendered from `source_state_version` at `updated_at`; displays a committed Run and artifact refs. Editing it does not change the Run, evidence, gates, or `state.sqlite.task_events`.
+
 ## Run Identity
 - run_id:
 - actor kind:

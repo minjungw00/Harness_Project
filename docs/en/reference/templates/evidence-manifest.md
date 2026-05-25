@@ -41,6 +41,8 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 # EM-0001 Evidence Manifest
 
+> Projection view: rendered from `source_state_version` at `updated_at`; maps owner records and artifact refs. Close follows canonical `evidence_gate` and related state, not Markdown edits.
+
 ## Identity
 - task_id:
 - change_unit_id:

@@ -39,6 +39,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # IFACE-0001 Interface Title
 
+> Projection view: rendered from `interface_contracts` and related refs at `source_state_version` / `updated_at`. Managed sections are generated display; use `User Notes and Proposals` for reconcile input.
+
 <!-- HARNESS:BEGIN managed -->
 ## Identity
 - module:
@@ -74,6 +76,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 <!-- HARNESS:END managed -->
 
 ## User Notes and Proposals
+<!-- Human-editable: interface proposals here are not canonical Interface Contract records until accepted through reconcile/Core. -->
 -
 ````
 

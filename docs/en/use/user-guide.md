@@ -86,6 +86,10 @@ Look for the next safe action. If the status looks stale or wrong, say:
 Show the current status and next action again from state.
 ```
 
+Read projection freshness as the freshness of the readable view, not as the task result. `current` means the card or report matches the state version it names. `stale`, `failed`, or `unknown` means the readable view may need refresh or reconcile before you rely on it.
+
+That is different from stale state, stale baseline, or stale evidence. Those mean the underlying work inputs moved, became outdated, or no longer prove the claim; they may block writes or close even when the status card itself is current. It is also different from MCP unavailable: if the agent cannot reach the required Harness/Core capability, it should say that directly and avoid claiming an authoritative state change, approval, gate update, or close until the connection or capability is restored.
+
 The status card is not the same as judgment-context. When the agent needs your judgment, it should add a focused decision prompt with options, a recommendation, uncertainty, what can continue if you defer, and refs to the relevant evidence or design records.
 
 If the agent uses words like guard, freeze, or careful mode, it should explain them in ordinary terms: what can actually be blocked before execution, and what can only be detected later. A freeze on a cooperative or detective surface means a scope hold or stricter next-action posture, not hard prevention.
@@ -128,6 +132,8 @@ Evidence answers: "What supports the claim that this work is done?"
 Evidence is not just "the agent says it changed the thing." It can include changed paths, test output, logs, screenshots, QA notes, verification results, or other artifacts that support the acceptance criteria.
 
 For large evidence, the agent should show refs and short outcomes first. Logs, screenshots, diffs, traces, Run details, Eval details, Manual QA notes, and artifacts should not be pasted into the default context unless you or the next reviewer need to inspect them.
+
+Markdown reports are useful views over that evidence, not the evidence or state record itself. If you edit a report, use the human notes or proposal area; edits inside generated or managed report text should be treated as drift or reconcile input, not as a gate change.
 
 Useful phrase:
 

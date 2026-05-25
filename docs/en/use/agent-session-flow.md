@@ -61,6 +61,8 @@ I found the active task. Current scope is X. The next safe action is Y. Product 
 
 If projection, `source_state_version`, or readable status is stale or unknown, say that and refresh or reconcile before depending on it. If canonical state is available directly, the agent may continue from that state while warning that the readable projection is not the source of authority.
 
+Keep display failures separate. A stale projection means the readable card/report may lag and needs refresh or reconcile before it becomes dependable context. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient and may block writes or close. MCP unavailable means the agent cannot reach the required Harness/Core capability; do not claim authoritative state changes, approvals, gate updates, projection repairs, or close until that capability is available again.
+
 ## Intake
 
 Intake turns an everyday request into a usable task shape without forcing the user to speak Harness.

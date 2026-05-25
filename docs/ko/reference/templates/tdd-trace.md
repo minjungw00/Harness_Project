@@ -39,6 +39,8 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 # TDD-0001 Trace Title
 
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 TDD record와 ref를 표시합니다. Plan text는 기록된 artifact 또는 result ref가 뒷받침하기 전까지 RED evidence가 아닙니다.
+
 ## Identity
 - task_id:
 - change_unit_id:

@@ -42,6 +42,8 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 # Manual QA
 
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 Manual QA record와 `qa_gate`를 표시합니다. QA result, waiver, risk acceptance는 QA, Decision Packet, residual-risk path를 통해 기록되어야 합니다.
+
 ## Identity
 - manual_qa_record_id: QA-0001 | null
 - task_id:

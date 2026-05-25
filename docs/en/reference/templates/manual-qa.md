@@ -42,6 +42,8 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 # Manual QA
 
+> Projection view: rendered from `source_state_version` at `updated_at`; displays Manual QA records and `qa_gate`. QA results, waivers, and risk acceptance must be recorded through the QA, Decision Packet, or residual-risk paths.
+
 ## Identity
 - manual_qa_record_id: QA-0001 | null
 - task_id:

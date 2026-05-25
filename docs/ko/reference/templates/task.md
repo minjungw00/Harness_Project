@@ -55,6 +55,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # TASK-0001 Task Title
 
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링된 보기입니다. Managed section은 생성된 표시 영역이며, 그 안의 edit는 상태 변경이 아니라 drift 또는 reconcile candidate입니다.
+
 <!-- HARNESS:BEGIN managed -->
 ## Current Summary
 - mode:
@@ -218,6 +220,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 <!-- HARNESS:END managed -->
 
 ## User Notes and Proposals
+<!-- Human-editable: 여기의 note와 proposal은 reconcile input이며, Core를 통해 accepted되기 전에는 상태를 바꾸지 않습니다. -->
 -
 ````
 

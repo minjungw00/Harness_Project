@@ -39,6 +39,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # IFACE-0001 Interface Title
 
+> Projection 보기: `interface_contracts`와 관련 ref를 `source_state_version` / `updated_at` 기준으로 렌더링한 보기입니다. Managed section은 생성된 표시 영역이며, reconcile 입력은 `User Notes and Proposals`에 적습니다.
+
 <!-- HARNESS:BEGIN managed -->
 ## Identity
 - module:
@@ -74,6 +76,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 <!-- HARNESS:END managed -->
 
 ## User Notes and Proposals
+<!-- Human-editable: 여기의 interface proposal은 reconcile/Core를 통해 accepted되기 전에는 기준 Interface Contract record가 아닙니다. -->
 -
 ````
 

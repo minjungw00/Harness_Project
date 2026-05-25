@@ -46,6 +46,8 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 # EVAL-0001 Verification Result
 
+> Projection view: rendered from `source_state_version` at `updated_at`; displays Eval state and reviewed refs. Verdict, assurance, and gate effects change only through Eval and Core gate records.
+
 ## Target
 - task_id:
 - change_unit_id: CU-01 | null

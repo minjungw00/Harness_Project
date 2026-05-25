@@ -33,6 +33,7 @@
 
 ````text
 Approval이 필요합니다.
+표시 전용: approval은 여전히 기준 approval decision path를 통해 기록되어야 합니다.
 
 {approval_id} {category}
 요청: {summary}

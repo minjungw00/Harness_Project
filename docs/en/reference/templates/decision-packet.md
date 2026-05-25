@@ -59,6 +59,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # DEC-0001 Decision Packet Title
 
+> Projection view: rendered from `source_state_version` at `updated_at`; displays `decision_packet_id` and related refs from state. Editing this Markdown does not resolve the Decision Packet; decisions are recorded through the decision path.
+
 ## Why Now
 - trigger:
 - blocker:

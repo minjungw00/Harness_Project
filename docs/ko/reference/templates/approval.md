@@ -44,6 +44,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # APR-0001 Approval Request
 
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 approval request와 boundary를 표시합니다. Approval은 여전히 기준 approval decision path를 거쳐야 하며, write에는 compatible `prepare_write`가 필요합니다.
+
 ## Request Summary
 - proposed action:
 

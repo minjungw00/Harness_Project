@@ -44,6 +44,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # DESIGN-0001 Design Title
 
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 owner record와 proposal을 요약합니다. 이 문서를 편집해도 Domain Language, Module Map, Interface Contract, Decision Packet, Task state를 대체하지 않습니다.
+
 ## Problem
 - design problem:
 

@@ -41,6 +41,8 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 # DIRECT-RESULT
 
+> Projection view: rendered from `source_state_version` at `updated_at`; displays the direct Run result. Editing it does not change result, assurance, escalation, or close state.
+
 ## Request
 - user request:
 

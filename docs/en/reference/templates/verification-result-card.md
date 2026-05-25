@@ -30,6 +30,7 @@ Use the verification result card when an Eval result needs a compact user-facing
 
 ````text
 Verification complete.
+Display only: Eval records and gate state remain canonical.
 
 {eval_id}
 Verdict: {verdict}

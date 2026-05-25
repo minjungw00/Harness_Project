@@ -59,6 +59,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # DEC-0001 Decision Packet Title
 
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며, state의 `decision_packet_id`와 관련 ref를 표시합니다. 이 Markdown을 편집해도 Decision Packet은 해결되지 않으며, decision은 decision path를 통해 기록됩니다.
+
 ## Why Now
 - trigger:
 - blocker:

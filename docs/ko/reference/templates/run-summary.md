@@ -49,6 +49,8 @@ updated_at: 2026-05-06T09:45:10+09:00
 
 # RUN-SUMMARY
 
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 committed Run과 artifact ref를 표시합니다. 이 문서를 편집해도 Run, evidence, gate, `state.sqlite.task_events`는 바뀌지 않습니다.
+
 ## Run Identity
 - run_id:
 - actor kind:

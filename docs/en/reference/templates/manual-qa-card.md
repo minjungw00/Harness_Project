@@ -28,6 +28,7 @@ Use the Manual QA card when required Manual QA needs a compact prompt showing th
 
 ````text
 Manual QA is required.
+Display only: `qa_gate` and QA records remain canonical.
 
 Record: {manual_qa_record_id|none until recorded}
 Gate: {qa_gate display: pending|passed|failed|waived|not_required}

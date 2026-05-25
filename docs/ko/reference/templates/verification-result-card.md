@@ -30,6 +30,7 @@ Eval 결과의 verdict, assurance 영향, 검토한 evidence, 남은 작업, 사
 
 ````text
 Verification이 완료되었습니다.
+표시 전용: Eval record와 gate state가 기준으로 남습니다.
 
 {eval_id}
 Verdict: {verdict}

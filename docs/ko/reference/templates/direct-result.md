@@ -41,6 +41,8 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 # DIRECT-RESULT
 
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 direct Run result를 표시합니다. 이 문서를 편집해도 result, assurance, escalation, close state는 바뀌지 않습니다.
+
 ## Request
 - user request:
 

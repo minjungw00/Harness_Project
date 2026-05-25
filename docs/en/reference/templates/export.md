@@ -44,6 +44,8 @@ updated_at: 2026-05-06T10:30:00+09:00
 
 # EXPORT-0001 Harness Export
 
+> Projection view: rendered from `source_state_version` at `updated_at`; this export is a report snapshot. It does not deploy, merge, satisfy gates, accept risk, change projection freshness, or close the Task.
+
 ## Scope
 - project_id:
 - task_ids:

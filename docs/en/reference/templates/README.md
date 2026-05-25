@@ -16,9 +16,17 @@ Projection templates match the API `ProjectionKind` tiers:
 
 Templates are rendered shapes, not canonical state. They must not redefine kernel fields, MCP schemas, SQLite DDL, gate behavior, or artifact integrity rules.
 
+Rendered examples should make that boundary visible to the reader. `source_state_version` names the state clock used for the render, `projection_version` or projection status names the render/template/job view, and `updated_at` names when the view was produced. Freshness lines say whether the view still matches its source records; they are not task results, gate values, approval, acceptance, or evidence.
+
+Managed blocks are projector-owned display. Direct edits inside managed blocks are drift and should become reconcile candidates, not state changes. Human-editable sections such as `User Notes and Proposals` are proposal surfaces: they become state only after reconcile or another Core state-changing path appends the relevant `state.sqlite.task_events` row.
+
 Any template that renders artifact refs must preserve `redaction_state`. Large or sensitive artifact bodies are not embedded by default. `secret_omitted` entries may show safe notes or handles and may support only visible nonsecret evidence; `blocked` entries show the committed metadata-only notice as unavailable input. Templates must not inline, reconstruct, summarize, or export omitted secret/PII values or blocked raw payload bytes.
 
 Display fields such as `redaction_availability_summary`, omitted or blocked impact lines, and `Downstream Effect` columns are rendered summaries only. They are derived from `ArtifactRef.redaction_state`, owner records, and downstream gate, evidence, QA, verification, projection, export, or Release Handoff status; they are not new canonical records, schema fields, DDL values, or authority inputs.
+
+Decision Packet visibility does not depend on a standalone `DEC` Markdown projection. MVP surfaces must still show active Decision Packets through `TASK`, status/next responses, judgment-context resources, and decision-packet resources. Standalone `DEC` is only an optional rendered view when that projection is enabled.
+
+Display cards should distinguish three different problems: a stale projection means the readable view may lag behind its source records, stale state or stale evidence means the underlying state, baseline, or artifact inputs have moved or become insufficient, and MCP unavailable means the surface cannot reach the required Harness/Core capability. Only the owner records and Core transitions can change state.
 
 ## MVP-required templates
 
