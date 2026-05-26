@@ -365,7 +365,7 @@ Manual QA는 UI/UX, copy, accessibility 해석, workflow, product taste, visual 
 
 Run summary, command result, Eval blocker, Manual QA finding, design-quality validator, same-session review, operator diagnostic에서 나온 finding은 별도의 kernel authority path가 아닙니다. Existing owner record 또는 structured response로 capture될 때만 state, gate, close에 영향을 줍니다.
 
-일반적인 경로는 unsupported 또는 newly supported claim에 대한 Evidence Manifest coverage, 사용자 소유 판단을 위한 Decision Packet, scope/completion/Autonomy Boundary 변경을 위한 Change Unit update, selected-loop result를 위한 Feedback Loop 또는 TDD Trace update, QA/verification outcome을 위한 Manual QA 또는 Eval record, 알려진 남은 위험을 위한 Residual Risk record, projection 또는 human-edit drift를 위한 reconcile item, failed close attempt에 대한 structured close blocker, 그리고 해당 owner path가 이미 적용되는 경우 follow-up Task/Change Unit/Journey Spine Entry record입니다. Chat text, report prose, review display text만으로는 gate를 충족하거나, 위험을 받아들이거나, evidence를 만들거나, Task를 close할 수 없습니다.
+일반적인 경로는 unsupported 또는 newly supported claim에 대한 Evidence Manifest coverage, 사용자 소유 판단을 위한 Decision Packet과 `decision_gate`, scope/completion/Autonomy Boundary 변경을 위한 Change Unit update, 필요한 설계 품질 전제조건을 위한 `design_gate`, QA outcome을 위한 Manual QA record와 `qa_gate`, selected-loop result를 위한 Feedback Loop 또는 TDD Trace update, verification outcome을 위한 Eval record, 알려진 남은 위험을 위한 Residual Risk record, projection 또는 human-edit drift를 위한 reconcile item, failed close attempt에 대한 structured close blocker, 그리고 해당 owner path가 이미 적용되는 경우 follow-up Task/Change Unit/Journey Spine Entry record입니다. Chat text, report prose, review display text만으로는 gate를 충족하거나, 위험을 받아들이거나, evidence를 만들거나, Task를 close할 수 없습니다.
 
 ### Residual Risk
 
@@ -405,6 +405,7 @@ Kernel은 design support records의 entity meaning도 담당합니다.
 - Generated Markdown은 기준 상태가 아닙니다. Projection edits는 상태에 영향을 주기 전에 reconcile을 거칩니다.
 - Raw artifacts는 근거 파일입니다. 그것을 링크하는 Markdown 보고서는 읽기용 projections입니다.
 - Chat, review display, report prose 안의 finding은 기존 owner record 또는 structured close/blocker result로 라우팅되기 전까지 state가 아닙니다.
+- Review Stages는 관리되는 표시/절차일 뿐입니다. Spec Compliance Review와 Code Quality / Stewardship Review를 분리하지만, 기준 기록, `ProjectionKind` value, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization이 아닙니다.
 - Autonomy Boundary는 판단 latitude만 기록합니다. Scope grant가 아니며 paths, tools, commands, network targets, secrets, sensitive categories를 허가하지 않습니다.
 - 사용자, caller, release/support 소비자, 문서 독자, 다른 system이 의존할 내용을 바꾸는 public commitment는 product direction, 중요한 technical direction, compatibility, risk, acceptance에 영향을 줄 때 사용자 소유 판단입니다. Approval은 그 Decision Packet 경로를 대신할 수 없습니다.
 - Approval은 사용자 소유의 제품 판단 또는 중요한 기술 판단, correctness proof, QA, 검증, 수용, 근거, Write Authorization을 대신하지 않습니다.
@@ -968,7 +969,7 @@ Residual-risk acceptance는 알려진 남은 위험이 requested close를 위해
 
 ## Waiver semantics
 
-Waivers는 reason, actor, time, 영향받는 gate와 함께 기록해야 하는 explicit user 또는 policy decisions입니다.
+Waivers는 policy 또는 gate name, Task와 Change Unit, reason, 받아들이는 위험, actor, time, 필요할 때 expiry 또는 follow-up, 영향받는 gate 또는 close impact와 함께 기록해야 하는 explicit user 또는 policy decisions입니다.
 
 허용되는 waivers:
 

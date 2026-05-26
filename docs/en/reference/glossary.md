@@ -418,7 +418,7 @@ The named report projection kinds are projections generated from state records a
 
 ### Review Stages
 
-A managed display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages can route findings to validator results, evidence gaps, Decision Packet candidates, Eval or verification needs, Manual QA needs, Approval needs, residual-risk candidates, Change Unit update recommendations, or close blockers. Their exact display-only boundary is owned by [Design Quality Policies](design-quality-policies.md#two-stage-review-display); same-session Review Stages do not create `assurance_level=detached_verified`.
+A managed display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages can route findings to validator results, evidence gaps, Decision Packet candidates, Eval or verification needs, Manual QA needs, Approval needs, residual-risk candidates, Change Unit update recommendations, or close blockers. They are not canonical records, `ProjectionKind` values, approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization. Their exact display-only boundary is owned by [Design Quality Policies](design-quality-policies.md#two-stage-review-display); same-session Review Stages do not create `assurance_level=detached_verified`.
 
 ### `request_hash`
 
@@ -522,7 +522,7 @@ A Change Unit shape that connects a thin path from trigger/input through domain 
 
 ### Waiver
 
-An explicit recorded exception to a gate requirement where policy allows it. Verification waiver, design waiver, and QA waiver are allowed under defined rules. Scope, sensitive approval, required evidence, and required acceptance are not waived for successful completion. Verification waiver and QA waiver do not upgrade assurance or make skipped checks appear passed.
+An explicit recorded exception to a gate or policy requirement where policy allows it. A waiver names the policy or gate, Task and Change Unit, reason, accepted risk, actor, expiry or follow-up when needed, and affected gate or close impact. Verification waiver, design waiver, and QA waiver are allowed under defined rules. Product-write scope, sensitive approval, required evidence coverage, and required acceptance are not waived for successful completion. Verification waiver and QA waiver do not upgrade assurance or make skipped checks appear passed.
 
 ### Write Authorization
 

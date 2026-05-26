@@ -46,7 +46,7 @@
 - 정책 waiver 의미
 - 정책이 기대하는 근거
 - 정책이 close에 미치는 영향
-- two-stage review display와 policy validator의 관계
+- two-stage review display와 policy validator 및 owner 기록의 관계
 - 설계 품질 정책이 `decision_gate`, `design_gate`, `qa_gate`, 근거 충분성, `prepare_write` blocker, close blocker에 영향을 주는 시점
 
 ## 여기서 다루지 않는 것
@@ -73,14 +73,14 @@ Kernel은 lifecycle, gate transition, close semantics, blocker mechanics, state 
 
 ## Two-stage review model
 
-Review guidance는 agent와 user가 "요청한 것을 만들었는가?"와 "구현이 유지보수 가능한가?"를 분리해 볼 수 있도록 두 stage로 표시됩니다. 이 stage는 절차와 표시 방식일 뿐이며, 새 kernel gate, schema, 기준 기록을 만들지 않습니다.
+Review guidance는 agent와 user가 "요청한 것을 만들었는가?"와 "구현이 유지보수 가능한가?"를 분리해 볼 수 있도록 두 stage로 표시됩니다. 이 stage는 관리되는 절차와 표시 방식일 뿐이며, 새 kernel gate, schema, 기준 기록, `ProjectionKind` value, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization을 만들지 않습니다.
 
 | Stage | Question | Typical coverage |
 |---|---|---|
 | Spec Compliance Review | 현재 Harness 권한 안에서 요청된 Task를 만족했는가? | 수용 기준 충족 범위, Change Unit 완료 조건, scope 및 Write Authority 호환성, Decision Packet 호환성, 근거 범위, Residual Risk 표시. |
 | Code Quality / Stewardship Review | 이 implementation이 codebase 안에서 유지보수하기 좋은가? | Domain language, module/interface boundary, vertical slice shape, feedback loop 또는 TDD trace, codebase stewardship, context hygiene, follow-up risk. |
 
-Review 단계에서는 validator 결과, 근거 공백, Decision Packet 후보, Change Unit 업데이트 추천안, Eval 또는 verification 필요, Manual QA 필요, Residual Risk 후보, Approval 필요, close blocker, follow-up work를 요약할 수 있습니다. Role Lens 또는 recommended playbook 라벨은 이 검토 관점을 고를 수 있지만 또 다른 권한 경로를 만들지는 않습니다. Review display 자체는 evidence, QA, verification, 결과 수락, Residual Risk 표시, 남은 위험을 받아들이는 판단, Approval, scope, Write Authorization을 충족하지 않습니다.
+Review 단계에서는 validator 결과, 근거 공백, Decision Packet 후보, Change Unit 업데이트 추천안, Eval 또는 verification 필요, Manual QA 필요, Residual Risk 후보, Approval 필요, close blocker, follow-up work를 요약할 수 있습니다. Role Lens 또는 recommended playbook 라벨은 이 검토 관점을 고를 수 있지만 또 다른 권한 경로를 만들지는 않습니다. Review display 자체는 evidence, QA, verification, 결과 수락, Residual Risk 표시 또는 남은 위험을 받아들이는 판단, Approval, scope, close, Write Authorization을 충족하지 않으며, underlying owner path 없이 close를 직접 차단하지도 않습니다.
 
 Same-session review는 detached verification이 아닙니다. 통과한 two-stage review는 `self_checked` confidence를 뒷받침하고 finding을 기존 state path로 연결할 수 있지만 `assurance_level=detached_verified`를 만들면 안 됩니다. Detached verification에는 여전히 valid independence boundary와 Eval path가 필요합니다.
 
@@ -95,7 +95,7 @@ Run, Eval record, Manual QA, design-quality validator, 같은 세션 review disp
 | Run 또는 selected feedback-loop execution | Log/artifact를 Run과 Feedback Loop execution에 붙이고, Evidence Manifest coverage를 갱신하며, failed 또는 missing check를 applicable한 경우 design/evidence blocker, rework Change Unit, Residual Risk 후보, close blocker로 연결합니다. |
 | Eval 또는 verification review | Eval verdict, reviewed refs, independence/freshness blocker, artifact refs를 기록합니다. 검토 근거가 없으면 Evidence Manifest coverage로, independence가 유효하지 않으면 verification gate 또는 close blocker로, 사용자 소유 waiver/risk 선택은 Decision Packet과 Residual Risk 경로로 연결합니다. |
 | Manual QA | Manual QA result, finding, evidence ref, waiver reason, `qa_gate` effect를 기록합니다. Failed 또는 waived human-inspection risk는 policy가 요구하는 대로 rework, Decision Packet, Residual Risk, close blocker, follow-up work로 연결합니다. |
-| Design-quality 또는 stewardship review | Validator result와 owner ref를 기록합니다. Scope 또는 autonomy gap은 Change Unit update로, 제품 또는 중요한 기술 판단은 Decision Packet으로, stale 또는 missing support는 evidence/reconcile path로, close-relevant risk는 Residual Risk 또는 close blocker로 연결합니다. |
+| Design-quality 또는 stewardship review | Validator result와 owner ref를 기록합니다. Design-quality gap은 applicable한 경우 `design_gate` 또는 evidence sufficiency로, 제품 또는 중요한 기술 판단은 Decision Packet과 `decision_gate`로, Manual QA finding은 Manual QA record와 `qa_gate`로, scope/completion/autonomy gap은 Change Unit update recommendation으로, stale 또는 missing support는 evidence/reconcile path로, close-relevant risk는 Residual Risk 후보 또는 structured close blocker로 연결합니다. |
 | Operator 또는 conformance finding | Existing state, event, artifact, projection freshness, error, reconcile/recover path, 또는 docs-maintenance report label을 통해 finding을 assert합니다. Docs-maintenance finding은 runtime effect `none`을 유지합니다. |
 
 ## 정책 계약 형태
@@ -449,28 +449,28 @@ Retrieved, indexed, remembered context는 context hygiene input이지 권한 출
 |---|---|
 | `name` | `two_stage_review_display` |
 | `applies_when` | Review guidance가 spec compliance, code quality, stewardship, 근거 공백, Decision Packet 후보, Residual Risk 후보, close blocker, follow-up work를 보여 줄 때. |
-| `default_requirement` | Spec Compliance Review와 Code Quality / Stewardship Review를 분리해서 표시한다. `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, `release-handoff` 같은 Role Lens와 playbook 라벨은 검토 관점으로만 다룬다. 관련 owner 기록, validator 결과, 근거 공백, Decision Packet 후보, Change Unit 업데이트 추천안, Residual Risk 후보, Approval 필요, Manual QA 필요, Eval 또는 verification 필요, close blocker, follow-up work를 요약하되 새 gate, schema, 기준 기록, assurance level 상승을 만들지 않는다. |
+| `default_requirement` | Spec Compliance Review와 Code Quality / Stewardship Review를 분리해서 표시한다. `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, `release-handoff` 같은 Role Lens와 playbook 라벨은 검토 관점으로만 다룬다. 관련 owner 기록, validator 결과, 근거 공백, Decision Packet 후보, Change Unit 업데이트 추천안, Residual Risk 후보, Approval 필요, Manual QA 필요, Eval 또는 verification 필요, close blocker, follow-up work를 요약하되 새 gate, schema, 기준 기록, `ProjectionKind` value, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization, assurance level 상승을 만들지 않는다. |
 | `allowed_waiver` | Review display가 유용하지 않은 좁은 direct/advisor work에서는 생략할 수 있다. 생략되는 것은 display뿐이며, underlying policy 또는 state 요구사항을 면제하지 않는다. 여기에는 Decision Packet 필요, evidence, QA, verification, 결과 수락, Residual Risk 표시 또는 남은 위험을 받아들이는 판단, scope, Approval, Write Authorization, Task 닫기가 포함된다. |
 | `required_record` | 기존 owner 기록, validator 결과, evidence ref, Decision Packet ref, Eval 또는 verification ref, Manual QA ref, Approval ref, residual-risk ref, close blocker ref, applicable한 경우 follow-up Task/Change Unit ref. Review display 자체는 기준 상태가 아니라 파생 display다. |
 | `validator` | Standalone validator ID 없음. Spec Compliance Review는 acceptance/evidence state와, applicable한 경우 `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, close-related residual-risk checks를 읽는다. Code Quality / Stewardship Review는 `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, `context_hygiene_check`를 읽는다. |
 | `evidence` | 기존 validator 결과 refs, evidence manifest refs, run/eval/manual QA refs, owner 기록 refs, Approval refs, residual-risk refs, close blocker refs, follow-up refs. |
-| `close_impact` | Review display 자체는 Task 닫기를 충족하거나 차단하지 않는다. 관련 policy validator, 근거 충분성, QA, verification, 결과 수락, Residual Risk 표시, Approval, scope, Write Authorization이 실제 close 영향을 결정한다. |
+| `close_impact` | Review display 자체는 Task 닫기를 충족하거나 차단하지 않는다. 관련 policy validator, 근거 충분성, QA, verification, 결과 수락, Residual Risk 표시 또는 남은 위험을 받아들이는 판단, Approval, scope, close blocker, Write Authorization이 owner path를 통해 실제 close 영향을 결정한다. |
 
-Review display의 발견 사항은 기존 경로로 연결합니다. Decision Packet, evidence, Eval 또는 verification, Manual QA, Residual Risk, Approval, Change Unit 업데이트 추천, follow-up work, close blocker가 그 경로입니다. 이 발견 사항은 새 기준 기록이 아닙니다. 같은 세션의 review content는 조건을 충족하는 independent Eval 또는 verification record가 detached assurance를 제공하지 않는 한 self-check 또는 stewardship signal입니다.
+Review display의 발견 사항은 기존 경로로 연결합니다. `design_gate`, `decision_gate`, `qa_gate`, evidence sufficiency, Decision Packet, Eval 또는 verification, Manual QA, Residual Risk, Approval, Change Unit 업데이트 추천, follow-up work, structured close blocker가 그 경로입니다. 이 발견 사항은 새 기준 기록이 아닙니다. 같은 세션의 review content는 조건을 충족하는 independent Eval 또는 verification record가 detached assurance를 제공하지 않는 한 self-check 또는 stewardship signal입니다.
 
 ## Waiver 규칙
 
-Waiver는 explicit, scoped, recorded여야 합니다. Waiver에는 다음을 포함해야 합니다.
+Waiver는 explicit, scoped, recorded여야 합니다. 정책 waiver에는 다음을 포함해야 합니다.
 
 - policy name
-- task와 Change Unit
+- Task와 Change Unit
 - reason
 - 받아들이는 위험
 - 면제한 actor
 - 필요할 때 expiry 또는 follow-up
 - 영향받는 gate 또는 close 영향
 
-정책 waiver는 정책 계약이 허용하는 경우에만 설계 품질 요구사항을 충족한 것으로 볼 수 있습니다. product write 범위, 민감 변경 approval, 필요한 근거 범위, 필수 결과 수락을 대신 면제하지 않습니다. Verification waiver는 kernel close semantics가 담당하며 `assurance_level=detached_verified`를 만들면 안 됩니다.
+정책 waiver는 정책 계약이 허용하는 경우에만 설계 품질 요구사항을 충족한 것으로 볼 수 있습니다. Product write 범위, 민감 변경 approval, 필요한 근거 범위, 필수 결과 수락, 기타 kernel blocker를 대신 면제하지 않습니다. Verification waiver는 kernel close semantics가 담당하며 `assurance_level=detached_verified`를 만들면 안 됩니다.
 
 Verification, QA, public API/interface 약속, 범위 확장, 기술/아키텍처 방향, dependency 방향, schema/data-model migration, module boundary change, 알려진 위험이 있는 결과 수락과 관련된 waiver는 `decision_quality`도 충족하고 active `autonomy_boundary`를 따라야 합니다.
 
@@ -545,7 +545,7 @@ Severity는 explicit user request, sensitive category, 공개 약속, public API
 | `manual_qa` | `manual_qa_required` | `qa_gate` pending/passed/failed/waived |
 | `context_hygiene` | `context_hygiene_check` | projection freshness, reconcile, evidence/design stale |
 
-Review 단계 display는 기존 policy validator를 합성합니다. 새 validator ID를 도입하지 않습니다.
+Review 단계 display는 기존 policy validator를 합성합니다. 새 validator ID 또는 `ProjectionKind` value를 도입하지 않습니다.
 
 | Review 단계 | Validator relationship | Possible routed outcomes |
 |---|---|---|

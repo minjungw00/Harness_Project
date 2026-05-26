@@ -147,9 +147,9 @@ Direct edits inside managed blocks are drift, not accepted state. Direct edits t
 10. Large logs, diffs, traces, screenshots, bundles, checkpoints, and sensitive artifacts are linked by artifact refs instead of embedded.
 11. Projection failure or staleness never rolls back committed Core state, rewrites `state.sqlite.task_events`, or changes the underlying task result.
 12. User-facing cards may use friendly labels, but canonical gate names remain the kernel fields.
-13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Change Unit DAG, Residual Risk, and Stewardship Impact displays are non-canonical projections from owner records and artifact refs.
+13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Change Unit DAG, Residual Risk, Stewardship Impact, and Review Stage displays are non-canonical projections from owner records and artifact refs.
 
-Projection and report surfaces may display current records, refs, and advisory next actions. They must not authorize writes, satisfy gates, create evidence, perform or record verification, record Manual QA, grant Approval, waive QA or verification, record result acceptance, record residual-risk acceptance, refresh projections by assertion alone, declare implementation readiness, close Tasks, or mutate owner records. Any such effect must come from the owner Core/MCP path named in the matrix below.
+Projection and report surfaces may display current records, refs, and advisory next actions. They must not authorize writes, create Write Authorization, satisfy gates, create evidence, perform or record verification, record Manual QA, grant Approval, waive QA or verification, record result acceptance, record residual-risk acceptance, refresh projections by assertion alone, declare implementation readiness, close Tasks, or mutate owner records. Any such effect must come from the owner Core/MCP path named in the matrix below.
 
 ## Document authority matrix
 
@@ -166,6 +166,7 @@ Projection and report surfaces may display current records, refs, and advisory n
 | Change Unit DAG | `state.sqlite.change_units`, `state.sqlite.change_unit_dependencies`, dependency-related events, and active Task state | `TASK` Change Unit Dependencies / DAG summary | shaping update or reconcile, then projector |
 | Residual Risk | `state.sqlite.residual_risks`, accepted-risk metadata and residual-risk refs, related Decision Packets, evidence/QA/eval refs, and artifact refs | `TASK` Residual Risk, optional `DEC` accepted-risk context when standalone projection is enabled, Journey Card residual-risk line | Core transition from decision, evidence, QA, Eval, reconcile, or close flow, then projector |
 | Stewardship Impact Summary | `domain_terms`, `module_map_items`, `interface_contracts`, `feedback_loops`, TDD records when TDD is selected, `state.sqlite.residual_risks`, `state.sqlite.decision_packets`, policy validator results, and related refs | `TASK` Stewardship Impact and status/resume stewardship displays | Owner record update, validator result, reconcile, or close flow, then projector |
+| Review Stages | Task, Change Unit, gate state, Evidence Manifest, validator results, Manual QA, Eval, Approval, Residual Risk, stewardship owner refs, and structured blocker refs | `TASK` and `RUN-SUMMARY` sections named Spec Compliance Review and Code Quality / Stewardship Review | Existing owner-record update, validator result, Decision Packet, evidence, Manual QA, Eval, residual-risk, close-blocker, Change Unit, or follow-up path, then projector |
 | User Notes | human-editable input -> `reconcile_items` -> accepted Core state-changing action and `state.sqlite.task_events`, or rejected/deferred/note outcome | `TASK` User Notes and Proposals | human edit, reconcile decision, Core event |
 | Shared Design | shared design records and events | `TASK` summary, `DESIGN`, optional `DEC` when standalone projection is enabled | Core transition or reconcile, then projector |
 | Domain Language | `domain_terms` table | `DOMAIN-LANGUAGE` projection | Core transition or reconcile, then projector |
@@ -200,7 +201,7 @@ Required authority statements:
 - Change Unit DAG: `state.sqlite.change_unit_dependencies` and Change Unit refs -> dependency projection; it is not a scheduler or authorization surface
 - Residual Risk: `state.sqlite.residual_risks` including accepted-risk metadata/refs -> residual-risk displays
 - Stewardship Impact Summary: derived from owner records, validator results, and refs -> `StewardshipImpactSummary` display; it is not a canonical record
-- Review Stages: Task, Change Unit, gates, evidence, validator results, residual-risk refs, and stewardship owner refs -> managed `TASK` or `RUN-SUMMARY` display sections named Spec Compliance Review and Code Quality / Stewardship Review; they are not canonical records, not new `ProjectionKind` values, and not detached verification
+- Review Stages: Task, Change Unit, gates, evidence, validator results, residual-risk refs, and stewardship owner refs -> managed `TASK` or `RUN-SUMMARY` display sections named Spec Compliance Review and Code Quality / Stewardship Review; they are not canonical records; they are not new `ProjectionKind` values, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization, or detached verification
 
 ## Managed block rules
 

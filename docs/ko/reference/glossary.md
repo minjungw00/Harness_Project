@@ -420,7 +420,7 @@ Task 보고서, approval 보고서, run summary, evidence manifest 보고서, Ev
 
 ### Review Stages
 
-Spec Compliance Review와 Code Quality / Stewardship Review를 분리하는 managed display/procedure split입니다. Spec Compliance Review는 현재 Harness 권한 안에서 requested work가 complete한지 묻습니다. Code Quality / Stewardship Review는 implementation이 codebase 안에서 유지보수하기 좋은지 묻습니다. Review Stages는 findings를 validator results, evidence gaps, Decision Packet candidates, Eval 또는 verification 필요, Manual QA 필요, Approval 필요, residual-risk candidates, Change Unit update recommendations, close blockers로 라우팅할 수 있습니다. 정확한 표시 전용 경계는 [Design Quality Policies](design-quality-policies.md#two-stage-review-display)가 담당합니다. Same-session Review Stages는 `assurance_level=detached_verified`를 만들지 않습니다.
+Spec Compliance Review와 Code Quality / Stewardship Review를 분리하는 managed display/procedure split입니다. Spec Compliance Review는 현재 Harness 권한 안에서 requested work가 complete한지 묻습니다. Code Quality / Stewardship Review는 implementation이 codebase 안에서 유지보수하기 좋은지 묻습니다. Review Stages는 findings를 validator results, evidence gaps, Decision Packet candidates, Eval 또는 verification 필요, Manual QA 필요, Approval 필요, residual-risk candidates, Change Unit update recommendations, close blockers로 라우팅할 수 있습니다. 기준 기록, `ProjectionKind` value, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization은 아닙니다. 정확한 표시 전용 경계는 [Design Quality Policies](design-quality-policies.md#two-stage-review-display)가 담당합니다. Same-session Review Stages는 `assurance_level=detached_verified`를 만들지 않습니다.
 
 ### `request_hash`
 
@@ -524,7 +524,7 @@ Trigger/input에서 domain logic, persistence 또는 state, caller/API 경계, o
 
 ### Waiver
 
-Policy가 허용하는 곳에서 gate requirement에 대한 explicit recorded exception입니다. Verification 면제, design waiver, QA 면제는 정의된 rules 아래 허용됩니다. Scope, sensitive approval, required evidence, 필수 결과 수락은 successful completion을 위해 waived되지 않습니다. Verification waiver와 QA waiver는 assurance를 높이거나 생략된 check가 passed된 것처럼 만들지 않습니다.
+Policy가 허용하는 gate 또는 policy requirement에 대한 explicit recorded exception입니다. Waiver는 policy 또는 gate, Task와 Change Unit, reason, 받아들이는 위험, actor, 필요할 때 expiry 또는 follow-up, 영향받는 gate 또는 close impact를 이름 붙입니다. Verification 면제, design waiver, QA 면제는 정의된 rules 아래 허용됩니다. Successful completion을 위해 product-write scope, sensitive approval, required evidence coverage, required acceptance는 waived되지 않습니다. Verification waiver와 QA waiver는 assurance를 높이거나 생략된 check가 passed된 것처럼 만들지 않습니다.
 
 ### Write Authorization
 

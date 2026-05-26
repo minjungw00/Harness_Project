@@ -4,6 +4,8 @@
 
 모듈 역할, 공개 interface, 내부 복잡도, 의존성, 테스트 경계, 소유자 결정, watchpoint를 읽기 쉬운 projection으로 확인해야 할 때 `MODULE-MAP`을 사용합니다.
 
+이 문서는 template 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 기준 기록
 
 - `module_map_items`
@@ -11,6 +13,7 @@
 - module map 변경을 제안하는 reconcile item
 - 관련 Decision Packet과 design ref
 - `deep_module_interface` 또는 `codebase_stewardship` 관련 design-quality validator 결과
+- 표시되는 경우 module 또는 boundary ref에 영향을 주는 routed stewardship finding
 - 읽기용 보기 최신성(projection freshness) 입력
 
 ## 렌더링 섹션
@@ -67,4 +70,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 메모
 
-이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. 기준 module 참조는 `StateRecordRef.record_kind=module_map_item`을 사용합니다.
+이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. 기준 module 참조는 `StateRecordRef.record_kind=module_map_item`을 사용합니다. Review, watchpoint, stewardship rollup text는 owner record 위의 display이며 Approval, evidence, QA, verification, acceptance, residual-risk acceptance, close, Write Authorization을 만들지 않습니다.

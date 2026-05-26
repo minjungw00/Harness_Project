@@ -282,13 +282,14 @@ For review output, keep the two questions separate:
 - Spec Compliance Review: did we build the requested thing under current scope and authority?
 - Code Quality / Stewardship Review: is the result maintainable and coherent in the codebase?
 
-Same-session review is self-check or stewardship signal unless a qualifying independent Eval or verification record exists. Findings must route through the existing paths before affected writes or close proceed.
+Review Stages are managed display/procedure only. They are not canonical records; they are not new `ProjectionKind` values, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization. Same-session review is self-check or stewardship signal unless a qualifying independent Eval or verification record exists. Findings must route through the existing paths before affected writes or close proceed.
 
 When a check, review, Eval, Manual QA result, or Run produces a finding, name the route instead of leaving the finding in chat:
 
 - Evidence gap or support: update Evidence Manifest coverage and cite Run/artifact/Feedback Loop/TDD refs.
 - User-owned product, technical, waiver, acceptance, or risk choice: show a Decision Packet candidate or existing Decision Packet ref.
 - Scope, completion, or autonomy mismatch: recommend a Change Unit update, smaller Change Unit, or follow-up Change Unit.
+- Stewardship or design-quality issue: show the existing `design_gate`, `decision_gate`, `qa_gate`, evidence, residual-risk, close-blocker, or Change Unit recommendation route that carries the impact.
 - Known remaining uncertainty or skipped check: show a Residual Risk candidate or ref before acceptance or risk-accepted close.
 - QA or verification outcome: point to the Manual QA or Eval record and its gate effect.
 - Close blocker: show the structured close blocker and smallest unblocker.
@@ -380,7 +381,7 @@ Residual-risk display must distinguish `status=none` from `not_visible`. `status
 
 Final acceptance is the user's acceptance of the result when the task path requires it. It is not the same as approval, verification, QA, residual-risk acceptance, or proof of correctness.
 
-Verification waiver and QA waiver do not upgrade assurance. A verification waiver keeps detached verification unsatisfied and routes close through accepted verification risk when close is otherwise allowed. It must not be summarized as `completed_verified`. A QA waiver closes only the QA requirement it names and leaves evidence, verification, acceptance, and residual-risk handling unchanged.
+Verification waiver and QA waiver do not upgrade assurance. A verification waiver keeps detached verification unsatisfied and routes close through accepted verification risk when close is otherwise allowed. It must not be summarized as `completed_verified`. A QA waiver closes only the QA requirement it names and leaves evidence, verification, acceptance, and residual-risk handling unchanged. Waiver prompts and summaries should show the named requirement, accepted risk, owner refs, follow-up when needed, and affected gate or close impact; exact waiver metadata is owned by [Design Quality Policies](../reference/design-quality-policies.md#waiver-rules) and [Kernel Reference](../reference/kernel.md#waiver-semantics).
 
 Applied close examples:
 

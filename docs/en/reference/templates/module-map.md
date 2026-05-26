@@ -4,6 +4,8 @@
 
 Use `MODULE-MAP` when module roles, public interfaces, internal complexity, dependencies, test boundaries, owner decisions, or watchpoints need a readable projection.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - `module_map_items`
@@ -11,6 +13,7 @@ Use `MODULE-MAP` when module roles, public interfaces, internal complexity, depe
 - reconcile items that propose module map changes
 - related Decision Packets and design refs
 - design-quality validator results related to `deep_module_interface` or `codebase_stewardship`
+- routed stewardship findings that affect module or boundary refs, when displayed
 - projection freshness inputs
 
 ## Rendered sections
@@ -67,4 +70,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Notes
 
-This template is a rendered shape, not canonical state. Canonical module refs use `StateRecordRef.record_kind=module_map_item`.
+This template is a rendered shape, not canonical state. Canonical module refs use `StateRecordRef.record_kind=module_map_item`. Review, watchpoint, and stewardship rollup text is display over owner records; it does not create Approval, evidence, QA, verification, acceptance, residual-risk acceptance, close, or Write Authorization.

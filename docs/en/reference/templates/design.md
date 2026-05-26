@@ -4,6 +4,8 @@
 
 Use `DESIGN` when shared design, domain language impact, module/interface planning, alternatives, recommendation, and verification considerations need a standalone readable projection.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - shared design records and events
@@ -13,6 +15,7 @@ Use `DESIGN` when shared design, domain language impact, module/interface planni
 - `module_map_items`
 - `interface_contracts`
 - feedback loop, TDD, Manual QA, and evidence refs
+- design-quality or stewardship findings routed through existing owner paths, when displayed
 - projection freshness inputs
 
 ## Rendered sections
@@ -118,4 +121,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Notes
 
-This template is a rendered shape, not canonical state. It may summarize design-support owner refs but must not replace those owner records.
+This template is a rendered shape, not canonical state. It may summarize design-support owner refs and routed stewardship findings, but it must not replace those owner records or the owner paths that Review Stages point to. It does not satisfy or block close, grant Approval, create evidence, record QA or verification, accept results, accept residual risk, or create Write Authorization.

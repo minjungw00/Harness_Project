@@ -4,6 +4,8 @@
 
 Use `INTERFACE-CONTRACT` when a module interface, caller impact, compatibility risk, or test boundary needs a readable projection.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - `interface_contracts`
@@ -12,6 +14,7 @@ Use `INTERFACE-CONTRACT` when a module interface, caller impact, compatibility r
 - related Decision Packets or design refs
 - boundary, integration, or contract test refs
 - design-quality validator results related to `deep_module_interface`
+- routed stewardship findings that affect interface or compatibility refs, when displayed
 - projection freshness inputs
 
 ## Rendered sections
@@ -82,4 +85,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Notes
 
-This template is a rendered shape, not canonical state. Canonical interface refs use `StateRecordRef.record_kind=interface_contract`.
+This template is a rendered shape, not canonical state. Canonical interface refs use `StateRecordRef.record_kind=interface_contract`. The `Review` section is projection display over interface, validator, and decision refs; it is not Approval, evidence, QA, verification, acceptance, residual-risk acceptance, close, or Write Authorization.

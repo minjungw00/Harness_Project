@@ -365,7 +365,7 @@ Manual QA is commonly required for UI/UX, copy, accessibility interpretation, wo
 
 Findings from Run summaries, command results, Eval blockers, Manual QA findings, design-quality validators, same-session reviews, or operator diagnostics are not a separate kernel authority path. They affect state, gates, or close only when captured through existing owner records or structured responses.
 
-The normal routes are Evidence Manifest coverage for unsupported or newly supported claims, Decision Packets for user-owned judgment, Change Unit updates for scope/completion/Autonomy Boundary changes, Feedback Loop or TDD Trace updates for selected-loop results, Manual QA or Eval records for QA/verification outcomes, Residual Risk records for known remaining risk, reconcile items for projection or human-edit drift, structured close blockers for failed close attempts, and follow-up Task/Change Unit/Journey Spine Entry records when that owner path already applies. Chat text, report prose, or review display text alone cannot satisfy a gate, accept risk, create evidence, or close a Task.
+The normal routes are Evidence Manifest coverage for unsupported or newly supported claims, Decision Packets and `decision_gate` for user-owned judgment, Change Unit updates for scope/completion/Autonomy Boundary changes, `design_gate` for required design-quality preconditions, Manual QA records and `qa_gate` for QA outcomes, Feedback Loop or TDD Trace updates for selected-loop results, Eval records for verification outcomes, Residual Risk records for known remaining risk, reconcile items for projection or human-edit drift, structured close blockers for failed close attempts, and follow-up Task/Change Unit/Journey Spine Entry records when that owner path already applies. Chat text, report prose, or review display text alone cannot satisfy a gate, accept risk, create evidence, or close a Task.
 
 ### Residual Risk
 
@@ -405,6 +405,7 @@ This section gathers the kernel's long negative boundaries in one place so refer
 - Generated Markdown is not canonical state. Projection edits route through reconcile before they can affect state.
 - Raw artifacts are evidence files; Markdown reports that link to them are readable projections.
 - Findings in chat, review displays, or report prose are not state until routed through existing owner records or structured close/blocker results.
+- Review Stages are managed display/procedure only. They separate Spec Compliance Review from Code Quality / Stewardship Review, but they are not canonical records, `ProjectionKind` values, approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization.
 - Autonomy Boundary records judgment latitude only. It is not a scope grant and does not authorize paths, tools, commands, network targets, secrets, or sensitive categories.
 - Public commitments that change what users, callers, release/support consumers, documentation readers, or other systems may rely on are user-owned judgment when they affect product direction, material technical direction, compatibility, risk, or acceptance. Approval cannot substitute for that Decision Packet path.
 - Approval is not user-owned product judgment or material technical judgment, correctness proof, QA, verification, acceptance, evidence, or Write Authorization.
@@ -969,7 +970,7 @@ User-visible close wording must preserve this distinction: `completed_verified` 
 
 ## Waiver semantics
 
-Waivers are explicit user or policy decisions that must be recorded with reason, actor, time, and affected gate.
+Waivers are explicit user or policy decisions that must be recorded with policy or gate name, Task and Change Unit, reason, accepted risk, actor, time, expiry or follow-up when needed, and affected gate or close impact.
 
 Allowed waivers:
 

@@ -46,7 +46,7 @@ This document owns:
 - policy waiver semantics
 - policy evidence expectations
 - policy close impact
-- two-stage review display relationship to policy validators
+- two-stage review display relationship to policy validators and owner records
 - when design-quality policies affect `decision_gate`, `design_gate`, `qa_gate`, evidence sufficiency, `prepare_write` blockers, or close blockers
 
 ## Not covered here
@@ -73,14 +73,14 @@ Policy waivers are also limited. They can satisfy a design-quality requirement o
 
 ## Two-stage review model
 
-Review guidance is displayed in two stages so agents and users can separate "did we build the requested thing?" from "is the implementation maintainable?" The stages are procedure and display, not new kernel gates, schemas, or canonical records.
+Review guidance is displayed in two stages so agents and users can separate "did we build the requested thing?" from "is the implementation maintainable?" The stages are managed procedure and display, not new kernel gates, schemas, canonical records, `ProjectionKind` values, approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization.
 
 | Stage | Question | Typical coverage |
 |---|---|---|
 | Spec Compliance Review | Did the work satisfy the requested task under the current Harness authority? | Acceptance criteria coverage, Change Unit completion conditions, scope and Write Authority compatibility, Decision Packet compatibility, evidence coverage, and residual-risk visibility. |
 | Code Quality / Stewardship Review | Is the implementation maintainable inside this codebase? | Domain language, module/interface boundary, vertical slice shape, feedback loop or TDD trace, codebase stewardship, context hygiene, and follow-up risk. |
 
-Review stages may summarize validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, Eval or verification needs, Manual QA needs, residual-risk candidates, Approval needs, close blockers, and follow-up work. Role Lens or recommended playbook labels may select this review posture, but they do not create another authority path. Review displays do not by themselves satisfy evidence, QA, verification, acceptance, residual-risk acceptance, Approval, scope, or Write Authorization.
+Review stages may summarize validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, Eval or verification needs, Manual QA needs, residual-risk candidates, Approval needs, close blockers, and follow-up work. Role Lens or recommended playbook labels may select this review posture, but they do not create another authority path. Review displays do not by themselves satisfy evidence, QA, verification, acceptance, residual-risk visibility or acceptance, Approval, scope, close, or Write Authorization, and they do not directly block close without an underlying owner path.
 
 Same-session review is not detached verification. A passed two-stage review may support `self_checked` confidence and may route findings through existing state paths, but it must not produce `assurance_level=detached_verified`. Detached verification still requires a valid independence boundary and Eval path.
 
@@ -95,7 +95,7 @@ This section does not create a finding schema, DDL table, gate, validator ID, or
 | Run or selected feedback-loop execution | Attach logs/artifacts to the Run and Feedback Loop execution, update Evidence Manifest coverage, and route failed or missing checks to a design/evidence blocker, rework Change Unit, residual-risk candidate, or close blocker when applicable. |
 | Eval or verification review | Record the Eval verdict, reviewed refs, independence/freshness blockers, and artifact refs; route missing reviewed evidence to Evidence Manifest coverage, invalid independence to verification gate or close blocker, and user-owned waiver/risk choices to Decision Packet and Residual Risk paths. |
 | Manual QA | Record Manual QA result, findings, evidence refs, waiver reason, and `qa_gate` effect; route failed or waived human-inspection risk to rework, Decision Packet, Residual Risk, close blocker, or follow-up work as policy requires. |
-| Design-quality or stewardship review | Record validator results and owner refs; route scope or autonomy gaps to Change Unit updates, product or material technical judgment to Decision Packets, stale or missing support to evidence/reconcile paths, and close-relevant risk to Residual Risk or close blockers. |
+| Design-quality or stewardship review | Record validator results and owner refs; route design-quality gaps through `design_gate` or evidence sufficiency as applicable, product or material technical judgment through Decision Packets and `decision_gate`, Manual QA findings through Manual QA records and `qa_gate`, scope/completion/autonomy gaps to Change Unit update recommendations, stale or missing support to evidence/reconcile paths, and close-relevant risk to Residual Risk candidates or structured close blockers. |
 | Operator or conformance finding | Assert the finding through existing state, events, artifacts, projection freshness, errors, reconcile/recover paths, or docs-maintenance report labels. Docs-maintenance findings keep runtime effect `none`. |
 
 ## Policy contract shape
@@ -449,28 +449,28 @@ Example: A final review can pass Spec Compliance because acceptance criteria and
 |---|---|
 | `name` | `two_stage_review_display` |
 | `applies_when` | Review guidance is shown for spec compliance, code quality, stewardship, evidence gaps, Decision Packet candidates, residual-risk candidates, close blockers, or follow-up work. |
-| `default_requirement` | Display Spec Compliance Review and Code Quality / Stewardship Review separately. Treat Role Lens and playbook labels such as `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, and `release-handoff` as review posture only. Summarize relevant owner records, validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, Approval needs, Manual QA needs, Eval or verification needs, close blockers, and follow-up work without creating new gates, schemas, canonical records, or assurance upgrades. |
+| `default_requirement` | Display Spec Compliance Review and Code Quality / Stewardship Review separately. Treat Role Lens and playbook labels such as `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, and `release-handoff` as review posture only. Summarize relevant owner records, validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, Approval needs, Manual QA needs, Eval or verification needs, close blockers, and follow-up work without creating new gates, schemas, canonical records, `ProjectionKind` values, approvals, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization, or assurance upgrades. |
 | `allowed_waiver` | Display may be omitted for narrow direct/advisor work where no review display is useful. Omission waives only the display; it does not waive underlying policy or state requirements, including Decision Packet needs, evidence, QA, verification, acceptance, residual-risk visibility or acceptance, scope, Approval, Write Authorization, or close. |
 | `required_record` | Existing owner records, validator results, evidence refs, Decision Packet refs, Eval or verification refs, Manual QA refs, Approval refs, residual-risk refs, close blocker refs, and follow-up Task/Change Unit refs where applicable. The review display itself is derived display, not canonical state. |
 | `validator` | No standalone validator ID. Spec Compliance Review reads acceptance/evidence state plus `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, and close-related residual-risk checks where applicable. Code Quality / Stewardship Review reads `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, and `context_hygiene_check`. |
 | `evidence` | Existing validator result refs, evidence manifest refs, run/eval/manual QA refs, owner-record refs, Approval refs, residual-risk refs, close blocker refs, and follow-up refs. |
-| `close_impact` | Review display does not by itself satisfy or block close. Underlying policy validators, evidence sufficiency, QA, verification, acceptance, residual-risk visibility, Approval, scope, and Write Authorization determine the actual close impact. |
+| `close_impact` | Review display does not by itself satisfy or block close. Underlying policy validators, evidence sufficiency, QA, verification, acceptance, residual-risk visibility or acceptance, Approval, scope, close blockers, and Write Authorization determine the actual close impact through their owner paths. |
 
-Review display findings route to existing paths: Decision Packet, evidence, Eval or verification, Manual QA, residual risk, Approval, Change Unit update recommendation, follow-up work, or close blocker. They are not new canonical records. Same-session review content is self-check or stewardship signal unless a qualifying independent Eval or verification record provides detached assurance.
+Review display findings route to existing paths: `design_gate`, `decision_gate`, `qa_gate`, evidence sufficiency, Decision Packet, Eval or verification, Manual QA, residual risk, Approval, Change Unit update recommendation, follow-up work, or structured close blocker. They are not new canonical records. Same-session review content is self-check or stewardship signal unless a qualifying independent Eval or verification record provides detached assurance.
 
 ## Waiver rules
 
-Waivers must be explicit, scoped, and recorded. A waiver should include:
+Waivers must be explicit, scoped, and recorded. A policy waiver must include:
 
 - policy name
-- task and Change Unit
+- Task and Change Unit
 - reason
 - accepted risk
 - actor who waived
 - expiry or follow-up when needed
 - affected gate or close impact
 
-Policy waivers can satisfy a design-quality requirement only where the policy contract allows it. They do not waive scope for product writes, sensitive-change approval, required evidence coverage, or required acceptance. Verification waivers are owned by the kernel close semantics and must not produce `assurance_level=detached_verified`.
+Policy waivers can satisfy a design-quality requirement only where the policy contract allows it. They do not waive product-write scope, sensitive-change approval, required evidence coverage, required acceptance, or any other kernel blocker. Verification waivers are owned by the kernel close semantics and must not produce `assurance_level=detached_verified`.
 
 Waivers that involve verification, QA, public API/interface commitment, scope expansion, technical/architecture direction, dependency direction, schema/data-model migration, module boundary change, or acceptance with known risk should also satisfy `decision_quality` and respect any active `autonomy_boundary`.
 
@@ -545,7 +545,7 @@ Severity can be raised above the matrix default by explicit user request, sensit
 | `manual_qa` | `manual_qa_required` | `qa_gate` pending/passed/failed/waived |
 | `context_hygiene` | `context_hygiene_check` | projection freshness, reconcile, evidence/design stale |
 
-Review-stage displays compose these existing policy validators; they do not introduce new validator IDs.
+Review-stage displays compose these existing policy validators; they do not introduce new validator IDs or `ProjectionKind` values.
 
 | Review stage | Validator relationship | Possible routed outcomes |
 |---|---|---|

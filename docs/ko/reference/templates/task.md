@@ -22,10 +22,10 @@
 - TDD가 선택된 경우 `tdd_traces`
 - design-quality validator 결과
 - 예상되는 evidence 필요 항목
-- Review Stage 표시 input
+- 기존 owner 기록과 ref에서 온 Review Stage 표시 input
 - artifact ref 및 읽기용 보기 최신성(projection freshness)
 
-`TASK`의 생성된 judgment, close, waiver, review-stage, stewardship, projection-freshness 항목은 표시 binding입니다. 위에 나열한 owner record, gate, artifact, ref로 해소되어야 하며, 그런 source가 없으면 명시적인 absence/blocking 상태로 렌더링해야 합니다.
+`TASK`의 생성된 judgment, close, waiver, review-stage, stewardship, projection-freshness 항목은 표시 binding입니다. 위에 나열한 owner record, gate, artifact, ref로 해소되어야 하며, 그런 source가 없으면 명시적인 absence/blocking 상태로 렌더링해야 합니다. 기준 기록, gate, `ProjectionKind` value, evidence, QA, verification, acceptance, residual-risk acceptance, close, Write Authorization을 만들지 않습니다.
 
 ## 렌더링 섹션
 
@@ -166,7 +166,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 | 1 | | | | | |
 
 ## Review Stages
-- note: managed display only; Role Lens/playbook 라벨은 gate를 만들지 않는다. Same-session review는 detached verification이 아니다. 발견 사항은 기존 owner record, ref, blocker로 연결한다.
+- note: managed display only; Role Lens/playbook 라벨은 gate, record, `ProjectionKind` value, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization을 만들지 않는다. Same-session review는 detached verification이 아니다. 발견 사항은 기존 owner record, ref, gate, blocker로 연결한다.
 
 ### Spec Compliance Review
 - 수용 기준 coverage:
@@ -420,7 +420,7 @@ Change Unit block sub-template:
 
 `TASK`의 Implementation Micro-Plan은 현재 Task와 Change Unit 상태에서 생성되거나 그 상태와 정렬된 가벼운 실행 보조 정보입니다. [Document Projection Reference](../document-projection.md#projection-principles)의 projection/report 경계 안에 머물며, `prepare_write`나 owner state change를 대체하지 않습니다.
 
-`TASK`의 Review Stages는 Role Lens, playbook, two-stage review guidance를 위한 관리되는 표시 섹션입니다. 정확한 권한 없음 규칙은 [Design Quality Policies](../design-quality-policies.md#two-stage-review-display)와 [Agent Integration](../agent-integration.md#role-lens-동작)이 담당하며, 발견 사항은 기존 owner path로 연결해야 합니다.
+`TASK`의 Review Stages는 Role Lens, playbook, two-stage review guidance를 위한 관리되는 표시 섹션입니다. 정확한 권한 없음 규칙은 [Design Quality Policies](../design-quality-policies.md#two-stage-review-display)와 [Agent Integration](../agent-integration.md#role-lens-동작)이 담당합니다. 기준 기록, `ProjectionKind` value, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization을 만들지 않으며, 발견 사항은 기존 owner path로 연결해야 합니다.
 
 생성된 summary는 사용자가 읽기 쉬운 평범한 말을 먼저 쓰고, 정확한 Harness term은 유용한 label이나 ref로 붙입니다. Projection이 명령어처럼 보이거나 표시 문구만으로 상태가 만들어진 것처럼 암시하면 안 됩니다.
 
@@ -428,7 +428,7 @@ Change Unit block sub-template:
 
 Residual-risk display는 `status=none`과 `not_visible`을 구분해야 합니다. `status=none`은 requested action에 대해 알려진 close-relevant residual risk가 없다는 뜻입니다. `not_visible`은 알려진 close-relevant risk가 있지만 acceptance 또는 close에 충분히 보이지 않았다는 뜻이므로, risk와 refs가 보일 때까지 blocker 또는 next action으로 남아야 합니다.
 
-`TASK`의 waiver 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 또는 verification waiver는 waiver를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA waiver는 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA waiver Decision Packet을, verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을 가리킵니다. 생략한 확인이나 대상, 받아들이는 위험, 후속 작업, 관련 refs, 닫기 영향도 함께 보여줘야 합니다. QA waiver는 Manual QA가 되지 않고, verification waiver는 detached verification을 만들지 않습니다.
+`TASK`의 waiver 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 또는 verification waiver는 waiver를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA waiver는 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA waiver Decision Packet을, verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을 가리킵니다. Policy 또는 gate, Task와 Change Unit, 생략한 확인이나 대상, reason, 받아들이는 위험, actor, 필요할 때 expiry 또는 follow-up, 관련 refs, 닫기 영향도 함께 보여줘야 합니다. QA waiver는 Manual QA가 되지 않고, verification waiver는 detached verification을 만들지 않습니다.
 
 `TASK`의 Close Summary는 진행 중이거나 최근 닫힌 `work` Task를 위한 이어가기 표시 요약입니다. Gate 상태나 남은 위험을 숨기면 안 됩니다. 닫기가 성공했거나, 막혔거나, 취소됐거나, 남은 위험을 받아들이고 닫혔을 때 changed scope, evidence, verification, Manual QA, 남은 위험(residual risk), 결과 수락, close reason, follow-up을 해당되는 만큼 보여주고 owner record로 돌아가는 ref를 포함해야 합니다.
 

@@ -4,12 +4,15 @@
 
 Use `DOMAIN-LANGUAGE` when domain terms need a readable projection for current meanings, code representations, pending term decisions, deprecated terms, and human proposals.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - `domain_terms`
 - reconcile items that propose domain term changes
 - Task refs that introduced or reconciled terms
 - design-quality validator results related to `domain_language`
+- routed stewardship findings that affect domain-language refs, when displayed
 - projection freshness inputs
 
 ## Rendered sections
@@ -63,4 +66,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Notes
 
-This template is a rendered shape, not canonical state. Canonical domain term refs use `StateRecordRef.record_kind=domain_term`.
+This template is a rendered shape, not canonical state. Canonical domain term refs use `StateRecordRef.record_kind=domain_term`. Pending term decisions, latest-review text, and human proposals are display or reconcile input; they do not satisfy gates, approve writes, create evidence, accept risk, or close work by themselves.

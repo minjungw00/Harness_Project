@@ -22,10 +22,10 @@ This is template reference documentation. It does not authorize runtime/server i
 - `tdd_traces` when TDD is selected
 - design-quality validator results
 - expected evidence needs
-- Review Stage display inputs
+- Review Stage display inputs from existing owner records and refs
 - artifact refs and projection freshness
 
-Generated judgment, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists.
+Generated judgment, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists. They do not create canonical records, gates, `ProjectionKind` values, evidence, QA, verification, acceptance, residual-risk acceptance, close, or Write Authorization.
 
 ## Rendered sections
 
@@ -166,7 +166,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 | 1 | | | | | |
 
 ## Review Stages
-- note: managed display only; Role Lens/playbook labels do not create gates; same-session review is not detached verification. Route findings to existing owner records, refs, or blockers.
+- note: managed display only; Role Lens/playbook labels do not create gates, records, `ProjectionKind` values, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization. Same-session review is not detached verification. Route findings to existing owner records, refs, gates, or blockers.
 
 ### Spec Compliance Review
 - acceptance criteria coverage:
@@ -420,7 +420,7 @@ Stewardship Impact in `TASK` is the `StewardshipImpactSummary` display derived f
 
 Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from or aligned with current Task and Change Unit state. It stays within the projection/report boundary in [Document Projection Reference](../document-projection.md#projection-principles) and never replaces `prepare_write` or owner state changes.
 
-Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. Their exact non-authority rule is owned by [Design Quality Policies](../design-quality-policies.md#two-stage-review-display) and [Agent Integration](../agent-integration.md#role-lens-behavior); findings must route to existing owner paths.
+Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. Their exact non-authority rule is owned by [Design Quality Policies](../design-quality-policies.md#two-stage-review-display) and [Agent Integration](../agent-integration.md#role-lens-behavior). They do not create canonical records, `ProjectionKind` values, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization; findings must route to existing owner paths.
 
 Generated summaries should use ordinary user-facing language first and exact Harness terms as labels or refs where useful. They should not turn the projection into a command language or imply that display text created state.
 
@@ -428,7 +428,7 @@ Authority claims in `TASK` must resolve to source refs or explicit absence. Writ
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means no known close-relevant residual risk exists for the requested action. `not_visible` means known close-relevant risk exists but has not been made visible enough for acceptance or close; it should remain a blocker or next action until the risk and refs are shown.
 
-Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the skipped check or surface, accepted risk, follow-up, relevant refs, and close impact. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
+Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the policy or gate, Task and Change Unit, skipped check or surface, reason, accepted risk, actor, expiry or follow-up when needed, relevant refs, and close impact. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
 
 Close Summary in `TASK` is a continuity display summary for active or recently closed `work` tasks. It must not hide gate status or residual risk. When close is successful, blocked, canceled, or risk-accepted, the summary should show changed scope, evidence, verification, Manual QA, residual risk, acceptance, close reason, and follow-up as applicable, with refs back to owner records.
 

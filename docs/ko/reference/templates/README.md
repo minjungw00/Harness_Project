@@ -20,7 +20,7 @@ Projection 템플릿은 API `ProjectionKind` tier와 일치합니다.
 
 렌더링 placeholder, label, table column, 예시 front matter key는 표시를 위한 template binding입니다. Binding은 기존 owner record field 또는 ref를 보여주거나, template이 나열한 source record에서 파생한 표시 전용 요약이어야 합니다. Source record 또는 ref가 없으면 상태를 만들어내지 말고 `none`, `unknown`, `not_required`, unavailable/blocking note로 렌더링합니다.
 
-파생 표시 요약에는 `approval_covers`, `approval_does_not_cover`, `secret_exposure_boundary` 같은 Approval boundary line, close context, close blocker, waiver path, projection freshness, redaction availability, compact context, Journey Card, judgment-context 관련 summary가 포함됩니다. 이 이름들은 새로운 기준 기록, schema field, DDL column, `ProjectionKind` value, gate, 권한을 만드는 입력이나 권한 경로가 아닙니다. 요약 대상인 owner record, ref, gate, artifact, Decision Packet을 통하지 않고 validator input으로 사용하면 안 됩니다.
+파생 표시 요약에는 `approval_covers`, `approval_does_not_cover`, `secret_exposure_boundary` 같은 Approval boundary line, close context, close blocker, waiver path, projection freshness, redaction availability, compact context, Journey Card, Review Stages, judgment-context 관련 summary가 포함됩니다. 이 이름들은 새로운 기준 기록, schema field, DDL column, `ProjectionKind` value, gate, 권한을 만드는 입력이나 권한 경로가 아닙니다. 요약 대상인 owner record, ref, gate, artifact, Decision Packet을 통하지 않고 validator input으로 사용하면 안 됩니다.
 
 렌더링 예시는 이 경계를 독자가 바로 볼 수 있어야 합니다. `source_state_version`은 렌더링에 사용한 상태 clock을 가리키고, `projection_version` 또는 projection status는 렌더/template/job 보기를 가리키며, `updated_at`은 그 보기가 만들어진 시각을 가리킵니다. 최신성 줄(freshness line)은 이 보기가 source record와 아직 맞는지 표시할 뿐이며 Task result, gate value, Approval, acceptance, evidence, close readiness, Core state rollback이 아닙니다.
 
