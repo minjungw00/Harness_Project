@@ -156,9 +156,9 @@ Diagram은 인지 부담을 줄일 때만 사용합니다.
 
 ## Docs-maintenance checks
 
-Docs-maintenance checks는 읽기 전용 문서 유지보수입니다. Core fixture conformance, runtime validator, 기준 상태 전이, projection 새로고침, 생성된 운영 보고서, QA result, acceptance record, evidence artifact, Residual Risk 수용, close readiness, 구현 준비 상태가 아닙니다.
+Docs-maintenance checks는 읽기 전용 문서 유지보수입니다. Documentation drift, owner mismatch, 영어/한국어 의미 일치 문제, owner 밖의 중복 규범 문구, 깨진 link나 anchor, TODO hygiene 문제를 보고할 수 있습니다. Core fixture conformance, runtime validator, 기준 상태 전이, projection 새로고침, 생성된 운영 보고서, QA result, 결과 수락 기록, evidence artifact, 남은 위험을 받아들이는 판단, close readiness, 구현 준비 상태가 아닙니다. Runtime fixture pass/fail에 포함되지 않습니다.
 
-Docs-maintenance review 또는 future checker는 category, file path, 가능한 경우 heading 또는 anchor, owner 문서, observed drift, suggested fix, 기준 상태 전이가 수행되지 않았다는 statement를 보고해야 합니다. Drift는 먼저 owner 문서를 업데이트해서 해결하고, 그다음 owner가 아닌 중복 설명을 짧은 요약과 owner 링크로 바꿉니다.
+Docs-maintenance review 또는 future checker는 category, file path, 가능한 경우 heading 또는 anchor, owner 문서, observed drift, expected source section, suggested fix, runtime effect가 none이라는 statement를 보고해야 합니다. 여기서 none은 기준 상태 전이가 수행되지 않았고 runtime fixture result가 기록되지 않았다는 뜻입니다. Drift는 먼저 owner 문서를 업데이트해서 해결하고, 그다음 owner가 아닌 중복 설명을 짧은 요약과 owner 링크로 바꿉니다.
 
 Result 의미:
 

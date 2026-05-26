@@ -156,9 +156,9 @@ After a rename, search for old paths, old anchors, old headings, and old title t
 
 ## Docs-maintenance checks
 
-Docs-maintenance checks are read-only documentation maintenance. They are not Core fixture conformance, runtime validators, canonical state transitions, projection refresh, generated operational reports, QA results, acceptance records, evidence artifacts, residual-risk acceptance, close readiness, or implementation readiness.
+Docs-maintenance checks are read-only documentation maintenance. They may report documentation drift, owner mismatch, English/Korean parity issues, duplicate normative text outside the owner, broken links or anchors, and TODO hygiene problems. They are not Core fixture conformance, runtime validators, canonical state transitions, projection refresh, generated operational reports, QA results, acceptance records, evidence artifacts, residual-risk acceptance, close readiness, or implementation readiness. They do not count toward runtime fixture pass/fail.
 
-A docs-maintenance review or future checker should report the category, file path, heading or anchor when available, owner document, observed drift, suggested fix, and a statement that no canonical state transition was performed. Resolve drift by updating the owner first, then replacing non-owner duplicates with a short summary plus owner link.
+A docs-maintenance review or future checker should report the category, file path, heading or anchor when available, owner document, observed drift, expected source section, suggested fix, and a runtime effect of none: no canonical state transition was performed and no runtime fixture result was recorded. Resolve drift by updating the owner first, then replacing non-owner duplicates with a short summary plus owner link.
 
 Use these result meanings:
 
