@@ -37,7 +37,7 @@ Approval 형태 표시 항목인 "이 Approval이 포괄하는 것", "이 Approv
 - Follow-Up
 - References
 
-## 예시 내용 단서
+### 예시 내용 단서
 
 다음과 같은 Decision Packet에도 같은 렌더링 섹션을 사용합니다. 이 단서는 추가 template section이 아닙니다.
 

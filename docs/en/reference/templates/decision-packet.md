@@ -37,7 +37,7 @@ A resolved Decision Packet is not sensitive Approval unless it is the approval-s
 - Follow-Up
 - References
 
-## Example content cues
+### Example content cues
 
 Use the same rendered sections for these common Decision Packet shapes. These cues are not extra template sections.
 
