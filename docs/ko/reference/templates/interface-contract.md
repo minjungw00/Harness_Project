@@ -12,7 +12,7 @@
 - 관련 Decision Packet 또는 design 참조
 - boundary, integration, contract test 참조
 - `deep_module_interface` 관련 design-quality validator 결과
-- projection 최신성 입력
+- 읽기용 보기 최신성(projection freshness) 입력
 
 ## 렌더링 섹션
 

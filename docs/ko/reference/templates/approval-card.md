@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-대기 중인 Approval의 sensitive-action 요청 범위, 목적, 경계, 위험, 대안, 추천안을 사용자에게 간결하게 보여줄 때 Approval Card를 사용합니다. 이 card는 민감한 행동을 허용할지 묻는 표시일 뿐이며 사용자 소유의 제품 판단이나 중요한 기술 판단, correctness review, 결과 수락, 남은 위험을 받아들이는 판단, Write Authorization이 아닙니다.
+대기 중인 Approval의 민감 행동(sensitive-action) 요청 범위, 목적, 경계, 위험, 대안, 추천안을 사용자에게 간결하게 보여줄 때 Approval Card를 사용합니다. 이 card는 민감한 행동을 허용할지 묻는 표시일 뿐이며 사용자 소유의 제품 판단이나 중요한 기술 판단, 정확성 검토(correctness review), 결과 수락, 남은 위험을 받아들이는 판단, Write Authorization이 아닙니다.
 
 ## 기준 기록
 
@@ -18,7 +18,7 @@
 ## 렌더링 섹션
 
 - Approval 필요 여부
-- request identity
+- 요청 식별자
 - purpose
 - allowed paths
 - allowed tools

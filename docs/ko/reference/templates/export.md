@@ -14,7 +14,7 @@
 - Eval 기록
 - Manual QA 기록
 - reconcile item
-- projection snapshot과 projection 최신성
+- projection snapshot과 읽기용 보기 최신성(projection freshness)
 - artifact 참조, redaction state, retention, integrity metadata
 - redaction, omission, blocked-artifact summary
 - export profile boundary와 non-deployment/non-merge reminder 표시

@@ -4,7 +4,7 @@
 
 이 문서는 Harness 참고 사양을 읽기 전에 필요한 가장 작은 개념 묶음을 소개합니다. 각 개념은 먼저 쉬운 예시로 시작하고, 그 뒤에 조금 더 엄밀한 설명을 붙입니다.
 
-커널, 런타임, MCP API, 문서 projection reference는 이제 reference 경로에 있습니다.
+커널, 런타임, MCP API, 문서 Projection 참조는 이제 reference 경로에 있습니다.
 
 ## 이런 때 읽기
 
@@ -31,7 +31,7 @@ Harness는 작업 흐름에서 시작하면 이해하기 쉽습니다.
 - 남은 불확실성은 남은 위험으로 기록합니다.
 - 읽기용 문서는 Projection이고, 사람이 문서를 고친 내용은 Reconcile을 거쳐야 상태가 됩니다.
 
-이 문서에서는 일부러 개념을 작게 다룹니다. 엄격한 kernel 정의는 [커널 참조](../reference/kernel.md)에 있고, public API 정의는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)에 있으며, projection rule은 [문서 Projection 참조](../reference/document-projection.md)에 있습니다.
+이 문서에서는 일부러 개념을 작게 다룹니다. 엄격한 커널 정의는 [커널 참조](../reference/kernel.md)에 있고, 공개 API 정의는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)에 있으며, Projection 규칙은 [문서 Projection 참조](../reference/document-projection.md)에 있습니다.
 
 ## Task
 
@@ -71,7 +71,7 @@ Decision Packet은 사용자가 해야 하는 결정이 진행, 쓰기, 닫기, 
 
 승인은 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답합니다. 승인은 최종 결과 수락, 설계 절충 선택, 남은 위험을 받아들이는 판단과 다릅니다.
 
-예를 들어 package install을 승인하는 것은 그 package를 architecture 방향으로 선택했다는 뜻이 아닙니다. Secret 접근 승인은 secret 값을 Evidence, projection, export, log, screenshot, summary에 노출해도 된다는 뜻이 아닙니다.
+예를 들어 package install을 승인하는 것은 그 package를 아키텍처 방향으로 선택했다는 뜻이 아닙니다. Secret 접근 승인은 secret 값을 Evidence, projection, export, log, screenshot, summary에 노출해도 된다는 뜻이 아닙니다.
 
 참조: [커널 참조](../reference/kernel.md).
 
@@ -95,9 +95,9 @@ Write Authorization은 지금 제품 파일 쓰기를 진행해도 되는지에 
 
 테스트가 통과해도 오류 문구가 헷갈리거나, 모바일에서 잘리거나, 화면의 다른 부분과 어울리지 않을 수 있습니다. 사람이 결과를 보고 무엇을 확인했는지 남겨야 할 때가 있습니다.
 
-Manual QA는 사람이 경험적 결과를 직접 확인하는 기록입니다. 특히 UI, UX, 문구, 접근성, 시각 결과, 제품 취향처럼 사람의 판단이 중요한 곳에서 필요합니다.
+Manual QA는 사람이 실제 경험을 직접 확인하는 기록입니다. 특히 UI, UX, 문구, 접근성, 시각 결과, 제품 감각처럼 사람의 판단이 중요한 곳에서 필요합니다.
 
-Manual QA를 면제한다면 생략한 대상, 받아들이는 위험, 후속 작업, 닫기 영향을 이름 붙여야 합니다. Waiver는 기록된 판단이지 test result가 아닙니다.
+Manual QA를 면제한다면 생략한 대상, 받아들이는 위험, 후속 작업, 닫기 영향을 이름 붙여야 합니다. Waiver는 기록된 판단이지 테스트 결과(test result)가 아닙니다.
 
 현재 담당 문서: [설계 품질 정책](../reference/design-quality-policies.md).
 

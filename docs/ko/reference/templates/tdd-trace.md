@@ -13,7 +13,7 @@ Change Unit에서 TDD가 필요하거나 선택 또는 기록된 상태이고 RE
 - Evidence Manifest coverage 참조
 - waiver 또는 non-TDD justification 참조
 - `tdd_trace` 관련 design-quality validator 결과
-- projection 최신성 입력
+- 읽기용 보기 최신성(projection freshness) 입력
 
 ## 렌더링 섹션
 

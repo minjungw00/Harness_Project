@@ -11,7 +11,7 @@
 - module map 변경을 제안하는 reconcile item
 - 관련 Decision Packet과 design ref
 - `deep_module_interface` 또는 `codebase_stewardship` 관련 design-quality validator 결과
-- projection 최신성 입력
+- 읽기용 보기 최신성(projection freshness) 입력
 
 ## 렌더링 섹션
 
