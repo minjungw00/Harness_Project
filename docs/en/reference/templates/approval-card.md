@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use the approval card when a pending approval needs a compact user-facing display of requested scope, purpose, boundaries, risks, alternatives, and recommendation.
+Use the approval card when a pending approval needs a compact user-facing display of requested sensitive-action scope, purpose, boundaries, risks, alternatives, and recommendation. The card asks permission for the sensitive action only; it is not user-owned product or material technical judgment, correctness review, result acceptance, residual-risk acceptance, or Write Authorization.
 
 ## Source records
 
@@ -38,6 +38,7 @@ Coverage placeholders such as `{approval_covers}` and `{approval_does_not_cover}
 ````text
 Approval is required.
 Display only: approval must still be recorded through the canonical approval decision path.
+Sensitive permission only: this is not user-owned product or material technical judgment, correctness, final acceptance, residual-risk acceptance, or Write Authorization.
 
 {approval_id} {category}
 Request: {summary}
@@ -75,13 +76,13 @@ Alternatives:
 Recommendation:
 {recommendation}
 
-Do you approve this sensitive action and scope only?
+Do you approve this sensitive action and scope only, without deciding product/material technical judgment or result acceptance?
 ````
 
 ## Notes
 
 This template is a rendered card shape, not approval authority. Approval still requires the canonical approval decision path.
 
-Approval does not resolve user-owned product or material technical judgment, prove correctness, replace verification, replace Manual QA, imply acceptance, accept residual risk, or create Write Authorization.
+Approval does not resolve user-owned product or material technical judgment, prove correctness, replace verification, replace Manual QA, imply result acceptance, accept residual risk, or create Write Authorization.
 
 Approval cards should make the Approval boundary explicit. For example, dependency install Approval is not an architecture decision; secret access Approval is not permission to expose secret values; auth or system Approval is not a session/JWT/social-login choice; and final acceptance is not permission for additional writes.

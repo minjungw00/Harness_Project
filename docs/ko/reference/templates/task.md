@@ -8,11 +8,12 @@
 
 - `state.sqlite` Task와 task gate
 - active Change Unit과 Change Unit dependency
+- mode, lifecycle, next action, 가장 먼저 해소할 막힘, 가장 작은 해소 방법, guarantee level, projection freshness를 위한 current-state 표시 input
 - Write Authorization 기록과 Write Authority Summary 표시 input
 - Decision Packet과 Residual Risk
 - 최신 Run, Evidence Manifest, Eval, Manual QA 기록, approval 기록
 - 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 summary
-- changed scope, evidence, verification, Manual QA, residual risk, acceptance, close reason을 포함하는 close summary 표시 input
+- changed scope, evidence, verification, Manual QA, residual risk, 결과 수락, close reason을 포함하는 close summary 표시 input
 - Journey Spine 기준 기록
 - `domain_terms`, `module_map_items`, `interface_contracts`, `feedback_loops`
 - TDD가 선택된 경우 `tdd_traces`
@@ -38,7 +39,7 @@
 - Stewardship Impact
 - Goal
 - Scope
-- Acceptance Criteria
+- 수용 기준
 - Active Change Unit
 - Pending Decisions
 - Evidence And Reports
@@ -78,6 +79,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - secondary blockers:
 - pending decision:
 - risk:
+- guarantee level:
 - scope gate:
 - decision gate:
 - approval gate:
@@ -109,6 +111,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 - main trade-off:
 - reversibility:
 - uncertainty:
+- deferral effect:
+- affected scope:
 - minimum context to judge:
 - affected gates:
 
@@ -145,7 +149,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - note: managed display only; Role Lens/playbook 라벨은 gate를 만들지 않는다. Same-session review는 detached verification이 아니다. 발견 사항은 기존 owner record, ref, blocker로 연결한다.
 
 ### Spec Compliance Review
-- acceptance criteria coverage:
+- 수용 기준 coverage:
 - Change Unit completion conditions:
 - scope / Write Authority compatibility:
 - Decision Packet compatibility:
@@ -187,7 +191,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - verification:
 - Manual QA:
 - residual risk:
-- acceptance:
+- 결과 수락:
 - close reason:
 - remaining follow-up:
 
@@ -218,7 +222,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ### Out
 -
 
-## Acceptance Criteria
+## 수용 기준
 - [ ] AC-01:
 - [ ] AC-02:
 
@@ -395,9 +399,11 @@ Change Unit block sub-template:
 
 `TASK`의 Review Stages는 Role Lens, playbook, two-stage review guidance를 위한 관리되는 표시 섹션입니다. Gate를 충족하거나, write를 허가하거나, 남은 위험을 받아들이거나, Task를 닫거나, owner record를 만들거나, `assurance_level=detached_verified`를 만들 수 없습니다. 발견 사항은 기존 Decision Packet, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit 업데이트, close-blocker 경로로 연결해야 합니다.
 
+생성된 summary는 사용자가 읽기 쉬운 평범한 말을 먼저 쓰고, 정확한 Harness term은 유용한 label이나 ref로 붙입니다. Projection이 명령어 언어처럼 보이거나 표시 문구만으로 상태가 만들어진 것처럼 암시하면 안 됩니다.
+
 `TASK`의 waiver 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 또는 verification waiver는 waiver를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA waiver는 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA waiver Decision Packet을, verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을 가리킵니다. 생략한 확인이나 대상, 받아들이는 위험, 후속 작업, 관련 refs, 닫기 영향도 함께 보여줘야 합니다. QA waiver는 Manual QA가 되지 않고, verification waiver는 detached verification을 만들지 않습니다.
 
-`TASK`의 Close Summary는 진행 중이거나 최근 닫힌 `work` Task를 위한 continuity 표시 요약입니다. Gate 상태나 남은 위험을 숨기면 안 됩니다. 닫기가 성공했거나, 막혔거나, 취소됐거나, 남은 위험을 받아들이고 닫혔을 때 changed scope, evidence, verification, Manual QA, residual risk, acceptance, close reason, follow-up을 해당되는 만큼 보여주고 owner record로 돌아가는 ref를 포함해야 합니다.
+`TASK`의 Close Summary는 진행 중이거나 최근 닫힌 `work` Task를 위한 continuity 표시 요약입니다. Gate 상태나 남은 위험을 숨기면 안 됩니다. 닫기가 성공했거나, 막혔거나, 취소됐거나, 남은 위험을 받아들이고 닫혔을 때 changed scope, evidence, verification, Manual QA, residual risk, 결과 수락, close reason, follow-up을 해당되는 만큼 보여주고 owner record로 돌아가는 ref를 포함해야 합니다.
 
 Direct work는 `DIRECT-RESULT`에서 가벼운 close impact summary를 보여주고, Journey Card close context는 compact status/resume 표시입니다. `TASK` Close Summary는 continuity 표시일 뿐이며 close state, 수락, QA, verification, 남은 위험을 받아들이는 판단, Write Authorization을 만들지 않습니다.
 

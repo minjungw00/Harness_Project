@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use `DIRECT-RESULT` for a compact, low-ceremony result report after small direct work closes or escalates.
+Use `DIRECT-RESULT` for a compact, low-ceremony result report after small direct work closes or escalates. It should read like a direct outcome, not a full task-level gate report.
 
 ## Source records
 

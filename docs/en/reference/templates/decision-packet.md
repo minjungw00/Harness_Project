@@ -13,6 +13,7 @@ Use `DEC` when standalone Decision Packet projection is enabled for user-owned p
 - related reconcile records, if applicable
 - residual risk refs
 - evidence and artifact refs
+- affected scope display inputs: product areas, screens or flows, modules, interfaces, paths, acceptance criteria, gates, and sensitive categories
 - projection freshness inputs
 
 Approval-shaped display bullets such as "what this approval covers," "what this approval does not cover," and "secret exposure boundary" are derived display summaries from linked Approval records, approval scope, related Decision Packet refs, and current write or close context. They explain the boundary only; they do not grant Approval or settle separate user-owned judgment.
@@ -27,6 +28,7 @@ A resolved Decision Packet is not sensitive Approval unless it is the approval-s
 - What User Is Deciding
 - What Agent May Decide Without User
 - Autonomy Boundary Impact, If Any
+- Affected Scope And Boundaries
 - Options
 - Recommendation
 - Consequence Of Deferring
@@ -100,9 +102,6 @@ updated_at: 2026-05-06T09:30:15+09:00
 - decision:
 - what this decision settles:
 - what this decision does not settle:
-- affected scope:
-- affected acceptance criteria:
-- affected gates:
 
 ## What Agent May Decide Without User
 - implementation detail:
@@ -115,9 +114,20 @@ updated_at: 2026-05-06T09:30:15+09:00
 - proposed boundary update:
 - user judgment required:
 
+## Affected Scope And Boundaries
+- in scope:
+- out of bounds:
+- affected product areas:
+- affected screens or flows:
+- affected modules/interfaces/paths:
+- affected acceptance criteria:
+- affected gates:
+- sensitive categories:
+
 ## Options
 ### Option A
 - choice:
+- trade-offs:
 - benefits:
 - costs:
 - risks:
@@ -127,6 +137,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ### Option B
 - choice:
+- trade-offs:
 - benefits:
 - costs:
 - risks:
@@ -141,6 +152,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Consequence Of Deferring
 - consequence:
+- can continue if deferred:
+- must stop until decided:
 - operation impact:
 - close impact:
 - residual risk or follow-up visibility:

@@ -19,6 +19,7 @@ Use `JOURNEY-CARD` when a current-position card needs to show where the work is,
 - acceptance and close-reason summaries
 - latest evidence, Eval, Manual QA, and report refs
 - projection freshness inputs
+- state, baseline, evidence, MCP, and capability freshness/blocker display summaries
 
 Judgment, write-authority, close-impact, residual-risk, and freshness placeholders are display bindings derived from the records above. If a user decision is actually needed, render a Decision Packet or decision prompt rather than treating this card as the judgment-context source.
 
@@ -35,6 +36,7 @@ Judgment, write-authority, close-impact, residual-risk, and freshness placeholde
 - Close context
 - Gates
 - Projection freshness
+- State/input freshness and capability availability
 
 ## Full template
 
@@ -82,6 +84,7 @@ Evidence and checks:
 - needed for: {evidence_needed_for}
 - latest evidence: {latest_evidence_ref|none}
 - verification: {verification_summary|none}
+- self-check vs detached boundary: {self_check_or_detached_boundary|none}
 - Manual QA: {manual_qa_summary|not_required}
 - omitted or blocked impact: {redaction_availability_summary|none}
 
@@ -105,6 +108,7 @@ Gates:
 - acceptance: {acceptance_gate}
 
 Projection freshness: {projection_freshness}; source_state_version={source_state_version|unknown} (view freshness, not task result)
+State/input freshness: {state_baseline_evidence_freshness_summary|current or none}
 ````
 
 ## Notes

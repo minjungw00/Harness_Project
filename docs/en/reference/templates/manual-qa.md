@@ -10,6 +10,7 @@ Use `MANUAL-QA` when Manual QA is required, performed, waived, pending, or repre
 - Task and Change Unit refs
 - `qa_gate`
 - Manual QA profile, setup, checklist, result, waiver, and findings
+- human inspector or role and the inspected quality or workflow
 - screenshot, browser log, video, or note artifact refs with redaction state
 - waiver reason, QA waiver Decision Packet refs when required, and Residual Risk refs related to QA waiver or failure
 - design-quality validator results related to `manual_qa`
@@ -68,12 +69,14 @@ updated_at: 2026-05-06T10:05:00+09:00
 - record result: passed | failed | waived | null when no record exists
 - qa_gate: pending | passed | failed | waived | not_required
 - qa_gate note: canonical close-relevant gate; this projection is display only
+- human inspection summary:
 - summary:
 - waiver reason:
 
 ## Waiver And Risk
 - waiver recording:
 - skipped check or surface:
+- risk visible before waiver:
 - accepted risk:
 - follow-up:
 - residual risk refs:
@@ -103,3 +106,5 @@ updated_at: 2026-05-06T10:05:00+09:00
 This template is a rendered shape, not canonical state. `qa_gate` is the canonical close-relevant gate; this projection only displays it.
 
 Manual QA projections may show safe omission notes, handles, and blocked artifact notices, but must not embed omitted secret/PII values or blocked capture payloads. A `secret_omitted` artifact can support visible workflow, UI, copy, accessibility, or smoke-test observations; a `blocked` capture is unavailable QA input unless a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the QA path.
+
+Screenshots, browser logs, videos, and notes are QA evidence refs. The Manual QA result is the recorded human inspection or valid waiver, not the existence of those captures alone.

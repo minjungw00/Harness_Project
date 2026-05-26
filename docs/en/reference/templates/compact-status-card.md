@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use the compact status card when a short current-state display needs to show the always-on Harness context envelope: Task, mode, scope, out of bounds, next safe action, blocker status, pending user decision, write authority, evidence, verification, Manual QA, residual risk, guarantee level, projection freshness, and latest refs.
+Use the compact status card when a short current-state display needs to show the always-on Harness context envelope: Task, mode, scope, out of bounds, next safe action, blocker status, pending user decision, write authority, evidence, verification, Manual QA, residual risk, guarantee level, projection freshness, and latest refs. Keep it small enough for status, next-action, and resume turns: ordinary-language state first, exact Harness labels only when they clarify the boundary.
 
 ## Source records
 
@@ -22,6 +22,7 @@ Use the compact status card when a short current-state display needs to show the
 - close blocker, close reason, and Manual QA summary
 - primary blocker, secondary blocker, and smallest unblocker display summaries derived from API errors, close blockers, gates, and refs
 - projection freshness and `source_state_version`
+- state, baseline, evidence, MCP, and capability freshness/blocker display summaries
 - latest report, Evidence Manifest, Run, Eval, Manual QA, and ArtifactRef refs
 
 Summary placeholders in this card are display bindings derived from the records above. Decision, close-blocker, residual-risk, and freshness summaries should show refs or explicit absence; they do not create judgment context or authority.
@@ -44,6 +45,7 @@ Summary placeholders in this card are display bindings derived from the records 
 - residual risk
 - acceptance and close status
 - projection freshness
+- state/input freshness and capability availability
 - latest refs
 
 ## Full template
@@ -72,12 +74,16 @@ Residual risk: {residual_risk_summary|none}
 Acceptance: {acceptance_summary|not_required}; gate={acceptance_gate}
 Close status: blockers={close_blockers|none}; reason={close_reason|none}
 Projection freshness (view only): {current|stale|failed|unknown}; source_state_version={source_state_version|unknown}; {refresh_or_reconcile_needed|none}
+State/input freshness: {state_baseline_evidence_freshness_summary|current or none}
+MCP/capability: {mcp_or_capability_summary|available}
 Latest refs: report={latest_report_ref|none}; evidence={evidence_manifest_ref|none}; run/eval/QA={latest_check_refs|none}
 ````
 
 ## Notes
 
-This template is a rendered card shape, not canonical state. Gate values remain owned by canonical state, and projection freshness is readable-view freshness only; it is not Task result, state freshness, evidence freshness, approval, acceptance, or write authority.
+This template is a rendered card shape, not canonical state. Gate values remain owned by canonical state, guarantee level is display and risk context, and projection freshness is readable-view freshness only; it is not Task result, state freshness, evidence freshness, approval, verification, acceptance, or write authority.
+
+Do not collapse display problems into one line. A stale projection means the readable card may lag. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient. MCP or capability unavailable means the surface cannot reach or provide the required Harness/Core capability.
 
 The primary blocker should come from the primary `ToolError` when an API response supplies one, or from the first close blocker when rendering a failed `harness.close_task` response. The owner label should say whether the next move is user-owned, agent-resolvable, or surface/system-owned, and should render as `none` or be omitted when there is no primary blocker. Secondary blockers should be grouped compactly and shown only when they change the next action, close readiness, or user judgment. These labels are display text, not new schema values or error codes.
 

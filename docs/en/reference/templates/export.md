@@ -17,6 +17,7 @@ Use `EXPORT` when an optional export or report projection is generated for revie
 - projection snapshots and projection freshness
 - artifact refs, redaction state, retention, and integrity metadata
 - redaction, omission, and blocked-artifact summaries
+- export profile boundary and non-deployment/non-merge reminder display
 
 ## Rendered sections
 
@@ -50,6 +51,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 - project_id:
 - task_ids:
 - included state version range:
+- omitted by policy or profile:
 - created by:
 - created at:
 
@@ -82,6 +84,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 - PII omitted:
 - redacted artifacts:
 - blocked artifacts:
+- omission notes preserved:
 - raw files excluded by policy:
 
 ## Omitted Or Blocked Content
@@ -114,5 +117,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 This template is a rendered shape, not canonical state. `EXPORT` is a `ProjectionKind` only; export snapshots and components remain artifacts linked to owner records or projection refs.
 
 `EXPORT` must not embed raw secrets, PII, sensitive logs, network traces, screenshots, or other sensitive artifact bodies by default. Large or sensitive artifacts are listed by `ArtifactRef`; raw files are included only when policy and retention allow them, and `secret_omitted` or `blocked` entries stay represented by refs and notes.
+
+If the export profile omits a projection snapshot, raw artifact, or state snapshot, show the omission and its review or Release Handoff impact rather than implying the bundle is complete.
 
 For `secret_omitted`, export may include safe omission notes or handles and hashes over safe stored bytes, but not omitted values. For `blocked`, export may include the committed metadata-only notice artifact and its hash, size, and content type; those fields describe the notice bytes, never the forbidden raw payload. Release Handoff sections must show the same omission or block impact as unavailable, insufficient, or unresolved input unless a documented replacement, waiver, Decision Packet outcome, accepted risk, or fallback resolved it before export.

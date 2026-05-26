@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use the verification result card when an Eval result needs a compact user-facing display of verdict, assurance impact, reviewed evidence, remaining work, and user follow-up.
+Use the verification result card when an Eval result needs a compact user-facing display of verdict, assurance impact, independence boundary, reviewed evidence, remaining work, and user follow-up.
 
 ## Source records
 
@@ -40,6 +40,7 @@ Display only: Eval records and gate state remain canonical.
 Verdict: {verdict}
 Assurance: {assurance_impact}
 Verification independence: {verification_independence}
+Self-check vs detached boundary: {self_check_or_detached_boundary}
 Manual QA: {manual_qa_impact}
 Acceptance: {acceptance_impact}
 

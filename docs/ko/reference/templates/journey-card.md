@@ -19,6 +19,7 @@
 - 수락과 close-reason summary
 - 최신 evidence, Eval, Manual QA, 보고서 참조
 - projection 최신성 입력
+- state, baseline, evidence, MCP, capability freshness/blocker 표시 summary
 
 Judgment, write-authority, close-impact, residual-risk, freshness placeholder는 위 기록에서 파생한 표시 binding입니다. 실제 사용자 decision이 필요하면 이 card를 judgment-context source로 취급하지 말고 Decision Packet 또는 decision prompt를 렌더링합니다.
 
@@ -35,6 +36,7 @@ Judgment, write-authority, close-impact, residual-risk, freshness placeholder는
 - close context
 - Gates
 - projection 최신성
+- state/input 최신성과 capability 사용 가능 여부
 
 ## 전체 템플릿
 
@@ -82,6 +84,7 @@ Write Authority Summary:
 - 필요한 이유: {evidence_needed_for}
 - 최신 evidence: {latest_evidence_ref|none}
 - 검증: {verification_summary|none}
+- self-check vs detached boundary: {self_check_or_detached_boundary|none}
 - Manual QA: {manual_qa_summary|not_required}
 - 생략/차단된 근거 영향: {redaction_availability_summary|none}
 
@@ -105,6 +108,7 @@ Gates:
 - acceptance: {acceptance_gate}
 
 Projection freshness: {projection_freshness}; source_state_version={source_state_version|unknown} (읽기용 보기의 최신성, Task result 아님)
+State/input freshness: {state_baseline_evidence_freshness_summary|current or none}
 ````
 
 ## 메모

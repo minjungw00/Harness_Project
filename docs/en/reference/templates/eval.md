@@ -10,6 +10,7 @@ Use `EVAL` when Harness needs a readable verification result with independence c
 - verification target
 - verdict
 - independence qualifier
+- self-check versus detached verification boundary
 - baseline relationship
 - checks performed
 - evidence reviewed
@@ -58,6 +59,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - verdict: passed | failed | blocked | inconclusive
 - assurance impact:
 - verification gate impact:
+- self-check vs detached boundary:
 - Manual QA impact:
 - acceptance impact:
 - next action:
@@ -66,6 +68,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - fresh run:
 - evaluator surface:
 - context independence: same_session | subagent_context | fresh_session | fresh_worktree | sandbox | manual_bundle
+- same-session self-review guard:
 - write capable:
 - product file write allowed:
 - baseline verified:
@@ -158,5 +161,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 ## Notes
 
 An Eval verdict alone does not upgrade assurance. `detached_verified` requires a passed verification with valid independence and no same-session self-review violation.
+
+If independence is invalid or the review is same-session self-check only, render that boundary explicitly and leave detached assurance unchanged.
 
 Eval projections must not imply omitted or blocked raw bytes were reviewed. `secret_omitted` evidence can support only visible nonsecret claims. If the Eval depends on a `blocked` payload, the result must remain `blocked` or `inconclusive`, or surface `EVIDENCE_INSUFFICIENT`, until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the verification path.

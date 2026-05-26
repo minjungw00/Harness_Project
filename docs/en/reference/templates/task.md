@@ -8,6 +8,7 @@ Use `TASK` as the continuity projection for active work. It summarizes where the
 
 - `state.sqlite` Task and task gates
 - active Change Unit and Change Unit dependencies
+- current-state display inputs for mode, lifecycle, next action, primary blocker, smallest unblocker, guarantee level, and projection freshness
 - Write Authorization records and Write Authority Summary display inputs
 - Decision Packets and Residual Risks
 - latest Run, Evidence Manifest, Eval, Manual QA record, and approval records
@@ -78,6 +79,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - secondary blockers:
 - pending decision:
 - risk:
+- guarantee level:
 - scope gate:
 - decision gate:
 - approval gate:
@@ -109,6 +111,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 - main trade-off:
 - reversibility:
 - uncertainty:
+- deferral effect:
+- affected scope:
 - minimum context to judge:
 - affected gates:
 
@@ -394,6 +398,8 @@ Stewardship Impact in `TASK` is the `StewardshipImpactSummary` display derived f
 Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from or aligned with current Task and Change Unit state. It does not authorize product writes, expand scope, satisfy Approval, create evidence, mutate state when edited, or replace `prepare_write`.
 
 Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. They do not satisfy gates, authorize writes, accept risk, close the task, create owner records, or create `assurance_level=detached_verified`. Findings must route to existing Decision Packet, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit update, or close-blocker paths.
+
+Generated summaries should use ordinary user-facing language first and exact Harness terms as labels or refs where useful. They should not turn the projection into a command language or imply that display text created state.
 
 Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the skipped check or surface, accepted risk, follow-up, relevant refs, and close impact. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
 

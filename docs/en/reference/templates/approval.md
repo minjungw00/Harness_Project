@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use `APR` after an approval request has been committed and Harness needs a readable approval request and decision record for sensitive change.
+Use `APR` after an approval request has been committed and Harness needs a readable approval request and decision record for a sensitive action. `APR` shows permission scope; it does not decide user-owned product or material technical judgment, correctness, result acceptance, residual-risk acceptance, deployment, merge, or Write Authorization.
 
 ## Source records
 
@@ -47,7 +47,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # APR-0001 Approval Request
 
-> Projection view: rendered from `source_state_version` at `updated_at`; displays the approval request and boundary. Approval still requires the canonical approval decision path, and writes still require compatible `prepare_write`.
+> Projection view: rendered from `source_state_version` at `updated_at`; displays the approval request and boundary. Approval is sensitive-action permission only. Approval still requires the canonical approval decision path, and writes still require compatible `prepare_write`.
 
 ## Request Summary
 - proposed action:
@@ -58,11 +58,12 @@ updated_at: 2026-05-06T09:30:15+09:00
 - this request covers:
 - this request does not decide:
 - if granted, still requires later:
+- result acceptance boundary:
 - secret exposure boundary:
 
 ## Related Decision Packet
 - approval-shaped Decision Packet:
-- separate Decision Packet for product or material technical judgment, if required:
+- separate Decision Packet for user-owned product or material technical judgment, if required:
 - decision gate impact:
 - approval gate impact:
 
@@ -116,7 +117,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - decided at:
 
 ## Boundary
-- approval does not resolve user-owned product or material technical judgment, prove correctness, replace verification, replace Manual QA, imply acceptance, or accept residual risk.
+- approval does not resolve user-owned product or material technical judgment, prove correctness, replace verification, replace Manual QA, imply result acceptance, or accept residual risk.
 - approval is not Write Authorization; a later compatible `prepare_write` retry must allow the write before implementation or direct `record_run` can consume authorization.
 - dependency install approval does not decide the architecture direction for using that dependency.
 - secret access approval does not permit exposing secret values in artifacts, projections, exports, logs, screenshots, or summaries.

@@ -2,13 +2,14 @@
 
 ## Used when
 
-Use the Manual QA card when required Manual QA needs a compact prompt showing the record, gate, profile, target, checklist, and evidence to record.
+Use the Manual QA card when Manual QA needs a compact human-inspection prompt showing the record, gate, profile, target, checklist, evidence to record, and waiver/risk visibility.
 
 ## Source records
 
 - Manual QA requirement and `qa_gate`
 - Manual QA record, if one exists
 - QA profile
+- human inspector or role and the human judgment being requested
 - target screen or flow
 - checklist items
 - expected screenshot, walkthrough note, or browser log evidence
@@ -35,10 +36,12 @@ Close context and waiver placeholders are derived display summaries from QA reco
 ````text
 Manual QA is required.
 Display only: `qa_gate` and QA records remain canonical.
+Human inspection only: automated checks, screenshots, and browser logs can support context, but they are not Manual QA by themselves.
 
 Record: {manual_qa_record_id|none until recorded}
 Gate: {qa_gate display: pending|passed|failed|waived|not_required}
 Profile: {profile}
+Human judgment requested: {human_inspection_summary}
 Target: {screen_or_flow}
 Checklist:
 - {checklist_item}
@@ -56,6 +59,7 @@ Close context:
 
 Waiver recording:
 - skipped Manual QA surface:
+- risk visible before waiver:
 - accepted risk:
 - follow-up:
 - relevant refs:

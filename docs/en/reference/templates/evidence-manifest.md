@@ -2,12 +2,13 @@
 
 ## Used when
 
-Use `EVIDENCE-MANIFEST` when Harness needs a readable map from acceptance criteria and completion conditions to supporting evidence.
+Use `EVIDENCE-MANIFEST` when Harness needs a readable map from acceptance criteria, completion conditions, and close-relevant claims to supporting evidence and artifact refs.
 
 ## Source records
 
 - evidence manifest record
 - acceptance criteria
+- completion conditions
 - changed file coverage
 - design-quality coverage
 - approval refs
@@ -21,6 +22,7 @@ Use `EVIDENCE-MANIFEST` when Harness needs a readable map from acceptance criter
 - Summary
 - Close Summary
 - Acceptance Criteria Coverage
+- Completion Conditions Coverage
 - Changed File Coverage
 - Design Quality Coverage
 - Approval Refs
@@ -73,6 +75,12 @@ updated_at: 2026-05-06T09:50:00+09:00
 |---|---|---|---|---|
 | AC-01 | | supported | test:, tdd:, log:, diff: | |
 | AC-02 | | unsupported | | |
+
+## Completion Conditions Coverage
+| Condition | Coverage State | Supporting Evidence / ArtifactRef refs | Notes |
+|---|---|---|---|
+| | supported | RUN-0001, ART-0001 | |
+| | unsupported | | |
 
 ## Changed File Coverage
 | Path | Covered Criteria | Evidence Refs |
@@ -133,5 +141,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 Where evidence is required, close depends on the canonical `evidence_gate`, not the report text alone.
 
 Evidence Manifest supports claims; it does not prove correctness by itself, create detached verification, record Manual QA, imply acceptance, or accept residual risk. When a close summary is rendered from this template, it should keep those lines separate so a passing test, a self-check, or user acceptance is not mistaken for another close condition.
+
+Coverage rows should point to owner records and ArtifactRef refs rather than embedding large evidence. If no ref supports a criterion, condition, or claim, show it as unsupported, insufficient, stale, or blocked instead of filling the gap with prose.
 
 `secret_omitted` artifacts may support claims whose nonsecret evidence remains visible, but not claims that require omitted values. `blocked` artifacts are committed metadata-only notices, not available raw evidence; dependent criteria remain unsupported, insufficient, or blocked until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the evidence path. This template must not include omitted secret/PII values or blocked payload bytes.

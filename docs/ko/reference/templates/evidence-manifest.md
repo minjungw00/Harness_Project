@@ -2,18 +2,19 @@
 
 ## 사용 시점
 
-acceptance criteria와 completion condition이 어떤 supporting evidence로 뒷받침되는지 보여줘야 할 때 `EVIDENCE-MANIFEST`를 사용합니다.
+수용 기준, completion condition, 닫기에 영향을 주는 claim이 어떤 supporting evidence와 artifact ref로 뒷받침되는지 보여줘야 할 때 `EVIDENCE-MANIFEST`를 사용합니다.
 
 ## 기준 기록
 
 - evidence manifest 기록
-- acceptance criteria
+- 수용 기준
+- completion condition
 - changed file coverage
 - design-quality coverage
 - approval 참조
 - artifact 참조와 `redaction_state`, 후속 evidence 영향
 - 관련 Run, Eval, Feedback Loop, Manual QA, TDD trace 참조
-- 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, Manual QA, 수용, Residual Risk 요약
+- 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, Manual QA, 결과 수락, 남은 위험 요약
 
 ## 렌더링 섹션
 
@@ -21,6 +22,7 @@ acceptance criteria와 completion condition이 어떤 supporting evidence로 뒷
 - Summary
 - 닫기 영향 요약
 - Acceptance Criteria Coverage
+- Completion Conditions Coverage
 - Changed File Coverage
 - Design Quality Coverage
 - Approval Refs
@@ -61,10 +63,10 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 ## 닫기 영향 요약
 - 근거가 뒷받침하는 것:
-- 근거가 대체하지 않는 것: 검증, Manual QA, 수용, Residual Risk 수용
+- 근거가 대체하지 않는 것: 검증, Manual QA, 결과 수락, 남은 위험을 받아들이는 판단
 - 검증 상태:
 - Manual QA 상태:
-- 수용 상태:
+- 결과 수락 상태:
 - Residual Risk:
 - 다음 close 조치:
 
@@ -73,6 +75,12 @@ updated_at: 2026-05-06T09:50:00+09:00
 |---|---|---|---|---|
 | AC-01 | | supported | test:, tdd:, log:, diff: | |
 | AC-02 | | unsupported | | |
+
+## Completion Conditions Coverage
+| Condition | Coverage 상태 | Supporting Evidence / ArtifactRef refs | Notes |
+|---|---|---|---|
+| | supported | RUN-0001, ART-0001 | |
+| | unsupported | | |
 
 ## Changed File Coverage
 | Path | Covered Criteria | Evidence Refs |
@@ -86,7 +94,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 | decision_quality_check | passed | DEC-0001 | |
 | autonomy_boundary_check | passed | CU-01 | |
 | feedback_loop_check | passed | FBL-0001, TDD-0001, LOG-0001 | |
-| tdd_trace_required | passed | TDD-0001, RED-LOG-0001, GREEN-LOG-0001 | RED, GREEN, relevant refactor/check coverage가 acceptance criteria 및 changed files로 link된다. |
+| tdd_trace_required | passed | TDD-0001, RED-LOG-0001, GREEN-LOG-0001 | RED, GREEN, relevant refactor/check coverage가 수용 기준 및 changed files로 link된다. |
 | module_interface_review | passed | module_map_item: MMI-0001, interface_contract: IFACE-0001, DEC-0001 | |
 | codebase_stewardship_check | passed | domain_term: TERM-0001, module_map_item: MMI-0001, interface_contract: IFACE-0001, feedback_loop: FBL-0001 | |
 | residual_risk_visibility_check | pending | RR-0001 | |
@@ -132,6 +140,8 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 Evidence가 필요한 경우 닫기 판단은 보고서 문장만이 아니라 기준 `evidence_gate`를 따릅니다.
 
-Evidence Manifest는 주장을 뒷받침하지만 그 자체로 correctness를 증명하거나 detached verification을 만들거나 Manual QA를 기록하거나 수용을 암시하거나 Residual Risk를 수용하지 않습니다. 이 template에서 닫기 영향 요약을 렌더링할 때는 테스트 통과, self-check, 사용자 수용이 서로 다른 닫기 조건으로 오해되지 않도록 각 줄을 분리해 보여줘야 합니다.
+Evidence Manifest는 주장을 뒷받침하지만 그 자체로 correctness를 증명하거나 detached verification을 만들거나 Manual QA를 기록하거나 결과 수락을 암시하거나 남은 위험을 받아들이지 않습니다. 이 template에서 닫기 영향 요약을 렌더링할 때는 테스트 통과, self-check, 사용자의 결과 수락이 서로 다른 닫기 조건으로 오해되지 않도록 각 줄을 분리해 보여줘야 합니다.
 
-`secret_omitted` artifact는 secret이 아닌 evidence가 보이는 주장만 뒷받침할 수 있으며, 생략된 값이 필요한 주장은 뒷받침하지 못합니다. `blocked` artifact는 커밋된 metadata-only notice이지 사용 가능한 원본 근거가 아닙니다. 의존하는 criteria는 replacement, waiver, Decision Packet outcome, accepted risk, documented fallback이 evidence 경로를 해소할 때까지 unsupported, insufficient, blocked 중 적절한 상태로 남습니다. 이 template은 생략된 secret/PII 값 또는 차단된 payload를 포함하면 안 됩니다.
+Coverage row는 큰 근거 본문을 붙여 넣는 대신 owner record와 ArtifactRef ref를 가리켜야 합니다. 어떤 criterion, condition, claim을 뒷받침하는 ref가 없다면 문장으로 빈틈을 메우지 말고 unsupported, insufficient, stale, blocked 중 적절한 상태로 보여줍니다.
+
+`secret_omitted` artifact는 secret이 아닌 evidence가 보이는 주장만 뒷받침할 수 있으며, 생략된 값이 필요한 주장은 뒷받침하지 못합니다. `blocked` artifact는 커밋된 metadata-only notice이지 사용 가능한 원본 근거가 아닙니다. 의존하는 criteria는 replacement, waiver, Decision Packet outcome, 받아들인 위험, documented fallback이 evidence 경로를 해소할 때까지 unsupported, insufficient, blocked 중 적절한 상태로 남습니다. 이 template은 생략된 secret/PII 값 또는 차단된 payload를 포함하면 안 됩니다.
