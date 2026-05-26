@@ -14,7 +14,7 @@ This is planning documentation; it does not authorize runtime or server implemen
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md) first. For storage and DDL details, use [Storage And DDL](../reference/storage-and-ddl.md). For post-MVP candidates, use the [Roadmap](../roadmap.md).
+Read [Implementation Overview](implementation-overview.md) first, including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status). For storage and DDL details, use [Storage And DDL](../reference/storage-and-ddl.md). For post-MVP candidates, use the [Roadmap](../roadmap.md).
 
 ## Main idea
 

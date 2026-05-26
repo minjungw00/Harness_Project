@@ -24,9 +24,20 @@
 
 Learn 경로에서 Harness의 기본 개념을 먼저 이해해 두는 것이 좋습니다. 정확한 동작은 이 문서 끝에 연결된 reference 문서들을 봅니다. Post-MVP 후보와 승격 기준은 [로드맵](../roadmap.md)을 봅니다.
 
+## 문서 승인 상태
+
+이 항목은 maintainer가 직접 갱신하는 문서 handoff 표시입니다. Reference 계약, conformance 결과, 생성된 운영 record, runtime 구현 승인으로 쓰지 않습니다. 아래 checkpoint에서 acceptance를 자동 추론하지 않습니다. Maintainer가 이 표를 명시적으로 바꿔야 합니다.
+
+| 질문 | 현재 상태 |
+|---|---|
+| 문서 유지보수가 아직 active인가? | 예. 재설계된 문서는 사람의 검토를 받을 준비가 되었고, 구현 handoff는 아직 accepted로 기록되지 않았습니다. |
+| 첫 runtime batch 계획을 위한 문서가 승인되었는가? | 아니오. 아래 checkpoint가 충족된 뒤 maintainer가 이 행을 예로 바꾸기 전까지 첫 runtime batch 계획은 시작할 수 없습니다. |
+| runtime/server 구현이 시작되었는가? | 아니오. 이 저장소는 아직 문서만 담고 있으며 Harness runtime/server 구현을 담고 있지 않습니다. |
+| 열려 있는 문서 follow-up issue가 있는가? | 이 handoff 표에는 아직 기록된 항목이 없습니다. Maintainer가 gap을 발견하면 acceptance 상태를 바꾸기 전에 owner 문서 링크 또는 `TODO_DECISION` / `TODO_IMPLEMENT` marker를 여기에 추가합니다. |
+
 ## 구현 handoff checkpoint
 
-이 checkpoint는 저장소가 아직 문서 유지보수 단계인지, 아니면 첫 runtime batch 계획을 시작할 준비가 되었는지 구분할 때 사용합니다. 이것은 계획 handoff일 뿐입니다. 그 자체로 runtime/server 구현을 승인하지 않으며, 정확한 schema, DDL, fixture 의미, runtime contract를 정의하지 않습니다.
+이 checkpoint는 maintainer가 문서 승인 상태를 문서 유지보수에서 첫 runtime batch 계획으로 바꾸기 전에 무엇이 참이어야 하는지 판단할 때 사용합니다. 이것은 계획 handoff일 뿐입니다. 그 자체로 runtime/server 구현을 승인하지 않으며, 정확한 schema, DDL, fixture 의미, runtime contract를 정의하지 않습니다.
 
 첫 구현 계획은 아래 조건이 모두 참일 때만 시작할 수 있습니다.
 

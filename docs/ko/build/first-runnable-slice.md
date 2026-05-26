@@ -14,7 +14,7 @@
 
 ## 읽기 전에
 
-[구현 개요](implementation-overview.md)를 먼저 읽습니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다. Post-MVP 후보는 [로드맵](../roadmap.md)을 봅니다.
+[구현 개요](implementation-overview.md)를 먼저 읽고 [문서 승인 상태](implementation-overview.md#문서-승인-상태)를 확인합니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다. Post-MVP 후보는 [로드맵](../roadmap.md)을 봅니다.
 
 ## 핵심 생각
 

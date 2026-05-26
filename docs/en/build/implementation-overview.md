@@ -24,9 +24,20 @@ This document does not define SQLite DDL, public MCP schemas, projection templat
 
 You should already understand the basic Harness concepts from the Learn path. For exact behavior, use the Reference docs linked at the end of this page. For post-MVP candidates and promotion criteria, use the [Roadmap](../roadmap.md).
 
+## Documentation acceptance status
+
+This is a maintainer-updated documentation handoff marker. It is not a Reference contract, conformance result, generated operational record, or runtime implementation authorization. Do not infer acceptance from the checklist below; maintainers must change this table deliberately.
+
+| Question | Current status |
+|---|---|
+| Is documentation maintenance still active? | Yes. The redesigned docs are ready for human review, and implementation handoff has not been accepted yet. |
+| Are docs accepted for first runtime-batch planning? | No. First runtime-batch planning may not begin until maintainers change this row to Yes after the checkpoint below is satisfied. |
+| Has runtime/server implementation started? | No. This repository still contains documentation, not Harness runtime/server implementation. |
+| Are there open follow-up docs issues? | None recorded in this handoff surface. If maintainers find gaps, add links to owner docs or `TODO_DECISION` / `TODO_IMPLEMENT` markers here before changing acceptance status. |
+
 ## Implementation handoff checkpoint
 
-Use this checkpoint to decide whether the repository is still in documentation-maintenance work or ready to plan the first runtime batch. It is a planning handoff only: it does not authorize runtime or server implementation by itself, and it does not define exact schemas, DDL, fixture semantics, or runtime contracts.
+Use this checkpoint to decide what must be true before maintainers can switch the documentation acceptance status from documentation maintenance to first runtime-batch planning. It is a planning handoff only: it does not authorize runtime or server implementation by itself, and it does not define exact schemas, DDL, fixture semantics, or runtime contracts.
 
 First implementation planning may start only when all of these are true:
 
