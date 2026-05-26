@@ -24,6 +24,14 @@ This document does not define SQLite DDL, public MCP schemas, projection templat
 
 You should already understand the basic Harness concepts from the Learn path. For exact behavior, use the Reference docs linked at the end of this page. For post-MVP candidates and promotion criteria, use the [Roadmap](../roadmap.md).
 
+## Main idea
+
+Build Kernel Smoke first: the smallest local Core authority path. Core alone changes canonical operational state. Then harden that path through evidence, projections, conformance, and operator recovery.
+
+Start with canonical state, `task_events`, artifact refs, Core tool behavior, and the minimal reference surface and MCP reachability needed to exercise that path. The initial implementation assumption is one local process with modules, not a distributed platform. Treat projection-template polish, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, and broad automation as non-authoritative things that read from or wrap that authority loop after it exists.
+
+If a proposed implementation starts with Agency-Hardened MVP as one large first batch, projection template polish, a dashboard or hosted workflow UI, a Context Index, a connector marketplace, hook expansion, metrics, parallel orchestration, or broad automation lanes, it is starting in the wrong place.
+
 ## Documentation acceptance status
 
 This is a maintainer-updated documentation handoff marker. It is not a Reference contract, conformance result, generated operational record, or runtime implementation authorization. Do not infer acceptance from the checklist below; maintainers must change this table deliberately.
@@ -52,20 +60,12 @@ First implementation planning means Kernel Smoke planning first, not Agency-Hard
 
 - The final docs-maintenance drift pass is complete, or remaining known gaps are recorded as `TODO_DECISION` or `TODO_IMPLEMENT` in the relevant owner docs. Docs-maintenance remains a read-only documentation check; see [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks) and [Operations And Conformance Reference](../reference/operations-and-conformance.md#docs-maintenance-profile).
 - The local-only MCP exposure baseline is accepted for MVP. Remote, shared, tunneled, or non-loopback exposure remains outside the MVP baseline unless owner docs promote and prove a connector profile; see [Runtime Architecture](../reference/runtime-architecture.md#local-access-expectations) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#mcp-boundary-and-caller-trust).
-- The Core-only mutation model is accepted: state-changing work goes through Core, while resources, projections, reports, and diagnostics remain read-only or derived unless a Core path commits state. See [Core process model](../reference/runtime-architecture.md#core-process-model) and [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow).
+- The Core-only mutation model is accepted: Core alone changes canonical operational state, while resources, projections, reports, diagnostics, MCP callers, and operator entrypoints remain read-only or derived unless they enter a Core state-changing path. See [Core process model](../reference/runtime-architecture.md#core-process-model), [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow), and the MCP [Idempotency](../reference/mcp-api-and-schemas.md#idempotency) and [State conflict behavior](../reference/mcp-api-and-schemas.md#state-conflict-behavior) sections.
 - The Kernel Smoke fixture queue is identified as the first runtime conformance authoring order. Exact fixture format, assertions, and catalog semantics stay in [Operations And Conformance Reference](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue).
 - The first runnable slice remains local, single-project, single-reference-surface, and fixture-proven. Use [First Runnable Slice](first-runnable-slice.md) for the planning checklist.
 - Post-MVP features remain outside MVP unless promoted by owner docs through the [Roadmap promotion rule](../roadmap.md#promotion-rule).
 
 This handoff does not promote roadmap items, dashboards or hosted workflow UI, Browser QA Capture automation, Context Index, broad connector ecosystems or marketplaces, team workflow, remote MCP exposure, preventive guard expansion, Local Derived Metrics or long-term metrics, or parallel orchestration into MVP. Keep exact contracts in Reference docs and use this section only as the short readiness checkpoint.
-
-## Main idea
-
-Build Kernel Smoke first: the smallest local Core authority path. Then harden it through evidence, projections, conformance, and operator recovery.
-
-Start with canonical state, `task_events`, artifact refs, Core tool behavior, and the minimal reference surface and MCP reachability needed to exercise that path. The initial implementation assumption is one local process with modules, not a distributed platform. Treat projection-template polish, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, and broad automation as non-authoritative things that read from or wrap that authority loop after it exists.
-
-If a proposed implementation starts with Agency-Hardened MVP as one large first batch, projection template polish, a dashboard or hosted workflow UI, a Context Index, a connector marketplace, hook expansion, metrics, parallel orchestration, or broad automation lanes, it is starting in the wrong place.
 
 ## Proof boundaries
 
@@ -87,17 +87,16 @@ The MVP can be one process with modules. It does not need separate services for 
 
 ### Core
 
-Core is the only path that mutates canonical operational state. It must:
+Core is the only path that mutates canonical operational state. Implement the transaction order owned by [Runtime Architecture](../reference/runtime-architecture.md#state-transaction-flow): envelope and state-version validation, lock acquisition, current-state read, validators, record update, `task_events` append, projection job enqueue, and commit. At this Build level, that means Core must:
 
-- validate tool envelopes, idempotency keys, and expected state versions
+- validate tool envelopes, idempotency keys, and expected state versions before a new mutation
 - acquire the relevant project or task lock
 - read current records
 - run Core checks and validators
-- update current records and append `task_events` in one transaction
-- enqueue projection work after state changes
+- update current records, append `task_events`, and enqueue projection work in the Core transaction
 - return blockers and refs that explain the result
 
-Agents, operator commands, projectors, and recovery flows must either enter through Core or preserve the same Core compatibility rules.
+Agents, MCP tools, operator commands, projectors, and recovery flows must either enter through Core or preserve the same Core compatibility rules. None of them may maintain a second canonical state model.
 
 ### State Store
 
@@ -128,6 +127,8 @@ For the first build path, prioritize:
 
 The public request and response contracts belong to [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
 
+State conflict and idempotency replay behavior are part of that public tool contract. Build code should use the owner sections for [Idempotency](../reference/mcp-api-and-schemas.md#idempotency) and [State conflict behavior](../reference/mcp-api-and-schemas.md#state-conflict-behavior), with durable storage details left to [Storage And DDL](../reference/storage-and-ddl.md).
+
 ### Projections
 
 Projections are human-readable views derived from state records and artifact refs. They are not canonical state.
@@ -152,7 +153,7 @@ Operator entrypoints are surfaces over Core behavior, not a second state model. 
 - check artifact integrity
 - run conformance fixtures
 
-Exact command names and flags can come later. The important part is that operator behavior uses the same Core state, events, artifacts, projections, and errors as MCP tools.
+Exact command names and flags can come later. The important part is that operator behavior uses the same Core state, events, artifacts, projections, and errors as MCP tools. State-changing operator outcomes must enter Core or a documented recovery path that preserves Core ordering; operator output must not become a parallel source of state truth.
 
 ## What you are not building yet
 
@@ -225,6 +226,6 @@ Then use the reference docs and current owners for exact behavior:
 
 - [Kernel Reference](../reference/kernel.md) for entities, gates, state logic, `prepare_write`, and `close_task`.
 - [Runtime Architecture Reference](../reference/runtime-architecture.md) for runtime spaces, Core flow, artifacts, projection/reconcile, and guarantee levels.
-- [MCP API And Schemas](../reference/mcp-api-and-schemas.md) for public resources, tools, schemas, errors, and artifact refs.
+- [MCP API And Schemas](../reference/mcp-api-and-schemas.md) for public resources, tools, schemas, errors, artifact refs, idempotency, and state conflict behavior.
 - [Storage And DDL](../reference/storage-and-ddl.md) for runtime layout, DDL, migrations, locks, artifacts, baselines, projection jobs, and validator-run storage.
 - [Operations And Conformance Reference](../reference/operations-and-conformance.md) for operator semantics and fixture expectations.

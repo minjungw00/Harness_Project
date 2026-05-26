@@ -13,38 +13,50 @@ Harness 운영자 절차, Conformance staging, fixture assertion rule, docs-main
 - Runtime Core fixture conformance와 docs-only maintenance check를 구분해야 할 때.
 - State, artifact, projection, MCP availability, generated file 사이의 운영 불일치를 진단할 때.
 
-## 계약 위치 지도
+## 읽기 전에
 
-| 필요한 것 | 먼저 볼 곳 | 관련 owner |
-|---|---|---|
-| Operator command 의미 | [운영자 entrypoint](#운영자-entrypoint), 그리고 해당 command section: [connect](#connect), [doctor](#doctor), [serve mcp](#serve-mcp), [projection refresh](#projection-refresh), [reconcile](#reconcile), [recover](#recover), [export](#export), [artifacts check](#artifacts-check), [conformance run](#conformance-run) | Core 상태 권한은 [커널 참조](kernel.md)에 남습니다. |
-| Operator 진단과 runtime-effect 경계 | [운영 진단은 새 상태가 아니라 사실을 보고합니다](#운영-진단은-새-상태가-아니라-사실을-보고합니다), [docs-maintenance 프로필](#docs-maintenance-프로필), [Release Handoff Export Profile](#release-handoff-export-profile) | Docs-maintenance rule body는 [문서 작성 가이드](../maintain/authoring-guide.md#docs-maintenance-checks)에 남습니다. |
-| Fixture body shape와 runner behavior | [Conformance Fixture Format](#conformance-fixture-format), [Conformance Execution](#conformance-execution), [Fixture Assertion Semantics](#fixture-assertion-semantics) | Public request schema는 [MCP API와 스키마](mcp-api-and-schemas.md)에 남습니다. Storage seeding detail은 [Storage와 DDL](storage-and-ddl.md)에 남습니다. |
-| Fixture 작성 순서와 suite coverage | [Conformance staging](#conformance-staging), [Kernel Smoke Authoring Queue](#kernel-smoke-authoring-queue), [Hardened MVP Fixture Coverage](#hardened-mvp-fixture-coverage), [Fixture Suites](#fixture-suites) | Kernel gate와 event name은 [커널 참조](kernel.md)에 남습니다. |
-| Concern별 fixture 예시 | [Fixture 예시 지도](#fixture-예시-지도), 그다음 해당 예시 section | 예시 `input`은 계속 담당 public tool schema를 통과해야 합니다. |
-| Artifact integrity, export, recover, reconcile check | [artifacts check](#artifacts-check), [export](#export), [recover](#recover), [reconcile](#reconcile) | Artifact layout과 DDL은 [Storage와 DDL](storage-and-ddl.md)에 남습니다. |
+Core transaction order는 [Runtime Architecture](runtime-architecture.md#state-transaction-flow)를, public tool schema와 replay 동작은 [MCP API와 스키마](mcp-api-and-schemas.md)를, storage layout은 [Storage와 DDL](storage-and-ddl.md)을, 상태 전이 의미는 [커널 참조](kernel.md)를 사용합니다.
 
-## 운영을 쉽게 말하면
+## 핵심 생각
 
 Operations는 Core 주변의 operator-facing command입니다. Repository를 연결하고, readiness를 진단하고, MCP를 제공하고, projection을 refresh하고, human edit을 reconcile하고, interrupted 상태를 recover하고, bundle을 export하고, artifact를 check할 수 있습니다.
 
-중요한 규칙은 operations가 agent와 같은 Core 권한 위에 놓인 접점이라는 점입니다. 진단, repair, export, fixture 실행은 할 수 있지만 두 번째 상태 모델을 만들거나 Markdown을 authoritative하게 만들면 안 됩니다.
-
-## Conformance를 쉽게 말하면
+중요한 규칙은 operations가 agent와 같은 Core 권한 위에 놓인 접점이라는 점입니다. 기준 운영 상태를 변경하는 것은 Core뿐입니다. Operator command는 진단, repair, export, fixture 실행은 할 수 있지만 두 번째 상태 모델을 만들거나 Markdown을 authoritative하게 만들거나 Core를 우회해 write하면 안 됩니다.
 
 Conformance는 executable fixture로 Harness behavior를 증명합니다. Passing fixture는 Core 또는 operator action을 실행하고 captured state, event, artifact, projection, error를 비교해야 합니다.
 
 Rendered prose, status text, Journey Card text, agent summary는 독자에게 도움이 될 수 있지만, 그것만 맞춰서는 conformance를 통과할 수 없습니다.
 
-## 이 문서만으로 증명하지 않는 것
+## 담당하는 참조 범위
+
+이 문서는 다음 항목을 담당합니다.
+
+- operator entrypoint semantics
+- operator diagnostic과 runtime-effect boundary
+- conformance staging과 fixture execution semantics
+- fixture assertion behavior와 example expectation
+- recover, reconcile, export, artifact-check, docs-maintenance operator profile
+
+## 여기서 다루지 않는 것
 
 이 참조 문서는 runtime 구현 준비 상태를 주장하지 않습니다. Future implementation과 Conformance work에 필요한 semantics를 정의합니다.
 
 Public MCP schema, SQLite DDL, projection template body, Learn/Use workflow, long-term analytics도 이 문서가 담당하지 않습니다. Docs-maintenance rule body는 [문서 작성 가이드](../maintain/authoring-guide.md#docs-maintenance-checks)가 담당하며, 이 reference는 아래 operator profile 경계만 담당합니다.
 
+## 계약 위치 지도
+
+| 필요한 것 | 먼저 볼 곳 | 관련 owner |
+|---|---|---|
+| Operator command 의미 | [운영자 entrypoint](#운영자-entrypoint), 그리고 해당 command section: [connect](#connect), [doctor](#doctor), [serve mcp](#serve-mcp), [projection refresh](#projection-refresh), [reconcile](#reconcile), [recover](#recover), [export](#export), [artifacts check](#artifacts-check), [conformance run](#conformance-run) | Core 상태 권한은 [커널 참조](kernel.md)에 남고, transaction order는 [Runtime Architecture](runtime-architecture.md#state-transaction-flow)에 남습니다. |
+| Operator 진단과 runtime-effect 경계 | [운영 진단은 새 상태가 아니라 사실을 보고합니다](#운영-진단은-새-상태가-아니라-사실을-보고합니다), [docs-maintenance 프로필](#docs-maintenance-프로필), [Release Handoff Export Profile](#release-handoff-export-profile) | Docs-maintenance rule body는 [문서 작성 가이드](../maintain/authoring-guide.md#docs-maintenance-checks)에 남습니다. |
+| Fixture body shape와 runner behavior | [Conformance Fixture Format](#conformance-fixture-format), [Conformance Execution](#conformance-execution), [Fixture Assertion Semantics](#fixture-assertion-semantics) | Public request schema, idempotency, state conflict behavior는 [MCP API와 스키마](mcp-api-and-schemas.md)에 남습니다. Storage seeding detail은 [Storage와 DDL](storage-and-ddl.md)에 남습니다. |
+| Fixture 작성 순서와 suite coverage | [Conformance staging](#conformance-staging), [Kernel Smoke Authoring Queue](#kernel-smoke-authoring-queue), [Hardened MVP Fixture Coverage](#hardened-mvp-fixture-coverage), [Fixture Suites](#fixture-suites) | Kernel gate와 event name은 [커널 참조](kernel.md)에 남습니다. |
+| Concern별 fixture 예시 | [Fixture 예시 지도](#fixture-예시-지도), 그다음 해당 예시 section | 예시 `input`은 계속 담당 public tool schema를 통과해야 합니다. |
+| Artifact integrity, export, recover, reconcile check | [artifacts check](#artifacts-check), [export](#export), [recover](#recover), [reconcile](#reconcile) | Artifact layout과 DDL은 [Storage와 DDL](storage-and-ddl.md)에 남습니다. |
+
 ## 운영자 entrypoint
 
-모든 운영자 entrypoint는 agent가 사용하는 것과 같은 Core 규칙 위에 놓인 접점입니다. 운영자 tool은 진단, repair, export, fixture 실행을 할 수 있지만 두 번째 상태 모델을 만들면 안 됩니다.
+모든 운영자 entrypoint는 agent가 사용하는 것과 같은 Core 규칙 위에 놓인 접점입니다. 운영자 tool은 진단, repair, export, fixture 실행을 할 수 있지만 두 번째 상태 모델을 만들면 안 됩니다. 상태를 변경하는 operator outcome은 Core에 들어가거나 Core state-version, idempotency, event, artifact, projection-enqueue semantics를 보존하는 문서화된 recovery path를 사용해야 합니다.
 
 필수 MVP 운영자 entrypoint:
 

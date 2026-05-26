@@ -13,38 +13,50 @@ It is a lookup document for operators, implementers, conformance authors, and ma
 - You need to tell runtime Core fixture conformance apart from docs-only maintenance checks.
 - You are diagnosing an operations mismatch across state, artifacts, projections, MCP availability, or generated files.
 
-## Contract map
+## Before you read
 
-| If you need... | Start here | Related owner |
-|---|---|---|
-| Operator command semantics | [Operator entrypoints](#operator-entrypoints), then the command section: [connect](#connect), [doctor](#doctor), [serve mcp](#serve-mcp), [projection refresh](#projection-refresh), [reconcile](#reconcile), [recover](#recover), [export](#export), [artifacts check](#artifacts-check), or [conformance run](#conformance-run) | Core state authority remains in [Kernel Reference](kernel.md). |
-| Operator diagnostics and runtime-effect boundaries | [Operator diagnostics report facts, not new state](#operator-diagnostics-report-facts-not-new-state), [Docs-maintenance profile](#docs-maintenance-profile), [Release Handoff Export Profile](#release-handoff-export-profile) | Docs-maintenance rule bodies stay in [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks). |
-| Fixture body shape and runner behavior | [Conformance Fixture Format](#conformance-fixture-format), [Conformance Execution](#conformance-execution), [Fixture Assertion Semantics](#fixture-assertion-semantics) | Public request schemas stay in [MCP API And Schemas](mcp-api-and-schemas.md). Storage seeding details stay in [Storage And DDL](storage-and-ddl.md). |
-| Fixture authoring order and suite coverage | [Conformance staging](#conformance-staging), [Kernel Smoke Authoring Queue](#kernel-smoke-authoring-queue), [Hardened MVP Fixture Coverage](#hardened-mvp-fixture-coverage), [Fixture Suites](#fixture-suites) | Kernel gate and event names stay in [Kernel Reference](kernel.md). |
-| Fixture examples by concern | [Fixture Example Map](#fixture-example-map), then the matching example section | Example `input` still validates against the owning public tool schema. |
-| Artifact integrity, export, recover, and reconcile checks | [artifacts check](#artifacts-check), [export](#export), [recover](#recover), [reconcile](#reconcile) | Artifact layout and DDL stay in [Storage And DDL](storage-and-ddl.md). |
+Use [Runtime Architecture](runtime-architecture.md#state-transaction-flow) for Core transaction ordering, [MCP API And Schemas](mcp-api-and-schemas.md) for public tool schemas and replay behavior, [Storage And DDL](storage-and-ddl.md) for storage layout, and [Kernel Reference](kernel.md) for state transition semantics.
 
-## Operations in plain language
+## Main idea
 
 Operations are the operator-facing commands around Core. They can connect a repository, diagnose readiness, serve MCP, refresh projections, reconcile human edits, recover interrupted state, export bundles, and check artifacts.
 
-The important rule is that operations are surfaces over the same Core authority used by agents. They may diagnose, repair, export, or run fixtures, but they must not create a second state model or make Markdown authoritative.
-
-## Conformance in plain language
+The important rule is that operations are surfaces over the same Core authority used by agents. Core alone changes canonical operational state. Operator commands may diagnose, repair, export, or run fixtures, but they must not create a second state model, make Markdown authoritative, or write around Core.
 
 Conformance proves Harness behavior with executable fixtures. A passing fixture must drive a Core or operator action and compare captured state, events, artifacts, projections, and errors.
 
 Rendered prose, status text, Journey Card text, or agent summaries can help a reader, but they cannot pass conformance by themselves.
 
-## What this document does not prove by itself
+## Reference scope
+
+This document owns:
+
+- operator entrypoint semantics
+- operator diagnostic and runtime-effect boundaries
+- conformance staging and fixture execution semantics
+- fixture assertion behavior and example expectations
+- recover, reconcile, export, artifact-check, and docs-maintenance operator profiles
+
+## Not covered here
 
 This reference does not claim runtime implementation readiness. It defines required semantics for future implementation and conformance work.
 
 It also does not own public MCP schemas, SQLite DDL, projection template bodies, Learn/Use workflow, or long-term analytics. Docs-maintenance rule bodies are owned by the [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks); this reference owns only the operator profile boundary below.
 
+## Contract map
+
+| If you need... | Start here | Related owner |
+|---|---|---|
+| Operator command semantics | [Operator entrypoints](#operator-entrypoints), then the command section: [connect](#connect), [doctor](#doctor), [serve mcp](#serve-mcp), [projection refresh](#projection-refresh), [reconcile](#reconcile), [recover](#recover), [export](#export), [artifacts check](#artifacts-check), or [conformance run](#conformance-run) | Core state authority remains in [Kernel Reference](kernel.md), with transaction ordering in [Runtime Architecture](runtime-architecture.md#state-transaction-flow). |
+| Operator diagnostics and runtime-effect boundaries | [Operator diagnostics report facts, not new state](#operator-diagnostics-report-facts-not-new-state), [Docs-maintenance profile](#docs-maintenance-profile), [Release Handoff Export Profile](#release-handoff-export-profile) | Docs-maintenance rule bodies stay in [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks). |
+| Fixture body shape and runner behavior | [Conformance Fixture Format](#conformance-fixture-format), [Conformance Execution](#conformance-execution), [Fixture Assertion Semantics](#fixture-assertion-semantics) | Public request schemas, idempotency, and state conflict behavior stay in [MCP API And Schemas](mcp-api-and-schemas.md). Storage seeding details stay in [Storage And DDL](storage-and-ddl.md). |
+| Fixture authoring order and suite coverage | [Conformance staging](#conformance-staging), [Kernel Smoke Authoring Queue](#kernel-smoke-authoring-queue), [Hardened MVP Fixture Coverage](#hardened-mvp-fixture-coverage), [Fixture Suites](#fixture-suites) | Kernel gate and event names stay in [Kernel Reference](kernel.md). |
+| Fixture examples by concern | [Fixture Example Map](#fixture-example-map), then the matching example section | Example `input` still validates against the owning public tool schema. |
+| Artifact integrity, export, recover, and reconcile checks | [artifacts check](#artifacts-check), [export](#export), [recover](#recover), [reconcile](#reconcile) | Artifact layout and DDL stay in [Storage And DDL](storage-and-ddl.md). |
+
 ## Operator entrypoints
 
-Every operator entrypoint is a surface over the same Core rules used by the agent. Operator tools may diagnose, repair, export, or run fixtures, but they must not create a second state model.
+Every operator entrypoint is a surface over the same Core rules used by the agent. Operator tools may diagnose, repair, export, or run fixtures, but they must not create a second state model. State-changing operator outcomes must enter Core or a documented recovery path that preserves Core state-version, idempotency, event, artifact, and projection-enqueue semantics.
 
 Required MVP operator entrypoints:
 

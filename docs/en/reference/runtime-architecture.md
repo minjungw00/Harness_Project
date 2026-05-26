@@ -13,11 +13,15 @@ It is a lookup document for implementers and operators. It does not repeat the L
 - You need to decide whether a failure affects canonical state, artifacts, projections, or only display.
 - You are explaining why a connected surface is cooperative, detective, preventive, or isolated.
 
-## Runtime architecture in plain language
+## Before you read
+
+Use the [Kernel Reference](kernel.md) for exact state transitions, [MCP API And Schemas](mcp-api-and-schemas.md) for public tool envelopes and replay behavior, [Storage And DDL](storage-and-ddl.md) for storage layout and locks, and [Operations And Conformance Reference](operations-and-conformance.md) for operator entrypoint semantics.
+
+## Main idea
 
 Harness runs as a local authority layer beside the user's product repository. The product repository stays the place where product work happens; Runtime Home stores operational authority; the Harness Server / Installation connects the two through Core, validators, projection, reconcile, and public MCP tools.
 
-The important rule is separation. Product source files, chat text, generated Markdown, and connector files can inform the system, but canonical operational state lives in `state.sqlite` current records plus `state.sqlite.task_events`, and raw evidence lives in the artifact store.
+The important rule is separation. Core alone changes canonical operational state. Product source files, chat text, generated Markdown, connector files, operator output, and MCP caller claims can inform the system, but canonical operational state lives in `state.sqlite` current records plus `state.sqlite.task_events`, and raw evidence lives in the artifact store.
 
 ## Reference scope
 
@@ -26,6 +30,7 @@ This document owns:
 - the three spaces in implementation detail
 - Product Repository / Harness Server or Installation / Harness Runtime Home separation
 - Core process model
+- Core-only canonical mutation authority
 - state transaction flow
 - artifact store architecture
 - local threat model and trust boundaries
@@ -71,7 +76,7 @@ flowchart LR
   Home -->|current records, events, raw evidence refs| Server
 ```
 
-This split prevents chat, Markdown reports, generated connector files, and product source files from becoming accidental operational state.
+This split prevents chat, Markdown reports, generated connector files, operator output, MCP caller claims, and product source files from becoming accidental operational state. Only a Core state-changing path can commit canonical operational state.
 
 ## Local threat model
 
@@ -211,7 +216,7 @@ MVP Core can run as a single process with these internal modules:
 | Connector adapter | reference surface registration, capability reporting, and capture hints |
 
 
-Core is the only component that updates canonical operational state. Agents, CLI commands, projectors, and reconnect/recovery flows must enter through Core logic or use recovery code that preserves the same state compatibility rules.
+Core is the only component that updates canonical operational state. Agents, MCP tools, CLI commands, projectors, and reconnect/recovery flows must enter through Core logic or use recovery code that preserves the same state compatibility rules. They may present, diagnose, recover, or derive from Core records, but they must not maintain a second canonical state model.
 
 Decision, Journey, and Autonomy/Boundary modules do not create a new authority tier. Their canonical records live in `state.sqlite` current records plus `state.sqlite.task_events`, their raw evidence lives in the artifact store, and their Markdown views remain projections or proposal surfaces.
 
@@ -231,23 +236,22 @@ Adapters and sidecars translate surface capability into observable facts. They d
 
 ## State transaction flow
 
-Every state-changing operation uses one SQLite transaction for current records and event history:
+Every state-changing operation uses one SQLite transaction for current records, event history, and projection enqueue rows:
 
 ```text
-1. validate request envelope and expected state version
+1. validate request envelope, idempotency replay state, and expected state version
 2. acquire the project/task lock needed for the transition
 3. read current state records
 4. run pre-transition validators
-5. update current records
+5. update current records and affected state/projection version counters
 6. append one or more rows to state.sqlite.task_events
-7. increment state/projection versions as needed
-8. enqueue projection jobs
-9. commit
-10. render Markdown projections after commit
+7. enqueue projection jobs for changed source records
+8. commit
+9. render Markdown projections after commit
 ```
 
 
-Within that transaction, Core increments the affected scope clock. Task-scoped changes increment `tasks.state_version`; project-scoped changes with `task_id=null` increment `project_state.state_version`. Event rows record the resulting state version for their affected scope.
+Within that transaction, Core increments the affected scope clock as part of the current-record update. Task-scoped changes increment `tasks.state_version`; project-scoped changes with `task_id=null` increment `project_state.state_version`. Event rows record the resulting state version for their affected scope. State conflict and idempotency replay behavior are exposed through the public API contract in [MCP API And Schemas](mcp-api-and-schemas.md#idempotency) and [State conflict behavior](mcp-api-and-schemas.md#state-conflict-behavior).
 
 Projection rendering happens after the transaction. A projection failure marks projection freshness as stale or failed and leaves the committed state intact. Projection cannot turn a passed task into a failed task, and it cannot repair canonical state without a later reconcile decision.
 

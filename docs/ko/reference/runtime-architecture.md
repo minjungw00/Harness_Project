@@ -13,11 +13,15 @@
 - 실패가 기준 상태, artifact, projection, 표시 영역 중 어디에 영향을 주는지 판단해야 할 때.
 - 연결된 접점이 cooperative, detective, preventive, isolated 중 어디에 해당하는지 설명해야 할 때.
 
-## 런타임 아키텍처를 쉬운 말로
+## 읽기 전에
+
+정확한 상태 전이는 [커널 참조](kernel.md)를, public tool envelope와 replay 동작은 [MCP API와 스키마](mcp-api-and-schemas.md)를, storage layout과 lock은 [Storage와 DDL](storage-and-ddl.md)을, operator entrypoint 의미는 [운영과 Conformance 참조](operations-and-conformance.md)를 사용합니다.
+
+## 핵심 생각
 
 Harness는 사용자의 Product Repository 옆에서 실행되는 로컬 권한 계층입니다. Product Repository는 실제 제품 작업이 일어나는 곳이고, Runtime Home은 운영 권한을 저장하며, Harness Server / Installation은 Core, validators, projection, reconcile, 공개 MCP tool을 통해 둘을 연결합니다.
 
-중요한 규칙은 분리입니다. 제품 소스 파일, 대화 텍스트, 생성된 Markdown, connector 파일은 system에 정보를 줄 수 있지만 기준 운영 상태는 `state.sqlite` 현재 기록과 `state.sqlite.task_events`에 있고, 원본 근거는 artifact store에 있습니다.
+중요한 규칙은 분리입니다. 기준 운영 상태를 변경하는 것은 Core뿐입니다. 제품 소스 파일, 대화 텍스트, 생성된 Markdown, connector 파일, operator output, MCP caller claim은 system에 정보를 줄 수 있지만 기준 운영 상태는 `state.sqlite` 현재 기록과 `state.sqlite.task_events`에 있고, 원본 근거는 artifact store에 있습니다.
 
 ## 담당하는 참조 범위
 
@@ -26,6 +30,7 @@ Harness는 사용자의 Product Repository 옆에서 실행되는 로컬 권한 
 - 구현 세부 관점의 세 공간
 - Product Repository / Harness Server 또는 Installation / Harness Runtime Home 분리
 - Core process model
+- Core-only canonical mutation authority
 - state transaction flow
 - artifact store architecture
 - 로컬 위협 모델과 신뢰 경계
@@ -71,7 +76,7 @@ flowchart LR
   Home -->|현재 기록, events, 원본 근거 refs| Server
 ```
 
-이 분리는 대화, Markdown 보고서, 생성된 connector 파일, 제품 소스 파일이 우연히 운영 상태가 되는 일을 막습니다.
+이 분리는 대화, Markdown 보고서, 생성된 connector 파일, operator output, MCP caller claim, 제품 소스 파일이 우연히 운영 상태가 되는 일을 막습니다. Core 상태 변경 경로만 기준 운영 상태를 commit할 수 있습니다.
 
 ## 로컬 위협 모델
 
@@ -211,7 +216,7 @@ MVP Core는 다음 내부 모듈을 가진 단일 프로세스로 실행할 수 
 | Connector adapter | 기준 접점 등록, capability 보고, capture hints |
 
 
-Core만 기준 운영 상태를 업데이트합니다. Agents, CLI commands, projectors, reconnect/recovery flows는 Core 로직을 거치거나 같은 상태 compatibility rules를 보존하는 recovery code를 사용해야 합니다.
+Core만 기준 운영 상태를 업데이트합니다. Agents, MCP tools, CLI commands, projectors, reconnect/recovery flows는 Core 로직을 거치거나 같은 상태 compatibility rules를 보존하는 recovery code를 사용해야 합니다. 이들은 Core record를 표시, 진단, 복구, 파생할 수 있지만 두 번째 기준 상태 모델을 유지하면 안 됩니다.
 
 Decision, Journey, Autonomy/Boundary modules는 새로운 권한 tier를 만들지 않습니다. 기준 기록은 `state.sqlite` 현재 기록과 `state.sqlite.task_events`에 있고, 원본 근거는 artifact store에 있으며, Markdown views는 projections 또는 proposal 접점으로 남습니다.
 
@@ -231,23 +236,22 @@ Adapters와 sidecars는 접점 capability를 observable facts로 번역합니다
 
 ## State transaction flow
 
-상태를 변경하는 모든 operation은 현재 기록과 event history에 대해 하나의 SQLite transaction을 사용합니다.
+상태를 변경하는 모든 operation은 현재 기록, event history, projection enqueue row에 대해 하나의 SQLite transaction을 사용합니다.
 
 ```text
-1. request envelope와 expected state version을 검증
+1. request envelope, idempotency replay state, expected state version을 검증
 2. transition에 필요한 project/task lock을 획득
 3. 현재 상태 기록을 읽음
 4. pre-transition validator를 실행
-5. 현재 기록 업데이트
+5. 현재 기록과 affected state/projection version counter를 업데이트
 6. state.sqlite.task_events에 하나 이상의 row를 추가
-7. 필요한 경우 state/projection version을 증가시키거나 갱신
-8. projection job을 대기열에 넣음
-9. commit
-10. commit 이후 Markdown projections를 렌더링
+7. 변경된 source record에 대해 projection job을 대기열에 넣음
+8. commit
+9. commit 이후 Markdown projections를 렌더링
 ```
 
 
-이 transaction 안에서 Core는 affected scope clock을 증가시킵니다. Task-scoped changes는 `tasks.state_version`을 증가시키고, `task_id=null`인 project-scoped changes는 `project_state.state_version`을 증가시킵니다. Event rows는 각 affected scope의 resulting state version을 기록합니다.
+이 transaction 안에서 Core는 current-record update의 일부로 affected scope clock을 증가시킵니다. Task-scoped changes는 `tasks.state_version`을 증가시키고, `task_id=null`인 project-scoped changes는 `project_state.state_version`을 증가시킵니다. Event rows는 각 affected scope의 resulting state version을 기록합니다. State conflict와 idempotency replay 동작은 [MCP API와 스키마의 Idempotency](mcp-api-and-schemas.md#idempotency)와 [State Conflict 동작](mcp-api-and-schemas.md#state-conflict-동작)에 드러나는 public API 계약입니다.
 
 Projection 렌더링은 transaction 이후에 일어납니다. Projection failure는 projection 최신성을 `stale` 또는 `failed`로 표시하고 커밋된 상태는 그대로 둡니다. Projection은 passed task를 failed task로 바꿀 수 없고, 나중의 reconcile decision 없이 기준 상태를 repair할 수도 없습니다.
 
