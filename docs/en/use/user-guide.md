@@ -18,6 +18,8 @@ Speak normally. Describe the work you want and any boundary you already know; th
 
 The agent should translate your request into the right Harness steps. You should not need to operate internal records by hand. Use ordinary language first and exact Harness labels second, only when they explain a real stop, boundary, or close condition.
 
+For small direct work, the ceremony budget is intentionally small: a compact scope, a minimal active Change Unit when product files may change, a write-authority check before the exact write, and a concise result with changed paths, checks, escalation status, and close-relevant risk. Direct means fewer user-facing steps, not bypassed scope or write authority.
+
 If you want to be explicit, you can still say:
 
 ```text
@@ -117,6 +119,8 @@ Once scope is clear, the agent may decide routine implementation details inside 
 
 The agent should stop and ask when the choice changes what users or other code can rely on: public API or module contracts, security or privacy trade-offs, UX or product behavior, material dependency or migration direction, scope expansion, or accepting known residual risk.
 
+A useful split is: Change Unit scope says what work surface may change; Autonomy Boundary says what judgment the agent may exercise inside that surface. Neither one authorizes a write by itself.
+
 Harness may use four related labels for this:
 
 | Label | Plain meaning |
@@ -125,6 +129,12 @@ Harness may use four related labels for this:
 | Autonomy Boundary | The judgment the agent may exercise alone inside that scope. It is not write authority and does not grant paths, tools, commands, network, secrets, or sensitive categories. |
 | Approval | Permission for a sensitive step. It is not acceptance, correctness, or user-owned judgment. |
 | Write Authorization | A one-attempt write allowance from `prepare_write`. It does not expand the scope or Autonomy Boundary. |
+
+For a small direct task, the agent can usually generate the minimal Change Unit from the request instead of asking you to fill in fields. These examples are explanatory, not a schema:
+
+- Docs typo: purpose "fix spelling in one paragraph"; out of bounds "no meaning change"; paths "the named doc only"; stop if "the edit changes the contract."
+- Copy-only UI change: purpose "rename this label"; out of bounds "behavior, layout, localization strategy"; paths "the target component and direct copy test."
+- Focused test change: purpose "add a regression test for the reported case"; out of bounds "implementation changes"; paths "the named test file or nearby test."
 
 If the agent asks you to approve something, the prompt should label the actual authority or recorded decision. The user may be approving a sensitive action, confirming scope, resolving a Decision Packet, accepting residual risk, accepting the final result, or checking Write Authorization status. "Approved" should not be a catch-all label or blank check.
 
@@ -231,6 +241,7 @@ If scope needs to grow, show me the options and impact first.
 Pause writes until I answer the open decision.
 Show what you can actually block and what you can only detect later.
 Use careful mode for this change: narrow scope, show write authority before writes, and ask before user-owned product or material technical trade-offs.
+If I step away, continue only inside the active scope and stop before public commitments or new user-owned judgment.
 ```
 
 Power-user equivalents for the same requests include Change Unit, Decision Packet, guarantee level, detached verification, residual risk, `prepare_write`, and Write Authorization. They are useful labels for explaining blocks and close conditions; they are not words you must memorize before using Harness.
@@ -262,6 +273,10 @@ Many small direct tasks skip some later checks. Bigger work should not hide thos
 
 A direct task result should stay compact and low-ceremony: what was requested, what stayed in scope, what changed, what was checked, whether it escalated, and any close-relevant risk or follow-up. It should not restate every gate when those gates did not affect the result.
 
+Direct work should escalate to `work` when the target is no longer obvious, changed paths cross the active Change Unit, more than a local product area is affected, a public API or module contract may change, sensitive or risky behavior appears, Manual QA or detached verification becomes important, or a user-owned product or material technical trade-off is needed.
+
+If an out-of-scope changed path is observed after action, the agent should not describe it as authorized work. It should show the mismatch, hold further product writes, and route to the smallest repair path: revert or isolate the extra change, ask for a scope decision, or escalate the same Task to `work` if the wider change is now the real task.
+
 ## Advanced status details
 
 Most users can continue with the quick path: scope, next safe action, blocker, smallest unblocker, and close-relevant risk. The details below matter when a status view looks stale, a Harness/Core capability is unavailable, the agent mentions guard or freeze behavior, or you ask for a specialized review lens.
@@ -285,6 +300,8 @@ Typical recovery readings:
 If the agent uses words like guard, freeze, or careful mode, it should explain them in ordinary terms: what can actually be blocked before execution, and what can only be detected later. A freeze on a cooperative or detective surface means a scope hold or stricter next-action posture, not hard prevention.
 
 The exact label may be guarantee level or surface capability. The useful question is still plain: "Can this surface prevent the action before it happens, or only detect a problem afterward?"
+
+AFK or "continue while I am away" instructions do not expand authority. The agent may continue only inside the active Change Unit, Autonomy Boundary, granted sensitive approvals, and compatible write authority. It should stop before scope expansion, public commitments such as API/module contracts or release promises, residual-risk acceptance, final acceptance, QA or verification waivers, or any new user-owned product or material technical judgment. On cooperative or detective surfaces, that stop is a held instruction or later detection path, not a claim of hard pre-execution blocking.
 
 ### Role Lens requests
 

@@ -47,13 +47,23 @@ The email login task may require changes to the login form, one API call, and se
 
 A Change Unit is the bounded product-write scope for a Task. It names the part of the product that may change so the agent, user, and Harness can tell whether a write is inside the agreed work.
 
+For a tiny docs, copy, or focused test edit, the Change Unit may be generated from the request and stay very small. The important point is still the same: direct work can be light, but product writes still happen inside an active scope.
+
+Reference: [Kernel Reference](../reference/kernel.md).
+
+## Autonomy Boundary
+
+Inside the email login Change Unit, the agent might decide to reuse an existing helper, split a private function, or add a focused test without asking again. That is different from deciding whether to use JWTs, change a public API, or accept a security trade-off.
+
+An Autonomy Boundary describes the judgment the agent may exercise inside the Change Unit. Change Unit scope answers "what work surface may change?" Autonomy Boundary answers "what choices may the agent make there without another user decision?" Neither one is Write Authorization.
+
 Reference: [Kernel Reference](../reference/kernel.md).
 
 ## Decision Packet
 
 The agent finds several reasonable failed-login choices: inline message, toast, or modal/layer for the interaction; generic, specific, or hybrid wording for the copy. Another task might need a choice between session cookie, JWT, and social login, or between a compatible public API extension and a breaking cleanup. The agent should not quietly choose the product, security, compatibility, or maintenance trade-off if that choice blocks progress.
 
-A Decision Packet records a user-owned decision that blocks progress, write, close, waiver, acceptance, residual-risk acceptance, product direction, material technical direction, scope, design trade-off, stewardship judgment, or public commitment. It names the decision, options, trade-offs, evidence, affected scope, residual risk, and next action.
+A Decision Packet records a user-owned decision that blocks progress, write, close, waiver, acceptance, residual-risk acceptance, product direction, material technical direction, scope, design trade-off, stewardship judgment, or public commitment. Public commitments include choices that change what users, callers, documentation readers, or release/support promises can rely on. A Decision Packet names the decision, options, trade-offs, evidence, affected scope, residual risk, and next action.
 
 Reference: [Kernel Reference](../reference/kernel.md).
 

@@ -138,6 +138,20 @@ Use `work` for feature work, structural changes, risky fixes, multi-file changes
 
 If a direct task grows, move the same task to `work` and show why.
 
+## Direct ceremony budget
+
+Direct mode is a lightweight user experience, not a lower authority path. For direct work, keep the visible budget to the smallest useful set:
+
+- classify the request as direct and state the narrow scope
+- name out-of-bounds behavior, files, or decisions when they are relevant
+- create or select an active minimal Change Unit before product writes
+- show write authority before the exact write attempt
+- report changed paths, the self-check or other lightweight evidence, escalation status, and close-relevant risk
+
+Do not create a Decision Packet, require Manual QA, request detached verification, or show a full close checklist unless the task shape, policy, changed surface, detected risk, or user request makes that necessary.
+
+Escalate the same Task to `work` when the target stops being obvious, the changed paths cross the active Change Unit, the edit affects multiple product areas, the change may alter a public API or module contract, sensitive or risky behavior appears, Manual QA or detached verification becomes important, or user-owned product or material technical judgment is needed.
+
 ## Scope and Change Unit
 
 Before product writes, shape the active scope into a Change Unit. The user-facing explanation should answer:
@@ -150,7 +164,7 @@ Before product writes, shape the active scope into a Change Unit. The user-facin
 
 Enough is known to propose the first safe Change Unit when the agent can state those items without hiding unresolved user judgment. If that cannot be done yet, continue intake with the next blocking question or propose a smaller Change Unit that avoids the unresolved area.
 
-Autonomy Boundary is not write authority. It only describes what judgment the agent may exercise without asking again. Actual product writes still require a compatible write check.
+Autonomy Boundary is not write authority. It only describes what judgment the agent may exercise without asking again. Change Unit scope answers where and what the work may change; Autonomy Boundary answers which choices the agent may make inside that scope. Actual product writes still require a compatible write check.
 
 Use this distinction when explaining stops and permissions:
 
@@ -160,6 +174,11 @@ Use this distinction when explaining stops and permissions:
 | Autonomy Boundary | What may the agent decide alone inside that scope? | Lets the agent choose covered implementation details without another user decision. | Does not grant paths, tools, commands, network, secrets, sensitive categories, approval, or write authority. |
 | Approval | May this sensitive step proceed? | Allows a named sensitive action within its recorded scope and expiry. | Does not decide user-owned judgment, prove correctness, accept risk, or create Write Authorization. |
 | Write Authorization | May this exact write attempt happen now? | Records that Core allowed one compatible write attempt after the required checks. | Is not reusable and does not expand scope, Autonomy Boundary, or Approval. |
+
+For small direct tasks, the active Change Unit may be generated from the user's request and surrounding context. Keep examples explanatory, not schema-defining:
+
+- Docs or copy edit: purpose "change this phrase"; non-goals "no behavior or contract change"; scoped paths "the named doc/component and direct test if present"; stop if "meaning, localization strategy, or public promise changes."
+- Focused test edit: purpose "cover the reported case"; non-goals "no implementation refactor"; scoped paths "the relevant test"; stop if "the fix requires product code."
 
 When a prompt or status uses the word "approved," name the exact authority or recorded decision: sensitive-action Approval, scope confirmation, Decision Packet resolution, residual-risk acceptance, final acceptance, or Write Authorization status. Do not use "approved" as a catch-all label.
 
@@ -212,6 +231,14 @@ For review output, keep the two questions separate:
 
 Same-session review is self-check or stewardship signal unless a qualifying independent Eval or verification record exists. It may find Decision Packet candidates, evidence gaps, Eval or verification needs, Manual QA needs, residual-risk candidates, Approval needs, Change Unit update recommendations, or close blockers, but those findings must route through the existing paths before affected writes or close proceed.
 
+## AFK work and public commitments
+
+When the user says to continue while they are away, treat that as permission to use already-recorded latitude, not as new authority. The agent may continue only inside the active Change Unit, the active Autonomy Boundary, granted sensitive approvals, and compatible `prepare_write` / Write Authorization for each product write.
+
+Stop and surface the smallest unblocker before scope expansion, new sensitive action without approval, Autonomy Boundary breach, residual-risk acceptance, final acceptance, QA or verification waiver, public API or module contract change, release/support promise, or other public commitment that users or other systems may rely on.
+
+Name the guarantee level when presenting AFK stops. On cooperative or detective surfaces, "stop" means hold by instruction or detect/report after action if the profile supports that validation. Use preventive wording only when the connected profile proves pre-execution blocking for the covered operation.
+
 ## Product writes
 
 Before writing product files, the agent must check write authority for the intended operation.
@@ -229,6 +256,8 @@ For external side effects, separate the before-action claim from the after-actio
 Do not describe a cooperative or detective hold as if it blocks execution. Say that writes are held by instruction, or that violations can be detected after action when the connected profile supports that validation. Use preventive wording only for proven pre-execution blocking on the covered operation.
 
 If write authority is blocked, unavailable, stale, or incompatible with the intended change, hold product writes and explain the smallest unblocker.
+
+If observed changed paths fall outside the consumed Write Authorization or active Change Unit, do not summarize them as authorized work. Show the mismatch, hold further product writes, and route to repair: revert or isolate the extra change, request a scope decision, or escalate to `work` when the wider change is now intentional.
 
 Documentation-maintenance edits are a separate docs-only workflow. They are governed by
 [Authoring Guide](../maintain/authoring-guide.md), not by the product-write flow described here.

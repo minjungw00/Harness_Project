@@ -16,6 +16,14 @@ For the user-facing agent procedure, read [Agent Session Flow](../use/agent-sess
 - You are writing connector conformance coverage.
 - You need to know which parts belong in a surface recipe instead of the common contract.
 
+## Before you read
+
+Read [Agent Session Flow](../use/agent-session-flow.md) for the user-facing procedure and [Kernel Reference](kernel.md) for write and close authority. This reference explains connector behavior and capability display, not kernel state transitions.
+
+## Main idea
+
+A connector should keep the agent's context small and current, route state-changing actions through Harness, and describe only the guarantees its proven capability profile can actually provide. Cooperative or detective surfaces may hold or detect; only covered preventive or isolated paths should be described as pre-execution blocking.
+
 ## Integration in plain language
 
 An agent surface is where the user talks to an agent. Harness is the local authority layer that keeps task state, write authority, evidence, verification, Manual QA, acceptance, projections, and reconcile behavior outside the chat transcript.
@@ -372,6 +380,14 @@ Two-stage review display should keep the stages visibly separate:
 
 Same-session review may be useful self-checking, but it is not detached verification and must not display `assurance_level=detached_verified`.
 
+## AFK and Public Commitment Display
+
+AFK, unattended, or "continue while I am away" instructions are connector display and posture concerns; they do not create new authority. A connector should keep AFK work inside the active Change Unit, active Autonomy Boundary, granted sensitive approvals, and compatible `prepare_write` / Write Authorization before actual product writes.
+
+The surface should stop and show the smallest unblocker before scope expansion, an Autonomy Boundary breach, a new sensitive action without Approval, residual-risk acceptance, final acceptance, QA or verification waiver, public API or module contract change, release/support promise, documentation promise that changes what readers may rely on, or another public commitment that requires user-owned product or material technical judgment.
+
+Display the stop according to the capability profile. On cooperative profiles, the connector instructs the agent to hold. On detective profiles, it may also describe after-action validation that can detect and report mismatches. Preventive or isolated wording is allowed only for operations covered by a proven guard or isolation path.
+
 ## Reference Surface Contract
 
 The MVP targets one reference surface. The reference surface should demonstrate the kernel rather than broad ecosystem support.
@@ -405,7 +421,8 @@ Overview scenarios:
 - one blocking question with recommendation and uncertainty when available
 - Decision Packet shown instead of broad approval for blocking user-owned judgment
 - Autonomy Boundary breach stops or routes to Decision Packet
-- AFK work remains covered by active Change Unit scope, Autonomy Boundary latitude, any granted sensitive approval that applies, and compatible `prepare_write` / Write Authorization before actual product writes
+- AFK work remains covered by active Change Unit scope, Autonomy Boundary latitude, any granted sensitive approval that applies, and compatible `prepare_write` / Write Authorization before actual product writes, with stop wording matched to the proven guarantee level
+- public commitments route to Decision Packet or another existing owner path when they require user-owned product or material technical judgment
 - `prepare_write` allowed and blocked paths
 - Write Authorization created for allowed writes and exposed through Write Authority Summary
 - write-capable `record_run` consumes a compatible Write Authorization

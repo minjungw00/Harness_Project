@@ -69,6 +69,8 @@ This matters even for a small task. If the agent discovers that the button text 
 
 Harness treats this as `direct` because the change is small, low risk, and easy to self-check. Direct does not mean "no record." It means the record should stay lightweight.
 
+The user-facing budget is small: name the scope, keep an active minimal Change Unit for the write, check write authority, make the narrow change, self-check it, and report the result. The user should not have to fill in a form for a one-string change.
+
 If the agent finds the label is shared across checkout, billing, and profile screens, it should stop and move the same Task toward `work` because the impact is wider than expected.
 
 ### Minimal Change Unit
@@ -82,6 +84,14 @@ Expected paths: profile view file and the directly related copy test, if present
 
 The Change Unit prevents a tiny request from quietly becoming a general UI cleanup.
 
+For similarly small tasks, the agent might auto-generate minimal Change Unit contents from the request. These examples are explanatory, not a new schema:
+
+```text
+Docs typo: fix one sentence in the named doc; no meaning or contract change.
+Copy-only UI change: change the label and direct copy test; no behavior, layout, or localization strategy change.
+Focused test change: add one regression test for the reported case; no implementation edit unless the Task escalates.
+```
+
 ### prepare_write before product write
 
 Before editing, the agent asks Harness whether this write is currently allowed. In user-facing language, the answer should be specific:
@@ -91,6 +101,8 @@ Write Authorization: allowed for the profile view file and matching copy test.
 ```
 
 If the intended file is outside the Change Unit, the write should pause. The user should see a scope question instead of a surprise edit.
+
+If an out-of-scope changed path is discovered after action, it should not be folded into the direct result. The agent should show the mismatch and either remove or isolate the extra change, ask for a scope decision, or move the same Task toward `work`.
 
 ### Recording the change
 

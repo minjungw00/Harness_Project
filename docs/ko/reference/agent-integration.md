@@ -16,6 +16,14 @@
 - connector conformance coverage를 작성할 때.
 - 공통 contract와 surface recipe의 경계를 확인해야 할 때.
 
+## 읽기 전에
+
+사용자에게 보이는 절차는 [에이전트 세션 흐름](../use/agent-session-flow.md)을 읽고, 쓰기와 닫기 권한은 [커널 참조](kernel.md)를 읽습니다. 이 참조는 connector behavior와 capability 표시를 설명하며, kernel state transition을 정의하지 않습니다.
+
+## 핵심 생각
+
+Connector는 agent에게 작고 최신인 context를 주고, 상태 변경을 Harness로 라우팅하며, 입증된 capability profile이 실제로 제공할 수 있는 보장만 말해야 합니다. Cooperative 또는 detective surface는 hold하거나 detect할 수 있습니다. 실행 전 차단이라고 말할 수 있는 것은 covered preventive 또는 isolated path뿐입니다.
+
 ## 통합을 쉬운 말로 설명하면
 
 Agent 접점은 사용자가 agent와 대화하는 접점입니다. Harness는 Task 상태, 쓰기 권한, 근거, verification, Manual QA, acceptance, projection, reconcile 동작을 대화 기록 밖에 두는 로컬 권한 계층입니다.
@@ -372,6 +380,14 @@ Two-stage review display는 두 stage가 분명히 분리되어 보이게 해야
 
 Same-session review는 유용한 self-check일 수 있지만 detached verification이 아니며 `assurance_level=detached_verified`로 표시하면 안 됩니다.
 
+## AFK와 public commitment 표시
+
+AFK, unattended, 또는 "내가 없는 동안 계속해" 지시는 connector 표시와 진행 자세에 관한 것이며 새 권한을 만들지 않습니다. Connector는 AFK 작업을 active Change Unit, active Autonomy Boundary, granted sensitive approvals, 실제 제품 파일 쓰기 전 compatible `prepare_write` / Write Authorization 안에 유지해야 합니다.
+
+Surface는 scope expansion, Autonomy Boundary breach, Approval 없는 새 sensitive action, residual-risk acceptance, final acceptance, QA 또는 verification waiver, public API 또는 module contract 변경, release/support promise, 문서 독자가 의존할 내용을 바꾸는 documentation promise, 사용자 소유 제품 판단 또는 중요한 기술 판단이 필요한 다른 public commitment 전에 멈추고 가장 작은 unblocker를 보여줘야 합니다.
+
+멈춤 표시는 capability profile에 맞춰야 합니다. Cooperative profile에서는 connector가 agent에게 hold를 지시합니다. Detective profile에서는 실행 뒤 mismatch를 감지하고 보고할 수 있는 validation도 설명할 수 있습니다. Preventive 또는 isolated wording은 입증된 guard 또는 isolation path가 해당 operation을 cover할 때만 허용됩니다.
+
 ## 기준 접점 계약
 
 MVP는 하나의 기준 접점을 목표로 합니다. 기준 접점은 넓은 ecosystem 지원이 아니라 kernel을 증명해야 합니다.
@@ -405,7 +421,8 @@ Overview scenario:
 - 가능할 때 recommendation과 uncertainty가 있는 one blocking question
 - 차단하는 사용자 소유 판단에 broad approval 대신 Decision Packet 표시
 - Autonomy Boundary breach가 stop하거나 Decision Packet으로 route
-- AFK work가 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive approval, 실제 product write 전 compatible `prepare_write` / Write Authorization 안에 머무름
+- AFK work가 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive approval, 실제 product write 전 compatible `prepare_write` / Write Authorization 안에 머무르고, stop wording이 입증된 guarantee level과 맞음
+- public commitment가 사용자 소유 제품 판단 또는 중요한 기술 판단을 필요로 하면 Decision Packet 또는 다른 기존 owner path로 route
 - `prepare_write` allowed/blocked path
 - allowed write에 Write Authorization 생성 및 Write Authority Summary 표시
 - write-capable `record_run`이 compatible Write Authorization consume

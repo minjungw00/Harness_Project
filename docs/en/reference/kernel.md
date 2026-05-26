@@ -15,6 +15,14 @@ This is reference documentation. It does not authorize runtime/server implementa
 - You are checking how Task, Change Unit, Decision Packet, Approval, Write Authorization, Run, evidence, Eval, Manual QA, Residual Risk, and Artifact records relate.
 - You are writing conformance fixtures or diagnosing a mismatch between state, artifacts, projections, and user-facing status.
 
+## Before you read
+
+Read [Concepts](../learn/concepts.md) or [Harness in One Task](../learn/harness-in-one-task.md) first if you want examples before exact state rules. Public MCP shapes are separate in [MCP API And Schemas](mcp-api-and-schemas.md), and connector capability language is separate in [Agent Integration Reference](agent-integration.md).
+
+## Main idea
+
+The kernel makes product writes and close decisions depend on explicit state: active Task, scoped Change Unit, Autonomy Boundary, write authority, decisions, approvals, evidence, verification, QA, acceptance, residual risk, and surface capability. A lighter mode can reduce user-facing ceremony, but it does not reduce those authority boundaries.
+
 ## Contract map
 
 | If you need... | Start here | Related owner |
@@ -96,11 +104,13 @@ This document does not own:
 
 ## Direct fast path
 
-Direct still needs an active scoped Change Unit before product writes. For small obvious requests, the Change Unit may be minimal and derived from the user's request, as long as it records the intended operation and scoped write surface clearly enough for `prepare_write` and `record_run` compatibility checks.
+Direct is a reduced interaction path, not a reduced authority path. Direct still needs an active scoped Change Unit before product writes and a compatible `prepare_write` decision before each exact write attempt. For small obvious requests, the Change Unit may be minimal and derived from the user's request, as long as it records the intended operation and scoped write surface clearly enough for `prepare_write` and `record_run` compatibility checks.
 
-No Decision Packet is created unless blocking user-owned judgment is detected. Evidence can be lightweight according to the applicable evidence profile, such as a changed path list, patch summary or diff artifact, command result when relevant, and self-check summary.
+No Decision Packet is created unless blocking user-owned judgment is detected. Evidence can be lightweight according to the applicable evidence profile, such as a changed path list, patch summary or diff artifact, command result when relevant, and self-check summary. Examples of minimal direct Change Unit contents in Learn and Use docs are explanatory examples of existing Change Unit semantics; they do not define a new schema or field set.
 
 Manual QA, detached verification, and residual-risk acceptance are not required for direct work unless policy, changed surface, user request, or detected risk requires them. If scope, risk, affected interface, or evidence expectations grow beyond the direct assumptions, the same Task escalates to `work` rather than continuing as direct.
+
+Direct must escalate to `work` when the target is no longer obvious, observed or intended changed paths fall outside the active Change Unit, multiple product areas are affected, a public API or module contract may change, sensitive or risky behavior appears, independent verification or Manual QA becomes close-relevant, or user-owned product or material technical judgment is required.
 
 ## Entity model
 
@@ -236,13 +246,13 @@ A Task is the user value unit. It carries the current mode, lifecycle phase, res
 
 ### Change Unit
 
-A Change Unit is the scoped implementation unit for product writes. It records purpose, non-goals, slice type, intended end-to-end path, autonomy boundary, allowed paths, allowed tools, validator profile, sensitive categories, approval needs, evidence expectations, QA expectations, dependencies, merge risk, completion conditions, and evaluator focus.
+A Change Unit is the scoped implementation unit for product writes. It answers what work surface may change. It records purpose, non-goals, slice type, intended end-to-end path, autonomy boundary, allowed paths, allowed tools, validator profile, sensitive categories, approval needs, evidence expectations, QA expectations, dependencies, merge risk, completion conditions, and evaluator focus.
 
 Every product write requires an active Change Unit whose scope covers the intended write. A Task may have one or many Change Units, but only the active Change Unit scopes the current write. Core authorizes a specific product-write attempt only through `prepare_write`, which creates a Write Authorization when the checks pass or returns the already committed response for idempotent replay of the same request.
 
 ### Autonomy Boundary
 
-An Autonomy Boundary is part of Change Unit semantics. It records the user-owned judgment boundary inside which the agent may proceed without asking the user for another decision. In ordinary terms, it answers: within this Change Unit, what may the agent decide alone, and what must stop for user judgment? It may include explicitly recorded latitude for how to carry out the agreed goal and scope, such as local implementation choices, conservative design details, codebase stewardship trade-offs, and low-risk execution choices. It must not be read as permission to change the goal, expand scope, choose user-owned product direction or material technical direction, or accept residual risk for the user.
+An Autonomy Boundary is part of Change Unit semantics. It answers which judgments the agent may exercise inside the Change Unit without asking the user for another decision. In ordinary terms, Change Unit scope says where and what the work may change; Autonomy Boundary says which choices may be made within that scope. It may include explicitly recorded latitude for how to carry out the agreed goal and scope, such as local implementation choices, conservative design details, codebase stewardship trade-offs, and low-risk execution choices. It must not be read as permission to change the goal, expand scope, choose user-owned product direction or material technical direction, or accept residual risk for the user.
 
 When the recorded latitude covers it, the agent may choose implementation details such as local helper shape, test organization, non-public naming, or a conservative code path that stays inside the agreed result. The agent must stop for user judgment when the choice changes public API or module contracts, security or privacy trade-offs, UX or product behavior, material dependency or migration direction, scope expansion, or residual-risk acceptance.
 
@@ -371,6 +381,7 @@ This section gathers the kernel's long negative boundaries in one place so refer
 - Generated Markdown is not canonical state. Projection edits route through reconcile before they can affect state.
 - Raw artifacts are evidence files; Markdown reports that link to them are readable projections.
 - Autonomy Boundary records judgment latitude only. It is not a scope grant and does not authorize paths, tools, commands, network targets, secrets, or sensitive categories.
+- Public commitments that change what users, callers, release/support consumers, documentation readers, or other systems may rely on are user-owned judgment when they affect product direction, material technical direction, compatibility, risk, or acceptance. Approval cannot substitute for that Decision Packet path.
 - Approval is not user-owned product judgment or material technical judgment, correctness proof, QA, verification, acceptance, evidence, or Write Authorization.
 - Decision Packet resolution is not sensitive approval unless it is the approval-shaped Decision Packet that owns a linked Approval record.
 - Write Authorization is not reusable scope. It records that Core allowed one specific write attempt under the current compatibility basis, and `record_run` may consume it for only one compatible implementation or direct Run.
@@ -843,6 +854,8 @@ Implementation and direct `record_run` calls that report product writes must con
 `runs.write_authorization_id` is populated only when a Run successfully consumes a compatible Write Authorization. A violation or audit Run that attempted to use an invalid, stale, missing, consumed, or scope-exceeded authorization must not populate `runs.write_authorization_id` as a consumed authorization. The attempted authorization ref, when useful for audit, should be recorded in validator findings, run violation payload, or `task_events.payload_json`.
 
 Core must verify observed changed paths against both the consumed Write Authorization and the active Change Unit. It also verifies recorded tools, commands, network targets, secret access, artifact inputs and refs, and the Run summary against the authorization and observed behavior when those observations are available from command results, artifacts, surface telemetry, or declared run data. The summary is audit and evidence context; it cannot claim authorized changes that the observed changed paths, artifacts, and authorization compatibility do not support.
+
+Observed out-of-scope changed paths are not normalized by including them in the Run summary. They require recovery or repair through compatible scope update, reverting or isolating the extra change, a new compatible Write Authorization and Run, or a committed violation/audit Run according to the case. Such observations do not satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness for the affected scope until repaired through the relevant owner records.
 
 When Write Authorization is required by the Run kind, active Change Unit, intended operation, or reported product-write observations, Core rejects `record_run` if authorization is missing before any Run is committed. A rejected pre-commit request has no Run ID, emits no stable `record_run` events, registers no artifacts, and enqueues no projection changes. If observed product writes already occurred but authorization is missing or exceeded, Core may instead record an interrupted, blocked, or violation Run for recovery and audit. Core assigns a Run ID only for such deliberately committed recovery/audit Runs; it must not fabricate one for rejected pre-commit cases. That Run must not satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness, and Core marks affected scope, evidence, approval, verification, and projection state stale or blocked. The corresponding Write Authorization, if any, remains unconsumed and may be marked stale, revoked, or expired according to the violation and compatibility basis. When the observed behavior asserts a general scope violation, Core may also append `scope_violation_detected`.
 

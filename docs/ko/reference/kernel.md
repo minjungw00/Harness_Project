@@ -1,6 +1,6 @@
 # 커널 참조
 
-## 이 문서가 도와주는 일
+## 이 문서로 할 수 있는 일
 
 이 문서는 Harness 상태, gate, 쓰기 권한, 근거, 검증, QA, 수용, 남은 위험, 닫기 동작의 정확한 커널 규칙을 확인하기 위한 참조 문서입니다.
 
@@ -14,6 +14,14 @@
 - Task가 쓰기, 진행, 사용자 판단 대기, 닫기 중 어디로 갈 수 있는지 판단해야 할 때.
 - Task, Change Unit, Decision Packet, Approval, Write Authorization, Run, 근거, Eval, Manual QA, Residual Risk, Artifact 기록의 관계를 확인할 때.
 - conformance fixture를 작성하거나 상태, artifact, projection, 사용자에게 보이는 상태 사이의 불일치를 진단할 때.
+
+## 읽기 전에
+
+정확한 상태 규칙보다 예시를 먼저 보고 싶다면 [핵심 개념](../learn/concepts.md)이나 [하나의 작업으로 보는 Harness](../learn/harness-in-one-task.md)를 먼저 읽습니다. Public MCP shape는 [MCP API와 스키마](mcp-api-and-schemas.md)에, connector capability 언어는 [Agent 통합 참조](agent-integration.md)에 따로 있습니다.
+
+## 핵심 생각
+
+Kernel은 제품 파일 쓰기와 닫기 판단이 명시적인 상태에 의존하게 만듭니다. Active Task, scoped Change Unit, Autonomy Boundary, write authority, decision, approval, evidence, verification, QA, acceptance, residual risk, surface capability가 그 상태입니다. 더 가벼운 mode는 사용자에게 보이는 절차를 줄일 수 있지만, 권한 경계를 줄이지 않습니다.
 
 ## 계약 위치 지도
 
@@ -96,11 +104,13 @@
 
 ## Direct fast path
 
-Direct에서도 제품 파일 쓰기 전에는 active scoped Change Unit이 필요합니다. 작고 명확한 request에서는 Change Unit이 minimal할 수 있고, 명확한 user request에서 파생될 수 있습니다. 단, `prepare_write`와 `record_run` compatibility check가 가능하도록 의도한 작업과 범위가 정해진 쓰기 대상은 충분히 명확히 기록해야 합니다.
+Direct는 줄어든 interaction path이지 줄어든 authority path가 아닙니다. Direct에서도 제품 파일 쓰기 전에는 active scoped Change Unit이 필요하고, 각 정확한 write attempt 전에는 compatible `prepare_write` decision이 필요합니다. 작고 명확한 request에서는 Change Unit이 minimal할 수 있고, 명확한 user request에서 파생될 수 있습니다. 단, `prepare_write`와 `record_run` compatibility check가 가능하도록 의도한 작업과 범위가 정해진 쓰기 대상은 충분히 명확히 기록해야 합니다.
 
-차단하는 사용자 소유 판단이 감지되지 않는 한 Decision Packet은 생성하지 않습니다. 근거는 적용되는 evidence profile에 따라 가벼울 수 있습니다. 예를 들어 changed path list, patch summary, diff artifact, 관련 command result, self-check summary가 될 수 있습니다.
+차단하는 사용자 소유 판단이 감지되지 않는 한 Decision Packet은 생성하지 않습니다. 근거는 적용되는 evidence profile에 따라 가벼울 수 있습니다. 예를 들어 changed path list, patch summary, diff artifact, 관련 command result, self-check summary가 될 수 있습니다. Learn과 Use 문서의 최소 direct Change Unit 예시는 기존 Change Unit semantics를 설명하는 예시이며, 새 schema나 field set을 정의하지 않습니다.
 
 Manual QA, detached verification, 남은 위험 수용은 policy, changed 접점, user request, 감지된 risk가 요구하지 않는 한 direct work에 required가 아닙니다. Scope, risk, affected interface, evidence expectations가 direct 가정을 넘어서 커지면 같은 Task가 `work`로 상향됩니다.
+
+대상이 더 이상 분명하지 않거나, 관찰되거나 의도된 changed paths가 active Change Unit 밖이거나, 여러 제품 영역이 영향을 받거나, public API 또는 module contract가 바뀔 수 있거나, 민감하거나 위험한 동작이 나타나거나, independent verification 또는 Manual QA가 close-relevant해지거나, 사용자 소유 제품 판단 또는 중요한 기술 판단이 필요하면 direct는 `work`로 상향되어야 합니다.
 
 ## Entity model
 
@@ -236,13 +246,13 @@ Task는 사용자 가치 단위입니다. current mode, lifecycle phase, result,
 
 ### Change Unit
 
-Change Unit은 제품 파일 쓰기를 위한 scoped implementation unit입니다. purpose, non-goals, slice type, intended end-to-end path, Autonomy Boundary, allowed paths, allowed tools, validator 프로필, sensitive categories, approval needs, evidence expectations, QA expectations, dependencies, merge risk, completion conditions, evaluator focus를 기록합니다.
+Change Unit은 제품 파일 쓰기를 위한 scoped implementation unit입니다. 어떤 작업 표면이 바뀔 수 있는지 답합니다. purpose, non-goals, slice type, intended end-to-end path, Autonomy Boundary, allowed paths, allowed tools, validator 프로필, sensitive categories, approval needs, evidence expectations, QA expectations, dependencies, merge risk, completion conditions, evaluator focus를 기록합니다.
 
 모든 제품 파일 쓰기에는 의도한 쓰기를 포함하는 active Change Unit이 필요합니다. Task는 하나 이상의 Change Unit을 가질 수 있지만, current write의 scope가 되는 것은 active Change Unit뿐입니다. Core는 `prepare_write`를 통해서만 특정 제품 파일 쓰기 attempt를 authorize하며, check가 pass하면 Write Authorization을 만들거나 같은 request의 idempotent replay에 대해 이미 commit된 response를 반환합니다.
 
 ### Autonomy Boundary
 
-Autonomy Boundary는 Change Unit semantics의 일부입니다. Agent가 추가 user decision 없이 진행할 수 있는 사용자 소유 판단 경계를 기록합니다. 쉽게 말해, 이 Change Unit 안에서 agent가 무엇을 혼자 판단해도 되고 무엇은 사용자 판단을 위해 멈춰야 하는지에 답합니다. Autonomy Boundary에는 합의된 목표와 scope 안에서 작업을 수행하는 방법에 대한 명시적 latitude가 들어갈 수 있습니다. 예를 들어 local 구현 선택, 보수적인 설계 세부사항, codebase stewardship trade-off, 낮은 위험의 실행 선택이 여기에 해당할 수 있습니다. 이를 목표 변경, scope expansion, 사용자 소유 제품 방향이나 중요한 기술 방향 선택, 사용자 대신 남은 위험을 수용할 권한으로 읽으면 안 됩니다.
+Autonomy Boundary는 Change Unit semantics의 일부입니다. Change Unit 안에서 agent가 추가 user decision 없이 행사할 수 있는 판단을 답합니다. 쉽게 말해, Change Unit scope는 어디에서 무엇이 바뀔 수 있는지 말하고, Autonomy Boundary는 그 scope 안에서 어떤 선택을 할 수 있는지 말합니다. Autonomy Boundary에는 합의된 목표와 scope 안에서 작업을 수행하는 방법에 대한 명시적 latitude가 들어갈 수 있습니다. 예를 들어 local 구현 선택, 보수적인 설계 세부사항, codebase stewardship trade-off, 낮은 위험의 실행 선택이 여기에 해당할 수 있습니다. 이를 목표 변경, scope expansion, 사용자 소유 제품 방향이나 중요한 기술 방향 선택, 사용자 대신 남은 위험을 수용할 권한으로 읽으면 안 됩니다.
 
 기록된 latitude가 포괄한다면 agent는 local helper의 형태, test 배치, 비공개 이름, 합의된 결과 안에 머무르는 보수적인 구현 방식 같은 구현 세부사항을 선택할 수 있습니다. Public API나 module contract 변경, security 또는 privacy trade-off, UX나 제품 동작, 중요한 dependency 또는 migration 방향, scope expansion, 남은 위험 수용은 사용자 판단을 위해 멈춰야 합니다.
 
@@ -373,6 +383,7 @@ Kernel은 design support records의 entity meaning도 담당합니다.
 - Generated Markdown은 기준 상태가 아닙니다. Projection edits는 상태에 영향을 주기 전에 reconcile을 거칩니다.
 - Raw artifacts는 근거 파일입니다. 그것을 링크하는 Markdown 보고서는 읽기용 projections입니다.
 - Autonomy Boundary는 판단 latitude만 기록합니다. Scope grant가 아니며 paths, tools, commands, network targets, secrets, sensitive categories를 허가하지 않습니다.
+- 사용자, caller, release/support 소비자, 문서 독자, 다른 system이 의존할 내용을 바꾸는 public commitment는 product direction, 중요한 technical direction, compatibility, risk, acceptance에 영향을 줄 때 사용자 소유 판단입니다. Approval은 그 Decision Packet 경로를 대신할 수 없습니다.
 - Approval은 사용자 소유의 제품 판단 또는 중요한 기술 판단, correctness proof, QA, 검증, 수용, 근거, Write Authorization을 대신하지 않습니다.
 - Decision Packet 해소는 linked Approval record를 가진 approval 형태의 Decision Packet인 경우를 제외하면 sensitive approval이 아닙니다.
 - Write Authorization은 재사용 가능한 scope가 아닙니다. Core가 현재 compatibility basis에서 특정 write attempt 하나를 허용했다는 기록이며, `record_run`은 이를 하나의 호환되는 implementation 또는 direct Run에만 사용할 수 있습니다.
@@ -844,6 +855,8 @@ External side effect는 실행 전에는 설명하고 실행 뒤에는 기록하
 `runs.write_authorization_id`는 Run이 호환되는 Write Authorization을 성공적으로 사용한 것으로 기록될 때만 populated됩니다. Invalid, `stale`, missing, consumed, scope-exceeded authorization을 사용하려 한 violation 또는 audit Run은 `runs.write_authorization_id`를 consumed authorization으로 populate하면 안 됩니다. Audit에 유용한 attempted authorization ref는 validator findings, run violation payload, 또는 `task_events.payload_json`에 기록해야 합니다.
 
 Core는 observed changed paths를 consumed Write Authorization 및 active Change Unit 양쪽과 비교해 verify해야 합니다. 또한 command results, artifacts, 접점 telemetry, declared run data에서 observations가 available한 경우 recorded tools, commands, network targets, secret access, artifact inputs와 refs, Run summary도 authorization 및 observed behavior와 비교해 verify합니다. Summary는 audit와 evidence context일 뿐이며, observed changed paths, artifacts, authorization compatibility가 뒷받침하지 않는 authorized changes를 주장할 수 없습니다.
+
+관찰된 범위 밖 changed paths는 Run summary에 포함한다고 해서 정상화되지 않습니다. Case에 따라 compatible scope update, extra change revert 또는 isolation, 새 compatible Write Authorization과 Run, committed violation/audit Run을 통해 recovery 또는 repair해야 합니다. 그런 관찰은 관련 owner record로 repair되기 전까지 affected scope의 evidence sufficiency, detached verification, QA, acceptance, close readiness를 충족하지 않습니다.
 
 Run kind, active Change Unit, intended operation, 또는 보고된 product-write observations 때문에 Write Authorization이 required인 경우 authorization이 missing이면 Core는 어떤 Run도 commit하기 전에 `record_run`을 거부합니다. 거부된 pre-commit request에는 Run ID가 없고, stable `record_run` events를 내보내지 않으며, artifacts를 등록하지 않고, projection changes를 대기열에 넣지 않습니다. Observed product writes가 이미 발생했지만 authorization이 missing이거나 exceeded된 경우 Core는 대신 recovery 및 audit을 위해 interrupted, blocked, violation Run을 record할 수 있습니다. Core는 이렇게 deliberate하게 committed된 recovery/audit Runs에만 Run ID를 부여하며, rejected pre-commit cases에는 Run ID를 fabricate하면 안 됩니다. 그 Run은 evidence sufficiency, detached verification, QA, 수용, close readiness를 충족하면 안 되며, Core는 affected scope, 근거, approval, 검증, projection 상태를 `stale` 또는 blocked로 표시합니다. Corresponding Write Authorization이 있으면 unconsumed로 남고, violation과 compatibility basis에 따라 `stale`, revoked, expired로 표시될 수 있습니다. Observed behavior가 general scope violation을 검증하면 Core는 `scope_violation_detected`도 추가할 수 있습니다.
 
