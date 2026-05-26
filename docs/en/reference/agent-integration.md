@@ -305,13 +305,13 @@ Keep these refs-first and pull the body only when needed:
 - older PRDs, old designs, closed issues, stale docs, and moved-path notes
 - module maps, interface contracts, domain language, coding standards, and TDD guidance
 
-Refs-first means the connector should push stable ids, paths, hashes, summaries, outcomes, and freshness, not paste large bodies into the default prompt. Embed excerpts only when the next safe action requires inspecting the content, and keep the excerpt tied to its source ref. Retrieved or indexed context follows the same rule: it can tell the agent what to inspect next, but it must not change gate, authority, evidence, verification, QA, acceptance, assurance, projection freshness, implementation readiness, or close status by itself.
+Refs-first means the connector should push stable ids, paths, hashes, summaries, outcomes, and freshness, not paste large bodies into the default prompt. Embed excerpts only when the next safe action requires inspecting the content, and keep the excerpt tied to its source ref. Retrieved or indexed context follows the same rule: it can tell the agent what to inspect next, but it remains pull-only context until an owner path records an actual state change.
 
 The compact status card renders the envelope for "where are we and what happens next?" Judgment-context is separate. Use judgment-context only when user judgment is needed, and include the decision question, options, recommendation, uncertainty, deferral effect, and relevant refs without turning the full evidence or artifact body into always-on context.
 
 Evaluators should receive a tighter verification bundle: acceptance criteria, changed files, approval scope, relevant Decision Packets, residual risk summary, Autonomy Boundary, deferred decisions, codebase stewardship refs, evidence manifest refs, required TDD trace refs, Manual QA requirement, artifact refs, freshness state, and forbidden patterns.
 
-A later Context Index may help retrieve relevant projections, artifact refs, repo files, docs, or notes. Until owner docs promote it, it is a read-only context provider, not a connector authority path. Even after promotion, retrieved context cannot replace existing authority paths unless those owner docs explicitly change; it cannot authorize writes or create Write Authorization, resolve Decision Packets, grant Approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA/verification or any gate/close-relevant requirement, record result acceptance, record residual-risk acceptance, upgrade assurance, enqueue or refresh projections or change projection freshness, declare implementation readiness, or close Tasks.
+A later Context Index may help retrieve relevant projections, artifact refs, repo files, docs, or notes. Until owner docs promote it, it is a read-only context provider, not a connector authority path. The full Context Index and retrieved-context non-authority boundary is owned by [Roadmap: Context Index](../roadmap.md#context-index).
 
 ## Fallback Semantics
 

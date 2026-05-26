@@ -115,7 +115,7 @@ State/input freshness: {state_baseline_evidence_freshness_summary|current or non
 
 이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `status`, `next`, 중요한 resume flow에서 보여주는 현재 위치 Journey Card output도 읽기/표시용 접점입니다.
 
-Journey Card의 Close context는 compact status/resume 표시입니다. `TASK`는 진행 중이거나 최근 닫힌 `work` Task의 continuity Close Summary를 담당하고, `DIRECT-RESULT`는 direct work의 가벼운 close impact summary를 담당합니다. 이 표시들은 close state, 수락, QA, verification, 남은 위험을 받아들이는 판단, Write Authorization을 만들지 않습니다.
+Journey Card의 Close context는 compact status/resume 표시입니다. `TASK`는 진행 중이거나 최근 닫힌 `work` Task의 continuity Close Summary를 담당하고, `DIRECT-RESULT`는 direct work의 가벼운 close impact summary를 담당합니다. 이 표시들은 [projection/report 경계](../document-projection.md#projection-principles)를 따르며, close와 gate effect는 여전히 owner record에서 옵니다.
 
 Blocker 줄은 API와 state record를 사용자에게 보이는 status로 바꿔 보여줍니다. 가장 먼저 해소할 막힘은 next action이 먼저 해소해야 하는 blocker여야 하며, 소유자 라벨은 다음 움직임이 사용자 소유인지, 에이전트가 해소 가능한지, 접점/시스템 소유인지 분명히 해야 합니다. 가장 먼저 해소할 막힘이 없으면 소유자는 `none`으로 렌더링하거나 생략할 수 있습니다. 추가 막힘은 후속 경로에 영향을 줄 때만 계속 보여줍니다. Raw `ErrorCode` 값만으로 설명을 끝내면 안 됩니다.
 

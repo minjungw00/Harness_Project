@@ -81,7 +81,7 @@ Latest refs: report={latest_report_ref|none}; evidence={evidence_manifest_ref|no
 
 ## Notes
 
-This template is a rendered card shape, not canonical state. Gate values remain owned by canonical state, guarantee level is display and risk context, and projection freshness is readable-view freshness only; it is not Task result, state freshness, evidence freshness, approval, verification, acceptance, or write authority.
+This template is a rendered card shape, not canonical state. Gate values remain owned by canonical state, guarantee level is display and risk context, and projection freshness is readable-view freshness only. Use the [projection/report boundary](../document-projection.md#projection-principles) for the exact non-authority rule.
 
 Do not collapse display problems into one line. A stale projection means the readable card may lag. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient. MCP or capability unavailable means the surface cannot reach or provide the required Harness/Core capability.
 

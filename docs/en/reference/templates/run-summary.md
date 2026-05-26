@@ -103,7 +103,7 @@ npm test -- --runInBand
 - manual_qa_required:
 
 ## Review Stages
-- note: run-local review display only; Role Lens/playbook labels do not create gates; same-session review cannot create `assurance_level=detached_verified`. Route findings to existing refs or blockers.
+- note: run-local review display only. The review-stage boundary is owned by [Design Quality Policies](../design-quality-policies.md#two-stage-review-display); route findings to existing refs or blockers.
 
 ### Spec Compliance Review
 - acceptance criteria coverage:
@@ -161,6 +161,6 @@ npm test -- --runInBand
 
 ## Notes
 
-Raw logs and diffs stay as artifacts; the report links to them. Same-session review content in a `RUN-SUMMARY` is self-check or stewardship signal only and cannot be rendered as detached verification. Findings route to existing Decision Packet, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit update, or close-blocker refs; the report does not create those records by itself.
+Raw logs and diffs stay as artifacts; the report links to them. Same-session review content in a `RUN-SUMMARY` is self-check or stewardship signal only and follows the [review-stage boundary](../design-quality-policies.md#two-stage-review-display). Findings route to existing Decision Packet, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit update, or close-blocker refs; the report does not create those records by itself.
 
 Evidence refs in this report must preserve `redaction_state`. `secret_omitted` refs may support only visible nonsecret evidence, and `blocked` refs are committed metadata-only notices for unavailable input, not raw logs, diffs, screenshots, or bundles.

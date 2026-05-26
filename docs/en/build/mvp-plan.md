@@ -123,7 +123,7 @@ Focus on:
 - `harness.status`, `harness.intake`, and `harness.next`
 - read-only recommended playbooks and Role Lens recommendations that do not create authority
 
-Do not let display guidance satisfy gates, authorize writes, create evidence, waive QA or verification, accept risk, accept results, close Tasks, or upgrade assurance.
+Display guidance remains read-only routing and status context. Exact Role Lens/playbook boundaries live in [Agent Integration](../reference/agent-integration.md#role-lens-behavior), and projection/report boundaries live in [Document Projection Reference](../reference/document-projection.md#projection-principles).
 
 ### MVP-2: Shaping Kernel, Write Gate, Approval, Baseline, Artifacts
 

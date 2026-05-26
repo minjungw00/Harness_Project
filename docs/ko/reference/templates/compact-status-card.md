@@ -81,7 +81,7 @@ MCP/capability: {mcp_or_capability_summary|available}
 
 ## 메모
 
-이 template은 렌더링 결과인 카드 형태일 뿐 기준 상태가 아닙니다. Gate value는 기준 상태가 계속 담당하고, guarantee level은 표시와 risk context입니다. Projection freshness는 읽기용 보기의 최신성만 뜻하며 Task result, state freshness, evidence freshness, Approval, verification, 수락, 쓰기 권한이 아닙니다.
+이 template은 렌더링 결과인 카드 형태일 뿐 기준 상태가 아닙니다. Gate value는 기준 상태가 계속 담당하고, guarantee level은 표시와 risk context입니다. Projection freshness는 읽기용 보기의 최신성만 뜻합니다. 정확한 권한 없음 규칙은 [projection/report 경계](../document-projection.md#projection-principles)를 사용합니다.
 
 표시 문제를 한 줄로 뭉개지 않습니다. Stale projection은 읽기용 card가 뒤처졌을 수 있다는 뜻입니다. Stale state, baseline, evidence는 실제 입력이 이동했거나 부족해졌다는 뜻입니다. MCP 또는 capability unavailable은 접점이 필요한 Harness/Core capability에 닿지 못하거나 제공하지 못한다는 뜻입니다.
 

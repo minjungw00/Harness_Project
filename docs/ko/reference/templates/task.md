@@ -395,9 +395,9 @@ Change Unit block sub-template:
 
 `TASK`의 Stewardship Impact는 owner 기록, validator 결과, 참조에서 파생되는 `StewardshipImpactSummary` 표시입니다. Domain Language, Module Map, Interface Contract, Feedback Loop, TDD Trace, residual risk, Decision Packet owner 기록을 대체하지 않습니다.
 
-`TASK`의 Implementation Micro-Plan은 현재 Task와 Change Unit 상태에서 생성되거나 그 상태와 정렬된 가벼운 실행 보조 정보입니다. Product write를 허가하거나, scope를 넓히거나, Approval을 충족하거나, 근거를 만들거나, edit만으로 상태를 변경하거나, `prepare_write`를 대체하지 않습니다.
+`TASK`의 Implementation Micro-Plan은 현재 Task와 Change Unit 상태에서 생성되거나 그 상태와 정렬된 가벼운 실행 보조 정보입니다. [Document Projection Reference](../document-projection.md#projection-principles)의 projection/report 경계 안에 머물며, `prepare_write`나 owner state change를 대체하지 않습니다.
 
-`TASK`의 Review Stages는 Role Lens, playbook, two-stage review guidance를 위한 관리되는 표시 섹션입니다. Gate를 충족하거나, write를 허가하거나, 남은 위험을 받아들이거나, Task를 닫거나, owner record를 만들거나, `assurance_level=detached_verified`를 만들 수 없습니다. 발견 사항은 기존 Decision Packet, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit 업데이트, close-blocker 경로로 연결해야 합니다.
+`TASK`의 Review Stages는 Role Lens, playbook, two-stage review guidance를 위한 관리되는 표시 섹션입니다. 정확한 권한 없음 규칙은 [Design Quality Policies](../design-quality-policies.md#two-stage-review-display)와 [Agent Integration](../agent-integration.md#role-lens-동작)이 담당하며, 발견 사항은 기존 owner path로 연결해야 합니다.
 
 생성된 summary는 사용자가 읽기 쉬운 평범한 말을 먼저 쓰고, 정확한 Harness term은 유용한 label이나 ref로 붙입니다. Projection이 명령어 언어처럼 보이거나 표시 문구만으로 상태가 만들어진 것처럼 암시하면 안 됩니다.
 
@@ -405,6 +405,6 @@ Change Unit block sub-template:
 
 `TASK`의 Close Summary는 진행 중이거나 최근 닫힌 `work` Task를 위한 continuity 표시 요약입니다. Gate 상태나 남은 위험을 숨기면 안 됩니다. 닫기가 성공했거나, 막혔거나, 취소됐거나, 남은 위험을 받아들이고 닫혔을 때 changed scope, evidence, verification, Manual QA, residual risk, 결과 수락, close reason, follow-up을 해당되는 만큼 보여주고 owner record로 돌아가는 ref를 포함해야 합니다.
 
-Direct work는 `DIRECT-RESULT`에서 가벼운 close impact summary를 보여주고, Journey Card close context는 compact status/resume 표시입니다. `TASK` Close Summary는 continuity 표시일 뿐이며 close state, 수락, QA, verification, 남은 위험을 받아들이는 판단, Write Authorization을 만들지 않습니다.
+Direct work는 `DIRECT-RESULT`에서 가벼운 close impact summary를 보여주고, Journey Card close context는 compact status/resume 표시입니다. `TASK` Close Summary는 [projection/report 경계](../document-projection.md#projection-principles) 안의 continuity 표시이며, close와 gate effect는 여전히 owner record에서 옵니다.
 
 `TASK`, Journey, evidence, report section에 표시되는 artifact ref는 `redaction_state`를 보존해야 합니다. `secret_omitted` ref는 보이는 nonsecret evidence만 뒷받침할 수 있고, `blocked` ref는 원본 content가 아니라 committed metadata-only notice와 사용할 수 없는 입력을 보여줍니다.

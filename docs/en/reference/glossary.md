@@ -122,7 +122,7 @@ The policy of keeping current state, evidence, and relevant references in contex
 
 ### Context Index
 
-A later read-only context provider that may surface relevant projections, artifact refs, repo files, docs, or notes. Until promoted through owner docs, it is non-authoritative retrieval only; even after promotion, it cannot replace existing authority paths unless those owner docs explicitly change. Indexed or retrieved context may inform work, compact status, status interpretation, source excerpts, and pull refs; it cannot authorize writes or create Write Authorization, resolve Decision Packets, grant Approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA/verification or any other gate/close-relevant requirement, record result acceptance, record residual-risk acceptance, upgrade assurance, enqueue or refresh projections or change projection freshness, declare implementation readiness, or close Tasks.
+A later read-only context provider that may surface relevant projections, artifact refs, repo files, docs, or notes. Until promoted through owner docs, it is non-authoritative retrieval only; even after promotion, it cannot replace existing authority paths unless those owner docs explicitly change. The exact future-feature boundary is owned by [Roadmap: Context Index](../roadmap.md#context-index), with connector handling in [Agent Integration](agent-integration.md#context-pushpull-principles).
 
 ### Decision Gate
 
@@ -158,7 +158,7 @@ A work mode for small, low-risk changes with obvious scope and result. Direct pr
 
 ### Docs-Maintenance Conformance
 
-A read-only documentation maintenance check profile that detects drift in bilingual parity, links, owner boundaries, stable catalogs, glossary terms, source-of-truth phrasing, TODO usage, and non-owner duplicate contracts. Its rule bodies are owned by the [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks), and operator reporting and entrypoint expectations are owned by [Operations And Conformance Reference](operations-and-conformance.md#docs-maintenance-profile). It is not Core fixture conformance, a runtime validator, projection refresh, QA, acceptance, evidence, residual-risk acceptance, or a canonical state transition. If exposed through `harness conformance run` or another operator command, it is a separately selected docs-only profile, conventionally `docs-maintenance`, whose console or ephemeral result does not affect runtime fixture pass/fail, implementation readiness, close readiness, or Task state.
+A read-only documentation maintenance check profile that detects drift in bilingual parity, links, owner boundaries, stable catalogs, glossary terms, source-of-truth phrasing, TODO usage, and non-owner duplicate contracts. Its rule bodies are owned by the [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks), and operator reporting and entrypoint expectations are owned by [Operations And Conformance Reference](operations-and-conformance.md#docs-maintenance-profile). It is a docs-only profile, not runtime conformance or task state authority.
 
 ### Domain Language
 
@@ -280,7 +280,7 @@ A SQLite `TEXT` column whose stored value is JSON. The `TEXT` type is MVP storag
 
 ### Local Derived Metrics
 
-Later diagnostic-only metrics derived from local records such as `state.sqlite.task_events`, runs, validator results, projection jobs, and reconcile items. Until promoted through owner docs, metric readouts may report rates, counts, durations, or guard-trigger summaries, but they must not mutate state, satisfy gates, authorize writes, grant approval, create evidence, enqueue or refresh projections, change projection freshness, change close readiness or implementation readiness, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, or close Tasks.
+Later diagnostic-only metrics derived from local records such as `state.sqlite.task_events`, runs, validator results, projection jobs, and reconcile items. Until promoted through owner docs, metric readouts may report rates, counts, durations, or guard-trigger summaries only as read-only diagnostics. The exact non-authority boundary is owned by [Roadmap: Local Derived Metrics](../roadmap.md#local-derived-metrics).
 
 ### Manual QA
 
@@ -380,11 +380,11 @@ Non-authoritative status/next display guidance computed from current state and p
 
 ### Release Handoff
 
-An optional report/export profile that summarizes release readiness for external PR, review, deployment, rollback, and monitoring processes. It includes close readiness, blockers, evidence refs, verification refs, Manual QA refs, residual-risk refs, changed files, projection freshness, redaction notes, and suggested checklist items. It is not deployment authority, merge authority, approval, evidence, verification, QA, acceptance, residual-risk acceptance, assurance upgrade, production monitoring, or Task close.
+An optional report/export profile that summarizes release readiness for external PR, review, deployment, rollback, and monitoring processes. It includes close readiness, blockers, evidence refs, verification refs, Manual QA refs, residual-risk refs, changed files, projection freshness, redaction notes, and suggested checklist items. The exact report/export authority boundary is owned by [Operations And Conformance](operations-and-conformance.md#release-handoff-export-profile).
 
 ### Role Lens
 
-A non-authoritative skill or playbook surface that lets a user ask for a product, engineering, design, security, QA, or release-handoff review posture. Role Lens output reuses existing routes such as `RecommendedPlaybook`, `DecisionPacketCandidate`, validator/check routes, evidence, Eval or verification, Manual QA, Approval, residual-risk, Change Unit update, and release handoff routes. It is not a schema, canonical record, `ProjectionKind` value, gate, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization, or assurance upgrade.
+A non-authoritative skill or playbook surface that lets a user ask for a product, engineering, design, security, QA, or release-handoff review posture. Role Lens output reuses existing routes such as `RecommendedPlaybook`, `DecisionPacketCandidate`, validator/check routes, evidence, Eval or verification, Manual QA, Approval, residual-risk, Change Unit update, and release handoff routes. The exact non-authority boundary is owned by [Agent Integration](agent-integration.md#role-lens-behavior).
 
 ### Report Projection
 
@@ -394,7 +394,7 @@ The named report projection kinds are projections generated from state records a
 
 ### Review Stages
 
-A managed display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages can route findings to validator results, evidence gaps, Decision Packet candidates, Eval or verification needs, Manual QA needs, Approval needs, residual-risk candidates, Change Unit update recommendations, or close blockers. They are not schemas, canonical records, new `ProjectionKind` values, gates, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization, or assurance upgrade. Same-session Review Stages do not create `assurance_level=detached_verified`.
+A managed display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages can route findings to validator results, evidence gaps, Decision Packet candidates, Eval or verification needs, Manual QA needs, Approval needs, residual-risk candidates, Change Unit update recommendations, or close blockers. Their exact display-only boundary is owned by [Design Quality Policies](design-quality-policies.md#two-stage-review-display); same-session Review Stages do not create `assurance_level=detached_verified`.
 
 ### `request_hash`
 

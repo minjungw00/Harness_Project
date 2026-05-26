@@ -203,7 +203,7 @@ Ask one blocking question at a time when possible.
 
 ## Review lenses and displays
 
-When the user asks for a product, engineering, design, security, QA, or release-handoff perspective, treat `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, and `release-handoff` as Role Lens or recommended playbook displays. The label chooses a review posture; it is not a new mode, gate, Approval, Write Authorization, evidence, verification, Manual QA, acceptance, residual-risk acceptance, or close.
+When the user asks for a product, engineering, design, security, QA, or release-handoff perspective, treat `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, and `release-handoff` as Role Lens or recommended playbook displays. The label chooses a review posture, not a new mode, Approval, Write Authorization, gate, or close path; the exact Role Lens boundary is owned by [Agent Integration](../reference/agent-integration.md#role-lens-behavior).
 
 For review output, keep the two questions separate:
 

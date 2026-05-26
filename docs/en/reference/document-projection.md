@@ -145,6 +145,8 @@ Direct edits inside managed blocks are drift, not accepted state. Direct edits t
 12. User-facing cards may use friendly labels, but canonical gate names remain the kernel fields.
 13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Change Unit DAG, Residual Risk, and Stewardship Impact displays are non-canonical projections from owner records and artifact refs.
 
+Projection and report surfaces may display current records, refs, and advisory next actions. They must not authorize writes, satisfy gates, create evidence, perform or record verification, record Manual QA, grant Approval, waive QA or verification, record result acceptance, record residual-risk acceptance, refresh projections by assertion alone, declare implementation readiness, close Tasks, or mutate owner records. Any such effect must come from the owner Core/MCP path named in the matrix below.
+
 ## Document authority matrix
 
 | Fact or surface | Canonical source | Projection or display surface | Update path |

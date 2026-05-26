@@ -203,7 +203,7 @@ Autonomy Boundary 안에서는 에이전트가 기존 helper를 재사용할지,
 
 ## Review Lens와 display
 
-사용자가 product, engineering, design, security, QA, release-handoff 관점으로 봐 달라고 하면 `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, `release-handoff`를 Role Lens 또는 recommended playbook display로 다룹니다. 라벨은 검토 관점을 고를 뿐이며 새 mode, gate, Approval, Write Authorization, evidence, verification, Manual QA, 결과 수락, 남은 위험을 받아들이는 판단, Task 닫기가 아닙니다.
+사용자가 product, engineering, design, security, QA, release-handoff 관점으로 봐 달라고 하면 `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, `release-handoff`를 Role Lens 또는 recommended playbook display로 다룹니다. 라벨은 검토 관점을 고를 뿐이며 새 mode, Approval, Write Authorization, gate, close path가 아닙니다. 정확한 Role Lens 경계는 [Agent Integration](../reference/agent-integration.md#role-lens-동작)이 담당합니다.
 
 Review output에서는 두 질문을 분리합니다.
 

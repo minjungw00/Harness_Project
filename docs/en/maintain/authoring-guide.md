@@ -112,6 +112,18 @@ When another document needs the same idea, write a short local summary and link 
 
 Repeated explanatory examples are allowed when they serve different readers, but repeated normative contract language is a drift risk.
 
+For the non-authority boundaries that are easy to repeat, use these owners:
+
+| Boundary | Owner for exact wording |
+|---|---|
+| Context Index and retrieved/indexed context | [Roadmap: Context Index](../roadmap.md#context-index) for future feature authority; [Agent Integration: Context Push/Pull Principles](../reference/agent-integration.md#context-pushpull-principles) for connector context handling |
+| Local Derived Metrics | [Roadmap: Local Derived Metrics](../roadmap.md#local-derived-metrics) |
+| Role Lens | [Agent Integration: Role Lens Behavior](../reference/agent-integration.md#role-lens-behavior) |
+| Review Stages | [Design Quality Policies: Two-stage Review Display](../reference/design-quality-policies.md#two-stage-review-display) |
+| Release Handoff and export | [Operations And Conformance: Release Handoff Export Profile](../reference/operations-and-conformance.md#release-handoff-export-profile); rendered shape in [EXPORT Template](../reference/templates/export.md) |
+| Docs-maintenance | [Authoring Guide: Docs-maintenance checks](#docs-maintenance-checks) for rule bodies; [Operations And Conformance: Docs-maintenance profile](../reference/operations-and-conformance.md#docs-maintenance-profile) for operator reporting |
+| Projection and report surfaces | [Document Projection Reference](../reference/document-projection.md); rendered shapes in [Template Reference](../reference/templates/README.md) |
+
 ## Owner-link summary pattern
 
 When you find duplicated normative language outside its owner, do not polish the duplicate in place. First decide which document owns the exact contract. Update that owner if the contract needs to change, then replace non-owner copies with:

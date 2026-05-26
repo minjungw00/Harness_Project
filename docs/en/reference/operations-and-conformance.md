@@ -29,7 +29,7 @@ Rendered prose, status text, Journey Card text, or agent summaries can help a re
 
 This reference does not claim runtime implementation readiness. It defines required semantics for future implementation and conformance work.
 
-It also does not own public MCP schemas, SQLite DDL, projection template bodies, Learn/Use workflow, or long-term analytics. Docs-maintenance is a separate read-only documentation profile whose rules are owned by the [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks); it is not runtime fixture conformance, implementation readiness, evidence, QA, acceptance, close readiness, or a canonical state transition, and it does not count toward runtime fixture pass/fail.
+It also does not own public MCP schemas, SQLite DDL, projection template bodies, Learn/Use workflow, or long-term analytics. Docs-maintenance rule bodies are owned by the [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks); this reference owns only the operator profile boundary below.
 
 ## Operator entrypoints
 
@@ -114,7 +114,7 @@ A docs-maintenance smoke profile may be run by an operator or reviewed manually 
 
 The [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks) owns the rule bodies, pass/warn/fail interpretation, and checklist. This document owns only the operator-maintenance expectation for reporting and entrypoint exposure.
 
-Minimal operator wiring contract: when exposed through `harness conformance run` or another operator entrypoint, docs-maintenance is an explicitly selected docs-only profile, conventionally named `docs-maintenance`. Runtime conformance runs must not include it unless an operator selects that profile. Even when selected, report it separately from runtime Core fixture suites and do not count it toward runtime fixture pass/fail or implementation readiness. Its `PASS`, `WARN`, and `FAIL` labels are docs-maintenance report labels, not Core fixture results. It must not affect Task state, MVP runtime validator IDs, projection freshness, QA, acceptance, close readiness, or any canonical state transition.
+Minimal operator wiring contract: when exposed through `harness conformance run` or another operator entrypoint, docs-maintenance is an explicitly selected docs-only profile, conventionally named `docs-maintenance`. Runtime conformance runs must not include it unless an operator selects that profile. Even when selected, report it separately from runtime Core fixture suites and do not count it toward runtime fixture pass/fail or implementation readiness. Its `PASS`, `WARN`, and `FAIL` labels are docs-maintenance report labels, not Core fixture results, and the read-only runtime-effect boundary above still applies.
 
 Console output or an ephemeral report from the docs-maintenance profile is the only output defined here. Generated operational report files require a future explicit implementation contract; this documentation batch does not define stored artifacts, projection jobs, DDL, or state records for this check.
 
@@ -545,7 +545,7 @@ Boundary:
 - Release Handoff does not close a Task, deploy, merge, approve, accept residual risk, accept the result, waive QA or verification, upgrade assurance, or satisfy gates by itself.
 - Suggested checklist items are advisory. If they reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, or approval needs, those needs route to the existing Decision Packet, evidence, Manual QA, Eval, residual-risk, approval, or close paths.
 
-Diagnostic and reporting boundary: future [Local Derived Metrics](../roadmap.md#local-derived-metrics) may appear in reports or operator diagnostics, but the roadmap keeps them as later, read-only diagnostic displays until owner docs promote them. A metric readout must not mutate state, satisfy gates, authorize writes, grant approval, create evidence, enqueue or refresh projections, change projection freshness, change close readiness or implementation readiness, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, or close a Task.
+Diagnostic and reporting boundary: future [Local Derived Metrics](../roadmap.md#local-derived-metrics) may appear in reports or operator diagnostics only as read-only derived displays until owner docs promote them. They do not create operational authority; use the roadmap section for the full metrics boundary.
 
 Release Handoff catalog entry:
 

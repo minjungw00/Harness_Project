@@ -216,7 +216,7 @@ Check this from engineering, design, security, QA, or release-handoff perspectiv
 
 Power-user labels for those review requests include product-review, eng-review, design-review, security-review, qa-review, and release-handoff.
 
-Those labels are Role Lens, playbook, or display requests. They help focus what to inspect; they are not new gates and do not by themselves create authority, Write Authorization, evidence, verification, Manual QA, Approval, acceptance, residual-risk acceptance, or close. If a lens finds an issue, route it through the existing path: Decision Packet, evidence, Eval or verification need, Manual QA, residual risk, Approval, Change Unit update recommendation, or close blocker.
+Those labels are Role Lens, playbook, or display requests. They help focus what to inspect; they are not new gates and do not by themselves create Approval, Write Authorization, evidence, QA, verification, acceptance, risk, or close effects. If a lens finds an issue, route it through the existing path: Decision Packet, evidence, Eval or verification need, Manual QA, residual risk, Approval, Change Unit update recommendation, or close blocker. The exact Role Lens boundary lives in [Agent Integration](../reference/agent-integration.md#role-lens-behavior).
 
 A useful final review often separates two questions:
 

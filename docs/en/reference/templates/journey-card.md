@@ -115,7 +115,7 @@ State/input freshness: {state_baseline_evidence_freshness_summary|current or non
 
 This template is a rendered shape, not canonical state. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains a read/display surface.
 
-Close context in a Journey Card is compact status/resume display. `TASK` owns the continuity Close Summary for active or recently closed `work` tasks, while `DIRECT-RESULT` owns the low-ceremony close impact summary for direct work. These displays do not create close state, acceptance, QA, verification, residual-risk acceptance, or Write Authorization.
+Close context in a Journey Card is compact status/resume display. `TASK` owns the continuity Close Summary for active or recently closed `work` tasks, while `DIRECT-RESULT` owns the low-ceremony close impact summary for direct work. These displays follow the [projection/report boundary](../document-projection.md#projection-principles); close and gate effects still come from owner records.
 
 The blocker lines translate API and state records into user-facing status. The primary blocker should be the first blocker the next action must resolve, and the owner label should make clear whether the next move is user-owned, agent-resolvable, or surface/system-owned. The owner may render as `none` or be omitted when there is no primary blocker. Secondary blockers stay visible only when they affect the follow-on path. Do not expose raw `ErrorCode` values as the only explanation.
 

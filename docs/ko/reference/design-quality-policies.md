@@ -395,7 +395,7 @@ Domain term, module map item, interface contract, Feedback Loop records, TDD가 
 
 예시: Task가 일주일 뒤 resume되면 compact Harness context envelope, latest evidence/run/eval/QA refs, Journey refs, policy refs, 수용 기준, projection freshness를 전달합니다. Old PRD는 필요할 때만 가져오고 최신이 아닌 input으로 표시합니다.
 
-Retrieved 또는 indexed context는 context hygiene input이지 권한 출처가 아닙니다. Agent가 compact status, pull ref, source excerpt를 찾는 데 도움을 줄 수는 있지만 write 허가와 Write Authorization 생성, Decision Packet 해소, Approval 부여, gate 충족, evidence 생성, verification 수행/기록, QA 기록, QA/verification 또는 gate/close 관련 요구사항 면제, 결과 수락 기록, 남은 위험을 받아들이는 판단 기록, assurance 상승, projection 대기열 추가 또는 refresh, projection 최신성 변경, 구현 준비 상태 선언, Task close는 여전히 해당 owner record가 결정합니다.
+Retrieved 또는 indexed context는 context hygiene input이지 권한 출처가 아닙니다. Agent가 compact status, pull ref, source excerpt를 찾는 데 도움을 줄 수는 있지만 write authority, gate, evidence, verification, QA, 결과 수락, projection 최신성, 구현 준비 상태, close effect는 여전히 해당 owner record가 결정합니다. Context Index와 retrieved-context의 전체 경계는 [Roadmap: Context Index](../roadmap.md#context-index)가 담당하고, connector 처리는 [Agent Integration](agent-integration.md#context-pushpull-principles)이 담당합니다.
 
 | Field | Contract |
 |---|---|

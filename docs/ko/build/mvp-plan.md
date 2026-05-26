@@ -123,7 +123,7 @@ Core 상태 전이 기반과 첫 MCP-facing read/tool을 계획합니다.
 - `harness.status`, `harness.intake`, `harness.next`
 - 권한을 만들지 않는 읽기 전용 추천 playbook과 Role Lens 추천
 
-표시 안내가 gate를 충족시키거나, 쓰기를 허가하거나, 근거를 만들거나, QA 또는 verification을 면제하거나, 위험을 수용하거나, 결과를 받아들이거나, Task를 닫거나, assurance를 올리게 만들면 안 됩니다.
+표시 안내는 읽기 전용 routing과 status context로 남습니다. 정확한 Role Lens/playbook 경계는 [Agent Integration](../reference/agent-integration.md#role-lens-동작)에 있고, projection/report 경계는 [Document Projection Reference](../reference/document-projection.md#projection-principles)에 있습니다.
 
 ### MVP-2: Shaping Kernel, Write Gate, Approval, Baseline, Artifacts
 

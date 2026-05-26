@@ -395,7 +395,7 @@ Use this when:
 
 Example: A task resumes after a week. Push the compact Harness context envelope, latest evidence/run/eval/QA refs, Journey refs, policy refs, acceptance criteria, and projection freshness; pull old PRDs only if needed and mark stale inputs.
 
-Retrieved or indexed context is a context-hygiene input, not an authority source. It may point the agent to compact status, pull refs, or source excerpts, but the underlying owner records still control whether Harness authorizes writes or creates Write Authorization, resolves Decision Packets, grants Approval, satisfies gates, creates evidence, performs or records verification, records QA, waives QA/verification or other gate/close-relevant requirements, records result acceptance, records residual-risk acceptance, upgrades assurance, enqueues or refreshes projections or changes projection freshness, declares implementation readiness, or closes Tasks.
+Retrieved or indexed context is a context-hygiene input, not an authority source. It may point the agent to compact status, pull refs, or source excerpts, but the underlying owner records still control any write authority, gates, evidence, verification, QA, acceptance, projection freshness, implementation readiness, and close effect. The full Context Index and retrieved-context boundary is owned by [Roadmap: Context Index](../roadmap.md#context-index), with connector handling in [Agent Integration](agent-integration.md#context-pushpull-principles).
 
 | Field | Contract |
 |---|---|
