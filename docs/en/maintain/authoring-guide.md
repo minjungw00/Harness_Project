@@ -6,7 +6,7 @@ Use this guide when you add, rewrite, split, rename, or review Harness documenta
 
 It helps you keep the redesigned documentation readable for the intended reader, clear about where each kind of detail belongs, and aligned between English and Korean.
 
-This guide governs documentation maintenance only. It does not authorize runtime behavior, server implementation, product state changes, generated operational files, evidence records, QA results, acceptance decisions, or task closure.
+This guide governs documentation maintenance only. It does not authorize runtime behavior, server implementation, product state changes, generated operational files, executable fixture files, runtime data, evidence records, QA results, acceptance decisions, or task closure.
 
 ## Documentation principles
 
@@ -119,6 +119,8 @@ Strict schemas, gates, DDL, enum values, state transitions, invariants, API shap
 
 Learn, Use, Build, and Maintain docs may summarize a contract in one or two sentences when needed, then link to the owning Reference document. They should not duplicate full tables, schema bodies, transition matrices, DDL blocks, or fixture mini-languages.
 
+Runtime conformance fixture body shape, assertion modes, isolated execution behavior, JSON `TEXT` validation, and owner-bound enum/status validation are owned by [Operations And Conformance](../reference/operations-and-conformance.md#conformance-fixture-format). Other docs should summarize that conformance is executable-state-based and link to the owner instead of restating the full contract.
+
 ## Repetition rule
 
 Do not repeat long source-of-truth paragraphs across docs.
@@ -183,7 +185,7 @@ After a rename, search for old paths, old anchors, old headings, and old title t
 
 ## Docs-maintenance checks
 
-Docs-maintenance checks are read-only documentation maintenance. They may report documentation drift, owner mismatch, English/Korean parity issues, duplicate normative text outside the owner, broken links or anchors, and TODO hygiene problems. They are not Core fixture conformance, runtime validators, canonical state transitions, projection refresh, generated operational reports, QA results, acceptance records, evidence artifacts, residual-risk acceptance, close readiness, or implementation readiness. They do not count toward runtime fixture pass/fail.
+Docs-maintenance checks are read-only documentation maintenance. They may report documentation drift, owner mismatch, English/Korean parity issues, duplicate normative text outside the owner, broken links or anchors, and TODO hygiene problems. They are not Core fixture conformance, runtime validators, canonical state transitions, projection refresh, generated operational reports, QA results, acceptance records, evidence artifacts, residual-risk acceptance, close readiness, or implementation readiness. They do not execute fixture actions, seed runtime state, compare runtime state/events/artifacts/projections/errors, or count toward runtime fixture pass/fail.
 
 A docs-maintenance review or future checker should report the category, file path, heading or anchor when available, owner document, observed drift, expected source section, suggested fix, and a runtime effect of none: no canonical state transition was performed and no runtime fixture result was recorded. Resolve drift by updating the owner first, then replacing non-owner duplicates with a short summary plus owner link.
 

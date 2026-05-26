@@ -289,6 +289,8 @@ Those belong either to the later Agency-Hardened MVP path in [MVP Plan](mvp-plan
 
 Write fixtures that drive Core behavior and assert state, events, artifacts, projections, and errors. Do not assert success by matching rendered prose.
 
+Each runtime fixture should execute in an isolated runtime home and temporary Product Repository, seed its own starting records and files, run one Core or operator action, and compare the captured executable result. Fixture body fields, assertion modes such as `partial_deep` and `contains_ordered`, JSON `TEXT` validation, and owner-bound status value validation are owned by [Operations And Conformance Reference](../reference/operations-and-conformance.md#conformance-fixture-format).
+
 The list below is the first-slice behavior checklist. Use the [Kernel Smoke Authoring Queue](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue) for the practical order, seed guidance, stable event targets, artifact/projection assertions, and primary-error expectations.
 
 Minimum first-slice fixtures:

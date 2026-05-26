@@ -70,6 +70,8 @@ At this point, the user or operator can observe a small but complete loop: curre
 
 For practical fixture authoring order, use the [Kernel Smoke Authoring Queue](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue). It maps the first runtime fixture candidates to this stage without changing the exact fixture body shape.
 
+Kernel Smoke pass/fail comes from runtime fixtures that drive Core or operator actions and compare captured state, `task_events`, artifacts, projections, and primary errors. Status prose, Journey Card text, close prose, and scenario descriptions are observable context only; exact fixture body and assertion rules stay in [Operations And Conformance](../reference/operations-and-conformance.md#conformance-fixture-format).
+
 ## Agency-Hardened MVP
 
 Agency-Hardened MVP is the later hardening and final reference conformance target, not the first implementation batch. It completes the rest of MVP-3 and then adds MVP-4 and MVP-5.
@@ -196,11 +198,13 @@ Focus on:
 - reconcile
 - export
 - artifact integrity check
-- fixture-based conformance smoke
+- fixture-based conformance smoke over state, events, artifacts, projections, and errors
 - agency conformance for Journey visibility, user judgment, Autonomy Boundary respect, and residual-risk visibility
 - later-boundary checks that keep Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, parallel orchestration, team workflow, broad connector automation, native hook or sidecar expansion, derived metrics, and preventive guard expansion out of MVP unless separately proven and promoted
 
 Do not create a second state model for operator commands. Operators diagnose, repair, export, or run fixtures over the same Core state model.
+
+Docs-maintenance remains a separate read-only documentation profile. It may report documentation drift, but it is not Kernel Smoke, not Agency-Hardened runtime conformance, and not an implementation-readiness signal.
 
 ## Exit criteria by stage
 

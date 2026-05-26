@@ -6,7 +6,7 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 목표는 재설계된 문서가 독자에게 읽기 쉽고, 세부 계약의 위치가 분명하며, 영어와 한국어 문서가 같은 의미를 유지하도록 돕는 것입니다.
 
-이 가이드는 문서 유지보수만 다룹니다. 런타임 동작, 서버 구현, 제품 상태 변경, 생성된 운영 파일, 근거 기록, QA 결과, 수락 결정, Task 닫기를 승인하거나 대체하지 않습니다.
+이 가이드는 문서 유지보수만 다룹니다. 런타임 동작, 서버 구현, 제품 상태 변경, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data, 근거 기록, QA 결과, 수락 결정, Task 닫기를 승인하거나 대체하지 않습니다.
 
 ## 문서 작성 원칙
 
@@ -119,6 +119,8 @@ Learn 문서를 조밀한 정의 목록으로 시작하지 않습니다. Glossar
 
 Learn, Use, Build, Maintain 문서는 필요할 때 계약을 한두 문장으로 요약하고 owner Reference 문서에 링크합니다. 전체 table, schema body, transition matrix, DDL block, fixture mini-language를 중복하지 않습니다.
 
+Runtime conformance fixture body shape, assertion mode, isolated execution behavior, JSON `TEXT` validation, owner-bound enum/status validation은 [운영과 Conformance](../reference/operations-and-conformance.md#conformance-fixture-format)가 담당합니다. 다른 문서는 conformance가 executable-state-based라는 점만 요약하고 owner로 링크해야 하며, 전체 계약을 다시 적지 않습니다.
+
 ## 반복 규칙
 
 긴 기준 기록 문단을 여러 문서에 반복하지 않습니다.
@@ -183,7 +185,7 @@ Diagram은 인지 부담을 줄일 때만 사용합니다.
 
 ## Docs-maintenance checks
 
-Docs-maintenance checks는 읽기 전용 문서 유지보수입니다. Documentation drift, owner mismatch, 영어/한국어 의미 일치 문제, owner 밖의 중복 규범 문구, 깨진 link나 anchor, TODO hygiene 문제를 보고할 수 있습니다. Core fixture conformance, runtime validator, 기준 상태 전이, projection 새로고침, 생성된 운영 보고서, QA result, 결과 수락 기록, evidence artifact, 남은 위험을 받아들이는 판단, close readiness, 구현 준비 상태가 아닙니다. Runtime fixture pass/fail에 포함되지 않습니다.
+Docs-maintenance checks는 읽기 전용 문서 유지보수입니다. Documentation drift, owner mismatch, 영어/한국어 의미 일치 문제, owner 밖의 중복 규범 문구, 깨진 link나 anchor, TODO hygiene 문제를 보고할 수 있습니다. Core fixture conformance, runtime validator, 기준 상태 전이, projection 새로고침, 생성된 운영 보고서, QA result, 결과 수락 기록, evidence artifact, 남은 위험을 받아들이는 판단, close readiness, 구현 준비 상태가 아닙니다. Fixture action을 실행하거나, runtime state를 seed하거나, runtime state/events/artifacts/projections/errors를 비교하지 않으며, runtime fixture pass/fail에 포함되지 않습니다.
 
 Docs-maintenance review 또는 future checker는 category, file path, 가능한 경우 heading 또는 anchor, owner 문서, observed drift, expected source section, suggested fix, runtime effect가 none이라는 statement를 보고해야 합니다. 여기서 none은 기준 상태 전이가 수행되지 않았고 runtime fixture result가 기록되지 않았다는 뜻입니다. Drift는 먼저 owner 문서를 업데이트해서 해결하고, 그다음 owner가 아닌 중복 설명을 짧은 요약과 owner 링크로 바꿉니다.
 

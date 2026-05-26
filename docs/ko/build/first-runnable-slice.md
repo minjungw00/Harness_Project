@@ -289,6 +289,8 @@ Required authority 또는 근거가 없을 때 close가 work를 끝내지 못하
 
 Core 동작을 실행하고 state, events, artifacts, projections, errors를 검증하는 fixture를 작성합니다. Rendered prose matching만으로 success를 검증하지 않습니다.
 
+각 runtime fixture는 isolated runtime home과 temporary Product Repository에서 실행되어야 하며, 자기 시작 record와 file을 seed하고, Core 또는 operator action 하나를 실행한 뒤 captured executable result를 비교해야 합니다. Fixture body field, `partial_deep`과 `contains_ordered` 같은 assertion mode, JSON `TEXT` validation, owner-bound status value validation은 [운영과 Conformance 참조](../reference/operations-and-conformance.md#conformance-fixture-format)가 담당합니다.
+
 아래 목록은 first-slice behavior checklist입니다. 실제 순서, seed guidance, stable event target, artifact/projection assertion, primary-error expectation은 [Kernel Smoke Authoring Queue](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue)를 사용합니다.
 
 첫 조각의 최소 fixture:
