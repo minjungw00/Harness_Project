@@ -6,6 +6,8 @@
 
 처음 읽는 독자는 Learn 경로에서 전체 그림을 먼저 보고, 정확한 상태 규칙이 필요할 때 이 문서로 돌아오는 것을 권장합니다.
 
+이 문서는 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다.
+
 ## 이런 때 읽기
 
 - 커널 상태 전이를 구현하거나 검토할 때.
@@ -32,9 +34,9 @@
 1. Kernel은 로컬 AI 지원 제품 작업을 위한 기준 상태 모델입니다.
 2. Kernel은 active Task, scoped Change Unit, gate, decision, 근거, 닫기 상태를 대화 기록 밖에 둡니다.
 3. 모든 제품 파일 쓰기에는 의도한 작업을 포함하는 active Task와 scoped Change Unit이 필요합니다.
-4. `prepare_write`는 write 전에 필요한 상태 조건을 확인하는 판단 지점입니다. 확인 대상에는 state version, scope, Autonomy Boundary, baseline, approval, design policy, Decision Packet, 접점 capability가 포함됩니다.
-5. `prepare_write`가 write 가능으로 판단하면 해당 시도 하나에 대한 한 번만 사용할 수 있는 Write Authorization을 만들거나 반환합니다.
-6. `record_run`은 실제로 일어난 일을 기록하고, 제품 파일 쓰기에는 호환되는 Write Authorization을 사용한 것으로 기록하며, artifact와 근거를 연결합니다.
+4. `prepare_write`는 제품 파일 쓰기에 대한 유일한 권한 판단 지점이며, write 전에 state version, active Change Unit scope, Autonomy Boundary, baseline freshness, approval, design policy, Decision Packet, 접점 capability를 확인합니다.
+5. `prepare_write`가 write 가능으로 판단하면 해당 시도 하나에 대한 durable하고 한 번만 사용할 수 있는 Write Authorization을 만들거나 반환합니다.
+6. `record_run`은 실제로 일어난 일을 기록하고, 하나의 implementation 또는 direct 제품 파일 쓰기 Run에 호환되는 Write Authorization 하나를 사용한 것으로 기록하며, 관찰된 변경과 artifact를 검증하고 근거를 연결합니다.
 7. 사용자 소유의 제품 판단 또는 중요한 기술 판단은 Decision Packet에 기록하고, 민감한 행동에 대한 허가는 Approval에 기록합니다.
 8. 근거, 검증, Manual QA, 수용, 남은 위험 표시는 서로 다른 gate이며 서로를 대신할 수 없습니다.
 9. `close_task`만 완료 판단 지점이며, 닫기에 영향을 주는 gate 상태가 요청된 닫기 의도와 맞을 때만 성공합니다.
@@ -236,7 +238,7 @@ Task는 사용자 가치 단위입니다. current mode, lifecycle phase, result,
 
 Change Unit은 제품 파일 쓰기를 위한 scoped implementation unit입니다. purpose, non-goals, slice type, intended end-to-end path, Autonomy Boundary, allowed paths, allowed tools, validator 프로필, sensitive categories, approval needs, evidence expectations, QA expectations, dependencies, merge risk, completion conditions, evaluator focus를 기록합니다.
 
-모든 제품 파일 쓰기에는 의도한 쓰기를 포함하는 active Change Unit이 필요합니다. Task는 하나 이상의 Change Unit을 가질 수 있지만, current write의 scope가 되는 것은 active Change Unit뿐입니다. Core는 `prepare_write`를 통해 특정 write attempt를 허용하며, gate가 pass하면 Write Authorization을 만들거나 같은 request의 idempotent replay에 대해 이미 commit된 response를 반환합니다.
+모든 제품 파일 쓰기에는 의도한 쓰기를 포함하는 active Change Unit이 필요합니다. Task는 하나 이상의 Change Unit을 가질 수 있지만, current write의 scope가 되는 것은 active Change Unit뿐입니다. Core는 `prepare_write`를 통해서만 특정 제품 파일 쓰기 attempt를 authorize하며, check가 pass하면 Write Authorization을 만들거나 같은 request의 idempotent replay에 대해 이미 commit된 response를 반환합니다.
 
 ### Autonomy Boundary
 
@@ -296,7 +298,7 @@ Sensitive action이 product trade-off, architecture choice, 중요한 기술 선
 
 ### Write Authorization
 
-Write Authorization은 `prepare_write`가 제품 파일 쓰기를 허용할 때 생성되는 durable state record입니다.
+Write Authorization은 `prepare_write`가 제품 파일 쓰기를 허용할 때 생성되는 durable하고 single-use인 state record입니다. 같은 committed `record_run` request의 idempotent replay를 제외하면, `record_run`을 통해 이를 consume하는 하나의 implementation 또는 direct Run과만 호환됩니다.
 
 Task, active Change Unit, `basis_state_version`, 의도한 작업, intended paths, intended tools, intended commands, intended network targets, intended secret access, sensitive categories, baseline, approval refs, relevant Decision Packet refs, guarantee level, status, created time, Run에 의한 consumption을 기록합니다.
 
@@ -373,7 +375,7 @@ Kernel은 design support records의 entity meaning도 담당합니다.
 - Autonomy Boundary는 판단 latitude만 기록합니다. Scope grant가 아니며 paths, tools, commands, network targets, secrets, sensitive categories를 허가하지 않습니다.
 - Approval은 사용자 소유의 제품 판단 또는 중요한 기술 판단, correctness proof, QA, 검증, 수용, 근거, Write Authorization을 대신하지 않습니다.
 - Decision Packet 해소는 linked Approval record를 가진 approval 형태의 Decision Packet인 경우를 제외하면 sensitive approval이 아닙니다.
-- Write Authorization은 재사용 가능한 scope가 아닙니다. Core가 현재 compatibility basis에서 특정 write attempt 하나를 허용했다는 기록입니다.
+- Write Authorization은 재사용 가능한 scope가 아닙니다. Core가 현재 compatibility basis에서 특정 write attempt 하나를 허용했다는 기록이며, `record_run`은 이를 하나의 호환되는 implementation 또는 direct Run에만 사용할 수 있습니다.
 - 근거 sufficiency는 대화 텍스트나 보고서 문장만으로 판단하지 않습니다.
 - Eval verdict만으로 `detached_verified`가 되지 않습니다. Valid independence가 필요합니다.
 - Manual QA는 수용을 뜻하지 않고, 수용은 Manual QA를 뜻하지 않습니다.
@@ -785,7 +787,9 @@ Stable event names는 MVP conformance fixtures가 `expected_events`에서 요구
 
 ## prepare_write
 
-`prepare_write`는 제품 파일 쓰기 decision point입니다. 다음 state-level decisions 중 하나를 반환합니다.
+`prepare_write`는 제품 파일 쓰기에 대한 유일한 권한 판단 지점입니다. Approval, Decision Packet resolution, `record_run`, `close_task`, report, projection, agent prose는 input이나 context를 제공할 수 있지만, 제품 파일 쓰기를 authorize하거나 사용 가능한 Write Authorization을 만들지는 못합니다.
+
+다음 state-level decisions 중 하나를 반환합니다.
 
 ```text
 allowed | blocked | approval_required | decision_required | state_conflict
@@ -810,9 +814,9 @@ Decision algorithm은 다음과 같습니다.
 13. 모든 필수 확인이 pass하면 의도한 작업에 대한 호환되는 unexpired Write Authorization을 만들거나 같은 request의 idempotent replay에 대해 이미 commit된 response를 반환하고, decision을 기록한 뒤 `allowed`를 반환합니다.
 
 
-필수 확인에는 active Task, active Change Unit, mode의 쓰기 가능 여부, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, 접점 capability profile 정보, design policy 사전 조건이 포함됩니다. Design policy 사전 조건은 intended write가 permitted RED-test write인지, blocked non-test implementation write인지, alternate feedback loop가 있는 explicit TDD waiver로 allowed되는 write인지에 영향을 줄 수 있지만, 새로운 커널 불변 규칙을 만들지는 않습니다.
+필수 확인에는 active Task, active Change Unit, mode의 쓰기 가능 여부, active Change Unit scope, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, 접점 capability profile 정보, design policy 사전 조건이 포함됩니다. Design policy 사전 조건은 intended write가 permitted RED-test write인지, blocked non-test implementation write인지, alternate feedback loop가 있는 explicit TDD waiver로 allowed되는 write인지에 영향을 줄 수 있지만, 새로운 커널 불변 규칙을 만들지는 않습니다.
 
-`allowed` decision은 `status=allowed`이고 allow decision이 사용한 affected scope의 `basis_state_version`이 기록된 Write Authorization을 만들거나 reference해야 합니다. `authorization_effect=returned`는 같은 idempotency key, request hash, `basis_state_version`을 가진 동일한 committed `prepare_write` request의 idempotent replay 또는 이미 commit된 response 반환에만 reserved됩니다. 서로 다른 호환 가능한 request는 각각 별도의 Write Authorization을 만듭니다. Compatibility가 authorization을 재사용 가능하게 만들지는 않습니다. Blocked, approval-required, decision-required, state-conflict result는 attempted write에 대해 사용 가능한 Write Authorization을 만들면 안 됩니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 `stale`, expire, revoke할 수 있습니다.
+`allowed` decision은 `status=allowed`이고 allow decision이 사용한 affected scope의 `basis_state_version`이 기록된 Write Authorization을 만들거나 reference해야 합니다. `authorization_effect=returned`는 같은 idempotency key, request hash, `basis_state_version`을 가진 동일한 committed `prepare_write` request의 idempotent replay 또는 이미 commit된 response 반환에만 reserved됩니다. 서로 다른 호환 가능한 request는 각각 별도의 Write Authorization을 만듭니다. Compatibility가 authorization을 재사용 가능하게 만들지는 않습니다. 생성된 각 authorization은 single-use이며, 같은 committed Run record의 idempotent replay를 제외하면 하나의 compatible implementation 또는 direct `record_run`에서만 consume될 수 있습니다. Blocked, approval-required, decision-required, state-conflict result는 attempted write에 대해 사용 가능한 Write Authorization을 만들면 안 됩니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 `stale`, expire, revoke할 수 있습니다.
 
 사용자 소유 판단이 필요하면 `prepare_write`는 Decision Packet을 통해 사용자 판단을 요청합니다. 그 판단을 broad approval로 바꾸면 안 됩니다. `approval_required`는 sensitive-change approval에만 사용합니다.
 
@@ -833,13 +837,13 @@ External side effect는 실행 전에는 설명하고 실행 뒤에는 기록하
 
 ## record_run
 
-`record_run`은 shaping updates, implementation, direct work, verification input에 대한 Run, artifact, 근거 recording point입니다. 제품 파일 쓰기에 사후 권한을 부여하지 않습니다.
+`record_run`은 shaping updates, implementation, direct work, verification input에 대한 Run, artifact, 근거 recording point입니다. Implementation 및 direct 제품 파일 쓰기 Run에 대해 write authority를 consume하지만, 권한 판단 지점이 아니며 제품 파일 쓰기에 사후 권한을 부여하지 않습니다.
 
 제품 파일 쓰기를 보고하는 implementation 및 direct `record_run` calls는 호환되고 unexpired, unconsumed인 Write Authorization을 사용한 것으로 기록해야 합니다. Consumed authorization은 active Task, active Change Unit, baseline, intended operation, sensitive categories, approval refs, relevant Decision Packet refs, write에 필요한 guarantee level과 맞아야 합니다.
 
 `runs.write_authorization_id`는 Run이 호환되는 Write Authorization을 성공적으로 사용한 것으로 기록될 때만 populated됩니다. Invalid, `stale`, missing, consumed, scope-exceeded authorization을 사용하려 한 violation 또는 audit Run은 `runs.write_authorization_id`를 consumed authorization으로 populate하면 안 됩니다. Audit에 유용한 attempted authorization ref는 validator findings, run violation payload, 또는 `task_events.payload_json`에 기록해야 합니다.
 
-Core는 observed changed paths를 consumed Write Authorization 및 active Change Unit 양쪽과 비교해 verify해야 합니다. 또한 command results, artifacts, 접점 telemetry, declared run data에서 observations가 available한 경우 recorded tools, commands, network targets, secret access도 authorization과 비교해 verify합니다.
+Core는 observed changed paths를 consumed Write Authorization 및 active Change Unit 양쪽과 비교해 verify해야 합니다. 또한 command results, artifacts, 접점 telemetry, declared run data에서 observations가 available한 경우 recorded tools, commands, network targets, secret access, artifact inputs와 refs, Run summary도 authorization 및 observed behavior와 비교해 verify합니다. Summary는 audit와 evidence context일 뿐이며, observed changed paths, artifacts, authorization compatibility가 뒷받침하지 않는 authorized changes를 주장할 수 없습니다.
 
 Run kind, active Change Unit, intended operation, 또는 보고된 product-write observations 때문에 Write Authorization이 required인 경우 authorization이 missing이면 Core는 어떤 Run도 commit하기 전에 `record_run`을 거부합니다. 거부된 pre-commit request에는 Run ID가 없고, stable `record_run` events를 내보내지 않으며, artifacts를 등록하지 않고, projection changes를 대기열에 넣지 않습니다. Observed product writes가 이미 발생했지만 authorization이 missing이거나 exceeded된 경우 Core는 대신 recovery 및 audit을 위해 interrupted, blocked, violation Run을 record할 수 있습니다. Core는 이렇게 deliberate하게 committed된 recovery/audit Runs에만 Run ID를 부여하며, rejected pre-commit cases에는 Run ID를 fabricate하면 안 됩니다. 그 Run은 evidence sufficiency, detached verification, QA, 수용, close readiness를 충족하면 안 되며, Core는 affected scope, 근거, approval, 검증, projection 상태를 `stale` 또는 blocked로 표시합니다. Corresponding Write Authorization이 있으면 unconsumed로 남고, violation과 compatibility basis에 따라 `stale`, revoked, expired로 표시될 수 있습니다. Observed behavior가 general scope violation을 검증하면 Core는 `scope_violation_detected`도 추가할 수 있습니다.
 
@@ -853,9 +857,11 @@ Read-only Runs는 Write Authorization을 사용한 것으로 기록하지 않고
 
 ## close_task
 
-`close_task`는 단일 완료 판단 지점입니다. Agent 보고, Eval 보고서, QA notes, acceptance messages는 inputs를 제공할 수 있지만 그 자체로 Task를 close하지 않습니다.
+`close_task`는 단일 완료 판단 지점입니다. Agent 보고, Eval 보고서, QA notes, acceptance messages, projection, final report는 inputs를 제공할 수 있지만 그 자체로 Task를 close하지 않습니다.
 
 여러 close blockers가 동시에 존재하면 public responses는 API가 소유한 [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence)에 따라 primary `ToolError.code`를 선택합니다. 이 section은 kernel checks와 상태 전이를 소유합니다.
+
+Close blocker는 public close response와 대응되는 state/check assertion 안에서 structured result로 emit되어야 합니다. Prose-only report text는 blocker를 설명할 수는 있지만, 유일한 recorded close-blocker result가 될 수 없습니다.
 
 Decision algorithm은 다음과 같습니다.
 

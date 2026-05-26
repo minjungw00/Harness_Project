@@ -6,6 +6,8 @@ Use this reference to implement, test, or review the public MCP resource and too
 
 It does not own SQLite DDL, storage layout, the full kernel transition table, projection template text, CLI command semantics, or connector cookbook details. Storage-owned JSON and DDL rules live in [Storage And DDL](storage-and-ddl.md).
 
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted.
+
 ## Read this when
 
 - You are wiring an MCP client or server surface to Harness Core.
@@ -96,8 +98,8 @@ Storage validation is a separate ownership boundary. Public API payloads and API
 1. Read status with `harness.status`, `harness.next`, or read-only resources.
 2. Intake or resume with `harness.intake` when a Task should be tracked.
 3. Request decision if blocked with `harness.request_user_decision`.
-4. Call `harness.prepare_write` before product write.
-5. Call `harness.record_run` after run/change.
+4. Call `harness.prepare_write` before product write; it is the only product-write authorization decision point.
+5. Call `harness.record_run` after run/change to record what happened and consume the compatible Write Authorization for implementation or direct product writes.
 6. Record evidence/eval/QA/acceptance when applicable through the matching public tool or Decision Packet path.
 7. Close when blockers clear with `harness.close_task`.
 
@@ -105,9 +107,9 @@ In user terms:
 
 - `harness.status` answers "where are we, what matters now, and is the display current?"
 - `harness.next` answers "what is the next safe action or smallest unblocker?"
-- `harness.prepare_write` answers "may this exact product write happen now?"
-- `harness.record_run` answers "what happened, what evidence or artifacts were recorded, and what is next?"
-- `harness.close_task` answers "can this Task finish or cancel now, and if not, what blocks it?"
+- `harness.prepare_write` answers "may this exact product write happen now, under the current active Change Unit, Autonomy Boundary, baseline, approval, Decision Packet, design-policy, and capability checks?"
+- `harness.record_run` answers "what happened, which compatible Write Authorization was consumed for one implementation/direct Run, what changed, and what evidence or artifacts were recorded?"
+- `harness.close_task` answers "can this Task finish or cancel now, and if not, what structured blockers prevent it?"
 
 Capability is not a first-class kernel gate. Surface capability appears through:
 
@@ -500,7 +502,7 @@ EndToEndPath:
   ui_or_observable_output: string | null
 ```
 
-`WriteAuthorizationSummary` and `WriteAuthoritySummary` are API payload shapes only. This document does not define SQLite DDL for Write Authorization records. `WriteAuthoritySummary` is the display/read shape clients use to show the Write Authority Summary beside Autonomy Boundary judgment latitude.
+`WriteAuthorizationSummary` and `WriteAuthoritySummary` are API payload shapes only. This document does not define SQLite DDL for Write Authorization records. `WriteAuthorizationSummary` represents a durable, single-use authorization returned by `harness.prepare_write`; it is compatible with one committed implementation or direct `harness.record_run` consumption except for idempotent replay of that same Run request. `WriteAuthoritySummary` is the display/read shape clients use to show the Write Authority Summary beside Autonomy Boundary judgment latitude.
 
 When a client renders guard, freeze, or careful-mode controls, it uses these existing display shapes rather than adding authority fields. `guarantee_display.level` and `guarantee_display.notes` must describe the actual connected capability and current enforcement path. `blocked_reasons[].message` should name the concrete held or blocked condition, such as scope, MCP availability, approval, baseline, or capability, and must not rely on a command label like "guard" or "freeze" to imply a stronger guarantee.
 
@@ -820,7 +822,7 @@ If an MCP server or caller cannot reach Core at all, the surface or operator may
 
 #### `harness.close_task` Close Blockers
 
-`harness.close_task` may return multiple close blockers. The primary `ToolError` in `CloseTaskResponse.base.errors` uses the precedence above; when present, `CloseTaskResponse.base.errors[0].code` is the primary close error code. `CloseTaskResponse.blockers` should include the observed close blockers in the same relative order. Residual-risk visibility remains before `ACCEPTANCE_REQUIRED` for close and acceptance flows because required acceptance can be recorded or relied on only after close-relevant residual risk is visible.
+`harness.close_task` may return multiple close blockers. The primary `ToolError` in `CloseTaskResponse.base.errors` uses the precedence above; when present, `CloseTaskResponse.base.errors[0].code` is the primary close error code. `CloseTaskResponse.blockers` must include the observed close blockers as structured results in the same relative order. Prose in status, reports, Journey views, or agent summaries may explain these blockers, but prose-only text is not a close-blocker result. Residual-risk visibility remains before `ACCEPTANCE_REQUIRED` for close and acceptance flows because required acceptance can be recorded or relied on only after close-relevant residual risk is visible.
 
 ## Idempotency
 
@@ -1043,9 +1045,9 @@ Idempotency behavior: read-only; repeated requests do not mutate state.
 
 ### `harness.prepare_write`
 
-Purpose: decide whether an intended product write is allowed before the agent writes.
+Purpose: decide whether an intended product write is allowed before the agent writes. This is the only public product-write authorization decision point.
 
-User-facing meaning: answer whether this exact product write may happen now. If `decision=allowed`, show the allowed operation, scope basis, Write Authorization ref or summary, guarantee limit, and any detective/cooperative limitation. If the write is blocked, show the primary reason and smallest unblocker; candidate approval or Decision Packet payloads are only candidates until committed by their owning tool path.
+User-facing meaning: answer whether this exact product write may happen now. The answer is based on the current active Task, active Change Unit scope, Autonomy Boundary, baseline freshness, approval, Decision Packet coverage, design policy, and surface capability. If `decision=allowed`, show the allowed operation, scope basis, durable single-use Write Authorization ref or summary, guarantee limit, and any detective/cooperative limitation. If the write is blocked, show the primary reason and smallest unblocker; candidate approval or Decision Packet payloads are only candidates until committed by their owning tool path.
 
 Allowed actor: `lead_agent`, `operator`.
 
@@ -1118,7 +1120,7 @@ When `dry_run=true` and the write would otherwise be allowed, Core returns `deci
 
 For `decision=blocked`, `decision=approval_required`, `decision=decision_required`, and `decision=state_conflict`, both authorization fields must be `null` and `authorization_effect=none`.
 
-A Write Authorization is specific to the intended operation and the current state, baseline, active Change Unit scope, approval refs, Decision Packet refs, sensitive categories, and guarantee level. It is consumed by `harness.record_run` through `write_authorization_id`; it is not a reusable grant.
+A Write Authorization is specific to the intended operation and the current state, baseline, active Change Unit scope, approval refs, Decision Packet refs, sensitive categories, and guarantee level. It is consumed by `harness.record_run` through `write_authorization_id`; it is not a reusable grant. One authorization is compatible with one committed implementation or direct Run, except for idempotent replay of that same committed `record_run` request.
 
 `active_decision_packet_refs` contains all Decision Packets relevant to the intended write, including pending, deferred, blocked, or recently resolved packets.
 
@@ -1157,7 +1159,7 @@ Approval authorizes sensitive categories inside the defined scope. Approval does
 
 ### `harness.record_run`
 
-Purpose: record shaping, implementation, direct-result, or verification-input run data, including artifacts and evidence updates.
+Purpose: record shaping, implementation, direct-result, or verification-input run data, including artifacts and evidence updates. For implementation and direct product-write Runs, this tool consumes a compatible Write Authorization; it does not decide write authorization.
 
 User-facing meaning: say what happened and what changed in evidence, artifacts, or next action. If Core rejects the request before committing a Run, do not claim a Run exists. If Core records a violation or audit Run after an observed product write, label it as audit/recovery context and do not present it as satisfying evidence, detached verification, QA, acceptance, or close readiness.
 
@@ -1291,6 +1293,8 @@ Feedback Loop creation and definition happen through `ShapingUpdatePayload.feedb
 
 `write_authorization_id` references the compatible Write Authorization returned by `harness.prepare_write`. For `kind=implementation` and `kind=direct`, `write_authorization_id` is required unless the Run records no product write and Core classifies it as read-only evidence or shaping. For `kind=shaping_update`, `write_authorization_id` must be `null`; MVP does not support shaping updates that also record observed product writes, so those writes must be recorded as `kind=implementation` or `kind=direct` with a compatible authorization. For `kind=verification_input`, keep `write_authorization_id` `null`; verification input that creates product writes should normally be disallowed in MVP.
 
+Core validates the consumed authorization against observed changed paths, created/deleted paths, artifact inputs and resolved artifact refs, command results, run summary, baseline, active Change Unit, approval refs, Decision Packet refs, sensitive categories, and surface guarantee. The run summary helps explain the Run, but it must not be accepted as proof of authorized changes without compatible observed paths, artifacts, and authorization basis.
+
 `runs.write_authorization_id` is populated only when a Run successfully consumes a compatible Write Authorization. A violation or audit Run that attempted to use an invalid, stale, missing, consumed, or scope-exceeded authorization must not populate `runs.write_authorization_id` as a consumed authorization. The attempted authorization ref, when useful for audit, should be recorded in validator findings, run violation payload, or `task_events.payload_json`. Such a violation Run may be recorded for audit or recovery if an observed product write already happened, but it must not satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness. The corresponding Write Authorization should remain unconsumed and may be marked stale, revoked, or expired according to the violation and compatibility basis.
 
 Response schema:
@@ -1327,7 +1331,7 @@ Projection jobs enqueued for committed Run responses: `TASK`, `RUN-SUMMARY`, `EV
 
 ValidatorResults emitted: `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
 
-Core checks/preconditions: `state_envelope`, `changed_paths`, `scope_coverage`, `approval_scope`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`.
+Core checks/preconditions: `state_envelope`, `changed_paths`, `scope_coverage`, `approval_scope`, `baseline_freshness`, `artifact_integrity`, `evidence_sufficiency`. The run summary is compared as part of the surrounding changed-path, artifact, and authorization compatibility checks; it is not a new gate.
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `SCOPE_VIOLATION`, `APPROVAL_REQUIRED`, `APPROVAL_EXPIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `EVIDENCE_INSUFFICIENT`, `VALIDATOR_FAILED`, `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`.
 
@@ -1669,7 +1673,7 @@ Idempotency behavior: repeated request returns the same Manual QA record and gat
 
 ### `harness.close_task`
 
-Purpose: close, cancel, or supersede a Task after Core checks all close-relevant gates.
+Purpose: close, cancel, or supersede a Task after Core checks all close-relevant gates. This is the only public completion decision point.
 
 Allowed actor: `user`, `lead_agent`, `operator`.
 
@@ -1704,6 +1708,8 @@ CloseTaskResponse:
 ```
 
 Close blockers include unresolved, missing, deferred-without-coverage, blocked, rejected, stale, or incompatible blocking Decision Packets, and known close-relevant residual risk that is not visible before any successful close. If no known close-relevant residual risk exists, `ResidualRiskSummary.status=none` satisfies residual-risk visibility and is not a close blocker. A risk-accepted close additionally requires visible and accepted Residual Risk refs. Acceptance, when required, can be recorded only after close-relevant residual risk is visible or confirmed as `ResidualRiskSummary.status=none`.
+
+`CloseTaskResponse.blockers` is the structured close-blocker result. Reports, projection text, status text, and agent summaries may render or explain those blockers, but a prose-only report must not be treated as the close blocker record or as a successful close decision.
 
 User-facing meaning: answer whether the Task can finish or cancel now. If close is blocked, display the first close blocker as the primary close blocker, use `required_next_action` as the smallest unblocker when present, and show remaining blockers as secondary close blockers with refs. Do not summarize a failed close as a generic gate failure when a concrete blocker is available.
 

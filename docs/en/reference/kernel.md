@@ -6,6 +6,8 @@ Use this reference to check the exact kernel contract for Harness state, gates, 
 
 It is a lookup document for implementers, conformance authors, and maintainers. First-time readers should start with the Learn path and return here when they need precise state rules.
 
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted.
+
 ## Read this when
 
 - You need to implement or review kernel state transitions.
@@ -32,9 +34,9 @@ It is a lookup document for implementers, conformance authors, and maintainers. 
 1. The kernel is the canonical state machine for local AI-assisted product work.
 2. It keeps the active Task, scoped Change Unit, gates, decisions, evidence, and close state outside the chat transcript.
 3. Every product write must have an active Task and a scoped Change Unit that covers the intended operation.
-4. `prepare_write` is the decision point that checks state version, scope, Autonomy Boundary, baseline, approval, design policy, Decision Packets, and surface capability before a write.
-5. When `prepare_write` allows a write, it creates or returns a single-use Write Authorization for that specific attempt.
-6. `record_run` records what happened, consumes a compatible Write Authorization for product writes, and attaches artifacts and evidence.
+4. `prepare_write` is the unique product-write authorization decision point, checking state version, active Change Unit scope, Autonomy Boundary, baseline freshness, approval, design policy, Decision Packets, and surface capability before a write.
+5. When `prepare_write` allows a write, it creates or returns a durable, single-use Write Authorization for that specific attempt.
+6. `record_run` records what happened, consumes one compatible Write Authorization for one implementation or direct product-write Run, validates observed changes and artifacts, and attaches evidence.
 7. User-owned product judgment or material technical judgment belongs in Decision Packets, while sensitive-action permission belongs in Approvals.
 8. Evidence, verification, Manual QA, acceptance, and residual-risk visibility are separate gates and cannot substitute for one another.
 9. `close_task` is the only completion decision point and succeeds only when all close-relevant gates match the requested close intent.
@@ -236,7 +238,7 @@ A Task is the user value unit. It carries the current mode, lifecycle phase, res
 
 A Change Unit is the scoped implementation unit for product writes. It records purpose, non-goals, slice type, intended end-to-end path, autonomy boundary, allowed paths, allowed tools, validator profile, sensitive categories, approval needs, evidence expectations, QA expectations, dependencies, merge risk, completion conditions, and evaluator focus.
 
-Every product write requires an active Change Unit whose scope covers the intended write. A Task may have one or many Change Units, but only the active Change Unit scopes the current write. Core allows a specific write attempt through `prepare_write`, which creates a Write Authorization when the gates pass or returns the already committed response for idempotent replay of the same request.
+Every product write requires an active Change Unit whose scope covers the intended write. A Task may have one or many Change Units, but only the active Change Unit scopes the current write. Core authorizes a specific product-write attempt only through `prepare_write`, which creates a Write Authorization when the checks pass or returns the already committed response for idempotent replay of the same request.
 
 ### Autonomy Boundary
 
@@ -296,7 +298,7 @@ If a sensitive action also includes user-owned product or material technical jud
 
 ### Write Authorization
 
-A Write Authorization is the durable state record created when `prepare_write` allows a product write.
+A Write Authorization is the durable, single-use state record created when `prepare_write` allows a product write. It is compatible with one recorded implementation or direct Run that consumes it through `record_run`, except for idempotent replay of that same committed `record_run` request.
 
 It records the Task, active Change Unit, `basis_state_version`, intended operation, intended paths, intended tools, intended commands, intended network targets, intended secret access, sensitive categories, baseline, approval refs, relevant Decision Packet refs, guarantee level, status, created time, and consumption by a Run.
 
@@ -371,7 +373,7 @@ This section gathers the kernel's long negative boundaries in one place so refer
 - Autonomy Boundary records judgment latitude only. It is not a scope grant and does not authorize paths, tools, commands, network targets, secrets, or sensitive categories.
 - Approval is not user-owned product judgment or material technical judgment, correctness proof, QA, verification, acceptance, evidence, or Write Authorization.
 - Decision Packet resolution is not sensitive approval unless it is the approval-shaped Decision Packet that owns a linked Approval record.
-- Write Authorization is not reusable scope. It records that Core allowed one specific write attempt under the current compatibility basis.
+- Write Authorization is not reusable scope. It records that Core allowed one specific write attempt under the current compatibility basis, and `record_run` may consume it for only one compatible implementation or direct Run.
 - Evidence sufficiency is not inferred from chat text or report prose alone.
 - Eval verdict alone does not create `detached_verified`; valid independence is required.
 - Manual QA does not imply acceptance, and acceptance does not imply Manual QA.
@@ -784,7 +786,9 @@ Catalog-only fixture skeletons in [Operations And Conformance](operations-and-co
 
 ## prepare_write
 
-`prepare_write` is the product-write decision point. It returns one of these state-level decisions:
+`prepare_write` is the unique product-write authorization decision point. Approval, Decision Packet resolution, `record_run`, `close_task`, reports, projections, and agent prose can provide inputs or context, but none of them authorize a product write or create a consumable Write Authorization.
+
+It returns one of these state-level decisions:
 
 ```text
 allowed | blocked | approval_required | decision_required | state_conflict
@@ -809,9 +813,9 @@ The decision algorithm is:
 13. If all required checks pass, create a compatible unexpired Write Authorization for the intended operation, or return the already committed response for idempotent replay of the same request, record the decision, and return `allowed`.
 
 
-Required checks include active Task, active Change Unit, mode write eligibility, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, surface capability profile, and design policy preconditions. Design policy preconditions can affect whether an intended write is a permitted RED-test write, a blocked non-test implementation write, or a write allowed by an explicit TDD waiver with an alternate feedback loop; they do not create a new kernel invariant.
+Required checks include active Task, active Change Unit, mode write eligibility, active Change Unit scope, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, surface capability profile, and design policy preconditions. Design policy preconditions can affect whether an intended write is a permitted RED-test write, a blocked non-test implementation write, or a write allowed by an explicit TDD waiver with an alternate feedback loop; they do not create a new kernel invariant.
 
-An `allowed` decision must create or reference a Write Authorization with `status=allowed` and a recorded `basis_state_version` for the affected scope used by the allow decision. `authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request with the same idempotency key, request hash, and `basis_state_version`, or for returning the already committed response. A distinct compatible request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Blocked, approval-required, decision-required, or state-conflict results must not create a consumable Write Authorization for the attempted write. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes.
+An `allowed` decision must create or reference a Write Authorization with `status=allowed` and a recorded `basis_state_version` for the affected scope used by the allow decision. `authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request with the same idempotency key, request hash, and `basis_state_version`, or for returning the already committed response. A distinct compatible request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Each created authorization is single-use and can be consumed by only one compatible implementation or direct `record_run`, except for idempotent replay of that same committed Run record. Blocked, approval-required, decision-required, or state-conflict results must not create a consumable Write Authorization for the attempted write. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes.
 
 When user-owned judgment is needed, `prepare_write` requests a user decision through a Decision Packet. It must not convert that judgment into broad approval. `approval_required` is reserved for sensitive-change approval.
 
@@ -832,13 +836,13 @@ The user-facing explanation should name the concrete side effect first, then the
 
 ## record_run
 
-`record_run` is the Run, artifact, and evidence recording point for shaping updates, implementation, direct work, and verification input. It does not retroactively authorize product writes.
+`record_run` is the Run, artifact, and evidence recording point for shaping updates, implementation, direct work, and verification input. It consumes write authority for implementation and direct product-write Runs, but it is not an authorization decision point and cannot retroactively authorize product writes.
 
 Implementation and direct `record_run` calls that report product writes must consume a compatible, unexpired, unconsumed Write Authorization. The consumed authorization must match the active Task, active Change Unit, baseline, intended operation, sensitive categories, approval refs, relevant Decision Packet refs, and guarantee level required by the write.
 
 `runs.write_authorization_id` is populated only when a Run successfully consumes a compatible Write Authorization. A violation or audit Run that attempted to use an invalid, stale, missing, consumed, or scope-exceeded authorization must not populate `runs.write_authorization_id` as a consumed authorization. The attempted authorization ref, when useful for audit, should be recorded in validator findings, run violation payload, or `task_events.payload_json`.
 
-Core must verify observed changed paths against both the consumed Write Authorization and the active Change Unit. It also verifies recorded tools, commands, network targets, and secret access against the authorization when those observations are available from command results, artifacts, surface telemetry, or declared run data.
+Core must verify observed changed paths against both the consumed Write Authorization and the active Change Unit. It also verifies recorded tools, commands, network targets, secret access, artifact inputs and refs, and the Run summary against the authorization and observed behavior when those observations are available from command results, artifacts, surface telemetry, or declared run data. The summary is audit and evidence context; it cannot claim authorized changes that the observed changed paths, artifacts, and authorization compatibility do not support.
 
 When Write Authorization is required by the Run kind, active Change Unit, intended operation, or reported product-write observations, Core rejects `record_run` if authorization is missing before any Run is committed. A rejected pre-commit request has no Run ID, emits no stable `record_run` events, registers no artifacts, and enqueues no projection changes. If observed product writes already occurred but authorization is missing or exceeded, Core may instead record an interrupted, blocked, or violation Run for recovery and audit. Core assigns a Run ID only for such deliberately committed recovery/audit Runs; it must not fabricate one for rejected pre-commit cases. That Run must not satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness, and Core marks affected scope, evidence, approval, verification, and projection state stale or blocked. The corresponding Write Authorization, if any, remains unconsumed and may be marked stale, revoked, or expired according to the violation and compatibility basis. When the observed behavior asserts a general scope violation, Core may also append `scope_violation_detected`.
 
@@ -852,9 +856,11 @@ Read-only Runs may be recorded without consuming Write Authorization, but they m
 
 ## close_task
 
-`close_task` is the single completion decision point. Agent reports, Eval reports, QA notes, and acceptance messages may provide inputs, but they do not close the Task by themselves.
+`close_task` is the single completion decision point. Agent reports, Eval reports, QA notes, acceptance messages, projections, and final reports may provide inputs, but they do not close the Task by themselves.
 
 When multiple close blockers exist, public responses select the primary `ToolError.code` using API-owned [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence); this section owns the kernel checks and state transitions.
+
+Close blockers must be emitted as structured results in the public close response and corresponding state/check assertions. Prose-only report text may explain those blockers, but it cannot be the only recorded close-blocker result.
 
 The decision algorithm is:
 

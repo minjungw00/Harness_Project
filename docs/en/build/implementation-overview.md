@@ -28,6 +28,8 @@ You should already understand the basic Harness concepts from the Learn path. Fo
 
 Build Kernel Smoke first: the smallest local Core authority path. Core alone changes canonical operational state. Then harden that path through evidence, projections, conformance, and operator recovery.
 
+The first authority loop is narrow: `prepare_write` is the only product-write authorization decision point, a returned Write Authorization is durable and single-use, `record_run` consumes it for one compatible implementation or direct Run while recording observed changes and artifacts, and `close_task` is the only completion decision point. Exact state logic lives in [Kernel Reference](../reference/kernel.md#prepare_write) and public request/response details live in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#public-tools).
+
 Start with canonical state, `task_events`, artifact refs, Core tool behavior, and the minimal reference surface and MCP reachability needed to exercise that path. The initial implementation assumption is one local process with modules, not a distributed platform. Treat projection-template polish, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, and broad automation as non-authoritative things that read from or wrap that authority loop after it exists.
 
 If a proposed implementation starts with Agency-Hardened MVP as one large first batch, projection template polish, a dashboard or hosted workflow UI, a Context Index, a connector marketplace, hook expansion, metrics, parallel orchestration, or broad automation lanes, it is starting in the wrong place.
@@ -71,7 +73,7 @@ This handoff does not promote roadmap items, dashboards or hosted workflow UI, B
 
 | Boundary | What it proves | What the user or operator can observe |
 |---|---|---|
-| Kernel Smoke | One local Task can go through the Core authority loop: scoped write decision, Write Authorization, `record_run`, artifact-backed evidence, status, minimal projection freshness, and close blockers. | Status shows the active Task, gates, Change Unit, evidence, blockers, and projection freshness. Out-of-scope work is blocked, compatible scoped work is authorized and consumed once, and close refuses missing evidence or required decisions. |
+| Kernel Smoke | One local Task can go through the Core authority loop: `prepare_write` as the write authorization point, single-use Write Authorization, `record_run` consumption with observed changes and artifacts, artifact-backed evidence, status, minimal projection freshness, and structured close blockers. | Status shows the active Task, gates, Change Unit, evidence, blockers, and projection freshness. Out-of-scope work is blocked, compatible scoped work is authorized and consumed once, and `close_task` refuses missing evidence or required decisions with structured blockers. |
 | Agency-Hardened MVP | Later hardening after Kernel Smoke: the local reference MVP handles user judgment, approvals, detached verification, Manual QA, residual risk, reconcile, recovery, export, and conformance with honest boundaries. | Fixtures and operator entrypoints show why work can or cannot continue, verify, accept, export, recover, or close through the same Core records and errors. |
 | Post-MVP roadmap | Later surfaces or automation can be considered only after the local kernel and agency proof are stable. | Optional capabilities remain read-only, display-only, metadata-only, or artifact-candidate-only until an owner promotes them through the [Roadmap promotion rule](../roadmap.md#promotion-rule) with exact contracts and fixtures. |
 
@@ -119,11 +121,11 @@ For the first build path, prioritize:
 - status and active Task reads
 - intake or Task creation
 - next-action guidance
-- `prepare_write`
-- `record_run`
+- `prepare_write` as the only product-write authorization decision point
+- `record_run` consumption of one compatible Write Authorization for one implementation or direct product-write Run
 - artifact registration through the tool flows that need it
 - evidence manifest updates
-- `close_task` blocker behavior
+- `close_task` blocker behavior as the only completion decision point
 
 The public request and response contracts belong to [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
 
@@ -187,12 +189,12 @@ It should show:
 - one Task with current state and gates
 - one active scoped Change Unit
 - `prepare_write` blocks writes without authority and allows a compatible scoped write
-- allowed `prepare_write` creates a durable Write Authorization
-- `record_run` consumes that authorization for one implementation or direct Run
+- allowed `prepare_write` creates a durable single-use Write Authorization
+- `record_run` consumes that authorization for one implementation or direct Run and records observed changes plus artifacts
 - artifacts can be registered and linked to the run or evidence
 - a minimal Evidence Manifest records support or insufficiency
 - a minimal `TASK` projection is current or at least durably enqueued
-- `close_task` blocks when evidence or decision requirements are missing
+- `close_task` blocks with structured blockers when evidence or decision requirements are missing
 - the same behavior is executable through basic Core fixtures
 
 Kernel Smoke is not the final MVP. It proves the write authority path is alive.

@@ -20,9 +20,11 @@ Read [Implementation Overview](implementation-overview.md) first, including its 
 
 Prove one Task can move through the Core state, `task_events`, and artifact path for scoped write authority, Run recording, artifact-backed evidence, status, minimal projection freshness, and close blockers before building the wider MVP.
 
+The loop stays intentionally small: `prepare_write` decides product-write authority, the returned Write Authorization is durable and single-use, `record_run` consumes it for one compatible implementation or direct Run while recording observed changes and artifacts, and `close_task` decides completion with structured blockers. Use [Kernel Reference](../reference/kernel.md#prepare_write) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#public-tools) for the exact contracts.
+
 ## Goal
 
-Plan the Kernel Smoke slice: the smallest Harness path that can prove authority over one local Task. The slice should create one project, one Task, one active Change Unit, one allowed write decision, one recorded Run, one registered artifact, one minimal Evidence Manifest, and one close blocker.
+Plan the Kernel Smoke slice: the smallest Harness path that can prove authority over one local Task. The slice should create one project, one Task, one active Change Unit, one allowed `prepare_write` decision, one single-use Write Authorization, one compatible recorded Run that consumes it, one registered artifact, one minimal Evidence Manifest, and one structured close blocker.
 
 This is a command-independent implementation guide. It describes capabilities and observable behavior, not CLI syntax.
 
@@ -38,13 +40,13 @@ An implementer can run a local Harness process against a temporary product repos
 2. A Task is created with current state and initial gates.
 3. A Change Unit scopes the intended product write.
 4. A write outside scope is blocked.
-5. A write inside scope receives a durable Write Authorization from `prepare_write`.
-6. A direct or implementation Run records the write and consumes the authorization.
+5. A write inside scope receives a durable single-use Write Authorization from `prepare_write`.
+6. A direct or implementation Run records the write and consumes that authorization once.
 7. A diff or log artifact is registered and linked to the Run.
 8. A minimal Evidence Manifest references the Run and artifact.
 9. Status reads show the current Task, gates, write authority, evidence state, blockers, and projection freshness without mutating state.
 10. A `TASK` projection is current or durably queued for rendering.
-11. Close is blocked when evidence or decision requirements are still missing.
+11. `close_task` is blocked with structured blockers when evidence or decision requirements are still missing.
 
 Passing this story means the kernel authority path works. It does not mean the MVP is agency-hardened, and it does not pull later automation into the MVP.
 
@@ -125,12 +127,14 @@ Checklist:
 
 - Validate the request envelope, idempotency key, project id, Task id, and expected state version.
 - Resolve the active Task and active Change Unit.
-- Check intended paths, tools, commands, network targets, secrets, and sensitive categories against the Change Unit.
+- Check intended paths, tools, commands, network targets, secrets, and sensitive categories against the active Change Unit.
+- Check the intended operation against the active Change Unit Autonomy Boundary.
 - Check baseline freshness at the level needed for the first slice.
 - Check approval and Decision Packet requirements enough to block missing authority.
+- Check design-policy preconditions that apply before writing.
 - Check surface capability honestly and report cooperative or detective limits.
 - Return a blocker when scope, state version, approval, decision, baseline, or capability is incompatible.
-- When allowed, create a durable single-use Write Authorization.
+- When allowed, create a durable single-use Write Authorization compatible with one later implementation or direct Run.
 - On idempotent replay of the same committed request, return the committed response rather than creating a second authorization.
 
 Done when:
@@ -149,7 +153,8 @@ Checklist:
 - Require a compatible, unexpired, unconsumed Write Authorization for direct or implementation Runs that record product writes.
 - Mark the Write Authorization consumed exactly once on successful commit.
 - Record actor, surface, kind, intended operation, observed changes, command results, artifact refs, summary, and Run status.
-- Detect observed changes outside the authorization and route them to a violation, blocker, stale evidence, or Decision Packet path.
+- Validate observed changed paths, created/deleted paths, artifact inputs and refs, command results, and Run summary against the authorization and active Change Unit.
+- Detect observations outside the authorization and route them to a violation, blocker, stale evidence, or Decision Packet path.
 - Append `task_events` in the same transaction as current record updates.
 
 Done when:
@@ -251,13 +256,13 @@ The first runnable slice proves:
 - Core can own state transitions.
 - The state store and `task_events` are usable.
 - A scoped Change Unit is required for product writes.
-- `prepare_write` is the authority decision for a write attempt.
+- `prepare_write` is the only product-write authorization decision point.
 - Write Authorization is durable and single-use.
-- `record_run` consumes write authority and records observed work.
+- `record_run` consumes write authority once and records observed work, artifacts, and summary.
 - Artifacts and evidence can be registered without relying on chat.
 - Status is read-only.
 - Projections are derived and failure-isolated.
-- Close can block when required evidence or decisions are missing.
+- `close_task` can block with structured blockers when required evidence or decisions are missing.
 
 ## What this does not prove yet
 
@@ -297,15 +302,15 @@ Minimum first-slice fixtures:
 - `prepare_write` allows a compatible scoped write and creates one Write Authorization
 - idempotent `prepare_write` replay returns the committed authorization response
 - `record_run` blocks when write authority is missing
-- `record_run` consumes a compatible Write Authorization and records observed changes
+- `record_run` consumes a compatible Write Authorization and records observed changes plus artifact-backed summary
 - second distinct `record_run` cannot reuse a consumed authorization
 - artifact registration stores hash, redaction state, and owner relation
 - Evidence Manifest records partial and sufficient evidence states
 - status read reports gates, evidence, write authority, and projection freshness without mutation
 - Task mutation enqueues or renders a `TASK` projection
 - projection failure does not roll back committed state
-- `close_task` blocks evidence-insufficient close
-- `close_task` blocks unresolved decision close
+- `close_task` blocks evidence-insufficient close with a structured blocker
+- `close_task` blocks unresolved decision close with a structured blocker
 
 Use the fixture shape and comparison rules in [Operations And Conformance Reference](../reference/operations-and-conformance.md#conformance-fixture-format). Do not add fields to the fixture body to express suite stage, authoring order, or docs-maintenance results.
 
