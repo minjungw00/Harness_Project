@@ -43,7 +43,7 @@ user conversation surface
   -> adapter, hook, sidecar, validator, or isolation layer
 ```
 
-Always-on rules should stay short. They should say when to use Harness, where to read status or the Journey Card, that product writes require `prepare_write`, that user-owned judgment routes through Decision Packets, that status must show what can actually be blocked and what can only be detected later, and that product writes hold when authoritative MCP is unavailable. The session procedure itself belongs in [Agent Session Flow](../use/agent-session-flow.md).
+Always-on rules and context should stay short, current, and non-authoritative. They should say when to use Harness, where to read current status or the Journey Card, that product writes require `prepare_write`, that user-owned judgment routes through Decision Packets, that status must show what can actually be blocked and what can only be detected later, and that product writes hold when authoritative MCP is unavailable. They should not expand into schema dumps, old task history, copied evidence bodies, or reference-contract replicas. The session procedure itself belongs in [Agent Session Flow](../use/agent-session-flow.md).
 
 ## What belongs in Use docs vs this Reference doc
 
@@ -285,17 +285,25 @@ The manifest concept is common. Surface-specific generated filenames belong in [
 
 ## Context Push/Pull Principles
 
-Implementation agents should receive a compact always-on Harness context envelope every turn and pull larger references only when needed. The envelope is operational state, not history. It should use ids, one-line summaries, and freshness markers; keeping it around a screenful is useful guidance, not a schema limit.
+Implementation agents should receive a compact always-on Harness context envelope every turn and pull larger references only when needed. The envelope is current operational state, not chat history, old projection text, or a complete reference dump. It should use ids, one-line summaries, and freshness markers; keeping it around a screenful is useful guidance, not a schema limit.
+
+Stale chat memory and pulled context may point the agent toward refs to inspect, but they cannot authorize writes, satisfy gates, close tasks, accept results, waive QA or verification, accept residual risk, replace current owner records, or repair stale projections. Any older context that matters to authority must first be reconciled through the owning Core path.
 
 Push every turn when available:
 
 | Envelope item | Push shape |
 |---|---|
 | Active Task | Task id, title, mode, and lifecycle phase. |
+| Current display | Journey Card or compact status card ref, or a one-line current status when a rendered card is not available. |
 | Next safe action | The next action and smallest unblocker if blocked. |
-| Active Change Unit | One-line summary of in-scope work, out-of-bounds areas, and active Autonomy Boundary. |
-| Blocking decisions | Decision Packet ids and one-line questions, or `none`. |
-| Write authority | Display status such as not requested, allowed, blocked, stale, or unavailable, with scoped path/tool summary when relevant. |
+| Active scoped Change Unit | One-line summary of in-scope work and out-of-bounds areas. |
+| Autonomy Boundary | What the agent may decide alone and what still needs user judgment. |
+| Active Decision Packet | Decision Packet ids and one-line questions, or `none`. |
+| Write Authority Summary | Display status such as not requested, allowed, blocked, stale, or unavailable, with scoped path/tool summary when relevant. |
+| Acceptance criteria | Current acceptance criteria snapshot or ref when the next action or close depends on it. |
+| Approval status | Active sensitive-action Approval status or `not_required` when relevant. |
+| Evidence refs | Latest Evidence Manifest ref and short coverage summary when evidence affects the next action or close. |
+| Residual-risk summary | Known close-relevant residual risk summary and refs, or explicit absence when close or acceptance depends on it. |
 | Guarantee level | Actual connected profile level and the guard or detection behavior it can prove. Do not infer this from a surface name. |
 | Connector profile freshness | Connector manifest ref, `capability_profile_version`, `last_verified_at`, and stale reason when generated files, MCP config, hooks, wrappers, sidecars, capture, or isolation behavior changed. |
 | Gate summary | Scope, approval, decision, design, evidence, verification, QA, acceptance, close blocker, Manual QA, and residual-risk status as compact values when relevant. |
@@ -303,10 +311,6 @@ Push every turn when available:
 
 Push refs or one-line summaries when relevant:
 
-- Journey Card or compact status card
-- current acceptance criteria snapshot
-- approval status
-- latest evidence manifest ref and coverage summary
 - latest Run, Eval, Manual QA, report, and residual-risk refs
 - relevant policy, TDD trace, stewardship, module/interface, and domain refs
 
@@ -314,12 +318,14 @@ Keep these refs-first and pull the body only when needed:
 
 - Evidence, Run, Eval, and Manual QA records
 - artifacts, logs, screenshots, diffs, workflow recordings, and large traces
-- older PRDs, old designs, closed issues, stale docs, and moved-path notes
+- older PRDs, old designs, closed issues, stale docs, old projections, and moved-path notes
 - module maps, interface contracts, domain language, coding standards, and TDD guidance
 
-Refs-first means the connector should push stable ids, paths, hashes, summaries, outcomes, and freshness, not paste large bodies into the default prompt. Embed excerpts only when the next safe action requires inspecting the content, and keep the excerpt tied to its source ref. Retrieved or indexed context follows the same rule: it can tell the agent what to inspect next, but it remains pull-only context until an owner path records an actual state change.
+Refs-first means the connector should push stable ids, paths, hashes, summaries, outcomes, and freshness, not paste large bodies into the default prompt. Embed excerpts only when the next safe action requires inspecting the content, and keep the excerpt tied to its source ref. Retrieved, indexed, or remembered context follows the same rule: it can tell the agent what to inspect next, but it remains pull-only context until an owner path records an actual state change.
 
 The compact status card renders the envelope for "where are we and what happens next?" Judgment-context is separate. Use judgment-context only when user judgment is needed, and include the decision question, options, recommendation, uncertainty, deferral effect, and relevant refs without turning the full evidence or artifact body into always-on context.
+
+Status, next-action, recommendation, and recommended-playbook outputs are read-only guidance. They may recommend `prepare_write`, a Decision Packet, a Change Unit update, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state or satisfy a gate unless the recommended action later runs through the existing MCP/Core mutation path.
 
 Evaluators should receive a tighter verification bundle: acceptance criteria, changed files, approval scope, relevant Decision Packets, residual risk summary, Autonomy Boundary, deferred decisions, codebase stewardship refs, evidence manifest refs, required TDD trace refs, Manual QA requirement, artifact refs, freshness state, and forbidden patterns.
 
@@ -338,7 +344,7 @@ Fallbacks are described by guarantee level and risk, not by surface name.
 
 If MCP is unavailable, the connector must not claim authoritative state updates. `MCP_SERVER_UNAVAILABLE` and `SURFACE_MCP_UNAVAILABLE` are diagnostic conditions, not additional public `ErrorCode` values. `MCP_UNAVAILABLE` remains the stable public availability code.
 
-`MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible from that call path. A connector must not invent Core state, Write Authorization, gate status, evidence, acceptance, or close readiness from chat, generated files, cached projections, or operator prose while Core is unreachable. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools. Product/runtime/code writes hold until MCP is reconnected or diagnosed, unless the work is an explicit pre-MVP documentation-authoring batch under `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. Cooperative surfaces hold by instruction; detective surfaces may also report after-action mismatches; stronger profiles may block before execution only when a fixture-proven guard covers the operation or when an isolation boundary is actually in use. That override is a documentation-maintainer override only; it is not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition.
+`MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible from that call path. A connector must not invent Core state, Write Authorization, gate status, evidence, acceptance, residual-risk acceptance, or close readiness from chat memory, generated files, cached projections, old status/next recommendations, or operator prose while Core is unreachable. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools. Product/runtime/code writes hold until MCP is reconnected or diagnosed, unless the work is an explicit pre-MVP documentation-authoring batch under `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. Cooperative surfaces hold by instruction; detective surfaces may also report after-action mismatches; stronger profiles may block before execution only when a fixture-proven guard covers the operation or when an isolation boundary is actually in use. That override is a documentation-maintainer override only; it is not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition.
 
 If MCP works but pre-tool guard is weak, low-risk direct work may proceed with cooperative `prepare_write` and detective changed-path validation. Medium/high-risk work should require stricter validation, a fixture-proven sidecar guard, explicit approval, detached verification, or isolation.
 
@@ -372,7 +378,7 @@ Role Lens output may surface or recommend routes for:
 - release handoff report input
 - a recommended next playbook
 
-These are display and routing outputs until an existing Core/MCP state-changing path records the underlying action. Role Lens output must not introduce schemas or canonical records, mutate canonical state by itself, authorize writes, grant Approval, satisfy a Decision Packet, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. When a lens identifies work that needs a state change, the surface routes through the normal MCP tool and Core path.
+These are display and routing outputs until an existing Core/MCP state-changing path records the underlying action. Role Lens output, like status/next recommendation output, must not introduce schemas or canonical records, mutate canonical state by itself, authorize writes, grant Approval, satisfy a Decision Packet, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. When a lens identifies work that needs a state change, the surface routes through the normal MCP tool and Core path.
 
 Two-stage review display should keep the stages visibly separate:
 
@@ -447,5 +453,7 @@ Overview scenarios:
 - capability fallback when a required tier is missing
 - local-only MCP default, with off-profile remote or shared exposure held, failed, or reported as capability-insufficient
 - MCP unavailable product-write hold
+- stale chat memory and pull-only context do not authorize writes, satisfy gates, accept results, or close tasks until reconciled through owner paths
+- status/next recommendations and Role Lens output remain read-only guidance unless the recommended action follows the existing Core mutation path
 
 Exact fixture format and operational commands are owned by the operations and conformance docs.

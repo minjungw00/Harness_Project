@@ -121,6 +121,8 @@ For example, "projection `TASK` is stale" means the readable view is behind the 
 
 These examples are display guidance. They do not add command flags, state tables, event names, public `ErrorCode` values, or fixture fields.
 
+Status/next recommendations, Role Lens output, recommended playbooks, and operator diagnostics are read-only guidance unless a later existing Core/MCP mutation path records the underlying action. They may suggest a Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, repair, export, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close a Task by themselves.
+
 ## Conformance staging
 
 Conformance can run incrementally, but staged execution must not change the fixture body shape or reduce final MVP requirements.
@@ -241,7 +243,7 @@ Required categories:
 | projections | queued jobs, freshness, managed hash drift, failed renders |
 | reconcile | pending human edits, managed block drift, generated/managed manifest drift |
 | validators/checks | required stable ValidatorResult-emitting validators, plus separately captured Core check/precondition categories |
-| agency/stewardship/context | Decision Packet and decision gate readiness, Autonomy Boundary readiness, residual-risk visibility, codebase stewardship, context freshness |
+| agency/stewardship/context | Decision Packet and decision gate readiness, Autonomy Boundary readiness, residual-risk visibility, codebase stewardship, context freshness, stale chat/pull-only context not treated as authority |
 | security/threat model | local MCP binding/access expectation, registered project/task/surface consistency, connector drift, sensitive-category side effects, redaction, omission, or block coverage |
 
 ```mermaid

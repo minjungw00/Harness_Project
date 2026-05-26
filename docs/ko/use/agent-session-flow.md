@@ -20,7 +20,7 @@
 
 사용자의 다음 판단에 영향을 주는 상태, 막힘, 판단, 다음 행동만 보여줍니다.
 
-매 턴마다 계속 보여주는 맥락은 간결한 Harness 맥락 묶음(envelope)이어야 합니다. 여기에는 활성 Task id와 모드, 범위, 범위 밖, 다음 안전한 행동, 가장 먼저 해소할 막힘, 가장 작은 해소 방법, 활성 Change Unit 요약, 막고 있는 결정, 쓰기 권한 상태, 근거, 검증, Manual QA, 남은 위험, 보장 수준(guarantee level), gate 요약, 읽기용 보기 최신성(projection freshness)이 들어갑니다. 근거(Evidence), Run, Eval, Manual QA, artifact, log, screenshot, diff, large trace는 기본적으로 ref와 짧은 결과만 보여주고, 다음 행동이 내용을 실제로 살펴봐야 할 때만 가져옵니다.
+매 턴마다 계속 보여주는 맥락은 간결하고 최신인 Harness 맥락 묶음(envelope)이어야 합니다. 여기에는 활성 Task id와 모드, 범위, 범위 밖, 다음 안전한 행동, 가장 먼저 해소할 막힘, 가장 작은 해소 방법, active scoped Change Unit, Autonomy Boundary, active Decision Packet, Write Authority Summary, 수용 기준, approval status, evidence refs, 검증, Manual QA, 남은 위험, 보장 수준(guarantee level), gate 요약, 읽기용 보기 최신성(projection freshness)이 들어갑니다. 근거(Evidence), Run, Eval, Manual QA, artifact, log, screenshot, diff, old projection, 오래된 PRD나 design, module map, large trace는 기본적으로 ref와 짧은 결과만 보여주고, 다음 행동이 내용을 실제로 살펴봐야 할 때만 가져옵니다. 오래된 chat memory는 살펴볼 ref를 가리킬 수 있지만 write를 허가하거나, gate를 충족하거나, 결과를 수락하거나, Task를 닫거나, current state를 대체할 수 없습니다.
 
 ## 세션 시작
 
@@ -56,7 +56,7 @@ Harness가 연결되어 있으면 사용자가 Harness 사용을 명시적으로
 
 ## 이어가기
 
-중요한 작업을 이어가기 전에는 Harness 상태를 읽고 현재 위치를 보여줍니다. 상태를 읽을 수 있는데 오래된 채팅만 보고 권한이나 범위를 재구성하면 안 됩니다.
+중요한 작업을 이어가기 전에는 Harness 상태를 읽고 현재 위치를 보여줍니다. 이어가기는 오래된 chat, stale status text, remembered prior recommendation이 아니라 current Core state와 owner records를 기준으로 해야 합니다. 오래된 chat memory는 살펴볼 ref를 찾는 데 도움을 줄 수 있지만 write를 허가하거나, Task를 close하거나, 결과를 수락하거나, check를 면제하거나, 남은 위험을 받아들이거나, current state를 대체할 수 없습니다.
 
 좋은 이어가기 답변:
 
@@ -81,6 +81,8 @@ MCP 결과를 기준으로 삼되, 사용자에게는 이해하기 쉬운 말로
 - `harness.prepare_write`는 "지금 이 정확한 제품 파일 쓰기를 해도 되는가?"라는 뜻입니다.
 - `harness.record_run`은 "무슨 일이 일어났고, 어떤 근거가 바뀌었으며, 다음은 무엇인가?"라는 뜻입니다.
 - `harness.close_task`는 "이 Task를 지금 끝내거나 취소할 수 있는가?"라는 뜻입니다.
+
+`harness.status`, `harness.next`, compact status card, recommendation line은 read-only display입니다. Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, close attempt를 추천할 수는 있지만, 추천 자체가 state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 결과를 수락하거나, 남은 위험을 받아들이거나, Task를 close하지 않습니다.
 
 응답에 오류나 막힘이 있으면 가장 먼저 해소할 막힘 하나를 먼저 말합니다. API precedence로 선택된 첫 `ToolError`를 쓰거나, `harness.close_task`가 blockers를 반환했다면 첫 close blocker를 사용합니다. 그다음 가장 작은 해소 방법을 평범한 말로 보여줍니다. 추가 막힘은 가장 먼저 해소할 막힘이 해소된 뒤에도 의미가 있을 때만 계속 보여줍니다.
 
@@ -247,12 +249,14 @@ Decision-centered prompt는 경로와 맞는 동사를 씁니다. 선택, defer,
 
 사용자가 product, engineering, design, security, QA, release-handoff 관점으로 봐 달라고 하면 `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, `release-handoff`를 Role Lens 또는 권장 playbook 표시로 다룹니다. 라벨은 검토 관점을 고를 뿐이며 새 mode, Approval, Write Authorization, gate, close path가 아닙니다. 정확한 Role Lens 경계는 [Agent Integration](../reference/agent-integration.md#role-lens-동작)이 담당합니다.
 
+Role Lens와 status/next recommendation은 기존 Core/MCP path가 실제 동작을 기록하기 전까지 guidance입니다. Decision Packet 후보, evidence gap, Eval 필요, Manual QA 필요, residual-risk 후보, Approval 필요, Change Unit update recommendation, close blocker를 찾을 수는 있지만, 그 자체로 state를 mutate하거나 해당 route를 충족하지 않습니다.
+
 검토 결과에서는 두 질문을 분리합니다.
 
 - Spec Compliance Review: 현재 scope와 권한 안에서 요청한 것을 만들었는가?
 - Code Quality / Stewardship Review: 결과가 codebase 안에서 유지보수 가능하고 일관적인가?
 
-같은 세션에서 하는 검토(review)는 조건을 충족하는 independent Eval 또는 verification record가 없는 한 자체 확인(self-check) 또는 stewardship signal입니다. Decision Packet 후보, 근거 부족, Eval 또는 검증 필요, Manual QA 필요, Residual Risk 후보, Approval 필요, Change Unit 업데이트 추천, close blocker를 찾을 수는 있지만, 영향받는 write나 Task 닫기가 진행되기 전에 이런 발견 사항은 기존 경로로 연결해야 합니다.
+같은 세션에서 하는 검토(review)는 조건을 충족하는 independent Eval 또는 verification record가 없는 한 자체 확인(self-check) 또는 stewardship signal입니다. Finding이 영향받는 write나 Task 닫기에 영향을 주려면 기존 경로로 연결해야 합니다.
 
 Check, review, Eval, Manual QA result, Run에서 finding이 나오면 chat에 남겨 두지 말고 route를 이름 붙입니다.
 

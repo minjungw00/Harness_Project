@@ -2,13 +2,14 @@
 
 ## Used when
 
-Use the compact status card when a short current-state display needs to show the always-on Harness context envelope: Task, mode, scope, out of bounds, next safe action, blocker status, pending user decision, write authority, evidence, verification, Manual QA, residual risk, guarantee level, projection freshness, and latest refs. Keep it small enough for status, next-action, and resume turns: ordinary-language state first, exact Harness labels only when they clarify the boundary.
+Use the compact status card when a short current-state display needs to show the always-on Harness context envelope: Task, mode, scope, out of bounds, next safe action, blocker status, pending user decision, write authority, acceptance criteria, evidence, verification, Manual QA, residual risk, guarantee level, projection freshness, and latest refs. Keep it small enough for status, next-action, and resume turns: ordinary-language state first, exact Harness labels only when they clarify the boundary.
 
 ## Source records
 
 - current Task state and lifecycle phase
 - scope and out-of-bounds summaries
 - active Change Unit summary
+- current acceptance criteria snapshot
 - pending Decision Packet summary
 - Write Authority summary
 - connected profile guarantee level
@@ -32,6 +33,7 @@ Summary placeholders in this card are display bindings derived from the records 
 - task identity
 - mode and lifecycle phase
 - scope and out of bounds
+- acceptance criteria
 - next safe action
 - primary blocker, owner, and smallest unblocker
 - secondary blockers
@@ -56,6 +58,7 @@ Display only: current-state view, not canonical state or write authority.
 Mode: {mode} / {lifecycle_phase}
 Scope: {scope_summary|none}
 Out of bounds: {out_of_bounds_summary|none}
+Acceptance criteria: {acceptance_criteria_summary|none}
 Next safe action: {next_safe_action}
 Primary blocker: {primary_blocker_label|none}
 Blocker owner: {primary_blocker_owner_label|none}
@@ -81,7 +84,9 @@ Latest refs: report={latest_report_ref|none}; evidence={evidence_manifest_ref|no
 
 ## Notes
 
-This template is a rendered card shape, not canonical state. Gate values remain owned by canonical state, guarantee level is display and risk context, and projection freshness is readable-view freshness only. Use the [projection/report boundary](../document-projection.md#projection-principles) for the exact non-authority rule.
+This template is a rendered card shape, not canonical state. It is rendered from current source records and refs, not stale chat memory. Gate values remain owned by canonical state, guarantee level is display and risk context, and projection freshness is readable-view freshness only. Use the [projection/report boundary](../document-projection.md#projection-principles) for the exact non-authority rule.
+
+Status/next recommendations in this card are read-only guidance. They may point to a Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
 
 Do not collapse display problems into one line. A stale projection means the readable card may lag. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient. MCP or capability unavailable means the surface cannot reach or provide the required Harness/Core capability.
 

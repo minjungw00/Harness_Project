@@ -83,6 +83,8 @@ If the status looks stale or wrong, say:
 Show the current status and next action again from state.
 ```
 
+The agent should resume from current Harness state, not from stale chat memory. Older conversation can help find refs to inspect, but it cannot authorize writes, accept results, accept residual risk, close a task, or replace current owner records.
+
 When the agent needs your judgment, status alone is not enough. It should add a focused prompt with options, a recommendation, uncertainty, the affected gates or acceptance criteria, what can continue if you defer, and refs to the relevant source, evidence, or design records.
 
 ### 3. When blocked, ask for the one unblocker
@@ -310,6 +312,7 @@ Typical recovery readings:
 - Projection stale but Core state current: refresh or reconcile the readable view, then continue from Core state. Do not treat the stale Markdown report as authority.
 - MCP unavailable: hold product writes and gate updates; do not claim Approval, result acceptance, residual-risk acceptance, or close until the required Harness/Core capability is available or the work moves to a capable surface.
 - Managed block edited by hand: treat the edit as drift or a proposal, then route it through Reconcile before it becomes state.
+- Stale chat or cached recommendations: use them only to find current refs to inspect. They do not authorize writes, satisfy gates, accept results, accept residual risk, close the task, or replace current state.
 
 ### guarantee level and careful mode
 
@@ -321,9 +324,9 @@ AFK or "continue while I am away" instructions do not expand authority. Careful 
 
 ### Role Lens requests
 
-Product-review, eng-review, design-review, security-review, qa-review, and release-handoff labels are Role Lens, playbook, or display requests. They help focus what to inspect; they are not new gates and do not by themselves create Approval, Write Authorization, evidence, QA, verification, acceptance, risk, or close effects.
+Product-review, eng-review, design-review, security-review, qa-review, and release-handoff labels are Role Lens, playbook, or display requests. Status/next recommendations are the same kind of read-only guidance. They help focus what to inspect; they are not new gates and do not by themselves create Approval, Write Authorization, evidence, QA, verification, acceptance, risk, or close effects.
 
-If a lens finds an issue, route it through the existing path: Decision Packet, evidence, Eval or verification need, Manual QA, residual risk, Approval, Change Unit update recommendation, or close blocker. Same-session review can be a helpful self-check or stewardship signal, but it is not detached verification. The exact Role Lens boundary lives in [Agent Integration](../reference/agent-integration.md#role-lens-behavior).
+If a lens or recommendation finds an issue, route it through the existing path: Decision Packet, evidence, Eval or verification need, Manual QA, residual risk, Approval, Change Unit update recommendation, or close blocker. Same-session review can be a helpful self-check or stewardship signal, but it is not detached verification. The exact Role Lens boundary lives in [Agent Integration](../reference/agent-integration.md#role-lens-behavior).
 
 ## When the task is blocked
 

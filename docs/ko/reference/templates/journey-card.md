@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-작업의 현재 위치, 범위와 범위 밖, 다음 움직임을 막는 것, 대기 중인 판단, Autonomy Boundary, Write Authority Summary, 근거와 확인, 남은 위험, 닫기 맥락(close context), gate, 읽기용 보기 최신성을 현재 위치 카드로 보여줄 때 `JOURNEY-CARD`를 사용합니다.
+작업의 현재 위치, 범위와 범위 밖, 다음 움직임을 막는 것, 대기 중인 판단, Autonomy Boundary, Write Authority Summary, 수용 기준, 근거와 확인, 남은 위험, 닫기 맥락(close context), gate, 읽기용 보기 최신성을 현재 위치 카드로 보여줄 때 `JOURNEY-CARD`를 사용합니다.
 
 ## 기준 기록
 
@@ -10,7 +10,9 @@
 - scope와 out-of-bounds summary
 - active Change Unit
 - Autonomy Boundary summary
+- current 수용 기준 snapshot
 - Write Authorization, approval, baseline, 보장 수준 참조
+- approval status
 - active Decision Packet 참조
 - 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 summary
 - blocker owner 표시 summary
@@ -27,6 +29,7 @@ Judgment, write-authority, close-impact, residual-risk, freshness placeholder는
 
 - 현재 위치와 다음 행동
 - scope와 out of bounds
+- 수용 기준
 - 현재 막는 것
 - 판단 맥락
 - Autonomy boundary
@@ -46,6 +49,7 @@ TASK-{id} {title}
 현재 위치: {mode} / {lifecycle_phase} / {current_position}
 범위: {scope_summary|none}
 범위 밖: {out_of_bounds_summary|none}
+수용 기준: {acceptance_criteria_summary|none}
 다음 행동: {next_action}
 
 현재 막는 것:
@@ -113,7 +117,9 @@ Gates:
 
 ## 메모
 
-이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. 저장된 `JOURNEY-CARD` Markdown은 선택 사항입니다. `status`, `next`, 중요한 이어가기(resume) 흐름에서 보여주는 현재 위치 Journey Card output도 읽기/표시용 접점입니다.
+이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Current source record와 ref에서 렌더링되며, 오래된 chat memory에서 렌더링하지 않습니다. 저장된 `JOURNEY-CARD` Markdown은 선택 사항입니다. `status`, `next`, 중요한 이어가기(resume) 흐름에서 보여주는 현재 위치 Journey Card output도 읽기/표시용 접점입니다.
+
+이 card 안이나 주변에 표시되는 status/next recommendation은 read-only guidance입니다. Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 결과를 수락하거나, 남은 위험을 받아들이거나, Task를 close하지 않습니다.
 
 Journey Card의 닫기 맥락(Close context)은 compact status/resume 표시입니다. `TASK`는 진행 중이거나 최근 닫힌 `work` Task의 이어가기용 Close Summary를 담당하고, `DIRECT-RESULT`는 direct 작업의 가벼운 close impact summary를 담당합니다. 이 표시들은 [projection/report 경계](../document-projection.md#projection-principles)를 따르며, close와 gate effect는 여전히 owner record에서 옵니다.
 

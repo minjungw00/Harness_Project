@@ -136,7 +136,9 @@ A generated manifest that records connector-generated and connector-managed path
 
 ### Context Hygiene
 
-The policy of keeping current state, evidence, and relevant references in context while avoiding stale chat, old PRDs, closed issues, and oversized raw artifacts unless they are explicitly needed. Indexed or retrieved context belongs here as refs or source-linked excerpts; it helps decide what to inspect, not what Harness has authorized, verified, accepted, waived, or closed.
+The policy of keeping always-on context short and current: push the Journey Card or compact status card, active Decision Packet, Autonomy Boundary, Write Authority Summary, active scoped Change Unit, acceptance criteria, approval status, evidence refs, residual-risk summary, gate summary, and projection freshness when relevant; pull older PRDs, designs, logs, module maps, old projections, closed issues, and oversized raw artifacts only when needed. Indexed, retrieved, or remembered context belongs here as refs or source-linked excerpts. It helps decide what to inspect, not what Harness has authorized, verified, accepted, waived, risk-accepted, or closed.
+
+Stale chat memory is pull-only context. It cannot authorize writes, satisfy gates, close tasks, accept results, waive QA or verification, accept residual risk, replace current state, or repair stale projections unless the relevant owner path records the change.
 
 ### Context Index
 
@@ -282,7 +284,7 @@ A guarantee level where risky work is separated by a worktree, sandbox, process 
 
 ### Journey Card
 
-A compact human-readable projection of the current Task position: state, next action, scope, blockers, the `decision_gate`, evidence, verification, QA, acceptance, residual risk, and projection freshness. A Journey Card is display, not canonical state.
+A compact human-readable projection of the current Task position: state, next action, scope, active scoped Change Unit, Autonomy Boundary, blockers, active Decision Packet, Write Authority Summary, acceptance criteria, approval status, evidence, verification, QA, acceptance, residual risk, and projection freshness. A Journey Card is display, not canonical state, and it is rendered from current owner records rather than stale chat memory.
 
 ### Journey Spine
 
@@ -398,7 +400,7 @@ The single agent surface targeted by the MVP implementation. It demonstrates the
 
 ### Recommended Playbook
 
-Non-authoritative status/next display guidance computed from current state and policy/playbook context. It suggests a procedure for the current stage, such as review, TDD, QA, guard check, release handoff, or browser-QA candidacy. Its `playbook_id` is a stable display/routing string identifier, not a Core-owned closed enum or DDL-backed value set. It is not a canonical kernel record, has no DDL table, task event, or projection job of its own, does not authorize writes or satisfy gates, and routes user-owned judgment to Decision Packet paths.
+Non-authoritative status/next display guidance computed from current state and policy/playbook context. It suggests a procedure for the current stage, such as review, TDD, QA, guard check, release handoff, or browser-QA candidacy. Its `playbook_id` is a stable display/routing string identifier, not a Core-owned closed enum or DDL-backed value set. It is not a canonical kernel record, has no DDL table, task event, or projection job of its own, does not authorize writes, satisfy gates, accept results, accept residual risk, or close tasks, and routes user-owned judgment to Decision Packet paths or other existing Core/MCP mutation paths.
 
 ### Release Handoff
 
@@ -406,7 +408,7 @@ An optional report/export profile that summarizes release readiness for external
 
 ### Role Lens
 
-A non-authoritative skill or playbook surface that lets a user ask for a product, engineering, design, security, QA, or release-handoff review posture. Role Lens output reuses existing routes such as `RecommendedPlaybook`, `DecisionPacketCandidate`, validator/check routes, evidence, Eval or verification, Manual QA, Approval, residual-risk, Change Unit update, and release handoff routes. The exact non-authority boundary is owned by [Agent Integration](agent-integration.md#role-lens-behavior).
+A non-authoritative skill or playbook surface that lets a user ask for a product, engineering, design, security, QA, or release-handoff review posture. Role Lens output reuses existing routes such as `RecommendedPlaybook`, `DecisionPacketCandidate`, validator/check routes, evidence, Eval or verification, Manual QA, Approval, residual-risk, Change Unit update, and release handoff routes. It is read-only guidance until an existing Core/MCP path records the underlying action, so it does not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, close tasks, or upgrade assurance by itself. The exact non-authority boundary is owned by [Agent Integration](agent-integration.md#role-lens-behavior).
 
 ### Report Projection
 

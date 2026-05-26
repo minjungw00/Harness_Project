@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use `JOURNEY-CARD` when a current-position card needs to show where the work is, what is in and out of scope, what is blocking the next move, what judgment is pending, the Autonomy Boundary, Write Authority Summary, evidence and checks, residual risk, close context, gates, and projection freshness.
+Use `JOURNEY-CARD` when a current-position card needs to show where the work is, what is in and out of scope, what is blocking the next move, what judgment is pending, the Autonomy Boundary, Write Authority Summary, acceptance criteria, evidence and checks, residual risk, close context, gates, and projection freshness.
 
 ## Source records
 
@@ -10,7 +10,9 @@ Use `JOURNEY-CARD` when a current-position card needs to show where the work is,
 - scope and out-of-bounds summaries
 - active Change Unit
 - Autonomy Boundary summary
+- current acceptance criteria snapshot
 - Write Authorization, approval, baseline, and guarantee refs
+- approval status
 - active Decision Packet refs
 - primary blocker, secondary blocker, and smallest unblocker display summaries
 - blocker owner display summary
@@ -27,6 +29,7 @@ Judgment, write-authority, close-impact, residual-risk, and freshness placeholde
 
 - current position and next action
 - scope and out of bounds
+- acceptance criteria
 - blocking now
 - Judgment context
 - Autonomy boundary
@@ -46,6 +49,7 @@ Display only: current-position view, not canonical state or write authority.
 Where we are: {mode} / {lifecycle_phase} / {current_position}
 Scope: {scope_summary|none}
 Out of bounds: {out_of_bounds_summary|none}
+Acceptance criteria: {acceptance_criteria_summary|none}
 Next action: {next_action}
 
 Blocking now:
@@ -113,7 +117,9 @@ State/input freshness: {state_baseline_evidence_freshness_summary|current or non
 
 ## Notes
 
-This template is a rendered shape, not canonical state. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains a read/display surface.
+This template is a rendered shape, not canonical state. It is rendered from current source records and refs, not stale chat memory. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains a read/display surface.
+
+Status/next recommendations shown in or near this card are read-only guidance. They may point to a Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
 
 Close context in a Journey Card is compact status/resume display. `TASK` owns the continuity Close Summary for active or recently closed `work` tasks, while `DIRECT-RESULT` owns the low-ceremony close impact summary for direct work. These displays follow the [projection/report boundary](../document-projection.md#projection-principles); close and gate effects still come from owner records.
 

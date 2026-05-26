@@ -20,7 +20,7 @@ Read [User Guide](user-guide.md) first if you want the user-facing version.
 
 Show only the state, blocker, judgment, and next action that affect the user's next decision.
 
-The always-on turn context should be a compact Harness envelope: active Task id and mode, scope, out of bounds, next safe action, primary blocker, smallest unblocker, active Change Unit summary, blocking decisions, write authority status, evidence, verification, Manual QA, residual risk, guarantee level, gate summary, and projection freshness. Evidence, Run, Eval, Manual QA, artifacts, logs, screenshots, diffs, and large traces should appear as refs and short outcomes by default, then be pulled only when the next action requires inspecting them.
+The always-on turn context should be a compact, current Harness envelope: active Task id and mode, scope, out of bounds, next safe action, primary blocker, smallest unblocker, active scoped Change Unit, Autonomy Boundary, active Decision Packet, Write Authority Summary, acceptance criteria, approval status, evidence refs, verification, Manual QA, residual risk, guarantee level, gate summary, and projection freshness. Evidence, Run, Eval, Manual QA, artifacts, logs, screenshots, diffs, old projections, older PRDs or designs, module maps, and large traces should appear as refs and short outcomes by default, then be pulled only when the next action requires inspecting them. Stale chat memory can point to refs to inspect, but it cannot authorize writes, satisfy gates, accept results, close tasks, or replace current state.
 
 ## Session start
 
@@ -56,7 +56,7 @@ Do not begin product writes from a broad natural-language request alone. First e
 
 ## Resume
 
-Before significant work resumes, read Harness state and show the current position. Do not reconstruct authority from old chat when state is available.
+Before significant work resumes, read Harness state and show the current position. Resume from current Core state and owner records, not old chat, stale status text, or remembered prior recommendations. Stale chat memory may identify refs to inspect, but it cannot authorize writes, close tasks, accept results, waive checks, accept residual risk, or replace current state.
 
 A good resume response says:
 
@@ -81,6 +81,8 @@ The exact error taxonomy, complete mapping, and precedence stay in [MCP API And 
 - `harness.prepare_write` means "may this exact product write happen now?"
 - `harness.record_run` means "what happened, what evidence changed, and what is next?"
 - `harness.close_task` means "can this Task finish or cancel now?"
+
+`harness.status`, `harness.next`, compact status cards, and recommendation lines are read-only displays. They can recommend a Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but the recommendation itself does not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
 
 When a response contains errors or blockers, lead with one primary blocker. Use the first `ToolError` chosen by API precedence, or the first `close_task` blocker when close returned blockers. Then show the smallest unblocker in ordinary language. Keep secondary blockers visible only when they will still matter after the primary blocker is resolved.
 
@@ -247,12 +249,14 @@ Ask one blocking question at a time when possible.
 
 When the user asks for a product, engineering, design, security, QA, or release-handoff perspective, treat `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, and `release-handoff` as Role Lens or recommended playbook displays. The label chooses a review posture, not a new mode, Approval, Write Authorization, gate, or close path; the exact Role Lens boundary is owned by [Agent Integration](../reference/agent-integration.md#role-lens-behavior).
 
+Role Lens and status/next recommendations are guidance until an existing Core/MCP path records the underlying action. They may find Decision Packet candidates, evidence gaps, Eval needs, Manual QA needs, residual-risk candidates, Approval needs, Change Unit update recommendations, or close blockers, but they do not by themselves mutate state or satisfy those routes.
+
 For review output, keep the two questions separate:
 
 - Spec Compliance Review: did we build the requested thing under current scope and authority?
 - Code Quality / Stewardship Review: is the result maintainable and coherent in the codebase?
 
-Same-session review is self-check or stewardship signal unless a qualifying independent Eval or verification record exists. It may find Decision Packet candidates, evidence gaps, Eval or verification needs, Manual QA needs, residual-risk candidates, Approval needs, Change Unit update recommendations, or close blockers, but those findings must route through the existing paths before affected writes or close proceed.
+Same-session review is self-check or stewardship signal unless a qualifying independent Eval or verification record exists. Findings must route through the existing paths before affected writes or close proceed.
 
 When a check, review, Eval, Manual QA result, or Run produces a finding, name the route instead of leaving the finding in chat:
 
