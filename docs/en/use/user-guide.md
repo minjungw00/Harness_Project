@@ -2,11 +2,9 @@
 
 ## What this document helps you do
 
-Use this guide when you want to understand how an AI-assisted task runs under Harness without turning the conversation into a work-management ritual.
+Use this guide when Harness is connected and you want to understand how one AI-assisted task should run without turning the conversation into a work-management ritual.
 
-Harness should help the agent keep scope, evidence, checks, decisions, QA, risk, and close state visible. You should still be able to talk normally. When Harness is connected, you do not need a special startup phrase. Describe the work you want, and the agent should decide from the task shape whether Harness applies.
-
-Harness is usually appropriate when product files may change, scope may drift, user judgment is needed, evidence, verification, QA, acceptance, or residual risk must be tracked, or sensitive categories may apply. For tiny questions or clearly read-only advice, the agent may handle the request directly.
+Speak normally. No startup phrase is required. Describe the work you want, and the agent should decide from the task shape whether Harness applies. Harness is usually appropriate when product files may change, scope may drift, user judgment is needed, evidence, verification, QA, acceptance, or residual risk must be tracked, or sensitive categories may apply. Tiny questions or clearly read-only advice can stay light.
 
 If you want to be explicit, you can still say:
 
@@ -14,27 +12,15 @@ If you want to be explicit, you can still say:
 Run this work under the harness.
 ```
 
-The agent should translate your request into the right Harness steps. You should not need to operate internal records by hand.
-
-Use deeper Harness labels only when they help explain a real stop, boundary, or close condition.
-
-Harness is neither just a technical gate system nor just a planning checklist. It supports user-owned product and material technical judgment, while keeping approval, Write Authorization, verification, Manual QA, risk, and acceptance separate.
-
-## Read this when
-
-Read this when Harness is connected and you want to understand how one AI-assisted task should be handled.
-
-## Before you read
+The agent should translate your request into the right Harness steps. You should not need to operate internal records by hand. Use ordinary language first and exact Harness labels second, only when they explain a real stop, boundary, or close condition.
 
 [Harness in One Task](../learn/harness-in-one-task.md) is helpful background, but it is not required.
 
-## Main idea
+## First-read path
 
-Speak normally. No startup phrase is required. The agent should translate your request into the right Harness flow when the task calls for it.
+### 1. Say what you want
 
-## 5-minute path
-
-Start by describing the work in ordinary language:
+Start with the work and any boundary you already know:
 
 ```text
 Add email login flow. Keep password reset and account creation out of scope.
@@ -48,42 +34,36 @@ The agent should decide whether the request is read-only advice, small direct wo
 
 If the task is small, the agent may handle it as direct work. If the task is larger, risky, multi-file, or unclear, it should shape the work before changing product files.
 
-When the task is blocked, ask:
+### 2. Expect a compact start
 
-```text
-What is blocking this task now, and what one decision or check would unblock it?
-```
+At the start, or before significant resume, the agent should show a short status or Journey Card. It should fit a quick scan and show only what affects the next decision or safe action:
 
-Near close, ask:
+- task and mode
+- scope and out of bounds
+- next safe action
+- decision or blocker, including who owns the next move
+- smallest unblocker
+- write permission, evidence, verification, Manual QA, residual risk, and acceptance status when they matter
+- capability or readable-status freshness only when it affects whether you can rely on the display
 
-```text
-Show close-relevant residual risk before I accept.
-```
-
-## What the agent should show first
-
-At the start, or before significant resume, the agent should show a compact status or Journey Card. It should be short enough to scan and specific enough to act on. Show only what affects the next decision or safe action, while keeping the authority context visible: Task, mode, scope, out of bounds, next safe action, decision needed, blocker status, write authority, evidence, verification, Manual QA, residual risk, guarantee level, and projection freshness.
+A good first status can look like this:
 
 ```text
 Task: TASK-123 Add email login flow
-Mode: work
+Mode: tracked work (`work`)
 Scope: login form, login API call, session storage
 Out of bounds: password reset, account creation
 Next safe action: decide failed-login UX before wiring final UI behavior
 Decision needed: failed-login message
-Primary blocker: user-owned decision about failed-login feedback
+Blocked by: user-owned product judgment
 Smallest unblocker: choose one option from DEC-014
-Secondary blockers: evidence collection after implementation; Manual QA before close if UI copy changes
-Write authority: not requested yet
-Evidence: none yet; needed later for login submission and failed-login handling
-Verification: not run yet; detached verification not expected until implementation exists
-Manual QA: likely needed for final copy and layout
-Residual risk: none recorded
-Guarantee level: cooperative; no pre-execution blocking is claimed. If changed-path validation is available, out-of-scope writes may be detected after action.
-Projection freshness: current as of source_state_version v42
+Write permission: not requested yet (`Write Authorization`)
+Evidence/checks: none yet; needed later for login submission and failed-login handling
+Manual QA / risk / acceptance: likely Manual QA for final copy and layout; no residual risk recorded yet
+Capability/status: cooperative surface; status current as of source_state_version v42
 ```
 
-Look for the next safe action and the smallest unblocker. A primary blocker should say who owns the next move: user-owned when it needs your product, material technical, Approval, QA, risk, or acceptance judgment; agent-resolvable when the agent can refresh state, collect evidence, rerun a check, retry `prepare_write`, or narrow the scope without changing your decision. Secondary blockers should stay visible only when they will still matter after the primary blocker is resolved.
+Look first for the next safe action and the smallest unblocker. A blocker should say who owns the next move: user-owned when it needs your product, material technical, Approval, QA, risk, or acceptance judgment; agent-resolvable when the agent can refresh state, collect evidence, rerun a check, retry `prepare_write`, or narrow scope without changing your decision.
 
 If the status looks stale or wrong, say:
 
@@ -91,19 +71,31 @@ If the status looks stale or wrong, say:
 Show the current status and next action again from state.
 ```
 
-Read projection freshness as the freshness of the readable view, not as the task result. `current` means the card or report matches the state version it names. `stale`, `failed`, or `unknown` means the readable view may need refresh or reconcile before you rely on it.
+When the agent needs your judgment, status alone is not enough. It should add a focused prompt with options, a recommendation, uncertainty, what can continue if you defer, and refs to the relevant evidence or design records.
 
-That is different from stale state, stale baseline, or stale evidence. Those mean the underlying work inputs moved, became outdated, or no longer prove the claim; they may block writes or close even when the status card itself is current. It is also different from MCP unavailable: if the agent cannot reach the required Harness/Core capability, it should say that directly and avoid claiming an authoritative state change, Approval, result acceptance, residual-risk acceptance, gate update, or close until the connection or capability is restored.
+### 3. When blocked, ask for the one unblocker
 
-Typical recovery readings:
+When the task is blocked, ask:
 
-- Projection stale but Core state current: refresh or reconcile the readable view, then continue from Core state. Do not treat the stale Markdown report as authority.
-- MCP unavailable: hold product writes and gate updates; do not claim Approval, result acceptance, residual-risk acceptance, or close until the required Harness/Core capability is available or the work moves to a capable surface.
-- Managed block edited by hand: treat the edit as drift or a proposal, then route it through Reconcile before it becomes state.
+```text
+What is blocking this task now, and what one decision or check would unblock it?
+```
 
-The status card is not the same as judgment-context. When the agent needs your judgment, it should add a focused decision prompt with options, a recommendation, uncertainty, what can continue if you defer, and refs to the relevant evidence or design records.
+### 4. Before close, ask what remains
 
-If the agent uses words like guard, freeze, or careful mode, it should explain them in ordinary terms: what can actually be blocked before execution, and what can only be detected later. A freeze on a cooperative or detective surface means a scope hold or stricter next-action posture, not hard prevention.
+Near close, ask:
+
+```text
+Show close-relevant residual risk before I accept.
+```
+
+Ask for the close checklist if you want the full close basis:
+
+```text
+Show the close checklist.
+```
+
+The agent should keep Approval, Decision Packet outcomes, Write Authorization, evidence, verification, Manual QA, acceptance, and residual risk separate. One of them should not be used as a substitute for another.
 
 ## The three everyday questions
 
@@ -214,9 +206,7 @@ Look at the product or technical trade-offs before choosing.
 Check this from engineering, design, security, QA, or release-handoff perspective.
 ```
 
-Power-user labels for those review requests include product-review, eng-review, design-review, security-review, qa-review, and release-handoff.
-
-Those labels are Role Lens, playbook, or display requests. They help focus what to inspect; they are not new gates and do not by themselves create Approval, Write Authorization, evidence, QA, verification, acceptance, risk, or close effects. If a lens finds an issue, route it through the existing path: Decision Packet, evidence, Eval or verification need, Manual QA, residual risk, Approval, Change Unit update recommendation, or close blocker. The exact Role Lens boundary lives in [Agent Integration](../reference/agent-integration.md#role-lens-behavior).
+Power-user labels for those review requests include product-review, eng-review, design-review, security-review, qa-review, and release-handoff. They focus the review; they are not new gates.
 
 A useful final review often separates two questions:
 
@@ -224,8 +214,6 @@ A useful final review often separates two questions:
 Spec Compliance Review: Did we build the requested thing under the current scope and authority?
 Code Quality / Stewardship Review: Is the result maintainable and coherent in the codebase?
 ```
-
-Same-session review can be a helpful self-check or stewardship signal, but it is not detached verification.
 
 For cautious work:
 
@@ -236,8 +224,6 @@ Pause writes until I answer the open decision.
 Show what you can actually block and what you can only detect later.
 Use careful mode for this change: narrow scope, show write authority before writes, and ask before user-owned product or material technical trade-offs.
 ```
-
-If the connected surface cannot block before execution, careful mode means a narrower posture, clearer status, and later validation where available. It should not be described as hard prevention.
 
 Power-user equivalents for the same requests include Change Unit, Decision Packet, guarantee level, detached verification, residual risk, `prepare_write`, and Write Authorization. They are useful labels for explaining blocks and close conditions; they are not words you must memorize before using Harness.
 
@@ -267,6 +253,36 @@ Typical flow:
 Many small direct tasks skip some later checks. Bigger work should not hide those checks; it should show them only when they matter.
 
 A direct task result should stay compact and low-ceremony: what was requested, what stayed in scope, what changed, what was checked, whether it escalated, and any close-relevant risk or follow-up. It should not restate every gate when those gates did not affect the result.
+
+## Advanced status details
+
+Most users can continue with the quick path: scope, next safe action, blocker, smallest unblocker, and close-relevant risk. The details below matter when a status view looks stale, a Harness/Core capability is unavailable, the agent mentions guard or freeze behavior, or you ask for a specialized review lens.
+
+### readable status and MCP availability
+
+Projection freshness is the freshness of the readable view, not the task result. `current` means the card or report matches the state version it names. `stale`, `failed`, or `unknown` means the readable view may need refresh or reconcile before you rely on it.
+
+That is different from stale state, stale baseline, or stale evidence. Those mean the underlying work inputs moved, became outdated, or no longer prove the claim; they may block writes or close even when the status card itself is current.
+
+It is also different from MCP unavailable. If the agent cannot reach the required Harness/Core capability, it should say that directly and avoid claiming an authoritative state change, Approval, result acceptance, residual-risk acceptance, gate update, projection repair, or close until the connection or capability is restored.
+
+Typical recovery readings:
+
+- Projection stale but Core state current: refresh or reconcile the readable view, then continue from Core state. Do not treat the stale Markdown report as authority.
+- MCP unavailable: hold product writes and gate updates; do not claim Approval, result acceptance, residual-risk acceptance, or close until the required Harness/Core capability is available or the work moves to a capable surface.
+- Managed block edited by hand: treat the edit as drift or a proposal, then route it through Reconcile before it becomes state.
+
+### guarantee level and careful mode
+
+If the agent uses words like guard, freeze, or careful mode, it should explain them in ordinary terms: what can actually be blocked before execution, and what can only be detected later. A freeze on a cooperative or detective surface means a scope hold or stricter next-action posture, not hard prevention.
+
+The exact label may be guarantee level or surface capability. The useful question is still plain: "Can this surface prevent the action before it happens, or only detect a problem afterward?"
+
+### Role Lens requests
+
+Product-review, eng-review, design-review, security-review, qa-review, and release-handoff labels are Role Lens, playbook, or display requests. They help focus what to inspect; they are not new gates and do not by themselves create Approval, Write Authorization, evidence, QA, verification, acceptance, risk, or close effects.
+
+If a lens finds an issue, route it through the existing path: Decision Packet, evidence, Eval or verification need, Manual QA, residual risk, Approval, Change Unit update recommendation, or close blocker. Same-session review can be a helpful self-check or stewardship signal, but it is not detached verification. The exact Role Lens boundary lives in [Agent Integration](../reference/agent-integration.md#role-lens-behavior).
 
 ## When the task is blocked
 
