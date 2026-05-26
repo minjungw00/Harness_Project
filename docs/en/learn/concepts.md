@@ -51,7 +51,7 @@ Reference: [Kernel Reference](../reference/kernel.md).
 
 ## Decision Packet
 
-The agent finds two reasonable failed-login behaviors: a generic security-safe message or a detailed message that is easier for users but leaks more information. The agent should not quietly choose the product trade-off if that choice blocks progress.
+The agent finds several reasonable failed-login choices: inline message, toast, or modal/layer for the interaction; generic, specific, or hybrid wording for the copy. Another task might need a choice between session cookie, JWT, and social login, or between a compatible public API extension and a breaking cleanup. The agent should not quietly choose the product, security, compatibility, or maintenance trade-off if that choice blocks progress.
 
 A Decision Packet records a user-owned decision that blocks progress, write, close, waiver, acceptance, residual-risk acceptance, product direction, material technical direction, scope, design trade-off, stewardship judgment, or public commitment. It names the decision, options, trade-offs, evidence, affected scope, residual risk, and next action.
 
@@ -70,6 +70,8 @@ Current owner: [Operations and Conformance Reference](../reference/operations-an
 The task needs a new dependency, a network call, or access to a sensitive file. Even if the change is useful, the user may need to approve that category of action before it proceeds.
 
 Approval answers whether a sensitive action may proceed inside a defined scope. Approval is not the same as accepting the final result, choosing a design trade-off, or accepting residual risk.
+
+For example, approval to install a package is not the same as deciding that package is the architecture direction. Approval to access a secret is not permission to expose secret values in Evidence, projections, exports, logs, screenshots, or summaries.
 
 Reference: [Kernel Reference](../reference/kernel.md).
 
@@ -94,6 +96,8 @@ Current owner: [Operations and Conformance Reference](../reference/operations-an
 A test can pass while the error message is confusing, clipped on mobile, or visually inconsistent. A human may need to look at the result and record what they saw.
 
 Manual QA is human inspection of the experiential result where that matters, especially UI, UX, copy, accessibility, visual output, product taste, and other judgment-heavy outcomes.
+
+If Manual QA is waived, the waiver should still name the skipped surface, accepted risk, follow-up, and close impact. A waiver is a recorded judgment, not a test result.
 
 Current owner: [Design Quality Policies](../reference/design-quality-policies.md).
 

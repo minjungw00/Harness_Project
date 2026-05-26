@@ -93,7 +93,13 @@ Show the current status and next action again from state.
 
 Read projection freshness as the freshness of the readable view, not as the task result. `current` means the card or report matches the state version it names. `stale`, `failed`, or `unknown` means the readable view may need refresh or reconcile before you rely on it.
 
-That is different from stale state, stale baseline, or stale evidence. Those mean the underlying work inputs moved, became outdated, or no longer prove the claim; they may block writes or close even when the status card itself is current. It is also different from MCP unavailable: if the agent cannot reach the required Harness/Core capability, it should say that directly and avoid claiming an authoritative state change, approval, gate update, or close until the connection or capability is restored.
+That is different from stale state, stale baseline, or stale evidence. Those mean the underlying work inputs moved, became outdated, or no longer prove the claim; they may block writes or close even when the status card itself is current. It is also different from MCP unavailable: if the agent cannot reach the required Harness/Core capability, it should say that directly and avoid claiming an authoritative state change, Approval, result acceptance, residual-risk acceptance, gate update, or close until the connection or capability is restored.
+
+Typical recovery readings:
+
+- Projection stale but Core state current: refresh or reconcile the readable view, then continue from Core state. Do not treat the stale Markdown report as authority.
+- MCP unavailable: hold product writes and gate updates; do not claim Approval, result acceptance, residual-risk acceptance, or close until the required Harness/Core capability is available or the work moves to a capable surface.
+- Managed block edited by hand: treat the edit as drift or a proposal, then route it through Reconcile before it becomes state.
 
 The status card is not the same as judgment-context. When the agent needs your judgment, it should add a focused decision prompt with options, a recommendation, uncertainty, what can continue if you defer, and refs to the relevant evidence or design records.
 
@@ -169,11 +175,13 @@ A good Decision Packet should feel like decision support, not a permission slip.
 Examples:
 
 - Product/UX: failed-login feedback could be an inline message, a toast, or a modal/layer. The packet should compare user flow, interruption, accessibility, and copy risk, then recommend a path.
-- Product/copy: failed-login wording could be terse and security-focused, recovery-oriented, or more specific at the field level. The packet should compare account enumeration risk, clarity, support burden, and product tone.
+- Product/copy: failed-login wording could be generic, specific, or hybrid. The packet should compare account enumeration risk, clarity, support burden, recovery usefulness, and product tone.
 - Product taste and QA: a polished interaction may need Manual QA for layout, accessibility interpretation, and feel; a simpler conservative behavior may be easier to verify. The packet should show the trade-off and what can continue if QA is deferred, or why nothing should continue until the decision is made.
-- Technical: session handling could use session auth, token auth, or social login. The packet should separate revocation, client compatibility, security, and implementation cost.
-- Technical: dependency additions, schema migrations, public API/interface changes, and module boundary changes can also need a Decision Packet when the choice affects compatibility, rollback, test boundary, or future maintenance.
-- Security-sensitive: approval to access a secret, change permissions, or export data only answers whether that sensitive step may proceed. It does not decide which data is exported, who may export it, what gets redacted, or what audit trail is acceptable.
+- Technical: auth handling could use a session cookie, JWT, or social login. The packet should separate revocation, CSRF/XSS exposure, client compatibility, operational complexity, migration impact, and implementation cost.
+- Technical: dependency additions can involve both Approval and a Decision Packet. Approving an install or dependency-file edit is not the same as deciding the dependency is the architecture direction.
+- Technical/data: schema migrations should show whether the path is additive, compatibility-shimmed, or breaking. The packet should name migration evidence, rollback risk, data-backfill risk, test boundary, and future maintenance impact.
+- Technical/interface: public API or module-boundary changes can need a compatibility or breaking-change Decision Packet. Passing tests does not settle caller impact, documentation promises, migration path, or release risk.
+- Security-sensitive: approval to access a secret, change permissions, or export data only answers whether that sensitive step may proceed. It does not decide which data is exported, who may export it, what gets redacted, what is omitted from artifacts, or what audit trail is acceptable.
 
 ## Phrase reference
 

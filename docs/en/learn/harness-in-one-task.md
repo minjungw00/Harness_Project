@@ -324,6 +324,21 @@ The reference docs define the exact mode rules, Decision Packet compatibility, a
 
 This tutorial only shows why those pieces exist.
 
+## Other task shapes you will recognize
+
+The two flows above are anchors, not the whole universe. Harness should stay practical across many kinds of work:
+
+- A leaf code fix can still be `direct`: "Fix the null crash in the date formatter" may stay inside one function and its focused test. The result can close with a changed-path summary, test output, and self-check. If the fix changes public behavior or shared contracts, the same Task should move toward `work`.
+- A UI/UX choice often needs a Decision Packet: a checkout error might be shown as an inline message, toast, or modal/layer. The packet should compare flow interruption, accessibility, copy risk, and product tone. Backend validation can continue if it does not commit to the final experience, but the UX should not be claimed complete.
+- Auth choices mix product and security judgment: choosing session cookie, JWT, or social login affects revocation, CSRF/XSS exposure, client support, and operational cost. Failed-login copy has a similar trade-off: generic, specific, or hybrid wording changes account-enumeration risk, clarity, support burden, and tone.
+- A dependency addition may need two separate user answers: approval to install or update dependency files, and a Decision Packet if adopting that dependency is an architecture choice with compatibility, rollback, cost, or maintenance impact.
+- A public API change needs more than passing tests. Adding a required request field, changing or removing a response field, changing an error code, or removing a caller path can require a compatibility or breaking-change Decision Packet, migration notes, caller-impact evidence, and verification from the relevant boundary.
+- A schema change should show migration evidence and rollback risk. An additive column may be low risk with a tested migration. A destructive cleanup or data backfill may need explicit user judgment, backup or rollback notes, and evidence that the old and new shapes were handled.
+- Secret access is not secret exposure. Approval may allow the agent to read or use a secret inside the Task, but Evidence, artifacts, projections, exports, logs, screenshots, and summaries should use redacted handles, omission notes, or nonsecret facts rather than raw values.
+- Manual QA is for human judgment: UX, copy, accessibility interpretation, visual polish, and product taste may need a person to inspect the result. If QA is waived, the waiver should name the skipped surface, accepted risk, follow-up, and close impact. It is not the same as tests passing.
+- Recovery should be visible and routine. If MCP is unavailable, the agent should hold authoritative state changes, product writes, and gate updates; it should not claim Approval, result acceptance, residual-risk acceptance, or close until Harness/Core is reachable or a capable surface is used. If a projection is stale but Core state is current, refresh or reconcile the readable view without treating the stale projection as the source of truth. If a managed block was edited by hand, route it through Reconcile instead of pretending the display edit changed state.
+- Same-session review is useful, but it is not detached verification. The agent can use it as a self-check or stewardship signal. Detached verification needs an independent enough Eval, verifier, session, or review boundary.
+
 ## The same concepts in one table
 
 | everyday phrase | Harness term | why it exists | where to read more |

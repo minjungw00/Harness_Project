@@ -64,7 +64,7 @@ I found the active task. Current scope is X. The next safe action is Y. Product 
 
 If projection, `source_state_version`, or readable status is stale or unknown, say that and refresh or reconcile before depending on it. If canonical state is available directly, the agent may continue from that state while warning that the readable projection is not the source of authority.
 
-Keep display failures separate. A stale projection means the readable card/report may lag and needs refresh or reconcile before it becomes dependable context. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient and may block writes or close. MCP unavailable means the agent cannot reach the required Harness/Core capability; do not claim authoritative state changes, approvals, gate updates, projection repairs, or close until that capability is available again.
+Keep display failures separate. A stale projection means the readable card/report may lag and needs refresh or reconcile before it becomes dependable context. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient and may block writes or close. MCP unavailable means the agent cannot reach the required Harness/Core capability; do not claim authoritative state changes, Approval, result acceptance, residual-risk acceptance, gate updates, projection repairs, or close until that capability is available again.
 
 If Core itself is unreachable, the display issue is `MCP_SERVER_UNAVAILABLE`: say Core cannot be reached and reconnect or diagnose before claiming state changed. If Core or the operator can tell that the current surface lacks usable MCP, the display issue is `SURFACE_MCP_UNAVAILABLE`: say this surface cannot use the required Harness tools, then hold writes by instruction or switch to a capable surface. Only say execution was blocked before action when a proven preventive guard covered that operation.
 
@@ -189,11 +189,12 @@ A user-facing Decision Packet should include:
 Useful examples:
 
 - Failed-login UX: compare inline message, toast, and modal/layer; recommend one based on flow, accessibility, interruption, and copy risk. If deferred, backend auth work may continue, but the final failed-login experience should not be claimed done.
-- Failed-login copy: compare terse security-focused wording, plain recovery wording, and more specific field-level guidance; recommend one based on account enumeration risk, clarity, support burden, and product tone. If deferred, validation wiring may continue, but release-ready copy and Manual QA should stay open.
+- Failed-login copy: compare generic, specific, and hybrid wording; recommend one based on account enumeration risk, clarity, recovery usefulness, support burden, and product tone. If deferred, validation wiring may continue, but release-ready copy and Manual QA should stay open.
 - Product taste and Manual QA need: compare a polished interaction that needs human visual review with a simpler conservative behavior that can be checked by tests and browser smoke. Explain the taste trade-off, QA cost, user impact, and what can continue if Manual QA is deferred, or why nothing should continue until the decision is made.
-- Session approach: compare session auth, token auth, and social login; explain revocation, CSRF/XSS exposure, client compatibility, operational complexity, and migration cost. If deferred, form scaffolding may continue only if it does not commit to the session model.
-- Dependency or migration choice: compare adding a dependency, using existing utilities, or postponing the capability; for schema/data-model migration, compare additive migration, compatibility shim, and breaking cleanup. Explain blast radius, rollback, test boundary, and maintenance cost.
-- Public API/interface or module boundary: compare preserving the current interface, adding a narrow extension, or moving responsibility across a module boundary. Explain caller impact, compatibility risk, boundary tests, and future-change cost.
+- Auth approach: compare session cookie, JWT, and social login; explain revocation, CSRF/XSS exposure, client compatibility, operational complexity, and migration cost. If deferred, form scaffolding may continue only if it does not commit to the session model.
+- Dependency choice: separate approval to install or update dependency files from the architecture decision to adopt the dependency. Compare adding the dependency, using existing utilities, or postponing the capability, and explain compatibility, rollback, cost, and maintenance impact.
+- Schema/data-model migration: compare additive migration, compatibility shim, and breaking cleanup. Explain migration evidence, data-backfill risk, rollback path, test boundary, and maintenance cost.
+- Public API/interface or module boundary: compare preserving the current interface, adding a narrow extension, or moving responsibility across a module boundary. Explain caller impact, compatibility or breaking-change risk, boundary tests, documentation promises, migration path, and future-change cost.
 - Security-sensitive change: approval to access a secret, change permissions, or export data is only an approval boundary. Separate product or security judgment may still be needed for roles, fields, redaction, audit logging, retention, rollback, and user notice.
 - QA or verification waiver: use the existing recording required for the Task. A QA waiver is recorded through Manual QA/gate state and `qa_gate=waived`; product/user risk or policy-required judgment uses a QA waiver Decision Packet. A verification waiver is recorded as `verification_gate=waived_by_user`; when user-owned judgment is needed, use the relevant Decision Packet. Name the skipped check or surface, accepted risk, follow-up, relevant refs, and close impact. Example: waive mobile Safari Manual QA for a copy-only change, accept wrapping risk, and keep a browser pass as release follow-up.
 - Residual-risk acceptance before close: show the remaining limitation, the evidence that does exist, why close can still be acceptable, and the follow-up that remains.
@@ -373,4 +374,28 @@ Bad write hold:
 
 ```text
 Harness is unhappy, so I stopped.
+```
+
+Good MCP-unavailable hold:
+
+```text
+I cannot reach Harness/Core from this surface, so I am holding product writes and will not claim state changes, gate updates, Approval, result acceptance, residual-risk acceptance, or close. Smallest unblocker: reconnect Core or continue from a capable surface.
+```
+
+Good projection-stale recovery:
+
+```text
+The Journey Card is stale, but Core state is current. I will refresh or reconcile the readable view, then continue from Core state instead of treating the old Markdown as authority.
+```
+
+Good managed-block response:
+
+```text
+The generated report's managed block was edited by hand. I will treat that edit as a reconcile proposal; it is not state until Reconcile or another Core state-changing path records it.
+```
+
+Good review boundary:
+
+```text
+Same-session review found one stewardship concern and no scope mismatch. This is a self-check signal, not detached verification; detached verification would need a qualifying Eval or independent review boundary.
 ```

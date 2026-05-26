@@ -324,6 +324,21 @@ Remembered session과 non-remembered session에 대한 검증이 통과했습니
 
 이 튜토리얼은 그 조각들이 왜 존재하는지만 보여 줍니다.
 
+## 자주 만나게 되는 다른 작업 모양
+
+위의 두 흐름은 기준점일 뿐, 모든 상황의 목록은 아닙니다. Harness는 여러 종류의 작업에서도 실용적으로 보여야 합니다.
+
+- Leaf code fix는 여전히 `direct`일 수 있습니다. "date formatter에서 null crash를 고쳐줘" 같은 요청이 function 하나와 focused test 안에 머문다면, 변경 경로 요약, test 출력, self-check로 닫을 수 있습니다. 고친 결과가 public behavior나 shared contract를 바꾸면 같은 Task를 `work` 쪽으로 옮겨야 합니다.
+- UI/UX 선택에는 Decision Packet이 필요할 수 있습니다. Checkout error를 inline message, toast, modal/layer 중 어디에 보여줄지 선택해야 한다면 flow 방해 정도, 접근성, 문구 위험, 제품 톤을 비교해야 합니다. Backend validation은 최종 경험을 확정하지 않는 범위에서 계속할 수 있지만, UX가 완료됐다고 말하면 안 됩니다.
+- Auth 선택은 제품 판단과 보안 판단이 섞입니다. Session cookie, JWT, social login 중 무엇을 쓸지에 따라 폐기 가능성, CSRF/XSS 노출, client 지원, 운영 비용이 달라집니다. 실패한 로그인 문구도 비슷합니다. 일반적인 문구, 더 구체적인 문구, hybrid 문구 중 무엇을 고르느냐에 따라 account-enumeration 위험, 명확성, 지원 부담, 톤이 달라집니다.
+- Dependency 추가에는 사용자 답이 두 개 필요할 수 있습니다. Install 또는 dependency 파일 갱신을 허용하는 Approval과, 그 dependency를 architecture 방향으로 채택할지 결정하는 Decision Packet은 다릅니다. 호환성, rollback, 비용, 유지보수 영향이 있으면 별도 결정이 필요합니다.
+- Public API 변경은 test 통과만으로 충분하지 않습니다. 필수 request field를 추가하거나, response field를 바꾸거나 제거하거나, error code를 바꾸거나, caller path를 제거한다면 compatibility 또는 breaking-change Decision Packet, migration note, caller-impact evidence, 관련 경계에서의 verification이 필요할 수 있습니다.
+- Schema 변경은 migration evidence와 rollback risk를 보여줘야 합니다. Column을 추가하는 additive migration은 test된 migration으로 낮은 위험에 머물 수 있습니다. 파괴적인 cleanup이나 data backfill은 명시적인 사용자 판단, backup 또는 rollback note, 기존 shape와 새 shape를 모두 다뤘다는 evidence가 필요할 수 있습니다.
+- Secret access는 secret 노출이 아닙니다. Approval은 Task 안에서 secret을 읽거나 사용할 수 있게 할 수 있지만, Evidence, artifact, projection, export, log, screenshot, summary에는 raw value가 아니라 redacted handle, omission note, nonsecret fact를 써야 합니다.
+- Manual QA는 사람의 판단을 위한 것입니다. UX, 문구, accessibility 해석, 시각적 완성도, product taste는 사람이 결과를 봐야 할 수 있습니다. QA를 면제한다면 생략한 대상, 받아들이는 위험, 후속 작업, 닫기 영향을 이름 붙여야 합니다. 이는 test 통과와 같지 않습니다.
+- 복구 상황은 눈에 보이되 평범하게 처리되어야 합니다. MCP를 사용할 수 없으면 Harness/Core에 다시 닿거나 사용할 수 있는 surface로 옮길 때까지 기준 상태 변경, 제품 파일 쓰기, gate 갱신을 보류하고, Approval, 결과 수락, 남은 위험을 받아들이는 판단, 닫기가 처리됐다고 주장하지 않습니다. Projection이 stale이지만 Core state가 current라면, stale projection을 기준으로 삼지 말고 읽기용 보기를 refresh 또는 reconcile합니다. Managed block을 사람이 직접 고쳤다면 표시 편집이 state를 바꾼 척하지 말고 Reconcile로 보냅니다.
+- 같은 세션에서 하는 review는 유용하지만 detached verification은 아닙니다. 에이전트는 이를 self-check 또는 stewardship signal로 사용할 수 있습니다. Detached verification에는 충분히 독립적인 Eval, verifier, session, review boundary가 필요합니다.
+
 ## 같은 개념을 한 표로 보기
 
 | 일상적인 말 | Harness term | 왜 필요한가 | 더 읽을 곳 |

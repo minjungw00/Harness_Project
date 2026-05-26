@@ -93,7 +93,13 @@ Harness 상태 기준으로 현재 상태와 다음 행동을 다시 보여줘.
 
 Projection 최신성은 작업 결과가 아니라 읽기용 보기(view)가 최신인지 나타냅니다. `current`는 카드나 보고서가 표시한 state version과 맞는다는 뜻입니다. `stale`, `failed`, `unknown`은 그 읽기용 보기를 믿기 전에 refresh 또는 reconcile이 필요할 수 있다는 뜻입니다.
 
-이것은 오래된 상태(stale state), 오래된 기준선(stale baseline), 오래된 근거(stale evidence)와 다릅니다. 그런 상태는 실제 작업 입력이 바뀌었거나 오래됐거나 주장을 더 이상 뒷받침하지 못한다는 뜻이며, 상태 카드 자체가 current여도 쓰기나 닫기를 막을 수 있습니다. MCP unavailable도 별개입니다. 에이전트가 필요한 Harness/Core 기능에 닿지 못한다면 그 사실을 바로 말해야 하며, 연결이나 기능이 복구되기 전에는 기준 상태 변경, 승인, 게이트 갱신, projection 복구, 닫기를 주장하면 안 됩니다.
+이것은 오래된 상태(stale state), 오래된 기준선(stale baseline), 오래된 근거(stale evidence)와 다릅니다. 그런 상태는 실제 작업 입력이 바뀌었거나 오래됐거나 주장을 더 이상 뒷받침하지 못한다는 뜻이며, 상태 카드 자체가 current여도 쓰기나 닫기를 막을 수 있습니다. MCP unavailable도 별개입니다. 에이전트가 필요한 Harness/Core 기능에 닿지 못한다면 그 사실을 바로 말해야 하며, 연결이나 기능이 복구되기 전에는 기준 상태 변경, Approval, 결과 수락, 남은 위험을 받아들이는 판단, gate 갱신, projection 복구, 닫기가 처리됐다고 주장하면 안 됩니다.
+
+자주 보게 되는 복구 해석:
+
+- Projection은 stale이지만 Core state가 current인 경우: 읽기용 보기를 refresh 또는 reconcile한 뒤 Core state에서 계속합니다. 오래된 Markdown report를 권한의 출처로 삼지 않습니다.
+- MCP unavailable인 경우: 필요한 Harness/Core capability를 사용할 수 있거나 가능한 surface로 옮길 때까지 제품 파일 쓰기와 gate 갱신을 보류하고, Approval, 결과 수락, 남은 위험을 받아들이는 판단, 닫기가 처리됐다고 주장하지 않습니다.
+- Managed block을 사람이 직접 편집한 경우: 그 편집을 drift 또는 proposal로 보고, state가 되기 전에 Reconcile로 보냅니다.
 
 상태 카드는 판단에 필요한 맥락과 다릅니다. 에이전트에게 사용자 판단이 필요하면 선택지, 추천안, 불확실성, 결정을 미뤘을 때 계속할 수 있는 일, 관련 근거 또는 설계 기록 ref를 담은 간결한 판단 요청을 별도로 붙여야 합니다.
 
@@ -169,11 +175,13 @@ Markdown 보고서는 이런 근거를 보여주는 유용한 보기(view)이지
 예시:
 
 - 제품/UX: 로그인 실패 피드백은 인라인 메시지, 토스트, 모달/레이어 중 하나일 수 있습니다. Decision Packet은 사용자 흐름, 방해 정도, 접근성, 문구 위험을 비교한 뒤 경로를 추천해야 합니다.
-- 제품 문구: 로그인 실패 문구는 보안을 우선한 짧은 문구, 복구를 쉽게 설명하는 문구, 필드 수준에서 더 구체적인 안내 중 하나일 수 있습니다. Decision Packet은 계정 열거(account enumeration) 위험, 명확성, 지원 부담, 제품 톤을 비교해야 합니다.
+- 제품 문구: 로그인 실패 문구는 일반적인 문구, 더 구체적인 문구, hybrid 문구 중 하나일 수 있습니다. Decision Packet은 계정 열거(account enumeration) 위험, 명확성, 지원 부담, 복구 도움 정도, 제품 톤을 비교해야 합니다.
 - 제품 감각과 QA: 더 완성도 높은 상호작용은 레이아웃, 접근성 해석, 사용감을 위해 Manual QA가 필요할 수 있고, 더 보수적인 동작은 검증하기 쉽습니다. Decision Packet은 장단점과 QA를 미뤄도 계속할 수 있는 일, 또는 결정 전에는 진행하면 안 되는 이유를 보여줘야 합니다.
-- 기술 선택: 세션 처리는 session auth, token auth, social login 중 하나를 쓸 수 있습니다. Decision Packet은 폐기 가능성, client 호환성, 보안, 구현 비용을 분리해서 보여줘야 합니다.
-- 기술 선택: 의존성 추가, schema migration, public API/interface 변경, module boundary 변경도 호환성, rollback, test boundary, future maintenance에 영향을 주면 Decision Packet이 필요할 수 있습니다.
-- 보안 민감 작업: secret 접근, 권한 변경, 데이터 export에 대한 Approval은 그 민감한 단계를 진행해도 되는지만 답합니다. 어떤 데이터를 export할지, 누가 export할 수 있는지, 무엇을 마스킹할지, 어떤 감사 기록이 필요한지는 따로 결정해야 합니다.
+- 기술 선택: Auth 처리는 session cookie, JWT, social login 중 하나를 쓸 수 있습니다. Decision Packet은 폐기 가능성, CSRF/XSS 노출, client 호환성, 운영 복잡도, migration 영향, 구현 비용을 분리해서 보여줘야 합니다.
+- 기술 선택: 의존성 추가에는 Approval과 Decision Packet이 둘 다 관련될 수 있습니다. Install 또는 dependency 파일 edit을 승인하는 것은 그 dependency를 architecture 방향으로 선택하는 것과 다릅니다.
+- 기술/데이터 선택: schema migration은 additive인지, compatibility shim을 쓰는지, breaking path인지 보여줘야 합니다. Decision Packet은 migration evidence, rollback risk, data-backfill risk, test boundary, future maintenance 영향을 이름 붙여야 합니다.
+- 기술/interface 선택: public API 또는 module-boundary 변경에는 compatibility 또는 breaking-change Decision Packet이 필요할 수 있습니다. 테스트 통과만으로 caller impact, documentation promise, migration path, release risk가 해결되지는 않습니다.
+- 보안 민감 작업: secret 접근, 권한 변경, 데이터 export에 대한 Approval은 그 민감한 단계를 진행해도 되는지만 답합니다. 어떤 데이터를 export할지, 누가 export할 수 있는지, 무엇을 redaction할지, artifact에서 무엇을 생략할지, 어떤 감사 기록이 필요한지는 따로 결정해야 합니다.
 
 ## 문장 모음
 
