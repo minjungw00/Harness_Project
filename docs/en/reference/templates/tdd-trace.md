@@ -4,6 +4,8 @@
 
 Use `TDD-TRACE` when TDD is required, selected, or recorded for a Change Unit and the RED, GREEN, refactor/check, waiver, and evidence refs need a readable projection.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - `tdd_traces`
@@ -12,6 +14,7 @@ Use `TDD-TRACE` when TDD is required, selected, or recorded for a Change Unit an
 - RED, GREEN, and refactor/check artifact refs
 - Evidence Manifest coverage refs
 - waiver or non-TDD justification refs
+- finding routes through Evidence Manifest, Decision Packet, Change Unit, Residual Risk, Manual QA, Eval, close-blocker, or follow-up refs when applicable
 - design-quality validator results related to `tdd_trace`
 - projection freshness inputs
 
@@ -23,6 +26,7 @@ Use `TDD-TRACE` when TDD is required, selected, or recorded for a Change Unit an
 - Refactor
 - Non-TDD Justification
 - Evidence Refs
+- Finding Routing
 
 ## Full template
 
@@ -82,8 +86,18 @@ updated_at: 2026-05-06T09:40:00+09:00
 - refactor/check log:
 - Evidence Manifest:
 - diff:
+
+## Finding Routing
+- evidence gaps or support:
+- Decision Packet candidates or refs:
+- Change Unit update or follow-up:
+- residual-risk candidates or refs:
+- Manual QA or Eval refs:
+- close blockers:
 ````
 
 ## Notes
 
 This template is a rendered shape, not canonical state. RED target or plan text is planning context; actual RED evidence must still come from recorded artifact or result refs.
+
+If TDD is advisory but not required or selected, no TDD waiver is needed. Render required, selected, recorded, or waived TDD from owner records only; route any findings through existing owner refs rather than adding template-only state.

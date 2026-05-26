@@ -30,7 +30,7 @@ Harness 개념을 처음 이해하려면 Learn 경로를 사용합니다. 정확
 | MCP resource, MCP tool, public schema, error, `ValidatorResult`, `ProjectionKind` | [MCP API와 스키마](mcp-api-and-schemas.md) |
 | SQLite record, artifact layout, enum hardening, `tree_hash`, `request_hash` storage use | [Storage와 DDL](storage-and-ddl.md) |
 | Projection, managed block, projection freshness, Markdown 보고서, template body | [문서 Projection 참조](document-projection.md); [Template 참조](templates/README.md) |
-| Design quality, stewardship, context hygiene, severity composition, policy contract | [설계 품질 정책](design-quality-policies.md) |
+| Design quality, stewardship, Feedback Loop finding routing, context hygiene, severity composition, policy contract | [설계 품질 정책](design-quality-policies.md) |
 | Surface capability, guarantee display, connector behavior | [Agent 통합 참조](agent-integration.md) |
 | Operator procedure, conformance fixture, docs-maintenance 보고 | [운영과 Conformance 참조](operations-and-conformance.md) |
 
@@ -212,7 +212,11 @@ Verification result record입니다. verdict, checks performed, evidence reviewe
 
 ### Feedback Loop
 
-Checks와 findings가 state, scope, design, evidence, follow-up work, close status로 되돌아가는 기준 support record이자 recorded path입니다. Inputs에는 tests, typecheck, lint, build, browser smoke, TDD red/green/refactor traces, Manual QA, Eval findings, user decisions, operational findings, residual-risk decisions가 포함될 수 있습니다. Public refs는 `StateRecordRef.record_kind=feedback_loop`를 사용하며, public mutation은 `record_run`의 `FeedbackLoopUpdate` 또는 Manual QA execution link를 사용합니다. Feedback loops는 findings가 chat 속에서 사라지지 않게 합니다.
+Checks와 findings가 state, scope, design, evidence, follow-up work, close status로 되돌아가는 기준 support record이자 recorded path입니다. Inputs에는 tests, typecheck, lint, build, browser smoke, TDD red/green/refactor traces, Manual QA, Eval findings, user decisions, operational findings, residual-risk decisions가 포함될 수 있습니다. Public refs는 `StateRecordRef.record_kind=feedback_loop`를 사용하며, public mutation은 `record_run`의 `FeedbackLoopUpdate` 또는 Manual QA execution link를 사용합니다. Feedback loops는 findings가 chat 속에서 사라지지 않게 하며, applicable한 경우 Evidence Manifest coverage, Decision Packet, Change Unit update, Residual Risk record, Manual QA 또는 Eval record, close blocker, follow-up Task/Change Unit record 같은 기존 owner path로 연결합니다.
+
+### Finding
+
+Run, Eval, Manual QA record, validator, review display, operator diagnostic, conformance check에서 나온 관찰된 issue, gap, risk, blocker, noteworthy result입니다. Finding은 standalone authority path가 아니며 chat이나 report prose에 남아 있는 것만으로 gate 또는 close에 영향을 주지 않습니다. Existing owner record 또는 structured result를 통해 라우팅될 때만 state-relevant해집니다. 예: Evidence Manifest gap, Decision Packet candidate 또는 record, Change Unit update, Feedback Loop 또는 TDD Trace update, Manual QA 또는 Eval record, Residual Risk record, reconcile item, close blocker, follow-up Task/Change Unit record. 라우팅 계약은 [설계 품질 정책](design-quality-policies.md#finding-라우팅)과 [커널 참조](kernel.md#finding-라우팅)가 담당합니다.
 
 ### Fixture Assertion Semantics
 

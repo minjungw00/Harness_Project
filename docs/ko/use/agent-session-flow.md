@@ -254,6 +254,18 @@ Decision-centered prompt는 경로와 맞는 동사를 씁니다. 선택, defer,
 
 같은 세션에서 하는 검토(review)는 조건을 충족하는 independent Eval 또는 verification record가 없는 한 자체 확인(self-check) 또는 stewardship signal입니다. Decision Packet 후보, 근거 부족, Eval 또는 검증 필요, Manual QA 필요, Residual Risk 후보, Approval 필요, Change Unit 업데이트 추천, close blocker를 찾을 수는 있지만, 영향받는 write나 Task 닫기가 진행되기 전에 이런 발견 사항은 기존 경로로 연결해야 합니다.
 
+Check, review, Eval, Manual QA result, Run에서 finding이 나오면 chat에 남겨 두지 말고 route를 이름 붙입니다.
+
+- Evidence gap 또는 support: Evidence Manifest coverage를 갱신하고 Run/artifact/Feedback Loop/TDD ref를 cite합니다.
+- 사용자 소유 제품, 기술, waiver, acceptance, risk 선택: Decision Packet 후보 또는 기존 Decision Packet ref를 보여줍니다.
+- Scope, completion, autonomy mismatch: Change Unit update, 더 작은 Change Unit, follow-up Change Unit을 추천합니다.
+- 알려진 남은 불확실성 또는 생략된 check: acceptance 또는 risk-accepted close 전에 Residual Risk 후보 또는 ref를 보여줍니다.
+- QA 또는 verification outcome: Manual QA 또는 Eval record와 gate effect를 가리킵니다.
+- Close blocker: structured close blocker와 가장 작은 unblocker를 보여줍니다.
+- Follow-up work: summary에 묻지 말고 기존 follow-up Task, Change Unit, Journey continuity route를 만들거나 참조합니다.
+
+Feedback Loop는 selected loop와 loop finding을 위한 기준 support-record path입니다. 정확한 routing 경계는 [설계 품질 정책](../reference/design-quality-policies.md#finding-라우팅)과 [커널 참조](../reference/kernel.md#finding-라우팅)가 담당합니다. 이 Use 문서는 agent display behavior만 설명합니다.
+
 ## AFK 작업과 public commitment
 
 사용자가 자리를 비운 동안 계속하라고 했더라도, 그것은 이미 기록된 latitude를 쓰라는 뜻이지 새 권한을 만든다는 뜻이 아닙니다. 에이전트는 active Change Unit, active Autonomy Boundary, granted sensitive approvals, 각 제품 파일 쓰기에 맞는 `prepare_write` / Write Authorization 안에서만 계속할 수 있습니다.

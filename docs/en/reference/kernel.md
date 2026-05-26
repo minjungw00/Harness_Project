@@ -359,6 +359,12 @@ An Eval is a verification result record. It records the verification target, ver
 
 Manual QA is a human inspection record for UX, workflow, copy, accessibility, visual output, product taste, or any other result that needs human judgment. `manual_qa_record.result` is the record-level result of an actual Manual QA record and is limited to `passed`, `failed`, or `waived`. Pending required QA is not represented as a Manual QA record result; it is represented by the aggregate `qa_gate=pending`.
 
+### Finding routing
+
+Findings from Run summaries, command results, Eval blockers, Manual QA findings, design-quality validators, same-session reviews, or operator diagnostics are not a separate kernel authority path. They affect state, gates, or close only when captured through existing owner records or structured responses.
+
+The normal routes are Evidence Manifest coverage for unsupported or newly supported claims, Decision Packets for user-owned judgment, Change Unit updates for scope/completion/Autonomy Boundary changes, Feedback Loop or TDD Trace updates for selected-loop results, Manual QA or Eval records for QA/verification outcomes, Residual Risk records for known remaining risk, reconcile items for projection or human-edit drift, structured close blockers for failed close attempts, and follow-up Task/Change Unit/Journey Spine Entry records when that owner path already applies. Chat text, report prose, or review display text alone cannot satisfy a gate, accept risk, create evidence, or close a Task.
+
 ### Residual Risk
 
 Residual Risk is a canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact.
@@ -385,6 +391,7 @@ The kernel also owns the entity meaning for design support records:
 - Interface Contract records are the canonical source for Interface Contract.
 - Feedback Loop records are the canonical support records for selected feedback-loop definitions, planned loops, execution refs, waivers, and alternate loops.
 - TDD Trace records capture red, green, refactor evidence or a recorded non-TDD justification. TDD is one possible Feedback Loop implementation, not the Feedback Loop record itself.
+- Design-support findings route through these existing records and structured blockers; this reference does not define a standalone finding table.
 
 Their policy requirements are owned by [Design Quality Policies](design-quality-policies.md). Their storage DDL is owned by [Storage And DDL](storage-and-ddl.md).
 
@@ -395,6 +402,7 @@ This section gathers the kernel's long negative boundaries in one place so refer
 - Chat text is not state. State-changing actions create canonical records and `state.sqlite.task_events`.
 - Generated Markdown is not canonical state. Projection edits route through reconcile before they can affect state.
 - Raw artifacts are evidence files; Markdown reports that link to them are readable projections.
+- Findings in chat, review displays, or report prose are not state until routed through existing owner records or structured close/blocker results.
 - Autonomy Boundary records judgment latitude only. It is not a scope grant and does not authorize paths, tools, commands, network targets, secrets, or sensitive categories.
 - Public commitments that change what users, callers, release/support consumers, documentation readers, or other systems may rely on are user-owned judgment when they affect product direction, material technical direction, compatibility, risk, or acceptance. Approval cannot substitute for that Decision Packet path.
 - Approval is not user-owned product judgment or material technical judgment, correctness proof, QA, verification, acceptance, evidence, or Write Authorization.

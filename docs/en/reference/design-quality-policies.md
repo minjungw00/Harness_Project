@@ -6,6 +6,8 @@ Use this reference to decide when a design-quality policy applies, what record o
 
 These policies help AI-assisted work stay aligned with product design, domain language, module boundaries, testing discipline, human QA, and context hygiene without turning every quality preference into a kernel rule.
 
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 This document does not define MCP schemas, SQLite DDL, state transition tables, runtime behavior, server behavior, or full projection templates.
 
 ## Read this when
@@ -78,9 +80,23 @@ Review guidance is displayed in two stages so agents and users can separate "did
 | Spec Compliance Review | Did the work satisfy the requested task under the current Harness authority? | Acceptance criteria coverage, Change Unit completion conditions, scope and Write Authority compatibility, Decision Packet compatibility, evidence coverage, and residual-risk visibility. |
 | Code Quality / Stewardship Review | Is the implementation maintainable inside this codebase? | Domain language, module/interface boundary, vertical slice shape, feedback loop or TDD trace, codebase stewardship, context hygiene, and follow-up risk. |
 
-Review stages may summarize validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, Eval or verification needs, Manual QA needs, residual-risk candidates, Approval needs, and close blockers. Role Lens or recommended playbook labels may select this review posture, but they do not create another authority path. Review displays do not by themselves satisfy evidence, QA, verification, acceptance, residual-risk acceptance, Approval, scope, or Write Authorization.
+Review stages may summarize validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, Eval or verification needs, Manual QA needs, residual-risk candidates, Approval needs, close blockers, and follow-up work. Role Lens or recommended playbook labels may select this review posture, but they do not create another authority path. Review displays do not by themselves satisfy evidence, QA, verification, acceptance, residual-risk acceptance, Approval, scope, or Write Authorization.
 
 Same-session review is not detached verification. A passed two-stage review may support `self_checked` confidence and may route findings through existing state paths, but it must not produce `assurance_level=detached_verified`. Detached verification still requires a valid independence boundary and Eval path.
+
+## Finding routing
+
+Findings from Runs, Eval records, Manual QA, design-quality validators, same-session review displays, operator diagnostics, or conformance examples must not disappear into chat or report prose. A finding becomes close-relevant only through an existing owner path, such as an Evidence Manifest gap or support row, Decision Packet candidate or record, Change Unit scope/completion/Autonomy Boundary update, Feedback Loop or TDD Trace update, Manual QA or Eval result, Residual Risk candidate or record, structured close blocker, reconcile item, or follow-up Task/Change Unit/Journey Spine Entry when the owner docs already define that route.
+
+This section does not create a finding schema, DDL table, gate, validator ID, or authority path. It names how policy findings are routed back to the existing records owned by Kernel, MCP API, Storage, Document Projection, and Operations.
+
+| Finding source | Route through existing owner paths |
+|---|---|
+| Run or selected feedback-loop execution | Attach logs/artifacts to the Run and Feedback Loop execution, update Evidence Manifest coverage, and route failed or missing checks to a design/evidence blocker, rework Change Unit, residual-risk candidate, or close blocker when applicable. |
+| Eval or verification review | Record the Eval verdict, reviewed refs, independence/freshness blockers, and artifact refs; route missing reviewed evidence to Evidence Manifest coverage, invalid independence to verification gate or close blocker, and user-owned waiver/risk choices to Decision Packet and Residual Risk paths. |
+| Manual QA | Record Manual QA result, findings, evidence refs, waiver reason, and `qa_gate` effect; route failed or waived human-inspection risk to rework, Decision Packet, Residual Risk, close blocker, or follow-up work as policy requires. |
+| Design-quality or stewardship review | Record validator results and owner refs; route scope or autonomy gaps to Change Unit updates, product or material technical judgment to Decision Packets, stale or missing support to evidence/reconcile paths, and close-relevant risk to Residual Risk or close blockers. |
+| Operator or conformance finding | Assert the finding through existing state, events, artifacts, projection freshness, errors, reconcile/recover paths, or docs-maintenance report labels. Docs-maintenance findings keep runtime effect `none`. |
 
 ## Policy contract shape
 
@@ -235,11 +251,11 @@ Example: Before changing parser behavior, define a small loop: failing parser fi
 |---|---|
 | `name` | `feedback_loop` |
 | `applies_when` | Before implementation starts, before a behavior-affecting write, when TDD is waived, when Manual QA is expected, or when the agent needs a credible way to learn whether the change works. |
-| `default_requirement` | Define the feedback loop before implementation: test, typecheck, lint, build, browser smoke, Manual QA, or an explicit alternate loop. The selected loop should be the smallest credible loop for the risk. When TDD is required for a Change Unit or behavior slice, define the loop and the intended RED check before non-test implementation begins. TDD trace is one implementation of this policy, not the only implementation. |
+| `default_requirement` | Define the feedback loop before implementation: test, typecheck, lint, build, browser smoke, Manual QA, or an explicit alternate loop. The selected loop should be the smallest credible loop for the risk. When TDD is required for a Change Unit or behavior slice, define the loop and the intended RED check before non-test implementation begins. TDD trace is one implementation of this policy, not the only implementation. Findings from the loop must route back to Evidence Manifest coverage, Decision Packet candidates, Change Unit updates, Residual Risk candidates, Manual QA or Eval records, close blockers, or follow-up work where applicable. |
 | `allowed_waiver` | Allowed for docs-only edits, comments, formatting, or advisory work with no implementation or product behavior impact. Waiver must record why no executable, browser, Manual QA, or alternate loop is useful. |
-| `required_record` | A canonical `feedback_loops` record referenced with `record_kind=feedback_loop`, selected-loop refs, validator results, `tdd_traces` when TDD is selected, Manual QA record when Manual QA is selected and performed, `qa_gate=pending` when required QA has no satisfying record yet, and evidence manifest refs when executed. |
+| `required_record` | A canonical `feedback_loops` record referenced with `record_kind=feedback_loop`, selected-loop refs, validator results, refs to existing owner records that carry routed findings when findings exist, `tdd_traces` when TDD is selected, Manual QA record when Manual QA is selected and performed, `qa_gate=pending` when required QA has no satisfying record yet, and evidence manifest refs when executed. |
 | `validator` | `feedback_loop_check` |
-| `evidence` | Feedback Loop refs, planned loop refs, test/typecheck/lint/build/browser smoke logs, Manual QA refs, alternate-loop justification, TDD trace refs when used. |
+| `evidence` | Feedback Loop refs, planned loop refs, test/typecheck/lint/build/browser smoke logs, Manual QA refs, alternate-loop justification, TDD trace refs when used, and existing owner refs for findings that affect evidence, decisions, scope, risk, close blockers, or follow-up work. |
 | `close_impact` | Missing feedback loop definition keeps `design_gate=pending` or `partial`. Missing execution evidence can make evidence insufficient. Manual QA loop failures affect `qa_gate` through the Manual QA policy. Missing required TDD RED/GREEN/refactor coverage is handled through `tdd_trace_required` and can also make evidence manifest coverage insufficient. |
 
 Public mutation path: selected-loop definitions and waivers are recorded with `FeedbackLoopUpdate` during `record_run(kind=shaping_update)`. Execution refs and status are updated with `EvidenceUpdates.feedback_loop_updates` during implementation/direct runs, or with `record_manual_qa.feedback_loop_ref` when Manual QA is the selected loop.
@@ -254,6 +270,15 @@ Use this when:
 - RED and GREEN evidence should prove the behavior path rather than just describe it.
 
 Example: For a state transition bug, record a failing transition test before non-test implementation, then record the passing test and any refactor/check evidence.
+
+Requirement levels:
+
+| Level | Meaning |
+|---|---|
+| Required | `tdd_trace_required` applies because policy, the Task, Change Unit, behavior slice, user, or operator requires it. Non-test implementation needs actual RED evidence first, unless a valid TDD waiver exists. |
+| Selected | TDD is chosen as the Feedback Loop even when not otherwise required. Record the TDD Trace because it is the selected loop. |
+| Waived | TDD was required or selected, but a non-TDD justification and alternate credible Feedback Loop were recorded before the waiver affects implementation or close. A waiver does not prove behavior. |
+| Advisory | TDD is recommended by the shape of work but not marked required or selected. No TDD waiver is needed if the selected Feedback Loop is otherwise credible; do not report `tdd_trace_required` as failed solely from advisory guidance. |
 
 | Field | Contract |
 |---|---|
@@ -423,15 +448,15 @@ Example: A final review can pass Spec Compliance because acceptance criteria and
 | Field | Contract |
 |---|---|
 | `name` | `two_stage_review_display` |
-| `applies_when` | Review guidance is shown for spec compliance, code quality, stewardship, evidence gaps, Decision Packet candidates, residual-risk candidates, or close blockers. |
-| `default_requirement` | Display Spec Compliance Review and Code Quality / Stewardship Review separately. Treat Role Lens and playbook labels such as `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, and `release-handoff` as review posture only. Summarize relevant owner records, validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, Approval needs, Manual QA needs, Eval or verification needs, and close blockers without creating new gates, schemas, canonical records, or assurance upgrades. |
+| `applies_when` | Review guidance is shown for spec compliance, code quality, stewardship, evidence gaps, Decision Packet candidates, residual-risk candidates, close blockers, or follow-up work. |
+| `default_requirement` | Display Spec Compliance Review and Code Quality / Stewardship Review separately. Treat Role Lens and playbook labels such as `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, and `release-handoff` as review posture only. Summarize relevant owner records, validator results, evidence gaps, Decision Packet candidates, Change Unit update recommendations, residual-risk candidates, Approval needs, Manual QA needs, Eval or verification needs, close blockers, and follow-up work without creating new gates, schemas, canonical records, or assurance upgrades. |
 | `allowed_waiver` | Display may be omitted for narrow direct/advisor work where no review display is useful. Omission waives only the display; it does not waive underlying policy or state requirements, including Decision Packet needs, evidence, QA, verification, acceptance, residual-risk visibility or acceptance, scope, Approval, Write Authorization, or close. |
-| `required_record` | Existing owner records, validator results, evidence refs, Decision Packet refs, Eval or verification refs, Manual QA refs, Approval refs, residual-risk refs, and close blocker refs. The review display itself is derived display, not canonical state. |
+| `required_record` | Existing owner records, validator results, evidence refs, Decision Packet refs, Eval or verification refs, Manual QA refs, Approval refs, residual-risk refs, close blocker refs, and follow-up Task/Change Unit refs where applicable. The review display itself is derived display, not canonical state. |
 | `validator` | No standalone validator ID. Spec Compliance Review reads acceptance/evidence state plus `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, and close-related residual-risk checks where applicable. Code Quality / Stewardship Review reads `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, and `context_hygiene_check`. |
-| `evidence` | Existing validator result refs, evidence manifest refs, run/eval/manual QA refs, owner-record refs, Approval refs, residual-risk refs, and close blocker refs. |
+| `evidence` | Existing validator result refs, evidence manifest refs, run/eval/manual QA refs, owner-record refs, Approval refs, residual-risk refs, close blocker refs, and follow-up refs. |
 | `close_impact` | Review display does not by itself satisfy or block close. Underlying policy validators, evidence sufficiency, QA, verification, acceptance, residual-risk visibility, Approval, scope, and Write Authorization determine the actual close impact. |
 
-Review display findings route to existing paths: Decision Packet, evidence, Eval or verification, Manual QA, residual risk, Approval, Change Unit update recommendation, or close blocker. They are not new canonical records. Same-session review content is self-check or stewardship signal unless a qualifying independent Eval or verification record provides detached assurance.
+Review display findings route to existing paths: Decision Packet, evidence, Eval or verification, Manual QA, residual risk, Approval, Change Unit update recommendation, follow-up work, or close blocker. They are not new canonical records. Same-session review content is self-check or stewardship signal unless a qualifying independent Eval or verification record provides detached assurance.
 
 ## Waiver rules
 

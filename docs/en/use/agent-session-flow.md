@@ -254,6 +254,18 @@ For review output, keep the two questions separate:
 
 Same-session review is self-check or stewardship signal unless a qualifying independent Eval or verification record exists. It may find Decision Packet candidates, evidence gaps, Eval or verification needs, Manual QA needs, residual-risk candidates, Approval needs, Change Unit update recommendations, or close blockers, but those findings must route through the existing paths before affected writes or close proceed.
 
+When a check, review, Eval, Manual QA result, or Run produces a finding, name the route instead of leaving the finding in chat:
+
+- Evidence gap or support: update Evidence Manifest coverage and cite Run/artifact/Feedback Loop/TDD refs.
+- User-owned product, technical, waiver, acceptance, or risk choice: show a Decision Packet candidate or existing Decision Packet ref.
+- Scope, completion, or autonomy mismatch: recommend a Change Unit update, smaller Change Unit, or follow-up Change Unit.
+- Known remaining uncertainty or skipped check: show a Residual Risk candidate or ref before acceptance or risk-accepted close.
+- QA or verification outcome: point to the Manual QA or Eval record and its gate effect.
+- Close blocker: show the structured close blocker and smallest unblocker.
+- Follow-up work: create or reference the existing follow-up Task, Change Unit, or Journey continuity route rather than burying the note in a summary.
+
+Feedback Loop is the canonical support-record path for selected loops and loop findings. Exact routing boundaries are owned by [Design Quality Policies](../reference/design-quality-policies.md#finding-routing) and [Kernel Reference](../reference/kernel.md#finding-routing); this Use doc only describes the agent display behavior.
+
 ## AFK work and public commitments
 
 When the user says to continue while they are away, treat that as permission to use already-recorded latitude, not as new authority. The agent may continue only inside the active Change Unit, the active Autonomy Boundary, granted sensitive approvals, and compatible `prepare_write` / Write Authorization for each product write.

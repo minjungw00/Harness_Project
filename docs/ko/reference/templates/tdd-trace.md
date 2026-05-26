@@ -4,6 +4,8 @@
 
 Change Unit에서 TDD가 필요하거나 선택 또는 기록된 상태이고 RED, GREEN, refactor/check, waiver, evidence ref를 읽기 쉬운 projection으로 볼 때 `TDD-TRACE`를 사용합니다.
 
+이 문서는 template 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 기준 기록
 
 - `tdd_traces`
@@ -12,6 +14,7 @@ Change Unit에서 TDD가 필요하거나 선택 또는 기록된 상태이고 RE
 - RED, GREEN, refactor/check artifact 참조
 - Evidence Manifest coverage 참조
 - waiver 또는 non-TDD justification 참조
+- applicable한 경우 Evidence Manifest, Decision Packet, Change Unit, Residual Risk, Manual QA, Eval, close blocker, follow-up ref를 통한 finding route
 - `tdd_trace` 관련 design-quality validator 결과
 - 읽기용 보기 최신성(projection freshness) 입력
 
@@ -23,6 +26,7 @@ Change Unit에서 TDD가 필요하거나 선택 또는 기록된 상태이고 RE
 - Refactor
 - Non-TDD Justification
 - Evidence Refs
+- Finding Routing
 
 ## 전체 템플릿
 
@@ -82,8 +86,18 @@ updated_at: 2026-05-06T09:40:00+09:00
 - refactor/check log:
 - Evidence Manifest:
 - diff:
+
+## Finding Routing
+- evidence gaps or support:
+- Decision Packet candidates or refs:
+- Change Unit update or follow-up:
+- residual-risk candidates or refs:
+- Manual QA or Eval refs:
+- close blockers:
 ````
 
 ## 메모
 
 이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. RED target 또는 plan은 계획 context이며, 실제 RED evidence는 여전히 기록된 artifact 또는 result ref에서 나와야 합니다.
+
+TDD가 advisory일 뿐 required 또는 selected가 아니라면 TDD waiver는 필요하지 않습니다. Required, selected, recorded, waived TDD는 owner record에서만 렌더링하고, finding은 template-only state를 추가하지 말고 기존 owner ref로 라우팅합니다.

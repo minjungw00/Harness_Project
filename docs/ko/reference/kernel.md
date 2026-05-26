@@ -361,6 +361,12 @@ Manual QA는 UX, workflow, copy, accessibility, visual output, product taste 또
 
 아직 충족되지 않은 required QA는 Manual QA record result가 아니라 aggregate `qa_gate=pending`으로 표현합니다.
 
+### Finding 라우팅
+
+Run summary, command result, Eval blocker, Manual QA finding, design-quality validator, same-session review, operator diagnostic에서 나온 finding은 별도의 kernel authority path가 아닙니다. Existing owner record 또는 structured response로 capture될 때만 state, gate, close에 영향을 줍니다.
+
+일반적인 경로는 unsupported 또는 newly supported claim에 대한 Evidence Manifest coverage, 사용자 소유 판단을 위한 Decision Packet, scope/completion/Autonomy Boundary 변경을 위한 Change Unit update, selected-loop result를 위한 Feedback Loop 또는 TDD Trace update, QA/verification outcome을 위한 Manual QA 또는 Eval record, 알려진 남은 위험을 위한 Residual Risk record, projection 또는 human-edit drift를 위한 reconcile item, failed close attempt에 대한 structured close blocker, 그리고 해당 owner path가 이미 적용되는 경우 follow-up Task/Change Unit/Journey Spine Entry record입니다. Chat text, report prose, review display text만으로는 gate를 충족하거나, 위험을 받아들이거나, evidence를 만들거나, Task를 close할 수 없습니다.
+
 ### Residual Risk
 
 Residual Risk는 알려진 남은 불확실성, trade-off, limitation, unchecked condition을 위한 기준 close-relevant support record입니다. source ref, affected scope, applicable한 경우 related Decision Packet, visibility status, accepted risk, follow-up 요구사항, close 영향을 기록합니다.
@@ -387,6 +393,7 @@ Kernel은 design support records의 entity meaning도 담당합니다.
 - Interface Contract records는 Interface Contract의 기준 기록입니다.
 - Feedback Loop records는 selected feedback-loop definitions, planned loops, execution refs, waivers, alternate loops를 위한 기준 보조 기록입니다.
 - TDD Trace records는 red, green, refactor 근거 또는 recorded non-TDD justification을 capture합니다. TDD는 가능한 Feedback Loop 구현 중 하나이지 Feedback Loop record 자체가 아닙니다.
+- Design-support finding은 이런 기존 record와 structured blocker를 통해 라우팅됩니다. 이 reference는 standalone finding table을 정의하지 않습니다.
 
 정책 요구사항은 [설계 품질 정책](design-quality-policies.md)이 담당합니다. Storage DDL은 [Storage와 DDL](storage-and-ddl.md)이 담당합니다.
 
@@ -397,6 +404,7 @@ Kernel은 design support records의 entity meaning도 담당합니다.
 - 대화 텍스트는 상태가 아닙니다. 상태를 변경하는 actions는 기준 records와 `state.sqlite.task_events`를 만듭니다.
 - Generated Markdown은 기준 상태가 아닙니다. Projection edits는 상태에 영향을 주기 전에 reconcile을 거칩니다.
 - Raw artifacts는 근거 파일입니다. 그것을 링크하는 Markdown 보고서는 읽기용 projections입니다.
+- Chat, review display, report prose 안의 finding은 기존 owner record 또는 structured close/blocker result로 라우팅되기 전까지 state가 아닙니다.
 - Autonomy Boundary는 판단 latitude만 기록합니다. Scope grant가 아니며 paths, tools, commands, network targets, secrets, sensitive categories를 허가하지 않습니다.
 - 사용자, caller, release/support 소비자, 문서 독자, 다른 system이 의존할 내용을 바꾸는 public commitment는 product direction, 중요한 technical direction, compatibility, risk, acceptance에 영향을 줄 때 사용자 소유 판단입니다. Approval은 그 Decision Packet 경로를 대신할 수 없습니다.
 - Approval은 사용자 소유의 제품 판단 또는 중요한 기술 판단, correctness proof, QA, 검증, 수용, 근거, Write Authorization을 대신하지 않습니다.
