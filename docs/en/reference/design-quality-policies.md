@@ -30,7 +30,7 @@ This document does not define MCP schemas, SQLite DDL, state transition tables, 
 | `deep_module_interface` | Are module roles, public interfaces, compatibility, and callers understood? |
 | `codebase_stewardship` | Does local task completion hide future maintenance, testability, domain, or boundary damage? |
 | `manual_qa` | Does a human need to inspect UX, workflow, copy, accessibility, visual output, or product taste? |
-| `context_hygiene` | Is the agent using a compact current context envelope, pulling large or stale refs only when needed, and warning on freshness drift? |
+| `context_hygiene` | Is the agent using a compact current context envelope, pulling large or stale refs only when needed, warning on freshness drift, and keeping retrieved context separate from authority? |
 | `two_stage_review_display` | Are spec compliance and code stewardship shown separately without creating new gates? |
 
 ## Reference scope
@@ -395,11 +395,13 @@ Use this when:
 
 Example: A task resumes after a week. Push the compact Harness context envelope, latest evidence/run/eval/QA refs, Journey refs, policy refs, acceptance criteria, and projection freshness; pull old PRDs only if needed and mark stale inputs.
 
+Retrieved or indexed context is a context-hygiene input, not an authority source. It may point the agent to compact status, pull refs, or source excerpts, but the underlying owner records still control whether Harness authorizes writes or creates Write Authorization, resolves Decision Packets, grants Approval, satisfies gates, creates evidence, performs or records verification, records QA, waives QA/verification or other gate/close-relevant requirements, records result acceptance, records residual-risk acceptance, upgrades assurance, enqueues or refreshes projections or changes projection freshness, declares implementation readiness, or closes Tasks.
+
 | Field | Contract |
 |---|---|
 | `name` | `context_hygiene` |
 | `applies_when` | Work resumes after interruption, old PRDs/design docs/issues exist, code paths have moved, acceptance criteria changed, module/interface/domain records changed, projection `source_state_version` or freshness is unknown/stale, or evaluator/reviewer needs a focused bundle. |
-| `default_requirement` | Push a compact always-on context envelope: active Task id/mode, next safe action, active Change Unit summary, blocking decisions, Write Authority status, guarantee level, gate summary, and projection freshness including `source_state_version` when known. Push large proof and history as refs and summaries: latest Evidence, Run, Eval, Manual QA, ArtifactRef, report, residual-risk, Journey, policy, acceptance-criteria, TDD, stewardship, module/interface, and domain refs. Pull stale PRDs, closed issues, old design docs, coding standards, long logs, screenshots, diffs, artifacts, and large traces only when needed as pull-only references. Mark stale docs, warn on projection freshness drift, and avoid treating chat as state. |
+| `default_requirement` | Push a compact always-on context envelope: active Task id/mode, next safe action, active Change Unit summary, blocking decisions, Write Authority status, guarantee level, gate summary, and projection freshness including `source_state_version` when known. Push large proof and history as refs and summaries: latest Evidence, Run, Eval, Manual QA, ArtifactRef, report, residual-risk, Journey, policy, acceptance-criteria, TDD, stewardship, module/interface, and domain refs. Pull stale PRDs, closed issues, old design docs, coding standards, long logs, screenshots, diffs, artifacts, large traces, and retrieved/indexed context only when needed as pull-only references. Mark stale docs, warn on projection freshness drift, and avoid treating chat or retrieved context as state. |
 | `allowed_waiver` | Allowed for short advisor-only work where no product state, design state, or evidence state is being changed. |
 | `required_record` | Source records needed to render the compact envelope: current Task summary/state, active Change Unit ref, Decision Packet refs, gate states, Write Authority summary, surface capability/guarantee summary, projection freshness, `source_state_version` when known, Evidence Manifest refs, Run refs, Eval refs, Manual QA refs, ArtifactRef refs, report refs, residual-risk refs, reconcile items for drift, and validator results. The compact envelope itself is rendered/derived current-context display, not a canonical record, schema field, DDL value, authority input, or storage object. |
 | `validator` | `context_hygiene_check` |

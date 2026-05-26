@@ -97,9 +97,9 @@ Later because parallel execution depends on stable locks, baseline freshness, ap
 
 ### Context Index
 
-A Context Index is a read-only context provider that may help an agent find relevant projections, artifact refs, repo files, docs, or user notes without treating indexed knowledge as Harness state.
+A Context Index is a read-only context provider that may help an agent find relevant projections, artifact refs, repo files, docs, or user notes without treating indexed knowledge as Harness state or authority.
 
-Later because indexed memory can blur local authority if introduced before the kernel and source-of-truth boundaries are stable. Until explicitly promoted through owner docs, a Context Index is non-authoritative retrieval only. A future Context Index may rank, summarize, or retrieve context, but indexed or retrieved context must not authorize writes, resolve Decision Packets, grant approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, enqueue or refresh projections, change projection freshness, declare implementation readiness, or close Tasks.
+Later because indexed memory can blur local authority if introduced before the kernel and source-of-truth boundaries are stable. Until explicitly promoted through owner docs, a Context Index is non-authoritative retrieval only. A future Context Index may rank, summarize, or retrieve context, but it cannot replace existing authority paths unless the owner docs for those paths explicitly change. Retrieved context may inform work, compact status, status interpretation, source excerpts, and pull refs; it cannot authorize writes or create Write Authorization, resolve Decision Packets, grant Approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA/verification or any other gate/close-relevant requirement, record result acceptance, record residual-risk acceptance, upgrade assurance, enqueue or refresh projections or change projection freshness, declare implementation readiness, or close Tasks.
 
 ```mermaid
 flowchart LR
