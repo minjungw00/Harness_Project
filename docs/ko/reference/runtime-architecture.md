@@ -6,6 +6,8 @@
 
 구현자와 운영자가 찾아보는 참조 문서이며, Learn overview 전체를 다시 설명하지 않습니다.
 
+이 문서는 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 이런 때 읽기
 
 - 제품 저장소 파일과 Harness runtime의 상태 관계를 매핑할 때.
@@ -257,18 +259,19 @@ Projection 렌더링은 transaction 이후에 일어납니다. Projection failur
 
 ## Artifact store architecture
 
-Artifact store는 지속 보관되는 근거 파일을 보관합니다. Raw artifacts에는 diffs, logs, screenshots, checkpoints, bundles, captured manifests, exported bundle components, 기타 integrity metadata와 함께 저장되는 evidence file이 포함됩니다.
+Artifact store는 지속 보관되는 근거 파일을 보관하지만, loose file dump가 아닙니다. Raw artifacts에는 diffs, logs, screenshots, traces, checkpoints, bundles, captured manifests, exported bundle components, 기타 integrity metadata와 owner 관계로 등록된 뒤에만 저장되는 evidence file이 포함됩니다.
 
 Artifact는 두 부분으로 이루어집니다.
 
 - artifact store 안의 raw file
-- kind, path, hash, size, redaction state, task/run relation, retention class를 이름 붙이는 `state.sqlite`의 artifact 상태 기록
+- kind, path, hash, size, redaction state, retention class, Task-scoped owner relation을 이름 붙이는 registered artifact ref와 `state.sqlite`의 artifact 상태 기록
 
 
-Core는 runs, evidence manifests, Eval records, Manual QA records, Decision Packets, 렌더링된 Task-scoped projection refs 같은 기존 Task-scoped owner record에 artifact refs를 기록합니다. MVP에서 렌더링된 projection ref로 향하는 `artifact_links`는 artifact의 `task_id` 안에 머뭅니다. Project-level projection job은 owner docs가 허용하는 곳에서 `projection_jobs` metadata로 track될 수 있지만, current MVP에서는 project-scoped artifact links가 아닙니다. Export snapshots와 components는 valid owners 또는 Task-scoped projections로 다시 link되는 artifact files로 남습니다. Exact relation rules는 MCP API, Storage와 DDL, Document Projection, Operations owner docs가 담당합니다. Large logs와 patches는 원본 artifact로 두고, Markdown 보고서는 제한 없는 evidence 본문을 포함하는 대신 artifact refs로 link해야 합니다.
+Core는 runs, evidence manifests, Eval records, Manual QA records, Decision Packets, 렌더링된 Task-scoped projection refs 같은 기존 Task-scoped owner record에 artifact refs를 기록합니다. MVP에서 렌더링된 projection ref로 향하는 `artifact_links`는 artifact의 `task_id` 안에 머뭅니다. Project-level projection job은 owner docs가 허용하는 곳에서 `projection_jobs` metadata로 track될 수 있지만, current MVP에서는 project-scoped artifact links가 아닙니다. Export snapshots와 components는 valid owners 또는 Task-scoped projections로 다시 link되는 artifact files로 남습니다. Exact relation rules는 MCP API, Storage와 DDL, Document Projection, Operations owner docs가 담당합니다. Large logs, diffs, screenshots, traces, patches는 원본 artifact로 두고, Markdown 보고서는 제한 없는 evidence 본문을 포함하는 대신 artifact refs로 link해야 합니다.
 
 Raw secrets는 artifacts로 저장하면 안 됩니다. Secret-related evidence가 required라면 Core는 redacted artifact, secret handle, relevant validator를 통과한 operator note를 기록합니다.
 
+Large logs, diffs, screenshots, traces 같은 큰 근거는 registered artifact ref로 link해야 합니다. Markdown 보고서와 export는 ref가 무엇을 뒷받침하는지 요약하고 redaction 및 availability state와 safe note를 표시할 수 있지만, 큰 evidence 본문을 붙여 넣거나 생략된 secret value를 다시 만들면 안 됩니다.
 
 ### Raw artifacts, 상태 기록, Markdown 보고서
 
@@ -335,7 +338,7 @@ Failures는 숨기지 않고 기록합니다.
 | Agent crash during write | active Run을 `runs.status=interrupted`로 표시하거나 equivalent interrupted recovery Run을 commit합니다. 가능하면 diff/log snapshots를 캡처하고 successful completion의 증거가 아닌 recovery artifacts로 등록합니다 |
 | approval 이후 baseline drift | approval 또는 evidence를 `stale`로 표시합니다. Scope가 영향을 받으면 reconfirmation을 요구합니다 |
 | evaluator가 repo drift 관찰 | verification을 차단하거나 `stale`로 표시합니다. Fresh baseline 또는 new bundle을 요구합니다 |
-| artifact file missing | artifact/evidence를 `stale`로 표시합니다. Recovery를 통해 다시 scan하거나 restore합니다 |
+| artifact file missing 또는 hash mismatch | artifact와 dependent evidence, projection, export, close-readiness view를 `stale` 또는 blocked로 표시합니다. Recovery를 통해 다시 scan하거나, 등록된 정확한 bytes를 restore하거나, replacement를 등록합니다 |
 | Projection job failed | state는 current로 유지하고 projection을 failed로 표시한 뒤 retry 또는 reconcile합니다 |
 | Managed Markdown edited directly | reconcile item을 만들고 기준 상태를 직접 바꾸지 않습니다 |
 | MCP unavailable | `MCP_SERVER_UNAVAILABLE`은 tool 호출이 Core에 닿을 수 없어 authoritative Core response가 불가능한 진단 조건이고, `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 연결된 접점에서 사용할 수 있는 MCP가 없거나 MCP configuration이 최신이 아니거나 required tools를 호출할 수 없음을 관찰할 수 있는 진단 조건입니다. `MCP_UNAVAILABLE`은 stable public availability code로 남습니다. Product/runtime/code writes는 cooperative 접점에서는 instruction으로 보류되고, 가능한 detective path에서는 실행 뒤에 감지되며, covered operation에 대해 입증된 preventive guard가 있을 때만 실행 전에 차단됩니다 |

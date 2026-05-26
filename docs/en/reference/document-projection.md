@@ -6,6 +6,8 @@ Use this reference to check how Harness renders human-readable Markdown projecti
 
 It defines projection authority boundaries, managed block behavior, human-editable sections, artifact reference rendering, template tiers, and projection freshness rules. It does not define canonical kernel state, MCP request/response schemas, SQLite DDL, design-quality policy requirements, or full template bodies. Full template bodies and display card shapes live in the [Template Reference](templates/README.md).
 
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Read this when
 
 - You need to implement or review Markdown projection behavior.
@@ -259,10 +261,11 @@ Rules:
 - Every artifact ref must resolve to an artifact record.
 - Every raw artifact ref must carry integrity metadata and redaction state.
 - Large or sensitive evidence is linked, not pasted into Markdown.
+- User-visible artifact lines should show the ref identity, owner or supporting record when useful, hash or short hash, size when useful, redaction state, retention class or availability, and any omission/block note needed to understand evidence impact.
 - `secret_omitted` artifacts are displayed as refs plus omission notes or handles. They may support visible nonsecret claims, but projection text must not imply that omitted values were inspected or proven.
 - `blocked` artifacts are displayed as refs plus block notes. The displayed hash, size, and content type describe the committed metadata-only notice bytes, not the forbidden raw payload. The projector must not reconstruct, inline, summarize, or export omitted or blocked raw values.
 - A `blocked` artifact display means the raw capture is unavailable. Evidence, QA, verification, Release Handoff, and export displays must surface that block as blocked, insufficient, unavailable input, or unresolved until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the path.
-- Missing or hash-mismatched artifacts mark related evidence or projection freshness stale.
+- Missing or hash-mismatched artifacts mark related evidence, projection freshness, export display, or close-readiness views stale or blocked. User-visible reports should point to the affected ref and the `artifacts check` or recovery path; they should not paste report prose as replacement evidence.
 - State record refs use record identity and optional projection path; for `record_kind=projection`, identity is `projection_jobs.projection_job_id` and the path is only a locator. They are not rendered as raw artifact refs.
 - `artifact_links.record_kind` must resolve to an existing same-Task state owner or projection ref. MVP artifact links are Task-scoped; `record_kind=projection` resolves to a completed `projection_jobs` row with the same `task_id`, and the link's `record_id` is `projection_jobs.projection_job_id`, while path display uses `StateRecordRef.projection_path` or `projection_jobs.output_path`. Project-level owner rows and project-level projection jobs use state or projection job freshness/output metadata unless a future extension adds project-scoped artifact linking. `EXPORT` is a `ProjectionKind` only; export snapshots and components remain artifacts linked to their owner records or to `record_kind=projection`, not to `record_kind=export`.
 

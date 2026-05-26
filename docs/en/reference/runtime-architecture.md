@@ -6,6 +6,8 @@ Use this reference to understand where Harness runs, where canonical state lives
 
 It is a lookup document for implementers and operators. It does not repeat the Learn overview or teach the whole Harness model from first principles.
 
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Read this when
 
 - You are mapping product repository files to Harness runtime state.
@@ -257,18 +259,19 @@ Projection rendering happens after the transaction. A projection failure marks p
 
 ## Artifact store architecture
 
-The artifact store holds durable evidence files. Raw artifacts include files such as diffs, logs, screenshots, checkpoints, bundles, captured manifests, exported bundle components, and other evidence files that are stored with integrity metadata.
+The artifact store holds durable evidence files, but it is not a loose file dump. Raw artifacts include files such as diffs, logs, screenshots, traces, checkpoints, bundles, captured manifests, exported bundle components, and other evidence files that are stored only after registration with integrity metadata and an owner relation.
 
 An artifact has two parts:
 
 - the raw file in the artifact store
-- the artifact state record in `state.sqlite` that names its kind, path, hash, size, redaction state, task/run relation, and retention class
+- the registered artifact ref and artifact state record in `state.sqlite` that name its kind, path, hash, size, redaction state, retention class, and Task-scoped owner relation
 
 
-Core records artifact refs on existing Task-scoped owner records such as runs, evidence manifests, Eval records, Manual QA records, Decision Packets, and rendered Task-scoped projection refs. In MVP, `artifact_links` to rendered projection refs stay within the artifact's `task_id`; project-level projection jobs may still be tracked by `projection_jobs` metadata where owner docs allow them, but they are not project-scoped artifact links. Export snapshots and components remain artifact files linked back to valid owners or Task-scoped projections. The MCP API, Storage And DDL, Document Projection, and Operations docs own the exact relation rules. Large logs and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
+Core records artifact refs on existing Task-scoped owner records such as runs, evidence manifests, Eval records, Manual QA records, Decision Packets, and rendered Task-scoped projection refs. In MVP, `artifact_links` to rendered projection refs stay within the artifact's `task_id`; project-level projection jobs may still be tracked by `projection_jobs` metadata where owner docs allow them, but they are not project-scoped artifact links. Export snapshots and components remain artifact files linked back to valid owners or Task-scoped projections. The MCP API, Storage And DDL, Document Projection, and Operations docs own the exact relation rules. Large logs, diffs, screenshots, traces, and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
 
 Raw secrets should not be stored as artifacts. If secret-related evidence is required, Core records a redacted artifact, a secret handle, or an operator note that passed the relevant validator.
 
+Large logs, diffs, screenshots, traces, and similar bulky evidence should be linked as registered artifact refs. Markdown reports and exports may summarize what the ref supports, display redaction and availability state, and include safe notes, but they should not paste large evidence bodies or recreate omitted secret values.
 
 ### Raw artifacts, state records, and Markdown reports
 
@@ -335,7 +338,7 @@ Failures are recorded rather than hidden:
 | Agent crash during write | mark the active Run with `runs.status=interrupted` or commit an equivalent interrupted recovery Run; capture diff/log snapshots when possible and register them as recovery artifacts, not proof of successful completion |
 | Baseline drift after approval | mark approval or evidence stale; require reconfirmation when scope is affected |
 | Evaluator observes repo drift | block or stale verification; require fresh baseline or new bundle |
-| Artifact file missing | mark artifact/evidence stale; rescan or restore through recovery |
+| Artifact file missing or hash mismatch | mark the artifact and dependent evidence, projection, export, or close-readiness view stale or blocked; rescan, restore the exact registered bytes, or register a replacement through recovery |
 | Projection job failed | keep state current; mark projection failed and retry or reconcile |
 | Managed Markdown edited directly | create reconcile item; do not mutate state directly |
 | MCP unavailable | distinguish diagnostic condition `MCP_SERVER_UNAVAILABLE`, where the tool call cannot reach Core and no authoritative Core response is possible, from diagnostic condition `SURFACE_MCP_UNAVAILABLE`, where Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools; `MCP_UNAVAILABLE` remains the stable public availability code; product/runtime/code writes are held by instruction on cooperative surfaces, detected after action on detective paths when available, or blocked before execution only by a proven preventive guard for the covered operation |

@@ -465,7 +465,7 @@ Required scenarios:
 | agent crash during write | commit a recovery Run with `runs.status=interrupted` and capture diff/log artifacts when possible; captured artifacts are recovery evidence, not proof of successful completion |
 | stale approval baseline | expire or re-request approval when scope is affected |
 | evaluator observes drift | mark verification blocked or evidence stale |
-| artifact registry mismatch | rescan files, mark missing artifacts stale, preserve hashes |
+| artifact registry mismatch | rescan files, mark missing or hash-mismatched artifacts stale or blocked, preserve registered hashes, and restore exact bytes or register a replacement through Core when recovery is possible |
 | projection job failed | retry or mark failed and create reconcile guidance |
 | managed Markdown edited | create reconcile item |
 | malformed or schema-incompatible storage JSON | repair only if Core can reconstruct the expected shape from canonical state or raw artifacts; otherwise fail or require manual recovery |
@@ -525,6 +525,7 @@ Required contents:
 - projection snapshots for relevant reports
 - artifact references and included raw artifact files when allowed
 - artifact integrity manifest
+- retention status for included refs, including retained raw files and expired or unavailable artifacts omitted from the bundle
 - redaction, omission, and block notes for secrets, sensitive logs, and PII
 
 ```mermaid
@@ -545,6 +546,8 @@ Exported projection snapshots may have hashes, but that does not make the Markdo
 Export is a `data_export`-category side effect when policy applies. Export must preserve the artifact boundary: included raw files are limited to allowed registered artifacts, projection snapshots remain snapshots, and the bundle carries redaction, omission, or block notes for secrets, sensitive logs, screenshots, network traces, telemetry/logging content, and PII that were removed or blocked.
 
 Export must never widen access to staged, omitted, or blocked content. `secret_omitted` artifacts are represented by refs, hashes over the safe bytes, and omission notes or handles. `blocked` artifacts are represented by committed metadata-only notices and must be listed as unavailable raw evidence; their hashes, sizes, and content types refer to the notice bytes, not the forbidden payload. Export manifests should name the affected artifact ref, the redaction, omission, or block category, and the affected evidence, QA, verification, projection, or Release Handoff display without including the secret or PII value.
+
+Retention does not make export a bypass around artifact policy. Retained artifacts may be copied only when the export profile, redaction state, owner relation, and integrity check allow raw inclusion. Expired, unavailable, `secret_omitted`, or `blocked` artifacts remain represented by refs, safe metadata, and omission/block notes; export must not recreate or recover their raw bytes from logs, Markdown reports, projections, chat text, or staging paths.
 
 Illustrative export manifest summary:
 
@@ -625,7 +628,7 @@ Required checks:
 - secret/PII handling is compatible with `redaction_state` and any export or capture notes
 - `secret_omitted` artifacts include omission notes or handles and no raw omitted values
 - `blocked` artifacts are committed metadata-only notices and do not contain the forbidden capture payload; hash, size, and content type must match the metadata-only notice bytes
-- retention class is valid
+- retention class is valid, and retained bytes or expired/unavailable refs are reported without treating expired or unavailable bytes as current evidence
 - projection or evidence refs resolve
 
 ```mermaid

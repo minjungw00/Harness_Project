@@ -6,6 +6,8 @@ Use this reference to implement or review the Harness runtime storage model. It 
 
 This is storage reference material. It does not define MVP stage sequencing; for stage order and exit criteria, see [Build: MVP Plan](../build/mvp-plan.md).
 
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Read this when
 
 - You need the exact reference storage layout or DDL draft.
@@ -1094,7 +1096,7 @@ Artifact filenames should include enough stable identity to avoid collisions:
 
 Markdown reports in the Product Repository are not raw artifacts by default. If an export needs a report snapshot, it can store that snapshot as an export component artifact while preserving the distinction between the report projection and raw evidence.
 
-The local layout is also a trust boundary. `state.sqlite`, `registry.sqlite`, and artifact files are authoritative only when they are reachable through the registered project layout and pass the owner, integrity, and shape checks owned by this document. Direct edits, copied artifact files, orphaned staging files, or manually changed connector state are not accepted as committed Harness meaning until Core, `doctor`, `recover`, or `artifacts check` validates or repairs them through the documented paths.
+The artifact directory is not a general drop zone. The local layout is also a trust boundary. `state.sqlite`, `registry.sqlite`, and artifact files are authoritative only when they are reachable through the registered project layout and pass the owner, integrity, and shape checks owned by this document. Direct edits, copied artifact files, orphaned staging files, or manually changed connector state are not accepted as committed Harness meaning until Core, `doctor`, `recover`, or `artifacts check` validates or repairs them through the documented paths.
 
 Files under `artifacts/tmp/` are staging inputs, not committed artifacts. A staged path becomes meaningful only when Core validates the path or capture adapter, writes the safe stored bytes under a registered artifact path, inserts the `artifacts` row, and links it to a same-Task owner in one committed transition.
 
@@ -1116,14 +1118,14 @@ The `artifacts.kind` field names durable evidence files. It does not make the ar
 
 Artifact registration is part of the Core transition that records the owner record, such as a Task, Run, Decision Packet context, Shared Design, Journey Spine Entry, Evidence Manifest, Eval, Manual QA record, Feedback Loop, TDD Trace, or rendered Task-scoped projection. Verification bundles and export components are artifact files linked to those owner records, not canonical `verification_bundle` or `export` state records.
 
-Artifact registration is the storage boundary for artifact poisoning. A staged path, capture adapter output, file name, extension, declared content type, and requested owner relation are untrusted until registration validates the source, applies redaction, omission, or blocking, computes stored-byte integrity, and links the artifact to an existing Task-scoped owner record. A `staged_uri` from the API is only a locator into approved staging or capture output; it cannot bypass this boundary by naming an arbitrary absolute path, symlink target, parent traversal, or repo-local file.
+Artifact registration is the storage boundary for artifact poisoning. A staged path, capture adapter output, file name, extension, declared content type, and requested owner relation are untrusted until registration validates the source, applies redaction, omission, or blocking, computes stored-byte integrity, and links the artifact to an existing Task-scoped owner record. A committed artifact requires the registered `ArtifactRef`, `artifacts` row, `sha256`, `size_bytes`, `redaction_state`, `retention_class`, and compatible `artifact_links` owner relation. A `staged_uri` from the API is only a locator into approved staging or capture output; it cannot bypass this boundary by naming an arbitrary absolute path, symlink target, parent traversal, or repo-local file.
 
 For example, a staged path such as `../../repo/.env`, an absolute path under a user's home directory, or a symlink that escapes `artifacts/tmp/` is reported as outside the approved staging/capture boundary. The response or `artifacts check` report should identify the affected staged locator and boundary class, reject registration or mark the artifact input invalid through existing artifact/check/error paths, and avoid copying or hashing the forbidden target as Harness evidence.
 
 MVP registration steps:
 
 1. Accept a connector-captured or operator-supplied file only from a canonical staging path under the project artifact `tmp/` directory or from an approved capture adapter.
-2. Apply redaction, omission, or blocking before hashing. Raw secrets and disallowed PII must not be copied into durable artifact storage.
+2. Apply redaction, omission, or blocking before hashing. Raw secrets and disallowed PII must not be copied into durable artifact storage. Secret-related evidence is represented only as a redacted artifact, a safe secret handle or omission note, or an operator note that the relevant validator accepts.
 3. Move or copy the stored bytes into the artifact directory using `{task_id}/{run_id-or-record_id}/{artifact_id}-{kind}.{ext}` under the matching kind directory.
 4. Compute `sha256`, `size_bytes`, `content_type`, and `redaction_state` from the safe stored bytes. For `blocked`, those bytes are the metadata-only notice, not the forbidden capture payload.
 5. Insert the `artifacts` row and required `artifact_links` rows in the same Core transaction that records the related state record and appends `task_events`.
@@ -1161,9 +1163,9 @@ sequenceDiagram
 | `secret_omitted` | evidence with secret values or PII omitted or replaced by handles | Omission notes or handles are stored; raw omitted values are not copied into artifact storage, projection snapshots, verification bundles, or export bundles. The hash, size, and content type cover only the safe stored bytes. |
 | `blocked` | a small metadata-only notice artifact explaining that capture was blocked | No forbidden content is stored. The notice is still a committed registered artifact record when Core records it; `sha256`, `size_bytes`, and `content_type` cover the notice bytes. Owner records may keep the blocked ref for audit, but the artifact bytes are not available evidence. |
 
-Evidence sufficiency, Manual QA, verification, projection, and export readers consume the committed `ArtifactRef` plus `redaction_state`. `secret_omitted` can support claims whose nonsecret evidence remains visible, but it cannot support claims that require the omitted bytes. `blocked` keeps the attempted capture visible for audit while leaving the related evidence, QA, verification, projection display, or export component blocked or insufficient until the owner flow records a replacement, waiver, Decision Packet outcome, or other documented resolution.
+Evidence sufficiency, Manual QA, verification, projection, and export readers consume the committed `ArtifactRef` plus `redaction_state`, `retention_class`, hash, size, and owner relation. `secret_omitted` can support claims whose nonsecret evidence remains visible, but it cannot support claims that require the omitted bytes. `blocked` keeps the attempted capture visible for audit while leaving the related evidence, QA, verification, projection display, or export component blocked or insufficient until the owner flow records a replacement, waiver, Decision Packet outcome, or other documented resolution.
 
-Artifact integrity failures return `ARTIFACT_MISSING` or a validator failure and mark related evidence or projection freshness stale according to the kernel rules.
+Artifact integrity failures return `ARTIFACT_MISSING` or a validator failure and mark related evidence, projection freshness, export readiness, or close readiness stale or blocked according to the kernel rules. Missing files and hash or size mismatches are not repaired by editing Markdown. Recovery may rescan, restore bytes that match the registered hash and size, or register a replacement artifact through Core; it must not rewrite the artifact row to bless different bytes without the documented registration path.
 
 Owner validation is part of integrity, not a display convenience. An artifact that claims another Task, Run, projection job, Decision Packet, Evidence Manifest, Eval, Manual QA record, or other owner must be rejected unless the owner exists, is compatible with the artifact kind, and is in the same Task scope required by the artifact-link contract. Export components and verification bundles still link back to existing owners; they do not create standalone `export` or `verification_bundle` state records.
 

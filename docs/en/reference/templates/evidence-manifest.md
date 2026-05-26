@@ -14,7 +14,7 @@ This is template reference documentation. It does not authorize runtime/server i
 - changed file coverage
 - design-quality coverage
 - approval refs
-- artifact refs with redaction state and downstream evidence impact
+- artifact refs with hash, size, redaction state, retention/availability, owner relation, and downstream evidence impact
 - related Run, Eval, Feedback Loop, Manual QA, and TDD trace refs
 - close-relevant verification, Manual QA, acceptance, and Residual Risk summaries when rendered with close context
 
@@ -124,16 +124,17 @@ updated_at: 2026-05-06T09:50:00+09:00
 - build:
 
 ## Redaction And Availability
-| Artifact Ref | Redaction State | Evidence Effect | Note |
-|---|---|---|---|
-| ART-0001 | secret_omitted | supports visible nonsecret facts only | |
-| ART-0002 | blocked | unavailable input; claim remains insufficient until resolved | |
+| Artifact Ref | Hash / Size | Redaction State | Retention / Availability | Evidence Effect | Note |
+|---|---|---|---|---|---|
+| ART-0001 | sha256:abc123... / 12 KB | secret_omitted | retained ref; raw secret omitted | supports visible nonsecret facts only | |
+| ART-0002 | sha256:def456... / 1 KB | blocked | metadata-only notice | unavailable input; claim remains insufficient until resolved | |
 
 ## Stale If
 - baseline drift from the recorded baseline
 - changed files are modified after supporting Run or Eval
 - approval scope expires or drifts
 - supporting artifact is missing, blocked, or fails integrity
+- supporting artifact hash or size no longer matches its registered ref
 - relevant config changes
 - relevant Shared Design, domain term, module map item, or interface contract records change
 ````
@@ -159,5 +160,7 @@ Evidence Manifest supports claims; it does not prove correctness by itself, crea
 Coverage rows should point to owner records and ArtifactRef refs rather than embedding large evidence. If no ref supports a criterion, condition, or claim, show it as unsupported, insufficient, stale, or blocked instead of filling the gap with prose.
 
 Chat text and Markdown report prose may explain the evidence story, but they are not enough to prove sufficiency unless they point to compatible owner records and registered ArtifactRef refs.
+
+Large logs, diffs, screenshots, traces, and bundles should stay as registered ArtifactRef refs with short outcomes. The manifest should show redaction state and availability before any reader drills into the artifact body.
 
 `secret_omitted` artifacts may support claims whose nonsecret evidence remains visible, but not claims that require omitted values. `blocked` artifacts are committed metadata-only notices, not available raw evidence; dependent criteria remain unsupported, insufficient, or blocked until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the evidence path. This template must not include omitted secret/PII values or blocked payload bytes.

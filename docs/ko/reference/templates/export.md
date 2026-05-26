@@ -4,6 +4,8 @@
 
 리뷰, 보관, 마이그레이션, Release Handoff를 위한 선택적 export/보고서 projection을 만들 때 `EXPORT`를 사용합니다.
 
+이 문서는 template 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 기준 기록
 
 - 포함된 Task와 gate 기록
@@ -15,7 +17,7 @@
 - Manual QA 기록
 - reconcile item
 - projection snapshot과 읽기용 보기 최신성(projection freshness)
-- artifact 참조, redaction state, retention, integrity metadata
+- artifact 참조, owner relation, redaction state, retention/availability, integrity metadata
 - redaction, omission, blocked-artifact summary
 - export profile boundary와 non-deployment/non-merge reminder 표시
 
@@ -76,8 +78,8 @@ updated_at: 2026-05-06T10:30:00+09:00
 - optional design projections:
 
 ## Artifact Refs
-| Artifact ID | Kind | Owner Record | URI | SHA256 | Redaction State | Retention | Omission/Block Note |
-|---|---|---|---|---|---|---|---|
+| Artifact ID | Kind | Owner Record | URI | SHA256 | Size | Redaction State | Retention / Availability | Export Treatment | Omission/Block Note |
+|---|---|---|---|---|---|---|---|---|---|
 
 ## Redaction Summary
 - secrets omitted:
@@ -85,7 +87,8 @@ updated_at: 2026-05-06T10:30:00+09:00
 - redacted artifacts:
 - blocked artifacts:
 - 보존된 omission notes:
-- raw files excluded by policy:
+- 포함된 retained raw files:
+- policy, expiry, unavailability 때문에 제외된 raw files:
 
 ## Omitted Or Blocked Content
 | Artifact ID | Affected Owner Or Display | Redaction State | 이후 영향 | Note |
@@ -118,6 +121,6 @@ updated_at: 2026-05-06T10:30:00+09:00
 
 `EXPORT`는 기본적으로 원본 secret, PII, 민감 log, network trace, screenshot, 기타 민감 artifact 본문을 포함하면 안 됩니다. 크거나 민감한 artifact는 `ArtifactRef`로 나열합니다. 원본 file은 policy와 retention이 허용할 때만 포함하고, `secret_omitted` 또는 `blocked` entry는 ref와 note로만 표현합니다.
 
-Export profile이 projection snapshot, raw artifact, state snapshot을 생략한다면 bundle이 완전한 것처럼 암시하지 말고 무엇이 빠졌는지와 review 또는 Release Handoff에 미치는 영향을 보여줍니다.
+Export profile이 projection snapshot, raw artifact, state snapshot을 생략한다면 bundle이 완전한 것처럼 암시하지 말고 무엇이 빠졌는지와 review 또는 Release Handoff에 미치는 영향을 보여줍니다. Retained artifact는 owner relation, integrity, redaction state, retention policy, export profile이 raw 포함을 허용할 때만 복사할 수 있습니다. Expired, unavailable, `secret_omitted`, `blocked` artifact는 ref, safe metadata, omission/block note로만 남습니다. Export는 projection, Markdown report, chat text, staging path에서 raw bytes를 다시 만들면 안 됩니다.
 
 `secret_omitted`에서는 export가 안전한 omission note 또는 handle, 안전하게 저장된 bytes에 대한 hash를 포함할 수 있지만 생략된 값을 포함하면 안 됩니다. `blocked`에서는 export가 커밋된 metadata-only notice artifact와 그 hash, size, content type을 포함할 수 있습니다. 이 field들은 금지된 원본 payload가 아니라 notice bytes를 설명합니다. Release Handoff section은 export 전에 documented replacement, waiver, Decision Packet outcome, 받아들인 위험, fallback으로 해소되지 않은 omission 또는 block impact를 unavailable, insufficient, unresolved input 중 적절한 상태로 표시해야 합니다.

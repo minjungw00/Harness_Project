@@ -6,6 +6,8 @@
 
 이 문서는 storage 관련 reference입니다. MVP stage sequencing은 이 문서가 정의하지 않습니다. Stage 순서와 exit criteria는 [Build: MVP 계획](../build/mvp-plan.md)을 봅니다.
 
+이 문서는 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 이런 때 읽기
 
 - 정확한 reference storage layout 또는 DDL draft가 필요할 때.
@@ -1094,7 +1096,7 @@ Artifact filenames는 collision을 피할 만큼 stable identity를 포함해야
 
 Product Repository의 Markdown 보고서는 기본적으로 원본 artifact가 아닙니다. Export에 보고서 snapshot이 필요하면 그 snapshot을 export component artifact로 저장할 수 있지만, 보고서 projection과 원본 evidence의 구분은 유지해야 합니다.
 
-Local layout 자체도 trust boundary입니다. `state.sqlite`, `registry.sqlite`, artifact file은 registered project layout을 통해 찾을 수 있고 이 문서가 소유하는 owner, integrity, shape check를 통과할 때만 authoritative합니다. Direct edit, 복사된 artifact file, orphaned staging file, 사람이 바꾼 connector state는 Core, `doctor`, `recover`, `artifacts check`가 documented path로 검증하거나 복구하기 전까지 committed Harness meaning으로 받아들이지 않습니다.
+Artifact directory는 일반 drop zone이 아닙니다. Local layout 자체도 trust boundary입니다. `state.sqlite`, `registry.sqlite`, artifact file은 registered project layout을 통해 찾을 수 있고 이 문서가 소유하는 owner, integrity, shape check를 통과할 때만 authoritative합니다. Direct edit, 복사된 artifact file, orphaned staging file, 사람이 바꾼 connector state는 Core, `doctor`, `recover`, `artifacts check`가 documented path로 검증하거나 복구하기 전까지 committed Harness meaning으로 받아들이지 않습니다.
 
 `artifacts/tmp/` 아래 file은 staging input일 뿐 committed artifact가 아닙니다. Staged path는 Core가 path 또는 capture adapter를 검증하고, 안전한 stored bytes를 registered artifact path 아래에 쓰며, `artifacts` row를 insert하고, 같은 Task의 owner에 link하는 transition이 commit된 뒤에만 의미를 가집니다.
 
@@ -1116,14 +1118,14 @@ Local layout 자체도 trust boundary입니다. `state.sqlite`, `registry.sqlite
 
 Artifact 등록은 Task, Run, Decision Packet context, Shared Design, Journey Spine Entry, Evidence Manifest, Eval, Manual QA record, Feedback Loop, TDD Trace, 렌더링된 Task-scoped projection 같은 owner 기록을 기록하는 Core transition의 일부입니다. Verification bundle과 export component는 그 owner 기록에 link되는 artifact file이며 기준 `verification_bundle` 또는 `export` 상태 기록은 아닙니다.
 
-Artifact 등록은 artifact poisoning을 막는 storage boundary입니다. Staged path, capture adapter output, file name, extension, declared content type, requested owner relation은 source 검증, redaction, omission, blocking 적용, stored-byte integrity 계산, 기존 Task-scoped owner record와의 link 검증이 끝나기 전까지 신뢰할 수 있는 입력이 아닙니다. API의 `staged_uri`는 approved staging 또는 capture output을 가리키는 locator일 뿐입니다. 임의 absolute path, symlink target, parent traversal, repo-local file을 이름으로 지정해 이 경계를 우회할 수 없습니다.
+Artifact 등록은 artifact poisoning을 막는 storage boundary입니다. Staged path, capture adapter output, file name, extension, declared content type, requested owner relation은 source 검증, redaction, omission, blocking 적용, stored-byte integrity 계산, 기존 Task-scoped owner record와의 link 검증이 끝나기 전까지 신뢰할 수 있는 입력이 아닙니다. Committed artifact에는 registered `ArtifactRef`, `artifacts` row, `sha256`, `size_bytes`, `redaction_state`, `retention_class`, compatible `artifact_links` owner relation이 필요합니다. API의 `staged_uri`는 approved staging 또는 capture output을 가리키는 locator일 뿐입니다. 임의 absolute path, symlink target, parent traversal, repo-local file을 이름으로 지정해 이 경계를 우회할 수 없습니다.
 
 예를 들어 `../../repo/.env` 같은 staged path, 사용자 home directory 아래 absolute path, 또는 `artifacts/tmp/`를 벗어나는 symlink는 approved staging/capture boundary 밖으로 보고합니다. 응답 또는 `artifacts check` report는 영향을 받는 staged locator와 boundary class를 식별하고, 기존 artifact/check/error 경로를 통해 등록을 거부하거나 artifact input을 유효하지 않은 것으로 표시하며, 금지된 대상을 Harness 근거로 복사하거나 hash하지 않습니다.
 
 MVP registration steps:
 
 1. Connector-captured 또는 operator-supplied file은 project artifact `tmp/` directory 아래 canonical staging path나 approved capture adapter에서만 받습니다.
-2. Hashing 전에 redaction, omission, blocking을 적용합니다. Raw secrets와 허용되지 않은 PII는 durable artifact storage로 복사하면 안 됩니다.
+2. Hashing 전에 redaction, omission, blocking을 적용합니다. Raw secrets와 허용되지 않은 PII는 durable artifact storage로 복사하면 안 됩니다. Secret-related evidence는 redacted artifact, 안전한 secret handle 또는 omission note, relevant validator가 받아들인 operator note로만 표현합니다.
 3. Stored bytes를 matching kind directory 아래 `{task_id}/{run_id-or-record_id}/{artifact_id}-{kind}.{ext}` 형식으로 artifact directory에 move 또는 copy합니다.
 4. 안전하게 저장된 bytes에서 `sha256`, `size_bytes`, `content_type`, `redaction_state`를 계산합니다. `blocked`에서는 이 bytes가 금지된 capture payload가 아니라 metadata-only notice입니다.
 5. 관련 상태 기록을 기록하고 `task_events`에 추가하는 같은 Core transaction에서 `artifacts` row와 required `artifact_links` row를 insert합니다.
@@ -1161,9 +1163,9 @@ sequenceDiagram
 | `secret_omitted` | secret value 또는 PII를 생략하거나 handle로 대체한 evidence | Omission note 또는 handle만 저장합니다. 생략된 원본 값은 artifact storage, projection snapshot, verification bundle, export bundle로 복사하지 않습니다. Hash, size, content type은 safe stored bytes만 기준으로 합니다. |
 | `blocked` | capture가 차단되었음을 설명하는 작은 metadata-only notice artifact | 금지된 내용은 저장하지 않습니다. Core가 이를 기록했다면 notice는 여전히 committed registered artifact record입니다. `sha256`, `size_bytes`, `content_type`은 notice bytes를 기준으로 합니다. Owner 기록은 audit을 위해 blocked ref를 유지할 수 있지만, artifact bytes는 available evidence가 아닙니다. |
 
-Evidence sufficiency, Manual QA, verification, projection, export reader는 committed `ArtifactRef`와 `redaction_state`를 함께 사용합니다. `secret_omitted`는 secret이 아닌 evidence가 남아 있는 주장을 뒷받침할 수 있지만 생략된 bytes가 필요한 주장은 뒷받침할 수 없습니다. `blocked`는 시도된 capture를 audit용으로 보이게 하되, owner flow가 replacement, waiver, Decision Packet outcome, 또는 다른 documented resolution을 기록하기 전까지 related evidence, QA, verification, projection display, export component를 blocked 또는 insufficient 상태로 남깁니다.
+Evidence sufficiency, Manual QA, verification, projection, export reader는 committed `ArtifactRef`와 `redaction_state`, `retention_class`, hash, size, owner relation을 함께 사용합니다. `secret_omitted`는 secret이 아닌 evidence가 남아 있는 주장을 뒷받침할 수 있지만 생략된 bytes가 필요한 주장은 뒷받침할 수 없습니다. `blocked`는 시도된 capture를 audit용으로 보이게 하되, owner flow가 replacement, waiver, Decision Packet outcome, 또는 다른 documented resolution을 기록하기 전까지 related evidence, QA, verification, projection display, export component를 blocked 또는 insufficient 상태로 남깁니다.
 
-Artifact integrity failures는 `ARTIFACT_MISSING` 또는 validator failure를 반환하고, kernel rules에 따라 related evidence 또는 projection freshness를 `stale`로 표시합니다.
+Artifact integrity failures는 `ARTIFACT_MISSING` 또는 validator failure를 반환하고, kernel rules에 따라 related evidence, projection freshness, export readiness, close readiness를 `stale` 또는 blocked로 표시합니다. Missing file, hash mismatch, size mismatch는 Markdown을 편집해서 repair하지 않습니다. Recovery는 registered hash와 size에 맞는 bytes를 rescan 또는 restore하거나 Core를 통해 replacement artifact를 등록할 수 있습니다. Documented registration path 없이 다른 bytes를 정당화하도록 artifact row를 rewrite하면 안 됩니다.
 
 Owner validation은 표시 편의를 위한 절차가 아니라 integrity의 일부입니다. Artifact가 다른 Task, Run, projection job, Decision Packet, Evidence Manifest, Eval, Manual QA record, 또는 다른 owner를 주장하더라도, 그 owner가 존재하고 artifact kind와 호환되며 artifact-link contract가 요구하는 같은 Task scope에 있지 않으면 거부해야 합니다. Export component와 verification bundle도 기존 owner로 다시 link되며 standalone `export` 또는 `verification_bundle` 상태 기록을 만들지 않습니다.
 
