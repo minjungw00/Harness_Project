@@ -2,19 +2,27 @@
 
 ## What this document helps you do
 
-Use this guide when Harness is connected and you want to understand how one AI-assisted task should run without turning the conversation into a work-management ritual.
+Use Harness through an ordinary conversation: start a task, understand what the agent should show you, know when your judgment is needed, and ask for the right close information without turning the work into a management ritual.
 
-Speak normally. No startup phrase is required. Describe the work you want, and the agent should decide from the task shape whether Harness applies. Harness is usually appropriate when product files may change, scope may drift, user judgment is needed, evidence, verification, QA, acceptance, or residual risk must be tracked, or sensitive categories may apply. Tiny questions or clearly read-only advice can stay light.
+## Read this when
+
+Read this when Harness is connected and you are starting, resuming, unblocking, or closing an AI-assisted task. It is especially useful when product files may change, scope may drift, user judgment is needed, evidence, verification, QA, acceptance, or residual risk must be tracked, or sensitive categories may apply.
+
+## Before you read
+
+No startup phrase or internal Harness label knowledge is required. [Harness in One Task](../learn/harness-in-one-task.md) is helpful background, but it is not required.
+
+## Main idea
+
+Speak normally. Describe the work you want and any boundary you already know; the agent should infer from the task shape whether Harness applies. Tiny questions or clearly read-only advice can stay light. Larger, riskier, multi-file, or unclear work should be shaped before product files change.
+
+The agent should translate your request into the right Harness steps. You should not need to operate internal records by hand. Use ordinary language first and exact Harness labels second, only when they explain a real stop, boundary, or close condition.
 
 If you want to be explicit, you can still say:
 
 ```text
 Run this work under the harness.
 ```
-
-The agent should translate your request into the right Harness steps. You should not need to operate internal records by hand. Use ordinary language first and exact Harness labels second, only when they explain a real stop, boundary, or close condition.
-
-[Harness in One Task](../learn/harness-in-one-task.md) is helpful background, but it is not required.
 
 ## First-read path
 
