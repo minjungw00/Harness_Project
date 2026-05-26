@@ -39,7 +39,7 @@ Display only: `qa_gate` and QA records remain canonical.
 Human inspection only: automated checks, screenshots, and browser logs can support context, but they are not Manual QA by themselves.
 
 Record: {manual_qa_record_id|none until recorded}
-Gate: {qa_gate display: pending|passed|failed|waived|not_required}
+Gate: {qa_gate display: not_required|required|pending|passed|failed|waived}
 Profile: {profile}
 Human judgment requested: {human_inspection_summary}
 Target: {screen_or_flow}

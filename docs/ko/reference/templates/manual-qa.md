@@ -67,7 +67,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Result
 - record result: passed | failed | waived | null when no record exists
-- qa_gate: pending | passed | failed | waived | not_required
+- qa_gate: not_required | required | pending | passed | failed | waived
 - qa_gate note: 기준 close-relevant gate; 이 projection은 표시 전용
 - 사람의 확인 요약:
 - summary:

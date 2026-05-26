@@ -44,7 +44,8 @@ updated_at: 2026-05-06T09:40:00+09:00
 ## Identity
 - task_id:
 - change_unit_id:
-- required: yes | no | recommended
+- trace status: required | recorded | waived | not_required
+- requirement/source:
 - feedback loop ref:
 - evidence manifest coverage ref:
 

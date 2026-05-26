@@ -44,7 +44,8 @@ updated_at: 2026-05-06T09:40:00+09:00
 ## Identity
 - task_id:
 - change_unit_id:
-- required: yes | no | recommended
+- trace 상태: required | recorded | waived | not_required
+- 요구/출처:
 - feedback loop ref:
 - evidence manifest coverage ref:
 

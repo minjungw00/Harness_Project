@@ -39,7 +39,7 @@ Manual QA가 필요합니다.
 사람의 확인만 Manual QA입니다. 자동 검사, screenshot, browser log는 맥락을 뒷받침할 수 있지만 그 자체로 Manual QA가 되지는 않습니다.
 
 기록: {manual_qa_record_id|none until recorded}
-Gate: {qa_gate display: pending|passed|failed|waived|not_required}
+Gate: {qa_gate display: not_required|required|pending|passed|failed|waived}
 프로필(Profile): {profile}
 요청되는 사람의 판단: {human_inspection_summary}
 대상(Target): {screen_or_flow}

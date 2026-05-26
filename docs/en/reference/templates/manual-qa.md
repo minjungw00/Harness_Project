@@ -67,7 +67,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Result
 - record result: passed | failed | waived | null when no record exists
-- qa_gate: pending | passed | failed | waived | not_required
+- qa_gate: not_required | required | pending | passed | failed | waived
 - qa_gate note: canonical close-relevant gate; this projection is display only
 - human inspection summary:
 - summary:

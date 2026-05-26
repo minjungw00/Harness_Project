@@ -229,7 +229,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Active Change Unit
 | ID | Purpose | Status | Slice Type | TDD | Manual QA | Core Verification |
 |---|---|---|---|---|---|---|
-| CU-01 | | | vertical | required: red_pending \| red_recorded \| green_recorded \| waived | pending | |
+| CU-01 | | | vertical | trace status: required \| recorded \| waived \| not_required; show RED/GREEN refs | pending | |
 
 ## Pending Decisions
 -
@@ -372,7 +372,8 @@ Change Unit block sub-template:
 - sensitive categories:
   - none
 - TDD:
-  - required: yes | no | recommended
+  - trace status: required | recorded | waived | not_required
+  - requirement/source:
   - RED target / plan:
   - RED evidence (actual):
   - green evidence:

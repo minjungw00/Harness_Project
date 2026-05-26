@@ -31,7 +31,7 @@ Use `INTERFACE-CONTRACT` when a module interface, caller impact, compatibility r
 doc_type: interface_contract
 interface_contract_id: IFACE-0001
 task_id: TASK-0001
-status: proposed
+review_status: pending
 projection_version: 1
 source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
@@ -63,7 +63,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - contract tests:
 
 ## Review
-- status:
+- review_status: pending | reviewed
 - reviewed by:
 - decision:
 - waiver reason:

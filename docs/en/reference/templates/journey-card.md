@@ -104,7 +104,7 @@ Gates:
 - approval: {approval_gate}
 - evidence: {evidence_gate}
 - verification: {verification_gate}
-- Manual QA: {qa_gate display: pending|passed|failed|waived|not_required}
+- Manual QA: {qa_gate display: not_required|required|pending|passed|failed|waived}
 - acceptance: {acceptance_gate}
 
 Projection freshness: {projection_freshness}; source_state_version={source_state_version|unknown} (view freshness, not task result)

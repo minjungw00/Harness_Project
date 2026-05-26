@@ -38,7 +38,7 @@ doc_type: export_manifest
 export_id: EXPORT-0001
 project_id: PRJ-0001
 profile: standard | release_handoff
-status: complete
+export_bundle_status: current
 source_state_version: 50
 updated_at: 2026-05-06T10:30:00+09:00
 ---
