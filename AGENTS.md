@@ -1,6 +1,8 @@
 # Codex Working Rules
 
-This repo is in pre-MVP Harness documentation review / documentation acceptance mode. This file is repository working guidance for documentation work, not Harness runtime guidance.
+This repo is in pre-MVP Harness documentation review / documentation acceptance mode. This file is a short always-on compass for agents working here, not a Harness runtime procedure, schema reference, or project history.
+
+## Repo Phase
 
 - Do not implement the Harness server, runtime code, product implementation code, generated operational files, or state/projection/artifact outputs.
 - Documentation edits are allowed in this phase.
@@ -10,3 +12,12 @@ This repo is in pre-MVP Harness documentation review / documentation acceptance 
 - Use small batches and report changed files.
 - Documentation edits do not require Journey Card, `prepare_write`, Write Authorization, `task_events`, MCP state transitions, evidence, QA, acceptance, residual-risk acceptance, or close.
 - Do not create commits unless the user explicitly asks for commits.
+
+## Harness Compass
+
+- When Harness is connected, no startup phrase is required. Infer Harness use from task shape; users do not need to say "Harness" or know internal labels.
+- Product/runtime writes are out of scope in this repo phase. In Harness-connected product work, product writes require compatible `prepare_write` / Write Authorization where applicable.
+- User-owned product, material technical, QA/waiver, acceptance, and residual-risk judgment routes through Decision Packets or the documented decision path, not broad approval.
+- Guard, freeze, and careful-mode wording must match the actual guarantee level. Cooperative or detective surfaces can hold by instruction or detect after action; only proven preventive profiles should claim pre-execution blocking.
+- Keep always-on context short and current. Do not bury state, copy schemas, or duplicate strict contracts here.
+- For detailed guidance, use [User Guide](docs/en/use/user-guide.md), [Agent Session Flow](docs/en/use/agent-session-flow.md), [Agent Integration Reference](docs/en/reference/agent-integration.md), and [Surface Cookbook](docs/en/reference/surface-cookbook.md). For docs edits, use [Authoring Guide](docs/en/maintain/authoring-guide.md).
