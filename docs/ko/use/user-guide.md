@@ -310,6 +310,8 @@ flowchart LR
 
 의존성 추가, 인증이나 권한 변경, 데이터 모델 변경, 공개 API 변경, 파괴적 쓰기, secret 접근, 운영 설정 변경은 승인이 필요할 수 있습니다. Approval은 민감한 단계를 진행해도 되는지만 답합니다. 의존성, migration, interface, module boundary, 제품, 중요한 기술, QA, 위험 선택 자체에는 별도의 Decision Packet이 여전히 필요할 수 있습니다.
 
+Sensitive category가 나타나면 좋은 prompt는 먼저 평범한 말로 설명해야 합니다. 어떤 side effect나 외부 영향이 일어나는지, 어떤 path, system, service, secret, data가 관련되는지, Harness가 이를 실행 전에 막을 수 있는지 아니면 실행 뒤에만 문제를 감지할 수 있는지, 어떤 evidence를 기록할지, 무엇을 redaction 또는 omission할지를 말합니다. Category label은 `secret_access`나 `data_export`처럼 괄호 안에 덧붙이면 충분합니다. 정확한 category 예시는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#sensitive-categories)에 있고, 정확한 write authority 동작은 [커널 참조](../reference/kernel.md#prepare_write)에 있습니다.
+
 자주 섞이는 "승인" 예시:
 
 - Dependency install을 승인하는 것은 그 dependency를 architecture 방향으로 선택하는 것과 다릅니다.

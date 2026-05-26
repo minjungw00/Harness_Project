@@ -224,6 +224,8 @@ Review output에서는 두 질문을 분리합니다.
 한계: 협조형 접점이라서 범위를 벗어난 쓰기는 사후 changed-path validation으로만 감지합니다.
 ```
 
+외부 side effect가 있을 때는 실행 전의 주장과 실행 뒤의 기록을 분리합니다. 실행 전에는 의도한 영향, sensitive category, Approval 또는 Decision Packet 필요 여부, 보장 수준을 말합니다. 실행 뒤에는 실제로 일어난 일, 기록된 Run/artifact/evidence ref, redaction/omission/block/stale/violation 여부를 말합니다. 정확한 보장 수준 의미는 [커널 참조](../reference/kernel.md#prepare_write)가 담당합니다.
+
 Cooperative 또는 detective hold를 실행 전에 막는 것처럼 설명하면 안 됩니다. 지시로 쓰기를 보류한다고 말하거나, connected profile이 해당 validation을 지원할 때 실행 뒤에 위반을 감지할 수 있다고 말합니다. Preventive 표현은 해당 operation에 대해 입증된 실행 전 차단이 있을 때만 씁니다.
 
 쓰기 권한이 막혔거나, 확인할 수 없거나, 최신이 아니거나, 의도한 변경과 맞지 않으면 제품 파일 쓰기를 멈추고 가장 작은 해소 방법을 설명합니다.

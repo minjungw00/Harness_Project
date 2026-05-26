@@ -224,6 +224,8 @@ Scope basis: email login Change Unit
 Limitation: cooperative surface; changed-path validation detects violations after the fact
 ```
 
+For external side effects, separate the before-action claim from the after-action record. Before action, say the intended effect, sensitive category, Approval or Decision Packet need, and guarantee level. After action, say what actually happened, which Run/artifact/evidence refs were recorded, and whether anything was redacted, omitted, blocked, stale, or a violation. Exact guarantee-level semantics are owned by [Kernel Reference](../reference/kernel.md#prepare_write).
+
 Do not describe a cooperative or detective hold as if it blocks execution. Say that writes are held by instruction, or that violations can be detected after action when the connected profile supports that validation. Use preventive wording only for proven pre-execution blocking on the covered operation.
 
 If write authority is blocked, unavailable, stale, or incompatible with the intended change, hold product writes and explain the smallest unblocker.

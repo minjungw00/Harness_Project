@@ -147,6 +147,8 @@ Reusable Decision Packet examples:
 - `decision_kind=qa_waiver` or `decision_kind=verification_waiver`: skipped QA or verification. Record what is not checked, why the waiver is proportionate, the accepted user/product/technical risk, and the smallest credible follow-up.
 - `decision_kind=residual_risk_acceptance`: close with known remaining risk. Record the visible limitation, evidence already present, why close can still proceed, visible residual-risk refs, and follow-up.
 
+Sensitive category labels such as `secret_access`, `data_export`, or `policy_override` identify approval risk; they do not choose the Decision Packet kind or settle the user-owned judgment by themselves. Category examples are owned by [MCP API And Schemas](mcp-api-and-schemas.md#sensitive-categories).
+
 | Field | Contract |
 |---|---|
 | `name` | `decision_quality` |

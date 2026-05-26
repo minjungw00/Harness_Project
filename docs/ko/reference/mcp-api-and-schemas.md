@@ -246,7 +246,7 @@ StateSummary:
     acceptance_gate: not_required | required | pending | accepted | rejected
 ```
 
-Sensitive categories:
+### Sensitive Categories
 
 ```text
 auth_change
@@ -269,6 +269,32 @@ billing_or_cost_change
 model_or_prompt_policy_change
 policy_override
 ```
+
+Sensitive category는 명령어처럼 외우는 체계가 아니라 Approval이 필요한 민감 위험을 설명하는 label입니다. 하나의 intended write에는 여러 category가 함께 붙을 수 있습니다. Category는 sensitive-action Approval이 왜 필요한지 설명하지만 제품, 아키텍처, 보안, QA, verification, 결과 수락, 남은 위험 관련 판단, policy 판단을 대신 해결하지 않습니다. 정확한 write-state 동작은 [커널 참조](kernel.md#prepare_write)가 담당하고, public request와 lifecycle shape은 [`harness.prepare_write`](#harnessprepare_write)와 [Approval Lifecycle](#approval-lifecycle)이 담당합니다.
+
+| Category | 보통 뜻하는 것 | Approval, Decision Packet, evidence, redaction 지침 |
+|---|---|---|
+| `auth_change` | 로그인, session, password, OAuth, account recovery, lockout, authentication policy 변경. | Approval은 민감한 auth 단계를 포괄합니다. Auth model, lockout behavior, recovery UX, user notice, 해소되지 않은 security trade-off에는 Decision Packet을 사용합니다. Evidence는 test 또는 review 결과를 보여주되 credential, token, secret value를 노출하지 않아야 합니다. |
+| `permission_model_change` | Role, ACL/RBAC rule, authorization check, admin capability, ownership check, access boundary 변경. | Approval은 permission-sensitive mutation을 포괄합니다. Role design, migration, audit expectation, default access, compatibility에는 Decision Packet을 사용합니다. Evidence는 보호 대상 subject data를 노출하지 않고 covered path와 policy check를 식별해야 합니다. |
+| `schema_change` | Database, state, API, event, fixture, data-model shape 변경과 migration. | Approval은 민감한 schema 또는 migration side effect를 포괄합니다. Additive path와 breaking path 선택, backfill, rollback, compatibility window, maintenance cost에는 Decision Packet을 사용합니다. Evidence에는 migration/test coverage를 포함하고 production-like record는 redaction해야 합니다. |
+| `dependency_change` | Runtime/build dependency 또는 dependency lock의 install, upgrade, removal, 변경. | Approval은 install, lockfile edit, dependency-file write를 포괄합니다. Dependency 채택이 architecture, compatibility, cost, license posture, rollback, maintenance를 바꾸면 Decision Packet을 사용합니다. Evidence에는 lockfile diff, test output, security 또는 license scan ref를 둘 수 있습니다. |
+| `public_api_change` | CLI flag, HTTP endpoint, SDK contract, exported function, public config, documented behavior, module-boundary commitment 변경. | Approval은 민감한 write를 포괄할 수 있지만 compatibility와 breaking-change 판단에는 Decision Packet이 필요합니다. Evidence에는 caller-impact check, docs update, migration note, relevant test를 포함해야 합니다. |
+| `destructive_write` | Delete, overwrite, irreversible migration step, data loss, reset operation, history/state removal. | Approval은 destructive side effect와 affected scope를 이름 붙여야 합니다. Rollback, backup, user impact, irreversibility, 남은 위험을 받아들이는 판단에는 Decision Packet을 사용합니다. Evidence에는 applicable한 dry-run, backup, diff, recovery ref가 있어야 합니다. |
+| `network_write` | POST/PUT/PATCH/DELETE 또는 그에 준하는 네트워크 write operation. | Approval은 network target, method/class, payload class, expiry를 포괄합니다. External user impact, rollback, data selection, target ownership이 불확실한 경우 Decision Packet을 사용합니다. Evidence는 request를 안전하게 요약하고 secret 또는 PII payload를 생략해야 합니다. |
+| `external_service_write` | Third-party service 또는 external account의 resource 생성, 변경, 삭제, configuration. | Approval은 external service action과 account/tenant boundary를 포괄합니다. Ownership, lifecycle, retention, cost, rollback, user notice, support impact에는 Decision Packet을 사용합니다. Evidence는 token이나 private raw payload 대신 service ref, id, redacted log를 사용해야 합니다. |
+| `secret_access` | Credential, token, certificate, key, secret handle의 read, write, rotation, copy, use. | Approval은 named secret scope와 access kind를 포괄합니다. Secret choice, rotation plan, retention, audit trail, exposure risk에는 Decision Packet을 사용합니다. Evidence는 handle, `secret_omitted`, `blocked` artifact를 사용해야 하며 secret value를 log, projection, export, screenshot, summary에 넣으면 안 됩니다. |
+| `production_config_change` | Production flag, environment variable, config file, runtime limit, operational default, safety switch 변경. | Approval은 production-sensitive config write를 포괄합니다. Rollout, rollback, user impact, monitoring, operational trade-off에는 Decision Packet을 사용합니다. Evidence에는 config diff 또는 plan ref를 두고 secret과 tenant-specific value는 redaction 또는 omission해야 합니다. |
+| `ci_cd_change` | CI workflow, release pipeline, deployment automation, runner permission, signing, publishing, test gate 변경. | Approval은 pipeline 또는 automation mutation을 포괄합니다. Release policy, required gate, runner trust, rollback, deployment authority에는 Decision Packet을 사용합니다. Evidence에는 workflow diff와 secret value가 omitted된 run log를 포함해야 합니다. |
+| `infra_or_deployment_change` | Cloud, container, Kubernetes, Terraform, provisioning, routing, scaling, deployment, operational topology 변경. | Approval은 infrastructure 또는 deployment side effect를 포괄합니다. Topology, rollout, rollback, availability, security boundary, cost, ownership choice에는 Decision Packet을 사용합니다. Evidence에는 plan/apply summary, affected resource, redacted provider output을 포함해야 합니다. |
+| `privacy_or_pii_change` | PII 또는 privacy-sensitive data의 collection, storage, display, transformation, retention, deletion. | Approval은 privacy-sensitive action을 포괄합니다. Data minimization, field, retention, user notice, consent, access, redaction strategy에는 Decision Packet을 사용합니다. Evidence는 sanitized sample을 사용하고 PII는 artifact 등록 전에 redacted, omitted, blocked 상태가 되어야 합니다. |
+| `data_export` | Report, file, external system, support bundle, user/operator download 등으로 현재 boundary 밖에 data를 내보내는 작업. | Approval은 어떤 data가 어디로 나가는지, destination, retention, expiry를 포괄합니다. Field selection, recipient authority, redaction, omitted value, audit trail, export와 관련해 받아들이는 위험에는 Decision Packet을 사용합니다. Evidence에는 redaction state를 보존하는 Evidence Manifest 또는 export ref를 포함해야 합니다. |
+| `telemetry_or_logging_change` | Event, log, metric, trace, sampling, correlation id, log retention 추가, 삭제, 변경. | Approval은 behavior, user data, cost, operational risk를 노출할 수 있는 telemetry를 포괄합니다. Event semantics, privacy posture, retention, opt-out, observability trade-off, support burden에는 Decision Packet을 사용합니다. Evidence는 sanitized sample을 보여주고 raw secret 또는 PII를 피해야 합니다. |
+| `license_or_compliance_change` | License file, notice, compliance control, audit evidence, legal commitment, policy-governed obligation 변경. | Approval은 compliance-sensitive write를 포괄합니다. Acceptable license posture, obligation handling, exception path, 위험을 받아들이는 판단에는 Decision Packet을 사용합니다. Evidence는 scan, notice, policy ref를 가리키되 restricted audit material을 불필요하게 노출하지 않아야 합니다. |
+| `billing_or_cost_change` | Paid resource use, quota, billing configuration, plan, cost-bearing model call, usage limit 변경. | Approval은 비용이 발생하는 action과 budget boundary를 포괄합니다. Cost/performance trade-off, quota policy, user impact, rollback, 비용 지출과 관련해 받아들이는 위험에는 Decision Packet을 사용합니다. Evidence에는 estimate, limit, observed usage ref를 포함해야 합니다. |
+| `model_or_prompt_policy_change` | Model selection, system/developer prompt, safety policy, tool policy, routing, evaluation policy, generated-output policy 변경. | Approval은 민감한 policy 또는 prompt write를 포괄합니다. Product tone, safety trade-off, data exposure, model cost, eval threshold, user-facing behavior에는 Decision Packet을 사용합니다. Evidence에는 eval ref와 필요한 경우 redacted prompt/policy artifact를 포함해야 합니다. |
+| `policy_override` | Harness, project, security, QA, verification, compliance policy를 우회, 약화, waiver, exception 처리하는 작업. | Approval은 scope 안의 민감한 override step만 허가할 수 있습니다. 왜 exception이 받아들일 만한지, 어떤 위험을 받아들이는지, 어떤 follow-up이 남는지, close에 어떤 영향이 있는지에는 Decision Packet을 사용합니다. Evidence는 policy, waiver, Residual Risk, follow-up ref를 연결해야 합니다. |
+
+Approval prompt는 일반 사용자가 이해하는 side effect를 먼저 말하고 identifier를 뒤에 붙여야 합니다. 예: "redaction된 billing CSV를 vendor X로 export해도 될까요? (`data_export`, `external_service_write`)." 같은 단계가 사용자 소유 제품 판단, 중요한 기술 판단, 보안, QA, verification, 결과 수락, 남은 위험 관련 판단, policy 판단도 결정한다면 그 판단은 compatible Decision Packet으로 연결해야 합니다. 그 판단이 write authority를 막고 있다면 `prepare_write`가 `allowed`를 반환하기 전에 applicable한 owner gate 의미에 따라 resolved, deferred, waived 또는 그 밖의 호환되는 방식으로 기록되어야 합니다.
 
 ## ArtifactRef
 

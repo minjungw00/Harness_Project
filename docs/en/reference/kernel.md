@@ -790,6 +790,17 @@ When `approval_required` is returned, no consumable Write Authorization exists a
 
 If MCP is unavailable on a cooperative-only surface, product writes must be held by instruction. If a stronger guard or isolation layer exists, the same decision may be enforced preventively or by isolation.
 
+External side effects must be described before execution and recorded after execution without changing their authority meaning. Before execution, `prepare_write` evaluates the intended side effect, including paths, commands, network targets, external services, secret access, sensitive categories, approvals, Decision Packet refs, and the connected surface's guarantee level. After execution, `record_run` records what happened, artifacts, evidence updates, and any violation or recovery state. It cannot retroactively authorize an effect that lacked compatible scope, Approval, Decision Packet coverage, or Write Authorization.
+
+| Guarantee level | Before execution | After execution |
+|---|---|---|
+| `cooperative` | The system can instruct the agent to hold or proceed, but must not claim the operation is technically blocked by Harness. | Observed writes or side effects are recorded from declared output, diffs, logs, or artifacts. Violations are audit/recovery context and do not satisfy evidence, verification, QA, acceptance, or close readiness. |
+| `detective` | The system can warn and may know what will be checked after action, but must not claim pre-execution prevention unless another layer proves it. | Changed paths, command results, telemetry, service refs, or artifact checks can detect mismatches and mark affected scope, evidence, approval, verification, or projection state stale or blocked. |
+| `preventive` | A proven guard can block the covered operation before execution when scope, approval, Decision Packet, baseline, and capability checks fail. | A blocked attempt may be recorded as validator/audit state. A successful write still needs compatible `record_run` consumption of the Write Authorization and evidence updates. |
+| `isolated` | The effect is confined to an isolation boundary until an authorized promotion or commit path releases it. | Escapes from the isolation boundary or promotion without compatible authority are violations. Safe isolated outputs can become evidence only through registered artifacts and compatible owner records. |
+
+The user-facing explanation should name the concrete side effect first, then the Harness labels. For example, "send a write request to the staging billing API" is the ordinary side effect; `network_write`, `external_service_write`, Approval, Decision Packet, and Write Authorization are the authority and state labels around it.
+
 ## record_run
 
 `record_run` is the Run, artifact, and evidence recording point for shaping updates, implementation, direct work, and verification input. It does not retroactively authorize product writes.

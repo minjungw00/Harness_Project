@@ -144,8 +144,10 @@ Policy validator는 MCP API document가 담당하는 validator 결과 형식에 
 - `decision_kind=architecture_choice`: session auth, token auth, social login 중에서 고릅니다. 폐기 가능성, CSRF/XSS 노출, client 호환성, 운영 복잡도, migration 경로, 추천안이 Task에 맞는 이유를 기록합니다.
 - `decision_kind=architecture_choice`: dependency addition, schema migration, public API/interface change, module boundary change입니다. 대안, 영향 범위, 호환성, rollback 또는 migration 비용, test boundary, 향후 유지보수 비용, 추천안, 결정을 미룰 때의 영향을 기록합니다.
 - `decision_kind=approval`: auth, permission, secret, data-export 작업입니다. Approval boundary는 민감한 단계를 허가할 수 있지만, 역할, exported fields, redaction, audit logging, retention, rollback, user notice가 아직 결정되지 않았다면 제품 또는 보안 판단에는 별도의 compatible Decision Packet이 필요합니다.
-- `decision_kind=qa_waiver` 또는 `decision_kind=verification_waiver`: QA 또는 verification을 생략합니다. 무엇을 확인하지 않는지, waiver가 비례적인 이유, 수용하는 사용자·제품·기술 위험, 가장 작은 신뢰 가능한 follow-up을 기록합니다.
+- `decision_kind=qa_waiver` 또는 `decision_kind=verification_waiver`: QA 또는 verification을 생략합니다. 무엇을 확인하지 않는지, waiver가 비례적인 이유, 사용자·제품·기술 측면에서 받아들이는 위험, 가장 작은 신뢰 가능한 follow-up을 기록합니다.
 - `decision_kind=residual_risk_acceptance`: 알려진 남은 위험을 두고 close합니다. 사용자에게 보인 한계, 이미 있는 근거, close를 진행할 수 있는 이유, 사용자에게 보인 residual-risk ref, follow-up을 기록합니다.
+
+`secret_access`, `data_export`, `policy_override` 같은 Sensitive category label은 Approval 필요성을 식별합니다. 그 label만으로 Decision Packet kind가 정해지거나 사용자 소유 판단이 해결되지는 않습니다. Category 예시는 [MCP API와 스키마](mcp-api-and-schemas.md#sensitive-categories)가 담당합니다.
 
 | Field | Contract |
 |---|---|

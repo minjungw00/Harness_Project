@@ -790,6 +790,17 @@ Decision algorithm은 다음과 같습니다.
 
 MCP를 사용할 수 없는 cooperative-only 접점에서는 제품 파일 쓰기를 instruction으로 보류해야 합니다. 더 강한 guard 또는 isolation layer가 있으면 같은 decision을 예방적으로 또는 isolation으로 강제할 수 있습니다.
 
+External side effect는 실행 전에는 설명하고 실행 뒤에는 기록하되, 그 authority 의미를 바꾸면 안 됩니다. 실행 전 `prepare_write`는 paths, commands, network targets, external services, secret access, sensitive categories, approvals, Decision Packet refs, 연결된 접점의 guarantee level을 포함해 의도한 side effect를 평가합니다. 실행 뒤 `record_run`은 실제로 일어난 일, artifacts, evidence updates, violation 또는 recovery state를 기록합니다. Compatible scope, Approval, Decision Packet coverage, Write Authorization 없이 일어난 effect에 사후 권한을 부여할 수는 없습니다.
+
+| Guarantee level | 실행 전 | 실행 뒤 |
+|---|---|---|
+| `cooperative` | System은 agent에게 보류하거나 진행하라고 지시할 수 있지만, Harness가 operation을 기술적으로 차단한다고 주장하면 안 됩니다. | 관찰된 write 또는 side effect는 declared output, diff, log, artifact를 통해 기록됩니다. Violation은 audit/recovery 맥락이며 evidence, verification, QA, acceptance, close readiness를 충족하지 않습니다. |
+| `detective` | System은 warning을 줄 수 있고 action 뒤 무엇을 확인할지 알 수 있지만, 다른 layer가 증명하지 않는 한 실행 전 차단을 주장하면 안 됩니다. | Changed paths, command result, telemetry, service ref, artifact check로 mismatch를 감지하고 affected scope, 근거, approval, verification, projection 상태를 `stale` 또는 blocked로 표시할 수 있습니다. |
+| `preventive` | 입증된 guard는 scope, approval, Decision Packet, baseline, capability check가 실패할 때 covered operation을 실행 전에 차단할 수 있습니다. | 차단된 attempt는 validator/audit state로 기록될 수 있습니다. 성공한 write도 compatible `record_run`이 Write Authorization을 consume하고 evidence update를 기록해야 합니다. |
+| `isolated` | Effect는 authorized promotion 또는 commit path가 release하기 전까지 isolation boundary 안에 갇힙니다. | Isolation boundary를 벗어난 escape 또는 compatible authority 없는 promotion은 violation입니다. 안전한 isolated output은 registered artifact와 compatible owner record를 통해서만 evidence가 될 수 있습니다. |
+
+사용자에게 설명할 때는 구체적인 side effect를 먼저 말하고 Harness label을 뒤에 붙입니다. 예를 들어 "staging billing API에 write request를 보낸다"가 일반적인 side effect이고, `network_write`, `external_service_write`, Approval, Decision Packet, Write Authorization은 그 주위의 authority와 state label입니다.
+
 ## record_run
 
 `record_run`은 shaping updates, implementation, direct work, verification input에 대한 Run, artifact, 근거 recording point입니다. 제품 파일 쓰기에 사후 권한을 부여하지 않습니다.
