@@ -96,7 +96,7 @@ Log, screenshot, artifact, projection, export, run summary에는 secret, PII, cr
 
 MVP의 기본 MCP 노출 자세는 등록된 project surface에 대한 local-only입니다. Local-only란 기본 connector와 `serve mcp` 자세가 로컬 프로세스, 로컬 socket, 또는 localhost loopback 접근을 사용한다는 뜻입니다. Non-loopback interface에 bind하거나, shared/remote endpoint를 publish하거나, network reachability 자체를 authorization으로 취급하지 않습니다. 이것은 로컬 운영 전제이지, 같은 machine의 모든 프로세스를 신뢰한다는 뜻이 아닙니다. 구체적인 로컬 위험에는 다른 로컬 프로세스의 tool call, forwarded 또는 tunneled port, 오래된 connector configuration, 위조된 `project_id`, `task_id`, `surface_id`, `actor_kind` claim, Runtime Home data를 관련 없는 user나 프로세스가 읽거나 바꿀 수 있게 하는 IPC 또는 file permission이 포함됩니다.
 
-정확한 로컬 transport는 지정하지 않습니다. Contract 수준에서 허용되는 전제에는 localhost TCP, owner-only filesystem permission으로 제한된 Unix-domain socket 또는 다른 local socket, in-process 또는 stdio transport, process-scoped configuration material, 추가 local control로 쓰는 per-project token, 또는 이에 준하는 local IPC/control path가 포함됩니다.
+정확한 로컬 transport는 지정하지 않습니다. Contract 수준에서 허용되는 전제에는 localhost TCP, owner-only filesystem permission으로 제한된 Unix-domain socket 또는 다른 local socket, in-process 또는 stdio transport, process-scoped configuration material, 추가 local control로 쓰는 per-project token, 또는 이에 준하는 local IPC/control path가 포함됩니다. Profile과 manifest는 raw token, secret, private configuration value가 아니라 access-control material class를 기록합니다.
 
 MCP를 local-only 범위 밖으로 노출하는 것은 MVP 기본값이 아닙니다. 그러려면 문서화된 connector capability profile, 접근 제어 계약, secret/PII 처리 정책, 보장 수준 표시, 노출된 권한을 검증하는 conformance coverage가 필요합니다. 이 참조 문서는 하나의 mechanism을 요구하지 않습니다. 다만 profile은 관련 없는 호출자가 endpoint를 사용하는 일을 무엇이 막는지, 그 노출로 어떤 data가 드러날 수 있는지, 어떤 guarantee level이 여전히 정직한지, Core가 여전히 무엇을 검증하는지 이름 붙여야 합니다.
 
