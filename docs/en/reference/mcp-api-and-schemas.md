@@ -6,7 +6,7 @@ Use this reference to implement, test, or review the public MCP resource and too
 
 It does not own SQLite DDL, storage layout, the full kernel transition table, projection template text, CLI command semantics, or connector cookbook details. Storage-owned JSON and DDL rules live in [Storage And DDL](storage-and-ddl.md).
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
 
 ## Read this when
 
@@ -511,6 +511,10 @@ When a client renders guard, freeze, or careful-mode controls, it uses these exi
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, Recommended Playbook, acceptance visibility, and residual-risk summaries are public MCP schemas. They describe API payloads only; owner docs define the canonical kernel records. `RecommendedPlaybook` is the display-only exception in this list: it has no canonical kernel record, DDL table, task event, or projection job of its own.
 
 Role Lens behavior uses these existing display and routing schemas. A role lens may appear as a `RecommendedPlaybook`, may route to an existing Decision Packet, or may propose a `DecisionPacketCandidate`. It does not introduce a parallel public payload schema, authority record, or state transition.
+
+Decision Packet quality is judged from the existing public fields below and the kernel authority rules in [Decision Packet](kernel.md#decision-packet) and [Decision Gate](kernel.md#decision-gate), not from additional payload members. A sufficient packet names what the user is deciding in `what_user_is_deciding`, includes realistic `options` with trade-offs, gives `recommendation` and uncertainty when available, identifies `affected_gates` and `affected_acceptance_criteria`, carries `context.source_refs` and `context.evidence_refs`, states `deferral_consequence`, and lists `what_agent_may_decide_without_user`. If those existing fields cannot honestly show the choice, sources, evidence, deferral impact, and agent latitude, the prompt should be blocked or narrowed, or the decision should remain pending until enough context exists, instead of being presented as broad approval.
+
+`DecisionPacketCandidate`, `RecommendedPlaybook.route`, `decision_packet_route`, and optional implementation `decision_requests` are request, display, or routing metadata. They can help a caller reach [`harness.request_user_decision`](#harnessrequest_user_decision), but they do not become canonical authority until the owner path commits or updates a compatible `DecisionPacket` and any linked owner records.
 
 ```yaml
 DecisionPacket:
@@ -1375,6 +1379,8 @@ RequestUserDecisionRequest:
 ```
 
 Core stores a canonical `DecisionPacket`. Minimal MVP implementations may omit `decision_requests`; public request and response schemas remain centered on Decision Packet, not Decision Request. If the implementation also creates or updates `decision_requests`, those rows are routing, interaction, idempotency replay, or legacy handoff metadata only, and they must link back to the canonical `decision_packet_id` before gate aggregation can consider their metadata. A `decision_request` row alone never satisfies `decision_gate`, approval, acceptance, waiver, residual-risk acceptance, or close. If `state_summary_at_request` is `null`, Core derives it from current state during the same transaction. The stored `state_summary_at_request` is a request-time snapshot and is not updated by later Task transitions. `approval_scope` is required when `decision_kind=approval`; for all other `decision_kind` values it must be `null` or omitted. `decision_kind=approval` is only the approval-shaped sensitive-change context and cannot resolve user-owned judgment such as product trade-offs, design direction, architecture or material technical direction, unresolved security or product-security judgment, QA waiver, verification risk, final acceptance, or residual-risk acceptance without separate compatible Decision Packets and gate updates. For `decision_kind=approval`, Core also creates a linked pending Approval record using the approval scope; the Approval is not granted until `harness.record_user_decision` resolves the Decision Packet. A `residual_risk_acceptance` packet must include the risk visibility context in `user_context.minimum_context` and relevant risk refs in `context.source_refs`. A broad natural-language answer such as "go ahead" is not a schema branch; the request must still name the `decision_kind`, option, affected gates, and user context that determine what Core is asking the user to decide.
+
+The user-visible prompt derived from this request should be decision-centered: ask the user to choose, defer, reject, waive, accept, or reconcile the named option, and say what that answer will and will not settle. It should not ask for generic approval unless `decision_kind=approval` and `approval_scope` describe the sensitive action being approved. The exact public fields remain the schema above; this prose describes minimum quality for using those fields.
 
 Response schema:
 

@@ -4,6 +4,8 @@
 
 Use `DEC` when standalone Decision Packet projection is enabled for user-owned product or material technical judgment, approval-shaped judgment, waiver, acceptance, residual-risk acceptance, or reconcile decisions.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - `state.sqlite.decision_packets`
@@ -37,6 +39,10 @@ A resolved Decision Packet is not sensitive Approval unless it is the approval-s
 - Follow-Up
 - References
 
+A sufficient rendered Decision Packet uses these sections to answer one user-owned decision, not to ask for broad permission. The exact public request and response fields are owned by [`harness.request_user_decision`](../mcp-api-and-schemas.md#harnessrequest_user_decision), and the canonical authority rules are owned by [Decision Packet](../kernel.md#decision-packet) and [Decision Gate](../kernel.md#decision-gate). This template may summarize the existing fields, but it must not add schema fields, gates, or alternate authority.
+
+The user-facing question should ask for the decision directly: choose an option, defer it with the stated consequence, reject the path, waive the named check, accept the named risk, accept the result, or reconcile the named drift. Use "approve" only for the approval-shaped context linked to Approval. For other packet kinds, ask what choice should be recorded and what remains outside that choice.
+
 ### Example content cues
 
 Use the same rendered sections for these common Decision Packet shapes. These cues are not extra template sections.
@@ -46,6 +52,7 @@ Use the same rendered sections for these common Decision Packet shapes. These cu
 - Technical choice: session cookie, JWT, or social login. Put revocation, CSRF/XSS exposure, client compatibility, implementation cost, and migration impact under Options and Minimum Context To Judge.
 - Dependency approval versus dependency decision: if the user is approving an install command or dependency-file edit, put that sensitive-action boundary under Approval-Shaped Context. If the user is choosing whether the dependency is the right architecture direction, put the technical choice under What User Is Deciding and Options.
 - Schema/data-model decision: put additive migration, compatibility shim, breaking cleanup, data backfill, migration evidence, rollback risk, and test boundary under Options and Minimum Context To Judge.
+- Scope or Autonomy Boundary expansion: put the proposed additional surface, why current scope or latitude is insufficient, what remains out of bounds, and whether a smaller Change Unit can continue under Consequence Of Deferring.
 - Security-sensitive approval: put the approval boundary under Approval-Shaped Context. If roles, exported fields, redaction, audit logging, retention, rollback, or user notice remain undecided, name them as unresolved product/security judgments and route them to separate compatible Decision Packets. Do not treat the approval packet as resolving those judgments.
 - Public API/interface decision: put caller compatibility, migration path, documentation promise, and rollback risk under Options and Minimum Context To Judge. Do not treat a resolved API decision as merge authority, deployment authority, or Write Authorization.
 - QA or verification waiver: put the skipped check or surface, accepted user/product/technical risk, relevant refs, close impact, and smallest credible follow-up under User Decision And Accepted Risk and Follow-Up.
@@ -100,6 +107,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## What User Is Deciding
 - decision category:
+- user-facing question:
 - decision:
 - what this decision settles:
 - what this decision does not settle:

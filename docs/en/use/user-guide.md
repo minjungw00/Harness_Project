@@ -4,6 +4,8 @@
 
 Use Harness through an ordinary conversation: start a task, understand what the agent should show you, know when your judgment is needed, and ask for the right close information without turning the work into a management ritual.
 
+This is use documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Read this when
 
 Read this when Harness is connected and you are starting, resuming, unblocking, or closing an AI-assisted task. It is especially useful when product files may change, scope may drift, user judgment is needed, evidence, verification, QA, acceptance, or residual risk must be tracked, or sensitive categories may apply.
@@ -81,7 +83,7 @@ If the status looks stale or wrong, say:
 Show the current status and next action again from state.
 ```
 
-When the agent needs your judgment, status alone is not enough. It should add a focused prompt with options, a recommendation, uncertainty, what can continue if you defer, and refs to the relevant evidence or design records.
+When the agent needs your judgment, status alone is not enough. It should add a focused prompt with options, a recommendation, uncertainty, the affected gates or acceptance criteria, what can continue if you defer, and refs to the relevant source, evidence, or design records.
 
 ### 3. When blocked, ask for the one unblocker
 
@@ -107,7 +109,7 @@ Show the close checklist.
 
 The agent should keep Approval, Decision Packet outcomes, Write Authorization, evidence, verification, Manual QA, acceptance, and residual risk separate. One of them should not be used as a substitute for another.
 
-A casual "go ahead" is only usable when the agent has already named the exact thing you are deciding. It is not enough for product trade-offs, architecture choices, QA or verification waivers, final acceptance, or residual-risk acceptance unless the prompt shows the options, consequences, relevant refs, and the specific route being recorded.
+A casual "go ahead" is only usable when the agent has already named the exact thing you are deciding. It is not enough for product trade-offs, architecture choices, QA or verification waivers, final acceptance, or residual-risk acceptance unless the prompt shows the options, consequences, relevant refs, what the agent may still decide without you, and the specific route being recorded.
 
 ## The three everyday questions
 
@@ -149,7 +151,7 @@ Useful phrases:
 Start with the scope and questions.
 That scope works. Do not expand beyond what we just agreed.
 If scope needs to grow, show me the options and impact first.
-What exactly am I approving here?
+What exact decision or sensitive action am I being asked to record?
 ```
 
 Harness may describe those boundaries as the active Change Unit, and it may use a Decision Packet when a scope change needs your judgment. You do not need to lead with those labels.
@@ -183,9 +185,9 @@ Most judgment is one of these:
 - accept a known residual risk
 - accept the final result when final acceptance is required
 
-When user-owned product or material technical judgment blocks progress, the agent should show a Decision Packet with options, trade-offs, recommendation, uncertainty, and deferral effect. It should not flatten that into a vague "approve everything?" question.
+When user-owned product or material technical judgment blocks progress, the agent should show a Decision Packet with options, trade-offs, recommendation, uncertainty, and deferral effect. It should also name affected gates or acceptance criteria, source refs, evidence refs, and what the agent may decide without you. It should not flatten that into a vague "approve everything?" question.
 
-A good Decision Packet should feel like decision support, not a permission slip. It should name the real choice, compare realistic paths, recommend one, and say what can safely continue if you defer, or why nothing should continue until you decide.
+A good Decision Packet should feel like decision support, not a permission slip. It should name the real choice, compare realistic paths, recommend one, and say what can safely continue if you defer, or why nothing should continue until you decide. Exact public fields are owned by [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision); canonical authority is owned by [Decision Packet](../reference/kernel.md#decision-packet) and [Decision Gate](../reference/kernel.md#decision-gate).
 
 Examples:
 
@@ -196,6 +198,7 @@ Examples:
 - Technical: dependency additions can involve both Approval and a Decision Packet. Approving an install or dependency-file edit is not the same as deciding the dependency is the architecture direction.
 - Technical/data: schema migrations should show whether the path is additive, compatibility-shimmed, or breaking. The packet should name migration evidence, rollback risk, data-backfill risk, test boundary, and future maintenance impact.
 - Technical/interface: public API or module-boundary changes can need a compatibility or breaking-change Decision Packet. Passing tests does not settle caller impact, documentation promises, migration path, or release risk.
+- Scope/autonomy: expanding from a copy fix into account behavior, or from a private helper change into a public module boundary, needs a decision that names the new surface, what remains out of bounds, and whether a smaller Change Unit can continue.
 - Security-sensitive: approval to access a secret, change permissions, or export data only answers whether that sensitive step may proceed. It does not decide which data is exported, who may export it, what gets redacted, what is omitted from artifacts, or what audit trail is acceptable.
 - QA or verification waiver: "go ahead" is not enough. The prompt should name the skipped check or surface, the risk you would accept, the follow-up, relevant refs, and whether close would become risk accepted.
 - Final acceptance or residual-risk acceptance: final acceptance means the result is acceptable when required; residual-risk acceptance means the named remaining risk is acceptable for close. The agent should ask for these separately, after showing evidence, verification, QA, and residual-risk visibility.

@@ -6,6 +6,8 @@ This document introduces the smallest concept set you need before reading Harnes
 
 The kernel, runtime, MCP API, and document projection references now live in the reference path.
 
+This is Learn documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Read this when
 
 Read this when Harness terms are starting to appear in examples, status summaries, or reference specs and you want the smallest useful vocabulary.
@@ -63,9 +65,9 @@ Reference: [Kernel Reference](../reference/kernel.md).
 
 The agent finds several reasonable failed-login choices: inline message, toast, or modal/layer for the interaction; generic, specific, or hybrid wording for the copy. Another task might need a choice between session cookie, JWT, and social login, or between a compatible public API extension and a breaking cleanup. The agent should not quietly choose the product, security, compatibility, or maintenance trade-off if that choice blocks progress.
 
-A Decision Packet records a user-owned decision that blocks progress, write, close, waiver, acceptance, residual-risk acceptance, product direction, material technical direction, scope, design trade-off, stewardship judgment, or public commitment. Public commitments include choices that change what users, callers, documentation readers, or release/support promises can rely on. A Decision Packet names the decision, options, trade-offs, evidence, affected scope, residual risk, and next action.
+A Decision Packet records a user-owned decision that blocks progress, write, close, waiver, acceptance, residual-risk acceptance, product direction, material technical direction, scope, design trade-off, stewardship judgment, or public commitment. Public commitments include choices that change what users, callers, documentation readers, or release/support promises can rely on. A good Decision Packet names the decision, realistic options, recommendation, trade-offs, affected gates or acceptance criteria, source and evidence refs, deferral consequence, what the agent may still decide without the user, residual risk, and next action. It should ask the user to choose, defer, reject, waive, accept, or reconcile the named issue, not to give broad approval.
 
-Reference: [Kernel Reference](../reference/kernel.md).
+References: [Decision Packet](../reference/kernel.md#decision-packet), [Decision Gate](../reference/kernel.md#decision-gate), and [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision).
 
 ## Evidence
 

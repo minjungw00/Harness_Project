@@ -6,6 +6,8 @@
 
 커널, 런타임, MCP API, 문서 Projection 참조는 이제 reference 경로에 있습니다.
 
+이 문서는 Learn 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 이런 때 읽기
 
 예시, 상태 요약, 참고 사양에서 Harness 용어가 보이기 시작했고 가장 작은 어휘부터 잡고 싶을 때 읽습니다.
@@ -63,9 +65,9 @@ Autonomy Boundary는 Change Unit 안에서 에이전트가 행사할 수 있는 
 
 에이전트가 실패한 로그인에 대해 여러 가지 괜찮은 선택지를 찾았습니다. 상호작용은 inline message, toast, modal/layer 중 하나일 수 있고, 문구는 일반적인 문구, 더 구체적인 문구, hybrid 문구 중 하나일 수 있습니다. 다른 Task라면 session cookie, JWT, social login 중에서 고르거나, 호환되는 public API extension과 breaking cleanup 중에서 골라야 할 수도 있습니다. 이런 선택이 진행을 막는 제품, 보안, 호환성, 유지보수 판단이라면 에이전트가 조용히 골라서는 안 됩니다.
 
-Decision Packet은 사용자가 해야 하는 결정이 진행, 쓰기, 닫기, 예외 허용, 결과 수락, 남은 위험을 받아들이는 판단, 제품 방향, 중요한 기술 방향, 범위, 설계 절충, 코드베이스 돌봄 판단, 공개 약속을 막을 때 기록하는 묶음입니다. 공개 약속에는 사용자, caller, 문서 독자, release/support 약속이 의존할 내용을 바꾸는 선택이 포함됩니다. 필요한 결정, 선택지, 장단점, 근거, 영향을 받는 범위, 남은 위험, 다음 행동을 적습니다.
+Decision Packet은 사용자가 해야 하는 결정이 진행, 쓰기, 닫기, 예외 허용, 결과 수락, 남은 위험을 받아들이는 판단, 제품 방향, 중요한 기술 방향, 범위, 설계 절충, 코드베이스 돌봄 판단, 공개 약속을 막을 때 기록하는 묶음입니다. 공개 약속에는 사용자, caller, 문서 독자, release/support 약속이 의존할 내용을 바꾸는 선택이 포함됩니다. 좋은 Decision Packet은 필요한 결정, 현실적인 선택지, 추천, 장단점, 영향을 받는 gate나 수용 기준, source/evidence refs, deferral consequence, 에이전트가 사용자 없이 계속 판단해도 되는 일, 남은 위험, 다음 행동을 적습니다. 사용자가 broad approval을 주도록 묻는 대신 이름 붙은 issue를 선택, defer, reject, waive, accept, reconcile할지 물어야 합니다.
 
-참조: [커널 참조](../reference/kernel.md).
+참조: [Decision Packet](../reference/kernel.md#decision-packet), [Decision Gate](../reference/kernel.md#decision-gate), [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision).
 
 ## 근거
 

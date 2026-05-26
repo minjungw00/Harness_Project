@@ -6,6 +6,8 @@ This document describes how an agent session should behave for users. It is proc
 
 It does not define connector contracts, full capability profiles, MCP schemas, or surface cookbooks. Those belong in [Agent Integration Reference](../reference/agent-integration.md) and [Surface Cookbook](../reference/surface-cookbook.md).
 
+This is use documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Read this when
 
 Read this when checking how the agent should present status, blockers, writes, checks, and close.
@@ -120,7 +122,7 @@ Before asking, inspect repo, codebase, docs, and Harness state that are availabl
 
 One blocking question at a time does not mean one clarification round total. Broad or design-heavy requests may need several short turns until the goal, scope, non-goals, acceptance criteria, affected product areas, user-facing screens or flows, modules, interfaces, sensitive categories, user-owned product or material technical trade-offs, verification or Manual QA expectations, and known product, implementation, verification, QA, or follow-up risks are shaped enough to propose the first safe Change Unit.
 
-Each blocking question should name the uncertainty, offer realistic options, include the agent's recommendation, and say what can continue if the decision is deferred, or why nothing should continue until the decision is made. Record assumptions the agent makes separately from choices, approvals, QA judgment, acceptance, or risk acceptance that belong to the user.
+Each blocking question should name the uncertainty, offer realistic options, include the agent's recommendation, identify affected gates or acceptance criteria when they matter, point to source or evidence refs, and say what can continue if the decision is deferred, or why nothing should continue until the decision is made. Record assumptions the agent makes separately from choices, approvals, QA judgment, acceptance, or risk acceptance that belong to the user.
 
 Good intake:
 
@@ -199,7 +201,7 @@ Inside the Autonomy Boundary, the agent may decide ordinary implementation detai
 
 When user-owned product or material technical judgment blocks progress, show or request a Decision Packet. Do not replace it with broad approval or a vague "continue?" prompt.
 
-The word "approved" or a casual "go ahead" is not enough when the underlying choice is a product trade-off, architecture direction, QA waiver, verification risk, final acceptance, or residual-risk acceptance. The prompt must name the decision route, what the user is deciding, what is not being decided, the evidence or risk refs, and the close or write impact.
+The word "approved" or a casual "go ahead" is not enough when the underlying choice is a product trade-off, architecture direction, QA waiver, verification risk, final acceptance, or residual-risk acceptance. The prompt must name the decision route, what the user is deciding, what is not being decided, the evidence or risk refs, what the agent may decide without the user, and the close or write impact.
 
 A user-facing Decision Packet should include:
 
@@ -207,8 +209,23 @@ A user-facing Decision Packet should include:
 - the exact question
 - options and trade-offs
 - recommendation and uncertainty
+- affected gates and affected acceptance criteria
+- source refs and evidence refs
 - what can continue if the decision is deferred, or why nothing should continue until it is made
+- what the agent may decide without the user
 - residual risk or follow-up
+
+The exact public fields are owned by [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision), and canonical authority is owned by [Decision Packet](../reference/kernel.md#decision-packet) and [Decision Gate](../reference/kernel.md#decision-gate). Do not copy the schema body into user prompts; render the decision in ordinary language and keep refs available for drill-down.
+
+Decision-centered prompts use verbs that match the route: choose, defer, reject, waive, accept, or reconcile. Use "approve" only when the route is a sensitive-action Approval. Good prompt shapes:
+
+```text
+Which failed-login UX should I record for this Change Unit: inline message, toast, or modal/layer? Recommendation: inline message because it preserves flow and accessibility. If deferred, I can continue backend auth wiring but not claim the final failed-login UX is done.
+```
+
+```text
+Should I record acceptance of the remaining mobile Safari wrapping risk for this close, or keep close blocked until Manual QA runs? Recommendation: keep it blocked unless release timing requires the waiver. Affected gate: qa_gate; affected criterion: AC-03 onboarding copy layout.
+```
 
 Useful examples:
 
@@ -219,6 +236,7 @@ Useful examples:
 - Dependency choice: separate approval to install or update dependency files from the architecture decision to adopt the dependency. Compare adding the dependency, using existing utilities, or postponing the capability, and explain compatibility, rollback, cost, and maintenance impact.
 - Schema/data-model migration: compare additive migration, compatibility shim, and breaking cleanup. Explain migration evidence, data-backfill risk, rollback path, test boundary, and maintenance cost.
 - Public API/interface or module boundary: compare preserving the current interface, adding a narrow extension, or moving responsibility across a module boundary. Explain caller impact, compatibility or breaking-change risk, boundary tests, documentation promises, migration path, and future-change cost.
+- Scope or Autonomy Boundary expansion: compare keeping the current small scope, adding the requested surface, or splitting a follow-up Change Unit. Explain affected paths, user-facing behavior, what remains out of bounds, write impact, and what the agent can still decide alone.
 - Security-sensitive change: approval to access a secret, change permissions, or export data is only an approval boundary. Separate product or security judgment may still be needed for roles, fields, redaction, audit logging, retention, rollback, and user notice.
 - QA or verification waiver: use the existing recording required for the Task. A QA waiver is recorded through Manual QA/gate state and `qa_gate=waived`; product/user risk or policy-required judgment uses a QA waiver Decision Packet. A verification waiver is recorded as `verification_gate=waived_by_user`; when user-owned judgment is needed, use the relevant Decision Packet. Name the skipped check or surface, accepted risk, follow-up, relevant refs, and close impact. Example: waive mobile Safari Manual QA for a copy-only change, accept wrapping risk, and keep a browser pass as release follow-up.
 - Residual-risk acceptance before close: show the remaining limitation, the evidence that does exist, why close can still be acceptable, and the follow-up that remains.
@@ -353,7 +371,7 @@ Approved, I will update whatever is needed and close the task.
 Good decision stop:
 
 ```text
-Blocked on user-owned product judgment: the empty state can either invite setup now or keep the page quiet until data exists. Recommendation: invite setup now, low uncertainty. If you defer, I can finish the data-loading refactor but not the empty-state UX.
+Blocked on user-owned product judgment: choose the empty-state behavior for AC-02. Options: invite setup now, or keep the page quiet until data exists. Recommendation: invite setup now, low uncertainty. If you defer, I can finish the data-loading refactor but not claim the empty-state UX is done.
 ```
 
 Bad decision stop:

@@ -4,6 +4,8 @@
 
 Standalone Decision Packet projection이 켜져 있고 사용자 소유의 제품 판단 또는 중요한 기술 판단, Approval 형태의 판단, waiver, 결과 수락, 남은 위험을 받아들이는 판단, reconcile decision을 보여줘야 할 때 `DEC`를 사용합니다.
 
+이 문서는 template 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 기준 기록
 
 - `state.sqlite.decision_packets`
@@ -37,6 +39,10 @@ Approval 형태 표시 항목인 "이 Approval이 포괄하는 것", "이 Approv
 - Follow-Up
 - References
 
+충분한 rendered Decision Packet은 이 section들로 하나의 사용자 소유 결정을 답하며, 넓은 permission을 요청하지 않습니다. 정확한 public request/response field는 [`harness.request_user_decision`](../mcp-api-and-schemas.md#harnessrequest_user_decision)이 소유하고, 기준 authority rule은 [Decision Packet](../kernel.md#decision-packet)과 [Decision Gate](../kernel.md#decision-gate)가 소유합니다. 이 template은 existing field를 요약해 보여줄 수 있지만 schema field, gate, alternate authority를 추가하면 안 됩니다.
+
+사용자가 보는 질문은 decision을 직접 물어야 합니다. Option을 선택할지, stated consequence와 함께 defer할지, path를 reject할지, 이름 붙은 check를 waive할지, 이름 붙은 risk를 accept할지, result를 accept할지, 이름 붙은 drift를 reconcile할지 묻습니다. "approve" 또는 "승인"은 Approval에 연결된 Approval 형태 context에서만 사용합니다. 다른 packet kind에서는 어떤 choice를 기록할지와 그 choice 밖에 남는 것이 무엇인지 물어야 합니다.
+
 ### 예시 내용 단서
 
 다음과 같은 Decision Packet에도 같은 렌더링 섹션을 사용합니다. 이 단서는 추가 template section이 아닙니다.
@@ -46,6 +52,7 @@ Approval 형태 표시 항목인 "이 Approval이 포괄하는 것", "이 Approv
 - 기술 선택: session cookie, JWT, social login 중에서 고르는 경우입니다. 폐기 가능성, CSRF/XSS 노출, client 호환성, 구현 비용, migration 영향은 Options와 Minimum Context To Judge에 둡니다.
 - Dependency Approval과 dependency decision 구분: 사용자가 install command나 dependency-file edit을 승인하는 경우 그 sensitive-action 경계는 Approval-Shaped Context에 둡니다. 그 dependency가 올바른 architecture 방향인지 선택하는 경우에는 technical choice를 What User Is Deciding과 Options에 둡니다.
 - Schema/data-model 결정: additive migration, compatibility shim, breaking cleanup, data backfill, migration 근거, rollback risk, test boundary는 Options와 Minimum Context To Judge에 둡니다.
+- Scope 또는 Autonomy Boundary 확장: proposed additional surface, current scope 또는 latitude가 부족한 이유, 계속 범위 밖에 남는 것, 더 작은 Change Unit으로 계속할 수 있는지 여부는 Consequence Of Deferring에 둡니다.
 - 보안 민감 Approval: Approval 경계는 Approval-Shaped Context에 둡니다. 역할, exported fields, redaction, audit logging, retention, rollback, user notice가 아직 결정되지 않았다면 해결되지 않은 제품/보안 판단으로 표시하고 별도의 compatible Decision Packet으로 보냅니다. Approval packet 하나가 그 판단까지 해결한 것처럼 쓰면 안 됩니다.
 - Public API/interface decision: 호출자 호환성, migration path, documentation promise, rollback risk는 Options와 Minimum Context To Judge에 둡니다. Resolved API decision을 merge 권한, deployment 권한, Write Authorization처럼 다루면 안 됩니다.
 - QA 또는 verification waiver: 생략하는 확인이나 대상 접점, 사용자·제품·기술 측면에서 받아들이는 위험, 관련 refs, 닫기 영향, 가장 작은 신뢰 가능한 follow-up은 User Decision And Accepted Risk와 Follow-Up에 둡니다.
@@ -100,6 +107,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## What User Is Deciding
 - decision category:
+- user-facing question:
 - decision:
 - 이 decision이 확정하는 것:
 - 이 decision이 확정하지 않는 것:

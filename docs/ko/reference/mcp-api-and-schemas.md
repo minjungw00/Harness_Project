@@ -6,7 +6,7 @@
 
 SQLite DDL과 storage layout, 전체 kernel transition table, projection template text, CLI command semantics, connector cookbook detail은 이 문서의 담당 범위가 아닙니다. Storage-owned JSON과 DDL 규칙은 [Storage와 DDL](storage-and-ddl.md)이 담당합니다.
 
-이 문서는 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다.
+이 문서는 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
 
 ## 이런 때 읽기
 
@@ -513,6 +513,10 @@ Client가 guard, freeze, careful-mode control을 렌더링할 때는 권한 fiel
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, Recommended Playbook, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. 기준 kernel records는 owner docs가 정의합니다. 이 목록에서 `RecommendedPlaybook`은 표시 전용 예외입니다. 자체 기준 kernel record, DDL table, task event, projection job이 없습니다.
 
 Role Lens behavior는 이 기존 표시 및 routing schema를 사용합니다. Role lens는 `RecommendedPlaybook`으로 나타날 수 있고, existing Decision Packet으로 route할 수 있으며, `DecisionPacketCandidate`를 propose할 수 있습니다. 별도의 public payload schema, 권한 기록, 상태 전이를 도입하지 않습니다.
+
+Decision Packet 품질은 아래 existing public fields와 [Decision Packet](kernel.md#decision-packet), [Decision Gate](kernel.md#decision-gate)의 kernel authority rule로 판단하며, 추가 payload member로 판단하지 않습니다. 충분한 packet은 `what_user_is_deciding`에 사용자가 무엇을 결정하는지 이름 붙이고, trade-off가 있는 현실적인 `options`를 포함하며, 가능할 때 `recommendation`과 uncertainty를 제공하고, `affected_gates`와 `affected_acceptance_criteria`를 식별하고, `context.source_refs`와 `context.evidence_refs`를 담고, `deferral_consequence`를 말하며, `what_agent_may_decide_without_user`를 나열합니다. 이 existing fields로 선택, source, evidence, deferral impact, agent latitude를 솔직히 보여줄 수 없다면 broad approval처럼 제시하지 말고 prompt를 blocked 또는 narrowed로 다루거나 충분한 context가 생길 때까지 decision을 pending으로 둬야 합니다.
+
+`DecisionPacketCandidate`, `RecommendedPlaybook.route`, `decision_packet_route`, optional implementation `decision_requests`는 request, display, routing metadata입니다. Caller가 [`harness.request_user_decision`](#harnessrequest_user_decision)으로 가도록 도울 수는 있지만, owner path가 compatible `DecisionPacket`과 연결된 owner records를 commit 또는 update하기 전에는 기준 권한이 되지 않습니다.
 
 ```yaml
 DecisionPacket:
@@ -1377,6 +1381,8 @@ RequestUserDecisionRequest:
 ```
 
 Core는 기준 `DecisionPacket`을 저장합니다. Minimal MVP 구현은 `decision_requests`를 생략할 수 있으며, public request와 response schema는 Decision Request가 아니라 Decision Packet을 중심으로 유지됩니다. 구현이 `decision_requests`도 만들거나 업데이트한다면 해당 row는 routing, interaction, idempotency replay, legacy handoff metadata일 뿐이며 gate aggregation이 그 metadata를 고려하려면 먼저 기준 `decision_packet_id`로 다시 연결되어야 합니다. `decision_request` row만으로는 `decision_gate`, Approval, acceptance, waiver, Residual Risk 수용, close를 절대 만족하지 않습니다. `state_summary_at_request`가 `null`이면 Core가 같은 transaction 안에서 current state로부터 파생합니다. Stored `state_summary_at_request`는 request-time snapshot이며 이후 Task transition으로 업데이트되지 않습니다. `approval_scope`는 `decision_kind=approval`일 때 required이며, 다른 `decision_kind` value에서는 `null` 또는 omitted여야 합니다. `decision_kind=approval`은 Approval 형태의 sensitive-change context일 뿐이며, 별도의 compatible Decision Packet과 gate update 없이 제품 장단점, 설계 방향, 아키텍처 판단이나 중요한 기술 판단, 해결되지 않은 security 또는 product-security 판단, QA 면제, verification risk, final acceptance, Residual Risk 수용 같은 사용자 소유 판단을 해소할 수 없습니다. `decision_kind=approval`에서 Core는 Approval 범위를 사용해 연결된 pending Approval 기록도 생성합니다. Approval은 `harness.record_user_decision`이 Decision Packet을 해소하기 전에는 granted가 아닙니다. `residual_risk_acceptance` packet은 `user_context.minimum_context`에 risk visibility context를 포함하고 `context.source_refs`에 relevant risk ref를 포함해야 합니다. "go ahead" 또는 "진행해" 같은 넓은 자연어 답변은 schema branch가 아닙니다. Request는 여전히 Core가 무엇을 묻는지 결정하는 `decision_kind`, option, affected gates, user context를 이름 붙여야 합니다.
+
+이 request에서 파생되는 사용자 표시 prompt는 결정 중심이어야 합니다. 사용자가 이름 붙은 option을 선택, defer, reject, waive, accept, reconcile할지 묻고, 그 답이 무엇을 확정하고 무엇을 확정하지 않는지 말해야 합니다. `decision_kind=approval`이고 `approval_scope`가 승인할 민감 동작을 설명하는 경우가 아니라면 generic approval을 요청하면 안 됩니다. 정확한 public fields는 위 schema 그대로이며, 이 문단은 그 field를 사용하는 최소 품질을 설명할 뿐입니다.
 
 Response schema:
 
