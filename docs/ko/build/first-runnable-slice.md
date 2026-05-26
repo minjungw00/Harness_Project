@@ -284,6 +284,8 @@ Required authority 또는 근거가 없을 때 close가 work를 끝내지 못하
 
 Core 동작을 실행하고 state, events, artifacts, projections, errors를 검증하는 fixture를 작성합니다. Rendered prose matching만으로 success를 검증하지 않습니다.
 
+아래 목록은 first-slice behavior checklist입니다. 실제 순서, seed guidance, stable event target, artifact/projection assertion, primary-error expectation은 [Kernel Smoke Authoring Queue](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue)를 사용합니다.
+
 첫 조각의 최소 fixture:
 
 - no-active-task 상태 조회가 `idle` 상태를 반환하고 event를 추가하지 않음
@@ -305,7 +307,7 @@ Core 동작을 실행하고 state, events, artifacts, projections, errors를 검
 - `close_task`가 evidence-insufficient close를 차단함
 - `close_task`가 해소되지 않은 decision close를 차단함
 
-Fixture shape와 비교 규칙은 [운영과 Conformance 참조](../reference/operations-and-conformance.md#conformance-fixture-format)를 따릅니다.
+Fixture shape와 비교 규칙은 [운영과 Conformance 참조](../reference/operations-and-conformance.md#conformance-fixture-format)를 따릅니다. Suite stage, authoring order, docs-maintenance result를 표현하기 위해 fixture body에 field를 추가하지 않습니다.
 
 ## 참고할 Reference 문서
 

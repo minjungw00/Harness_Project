@@ -68,6 +68,8 @@ Kernel Smoke는 나머지 시스템이 완성되기 전에 Harness 쓰기 권한
 
 이 시점에서 사용자 또는 운영자는 작지만 완결된 루프를 볼 수 있어야 합니다. 현재 Task 상태, scoped write block/allow, durable Write Authorization 생성과 사용, artifact와 Evidence Manifest 연결, projection 최신성 또는 대기열 추가, structured close blocker가 그 관찰 대상입니다.
 
+실제 fixture 작성 순서는 [Kernel Smoke Authoring Queue](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue)를 사용합니다. 이 queue는 첫 runtime fixture candidate를 이 stage에 매핑하되 exact fixture body shape를 바꾸지 않습니다.
+
 ## Agency-Hardened MVP
 
 Agency-Hardened MVP는 최종 reference conformance 목표입니다. 나머지 MVP-3을 완료한 뒤 MVP-4와 MVP-5를 추가합니다.

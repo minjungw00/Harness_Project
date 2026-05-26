@@ -284,6 +284,8 @@ Those belong either to the later Agency-Hardened MVP path in [MVP Plan](mvp-plan
 
 Write fixtures that drive Core behavior and assert state, events, artifacts, projections, and errors. Do not assert success by matching rendered prose.
 
+The list below is the first-slice behavior checklist. Use the [Kernel Smoke Authoring Queue](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue) for the practical order, seed guidance, stable event targets, artifact/projection assertions, and primary-error expectations.
+
 Minimum first-slice fixtures:
 
 - no-active-task status read returns idle state and appends no events
@@ -305,7 +307,7 @@ Minimum first-slice fixtures:
 - `close_task` blocks evidence-insufficient close
 - `close_task` blocks unresolved decision close
 
-Use the fixture shape and comparison rules in [Operations And Conformance Reference](../reference/operations-and-conformance.md#conformance-fixture-format).
+Use the fixture shape and comparison rules in [Operations And Conformance Reference](../reference/operations-and-conformance.md#conformance-fixture-format). Do not add fields to the fixture body to express suite stage, authoring order, or docs-maintenance results.
 
 ## Reference docs to consult
 

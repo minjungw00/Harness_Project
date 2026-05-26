@@ -68,6 +68,8 @@ Kernel Smoke is useful because it proves the Harness write authority loop before
 
 At this point, the user or operator can observe a small but complete loop: current Task status, scoped write block/allow, durable Write Authorization creation and consumption, artifact and Evidence Manifest links, projection freshness or enqueueing, and structured close blockers.
 
+For practical fixture authoring order, use the [Kernel Smoke Authoring Queue](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue). It maps the first runtime fixture candidates to this stage without changing the exact fixture body shape.
+
 ## Agency-Hardened MVP
 
 Agency-Hardened MVP is the final reference conformance target. It completes the rest of MVP-3 and then adds MVP-4 and MVP-5.
