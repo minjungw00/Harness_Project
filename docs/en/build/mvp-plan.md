@@ -183,7 +183,7 @@ Focus on:
 - Decision Packet close checks
 - close blocker reporting
 
-Do not require automated Browser QA Capture or hosted workflow automation for MVP. Browser screenshots, console logs, network traces, accessibility snapshots, or workflow recordings may support QA evidence only when registered and linked through existing Manual QA/artifact paths, but Manual QA records and artifact refs are the MVP requirement. Captured material does not replace Manual QA judgment or acceptance.
+Do not require automated Browser QA Capture or hosted workflow automation for MVP. Browser screenshots, console logs, network traces, accessibility snapshots, or workflow recordings may support QA evidence only when registered and linked through existing Manual QA/artifact paths, but Manual QA records and artifact refs are the MVP requirement. Captured material does not replace Manual QA judgment, final acceptance, or detached verification unless a separate Eval path satisfies independence. Unsupported surfaces fall back to human Manual QA notes and manually supplied artifacts.
 
 ### MVP-5: Operator Smoke, Agency Conformance, Later-Boundary Checks
 

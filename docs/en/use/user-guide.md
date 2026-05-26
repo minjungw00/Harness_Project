@@ -355,13 +355,15 @@ These words answer different questions. Keep them separate near close, even when
 |---|---|---|
 | Evidence | Supports the claim that a criterion or result was met. | The agent saying "done", a report sentence, or final acceptance. |
 | Verification | Checks correctness from an appropriate review boundary. Detached verification needs independence. | Same-session self-review, passing tests alone, or Manual QA. |
-| Manual QA | Records human inspection of UX, workflow, copy, accessibility interpretation, visual result, or product feel. | Automated tests, browser smoke, verification, or acceptance. |
+| Manual QA | Records human inspection where human judgment matters, commonly UI/UX, copy, accessibility interpretation, workflow, product taste, or visual output. | Automated tests, browser smoke, Browser QA artifacts, verification, or acceptance. |
 | Acceptance | Records the user's judgment that the result is acceptable when the task requires it. | Correctness proof, QA, verification, or approval. |
 | Residual Risk | Names known remaining uncertainty, limitation, unchecked condition, or trade-off. | Evidence, verification, QA, or acceptance. |
 | Decision | Records the user-owned product direction, material technical direction, waiver, or close-relevant choice. | Broad approval or chat agreement that does not answer the actual trade-off. |
 | Approval | Allows a named sensitive action to proceed. | Acceptance, correctness, evidence, verification, QA, or risk acceptance. |
 
 Approval is not acceptance. Tests passing do not mean Manual QA happened. Same-session self-review can be a useful self-check, but it is not detached verification. Accepting a result does not prove it is correct. Accepting residual risk is not proof either; it means the known uncertainty was visible and accepted for this Task. Final acceptance, when required, should come after close-relevant residual risk has been shown or reported as no known close-relevant risk.
+
+Manual QA judgment is separate from Browser QA artifacts. Screenshots, browser smoke, console logs, network traces, accessibility snapshots, and workflow recordings can support evidence when they are registered through the existing artifact path, but they do not become Manual QA, final acceptance, or detached verification. Browser QA Capture remains a v1/post-MVP candidate unless owner docs explicitly promote it. If a surface cannot support browser capture, use human Manual QA notes and manually supplied artifacts instead.
 
 Useful verification wording:
 
@@ -389,7 +391,7 @@ If the agent asks for a QA or verification waiver, it should name the existing r
 Applied examples:
 
 - Direct docs or copy fix: a changed path, diff or patch summary, and self-check can support the claim. It should not be described as detached verification, and it does not need Manual QA unless the changed surface needs human inspection.
-- UI/UX work: tests and browser smoke can support rendering or behavior claims. Manual QA is still the human check for layout, interaction feel, copy, and accessibility interpretation. A QA waiver should name the skipped surface, accepted risk, follow-up, relevant refs, and close impact.
+- UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: tests, browser smoke, and Browser QA artifacts can support rendering or behavior claims. Manual QA is still the human check for layout, interaction feel, copy, accessibility interpretation, workflow quality, and product taste. When automated browser capture is unavailable, human notes and manually supplied artifacts are the fallback. A QA waiver should name the skipped surface, accepted risk, follow-up, relevant refs, and close impact.
 - Auth or security work: approval may allow secret access, permission changes, or auth-file writes. The security or product choice still needs a Decision Packet when roles, redaction, audit trail, session model, lockout behavior, or user notice are being decided.
 - Public API work: passing tests support behavior, but compatibility, caller impact, migration path, and documentation promises may need a Decision Packet and independent verification.
 - Risk-accepted close: the agent should show the evidence that exists, the verification or QA that is missing or waived, the remaining limitation, and the follow-up. Closing with accepted risk is not the same as closing as detached verified.

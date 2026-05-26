@@ -315,7 +315,7 @@ Sufficiency는 양이 아니라 coverage로 표시합니다. 중요한 질문은
 
 근거 표시는 먼저 참조를 보여주는 방식(refs-first)으로 합니다. Evidence, Run, Eval, Manual QA, artifact, log, screenshot, diff, trace ref와 짧은 결과를 보여주고, 사용자나 evaluator가 다음 행동을 결정하기 위해 내용을 살펴봐야 할 때만 excerpt를 본문에 넣습니다.
 
-Task shape에 따라 "충분함"의 모습은 달라집니다. Advisor work는 recorded evidence가 요청된 경우에만 보통 source refs 또는 review bundle을 cite합니다. Direct docs-only work는 changed path, diff 또는 patch summary, self-check로 뒷받침될 수 있습니다. Direct code는 focused check 또는 automated check가 적용되지 않는다는 recorded reason을 더합니다. Feature work는 각 criterion을 Run과 artifact refs에 map합니다. UI/UX/copy work는 visual evidence와 Manual QA를 분리합니다. Sensitive work는 Approval, redaction, omission refs를 visible하게 유지하지만 Approval을 correctness로 취급하지 않습니다. Verification-required work에는 reviewed evidence를 이름 붙이는 Eval이 필요합니다.
+Task shape에 따라 "충분함"의 모습은 달라집니다. Advisor work는 recorded evidence가 요청된 경우에만 보통 source refs 또는 review bundle을 cite합니다. Direct docs-only work는 changed path, diff 또는 patch summary, self-check로 뒷받침될 수 있습니다. Direct code는 focused check 또는 automated check가 적용되지 않는다는 recorded reason을 더합니다. Feature work는 각 criterion을 Run과 artifact refs에 map합니다. UI/UX, workflow, copy, accessibility, product-taste, visual-output work는 visual 또는 Browser QA artifact evidence와 Manual QA judgment를 분리합니다. Sensitive work는 Approval, redaction, omission refs를 visible하게 유지하지만 Approval을 correctness로 취급하지 않습니다. Verification-required work에는 reviewed evidence를 이름 붙이는 Eval이 필요합니다.
 
 Evidence가 stale이 되면 이유를 쉬운 말로 말하고 가장 작은 repair를 이름 붙입니다. 흔한 원인은 baseline drift, supporting Run 또는 Eval 이후 changed files 변경, approval drift 또는 expiry, missing 또는 failed-integrity artifacts, relevant Shared Design, domain term, module map, interface contract changes입니다.
 
@@ -342,7 +342,7 @@ Evidence가 stale이 되면 이유를 쉬운 말로 말하고 가장 작은 repa
 | Detached verified | Eval이 valid independence, same-session self-review 문제 없음, stale baseline 또는 bundle input 없음으로 pass했을 때. |
 | Waived with accepted risk | Verification 또는 다른 close-relevant check가 waived되었고 보이는 remaining risk가 risk-accepted close를 위해 accepted되었을 때. |
 
-Manual QA는 UX, 흐름, 시각 결과, 문구, 접근성 해석처럼 사람이 봐야 하는 품질을 확인했는지에 답합니다. Manual QA 결과가 실제로 기록되었거나 타당하게 면제된 것이 아니라면 browser smoke, screenshot capture, verifier note를 Manual QA처럼 보여주면 안 됩니다.
+Manual QA는 사람이 봐야 하는 품질을 확인했는지에 답합니다. 흔한 대상은 UI/UX, workflow, copy, accessibility 해석, product taste, visual output입니다. Manual QA 결과가 실제로 기록되었거나 타당하게 면제된 것이 아니라면 browser smoke, screenshot capture, Browser QA Capture artifact, verifier note를 Manual QA처럼 보여주면 안 됩니다. Browser QA Capture는 owner 문서가 명시적으로 승격하기 전까지 v1/post-MVP 후보입니다. 사용할 수 있더라도 그 artifact는 supporting ref일 뿐이며, 별도의 Eval 경로가 independence를 충족하지 않는 한 최종 수락이나 detached verification이 아닙니다. Browser capture가 해당 접점에서 지원되지 않으면 사람이 작성한 Manual QA notes와 수동 제공 artifacts를 사용합니다.
 
 남은 위험은 알려진 한계, 불확실성, 확인하지 못한 조건, 장단점입니다. 위험을 받아들이고 닫거나 최종 수락을 하기 전에는 반드시 보여야 합니다. 남은 위험을 받아들이는 판단은 보장 수준을 높이지 않고, verification이나 QA를 대체하지 않습니다.
 
@@ -353,7 +353,7 @@ Verification waiver와 QA waiver는 assurance를 높이지 않습니다. Verific
 닫기 적용 예시:
 
 - Direct 작업: 변경 파일, 근거 refs, 자체 확인(self-check), `work`로 전환됐는지 여부를 보여줍니다. 조건을 충족하는 Eval 없이 detached verified라고 부르면 안 됩니다.
-- UI/UX 작업: 테스트, browser smoke, Manual QA, 수락을 각 줄로 분리합니다. Manual QA를 면제한다면 생략한 대상, 받아들이는 위험, 후속 작업을 보여줍니다.
+- UI/UX, workflow, copy, accessibility, product-taste, visual-output 작업: 테스트, browser smoke, Browser QA artifacts, Manual QA, 수락을 각 줄로 분리합니다. Manual QA를 면제한다면 생략한 대상, 받아들이는 위험, 후속 작업을 보여줍니다.
 - Auth 또는 security 작업: Approval을 security 또는 product decision과 분리해서 보여준 뒤 근거와 검증을 보여줍니다. Secret이나 permission을 만지는 Approval은 redaction, audit, role, retention, user notice 선택을 대신하지 않습니다.
 - Public API 작업: caller compatibility, migration 또는 documentation 영향, 근거, 검증을 따로 보여줍니다. 테스트 통과만으로 API contract 결정이 끝난 것은 아닙니다.
 - 위험을 받아들이고 닫기: 남은 한계, 이미 있는 근거, 빠졌거나 면제된 verification 또는 QA, 받아들인 위험, 후속 작업을 보여줍니다. 결과를 detached verified처럼 표시하면 안 됩니다.

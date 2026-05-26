@@ -4,6 +4,8 @@
 
 Use `MANUAL-QA` when Manual QA is required, performed, waived, pending, or represented in `qa_gate` and the record needs a readable projection.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - `manual_qa_records`
@@ -11,7 +13,7 @@ Use `MANUAL-QA` when Manual QA is required, performed, waived, pending, or repre
 - `qa_gate`
 - Manual QA profile, setup, checklist, result, waiver, and findings
 - human inspector or role and the inspected quality or workflow
-- screenshot, browser log, video, or note artifact refs with redaction state
+- screenshot, browser log, `qa_capture`, video, workflow recording, or manually supplied note artifact refs with redaction state
 - waiver reason, QA waiver Decision Packet refs when required, and Residual Risk refs related to QA waiver or failure
 - design-quality validator results related to `manual_qa`
 - projection freshness inputs
@@ -43,7 +45,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 # Manual QA
 
-> Projection view: rendered from `source_state_version` at `updated_at`; displays Manual QA records and `qa_gate`. QA results and QA waivers are recorded in `manual_qa_records` and `qa_gate`; QA waivers that involve product/user risk use a linked QA waiver Decision Packet, and residual-risk acceptance is recorded on Residual Risk refs.
+> Projection view: rendered from `source_state_version` at `updated_at`; displays Manual QA records and `qa_gate`. QA results and QA waivers are recorded in `manual_qa_records` and `qa_gate`; QA waivers that involve product/user risk use a linked QA waiver Decision Packet, and residual-risk acceptance is recorded on Residual Risk refs. Browser QA artifacts are supporting refs only; they do not replace the human Manual QA judgment, final acceptance, or detached verification.
 
 ## Identity
 - manual_qa_record_id: QA-0001 | null
@@ -57,6 +59,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - build/run command:
 - test account/data:
 - route or screen:
+- browser capture support: supported | unsupported | not applicable
 
 ## Checklist
 - [ ] primary workflow works
@@ -90,9 +93,12 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Evidence Refs
 - screenshot:
+- qa_capture:
 - browser log:
 - video:
 - note:
+- manually supplied artifact:
+- unsupported-surface fallback note:
 
 ## Redaction And Availability
 | Artifact Ref | Redaction State | QA Effect | Note |
@@ -107,4 +113,4 @@ This template is a rendered shape, not canonical state. `qa_gate` is the canonic
 
 Manual QA projections may show safe omission notes, handles, and blocked artifact notices, but must not embed omitted secret/PII values or blocked capture payloads. A `secret_omitted` artifact can support visible workflow, UI, copy, accessibility, or smoke-test observations; a `blocked` capture is unavailable QA input unless a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the QA path.
 
-Screenshots, browser logs, videos, and notes are QA evidence refs. The Manual QA result is the recorded human inspection or valid waiver, not the existence of those captures alone.
+Screenshots, browser logs, videos, `qa_capture` outputs, workflow recordings, and notes are QA evidence refs. Browser QA Capture remains a v1/post-MVP candidate until owner docs explicitly promote it. The Manual QA result is the recorded human inspection or valid waiver, not the existence of those captures alone. Browser QA artifacts also do not record final acceptance or detached verification unless a separate Eval path satisfies verification independence. When a surface does not support browser capture, the fallback is human Manual QA notes and manually supplied artifacts.

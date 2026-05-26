@@ -359,6 +359,8 @@ An Eval is a verification result record. It records the verification target, ver
 
 Manual QA is a human inspection record for UX, workflow, copy, accessibility, visual output, product taste, or any other result that needs human judgment. `manual_qa_record.result` is the record-level result of an actual Manual QA record and is limited to `passed`, `failed`, or `waived`. Pending required QA is not represented as a Manual QA record result; it is represented by the aggregate `qa_gate=pending`.
 
+Manual QA is commonly required for UI/UX, copy, accessibility interpretation, workflow, product taste, and visual output because those surfaces depend on human judgment. Browser smoke, screenshots, console logs, network traces, accessibility snapshots, workflow recordings, or other Browser QA artifacts can be registered artifact refs attached to evidence or a Manual QA record, but they are not the Manual QA judgment itself. They also do not record final acceptance and do not create detached verification unless a separate Eval path satisfies the verification independence requirements. MVP requires the Manual QA record or valid QA waiver, `qa_gate`, and any supporting registered artifact refs; automated Browser QA Capture is a v1/post-MVP candidate unless explicitly promoted by owner docs. Unsupported surfaces fall back to human Manual QA notes and manually supplied artifacts.
+
 ### Finding routing
 
 Findings from Run summaries, command results, Eval blockers, Manual QA findings, design-quality validators, same-session reviews, or operator diagnostics are not a separate kernel authority path. They affect state, gates, or close only when captured through existing owner records or structured responses.
@@ -544,7 +546,7 @@ Chat text and Markdown report prose are not evidence authority. A status card or
 | `direct docs-only` | Sufficient evidence may be a changed path list, diff artifact or recorded patch summary, and self-check summary mapped to the stated completion condition, such as typo fixed, link corrected, or no meaning change. Rendered Markdown prose alone is not enough. |
 | `direct code` | Sufficient evidence may be changed path list, diff artifact or patch summary, a focused command/test/log artifact when applicable or an explicit recorded reason no automated check applies, and self-check summary mapped to the requested behavior. If public behavior, contract, or risk grows beyond the narrow criterion, the same Task should move toward `work`. |
 | `work feature` | Sufficient evidence requires each close-relevant acceptance criterion or completion condition to map to supporting Run refs, artifact refs, or supporting state refs; changed file coverage; run summary; diff/log/test/build artifacts as applicable; and `evidence_manifest.status=sufficient`. Unsupported criteria keep the gate `partial`. |
-| `UI/UX/copy work` | Requires `work feature` evidence plus UI/copy-specific support such as screenshot, browser-smoke, copy diff, or accessibility-check artifacts when relevant. When QA is required, sufficiency for close also needs a Manual QA record or valid QA waiver; automated checks do not become Manual QA. |
+| `UI/UX/copy work` | Requires `work feature` evidence plus UI, workflow, copy, accessibility, product-taste, or visual-output support such as screenshot, browser-smoke, copy diff, accessibility-check, Browser QA artifact, or manually supplied artifact refs when relevant. When QA is required, sufficiency for close also needs a Manual QA record or valid QA waiver; automated checks and Browser QA artifacts do not become Manual QA. |
 | `sensitive work` | Requires normal task evidence plus approval refs, approval scope compatibility, baseline relation, relevant redaction or omission impact, and no approval drift. Approval allows a sensitive step; it does not prove correctness, satisfy evidence, or decide separate product/security judgment. |
 | `verification-required work` | Requires Evidence Manifest plus an Eval record that names the evidence reviewed. If the Task is to close as `completed_verified`, the Eval must have valid independence and the reviewed refs must still be current, available, and compatible with the active baseline. |
 
@@ -563,7 +565,7 @@ Mapping examples:
 | `direct docs-only` | "AC-01 typo corrected without meaning change" | `RUN-DOCS-001` plus `ART-DIFF-001` or a recorded patch summary; self-check summary records the rendered or linked doc check. |
 | `direct code` | "AC-01 formatter returns fallback for null date" | `RUN-CODE-001`, `ART-DIFF-001`, and `ART-TEST-001`; if no automated check applies, the Run records the reason and self-check. |
 | `work feature` | "AC-01 login form submits email" and "AC-02 failed login message appears" | Each AC maps separately to Run refs, diff/test/log ArtifactRefs, and any Feedback Loop or TDD trace refs that support that criterion. |
-| `UI/UX/copy work` | "AC-03 final button copy is readable in the target viewport" | Copy diff and screenshot/browser-smoke ArtifactRefs support visible output; `QA-0001` or a valid QA waiver supports required Manual QA. |
+| `UI/UX/copy work` | "AC-03 final button copy is readable in the target viewport" | Copy diff and screenshot/browser-smoke or Browser QA ArtifactRefs support visible output; `QA-0001` or a valid QA waiver supports required Manual QA. If browser capture is unsupported, manually supplied artifacts and human notes can support the row. |
 | `sensitive work` | "AC-04 export contains only approved redacted fields" | Normal Run/artifact evidence plus `APR-0001`, compatible baseline and approval scope, and redaction or omission notes on the relevant ArtifactRefs. |
 | `verification-required work` | "Completion condition: independent verifier reviewed the changed scope" | Evidence Manifest refs plus `EVAL-0001`, reviewed Run/artifact refs, and a valid independence qualifier when closing as `completed_verified`. |
 
@@ -605,7 +607,7 @@ Rules:
 not_required | required | pending | passed | failed | waived
 ```
 
-`qa_gate` is the canonical kernel gate for required human QA. Individual Manual QA records have record-level results; the gate is the aggregate close-relevant state. `qa_gate=pending` means required QA has not yet produced a satisfying Manual QA record, or the latest relevant Manual QA record does not satisfy policy. It does not mean `manual_qa_record.result=pending`. `qa_gate=waived` requires a waiver reason, and product/user risk or policy-required judgment requires a QA waiver Decision Packet.
+`qa_gate` is the canonical kernel gate for required human QA. Individual Manual QA records have record-level results; the gate is the aggregate close-relevant state. `qa_gate=pending` means required QA has not yet produced a satisfying Manual QA record, or the latest relevant Manual QA record does not satisfy policy. It does not mean `manual_qa_record.result=pending`. Browser QA artifacts do not update `qa_gate` except through the normal Manual QA record or valid QA waiver path. `qa_gate=waived` requires a waiver reason, and product/user risk or policy-required judgment requires a QA waiver Decision Packet.
 
 ### Acceptance Gate
 

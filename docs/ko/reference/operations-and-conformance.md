@@ -131,7 +131,7 @@ Agency-Hardened MVP는 final reference conformance target입니다. Decision Pac
 
 MVP의 guard/freeze conformance는 cooperative/detective level에서 honest display와 behavior를 검증합니다. Freeze request는 work를 보류하거나, next action을 더 엄격하게 만들거나, existing scope가 incompatible할 때 `prepare_write`가 차단 또는 보류하게 만들 수 있습니다. Persistent owner-record change는 기존 Core 상태 변경 경로, Decision Packet route, owner-record update path를 통해 일어날 때만 검증해야 합니다. Guard display는 현재 경로가 cooperative인지 detective인지, 그리고 어떤 위반이 사후에만 감지될 수 있는지 보고합니다. Preventive `T4` guard fixture는 기준 접점이 covered operation에 대한 pre-tool blocking을 구현하고 증명하지 않는 한 v1-or-later입니다.
 
-Browser QA Capture conformance는 v1 priority candidate이지 MVP smoke 요구사항이 아닙니다. [로드맵 승격 규칙](../roadmap.md#승격-규칙)을 통해 승격되기 전까지는 권한 없는 capture support일 뿐입니다. Future fixtures는 capability profile fields, redaction 및 secret/PII handling, browser test environment, artifact 보존, capture artifact mapping, unsupported 접점 fallback 동작, projection-as-canonical 의존성 없음이 정의된 뒤에만 declared `T6 QA Capture` 동작을 증명해야 합니다. MVP fixtures는 automated browser capture를 요구하지 않고 Manual QA records, artifact refs, QA 면제 동작, 결과 수락 경계, close blockers를 계속 증명합니다.
+Browser QA Capture conformance는 v1/post-MVP priority candidate이지 MVP smoke 요구사항이 아닙니다. [로드맵 승격 규칙](../roadmap.md#승격-규칙)을 통해 승격되기 전까지는 권한 없는 capture support일 뿐입니다. Future fixtures는 capability profile fields, redaction 및 secret/PII handling, browser test environment, artifact 보존, capture artifact mapping, unsupported 접점 fallback 동작, projection-as-canonical 의존성 없음이 정의된 뒤에만 declared `T6 QA Capture` 동작을 증명해야 합니다. MVP fixtures는 automated browser capture를 요구하지 않고 Manual QA records, artifact refs, QA 면제 동작, 결과 수락 경계, close blockers를 계속 증명합니다.
 
 ```mermaid
 flowchart LR
@@ -871,7 +871,7 @@ Agency, stewardship, context hygiene는 MVP conformance suite입니다. 이 suit
 
 Status/next recommendations는 Role Lens recommendations를 포함해 read response로만 fixture-observable합니다. Fixture는 관련 있을 때 `recommended_playbooks`를 검증할 수 있지만, recommendation 자체로 state event, gate 충족, projection 대기열 추가, artifact, evidence, verification, QA, 결과 수락, 남은 위험을 받아들이는 판단, close, assurance level 상승이 발생하지 않았다는 점도 증명해야 합니다. Recommendation 또는 role lens가 사용자 소유 판단을 암시하면 expected behavior는 Decision Packet ref 또는 Decision Packet request path이지 satisfied `decision_gate`가 아닙니다. Validator, evidence, Manual QA, residual-risk, release-handoff work를 식별하면 expected behavior는 routed recommendation 또는 candidate이지, 이후 public mutation fixture가 Core를 통해 record하기 전까지 committed owner record가 아닙니다.
 
-`browser-qa-candidate` recommendation도 같은 read-only rule을 따릅니다. Recommendation은 `T6 QA Capture` 접점에서 Browser QA Capture가 유용하다고 이름 붙일 수 있지만, recommendation alone으로 상태를 변경하거나, projection을 대기열에 넣거나, artifact를 만들거나, evidence를 만들거나 충족하거나, verification을 수행 또는 기록하거나, QA를 기록하거나, QA 또는 verification을 면제하거나, 남은 위험을 받아들이거나, 결과를 수락하거나, Task를 닫거나, assurance를 올리면 안 됩니다. Actual artifacts, Manual QA records, QA gate updates, Eval results, close effects에는 이후 Core를 통한 public mutation이 필요합니다.
+`browser-qa-candidate` recommendation도 같은 read-only rule을 따릅니다. Recommendation은 `T6 QA Capture` 접점에서 Browser QA Capture가 유용하다고 이름 붙일 수 있지만, recommendation alone으로 상태를 변경하거나, projection을 대기열에 넣거나, artifact를 만들거나, evidence를 만들거나 충족하거나, verification을 수행 또는 기록하거나, QA를 기록하거나, QA 또는 verification을 면제하거나, 남은 위험을 받아들이거나, 결과를 수락하거나, Task를 닫거나, assurance를 올리면 안 됩니다. 접점이 browser capture를 지원하지 않으면 unsupported capture를 MVP 실패로 다루는 대신 사람이 작성한 Manual QA notes와 수동 제공 artifacts fallback을 이름 붙여야 합니다. Actual artifacts, Manual QA records, QA gate updates, Eval results, close effects에는 이후 Core를 통한 public mutation이 필요합니다.
 
 ```mermaid
 flowchart LR
@@ -3288,9 +3288,11 @@ expected_error: null
 
 이 catalog entries는 future candidates이지 MVP fixture bodies 또는 MVP smoke 요구사항이 아닙니다. Browser QA Capture capability profile, redaction 및 secret/PII policy, test environment, artifact retention, fixture 또는 conformance target, fallback 의미, projection-as-canonical 의존성 없음이 정의된 뒤에만 executable이 됩니다.
 
+최소 MVP Manual QA coverage는 기존 Manual QA record 또는 valid QA waiver, `qa_gate` behavior, Core owner path를 통해 제공된 registered artifact refs입니다. Automated Browser QA Capture는 승격 이후에 유용한 capture 보조 수단이지만, MVP Manual QA 또는 artifact coverage를 충족하기 위해 요구되지 않습니다.
+
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
-| `BROWSER-QA-capture-artifacts-attach-to-manual-qa` | `record_manual_qa` | Capable `T6 QA Capture` profile이 supported screenshot, `qa_capture`, log 또는 console log, network trace, accessibility snapshot, workflow recording artifacts를 등록하고, 이를 Manual QA record 또는 Feedback Loop execution에 link하며, redaction과 retention policy를 적용하고, normal Manual QA result semantics를 통해서만 `qa_gate`를 업데이트합니다. |
+| `BROWSER-QA-capture-artifacts-attach-to-manual-qa` | `record_manual_qa` | Capable `T6 QA Capture` profile이 supported screenshot, `qa_capture`, log 또는 console log, network trace, accessibility snapshot, workflow recording artifacts를 등록하고, 이를 Manual QA record 또는 Feedback Loop execution에 link하며, redaction과 retention policy를 적용하고, normal Manual QA result semantics를 통해서만 `qa_gate`를 업데이트합니다. 이 artifacts는 human QA record를 뒷받침하지만 human judgment 자체는 아닙니다. |
 | `BROWSER-QA-capture-not-final-acceptance-or-detached-verification` | `record_manual_qa` 또는 `record_eval` | Browser QA artifacts는 evidence를 보강할 수 있지만 최종 수락을 기록하지 않고, required human Manual QA judgment를 대체하지 않으며, separate Eval path가 independence 요구사항을 충족하지 않는 한 `assurance_level=detached_verified`를 설정하지 않습니다. |
 | `BROWSER-QA-unsupported-surface-falls-back-to-human-notes` | `record_manual_qa` 또는 `next` | Browser capture capability가 없는 접점은 missing `T6` capability를 보고하고, 사람이 작성한 Manual QA notes와 수동 제공 artifacts를 추천하며, automated browser capture가 unavailable하다는 이유만으로 MVP smoke를 fail하지 않습니다. |
 
@@ -3309,7 +3311,7 @@ expected_error: null
 
 Future v1 candidate suites:
 
-- browser-qa-capture: declared `T6 QA Capture` support, redaction and retention policy, browser test environment, capture artifact mapping, Manual QA attachment, detached-verification 경계, 최종 수락 경계, unsupported 접점 fallback
+- browser-qa-capture: 승격 전까지 Minimum MVP 밖에 있음, declared `T6 QA Capture` support, redaction and retention policy, browser test environment, capture artifact mapping, Manual QA attachment, detached-verification 경계, 최종 수락 경계, unsupported 접점 fallback
 
 Conformance output은 fixture id, pass/fail, observed state summary, observed events, artifact integrity result, projection freshness, error code comparison을 포함해야 합니다.
 

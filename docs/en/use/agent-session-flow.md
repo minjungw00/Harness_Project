@@ -315,7 +315,7 @@ When evidence is missing, name the criterion or claim that lacks support. Do not
 
 Use refs-first evidence display. Cite Evidence, Run, Eval, Manual QA, artifact, log, screenshot, diff, or trace refs with a short outcome, and embed excerpts only when the user or evaluator needs to inspect the content to decide the next action.
 
-Task shape changes what "enough" looks like. Advisor work usually cites source refs or a review bundle only when recorded evidence is requested. Direct docs-only work can be supported by changed path, diff or patch summary, and self-check. Direct code adds a focused check or a recorded reason no automated check applies. Feature work maps each criterion to Run and artifact refs. UI/UX/copy work separates visual evidence from Manual QA. Sensitive work keeps Approval, redaction, and omission refs visible without treating Approval as correctness. Verification-required work needs an Eval that names the evidence reviewed.
+Task shape changes what "enough" looks like. Advisor work usually cites source refs or a review bundle only when recorded evidence is requested. Direct docs-only work can be supported by changed path, diff or patch summary, and self-check. Direct code adds a focused check or a recorded reason no automated check applies. Feature work maps each criterion to Run and artifact refs. UI/UX, workflow, copy, accessibility, product-taste, and visual-output work separates visual or Browser QA artifact evidence from Manual QA judgment. Sensitive work keeps Approval, redaction, and omission refs visible without treating Approval as correctness. Verification-required work needs an Eval that names the evidence reviewed.
 
 If evidence becomes stale, say why in ordinary language and name the smallest repair. Common causes are baseline drift, changed files after the supporting Run or Eval, approval drift or expiry, missing or failed-integrity artifacts, and relevant Shared Design, domain term, module map, or interface contract changes.
 
@@ -342,7 +342,7 @@ Use these user-facing labels consistently:
 | Detached verified | The Eval passed with valid independence, no same-session self-review issue, and no stale baseline or bundle input. |
 | Waived with accepted risk | Verification or another close-relevant check was waived and the visible remaining risk was accepted for risk-accepted close. |
 
-Manual QA answers whether a person inspected qualities that need human judgment, such as UX, workflow, visual result, copy, or accessibility interpretation. Do not present a browser smoke run, screenshot capture, or verifier note as Manual QA unless a Manual QA result was actually recorded or validly waived.
+Manual QA answers whether a person inspected qualities that need human judgment, commonly UI/UX, workflow, copy, accessibility interpretation, product taste, or visual output. Do not present a browser smoke run, screenshot capture, Browser QA Capture artifact, or verifier note as Manual QA unless a Manual QA result was actually recorded or validly waived. Browser QA Capture is a v1/post-MVP candidate unless owner docs explicitly promote it; even when available, its artifacts are supporting refs, not final acceptance or detached verification unless a separate Eval path also satisfies independence. If browser capture is unsupported for the surface, use human Manual QA notes and manually supplied artifacts.
 
 Residual risk is a known remaining limitation, uncertainty, unchecked condition, or trade-off. It must be visible before risk-accepted close or final acceptance. Risk acceptance does not upgrade assurance and does not replace verification or QA.
 
@@ -353,7 +353,7 @@ Verification waiver and QA waiver do not upgrade assurance. A verification waive
 Applied close examples:
 
 - Direct work: show changed files, evidence refs, self-check, and whether anything escalated. Do not call it detached verified without a qualifying Eval.
-- UI/UX work: keep tests, browser smoke, Manual QA, and acceptance on separate lines. If Manual QA is waived, show the skipped surface, accepted risk, and follow-up.
+- UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: keep tests, browser smoke, Browser QA artifacts, Manual QA, and acceptance on separate lines. If Manual QA is waived, show the skipped surface, accepted risk, and follow-up.
 - Auth or security work: show approval separately from the security or product decision, then show evidence and verification. Approval to touch a secret or permission does not settle redaction, audit, role, retention, or user-notice choices.
 - Public API work: show caller compatibility, migration or documentation impact, evidence, and verification separately. Passing tests does not by itself settle the API contract decision.
 - Risk-accepted close: show the limitation, existing evidence, missing or waived verification or QA, accepted risk, and follow-up. Do not present the result as detached verified.

@@ -183,7 +183,7 @@ Projection failure는 Core 상태 failure와 분리됩니다.
 - Decision Packet 닫기 확인
 - 닫기 차단 조건 표시
 
-MVP에서 자동 Browser QA Capture나 hosted workflow automation을 요구하지 않습니다. screenshot, console log, network trace, accessibility snapshot, workflow recording은 기존 Manual QA/artifact path를 통해 등록되고 연결될 때만 QA evidence를 보강할 수 있지만, MVP 요구사항은 Manual QA 기록과 artifact ref입니다. 캡처 자료는 Manual QA judgment나 acceptance를 대체하지 않습니다.
+MVP에서 자동 Browser QA Capture나 hosted workflow automation을 요구하지 않습니다. screenshot, console log, network trace, accessibility snapshot, workflow recording은 기존 Manual QA/artifact path를 통해 등록되고 연결될 때만 QA evidence를 보강할 수 있지만, MVP 요구사항은 Manual QA 기록과 artifact ref입니다. 캡처 자료는 Manual QA judgment, final acceptance, detached verification을 대체하지 않습니다. Detached verification은 별도 Eval 경로가 independence를 충족해야 합니다. 지원하지 않는 접점은 사람이 작성한 Manual QA notes와 수동 제공 artifacts로 fallback합니다.
 
 ### MVP-5: Operator Smoke, Agency Conformance, Later-Boundary Checks
 
