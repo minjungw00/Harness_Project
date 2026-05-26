@@ -253,6 +253,8 @@ Evidence: diff for login form and session code; test output for remember-me beha
 
 Evidence is why the user can later ask, "What supports the claim that remember-me works?" and get a concrete answer instead of a chat memory.
 
+Strict details behind that simple idea span Evidence Gate and Evidence Manifest semantics, artifact registration and storage integrity, and conformance proof.
+
 ### Verification
 
 For work mode, Harness expects stronger checking than a direct self-check unless the user explicitly accepts the verification risk.
@@ -265,6 +267,8 @@ Detached verification: a separate check confirms that a remembered session survi
 
 If detached verification cannot run, the agent should say so plainly and show the remaining verification risk. Closing without it is a risk-accepted close, not detached verification.
 
+Strict details span Verification Gate semantics, assurance level, Eval and tool schemas, detached-verification independence, and conformance fixtures.
+
 ### Manual QA
 
 Manual QA asks whether a person inspected the experience:
@@ -274,6 +278,8 @@ Manual QA: login screen shows the checkbox clearly, copy is understandable, keyb
 ```
 
 Manual QA exists because tests can pass while the experience is still confusing, clipped, inaccessible, or surprising.
+
+Strict details span Manual QA policy, QA Gate semantics, Manual QA record and tool shape, and conformance proof.
 
 ### Residual risk
 
@@ -320,7 +326,7 @@ Accepted and closed as work.
 
 ### What the reference docs define more strictly
 
-The reference docs define the exact mode rules, Decision Packet compatibility, approval handling, Write Authorization behavior, evidence sufficiency, verification independence, QA gates, residual-risk visibility, acceptance timing, and close semantics.
+The reference docs define the exact mode rules, Decision Packet compatibility, approval handling, Write Authorization behavior, evidence sufficiency, verification independence, QA gates, residual-risk visibility, acceptance timing, and close semantics. Evidence, Verification, and Manual QA each cross more than one reference owner; the table below keeps those splits compact.
 
 This tutorial only shows why those pieces exist.
 
@@ -347,10 +353,10 @@ The two flows above are anchors, not the whole universe. Harness should stay pra
 | "What may change?" | Change Unit | Bounds product writes so the task does not silently expand. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "This needs your call." | Decision Packet | Separates user-owned product or material technical judgment from broad approval. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "May this sensitive step proceed?" | Approval | Allows a sensitive action inside a defined scope without replacing user-owned judgment or final acceptance. | [Kernel Reference](../reference/kernel.md). |
-| "May I edit these files now?" | Write Authorization | Checks that the intended write fits the current Task, Change Unit, decisions, and approvals. | [Kernel Reference](../reference/kernel.md); agent-surface owner: [Agent Integration Reference](../reference/agent-integration.md). |
-| "Here is what supports the claim." | Evidence | Makes "done" inspectable through diffs, logs, checks, screenshots, or other records. | [Use: User Guide](../use/user-guide.md); owner: [Operations and Conformance Reference](../reference/operations-and-conformance.md). |
-| "Was it checked independently?" | Verification | Distinguishes self-checks from detached checks. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
-| "Did a person inspect the experience?" | Manual QA | Covers UX, copy, accessibility, visual quality, and workflow judgment that tests may miss. | [Use: User Guide](../use/user-guide.md); [Design Quality Policies](../reference/design-quality-policies.md). |
+| "May I edit these files now?" | Write Authorization | Checks that the intended write fits the current Task, Change Unit, decisions, and approvals. | Strict behavior: [Kernel Reference](../reference/kernel.md), [MCP API and Schemas](../reference/mcp-api-and-schemas.md); agent-surface behavior: [Agent Integration Reference](../reference/agent-integration.md). |
+| "Here is what supports the claim." | Evidence | Makes "done" inspectable through diffs, logs, checks, screenshots, or other records. | [Use: User Guide](../use/user-guide.md); strict behavior: [Kernel Reference](../reference/kernel.md), [MCP API and Schemas](../reference/mcp-api-and-schemas.md), [Storage And DDL](../reference/storage-and-ddl.md), [Operations and Conformance Reference](../reference/operations-and-conformance.md). |
+| "Was it checked independently?" | Verification | Distinguishes self-checks from detached checks. | [Use: User Guide](../use/user-guide.md); strict behavior: [Kernel Reference](../reference/kernel.md), [MCP API and Schemas](../reference/mcp-api-and-schemas.md), [Operations and Conformance Reference](../reference/operations-and-conformance.md). |
+| "Did a person inspect the experience?" | Manual QA | Covers UX, copy, accessibility, visual quality, and workflow judgment that tests may miss. | [Use: User Guide](../use/user-guide.md); strict behavior: [Design Quality Policies](../reference/design-quality-policies.md), [Kernel Reference](../reference/kernel.md), [MCP API and Schemas](../reference/mcp-api-and-schemas.md), [Operations and Conformance Reference](../reference/operations-and-conformance.md). |
 | "Is the result good enough?" | Acceptance | Records the user's final judgment when the task path requires it. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "What uncertainty remains?" | Residual Risk | Makes known limitations visible before close or acceptance. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "Can we call this done?" | Close | Finishes the Task only when the relevant blockers have been handled. | [Kernel Reference](../reference/kernel.md); agent-surface owner: [Agent Integration Reference](../reference/agent-integration.md). |

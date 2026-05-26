@@ -31,7 +31,7 @@ Harness is easiest to understand if you start with the work journey:
 - Remaining uncertainty is Residual Risk.
 - Readable documents are Projections, and human edits become state through Reconcile.
 
-These concepts are intentionally small here. Strict kernel definitions live in [Kernel Reference](../reference/kernel.md), public API definitions live in [MCP API and Schemas](../reference/mcp-api-and-schemas.md), and projection rules live in [Document Projection Reference](../reference/document-projection.md).
+These concepts are intentionally small here. Strict kernel definitions live in [Kernel Reference](../reference/kernel.md), public API definitions live in [MCP API and Schemas](../reference/mcp-api-and-schemas.md), and projection rules live in [Document Projection Reference](../reference/document-projection.md). Some concepts span several references; the notes below name the split without copying the owner maps.
 
 ## Task
 
@@ -63,7 +63,7 @@ The agent says the login flow works. Useful support might include the diff, the 
 
 Evidence is recorded support for claims about the work. It can include diffs, logs, tests, screenshots, run summaries, evaluation records, Manual QA records, or other durable artifacts tied to the task.
 
-Current owner: [Operations and Conformance Reference](../reference/operations-and-conformance.md).
+This is the plain concept. Strict behavior lives across [Kernel Reference](../reference/kernel.md) for Evidence Gate, Evidence Manifest, and evidence sufficiency; [MCP API and Schemas](../reference/mcp-api-and-schemas.md) and [Storage And DDL](../reference/storage-and-ddl.md) for artifact registration, `ArtifactRef`, and storage integrity; and [Operations and Conformance Reference](../reference/operations-and-conformance.md) for conformance proof.
 
 ## Approval
 
@@ -81,7 +81,7 @@ The agent is ready to edit the login code. Harness needs to check whether there 
 
 Write Authorization is the Harness decision that a product write may proceed now. In the current spec language, `prepare_write` is the product-write decision point.
 
-Reference: [MCP API and Schemas](../reference/mcp-api-and-schemas.md).
+Strict behavior lives across [Kernel Reference](../reference/kernel.md) for write-gate semantics and state effects, [MCP API and Schemas](../reference/mcp-api-and-schemas.md) for the public `prepare_write` shape, and [Agent Integration Reference](../reference/agent-integration.md) for connected-surface behavior.
 
 ## Verification
 
@@ -89,7 +89,7 @@ The agent runs tests after editing the login flow. That is useful, but it is not
 
 Verification records how the result was checked and how independent that check was. Harness separates self-checks from detached verification so confidence is not confused with independence.
 
-Current owner: [Operations and Conformance Reference](../reference/operations-and-conformance.md).
+Strict behavior lives across [Kernel Reference](../reference/kernel.md) for verification gate, assurance, and verification independence semantics; [MCP API and Schemas](../reference/mcp-api-and-schemas.md) for Eval and verification tool schemas; and [Operations and Conformance Reference](../reference/operations-and-conformance.md) for conformance fixtures.
 
 ## Manual QA
 
@@ -99,7 +99,7 @@ Manual QA is human inspection of the experiential result where that matters, esp
 
 If Manual QA is waived, the waiver should still name the skipped surface, accepted risk, follow-up, and close impact. A waiver is a recorded judgment, not a test result.
 
-Current owner: [Design Quality Policies](../reference/design-quality-policies.md).
+Strict behavior lives across [Design Quality Policies](../reference/design-quality-policies.md) for Manual QA requirements and waivers; [Kernel Reference](../reference/kernel.md) for QA Gate semantics; [MCP API and Schemas](../reference/mcp-api-and-schemas.md) for Manual QA record and tool shape; and [Operations and Conformance Reference](../reference/operations-and-conformance.md) for conformance proof.
 
 ## Acceptance
 
@@ -123,7 +123,7 @@ Harness can generate a readable task report or Journey Card from recorded state.
 
 A Projection is a human-readable rendering of Harness state records and artifact references. Markdown reports, Journey Cards, and Journey Spine views are projections; they display state but do not replace it.
 
-Current owner: [Document Projection Reference](../reference/document-projection.md).
+Strict behavior lives across [Document Projection Reference](../reference/document-projection.md) for projection authority, managed blocks, and freshness; [MCP API and Schemas](../reference/mcp-api-and-schemas.md) for `ProjectionKind` and projection refs; and [Template Reference](../reference/templates/README.md) for rendered template bodies and display card shapes.
 
 ## Reconcile
 
@@ -131,4 +131,4 @@ A user edits a notes section in a generated report and proposes a different next
 
 Reconcile is the explicit path for turning human-editable notes, proposals, or projection drift into accepted state changes, rejected proposals, notes, decisions, or deferred items.
 
-Current owner: [Document Projection Reference](../reference/document-projection.md).
+Strict behavior lives across [Document Projection Reference](../reference/document-projection.md) for human-editable input, drift, and reconcile items; [MCP API and Schemas](../reference/mcp-api-and-schemas.md) for public reconcile decision shapes; and the relevant owner reference for any state record a reconcile outcome changes.

@@ -31,7 +31,7 @@ Harness는 작업 흐름에서 시작하면 이해하기 쉽습니다.
 - 남은 불확실성은 남은 위험으로 기록합니다.
 - 읽기용 문서는 Projection이고, 사람이 문서를 고친 내용은 Reconcile을 거쳐야 상태가 됩니다.
 
-이 문서에서는 일부러 개념을 작게 다룹니다. 엄격한 커널 정의는 [커널 참조](../reference/kernel.md)에 있고, 공개 API 정의는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)에 있으며, Projection 규칙은 [문서 Projection 참조](../reference/document-projection.md)에 있습니다.
+이 문서에서는 일부러 개념을 작게 다룹니다. 엄격한 커널 정의는 [커널 참조](../reference/kernel.md)에 있고, 공개 API 정의는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)에 있으며, Projection 규칙은 [문서 Projection 참조](../reference/document-projection.md)에 있습니다. 여러 참조 문서에 걸치는 개념은 아래에서 owner map 전체를 반복하지 않고 짧게 경계만 이름 붙입니다.
 
 ## Task
 
@@ -63,7 +63,7 @@ Decision Packet은 사용자가 해야 하는 결정이 진행, 쓰기, 닫기, 
 
 근거는 작업에 대한 주장을 뒷받침하는 기록입니다. diff, 로그, 테스트, 스크린샷, 실행 요약, 평가 기록, Manual QA 기록, 작업과 연결된 오래 보관할 파일이 여기에 포함될 수 있습니다.
 
-담당 문서: [운영과 Conformance 참조](../reference/operations-and-conformance.md).
+여기서는 쉬운 개념만 말합니다. 엄격한 동작은 [커널 참조](../reference/kernel.md)의 Evidence Gate, Evidence Manifest, evidence sufficiency, [MCP API와 스키마](../reference/mcp-api-and-schemas.md)와 [Storage와 DDL](../reference/storage-and-ddl.md)의 artifact registration, `ArtifactRef`, storage integrity, 그리고 [운영과 Conformance 참조](../reference/operations-and-conformance.md)의 conformance proof에 걸쳐 있습니다.
 
 ## 승인
 
@@ -81,7 +81,7 @@ Decision Packet은 사용자가 해야 하는 결정이 진행, 쓰기, 닫기, 
 
 Write Authorization은 지금 제품 파일 쓰기를 진행해도 되는지에 대한 Harness의 판단입니다. 현재 사양 용어로는 `prepare_write`가 제품 파일 쓰기 판단 지점입니다.
 
-참조: [MCP API와 스키마](../reference/mcp-api-and-schemas.md).
+엄격한 동작은 [커널 참조](../reference/kernel.md)의 write-gate 의미와 state effect, [MCP API와 스키마](../reference/mcp-api-and-schemas.md)의 public `prepare_write` shape, 그리고 [Agent 통합 참조](../reference/agent-integration.md)의 connected-surface behavior에 걸쳐 있습니다.
 
 ## 검증
 
@@ -89,7 +89,7 @@ Write Authorization은 지금 제품 파일 쓰기를 진행해도 되는지에 
 
 검증은 결과를 어떻게 확인했는지, 그 확인이 얼마나 분리되어 있었는지 기록합니다. Harness는 자체 확인과 분리된 검증을 구분해서 확신과 독립성을 혼동하지 않게 합니다.
 
-담당 문서: [운영과 Conformance 참조](../reference/operations-and-conformance.md).
+엄격한 동작은 [커널 참조](../reference/kernel.md)의 verification gate, assurance, verification independence 의미, [MCP API와 스키마](../reference/mcp-api-and-schemas.md)의 Eval과 verification tool schema, 그리고 [운영과 Conformance 참조](../reference/operations-and-conformance.md)의 conformance fixture에 걸쳐 있습니다.
 
 ## Manual QA
 
@@ -99,7 +99,7 @@ Manual QA는 사람이 실제 경험을 직접 확인하는 기록입니다. 특
 
 Manual QA를 면제한다면 생략한 대상, 받아들이는 위험, 후속 작업, 닫기 영향을 이름 붙여야 합니다. Waiver는 기록된 판단이지 테스트 결과(test result)가 아닙니다.
 
-현재 담당 문서: [설계 품질 정책](../reference/design-quality-policies.md).
+엄격한 동작은 [설계 품질 정책](../reference/design-quality-policies.md)의 Manual QA requirement와 waiver policy, [커널 참조](../reference/kernel.md)의 QA Gate 의미, [MCP API와 스키마](../reference/mcp-api-and-schemas.md)의 Manual QA record와 tool shape, 그리고 [운영과 Conformance 참조](../reference/operations-and-conformance.md)의 conformance proof에 걸쳐 있습니다.
 
 ## 수락
 
@@ -123,7 +123,7 @@ Harness는 기록된 상태에서 읽기 쉬운 작업 보고서나 Journey Card
 
 Projection은 Harness 상태 기록과 근거 참조를 사람이 읽을 수 있게 보여 주는 결과입니다. Markdown 보고서, Journey Card, Journey Spine은 Projection입니다. 상태를 보여 주지만 상태를 대체하지는 않습니다.
 
-현재 담당 문서: [문서 Projection 참조](../reference/document-projection.md).
+엄격한 동작은 [문서 Projection 참조](../reference/document-projection.md)의 projection authority, managed block, freshness, [MCP API와 스키마](../reference/mcp-api-and-schemas.md)의 `ProjectionKind`와 projection ref, 그리고 [Template Reference](../reference/templates/README.md)의 rendered template body와 display card shape에 걸쳐 있습니다.
 
 ## Reconcile
 
@@ -131,4 +131,4 @@ Projection은 Harness 상태 기록과 근거 참조를 사람이 읽을 수 있
 
 Reconcile은 사람이 편집한 메모, 제안, 읽기용 문서와 실제 상태의 차이를 받아들인 상태 변경, 거절된 제안, 메모, 결정, 나중으로 미룬 항목으로 정리하는 명시적 경로입니다.
 
-현재 담당 문서: [문서 Projection 참조](../reference/document-projection.md).
+엄격한 동작은 [문서 Projection 참조](../reference/document-projection.md)의 human-editable input, drift, reconcile item, [MCP API와 스키마](../reference/mcp-api-and-schemas.md)의 public reconcile decision shape, 그리고 reconcile 결과가 바꾸는 해당 state record의 owner reference에 걸쳐 있습니다.

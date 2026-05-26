@@ -253,6 +253,8 @@ Not allowed: 관련 없는 account recovery 또는 전체 auth 재설계.
 
 근거 덕분에 사용자는 나중에 "remember me가 동작한다는 주장을 무엇이 뒷받침하지?"라고 물을 수 있습니다. 답은 대화 기억이 아니라 구체적인 기록이어야 합니다.
 
+이 쉬운 생각의 엄격한 세부사항은 커널의 Evidence Gate와 Evidence Manifest, artifact registration과 storage integrity, conformance proof에 걸쳐 있습니다.
+
 ### 검증
 
 `work`에서는 사용자가 검증 위험을 명시적으로 받아들이지 않는 한 `direct` 자체 확인(self-check)보다 더 강한 확인이 기대됩니다.
@@ -265,6 +267,8 @@ Not allowed: 관련 없는 account recovery 또는 전체 auth 재설계.
 
 분리된 검증을 실행할 수 없다면 에이전트는 그 사실을 분명히 말하고 남은 검증 위험을 보여야 합니다. 검증 없이 닫는 것은 위험을 받아들이고 닫는 것이지 분리된 검증이 아닙니다.
 
+엄격한 세부사항은 Verification Gate 의미, assurance level, Eval 및 tool schema, detached-verification independence, conformance fixture에 걸쳐 있습니다.
+
 ### Manual QA
 
 Manual QA는 사람이 실제 경험을 확인했는지 묻습니다.
@@ -274,6 +278,8 @@ Manual QA: 로그인 화면의 checkbox가 분명히 보이고, 문구가 이해
 ```
 
 Manual QA가 필요한 이유는 테스트가 통과해도 경험이 혼란스럽거나, 화면에서 잘리거나, 접근성이 나쁘거나, 사용자의 기대와 다를 수 있기 때문입니다.
+
+엄격한 세부사항은 Manual QA policy, QA Gate 의미, Manual QA record와 tool shape, conformance proof에 걸쳐 있습니다.
 
 ### 남은 위험
 
@@ -320,7 +326,7 @@ Remembered session과 non-remembered session에 대한 검증이 통과했습니
 
 ### 참고 문서가 더 엄격하게 정의하는 것
 
-참고 문서는 모드 규칙, Decision Packet compatibility, 승인 처리, Write Authorization 동작, 근거 충분성, 검증 독립성, QA 게이트, 남은 위험 표시, 수락 시점, 닫기 의미를 정확히 정의합니다.
+참고 문서는 모드 규칙, Decision Packet compatibility, 승인 처리, Write Authorization 동작, 근거 충분성, 검증 독립성, QA 게이트, 남은 위험 표시, 수락 시점, 닫기 의미를 정확히 정의합니다. Evidence, Verification, Manual QA는 각각 둘 이상의 reference owner에 걸치므로, 아래 표에서는 그 경계를 짧게만 보여 줍니다.
 
 이 튜토리얼은 그 조각들이 왜 존재하는지만 보여 줍니다.
 
@@ -347,10 +353,10 @@ Remembered session과 non-remembered session에 대한 검증이 통과했습니
 | "어디까지 바꿔도 되지?" | Change Unit | 제품 쓰기 범위를 제한해 작업이 조용히 커지지 않게 한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "이건 사용자가 결정해야 해." | Decision Packet | 사용자가 소유한 제품 판단이나 중요한 기술 판단을 넓은 승인과 분리한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "이 민감한 단계를 진행해도 되나?" | 승인 | 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답한다. 사용자 소유 판단이나 최종 수락을 대신하지 않는다. | [커널 참조](../reference/kernel.md). |
-| "지금 이 파일을 수정해도 되나?" | Write Authorization | 의도한 쓰기가 현재 Task, Change Unit, 결정, 승인과 맞는지 확인한다. | [커널 참조](../reference/kernel.md); agent 접점 세부 담당: [Agent 통합 참조](../reference/agent-integration.md). |
-| "이 주장을 뒷받침하는 것은 이것이다." | 근거 | diff, log, check, screenshot 같은 기록으로 "끝났다"는 말을 확인 가능하게 만든다. | [사용자 가이드](../use/user-guide.md); 담당 문서: [운영과 Conformance 참조](../reference/operations-and-conformance.md). |
-| "독립적으로 확인했나?" | 검증 | 자체 확인과 분리된 검증을 구분한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
-| "사람이 실제 경험을 봤나?" | Manual QA | 테스트가 놓칠 수 있는 UX, 문구, 접근성, 시각 품질, 작업 흐름 판단을 다룬다. | [사용자 가이드](../use/user-guide.md); [설계 품질 정책](../reference/design-quality-policies.md). |
+| "지금 이 파일을 수정해도 되나?" | Write Authorization | 의도한 쓰기가 현재 Task, Change Unit, 결정, 승인과 맞는지 확인한다. | 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md); agent 접점 동작: [Agent 통합 참조](../reference/agent-integration.md). |
+| "이 주장을 뒷받침하는 것은 이것이다." | 근거 | diff, log, check, screenshot 같은 기록으로 "끝났다"는 말을 확인 가능하게 만든다. | [사용자 가이드](../use/user-guide.md); 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Storage와 DDL](../reference/storage-and-ddl.md), [운영과 Conformance 참조](../reference/operations-and-conformance.md). |
+| "독립적으로 확인했나?" | 검증 | 자체 확인과 분리된 검증을 구분한다. | [사용자 가이드](../use/user-guide.md); 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [운영과 Conformance 참조](../reference/operations-and-conformance.md). |
+| "사람이 실제 경험을 봤나?" | Manual QA | 테스트가 놓칠 수 있는 UX, 문구, 접근성, 시각 품질, 작업 흐름 판단을 다룬다. | [사용자 가이드](../use/user-guide.md); 엄격한 동작: [설계 품질 정책](../reference/design-quality-policies.md), [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [운영과 Conformance 참조](../reference/operations-and-conformance.md). |
 | "이 결과를 받아들일 수 있나?" | 수락 | Task 경로가 요구할 때 사용자의 최종 판단을 기록한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "아직 어떤 불확실성이 남았나?" | 남은 위험 | 닫기나 수락 전에 알려진 제한과 위험을 보이게 한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "이제 끝났다고 해도 되나?" | 닫기 | 관련 blocker가 처리된 뒤에만 Task를 완료한다. | [커널 참조](../reference/kernel.md); agent 접점 세부 담당: [Agent 통합 참조](../reference/agent-integration.md). |
