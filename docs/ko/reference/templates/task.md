@@ -4,6 +4,8 @@
 
 진행 중인 작업을 이어서 파악할 수 있는 Projection이 필요할 때 `TASK`를 사용합니다. 이 template은 작업의 현재 위치, 판단 맥락, 막힘 소유자를 보여줍니다. 또한 Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, 다음 근거, Residual Risk, Close Summary, gate, active Change Unit, 대기 중인 decision을 요약합니다. 관련 보고서 참조와 읽기용 보기 최신성도 함께 보여줍니다.
 
+이 문서는 template 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 기준 기록
 
 - `state.sqlite` Task와 task gate
@@ -12,6 +14,7 @@
 - Write Authorization 기록과 Write Authority Summary 표시 input
 - Decision Packet과 Residual Risk
 - 최신 Run, Evidence Manifest, Eval, Manual QA 기록, approval 기록
+- Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, artifact 권한 claim을 표시할 때 필요한 source refs
 - 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 summary
 - changed scope, evidence, verification, Manual QA, 남은 위험(residual risk), 결과 수락, close reason을 포함하는 close summary 표시 input
 - Journey Spine 기준 기록
@@ -29,6 +32,7 @@
 - Current Summary
 - Where We Are
 - Judgment Context
+- Authority Source Refs
 - Autonomy Boundary
 - Write Authority Summary
 - Implementation Micro-Plan
@@ -73,11 +77,14 @@ updated_at: 2026-05-06T09:30:15+09:00
 - scope summary:
 - out of bounds:
 - next action:
+- checked:
+- remaining:
 - primary blocker:
 - blocker owner:
 - smallest unblocker:
 - secondary blockers:
 - pending decision:
+- user is deciding:
 - risk:
 - guarantee level:
 - scope gate:
@@ -90,12 +97,15 @@ updated_at: 2026-05-06T09:30:15+09:00
 - acceptance gate:
 - active change unit:
 - Write Authority Summary:
+- authority source refs:
 - latest report:
 - projection freshness:
 
 ## Where We Are
 - current position:
 - active path:
+- checked:
+- remaining:
 - primary blocker:
 - blocker owner:
 - smallest unblocker:
@@ -115,6 +125,16 @@ updated_at: 2026-05-06T09:30:15+09:00
 - affected scope:
 - minimum context to judge:
 - affected gates:
+
+## Authority Source Refs
+- Write Authorization:
+- Approval:
+- Evidence Manifest:
+- Eval:
+- Manual QA:
+- Acceptance Decision Packet:
+- Residual Risk:
+- artifacts:
 
 ## Autonomy Boundary
 - profile:
@@ -181,6 +201,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Residual Risk
 - close-relevant risk:
 - visibility status:
+- status value:
 - accepted residual-risk refs:
 - 후속 작업 필요:
 - 닫기 영향:
@@ -192,6 +213,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Manual QA:
 - residual risk:
 - 결과 수락:
+- authority source refs:
 - close reason:
 - remaining follow-up:
 
@@ -401,6 +423,10 @@ Change Unit block sub-template:
 `TASK`의 Review Stages는 Role Lens, playbook, two-stage review guidance를 위한 관리되는 표시 섹션입니다. 정확한 권한 없음 규칙은 [Design Quality Policies](../design-quality-policies.md#two-stage-review-display)와 [Agent Integration](../agent-integration.md#role-lens-동작)이 담당하며, 발견 사항은 기존 owner path로 연결해야 합니다.
 
 생성된 summary는 사용자가 읽기 쉬운 평범한 말을 먼저 쓰고, 정확한 Harness term은 유용한 label이나 ref로 붙입니다. Projection이 명령어처럼 보이거나 표시 문구만으로 상태가 만들어진 것처럼 암시하면 안 됩니다.
+
+`TASK`의 authority claim은 source ref 또는 명시적 absence로 해소되어야 합니다. Write authority claim은 Write Authorization ref를, sensitive-action permission은 Approval ref를, evidence sufficiency는 Evidence Manifest ref를, detached verification은 Eval ref를, Manual QA는 Manual QA record 또는 valid waiver ref를, final acceptance는 Acceptance Decision Packet ref를, residual-risk visibility 또는 acceptance는 Residual Risk refs 또는 `ResidualRiskSummary.status=none`을 가리켜야 합니다. Ref가 없으면 completed authority가 아니라 missing support로 렌더링해야 합니다.
+
+Residual-risk display는 `status=none`과 `not_visible`을 구분해야 합니다. `status=none`은 requested action에 대해 알려진 close-relevant residual risk가 없다는 뜻입니다. `not_visible`은 알려진 close-relevant risk가 있지만 acceptance 또는 close에 충분히 보이지 않았다는 뜻이므로, risk와 refs가 보일 때까지 blocker 또는 next action으로 남아야 합니다.
 
 `TASK`의 waiver 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 또는 verification waiver는 waiver를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA waiver는 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA waiver Decision Packet을, verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을 가리킵니다. 생략한 확인이나 대상, 받아들이는 위험, 후속 작업, 관련 refs, 닫기 영향도 함께 보여줘야 합니다. QA waiver는 Manual QA가 되지 않고, verification waiver는 detached verification을 만들지 않습니다.
 

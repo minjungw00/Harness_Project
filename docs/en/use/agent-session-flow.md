@@ -20,6 +20,13 @@ Read [User Guide](user-guide.md) first if you want the user-facing version.
 
 Show only the state, blocker, judgment, and next action that affect the user's next decision.
 
+A useful status or next-action response answers four questions in ordinary language:
+
+- What is blocked now?
+- What has already been checked, and by which refs?
+- What remains before the next write, acceptance, or close?
+- What, if anything, is the user deciding?
+
 The always-on turn context should be a compact, current Harness envelope: active Task id and mode, scope, out of bounds, next safe action, primary blocker, smallest unblocker, active scoped Change Unit, Autonomy Boundary, active Decision Packet, Write Authority Summary, acceptance criteria, approval status, evidence refs, verification, Manual QA, residual risk, guarantee level, gate summary, and projection freshness. Evidence, Run, Eval, Manual QA, artifacts, logs, screenshots, diffs, old projections, older PRDs or designs, module maps, and large traces should appear as refs and short outcomes by default, then be pulled only when the next action requires inspecting them. Stale chat memory can point to refs to inspect, but it cannot authorize writes, satisfy gates, accept results, close tasks, or replace current state.
 
 ## Session start
@@ -83,6 +90,25 @@ The exact error taxonomy, complete mapping, and precedence stay in [MCP API And 
 - `harness.close_task` means "can this Task finish or cancel now?"
 
 `harness.status`, `harness.next`, compact status cards, and recommendation lines are read-only displays. They can recommend a Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but the recommendation itself does not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
+
+When `harness.next` returns an `action_kind`, render the plain action before the enum. Use the exact enum only when it helps a power user or explains a boundary:
+
+| `action_kind` | Say to the user |
+|---|---|
+| `ask_user` | A user-owned answer is needed; show the focused question, recommendation, impact, and refs. |
+| `prepare_write` | Check write authority for the exact intended write. |
+| `implement` | Continue the scoped implementation path; for product writes, use only current compatible Write Authorization. |
+| `launch_verify` | Start or prepare an independent verification path from current evidence refs. |
+| `record_eval` | Record the evaluator result; do not claim detached verification until the Eval qualifies. |
+| `record_manual_qa` | Record a human QA outcome or valid waiver; do not treat browser artifacts alone as Manual QA. |
+| `request_acceptance` | Ask for final acceptance after evidence, verification, QA, and residual-risk visibility are shown. |
+| `close_task` | Attempt close through the close path and be ready to show blockers. |
+| `reconcile` | Refresh or reconcile stale display, managed-block drift, or proposal/state mismatch. |
+| `idle` | No immediate Harness action is needed for this focus. |
+
+The exact enum and API contract are owned by [`harness.next`](../reference/mcp-api-and-schemas.md#harnessnext). This table is display guidance, not a new route or gate.
+
+Every authority claim in status, next, result, acceptance, or close display must be traceable to its source ref or explicit absence. Use a Write Authorization ref for "write allowed," an Approval ref for sensitive-action permission, an Evidence Manifest ref for evidence sufficiency, an Eval ref for detached verification, a Manual QA record or valid waiver ref for Manual QA, an Acceptance Decision Packet ref for final acceptance, Residual Risk refs or `ResidualRiskSummary.status=none` for residual-risk visibility, and artifact refs for logs, diffs, screenshots, traces, or bundles. If the ref is missing, say the claim is not yet supported.
 
 When a response contains errors or blockers, lead with one primary blocker. Use the first `ToolError` chosen by API precedence, or the first `close_task` blocker when close returned blockers. Then show the smallest unblocker in ordinary language. Keep secondary blockers visible only when they will still matter after the primary blocker is resolved.
 
@@ -350,6 +376,8 @@ Manual QA answers whether a person inspected qualities that need human judgment,
 
 Residual risk is a known remaining limitation, uncertainty, unchecked condition, or trade-off. It must be visible before risk-accepted close or final acceptance. Risk acceptance does not upgrade assurance and does not replace verification or QA.
 
+Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means Core has no known close-relevant residual risk for the current Task and requested action. `not_visible` means known close-relevant risk exists but has not yet been shown with enough context for acceptance or close, so the next action is to surface that risk and refs. Do not summarize `not_visible` as "no risk."
+
 Final acceptance is the user's acceptance of the result when the task path requires it. It is not the same as approval, verification, QA, residual-risk acceptance, or proof of correctness.
 
 Verification waiver and QA waiver do not upgrade assurance. A verification waiver keeps detached verification unsatisfied and routes close through accepted verification risk when close is otherwise allowed. It must not be summarized as `completed_verified`. A QA waiver closes only the QA requirement it names and leaves evidence, verification, acceptance, and residual-risk handling unchanged.
@@ -444,13 +472,13 @@ Tests passed, so Manual QA and acceptance are complete.
 Good direct result:
 
 ```text
-Done as direct. Scope was one settings label; account behavior stayed out of bounds. Changed `src/settings/Profile.tsx`. Self-check passed with the existing copy test. No escalation, no known close-relevant residual risk.
+Done as direct. Scope was one settings label; account behavior stayed out of bounds. Changed `src/settings/Profile.tsx`. Checked: copy test RUN-031 and diff ART-DIFF-031. Write authority: WA-031 consumed. Evidence: EM-031. No escalation. Residual risk: none for this close (`ResidualRiskSummary.status=none`).
 ```
 
 Good work close summary:
 
 ```text
-Close summary: changed scope stayed inside login form, login API call, and session storage. Evidence covers AC-01 and AC-02 via RUN-018 and EVIDENCE-009. Verification is self-checked only; no detached Eval was required for this path. Manual QA passed for final copy and layout. Residual risk: mobile Safari was not checked, accepted in DEC-022 with follow-up. Final acceptance recorded. Close reason: completed with accepted residual risk.
+Close summary: changed scope stayed inside login form, login API call, and session storage. Evidence covers AC-01 and AC-02 via Evidence Manifest EM-009, supported by RUN-018 and ART-TEST-018. Verification is self-checked in RUN-018; no detached Eval was required for this path. Manual QA passed for final copy and layout in MQA-006. Residual risk: mobile Safari was not checked; accepted in DEC-022 with Residual Risk RISK-004 and follow-up TASK-144. Final acceptance recorded in DEC-023. Close reason: completed with accepted residual risk.
 ```
 
 Good write hold:

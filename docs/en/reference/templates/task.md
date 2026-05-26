@@ -4,6 +4,8 @@
 
 Use `TASK` as the continuity projection for active work. It summarizes where the work is, current judgment context, blocker ownership, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, next evidence, residual risk, close summary, gates, active Change Unit, pending decisions, evidence, report refs, and projection freshness.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - `state.sqlite` Task and task gates
@@ -12,6 +14,7 @@ Use `TASK` as the continuity projection for active work. It summarizes where the
 - Write Authorization records and Write Authority Summary display inputs
 - Decision Packets and Residual Risks
 - latest Run, Evidence Manifest, Eval, Manual QA record, and approval records
+- authority source refs for Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, and artifacts when those claims are displayed
 - primary blocker, secondary blocker, and smallest unblocker display summaries
 - close summary display inputs, including changed scope, evidence, verification, Manual QA, residual risk, acceptance, and close reason
 - Journey Spine source records
@@ -29,6 +32,7 @@ Generated judgment, close, waiver, review-stage, stewardship, and projection-fre
 - Current Summary
 - Where We Are
 - Judgment Context
+- Authority Source Refs
 - Autonomy Boundary
 - Write Authority Summary
 - Implementation Micro-Plan
@@ -73,11 +77,14 @@ updated_at: 2026-05-06T09:30:15+09:00
 - scope summary:
 - out of bounds:
 - next action:
+- checked:
+- remaining:
 - primary blocker:
 - blocker owner:
 - smallest unblocker:
 - secondary blockers:
 - pending decision:
+- user is deciding:
 - risk:
 - guarantee level:
 - scope gate:
@@ -90,12 +97,15 @@ updated_at: 2026-05-06T09:30:15+09:00
 - acceptance gate:
 - active change unit:
 - write authority summary:
+- authority source refs:
 - latest report:
 - projection freshness:
 
 ## Where We Are
 - current position:
 - active path:
+- checked:
+- remaining:
 - primary blocker:
 - blocker owner:
 - smallest unblocker:
@@ -115,6 +125,16 @@ updated_at: 2026-05-06T09:30:15+09:00
 - affected scope:
 - minimum context to judge:
 - affected gates:
+
+## Authority Source Refs
+- Write Authorization:
+- Approval:
+- Evidence Manifest:
+- Eval:
+- Manual QA:
+- Acceptance Decision Packet:
+- Residual Risk:
+- artifacts:
 
 ## Autonomy Boundary
 - profile:
@@ -181,6 +201,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Residual Risk
 - close-relevant risk:
 - visibility status:
+- status value:
 - accepted residual-risk refs:
 - follow-up required:
 - close impact:
@@ -192,6 +213,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Manual QA:
 - residual risk:
 - acceptance:
+- authority source refs:
 - close reason:
 - remaining follow-up:
 
@@ -401,6 +423,10 @@ Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from
 Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. Their exact non-authority rule is owned by [Design Quality Policies](../design-quality-policies.md#two-stage-review-display) and [Agent Integration](../agent-integration.md#role-lens-behavior); findings must route to existing owner paths.
 
 Generated summaries should use ordinary user-facing language first and exact Harness terms as labels or refs where useful. They should not turn the projection into a command language or imply that display text created state.
+
+Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to Write Authorization refs, sensitive-action permission to Approval refs, evidence sufficiency to Evidence Manifest refs, detached verification to Eval refs, Manual QA to Manual QA records or valid waiver refs, final acceptance to Acceptance Decision Packet refs, and residual-risk visibility or acceptance to Residual Risk refs or `ResidualRiskSummary.status=none`. Missing refs should render as missing support, not as completed authority.
+
+Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means no known close-relevant residual risk exists for the requested action. `not_visible` means known close-relevant risk exists but has not been made visible enough for acceptance or close; it should remain a blocker or next action until the risk and refs are shown.
 
 Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the skipped check or surface, accepted risk, follow-up, relevant refs, and close impact. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
 

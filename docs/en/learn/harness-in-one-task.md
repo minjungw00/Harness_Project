@@ -144,8 +144,10 @@ Harness can close the Task when the scope stayed narrow, the write was authorize
 The close summary should be plain:
 
 ```text
-Closed as direct, self-checked.
+Closed as direct, self-checked. Residual risk: none for this close.
 ```
+
+"No close-relevant risk is known" is an explicit state claim, not a hidden-risk shortcut. If Harness knows about close-relevant risk that has not been shown to the user, the display should say the risk is not visible yet and keep close or acceptance blocked until the risk and refs are shown.
 
 ### What the user sees
 
@@ -153,8 +155,9 @@ The user should see a compact result, not internal machinery:
 
 ```text
 Changed the profile button label to "Update profile."
-Checked the rendered copy.
-Closed as a small direct task.
+Checked the rendered copy with RUN-031 and diff ART-DIFF-031.
+Write Authorization WA-031 was consumed; Evidence Manifest EM-031 covers the direct claim.
+Closed as a small direct task. Residual risk: none for this close.
 ```
 
 ### What the reference docs define more strictly
@@ -332,10 +335,11 @@ The user should see the work journey, not a reference manual:
 ```text
 Implemented remember-me as extended session on this device.
 Changed login form, session persistence, and tests.
-Verification passed for remembered and non-remembered sessions.
-Manual QA passed for the login screen flow.
-Residual risk shown and accepted: not checked across every supported browser policy.
-Accepted and closed as work.
+Evidence Manifest EM-009 covers AC-01 and AC-02 with RUN-018 and ART-TEST-018.
+Eval EVAL-012 verified remembered and non-remembered sessions.
+Manual QA MQA-006 passed for the login screen flow.
+Residual risk RISK-004 was shown and accepted in DEC-022: not checked across every supported browser policy.
+Final acceptance was recorded in DEC-023 and the task closed as work.
 ```
 
 ### What the reference docs define more strictly

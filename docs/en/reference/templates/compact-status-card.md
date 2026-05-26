@@ -4,6 +4,8 @@
 
 Use the compact status card when a short current-state display needs to show the always-on Harness context envelope: Task, mode, scope, out of bounds, next safe action, blocker status, pending user decision, write authority, acceptance criteria, evidence, verification, Manual QA, residual risk, guarantee level, projection freshness, and latest refs. Keep it small enough for status, next-action, and resume turns: ordinary-language state first, exact Harness labels only when they clarify the boundary.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - current Task state and lifecycle phase
@@ -12,6 +14,7 @@ Use the compact status card when a short current-state display needs to show the
 - current acceptance criteria snapshot
 - pending Decision Packet summary
 - Write Authority summary
+- authority source refs for Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, and artifacts when those claims are displayed
 - connected profile guarantee level
 - risk summary
 - design-quality or stewardship summary
@@ -35,10 +38,13 @@ Summary placeholders in this card are display bindings derived from the records 
 - scope and out of bounds
 - acceptance criteria
 - next safe action
+- checked summary
+- remaining work or checks
 - primary blocker, owner, and smallest unblocker
 - secondary blockers
 - active Change Unit
 - user decision
+- authority source refs
 - write authority
 - guarantee level
 - design and stewardship
@@ -60,6 +66,8 @@ Scope: {scope_summary|none}
 Out of bounds: {out_of_bounds_summary|none}
 Acceptance criteria: {acceptance_criteria_summary|none}
 Next safe action: {next_safe_action}
+Checked: {checked_summary|none}
+Remaining: {remaining_summary|none}
 Primary blocker: {primary_blocker_label|none}
 Blocker owner: {primary_blocker_owner_label|none}
 Smallest unblocker: {smallest_unblocker|none}
@@ -67,13 +75,14 @@ Secondary blockers: {secondary_blockers_summary|none}
 Change Unit: {active_change_unit_summary|none}
 Decision needed: {blocking_decision_summary|none}
 Write authority: {write_authority_status}
+Authority refs: write={write_authorization_ref|none}; approval={approval_refs|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_decision_ref|none}; residual_risk={residual_risk_refs|none}
 Guarantee: {guarantee_level}; {guard_or_detection_summary}
 Authority gates: scope={scope_gate}; approval={approval_gate}; decision={decision_gate}
 Design/stewardship: {design_summary|none}; gate={design_gate}
 Evidence: {evidence_summary|none}; gate={evidence_gate}
 Verification: {verification_summary|none}; gate={verification_gate}
 Manual QA: {manual_qa_summary|not_required}; gate={qa_gate}
-Residual risk: {residual_risk_summary|none}
+Residual risk: status={residual_risk_status|none}; {residual_risk_summary|none}; refs={residual_risk_refs|none}
 Acceptance: {acceptance_summary|not_required}; gate={acceptance_gate}
 Close status: blockers={close_blockers|none}; reason={close_reason|none}
 Projection freshness (view only): {current|stale|failed|unknown}; source_state_version={source_state_version|unknown}; {refresh_or_reconcile_needed|none}
@@ -87,6 +96,10 @@ Latest refs: report={latest_report_ref|none}; evidence={evidence_manifest_ref|no
 This template is a rendered card shape, not canonical state. It is rendered from current source records and refs, not stale chat memory. Gate values remain owned by canonical state, guarantee level is display and risk context, and projection freshness is readable-view freshness only. Use the [projection/report boundary](../document-projection.md#projection-principles) for the exact non-authority rule.
 
 Status/next recommendations in this card are read-only guidance. They may point to a Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
+
+Authority lines must be refs-first. If the card says writes are allowed, cite the Write Authorization ref. If it says evidence is sufficient, cite the Evidence Manifest ref. If it says detached verification passed, cite the Eval ref. If it says Manual QA passed or was waived, cite the Manual QA record or waiver path. If it says final acceptance or residual-risk acceptance was recorded, cite the Acceptance Decision Packet or Residual Risk refs. If the source ref is absent, render the claim as unsupported or not yet recorded.
+
+Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means no known close-relevant residual risk exists for the requested action and should render with an explicit empty risk-ref set. `not_visible` means known close-relevant risk exists but is not yet visible enough for acceptance or close, and should show the blocking risk refs or the refs that explain why the risk is hidden.
 
 Do not collapse display problems into one line. A stale projection means the readable card may lag. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient. MCP or capability unavailable means the surface cannot reach or provide the required Harness/Core capability.
 

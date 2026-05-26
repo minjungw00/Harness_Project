@@ -664,6 +664,8 @@ AcceptanceVisibilityContext:
 
 `ResidualRiskSummary.visible_refs`, `not_visible_refs`, `unaccepted_refs`, `accepted_refs`, and related acceptance visibility risk-ref arrays contain `StateRecordRef` entries with `record_kind=residual_risk`. `visible_refs` lists close-relevant Residual Risk records visible in the current judgment context; `unaccepted_refs` may overlap with visible risk when risk acceptance is still needed. Accepted risk remains metadata/state on Residual Risk records.
 
+Displays must preserve the difference between "none" and "not visible." `status=none` is an affirmative current-state claim that no known close-relevant Residual Risk exists for the requested action. `status=not_visible` is a blocker or pre-acceptance warning that known close-relevant risk exists but has not yet been shown with enough context for acceptance or close. User-facing summaries should render both the status and the relevant risk refs or explicit empty ref set.
+
 Autonomy Boundary summaries describe judgment latitude, not scope authority. They do not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit scope and any required approval.
 
 `decision_kind=approval` is retained as a stable public enum value. In both `DecisionPacket` and `DecisionPacketCandidate`, it means an approval-shaped judgment context for sensitive-change approval only. It cannot resolve user-owned judgment such as product trade-offs, design direction, architecture or material technical direction, unresolved security or product-security judgment, QA waiver, verification risk, final acceptance, or residual-risk acceptance unless those decisions are separately represented by compatible Decision Packets and gate updates.
@@ -1026,6 +1028,21 @@ NextResponse:
   judgment_context: JudgmentContext | null
   autonomy_boundary: AutonomyBoundarySummary | null
 ```
+
+`next_action.action_kind` meanings:
+
+| `action_kind` | User-facing meaning | Authority boundary |
+|---|---|---|
+| `ask_user` | A user-owned decision, approval, QA judgment, acceptance, residual-risk judgment, or other answer is needed before the named path can continue. | The prompt must name what the user is deciding and cite relevant refs; it does not authorize writes or close by itself. |
+| `prepare_write` | Check whether the exact intended product write may happen now. | No product write is authorized until `harness.prepare_write` returns a compatible Write Authorization. |
+| `implement` | Carry out the already-scoped work; for product writes, use only current compatible Write Authorization. | Does not widen scope, reuse an old authorization, or settle user-owned judgment. |
+| `launch_verify` | Prepare or launch a verification path from current evidence and source refs. | Creates at most a detached candidate; it is not a passing Eval or assurance upgrade. |
+| `record_eval` | Record the evaluator's result and reviewed refs. | Verification is not passed until Core records a qualifying Eval and updates the gate or assurance state. |
+| `record_manual_qa` | Record a human Manual QA outcome or valid waiver path. | Browser artifacts, smoke runs, or notes are not Manual QA unless a Manual QA record or valid waiver is recorded. |
+| `request_acceptance` | Ask for final acceptance after evidence, verification, Manual QA, and residual-risk visibility are shown. | Acceptance does not replace evidence, verification, Manual QA, approval, scope, or residual-risk visibility. |
+| `close_task` | Attempt close, cancel, or supersede through `harness.close_task`. | A close attempt may still return blockers; status text or reports cannot close the Task. |
+| `reconcile` | Refresh or reconcile stale projection, managed-block drift, proposal text, or state/display mismatch. | Reconcile display does not become state until the existing reconcile/owner path accepts it. |
+| `idle` | No immediate Harness action is required for the requested focus. | Does not imply the Task is closed, accepted, verified, or risk-free. |
 
 State transition summary: no state transition.
 

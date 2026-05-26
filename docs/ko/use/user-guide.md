@@ -53,6 +53,7 @@ Harness가 연결된 상태에서 AI와 함께 하는 작업을 시작하거나,
 - 작업과 모드
 - 범위와 범위 밖
 - 다음 안전한 행동
+- 무엇이 막혀 있는지, 무엇을 확인했는지, 무엇이 남았는지, 사용자가 무엇을 결정하는지
 - 필요한 결정이나 막힘, 그리고 다음 움직임의 소유자
 - 가장 작은 해소 방법
 - 쓰기 권한, 근거, 검증, Manual QA, 남은 위험, 수락 상태가 의미 있을 때의 요약
@@ -69,10 +70,13 @@ Harness가 연결된 상태에서 AI와 함께 하는 작업을 시작하거나,
 필요한 결정: 로그인 실패 메시지
 막힘: 사용자 소유 제품 판단
 가장 작은 해소 방법: DEC-014에서 선택지 하나 고르기
-쓰기 권한: 아직 요청하지 않음(`Write Authorization`)
-근거/확인: 아직 없음; 나중에 로그인 제출과 로그인 실패 처리 근거 필요
-Manual QA / 위험 / 수락: 최종 문구와 레이아웃에 Manual QA가 필요할 가능성 있음; 기록된 남은 위험 없음
-능력/상태: cooperative 접점; source_state_version v42 기준 상태 current
+확인됨: source_state_version v42에서 current state를 읽음; 아직 write, evidence, QA ref 없음
+남은 것: 쓰기 권한 확인, 구현 근거, 최종 문구/레이아웃 QA, 닫기 판단
+사용자 결정: DEC-014의 로그인 실패 메시지
+쓰기 권한: 아직 요청하지 않음; Write Authorization ref 없음
+근거/확인: 아직 없음; Evidence Manifest ref 없음
+Manual QA / 위험 / 수락: 최종 문구와 레이아웃에 Manual QA가 필요할 가능성 있음; 알려진 닫기 관련 남은 위험은 아직 없음
+능력/상태: cooperative 접점; source_state_version v42 기준 읽기용 상태 current
 ```
 
 먼저 다음 안전한 행동과 가장 작은 해소 방법을 봅니다. 막힘은 다음 움직임을 누가 소유하는지 말해야 합니다. 제품 판단, 중요한 기술 판단, Approval, QA, 남은 위험을 받아들이는 판단, 최종 수락처럼 사용자가 판단해야 하면 사용자 소유 막힘입니다. 상태 refresh, 근거 수집, check 재실행, `prepare_write` 재시도, 범위 축소처럼 에이전트가 사용자 판단을 바꾸지 않고 처리할 수 있으면 에이전트가 해소 가능한 막힘입니다.
@@ -110,6 +114,10 @@ Harness 상태 기준으로 현재 상태와 다음 행동을 다시 보여줘.
 ```
 
 에이전트는 Approval, Decision Packet 결과, Write Authorization, 근거, 검증, Manual QA, 수락, 남은 위험을 서로 분리해서 보여줘야 합니다. 하나를 다른 것의 대체물처럼 쓰면 안 됩니다.
+
+Authority claim에는 ref가 붙어야 합니다. "Write allowed"는 Write Authorization ref를, "evidence sufficient"는 Evidence Manifest ref를, "detached verified"는 Eval ref를, "Manual QA passed"는 Manual QA record를, "accepted"는 Acceptance Decision Packet을, "residual risk handled"는 Residual Risk refs 또는 명시적인 `ResidualRiskSummary.status=none`을 가리켜야 합니다.
+
+Residual-risk wording도 정확해야 합니다. `status=none`은 이 requested action에 대해 알려진 close-relevant residual risk가 없다는 뜻입니다. `not_visible`은 알려진 close-relevant risk가 있지만 acceptance 또는 close에 충분한 맥락으로 아직 보이지 않았다는 뜻입니다. `not_visible`은 "위험 없음"이 아니라 먼저 보여줘야 할 대상으로 다룹니다.
 
 가볍게 "go ahead" 또는 "진행해"라고 답하는 말은 에이전트가 사용자가 정확히 무엇을 결정하는지 이미 이름 붙였을 때만 사용할 수 있습니다. 제품 장단점, architecture 선택, QA 또는 verification waiver, 최종 수락, 남은 위험을 받아들이는 판단에는 선택지, 결과, 관련 ref, 에이전트가 여전히 사용자 없이 결정해도 되는 일, 기록되는 경로가 보이지 않는 한 충분하지 않습니다.
 
@@ -292,6 +300,18 @@ flowchart LR
 작은 `direct` 작업은 뒤쪽 확인 중 일부를 건너뛸 수 있습니다. 더 큰 작업은 그런 확인을 숨기지 말고, 필요할 때만 보여줘야 합니다.
 
 `direct` 작업 결과는 작고 부담 없어야 합니다. 무엇을 요청했는지, 범위가 어디까지였는지, 무엇이 바뀌었는지, 무엇을 확인했는지, `work`로 전환됐는지, 닫기에 영향을 주는 위험이나 후속 작업이 있는지만 보여주면 됩니다. 결과에 영향을 주지 않은 모든 gate를 다시 나열할 필요는 없습니다.
+
+간결한 `direct` 결과 예:
+
+```text
+direct로 완료했습니다. 범위: 설정 label만; 계정 동작은 범위 밖으로 유지했습니다. `src/settings/Profile.tsx`를 변경했습니다. RUN-031과 diff ART-DIFF-031로 확인했습니다. Write Authorization WA-031이 consumed됐습니다. Evidence Manifest EM-031이 이 direct claim을 뒷받침합니다. `work` 전환은 없습니다. 남은 위험: 이번 close에는 없음(`ResidualRiskSummary.status=none`).
+```
+
+조금 더 자세한 `work` 닫기 요약 예:
+
+```text
+닫기 요약: 변경 범위는 로그인 폼, 로그인 API 호출, 세션 저장 안에 머물렀습니다. Evidence Manifest EM-009가 RUN-018과 ART-TEST-018을 근거로 AC-01과 AC-02를 뒷받침합니다. 검증은 RUN-018에 기록된 자체 확인(self-check)이며, 이 경로에서는 detached Eval이 필요하지 않았습니다. Manual QA는 MQA-006에서 통과했습니다. Residual Risk RISK-004는 mobile Safari 미확인 동작을 다루며 DEC-022에서 후속 TASK-144와 함께 받아들였습니다. 최종 수락은 DEC-023에 기록됐습니다. Close reason: completed with accepted residual risk.
+```
 
 `direct` 작업은 대상이 더 이상 분명하지 않거나, 변경 경로가 활성 Change Unit을 넘거나, 여러 제품 영역에 걸치거나, public API 또는 module contract가 바뀔 수 있거나, 민감하거나 위험한 동작이 나타나거나, Manual QA 또는 detached verification이 중요해지거나, 사용자 소유의 제품 판단 또는 중요한 기술 판단이 필요해지면 `work`로 전환해야 합니다.
 

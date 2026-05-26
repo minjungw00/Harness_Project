@@ -53,6 +53,7 @@ At the start, or before significant resume, the agent should show a short status
 - task and mode
 - scope and out of bounds
 - next safe action
+- what is blocked, what has been checked, what remains, and what you are deciding
 - decision or blocker, including who owns the next move
 - smallest unblocker
 - write permission, evidence, verification, Manual QA, residual risk, and acceptance status when they matter
@@ -69,10 +70,13 @@ Next safe action: decide failed-login UX before wiring final UI behavior
 Decision needed: failed-login message
 Blocked by: user-owned product judgment
 Smallest unblocker: choose one option from DEC-014
-Write permission: not requested yet (`Write Authorization`)
-Evidence/checks: none yet; needed later for login submission and failed-login handling
-Manual QA / risk / acceptance: likely Manual QA for final copy and layout; no residual risk recorded yet
-Capability/status: cooperative surface; status current as of source_state_version v42
+Checked: current state read from source_state_version v42; no write, evidence, or QA refs yet
+Remaining: write-authority check, implementation evidence, final copy/layout QA, and close decision
+You decide: failed-login message in DEC-014
+Write permission: not requested yet; no Write Authorization ref
+Evidence/checks: none yet; no Evidence Manifest ref
+Manual QA / risk / acceptance: likely Manual QA for final copy and layout; no known close-relevant residual risk recorded yet
+Capability/status: cooperative surface; readable status current as of source_state_version v42
 ```
 
 Look first for the next safe action and the smallest unblocker. A blocker should say who owns the next move: user-owned when it needs your product, material technical, Approval, QA, risk, or acceptance judgment; agent-resolvable when the agent can refresh state, collect evidence, rerun a check, retry `prepare_write`, or narrow scope without changing your decision.
@@ -110,6 +114,10 @@ Show the close checklist.
 ```
 
 The agent should keep Approval, Decision Packet outcomes, Write Authorization, evidence, verification, Manual QA, acceptance, and residual risk separate. One of them should not be used as a substitute for another.
+
+Authority claims should come with refs. "Write allowed" should point to a Write Authorization ref; "evidence sufficient" to an Evidence Manifest ref; "detached verified" to an Eval ref; "Manual QA passed" to a Manual QA record; "accepted" to an Acceptance Decision Packet; and "residual risk handled" to Residual Risk refs or an explicit `ResidualRiskSummary.status=none`.
+
+Residual-risk wording should also be precise. `status=none` means there is no known close-relevant residual risk for this requested action. `not_visible` means known close-relevant risk exists but has not yet been shown well enough for acceptance or close. Treat `not_visible` as something to surface, not as "no risk."
 
 A casual "go ahead" is only usable when the agent has already named the exact thing you are deciding. It is not enough for product trade-offs, architecture choices, QA or verification waivers, final acceptance, or residual-risk acceptance unless the prompt shows the options, consequences, relevant refs, what the agent may still decide without you, and the specific route being recorded.
 
@@ -290,6 +298,18 @@ Typical flow:
 Many small direct tasks skip some later checks. Bigger work should not hide those checks; it should show them only when they matter.
 
 A direct task result should stay compact and low-ceremony: what was requested, what stayed in scope, what changed, what was checked, whether it escalated, and any close-relevant risk or follow-up. It should not restate every gate when those gates did not affect the result.
+
+Compact direct result:
+
+```text
+Done as direct. Scope: settings label only; account behavior stayed out of bounds. Changed `src/settings/Profile.tsx`. Checked RUN-031 and diff ART-DIFF-031. Write Authorization WA-031 was consumed. Evidence Manifest EM-031 covers the claim. No escalation. Residual risk: none for this close (`ResidualRiskSummary.status=none`).
+```
+
+Fuller work close summary:
+
+```text
+Close summary: changed scope stayed inside login form, login API call, and session storage. Evidence Manifest EM-009 covers AC-01 and AC-02, supported by RUN-018 and ART-TEST-018. Verification is self-checked in RUN-018; no detached Eval was required for this path. Manual QA passed in MQA-006. Residual risk RISK-004 covers untested mobile Safari behavior and was accepted in DEC-022 with follow-up TASK-144. Final acceptance recorded in DEC-023. Close reason: completed with accepted residual risk.
+```
 
 Direct work should escalate to `work` when the target is no longer obvious, changed paths cross the active Change Unit, more than a local product area is affected, a public API or module contract may change, sensitive or risky behavior appears, Manual QA or detached verification becomes important, or a user-owned product or material technical trade-off is needed.
 

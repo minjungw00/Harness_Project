@@ -666,6 +666,8 @@ AcceptanceVisibilityContext:
 
 `ResidualRiskSummary.visible_refs`, `not_visible_refs`, `unaccepted_refs`, `accepted_refs`, related acceptance visibility risk-ref array는 `record_kind=residual_risk`인 `StateRecordRef` entry를 포함합니다. `visible_refs`는 현재 judgment context에서 visible한 close-relevant Residual Risk record를 나열하며, risk acceptance가 아직 필요하면 `unaccepted_refs`가 visible risk와 overlap될 수 있습니다. Accepted risk는 Residual Risk record의 metadata/state로 남습니다.
 
+표시에서는 "none"과 "not visible"을 반드시 구분해야 합니다. `status=none`은 requested action에 대해 알려진 close-relevant Residual Risk가 없다는 current-state claim입니다. `status=not_visible`은 알려진 close-relevant risk가 있지만 acceptance 또는 close에 필요한 맥락으로 아직 보이지 않았다는 blocker 또는 acceptance 전 경고입니다. 사용자에게 보이는 summary는 status와 관련 risk refs, 또는 명시적인 empty ref set을 함께 렌더링해야 합니다.
+
 Autonomy Boundary summary는 범위 권한이 아니라 판단 재량을 설명합니다. Active Change Unit scope와 required Approval 밖의 paths, tools, commands, network targets, secret access, sensitive categories를 허가하지 않습니다.
 
 `decision_kind=approval`은 stable public enum value로 유지됩니다. `DecisionPacket`과 `DecisionPacketCandidate` 모두에서 이 값은 sensitive-change Approval만을 위한 Approval 형태의 judgment context를 뜻합니다. 제품 장단점, 설계 방향, 아키텍처 판단이나 중요한 기술 판단, 해결되지 않은 security 또는 product-security 판단, QA 면제, verification risk, final acceptance, Residual Risk 수용 같은 사용자 소유 판단은 별도의 compatible Decision Packets와 gate updates로 표현되지 않는 한 이 값으로 해소할 수 없습니다.
@@ -1028,6 +1030,21 @@ NextResponse:
   judgment_context: JudgmentContext | null
   autonomy_boundary: AutonomyBoundarySummary | null
 ```
+
+`next_action.action_kind` 의미:
+
+| `action_kind` | 사용자에게 보이는 의미 | 권한 경계 |
+|---|---|---|
+| `ask_user` | 이름 붙은 경로를 계속하기 전에 사용자 소유 결정, 승인, QA 판단, 수락, 남은 위험 판단, 또는 다른 답변이 필요합니다. | Prompt는 사용자가 무엇을 결정하는지와 관련 refs를 말해야 하며, 그 자체로 write나 close를 허가하지 않습니다. |
+| `prepare_write` | 정확히 의도한 제품 파일 쓰기를 지금 해도 되는지 확인합니다. | `harness.prepare_write`가 compatible Write Authorization을 반환하기 전에는 제품 파일 쓰기가 허가되지 않습니다. |
+| `implement` | 이미 범위가 잡힌 작업을 수행합니다. 제품 파일 쓰기에는 current compatible Write Authorization만 사용합니다. | Scope를 넓히거나 오래된 authorization을 재사용하거나 사용자 소유 판단을 해결하지 않습니다. |
+| `launch_verify` | Current evidence와 source refs에서 verification path를 준비하거나 시작합니다. | 많아야 detached candidate를 만들 뿐이며, passing Eval이나 assurance upgrade가 아닙니다. |
+| `record_eval` | Evaluator 결과와 reviewed refs를 기록합니다. | Core가 qualifying Eval을 기록하고 gate 또는 assurance state를 갱신하기 전에는 verification passed가 아닙니다. |
+| `record_manual_qa` | Human Manual QA outcome 또는 valid waiver path를 기록합니다. | Browser artifact, smoke run, note만으로는 Manual QA가 아니며 Manual QA record 또는 valid waiver가 필요합니다. |
+| `request_acceptance` | Evidence, verification, Manual QA, residual-risk visibility를 보여준 뒤 final acceptance를 요청합니다. | Acceptance는 evidence, verification, Manual QA, approval, scope, residual-risk visibility를 대체하지 않습니다. |
+| `close_task` | `harness.close_task`로 close, cancel, supersede를 시도합니다. | Close attempt는 여전히 blocker를 반환할 수 있으며, status text나 report만으로 Task가 닫히지 않습니다. |
+| `reconcile` | 오래된 projection, managed-block drift, proposal text, state/display mismatch를 refresh 또는 reconcile합니다. | Reconcile 표시는 기존 reconcile/owner path가 받아들이기 전에는 state가 아닙니다. |
+| `idle` | 요청한 focus에 필요한 즉시 Harness action이 없습니다. | Task가 닫혔거나, 수락됐거나, verified됐거나, risk-free라는 뜻이 아닙니다. |
 
 State transition summary: state transition 없음.
 
