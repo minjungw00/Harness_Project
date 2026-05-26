@@ -20,6 +20,7 @@ It does not own SQLite DDL, storage layout, the full kernel transition table, pr
 | Read-only resource contract | [Read-only resources](#read-only-resources) | Projection rendering rules stay in [Document Projection Reference](document-projection.md). |
 | Common request envelope and response shape | [Tool envelope](#tool-envelope), [Common response](#common-response) | State-version transition semantics stay in [Kernel Reference](kernel.md). |
 | Shared public schemas and refs | [Shared schemas](#shared-schemas), [ArtifactRef](#artifactref), [ValidatorResult](#validatorresult) | Storage-only JSON and DDL stay in [Storage And DDL](storage-and-ddl.md). |
+| Markdown schema notation | [Schema notation convention](#schema-notation-convention) | Fixture assertion modes stay in [Operations And Conformance Reference](operations-and-conformance.md#fixture-assertion-semantics). |
 | Sensitive category labels | [Sensitive Categories](#sensitive-categories) | Approval and write-state behavior stay in [Kernel Reference](kernel.md#prepare_write). |
 | Error codes and primary-error selection | [Error taxonomy](#error-taxonomy), [Primary Error Code Precedence](#primary-error-code-precedence), [`harness.close_task` Close Blockers](#harnessclose_task-close-blockers) | Operator diagnostics stay in [Operations And Conformance Reference](operations-and-conformance.md). |
 | Public tool request and response schemas | [Public Tool Schema Map](#public-tool-schema-map), then the matching tool section | Fixture `action` and `input` rules stay in [Operations And Conformance Reference](operations-and-conformance.md#conformance-fixture-format). |
@@ -34,6 +35,21 @@ All state changes go through public tools and Core. A tool response may include 
 Status and next-action displays should translate public MCP concepts into ordinary user language before showing them. A user should see what is blocking, the smallest unblocker, and any important secondary blockers. Raw `ToolError`, `ErrorCode`, and schema field names may appear as optional detail for implementers, logs, or conformance output, but they should not be the only user-facing explanation.
 
 The public request and response schemas in this document are the validation source for API payloads, including API-shaped payloads that Core later stores. Core must validate every storage JSON value before commit against either the API-owned shape here or the storage-owned shape in [Storage And DDL](storage-and-ddl.md). Malformed or schema-incompatible JSON is invalid state.
+
+## Schema notation convention
+
+The Markdown YAML-like blocks in this document are normative schema notation, not example payloads unless the surrounding text says they are examples. Implementations should translate them into validation code with these rules:
+
+- `field: Type` means the field is required and its value must be non-null.
+- `field: Type | null` means the field is still required, but its value may be JSON `null`. Omission is different from expected `null`.
+- A field is optional only when the field's prose, a branch rule, or an explicit extension rule says it may be omitted. Nullable does not mean optional.
+- `Type[]` means a JSON array whose items match `Type`. An explicit empty array `[]` is a present empty collection; it is different from omission. Empty arrays are valid unless the field prose requires one or more items.
+- `object` means a JSON object. When nested fields are shown, those child fields follow the same required, nullable, array, and enum rules. Object maps are written or described as keyed objects, such as `field: { [key_name]: ValueType }` or "keyed by validator ID"; keys are strings and values must match the stated value type. An explicit `{}` for an object-map field is a present empty map.
+- `a | b | c` means an enum of literal values. It is closed unless the section labels the enum extensible or describes the field as a display/routing string. Extensible enums define the known supported values and any enabled extension tiers; public request validators accept only supported or enabled values. Unknown values do not become canonical authority by appearing in a payload.
+- Branch rules in prose can further require one field to be non-null, another field to be `null`, or another branch to be absent. Those branch rules are part of the schema.
+- Unlisted fields are not public contract fields unless the section explicitly defines an extension container or optional extension field. Public request validators must reject unlisted fields outside such an extension point. Optional extension fields are omitted by default, must be profile- or owner-scoped, and must not affect gates, state authority, or storage ownership unless their owner document promotes that semantics.
+
+Storage validation is a separate ownership boundary. Public API payloads and API-shaped stored JSON validate against this document first. Storage-only JSON `TEXT`, DDL nullability, column defaults, and storage hardening validate against [Storage And DDL](storage-and-ddl.md). Do not infer a public API field from a SQLite column, or a storage column rule from a public response display field, unless the owner documents explicitly link them.
 
 ## Reference scope
 

@@ -20,6 +20,7 @@ SQLite DDL과 storage layout, 전체 kernel transition table, projection templat
 | Read-only resource contract | [Read-only resources](#read-only-resources) | Projection rendering rule은 [문서 Projection 참조](document-projection.md)에 남습니다. |
 | 공통 request envelope와 response shape | [Tool envelope](#tool-envelope), [Common response](#common-response) | State-version transition 의미는 [커널 참조](kernel.md)에 남습니다. |
 | Shared public schema와 ref | [Shared schemas](#shared-schemas), [ArtifactRef](#artifactref), [ValidatorResult](#validatorresult) | Storage-only JSON과 DDL은 [Storage와 DDL](storage-and-ddl.md)에 남습니다. |
+| Markdown schema 표기 | [Schema notation convention](#schema-notation-convention) | Fixture assertion mode는 [운영과 Conformance 참조](operations-and-conformance.md#fixture-assertion-semantics)에 남습니다. |
 | Sensitive category label | [Sensitive Categories](#sensitive-categories) | Approval과 write-state behavior는 [커널 참조](kernel.md#prepare_write)에 남습니다. |
 | Error code와 primary-error 선택 | [Error taxonomy](#error-taxonomy), [Primary Error Code Precedence](#primary-error-code-precedence), [`harness.close_task` Close Blockers](#harnessclose_task-close-blockers) | Operator diagnostic은 [운영과 Conformance 참조](operations-and-conformance.md)에 남습니다. |
 | Public tool request와 response schema | [Public Tool Schema Map](#public-tool-schema-map), 그리고 해당 tool section | Fixture `action`과 `input` rule은 [운영과 Conformance 참조](operations-and-conformance.md#conformance-fixture-format)에 남습니다. |
@@ -34,6 +35,21 @@ MCP resource는 읽기 전용 보기로 동작합니다. 현재 상태, projecti
 Status와 next-action 표시는 public MCP 개념을 사용자에게 보이기 전에 평범한 말로 바꿔 보여줘야 합니다. 사용자는 무엇이 막고 있는지, 가장 작은 해소 방법이 무엇인지, 중요한 추가 막힘이 무엇인지 볼 수 있어야 합니다. Raw `ToolError`, `ErrorCode`, schema field name은 구현자, log, conformance output을 위한 선택 세부 정보로는 보일 수 있지만, 사용자 설명이 그것만으로 끝나면 안 됩니다.
 
 이 문서의 public request와 response schema는 API payload의 검증 기준입니다. 여기에는 Core가 나중에 저장하는 API-shaped payload도 포함됩니다. Core는 commit 전에 모든 storage JSON 값을 이 문서의 API-owned shape 또는 [Storage와 DDL](storage-and-ddl.md)의 storage-owned shape에 맞게 검증해야 합니다. 잘못된 JSON이나 schema와 맞지 않는 JSON은 유효하지 않은 상태입니다.
+
+## Schema notation convention
+
+이 문서의 Markdown YAML-like block은 surrounding text가 example이라고 명시하지 않는 한 normative schema notation입니다. 구현자는 다음 rule에 따라 validation code로 옮겨야 합니다.
+
+- `field: Type`은 field가 required이고 value가 non-null이어야 함을 뜻합니다.
+- `field: Type | null`은 field가 여전히 required이지만 value가 JSON `null`일 수 있음을 뜻합니다. Omission은 expected `null`과 다릅니다.
+- Field의 prose, branch rule, 또는 explicit extension rule이 omitted 가능하다고 말할 때만 optional입니다. Nullable은 optional을 뜻하지 않습니다.
+- `Type[]`은 item이 `Type`과 일치하는 JSON array입니다. 명시적 empty array `[]`는 present empty collection이며 omission과 다릅니다. Field prose가 one or more items를 요구하지 않는 한 empty array는 valid합니다.
+- `object`는 JSON object입니다. Nested field가 표시되면 child field에도 같은 required, nullable, array, enum rule이 적용됩니다. Object map은 `field: { [key_name]: ValueType }` 또는 "keyed by validator ID"처럼 keyed object로 쓰거나 설명합니다. Key는 string이고 value는 stated value type과 일치해야 합니다. Object-map field의 명시적 `{}`는 present empty map입니다.
+- `a | b | c`는 literal value enum입니다. 해당 section이 enum을 extensible이라고 label하거나 field를 display/routing string이라고 설명하지 않는 한 closed enum입니다. Extensible enum은 알려진 supported value와 enabled extension tier를 정의하며, public request validator는 supported 또는 enabled value만 accept합니다. Payload에 unknown value가 나타난다고 canonical authority가 생기지 않습니다.
+- Prose의 branch rule은 어떤 field를 non-null로, 다른 field를 `null`로, 또는 다른 branch를 absent로 요구할 수 있습니다. 이런 branch rule도 schema의 일부입니다.
+- 나열되지 않은 field는 section이 extension container 또는 optional extension field를 명시적으로 정의하지 않는 한 public contract field가 아닙니다. Public request validator는 이런 extension point 밖의 unlisted field를 reject해야 합니다. Optional extension field는 기본적으로 omitted이며, profile 또는 owner scope를 가져야 하고, owner document가 그 의미를 승격하기 전까지 gate, state authority, storage ownership에 영향을 주면 안 됩니다.
+
+Storage validation은 별도의 ownership boundary입니다. Public API payload와 API-shaped stored JSON은 먼저 이 문서에 맞게 validate합니다. Storage-only JSON `TEXT`, DDL nullability, column default, storage hardening은 [Storage와 DDL](storage-and-ddl.md)에 맞게 validate합니다. Owner document가 명시적으로 연결하지 않는 한 SQLite column에서 public API field를 추론하거나 public response display field에서 storage column rule을 추론하면 안 됩니다.
 
 ## 담당하는 참조 범위
 

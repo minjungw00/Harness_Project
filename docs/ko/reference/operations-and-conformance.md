@@ -676,8 +676,8 @@ initial_state: object
 input: object
 action: string
 expected_state: object
-expected_events: list
-expected_artifacts: list
+expected_events: object[]
+expected_artifacts: object[]
 expected_projection: object
 expected_error: object | null
 ```
@@ -706,6 +706,8 @@ classDiagram
 ```
 
 Fixture file과 suite catalog는 fixture body 밖에 metadata를 가질 수 있습니다. Fixture body 자체는 위 field만 사용해야 conformance runner가 behavior를 일관되게 비교할 수 있습니다.
+
+Fixture body type notation은 API의 [Schema notation convention](mcp-api-and-schemas.md#schema-notation-convention)을 따릅니다. 위 top-level fixture body field는 모두 required입니다. Fixture가 empty object, object map, array를 의도적으로 제공할 때는 `{}` 또는 `[]`를 사용합니다. Required top-level field를 생략하는 것은 invalid fixture body이며 "not asserted"가 아닙니다.
 
 MCP tool action의 경우 executable fixture `input`은 API docs가 정의하는 해당 tool의 public request payload입니다. Runner는 schema가 요구하는 경우 `envelope: ToolEnvelope`를 포함해 `action`에 해당하는 request schema로 `input`을 검증해야 합니다. 이 문서의 예시는 다음 envelope-expansion convention 아래에서만 `ToolEnvelope`를 생략할 수 있습니다. Validation, 정규화, request hashing, Core execution 전에 runner가 `initial_state`, suite defaults, fixture metadata에서 deterministic valid envelope를 제공합니다. Expanded request가 Core에 전달되는 값입니다. 이 convention은 fixture field를 추가하거나 fixture body shape를 바꾸거나 alternate request schema를 만들지 않습니다.
 
@@ -767,6 +769,10 @@ Conformance runner는 status-like `TEXT` field도 [Storage와 DDL](storage-and-d
 
 Fixture assertion mode는 runner default 또는 suite catalog metadata입니다. Core input이 아니고 MCP tool에 전달되지 않으며 fixture body에 field를 추가하면 안 됩니다. Fixture body는 정확히 `scenario_id`, `initial_state`, `input`, `action`, `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, `expected_error`만 유지합니다.
 
+Partial assertion object 안에서 omission은 "not asserted"를 뜻합니다. Value가 `null`인 listed field는 captured field가 present이고 JSON `null`과 같음을 assert합니다. Listed array value `[]`는 present empty array를 assert합니다. Owner schema가 해당 field를 map이라고 말하는 경우 listed object-map value `{}`는 present empty map을 assert합니다. `partial_deep` 아래의 structured object에서는 object 존재만 의도적으로 assert하는 경우가 아니라면 fixture author는 최소 하나의 child field를 나열해야 합니다.
+
+이 omission rule은 assertion rule일 뿐입니다. Public MCP `input`에서 omitted field를 valid로 만들지 않습니다. Fixture `input`은 documented envelope expansion 이후에도 owning public request schema를 통과해야 합니다.
+
 Default comparison modes:
 
 | Fixture field | Default assertion mode |
@@ -776,6 +782,8 @@ Default comparison modes:
 | `expected_artifacts` | `contains_by_identity`; 나열된 각 artifact는 같은 `artifact_id`와 `kind`를 가진 registered artifact와 일치해야 하며, 그 밖에 나열된 artifact field는 재귀적으로 일치합니다. |
 | `expected_projection` | `partial_by_kind`; 나열된 각 projection kind는 해당 kind에 대해 나열된 status assertion 또는 partial object assertion을 만족해야 합니다. |
 | `expected_error` | `expected_error: null`은 action이 error를 반환하지 않았음을 검증합니다. `expected_error`가 object이면 `expected_error.code`는 required이며 API가 소유한 [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence)에 따라 선택된 primary API `ErrorCode`인 `ToolError.code`, 즉 response에 errors가 있으면 `ToolResponseBase.errors[0].code`와 exact match합니다. Arbitrary secondary error, validator finding code, policy finding code, local diagnostic label과 match하면 안 됩니다. `expected_error.details`는 optional입니다. Omitted이면 details field는 검증하지 않습니다. `details`가 present이면 suite metadata가 `expected_error.details: exact`로 설정하지 않는 한 `partial_deep`으로 match합니다. |
+
+`expected_events`는 기본적으로 `contains_ordered`이므로 `expected_events: []`는 fixture가 특정 stable event를 요구하지 않는다는 뜻입니다. 이것만으로 captured stable-event stream이 empty임을 assert하지 않습니다. Stable event가 없었음을 assert하려면 suite metadata에서 해당 fixture 또는 suite에 `expected_events: exact`를 설정해야 합니다. 마찬가지로 `expected_artifacts: []`와 `expected_projection: {}`는 default mode에서 required artifact 또는 projection entry가 없다는 뜻입니다. Compatible exact-mode metadata가 없다면 captured artifact나 projection observation을 금지하지 않습니다.
 
 `expected_events` comparisons는 captured `task_events`의 [Kernel Stable Event Catalog](kernel.md#stable-event-catalog) projection을 대상으로 합니다. API tool detail/audit event lists는 이 set을 확장하지 않습니다. `task_events`에 capture된 non-catalog detail 또는 local-audit events는 normal MVP fixture를 fail하게 만들면 안 됩니다. Suite metadata가 `expected_events: exact`로 설정하면, future non-MVP/local suite가 implementation-specific detail-event assertions를 명시적으로 opt in하지 않는 한 exactness는 captured stream의 stable-event projection에 적용됩니다. Validator IDs, Core check names, projection status shorthands, fixture seed shorthand, scenario catalog IDs는 event names가 아닙니다. Prose examples는 non-catalog event names를 illustrative 또는 future extension ideas로 언급할 수 있지만, executable MVP fixtures는 kernel catalog가 승격하기 전까지 이를 요구하면 안 됩니다.
 
@@ -804,8 +812,6 @@ Artifact redaction scenario 지침:
 | `ARTIFACT-staged-uri-untrusted-task-scope-required` | `record_run`, `record_manual_qa`, `record_eval`, 또는 `artifacts_check` | 호출자가 임의로 제공한 `staged_uri`, absolute path, traversal path, symlink escape, repo-local path, 또는 다른 Task의 artifact relation은 committed artifact로 받아들이지 않습니다. 그 값에서 evidence, QA, Eval, projection, export, Release Handoff claim을 인정하지 않습니다. Committed artifact link는 trusted staging/capture bytes와 같은 Task의 owner relation으로만 resolve되며, `record_kind=projection`인 경우 completed same-Task projection job으로만 resolve됩니다. |
 | `EXPORT-redaction-notes-do-not-leak-omitted-or-blocked-values` | `export` 또는 Release Handoff report read | Export 또는 Release Handoff assertion은 artifact ref, redaction state, omission/block note, 영향을 받는 display를 나열합니다. 생략된 원본 값과 금지되어 차단된 payload는 exported snapshot, raw-file copy, report text, fixture assertion에 없어야 합니다. |
 | `EXPORT-secret-pii-omission-reported-not-silent` | `export` 또는 Release Handoff report read | Secret 또는 PII 제거는 affected artifact ref와 evidence, QA, verification, projection, Release Handoff display에 연결된 안전한 omission, redaction, block metadata로 보여야 합니다. Export는 sensitive value를 포함하지 않고, staged 또는 blocked content 접근 범위를 넓히지 않으며, material이 omitted 또는 blocked되었다는 사실을 숨기지 않습니다. |
-
-모든 `expected_*` value 안에서 nested field가 없다는 것은 "not asserted"이지 "expected null"이 아닙니다. `expected_artifacts: []`, `expected_projection: {}` 같은 empty default-mode collection은 valid하며 required entry가 없음을 뜻합니다. `expected_events: []`는 required stable catalog event가 없음을 검증합니다. Committed transitions가 non-stable detail 또는 local-audit events를 추가할 수 있으므로 `task_events` rows가 전혀 추가되지 않았음을 검증하지 않습니다. Extra stable entry가 없음을 검증해야 하는 suite는 fixture body 밖의 compatible exact-mode metadata를 사용해야 합니다.
 
 Allowed `expected_projection` status assertions:
 
