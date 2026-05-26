@@ -194,7 +194,7 @@ state.sqlite / artifact store / validators / projector / reconcile worker
 
 The conversation surface gathers user intent, decisions, approvals, QA judgments, and acceptance. The agent surface performs reading, editing, and checking. Harness rules and skills keep the agent oriented. The MCP server provides the tool boundary. Core owns the state machine. Validators, artifact capture, projection, and reconcile attach evidence and readable output to state transitions.
 
-Native hooks, sidecars, command wrappers, file watchers, and worktree isolation are capability-dependent enforcement layers. MVP relies on cooperative/detective behavior for the reference surface unless a concrete capability profile proves stronger enforcement.
+Native hooks, sidecars, command wrappers, file watchers, and worktree isolation are capability-dependent enforcement layers. MVP relies on cooperative/detective behavior for the reference surface unless a concrete capability profile has fixture-proven stronger enforcement.
 
 
 ### Core modules
@@ -317,17 +317,17 @@ The harness reports guarantee levels to make enforcement strength honest:
 
 | Level | Meaning |
 |---|---|
-| `cooperative` | the agent surface is expected to follow Harness instructions and MCP decisions, but Harness does not claim pre-execution blocking |
-| `detective` | Harness can observe violations after action and mark state blocked, stale, partial, or failed |
-| `preventive` | a proven connector or runtime path can block a covered violating action before it executes |
-| `isolated` | risky work is separated by a worktree, sandbox, process boundary, or equivalent isolation |
+| `cooperative` | the agent surface is expected to follow Harness instructions and MCP decisions; any hold is by instruction, and Harness does not claim pre-execution blocking |
+| `detective` | Harness can observe violations after action and mark state blocked, stale, partial, or failed; this is detection, not prevention |
+| `preventive` | a concrete connector or runtime path has fixture-proven pre-tool blocking for the covered operation before it executes |
+| `isolated` | risky work is separated by a worktree, sandbox, process boundary, evaluator boundary, or equivalent isolation; isolation limits blast radius but does not by itself approve or verify the work |
 
 
-Guarantee display should name both sides of the boundary: what the connected profile can actually block before execution, and what it can only detect after action. Guard, freeze, and careful-mode labels inherit this connected-profile guarantee; they do not upgrade a cooperative or detective profile into preventive blocking.
+Guarantee display should name both sides of the boundary: what the connected profile can actually block before execution, and what it can only detect after action. A surface name, product name, recipe name, or friendly mode label is never proof of capability. Guard, freeze, and careful-mode labels inherit the connected profile's proven capability; they do not upgrade a cooperative or detective profile into preventive blocking, and they do not create authority tiers.
 
-MVP reference behavior is cooperative/detective unless the connected surface has a concrete, proven pre-tool guard for covered operations or an isolation layer. Native hook expansion, advanced sidecar watching, and broad isolated execution are later roadmap items unless explicitly implemented for the MVP reference surface. Until promoted through owner docs, they may improve observation or display only; they do not authorize writes, satisfy gates, grant approval, or replace Core authority.
+MVP reference behavior is cooperative/detective unless the connected surface has a concrete, fixture-proven pre-tool guard for covered operations or an isolation layer. Native hook expansion, advanced sidecar watching, and broad isolated execution are later roadmap items unless explicitly implemented for the MVP reference surface. Until promoted through owner docs, they may improve observation or display only; they do not authorize writes, satisfy gates, grant approval, prove verification or QA, record acceptance, or replace Core authority.
 
-Guarantee level is display and risk context. It is not approval, verification, acceptance, or a kernel gate.
+Guarantee level is display and risk context. It is not Approval, Write Authorization, verification, QA, acceptance, residual-risk acceptance, close readiness, or a kernel gate.
 
 ## Failure and recovery overview
 
@@ -341,8 +341,8 @@ Failures are recorded rather than hidden:
 | Artifact file missing or hash mismatch | mark the artifact and dependent evidence, projection, export, or close-readiness view stale or blocked; rescan, restore the exact registered bytes, or register a replacement through recovery |
 | Projection job failed | keep state current; mark projection failed and retry or reconcile; do not roll back Core state |
 | Managed Markdown edited directly | create reconcile item; do not mutate state directly |
-| MCP unavailable | distinguish diagnostic condition `MCP_SERVER_UNAVAILABLE`, where the tool call cannot reach Core and no authoritative Core response is possible, from diagnostic condition `SURFACE_MCP_UNAVAILABLE`, where Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools; `MCP_UNAVAILABLE` remains the stable public availability code; product/runtime/code writes are held by instruction on cooperative surfaces, detected after action on detective paths when available, or blocked before execution only by a proven preventive guard for the covered operation |
-| Surface capability mismatch | record validator result, adjust guarantee display, and decline Write Authorization or hold unsafe writes when required checks cannot be satisfied; pre-execution blocking still depends on the proven connected profile |
+| MCP unavailable | distinguish diagnostic condition `MCP_SERVER_UNAVAILABLE`, where the tool call cannot reach Core and no authoritative Core response is possible, from diagnostic condition `SURFACE_MCP_UNAVAILABLE`, where Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools; `MCP_UNAVAILABLE` remains the stable public availability code; product/runtime/code writes are held by instruction on cooperative surfaces, detected after action on detective paths when available, or blocked before execution only by a fixture-proven preventive guard for the covered operation |
+| Surface capability mismatch | record validator result, adjust guarantee display, and decline Write Authorization or hold unsafe writes when required checks cannot be satisfied; pre-execution blocking still depends on fixture-proven connected profile coverage |
 
 
 Recovery tools may repair projection freshness, rescan artifacts, interrupt stale runs, expire drifted approvals, or create reconcile items. They must preserve the same authority rules: `state.sqlite` is operational state, `state.sqlite.task_events` is the event history inside that state store, raw evidence lives in the artifact store, and Markdown reports remain projections.

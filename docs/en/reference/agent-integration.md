@@ -8,6 +8,8 @@ It owns the common connector contract: capability tiers, capability profiles, ge
 
 For the user-facing agent procedure, read [Agent Session Flow](../use/agent-session-flow.md). For surface-specific setup notes, read [Surface Cookbook](surface-cookbook.md).
 
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Read this when
 
 - You are implementing or reviewing a connector for an agent surface.
@@ -22,7 +24,7 @@ Read [Agent Session Flow](../use/agent-session-flow.md) for the user-facing proc
 
 ## Main idea
 
-A connector should keep the agent's context small and current, route state-changing actions through Harness, and describe only the guarantees its proven capability profile can actually provide. Cooperative or detective surfaces may hold or detect; only covered preventive or isolated paths should be described as pre-execution blocking.
+A connector should keep the agent's context small and current, route state-changing actions through Harness, and describe only the guarantees its proven capability profile can actually provide. Cooperative or detective surfaces may hold or detect; only covered preventive paths with fixture-proven pre-tool blocking should be described as pre-execution blocking, and isolated paths should be described as separation rather than approval or verification.
 
 ## Integration in plain language
 
@@ -63,11 +65,11 @@ Always-on rules should stay short. They should say when to use Harness, where to
 | `T1 Skill` | Surface can follow a Harness procedure. | skill, command, prompt, playbook |
 | `T2 MCP` | Surface can call Harness tools and resources. | MCP server connection |
 | `T3 Capture` | Surface can return diffs, logs, and run output reliably. | structured output, wrapper, adapter |
-| `T4 Guard` | Surface can block or interrupt covered out-of-scope files, commands, network, or secrets before execution when the profile proves that path. | hook, permission system, policy engine, sidecar |
+| `T4 Guard` | Surface can block or interrupt covered out-of-scope files, commands, network, or secrets before execution when fixture coverage proves that concrete path for the profile. | hook, permission system, policy engine, sidecar |
 | `T5 Isolation` | Surface can run verification or risky work in a separate boundary. | worktree, sandbox, fresh process, isolated runner |
 | `T6 QA Capture` | Surface can structure browser, screenshot, walkthrough, workflow-recording, or Manual QA artifacts. | browser runner, screenshot capture, console/network capture, accessibility snapshot, QA note capture |
 
-Normal interactive Harness use is most natural at `T2` or higher. Reliable detached verification usually needs `T3` capture plus a real independence boundary. High-risk work should use a proven `T4` guard or `T5` isolation when available. `T6` improves UI/UX evidence, but it does not replace Manual QA judgment and is not required for MVP when a human QA note can be recorded.
+Normal interactive Harness use is most natural at `T2` or higher. Reliable detached verification usually needs `T3` capture plus a real independence boundary. High-risk work should use a fixture-proven `T4` guard or `T5` isolation when available. `T6` improves UI/UX evidence, but it does not replace Manual QA judgment and is not required for MVP when a human QA note can be recorded.
 
 `T6 QA Capture` profiles must name supported capture types and fallback behavior. Candidate capture types include screenshot, console log, network trace, accessibility snapshot, and workflow recording. Captured files must follow redaction and secret/PII handling before durable storage and should be registered as artifact refs attached to the Manual QA record or feedback loop execution.
 
@@ -212,7 +214,7 @@ capabilities:
   fresh_verify: fresh_session
   worktree_isolation: optional
 fallbacks:
-  - sidecar guard for proven covered operations
+  - sidecar guard for fixture-proven covered operations
   - approval card
   - fresh evaluator profile
 ```
@@ -243,22 +245,22 @@ fallbacks:
 
 Integration uses the guarantee levels defined in [Runtime Architecture Reference](runtime-architecture.md#guarantee-levels) and applies them to connected surface profiles, current enforcement paths, and fallback choices.
 
-This reference owns how connector profiles report and display those levels. It must not infer a stronger level from a surface name, and it must not treat guarantee level as approval, verification, QA, acceptance, or a kernel gate.
+This reference owns how connector profiles report and display those levels. It must not infer a stronger level from a surface name, product name, recipe name, or mode label, and it must not treat guarantee level as Approval, Write Authorization, verification, QA, acceptance, residual-risk acceptance, close readiness, or a kernel gate.
 
 | Level | Display responsibility |
 |---|---|
-| `cooperative` | Show that the surface is expected to follow Harness decisions, but Harness does not claim physical blocking before execution. |
+| `cooperative` | Show that the surface is expected to follow Harness decisions; holds are by instruction, and Harness does not claim physical blocking before execution. |
 | `detective` | Show that Harness can observe changed paths, logs, artifacts, or projection drift after action and mark state stale, blocked, partial, or failed; display this as detection, not prevention. |
-| `preventive` | Show the proven hook, wrapper, permission layer, policy engine, or sidecar path and the covered operations it can block before execution. |
-| `isolated` | Show the separate worktree, sandbox, process, evaluator bundle, or equivalent boundary used for risky work or verification. |
+| `preventive` | Show the fixture-proven hook, wrapper, permission layer, policy engine, or sidecar path and the covered operations it can block before execution. |
+| `isolated` | Show the separate worktree, sandbox, process, evaluator bundle, or equivalent boundary used for risky work or verification; do not present isolation alone as approval, acceptance, or verification. |
 
-Guard, freeze, and careful-mode labels are safety-control labels over the actual profile. Their display must say what can actually be blocked before execution and what can only be detected later.
+Guard, freeze, and careful-mode labels are safety-control labels over the actual profile, not authority tiers. Their display must say what can actually be blocked before execution and what can only be detected later.
 
 | User wording | Actual boundary |
 |---|---|
-| Freeze | A visible scope hold or stricter next-action posture around current work. On cooperative or detective profiles it is not hard prevention; persistent owner-record changes still route through the normal Core path. |
-| Guard | Cooperative, detective, preventive, or isolated protection according to the proven profile and current enforcement path. Use preventive wording only for covered operations with proven pre-execution blocking. |
-| Careful mode | Stricter `prepare_write`, scope, evidence, status refresh, and user-question posture. It is not a new authority tier and does not block by itself. |
+| Freeze | A visible scope hold or stricter next-action posture around current work. On cooperative profiles it is an instruction to hold. On detective profiles it may be paired with post-action validation. It is hard prevention only when fixture-proven pre-tool blocking covers the operation; persistent owner-record changes still route through the normal Core path. |
+| Guard | Cooperative, detective, preventive, or isolated protection according to the proven profile and current enforcement path. Use preventive wording only for covered operations with fixture-proven pre-tool blocking. |
+| Careful mode | Stricter `prepare_write`, scope, evidence, status refresh, and user-question posture. It is not a new authority tier, does not block by itself, and does not satisfy gates or decisions. |
 
 ## Generated Manifest Expectations
 
@@ -330,14 +332,14 @@ Fallbacks are described by guarantee level and risk, not by surface name.
 |---|---|---|
 | Cooperative | The surface can follow instructions but cannot enforce them. | Tell the agent to use `prepare_write`, hold on blocked decisions, and record runs. Product writes pause if authoritative MCP is unavailable or write scope cannot be checked. |
 | Detective | Harness can observe changed files, logs, projection drift, or artifact gaps after action. | Validators may mark state stale, partial, blocked, or failed and require repair, reconcile, or fresh verification. |
-| Preventive | A proven hook, permission layer, wrapper, policy engine, or sidecar can block before execution. | Claim only the operations that the proven blocking path actually covers. |
-| Isolated | Risk requires separation. | Launch work or verification in a separate worktree, sandbox, process, or manual evaluator bundle. |
+| Preventive | A fixture-proven hook, permission layer, wrapper, policy engine, or sidecar can block before execution. | Claim only the operations that the fixture-proven blocking path actually covers. |
+| Isolated | Risk requires separation. | Launch work or verification in a separate worktree, sandbox, process, or manual evaluator bundle; do not treat separation as approval, acceptance, or verification unless the relevant owner path records that result. |
 
 If MCP is unavailable, the connector must not claim authoritative state updates. `MCP_SERVER_UNAVAILABLE` and `SURFACE_MCP_UNAVAILABLE` are diagnostic conditions, not additional public `ErrorCode` values. `MCP_UNAVAILABLE` remains the stable public availability code.
 
 `MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools. Product/runtime/code writes hold until MCP is reconnected or diagnosed, unless the work is an explicit pre-MVP documentation-authoring batch under `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. That override is a documentation-maintainer override only; it is not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition.
 
-If MCP works but pre-tool guard is weak, low-risk direct work may proceed with cooperative `prepare_write` and detective changed-path validation. Medium/high-risk work should require stricter validation, a proven sidecar guard, explicit approval, detached verification, or isolation.
+If MCP works but pre-tool guard is weak, low-risk direct work may proceed with cooperative `prepare_write` and detective changed-path validation. Medium/high-risk work should require stricter validation, a fixture-proven sidecar guard, explicit approval, detached verification, or isolation.
 
 If native capture is unavailable, the connector should fall back to manual artifact capture: named artifact refs for diffs, logs, screenshots, workflow notes, command output, or QA notes supplied by the user or operator. If native isolation or fresh evaluator support is unavailable, it should fall back to a manual verification bundle with acceptance criteria, changed files, relevant refs, artifact refs, freshness state, and forbidden patterns. These fallbacks are explicit evidence routes, not upgrades to preventive or isolated guarantee levels.
 
@@ -386,7 +388,7 @@ AFK, unattended, or "continue while I am away" instructions are connector displa
 
 The surface should stop and show the smallest unblocker before scope expansion, an Autonomy Boundary breach, a new sensitive action without Approval, residual-risk acceptance, final acceptance, QA or verification waiver, public API or module contract change, release/support promise, documentation promise that changes what readers may rely on, or another public commitment that requires user-owned product or material technical judgment.
 
-Display the stop according to the capability profile. On cooperative profiles, the connector instructs the agent to hold. On detective profiles, it may also describe after-action validation that can detect and report mismatches. Preventive or isolated wording is allowed only for operations covered by a proven guard or isolation path.
+Display the stop according to the capability profile. On cooperative profiles, the connector instructs the agent to hold. On detective profiles, it may also describe after-action validation that can detect and report mismatches. Preventive wording is allowed only for operations covered by fixture-proven pre-tool blocking. Isolated wording is allowed only when the work uses a proven separation boundary.
 
 ## Reference Surface Contract
 

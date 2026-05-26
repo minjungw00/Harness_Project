@@ -315,11 +315,11 @@ MCP에 닿지 못하는 상태(MCP unavailable)도 별개입니다. 에이전트
 
 ### 보장 수준과 careful mode
 
-에이전트가 guard, freeze, careful mode 같은 말을 쓴다면 쉬운 말로 풀어야 합니다. 무엇을 실행 전에 실제로 막을 수 있고, 무엇은 실행 뒤에만 감지할 수 있는지 구분해야 합니다. Cooperative 또는 detective 접점에서 freeze는 범위 보류나 다음 행동을 더 엄격하게 제한하는 상태이지 실행 전 강제 차단이 아닙니다.
+에이전트가 guard, freeze, careful mode 같은 말을 쓴다면 쉬운 말로 풀어야 합니다. 무엇을 실행 전에 실제로 막을 수 있고, 무엇은 실행 뒤에만 감지할 수 있는지 구분해야 합니다. Cooperative 접점에서 freeze는 지시에 따른 범위 보류나 다음 행동을 더 엄격하게 제한하는 상태입니다. Detective 접점에서는 사후 check가 함께 붙을 수 있습니다. 해당 종류의 operation에 대해 연결된 profile이 pre-tool blocking을 입증했을 때만 hard prevention입니다.
 
-정확한 라벨은 보장 수준(guarantee level) 또는 접점 능력(surface capability)일 수 있습니다. 사용자가 확인해야 할 질문은 여전히 쉽습니다. "이 접점이 그 행동을 실행 전에 막을 수 있는가, 아니면 실행 뒤에 문제를 감지할 수 있을 뿐인가?"
+정확한 라벨은 보장 수준(guarantee level) 또는 접점 능력(surface capability)일 수 있습니다. 이것은 표시와 risk context이지 Approval, verification, QA, acceptance, residual-risk acceptance, close, kernel gate가 아닙니다. 사용자가 확인해야 할 질문은 여전히 쉽습니다. "이 접점이 그 행동을 실행 전에 막을 수 있는가, 아니면 실행 뒤에 문제를 감지할 수 있을 뿐인가?"
 
-AFK 또는 "내가 없는 동안 계속해"라는 지시는 권한을 넓히지 않습니다. 에이전트는 활성 Change Unit, Autonomy Boundary, granted sensitive approvals, 호환되는 write authority 안에서만 계속할 수 있습니다. Scope expansion, API/module contract나 release promise 같은 public commitment, residual-risk acceptance, final acceptance, QA 또는 verification waiver, 새 사용자 소유 제품 판단 또는 중요한 기술 판단 전에는 멈춰야 합니다. Cooperative 또는 detective surface에서 그 멈춤은 지시에 따른 보류나 사후 detection 경로이지, 강한 실행 전 차단이라고 주장하면 안 됩니다.
+AFK 또는 "내가 없는 동안 계속해"라는 지시는 권한을 넓히지 않습니다. Careful mode도 새 authority tier를 만들지 않으며 더 엄격한 진행 자세를 요청할 뿐입니다. 에이전트는 활성 Change Unit, Autonomy Boundary, granted sensitive approvals, 호환되는 write authority 안에서만 계속할 수 있습니다. Scope expansion, API/module contract나 release promise 같은 public commitment, residual-risk acceptance, final acceptance, QA 또는 verification waiver, 새 사용자 소유 제품 판단 또는 중요한 기술 판단 전에는 멈춰야 합니다. Cooperative 또는 detective surface에서 그 멈춤은 지시에 따른 보류나 사후 detection 경로이지, 강한 실행 전 차단이라고 주장하면 안 됩니다.
 
 ### Role Lens 요청
 

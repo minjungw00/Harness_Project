@@ -6,6 +6,8 @@ Use this reference to check surface-specific connector recipes for Codex, Claude
 
 This document owns local setup notes, generated file names, MCP configuration hints, capture/guard/isolation options, common fallbacks, and conformance risks that vary by surface. The common connector contract lives in [Agent Integration Reference](agent-integration.md).
 
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 A surface name never implies a guarantee level. Every connector still declares a capability profile, and the profile's proven capabilities determine the guarantee level.
 
 For generic capability profile examples, see [Agent Integration Reference](agent-integration.md#capability-profile-examples).
@@ -25,11 +27,11 @@ Each recipe should keep only surface-specific material:
 - common fallbacks
 - conformance risks
 
-Do not repeat generic kernel rules, public API schemas, or policy contracts here. The common contract determines what cooperative, detective, preventive, and isolated mean. A recipe only names the surface-specific path that can provide that behavior. Guard, freeze, and careful-mode labels may appear only as labels over the connected profile's actual capability. When a recipe uses one of those labels, it must say whether the behavior is a scope hold, a post-action detector, a proven pre-execution block, or isolation.
+Do not repeat generic kernel rules, public API schemas, or policy contracts here. The common contract determines what cooperative, detective, preventive, and isolated mean. A recipe only names the surface-specific path that can provide that behavior. Guard, freeze, and careful-mode labels may appear only as labels over the connected profile's actual capability. When a recipe uses one of those labels, it must say whether the behavior is a scope hold, a post-action detector, a fixture-proven pre-tool block, or isolation. Those labels do not authorize writes, satisfy gates, record verification, record acceptance, or create a new authority tier.
 
 The `guarantee_boundary` blocks below are recipe documentation notes, not public schema, DDL shape, or canonical Capability Profile fields. A connector may record equivalent facts in its Capability Profile or Connector Manifest only according to the [Agent Integration Reference](agent-integration.md) contract. Surface Cookbook names surface-specific paths and examples; it does not redefine guarantee levels.
 
-When a recipe lists a manual verification bundle under `fallback_isolation`, read it as verification/evaluator fallback input. A manual verification bundle does not by itself upgrade the connected surface to `preventive` or `isolated`. An `isolated` guarantee still requires a proven separate worktree, sandbox, process boundary, read-only bundle, or equivalent independence/isolation boundary.
+When a recipe lists a manual verification bundle under `fallback_isolation`, read it as verification/evaluator fallback input. A manual verification bundle does not by itself upgrade the connected surface to `preventive` or `isolated`. An `isolated` guarantee still requires a proven separate worktree, sandbox, process boundary, read-only bundle, or equivalent independence/isolation boundary, and it remains separate from Approval, QA, acceptance, and verification results.
 
 ## Codex
 
@@ -49,7 +51,7 @@ mcp_configuration_hints:
   - record generated MCP config paths, managed hashes, and profile freshness in the connector manifest
 guarantee_boundary:
   default_level: cooperative for AGENTS.md, skill, or command wording alone
-  can_block_before_execution: only covered operations through a wrapper, sidecar, host permission, or host hook that is available and proven for the concrete Codex profile
+  can_block_before_execution: only covered operations through a wrapper, sidecar, host permission, or host hook that is available and fixture-proven for the concrete Codex profile
   can_detect_after_action: changed paths, run/artifact gaps, and generated-file drift when validators or sidecars are active
   native_capture: wrapper or explicit record_run discipline when configured
   fallback_capture: manual artifact capture for diffs, logs, screenshots, command output, and QA notes
@@ -61,13 +63,13 @@ capture_guard_isolation_options:
   - manual artifact capture when wrapper or structured capture is unavailable
   - manual verification bundle when fresh evaluator support is unavailable
 common_fallbacks:
-  - cooperative prepare_write discipline unless pre-tool guard is proven
+  - cooperative prepare_write discipline unless pre-tool guard is fixture-proven
   - detective changed-path validation
   - manual artifact capture
   - manual verification bundle
   - docs-authoring override only for exact pre-MVP docs allowlists
 conformance_risks:
-  - pre-tool guard strength depends on host environment and must be proven
+  - pre-tool guard strength depends on host environment and must be fixture-proven
   - artifact capture may need a wrapper or explicit record_run discipline
   - long AGENTS.md files can bury current Harness status and authority context
   - document rewrite sessions can sprawl without batch boundaries
@@ -75,7 +77,7 @@ conformance_risks:
 
 Codex connector work should keep `AGENTS.md` short enough to scan every turn. Treat it as an always-on compass, not a procedure manual, schema reference, or project history. Put procedural depth in a skill, command, or MCP resource.
 
-Codex-facing wording may expose phrases such as "freeze this task to these paths" or "show what can actually be blocked and what can only be detected later." For profiles without proven pre-tool blocking, describe freeze as a cooperative scope hold or stricter next-action posture plus detective changed-path validation when available, not as preventive guard.
+Codex-facing wording may expose phrases such as "freeze this task to these paths" or "show what can actually be blocked and what can only be detected later." For profiles without fixture-proven pre-tool blocking, describe freeze as a cooperative scope hold or stricter next-action posture plus detective changed-path validation when available, not as preventive guard.
 
 ## Claude Code
 
@@ -96,7 +98,7 @@ mcp_configuration_hints:
   - record hook paths, MCP generated paths, managed hashes, and profile freshness in the connector manifest
 guarantee_boundary:
   default_level: cooperative for CLAUDE.md or skill wording alone
-  can_block_before_execution: only covered operations through configured and conformance-proven PreToolUse hooks, wrappers, sidecars, or permissions
+  can_block_before_execution: only covered operations through configured and fixture-proven PreToolUse hooks, wrappers, sidecars, or permissions
   can_detect_after_action: changed files, command output, log artifacts, and stop summaries through PostToolUse or Stop hooks when configured
   native_capture: hook, wrapper, or structured run summary when configured
   fallback_capture: manual artifact capture for diffs, logs, screenshots, command output, and QA notes
@@ -104,7 +106,7 @@ guarantee_boundary:
 capture_guard_isolation_options:
   - SessionStart hook for Journey Card or status card injection
   - UserPromptSubmit hook for intake and shaping guidance
-  - PreToolUse hook for covered edit, command, network, or secret guard when configured and proven
+  - PreToolUse hook for covered edit, command, network, or secret guard when configured and fixture-proven
   - PostToolUse hook for changed files, command output, and log artifact candidates
   - Stop hook for run summary and verify/QA needs
   - PreCompact hook for Task summary and artifact refs
@@ -115,14 +117,14 @@ common_fallbacks:
   - manual artifact capture
   - manual verification bundle
   - stop-hook report draft
-  - cooperative scope hold or careful-mode instruction when hooks are absent or unproven
+  - cooperative scope hold or careful-mode instruction when hooks are absent or not fixture-proven
 conformance_risks:
   - hook behavior is version and configuration dependent
   - read-only verification profile must be tested by conformance
-  - PreToolUse can claim preventive guard only for covered operations it is proven to block
+  - PreToolUse can claim preventive guard only for covered operations it is fixture-proven to block before execution
 ```
 
-Claude Code recipes may map "guard" to `PreToolUse` only when that hook is configured and conformance proves it can block the covered operation before execution. Otherwise, freeze and careful mode remain cooperative scope-hold or stricter next-action instructions plus any available post-tool capture.
+Claude Code recipes may map "guard" to `PreToolUse` only when that hook is configured and fixture coverage proves it can block the covered operation before execution. Otherwise, freeze and careful mode remain cooperative scope-hold or stricter next-action instructions plus any available post-tool capture.
 
 ## Gemini
 
@@ -144,7 +146,7 @@ mcp_configuration_hints:
   - record extension, wrapper, sidecar, MCP generated paths, managed hashes, and profile freshness in the connector manifest
 guarantee_boundary:
   default_level: cooperative for extension or prompt package wording alone
-  can_block_before_execution: only covered paths or commands through a proven CLI wrapper, sidecar-controlled run, policy layer, or host permission
+  can_block_before_execution: only covered paths or commands through a fixture-proven CLI wrapper, sidecar-controlled run, policy layer, or host permission
   can_detect_after_action: changed paths, command output, artifact gaps, and generated-file drift when wrapper, sidecar, or validators are active
   native_capture: CLI wrapper, sidecar, or host capture when configured
   fallback_capture: manual artifact capture for diffs, logs, screenshots, command output, and QA notes
@@ -164,7 +166,7 @@ common_fallbacks:
   - cooperative hold or narrowed boundary when only extension wording is available
 conformance_risks:
   - extension context can become too large
-  - capture and guard behavior varies by host profile and must be proven for covered operations
+  - capture and guard behavior varies by host profile and must be fixture-proven for covered operations
   - extension wording alone must not be reported as a guard
 ```
 
@@ -191,7 +193,7 @@ mcp_configuration_hints:
   - record generated custom instruction, task, wrapper, MCP paths, managed hashes, and profile freshness in the connector manifest
 guarantee_boundary:
   default_level: cooperative for custom instruction or chat wording alone
-  can_block_before_execution: only covered operations through a proven VS Code task wrapper, terminal wrapper, sidecar, host permission, or cloud policy path
+  can_block_before_execution: only covered operations through a fixture-proven VS Code task wrapper, terminal wrapper, sidecar, host permission, or cloud policy path
   can_detect_after_action: task output, changed files, command logs, artifact gaps, and generated-file drift when wrapper, sidecar, or validators are active
   native_capture: VS Code task, terminal wrapper, sidecar, or profile-specific capture when configured
   fallback_capture: manual artifact capture for diffs, logs, screenshots, command output, and QA notes
@@ -200,7 +202,7 @@ capture_guard_isolation_options:
   - VS Code task wrapper for owned task capture
   - sidecar adapter for changed-file or command observation
   - manual artifact capture when task, wrapper, or sidecar capture is unavailable
-  - profile-specific guard only when the host is proven to block covered operations
+  - profile-specific guard only when the host is fixture-proven to block covered operations before execution
   - explicit approval card display for sensitive changes
 common_fallbacks:
   - VS Code task wrapper
@@ -215,7 +217,7 @@ conformance_risks:
   - user-facing freeze cards must show allowed paths and what can actually be blocked versus detected later
 ```
 
-Copilot recipes should not blur IDE and cloud behavior. A VS Code task wrapper may support detective capture or preventive blocking for tasks it owns when the profile proves that behavior, while chat instructions alone remain cooperative.
+Copilot recipes should not blur IDE and cloud behavior. A VS Code task wrapper may support detective capture or preventive blocking for tasks it owns when fixture coverage proves that behavior, while chat instructions alone remain cooperative.
 
 ## Cursor
 
@@ -236,7 +238,7 @@ mcp_configuration_hints:
   - record generated rule, sidecar, MCP paths, managed hashes, and profile freshness in the connector manifest
 guarantee_boundary:
   default_level: cooperative for Cursor project-rule wording alone
-  can_block_before_execution: only covered operations through proven IDE permission support, wrapper, sidecar, or policy path
+  can_block_before_execution: only covered operations through fixture-proven IDE permission support, wrapper, sidecar, or policy path
   can_detect_after_action: changed files, generated-file drift, artifact gaps, and validator findings when sidecar or validators are active
   native_capture: sidecar, wrapper, or IDE capture when configured
   fallback_capture: manual artifact capture for diffs, logs, screenshots, command output, and QA notes
@@ -244,7 +246,7 @@ guarantee_boundary:
 capture_guard_isolation_options:
   - sidecar changed-file detection
   - generated file drift detection
-  - IDE permission support when available and proven
+  - IDE permission support when available and fixture-proven
   - manual artifact capture when native capture is unavailable
   - manual verification bundle
 common_fallbacks:
@@ -252,11 +254,11 @@ common_fallbacks:
   - generated file drift detection
   - manual artifact capture
   - manual verification bundle
-  - cooperative project-rule instruction when IDE permissions are unproven
+  - cooperative project-rule instruction when IDE permissions are not fixture-proven
 conformance_risks:
   - project rules can become too verbose
-  - guard coverage depends on IDE profile and proven permissions
+  - guard coverage depends on IDE profile and fixture-proven permissions
   - generated project rules must become reconcile candidates when locally edited
 ```
 
-Cursor connectors should keep project rules short and use the skill/playbook plus MCP for procedural depth. Project-rule wording alone is cooperative; IDE permission or sidecar proof is required before claiming preventive guard behavior.
+Cursor connectors should keep project rules short and use the skill/playbook plus MCP for procedural depth. Project-rule wording alone is cooperative; IDE permission or sidecar fixture proof is required before claiming preventive guard behavior.

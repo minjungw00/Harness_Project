@@ -48,7 +48,7 @@ Show:
 - secondary blockers only when they still affect the follow-on path
 - write authority status when writes are possible or near
 - evidence, verification, Manual QA, residual-risk, and acceptance status when those affect the next decision or close readiness
-- guarantee level and what the surface can actually block or only detect
+- guarantee level and what the surface can actually block or only detect, as display and risk context rather than approval, verification, acceptance, or a gate
 - compact gate and projection freshness status
 - when guard, freeze, or careful mode is relevant, what can actually be blocked before execution and what can only be detected after action
 
@@ -68,7 +68,7 @@ If projection, `source_state_version`, or readable status is stale or unknown, s
 
 Keep display failures separate. A stale projection means the readable card/report may lag and needs refresh or reconcile before it becomes dependable context. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient and may block writes or close. MCP unavailable means the agent cannot reach the required Harness/Core capability; do not claim authoritative state changes, Approval, result acceptance, residual-risk acceptance, gate updates, projection repairs, or close until that capability is available again.
 
-If Core itself is unreachable, the display issue is `MCP_SERVER_UNAVAILABLE`: say Core cannot be reached and reconnect or diagnose before claiming state changed. If Core or the operator can tell that the current surface lacks usable MCP, the display issue is `SURFACE_MCP_UNAVAILABLE`: say this surface cannot use the required Harness tools, then hold writes by instruction or switch to a capable surface. Only say execution was blocked before action when a proven preventive guard covered that operation.
+If Core itself is unreachable, the display issue is `MCP_SERVER_UNAVAILABLE`: say Core cannot be reached and reconnect or diagnose before claiming state changed. If Core or the operator can tell that the current surface lacks usable MCP, the display issue is `SURFACE_MCP_UNAVAILABLE`: say this surface cannot use the required Harness tools, then hold writes by instruction or switch to a capable surface. Surface name alone does not prove capability. Only say execution was blocked before action when a preventive guard has proven pre-tool blocking for that covered operation.
 
 ## Reading status and blockers
 
@@ -98,7 +98,7 @@ Common display examples:
 |---|---|---|
 | `STATE_CONFLICT` | State changed since this view. | Refresh status and retry with the current state version. |
 | `MCP_UNAVAILABLE` with `details.mcp_unavailable_kind=server_unavailable`, or diagnostic `MCP_SERVER_UNAVAILABLE` | Core cannot be reached. | Reconnect or diagnose Core access before claiming state changes. |
-| `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` with `details.mcp_unavailable_kind=surface_mcp_unavailable`, or diagnostic `SURFACE_MCP_UNAVAILABLE` | This surface cannot use the required Harness tools. | Repair the surface or switch to a capable surface; hold writes by instruction unless a proven guard blocks execution. |
+| `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` with `details.mcp_unavailable_kind=surface_mcp_unavailable`, or diagnostic `SURFACE_MCP_UNAVAILABLE` | This surface cannot use the required Harness tools. | Repair the surface or switch to a capable surface; hold writes by instruction unless the profile has proven pre-tool blocking for the covered operation. |
 | `MCP_UNAVAILABLE` with no useful detail | Harness/Core capability is unavailable. | Reconnect, repair the surface, or switch to a capable surface before claiming state changes. |
 | `CAPABILITY_INSUFFICIENT` | This surface cannot provide the needed guarantee. | Use a capable profile, reduce the operation, or choose a path that does not need that capability. |
 | `NO_ACTIVE_TASK` | No active Task is selected. | Select or create the Task before continuing. |
@@ -272,7 +272,7 @@ When the user says to continue while they are away, treat that as permission to 
 
 Stop and surface the smallest unblocker before scope expansion, new sensitive action without approval, Autonomy Boundary breach, residual-risk acceptance, final acceptance, QA or verification waiver, public API or module contract change, release/support promise, or other public commitment that users or other systems may rely on.
 
-Name the guarantee level when presenting AFK stops. On cooperative or detective surfaces, "stop" means hold by instruction or detect/report after action if the profile supports that validation. Use preventive wording only when the connected profile proves pre-execution blocking for the covered operation.
+Name the guarantee level when presenting AFK stops. On cooperative or detective surfaces, "stop" means hold by instruction or detect/report after action if the profile supports that validation. Use preventive wording only when the connected profile proves pre-tool blocking for the covered operation. Careful mode may narrow the posture, but it is not a new authority tier.
 
 ## Product writes
 
@@ -286,9 +286,9 @@ Scope basis: email login Change Unit
 Limitation: cooperative surface; changed-path validation detects violations after the fact
 ```
 
-For external side effects, separate the before-action claim from the after-action record. Before action, say the intended effect, sensitive category, Approval or Decision Packet need, and guarantee level. After action, say what actually happened, which Run/artifact/evidence refs were recorded, and whether anything was redacted, omitted, blocked, stale, or a violation. Exact guarantee-level semantics are owned by [Runtime Architecture Reference](../reference/runtime-architecture.md#guarantee-levels).
+For external side effects, separate the before-action claim from the after-action record. Before action, say the intended effect, sensitive category, Approval or Decision Packet need, and guarantee level. After action, say what actually happened, which Run/artifact/evidence refs were recorded, and whether anything was redacted, omitted, blocked, stale, or a violation. Guarantee level is display and risk context; it does not grant Approval, verify the result, record QA, accept risk, accept the result, or close the Task. Exact guarantee-level semantics are owned by [Runtime Architecture Reference](../reference/runtime-architecture.md#guarantee-levels).
 
-Do not describe a cooperative or detective hold as if it blocks execution. Say that writes are held by instruction, or that violations can be detected after action when the connected profile supports that validation. Use preventive wording only for proven pre-execution blocking on the covered operation.
+Do not describe a cooperative or detective hold as if it blocks execution. Say that writes are held by instruction, or that violations can be detected after action when the connected profile supports that validation. Use preventive wording only for proven pre-tool blocking on the covered operation.
 
 If write authority is blocked, unavailable, stale, or incompatible with the intended change, hold product writes and explain the smallest unblocker.
 

@@ -313,11 +313,11 @@ Typical recovery readings:
 
 ### guarantee level and careful mode
 
-If the agent uses words like guard, freeze, or careful mode, it should explain them in ordinary terms: what can actually be blocked before execution, and what can only be detected later. A freeze on a cooperative or detective surface means a scope hold or stricter next-action posture, not hard prevention.
+If the agent uses words like guard, freeze, or careful mode, it should explain them in ordinary terms: what can actually be blocked before execution, and what can only be detected later. A freeze on a cooperative surface means a scope hold or stricter next-action posture by instruction. On a detective surface it may also include after-action checks. It is hard prevention only when the connected profile has proven pre-tool blocking for that exact kind of operation.
 
-The exact label may be guarantee level or surface capability. The useful question is still plain: "Can this surface prevent the action before it happens, or only detect a problem afterward?"
+The exact label may be guarantee level or surface capability. It is display and risk context, not Approval, verification, QA, acceptance, residual-risk acceptance, close, or a kernel gate. The useful question is still plain: "Can this surface prevent the action before it happens, or only detect a problem afterward?"
 
-AFK or "continue while I am away" instructions do not expand authority. The agent may continue only inside the active Change Unit, Autonomy Boundary, granted sensitive approvals, and compatible write authority. It should stop before scope expansion, public commitments such as API/module contracts or release promises, residual-risk acceptance, final acceptance, QA or verification waivers, or any new user-owned product or material technical judgment. On cooperative or detective surfaces, that stop is a held instruction or later detection path, not a claim of hard pre-execution blocking.
+AFK or "continue while I am away" instructions do not expand authority. Careful mode also does not create a new authority tier; it just asks the agent to use a stricter posture. The agent may continue only inside the active Change Unit, Autonomy Boundary, granted sensitive approvals, and compatible write authority. It should stop before scope expansion, public commitments such as API/module contracts or release promises, residual-risk acceptance, final acceptance, QA or verification waivers, or any new user-owned product or material technical judgment. On cooperative or detective surfaces, that stop is a held instruction or later detection path, not a claim of hard pre-execution blocking.
 
 ### Role Lens requests
 
