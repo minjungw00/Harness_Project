@@ -62,7 +62,7 @@ README 문서는 경로별 소유권을 요약할 수 있지만 엄격한 계약
 
 ## 문서 시작 방식
 
-재설계된 문서는 짧고 예측 가능한 시작부를 둡니다. 길게 설명하지 않더라도 독자의 경로가 보여야 합니다.
+재설계된 문서는 짧고 예측 가능한 시작부를 둡니다. 길게 설명하지 않더라도 독자의 경로가 보여야 합니다. `reference/templates` 아래의 템플릿 참조 파일은 일반 시작 heading 대신 아래의 템플릿 전용 시작 방식을 사용합니다.
 
 ### 이 문서로 할 수 있는 일
 
@@ -83,6 +83,21 @@ README 문서는 경로별 소유권을 요약할 수 있지만 엄격한 계약
 ### Reference 범위
 
 Reference 문서에만 둡니다. 이 문서가 어떤 정확한 계약을 담당하고, 무엇을 담당하지 않는지 밝힙니다. 이렇게 해야 Learn, Use, Build 문서로 엄격한 세부사항이 퍼지지 않습니다.
+
+### 템플릿 참조 시작 방식
+
+템플릿 참조 파일은 위 일반 시작 heading의 명시적 예외입니다. Docs-maintenance는 directory index인 `docs/*/reference/templates/README.md`와 개별 template인 `docs/*/reference/templates/` 아래의 README가 아닌 Markdown file을 경로로 구분해야 합니다.
+
+디렉터리 README는 `사용 시점`으로 시작한 뒤 `템플릿 계층`을 둡니다. 이 README는 디렉터리가 렌더링된 template body와 display card shape를 담당하며, projection rule, freshness behavior, authority boundary는 각 Reference owner에 남는다는 점을 설명해야 합니다.
+
+개별 template file은 다음 section을 이 순서로 시작해야 합니다.
+
+- `사용 시점`: 독자 목적과 projection 또는 display 상황.
+- `기준 기록`: renderer가 읽을 수 있는 owner record, ref, gate, artifact, summary.
+- `렌더링 섹션`: 독자가 기대해야 하는 display shape.
+- `전체 템플릿`: 완전한 rendered body 또는 card body.
+
+Template file은 시작 설명이나 `메모` 근처에서 권한 없음 경계를 보여줘야 합니다. Template은 렌더링 표시일 뿐이며 기준 상태, gate authority, Approval, acceptance, evidence, schema, DDL, runtime behavior가 아닙니다.
 
 ## 개념 소개 규칙
 
@@ -186,6 +201,7 @@ Result 의미:
 |---|---|
 | 영어/한국어 파일 구조 일치 | 명시적인 예외가 문서화되지 않는 한 `docs/en`과 `docs/ko`는 같은 활성 문서 경로를 유지합니다. |
 | 영어/한국어 의미 섹션 일치 | 대응 파일은 같은 활성 파일 맵과 의미상 같은 섹션 범위를 유지합니다. Owner 링크, stable identifier, schema name, enum value, DDL name, validator ID, code identifier, 검토 가능성이 분명하다면 heading text와 작은 묶음 방식은 자연스럽게 조정할 수 있습니다. |
+| 시작 방식 준수 | Template이 아닌 재설계 문서는 표준 시작 방식을 사용합니다. `docs/*/reference/templates/README.md`는 `사용 시점`과 `템플릿 계층`을 사용하고, `docs/*/reference/templates/` 아래의 `README.md`가 아닌 개별 template file은 `사용 시점`, `기준 기록`, `렌더링 섹션`, `전체 템플릿`과 명확한 권한 없음 경계를 사용합니다. |
 | 깨진 교차 참조 탐지 | Markdown links, heading anchors, template/reference links, paired-language entry links가 활성 문서로 연결됩니다. |
 | Owner 경계 불일치 | 정확한 계약은 활성 owner 문서에 머뭅니다. 여기에는 `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, `reference/glossary.md`가 포함됩니다. |
 | Fixture/action schema 불일치 | Operations fixture examples의 `action`과 실행 가능한 `input`은 `reference/mcp-api-and-schemas.md`의 public MCP request schemas 및 `reference/operations-and-conformance.md`의 `ToolEnvelope` expansion convention과 일치해야 합니다. Fixture 의미는 여기서 다시 설명하지 않고 링크합니다. |
@@ -199,7 +215,7 @@ Result 의미:
 ```text
 [ ] 이 문서는 분명한 독자 상황을 돕는가?
 [ ] README 진입점이 처음 읽는 사람, 사용자, 구현자, Reference 독자, 유지보수 담당자를 빠르게 안내하는가?
-[ ] 시작부가 표준 패턴을 따르는가?
+[ ] 시작부가 표준 패턴 또는 `reference/templates` 파일의 템플릿 전용 패턴을 따르는가?
 [ ] 개념을 엄격한 정의보다 예시로 먼저 소개하는가?
 [ ] strict schema, gate, DDL, enum, invariant가 Reference 문서에 머무는가?
 [ ] 긴 기준 기록 문단과 중복된 규범 계약 블록을 반복하지 않고 요약과 링크로 처리했는가?

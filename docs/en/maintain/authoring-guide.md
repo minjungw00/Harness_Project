@@ -62,7 +62,7 @@ README pages may summarize path ownership, but they should not copy strict contr
 
 ## Standard opening pattern
 
-Every redesigned document should begin with a short, predictable opening. Keep it compact, but make the reader's path clear.
+Every redesigned document should begin with a short, predictable opening. Keep it compact, but make the reader's path clear. Template reference files under `reference/templates` use the template-specific opening below instead of the general opening headings.
 
 ### What this document helps you do
 
@@ -83,6 +83,21 @@ Give the reader the central model or claim that will make the rest of the page e
 ### Reference scope, only for reference docs
 
 Reference docs should state the exact contract they own and what they deliberately do not own. This prevents strict details from spreading across Learn, Use, and Build docs.
+
+### Template reference opening, only for `reference/templates`
+
+Template reference files are the explicit exception to the general opening headings above. Docs-maintenance should identify them by path: `docs/*/reference/templates/README.md` for the directory index and non-README Markdown files under `docs/*/reference/templates/` for individual templates.
+
+The directory README should begin with `Used when`, then `Template tiering`. It should explain that the directory owns rendered template bodies and display card shapes while projection rules, freshness behavior, and authority boundaries stay with their reference owners.
+
+Each individual template file should begin with these sections, in this order:
+
+- `Used when`: the reader purpose and projection or display situation.
+- `Source records`: the owner records, refs, gates, artifacts, or summaries the renderer may read.
+- `Rendered sections`: the display shape readers should expect.
+- `Full template`: the complete rendered body or card body.
+
+Template files must also make the non-authority boundary visible, either in the opening explanation or near `Notes`: a template is rendered display, not canonical state, gate authority, approval, acceptance, evidence, schema, DDL, or runtime behavior.
 
 ## Concept introduction rule
 
@@ -186,6 +201,7 @@ Required check categories:
 |---|---|
 | English/Korean file structure parity | `docs/en` and `docs/ko` keep the same active document paths unless an exception is explicitly documented. |
 | English/Korean semantic section parity | Paired files keep the same active file map and semantic section coverage. Heading text and minor grouping may be idiomatic when owner links, stable identifiers, schema names, enum values, DDL names, validator IDs, code identifiers, and reviewability remain clear. |
+| Opening convention compliance | Non-template redesigned docs use the standard opening pattern. `docs/*/reference/templates/README.md` uses `Used when` plus `Template tiering`; individual template files under `docs/*/reference/templates/` other than `README.md` use `Used when`, `Source records`, `Rendered sections`, and `Full template`, plus a visible non-authority boundary. |
 | Broken cross-reference detection | Markdown links, heading anchors, template/reference links, and paired-language entry links resolve to active docs. |
 | Owner-boundary drift | Exact contracts stay in their active owners, including `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, and `reference/glossary.md`. |
 | Fixture/action schema drift | Operations fixture examples keep `action` and executable `input` aligned with public MCP request schemas in `reference/mcp-api-and-schemas.md` and the `ToolEnvelope` expansion convention in `reference/operations-and-conformance.md`; fixture semantics are linked, not restated here. |
@@ -199,7 +215,7 @@ Required check categories:
 ```text
 [ ] Does the document serve a clear reader situation?
 [ ] Do README entrypoints route first-time readers, users, implementers, reference readers, and maintainers quickly?
-[ ] Does the opening follow the standard pattern?
+[ ] Does the opening follow the standard pattern, or the template-specific pattern for `reference/templates` files?
 [ ] Are concepts introduced through examples before strict definitions?
 [ ] Are strict schemas, gates, DDL, enums, and invariants kept in Reference docs?
 [ ] Are long source-of-truth paragraphs and duplicated normative contract blocks summarized and linked instead of repeated?
