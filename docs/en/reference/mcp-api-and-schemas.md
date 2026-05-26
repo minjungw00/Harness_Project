@@ -38,6 +38,8 @@ This document owns:
 - `ValidatorResult`
 - artifact input and artifact ref schema as public API shapes
 
+For conformance fixtures, these public request schemas are exact. Catalog-only skeleton guidance in [Operations And Conformance](operations-and-conformance.md#catalog-only-fixture-skeleton-guidance) may say which action a scenario should drive, but it does not add request fields, alternate payload branches, or fixture-only API shortcuts. Executable fixture `input` must validate against the public request schema for the selected action after any documented `ToolEnvelope` expansion.
+
 ## Not covered here
 
 This document does not own:

@@ -710,6 +710,8 @@ Stable event names are the `event_type` values that MVP conformance fixtures may
 
 The catalog is deliberately compact. Non-stable implementation-local detail or audit events, plus future extension events, may still be recorded in `task_events`, but MVP fixture authors must not require them in `expected_events` until they are added here.
 
+Catalog-only fixture skeletons in [Operations And Conformance](operations-and-conformance.md#catalog-only-fixture-skeleton-guidance) may name expected event behavior at a family level. When a catalog entry becomes executable, `expected_events` still asserts only the stable names above; read-only status/next and docs-maintenance scenarios should normally require no stable events unless a documented Core action commits state.
+
 
 | Trigger | From | To | Gate or record effect |
 |---|---|---|---|
