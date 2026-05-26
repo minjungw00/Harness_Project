@@ -4,7 +4,7 @@
 
 이 문서는 MVP 범위를 구현 순서로 다시 정리합니다. 구현 단계는 저장소 스키마, DDL, projection 템플릿 본문, 운영자 명령 문법과 분리해서 설명합니다.
 
-이 문서는 구현 계획 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현을 시작하라는 뜻이 아닙니다.
+이 문서는 구현 계획 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 Kernel Smoke입니다. 즉 모듈을 가진 로컬 프로세스 하나로 권한 루프 하나를 증명합니다. Agency-Hardened MVP는 Kernel Smoke 이후의 later hardening과 conformance target이며, roadmap automation은 owner 문서가 승격하고 증명하기 전까지 MVP 밖에 둡니다.
 
 첫 실행 가능한 조각 이후 무엇을 만들지 계획할 때 이 문서를 사용합니다. 정확한 규칙은 reference 문서를 봅니다.
 
@@ -20,9 +20,9 @@
 
 ## 핵심 생각
 
-MVP 구현은 좁은 Kernel Smoke 경로에서 시작해 Agency-Hardened MVP로 확장됩니다. Later automation은 future owner가 [로드맵 승격 규칙](../roadmap.md#승격-규칙)을 통해 승격하고 별도로 증명하기 전까지 경계 밖에 둡니다.
+MVP 구현은 좁은 Kernel Smoke 경로에서 시작하고, 그 뒤 Agency-Hardened MVP를 향해 단단해집니다. Later automation은 future owner가 [로드맵 승격 규칙](../roadmap.md#승격-규칙)을 통해 승격하고 별도로 증명하기 전까지 경계 밖에 둡니다.
 
-이 계획의 중심은 Core state, `task_events`, artifact refs, 근거, blocker, 그리고 그 권한 경로를 실행해 볼 최소 reference surface와 MCP reachability입니다. Projection template 다듬기, dashboard, index, hook expansion, 넓은 connector ecosystem 또는 marketplace, 접점별 connector automation, broad automation은 그 경로가 존재한 뒤에 유용해집니다. 첫 구축 대상이 아닙니다.
+이 계획의 중심은 Core state, `task_events`, artifact refs, 근거, blocker, 그리고 그 권한 경로를 실행해 볼 최소 reference surface와 MCP reachability입니다. 초기 구현 가정은 모듈을 가진 로컬 프로세스 하나로 남습니다. Projection template 다듬기, dashboard 또는 hosted workflow UI, index, hook expansion, 넓은 connector ecosystem 또는 marketplace, team workflow, 접점별 connector automation, metrics, parallel orchestration, broad automation은 그 경로가 존재한 뒤에 유용해집니다. 첫 구축 대상이 아닙니다.
 
 ## MVP 범위, 쉬운 말로
 
@@ -48,7 +48,7 @@ MVP는 하나의 로컬 프로젝트와 하나의 기준 agent 접점이 Harness
 
 ## Kernel Smoke
 
-Kernel Smoke는 첫 실행 가능한 conformance 목표입니다. MVP-0부터 early MVP-3까지를 가로지르지만 선택한 권한 경로에만 집중합니다.
+Kernel Smoke는 첫 실행 가능한 conformance 목표이자 첫 구현/증명 대상입니다. MVP-0부터 early MVP-3까지를 가로지르지만 선택한 권한 경로에만 집중합니다.
 
 다음을 증명해야 합니다.
 
@@ -72,7 +72,7 @@ Kernel Smoke는 나머지 시스템이 완성되기 전에 Harness 쓰기 권한
 
 ## Agency-Hardened MVP
 
-Agency-Hardened MVP는 최종 reference conformance 목표입니다. 나머지 MVP-3을 완료한 뒤 MVP-4와 MVP-5를 추가합니다.
+Agency-Hardened MVP는 later hardening이자 최종 reference conformance 목표이며, 첫 구현 batch가 아닙니다. 나머지 MVP-3을 완료한 뒤 MVP-4와 MVP-5를 추가합니다.
 
 다음을 증명해야 합니다.
 
@@ -108,7 +108,7 @@ Agency-Hardened MVP를 통과하면 로컬 reference MVP가 구현에 사용할 
 - honest cooperative 또는 detective 능력을 가진 기준 agent 접점 등록
 - doctor/readiness 상태 표시
 
-여기서 multi-project orchestration이나 connector ecosystem은 추가하지 않습니다.
+여기서 multi-project orchestration, team workflow, hosted workflow UI, metrics, connector ecosystem은 추가하지 않습니다.
 
 ### MVP-1: Core State, Journey/Decision Skeleton, MCP Facade
 
@@ -183,7 +183,7 @@ Projection failure는 Core 상태 failure와 분리됩니다.
 - Decision Packet 닫기 확인
 - 닫기 차단 조건 표시
 
-MVP에서 자동 Browser QA Capture를 요구하지 않습니다. screenshot, console log, network trace, accessibility snapshot, workflow recording은 기존 Manual QA/artifact path를 통해 등록되고 연결될 때만 QA evidence를 보강할 수 있지만, MVP 요구사항은 Manual QA 기록과 artifact ref입니다. 캡처 자료는 Manual QA judgment나 acceptance를 대체하지 않습니다.
+MVP에서 자동 Browser QA Capture나 hosted workflow automation을 요구하지 않습니다. screenshot, console log, network trace, accessibility snapshot, workflow recording은 기존 Manual QA/artifact path를 통해 등록되고 연결될 때만 QA evidence를 보강할 수 있지만, MVP 요구사항은 Manual QA 기록과 artifact ref입니다. 캡처 자료는 Manual QA judgment나 acceptance를 대체하지 않습니다.
 
 ### MVP-5: Operator Smoke, Agency Conformance, Later-Boundary Checks
 
@@ -198,20 +198,71 @@ MVP에서 자동 Browser QA Capture를 요구하지 않습니다. screenshot, co
 - artifact 무결성 확인
 - fixture 기반 conformance smoke
 - Journey 표시, 사용자 판단, Autonomy Boundary 준수, 남은 위험 표시를 대상으로 하는 agency conformance
-- Dashboard, Browser QA Capture, Cross-Surface Verification, Context Index, parallel orchestration, broad connector automation, native hook 또는 sidecar expansion, derived metrics, preventive guard expansion을 별도 증명과 승격 없이는 MVP 밖에 두는 later 경계 확인
+- Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, parallel orchestration, team workflow, broad connector automation, native hook 또는 sidecar expansion, derived metrics, preventive guard expansion을 별도 증명과 승격 없이는 MVP 밖에 두는 later 경계 확인
 
 운영자 명령을 위해 두 번째 상태 모델을 만들지 않습니다. Operator는 같은 Core 상태 모델 위에서 진단, 복구, export, fixture 실행을 수행합니다.
 
 ## Stage별 완료 기준
 
-| Stage | 완료 기준 |
-|---|---|
-| MVP-0 | 프로젝트 하나가 등록되고, expected state version을 사용하는 상태 변경 전에 project state가 존재해야 한다. 기준 agent 접점이 등록되어 있고, runtime 파일과 artifact 저장소가 있으며, doctor/readiness가 프로젝트와 runtime 상태를 표시할 수 있어야 한다. |
-| MVP-1 | No-active-Task 상태 표시가 동작해야 한다. advisor Task는 Core를 통해 intake와 close를 할 수 있어야 하며, Task 상태는 Journey/Decision 상태를 보여 줘야 한다. 읽기 안내는 권한을 만들지 않아야 하고, 진행을 막는 사용자 판단은 Decision Packet을 만들거나 연결할 수 있어야 한다. 모든 상태 변경은 현재 기록과 `task_events`를 하나의 transaction에서 갱신해야 한다. |
-| MVP-2 | Active scoped Change Unit이 없는 제품 파일 쓰기는 차단되어야 한다. Sensitive change는 approval을 요구해야 하며, Autonomy Boundary violation은 차단되거나 Decision Packet으로 라우팅되어야 한다. 해소되지 않은 blocking Decision Packet은 영향받는 쓰기를 차단해야 한다. 허용된 `prepare_write`는 durable Write Authorization ref를 만들고, idempotent replay가 동작해야 한다. Approval drift는 approval을 차단하거나 만료시킬 수 있어야 하며, shaping은 필요한 경계를 기록해야 한다. Raw artifact는 integrity/redaction metadata를 저장해야 한다. |
-| MVP-3 | `direct` 및 구현 Run은 artifact를 등록하고 근거를 갱신해야 한다. Run은 compatible Write Authorization을 한 번 사용한 것으로 기록해야 하며, authorization 밖의 observed change는 감지되어야 한다. 발견된 사항은 상태, 근거, Decision Packet, Change Unit, 차단 조건 중 적절한 경로로 연결되어야 한다. Stewardship issue가 보여야 하고, 검증 전 MVP 필수 projection은 대기열에 넣거나 렌더링할 수 있어야 한다. Projection failure는 상태와 분리되어 처리되어야 하며, managed Markdown edit는 reconcile item을 만들어야 한다. |
-| MVP-4 | work는 같은 세션의 self-review만으로 detached verified 상태로 닫힐 수 없어야 한다. Verification waiver는 accepted risk로만 닫을 수 있어야 하며, required Manual QA와 acceptance는 독립적으로 차단해야 한다. Close-relevant residual risk는 successful close 전에 보여야 한다. Risk-accepted close에는 accepted Residual Risk refs가 필요하고, acceptance는 risk visibility 뒤에 와야 한다. Blocking Decision Packet은 close를 차단해야 하며, policy 또는 사용자가 detached verification을 요구하지 않는 한 direct work는 self-checked로 닫힐 수 있어야 한다. |
-| MVP-5 | Conformance smoke는 core, connector, agency, stewardship, context-hygiene, 설계 품질 경로를 포괄해야 한다. Agency 점검은 Journey 표시, 해소되지 않은 결정, agent latitude, 남은 위험 표시를 증명해야 한다. Dependency DAG 지원은 metadata만 남아야 하며, export는 state snapshots, 보고서 projection, artifact refs, redaction status를 포함해야 한다. |
+다음은 구현자가 읽기 쉬운 checklist입니다. Stage별 완료 기준을 다시 쓴 것이며, schema, fixture, DDL, runtime requirement를 새로 추가하지 않습니다.
+
+### MVP-0 완료 checklist
+
+- 프로젝트 하나가 등록되어 있다.
+- Expected state version을 사용하는 상태 변경 전에 project state가 존재한다.
+- 기준 agent 접점이 등록되어 있다.
+- Runtime 파일과 artifact 저장소가 있다.
+- Doctor/readiness가 프로젝트와 runtime 상태를 표시할 수 있다.
+
+### MVP-1 완료 checklist
+
+- No-active-Task 상태 표시가 동작한다.
+- Advisor Task가 Core를 통해 intake와 close를 할 수 있다.
+- Task 상태가 Journey/Decision 상태를 보여 준다.
+- 읽기 안내는 권한을 만들지 않는다.
+- 진행을 막는 사용자 판단은 Decision Packet을 만들거나 연결할 수 있다.
+- 모든 상태 변경은 현재 기록과 `task_events`를 하나의 transaction에서 갱신한다.
+
+### MVP-2 완료 checklist
+
+- Active scoped Change Unit이 없는 제품 파일 쓰기는 차단된다.
+- Sensitive change는 approval을 요구한다.
+- Autonomy Boundary violation은 차단되거나 Decision Packet으로 라우팅된다.
+- 해소되지 않은 blocking Decision Packet은 영향받는 쓰기를 차단한다.
+- 허용된 `prepare_write`는 durable Write Authorization ref를 만든다.
+- Idempotent replay가 동작한다.
+- Approval drift는 approval을 차단하거나 만료시킬 수 있다.
+- Shaping은 필요한 경계를 기록한다.
+- Raw artifact는 integrity/redaction metadata를 저장한다.
+
+### MVP-3 완료 checklist
+
+- `direct` 및 구현 Run은 artifact를 등록하고 근거를 갱신한다.
+- Run은 compatible Write Authorization을 한 번 사용한 것으로 기록한다.
+- Authorization 밖의 observed change는 감지된다.
+- 발견된 사항은 상태, 근거, Decision Packet, Change Unit, 차단 조건 중 적절한 경로로 연결된다.
+- Stewardship issue가 보인다.
+- 검증 전 MVP 필수 projection은 대기열에 넣거나 렌더링할 수 있다.
+- Projection failure는 상태와 분리되어 처리된다.
+- Managed Markdown edit는 reconcile item을 만든다.
+
+### MVP-4 완료 checklist
+
+- Work는 같은 세션의 self-review만으로 detached verified 상태로 닫힐 수 없다.
+- Verification waiver는 accepted risk로만 닫을 수 있다.
+- Required Manual QA와 acceptance는 독립적으로 차단한다.
+- Close-relevant residual risk는 successful close 전에 보인다.
+- Risk-accepted close에는 accepted Residual Risk refs가 필요하다.
+- Acceptance는 risk visibility 뒤에 온다.
+- Blocking Decision Packet은 close를 차단한다.
+- Policy 또는 사용자가 detached verification을 요구하지 않는 한 direct work는 self-checked로 닫힐 수 있다.
+
+### MVP-5 완료 checklist
+
+- Conformance smoke는 core, connector, agency, stewardship, context-hygiene, 설계 품질 경로를 포괄한다.
+- Agency 점검은 Journey 표시, 해소되지 않은 결정, agent latitude, 남은 위험 표시를 증명한다.
+- Dependency DAG 지원은 metadata만 남는다.
+- Export는 state snapshots, 보고서 projection, artifact refs, redaction status를 포함한다.
 
 ## Stage별 관찰 가능성
 
@@ -228,8 +279,8 @@ MVP에서 자동 Browser QA Capture를 요구하지 않습니다. screenshot, co
 
 다음은 향후 계획이 owner 문서, capability profile, 정확한 계약, redaction/secret/PII policy, runtime 접점을 capture할 때의 artifact retention과 test-environment rule, fixture 또는 conformance target, fallback 동작, projection-as-canonical 의존성 없음으로 승격하기 전까지 MVP 밖에 둡니다.
 
-- 권한 또는 close-readiness 기준으로 쓰이는 dashboard, hosted workflow UI, local metric
-- broad connector marketplace 또는 접점 ecosystem
+- 권한, implementation-readiness, close-readiness 기준으로 쓰이는 dashboard, hosted workflow UI, local metric
+- 기준 접점 하나를 넘어서는 broad connector marketplace 또는 접점 ecosystem
 - 필수 자동화 또는 acceptance 대체물로서의 Browser QA Capture
 - 필수 assurance 경로로서의 Cross-Surface Verification
 - 증명된 pre-tool blocking 경로가 없는 preventive `T4` guard expansion
@@ -240,4 +291,4 @@ MVP에서 자동 Browser QA Capture를 요구하지 않습니다. screenshot, co
 - team workflow, permissions, team profile export/import
 - MVP-critical 상태로서의 Local Derived Metrics 또는 long-term operational metrics
 
-구현 중 later feature가 유용해 보이더라도 owner 문서가 권한 경로를 정의하고 증명하기 전까지는 읽기 전용 표시, metadata, 기존 owner path를 위한 artifact 후보, fixture candidate로 유지합니다.
+구현 중 later feature가 유용해 보이더라도 owner 문서가 권한 경로를 정의하고 증명하기 전까지는 읽기 전용 표시, metadata, 기존 owner path를 위한 artifact 후보, fixture candidate로 유지합니다. Kernel Smoke 또는 Agency-Hardened MVP의 전제 조건이 되어서는 안 됩니다.

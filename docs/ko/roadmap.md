@@ -4,6 +4,8 @@
 
 이 문서는 post-MVP 자동화 후보와 능력 확장 항목을 모아 둡니다. 독자가 나중에 다룰 수 있는 일을 볼 수 있게 하되, 그것을 첫 구현 작업, 현재 권한, MVP 필수 동작으로 오해하지 않게 하는 것이 목적입니다.
 
+이 문서는 roadmap 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 Kernel Smoke입니다. Agency-Hardened MVP는 이 roadmap이 아니라 Build 문서의 later MVP hardening에 속하며, 아래 항목은 owner 문서가 승격하고 증명하기 전까지 MVP 밖에 둡니다.
+
 이 문서는 다음을 확인할 때 사용합니다.
 
 - 어떤 아이디어가 MVP 구현 계약 밖에 있는지
@@ -16,12 +18,12 @@
 
 Kernel invariant, public MCP schema, MVP 구현 요구사항, MVP 필수 conformance는 이 문서가 소유하지 않습니다. MVP는 local kernel을 입증합니다. 즉 상태, gate, artifact, verification, projection, reconcile, 하나의 기준 agent 접점이 안정적으로 동작하는지를 먼저 증명합니다. 아래 항목들은 이 기본 요소가 안정된 뒤에 이어갈 수 있는 후속 후보입니다. MVP 구현 순서는 [MVP 계획](build/mvp-plan.md)을 보고, 엄밀한 API, storage, projection, fixture 계약은 Reference 문서를 봅니다.
 
-이 roadmap은 첫 증명과 최종 증명이 담당 문서에서 명확해진 뒤의 후보를 다룹니다. Kernel Smoke, Agency-Hardened MVP, Core state/`task_events`/artifact 경로를 우회하는 대체 경로가 아닙니다. Dashboard, Browser QA Capture, Cross-Surface Verification, Context Index, Native Hook Expansion, Advanced Sidecar Watcher, Local Derived Metrics, connector marketplace, orchestration은 나중에 Harness 동작을 수집하거나 보여 주거나 확장할 수 있지만, 첫 실행 가능한 권한 루프를 대체하지 않습니다.
+첫 구현/증명 대상은 Kernel Smoke입니다. Agency-Hardened MVP는 later MVP hardening입니다. 이 roadmap은 Build 문서가 담당하는 두 증명 대상이 owner 문서에서 명확해진 뒤의 후보만 다룹니다. Kernel Smoke, Agency-Hardened MVP, Core state/`task_events`/artifact 경로를 우회하는 대체 경로가 아닙니다. Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, Native Hook Expansion, Advanced Sidecar Watcher, Local Derived Metrics, connector marketplace, team workflow, orchestration은 나중에 Harness 동작을 수집하거나 보여 주거나 확장할 수 있지만, 첫 실행 가능한 권한 루프를 대체하지 않습니다.
 
 ```mermaid
 flowchart LR
-  MVP["MVP local kernel stable basics"] --> Basics["state, gates, artifacts, verification, projection, reconcile, one reference surface"]
-  Basics --> Stable["Kernel Smoke와 Agency-Hardened MVP는 MVP owner-doc work"]
+  Kernel["Kernel Smoke first runnable proof"] --> Harden["Agency-Hardened MVP later hardening"]
+  Harden --> Basics["state, gates, artifacts, verification, projection, reconcile, one reference surface"]
   Basics --> Later["post-MVP roadmap candidates"]
   Later --> Promote["future version은 owner 결정 이후에만 가능"]
 ```
@@ -40,7 +42,7 @@ Roadmap 후보는 향후 owner 결정이 다음을 모두 부여한 뒤에만 v1
 - 지원하지 않는 접점에 대한 fallback 동작
 - projection을 기준 상태로 취급하는 의존성 없음
 
-이 규칙은 Dashboard, Browser QA Capture, Cross-Surface Verification, Native Hook Expansion, Advanced Sidecar Watcher, Context Index, Local Derived Metrics, 그리고 아래의 모든 항목에 똑같이 적용됩니다. 항목별 설명은 제약을 추가할 수 있지만 이 승격 규칙을 완화하지는 않습니다.
+이 규칙은 Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Broad Connector Ecosystem, Native Hook Expansion, Preventive Guard Expansion, Advanced Sidecar Watcher, Context Index, Local Derived Metrics, 그리고 아래의 모든 항목에 똑같이 적용됩니다. 항목별 설명은 제약을 추가할 수 있지만 이 승격 규칙을 완화하지는 않습니다.
 
 ```mermaid
 flowchart TD
@@ -57,13 +59,19 @@ flowchart TD
 
 ### Dashboard
 
-Dashboard는 active Task, gate, approval, 근거 coverage, projection 최신성, artifact 무결성, reconcile item을 시각화할 수 있습니다.
+Dashboard 또는 hosted workflow UI는 active Task, gate, approval, 근거 coverage, projection 최신성, artifact 무결성, reconcile item을 시각화할 수 있습니다.
 
-MVP는 dashboard가 보여 줄 record, projection, conformance fixture를 먼저 안정화해야 하므로 이 항목은 later입니다. Owner 문서가 명시적으로 승격하기 전까지 dashboard는 `state.sqlite`, artifact ref, projection job status 위의 읽기 전용 진단 표시입니다. Dashboard가 Task state, evidence, 결과 수락, close readiness, projection 최신성, metric 해석의 기준이 되어서는 안 됩니다.
+MVP는 dashboard 또는 hosted UI가 보여 줄 record, projection, conformance fixture를 먼저 안정화해야 하므로 이 항목은 later입니다. Owner 문서가 명시적으로 승격하기 전까지 dashboard 또는 hosted workflow UI는 `state.sqlite`, artifact ref, projection job status 위의 읽기 전용 진단/workflow 표시입니다. Dashboard 또는 hosted UI가 Task state, evidence, 결과 수락, implementation readiness, close readiness, projection 최신성, workflow routing, metric 해석의 기준이 되어서는 안 됩니다.
+
+### Broad Connector Ecosystem
+
+넓은 connector ecosystem 또는 marketplace는 기준 접점이 안정된 뒤 더 많은 agent surface, evaluator environment, workflow integration을 추가할 수 있습니다.
+
+MVP는 로컬 project 하나, 기준 접점 하나, local MCP reachability, Core 권한 경로 하나를 가정하므로 later입니다. Owner 문서가 명시적으로 승격하기 전까지 connector ecosystem 작업은 문서, prototype, fixture-candidate material일 뿐입니다. MCP 노출을 넓히거나, 권한을 만들거나, Core를 우회하거나, 기준 접점 증명을 대체하거나, 지원하지 않는 접점을 기본적으로 MVP 실패로 만들면 안 됩니다.
 
 ### Browser QA Capture
 
-Browser QA Capture는 v1 우선 후보이지 MVP 요구사항이 아닙니다. 연결된 접점이 지원하는 경우 automatic 또는 assisted capture가 Manual QA record를 위해 screenshot, console log, network trace, accessibility snapshot, workflow recording을 수집할 수 있습니다.
+Browser QA Capture는 v1 우선 후보이지 첫 구축 대상도 MVP 요구사항도 아닙니다. 연결된 접점이 지원하는 경우 automatic 또는 assisted capture가 Manual QA record를 위해 screenshot, console log, network trace, accessibility snapshot, workflow recording을 수집할 수 있습니다.
 
 승격에는 declared `T6 QA Capture` capability profile, redaction 및 secret/PII handling policy, test environment setup, artifact retention rules, fixture 또는 conformance target, 지원하지 않는 접점의 fallback 동작, projection-as-canonical 의존성 없음이 필요합니다.
 
@@ -83,6 +91,12 @@ Native hook은 이를 지원하는 접점에서 더 강한 pre-tool guard, comma
 
 Hook API가 접점마다 다르므로 later입니다. MVP는 기준 접점이 실제로 지원할 때만 concrete hook을 사용할 수 있습니다. 그 외에는 native hook이 capability-dependent enhancement입니다. Owner 문서가 명시적으로 승격하기 전까지 Native Hook Expansion은 권한이 없습니다. Hook은 `prepare_write`를 보조하거나 artifact를 capture하거나 guard 표시를 개선할 수 있지만, Core 권한 경로를 대체하거나, approval을 부여하거나, gate를 충족하거나, 지원하지 않는 접점을 기본적으로 MVP 실패로 만들면 안 됩니다.
 
+### Preventive Guard Expansion
+
+Preventive guard expansion은 해당 operation에 대해 구체적인 pre-tool blocking 경로를 증명하는 접점에서만 future work가 될 수 있습니다.
+
+MVP는 cooperative 또는 detective guarantee에서 정직하게 시작할 수 있으므로 later입니다. Owner 문서가 명시적으로 승격하기 전까지 preventive guard expansion은 MVP 요구사항이 아니며 label만으로 주장하면 안 됩니다. Cooperative 또는 detective guard/freeze 표시는 증명된 capability 안에서 hold, warning, detection을 할 수 있지만 pre-execution blocking이라고 설명하면 안 됩니다.
+
 ### Advanced Sidecar Watcher
 
 Advanced sidecar watcher는 file write, command execution, generated-file drift, artifact capture opportunity, repo baseline drift를 거의 실시간으로 관찰할 수 있습니다.
@@ -93,11 +107,11 @@ MVP는 cooperative `prepare_write`, git diff check, artifact registration, detec
 
 Parallel Change Unit orchestration은 work를 여러 active implementation lane으로 나누고, dependency DAG를 관리하고, baseline을 분리하고, 동시에 생긴 근거를 조정할 수 있습니다.
 
-Parallel execution은 stable lock, baseline freshness, approval scope composition, artifact partitioning, close semantics에 의존하므로 later입니다.
+Parallel execution은 stable lock, baseline freshness, approval scope composition, artifact partitioning, close semantics에 의존하므로 later입니다. Owner 문서가 명시적으로 승격하기 전까지 dependency DAG 지원은 metadata-only로 남고, concurrent lane scheduler는 MVP에 필요하지 않습니다.
 
 ### Context Index
 
-Context Index는 읽기 전용 context provider입니다. Agent가 관련 projection, artifact ref, repo file, doc, user note를 찾도록 도울 수 있지만 인덱싱된 지식을 Harness 상태나 권한으로 취급하지 않습니다.
+Context Index는 읽기 전용 context provider입니다. Agent가 관련 projection, artifact ref, repo file, doc, user note를 찾도록 도울 수 있지만 인덱싱된 지식을 Harness 상태나 권한으로 취급하지 않습니다. 첫 구축 대상도 MVP 선행 조건도 아닙니다.
 
 인덱싱된 memory는 kernel과 기준 기록 경계가 안정되기 전에 도입하면 local 권한을 흐릴 수 있으므로 later입니다. Owner 문서가 명시적으로 승격하기 전까지 Context Index는 권한 없는 retrieval only입니다. 향후 Context Index는 context의 순위를 매기고, 요약하고, 가져올 수 있지만 해당 권한 경로의 owner 문서가 명시적으로 바뀌지 않는 한 기존 권한 경로를 대체할 수 없습니다. 가져온 context는 작업, compact status, status 해석, source excerpt, pull ref에 도움을 줄 수는 있어도 write를 허가하거나 Write Authorization을 만들거나, Decision Packet을 해소하거나, Approval을 부여하거나, gate를 충족하거나, evidence를 만들거나, verification을 수행하거나 기록하거나, QA를 기록하거나, QA/verification 또는 gate/close 관련 요구사항을 면제하거나, 결과 수락을 기록하거나, 남은 위험을 받아들이는 판단을 기록하거나, assurance를 올리거나, projection을 대기열에 넣거나 refresh하거나 projection 최신성을 바꾸거나, 구현 준비 상태를 선언하거나, Task를 close하지 않습니다.
 
@@ -157,7 +171,7 @@ flowchart LR
 
 Team profile 내보내기/가져오기는 policy 기본값, connector 프로필, 접점 능력 가정, validator 프로필, 프로젝트 설정 템플릿을 team에 공유할 수 있습니다.
 
-MVP는 local kernel이므로 later입니다. Team sharing은 runtime state에 영향을 주기 전에 versioning, privacy review, secret handling, conflict behavior가 필요합니다.
+MVP는 local kernel이므로 later입니다. Team workflow, shared workspace, permissions, profile sharing은 runtime state에 영향을 주기 전에 versioning, privacy review, secret handling, conflict behavior가 필요합니다. Owner 문서가 명시적으로 승격하기 전까지 team workflow는 MVP 요구사항이 아니며 권한 또는 acceptance path가 되면 안 됩니다.
 
 ## 추가 이후 후보
 

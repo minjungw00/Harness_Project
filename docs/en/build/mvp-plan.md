@@ -4,7 +4,7 @@
 
 This document turns the MVP scope material into an implementable build sequence. It keeps delivery stages separate from storage schemas, DDL, projection template bodies, and operator command syntax.
 
-This is planning documentation; it does not authorize runtime or server implementation before the redesigned docs are accepted.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target is Kernel Smoke: one local process with modules proving one authority loop. Agency-Hardened MVP is a later hardening and conformance target after Kernel Smoke, and roadmap automation stays outside MVP unless owner docs promote and prove it.
 
 Use this when you need to plan what to build after the first runnable slice. Use the reference docs for exact contracts.
 
@@ -20,9 +20,9 @@ Read [Implementation Overview](implementation-overview.md), including its [Docum
 
 ## Main idea
 
-MVP delivery moves from a narrow Kernel Smoke path to an Agency-Hardened MVP, while later automation stays outside the boundary unless a future owner promotes it through the [Roadmap promotion rule](../roadmap.md#promotion-rule) and proves it separately.
+MVP delivery starts with the narrow Kernel Smoke path and only then hardens toward Agency-Hardened MVP. Later automation stays outside the boundary unless a future owner promotes it through the [Roadmap promotion rule](../roadmap.md#promotion-rule) and proves it separately.
 
-The center of the plan is Core state, `task_events`, artifact refs, evidence, blockers, and the minimal reference surface and MCP reachability needed to exercise them. Projection-template polish, dashboards, indexes, hook expansion, broad connector ecosystems or marketplaces, surface-specific connector automation, and broad automation become useful after that path exists; they are not the first build target.
+The center of the plan is Core state, `task_events`, artifact refs, evidence, blockers, and the minimal reference surface and MCP reachability needed to exercise them. The initial implementation assumption remains one local process with modules. Projection-template polish, dashboards or hosted workflow UI, indexes, hook expansion, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, metrics, parallel orchestration, and broad automation become useful after that path exists; they are not the first build target.
 
 ## MVP scope in plain language
 
@@ -48,7 +48,7 @@ In practical terms, build the state and authority path before presentation polis
 
 ## Kernel Smoke
 
-Kernel Smoke is the first runnable conformance target. It crosses MVP-0 through early MVP-3, but only for the selected authority path.
+Kernel Smoke is the first runnable conformance target and the first implementation/proof target. It crosses MVP-0 through early MVP-3, but only for the selected authority path.
 
 It must prove:
 
@@ -72,7 +72,7 @@ For practical fixture authoring order, use the [Kernel Smoke Authoring Queue](..
 
 ## Agency-Hardened MVP
 
-Agency-Hardened MVP is the final reference conformance target. It completes the rest of MVP-3 and then adds MVP-4 and MVP-5.
+Agency-Hardened MVP is the later hardening and final reference conformance target, not the first implementation batch. It completes the rest of MVP-3 and then adds MVP-4 and MVP-5.
 
 It must prove:
 
@@ -108,7 +108,7 @@ Focus on:
 - reference surface registration with honest cooperative or detective capability
 - doctor/readiness reporting
 
-Do not add multi-project orchestration or connector ecosystems here.
+Do not add multi-project orchestration, team workflow, hosted workflow UI, metrics, or connector ecosystems here.
 
 ### MVP-1: Core State, Journey/Decision Skeleton, MCP Facade
 
@@ -183,7 +183,7 @@ Focus on:
 - Decision Packet close checks
 - close blocker reporting
 
-Do not require automated Browser QA Capture for MVP. Browser screenshots, console logs, network traces, accessibility snapshots, or workflow recordings may support QA evidence only when registered and linked through existing Manual QA/artifact paths, but Manual QA records and artifact refs are the MVP requirement. Captured material does not replace Manual QA judgment or acceptance.
+Do not require automated Browser QA Capture or hosted workflow automation for MVP. Browser screenshots, console logs, network traces, accessibility snapshots, or workflow recordings may support QA evidence only when registered and linked through existing Manual QA/artifact paths, but Manual QA records and artifact refs are the MVP requirement. Captured material does not replace Manual QA judgment or acceptance.
 
 ### MVP-5: Operator Smoke, Agency Conformance, Later-Boundary Checks
 
@@ -198,20 +198,71 @@ Focus on:
 - artifact integrity check
 - fixture-based conformance smoke
 - agency conformance for Journey visibility, user judgment, Autonomy Boundary respect, and residual-risk visibility
-- later-boundary checks that keep Dashboard, Browser QA Capture, Cross-Surface Verification, Context Index, parallel orchestration, broad connector automation, native hook or sidecar expansion, derived metrics, and preventive guard expansion out of MVP unless separately proven and promoted
+- later-boundary checks that keep Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, parallel orchestration, team workflow, broad connector automation, native hook or sidecar expansion, derived metrics, and preventive guard expansion out of MVP unless separately proven and promoted
 
 Do not create a second state model for operator commands. Operators diagnose, repair, export, or run fixtures over the same Core state model.
 
 ## Exit criteria by stage
 
-| Stage | Exit criteria |
-|---|---|
-| MVP-0 | One project is registered, project state exists before mutations use expected state versions, the reference surface is registered, runtime files and artifact storage exist, and doctor/readiness can report project/runtime status. |
-| MVP-1 | No-active-Task status works, an advisor Task can intake and close through Core, Task status exposes Journey/Decision state, read guidance is non-authoritative, blocking user judgment can create or associate a Decision Packet, and every state mutation updates current records plus `task_events` in one transaction. |
-| MVP-2 | Product writes without active scoped Change Unit block, sensitive changes require approval, Autonomy Boundary violations block or route to Decision Packets, unresolved blocking Decision Packets block affected writes, allowed `prepare_write` creates durable Write Authorization refs, idempotent replay works, approval drift can block or expire approval, shaping records the needed boundaries, and raw artifacts store integrity/redaction metadata. |
-| MVP-3 | Direct and implementation Runs register artifacts and update evidence, Runs consume compatible Write Authorizations, observed out-of-scope changes are detected, findings route back into state/evidence/Decision Packets/Change Units/blockers, stewardship issues are visible, MVP-required pre-verification projections can enqueue or render, projection failure is state-isolated, and managed Markdown edits create reconcile items. |
-| MVP-4 | Work cannot close as detached verified from same-session self-review, verification waivers close only with accepted risk, Manual QA and acceptance block independently when required, close-relevant residual risk is visible before successful close, risk-accepted close requires accepted Residual Risk refs, acceptance follows risk visibility, blocking Decision Packets block close, and direct work can close self-checked unless policy or the user requires detached verification. |
-| MVP-5 | Conformance smoke covers core, connector, agency, stewardship, context-hygiene, and design-quality paths; agency checks prove Journey visibility, unresolved decisions, agent latitude, and residual-risk visibility; dependency DAG support remains metadata-only; export includes state snapshots, report projections, artifact refs, and redaction status. |
+Use these as implementation-readable checklists. They restate the stage exit criteria; they do not add schemas, fixtures, DDL, or new runtime requirements.
+
+### MVP-0 exit checklist
+
+- One project is registered.
+- Project state exists before mutations use expected state versions.
+- The reference surface is registered.
+- Runtime files and artifact storage exist.
+- Doctor/readiness can report project/runtime status.
+
+### MVP-1 exit checklist
+
+- No-active-Task status works.
+- An advisor Task can intake and close through Core.
+- Task status exposes Journey/Decision state.
+- Read guidance is non-authoritative.
+- Blocking user judgment can create or associate a Decision Packet.
+- Every state mutation updates current records plus `task_events` in one transaction.
+
+### MVP-2 exit checklist
+
+- Product writes without an active scoped Change Unit block.
+- Sensitive changes require approval.
+- Autonomy Boundary violations block or route to Decision Packets.
+- Unresolved blocking Decision Packets block affected writes.
+- Allowed `prepare_write` creates durable Write Authorization refs.
+- Idempotent replay works.
+- Approval drift can block or expire approval.
+- Shaping records the needed boundaries.
+- Raw artifacts store integrity/redaction metadata.
+
+### MVP-3 exit checklist
+
+- Direct and implementation Runs register artifacts and update evidence.
+- Runs consume compatible Write Authorizations.
+- Observed out-of-scope changes are detected.
+- Findings route back into state, evidence, Decision Packets, Change Units, or blockers.
+- Stewardship issues are visible.
+- MVP-required pre-verification projections can enqueue or render.
+- Projection failure is state-isolated.
+- Managed Markdown edits create reconcile items.
+
+### MVP-4 exit checklist
+
+- Work cannot close as detached verified from same-session self-review.
+- Verification waivers close only with accepted risk.
+- Manual QA and acceptance block independently when required.
+- Close-relevant residual risk is visible before successful close.
+- Risk-accepted close requires accepted Residual Risk refs.
+- Acceptance follows risk visibility.
+- Blocking Decision Packets block close.
+- Direct work can close self-checked unless policy or the user requires detached verification.
+
+### MVP-5 exit checklist
+
+- Conformance smoke covers core, connector, agency, stewardship, context-hygiene, and design-quality paths.
+- Agency checks prove Journey visibility, unresolved decisions, agent latitude, and residual-risk visibility.
+- Dependency DAG support remains metadata-only.
+- Export includes state snapshots, report projections, artifact refs, and redaction status.
 
 ## Observable by stage
 
@@ -228,8 +279,8 @@ Do not create a second state model for operator commands. Operators diagnose, re
 
 Keep these outside MVP unless a future plan promotes them through owner docs with a capability profile, exact contracts, redaction/secret/PII policy, artifact retention and test-environment rules when runtime surfaces are captured, fixtures or a conformance target, fallback behavior, and no projection-as-canonical dependency:
 
-- dashboard, hosted workflow UI, or local metrics as authority or close-readiness surfaces
-- broad connector marketplace or surface ecosystem
+- dashboard, hosted workflow UI, or local metrics as authority, implementation-readiness, or close-readiness surfaces
+- broad connector marketplace or surface ecosystem beyond the one reference surface
 - Browser QA Capture as required automation or acceptance replacement
 - Cross-Surface Verification as a required assurance path
 - preventive `T4` guard expansion without a proven pre-tool blocking path
@@ -240,4 +291,4 @@ Keep these outside MVP unless a future plan promotes them through owner docs wit
 - team workflow, permissions, and team profile export/import
 - Local Derived Metrics or long-term operational metrics as MVP-critical state
 
-If a later feature is useful during implementation, keep it as read-only display, metadata, artifact candidates for existing owner paths, or fixture candidate until owner docs define and prove its authority path.
+If a later feature is useful during implementation, keep it as read-only display, metadata, artifact candidates for existing owner paths, or fixture candidate until owner docs define and prove its authority path. It must not become a prerequisite for Kernel Smoke or Agency-Hardened MVP.

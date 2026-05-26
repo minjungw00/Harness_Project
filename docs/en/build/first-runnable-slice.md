@@ -4,7 +4,7 @@
 
 This document turns the Build overview into the smallest runnable proof an implementer should plan first.
 
-This is planning documentation; it does not authorize runtime or server implementation before the redesigned docs are accepted.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target is Kernel Smoke: one local process with modules proving one authority loop. Agency-Hardened MVP is a later hardening and conformance target after Kernel Smoke, and roadmap automation stays outside MVP unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -14,7 +14,7 @@ This is planning documentation; it does not authorize runtime or server implemen
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md) first, including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status). For storage and DDL details, use [Storage And DDL](../reference/storage-and-ddl.md). For post-MVP candidates, use the [Roadmap](../roadmap.md).
+Read [Implementation Overview](implementation-overview.md) first, including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status). That handoff table is the Build entry gate; until maintainers accept first runtime-batch planning, this slice remains planning-only. For storage and DDL details, use [Storage And DDL](../reference/storage-and-ddl.md). For post-MVP candidates, use the [Roadmap](../roadmap.md).
 
 ## Main idea
 
@@ -22,13 +22,13 @@ Prove one Task can move through the Core state, `task_events`, and artifact path
 
 ## Goal
 
-Build the smallest Harness slice that can prove authority over one local Task. The slice should create one project, one Task, one active Change Unit, one allowed write decision, one recorded Run, one registered artifact, one minimal Evidence Manifest, and one close blocker.
+Plan the Kernel Smoke slice: the smallest Harness path that can prove authority over one local Task. The slice should create one project, one Task, one active Change Unit, one allowed write decision, one recorded Run, one registered artifact, one minimal Evidence Manifest, and one close blocker.
 
 This is a command-independent implementation guide. It describes capabilities and observable behavior, not CLI syntax.
 
 Do not include or duplicate full DDL here. Storage details and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
-The first slice is deliberately not a projection-template-polish milestone, dashboard milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, or parallel automation path. It still includes the one reference surface and minimal MCP reachability needed for Kernel Smoke. The excluded items can only read from, display, provide artifact candidates for existing owner paths, or wrap the authority loop after the Core records and transitions are real. Any durable artifact registration or attachment still follows existing Core/MCP owner paths or a future promoted owner contract under the [Roadmap promotion rule](../roadmap.md#promotion-rule).
+The first slice is deliberately not Agency-Hardened MVP as a whole, a projection-template-polish milestone, dashboard or hosted-workflow-UI milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, or parallel automation path. It still includes the one reference surface and minimal MCP reachability needed for Kernel Smoke. The excluded items can only read from, display, provide artifact candidates for existing owner paths, or wrap the authority loop after the Core records and transitions are real. Any durable artifact registration or attachment still follows existing Core/MCP owner paths or a future promoted owner contract under the [Roadmap promotion rule](../roadmap.md#promotion-rule).
 
 ## Success story
 
@@ -46,7 +46,7 @@ An implementer can run a local Harness process against a temporary product repos
 10. A `TASK` projection is current or durably queued for rendering.
 11. Close is blocked when evidence or decision requirements are still missing.
 
-Passing this story means the kernel authority path works. It does not mean the MVP is agency-hardened.
+Passing this story means the kernel authority path works. It does not mean the MVP is agency-hardened, and it does not pull later automation into the MVP.
 
 The observable result can be plain. A user or operator should be able to see the current Task, why a write is blocked or allowed, which Write Authorization was consumed, which artifact backs the Run, whether the Evidence Manifest is sufficient, whether the `TASK` projection is fresh or queued, and why close still blocks.
 
@@ -273,9 +273,9 @@ This slice does not prove:
 - full projection and reconcile behavior
 - projection template completeness
 - recover, export, artifact integrity, and broad operator smoke
-- dashboard, Context Index, connector marketplace, or Browser QA Capture behavior
+- dashboard, hosted workflow UI, Context Index, connector marketplace, or Browser QA Capture behavior
 - Cross-Surface Verification, native hook expansion, Advanced Sidecar Watcher, or Local Derived Metrics behavior
-- preventive guard behavior
+- preventive guard expansion behavior
 - parallel orchestration or team workflow
 
 Those belong either to the later Agency-Hardened MVP path in [MVP Plan](mvp-plan.md) or to the post-MVP [Roadmap](../roadmap.md), depending on the item.

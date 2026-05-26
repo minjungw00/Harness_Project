@@ -4,7 +4,7 @@
 
 이 문서는 Build 개요를 구현자가 가장 먼저 계획해야 하는 작은 실행 가능한 증명으로 바꿔 줍니다.
 
-이 문서는 구현 계획 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현을 시작하라는 뜻이 아닙니다.
+이 문서는 구현 계획 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 Kernel Smoke입니다. 즉 모듈을 가진 로컬 프로세스 하나로 권한 루프 하나를 증명합니다. Agency-Hardened MVP는 Kernel Smoke 이후의 later hardening과 conformance target이며, roadmap automation은 owner 문서가 승격하고 증명하기 전까지 MVP 밖에 둡니다.
 
 ## 이런 때 읽기
 
@@ -14,7 +14,7 @@
 
 ## 읽기 전에
 
-[구현 개요](implementation-overview.md)를 먼저 읽고 [문서 승인 상태](implementation-overview.md#문서-승인-상태)를 확인합니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다. Post-MVP 후보는 [로드맵](../roadmap.md)을 봅니다.
+[구현 개요](implementation-overview.md)를 먼저 읽고 [문서 승인 상태](implementation-overview.md#문서-승인-상태)를 확인합니다. 그 handoff 표가 Build 진입 gate입니다. Maintainer가 첫 runtime batch 계획을 승인하기 전까지 이 조각은 planning-only입니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)을 봅니다. Post-MVP 후보는 [로드맵](../roadmap.md)을 봅니다.
 
 ## 핵심 생각
 
@@ -22,13 +22,13 @@
 
 ## 목표
 
-하나의 로컬 Task에 대해 Harness가 권한을 행사할 수 있음을 증명하는 가장 작은 조각을 계획합니다. 이 조각은 프로젝트 하나, Task 하나, active Change Unit 하나, 허용된 쓰기 결정 하나, 기록된 Run 하나, 등록된 artifact 하나, 최소 Evidence Manifest 하나, 닫기 차단 조건 하나를 만들어야 합니다.
+Kernel Smoke 조각을 계획합니다. 하나의 로컬 Task에 대해 Harness가 권한을 행사할 수 있음을 증명하는 가장 작은 경로입니다. 이 조각은 프로젝트 하나, Task 하나, active Change Unit 하나, 허용된 쓰기 결정 하나, 기록된 Run 하나, 등록된 artifact 하나, 최소 Evidence Manifest 하나, 닫기 차단 조건 하나를 만들어야 합니다.
 
 이 문서는 특정 command에 묶이지 않는 구현 안내서입니다. CLI 문법이 아니라 기능과 관찰 가능한 동작을 설명합니다.
 
 여기에 전체 DDL을 포함하거나 반복하지 않습니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)이 담당합니다.
 
-첫 조각은 projection template을 다듬는 단계도, dashboard를 만드는 단계도, 넓은 connector ecosystem이나 marketplace를 만드는 단계도, multi-surface connector expansion도, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, parallel automation path도 아닙니다. Kernel Smoke에 필요한 기준 agent 접점 하나와 최소 MCP reachability는 여전히 포함합니다. 제외된 항목은 Core record와 transition이 실제로 존재한 뒤 권한 루프를 읽거나, 표시하거나, 기존 owner path를 위한 artifact 후보를 제공하거나, 감쌀 수 있을 뿐입니다. 지속 artifact 등록이나 연결은 여전히 기존 Core/MCP owner path 또는 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따른 향후 승격 owner contract를 따릅니다.
+첫 조각은 Agency-Hardened MVP 전체도, projection template을 다듬는 단계도, dashboard 또는 hosted-workflow-UI 단계도, 넓은 connector ecosystem이나 marketplace를 만드는 단계도, multi-surface connector expansion도, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, parallel automation path도 아닙니다. Kernel Smoke에 필요한 기준 agent 접점 하나와 최소 MCP reachability는 여전히 포함합니다. 제외된 항목은 Core record와 transition이 실제로 존재한 뒤 권한 루프를 읽거나, 표시하거나, 기존 owner path를 위한 artifact 후보를 제공하거나, 감쌀 수 있을 뿐입니다. 지속 artifact 등록이나 연결은 여전히 기존 Core/MCP owner path 또는 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따른 향후 승격 owner contract를 따릅니다.
 
 ## 성공 이야기
 
@@ -46,7 +46,7 @@
 10. `TASK` projection이 최신이거나 렌더링을 위해 durable queue에 들어간다.
 11. 근거 또는 결정 요구사항이 아직 충족되지 않았으면 close가 차단된다.
 
-이 흐름을 통과하면 커널 권한 경로가 동작한다는 뜻입니다. Agency-Hardened MVP가 완료되었다는 뜻은 아닙니다.
+이 흐름을 통과하면 커널 권한 경로가 동작한다는 뜻입니다. Agency-Hardened MVP가 완료되었다는 뜻도 아니고, later automation을 MVP로 끌어온다는 뜻도 아닙니다.
 
 관찰 결과는 단순해도 됩니다. 사용자 또는 운영자는 현재 Task, 쓰기가 차단되거나 허용된 이유, 어떤 Write Authorization이 사용되었는지, 어떤 artifact가 Run을 뒷받침하는지, Evidence Manifest가 충분한지, `TASK` projection이 최신이거나 대기열에 있는지, close가 왜 아직 막히는지를 볼 수 있어야 합니다.
 
@@ -273,9 +273,9 @@ Required authority 또는 근거가 없을 때 close가 work를 끝내지 못하
 - 전체 projection과 reconcile 동작
 - projection template 완성도
 - recover, export, artifact integrity, broad operator smoke
-- dashboard, Context Index, connector marketplace, Browser QA Capture 동작
+- dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture 동작
 - Cross-Surface Verification, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics 동작
-- preventive guard 동작
+- preventive guard expansion 동작
 - parallel orchestration 또는 team workflow
 
 이 내용은 항목에 따라 [MVP 계획](mvp-plan.md)의 이후 Agency-Hardened MVP 경로 또는 post-MVP [로드맵](../roadmap.md)에 속합니다.

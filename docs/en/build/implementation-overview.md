@@ -4,7 +4,7 @@
 
 This document tells implementers what to build before they dive into the full reference specs. It is the bridge between the reader-centered docs and the detailed contracts in the kernel, runtime, MCP, storage, projection, and conformance references.
 
-This is planning documentation; it does not authorize runtime or server implementation before the redesigned docs are accepted.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target is Kernel Smoke: one local process with modules proving one authority loop. Agency-Hardened MVP is a later hardening and conformance target after Kernel Smoke, and roadmap automation stays outside MVP unless owner docs promote and prove it.
 
 Use it to answer three questions:
 
@@ -35,6 +35,8 @@ This is a maintainer-updated documentation handoff marker. It is not a Reference
 | Has runtime/server implementation started? | No. This repository still contains documentation, not Harness runtime/server implementation. |
 | Are there open follow-up docs issues? | No. The known follow-up docs issues below are resolved; maintainers still must change the acceptance status deliberately. |
 
+Build readers should treat this table as the entry gate. Until maintainers change the second row to Yes, even Kernel Smoke remains planning-only in this repository.
+
 ### Known follow-up docs issues
 
 Maintainers update this list. These entries route documentation maintenance only; they do not define Reference contracts, conformance results, generated operational records, or runtime/server authorization.
@@ -46,7 +48,7 @@ Maintainers update this list. These entries route documentation maintenance only
 
 Use this checkpoint to decide what must be true before maintainers can switch the documentation acceptance status from documentation maintenance to first runtime-batch planning. It is a planning handoff only: it does not authorize runtime or server implementation by itself, and it does not define exact schemas, DDL, fixture semantics, or runtime contracts.
 
-First implementation planning may start only when all of these are true:
+First implementation planning means Kernel Smoke planning first, not Agency-Hardened MVP or roadmap automation. It may start only when all of these are true:
 
 - The final docs-maintenance drift pass is complete, or remaining known gaps are recorded as `TODO_DECISION` or `TODO_IMPLEMENT` in the relevant owner docs. Docs-maintenance remains a read-only documentation check; see [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks) and [Operations And Conformance Reference](../reference/operations-and-conformance.md#docs-maintenance-profile).
 - The local-only MCP exposure baseline is accepted for MVP. Remote, shared, tunneled, or non-loopback exposure remains outside the MVP baseline unless owner docs promote and prove a connector profile; see [Runtime Architecture](../reference/runtime-architecture.md#local-access-expectations) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#mcp-boundary-and-caller-trust).
@@ -55,27 +57,27 @@ First implementation planning may start only when all of these are true:
 - The first runnable slice remains local, single-project, single-reference-surface, and fixture-proven. Use [First Runnable Slice](first-runnable-slice.md) for the planning checklist.
 - Post-MVP features remain outside MVP unless promoted by owner docs through the [Roadmap promotion rule](../roadmap.md#promotion-rule).
 
-This handoff does not promote roadmap items, dashboards, Browser QA Capture automation, Context Index, a broad connector marketplace, remote MCP exposure, preventive guard expansion, or parallel orchestration into MVP. Keep exact contracts in Reference docs and use this section only as the short readiness checkpoint.
+This handoff does not promote roadmap items, dashboards or hosted workflow UI, Browser QA Capture automation, Context Index, broad connector ecosystems or marketplaces, team workflow, remote MCP exposure, preventive guard expansion, Local Derived Metrics or long-term metrics, or parallel orchestration into MVP. Keep exact contracts in Reference docs and use this section only as the short readiness checkpoint.
 
 ## Main idea
 
-Build the smallest local Core authority path first, then harden it through evidence, projections, conformance, and operator recovery.
+Build Kernel Smoke first: the smallest local Core authority path. Then harden it through evidence, projections, conformance, and operator recovery.
 
-Start with canonical state, `task_events`, artifact refs, Core tool behavior, and the minimal reference surface and MCP reachability needed to exercise that path. Treat projection-template polish, dashboards, indexes, broad connector ecosystems or marketplaces, surface-specific connector automation, hook expansion, Browser QA automation, and broad automation as non-authoritative things that read from or wrap that authority loop after it exists.
+Start with canonical state, `task_events`, artifact refs, Core tool behavior, and the minimal reference surface and MCP reachability needed to exercise that path. The initial implementation assumption is one local process with modules, not a distributed platform. Treat projection-template polish, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, and broad automation as non-authoritative things that read from or wrap that authority loop after it exists.
 
-If a proposed implementation starts with projection template polish, a dashboard, a Context Index, a connector marketplace, hook expansion, or broad automation lanes, it is starting in the wrong place.
+If a proposed implementation starts with Agency-Hardened MVP as one large first batch, projection template polish, a dashboard or hosted workflow UI, a Context Index, a connector marketplace, hook expansion, metrics, parallel orchestration, or broad automation lanes, it is starting in the wrong place.
 
 ## Proof boundaries
 
 | Boundary | What it proves | What the user or operator can observe |
 |---|---|---|
 | Kernel Smoke | One local Task can go through the Core authority loop: scoped write decision, Write Authorization, `record_run`, artifact-backed evidence, status, minimal projection freshness, and close blockers. | Status shows the active Task, gates, Change Unit, evidence, blockers, and projection freshness. Out-of-scope work is blocked, compatible scoped work is authorized and consumed once, and close refuses missing evidence or required decisions. |
-| Agency-Hardened MVP | The local reference MVP handles user judgment, approvals, detached verification, Manual QA, residual risk, reconcile, recovery, export, and conformance with honest boundaries. | Fixtures and operator entrypoints show why work can or cannot continue, verify, accept, export, recover, or close through the same Core records and errors. |
+| Agency-Hardened MVP | Later hardening after Kernel Smoke: the local reference MVP handles user judgment, approvals, detached verification, Manual QA, residual risk, reconcile, recovery, export, and conformance with honest boundaries. | Fixtures and operator entrypoints show why work can or cannot continue, verify, accept, export, recover, or close through the same Core records and errors. |
 | Post-MVP roadmap | Later surfaces or automation can be considered only after the local kernel and agency proof are stable. | Optional capabilities remain read-only, display-only, metadata-only, or artifact-candidate-only until an owner promotes them through the [Roadmap promotion rule](../roadmap.md#promotion-rule) with exact contracts and fixtures. |
 
 ## What you are building
 
-Harness MVP is a local authority kernel for AI-assisted product work. The first implementation should be one local system with clear internal modules, not a distributed platform.
+Harness MVP is a local authority kernel for AI-assisted product work. The first implementation target is Kernel Smoke. The initial implementation assumption is one local system with clear internal modules, not a distributed platform.
 
 ### Local Server / Process
 
@@ -156,25 +158,25 @@ Exact command names and flags can come later. The important part is that operato
 
 Keep the first implementation narrow. Do not build these as MVP prerequisites:
 
-- dashboard or rich hosted UI as an authority path
-- broad connector ecosystem
+- dashboard, hosted workflow UI, or rich UI as an authority path or close-readiness source
+- broad connector ecosystem or marketplace beyond one reference surface
 - Context Index as authority or read/write prerequisite
 - Browser QA Capture as required automation or acceptance replacement
 - Cross-Surface Verification as a required assurance path
 - native hook expansion beyond a concrete reference-surface capability
 - Advanced Sidecar Watcher as required enforcement
-- Local Derived Metrics as MVP-critical state
+- Local Derived Metrics or long-term metrics as MVP-critical state, authority, or readiness
 - team workflow, shared workspaces, permissions, or profile import/export
-- parallel orchestration automation
-- preventive guard expansion unless the reference surface proves a concrete pre-tool blocking path
+- parallel orchestration automation, concurrent lane scheduling, or multi-agent scheduling
+- preventive guard expansion unless the reference surface proves a concrete pre-tool blocking path for the covered operation
 
 MVP may display cooperative or detective guard/freeze status and may hold or narrow work through existing Change Unit, Autonomy Boundary, and `prepare_write` behavior. Surface labels do not upgrade the stored guarantee level.
 
-Useful later capabilities can appear only as read-only displays, metadata, artifact candidates for existing owner paths, or fixture candidates until their owner docs define capability profile, redaction/secret/PII policy, retention or test-environment rules when needed, fixture coverage, fallback behavior, and no projection-as-canonical dependency.
+Useful later capabilities can appear only as read-only displays, metadata, artifact candidates for existing owner paths, or fixture candidates until their owner docs define capability profile, redaction/secret/PII policy, retention or test-environment rules when needed, fixture coverage, fallback behavior, and no projection-as-canonical dependency. They must not be required to run Kernel Smoke or to claim MVP close readiness.
 
 ## The first proof
 
-The first proof is Kernel Smoke: the smallest runnable path that proves Harness can make and enforce one authority decision.
+The first implementation/proof target is Kernel Smoke: the smallest runnable path that proves Harness can make and enforce one authority decision.
 
 Kernel Smoke proves the authority loop, not the full MVP, not template completeness, and not broad automation.
 
@@ -196,7 +198,7 @@ Kernel Smoke is not the final MVP. It proves the write authority path is alive.
 
 ## The final MVP proof
 
-The final proof is Agency-Hardened MVP. It adds the remaining conformance needed for an agent to act with honest boundaries:
+The final proof is Agency-Hardened MVP. It is a later hardening and conformance target after Kernel Smoke, not the first implementation batch. It adds the remaining conformance needed for an agent to act with honest boundaries:
 
 - Decision Packet quality and user-judgment routing
 - separation between approvals, Decision Packets, and Write Authorizations
