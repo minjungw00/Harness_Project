@@ -162,9 +162,13 @@ Harness는 이런 경계를 활성 Change Unit 안에서 작업을 유지하는 
 
 근거는 에이전트가 "했습니다"라고 말하는 것이 아닙니다. 변경된 경로, 테스트 결과, 로그, 스크린샷, QA 기록, 검증 결과처럼 수용 기준을 뒷받침하는 자료입니다.
 
+충분한 근거란 파일이나 artifact가 많다는 뜻이 아니라 stated acceptance criteria 또는 completion conditions가 covered됐다는 뜻입니다. 아주 작은 docs-only fix는 changed path, diff 또는 patch summary, self-check만 있으면 될 수 있습니다. Code fix는 보통 diff와 함께 focused test, command, log, 또는 automated check가 적용되지 않는다는 recorded reason이 필요합니다. Feature는 각 수용 기준을 Run 및 artifact refs에 map해야 합니다. UI, UX, copy work는 human judgment가 중요하면 visual evidence와 Manual QA가 필요할 수 있습니다. Sensitive work는 Approval과 redaction refs를 보이게 유지하지만 Approval은 correctness proof가 아닙니다. Verification-required work에는 어떤 evidence를 review했는지 말하는 Eval이 필요합니다.
+
 큰 근거는 먼저 참조(ref)와 짧은 결과로 보여줘야 합니다. 로그, 스크린샷, diff, trace, Run 세부사항, Eval 세부사항, Manual QA note, artifact는 사용자나 다음 검토자가 내용을 살펴봐야 할 때가 아니면 기본 맥락에 붙여 넣지 않습니다.
 
-Markdown 보고서는 이런 근거를 보여주는 유용한 보기(view)이지, 근거나 상태 기록 그 자체가 아닙니다. 보고서를 편집한다면 사람이 적는 note 또는 proposal 영역을 사용합니다. 생성되었거나 관리되는 보고서 본문을 직접 고친 내용은 게이트 변경이 아니라 drift 또는 reconcile input으로 다뤄져야 합니다.
+Markdown 보고서는 이런 근거를 보여주는 유용한 보기(view)이지, 근거나 상태 기록 그 자체가 아닙니다. Report prose와 chat text는 evidence story를 설명할 수 있지만, 관련 criteria가 compatible owner records와 artifact refs를 가리키지 않는 한 evidence sufficiency를 증명하기에는 충분하지 않습니다. 보고서를 편집한다면 사람이 적는 note 또는 proposal 영역을 사용합니다. 생성되었거나 관리되는 보고서 본문을 직접 고친 내용은 게이트 변경이 아니라 drift 또는 reconcile input으로 다뤄져야 합니다.
+
+Evidence는 한때 sufficient처럼 보였더라도 stale이 될 수 있습니다. 흔한 원인은 baseline drift, supporting run 또는 eval 이후 changed files 변경, approval drift 또는 expiry, missing artifact, relevant design record change입니다.
 
 자주 쓰는 말:
 

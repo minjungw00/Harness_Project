@@ -526,31 +526,40 @@ not_required | none | partial | sufficient | stale | blocked
 
 ### Evidence Sufficiency Profiles
 
-근거 sufficiency는 Evidence Manifest와 related 상태 기록 및 artifact refs에서 판단합니다. 대화 텍스트나 보고서 문장만으로 판단하면 안 됩니다. Status card나 Markdown 보고서는 근거가 왜 missing인지 요약할 수 있지만 close decision은 manifest, Task, gates, Change Units, Runs, approvals, Evals, Manual QA records, baseline relation, registered artifacts를 사용합니다.
+근거 sufficiency는 criteria-based입니다. Active Task와 Change Unit의 닫기에 영향을 주는 수용 기준, completion conditions, claims가 Evidence Manifest에서 관련 state records와 registered artifact refs로 덮였는지로 판단합니다. Artifact 개수를 세어 판단하지 않습니다.
+
+Artifact ref는 manifest가 그 ref 또는 그 ref가 뒷받침하는 owner record를 해당 criterion, condition, claim에 매핑할 때만 sufficiency에 기여합니다. Artifact가 많아도 required criterion에 supporting ref가 없으면 Task는 여전히 `partial`일 수 있습니다. 반대로 작은 direct Task는 모든 required criterion 또는 completion condition이 current 상태로 covered되어 있으면 적은 ref만으로도 `sufficient`일 수 있습니다.
+
+Chat text와 Markdown report prose는 evidence authority가 아닙니다. Status card나 Markdown 보고서는 evidence가 present, missing, stale, blocked인 이유를 요약할 수 있지만 close는 manifest, Task, gates, Change Units, Runs, approvals, Evals, Manual QA records, baseline relation, registered artifacts를 사용합니다.
 
 | Evidence Profile | Minimum sufficiency guidance |
 |---|---|
-| `advisor` | `evidence_gate` is usually `not_required` unless the user or policy asks for a recorded decision, review bundle, or exportable artifact. |
-| `direct docs-only` | Sufficient evidence may be changed path list, diff artifact or recorded patch summary, and self-check summary. |
-| `direct code` | Sufficient evidence may be changed path list, diff artifact, relevant command/test/log artifact or explicit reason no automated check applies, and self-check summary. |
-| `work feature` | Sufficient evidence requires acceptance-criteria-to-evidence mapping, changed file coverage, run summary, diff/log/test/build artifacts as applicable, and `evidence_manifest.status=sufficient`. |
-| `UI/UX/copy work` | QA가 required이면 `work feature` evidence와 Manual QA record 또는 valid QA 면제가 필요합니다. |
-| `sensitive work` | Requires normal task evidence plus approval ref, approval scope compatibility, baseline relation, and no approval drift. |
-| `verification-required work` | Requires Evidence Manifest plus Eval record with reviewed evidence and valid independence if the task is to close as `completed_verified`. |
+| `advisor` | 읽기 전용 advice에는 보통 `evidence_gate`가 `not_required`입니다. 사용자나 policy가 recorded decision, review bundle, exportable artifact를 요구하면 source refs, reviewed artifact refs, advice claim을 뒷받침하는 Run 또는 bundle refs에서 sufficiency가 옵니다. Advisor prose만으로는 evidence가 아닙니다. |
+| `direct docs-only` | Sufficient evidence는 changed path list, diff artifact 또는 recorded patch summary, typo fixed, link corrected, no meaning change 같은 stated completion condition에 매핑된 self-check summary일 수 있습니다. Rendered Markdown prose만으로는 충분하지 않습니다. |
+| `direct code` | Sufficient evidence는 changed path list, diff artifact 또는 patch summary, 적용 가능한 focused command/test/log artifact 또는 automated check가 적용되지 않는다는 explicit recorded reason, requested behavior에 매핑된 self-check summary일 수 있습니다. Public behavior, contract, risk가 좁은 criterion을 넘어서 커지면 같은 Task를 `work` 쪽으로 옮겨야 합니다. |
+| `work feature` | 닫기에 영향을 주는 각 수용 기준 또는 completion condition이 supporting Run refs, artifact refs, supporting state refs에 매핑되어야 합니다. Changed file coverage, run summary, 적용 가능한 diff/log/test/build artifacts, `evidence_manifest.status=sufficient`도 필요합니다. Unsupported criteria가 있으면 gate는 `partial`로 남습니다. |
+| `UI/UX/copy work` | `work feature` evidence에 더해 관련 있을 때 screenshot, browser-smoke, copy diff, accessibility-check artifact 같은 UI/copy-specific support가 필요합니다. QA가 required이면 close sufficiency에는 Manual QA record 또는 valid QA waiver도 필요하며, automated check는 Manual QA가 되지 않습니다. |
+| `sensitive work` | Normal task evidence에 더해 approval refs, approval scope compatibility, baseline relation, relevant redaction 또는 omission impact, approval drift 없음이 필요합니다. Approval은 sensitive step을 허용하지만 correctness를 증명하거나 evidence를 충족하거나 별도의 product/security judgment를 결정하지 않습니다. |
+| `verification-required work` | Evidence Manifest와 reviewed evidence를 이름 붙이는 Eval record가 필요합니다. Task가 `completed_verified`로 close하려면 Eval에 valid independence가 있어야 하고, reviewed refs가 active baseline과 current, available, compatible해야 합니다. |
 
 Close impact:
 
 - Required evidence가 absent이면 `evidence_gate=none`입니다.
 - Required evidence가 incomplete이면 `evidence_gate=partial`입니다.
-- 근거가 baseline, changed files, approval drift, missing artifact, relevant design record change로 무효화되면 `evidence_gate=stale` 또는 `blocked`입니다.
+- 근거가 baseline drift, supporting Run 또는 Eval 이후 changed files 변경, approval drift 또는 expiry, missing artifact 또는 artifact integrity failure, relevant Shared Design, domain term, module map item, interface contract change로 무효화되면 `evidence_gate=stale` 또는 `blocked`입니다.
 - 근거가 required인 successful close에는 `evidence_gate=sufficient`가 필요합니다.
 - 근거가 required인데 missing인 경우 `evidence_gate=not_required`를 사용하면 안 됩니다.
 
-Examples:
+Mapping examples:
 
-- Direct typo fix: changed path `docs/help.md`, diff artifact 또는 patch summary, self-check summary는 `direct docs-only` evidence를 뒷받침할 수 있습니다.
-- Work feature: AC-01은 passing test log와 changed path coverage에 map되고, AC-02는 build log와 run summary에 map됩니다. Evidence Manifest가 둘 다 supported로 기록합니다.
-- UI copy change: changed copy path, diff artifact, self-check, required Manual QA 기록은 close를 뒷받침합니다. Manual QA가 recorded되거나 validly waived되기 전에는 close가 blocked됩니다.
+| Task shape | Criterion 또는 completion condition | Row를 supported로 만들 수 있는 supporting refs |
+|---|---|---|
+| `direct docs-only` | "AC-01 typo corrected without meaning change" | `RUN-DOCS-001`와 `ART-DIFF-001` 또는 recorded patch summary. Self-check summary는 rendered 또는 linked doc check를 기록합니다. |
+| `direct code` | "AC-01 formatter returns fallback for null date" | `RUN-CODE-001`, `ART-DIFF-001`, `ART-TEST-001`. Automated check가 적용되지 않으면 Run이 reason과 self-check를 기록합니다. |
+| `work feature` | "AC-01 login form submits email"과 "AC-02 failed login message appears" | 각 AC는 해당 criterion을 뒷받침하는 Run refs, diff/test/log ArtifactRefs, Feedback Loop 또는 TDD trace refs에 별도로 매핑됩니다. |
+| `UI/UX/copy work` | "AC-03 final button copy is readable in the target viewport" | Copy diff와 screenshot/browser-smoke ArtifactRefs가 visible output을 뒷받침합니다. `QA-0001` 또는 valid QA waiver가 required Manual QA를 뒷받침합니다. |
+| `sensitive work` | "AC-04 export contains only approved redacted fields" | Normal Run/artifact evidence에 더해 `APR-0001`, compatible baseline과 approval scope, 관련 ArtifactRefs의 redaction 또는 omission note가 필요합니다. |
+| `verification-required work` | "Completion condition: independent verifier reviewed the changed scope" | Evidence Manifest refs와 `EVAL-0001`, reviewed Run/artifact refs, `completed_verified` close에는 valid independence qualifier가 필요합니다. |
 
 
 ### Verification Gate

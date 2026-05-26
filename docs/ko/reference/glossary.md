@@ -4,6 +4,8 @@
 
 다른 문서를 읽다가 Harness의 official term, capitalization, record name, 서로 대체할 수 없는 경계를 확인할 때 이 용어집을 사용합니다.
 
+이 문서는 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 이런 때 읽기
 
 Harness 용어를 확인하거나, authority path를 섞지 않도록 점검하거나, 정확한 behavior를 담당하는 reference owner를 찾을 때 읽습니다.
@@ -186,7 +188,7 @@ Product term, meaning, code representation, related terms, source, status, `"not
 
 ### Evidence
 
-Work에 대한 주장을 뒷받침하는 recorded support입니다. diffs, logs, tests, run summaries, screenshots, Eval records, Manual QA records 등이 여기에 해당합니다.
+Work에 대한 주장을 뒷받침하는 recorded support입니다. diffs, logs, tests, run summaries, screenshots, Eval records, Manual QA records 등이 여기에 해당합니다. Evidence는 특정 수용 기준, completion condition, 또는 close-relevant claim을 뒷받침합니다. 에이전트가 작업이 끝났다고 말하는 것 자체는 Evidence가 아닙니다.
 
 ### Evidence Gate
 
@@ -194,7 +196,7 @@ Required evidence coverage를 위한 kernel gate입니다. Value set과 close me
 
 ### Evidence Manifest
 
-Acceptance criteria 또는 completion conditions를 이를 뒷받침하는 evidence references에 매핑하는 state record입니다.
+Acceptance criteria 또는 completion conditions를 이를 뒷받침하는 evidence references에 매핑하는 state record입니다. Sufficiency는 artifact 개수나 report prose가 아니라, 그 criteria와 conditions가 current owner records와 `ArtifactRef` refs로 covered되는지에 달려 있습니다.
 
 ### Evidence Profile
 
@@ -202,7 +204,7 @@ Task shape에 충분한 evidence가 무엇인지 validators에 알려주는 name
 
 ### Evidence Sufficiency
 
-필수 수용 기준 또는 completion conditions가 Evidence Manifest와 관련 state records 및 artifact refs로 뒷받침되는지에 대한 close-relevant judgment입니다. Chat text나 Markdown 보고서 prose만으로 판단하지 않습니다.
+필수 수용 기준 또는 completion conditions가 Evidence Manifest와 관련 state records 및 artifact refs로 뒷받침되는지에 대한 close-relevant judgment입니다. Criteria-based 판단이므로 각 required row에는 compatible current support가 필요합니다. Chat text나 Markdown 보고서 prose만으로 판단하지 않으며, baseline drift, changed files, approval drift, missing artifacts, relevant design record changes로 stale이 될 수 있습니다.
 
 ### Eval
 

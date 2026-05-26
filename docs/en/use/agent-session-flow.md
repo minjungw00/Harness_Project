@@ -289,17 +289,23 @@ Documentation-maintenance edits are a separate docs-only workflow. They are gove
 
 After advice, changes, runs, or review, record the result at the right level of detail. User-facing evidence should map to acceptance criteria or the stated task goal.
 
+Display sufficiency as coverage, not volume. The useful question is which acceptance criteria, completion conditions, or close-relevant claims have current supporting refs. A long artifact list does not make a missing criterion supported, and chat text or Markdown report prose should never be the only proof that evidence is sufficient.
+
 Good evidence display:
 
 ```text
 Evidence:
 - AC-01: login form renders with email field, supported by test run RUN-008.
-- AC-02: failed login message still needs Manual QA.
+- AC-02: failed login message appears, supported by RUN-009 and ART-TEST-009; final wording still needs Manual QA.
 ```
 
 When evidence is missing, name the criterion or claim that lacks support. Do not say only "evidence gate failed."
 
 Use refs-first evidence display. Cite Evidence, Run, Eval, Manual QA, artifact, log, screenshot, diff, or trace refs with a short outcome, and embed excerpts only when the user or evaluator needs to inspect the content to decide the next action.
+
+Task shape changes what "enough" looks like. Advisor work usually cites source refs or a review bundle only when recorded evidence is requested. Direct docs-only work can be supported by changed path, diff or patch summary, and self-check. Direct code adds a focused check or a recorded reason no automated check applies. Feature work maps each criterion to Run and artifact refs. UI/UX/copy work separates visual evidence from Manual QA. Sensitive work keeps Approval, redaction, and omission refs visible without treating Approval as correctness. Verification-required work needs an Eval that names the evidence reviewed.
+
+If evidence becomes stale, say why in ordinary language and name the smallest repair. Common causes are baseline drift, changed files after the supporting Run or Eval, approval drift or expiry, missing or failed-integrity artifacts, and relevant Shared Design, domain term, module map, or interface contract changes.
 
 ## Verification, Manual QA, residual risk, acceptance
 

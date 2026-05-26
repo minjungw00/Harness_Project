@@ -6,6 +6,8 @@ This document teaches Harness through two concrete task flows before you read th
 
 After reading it, you should be able to recognize why Harness records a Task, a Change Unit, a Decision Packet, Approval, Write Authorization, Evidence, Verification, Manual QA, Acceptance, Residual Risk, and Close. You do not need to know the internal record details to follow the story.
 
+This is Learn documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Read this when
 
 Read this when you want to understand Harness through concrete task flow before learning the stricter terms.
@@ -263,7 +265,7 @@ Evidence ties claims to records:
 Evidence: diff for login form and session code; test output for remember-me behavior; notes from the implementation run.
 ```
 
-Evidence is why the user can later ask, "What supports the claim that remember-me works?" and get a concrete answer instead of a chat memory.
+Evidence is why the user can later ask, "What supports the claim that remember-me works?" and get a concrete answer instead of a chat memory. The answer should map the acceptance criteria and completion conditions to Run refs, artifact refs, and other supporting refs. It is not enough to have a pile of artifacts somewhere, and it is not enough for a Markdown report to say "covered."
 
 Strict details behind that simple idea span Evidence Gate and Evidence Manifest semantics, artifact registration and storage integrity, and conformance proof.
 
@@ -347,6 +349,7 @@ This tutorial only shows why those pieces exist.
 The two flows above are anchors, not the whole universe. Harness should stay practical across many kinds of work:
 
 - A leaf code fix can still be `direct`: "Fix the null crash in the date formatter" may stay inside one function and its focused test. The result can close with a changed-path summary, test output, and self-check. If the fix changes public behavior or shared contracts, the same Task should move toward `work`.
+- Evidence shape should follow the task shape: advisor work usually needs only cited sources unless recorded evidence is requested; direct docs-only work can use a changed path, diff or patch summary, and self-check; direct code adds a focused test, command, log, or reason no automated check applies; work features map each criterion to Run and artifact refs; UI/UX/copy work may need visual evidence and Manual QA; sensitive work keeps Approval and redaction context separate from correctness; verification-required work needs an Eval that reviewed current evidence.
 - A UI/UX choice often needs a Decision Packet: a checkout error might be shown as an inline message, toast, or modal/layer. The packet should compare flow interruption, accessibility, copy risk, and product tone. Backend validation can continue if it does not commit to the final experience, but the UX should not be claimed complete.
 - Auth choices mix product and security judgment: choosing session cookie, JWT, or social login affects revocation, CSRF/XSS exposure, client support, and operational cost. Failed-login copy has a similar trade-off: generic, specific, or hybrid wording changes account-enumeration risk, clarity, support burden, and tone.
 - A dependency addition may need two separate user answers: approval to install or update dependency files, and a Decision Packet if adopting that dependency is an architecture choice with compatibility, rollback, cost, or maintenance impact.
@@ -355,6 +358,7 @@ The two flows above are anchors, not the whole universe. Harness should stay pra
 - Secret access is not secret exposure. Approval may allow the agent to read or use a secret inside the Task, but Evidence, artifacts, projections, exports, logs, screenshots, and summaries should use redacted handles, omission notes, or nonsecret facts rather than raw values.
 - Manual QA is for human judgment: UX, copy, accessibility interpretation, visual polish, and product taste may need a person to inspect the result. If QA is waived, the waiver should name the skipped surface, accepted risk, follow-up, and close impact. It is not the same as tests passing.
 - Recovery should be visible and routine. If MCP is unavailable, the agent should hold authoritative state changes, product writes, and gate updates; it should not claim Approval, result acceptance, residual-risk acceptance, or close until Harness/Core is reachable or a capable surface is used. If a projection is stale but Core state is current, refresh or reconcile the readable view without treating the stale projection as the source of truth. If a managed block was edited by hand, route it through Reconcile instead of pretending the display edit changed state.
+- Evidence can become stale for practical reasons: the baseline moved, files changed after the supporting run or eval, Approval drifted or expired, an artifact is missing, or a relevant design record changed. The repair is to refresh or replace the supporting refs, not to patch report prose.
 - Same-session review is useful, but it is not detached verification. The agent can use it as a self-check or stewardship signal. Detached verification needs an independent enough Eval, verifier, session, or review boundary.
 
 ## The same concepts in one table

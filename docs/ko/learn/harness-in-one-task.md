@@ -6,6 +6,8 @@
 
 읽고 나면 Task, Change Unit, Decision Packet, 승인, Write Authorization, 근거, 검증, Manual QA, 수락, 남은 위험, 닫기가 왜 필요한지 감을 잡을 수 있습니다. 내부 기록 세부사항을 몰라도 흐름을 따라갈 수 있어야 합니다.
 
+이 문서는 Learn 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 이런 때 읽기
 
 엄격한 용어를 배우기 전에, 구체적인 작업 흐름으로 Harness를 이해하고 싶을 때 읽습니다.
@@ -263,7 +265,7 @@ Not allowed: 관련 없는 account recovery 또는 전체 auth 재설계.
 근거: 로그인 폼과 세션 코드의 diff, remember-me 동작 테스트 출력, 구현 실행 메모.
 ```
 
-근거 덕분에 사용자는 나중에 "remember me가 동작한다는 주장을 무엇이 뒷받침하지?"라고 물을 수 있습니다. 답은 대화 기억이 아니라 구체적인 기록이어야 합니다.
+근거 덕분에 사용자는 나중에 "remember me가 동작한다는 주장을 무엇이 뒷받침하지?"라고 물을 수 있습니다. 답은 대화 기억이 아니라 구체적인 기록이어야 합니다. 그 답은 수용 기준과 completion conditions를 Run refs, artifact refs, 다른 supporting refs에 map해야 합니다. 어딘가에 artifact가 많다는 것만으로는 충분하지 않고, Markdown report가 "covered"라고 말하는 것만으로도 충분하지 않습니다.
 
 이 쉬운 생각의 엄격한 세부사항은 커널의 Evidence Gate와 Evidence Manifest, artifact registration과 storage integrity, conformance proof에 걸쳐 있습니다.
 
@@ -347,6 +349,7 @@ Remembered session과 non-remembered session에 대한 검증이 통과했습니
 위의 두 흐름은 기준점일 뿐, 모든 상황의 목록은 아닙니다. Harness는 여러 종류의 작업에서도 실용적으로 보여야 합니다.
 
 - Leaf code fix는 여전히 `direct`일 수 있습니다. "date formatter에서 null crash를 고쳐줘" 같은 요청이 function 하나와 focused test 안에 머문다면, 변경 경로 요약, test 출력, 자체 확인(self-check)으로 닫을 수 있습니다. 고친 결과가 public behavior나 shared contract를 바꾸면 같은 Task를 `work` 쪽으로 옮겨야 합니다.
+- Evidence shape는 task shape를 따라야 합니다. Advisor work는 recorded evidence가 요청되지 않는 한 보통 cited sources만 있으면 됩니다. Direct docs-only work는 changed path, diff 또는 patch summary, self-check를 사용할 수 있습니다. Direct code는 focused test, command, log, 또는 automated check가 적용되지 않는다는 reason을 더합니다. Work feature는 각 criterion을 Run과 artifact refs에 map합니다. UI/UX/copy work에는 visual evidence와 Manual QA가 필요할 수 있습니다. Sensitive work는 Approval과 redaction context를 correctness와 분리합니다. Verification-required work에는 current evidence를 review한 Eval이 필요합니다.
 - UI/UX 선택에는 Decision Packet이 필요할 수 있습니다. Checkout error를 inline message, toast, modal/layer 중 어디에 보여줄지 선택해야 한다면 flow 방해 정도, 접근성, 문구 위험, 제품 톤을 비교해야 합니다. Backend validation은 최종 경험을 확정하지 않는 범위에서 계속할 수 있지만, UX가 완료됐다고 말하면 안 됩니다.
 - Auth 선택은 제품 판단과 보안 판단이 섞입니다. Session cookie, JWT, social login 중 무엇을 쓸지에 따라 폐기 가능성, CSRF/XSS 노출, client 지원, 운영 비용이 달라집니다. 실패한 로그인 문구도 비슷합니다. 일반적인 문구, 더 구체적인 문구, hybrid 문구 중 무엇을 고르느냐에 따라 account-enumeration 위험, 명확성, 지원 부담, 톤이 달라집니다.
 - Dependency 추가에는 사용자 답이 두 개 필요할 수 있습니다. Install 또는 dependency 파일 갱신을 허용하는 Approval과, 그 dependency를 아키텍처 방향으로 채택할지 결정하는 Decision Packet은 다릅니다. 호환성, rollback, 비용, 유지보수 영향이 있으면 별도 결정이 필요합니다.
@@ -355,6 +358,7 @@ Remembered session과 non-remembered session에 대한 검증이 통과했습니
 - Secret access는 secret 노출이 아닙니다. Approval은 Task 안에서 secret을 읽거나 사용할 수 있게 할 수 있지만, Evidence, artifact, projection, export, log, screenshot, summary에는 raw value가 아니라 redacted handle, omission note, nonsecret fact를 써야 합니다.
 - Manual QA는 사람의 판단을 위한 것입니다. UX, 문구, accessibility 해석, 시각적 완성도, 제품 감각(product taste)은 사람이 결과를 봐야 할 수 있습니다. QA를 면제한다면 생략한 대상, 받아들이는 위험, 후속 작업, 닫기 영향을 이름 붙여야 합니다. 이는 test 통과와 같지 않습니다.
 - 복구 상황은 눈에 보이되 평범하게 처리되어야 합니다. MCP를 사용할 수 없으면 Harness/Core에 다시 닿거나 사용할 수 있는 접점(surface)으로 옮길 때까지 기준 상태 변경, 제품 파일 쓰기, gate 갱신을 보류하고, Approval, 결과 수락, 남은 위험을 받아들이는 판단, 닫기가 처리됐다고 주장하지 않습니다. 읽기용 보기(Projection)가 stale이지만 Core state가 current라면, stale projection을 기준으로 삼지 말고 읽기용 보기를 refresh 또는 reconcile합니다. 관리 영역(managed block)을 사람이 직접 고쳤다면 표시 편집이 state를 바꾼 척하지 말고 Reconcile로 보냅니다.
+- Evidence는 실제적인 이유로 stale이 될 수 있습니다. Baseline이 움직였거나, supporting run 또는 eval 뒤에 file이 바뀌었거나, Approval이 drift 또는 expire됐거나, artifact가 missing 상태이거나, relevant design record가 바뀐 경우입니다. Repair는 report prose를 고치는 것이 아니라 supporting refs를 refresh하거나 replace하는 것입니다.
 - 같은 세션에서 하는 검토(review)는 유용하지만 detached verification은 아닙니다. 에이전트는 이를 자체 확인(self-check) 또는 stewardship signal로 사용할 수 있습니다. Detached verification에는 충분히 독립적인 Eval, verifier, session, review boundary가 필요합니다.
 
 ## 같은 개념을 한 표로 보기

@@ -289,17 +289,23 @@ Cooperative 또는 detective hold를 실행 전에 막는 것처럼 설명하면
 
 조언, 변경, 실행, 리뷰 뒤에는 결과를 필요한 수준으로 기록합니다. 사용자가 보는 근거는 수용 기준이나 명시된 작업 목표와 연결되어야 합니다.
 
+Sufficiency는 양이 아니라 coverage로 표시합니다. 중요한 질문은 어떤 수용 기준, completion condition, close-relevant claim에 current supporting refs가 있는지입니다. 긴 artifact list는 missing criterion을 supported로 만들지 않으며, chat text나 Markdown report prose만으로 evidence가 sufficient하다고 증명하면 안 됩니다.
+
 좋은 근거 표시:
 
 ```text
 근거:
 - AC-01: 이메일 필드가 있는 로그인 폼 렌더링을 RUN-008 테스트 결과가 뒷받침합니다.
-- AC-02: 로그인 실패 메시지는 아직 Manual QA가 필요합니다.
+- AC-02: 로그인 실패 메시지는 RUN-009와 ART-TEST-009가 뒷받침합니다. 최종 문구는 아직 Manual QA가 필요합니다.
 ```
 
 근거가 부족하면 어떤 기준이나 주장이 뒷받침되지 않는지 말합니다. 단순히 "근거 게이트가 실패했습니다"라고만 말하지 않습니다.
 
 근거 표시는 먼저 참조를 보여주는 방식(refs-first)으로 합니다. Evidence, Run, Eval, Manual QA, artifact, log, screenshot, diff, trace ref와 짧은 결과를 보여주고, 사용자나 evaluator가 다음 행동을 결정하기 위해 내용을 살펴봐야 할 때만 excerpt를 본문에 넣습니다.
+
+Task shape에 따라 "충분함"의 모습은 달라집니다. Advisor work는 recorded evidence가 요청된 경우에만 보통 source refs 또는 review bundle을 cite합니다. Direct docs-only work는 changed path, diff 또는 patch summary, self-check로 뒷받침될 수 있습니다. Direct code는 focused check 또는 automated check가 적용되지 않는다는 recorded reason을 더합니다. Feature work는 각 criterion을 Run과 artifact refs에 map합니다. UI/UX/copy work는 visual evidence와 Manual QA를 분리합니다. Sensitive work는 Approval, redaction, omission refs를 visible하게 유지하지만 Approval을 correctness로 취급하지 않습니다. Verification-required work에는 reviewed evidence를 이름 붙이는 Eval이 필요합니다.
+
+Evidence가 stale이 되면 이유를 쉬운 말로 말하고 가장 작은 repair를 이름 붙입니다. 흔한 원인은 baseline drift, supporting Run 또는 Eval 이후 changed files 변경, approval drift 또는 expiry, missing 또는 failed-integrity artifacts, relevant Shared Design, domain term, module map, interface contract changes입니다.
 
 ## 검증, Manual QA, 남은 위험, 수락
 

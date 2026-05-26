@@ -4,6 +4,8 @@
 
 수용 기준, completion condition, 닫기에 영향을 주는 claim이 어떤 supporting evidence와 artifact ref로 뒷받침되는지 보여줘야 할 때 `EVIDENCE-MANIFEST`를 사용합니다.
 
+이 문서는 template 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 기준 기록
 
 - evidence manifest 기록
@@ -71,16 +73,16 @@ updated_at: 2026-05-06T09:50:00+09:00
 - 다음 close 조치:
 
 ## Acceptance Criteria Coverage
-| AC ID | Statement | Coverage 상태 | Supporting Evidence | Notes |
-|---|---|---|---|---|
-| AC-01 | | supported | test:, tdd:, log:, diff: | |
-| AC-02 | | unsupported | | |
+| AC ID | Statement | Coverage 상태 | Run Refs | ArtifactRef Refs | Supporting State Refs | Notes |
+|---|---|---|---|---|---|---|
+| AC-01 | | supported | RUN-0001 | ART-TEST-0001, ART-DIFF-0001 | FBL-0001 | |
+| AC-02 | | unsupported | | | | |
 
 ## Completion Conditions Coverage
-| Condition | Coverage 상태 | Supporting Evidence / ArtifactRef refs | Notes |
-|---|---|---|---|
-| | supported | RUN-0001, ART-0001 | |
-| | unsupported | | |
+| Condition | Coverage 상태 | Run Refs | ArtifactRef Refs | Supporting State Refs | Notes |
+|---|---|---|---|---|---|
+| | supported | RUN-0001 | ART-0001 | | |
+| | unsupported | | | | |
 
 ## Changed File Coverage
 | Path | Covered Criteria | Evidence Refs |
@@ -128,20 +130,34 @@ updated_at: 2026-05-06T09:50:00+09:00
 | ART-0002 | blocked | 사용할 수 없는 입력; claim은 해소 전까지 insufficient | |
 
 ## Stale If
-- baseline head changes
-- changed files are modified after eval
-- Approval 범위가 만료됨
+- recorded baseline에서 baseline drift가 발생함
+- supporting Run 또는 Eval 이후 changed files가 수정됨
+- Approval 범위가 만료되거나 drift됨
+- supporting artifact가 missing, blocked, 또는 integrity failure 상태가 됨
 - relevant config changes
-- domain term records change
-- interface contract records change
+- relevant Shared Design, domain term, module map item, interface contract records change
 ````
 
 ## 메모
 
 근거(Evidence)가 필요한 경우 닫기 판단은 보고서 문장만이 아니라 기준 `evidence_gate`를 따릅니다.
 
+Evidence sufficiency는 artifact 개수가 아니라 수용 기준, completion conditions, close-relevant claims의 coverage에 달려 있습니다. Required row에 current supporting refs가 없으면 artifact가 많아도 manifest는 partial로 남습니다. 작은 direct docs-only Task는 모든 required condition을 cover한다면 Run ref 하나와 diff artifact 하나만으로도 sufficient일 수 있습니다.
+
+Example coverage mappings:
+
+| Criterion / Condition | Run Refs | ArtifactRef Refs | Supporting State Refs | Sufficiency Note |
+|---|---|---|---|---|
+| AC-01 docs typo corrected without meaning change | RUN-DOCS-001 | ART-DIFF-001 | | Changed doc path와 self-check가 stated docs-only condition을 cover할 때만 sufficient입니다. |
+| AC-02 login form submits email | RUN-FEATURE-001 | ART-DIFF-002, ART-TEST-002 | FBL-001 | Run, diff, test/log refs가 Task 전체가 아니라 이 AC에 map될 때 supported입니다. |
+| AC-03 final button copy is readable in target viewport | RUN-UI-001 | ART-SCREENSHOT-001, ART-DIFF-003 | QA-0001 | Manual QA가 required이면 screenshot이나 browser smoke만으로 QA path를 충족하지 않습니다. |
+| AC-04 export contains only approved redacted fields | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | Approval과 Decision refs는 scope 또는 judgment context를 보여줍니다. Redacted artifact refs는 여전히 nonsecret claim을 증명해야 합니다. |
+| Completion condition: independent verifier reviewed the changed scope | RUN-VERIFY-001 | ART-BUNDLE-001 | EVAL-0001 | Eval이 current refs를 review했고 requested close에 필요한 independence가 있을 때만 valid합니다. |
+
 Evidence Manifest는 주장을 뒷받침하지만 그 자체로 correctness를 증명하거나 detached verification을 만들거나 Manual QA를 기록하거나 결과 수락을 암시하거나 남은 위험을 받아들이지 않습니다. 이 template에서 닫기 영향 요약을 렌더링할 때는 테스트 통과, 자체 확인(self-check), 사용자의 결과 수락이 서로 다른 닫기 조건으로 오해되지 않도록 각 줄을 분리해 보여줘야 합니다.
 
 Coverage row는 큰 근거 본문을 붙여 넣는 대신 owner record와 ArtifactRef ref를 가리켜야 합니다. 어떤 criterion, condition, claim을 뒷받침하는 ref가 없다면 문장으로 빈틈을 메우지 말고 unsupported, insufficient, stale, blocked 중 적절한 상태로 보여줍니다.
+
+Chat text와 Markdown report prose는 evidence story를 설명할 수 있지만, 관련 criteria가 compatible owner records와 registered ArtifactRef refs를 가리키지 않는 한 sufficiency를 증명하기에는 충분하지 않습니다.
 
 `secret_omitted` artifact는 secret이 아닌 evidence가 보이는 주장만 뒷받침할 수 있으며, 생략된 값이 필요한 주장은 뒷받침하지 못합니다. `blocked` artifact는 커밋된 metadata-only notice이지 사용 가능한 원본 근거가 아닙니다. 의존하는 criteria는 replacement, waiver, Decision Packet outcome, 받아들인 위험, documented fallback이 evidence 경로를 해소할 때까지 unsupported, insufficient, blocked 중 적절한 상태로 남습니다. 이 template은 생략된 secret/PII 값 또는 차단된 payload를 포함하면 안 됩니다.

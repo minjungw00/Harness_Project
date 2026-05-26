@@ -4,6 +4,8 @@
 
 Use this glossary to confirm official Harness terms, capitalization, record names, and non-substitution boundaries while reading other docs.
 
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Read this when
 
 Read this when you need to check a Harness term, avoid mixing authority paths, or find the reference owner for exact behavior.
@@ -186,7 +188,7 @@ A canonical structured record in `domain_terms` that stores a product term, mean
 
 ### Evidence
 
-Recorded support for claims about the work, such as diffs, logs, tests, run summaries, screenshots, Eval records, or Manual QA records.
+Recorded support for claims about the work, such as diffs, logs, tests, run summaries, screenshots, Eval records, or Manual QA records. Evidence supports specific acceptance criteria, completion conditions, or close-relevant claims; it is not the agent merely saying the work is done.
 
 ### Evidence Gate
 
@@ -194,7 +196,7 @@ The kernel gate for required evidence coverage. Its value set and close meaning 
 
 ### Evidence Manifest
 
-A state record mapping acceptance criteria or completion conditions to supporting evidence references.
+A state record mapping acceptance criteria or completion conditions to supporting evidence references. Sufficiency depends on the coverage of those criteria and conditions by current owner records and `ArtifactRef` refs, not on artifact count or report prose.
 
 ### Evidence Profile
 
@@ -202,7 +204,7 @@ A named evidence sufficiency profile, such as `advisor`, `direct docs-only`, `di
 
 ### Evidence Sufficiency
 
-The close-relevant judgment that required acceptance criteria or completion conditions are supported by the Evidence Manifest plus related state records and artifact refs. It is not judged from chat text or Markdown report prose alone.
+The close-relevant judgment that required acceptance criteria or completion conditions are supported by the Evidence Manifest plus related state records and artifact refs. It is criteria-based: each required row needs compatible current support. It is not judged from chat text or Markdown report prose alone, and evidence can become stale through baseline drift, changed files, approval drift, missing artifacts, or relevant design record changes.
 
 ### Eval
 

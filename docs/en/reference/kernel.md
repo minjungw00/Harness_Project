@@ -524,31 +524,40 @@ Where evidence is required, a successful completion requires `evidence_gate=suff
 
 ### Evidence Sufficiency Profiles
 
-Evidence sufficiency is judged from the Evidence Manifest plus related state records and artifact refs. It must not be judged from chat text or report prose alone. A status card or Markdown report may summarize why evidence is missing, but the close decision uses the manifest, Task, gates, Change Units, Runs, approvals, Evals, Manual QA records, baseline relation, and registered artifacts.
+Evidence sufficiency is criteria-based. It is judged from whether the Evidence Manifest covers the close-relevant acceptance criteria, completion conditions, and claims for the active Task and Change Unit, using related state records and registered artifact refs. It is not judged by counting artifacts.
+
+An artifact ref contributes to sufficiency only when the manifest maps it, or the related owner record it supports, to the criterion, condition, or claim it proves. A Task with many artifacts can still be `partial` when a required criterion has no supporting refs. A small direct Task can be `sufficient` with few refs when every required criterion or completion condition is covered and current.
+
+Chat text and Markdown report prose are not evidence authority. A status card or Markdown report may summarize why evidence is present, missing, stale, or blocked, but close uses the manifest, Task, gates, Change Units, Runs, approvals, Evals, Manual QA records, baseline relation, and registered artifacts.
 
 | Evidence Profile | Minimum sufficiency guidance |
 |---|---|
-| `advisor` | `evidence_gate` is usually `not_required` unless the user or policy asks for a recorded decision, review bundle, or exportable artifact. |
-| `direct docs-only` | Sufficient evidence may be changed path list, diff artifact or recorded patch summary, and self-check summary. |
-| `direct code` | Sufficient evidence may be changed path list, diff artifact, relevant command/test/log artifact or explicit reason no automated check applies, and self-check summary. |
-| `work feature` | Sufficient evidence requires acceptance-criteria-to-evidence mapping, changed file coverage, run summary, diff/log/test/build artifacts as applicable, and `evidence_manifest.status=sufficient`. |
-| `UI/UX/copy work` | Requires `work feature` evidence plus Manual QA record or valid QA waiver when QA is required. |
-| `sensitive work` | Requires normal task evidence plus approval ref, approval scope compatibility, baseline relation, and no approval drift. |
-| `verification-required work` | Requires Evidence Manifest plus Eval record with reviewed evidence and valid independence if the task is to close as `completed_verified`. |
+| `advisor` | `evidence_gate` is usually `not_required` for read-only advice. If the user or policy asks for a recorded decision, review bundle, or exportable artifact, sufficiency comes from source refs, reviewed artifact refs, and any Run or bundle refs that support the advice claims; advisor prose alone is not evidence. |
+| `direct docs-only` | Sufficient evidence may be a changed path list, diff artifact or recorded patch summary, and self-check summary mapped to the stated completion condition, such as typo fixed, link corrected, or no meaning change. Rendered Markdown prose alone is not enough. |
+| `direct code` | Sufficient evidence may be changed path list, diff artifact or patch summary, a focused command/test/log artifact when applicable or an explicit recorded reason no automated check applies, and self-check summary mapped to the requested behavior. If public behavior, contract, or risk grows beyond the narrow criterion, the same Task should move toward `work`. |
+| `work feature` | Sufficient evidence requires each close-relevant acceptance criterion or completion condition to map to supporting Run refs, artifact refs, or supporting state refs; changed file coverage; run summary; diff/log/test/build artifacts as applicable; and `evidence_manifest.status=sufficient`. Unsupported criteria keep the gate `partial`. |
+| `UI/UX/copy work` | Requires `work feature` evidence plus UI/copy-specific support such as screenshot, browser-smoke, copy diff, or accessibility-check artifacts when relevant. When QA is required, sufficiency for close also needs a Manual QA record or valid QA waiver; automated checks do not become Manual QA. |
+| `sensitive work` | Requires normal task evidence plus approval refs, approval scope compatibility, baseline relation, relevant redaction or omission impact, and no approval drift. Approval allows a sensitive step; it does not prove correctness, satisfy evidence, or decide separate product/security judgment. |
+| `verification-required work` | Requires Evidence Manifest plus an Eval record that names the evidence reviewed. If the Task is to close as `completed_verified`, the Eval must have valid independence and the reviewed refs must still be current, available, and compatible with the active baseline. |
 
 Close impact:
 
 - Required evidence absent means `evidence_gate=none`.
 - Required evidence incomplete means `evidence_gate=partial`.
-- Evidence invalidated by baseline, changed files, approval drift, missing artifact, or relevant design record change means `evidence_gate=stale` or `blocked`.
+- Evidence invalidated by baseline drift, changed files after the supporting Run or Eval, approval drift or expiry, missing artifact or artifact integrity failure, or a relevant Shared Design, domain term, module map item, or interface contract change means `evidence_gate=stale` or `blocked`.
 - Successful close where evidence is required needs `evidence_gate=sufficient`.
 - `evidence_gate=not_required` must not be used when evidence is required but missing.
 
-Examples:
+Mapping examples:
 
-- Direct typo fix: changed path `docs/help.md`, diff artifact or patch summary, and self-check summary can support `direct docs-only` evidence.
-- Work feature: AC-01 maps to passing test log and changed path coverage; AC-02 maps to build log plus run summary; the Evidence Manifest records both as supported.
-- UI copy change: changed copy path, diff artifact, self-check, and required Manual QA record support close; until Manual QA is recorded or validly waived, close remains blocked.
+| Task shape | Criterion or completion condition | Supporting refs that can make the row supported |
+|---|---|---|
+| `direct docs-only` | "AC-01 typo corrected without meaning change" | `RUN-DOCS-001` plus `ART-DIFF-001` or a recorded patch summary; self-check summary records the rendered or linked doc check. |
+| `direct code` | "AC-01 formatter returns fallback for null date" | `RUN-CODE-001`, `ART-DIFF-001`, and `ART-TEST-001`; if no automated check applies, the Run records the reason and self-check. |
+| `work feature` | "AC-01 login form submits email" and "AC-02 failed login message appears" | Each AC maps separately to Run refs, diff/test/log ArtifactRefs, and any Feedback Loop or TDD trace refs that support that criterion. |
+| `UI/UX/copy work` | "AC-03 final button copy is readable in the target viewport" | Copy diff and screenshot/browser-smoke ArtifactRefs support visible output; `QA-0001` or a valid QA waiver supports required Manual QA. |
+| `sensitive work` | "AC-04 export contains only approved redacted fields" | Normal Run/artifact evidence plus `APR-0001`, compatible baseline and approval scope, and redaction or omission notes on the relevant ArtifactRefs. |
+| `verification-required work` | "Completion condition: independent verifier reviewed the changed scope" | Evidence Manifest refs plus `EVAL-0001`, reviewed Run/artifact refs, and a valid independence qualifier when closing as `completed_verified`. |
 
 
 ### Verification Gate

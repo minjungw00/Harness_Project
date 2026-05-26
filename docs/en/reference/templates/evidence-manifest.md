@@ -4,6 +4,8 @@
 
 Use `EVIDENCE-MANIFEST` when Harness needs a readable map from acceptance criteria, completion conditions, and close-relevant claims to supporting evidence and artifact refs.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - evidence manifest record
@@ -71,16 +73,16 @@ updated_at: 2026-05-06T09:50:00+09:00
 - next close action:
 
 ## Acceptance Criteria Coverage
-| AC ID | Statement | Coverage State | Supporting Evidence | Notes |
-|---|---|---|---|---|
-| AC-01 | | supported | test:, tdd:, log:, diff: | |
-| AC-02 | | unsupported | | |
+| AC ID | Statement | Coverage State | Run Refs | ArtifactRef Refs | Supporting State Refs | Notes |
+|---|---|---|---|---|---|---|
+| AC-01 | | supported | RUN-0001 | ART-TEST-0001, ART-DIFF-0001 | FBL-0001 | |
+| AC-02 | | unsupported | | | | |
 
 ## Completion Conditions Coverage
-| Condition | Coverage State | Supporting Evidence / ArtifactRef refs | Notes |
-|---|---|---|---|
-| | supported | RUN-0001, ART-0001 | |
-| | unsupported | | |
+| Condition | Coverage State | Run Refs | ArtifactRef Refs | Supporting State Refs | Notes |
+|---|---|---|---|---|---|
+| | supported | RUN-0001 | ART-0001 | | |
+| | unsupported | | | | |
 
 ## Changed File Coverage
 | Path | Covered Criteria | Evidence Refs |
@@ -128,20 +130,34 @@ updated_at: 2026-05-06T09:50:00+09:00
 | ART-0002 | blocked | unavailable input; claim remains insufficient until resolved | |
 
 ## Stale If
-- baseline head changes
-- changed files are modified after eval
-- approval scope expires
+- baseline drift from the recorded baseline
+- changed files are modified after supporting Run or Eval
+- approval scope expires or drifts
+- supporting artifact is missing, blocked, or fails integrity
 - relevant config changes
-- domain term records change
-- interface contract records change
+- relevant Shared Design, domain term, module map item, or interface contract records change
 ````
 
 ## Notes
 
 Where evidence is required, close depends on the canonical `evidence_gate`, not the report text alone.
 
+Evidence sufficiency depends on coverage of acceptance criteria, completion conditions, and close-relevant claims, not on artifact count. A manifest with many artifacts remains partial when a required row has no current supporting refs; a small direct docs-only task may be sufficient with one Run ref and one diff artifact when they cover every required condition.
+
+Example coverage mappings:
+
+| Criterion / Condition | Run Refs | ArtifactRef Refs | Supporting State Refs | Sufficiency Note |
+|---|---|---|---|---|
+| AC-01 docs typo corrected without meaning change | RUN-DOCS-001 | ART-DIFF-001 | | Sufficient only when the changed doc path and self-check cover the stated docs-only condition. |
+| AC-02 login form submits email | RUN-FEATURE-001 | ART-DIFF-002, ART-TEST-002 | FBL-001 | Supported when the Run, diff, and test/log refs map to this AC rather than only to the Task in general. |
+| AC-03 final button copy is readable in target viewport | RUN-UI-001 | ART-SCREENSHOT-001, ART-DIFF-003 | QA-0001 | If Manual QA is required, screenshot or browser smoke alone does not satisfy the QA path. |
+| AC-04 export contains only approved redacted fields | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | Approval and Decision refs show scope or judgment context; redacted artifact refs still need to prove the nonsecret claim. |
+| Completion condition: independent verifier reviewed the changed scope | RUN-VERIFY-001 | ART-BUNDLE-001 | EVAL-0001 | Valid only when the Eval reviewed current refs and has the required independence for the requested close. |
+
 Evidence Manifest supports claims; it does not prove correctness by itself, create detached verification, record Manual QA, imply acceptance, or accept residual risk. When a close summary is rendered from this template, it should keep those lines separate so a passing test, a self-check, or user acceptance is not mistaken for another close condition.
 
 Coverage rows should point to owner records and ArtifactRef refs rather than embedding large evidence. If no ref supports a criterion, condition, or claim, show it as unsupported, insufficient, stale, or blocked instead of filling the gap with prose.
+
+Chat text and Markdown report prose may explain the evidence story, but they are not enough to prove sufficiency unless they point to compatible owner records and registered ArtifactRef refs.
 
 `secret_omitted` artifacts may support claims whose nonsecret evidence remains visible, but not claims that require omitted values. `blocked` artifacts are committed metadata-only notices, not available raw evidence; dependent criteria remain unsupported, insufficient, or blocked until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the evidence path. This template must not include omitted secret/PII values or blocked payload bytes.

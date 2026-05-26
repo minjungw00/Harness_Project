@@ -162,9 +162,13 @@ Evidence answers: "What supports the claim that this work is done?"
 
 Evidence is not just "the agent says it changed the thing." It can include changed paths, test output, logs, screenshots, QA notes, verification results, or other artifacts that support the acceptance criteria.
 
+Enough evidence means the stated acceptance criteria or completion conditions are covered, not that many files or artifacts exist. A tiny docs-only fix may need only a changed path, diff or patch summary, and self-check. A code fix usually needs the diff plus a focused test, command, log, or a recorded reason no automated check applies. A feature should map each acceptance criterion to Run and artifact refs. UI, UX, and copy work may need visual evidence and Manual QA when human judgment matters. Sensitive work keeps Approval and redaction refs visible, but Approval is not proof of correctness. Verification-required work needs an Eval that says which evidence it reviewed.
+
 For large evidence, the agent should show refs and short outcomes first. Logs, screenshots, diffs, traces, Run details, Eval details, Manual QA notes, and artifacts should not be pasted into the default context unless you or the next reviewer need to inspect them.
 
-Markdown reports are useful views over that evidence, not the evidence or state record itself. If you edit a report, use the human notes or proposal area; edits inside generated or managed report text should be treated as drift or reconcile input, not as a gate change.
+Markdown reports are useful views over that evidence, not the evidence or state record itself. Report prose and chat text can explain the evidence story, but they are not enough to prove evidence sufficiency unless the relevant criteria point to compatible owner records and artifact refs. If you edit a report, use the human notes or proposal area; edits inside generated or managed report text should be treated as drift or reconcile input, not as a gate change.
+
+Evidence can go stale even after it once looked sufficient. Common causes are baseline drift, changed files after the supporting run or eval, approval drift or expiry, a missing artifact, or a relevant design record change.
 
 Useful phrase:
 
