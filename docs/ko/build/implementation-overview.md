@@ -24,6 +24,21 @@
 
 Learn 경로에서 Harness의 기본 개념을 먼저 이해해 두는 것이 좋습니다. 정확한 동작은 이 문서 끝에 연결된 reference 문서들을 봅니다. Post-MVP 후보와 승격 기준은 [로드맵](../roadmap.md)을 봅니다.
 
+## 구현 handoff checkpoint
+
+이 checkpoint는 저장소가 아직 문서 유지보수 단계인지, 아니면 첫 runtime batch 계획을 시작할 준비가 되었는지 구분할 때 사용합니다. 이것은 계획 handoff일 뿐입니다. 그 자체로 runtime/server 구현을 승인하지 않으며, 정확한 schema, DDL, fixture 의미, runtime contract를 정의하지 않습니다.
+
+첫 구현 계획은 아래 조건이 모두 참일 때만 시작할 수 있습니다.
+
+- 최종 docs-maintenance drift pass가 완료되었거나, 남은 알려진 gap이 관련 owner 문서에 `TODO_DECISION` 또는 `TODO_IMPLEMENT`로 기록되어 있다. Docs-maintenance는 읽기 전용 문서 점검으로 남습니다. [문서 작성 가이드](../maintain/authoring-guide.md#docs-maintenance-checks)와 [운영과 Conformance 참조](../reference/operations-and-conformance.md#docs-maintenance-프로필)를 봅니다.
+- MVP의 local-only MCP 노출 baseline이 승인되어 있다. Remote, shared, tunneled, non-loopback 노출은 owner 문서가 connector profile을 승격하고 증명하기 전까지 MVP baseline 밖입니다. [런타임 아키텍처](../reference/runtime-architecture.md#로컬-접근-기대사항)와 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#mcp-경계와-호출자-신뢰)를 봅니다.
+- Core-only mutation model이 승인되어 있다. 상태 변경 작업은 Core를 거치고, resource, projection, report, diagnostic은 Core 경로가 상태를 commit하지 않는 한 read-only 또는 derived로 남습니다. [Core process model](../reference/runtime-architecture.md#core-process-model)과 [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow)를 봅니다.
+- Kernel Smoke fixture queue가 첫 runtime conformance 작성 순서로 확인되어 있다. 정확한 fixture format, assertion, catalog semantics는 [운영과 Conformance 참조](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue)에 둡니다.
+- 첫 실행 가능한 조각은 local, single-project, single-reference-surface, fixture-proven 범위를 유지한다. 계획 점검 목록은 [첫 실행 가능한 조각](first-runnable-slice.md)을 사용합니다.
+- Post-MVP feature는 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따라 owner 문서가 승격하기 전까지 MVP 밖에 남아 있다.
+
+이 handoff는 roadmap 항목, dashboard, Browser QA Capture automation, Context Index, broad connector marketplace, remote MCP exposure, preventive guard expansion, parallel orchestration을 MVP로 승격하지 않습니다. 정확한 계약은 Reference 문서에 두고, 이 섹션은 짧은 readiness checkpoint로만 사용합니다.
+
 ## 핵심 생각
 
 가장 작은 로컬 Core 권한 경로를 먼저 증명하고, 그다음 근거, projection, conformance, 운영자 복구 경로를 붙여 단단하게 만듭니다.

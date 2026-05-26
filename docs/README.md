@@ -62,6 +62,10 @@ Reference docs own exact contracts. Learn, Use, and Build docs may summarize a c
 
 엄격한 계약은 Reference 문서가 담당합니다. Learn, Use, Build 문서는 독자에게 필요한 만큼 쉬운 말로 요약할 수 있지만, schema, DDL, transition table, fixture body, 기타 규범적 계약 블록을 복사하지 않고 owner Reference 문서로 연결합니다.
 
+The implementation handoff checkpoint lives in [English Implementation Overview](en/build/implementation-overview.md#implementation-handoff-checkpoint) and [Korean Implementation Overview](ko/build/implementation-overview.md#구현-handoff-checkpoint). It separates documentation-maintenance work from first runtime-batch planning; it does not replace Reference contracts.
+
+구현 handoff checkpoint는 [영어 구현 개요](en/build/implementation-overview.md#implementation-handoff-checkpoint)와 [한국어 구현 개요](ko/build/implementation-overview.md#구현-handoff-checkpoint)에 있습니다. 이 checkpoint는 문서 유지보수와 첫 runtime batch 계획을 구분하며, Reference 계약을 대체하지 않습니다.
+
 ## Roadmap / 로드맵
 
 Post-MVP items live in each language tree's roadmap: [English](en/roadmap.md), [Korean](ko/roadmap.md). The roadmap is not part of the MVP implementation contract unless a future owner explicitly promotes an item with scope, fixtures, and fallback behavior.

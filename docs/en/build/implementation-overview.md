@@ -24,6 +24,21 @@ This document does not define SQLite DDL, public MCP schemas, projection templat
 
 You should already understand the basic Harness concepts from the Learn path. For exact behavior, use the Reference docs linked at the end of this page. For post-MVP candidates and promotion criteria, use the [Roadmap](../roadmap.md).
 
+## Implementation handoff checkpoint
+
+Use this checkpoint to decide whether the repository is still in documentation-maintenance work or ready to plan the first runtime batch. It is a planning handoff only: it does not authorize runtime or server implementation by itself, and it does not define exact schemas, DDL, fixture semantics, or runtime contracts.
+
+First implementation planning may start only when all of these are true:
+
+- The final docs-maintenance drift pass is complete, or remaining known gaps are recorded as `TODO_DECISION` or `TODO_IMPLEMENT` in the relevant owner docs. Docs-maintenance remains a read-only documentation check; see [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks) and [Operations And Conformance Reference](../reference/operations-and-conformance.md#docs-maintenance-profile).
+- The local-only MCP exposure baseline is accepted for MVP. Remote, shared, tunneled, or non-loopback exposure remains outside the MVP baseline unless owner docs promote and prove a connector profile; see [Runtime Architecture](../reference/runtime-architecture.md#local-access-expectations) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#mcp-boundary-and-caller-trust).
+- The Core-only mutation model is accepted: state-changing work goes through Core, while resources, projections, reports, and diagnostics remain read-only or derived unless a Core path commits state. See [Core process model](../reference/runtime-architecture.md#core-process-model) and [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow).
+- The Kernel Smoke fixture queue is identified as the first runtime conformance authoring order. Exact fixture format, assertions, and catalog semantics stay in [Operations And Conformance Reference](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue).
+- The first runnable slice remains local, single-project, single-reference-surface, and fixture-proven. Use [First Runnable Slice](first-runnable-slice.md) for the planning checklist.
+- Post-MVP features remain outside MVP unless promoted by owner docs through the [Roadmap promotion rule](../roadmap.md#promotion-rule).
+
+This handoff does not promote roadmap items, dashboards, Browser QA Capture automation, Context Index, a broad connector marketplace, remote MCP exposure, preventive guard expansion, or parallel orchestration into MVP. Keep exact contracts in Reference docs and use this section only as the short readiness checkpoint.
+
 ## Main idea
 
 Build the smallest local Core authority path first, then harden it through evidence, projections, conformance, and operator recovery.

@@ -46,6 +46,8 @@ Use this path when you want to run an AI-assisted development session under Harn
 
 Use this path for implementation planning and review. These pages do not authorize starting Harness server or runtime implementation; actual implementation starts only after the redesigned documentation is accepted. Build docs explain order, module boundaries, runnable slices, and verification strategy without duplicating exact schemas or DDL.
 
+Start with the [Implementation Overview](build/implementation-overview.md#implementation-handoff-checkpoint) handoff checkpoint to tell whether work is still documentation maintenance or ready for first runtime-batch planning.
+
 - [Implementation Overview](build/implementation-overview.md)
 - [First Runnable Slice](build/first-runnable-slice.md)
 - [MVP Plan](build/mvp-plan.md)
