@@ -203,6 +203,12 @@ Docs-maintenance checks는 읽기 전용 문서 유지보수입니다. Documenta
 
 Maintain 문서는 documentation review rule, category label, reviewer expectation을 정의할 수 있습니다. Runtime conformance pass/fail, runtime fixture semantics, Core state effect, gate behavior, implementation readiness를 정의하면 안 됩니다. Docs-maintenance finding이 runtime contract를 건드리면 그 contract를 다시 적지 말고 owner Reference 문서를 가리켜야 합니다.
 
+### 최종 사전 수락 리뷰
+
+Maintainer가 문서 세트를 구현 계획에 사용할 수 있다고 받아들이기 전, 마지막 docs-maintenance pass를 수행합니다. 영어/한국어 활성 파일 맵 일치, 대응 파일의 의미 섹션 일치, 깨진 link와 anchor, owner-boundary drift, owner가 아닌 문서의 중복 contract, Approval, Decision Packet, Evidence, Verification, Manual QA, Acceptance, Residual Risk, Projection, Guarantee Level 용어 drift, TODO hygiene를 확인합니다.
+
+이 최종 리뷰는 문서 유지보수일 뿐입니다. Runtime conformance, evidence, QA, acceptance, residual-risk acceptance, close readiness, implementation readiness, 기준 상태를 만들지 않습니다. Finding을 기록할 때는 기존 docs-maintenance reporting expectation을 사용하며, 이 최종 pass를 위한 새 필수 report format을 만들지 않습니다.
+
 Docs-maintenance review 또는 future checker는 다음 항목을 보고해야 합니다.
 
 - category

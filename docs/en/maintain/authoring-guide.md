@@ -203,6 +203,12 @@ Docs-maintenance checks are read-only documentation maintenance. They may report
 
 Maintain docs may define documentation review rules, category labels, and reviewer expectations. They must not define runtime conformance pass/fail, runtime fixture semantics, Core state effects, gate behavior, or implementation readiness. When a docs-maintenance finding touches a runtime contract, the finding should point to the owner Reference document instead of restating that contract.
 
+### Final pre-acceptance review
+
+Before maintainers accept the documentation set for implementation planning, do one final docs-maintenance pass. Check English/Korean active file map parity, semantic section parity in paired files, broken links and anchors, owner-boundary drift, non-owner duplicate contracts, terminology drift for Approval, Decision Packet, Evidence, Verification, Manual QA, Acceptance, Residual Risk, Projection, and Guarantee Level, and TODO hygiene.
+
+This final review is documentation maintenance only. It does not create runtime conformance, evidence, QA, acceptance, residual-risk acceptance, close readiness, implementation readiness, or canonical state. Use the existing docs-maintenance reporting expectations when recording findings; do not create a new required report format for this final pass.
+
 A docs-maintenance review or future checker should report:
 
 - category
