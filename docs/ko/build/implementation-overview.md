@@ -139,7 +139,7 @@ Projection은 state record와 artifact ref에서 나온 사람이 읽기 쉬운 
 
 Projection output은 그것이 의존하는 Core 원천 기록에서 파생합니다. 예를 들어 Task, gate, Run, artifact, evidence, Eval, QA, 그 밖의 owner record가 존재한 뒤 그 기록에서 나와야 합니다. 최소 `TASK` projection 최신성 또는 대기열 추가 경로는 Kernel Smoke에 포함될 수 있지만, projection template은 권한을 만들거나, 근거를 충족하거나, state를 대체하거나, state model을 정하거나, 첫 증명이 될 수 없습니다.
 
-첫 실행 가능한 조각은 최소 `TASK` projection job을 대기열에 넣거나 최소 `TASK` projection을 렌더링할 수 있으면 됩니다. 최종 MVP는 원천 기록이 존재하거나 변경될 때 [문서 Projection 참조](../reference/document-projection.md#template-tiers)와 [Template 참조](../reference/templates/README.md)가 소유하는 MVP-required projection kind를 enqueue하고 렌더링할 수 있어야 합니다.
+첫 실행 가능한 조각은 최소 `TASK` projection job을 대기열에 넣거나 최소 `TASK` projection을 렌더링할 수 있으면 됩니다. 최종 MVP는 원천 기록이 존재하거나 변경될 때 MVP-required `ProjectionKind` value를 지원해야 합니다. `ProjectionKind` value와 API-owned MVP tiering은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#shared-schemas)가 담당합니다. [문서 Projection 참조](../reference/document-projection.md#template-tiers)는 projection authority boundary, source-record rule, freshness rule, template tier presentation을 담당하고, [Template 참조](../reference/templates/README.md)는 rendered template body와 display card를 담당합니다.
 
 Projection failure는 committed Core 상태를 롤백하면 안 됩니다. Projection이 최신인지 또는 job 상태가 어떤지 표시하고, repair나 reconcile은 이후 action에 맡깁니다. `source_state_version`과 freshness는 display/readiness fact입니다. Close/readiness output은 readable view가 오래되었거나 failed임을 보여줘야 하지만, stale Markdown이 work를 authorize하거나 close를 충족하거나 current Core state, 소스 관리, 테스트, 리뷰를 대체할 수는 없습니다.
 

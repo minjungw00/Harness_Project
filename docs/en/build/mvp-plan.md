@@ -165,7 +165,7 @@ Focus on:
 
 Build MVP-required renderers from records that already exist. Do not make projection templates, template polish, or additional renderer-first work the driver for Task, Run, evidence, or verification design.
 
-At this stage, build the MVP-required pre-verification renderers owned by [Document Projection Reference](../reference/document-projection.md#template-tiers) and [Template Reference](../reference/templates/README.md) when their source records exist. The Eval renderer remains MVP-required, but its executable render path completes with MVP-4 when Eval source records exist.
+At this stage, build the MVP-required pre-verification renderers for API-owned MVP-required `ProjectionKind` values when their source records exist. `ProjectionKind` values and API-owned MVP tiering belong to [MCP API And Schemas](../reference/mcp-api-and-schemas.md#shared-schemas); [Document Projection Reference](../reference/document-projection.md#template-tiers) owns projection authority boundaries, source-record rules, freshness rules, and template tier presentation; [Template Reference](../reference/templates/README.md) owns rendered template bodies and display cards. The Eval renderer remains MVP-required, but its executable render path completes with MVP-4 when Eval source records exist.
 
 Projection failure remains separate from Core state failure.
 
