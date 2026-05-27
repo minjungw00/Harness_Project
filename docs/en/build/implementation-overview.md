@@ -47,7 +47,7 @@ This is a maintainer-updated documentation handoff marker. It is not a Reference
 | Is documentation maintenance still active? | Yes. The current docs are ready for human review, and implementation handoff has not been accepted yet. |
 | Are docs accepted for first runtime-batch planning? | No. First runtime-batch planning may not begin until maintainers change this row to Yes after the checkpoint below is satisfied. |
 | Has runtime/server implementation started? | No. This repository still contains documentation, not Harness runtime/server implementation. |
-| Are there open follow-up docs issues? | No known open follow-up docs issues; maintainers still must change the acceptance status deliberately. |
+| Are there open follow-up docs issues? | Pending final maintainer docs-maintenance review. Maintainers must complete that documentation-only review before they can deliberately change the docs-accepted row to Yes; it is not runtime conformance or implementation readiness. |
 
 Build readers should treat this table as the entry gate. Until maintainers change the second row to Yes, even Kernel Smoke remains planning-only in this repository.
 

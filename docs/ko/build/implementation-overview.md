@@ -47,7 +47,7 @@ Kernel Smoke를 먼저 만듭니다. 즉 가장 작은 로컬 Core 권한 경로
 | 문서 유지보수가 아직 active인가? | 예. 현재 문서는 사람의 검토를 받을 준비가 되었고, 구현 handoff는 아직 accepted로 기록되지 않았습니다. |
 | 첫 runtime batch 계획을 위한 문서가 승인되었는가? | 아니오. 아래 checkpoint가 충족된 뒤 maintainer가 이 행을 예로 바꾸기 전까지 첫 runtime batch 계획은 시작할 수 없습니다. |
 | runtime/server 구현이 시작되었는가? | 아니오. 이 저장소는 아직 문서만 담고 있으며 Harness runtime/server 구현을 담고 있지 않습니다. |
-| 열려 있는 문서 follow-up issue가 있는가? | 알려진 open follow-up docs issue는 없습니다. 그래도 acceptance 상태는 maintainer가 명시적으로 바꿔야 합니다. |
+| 열려 있는 문서 follow-up issue가 있는가? | Maintainer의 최종 docs-maintenance review가 아직 남아 있습니다. Maintainer는 이 문서 전용 검토를 완료한 뒤에야 docs-accepted 행을 명시적으로 예로 바꿀 수 있으며, 이 검토는 runtime conformance나 구현 준비 상태를 뜻하지 않습니다. |
 
 Build 독자는 이 표를 진입 gate로 보아야 합니다. Maintainer가 두 번째 행을 예로 바꾸기 전까지 Kernel Smoke도 이 저장소에서는 planning-only입니다.
 
