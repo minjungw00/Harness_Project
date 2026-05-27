@@ -4,7 +4,7 @@
 
 Projection 템플릿과 표시 카드가 렌더링하는 Markdown 형태를 확인할 때 이 파일들을 사용합니다. Projection 규칙, 권한 경계, 최신성 동작은 [문서 Projection 참조](../document-projection.md)가 정의합니다.
 
-이 문서는 template 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+Owner 경계: 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들 권한을 주지 않습니다. 첫 구현/증명 대상은 Kernel Smoke로 유지됩니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 명시적으로 승격하고 증명하기 전까지 MVP 범위 밖입니다.
 
 ## 템플릿 계층
 
@@ -16,7 +16,7 @@ Projection 템플릿은 API `ProjectionKind` tier와 일치합니다.
 | MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, 기록이 있거나, user/operator가 projection을 켰을 때 렌더링합니다. |
 | Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | 해당 선택 projection이 켜져 있을 때만 렌더링합니다. |
 
-템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`, 그 밖의 report projection은 owner record와 ref에서 나온 readable view입니다. Kernel field, MCP schema, SQLite DDL, gate behavior, artifact integrity rule을 재정의하면 안 됩니다.
+`TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`, 그 밖의 report projection은 owner record와 ref에서 나온 readable view입니다. Kernel field, MCP schema, SQLite DDL, gate behavior, artifact integrity rule을 재정의하면 안 됩니다.
 
 렌더링 placeholder, label, table column, 예시 front matter key는 표시를 위한 template binding입니다. Binding은 기존 owner record field 또는 ref를 보여주거나, template이 나열한 source record에서 파생한 표시 전용 요약이어야 합니다. Source record 또는 ref가 없으면 상태를 만들어내지 말고 `none`, `unknown`, `not_required`, unavailable/blocking note로 렌더링합니다.
 

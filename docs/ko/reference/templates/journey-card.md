@@ -4,7 +4,7 @@
 
 작업의 현재 위치, 범위와 범위 밖, 다음 움직임을 막는 것, 대기 중인 판단, Autonomy Boundary, Write Authority Summary, 수용 기준, 근거와 확인, 남은 위험, 닫기 맥락(close context), gate, 읽기용 보기 최신성을 현재 위치 카드로 보여줄 때 `JOURNEY-CARD`를 사용합니다.
 
-이 문서는 template 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
 ## 기준 기록
 

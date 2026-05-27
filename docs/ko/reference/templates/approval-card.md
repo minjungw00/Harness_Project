@@ -4,7 +4,7 @@
 
 대기 중인 Approval의 민감 행동(sensitive-action) 요청 범위, 목적, 경계, 위험, 대안, 추천안을 사용자에게 간결하게 보여줄 때 Approval Card를 사용합니다. 이 card는 민감한 행동을 허용할지 묻는 표시일 뿐이며 사용자 소유의 제품 판단이나 중요한 기술 판단, 정확성 검토(correctness review), 결과 수락, 남은 위험을 받아들이는 판단, Write Authorization이 아닙니다.
 
-이 문서는 template 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
 ## 기준 기록
 

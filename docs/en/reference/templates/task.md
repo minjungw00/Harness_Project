@@ -4,7 +4,7 @@
 
 Use `TASK` as the continuity projection for active work. It summarizes where the work is, current judgment context, blocker ownership, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, next evidence, residual risk, close summary, gates, active Change Unit, pending decisions, evidence, report refs, and projection freshness.
 
-This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
 ## Source records
 

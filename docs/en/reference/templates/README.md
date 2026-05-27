@@ -4,7 +4,7 @@
 
 Use these files when you need the rendered Markdown shape for projection templates and display cards. The projection rules, authority boundaries, and freshness behavior are defined in [Document Projection Reference](../document-projection.md).
 
-This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+Owner boundary: templates are rendered shapes, not canonical state. They do not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. Kernel Smoke remains the first implementation/proof target. Agency-Hardened MVP and post-MVP automation remain outside MVP unless their owner docs explicitly promote and prove them.
 
 ## Template tiering
 
@@ -16,7 +16,7 @@ Projection templates match the API `ProjectionKind` tiers:
 | MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. |
 | Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Render only when the corresponding optional projection is enabled. |
 
-Templates are rendered shapes, not canonical state. `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`, and other report projections are readable views from owner records and refs. They must not redefine kernel fields, MCP schemas, SQLite DDL, gate behavior, or artifact integrity rules.
+`TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`, and other report projections are readable views from owner records and refs. They must not redefine kernel fields, MCP schemas, SQLite DDL, gate behavior, or artifact integrity rules.
 
 Rendered placeholders, labels, table columns, and example front matter keys are template bindings for display. A binding must either show an existing owner record field or ref, or be a derived display summary from the source records named by the template. If the source record or ref does not exist, render `none`, `unknown`, `not_required`, or an unavailable/blocking note instead of inventing state.
 

@@ -4,7 +4,7 @@
 
 Use the approval card when a pending approval needs a compact user-facing display of requested sensitive-action scope, purpose, boundaries, risks, alternatives, and recommendation. The card asks permission for the sensitive action only; it is not user-owned product or material technical judgment, correctness review, result acceptance, residual-risk acceptance, or Write Authorization.
 
-This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
 ## Source records
 

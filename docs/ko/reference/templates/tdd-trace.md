@@ -4,7 +4,7 @@
 
 Change Unit에서 TDD가 필요하거나 선택 또는 기록된 상태이고 RED, GREEN, refactor/check, waiver, evidence ref를 읽기 쉬운 projection으로 볼 때 `TDD-TRACE`를 사용합니다.
 
-이 문서는 template 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
 ## 기준 기록
 

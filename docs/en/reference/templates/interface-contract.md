@@ -4,7 +4,7 @@
 
 Use `INTERFACE-CONTRACT` when a module interface, caller impact, compatibility risk, or test boundary needs a readable projection.
 
-This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
 ## Source records
 
