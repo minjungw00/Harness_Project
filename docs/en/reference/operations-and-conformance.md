@@ -99,7 +99,7 @@ flowchart TD
   Conformance --> Fixtures["execute exact-shape fixtures"]
 ```
 
-Exact command flags may vary by implementation, but the semantics below are required for the reference MVP.
+Exact command names and flags may vary by implementation, but the behavior contract below is required for the reference MVP. Operator behavior is command-independent: it is defined by Core state records, `state.sqlite.task_events`, artifact refs and files, projection jobs and freshness, and API-owned errors or operator diagnostic labels. Console text, report prose, flag spelling, and shell exit formatting are display surfaces; they must not become a second state model.
 
 Operator command map:
 
@@ -233,33 +233,34 @@ authority   edited generated file is not Task state and was not silently overwri
 
 `doctor` reports readiness, drift, and repair options.
 
-Required categories:
+Required doctor/readiness categories:
 
 | Category | Checks |
 |---|---|
-| project | registered project, repo root, static config validity |
-| state | current state readability, JSON field parse and shape validity, owner-bound status values, state-version and idempotency consistency, locks, active Task consistency |
-| MCP | server reachability, Core reachability, read resource availability, public tool availability |
-| surface | capability profile declared for the actual host/profile, profile freshness, stale capability profile detection after version/MCP config/hook/permission/workspace policy/generated-file/conformance-result/capture/QA-capture/redaction/retention changes, generated/managed manifest drift, MCP config freshness, required MCP tool-call ability |
-| artifacts | file existence, hash, size, redaction state, task/run or artifact-link relation |
+| runtime home | runtime root readability, project directory presence, `registry.sqlite`, `project.yaml`, per-project `state.sqlite`, artifact directories, locks, storage permissions posture, generated operational path posture, and whether direct file edits would bypass Core |
+| project state | registered project, repo root, static config validity, current state readability, JSON field parse and shape validity, owner-bound status values, state-version and idempotency consistency, active Task consistency |
+| artifact store | file existence, hash, size, content type, redaction state/status, retention or availability, task/run or artifact-link relation, approved staging boundary, and missing or hash-mismatched files |
+| reference surface | capability profile declared for the actual host/profile, profile freshness, stale capability profile detection after version/MCP config/hook/permission/workspace policy/generated-file/conformance-result/capture/QA-capture/redaction/retention changes, generated/managed manifest drift, MCP config freshness, required MCP tool-call ability, and honest guarantee display |
+| MCP availability | server reachability, Core reachability, read resource availability, public tool availability, local-only or promoted access posture, and `MCP_SERVER_UNAVAILABLE` versus `SURFACE_MCP_UNAVAILABLE` diagnostics |
 | projections | queued jobs, freshness, managed hash drift, failed renders |
 | reconcile | pending human edits, managed block drift, generated/managed manifest drift |
 | validators/checks | required stable ValidatorResult-emitting validators, plus separately captured Core check/precondition categories |
 | agency/stewardship/context | Decision Packet and decision gate readiness, Autonomy Boundary readiness, residual-risk visibility, codebase stewardship, context freshness, stale chat/pull-only context not treated as authority |
-| security/threat model | local MCP binding/access expectation, registered project/task/surface consistency, connector drift, sensitive-category side effects, redaction, omission, or block coverage |
+| security/threat model | local binding/access expectation, registered project/task/surface consistency, connector drift, sensitive-category side effects, redaction, omission, or block coverage that cuts across runtime home, artifact store, reference surface, and MCP availability |
 
 ```mermaid
 flowchart TD
-  Doctor["harness doctor"] --> Project["project"]
-  Doctor --> State["state"]
-  Doctor --> MCP["MCP"]
-  Doctor --> Surface["surface"]
-  Doctor --> Artifacts["artifacts"]
+  Doctor["harness doctor"] --> Runtime["runtime home"]
+  Doctor --> State["project state"]
+  Doctor --> MCP["MCP availability"]
+  Doctor --> Surface["reference surface"]
+  Doctor --> Artifacts["artifact store"]
   Doctor --> Projections["projections"]
   Doctor --> Reconcile["reconcile"]
   Doctor --> Validators["validators/checks"]
   Doctor --> Agency["agency/stewardship/context"]
   Doctor --> Security["security/threat model"]
+  Runtime --> Perms["storage and permission posture"]
   State --> JSON["JSON TEXT parse and shape validity"]
   Projections --> Freshness["freshness and failed renders"]
   Validators --> Stable["stable ValidatorResult IDs and Core checks"]
@@ -293,11 +294,12 @@ Compact doctor examples:
 
 | Category | Example report | Operational meaning |
 |---|---|---|
-| project | `project OK repo_root=/repo project_id=PRJ-0001` | Project registration and static config are readable. |
-| state | `state FAIL state.sqlite tasks.current_json malformed` | Current state is invalid; this is not a projection problem. Recovery may repair only if Core can reconstruct the shape. |
-| MCP | `MCP FAIL MCP_SERVER_UNAVAILABLE localhost endpoint refused` | Core cannot be reached through MCP, so no authoritative Core response or state-changing claim is available from that path. |
-| surface | `surface WARN SURFACE_MCP_UNAVAILABLE required tool not callable by SURFACE-REF` | Core may be reachable, but this connected surface cannot use the required MCP path; write-capable work is held according to the guarantee profile. |
-| artifacts | `artifacts FAIL ART-204 hash mismatch; evidence_gate may become stale` | The artifact record and stored file disagree; Markdown edits do not repair the evidence. |
+| runtime home | `runtime home WARN project directory permissions broader than profile` | The storage posture reduces the reported guarantee; direct file edits still do not become authority. |
+| project state | `project state OK repo_root=/repo project_id=PRJ-0001` | Project registration, static config, and current state shape are readable. |
+| project state | `project state FAIL state.sqlite tasks.current_json malformed` | Current state is invalid; this is not a projection problem. Recovery may repair only if Core can reconstruct the shape. |
+| MCP availability | `MCP availability FAIL MCP_SERVER_UNAVAILABLE localhost endpoint refused` | Core cannot be reached through MCP, so no authoritative Core response or state-changing claim is available from that path. |
+| reference surface | `reference surface WARN SURFACE_MCP_UNAVAILABLE required tool not callable by SURFACE-REF` | Core may be reachable, but this connected surface cannot use the required MCP path; write-capable work is held according to the guarantee profile. |
+| artifact store | `artifact store FAIL ART-204 hash mismatch; evidence_gate may become stale` | The artifact record and stored file disagree; Markdown edits do not repair the evidence. |
 | projections | `projections WARN TASK stale source_state_version=41 current_task_state_version=44` | Task state may still be valid; the readable `TASK` view lags and should be refreshed or reconciled. |
 | projections | `projections FAIL RUN-SUMMARY failed render_error=template_input_missing` | The projection job failed; the Run record is not converted into a failed Run by this display failure. |
 | reconcile | `reconcile MANUAL generated-file drift .harness/agent/generated/reference-instructions.md` | The generated file is reported and routed for review; it is not silently overwritten or treated as state. |
@@ -325,11 +327,11 @@ Security diagnostic display examples:
 
 | Observed condition | Category and level guidance | Report content |
 |---|---|---|
-| MCP is exposed beyond local process/localhost without a matching connector profile, or appears forwarded, tunneled, stale, or unknown. | `security/threat model` plus `MCP`; `WARN` for reduced read-only guarantees, `FAIL` when state-changing or close-relevant paths would rely on the exposure. | Observed bind or access mode, active project, expected surface profile, reduced guarantee, and next diagnosis or reconnect action. |
+| MCP is exposed beyond local process/localhost without a matching connector profile, or appears forwarded, tunneled, stale, or unknown. | `security/threat model` plus `MCP availability`; `WARN` for reduced read-only guarantees, `FAIL` when state-changing or close-relevant paths would rely on the exposure. | Observed bind or access mode, active project, expected surface profile, reduced guarantee, and next diagnosis or reconnect action. |
 | Runtime Home permissions are unknown or weaker than the documented local control profile. | `security/threat model`; `WARN` or `MANUAL` according to platform observability. | Affected path class, observable owner/mode facts when available, and the reminder that file permissions are diagnostic rather than canonical state. |
-| Runtime Home has broad write access. | `security/threat model` plus `state`, `surface`, or `artifacts` as affected; usually `FAIL` for write-capable readiness. | Tampering risk for `state.sqlite`, `registry.sqlite`, `project.yaml`, connector config snippets, connector manifests, generated manifests, artifact storage, staging files, and generated operational files; direct edits remain invalid until Core/recover/artifact checks validate them. |
-| Artifact directories have broad read access. | `security/threat model` plus `artifacts`; `WARN` or `FAIL` according to sensitivity. | Confidentiality risk for logs, screenshots, tokens, PII, verification bundles, and exports; report artifact refs, redaction state, and path class without leaking raw values. |
-| Registered project, Task, or surface does not match the caller's claim. | `security/threat model`, `MCP`, and `surface`; `FAIL` for the affected operation. | Claimed versus registered identifiers where safe to display, affected tool or surface, and guidance to refresh/reconnect rather than treating the claim as authority. |
+| Runtime Home has broad write access. | `security/threat model` plus `runtime home`, `project state`, `reference surface`, or `artifact store` as affected; usually `FAIL` for write-capable readiness. | Tampering risk for `state.sqlite`, `registry.sqlite`, `project.yaml`, connector config snippets, connector manifests, generated manifests, artifact storage, staging files, and generated operational files; direct edits remain invalid until Core/recover/artifact checks validate them. |
+| Artifact directories have broad read access. | `security/threat model` plus `artifact store`; `WARN` or `FAIL` according to sensitivity. | Confidentiality risk for logs, screenshots, tokens, PII, verification bundles, and exports; report artifact refs, redaction state, and path class without leaking raw values. |
+| Registered project, Task, or surface does not match the caller's claim. | `security/threat model`, `MCP availability`, and `reference surface`; `FAIL` for the affected operation. | Claimed versus registered identifiers where safe to display, affected tool or surface, and guidance to refresh/reconnect rather than treating the claim as authority. |
 
 ## serve mcp
 
@@ -470,46 +472,54 @@ When reconcile reports generated-file or managed-block drift, it should say whic
 
 Recover repairs interrupted or inconsistent operational state without rewriting history.
 
-Required scenarios:
+Required recovery classes:
 
 | Scenario | Recovery behavior |
 |---|---|
-| agent crash during write | commit a recovery Run with `runs.status=interrupted` and capture diff/log artifacts when possible; captured artifacts are recovery evidence, not proof of successful completion |
-| stale approval baseline | expire or re-request approval when scope is affected |
-| evaluator observes drift | mark verification blocked or evidence stale |
-| artifact registry mismatch | rescan files, mark missing or hash-mismatched artifacts stale or blocked, preserve registered hashes, and restore exact bytes or register a replacement through Core when recovery is possible |
-| projection job failed | retry or mark failed and create reconcile guidance |
-| managed Markdown edited | create reconcile item |
+| interrupted agent write | commit a recovery Run with `runs.status=interrupted` or an equivalent interrupted recovery record and capture diff/log artifacts when possible; captured artifacts are recovery evidence only, not proof of successful completion |
+| baseline drift | mark affected baseline-dependent write, verification, evidence, approval, or close readiness stale or blocked until a fresh baseline or compatible owner path exists |
+| approval drift | expire, narrow, or re-request approval when scope, baseline, sensitive category, expiry, or actor context no longer matches; do not turn the old approval into broad authorization |
+| evaluator repo drift | mark verification blocked or evidence stale, require a fresh evaluator bundle or Eval path, and do not set detached verification passed from a drifted observation |
+| artifact missing or hash mismatch | rescan files, mark missing or hash-mismatched artifacts stale or blocked, preserve registered hashes, and restore exact bytes or register a replacement through Core when recovery is possible |
+| projection failure | retry from committed source records or mark failed and create reconcile guidance; do not change Task result or fabricate state from the rendered report |
+| managed Markdown direct edit | create reconcile item and leave canonical state unchanged until an explicit reconcile decision applies through Core |
 | malformed or schema-incompatible storage JSON | repair only if Core can reconstruct the expected shape from canonical state or raw artifacts; otherwise fail or require manual recovery |
 | idempotency replay mismatch | preserve the original committed replay row, report `STATE_CONFLICT` for the changed request, and do not merge new artifacts, events, projection jobs, or response fields into the old result |
-| lock expired | append recovery event and release or reacquire according to lock policy |
+| expired lock | append recovery event and release or reacquire according to lock policy |
 | MCP unavailable | report diagnostic condition `MCP_SERVER_UNAVAILABLE` or `SURFACE_MCP_UNAVAILABLE`, keep product/runtime/code writes held, and give the next diagnosis or reconnect step |
+| surface capability mismatch | report or emit `surface_capability_check` where the owner path allows it, reduce guarantee display, and hold or fail unsafe writes with existing `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, or blocked-reason paths rather than claiming preventive blocking |
 | local security posture weak or unknown | report the same `OK`/`WARN`/`FAIL`/`MANUAL` posture classes as doctor for Runtime Home permissions, artifact directory exposure, MCP reachability, stale MCP config, or broad local file access; hold write-capable or close-relevant recovery until the posture is diagnosed |
 
 ```mermaid
 flowchart TD
   Scenario["failure scenario"] --> Classify["classify recovery path"]
-  Classify --> Interrupted["agent crash during write<br/>runs.status=interrupted"]
-  Classify --> Baseline["stale approval baseline"]
-  Classify --> Evidence["evaluator drift or artifact mismatch"]
-  Classify --> Projection["projection job failed or managed Markdown edited"]
+  Classify --> Interrupted["interrupted agent write<br/>runs.status=interrupted"]
+  Classify --> Baseline["baseline drift"]
+  Classify --> Approval["approval drift"]
+  Classify --> Eval["evaluator repo drift"]
+  Classify --> Evidence["artifact missing or hash mismatch"]
+  Classify --> Projection["projection failure or managed Markdown direct edit"]
   Classify --> Storage["malformed or schema-incompatible storage JSON"]
   Classify --> Replay["idempotency replay mismatch"]
-  Classify --> Lock["lock expired"]
+  Classify --> Lock["expired lock"]
   Classify --> MCP["MCP unavailable"]
+  Classify --> Capability["surface capability mismatch"]
   Classify --> Security["local security posture weak or unknown"]
   Interrupted --> Event["append compensating event"]
-  Baseline --> Approval["expire or re-request approval"]
-  Evidence --> Stale["mark evidence or verification stale/blocked"]
+  Baseline --> Stale["mark affected readiness stale/blocked"]
+  Approval --> Reapprove["expire, narrow, or re-request approval"]
+  Eval --> Verify["block verification until fresh bundle/path"]
+  Evidence --> Artifact["preserve hash; restore exact bytes or register replacement"]
   Projection --> Recon["retry, fail, or create reconcile guidance"]
   Storage --> Repair["repair only from canonical state or raw artifacts"]
   Replay --> Conflict["preserve original replay and report STATE_CONFLICT"]
   Lock --> Release["release or reacquire by policy"]
   MCP --> Hold["hold product/runtime/code writes and diagnose"]
+  Capability --> Hold
   Security --> Hold
 ```
 
-Recovery may append compensating events. It must not silently delete evidence, rewrite event history, or make projections authoritative.
+Recovery may append compensating events. It must not silently delete evidence, rewrite event history, make projections authoritative, fabricate successful run evidence, set verification or QA passed, accept results, accept residual risk, or close a Task.
 
 Illustrative recovery report:
 
@@ -523,7 +533,7 @@ not done    no earlier task_events rewritten; no evidence silently deleted
 not done    no Markdown projection edited into canonical state
 ```
 
-Captured recovery artifacts can explain what was observed during interruption. They do not prove the interrupted implementation completed successfully and cannot satisfy evidence, verification, QA, acceptance, or close by themselves.
+Captured recovery artifacts can explain what was observed during interruption or repair. They do not prove the interrupted implementation completed successfully and cannot satisfy evidence, verification, QA, acceptance, residual-risk acceptance, or close by themselves.
 
 ## export
 
@@ -531,14 +541,14 @@ Export creates a review or archival bundle for a Task.
 
 Required contents:
 
-- export manifest with created time, task id, projection freshness, and redaction summary
-- state snapshots for the Task and related records
+- export manifest with created time, Task id or ids, included state/event version range, projection freshness, export profile, and redaction status summary
+- state snapshots for the Task and related Core records, plus safe state/event version facts needed to understand the snapshot without creating new DDL or a second state store
 - Decision Packets, user decisions, residual risks with accepted-risk metadata/refs, Journey Spine entries or continuity refs, and relevant Change Unit Autonomy Boundary summaries
-- projection snapshots for relevant reports
-- artifact references and included raw artifact files when allowed
+- report projection snapshots for relevant reports, including current/stale/failed/omitted freshness status
+- artifact references, owner relations, integrity metadata, redaction status, retention/availability, and included raw artifact files only when allowed
 - artifact integrity manifest
-- retention status for included refs, including retained raw files and expired or unavailable artifacts omitted from the bundle
-- redaction, omission, and block notes for secrets, sensitive logs, and PII
+- retention status for included refs, including retained raw files copied into the bundle and expired or unavailable artifacts omitted from the bundle
+- redaction, omission, and block notes for omitted secrets, sensitive logs, screenshots, network traces, telemetry/logging content, and PII
 
 ```mermaid
 flowchart TD
@@ -547,19 +557,21 @@ flowchart TD
   Export --> Decisions["Decision Packets and user decisions"]
   Export --> Risks["residual risks and accepted-risk refs"]
   Export --> Journey["Journey Spine or continuity refs"]
-  Export --> Projections["projection snapshots"]
-  Export --> Artifacts["artifact refs and allowed raw files"]
+  Export --> Projections["report projection snapshots"]
+  Export --> Artifacts["artifact refs, retention, and allowed raw files"]
   Export --> Integrity["artifact integrity manifest"]
   Export --> Redaction["redaction, omission, and block notes"]
 ```
 
 Exported projection snapshots may have hashes, but that does not make the Markdown projection the canonical evidence. Raw evidence remains the artifact files and their registered refs.
 
+Export output is derived from Core state, `task_events` version facts, artifact records and files, projection records/snapshots, and existing error or diagnostic outcomes. It must not infer success from report prose, recovery artifacts, stale projections, chat text, or operator console output.
+
 Export is a `data_export`-category side effect when policy applies. Export must preserve the artifact boundary: included raw files are limited to allowed registered artifacts, projection snapshots remain snapshots, and the bundle carries redaction, omission, or block notes for secrets, sensitive logs, screenshots, network traces, telemetry/logging content, and PII that were removed or blocked.
 
 Export must never widen access to staged, omitted, or blocked content. `secret_omitted` artifacts are represented by refs, hashes over the safe bytes, and omission notes or handles. `blocked` artifacts are represented by committed metadata-only notices and must be listed as unavailable raw evidence; their hashes, sizes, and content types refer to the notice bytes, not the forbidden payload. Export manifests should name the affected artifact ref, the redaction, omission, or block category, and the affected evidence, QA, verification, projection, or Release Handoff display without including the secret or PII value.
 
-Retention does not make export a bypass around artifact policy. Retained artifacts may be copied only when the export profile, redaction state, owner relation, and integrity check allow raw inclusion. Expired, unavailable, `secret_omitted`, or `blocked` artifacts remain represented by refs, safe metadata, and omission/block notes; export must not recreate or recover their raw bytes from logs, Markdown reports, projections, chat text, or staging paths.
+Retention does not make export a bypass around artifact policy. Retained artifacts may be copied only when the export profile, redaction status, owner relation, and integrity check allow raw inclusion. Expired, unavailable, `secret_omitted`, or `blocked` artifacts remain represented by refs, safe metadata, and omission/block notes; export must not recreate or recover their raw bytes from logs, Markdown reports, projections, chat text, or staging paths.
 
 Illustrative export manifest summary:
 
@@ -581,8 +593,12 @@ artifact_integrity:
   unavailable: [ART-204]
 redaction_summary:
   redacted: 2
+  omitted_secrets: 1
   secret_omitted: 1
   blocked: 1
+retention_summary:
+  retained_raw_files_included: [ART-101, ART-102]
+  expired_or_unavailable: [ART-204]
 omitted_artifacts:
   - artifact_id: ART-204
     reason: blocked
@@ -601,6 +617,7 @@ The profile summarizes:
 - evidence refs, verification refs, Manual QA refs, and residual-risk refs
 - changed files and affected Change Unit scope
 - projection freshness and any stale, failed, or omitted projection snapshots
+- artifact retention and availability, including retained raw files and expired or unavailable artifacts omitted from the export
 - redaction, omission, or block notes for secrets, sensitive logs, PII, omitted artifacts, and blocked artifacts
 - suggested PR, review, deployment, rollback, and monitoring checklist items for the user's external systems
 
@@ -618,7 +635,7 @@ Release Handoff catalog entry:
 
 | Scenario ID | Operator action | Required assertions |
 |---|---|---|
-| `EXPORT-release-handoff-does-not-close-or-deploy` | `export` or report read | Generating or returning a Release Handoff report/export may include close readiness, blockers, evidence refs, verification refs, Manual QA refs, residual-risk refs, changed files, projection freshness, redaction/omission/block notes, and advisory PR/deploy/rollback/monitoring checklist items. The report/export alone must not mutate Task lifecycle, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, merge, deploy, monitor production, upgrade assurance, or create deployment/merge authority. Checklist findings that reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, or approval needs route to existing Decision Packet, evidence, Manual QA, Eval, residual-risk, approval, or close paths. |
+| `EXPORT-release-handoff-does-not-close-or-deploy` | `export` or report read | Generating or returning a Release Handoff report/export may include close readiness, blockers, evidence refs, verification refs, Manual QA refs, residual-risk refs, changed files, projection freshness, artifact retention/availability, redaction/omission/block notes, and advisory PR/deploy/rollback/monitoring checklist items. The report/export alone must not mutate Task lifecycle, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, merge, deploy, monitor production, upgrade assurance, or create deployment/merge authority. Checklist findings that reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, or approval needs route to existing Decision Packet, evidence, Manual QA, Eval, residual-risk, approval, or close paths. |
 
 ## artifacts check
 

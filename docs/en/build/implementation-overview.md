@@ -144,16 +144,16 @@ Human-editable projection sections are proposal surfaces. The implementation pat
 Operator entrypoints are surfaces over Core behavior, not a second state model. Build them as command-independent capabilities first:
 
 - connect or register a project
-- report doctor/readiness status
+- report doctor/readiness status across runtime home, project state, artifact store, reference surface, MCP availability, projections, reconcile, validators/checks, and agency/stewardship/context
 - serve or expose the MCP boundary
 - refresh projections
 - reconcile human edits, generated-file drift, or managed-block drift without silently overwriting the existing file or treating it as state
-- recover interrupted or stale operational state
-- export state, projections, and artifact refs
+- recover interrupted or stale operational state, including baseline drift, approval drift, evaluator repo drift, artifact missing or hash mismatch, projection failure, managed Markdown direct edits, MCP unavailable, and surface capability mismatch, without treating recovery artifacts as successful completion proof
+- export state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, and retained, expired, or unavailable artifact status
 - check artifact integrity
 - run conformance fixtures
 
-Exact command names and flags can come later. The important part is that operator behavior uses the same Core state, events, artifacts, projections, and errors as MCP tools. State-changing operator outcomes must enter Core or a documented recovery path that preserves Core ordering; operator output must not become a parallel source of state truth.
+Exact command names and flags can come later. The important part is the command-independent behavior contract: operator behavior uses the same Core state, `task_events`, artifacts, projections, and existing errors or diagnostics as MCP tools. State-changing operator outcomes must enter Core or a documented recovery path that preserves Core ordering; operator output must not become a parallel source of state truth.
 
 ## What you are not building yet
 

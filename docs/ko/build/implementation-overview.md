@@ -144,16 +144,16 @@ Projection failure는 committed Core 상태를 롤백하면 안 됩니다. Proje
 Operator 진입점은 Core 동작 위에 놓이는 경로이지 두 번째 상태 모델이 아닙니다. 먼저 command-independent 기능으로 계획합니다.
 
 - project connect 또는 등록
-- doctor/readiness 상태 표시
+- runtime home, project state, artifact store, reference surface, MCP availability, projections, reconcile, validators/checks, agency/stewardship/context에 대한 doctor/readiness 상태 표시
 - MCP 경계 제공
 - projection 새로고침
 - human edit, generated-file drift, managed-block drift를 조용히 덮어쓰거나 state로 취급하지 않고 reconcile
-- interrupted 또는 최신이 아닌 운영 상태 복구
-- state, projection, artifact ref export
+- baseline drift, approval drift, evaluator repo drift, artifact missing 또는 hash mismatch, projection failure, managed Markdown direct edit, MCP unavailable, surface capability mismatch를 포함한 interrupted 또는 최신이 아닌 운영 상태 복구. Recovery artifact를 successful completion proof로 취급하지 않습니다
+- state snapshot, report projection snapshot, artifact refs, redaction status, omitted-secret note, retained/expired/unavailable artifact status export
 - artifact 무결성 확인
 - conformance fixture 실행
 
-정확한 command name과 flag는 나중에 정해도 됩니다. 중요한 것은 operator 동작이 MCP tool과 같은 Core 상태, event, artifact, projection, error를 사용한다는 점입니다. 상태를 변경하는 operator outcome은 Core 또는 Core ordering을 보존하는 문서화된 recovery path에 들어가야 하며, operator output이 별도 state truth가 되면 안 됩니다.
+정확한 command name과 flag는 나중에 정해도 됩니다. 중요한 것은 command-independent behavior contract입니다. Operator 동작은 MCP tool과 같은 Core state, `task_events`, artifacts, projections, 기존 error 또는 diagnostics를 사용합니다. 상태를 변경하는 operator outcome은 Core 또는 Core ordering을 보존하는 문서화된 recovery path에 들어가야 하며, operator output이 별도 state truth가 되면 안 됩니다.
 
 ## 아직 만들지 않는 것
 

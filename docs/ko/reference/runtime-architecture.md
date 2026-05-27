@@ -218,7 +218,7 @@ MVP Core는 다음 내부 모듈을 가진 단일 프로세스로 실행할 수 
 | Connector adapter | 기준 접점 등록, capability 보고, capture hints |
 
 
-Core만 기준 운영 상태를 업데이트합니다. Agents, MCP tools, CLI commands, projectors, reconnect/recovery flows는 Core 로직을 거치거나 같은 상태 compatibility rules를 보존하는 recovery code를 사용해야 합니다. 이들은 Core record를 표시, 진단, 복구, 파생할 수 있지만 두 번째 기준 상태 모델을 유지하면 안 됩니다.
+Core만 기준 운영 상태를 업데이트합니다. Agents, MCP tools, CLI commands, projectors, reconnect/recovery flows는 Core 로직을 거치거나 같은 상태 compatibility rules를 보존하는 recovery code를 사용해야 합니다. 이들은 Core record를 표시, 진단, 복구, 파생할 수 있지만 두 번째 기준 상태 모델을 유지하면 안 됩니다. Operator command name과 flag는 표시/entrypoint 선택입니다. 동작은 Core state record, `state.sqlite.task_events`, artifacts, projection jobs, API-owned errors 또는 문서화된 diagnostics가 정의합니다.
 
 Decision, Journey, Autonomy/Boundary modules는 새로운 권한 tier를 만들지 않습니다. 기준 기록은 `state.sqlite` 현재 기록과 `state.sqlite.task_events`에 있고, 원본 근거는 artifact store에 있으며, Markdown views는 projections 또는 proposal 접점으로 남습니다.
 
@@ -272,6 +272,8 @@ Core는 runs, evidence manifests, Eval records, Manual QA records, Decision Pack
 Raw secrets는 artifacts로 저장하면 안 됩니다. Secret-related evidence가 required라면 Core는 redacted artifact, secret handle, relevant validator를 통과한 operator note를 기록합니다.
 
 Large logs, diffs, screenshots, traces 같은 큰 근거는 registered artifact ref로 link해야 합니다. Markdown 보고서와 export는 ref가 무엇을 뒷받침하는지 요약하고 redaction 및 availability state와 safe note를 표시할 수 있지만, 큰 evidence 본문을 붙여 넣거나 생략된 secret value를 다시 만들면 안 됩니다.
+
+Export는 파생 bundle이며 네 번째 권한 공간이 아닙니다. Export는 Core state snapshot, 안전한 state/event version fact, report projection snapshot, artifact ref, 허용된 raw artifact file, artifact integrity result, redaction status, omitted-secret note, retained, expired, unavailable, `secret_omitted`, `blocked` artifact의 retention/availability fact를 포함할 수 있습니다. Durable file이 되는 export component는 valid owner record 또는 Task-scoped projection ref에 연결된 artifact로 남습니다. Export는 recovery artifact, stale projection, Markdown prose, chat text, staging path, operator console output에서 성공을 추론하면 안 됩니다.
 
 ### Raw artifacts, 상태 기록, Markdown 보고서
 
@@ -336,14 +338,15 @@ Failures는 숨기지 않고 기록합니다.
 | Failure | Architecture-level handling |
 |---|---|
 | Agent crash during write | active Run을 `runs.status=interrupted`로 표시하거나 equivalent interrupted recovery Run을 commit합니다. 가능하면 diff/log snapshots를 캡처하고 successful completion의 증거가 아닌 recovery artifacts로 등록합니다 |
-| approval 이후 baseline drift | approval 또는 evidence를 `stale`로 표시합니다. Scope가 영향을 받으면 reconfirmation을 요구합니다 |
-| evaluator가 repo drift 관찰 | verification을 차단하거나 `stale`로 표시합니다. Fresh baseline 또는 new bundle을 요구합니다 |
+| Baseline drift | fresh baseline 또는 compatible owner path가 생길 때까지 baseline-dependent write, verification, evidence, approval, close-readiness path를 `stale` 또는 blocked로 표시합니다 |
+| Approval drift | scope, baseline, sensitive category, expiry, actor context가 더 이상 맞지 않으면 Approval을 만료, 축소, 또는 재요청합니다. 오래된 Approval을 broad authorization으로 바꾸지 않습니다 |
+| evaluator가 repo drift 관찰 | verification을 차단하거나 `stale`로 표시합니다. Fresh baseline, evaluator bundle, 또는 Eval path를 요구하며 drifted observation에서 detached verification passed를 설정하지 않습니다 |
 | artifact file missing 또는 hash mismatch | artifact와 dependent evidence, projection, export, close-readiness view를 `stale` 또는 blocked로 표시합니다. Recovery를 통해 다시 scan하거나, 등록된 정확한 bytes를 restore하거나, replacement를 등록합니다 |
-| Projection job failed | state는 current로 유지하고 projection을 failed로 표시한 뒤 retry 또는 reconcile합니다. Core state를 roll back하지 않습니다 |
+| Projection job failed | state는 current로 유지하고 projection을 failed로 표시한 뒤 retry 또는 reconcile합니다. Core state를 roll back하거나 Task result를 fail로 만들거나 rendered Markdown에서 state를 만들어내지 않습니다 |
 | Managed Markdown edited directly | reconcile item을 만들고 기준 상태를 직접 바꾸지 않습니다 |
 | Stale PRD, chat memory, evaluator bundle | stale context는 pull-only input으로 취급합니다. Owner path가 refresh, reconcile, supersede하기 전까지 write authorization, current Task state replacement, gate satisfaction, result acceptance, detached verification 기록, close에 사용할 수 없습니다 |
 | MCP unavailable | `MCP_SERVER_UNAVAILABLE`은 tool 호출이 Core에 닿을 수 없어 authoritative Core response가 불가능한 진단 조건이고, `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 연결된 접점에서 사용할 수 있는 MCP가 없거나 MCP configuration이 최신이 아니거나 required tools를 호출할 수 없음을 관찰할 수 있는 진단 조건입니다. `MCP_UNAVAILABLE`은 stable public availability code로 남습니다. Product/runtime/code writes는 cooperative 접점에서는 instruction으로 보류되고, 가능한 detective path에서는 실행 뒤에 감지되며, covered operation에 대해 fixture로 입증된 preventive guard가 있을 때만 실행 전에 차단됩니다 |
 | Surface capability mismatch | validator result를 기록하고 보장 수준 표시를 조정하며, required checks를 충족할 수 없으면 Write Authorization을 거부하거나 unsafe writes를 보류합니다. 실행 전 차단은 여전히 connected profile에서 fixture로 입증된 coverage에 달려 있습니다 |
 
 
-Recovery tools는 projection 최신성 repair, artifact rescan, 최신이 아닌 runs interrupt, drifted approvals expire, reconcile items create를 수행할 수 있습니다. 다만 같은 권한 규칙을 보존해야 합니다. `state.sqlite`는 운영 상태이고, `state.sqlite.task_events`는 그 state store 안의 event 이력이며, 원본 근거는 artifact store에 있고, Markdown 보고서는 projection으로 남습니다.
+Recovery tools는 projection 최신성 repair, artifact rescan, 최신이 아닌 runs interrupt, drifted approvals expire, reconcile items create를 수행할 수 있습니다. 다만 같은 권한 규칙을 보존해야 합니다. `state.sqlite`는 운영 상태이고, `state.sqlite.task_events`는 그 state store 안의 event 이력이며, 원본 근거는 artifact store에 있고, Markdown 보고서는 projection으로 남습니다. Recovery artifact와 compensating event는 recovery가 관찰하거나 변경한 내용을 설명합니다. 그 자체로 successful implementation을 증명하거나, evidence를 충족하거나, verification 또는 QA를 pass하거나, 결과 또는 남은 위험을 수락하거나, Task를 close하지 않습니다.

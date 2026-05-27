@@ -40,7 +40,7 @@ The MVP should let one local project and one reference agent surface operate thr
 - MCP resources and tools over Core
 - projection jobs and MVP-required projection renderers
 - reconcile for human-editable input or managed-block drift
-- doctor, recover, export, artifact integrity, and conformance smoke entrypoints
+- doctor/readiness, recover, export, artifact integrity, and conformance smoke entrypoints that report through Core state, `task_events`, artifacts, projections, and existing errors or diagnostics
 
 Keep this scope local, inspectable, and fixture-proven.
 
@@ -87,7 +87,7 @@ It must prove:
 - feedback-loop and TDD checks
 - codebase stewardship coverage
 - projection and reconcile completeness
-- recover, export, and artifact integrity behavior
+- recover, export, and artifact integrity behavior, including the rule that recovery artifacts do not prove successful completion
 - later-boundary checks
 - required agency conformance fixtures
 
@@ -195,10 +195,10 @@ Build the operator and conformance proof layer.
 
 Focus on:
 
-- doctor
-- recover
+- doctor/readiness categories for runtime home, project state, artifact store, reference surface, MCP availability, projections, reconcile, validators/checks, and agency/stewardship/context
+- recover handling for baseline drift, approval drift, evaluator repo drift, artifact missing or hash mismatch, projection failure, managed Markdown direct edits, MCP unavailable, and surface capability mismatch
 - reconcile
-- export
+- export of state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, and retained, expired, or unavailable artifact status
 - artifact integrity check
 - fixture-based conformance smoke over state, events, artifacts, projections, and errors, with suite catalog metadata kept outside the fixture body
 - coverage-map conformance for core, connector, connector guard/freeze, agency, stewardship, context-hygiene, and design-quality paths
@@ -206,7 +206,7 @@ Focus on:
 - connector and context conformance for MCP unavailable holds, surface capability mismatch, generated-file drift, stale projection write guards, stale PRD/chat-memory pull-only behavior, evaluator bundle freshness, and artifact integrity effects
 - later-boundary checks that keep Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, parallel orchestration, team workflow, broad connector automation, native hook or sidecar expansion, derived metrics, and preventive guard expansion out of MVP unless separately proven and promoted
 
-Do not create a second state model for operator commands. Operators diagnose, repair, export, or run fixtures over the same Core state model.
+Do not create a second state model for operator commands. Operators diagnose, repair, export, or run fixtures over the same Core state model. Exact command names and flags can vary; the contract is the command-independent behavior over Core state, `task_events`, artifacts, projections, and existing errors or diagnostics.
 
 Docs-maintenance remains a separate read-only documentation profile. It may report documentation drift, but it is not Kernel Smoke, not Agency-Hardened runtime conformance, and not an implementation-readiness signal.
 
@@ -220,7 +220,7 @@ Use these as implementation-readable checklists. They restate the stage exit cri
 - Project state exists before mutations use expected state versions.
 - The reference surface is registered.
 - Runtime files and artifact storage exist.
-- Doctor/readiness can report project/runtime status.
+- Doctor/readiness can report runtime home, project state, artifact store, reference surface, and MCP availability status without creating state.
 
 ### MVP-1 exit checklist
 
@@ -274,14 +274,14 @@ Use these as implementation-readable checklists. They restate the stage exit cri
 - Suite catalog metadata groups exact-shape fixtures by suite, stage, and tags without being passed to Core.
 - Agency checks prove Journey visibility, unresolved decisions, agent latitude, distinct user judgments, and residual-risk visibility.
 - Dependency DAG support remains metadata-only.
-- Export includes state snapshots, report projections, artifact refs, and redaction status.
+- Export includes state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, and retained, expired, or unavailable artifact status.
 - Browser QA Capture entries remain future candidates unless promoted through owner docs.
 
 ## Observable by stage
 
 | Stage | What the user or operator can observe |
 |---|---|
-| MVP-0 | Doctor/readiness can show the runtime home, registered project, artifact store, reference surface, and idle state. |
+| MVP-0 | Doctor/readiness can show runtime home, project state, artifact store, reference surface, MCP availability, and idle state. |
 | MVP-1 | Status, intake, and next-action reads can show the active Task, Journey/Decision state, and non-authoritative guidance without mutating state. |
 | MVP-2 | `prepare_write` can explain missing scope, out-of-scope paths, sensitive approval needs, stale baseline, unresolved decisions, and compatible Write Authorization creation. |
 | MVP-3 | `record_run` consumes authority, Runs cite artifacts, evidence updates, projection freshness is visible, and reconcile items appear for managed drift. |
