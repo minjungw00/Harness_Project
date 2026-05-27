@@ -4,6 +4,8 @@
 
 Use the approval card when a pending approval needs a compact user-facing display of requested sensitive-action scope, purpose, boundaries, risks, alternatives, and recommendation. The card asks permission for the sensitive action only; it is not user-owned product or material technical judgment, correctness review, result acceptance, residual-risk acceptance, or Write Authorization.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - approval record
@@ -12,12 +14,14 @@ Use the approval card when a pending approval needs a compact user-facing displa
 - allowed paths, tools, commands, network targets, and secrets
 - baseline ref
 - risks, alternatives, and recommendation
+- related Write Authorization boundary, artifact refs, redaction state, and projection freshness when displayed
 
 Coverage placeholders such as `{approval_covers}` and `{approval_does_not_cover}` are derived display summaries from approval scope, linked Approval records, related Decision Packet refs, and current write or close context. They show the approval boundary only; the Approval record and decision path remain authoritative.
 
 ## Rendered sections
 
 - approval requirement
+- compact refs
 - request identity
 - purpose
 - allowed paths
@@ -39,6 +43,7 @@ Coverage placeholders such as `{approval_covers}` and `{approval_does_not_cover}
 Approval is required.
 Display only: approval must still be recorded through the canonical approval decision path.
 Sensitive permission only: this is not user-owned product or material technical judgment, correctness, final acceptance, residual-risk acceptance, or Write Authorization.
+Refs: approval={approval_id}; decision={decision_packet_ref|none}; write={write_authorization_ref|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 
 {approval_id} {category}
 Request: {summary}

@@ -13,8 +13,9 @@ This is template reference documentation. It does not authorize runtime/server i
 - changed paths
 - out-of-bounds or unchanged scope summary
 - checks performed
-- Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, Approval, and artifact refs when those claims are displayed
-- artifact refs
+- Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, and Artifact refs when those claims are displayed
+- artifact refs with redaction state and availability
+- projection freshness inputs
 - escalation flag
 - close assurance
 - evidence, verification, Manual QA, acceptance, and residual-risk close summaries when applicable
@@ -33,6 +34,7 @@ Close Summary lines are derived display summaries from existing gate and owner-r
 - Close Summary
 - Escalation
 - Evidence Refs
+- Projection Freshness
 
 ## Full template
 
@@ -58,7 +60,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 ## Scope
 - direct run scope:
 - limits:
-- write authorization:
+- write authorization ref:
 - allowed paths:
 - approval refs:
 
@@ -75,29 +77,42 @@ updated_at: 2026-05-06T09:40:00+09:00
 - self-check:
 - tests/build:
 - validator outcomes:
+- artifact refs and redaction state:
 - artifact availability:
 
 ## Assurance
 - assurance_level:
 - meaning:
 - detached verify needed:
+- self-check refs:
+- detached verification Eval ref:
+- verification waiver ref:
+- QA waiver ref:
+- risk-accepted close refs:
 
 ## Authority Refs
 - write authorization:
+- Decision Packet:
 - approval:
 - Evidence Manifest:
 - Eval:
 - Manual QA:
 - Acceptance Decision Packet:
 - Residual Risk:
+- Artifact refs:
+- redaction state:
+- projection freshness:
 
 ## Close Summary
+- display state label (plain text, not a schema value):
 - evidence:
 - verification:
 - Manual QA:
 - acceptance:
 - residual risk status:
 - residual risk refs:
+- verification waiver ref:
+- QA waiver ref:
 - follow-up:
 
 ## Escalation
@@ -109,11 +124,18 @@ updated_at: 2026-05-06T09:40:00+09:00
 - diff:
 - follow-up report:
 - omitted or blocked artifact impact:
+
+## Projection Freshness
+- freshness:
+- source_state_version:
+- stale or reconcile impact:
 ````
 
 ## Notes
 
 Direct work may close self-checked by default unless policy or the user requires detached verification or other gates. A consumed Write Authorization ref may be displayed, but the projection does not become the canonical authorization record.
+
+Direct Result should display self-checked, `detached_verified`, verification-waived, QA-waived, and risk-accepted-close states as separate lines. A waiver line points to the waiver ref or says it is not recorded; it does not become verification or QA. A risk-accepted close points to accepted Residual Risk refs and any required Decision Packet instead of being rendered as detached verified.
 
 Checks and tests in a Direct Result are evidence or self-check context. They do not become detached verification without a qualifying Eval, do not become Manual QA without a Manual QA result or valid waiver, and do not imply final acceptance. If direct work closes with accepted risk, the Close Summary should point to accepted Residual Risk refs, the Decision Packet that recorded the risk acceptance when one was required, and follow-up instead of presenting the result as detached verified. If no close-relevant risk is known, say that directly rather than adding gate inventory.
 

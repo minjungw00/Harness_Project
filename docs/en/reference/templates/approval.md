@@ -4,6 +4,8 @@
 
 Use `APR` after an approval request has been committed and Harness needs a readable approval request and decision record for a sensitive action. `APR` shows permission scope; it does not decide user-owned product or material technical judgment, correctness, result acceptance, residual-risk acceptance, deployment, merge, or Write Authorization.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - approval record
@@ -13,6 +15,7 @@ Use `APR` after an approval request has been committed and Harness needs a reada
 - sensitive categories
 - allowed paths, tools, commands, network targets, and secrets
 - baseline, expiry, alternatives, and decision note
+- related Write Authorization, artifact refs, redaction state, and projection freshness when displayed as boundary context
 
 A non-mutating `approval_request_candidate` returned by `prepare_write` is not an `APR` source and must be displayed, if at all, as candidate display.
 
@@ -21,6 +24,7 @@ Boundary Summary is a derived display block from approval scope, linked Approval
 ## Rendered sections
 
 - Request Summary
+- Source Refs
 - Boundary Summary
 - Related Decision Packet
 - Requested Scope
@@ -53,6 +57,14 @@ updated_at: 2026-05-06T09:30:15+09:00
 - proposed action:
 - sensitive action being approved:
 - what the word "approved" means here:
+
+## Source Refs
+- Approval record:
+- Decision Packet:
+- related Write Authorization:
+- artifact refs:
+- redaction state:
+- projection freshness:
 
 ## Boundary Summary
 - this request covers:
@@ -127,6 +139,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 ````
 
 ## Notes
+
+This template is a rendered projection, not approval authority. The Approval record and approval decision path remain authoritative; this Markdown only displays the request, decision, and boundary.
 
 The Boundary section is the user-facing reminder. Decision request routing records are not decision authority and cannot affect `decision_gate` except through a linked compatible Decision Packet.
 

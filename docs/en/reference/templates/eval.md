@@ -18,9 +18,11 @@ This is template reference documentation. It does not authorize runtime/server i
 - evidence reviewed
 - blockers
 - artifact refs with redaction state and input availability
+- related Decision Packet, Approval, Evidence Manifest, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
 
 ## Rendered sections
 
+- Source Refs
 - Target
 - Verdict
 - Environment And Independence
@@ -50,6 +52,17 @@ updated_at: 2026-05-06T10:05:00+09:00
 # EVAL-0001 Verification Result
 
 > Projection view: rendered from `source_state_version` at `updated_at`; displays Eval state and reviewed refs. Verdict, assurance, and gate effects change only through Eval and Core gate records.
+
+## Source Refs
+- Evidence Manifest:
+- Decision Packets:
+- Approval:
+- Manual QA:
+- Acceptance context:
+- Residual Risk:
+- Artifact refs:
+- redaction state:
+- projection freshness:
 
 ## Target
 - task_id:
@@ -126,6 +139,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - diff:
 - bundle:
 - logs:
+- artifact refs only; large evidence bodies not embedded:
 - approvals:
 - decisions:
 
@@ -171,3 +185,5 @@ If independence is invalid or the review is same-session self-check only, render
 If the evaluator bundle, baseline, included artifacts, Evidence Manifest, approval/Decision Packet refs, or close-relevant Residual Risk refs are stale, render the stale input and keep assurance unchanged until replacement or compatible re-verification is recorded.
 
 Eval projections must not imply omitted or blocked raw bytes were reviewed. `secret_omitted` evidence can support only visible nonsecret claims. If the Eval depends on a `blocked` payload, the result must remain `blocked` or `inconclusive`, or surface `EVIDENCE_INSUFFICIENT`, until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the verification path.
+
+Eval templates should keep reviewed evidence refs compact. Large logs, bundles, screenshots, diffs, and traces stay as ArtifactRef refs with redaction state and availability; the Eval body records what was reviewed, not the raw evidence payload.

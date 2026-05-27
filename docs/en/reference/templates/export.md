@@ -20,6 +20,7 @@ This is template reference documentation. It does not authorize runtime/server i
 - artifact refs, owner relations, redaction status, retention/availability, and integrity metadata
 - redaction, omission, and blocked-artifact summaries
 - omitted-secret notes and retained/expired artifact summaries
+- compact authority refs for Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when included in review or Release Handoff display
 - export profile boundary and non-deployment/non-merge reminder display
 
 ## Rendered sections
@@ -107,10 +108,12 @@ updated_at: 2026-05-06T10:30:00+09:00
 ## Release Handoff
 - close readiness:
 - close blockers:
+- authority refs: write={write_authorization_refs|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_refs|none}; eval={eval_refs|none}; manual_qa={manual_qa_refs|none}; acceptance={acceptance_context_refs|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_status_summary}; freshness={projection_freshness}
 - evidence refs:
 - verification refs:
 - Manual QA refs:
 - residual-risk refs:
+- close/assurance display distinctions: self_checked={self_check_refs|none}; detached_verified={eval_refs|none}; verification_waived={verification_waiver_refs|none}; qa_waived={qa_waiver_refs|none}; risk_accepted_close={accepted_residual_risk_refs|none}
 - changed files:
 - projection freshness:
 - artifact retention/availability:
@@ -124,6 +127,8 @@ updated_at: 2026-05-06T10:30:00+09:00
 ## Notes
 
 This template is a rendered shape, not canonical state. `EXPORT` is a `ProjectionKind` only; export snapshots and components remain artifacts linked to owner records or projection refs.
+
+Release Handoff display in `EXPORT` should keep self-checked work, `detached_verified`, verification waiver, QA waiver, and risk-accepted close separate, with refs or explicit absence. The export may preserve those displays, but it does not grant approval, satisfy gates, accept results, accept residual risk, waive QA or verification, upgrade assurance, or close the Task.
 
 `EXPORT` must not embed raw secrets, PII, sensitive logs, network traces, screenshots, or other sensitive artifact bodies by default. Large or sensitive artifacts are listed by `ArtifactRef`; raw files are included only when policy and retention allow them, and `secret_omitted` or `blocked` entries stay represented by refs and notes.
 

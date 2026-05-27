@@ -4,6 +4,8 @@
 
 대기 중인 Approval의 민감 행동(sensitive-action) 요청 범위, 목적, 경계, 위험, 대안, 추천안을 사용자에게 간결하게 보여줄 때 Approval Card를 사용합니다. 이 card는 민감한 행동을 허용할지 묻는 표시일 뿐이며 사용자 소유의 제품 판단이나 중요한 기술 판단, 정확성 검토(correctness review), 결과 수락, 남은 위험을 받아들이는 판단, Write Authorization이 아닙니다.
 
+이 문서는 template 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+
 ## 기준 기록
 
 - Approval 기록
@@ -12,12 +14,14 @@
 - 허용된 path, tool, command, network target, secret
 - baseline 참조
 - 위험, 대안, 추천안
+- 표시될 때 관련 Write Authorization boundary, artifact refs, redaction state, projection freshness
 
 `{approval_covers}`, `{approval_does_not_cover}` 같은 coverage placeholder는 Approval 범위, 연결된 Approval 기록, 관련 Decision Packet ref, 현재 쓰기 또는 닫기 context에서 파생한 표시 전용 요약입니다. Approval 경계만 보여주며, Approval 기록과 decision path가 계속 기준 출처입니다.
 
 ## 렌더링 섹션
 
 - Approval 필요 여부
+- compact refs
 - 요청 식별자
 - purpose
 - allowed paths
@@ -39,6 +43,7 @@
 Approval이 필요합니다.
 표시 전용: Approval은 여전히 기준 Approval 결정 경로를 통해 기록되어야 합니다.
 민감 행동 허용만 묻습니다. 사용자 소유의 제품 판단이나 중요한 기술 판단, correctness, 최종 수락, 남은 위험을 받아들이는 판단, Write Authorization이 아닙니다.
+Refs: approval={approval_id}; decision={decision_packet_ref|none}; write={write_authorization_ref|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 
 {approval_id} {category}
 요청: {summary}

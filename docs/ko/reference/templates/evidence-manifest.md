@@ -17,12 +17,14 @@
 - hash, size, redaction state, retention/availability, owner relation, 후속 evidence 영향을 포함한 artifact 참조
 - 관련 Run, Eval, Feedback Loop, Manual QA, TDD trace 참조
 - 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, Manual QA, 결과 수락, 남은 위험 요약
+- 닫기 맥락으로 렌더링할 때 Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness를 보여주는 compact authority refs
 
 ## 렌더링 섹션
 
 - Identity
 - Summary
 - 닫기 영향 요약
+- Authority And Close Refs
 - Acceptance Criteria Coverage
 - Completion Conditions Coverage
 - Changed File Coverage
@@ -70,7 +72,13 @@ updated_at: 2026-05-06T09:50:00+09:00
 - Manual QA 상태:
 - 결과 수락 상태:
 - Residual Risk:
+- close/assurance 표시 구분:
 - 다음 close 조치:
+
+## Authority And Close Refs
+- compact refs: write={write_authorization_ref|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
+- redaction state:
+- projection freshness:
 
 ## Acceptance Criteria Coverage
 | AC ID | Statement | Coverage 상태 | Run Refs | ArtifactRef Refs | Supporting State Refs | Notes |
@@ -156,6 +164,8 @@ Example coverage mappings:
 | Completion condition: independent verifier reviewed the changed scope | RUN-VERIFY-001 | ART-BUNDLE-001 | EVAL-0001 | Eval이 current refs를 review했고 requested close에 필요한 independence가 있을 때만 valid합니다. |
 
 Evidence Manifest는 주장을 뒷받침하지만 그 자체로 correctness를 증명하거나 detached verification을 만들거나 Manual QA를 기록하거나 결과 수락을 암시하거나 남은 위험을 받아들이지 않습니다. 이 template에서 닫기 영향 요약을 렌더링할 때는 테스트 통과, 자체 확인(self-check), 사용자의 결과 수락이 서로 다른 닫기 조건으로 오해되지 않도록 각 줄을 분리해 보여줘야 합니다.
+
+닫기 맥락을 보여줄 때 manifest는 risk-accepted close, waived verification, QA waiver, self-checked, `detached_verified`를 owner ref 또는 명시적인 absence와 함께 서로 다른 표시 상태로 렌더링해야 합니다. 이 label은 owner record를 읽기 쉽게 요약할 뿐이며 Evidence Manifest authority가 아닙니다.
 
 Coverage row는 큰 근거 본문을 붙여 넣는 대신 owner record와 ArtifactRef ref를 가리켜야 합니다. 어떤 criterion, condition, claim을 뒷받침하는 ref가 없다면 문장으로 빈틈을 메우지 말고 unsupported, insufficient, stale, blocked 중 적절한 상태로 보여줍니다.
 

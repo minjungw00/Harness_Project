@@ -15,12 +15,14 @@ This is template reference documentation. It does not authorize runtime/server i
 - human inspector or role and the inspected quality or workflow
 - screenshot, browser log, `qa_capture`, video, workflow recording, or manually supplied note artifact refs with redaction state
 - waiver reason, QA waiver Decision Packet refs when required, and Residual Risk refs related to QA waiver or failure
+- Evidence Manifest, Eval, acceptance context, Approval, Artifact refs, redaction state, and projection freshness when those claims are displayed
 - design-quality validator results related to `manual_qa`
 - projection freshness inputs
 
 ## Rendered sections
 
 - Identity
+- Authority And Close Refs
 - Setup
 - Checklist
 - Result
@@ -55,6 +57,18 @@ updated_at: 2026-05-06T10:05:00+09:00
 - required: yes | no
 - performed by:
 
+## Authority And Close Refs
+- Manual QA record:
+- QA waiver Decision Packet:
+- Evidence Manifest:
+- Eval:
+- Approval:
+- Acceptance context:
+- Residual Risk:
+- Artifact refs:
+- redaction state:
+- projection freshness:
+
 ## Setup
 - build/run command:
 - test account/data:
@@ -72,12 +86,14 @@ updated_at: 2026-05-06T10:05:00+09:00
 - record result: passed | failed | waived | null when no record exists
 - qa_gate: not_required | required | pending | passed | failed | waived
 - qa_gate note: canonical close-relevant gate; this projection is display only
+- QA waiver display: `qa_gate=waived` plus Manual QA record or waiver reason, and QA waiver Decision Packet when required
 - human inspection summary:
 - summary:
 - waiver reason:
 
 ## Waiver And Risk
 - waiver recording:
+- QA waiver Decision Packet:
 - skipped check or surface:
 - risk visible before waiver:
 - accepted risk:
@@ -110,6 +126,8 @@ updated_at: 2026-05-06T10:05:00+09:00
 ## Notes
 
 This template is a rendered shape, not canonical state. `qa_gate` is the canonical close-relevant gate; this projection only displays it.
+
+Manual QA display must keep a passed Manual QA record, failed Manual QA record, pending required QA, and QA waiver visually distinct. `qa_gate=waived` is a waiver display with refs and accepted risk/follow-up when required; it is not a passed Manual QA result, final acceptance, or detached verification.
 
 Manual QA projections may show safe omission notes, handles, and blocked artifact notices, but must not embed omitted secret/PII values or blocked capture payloads. A `secret_omitted` artifact can support visible workflow, UI, copy, accessibility, or smoke-test observations; a `blocked` capture is unavailable QA input unless a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the QA path.
 

@@ -17,6 +17,7 @@ This is template reference documentation. It does not authorize runtime/server i
 - expected screenshot, walkthrough note, browser log, Browser QA artifact, or manually supplied artifact evidence
 - waiver reason, QA waiver Decision Packet refs when required, and Residual Risk refs when QA is waived or deferred
 - verification, acceptance, and close-impact summaries
+- compact refs for Manual QA record, QA waiver Decision Packet, Evidence Manifest, Eval, acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness
 
 Close context and waiver placeholders are derived display summaries from QA records, `qa_gate`, related gate states, Decision Packet refs, and Residual Risk refs. Waiver paths should render those refs or say that recording is still needed.
 
@@ -43,6 +44,7 @@ Browser QA Capture: useful when promoted and supported; not final acceptance, no
 
 Record: {manual_qa_record_id|none until recorded}
 Gate: {qa_gate display: not_required|required|pending|passed|failed|waived}
+Refs: manual_qa={manual_qa_record_id|none}; qa_waiver_decision={qa_waiver_decision_packet_ref|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 Profile: {profile}
 Human judgment requested: {human_inspection_summary}
 Target: {screen_or_flow}
@@ -59,6 +61,7 @@ Evidence to record:
 Close context:
 - automated checks: {check_refs|none; not a Manual QA result}
 - Browser QA artifacts: {artifact_refs|none; supporting refs only}
+- QA waiver display: {qa_gate=waived with waiver refs|none}
 - verification impact: {verification_impact}
 - acceptance impact: {acceptance_impact}
 - residual risk or follow-up: {residual_risk_or_follow_up|none}
@@ -80,5 +83,7 @@ Record the Manual QA result, record an allowed low-risk QA waiver reason, or req
 This template is a rendered card shape, not canonical QA state. `qa_gate` remains the close-relevant gate.
 
 Manual QA is human inspection. Passing tests, browser smoke, screenshot capture, Browser QA Capture artifacts, verification, or user acceptance may support the close context, but they do not become Manual QA unless `record_manual_qa` records a Manual QA result or a valid QA waiver updates `qa_gate=waived` with a waiver reason and, when user-owned risk is involved, a compatible QA waiver Decision Packet. Browser QA Capture remains a v1/post-MVP candidate unless owner docs explicitly promote it, and captured artifacts do not record final acceptance or detached verification unless a separate Eval path satisfies independence. A chat statement alone is not enough when the waiver affects close or accepted risk.
+
+The card should render pending QA, passed QA, failed QA, and waived QA as separate display states. Waived QA cites the Manual QA record or waiver reason, the QA waiver Decision Packet when required, residual-risk refs when applicable, and close impact; it is not a passed inspection.
 
 The card may ask for replacement evidence or waiver recording when an artifact is `secret_omitted` or `blocked`, but it must not display omitted values or blocked raw capture content. When browser capture is unsupported for the surface, the card should ask for human Manual QA notes and manually supplied artifacts instead of treating capture absence as a QA result.

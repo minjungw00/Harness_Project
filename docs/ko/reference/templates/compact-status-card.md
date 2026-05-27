@@ -14,7 +14,7 @@
 - current 수용 기준 snapshot
 - 대기 중인 Decision Packet summary
 - Write Authority summary
-- Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, artifact 권한 claim을 표시할 때 필요한 source refs
+- Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, artifact, redaction state, projection freshness 권한 claim을 표시할 때 필요한 source refs
 - 연결 profile의 보장 수준
 - 위험 summary
 - design-quality 또는 stewardship summary
@@ -75,7 +75,7 @@ TASK-{id} {title}
 Change Unit: {active_change_unit_summary|none}
 필요한 판단: {blocking_decision_summary|none}
 쓰기 권한: {write_authority_status}
-Authority refs: write={write_authorization_ref|none}; approval={approval_refs|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_decision_ref|none}; residual_risk={residual_risk_refs|none}
+Authority refs: write={write_authorization_ref|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_decision_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 보장 수준: {guarantee_level}; {guard_or_detection_summary}
 권한 gate: scope={scope_gate}; approval={approval_gate}; decision={decision_gate}
 Design/stewardship: {design_summary|none}; gate={design_gate}
@@ -85,6 +85,7 @@ Manual QA: {manual_qa_summary|not_required}; gate={qa_gate}
 남은 위험: status={residual_risk_status|none}; {residual_risk_summary|none}; refs={residual_risk_refs|none}
 수락: {acceptance_summary|not_required}; gate={acceptance_gate}
 닫기 상태: blockers={close_blockers|none}; reason={close_reason|none}
+닫기/assurance 표시: self_checked={self_check_refs|none}; detached_verified={eval_ref|none}; verification_waived={verification_waiver_ref|none}; qa_waived={manual_qa_waiver_ref|none}; risk_accepted_close={accepted_residual_risk_refs|none}
 읽기용 보기 최신성(projection freshness): {current|stale|failed|unknown}; source_state_version={source_state_version|unknown}; {refresh_or_reconcile_needed|none}
 상태/입력 최신성: {state_baseline_evidence_freshness_summary|current or none}
 MCP/capability: {mcp_or_capability_summary|available}
@@ -109,6 +110,6 @@ Design/stewardship은 닫기 상태(Close status)와 별개입니다. Shaping, w
 
 이것은 judgment-context가 아닙니다. 사용자 판단이 필요하면 선택지, 추천안, 불확실성, 결정을 미룰 때의 영향, 관련 refs가 있는 decision prompt를 별도로 렌더링합니다.
 
-Close status는 close reason 구분을 보존해야 합니다. `completed_with_risk_accepted`는 accepted residual risk가 있는 successful close로 렌더링하고, ordinary done, verified, self-checked close처럼 보여주면 안 됩니다. Final acceptance가 next action이면 별도 acceptance prompt가 evidence, verification, Manual QA, residual-risk visibility 또는 `none`, acceptance가 대체하지 않는 것을 보여줘야 합니다.
+Close status는 close reason 구분을 보존해야 합니다. `completed_with_risk_accepted`는 accepted residual risk가 있는 successful close로 렌더링하고, ordinary done, verified, self-checked close처럼 보여주면 안 됩니다. Self-checked, `detached_verified`, verification-waived, QA-waived, risk-accepted-close label은 ref 또는 명시적인 absence와 함께 별도 display slot에 둡니다. Final acceptance가 next action이면 별도 acceptance prompt가 evidence, verification, Manual QA, residual-risk visibility 또는 `none`, acceptance가 대체하지 않는 것을 보여줘야 합니다.
 
 큰 기록은 먼저 참조를 보여주는 방식(refs-first)으로 둡니다. Evidence, Run, Eval, Manual QA, artifact, log, screenshot, diff, large trace는 기본적으로 본문에 포함하지 않습니다.

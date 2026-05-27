@@ -14,7 +14,7 @@ This is template reference documentation. It does not authorize runtime/server i
 - Write Authorization records and Write Authority Summary display inputs
 - Decision Packets and Residual Risks
 - latest Run, Evidence Manifest, Eval, Manual QA record, and approval records
-- authority source refs for Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, and artifacts when those claims are displayed
+- compact authority source refs for Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
 - primary blocker, secondary blocker, and smallest unblocker display summaries
 - close summary display inputs, including changed scope, evidence, verification, Manual QA, residual risk, acceptance, and close reason
 - Journey Spine source records
@@ -97,7 +97,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 - acceptance gate:
 - active change unit:
 - write authority summary:
-- authority source refs:
+- authority source refs: write=; decision=; approval=; evidence=; eval=; manual_qa=; acceptance=; residual_risk=; artifacts=
+- redaction state:
 - latest report:
 - projection freshness:
 
@@ -128,13 +129,16 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Authority Source Refs
 - Write Authorization:
+- Decision Packet:
 - Approval:
 - Evidence Manifest:
 - Eval:
 - Manual QA:
 - Acceptance Decision Packet:
+- Acceptance context:
 - Residual Risk:
-- artifacts:
+- Artifact refs and redaction state:
+- Projection freshness:
 
 ## Autonomy Boundary
 - profile:
@@ -214,6 +218,12 @@ updated_at: 2026-05-06T09:30:15+09:00
 - residual risk:
 - acceptance:
 - authority source refs:
+- display state label (plain text, not a schema value):
+- self-check refs:
+- detached verification Eval ref:
+- verification waiver ref:
+- QA waiver ref:
+- accepted residual-risk refs:
 - close reason:
 - remaining follow-up:
 
@@ -267,6 +277,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Decision:
 - Diff:
 - Logs:
+- Artifact refs with redaction state:
+- Projection freshness:
 <!-- HARNESS:END managed -->
 
 ## User Notes and Proposals
@@ -427,6 +439,8 @@ Generated summaries should use ordinary user-facing language first and exact Har
 Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to Write Authorization refs, sensitive-action permission to Approval refs, evidence sufficiency to Evidence Manifest refs, detached verification to Eval refs, Manual QA to Manual QA records or valid waiver refs, final acceptance to Acceptance Decision Packet refs, and residual-risk visibility or acceptance to Residual Risk refs or `ResidualRiskSummary.status=none`. Missing refs should render as missing support, not as completed authority.
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means no known close-relevant residual risk exists for the requested action. `not_visible` means known close-relevant risk exists but has not been made visible enough for acceptance or close; it should remain a blocker or next action until the risk and refs are shown.
+
+Close and assurance display in `TASK` must keep self-checked work, `detached_verified`, verification waiver, QA waiver, and risk-accepted close visibly separate. A risk-accepted close should cite accepted Residual Risk refs and any required Decision Packet; a verification waiver should cite `verification_gate=waived_by_user` and its Decision Packet when required; a QA waiver should cite `qa_gate=waived`, the Manual QA record or waiver reason, and the QA waiver Decision Packet when required.
 
 Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the policy or gate, Task and Change Unit, skipped check or surface, reason, accepted risk, actor, expiry or follow-up when needed, relevant refs, and close impact. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
 

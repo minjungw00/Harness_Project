@@ -15,6 +15,7 @@ This is template reference documentation. It does not authorize runtime/server i
 - related reconcile records, if applicable
 - residual risk refs
 - evidence and artifact refs
+- Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, acceptance context, Artifact refs, redaction state, and projection freshness when displayed as related authority context
 - affected scope display inputs: product areas, screens or flows, modules, interfaces, paths, acceptance criteria, gates, and sensitive categories
 - projection freshness inputs
 
@@ -92,7 +93,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - current gates:
 - latest evidence:
 - residual risk:
-- source refs:
+- source refs: decision={decision_packet_id}; write={write_authorization_ref|none}; approval={approval_refs|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 
 ## Approval-Shaped Context, If Applicable
 - decision_kind=approval scope:
@@ -194,17 +195,23 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## References
 - TASK:
 - Change Unit:
+- Write Authorization:
 - DESIGN:
 - APR:
 - EVIDENCE-MANIFEST:
 - EVAL:
 - MANUAL-QA:
+- Acceptance context:
 - Residual Risk:
 - artifacts:
+- redaction state:
+- projection freshness:
 ````
 
 ## Notes
 
 This template is a rendered shape, not canonical state. MVP Decision Packet visibility still comes through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources unless standalone `DEC` projection is enabled.
+
+Decision Packet projections should keep authority context refs compact and explicit. Displaying a Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, acceptance, residual-risk, artifact, redaction, or freshness ref in this template does not make the packet prose the authority for that record.
 
 Repeat option subsections as needed. Some product choices have more than two realistic options.

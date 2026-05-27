@@ -16,6 +16,7 @@ This is template reference documentation. It does not authorize runtime/server i
 - blockers or rework
 - user follow-up
 - Manual QA, acceptance, Residual Risk, verification-waiver Decision Packet refs, and `verification_gate` status when close context is rendered
+- compact refs for Eval, Evidence Manifest, Manual QA, acceptance context, Residual Risk, verification-waiver Decision Packet, Artifact refs, redaction state, and projection freshness
 
 Close context and verification-waiver placeholders are derived display summaries from Eval records, gate state, QA/acceptance status, Residual Risk refs, and waiver Decision Packet refs. Waiver paths should render those refs or say that recording is still needed.
 
@@ -40,6 +41,7 @@ Verification complete.
 Display only: Eval records and gate state remain canonical.
 
 {eval_id}
+Refs: eval={eval_id}; evidence={evidence_manifest_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; verification_waiver={verification_waiver_decision_packet_ref|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 Verdict: {verdict}
 Assurance: {assurance_impact}
 User-facing verification status: {self-checked|detached candidate|detached verified|waived with accepted risk}
@@ -64,6 +66,7 @@ Close context:
 - verification did not check:
 - bundle or baseline freshness: {current|stale|not_applicable}
 - Manual QA: {manual_qa_status_or_needed}
+- QA waiver display: {qa_gate=waived with Manual QA or waiver refs|none}
 - acceptance: {acceptance_status_or_needed}
 - residual risk: {residual_risk_summary|none}
 - verification waiver display: {Decision Packet ref when required; `verification_gate=waived_by_user` when waived|none}
@@ -82,6 +85,8 @@ User follow-up:
 This template is a rendered card shape, not verification authority. Eval records and gate state remain canonical.
 
 Verification checks correctness from the recorded review boundary. It does not record Manual QA, imply user acceptance, or accept residual risk. Same-session self-review may be shown as a self-check or review note, but it must not be rendered as detached verification. A verification waiver should show the Decision Packet that records the user-owned waiver when required, `verification_gate=waived_by_user`, skipped check, accepted risk, follow-up, relevant refs, and close impact; it does not create detached verification or upgrade assurance.
+
+If QA is waived while verification is displayed, keep the QA waiver separate from the Eval verdict and assurance line. QA waiver display cites `qa_gate=waived`, the Manual QA record or waiver reason, and a QA waiver Decision Packet when required; it is not a passed Manual QA result or detached verification.
 
 Use user-facing wording carefully: "self-checked" means the implementing path checked its own work; "detached candidate" means the boundary may qualify but has not yet produced detached assurance; "detached verified" means a passed Eval has valid independence and current inputs; "waived with accepted risk" means close relies on accepted visible risk and must use the risk-accepted close path. These phrases are display wording and do not add `assurance_level` values.
 

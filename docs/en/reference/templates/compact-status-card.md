@@ -14,7 +14,7 @@ This is template reference documentation. It does not authorize runtime/server i
 - current acceptance criteria snapshot
 - pending Decision Packet summary
 - Write Authority summary
-- authority source refs for Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, and artifacts when those claims are displayed
+- authority source refs for Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, artifacts, redaction state, and projection freshness when those claims are displayed
 - connected profile guarantee level
 - risk summary
 - design-quality or stewardship summary
@@ -75,7 +75,7 @@ Secondary blockers: {secondary_blockers_summary|none}
 Change Unit: {active_change_unit_summary|none}
 Decision needed: {blocking_decision_summary|none}
 Write authority: {write_authority_status}
-Authority refs: write={write_authorization_ref|none}; approval={approval_refs|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_decision_ref|none}; residual_risk={residual_risk_refs|none}
+Authority refs: write={write_authorization_ref|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_decision_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 Guarantee: {guarantee_level}; {guard_or_detection_summary}
 Authority gates: scope={scope_gate}; approval={approval_gate}; decision={decision_gate}
 Design/stewardship: {design_summary|none}; gate={design_gate}
@@ -85,6 +85,7 @@ Manual QA: {manual_qa_summary|not_required}; gate={qa_gate}
 Residual risk: status={residual_risk_status|none}; {residual_risk_summary|none}; refs={residual_risk_refs|none}
 Acceptance: {acceptance_summary|not_required}; gate={acceptance_gate}
 Close status: blockers={close_blockers|none}; reason={close_reason|none}
+Close/assurance display: self_checked={self_check_refs|none}; detached_verified={eval_ref|none}; verification_waived={verification_waiver_ref|none}; qa_waived={manual_qa_waiver_ref|none}; risk_accepted_close={accepted_residual_risk_refs|none}
 Projection freshness (view only): {current|stale|failed|unknown}; source_state_version={source_state_version|unknown}; {refresh_or_reconcile_needed|none}
 State/input freshness: {state_baseline_evidence_freshness_summary|current or none}
 MCP/capability: {mcp_or_capability_summary|available}
@@ -109,6 +110,6 @@ Design/stewardship is separate from Close status. It may affect shaping, write b
 
 This is not judgment-context. If user judgment is needed, render a separate decision prompt with options, recommendation, uncertainty, deferral effect, and relevant refs.
 
-Close status should preserve the close-reason distinction. Render `completed_with_risk_accepted` as successful close with accepted residual risk, not as ordinary done, verified, or self-checked close. If final acceptance is the next action, the separate acceptance prompt must show evidence, verification, Manual QA, residual-risk visibility or `none`, and what acceptance does not replace.
+Close status should preserve the close-reason distinction. Render `completed_with_risk_accepted` as successful close with accepted residual risk, not as ordinary done, verified, or self-checked close. Keep self-checked, `detached_verified`, verification-waived, QA-waived, and risk-accepted-close labels on separate display slots with refs or explicit absence. If final acceptance is the next action, the separate acceptance prompt must show evidence, verification, Manual QA, residual-risk visibility or `none`, and what acceptance does not replace.
 
 Large records stay refs-first. Evidence, Run, Eval, Manual QA, artifacts, logs, screenshots, diffs, and large traces are not embedded by default.

@@ -17,12 +17,14 @@ This is template reference documentation. It does not authorize runtime/server i
 - artifact refs with hash, size, redaction state, retention/availability, owner relation, and downstream evidence impact
 - related Run, Eval, Feedback Loop, Manual QA, and TDD trace refs
 - close-relevant verification, Manual QA, acceptance, and Residual Risk summaries when rendered with close context
+- compact authority refs for Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when rendered with close context
 
 ## Rendered sections
 
 - Identity
 - Summary
 - Close Summary
+- Authority And Close Refs
 - Acceptance Criteria Coverage
 - Completion Conditions Coverage
 - Changed File Coverage
@@ -70,7 +72,13 @@ updated_at: 2026-05-06T09:50:00+09:00
 - Manual QA status:
 - acceptance status:
 - residual risk:
+- close/assurance display distinction:
 - next close action:
+
+## Authority And Close Refs
+- compact refs: write={write_authorization_ref|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
+- redaction state:
+- projection freshness:
 
 ## Acceptance Criteria Coverage
 | AC ID | Statement | Coverage State | Run Refs | ArtifactRef Refs | Supporting State Refs | Notes |
@@ -156,6 +164,8 @@ Example coverage mappings:
 | Completion condition: independent verifier reviewed the changed scope | RUN-VERIFY-001 | ART-BUNDLE-001 | EVAL-0001 | Valid only when the Eval reviewed current refs and has the required independence for the requested close. |
 
 Evidence Manifest supports claims; it does not prove correctness by itself, create detached verification, record Manual QA, imply acceptance, or accept residual risk. When a close summary is rendered from this template, it should keep those lines separate so a passing test, a self-check, or user acceptance is not mistaken for another close condition.
+
+When close context is shown, the manifest should render risk-accepted close, waived verification, QA waiver, self-checked, and `detached_verified` as distinct display states with owner refs or explicit absence. Those labels are readable summaries of owner records, not Evidence Manifest authority.
 
 Coverage rows should point to owner records and ArtifactRef refs rather than embedding large evidence. If no ref supports a criterion, condition, or claim, show it as unsupported, insufficient, stale, or blocked instead of filling the gap with prose.
 

@@ -14,7 +14,7 @@
 - Write Authorization 기록과 Write Authority Summary 표시 input
 - Decision Packet과 Residual Risk
 - 최신 Run, Evidence Manifest, Eval, Manual QA 기록, approval 기록
-- Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, artifact 권한 claim을 표시할 때 필요한 source refs
+- Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness 권한 claim을 표시할 때 필요한 compact source refs
 - 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 summary
 - changed scope, evidence, verification, Manual QA, 남은 위험(residual risk), 결과 수락, close reason을 포함하는 close summary 표시 input
 - Journey Spine 기준 기록
@@ -97,7 +97,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 - acceptance gate:
 - active change unit:
 - Write Authority Summary:
-- authority source refs:
+- authority source refs: write=; decision=; approval=; evidence=; eval=; manual_qa=; acceptance=; residual_risk=; artifacts=
+- redaction state:
 - latest report:
 - projection freshness:
 
@@ -128,13 +129,16 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Authority Source Refs
 - Write Authorization:
+- Decision Packet:
 - Approval:
 - Evidence Manifest:
 - Eval:
 - Manual QA:
 - Acceptance Decision Packet:
+- Acceptance context:
 - Residual Risk:
-- artifacts:
+- Artifact refs and redaction state:
+- Projection freshness:
 
 ## Autonomy Boundary
 - profile:
@@ -214,6 +218,12 @@ updated_at: 2026-05-06T09:30:15+09:00
 - residual risk:
 - 결과 수락:
 - authority source refs:
+- display state label (plain text, schema value 아님):
+- self-check refs:
+- detached verification Eval ref:
+- verification waiver ref:
+- QA waiver ref:
+- accepted residual-risk refs:
 - close reason:
 - remaining follow-up:
 
@@ -267,6 +277,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Decision:
 - Diff:
 - Logs:
+- Artifact refs with redaction state:
+- Projection freshness:
 <!-- HARNESS:END managed -->
 
 ## User Notes and Proposals
@@ -427,6 +439,8 @@ Change Unit block sub-template:
 `TASK`의 authority claim은 source ref 또는 명시적 absence로 해소되어야 합니다. Write authority claim은 Write Authorization ref를, sensitive-action permission은 Approval ref를, evidence sufficiency는 Evidence Manifest ref를, detached verification은 Eval ref를, Manual QA는 Manual QA record 또는 valid waiver ref를, final acceptance는 Acceptance Decision Packet ref를, residual-risk visibility 또는 acceptance는 Residual Risk refs 또는 `ResidualRiskSummary.status=none`을 가리켜야 합니다. Ref가 없으면 completed authority가 아니라 missing support로 렌더링해야 합니다.
 
 Residual-risk display는 `status=none`과 `not_visible`을 구분해야 합니다. `status=none`은 requested action에 대해 알려진 close-relevant residual risk가 없다는 뜻입니다. `not_visible`은 알려진 close-relevant risk가 있지만 acceptance 또는 close에 충분히 보이지 않았다는 뜻이므로, risk와 refs가 보일 때까지 blocker 또는 next action으로 남아야 합니다.
+
+`TASK`의 close와 assurance 표시는 self-checked work, `detached_verified`, verification waiver, QA waiver, risk-accepted close를 눈에 보이게 분리해야 합니다. Risk-accepted close는 accepted Residual Risk refs와 필요한 Decision Packet을 가리켜야 합니다. Verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을, QA waiver는 `qa_gate=waived`, Manual QA record 또는 waiver reason, 필요한 경우 QA waiver Decision Packet을 가리켜야 합니다.
 
 `TASK`의 waiver 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 또는 verification waiver는 waiver를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA waiver는 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA waiver Decision Packet을, verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을 가리킵니다. Policy 또는 gate, Task와 Change Unit, 생략한 확인이나 대상, reason, 받아들이는 위험, actor, 필요할 때 expiry 또는 follow-up, 관련 refs, 닫기 영향도 함께 보여줘야 합니다. QA waiver는 Manual QA가 되지 않고, verification waiver는 detached verification을 만들지 않습니다.
 

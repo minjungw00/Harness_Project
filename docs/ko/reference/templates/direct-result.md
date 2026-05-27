@@ -13,8 +13,9 @@
 - 변경 경로
 - 범위 밖 또는 유지된 범위 summary
 - 실행한 check
-- 표시되는 claim이 있을 때 Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, Approval, artifact refs
-- artifact 참조
+- 표시되는 claim이 있을 때 Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Acceptance Decision Packet, Residual Risk, Artifact refs
+- redaction state와 availability를 포함한 artifact 참조
+- 읽기용 보기 최신성(projection freshness) 입력
 - escalation flag
 - close assurance
 - 해당되는 경우 근거, 검증, Manual QA, 수락, Residual Risk 관련 닫기 영향 요약
@@ -33,6 +34,7 @@
 - 닫기 영향 요약
 - Escalation
 - Evidence Refs
+- Projection Freshness
 
 ## 전체 템플릿
 
@@ -58,7 +60,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 ## Scope
 - direct run scope:
 - limits:
-- write authorization:
+- write authorization ref:
 - allowed paths:
 - approval refs:
 
@@ -75,29 +77,42 @@ updated_at: 2026-05-06T09:40:00+09:00
 - self-check:
 - tests/build:
 - validator outcomes:
+- artifact refs and redaction state:
 - artifact availability:
 
 ## Assurance
 - assurance_level:
 - meaning:
 - detached verify needed:
+- self-check refs:
+- detached verification Eval ref:
+- verification waiver ref:
+- QA waiver ref:
+- risk-accepted close refs:
 
 ## Authority Refs
 - write authorization:
+- Decision Packet:
 - approval:
 - Evidence Manifest:
 - Eval:
 - Manual QA:
 - Acceptance Decision Packet:
 - Residual Risk:
+- Artifact refs:
+- redaction state:
+- projection freshness:
 
 ## 닫기 영향 요약
+- display state label (plain text, schema value 아님):
 - 근거:
 - 검증:
 - Manual QA:
 - 수락:
 - Residual Risk status:
 - Residual Risk refs:
+- verification waiver ref:
+- QA waiver ref:
 - 후속 작업:
 
 ## Escalation
@@ -109,11 +124,18 @@ updated_at: 2026-05-06T09:40:00+09:00
 - diff:
 - 후속 보고서:
 - 생략/차단 artifact 영향:
+
+## Projection Freshness
+- freshness:
+- source_state_version:
+- stale 또는 reconcile 영향:
 ````
 
 ## 메모
 
 정책 또는 사용자가 detached verification 또는 다른 gate를 요구하지 않으면 direct 작업은 기본적으로 자체 확인(self-checked) 상태로 닫힐 수 있습니다. Consumed Write Authorization 참조를 표시할 수 있지만, projection이 기준 authorization 기록이 되는 것은 아닙니다.
+
+Direct Result는 self-checked, `detached_verified`, verification-waived, QA-waived, risk-accepted-close 상태를 별도 줄로 표시해야 합니다. Waiver 줄은 waiver ref를 가리키거나 아직 기록되지 않았다고 말하며, verification 또는 QA가 되지 않습니다. Risk-accepted close는 detached verified처럼 보이지 않게, accepted Residual Risk refs와 필요한 Decision Packet을 가리킵니다.
 
 Direct Result의 checks와 tests는 evidence 또는 자체 확인(self-check) 맥락입니다. 조건을 충족하는 Eval 없이는 detached verification이 되지 않고, Manual QA 결과 또는 유효한 waiver 없이는 Manual QA가 되지 않으며, 최종 수락을 암시하지도 않습니다. Direct 작업이 남은 위험을 받아들이는 판단으로 닫힌다면 닫기 영향 요약은 결과를 detached verified처럼 보여주는 대신 받아들인 Residual Risk refs, 필요한 경우 남은 위험을 받아들이는 판단을 기록한 Decision Packet, 후속 작업을 가리켜야 합니다. 알려진 close-relevant risk가 없다면 gate 목록을 덧붙이기보다 그 사실을 직접 말합니다.
 

@@ -20,6 +20,7 @@
 - artifact 참조, owner relation, redaction status, retention/availability, integrity metadata
 - redaction, omission, blocked-artifact summary
 - omitted-secret note와 retained/expired artifact summary
+- review 또는 Release Handoff display에 포함될 때 Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness를 보여주는 compact authority refs
 - export profile boundary와 non-deployment/non-merge reminder 표시
 
 ## 렌더링 섹션
@@ -107,10 +108,12 @@ updated_at: 2026-05-06T10:30:00+09:00
 ## Release Handoff
 - close readiness:
 - close blockers:
+- authority refs: write={write_authorization_refs|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_refs|none}; eval={eval_refs|none}; manual_qa={manual_qa_refs|none}; acceptance={acceptance_context_refs|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_status_summary}; freshness={projection_freshness}
 - evidence refs:
 - verification refs:
 - Manual QA refs:
 - residual-risk refs:
+- close/assurance display distinctions: self_checked={self_check_refs|none}; detached_verified={eval_refs|none}; verification_waived={verification_waiver_refs|none}; qa_waived={qa_waiver_refs|none}; risk_accepted_close={accepted_residual_risk_refs|none}
 - changed files:
 - projection freshness:
 - artifact retention/availability:
@@ -124,6 +127,8 @@ updated_at: 2026-05-06T10:30:00+09:00
 ## 메모
 
 이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. `EXPORT`는 `ProjectionKind`일 뿐이며, export snapshot과 component는 owner 기록 또는 projection ref에 연결된 artifact로 남습니다.
+
+`EXPORT`의 Release Handoff display는 self-checked work, `detached_verified`, verification waiver, QA waiver, risk-accepted close를 ref 또는 명시적인 absence와 함께 분리해서 보여줘야 합니다. Export는 이런 표시를 보존할 수 있지만 Approval을 부여하거나, gate를 충족하거나, 결과를 수락하거나, 남은 위험을 받아들이거나, QA 또는 verification을 waive하거나, assurance를 높이거나, Task를 닫지 않습니다.
 
 `EXPORT`는 기본적으로 원본 secret, PII, 민감 log, network trace, screenshot, 기타 민감 artifact 본문을 포함하면 안 됩니다. 크거나 민감한 artifact는 `ArtifactRef`로 나열합니다. 원본 file은 policy와 retention이 허용할 때만 포함하고, `secret_omitted` 또는 `blocked` entry는 ref와 note로만 표현합니다.
 
