@@ -4,7 +4,7 @@
 
 Use this guide when you add, rewrite, split, rename, or review Harness documentation.
 
-It helps you keep the redesigned documentation readable for the intended reader, clear about where each kind of detail belongs, and aligned between English and Korean.
+It helps you keep the current documentation readable for the intended reader, clear about where each kind of detail belongs, and aligned between English and Korean.
 
 This guide governs documentation maintenance only. It does not authorize runtime behavior, server implementation, product state changes, generated operational files, executable fixture files, runtime data, evidence records, QA results, acceptance decisions, or task closure.
 
@@ -50,7 +50,7 @@ They should emphasize user-facing flow, status interpretation, decisions, and re
 
 ### Build
 
-Build docs help an implementer construct the reference system after the documentation redesign is accepted.
+Build docs help an implementer construct the reference system after the documentation set is accepted for implementation planning.
 
 They should explain implementation order, module boundaries, runnable slices, and verification strategy. Link to Reference docs for exact schemas, DDL, and invariants.
 
@@ -70,13 +70,13 @@ They define authoring rules, translation policy, review checklists, link hygiene
 
 README pages are routing pages before they are explanations. They should briefly say what Harness is and is not, then route first-time readers, users, implementers, reference readers, and maintainers to the right owner docs.
 
-Keep entrypoints current and compact. Do not use them to preserve migration history, removed names, retired paths, or old structures unless a section is clearly labeled as a non-active migration record.
+Keep entrypoints current and compact. Do not use them to preserve migration history, removed names, inactive paths, or old structures unless a section is clearly labeled as a non-active migration record.
 
 README pages may summarize path ownership, but they should not copy strict contracts. Link to Reference owners for exact schemas, DDL, gates, state transitions, fixture semantics, template bodies, and official definitions.
 
 ## Standard opening pattern
 
-Every redesigned document should begin with a short, predictable opening. Keep it compact, but make the reader's path clear. Template reference files under `reference/templates` use the template-specific opening below instead of the general opening headings.
+Every active document should begin with a short, predictable opening. Keep it compact, but make the reader's path clear. Template reference files under `reference/templates` use the template-specific opening below instead of the general opening headings.
 
 ### What this document helps you do
 
@@ -236,7 +236,7 @@ Required check categories:
 |---|---|
 | English/Korean file structure parity | `docs/en` and `docs/ko` keep the same active document paths, README entries, and paired route expectations unless an exception is explicitly documented. |
 | English/Korean semantic section parity | Paired files keep the same active file map, reader purpose, semantic section coverage, owner links, and contractual detail. Heading text and minor grouping may be idiomatic when stable identifiers, schema names, enum values, DDL names, validator IDs, code identifiers, and reviewability remain clear. |
-| Opening convention compliance | Non-template redesigned docs use the standard opening pattern. `docs/*/reference/templates/README.md` uses `Used when` plus `Template tiering`; individual template files under `docs/*/reference/templates/` other than `README.md` use `Used when`, `Source records`, `Rendered sections`, and `Full template`, plus a visible non-authority boundary. |
+| Opening convention compliance | Non-template active docs use the standard opening pattern. `docs/*/reference/templates/README.md` uses `Used when` plus `Template tiering`; individual template files under `docs/*/reference/templates/` other than `README.md` use `Used when`, `Source records`, `Rendered sections`, and `Full template`, plus a visible non-authority boundary. |
 | Broken cross-reference detection | Markdown links, heading anchors, template/reference links, same-language README routes, paired-language entry links, and owner-section links resolve to active docs and current anchors. |
 | Owner-boundary drift | Exact contracts stay in their active owners, including `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, and `reference/glossary.md`; non-owner docs summarize and link rather than redefining those contracts. |
 | Fixture/action schema drift | Operations fixture examples keep `action` and executable `input` aligned with public MCP request schemas in `reference/mcp-api-and-schemas.md` and the `ToolEnvelope` expansion convention in `reference/operations-and-conformance.md`; docs-maintenance may flag drift but does not execute fixture actions or restate fixture semantics here. |
@@ -264,7 +264,7 @@ Required check categories:
 
 ## Reference ownership map
 
-Use this map when deciding where exact detail belongs. It identifies the active owner in the redesigned documentation structure, so retired paths do not remain part of the authoring workflow.
+Use this map when deciding where exact detail belongs. It identifies the active owner in the current documentation structure, so inactive paths do not remain part of the authoring workflow.
 
 | Subject | Active owner |
 |---|---|

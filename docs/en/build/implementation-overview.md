@@ -4,7 +4,7 @@
 
 This document tells implementers what to build before they dive into the full reference specs. It is the bridge between the reader-centered docs and the detailed contracts in the kernel, runtime, MCP, storage, projection, and conformance references.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target is Kernel Smoke: one local process with modules proving one authority loop. Agency-Hardened MVP is a later hardening and conformance target after Kernel Smoke, and roadmap automation stays outside MVP unless owner docs promote and prove it.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target is Kernel Smoke: one local process with modules proving one authority loop. Agency-Hardened MVP is a later hardening and conformance target after Kernel Smoke, and roadmap automation stays outside MVP unless owner docs promote and prove it.
 
 Use it to answer three questions:
 
@@ -16,7 +16,7 @@ This document does not define SQLite DDL, public MCP schemas, projection templat
 
 ## Read this when
 
-- You are planning the first implementation shape after the documentation redesign is accepted.
+- You are planning the first implementation shape after the documentation set is accepted for implementation planning.
 - You need to review whether a proposed MVP build keeps the right scope.
 - You want the short map before reading the strict reference specs.
 
@@ -40,19 +40,12 @@ This is a maintainer-updated documentation handoff marker. It is not a Reference
 
 | Question | Current status |
 |---|---|
-| Is documentation maintenance still active? | Yes. The redesigned docs are ready for human review, and implementation handoff has not been accepted yet. |
+| Is documentation maintenance still active? | Yes. The current docs are ready for human review, and implementation handoff has not been accepted yet. |
 | Are docs accepted for first runtime-batch planning? | No. First runtime-batch planning may not begin until maintainers change this row to Yes after the checkpoint below is satisfied. |
 | Has runtime/server implementation started? | No. This repository still contains documentation, not Harness runtime/server implementation. |
-| Are there open follow-up docs issues? | No. The known follow-up docs issues below are resolved; maintainers still must change the acceptance status deliberately. |
+| Are there open follow-up docs issues? | No known open follow-up docs issues; maintainers still must change the acceptance status deliberately. |
 
 Build readers should treat this table as the entry gate. Until maintainers change the second row to Yes, even Kernel Smoke remains planning-only in this repository.
-
-### Known follow-up docs issues
-
-Maintainers update this list. These entries route documentation maintenance only; they do not define Reference contracts, conformance results, generated operational records, or runtime/server authorization.
-
-- Resolved in this batch - repo-level `.agents` / `.codex` instruction audit: inspected the actual repository surfaces. `.agents` is an empty directory and `.codex` is an empty file; neither contains active instructions, generated instructions, managed blocks, connector manifests, or stale Harness guidance. They are left untouched as inert placeholders, and `AGENTS.md` remains the only repo-level always-on instruction surface.
-- Resolved in this batch - User Guide opening convention alignment: verified that [User Guide](../use/user-guide.md) already follows the [Authoring Guide standard opening pattern](../maintain/authoring-guide.md#standard-opening-pattern) and keeps the no-startup-phrase convention aligned with [Agent Session Flow](../use/agent-session-flow.md).
 
 ## Implementation handoff checkpoint
 

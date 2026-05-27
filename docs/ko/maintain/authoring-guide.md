@@ -4,7 +4,7 @@
 
 Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰할 때 이 가이드를 사용합니다.
 
-목표는 재설계된 문서가 독자에게 읽기 쉽고, 세부 계약의 위치가 분명하며, 영어와 한국어 문서가 같은 의미를 유지하도록 돕는 것입니다.
+목표는 현재 문서가 독자에게 읽기 쉽고, 세부 계약의 위치가 분명하며, 영어와 한국어 문서가 같은 의미를 유지하도록 돕는 것입니다.
 
 이 가이드는 문서 유지보수만 다룹니다. 런타임 동작, 서버 구현, 제품 상태 변경, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data, 근거 기록, QA 결과, 수락 결정, Task 닫기를 승인하거나 대체하지 않습니다.
 
@@ -50,7 +50,7 @@ Use 문서는 사용자가 AI 지원 개발 세션에서 Harness를 따라가도
 
 ### Build
 
-Build 문서는 문서 재설계가 승인된 뒤 reference system을 구현하는 사람을 돕습니다.
+Build 문서는 문서 세트가 구현 계획에 사용할 수 있다고 승인된 뒤 reference system을 구현하는 사람을 돕습니다.
 
 구현 순서, module 경계, 실행 가능한 조각, 검증 전략을 설명합니다. 정확한 스키마, DDL, 불변 조건은 Reference 문서로 연결합니다.
 
@@ -70,13 +70,13 @@ Maintain 문서는 문서 시스템 자체를 관리합니다.
 
 README 문서는 긴 설명서이기 전에 길잡이입니다. Harness가 무엇이고 무엇이 아닌지 짧게 말한 뒤, 처음 읽는 사람, 사용자, 구현자, Reference 독자, 유지보수 담당자를 알맞은 owner 문서로 빠르게 안내해야 합니다.
 
-진입점은 현재 구조를 작고 명확하게 보여줘야 합니다. 명확히 비활성 migration record라고 표시한 섹션이 아니라면 migration history, 제거된 이름, retired path, 예전 구조를 보존하는 장소로 쓰지 않습니다.
+진입점은 현재 구조를 작고 명확하게 보여줘야 합니다. 명확히 비활성 migration record라고 표시한 섹션이 아니라면 migration history, 제거된 이름, 비활성 path, 예전 구조를 보존하는 장소로 쓰지 않습니다.
 
 README 문서는 경로별 소유권을 요약할 수 있지만 엄격한 계약을 복사하면 안 됩니다. 정확한 schema, DDL, gate, state transition, fixture 의미, template 본문, 공식 정의는 Reference owner로 연결합니다.
 
 ## 문서 시작 방식
 
-재설계된 문서는 짧고 예측 가능한 시작부를 둡니다. 길게 설명하지 않더라도 독자의 경로가 보여야 합니다. `reference/templates` 아래의 템플릿 참조 파일은 일반 시작 heading 대신 아래의 템플릿 전용 시작 방식을 사용합니다.
+활성 문서는 짧고 예측 가능한 시작부를 둡니다. 길게 설명하지 않더라도 독자의 경로가 보여야 합니다. `reference/templates` 아래의 템플릿 참조 파일은 일반 시작 heading 대신 아래의 템플릿 전용 시작 방식을 사용합니다.
 
 ### 이 문서로 할 수 있는 일
 
@@ -236,7 +236,7 @@ Result 의미:
 |---|---|
 | 영어/한국어 파일 구조 일치 | 명시적인 예외가 문서화되지 않는 한 `docs/en`과 `docs/ko`는 같은 활성 문서 경로, README entry, paired route expectation을 유지합니다. |
 | 영어/한국어 의미 섹션 일치 | 대응 파일은 같은 활성 파일 맵, 독자 목적, 의미상 같은 섹션 범위, owner link, 계약 세부사항을 유지합니다. Stable identifier, schema name, enum value, DDL name, validator ID, code identifier, 검토 가능성이 분명하다면 heading text와 작은 묶음 방식은 자연스럽게 조정할 수 있습니다. |
-| 시작 방식 준수 | Template이 아닌 재설계 문서는 표준 시작 방식을 사용합니다. `docs/*/reference/templates/README.md`는 `사용 시점`과 `템플릿 계층`을 사용하고, `docs/*/reference/templates/` 아래의 `README.md`가 아닌 개별 template file은 `사용 시점`, `기준 기록`, `렌더링 섹션`, `전체 템플릿`과 명확한 권한 없음 경계를 사용합니다. |
+| 시작 방식 준수 | Template이 아닌 활성 문서는 표준 시작 방식을 사용합니다. `docs/*/reference/templates/README.md`는 `사용 시점`과 `템플릿 계층`을 사용하고, `docs/*/reference/templates/` 아래의 `README.md`가 아닌 개별 template file은 `사용 시점`, `기준 기록`, `렌더링 섹션`, `전체 템플릿`과 명확한 권한 없음 경계를 사용합니다. |
 | 깨진 교차 참조 탐지 | Markdown links, heading anchors, template/reference links, same-language README routes, paired-language entry links, owner-section links가 활성 문서와 현재 anchor로 연결됩니다. |
 | Owner 경계 불일치 | 정확한 계약은 활성 owner 문서에 머뭅니다. 여기에는 `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, `reference/glossary.md`가 포함됩니다. Owner가 아닌 문서는 이 contract를 다시 정의하지 않고 요약하고 link합니다. |
 | Fixture/action schema 불일치 | Operations fixture examples의 `action`과 실행 가능한 `input`은 `reference/mcp-api-and-schemas.md`의 public MCP request schemas 및 `reference/operations-and-conformance.md`의 `ToolEnvelope` expansion convention과 일치해야 합니다. Docs-maintenance는 drift를 flag할 수 있지만 fixture action을 실행하거나 fixture 의미를 여기서 다시 설명하지 않습니다. |
@@ -264,7 +264,7 @@ Result 의미:
 
 ## Reference ownership map
 
-정확한 세부사항을 어디에 둘지 판단할 때 이 map을 사용합니다. 이 map은 재설계된 문서 구조의 active owner를 식별하며, retired paths가 authoring workflow에 남지 않게 합니다.
+정확한 세부사항을 어디에 둘지 판단할 때 이 map을 사용합니다. 이 map은 현재 문서 구조의 active owner를 식별하며, 비활성 path가 authoring workflow에 남지 않게 합니다.
 
 | Subject | Active owner |
 |---|---|

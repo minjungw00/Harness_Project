@@ -28,7 +28,7 @@ Harness keeps that operating record around task state, Change Unit scope, user j
 
 ## Who it is for
 
-Harness is for developers using AI agents to modify, verify, or explain product code. It is also for solo maintainers who need reliable resume behavior, technical leads who want local records of approval and acceptance, connector authors integrating an agent surface with Harness, and documentation authors maintaining the redesigned Harness model.
+Harness is for developers using AI agents to modify, verify, or explain product code. It is also for solo maintainers who need reliable resume behavior, technical leads who want local records of approval and acceptance, connector authors integrating an agent surface with Harness, and documentation authors maintaining the current Harness model.
 
 The shared need is simple: people want the speed of agent-assisted work without losing the ability to understand what happened, what is allowed, what was checked, and what still needs judgment.
 

@@ -4,7 +4,7 @@
 
 이 문서는 구현자가 전체 reference 명세에 들어가기 전에 무엇을 먼저 계획해야 하는지 알려 줍니다. 독자 중심 문서가 kernel, runtime, MCP, storage, projection, conformance reference와 어떻게 이어지는지 보여 주는 Build 계층입니다.
 
-이 문서는 구현 계획 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 Kernel Smoke입니다. 즉 모듈을 가진 로컬 프로세스 하나로 권한 루프 하나를 증명합니다. Agency-Hardened MVP는 Kernel Smoke 이후의 later hardening과 conformance target이며, roadmap automation은 owner 문서가 승격하고 증명하기 전까지 MVP 밖에 둡니다.
+이 문서는 구현 계획 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 Kernel Smoke입니다. 즉 모듈을 가진 로컬 프로세스 하나로 권한 루프 하나를 증명합니다. Agency-Hardened MVP는 Kernel Smoke 이후의 later hardening과 conformance target이며, roadmap automation은 owner 문서가 승격하고 증명하기 전까지 MVP 밖에 둡니다.
 
 이 문서로 다음을 확인합니다.
 
@@ -16,7 +16,7 @@
 
 ## 이런 때 읽기
 
-- 재설계 문서가 승인된 뒤 첫 구현 형태를 계획할 때.
+- 문서 세트가 구현 계획에 사용할 수 있다고 승인된 뒤 첫 구현 형태를 계획할 때.
 - 제안된 MVP 구현 계획이 올바른 범위를 유지하는지 리뷰할 때.
 - 엄밀한 reference 명세를 읽기 전에 짧은 지도가 필요할 때.
 
@@ -40,19 +40,12 @@ Kernel Smoke를 먼저 만듭니다. 즉 가장 작은 로컬 Core 권한 경로
 
 | 질문 | 현재 상태 |
 |---|---|
-| 문서 유지보수가 아직 active인가? | 예. 재설계된 문서는 사람의 검토를 받을 준비가 되었고, 구현 handoff는 아직 accepted로 기록되지 않았습니다. |
+| 문서 유지보수가 아직 active인가? | 예. 현재 문서는 사람의 검토를 받을 준비가 되었고, 구현 handoff는 아직 accepted로 기록되지 않았습니다. |
 | 첫 runtime batch 계획을 위한 문서가 승인되었는가? | 아니오. 아래 checkpoint가 충족된 뒤 maintainer가 이 행을 예로 바꾸기 전까지 첫 runtime batch 계획은 시작할 수 없습니다. |
 | runtime/server 구현이 시작되었는가? | 아니오. 이 저장소는 아직 문서만 담고 있으며 Harness runtime/server 구현을 담고 있지 않습니다. |
-| 열려 있는 문서 follow-up issue가 있는가? | 아니오. 아래 알려진 문서 follow-up issue는 resolved 상태입니다. 그래도 acceptance 상태는 maintainer가 명시적으로 바꿔야 합니다. |
+| 열려 있는 문서 follow-up issue가 있는가? | 알려진 open follow-up docs issue는 없습니다. 그래도 acceptance 상태는 maintainer가 명시적으로 바꿔야 합니다. |
 
 Build 독자는 이 표를 진입 gate로 보아야 합니다. Maintainer가 두 번째 행을 예로 바꾸기 전까지 Kernel Smoke도 이 저장소에서는 planning-only입니다.
-
-### 알려진 문서 follow-up issue
-
-Maintainer가 이 목록을 갱신합니다. 이 항목들은 문서 유지보수만 안내하며 Reference 계약, conformance 결과, 생성된 운영 record, runtime/server 승인을 만들지 않습니다.
-
-- 이번 batch에서 resolved - repo-level `.agents` / `.codex` instruction audit: 실제 repository surface를 확인했습니다. `.agents`는 빈 directory이고 `.codex`는 빈 file입니다. 둘 다 active instruction, generated instruction, managed block, connector manifest, stale Harness guidance를 담고 있지 않습니다. 따라서 inert placeholder로 그대로 두며, `AGENTS.md`가 유일한 repo-level always-on instruction surface로 남습니다.
-- 이번 batch에서 resolved - User Guide opening convention alignment: [사용자 가이드](../use/user-guide.md)가 이미 [문서 작성 가이드의 문서 시작 방식](../maintain/authoring-guide.md#문서-시작-방식)을 따르고, startup phrase 없음 convention을 [Agent 세션 흐름](../use/agent-session-flow.md)과 맞게 유지함을 확인했습니다.
 
 ## 구현 handoff checkpoint
 

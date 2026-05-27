@@ -1,36 +1,32 @@
 # Harness Documentation
 
-This is the English entrypoint for the reader-centered Harness documentation set.
+This is the English routing page for the Harness documentation set.
+
+This repository is in documentation review. This page does not authorize Harness server/runtime implementation, generated operational files, executable fixtures, or runtime data. The first implementation/proof path remains Kernel Smoke first, Agency-Hardened MVP later, and post-MVP automation in the roadmap unless owner docs promote it.
 
 Harness is an agency-preserving local authority kernel for AI-assisted product work. It keeps a local operating record of scope, user-owned judgment, write authority, evidence, verification, QA, acceptance, residual risk, and close.
 
-For the full identity, authority model, integration-surface boundaries, and non-goals, read [Overview](learn/overview.md) and [Purpose and Principles](learn/purpose-and-principles.md).
-
-## What Harness Is / Is Not
-
-Harness is meant to make AI-assisted work followable from local state, durable evidence, and readable projections. This repository is still in documentation review; it does not contain the Harness server or runtime implementation.
-
 Harness is not a chat script, prompt bundle, test harness, evaluation harness, dashboard, or replacement for the user's product repository, version control, tests, code review, or product and technical judgment.
 
-## Quick Routes
+## Reader Routes
 
-| If you need to... | Start with | Then read |
+| Reader role | Start here | Then use |
 |---|---|---|
-| Understand Harness for the first time | [Overview](learn/overview.md) | [Harness in One Task](learn/harness-in-one-task.md) |
-| Use Harness during assisted development | [User Guide](use/user-guide.md) | [Agent Session Flow](use/agent-session-flow.md) |
-| Prepare implementation after doc acceptance | [Implementation Overview](build/implementation-overview.md) | [First Runnable Slice](build/first-runnable-slice.md), [MVP Plan](build/mvp-plan.md), then Reference |
-| Look up exact behavior or stable names | [Reference](#reference) | The owner page for the contract you need |
-| Maintain or review the docs | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md) |
+| New reader | [Overview](learn/overview.md) | [Harness in One Task](learn/harness-in-one-task.md), then [Concepts](learn/concepts.md) |
+| User | [User Guide](use/user-guide.md) | [Agent Session Flow](use/agent-session-flow.md) when you need the agent-facing flow |
+| Implementer | [Implementation Overview](build/implementation-overview.md) | [First Runnable Slice](build/first-runnable-slice.md), [MVP Plan](build/mvp-plan.md), then the relevant Reference owner |
+| Operator or conformance author | [Operations And Conformance Reference](reference/operations-and-conformance.md#contract-map) | [Runtime Architecture](reference/runtime-architecture.md), [MCP API And Schemas](reference/mcp-api-and-schemas.md), [Storage And DDL](reference/storage-and-ddl.md) |
+| Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md) |
 
 ## Ownership Rule
 
 Reference docs own exact contracts: schemas, DDL, gates, state transitions, enum values, fixture semantics, template bodies, and official definitions. Learn, Use, and Build docs explain the idea for their reader and link to Reference instead of copying strict contract blocks.
 
-Documentation-maintenance checks are read-only review guidance, not runtime conformance or implementation readiness. Use the Authoring Guide for actionable drift categories and owner-first resolution; use Operations And Conformance only for the docs-maintenance profile reporting boundary.
+Documentation-maintenance checks are read-only review guidance, not runtime conformance or implementation readiness. Use the [Authoring Guide](maintain/authoring-guide.md#docs-maintenance-checks) for drift categories and owner-first resolution; use [Operations And Conformance](reference/operations-and-conformance.md#docs-maintenance-profile) only for the docs-maintenance profile reporting boundary.
 
 ## Learn
 
-Start here to understand Harness before using or building it. Learn docs explain the mental model with concrete examples; strict contracts stay in Reference. The recommended path is [Overview](learn/overview.md) first, then [Harness in One Task](learn/harness-in-one-task.md).
+Use Learn when you want the mental model before exact contracts.
 
 - [Overview](learn/overview.md)
 - [Harness in One Task](learn/harness-in-one-task.md)
@@ -39,16 +35,16 @@ Start here to understand Harness before using or building it. Learn docs explain
 
 ## Use
 
-Use this path when you want to run an AI-assisted development session under Harness. Use docs prioritize user-facing flow, status interpretation, decisions, and recovery paths. Start with the user guide, then use the agent-session flow when you need to understand how the agent should proceed.
+Use this path when you want to run an AI-assisted development session under Harness. These pages prioritize user-facing flow, status interpretation, decisions, and recovery paths.
 
 - [User Guide](use/user-guide.md)
 - [Agent Session Flow](use/agent-session-flow.md)
 
 ## Build
 
-Use this path for implementation orientation and later planning review. These pages do not authorize starting Harness server or runtime implementation, and first runtime-batch planning may begin only after maintainers deliberately update the Documentation Acceptance Status. Build docs explain order, module boundaries, runnable slices, and verification strategy without duplicating exact schemas or DDL.
+Use this path for implementation orientation and planning review. These pages keep the first path narrow: Kernel Smoke first, Agency-Hardened MVP later, roadmap automation outside MVP unless owner docs promote it.
 
-Start with the [Documentation Acceptance Status](build/implementation-overview.md#documentation-acceptance-status) in Implementation Overview. It is the maintainer-updated place to tell whether work is still documentation maintenance, first runtime-batch planning may begin, runtime/server implementation has started, or open documentation follow-up issues are recorded.
+Start with the [Documentation Acceptance Status](build/implementation-overview.md#documentation-acceptance-status). Until maintainers deliberately accept first runtime-batch planning there, Build pages remain planning guidance and do not authorize runtime/server implementation.
 
 - [Implementation Overview](build/implementation-overview.md)
 - [First Runnable Slice](build/first-runnable-slice.md)
@@ -56,7 +52,7 @@ Start with the [Documentation Acceptance Status](build/implementation-overview.m
 
 ## Reference
 
-Use this path to look up detailed contracts, schemas, policies, and definitions. If another path summarizes a strict rule, the Reference owner is the source to update first.
+Use this path to look up strict contracts. If another path summarizes a strict rule, update the Reference owner first.
 
 - [Kernel Reference](reference/kernel.md)
 - [Runtime Architecture Reference](reference/runtime-architecture.md)
@@ -72,7 +68,7 @@ Use this path to look up detailed contracts, schemas, policies, and definitions.
 
 ## Maintain
 
-Use this path to keep the docs and future Harness system coherent over time. Maintain docs govern documentation maintenance, not runtime behavior. They define English/Korean parity expectations, owner-boundary review, TODO hygiene, broken-reference checks, and how to replace duplicate full contracts with short summaries plus owner links.
+Use this path to keep the docs and future Harness system coherent over time. Maintain docs govern documentation maintenance, not runtime behavior.
 
 - [Authoring Guide](maintain/authoring-guide.md)
 - [Translation Guide](maintain/translation-guide.md)

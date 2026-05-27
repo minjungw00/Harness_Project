@@ -4,7 +4,7 @@
 
 매 턴 유지되는 Harness 맥락 묶음(context envelope)을 짧은 현재 상태 표시로 보여줄 때 Compact Status Card를 사용합니다. 여기에는 Task, 모드, 범위, 범위 밖, 다음 안전한 행동, 막힘 상태, 대기 중인 사용자 판단, 쓰기 권한, 수용 기준, 근거, 검증, Manual QA, 남은 위험, 보장 수준(guarantee level), 읽기용 보기 최신성(projection freshness), 최신 참조(ref)가 포함됩니다. 상태 확인, 다음 행동, 이어가기 턴에서 부담 없이 읽을 수 있게 유지하고, 평범한 상태 설명을 먼저 쓰며 정확한 Harness label은 경계를 분명히 할 때만 붙입니다.
 
-이 문서는 template 참조 문서입니다. 재설계 문서가 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+이 문서는 template 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
 
 ## 기준 기록
 

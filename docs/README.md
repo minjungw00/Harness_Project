@@ -1,74 +1,53 @@
 # Harness Documentation / 하네스 문서
 
-This directory contains the Harness documentation in parallel English and Korean trees.
+This is the bilingual routing page for the Harness documentation set.
+
+This repository is in documentation review. This page does not authorize Harness server/runtime implementation, generated operational files, executable fixtures, or runtime data. The first implementation/proof path remains Kernel Smoke first, Agency-Hardened MVP later, and post-MVP automation in the roadmap unless owner docs promote it.
 
 Harness is an agency-preserving local authority kernel for AI-assisted product work. It keeps a local operating record of the work facts that need to remain followable after chat moves on.
 
-Harness is not a chat script, prompt bundle, test harness, evaluation harness, dashboard, or replacement for the user's product repository or product and technical judgment. This repository is still in documentation review; server and runtime implementation have not started.
+Harness is not a chat script, prompt bundle, test harness, evaluation harness, dashboard, or replacement for the user's product repository, version control, tests, code review, or product and technical judgment.
 
-For the full identity, authority model, integration-surface boundaries, and non-goals, start with [English Overview](en/learn/overview.md), [English Purpose and Principles](en/learn/purpose-and-principles.md), [Korean Overview](ko/learn/overview.md), or [Korean Purpose and Principles](ko/learn/purpose-and-principles.md).
+이 문서는 Harness 문서 세트의 이중 언어 길잡이입니다.
 
-이 디렉터리는 Harness 문서를 영어와 한국어 트리로 나누어 담고 있습니다.
+이 저장소는 문서 검토 단계입니다. 이 페이지는 Harness server/runtime 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 승인하지 않습니다. 첫 구현/증명 경로는 Kernel Smoke 먼저, Agency-Hardened MVP 나중, post-MVP automation은 owner 문서가 승격하기 전까지 roadmap에 둡니다.
 
 Harness는 AI 지원 제품 작업을 위한, 사용자 판단권을 보존하는 로컬 권한 커널입니다. 대화가 지나간 뒤에도 따라갈 수 있어야 하는 작업 사실을 로컬 운영 기록으로 유지합니다.
 
-Harness는 대화 스크립트, prompt 묶음, test harness, evaluation harness, dashboard, 사용자의 제품 저장소나 제품 판단과 기술 판단을 대체하는 도구가 아닙니다. 이 저장소는 아직 문서 검토 단계이며, server와 runtime 구현은 시작하지 않았습니다.
+Harness는 대화 스크립트, prompt 묶음, test harness, evaluation harness, dashboard, 사용자의 제품 저장소, 버전 관리, 테스트, 코드 리뷰, 제품 판단과 기술 판단을 대체하지 않습니다.
 
-정체성, 권한 모델, 통합 접점 경계, 비목표의 전체 설명은 [영어 개요](en/learn/overview.md), [영어 목적과 원칙](en/learn/purpose-and-principles.md), [한국어 개요](ko/learn/overview.md), [한국어 목적과 원칙](ko/learn/purpose-and-principles.md)에서 시작합니다.
-
-## Choose a Language / 언어 선택
+## Choose A Language / 언어 선택
 
 | Language | Entry point |
 |---|---|
 | English | [en/README.md](en/README.md) |
 | Korean | [ko/README.md](ko/README.md) |
 
-## Quick Routes / 빠른 경로
+## Reader Routes / 독자별 경로
 
-| Reader need / 독자 필요 | English start / 영어 시작 | Korean start / 한국어 시작 |
+| Reader / 독자 | English start / 영어 시작 | Korean start / 한국어 시작 |
 |---|---|---|
-| First time with Harness / Harness를 처음 읽을 때 | [Overview](en/learn/overview.md) | [개요](ko/learn/overview.md) |
-| A concrete one-task story / 한 작업의 구체적 흐름 | [Harness in One Task](en/learn/harness-in-one-task.md) | [하나의 작업으로 보는 Harness](ko/learn/harness-in-one-task.md) |
-| Using Harness during assisted work / AI 지원 작업 중 사용 | [User Guide](en/use/user-guide.md) | [사용자 가이드](ko/use/user-guide.md) |
-| Implementing after documentation acceptance / 문서 승인 뒤 구현 준비 | [Implementation Overview](en/build/implementation-overview.md) | [구현 개요](ko/build/implementation-overview.md) |
-| Looking up strict contracts / 엄격한 계약 확인 | [English Reference list](en/README.md#reference) | [한국어 Reference 목록](ko/README.md#reference) |
-| Maintaining the documentation set / 문서 세트 유지보수 | [Authoring Guide](en/maintain/authoring-guide.md) | [문서 작성 가이드](ko/maintain/authoring-guide.md) |
+| New reader or user / 처음 읽는 사람 또는 사용자 | [Overview](en/learn/overview.md), then [User Guide](en/use/user-guide.md) | [개요](ko/learn/overview.md), then [사용자 가이드](ko/use/user-guide.md) |
+| Implementer / 구현자 | [Implementation Overview](en/build/implementation-overview.md), then [First Runnable Slice](en/build/first-runnable-slice.md) | [구현 개요](ko/build/implementation-overview.md), then [첫 실행 가능한 조각](ko/build/first-runnable-slice.md) |
+| Operator or conformance author / 운영자 또는 Conformance 작성자 | [Operations And Conformance Reference](en/reference/operations-and-conformance.md#contract-map) | [운영과 Conformance 참조](ko/reference/operations-and-conformance.md#계약-위치-지도) |
+| Documentation maintainer / 문서 유지보수 담당자 | [Authoring Guide](en/maintain/authoring-guide.md), then [Translation Guide](en/maintain/translation-guide.md) | [문서 작성 가이드](ko/maintain/authoring-guide.md), then [번역 가이드](ko/maintain/translation-guide.md) |
 
-## Reader Paths and Ownership / 독자 경로와 소유권
+## Contract Owners / 계약 Owner
 
-The redesigned documentation is organized around five reader paths. Use the path for the reader's immediate need, then link to the owner when exact detail matters.
+Reference docs own exact contracts. Learn, Use, and Build docs summarize for their reader and link to the owning Reference page instead of copying schemas, DDL, transition tables, fixture bodies, template bodies, enum tables, or other normative contract blocks.
 
-| Path | Purpose | Ownership note |
+엄격한 계약은 Reference 문서가 담당합니다. Learn, Use, Build 문서는 독자에게 필요한 만큼 요약하고, schema, DDL, transition table, fixture body, template body, enum table, 기타 규범적 계약 블록을 복사하지 않고 owner Reference 문서로 연결합니다.
+
+| Need / 필요 | English owner / 영어 owner | Korean owner / 한국어 owner |
 |---|---|---|
-| Learn | Understand what kind of Harness this is, why it exists, and how its concepts fit together. | Owns mental model and examples, not strict schemas or gates. |
-| Use | Follow Harness as a user during assisted development work. | Owns user-facing flow and status interpretation. |
-| Build | Prepare to implement Harness after the redesigned docs are accepted. | Owns implementation order and runnable slices, not exact DDL or API bodies. |
-| Reference | Look up stable contracts, schemas, operations/conformance rules, glossary definitions, and design-quality policies. | Owns strict contracts. |
-| Maintain | Keep the documentation and future Harness system coherent over time. | Owns documentation governance, not runtime behavior. |
-
-재설계된 문서는 다섯 가지 독자 경로를 중심으로 정리합니다. 독자의 지금 필요에 맞는 경로에서 시작하고, 정확한 세부사항이 필요하면 owner 문서로 연결합니다.
-
-| 경로 | 목적 | 소유권 메모 |
-|---|---|---|
-| Learn | Harness가 어떤 종류의 시스템인지, 왜 필요한지, 핵심 개념이 어떻게 이어지는지 이해합니다. | 이해 모델과 예시를 담당합니다. 엄격한 schema나 gate는 담당하지 않습니다. |
-| Use | AI 지원 개발 과정에서 사용자가 Harness를 어떻게 따라가면 되는지 봅니다. | 사용자에게 보이는 흐름과 상태 해석을 담당합니다. |
-| Build | 재설계된 문서가 승인된 뒤 구현을 준비합니다. | 구현 순서와 실행 가능한 조각을 담당합니다. 정확한 DDL이나 API 본문은 담당하지 않습니다. |
-| Reference | 안정적인 계약, schema, 운영/Conformance 규칙, 용어 정의, 설계 품질 정책을 찾아봅니다. | 엄격한 계약을 담당합니다. |
-| Maintain | 문서와 이후 Harness 시스템의 일관성을 유지합니다. | 문서 거버넌스를 담당합니다. 런타임 동작은 담당하지 않습니다. |
-
-## Contract Ownership / 계약 소유권
-
-Reference docs own exact contracts. Learn, Use, and Build docs may summarize a contract in ordinary reader language, but they should link to the owning Reference page instead of copying schemas, DDL, transition tables, fixture bodies, or other normative contract blocks.
-
-엄격한 계약은 Reference 문서가 담당합니다. Learn, Use, Build 문서는 독자에게 필요한 만큼 쉬운 말로 요약할 수 있지만, schema, DDL, transition table, fixture body, 기타 규범적 계약 블록을 복사하지 않고 owner Reference 문서로 연결합니다.
-
-The implementation handoff checkpoint lives in [English Implementation Overview](en/build/implementation-overview.md#implementation-handoff-checkpoint) and [Korean Implementation Overview](ko/build/implementation-overview.md#구현-handoff-checkpoint). It separates documentation-maintenance work from first runtime-batch planning; it does not replace Reference contracts.
-
-Open follow-up entries in that checkpoint are maintainer-updated documentation-maintenance notes only. They do not create runtime authority or Reference contracts.
-
-구현 handoff checkpoint는 [영어 구현 개요](en/build/implementation-overview.md#implementation-handoff-checkpoint)와 [한국어 구현 개요](ko/build/implementation-overview.md#구현-handoff-checkpoint)에 있습니다. 이 checkpoint는 문서 유지보수와 첫 runtime batch 계획을 구분하며, Reference 계약을 대체하지 않습니다.
-
-그 checkpoint의 열린 follow-up 항목은 maintainer가 갱신하는 문서 유지보수 메모일 뿐입니다. Runtime authority나 Reference 계약을 만들지 않습니다.
+| Kernel state, gates, write authority, close / Kernel 상태, gate, 쓰기 권한, 닫기 | [Kernel Reference](en/reference/kernel.md) | [커널 참조](ko/reference/kernel.md) |
+| Public MCP schemas, tools, errors / Public MCP schema, tool, error | [MCP API And Schemas](en/reference/mcp-api-and-schemas.md) | [MCP API와 스키마](ko/reference/mcp-api-and-schemas.md) |
+| Runtime architecture, Core flow, guarantee levels / Runtime architecture, Core flow, guarantee level | [Runtime Architecture Reference](en/reference/runtime-architecture.md) | [런타임 아키텍처 참조](ko/reference/runtime-architecture.md) |
+| Storage layout, DDL, migrations, artifacts / Storage layout, DDL, migration, artifact | [Storage And DDL](en/reference/storage-and-ddl.md) | [Storage와 DDL](ko/reference/storage-and-ddl.md) |
+| Projections and rendered templates / Projection과 렌더링 template | [Document Projection Reference](en/reference/document-projection.md), [Template Reference](en/reference/templates/README.md) | [문서 Projection 참조](ko/reference/document-projection.md), [Template 참조](ko/reference/templates/README.md) |
+| Operators, conformance, docs-maintenance reporting / 운영자, Conformance, docs-maintenance 보고 | [Operations And Conformance Reference](en/reference/operations-and-conformance.md) | [운영과 Conformance 참조](ko/reference/operations-and-conformance.md) |
+| Agent integration and surface recipes / Agent 통합과 접점 recipe | [Agent Integration Reference](en/reference/agent-integration.md), [Surface Cookbook](en/reference/surface-cookbook.md) | [Agent 통합 참조](ko/reference/agent-integration.md), [Surface Cookbook](ko/reference/surface-cookbook.md) |
+| Official terms / 공식 용어 | [Glossary Reference](en/reference/glossary.md) | [용어집 참조](ko/reference/glossary.md) |
 
 ## Roadmap / 로드맵
 
@@ -78,6 +57,6 @@ Post-MVP 항목은 각 언어 트리의 Roadmap에 둡니다. [English](en/roadm
 
 ## Parity / 문서 Parity
 
-English and Korean docs keep the same file map and semantic content. Semantic parity must be maintained across `docs/en` and `docs/ko`.
+English and Korean docs keep the same file map and semantic content. Semantic parity must be maintained across `docs/en` and `docs/ko`, while Korean headings and prose may be natural Korean.
 
-영어 문서와 한국어 문서는 같은 파일 지도를 유지하고, 의미상 같은 내용을 담아야 합니다. 단, 한국어 문서는 자연스러운 한국어 제목과 문장 흐름을 사용할 수 있습니다.
+영어 문서와 한국어 문서는 같은 파일 지도와 의미상 같은 내용을 유지합니다. `docs/en`과 `docs/ko`의 의미 일치를 유지하되, 한국어 문서는 자연스러운 한국어 제목과 문장 흐름을 사용할 수 있습니다.

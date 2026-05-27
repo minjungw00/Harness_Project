@@ -6,7 +6,7 @@ This document teaches Harness through two concrete task flows before you read th
 
 After reading it, you should be able to recognize why Harness records a Task, a Change Unit, a Decision Packet, Approval, Write Authorization, Evidence, Verification, Manual QA, Acceptance, Residual Risk, and Close. You do not need to know the internal record details to follow the story.
 
-This is Learn documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+This is Learn documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
 
 ## Read this when
 

@@ -6,7 +6,7 @@ Use this reference to check the exact kernel contract for Harness state, gates, 
 
 It is a lookup document for implementers, conformance authors, and maintainers. First-time readers should start with the Learn path and return here when they need precise state rules.
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
 
 ## Read this when
 
@@ -281,7 +281,7 @@ Decision Packets feed `decision_gate`. Blocking user-owned judgment cannot be sa
 
 A Decision Packet is sufficient for kernel use only when it records a decision, not a blank permission request. It must make the user-owned question explicit, compare realistic options, include the agent recommendation or explain why none is available, expose material trade-offs, name affected gates and acceptance criteria, point to source and evidence refs, state the consequence of deferral, and say what the agent may decide without the user. These are quality requirements for the existing Decision Packet record and public request shape owned by [MCP API And Schemas](mcp-api-and-schemas.md#harnessrequest_user_decision); they do not add fields, gates, or an alternate authority path.
 
-Minimal MVP implementations may omit `decision_requests`. If an implementation keeps them, they are routing, interaction, replay, or legacy handoff metadata only. They are not authority for user-owned judgment, and a `decision_request` row alone never satisfies `decision_gate`, approval, acceptance, waiver, residual-risk acceptance, or close.
+Minimal MVP implementations may omit `decision_requests`. If an implementation keeps them, they are routing, interaction, replay, or compatibility handoff metadata only. They are not authority for user-owned judgment, and a `decision_request` row alone never satisfies `decision_gate`, approval, acceptance, waiver, residual-risk acceptance, or close.
 
 Decision Packet status is record-level:
 

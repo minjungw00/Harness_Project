@@ -6,7 +6,7 @@ Use this reference to implement or review the Harness runtime storage model. It 
 
 This is storage reference material. It does not define MVP stage sequencing; for stage order and exit criteria, see [Build: MVP Plan](../build/mvp-plan.md).
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
 
 ## Read this when
 
@@ -231,7 +231,7 @@ The table below is an owner map for additional status-like `TEXT` fields in the 
 | `feedback_loops.loop_kind`, `feedback_loops.status`, `tdd_traces.status` | `FeedbackLoopUpdate` and `TddTraceUpdate` in [`harness.record_run`](mcp-api-and-schemas.md#harnessrecord_run), plus the storage-specific Feedback Loop notes below. |
 | `tool_invocations.status` | Reference idempotency/replay storage semantics in this document; it describes committed replay state only, not surface diagnostics. Its storage value is promoted below. |
 
-The following MVP storage-owned value sets are promoted for fields whose existing owner docs and fixture examples already imply stable meaning, and for formerly unresolved storage status fields whose owner-bound compatibility meanings are resolved here. These values are storage hardening values; they do not redefine API payload enums, kernel gate values, lifecycle phases, projection statuses, or optional-table requirements.
+The following MVP storage-owned value sets are promoted for fields whose existing owner docs and fixture examples already imply stable meaning, and for storage status fields whose owner-bound compatibility meanings are resolved here. These values are storage hardening values; they do not redefine API payload enums, kernel gate values, lifecycle phases, projection statuses, or optional-table requirements.
 
 | Field(s) | Durable values | Compatibility meaning |
 | --- | --- | --- |
@@ -480,7 +480,7 @@ CREATE TABLE approvals (
   decided_at TEXT
 );
 
--- Optional compatibility/routing table for routing, interaction, replay, or legacy handoff metadata only.
+-- Optional compatibility/routing table for routing, interaction, replay, or compatibility handoff metadata only.
 -- Minimal MVP implementations may omit this table.
 -- decision_packet_id may remain null for routing/replay staging; unlinked rows are non-authoritative.
 -- Gate aggregation may consider a row only through a linked compatible decision_packet_id.
@@ -886,7 +886,7 @@ Stored `write_authorizations` rows require non-null `basis_state_version`, inclu
 
 `record_run` consumption is stored by setting the reciprocal links `write_authorizations.consumed_by_run_id` and `runs.write_authorization_id` in one Core transaction. The unique partial index on `runs.write_authorization_id` enforces storage single-use for committed Runs; idempotent replay returns the original Run and response metadata instead of inserting another Run row. Rejected pre-commit `record_run` calls, such as missing Write Authorization before any Run is committed, do not insert a `runs` row and therefore have no storage Run ID to return; the nullable API `run_id` represents that absence without inventing a placeholder. Runs that attempt an invalid, stale, missing, consumed, or scope-exceeded authorization leave `runs.write_authorization_id` empty; attempted refs may be kept in validator findings, run violation payload, or `task_events.payload_json` for audit. Kernel-owned close and evidence consequences remain in [Kernel `record_run` State Logic](kernel.md#record_run).
 
-`decision_packets` stores Decision Packet state records. `decision_requests` is an optional interaction/routing compatibility table for implementation handoff, replay, or legacy request flow; a minimal MVP implementation may omit it, along with its optional indexes and nullable compatibility fields. If retained, unlinked `decision_requests` rows remain non-authoritative routing metadata, approval links use `approvals.decision_packet_id`, and gate aggregation must consider `decision_requests` only through a linked compatible `decision_packet_id`. The decision gate and approval/acceptance/risk authority rules stay in [Kernel Decision Gate](kernel.md#decision-gate) and the related public tools in [MCP API And Schemas](mcp-api-and-schemas.md#public-tools).
+`decision_packets` stores Decision Packet state records. `decision_requests` is an optional interaction/routing compatibility table for implementation handoff, replay, or compatibility request flow; a minimal MVP implementation may omit it, along with its optional indexes and nullable compatibility fields. If retained, unlinked `decision_requests` rows remain non-authoritative routing metadata, approval links use `approvals.decision_packet_id`, and gate aggregation must consider `decision_requests` only through a linked compatible `decision_packet_id`. The decision gate and approval/acceptance/risk authority rules stay in [Kernel Decision Gate](kernel.md#decision-gate) and the related public tools in [MCP API And Schemas](mcp-api-and-schemas.md#public-tools).
 
 `residual_risks` stores residual-risk rows. MVP accepted-risk identity is `residual_risk_id`; there is no separate `accepted_risks` table or `ARISK-*` canonical record. Accepted-risk metadata/state stays on `residual_risks.accepted_risk_json`, `status`, and `accepted_at`, while Decision Packets may reference rows through `decision_packets.residual_risk_refs_json`. Visibility and close semantics stay in [Close Semantics](kernel.md#close-result-semantics).
 
@@ -1315,7 +1315,7 @@ stateDiagram-v2
   running --> completed: render and write succeed
   running --> failed: render or write fails
   failed --> pending: retry with newer attempt
-  pending --> skipped: obsolete version or managed drift
+  pending --> skipped: superseded version or managed drift
   completed --> [*]
   skipped --> [*]
 ```
@@ -1441,7 +1441,7 @@ Compatibility aliases:
 | `docs_consistency` | `context_hygiene_check` |
 | `projection_freshness` | `context_hygiene_check` |
 
-These aliases are old compatibility inputs for legacy validator outputs or legacy validator IDs only; MVP conformance must emit the stable IDs above. The `projection_freshness` alias maps older validator output to `context_hygiene_check`; new MVP fixture assertions for mechanical projection freshness should use `expected_state.checks.projection_freshness`.
+These aliases are compatibility inputs for non-stable validator outputs or non-stable validator IDs only; MVP conformance must emit the stable IDs above. The `projection_freshness` alias maps alternate validator output to `context_hygiene_check`; MVP fixture assertions for mechanical projection freshness should use `expected_state.checks.projection_freshness`.
 
 ### Evidence and Verification Profile Implementation Notes
 

@@ -6,7 +6,7 @@ Use this reference to look up Harness operator procedures, conformance staging, 
 
 It is a lookup document for operators, implementers, conformance authors, and maintainers. It is not an onboarding path; first-time readers should start with Learn or Build docs and return here when they need exact operational or conformance semantics.
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the redesigned docs are accepted. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
 
 ## Read this when
 
@@ -3127,7 +3127,7 @@ initial_state:
   context_refs:
     - record_kind: projection
       record_id: PRD-2025-OLD
-      label: "legacy search PRD"
+      label: "stale search PRD"
       freshness: stale
       claims:
         acceptance_criteria:
