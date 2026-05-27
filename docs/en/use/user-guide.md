@@ -18,9 +18,11 @@ No startup phrase or internal Harness label knowledge is required. [Harness in O
 
 Speak normally. Describe the work you want and any boundary you already know; the agent should infer from the task shape whether Harness applies. Tiny questions or clearly read-only advice can stay light. Larger, riskier, multi-file, or unclear work should be shaped before product files change.
 
+Harness should keep the work understandable, not replace the conversation or the engineering process around it. Source control still records product-file history, tests still check executable behavior, code review still reviews the change, and user-owned product or material technical judgment still belongs to the user.
+
 The agent should translate your request into the right Harness steps. You should not need to operate internal records by hand. Use ordinary language first and exact Harness labels second, only when they explain a real stop, boundary, or close condition.
 
-For small direct work, the ceremony budget is intentionally small: a compact scope, a minimal active Change Unit when product files may change, a write-authority check before the exact write, and a concise result with changed paths, checks, escalation status, and close-relevant risk. Direct means fewer user-facing steps, not bypassed scope or write authority.
+For small direct work, the ceremony budget is intentionally small: a compact scope, a minimal active Change Unit when product files may change, a write-authority check before the exact write, and a concise result with what changed, what was checked, whether it escalated, what remains risky, and what decision is needed if anything blocks close. Direct means fewer user-facing steps, not bypassed scope or write authority.
 
 If you want to be explicit, you can still say:
 
@@ -295,7 +297,7 @@ Typical flow:
 6. After changes or advice, the agent records the relevant result and evidence when evidence applies.
 7. When needed, verification, Manual QA, residual risk, and acceptance are handled before close.
 
-Many small direct tasks skip some later checks. Bigger work should not hide those checks; it should show them only when they matter.
+Many small direct tasks skip some later checks. Bigger work should not hide those checks; it should show them only when they matter. In every case, useful user-facing output favors the same plain questions: what changed, what was checked, what remains risky, and what decision is needed now.
 
 A direct task result should stay compact and low-ceremony: what was requested, what stayed in scope, what changed, what was checked, whether it escalated, and any close-relevant risk or follow-up. It should not restate every gate when those gates did not affect the result.
 

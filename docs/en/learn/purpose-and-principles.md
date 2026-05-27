@@ -4,6 +4,8 @@
 
 This document explains why Harness exists, who it is for, what it values, how it thinks about common AI-assisted development failures, and what belongs inside the MVP boundary.
 
+This is Learn documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Read this when
 
 Read this when you want the values and boundaries behind Harness before reading strict contracts or implementation plans.
@@ -14,7 +16,7 @@ Read this when you want the values and boundaries behind Harness before reading 
 
 ## Main idea
 
-Harness is an agency-preserving local authority kernel for AI-assisted product work. It preserves user agency by making work followable from local state, durable evidence, and readable projections.
+Harness is an agency-preserving local authority kernel for AI-assisted product work. It preserves user agency by making work followable from durable local state, artifact-backed evidence refs, and readable projections.
 
 ## Purpose
 
@@ -24,7 +26,7 @@ The user should be able to begin in ordinary language. The agent should be able 
 
 Harness is not ceremony for its own sake. It maintains a local operating record for work that would otherwise become blurry.
 
-Harness keeps that operating record around task state, Change Unit scope, user judgment, Write Authorization, evidence, verification, QA, Acceptance, Residual Risk, and close. The point is not to replace the user's tools or conversation, but to make the work followable from current local state.
+Harness keeps that operating record around task state, Change Unit scope, user judgment, Write Authorization, evidence, verification, QA, Acceptance, Residual Risk, and close. The point is not to replace the user's tools, source control, tests, code review, or conversation, but to make the work followable from current local state.
 
 ## Who it is for
 
@@ -38,7 +40,7 @@ Harness keeps operational state and evidence local. The durable work record shou
 
 Harness makes boundaries explicit. Scope, approval, decisions, evidence, verification, Manual QA, acceptance, and residual risk are different questions, so the system records them separately.
 
-Harness is honest about assurance. It should say what was checked and how independent that check was, instead of treating every review as equally strong.
+Harness is honest about assurance. It should say what changed, what was checked, how independent that check was, what remains risky, and what decision is needed, instead of treating every review as equally strong.
 
 Harness preserves strategic agency. The user keeps judgment over goals, scope, design direction, product trade-offs, material technical trade-offs, codebase stewardship, QA, acceptance, and residual-risk acceptance.
 
@@ -52,6 +54,8 @@ Harness treats projections with humility. Markdown reports help humans read stat
 
 Harness describes capability by actual guarantee level, not by product name. If an agent surface can only cooperate or report after the fact, Harness should say that plainly.
 
+Harness complements ordinary engineering discipline. Source control remains the history of product files, tests remain executable checks, code review remains human and team review, and user-owned product or material technical judgment remains with the user.
+
 ## Strategic thesis
 
 The strategic thesis is simple: AI-assisted work can move quickly while the user keeps meaningful judgment.
@@ -62,9 +66,9 @@ This thesis has three practical consequences.
 
 First, chat is an operating surface, not durable state. It is where people and agents coordinate, but it is not the record that decides whether work can write or close.
 
-Second, Harness state is the operating record. It stores the task, scope, decisions, approvals, evidence, verification, QA, acceptance, and residual risk needed to reason about the work.
+Second, Harness state is the operating record. It stores the task, scope, decisions, approvals, evidence refs, verification, QA, acceptance, and residual risk needed to reason about the work.
 
-Third, readable documents are projections and proposal areas. They help humans inspect and edit the story of the work, but accepted changes enter the operating record only through reconcile or another state-changing action.
+Third, readable documents are projections and proposal areas. They help humans inspect and edit the story of the work, but accepted changes enter the operating record only through reconcile or another state-changing action. Projection freshness is a display fact, not a substitute for current state, evidence, tests, review, or acceptance.
 
 ## Failure model, rewritten as reader-facing problems
 
@@ -100,7 +104,7 @@ Harness can integrate with MCP tools/connectors, hooks, guardrails, adapters, si
 
 Harness authority comes from Core and canonical local state around Task and Change Unit scope, Decision Packets, Approval, Write Authorization, evidence, verification, QA, acceptance, residual risk, and close.
 
-Harness also does not replace the product repository, version control system, test runner, review process, or user judgment.
+Harness also does not replace the product repository, source control or version control system, test runner, code review process, or user judgment.
 
 Harness does not treat chat history as durable state or generated Markdown reports as the operating record.
 

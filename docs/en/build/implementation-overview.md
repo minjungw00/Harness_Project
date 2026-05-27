@@ -28,6 +28,8 @@ You should already understand the basic Harness concepts from the Learn path. Fo
 
 Build Kernel Smoke first: the smallest local Core authority path. Core alone changes canonical operational state. Then harden that path through evidence, projections, conformance, and operator recovery.
 
+The local kernel is a coordination and authority record, not a replacement for the product repository, source control, tests, code review, conversation, or user-owned product and material technical judgment. Build the first path so status and close output explain what changed, what was checked, what remains risky, and what decision is needed.
+
 The first authority loop is narrow: `prepare_write` is the only product-write authorization decision point, a returned Write Authorization is durable and single-use, `record_run` consumes it for one compatible implementation or direct Run while recording observed changes and artifacts, and `close_task` is the only completion decision point. Exact state logic lives in [Kernel Reference](../reference/kernel.md#prepare_write) and public request/response details live in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#public-tools).
 
 Start with canonical state, `task_events`, artifact refs, Core tool behavior, and the minimal reference surface and MCP reachability needed to exercise that path. The initial implementation assumption is one local process with modules, not a distributed platform. Treat projection-template polish, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, and broad automation as non-authoritative things that read from or wrap that authority loop after it exists.
@@ -67,13 +69,13 @@ This handoff does not promote roadmap items, dashboards or hosted workflow UI, B
 
 | Boundary | What it proves | What the user or operator can observe |
 |---|---|---|
-| Kernel Smoke | One local Task can go through the Core authority loop: `prepare_write` as the write authorization point, single-use Write Authorization, `record_run` consumption with observed changes and artifacts, artifact-backed evidence, status, minimal projection freshness, and structured close blockers. | Status shows the active Task, gates, Change Unit, evidence, blockers, and projection freshness. Out-of-scope work is blocked, compatible scoped work is authorized and consumed once, and `close_task` refuses missing evidence or required decisions with structured blockers. |
+| Kernel Smoke | One local Task can go through the Core authority loop: `prepare_write` as the write authorization point, single-use Write Authorization, `record_run` consumption with observed changes and artifacts, artifact-backed evidence, status, minimal projection freshness, and structured close blockers. | Status shows the active Task, gates, Change Unit, evidence, blockers, and projection freshness. `prepare_write` refuses out-of-scope write authorization, compatible scoped work is authorized and consumed once, and `close_task` refuses missing evidence or required decisions with structured blockers. |
 | Agency-Hardened MVP | Later hardening after Kernel Smoke: the local reference MVP handles user judgment, approvals, detached verification, Manual QA, residual risk, reconcile, recovery, export, and conformance with honest boundaries. | Fixtures and operator entrypoints show why work can or cannot continue, verify, accept, export, recover, or close through the same Core records and errors. |
 | Post-MVP roadmap | Later surfaces or automation can be considered only after the local kernel and agency proof are stable. | Optional capabilities remain read-only, display-only, metadata-only, or artifact-candidate-only until an owner promotes them through the [Roadmap promotion rule](../roadmap.md#promotion-rule) with exact contracts and fixtures. |
 
 ## What you are building
 
-Harness MVP is a local authority kernel for AI-assisted product work. The first implementation target is Kernel Smoke. The initial implementation assumption is one local system with clear internal modules, not a distributed platform.
+Harness MVP is a local authority kernel for AI-assisted product work. It keeps durable local state, artifact refs, and readable projections around the work journey, while leaving product history, executable checking, review, and user judgment with the existing engineering process. The first implementation target is Kernel Smoke. The initial implementation assumption is one local system with clear internal modules, not a distributed platform.
 
 ### Local Server / Process
 
@@ -135,7 +137,7 @@ Build projection output from the Core source records it depends on, such as Task
 
 The first runnable slice may enqueue a minimal `TASK` projection job or render a minimal `TASK` projection. The final MVP must support enqueueing and rendering MVP-required `ProjectionKind` values when their source records exist or change: `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT`.
 
-Projection failure must not roll back committed Core state. It should mark projection freshness or job status and leave recovery or reconcile to a later action. `source_state_version` and freshness are display/readiness facts: close/readiness output should show when a readable view is stale or failed, but stale Markdown cannot authorize work, satisfy close, or replace current Core state.
+Projection failure must not roll back committed Core state. It should mark projection freshness or job status and leave recovery or reconcile to a later action. `source_state_version` and freshness are display/readiness facts: close/readiness output should show when a readable view is stale or failed, but stale Markdown cannot authorize work, satisfy close, replace current Core state, replace source control, replace tests, or replace review.
 
 Human-editable projection sections are proposal surfaces. The implementation path should route proposal -> reconcile item -> accepted Core state-changing action and `task_events` row, or reject, defer, or note. Direct managed-block edits are drift, not state changes.
 
@@ -186,7 +188,7 @@ It should show:
 - one registered project and reference surface
 - one Task with current state and gates
 - one active scoped Change Unit
-- `prepare_write` blocks writes without authority and allows a compatible scoped write
+- `prepare_write` refuses write authorization without authority and allows a compatible scoped write
 - allowed `prepare_write` creates a durable single-use Write Authorization
 - `record_run` consumes that authorization for one implementation or direct Run and records observed changes plus artifacts
 - artifacts can be registered and linked to the run or evidence
