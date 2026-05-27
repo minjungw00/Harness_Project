@@ -48,7 +48,7 @@ Reference: [Kernel Reference](../reference/kernel.md).
 
 A user asks for "better onboarding." Before implementation hardens into a plan, the agent and user need a shared understanding of the goal, non-goals, acceptance criteria, assumptions, affected screens, domain terms, module or interface impact, and first safe slice.
 
-Shared Design is that recorded understanding. It helps turn blurry work into a safe first Change Unit, but it is not approval, Write Authorization, final acceptance, QA judgment, or residual-risk acceptance.
+Shared Design is that recorded understanding. It helps turn blurry work into a safe first Change Unit, but it is not sensitive-action Approval, Write Authorization, final acceptance, QA judgment, or residual-risk acceptance.
 
 If shaping reveals a choice the user owns, such as public API direction, domain-language meaning, module boundary movement, architecture direction, or a known-risk waiver, that choice routes through a Decision Packet. Shared Design can point to the decision; it does not decide it by itself.
 
@@ -94,13 +94,13 @@ The task needs a new dependency, a network call, or access to a sensitive file. 
 
 Approval answers whether a sensitive action may proceed inside a defined scope. Approval is not the same as accepting the final result, choosing a design trade-off, or accepting residual risk.
 
-For example, approval to install a package is not the same as deciding that package is the architecture direction. Approval to access a secret is not permission to expose secret values in Evidence, projections, exports, logs, screenshots, or summaries.
+For example, sensitive-action Approval to install a package is not the same as deciding that package is the architecture direction. Sensitive-action Approval to access a secret is not permission to expose secret values in Evidence, projections, exports, logs, screenshots, or summaries.
 
 Reference: [Kernel Reference](../reference/kernel.md).
 
 ## Write Authorization
 
-The agent is ready to edit the login code. Harness needs to check whether there is an active Change Unit, whether the target path is in scope, whether required Approvals exist, and whether any blocking decision must be resolved first.
+The agent is ready to edit the login code. Harness needs to check whether there is an active Change Unit, whether the target path is in scope, whether any required sensitive-action Approval exists, and whether any blocking decision must be resolved first.
 
 Write Authorization is the Harness decision that a product write may proceed now. In the current spec language, `prepare_write` is the product-write decision point.
 

@@ -68,9 +68,11 @@ Use the term that fits the sentence and reader context.
 | residual-risk acceptance / accepted risk | In user-facing prose, prefer `남은 위험을 받아들이는 판단` or `남은 위험을 받아들이다`. In stricter reference contexts, `위험 수락` or exact Harness identifiers may be acceptable when the surrounding page uses that register. |
 | Acceptance Gate / acceptance_gate | Keep exact identifiers such as `Acceptance Gate` or `acceptance_gate` where needed. Explain the meaning in Korean prose instead of inventing a new unstable term. |
 | residual risk | Use `남은 위험` in user-facing prose. `잔여 리스크` is acceptable in more formal technical prose when the page already uses that register. |
-| approval | Use `승인` in ordinary prose. Keep `Approval` when naming the Harness concept, status, or record. |
+| approval / Approval | Use `Approval` when naming the canonical Harness sensitive-action permission concept, status, gate, or record. Use `승인` only for ordinary non-concept prose in Korean. |
 | write authority | Use `쓰기 권한` in prose. Keep `Write Authorization` exact when naming the Harness record. |
 | gate | Use `게이트` for strict contracts. In user-facing flow, prefer concrete phrases such as `확인`, `닫기 확인`, or `막힘`. |
+
+Capitalization rule: `Approval` is the canonical Harness permission concept for sensitive actions. Lowercase `approval` may remain only in stable identifiers, enum values, schema names, intentionally fixed phrases, or quoted legacy/user wording, such as `approval_gate`, `decision_kind=approval`, `approval_request_candidate`, `approval_scope`, `approval-shaped`, and approval drift.
 
 ## Avoid examples
 

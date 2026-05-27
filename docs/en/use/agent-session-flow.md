@@ -56,7 +56,7 @@ Show:
 - secondary blockers only when they still affect the follow-on path
 - write authority status when writes are possible or near
 - evidence, verification, Manual QA, residual-risk, and acceptance status when those affect the next decision or close readiness
-- guarantee level and what the surface can actually block or only detect, as display and risk context rather than approval, verification, acceptance, or a gate
+- guarantee level and what the surface can actually block or only detect, as display and risk context rather than sensitive-action Approval, verification, acceptance, or a gate
 - compact gate and projection freshness status
 - when guard, freeze, or careful mode is relevant, what can actually be blocked before execution and what can only be detected after action
 
@@ -202,7 +202,7 @@ Use this distinction when explaining stops and permissions:
 | Concept | Plain question | Allows | Does not allow |
 |---|---|---|---|
 | Change Unit scope | What work area is in bounds? | Names the behavior, files, paths, tools, commands, network targets, and sensitive categories the work is scoped around. | Does not decide user-owned product or material technical judgment or create Write Authorization by itself. |
-| Autonomy Boundary | What may the agent decide alone inside that scope? | Lets the agent choose covered implementation details without another user decision. | Does not grant paths, tools, commands, network, secrets, sensitive categories, approval, or write authority. |
+| Autonomy Boundary | What may the agent decide alone inside that scope? | Lets the agent choose covered implementation details without another user decision. | Does not grant paths, tools, commands, network, secrets, sensitive categories, sensitive-action Approval, or write authority. |
 | Approval | May this sensitive step proceed? | Allows a named sensitive action within its recorded scope and expiry. | Does not decide user-owned judgment, prove correctness, accept risk, or create Write Authorization. |
 | Decision Packet | What user-owned judgment is being recorded? | Resolves, defers, rejects, or blocks the named product, material technical, waiver, acceptance, residual-risk, or reconcile choice. | Does not grant sensitive-action Approval unless it is the approval-shaped packet linked to an Approval record. |
 | Acceptance | Is the result acceptable when final acceptance is required? | Records the user's final result judgment after close-relevant residual risk is visible or confirmed absent. | Does not replace evidence, verification, Manual QA, Approval, Write Authorization, or residual-risk acceptance. |
@@ -218,13 +218,13 @@ When a prompt or status uses the word "approved," name the exact authority or re
 
 Examples:
 
-- Dependency install approval: approval to run the install or update dependency files does not decide that the new dependency is the right architecture choice. If that choice affects compatibility, rollback, cost, or maintenance, use a Decision Packet.
-- Secret access approval: approval to read or use a secret inside the requested scope does not permit exposing secret values in artifacts, projections, exports, logs, screenshots, or summaries.
-- Auth/system change approval: approval to touch auth files, permissions, or system configuration does not choose session auth, JWT, social login, role model, lockout behavior, or user notice.
+- Dependency install sensitive-action Approval: Approval to run the install or update dependency files does not decide that the new dependency is the right architecture choice. If that choice affects compatibility, rollback, cost, or maintenance, use a Decision Packet.
+- Secret access sensitive-action Approval: Approval to read or use a secret inside the requested scope does not permit exposing secret values in artifacts, projections, exports, logs, screenshots, or summaries.
+- Auth/system change sensitive-action Approval: Approval to touch auth files, permissions, or system configuration does not choose session auth, JWT, social login, role model, lockout behavior, or user notice.
 - Public API change decision: resolving the API direction decides the contract choice for the Task; it is not deployment authority, merge authority, or a reusable Write Authorization.
 - Final acceptance: accepting the result does not authorize more writes, approve new sensitive actions, or retroactively satisfy missing evidence, QA, verification, or Write Authorization.
 
-Use Shared Design to record the shared understanding of goal, scope, non-goals, assumptions, domain/module/interface impact, and first Change Unit shape. Do not present Shared Design as approval, final acceptance, residual-risk acceptance, or Write Authorization. If Shared Design exposes a public API/interface choice, domain-language conflict, module boundary move, architecture direction, or known-risk waiver that the user owns, route that choice to a Decision Packet.
+Use Shared Design to record the shared understanding of goal, scope, non-goals, assumptions, domain/module/interface impact, and first Change Unit shape. Do not present Shared Design as sensitive-action Approval, final acceptance, residual-risk acceptance, or Write Authorization. If Shared Design exposes a public API/interface choice, domain-language conflict, module boundary move, architecture direction, or known-risk waiver that the user owns, route that choice to a Decision Packet.
 
 Inside the Autonomy Boundary, the agent may decide ordinary implementation details: whether to reuse an existing helper, how to split a private function, where to place focused tests, or which conservative internal approach best fits the agreed result. The agent must stop for user judgment before public API or module contract changes, security or privacy trade-offs, UX or product trade-offs, material technical direction such as dependency or migration choices, scope expansion, or residual-risk acceptance.
 
@@ -264,12 +264,12 @@ Useful examples:
 - Failed-login copy: compare generic, specific, and hybrid wording; recommend one based on account enumeration risk, clarity, recovery usefulness, support burden, and product tone. If deferred, validation wiring may continue, but release-ready copy and Manual QA should stay open.
 - Product taste and Manual QA need: compare a polished interaction that needs human visual review with a simpler conservative behavior that can be checked by tests and browser smoke. Explain the taste trade-off, QA cost, user impact, and what can continue if Manual QA is deferred, or why nothing should continue until the decision is made.
 - Auth approach: compare session cookie, JWT, and social login; explain revocation, CSRF/XSS exposure, client compatibility, operational complexity, and migration cost. If deferred, form scaffolding may continue only if it does not commit to the session model.
-- Dependency choice: separate approval to install or update dependency files from the architecture decision to adopt the dependency. Compare adding the dependency, using existing utilities, or postponing the capability, and explain compatibility, rollback, cost, and maintenance impact.
+- Dependency choice: separate sensitive-action Approval to install or update dependency files from the architecture decision to adopt the dependency. Compare adding the dependency, using existing utilities, or postponing the capability, and explain compatibility, rollback, cost, and maintenance impact.
 - Domain-language conflict: compare preserving the current product term, adding a narrow code alias, or migrating to a new term. Explain product meaning, public docs, API/interface naming, caller expectations, module responsibility, migration cost, and what can continue if the decision is deferred.
 - Schema/data-model migration: compare additive migration, compatibility shim, and breaking cleanup. Explain migration evidence, data-backfill risk, rollback path, test boundary, and maintenance cost.
 - Public API/interface or module boundary: compare preserving the current interface, adding a narrow extension, or moving responsibility across a module boundary. Explain caller impact, compatibility or breaking-change risk, boundary tests, documentation promises, migration path, and future-change cost.
 - Scope or Autonomy Boundary expansion: compare keeping the current small scope, adding the requested surface, or splitting a follow-up Change Unit. Explain affected paths, user-facing behavior, what remains out of bounds, write impact, and what the agent can still decide alone.
-- Security-sensitive change: approval to access a secret, change permissions, or export data is only an approval boundary. Separate product or security judgment may still be needed for roles, fields, redaction, audit logging, retention, rollback, and user notice.
+- Security-sensitive change: sensitive-action Approval to access a secret, change permissions, or export data is only an Approval boundary. Separate product or security judgment may still be needed for roles, fields, redaction, audit logging, retention, rollback, and user notice.
 - QA or verification waiver: use the existing recording required for the Task. A QA waiver is recorded through Manual QA/gate state and `qa_gate=waived`; product/user risk or policy-required judgment uses a QA waiver Decision Packet. A verification waiver is recorded as `verification_gate=waived_by_user`; when user-owned judgment is needed, use the relevant Decision Packet. Name the skipped check or surface, accepted risk, follow-up, relevant refs, and close impact. Example: waive mobile Safari Manual QA for a copy-only change, accept wrapping risk, and keep a browser pass as release follow-up.
 - Residual-risk acceptance before close: show the remaining limitation, the evidence that does exist, why close can still be acceptable, and the follow-up that remains.
 
@@ -383,7 +383,7 @@ Residual risk is a known remaining limitation, uncertainty, unchecked condition,
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means Core has no known close-relevant residual risk for the current Task and requested action. `not_visible` means known close-relevant risk exists but has not yet been shown with enough context for acceptance or close, so the next action is to surface that risk and refs. Do not summarize `not_visible` as "no risk."
 
-Final acceptance is the user's acceptance of the result when the task path requires it. It is not the same as approval, verification, QA, residual-risk acceptance, or proof of correctness.
+Final acceptance is the user's acceptance of the result when the task path requires it. It is not the same as sensitive-action Approval, verification, QA, residual-risk acceptance, or proof of correctness.
 
 Verification waiver and QA waiver do not upgrade assurance. A verification waiver keeps detached verification unsatisfied and routes close through accepted verification risk when close is otherwise allowed. It must not be summarized as `completed_verified`. A QA waiver closes only the QA requirement it names and leaves evidence, verification, acceptance, and residual-risk handling unchanged. Waiver prompts and summaries should show the named requirement, accepted risk, owner refs, follow-up when needed, and affected gate or close impact; exact waiver metadata is owned by [Design Quality Policies](../reference/design-quality-policies.md#waiver-rules) and [Kernel Reference](../reference/kernel.md#waiver-semantics).
 
@@ -391,7 +391,7 @@ Applied close examples:
 
 - Direct work: show changed files, evidence refs, self-check, and whether anything escalated. Do not call it detached verified without a qualifying Eval.
 - UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: keep tests, browser smoke, Browser QA artifacts, Manual QA, and acceptance on separate lines. If Manual QA is waived, show the skipped surface, accepted risk, and follow-up.
-- Auth or security work: show approval separately from the security or product decision, then show evidence and verification. Approval to touch a secret or permission does not settle redaction, audit, role, retention, or user-notice choices.
+- Auth or security work: show sensitive-action Approval separately from the security or product decision, then show evidence and verification. Approval to touch a secret or permission does not settle redaction, audit, role, retention, or user-notice choices.
 - Public API work: show caller compatibility, migration or documentation impact, evidence, and verification separately. Passing tests does not by itself settle the API contract decision.
 - Risk-accepted close: show the limitation, existing evidence, missing or waived verification or QA, accepted risk, and follow-up. Do not present the result as detached verified.
 
@@ -441,16 +441,16 @@ Blocked on user-owned product judgment: choose the empty-state behavior for AC-0
 Bad decision stop:
 
 ```text
-Need approval to continue.
+Need sensitive-action Approval to continue.
 ```
 
-Good approval summary:
+Good sensitive-action Approval summary:
 
 ```text
-Approved for: install zod and update the package lock within CU-03. Not decided: whether validation should become part of the public API. Next safe action: retry prepare_write for the exact dependency-file write.
+Sensitive-action Approval granted for: install zod and update the package lock within CU-03. Not decided: whether validation should become part of the public API. Next safe action: retry prepare_write for the exact dependency-file write.
 ```
 
-Bad approval summary:
+Bad Approval summary:
 
 ```text
 Approved, so I will finish the auth design, implement it, deploy it, and close.

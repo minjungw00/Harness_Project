@@ -146,10 +146,10 @@ Checklist:
 - Check intended paths, tools, commands, network targets, secrets, and sensitive categories against the active Change Unit.
 - Check the intended operation against the active Change Unit Autonomy Boundary.
 - Check baseline freshness at the level needed for the first slice.
-- Check approval and Decision Packet requirements enough to block missing authority.
+- Check sensitive-action Approval and Decision Packet requirements enough to block missing authority.
 - Check design-policy preconditions that apply before writing.
 - Check surface capability honestly and report cooperative or detective limits.
-- Return a blocker when scope, state version, approval, decision, baseline, or capability is incompatible.
+- Return a blocker when scope, state version, sensitive-action Approval, decision, baseline, or capability is incompatible.
 - When allowed, create a durable single-use Write Authorization compatible with one later implementation or direct Run.
 - On idempotent replay of the same committed request, return the committed response rather than creating a second authorization.
 
@@ -254,7 +254,7 @@ Make close refuse to finish work when required authority or evidence is missing.
 
 Checklist:
 
-- Implement enough `close_task` state logic to inspect gates, evidence, Decision Packets, approval state, residual-risk visibility, QA, verification, and acceptance at a minimal level.
+- Implement enough `close_task` state logic to inspect gates, evidence, Decision Packets, sensitive-action Approval state, residual-risk visibility, QA, verification, and acceptance at a minimal level.
 - Return structured blockers rather than only prose.
 - Prove at least evidence-insufficient and decision-required close blockers.
 - Allow a clean self-checked direct close only when the direct path has sufficient state and no required blocker remains.

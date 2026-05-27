@@ -174,7 +174,7 @@ Evidence answers: "What supports the claim that this work is done?"
 
 Evidence is not just "the agent says it changed the thing." It can include changed paths, test output, logs, screenshots, QA notes, verification results, or other artifacts that support the acceptance criteria.
 
-Enough evidence means the stated acceptance criteria or completion conditions are covered, not that many files or artifacts exist. A tiny docs-only fix may need only a changed path, diff or patch summary, and self-check. A code fix usually needs the diff plus a focused test, command, log, or a recorded reason no automated check applies. A feature should map each acceptance criterion to Run and artifact refs. UI, UX, and copy work may need visual evidence and Manual QA when human judgment matters. Sensitive work keeps Approval and redaction refs visible, but Approval is not proof of correctness. Verification-required work needs an Eval that says which evidence it reviewed.
+Enough evidence means the stated acceptance criteria or completion conditions are covered, not that many files or artifacts exist. A tiny docs-only fix may need only a changed path, diff or patch summary, and self-check. A code fix usually needs the diff plus a focused test, command, log, or a recorded reason no automated check applies. A feature should map each acceptance criterion to Run and artifact refs. UI, UX, and copy work may need visual evidence and Manual QA when human judgment matters. Sensitive work keeps sensitive-action Approval and redaction refs visible, but Approval is not proof of correctness. Verification-required work needs an Eval that says which evidence it reviewed.
 
 For large evidence, the agent should show refs and short outcomes first. Logs, screenshots, diffs, traces, Run details, Eval details, Manual QA notes, and artifacts should not be pasted into the default context unless you or the next reviewer need to inspect them. The artifact store is not a loose file dump: useful evidence should appear as registered artifact refs with hash or size details when relevant, redaction state, retention or availability, and the owner record they support.
 
@@ -198,7 +198,7 @@ Most judgment is one of these:
 
 - choose a product direction or trade-off you own
 - choose a material technical direction whose cost, compatibility, security, migration, interface, or maintenance impact you own
-- approve a sensitive step
+- grant sensitive-action Approval
 - decide whether Manual QA is needed or whether a waiver is acceptable
 - accept a known residual risk
 - accept the final result when final acceptance is required
@@ -213,11 +213,11 @@ Examples:
 - Product/copy: failed-login wording could be generic, specific, or hybrid. The packet should compare account enumeration risk, clarity, support burden, recovery usefulness, and product tone.
 - Product taste and QA: a polished interaction may need Manual QA for layout, accessibility interpretation, and feel; a simpler conservative behavior may be easier to verify. The packet should show the trade-off and what can continue if QA is deferred, or why nothing should continue until the decision is made.
 - Technical: auth handling could use a session cookie, JWT, or social login. The packet should separate revocation, CSRF/XSS exposure, client compatibility, operational complexity, migration impact, and implementation cost.
-- Technical: dependency additions can involve both Approval and a Decision Packet. Approving an install or dependency-file edit is not the same as deciding the dependency is the architecture direction.
+- Technical: dependency additions can involve both sensitive-action Approval and a Decision Packet. Granting Approval for an install or dependency-file edit is not the same as deciding the dependency is the architecture direction.
 - Technical/data: schema migrations should show whether the path is additive, compatibility-shimmed, or breaking. The packet should name migration evidence, rollback risk, data-backfill risk, test boundary, and future maintenance impact.
 - Technical/interface: public API or module-boundary changes can need a compatibility or breaking-change Decision Packet. Passing tests does not settle caller impact, documentation promises, migration path, or release risk.
 - Scope/autonomy: expanding from a copy fix into account behavior, or from a private helper change into a public module boundary, needs a decision that names the new surface, what remains out of bounds, and whether a smaller Change Unit can continue.
-- Security-sensitive: approval to access a secret, change permissions, or export data only answers whether that sensitive step may proceed. It does not decide which data is exported, who may export it, what gets redacted, what is omitted from artifacts, or what audit trail is acceptable.
+- Security-sensitive: sensitive-action Approval to access a secret, change permissions, or export data only answers whether that sensitive step may proceed. It does not decide which data is exported, who may export it, what gets redacted, what is omitted from artifacts, or what audit trail is acceptable.
 - QA or verification waiver: "go ahead" is not enough. The prompt should name the skipped check or surface, the risk you would accept, the follow-up, relevant refs, and whether close would become risk accepted.
 - Final acceptance or residual-risk acceptance: final acceptance means the result is acceptable when required; residual-risk acceptance means the named remaining risk is acceptable for close. The agent should ask for these separately, after showing evidence, verification, QA, and residual-risk visibility.
 
@@ -383,7 +383,7 @@ These words answer different questions. Keep them separate near close, even when
 | Evidence | Supports the claim that a criterion or result was met. | The agent saying "done", a report sentence, or final acceptance. |
 | Verification | Checks correctness from an appropriate review boundary. Detached verification needs independence. | Same-session self-review, passing tests alone, or Manual QA. |
 | Manual QA | Records human inspection where human judgment matters, commonly UI/UX, copy, accessibility interpretation, workflow, product taste, or visual output. | Automated tests, browser smoke, Browser QA artifacts, verification, or acceptance. |
-| Acceptance | Records the user's judgment that the result is acceptable when the task requires it. | Correctness proof, QA, verification, or approval. |
+| Acceptance | Records the user's judgment that the result is acceptable when the task requires it. | Correctness proof, QA, verification, or sensitive-action Approval. |
 | Residual Risk | Names known remaining uncertainty, limitation, unchecked condition, or trade-off. | Evidence, verification, QA, or acceptance. |
 | Decision | Records the user-owned product direction, material technical direction, waiver, or close-relevant choice. | Broad approval or chat agreement that does not answer the actual trade-off. |
 | Approval | Allows a named sensitive action to proceed. | Acceptance, correctness, evidence, verification, QA, or risk acceptance. |
@@ -401,15 +401,15 @@ Useful verification wording:
 | Detached verified | A qualifying independent Eval passed, and its reviewed evidence and baseline were still current. |
 | Waived with accepted risk | You chose to close despite a missing or waived check after seeing the remaining risk. This is not verified close. |
 
-Examples that may need approval include dependency additions, auth or permission changes, data model changes, public API changes, destructive writes, secret access, and production configuration changes. Approval only answers whether a sensitive step may proceed; a separate Decision Packet may still be needed for the dependency, migration, interface, module-boundary, product, material technical, QA, or risk choice itself.
+Examples that may need sensitive-action Approval include dependency additions, auth or permission changes, data model changes, public API changes, destructive writes, secret access, and production configuration changes. Approval only answers whether a sensitive step may proceed; a separate Decision Packet may still be needed for the dependency, migration, interface, module-boundary, product, material technical, QA, or risk choice itself.
 
 When a sensitive category appears, the useful prompt should use ordinary language first: what side effect will happen, which path, system, service, secret, or data is involved, whether Harness can prevent it or only detect issues after action, what evidence will be recorded, and what will be redacted or omitted. The category label can follow in parentheses, such as `secret_access` or `data_export`. Exact category examples live in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#sensitive-categories), and exact write authority behavior lives in [Kernel Reference](../reference/kernel.md#prepare_write).
 
 Common "approved" mix-ups:
 
-- Approving a dependency install is not the same as choosing that dependency as the architecture direction.
-- Approving secret access is not permission to reveal secret values in artifacts, projections, exports, logs, screenshots, or summaries.
-- Approving auth or system-file access is not choosing session auth, JWT, social login, role design, lockout behavior, or user notice.
+- Granting sensitive-action Approval for a dependency install is not the same as choosing that dependency as the architecture direction.
+- Granting sensitive-action Approval for secret access is not permission to reveal secret values in artifacts, projections, exports, logs, screenshots, or summaries.
+- Granting sensitive-action Approval for auth or system-file access is not choosing session auth, JWT, social login, role design, lockout behavior, or user notice.
 - Deciding a public API change is not permission to deploy, merge, or make additional writes.
 - Final acceptance means you accept the result when that task path requires it; it is not Write Authorization for more edits.
 
@@ -419,7 +419,7 @@ Applied examples:
 
 - Direct docs or copy fix: a changed path, diff or patch summary, and self-check can support the claim. It should not be described as detached verification, and it does not need Manual QA unless the changed surface needs human inspection.
 - UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: tests, browser smoke, and Browser QA artifacts can support rendering or behavior claims. Manual QA is still the human check for layout, interaction feel, copy, accessibility interpretation, workflow quality, and product taste. When automated browser capture is unavailable, human notes and manually supplied artifacts are the fallback. A QA waiver should name the skipped surface, accepted risk, follow-up, relevant refs, and close impact.
-- Auth or security work: approval may allow secret access, permission changes, or auth-file writes. The security or product choice still needs a Decision Packet when roles, redaction, audit trail, session model, lockout behavior, or user notice are being decided.
+- Auth or security work: sensitive-action Approval may allow secret access, permission changes, or auth-file writes. The security or product choice still needs a Decision Packet when roles, redaction, audit trail, session model, lockout behavior, or user notice are being decided.
 - Public API work: passing tests support behavior, but compatibility, caller impact, migration path, and documentation promises may need a Decision Packet and independent verification.
 - Risk-accepted close: the agent should show the evidence that exists, the verification or QA that is missing or waived, the remaining limitation, and the follow-up. Closing with accepted risk is not the same as closing as detached verified.
 
@@ -434,7 +434,7 @@ For a `work` task, the close summary should show the changed scope, evidence, ve
 - Verification is either not expected for this task path, completed, or explicitly waived with recorded risk.
 - Manual QA is either not needed, completed, or validly waived.
 - Known close-relevant residual risk has been shown, or the agent reports that there is no known close-relevant residual risk.
-- Final acceptance is requested separately from approval when final acceptance is required.
+- Final acceptance is requested separately from sensitive-action Approval when final acceptance is required.
 
 Useful close phrases:
 

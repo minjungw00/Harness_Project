@@ -92,15 +92,15 @@ Decision Packet은 특정 사용자 소유 판단이 진행, 쓰기, 닫기, 예
 
 작업에 새 의존성, 네트워크 호출, 민감한 파일 접근이 필요할 수 있습니다. 유용한 변경이라도 그 종류의 행동을 진행하기 전에 사용자의 승인이 필요할 수 있습니다.
 
-승인은 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답합니다. 승인은 최종 결과 수락, 설계 절충 선택, 남은 위험을 받아들이는 판단과 다릅니다.
+Sensitive-action Approval은 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답합니다. Approval은 최종 결과 수락, 설계 절충 선택, 남은 위험을 받아들이는 판단과 다릅니다.
 
-예를 들어 package install을 승인하는 것은 그 package를 아키텍처 방향으로 선택했다는 뜻이 아닙니다. Secret 접근 승인은 secret 값을 Evidence, projection, export, log, screenshot, summary에 노출해도 된다는 뜻이 아닙니다.
+예를 들어 package install에 대한 sensitive-action Approval은 그 package를 아키텍처 방향으로 선택했다는 뜻이 아닙니다. Secret 접근 sensitive-action Approval은 secret 값을 Evidence, projection, export, log, screenshot, summary에 노출해도 된다는 뜻이 아닙니다.
 
 참조: [커널 참조](../reference/kernel.md).
 
 ## Write Authorization
 
-에이전트가 로그인 코드를 수정할 준비가 되었습니다. Harness는 활성 Change Unit이 있는지, 대상 경로가 범위 안인지, 필요한 Approval이 있는지, 먼저 풀어야 하는 결정이 있는지 확인해야 합니다.
+에이전트가 로그인 코드를 수정할 준비가 되었습니다. Harness는 활성 Change Unit이 있는지, 대상 경로가 범위 안인지, 필요한 sensitive-action Approval이 있는지, 먼저 풀어야 하는 결정이 있는지 확인해야 합니다.
 
 Write Authorization은 지금 제품 파일 쓰기를 진행해도 되는지에 대한 Harness의 판단입니다. 현재 사양 용어로는 `prepare_write`가 제품 파일 쓰기 판단 지점입니다.
 

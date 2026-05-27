@@ -34,7 +34,7 @@ flowchart LR
 
 AI agents can help with development, but the work journey often becomes blurry. A small request may turn into a larger change. A design choice may happen inside implementation without being named. A test may be mentioned in chat but not tied to the task. A user may accept the result without seeing which risks remain.
 
-Harness solves this by making the work journey explicit. It records the task, the bounded change being attempted, decisions that need user judgment, approvals for sensitive actions, evidence, verification, Manual QA, acceptance, and residual risk. It does not make every task heavy. It makes the important facts visible when they matter.
+Harness solves this by making the work journey explicit. It records the task, the bounded change being attempted, decisions that need user judgment, sensitive-action Approvals, evidence, verification, Manual QA, acceptance, and residual risk. It does not make every task heavy. It makes the important facts visible when they matter.
 
 The goal is not to replace conversation, source control, tests, code review, or user judgment. The goal is to stop relying on conversation as the only memory of the work, and to make the rest of the work record easier to inspect.
 
@@ -57,7 +57,7 @@ Harness records the parts of the work journey that must survive the conversation
 - the Task the user wants done or answered
 - the Change Unit that bounds product writes
 - decisions and Decision Packets when user judgment blocks progress
-- approvals for sensitive actions
+- sensitive-action Approvals
 - evidence such as diffs, logs, checks, screenshots, run summaries, evaluation records, or Manual QA records
 - verification status, including whether a check was self-checking or detached from the implementation session
 - Manual QA when human inspection is needed

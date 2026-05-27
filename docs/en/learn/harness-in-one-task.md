@@ -238,7 +238,7 @@ If the user chooses extended sessions, the Change Unit may include session persi
 
 ### Write Authorization
 
-Before product writes, the agent asks Harness to check the intended edit against the active Task, Change Unit, approvals, and resolved decisions.
+Before product writes, the agent asks Harness to check the intended edit against the active Task, Change Unit, sensitive-action Approvals, and resolved decisions.
 
 The user-facing summary should say what is allowed and what is not:
 
@@ -247,7 +247,7 @@ Write Authorization: allowed for login form, session persistence code, and relat
 Not allowed: unrelated account recovery or global auth redesign.
 ```
 
-If the chosen behavior requires a sensitive-action Approval, Harness should stop before the write and ask for that Approval separately. Approval answers "may this sensitive action proceed?" It does not replace the Decision Packet, tests, QA, risk acceptance, or final acceptance.
+If the chosen behavior requires a sensitive-action Approval, Harness should stop before the write and ask for that Approval separately. Sensitive-action Approval answers "may this sensitive action proceed?" It does not replace the Decision Packet, tests, QA, risk acceptance, or final acceptance.
 
 ### Implementation
 
@@ -316,7 +316,7 @@ When final acceptance is required, the user accepts the result after seeing evid
 Accepted. The remember-me behavior matches the selected option and the shown residual risk is acceptable.
 ```
 
-Acceptance is not the same as approval. Approval may let a sensitive step proceed; acceptance says the completed result is good enough.
+Acceptance is not the same as sensitive-action Approval. Approval may let a sensitive step proceed; acceptance says the completed result is good enough.
 
 ### Close
 
@@ -344,7 +344,7 @@ Final acceptance was recorded in DEC-023 and the task closed as work.
 
 ### What the reference docs define more strictly
 
-The reference docs define the exact mode rules, Decision Packet compatibility, approval handling, Write Authorization behavior, evidence sufficiency, verification independence, QA gates, residual-risk visibility, acceptance timing, and close semantics. Evidence, Verification, and Manual QA each cross more than one reference owner; the table below keeps those splits compact.
+The reference docs define the exact mode rules, Decision Packet compatibility, sensitive-action Approval handling, Write Authorization behavior, evidence sufficiency, verification independence, QA gates, residual-risk visibility, acceptance timing, and close semantics. Evidence, Verification, and Manual QA each cross more than one reference owner; the table below keeps those splits compact.
 
 This tutorial only shows why those pieces exist.
 
@@ -356,7 +356,7 @@ The two flows above are anchors, not the whole universe. Harness should stay pra
 - Evidence shape should follow the task shape: advisor work usually needs only cited sources unless recorded evidence is requested; direct docs-only work can use a changed path, diff or patch summary, and self-check; direct code adds a focused test, command, log, or reason no automated check applies; work features map each criterion to Run and artifact refs; UI/UX/copy work may need visual evidence and Manual QA; sensitive work keeps Approval and redaction context separate from correctness; verification-required work needs an Eval that reviewed current evidence.
 - A UI/UX choice often needs a Decision Packet: a checkout error might be shown as an inline message, toast, or modal/layer. The packet should compare flow interruption, accessibility, copy risk, and product tone. Backend validation can continue if it does not commit to the final experience, but the UX should not be claimed complete.
 - Auth choices mix product and security judgment: choosing session cookie, JWT, or social login affects revocation, CSRF/XSS exposure, client support, and operational cost. Failed-login copy has a similar trade-off: generic, specific, or hybrid wording changes account-enumeration risk, clarity, support burden, and tone.
-- A dependency addition may need two separate user answers: approval to install or update dependency files, and a Decision Packet if adopting that dependency is an architecture choice with compatibility, rollback, cost, or maintenance impact.
+- A dependency addition may need two separate user answers: sensitive-action Approval to install or update dependency files, and a Decision Packet if adopting that dependency is an architecture choice with compatibility, rollback, cost, or maintenance impact.
 - A public API change needs more than passing tests. Adding a required request field, changing or removing a response field, changing an error code, or removing a caller path can require a compatibility or breaking-change Decision Packet, migration notes, caller-impact evidence, and verification from the relevant boundary.
 - A schema change should show migration evidence and rollback risk. An additive column may be low risk with a tested migration. A destructive cleanup or data backfill may need explicit user judgment, backup or rollback notes, and evidence that the old and new shapes were handled.
 - Secret access is not secret exposure. Approval may allow the agent to read or use a secret inside the Task, but Evidence, artifacts, projections, exports, logs, screenshots, and summaries should use redacted handles, omission notes, or nonsecret facts rather than raw values.
@@ -373,7 +373,7 @@ The two flows above are anchors, not the whole universe. Harness should stay pra
 | "What may change?" | Change Unit | Bounds product writes so the task does not silently expand. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "This needs your call." | Decision Packet | Separates user-owned product or material technical judgment from broad approval. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "May this sensitive step proceed?" | Approval | Allows a sensitive action inside a defined scope without replacing user-owned judgment or final acceptance. | [Kernel Reference](../reference/kernel.md). |
-| "May I edit these files now?" | Write Authorization | Checks that the intended write fits the current Task, Change Unit, decisions, and approvals. | Strict behavior: [Kernel Reference](../reference/kernel.md), [MCP API and Schemas](../reference/mcp-api-and-schemas.md); agent-surface behavior: [Agent Integration Reference](../reference/agent-integration.md). |
+| "May I edit these files now?" | Write Authorization | Checks that the intended write fits the current Task, Change Unit, decisions, and sensitive-action Approvals. | Strict behavior: [Kernel Reference](../reference/kernel.md), [MCP API and Schemas](../reference/mcp-api-and-schemas.md); agent-surface behavior: [Agent Integration Reference](../reference/agent-integration.md). |
 | "Here is what supports the claim." | Evidence | Makes "done" inspectable through diffs, logs, checks, screenshots, or other records. | [Use: User Guide](../use/user-guide.md); strict behavior: [Kernel Reference](../reference/kernel.md), [MCP API and Schemas](../reference/mcp-api-and-schemas.md), [Storage And DDL](../reference/storage-and-ddl.md), [Operations and Conformance Reference](../reference/operations-and-conformance.md). |
 | "Was it checked independently?" | Verification | Distinguishes self-checks from detached checks. | [Use: User Guide](../use/user-guide.md); strict behavior: [Kernel Reference](../reference/kernel.md), [MCP API and Schemas](../reference/mcp-api-and-schemas.md), [Operations and Conformance Reference](../reference/operations-and-conformance.md). |
 | "Did a person inspect the experience?" | Manual QA | Covers UX, copy, accessibility, visual quality, and workflow judgment that tests may miss. | [Use: User Guide](../use/user-guide.md); strict behavior: [Design Quality Policies](../reference/design-quality-policies.md), [Kernel Reference](../reference/kernel.md), [MCP API and Schemas](../reference/mcp-api-and-schemas.md), [Operations and Conformance Reference](../reference/operations-and-conformance.md). |

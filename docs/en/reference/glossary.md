@@ -52,11 +52,11 @@ MVP final acceptance is recorded through a Decision Packet user decision, `task_
 
 ### Approval
 
-A prior user decision allowing a sensitive action to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. When Approval is requested, Core captures the user judgment through an approval-shaped Decision Packet and linked Approval record; granted Approval still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it does not resolve user-owned product or material technical judgment, prove correctness, record final acceptance, accept residual risk, or replace a Decision Packet.
+A prior user decision allowing a sensitive action to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. When Approval is requested, Core captures the user judgment through an approval-shaped Decision Packet and linked Approval record; granted sensitive-action Approval still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it does not resolve user-owned product or material technical judgment, prove correctness, record final acceptance, accept residual risk, or replace a Decision Packet.
 
 ### Approval Gate
 
-The kernel gate for sensitive-action Approval. It is required only when sensitive categories are present. Granted Approval does not prove correctness, imply acceptance, resolve user-owned judgment, or create Write Authorization.
+The kernel gate for sensitive-action Approval. It is required only when sensitive categories are present. Granted sensitive-action Approval does not prove correctness, imply acceptance, resolve user-owned judgment, or create Write Authorization.
 
 ### Artifact
 

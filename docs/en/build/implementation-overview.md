@@ -72,7 +72,7 @@ This handoff does not promote roadmap items, dashboards or hosted workflow UI, B
 | Boundary | What it proves | What the user or operator can observe |
 |---|---|---|
 | Kernel Smoke | One local Task can go through the Core authority loop: `prepare_write` as the write authorization point, single-use Write Authorization, `record_run` consumption with observed changes and artifacts, artifact-backed evidence, status, minimal projection freshness, and structured close blockers. | Status shows the active Task, gates, Change Unit, evidence, blockers, and projection freshness. `prepare_write` refuses out-of-scope write authorization, compatible scoped work is authorized and consumed once, and `close_task` refuses missing evidence or required decisions with structured blockers. |
-| Agency-Hardened MVP | Later hardening after Kernel Smoke: the local reference MVP handles user judgment, approvals, detached verification, Manual QA, residual risk, reconcile, recovery, export, and conformance with honest boundaries. | Fixtures and operator entrypoints show why work can or cannot continue, verify, accept, export, recover, or close through the same Core records and errors. |
+| Agency-Hardened MVP | Later hardening after Kernel Smoke: the local reference MVP handles user judgment, sensitive-action Approval, detached verification, Manual QA, residual risk, reconcile, recovery, export, and conformance with honest boundaries. | Fixtures and operator entrypoints show why work can or cannot continue, verify, accept, export, recover, or close through the same Core records and errors. |
 | Post-MVP roadmap | Later surfaces or automation can be considered only after the local kernel and agency proof are stable. | Optional capabilities remain read-only, display-only, metadata-only, or artifact-candidate-only until an owner promotes them through the [Roadmap promotion rule](../roadmap.md#promotion-rule) with exact contracts and fixtures. |
 
 ## What you are building
@@ -102,7 +102,7 @@ Agents, MCP tools, operator commands, projectors, and recovery flows must either
 
 ### State Store
 
-The state store keeps canonical operational state: project state, Tasks, gates, Change Units, Decision Packets, approvals, Write Authorizations, Runs, evidence manifests, Eval records, Manual QA records, residual risks, projection jobs, reconcile items, and `task_events`.
+The state store keeps canonical operational state: project state, Tasks, gates, Change Units, Decision Packets, Approval records, Write Authorizations, Runs, evidence manifests, Eval records, Manual QA records, residual risks, projection jobs, reconcile items, and `task_events`.
 
 Do not design this from scratch in the Build layer. Storage details and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
@@ -208,7 +208,7 @@ Kernel Smoke is not the final MVP. It proves the write authority path is alive. 
 The final proof is Agency-Hardened MVP. It is a later hardening and conformance target after Kernel Smoke, not the first implementation batch. It adds the remaining conformance needed for an agent to act with honest boundaries:
 
 - Decision Packet quality and user-judgment routing
-- separation between approvals, Decision Packets, and Write Authorizations
+- separation between sensitive-action Approval, Decision Packets, and Write Authorizations
 - residual-risk visibility before acceptance and close
 - detached verification independence
 - Manual QA records and QA blockers

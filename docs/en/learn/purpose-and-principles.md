@@ -30,7 +30,7 @@ Harness keeps that operating record around task state, Change Unit scope, user j
 
 ## Who it is for
 
-Harness is for developers using AI agents to modify, verify, or explain product code. It is also for solo maintainers who need reliable resume behavior, technical leads who want local records of approval and acceptance, connector authors integrating an agent surface with Harness, and documentation authors maintaining the current Harness model.
+Harness is for developers using AI agents to modify, verify, or explain product code. It is also for solo maintainers who need reliable resume behavior, technical leads who want local records of sensitive-action Approval and acceptance, connector authors integrating an agent surface with Harness, and documentation authors maintaining the current Harness model.
 
 The shared need is simple: people want the speed of agent-assisted work without losing the ability to understand what happened, what is allowed, what was checked, and what still needs judgment.
 
@@ -38,7 +38,7 @@ The shared need is simple: people want the speed of agent-assisted work without 
 
 Harness keeps operational state and evidence local. The durable work record should not depend on a remote chat transcript.
 
-Harness makes boundaries explicit. Scope, approval, decisions, evidence, verification, Manual QA, acceptance, and residual risk are different questions, so the system records them separately.
+Harness makes boundaries explicit. Scope, sensitive-action Approval, decisions, evidence, verification, Manual QA, acceptance, and residual risk are different questions, so the system records them separately.
 
 Harness is honest about assurance. It should say what changed, what was checked, how independent that check was, what remains risky, and what decision is needed, instead of treating every review as equally strong.
 
@@ -66,7 +66,7 @@ This thesis has three practical consequences.
 
 First, chat is an operating surface, not durable state. It is where people and agents coordinate, but it is not the record that decides whether work can write or close.
 
-Second, Harness state is the operating record. It stores the task, scope, decisions, approvals, evidence refs, verification, QA, acceptance, and residual risk needed to reason about the work.
+Second, Harness state is the operating record. It stores the task, scope, decisions, sensitive-action Approvals, evidence refs, verification, QA, acceptance, and residual risk needed to reason about the work.
 
 Third, readable documents are projections and proposal areas. They help humans inspect and edit the story of the work, but accepted changes enter the operating record only through reconcile or another state-changing action. Projection freshness is a display fact, not a substitute for current state, evidence, tests, review, or acceptance.
 
@@ -74,7 +74,7 @@ Third, readable documents are projections and proposal areas. They help humans i
 
 Without Harness, the work journey can disappear into chat. A later reader cannot tell what the current state is, what the next action should be, which decisions are open, or what evidence supports the result. Harness responds by recording task state, change scope, decisions, evidence, QA, acceptance, residual risk, and close status, then generating readable views from those records.
 
-Without Harness, scope and Approval can drift. A small request can become a broad rewrite, or a sensitive action can happen without explicit sensitive-action Approval. Harness responds by requiring product writes to stay inside scoped Change Units and by requiring Approval for sensitive categories.
+Without Harness, scope and Approval can drift. A small request can become a broad rewrite, or a sensitive action can happen without explicit sensitive-action Approval. Harness responds by requiring product writes to stay inside scoped Change Units and by requiring sensitive-action Approval for sensitive categories.
 
 Without Harness, evidence can be too weak or too temporary. Tests, logs, screenshots, and run summaries can vanish with the session or remain as unstructured claims. Harness responds by tying evidence to the task and storing durable artifacts where evidence is required.
 
@@ -114,4 +114,4 @@ Harness does not promise preventive enforcement where a connected agent surface 
 
 Harness does not make a dashboard, team workflow platform, long-term analytics layer, broad connector ecosystem, or automatic parallel execution system part of the MVP.
 
-Harness does not hide approval, QA, verification, acceptance, or remaining risk behind a single "done" label.
+Harness does not hide sensitive-action Approval, QA, verification, acceptance, or remaining risk behind a single "done" label.

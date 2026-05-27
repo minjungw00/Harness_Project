@@ -33,7 +33,7 @@ The MVP should let one local project and one reference agent surface operate thr
 - canonical Task state and `task_events`
 - scoped Change Units for product writes
 - `prepare_write` and durable Write Authorizations
-- approvals for sensitive categories
+- sensitive-action Approvals for sensitive categories
 - Decision Packets for user-owned product judgment or material technical judgment
 - Runs, artifact refs, and Evidence Manifests
 - verification, Manual QA, residual-risk visibility, acceptance, and close blockers
@@ -79,7 +79,7 @@ Agency-Hardened MVP is the later hardening and final reference conformance targe
 It must prove:
 
 - Decision Packet quality and user-judgment routing
-- approval, Decision Packet, and Write Authorization separation
+- sensitive-action Approval, Decision Packet, and Write Authorization separation
 - residual-risk visibility before acceptance and close
 - detached verification independence
 - Manual QA records and blockers
@@ -142,11 +142,11 @@ Focus on:
 - baseline capture and freshness checks
 - `harness.prepare_write`
 - durable Write Authorization records
-- approval request and decision flow for sensitive categories
-- minimal changed-path, scope, approval, baseline, decision, autonomy, and capability checks
+- sensitive-action Approval request and decision flow for sensitive categories
+- minimal changed-path, scope, sensitive-action Approval, baseline, decision, autonomy, and capability checks
 - raw artifact registration with integrity and redaction metadata
 
-Do not treat approval as user-owned judgment. User-owned product trade-offs, architecture choices, material technical choices, unresolved security or product-security judgment, QA waivers, verification risk, acceptance, and residual-risk acceptance still require compatible Decision Packets when they apply.
+Do not treat sensitive-action Approval as user-owned judgment. User-owned product trade-offs, architecture choices, material technical choices, unresolved security or product-security judgment, QA waivers, verification risk, acceptance, and residual-risk acceptance still require compatible Decision Packets when they apply.
 
 ### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
 
@@ -222,7 +222,7 @@ Read the stage exits in two layers:
 |---|---|---|
 | MVP-0 | Required foundation for the first local project, runtime home, artifact store, reference surface, and idle readiness. | The same foundation remains in force and later supports broader doctor/readiness categories. |
 | MVP-1 | Required only for the Task state, state-version, `task_events`, minimal status/intake, and decision-blocker visibility needed by the first authority loop. | Completes the Journey/Decision skeleton and read-only guidance boundaries needed by the final local MVP. |
-| MVP-2 | Required for one active Change Unit, `prepare_write` allow/block, durable Write Authorization creation, and artifact registration basics. | Adds the broader approval, baseline, autonomy, sensitive-category, and drift handling needed for hardened conformance. |
+| MVP-2 | Required for one active Change Unit, `prepare_write` allow/block, durable Write Authorization creation, and artifact registration basics. | Adds the broader sensitive-action Approval, baseline, autonomy, sensitive-category, and drift handling needed for hardened conformance. |
 | MVP-3 | Required for one compatible `record_run`, Write Authorization consumption, artifact-backed Evidence Manifest basics, and minimal `TASK` projection freshness or enqueueing. | Completes feedback-loop, TDD, stewardship, projection, and reconcile coverage for the local reference MVP. |
 | MVP-4 | Not required to pass Kernel Smoke. Missing MVP-4 behavior is simply not yet proven by the first slice. | Required for verification, Manual QA, residual-risk visibility, acceptance, and close-readiness hardening. |
 | MVP-5 | Not required to pass Kernel Smoke. Missing MVP-5 behavior is simply not yet proven by the first slice. | Required for operator smoke, agency conformance, recover/export/artifact-integrity proof, and later-boundary checks. |
@@ -249,12 +249,12 @@ Kernel Smoke may pass with only the selected MVP-0 through early MVP-3 subset ab
 ### MVP-2 exit checklist
 
 - Product writes without an active scoped Change Unit block.
-- Sensitive changes require approval.
+- Sensitive changes require sensitive-action Approval.
 - Autonomy Boundary violations block or route to Decision Packets.
 - Unresolved blocking Decision Packets block affected writes.
 - Allowed `prepare_write` creates durable Write Authorization refs.
 - Idempotent replay works.
-- Approval drift can block or expire approval.
+- Approval drift can block or expire sensitive-action Approval.
 - Shaping records the needed boundaries.
 - Raw artifacts store integrity/redaction metadata.
 

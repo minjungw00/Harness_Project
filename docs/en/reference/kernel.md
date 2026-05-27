@@ -42,7 +42,7 @@ The kernel makes product writes and close decisions depend on explicit state: ac
 1. The kernel is the canonical state machine for local AI-assisted product work.
 2. It keeps the active Task, scoped Change Unit, gates, decisions, evidence, and close state outside the chat transcript.
 3. Every product write must have an active Task and a scoped Change Unit that covers the intended operation.
-4. `prepare_write` is the unique product-write authorization decision point, checking state version, active Change Unit scope, Autonomy Boundary, baseline freshness, approval, design policy, Decision Packets, and surface capability before a write.
+4. `prepare_write` is the unique product-write authorization decision point, checking state version, active Change Unit scope, Autonomy Boundary, baseline freshness, sensitive-action Approval, design policy, Decision Packets, and surface capability before a write.
 5. When `prepare_write` allows a write, it creates or returns a durable, single-use Write Authorization for that specific attempt.
 6. `record_run` records what happened, consumes one compatible Write Authorization for one implementation or direct product-write Run, validates observed changes and artifacts, and attaches evidence.
 7. User-owned product judgment or material technical judgment belongs in Decision Packets, while sensitive-action permission belongs in Approvals.
@@ -58,7 +58,7 @@ The kernel makes product writes and close decisions depend on explicit state: ac
 
 2. What work is allowed now?
 
-   Allowed work is computed from the active Task, active Change Unit, mode, scope, Autonomy Boundary, baseline freshness, approval state, design policy, Decision Packets, surface capability, and the requested operation.
+   Allowed work is computed from the active Task, active Change Unit, mode, scope, Autonomy Boundary, baseline freshness, sensitive-action Approval state, design policy, Decision Packets, surface capability, and the requested operation.
 
 3. What user judgment is still blocking progress?
 
@@ -66,7 +66,7 @@ The kernel makes product writes and close decisions depend on explicit state: ac
 
 4. Can this Task close?
 
-   `close_task` decides close by checking active Run state, scope, decisions, approval, design, evidence, verification, QA, residual-risk visibility, acceptance, and the requested close reason.
+   `close_task` decides close by checking active Run state, scope, decisions, sensitive-action Approval, design, evidence, verification, QA, residual-risk visibility, acceptance, and the requested close reason.
 
 ## Judgment route boundaries
 
@@ -91,7 +91,7 @@ This document owns:
 - `prepare_write` state logic
 - `close_task` state logic
 - invariant enforcement mapping
-- boundaries and non-substitutions among approval, user-owned judgment, write authority, verification, QA, acceptance, and residual-risk acceptance
+- boundaries and non-substitutions among sensitive-action Approval, user-owned judgment, write authority, verification, QA, acceptance, and residual-risk acceptance
 
 ## Not covered here
 
@@ -259,7 +259,7 @@ A Task is the user value unit. It carries the current mode, lifecycle phase, res
 
 ### Change Unit
 
-A Change Unit is the scoped implementation unit for product writes. It answers what work surface may change. It records purpose, non-goals, slice type, intended end-to-end path, autonomy boundary, allowed paths, allowed tools, validator profile, sensitive categories, approval needs, evidence expectations, QA expectations, dependencies, merge risk, completion conditions, and evaluator focus.
+A Change Unit is the scoped implementation unit for product writes. It answers what work surface may change. It records purpose, non-goals, slice type, intended end-to-end path, autonomy boundary, allowed paths, allowed tools, validator profile, sensitive categories, sensitive-action Approval needs, evidence expectations, QA expectations, dependencies, merge risk, completion conditions, and evaluator focus.
 
 Every product write requires an active Change Unit whose scope covers the intended write. A Task may have one or many Change Units, but only the active Change Unit scopes the current write. Core authorizes a specific product-write attempt only through `prepare_write`, which creates a Write Authorization when the checks pass or returns the already committed response for idempotent replay of the same request.
 
@@ -269,7 +269,7 @@ An Autonomy Boundary is part of Change Unit semantics. It answers which judgment
 
 When the recorded latitude covers it, the agent may choose implementation details such as local helper shape, test organization, non-public naming, or a conservative code path that stays inside the agreed result. The agent must stop for user judgment when the choice changes public API or module contracts, security or privacy trade-offs, UX or product behavior, material dependency or migration direction, scope expansion, or residual-risk acceptance.
 
-The Autonomy Boundary is not a scope grant or write authority. It does not grant or widen paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A Decision Packet may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible Change Unit scope and granted Approval when sensitive categories apply.
+The Autonomy Boundary is not a scope grant or write authority. It does not grant or widen paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A Decision Packet may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible Change Unit scope and granted sensitive-action Approval when sensitive categories apply.
 
 The Autonomy Boundary does not replace Change Unit scope, sensitive-action Approval, policy checks, evidence, verification, QA, acceptance, or `prepare_write`. If an intended operation exceeds the active Autonomy Boundary, the kernel blocks the operation and requests a user decision through a Decision Packet when user-owned judgment can resolve it.
 
@@ -281,7 +281,7 @@ Decision Packets feed `decision_gate`. Blocking user-owned judgment cannot be sa
 
 A Decision Packet is sufficient for kernel use only when it records a decision, not a blank permission request. It must make the user-owned question explicit, compare realistic options, include the agent recommendation or explain why none is available, expose material trade-offs, name affected gates and acceptance criteria, point to source and evidence refs, state the consequence of deferral, and say what the agent may decide without the user. These are quality requirements for the existing Decision Packet record and public request shape owned by [MCP API And Schemas](mcp-api-and-schemas.md#harnessrequest_user_decision); they do not add fields, gates, or an alternate authority path.
 
-Minimal MVP implementations may omit `decision_requests`. If an implementation keeps them, they are routing, interaction, replay, or compatibility handoff metadata only. They are not authority for user-owned judgment, and a `decision_request` row alone never satisfies `decision_gate`, approval, acceptance, waiver, residual-risk acceptance, or close.
+Minimal MVP implementations may omit `decision_requests`. If an implementation keeps them, they are routing, interaction, replay, or compatibility handoff metadata only. They are not authority for user-owned judgment, and a `decision_request` row alone never satisfies `decision_gate`, sensitive-action Approval, acceptance, waiver, residual-risk acceptance, or close.
 
 Decision Packet status is record-level:
 
@@ -331,7 +331,7 @@ It records the Task, active Change Unit, `basis_state_version`, intended operati
 
 A Write Authorization is not scope by itself. It is evidence that Core allowed a specific write attempt under the active scope and gates.
 
-A Write Authorization does not replace approval, evidence, verification, QA, acceptance, or residual-risk visibility.
+A Write Authorization does not replace sensitive-action Approval, evidence, verification, QA, acceptance, or residual-risk visibility.
 
 `authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request with the same idempotency key, request hash, and `basis_state_version`, or for returning the already committed response. A distinct compatible `prepare_write` request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes.
 
@@ -405,7 +405,7 @@ This section gathers the kernel's long negative boundaries in one place so refer
 - Generated Markdown is not canonical state. Projection edits route through reconcile before they can affect state.
 - Raw artifacts are evidence files; Markdown reports that link to them are readable projections.
 - Findings in chat, review displays, or report prose are not state until routed through existing owner records or structured close/blocker results.
-- Review Stages are managed display/procedure only. They separate Spec Compliance Review from Code Quality / Stewardship Review, but they are not canonical records, `ProjectionKind` values, approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization.
+- Review Stages are managed display/procedure only. They separate Spec Compliance Review from Code Quality / Stewardship Review, but they are not canonical records, `ProjectionKind` values, sensitive-action Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization.
 - Autonomy Boundary records judgment latitude only. It is not a scope grant and does not authorize paths, tools, commands, network targets, secrets, or sensitive categories.
 - Public commitments that change what users, callers, release/support consumers, documentation readers, or other systems may rely on are user-owned judgment when they affect product direction, material technical direction, compatibility, risk, or acceptance. Approval cannot substitute for that Decision Packet path.
 - Approval is not user-owned product judgment or material technical judgment, correctness proof, QA, verification, acceptance, evidence, or Write Authorization.
@@ -506,7 +506,7 @@ not_required | required | pending | granted | denied | expired
 
 `approval_gate` is required only when sensitive categories are present. A display layer may show `passed` as an alias for `granted` when no approval drift exists, but the canonical value remains `granted`.
 
-- `approval_gate=not_required` means no sensitive category currently requires approval.
+- `approval_gate=not_required` means no sensitive category currently requires sensitive-action Approval.
 - `approval_gate=required` means sensitive-action Approval is needed, but no committed approval-shaped Decision Packet and linked pending Approval record exists yet. This is the state `prepare_write` reaches when it detects missing sensitive-action Approval.
 - `approval_gate=pending` means `harness.request_user_decision(decision_kind=approval)` has created the committed approval-shaped Decision Packet and linked pending Approval record, and the system is awaiting a user/operator decision.
 - `approval_gate=granted` means a compatible Approval record covers the sensitive scope. It is not a Write Authorization and does not authorize user-owned judgment; the write path must still pass a fresh compatible `prepare_write` decision before `record_run` can consume an authorization.
@@ -682,7 +682,7 @@ completed_with_risk_accepted | cancelled | superseded
 none | self_checked | detached_verified
 ```
 
-Assurance is not approval, QA, or acceptance. It summarizes the technical checking level supported by runs, evidence, Eval records, and verification independence.
+Assurance is not sensitive-action Approval, QA, or acceptance. It summarizes the technical checking level supported by runs, evidence, Eval records, and verification independence.
 
 User-facing display must not introduce additional `assurance_level` values. Use these phrases for ordinary wording:
 
@@ -755,10 +755,10 @@ All successful close paths require residual-risk visibility before close. If no 
 | Close path | Required compatible state |
 |---|---|
 | Advisor completed | no active Run; no product write pending; no blocking unresolved Decision Packet; `result=advice_only`; `close_reason=completed_self_checked` |
-| Direct self-checked | no active Run; active Change Unit completed or not needed for non-write direct; scope passed for writes; blocking Decision Packets resolved or validly deferred for close; required Approval granted; required evidence sufficient; `assurance_level=self_checked`; `close_reason=completed_self_checked` |
+| Direct self-checked | no active Run; active Change Unit completed or not needed for non-write direct; scope passed for writes; blocking Decision Packets resolved or validly deferred for close; required sensitive-action Approval granted; required evidence sufficient; `assurance_level=self_checked`; `close_reason=completed_self_checked` |
 | Direct verified | direct self-checked requirements plus valid passed detached verification with current baseline and bundle inputs; `assurance_level=detached_verified`; `close_reason=completed_verified` |
-| Work verified | no active Run; Change Unit complete or explicitly deferred; scope passed; blocking Decision Packets resolved; approval not required or granted; design passed or waived; evidence sufficient; verification passed with valid independence and current baseline/bundle inputs; QA passed or waived if required; residual risk visible or confirmed as `ResidualRiskSummary.status=none` before acceptance; acceptance accepted if required; `close_reason=completed_verified` |
-| Work risk accepted | work close requirements for scope, approval, design, evidence, QA, and acceptance are satisfied; verification may be `waived_by_user`; blocking decisions are resolved or validly deferred with residual risk visibility; visible and accepted Residual Risk refs are recorded, including verification risk when verification is waived; assurance must be `none` or `self_checked`; `close_reason=completed_with_risk_accepted` |
+| Work verified | no active Run; Change Unit complete or explicitly deferred; scope passed; blocking Decision Packets resolved; sensitive-action Approval not required or granted; design passed or waived; evidence sufficient; verification passed with valid independence and current baseline/bundle inputs; QA passed or waived if required; residual risk visible or confirmed as `ResidualRiskSummary.status=none` before acceptance; acceptance accepted if required; `close_reason=completed_verified` |
+| Work risk accepted | work close requirements for scope, sensitive-action Approval, design, evidence, QA, and acceptance are satisfied; verification may be `waived_by_user`; blocking decisions are resolved or validly deferred with residual risk visibility; visible and accepted Residual Risk refs are recorded, including verification risk when verification is waived; assurance must be `none` or `self_checked`; `close_reason=completed_with_risk_accepted` |
 | Cancelled | no active write in progress; `result=cancelled`; `close_reason=cancelled` or `superseded` |
 
 ### Transition table
@@ -865,7 +865,7 @@ The decision algorithm is:
 6. Check intended paths, tools, commands, network targets, and secret access against the Change Unit. Scope gaps return `blocked` or require scope confirmation.
 7. Check baseline freshness. If the baseline is stale, return `blocked` and mark dependent approvals, Decision Packets, or evidence stale or incompatible where applicable.
 8. Determine sensitive categories. If sensitive categories exist and no matching Approval is granted, set or keep `approval_gate=required`, record approval-required blocker state for a committed non-dry-run decision when applicable, return `approval_required`, and optionally return an `approval_request_candidate` for display or a later `request_user_decision(decision_kind=approval)` call. This path must not create an Approval record, Decision Packet, Write Authorization, or `APR`.
-9. Validate approval scope. Denied, expired, drifted, or insufficient approval returns `blocked` or `approval_required` depending on whether a new approval can resolve it. If a new approval can resolve it, the gate returns to `approval_gate=required` until `request_user_decision(decision_kind=approval)` commits the approval request.
+9. Validate Approval scope. Denied, expired, drifted, or insufficient sensitive-action Approval returns `blocked` or `approval_required` depending on whether a new Approval can resolve it. If a new Approval can resolve it, the gate returns to `approval_gate=required` until `request_user_decision(decision_kind=approval)` commits the Approval request.
 10. Run design-policy precondition checks that apply before writing. Required unmet design preconditions return `blocked` or `decision_required` according to policy. When policy requires `tdd_trace`, `prepare_write` may distinguish test-path writes that create RED evidence from non-test implementation writes that require existing RED evidence or a valid TDD waiver.
 11. Evaluate Decision Packet requirements for the intended operation. A required blocking Decision Packet that is absent, pending, blocked, or deferred without coverage for the intended operation blocks the write and returns `decision_required` when user judgment can resolve it. A resolved Decision Packet must match the active Change Unit, Autonomy Boundary, baseline, and intended operation.
 12. Run surface capability checks. Capability failures are recorded as validator results, blocked reasons, and guarantee display changes; they do not create capability as a first-class kernel gate.
@@ -887,8 +887,8 @@ External side effects must be described before execution and recorded after exec
 | Guarantee level | Before execution | After execution |
 |---|---|---|
 | `cooperative` | The system can instruct the agent to hold or proceed, but must not claim the operation is technically blocked by Harness. | Observed writes or side effects are recorded from declared output, diffs, logs, or artifacts. Violations are audit/recovery context and do not satisfy evidence, verification, QA, acceptance, or close readiness. |
-| `detective` | The system can warn and may know what will be checked after action, but must not claim pre-execution prevention unless another layer proves it. | Changed paths, command results, telemetry, service refs, or artifact checks can detect mismatches and mark affected scope, evidence, approval, verification, or projection state stale or blocked. |
-| `preventive` | A proven guard can block the covered operation before execution when scope, approval, Decision Packet, baseline, and capability checks fail. | A blocked attempt may be recorded as validator/audit state. A successful write still needs compatible `record_run` consumption of the Write Authorization and evidence updates. |
+| `detective` | The system can warn and may know what will be checked after action, but must not claim pre-execution prevention unless another layer proves it. | Changed paths, command results, telemetry, service refs, or artifact checks can detect mismatches and mark affected scope, evidence, Approval, verification, or projection state stale or blocked. |
+| `preventive` | A proven guard can block the covered operation before execution when scope, sensitive-action Approval, Decision Packet, baseline, and capability checks fail. | A blocked attempt may be recorded as validator/audit state. A successful write still needs compatible `record_run` consumption of the Write Authorization and evidence updates. |
 | `isolated` | The effect is confined to an isolation boundary until an authorized promotion or commit path releases it. | Escapes from the isolation boundary or promotion without compatible authority are violations. Safe isolated outputs can become evidence only through registered artifacts and compatible owner records. |
 
 The user-facing explanation should name the concrete side effect first, then the Harness labels. For example, "send a write request to the staging billing API" is the ordinary side effect; `network_write`, `external_service_write`, Approval, Decision Packet, and Write Authorization are the authority and state labels around it.
@@ -905,11 +905,11 @@ Core must verify observed changed paths against both the consumed Write Authoriz
 
 Observed out-of-scope changed paths are not normalized by including them in the Run summary. They require recovery or repair through compatible scope update, reverting or isolating the extra change, a new compatible Write Authorization and Run, or a committed violation/audit Run according to the case. Such observations do not satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness for the affected scope until repaired through the relevant owner records.
 
-When Write Authorization is required by the Run kind, active Change Unit, intended operation, or reported product-write observations, Core rejects `record_run` if authorization is missing before any Run is committed. A rejected pre-commit request has no Run ID, emits no stable `record_run` events, registers no artifacts, and enqueues no projection changes. If observed product writes already occurred but authorization is missing or exceeded, Core may instead record an interrupted, blocked, or violation Run for recovery and audit. Core assigns a Run ID only for such deliberately committed recovery/audit Runs; it must not fabricate one for rejected pre-commit cases. That Run must not satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness, and Core marks affected scope, evidence, approval, verification, and projection state stale or blocked. The corresponding Write Authorization, if any, remains unconsumed and may be marked stale, revoked, or expired according to the violation and compatibility basis. When the observed behavior asserts a general scope violation, Core may also append `scope_violation_detected`.
+When Write Authorization is required by the Run kind, active Change Unit, intended operation, or reported product-write observations, Core rejects `record_run` if authorization is missing before any Run is committed. A rejected pre-commit request has no Run ID, emits no stable `record_run` events, registers no artifacts, and enqueues no projection changes. If observed product writes already occurred but authorization is missing or exceeded, Core may instead record an interrupted, blocked, or violation Run for recovery and audit. Core assigns a Run ID only for such deliberately committed recovery/audit Runs; it must not fabricate one for rejected pre-commit cases. That Run must not satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness, and Core marks affected scope, evidence, Approval, verification, and projection state stale or blocked. The corresponding Write Authorization, if any, remains unconsumed and may be marked stale, revoked, or expired according to the violation and compatibility basis. When the observed behavior asserts a general scope violation, Core may also append `scope_violation_detected`.
 
 An interrupted Run is a committed recovery Run for an execution attempt that started or was observed but did not complete normally because of crash, interruption, abandoned session, or equivalent recovery condition. Any captured diff/log artifacts are recovery evidence only.
 
-The Task cannot rely on an interrupted, blocked, or violation Run for close until the state is repaired through compatible scope, approval, Decision Packet resolution, evidence update, verification, or a new write authorization and Run.
+The Task cannot rely on an interrupted, blocked, or violation Run for close until the state is repaired through compatible scope, sensitive-action Approval, Decision Packet resolution, evidence update, verification, or a new write authorization and Run.
 
 MVP `shaping_update` is not a product-write recording path. Shaping-only Runs may be recorded without consuming Write Authorization, but they must not include product file changes. If a `shaping_update` also reports observed product writes, Core rejects it and requires `kind=implementation` or `kind=direct` with a compatible Write Authorization.
 
@@ -931,7 +931,7 @@ The decision algorithm is:
 4. Check the active Change Unit. Write-capable Tasks need the active Change Unit completed, explicitly deferred, or superseded according to policy.
 5. Check `scope_gate`. Product writes require passed scope.
 6. Check `decision_gate` and blocking Decision Packets. Required, pending, blocked, absent, or incompatible blocking decisions block close. Deferred decisions are compatible only when close impact, residual risk, and follow-up visibility are recorded.
-7. Check `approval_gate`. Sensitive changes require granted Approval with no drift or expiry.
+7. Check `approval_gate`. Sensitive changes require granted sensitive-action Approval with no drift or expiry.
 8. Check `design_gate`. Required design gates must be passed or validly waived; stale, blocked, pending, or partial required design gates block close unless policy converts them to a recorded waiver.
 9. Check `evidence_gate`. Where evidence is required, only `sufficient` can close successfully.
 10. Check `verification_gate`. Work requires passed detached verification or explicit user verification waiver. Direct work defaults to not required, but optional passed detached verification may upgrade assurance. Same-session review, including passed Spec Compliance Review and Code Quality / Stewardship Review displays, cannot produce detached assurance. A detached candidate with a stale bundle, stale baseline, changed reviewed inputs, or invalid independence remains unsatisfied. Verification waiver is separate from detached verification and cannot contribute to `assurance_level=detached_verified`.
@@ -997,7 +997,7 @@ Decision deferral is not a waiver. A deferred Decision Packet must record the af
 |---|---|
 | Chat is not state. | State-changing actions create state records and `task_events`; projections and chat text cannot mutate state without MCP action or reconcile. |
 | Product write requires an active scoped Change Unit. | `prepare_write` blocks write-capable actions without active Task, active Change Unit, and passed scope gate; allowed writes create Write Authorization or return the committed idempotent replay response, and implementation/direct Runs must consume a compatible authorization. |
-| Sensitive action requires explicit Approval. | `prepare_write` detects sensitive categories, checks approval gate and approval scope, and blocks denied, expired, missing, or drifted Approval; Approval cannot satisfy user-owned judgment outside its sensitive scope. |
+| Sensitive action requires explicit Approval. | `prepare_write` detects sensitive categories, checks Approval Gate and Approval scope, and blocks denied, expired, missing, or drifted Approval; Approval cannot satisfy user-owned judgment outside its sensitive scope. |
 | Blocking user-owned judgment requires a recorded Decision Packet. | `decision_gate`, `prepare_write`, `record_run`, and `close_task` require a canonical Decision Packet for blocking user-owned judgment; unresolved or incompatible blocking packets prevent affected writes and close. |
 | Completion requires evidence coverage where evidence is required. | `close_task` requires `evidence_gate=sufficient` when evidence applies; required evidence cannot be waived for passed completion. |
 | Work cannot self-certify detached verification. | Eval plus valid independence and current baseline/bundle inputs are required for `detached_verified`; self-check, same-session review, stale bundle review, and verification waiver cannot upgrade assurance. |
@@ -1023,7 +1023,7 @@ The following combinations are invalid and must be rejected or repaired by the k
 | Product write attempted when `scope_gate` is not `passed` | block or request scope confirmation |
 | Intended operation exceeds the active Change Unit Autonomy Boundary | block `prepare_write`; request user decision when user-owned judgment can resolve it |
 | Implementation or direct Run recorded with no compatible unexpired, unconsumed Write Authorization | reject `record_run` or record a violation/audit Run without populating `runs.write_authorization_id`; evidence, verification, QA, acceptance, and close cannot rely on it |
-| Run attempted with an invalid, stale, missing, consumed, or scope-exceeded Write Authorization | do not record it as consumed; record the attempted authorization ref in validator findings, run violation payload, or `task_events.payload_json` when useful; mark scope, evidence, approval, verification, and projections stale or blocked as appropriate; the authorization remains unconsumed and may be stale, revoked, or expired |
+| Run attempted with an invalid, stale, missing, consumed, or scope-exceeded Write Authorization | do not record it as consumed; record the attempted authorization ref in validator findings, run violation payload, or `task_events.payload_json` when useful; mark scope, evidence, Approval, verification, and projections stale or blocked as appropriate; the authorization remains unconsumed and may be stale, revoked, or expired |
 | Blocking user-owned judgment detected with `decision_gate=not_required` | repair to `required` and request a Decision Packet |
 | `decision_gate=pending`, `resolved`, `deferred`, or `blocked` for user-owned judgment without a linked Decision Packet | reject or repair by associating the canonical Decision Packet |
 | Product write attempted with required blocking Decision Packet absent or unresolved | block `prepare_write`; return a Decision Packet request or candidate rather than broad approval |
@@ -1032,7 +1032,7 @@ The following combinations are invalid and must be rejected or repaired by the k
 | `decision_gate=resolved` where the recorded decision no longer matches the active Change Unit, Autonomy Boundary, baseline, or intended operation | repair to `required`, `pending`, or `blocked` |
 | Stored `decision_gate` differs from aggregate recomputation | recompute and repair before write or close |
 | Sensitive change with `approval_gate=not_required` | repair to `approval_gate=required` and block `prepare_write`; do not create Approval, Decision Packet, Write Authorization, or `APR` until `request_user_decision(decision_kind=approval)` commits the approval request |
-| Sensitive change with Approval denied, expired, or outside the granted Approval scope | block `prepare_write` |
+| Sensitive change with denied, expired, or out-of-scope sensitive-action Approval | block `prepare_write` |
 | Required evidence with `evidence_gate=not_required` | repair to `none`, `partial`, `sufficient`, `stale`, or `blocked` |
 | `evidence_gate=none` while evidence records support required criteria | recompute evidence gate |
 | Completed passed result where required evidence is `none`, `partial`, `stale`, or `blocked` | block close |

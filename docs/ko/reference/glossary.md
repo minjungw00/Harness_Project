@@ -52,11 +52,11 @@ MVP 최종 수락은 Decision Packet user decision, `task_gates.acceptance_gate`
 
 ### Approval
 
-정의된 scope 안에서 sensitive action을 진행할 수 있도록 허용하는 사전 user decision입니다. Approval은 paths, tools, commands 또는 command classes, network targets, secret scope, baseline, sensitive categories, expiry conditions에 묶입니다. Approval이 요청되면 Core는 approval-shaped Decision Packet과 linked Approval record를 통해 user judgment를 capture합니다. Granted Approval이 있어도 Write Authorization이 생기려면 이후 compatible `prepare_write` result가 필요합니다. Approval은 sensitive-action permission일 뿐입니다. 사용자 소유 제품 판단이나 중요한 기술 판단을 해소하지 않고, correctness를 증명하지 않으며, final acceptance를 기록하거나 Residual Risk를 받아들이거나 Decision Packet을 대체하지 않습니다.
+정의된 scope 안에서 sensitive action을 진행할 수 있도록 허용하는 사전 user decision입니다. Approval은 paths, tools, commands 또는 command classes, network targets, secret scope, baseline, sensitive categories, expiry conditions에 묶입니다. Approval이 요청되면 Core는 approval-shaped Decision Packet과 linked Approval record를 통해 user judgment를 capture합니다. Granted sensitive-action Approval이 있어도 Write Authorization이 생기려면 이후 compatible `prepare_write` result가 필요합니다. Approval은 sensitive-action permission일 뿐입니다. 사용자 소유 제품 판단이나 중요한 기술 판단을 해소하지 않고, correctness를 증명하지 않으며, final acceptance를 기록하거나 Residual Risk를 받아들이거나 Decision Packet을 대체하지 않습니다.
 
 ### Approval Gate
 
-Sensitive-action Approval을 위한 kernel gate입니다. Sensitive categories가 있을 때만 required입니다. Granted Approval은 correctness를 증명하지 않고, acceptance를 뜻하지 않으며, 사용자 소유 판단을 해소하거나 Write Authorization을 만들지 않습니다.
+Sensitive-action Approval을 위한 kernel gate입니다. Sensitive categories가 있을 때만 required입니다. Granted sensitive-action Approval은 correctness를 증명하지 않고, acceptance를 뜻하지 않으며, 사용자 소유 판단을 해소하거나 Write Authorization을 만들지 않습니다.
 
 ### Artifact
 
