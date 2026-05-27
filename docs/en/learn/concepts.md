@@ -100,7 +100,7 @@ Reference: [Kernel Reference](../reference/kernel.md).
 
 ## Write Authorization
 
-The agent is ready to edit the login code. Harness needs to check whether there is an active Change Unit, whether the target path is in scope, whether required approvals exist, and whether any blocking decision must be resolved first.
+The agent is ready to edit the login code. Harness needs to check whether there is an active Change Unit, whether the target path is in scope, whether required Approvals exist, and whether any blocking decision must be resolved first.
 
 Write Authorization is the Harness decision that a product write may proceed now. In the current spec language, `prepare_write` is the product-write decision point.
 

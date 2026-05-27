@@ -52,11 +52,11 @@ MVP final acceptance is recorded through a Decision Packet user decision, `task_
 
 ### Approval
 
-A prior user decision allowing a sensitive action to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. When approval is requested, Core captures the user judgment through an approval-shaped Decision Packet and linked Approval record; granted approval still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it does not resolve user-owned product or material technical judgment, prove correctness, record final acceptance, accept residual risk, or replace a Decision Packet.
+A prior user decision allowing a sensitive action to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. When Approval is requested, Core captures the user judgment through an approval-shaped Decision Packet and linked Approval record; granted Approval still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it does not resolve user-owned product or material technical judgment, prove correctness, record final acceptance, accept residual risk, or replace a Decision Packet.
 
 ### Approval Gate
 
-The kernel gate for sensitive-change approval. It is required only when sensitive categories are present. Granted approval does not prove correctness, imply acceptance, resolve user-owned judgment, or create Write Authorization.
+The kernel gate for sensitive-action Approval. It is required only when sensitive categories are present. Granted Approval does not prove correctness, imply acceptance, resolve user-owned judgment, or create Write Authorization.
 
 ### Artifact
 
@@ -70,7 +70,7 @@ A structured pointer to a raw artifact file registered in the artifact store, in
 
 The Change Unit semantics that record the user-owned judgment boundary inside which an agent may proceed without asking for additional user judgment. In plain terms, it says what the agent may decide alone inside the active Change Unit. Routine implementation details may be inside the boundary; public API or module contract changes, security or privacy trade-offs, UX or product behavior trade-offs, material dependency or migration direction, scope expansion, and residual-risk acceptance require explicit user judgment and must not be inferred from broad autonomy.
 
-It is not a scope grant or write authority and does not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A Decision Packet may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible Change Unit scope and sensitive-action approval when sensitive categories apply. Exact kernel behavior is owned by [Autonomy Boundary](kernel.md#autonomy-boundary), with policy placement in [Design Quality Policies](design-quality-policies.md#autonomy-boundary-autonomy_boundary).
+It is not a scope grant or write authority and does not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A Decision Packet may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible Change Unit scope and sensitive-action Approval when sensitive categories apply. Exact kernel behavior is owned by [Autonomy Boundary](kernel.md#autonomy-boundary), with policy placement in [Design Quality Policies](design-quality-policies.md#autonomy-boundary-autonomy_boundary).
 
 ### Assurance
 
@@ -426,7 +426,7 @@ The idempotency hash of a tool request, computed from canonical UTF-8 JSON cover
 
 ### Residual Risk
 
-A canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact. Known close-relevant Residual Risk must be visible before any successful acceptance or close, or `ResidualRiskSummary.status=none` must confirm no known close-relevant risk. User acceptance of risk does not create detached verification, Manual QA pass, sensitive approval, or final acceptance. Accepted risk is metadata/state on the Residual Risk record in MVP, not a separate `accepted_risk` state record.
+A canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact. Known close-relevant Residual Risk must be visible before any successful acceptance or close, or `ResidualRiskSummary.status=none` must confirm no known close-relevant risk. User acceptance of risk does not create detached verification, Manual QA pass, sensitive-action Approval, or final acceptance. Accepted risk is metadata/state on the Residual Risk record in MVP, not a separate `accepted_risk` state record.
 
 ### Risk Accepted Close
 
@@ -522,7 +522,7 @@ A Change Unit shape that connects a thin path from trigger/input through domain 
 
 ### Waiver
 
-An explicit recorded exception to a gate or policy requirement where policy allows it. A waiver names the policy or gate, Task and Change Unit, reason, accepted risk, actor, expiry or follow-up when needed, and affected gate or close impact. Verification waiver, design waiver, and QA waiver are allowed under defined rules. Product-write scope, sensitive approval, required evidence coverage, and required acceptance are not waived for successful completion. Verification waiver and QA waiver do not upgrade assurance or make skipped checks appear passed.
+An explicit recorded exception to a gate or policy requirement where policy allows it. A waiver names the policy or gate, Task and Change Unit, reason, accepted risk, actor, expiry or follow-up when needed, and affected gate or close impact. Verification waiver, design waiver, and QA waiver are allowed under defined rules. Product-write scope, sensitive-action Approval, required evidence coverage, and required acceptance are not waived for successful completion. Verification waiver and QA waiver do not upgrade assurance or make skipped checks appear passed.
 
 ### Write Authorization
 

@@ -285,7 +285,7 @@ The first runnable slice proves:
 This slice does not prove the items below yet. These are not failed Kernel Smoke requirements; they are not-yet-proven capabilities for the later Agency-Hardened MVP path or post-MVP roadmap:
 
 - full Decision Packet quality
-- full approval lifecycle and approval drift handling
+- full Approval lifecycle and Approval drift handling
 - detached verification independence
 - Manual QA policy coverage
 - residual-risk visibility before acceptance and close

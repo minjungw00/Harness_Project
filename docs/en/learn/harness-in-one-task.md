@@ -247,7 +247,7 @@ Write Authorization: allowed for login form, session persistence code, and relat
 Not allowed: unrelated account recovery or global auth redesign.
 ```
 
-If the chosen behavior requires a sensitive approval, Harness should stop before the write and ask for that approval separately. Approval answers "may this sensitive action proceed?" It does not replace the Decision Packet, tests, QA, risk acceptance, or final acceptance.
+If the chosen behavior requires a sensitive-action Approval, Harness should stop before the write and ask for that Approval separately. Approval answers "may this sensitive action proceed?" It does not replace the Decision Packet, tests, QA, risk acceptance, or final acceptance.
 
 ### Implementation
 

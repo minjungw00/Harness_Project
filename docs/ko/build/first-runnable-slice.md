@@ -285,7 +285,7 @@ Required authority 또는 근거가 없을 때 close가 work를 끝내지 못하
 이 조각은 아래 항목을 아직 증명하지 않습니다. 이들은 failed Kernel Smoke requirement가 아니라 이후 Agency-Hardened MVP 경로 또는 post-MVP roadmap에서 증명할 not-yet-proven capability입니다.
 
 - 전체 Decision Packet 품질
-- 전체 approval lifecycle과 approval drift handling
+- 전체 Approval lifecycle과 Approval drift handling
 - detached verification 독립성
 - Manual QA policy 적용 범위
 - acceptance와 close 전에 남은 위험을 표시하는 규칙

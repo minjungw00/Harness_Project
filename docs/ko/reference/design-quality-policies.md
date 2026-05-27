@@ -71,7 +71,7 @@ Kernel은 lifecycle, gate transition, close semantics, blocker mechanics, state 
 
 권한 경로는 구분해서 유지합니다. 제품 판단과 중요한 기술 판단이 진행, write, waiver, acceptance, close를 막으면 Decision Packet으로 라우팅합니다. Policy validator는 설계 품질 finding과 gate impact를 보고합니다. State change, product write, acceptance, residual-risk acceptance, close가 진행될 수 있는지는 여전히 kernel authority가 결정합니다.
 
-정책 waiver도 제한적입니다. 정책 계약이 허용하는 경우에만 설계 품질 요구사항을 충족한 것으로 볼 수 있습니다. product write 범위, 민감 변경 approval, 필요한 근거 범위, 필수 결과 수락, verification 독립성을 대신 면제하지 않습니다.
+정책 waiver도 제한적입니다. 정책 계약이 허용하는 경우에만 설계 품질 요구사항을 충족한 것으로 볼 수 있습니다. product write 범위, sensitive-action Approval, 필요한 근거 범위, 필수 결과 수락, verification 독립성을 대신 면제하지 않습니다.
 
 ## Two-stage review model
 
@@ -175,7 +175,7 @@ Shared Design은 기록된 shared understanding이지 final approval, sensitive-
 |---|---|
 | `name` | `decision_quality` |
 | `applies_when` | Design choice, 사용자 소유의 제품 장단점 판단, product taste 판단, 중요한 기술 선택, 제품 의미, public documentation, caller expectation, 수용 기준, API naming, module responsibility에 영향을 주는 domain-language conflict, Manual QA 필요 여부가 사용자 소유의 제품·UX·접근성·릴리스 위험·product taste 판단에 달린 경우, Manual QA waiver 선택, 범위 확장, durable impact가 있는 dependency addition, schema/data-model migration, public API/interface change, module boundary change, architecture choice, 수평 예외, verification 면제, QA 면제, 알려진 위험이 있는 결과 수락이 있을 때. |
-| `default_requirement` | Decision이 실제 행동으로 이어지기 전에 Decision Packet을 기록한다. Packet에는 context, 검토한 선택지, 장단점, 추천안, uncertainty, reversibility, evidence ref, 결정을 미룰 때의 결과, residual risk가 포함되어야 한다. Agent 추천안과 사용자 판단 또는 위험을 받아들이는 판단을 분리해 둔다. `decision_kind=approval`에서는 sensitive-change scope와 boundary가 명확한지 평가하고, approval 형태의 맥락을 제품, 기술, 보안, QA, verification, 결과 수락, residual-risk 판단의 해결로 취급하지 않는다. |
+| `default_requirement` | Decision이 실제 행동으로 이어지기 전에 Decision Packet을 기록한다. Packet에는 context, 검토한 선택지, 장단점, 추천안, uncertainty, reversibility, evidence ref, 결정을 미룰 때의 결과, residual risk가 포함되어야 한다. Agent 추천안과 사용자 판단 또는 위험을 받아들이는 판단을 분리해 둔다. `decision_kind=approval`에서는 sensitive-action scope와 boundary가 명확한지 평가하고, Approval 형태의 맥락을 제품, 기술, 보안, QA, verification, 결과 수락, residual-risk 판단의 해결로 취급하지 않는다. |
 | `allowed_waiver` | 공개 interface, 제품, 중요한 기술, 아키텍처, 유지보수, verification, QA, 알려진 위험 impact가 없고 사소하며 되돌리기 쉬운 선택에만 허용된다. Waiver에는 Decision Packet이 judgment를 개선하지 않는 이유를 기록해야 한다. |
 | `required_record` | Decision Packet 기록과 렌더링될 때 선택적 `DEC` projection. |
 | `validator` | `decision_quality_check` |
@@ -488,7 +488,7 @@ Waiver는 explicit, scoped, recorded여야 합니다. 정책 waiver에는 다음
 - 필요할 때 expiry 또는 follow-up
 - 영향받는 gate 또는 close 영향
 
-정책 waiver는 정책 계약이 허용하는 경우에만 설계 품질 요구사항을 충족한 것으로 볼 수 있습니다. Product write 범위, 민감 변경 approval, 필요한 근거 범위, 필수 결과 수락, 기타 kernel blocker를 대신 면제하지 않습니다. Verification waiver는 kernel close semantics가 담당하며 `assurance_level=detached_verified`를 만들면 안 됩니다.
+정책 waiver는 정책 계약이 허용하는 경우에만 설계 품질 요구사항을 충족한 것으로 볼 수 있습니다. Product write 범위, sensitive-action Approval, 필요한 근거 범위, 필수 결과 수락, 기타 kernel blocker를 대신 면제하지 않습니다. Verification waiver는 kernel close semantics가 담당하며 `assurance_level=detached_verified`를 만들면 안 됩니다.
 
 Verification, QA, public API/interface 약속, 범위 확장, 기술/아키텍처 방향, dependency 방향, schema/data-model migration, module boundary change, 알려진 위험이 있는 결과 수락과 관련된 waiver는 `decision_quality`도 충족하고 active `autonomy_boundary`를 따라야 합니다.
 
@@ -517,8 +517,8 @@ Default impact vocabulary:
 - `not_required`: 해당 policy의 `applies_when`이 독립적으로 true가 아니면 발견 사항을 내보낼 필요가 없다.
 - `warning`: visible validator 발견 사항을 내보내되 default로 write 또는 close를 차단하지 않는다.
 - `design_gate=pending` 또는 `design_gate=partial`: shaping, owner 기록, evidence, waiver가 incomplete하다. `prepare_write`는 이 matrix 또는 정책 계약이 gap을 write-blocking이라고 말할 때만 차단한다.
-- `blocking before write`: issue가 해소되지 않은 동안 `prepare_write`는 영향받는 product write를 허가하면 안 된다. Decision Packet 또는 approval request를 만들거나 연결하는 것은 blocker path를 기록할 뿐이며 write를 허가하지 않는다. Authorization에는 issue가 해소되거나 validly waived되고, relevant Decision Packet이 영향받는 operation에 대해 해소되었거나 otherwise compatible이며, 필요한 sensitive approval이 granted된 뒤 later compatible `prepare_write`가 Write Authorization을 만들어야 한다.
-- `close blocker`: successful close는 pass 또는 compatible waiver를 기다린다. 받아들인 residual risk는 kernel과 관련 정책 계약이 risk-accepted close path를 허용하는 경우에만 도움이 되며, 근거 충분성, required QA, sensitive approval, 최종 수락을 대체하지 않는다.
+- `blocking before write`: issue가 해소되지 않은 동안 `prepare_write`는 영향받는 product write를 허가하면 안 된다. Decision Packet 또는 approval request를 만들거나 연결하는 것은 blocker path를 기록할 뿐이며 write를 허가하지 않는다. Authorization에는 issue가 해소되거나 validly waived되고, relevant Decision Packet이 영향받는 operation에 대해 해소되었거나 otherwise compatible이며, 필요한 sensitive-action Approval이 granted된 뒤 later compatible `prepare_write`가 Write Authorization을 만들어야 한다.
+- `close blocker`: successful close는 pass 또는 compatible waiver를 기다린다. 받아들인 residual risk는 kernel과 관련 정책 계약이 risk-accepted close path를 허용하는 경우에만 도움이 되며, 근거 충분성, required QA, sensitive-action Approval, 최종 수락을 대체하지 않는다.
 - `Decision Packet required`: Decision Packet state path를 사용하고 applicable한 경우 `decision_gate=required`, `pending`, 또는 `blocked`로 설정하거나 유지한다.
 
 이것은 정책 영향 vocabulary이며 API `ValidatorResult.findings.severity` enum이 아닙니다. Validator 발견 사항은 계속 `info`, `warning`, `error`, `blocker`를 사용합니다. 합성된 정책 영향은 gates, blocked reasons, close blockers, Decision Packet needs, waiver eligibility, fixture-observed 파생 상태를 통해 드러납니다.
@@ -531,11 +531,11 @@ Default impact vocabulary:
 
 이 순서는 왼쪽에서 오른쪽으로 갈수록 강합니다. 같은 영향 대상에서 경쟁하는 impact에는 이 전체 순서를 적용합니다.
 
-이 order는 같은 concern에서 약한 default를 무시할 수 있는지를 결정합니다. 서로 다른 영향받는 gate를 하나로 합치지 않습니다. 한 발견 사항이 `design_gate`에 영향을 주고 다른 발견 사항이 `qa_gate`, `decision_gate`, 근거 충분성, Residual Risk 표시에 영향을 주면 합성 결과는 모든 영향받는 gate, blockers, refs를 유지합니다. `Decision Packet required`는 judgment-routing impact이지 write blocker, close blocker, 근거 충분성, required QA, required approval, Residual Risk 표시를 대체하지 않습니다. Decision Packet은 발견 사항의 user-judgment 부분을 해소할 수 있지만, 독립적인 write blocker 또는 close blocker는 자체 policy 또는 kernel condition이 충족될 때까지 남습니다.
+이 order는 같은 concern에서 약한 default를 무시할 수 있는지를 결정합니다. 서로 다른 영향받는 gate를 하나로 합치지 않습니다. 한 발견 사항이 `design_gate`에 영향을 주고 다른 발견 사항이 `qa_gate`, `decision_gate`, 근거 충분성, Residual Risk 표시에 영향을 주면 합성 결과는 모든 영향받는 gate, blockers, refs를 유지합니다. `Decision Packet required`는 judgment-routing impact이지 write blocker, close blocker, 근거 충분성, required QA, required Approval, Residual Risk 표시를 대체하지 않습니다. Decision Packet은 발견 사항의 user-judgment 부분을 해소할 수 있지만, 독립적인 write blocker 또는 close blocker는 자체 policy 또는 kernel condition이 충족될 때까지 남습니다.
 
 Validator는 모든 관련 발견 사항을 보고해야 합니다. Composition rule은 합성된 gate, write-blocker, close-blocker, waiver, Decision Packet impact를 결정하지만, 더 약한 발견 사항을 validator 결과, evidence, status, conformance output에서 숨기면 안 됩니다. Primary public `ToolError` 선택은 API가 소유한 [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence)를 따릅니다. 이 policy rule은 error-code precedence를 재정의하거나 secondary error를 숨기지 않습니다.
 
-Severity는 explicit user request, sensitive category, 공개 약속, public API/interface 또는 schema impact, 알려진 위험이 있는 결과 수락, Residual Risk 표시, 최신이 아닌 critical context, 해당 case가 blocking임을 검증하는 conformance fixture에 의해 matrix default보다 올라갈 수 있습니다. Severity는 관련 정책 계약에 따라 기록된 allowed waiver가 있을 때만 낮아질 수 있으며, 해당 contract가 waiver를 허용하는 policy가 소유한 impact에만 적용됩니다. 정책 waiver는 missing scope, missing sensitive approval, 필요한 근거 불충분, 필수 결과 수락, Write Authorization 요구사항 같은 Kernel Authority blocker를 낮추지 않습니다. 또한 API primary error precedence를 바꾸지 않습니다. 이 rule은 정책 계약 interpretation, validators, gates, write blockers, close blockers, Decision Packet needs에 영향을 주지만 Design Stewardship Defaults를 Kernel Authority Invariants로 만들지는 않습니다.
+Severity는 explicit user request, sensitive category, 공개 약속, public API/interface 또는 schema impact, 알려진 위험이 있는 결과 수락, Residual Risk 표시, 최신이 아닌 critical context, 해당 case가 blocking임을 검증하는 conformance fixture에 의해 matrix default보다 올라갈 수 있습니다. Severity는 관련 정책 계약에 따라 기록된 allowed waiver가 있을 때만 낮아질 수 있으며, 해당 contract가 waiver를 허용하는 policy가 소유한 impact에만 적용됩니다. 정책 waiver는 missing scope, missing sensitive-action Approval, 필요한 근거 불충분, 필수 결과 수락, Write Authorization 요구사항 같은 Kernel Authority blocker를 낮추지 않습니다. 또한 API primary error precedence를 바꾸지 않습니다. 이 rule은 정책 계약 interpretation, validators, gates, write blockers, close blockers, Decision Packet needs에 영향을 주지만 Design Stewardship Defaults를 Kernel Authority Invariants로 만들지는 않습니다.
 
 | Task shape | Warning 또는 `not_required` default | Gate/write default | Close/decision default |
 |---|---|---|---|

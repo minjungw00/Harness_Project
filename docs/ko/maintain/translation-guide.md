@@ -4,7 +4,7 @@
 
 영어와 한국어 Harness 문서를 함께 고칠 때 이 가이드를 사용합니다.
 
-이 문서는 이중 언어 문서 유지보수 지침입니다. Runtime behavior, conformance pass/fail, generated output, evidence, QA, acceptance, close readiness, implementation readiness를 정의하지 않습니다.
+이 문서는 이중 언어 문서 유지보수를 위한 Maintain 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data, 제품 상태 변경을 승인하지 않으며, conformance pass/fail, evidence, QA, acceptance, close readiness, implementation readiness를 정의하지 않습니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
 
 ## 이런 때 읽기
 

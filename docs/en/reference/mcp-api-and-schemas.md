@@ -666,9 +666,9 @@ AcceptanceVisibilityContext:
 
 Displays must preserve the difference between "none" and "not visible." `status=none` is an affirmative current-state claim that no known close-relevant Residual Risk exists for the requested action. `status=not_visible` is a blocker or pre-acceptance warning that known close-relevant risk exists but has not yet been shown with enough context for acceptance or close. User-facing summaries should render both the status and the relevant risk refs or explicit empty ref set.
 
-Autonomy Boundary summaries describe judgment latitude, not scope authority. They do not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit scope and any required approval.
+Autonomy Boundary summaries describe judgment latitude, not scope authority. They do not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit scope and any required Approval.
 
-`decision_kind=approval` is retained as a stable public enum value. In both `DecisionPacket` and `DecisionPacketCandidate`, it means an approval-shaped judgment context for sensitive-change approval only. It cannot resolve user-owned judgment such as product trade-offs, design direction, architecture or material technical direction, unresolved security or product-security judgment, QA waiver, verification risk, final acceptance, or residual-risk acceptance unless those decisions are separately represented by compatible Decision Packets and gate updates.
+`decision_kind=approval` is retained as a stable public enum value. In both `DecisionPacket` and `DecisionPacketCandidate`, it means an approval-shaped judgment context for sensitive-action Approval only. It cannot resolve user-owned judgment such as product trade-offs, design direction, architecture or material technical direction, unresolved security or product-security judgment, QA waiver, verification risk, final acceptance, or residual-risk acceptance unless those decisions are separately represented by compatible Decision Packets and gate updates.
 
 ## ValidatorResult
 
@@ -742,9 +742,9 @@ Tool descriptions below separate `ValidatorResults emitted` from Core checks/pre
 | `DECISION_REQUIRED` | blocking user-owned judgment requires a Decision Packet before the requested action can proceed |
 | `DECISION_UNRESOLVED` | a relevant Decision Packet is pending, deferred without coverage, rejected, blocked, stale, or incompatible with the requested action |
 | `AUTONOMY_BOUNDARY_EXCEEDED` | the intended operation exceeds the active Change Unit Autonomy Boundary |
-| `APPROVAL_REQUIRED` | sensitive change requires approval before proceeding |
-| `APPROVAL_DENIED` | the relevant approval was denied |
-| `APPROVAL_EXPIRED` | approval expired or drifted from baseline/scope |
+| `APPROVAL_REQUIRED` | sensitive action requires Approval before proceeding |
+| `APPROVAL_DENIED` | the relevant Approval was denied |
+| `APPROVAL_EXPIRED` | Approval expired or drifted from baseline/scope |
 | `CAPABILITY_INSUFFICIENT` | the connected surface cannot satisfy a required validator or enforcement condition |
 | `MCP_UNAVAILABLE` | required MCP access is unavailable, stale, or unreachable |
 | `EVIDENCE_INSUFFICIENT` | required evidence coverage is absent, partial, stale, or blocked |
@@ -779,7 +779,7 @@ User-facing displays should map `ErrorCode` values to display labels and next-ac
 | `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | missing or stale write authority | Call or retry `harness.prepare_write` for the exact intended operation, current scope, and current state before any product write. |
 | `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | scope, boundary, or baseline issue | Confirm or narrow scope, update the Change Unit or baseline, or request the needed Decision Packet before the operation proceeds. |
 | `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | judgment needed | Show the relevant Decision Packet or decision prompt with options, recommendation, uncertainty, deferral effect, and refs. |
-| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | approval needed or not usable | Request, resolve, or renew the sensitive-action Approval; do not treat Approval as Write Authorization or product judgment. |
+| `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | Approval needed or not usable | Request, resolve, or renew the sensitive-action Approval; do not treat Approval as Write Authorization or product judgment. |
 | `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE` | evidence, verification, QA, acceptance, or risk visibility needed | Record or rerun the missing check, show residual risk, request acceptance, or record a valid waiver through the owning path. |
 | `PROJECTION_STALE` | stale status view | Refresh or reconcile the projection before relying on that readable view; canonical state remains the authority when directly available. |
 | `RECONCILE_REQUIRED` | reconcile needed | Reconcile human-editable or managed-block drift before using the affected projection or close path. |
@@ -809,9 +809,9 @@ If an MCP server or caller cannot reach Core at all, the surface or operator may
 | 7 | `SCOPE_VIOLATION` | the intended or observed paths, tools, commands, network, secrets, or categories exceed active or authorized scope |
 | 8 | `WRITE_AUTHORIZATION_REQUIRED` | a write-capable Run is missing a required Write Authorization |
 | 9 | `WRITE_AUTHORIZATION_INVALID` | the supplied Write Authorization is stale, expired, revoked, consumed outside replay, or incompatible |
-| 10 | `APPROVAL_DENIED` | a relevant sensitive-change approval was denied |
-| 11 | `APPROVAL_EXPIRED` | a relevant sensitive-change approval expired or drifted from scope or baseline |
-| 12 | `APPROVAL_REQUIRED` | a sensitive change needs approval and no compatible granted approval exists |
+| 10 | `APPROVAL_DENIED` | a relevant sensitive-action Approval was denied |
+| 11 | `APPROVAL_EXPIRED` | a relevant sensitive-action Approval expired or drifted from scope or baseline |
+| 12 | `APPROVAL_REQUIRED` | a sensitive change needs Approval and no compatible granted Approval exists |
 | 13 | `DECISION_UNRESOLVED` | an existing relevant Decision Packet is pending, deferred without coverage, rejected, blocked, stale, or incompatible |
 | 14 | `AUTONOMY_BOUNDARY_EXCEEDED` | the intended operation exceeds the active Change Unit Autonomy Boundary, even when the next step is a Decision Packet |
 | 15 | `DECISION_REQUIRED` | blocking user-owned judgment needs a Decision Packet before the action can proceed |
@@ -1167,7 +1167,7 @@ Idempotency behavior: repeated allowed/blocked decision with same payload return
 
 #### Approval Lifecycle
 
-Sensitive-change approval follows this recipe:
+Sensitive-action Approval follows this recipe:
 
 1. `harness.prepare_write` detects sensitive categories for the intended product write.
 2. If no compatible granted Approval covers the scope, baseline, sensitive categories, paths, tools, commands, network targets, secret access, and capability requirements, `prepare_write` returns `decision=approval_required`, includes an `approval_request_candidate`, sets both Write Authorization fields to `null`, uses `authorization_effect=none`, and may update Task blockers plus enqueue `TASK`. It must not create an Approval record, Decision Packet, Write Authorization, or `APR` projection job for this non-mutating candidate.
@@ -1395,7 +1395,7 @@ RequestUserDecisionRequest:
   reconcile_item_id: string | null
 ```
 
-Core stores a canonical `DecisionPacket`. Minimal MVP implementations may omit `decision_requests`; public request and response schemas remain centered on Decision Packet, not Decision Request. If the implementation also creates or updates `decision_requests`, those rows are routing, interaction, idempotency replay, or compatibility handoff metadata only, and they must link back to the canonical `decision_packet_id` before gate aggregation can consider their metadata. A `decision_request` row alone never satisfies `decision_gate`, approval, acceptance, waiver, residual-risk acceptance, or close. If `state_summary_at_request` is `null`, Core derives it from current state during the same transaction. The stored `state_summary_at_request` is a request-time snapshot and is not updated by later Task transitions. `approval_scope` is required when `decision_kind=approval`; for all other `decision_kind` values it must be `null` or omitted. `decision_kind=approval` is only the approval-shaped sensitive-change context and cannot resolve user-owned judgment such as product trade-offs, design direction, architecture or material technical direction, unresolved security or product-security judgment, QA waiver, verification risk, final acceptance, or residual-risk acceptance without separate compatible Decision Packets and gate updates. For `decision_kind=approval`, Core also creates a linked pending Approval record using the approval scope; the Approval is not granted until `harness.record_user_decision` resolves the Decision Packet. A `residual_risk_acceptance` packet must include the risk visibility context in `user_context.minimum_context` and relevant risk refs in `context.source_refs`. A broad natural-language answer such as "go ahead" is not a schema branch; the request must still name the `decision_kind`, option, affected gates, and user context that determine what Core is asking the user to decide.
+Core stores a canonical `DecisionPacket`. Minimal MVP implementations may omit `decision_requests`; public request and response schemas remain centered on Decision Packet, not Decision Request. If the implementation also creates or updates `decision_requests`, those rows are routing, interaction, idempotency replay, or compatibility handoff metadata only, and they must link back to the canonical `decision_packet_id` before gate aggregation can consider their metadata. A `decision_request` row alone never satisfies `decision_gate`, approval, acceptance, waiver, residual-risk acceptance, or close. If `state_summary_at_request` is `null`, Core derives it from current state during the same transaction. The stored `state_summary_at_request` is a request-time snapshot and is not updated by later Task transitions. `approval_scope` is required when `decision_kind=approval`; for all other `decision_kind` values it must be `null` or omitted. `decision_kind=approval` is only the approval-shaped context for sensitive-action Approval and cannot resolve user-owned judgment such as product trade-offs, design direction, architecture or material technical direction, unresolved security or product-security judgment, QA waiver, verification risk, final acceptance, or residual-risk acceptance without separate compatible Decision Packets and gate updates. For `decision_kind=approval`, Core also creates a linked pending Approval record using the approval scope; the Approval is not granted until `harness.record_user_decision` resolves the Decision Packet. A `residual_risk_acceptance` packet must include the risk visibility context in `user_context.minimum_context` and relevant risk refs in `context.source_refs`. A broad natural-language answer such as "go ahead" is not a schema branch; the request must still name the `decision_kind`, option, affected gates, and user context that determine what Core is asking the user to decide.
 
 The user-visible prompt derived from this request should be decision-centered: ask the user to choose, defer, reject, waive, accept, or reconcile the named option, and say what that answer will and will not settle. It should not ask for generic approval unless `decision_kind=approval` and `approval_scope` describe the sensitive action being approved. The exact public fields remain the schema above; this prose describes minimum quality for using those fields.
 

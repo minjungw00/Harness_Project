@@ -670,7 +670,7 @@ AcceptanceVisibilityContext:
 
 Autonomy Boundary summary는 범위 권한이 아니라 판단 재량을 설명합니다. Active Change Unit scope와 required Approval 밖의 paths, tools, commands, network targets, secret access, sensitive categories를 허가하지 않습니다.
 
-`decision_kind=approval`은 stable public enum value로 유지됩니다. `DecisionPacket`과 `DecisionPacketCandidate` 모두에서 이 값은 sensitive-change Approval만을 위한 Approval 형태의 judgment context를 뜻합니다. 제품 장단점, 설계 방향, 아키텍처 판단이나 중요한 기술 판단, 해결되지 않은 security 또는 product-security 판단, QA 면제, verification risk, final acceptance, Residual Risk 수용 같은 사용자 소유 판단은 별도의 compatible Decision Packets와 gate updates로 표현되지 않는 한 이 값으로 해소할 수 없습니다.
+`decision_kind=approval`은 stable public enum value로 유지됩니다. `DecisionPacket`과 `DecisionPacketCandidate` 모두에서 이 값은 sensitive-action Approval만을 위한 Approval 형태의 judgment context를 뜻합니다. 제품 장단점, 설계 방향, 아키텍처 판단이나 중요한 기술 판단, 해결되지 않은 security 또는 product-security 판단, QA 면제, verification risk, final acceptance, Residual Risk 수용 같은 사용자 소유 판단은 별도의 compatible Decision Packets와 gate updates로 표현되지 않는 한 이 값으로 해소할 수 없습니다.
 
 ## ValidatorResult
 
@@ -744,9 +744,9 @@ Status, next, write, close flow에서 자주 드러나는 agency-critical subset
 | `DECISION_REQUIRED` | 사용자 소유 판단이 requested action 진행을 막고 있어 Decision Packet이 필요함 |
 | `DECISION_UNRESOLVED` | relevant Decision Packet이 pending, deferred without coverage, rejected, blocked, `stale` 또는 requested action과 incompatible함 |
 | `AUTONOMY_BOUNDARY_EXCEEDED` | the intended operation exceeds the active Change Unit Autonomy Boundary |
-| `APPROVAL_REQUIRED` | sensitive change requires approval before proceeding |
-| `APPROVAL_DENIED` | the relevant approval was denied |
-| `APPROVAL_EXPIRED` | approval expired or drifted from baseline/scope |
+| `APPROVAL_REQUIRED` | sensitive action requires Approval before proceeding |
+| `APPROVAL_DENIED` | the relevant Approval was denied |
+| `APPROVAL_EXPIRED` | Approval expired or drifted from baseline/scope |
 | `CAPABILITY_INSUFFICIENT` | 연결된 접점이 required validator 또는 enforcement condition을 충족할 수 없음 |
 | `MCP_UNAVAILABLE` | required MCP access가 unavailable, `stale`, 또는 unreachable임 |
 | `EVIDENCE_INSUFFICIENT` | required evidence coverage가 absent, partial, `stale`, 또는 blocked임 |
@@ -811,8 +811,8 @@ MCP server나 호출자가 Core에 전혀 닿을 수 없으면 접점 또는 ope
 | 7 | `SCOPE_VIOLATION` | intended 또는 observed paths, tools, commands, network, secrets, categories가 active 또는 authorized scope를 초과함 |
 | 8 | `WRITE_AUTHORIZATION_REQUIRED` | write-capable Run에 required Write Authorization이 없음 |
 | 9 | `WRITE_AUTHORIZATION_INVALID` | supplied Write Authorization이 `stale`, expired, revoked, replay 밖에서 consumed, 또는 incompatible함 |
-| 10 | `APPROVAL_DENIED` | relevant sensitive-change Approval이 denied됨 |
-| 11 | `APPROVAL_EXPIRED` | relevant sensitive-change Approval이 expired되었거나 scope 또는 baseline에서 drift됨 |
+| 10 | `APPROVAL_DENIED` | relevant sensitive-action Approval이 denied됨 |
+| 11 | `APPROVAL_EXPIRED` | relevant sensitive-action Approval이 expired되었거나 scope 또는 baseline에서 drift됨 |
 | 12 | `APPROVAL_REQUIRED` | sensitive change에 Approval이 필요하지만 compatible granted Approval이 없음 |
 | 13 | `DECISION_UNRESOLVED` | existing relevant Decision Packet이 pending, deferred without coverage, rejected, blocked, `stale`, 또는 incompatible함 |
 | 14 | `AUTONOMY_BOUNDARY_EXCEEDED` | intended operation이 active Change Unit Autonomy Boundary를 초과하며, next step이 Decision Packet이어도 이 code를 사용함 |
@@ -1397,7 +1397,7 @@ RequestUserDecisionRequest:
   reconcile_item_id: string | null
 ```
 
-Core는 기준 `DecisionPacket`을 저장합니다. Minimal MVP 구현은 `decision_requests`를 생략할 수 있으며, public request와 response schema는 Decision Request가 아니라 Decision Packet을 중심으로 유지됩니다. 구현이 `decision_requests`도 만들거나 업데이트한다면 해당 row는 routing, interaction, idempotency replay, compatibility handoff metadata일 뿐이며 gate aggregation이 그 metadata를 고려하려면 먼저 기준 `decision_packet_id`로 다시 연결되어야 합니다. `decision_request` row만으로는 `decision_gate`, Approval, acceptance, waiver, Residual Risk 수용, close를 절대 만족하지 않습니다. `state_summary_at_request`가 `null`이면 Core가 같은 transaction 안에서 current state로부터 파생합니다. Stored `state_summary_at_request`는 request-time snapshot이며 이후 Task transition으로 업데이트되지 않습니다. `approval_scope`는 `decision_kind=approval`일 때 required이며, 다른 `decision_kind` value에서는 `null` 또는 omitted여야 합니다. `decision_kind=approval`은 Approval 형태의 sensitive-change context일 뿐이며, 별도의 compatible Decision Packet과 gate update 없이 제품 장단점, 설계 방향, 아키텍처 판단이나 중요한 기술 판단, 해결되지 않은 security 또는 product-security 판단, QA 면제, verification risk, final acceptance, Residual Risk 수용 같은 사용자 소유 판단을 해소할 수 없습니다. `decision_kind=approval`에서 Core는 Approval 범위를 사용해 연결된 pending Approval 기록도 생성합니다. Approval은 `harness.record_user_decision`이 Decision Packet을 해소하기 전에는 granted가 아닙니다. `residual_risk_acceptance` packet은 `user_context.minimum_context`에 risk visibility context를 포함하고 `context.source_refs`에 relevant risk ref를 포함해야 합니다. "go ahead" 또는 "진행해" 같은 넓은 자연어 답변은 schema branch가 아닙니다. Request는 여전히 Core가 무엇을 묻는지 결정하는 `decision_kind`, option, affected gates, user context를 이름 붙여야 합니다.
+Core는 기준 `DecisionPacket`을 저장합니다. Minimal MVP 구현은 `decision_requests`를 생략할 수 있으며, public request와 response schema는 Decision Request가 아니라 Decision Packet을 중심으로 유지됩니다. 구현이 `decision_requests`도 만들거나 업데이트한다면 해당 row는 routing, interaction, idempotency replay, compatibility handoff metadata일 뿐이며 gate aggregation이 그 metadata를 고려하려면 먼저 기준 `decision_packet_id`로 다시 연결되어야 합니다. `decision_request` row만으로는 `decision_gate`, Approval, acceptance, waiver, Residual Risk 수용, close를 절대 만족하지 않습니다. `state_summary_at_request`가 `null`이면 Core가 같은 transaction 안에서 current state로부터 파생합니다. Stored `state_summary_at_request`는 request-time snapshot이며 이후 Task transition으로 업데이트되지 않습니다. `approval_scope`는 `decision_kind=approval`일 때 required이며, 다른 `decision_kind` value에서는 `null` 또는 omitted여야 합니다. `decision_kind=approval`은 sensitive-action Approval을 위한 Approval 형태 context일 뿐이며, 별도의 compatible Decision Packet과 gate update 없이 제품 장단점, 설계 방향, 아키텍처 판단이나 중요한 기술 판단, 해결되지 않은 security 또는 product-security 판단, QA 면제, verification risk, final acceptance, Residual Risk 수용 같은 사용자 소유 판단을 해소할 수 없습니다. `decision_kind=approval`에서 Core는 Approval 범위를 사용해 연결된 pending Approval 기록도 생성합니다. Approval은 `harness.record_user_decision`이 Decision Packet을 해소하기 전에는 granted가 아닙니다. `residual_risk_acceptance` packet은 `user_context.minimum_context`에 risk visibility context를 포함하고 `context.source_refs`에 relevant risk ref를 포함해야 합니다. "go ahead" 또는 "진행해" 같은 넓은 자연어 답변은 schema branch가 아닙니다. Request는 여전히 Core가 무엇을 묻는지 결정하는 `decision_kind`, option, affected gates, user context를 이름 붙여야 합니다.
 
 이 request에서 파생되는 사용자 표시 prompt는 결정 중심이어야 합니다. 사용자가 이름 붙은 option을 선택, defer, reject, waive, accept, reconcile할지 묻고, 그 답이 무엇을 확정하고 무엇을 확정하지 않는지 말해야 합니다. `decision_kind=approval`이고 `approval_scope`가 승인할 민감 동작을 설명하는 경우가 아니라면 generic approval을 요청하면 안 됩니다. 정확한 public fields는 위 schema 그대로이며, 이 문단은 그 field를 사용하는 최소 품질을 설명할 뿐입니다.
 

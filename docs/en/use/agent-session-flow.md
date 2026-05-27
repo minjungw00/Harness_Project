@@ -303,9 +303,9 @@ Feedback Loop is the canonical support-record path for selected loops and loop f
 
 ## AFK work and public commitments
 
-When the user says to continue while they are away, treat that as permission to use already-recorded latitude, not as new authority. The agent may continue only inside the active Change Unit, the active Autonomy Boundary, granted sensitive approvals, and compatible `prepare_write` / Write Authorization for each product write.
+When the user says to continue while they are away, treat that as permission to use already-recorded latitude, not as new authority. The agent may continue only inside the active Change Unit, the active Autonomy Boundary, granted sensitive-action Approvals, and compatible `prepare_write` / Write Authorization for each product write.
 
-Stop and surface the smallest unblocker before scope expansion, new sensitive action without approval, Autonomy Boundary breach, residual-risk acceptance, final acceptance, QA or verification waiver, public API or module contract change, domain-language change that affects public meaning, release/support promise, or other public commitment that users or other systems may rely on.
+Stop and surface the smallest unblocker before scope expansion, new sensitive action without Approval, Autonomy Boundary breach, residual-risk acceptance, final acceptance, QA or verification waiver, public API or module contract change, domain-language change that affects public meaning, release/support promise, or other public commitment that users or other systems may rely on.
 
 Name the guarantee level when presenting AFK stops. On cooperative or detective surfaces, "stop" means hold by instruction or detect/report after action if the profile supports that validation. Use preventive wording only when the connected profile proves pre-tool blocking for the covered operation. Careful mode may narrow the posture, but it is not a new authority tier.
 

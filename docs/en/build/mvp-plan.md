@@ -298,7 +298,7 @@ Kernel Smoke may pass with only the selected MVP-0 through early MVP-3 subset ab
 |---|---|
 | MVP-0 | Doctor/readiness can show runtime home, project state, artifact store, reference surface, MCP availability, and idle state. |
 | MVP-1 | Status, intake, and next-action reads can show the active Task, Journey/Decision state, and non-authoritative guidance without mutating state. |
-| MVP-2 | `prepare_write` can explain missing scope, out-of-scope paths, sensitive approval needs, stale baseline, unresolved decisions, and compatible Write Authorization creation. |
+| MVP-2 | `prepare_write` can explain missing scope, out-of-scope paths, sensitive-action Approval needs, stale baseline, unresolved decisions, and compatible Write Authorization creation. |
 | MVP-3 | `record_run` consumes authority, Runs cite artifacts, evidence updates, projection freshness is visible, and reconcile items appear for managed drift. |
 | MVP-4 | Verification, Manual QA, residual-risk visibility, acceptance, and `close_task` blockers explain whether the Task can close. |
 | MVP-5 | Doctor, recover, reconcile, export, artifact integrity, and conformance fixtures prove the same Core state and keep later automation outside the MVP boundary. |

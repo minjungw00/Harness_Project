@@ -100,7 +100,7 @@ Decision Packet은 특정 사용자 소유 판단이 진행, 쓰기, 닫기, 예
 
 ## Write Authorization
 
-에이전트가 로그인 코드를 수정할 준비가 되었습니다. Harness는 활성 Change Unit이 있는지, 대상 경로가 범위 안인지, 필요한 승인이 있는지, 먼저 풀어야 하는 결정이 있는지 확인해야 합니다.
+에이전트가 로그인 코드를 수정할 준비가 되었습니다. Harness는 활성 Change Unit이 있는지, 대상 경로가 범위 안인지, 필요한 Approval이 있는지, 먼저 풀어야 하는 결정이 있는지 확인해야 합니다.
 
 Write Authorization은 지금 제품 파일 쓰기를 진행해도 되는지에 대한 Harness의 판단입니다. 현재 사양 용어로는 `prepare_write`가 제품 파일 쓰기 판단 지점입니다.
 

@@ -6,7 +6,7 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 목표는 현재 문서가 독자에게 읽기 쉽고, 세부 계약의 위치가 분명하며, 영어와 한국어 문서가 같은 의미를 유지하도록 돕는 것입니다.
 
-이 가이드는 문서 유지보수만 다룹니다. 런타임 동작, 서버 구현, 제품 상태 변경, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data, 근거 기록, QA 결과, 수락 결정, Task 닫기를 승인하거나 대체하지 않습니다.
+이 문서는 Maintain 문서입니다. 문서 유지보수만 다루며, 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 제품 상태 변경, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data, 근거 기록, QA 결과, 수락 결정, Task 닫기를 승인하거나 대체하지 않습니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
 
 ## 이런 때 읽기
 
@@ -147,7 +147,7 @@ Runtime conformance fixture body shape, assertion mode, isolated execution behav
 
 | 경계 | 정확한 문구의 owner |
 |---|---|
-| Context Index와 retrieved/indexed context | Future feature 권한은 [Roadmap: Context Index](../roadmap.md#context-index), connector context 처리는 [Agent Integration: Context Push/Pull Principles](../reference/agent-integration.md#context-pushpull-principles) |
+| Context Index와 retrieved/indexed context | Future feature 경계는 [Roadmap: Context Index](../roadmap.md#context-index), connector context 처리는 [Agent Integration: Context Push/Pull Principles](../reference/agent-integration.md#context-pushpull-principles) |
 | Local Derived Metrics | [Roadmap: Local Derived Metrics](../roadmap.md#local-derived-metrics) |
 | Role Lens | [Agent Integration: Role Lens 동작](../reference/agent-integration.md#role-lens-동작) |
 | Review Stages | [Design Quality Policies: Two-stage Review Display](../reference/design-quality-policies.md#two-stage-review-display) |

@@ -121,14 +121,14 @@ updated_at: 2026-05-06T10:30:00+09:00
 - suggested PR checklist:
 - suggested deploy checklist:
 - suggested rollback or monitoring notes:
-- external authority reminder: Deployment, merge, approval, production monitoring, QA or verification waiver, gate satisfaction, final acceptance, residual-risk acceptance, assurance upgrade, and Task close remain outside this report.
+- external authority reminder: Deployment, merge, Approval, production monitoring, QA or verification waiver, gate satisfaction, final acceptance, residual-risk acceptance, assurance upgrade, and Task close remain outside this report.
 ````
 
 ## Notes
 
 This template is a rendered shape, not canonical state. `EXPORT` is a `ProjectionKind` only; export snapshots and components remain artifacts linked to owner records or projection refs.
 
-Release Handoff display in `EXPORT` should keep self-checked work, `detached_verified`, verification waiver, QA waiver, and risk-accepted close separate, with refs or explicit absence. The export may preserve those displays, but it does not grant approval, satisfy gates, accept results, accept residual risk, waive QA or verification, upgrade assurance, or close the Task.
+Release Handoff display in `EXPORT` should keep self-checked work, `detached_verified`, verification waiver, QA waiver, and risk-accepted close separate, with refs or explicit absence. The export may preserve those displays, but it does not grant Approval, satisfy gates, accept results, accept residual risk, waive QA or verification, upgrade assurance, or close the Task.
 
 `EXPORT` must not embed raw secrets, PII, sensitive logs, network traces, screenshots, or other sensitive artifact bodies by default. Large or sensitive artifacts are listed by `ArtifactRef`; raw files are included only when policy and retention allow them, and `secret_omitted` or `blocked` entries stay represented by refs and notes.
 

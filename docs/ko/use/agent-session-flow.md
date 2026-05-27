@@ -303,7 +303,7 @@ Feedback Loop는 selected loop와 loop finding을 위한 기준 support-record p
 
 ## AFK 작업과 public commitment
 
-사용자가 자리를 비운 동안 계속하라고 했더라도, 그것은 이미 기록된 latitude를 쓰라는 뜻이지 새 권한을 만든다는 뜻이 아닙니다. 에이전트는 active Change Unit, active Autonomy Boundary, granted sensitive approvals, 각 제품 파일 쓰기에 맞는 `prepare_write` / Write Authorization 안에서만 계속할 수 있습니다.
+사용자가 자리를 비운 동안 계속하라고 했더라도, 그것은 이미 기록된 latitude를 쓰라는 뜻이지 새 권한을 만든다는 뜻이 아닙니다. 에이전트는 active Change Unit, active Autonomy Boundary, granted sensitive-action Approvals, 각 제품 파일 쓰기에 맞는 `prepare_write` / Write Authorization 안에서만 계속할 수 있습니다.
 
 Scope expansion, Approval 없는 새 sensitive action, Autonomy Boundary breach, residual-risk acceptance, final acceptance, QA 또는 verification waiver, public API 또는 module contract 변경, public meaning에 영향을 주는 domain-language change, release/support promise, 사용자나 다른 시스템이 의존할 수 있는 다른 public commitment 전에는 멈추고 가장 작은 unblocker를 보여줘야 합니다.
 

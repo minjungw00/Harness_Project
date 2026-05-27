@@ -72,13 +72,13 @@ Next safe action: decide failed-login UX before wiring final UI behavior
 Decision needed: failed-login message
 Blocked by: user-owned product judgment
 Smallest unblocker: choose one option from DEC-014
-Checked: current state read from source_state_version v42; no write, evidence, or QA refs yet
+Checked: current Core state v42 read; no write, evidence, or QA refs yet
 Remaining: write-authority check, implementation evidence, final copy/layout QA, and close decision
 You decide: failed-login message in DEC-014
 Write permission: not requested yet; no Write Authorization ref
 Evidence/checks: none yet; no Evidence Manifest ref
 Manual QA / risk / acceptance: likely Manual QA for final copy and layout; no known close-relevant residual risk recorded yet
-Capability/status: cooperative surface; readable status current as of source_state_version v42
+Capability/status: cooperative surface; readable status current from source_state_version v42
 ```
 
 Look first for the next safe action and the smallest unblocker. A blocker should say who owns the next move: user-owned when it needs your product, material technical, Approval, QA, risk, or acceptance judgment; agent-resolvable when the agent can refresh state, collect evidence, rerun a check, retry `prepare_write`, or narrow scope without changing your decision.
@@ -145,7 +145,7 @@ Harness may use several related labels for this:
 | Autonomy Boundary | The judgment the agent may exercise alone inside that scope. It is not write authority and does not grant paths, tools, commands, network, secrets, or sensitive categories. |
 | Approval | Permission for a sensitive step. It is not acceptance, correctness, or user-owned judgment. |
 | Decision Packet | The recorded path for user-owned product, material technical, waiver, acceptance, residual-risk, or reconcile judgment. It is not sensitive-action permission unless it is approval-shaped and linked to Approval. |
-| Acceptance | Your final judgment that the result is acceptable when the task path requires it. It does not replace evidence, QA, verification, approval, or residual-risk acceptance. |
+| Acceptance | Your final judgment that the result is acceptable when the task path requires it. It does not replace evidence, QA, verification, Approval, or residual-risk acceptance. |
 | Residual-risk acceptance | Your judgment that known remaining risk is acceptable for this close. It is not a normal no-risk close and does not upgrade assurance. |
 | Write Authorization | A one-attempt write allowance from `prepare_write`. It does not expand the scope or Autonomy Boundary. |
 
@@ -342,7 +342,7 @@ If the agent uses words like guard, freeze, or careful mode, it should explain t
 
 The exact label may be guarantee level or surface capability. It is display and risk context, not Approval, verification, QA, acceptance, residual-risk acceptance, close, or a kernel gate. The useful question is still plain: "Can this surface prevent the action before it happens, or only detect a problem afterward?"
 
-AFK or "continue while I am away" instructions do not expand authority. Careful mode also does not create a new authority tier; it just asks the agent to use a stricter posture. The agent may continue only inside the active Change Unit, Autonomy Boundary, granted sensitive approvals, and compatible write authority. It should stop before scope expansion, public commitments such as API/module contracts or release promises, residual-risk acceptance, final acceptance, QA or verification waivers, or any new user-owned product or material technical judgment. On cooperative or detective surfaces, that stop is a held instruction or later detection path, not a claim of hard pre-execution blocking.
+AFK or "continue while I am away" instructions do not expand authority. Careful mode also does not create a new authority tier; it just asks the agent to use a stricter posture. The agent may continue only inside the active Change Unit, Autonomy Boundary, granted sensitive-action Approvals, and compatible write authority. It should stop before scope expansion, public commitments such as API/module contracts or release promises, residual-risk acceptance, final acceptance, QA or verification waivers, or any new user-owned product or material technical judgment. On cooperative or detective surfaces, that stop is a held instruction or later detection path, not a claim of hard pre-execution blocking.
 
 ### Role Lens requests
 

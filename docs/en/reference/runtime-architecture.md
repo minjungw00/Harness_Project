@@ -139,7 +139,7 @@ repo/
 ```
 
 
-The repository may hold generated `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, and other report projections. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; accepted changes become state only through reconcile and a Core state-changing action.
+The repository may hold generated `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, and other report projections. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; human edits become state only when reconcile routes them into a Core state-changing action.
 
 ## Harness Server / Installation
 
@@ -327,7 +327,7 @@ The harness reports guarantee levels to make enforcement strength honest:
 
 Guarantee display should name both sides of the boundary: what the connected profile can actually block before execution, and what it can only detect after action. A surface name, product name, recipe name, or friendly mode label is never proof of capability; the declaration must come from the actual host/profile capability profile and its current proof basis. Guard, freeze, and careful-mode labels inherit the connected profile's proven capability; they do not upgrade a cooperative or detective profile into preventive blocking, and they do not create authority tiers.
 
-MVP reference behavior is cooperative/detective unless the connected surface has a concrete, fixture-proven pre-tool guard for covered operations or an isolation layer. Native hook expansion, advanced sidecar watching, and broad isolated execution are later roadmap items unless explicitly implemented for the MVP reference surface. Until promoted through owner docs, they may improve observation or display only; they do not authorize writes, satisfy gates, grant approval, prove verification or QA, record acceptance, or replace Core authority.
+MVP reference behavior is cooperative/detective unless the connected surface has a concrete, fixture-proven pre-tool guard for covered operations or an isolation layer. Native hook expansion, advanced sidecar watching, and broad isolated execution are later roadmap items unless explicitly implemented for the MVP reference surface. Until promoted through owner docs, they may improve observation or display only; they do not authorize writes, satisfy gates, grant Approval, prove verification or QA, record acceptance, or replace Core authority.
 
 Guarantee level is display and risk context. It is not Approval, Write Authorization, verification, QA, acceptance, residual-risk acceptance, close readiness, or a kernel gate.
 

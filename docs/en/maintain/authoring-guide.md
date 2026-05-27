@@ -6,7 +6,7 @@ Use this guide when you add, rewrite, split, rename, or review Harness documenta
 
 It helps you keep the current documentation readable for the intended reader, clear about where each kind of detail belongs, and aligned between English and Korean.
 
-This guide governs documentation maintenance only. It does not authorize runtime behavior, server implementation, product state changes, generated operational files, executable fixture files, runtime data, evidence records, QA results, acceptance decisions, or task closure.
+This is maintenance documentation. It governs documentation maintenance only and does not authorize runtime/server implementation, product state changes, generated operational files, executable fixtures, runtime data, evidence records, QA results, acceptance decisions, or task closure before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless owner docs promote and prove them.
 
 ## Read this when
 
@@ -147,7 +147,7 @@ For the non-authority boundaries that are easy to repeat, use these owners:
 
 | Boundary | Owner for exact wording |
 |---|---|
-| Context Index and retrieved/indexed context | [Roadmap: Context Index](../roadmap.md#context-index) for future feature authority; [Agent Integration: Context Push/Pull Principles](../reference/agent-integration.md#context-pushpull-principles) for connector context handling |
+| Context Index and retrieved/indexed context | [Roadmap: Context Index](../roadmap.md#context-index) for future feature boundary; [Agent Integration: Context Push/Pull Principles](../reference/agent-integration.md#context-pushpull-principles) for connector context handling |
 | Local Derived Metrics | [Roadmap: Local Derived Metrics](../roadmap.md#local-derived-metrics) |
 | Role Lens | [Agent Integration: Role Lens Behavior](../reference/agent-integration.md#role-lens-behavior) |
 | Review Stages | [Design Quality Policies: Two-stage Review Display](../reference/design-quality-policies.md#two-stage-review-display) |

@@ -4,6 +4,8 @@
 
 Use `RUN-SUMMARY` when `record_run` commits an execution run and Harness needs a readable summary of what ran, what changed, what checks or validators reported, and which artifacts hold the raw evidence.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - run record

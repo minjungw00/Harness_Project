@@ -4,6 +4,8 @@
 
 Use `JOURNEY-CARD` when a current-position card needs to show where the work is, what is in and out of scope, what is blocking the next move, what judgment is pending, the Autonomy Boundary, Write Authority Summary, acceptance criteria, evidence and checks, residual risk, close context, gates, and projection freshness.
 
+This is template reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+
 ## Source records
 
 - current Task state and gates

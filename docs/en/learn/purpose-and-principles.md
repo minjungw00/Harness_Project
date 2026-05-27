@@ -74,7 +74,7 @@ Third, readable documents are projections and proposal areas. They help humans i
 
 Without Harness, the work journey can disappear into chat. A later reader cannot tell what the current state is, what the next action should be, which decisions are open, or what evidence supports the result. Harness responds by recording task state, change scope, decisions, evidence, QA, acceptance, residual risk, and close status, then generating readable views from those records.
 
-Without Harness, scope and approval can drift. A small request can become a broad rewrite, or a sensitive action can happen without explicit approval. Harness responds by requiring product writes to stay inside scoped Change Units and by requiring approval for sensitive categories.
+Without Harness, scope and Approval can drift. A small request can become a broad rewrite, or a sensitive action can happen without explicit sensitive-action Approval. Harness responds by requiring product writes to stay inside scoped Change Units and by requiring Approval for sensitive categories.
 
 Without Harness, evidence can be too weak or too temporary. Tests, logs, screenshots, and run summaries can vanish with the session or remain as unstructured claims. Harness responds by tying evidence to the task and storing durable artifacts where evidence is required.
 

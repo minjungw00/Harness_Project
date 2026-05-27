@@ -72,13 +72,13 @@ Harness는 작업을 이해할 수 있게 유지해야 하며, 대화나 그 주
 필요한 결정: 로그인 실패 메시지
 막힘: 사용자 소유 제품 판단
 가장 작은 해소 방법: DEC-014에서 선택지 하나 고르기
-확인됨: source_state_version v42에서 current state를 읽음; 아직 write, evidence, QA ref 없음
+확인됨: current Core state v42를 읽음; 아직 write, evidence, QA ref 없음
 남은 것: 쓰기 권한 확인, 구현 근거, 최종 문구/레이아웃 QA, 닫기 판단
 사용자 결정: DEC-014의 로그인 실패 메시지
 쓰기 권한: 아직 요청하지 않음; Write Authorization ref 없음
 근거/확인: 아직 없음; Evidence Manifest ref 없음
 Manual QA / 위험 / 수락: 최종 문구와 레이아웃에 Manual QA가 필요할 가능성 있음; 알려진 닫기 관련 남은 위험은 아직 없음
-능력/상태: cooperative 접점; source_state_version v42 기준 읽기용 상태 current
+능력/상태: cooperative 접점; source_state_version v42에서 온 읽기용 상태 current
 ```
 
 먼저 다음 안전한 행동과 가장 작은 해소 방법을 봅니다. 막힘은 다음 움직임을 누가 소유하는지 말해야 합니다. 제품 판단, 중요한 기술 판단, Approval, QA, 남은 위험을 받아들이는 판단, 최종 수락처럼 사용자가 판단해야 하면 사용자 소유 막힘입니다. 상태 refresh, 근거 수집, check 재실행, `prepare_write` 재시도, 범위 축소처럼 에이전트가 사용자 판단을 바꾸지 않고 처리할 수 있으면 에이전트가 해소 가능한 막힘입니다.
@@ -344,7 +344,7 @@ MCP에 닿지 못하는 상태(MCP unavailable)도 별개입니다. 에이전트
 
 정확한 라벨은 보장 수준(guarantee level) 또는 접점 능력(surface capability)일 수 있습니다. 이것은 표시와 risk context이지 Approval, verification, QA, acceptance, residual-risk acceptance, close, kernel gate가 아닙니다. 사용자가 확인해야 할 질문은 여전히 쉽습니다. "이 접점이 그 행동을 실행 전에 막을 수 있는가, 아니면 실행 뒤에 문제를 감지할 수 있을 뿐인가?"
 
-AFK 또는 "내가 없는 동안 계속해"라는 지시는 권한을 넓히지 않습니다. Careful mode도 새 authority tier를 만들지 않으며 더 엄격한 진행 자세를 요청할 뿐입니다. 에이전트는 활성 Change Unit, Autonomy Boundary, granted sensitive approvals, 호환되는 write authority 안에서만 계속할 수 있습니다. Scope expansion, API/module contract나 release promise 같은 public commitment, residual-risk acceptance, final acceptance, QA 또는 verification waiver, 새 사용자 소유 제품 판단 또는 중요한 기술 판단 전에는 멈춰야 합니다. Cooperative 또는 detective surface에서 그 멈춤은 지시에 따른 보류나 사후 detection 경로이지, 강한 실행 전 차단이라고 주장하면 안 됩니다.
+AFK 또는 "내가 없는 동안 계속해"라는 지시는 권한을 넓히지 않습니다. Careful mode도 새 authority tier를 만들지 않으며 더 엄격한 진행 자세를 요청할 뿐입니다. 에이전트는 활성 Change Unit, Autonomy Boundary, granted sensitive-action Approvals, 호환되는 write authority 안에서만 계속할 수 있습니다. Scope expansion, API/module contract나 release promise 같은 public commitment, residual-risk acceptance, final acceptance, QA 또는 verification waiver, 새 사용자 소유 제품 판단 또는 중요한 기술 판단 전에는 멈춰야 합니다. Cooperative 또는 detective surface에서 그 멈춤은 지시에 따른 보류나 사후 detection 경로이지, 강한 실행 전 차단이라고 주장하면 안 됩니다.
 
 ### Role Lens 요청
 

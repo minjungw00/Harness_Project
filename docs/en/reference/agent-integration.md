@@ -346,7 +346,7 @@ If MCP is unavailable, the connector must not claim authoritative state updates.
 
 `MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible from that call path. A connector must not invent Core state, Write Authorization, gate status, evidence, acceptance, residual-risk acceptance, or close readiness from chat memory, generated files, cached projections, old status/next recommendations, or operator prose while Core is unreachable. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools. Product/runtime/code writes hold until MCP is reconnected or diagnosed, unless the work is an explicit pre-MVP documentation-authoring batch under `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. Cooperative surfaces hold by instruction; detective surfaces may also report after-action mismatches; stronger profiles may block before execution only when a fixture-proven guard covers the operation or when an isolation boundary is actually in use. That override is a documentation-maintainer override only; it is not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition.
 
-If MCP works but pre-tool guard is weak, low-risk direct work may proceed with cooperative `prepare_write` and detective changed-path validation. Medium/high-risk work should require stricter validation, a fixture-proven sidecar guard, explicit approval, detached verification, or isolation.
+If MCP works but pre-tool guard is weak, low-risk direct work may proceed with cooperative `prepare_write` and detective changed-path validation. Medium/high-risk work should require stricter validation, a fixture-proven sidecar guard, explicit sensitive-action Approval, detached verification, or isolation.
 
 If native capture is unavailable, the connector should fall back to manual artifact capture: named artifact refs for diffs, logs, screenshots, workflow notes, command output, or QA notes supplied by the user or operator. If native isolation or fresh evaluator support is unavailable, it should fall back to a manual verification bundle with acceptance criteria, changed files, relevant refs, artifact refs, freshness state, and forbidden patterns. These fallbacks are explicit evidence routes, not upgrades to preventive or isolated guarantee levels.
 
@@ -391,7 +391,7 @@ Same-session review may be useful self-checking, but it is not detached verifica
 
 ## AFK and Public Commitment Display
 
-AFK, unattended, or "continue while I am away" instructions are connector display and posture concerns; they do not create new authority. A connector should keep AFK work inside the active Change Unit, active Autonomy Boundary, granted sensitive approvals, and compatible `prepare_write` / Write Authorization before actual product writes.
+AFK, unattended, or "continue while I am away" instructions are connector display and posture concerns; they do not create new authority. A connector should keep AFK work inside the active Change Unit, active Autonomy Boundary, granted sensitive-action Approvals, and compatible `prepare_write` / Write Authorization before actual product writes.
 
 The surface should stop and show the smallest unblocker before scope expansion, an Autonomy Boundary breach, a new sensitive action without Approval, residual-risk acceptance, final acceptance, QA or verification waiver, public API or module contract change, release/support promise, documentation promise that changes what readers may rely on, or another public commitment that requires user-owned product or material technical judgment.
 
@@ -431,12 +431,12 @@ Overview scenarios:
 - one blocking question with recommendation and uncertainty when available
 - Decision Packet shown instead of broad approval for blocking user-owned judgment
 - Autonomy Boundary breach stops or routes to Decision Packet
-- AFK work remains covered by active Change Unit scope, Autonomy Boundary latitude, any granted sensitive approval that applies, and compatible `prepare_write` / Write Authorization before actual product writes, with stop wording matched to the proven guarantee level
+- AFK work remains covered by active Change Unit scope, Autonomy Boundary latitude, any granted sensitive-action Approval that applies, and compatible `prepare_write` / Write Authorization before actual product writes, with stop wording matched to the proven guarantee level
 - public commitments route to Decision Packet or another existing owner path when they require user-owned product or material technical judgment
 - `prepare_write` allowed and blocked paths
 - Write Authorization created for allowed writes and exposed through Write Authority Summary
 - write-capable `record_run` consumes a compatible Write Authorization
-- sensitive approval request, granted, denied, and expired paths
+- sensitive-action Approval request, granted, denied, and expired paths
 - `record_run` with artifacts and evidence update
 - direct result projection
 - verification launch or manual verification bundle

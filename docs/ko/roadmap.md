@@ -89,7 +89,7 @@ MVP에는 하나의 기준 접점과 detached verification bundle/manual evaluat
 
 Native hook은 이를 지원하는 접점에서 더 강한 pre-tool guard, command interception, file write blocking, richer artifact capture를 제공할 수 있습니다.
 
-Hook API가 접점마다 다르므로 later입니다. MVP는 기준 접점이 실제로 지원할 때만 concrete hook을 사용할 수 있습니다. 그 외에는 native hook이 capability-dependent enhancement입니다. Owner 문서가 명시적으로 승격하기 전까지 Native Hook Expansion은 권한이 없습니다. Hook은 `prepare_write`를 보조하거나 artifact를 capture하거나 guard 표시를 개선할 수 있지만, Core 권한 경로를 대체하거나, approval을 부여하거나, gate를 충족하거나, 지원하지 않는 접점을 기본적으로 MVP 실패로 만들면 안 됩니다.
+Hook API가 접점마다 다르므로 later입니다. MVP는 기준 접점이 실제로 지원할 때만 concrete hook을 사용할 수 있습니다. 그 외에는 native hook이 capability-dependent enhancement입니다. Owner 문서가 명시적으로 승격하기 전까지 Native Hook Expansion은 권한이 없습니다. Hook은 `prepare_write`를 보조하거나 artifact를 capture하거나 guard 표시를 개선할 수 있지만, Core 권한 경로를 대체하거나, Approval을 부여하거나, gate를 충족하거나, 지원하지 않는 접점을 기본적으로 MVP 실패로 만들면 안 됩니다.
 
 ### Preventive Guard Expansion
 
@@ -107,7 +107,7 @@ MVP는 cooperative `prepare_write`, git diff check, artifact registration, detec
 
 Parallel Change Unit orchestration은 work를 여러 active implementation lane으로 나누고, dependency DAG를 관리하고, baseline을 분리하고, 동시에 생긴 근거를 조정할 수 있습니다.
 
-Parallel execution은 stable lock, baseline freshness, approval scope composition, artifact partitioning, close semantics에 의존하므로 later입니다. Owner 문서가 명시적으로 승격하기 전까지 dependency DAG 지원은 metadata-only로 남고, concurrent lane scheduler는 MVP에 필요하지 않습니다.
+Parallel execution은 stable lock, baseline freshness, Approval scope composition, artifact partitioning, close semantics에 의존하므로 later입니다. Owner 문서가 명시적으로 승격하기 전까지 dependency DAG 지원은 metadata-only로 남고, concurrent lane scheduler는 MVP에 필요하지 않습니다.
 
 ### Context Index
 
@@ -131,7 +131,7 @@ flowchart LR
 
 Local Derived Metrics는 `state.sqlite.task_events`, run, validator result, projection job, reconcile item에서 diagnostic rate, count, duration, guard-trigger summary를 파생할 수 있습니다.
 
-Metric은 권한이 아니라 파생값이므로 later입니다. Owner 문서가 명시적으로 승격하기 전까지 local metric은 읽기 전용 진단 표시입니다. 사용자가 process bottleneck, 보고 공백, 반복되는 운영 패턴을 찾는 데 도움을 줄 수 있지만 diagnostic-only입니다. Metric 표시는 상태 변경, gate 충족, 쓰기 권한, 승인 부여, 근거 생성, projection 대기열 추가 또는 새로고침, projection 최신성 변경, close readiness 또는 구현 준비 상태 변경, verification 수행 또는 기록, QA 기록, QA 또는 verification 면제, 남은 위험을 받아들이는 판단 기록, 결과 수락, assurance level 상승, Task close를 하면 안 됩니다.
+Metric은 권한이 아니라 파생값이므로 later입니다. Owner 문서가 명시적으로 승격하기 전까지 local metric은 읽기 전용 진단 표시입니다. 사용자가 process bottleneck, 보고 공백, 반복되는 운영 패턴을 찾는 데 도움을 줄 수 있지만 diagnostic-only입니다. Metric 표시는 상태 변경, gate 충족, 쓰기 권한, Approval 부여, 근거 생성, projection 대기열 추가 또는 새로고침, projection 최신성 변경, close readiness 또는 구현 준비 상태 변경, verification 수행 또는 기록, QA 기록, QA 또는 verification 면제, 남은 위험을 받아들이는 판단 기록, 결과 수락, assurance level 상승, Task close를 하면 안 됩니다.
 
 ```mermaid
 flowchart LR

@@ -4,7 +4,7 @@
 
 Use this guide when editing English and Korean Harness documentation together.
 
-This is maintenance guidance for bilingual documentation. It does not define runtime behavior, conformance pass/fail, generated outputs, evidence, QA, acceptance, close readiness, or implementation readiness.
+This is maintenance documentation for bilingual documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or product state changes before the documentation set is accepted for implementation planning, and it does not define conformance pass/fail, evidence, QA, acceptance, close readiness, or implementation readiness. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless owner docs promote and prove them.
 
 ## Read this when
 

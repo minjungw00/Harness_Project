@@ -89,7 +89,7 @@ Later because MVP only needs one reference surface plus detached verification bu
 
 Native hooks can provide stronger pre-tool guards, command interception, file write blocking, or richer artifact capture in surfaces that support them.
 
-Later because hook APIs vary by surface. MVP may use a concrete hook only when the reference surface actually supports it; otherwise native hooks are a capability-dependent enhancement. Until explicitly promoted through owner docs, Native Hook Expansion is non-authoritative: a hook can support `prepare_write`, capture artifacts, or improve guard display, but it must not replace the Core authority path, grant approval, satisfy gates, or make unsupported surfaces fail the MVP by default.
+Later because hook APIs vary by surface. MVP may use a concrete hook only when the reference surface actually supports it; otherwise native hooks are a capability-dependent enhancement. Until explicitly promoted through owner docs, Native Hook Expansion is non-authoritative: a hook can support `prepare_write`, capture artifacts, or improve guard display, but it must not replace the Core authority path, grant Approval, satisfy gates, or make unsupported surfaces fail the MVP by default.
 
 ### Preventive Guard Expansion
 
@@ -107,7 +107,7 @@ Later because MVP can start with cooperative `prepare_write`, git diff checks, a
 
 Parallel Change Unit orchestration can split work into multiple active implementation lanes, manage dependency DAGs, isolate baselines, and reconcile concurrent evidence.
 
-Later because parallel execution depends on stable locks, baseline freshness, approval scope composition, artifact partitioning, and close semantics. Until explicitly promoted through owner docs, dependency DAG support remains metadata-only and no concurrent lane scheduler is required for MVP.
+Later because parallel execution depends on stable locks, baseline freshness, Approval scope composition, artifact partitioning, and close semantics. Until explicitly promoted through owner docs, dependency DAG support remains metadata-only and no concurrent lane scheduler is required for MVP.
 
 ### Context Index
 
@@ -131,7 +131,7 @@ In addition to the promotion rule, a Context Index should become v1 work only if
 
 Local Derived Metrics can derive diagnostic rates, counts, durations, and guard-trigger summaries from `state.sqlite.task_events`, runs, validator results, projection jobs, and reconcile items.
 
-Later because metrics are derived values, not authority. Until explicitly promoted through owner docs, local metrics are read-only diagnostic displays. They may help users spot process bottlenecks, reporting gaps, and recurring operational patterns, but they are diagnostic only. Metric readouts must not mutate state, satisfy gates, authorize writes, grant approval, create evidence, enqueue or refresh projections, change projection freshness, change close readiness or implementation readiness, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, or close Tasks.
+Later because metrics are derived values, not authority. Until explicitly promoted through owner docs, local metrics are read-only diagnostic displays. They may help users spot process bottlenecks, reporting gaps, and recurring operational patterns, but they are diagnostic only. Metric readouts must not mutate state, satisfy gates, authorize writes, grant Approval, create evidence, enqueue or refresh projections, change projection freshness, change close readiness or implementation readiness, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, or close Tasks.
 
 ```mermaid
 flowchart LR

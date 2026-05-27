@@ -206,13 +206,13 @@ capture_guard_isolation_options:
   - sidecar adapter for changed-file or command observation
   - manual artifact capture when task, wrapper, or sidecar capture is unavailable
   - profile-specific guard only when the host is fixture-proven to block covered operations before execution
-  - explicit approval card display for sensitive changes
+  - explicit Approval Card display for sensitive actions
 common_fallbacks:
   - VS Code task wrapper
   - sidecar adapter
   - manual artifact capture
   - manual verification bundle
-  - explicit approval card
+  - explicit Approval Card
   - cooperative chat instruction for profiles without wrapper or sidecar support
 conformance_risks:
   - cloud and IDE profiles may differ materially

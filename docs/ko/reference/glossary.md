@@ -52,11 +52,11 @@ MVP 최종 수락은 Decision Packet user decision, `task_gates.acceptance_gate`
 
 ### Approval
 
-정의된 scope 안에서 sensitive action을 진행할 수 있도록 허용하는 사전 user decision입니다. Approval은 paths, tools, commands 또는 command classes, network targets, secret scope, baseline, sensitive categories, expiry conditions에 묶입니다. Approval이 요청되면 Core는 approval-shaped Decision Packet과 linked Approval record를 통해 user judgment를 capture합니다. Granted approval이 있어도 Write Authorization이 생기려면 이후 compatible `prepare_write` result가 필요합니다. Approval은 sensitive-action permission일 뿐입니다. 사용자 소유 제품 판단이나 중요한 기술 판단을 해소하지 않고, correctness를 증명하지 않으며, final acceptance를 기록하거나 Residual Risk를 받아들이거나 Decision Packet을 대체하지 않습니다.
+정의된 scope 안에서 sensitive action을 진행할 수 있도록 허용하는 사전 user decision입니다. Approval은 paths, tools, commands 또는 command classes, network targets, secret scope, baseline, sensitive categories, expiry conditions에 묶입니다. Approval이 요청되면 Core는 approval-shaped Decision Packet과 linked Approval record를 통해 user judgment를 capture합니다. Granted Approval이 있어도 Write Authorization이 생기려면 이후 compatible `prepare_write` result가 필요합니다. Approval은 sensitive-action permission일 뿐입니다. 사용자 소유 제품 판단이나 중요한 기술 판단을 해소하지 않고, correctness를 증명하지 않으며, final acceptance를 기록하거나 Residual Risk를 받아들이거나 Decision Packet을 대체하지 않습니다.
 
 ### Approval Gate
 
-Sensitive-change approval을 위한 kernel gate입니다. Sensitive categories가 있을 때만 required입니다. Granted approval은 correctness를 증명하지 않고, acceptance를 뜻하지 않으며, 사용자 소유 판단을 해소하거나 Write Authorization을 만들지 않습니다.
+Sensitive-action Approval을 위한 kernel gate입니다. Sensitive categories가 있을 때만 required입니다. Granted Approval은 correctness를 증명하지 않고, acceptance를 뜻하지 않으며, 사용자 소유 판단을 해소하거나 Write Authorization을 만들지 않습니다.
 
 ### Artifact
 
@@ -70,7 +70,7 @@ Artifact store에 등록된 raw artifact file을 가리키는 structured pointer
 
 추가 user judgment 없이 agent가 진행할 수 있는 사용자 소유 판단 경계를 기록하는 Change Unit semantics입니다. 쉽게 말해 active Change Unit 안에서 agent가 무엇을 혼자 판단해도 되는지 말합니다. 일상적인 구현 세부사항은 경계 안에 있을 수 있지만, public API 또는 module contract 변경, security 또는 privacy trade-off, UX 또는 제품 동작 trade-off, 중요한 dependency 또는 migration 방향, scope expansion, 남은 위험을 받아들이는 판단은 명시적인 user judgment가 필요하며 넓은 자율성에서 추론하면 안 됩니다.
 
-이는 scope grant나 write authority가 아니며 active Change Unit 밖의 paths, tools, commands, network targets, secret access, sensitive categories를 허가하지 않습니다. Decision Packet이 Autonomy Boundary update나 Change Unit update proposal을 허가할 수는 있지만, resulting write에는 여전히 compatible Change Unit scope와 sensitive categories에 필요한 sensitive-action approval이 필요합니다. 정확한 kernel behavior는 [Autonomy Boundary](kernel.md#autonomy-boundary)가 담당하고, policy placement는 [설계 품질 정책](design-quality-policies.md#autonomy-boundary-autonomy_boundary)이 담당합니다.
+이는 scope grant나 write authority가 아니며 active Change Unit 밖의 paths, tools, commands, network targets, secret access, sensitive categories를 허가하지 않습니다. Decision Packet이 Autonomy Boundary update나 Change Unit update proposal을 허가할 수는 있지만, resulting write에는 여전히 compatible Change Unit scope와 sensitive categories에 필요한 sensitive-action Approval이 필요합니다. 정확한 kernel behavior는 [Autonomy Boundary](kernel.md#autonomy-boundary)가 담당하고, policy placement는 [설계 품질 정책](design-quality-policies.md#autonomy-boundary-autonomy_boundary)이 담당합니다.
 
 ### Assurance
 
@@ -428,7 +428,7 @@ Spec Compliance Review와 Code Quality / Stewardship Review를 분리하는 mana
 
 ### Residual Risk
 
-Evidence, verification, QA, 결과 수락 work 이후에도 남는 known uncertainty, trade-off, limitation, unchecked condition을 위한 기준 close-relevant support record입니다. source refs, affected scope, applicable한 경우 related Decision Packet, visibility status, 받아들인 위험, follow-up requirement, close impact를 기록합니다. Known close-relevant Residual Risk는 successful acceptance 또는 close 전에 보여야 하며, known close-relevant risk가 없으면 `ResidualRiskSummary.status=none`으로 확인되어야 합니다. 사용자가 위험을 받아들이는 판단은 detached verification, Manual QA pass, sensitive approval, final acceptance를 만들지 않습니다. MVP에서 받아들인 위험은 Residual Risk record 위의 metadata/state이며 별도의 `accepted_risk` state record가 아닙니다.
+Evidence, verification, QA, 결과 수락 work 이후에도 남는 known uncertainty, trade-off, limitation, unchecked condition을 위한 기준 close-relevant support record입니다. source refs, affected scope, applicable한 경우 related Decision Packet, visibility status, 받아들인 위험, follow-up requirement, close impact를 기록합니다. Known close-relevant Residual Risk는 successful acceptance 또는 close 전에 보여야 하며, known close-relevant risk가 없으면 `ResidualRiskSummary.status=none`으로 확인되어야 합니다. 사용자가 위험을 받아들이는 판단은 detached verification, Manual QA pass, sensitive-action Approval, final acceptance를 만들지 않습니다. MVP에서 받아들인 위험은 Residual Risk record 위의 metadata/state이며 별도의 `accepted_risk` state record가 아닙니다.
 
 ### Risk Accepted Close
 
@@ -524,7 +524,7 @@ Trigger/input에서 domain logic, persistence 또는 state, caller/API 경계, o
 
 ### Waiver
 
-Policy가 허용하는 gate 또는 policy requirement에 대한 explicit recorded exception입니다. Waiver는 policy 또는 gate, Task와 Change Unit, reason, 받아들이는 위험, actor, 필요할 때 expiry 또는 follow-up, 영향받는 gate 또는 close impact를 이름 붙입니다. Verification 면제, design waiver, QA 면제는 정의된 rules 아래 허용됩니다. Successful completion을 위해 product-write scope, sensitive approval, required evidence coverage, required acceptance는 waived되지 않습니다. Verification waiver와 QA waiver는 assurance를 높이거나 생략된 check가 passed된 것처럼 만들지 않습니다.
+Policy가 허용하는 gate 또는 policy requirement에 대한 explicit recorded exception입니다. Waiver는 policy 또는 gate, Task와 Change Unit, reason, 받아들이는 위험, actor, 필요할 때 expiry 또는 follow-up, 영향받는 gate 또는 close impact를 이름 붙입니다. Verification 면제, design waiver, QA 면제는 정의된 rules 아래 허용됩니다. Successful completion을 위해 product-write scope, sensitive-action Approval, required evidence coverage, required acceptance는 waived되지 않습니다. Verification waiver와 QA waiver는 assurance를 높이거나 생략된 check가 passed된 것처럼 만들지 않습니다.
 
 ### Write Authorization
 
