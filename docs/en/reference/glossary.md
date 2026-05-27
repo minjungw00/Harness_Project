@@ -42,7 +42,7 @@ The degree to which harness behavior, projections, validators, and close decisio
 
 ### Acceptance
 
-The user's judgment that the result and remaining trade-offs are acceptable. Acceptance is separate from approval, assurance, verification, Manual QA, evidence sufficiency, and residual-risk acceptance. It does not authorize more writes or retroactively satisfy a missing check.
+The user's judgment that the result and remaining trade-offs are acceptable after close-relevant residual risk is visible or confirmed absent. Required final acceptance is recorded through the kernel acceptance path, including a Decision Packet user decision, `task_gates.acceptance_gate`, and `state.sqlite.task_events`. Acceptance is separate from approval, assurance, verification, Manual QA, evidence sufficiency, and residual-risk acceptance. It does not authorize more writes or retroactively satisfy a missing check.
 
 ### Acceptance Gate
 
@@ -52,7 +52,7 @@ MVP final acceptance is recorded through a Decision Packet user decision, `task_
 
 ### Approval
 
-A prior user decision allowing a sensitive change to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. When approval is requested, Core captures the user judgment through an approval-shaped Decision Packet and linked Approval record; granted approval still requires a later compatible `prepare_write` result before any Write Authorization exists.
+A prior user decision allowing a sensitive action to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. When approval is requested, Core captures the user judgment through an approval-shaped Decision Packet and linked Approval record; granted approval still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it does not resolve user-owned product or material technical judgment, prove correctness, record final acceptance, accept residual risk, or replace a Decision Packet.
 
 ### Approval Gate
 
@@ -70,7 +70,7 @@ A structured pointer to a raw artifact file registered in the artifact store, in
 
 The Change Unit semantics that record the user-owned judgment boundary inside which an agent may proceed without asking for additional user judgment. In plain terms, it says what the agent may decide alone inside the active Change Unit. Routine implementation details may be inside the boundary; public API or module contract changes, security or privacy trade-offs, UX or product behavior trade-offs, material dependency or migration direction, scope expansion, and residual-risk acceptance require explicit user judgment and must not be inferred from broad autonomy.
 
-It is not a scope grant or write authority and does not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A Decision Packet may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible scope and approval when sensitive categories apply.
+It is not a scope grant or write authority and does not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A Decision Packet may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible Change Unit scope and sensitive-action approval when sensitive categories apply. Exact kernel behavior is owned by [Autonomy Boundary](kernel.md#autonomy-boundary), with policy placement in [Design Quality Policies](design-quality-policies.md#autonomy-boundary-autonomy_boundary).
 
 ### Assurance
 
@@ -150,7 +150,7 @@ The Task-level aggregate gate for blocking user-owned judgment before progress, 
 
 ### Decision Packet
 
-A recorded decision-support packet for blocking user-owned judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Decision Packet record IDs use `DEC-*`. Its record-level status is owned by [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute) and the public `DecisionPacket` schema; relevant statuses feed the Task-level `decision_gate`. Its canonical form is kernel state. MVP visibility is required through Task/status/next/judgment-context and decision-packet surfaces; standalone `DEC` Markdown renderings are optional projections or proposal surfaces unless enabled. Public API/interface choices, architecture direction, domain-language conflicts, module boundary changes, waivers, acceptance, and residual-risk choices use this path when user-owned product judgment or material technical judgment blocks progress, writes, close, or a public commitment. Broad approval text does not satisfy a Decision Packet unless it answers the specific recorded route and option.
+A canonical kernel state record for blocking user-owned judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Decision Packet record IDs use `DEC-*`; record-level status is owned by [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute) and the public `DecisionPacket` schema, and relevant statuses feed the Task-level `decision_gate`. MVP visibility is required through Task/status/next/judgment-context and decision-packet surfaces; standalone `DEC` Markdown renderings are optional projections or proposal surfaces unless enabled. Public API/interface choices, architecture direction, domain-language conflicts, module boundary changes, waivers, acceptance, and residual-risk choices use this path when user-owned product judgment or material technical judgment blocks progress, writes, close, or a public commitment. Broad approval text does not satisfy a Decision Packet unless it answers the specific recorded route and option.
 
 ### Decision Request
 
@@ -190,7 +190,7 @@ A canonical structured record in `domain_terms` that stores a product term, mean
 
 ### Evidence
 
-Recorded support for claims about the work, such as diffs, logs, tests, run summaries, screenshots, Eval records, or Manual QA records. Evidence supports specific acceptance criteria, completion conditions, or close-relevant claims; it is not the agent merely saying the work is done.
+Recorded support for claims about the work, such as diffs, logs, tests, run summaries, screenshots, Eval records, Manual QA records, and registered artifact refs. Evidence supports specific acceptance criteria, completion conditions, or close-relevant claims through owner records such as Evidence Manifests and ArtifactRefs; it is not the agent merely saying the work is done, and it is not made sufficient by Markdown report prose alone.
 
 ### Evidence Gate
 
@@ -250,13 +250,13 @@ The user-facing and connector-facing display of the actual guarantee level for a
 
 ### Guarantee Level
 
-The strength of enforcement available for a connected surface or runtime path.
+The honest enforcement strength available for a connected surface or runtime path.
 
 ```text
 cooperative | detective | preventive | isolated
 ```
 
-Capability affects validator results, blocked reasons, and display; it is not a kernel gate.
+Capability affects validator results, blocked reasons, and display; it is not Approval, Write Authorization, verification, QA, acceptance, residual-risk acceptance, close readiness, or a kernel gate. Exact level meanings are owned by [Runtime Architecture](runtime-architecture.md#guarantee-levels).
 
 ### Guard
 
@@ -308,7 +308,7 @@ Later diagnostic-only metrics derived from local records such as `state.sqlite.t
 
 ### Manual QA
 
-Human inspection of experiential product quality such as UX, workflow, copy, visual output, accessibility, and product fit.
+Human inspection of experiential product quality such as UX, workflow, copy, visual output, accessibility, and product fit. Manual QA is recorded through the Manual QA record or a valid QA waiver path when required; browser smoke, screenshots, Browser QA artifacts, tests, or verifier notes may support context but are not Manual QA judgment by themselves. Exact gate behavior is owned by [QA Gate](kernel.md#qa-gate), with policy requirements in [Design Quality Policies](design-quality-policies.md#manual-qa-manual_qa).
 
 ### Manual Bundle
 
@@ -414,7 +414,7 @@ A non-authoritative skill or playbook surface that lets a user ask for a product
 
 A Markdown report generated from state records and artifact references, such as a Task report, approval report, run summary, evidence manifest report, Eval report, or direct-result report.
 
-The named report projection kinds are projections generated from state records and artifact refs; evidence-file authority stays with registered artifact files.
+The named report projection kinds are projections generated from state records and artifact refs; state authority stays with Core records and evidence-file authority stays with registered artifact files. Exact projection rules are owned by [Document Projection Reference](document-projection.md), and full rendered bodies are owned by [Template Reference](templates/README.md).
 
 ### Review Stages
 
@@ -426,11 +426,11 @@ The idempotency hash of a tool request, computed from canonical UTF-8 JSON cover
 
 ### Residual Risk
 
-A canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact. Residual risk must remain visible when it affects close, and user acceptance of risk does not create detached verification, Manual QA pass, sensitive approval, or final acceptance. Accepted risk is metadata/state on the Residual Risk record in MVP, not a separate `accepted_risk` state record.
+A canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact. Known close-relevant Residual Risk must be visible before any successful acceptance or close, or `ResidualRiskSummary.status=none` must confirm no known close-relevant risk. User acceptance of risk does not create detached verification, Manual QA pass, sensitive approval, or final acceptance. Accepted risk is metadata/state on the Residual Risk record in MVP, not a separate `accepted_risk` state record.
 
 ### Risk Accepted Close
 
-A successful close where the user accepts close-relevant residual risk, including verification risk when verification was waived. It uses `close_reason=completed_with_risk_accepted` and must not display `assurance_level=detached_verified`. User-facing summaries must keep it distinct from normal `completed_verified` or `completed_self_checked` close.
+A successful close where the user accepts visible close-relevant residual risk, including verification risk when verification was waived. It uses `close_reason=completed_with_risk_accepted`, requires accepted Residual Risk refs, and must not display `assurance_level=detached_verified`. User-facing summaries must keep it distinct from normal `completed_verified` or `completed_self_checked` close.
 
 ### Run
 
@@ -438,19 +438,19 @@ An execution attempt by an agent, evaluator, operator, or other actor against a 
 
 ### Scope Gate
 
-The kernel gate requiring product writes to be covered by an active scoped Change Unit. Scope is required for write-capable direct and work modes even when approval is not required.
+The kernel gate requiring product writes to be covered by an active scoped Change Unit. Scope is required for write-capable direct and work modes even when approval is not required. Scope Gate does not grant sensitive-action Approval, resolve user-owned judgment, or create Write Authorization; exact values and compatibility are owned by [Scope Gate](kernel.md#scope-gate).
 
 ### Severity Composition
 
-The policy-owned rule for merging multiple applicable task-shape defaults, policy contracts, and validator findings. The same concern is the same policy-relevant target, not the whole Task or merely the same validator ID. The rule keeps all findings visible, preserves impacts across different affected gates or blocker targets, and uses the strongest applicable impact only for competing impacts on the same concern. It affects validators, gates, write blockers, close blockers, waivers, and Decision Packet needs, while public primary `ToolError` selection remains API-owned.
+The policy-owned rule for merging multiple applicable task-shape defaults, policy contracts, and validator findings. The same concern is the same policy-relevant target, not the whole Task or merely the same validator ID. The rule keeps all findings visible, preserves impacts across different affected gates or blocker targets, and uses the strongest applicable impact only for competing impacts on the same concern. It affects validators, gates, write blockers, close blockers, waivers, and Decision Packet needs, while public primary `ToolError` selection remains API-owned. Exact policy behavior is owned by [Severity composition rule](design-quality-policies.md#severity-composition-rule).
 
 ### Shared Design
 
-The minimum recorded shared understanding of a task before implementation hardens into a plan: goal, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain/module/interface impact, and first Change Unit shape. Shared Design is not final approval, sensitive-action Approval, final acceptance, residual-risk acceptance, QA judgment, or Write Authorization. Markdown renderings of Shared Design are projections and proposal surfaces.
+The minimum recorded shared understanding of a task before implementation hardens into a plan: goal, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain/module/interface impact, and first Change Unit shape. Shared Design can support shaping and `design_gate` readiness, but it is not final approval, sensitive-action Approval, final acceptance, residual-risk acceptance, QA judgment, or Write Authorization. Markdown renderings of Shared Design are projections and proposal surfaces. Exact policy requirements are owned by [Design Quality Policies](design-quality-policies.md#shared-design-shared_design).
 
 ### Source-of-truth
 
-The authoritative source for a fact. In the harness, operational state is canonical in `state.sqlite` current records plus `state.sqlite.task_events`; raw evidence is canonical in the artifact store; Markdown documents are projections.
+The authoritative source for a fact. In Harness, operational state is canonical in `state.sqlite` current records plus `state.sqlite.task_events`, raw evidence files are canonical in the artifact store, and Markdown documents are projections. Product repository files remain the source for product content; they do not become Harness operational state unless an existing Core, reconcile, artifact-registration, or owner-record path records the relevant Harness fact.
 
 ### `state.sqlite.task_events`
 
@@ -502,7 +502,7 @@ A record of red, green, and refactor evidence for a Change Unit or behavior slic
 
 ### Verification
 
-The process of checking whether the result satisfies the relevant criteria. Verification is separate from approval, Manual QA, and acceptance.
+The process of checking whether the result satisfies the relevant criteria. Verification may support assurance when recorded through a valid Eval path and independence profile, but same-session self-check is not detached verification. Verification is separate from approval, Manual QA, acceptance, and residual-risk acceptance. Exact gate and independence behavior is owned by [Verification Gate](kernel.md#verification-gate) and [`harness.record_eval`](mcp-api-and-schemas.md#harnessrecord_eval).
 
 ### Verification Gate
 
@@ -526,7 +526,7 @@ An explicit recorded exception to a gate or policy requirement where policy allo
 
 ### Write Authorization
 
-A durable state record created by `prepare_write` for a specific allowed write attempt. It records `basis_state_version`, the affected-scope state version used as the compatibility basis for replay, stale detection, and audit. Distinct compatible `prepare_write` requests create distinct authorizations; idempotent replay may return the committed response. It is single-use for a committed implementation or direct run, and it does not replace scope, approval, evidence, verification, Manual QA, acceptance, or residual-risk visibility.
+A durable state record created by `prepare_write` for a specific allowed write attempt. It records `basis_state_version`, the affected-scope state version used as the compatibility basis for replay, stale detection, and audit. Distinct compatible `prepare_write` requests create distinct authorizations; idempotent replay may return the committed response. It is single-use for a committed implementation or direct Run, and it does not replace Change Unit scope, sensitive-action Approval, Decision Packet compatibility, evidence, verification, Manual QA, acceptance, or residual-risk visibility.
 
 ### Write Authorization Lifecycle Events
 

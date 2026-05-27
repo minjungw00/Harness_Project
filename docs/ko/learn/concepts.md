@@ -76,7 +76,7 @@ Autonomy Boundary는 Change Unit 안에서 에이전트가 행사할 수 있는 
 
 에이전트가 실패한 로그인에 대해 여러 가지 괜찮은 선택지를 찾았습니다. 상호작용은 inline message, toast, modal/layer 중 하나일 수 있고, 문구는 일반적인 문구, 더 구체적인 문구, hybrid 문구 중 하나일 수 있습니다. 다른 Task라면 session cookie, JWT, social login 중에서 고르거나, 호환되는 public API extension과 breaking cleanup 중에서 골라야 할 수도 있습니다. 이런 선택이 진행을 막는 제품, 보안, 호환성, 유지보수 판단이라면 에이전트가 조용히 골라서는 안 됩니다.
 
-Decision Packet은 사용자가 해야 하는 결정이 진행, 쓰기, 닫기, 예외 허용, 결과 수락, 남은 위험을 받아들이는 판단, 제품 방향, 중요한 기술 방향, 범위, 설계 절충, 코드베이스 돌봄 판단, 공개 약속을 막을 때 기록하는 묶음입니다. 공개 약속에는 사용자, caller, 문서 독자, release/support 약속이 의존할 내용을 바꾸는 선택이 포함됩니다. 좋은 Decision Packet은 필요한 결정, 현실적인 선택지, 추천, 장단점, 영향을 받는 gate나 수용 기준, source/evidence refs, deferral consequence, 에이전트가 사용자 없이 계속 판단해도 되는 일, 남은 위험, 다음 행동을 적습니다. 사용자가 broad approval을 주도록 묻는 대신 이름 붙은 issue를 선택, defer, reject, waive, accept, reconcile할지 물어야 합니다.
+Decision Packet은 특정 사용자 소유 판단이 진행, 쓰기, 닫기, 예외 허용, 결과 수락, 남은 위험을 받아들이는 판단, 제품 방향, 중요한 기술 방향, 범위, 설계 절충, 코드베이스 돌봄 판단, 공개 약속을 막을 때 기록합니다. 사용자가 broad approval을 주도록 묻는 대신 이름 붙은 issue를 결정하도록 물어야 합니다. 정확한 record quality와 public fields는 아래 reference 문서가 담당합니다.
 
 참조: [Decision Packet](../reference/kernel.md#decision-packet), [Decision Gate](../reference/kernel.md#decision-gate), [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision).
 
