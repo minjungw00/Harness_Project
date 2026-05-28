@@ -4,7 +4,7 @@
 
 This document turns the Build overview into the smallest runnable product MVP an implementer should plan first.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, exercised by the Kernel Smoke conformance profile: one local process with modules proving one authority loop. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target. v1+ automation stays roadmap scope unless owner docs promote and prove it.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, exercised by the Kernel Smoke conformance profile: one local process with modules proving one authority loop. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -14,7 +14,7 @@ This is planning documentation. It does not authorize runtime/server implementat
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md) first, including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status). That handoff table is the Build entry gate; until maintainers accept first runtime-batch planning, this slice remains planning-only. For storage and DDL details, use [Storage And DDL](../reference/storage-and-ddl.md). For post-MVP candidates, use the [Roadmap](../roadmap.md).
+Read [Implementation Overview](implementation-overview.md) first, including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status). That handoff table is the Build entry gate; until maintainers accept first runtime-batch planning, this slice remains planning-only. For storage and DDL details, use [Storage And DDL](../reference/storage-and-ddl.md). For v1+ Expansion candidates, use the [Roadmap](../roadmap.md).
 
 ## Main idea
 
@@ -306,14 +306,14 @@ The first runnable slice proves:
 
 ## What this does not prove yet
 
-This slice does not prove the items below yet. These are not failed v0.1 Kernel MVP requirements; they are not-yet-proven capabilities for later packs or the post-MVP roadmap:
+This slice does not prove the items below yet. These are not failed v0.1 Kernel MVP requirements; they are not-yet-proven capabilities for later packs or the v1+ Expansion roadmap:
 
 - v0.2 Evidence & Projection Pack: full projection and reconcile behavior, projection template completeness, and evidence/projection coverage beyond the minimal loop.
 - v0.3 Agency Pack: full Decision Packet quality, full Approval lifecycle and Approval drift handling, detached verification independence, Manual QA policy matrix, residual-risk visibility and accepted-close semantics, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, and context-hygiene coverage.
 - v0.4 Operations Pack: release handoff, recover, export, artifact integrity, broad operator smoke, and large fixture suite coverage.
 - v1+ Expansion: dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, and team workflow.
 
-Those belong either to later packs in [MVP Plan](mvp-plan.md) or to the post-MVP [Roadmap](../roadmap.md), depending on the item.
+Those belong either to later packs in [MVP Plan](mvp-plan.md) or to the v1+ Expansion [Roadmap](../roadmap.md), depending on the item.
 
 ## Fixtures to write
 

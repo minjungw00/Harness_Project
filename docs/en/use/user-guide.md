@@ -4,7 +4,7 @@
 
 Use Harness through an ordinary conversation: start a task, understand what the agent should show you, know when your judgment is needed, and ask for the right close information without turning the work into a management ritual.
 
-This is use documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+This is use documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, exercised by Kernel Smoke as its narrow conformance profile. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -492,7 +492,7 @@ These words answer different questions. Keep them separate near close, even when
 
 Approval is not acceptance. Tests passing do not mean Manual QA happened. Same-session self-review can be a useful self-check, but it is not detached verification. Accepting a result does not prove it is correct. Accepting residual risk is not proof either; it means the known uncertainty was visible and accepted for this Task. Final acceptance, when required, should come after close-relevant residual risk has been shown or reported as no known close-relevant risk.
 
-Manual QA judgment is separate from Browser QA artifacts. Screenshots, browser smoke, console logs, network traces, accessibility snapshots, and workflow recordings can support evidence when they are registered through the existing artifact path, but they do not become Manual QA, final acceptance, or detached verification. Browser QA Capture remains a v1/post-MVP candidate unless owner docs explicitly promote it. If a surface cannot support browser capture, use human Manual QA notes and manually supplied artifacts instead.
+Manual QA judgment is separate from Browser QA artifacts. Screenshots, browser smoke, console logs, network traces, accessibility snapshots, and workflow recordings can support evidence when they are registered through the existing artifact path, but they do not become Manual QA, final acceptance, or detached verification. Browser QA Capture remains a v1+ Expansion candidate unless owner docs explicitly promote it. If a surface cannot support browser capture, use human Manual QA notes and manually supplied artifacts instead.
 
 Useful verification wording:
 

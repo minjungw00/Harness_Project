@@ -6,7 +6,7 @@ Use this reference to decide when a design-quality policy applies, what record o
 
 These policies help AI-assisted work stay aligned with product design, domain language, module boundaries, testing discipline, human QA, and context hygiene without turning every quality preference into a kernel rule.
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, exercised by Kernel Smoke as its narrow conformance profile. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 This document does not define MCP schemas, SQLite DDL, state transition tables, runtime behavior, server behavior, or full projection templates.
 
@@ -582,4 +582,4 @@ Review-stage displays compose these existing policy validators; they do not intr
 | Spec Compliance Review | Reads acceptance/evidence state plus `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, and close-related residual-risk checks where applicable. | Validator result refs, evidence gaps, Decision Packet candidates, Eval or verification needs, Manual QA needs, Approval needs, Change Unit update recommendations, residual-risk candidates, or close blockers. |
 | Code Quality / Stewardship Review | Reads `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, and `context_hygiene_check`. | Stewardship validator findings, reconcile items, owner-record update recommendations, Eval or verification needs, Manual QA needs where relevant, Approval needs where relevant, follow-up Change Unit recommendations, residual-risk candidates, or close blockers. |
 
-The reference MVP may implement minimal validators first, but it should use the MVP severity defaults as the task-shape router for warning versus blocker behavior and keep validator IDs stable so conformance fixtures can grow without changing policy names.
+Staged delivery may implement minimal validators first, but it should use the MVP severity defaults as the task-shape router for warning versus blocker behavior and keep validator IDs stable so conformance fixtures can grow without changing policy names.

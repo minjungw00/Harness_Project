@@ -4,7 +4,7 @@
 
 This document turns the MVP scope material into an implementable staged delivery plan. It keeps delivery order separate from storage schemas, DDL, projection template bodies, operator command syntax, and executable fixture contracts.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, also exercised by the Kernel Smoke conformance profile: one local process with modules proving one authority loop. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target. v1+ automation stays roadmap scope unless owner docs promote and prove it.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, also exercised by the Kernel Smoke conformance profile: one local process with modules proving one authority loop. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 Use this when you need to plan what to build after the first runnable slice. Use the reference docs for exact contracts.
 
@@ -16,7 +16,7 @@ Use this when you need to plan what to build after the first runnable slice. Use
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md), including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status), [First Runnable Slice](first-runnable-slice.md), and [Runtime Walkthrough](runtime-walkthrough.md). For exact API contracts, use [MCP API And Schemas](../reference/mcp-api-and-schemas.md). For storage details and DDL, use [Storage And DDL](../reference/storage-and-ddl.md). For design-quality gate and validator behavior, use [Design Quality Policies](../reference/design-quality-policies.md). For conformance fixture semantics, use [Operations And Conformance](../reference/operations-and-conformance.md). For post-MVP candidates and promotion criteria, use the [Roadmap](../roadmap.md).
+Read [Implementation Overview](implementation-overview.md), including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status), [First Runnable Slice](first-runnable-slice.md), and [Runtime Walkthrough](runtime-walkthrough.md). For exact API contracts, use [MCP API And Schemas](../reference/mcp-api-and-schemas.md). For storage details and DDL, use [Storage And DDL](../reference/storage-and-ddl.md). For design-quality gate and validator behavior, use [Design Quality Policies](../reference/design-quality-policies.md). For conformance fixture semantics, use [Operations And Conformance](../reference/operations-and-conformance.md). For v1+ Expansion candidates and promotion criteria, use the [Roadmap](../roadmap.md).
 
 ## Main idea
 
@@ -118,7 +118,7 @@ Do not make projection template polish or renderer-first work drive Task, Run, e
 
 ## v0.3 Agency Pack
 
-v0.3 preserves Agency-Hardened MVP as a later reference conformance target, not as first implementation scope. This pack hardens the kernel so the local reference MVP can route user-owned judgment, assurance, and risk with honest boundaries.
+v0.3 preserves Agency-Hardened MVP as a later reference conformance target, not as first implementation scope. This pack hardens the kernel so the local reference path can route user-owned judgment, assurance, and risk with honest boundaries.
 
 Focus on:
 
@@ -134,7 +134,7 @@ Focus on:
 - distinct Approval, Manual QA, verification-waiver, acceptance, and residual-risk-acceptance judgments
 - agency conformance fixtures that prove behavior through Core state, events, artifacts, projections, and errors
 
-Passing this pack means the local reference MVP handles the agency-preserving parts of work with clear boundaries. It does not promote later automation into MVP.
+Passing this pack means the local reference path handles the agency-preserving parts of work with clear boundaries. It does not promote v1+ Expansion automation into staged delivery.
 
 ## v0.4 Operations Pack
 

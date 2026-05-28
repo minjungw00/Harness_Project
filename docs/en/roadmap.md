@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-This document collects post-MVP automation candidates and capability expansions so readers can see what may come later without treating it as first-implementation work, current authority, or staged-delivery required behavior.
+This document collects v1+ Expansion automation candidates and capability expansions so readers can see what may come later without treating it as first-implementation work, current authority, or staged-delivery required behavior.
 
 This is roadmap documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, exercised by the Kernel Smoke conformance profile. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target in Build docs, and the items below stay in v1+ Expansion unless owner docs promote and prove them.
 
@@ -41,7 +41,7 @@ v0.1 Kernel MVP and the v0.2 through v0.4 packs are Build-owned staged delivery,
 
 ## Promotion rule
 
-A roadmap candidate can become v1 or later scoped work only after a future owner decision gives it all of the following:
+A roadmap candidate can become v1+ Expansion scoped work only after a future owner decision gives it all of the following:
 
 - an explicit future-version owner decision; usefulness during staged delivery is not promotion
 - a clear capability profile requirement
@@ -61,7 +61,7 @@ flowchart TD
   Fixture --> Fallback["fallback behavior for unsupported surfaces"]
   Fallback --> Projection["no projection-as-canonical dependency"]
   Projection --> Promote["eligible for explicit re-scope decision only"]
-  Candidate -- "missing any criterion" --> Later["remains post-MVP roadmap item"]
+  Candidate -- "missing any criterion" --> Later["remains v1+ Expansion roadmap item"]
 ```
 
 ## Roadmap Items
@@ -70,7 +70,7 @@ flowchart TD
 
 A dashboard or hosted workflow UI can visualize active Tasks, gates, approvals, evidence coverage, projection freshness, artifact integrity, and reconcile items.
 
-Later because MVP should first stabilize the records, projections, and conformance fixtures that the dashboard or hosted UI would display. Until explicitly promoted through owner docs, a dashboard or hosted workflow UI is a read-only diagnostic/workflow display over `state.sqlite`, artifact refs, and projection job status. It must not become the source of truth for Task state, evidence, acceptance, implementation readiness, close readiness, projection freshness, workflow routing, or metric interpretation.
+Later because staged delivery should first stabilize the records, projections, and conformance fixtures that the dashboard or hosted UI would display. Until explicitly promoted through owner docs, a dashboard or hosted workflow UI is a read-only diagnostic/workflow display over `state.sqlite`, artifact refs, and projection job status. It must not become the source of truth for Task state, evidence, acceptance, implementation readiness, close readiness, projection freshness, workflow routing, or metric interpretation.
 
 ### Broad Connector Ecosystem
 
@@ -80,7 +80,7 @@ Later because v0.1 Kernel MVP assumes one local project, one reference surface, 
 
 ### Browser QA Capture
 
-Browser QA Capture is a v1/post-MVP priority candidate, not the first build target and not a staged-delivery requirement. Automatic or assisted capture can gather screenshots, console logs, network traces, accessibility snapshots, and workflow recordings for Manual QA records where the connected surface supports it.
+Browser QA Capture is a v1+ Expansion candidate, not the first build target and not a staged-delivery requirement. Automatic or assisted capture can gather screenshots, console logs, network traces, accessibility snapshots, and workflow recordings for Manual QA records where the connected surface supports it.
 
 Promotion requires a declared `T6 QA Capture` capability profile, redaction and secret/PII handling policy, test environment setup, artifact retention rules, fixture or conformance target, fallback behavior for unsupported surfaces, and no projection-as-canonical dependency.
 
@@ -110,19 +110,19 @@ Later because staged delivery may honestly start with cooperative or detective g
 
 An advanced sidecar watcher can observe file writes, command execution, generated-file drift, artifact capture opportunities, and repo baseline drift in near real time.
 
-Later because MVP can start with cooperative `prepare_write`, git diff checks, artifact registration, and detective validators. Until explicitly promoted through owner docs, an Advanced Sidecar Watcher is a non-authoritative observer. Its observations must route through Core records, validators, artifact registration, or reconcile before they affect Harness state, and it should not be required for the core state model to work.
+Later because staged delivery can start with cooperative `prepare_write`, git diff checks, artifact registration, and detective validators. Until explicitly promoted through owner docs, an Advanced Sidecar Watcher is a non-authoritative observer. Its observations must route through Core records, validators, artifact registration, or reconcile before they affect Harness state, and it should not be required for the core state model to work.
 
 ### Parallel Orchestration
 
 Parallel Change Unit orchestration can split work into multiple active implementation lanes, manage dependency DAGs, isolate baselines, and reconcile concurrent evidence.
 
-Later because parallel execution depends on stable locks, baseline freshness, Approval scope composition, artifact partitioning, and close semantics. Until explicitly promoted through owner docs, dependency DAG support remains metadata-only and no concurrent lane scheduler is required for MVP.
+Later because parallel execution depends on stable locks, baseline freshness, Approval scope composition, artifact partitioning, and close semantics. Until explicitly promoted through owner docs, dependency DAG support remains metadata-only and no concurrent lane scheduler is required for staged delivery.
 
 ### Context Index
 
-A Context Index is a read-only context provider that may help an agent find relevant projections, artifact refs, repo files, docs, or user notes without treating indexed knowledge as Harness state or authority. It is not the first build target and not an MVP prerequisite.
+A Context Index is a read-only context provider that may help an agent find relevant projections, artifact refs, repo files, docs, or user notes without treating indexed knowledge as Harness state or authority. It is not the first build target and not a staged-delivery prerequisite.
 
-Later because indexed memory can blur local authority if introduced before the kernel and source-of-truth boundaries are stable. Compact always-on rules and phase-based context bundles do not require a Context Index; they are connector context discipline. Until explicitly promoted through owner docs, a Context Index is non-authoritative retrieval only and remains a v1/later candidate. A future Context Index may rank, summarize, or retrieve context, but it cannot replace existing authority paths unless the owner docs for those paths explicitly change. Retrieved context may inform work, compact status, status interpretation, source excerpts, and pull refs; it cannot authorize writes or create Write Authorization, resolve Decision Packets, grant Approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA/verification or any other gate/close-relevant requirement, record result acceptance, record residual-risk acceptance, upgrade assurance, enqueue or refresh projections or change projection freshness, declare implementation readiness, or close Tasks. Stale retrieved context cannot satisfy gates or write authority; it can only point to owner records that must be refreshed, reconciled, or inspected through existing paths.
+Later because indexed memory can blur local authority if introduced before the kernel and source-of-truth boundaries are stable. Compact always-on rules and phase-based context bundles do not require a Context Index; they are connector context discipline. Until explicitly promoted through owner docs, a Context Index is non-authoritative retrieval only and remains a v1+ Expansion candidate. A future Context Index may rank, summarize, or retrieve context, but it cannot replace existing authority paths unless the owner docs for those paths explicitly change. Retrieved context may inform work, compact status, status interpretation, source excerpts, and pull refs; it cannot authorize writes or create Write Authorization, resolve Decision Packets, grant Approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA/verification or any other gate/close-relevant requirement, record result acceptance, record residual-risk acceptance, upgrade assurance, enqueue or refresh projections or change projection freshness, declare implementation readiness, or close Tasks. Stale retrieved context cannot satisfy gates or write authority; it can only point to owner records that must be refreshed, reconciled, or inspected through existing paths.
 
 ```mermaid
 flowchart LR
@@ -134,7 +134,7 @@ flowchart LR
   Index --> Boundary["non-authoritative context only"]
 ```
 
-In addition to the promotion rule, a Context Index should become v1 work only if a future decision assigns freshness and staleness rules, privacy/redaction behavior, connector capability expectations, fixture coverage, and a display rule that distinguishes retrieved context from canonical state.
+In addition to the promotion rule, a Context Index should become v1+ Expansion work only if a future decision assigns freshness and staleness rules, privacy/redaction behavior, connector capability expectations, fixture coverage, and a display rule that distinguishes retrieved context from canonical state.
 
 ### Local Derived Metrics
 
@@ -174,19 +174,19 @@ Candidate derived metrics:
 - `domain_language_mismatch_count`
 - `interface_review_required_count`
 
-In addition to the promotion rule, these metrics should become v1 work only if a future decision assigns fixture coverage or conformance target, retention behavior, privacy/redaction behavior when needed, fallback behavior for unsupported inputs, and a user-facing interpretation rule. Even then, the metric value remains derived; any state change must still go through the normal Core owner path.
+In addition to the promotion rule, these metrics should become v1+ Expansion work only if a future decision assigns fixture coverage or conformance target, retention behavior, privacy/redaction behavior when needed, fallback behavior for unsupported inputs, and a user-facing interpretation rule. Even then, the metric value remains derived; any state change must still go through the normal Core owner path.
 
 ### Team Profile Export And Import
 
 Team profile export/import can share policy defaults, connector profiles, surface capability assumptions, validator profiles, and project setup templates across a team.
 
-Later because v0.1 is a local kernel. Team workflow, shared workspaces, permissions, and profile sharing need versioning, privacy review, secret handling, and conflict behavior before they should affect runtime state. Until explicitly promoted through owner docs, team workflow is not a staged-delivery requirement and must not become an authority or acceptance path.
+Later because v0.1 Kernel MVP is a local kernel. Team workflow, shared workspaces, permissions, and profile sharing need versioning, privacy review, secret handling, and conflict behavior before they should affect runtime state. Until explicitly promoted through owner docs, team workflow is not a staged-delivery requirement and must not become an authority or acceptance path.
 
 ## Additional Later Candidates
 
 The following are also later and non-authoritative unless a future batch promotes them with owner docs, fixtures, fallback behavior, retention/redaction decisions where relevant, and implementation ownership:
 
-- deployment, canary, rollback, merge, and production-monitoring automation; Release Handoff may exist earlier only as a v1 report/export profile that leaves those authorities external
+- deployment, canary, rollback, merge, and production-monitoring automation; Release Handoff may exist earlier only as a v1+ Expansion report/export profile that leaves those authorities external
 - artifact dashboard
 - worktree-based fresh verify automation
 - advanced architecture drift validator

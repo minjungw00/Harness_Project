@@ -72,7 +72,7 @@ flowchart LR
 
 확인이 통과하면 Core는 specific attempt 하나에 맞는 Write Authorization을 만들거나 반환합니다. 통과하지 못하면 response는 blocker, state conflict, sensitive-action Approval path, Decision Packet path로 이어집니다.
 
-엄격한 동작: Write Authorization 의미는 [Write Authorization](../reference/kernel.md#write-authorization)이 담당합니다. Approval과 Decision Packet의 non-substitution rule은 [Judgment route boundaries](../reference/kernel.md#judgment-route-boundaries)가 담당합니다.
+엄격한 동작: Write Authorization 의미는 [Write Authorization](../reference/kernel.md#write-authorization)이 담당합니다. Approval과 Decision Packet의 non-substitution rule은 [판단 경로 경계](../reference/kernel.md#판단-경로-경계)가 담당합니다.
 
 ### 6. Write Authorization -> Run
 

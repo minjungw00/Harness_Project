@@ -430,7 +430,7 @@ Surface는 scope expansion, Autonomy Boundary breach, Approval 없는 새 sensit
 
 ## 기준 접점 계약
 
-MVP는 하나의 기준 접점을 목표로 합니다. 기준 접점은 넓은 ecosystem 지원이 아니라 kernel을 증명해야 합니다.
+v0.1 Kernel MVP는 하나의 기준 접점을 목표로 합니다. 기준 접점은 넓은 ecosystem 지원이 아니라 kernel을 증명해야 합니다.
 
 Minimum reference expectations:
 

@@ -149,7 +149,7 @@ Always-on context를 짧고 최신으로 유지하는 policy입니다. Compact r
 
 ### Context Index
 
-Relevant projection, 아티팩트 참조, repo file, doc, note를 보여줄 수 있는 later read-only context provider입니다. Owner 문서로 승격되기 전까지는 v1/later candidate이자 권한 없는 retrieval only입니다. 승격 이후에도 해당 owner 문서가 명시적으로 바뀌지 않는 한 기존 권한 경로를 대체할 수 없습니다. Retrieved context는 살펴볼 source를 가리킬 수 있지만 write를 허가하거나, decision을 해소하거나, Approval을 부여하거나, evidence를 만들거나, verification을 수행하거나, risk를 받아들이거나, gate를 충족하거나, Task를 close하면 안 됩니다. 정확한 future-feature 경계는 [Roadmap: Context Index](../roadmap.md#context-index)가 담당하고, connector 처리는 [Agent Integration](agent-integration.md#context-pushpull-principles)이 담당합니다.
+Relevant projection, 아티팩트 참조, repo file, doc, note를 보여줄 수 있는 later read-only context provider입니다. Owner 문서로 승격되기 전까지는 v1+ Expansion 후보이자 권한 없는 retrieval only입니다. 승격 이후에도 해당 owner 문서가 명시적으로 바뀌지 않는 한 기존 권한 경로를 대체할 수 없습니다. Retrieved context는 살펴볼 source를 가리킬 수 있지만 write를 허가하거나, decision을 해소하거나, Approval을 부여하거나, evidence를 만들거나, verification을 수행하거나, risk를 받아들이거나, gate를 충족하거나, Task를 close하면 안 됩니다. 정확한 future-feature 경계는 [Roadmap: Context Index](../roadmap.md#context-index)가 담당하고, connector 처리는 [Agent Integration](agent-integration.md#context-pushpull-principles)이 담당합니다.
 
 ### Decision Gate
 
@@ -433,7 +433,7 @@ Reconcile decision이 accept, reject, convert, defer하기 전에 human-editable
 
 ### Reference Surface
 
-MVP implementation이 target하는 단일 agent 접점입니다. Kernel과 커넥터 계약을 demonstrate하기 위한 범위이며 broad MVP 접점 support를 뜻하지 않습니다.
+v0.1 Kernel MVP가 target하는 단일 agent 접점입니다. Kernel과 커넥터 계약을 demonstrate하기 위한 범위이며 broad connector-surface support를 뜻하지 않습니다.
 
 ### Recommended Playbook
 
@@ -493,7 +493,7 @@ Implementation이 plan으로 굳어지기 전에 Task에 대해 최소한으로 
 
 ### `state.sqlite.task_events`
 
-`state.sqlite` 안의 추가 전용 event history table입니다. MVP는 별도의 event store를 사용하지 않습니다. Deterministic order는 timestamp나 event ID가 아니라 `task_events.event_seq`입니다.
+`state.sqlite` 안의 추가 전용 event history table입니다. Reference event storage는 별도의 event store를 사용하지 않습니다. Deterministic order는 timestamp나 event ID가 아니라 `task_events.event_seq`입니다.
 
 ### Stable Event Catalog
 

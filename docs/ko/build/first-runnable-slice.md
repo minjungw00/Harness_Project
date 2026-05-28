@@ -306,14 +306,14 @@ Required authority 또는 근거가 없을 때 close가 work를 끝내지 못하
 
 ## 아직 증명하지 않는 것
 
-이 조각은 아래 항목을 아직 증명하지 않습니다. 이들은 failed v0.1 Kernel MVP requirement가 아니라 later pack 또는 post-MVP roadmap에서 증명할 not-yet-proven capability입니다.
+이 조각은 아래 항목을 아직 증명하지 않습니다. 이들은 failed v0.1 Kernel MVP requirement가 아니라 later pack 또는 v1+ Expansion roadmap에서 증명할 not-yet-proven capability입니다.
 
 - v0.2 Evidence & Projection Pack: 전체 projection과 reconcile 동작, projection template 완성도, minimal loop를 넘어서는 evidence/projection coverage.
 - v0.3 Agency Pack: 전체 Decision Packet 품질, 전체 Approval lifecycle과 Approval drift handling, detached verification 독립성, Manual QA policy matrix, residual-risk visibility와 accepted-close semantics, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context-hygiene coverage.
 - v0.4 Operations Pack: release handoff, recover, export, artifact integrity, broad operator smoke, large fixture suite coverage.
 - v1+ Expansion: dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow.
 
-이 내용은 항목에 따라 [MVP 계획](mvp-plan.md)의 later pack 또는 post-MVP [로드맵](../roadmap.md)에 속합니다.
+이 내용은 항목에 따라 [MVP 계획](mvp-plan.md)의 later pack 또는 v1+ Expansion [로드맵](../roadmap.md)에 속합니다.
 
 ## 작성할 Fixture
 

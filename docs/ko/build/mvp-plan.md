@@ -118,7 +118,7 @@ Projection template polish나 renderer-first 작업이 Task, Run, evidence, veri
 
 ## v0.3 Agency Pack
 
-v0.3은 Agency-Hardened MVP를 첫 구현 scope가 아니라 later reference conformance target으로 보존합니다. 이 pack은 local reference MVP가 user-owned judgment, assurance, risk를 정직한 경계 안에서 route할 수 있도록 kernel을 harden합니다.
+v0.3은 Agency-Hardened MVP를 첫 구현 scope가 아니라 later reference conformance target으로 보존합니다. 이 pack은 local reference path가 user-owned judgment, assurance, risk를 정직한 경계 안에서 route할 수 있도록 kernel을 harden합니다.
 
 중점:
 
@@ -134,7 +134,7 @@ v0.3은 Agency-Hardened MVP를 첫 구현 scope가 아니라 later reference con
 - distinct Approval, Manual QA, verification-waiver, acceptance, residual-risk-acceptance judgments
 - Core state, events, artifacts, projections, errors를 통해 behavior를 증명하는 agency conformance fixtures
 
-이 pack을 통과하면 local reference MVP가 agency-preserving work를 명확한 경계로 처리한다는 뜻입니다. Later automation을 MVP로 승격하지는 않습니다.
+이 pack을 통과하면 local reference path가 agency-preserving work를 명확한 경계로 처리한다는 뜻입니다. v1+ Expansion automation을 staged delivery로 승격하지는 않습니다.
 
 ## v0.4 Operations Pack
 

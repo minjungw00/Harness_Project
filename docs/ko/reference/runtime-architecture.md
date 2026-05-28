@@ -131,7 +131,7 @@ Repository는 생성된 `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `
 
 ## Harness Server / Installation
 
-Harness Server / Installation은 제어 계층입니다. MVP는 여러 service의 fleet 대신 내부 모듈을 가진 하나의 로컬 프로세스로 구현할 수 있습니다.
+Harness Server / Installation은 제어 계층입니다. v0.1 Kernel MVP는 여러 service의 fleet 대신 내부 모듈을 가진 하나의 로컬 프로세스로 구현할 수 있습니다.
 
 Core runtime의 책임:
 
@@ -182,12 +182,12 @@ state.sqlite / artifact store / validators / projector / reconcile worker
 
 대화 접점은 사용자 의도, decision, approval, QA 판단, acceptance를 모읍니다. Agent 접점은 읽기, 편집, 확인을 수행합니다. Harness rules와 skills는 agent가 현재 상태를 놓치지 않게 합니다. MCP server는 tool 경계를 제공합니다. Core는 상태 모델을 담당합니다. Validator, artifact 수집, projection, reconcile은 근거와 읽기용 출력을 상태 전이에 붙입니다.
 
-Native hooks, sidecars, command wrappers, file watchers, worktree isolation은 capability에 따라 달라지는 집행 계층입니다. 구체적인 capability profile이 fixture로 더 강한 enforcement를 증명하지 않는 한 MVP는 reference 접점에서 cooperative/detective behavior에 의존합니다.
+Native hooks, sidecars, command wrappers, file watchers, worktree isolation은 capability에 따라 달라지는 집행 계층입니다. 구체적인 capability profile이 fixture로 더 강한 enforcement를 증명하지 않는 한 v0.1 Kernel MVP는 reference 접점에서 cooperative/detective behavior에 의존합니다.
 
 
 ### Core modules
 
-MVP Core는 다음 내부 모듈을 가진 단일 프로세스로 실행할 수 있습니다.
+v0.1 Kernel MVP Core는 다음 내부 모듈을 가진 단일 프로세스로 실행할 수 있습니다.
 
 | Module | Runtime responsibility |
 |---|---|

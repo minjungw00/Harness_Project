@@ -4,7 +4,7 @@
 
 Use this glossary to confirm official Harness terms, capitalization, record names, and non-substitution boundaries while reading other docs.
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, exercised by Kernel Smoke as its narrow conformance profile. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -147,7 +147,7 @@ Stale chat memory is pull-only context. It cannot authorize writes, satisfy gate
 
 ### Context Index
 
-A later read-only context provider that may surface relevant projections, artifact refs, repo files, docs, or notes. Until promoted through owner docs, it is a v1/later candidate and non-authoritative retrieval only; even after promotion, it cannot replace existing authority paths unless those owner docs explicitly change. Retrieved context may point to sources to inspect, but it must not authorize writes, resolve decisions, grant Approval, create evidence, perform verification, accept risk, satisfy gates, or close Tasks. The exact future-feature boundary is owned by [Roadmap: Context Index](../roadmap.md#context-index), with connector handling in [Agent Integration](agent-integration.md#context-pushpull-principles).
+A later read-only context provider that may surface relevant projections, artifact refs, repo files, docs, or notes. Until promoted through owner docs, it is a v1+ Expansion candidate and non-authoritative retrieval only; even after promotion, it cannot replace existing authority paths unless those owner docs explicitly change. Retrieved context may point to sources to inspect, but it must not authorize writes, resolve decisions, grant Approval, create evidence, perform verification, accept risk, satisfy gates, or close Tasks. The exact future-feature boundary is owned by [Roadmap: Context Index](../roadmap.md#context-index), with connector handling in [Agent Integration](agent-integration.md#context-pushpull-principles).
 
 ### Decision Gate
 
@@ -419,7 +419,7 @@ The canonical candidate record created from human-editable input or projection d
 
 ### Reference Surface
 
-The single agent surface targeted by the MVP implementation. It demonstrates the kernel and connector contract without implying broad MVP surface support.
+The single agent surface targeted by v0.1 Kernel MVP. It demonstrates the kernel and connector contract without implying broad connector-surface support.
 
 ### Recommended Playbook
 
@@ -477,7 +477,7 @@ The authoritative source for a fact. In Harness, operational state is canonical 
 
 ### `state.sqlite.task_events`
 
-The append-only event history table inside `state.sqlite`. MVP does not use a separate event store. Deterministic order is `task_events.event_seq`, not timestamps or event IDs.
+The append-only event history table inside `state.sqlite`. Reference event storage does not use a separate event store. Deterministic order is `task_events.event_seq`, not timestamps or event IDs.
 
 ### Stable Event Catalog
 

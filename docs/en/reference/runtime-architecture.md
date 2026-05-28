@@ -131,7 +131,7 @@ The repository may hold generated `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-
 
 ## Harness Server / Installation
 
-The Harness Server / Installation is the control plane. MVP can implement it as one local process with internal modules rather than a fleet of services.
+The Harness Server / Installation is the control plane. v0.1 Kernel MVP can implement it as one local process with internal modules rather than a fleet of services.
 
 Core runtime responsibilities:
 
@@ -182,12 +182,12 @@ state.sqlite / artifact store / validators / projector / reconcile worker
 
 The conversation surface gathers user intent, decisions, approvals, QA judgments, and acceptance. The agent surface performs reading, editing, and checking. Harness rules and skills keep the agent oriented. The MCP server provides the tool boundary. Core owns the state machine. Validators, artifact capture, projection, and reconcile attach evidence and readable output to state transitions.
 
-Native hooks, sidecars, command wrappers, file watchers, and worktree isolation are capability-dependent enforcement layers. MVP relies on cooperative/detective behavior for the reference surface unless a concrete capability profile has fixture-proven stronger enforcement.
+Native hooks, sidecars, command wrappers, file watchers, and worktree isolation are capability-dependent enforcement layers. v0.1 Kernel MVP relies on cooperative/detective behavior for the reference surface unless a concrete capability profile has fixture-proven stronger enforcement.
 
 
 ### Core modules
 
-MVP Core can run as a single process with these internal modules:
+v0.1 Kernel MVP Core can run as a single process with these internal modules:
 
 | Module | Runtime responsibility |
 |---|---|

@@ -430,7 +430,7 @@ Display the stop according to the capability profile. On cooperative profiles, t
 
 ## Reference Surface Contract
 
-The MVP targets one reference surface. The reference surface should demonstrate the kernel rather than broad ecosystem support.
+v0.1 Kernel MVP targets one reference surface. The reference surface should demonstrate the kernel rather than broad ecosystem support.
 
 Minimum reference expectations:
 
