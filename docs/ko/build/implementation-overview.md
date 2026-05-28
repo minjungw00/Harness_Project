@@ -4,7 +4,7 @@
 
 이 문서는 구현자가 전체 reference 명세에 들어가기 전에 무엇을 먼저 계획해야 하는지 알려 줍니다. 독자 중심 문서가 kernel, runtime, MCP, storage, projection, conformance reference와 어떻게 이어지는지 보여 주는 Build 계층입니다.
 
-이 문서는 문서 재설계 / 피드백 반영과 handoff review를 위한 구현 계획 문서입니다. maintainer가 문서 세트를 첫 runtime batch 계획에 사용할 수 있다고 명시적으로 승인하기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 제품 MVP 목표는 v0.1 Kernel MVP이며, Kernel Smoke conformance profile이 이를 실행 가능한 방식으로 증명합니다. 즉 모듈을 가진 로컬 프로세스 하나로 권한 루프 하나를 증명합니다. v0.2부터 v0.4까지는 Agency-Hardened MVP reference conformance target을 향한 staged pack입니다. v1+ automation은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
+이 문서는 문서 재설계 / 피드백 반영과 handoff review를 위한 구현 계획 문서입니다. maintainer가 문서 세트를 첫 runtime batch 계획에 사용할 수 있다고 명시적으로 승인하기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 제품 MVP 목표는 v0.1 Kernel MVP이며, Kernel Smoke conformance profile이 이를 실행 가능한 방식으로 증명합니다. 즉 모듈을 가진 로컬 프로세스 하나로 권한 루프 하나를 증명합니다. v0.2부터 v0.4까지는 Agency-Hardened MVP reference conformance target을 향한 staged pack입니다. v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
 
 이 문서로 다음을 확인합니다.
 
@@ -22,7 +22,7 @@
 
 ## 읽기 전에
 
-Learn 경로에서 Harness의 기본 개념을 먼저 이해해 두는 것이 좋습니다. 정확한 동작은 이 문서 끝에 연결된 reference 문서들을 봅니다. Post-MVP 후보와 승격 기준은 [로드맵](../roadmap.md)을 봅니다.
+Learn 경로에서 Harness의 기본 개념을 먼저 이해해 두는 것이 좋습니다. 정확한 동작은 이 문서 끝에 연결된 reference 문서들을 봅니다. v1+ Expansion 후보와 승격 기준은 [로드맵](../roadmap.md)을 봅니다.
 
 ## 핵심 생각
 
@@ -62,12 +62,12 @@ Build 독자는 이 표를 진입 gate로 보아야 합니다. maintainer handof
 첫 구현 계획은 Agency-Hardened MVP나 roadmap automation이 아니라 v0.1 Kernel MVP 계획부터 시작한다는 뜻입니다. 아래 조건이 모두 참일 때만 시작할 수 있습니다.
 
 - 최종 docs-maintenance drift pass가 완료되었거나, 남은 알려진 gap이 관련 owner 문서에 `TODO_DECISION` 또는 `TODO_IMPLEMENT`로 기록되어 있다. Docs-maintenance는 읽기 전용 문서 점검으로 남습니다. [문서 작성 가이드](../maintain/authoring-guide.md#docs-maintenance-checks)와 [운영과 Conformance 참조](../reference/operations-and-conformance.md#docs-maintenance-프로필)를 봅니다.
-- v0.1 Kernel MVP의 local-only MCP 노출 baseline이 승인되어 있다. Remote, shared, tunneled, non-loopback 노출은 owner 문서가 connector profile을 승격하고 증명하기 전까지 v0.1 baseline 밖입니다. [런타임 아키텍처](../reference/runtime-architecture.md#로컬-접근-기대사항)와 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#mcp-경계와-호출자-신뢰)를 봅니다.
+- v0.1 Kernel MVP의 local-only MCP 노출 baseline이 승인되어 있다. Remote, shared, tunneled, non-loopback 노출은 owner 문서가 connector profile을 승격하고 증명하기 전까지 v0.1 baseline 밖입니다. [런타임 아키텍처](../reference/runtime-architecture.md#로컬-접근-기대사항), [보안 위협 모델 참조](../reference/security-threat-model.md#mcp-local-access와-caller-boundary), [MCP API와 스키마](../reference/mcp-api-and-schemas.md#mcp-경계와-호출자-신뢰)를 봅니다.
 - Reference surface capability profile이 실제 사용하는 host/profile/configuration에 대한 구체적인 declaration으로 승인되어 있다. Version, MCP config, hook, permission, workspace policy, generated file, conformance result, capture method, QA capture method, redaction policy, artifact retention behavior가 바뀌면 refresh되어야 합니다. 정확한 connector profile과 surface recipe detail은 [Agent 통합 참조](../reference/agent-integration.md#capability-profiles)와 [Surface Cookbook](../reference/surface-cookbook.md)에 둡니다.
 - Core-only mutation model이 승인되어 있다. 기준 운영 상태를 변경하는 것은 Core뿐이며, resource, projection, report, diagnostic, MCP caller, operator entrypoint는 Core의 상태 변경 경로에 들어가지 않는 한 read-only 또는 derived로 남습니다. [Core process model](../reference/runtime-architecture.md#core-process-model), [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow), MCP [Idempotency](../reference/mcp-api-and-schemas.md#idempotency)와 [State Conflict 동작](../reference/mcp-api-and-schemas.md#state-conflict-동작)을 봅니다.
 - Kernel Smoke fixture queue가 v0.1 Kernel MVP conformance 작성 순서로 확인되어 있다. 정확한 fixture format, assertion, catalog semantics는 [운영과 Conformance 참조](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue)에 둡니다.
 - 첫 실행 가능한 조각은 local, single-project, single-reference-surface, fixture-proven 범위를 유지한다. 계획 점검 목록은 [첫 실행 가능한 조각](first-runnable-slice.md)을 사용합니다.
-- v1+ Expansion feature는 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따라 owner 문서가 승격하기 전까지 v0.1 Kernel MVP, v0.2부터 v0.4까지의 staged pack, Agency-Hardened MVP 밖에 남아 있다.
+- v1+ Expansion 기능은 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따라 owner 문서가 승격하기 전까지 v0.1 Kernel MVP, v0.2부터 v0.4까지의 staged pack, Agency-Hardened MVP 밖에 남아 있다.
 
 이 handoff는 roadmap 항목, dashboard 또는 hosted workflow UI, Browser QA Capture automation, Context Index, broad connector ecosystem 또는 marketplace, team workflow, remote MCP exposure, preventive guard expansion, Local Derived Metrics 또는 long-term metrics, parallel orchestration을 v0.1 Kernel MVP, v0.2부터 v0.4까지의 staged pack, Agency-Hardened MVP로 승격하지 않습니다. 정확한 계약은 Reference 문서에 두고, 이 섹션은 짧은 readiness checkpoint로만 사용합니다.
 

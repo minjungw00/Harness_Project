@@ -6,7 +6,7 @@ Use this guide when you add, rewrite, split, rename, or review Harness documenta
 
 It helps you keep the current documentation readable for the intended reader, clear about where each kind of detail belongs, and aligned between English and Korean.
 
-This is maintenance documentation. It governs documentation maintenance only and does not authorize runtime/server implementation, product state changes, generated operational files, executable fixtures, runtime data, evidence records, QA results, acceptance decisions, or task closure before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless owner docs promote and prove them.
+This is maintenance documentation. It governs documentation maintenance only and does not authorize runtime/server implementation, product state changes, generated operational files, executable fixtures, runtime data, evidence records, QA results, acceptance decisions, or task closure before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, exercised by Kernel Smoke as its narrow conformance profile. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -154,6 +154,7 @@ For the non-authority boundaries that are easy to repeat, use these owners:
 | Release Handoff and export | [Operations And Conformance: Release Handoff Export Profile](../reference/operations-and-conformance.md#release-handoff-export-profile); rendered shape in [EXPORT Template](../reference/templates/export.md) |
 | Docs-maintenance | [Authoring Guide: Docs-maintenance checks](#docs-maintenance-checks) for rule bodies; [Operations And Conformance: Docs-maintenance profile](../reference/operations-and-conformance.md#docs-maintenance-profile) for operator reporting |
 | Projection and report surfaces | [Document Projection Reference](../reference/document-projection.md); rendered shapes in [Template Reference](../reference/templates/README.md) |
+| Security assets, trust boundaries, threat categories, control categories, and high-risk cooperative/detective/preventive/isolated security expectations | [Security Threat Model Reference](../reference/security-threat-model.md) for threat concepts; exact API, storage, kernel, connector, operations, and conformance behavior stays with those owners |
 
 ## Owner-link summary pattern
 
@@ -244,7 +245,7 @@ Required check categories:
 | English/Korean semantic section parity | Paired files keep the same active file map, reader purpose, semantic section coverage, owner links, and contractual detail. Heading text and minor grouping may be idiomatic when stable identifiers, schema names, enum values, DDL names, validator IDs, code identifiers, and reviewability remain clear. |
 | Opening convention compliance | Non-template active docs use the standard opening pattern. `docs/*/reference/templates/README.md` uses `Used when` plus `Template tiering`; individual template files under `docs/*/reference/templates/` other than `README.md` use `Used when`, `Source records`, `Rendered sections`, and `Full template`, plus a visible non-authority boundary. |
 | Broken cross-reference detection | Markdown links, heading anchors, template/reference links, same-language README routes, paired-language entry links, and owner-section links resolve to active docs and current anchors. |
-| Owner-boundary drift | Exact contracts stay in their active owners, including `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, and `reference/glossary.md`; non-owner docs summarize and link rather than redefining those contracts. |
+| Owner-boundary drift | Exact contracts and active owner concepts stay in their active owners, including `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/security-threat-model.md`, `reference/operations-and-conformance.md`, and `reference/glossary.md`; non-owner docs summarize and link rather than redefining those contracts. |
 | Fixture/action schema drift | Operations fixture examples keep `action` and executable `input` aligned with public MCP request schemas in `reference/mcp-api-and-schemas.md` and the `ToolEnvelope` expansion convention in `reference/operations-and-conformance.md`; docs-maintenance may flag drift but does not execute fixture actions or restate fixture semantics here. |
 | Enum, event, validator, and projection drift | State/gate/result values and Kernel Stable Event Catalog names match `reference/kernel.md`; error and stable `ValidatorResult` IDs match `reference/mcp-api-and-schemas.md`; storage values match `reference/storage-and-ddl.md`; `ProjectionKind` tiers and template ownership match `reference/document-projection.md` and `reference/templates/*.md`. |
 | Glossary and source-of-truth phrasing drift | Official terms, capitalization, record ID prefixes, source-of-truth wording, and authority-boundary phrases match `reference/glossary.md` and the relevant owner docs without implying extra state authorities. |
@@ -281,6 +282,7 @@ Use this map when deciding where exact detail belongs. It identifies the active 
 | Strategic thesis, failure model, MVP boundary, principle groups | `learn/purpose-and-principles.md` for reader explanation; `reference/design-quality-policies.md` and `reference/kernel.md` for exact contract impact |
 | Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` |
 | Runtime architecture, three spaces in implementation detail, Core process model, artifact architecture, projection/reconcile architecture, guarantee levels | `reference/runtime-architecture.md` |
+| Security assets, trust boundaries, threat categories, control categories, and high-risk cooperative/detective/preventive/isolated security expectations | `reference/security-threat-model.md` for threat concepts; exact enforcement, API, storage, kernel, connector, operations, and conformance behavior stays with those owners |
 | MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `reference/mcp-api-and-schemas.md` |
 | SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` |
 | MVP implementation order and stage exit criteria | `build/mvp-plan.md` |
@@ -295,6 +297,6 @@ Use this map when deciding where exact detail belongs. It identifies the active 
 | Generic capability profile examples | `reference/agent-integration.md` |
 | Operator procedures, conformance fixture bodies, fixture assertion semantics, doctor/recover/reconcile/export/artifact integrity, docs-maintenance reporting | `reference/operations-and-conformance.md` |
 | Official term definitions and capitalization | `reference/glossary.md` |
-| Post-MVP roadmap | `roadmap.md` |
+| v1+ Expansion roadmap | `roadmap.md` |
 | Documentation authoring rules | `maintain/authoring-guide.md` |
 | Translation and bilingual prose rules | `maintain/translation-guide.md` |

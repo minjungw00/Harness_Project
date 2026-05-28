@@ -17,7 +17,7 @@ Harness 운영자 절차, Conformance staging, fixture assertion rule, docs-main
 
 ## 읽기 전에
 
-Core transaction order는 [Runtime Architecture](runtime-architecture.md#state-transaction-flow)를, public tool schema와 replay 동작은 [MCP API와 스키마](mcp-api-and-schemas.md)를, storage layout은 [Storage와 DDL](storage-and-ddl.md)을, 상태 전이 의미는 [커널 참조](kernel.md)를 사용합니다.
+Core transaction order는 [Runtime Architecture](runtime-architecture.md#state-transaction-flow)를, security asset, trust boundary, threat, control은 [보안 위협 모델 참조](security-threat-model.md)를, public tool schema와 replay 동작은 [MCP API와 스키마](mcp-api-and-schemas.md)를, storage layout은 [Storage와 DDL](storage-and-ddl.md)을, 상태 전이 의미는 [커널 참조](kernel.md)를 사용합니다.
 
 ## 핵심 생각
 
@@ -57,6 +57,7 @@ Public MCP schema, SQLite DDL, projection template body, Learn/Use workflow, lon
 | Fixture 작성 순서와 suite coverage | [Conformance staging](#conformance-staging), [Kernel Smoke Authoring Queue](#kernel-smoke-authoring-queue), [Hardened MVP Fixture Coverage](#hardened-mvp-fixture-coverage), [Fixture Suites](#fixture-suites) | Kernel gate와 event name은 [커널 참조](kernel.md)에 남습니다. |
 | Concern별 fixture 예시 | [Fixture 예시 지도](#fixture-예시-지도), 그다음 해당 예시 section | 예시 `input`은 계속 담당 public tool schema를 통과해야 합니다. |
 | Artifact integrity, export, recover, reconcile check | [artifacts check](#artifacts-check), [export](#export), [recover](#recover), [reconcile](#reconcile) | Artifact layout과 DDL은 [Storage와 DDL](storage-and-ddl.md)에 남습니다. |
+| Security와 threat-model 진단 category | [doctor](#doctor), [serve mcp](#serve-mcp), [artifacts check](#artifacts-check) | Threat-model concept은 [보안 위협 모델 참조](security-threat-model.md)에 남습니다. API, storage, kernel detail은 각 owner에 남습니다. |
 
 ## 운영자 entrypoint
 
@@ -246,7 +247,7 @@ authority   edited generated file은 Task state가 아니며 조용히 overwrite
 | reconcile | 대기 중인 human edit, managed block drift, generated/managed manifest drift |
 | validators/checks | 필수 stable ValidatorResult 발행 validator와 별도로 수집되는 Core check/precondition category |
 | agency/stewardship/context | Decision Packet과 decision gate 준비 상태, Autonomy Boundary 준비 상태, Residual Risk 가시성, codebase stewardship, context freshness, 오래된 chat/pull-only context를 권한으로 취급하지 않는지 |
-| security/threat model | runtime home, artifact store, reference surface, MCP availability를 가로지르는 local binding/access 기대사항, 등록된 project/Task/surface 일관성, connector drift, 민감 category 부작용, redaction, omission, block 적용 범위 |
+| security/threat model | runtime home, artifact store, reference surface, MCP availability를 가로지르는 local binding/access 기대사항, 등록된 project/Task/surface 일관성, connector drift, 민감 category 부작용, redaction, omission, block 적용 범위. Threat concept은 [보안 위협 모델 참조](security-threat-model.md)가 담당합니다. |
 
 ```mermaid
 flowchart TD
@@ -307,7 +308,7 @@ Compact doctor 예시:
 | agency/stewardship/context | `agency/stewardship/context FAIL Decision Packet required for user-owned trade-off` | Blocker는 Decision Packet path로 route됩니다. Broad approval이나 status prose만으로 decision을 충족할 수 없습니다. |
 | security/threat model | `security/threat model WARN socket permissions broader than profile` | Finding은 보고되는 guarantee를 낮추고 write-capable readiness를 막을 수 있지만, file permission은 기준 상태가 아니라 diagnostic입니다. |
 
-Security-oriented doctor output은 진단 정보이며 새로운 runtime authority를 만들지 않습니다. MCP access mode가 로컬 프로세스/localhost 기대사항 또는 문서화된 connector profile과 맞지 않을 때, project/task/surface claim이 registered state와 맞지 않을 때, connector-managed file이 drift되었을 때, artifact에 sensitive category가 요구하는 redaction, omission, block metadata가 없을 때, `destructive_write`, `network_write`, `external_service_write`, `secret_access`, `privacy_or_pii_change`, `data_export`, `infra_or_deployment_change`, `production_config_change`, `ci_cd_change`, `billing_or_cost_change`, `telemetry_or_logging_change` 같은 sensitive operation이 recorded scope/approval/Decision Packet/Write Authorization path 밖에서 나타날 때 이를 보고해야 합니다.
+Security-oriented doctor output은 진단 정보이며 새로운 runtime authority를 만들지 않습니다. [보안 위협 모델 참조](security-threat-model.md)의 threat concept을 적용하며, MCP access mode가 로컬 프로세스/localhost 기대사항 또는 문서화된 connector profile과 맞지 않을 때, project/task/surface claim이 registered state와 맞지 않을 때, connector-managed file이 drift되었을 때, artifact에 sensitive category가 요구하는 redaction, omission, block metadata가 없을 때, `destructive_write`, `network_write`, `external_service_write`, `secret_access`, `privacy_or_pii_change`, `data_export`, `infra_or_deployment_change`, `production_config_change`, `ci_cd_change`, `billing_or_cost_change`, `telemetry_or_logging_change` 같은 sensitive operation이 recorded scope/approval/Decision Packet/Write Authorization path 밖에서 나타날 때 이를 보고해야 합니다.
 
 Doctor는 runtime-home file trust posture도 문서 계약 수준에서 확인해야 합니다. Platform에서 관찰 가능한 범위와 risk에 따라, `state.sqlite`, `registry.sqlite`, `project.yaml`, connector config snippet, connector manifest, generated manifest, artifact directory, staging file, generated operational file이 문서화된 local control profile보다 넓게 readable 또는 writable하여 변조, 위조된 configuration, secret/PII 노출이 가능하면 warn 또는 fail해야 합니다. File-permission finding은 진단 정보입니다. Direct file edit를 authoritative하게 만들지 않으며 Core shape, owner, integrity, artifact check를 대체하지 않습니다.
 
@@ -361,9 +362,9 @@ flowchart TD
 
 MCP를 사용할 수 없으면 operations는 진단 조건인 `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`을 구분해야 합니다. 이 이름들은 추가 public `ErrorCode` 값이 아닙니다. 이 조건들을 `ToolError`로 드러낼 때 operations는 API-owned error selection과 details shape를 사용해야 합니다. `MCP_UNAVAILABLE`은 stable public availability code로 남고, 접점-side availability 또는 capability case는 문맥에 따라 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`와 `details.mcp_unavailable_kind`로 표현될 수 있습니다. `MCP_SERVER_UNAVAILABLE`에서는 tool 호출이 Core에 닿을 수 없어 authoritative Core response가 불가능하므로, 상태 변경 주장 전에 server diagnosis 또는 reconnect가 next action입니다. `SURFACE_MCP_UNAVAILABLE`에서는 Core 또는 operator가 연결된 접점에서 사용할 수 있는 MCP가 없거나 MCP configuration이 최신이 아니거나 required MCP tools를 호출할 수 없음을 관찰할 수 있습니다. Cooperative 접점은 product/runtime/code write를 instruction으로 보류해야 하며, stronger profile은 fixture로 입증된 blocking이 해당 operation을 cover할 때만 예방적으로, 또는 입증된 isolation boundary로 보류를 강제할 수 있습니다. Operations는 실제 보장 수준을 그대로 보고해야 합니다.
 
-`serve mcp`는 예상되지 않은 호출자, 문서화된 로컬 프로세스/localhost 기대사항 또는 connector 접근 계약 밖의 호출자, weak socket or config permissions, forwarded 또는 tunneled endpoint, stale connector configuration을 위협 모델 문제로 다뤄야 합니다. 사용자가 접점이 Core가 기대하는 접점인지 볼 수 있도록 access mode, active project, surface identity, capability profile을 보고합니다. Spoofed `surface_id`, `actor_kind`, project/task selection을 authority의 증거처럼 보여주면 안 됩니다. Public tool contract는 여전히 Core를 통해 이 claims를 해석하고 검증합니다.
+`serve mcp`는 예상되지 않은 호출자, 문서화된 로컬 프로세스/localhost 기대사항 또는 connector 접근 계약 밖의 호출자, weak socket or config permissions, forwarded 또는 tunneled endpoint, stale connector configuration을 [보안 위협 모델 참조](security-threat-model.md)가 정의하는 위협 모델 문제로 다뤄야 합니다. 사용자가 접점이 Core가 기대하는 접점인지 볼 수 있도록 access mode, active project, surface identity, capability profile을 보고합니다. Spoofed `surface_id`, `actor_kind`, project/task selection을 authority의 증거처럼 보여주면 안 됩니다. Public tool contract는 여전히 Core를 통해 이 claims를 해석하고 검증합니다.
 
-Remote 또는 shared MCP 노출은 opt-in connector posture이지 MVP `serve mcp` 기본값이 아닙니다. Operations가 이를 사용 가능하다고 표시하기 전에 connector profile은 access-control contract, secret/PII 처리, redaction 또는 omission 동작, guarantee display, 노출된 path가 Core envelope validation이나 compatibility check를 우회하지 않음을 증명하는 conformance scenario를 포괄해야 합니다.
+Remote 또는 shared MCP 노출은 opt-in connector posture이지 v0.1 Kernel MVP나 staged-delivery `serve mcp` 기본값이 아닙니다. Operations가 이를 사용 가능하다고 표시하기 전에 connector profile은 access-control contract, secret/PII 처리, redaction 또는 omission 동작, guarantee display, 노출된 path가 Core envelope validation이나 compatibility check를 우회하지 않음을 증명하는 conformance scenario를 포괄해야 합니다.
 
 Access mode가 unknown이거나 registered profile보다 약하면 operations는 노출된 권한에 맞는 진단 심각도를 선택해야 합니다. Read-only resource exposure는 사용자가 낮아진 보장 수준을 이해할 수 있으면 warning일 수 있습니다. 상태 변경 tool, product/runtime/code write 경로, close-relevant flow는 과장된 보장 수준으로 조용히 계속 진행하지 말고 fail, hold, 또는 `CAPABILITY_INSUFFICIENT`/`MCP_UNAVAILABLE` 보고로 처리해야 합니다.
 

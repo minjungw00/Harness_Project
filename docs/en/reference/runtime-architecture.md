@@ -6,7 +6,7 @@ Use this reference to understand where Harness runs, where canonical state lives
 
 It is a lookup document for implementers and operators. It does not repeat the Learn overview or teach the whole Harness model from first principles.
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, exercised by Kernel Smoke as its narrow conformance profile. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -17,7 +17,7 @@ This is reference documentation. It does not authorize runtime/server implementa
 
 ## Before you read
 
-Use the [Kernel Reference](kernel.md) for exact state transitions, [MCP API And Schemas](mcp-api-and-schemas.md) for public tool envelopes and replay behavior, [Storage And DDL](storage-and-ddl.md) for storage layout and locks, and [Operations And Conformance Reference](operations-and-conformance.md) for operator entrypoint semantics.
+Use the [Kernel Reference](kernel.md) for exact state transitions, [MCP API And Schemas](mcp-api-and-schemas.md) for public tool envelopes and replay behavior, [Storage And DDL](storage-and-ddl.md) for storage layout and locks, [Security Threat Model Reference](security-threat-model.md) for security assets, trust boundaries, threats, and controls, and [Operations And Conformance Reference](operations-and-conformance.md) for operator entrypoint semantics.
 
 ## Main idea
 
@@ -35,7 +35,7 @@ This document owns:
 - Core-only canonical mutation authority
 - state transaction flow
 - artifact store architecture
-- local threat model and trust boundaries
+- architecture placement for security boundaries
 - projection and reconcile architecture
 - guarantee levels
 - failure and recovery overview
@@ -48,6 +48,7 @@ This document does not own:
 - SQLite DDL; see [Storage And DDL](storage-and-ddl.md)
 - full CLI command semantics; see [Operations And Conformance Reference](operations-and-conformance.md)
 - conformance fixture format; see [Operations And Conformance Reference](operations-and-conformance.md)
+- threat-model assets, trust boundaries, threat categories, and control categories; see [Security Threat Model Reference](security-threat-model.md)
 - surface-specific connector cookbooks; see [Surface Cookbook](surface-cookbook.md)
 - connector capability profiles; see [Agent Integration Reference](agent-integration.md)
 - kernel transition table; see [Kernel Reference](kernel.md)
@@ -82,42 +83,29 @@ This split prevents chat, Markdown reports, generated connector files, operator 
 
 ## Local threat model
 
-Harness is designed as a local authority layer, not as a general operating-system security boundary. The local threat model assumes a user-controlled Product Repository, a local Harness Server / Installation, a Harness Runtime Home, and one or more connected agent surfaces. A local process or file with write access to any one of those spaces can try to influence Harness, so the runtime treats nearby files and callers as separate trust zones rather than interchangeable authority.
+Harness is designed as a local authority layer, not as a general operating-system security boundary. The full asset map, trust-boundary map, threat categories, and control categories are owned by [Security Threat Model Reference](security-threat-model.md).
 
-The main boundaries are:
+The architecture implication is simple: nearby files and callers are separate trust zones. Product files, chat text, generated connector files, operator output, projection Markdown, artifact bytes, external command output, and MCP caller claims can inform Harness, but Core alone commits canonical operational state.
 
-| Boundary | Trust concern | Runtime handling |
-|---|---|---|
-| Product Repository | Human-editable files, generated Markdown, stale docs, and connector-managed files can be edited directly or used as spoofed context. | Product files are input or projection surfaces. Accepted operational meaning must flow through Core or reconcile, and managed-block drift is not silently accepted as state. |
-| Harness Server / Installation | The MCP server and operator tools are a local control plane that could receive calls from the wrong process, stale surface config, or a spoofed project/task/surface claim. | Public tools enter through Core, use request-envelope validation, state-version checks, idempotency, surface capability reporting, and honest guarantee display. Local binding and access expectations are API and operations contracts, not a claim that every local process is trusted. |
-| Agent surface | A surface may overstate its capability, skip MCP, or present user, evaluator, or operator intent inaccurately. | Capability is observed through connector profiles, `surface_capability_check`, blocked reasons, and guarantee display. `actor_kind` informs routing, but it is not by itself approval, acceptance, verification independence, or user-owned judgment. |
-| Connector files | Generated instructions, manifests, capture hints, and local configuration can drift or be hand-edited. | Connector-managed files are checked through manifests and drift reporting. They do not create state authority without Core records. |
-| Harness Runtime Home | `registry.sqlite`, `project.yaml`, `state.sqlite`, `state.sqlite.task_events`, and artifact directories hold operational authority and evidence. | Core transactions, locks, state versions, event history, doctor, and recovery preserve the authority boundary. Direct file edits are invalid state changes until a Core or recovery path validates them. |
-| Artifact store | Staged files, screenshots, logs, network traces, export components, and copied evidence can be poisoned, tampered with, oversized, or contain secrets/PII. | Artifact registration treats inputs as untrusted until an approved staging/capture path, redaction or omission, hash/size/content-type checks, Task-scoped ownership, and owner-record validation succeed. |
+Architecture keeps these security boundaries visible:
 
-Sensitive categories are the map for side-effect, security, compliance, product-contract, and policy risk. Runtime-facing side effects include `destructive_write`, `network_write`, `external_service_write`, `data_export`, `infra_or_deployment_change`, `production_config_change`, `ci_cd_change`, `billing_or_cost_change`, and `telemetry_or_logging_change`. Product/security/compliance-sensitive categories such as `auth_change`, `permission_model_change`, `schema_change`, `dependency_change`, `public_api_change`, `secret_access`, `privacy_or_pii_change`, `license_or_compliance_change`, `model_or_prompt_policy_change`, and `policy_override` are also not made safe by being local operations or by being initiated through a nearby file, connector, or caller. When policy applies, the applicable Harness paths still apply: scope for bounded work, Approval for sensitive operations, compatible Decision Packets for user-owned judgment, Write Authorization for write-capable work, evidence when claims or close depend on it, and capability/guarantee reporting for the connected surface.
+| Boundary | Architecture handling |
+|---|---|
+| Product Repository and projections | Input and readable views; operational meaning flows through Core or reconcile. |
+| MCP server and connected surfaces | Public tools enter through Core and capability is displayed according to the actual profile. |
+| Runtime Home | `state.sqlite`, `state.sqlite.task_events`, registry/config files, and artifacts are treated as local control data; direct file edits are not authority. |
+| Artifact store | Evidence bytes are untrusted until artifact registration, integrity, redaction/omission, and owner-record checks succeed. |
+| External tools and network | Side-effecting commands stay bounded by existing scope, Approval, write-authority, connector, and operator controls. |
 
-Logs, screenshots, artifacts, projections, exports, and run summaries may carry secrets, PII, credentials, tokens, private customer data, or sensitive operational details. Runtime architecture therefore treats redaction and omission as part of evidence handling, not as cosmetic report formatting. Raw secrets should not become durable artifacts, and exported bundles must carry redaction or omission notes when content was removed or blocked.
+Local-only MCP exposure, secret/PII handling, command/path/network allowlists for high-risk work, artifact path validation, stale approval replay, projection tampering, capability overclaiming, and stale context poisoning are threat-model concepts. Their exact API, storage, kernel, connector, and operations contracts remain with the owner documents linked from the threat model.
 
 ### Local access expectations
 
-The MVP default MCP exposure posture is local-only for a registered project surface. Local-only means the default connector and `serve mcp` posture uses local process, local socket, or localhost-loopback access for the expected local user/profile; it does not bind a non-loopback interface, publish a shared or remote endpoint, rely on a forwarded or tunneled port, cross into a cloud/CI relay, expose a cross-user socket or directory, or treat network reachability as authorization. Any caller, endpoint, port, socket, config file, relay, or filesystem path outside the registered connector profile is outside the MVP local boundary. This is a local operating assumption, not trust in every process on the machine. Concrete local risks include another local process issuing tool calls, a forwarded or tunneled port, stale connector configuration, spoofed `project_id`, `task_id`, `surface_id`, or `actor_kind` claims, and IPC or file permissions that let unrelated users or processes read or change Runtime Home data.
+At the architecture level, the v0.1 baseline and staged-delivery default MCP posture is local-only for a registered project surface. Local-only means the runtime is expected to use a local process, local socket, localhost-loopback, in-process/stdio, process-scoped configuration material, a per-project token or handle, or an equivalent local IPC/control path for the expected local user/profile.
 
-The exact local transport is not prescribed. Acceptable contract-level assumptions include localhost TCP with local-only binding, a Unix-domain socket or other local socket constrained by owner-only filesystem permissions, in-process or stdio transport, process-scoped configuration material, a per-project token or handle used as an additional local control, or an equivalent local IPC/control path. Profiles and manifests record the access-control material class, bind/reachability posture, freshness basis, and display-safe handle or fingerprint when needed; they do not store raw token, secret, or private configuration values.
+Remote, shared, tunneled, forwarded, non-loopback, cross-user, or cloud/CI relay exposure remains outside the v0.1 baseline and staged delivery unless owner docs promote and prove a connector posture. The full asset, trust-boundary, threat, and control model is owned by [Security Threat Model Reference](security-threat-model.md#mcp-local-access-and-caller-boundaries); connector profile reporting stays in [Agent Integration Reference](agent-integration.md#capability-profiles), API validation stays in [MCP API And Schemas](mcp-api-and-schemas.md#mcp-boundary-and-caller-trust), and operator diagnostics stay in [Operations And Conformance Reference](operations-and-conformance.md#serve-mcp).
 
-Exposing MCP beyond local-only scope is not the MVP default and remains outside MVP unless owner documentation and conformance promote a specific connector posture. It requires a documented connector capability profile, access-control contract, secret/PII handling policy, guarantee display, and conformance coverage for the exposed authority. This reference does not require one mechanism, but the profile must name what prevents unrelated callers from using the endpoint, what data the exposure may reveal, what guarantee level is still honest, and what Core still validates.
-
-When the access mode is weaker, unknown, or outside the documented profile, Harness reports that honestly. `doctor` or `serve mcp` may warn or fail according to the risk, status and write decisions should reduce the guarantee display or emit `surface_capability_check` findings, cooperative surfaces hold product/runtime/code writes, and API-visible failures use existing `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` paths where the MCP API owner allows them. A weak access mode does not by itself prove existing state is corrupt, but it can make write-capable or close-relevant paths capability-insufficient until diagnosed.
-
-Diagnostic examples are part of the documentation contract, not a new state model:
-
-| Observed posture | Honest report |
-|---|---|
-| MCP is bound to a non-local interface, forwarded, tunneled, or reachable by a caller outside the registered connector profile. | `doctor` and `serve mcp` name the observed access mode, active project, surface profile, and weaker guarantee; state-changing or close-relevant paths hold, fail, or use existing `MCP_UNAVAILABLE` / `CAPABILITY_INSUFFICIENT` responses instead of adding a new public `ErrorCode`. |
-| Runtime Home permissions are unknown or weaker than owner-only expectations. | `doctor` reports a security/threat-model finding with platform observability and remediation guidance. It does not treat file permissions as canonical state or accept direct file edits as authority. |
-| Runtime Home has broad write access. | Reports call this a local tampering risk for `state.sqlite`, `registry.sqlite`, `project.yaml`, connector manifests, artifact files, staging files, and generated operational files. Core still accepts meaning only through shape, owner, event, integrity, recovery, or artifact-registration checks. |
-| Artifact directories have broad read access. | Reports call this a confidentiality risk for logs, screenshots, tokens, PII, verification bundles, exports, and other sensitive evidence. Redaction, omission, block notes, retention, and export rules still define what Harness may display or copy. |
-| Envelope claims name the wrong project, Task, surface, Run, or actor role. | Public tools validate the claims against registered records and tool scope. `actor_kind` may guide routing, but it cannot by itself satisfy Approval, user acceptance, Manual QA, or detached verification. |
+MCP reachability is not authorization. Public tool calls still rely on Core envelope validation, state-version checks, idempotency, registered project/task/surface compatibility, and the actual connected surface guarantee level.
 
 ## Product Repository
 

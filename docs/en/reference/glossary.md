@@ -32,6 +32,7 @@ This glossary owns official term wording, capitalization reminders, record-name 
 | Projections, managed blocks, projection freshness, Markdown reports, template bodies | [Document Projection Reference](document-projection.md); [Template Reference](templates/README.md) |
 | Discovery and Shared Design, design quality, stewardship, Feedback Loop finding routing, context hygiene, severity composition, policy contracts | [Design Quality Policies](design-quality-policies.md) |
 | Surface capability, guarantee display, connector behavior | [Agent Integration Reference](agent-integration.md) |
+| Security assets, trust boundaries, threat categories, high-risk control expectations | [Security Threat Model Reference](security-threat-model.md) |
 | Operator procedures, conformance fixtures, docs-maintenance reporting | [Operations And Conformance Reference](operations-and-conformance.md) |
 
 ## Official Terms
@@ -502,6 +503,14 @@ The task-scoped state clock stored in `tasks.state_version`. Task-scoped mutatio
 
 The user's durable authority to understand the work journey and make or withhold judgment over goals, scope, design, trade-offs, codebase stewardship, QA, acceptance, and residual risk. The harness preserves Strategic Agency by making state, decisions, evidence, blockers, and remaining risk explicit outside chat.
 
+### Secret Handle
+
+A display-safe reference to sensitive material such as credentials, tokens, certificates, keys, or other secret values. A secret handle may support evidence or approval scope without storing the raw secret in artifacts, connector manifests, projections, exports, screenshots, logs, summaries, or prompt context. Exact storage and API behavior stays with the storage and MCP/API owners.
+
+### Security Threat Model
+
+The reference owner for Harness security assets, trust boundaries, threat categories, and control expectations. It explains risks such as prompt injection in repo docs, projection tampering, stale approval replay, out-of-scope writes, MCP-unavailable state claims, secret leakage through evidence artifacts, artifact hash mismatch, malicious generated connector files, capability overclaiming, and stale context poisoning. It does not own exact DDL, public API schemas, or kernel transitions.
+
 ### Surface Capability Check
 
 A validator that reports whether a connected agent surface can satisfy required harness behavior. It affects blocked reasons and guarantee display, but it is not a kernel gate.
@@ -529,6 +538,10 @@ A record of red, green, and refactor evidence for a Change Unit or behavior slic
 ### Tiny Direct Profile
 
 A Direct subprofile for a typo, single docs sentence, or obvious rename where scope, result, and no-user-judgment boundary are immediately clear. It keeps interaction minimal, but it must escalate to ordinary Direct when scope broadens while remaining low-risk and narrow, or when Evidence Manifest coverage, artifact refs, link/render proof, or other evidence beyond the tiny result note is needed. It must route to Work when product judgment, material technical judgment, architecture choice, public interface/API impact, UX workflow, schema, sensitive category, or multi-step delivery appears.
+
+### Trust Boundary
+
+A separation between Harness surfaces, files, callers, or runtime spaces where input from one side must not be treated as authority on the other side without an owner path. For example, chat text, Product Repository documents, projections, generated connector files, artifact bytes, and MCP caller claims can inform Harness, but they do not become canonical operational state unless Core or another documented owner path accepts their meaning. The trust-boundary map is owned by [Security Threat Model Reference](security-threat-model.md).
 
 ### Verification
 

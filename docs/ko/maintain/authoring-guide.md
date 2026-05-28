@@ -6,7 +6,7 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 목표는 현재 문서가 독자에게 읽기 쉽고, 세부 계약의 위치가 분명하며, 영어와 한국어 문서가 같은 의미를 유지하도록 돕는 것입니다.
 
-이 문서는 Maintain 문서입니다. 문서 유지보수만 다루며, 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 제품 상태 변경, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data, 근거 기록, QA 결과, 수락 결정, Task 닫기를 승인하거나 대체하지 않습니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+이 문서는 Maintain 문서입니다. 문서 유지보수만 다루며, 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 제품 상태 변경, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data, 근거 기록, QA 결과, 수락 결정, Task 닫기를 승인하거나 대체하지 않습니다. 첫 제품 MVP 목표는 v0.1 Kernel MVP이며, Kernel Smoke가 좁은 conformance profile로 이를 실행합니다. v0.2부터 v0.4까지는 Agency-Hardened MVP reference conformance target을 향한 staged pack이고, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
 
 ## 이런 때 읽기
 
@@ -154,6 +154,7 @@ Runtime conformance fixture body shape, assertion mode, isolated execution behav
 | Release Handoff와 export | [Operations And Conformance: Release Handoff Export Profile](../reference/operations-and-conformance.md#release-handoff-export-profile); 렌더링 형태는 [EXPORT Template](../reference/templates/export.md) |
 | Docs-maintenance | Rule body는 [Authoring Guide: Docs-maintenance checks](#docs-maintenance-checks), operator 보고는 [Operations And Conformance: docs-maintenance profile](../reference/operations-and-conformance.md#docs-maintenance-프로필) |
 | Projection과 report surfaces | [Document Projection Reference](../reference/document-projection.md), 렌더링 형태는 [Template Reference](../reference/templates/README.md) |
+| Security asset, trust boundary, threat category, control category, high-risk cooperative/detective/preventive/isolated security expectation | Threat concept은 [보안 위협 모델 참조](../reference/security-threat-model.md)가 담당하고, exact API, storage, kernel, connector, operations, conformance behavior는 각 owner에 남습니다. |
 
 ## Owner 링크 요약 패턴
 
@@ -244,7 +245,7 @@ Result 의미:
 | 영어/한국어 의미 섹션 일치 | 대응 파일은 같은 활성 파일 맵, 독자 목적, 의미상 같은 섹션 범위, owner link, 계약 세부사항을 유지합니다. Stable identifier, schema name, enum value, DDL name, validator ID, code identifier, 검토 가능성이 분명하다면 heading text와 작은 묶음 방식은 자연스럽게 조정할 수 있습니다. |
 | 시작 방식 준수 | Template이 아닌 활성 문서는 표준 시작 방식을 사용합니다. `docs/*/reference/templates/README.md`는 `사용 시점`과 `템플릿 계층`을 사용하고, `docs/*/reference/templates/` 아래의 `README.md`가 아닌 개별 template file은 `사용 시점`, `기준 기록`, `렌더링 섹션`, `전체 템플릿`과 명확한 권한 없음 경계를 사용합니다. |
 | 깨진 교차 참조 탐지 | Markdown links, heading anchors, template/reference links, same-language README routes, paired-language entry links, owner-section links가 활성 문서와 현재 anchor로 연결됩니다. |
-| Owner 경계 불일치 | 정확한 계약은 활성 owner 문서에 머뭅니다. 여기에는 `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/operations-and-conformance.md`, `reference/glossary.md`가 포함됩니다. Owner가 아닌 문서는 이 contract를 다시 정의하지 않고 요약하고 link합니다. |
+| Owner 경계 불일치 | 정확한 계약과 active owner concept은 활성 owner 문서에 머뭅니다. 여기에는 `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/security-threat-model.md`, `reference/operations-and-conformance.md`, `reference/glossary.md`가 포함됩니다. Owner가 아닌 문서는 이 contract를 다시 정의하지 않고 요약하고 link합니다. |
 | Fixture/action schema 불일치 | Operations fixture examples의 `action`과 실행 가능한 `input`은 `reference/mcp-api-and-schemas.md`의 public MCP request schemas 및 `reference/operations-and-conformance.md`의 `ToolEnvelope` expansion convention과 일치해야 합니다. Docs-maintenance는 drift를 flag할 수 있지만 fixture action을 실행하거나 fixture 의미를 여기서 다시 설명하지 않습니다. |
 | Enum, event, validator, projection 불일치 | State/gate/result values와 Kernel Stable Event Catalog names는 `reference/kernel.md`, error와 stable `ValidatorResult` IDs는 `reference/mcp-api-and-schemas.md`, storage values는 `reference/storage-and-ddl.md`, `ProjectionKind` tiers와 template ownership은 `reference/document-projection.md` 및 `reference/templates/*.md`와 일치해야 합니다. |
 | Glossary와 기준 기록 표현 불일치 | Official terms, capitalization, record ID prefixes, source-of-truth wording, authority-boundary phrases는 `reference/glossary.md`와 relevant owner docs에 맞아야 하며 추가 상태 권한을 암시하지 않아야 합니다. |
@@ -281,6 +282,7 @@ Result 의미:
 | Strategic thesis, failure model, MVP boundary, principle groups | 독자 설명은 `learn/purpose-and-principles.md`; exact contract impact는 `reference/design-quality-policies.md`와 `reference/kernel.md` |
 | Kernel entities, lifecycle, gates, state transitions, close semantics, `prepare_write`, `close_task` | `reference/kernel.md` |
 | Runtime architecture, three spaces in implementation detail, Core process model, artifact architecture, projection/reconcile architecture, guarantee levels | `reference/runtime-architecture.md` |
+| Security asset, trust boundary, threat category, control category, high-risk cooperative/detective/preventive/isolated security expectation | Threat concept은 `reference/security-threat-model.md`가 담당하고, exact enforcement, API, storage, kernel, connector, operations, conformance behavior는 각 owner에 남습니다. |
 | MCP resources/tools, request/response schemas, error taxonomy, validator result schema, artifact ref shape | `reference/mcp-api-and-schemas.md` |
 | SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` |
 | MVP implementation order and stage exit criteria | `build/mvp-plan.md` |
@@ -295,6 +297,6 @@ Result 의미:
 | Generic capability profile examples | `reference/agent-integration.md` |
 | Operator procedures, conformance fixture bodies, fixture assertion 의미, doctor/recover/reconcile/export/artifact integrity, docs-maintenance 보고 | `reference/operations-and-conformance.md` |
 | Official term definitions and capitalization | `reference/glossary.md` |
-| Post-MVP roadmap | `roadmap.md` |
+| v1+ Expansion roadmap | `roadmap.md` |
 | Documentation authoring rules | `maintain/authoring-guide.md` |
 | Translation and bilingual prose rules | `maintain/translation-guide.md` |

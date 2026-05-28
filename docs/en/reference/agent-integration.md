@@ -8,7 +8,7 @@ It owns the common connector contract: capability tiers, capability profiles, ge
 
 For the user-facing agent procedure, read [Agent Session Flow](../use/agent-session-flow.md). For surface-specific setup notes, read [Surface Cookbook](surface-cookbook.md).
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, exercised by Kernel Smoke as its narrow conformance profile. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -20,7 +20,7 @@ This is reference documentation. It does not authorize runtime/server implementa
 
 ## Before you read
 
-Read [Agent Session Flow](../use/agent-session-flow.md) for the user-facing procedure and [Kernel Reference](kernel.md) for write and close authority. This reference explains connector behavior and capability display, not kernel state transitions.
+Read [Agent Session Flow](../use/agent-session-flow.md) for the user-facing procedure, [Kernel Reference](kernel.md) for write and close authority, and [Security Threat Model Reference](security-threat-model.md) for MCP exposure, generated-file, stale-context, artifact, secret, and capability-overclaiming threats. This reference explains connector behavior and capability display, not kernel state transitions.
 
 ## Main idea
 
@@ -56,6 +56,7 @@ Always-on rules and context should stay short, current, and non-authoritative. T
 | Public MCP request/response schemas | [MCP API And Schemas](mcp-api-and-schemas.md) |
 | Kernel state transitions and write/close rules | [Kernel Reference](kernel.md) |
 | Runtime guarantee level definitions | [Runtime Architecture Reference](runtime-architecture.md#guarantee-levels) |
+| Security assets, trust boundaries, threat categories, and control categories | [Security Threat Model Reference](security-threat-model.md) |
 
 ## Capability Tiers
 
@@ -127,14 +128,16 @@ Target profile values may include:
 
 Every capability profile must state MCP exposure posture at a contract level. The exact field names are connector-owned, but the profile must make these facts visible:
 
-- whether the MVP default `local_only` posture is in effect
+- whether the v0.1 baseline and staged-delivery `local_only` posture is in effect
 - the assumed local transport, such as localhost TCP, local socket, in-process/stdio, process-scoped configuration material, or equivalent local IPC
 - the access-control material class, such as bind scope, socket path class, process pipe/stdio, per-project token handle, process-scoped config handle, or equivalent local control, without raw token, secret, or private configuration values
 - the access-control contract that keeps unrelated callers from using the endpoint
 - whether remote or shared MCP exposure is disabled, unsupported, or explicitly enabled by the profile
 - for any beyond-local exposure, the owner-doc and conformance-promotion basis, secret/PII handling policy, redaction or omission behavior, guarantee display, and conformance coverage that prove the exposure does not silently upgrade authority
 
-Capability profiles must be refreshed when detected version, MCP config, hooks, permissions, workspace policy, generated files or managed blocks, conformance result, capture method, QA capture method, browser test environment, redaction policy, artifact retention behavior, access-control material class, local bind/reachability posture, or isolation/guard wrapper behavior changes. A beyond-local exposure remains outside MVP until promoted by owner docs and conformance; connector prose must not present it as the safe MVP default.
+The security reason for these fields is owned by [Security Threat Model Reference](security-threat-model.md); this reference owns how connector profiles report them.
+
+Capability profiles must be refreshed when detected version, MCP config, hooks, permissions, workspace policy, generated files or managed blocks, conformance result, capture method, QA capture method, browser test environment, redaction policy, artifact retention behavior, access-control material class, local bind/reachability posture, or isolation/guard wrapper behavior changes. Beyond-local exposure remains outside the v0.1 baseline and staged delivery until promoted by owner docs and conformance; connector prose must not present it as the safe v0.1 or staged-delivery default.
 
 ## Capability Profile Examples
 
@@ -346,7 +349,7 @@ If MCP is unavailable, the connector must not claim authoritative state updates.
 
 `MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible from that call path. A connector must not invent Core state, Write Authorization, gate status, evidence, acceptance, residual-risk acceptance, or close readiness from chat memory, generated files, cached projections, old status/next recommendations, or operator prose while Core is unreachable. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools. Product/runtime/code writes hold until MCP is reconnected or diagnosed, unless the work is an explicit pre-MVP documentation-authoring batch under `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. Cooperative surfaces hold by instruction; detective surfaces may also report after-action mismatches; stronger profiles may block before execution only when a fixture-proven guard covers the operation or when an isolation boundary is actually in use. That override is a documentation-maintainer override only; it is not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition.
 
-If MCP works but pre-tool guard is weak, low-risk direct work may proceed with cooperative `prepare_write` and detective changed-path validation. Medium/high-risk work should require stricter validation, a fixture-proven sidecar guard, explicit sensitive-action Approval, detached verification, or isolation.
+If MCP works but pre-tool guard is weak, low-risk direct work may proceed with cooperative `prepare_write` and detective changed-path validation. Medium/high-risk work must not rely on cooperative-only claims when the assessed threat/control path requires preventive or isolated controls. The [Security Threat Model](security-threat-model.md) names the security reason; connector profiles, operations, API, kernel, and conformance owners define the exact behavior.
 
 If native capture is unavailable, the connector should fall back to manual artifact capture: named artifact refs for diffs, logs, screenshots, workflow notes, command output, or QA notes supplied by the user or operator. If native isolation or fresh evaluator support is unavailable, it should fall back to a manual verification bundle with acceptance criteria, changed files, relevant refs, artifact refs, freshness state, and forbidden patterns. These fallbacks are explicit evidence routes, not upgrades to preventive or isolated guarantee levels.
 

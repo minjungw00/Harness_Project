@@ -4,7 +4,7 @@
 
 This document tells implementers what to build before they dive into the full reference specs. It is the bridge between the reader-centered docs and the detailed contracts in the kernel, runtime, MCP, storage, projection, and conformance references.
 
-This is planning documentation for documentation redesign / feedback incorporation and handoff review. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before maintainers explicitly accept the documentation set for first runtime-batch planning. The first product MVP target is v0.1 Kernel MVP, exercised by the Kernel Smoke conformance profile: one local process with modules proving one authority loop. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target. v1+ automation stays roadmap scope unless owner docs promote and prove it.
+This is planning documentation for documentation redesign / feedback incorporation and handoff review. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before maintainers explicitly accept the documentation set for first runtime-batch planning. The first product MVP target is v0.1 Kernel MVP, exercised by the Kernel Smoke conformance profile: one local process with modules proving one authority loop. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 Use it to answer three questions:
 
@@ -22,7 +22,7 @@ This document does not define SQLite DDL, public MCP schemas, projection templat
 
 ## Before you read
 
-You should already understand the basic Harness concepts from the Learn path. For exact behavior, use the Reference docs linked at the end of this page. For post-MVP candidates and promotion criteria, use the [Roadmap](../roadmap.md).
+You should already understand the basic Harness concepts from the Learn path. For exact behavior, use the Reference docs linked at the end of this page. For v1+ Expansion candidates and promotion criteria, use the [Roadmap](../roadmap.md).
 
 ## Main idea
 
@@ -62,7 +62,7 @@ Use this checkpoint to decide what must be true before maintainers can switch th
 First implementation planning means v0.1 Kernel MVP planning first, not Agency-Hardened MVP or roadmap automation. It may start only when all of these are true:
 
 - The final docs-maintenance drift pass is complete, or remaining known gaps are recorded as `TODO_DECISION` or `TODO_IMPLEMENT` in the relevant owner docs. Docs-maintenance remains a read-only documentation check; see [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks) and [Operations And Conformance Reference](../reference/operations-and-conformance.md#docs-maintenance-profile).
-- The local-only MCP exposure baseline is accepted for v0.1 Kernel MVP. Remote, shared, tunneled, or non-loopback exposure remains outside the v0.1 baseline unless owner docs promote and prove a connector profile; see [Runtime Architecture](../reference/runtime-architecture.md#local-access-expectations) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#mcp-boundary-and-caller-trust).
+- The local-only MCP exposure baseline is accepted for v0.1 Kernel MVP. Remote, shared, tunneled, or non-loopback exposure remains outside the v0.1 baseline unless owner docs promote and prove a connector profile; see [Runtime Architecture](../reference/runtime-architecture.md#local-access-expectations), [Security Threat Model Reference](../reference/security-threat-model.md#mcp-local-access-and-caller-boundaries), and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#mcp-boundary-and-caller-trust).
 - The reference surface capability profile is accepted as a concrete declaration for the actual host/profile/configuration in use, with refresh triggers for version, MCP config, hooks, permissions, workspace policy, generated files, conformance result, capture method, QA capture method, redaction policy, and artifact retention behavior. Exact connector profile and surface recipe details stay in [Agent Integration Reference](../reference/agent-integration.md#capability-profiles) and [Surface Cookbook](../reference/surface-cookbook.md).
 - The Core-only mutation model is accepted: Core alone changes canonical operational state, while resources, projections, reports, diagnostics, MCP callers, and operator entrypoints remain read-only or derived unless they enter a Core state-changing path. See [Core process model](../reference/runtime-architecture.md#core-process-model), [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow), and the MCP [Idempotency](../reference/mcp-api-and-schemas.md#idempotency) and [State conflict behavior](../reference/mcp-api-and-schemas.md#state-conflict-behavior) sections.
 - The Kernel Smoke fixture queue is identified as the v0.1 Kernel MVP conformance authoring order. Exact fixture format, assertions, and catalog semantics stay in [Operations And Conformance Reference](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue).

@@ -6,7 +6,7 @@
 
 구현자와 운영자가 찾아보는 참조 문서이며, Learn overview 전체를 다시 설명하지 않습니다.
 
-이 문서는 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+이 문서는 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 제품 MVP 목표는 v0.1 Kernel MVP이며, Kernel Smoke가 좁은 conformance profile로 이를 실행합니다. v0.2부터 v0.4까지는 Agency-Hardened MVP reference conformance target을 향한 staged pack이고, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
 
 ## 이런 때 읽기
 
@@ -17,7 +17,7 @@
 
 ## 읽기 전에
 
-정확한 상태 전이는 [커널 참조](kernel.md)를, public tool envelope와 replay 동작은 [MCP API와 스키마](mcp-api-and-schemas.md)를, storage layout과 lock은 [Storage와 DDL](storage-and-ddl.md)을, operator entrypoint 의미는 [운영과 Conformance 참조](operations-and-conformance.md)를 사용합니다.
+정확한 상태 전이는 [커널 참조](kernel.md)를, public tool envelope와 replay 동작은 [MCP API와 스키마](mcp-api-and-schemas.md)를, storage layout과 lock은 [Storage와 DDL](storage-and-ddl.md)을, security asset, trust boundary, threat, control은 [보안 위협 모델 참조](security-threat-model.md)를, operator entrypoint 의미는 [운영과 Conformance 참조](operations-and-conformance.md)를 사용합니다.
 
 ## 핵심 생각
 
@@ -35,7 +35,7 @@ Harness는 사용자의 Product Repository 옆에서 실행되는 로컬 권한 
 - Core-only canonical mutation authority
 - state transaction flow
 - artifact store architecture
-- 로컬 위협 모델과 신뢰 경계
+- security boundary의 architecture placement
 - projection과 reconcile architecture
 - 보장 수준
 - failure와 recovery overview
@@ -48,6 +48,7 @@ Harness는 사용자의 Product Repository 옆에서 실행되는 로컬 권한 
 - SQLite DDL. [Storage와 DDL](storage-and-ddl.md)을 봅니다.
 - full CLI command 의미. 현재 담당 문서는 [운영과 Conformance](operations-and-conformance.md)입니다.
 - conformance fixture 형식. 현재 담당 문서는 [운영과 Conformance](operations-and-conformance.md)입니다.
+- threat-model asset, trust boundary, threat category, control category. [보안 위협 모델 참조](security-threat-model.md)를 봅니다.
 - 접점별 connector cookbook. [Surface Cookbook](surface-cookbook.md)을 봅니다.
 - connector capability profile. [Agent 통합 참조](agent-integration.md)를 봅니다.
 - kernel transition table. 자세한 내용은 [커널 참조](kernel.md)를 봅니다.
@@ -82,42 +83,29 @@ flowchart LR
 
 ## 로컬 위협 모델
 
-Harness는 로컬 권한 계층으로 설계되며, 일반적인 운영체제 보안 경계를 대신하지 않습니다. 이 로컬 위협 모델은 사용자가 관리하는 Product Repository, 로컬 Harness Server / Installation, Harness Runtime Home, 하나 이상의 연결된 agent 접점을 전제로 합니다. 이 공간 중 하나에 쓰기 접근 권한이 있는 로컬 프로세스나 파일은 Harness에 영향을 주려고 할 수 있으므로, runtime은 가까이 있는 파일과 호출자를 모두 같은 권한으로 보지 않고 별도의 신뢰 영역으로 다룹니다.
+Harness는 로컬 권한 계층으로 설계되며, 일반적인 operating-system security boundary를 대신하지 않습니다. 전체 asset map, trust-boundary map, threat category, control category는 [보안 위협 모델 참조](security-threat-model.md)가 담당합니다.
 
-주요 경계는 다음과 같습니다.
+Architecture implication은 단순합니다. 가까이 있는 file과 caller도 별도의 trust zone입니다. Product file, chat text, generated connector file, operator output, projection Markdown, artifact bytes, external command output, MCP caller claim은 Harness에 정보를 줄 수 있지만, canonical operational state를 commit하는 것은 Core뿐입니다.
 
-| 경계 | 신뢰 우려 | Runtime 처리 |
-|---|---|---|
-| Product Repository | 사람이 편집할 수 있는 파일, 생성된 Markdown, 오래된 문서, connector-managed file이 직접 수정되거나 위조된 context로 쓰일 수 있습니다. | Product file은 입력 또는 projection 접점입니다. 수용된 운영 의미는 Core 또는 reconcile을 거쳐야 하며, managed-block drift를 조용히 state로 받아들이지 않습니다. |
-| Harness Server / Installation | MCP server와 operator tool은 로컬 제어면입니다. 잘못된 프로세스, 오래된 surface config, 위조된 project/task/surface claim에서 호출이 들어올 수 있습니다. | Public tool은 Core를 통과하고 request-envelope validation, state-version check, idempotency, surface capability reporting, 정직한 보장 수준 표시를 사용합니다. 로컬 binding과 접근 기대사항은 API와 operations 계약이며, 모든 로컬 프로세스를 신뢰한다는 뜻이 아닙니다. |
-| Agent surface | 접점이 capability를 과장하거나, MCP를 건너뛰거나, user/evaluator/operator intent를 부정확하게 표현할 수 있습니다. | Capability는 connector profile, `surface_capability_check`, blocked reason, 보장 수준 표시로 관찰합니다. `actor_kind`는 routing에 쓰이지만 그 자체가 approval, acceptance, verification independence, user-owned judgment는 아닙니다. |
-| Connector files | Generated instruction, manifest, capture hint, local configuration이 drift되거나 손으로 수정될 수 있습니다. | Connector-managed file은 manifest와 drift reporting으로 확인합니다. Core record 없이 상태 권한을 만들지 않습니다. |
-| Harness Runtime Home | `registry.sqlite`, `project.yaml`, `state.sqlite`, `state.sqlite.task_events`, artifact directories는 운영 권한과 근거를 담습니다. | Core transaction, lock, state version, event history, doctor, recovery가 이 권한 경계를 보존합니다. Direct file edit는 Core 또는 recovery path가 검증하기 전까지 유효한 state change가 아닙니다. |
-| Artifact store | Staged file, screenshot, log, network trace, export component, copied evidence에는 poisoning, 변조, 과도한 크기, secret/PII 포함 위험이 있습니다. | Artifact 등록은 approved staging/capture path, redaction 또는 omission, hash/size/content-type check, Task-scoped ownership, owner-record validation이 성공하기 전까지 input을 신뢰하지 않습니다. |
+Architecture는 다음 security boundary를 보이게 유지합니다.
 
-Sensitive category는 side effect, security, compliance, product-contract, policy risk를 보는 지도입니다. Runtime-facing side effect에는 `destructive_write`, `network_write`, `external_service_write`, `data_export`, `infra_or_deployment_change`, `production_config_change`, `ci_cd_change`, `billing_or_cost_change`, `telemetry_or_logging_change`가 포함됩니다. `auth_change`, `permission_model_change`, `schema_change`, `dependency_change`, `public_api_change`, `secret_access`, `privacy_or_pii_change`, `license_or_compliance_change`, `model_or_prompt_policy_change`, `policy_override` 같은 product/security/compliance-sensitive category도 local operation이라는 이유나 가까운 파일, connector, 호출자에서 시작되었다는 이유만으로 안전해지지 않습니다. Policy가 적용되면 해당되는 Harness 경로를 거쳐야 합니다. 예를 들어 범위 있는 작업을 위한 scope, 민감 행위 허용을 위한 Approval, 사용자 소유 판단을 위한 compatible Decision Packet, write-capable 작업을 위한 Write Authorization, 주장이나 close가 의존하는 evidence, 연결된 접점의 capability/guarantee reporting이 여기에 포함될 수 있습니다.
+| Boundary | Architecture handling |
+|---|---|
+| Product Repository와 projections | Input과 readable view입니다. Operational meaning은 Core 또는 reconcile을 통해 흐릅니다. |
+| MCP server와 connected surfaces | Public tool은 Core를 통해 들어오며, capability는 실제 profile에 맞게 표시합니다. |
+| Runtime Home | `state.sqlite`, `state.sqlite.task_events`, registry/config file, artifact는 local control data로 취급합니다. Direct file edit는 authority가 아닙니다. |
+| Artifact store | Evidence bytes는 artifact registration, integrity, redaction/omission, owner-record check가 성공하기 전까지 untrusted입니다. |
+| External tools와 network | Side effect가 있는 command는 기존 scope, Approval, write-authority, connector, operator control 안에 머물러야 합니다. |
 
-Log, screenshot, artifact, projection, export, run summary에는 secret, PII, credential, token, private customer data, 민감한 운영 세부 정보가 들어갈 수 있습니다. 따라서 runtime architecture에서 redaction과 omission은 보기 좋은 보고서 서식이 아니라 evidence handling의 일부입니다. Raw secrets는 durable artifact가 되면 안 되며, exported bundle은 내용이 제거되었거나 blocked되었을 때 redaction 또는 omission note를 포함해야 합니다.
+Local-only MCP exposure, secret/PII handling, high-risk work용 command/path/network allowlist, artifact path validation, stale approval replay, projection tampering, capability overclaiming, stale context poisoning은 threat-model concept입니다. Exact API, storage, kernel, connector, operations contract는 threat model에서 연결한 owner 문서에 남습니다.
 
 ### 로컬 접근 기대사항
 
-MVP의 기본 MCP 노출 자세는 등록된 project surface에 대한 local-only입니다. Local-only란 기본 connector와 `serve mcp` 자세가 기대되는 local user/profile에 대해 로컬 프로세스, 로컬 socket, 또는 localhost loopback 접근을 사용한다는 뜻입니다. Non-loopback interface에 bind하거나, shared/remote endpoint를 publish하거나, forwarded/tunneled port에 의존하거나, cloud/CI relay를 통과하거나, cross-user socket 또는 directory를 노출하거나, network reachability 자체를 authorization으로 취급하지 않습니다. Registered connector profile 밖의 caller, endpoint, port, socket, config file, relay, filesystem path는 MVP local boundary 밖에 있습니다. 이것은 로컬 운영 전제이지, 같은 machine의 모든 프로세스를 신뢰한다는 뜻이 아닙니다. 구체적인 로컬 위험에는 다른 로컬 프로세스의 tool call, forwarded 또는 tunneled port, 오래된 connector configuration, 위조된 `project_id`, `task_id`, `surface_id`, `actor_kind` claim, Runtime Home data를 관련 없는 user나 프로세스가 읽거나 바꿀 수 있게 하는 IPC 또는 file permission이 포함됩니다.
+Architecture 수준에서 v0.1 baseline과 staged-delivery default의 MCP posture는 registered project surface에 대한 local-only입니다. Local-only는 expected local user/profile에 대해 runtime이 local process, local socket, localhost-loopback, in-process/stdio, process-scoped configuration material, per-project token 또는 handle, 이에 준하는 local IPC/control path를 사용한다는 뜻입니다.
 
-정확한 로컬 transport는 지정하지 않습니다. Contract 수준에서 허용되는 전제에는 local-only binding을 사용하는 localhost TCP, owner-only filesystem permission으로 제한된 Unix-domain socket 또는 다른 local socket, in-process 또는 stdio transport, process-scoped configuration material, 추가 local control로 쓰는 per-project token 또는 handle, 이에 준하는 local IPC/control path가 포함됩니다. Profile과 manifest는 access-control material class, bind/reachability posture, freshness basis, 필요할 때 display-safe handle 또는 fingerprint를 기록하며 raw token, secret, private configuration value를 저장하지 않습니다.
+Remote, shared, tunneled, forwarded, non-loopback, cross-user, cloud/CI relay 노출은 owner docs가 connector posture를 승격하고 증명하기 전까지 v0.1 baseline과 staged delivery 밖에 남습니다. 전체 asset, trust-boundary, threat, control model은 [보안 위협 모델 참조](security-threat-model.md#mcp-local-access와-caller-boundary)가 담당하고, connector profile reporting은 [Agent 통합 참조](agent-integration.md#capability-profiles), API validation은 [MCP API와 스키마](mcp-api-and-schemas.md#mcp-경계와-호출자-신뢰), operator diagnostic은 [운영과 Conformance 참조](operations-and-conformance.md#serve-mcp)가 담당합니다.
 
-MCP를 local-only 범위 밖으로 노출하는 것은 MVP 기본값이 아니며, owner documentation과 conformance가 특정 connector posture를 승격하기 전까지 MVP 밖에 남습니다. 그러려면 문서화된 connector capability profile, 접근 제어 계약, secret/PII 처리 정책, 보장 수준 표시, 노출된 권한을 검증하는 conformance coverage가 필요합니다. 이 참조 문서는 하나의 mechanism을 요구하지 않습니다. 다만 profile은 관련 없는 호출자가 endpoint를 사용하는 일을 무엇이 막는지, 그 노출로 어떤 data가 드러날 수 있는지, 어떤 guarantee level이 여전히 정직한지, Core가 여전히 무엇을 검증하는지 이름 붙여야 합니다.
-
-Access mode가 더 약하거나 unknown이거나 문서화된 profile 밖에 있으면 Harness는 이를 솔직하게 보고합니다. `doctor` 또는 `serve mcp`는 risk에 따라 warn 또는 fail할 수 있고, status와 write decision은 보장 수준 표시를 낮추거나 `surface_capability_check` finding을 emit해야 하며, cooperative 접점은 product/runtime/code write를 보류합니다. API에 보이는 failure는 MCP API owner가 허용하는 곳에서 기존 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT` path를 사용합니다. 약한 access mode 자체가 existing state의 손상을 증명하지는 않지만, write-capable 또는 close-relevant 경로가 진단 전까지 capability 부족 상태가 될 수 있습니다.
-
-진단 예시는 문서 계약의 일부이며 새 상태 모델이 아닙니다.
-
-| 관찰된 상태 | 보고 내용 |
-|---|---|
-| MCP가 non-local interface에 bind되었거나, forwarded/tunneled 되었거나, registered connector profile 밖 호출자가 도달할 수 있습니다. | `doctor`와 `serve mcp`는 관찰된 access mode, active project, surface profile, 낮아진 보장 수준을 이름 붙입니다. 상태 변경 또는 close-relevant 경로는 hold, fail, 또는 기존 `MCP_UNAVAILABLE` / `CAPABILITY_INSUFFICIENT` response를 사용하며 새 public `ErrorCode`를 추가하지 않습니다. |
-| Runtime Home 권한이 unknown이거나 owner-only expectation보다 약합니다. | `doctor`는 platform observability와 remediation guidance가 포함된 security/threat-model finding을 보고합니다. 파일 권한을 기준 상태로 취급하거나 직접 파일 편집을 권한 근거로 받아들이지 않습니다. |
-| Runtime Home에 광범위한 쓰기 권한이 있습니다. | Report는 `state.sqlite`, `registry.sqlite`, `project.yaml`, connector manifest, artifact file, staging file, generated operational file에 대한 로컬 변조 위험이라고 설명합니다. Core는 shape, owner, event, integrity, recovery, artifact-registration check를 통해서만 의미를 받아들입니다. |
-| Artifact directory에 광범위한 읽기 권한이 있습니다. | Report는 log, screenshot, token, PII, verification bundle, export, 기타 민감 evidence에 대한 기밀성 위험을 설명합니다. Redaction, omission, block note, retention, export rule이 Harness가 표시하거나 복사할 수 있는 내용을 계속 정의합니다. |
-| Envelope claim이 잘못된 project, Task, surface, Run, actor role을 이름으로 지정합니다. | Public tool은 registered record와 tool scope에 대해 claim을 검증합니다. `actor_kind`는 routing을 도울 수 있지만, 그 자체로 Approval, user acceptance, Manual QA, detached verification을 충족할 수 없습니다. |
+MCP reachability는 authorization이 아닙니다. Public tool call은 계속 Core envelope validation, state-version check, idempotency, registered project/task/surface compatibility, 실제 connected surface guarantee level에 의존합니다.
 
 ## Product Repository
 
