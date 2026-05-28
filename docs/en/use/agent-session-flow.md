@@ -22,12 +22,14 @@ Show only the state, blocker, judgment, and next action that affect the user's n
 
 A useful status or next-action response answers four questions in ordinary language:
 
-- What is blocked now?
-- What has already been checked, and by which refs?
-- What remains before the next write, acceptance, or close?
-- What, if anything, is the user deciding?
+- Scope: what may change, and what is out of bounds?
+- Judgment: what, if anything, must the user decide?
+- Evidence: what has already been checked, and by which refs?
+- Close Readiness: what remains before verification, Manual QA, acceptance, residual-risk handling, or close?
 
-The always-on turn context should be a compact, current Harness envelope: active Task id and mode, scope, out of bounds, next safe action, primary blocker, smallest unblocker, active scoped Change Unit, Autonomy Boundary, active Decision Packet, Write Authority Summary, acceptance criteria, approval status, evidence refs, verification, Manual QA, residual risk, guarantee level, gate summary, and projection freshness. Evidence, Run, Eval, Manual QA, artifacts, logs, screenshots, diffs, old projections, older PRDs or designs, module maps, and large traces should appear as refs and short outcomes by default, then be pulled only when the next action requires inspecting them. Stale chat memory can point to refs to inspect, but it cannot authorize writes, satisfy gates, accept results, close tasks, or replace current state.
+Render gate state through four user-facing display groups: Scope, Judgment, Evidence, and Close Readiness. They are display groups only; they do not replace kernel gates, add schema fields, change recompute rules, authorize writes, satisfy gates, accept residual risk, or close the Task. Exact gate values, recompute behavior, and close semantics are owned by [Kernel Reference](../reference/kernel.md#gates) and [`close_task`](../reference/kernel.md#close_task).
+
+The always-on turn context should be a compact, current Harness envelope: active Task id and mode, the four display groups, next safe action, primary blocker, smallest unblocker, active scoped Change Unit, Autonomy Boundary, active Decision Packet, Write Authority Summary, acceptance criteria, approval status, source refs, guarantee level, optional raw gate refs, and projection freshness. Evidence, Run, Eval, Manual QA, artifacts, logs, screenshots, diffs, old projections, older PRDs or designs, module maps, and large traces should appear as refs and short outcomes by default, then be pulled only when the next action requires inspecting them. Stale chat memory can point to refs to inspect, but it cannot authorize writes, satisfy gates, accept results, close tasks, or replace current state.
 
 ## Session start
 
@@ -48,16 +50,17 @@ Keep small direct tasks light. Do not add ceremony just to answer a question, in
 Show:
 
 - the active or likely Task id and mode: `advisor`, `direct`, or `work`
-- the current or proposed scope
-- what is out of bounds
+- Scope: the current or proposed scope, what is out of bounds, and any active Change Unit or write-authority boundary that affects the next action
+- Judgment: any user-owned question, Decision Packet, or sensitive-action Approval that blocks progress
+- Evidence: supporting refs, missing support, stale support, or checks already run
+- Close Readiness: verification, Manual QA, residual-risk, acceptance, and close-blocker status when those affect the next decision or close
 - the next safe action
-- any question that blocks progress
 - the primary blocker, who owns the next move, and the smallest unblocker
 - secondary blockers only when they still affect the follow-on path
 - write authority status when writes are possible or near
-- evidence, verification, Manual QA, residual-risk, and acceptance status when those affect the next decision or close readiness
 - guarantee level and what the surface can actually block or only detect, as display and risk context rather than sensitive-action Approval, verification, acceptance, or a gate
-- compact gate and projection freshness status
+- optional raw gate names or refs only when they clarify a boundary; do not make the user read the full gate taxonomy to understand the next action
+- projection freshness status
 - when guard, freeze, or careful mode is relevant, what can actually be blocked before execution and what can only be detected after action
 
 Do not begin product writes from a broad natural-language request alone. First establish scope and compatible write authority for the intended change.
@@ -83,6 +86,17 @@ If Core itself is unreachable, the display issue is `MCP_SERVER_UNAVAILABLE`: sa
 Use MCP results as the source, then speak in user terms.
 
 The exact error taxonomy, complete mapping, and precedence stay in [MCP API And Schemas](../reference/mcp-api-and-schemas.md). This section gives short display examples for common session responses; it is intentionally not exhaustive.
+
+Status and blocker displays should put the four groups before raw gate detail:
+
+| Display group | Show first | Typical owner refs |
+|---|---|---|
+| Scope | What may change, what is out of bounds, and whether the intended write fits. | Task, Change Unit, Autonomy Boundary, Write Authorization. |
+| Judgment | What the user must decide or approve before progress can continue. | Decision Packet, Approval, Acceptance Decision Packet, Residual Risk. |
+| Evidence | What supports the claim, what is missing, and whether support is stale. | Evidence Manifest, Run, artifact refs, Eval input refs. |
+| Close Readiness | What remains before close can be attempted or accepted. | Eval, Manual QA, Acceptance, Residual Risk, close blockers. |
+
+These groups are not gate aliases and do not define exact enum values. When exact gate names are useful, show them after the plain group summary and link or cite the owner record.
 
 - `harness.status` means "where are we now?"
 - `harness.next` means "what is the next safe action or smallest unblocker?"
@@ -222,10 +236,10 @@ Use this distinction when explaining stops and permissions:
 |---|---|---|---|
 | Change Unit scope | What work area is in bounds? | Names the behavior, files, paths, tools, commands, network targets, and sensitive categories the work is scoped around. | Does not decide user-owned product or material technical judgment or create Write Authorization by itself. |
 | Autonomy Boundary | What may the agent decide alone inside that scope? | Lets the agent choose covered implementation details without another user decision. | Does not grant paths, tools, commands, network, secrets, sensitive categories, sensitive-action Approval, or write authority. |
-| Approval | May this sensitive step proceed? | Allows a named sensitive action within its recorded scope and expiry. | Does not decide user-owned judgment, prove correctness, accept risk, or create Write Authorization. |
+| Approval | May this sensitive step proceed? | Allows a named sensitive action within its recorded scope and expiry. | Does not decide user-owned judgment, prove correctness, accept residual risk, or create Write Authorization. |
 | Decision Packet | What user-owned judgment is being recorded? | Resolves, defers, rejects, or blocks the named product, material technical, waiver, acceptance, residual-risk, or reconcile choice. | Does not grant sensitive-action Approval unless it is the approval-shaped packet linked to an Approval record. |
 | Acceptance | Is the result acceptable when final acceptance is required? | Records the user's final result judgment after close-relevant residual risk is visible or confirmed absent. | Does not replace evidence, verification, Manual QA, Approval, Write Authorization, or residual-risk acceptance. |
-| Residual-risk acceptance | Is this known remaining risk acceptable for close? | Records acceptance of visible close-relevant risk and supports risk-accepted close when other gates allow it. | Does not create detached verification, prove correctness, waive QA, or make the close a normal no-risk close. |
+| Residual-risk acceptance | Is this known remaining risk acceptable for close? | Records acceptance of visible close-relevant risk and supports residual-risk accepted close when other gates allow it. | Does not create detached verification, prove correctness, waive QA, or make the close a normal no-risk close. |
 | Write Authorization | May this exact write attempt happen now? | Records that Core allowed one compatible write attempt after the required checks. | Is not reusable and does not expand scope, Autonomy Boundary, or Approval. |
 
 For small direct tasks, the active Change Unit may be generated from the user's request and surrounding context. Keep examples explanatory, not schema-defining:
@@ -251,7 +265,7 @@ Inside the Autonomy Boundary, the agent may decide ordinary implementation detai
 
 When user-owned product, technical, security/privacy, QA/acceptance, residual-risk, or scope/autonomy judgment blocks progress, show or request a Decision Packet. Do not replace it with broad approval or a vague "continue?" prompt.
 
-The word "approved" or a casual "go ahead" is not enough when the underlying choice is a product trade-off, architecture direction, QA waiver, verification risk, final acceptance, or residual-risk acceptance. The prompt must name the decision route, what the user is deciding, what is not being decided, the evidence or risk refs, what the agent may decide without the user, and the close or write impact.
+The word "approved" or a casual "go ahead" is not enough when the underlying choice is a product trade-off, architecture direction, QA waiver, risk from a verification gap, final acceptance, or residual-risk acceptance. The prompt must name the decision route, what the user is deciding, what is not being decided, the evidence or risk refs, what the agent may decide without the user, and the close or write impact.
 
 A user-facing Decision Packet should include:
 
@@ -283,7 +297,7 @@ Which failed-login UX should I record for this Change Unit: inline layer, toast,
 ```text
 Decision: Mobile Safari QA waiver
 Judgment type: QA / acceptance
-Should I record acceptance of the remaining mobile Safari wrapping risk for this close, or keep close blocked until Manual QA runs? Recommendation: keep it blocked unless release timing requires the waiver. Affected gate: qa_gate; affected criterion: AC-03 onboarding copy layout.
+Should I record acceptance of the remaining mobile Safari wrapping risk for this close, or keep close blocked until Manual QA runs? Recommendation: keep it blocked unless release timing requires the waiver. Affected group: Close Readiness; owner path/gate ref: Manual QA / qa_gate; affected criterion: AC-03 onboarding copy layout.
 ```
 
 Useful examples:
@@ -299,7 +313,7 @@ Useful examples:
 - Scope / autonomy: scope or Autonomy Boundary expansion should compare keeping the current small scope, adding the requested surface, or splitting a follow-up Change Unit. Explain affected paths, user-facing behavior, what remains out of bounds, write impact, and what the agent can still decide alone.
 - Security / privacy: sensitive-action Approval to access a secret, change permissions, or export data is only an Approval boundary. Separate product or security judgment may still be needed for roles, fields, redaction, audit logging, retention, rollback, and user notice.
 - Security / privacy: PII logging policy should compare options such as no PII in logs, redacted or tokenized identifiers, or limited diagnostic fields. Explain privacy exposure, debugging value, retention, redaction, audit trail, and evidence needed to prove the policy is followed.
-- QA / acceptance: QA or verification waiver should use the existing recording required for the Task. A QA waiver is recorded through Manual QA/gate state and `qa_gate=waived`; product/user risk or policy-required judgment uses a QA waiver Decision Packet. A verification waiver is recorded as `verification_gate=waived_by_user`; when user-owned judgment is needed, use the relevant Decision Packet. Name the skipped check or surface, accepted risk, follow-up, relevant refs, and close impact. Example: waive mobile Safari Manual QA for a copy-only change, accept wrapping risk, and keep a browser pass as release follow-up.
+- QA / acceptance: QA or verification waiver should use the existing recording required for the Task and cite the owner refs. QA waiver effects are owned by the Manual QA / QA policy path; product/user risk or policy-required judgment uses a QA waiver Decision Packet. Verification waiver effects are owned by the kernel verification-waiver path; when user-owned judgment is needed, use the relevant Decision Packet. Name the skipped check or surface, accepted residual risk, residual-risk follow-up, relevant refs, and close impact. Example: waive mobile Safari Manual QA for a copy-only change, accept residual risk for viewport wrapping, and keep a browser pass as release follow-up.
 - Residual risk: residual-risk acceptance before close should show the remaining limitation, the evidence that does exist, why close can still be acceptable, and the follow-up that remains. A residual-risk accepted close is not a detached-verified close.
 
 Ask one blocking question at a time when possible.
@@ -322,8 +336,8 @@ When a check, review, Eval, Manual QA result, or Run produces a finding, name th
 - Evidence gap or support: update Evidence Manifest coverage and cite Run/artifact/Feedback Loop/TDD refs.
 - User-owned product, technical, waiver, acceptance, or risk choice: show a Decision Packet candidate or existing Decision Packet ref.
 - Scope, completion, or autonomy mismatch: recommend a Change Unit update, smaller Change Unit, or follow-up Change Unit.
-- Stewardship or design-quality issue: show the existing `design_gate`, `decision_gate`, `qa_gate`, evidence, residual-risk, close-blocker, or Change Unit recommendation route that carries the impact.
-- Known remaining uncertainty or skipped check: show a Residual Risk candidate or ref before acceptance or risk-accepted close.
+- Stewardship or design-quality issue: show the existing design, decision, QA, evidence, residual-risk, close-blocker, or Change Unit recommendation route that carries the impact.
+- Known remaining uncertainty or skipped check: show a Residual Risk candidate or ref before acceptance or residual-risk accepted close.
 - QA or verification outcome: point to the Manual QA or Eval record and its gate effect.
 - Close blocker: show the structured close blocker and smallest unblocker.
 - Follow-up work: create or reference the existing follow-up Task, Change Unit, or Journey continuity route rather than burying the note in a summary.
@@ -350,7 +364,7 @@ Scope basis: email login Change Unit
 Limitation: cooperative surface; changed-path validation detects violations after the fact
 ```
 
-For external side effects, separate the before-action claim from the after-action record. Before action, say the intended effect, sensitive category, Approval or Decision Packet need, and guarantee level. After action, say what actually happened, which Run/artifact/evidence refs were recorded, and whether anything was redacted, omitted, blocked, stale, or a violation. Guarantee level is display and risk context; it does not grant Approval, verify the result, record QA, accept risk, accept the result, or close the Task. Exact guarantee-level semantics are owned by [Runtime Architecture Reference](../reference/runtime-architecture.md#guarantee-levels).
+For external side effects, separate the before-action claim from the after-action record. Before action, say the intended effect, sensitive category, Approval or Decision Packet need, and guarantee level. After action, say what actually happened, which Run/artifact/evidence refs were recorded, and whether anything was redacted, omitted, blocked, stale, or a violation. Guarantee level is display and risk context; it does not grant Approval, verify the result, record QA, accept residual risk, accept the result, or close the Task. Exact guarantee-level semantics are owned by [Runtime Architecture Reference](../reference/runtime-architecture.md#guarantee-levels).
 
 Do not describe a cooperative or detective hold as if it blocks execution. Say that writes are held by instruction, or that violations can be detected after action when the connected profile supports that validation. Use preventive wording only for proven pre-tool blocking on the covered operation.
 
@@ -404,25 +418,25 @@ Use these user-facing labels consistently:
 | Self-checked | The implementing path checked its own result. |
 | Detached candidate | A fresh session, fresh worktree, sandbox, manual bundle, or qualifying subagent path may be independent but has not yet produced detached assurance. |
 | Detached verified | The Eval passed with valid independence, no same-session self-review issue, and no stale baseline or bundle input. |
-| Waived with accepted risk | Verification or another close-relevant check was waived and the visible remaining risk was accepted for risk-accepted close. |
+| Waived with accepted residual risk | Verification or another close-relevant check was waived and the visible remaining residual risk was accepted for residual-risk accepted close. |
 
 Manual QA answers whether a person inspected qualities that need human judgment, commonly UI/UX, workflow, copy, accessibility interpretation, product taste, or visual output. Do not present a browser smoke run, screenshot capture, Browser QA Capture artifact, or verifier note as Manual QA unless a Manual QA result was actually recorded or validly waived. Browser QA Capture is a v1/post-MVP candidate unless owner docs explicitly promote it; even when available, its artifacts are supporting refs, not final acceptance or detached verification unless a separate Eval path also satisfies independence. If browser capture is unsupported for the surface, use human Manual QA notes and manually supplied artifacts.
 
-Residual risk is a known remaining limitation, uncertainty, unchecked condition, or trade-off. It must be visible before risk-accepted close or final acceptance. Residual-risk acceptance does not upgrade assurance and does not replace verification or QA.
+Residual risk is a known remaining limitation, uncertainty, unchecked condition, or trade-off. It must be visible before residual-risk accepted close or final acceptance. Residual-risk acceptance does not upgrade assurance and does not replace verification or QA.
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means Core has no known close-relevant residual risk for the current Task and requested action. `not_visible` means known close-relevant risk exists but has not yet been shown with enough context for acceptance or close, so the next action is to surface that risk and refs. Do not summarize `not_visible` as "no risk."
 
 Final acceptance is the user's acceptance of the result when the task path requires it. It is not the same as sensitive-action Approval, verification, QA, residual-risk acceptance, or proof of correctness.
 
-Verification waiver and QA waiver do not upgrade assurance. A verification waiver keeps detached verification unsatisfied and routes close through accepted verification risk when close is otherwise allowed. It must not be summarized as `completed_verified`. A QA waiver closes only the QA requirement it names and leaves evidence, verification, acceptance, and residual-risk handling unchanged. Waiver prompts and summaries should show the named requirement, accepted risk, owner refs, follow-up when needed, and affected gate or close impact; exact waiver metadata is owned by [Design Quality Policies](../reference/design-quality-policies.md#waiver-rules) and [Kernel Reference](../reference/kernel.md#waiver-semantics).
+Verification waiver and QA waiver do not upgrade assurance. A verification waiver keeps detached verification unsatisfied. When close is otherwise allowed, it can close only through residual-risk acceptance for the waived verification gap. It must not be summarized as verified close. A QA waiver closes only the QA requirement it names and leaves evidence, verification, acceptance, and residual-risk handling unchanged. Waiver prompts and summaries should show the named requirement, accepted residual risk, residual-risk owner refs, residual-risk follow-up when needed, and affected owner path or close impact; exact waiver metadata and gate effects are owned by [Design Quality Policies](../reference/design-quality-policies.md#waiver-rules) and [Kernel Reference](../reference/kernel.md#waiver-semantics).
 
 Applied close examples:
 
 - Direct work: show changed files, evidence refs, self-check, and whether anything escalated. Do not call it detached verified without a qualifying Eval.
-- UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: keep tests, browser smoke, Browser QA artifacts, Manual QA, and acceptance on separate lines. If Manual QA is waived, show the skipped surface, accepted risk, and follow-up.
+- UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: keep tests, browser smoke, Browser QA artifacts, Manual QA, and acceptance on separate lines. If Manual QA is waived, show the skipped surface, accepted residual risk, and residual-risk follow-up.
 - Auth or security work: show sensitive-action Approval separately from the security or product decision, then show evidence and verification. Approval to touch a secret or permission does not settle redaction, audit, role, retention, or user-notice choices.
 - Public API work: show caller compatibility, migration or documentation impact, evidence, and verification separately. Passing tests does not by itself settle the API contract decision.
-- Risk-accepted close: show the limitation, existing evidence, missing or waived verification or QA, accepted risk, and follow-up. Do not present the result as detached verified.
+- Residual-risk accepted close: show the limitation, existing evidence, missing or waived verification or QA, accepted residual risk, and residual-risk follow-up. Do not present the result as detached verified.
 
 ## Close
 
@@ -434,16 +448,18 @@ For `work` tasks, the close summary must make the close basis visible. Show chan
 
 Use the close display that matches the task shape: `DIRECT-RESULT` is the compact result display for direct work, `TASK` Close Summary is continuity display for active or recently closed `work` tasks, and Journey Card close context is compact status/resume display. None of these displays creates state, gates, acceptance, QA, verification, residual-risk acceptance, close, or write authority.
 
+Close displays should lead with the same four groups: Scope for changed scope, Judgment for acceptance or residual-risk decisions, Evidence for support refs, and Close Readiness for verification, Manual QA, residual risk, close blockers, and close reason. Raw gate names can follow when they explain a blocker, but exact gate values and close semantics remain kernel-owned.
+
 Before successful close, show or confirm:
 
 - scope match
 - evidence coverage or no evidence requirement
-- verification status, including stale evaluator bundle or baseline drift when present, or `verification_gate=waived_by_user` with the relevant Decision Packet and accepted risk refs when required
+- verification status, including stale evaluator bundle or baseline drift when present, or the kernel-owned verification-waiver path with the relevant Decision Packet and accepted Residual Risk refs when required
 - Manual QA status or valid waiver
 - close-relevant residual risk shown or no known close-relevant residual risk reported
 - final acceptance recorded when required
 
-Do not ask for final acceptance from a generic "all good?" prompt. The final acceptance prompt must show the close basis: evidence, verification, Manual QA, residual-risk visibility or `none`, what acceptance does not replace, and whether the requested close is normal close or risk-accepted close.
+Do not ask for final acceptance from a generic "all good?" prompt. The final acceptance prompt must show the close basis: evidence, verification, Manual QA, residual-risk visibility or `none`, what acceptance does not replace, and whether the requested close is normal close or residual-risk accepted close.
 
 If close is blocked, say exactly why and name the smallest next unblocker.
 
@@ -488,7 +504,11 @@ Approved, so I will finish the auth design, implement it, deploy it, and close.
 Good close block:
 
 ```text
-Close is blocked by a user-owned Manual QA judgment for the onboarding copy. Smallest unblocker: record whether the copy is acceptable. Secondary blocker: AC-02 evidence is still missing, which the agent can collect after Manual QA.
+Close is blocked.
+Judgment: user-owned Manual QA judgment for the onboarding copy is still needed.
+Evidence: AC-02 evidence is still missing, which the agent can collect after Manual QA.
+Close Readiness: close cannot proceed until the Manual QA judgment is recorded.
+Smallest unblocker: record whether the copy is acceptable.
 ```
 
 Bad close block:
@@ -506,13 +526,21 @@ Tests passed, so Manual QA and acceptance are complete.
 Good direct result:
 
 ```text
-Done as direct. Scope was one settings label; account behavior stayed out of bounds. Changed `src/settings/Profile.tsx`. Checked: copy test RUN-031 and diff ART-DIFF-031. Write authority: WA-031 consumed. Evidence: EM-031. No escalation. Residual risk: none for this close (`ResidualRiskSummary.status=none`).
+Done as direct.
+Scope: one settings label; account behavior stayed out of bounds; Write Authorization WA-031 was consumed; no escalation.
+Judgment: no user-owned decision was needed.
+Evidence: changed `src/settings/Profile.tsx`; checked copy test RUN-031 and diff ART-DIFF-031; Evidence Manifest EM-031 supports the claim.
+Close Readiness: no close-relevant blocker remains; residual risk is none for this close (`ResidualRiskSummary.status=none`).
 ```
 
 Good work close summary:
 
 ```text
-Close summary: changed scope stayed inside login form, login API call, and session storage. Evidence covers AC-01 and AC-02 via Evidence Manifest EM-009, supported by RUN-018 and ART-TEST-018. Verification is self-checked in RUN-018; no detached Eval was required for this path. Manual QA passed for final copy and layout in MQA-006. Residual risk: mobile Safari was not checked; accepted in DEC-022 with Residual Risk RISK-004 and follow-up TASK-144. Final acceptance recorded in DEC-023. Close reason: completed with accepted residual risk.
+Close summary:
+Scope: changed scope stayed inside login form, login API call, and session storage.
+Judgment: mobile Safari residual risk accepted in DEC-022; final acceptance recorded in DEC-023.
+Evidence: AC-01 and AC-02 are covered by Evidence Manifest EM-009, supported by RUN-018 and ART-TEST-018.
+Close Readiness: verification is self-checked in RUN-018; no detached Eval was required for this path. Manual QA passed for final copy and layout in MQA-006. Residual Risk RISK-004 has follow-up TASK-144. Close reason: completed with accepted residual risk.
 ```
 
 Good write hold:

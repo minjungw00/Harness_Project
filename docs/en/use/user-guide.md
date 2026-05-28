@@ -30,6 +30,19 @@ If you want to be explicit, you can still say:
 Run this work under the harness.
 ```
 
+## The four display groups
+
+Harness has exact internal gates, but user-facing status should usually group them into four readable lines. These groups explain why work is stopped and what must happen next. They are display groups only; they do not replace kernel gates, create schema fields, change recompute rules, or define close eligibility. Exact gate values, recompute behavior, and close semantics stay in [Kernel Reference](../reference/kernel.md#gates) and [`close_task`](../reference/kernel.md#close_task).
+
+| Display group | Plain question | What it usually includes |
+|---|---|---|
+| Scope | What may change? | Task scope, out of bounds, active Change Unit, Autonomy Boundary limits, and write authority compatibility. |
+| Judgment | What must the user decide? | Decision Packets, sensitive-action Approval, product/UX choices, material technical choices, QA or waiver choices, acceptance, residual-risk, or scope/autonomy decisions. |
+| Evidence | What supports completion claims? | Evidence Manifest coverage, Run and artifact refs, self-checks, missing evidence, stale evidence, or redaction/omission state. |
+| Close Readiness | What still prevents close? | Verification, Manual QA, final acceptance, residual-risk visibility or acceptance, close blockers, and close reason. |
+
+Status may still show exact Harness terms or source refs when they help, but it should lead with the display group and then point to the owner record instead of making the user read the full gate taxonomy.
+
 ## First-read path
 
 ### 1. Say what you want
@@ -40,11 +53,12 @@ Start with the work and any boundary you already know:
 Add email login flow. Keep password reset and account creation out of scope.
 ```
 
-The agent should decide whether the request is read-only advice, small direct work, or tracked work. When tracking is useful, it should answer three plain questions before it gets deep into the work:
+The agent should decide whether the request is read-only advice, small direct work, or tracked work. When tracking is useful, it should answer four plain questions before it gets deep into the work:
 
-- What is in scope, and what is out of bounds?
-- What evidence or checks already exist, and what is still missing?
-- What judgment is needed from me now, if any?
+- Scope: what is in bounds, and what is out of bounds?
+- Judgment: what user-owned decision is needed now, if any?
+- Evidence: what support or checks already exist, and what is still missing?
+- Close Readiness: what would still block verification, Manual QA, acceptance, residual-risk handling, or close?
 
 If the task is small, the agent may handle it as direct work. If the task is larger, risky, multi-file, or unclear, it should shape the work before changing product files.
 
@@ -63,6 +77,7 @@ At the start, or before significant resume, the agent should show a short status
 - task and mode
 - scope and out of bounds
 - next safe action
+- the four display groups: Scope, Judgment, Evidence, and Close Readiness
 - what is blocked, what has been checked, what remains, and what you are deciding
 - decision or blocker, including who owns the next move
 - smallest unblocker
@@ -74,18 +89,11 @@ A good first status can look like this:
 ```text
 Task: TASK-123 Add email login flow
 Mode: tracked work (`work`)
-Scope: login form, login API call, session storage
-Out of bounds: password reset, account creation
 Next safe action: decide failed-login UX before wiring final UI behavior
-Decision needed: failed-login message
-Blocked by: user-owned product judgment
-Smallest unblocker: choose one option from DEC-014
-Checked: current Core state v42 read; no write, evidence, or QA refs yet
-Remaining: write-authority check, implementation evidence, final copy/layout QA, and close decision
-You decide: failed-login message in DEC-014
-Write permission: not requested yet; no Write Authorization ref
-Evidence/checks: none yet; no Evidence Manifest ref
-Manual QA / risk / acceptance: likely Manual QA for final copy and layout; no known close-relevant residual risk recorded yet
+Scope: login form, login API call, session storage; out of bounds: password reset, account creation; write authority not requested yet
+Judgment: failed-login message in DEC-014 is user-owned; smallest unblocker is choosing one option
+Evidence: current Core state v42 read; no implementation evidence or Evidence Manifest ref yet
+Close Readiness: final copy/layout Manual QA, residual-risk visibility, acceptance, and close decision remain later in the flow
 Capability/status: cooperative surface; readable status current from source_state_version v42
 ```
 
@@ -131,9 +139,9 @@ Residual-risk wording should also be precise. `status=none` means there is no kn
 
 A casual "go ahead" is only usable when the agent has already named the exact thing you are deciding. It is not enough for product trade-offs, architecture choices, QA or verification waivers, final acceptance, or residual-risk acceptance unless the prompt shows the options, consequences, relevant refs, what the agent may still decide without you, and the specific route being recorded.
 
-## The three everyday questions
+## The four everyday groups
 
-### scope
+### Scope
 
 Scope answers: "What work are we doing, and what are we not doing?"
 
@@ -176,29 +184,7 @@ What exact decision or sensitive action am I being asked to record?
 
 Harness may describe those boundaries as the active Change Unit, and it may use a Decision Packet when a scope change needs your judgment. You do not need to lead with those labels.
 
-### evidence
-
-Evidence answers: "What supports the claim that this work is done?"
-
-Evidence is not just "the agent says it changed the thing." It can include changed paths, test output, logs, screenshots, QA notes, verification results, or other artifacts that support the acceptance criteria.
-
-Enough evidence means the stated acceptance criteria or completion conditions are covered, not that many files or artifacts exist. A tiny docs-only fix may need only a changed path, diff or patch summary, and self-check. A code fix usually needs the diff plus a focused test, command, log, or a recorded reason no automated check applies. A feature should map each acceptance criterion to Run and artifact refs. UI, UX, and copy work may need visual evidence and Manual QA when human judgment matters. Sensitive work keeps sensitive-action Approval and redaction refs visible, but Approval is not proof of correctness. Verification-required work needs an Eval that says which evidence it reviewed.
-
-For large evidence, the agent should show refs and short outcomes first. Logs, screenshots, diffs, traces, Run details, Eval details, Manual QA notes, and artifacts should not be pasted into the default context unless you or the next reviewer need to inspect them. The artifact store is not a loose file dump: useful evidence should appear as registered artifact refs with hash or size details when relevant, redaction state, retention or availability, and the owner record they support.
-
-Markdown reports are useful views over that evidence, not the evidence or state record itself. Report prose and chat text can explain the evidence story, but they are not enough to prove evidence sufficiency unless the relevant criteria point to compatible owner records and artifact refs. If you edit a report, use the human notes or proposal area; edits inside generated or managed report text should be treated as drift or reconcile input, not as a gate change.
-
-Secret values should not be stored as artifacts. If secret-related evidence is needed, the useful display is a redacted artifact, a secret handle or omission note, or an operator note that passed the relevant validator. When an artifact is redacted, omitted, blocked, expired, or unavailable, the agent should say that visibly instead of implying the raw bytes were reviewed.
-
-Evidence can go stale even after it once looked sufficient. Common causes are baseline drift, changed files after the supporting run or eval, approval drift or expiry, a missing artifact, an artifact hash or size mismatch, an expired or unavailable artifact, or a relevant design record change.
-
-Useful phrase:
-
-```text
-Show which acceptance criteria are missing evidence, and suggest what additional checks would be enough.
-```
-
-### judgment needed now
+### Judgment
 
 Judgment answers: "What do I need to decide before the work can safely continue or close?"
 
@@ -246,9 +232,47 @@ Examples:
 - Scope / autonomy: expanding from a copy fix into account behavior, or from a private helper change into a public module boundary, needs a decision that names the new surface, what remains out of bounds, and whether a smaller Change Unit can continue.
 - Security / privacy: sensitive-action Approval to access a secret, change permissions, or export data only answers whether that sensitive step may proceed. It does not decide which data is exported, who may export it, what gets redacted, what is omitted from artifacts, or what audit trail is acceptable.
 - Security / privacy: a PII logging policy might compare "do not log PII," "log redacted or tokenized identifiers," and "log limited fields for debugging." The packet should show privacy risk, debugging value, retention, redaction, audit trail, and whether existing evidence can prove the policy is followed.
-- QA / acceptance: a QA waiver prompt should name the skipped check or surface, the risk you would accept, the follow-up, relevant refs, and whether close would become risk accepted. "Go ahead" is not enough.
-- Residual risk: a residual-risk accepted close should show the remaining limitation, evidence that does exist, missing or waived QA/verification, the accepted risk, and follow-up. It is not a detached-verified close.
+- QA / acceptance: a QA waiver prompt should name the skipped check or surface, the residual risk you would accept, the residual-risk follow-up, relevant refs, and whether close would become residual-risk accepted. "Go ahead" is not enough.
+- Residual risk: a residual-risk accepted close should show the remaining limitation, evidence that does exist, missing or waived QA/verification, the accepted residual risk, and residual-risk follow-up. It is not a detached-verified close.
 - QA / acceptance and Residual risk: final acceptance means the result is acceptable when required; residual-risk acceptance means the named remaining risk is acceptable for close. The agent should ask for these separately, after showing evidence, verification, QA, and residual-risk visibility.
+
+### Evidence
+
+Evidence answers: "What supports the claim that this work is done?"
+
+Evidence is not just "the agent says it changed the thing." It can include changed paths, test output, logs, screenshots, QA notes, verification results, or other artifacts that support the acceptance criteria.
+
+Enough evidence means the stated acceptance criteria or completion conditions are covered, not that many files or artifacts exist. A tiny docs-only fix may need only a changed path, diff or patch summary, and self-check. A code fix usually needs the diff plus a focused test, command, log, or a recorded reason no automated check applies. A feature should map each acceptance criterion to Run and artifact refs. UI, UX, and copy work may need visual evidence and Manual QA when human judgment matters. Sensitive work keeps sensitive-action Approval and redaction refs visible, but Approval is not proof of correctness. Verification-required work needs an Eval that says which evidence it reviewed.
+
+For large evidence, the agent should show refs and short outcomes first. Logs, screenshots, diffs, traces, Run details, Eval details, Manual QA notes, and artifacts should not be pasted into the default context unless you or the next reviewer need to inspect them. The artifact store is not a loose file dump: useful evidence should appear as registered artifact refs with hash or size details when relevant, redaction state, retention or availability, and the owner record they support.
+
+Markdown reports are useful views over that evidence, not the evidence or state record itself. Report prose and chat text can explain the evidence story, but they are not enough to prove evidence sufficiency unless the relevant criteria point to compatible owner records and artifact refs. If you edit a report, use the human notes or proposal area; edits inside generated or managed report text should be treated as drift or reconcile input, not as a gate change.
+
+Secret values should not be stored as artifacts. If secret-related evidence is needed, the useful display is a redacted artifact, a secret handle or omission note, or an operator note that passed the relevant validator. When an artifact is redacted, omitted, blocked, expired, or unavailable, the agent should say that visibly instead of implying the raw bytes were reviewed.
+
+Evidence can go stale even after it once looked sufficient. Common causes are baseline drift, changed files after the supporting run or eval, approval drift or expiry, a missing artifact, an artifact hash or size mismatch, an expired or unavailable artifact, or a relevant design record change.
+
+Useful phrase:
+
+```text
+Show which acceptance criteria are missing evidence, and suggest what additional checks would be enough.
+```
+
+### Close Readiness
+
+Close Readiness answers: "What still has to be true before this Task can close?"
+
+This group pulls together the close-facing parts of the work: verification, Manual QA, acceptance, residual-risk visibility or acceptance, and close blockers. It is a user-facing summary layer, not a new gate. If the exact kernel gate state matters, the agent should link the relevant source refs and the [Kernel Reference](../reference/kernel.md#close_task) instead of redefining the values in chat.
+
+A useful Close Readiness line says whether the result is blocked, ready to request acceptance, ready to attempt close, or waiting on a specific check or judgment. It should name the smallest unblocker and keep residual-risk accepted close visibly different from a normal self-checked or detached-verified close.
+
+Useful phrases:
+
+```text
+Show Close Readiness in plain language.
+What one check or decision still blocks close?
+Show close-relevant residual risk before I accept.
+```
 
 ## Phrase reference
 
@@ -318,8 +342,9 @@ flowchart LR
   Brief --> Scope["First Safe Change Unit Candidate"]
   Decisions --> Scope
   Scope --> Work["do allowed work"]
-  Work --> Checks["evidence / checks"]
-  Checks --> Close["close or ask"]
+  Work --> Evidence["Evidence: supporting refs"]
+  Evidence --> Readiness["Close Readiness: verify / QA / risk / acceptance"]
+  Readiness --> Close["close or ask"]
 ```
 
 Typical flow:
@@ -327,11 +352,11 @@ Typical flow:
 1. The agent checks status or starts intake.
 2. The agent classifies the request as `advisor`, `direct`, or `work`.
 3. If the request is ambiguous, feature-shaped, auth/security-sensitive, UX/workflow-heavy, public-interface-facing, or likely to become `work`, and clarification is needed, the agent can use Discovery and produce a Discovery Brief.
-4. The agent routes user-owned product, technical, security, QA, operational, or scope judgments to Decision Packet candidates or existing decision paths.
-5. The agent proposes the First Safe Change Unit Candidate, then confirms scope and the active Change Unit when product writes may happen.
+4. The agent routes user-owned product, technical, security, QA, operational, or scope judgments under Judgment to Decision Packet candidates or existing decision paths.
+5. The agent proposes the First Safe Change Unit Candidate, then confirms Scope and the active Change Unit when product writes may happen.
 6. Before product writes, the agent checks write authority.
-7. After changes or advice, the agent records the relevant result and evidence when evidence applies.
-8. When needed, verification, Manual QA, residual risk, and acceptance are handled before close.
+7. After changes or advice, the agent records the relevant result and Evidence when evidence applies.
+8. When needed, Close Readiness covers verification, Manual QA, residual risk, acceptance, and close blockers before close.
 
 Many small direct tasks skip some later checks. Bigger work should not hide those checks; it should show them only when they matter. In every case, useful user-facing output favors the same plain questions: what changed, what was checked, what remains risky, and what decision is needed now.
 
@@ -340,13 +365,21 @@ A direct task result should stay compact and low-ceremony: what was requested, w
 Compact direct result:
 
 ```text
-Done as direct. Scope: settings label only; account behavior stayed out of bounds. Changed `src/settings/Profile.tsx`. Checked RUN-031 and diff ART-DIFF-031. Write Authorization WA-031 was consumed. Evidence Manifest EM-031 covers the claim. No escalation. Residual risk: none for this close (`ResidualRiskSummary.status=none`).
+Done as direct.
+Scope: settings label only; account behavior stayed out of bounds; Write Authorization WA-031 was consumed; no escalation.
+Judgment: no user-owned decision was needed.
+Evidence: changed `src/settings/Profile.tsx`; checked RUN-031 and diff ART-DIFF-031; Evidence Manifest EM-031 covers the claim.
+Close Readiness: no close-relevant blocker remains; residual risk is none for this close (`ResidualRiskSummary.status=none`).
 ```
 
 Fuller work close summary:
 
 ```text
-Close summary: changed scope stayed inside login form, login API call, and session storage. Evidence Manifest EM-009 covers AC-01 and AC-02, supported by RUN-018 and ART-TEST-018. Verification is self-checked in RUN-018; no detached Eval was required for this path. Manual QA passed in MQA-006. Residual risk RISK-004 covers untested mobile Safari behavior and was accepted in DEC-022 with follow-up TASK-144. Final acceptance recorded in DEC-023. Close reason: completed with accepted residual risk.
+Close summary:
+Scope: changed scope stayed inside login form, login API call, and session storage.
+Judgment: residual risk accepted in DEC-022; final acceptance recorded in DEC-023.
+Evidence: Evidence Manifest EM-009 covers AC-01 and AC-02, supported by RUN-018 and ART-TEST-018.
+Close Readiness: verification is self-checked in RUN-018; no detached Eval was required for this path. Manual QA passed in MQA-006. Residual Risk RISK-004 covers untested mobile Safari behavior with follow-up TASK-144. Close reason: completed with accepted residual risk.
 ```
 
 Direct work should escalate to `work` when the target is no longer obvious, changed paths cross the active Change Unit, more than a local product area is affected, a public API or module contract may change, sensitive or risky behavior appears, Manual QA or detached verification becomes important, or a user-owned product or material technical trade-off is needed.
@@ -394,9 +427,10 @@ Good blocked status:
 
 ```text
 Blocked:
-- Primary blocker (user-owned): empty-state behavior is not chosen.
+- Judgment (user-owned): empty-state behavior is not chosen.
+- Evidence: AC-02 support can be collected after the behavior is chosen.
+- Close Readiness: updated onboarding copy still needs user-owned Manual QA before close.
 - Smallest unblocker: choose the empty-state behavior from DEC-021.
-- Secondary blockers: agent-resolvable AC-02 evidence after the behavior is chosen; user-owned Manual QA before close for the updated onboarding copy.
 
 Next safe action: answer DEC-021, or ask the agent to propose a smaller Change Unit that avoids the empty state.
 ```
@@ -435,7 +469,7 @@ Useful verification wording:
 | Self-checked | The agent checked its own work and recorded what it checked. This is useful, but not independent. |
 | Detached candidate | A separate verifier, session, worktree, sandbox, or bundle may be independent enough, but Harness has not yet recorded a passing detached verification. |
 | Detached verified | A qualifying independent Eval passed, and its reviewed evidence and baseline were still current. |
-| Waived with accepted risk | You chose to close despite a missing or waived check after seeing the remaining risk. This is not verified close. |
+| Waived with accepted residual risk | You chose to close despite a missing or waived check after seeing and accepting the remaining residual risk. This is not verified close. |
 
 Examples that may need sensitive-action Approval include dependency additions, auth or permission changes, data model changes, public API changes, destructive writes, secret access, and production configuration changes. Approval only answers whether a sensitive step may proceed; a separate Decision Packet may still be needed for the dependency, migration, interface, module-boundary, product, material technical, QA, or risk choice itself.
 
@@ -449,15 +483,15 @@ Common "approved" mix-ups:
 - Deciding a public API change is not permission to deploy, merge, or make additional writes.
 - Final acceptance means you accept the result when that task path requires it; it is not Write Authorization for more edits.
 
-If the agent asks for a QA or verification waiver, it should name the existing recording it will use. A QA waiver is recorded through Manual QA state and `qa_gate=waived`; when product/user risk or policy-required judgment is involved, it should reference a QA waiver Decision Packet. A verification waiver is recorded as `verification_gate=waived_by_user`; when the waiver needs user-owned judgment, it should reference the relevant Decision Packet and accepted residual-risk refs. That prompt should say what is not being checked, what risk you would accept, what follow-up remains, which refs matter, and how close is affected. A casual chat statement should not be treated as a close-relevant waiver when accepted risk is involved. If the agent asks to close with residual risk, it should show the remaining limitation first, then ask whether you accept that risk for this Task. Verification waiver can close only as risk accepted; it should not be presented as detached verified.
+If the agent asks for a QA or verification waiver, it should name the existing recording path it will use and link the owner refs. QA waiver effects are owned by the Manual QA / QA policy path; when product/user risk or policy-required judgment is involved, the prompt should reference a QA waiver Decision Packet. Verification waiver effects are owned by the kernel verification-waiver path; when the waiver needs user-owned judgment, the prompt should reference the relevant Decision Packet and accepted Residual Risk refs. The prompt should say what is not being checked, what residual risk you would accept, what residual-risk follow-up remains, which refs matter, and how close is affected. A casual chat statement should not be treated as a close-relevant waiver when residual-risk acceptance is involved. If the agent asks to close with residual risk, it should show the remaining limitation first, then ask whether you accept that residual risk for this Task. Verification waiver can close only as residual-risk accepted; it should not be presented as detached verified. Exact gate effects stay in [Kernel Reference](../reference/kernel.md#waiver-semantics) and [Design Quality Policies](../reference/design-quality-policies.md#waiver-rules).
 
 Applied examples:
 
 - Direct docs or copy fix: a changed path, diff or patch summary, and self-check can support the claim. It should not be described as detached verification, and it does not need Manual QA unless the changed surface needs human inspection.
-- UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: tests, browser smoke, and Browser QA artifacts can support rendering or behavior claims. Manual QA is still the human check for layout, interaction feel, copy, accessibility interpretation, workflow quality, and product taste. When automated browser capture is unavailable, human notes and manually supplied artifacts are the fallback. A QA waiver should name the skipped surface, accepted risk, follow-up, relevant refs, and close impact.
+- UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: tests, browser smoke, and Browser QA artifacts can support rendering or behavior claims. Manual QA is still the human check for layout, interaction feel, copy, accessibility interpretation, workflow quality, and product taste. When automated browser capture is unavailable, human notes and manually supplied artifacts are the fallback. A QA waiver should name the skipped surface, accepted residual risk, residual-risk follow-up, relevant refs, and close impact.
 - Auth or security work: sensitive-action Approval may allow secret access, permission changes, or auth-file writes. The security or product choice still needs a Decision Packet when roles, redaction, audit trail, session model, lockout behavior, or user notice are being decided.
 - Public API work: passing tests support behavior, but compatibility, caller impact, migration path, and documentation promises may need a Decision Packet and independent verification.
-- Risk-accepted close: the agent should show the evidence that exists, the verification or QA that is missing or waived, the remaining limitation, and the follow-up. Closing with accepted risk is not the same as closing as detached verified.
+- Residual-risk accepted close: the agent should show the evidence that exists, the verification or QA that is missing or waived, the remaining limitation, and the residual-risk follow-up. Closing with accepted residual risk is not the same as closing as detached verified.
 
 ## Close checklist
 
@@ -481,7 +515,7 @@ Accepted. Close this task.
 I do not accept it. Rework the UX before close.
 ```
 
-"Accepted. Close this task." is normal close wording only when no risk-accepted close is being requested. When known residual risk is part of the close basis, use risk-accepted wording and expect the close reason to remain visibly different from verified or self-checked close.
+"Accepted. Close this task." is normal close wording only when no residual-risk accepted close is being requested. When known residual risk is part of the close basis, use residual-risk accepted wording and expect the close reason to remain visibly different from verified or self-checked close.
 
 ## Where to go next
 

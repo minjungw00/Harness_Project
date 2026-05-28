@@ -20,6 +20,17 @@ Read this when Harness terms are starting to appear in examples, status summarie
 
 Harness vocabulary names a small work journey: request, scope, judgment, support, checks, acceptance, remaining risk, and close.
 
+## Gate display groups
+
+When Harness status is shown to users, the many internal gate details should usually appear as four readable display groups:
+
+- Scope: what may change.
+- Judgment: what the user must decide.
+- Evidence: what supports completion claims.
+- Close Readiness: verification, Manual QA, acceptance, residual risk, and close blockers.
+
+These groups are a reading aid, not a replacement for the kernel gate taxonomy. They do not create schema fields, gate values, recompute inputs, authority paths, or close rules. Strict gate behavior stays in [Kernel Reference](../reference/kernel.md#gates), public API behavior stays in [MCP API and Schemas](../reference/mcp-api-and-schemas.md), and projection rendering rules stay in [Document Projection Reference](../reference/document-projection.md).
+
 ## The smallest concept set
 
 Harness is easiest to understand if you start with the work journey:

@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-진행 중인 작업을 이어서 파악할 수 있는 Projection이 필요할 때 `TASK`를 사용합니다. 이 template은 작업의 현재 위치, 판단 맥락, 막힘 소유자를 보여줍니다. 또한 Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, 다음 근거, Residual Risk, Close Summary, gate, active Change Unit, 대기 중인 decision을 요약합니다. 관련 보고서 참조와 읽기용 보기 최신성도 함께 보여줍니다.
+진행 중인 작업을 이어서 파악할 수 있는 Projection이 필요할 때 `TASK`를 사용합니다. 이 template은 Scope, Judgment, Evidence, Close Readiness라는 네 가지 사용자에게 보이는 gate 표시 그룹을 먼저 요약합니다. 또한 작업의 현재 위치, 판단 맥락, 막힘 소유자, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, 다음 근거, Residual Risk, Close Summary, 필요할 때의 kernel gate detail, active Change Unit, 대기 중인 decision을 보여줍니다. 관련 보고서 참조와 읽기용 보기 최신성도 함께 보여줍니다.
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
@@ -11,6 +11,7 @@
 - `state.sqlite` Task와 task gate
 - active Change Unit과 Change Unit dependency
 - mode, lifecycle, next action, 가장 먼저 해소할 막힘, 가장 작은 해소 방법, guarantee level, 읽기용 보기 최신성(projection freshness)을 위한 현재 상태 표시 input
+- 기존 owner 기록, gate, blocker, ref에서 파생되는 Scope, Judgment, Evidence, Close Readiness 표시 그룹 input
 - Write Authorization 기록과 Write Authority Summary 표시 input
 - Decision Packet과 Residual Risk, 렌더링할 때의 읽기용 Decision Packet 표시 metadata
 - 최신 Run, Evidence Manifest, Eval, Manual QA 기록, approval 기록
@@ -25,10 +26,11 @@
 - 기존 owner 기록과 ref에서 온 Review Stage 표시 input
 - artifact ref 및 읽기용 보기 최신성(projection freshness)
 
-`TASK`의 생성된 judgment, Decision Packet 표시 metadata, close, waiver, review-stage, stewardship, projection-freshness 항목은 표시 binding입니다. 위에 나열한 owner record, gate, artifact, ref로 해소되어야 하며, 그런 source가 없으면 명시적인 absence/blocking 상태로 렌더링해야 합니다. 기준 기록, gate, `ProjectionKind` value, evidence, QA, verification, acceptance, residual-risk acceptance, close, Write Authorization을 만들지 않습니다.
+`TASK`의 생성된 gate group summary, judgment, Decision Packet 표시 metadata, close, waiver, review-stage, stewardship, projection-freshness 항목은 표시 binding입니다. 위에 나열한 owner record, gate, artifact, ref로 해소되어야 하며, 그런 source가 없으면 명시적인 absence/blocking 상태로 렌더링해야 합니다. 기준 기록, gate, `ProjectionKind` value, evidence, QA, verification, acceptance, residual-risk acceptance, close, Write Authorization을 만들지 않습니다.
 
 ## 렌더링 섹션
 
+- Gate Group Summary
 - Current Summary
 - Where We Are
 - Judgment Context
@@ -68,6 +70,32 @@ updated_at: 2026-05-06T09:30:15+09:00
 > Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링된 보기입니다. Managed section은 생성된 표시 영역이며, 그 안의 edit는 상태 변경이 아니라 drift 또는 reconcile candidate입니다.
 
 <!-- HARNESS:BEGIN managed -->
+## Gate Group Summary
+- Scope:
+  - what may change:
+  - out of bounds:
+  - write authority:
+  - blocker / smallest unblocker:
+  - source refs:
+- Judgment:
+  - user decision needed:
+  - decision / approval / acceptance refs:
+  - blocker / smallest unblocker:
+  - what agent may continue:
+- Evidence:
+  - supporting refs:
+  - missing or stale support:
+  - artifact redaction or omission state:
+  - next evidence action:
+- Close Readiness:
+  - verification:
+  - Manual QA:
+  - residual risk:
+  - acceptance:
+  - close blockers / close reason:
+  - smallest unblocker:
+- note: These are display groups only. Exact gate values, recompute rules, and close semantics are owned by Kernel Reference.
+
 ## Current Summary
 - mode:
 - lifecycle phase:
@@ -86,15 +114,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 - pending decision:
 - user is deciding:
 - risk:
+- gate display groups: Scope=; Judgment=; Evidence=; Close Readiness=
 - guarantee level:
-- scope gate:
-- decision gate:
-- approval gate:
-- design gate:
-- evidence gate:
-- verification gate:
-- Manual QA:
-- acceptance gate:
+- kernel gate detail: scope=; decision=; approval=; design=; evidence=; verification=; Manual QA=; acceptance=
 - active change unit:
 - Write Authority Summary:
 - authority source refs: write=; decision=; approval=; evidence=; eval=; manual_qa=; acceptance=; residual_risk=; artifacts=
@@ -130,7 +152,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 - reversibility:
 - affected scope:
 - minimum context to judge:
-- affected gates:
+- affected display group:
+- affected gate refs:
 
 ## Authority Source Refs
 - Write Authorization:
@@ -374,7 +397,7 @@ Change Unit block sub-template:
   - 제품 방향:
   - 중요한 기술 방향:
   - public interface 또는 호환성 약속:
-  - 남은 위험을 받아들이는 판단:
+  - 잔여 위험 수락 판단:
 - AFK stop conditions:
   - boundary exceeded:
   - evidence cannot be produced:
@@ -441,17 +464,19 @@ Change Unit block sub-template:
 
 생성된 summary는 사용자가 읽기 쉬운 평범한 말을 먼저 쓰고, 정확한 Harness term은 유용한 label이나 ref로 붙입니다. Projection이 명령어처럼 보이거나 표시 문구만으로 상태가 만들어진 것처럼 암시하면 안 됩니다.
 
+Gate Group Summary는 읽는 사람이 raw gate detail보다 실제 막힘 이야기를 먼저 보도록 첫 managed section으로 둡니다. Scope, Judgment, Evidence, Close Readiness는 기존 owner 기록, gate, blocker, ref에서 파생되는 표시 그룹입니다. 기준 field, 정확한 gate value의 alias, 새 gate, recompute input, close semantics, authority path가 아닙니다. 정확한 gate 값과 recompute rule은 [커널 참조](../kernel.md#gates)가 담당하고, close 동작은 [`close_task`](../kernel.md#close_task)가 담당합니다.
+
 `TASK`의 Decision Packet 표시는 사용자가 Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy 중 어떤 판단을 하는지 빠르게 볼 수 있도록 읽기용 표시용 판단 유형을 보여줄 수 있습니다. 이를 주 표시 category로 사용합니다. 결정이 여러 영역에 걸쳐 있으면 category를 배타적으로 다루지 말고 부차적인 고려사항을 장단점, 영향받는 gate, risk, evidence, follow-up에 렌더링해야 합니다. 이 category는 owner Decision Packet context와 ref에서 파생되는 표시 metadata입니다. 기준 schema field, gate, status, owner contract, validator input이 아니며 `decision_kind`, Approval, acceptance, QA, residual-risk acceptance, close, Write Authorization의 owner contract를 흐리면 안 됩니다.
 
 `TASK`의 authority claim은 source ref 또는 명시적 absence로 해소되어야 합니다. Write authority claim은 Write Authorization ref를, sensitive-action permission은 Approval ref를, evidence sufficiency는 Evidence Manifest ref를, detached verification은 Eval ref를, Manual QA는 Manual QA record 또는 valid waiver ref를, final acceptance는 Acceptance Decision Packet ref를, residual-risk visibility 또는 acceptance는 Residual Risk refs 또는 `ResidualRiskSummary.status=none`을 가리켜야 합니다. Ref가 없으면 completed authority가 아니라 missing support로 렌더링해야 합니다.
 
 Residual-risk display는 `status=none`과 `not_visible`을 구분해야 합니다. `status=none`은 requested action에 대해 알려진 close-relevant residual risk가 없다는 뜻입니다. `not_visible`은 알려진 close-relevant risk가 있지만 acceptance 또는 close에 충분히 보이지 않았다는 뜻이므로, risk와 refs가 보일 때까지 blocker 또는 next action으로 남아야 합니다.
 
-`TASK`의 close와 assurance 표시는 self-checked work, `detached_verified`, verification waiver, QA waiver, risk-accepted close를 눈에 보이게 분리해야 합니다. Risk-accepted close는 accepted Residual Risk refs와 필요한 Decision Packet을 가리켜야 합니다. Verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을, QA waiver는 `qa_gate=waived`, Manual QA record 또는 waiver reason, 필요한 경우 QA waiver Decision Packet을 가리켜야 합니다.
+`TASK`의 close와 assurance 표시는 self-checked work, `detached_verified`, verification waiver, QA waiver, residual-risk accepted close를 눈에 보이게 분리해야 합니다. Residual-risk accepted close는 수락된 Residual Risk refs와 필요한 Decision Packet을 가리켜야 합니다. Verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을, QA waiver는 `qa_gate=waived`, Manual QA record 또는 waiver reason, 필요한 경우 QA waiver Decision Packet을 가리켜야 합니다.
 
-`TASK`의 waiver 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 또는 verification waiver는 waiver를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA waiver는 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA waiver Decision Packet을, verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을 가리킵니다. Policy 또는 gate, Task와 Change Unit, 생략한 확인이나 대상, reason, 받아들이는 위험, actor, 필요할 때 expiry 또는 follow-up, 관련 refs, 닫기 영향도 함께 보여줘야 합니다. QA waiver는 Manual QA가 되지 않고, verification waiver는 detached verification을 만들지 않습니다.
+`TASK`의 waiver 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 또는 verification waiver는 waiver를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA waiver는 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA waiver Decision Packet을, verification waiver는 `verification_gate=waived_by_user`와 필요한 경우 그 Decision Packet을 가리킵니다. Policy 또는 gate, Task와 Change Unit, 생략한 확인이나 대상, reason, 수락된 잔여 위험, actor, 필요할 때 expiry 또는 잔여 위험 후속 작업, 관련 refs, 닫기 영향도 함께 보여줘야 합니다. QA waiver는 Manual QA가 되지 않고, verification waiver는 detached verification을 만들지 않습니다.
 
-`TASK`의 Close Summary는 진행 중이거나 최근 닫힌 `work` Task를 위한 이어가기 표시 요약입니다. Gate 상태나 남은 위험을 숨기면 안 됩니다. 닫기가 성공했거나, 막혔거나, 취소됐거나, 남은 위험을 받아들이고 닫혔을 때 changed scope, evidence, verification, Manual QA, 남은 위험(residual risk), 결과 수락, close reason, follow-up을 해당되는 만큼 보여주고 owner record로 돌아가는 ref를 포함해야 합니다.
+`TASK`의 Close Summary는 진행 중이거나 최근 닫힌 `work` Task를 위한 이어가기 표시 요약입니다. Gate 상태나 남은 위험을 숨기면 안 됩니다. 닫기가 성공했거나, 막혔거나, 취소됐거나, residual-risk accepted로 닫혔을 때 changed scope, evidence, verification, Manual QA, 남은 위험(residual risk), 결과 수락, close reason, 잔여 위험 후속 작업을 해당되는 만큼 보여주고 owner record로 돌아가는 ref를 포함해야 합니다.
 
 Direct 작업은 `DIRECT-RESULT`에서 가벼운 close impact summary를 보여주고, Journey Card close context는 compact status/resume 표시입니다. `TASK` Close Summary는 [projection/report 경계](../document-projection.md#projection-principles) 안의 이어가기 표시이며, close와 gate effect는 여전히 owner record에서 옵니다.
 

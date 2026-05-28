@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use `TASK` as the continuity projection for active work. It summarizes where the work is, current judgment context, blocker ownership, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, next evidence, residual risk, close summary, gates, active Change Unit, pending decisions, evidence, report refs, and projection freshness.
+Use `TASK` as the continuity projection for active work. It summarizes the four user-facing gate display groups first: Scope, Judgment, Evidence, and Close Readiness. It also shows where the work is, current judgment context, blocker ownership, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, next evidence, residual risk, close summary, kernel gate detail when useful, active Change Unit, pending decisions, evidence, report refs, and projection freshness.
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
@@ -11,6 +11,7 @@ Boundary: projection template only; it does not authorize runtime/server impleme
 - `state.sqlite` Task and task gates
 - active Change Unit and Change Unit dependencies
 - current-state display inputs for mode, lifecycle, next action, primary blocker, smallest unblocker, guarantee level, and projection freshness
+- display inputs for Scope, Judgment, Evidence, and Close Readiness groups derived from existing owner records, gates, blockers, and refs
 - Write Authorization records and Write Authority Summary display inputs
 - Decision Packets and Residual Risks, including reader-facing Decision Packet display metadata when rendered
 - latest Run, Evidence Manifest, Eval, Manual QA record, and approval records
@@ -25,10 +26,11 @@ Boundary: projection template only; it does not authorize runtime/server impleme
 - Review Stage display inputs from existing owner records and refs
 - artifact refs and projection freshness
 
-Generated judgment, Decision Packet display metadata, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists. They do not create canonical records, gates, `ProjectionKind` values, evidence, QA, verification, acceptance, residual-risk acceptance, close, or Write Authorization.
+Generated gate group summaries, judgment, Decision Packet display metadata, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists. They do not create canonical records, gates, `ProjectionKind` values, evidence, QA, verification, acceptance, residual-risk acceptance, close, or Write Authorization.
 
 ## Rendered sections
 
+- Gate Group Summary
 - Current Summary
 - Where We Are
 - Judgment Context
@@ -68,6 +70,32 @@ updated_at: 2026-05-06T09:30:15+09:00
 > Projection view: rendered from `source_state_version` at `updated_at`. Managed sections are generated display; edits inside them are drift/reconcile candidates, not state changes.
 
 <!-- HARNESS:BEGIN managed -->
+## Gate Group Summary
+- Scope:
+  - what may change:
+  - out of bounds:
+  - write authority:
+  - blocker / smallest unblocker:
+  - source refs:
+- Judgment:
+  - user decision needed:
+  - decision / approval / acceptance refs:
+  - blocker / smallest unblocker:
+  - what agent may continue:
+- Evidence:
+  - supporting refs:
+  - missing or stale support:
+  - artifact redaction or omission state:
+  - next evidence action:
+- Close Readiness:
+  - verification:
+  - Manual QA:
+  - residual risk:
+  - acceptance:
+  - close blockers / close reason:
+  - smallest unblocker:
+- note: These are display groups only. Exact gate values, recompute rules, and close semantics are owned by Kernel Reference.
+
 ## Current Summary
 - mode:
 - lifecycle phase:
@@ -86,15 +114,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 - pending decision:
 - user is deciding:
 - risk:
+- gate display groups: Scope=; Judgment=; Evidence=; Close Readiness=
 - guarantee level:
-- scope gate:
-- decision gate:
-- approval gate:
-- design gate:
-- evidence gate:
-- verification gate:
-- Manual QA:
-- acceptance gate:
+- kernel gate detail: scope=; decision=; approval=; design=; evidence=; verification=; Manual QA=; acceptance=
 - active change unit:
 - write authority summary:
 - authority source refs: write=; decision=; approval=; evidence=; eval=; manual_qa=; acceptance=; residual_risk=; artifacts=
@@ -130,7 +152,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 - reversibility:
 - affected scope:
 - minimum context to judge:
-- affected gates:
+- affected display group:
+- affected gate refs:
 
 ## Authority Source Refs
 - Write Authorization:
@@ -441,17 +464,19 @@ Review Stages in `TASK` are managed display sections for Role Lens, playbook, or
 
 Generated summaries should use ordinary user-facing language first and exact Harness terms as labels or refs where useful. They should not turn the projection into a command language or imply that display text created state.
 
+Gate Group Summary is the first managed section so readers see the practical blocker story before raw gate detail. Scope, Judgment, Evidence, and Close Readiness are display groups derived from existing owner records, gates, blockers, and refs. They are not canonical fields, aliases for exact gate values, new gates, recompute inputs, close semantics, or authority paths. Exact gate values and recompute rules remain in [Kernel Reference](../kernel.md#gates), and close behavior remains in [`close_task`](../kernel.md#close_task).
+
 Decision Packet display in `TASK` may show a reader-facing display judgment type so users can scan whether they are making a Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, or Scope / autonomy judgment. Use it as the primary display category. If a decision is cross-cutting, render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the category as exclusive. The category is display metadata derived from the owner Decision Packet context and refs. It is not a canonical schema field, gate, status, owner contract, or validator input, and it must not blur the owner contracts for `decision_kind`, Approval, acceptance, QA, residual-risk acceptance, close, or Write Authorization.
 
 Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to Write Authorization refs, sensitive-action permission to Approval refs, evidence sufficiency to Evidence Manifest refs, detached verification to Eval refs, Manual QA to Manual QA records or valid waiver refs, final acceptance to Acceptance Decision Packet refs, and residual-risk visibility or acceptance to Residual Risk refs or `ResidualRiskSummary.status=none`. Missing refs should render as missing support, not as completed authority.
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means no known close-relevant residual risk exists for the requested action. `not_visible` means known close-relevant risk exists but has not been made visible enough for acceptance or close; it should remain a blocker or next action until the risk and refs are shown.
 
-Close and assurance display in `TASK` must keep self-checked work, `detached_verified`, verification waiver, QA waiver, and risk-accepted close visibly separate. A risk-accepted close should cite accepted Residual Risk refs and any required Decision Packet; a verification waiver should cite `verification_gate=waived_by_user` and its Decision Packet when required; a QA waiver should cite `qa_gate=waived`, the Manual QA record or waiver reason, and the QA waiver Decision Packet when required.
+Close and assurance display in `TASK` must keep self-checked work, `detached_verified`, verification waiver, QA waiver, and residual-risk accepted close visibly separate. A residual-risk accepted close should cite accepted Residual Risk refs and any required Decision Packet; a verification waiver should cite `verification_gate=waived_by_user` and its Decision Packet when required; a QA waiver should cite `qa_gate=waived`, the Manual QA record or waiver reason, and the QA waiver Decision Packet when required.
 
-Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the policy or gate, Task and Change Unit, skipped check or surface, reason, accepted risk, actor, expiry or follow-up when needed, relevant refs, and close impact. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
+Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the policy or gate, Task and Change Unit, skipped check or surface, reason, accepted residual risk, actor, expiry or residual-risk follow-up when needed, relevant refs, and close impact. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
 
-Close Summary in `TASK` is a continuity display summary for active or recently closed `work` tasks. It must not hide gate status or residual risk. When close is successful, blocked, canceled, or risk-accepted, the summary should show changed scope, evidence, verification, Manual QA, residual risk, acceptance, close reason, and follow-up as applicable, with refs back to owner records.
+Close Summary in `TASK` is a continuity display summary for active or recently closed `work` tasks. It must not hide gate status or residual risk. When close is successful, blocked, canceled, or residual-risk accepted, the summary should show changed scope, evidence, verification, Manual QA, residual risk, acceptance, close reason, and residual-risk follow-up as applicable, with refs back to owner records.
 
 Direct work uses `DIRECT-RESULT` for its low-ceremony close impact summary, and Journey Card close context is compact status/resume display. `TASK` Close Summary remains a continuity display under the [projection/report boundary](../document-projection.md#projection-principles); close and gate effects still come from owner records.
 

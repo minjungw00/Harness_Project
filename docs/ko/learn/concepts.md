@@ -20,6 +20,17 @@
 
 Harness의 어휘는 요청, 범위, 판단, 근거, 확인, 수락, 남은 위험, 닫기로 이어지는 작은 작업 흐름에 이름을 붙입니다.
 
+## Gate 표시 그룹
+
+Harness 상태를 사용자에게 보여줄 때는 많은 내부 gate detail을 보통 네 가지 읽기 쉬운 표시 그룹으로 묶습니다.
+
+- Scope: 무엇이 바뀔 수 있는가.
+- Judgment: 사용자가 무엇을 결정해야 하는가.
+- Evidence: 완료 주장을 무엇이 뒷받침하는가.
+- Close Readiness: verification, Manual QA, acceptance, residual risk, close blockers.
+
+이 그룹은 읽기 보조 도구이지 kernel gate taxonomy를 대체하지 않습니다. Schema field, gate value, recompute input, authority path, close rule을 만들지 않습니다. 엄격한 gate 동작은 [커널 참조](../reference/kernel.md#gates)가, public API 동작은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)가, projection rendering 규칙은 [문서 Projection 참조](../reference/document-projection.md)가 담당합니다.
+
 ## 가장 작은 개념 묶음
 
 Harness는 작업 흐름에서 시작하면 이해하기 쉽습니다.
