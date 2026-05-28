@@ -121,14 +121,14 @@ updated_at: 2026-05-06T10:30:00+09:00
 - suggested PR checklist:
 - suggested deploy checklist:
 - suggested rollback 또는 monitoring notes:
-- 외부 권한 reminder: Deployment, merge, Approval, production monitoring, QA 또는 verification waiver, gate satisfaction, 최종 수락, 남은 위험을 받아들이는 판단, assurance upgrade, Task 닫기는 이 보고서 밖에 남는다.
+- 외부 권한 reminder: Deployment, merge, Approval, production monitoring, QA 또는 verification waiver, gate satisfaction, 최종 수락, 잔여 위험을 받아들이는 판단, assurance upgrade, Task 닫기는 이 보고서 밖에 남는다.
 ````
 
 ## 메모
 
 이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. `EXPORT`는 `ProjectionKind`일 뿐이며, export snapshot과 component는 owner 기록 또는 projection ref에 연결된 artifact로 남습니다.
 
-`EXPORT`의 Release Handoff display는 self-checked work, `detached_verified`, verification waiver, QA waiver, risk-accepted close를 ref 또는 명시적인 absence와 함께 분리해서 보여줘야 합니다. Export는 이런 표시를 보존할 수 있지만 Approval을 부여하거나, gate를 충족하거나, 결과를 수락하거나, 남은 위험을 받아들이거나, QA 또는 verification을 waive하거나, assurance를 높이거나, Task를 닫지 않습니다.
+`EXPORT`의 Release Handoff display는 self-checked work, `detached_verified`, verification waiver, QA waiver, risk-accepted close를 ref 또는 명시적인 absence와 함께 분리해서 보여줘야 합니다. Export는 이런 표시를 보존할 수 있지만 Approval을 부여하거나, gate를 충족하거나, 결과를 수락하거나, 잔여 위험을 받아들이거나, QA 또는 verification을 waive하거나, assurance를 높이거나, Task를 닫지 않습니다.
 
 `EXPORT`는 기본적으로 원본 secret, PII, 민감 log, network trace, screenshot, 기타 민감 artifact 본문을 포함하면 안 됩니다. 크거나 민감한 artifact는 `ArtifactRef`로 나열합니다. 원본 file은 policy와 retention이 허용할 때만 포함하고, `secret_omitted` 또는 `blocked` entry는 ref와 note로만 표현합니다.
 

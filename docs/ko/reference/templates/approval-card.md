@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-대기 중인 Approval의 민감 행동(sensitive-action) 요청 범위, 목적, 경계, 위험, 대안, 추천안을 사용자에게 간결하게 보여줄 때 Approval Card를 사용합니다. 이 card는 민감한 행동을 허용할지 묻는 표시일 뿐이며 사용자 소유의 제품 판단이나 중요한 기술 판단, 정확성 검토(correctness review), 결과 수락, 남은 위험을 받아들이는 판단, Write Authorization이 아닙니다.
+대기 중인 Approval의 민감 행동(sensitive-action) 요청 범위, 목적, 경계, 위험, 대안, 추천안을 사용자에게 간결하게 보여줄 때 Approval Card를 사용합니다. 이 card는 민감한 행동을 허용할지 묻는 표시일 뿐이며 사용자 소유의 제품 판단이나 중요한 기술 판단, 정확성 검토(correctness review), 결과 수락, 잔여 위험을 받아들이는 판단, Write Authorization이 아닙니다.
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
@@ -42,7 +42,7 @@
 ````text
 Approval이 필요합니다.
 표시 전용: Approval은 여전히 기준 Approval 결정 경로를 통해 기록되어야 합니다.
-민감 행동 허용만 묻습니다. 사용자 소유의 제품 판단이나 중요한 기술 판단, correctness, 최종 수락, 남은 위험을 받아들이는 판단, Write Authorization이 아닙니다.
+민감 행동 허용만 묻습니다. 사용자 소유의 제품 판단이나 중요한 기술 판단, correctness, 최종 수락, 잔여 위험을 받아들이는 판단, Write Authorization이 아닙니다.
 Refs: approval={approval_id}; decision={decision_packet_ref|none}; write={write_authorization_ref|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 
 {approval_id} {category}
@@ -89,6 +89,6 @@ Baseline:
 
 이 template은 렌더링 결과인 카드 형태일 뿐 Approval 권한 자체가 아닙니다. Approval은 여전히 기준 Approval 결정 경로를 거쳐야 합니다.
 
-Approval은 사용자 소유의 제품 판단이나 중요한 기술 판단을 해소하지 않고, correctness를 증명하지 않으며, verification이나 Manual QA를 대체하지 않고, 결과 수락을 암시하지 않으며, 남은 위험을 받아들이는 판단을 대신하지 않고, Write Authorization을 만들지 않습니다.
+Approval은 사용자 소유의 제품 판단이나 중요한 기술 판단을 해소하지 않고, correctness를 증명하지 않으며, verification이나 Manual QA를 대체하지 않고, 결과 수락을 암시하지 않으며, 잔여 위험을 받아들이는 판단을 대신하지 않고, Write Authorization을 만들지 않습니다.
 
 Approval Card는 Approval 경계를 명시해야 합니다. 예를 들어 dependency install Approval은 architecture 결정이 아니고, secret access Approval은 secret 값 노출 허가가 아니며, auth 또는 system Approval은 session/JWT/social-login 선택이 아니고, 최종 수락은 추가 write 허가가 아닙니다.

@@ -2,17 +2,17 @@
 
 ## 이 문서가 도와주는 일
 
-이 참조 문서는 Harness의 public MCP resource와 tool 계약을 구현·테스트·검토할 때 사용합니다. 이 문서는 읽기 전용 resource와 public tool, 공통 envelope, request/response schema를 다룹니다. 또한 shared ref, error taxonomy, idempotency, state conflict 동작, `ValidatorResult`, `ArtifactRef`의 public API shape를 정리합니다.
+이 참조 문서는 하네스의 public MCP resource와 tool 계약을 구현·테스트·검토할 때 사용합니다. 이 문서는 읽기 전용 resource와 public tool, 공통 envelope, request/response schema를 다룹니다. 또한 shared ref, error taxonomy, idempotency, state conflict 동작, `ValidatorResult`, `ArtifactRef`의 public API shape를 정리합니다.
 
 SQLite DDL과 storage layout, 전체 kernel transition table, projection template text, CLI command semantics, connector cookbook detail은 이 문서의 담당 범위가 아닙니다. Storage-owned JSON과 DDL 규칙은 [Storage와 DDL](storage-and-ddl.md)이 담당합니다.
 
-이 문서는 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+이 문서는 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 제품 MVP 목표는 v0.1 Kernel MVP이며, Kernel Smoke는 이를 좁게 실행하는 conformance profile입니다. v0.2부터 v0.4까지는 Agency-Hardened MVP reference conformance target으로 가는 staged pack이고, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
 
 ## 이런 때 읽기
 
 - MCP client 또는 server 접점을 Harness Core에 연결할 때.
-- Harness tool의 정확한 public request 또는 response shape가 필요할 때.
-- API response에 어떤 error, validator result, artifact 참조, projection 참조가 나타날 수 있는지 확인할 때.
+- 하네스 tool의 정확한 public request 또는 response shape가 필요할 때.
+- API response에 어떤 error, validator result, 아티팩트 참조, projection 참조가 나타날 수 있는지 확인할 때.
 - Public API behavior를 검증하는 conformance fixture를 작성할 때.
 
 ## 읽기 전에
@@ -23,7 +23,7 @@ SQLite DDL과 storage layout, 전체 kernel transition table, projection templat
 
 MCP resource는 읽기 전용 보기로 동작합니다. 현재 상태, projection 최신성, 사용자에게 보이는 요약을 보고할 수 있지만, 상태를 만들거나 복구하면 안 됩니다.
 
-모든 상태 변경은 public tool과 Core를 거칩니다. MCP envelope는 Core가 검증할 caller claim을 담을 뿐 두 번째 상태 모델이 아닙니다. Tool response에는 projection path와 artifact 참조가 포함될 수 있습니다. 하지만 이 값들은 기준 상태 기록이나 durable evidence file을 가리키는 참조일 뿐, 기준 상태를 대체하지 않습니다.
+모든 상태 변경은 public tool과 Core를 거칩니다. MCP envelope는 Core가 검증할 caller claim을 담을 뿐 두 번째 상태 모델이 아닙니다. Tool response에는 projection path와 아티팩트 참조가 포함될 수 있습니다. 하지만 이 값들은 기준 상태 기록이나 durable evidence file을 가리키는 참조일 뿐, 기준 상태를 대체하지 않습니다.
 
 Status와 next-action 표시는 public MCP 개념을 사용자에게 보이기 전에 평범한 말로 바꿔 보여줘야 합니다. 사용자는 무엇이 막고 있는지, 가장 작은 해소 방법이 무엇인지, 중요한 추가 막힘이 무엇인지 볼 수 있어야 합니다. Raw `ToolError`, `ErrorCode`, schema field name은 구현자, log, conformance output을 위한 선택 세부 정보로는 보일 수 있지만, 사용자 설명이 그것만으로 끝나면 안 됩니다.
 
@@ -253,7 +253,7 @@ Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](ke
 | MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, source 기록이 있거나, user/operator가 projection을 켤 때 지원하거나 대기열에 넣습니다. |
 | Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | 대응하는 선택 projection이 켜진 경우에만 지원할 수 있습니다. |
 
-ProjectionKind extensibility가 projection을 기준 상태로 만들지는 않습니다. 모든 projection job은 여전히 owner 기록 및 artifact 참조에서 파생된 보기를 렌더링합니다. `DEC`는 해당 기능이 켜졌을 때 standalone Decision Packet Markdown에만 유효하며, MVP-required projection job이 아닙니다. Standalone `DEC` job이 없어도 MVP Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공되어야 합니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `harness.status`, `harness.next`, significant resume flow의 현재 위치 Journey Card output은 agency conformance에 계속 필요합니다.
+ProjectionKind extensibility가 projection을 기준 상태로 만들지는 않습니다. 모든 projection job은 여전히 owner 기록 및 아티팩트 참조에서 파생된 보기를 렌더링합니다. `DEC`는 해당 기능이 켜졌을 때 standalone Decision Packet Markdown에만 유효하며, MVP-required projection job이 아닙니다. Standalone `DEC` job이 없어도 MVP Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공되어야 합니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `harness.status`, `harness.next`, significant resume flow의 현재 위치 Journey Card output은 agency conformance에 계속 필요합니다.
 
 `EXPORT`는 export 기능이 켜졌을 때 Release Handoff 같은 보고서 profile을 포함할 수 있습니다. 이런 profile은 projection/보고서 접점일 뿐입니다. Deployment 권한, merge 권한, production-monitoring 권한, final acceptance, Residual Risk 수용, assurance 향상, Task close 권한을 만들지 않습니다.
 
@@ -308,7 +308,7 @@ model_or_prompt_policy_change
 policy_override
 ```
 
-Sensitive category는 명령어처럼 외우는 체계가 아니라 Approval이 필요한 민감 위험을 설명하는 label입니다. 하나의 intended write에는 여러 category가 함께 붙을 수 있습니다. Category는 sensitive-action Approval이 왜 필요한지 설명하지만 제품, 아키텍처, 보안, QA, verification, 결과 수락, 남은 위험 관련 판단, policy 판단을 대신 해결하지 않습니다. 정확한 write-state 동작은 [커널 참조](kernel.md#prepare_write)가 담당하고, public request와 lifecycle shape은 [`harness.prepare_write`](#harnessprepare_write)와 [Approval Lifecycle](#approval-lifecycle)이 담당합니다.
+Sensitive category는 명령어처럼 외우는 체계가 아니라 Approval이 필요한 민감 위험을 설명하는 label입니다. 하나의 intended write에는 여러 category가 함께 붙을 수 있습니다. Category는 sensitive-action Approval이 왜 필요한지 설명하지만 제품, 아키텍처, 보안, QA, verification, 결과 수락, 잔여 위험 관련 판단, policy 판단을 대신 해결하지 않습니다. 정확한 write-state 동작은 [커널 참조](kernel.md#prepare_write)가 담당하고, public request와 lifecycle shape은 [`harness.prepare_write`](#harnessprepare_write)와 [Approval Lifecycle](#approval-lifecycle)이 담당합니다.
 
 | Category | 보통 뜻하는 것 | Approval, Decision Packet, evidence, redaction 지침 |
 |---|---|---|
@@ -317,7 +317,7 @@ Sensitive category는 명령어처럼 외우는 체계가 아니라 Approval이 
 | `schema_change` | Database, state, API, event, fixture, data-model shape 변경과 migration. | Approval은 민감한 schema 또는 migration side effect를 포괄합니다. Additive path와 breaking path 선택, backfill, rollback, compatibility window, maintenance cost에는 Decision Packet을 사용합니다. Evidence에는 migration/test coverage를 포함하고 production-like record는 redaction해야 합니다. |
 | `dependency_change` | Runtime/build dependency 또는 dependency lock의 install, upgrade, removal, 변경. | Approval은 install, lockfile edit, dependency-file write를 포괄합니다. Dependency 채택이 architecture, compatibility, cost, license posture, rollback, maintenance를 바꾸면 Decision Packet을 사용합니다. Evidence에는 lockfile diff, test output, security 또는 license scan ref를 둘 수 있습니다. |
 | `public_api_change` | CLI flag, HTTP endpoint, SDK contract, exported function, public config, documented behavior, module-boundary commitment 변경. | Approval은 민감한 write를 포괄할 수 있지만 compatibility와 breaking-change 판단에는 Decision Packet이 필요합니다. Evidence에는 caller-impact check, docs update, migration note, relevant test를 포함해야 합니다. |
-| `destructive_write` | Delete, overwrite, irreversible migration step, data loss, reset operation, history/state removal. | Approval은 destructive side effect와 affected scope를 이름 붙여야 합니다. Rollback, backup, user impact, irreversibility, 남은 위험을 받아들이는 판단에는 Decision Packet을 사용합니다. Evidence에는 applicable한 dry-run, backup, diff, recovery ref가 있어야 합니다. |
+| `destructive_write` | Delete, overwrite, irreversible migration step, data loss, reset operation, history/state removal. | Approval은 destructive side effect와 affected scope를 이름 붙여야 합니다. Rollback, backup, user impact, irreversibility, 잔여 위험을 받아들이는 판단에는 Decision Packet을 사용합니다. Evidence에는 applicable한 dry-run, backup, diff, recovery ref가 있어야 합니다. |
 | `network_write` | POST/PUT/PATCH/DELETE 또는 그에 준하는 네트워크 write operation. | Approval은 network target, method/class, payload class, expiry를 포괄합니다. External user impact, rollback, data selection, target ownership이 불확실한 경우 Decision Packet을 사용합니다. Evidence는 request를 안전하게 요약하고 secret 또는 PII payload를 생략해야 합니다. |
 | `external_service_write` | Third-party service 또는 external account의 resource 생성, 변경, 삭제, configuration. | Approval은 external service action과 account/tenant boundary를 포괄합니다. Ownership, lifecycle, retention, cost, rollback, user notice, support impact에는 Decision Packet을 사용합니다. Evidence는 token이나 private raw payload 대신 service ref, id, redacted log를 사용해야 합니다. |
 | `secret_access` | Credential, token, certificate, key, secret handle의 read, write, rotation, copy, use. | Approval은 named secret scope와 access kind를 포괄합니다. Secret choice, rotation plan, retention, audit trail, exposure risk에는 Decision Packet을 사용합니다. Evidence는 handle, `secret_omitted`, `blocked` artifact를 사용해야 하며 secret value를 log, projection, export, screenshot, summary에 넣으면 안 됩니다. |
@@ -332,11 +332,11 @@ Sensitive category는 명령어처럼 외우는 체계가 아니라 Approval이 
 | `model_or_prompt_policy_change` | Model selection, system/developer prompt, safety policy, tool policy, routing, evaluation policy, generated-output policy 변경. | Approval은 민감한 policy 또는 prompt write를 포괄합니다. Product tone, safety trade-off, data exposure, model cost, eval threshold, user-facing behavior에는 Decision Packet을 사용합니다. Evidence에는 eval ref와 필요한 경우 redacted prompt/policy artifact를 포함해야 합니다. |
 | `policy_override` | Harness, project, security, QA, verification, compliance policy를 우회, 약화, waiver, exception 처리하는 작업. | Approval은 scope 안의 민감한 override step만 허가할 수 있습니다. 왜 exception이 받아들일 만한지, 어떤 위험을 받아들이는지, 어떤 follow-up이 남는지, close에 어떤 영향이 있는지에는 Decision Packet을 사용합니다. Evidence는 policy, waiver, Residual Risk, follow-up ref를 연결해야 합니다. |
 
-Approval prompt는 일반 사용자가 이해하는 side effect를 먼저 말하고 identifier를 뒤에 붙여야 합니다. 예: "redaction된 billing CSV를 vendor X로 export해도 될까요? (`data_export`, `external_service_write`)." 같은 단계가 사용자 소유 제품 판단, 중요한 기술 판단, 보안, QA, verification, 결과 수락, 남은 위험 관련 판단, policy 판단도 결정한다면 그 판단은 compatible Decision Packet으로 연결해야 합니다. 그 판단이 write authority를 막고 있다면 `prepare_write`가 `allowed`를 반환하기 전에 applicable한 owner gate 의미에 따라 resolved, deferred, waived 또는 그 밖의 호환되는 방식으로 기록되어야 합니다.
+Approval prompt는 일반 사용자가 이해하는 side effect를 먼저 말하고 identifier를 뒤에 붙여야 합니다. 예: "redaction된 billing CSV를 vendor X로 export해도 될까요? (`data_export`, `external_service_write`)." 같은 단계가 사용자 소유 제품 판단, 중요한 기술 판단, 보안, QA, verification, 결과 수락, 잔여 위험 관련 판단, policy 판단도 결정한다면 그 판단은 compatible Decision Packet으로 연결해야 합니다. 그 판단이 write authority를 막고 있다면 `prepare_write`가 `allowed`를 반환하기 전에 applicable한 owner gate 의미에 따라 resolved, deferred, waived 또는 그 밖의 호환되는 방식으로 기록되어야 합니다.
 
 ## ArtifactRef
 
-Artifact ref는 artifact store에 등록되어 지속 보관되는 근거 파일을 가리킵니다. Report projection과 record projection은 근거 파일 참조가 필요할 때 artifact ref를 사용합니다. Projection 자체는 근거 파일이 아닙니다.
+아티팩트 참조는 artifact store에 등록되어 지속 보관되는 근거 파일을 가리킵니다. Report projection과 record projection은 근거 파일 참조가 필요할 때 아티팩트 참조를 사용합니다. Projection 자체는 근거 파일이 아닙니다.
 
 Artifact 등록은 임의 파일을 쌓아 두는 느슨한 파일 덤프가 아닙니다. Staged file은 Core가 staging 또는 capture source, stored-byte integrity, `redaction_state`, Task-scoped owner relation을 검증한 뒤에만 public `ArtifactRef`가 됩니다.
 
@@ -1035,7 +1035,7 @@ NextResponse:
 
 | `action_kind` | 사용자에게 보이는 의미 | 권한 경계 |
 |---|---|---|
-| `ask_user` | 이름 붙은 경로를 계속하기 전에 사용자 소유 결정, 승인, QA 판단, 수락, 남은 위험 판단, 또는 다른 답변이 필요합니다. | Prompt는 사용자가 무엇을 결정하는지와 관련 refs를 말해야 하며, 그 자체로 write나 close를 허가하지 않습니다. |
+| `ask_user` | 이름 붙은 경로를 계속하기 전에 사용자 소유 결정, 승인, QA 판단, 수락, 잔여 위험 판단, 또는 다른 답변이 필요합니다. | Prompt는 사용자가 무엇을 결정하는지와 관련 refs를 말해야 하며, 그 자체로 write나 close를 허가하지 않습니다. |
 | `prepare_write` | 정확히 의도한 제품 파일 쓰기를 지금 해도 되는지 확인합니다. | `harness.prepare_write`가 compatible Write Authorization을 반환하기 전에는 제품 파일 쓰기가 허가되지 않습니다. |
 | `implement` | 이미 범위가 잡힌 작업을 수행합니다. 제품 파일 쓰기에는 current compatible Write Authorization만 사용합니다. | Scope를 넓히거나 오래된 authorization을 재사용하거나 사용자 소유 판단을 해결하지 않습니다. |
 | `launch_verify` | Current evidence와 source refs에서 verification path를 준비하거나 시작합니다. | 많아야 detached candidate를 만들 뿐이며, passing Eval이나 assurance upgrade가 아닙니다. |

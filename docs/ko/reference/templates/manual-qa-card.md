@@ -82,7 +82,7 @@ Manual QA 결과를 기록하거나, 허용된 낮은 위험의 QA waiver 사유
 
 이 template은 렌더링 결과인 카드 형태일 뿐 기준 QA 상태가 아닙니다. `qa_gate`는 close-relevant gate로 남습니다.
 
-Manual QA는 사람이 확인한 기록입니다. 테스트 통과, browser smoke, screenshot capture, Browser QA Capture artifact, 검증, 사용자의 결과 수락은 닫기 맥락을 뒷받침할 수 있지만, `record_manual_qa`가 Manual QA 결과를 기록했거나 유효한 QA waiver가 waiver reason과 함께 `qa_gate=waived`를 갱신하고, 사용자 소유 위험이 있으면 호환되는 QA waiver Decision Packet을 포함한 경우가 아니면 Manual QA가 되지 않습니다. Browser QA Capture는 owner 문서가 명시적으로 승격하기 전까지 v1/post-MVP 후보이며, captured artifact는 별도 Eval 경로가 independence를 충족하지 않는 한 final acceptance 또는 detached verification을 기록하지 않습니다. Waiver에 닫기 영향이나 위험을 받아들이는 판단이 걸려 있는 경우 가벼운 채팅 문장만으로는 충분하지 않습니다.
+Manual QA는 사람이 확인한 기록입니다. 테스트 통과, browser smoke, screenshot capture, Browser QA Capture artifact, 검증, 사용자의 결과 수락은 닫기 맥락을 뒷받침할 수 있지만, `record_manual_qa`가 Manual QA 결과를 기록했거나 유효한 QA waiver가 waiver reason과 함께 `qa_gate=waived`를 갱신하고, 사용자 소유 위험이 있으면 호환되는 QA waiver Decision Packet을 포함한 경우가 아니면 Manual QA가 되지 않습니다. Browser QA Capture는 owner 문서가 명시적으로 승격하고 증명하기 전까지 v1+ Expansion 후보이며, captured artifact는 별도 Eval 경로가 independence를 충족하지 않는 한 final acceptance 또는 detached verification을 기록하지 않습니다. Waiver에 닫기 영향이나 위험을 받아들이는 판단이 걸려 있는 경우 가벼운 채팅 문장만으로는 충분하지 않습니다.
 
 이 card는 pending QA, passed QA, failed QA, waived QA를 별도 표시 상태로 렌더링해야 합니다. Waived QA는 Manual QA record 또는 waiver reason, 필요한 경우 QA waiver Decision Packet, 해당되는 Residual Risk refs, close impact를 cite하며 passed inspection이 아닙니다.
 

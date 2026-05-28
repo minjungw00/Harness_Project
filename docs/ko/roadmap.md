@@ -37,7 +37,7 @@ flowchart LR
   Later --> Promote["future version은 owner 결정 이후에만 가능"]
 ```
 
-v0.1 Kernel MVP와 v0.2부터 v0.4까지의 pack은 Build-owned staged delivery이지 roadmap 범위가 아닙니다. 이 roadmap은 staged-delivery owner 문서가 요구하는 kernel 권한, Decision Packet, 남은 위험 표시, detached verification, Manual QA, recover/export, release handoff, fixture conformance 동작을 흡수하면 안 됩니다. Roadmap 항목은 owner 문서가 제한적으로 허용할 때만 읽기, 표시, 추천, artifact 후보 제공, fixture 후보 역할을 할 수 있습니다. 지속 artifact 등록이나 연결은 여전히 기존 Core/MCP artifact owner path 또는 향후 승격된 owner contract를 거쳐야 합니다. 여기에 이름이 있다는 이유만으로 권한 경로가 되지는 않습니다.
+v0.1 Kernel MVP와 v0.2부터 v0.4까지의 pack은 Build-owned staged delivery이지 roadmap 범위가 아닙니다. 이 roadmap은 staged-delivery owner 문서가 요구하는 kernel 권한, Decision Packet, 잔여 위험 표시, detached verification, Manual QA, recover/export, release handoff, fixture conformance 동작을 흡수하면 안 됩니다. Roadmap 항목은 owner 문서가 제한적으로 허용할 때만 읽기, 표시, 추천, artifact 후보 제공, fixture 후보 역할을 할 수 있습니다. 지속 artifact 등록이나 연결은 여전히 기존 Core/MCP artifact owner path 또는 향후 승격된 owner contract를 거쳐야 합니다. 여기에 이름이 있다는 이유만으로 권한 경로가 되지는 않습니다.
 
 ## 승격 규칙
 
@@ -80,7 +80,7 @@ v0.1 Kernel MVP는 로컬 project 하나, 기준 접점 하나, local MCP reacha
 
 ### Browser QA Capture
 
-Browser QA Capture는 v1/post-MVP 우선 후보이지 첫 구축 대상도 staged-delivery 요구사항도 아닙니다. 연결된 접점이 지원하는 경우 automatic 또는 assisted capture가 Manual QA record를 위해 screenshot, console log, network trace, accessibility snapshot, workflow recording을 수집할 수 있습니다.
+Browser QA Capture는 owner 문서가 명시적으로 승격하고 증명하기 전까지 v1+ Expansion roadmap 후보이지 첫 구축 대상도 staged-delivery 요구사항도 아닙니다. 연결된 접점이 지원하는 경우 automatic 또는 assisted capture가 Manual QA record를 위해 screenshot, console log, network trace, accessibility snapshot, workflow recording을 수집할 수 있습니다.
 
 승격에는 declared `T6 QA Capture` capability profile, redaction 및 secret/PII handling policy, test environment setup, artifact retention rules, fixture 또는 conformance target, 지원하지 않는 접점의 fallback 동작, projection-as-canonical 의존성 없음이 필요합니다.
 
@@ -122,7 +122,7 @@ Parallel execution은 stable lock, baseline freshness, Approval scope compositio
 
 Context Index는 읽기 전용 context provider입니다. Agent가 관련 projection, artifact ref, repo file, doc, user note를 찾도록 도울 수 있지만 인덱싱된 지식을 Harness 상태나 권한으로 취급하지 않습니다. 첫 구축 대상도 MVP 선행 조건도 아닙니다.
 
-인덱싱된 memory는 kernel과 기준 기록 경계가 안정되기 전에 도입하면 local 권한을 흐릴 수 있으므로 later입니다. Compact always-on rules와 phase-based context bundle은 Context Index를 필요로 하지 않으며 connector context discipline입니다. Owner 문서가 명시적으로 승격하기 전까지 Context Index는 권한 없는 retrieval only이며 v1/later candidate로 남습니다. 향후 Context Index는 context의 순위를 매기고, 요약하고, 가져올 수 있지만 해당 권한 경로의 owner 문서가 명시적으로 바뀌지 않는 한 기존 권한 경로를 대체할 수 없습니다. 가져온 context는 작업, compact status, status 해석, source excerpt, pull ref에 도움을 줄 수는 있어도 write를 허가하거나 Write Authorization을 만들거나, Decision Packet을 해소하거나, Approval을 부여하거나, gate를 충족하거나, evidence를 만들거나, verification을 수행하거나 기록하거나, QA를 기록하거나, QA/verification 또는 gate/close 관련 요구사항을 면제하거나, 결과 수락을 기록하거나, 남은 위험을 받아들이는 판단을 기록하거나, assurance를 올리거나, projection을 대기열에 넣거나 refresh하거나 projection 최신성을 바꾸거나, 구현 준비 상태를 선언하거나, Task를 close하지 않습니다. 오래된 retrieved context는 gate나 write authority를 충족할 수 없고, 기존 경로를 통해 refresh, reconcile, inspect해야 하는 owner record를 가리킬 수만 있습니다.
+인덱싱된 memory는 kernel과 기준 기록 경계가 안정되기 전에 도입하면 local 권한을 흐릴 수 있으므로 later입니다. Compact always-on rules와 phase-based context bundle은 Context Index를 필요로 하지 않으며 connector context discipline입니다. Owner 문서가 명시적으로 승격하기 전까지 Context Index는 권한 없는 retrieval only이며 v1/later candidate로 남습니다. 향후 Context Index는 context의 순위를 매기고, 요약하고, 가져올 수 있지만 해당 권한 경로의 owner 문서가 명시적으로 바뀌지 않는 한 기존 권한 경로를 대체할 수 없습니다. 가져온 context는 작업, compact status, status 해석, source excerpt, pull ref에 도움을 줄 수는 있어도 write를 허가하거나 Write Authorization을 만들거나, Decision Packet을 해소하거나, Approval을 부여하거나, gate를 충족하거나, evidence를 만들거나, verification을 수행하거나 기록하거나, QA를 기록하거나, QA/verification 또는 gate/close 관련 요구사항을 면제하거나, 결과 수락을 기록하거나, 잔여 위험을 받아들이는 판단을 기록하거나, assurance를 올리거나, projection을 대기열에 넣거나 refresh하거나 projection 최신성을 바꾸거나, 구현 준비 상태를 선언하거나, Task를 close하지 않습니다. 오래된 retrieved context는 gate나 write authority를 충족할 수 없고, 기존 경로를 통해 refresh, reconcile, inspect해야 하는 owner record를 가리킬 수만 있습니다.
 
 ```mermaid
 flowchart LR
@@ -140,7 +140,7 @@ flowchart LR
 
 Local Derived Metrics는 `state.sqlite.task_events`, run, validator result, projection job, reconcile item에서 diagnostic rate, count, duration, guard-trigger summary를 파생할 수 있습니다.
 
-Metric은 권한이 아니라 파생값이므로 later입니다. Owner 문서가 명시적으로 승격하기 전까지 local metric은 읽기 전용 진단 표시입니다. 사용자가 process bottleneck, 보고 공백, 반복되는 운영 패턴을 찾는 데 도움을 줄 수 있지만 diagnostic-only입니다. Metric 표시는 상태 변경, gate 충족, 쓰기 권한, Approval 부여, 근거 생성, projection 대기열 추가 또는 새로고침, projection 최신성 변경, close readiness 또는 구현 준비 상태 변경, verification 수행 또는 기록, QA 기록, QA 또는 verification 면제, 남은 위험을 받아들이는 판단 기록, 결과 수락, assurance level 상승, Task close를 하면 안 됩니다.
+Metric은 권한이 아니라 파생값이므로 later입니다. Owner 문서가 명시적으로 승격하기 전까지 local metric은 읽기 전용 진단 표시입니다. 사용자가 process bottleneck, 보고 공백, 반복되는 운영 패턴을 찾는 데 도움을 줄 수 있지만 diagnostic-only입니다. Metric 표시는 상태 변경, gate 충족, 쓰기 권한, Approval 부여, 근거 생성, projection 대기열 추가 또는 새로고침, projection 최신성 변경, close readiness 또는 구현 준비 상태 변경, verification 수행 또는 기록, QA 기록, QA 또는 verification 면제, 잔여 위험을 받아들이는 판단 기록, 결과 수락, assurance level 상승, Task close를 하면 안 됩니다.
 
 ```mermaid
 flowchart LR

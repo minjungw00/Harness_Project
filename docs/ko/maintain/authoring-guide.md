@@ -202,7 +202,7 @@ Diagram은 인지 부담을 줄일 때만 사용합니다.
 
 ## Docs-maintenance checks
 
-Docs-maintenance checks는 읽기 전용 문서 유지보수입니다. Documentation drift, owner mismatch, 영어/한국어 의미 일치 문제, owner 밖의 중복 규범 문구, 깨진 link나 anchor, TODO hygiene 문제를 보고할 수 있습니다. Core fixture conformance, runtime validator, 기준 상태 전이, projection 새로고침, 생성된 운영 보고서, QA result, 결과 수락 기록, evidence artifact, 남은 위험을 받아들이는 판단, close readiness, 구현 준비 상태가 아닙니다. Fixture action을 실행하거나, runtime state를 seed하거나, runtime state/events/artifacts/projections/errors를 비교하지 않으며, runtime fixture pass/fail에 포함되지 않습니다.
+Docs-maintenance checks는 읽기 전용 문서 유지보수입니다. Documentation drift, owner mismatch, 영어/한국어 의미 일치 문제, owner 밖의 중복 규범 문구, 깨진 link나 anchor, TODO hygiene 문제를 보고할 수 있습니다. Core fixture conformance, runtime validator, 기준 상태 전이, projection 새로고침, 생성된 운영 보고서, QA result, 결과 수락 기록, evidence artifact, 잔여 위험을 받아들이는 판단, close readiness, 구현 준비 상태가 아닙니다. Fixture action을 실행하거나, runtime state를 seed하거나, runtime state/events/artifacts/projections/errors를 비교하지 않으며, runtime fixture pass/fail에 포함되지 않습니다.
 
 Maintain 문서는 documentation review rule, category label, reviewer expectation을 정의할 수 있습니다. Runtime conformance pass/fail, runtime fixture semantics, Core state effect, gate behavior, implementation readiness를 정의하면 안 됩니다. Docs-maintenance finding이 runtime contract를 건드리면 그 contract를 다시 적지 말고 owner Reference 문서를 가리켜야 합니다.
 

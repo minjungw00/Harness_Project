@@ -47,7 +47,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 # Manual QA
 
-> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 Manual QA record와 `qa_gate`를 표시합니다. QA result와 QA waiver는 `manual_qa_records`와 `qa_gate`에 기록됩니다. Product/user risk가 있는 QA waiver는 연결된 QA waiver Decision Packet을 사용하고, 남은 위험을 받아들이는 판단은 Residual Risk refs에 기록됩니다. Browser QA artifact는 supporting ref일 뿐이며 human Manual QA judgment, final acceptance, detached verification을 대체하지 않습니다.
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 Manual QA record와 `qa_gate`를 표시합니다. QA result와 QA waiver는 `manual_qa_records`와 `qa_gate`에 기록됩니다. Product/user risk가 있는 QA waiver는 연결된 QA waiver Decision Packet을 사용하고, 잔여 위험을 받아들이는 판단은 Residual Risk refs에 기록됩니다. Browser QA artifact는 supporting ref일 뿐이며 human Manual QA judgment, final acceptance, detached verification을 대체하지 않습니다.
 
 ## Identity
 - manual_qa_record_id: QA-0001 | null
@@ -131,4 +131,4 @@ Manual QA 표시는 passed Manual QA record, failed Manual QA record, pending re
 
 Manual QA projection은 안전한 omission note, handle, blocked artifact notice를 보여줄 수 있지만 생략된 secret/PII 값이나 차단된 capture payload를 포함하면 안 됩니다. `secret_omitted` artifact는 보이는 workflow, UI, copy, accessibility, smoke-test observation을 뒷받침할 수 있습니다. `blocked` capture는 replacement, waiver, Decision Packet outcome, 받아들인 위험, documented fallback이 QA 경로를 해소하지 않는 한 사용할 수 없는 QA 입력입니다.
 
-Screenshot, browser log, video, `qa_capture` output, workflow recording, note는 QA evidence ref입니다. Browser QA Capture는 owner 문서가 명시적으로 승격하기 전까지 v1/post-MVP 후보입니다. Manual QA result는 기록된 사람의 확인 또는 유효한 waiver이지, 이런 capture가 존재한다는 사실만으로 만들어지지 않습니다. Browser QA artifact는 별도의 Eval 경로가 verification independence를 충족하지 않는 한 final acceptance 또는 detached verification도 기록하지 않습니다. 어떤 접점이 browser capture를 지원하지 않으면 사람이 작성한 Manual QA notes와 수동 제공 artifacts를 fallback으로 사용합니다.
+Screenshot, browser log, video, `qa_capture` output, workflow recording, note는 QA evidence ref입니다. Browser QA Capture는 owner 문서가 명시적으로 승격하고 증명하기 전까지 v1+ Expansion 후보입니다. Manual QA result는 기록된 사람의 확인 또는 유효한 waiver이지, 이런 capture가 존재한다는 사실만으로 만들어지지 않습니다. Browser QA artifact는 별도의 Eval 경로가 verification independence를 충족하지 않는 한 final acceptance 또는 detached verification도 기록하지 않습니다. 어떤 접점이 browser capture를 지원하지 않으면 사람이 작성한 Manual QA notes와 수동 제공 artifacts를 fallback으로 사용합니다.

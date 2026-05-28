@@ -16,7 +16,7 @@
 - approval 참조
 - hash, size, redaction state, retention/availability, owner relation, 후속 evidence 영향을 포함한 artifact 참조
 - 관련 Run, Eval, Feedback Loop, Manual QA, TDD trace 참조
-- 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, Manual QA, 결과 수락, 남은 위험 요약
+- 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, Manual QA, 결과 수락, 잔여 위험 요약
 - 닫기 맥락으로 렌더링할 때 Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness를 보여주는 compact authority refs
 
 ## 렌더링 섹션
@@ -67,7 +67,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 ## 닫기 영향 요약
 - 근거가 뒷받침하는 것:
-- 근거가 대체하지 않는 것: 검증, Manual QA, 결과 수락, 남은 위험을 받아들이는 판단
+- 근거가 대체하지 않는 것: 검증, Manual QA, 결과 수락, 잔여 위험을 받아들이는 판단
 - 검증 상태:
 - Manual QA 상태:
 - 결과 수락 상태:
@@ -98,7 +98,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 | `src/...` | AC-01 | DIFF-0001, LOG-0001 |
 
 ## Design Quality Coverage
-| Item | Coverage / gate 표시 상태 | Evidence Refs | Notes |
+| Item | Coverage / 관문 표시 상태 | Evidence Refs | Notes |
 |---|---|---|---|
 | vertical_slice_shape | passed | CU-01 | |
 | decision_quality_check | passed | DEC-0001 | |
@@ -110,7 +110,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 | residual_risk_visibility_check | pending | RR-0001 | |
 | manual_qa_required | pending | qa_gate; no satisfying Manual QA record yet | |
 
-`Coverage / gate 표시 상태`는 이 manifest의 evidence coverage 또는 close와 관련된 gate 표시 상태입니다. 이 column의 `pending` 같은 값은 `ValidatorResult.status` 값이 아닙니다.
+`Coverage / 관문 표시 상태`는 이 manifest의 evidence coverage 또는 close와 관련된 관문 표시 상태입니다. 이 column의 `pending` 같은 값은 `ValidatorResult.status` 값이 아닙니다.
 
 ## Approval Refs
 - APR-0001:
@@ -163,7 +163,7 @@ Example coverage mappings:
 | AC-04 export contains only approved redacted fields | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | Approval과 Decision refs는 scope 또는 judgment context를 보여줍니다. Redacted artifact refs는 여전히 nonsecret claim을 증명해야 합니다. |
 | Completion condition: independent verifier reviewed the changed scope | RUN-VERIFY-001 | ART-BUNDLE-001 | EVAL-0001 | Eval이 current refs를 review했고 requested close에 필요한 independence가 있을 때만 valid합니다. |
 
-Evidence Manifest는 주장을 뒷받침하지만 그 자체로 correctness를 증명하거나 detached verification을 만들거나 Manual QA를 기록하거나 결과 수락을 암시하거나 남은 위험을 받아들이지 않습니다. 이 template에서 닫기 영향 요약을 렌더링할 때는 테스트 통과, 자체 확인(self-check), 사용자의 결과 수락이 서로 다른 닫기 조건으로 오해되지 않도록 각 줄을 분리해 보여줘야 합니다.
+Evidence Manifest는 주장을 뒷받침하지만 그 자체로 correctness를 증명하거나 detached verification을 만들거나 Manual QA를 기록하거나 결과 수락을 암시하거나 잔여 위험을 받아들이지 않습니다. 이 template에서 닫기 영향 요약을 렌더링할 때는 테스트 통과, 자체 확인(self-check), 사용자의 결과 수락이 서로 다른 닫기 조건으로 오해되지 않도록 각 줄을 분리해 보여줘야 합니다.
 
 닫기 맥락을 보여줄 때 manifest는 risk-accepted close, waived verification, QA waiver, self-checked, `detached_verified`를 owner ref 또는 명시적인 absence와 함께 서로 다른 표시 상태로 렌더링해야 합니다. 이 label은 owner record를 읽기 쉽게 요약할 뿐이며 Evidence Manifest authority가 아닙니다.
 

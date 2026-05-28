@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-매 턴 유지되는 Harness 맥락 묶음(context envelope)을 짧은 현재 상태 표시로 보여줄 때 Compact Status Card를 사용합니다. 여기에는 Task, 모드, 범위, 범위 밖, 다음 안전한 행동, 막힘 상태, 대기 중인 사용자 판단, 쓰기 권한, 수용 기준, 근거, 검증, Manual QA, 남은 위험, 보장 수준(guarantee level), 읽기용 보기 최신성(projection freshness), 최신 참조(ref)가 포함됩니다. 상태 확인, 다음 행동, 이어가기 턴에서 부담 없이 읽을 수 있게 유지하고, 평범한 상태 설명을 먼저 쓰며 정확한 Harness label은 경계를 분명히 할 때만 붙입니다.
+매 턴 유지되는 Harness 맥락 묶음(context envelope)을 짧은 현재 상태 표시로 보여줄 때 Compact Status Card를 사용합니다. 여기에는 Task, 모드, 범위, 범위 밖, 다음 안전한 행동, 막힘 상태, 대기 중인 사용자 판단, 쓰기 권한, 수용 기준, 근거, 검증, Manual QA, 잔여 위험, 보장 수준(guarantee level), 읽기용 보기 최신성(projection freshness), 최신 참조(ref)가 포함됩니다. 상태 확인, 다음 행동, 이어가기 턴에서 부담 없이 읽을 수 있게 유지하고, 평범한 상태 설명을 먼저 쓰며 정확한 Harness label은 경계를 분명히 할 때만 붙입니다.
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
@@ -50,7 +50,7 @@
 - design과 stewardship
 - 근거와 검증
 - Manual QA
-- 남은 위험
+- 잔여 위험
 - 수락과 닫기 상태
 - 읽기용 보기 최신성
 - state/input 최신성과 capability 사용 가능 여부
@@ -82,7 +82,7 @@ Design/stewardship: {design_summary|none}; gate={design_gate}
 근거: {evidence_summary|none}; gate={evidence_gate}
 검증: {verification_summary|none}; gate={verification_gate}
 Manual QA: {manual_qa_summary|not_required}; gate={qa_gate}
-남은 위험: status={residual_risk_status|none}; {residual_risk_summary|none}; refs={residual_risk_refs|none}
+잔여 위험: status={residual_risk_status|none}; {residual_risk_summary|none}; refs={residual_risk_refs|none}
 수락: {acceptance_summary|not_required}; gate={acceptance_gate}
 닫기 상태: blockers={close_blockers|none}; reason={close_reason|none}
 닫기/assurance 표시: self_checked={self_check_refs|none}; detached_verified={eval_ref|none}; verification_waived={verification_waiver_ref|none}; qa_waived={manual_qa_waiver_ref|none}; risk_accepted_close={accepted_residual_risk_refs|none}
@@ -96,7 +96,7 @@ MCP/capability: {mcp_or_capability_summary|available}
 
 이 template은 렌더링 결과인 카드 형태일 뿐 기준 상태가 아닙니다. Current source record와 ref에서 렌더링되며, 오래된 chat memory에서 렌더링하지 않습니다. Gate value는 기준 상태가 계속 담당하고, guarantee level은 표시와 위험 맥락입니다. Projection freshness는 읽기용 보기의 최신성만 뜻합니다. 정확한 권한 없음 규칙은 [projection/report 경계](../document-projection.md#projection-principles)를 사용합니다.
 
-이 card의 status/next recommendation은 read-only guidance입니다. Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 결과를 수락하거나, 남은 위험을 받아들이거나, Task를 close하지 않습니다.
+이 card의 status/next recommendation은 read-only guidance입니다. Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 결과를 수락하거나, 잔여 위험을 받아들이거나, Task를 close하지 않습니다.
 
 Authority line은 refs-first여야 합니다. Card가 write allowed라고 말하면 Write Authorization ref를 cite합니다. Evidence sufficient라고 말하면 Evidence Manifest ref를 cite합니다. Detached verification이 passed라고 말하면 Eval ref를 cite합니다. Manual QA가 passed 또는 waived라고 말하면 Manual QA record 또는 waiver path를 cite합니다. Final acceptance 또는 residual-risk acceptance가 recorded라고 말하면 Acceptance Decision Packet 또는 Residual Risk refs를 cite합니다. Source ref가 없으면 claim을 unsupported 또는 not yet recorded로 렌더링합니다.
 

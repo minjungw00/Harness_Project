@@ -121,4 +121,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 메모
 
-이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Design-support owner ref와 라우팅된 stewardship finding을 요약할 수 있지만 owner 기록이나 Review Stages가 가리키는 owner path를 대체하지 않습니다. Close를 충족하거나 차단하지 않고, Approval을 부여하지 않으며, evidence 생성, QA 또는 verification 기록, 결과 수락, 남은 위험을 받아들이는 판단, Write Authorization 생성을 하지 않습니다.
+이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Design-support owner ref와 라우팅된 stewardship finding을 요약할 수 있지만 owner 기록이나 Review Stages가 가리키는 owner path를 대체하지 않습니다. Close를 충족하거나 차단하지 않고, Approval을 부여하지 않으며, evidence 생성, QA 또는 verification 기록, 결과 수락, 잔여 위험을 받아들이는 판단, Write Authorization 생성을 하지 않습니다.

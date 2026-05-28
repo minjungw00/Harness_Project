@@ -137,7 +137,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 Direct Result는 self-checked, `detached_verified`, verification-waived, QA-waived, risk-accepted-close 상태를 별도 줄로 표시해야 합니다. Waiver 줄은 waiver ref를 가리키거나 아직 기록되지 않았다고 말하며, verification 또는 QA가 되지 않습니다. Risk-accepted close는 detached verified처럼 보이지 않게, accepted Residual Risk refs와 필요한 Decision Packet을 가리킵니다.
 
-Direct Result의 checks와 tests는 evidence 또는 자체 확인(self-check) 맥락입니다. 조건을 충족하는 Eval 없이는 detached verification이 되지 않고, Manual QA 결과 또는 유효한 waiver 없이는 Manual QA가 되지 않으며, 최종 수락을 암시하지도 않습니다. Direct 작업이 남은 위험을 받아들이는 판단으로 닫힌다면 닫기 영향 요약은 결과를 detached verified처럼 보여주는 대신 받아들인 Residual Risk refs, 필요한 경우 남은 위험을 받아들이는 판단을 기록한 Decision Packet, 후속 작업을 가리켜야 합니다. 알려진 close-relevant risk가 없다면 gate 목록을 덧붙이기보다 그 사실을 직접 말합니다.
+Direct Result의 checks와 tests는 evidence 또는 자체 확인(self-check) 맥락입니다. 조건을 충족하는 Eval 없이는 detached verification이 되지 않고, Manual QA 결과 또는 유효한 waiver 없이는 Manual QA가 되지 않으며, 최종 수락을 암시하지도 않습니다. Direct 작업이 잔여 위험을 받아들이는 판단으로 닫힌다면 닫기 영향 요약은 결과를 detached verified처럼 보여주는 대신 받아들인 Residual Risk refs, 필요한 경우 잔여 위험을 받아들이는 판단을 기록한 Decision Packet, 후속 작업을 가리켜야 합니다. 알려진 close-relevant risk가 없다면 gate 목록을 덧붙이기보다 그 사실을 직접 말합니다.
 
 Direct Result의 authority claim은 source ref 또는 명시적인 absence를 cite해야 합니다. Write permission에는 Write Authorization, evidence sufficiency에는 Evidence Manifest, detached verification에는 Eval, QA에는 Manual QA record 또는 waiver path, final acceptance에는 Acceptance Decision Packet, residual-risk visibility에는 Residual Risk refs 또는 `ResidualRiskSummary.status=none`을 사용합니다. `not_visible` residual risk를 "none"처럼 렌더링하면 안 됩니다.
 
