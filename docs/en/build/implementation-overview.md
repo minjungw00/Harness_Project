@@ -44,14 +44,14 @@ If a proposed implementation starts with Agency-Hardened MVP as one large first 
 
 This is a maintainer-updated documentation handoff marker. It is not a Reference contract, conformance result, generated operational record, or runtime implementation authorization. Do not infer acceptance from the checklist below; maintainers must change this table deliberately.
 
-Current revision status: documentation redesign / feedback incorporation is active. This status marker is not runtime/server implementation, runtime conformance, or implementation readiness.
+Current revision status: the follow-up cleanup pass has been reflected in this handoff marker, but documentation acceptance remains No unless maintainers deliberately change it. This status marker is not runtime/server implementation, runtime conformance, or implementation readiness.
 
 | Question | Current status |
 |---|---|
-| Is documentation redesign / feedback incorporation still active? | Yes. Documentation-only redesign work is in progress, and implementation handoff still requires a deliberate maintainer update. |
+| Is documentation redesign / feedback incorporation still active? | Yes. The follow-up cleanup status is reflected, but implementation handoff still requires a deliberate maintainer update. |
 | Are docs accepted for first runtime-batch planning? | No. First runtime-batch planning may not begin until maintainers change this row to Yes after the checkpoint below is satisfied. |
 | Has runtime/server implementation started? | No. This repository still contains documentation, not Harness runtime/server implementation. |
-| Are there open follow-up docs issues? | Planned redesign follow-up work remains. No blocking docs-maintenance drift is known from the completed documentation-only redesign changes so far. Maintainers still must deliberately change the docs-accepted row to Yes before first runtime-batch planning may begin; this is not runtime conformance or implementation readiness. |
+| Are there open follow-up docs issues? | Known non-blocking owner-recorded follow-up remains: `TODO_DECISION(schema-owner)` in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision) on whether a future schema-owned display judgment type category is needed. No known blocking docs-maintenance drift remains after the projection-tier, conformance-split, and Korean terminology cleanup. Docs accepted for first runtime-batch planning is still No unless maintainers deliberately change it; runtime/server implementation remains Not started. Docs-maintenance status is not runtime conformance or implementation readiness. |
 
 Build readers should treat this table as the entry gate. Until maintainer handoff changes the second row to Yes, even v0.1 Kernel MVP remains planning-only in this repository and runtime/server implementation must not start.
 

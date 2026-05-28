@@ -27,10 +27,10 @@ AGENTS.md / agent rule, MCP, spec-driven workflow, hook / sidecar, test runner /
 
 | Check / 확인 | Current status / 현재 상태 |
 |---|---|
-| Documentation redesign / feedback incorporation / 문서 재설계와 피드백 반영 | Active; documentation-only redesign work is in progress, and acceptance still requires a deliberate maintainer update. / 진행 중입니다. 문서 전용 재설계 작업이 진행 중이며, acceptance는 여전히 maintainer의 명시적 갱신이 필요합니다. |
+| Documentation redesign / feedback incorporation / 문서 재설계와 피드백 반영 | Active; follow-up cleanup status is reflected, and acceptance still requires a deliberate maintainer update. / 진행 중입니다. 후속 cleanup status가 반영되었으며, acceptance는 여전히 maintainer의 명시적 갱신이 필요합니다. |
 | Docs accepted for first runtime-batch planning / 첫 runtime batch 계획을 위한 문서 승인 | Not yet; maintainers must update the handoff status deliberately. / 아직 아닙니다. maintainer가 handoff 상태를 명시적으로 갱신해야 합니다. |
 | Runtime/server implementation / runtime/server 구현 | Not started. / 시작하지 않았습니다. |
-| Open follow-up docs issues / 열려 있는 문서 후속 이슈 | Planned redesign follow-up work remains. No blocking docs-maintenance drift is known from the completed documentation-only redesign changes so far; this is not runtime conformance or implementation readiness. / 계획된 문서 재설계 후속 작업은 남아 있습니다. 지금까지 완료된 문서 전용 재설계 변경에서 알려진 차단 docs-maintenance drift는 없으며, 이는 runtime conformance나 구현 준비 상태를 뜻하지 않습니다. |
+| Open follow-up docs issues / 열려 있는 문서 후속 이슈 | Known non-blocking owner-recorded follow-up remains: `TODO_DECISION(schema-owner)` on whether a future schema-owned display judgment type category is needed. No known blocking docs-maintenance drift remains after the projection-tier, conformance-split, and Korean terminology cleanup. Docs accepted for first runtime-batch planning is still No unless maintainers deliberately change it; runtime/server implementation remains Not started. Docs-maintenance status is not runtime conformance or implementation readiness. / 알려진 비차단 owner-recorded follow-up은 남아 있습니다. future schema-owned display judgment type category 필요 여부를 정하는 `TODO_DECISION(schema-owner)`입니다. Projection-tier, conformance-split, 한국어 용어 cleanup 뒤 알려진 차단 docs-maintenance drift는 없습니다. 첫 runtime batch 계획을 위한 docs accepted는 maintainer가 명시적으로 바꾸기 전까지 여전히 아니오이며, runtime/server 구현은 시작하지 않았습니다. Docs-maintenance status는 runtime conformance나 구현 준비 상태가 아닙니다. |
 
 Until the docs-accepted row is deliberately set to Yes in the maintainer handoff status, work remains documentation maintenance and runtime/server implementation must not start.
 

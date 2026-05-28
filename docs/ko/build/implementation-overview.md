@@ -44,14 +44,14 @@ v0.1 Kernel MVP를 먼저 만듭니다. 즉 가장 작은 로컬 Core 권한 경
 
 이 항목은 maintainer가 직접 갱신하는 문서 handoff 표시입니다. Reference 계약, conformance 결과, 생성된 운영 record, runtime 구현 승인으로 쓰지 않습니다. 아래 checkpoint에서 acceptance를 자동 추론하지 않습니다. maintainer가 이 표를 명시적으로 바꿔야 합니다.
 
-현재 revision status: 문서 재설계 / 피드백 반영이 진행 중입니다. 이 status marker는 runtime/server 구현, runtime conformance, 구현 준비 상태가 아닙니다.
+현재 revision status: 후속 cleanup pass 결과가 이 handoff marker에 반영되었지만, maintainer가 명시적으로 바꾸기 전까지 문서 승인은 여전히 아니오입니다. 이 status marker는 runtime/server 구현, runtime conformance, 구현 준비 상태가 아닙니다.
 
 | 질문 | 현재 상태 |
 |---|---|
-| 문서 재설계 / 피드백 반영이 아직 active인가? | 예. 문서 전용 재설계 작업이 진행 중이며, 구현 handoff는 여전히 maintainer의 명시적 갱신이 필요합니다. |
+| 문서 재설계 / 피드백 반영이 아직 active인가? | 예. 후속 cleanup status가 반영되었지만, 구현 handoff는 여전히 maintainer의 명시적 갱신이 필요합니다. |
 | 첫 runtime batch 계획을 위한 문서가 승인되었는가? | 아니오. 아래 checkpoint가 충족된 뒤 maintainer가 이 행을 예로 바꾸기 전까지 첫 runtime batch 계획은 시작할 수 없습니다. |
 | runtime/server 구현이 시작되었는가? | 아니오. 이 저장소는 아직 문서만 담고 있으며 하네스 runtime/server 구현을 담고 있지 않습니다. |
-| 열려 있는 문서 follow-up issue가 있는가? | 계획된 문서 재설계 후속 작업은 남아 있습니다. 지금까지 완료된 문서 전용 재설계 변경에서 알려진 차단 docs-maintenance drift는 없습니다. 첫 runtime batch 계획이 시작되려면 maintainer가 docs-accepted 행을 여전히 명시적으로 예로 바꿔야 하며, 이 상태는 runtime conformance나 구현 준비 상태를 뜻하지 않습니다. |
+| 열려 있는 문서 follow-up issue가 있는가? | 알려진 비차단 owner-recorded follow-up은 남아 있습니다. [MCP API와 스키마](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision)의 `TODO_DECISION(schema-owner)`가 future schema-owned display judgment type category 필요 여부를 결정해야 합니다. Projection-tier, conformance-split, 한국어 용어 cleanup 뒤 알려진 차단 docs-maintenance drift는 없습니다. 첫 runtime batch 계획을 위한 docs accepted는 maintainer가 명시적으로 바꾸기 전까지 여전히 아니오이며, runtime/server 구현은 시작하지 않았습니다. Docs-maintenance status는 runtime conformance나 구현 준비 상태가 아닙니다. |
 
 Build 독자는 이 표를 진입 gate로 보아야 합니다. maintainer handoff가 두 번째 행을 예로 바꾸기 전까지 v0.1 Kernel MVP도 이 저장소에서는 planning-only이며 runtime/server 구현을 시작하면 안 됩니다.
 
