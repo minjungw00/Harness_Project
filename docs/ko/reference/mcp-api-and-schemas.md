@@ -178,11 +178,11 @@ ToolEnvelope:
 
 ### MCP 경계와 호출자 신뢰
 
-Public MCP 계약의 MVP 기본값은 등록된 project surface에 대한 local-only 노출입니다. Local-only란 기대되는 local user/profile에 대한 로컬 프로세스, 로컬 socket, 또는 localhost loopback 연결을 뜻합니다. 인증되지 않은 shared endpoint, non-loopback bind, forwarded/tunneled endpoint, cloud/CI relay, cross-user socket 또는 directory, 등록된 connector profile로 설명되지 않는 remote caller는 제외됩니다. MCP server를 이 로컬 경계 밖에 노출하면 위협 모델이 달라지며, owner documentation과 conformance가 특정 connector posture를 승격하기 전까지 MVP 밖에 남습니다. 그런 더 강한 profile이 없다면 MCP endpoint에 닿을 수 있는 호출자도 Core가 검증해야 하는 claim을 보낸 출처일 뿐, 자동으로 신뢰되는 권한이 아닙니다.
+Public MCP 계약의 v0.1/default reference posture는 등록된 project surface에 대한 local-only 노출입니다. Local-only란 기대되는 local user/profile에 대한 로컬 프로세스, 로컬 socket, 또는 localhost loopback 연결을 뜻합니다. 인증되지 않은 shared endpoint, non-loopback bind, forwarded/tunneled endpoint, cloud/CI relay, cross-user socket 또는 directory, 등록된 connector profile로 설명되지 않는 remote caller는 제외됩니다. MCP server를 이 로컬 경계 밖에 노출하면 위협 모델이 달라지며, owner documentation과 conformance가 특정 connector posture를 승격하기 전까지 v0.1/default reference posture 밖에 남습니다. 그런 더 강한 profile이 없다면 MCP endpoint에 닿을 수 있는 호출자도 Core가 검증해야 하는 claim을 보낸 출처일 뿐, 자동으로 신뢰되는 권한이 아닙니다.
 
 접근 제어 계약은 localhost-only binding, local file permission으로 제한된 Unix-domain socket 또는 다른 local socket, in-process 또는 stdio transport, per-project token handle, process-scoped configuration material, 또는 이에 준하는 로컬 제어 같은 여러 방식으로 구현될 수 있습니다. 이 예시는 access-control material class이지 schema enum, raw secret value, 필수 CLI syntax가 아닙니다. Public schema와 diagnostic detail은 material class, bind/reachability posture, freshness state, profile ref, conformance 또는 operator-check ref, display-safe handle/fingerprint를 담을 수 있지만 raw token, secret, private configuration value, omitted secret, blocked payload bytes를 담으면 안 됩니다. Public API 계약에서 중요한 점은 호출자의 access mode가 등록된 surface profile과 맞아야 하고, 변경 요청 전에 Core가 모든 envelope claim을 계속 검증한다는 것입니다.
 
-권한이 없거나 profile에 맞지 않는 호출자는 엔드포인트에 닿을 수 있다는 이유만으로 권한으로 승격되면 안 됩니다. API는 local-access profile 불일치를 위해 MVP `UNAUTHORIZED` error code를 추가하지 않습니다. 호출이 Core에 닿을 수 없으면 authoritative Core response는 존재하지 않습니다. Core 또는 operator가 문제를 분류할 수 있으면 response는 기존 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT` path를 사용하며, access problem을 더 구체적으로 분류할 수 없을 때는 `details.mcp_unavailable_kind=unknown`을 사용합니다. Project, Task, surface, Run, actor claim mismatch는 addressed tool에 대한 일반 record-compatibility, state-conflict, scope, capability, validator checks로 해석합니다.
+권한이 없거나 profile에 맞지 않는 호출자는 엔드포인트에 닿을 수 있다는 이유만으로 권한으로 승격되면 안 됩니다. Current reference API는 local-access profile 불일치를 위해 `UNAUTHORIZED` error code를 추가하지 않습니다. 호출이 Core에 닿을 수 없으면 authoritative Core response는 존재하지 않습니다. Core 또는 operator가 문제를 분류할 수 있으면 response는 기존 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT` path를 사용하며, access problem을 더 구체적으로 분류할 수 없을 때는 `details.mcp_unavailable_kind=unknown`을 사용합니다. Project, Task, surface, Run, actor claim mismatch는 addressed tool에 대한 일반 record-compatibility, state-conflict, scope, capability, validator checks로 해석합니다.
 
 Envelope field는 routing과 감사용 claim입니다.
 
@@ -243,7 +243,7 @@ ProjectionJobRef:
 
 `EventRef.event_seq`는 `task_events.event_seq`를 mirror합니다. Responses는 events를 ascending `event_seq`로 나열합니다. Timestamps와 `event_id` lexical order는 deterministic event ordering에 사용하지 않습니다.
 
-Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](kernel.md#stable-event-catalog)가 담당합니다. 아래 tool sections는 response가 반환하거나 implementation이 저장할 수 있는 `EventRef.event_type` 값을 설명하지만, 두 번째 event taxonomy를 정의하지 않습니다. Stable로 label된 names는 catalog names입니다. Stable catalog에 없는 이름은 implementation-local detail 또는 audit events로 나타날 수 있지만 fixture-stable이 아니며 MVP `expected_events` fixtures가 요구하면 안 됩니다. ValidatorResult IDs, Core check names, projection status shorthands, fixture seed shorthand는 kernel catalog가 명시적으로 나열하지 않는 한 event names가 아닙니다.
+Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](kernel.md#stable-event-catalog)가 담당합니다. 아래 tool sections는 response가 반환하거나 implementation이 저장할 수 있는 `EventRef.event_type` 값을 설명하지만, 두 번째 event taxonomy를 정의하지 않습니다. Stable로 label된 names는 catalog names입니다. Stable catalog에 없는 이름은 implementation-local detail 또는 audit events로 나타날 수 있지만 fixture-stable이 아니며 staged/reference `expected_events` fixtures가 요구하면 안 됩니다. ValidatorResult IDs, Core check names, projection status shorthands, fixture seed shorthand는 kernel catalog가 명시적으로 나열하지 않는 한 event names가 아닙니다.
 
 `ProjectionKind`는 API가 staged/reference support tier를 담당하는 extensible enum입니다.
 
@@ -253,7 +253,7 @@ Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](ke
 | Reference-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, source 기록이 있거나, user/operator가 projection을 켤 때 지원하거나 대기열에 넣습니다. |
 | Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | 대응하는 선택 projection이 켜진 경우에만 지원할 수 있습니다. |
 
-Tier label은 enum value가 아닙니다. `Reference-required`는 관련 owner record가 존재한 뒤 staged/reference MVP projection support에서 필요하다는 뜻입니다. 모든 v0.1 Kernel MVP run이 모든 kind를 렌더링해야 한다는 뜻이 아닙니다. v0.1 Kernel MVP는 최소 `TASK` projection 또는 durable projection enqueue만 요구합니다. v0.2+는 evidence/projection support를 확장하며, Agency-Hardened/reference MVP는 source record가 존재하거나 변경될 때 전체 Reference-required projection set을 지원합니다.
+Tier label은 enum value가 아닙니다. `Reference-required`는 관련 owner record가 존재한 뒤 staged/reference projection support에서 필요하다는 뜻입니다. 모든 v0.1 Kernel MVP run이 모든 kind를 렌더링해야 한다는 뜻이 아닙니다. v0.1 Kernel MVP는 최소 `TASK` projection 또는 durable projection enqueue만 요구합니다. v0.2+는 evidence/projection support를 확장하며, Agency-Hardened/reference MVP는 source record가 존재하거나 변경될 때 전체 Reference-required projection set을 지원합니다.
 
 ProjectionKind extensibility가 projection을 기준 상태로 만들지는 않습니다. 모든 projection job은 여전히 owner 기록 및 아티팩트 참조에서 파생된 보기를 렌더링합니다. 어떤 projection tier도 state, evidence, QA, verification, acceptance, residual-risk acceptance, close authority, Write Authorization을 만들지 않습니다. `DEC`는 해당 기능이 켜졌을 때 standalone Decision Packet Markdown에만 유효하며, Reference-required projection job이 아닙니다. Standalone `DEC` job이 없어도 required Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공되어야 합니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `harness.status`, `harness.next`, significant resume flow의 현재 위치 Journey Card output은 agency conformance에 계속 필요합니다.
 
@@ -344,7 +344,7 @@ Artifact 등록은 임의 파일을 쌓아 두는 느슨한 파일 덤프가 아
 
 Reference implementation에서 artifact 등록은 Task-scoped입니다. `ArtifactRef.task_id`와 `ArtifactInput.relation.task_id`는 required이며 `artifacts.task_id`와 `artifact_links.task_id`에 대응합니다. `retention_class=project`는 retention policy에 영향을 줄 뿐 artifact ownership scope를 바꾸지 않습니다.
 
-Later Browser QA Capture는 새 MVP schema가 아니라 이 artifact 경계를 사용합니다. 화면 capture는 보통 `screenshot`을 사용하고, 묶음 QA output은 `qa_capture`를 사용할 수 있습니다. Console log와 network trace는 `log` 또는 `qa_capture`를 사용할 수 있고, accessibility snapshot과 workflow recording은 명확한 description과 함께 `qa_capture` 또는 `other`를 사용할 수 있습니다. 이러한 artifact는 모두 redaction, secret/PII handling, Task-scoped ownership, Manual QA record 또는 Feedback Loop attachment rules를 따라야 합니다. Capture artifact는 evidence를 보강할 수 있지만 acceptance를 만들거나, Manual QA judgment를 대체하거나, detached verification을 충족하거나, v0.1 Kernel MVP에 필요한 capture schema를 추가하지 않습니다.
+Later Browser QA Capture는 새 reference schema가 아니라 이 artifact 경계를 사용합니다. 화면 capture는 보통 `screenshot`을 사용하고, 묶음 QA output은 `qa_capture`를 사용할 수 있습니다. Console log와 network trace는 `log` 또는 `qa_capture`를 사용할 수 있고, accessibility snapshot과 workflow recording은 명확한 description과 함께 `qa_capture` 또는 `other`를 사용할 수 있습니다. 이러한 artifact는 모두 redaction, secret/PII handling, Task-scoped ownership, Manual QA record 또는 Feedback Loop attachment rules를 따라야 합니다. Capture artifact는 evidence를 보강할 수 있지만 acceptance를 만들거나, Manual QA judgment를 대체하거나, detached verification을 충족하거나, v0.1 Kernel MVP에 필요한 capture schema를 추가하지 않습니다.
 
 ```yaml
 ArtifactRef:
@@ -415,8 +415,8 @@ Rules:
 - Policy가 omission 또는 blocking을 요구하면 committed ref는 `redaction_state=secret_omitted` 또는 `redaction_state=blocked`를 기록합니다. 호출자는 생략되었거나 차단된 bytes를 사용할 수 있는 evidence, QA material, verification input, projection body text, export payload로 취급하면 안 됩니다.
 - Core가 기록한 `blocked` metadata-only notice는 여전히 committed registered artifact record입니다. Artifact ref, hash, size, content type, owner relation, retention class는 metadata-only notice bytes에 적용되며, 금지된 원본 bytes를 사용할 수 있게 만들지 않고 audit/display continuity를 보존합니다.
 - Tool response는 기록된 `ArtifactRef` 값을 `registered_artifacts`, `bundle_ref`, 기타 response field로 반환합니다. Response는 `staged_uri`를 권한이나 durable evidence URI처럼 다시 노출하면 안 됩니다.
-- `relation.record_kind`는 Core가 검증할 수 있는 기존 기준 owner 기록 또는 렌더링된 projection 참조를 이름으로 지정해야 합니다. MVP의 non-projection owner에서는 concrete owner row가 `relation.task_id`와 같은 Task scope여야 합니다. 같은 owner kind의 project-scoped row는 future extension이 project-scoped artifact storage/API를 추가하기 전까지 artifact-link target이 아닙니다. Verification bundle은 `ArtifactRef.kind=bundle` 또는 `manifest`를 사용합니다. Export output은 `ArtifactRef.kind=export_component` 또는 `retention_class=export`를 사용합니다. `verification_bundle`과 `export`는 MVP artifact relation record kind가 아닙니다.
-- `relation.record_kind=projection`은 Core가 `projection_jobs`를 통해 찾을 수 있는, 이미 렌더링되었거나 기록된 Task-scoped projection output에만 valid합니다. MVP에서 `record_id_hint`는 `projection_jobs.projection_job_id`를 이름으로 지정하고, job의 `task_id`는 `relation.task_id`와 일치해야 합니다. Core는 hint를 검증할 때 `target_ref`와 `output_path`를 사용할 수 있지만, 이 값들이 identity에서 job id를 대체하지 않습니다. Project-level projection job은 owner docs가 허용하는 곳에서 존재할 수 있지만, 현재 MVP artifact API는 이를 위한 project-scoped artifact link를 등록하지 않습니다.
+- `relation.record_kind`는 Core가 검증할 수 있는 기존 기준 owner 기록 또는 렌더링된 projection 참조를 이름으로 지정해야 합니다. Current Task-scoped artifact API의 non-projection owner에서는 concrete owner row가 `relation.task_id`와 같은 Task scope여야 합니다. 같은 owner kind의 project-scoped row는 future extension이 project-scoped artifact storage/API를 추가하기 전까지 artifact-link target이 아닙니다. Verification bundle은 `ArtifactRef.kind=bundle` 또는 `manifest`를 사용합니다. Export output은 `ArtifactRef.kind=export_component` 또는 `retention_class=export`를 사용합니다. `verification_bundle`과 `export`는 current reference artifact relation record kind가 아닙니다.
+- `relation.record_kind=projection`은 Core가 `projection_jobs`를 통해 찾을 수 있는, 이미 렌더링되었거나 기록된 Task-scoped projection output에만 valid합니다. Current Task-scoped artifact API에서 `record_id_hint`는 `projection_jobs.projection_job_id`를 이름으로 지정하고, job의 `task_id`는 `relation.task_id`와 일치해야 합니다. Core는 hint를 검증할 때 `target_ref`와 `output_path`를 사용할 수 있지만, 이 값들이 identity에서 job id를 대체하지 않습니다. Project-level projection job은 owner docs가 허용하는 곳에서 존재할 수 있지만, current Task-scoped artifact API는 이를 위한 project-scoped artifact link를 등록하지 않습니다.
 
 이후 consumer도 같은 의미를 유지해야 합니다. Evidence Manifest, Manual QA, Eval, projection, export, Release Handoff, doctor, artifact integrity display는 ref, hash, 안전한 omission note, handle, blocked notice를 보여줄 수 있지만 생략되었거나 차단된 원본 값을 inline 표시하거나 재구성하거나 요약하거나 export하면 안 됩니다. `secret_omitted`는 secret이 아닌 evidence가 보이는 주장만 충족할 수 있으며, 생략된 값이 필요한 주장은 unsupported 또는 insufficient로 남겨야 합니다. `blocked`는 replacement artifact, compatible waiver, Decision Packet outcome, accepted risk, 또는 다른 documented resolution이 그 경로를 해소하기 전까지 evidence, QA, verification, projection, export, Release Handoff에서 시도된 input을 사용할 수 없는 것으로 취급한다는 뜻입니다.
 
@@ -429,9 +429,9 @@ StateRecordRef:
   projection_path: string | null
 ```
 
-`record_kind=projection`에서 `record_id`는 MVP projection identity인 `projection_jobs.projection_job_id`입니다. `projection_path`는 선택적 표시 및 복구 metadata입니다. 값이 있으면 job의 `output_path`를 mirror하거나 좁혀야 하며 같은 job 아래에서 찾을 수 있어야 합니다. Alternate key가 아니며 별도의 `projections` table을 뜻하지 않습니다.
+`record_kind=projection`에서 `record_id`는 projection job identity인 `projection_jobs.projection_job_id`입니다. `projection_path`는 선택적 표시 및 복구 metadata입니다. 값이 있으면 job의 `output_path`를 mirror하거나 좁혀야 하며 같은 job 아래에서 찾을 수 있어야 합니다. Alternate key가 아니며 별도의 `projections` table을 뜻하지 않습니다.
 
-MVP에는 `accepted_risk` `StateRecordRef.record_kind`가 없습니다. `accepted_risk_refs`, `accepted_refs`, 또는 accepted-risk equivalent로 이름 붙은 public fields는 `record_kind=residual_risk`인 `StateRecordRef` entries를 사용해야 합니다. Accepted risk는 그 Residual Risk records의 metadata/state입니다.
+Current reference API에는 `accepted_risk` `StateRecordRef.record_kind`가 없습니다. `accepted_risk_refs`, `accepted_refs`, 또는 accepted-risk equivalent로 이름 붙은 public fields는 `record_kind=residual_risk`인 `StateRecordRef` entries를 사용해야 합니다. Accepted risk는 그 Residual Risk records의 metadata/state입니다.
 
 기준 design-support records에 대한 public refs는 해당 storage record id와 함께 `record_kind=domain_term`, `record_kind=module_map_item`, 또는 `record_kind=interface_contract`를 사용합니다. `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` 같은 렌더링된 Markdown projection 자체를 가리키고 `record_id=projection_jobs.projection_job_id`를 사용할 때만 `record_kind=projection`을 사용합니다.
 
@@ -701,7 +701,7 @@ ValidatorResult:
 
 `surface_capability_check` validator는 이 schema를 `validator_kind=capability`로 사용합니다.
 
-`ValidatorResult`를 통해 내보내는 Stable MVP validator IDs는 다음과 같습니다.
+Agency-Hardened/reference MVP의 stable ValidatorResult ID는 다음과 같습니다.
 
 - `decision_gate_check`
 - `decision_quality_check`
@@ -728,7 +728,7 @@ Status, next, write, close flow에서 자주 드러나는 agency-critical subset
 - `residual_risk_visibility_check`
 - `context_hygiene_check`
 
-이 smaller subset에서 빠진 design-quality validator, 즉 `shared_design_alignment`, `vertical_slice_shape`, `domain_language_consistency`, `module_interface_review`는 위 full stable MVP ValidatorResult-emitting set에 계속 포함됩니다.
+이 smaller subset에서 빠진 design-quality validator, 즉 `shared_design_alignment`, `vertical_slice_shape`, `domain_language_consistency`, `module_interface_review`는 위 full stable ValidatorResult-emitting set에 계속 포함됩니다.
 
 아래 tool description은 `ValidatorResults emitted`와 Core check/precondition을 구분합니다. Core check는 transition을 막거나, gate를 갱신하거나, blocked reason을 채우거나, fixture assertion에 나타날 수 있지만 위에 나열되지 않는 한 validator ID가 아닙니다.
 
@@ -1139,7 +1139,7 @@ ApprovalRequestCandidate:
 
 `dry_run=false`이고 `decision=allowed`일 때 response는 non-null `write_authorization_ref`를 포함해야 합니다. 호출자가 expanded payload를 request하거나 implementation이 지원하면 `write_authorization` summary도 반환할 수 있습니다. `authorization_effect`는 Core가 새 authorization을 create하면 `created`입니다.
 
-`WriteAuthorizationSummary.basis_state_version`은 Core가 allowed write attempt의 compatibility basis로 사용한 affected-scope state version입니다. MVP prepare-write product writes에서는 `task_id`의 Task State Version입니다. Replay와 최신성 감지 audit metadata이며, response의 resulting `base.state_version`이 아닙니다.
+`WriteAuthorizationSummary.basis_state_version`은 Core가 allowed write attempt의 compatibility basis로 사용한 affected-scope state version입니다. Current reference prepare-write product write에서는 `task_id`의 Task State Version입니다. Replay와 최신성 감지 audit metadata이며, response의 resulting `base.state_version`이 아닙니다.
 
 `authorization_effect=returned`는 같은 idempotency key, request hash, `basis_state_version`을 가진 동일한 committed `prepare_write` request와 response의 idempotent replay에만 reserved됩니다. 서로 다른 compatible request는 서로 다른 Write Authorization을 생성합니다. Compatibility가 authorization을 reusable하게 만들지는 않습니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 `stale`, expire, revoke할 수 있습니다.
 
@@ -1312,7 +1312,7 @@ TddTraceUpdate:
   non_tdd_justification: string | null
 ```
 
-`payload` branch는 `kind`와 일치해야 하며, 다른 branch는 `null`이거나 absent여야 합니다. `ArtifactInput` 값은 같은 Core transaction에서 찾고, response field에는 committed `ArtifactRef` 값이 들어갑니다. MVP에서 Change Unit creation과 update는 `kind=shaping_update`와 `change_unit_updates`를 통해 이뤄집니다. `operation=create`는 `change_units` record를 만들고, `operation=select_active`는 Task의 `active_change_unit_id`를 update합니다. `allowed_paths`, `allowed_tools`, `allowed_commands`, `allowed_network_targets`, `secret_scope`, `sensitive_categories`는 scope field입니다. `autonomy_profile`, `agent_may_do`, `user_judgment_required`, `afk_stop_conditions`는 Autonomy Boundary judgment latitude만 설명합니다.
+`payload` branch는 `kind`와 일치해야 하며, 다른 branch는 `null`이거나 absent여야 합니다. `ArtifactInput` 값은 같은 Core transaction에서 찾고, response field에는 committed `ArtifactRef` 값이 들어갑니다. Current reference API에서 Change Unit creation과 update는 `kind=shaping_update`와 `change_unit_updates`를 통해 이뤄집니다. `operation=create`는 `change_units` record를 만들고, `operation=select_active`는 Task의 `active_change_unit_id`를 update합니다. `allowed_paths`, `allowed_tools`, `allowed_commands`, `allowed_network_targets`, `secret_scope`, `sensitive_categories`는 scope field입니다. `autonomy_profile`, `agent_may_do`, `user_judgment_required`, `afk_stop_conditions`는 Autonomy Boundary judgment latitude만 설명합니다.
 
 `secret_omitted` artifact를 연결하는 Evidence update는 남아 있는 보이는 nonsecret evidence로 증명되는 acceptance criteria 또는 completion condition만 지원할 수 있습니다. `blocked` artifact를 연결하는 Evidence update는 시도된 capture를 커밋된 metadata-only notice로 보존하지만, 금지된 원본 payload가 필요한 evidence를 충족하지 않습니다. 관련 Evidence Manifest 또는 gate는 documented resolution이 유효한 path를 제공할 때까지 unsupported, partial, blocked, insufficient 중 적절한 상태로 남습니다.
 
@@ -1399,7 +1399,7 @@ RequestUserDecisionRequest:
   reconcile_item_id: string | null
 ```
 
-Core는 기준 `DecisionPacket`을 저장합니다. Minimal MVP 구현은 `decision_requests`를 생략할 수 있으며, public request와 response schema는 Decision Request가 아니라 Decision Packet을 중심으로 유지됩니다. 구현이 `decision_requests`도 만들거나 업데이트한다면 해당 row는 routing, interaction, idempotency replay, compatibility handoff metadata일 뿐이며 gate aggregation이 그 metadata를 고려하려면 먼저 기준 `decision_packet_id`로 다시 연결되어야 합니다. `decision_request` row만으로는 `decision_gate`, Approval, acceptance, waiver, Residual Risk 수용, close를 절대 만족하지 않습니다. `state_summary_at_request`가 `null`이면 Core가 같은 transaction 안에서 current state로부터 파생합니다. Stored `state_summary_at_request`는 request-time snapshot이며 이후 Task transition으로 업데이트되지 않습니다. `approval_scope`는 `decision_kind=approval`일 때 required이며, 다른 `decision_kind` value에서는 `null` 또는 omitted여야 합니다. `decision_kind=approval`은 sensitive-action Approval을 위한 Approval 형태 context일 뿐이며, 별도의 compatible Decision Packet과 gate update 없이 제품 장단점, 설계 방향, 아키텍처 판단이나 중요한 기술 판단, 해결되지 않은 security 또는 product-security 판단, QA 면제, verification risk, final acceptance, Residual Risk 수용 같은 사용자 소유 판단을 해소할 수 없습니다. `decision_kind=approval`에서 Core는 Approval 범위를 사용해 연결된 pending Approval 기록도 생성합니다. Approval은 `harness.record_user_decision`이 Decision Packet을 해소하기 전에는 granted가 아닙니다. `residual_risk_acceptance` packet은 `user_context.minimum_context`에 risk visibility context를 포함하고 `context.source_refs`에 relevant risk ref를 포함해야 합니다. "go ahead" 또는 "진행해" 같은 넓은 자연어 답변은 schema branch가 아닙니다. Request는 여전히 Core가 무엇을 묻는지 결정하는 `decision_kind`, option, affected gates, user context를 이름 붙여야 합니다.
+Core는 기준 `DecisionPacket`을 저장합니다. Minimal v0.1 Kernel MVP 구현은 `decision_requests`를 생략할 수 있으며, public request와 response schema는 Decision Request가 아니라 Decision Packet을 중심으로 유지됩니다. 구현이 `decision_requests`도 만들거나 업데이트한다면 해당 row는 routing, interaction, idempotency replay, compatibility handoff metadata일 뿐이며 gate aggregation이 그 metadata를 고려하려면 먼저 기준 `decision_packet_id`로 다시 연결되어야 합니다. `decision_request` row만으로는 `decision_gate`, Approval, acceptance, waiver, Residual Risk 수용, close를 절대 만족하지 않습니다. `state_summary_at_request`가 `null`이면 Core가 같은 transaction 안에서 current state로부터 파생합니다. Stored `state_summary_at_request`는 request-time snapshot이며 이후 Task transition으로 업데이트되지 않습니다. `approval_scope`는 `decision_kind=approval`일 때 required이며, 다른 `decision_kind` value에서는 `null` 또는 omitted여야 합니다. `decision_kind=approval`은 sensitive-action Approval을 위한 Approval 형태 context일 뿐이며, 별도의 compatible Decision Packet과 gate update 없이 제품 장단점, 설계 방향, 아키텍처 판단이나 중요한 기술 판단, 해결되지 않은 security 또는 product-security 판단, QA 면제, verification risk, final acceptance, Residual Risk 수용 같은 사용자 소유 판단을 해소할 수 없습니다. `decision_kind=approval`에서 Core는 Approval 범위를 사용해 연결된 pending Approval 기록도 생성합니다. Approval은 `harness.record_user_decision`이 Decision Packet을 해소하기 전에는 granted가 아닙니다. `residual_risk_acceptance` packet은 `user_context.minimum_context`에 risk visibility context를 포함하고 `context.source_refs`에 relevant risk ref를 포함해야 합니다. "go ahead" 또는 "진행해" 같은 넓은 자연어 답변은 schema branch가 아닙니다. Request는 여전히 Core가 무엇을 묻는지 결정하는 `decision_kind`, option, affected gates, user context를 이름 붙여야 합니다.
 
 이 request에서 파생되는 사용자 표시 prompt는 결정 중심이어야 합니다. 사용자가 이름 붙은 option을 선택, defer, reject, waive, accept, reconcile할지 묻고, 그 답이 무엇을 확정하고 무엇을 확정하지 않는지 말해야 합니다. `decision_kind=approval`이고 `approval_scope`가 승인할 민감 동작을 설명하는 경우가 아니라면 generic approval을 요청하면 안 됩니다. 정확한 public fields는 위 schema 그대로이며, 이 문단은 그 field를 사용하는 최소 품질을 설명할 뿐입니다.
 

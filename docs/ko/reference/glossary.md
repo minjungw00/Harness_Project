@@ -50,7 +50,7 @@ Close-relevant 잔여 위험이 보였거나 없다고 확인된 뒤, 결과와 
 
 Required user acceptance를 위한 kernel gate입니다. Value set과 compatibility meaning은 [Acceptance Gate](kernel.md#acceptance-gate)가 담당합니다. Acceptance는 QA나 verification을 대신할 수 없습니다.
 
-MVP 최종 수락은 결정 패킷 user decision, `task_gates.acceptance_gate`, `state.sqlite.task_events`를 통해 기록됩니다. 별도의 acceptance record 또는 table은 없습니다.
+Current reference model에서 final acceptance는 결정 패킷 user decision, `task_gates.acceptance_gate`, `state.sqlite.task_events`를 통해 기록됩니다. 별도의 acceptance record 또는 table은 없습니다.
 
 ### Approval
 
@@ -160,13 +160,13 @@ Relevant projection, 아티팩트 참조, repo file, doc, note를 보여줄 수 
 
 한국어 기준 표현: 결정 패킷.
 
-차단하는 사용자 소유 판단을 위한 기준 kernel state record입니다. decision needed, options, 가능할 때 recommendation, trade-offs, affected scope, evidence, 잔여 위험, owner, status, next action을 명시합니다. 결정 패킷 record ID는 `DEC-*`를 사용합니다. Record-level status는 [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute)와 public `DecisionPacket` schema가 담당하며, 관련 statuses가 Task-level `decision_gate`에 반영됩니다. MVP visibility는 Task/status/next/judgment-context 및 decision-packet 접점을 통해 required이며, standalone `DEC` Markdown 렌더링 결과는 기능이 켜져 있을 때만 optional projection 또는 proposal 접점입니다. Public API/interface 선택, architecture direction, domain-language conflict, module boundary change, waiver, acceptance, 잔여 위험 선택은 사용자 소유 제품 판단 또는 중요한 기술 판단이 진행, write, close를 막거나 public commitment를 만들 때 이 경로를 사용합니다. 넓은 approval text는 특정 recorded route와 option에 답하지 않는 한 결정 패킷을 충족하지 않습니다.
+차단하는 사용자 소유 판단을 위한 기준 kernel state record입니다. decision needed, options, 가능할 때 recommendation, trade-offs, affected scope, evidence, 잔여 위험, owner, status, next action을 명시합니다. 결정 패킷 record ID는 `DEC-*`를 사용합니다. Record-level status는 [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute)와 public `DecisionPacket` schema가 담당하며, 관련 statuses가 Task-level `decision_gate`에 반영됩니다. Required Decision Packet visibility는 Task/status/next/judgment-context 및 decision-packet 접점을 통해 제공되며, standalone `DEC` Markdown 렌더링 결과는 기능이 켜져 있을 때만 optional projection 또는 proposal 접점입니다. Public API/interface 선택, architecture direction, domain-language conflict, module boundary change, waiver, acceptance, 잔여 위험 선택은 사용자 소유 제품 판단 또는 중요한 기술 판단이 진행, write, close를 막거나 public commitment를 만들 때 이 경로를 사용합니다. 넓은 approval text는 특정 recorded route와 option에 답하지 않는 한 결정 패킷을 충족하지 않습니다.
 
 사용자 표시에서는 결정 패킷을 표시용 판단 유형으로 분류할 수 있습니다. Category는 Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy입니다. 이 주 표시 label은 사용자가 어떤 종류의 판단을 요구받는지 이해하도록 돕는 표시 metadata이며 기준 schema field, status, gate, owner record, validator input, authority path가 아닙니다. 여러 영역에 걸친 결정은 category를 배타적으로 다루지 말고 부차적인 고려사항을 trade-offs, affected gates, risk, evidence, follow-up에 보여줘야 합니다. 표시는 decision title, 사용자가 정확히 결정하는 것, 왜 지금 필요한지, options, trade-offs, recommendation, uncertainty, deferral consequence, 해당하는 경우 잔여 위험을 보이게 하되 `decision_kind`, Approval, acceptance, QA, residual-risk acceptance, close, 쓰기 허가 기록의 owner contract를 바꾸면 안 됩니다.
 
 ### Decision Request
 
-기준 결정 패킷을 가리킬 수 있는 optional routing, interaction, idempotency replay, compatibility handoff metadata입니다. Minimal MVP 구현은 이를 생략할 수 있습니다. Decision Request는 decision authority가 아니며 그 자체로 `decision_gate`, approval, 결과 수락, waiver, 잔여 위험을 받아들이는 판단, close를 절대 충족하지 않습니다. Gate aggregation에는 linked compatible `decision_packet_id`를 통해서만 relevant합니다.
+기준 결정 패킷을 가리킬 수 있는 optional routing, interaction, idempotency replay, compatibility handoff metadata입니다. Minimal v0.1 Kernel MVP 구현은 이를 생략할 수 있습니다. Decision Request는 decision authority가 아니며 그 자체로 `decision_gate`, approval, 결과 수락, waiver, 잔여 위험을 받아들이는 판단, close를 절대 충족하지 않습니다. Gate aggregation에는 linked compatible `decision_packet_id`를 통해서만 relevant합니다.
 
 ### Design Gate
 
@@ -328,7 +328,7 @@ Module 또는 external 경계의 public interface, inputs, outputs, errors, comp
 
 ### JSON `TEXT` Field
 
-저장된 값이 JSON인 SQLite `TEXT` column입니다. `TEXT` type은 MVP storage flexibility일 뿐입니다. Core는 commit 전에 API-owned 또는 storage-owned shape에 맞게 값을 검증해야 하며, malformed JSON 또는 schema-incompatible JSON은 invalid state입니다.
+저장된 값이 JSON인 SQLite `TEXT` column입니다. `TEXT` type은 reference storage flexibility일 뿐입니다. Core는 commit 전에 API-owned 또는 storage-owned shape에 맞게 값을 검증해야 하며, malformed JSON 또는 schema-incompatible JSON은 invalid state입니다.
 
 ### Local Derived Metrics
 
@@ -408,7 +408,7 @@ Projection과 source record, managed hash, 아티팩트 참조, projection job s
 
 ### Projection Job
 
-Committed state records와 아티팩트 참조에서 Markdown projection을 렌더링하도록 projector에 요청하는 durable outbox record입니다. `record_kind=projection` identity는 `projection_jobs.projection_job_id`입니다. Project-level projection jobs는 MVP artifact DDL에서 그 자체로 project-scoped artifact links를 만들지 않습니다.
+Committed state records와 아티팩트 참조에서 Markdown projection을 렌더링하도록 projector에 요청하는 durable outbox record입니다. `record_kind=projection` identity는 `projection_jobs.projection_job_id`입니다. Project-level projection jobs는 current Task-scoped artifact DDL에서 그 자체로 project-scoped artifact links를 만들지 않습니다.
 
 ### Question Queue
 
@@ -466,7 +466,7 @@ Spec Compliance Review와 Code Quality / Stewardship Review를 분리하는 mana
 
 한국어 기준 표현: 잔여 위험.
 
-잔여 위험은 Evidence, verification, QA, 결과 수락 work 이후에도 남는 known uncertainty, trade-off, limitation, unchecked condition을 위한 기준 close-relevant support record입니다. source refs, affected scope, applicable한 경우 related 결정 패킷, visibility status, 받아들인 위험, follow-up requirement, close impact를 기록합니다. Known close-relevant 잔여 위험은 successful acceptance 또는 close 전에 보여야 하며, known close-relevant risk가 없으면 `ResidualRiskSummary.status=none`으로 확인되어야 합니다. 사용자가 위험을 받아들이는 판단은 분리 검증, 수동 QA pass, sensitive-action Approval, final acceptance를 만들지 않습니다. MVP에서 받아들인 위험은 잔여 위험 record 위의 metadata/state이며 별도의 `accepted_risk` state record가 아닙니다.
+잔여 위험은 Evidence, verification, QA, 결과 수락 work 이후에도 남는 known uncertainty, trade-off, limitation, unchecked condition을 위한 기준 close-relevant support record입니다. source refs, affected scope, applicable한 경우 related 결정 패킷, visibility status, 받아들인 위험, follow-up requirement, close impact를 기록합니다. Known close-relevant 잔여 위험은 successful acceptance 또는 close 전에 보여야 하며, known close-relevant risk가 없으면 `ResidualRiskSummary.status=none`으로 확인되어야 합니다. 사용자가 위험을 받아들이는 판단은 분리 검증, 수동 QA pass, sensitive-action Approval, final acceptance를 만들지 않습니다. Current reference model에서 받아들인 위험은 잔여 위험 record 위의 metadata/state이며 별도의 `accepted_risk` state record가 아닙니다.
 
 ### Risk Accepted Close
 
@@ -498,7 +498,7 @@ Implementation이 plan으로 굳어지기 전에 Task에 대해 최소한으로 
 
 ### Stable Event Catalog
 
-MVP conformance fixtures가 `expected_events`에서 검증할 수 있는 `task_events.event_type` names에 대한 kernel-owned compact list입니다. Stable event names를 prose examples, fixture shorthand, non-stable implementation-local detail 또는 audit events, validator IDs, Core check names, projection status shorthands, future extension events와 구분합니다.
+Staged/reference conformance fixtures가 `expected_events`에서 검증할 수 있는 `task_events.event_type` names에 대한 kernel-owned compact list입니다. Stable event names를 prose examples, fixture shorthand, non-stable implementation-local detail 또는 audit events, validator IDs, Core check names, projection status shorthands, future extension events와 구분합니다.
 
 ### State Record
 

@@ -103,7 +103,7 @@ flowchart TD
   Conformance --> Fixtures["execute exact-shape fixtures"]
 ```
 
-Exact command names and flags may vary by implementation, but the behavior contract below is required for the reference MVP. Operator behavior is command-independent: it is defined by Core state records, `state.sqlite.task_events`, artifact refs and files, projection jobs and freshness, and API-owned errors or operator diagnostic labels. Console text, report prose, flag spelling, and shell exit formatting are display surfaces; they must not become a second state model.
+Exact command names and flags may vary by implementation, but the behavior contract below is required for the reference model. Operator behavior is command-independent: it is defined by Core state records, `state.sqlite.task_events`, artifact refs and files, projection jobs and freshness, and API-owned errors or operator diagnostic labels. Console text, report prose, flag spelling, and shell exit formatting are display surfaces; they must not become a second state model.
 
 Operator command map:
 
@@ -317,7 +317,7 @@ Doctor should also check the runtime-home file trust posture at the documentatio
 
 For artifacts, doctor treats missing redaction, omission, or block metadata as a security finding, not a cosmetic report issue. It must not recommend copying raw staged files into place as a repair unless Core can validate and register them through the artifact registration contract. When doctor reports `secret_omitted` or `blocked`, it reports the committed artifact ref and safe metadata only. For `blocked`, hash, size, and content type describe the registered metadata notice bytes; doctor must not claim the forbidden payload can be recovered from Harness.
 
-MVP local security posture has this minimum severity baseline. Implementations may be stricter for a platform or connector, but they must not report a weak local exposure as `OK` merely because it is reachable from the same machine:
+The reference local security posture has this minimum severity baseline. Implementations may be stricter for a platform or connector, but they must not report a weak local exposure as `OK` merely because it is reachable from the same machine:
 
 | Check | `OK` baseline | `WARN` baseline | `FAIL` baseline | `MANUAL` baseline |
 |---|---|---|---|---|
@@ -344,7 +344,7 @@ Security diagnostic display examples:
 Required behavior:
 
 - report whether access is local process/localhost only or covered by a documented connector capability profile
-- default to local-only exposure for MVP and avoid non-loopback binding or shared/remote endpoints unless the connector profile explicitly covers them
+- default to local-only exposure for the v0.1/default reference posture and avoid non-loopback binding or shared/remote endpoints unless the connector profile explicitly covers them
 - report the documented access-control contract and material class when MCP is exposed to a caller, such as localhost-only binding, Unix-domain socket, per-project token, process-scoped configuration material, or equivalent local control, without printing raw token, secret, or private configuration values
 - expose read resources without mutation
 - expose public tools through Core, not shell shortcuts
@@ -380,7 +380,7 @@ Projection refresh regenerates Product Repository Markdown from committed state 
 Required behavior:
 
 - render only the latest projection version for a target
-- render or enqueue staged-delivery required `ProjectionKind` views when their source records exist or change
+- render or enqueue Reference-required `ProjectionKind` views when their source records exist or change
 - preserve human-editable sections
 - compare managed block hashes before overwrite
 - create reconcile items for managed-block drift
@@ -424,7 +424,7 @@ Illustrative projection refresh statuses:
 | `TASK stale source_state_version=41 current_task_state_version=44` | State moved ahead of the rendered view. The Task result did not fail; the view needs refresh or reconcile. |
 | `RUN-SUMMARY failed projection_job_id=PJOB-088` | The latest render failed. The committed Run keeps its own `runs.status`; projection failure is reported separately. |
 | `APR skipped managed_block_drift reconcile_item=REC-019` | The projector avoided overwriting a changed managed block and routed the drift to reconcile. |
-| optional `EXPORT` projection enabled: `EXPORT stale artifact ART-204 unavailable` | Applies only when the optional `EXPORT` projection/report surface is enabled. It does not make `EXPORT` a Kernel Smoke or staged-delivery required refresh target, and it is not proof that the underlying Task state failed. |
+| optional `EXPORT` projection enabled: `EXPORT stale artifact ART-204 unavailable` | Applies only when the optional `EXPORT` projection/report surface is enabled. It does not make `EXPORT` a Kernel Smoke or Reference-required refresh target, and it is not proof that the underlying Task state failed. |
 
 ## reconcile
 
@@ -656,7 +656,7 @@ Required checks:
 - linked state owner exists in the same Task scope as the artifact link, or `record_kind=projection` resolves to a completed same-Task `projection_jobs` row
 - no unregistered staging path or arbitrary `staged_uri` is accepted as a committed artifact
 - owner-link relation semantics are compatible with the artifact's kind, including artifacts whose kind is `bundle`, `manifest`, or `export_component`
-- for projection artifact links, `artifact_links.record_id` must equal `projection_jobs.projection_job_id`; integrity validates that job/output identity through the same Task scope as the artifact link, `target_ref`, `status=completed`, and `output_path` or a documented projection ref instead of looking for a separate `projections` table. Project-level projection jobs are not project-scoped artifact links in the current MVP.
+- for projection artifact links, `artifact_links.record_id` must equal `projection_jobs.projection_job_id`; integrity validates that job/output identity through the same Task scope as the artifact link, `target_ref`, `status=completed`, and `output_path` or a documented projection ref instead of looking for a separate `projections` table. Project-level projection jobs are not project-scoped artifact links in the current Task-scoped artifact API.
 - bundle, manifest, and export-component artifacts are validated through their artifact row and owner links; the check must not look for nonexistent `verification_bundle` or `export` state tables
 - secret/PII handling is compatible with `redaction_state` and any export or capture notes
 - `secret_omitted` artifacts include omission notes or handles and no raw omitted values

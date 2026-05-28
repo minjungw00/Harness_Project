@@ -50,7 +50,7 @@ The user's judgment that the result and remaining trade-offs are acceptable afte
 
 The kernel gate for required user acceptance. Its value set and compatibility meaning are owned by [Acceptance Gate](kernel.md#acceptance-gate). Acceptance cannot substitute for QA or verification.
 
-MVP final acceptance is recorded through a Decision Packet user decision, `task_gates.acceptance_gate`, and `state.sqlite.task_events`; there is no separate acceptance record or table.
+Final acceptance in the current reference model is recorded through a Decision Packet user decision, `task_gates.acceptance_gate`, and `state.sqlite.task_events`; there is no separate acceptance record or table.
 
 ### Approval
 
@@ -156,13 +156,13 @@ The Task-level aggregate gate for blocking user-owned judgment before progress, 
 
 ### Decision Packet
 
-A canonical kernel state record for blocking user-owned judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Decision Packet record IDs use `DEC-*`; record-level status is owned by [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute) and the public `DecisionPacket` schema, and relevant statuses feed the Task-level `decision_gate`. MVP visibility is required through Task/status/next/judgment-context and decision-packet surfaces; standalone `DEC` Markdown renderings are optional projections or proposal surfaces unless enabled. Public API/interface choices, architecture direction, domain-language conflicts, module boundary changes, waivers, acceptance, and residual-risk choices use this path when user-owned product judgment or material technical judgment blocks progress, writes, close, or a public commitment. Broad approval text does not satisfy a Decision Packet unless it answers the specific recorded route and option.
+A canonical kernel state record for blocking user-owned judgment. It names the decision needed, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Decision Packet record IDs use `DEC-*`; record-level status is owned by [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute) and the public `DecisionPacket` schema, and relevant statuses feed the Task-level `decision_gate`. Required Decision Packet visibility is provided through Task/status/next/judgment-context and decision-packet surfaces; standalone `DEC` Markdown renderings are optional projections or proposal surfaces unless enabled. Public API/interface choices, architecture direction, domain-language conflicts, module boundary changes, waivers, acceptance, and residual-risk choices use this path when user-owned product judgment or material technical judgment blocks progress, writes, close, or a public commitment. Broad approval text does not satisfy a Decision Packet unless it answers the specific recorded route and option.
 
 User-facing displays may classify a Decision Packet by display judgment type: Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, or Scope / autonomy. This primary display label helps readers understand what kind of judgment they are being asked to make; it is display metadata, not a canonical schema field, status, gate, owner record, validator input, or authority path. Cross-cutting decisions should show secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up rather than treating the category as exclusive. Displays should make the decision title, what the user is deciding, why it is needed now, options, trade-offs, recommendation, uncertainty, deferral consequence, and residual risk when relevant visible without changing the owner contracts for `decision_kind`, Approval, acceptance, QA, residual-risk acceptance, close, or Write Authorization.
 
 ### Decision Request
 
-Optional routing, interaction, idempotency replay, or compatibility handoff metadata that may point to a canonical Decision Packet. A minimal MVP implementation may omit it. A Decision Request is not decision authority, never satisfies `decision_gate`, approval, acceptance, waiver, residual-risk acceptance, or close by itself, and is only relevant to gate aggregation through a linked compatible `decision_packet_id`.
+Optional routing, interaction, idempotency replay, or compatibility handoff metadata that may point to a canonical Decision Packet. A minimal v0.1 Kernel MVP implementation may omit it. A Decision Request is not decision authority, never satisfies `decision_gate`, approval, acceptance, waiver, residual-risk acceptance, or close by itself, and is only relevant to gate aggregation through a linked compatible `decision_packet_id`.
 
 ### Design Gate
 
@@ -320,7 +320,7 @@ The canonical record of a module or external boundary's public interface, inputs
 
 ### JSON `TEXT` Field
 
-A SQLite `TEXT` column whose stored value is JSON. The `TEXT` type is MVP storage flexibility only; Core must validate the value before commit against the API-owned or storage-owned shape, and malformed or schema-incompatible JSON is invalid state.
+A SQLite `TEXT` column whose stored value is JSON. The `TEXT` type is reference storage flexibility only; Core must validate the value before commit against the API-owned or storage-owned shape, and malformed or schema-incompatible JSON is invalid state.
 
 ### Local Derived Metrics
 
@@ -396,7 +396,7 @@ The relationship between a projection and its source records, managed hash, arti
 
 ### Projection Job
 
-A durable outbox record that asks the projector to render a Markdown projection from committed state records and artifact refs. `record_kind=projection` identity is `projection_jobs.projection_job_id`; project-level projection jobs do not by themselves create project-scoped artifact links in the MVP artifact DDL.
+A durable outbox record that asks the projector to render a Markdown projection from committed state records and artifact refs. `record_kind=projection` identity is `projection_jobs.projection_job_id`; project-level projection jobs do not by themselves create project-scoped artifact links in the current Task-scoped artifact DDL.
 
 ### Question Queue
 
@@ -450,7 +450,7 @@ The idempotency hash of a tool request, computed from canonical UTF-8 JSON cover
 
 ### Residual Risk
 
-A canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact. Known close-relevant Residual Risk must be visible before any successful acceptance or close, or `ResidualRiskSummary.status=none` must confirm no known close-relevant risk. User acceptance of risk does not create detached verification, Manual QA pass, sensitive-action Approval, or final acceptance. Accepted risk is metadata/state on the Residual Risk record in MVP, not a separate `accepted_risk` state record.
+A canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact. Known close-relevant Residual Risk must be visible before any successful acceptance or close, or `ResidualRiskSummary.status=none` must confirm no known close-relevant risk. User acceptance of risk does not create detached verification, Manual QA pass, sensitive-action Approval, or final acceptance. Accepted risk is metadata/state on the Residual Risk record in the current reference model, not a separate `accepted_risk` state record.
 
 ### Risk Accepted Close
 
@@ -482,7 +482,7 @@ The append-only event history table inside `state.sqlite`. Reference event stora
 
 ### Stable Event Catalog
 
-The kernel-owned compact list of `task_events.event_type` names that MVP conformance fixtures may assert in `expected_events`. It classifies stable event names separately from prose examples, fixture shorthand, non-stable implementation-local detail or audit events, validator IDs, Core check names, projection status shorthands, and future extension events.
+The kernel-owned compact list of `task_events.event_type` names that staged/reference conformance fixtures may assert in `expected_events`. It classifies stable event names separately from prose examples, fixture shorthand, non-stable implementation-local detail or audit events, validator IDs, Core check names, projection status shorthands, and future extension events.
 
 ### State Record
 
