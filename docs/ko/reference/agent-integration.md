@@ -70,7 +70,7 @@ Always-on rule과 context는 짧고 최신이어야 하며, 그 자체가 권한
 | `T5 Isolation` | 접점이 verification 또는 risky work를 별도 경계에서 실행할 수 있습니다. | worktree, sandbox, fresh process, isolated runner |
 | `T6 QA Capture` | 접점이 browser, screenshot, walkthrough, workflow-recording, Manual QA artifact를 구조화할 수 있습니다. | browser runner, screenshot capture, console/network capture, accessibility snapshot, QA note capture |
 
-일반적인 interactive Harness 사용은 `T2` 이상에서 가장 자연스럽습니다. Reliable detached verification에는 보통 `T3` capture와 실제 independence boundary가 필요합니다. High-risk work에는 가능하면 fixture로 입증된 `T4` guard 또는 `T5` isolation을 사용해야 합니다. `T6`는 UI/UX evidence를 보강하지만 Manual QA judgment를 대체하지 않으며, human QA note를 기록할 수 있다면 MVP 필수 조건은 아닙니다.
+일반적인 interactive Harness 사용은 `T2` 이상에서 가장 자연스럽습니다. Reliable detached verification에는 보통 `T3` capture와 실제 independence boundary가 필요합니다. High-risk work에는 가능하면 fixture로 입증된 `T4` guard 또는 `T5` isolation을 사용해야 합니다. `T6`는 UI/UX evidence를 보강하지만 Manual QA judgment, final acceptance, detached verification을 대체하지 않으며, human Manual QA note와 수동으로 제공된 artifact를 기록할 수 있다면 v0.1/default reference posture나 Agency-Hardened Manual QA coverage의 필수 조건이 아닙니다.
 
 `T6 QA Capture` profile은 지원하는 capture type과 fallback 동작을 이름으로 밝혀야 합니다. Candidate capture type에는 screenshot, console log, network trace, accessibility snapshot, workflow recording이 있습니다. Captured file은 durable storage 전에 redaction과 secret/PII handling을 따라야 하며, Manual QA record 또는 feedback loop execution에 붙는 artifact ref로 등록되어야 합니다.
 
