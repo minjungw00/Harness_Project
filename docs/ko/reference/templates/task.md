@@ -12,7 +12,7 @@
 - active Change Unit과 Change Unit dependency
 - mode, lifecycle, next action, 가장 먼저 해소할 막힘, 가장 작은 해소 방법, guarantee level, 읽기용 보기 최신성(projection freshness)을 위한 현재 상태 표시 input
 - Write Authorization 기록과 Write Authority Summary 표시 input
-- Decision Packet과 Residual Risk
+- Decision Packet과 Residual Risk, 렌더링할 때의 읽기용 Decision Packet 표시 metadata
 - 최신 Run, Evidence Manifest, Eval, Manual QA 기록, approval 기록
 - Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness 권한 claim을 표시할 때 필요한 compact source refs
 - 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 summary
@@ -25,7 +25,7 @@
 - 기존 owner 기록과 ref에서 온 Review Stage 표시 input
 - artifact ref 및 읽기용 보기 최신성(projection freshness)
 
-`TASK`의 생성된 judgment, close, waiver, review-stage, stewardship, projection-freshness 항목은 표시 binding입니다. 위에 나열한 owner record, gate, artifact, ref로 해소되어야 하며, 그런 source가 없으면 명시적인 absence/blocking 상태로 렌더링해야 합니다. 기준 기록, gate, `ProjectionKind` value, evidence, QA, verification, acceptance, residual-risk acceptance, close, Write Authorization을 만들지 않습니다.
+`TASK`의 생성된 judgment, Decision Packet 표시 metadata, close, waiver, review-stage, stewardship, projection-freshness 항목은 표시 binding입니다. 위에 나열한 owner record, gate, artifact, ref로 해소되어야 하며, 그런 source가 없으면 명시적인 absence/blocking 상태로 렌더링해야 합니다. 기준 기록, gate, `ProjectionKind` value, evidence, QA, verification, acceptance, residual-risk acceptance, close, Write Authorization을 만들지 않습니다.
 
 ## 렌더링 섹션
 
@@ -116,13 +116,18 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Judgment Context
 - pending decision packets:
+- decision title:
+- 표시용 판단 유형:
+- why needed now:
 - what user is deciding:
-- what agent may decide without user:
+- options:
+- trade-offs:
 - recommendation:
-- main trade-off:
-- reversibility:
 - uncertainty:
-- deferral effect:
+- deferral consequence:
+- residual risk when relevant:
+- what agent may decide without user:
+- reversibility:
 - affected scope:
 - minimum context to judge:
 - affected gates:
@@ -435,6 +440,8 @@ Change Unit block sub-template:
 `TASK`의 Review Stages는 Role Lens, playbook, two-stage review guidance를 위한 관리되는 표시 섹션입니다. 정확한 권한 없음 규칙은 [Design Quality Policies](../design-quality-policies.md#two-stage-review-display)와 [Agent Integration](../agent-integration.md#role-lens-동작)이 담당합니다. 기준 기록, `ProjectionKind` value, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization을 만들지 않으며, 발견 사항은 기존 owner path로 연결해야 합니다.
 
 생성된 summary는 사용자가 읽기 쉬운 평범한 말을 먼저 쓰고, 정확한 Harness term은 유용한 label이나 ref로 붙입니다. Projection이 명령어처럼 보이거나 표시 문구만으로 상태가 만들어진 것처럼 암시하면 안 됩니다.
+
+`TASK`의 Decision Packet 표시는 사용자가 Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy 중 어떤 판단을 하는지 빠르게 볼 수 있도록 읽기용 표시용 판단 유형을 보여줄 수 있습니다. 이를 주 표시 category로 사용합니다. 결정이 여러 영역에 걸쳐 있으면 category를 배타적으로 다루지 말고 부차적인 고려사항을 장단점, 영향받는 gate, risk, evidence, follow-up에 렌더링해야 합니다. 이 category는 owner Decision Packet context와 ref에서 파생되는 표시 metadata입니다. 기준 schema field, gate, status, owner contract, validator input이 아니며 `decision_kind`, Approval, acceptance, QA, residual-risk acceptance, close, Write Authorization의 owner contract를 흐리면 안 됩니다.
 
 `TASK`의 authority claim은 source ref 또는 명시적 absence로 해소되어야 합니다. Write authority claim은 Write Authorization ref를, sensitive-action permission은 Approval ref를, evidence sufficiency는 Evidence Manifest ref를, detached verification은 Eval ref를, Manual QA는 Manual QA record 또는 valid waiver ref를, final acceptance는 Acceptance Decision Packet ref를, residual-risk visibility 또는 acceptance는 Residual Risk refs 또는 `ResidualRiskSummary.status=none`을 가리켜야 합니다. Ref가 없으면 completed authority가 아니라 missing support로 렌더링해야 합니다.
 

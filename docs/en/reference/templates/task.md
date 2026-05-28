@@ -12,7 +12,7 @@ Boundary: projection template only; it does not authorize runtime/server impleme
 - active Change Unit and Change Unit dependencies
 - current-state display inputs for mode, lifecycle, next action, primary blocker, smallest unblocker, guarantee level, and projection freshness
 - Write Authorization records and Write Authority Summary display inputs
-- Decision Packets and Residual Risks
+- Decision Packets and Residual Risks, including reader-facing Decision Packet display metadata when rendered
 - latest Run, Evidence Manifest, Eval, Manual QA record, and approval records
 - compact authority source refs for Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
 - primary blocker, secondary blocker, and smallest unblocker display summaries
@@ -25,7 +25,7 @@ Boundary: projection template only; it does not authorize runtime/server impleme
 - Review Stage display inputs from existing owner records and refs
 - artifact refs and projection freshness
 
-Generated judgment, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists. They do not create canonical records, gates, `ProjectionKind` values, evidence, QA, verification, acceptance, residual-risk acceptance, close, or Write Authorization.
+Generated judgment, Decision Packet display metadata, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists. They do not create canonical records, gates, `ProjectionKind` values, evidence, QA, verification, acceptance, residual-risk acceptance, close, or Write Authorization.
 
 ## Rendered sections
 
@@ -116,13 +116,18 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Judgment Context
 - pending decision packets:
+- decision title:
+- display judgment type:
+- why needed now:
 - what user is deciding:
-- what agent may decide without user:
+- options:
+- trade-offs:
 - recommendation:
-- main trade-off:
-- reversibility:
 - uncertainty:
-- deferral effect:
+- deferral consequence:
+- residual risk when relevant:
+- what agent may decide without user:
+- reversibility:
 - affected scope:
 - minimum context to judge:
 - affected gates:
@@ -435,6 +440,8 @@ Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from
 Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. Their exact non-authority rule is owned by [Design Quality Policies](../design-quality-policies.md#two-stage-review-display) and [Agent Integration](../agent-integration.md#role-lens-behavior). They do not create canonical records, `ProjectionKind` values, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization; findings must route to existing owner paths.
 
 Generated summaries should use ordinary user-facing language first and exact Harness terms as labels or refs where useful. They should not turn the projection into a command language or imply that display text created state.
+
+Decision Packet display in `TASK` may show a reader-facing display judgment type so users can scan whether they are making a Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, or Scope / autonomy judgment. Use it as the primary display category. If a decision is cross-cutting, render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the category as exclusive. The category is display metadata derived from the owner Decision Packet context and refs. It is not a canonical schema field, gate, status, owner contract, or validator input, and it must not blur the owner contracts for `decision_kind`, Approval, acceptance, QA, residual-risk acceptance, close, or Write Authorization.
 
 Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to Write Authorization refs, sensitive-action permission to Approval refs, evidence sufficiency to Evidence Manifest refs, detached verification to Eval refs, Manual QA to Manual QA records or valid waiver refs, final acceptance to Acceptance Decision Packet refs, and residual-risk visibility or acceptance to Residual Risk refs or `ResidualRiskSummary.status=none`. Missing refs should render as missing support, not as completed authority.
 

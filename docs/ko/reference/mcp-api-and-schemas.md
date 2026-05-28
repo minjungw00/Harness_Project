@@ -1401,6 +1401,8 @@ Core는 기준 `DecisionPacket`을 저장합니다. Minimal MVP 구현은 `decis
 
 이 request에서 파생되는 사용자 표시 prompt는 결정 중심이어야 합니다. 사용자가 이름 붙은 option을 선택, defer, reject, waive, accept, reconcile할지 묻고, 그 답이 무엇을 확정하고 무엇을 확정하지 않는지 말해야 합니다. `decision_kind=approval`이고 `approval_scope`가 승인할 민감 동작을 설명하는 경우가 아니라면 generic approval을 요청하면 안 됩니다. 정확한 public fields는 위 schema 그대로이며, 이 문단은 그 field를 사용하는 최소 품질을 설명할 뿐입니다.
 
+사용자 표시 접점은 Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy 같은 표시용 판단 유형 category를 렌더링할 수 있습니다. 이 주 표시 category는 `decision_kind`, context, source refs, 주변 owner record에서 파생되는 표시 metadata입니다. 결정이 여러 영역에 걸쳐 있으면 category를 배타적으로 다루지 말고 부차적인 고려사항을 trade-offs, affected gates, risk, evidence, follow-up에 보여줘야 합니다. 현재 reference model에서는 request 또는 response field가 아니며, gate aggregation에 사용하면 안 되고, 위 기준 owner contract를 흐리면 안 됩니다. TODO_DECISION(schema-owner): future schema-owned display category가 필요한지 결정합니다. Schema owner가 명시적으로 승격하기 전까지 judgment type은 projection/display guidance일 뿐입니다.
+
 Response schema:
 
 ```yaml

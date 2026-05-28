@@ -99,7 +99,7 @@ Show the current status and next action again from state.
 
 The agent should resume from current Harness state, not from stale chat memory. Older conversation can help find refs to inspect, but it cannot authorize writes, accept results, accept residual risk, close a task, or replace current owner records.
 
-When the agent needs your judgment, status alone is not enough. It should add a focused prompt with options, a recommendation, uncertainty, the affected gates or acceptance criteria, what can continue if you defer, and refs to the relevant source, evidence, or design records.
+When the agent needs your judgment, status alone is not enough. It should add a focused prompt with a decision title, display judgment type, the exact choice, options, a recommendation, uncertainty, affected gates or acceptance criteria when relevant, what can continue if you defer, and source refs and evidence, risk, or design refs when available or relevant.
 
 ### 3. When blocked, ask for the one unblocker
 
@@ -204,30 +204,51 @@ Judgment answers: "What do I need to decide before the work can safely continue 
 
 Most judgment is one of these:
 
-- choose a product direction or trade-off you own
-- choose a material technical direction whose cost, compatibility, security, migration, interface, or maintenance impact you own
+- choose a Product / UX direction or trade-off you own
+- choose a Technical architecture direction whose cost, compatibility, security, migration, interface, or maintenance impact you own
+- choose a Security / privacy rule or trade-off, such as redaction, audit trail, retention, or PII handling
 - grant sensitive-action Approval
-- decide whether Manual QA is needed or whether a waiver is acceptable
-- accept a known residual risk
-- accept the final result when final acceptance is required
+- make a QA / acceptance judgment, including whether Manual QA is needed, whether a waiver is acceptable, or whether the result is acceptable
+- make a Residual risk judgment, including accepting a named remaining risk for this Task
+- make a Scope / autonomy judgment, including whether to expand scope or let the agent decide more inside the active Change Unit
 
-When user-owned product or material technical judgment blocks progress, the agent should show a Decision Packet with options, trade-offs, recommendation, uncertainty, and deferral effect. It should also name affected gates or acceptance criteria, source refs, evidence refs, and what the agent may decide without you. It should not flatten that into a vague "approve everything?" question.
+When user-owned product, technical, security/privacy, QA/acceptance, residual-risk, or scope/autonomy judgment blocks progress, the agent should show a Decision Packet. It should not flatten that into a vague "approve everything?" question.
 
-A good Decision Packet should feel like decision support, not a permission slip. It should name the real choice, compare realistic paths, recommend one, and say what can safely continue if you defer, or why nothing should continue until you decide. Exact public fields are owned by [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision); canonical authority is owned by [Decision Packet](../reference/kernel.md#decision-packet) and [Decision Gate](../reference/kernel.md#decision-gate).
+A good Decision Packet should feel like decision support, not a permission slip. It should name the real choice, compare realistic paths, recommend one, and say what can safely continue if you defer, or why nothing should continue until you decide.
+
+User-facing Decision Packet displays should have this shape:
+
+- Decision title
+- Display judgment type: Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, or Scope / autonomy
+- Why this is needed now
+- What the user is deciding / exact choice
+- Options
+- Trade-offs
+- Recommendation
+- Uncertainty
+- Deferral consequence
+- Residual risk when relevant
+- Affected gates and acceptance criteria when relevant
+- Source refs and evidence, risk, or design refs when available or relevant
+- What the agent may decide without the user
+
+The display judgment type helps readers scan what kind of decision they are being asked to make. Use it as the primary display category. If a decision is cross-cutting, show secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of pretending the category is exclusive. It is display guidance, not a new schema field, gate, owner record, validator input, or authority path. Exact public fields are owned by [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision); canonical authority is owned by [Decision Packet](../reference/kernel.md#decision-packet) and [Decision Gate](../reference/kernel.md#decision-gate).
 
 Examples:
 
-- Product/UX: failed-login feedback could be an inline message, a toast, or a modal/layer. The packet should compare user flow, interruption, accessibility, and copy risk, then recommend a path.
-- Product/copy: failed-login wording could be generic, specific, or hybrid. The packet should compare account enumeration risk, clarity, support burden, recovery usefulness, and product tone.
-- Product taste and QA: a polished interaction may need Manual QA for layout, accessibility interpretation, and feel; a simpler conservative behavior may be easier to verify. The packet should show the trade-off and what can continue if QA is deferred, or why nothing should continue until the decision is made.
-- Technical: auth handling could use a session cookie, JWT, or social login. The packet should separate revocation, CSRF/XSS exposure, client compatibility, operational complexity, migration impact, and implementation cost.
-- Technical: dependency additions can involve both sensitive-action Approval and a Decision Packet. Granting Approval for an install or dependency-file edit is not the same as deciding the dependency is the architecture direction.
-- Technical/data: schema migrations should show whether the path is additive, compatibility-shimmed, or breaking. The packet should name migration evidence, rollback risk, data-backfill risk, test boundary, and future maintenance impact.
-- Technical/interface: public API or module-boundary changes can need a compatibility or breaking-change Decision Packet. Passing tests does not settle caller impact, documentation promises, migration path, or release risk.
-- Scope/autonomy: expanding from a copy fix into account behavior, or from a private helper change into a public module boundary, needs a decision that names the new surface, what remains out of bounds, and whether a smaller Change Unit can continue.
-- Security-sensitive: sensitive-action Approval to access a secret, change permissions, or export data only answers whether that sensitive step may proceed. It does not decide which data is exported, who may export it, what gets redacted, what is omitted from artifacts, or what audit trail is acceptable.
-- QA or verification waiver: "go ahead" is not enough. The prompt should name the skipped check or surface, the risk you would accept, the follow-up, relevant refs, and whether close would become risk accepted.
-- Final acceptance or residual-risk acceptance: final acceptance means the result is acceptable when required; residual-risk acceptance means the named remaining risk is acceptable for close. The agent should ask for these separately, after showing evidence, verification, QA, and residual-risk visibility.
+- Product / UX: failed-login feedback could be an inline layer, a toast, or a modal. The packet should compare user flow, interruption, accessibility, and copy risk, then recommend a path.
+- Product / UX: failed-login wording could be generic, specific, or hybrid. The packet should compare account enumeration risk, clarity, support burden, recovery usefulness, and product tone.
+- QA / acceptance: a polished interaction may need Manual QA for layout, accessibility interpretation, and feel; a simpler conservative behavior may be easier to verify. The packet should show the trade-off and what can continue if QA is deferred, or why nothing should continue until the decision is made.
+- Technical architecture: auth approach can compare local session cookie, bearer token/JWT, OAuth/OIDC sign-in, or social-login provider integration. OAuth/OIDC may still produce a local session or token strategy, so the packet should separate identity-provider choice from session/storage model when both matter. It should also explain revocation, CSRF/XSS exposure, client compatibility, operational complexity, migration impact, and implementation cost.
+- Technical architecture: dependency additions can involve both sensitive-action Approval and a Decision Packet. Granting Approval for an install or dependency-file edit is not the same as deciding the dependency is the architecture direction.
+- Technical architecture: schema migrations should show whether the path is additive, compatibility-shimmed, or breaking. The packet should name migration evidence, rollback risk, data-backfill risk, test boundary, and future maintenance impact.
+- Technical architecture: public API or module-boundary changes can need a compatibility or breaking-change Decision Packet. Passing tests does not settle caller impact, documentation promises, migration path, or release risk.
+- Scope / autonomy: expanding from a copy fix into account behavior, or from a private helper change into a public module boundary, needs a decision that names the new surface, what remains out of bounds, and whether a smaller Change Unit can continue.
+- Security / privacy: sensitive-action Approval to access a secret, change permissions, or export data only answers whether that sensitive step may proceed. It does not decide which data is exported, who may export it, what gets redacted, what is omitted from artifacts, or what audit trail is acceptable.
+- Security / privacy: a PII logging policy might compare "do not log PII," "log redacted or tokenized identifiers," and "log limited fields for debugging." The packet should show privacy risk, debugging value, retention, redaction, audit trail, and whether existing evidence can prove the policy is followed.
+- QA / acceptance: a QA waiver prompt should name the skipped check or surface, the risk you would accept, the follow-up, relevant refs, and whether close would become risk accepted. "Go ahead" is not enough.
+- Residual risk: a residual-risk accepted close should show the remaining limitation, evidence that does exist, missing or waived QA/verification, the accepted risk, and follow-up. It is not a detached-verified close.
+- QA / acceptance and Residual risk: final acceptance means the result is acceptable when required; residual-risk acceptance means the named remaining risk is acceptable for close. The agent should ask for these separately, after showing evidence, verification, QA, and residual-risk visibility.
 
 ## Phrase reference
 
@@ -424,7 +445,7 @@ Common "approved" mix-ups:
 
 - Granting sensitive-action Approval for a dependency install is not the same as choosing that dependency as the architecture direction.
 - Granting sensitive-action Approval for secret access is not permission to reveal secret values in artifacts, projections, exports, logs, screenshots, or summaries.
-- Granting sensitive-action Approval for auth or system-file access is not choosing session auth, JWT, social login, role design, lockout behavior, or user notice.
+- Granting sensitive-action Approval for auth or system-file access is not choosing the identity-provider or session/storage model, such as local session cookie, bearer token/JWT, OAuth/OIDC sign-in, or social-login provider integration; it also does not decide role design, lockout behavior, or user notice.
 - Deciding a public API change is not permission to deploy, merge, or make additional writes.
 - Final acceptance means you accept the result when that task path requires it; it is not Write Authorization for more edits.
 

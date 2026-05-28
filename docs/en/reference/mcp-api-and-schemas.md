@@ -1399,6 +1399,8 @@ Core stores a canonical `DecisionPacket`. Minimal MVP implementations may omit `
 
 The user-visible prompt derived from this request should be decision-centered: ask the user to choose, defer, reject, waive, accept, or reconcile the named option, and say what that answer will and will not settle. It should not ask for generic approval unless `decision_kind=approval` and `approval_scope` describe the sensitive action being approved. The exact public fields remain the schema above; this prose describes minimum quality for using those fields.
 
+User-facing surfaces may render a display judgment type category such as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, or Scope / autonomy. That primary display category is metadata derived from `decision_kind`, context, source refs, and the surrounding owner records. If a decision is cross-cutting, surfaces should show secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the category as exclusive. It is not a request or response field in the current reference model, must not be used for gate aggregation, and must not blur the canonical owner contracts above. TODO_DECISION(schema-owner): decide whether a future schema-owned display category is needed; unless schema owners explicitly promote it, judgment type remains projection/display guidance only.
+
 Response schema:
 
 ```yaml
