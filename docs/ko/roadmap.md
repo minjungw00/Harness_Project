@@ -37,7 +37,7 @@ flowchart LR
   Later --> Promote["future version은 owner 결정 이후에만 가능"]
 ```
 
-v0.1 Kernel MVP와 v0.2부터 v0.4까지의 pack은 Build-owned staged delivery이지 roadmap 범위가 아닙니다. 이 roadmap은 staged-delivery owner 문서가 요구하는 kernel 권한, Decision Packet, 잔여 위험 표시, detached verification, Manual QA, recover/export, release handoff, fixture conformance 동작을 흡수하면 안 됩니다. Roadmap 항목은 owner 문서가 제한적으로 허용할 때만 읽기, 표시, 추천, artifact 후보 제공, fixture 후보 역할을 할 수 있습니다. 지속 artifact 등록이나 연결은 여전히 기존 Core/MCP artifact owner path 또는 향후 승격된 owner contract를 거쳐야 합니다. 여기에 이름이 있다는 이유만으로 권한 경로가 되지는 않습니다.
+v0.1 Kernel MVP와 v0.2부터 v0.4까지의 pack은 Build-owned staged delivery이지 roadmap 범위가 아닙니다. 이 roadmap은 staged-delivery owner 문서가 요구하는 kernel 권한, Decision Packet, 잔여 위험 표시, 분리 검증(detached verification), Manual QA, recover/export, release handoff, fixture conformance 동작을 흡수하면 안 됩니다. Roadmap 항목은 owner 문서가 제한적으로 허용할 때만 읽기, 표시, 추천, artifact 후보 제공, fixture 후보 역할을 할 수 있습니다. 지속 artifact 등록이나 연결은 여전히 기존 Core/MCP artifact owner path 또는 향후 승격된 owner contract를 거쳐야 합니다. 여기에 이름이 있다는 이유만으로 권한 경로가 되지는 않습니다.
 
 ## 승격 규칙
 
@@ -70,7 +70,7 @@ flowchart TD
 
 Dashboard 또는 hosted workflow UI는 active Task, gate, approval, 근거 coverage, projection 최신성, artifact 무결성, reconcile item을 시각화할 수 있습니다.
 
-Staged delivery가 dashboard 또는 hosted UI가 보여 줄 record, projection, conformance fixture를 먼저 안정화해야 하므로 이 항목은 later입니다. Owner 문서가 명시적으로 승격하기 전까지 dashboard 또는 hosted workflow UI는 `state.sqlite`, artifact ref, projection job status 위의 읽기 전용 진단/workflow 표시입니다. Dashboard 또는 hosted UI가 Task state, evidence, 결과 수락, implementation readiness, close readiness, projection 최신성, workflow routing, metric 해석의 기준이 되어서는 안 됩니다.
+Staged delivery가 dashboard 또는 hosted UI가 보여 줄 record, projection, conformance fixture를 먼저 안정화해야 하므로 이 항목은 later입니다. Owner 문서가 명시적으로 승격하기 전까지 dashboard 또는 hosted workflow UI는 `state.sqlite`, 아티팩트 참조, projection job status 위의 읽기 전용 진단/workflow 표시입니다. Dashboard 또는 hosted UI가 Task state, evidence, 결과 수락, implementation readiness, close readiness, projection 최신성, workflow routing, metric 해석의 기준이 되어서는 안 됩니다.
 
 ### Broad Connector Ecosystem
 
@@ -84,15 +84,15 @@ Browser QA Capture는 owner 문서가 명시적으로 승격하고 증명하기 
 
 승격에는 declared `T6 QA Capture` capability profile, redaction 및 secret/PII handling policy, test environment setup, artifact retention rules, fixture 또는 conformance target, 지원하지 않는 접점의 fallback 동작, projection-as-canonical 의존성 없음이 필요합니다.
 
-Owner 문서가 명시적으로 승격하기 전까지 Browser QA Capture는 candidate, prototype, manual capture aid, artifact-candidate source로만 논의할 수 있습니다. 캡처한 browser QA 자료는 기존 Manual QA/artifact path 또는 승격된 owner contract를 통해 등록되고 연결될 때만 QA evidence를 보강할 수 있습니다. 일반적으로 `qa_capture`, `screenshot`, `log`, 또는 캡처한 파일이 console log, network trace, accessibility snapshot, workflow recording인 경우 `other`를 사용할 수 있습니다. 이는 유용하지만 non-authoritative입니다. Final acceptance가 아니며, UI/UX, copy, accessibility 해석, workflow, product taste, visual output에 human judgment가 필요한 경우 Manual QA judgment를 대체하지 않고, verification independence requirements도 충족하지 않는 한 detached verification을 대체하지 않으며, 기존 Manual QA/artifact flow를 대체하지 않습니다.
+Owner 문서가 명시적으로 승격하기 전까지 Browser QA Capture는 candidate, prototype, manual capture aid, artifact-candidate source로만 논의할 수 있습니다. 캡처한 browser QA 자료는 기존 Manual QA/artifact path 또는 승격된 owner contract를 통해 등록되고 연결될 때만 QA evidence를 보강할 수 있습니다. 일반적으로 `qa_capture`, `screenshot`, `log`, 또는 캡처한 파일이 console log, network trace, accessibility snapshot, workflow recording인 경우 `other`를 사용할 수 있습니다. 이는 유용하지만 non-authoritative입니다. Final acceptance가 아니며, UI/UX, copy, accessibility 해석, workflow, product taste, visual output에 human judgment가 필요한 경우 Manual QA judgment를 대체하지 않고, verification independence requirements도 충족하지 않는 한 분리 검증을 대체하지 않으며, 기존 Manual QA/artifact flow를 대체하지 않습니다.
 
-지원하지 않는 접점은 사람이 작성한 Manual QA notes와 수동 제공 artifacts를 대체 경로로 사용해야 합니다. 단계별 전달 계획은 automated browser capture를 요구하지 않고 Manual QA record와 artifact refs를 지원합니다.
+지원하지 않는 접점은 사람이 작성한 Manual QA notes와 수동 제공 artifacts를 대체 경로로 사용해야 합니다. 단계별 전달 계획은 automated browser capture를 요구하지 않고 Manual QA record와 아티팩트 참조를 지원합니다.
 
 ### Cross-Surface Verification
 
 Cross-surface verification은 verification bundle을 다른 agent 접점 또는 evaluator environment로 보낼 수 있습니다.
 
-Agency-Hardened MVP는 local reference path에서 bundle과 manual evaluator instruction으로 detached verification을 증명할 수 있으므로 Cross-Surface Verification은 later입니다. Owner 문서가 명시적으로 승격하기 전까지 Cross-Surface Verification은 권한이 없습니다. Bundle을 다른 접점으로 보내는 것만으로 Eval을 기록하거나, verification을 충족하거나, assurance를 올리거나, 결과를 수락하거나, Task를 close하면 안 됩니다. 승격하려면 위 규칙을 만족하고, 결과 Eval 또는 finding이 projection을 canonical state로 의존하지 않으면서 Core를 통해 돌아오는 방식을 정의해야 합니다.
+Agency-Hardened MVP는 local reference path에서 bundle과 manual evaluator instruction으로 분리 검증을 증명할 수 있으므로 Cross-Surface Verification은 later입니다. Owner 문서가 명시적으로 승격하기 전까지 Cross-Surface Verification은 권한이 없습니다. Bundle을 다른 접점으로 보내는 것만으로 Eval을 기록하거나, verification을 충족하거나, assurance를 올리거나, 결과를 수락하거나, Task를 close하면 안 됩니다. 승격하려면 위 규칙을 만족하고, 결과 Eval 또는 finding이 projection을 canonical state로 의존하지 않으면서 Core를 통해 돌아오는 방식을 정의해야 합니다.
 
 ### Native Hook Expansion
 
@@ -120,14 +120,14 @@ Parallel execution은 stable lock, baseline freshness, Approval scope compositio
 
 ### Context Index
 
-Context Index는 읽기 전용 context provider입니다. Agent가 관련 projection, artifact ref, repo file, doc, user note를 찾도록 도울 수 있지만 인덱싱된 지식을 Harness 상태나 권한으로 취급하지 않습니다. 첫 구축 대상도 staged-delivery 선행 조건도 아닙니다.
+Context Index는 읽기 전용 context provider입니다. Agent가 관련 projection, 아티팩트 참조, repo file, doc, user note를 찾도록 도울 수 있지만 인덱싱된 지식을 Harness 상태나 권한으로 취급하지 않습니다. 첫 구축 대상도 staged-delivery 선행 조건도 아닙니다.
 
 인덱싱된 memory는 kernel과 기준 기록 경계가 안정되기 전에 도입하면 local 권한을 흐릴 수 있으므로 later입니다. Compact always-on rules와 phase-based context bundle은 Context Index를 필요로 하지 않으며 connector context discipline입니다. Owner 문서가 명시적으로 승격하기 전까지 Context Index는 권한 없는 retrieval only이며 v1+ Expansion 후보로 남습니다. 향후 Context Index는 context의 순위를 매기고, 요약하고, 가져올 수 있지만 해당 권한 경로의 owner 문서가 명시적으로 바뀌지 않는 한 기존 권한 경로를 대체할 수 없습니다. 가져온 context는 작업, compact status, status 해석, source excerpt, pull ref에 도움을 줄 수는 있어도 write를 허가하거나 Write Authorization을 만들거나, Decision Packet을 해소하거나, Approval을 부여하거나, gate를 충족하거나, evidence를 만들거나, verification을 수행하거나 기록하거나, QA를 기록하거나, QA/verification 또는 gate/close 관련 요구사항을 면제하거나, 결과 수락을 기록하거나, 잔여 위험을 받아들이는 판단을 기록하거나, assurance를 올리거나, projection을 대기열에 넣거나 refresh하거나 projection 최신성을 바꾸거나, 구현 준비 상태를 선언하거나, Task를 close하지 않습니다. 오래된 retrieved context는 gate나 write authority를 충족할 수 없고, 기존 경로를 통해 refresh, reconcile, inspect해야 하는 owner record를 가리킬 수만 있습니다.
 
 ```mermaid
 flowchart LR
   Projections["projections"] --> Index["Context Index<br/>read-only retrieval"]
-  Artifacts["artifact refs"] --> Index
+  Artifacts["아티팩트 참조"] --> Index
   Repo["repo files"] --> Index
   Docs["docs and notes"] --> Index
   Index --> Agent["agent context"]

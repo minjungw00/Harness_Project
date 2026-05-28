@@ -64,7 +64,7 @@ Invoice summary에서 null date formatting을 고쳐줘.
 - 범위 밖: invoice data model 변경, localization strategy, billing behavior, public API 변경.
 - 쓰기 전: active Change Unit이 intended path를 포함해야 하고, `prepare_write`가 특정 write attempt를 허용해야 합니다.
 - 근거: diff 또는 patch summary와 focused test, 또는 자동 확인이 적용되지 않는다는 기록된 이유.
-- 닫기: 작업이 좁게 유지되고 required QA, 분리 검증, acceptance, residual-risk path가 적용되지 않으면 보통 self-checked로 닫습니다.
+- 닫기: 작업이 좁게 유지되고 required QA, 분리 검증, acceptance, 잔여 위험 경로가 적용되지 않으면 보통 self-checked로 닫습니다.
 
 사용자가 보는 결과는 여전히 단순할 수 있습니다.
 
@@ -72,7 +72,7 @@ Invoice summary에서 null date formatting을 고쳐줘.
 Null invoice date가 "Not set"으로 표시되도록 바꿨습니다.
 `invoiceSummary.test`로 확인했습니다.
 쓰기 허가 기록이 implementation run에서 consumed됐습니다.
-Self-checked로 닫았습니다. 알려진 close-relevant residual risk는 없습니다.
+Self-checked로 닫았습니다. 알려진 닫기 관련 잔여 위험은 없습니다.
 ```
 
 에이전트가 formatter가 export, report, billing email, API response에 공유된다는 사실을 발견하면 이 작업은 더 이상 직접적인 코드 수정이 아닙니다. 하네스는 멈추고 제품 파일을 더 바꾸기 전에 더 넓은 영향을 먼저 정리해야 합니다.
@@ -141,8 +141,8 @@ Code는 끝났고 test도 통과했습니다.
 - Acceptance criterion을 뒷받침하는 ref가 없어 evidence가 partial입니다.
 - Verification이 required인데 compatible Eval이 없습니다.
 - UI behavior에 수동 QA가 required인데 아직 passed 또는 valid waiver가 없습니다.
-- Final acceptance가 required인데 evidence, QA, verification, residual-risk visibility와 함께 요청되지 않았습니다.
-- 알려진 close-relevant 잔여 위험(residual risk)이 있지만 아직 보이거나 받아들여지지 않았습니다.
+- Final acceptance가 required인데 evidence, QA, verification, 잔여 위험 표시와 함께 요청되지 않았습니다.
+- 알려진 닫기 관련 잔여 위험이 있지만 아직 보이거나 받아들여지지 않았습니다.
 
 유용한 close blocker는 가장 작은 unblocker를 이름 붙입니다.
 

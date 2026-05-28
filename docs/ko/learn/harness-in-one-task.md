@@ -198,7 +198,7 @@ Task: 로그인 플로우에 remember me 동작을 추가한다.
 예상 모드: work.
 ```
 
-"remember me"가 모호하기 때문에 에이전트는 구현 계획 전에 Discovery를 사용합니다. Discovery는 요구사항 구체화이지 approval, sensitive-action Approval, 쓰기 허가 기록, evidence, verification, QA, acceptance, residual-risk acceptance, close, scope authority, 새 authority path가 아닙니다. 제품, 기술, security, QA, 운영, scope 판단을 분리하고, codebase-answerable question은 repository와 현재 하네스 context에서 답하며, codebase가 답할 수 없는 결정만 사용자에게 묻습니다.
+"remember me"가 모호하기 때문에 에이전트는 구현 계획 전에 Discovery를 사용합니다. Discovery는 요구사항 구체화이지 approval, sensitive-action Approval, 쓰기 허가 기록, evidence, verification, QA, acceptance, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. 제품, 기술, security, QA, 운영, scope 판단을 분리하고, codebase-answerable question은 repository와 현재 하네스 context에서 답하며, codebase가 답할 수 없는 결정만 사용자에게 묻습니다.
 
 에이전트는 짧은 Discovery Brief를 유지할 수 있습니다.
 
@@ -276,7 +276,7 @@ Change Unit: 로그인 폼 checkbox, 선택된 remember-me 동작, test, 직접 
 Not allowed: 관련 없는 account recovery 또는 전체 auth 재설계.
 ```
 
-선택한 동작에 sensitive-action Approval이 필요하면 하네스는 쓰기 전에 멈추고 별도 Approval을 요청해야 합니다. Sensitive-action Approval은 "이 민감한 행동을 진행해도 되는가?"에 답합니다. 결정 패킷, 테스트, QA, residual-risk acceptance, 최종 수락을 대신하지 않습니다.
+선택한 동작에 sensitive-action Approval이 필요하면 하네스는 쓰기 전에 멈추고 별도 Approval을 요청해야 합니다. Sensitive-action Approval은 "이 민감한 행동을 진행해도 되는가?"에 답합니다. 결정 패킷, 테스트, QA, 잔여 위험을 받아들이는 판단, 최종 수락을 대신하지 않습니다.
 
 ### 구현
 

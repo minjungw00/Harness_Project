@@ -8,7 +8,7 @@ This repository is currently in documentation redesign / feedback incorporation 
 
 Harness는 AI 지원 제품 작업을 위한 로컬 작업 장부이자 판단 라우터입니다. 무엇을 바꿀 수 있는지, 누가 판단해야 하는지, 어떤 근거가 있는지, 어떤 위험이 남았는지, 작업을 닫아도 되는지를 기록합니다.
 
-Harness는 사용자 판단권을 보존하는 로컬 권한 커널이라는 원칙을 계속 따릅니다. 오래 남아야 하는 작업 사실은 local state, artifact ref, 읽기용 projection에 두고, 사용자가 소유한 제품 판단과 중요한 기술 판단은 사용자에게 남겨 둡니다.
+Harness는 사용자 판단권을 보존하는 로컬 권한 커널이라는 원칙을 계속 따릅니다. 오래 남아야 하는 작업 사실은 지속 로컬 상태, 아티팩트 참조, 읽기용 투영 문서(projection)에 두고, 사용자가 소유한 제품 판단과 중요한 기술 판단은 사용자에게 남겨 둡니다.
 
 이 저장소는 현재 문서 재설계 / 피드백 반영 및 문서 검토/승인 단계에 있습니다. 이 저장소에는 아직 Harness server 또는 runtime이 구현되어 있지 않습니다.
 
