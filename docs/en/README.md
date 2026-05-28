@@ -2,7 +2,7 @@
 
 This is the English routing page for the Harness documentation set.
 
-This repository is in documentation redesign / feedback incorporation and documentation review. This page does not authorize Harness server/runtime implementation, generated operational files, executable fixtures, or runtime data. First runtime-batch planning may not begin until maintainers deliberately accept the docs in the implementation handoff. The first implementation/proof path remains Kernel Smoke first, Agency-Hardened MVP later, and post-MVP automation in the roadmap unless owner docs promote it.
+This repository is in documentation redesign / feedback incorporation and documentation review. This page does not authorize Harness server/runtime implementation, generated operational files, executable fixtures, or runtime data. First runtime-batch planning may not begin until maintainers deliberately accept the docs in the implementation handoff. The first product MVP target is v0.1 Kernel MVP, exercised by the Kernel Smoke conformance profile; v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, and v1+ Expansion stays in the roadmap unless owner docs promote and prove it.
 
 Harness is a local work ledger and judgment router for AI-assisted product work. It records what may change, who must decide, what evidence exists, what risk remains, and whether the work can close.
 
@@ -63,7 +63,7 @@ Use this path when you want to run an AI-assisted development session under Harn
 
 ## Build
 
-Use this path for implementation orientation and planning review. These pages keep the first path narrow: Kernel Smoke first, Agency-Hardened MVP later, roadmap automation outside MVP unless owner docs promote it.
+Use this path for implementation orientation and planning review. These pages keep the first path narrow: v0.1 Kernel MVP first, Kernel Smoke as its narrow conformance profile, Agency-Hardened MVP later through staged packs, and roadmap automation outside the staged delivery unless owner docs promote it.
 
 Start with the [Documentation Acceptance Status](build/implementation-overview.md#documentation-acceptance-status). Until maintainers deliberately accept first runtime-batch planning there, Build pages remain planning guidance and do not authorize runtime/server implementation.
 
@@ -98,7 +98,7 @@ Use this path to keep the docs and future Harness system coherent over time. Mai
 
 - [Roadmap](roadmap.md)
 
-Post-MVP items live in the roadmap. The roadmap is not part of the MVP implementation contract unless a future owner explicitly promotes an item with scope, fixtures, and fallback behavior.
+Post-MVP items live in the roadmap. The roadmap is not part of Build-owned staged delivery unless a future owner explicitly promotes an item with scope, fixtures, and fallback behavior.
 
 ## Language Parity
 

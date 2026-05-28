@@ -2,310 +2,138 @@
 
 ## What this document helps you do
 
-This document turns the MVP scope material into an implementable build sequence. It keeps delivery stages separate from storage schemas, DDL, projection template bodies, and operator command syntax.
+This document turns the MVP scope material into an implementable staged delivery plan. It keeps delivery order separate from storage schemas, DDL, projection template bodies, operator command syntax, and executable fixture contracts.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target is Kernel Smoke: one local process with modules proving one authority loop. Agency-Hardened MVP is a later hardening and conformance target after Kernel Smoke, and roadmap automation stays outside MVP unless owner docs promote and prove it.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, also exercised by the Kernel Smoke conformance profile: one local process with modules proving one authority loop. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target. v1+ automation stays roadmap scope unless owner docs promote and prove it.
 
 Use this when you need to plan what to build after the first runnable slice. Use the reference docs for exact contracts.
 
 ## Read this when
 
-- You are planning delivery after Kernel Smoke.
-- You need to review MVP scope stage by stage.
-- You want to separate the implementation sequence from storage, schema, and template details.
+- You are planning v0.1 Kernel MVP or the packs that follow it.
+- You need to review staged delivery scope without expanding the first implementation batch.
+- You want to separate implementation order from storage, schema, fixture, and template details.
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md), including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status), and [First Runnable Slice](first-runnable-slice.md). For exact API contracts, use [MCP API And Schemas](../reference/mcp-api-and-schemas.md). For storage details and DDL, use [Storage And DDL](../reference/storage-and-ddl.md). For design-quality gate and validator behavior, use [Design Quality Policies](../reference/design-quality-policies.md). For post-MVP candidates and promotion criteria, use the [Roadmap](../roadmap.md).
+Read [Implementation Overview](implementation-overview.md), including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status), and [First Runnable Slice](first-runnable-slice.md). For exact API contracts, use [MCP API And Schemas](../reference/mcp-api-and-schemas.md). For storage details and DDL, use [Storage And DDL](../reference/storage-and-ddl.md). For design-quality gate and validator behavior, use [Design Quality Policies](../reference/design-quality-policies.md). For conformance fixture semantics, use [Operations And Conformance](../reference/operations-and-conformance.md). For post-MVP candidates and promotion criteria, use the [Roadmap](../roadmap.md).
 
 ## Main idea
 
-MVP delivery starts with the narrow Kernel Smoke path and only then hardens toward Agency-Hardened MVP. Later automation stays outside the boundary unless a future owner promotes it through the [Roadmap promotion rule](../roadmap.md#promotion-rule) and proves it separately.
+Delivery starts with a true Kernel MVP, not a full agency-hardened platform. v0.1 proves the first local authority loop. Later packs add evidence/projection depth, agency hardening, and operations/conformance coverage without changing the first target or promoting roadmap automation.
 
-The center of the plan is Core state, `task_events`, artifact refs, evidence, blockers, and the minimal reference surface and MCP reachability needed to exercise them. The initial implementation assumption remains one local process with modules. Projection-template polish, dashboards or hosted workflow UI, indexes, hook expansion, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, metrics, parallel orchestration, and broad automation become useful after that path exists; they are not the first build target.
+The center of the first plan is Core state, `task_events`, scoped write authority, artifact refs, a minimal Evidence Manifest, blockers, and the minimal reference surface and MCP reachability needed to exercise them. The initial implementation assumption remains one local process with modules. Projection-template polish, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, metrics, parallel orchestration, and broad automation become useful after that path exists; they are not part of v0.1 Kernel MVP.
 
-## MVP scope in plain language
+## Staged delivery
 
-The MVP is a local kernel-authority and agency-conformance project. It is not a broad agent platform.
+| Stage | Delivery target | Scope boundary |
+|---|---|---|
+| v0.1 | Kernel MVP | First local authority loop only. This is the first product MVP target and the first runnable conformance target through Kernel Smoke fixtures. |
+| v0.2 | Evidence & Projection Pack | Deeper evidence, projection, and reconcile behavior after the kernel loop exists. |
+| v0.3 | Agency Pack | Agency-Hardened MVP behavior around user judgment, Manual QA, detached verification, residual risk, stewardship, TDD, and feedback policy. |
+| v0.4 | Operations Pack | Operator readiness, recover/export, artifact integrity, release handoff, and broader conformance suite coverage. |
 
-The MVP should let one local project and one reference agent surface operate through Harness with:
+```mermaid
+flowchart LR
+  Kernel["v0.1 Kernel MVP<br/>first local authority loop"] --> Evidence["v0.2 Evidence & Projection Pack"]
+  Evidence --> Agency["v0.3 Agency Pack"]
+  Agency --> Ops["v0.4 Operations Pack<br/>Agency-Hardened MVP conformance"]
+  Ops -. "roadmap boundary" .-> Expansion["v1+ Expansion<br/>roadmap candidates"]
+```
 
-- canonical Task state and `task_events`
-- scoped Change Units for product writes
-- `prepare_write` and durable Write Authorizations
-- sensitive-action Approvals for sensitive categories
-- Decision Packets for user-owned product judgment or material technical judgment
-- Runs, artifact refs, and Evidence Manifests
-- verification, Manual QA, residual-risk visibility, acceptance, and close blockers
-- MCP resources and tools over Core
-- projection jobs and MVP-required projection renderers
-- reconcile for human-editable input or managed-block drift
-- doctor/readiness, recover, export, artifact integrity, and conformance smoke entrypoints that report through Core state, `task_events`, artifacts, projections, and existing errors or diagnostics
+Kernel Smoke remains the conformance authoring profile for v0.1 Kernel MVP. The name "Smoke" means the fixture profile is narrow; it does not make the first product target a sub-target.
 
-Keep this scope local, inspectable, and fixture-proven.
+### Boundary After Staged Delivery: v1+ Expansion
 
-In practical terms, build the state and authority path before presentation polish. A projection or UI may make status easier to read, but it must be downstream from Core records.
+v1+ Expansion is roadmap scope, not a Build-owned staged delivery phase. Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, broader connectors, metrics, team workflow, orchestration, and similar candidates stay outside v0.1 Kernel MVP and Agency-Hardened MVP unless owner docs explicitly promote and prove a future item.
 
-## Kernel Smoke
+## v0.1 Kernel MVP
 
-Kernel Smoke is the first runnable conformance target and the first implementation/proof target. It crosses MVP-0 through early MVP-3, but only for the selected authority path.
+v0.1 proves only the first local authority loop for one local project, one reference surface, and one Task. It should be small enough that every behavior can be observed through Core state, `task_events`, artifacts, projection freshness or enqueueing, and structured blockers.
 
-It must prove:
+v0.1 must prove:
 
-- project and Task state
+- project registration
+- Task state and `task_events`
+- direct, work, and advisor mode basics
 - one scoped Change Unit
+- basic Decision Packet lifecycle sufficient to request, record, expose, and block on a needed decision
 - `prepare_write` allow and block behavior
-- durable Write Authorization creation
-- `record_run` consumption of that authorization
-- artifact registration
-- Evidence Manifest basics
-- minimal required projection freshness or enqueueing
-- blocked writes or Runs when write authority is missing
-- blocked close when evidence or decision requirements are missing
-- basic Core fixture execution
+- durable single-use Write Authorization creation
+- `record_run` consumption of one compatible authorization
+- minimal `ArtifactRef`
+- minimal Evidence Manifest
+- close blocked when evidence or required decisions are missing
+- `status` and `next` reads without mutation
+- minimal `TASK` projection or durable projection enqueue
+- basic Core fixture execution through the Kernel Smoke queue
 
-Kernel Smoke is useful because it proves the Harness write authority loop before the rest of the system exists. It is not final MVP conformance.
+v0.1 should not prove full detached verification independence, a Manual QA policy matrix, residual-risk accepted close semantics, stewardship validators, TDD trace, feedback loop policy, release handoff, full export/recover behavior, or a large fixture suite. Those are later-pack work.
 
-At this point, the user or operator can observe a small but complete loop: current Task status, scoped write block/allow, durable Write Authorization creation and consumption, artifact and Evidence Manifest links, projection freshness or enqueueing, and structured close blockers.
+At this point, the user or operator can observe a small but complete loop: current Task status, mode basics, active Change Unit, basic Decision Packet state, scoped write block/allow, durable Write Authorization creation and consumption, artifact and Evidence Manifest links, projection freshness or enqueueing, next-action guidance, and structured close blockers.
 
-For practical fixture authoring order, use the [Kernel Smoke Authoring Queue](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue). It maps the first runtime fixture candidates to this stage without changing the exact fixture body shape.
+For practical fixture authoring order, use the [Kernel Smoke Authoring Queue](../reference/operations-and-conformance.md#kernel-smoke-authoring-queue). It maps the v0.1 runtime fixture candidates to this stage without changing the exact fixture body shape.
 
 Kernel Smoke pass/fail comes from runtime fixtures that drive Core or operator actions and compare captured state, `task_events`, artifacts, projections, and primary errors. Status prose, Journey Card text, close prose, and scenario descriptions are observable context only; exact fixture body and assertion rules stay in [Operations And Conformance](../reference/operations-and-conformance.md#conformance-fixture-format).
 
-## Agency-Hardened MVP
+## v0.2 Evidence & Projection Pack
 
-Agency-Hardened MVP is the later hardening and final reference conformance target, not the first implementation batch. It completes the rest of MVP-3 and then adds MVP-4 and MVP-5.
+v0.2 builds on the kernel loop by making evidence and readable output more complete while keeping projections derived from Core records.
 
-It must prove:
+Focus on:
+
+- evidence manifest coverage beyond the minimum v0.1 loop
+- evidence sufficiency, stale, blocked, partial, supported, unsupported, and not-applicable reporting where owner docs already define those states
+- artifact relation and redaction/integrity checks needed by evidence and projection display
+- staged-delivery required projection renderers when their source records exist
+- projection freshness and failure isolation across the required `ProjectionKind` values
+- reconcile behavior for human-editable proposal areas and managed-block drift
+- projection and evidence fixture coverage beyond Kernel Smoke
+
+Do not make projection template polish or renderer-first work drive Task, Run, evidence, verification, or close design. `ProjectionKind` values and API-owned tiering belong to [MCP API And Schemas](../reference/mcp-api-and-schemas.md#shared-schemas); [Document Projection Reference](../reference/document-projection.md#template-tiers) owns authority boundaries, source-record rules, freshness rules, and template tier presentation; [Template Reference](../reference/templates/README.md) owns rendered template bodies and display cards.
+
+## v0.3 Agency Pack
+
+v0.3 preserves Agency-Hardened MVP as a later reference conformance target, not as first implementation scope. This pack hardens the kernel so the local reference MVP can route user-owned judgment, assurance, and risk with honest boundaries.
+
+Focus on:
 
 - Decision Packet quality and user-judgment routing
 - sensitive-action Approval, Decision Packet, and Write Authorization separation
+- Manual QA policy matrix and Manual QA blockers
+- detached verification independence, including same-session verification guard behavior
 - residual-risk visibility before acceptance and close
-- detached verification independence
-- Manual QA records and blockers
-- stewardship and context-hygiene validators
-- feedback-loop and TDD checks
-- codebase stewardship coverage
-- projection and reconcile completeness
-- recover, export, and artifact integrity behavior, including the rule that recovery artifacts do not prove successful completion
-- later-boundary checks
-- required agency conformance fixtures
-
-Passing Agency-Hardened MVP means the local reference MVP is coherent enough for implementation use. It does not promote later automation into MVP.
-
-At this point, the user or operator can observe not just that writes are controlled, but why work can proceed, pause, verify, require Manual QA, expose residual risk, accept, recover, export, or close.
-
-## MVP-0 Through MVP-5
-
-The stage descriptions below use implementation verbs for future planning after documentation acceptance. They are not permission to begin runtime/server implementation, generated operational files, executable fixtures, or runtime data during the current documentation-acceptance phase.
-
-### MVP-0: Runtime Bootstrap
-
-Build the local runtime home and register one project.
-
-Focus on:
-
-- project registration
-- project state initialization
-- static project configuration
-- artifact store initialization
-- reference surface registration with honest cooperative or detective capability
-- doctor/readiness reporting
-
-Do not add multi-project orchestration, team workflow, hosted workflow UI, metrics, or connector ecosystems here.
-
-### MVP-1: Core State, Journey/Decision Skeleton, MCP Facade
-
-Build the Core state transition foundation and the first MCP-facing reads and tools.
-
-Focus on:
-
-- transaction wrapper, locks, state version checks, and idempotency replay
-- current records plus task event append behavior
-- active Task absent status
-- advisor Task intake, read-only progress, and close
-- Journey Spine reconstruction and Journey Card inputs
-- Decision Packet records and `decision_gate` aggregation
-- `harness.status`, `harness.intake`, and `harness.next`
-- read-only recommended playbooks and Role Lens recommendations that do not create authority
-
-Display guidance remains read-only routing and status context. Exact Role Lens/playbook boundaries live in [Agent Integration](../reference/agent-integration.md#role-lens-behavior), and projection/report boundaries live in [Document Projection Reference](../reference/document-projection.md#projection-principles).
-
-### MVP-2: Shaping Kernel, Write Gate, Approval, Baseline, Artifacts
-
-Build the first write-capable authority path.
-
-Focus on:
-
-- Change Unit records and active scope
-- autonomy boundary fields
-- baseline capture and freshness checks
-- `harness.prepare_write`
-- durable Write Authorization records
-- sensitive-action Approval request and decision flow for sensitive categories
-- minimal changed-path, scope, sensitive-action Approval, baseline, decision, autonomy, and capability checks
-- raw artifact registration with integrity and redaction metadata
-
-Do not treat sensitive-action Approval as user-owned judgment. User-owned product trade-offs, architecture choices, material technical choices, unresolved security or product-security judgment, QA waivers, verification risk, acceptance, and residual-risk acceptance still require compatible Decision Packets when they apply.
-
-### MVP-3: Runs, Evidence, Feedback Loop, Projection, Reconcile
-
-Build the post-write recording and readable-output path.
-
-Focus on:
-
-- `harness.record_run`
-- Run records and Write Authorization consumption
-- Evidence Manifest records and evidence gate updates
-- Feedback Loop and TDD support records where policy requires them
-- codebase stewardship checks
-- projection jobs and MVP-required renderers whose source records exist before verification
-- managed block hashes
-- reconcile item creation for managed drift and human-editable proposals
-
-Build MVP-required renderers from records that already exist. Do not make projection templates, template polish, or additional renderer-first work the driver for Task, Run, evidence, or verification design.
-
-At this stage, build the MVP-required pre-verification renderers for API-owned MVP-required `ProjectionKind` values when their source records exist. `ProjectionKind` values and API-owned MVP tiering belong to [MCP API And Schemas](../reference/mcp-api-and-schemas.md#shared-schemas); [Document Projection Reference](../reference/document-projection.md#template-tiers) owns projection authority boundaries, source-record rules, freshness rules, and template tier presentation; [Template Reference](../reference/templates/README.md) owns rendered template bodies and display cards. The Eval renderer remains MVP-required, but its executable render path completes with MVP-4 when Eval source records exist.
-
-Projection failure remains separate from Core state failure.
-
-### MVP-4: Verification, Manual QA, Residual Risk, Close
-
-Build the close-readiness and assurance path.
-
-Focus on:
-
-- `harness.launch_verify`
-- `harness.record_eval`
-- `harness.record_manual_qa`
-- `harness.close_task`
-- verification independence checks
-- same-session verification guard
-- evaluator bundle freshness
-- Manual QA aggregation and QA blockers
-- residual-risk visibility before acceptance and close
-- acceptance and risk-accepted close rules
+- residual-risk accepted close full semantics
+- stewardship validators and codebase stewardship coverage
+- TDD trace behavior where policy requires it
+- feedback loop policy where policy requires it
 - distinct Approval, Manual QA, verification-waiver, acceptance, and residual-risk-acceptance judgments
-- Decision Packet close checks
-- close blocker reporting
+- agency conformance fixtures that prove behavior through Core state, events, artifacts, projections, and errors
 
-Do not require automated Browser QA Capture or hosted workflow automation for MVP. Browser screenshots, console logs, network traces, accessibility snapshots, or workflow recordings may support QA evidence only when registered and linked through existing Manual QA/artifact paths, but Manual QA records and artifact refs are the MVP requirement. Captured material does not replace Manual QA judgment, final acceptance, or detached verification unless a separate Eval path satisfies independence. Unsupported surfaces fall back to human Manual QA notes and manually supplied artifacts.
+Passing this pack means the local reference MVP handles the agency-preserving parts of work with clear boundaries. It does not promote later automation into MVP.
 
-### MVP-5: Operator Smoke, Agency Conformance, Later-Boundary Checks
+## v0.4 Operations Pack
 
-Build the operator and conformance proof layer.
+v0.4 completes the local operational proof around the same Core state model.
 
 Focus on:
 
 - doctor/readiness categories for runtime home, project state, artifact store, reference surface, MCP availability, projections, reconcile, validators/checks, and agency/stewardship/context
-- recover handling for baseline drift, approval drift, evaluator repo drift, artifact missing or hash mismatch, projection failure, managed Markdown direct edits, MCP unavailable, and surface capability mismatch
-- reconcile
-- export of state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, and retained, expired, or unavailable artifact status
-- artifact integrity check
-- fixture-based conformance smoke over state, events, artifacts, projections, and errors, with suite catalog metadata kept outside the fixture body
-- coverage-map conformance for core, connector, connector guard/freeze, agency, stewardship, context-hygiene, and design-quality paths
-- agency conformance for Journey visibility, user judgment, Autonomy Boundary respect, distinct user judgments, and residual-risk visibility
-- connector and context conformance for MCP unavailable holds, surface capability mismatch, generated-file drift, stale projection write guards, stale PRD/chat-memory pull-only behavior, evaluator bundle freshness, and artifact integrity effects
-- later-boundary checks that keep Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, parallel orchestration, team workflow, broad connector automation, native hook or sidecar expansion, derived metrics, and preventive guard expansion out of MVP unless separately proven and promoted
+- recover handling for interrupted or drifted operational state
+- export behavior for state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, and retained, expired, or unavailable artifact status
+- artifact integrity checks
+- release handoff report/export profile where owner docs define it
+- operator smoke over connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifacts check, and conformance run
+- large fixture suite coverage for the Agency-Hardened MVP reference target
+- later-boundary checks that keep Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, parallel orchestration, team workflow, broad connector automation, native hook or sidecar expansion, derived metrics, and preventive guard expansion in v1+ Expansion unless separately proven and promoted
 
 Do not create a second state model for operator commands. Operators diagnose, repair, export, or run fixtures over the same Core state model. Exact command names and flags can vary; the contract is the command-independent behavior over Core state, `task_events`, artifacts, projections, and existing errors or diagnostics.
 
-Docs-maintenance remains a separate read-only documentation profile. It may report documentation drift, but it is not Kernel Smoke, not Agency-Hardened runtime conformance, and not an implementation-readiness signal.
+Docs-maintenance remains a separate read-only documentation profile. It may report documentation drift, but it is not v0.1 Kernel MVP, not Agency-Hardened runtime conformance, and not an implementation-readiness signal.
 
-## Exit criteria by stage
+## Roadmap-Scoped v1+ Expansion Candidates
 
-Use these as implementation-readable checklists for future runtime planning after documentation acceptance. They restate the stage exit criteria; they do not add schemas, fixtures, DDL, or new runtime requirements, and they do not authorize implementation while the [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status) still blocks first runtime-batch planning.
-
-Read the stage exits in two layers:
-
-| Stage | Kernel Smoke reading | Agency-Hardened MVP reading |
-|---|---|---|
-| MVP-0 | Required foundation for the first local project, runtime home, artifact store, reference surface, and idle readiness. | The same foundation remains in force and later supports broader doctor/readiness categories. |
-| MVP-1 | Required only for the Task state, state-version, `task_events`, minimal status/intake, and decision-blocker visibility needed by the first authority loop. | Completes the Journey/Decision skeleton and read-only guidance boundaries needed by the final local MVP. |
-| MVP-2 | Required for one active Change Unit, `prepare_write` allow/block, durable Write Authorization creation, and artifact registration basics. | Adds the broader sensitive-action Approval, baseline, autonomy, sensitive-category, and drift handling needed for hardened conformance. |
-| MVP-3 | Required for one compatible `record_run`, Write Authorization consumption, artifact-backed Evidence Manifest basics, and minimal `TASK` projection freshness or enqueueing. | Completes feedback-loop, TDD, stewardship, projection, and reconcile coverage for the local reference MVP. |
-| MVP-4 | Not required to pass Kernel Smoke. Missing MVP-4 behavior is simply not yet proven by the first slice. | Required for verification, Manual QA, residual-risk visibility, acceptance, and close-readiness hardening. |
-| MVP-5 | Not required to pass Kernel Smoke. Missing MVP-5 behavior is simply not yet proven by the first slice. | Required for operator smoke, agency conformance, recover/export/artifact-integrity proof, and later-boundary checks. |
-
-Kernel Smoke may pass with only the selected MVP-0 through early MVP-3 subset above. Agency-Hardened MVP requires the remaining stage criteria and fixture coverage owned by [Operations And Conformance](../reference/operations-and-conformance.md#hardened-mvp-fixture-coverage).
-
-### MVP-0 exit checklist
-
-- One project is registered.
-- Project state exists before mutations use expected state versions.
-- The reference surface is registered.
-- Runtime files and artifact storage exist.
-- Doctor/readiness can report runtime home, project state, artifact store, reference surface, and MCP availability status without creating state.
-
-### MVP-1 exit checklist
-
-- No-active-Task status works.
-- An advisor Task can intake and close through Core.
-- Task status exposes Journey/Decision state.
-- Read guidance is non-authoritative.
-- Blocking user judgment can create or associate a Decision Packet.
-- Every state mutation updates current records plus `task_events` in one transaction.
-
-### MVP-2 exit checklist
-
-- Product writes without an active scoped Change Unit block.
-- Sensitive changes require sensitive-action Approval.
-- Autonomy Boundary violations block or route to Decision Packets.
-- Unresolved blocking Decision Packets block affected writes.
-- Allowed `prepare_write` creates durable Write Authorization refs.
-- Idempotent replay works.
-- Approval drift can block or expire sensitive-action Approval.
-- Shaping records the needed boundaries.
-- Raw artifacts store integrity/redaction metadata.
-
-### MVP-3 exit checklist
-
-- Direct and implementation Runs register artifacts and update evidence.
-- Runs consume compatible Write Authorizations.
-- Observed out-of-scope changes are detected.
-- Findings route back into state, evidence, Decision Packets, Change Units, or blockers.
-- Stewardship issues are visible.
-- MVP-required pre-verification projections can enqueue or render.
-- Projection failure is state-isolated.
-- Managed Markdown edits create reconcile items.
-
-### MVP-4 exit checklist
-
-- Work cannot close as detached verified from same-session self-review.
-- Stale evaluator bundles cannot record detached verification as passed.
-- Verification waivers close only with accepted risk.
-- Manual QA and acceptance block independently when required.
-- Close-relevant residual risk is visible before successful close.
-- Risk-accepted close requires accepted Residual Risk refs.
-- Acceptance follows risk visibility.
-- Approval, Manual QA, verification waiver, acceptance, and residual-risk acceptance stay separate.
-- Blocking Decision Packets block close.
-- Direct work can close self-checked unless policy or the user requires detached verification.
-
-### MVP-5 exit checklist
-
-- Conformance smoke covers core, connector, connector guard/freeze, agency, stewardship, context-hygiene, and design-quality paths.
-- Catalog scenario coverage includes artifact integrity, MCP unavailable, surface capability mismatch, generated-file drift, stale projection write guards, stale PRD/chat-memory context, evaluator bundle freshness, residual-risk visibility, and distinct user judgments.
-- Suite catalog metadata groups exact-shape fixtures by suite, stage, and tags without being passed to Core.
-- Agency checks prove Journey visibility, unresolved decisions, agent latitude, distinct user judgments, and residual-risk visibility.
-- Dependency DAG support remains metadata-only.
-- Export includes state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, and retained, expired, or unavailable artifact status.
-- Browser QA Capture entries remain future candidates unless promoted through owner docs.
-
-## Observable by stage
-
-| Stage | What the user or operator can observe |
-|---|---|
-| MVP-0 | Doctor/readiness can show runtime home, project state, artifact store, reference surface, MCP availability, and idle state. |
-| MVP-1 | Status, intake, and next-action reads can show the active Task, Journey/Decision state, and non-authoritative guidance without mutating state. |
-| MVP-2 | `prepare_write` can explain missing scope, out-of-scope paths, sensitive-action Approval needs, stale baseline, unresolved decisions, and compatible Write Authorization creation. |
-| MVP-3 | `record_run` consumes authority, Runs cite artifacts, evidence updates, projection freshness is visible, and reconcile items appear for managed drift. |
-| MVP-4 | Verification, Manual QA, residual-risk visibility, acceptance, and `close_task` blockers explain whether the Task can close. |
-| MVP-5 | Doctor, recover, reconcile, export, artifact integrity, and conformance fixtures prove the same Core state and keep later automation outside the MVP boundary. |
-
-## Later boundary
-
-Keep these outside MVP unless a future plan promotes them through owner docs with a capability profile, exact contracts, redaction/secret/PII policy, artifact retention and test-environment rules when runtime surfaces are captured, fixtures or a conformance target, fallback behavior, and no projection-as-canonical dependency:
+Keep these in roadmap-scoped v1+ Expansion unless a future plan promotes them through owner docs with a capability profile, exact contracts, redaction/secret/PII policy, artifact retention and test-environment rules when runtime surfaces are captured, fixtures or a conformance target, fallback behavior, and no projection-as-canonical dependency:
 
 - dashboard, hosted workflow UI, or local metrics as authority, implementation-readiness, or close-readiness surfaces
 - broad connector marketplace or surface ecosystem beyond the one reference surface
@@ -317,6 +145,69 @@ Keep these outside MVP unless a future plan promotes them through owner docs wit
 - deployment, canary, rollback, or production monitoring automation
 - parallel orchestration and concurrent lane scheduling
 - team workflow, permissions, and team profile export/import
-- Local Derived Metrics or long-term operational metrics as MVP-critical state
+- Local Derived Metrics or long-term operational metrics as staged-delivery-critical state
 
-If a later feature is useful during implementation, keep it as read-only display, metadata, artifact candidates for existing owner paths, or fixture candidate until owner docs define and prove its authority path. It must not become a prerequisite for Kernel Smoke or Agency-Hardened MVP.
+If a later feature is useful during implementation, keep it as read-only display, metadata, artifact candidates for existing owner paths, or fixture candidate until owner docs define and prove its authority path. It must not become a prerequisite for v0.1 Kernel MVP, Agency-Hardened MVP, or any close-readiness claim.
+
+## Exit criteria by stage
+
+Use these as implementation-readable checklists for future runtime planning after documentation acceptance. They restate staged exits; they do not add schemas, fixtures, DDL, or new runtime requirements, and they do not authorize implementation while the [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status) still blocks first runtime-batch planning.
+
+### v0.1 Kernel MVP exit checklist
+
+- One project is registered.
+- One reference surface is registered with an honest guarantee level.
+- One Task can be created, read, advanced, and represented in `task_events`.
+- Direct, work, and advisor mode basics are observable without implying full policy coverage.
+- One Change Unit scopes product writes.
+- Basic Decision Packet lifecycle can request, record, expose, and block on a required decision.
+- Product writes without an active compatible Change Unit block.
+- Out-of-scope intended writes block.
+- Allowed `prepare_write` creates a durable single-use Write Authorization.
+- A compatible `record_run` consumes the authorization once.
+- Minimal artifact registration returns an `ArtifactRef`.
+- Minimal Evidence Manifest links Run and artifact support.
+- `status` and `next` return current state without mutating state.
+- A `TASK` projection is current or durably enqueued.
+- `close_task` blocks when required evidence or a required decision is missing.
+
+### v0.2 Evidence & Projection Pack exit checklist
+
+- Evidence state covers owner-defined sufficient, partial, stale, blocked, unsupported, and not-applicable cases needed after v0.1.
+- Artifact relations, integrity, and redaction metadata support evidence and projection display.
+- Staged-delivery required pre-verification projections can enqueue or render when source records exist.
+- Projection failure is isolated from Core state failure.
+- Managed Markdown edits or proposal sections create reconcile items.
+- Evidence and projection fixtures extend Kernel Smoke without changing the fixture body shape.
+
+### v0.3 Agency Pack exit checklist
+
+- Decision Packet quality and user-judgment routing are fixture-proven.
+- Sensitive-action Approval does not substitute for Decision Packets, Write Authorization, Manual QA, verification, acceptance, or residual-risk acceptance.
+- Detached verification independence and same-session verification guard behavior are fixture-proven.
+- Manual QA policy matrix and QA blockers are fixture-proven where policy requires them.
+- Close-relevant residual risk is visible before successful acceptance or close.
+- Risk-accepted close cites accepted Residual Risk refs under the owner semantics.
+- Stewardship validators, feedback loop policy, and TDD trace behavior are covered where policy requires them.
+- Agency conformance proves Journey visibility, user judgment, Autonomy Boundary respect, distinct user judgments, and residual-risk visibility.
+
+### v0.4 Operations Pack exit checklist
+
+- Doctor/readiness reports runtime home, project state, artifact store, reference surface, MCP availability, projections, reconcile, validators/checks, and agency/stewardship/context categories.
+- Recover handles interrupted or drifted operational state without treating recovery artifacts as successful completion proof.
+- Export includes state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, and retained, expired, or unavailable artifact status.
+- Artifact integrity check reports missing or mismatched artifacts through existing diagnostics.
+- Release handoff report/export behavior follows its owner profile without taking over deployment, merge, rollback, or production authority.
+- Large fixture suite coverage proves Agency-Hardened MVP through exact-shape fixtures, not prose.
+- Later-boundary checks keep v1+ Expansion items out of staged delivery unless owner docs promote and prove them.
+
+## Observable by stage
+
+| Stage | What the user or operator can observe |
+|---|---|
+| v0.1 Kernel MVP | A local project and Task move through the first authority loop: mode basics, Change Unit scope, Decision Packet blocker, `prepare_write`, Write Authorization, `record_run`, artifact, Evidence Manifest, status/next, `TASK` projection or enqueue, and close blockers. |
+| v0.2 Evidence & Projection Pack | Evidence state, artifact-backed support, projection freshness, projection failure isolation, and reconcile items are visible from owner records. |
+| v0.3 Agency Pack | Decision quality, Approval separation, Manual QA, detached verification, residual risk, stewardship, TDD, feedback, acceptance, and close behavior explain whether work can proceed or close. |
+| v0.4 Operations Pack | Doctor, recover, reconcile, export, release handoff, artifact integrity, and conformance fixtures prove the same Core state and leave later automation in roadmap-scoped v1+ Expansion. |
+
+After staged delivery, promoted roadmap items can read, display, wrap, or extend the authority loop only after owner docs define exact contracts and fixture coverage.

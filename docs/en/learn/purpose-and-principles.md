@@ -4,7 +4,7 @@
 
 This document explains why Harness exists, who it is for, what it values, how it thinks about common AI-assisted development failures, and what belongs inside the MVP boundary.
 
-This is Learn documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before maintainers explicitly accept the documentation set for first runtime-batch planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+This is Learn documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before maintainers explicitly accept the documentation set for first runtime-batch planning. The first product MVP target is v0.1 Kernel MVP, exercised by the Kernel Smoke conformance profile. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, and v1+ automation stays roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -105,11 +105,11 @@ Without Harness, generated documents can be mistaken for operational truth. A st
 
 ## MVP boundary in plain language
 
-The MVP is a proof of the local kernel and agency model, not a broad platform.
+The staged MVP model proves the local kernel and agency model, not a broad platform.
 
-It should prove one local project, one reference agent surface, local runtime state, durable artifacts, public MCP tools, write gating, evidence, detached verification support, Manual QA, acceptance, projections, reconcile, recovery, export, and fixture-based conformance.
+v0.1 Kernel MVP should prove one local project, one reference agent surface, local runtime state, public MCP tools, write gating, minimal evidence, a minimal `TASK` projection or enqueue, and fixture-based Kernel Smoke conformance.
 
-The MVP may be delivered in stages, but the final MVP still needs to prove the same authority and agency requirements. Early slices can be small as long as they do not redefine the boundary by hiding critical decisions, evidence, or close behavior.
+v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, which adds detached verification support, Manual QA, acceptance, projection/reconcile depth, recovery, export, and the remaining agency requirements. Early slices can be small as long as they do not redefine the boundary by hiding critical decisions, evidence, or close behavior.
 
 ## Non-goals
 

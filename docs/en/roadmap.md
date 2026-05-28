@@ -2,13 +2,13 @@
 
 ## What this document helps you do
 
-This document collects post-MVP automation candidates and capability expansions so readers can see what may come later without treating it as first-implementation work, current authority, or MVP-required behavior.
+This document collects post-MVP automation candidates and capability expansions so readers can see what may come later without treating it as first-implementation work, current authority, or staged-delivery required behavior.
 
-This is roadmap documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target is Kernel Smoke. Agency-Hardened MVP belongs to later MVP hardening in Build docs, not to this roadmap, and the items below stay outside MVP unless owner docs promote and prove them.
+This is roadmap documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, exercised by the Kernel Smoke conformance profile. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target in Build docs, and the items below stay in v1+ Expansion unless owner docs promote and prove them.
 
 ## Read this when
 
-- You want to know which ideas are intentionally outside the MVP implementation contract.
+- You want to know which ideas are intentionally outside Build-owned staged delivery.
 - You are checking whether a future capability needs policy, fixture, and fallback decisions before promotion.
 - You need to keep roadmap items non-authoritative until an owner explicitly scopes and promotes them.
 
@@ -18,31 +18,32 @@ For current implementation planning, start with [Build: Implementation Overview]
 
 ## Main idea
 
-Roadmap items are useful future candidates, not current authority paths or MVP requirements. A roadmap item may become scoped work only after an owner decision promotes it with clear capability, policy, fixture, fallback, and projection-authority boundaries.
+Roadmap items are useful future candidates, not current authority paths or staged-delivery requirements. A roadmap item may become scoped work only after an owner decision promotes it with clear capability, policy, fixture, fallback, and projection-authority boundaries.
 
-## This is not MVP scope
+## Not Staged Delivery
 
-This document is not part of the MVP implementation contract.
+This document is not part of the Build-owned staged delivery.
 
-It does not own kernel invariants, public MCP schemas, MVP implementation requirements, or required MVP conformance. The MVP proves the local kernel: state, gates, artifacts, verification, projection, reconcile, and one reference surface. The items below are useful follow-ons after those basics are stable. For the MVP implementation order, use [Build: MVP Plan](build/mvp-plan.md); for strict API, storage, projection, and fixture contracts, use the Reference docs.
+It does not own kernel invariants, public MCP schemas, staged-delivery implementation requirements, or required staged-delivery conformance. The Build layer owns staged delivery: v0.1 Kernel MVP first, then v0.2 Evidence & Projection Pack, v0.3 Agency Pack, and v0.4 Operations Pack. The items below are useful follow-ons after those basics are stable. For staged delivery order, use [Build: MVP Plan](build/mvp-plan.md); for strict API, storage, projection, and fixture contracts, use the Reference docs.
 
-The first implementation/proof target is Kernel Smoke. Agency-Hardened MVP is later MVP hardening. This roadmap starts only after those Build-owned proof targets have clear owner-doc coverage. It is not an alternate route around Kernel Smoke, Agency-Hardened MVP, or the Core state/`task_events`/artifact path. Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, Native Hook Expansion, Advanced Sidecar Watcher, Local Derived Metrics, connector marketplaces, team workflow, and orchestration can collect, display, or extend Harness behavior later; they do not replace the first runnable authority loop.
+The first product MVP target is v0.1 Kernel MVP. Agency-Hardened MVP is reached later through the v0.2 through v0.4 packs. This roadmap starts at v1+ Expansion, after those Build-owned proof targets have clear owner-doc coverage. It is not an alternate route around v0.1 Kernel MVP, Agency-Hardened MVP, or the Core state/`task_events`/artifact path. Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, Native Hook Expansion, Advanced Sidecar Watcher, Local Derived Metrics, connector marketplaces, team workflow, and orchestration can collect, display, or extend Harness behavior later; they do not replace the first runnable authority loop.
 
 ```mermaid
 flowchart LR
-  Kernel["Kernel Smoke first runnable proof"] --> Harden["Agency-Hardened MVP later hardening"]
-  Harden --> Basics["state, gates, artifacts, verification, projection, reconcile, one reference surface"]
-  Basics --> Later["post-MVP roadmap candidates"]
+  Kernel["v0.1 Kernel MVP"] --> Evidence["v0.2 Evidence & Projection Pack"]
+  Evidence --> Agency["v0.3 Agency Pack"]
+  Agency --> Ops["v0.4 Operations Pack<br/>Agency-Hardened MVP"]
+  Ops -. "roadmap boundary" .-> Later["v1+ roadmap candidates"]
   Later --> Promote["future version only after owner decision"]
 ```
 
-Kernel Smoke and Agency-Hardened MVP are both MVP delivery stages, not roadmap scope. This roadmap must not absorb kernel authority, Decision Packet, residual-risk visibility, detached verification, Manual QA, recover/export, or fixture-conformance behavior that the MVP owner documents require. A roadmap item may read, display, recommend, provide artifact candidates, or act as a fixture candidate only when an owner doc allows that limited use. Any durable artifact registration or attachment must still go through an existing Core/MCP artifact owner path or a future promoted owner contract. Being listed here is never an authority path.
+v0.1 Kernel MVP and the v0.2 through v0.4 packs are Build-owned staged delivery, not roadmap scope. This roadmap must not absorb kernel authority, Decision Packet, residual-risk visibility, detached verification, Manual QA, recover/export, release handoff, or fixture-conformance behavior that staged-delivery owner documents require. A roadmap item may read, display, recommend, provide artifact candidates, or act as a fixture candidate only when an owner doc allows that limited use. Any durable artifact registration or attachment must still go through an existing Core/MCP artifact owner path or a future promoted owner contract. Being listed here is never an authority path.
 
 ## Promotion rule
 
 A roadmap candidate can become v1 or later scoped work only after a future owner decision gives it all of the following:
 
-- an explicit future-version owner decision; usefulness during MVP implementation is not promotion
+- an explicit future-version owner decision; usefulness during staged delivery is not promotion
 - a clear capability profile requirement
 - a redaction and secret/PII handling policy
 - a test environment and artifact retention policy when it captures runtime surfaces
@@ -75,35 +76,35 @@ Later because MVP should first stabilize the records, projections, and conforman
 
 A broad connector ecosystem or marketplace can add more agent surfaces, evaluator environments, or workflow integrations after the reference surface is stable.
 
-Later because MVP assumes one local project, one reference surface, local MCP reachability, and one Core authority path. Until explicitly promoted through owner docs, connector ecosystem work is documentation, prototype, or fixture-candidate material only. It must not widen MCP exposure, create authority, bypass Core, replace the reference surface proof, or make unsupported surfaces fail MVP by default.
+Later because v0.1 Kernel MVP assumes one local project, one reference surface, local MCP reachability, and one Core authority path. Until explicitly promoted through owner docs, connector ecosystem work is documentation, prototype, or fixture-candidate material only. It must not widen MCP exposure, create authority, bypass Core, replace the reference surface proof, or make unsupported surfaces fail v0.1 by default.
 
 ### Browser QA Capture
 
-Browser QA Capture is a v1/post-MVP priority candidate, not the first build target and not an MVP requirement. Automatic or assisted capture can gather screenshots, console logs, network traces, accessibility snapshots, and workflow recordings for Manual QA records where the connected surface supports it.
+Browser QA Capture is a v1/post-MVP priority candidate, not the first build target and not a staged-delivery requirement. Automatic or assisted capture can gather screenshots, console logs, network traces, accessibility snapshots, and workflow recordings for Manual QA records where the connected surface supports it.
 
 Promotion requires a declared `T6 QA Capture` capability profile, redaction and secret/PII handling policy, test environment setup, artifact retention rules, fixture or conformance target, fallback behavior for unsupported surfaces, and no projection-as-canonical dependency.
 
 Until explicitly promoted through owner docs, Browser QA Capture may be discussed as a candidate, prototype, manual capture aid, or artifact-candidate source. Captured browser QA material can improve QA evidence only when it is registered and linked through existing Manual QA/artifact paths or through a promoted owner contract, commonly as `qa_capture`, `screenshot`, `log`, or `other` when the captured file is a console log, network trace, accessibility snapshot, or workflow recording. It is useful but non-authoritative: it is not final acceptance, does not replace Manual QA judgment when UI/UX, copy, accessibility interpretation, workflow, product taste, or visual output needs human judgment, does not replace detached verification unless the verification independence requirements are also met, and does not replace the existing Manual QA/artifact flow.
 
-Unsupported surfaces should fall back to human Manual QA notes and manually supplied artifacts. MVP supports Manual QA records and artifact refs without requiring automated browser capture.
+Unsupported surfaces should fall back to human Manual QA notes and manually supplied artifacts. Staged delivery supports Manual QA records and artifact refs without requiring automated browser capture.
 
 ### Cross-Surface Verification
 
 Cross-surface verification can send a verification bundle to a different agent surface or evaluator environment.
 
-Later because MVP only needs one reference surface plus detached verification bundles/manual evaluator instructions. Until explicitly promoted through owner docs, Cross-Surface Verification is non-authoritative: sending a bundle to another surface must not record an Eval, satisfy verification, raise assurance, accept a result, or close a Task by itself. Promotion must satisfy the rule above and define how any resulting Eval or finding returns through Core without depending on projections as canonical state.
+Later because Agency-Hardened MVP can prove detached verification with bundles and manual evaluator instructions on the local reference path. Until explicitly promoted through owner docs, Cross-Surface Verification is non-authoritative: sending a bundle to another surface must not record an Eval, satisfy verification, raise assurance, accept a result, or close a Task by itself. Promotion must satisfy the rule above and define how any resulting Eval or finding returns through Core without depending on projections as canonical state.
 
 ### Native Hook Expansion
 
 Native hooks can provide stronger pre-tool guards, command interception, file write blocking, or richer artifact capture in surfaces that support them.
 
-Later because hook APIs vary by surface. MVP may use a concrete hook only when the reference surface actually supports it; otherwise native hooks are a capability-dependent enhancement. Until explicitly promoted through owner docs, Native Hook Expansion is non-authoritative: a hook can support `prepare_write`, capture artifacts, or improve guard display, but it must not replace the Core authority path, grant Approval, satisfy gates, or make unsupported surfaces fail the MVP by default.
+Later because hook APIs vary by surface. v0.1 may use a concrete hook only when the reference surface actually supports it; otherwise native hooks are a capability-dependent enhancement. Until explicitly promoted through owner docs, Native Hook Expansion is non-authoritative: a hook can support `prepare_write`, capture artifacts, or improve guard display, but it must not replace the Core authority path, grant Approval, satisfy gates, or make unsupported surfaces fail v0.1 by default.
 
 ### Preventive Guard Expansion
 
 Preventive guard expansion can become future work only for surfaces that prove a concrete pre-tool blocking path for the covered operation.
 
-Later because MVP may honestly start with cooperative or detective guarantees. Until explicitly promoted through owner docs, preventive guard expansion is not an MVP requirement and must not be claimed by label alone. Cooperative or detective guard/freeze displays can hold, warn, or detect within their proven capability, but they must not be described as pre-execution blocking.
+Later because staged delivery may honestly start with cooperative or detective guarantees. Until explicitly promoted through owner docs, preventive guard expansion is not a staged-delivery requirement and must not be claimed by label alone. Cooperative or detective guard/freeze displays can hold, warn, or detect within their proven capability, but they must not be described as pre-execution blocking.
 
 ### Advanced Sidecar Watcher
 
@@ -179,7 +180,7 @@ In addition to the promotion rule, these metrics should become v1 work only if a
 
 Team profile export/import can share policy defaults, connector profiles, surface capability assumptions, validator profiles, and project setup templates across a team.
 
-Later because MVP is a local kernel. Team workflow, shared workspaces, permissions, and profile sharing need versioning, privacy review, secret handling, and conflict behavior before they should affect runtime state. Until explicitly promoted through owner docs, team workflow is not an MVP requirement and must not become an authority or acceptance path.
+Later because v0.1 is a local kernel. Team workflow, shared workspaces, permissions, and profile sharing need versioning, privacy review, secret handling, and conflict behavior before they should affect runtime state. Until explicitly promoted through owner docs, team workflow is not a staged-delivery requirement and must not become an authority or acceptance path.
 
 ## Additional Later Candidates
 

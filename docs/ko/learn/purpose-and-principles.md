@@ -4,7 +4,7 @@
 
 이 문서는 Harness가 왜 존재하는지, 누구를 위한 것인지, 어떤 가치를 지키는지, AI 지원 개발에서 반복되는 실패를 어떻게 바라보는지, MVP 범위에 무엇이 들어가는지 설명합니다.
 
-이 문서는 Learn 문서입니다. maintainer가 문서 세트를 첫 runtime batch 계획에 사용할 수 있다고 명시적으로 승인하기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 구현/증명 대상은 계속 Kernel Smoke입니다. Agency-Hardened MVP와 post-MVP automation은 owner 문서가 승격하고 증명하기 전까지 범위 밖입니다.
+이 문서는 Learn 문서입니다. maintainer가 문서 세트를 첫 runtime batch 계획에 사용할 수 있다고 명시적으로 승인하기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 제품 MVP 목표는 v0.1 Kernel MVP이며 Kernel Smoke conformance profile이 이를 실행 가능한 방식으로 증명합니다. v0.2부터 v0.4까지는 Agency-Hardened MVP reference conformance target을 향한 staged pack이며, v1+ automation은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
 
 ## 이런 때 읽기
 
@@ -105,11 +105,11 @@ Harness가 없으면 생성된 문서가 운영상의 진실처럼 오해될 수
 
 ## MVP 경계를 쉬운 말로 설명하기
 
-MVP는 넓은 플랫폼이 아니라 로컬 커널과 사용자 판단권 모델의 증명입니다.
+Staged MVP model은 넓은 플랫폼이 아니라 로컬 커널과 사용자 판단권 모델의 증명입니다.
 
-MVP는 하나의 로컬 프로젝트, 하나의 기준 에이전트 접점, 로컬 실행 상태, 오래 보관할 근거, 공개 MCP 도구, 쓰기 제한, 근거, 분리된 검증 지원, Manual QA, 수락, 읽기용 문서, Reconcile, 복구, 내보내기, fixture 기반 적합성 확인을 증명해야 합니다.
+v0.1 Kernel MVP는 하나의 로컬 프로젝트, 하나의 기준 에이전트 접점, 로컬 실행 상태, 공개 MCP 도구, 쓰기 제한, 최소 근거, 최소 `TASK` projection 또는 enqueue, fixture 기반 Kernel Smoke conformance를 증명해야 합니다.
 
-MVP는 단계적으로 전달될 수 있지만, 최종 MVP가 증명해야 하는 권한과 사용자 판단권 요구사항은 그대로입니다. 초기 조각은 작아도 괜찮지만, 중요한 결정, 근거, 닫기 판단을 숨기면서 경계를 다시 정의해서는 안 됩니다.
+v0.2부터 v0.4까지는 Agency-Hardened MVP reference conformance target을 향한 staged pack이며, detached verification support, Manual QA, acceptance, projection/reconcile depth, recovery, export, 나머지 agency requirements를 추가합니다. 초기 조각은 작아도 괜찮지만, 중요한 결정, 근거, 닫기 판단을 숨기면서 경계를 다시 정의해서는 안 됩니다.
 
 ## 비목표
 

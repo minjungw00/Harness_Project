@@ -6,7 +6,7 @@ This document teaches Harness through two concrete task flows before you read th
 
 After reading it, you should be able to recognize when Harness uses Discovery, and why it records a Task, a Change Unit, a Decision Packet, Approval, Write Authorization, Evidence, Verification, Manual QA, Acceptance, Residual Risk, and Close. You do not need to know the internal record details to follow the story.
 
-This is Learn documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first implementation/proof target remains Kernel Smoke; Agency-Hardened MVP and post-MVP automation stay out of scope unless their owner docs promote and prove them.
+This is Learn documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first product MVP target is v0.1 Kernel MVP, exercised by the Kernel Smoke conformance profile. v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, and v1+ automation stays roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
