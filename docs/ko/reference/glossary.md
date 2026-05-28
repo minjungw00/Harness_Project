@@ -399,7 +399,7 @@ Design-quality policies가 사용하는 standard form입니다. `name`, `applies
 
 ### ProjectionKind
 
-Projection job과 template kind를 나타내는 API enum입니다. Tier, values, extension rules는 [Shared schemas](mcp-api-and-schemas.md#shared-schemas)가 담당합니다. 어떤 ProjectionKind도 projection을 기준 상태로 만들지 않습니다.
+Projection job과 template kind를 나타내는 API enum입니다. Tier, values, extension rules는 [Shared schemas](mcp-api-and-schemas.md#shared-schemas)가 담당합니다. `Reference-required` 같은 tier label은 support expectation이지 v0.1 Kernel MVP run obligation이 아닙니다. v0.1은 최소 `TASK` projection 또는 durable projection enqueue만 요구합니다. 어떤 ProjectionKind도 projection을 기준 상태로 만들지 않습니다.
 
 ### Projection Freshness
 

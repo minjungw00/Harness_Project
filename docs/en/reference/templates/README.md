@@ -8,13 +8,15 @@ Owner boundary: templates are rendered shapes, not canonical state. They do not 
 
 ## Template tiering
 
-Projection templates match the API `ProjectionKind` tiers:
+Projection templates match the API `ProjectionKind` staged/reference support tiers:
 
 | Tier | Templates | Rule |
 |---|---|---|
-| MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | MVP projector must enqueue/render these when their source records exist or change. |
-| MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. |
+| Reference-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Staged/reference projection support must enqueue/render these when their source records exist or change. |
+| Reference-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. |
 | Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Render only when the corresponding optional projection is enabled. |
+
+`Reference-required` means required by the staged/reference MVP projection support after the relevant owner records exist; it does not mean every v0.1 Kernel MVP run must render every kind. v0.1 Kernel MVP requires only a minimal `TASK` projection or durable projection enqueue. v0.2+ expands evidence/projection support; the Agency-Hardened/reference MVP supports the full Reference-required projection set when source records exist or change.
 
 `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`, and other report projections are readable views from owner records and refs. They must not redefine kernel fields, MCP schemas, SQLite DDL, gate behavior, or artifact integrity rules.
 
@@ -32,7 +34,7 @@ Any template that renders artifact refs must preserve `redaction_state`. Large o
 
 Display fields such as `redaction_availability_summary`, omitted or blocked impact lines, and `Downstream Effect` columns are rendered summaries only. They are derived from `ArtifactRef.redaction_state`, owner records, and downstream gate, evidence, QA, verification, projection, export, or Release Handoff status.
 
-Decision Packet visibility does not depend on a standalone `DEC` Markdown projection. MVP surfaces must still show active Decision Packets through `TASK`, status/next responses, judgment-context resources, and decision-packet resources. Standalone `DEC` is only an optional rendered view when that projection is enabled.
+Decision Packet visibility does not depend on a standalone `DEC` Markdown projection. Required surfaces must still show active Decision Packets through `TASK`, status/next responses, judgment-context resources, and decision-packet resources. Standalone `DEC` is only an optional rendered view when that projection is enabled.
 
 Decision Packet displays may include reader-facing shape fields such as decision title, display judgment type, why this is needed now, what the user is deciding, options, trade-offs, recommendation, uncertainty, deferral consequence, and residual risk when relevant. Display judgment type should use the primary display categories Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, or Scope / autonomy. If a decision is cross-cutting, templates should render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the category as exclusive. These labels help readers; they are derived display metadata, not new schema fields, `ProjectionKind` values, gates, owner records, validator inputs, or authority paths.
 
@@ -40,7 +42,7 @@ Display cards should distinguish three different problems: a stale projection me
 
 Close and assurance displays must keep distinct labels for self-checked work, `detached_verified` assurance, waived verification, QA waiver, and residual-risk accepted `completed_with_risk_accepted` close. They may appear in the same compact card, but should not be collapsed into "done," "verified," or "accepted" without the owner refs that support each state.
 
-## MVP-required templates
+## Reference-required templates
 
 - [TASK](task.md)
 - [APR](approval.md)
@@ -49,7 +51,7 @@ Close and assurance displays must keep distinct labels for self-checked work, `d
 - [EVAL](eval.md)
 - [DIRECT-RESULT](direct-result.md)
 
-## MVP-optional templates
+## Reference-optional templates
 
 - [MANUAL-QA](manual-qa.md)
 - [TDD-TRACE](tdd-trace.md)

@@ -387,7 +387,7 @@ A human-readable rendering of canonical state records and artifact references. P
 
 ### ProjectionKind
 
-The API enum for projection job and template kinds. Tiers, values, and extension rules are owned by [Shared schemas](mcp-api-and-schemas.md#shared-schemas). No ProjectionKind makes a projection canonical state.
+The API enum for projection job and template kinds. Tiers, values, and extension rules are owned by [Shared schemas](mcp-api-and-schemas.md#shared-schemas). Tier labels such as `Reference-required` are support expectations, not v0.1 Kernel MVP run obligations; v0.1 requires only a minimal `TASK` projection or durable projection enqueue. No ProjectionKind makes a projection canonical state.
 
 ### Projection Freshness
 

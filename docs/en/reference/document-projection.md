@@ -312,21 +312,23 @@ Rules:
 
 ## Template tiers
 
-Projection templates match the API `ProjectionKind` tiers.
+Projection templates match the API `ProjectionKind` staged/reference support tiers.
 
 | Tier | Templates | Rule | Template reference |
 |---|---|---|---|
-| MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | MVP projector must support enqueueing and rendering these when their source records exist or change. | [TASK](templates/task.md), [APR](templates/approval.md), [RUN-SUMMARY](templates/run-summary.md), [EVIDENCE-MANIFEST](templates/evidence-manifest.md), [EVAL](templates/eval.md), [DIRECT-RESULT](templates/direct-result.md) |
-| MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. | [MANUAL-QA](templates/manual-qa.md), [TDD-TRACE](templates/tdd-trace.md), [DOMAIN-LANGUAGE](templates/domain-language.md), [MODULE-MAP](templates/module-map.md), [INTERFACE-CONTRACT](templates/interface-contract.md) |
+| Reference-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Staged/reference projection support must support enqueueing and rendering these when their source records exist or change. | [TASK](templates/task.md), [APR](templates/approval.md), [RUN-SUMMARY](templates/run-summary.md), [EVIDENCE-MANIFEST](templates/evidence-manifest.md), [EVAL](templates/eval.md), [DIRECT-RESULT](templates/direct-result.md) |
+| Reference-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. | [MANUAL-QA](templates/manual-qa.md), [TDD-TRACE](templates/tdd-trace.md), [DOMAIN-LANGUAGE](templates/domain-language.md), [MODULE-MAP](templates/module-map.md), [INTERFACE-CONTRACT](templates/interface-contract.md) |
 | Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Render only when the corresponding optional projection is enabled. | [DEC](templates/decision-packet.md), [DESIGN](templates/design.md), [EXPORT](templates/export.md), [JOURNEY-CARD](templates/journey-card.md) |
 
-`ProjectionKind` tiering controls renderer support expectations; no tier makes a projection canonical state. For MVP-required kinds, the render/enqueue condition is source-backed: `TASK` after a Task exists or changes, `APR` after a committed approval-shaped Decision Packet or Approval record exists or changes, `RUN-SUMMARY` after a Run commits, `EVIDENCE-MANIFEST` after evidence coverage exists or changes, `EVAL` after an Eval record exists or changes, and `DIRECT-RESULT` after direct-result source records exist or change. If the source record does not exist, the projector must not invent placeholder state to satisfy template completeness.
+`Reference-required` means required by the staged/reference MVP projection support after the relevant owner records exist; it does not mean every v0.1 Kernel MVP run must render every kind. v0.1 Kernel MVP requires only a minimal `TASK` projection or durable projection enqueue. v0.2+ expands evidence/projection support; the Agency-Hardened/reference MVP supports the full Reference-required projection set when source records exist or change.
+
+`ProjectionKind` tiering controls renderer support expectations only; no tier makes a projection canonical state or creates evidence, QA, verification, acceptance, residual-risk acceptance, close authority, or Write Authorization. For Reference-required kinds, the render/enqueue condition is source-backed: `TASK` after a Task exists or changes, `APR` after a committed approval-shaped Decision Packet or Approval record exists or changes, `RUN-SUMMARY` after a Run commits, `EVIDENCE-MANIFEST` after evidence coverage exists or changes, `EVAL` after an Eval record exists or changes, and `DIRECT-RESULT` after direct-result source records exist or change. If the source record does not exist, the projector must not invent placeholder state to satisfy template completeness.
 
 The `EXPORT` template is an optional projection output. It does not introduce an `export` state record for artifact links. Export projections list artifact refs, hashes, redaction states, and redaction/omission/block notes; they do not embed large or sensitive artifact bodies by default.
 
 Persisted `JOURNEY-CARD` Markdown is optional. Current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows is required for agency conformance.
 
-MVP Decision Packet visibility is required through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Standalone `DEC` Markdown is optional unless the standalone Decision Packet projection feature is enabled.
+Required Decision Packet visibility is provided through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Standalone `DEC` Markdown is optional unless the standalone Decision Packet projection feature is enabled.
 
 Decision Packet record IDs use `DEC-*`. `DEC` as a `projection_kind` is only the projection kind label; when a standalone projection needs its own identity, use a separate `projection_id` such as `DEC-PROJ-0001`.
 

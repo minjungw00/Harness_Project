@@ -245,15 +245,17 @@ ProjectionJobRef:
 
 Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](kernel.md#stable-event-catalog)가 담당합니다. 아래 tool sections는 response가 반환하거나 implementation이 저장할 수 있는 `EventRef.event_type` 값을 설명하지만, 두 번째 event taxonomy를 정의하지 않습니다. Stable로 label된 names는 catalog names입니다. Stable catalog에 없는 이름은 implementation-local detail 또는 audit events로 나타날 수 있지만 fixture-stable이 아니며 MVP `expected_events` fixtures가 요구하면 안 됩니다. ValidatorResult IDs, Core check names, projection status shorthands, fixture seed shorthand는 kernel catalog가 명시적으로 나열하지 않는 한 event names가 아닙니다.
 
-`ProjectionKind`는 API가 MVP tier를 담당하는 extensible enum입니다.
+`ProjectionKind`는 API가 staged/reference support tier를 담당하는 extensible enum입니다.
 
 | Tier | Values | Requirement |
 |---|---|---|
-| MVP-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Reference implementation은 이 kind들을 지원하고 source 기록이 변경될 때 대기열에 넣고 렌더링해야 합니다. |
-| MVP-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, source 기록이 있거나, user/operator가 projection을 켤 때 지원하거나 대기열에 넣습니다. |
+| Reference-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Staged/reference projection support는 관련 source record가 존재하거나 변경될 때 이 kind들을 지원하고 대기열에 넣고 렌더링해야 합니다. |
+| Reference-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Policy가 적용되거나, source 기록이 있거나, user/operator가 projection을 켤 때 지원하거나 대기열에 넣습니다. |
 | Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | 대응하는 선택 projection이 켜진 경우에만 지원할 수 있습니다. |
 
-ProjectionKind extensibility가 projection을 기준 상태로 만들지는 않습니다. 모든 projection job은 여전히 owner 기록 및 아티팩트 참조에서 파생된 보기를 렌더링합니다. `DEC`는 해당 기능이 켜졌을 때 standalone Decision Packet Markdown에만 유효하며, MVP-required projection job이 아닙니다. Standalone `DEC` job이 없어도 MVP Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공되어야 합니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `harness.status`, `harness.next`, significant resume flow의 현재 위치 Journey Card output은 agency conformance에 계속 필요합니다.
+Tier label은 enum value가 아닙니다. `Reference-required`는 관련 owner record가 존재한 뒤 staged/reference MVP projection support에서 필요하다는 뜻입니다. 모든 v0.1 Kernel MVP run이 모든 kind를 렌더링해야 한다는 뜻이 아닙니다. v0.1 Kernel MVP는 최소 `TASK` projection 또는 durable projection enqueue만 요구합니다. v0.2+는 evidence/projection support를 확장하며, Agency-Hardened/reference MVP는 source record가 존재하거나 변경될 때 전체 Reference-required projection set을 지원합니다.
+
+ProjectionKind extensibility가 projection을 기준 상태로 만들지는 않습니다. 모든 projection job은 여전히 owner 기록 및 아티팩트 참조에서 파생된 보기를 렌더링합니다. 어떤 projection tier도 state, evidence, QA, verification, acceptance, residual-risk acceptance, close authority, Write Authorization을 만들지 않습니다. `DEC`는 해당 기능이 켜졌을 때 standalone Decision Packet Markdown에만 유효하며, Reference-required projection job이 아닙니다. Standalone `DEC` job이 없어도 required Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공되어야 합니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항입니다. `harness.status`, `harness.next`, significant resume flow의 현재 위치 Journey Card output은 agency conformance에 계속 필요합니다.
 
 `EXPORT`는 export 기능이 켜졌을 때 Release Handoff 같은 보고서 profile을 포함할 수 있습니다. 이런 profile은 projection/보고서 접점일 뿐입니다. Deployment 권한, merge 권한, production-monitoring 권한, final acceptance, Residual Risk 수용, assurance 향상, Task close 권한을 만들지 않습니다.
 
@@ -342,7 +344,7 @@ Artifact 등록은 임의 파일을 쌓아 두는 느슨한 파일 덤프가 아
 
 Reference implementation에서 artifact 등록은 Task-scoped입니다. `ArtifactRef.task_id`와 `ArtifactInput.relation.task_id`는 required이며 `artifacts.task_id`와 `artifact_links.task_id`에 대응합니다. `retention_class=project`는 retention policy에 영향을 줄 뿐 artifact ownership scope를 바꾸지 않습니다.
 
-Later Browser QA Capture는 새 MVP schema가 아니라 이 artifact 경계를 사용합니다. 화면 capture는 보통 `screenshot`을 사용하고, 묶음 QA output은 `qa_capture`를 사용할 수 있습니다. Console log와 network trace는 `log` 또는 `qa_capture`를 사용할 수 있고, accessibility snapshot과 workflow recording은 명확한 description과 함께 `qa_capture` 또는 `other`를 사용할 수 있습니다. 이러한 artifact는 모두 redaction, secret/PII handling, Task-scoped ownership, Manual QA record 또는 Feedback Loop attachment rules를 따라야 합니다. Capture artifact는 evidence를 보강할 수 있지만 acceptance를 만들거나, Manual QA judgment를 대체하거나, detached verification을 충족하거나, MVP-required capture schema를 추가하지 않습니다.
+Later Browser QA Capture는 새 MVP schema가 아니라 이 artifact 경계를 사용합니다. 화면 capture는 보통 `screenshot`을 사용하고, 묶음 QA output은 `qa_capture`를 사용할 수 있습니다. Console log와 network trace는 `log` 또는 `qa_capture`를 사용할 수 있고, accessibility snapshot과 workflow recording은 명확한 description과 함께 `qa_capture` 또는 `other`를 사용할 수 있습니다. 이러한 artifact는 모두 redaction, secret/PII handling, Task-scoped ownership, Manual QA record 또는 Feedback Loop attachment rules를 따라야 합니다. Capture artifact는 evidence를 보강할 수 있지만 acceptance를 만들거나, Manual QA judgment를 대체하거나, detached verification을 충족하거나, v0.1 Kernel MVP에 필요한 capture schema를 추가하지 않습니다.
 
 ```yaml
 ArtifactRef:
@@ -508,7 +510,7 @@ EndToEndPath:
 
 Client가 guard, freeze, careful-mode control을 렌더링할 때는 권한 field를 추가하지 않고 이 기존 display shape를 사용합니다. `guarantee_display.level`과 `guarantee_display.notes`는 실제 연결된 capability와 현재 적용 경로를 설명해야 합니다. `blocked_reasons[].message`는 scope, MCP availability, Approval, baseline, capability 같은 구체적인 보류 또는 차단 조건을 이름 붙여야 하며, "guard"나 "freeze" 같은 command label만으로 더 강한 guarantee를 암시하면 안 됩니다.
 
-`DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` 같은 Extension / optional tier의 `ProjectionKind` 값은 해당 projection 기능이 켜졌을 때만 projection job kind로 유효합니다. MVP-required Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공됩니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항으로 남지만 현재 위치 Journey Card output은 status, next, significant resume flows에서 필요합니다. 전체 projection template text는 [Template 참조](templates/README.md)에 있으며, 이 API schema file이 담당하지 않습니다.
+`DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` 같은 Extension / optional tier의 `ProjectionKind` 값은 해당 projection 기능이 켜졌을 때만 projection job kind로 유효합니다. Required Decision Packet visibility는 `TASK` projections, status/next responses, judgment-context resources, decision-packet resources를 통해 제공됩니다. Persisted `JOURNEY-CARD` Markdown은 선택 사항으로 남지만 현재 위치 Journey Card output은 status, next, significant resume flows에서 필요합니다. 전체 projection template text는 [Template 참조](templates/README.md)에 있으며, 이 API schema file이 담당하지 않습니다.
 
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, Recommended Playbook, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. 기준 kernel records는 owner docs가 정의합니다. 이 목록에서 `RecommendedPlaybook`은 표시 전용 예외입니다. 자체 기준 kernel record, DDL table, task event, projection job이 없습니다.
 

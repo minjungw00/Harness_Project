@@ -884,7 +884,7 @@ Replay lookup uses the committed row before current state-version freshness for 
 
 `tasks.projection_version` is the TASK projection/template/job version used to prevent older TASK renders from replacing newer ones. It is not a state clock. `tasks.projected_version`, if retained, is only the TASK projection summary cache of the last rendered source state version. It must not be treated as the storage location for every task-related `ProjectionKind`.
 
-`tasks.projection_status` is the TASK projection status summary. Per-kind projection freshness is tracked through `projection_jobs.source_state_version`, job status, managed hashes, and the relevant projection records or artifact refs for API-owned MVP-required kinds, MVP-optional kinds, and enabled projection kinds in the Extension / optional tier. `APR` freshness starts from committed Approval records and their approval-shaped Decision Packets, not from non-mutating `approval_request_candidate` payloads. Do not treat one Task field as owning all projection freshness.
+`tasks.projection_status` is the TASK projection status summary. Per-kind projection freshness is tracked through `projection_jobs.source_state_version`, job status, managed hashes, and the relevant projection records or artifact refs for API-owned Reference-required kinds, Reference-optional kinds, and enabled projection kinds in the Extension / optional tier. These are staged/reference support labels, not v0.1 Kernel MVP scope: v0.1 requires only a minimal `TASK` projection or durable projection enqueue, while v0.2+ expands evidence/projection support and the Agency-Hardened/reference MVP supports the full Reference-required set when source records exist or change. `APR` freshness starts from committed Approval records and their approval-shaped Decision Packets, not from non-mutating `approval_request_candidate` payloads. Do not treat one Task field as owning all projection freshness.
 
 `write_authorizations` stores durable `prepare_write` allow decisions. The allow/block contract is owned by [Kernel `prepare_write` State Logic](kernel.md#prepare_write) and the public response shape by [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write). Storage-specific requirements are: each distinct committed non-dry-run allowed request inserts a distinct row; idempotent return is only replay of the same committed request under the same idempotency key, request hash, and compatible basis; `basis_state_version` stores the affected-scope state version used as the compatibility basis; `updated_at` changes whenever authorization status changes; and status history remains in `task_events`.
 
@@ -1304,11 +1304,11 @@ Reference storage does not define a separate `projections` table. A rendered pro
 
 Sensitive-approval projection jobs follow the APR source rule owned by the [APR Template](templates/approval.md#source-records) and [Document Projection Reference](document-projection.md#document-authority-matrix), plus the non-mutating candidate contract owned by [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write): an `approval_request_candidate` may affect `TASK` display or blockers, but it is never an `APR` source. `APR` jobs start from committed approval state changes.
 
-For MVP, Decision Packet visibility is rendered through `TASK` projections, status/next responses, judgment-context resources, and decision-packet read resources. A standalone `DEC` projection is optional unless the standalone Decision Packet projection feature is enabled. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains an agency-conformance requirement. This document does not define extension template text.
+For staged/reference support, Decision Packet visibility is rendered through `TASK` projections, status/next responses, judgment-context resources, and decision-packet read resources. A standalone `DEC` projection is optional unless the standalone Decision Packet projection feature is enabled. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains an agency-conformance requirement. This document does not define extension template text.
 
 The job lifecycle below applies to every enqueued `ProjectionKind`. Stage sequencing and proof scope are owned by [Build: MVP Plan](../build/mvp-plan.md).
 
-MVP job lifecycle:
+Projection job lifecycle:
 
 ```text
 pending -> running -> completed
@@ -1342,7 +1342,7 @@ Rules:
 
 The reference projector executes pending jobs after the Core transaction commits.
 
-MVP worker steps:
+Projection worker steps:
 
 ```mermaid
 sequenceDiagram

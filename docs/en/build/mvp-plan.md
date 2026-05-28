@@ -109,12 +109,12 @@ Focus on:
 - evidence manifest coverage beyond the minimum v0.1 loop
 - evidence sufficiency, stale, blocked, partial, supported, unsupported, and not-applicable reporting where owner docs already define those states
 - artifact relation and redaction/integrity checks needed by evidence and projection display
-- staged-delivery required projection renderers when their source records exist
-- projection freshness and failure isolation across the required `ProjectionKind` values
+- Reference-required projection renderers when their source records exist
+- projection freshness and failure isolation across the Reference-required `ProjectionKind` values
 - reconcile behavior for human-editable proposal areas and managed-block drift
 - projection and evidence fixture coverage beyond Kernel Smoke
 
-Do not make projection template polish or renderer-first work drive Task, Run, evidence, verification, or close design. `ProjectionKind` values and API-owned tiering belong to [MCP API And Schemas](../reference/mcp-api-and-schemas.md#shared-schemas); [Document Projection Reference](../reference/document-projection.md#template-tiers) owns authority boundaries, source-record rules, freshness rules, and template tier presentation; [Template Reference](../reference/templates/README.md) owns rendered template bodies and display cards.
+Do not make projection template polish or renderer-first work drive Task, Run, evidence, verification, or close design. Reference-required projection support is staged/reference support, not a retroactive v0.1 requirement; v0.1 remains limited to a minimal `TASK` projection or durable projection enqueue. `ProjectionKind` values and API-owned tiering belong to [MCP API And Schemas](../reference/mcp-api-and-schemas.md#shared-schemas); [Document Projection Reference](../reference/document-projection.md#template-tiers) owns authority boundaries, source-record rules, freshness rules, and template tier presentation; [Template Reference](../reference/templates/README.md) owns rendered template bodies and display cards.
 
 ## v0.3 Agency Pack
 
@@ -199,7 +199,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 
 - Evidence state covers owner-defined sufficient, partial, stale, blocked, unsupported, and not-applicable cases needed after v0.1.
 - Artifact relations, integrity, and redaction metadata support evidence and projection display.
-- Staged-delivery required pre-verification projections can enqueue or render when source records exist.
+- Reference-required pre-verification projections can enqueue or render when source records exist.
 - Projection failure is isolated from Core state failure.
 - Managed Markdown edits or proposal sections create reconcile items.
 - Evidence and projection fixtures extend Kernel Smoke without changing the fixture body shape.
