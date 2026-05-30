@@ -16,11 +16,40 @@ For a first explanation of Harness concepts, use the Learn path. For exact behav
 
 ## Main idea
 
-The glossary is a lookup aid and owner map. It keeps names and short non-substitution reminders consistent, but it is not a substitute for the owner reference documents.
+The glossary is a lookup aid and owner map. It keeps public terms, internal implementation terms, capitalization, and short non-substitution reminders consistent, but it is not a substitute for the owner reference documents.
 
 ## Reference scope
 
 This glossary owns official term wording, capitalization reminders, record-name orientation, and owner routing. It does not own kernel behavior, public MCP schemas, storage DDL, projection rules, template bodies, connector capability profiles, or conformance fixture semantics.
+
+## Public Terms
+
+Use these words first in user-facing docs, prompts, and status summaries. They are intentionally plain so users can work with Harness without learning record names.
+
+| Public term | Plain meaning |
+|---|---|
+| work | The thing the user wants completed, answered, investigated, or decided. |
+| scope | What may change, what is out of bounds, and where the agent should stop before continuing. |
+| judgment | A user-owned choice, such as a product direction, material technical trade-off, sensitive action, QA waiver, accepting the result, or risk decision. |
+| evidence | Durable support for a claim about the work. |
+| close readiness | What still has to be true before the work can finish or close. |
+| risk | Known uncertainty, limitation, skipped check, trade-off, or possible consequence that should remain visible. |
+
+User-facing docs should explain the plain concept first. Add exact Harness labels in parentheses only when they help explain a boundary, blocker, source ref, or reference link.
+
+## Internal Implementation Terms
+
+These are implementation labels used by references, APIs, schemas, records, and status refs. Users do not need to use these terms in prompts; agents should translate ordinary requests into the right Harness procedure.
+
+| Internal term | Plain-language explanation |
+|---|---|
+| Change Unit | The bounded work scope for product writes. It says what may change but does not authorize a write by itself. |
+| Decision Packet | The recorded path for a specific user-owned judgment that blocks progress, write, waiver, acceptance, risk handling, or close. |
+| Write Authorization | The Harness result that one specific product-write attempt may proceed now after scope and other checks. |
+| Evidence Manifest | A record mapping completion conditions or acceptance criteria to supporting evidence refs. |
+| Projection | A readable view rendered from Harness state, such as a report or Journey Card. It displays state but does not replace it. |
+| Autonomy Boundary | The choices the agent may make inside the active scope without asking the user again. |
+| `task_events` | The internal event log table for task state changes. It is a reference/schema term, not user-facing vocabulary. |
 
 ## Owner map
 
@@ -44,17 +73,17 @@ The degree to which harness behavior, projections, validators, and close decisio
 
 ### Acceptance
 
-The user's judgment that the result and remaining trade-offs are acceptable after close-relevant residual risk is visible or confirmed absent. Required final acceptance is recorded through the kernel acceptance path, including a Decision Packet user decision, `task_gates.acceptance_gate`, and `state.sqlite.task_events`. Acceptance is separate from approval, assurance, verification, Manual QA, evidence sufficiency, and residual-risk acceptance. It does not authorize more writes or retroactively satisfy a missing check.
+The user's judgment that the result and remaining trade-offs are acceptable after close-relevant residual risk is visible or confirmed absent. Required Acceptance is recorded through the kernel acceptance path, including a Decision Packet user decision, `task_gates.acceptance_gate`, and `state.sqlite.task_events`. Acceptance is separate from approval, assurance, verification, Manual QA, evidence sufficiency, and residual-risk acceptance. It does not authorize more writes or retroactively satisfy a missing check.
 
 ### Acceptance Gate
 
 The kernel gate for required user acceptance. Its value set and compatibility meaning are owned by [Acceptance Gate](kernel.md#acceptance-gate). Acceptance cannot substitute for QA or verification.
 
-Final acceptance in the current reference model is recorded through a Decision Packet user decision, `task_gates.acceptance_gate`, and `state.sqlite.task_events`; there is no separate acceptance record or table.
+Required Acceptance in the current reference model is recorded through a Decision Packet user decision, `task_gates.acceptance_gate`, and `state.sqlite.task_events`; there is no separate acceptance record or table.
 
 ### Approval
 
-A prior user decision allowing a sensitive action to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. When Approval is requested, Core captures the user judgment through an approval-shaped Decision Packet and linked Approval record; granted sensitive-action Approval still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it does not resolve user-owned product or material technical judgment, prove correctness, record final acceptance, accept residual risk, or replace a Decision Packet.
+A prior user decision allowing a sensitive action to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. When Approval is requested, Core captures the user judgment through an approval-shaped Decision Packet and linked Approval record; granted sensitive-action Approval still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it does not resolve user-owned product or material technical judgment, prove correctness, record Acceptance, accept residual risk, or replace a Decision Packet.
 
 ### Approval Gate
 
@@ -450,7 +479,7 @@ The idempotency hash of a tool request, computed from canonical UTF-8 JSON cover
 
 ### Residual Risk
 
-A canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact. Known close-relevant Residual Risk must be visible before any successful acceptance or close, or `ResidualRiskSummary.status=none` must confirm no known close-relevant risk. User acceptance of risk does not create detached verification, Manual QA pass, sensitive-action Approval, or final acceptance. Accepted risk is metadata/state on the Residual Risk record in the current reference model, not a separate `accepted_risk` state record.
+A canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact. Known close-relevant Residual Risk must be visible before any successful acceptance or close, or `ResidualRiskSummary.status=none` must confirm no known close-relevant risk. User acceptance of risk does not create detached verification, Manual QA pass, sensitive-action Approval, or Acceptance. Accepted risk is metadata/state on the Residual Risk record in the current reference model, not a separate `accepted_risk` state record.
 
 ### Risk Accepted Close
 
@@ -470,7 +499,7 @@ The policy-owned rule for merging multiple applicable task-shape defaults, polic
 
 ### Shared Design
 
-The minimum recorded shared understanding of a task before implementation hardens into a plan: goal, user value, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain/module/interface impact, and first Change Unit shape. Discovery Briefs, Question Queues, Assumption Registers, and First Safe Change Unit Candidates can feed Shared Design. Shared Design can support shaping and `design_gate` readiness, but it is not final approval, sensitive-action Approval, final acceptance, residual-risk acceptance, QA judgment, evidence, close readiness, or Write Authorization. Markdown renderings of Shared Design are projections and proposal surfaces. Exact policy requirements are owned by [Design Quality Policies](design-quality-policies.md#shared-design-shared_design).
+The minimum recorded shared understanding of a task before implementation hardens into a plan: goal, user value, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain/module/interface impact, and first Change Unit shape. Discovery Briefs, Question Queues, Assumption Registers, and First Safe Change Unit Candidates can feed Shared Design. Shared Design can support shaping and `design_gate` readiness, but it is not final approval, sensitive-action Approval, Acceptance, residual-risk acceptance, QA judgment, evidence, close readiness, or Write Authorization. Markdown renderings of Shared Design are projections and proposal surfaces. Exact policy requirements are owned by [Design Quality Policies](design-quality-policies.md#shared-design-shared_design).
 
 ### Source-of-truth
 

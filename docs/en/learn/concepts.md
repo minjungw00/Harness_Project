@@ -2,13 +2,15 @@
 
 ## What this document helps you do
 
-This document introduces the smallest vocabulary you need after you understand the plain product idea: Harness keeps work, scope, judgment, evidence, close readiness, and risk outside fragile chat context. Each concept starts with a plain example, then gives a tighter definition.
+This document gives you the smallest vocabulary for using Harness in ordinary work. It starts with public user-facing words, then lists the internal implementation terms you may see in reference docs, status cards, or API-shaped examples.
+
+Harness should be usable even when you do not know the internal labels. You can talk about work, scope, judgment, evidence, close readiness, and risk; the agent translates that into Harness records and procedures when precision is needed.
 
 The exact kernel, runtime, MCP API, and document-rendering contracts live in the reference path.
 
 ## Read this when
 
-Read this when Harness terms are starting to appear in examples, status summaries, or reference specs and you want the smallest useful vocabulary.
+Read this when Harness terms are starting to appear in examples, status summaries, or reference specs and you want the plain meaning first.
 
 ## Before you read
 
@@ -16,153 +18,115 @@ Read this when Harness terms are starting to appear in examples, status summarie
 
 ## Main idea
 
-Start with ordinary questions: what are we trying to do, what may change, who must decide, what supports the completion claim, what still needs checking or QA, what risk remains, and can the work close?
+Start with ordinary questions:
 
-Harness vocabulary gives those questions exact implementation names. The names matter for references and APIs, but the plain questions come first.
+- What work are we trying to do?
+- What is in scope, and what is out of scope?
+- What judgment belongs to the user?
+- What evidence supports the claim that the work is done?
+- What still affects close readiness?
+- What risk remains?
 
-## User-facing display groups
+Harness gives those questions exact implementation names so agents, tools, and records can agree. The names matter in references and APIs, but the plain questions come first.
+
+## Public Vocabulary
+
+Use these words in user-facing docs, prompts, and status summaries.
+
+| Public term | Plain meaning |
+|---|---|
+| Work | The thing the user wants completed, answered, investigated, or decided. |
+| Scope | What may change, what must stay out of bounds, and where the agent should stop before continuing. |
+| Judgment | A choice the user owns, such as a product direction, important technical trade-off, sensitive action, QA waiver, accepting the result, or risk decision. |
+| Evidence | Durable support for a claim, such as changed paths, diffs, test output, logs, screenshots, run summaries, QA notes, or verification results. |
+| Close readiness | What still has to be true before the work can finish: checks, QA, acceptance, risk visibility, and blockers. |
+| Risk | Known uncertainty, limitation, skipped check, trade-off, or possible consequence that should stay visible instead of disappearing behind "done." |
+
+User-facing docs should explain the easy concept first. Add the exact internal term in parentheses only when it helps the reader understand a real stop, boundary, or reference link.
+
+## User-Facing Display Groups
 
 When Harness status is shown to users, the many internal details should usually appear as four readable display groups:
 
-- Scope: what may change.
-- Judgment: what the user must decide.
-- Evidence: what supports completion claims.
-- Close Readiness: verification, Manual QA, final acceptance (Acceptance), residual risk, and close blockers.
+| Display group | Plain question | What it usually shows |
+|---|---|---|
+| Scope | What may change? | The agreed work area, out-of-bounds items, and whether the next intended action fits. |
+| Judgment | What must the user decide? | Product, technical, security, QA, acceptance, risk, permission, or scope choices that need the user. |
+| Evidence | What supports completion claims? | The current support, missing support, stale support, and evidence refs when they matter. |
+| Close readiness | What still prevents finish or close? | Verification, Manual QA, accepting the result, visible risk, accepted risk when relevant, and close blockers. |
 
 These groups are a reading aid, not a replacement for the kernel gate taxonomy. They do not create schema fields, gate values, recompute inputs, authority paths, or close rules. Strict gate behavior stays in [Kernel Reference](../reference/kernel.md#gates), public API behavior stays in [MCP API and Schemas](../reference/mcp-api-and-schemas.md), and readable document rendering rules stay in [Document Projection Reference](../reference/document-projection.md).
 
-## From Plain Questions To Implementation Terms
+## How Users Can Speak
 
-Harness is easiest to understand if you start with the work journey:
+Users do not need a command language. These are enough:
 
-- A user asks for work to be completed, answered, investigated, or decided. The implementation term is Task.
-- If the work is blurry, a shared shaping record can capture the goal, scope, assumptions, and first safe shape. The implementation term is Shared Design.
-- Product writes need an active work boundary. That scoped write boundary is called a Change Unit in the Reference docs.
-- Important claims need support. The implementation term is Evidence.
-- Sensitive actions need permission, called Approval in the Reference docs, and product writes need a current allow/deny decision, called Write Authorization.
-- Checks and human inspection need to stay distinguishable. The implementation terms are Verification and Manual QA.
-- The user may need to give final acceptance for the result. The implementation term is Acceptance.
-- Known uncertainty after the work needs to stay visible. That remaining risk is called Residual Risk in the Reference docs.
-- Readable reports are views, not state. A readable report rendered from state is called a Projection in the Reference docs, and Reconcile is the path for handling accepted human edits or drift.
+```text
+Add email login. Keep password reset and account creation out of scope.
+Show what is blocking this work.
+What evidence supports the completion claim?
+Show close readiness before I accept.
+Show the remaining risks.
+```
 
-These concepts are intentionally small here. Strict kernel definitions live in [Kernel Reference](../reference/kernel.md), public API definitions live in [MCP API and Schemas](../reference/mcp-api-and-schemas.md), and readable document rules live in [Document Projection Reference](../reference/document-projection.md). Some concepts span several references; the notes below name the split without copying the owner maps.
+The agent may answer with internal labels when they clarify what Harness recorded or why the work is stopped. For example, it may say "the scope (Change Unit) does not include the new auth file" or "this needs a user judgment (Decision Packet)." Users should not need to begin with those labels.
 
-## Task
+## Internal Implementation Terms
 
-A user says, "Add email login and show a helpful error when the password is wrong." The chat may include many turns, but the work still needs one durable unit that says what the user wants done and what state the work is in.
+These terms are exact implementation names used by references, APIs, schemas, records, or status refs. Users do not need to use them in prompts.
 
-A Task is the user value unit: the thing the user wants completed, answered, investigated, or decided. Harness uses the Task to keep status, next action, blockers, evidence, QA, final acceptance, and close behavior connected.
+| Internal term | Plain-language explanation |
+|---|---|
+| Task | The durable unit for the work the user wants completed, answered, investigated, or decided. |
+| Discovery | A clarification posture before implementation planning when the request is too blurry to shape safely. |
+| Shared Design | A recorded shared understanding of goal, scope, assumptions, and first safe shape for blurry work. |
+| Change Unit | The bounded work scope for product writes. It names what may change, but does not authorize a write by itself. |
+| Autonomy Boundary | The choices the agent may make inside the active scope without asking the user again. |
+| Decision Packet | The recorded path for a specific user-owned judgment that blocks progress, write, waiver, acceptance, risk handling, or close. |
+| Approval | Permission for a named sensitive action. It is not result acceptance and does not prove correctness. |
+| Write Authorization | The Harness result that a specific product-write attempt may proceed now, after scope and other checks. |
+| Evidence Manifest | A record mapping completion conditions or acceptance criteria to the evidence that supports them. |
+| Verification | A recorded check of correctness, with stronger meaning when it happens across an independent boundary. |
+| Manual QA | Human inspection for quality that needs human judgment, such as UI, UX, copy, accessibility, workflow, or visual output. |
+| Acceptance | The user's judgment that the result is acceptable when the task path requires result acceptance. |
+| Residual Risk | Known remaining uncertainty, limitation, or trade-off after the work. |
+| Projection | A readable view rendered from Harness state, such as a report or Journey Card. It displays state but does not replace it. |
+| Reconcile | The deliberate path for handling human edits or drift in a readable view. |
+| `task_events` | The internal event log table for task state changes. It is a reference/schema term, not user-facing vocabulary. |
 
-Reference: [Kernel Reference](../reference/kernel.md).
+Reference docs contain many more terms because they must be precise about records, APIs, storage, and conformance. Learn and Use docs should normally stay with the public vocabulary unless an internal label explains a real boundary.
 
-## Shared Design
+## Implementation Term Lookup
 
-A user asks for "better onboarding." Before implementation hardens into a plan, the agent and user need a shared understanding of the goal, non-goals, acceptance criteria, assumptions, affected screens, domain terms, module or interface impact, and first safe slice.
+These compact anchors keep older links stable without making users learn the implementation vocabulary first.
 
-Shared Design is that recorded understanding. It helps turn blurry work into a safe first Change Unit, but it is not sensitive-action Approval, Write Authorization, final acceptance, QA judgment, or residual-risk acceptance.
+- <a id="task"></a>Task: internal durable unit for work.
+- <a id="shared-design"></a>Shared Design: recorded shared understanding for blurry work.
+- <a id="change-unit"></a>Change Unit: bounded product-write scope.
+- <a id="autonomy-boundary"></a>Autonomy Boundary: choices the agent may make inside scope.
+- <a id="decision-packet"></a>Decision Packet: path for recording a specific user-owned judgment.
+- <a id="evidence"></a>Evidence: support for a completion or correctness claim.
+- <a id="approval"></a>Approval: permission for a named sensitive action.
+- <a id="write-authorization"></a>Write Authorization: one-attempt allowance for a compatible write.
+- <a id="verification"></a>Verification: recorded correctness check.
+- <a id="manual-qa"></a>Manual QA: human inspection where human judgment matters.
+- <a id="acceptance"></a>Acceptance: result acceptance when required by the task path.
+- <a id="residual-risk"></a>Residual Risk: known remaining uncertainty, limitation, or trade-off.
+- <a id="projection"></a>Projection: readable view rendered from Harness state, not authority.
+- <a id="reconcile"></a>Reconcile: path for handling readable-view drift or human edits.
 
-If shaping reveals a choice the user owns, such as public API direction, domain-language meaning, module boundary movement, architecture direction, or a known-risk waiver, that choice routes through a Decision Packet. Shared Design can point to the decision; it does not decide it by itself.
+## Important Separations
 
-References: [Shared Design](../reference/glossary.md#shared-design) and [Design Quality Policies](../reference/design-quality-policies.md#shared-design-shared_design).
+These separations keep Harness from turning a casual phrase into the wrong authority:
 
-## Change Unit
+- Scope is not write permission. A scoped work area can exist before a specific write is allowed.
+- Judgment is not broad approval. The user should be asked for the named choice that matters.
+- Approval is only permission for a sensitive action. It is not result acceptance, evidence, QA, verification, or risk acceptance.
+- Evidence is not the agent saying "done." It is recorded support for the claim.
+- A readable report is not the operating record. It should point back to the records and evidence it summarizes.
+- Close readiness is not a new gate. It is a user-facing summary of what still blocks finish or close.
+- Accepting risk is not proof that the work is correct. It means the remaining uncertainty was visible and accepted for this work.
 
-The email login task may require changes to the login form, one API call, and session handling. That is a bounded slice. If the work suddenly starts rewriting the whole authentication system, the scope has changed and should be visible.
+## Where Exact Rules Live
 
-A Change Unit is the bounded product-write scope for a Task. It names the part of the product that may change so the agent, user, and Harness can tell whether a write is inside the agreed work.
-
-For a tiny docs, copy, or focused test edit, the Change Unit may be generated from the request and stay very small. The important point is still the same: direct work can be light, but product writes still happen inside an active scope.
-
-Reference: [Kernel Reference](../reference/kernel.md).
-
-## Autonomy Boundary
-
-Inside the email login Change Unit, the agent might decide to reuse an existing helper, split a private function, or add a focused test without asking again. That is different from deciding whether to use JWTs, change a public API, or accept a security trade-off.
-
-An Autonomy Boundary describes the judgment the agent may exercise inside the Change Unit. Change Unit scope answers "what work surface may change?" Autonomy Boundary answers "what choices may the agent make there without another user decision?" Neither one is Write Authorization.
-
-Reference: [Kernel Reference](../reference/kernel.md).
-
-## Decision Packet
-
-The agent finds several reasonable failed-login choices: inline message, toast, or modal/layer for the interaction; generic, specific, or hybrid wording for the copy. Another task might need a choice between session cookie, JWT, and social login, or between a compatible public API extension and a breaking cleanup. The agent should not quietly choose the product, security, compatibility, or maintenance trade-off if that choice blocks progress.
-
-A Decision Packet records a specific user-owned decision when that judgment blocks progress, write, close, waiver, final acceptance, residual-risk acceptance, product direction, material technical direction, scope, design trade-off, stewardship judgment, or public commitment. It should ask the user to decide the named issue, not to give broad approval. Exact record quality and public fields live in the references below.
-
-References: [Decision Packet](../reference/kernel.md#decision-packet), [Decision Gate](../reference/kernel.md#decision-gate), and [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision).
-
-## Evidence
-
-The agent says the login flow works. Useful support might include the diff, the test output, a screenshot of the error state, and a note about the manual browser check. Without those records, "works" is only a chat claim.
-
-Evidence is recorded support for claims about the work. It can include diffs, logs, tests, screenshots, run summaries, evaluation records, Manual QA records, or other durable artifacts tied to the task.
-
-This is the plain concept. Strict behavior lives across [Kernel Reference](../reference/kernel.md) for Evidence Gate, Evidence Manifest, and evidence sufficiency; [MCP API and Schemas](../reference/mcp-api-and-schemas.md) and [Storage And DDL](../reference/storage-and-ddl.md) for artifact registration, `ArtifactRef`, and storage integrity; and [Operations and Conformance Reference](../reference/operations-and-conformance.md) for conformance proof.
-
-## Approval
-
-The task needs a new dependency, a network call, or access to a sensitive file. Even if the change is useful, the user may need to approve that category of action before it proceeds.
-
-Approval answers whether a sensitive action may proceed inside a defined scope. Approval is not the same as accepting the final result, choosing a design trade-off, or accepting residual risk.
-
-For example, sensitive-action Approval to install a package is not the same as deciding that package is the architecture direction. Sensitive-action Approval to access a secret is not permission to expose secret values in Evidence, projections, exports, logs, screenshots, or summaries.
-
-Reference: [Kernel Reference](../reference/kernel.md).
-
-## Write Authorization
-
-The agent is ready to edit the login code. Harness needs to check whether there is an active Change Unit, whether the target path is in scope, whether any required sensitive-action Approval exists, and whether any blocking decision must be resolved first.
-
-Write Authorization is the Harness decision that a product write may proceed now. In the current spec language, `prepare_write` is the product-write decision point.
-
-Strict behavior lives across [Kernel Reference](../reference/kernel.md) for write-gate semantics and state effects, [MCP API and Schemas](../reference/mcp-api-and-schemas.md) for the public `prepare_write` shape, and [Agent Integration Reference](../reference/agent-integration.md) for connected-surface behavior.
-
-## Verification
-
-The agent runs tests after editing the login flow. That is useful, but it is not the same as an independent check by another session, tool path, or evaluator bundle.
-
-Verification records how the result was checked and how independent that check was. Harness separates self-checks from detached verification so confidence is not confused with independence.
-
-Strict behavior lives across [Kernel Reference](../reference/kernel.md) for verification gate, assurance, and verification independence semantics; [MCP API and Schemas](../reference/mcp-api-and-schemas.md) for Eval and verification tool schemas; and [Operations and Conformance Reference](../reference/operations-and-conformance.md) for conformance fixtures.
-
-## Manual QA
-
-A test can pass while the error message is confusing, clipped on mobile, or visually inconsistent. A human may need to look at the result and record what they saw.
-
-Manual QA is human inspection of the experiential result where that matters, especially UI, UX, copy, accessibility, visual output, product taste, and other judgment-heavy outcomes.
-
-If Manual QA is waived, the waiver should still name the skipped surface, accepted risk, follow-up, and close impact. A waiver is a recorded judgment, not a test result.
-
-Strict behavior lives across [Design Quality Policies](../reference/design-quality-policies.md) for Manual QA requirements and waivers; [Kernel Reference](../reference/kernel.md) for QA Gate semantics; [MCP API and Schemas](../reference/mcp-api-and-schemas.md) for Manual QA record and tool shape; and [Operations and Conformance Reference](../reference/operations-and-conformance.md) for conformance proof.
-
-## Acceptance
-
-The work may be implemented and checked, but the user still needs to decide whether the result satisfies the request and whether the remaining trade-offs are acceptable.
-
-Acceptance is the user's judgment that the task result can be accepted. It is separate from Approval, Verification, Manual QA, and Residual Risk.
-
-Reference: [Kernel Reference](../reference/kernel.md).
-
-## Residual Risk
-
-The login flow is done, but rate limiting was not added in this task, or the detached verifier could not run in the current environment. That remaining uncertainty should be named instead of disappearing behind "done."
-
-Residual Risk is known remaining uncertainty, limitation, or trade-off after the work. When task close depends on accepting that risk, the user's residual-risk acceptance must be explicit.
-
-Reference: [Kernel Reference](../reference/kernel.md).
-
-## Projection
-
-Harness can generate a readable task report or Journey Card from recorded state. A user can read it quickly, but editing that report should not silently rewrite the operating record.
-
-A Projection is a human-readable rendering of Harness state records and artifact references. Markdown reports, Journey Cards, and Journey Spine views are projections; they display state but do not replace it.
-
-Strict behavior lives across [Document Projection Reference](../reference/document-projection.md) for projection authority, managed blocks, and freshness; [MCP API and Schemas](../reference/mcp-api-and-schemas.md) for `ProjectionKind` and projection refs; and [Template Reference](../reference/templates/README.md) for rendered template bodies and display card shapes.
-
-## Reconcile
-
-A user edits a notes section in a generated report and proposes a different next action. Harness should not pretend the operational state changed just because a Markdown line changed. The proposal needs a deliberate path into state.
-
-Reconcile is the explicit path for turning human-editable notes, proposals, or projection drift into accepted state changes, rejected proposals, notes, decisions, or deferred items.
-
-Strict behavior lives across [Document Projection Reference](../reference/document-projection.md) for human-editable input, drift, and reconcile items; [MCP API and Schemas](../reference/mcp-api-and-schemas.md) for public reconcile decision shapes; and the relevant owner reference for any state record a reconcile outcome changes.
+Strict kernel definitions live in [Kernel Reference](../reference/kernel.md), public API definitions live in [MCP API and Schemas](../reference/mcp-api-and-schemas.md), and readable document rules live in [Document Projection Reference](../reference/document-projection.md).

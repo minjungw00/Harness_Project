@@ -18,9 +18,9 @@ Speak normally. Describe the work you want and any boundary you already know; th
 
 Harness should keep the work understandable, not replace the conversation or the engineering process around it. Source control still records product-file history, tests still check executable behavior, code review still reviews the change, and user-owned product or material technical judgment still belongs to the user.
 
-The agent should translate your request into the right Harness steps. You should not need to operate internal records by hand. Use ordinary language first and exact Harness labels second, only when they explain a real stop, boundary, or close condition.
+The agent should translate your request into the right Harness steps. You should not need to operate internal records by hand or know labels such as Discovery, Change Unit, Decision Packet, Write Authorization, Evidence Manifest, Projection, Autonomy Boundary, or `task_events`. Use ordinary language first and exact Harness labels second, only when they explain a real stop, boundary, source ref, or close condition.
 
-For small direct work, the ceremony budget is intentionally small: a compact scope, a minimal active Change Unit when product files may change, a write-authority check before the exact write, and a concise result with what changed, what was checked, whether it escalated, what remains risky, and what decision is needed if anything blocks close. Direct means fewer user-facing steps, not bypassed scope or write authority.
+For small direct work, the ceremony budget is intentionally small: a compact scope, a minimal active work boundary when product files may change, a check before the exact write, and a concise result with what changed, what was checked, whether it escalated, what remains risky, and what decision is needed if anything blocks close. The internal labels may be Change Unit and Write Authorization, but users do not need to start there. Direct means fewer user-facing steps, not bypassed scope or write checks.
 
 If you want to be explicit, you can still say:
 
@@ -34,10 +34,10 @@ Harness has exact internal gates, but user-facing status should usually group th
 
 | Display group | Plain question | What it usually includes |
 |---|---|---|
-| Scope | What may change? | Task scope, out of bounds, active Change Unit, Autonomy Boundary limits, and write authority compatibility. |
-| Judgment | What must the user decide? | Decision Packets, sensitive-action Approval, product/UX choices, material technical choices, QA or waiver choices, acceptance, residual-risk, or scope/autonomy decisions. |
-| Evidence | What supports completion claims? | Evidence Manifest coverage, Run and artifact refs, self-checks, missing evidence, stale evidence, or redaction/omission state. |
-| Close Readiness | What still prevents close? | Verification, Manual QA, final acceptance, residual-risk visibility or acceptance, close blockers, and close reason. |
+| Scope | What may change? | The agreed work area, out of bounds items, whether the next action fits, and internal refs such as Change Unit or Autonomy Boundary only when useful. |
+| Judgment | What must the user decide? | Product/UX choices, material technical choices, sensitive-action permission, QA or waiver choices, acceptance, risk, or scope decisions. A Decision Packet may be the internal record. |
+| Evidence | What supports completion claims? | Changed paths, tests, logs, screenshots, artifact refs, self-checks, missing support, stale support, or Evidence Manifest refs when useful. |
+| Close Readiness | What still prevents close? | Verification, Manual QA, accepting the result, residual-risk visibility or acceptance, close blockers, and close reason. |
 
 Status may still show exact Harness terms or source refs when they help, but it should lead with the display group and then point to the owner record instead of making the user read the full gate taxonomy.
 
@@ -56,17 +56,17 @@ The agent should decide whether the request is read-only advice, small direct wo
 - Scope: what is in bounds, and what is out of bounds?
 - Judgment: what user-owned decision is needed now, if any?
 - Evidence: what support or checks already exist, and what is still missing?
-- Close Readiness: what would still block verification, Manual QA, acceptance, residual-risk handling, or close?
+- Close Readiness: what would still block verification, Manual QA, accepting the result, residual-risk handling, or close?
 
 If the task is small, the agent may handle it as direct work. Tiny edits such as a typo, one docs sentence, or an obvious rename can use the tiny direct profile under `direct`: the agent should keep the display to the trivial scope, changed path or no-file result, and self-check. If the task is larger, risky, multi-file, unclear, evidence-heavy, or touches user-owned judgment or sensitive boundaries, it should shape the work before changing product files.
 
-When you want stronger clarification before planning, ask for Discovery:
+When you want stronger clarification before planning, ask the agent to clarify first:
 
 ```text
-Start Discovery. Ask targeted questions until the first safe Change Unit is clear. Separate product decisions from technical decisions. Show options, recommendation, and uncertainty. Only ask me what the codebase cannot answer.
+Clarify the request first. Ask targeted questions until the first safe scope is clear. Separate product decisions from technical decisions. Show options, recommendation, and uncertainty. Only ask me what the codebase cannot answer.
 ```
 
-Discovery is for requirement clarification before write authority. A good Discovery pass separates goal, user value, non-goals, acceptance criteria, assumptions, product decisions, technical decisions, security choices, QA or verification expectations, operational concerns, and scope boundaries. It may ask multiple targeted questions, but it should stop once the first safe Change Unit candidate is clear enough to propose. Discovery output should feed Shared Design, Decision Packet candidates, and Change Unit shaping; it is not approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, scope authority, or a new authority path.
+Harness reference docs call this clarification posture Discovery. A good clarification pass separates goal, user value, non-goals, completion criteria, assumptions, product decisions, technical decisions, security choices, QA or verification expectations, operational concerns, and scope boundaries. It may ask multiple targeted questions, but it should stop once a first safe scope is clear enough to propose. Internally, that output may feed Shared Design, Decision Packet candidates, and Change Unit shaping; it is not approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, scope authority, or a new authority path.
 
 ### 2. Expect a compact start
 
@@ -89,9 +89,9 @@ Task: TASK-123 Add email login flow
 Mode: tracked work (`work`)
 Next safe action: decide failed-login UX before wiring final UI behavior
 Scope: login form, login API call, session storage; out of bounds: password reset, account creation; write authority not requested yet
-Judgment: failed-login message in DEC-014 is user-owned; smallest unblocker is choosing one option
-Evidence: current Core state v42 read; no implementation evidence or Evidence Manifest ref yet
-Close Readiness: final copy/layout Manual QA, residual-risk visibility, acceptance, and close decision remain later in the flow
+Judgment: failed-login message needs your choice; decision ref DEC-014; smallest unblocker is choosing one option
+Evidence: current Core state v42 read; no implementation evidence yet
+Close Readiness: final copy/layout Manual QA, residual-risk visibility, accepting the result, and close decision remain later in the flow
 Capability/status: cooperative surface; readable status current from source_state_version v42
 ```
 
@@ -135,7 +135,7 @@ Authority claims should come with refs. "Write allowed" should point to a Write 
 
 Residual-risk wording should also be precise. `status=none` means there is no known close-relevant residual risk for this requested action. `not_visible` means known close-relevant risk exists but has not yet been shown well enough for acceptance or close. Treat `not_visible` as something to surface, not as "no risk."
 
-A casual "go ahead" is only usable when the agent has already named the exact thing you are deciding. It is not enough for product trade-offs, architecture choices, QA or verification waivers, final acceptance, or residual-risk acceptance unless the prompt shows the options, consequences, relevant refs, what the agent may still decide without you, and the specific route being recorded.
+A casual "go ahead" is only usable when the agent has already named the exact thing you are deciding. It is not enough for product trade-offs, architecture choices, QA or verification waivers, accepting the result, or residual-risk acceptance unless the prompt shows the options, consequences, relevant refs, what the agent may still decide without you, and the specific route being recorded.
 
 ## The four everyday groups
 
@@ -149,9 +149,9 @@ Once scope is clear, the agent may decide routine implementation details inside 
 
 The agent should stop and ask when the choice changes what users or other code can rely on: public API or module contracts, security or privacy trade-offs, UX or product behavior, material dependency or migration direction, scope expansion, or accepting known residual risk.
 
-A useful split is: Change Unit scope says what work surface may change; Autonomy Boundary says what judgment the agent may exercise inside that surface. Neither one authorizes a write by itself.
+A useful split is: scope says what work surface may change; the agent's autonomy says what judgment it may exercise inside that surface. Reference docs call these Change Unit scope and Autonomy Boundary. Neither one authorizes a write by itself.
 
-Harness may use several related labels for this:
+Harness may use several related internal labels for this:
 
 | Label | Plain meaning |
 |---|---|
@@ -170,7 +170,7 @@ For a small direct task, the agent can usually generate the minimal Change Unit 
 - Copy-only UI change: purpose "rename this label"; out of bounds "behavior, layout, localization strategy"; paths "the target component and direct copy test."
 - Focused test change: purpose "add a regression test for the reported case"; out of bounds "implementation changes"; paths "the named test file or nearby test."
 
-If the agent asks you to approve something, the prompt should label the actual authority or recorded decision. The user may be approving a sensitive action, confirming scope, resolving a Decision Packet, accepting residual risk, accepting the final result, or checking Write Authorization status. "Approved" should not be a catch-all label or blank check.
+If the agent asks you to approve something, the prompt should label the actual authority or recorded decision. The user may be approving a sensitive action, confirming scope, resolving a Decision Packet, accepting residual risk, accepting the result, or checking Write Authorization status. "Approved" should not be a catch-all label or blank check.
 
 Useful phrases:
 
@@ -233,7 +233,7 @@ Examples:
 - Security / privacy: a PII logging policy might compare "do not log PII," "log redacted or tokenized identifiers," and "log limited fields for debugging." The packet should show privacy risk, debugging value, retention, redaction, audit trail, and whether existing evidence can prove the policy is followed.
 - QA / acceptance: a QA waiver prompt should name the skipped check or surface, the residual risk you would accept, the residual-risk follow-up, relevant refs, and whether close would become residual-risk accepted. "Go ahead" is not enough.
 - Residual risk: a residual-risk accepted close should show the remaining limitation, evidence that does exist, missing or waived QA/verification, the accepted residual risk, and residual-risk follow-up. It is not a detached-verified close.
-- QA / acceptance and Residual risk: final acceptance means the result is acceptable when required; residual-risk acceptance means the named remaining risk is acceptable for close. The agent should ask for these separately, after showing evidence, verification, QA, and residual-risk visibility.
+- QA / acceptance and Residual risk: accepting the result means the result is acceptable when required; residual-risk acceptance means the named remaining risk is acceptable for close. The agent should ask for these separately, after showing evidence, verification, QA, and residual-risk visibility.
 
 ### Evidence
 
@@ -307,7 +307,7 @@ Everyday work starts as a conversation, not as a command language. Use ordinary 
 | Continue this work. Check harness state first. | Resume from Harness state. |
 | Show me the Journey Card before resuming. | Resume status before more work. |
 | If this is small, just handle it; if it grows, use the tracked flow. | `direct` or `work` classification. |
-| Start Discovery. Ask targeted questions until the first safe Change Unit is clear. Separate product decisions from technical decisions. Show options, recommendation, and uncertainty. Only ask me what the codebase cannot answer. | Discovery feeding Shared Design, Decision Packet candidates, and Change Unit shaping. |
+| Clarify the request first. Ask targeted questions until the first safe scope is clear. Separate product decisions from technical decisions. Show options, recommendation, and uncertainty. Only ask me what the codebase cannot answer. | Discovery feeding Shared Design, Decision Packet candidates, and Change Unit shaping. |
 | Start with the scope and questions. | Task scope; active Change Unit when product writes may happen. |
 | Do not expand beyond the scope we just agreed. | Change Unit boundary. |
 | If scope needs to grow, show me the options and impact first. | Decision Packet for scope or user-owned judgment. |
@@ -315,8 +315,8 @@ Everyday work starts as a conversation, not as a command language. Use ordinary 
 | Check your work independently if possible. | detached verification. |
 | Decide whether Manual QA is needed. | Manual QA requirement or waiver. |
 | Show the remaining risks before I accept. | residual risk and close-relevant risk status. |
-| If final acceptance is required, ask me for it before close. | final acceptance before task close. |
-| No separate final acceptance is needed here; close once the relevant blockers are clear. | final acceptance not required for this task path. |
+| If accepting the result is required, ask me for it before close. | result acceptance before task close. |
+| No separate result acceptance is needed here; close once the relevant blockers are clear. | result acceptance not required for this task path. |
 | Accepted. Close this task. | task close, when blockers are clear. |
 
 You may also say "Run this work under the harness" when you want to be explicit, but it is not required.
@@ -357,15 +357,15 @@ The normal path should feel like a short conversation. Users should see the curr
 ```mermaid
 flowchart LR
   Request["request"] --> Classify["classify task shape"]
-  Classify --> Discovery["Discovery when clarification is needed"]
+  Classify --> Discovery["clarify when needed"]
   Classify --> Scope["scope"]
-  Discovery --> Brief["Discovery Brief"]
-  Brief --> Decisions["Decision Packet candidates when user-owned"]
-  Brief --> Scope["First Safe Change Unit Candidate"]
+  Discovery --> Brief["clarified summary"]
+  Brief --> Decisions["user-owned decision ref when needed"]
+  Brief --> Scope["first safe scope"]
   Decisions --> Scope
   Scope --> Work["do allowed work"]
   Work --> Evidence["Evidence: supporting refs"]
-  Evidence --> Readiness["Close Readiness: verify / QA / risk / acceptance"]
+  Evidence --> Readiness["Close Readiness: verify / QA / risk / accept result"]
   Readiness --> Close["close or ask"]
 ```
 
@@ -373,11 +373,11 @@ Typical flow:
 
 1. The agent checks status or starts intake.
 2. The agent classifies the request as `advisor`, `direct`, or `work`.
-3. If the request is ambiguous, feature-shaped, auth/security-sensitive, UX/workflow-heavy, public-interface-facing, or likely to become `work`, and clarification is needed, the agent can use Discovery and produce a Discovery Brief.
-4. The agent routes user-owned product, technical, security, QA, operational, or scope judgments under Judgment to Decision Packet candidates or existing decision paths.
-5. The agent proposes the First Safe Change Unit Candidate, then confirms Scope and the active Change Unit when product writes may happen.
-6. Before product writes, the agent checks write authority.
-7. After changes or advice, the agent records the relevant result and Evidence when evidence applies.
+3. If the request is ambiguous, feature-shaped, auth/security-sensitive, UX/workflow-heavy, public-interface-facing, or likely to become `work`, and clarification is needed, the agent clarifies the request before planning. Internally, Harness calls this Discovery and may produce a Discovery Brief.
+4. The agent routes user-owned product, technical, security, QA, operational, or scope judgments under Judgment to the existing decision path. The internal record may be a Decision Packet.
+5. The agent proposes the first safe scope, then confirms the active work boundary when product writes may happen. The internal record may be a Change Unit.
+6. Before product writes, the agent checks that the exact write is allowed. The internal result may be Write Authorization.
+7. After changes or advice, the agent records the relevant result and evidence when evidence applies.
 8. When needed, Close Readiness covers verification, Manual QA, residual risk, acceptance, and close blockers before close.
 
 Many small direct tasks skip some later checks. Bigger work should not hide those checks; it should show them only when they matter. In every case, useful user-facing output favors the same plain questions: what changed, what was checked, what remains risky, and what decision is needed now.
@@ -407,7 +407,7 @@ Fuller work close summary:
 ```text
 Close summary:
 Scope: changed scope stayed inside login form, login API call, and session storage.
-Judgment: residual risk accepted in DEC-022; final acceptance recorded in DEC-023.
+Judgment: residual risk accepted in DEC-022; result acceptance recorded in DEC-023.
 Evidence: Evidence Manifest EM-009 covers AC-01 and AC-02, supported by RUN-018 and ART-TEST-018.
 Close Readiness: verification is self-checked in RUN-018; no detached Eval was required for this path. Manual QA passed in MQA-006. Residual Risk RISK-004 covers untested mobile Safari behavior with follow-up TASK-144. Close reason: completed with accepted residual risk.
 ```
@@ -441,7 +441,7 @@ If the agent uses words like guard, freeze, or careful mode, it should explain t
 
 The exact label may be guarantee level or surface capability. It is display and risk context, not Approval, verification, QA, acceptance, residual-risk acceptance, close, or a kernel gate. The useful question is still plain: "Can this surface prevent the action before it happens, or only detect a problem afterward?"
 
-AFK or "continue while I am away" instructions do not expand authority. Careful mode also does not create a new authority tier; it just asks the agent to use a stricter posture. The agent may continue only inside the active Change Unit, Autonomy Boundary, granted sensitive-action Approvals, and compatible write authority. It should stop before scope expansion, public commitments such as API/module contracts or release promises, residual-risk acceptance, final acceptance, QA or verification waivers, or any new user-owned product or material technical judgment. On cooperative or detective surfaces, that stop is a held instruction or later detection path, not a claim of hard pre-execution blocking.
+AFK or "continue while I am away" instructions do not expand authority. Careful mode also does not create a new authority tier; it just asks the agent to use a stricter posture. The agent may continue only inside the active Change Unit, Autonomy Boundary, granted sensitive-action Approvals, and compatible write authority. It should stop before scope expansion, public commitments such as API/module contracts or release promises, residual-risk acceptance, accepting the result, QA or verification waivers, or any new user-owned product or material technical judgment. On cooperative or detective surfaces, that stop is a held instruction or later detection path, not a claim of hard pre-execution blocking.
 
 ### Role Lens requests
 
@@ -480,7 +480,7 @@ These words answer different questions. Keep them separate near close, even when
 
 | Item | Plain job | Do not substitute it with |
 |---|---|---|
-| Evidence | Supports the claim that a criterion or result was met. | The agent saying "done", a report sentence, or final acceptance. |
+| Evidence | Supports the claim that a criterion or result was met. | The agent saying "done", a report sentence, or result acceptance. |
 | Verification | Checks correctness from an appropriate review boundary. Detached verification needs independence. | Same-session self-review, passing tests alone, or Manual QA. |
 | Manual QA | Records human inspection where human judgment matters, commonly UI/UX, copy, accessibility interpretation, workflow, product taste, or visual output. | Automated tests, browser smoke, Browser QA artifacts, verification, or acceptance. |
 | Acceptance | Records the user's judgment that the result is acceptable when the task requires it. | Correctness proof, QA, verification, or sensitive-action Approval. |
@@ -488,9 +488,9 @@ These words answer different questions. Keep them separate near close, even when
 | Decision | Records the user-owned product direction, material technical direction, waiver, or close-relevant choice. | Broad approval or chat agreement that does not answer the actual trade-off. |
 | Approval | Allows a named sensitive action to proceed. | Acceptance, correctness, evidence, verification, QA, or residual-risk acceptance. |
 
-Approval is not acceptance. Tests passing do not mean Manual QA happened. Same-session self-review can be a useful self-check, but it is not detached verification. Accepting a result does not prove it is correct. Accepting residual risk is not proof either; it means the known uncertainty was visible and accepted for this Task. Final acceptance, when required, should come after close-relevant residual risk has been shown or reported as no known close-relevant risk.
+Approval is not acceptance. Tests passing do not mean Manual QA happened. Same-session self-review can be a useful self-check, but it is not detached verification. Accepting a result does not prove it is correct. Accepting residual risk is not proof either; it means the known uncertainty was visible and accepted for this Task. Result acceptance, when required, should come after close-relevant residual risk has been shown or reported as no known close-relevant risk.
 
-Manual QA judgment is separate from Browser QA artifacts. Screenshots, browser smoke, console logs, network traces, accessibility snapshots, and workflow recordings can support evidence when they are registered through the existing artifact path, but they do not become Manual QA, final acceptance, or detached verification. Browser QA Capture remains a v1+ Expansion candidate unless owner docs explicitly promote it. If a surface cannot support browser capture, use human Manual QA notes and manually supplied artifacts instead.
+Manual QA judgment is separate from Browser QA artifacts. Screenshots, browser smoke, console logs, network traces, accessibility snapshots, and workflow recordings can support evidence when they are registered through the existing artifact path, but they do not become Manual QA, result acceptance, or detached verification. Browser QA Capture remains a v1+ Expansion candidate unless owner docs explicitly promote it. If a surface cannot support browser capture, use human Manual QA notes and manually supplied artifacts instead.
 
 Useful verification wording:
 
@@ -511,7 +511,7 @@ Common "approved" mix-ups:
 - Granting sensitive-action Approval for secret access is not permission to reveal secret values in artifacts, projections, exports, logs, screenshots, or summaries.
 - Granting sensitive-action Approval for auth or system-file access is not choosing the identity-provider or session/storage model, such as local session cookie, bearer token/JWT, OAuth/OIDC sign-in, or social-login provider integration; it also does not decide role design, lockout behavior, or user notice.
 - Deciding a public API change is not permission to deploy, merge, or make additional writes.
-- Final acceptance means you accept the result when that task path requires it; it is not Write Authorization for more edits.
+- Result acceptance means you accept the result when that task path requires it; it is not Write Authorization for more edits.
 
 If the agent asks for a QA or verification waiver, it should name the existing recording path it will use and link the owner refs. QA waiver effects are owned by the Manual QA / QA policy path; when product/user risk or policy-required judgment is involved, the prompt should reference a QA waiver Decision Packet. Verification waiver effects are owned by the kernel verification-waiver path; when the waiver needs user-owned judgment, the prompt should reference the relevant Decision Packet and accepted Residual Risk refs. The prompt should say what is not being checked, what residual risk you would accept, what residual-risk follow-up remains, which refs matter, and how close is affected. A casual chat statement should not be treated as a close-relevant waiver when residual-risk acceptance is involved. If the agent asks to close with residual risk, it should show the remaining limitation first, then ask whether you accept that residual risk for this Task. Verification waiver can close only as residual-risk accepted; it should not be presented as detached verified. Exact gate effects stay in [Kernel Reference](../reference/kernel.md#waiver-semantics) and [Design Quality Policies](../reference/design-quality-policies.md#waiver-rules).
 
@@ -534,7 +534,7 @@ For a `work` task, the close summary should show the changed scope, evidence, ve
 - Verification is either not expected for this task path, completed, or explicitly waived with recorded risk.
 - Manual QA is either not needed, completed, or validly waived.
 - Known close-relevant residual risk has been shown, or the agent reports that there is no known close-relevant residual risk.
-- Final acceptance is requested separately from sensitive-action Approval when final acceptance is required.
+- Result acceptance is requested separately from sensitive-action Approval when result acceptance is required.
 
 Useful close phrases:
 
