@@ -225,7 +225,7 @@ It should show:
 - small direct changes and tracked work use different procedural budgets without bypassing authority
 - close blocks when required evidence or user judgment is missing
 - residual risk is visible before successful acceptance or close when close-relevant risk exists
-- final user acceptance is distinct from sensitive-action Approval and residual-risk acceptance
+- final acceptance is distinct from sensitive-action Approval and residual-risk acceptance
 - user-facing projections or cards are derived from Core records and are sufficient without template polish becoming authoritative
 
 ## The hardened local reference proof

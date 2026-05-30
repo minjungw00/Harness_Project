@@ -4,7 +4,7 @@
 
 Use this guide when editing English and Korean Harness documentation together.
 
-This is maintenance documentation for bilingual documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or product state changes before the documentation set is accepted for implementation planning, and it does not define conformance pass/fail, evidence, QA, acceptance, close readiness, or implementation readiness. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Assurance & Stewardship Pack and v0.4 Operations & Handoff Pack harden the local reference target. v1+ Expansion remains roadmap scope unless owner docs promote and prove an item.
+This is maintenance documentation for bilingual documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or product state changes before the documentation set is accepted for implementation planning, and it does not define conformance pass/fail, evidence, QA, final acceptance, close readiness, or implementation readiness. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Assurance & Stewardship Pack and v0.4 Operations & Handoff Pack harden the local reference target. v1+ Expansion remains roadmap scope unless owner docs promote and prove an item.
 
 ## Read this when
 
@@ -189,5 +189,5 @@ Heading order and document meaning should remain aligned with the English docume
 [ ] In user-facing docs, do natural Korean phrases appear before Harness labels when both are needed?
 [ ] Are headings idiomatic while preserving the same document structure and scope?
 [ ] Were English and Korean link changes made in the same batch?
-[ ] Does the review avoid treating translation drift as runtime state, evidence, QA, acceptance, close readiness, or implementation readiness?
+[ ] Does the review avoid treating translation drift as runtime state, evidence, QA, final acceptance, close readiness, or implementation readiness?
 ```

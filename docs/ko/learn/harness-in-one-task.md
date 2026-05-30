@@ -195,7 +195,7 @@ Task: 로그인 플로우에 remember me 동작을 추가한다.
 예상 작업 모양: 추적되는 작업(`work`).
 ```
 
-"remember me"가 모호하기 때문에 에이전트는 구현 계획 전에 요구를 구체화합니다. Reference 문서는 이런 구체화 자세를 Discovery라고 부릅니다. 이것은 approval, sensitive-action Approval, 쓰기 허가 기록, evidence, verification, QA, acceptance, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. 제품, 기술, security, QA, 운영, scope 판단을 분리하고, codebase-answerable question은 repository와 현재 하네스 context에서 답하며, codebase가 답할 수 없는 결정만 사용자에게 묻습니다.
+"remember me"가 모호하기 때문에 에이전트는 구현 계획 전에 요구를 구체화합니다. Reference 문서는 이런 구체화 자세를 Discovery라고 부릅니다. 이것은 approval, sensitive-action Approval, 쓰기 허가 기록, evidence, verification, QA, 작업 수락, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. 제품, 기술, security, QA, 운영, scope 판단을 분리하고, codebase-answerable question은 repository와 현재 하네스 context에서 답하며, codebase가 답할 수 없는 결정만 사용자에게 묻습니다.
 
 에이전트는 짧은 구체화 요약을 유지할 수 있습니다.
 
@@ -271,7 +271,7 @@ Option B: 현재 기기에서 세션을 더 오래 유지한다.
 Not allowed: 관련 없는 account recovery 또는 전체 auth 재설계.
 ```
 
-Reference 문서는 이 allow/deny 결과를 쓰기 허가 기록이라고 부릅니다. 선택한 동작에 sensitive-action Approval이 필요하면 하네스는 쓰기 전에 멈추고 별도 Approval을 요청해야 합니다. Sensitive-action Approval은 "이 민감한 행동을 진행해도 되는가?"에 답합니다. 사용자 판단, 테스트, QA, 잔여 위험을 받아들이는 판단, 최종 수락을 대신하지 않습니다.
+Reference 문서는 이 allow/deny 결과를 쓰기 허가 기록이라고 부릅니다. 선택한 동작에 sensitive-action Approval이 필요하면 하네스는 쓰기 전에 멈추고 별도 Approval을 요청해야 합니다. Sensitive-action Approval은 "이 민감한 행동을 진행해도 되는가?"에 답합니다. 사용자 판단, 테스트, QA, 잔여 위험을 받아들이는 판단, 작업 수락을 대신하지 않습니다.
 
 ### 구현
 
@@ -388,7 +388,7 @@ Power-user 표시는 각 줄 뒤의 owner ref를 함께 보여줄 수 있지만,
 - Schema 변경은 migration 근거와 rollback risk를 보여줘야 합니다. Column을 추가하는 additive migration은 test된 migration으로 낮은 위험에 머물 수 있습니다. 파괴적인 cleanup이나 data backfill은 명시적인 사용자 판단, backup 또는 rollback note, 기존 shape와 새 shape를 모두 다뤘다는 evidence가 필요할 수 있습니다.
 - Secret access는 secret 노출이 아닙니다. Approval은 Task 안에서 secret을 읽거나 사용할 수 있게 할 수 있지만, Evidence, artifact, projection, export, log, screenshot, summary에는 raw value가 아니라 redacted handle, omission note, nonsecret fact를 써야 합니다.
 - 수동 QA는 사람의 판단을 위한 것입니다. UX, 문구, accessibility 해석, 시각적 완성도, 제품 감각(product taste)은 사람이 결과를 봐야 할 수 있습니다. QA를 면제한다면 생략한 대상, 받아들이는 위험, 후속 작업, 닫기 영향을 이름 붙여야 합니다. 이는 test 통과와 같지 않습니다.
-- 복구 상황은 눈에 보이되 평범하게 처리되어야 합니다. MCP를 사용할 수 없으면 하네스/Core에 다시 닿거나 사용할 수 있는 접점(surface)으로 옮길 때까지 기준 상태 변경, 제품 파일 쓰기, gate 갱신을 보류하고, Approval, 결과 수락, 잔여 위험을 받아들이는 판단, 닫기가 처리됐다고 주장하지 않습니다. 읽기용 보기(Projection)가 stale이지만 Core state가 current라면, stale projection을 기준으로 삼지 말고 읽기용 보기를 refresh 또는 reconcile합니다. 관리 영역(managed block)을 사람이 직접 고쳤다면 표시 편집이 state를 바꾼 척하지 말고 Reconcile로 보냅니다.
+- 복구 상황은 눈에 보이되 평범하게 처리되어야 합니다. MCP를 사용할 수 없으면 하네스/Core에 다시 닿거나 사용할 수 있는 접점(surface)으로 옮길 때까지 기준 상태 변경, 제품 파일 쓰기, gate 갱신을 보류하고, Approval, 작업 수락, 잔여 위험을 받아들이는 판단, 닫기가 처리됐다고 주장하지 않습니다. 읽기용 보기(Projection)가 stale이지만 Core state가 current라면, stale projection을 기준으로 삼지 말고 읽기용 보기를 refresh 또는 reconcile합니다. 관리 영역(managed block)을 사람이 직접 고쳤다면 표시 편집이 state를 바꾼 척하지 말고 Reconcile로 보냅니다.
 - Evidence는 실제적인 이유로 stale이 될 수 있습니다. Baseline이 움직였거나, supporting run 또는 eval 뒤에 file이 바뀌었거나, Approval이 drift 또는 expire됐거나, artifact가 missing 상태이거나, relevant design record가 바뀐 경우입니다. Repair는 report prose를 고치는 것이 아니라 supporting refs를 refresh하거나 replace하는 것입니다.
 - 같은 세션에서 하는 검토(review)는 유용하지만 분리 검증은 아닙니다. 에이전트는 이를 자체 확인(self-check) 또는 stewardship signal로 사용할 수 있습니다. 분리 검증에는 충분히 독립적인 Eval, verifier, session, review boundary가 필요합니다.
 
@@ -400,7 +400,7 @@ Power-user 표시는 각 줄 뒤의 owner ref를 함께 보여줄 수 있지만,
 | "쓰기를 계획하기 전에 무엇을 구체화해야 하지?" | Discovery | 에이전트가 확인할 수 있는 사실과 사용자 소유 결정을 분리하고, 쓰기 권한 전에 Discovery Brief, Question Queue, Assumption Register를 만들며, 안전한 다음 작업이나 작업 분할을 제안한다. 사용자 소유 선택은 결정 패킷 candidate와 기존 shaping path로 라우팅한다. | [사용자 가이드](../use/user-guide.md); [설계 품질 정책](../reference/design-quality-policies.md#shared-design-shared_design). |
 | "어디까지 바꿔도 되지?" | Change Unit | 제품 쓰기 범위를 제한해 작업이 조용히 커지지 않게 한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "이건 사용자가 결정해야 해." | 결정 패킷 | 사용자가 소유한 제품 판단이나 중요한 기술 판단을 넓은 승인과 분리한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
-| "이 민감한 단계를 진행해도 되나?" | Approval | 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답한다. 사용자 소유 판단이나 최종 수락을 대신하지 않는다. | [커널 참조](../reference/kernel.md). |
+| "이 민감한 단계를 진행해도 되나?" | Approval | 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답한다. 사용자 소유 판단이나 작업 수락을 대신하지 않는다. | [커널 참조](../reference/kernel.md). |
 | "지금 이 파일을 수정해도 되나?" | 쓰기 허가 기록 | 의도한 쓰기가 현재 Task, Change Unit, 결정, sensitive-action Approval과 맞는지 확인한다. | 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md); agent 접점 동작: [Agent 통합 참조](../reference/agent-integration.md). |
 | "이 주장을 뒷받침하는 것은 이것이다." | 근거 | diff, log, check, screenshot 같은 기록으로 "끝났다"는 말을 확인 가능하게 만든다. | [사용자 가이드](../use/user-guide.md); 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Storage와 DDL](../reference/storage-and-ddl.md), [운영과 Conformance 참조](../reference/operations-and-conformance.md). |
 | "독립적으로 확인했나?" | 검증 | 자체 확인과 분리 검증을 구분한다. | [사용자 가이드](../use/user-guide.md); 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [운영과 Conformance 참조](../reference/operations-and-conformance.md). |

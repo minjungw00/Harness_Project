@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use `DEC` when standalone Decision Packet projection is enabled for user-owned product or material technical judgment, approval-shaped judgment, waiver, acceptance, residual-risk acceptance, or reconcile decisions.
+Use `DEC` when standalone Decision Packet projection is enabled for user-owned product or material technical judgment, approval-shaped judgment, waiver, final acceptance, residual-risk acceptance, or reconcile decisions.
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
@@ -16,7 +16,7 @@ Boundary: projection template only; it does not authorize runtime/server impleme
 - related reconcile records, if applicable
 - residual risk refs
 - evidence and artifact refs
-- Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, acceptance context, Artifact refs, redaction state, and projection freshness when displayed as related authority context
+- Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, final acceptance context, Artifact refs, redaction state, and projection freshness when displayed as related authority context
 - affected scope display inputs: product areas, screens or flows, modules, interfaces, paths, acceptance criteria, gates, and sensitive categories
 - projection freshness inputs
 
@@ -218,6 +218,6 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 This template is a rendered shape, not canonical state. Required Decision Packet visibility still comes through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources unless standalone `DEC` projection is enabled.
 
-Decision Packet projections should keep authority context refs compact and explicit. Displaying a Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, acceptance, residual-risk, artifact, redaction, or freshness ref in this template does not make the packet prose the authority for that record.
+Decision Packet projections should keep authority context refs compact and explicit. Displaying a Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, artifact, redaction, or freshness ref in this template does not make the packet prose the authority for that record.
 
 Repeat option subsections as needed. Some product choices have more than two realistic options.

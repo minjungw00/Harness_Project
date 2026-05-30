@@ -99,7 +99,7 @@ Login에 remember-me 동작을 추가해줘.
 
 Reference 문서는 이런 구체화 자세를 Discovery라고 부릅니다. 제품, 기술, security, QA, 운영, scope 질문을 분리하고, codebase-answerable question은 repository와 현재 하네스 context에서 답하며, codebase가 답할 수 없는 결정만 사용자에게 묻습니다.
 
-요구사항 구체화(Discovery)는 민감 동작 허가(Approval)도 아니고, 제품 파일 쓰기 허가도 아니며, evidence, verification, QA, 작업 수락(Acceptance), 잔여 위험 수용, close, 새 authority path도 아닙니다. 에이전트가 확인할 수 있는 사실과 사용자 소유 결정을 분리하고 안전한 다음 작업을 보이게 하는 구체화 작업입니다.
+요구사항 구체화(Discovery)는 민감 동작 허가(Approval)도 아니고, 제품 파일 쓰기 허가도 아니며, evidence, verification, QA, 작업 수락, 잔여 위험 수용, close, 새 authority path도 아닙니다. 에이전트가 확인할 수 있는 사실과 사용자 소유 결정을 분리하고 안전한 다음 작업을 보이게 하는 구체화 작업입니다.
 
 사용자에게 보이는 흐름은 [사용자 가이드](../use/user-guide.md#평소-말로-시작하기)와 [Agent 세션 흐름](../use/agent-session-flow.md)를 사용합니다. 용어 뒤의 정확한 owner behavior는 [Kernel Reference](../reference/kernel.md)와 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 사용합니다.
 
@@ -142,7 +142,7 @@ Code는 끝났고 test도 통과했습니다.
 - Acceptance criterion을 뒷받침하는 ref가 없어 evidence가 partial입니다.
 - Verification이 required인데 compatible Eval이 없습니다.
 - UI behavior에 수동 QA가 required인데 아직 passed 또는 valid waiver가 없습니다.
-- 작업 수락(Acceptance)이 required인데 evidence, QA, verification, 남은 위험 표시와 함께 요청되지 않았습니다.
+- 작업 수락이 required인데 evidence, QA, verification, 남은 위험 표시와 함께 요청되지 않았습니다.
 - 알려진 닫기 관련 남은 위험이 있지만 아직 보이거나 받아들여지지 않았습니다.
 
 유용한 close blocker는 가장 작은 unblocker를 이름 붙입니다.

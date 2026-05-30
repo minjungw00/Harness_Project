@@ -72,7 +72,7 @@ flowchart LR
 
 Strict projection behavior is owned by this reference, especially the [Document authority matrix](#document-authority-matrix), [Managed block rules](#managed-block-rules), and [Freshness and failure rules](#freshness-and-failure-rules). Canonical state and gates are owned by [Kernel Reference](kernel.md), artifact relation storage is owned by [Storage And DDL](storage-and-ddl.md), and public projection refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md). The diagram summarizes authority direction only.
 
-Generated reports should make this visible without requiring the reader to know this reference first. In examples and templates, `source_state_version` names the state clock used for the render, `projection_version` or projection status names the rendered view, `updated_at` names when the view was produced, and freshness lines say whether the view still matches its source records. None of those fields make Markdown the owner of Task state, gates, approvals, evidence, QA, verification, Decision Packets, or acceptance.
+Generated reports should make this visible without requiring the reader to know this reference first. In examples and templates, `source_state_version` names the state clock used for the render, `projection_version` or projection status names the rendered view, `updated_at` names when the view was produced, and freshness lines say whether the view still matches its source records. None of those fields make Markdown the owner of Task state, gates, approvals, evidence, verification, Manual QA, Decision Packets, final acceptance, residual-risk visibility, and residual-risk acceptance.
 
 Freshness display is diagnostic and operationally relevant, but it is still display. A stale or failed projection can block close/readiness views that require current readable context or can cause an action to report `PROJECTION_STALE` through the owning API path, but it must not roll back committed Core state, change gate values, mark a Task failed, or make an old report authoritative.
 
@@ -163,7 +163,7 @@ Humans may not directly edit the following projection text into canonical state:
 - managed block content
 - front matter fields such as `source_state_version`
 - current gate values, lifecycle phase, result, close reason, or assurance level
-- approval, verification, Manual QA, acceptance, or residual-risk status
+- approval, verification, Manual QA, final acceptance, or residual-risk status
 - Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Change Unit DAG, Residual Risk, Stewardship Impact, Review Stage, or Write Authorization display text
 - artifact reference identity, hash, redaction state, or artifact availability
 - status cards, Journey Cards, or other generated display surfaces
@@ -187,7 +187,9 @@ Direct edits inside managed blocks are drift, not accepted state. Direct edits t
 12. User-facing cards may use friendly labels, but canonical gate names remain the kernel fields.
 13. Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Change Unit DAG, Residual Risk, Stewardship Impact, and Review Stage displays are non-canonical projections from owner records and artifact refs.
 
-Projection and report surfaces may display current records, refs, and advisory next actions. They must not authorize writes, create Write Authorization, satisfy gates, create evidence, perform or record verification, record Manual QA, grant Approval, waive QA or verification, record result acceptance, record residual-risk acceptance, refresh projections by assertion alone, declare implementation readiness, close Tasks, or mutate owner records. Any such effect must come from the owner Core/MCP path named in the matrix below.
+Projection and report surfaces may display current records, refs, and advisory next actions. They must not authorize writes, create Write Authorization, satisfy gates, create evidence, perform or record verification, record Manual QA, grant Approval, waive QA or verification, record final acceptance, record residual-risk acceptance, refresh projections by assertion alone, declare implementation readiness, close Tasks, or mutate owner records. Any such effect must come from the owner Core/MCP path named in the matrix below.
+
+Close/readiness displays must keep evidence, verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance on separate lines when those categories are relevant. A projection may summarize a test pass, Eval, QA waiver, acceptance Decision Packet, or accepted Residual Risk ref, but it must not render one of those as another category or as a single all-purpose "done" flag.
 
 ## Document authority matrix
 
@@ -235,13 +237,13 @@ Required authority statements:
 - Journey Card: derived display from current state and refs; it is never canonical state
 - Autonomy Boundary: active `state.sqlite.change_units` boundary fields -> projection surfaces; it is judgment latitude, not scope authority
 - Write Authority Summary: derived display from active scope, approval, Write Authorization, baseline, and guarantee refs; it is never canonical state and cannot authorize work
-- Write Authorization: `state.sqlite.write_authorizations` records a specific allowed write attempt; it is not scope, approval, evidence, verification, QA, acceptance, or residual-risk acceptance
+- Write Authorization: `state.sqlite.write_authorizations` records a specific allowed write attempt; it is not scope, approval, evidence, verification, QA, final acceptance, or residual-risk acceptance
 - Implementation Micro-Plan: current Task and Change Unit owner records plus related refs -> `TASK` managed execution-aid section; it is not canonical state, not a new `ProjectionKind`, not scope authority, not approval, and not Write Authorization
 - Approval: `approvals` plus the approval-shaped Decision Packet -> `APR` projection only after the Approval record exists or changes; an `approval_request_candidate` from `prepare_write` may appear as candidate display, but it is not an `APR` source
 - Change Unit DAG: `state.sqlite.change_unit_dependencies` and Change Unit refs -> dependency projection; it is not a scheduler or authorization surface
 - Residual Risk: `state.sqlite.residual_risks` including accepted-risk metadata/refs -> residual-risk displays
 - Stewardship Impact Summary: derived from owner records, validator results, and refs -> `StewardshipImpactSummary` display; it is not a canonical record
-- Review Stages: Task, Change Unit, gates, evidence, validator results, residual-risk refs, and stewardship owner refs -> managed `TASK` or `RUN-SUMMARY` display sections named Spec Compliance Review and Code Quality / Stewardship Review; they are not canonical records; they are not new `ProjectionKind` values, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization, or detached verification
+- Review Stages: Task, Change Unit, gates, evidence, validator results, residual-risk refs, and stewardship owner refs -> managed `TASK` or `RUN-SUMMARY` display sections named Spec Compliance Review and Code Quality / Stewardship Review; they are not canonical records; they are not new `ProjectionKind` values, Approval, evidence, verification, QA, final acceptance, residual-risk acceptance, close, Write Authorization, or detached verification
 
 ## Managed block rules
 
@@ -324,7 +326,7 @@ Projection templates match the API `ProjectionKind` staged/reference support tie
 
 `Reference-required` means required by staged/reference projection support after the relevant owner records exist; it does not mean every v0.1 Core Authority Slice run must render every kind. v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. v0.2 User-Facing Harness MVP provides enough derived projection or card output for users to understand scope, judgment, evidence, close readiness, acceptance, and residual risk. Hardened local reference support covers the full Reference-required projection set when source records exist or change.
 
-`ProjectionKind` tiering controls renderer support expectations only; no tier makes a projection canonical state or creates evidence, QA, verification, acceptance, residual-risk acceptance, close authority, or Write Authorization. For Reference-required kinds, the render/enqueue condition is source-backed: `TASK` after a Task exists or changes, `APR` after a committed approval-shaped Decision Packet or Approval record exists or changes, `RUN-SUMMARY` after a Run commits, `EVIDENCE-MANIFEST` after evidence coverage exists or changes, `EVAL` after an Eval record exists or changes, and `DIRECT-RESULT` after direct-result source records exist or change. If the source record does not exist, the projector must not invent placeholder state to satisfy template completeness.
+`ProjectionKind` tiering controls renderer support expectations only; no tier makes a projection canonical state or creates evidence, QA, verification, final acceptance, residual-risk acceptance, close authority, or Write Authorization. For Reference-required kinds, the render/enqueue condition is source-backed: `TASK` after a Task exists or changes, `APR` after a committed approval-shaped Decision Packet or Approval record exists or changes, `RUN-SUMMARY` after a Run commits, `EVIDENCE-MANIFEST` after evidence coverage exists or changes, `EVAL` after an Eval record exists or changes, and `DIRECT-RESULT` after direct-result source records exist or change. If the source record does not exist, the projector must not invent placeholder state to satisfy template completeness.
 
 The `EXPORT` template is an optional projection output. It does not introduce an `export` state record for artifact links. Export projections list artifact refs, hashes, redaction states, and redaction/omission/block notes; they do not embed large or sensitive artifact bodies by default.
 

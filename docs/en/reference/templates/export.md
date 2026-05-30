@@ -20,7 +20,7 @@ Boundary: projection template only; it does not authorize runtime/server impleme
 - artifact refs, owner relations, redaction status, retention/availability, and integrity metadata
 - redaction, omission, and blocked-artifact summaries
 - omitted-secret notes and retained/expired artifact summaries
-- compact authority refs for Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when included in review or Release Handoff display
+- compact authority refs for Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, final acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when included in review or Release Handoff display
 - export profile boundary and non-deployment/non-merge reminder display
 
 ## Rendered sections
@@ -136,4 +136,4 @@ If the export profile omits a report projection snapshot, raw artifact, or state
 
 For `secret_omitted`, export may include safe omission notes or handles and hashes over safe stored bytes, but not omitted values. For `blocked`, export may include the committed metadata-only notice artifact and its hash, size, and content type; those fields describe the notice bytes, never the forbidden raw payload. Release Handoff sections must show the same omission or block impact as unavailable, insufficient, or unresolved input unless a documented replacement, waiver, Decision Packet outcome, accepted risk, or fallback resolved it before export.
 
-If recovery artifacts appear in an export, label them as recovery observations. They do not prove successful completion and must not be counted as evidence, verification, QA, acceptance, or close proof unless a separate owner record already resolved that path.
+If recovery artifacts appear in an export, label them as recovery observations. They do not prove successful completion and must not be counted as evidence, verification, QA, final acceptance, or close proof unless a separate owner record already resolved that path.

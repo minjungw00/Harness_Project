@@ -39,7 +39,7 @@ Use these words in user-facing docs, prompts, and status summaries.
 | Scope | What may change, what must stay out of bounds, and where the agent should stop before continuing. |
 | Judgment | A choice the user owns, such as a product direction, important technical trade-off, sensitive action, QA waiver, accepting the result, or risk decision. |
 | Evidence | Durable support for a claim, such as changed paths, diffs, test output, logs, screenshots, run summaries, QA notes, or verification results. |
-| Close readiness | What still has to be true before the work can finish: checks, QA, acceptance, risk visibility, and blockers. |
+| Close readiness | What still has to be true before the work can finish: checks, QA, final acceptance, risk visibility, and blockers. |
 | Risk | Known uncertainty, limitation, skipped check, trade-off, or possible consequence that should stay visible instead of disappearing behind "done." |
 
 User-facing docs should explain the easy concept first. Add the exact internal term in parentheses only when it helps the reader understand a real stop, boundary, or reference link.
@@ -51,7 +51,7 @@ When Harness status is shown to users, the many internal details should usually 
 | Display group | Plain question | What it usually shows |
 |---|---|---|
 | Scope | What may change? | The agreed work area, out-of-bounds items, and whether the next intended action fits. |
-| Judgment | What must the user decide? | Product, technical, security, QA, acceptance, risk, permission, or scope choices that need the user. |
+| Judgment | What must the user decide? | Product, technical, security, QA, final acceptance, risk, permission, or scope choices that need the user. |
 | Evidence | What supports completion claims? | The current support, missing support, stale support, and evidence refs when they matter. |
 | Close readiness | What still prevents finish or close? | Verification, Manual QA, accepting the result, visible risk, accepted risk when relevant, and close blockers. |
 
@@ -85,12 +85,12 @@ These terms are exact implementation names used by references, APIs, schemas, re
 | Change Unit | The bounded work scope for product writes. It names what may change, but does not authorize a write by itself. |
 | Autonomy Boundary | The choices the agent may make inside the active scope without asking the user again. |
 | Decision Packet | The recorded path for a specific user-owned judgment that blocks progress, write, waiver, acceptance, risk handling, or close. |
-| Approval | Permission for a named sensitive action. It is not result acceptance and does not prove correctness. |
+| Approval | Permission for a named sensitive action. It is not final acceptance and does not prove correctness. |
 | Write Authorization | The Harness result that a specific product-write attempt may proceed now, after scope and other checks. |
 | Evidence Manifest | A record mapping completion conditions or acceptance criteria to the evidence that supports them. |
 | Verification | A recorded check of correctness, with stronger meaning when it happens across an independent boundary. |
 | Manual QA | Human inspection for quality that needs human judgment, such as UI, UX, copy, accessibility, workflow, or visual output. |
-| Acceptance | The user's judgment that the result is acceptable when the task path requires result acceptance. |
+| Acceptance | The user's judgment that the result is acceptable when the task path requires final acceptance. |
 | Residual Risk | Known remaining uncertainty, limitation, or trade-off after the work. |
 | Projection | A readable view rendered from Harness state, such as a report or Journey Card. It displays state but does not replace it. |
 | Reconcile | The deliberate path for handling human edits or drift in a readable view. |
@@ -112,7 +112,7 @@ These compact anchors keep older links stable without making users learn the imp
 - <a id="write-authorization"></a>Write Authorization: one-attempt allowance for a compatible write.
 - <a id="verification"></a>Verification: recorded correctness check.
 - <a id="manual-qa"></a>Manual QA: human inspection where human judgment matters.
-- <a id="acceptance"></a>Acceptance: result acceptance when required by the task path.
+- <a id="acceptance"></a>Acceptance: final acceptance when required by the task path.
 - <a id="residual-risk"></a>Residual Risk: known remaining uncertainty, limitation, or trade-off.
 - <a id="projection"></a>Projection: readable view rendered from Harness state, not authority.
 - <a id="reconcile"></a>Reconcile: path for handling readable-view drift or human edits.
@@ -123,7 +123,7 @@ These separations keep Harness from turning a casual phrase into the wrong autho
 
 - Scope is not write permission. A scoped work area can exist before a specific write is allowed.
 - Judgment is not broad approval. The user should be asked for the named choice that matters.
-- Approval is only permission for a sensitive action. It is not result acceptance, evidence, QA, verification, or risk acceptance.
+- Approval is only permission for a sensitive action. It is not final acceptance, evidence, QA, verification, or risk acceptance.
 - Evidence is not the agent saying "done." It is recorded support for the claim.
 - A readable report is not the operating record. It should point back to the records and evidence it summarizes.
 - Close readiness is not a new gate. It is a user-facing summary of what still blocks finish or close.

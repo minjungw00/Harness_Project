@@ -28,7 +28,7 @@ A connector should keep the agent's context small and current, route state-chang
 
 ## Integration in plain language
 
-An agent surface is where the user talks to an agent. Harness is the local authority layer that keeps task state, write authority, evidence, verification, Manual QA, acceptance, projections, and reconcile behavior outside the chat transcript.
+An agent surface is where the user talks to an agent. Harness is the local authority layer that keeps task state, write authority, evidence, verification, Manual QA, final acceptance, projections, and reconcile behavior outside the chat transcript.
 
 A connector should give the agent small current context, route state changes through Harness MCP tools, capture what happened when the surface can do so, and name the actual guarantee level for the connected profile. Capability is concrete: it must be declared and proven for the actual host, target profile, version/configuration, workspace policy, capture path, and guard or isolation path in use. A surface name is never enough to claim a capability.
 
@@ -248,7 +248,7 @@ fallbacks:
 
 Integration uses the guarantee levels defined in [Runtime Architecture Reference](runtime-architecture.md#guarantee-levels) and applies them to connected surface profiles, current enforcement paths, and fallback choices.
 
-This reference owns how connector profiles report and display those levels. It must not infer a stronger level from a surface name, product name, recipe name, or mode label, and it must not treat guarantee level as Approval, Write Authorization, verification, QA, acceptance, residual-risk acceptance, close readiness, or a kernel gate.
+This reference owns how connector profiles report and display those levels. It must not infer a stronger level from a surface name, product name, recipe name, or mode label, and it must not treat guarantee level as Approval, Write Authorization, verification, QA, final acceptance, residual-risk acceptance, close readiness, or a kernel gate.
 
 | Level | Display responsibility |
 |---|---|
@@ -297,11 +297,11 @@ Keep the always-on compact context rule set to these ten items or fewer:
 1. Read current status or the Journey Card before significant work or resume.
 2. Product/runtime/code writes require compatible `prepare_write` and Write Authorization.
 3. User-owned product or material technical judgment routes through Decision Packets.
-4. Approval is not product judgment, result acceptance, or residual-risk acceptance.
+4. Approval is not product judgment, final acceptance, or residual-risk acceptance.
 5. Projection is readable output, not canonical state.
 6. Evidence uses artifact refs and state refs, not pasted logs or copied evidence bodies as authority.
 7. Same-session review is self-checking context, not detached verification.
-8. MCP unavailable means no authoritative state update, gate update, evidence, acceptance, residual-risk, projection-repair, or close claim.
+8. MCP unavailable means no authoritative state update, gate update, evidence, final acceptance, residual-risk visibility, residual-risk acceptance, projection-repair, or close claim.
 9. Show blockers and close-relevant residual risk before acceptance or close.
 10. Pull Reference docs, schemas, historical records, and large artifacts only when the next action needs them.
 
@@ -324,7 +324,7 @@ Phase-filtered envelope candidates:
 | Residual-risk summary | Known close-relevant residual risk summary and refs, or explicit absence when close or acceptance depends on it. |
 | Guarantee level | Actual connected profile level and the guard or detection behavior it can prove. Do not infer this from a surface name. |
 | Connector profile freshness | Connector manifest ref, `capability_profile_version`, `last_verified_at`, and stale reason when generated files, MCP config, hooks, wrappers, sidecars, capture, or isolation behavior changed. |
-| Gate summary | Scope, approval, decision, design, evidence, verification, QA, acceptance, close blocker, Manual QA, and residual-risk status as compact values when relevant. |
+| Gate summary | Scope, approval, decision, design, evidence, verification, QA, final acceptance, close blocker, Manual QA, and residual-risk status as compact values when relevant. |
 | Projection freshness | Projection id or ref, `source_state_version` when known, freshness state, and refresh/reconcile warning when needed. |
 
 Push refs or one-line summaries when relevant:
@@ -350,11 +350,11 @@ Use phase-based bundles so agents do not load the whole documentation set:
 | Write | Active Change Unit, Autonomy Boundary, intended paths/tools/commands/network/secrets summary, baseline, Approval status, active Decision Packets, Write Authority Summary, and capability guarantee. | Exact `prepare_write`, Kernel, security, approval, or policy references only when the intended write touches that boundary or the connector is implementing the check. |
 | Evidence | Changed-path summary, latest Run summary, Evidence Manifest ref, artifact refs with integrity/freshness, evidence gaps, and next evidence action. | Logs, diffs, screenshots, traces, raw artifacts, artifact-storage details, or evidence contract sections only when interpreting, repairing, or registering evidence. |
 | Verification | Acceptance criteria, changed files, evidence refs, artifact refs, approval scope, active or relevant Decision Packets, residual-risk summary, Manual QA requirement, independence/freshness profile, and forbidden patterns. | Full evaluator bundle material, source files, logs, exact Eval/Manual QA contracts, or verification guidance only when the evaluator needs to inspect them. |
-| Close | Close-readiness summary, close blockers, evidence/verification/QA/acceptance status, residual-risk summary or accepted refs, projection freshness, and smallest unblocker. | `close_task`, acceptance, residual-risk, Manual QA, verification, or artifact details only when a blocker or close attempt depends on the exact contract or source content. |
+| Close | Close-readiness summary, close blockers, evidence/verification/QA/final acceptance status, residual-risk summary or accepted refs, projection freshness, and smallest unblocker. | `close_task`, final acceptance, residual-risk visibility, residual-risk acceptance, Manual QA, verification, or artifact details only when a blocker or close attempt depends on the exact contract or source content. |
 
 Discovery phase phrases such as "first implementation candidate" and "work split" are context proposal/support phrases, not standalone schemas, canonical record types, gate values, projection kinds, or authority paths.
 
-For user-facing mode display, connectors should lead with read/advice work, small change, or tracked work. These labels are derived display text, not schema fields, enum values, canonical record types, projection kinds, gate values, or authority paths. If an envelope or context bundle mentions a work-shape display label, it means the derived display label for the current schema mode, not a new API field unless a future schema owner explicitly defines one. The schema-owned values remain `advisor`, `direct`, and `work` for state, conformance, and API payloads. Display translation must not reduce product-write authority checks, user-owned judgment routing, sensitive-action Approval, evidence, QA, verification, acceptance, residual-risk visibility, or close rules.
+For user-facing mode display, connectors should lead with read/advice work, small change, or tracked work. These labels are derived display text, not schema fields, enum values, canonical record types, projection kinds, gate values, or authority paths. If an envelope or context bundle mentions a work-shape display label, it means the derived display label for the current schema mode, not a new API field unless a future schema owner explicitly defines one. The schema-owned values remain `advisor`, `direct`, and `work` for state, conformance, and API payloads. Display translation must not reduce product-write authority checks, user-owned judgment routing, sensitive-action Approval, evidence, QA, verification, final acceptance, residual-risk visibility, residual-risk acceptance, or close rules.
 
 Phase bundles are context discipline, not new schemas or gates. Moving from one phase to another changes what the connector pushes by default; it does not authorize writes, resolve decisions, create evidence, perform verification, accept risk, or close a Task.
 
@@ -379,7 +379,7 @@ Fallbacks are described by guarantee level and risk, not by surface name.
 
 If MCP is unavailable, the connector must not claim authoritative state updates. `MCP_SERVER_UNAVAILABLE` and `SURFACE_MCP_UNAVAILABLE` are diagnostic conditions, not additional public `ErrorCode` values. `MCP_UNAVAILABLE` remains the stable public availability code.
 
-`MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible from that call path. A connector must not invent Core state, Write Authorization, gate status, evidence, acceptance, residual-risk acceptance, or close readiness from chat memory, generated files, cached projections, old status/next recommendations, or operator prose while Core is unreachable. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools. Product/runtime/code writes hold until MCP is reconnected or diagnosed, unless the work is an explicit pre-MVP documentation-authoring batch under `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. Cooperative surfaces hold by instruction; detective surfaces may also report after-action mismatches; stronger profiles may block before execution only when a fixture-proven guard covers the operation or when an isolation boundary is actually in use. That override is a documentation-maintainer override only; it is not Core authorization, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a canonical state transition.
+`MCP_SERVER_UNAVAILABLE` means the tool call cannot reach Core, so no authoritative Core response is possible from that call path. A connector must not invent Core state, Write Authorization, gate status, evidence, final acceptance, residual-risk acceptance, or close readiness from chat memory, generated files, cached projections, old status/next recommendations, or operator prose while Core is unreachable. `SURFACE_MCP_UNAVAILABLE` means Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools. Product/runtime/code writes hold until MCP is reconnected or diagnosed, unless the work is an explicit pre-MVP documentation-authoring batch under `DOCS_AUTHORING_OVERRIDE` with an exact path allowlist. Cooperative surfaces hold by instruction; detective surfaces may also report after-action mismatches; stronger profiles may block before execution only when a fixture-proven guard covers the operation or when an isolation boundary is actually in use. That override is a documentation-maintainer override only; it is not Core authorization, Write Authorization, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or a canonical state transition.
 
 If MCP works but pre-tool guard is weak, low-risk direct work may proceed with cooperative `prepare_write` and detective changed-path validation. Medium/high-risk work must not rely on cooperative-only claims when the assessed threat/control path requires preventive or isolated controls. The [Security Threat Model](security-threat-model.md) names the security reason; connector profiles, operations, API, kernel, and conformance owners define the exact behavior.
 

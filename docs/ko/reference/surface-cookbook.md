@@ -46,7 +46,7 @@ Generated 또는 managed recipe output은 [Agent 통합 참조](agent-integratio
 
 아래 `guarantee_boundary` block은 recipe 문서용 설명일 뿐 public schema, DDL shape, canonical Capability Profile field가 아닙니다. Connector는 [Agent 통합 참조](agent-integration.md) contract에 맞는 경우에만 같은 사실을 Capability Profile 또는 Connector Manifest에 기록할 수 있습니다. Surface Cookbook은 접점별 path와 예시를 이름 붙일 뿐 guarantee level을 다시 정의하지 않습니다.
 
-Recipe가 `fallback_isolation` 아래에 manual verification bundle을 적을 때는 verification/evaluator 입력으로 쓰는 fallback이라는 뜻입니다. Manual verification bundle만으로 연결된 surface가 `preventive` 또는 `isolated`로 올라가지 않습니다. `isolated` guarantee에는 여전히 입증된 별도 worktree, sandbox, process boundary, read-only bundle 또는 동등한 independence/isolation boundary가 필요하며, Approval, QA, acceptance, verification result와는 분리됩니다.
+Recipe가 `fallback_isolation` 아래에 manual verification bundle을 적을 때는 verification/evaluator 입력으로 쓰는 fallback이라는 뜻입니다. Manual verification bundle만으로 연결된 surface가 `preventive` 또는 `isolated`로 올라가지 않습니다. `isolated` guarantee에는 여전히 입증된 별도 worktree, sandbox, process boundary, read-only bundle 또는 동등한 independence/isolation boundary가 필요하며, Approval, QA, 작업 수락, verification result와는 분리됩니다.
 
 ## Codex
 
@@ -170,13 +170,13 @@ capture_guard_isolation_options:
   - CLI wrapper for command and artifact capture
   - sidecar-controlled run for covered paths and commands
   - native capture가 없을 때 manual artifact capture
-  - Manual QA note artifact when browser capture is unavailable
+  - 수동 QA note artifact when browser capture is unavailable
   - isolated evaluator bundle when host capture is weak
 common_fallbacks:
   - CLI wrapper
   - sidecar-controlled run
   - manual artifact capture
-  - Manual QA note artifact
+  - 수동 QA note artifact
   - manual verification bundle
   - cooperative hold or narrowed boundary when only extension wording is available
 conformance_risks:

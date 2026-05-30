@@ -109,9 +109,11 @@ Fields marked required in a request or response schema are required when that to
 
 For v0.1, the runnable API surface is the narrow authority loop: state envelope and idempotency, Task refs, one basic scope represented by the Change Unit owner shape where the reference contract requires it, `harness.prepare_write`, single-use Write Authorization summary/ref, compatible `harness.record_run`, one committed `ArtifactRef` or evidence relation, read-only `harness.status` / `harness.next`, and structured blockers. `decision_kind` and `judgment_domain` are required whenever Core creates a Decision Packet, including a seeded v0.1 judgment blocker, but full user-facing Decision Packet quality and optional `decision_requests` rows are later than the smallest slice.
 
-For v0.2, user-facing MVP surfaces must expose `judgment_domain` consistently for display/grouping while keeping `decision_kind` as the lifecycle and gate route. v0.2 also needs acceptance and residual-risk visibility fields sufficient for a user to understand close readiness. Detached verification independence, the full Manual QA policy matrix, stewardship validators, export/recover, release handoff, and optional projection kinds are later profiles unless an owner doc explicitly promotes a subset.
+For v0.2, user-facing MVP surfaces must expose `judgment_domain` consistently for display/grouping while keeping `decision_kind` as the lifecycle and gate route. v0.2 also needs fields for final acceptance, and fields for residual-risk visibility, sufficient for a user to understand close readiness. Detached verification independence, the full Manual QA policy matrix, stewardship validators, export/recover, release handoff, and optional projection kinds are later profiles unless an owner doc explicitly promotes a subset.
 
 Tool-section lines that say "Projection jobs enqueued" describe committed, non-dry-run behavior when projection support for that kind is in scope. Dry runs, pre-commit state conflicts, and rejected pre-commit requests do not enqueue projection jobs. v0.1 may preserve freshness/read facts without proving full Markdown rendering; projections remain derived views, not authority.
+
+API surfaces must preserve the close-support categories even when a stage does not require all of them. Evidence, verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance are separate response meanings. A status, next-action, decision, or close response may say a category is `not_required`, but it must not use a test pass, Eval verdict, QA waiver, final acceptance note, or accepted residual risk as a generic substitute for another category.
 
 In user terms:
 
@@ -195,7 +197,7 @@ Unauthorized or off-profile callers must not be upgraded into authority because 
 Envelope fields are routing and audit claims:
 
 - `project_id`, `task_id`, `surface_id`, and `run_id` must resolve to records compatible with the addressed operation. A caller cannot create authority by naming another project, Task, surface, or Run.
-- `actor_kind` describes the claimed actor role for routing and policy checks. It must not by itself satisfy sensitive-action Approval, user acceptance, Decision Packet resolution, Manual QA judgment, or detached verification independence.
+- `actor_kind` describes the claimed actor role for routing and policy checks. It must not by itself satisfy sensitive-action Approval, final acceptance, Decision Packet resolution, Manual QA judgment, or detached verification independence.
 - `idempotency_key` prevents duplicate committed mutations. It is not an authorization token, and replay is valid only for the same canonical request payload in the same `(project_id, tool_name, idempotency_key)` scope. Reusing the key with a changed payload, artifact input set, or envelope authority basis returns `STATE_CONFLICT` and must not merge new effects into the original committed response.
 - `expected_state_version` is the caller's freshness and concurrency claim for a new mutation attempt. A stale or wrong version returns `STATE_CONFLICT` before mutation; this prevents an older Task or project view, Approval basis, evidence context, artifact relation, projection summary, or user-judgment context from becoming write authority.
 - `dry_run=true` returns diagnostics only. It does not reserve an idempotency key, create a Write Authorization, attach artifacts, or prove that a later write is safe.
@@ -205,7 +207,7 @@ Public tool responses should make local-security claim failures visible through 
 | Condition | Response guidance |
 |---|---|
 | `project_id`, `task_id`, or `surface_id` does not resolve, resolves outside the addressed project, or conflicts with a tool-specific Task or owner record. | Reject before mutation. Select the primary `ErrorCode` from the existing precedence table, and place the concrete claim mismatch in `ToolError.details`, blocked reasons, state summaries, or validator/check output. Do not add a public spoofing-specific code. |
-| `actor_kind` claims `user`, `operator`, or `evaluator` but the request path cannot satisfy user acceptance, Manual QA, Approval, or detached verification independence. | Keep the relevant gate unsatisfied and use the existing blocker, such as `ACCEPTANCE_REQUIRED`, `QA_REQUIRED`, `APPROVAL_REQUIRED`, `DECISION_REQUIRED`, `VERIFY_NOT_DETACHED`, `CAPABILITY_INSUFFICIENT`, or a validator result, according to the tool. The actor claim is audit context, not proof of judgment. |
+| `actor_kind` claims `user`, `operator`, or `evaluator` but the request path cannot satisfy final acceptance, Manual QA, Approval, or detached verification independence. | Keep the relevant gate unsatisfied and use the existing blocker, such as `ACCEPTANCE_REQUIRED`, `QA_REQUIRED`, `APPROVAL_REQUIRED`, `DECISION_REQUIRED`, `VERIFY_NOT_DETACHED`, `CAPABILITY_INSUFFICIENT`, or a validator result, according to the tool. The actor claim is audit context, not proof of judgment. |
 | The MCP endpoint is reachable only through an off-profile, weak, stale, forwarded, tunneled, or unknown access mode. | If Core or the operator can classify the condition, use existing `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` and include the available access-mode facts in `details` or guarantee display. If Core cannot be reached, no authoritative Core response or mutation can be claimed. |
 
 ## Common response
@@ -263,7 +265,7 @@ Event stability for fixture assertions is owned by the [Kernel Stable Event Cata
 
 Tier labels are not enum values. `Reference-required` means required by staged/reference projection support after the relevant owner records exist; it does not mean every v0.1 Core Authority Slice run must render every kind. v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. v0.2 User-Facing Harness MVP provides enough derived projection or card output for users to understand scope, judgment, evidence, close readiness, acceptance, and residual risk. Hardened local reference support covers the full Reference-required projection set when source records exist or change.
 
-ProjectionKind extensibility does not make projections canonical state. Every projection job still renders a derived view from owner records and artifact refs. No projection tier creates state, evidence, QA, verification, acceptance, residual-risk acceptance, close authority, or Write Authorization. `DEC` is valid only for standalone Decision Packet Markdown when that feature is enabled, and it is not a Reference-required projection job. Absence of a standalone `DEC` job must not reduce required Decision Packet visibility, which is provided through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows remains required for agency conformance.
+ProjectionKind extensibility does not make projections canonical state. Every projection job still renders a derived view from owner records and artifact refs. No projection tier creates state, evidence, QA, verification, final acceptance, residual-risk acceptance, close authority, or Write Authorization. `DEC` is valid only for standalone Decision Packet Markdown when that feature is enabled, and it is not a Reference-required projection job. Absence of a standalone `DEC` job must not reduce required Decision Packet visibility, which is provided through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows remains required for agency conformance.
 
 `EXPORT` may include report profiles such as Release Handoff when the export feature is enabled. Such profiles are projection/report surfaces only; they do not create deployment authority, merge authority, production-monitoring authority, final acceptance, residual-risk acceptance, assurance upgrades, or Task close authority.
 
@@ -320,7 +322,7 @@ model_or_prompt_policy_change
 policy_override
 ```
 
-Use sensitive categories as approval-risk labels, not as a command language. A single intended write may carry more than one category. The category explains why a sensitive-action Approval may be needed; it does not resolve product, architecture, security, QA, verification, result-acceptance, residual-risk, or policy judgment. Exact write-state behavior is owned by [Kernel Reference](kernel.md#prepare_write); public request and lifecycle shapes are owned by [`harness.prepare_write`](#harnessprepare_write) and [Approval Lifecycle](#approval-lifecycle).
+Use sensitive categories as approval-risk labels, not as a command language. A single intended write may carry more than one category. The category explains why a sensitive-action Approval may be needed; it does not resolve product, architecture, security, QA, verification, final acceptance, residual-risk acceptance, or policy judgment. Exact write-state behavior is owned by [Kernel Reference](kernel.md#prepare_write); public request and lifecycle shapes are owned by [`harness.prepare_write`](#harnessprepare_write) and [Approval Lifecycle](#approval-lifecycle).
 
 | Category | Usually signals | Approval, Decision Packet, evidence, and redaction guidance |
 |---|---|---|
@@ -344,7 +346,7 @@ Use sensitive categories as approval-risk labels, not as a command language. A s
 | `model_or_prompt_policy_change` | Model selection, system/developer prompts, safety policy, tool policy, routing, evaluation policy, or generated-output policy. | Approval covers the sensitive policy or prompt write. Use a Decision Packet for product tone, safety trade-offs, data exposure, model cost, eval threshold, or user-facing behavior. Evidence should include eval refs and redacted prompt/policy artifacts when needed. |
 | `policy_override` | Bypassing, weakening, waiving, or making an exception to a Harness, project, security, QA, verification, or compliance policy. | Approval may permit the sensitive override step only inside its scope. Use a Decision Packet for why the exception is acceptable, what risk is accepted, what follow-up remains, and how close is affected. Evidence should link the policy, waiver, residual-risk, and follow-up refs. |
 
-Approval prompts should name the ordinary side effect first and include identifiers second, for example: "May I export the redacted billing CSV to vendor X? (`data_export`, `external_service_write`)." If the same step would also decide user-owned product, material technical, security, QA, verification, result-acceptance, residual-risk, or policy judgment, route that judgment to a compatible Decision Packet. When that judgment blocks write authority, it must be resolved, deferred, waived, or otherwise recorded according to the applicable owner gate semantics before `prepare_write` can return `allowed`.
+Approval prompts should name the ordinary side effect first and include identifiers second, for example: "May I export the redacted billing CSV to vendor X? (`data_export`, `external_service_write`)." If the same step would also decide user-owned product, material technical, security, QA, verification, final acceptance, residual-risk acceptance, or policy judgment, route that judgment to a compatible Decision Packet. When that judgment blocks write authority, it must be resolved, deferred, waived, or otherwise recorded according to the applicable owner gate semantics before `prepare_write` can return `allowed`.
 
 ## ArtifactRef
 
@@ -685,7 +687,7 @@ AcceptanceVisibilityContext:
   what_acceptance_does_not_replace: string[]
 ```
 
-`ResidualRiskSummary.status=none` means Core has no known close-relevant Residual Risk for the current Task and requested action. It satisfies residual-risk visibility for acceptance and ordinary successful close, with `close_relevant_count=0` and empty risk-ref arrays. It must not be returned when Core knows of hidden, blocked, or otherwise undisplayed close-relevant risk; those cases use `not_visible` or `blocked`.
+`ResidualRiskSummary.status=none` means Core has no known close-relevant Residual Risk for the current Task and requested action. It satisfies residual-risk visibility for final acceptance and ordinary successful close, with `close_relevant_count=0` and empty risk-ref arrays. It must not be returned when Core knows of hidden, blocked, or otherwise undisplayed close-relevant risk; those cases use `not_visible` or `blocked`.
 
 `ResidualRiskSummary.visible_refs`, `not_visible_refs`, `unaccepted_refs`, `accepted_refs`, and related acceptance visibility risk-ref arrays contain `StateRecordRef` entries with `record_kind=residual_risk`. `visible_refs` lists close-relevant Residual Risk records visible in the current judgment context; `unaccepted_refs` may overlap with visible risk when residual-risk acceptance is still needed. Accepted risk remains metadata/state on Residual Risk records.
 
@@ -775,10 +777,10 @@ Tool descriptions below separate `ValidatorResults emitted` from Core checks/pre
 | `EVIDENCE_INSUFFICIENT` | required evidence coverage is absent, partial, stale, or blocked |
 | `VERIFY_NOT_DETACHED` | verification cannot count as detached verification |
 | `QA_REQUIRED` | required Manual QA is pending, failed, or missing |
-| `ACCEPTANCE_REQUIRED` | required user acceptance is pending or rejected |
+| `ACCEPTANCE_REQUIRED` | required final acceptance is pending or rejected |
 | `PROJECTION_STALE` | projection freshness is stale or failed for the requested action |
 | `RECONCILE_REQUIRED` | human-editable or managed-block drift requires reconcile |
-| `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk has not been made visible before acceptance or successful close |
+| `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk has not been made visible before final acceptance or successful close |
 | `ARTIFACT_MISSING` | a referenced artifact file is missing or integrity check failed |
 | `BASELINE_STALE` | baseline no longer matches the repository state required by the operation |
 | `VALIDATOR_FAILED` | generic fallback when one or more required validators failed and no more specific typed `ErrorCode` applies |
@@ -805,7 +807,7 @@ User-facing displays should map `ErrorCode` values to display labels and next-ac
 | `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | scope, boundary, or baseline issue | Confirm or narrow scope, update the Change Unit or baseline, or request the needed Decision Packet before the operation proceeds. |
 | `DECISION_REQUIRED`, `DECISION_UNRESOLVED` | judgment needed | Show the relevant Decision Packet or decision prompt with options, recommendation, uncertainty, deferral effect, and refs. |
 | `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED` | Approval needed or not usable | Request, resolve, or renew the sensitive-action Approval; do not treat Approval as Write Authorization or product judgment. |
-| `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE` | evidence, verification, QA, acceptance, or risk visibility needed | Record or rerun the missing check, show residual risk, request acceptance, or record a valid waiver through the owning path. |
+| `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE` | evidence, verification, QA, final acceptance, or risk visibility needed | Record or rerun the missing check, show residual risk, request final acceptance, or record a valid waiver through the owning path. |
 | `PROJECTION_STALE` | stale status view | Refresh or reconcile the projection before relying on that readable view; canonical state remains the authority when directly available. |
 | `RECONCILE_REQUIRED` | reconcile needed | Reconcile human-editable or managed-block drift before using the affected projection or close path. |
 | `ARTIFACT_MISSING` | artifact issue | Reattach, regenerate, or replace the missing or failed artifact before relying on it as evidence. |
@@ -844,8 +846,8 @@ If an MCP server or caller cannot reach Core at all, the surface or operator may
 | 17 | `EVIDENCE_INSUFFICIENT` | required evidence coverage is absent, partial, stale, or blocked |
 | 18 | `VERIFY_NOT_DETACHED` | verification cannot count as detached verification |
 | 19 | `QA_REQUIRED` | required Manual QA is pending, failed, missing, or not validly waived |
-| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk has not been made visible before acceptance or close; not selected when `ResidualRiskSummary.status=none` confirms no known close-relevant risk |
-| 21 | `ACCEPTANCE_REQUIRED` | required user acceptance is pending or rejected after residual-risk visibility is satisfied |
+| 20 | `RESIDUAL_RISK_NOT_VISIBLE` | known close-relevant residual risk has not been made visible before final acceptance or close; not selected when `ResidualRiskSummary.status=none` confirms no known close-relevant risk |
+| 21 | `ACCEPTANCE_REQUIRED` | required final acceptance is pending or rejected after residual-risk visibility is satisfied |
 | 22 | `PROJECTION_STALE` | projection freshness is stale or failed for the requested action |
 | 23 | `RECONCILE_REQUIRED` | human-editable or managed-block drift requires reconcile |
 | 24 | `ARTIFACT_MISSING` | a referenced artifact file is missing or failed integrity checks |
@@ -853,7 +855,9 @@ If an MCP server or caller cannot reach Core at all, the surface or operator may
 
 #### `harness.close_task` Close Blockers
 
-`harness.close_task` may return multiple close blockers. The primary `ToolError` in `CloseTaskResponse.base.errors` uses the precedence above; when present, `CloseTaskResponse.base.errors[0].code` is the primary close error code. `CloseTaskResponse.blockers` must include the observed close blockers as structured results in the same relative order. Prose in status, reports, Journey views, or agent summaries may explain these blockers, but prose-only text is not a close-blocker result. Residual-risk visibility remains before `ACCEPTANCE_REQUIRED` for close and acceptance flows because required acceptance can be recorded or relied on only after close-relevant residual risk is visible.
+`harness.close_task` may return multiple close blockers. The primary `ToolError` in `CloseTaskResponse.base.errors` uses the precedence above; when present, `CloseTaskResponse.base.errors[0].code` is the primary close error code. `CloseTaskResponse.blockers` must include the observed close blockers as structured results in the same relative order. Prose in status, reports, Journey views, or agent summaries may explain these blockers, but prose-only text is not a close-blocker result. Residual-risk visibility remains before `ACCEPTANCE_REQUIRED` for close and final acceptance flows because required final acceptance can be recorded or relied on only after close-relevant residual risk is visible.
+
+Visible-but-unaccepted close-relevant risk is not returned as `RESIDUAL_RISK_NOT_VISIBLE`. If the requested close path requires risk acceptance, public close/API responses use primary `DECISION_REQUIRED` when a residual-risk acceptance Decision Packet must be requested, or `DECISION_UNRESOLVED` when a relevant residual-risk acceptance Decision Packet exists but is pending, rejected, blocked, stale, deferred without coverage, or incompatible. The structured close blocker category must be `residual_risk_acceptance`, and `related_refs` must cite the relevant `residual_risk` refs or pending Decision Packet refs.
 
 ## Idempotency
 
@@ -1019,7 +1023,7 @@ Idempotency behavior: same key returns the same Task/resume decision; different 
 
 Purpose: return the next safe action, instruction bundle, and pending decisions for the current Task.
 
-User-facing meaning: show what should happen next. `next_action.summary` should be ordinary action language such as ask the user, prepare this write, record evidence, run verification, record Manual QA, request acceptance, refresh or reconcile, or close. `next_action.required_tool` is a caller hint, not a command the user must see unless power-user detail is useful.
+User-facing meaning: show what should happen next. `next_action.summary` should be ordinary action language such as ask the user, prepare this write, record evidence, run verification, record Manual QA, request final acceptance, refresh or reconcile, or close. `next_action.required_tool` is a caller hint, not a command the user must see unless power-user detail is useful.
 
 Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
 
@@ -1058,13 +1062,13 @@ NextResponse:
 
 | `action_kind` | User-facing meaning | Authority boundary |
 |---|---|---|
-| `ask_user` | A user-owned decision, sensitive-action Approval, QA judgment, acceptance, residual-risk judgment, or other answer is needed before the named path can continue. | The prompt must name what the user is deciding and cite relevant refs; it does not authorize writes or close by itself. |
+| `ask_user` | A user-owned decision, sensitive-action Approval, QA judgment, final acceptance judgment, residual-risk acceptance judgment, or other answer is needed before the named path can continue. | The prompt must name what the user is deciding and cite relevant refs; it does not authorize writes or close by itself. |
 | `prepare_write` | Check whether the exact intended product write may happen now. | No product write is authorized until `harness.prepare_write` returns a compatible Write Authorization. |
 | `implement` | Carry out the already-scoped work; for product writes, use only current compatible Write Authorization. | Does not widen scope, reuse an old authorization, or settle user-owned judgment. |
 | `launch_verify` | Prepare or launch a verification path from current evidence and source refs. | Creates at most a detached candidate; it is not a passing Eval or assurance upgrade. |
 | `record_eval` | Record the evaluator's result and reviewed refs. | Verification is not passed until Core records a qualifying Eval and updates the gate or assurance state. |
 | `record_manual_qa` | Record a human Manual QA outcome or valid waiver path. | Browser artifacts, smoke runs, or notes are not Manual QA unless a Manual QA record or valid waiver is recorded. |
-| `request_acceptance` | Ask for final acceptance after evidence, verification, Manual QA, and residual-risk visibility are shown. | Acceptance does not replace evidence, verification, Manual QA, sensitive-action Approval, scope, or residual-risk visibility. |
+| `request_acceptance` | Ask for final acceptance after evidence, verification, Manual QA, and residual-risk visibility are shown. | Final acceptance does not replace evidence, verification, Manual QA, sensitive-action Approval, scope, or residual-risk visibility. |
 | `close_task` | Attempt close, cancel, or supersede through `harness.close_task`. | A close attempt may still return blockers; status text or reports cannot close the Task. |
 | `reconcile` | Refresh or reconcile stale projection, managed-block drift, proposal text, or state/display mismatch. | Reconcile display does not become state until the existing reconcile/owner path accepts it. |
 | `idle` | No immediate Harness action is required for the requested focus. | Does not imply the Task is closed, accepted, verified, or risk-free. |
@@ -1081,7 +1085,7 @@ Projection jobs enqueued: none.
 
 Routing metadata, including `RecommendedPlaybook.route`, `decision_packet_route`, and optional implementation `decision_requests`, is not authority by itself. It can point the caller toward the existing Decision Packet or owner-record path, but it cannot satisfy sensitive-action Approval, user-owned judgment, acceptance, waiver, residual-risk acceptance, Write Authorization, or close.
 
-When `focus=acceptance`, `judgment_context.acceptance_visibility` must be non-null. It must include the residual-risk summary, unaccepted close-relevant risk refs, evidence summary refs, verification status, QA status, acceptance status, and what acceptance does not replace. The context must distinguish `ResidualRiskSummary.status=none`, meaning no known close-relevant risk exists, from `not_visible`, meaning known close-relevant risk is still hidden. The context must make clear before any acceptance request that acceptance does not replace evidence sufficiency, verification, Manual QA, sensitive-action Approval, scope, or residual-risk visibility. A response that asks for final acceptance without this visibility context is incomplete display and must not be treated as acceptance authority.
+When `focus=acceptance`, `judgment_context.acceptance_visibility` must be non-null. It must include the residual-risk summary, unaccepted close-relevant risk refs, evidence summary refs, verification status, QA status, final acceptance status, and what final acceptance does not replace. The context must distinguish `ResidualRiskSummary.status=none`, meaning no known close-relevant risk exists, from `not_visible`, meaning known close-relevant risk is still hidden. The context must make clear before any final acceptance request that final acceptance does not replace evidence sufficiency, verification, Manual QA, sensitive-action Approval, scope, or residual-risk visibility. A response that asks for final acceptance without this visibility context is incomplete display and must not be treated as final acceptance authority.
 
 When the next action is blocked, display the primary blocker and smallest unblocker first. Secondary blockers should appear as follow-on context when they would still block the same close, write, verification, QA, or acceptance path after the primary blocker is resolved.
 
@@ -1209,7 +1213,7 @@ Approval authorizes sensitive categories inside the defined scope. Approval does
 
 Purpose: record shaping, implementation, direct-result, or verification-input run data, including artifacts and evidence updates. For implementation and direct product-write Runs, this tool consumes a compatible Write Authorization; it does not decide write authorization.
 
-User-facing meaning: say what happened and what changed in evidence, artifacts, or next action. If Core rejects the request before committing a Run, do not claim a Run exists. If Core records a violation or audit Run after an observed product write, label it as audit/recovery context and do not present it as satisfying evidence, detached verification, QA, acceptance, or close readiness.
+User-facing meaning: say what happened and what changed in evidence, artifacts, or next action. If Core rejects the request before committing a Run, do not claim a Run exists. If Core records a violation or audit Run after an observed product write, label it as audit/recovery context and do not present it as satisfying evidence, detached verification, QA, final acceptance, or close readiness.
 
 Allowed actor: `lead_agent`, `evaluator`, `operator`.
 
@@ -1343,7 +1347,7 @@ Feedback Loop creation and definition happen through `ShapingUpdatePayload.feedb
 
 Core validates the consumed authorization against observed changed paths, created/deleted paths, artifact inputs and resolved artifact refs, command results, run summary, baseline, active Change Unit, approval refs, Decision Packet refs, sensitive categories, and surface guarantee. The run summary helps explain the Run, but it must not be accepted as proof of authorized changes without compatible observed paths, artifacts, and authorization basis.
 
-`runs.write_authorization_id` is populated only when a Run successfully consumes a compatible Write Authorization. A violation or audit Run that attempted to use an invalid, stale, missing, consumed, or scope-exceeded authorization must not populate `runs.write_authorization_id` as a consumed authorization. The attempted authorization ref, when useful for audit, should be recorded in validator findings, run violation payload, or `task_events.payload_json`. Such a violation Run may be recorded for audit or recovery if an observed product write already happened, but it must not satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness. The corresponding Write Authorization should remain unconsumed and may be marked stale, revoked, or expired according to the violation and compatibility basis.
+`runs.write_authorization_id` is populated only when a Run successfully consumes a compatible Write Authorization. A violation or audit Run that attempted to use an invalid, stale, missing, consumed, or scope-exceeded authorization must not populate `runs.write_authorization_id` as a consumed authorization. The attempted authorization ref, when useful for audit, should be recorded in validator findings, run violation payload, or `task_events.payload_json`. Such a violation Run may be recorded for audit or recovery if an observed product write already happened, but it must not satisfy evidence sufficiency, detached verification, QA, final acceptance, or close readiness. The corresponding Write Authorization should remain unconsumed and may be marked stale, revoked, or expired according to the violation and compatibility basis.
 
 Response schema:
 
@@ -1373,7 +1377,7 @@ Stable EventRef values that may be returned: `run_recorded`, `write_authorizatio
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `shaping_updated`, `implementation_recorded`, `direct_result_recorded`, `verification_input_recorded`, `artifact_registered`, `feedback_loop_updated`, `tdd_trace_updated`.
 
-Violation or audit Runs may emit `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, or `scope_violation_detected` for audit and recovery. Those Runs cannot satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness. Pre-commit rejection responses return no stable EventRef values from `record_run`.
+Violation or audit Runs may emit `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, or `scope_violation_detected` for audit and recovery. Those Runs cannot satisfy evidence sufficiency, detached verification, QA, final acceptance, or close readiness. Pre-commit rejection responses return no stable EventRef values from `record_run`.
 
 Projection jobs enqueued for committed non-dry-run Run responses when the relevant projection support is in scope: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `DIRECT-RESULT` for `kind=direct`; `TDD-TRACE` when updated. Dry-run and pre-commit rejection responses enqueue no projection jobs.
 
@@ -1421,7 +1425,7 @@ RequestUserDecisionRequest:
   reconcile_item_id: string | null
 ```
 
-Core stores a canonical `DecisionPacket`. Minimal v0.1 Core Authority Slice implementations may omit `decision_requests`; public request and response schemas remain centered on Decision Packet, not Decision Request. If the implementation also creates or updates `decision_requests`, those rows are routing, interaction, idempotency replay, or compatibility handoff metadata only, and they must link back to the canonical `decision_packet_id` before gate aggregation can consider their metadata. A `decision_request` row alone never satisfies `decision_gate`, sensitive-action Approval, acceptance, waiver, residual-risk acceptance, or close. `expires_at` is copied into canonical Decision Packet state when present; optional `decision_requests.expires_at` is routing metadata only and must not replace the packet's expiry. If `state_summary_at_request` is `null`, Core derives it from current state during the same transaction. The stored `state_summary_at_request` is a request-time snapshot and is not updated by later Task transitions. `approval_scope` is required when `decision_kind=approval`; for all other `decision_kind` values it must be `null` or omitted. `decision_kind=approval` is only the approval-shaped context for sensitive-action Approval and cannot resolve user-owned judgment such as product trade-offs, design direction, architecture or material technical direction, unresolved security or product-security judgment, QA waiver, verification waiver, verification risk, final acceptance, or residual-risk acceptance without separate compatible Decision Packets and gate updates. For `decision_kind=approval`, Core also creates a linked pending Approval record using the approval scope; the Approval is not granted until `harness.record_user_decision` resolves the Decision Packet. `judgment_domain` is required for every user-facing decision request and stored Decision Packet; it is the user-visible judgment grouping, not the lifecycle route. A `residual_risk_acceptance` packet must include the risk visibility context in `user_context.minimum_context` and relevant risk refs in `context.source_refs`. A broad natural-language answer such as "go ahead," "proceed," or "looks good" is not a schema branch; the request must still name the `decision_kind`, `judgment_domain`, option, affected gates, and user context that determine what Core is asking the user to decide.
+Core stores a canonical `DecisionPacket`. Minimal v0.1 Core Authority Slice implementations may omit `decision_requests`; public request and response schemas remain centered on Decision Packet, not Decision Request. If the implementation also creates or updates `decision_requests`, those rows are routing, interaction, idempotency replay, or compatibility handoff metadata only, and they must link back to the canonical `decision_packet_id` before gate aggregation can consider their metadata. A `decision_request` row alone never satisfies `decision_gate`, sensitive-action Approval, final acceptance, waiver, residual-risk acceptance, or close. `expires_at` is copied into canonical Decision Packet state when present; optional `decision_requests.expires_at` is routing metadata only and must not replace the packet's expiry. If `state_summary_at_request` is `null`, Core derives it from current state during the same transaction. The stored `state_summary_at_request` is a request-time snapshot and is not updated by later Task transitions. `approval_scope` is required when `decision_kind=approval`; for all other `decision_kind` values it must be `null` or omitted. `decision_kind=approval` is only the approval-shaped context for sensitive-action Approval and cannot resolve user-owned judgment such as product trade-offs, design direction, architecture or material technical direction, unresolved security or product-security judgment, QA waiver, verification waiver, verification risk, final acceptance, or residual-risk acceptance without separate compatible Decision Packets and gate updates. For `decision_kind=approval`, Core also creates a linked pending Approval record using the approval scope; the Approval is not granted until `harness.record_user_decision` resolves the Decision Packet. `judgment_domain` is required for every user-facing decision request and stored Decision Packet; it is the user-visible judgment grouping, not the lifecycle route. A `residual_risk_acceptance` packet must include the risk visibility context in `user_context.minimum_context` and relevant risk refs in `context.source_refs`. A broad natural-language answer such as "go ahead," "proceed," or "looks good" is not a schema branch; the request must still name the `decision_kind`, `judgment_domain`, option, affected gates, and user context that determine what Core is asking the user to decide.
 
 The user-visible prompt derived from this request should be decision-centered: ask the user to choose, defer, reject, waive, accept, or reconcile the named option, and say what that answer will and will not settle. It should not ask for generic approval unless `decision_kind=approval` and `approval_scope` describe the sensitive action being approved. Every user-facing decision request must include the exact thing the user is deciding, `judgment_domain`, `decision_kind`, options, pros/cons or benefits/costs/risks, recommendation when the agent can justify one, uncertainty, what happens if the decision is deferred, affected gates or blocked actions, and related state or artifact refs. If an ordinary answer could map to multiple pending decisions, the surface must clarify instead of recording it against all of them. Surfaces may render friendly labels such as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed from the enum value, but the stored schema value is the snake-case enum above.
 
@@ -1441,7 +1445,7 @@ RequestUserDecisionResponse:
 
 `pending_decisions` returned by status and next-action responses contain unresolved user-action `StateRecordRef` entries with `record_kind=decision_packet`. `active_decision_packet_refs` fields include all Decision Packets relevant to the current phase or requested action, including pending, deferred, blocked, or recently resolved packets.
 
-State transition summary: records a pending Decision Packet and usually moves Task to `waiting_user`; decision-gate judgment, such as a user-owned product trade-off or material technical/architecture choice, sets `decision_gate=pending`; approval requests create a pending Approval record and set `approval_gate=pending`; scope confirmation sets `scope_gate=pending`; acceptance and residual-risk acceptance set or keep `acceptance_gate=pending` when acceptance is required.
+State transition summary: records a pending Decision Packet and usually moves Task to `waiting_user`; decision-gate judgment, such as a user-owned product trade-off or material technical/architecture choice, sets `decision_gate=pending`; approval requests create a pending Approval record and set `approval_gate=pending`; scope confirmation sets `scope_gate=pending`; final acceptance sets or keeps `acceptance_gate=pending` when final acceptance is required. Residual-risk acceptance uses its own `decision_kind=residual_risk_acceptance` path and the `residual_risk_acceptance` close blocker category when named visible risk still needs user acceptance.
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `decision_packet_created`, `user_decision_requested`, `approval_requested`, `scope_confirmation_requested`, `design_choice_requested`, `architecture_choice_requested`, `autonomy_boundary_decision_requested`, `verification_waiver_requested`, `qa_waiver_requested`, `acceptance_requested`, `residual_risk_acceptance_requested`, `reconcile_decision_requested`.
 
@@ -1508,7 +1512,7 @@ AcceptedRiskInput:
   evidence_refs: EvidenceRefs
 ```
 
-The payload branch must match `decision_kind`; other branches must be absent. `judgment_domain` is read from the stored Decision Packet for display and grouping, not used as a payload branch. The selected branch, selected option, and compatible Decision Packet determine the recorded judgment; free-form note text such as "approved," "go ahead," "proceed," or "looks good" cannot broaden it into sensitive-action Approval, acceptance, waiver, residual-risk acceptance, or write authority. `accepted_risks` is allowed only when the Decision Packet and current Judgment Context made the close-relevant residual risk visible before the user decision. For `decision_kind=acceptance`, Core may record acceptance only when close-relevant residual risk is visible or `ResidualRiskSummary.status=none` confirms no known close-relevant risk. Final acceptance records the user's result judgment; it does not approve sensitive actions, waive QA or verification, or mark a known risk accepted unless the residual-risk acceptance route also records the identified risk. Core records the answer against the canonical `DecisionPacket` identified by `decision_packet_id`; any `decision_requests` row is updated only as routing/replay metadata and cannot satisfy `decision_gate`, sensitive-action Approval, acceptance, waiver, residual-risk acceptance, or close without the linked compatible Decision Packet and owner-record updates. Core records accepted risk by updating Residual Risk records and returning residual-risk state refs; it does not treat residual-risk acceptance as detached verification. `AcceptedRiskInput.residual_risk_ref=null` is allowed only when the current Decision Packet and Judgment Context already made that close-relevant risk visible to the user and include enough source and evidence context for Core to create or associate a Residual Risk record in the same committed transition. If visibility or context is absent, Core must reject or block instead of silently creating and accepting a hidden risk.
+The payload branch must match `decision_kind`; other branches must be absent. `judgment_domain` is read from the stored Decision Packet for display and grouping, not used as a payload branch. The selected branch, selected option, and compatible Decision Packet determine the recorded judgment; free-form note text such as "approved," "go ahead," "proceed," or "looks good" cannot broaden it into sensitive-action Approval, final acceptance, waiver, residual-risk acceptance, or write authority. `accepted_risks` is allowed only when the Decision Packet and current Judgment Context made the close-relevant residual risk visible before the user decision. For `decision_kind=acceptance`, Core may record acceptance only when close-relevant residual risk is visible or `ResidualRiskSummary.status=none` confirms no known close-relevant risk. Final acceptance records the user's result judgment; it does not approve sensitive actions, waive QA or verification, or mark a known risk accepted unless the residual-risk acceptance route also records the identified risk. Core records the answer against the canonical `DecisionPacket` identified by `decision_packet_id`; any `decision_requests` row is updated only as routing/replay metadata and cannot satisfy `decision_gate`, sensitive-action Approval, final acceptance, waiver, residual-risk acceptance, or close without the linked compatible Decision Packet and owner-record updates. Core records accepted risk by updating Residual Risk records and returning residual-risk state refs; it does not treat residual-risk acceptance as detached verification. `AcceptedRiskInput.residual_risk_ref=null` is allowed only when the current Decision Packet and Judgment Context already made that close-relevant risk visible to the user and include enough source and evidence context for Core to create or associate a Residual Risk record in the same committed transition. If visibility or context is absent, Core must reject or block instead of silently creating and accepting a hidden risk.
 
 For `decision_kind=verification_waiver`, `decision.verification_waiver.value=waived` records accepted verification risk only through the Decision Packet and Residual Risk path above. If that risk is close-relevant, `accepted_risks` must identify or create the visible Residual Risk refs needed for a later `completed_with_risk_accepted` close. A verification-waiver decision must not update assurance, must not create detached verification, and must not allow `completed_verified` close.
 
@@ -1764,12 +1768,29 @@ CloseTaskRequest:
 Response schema:
 
 ```yaml
+CloseBlockerCategory:
+  enum:
+    - open_run
+    - scope
+    - user_decision
+    - sensitive_action_approval
+    - design_policy
+    - evidence
+    - verification
+    - manual_qa
+    - residual_risk_visibility
+    - residual_risk_acceptance
+    - final_acceptance
+    - projection_freshness
+    - artifact_availability
+
 CloseTaskResponse:
   base: ToolResponseBase
   closed: boolean
   state: StateSummary
   blockers:
     - code: ErrorCode
+      category: CloseBlockerCategory
       message: string
       required_next_action: string
       related_refs: StateRecordRef[]
@@ -1777,13 +1798,15 @@ CloseTaskResponse:
   artifact_refs: ArtifactRef[]
 ```
 
-Close blockers include unresolved, missing, deferred-without-coverage, blocked, rejected, stale, or incompatible blocking Decision Packets, and known close-relevant residual risk that is not visible before any successful close. If no known close-relevant residual risk exists, `ResidualRiskSummary.status=none` satisfies residual-risk visibility and is not a close blocker. A risk-accepted close additionally requires visible and accepted Residual Risk refs. Acceptance, when required, can be recorded only after close-relevant residual risk is visible or confirmed as `ResidualRiskSummary.status=none`.
+Close blockers include unresolved, missing, deferred-without-coverage, blocked, rejected, stale, or incompatible blocking Decision Packets, and known close-relevant residual risk that is not visible before any successful close. If no known close-relevant residual risk exists, `ResidualRiskSummary.status=none` satisfies residual-risk visibility and is not a close blocker. A risk-accepted close additionally requires visible and accepted Residual Risk refs. Final acceptance, when required, can be recorded only after close-relevant residual risk is visible or confirmed as `ResidualRiskSummary.status=none`. If close-relevant risk is visible but not accepted and the requested close path requires risk acceptance, the blocker category is `residual_risk_acceptance`; use `DECISION_REQUIRED` or `DECISION_UNRESOLVED` as the blocker code according to whether the residual-risk acceptance decision is missing or unresolved.
 
 For `requested_close_reason=completed_verified`, blockers include same-session review, invalid or insufficient independence, stale evaluator bundle, baseline drift, missing or failed-integrity reviewed artifacts, and verification waiver. For `requested_close_reason=completed_with_risk_accepted`, blockers include missing visible accepted Residual Risk refs for the waived or remaining verification risk.
 
 `CloseTaskResponse.blockers` is the structured close-blocker result. Reports, projection text, status text, and agent summaries may render or explain those blockers, but a prose-only report must not be treated as the close blocker record or as a successful close decision.
 
 User-facing meaning: answer whether the Task can finish or cancel now. If close is blocked, display the first close blocker as the primary close blocker, use `required_next_action` as the smallest unblocker when present, and show remaining blockers as secondary close blockers with refs. Do not summarize a failed close as a generic gate failure when a concrete blocker is available.
+
+`CloseBlockerCategory` is the stable public category value set for `CloseTaskResponse.blockers[].category`: `open_run`, `scope`, `user_decision`, `sensitive_action_approval`, `design_policy`, `evidence`, `verification`, `manual_qa`, `residual_risk_visibility`, `residual_risk_acceptance`, `final_acceptance`, `projection_freshness`, and `artifact_availability`. User-facing displays may render natural labels for those values, but the primary `ErrorCode` does not collapse secondary blockers, and `closed=false` must not be explained as one generic "not done" state when multiple categories remain unresolved.
 
 State transition summary: successful completion moves Task to `completed` with result and close reason; cancellation/supersession moves Task to `cancelled`; failed close leaves Task non-terminal and reports blockers.
 
@@ -1793,7 +1816,7 @@ Projection jobs enqueued: for a committed non-dry-run successful close or close-
 
 ValidatorResults emitted: `decision_gate_check`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, `manual_qa_required`, `residual_risk_visibility_check`, `context_hygiene_check` when projection or context hygiene must be emitted as a ValidatorResult.
 
-Core checks/preconditions: `state_envelope`, `active_run_absent`, `active_change_unit_complete`, `scope_coverage`, `approval_scope`, `design_gate_close`, `evidence_sufficiency`, `same_session_verify_guard`, `acceptance_required`, `projection_freshness`.
+Core checks/preconditions: `state_envelope`, `active_run_absent`, `active_change_unit_complete`, `scope_coverage`, `approval_scope`, `design_gate_close`, `evidence_sufficiency`, `same_session_verify_guard`, `qa_required`, `residual_risk_visibility`, `residual_risk_acceptance`, `acceptance_required`, `projection_freshness`.
 
 Possible errors: `STATE_CONFLICT`, `NO_ACTIVE_TASK`, `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `AUTONOMY_BOUNDARY_EXCEEDED`, `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, `APPROVAL_EXPIRED`, `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, `QA_REQUIRED`, `ACCEPTANCE_REQUIRED`, `RESIDUAL_RISK_NOT_VISIBLE`, `PROJECTION_STALE`, `RECONCILE_REQUIRED`, `ARTIFACT_MISSING`, `BASELINE_STALE`, `VALIDATOR_FAILED`, `MCP_UNAVAILABLE`.
 

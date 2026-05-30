@@ -122,7 +122,7 @@ The MVP must demonstrate:
 - status and next-action output explain current scope, missing decisions, evidence state, close blockers, and safe next action
 - close is blocked when required evidence or required user judgment is missing
 - residual risk can be displayed before acceptance and close
-- final user acceptance is distinct from sensitive-action Approval and residual-risk acceptance
+- final acceptance is distinct from sensitive-action Approval and residual-risk acceptance
 - readable projections or cards are sufficient to show the user-facing path, without template polish becoming the source of truth
 - conformance can prove the path through Core state, events, artifacts, projection/freshness facts, and structured errors rather than prose alone
 
@@ -214,13 +214,13 @@ Use these as implementation-readable checklists for future runtime planning afte
 - Close blocks when required evidence is missing.
 - Close blocks when required user judgment is missing or unresolved.
 - Residual risk is visible before successful acceptance or close when known close-relevant risk exists.
-- Final user acceptance is recorded or represented separately from sensitive-action Approval and residual-risk acceptance.
+- Final acceptance is recorded or represented separately from sensitive-action Approval and residual-risk acceptance.
 - User-facing projections or cards are derived from Core records and are sufficient for the MVP path without making template polish authoritative.
 
 ### v0.3 Assurance & Stewardship Pack exit checklist
 
 - Decision Packet quality and user-judgment routing are fixture-proven.
-- Sensitive-action Approval does not substitute for Decision Packets, Write Authorization, Manual QA, verification, acceptance, or residual-risk acceptance.
+- Sensitive-action Approval does not substitute for Decision Packets, Write Authorization, Manual QA, verification, final acceptance, or residual-risk acceptance.
 - Detached verification independence and same-session verification guard behavior are fixture-proven.
 - Manual QA policy matrix and QA blockers are fixture-proven where policy requires them.
 - Risk-accepted close cites accepted Residual Risk refs under the owner semantics.
@@ -243,7 +243,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 |---|---|
 | v0.1 Core Authority Slice | An implementer/operator can see one local Task move through scope, `prepare_write`, Write Authorization, `record_run`, artifact/evidence link, read-only status/next, and structured blockers. |
 | v0.2 User-Facing Harness MVP | A user can see ordinary work clarified into scope, judgment, evidence, close readiness, acceptance, and residual-risk language, with close blocked when evidence or user judgment is missing. |
-| v0.3 Assurance & Stewardship Pack | The local path explains verification, Manual QA, stewardship, TDD, feedback, context hygiene, acceptance, residual-risk acceptance, and close behavior through Core records and fixtures. |
+| v0.3 Assurance & Stewardship Pack | The local path explains verification, Manual QA, stewardship, TDD, feedback, context hygiene, final acceptance, residual-risk acceptance, and close behavior through Core records and fixtures. |
 | v0.4 Operations & Handoff Pack | Operators can diagnose, recover, reconcile, export, check artifacts, run conformance, and prepare release handoff over the same Core state. |
 
 After staged delivery, promoted roadmap items can read, display, wrap, or extend the authority loop only after owner docs define exact contracts and fixture coverage.

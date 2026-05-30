@@ -56,7 +56,7 @@ Strict behavior: Task lifecycle, modes, and state transitions are owned by [Kern
 
 Discovery is used when the request is ambiguous, risky, multi-step, product-facing, or likely to need user-owned judgment. It clarifies goal, non-goals, acceptance criteria, assumptions, technical and product choices, security or privacy concerns, QA expectations, and scope boundaries.
 
-Strict behavior: Discovery is shaping input. It is not Approval, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, scope authority, or a new authority path. Decision routing is owned by [Decision Packet](../reference/kernel.md#decision-packet) and the public decision call in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision).
+Strict behavior: Discovery is shaping input. It is not Approval, Write Authorization, evidence, verification, QA, final acceptance, residual-risk acceptance, close, scope authority, or a new authority path. Decision routing is owned by [Decision Packet](../reference/kernel.md#decision-packet) and the public decision call in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision).
 
 ### 3. Discovery -> scoped next work -> Change Unit
 

@@ -18,7 +18,7 @@ Boundary: projection template only; it does not authorize runtime/server impleme
 - projection freshness inputs
 - escalation flag
 - close assurance
-- evidence, verification, Manual QA, acceptance, and residual-risk close summaries when applicable
+- evidence, verification, Manual QA, final acceptance, and residual-risk close summaries when applicable
 
 Close Summary lines are derived display summaries from existing gate and owner-record refs. Direct work does not create additional close fields beyond the records it summarizes.
 

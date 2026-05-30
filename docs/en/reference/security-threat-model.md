@@ -49,7 +49,7 @@ This document does not own:
 
 - public MCP request/response schemas, public error shapes, or idempotency/replay contracts; see [MCP API And Schemas](mcp-api-and-schemas.md)
 - SQLite DDL, storage layout, canonical enum hardening, artifact row shape, or exact file layout; see [Storage And DDL](storage-and-ddl.md)
-- kernel state transitions, gates, Approval lifecycle, `prepare_write`, Write Authorization, acceptance, residual-risk acceptance, or close; see [Kernel Reference](kernel.md)
+- kernel state transitions, gates, Approval lifecycle, `prepare_write`, Write Authorization, final acceptance, residual-risk acceptance, or close; see [Kernel Reference](kernel.md)
 - operator command semantics, diagnostic severity baselines, or recover/reconcile/export behavior; see [Operations And Conformance Reference](operations-and-conformance.md)
 - fixture assertion semantics; see [Conformance Fixtures Reference](conformance-fixtures.md)
 - connector capability-profile field details, generated-manifest contracts, or surface recipes; see [Agent Integration Reference](agent-integration.md) and [Surface Cookbook](surface-cookbook.md)
@@ -142,7 +142,7 @@ Expected state version, idempotency, baseline compatibility, approval expiry, pr
 
 ### Fail closed when authority is unavailable
 
-If the authority path needed for a state-changing, write-capable, sensitive, verification, QA, acceptance, residual-risk, or close-relevant action is unavailable, the action must fail, hold, or report capability insufficiency rather than continuing from chat, stale projection text, generated files, cached context, or operator prose.
+If the authority path needed for a state-changing, write-capable, sensitive, verification, QA, final acceptance, residual-risk acceptance, or close-relevant action is unavailable, the action must fail, hold, or report capability insufficiency rather than continuing from chat, stale projection text, generated files, cached context, or operator prose.
 
 For MCP unavailability, operations and connectors use the existing diagnostic distinction between `MCP_SERVER_UNAVAILABLE` and `SURFACE_MCP_UNAVAILABLE`, while API-visible failures use the API-owned `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` paths where applicable.
 

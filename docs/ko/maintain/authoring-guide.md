@@ -28,7 +28,7 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 이번 재설계에서는 용어, MVP 단계, 스키마(schema) 구조, 투영(projection) 구조, 보안 표현, 문서 구성이 바뀔 수 있습니다. 정리된 제품 명제나 구현 가능성과 충돌하는 기존 문구는 연속성만으로 보존하지 않습니다.
 
-이 저장소에서 문서를 편집할 때는 하네스 런타임 절차가 필요하지 않습니다. 문서 편집을 위해 runtime state, `task_events`, Write Authorization, Evidence Manifest, Manual QA record, Acceptance record, Residual Risk record, generated projection, 운영 파일, executable fixture, 제품 저장소 예시를 만들지 않습니다. 이런 용어는 향후 Harness 동작을 설명할 때만 문서화할 수 있습니다.
+이 저장소에서 문서를 편집할 때는 하네스 런타임 절차가 필요하지 않습니다. 문서 편집을 위해 runtime state, `task_events`, Write Authorization, Evidence Manifest, 수동 QA record, Acceptance record, Residual Risk record, generated projection, 운영 파일, executable fixture, 제품 저장소 예시를 만들지 않습니다. 이런 용어는 향후 Harness 동작을 설명할 때만 문서화할 수 있습니다.
 
 문서 파일은 Harness를 이해하고 구현하기 위한 원천 자료입니다. 향후 Harness Server가 명시적으로 projection으로 생성하지 않는 한 Harness projection이 아닙니다. 문서 페이지가 자신이 설명하는 런타임 생명주기를 따르게 만들지 않습니다. 생명주기는 설명하고, owner contract로 연결하며, 편집 점검은 편집 점검으로 유지합니다.
 
@@ -53,7 +53,7 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 | 이 저장소가 앞으로 하네스 서버 소스 저장소가 된다는 설명이 흐려질 수 있습니다. | 현재는 문서 전용이며, 문서 승인 이후 하네스 서버 소스 저장소가 될 의도임을 진입점 문서에서 분명히 유지합니다. |
 | 요구사항 탐색(discovery)과 확인이 구현 단위(Change Unit)로 너무 빨리 수렴할 수 있습니다. | 범위가 정해진 구현 단위를 요구하기 전에 초기 discovery 여지를 남깁니다. |
 | `judgment_domain` 문서가 schema-owned enum과 어긋날 수 있습니다. | 사용자에게 보이는 label, 예시, template, fixture, storage owner map, Decision Packet 문서를 schema-owned `judgment_domain` enum과 맞춥니다. 임시 display-only category 표현을 다시 도입하지 않습니다. |
-| Approval, acceptance, residual-risk acceptance를 혼동하기 쉽습니다. | 진행 허가, 작업 수락, 잔여 위험 수용을 예시와 routing text에서 분리합니다. |
+| Approval, acceptance, 잔여 위험 수용을 혼동하기 쉽습니다. | 진행 허가, 작업 수락, 잔여 위험 수용을 예시와 routing text에서 분리합니다. |
 | 현재 MVP 단계가 너무 크고, 핵심 사용자 가치를 뒤로 미룰 수 있습니다. | MVP 크기와 초기 사용자 가치 사이의 긴장을 드러냅니다. Staging 결정은 owning Build/Reference 문서에 남깁니다. |
 | Projection/template 범위가 초기 구현에 비해 넓을 수 있습니다. | 초기 범위가 넓다는 점을 표시하고, staging 결정은 projection/template owner로 보냅니다. |
 | 보안 보장 표현은 실제 강제 수준과 맞아야 합니다. | Cooperative, detective, preventive, isolated 표현은 해당 surface가 그 수준을 제공할 때만 사용합니다. |
@@ -252,13 +252,13 @@ Exact schema identifier, API name, enum value, DDL name, file name, error code, 
 
 ## Docs-maintenance checks
 
-Docs-maintenance checks는 편집 품질 점검입니다. Documentation drift, owner mismatch, 영어/한국어 의미 일치 문제, owner 밖의 중복 규범 문구, 깨진 link나 anchor, TODO hygiene 문제를 보고할 수 있습니다. Runtime conformance나 implementation readiness가 아니며, fixture action을 실행하거나, runtime state를 seed하거나, runtime state/events/artifacts/projections/errors를 비교하거나, runtime fixture pass/fail에 포함되지 않습니다. 기준 상태, runtime state, `task_events`, evidence artifact나 Evidence Manifest, QA result나 Manual QA record, Acceptance record, 잔여 위험 수용이나 Residual Risk record, close readiness, projection refresh나 운영 보고서, implementation readiness를 만들거나 갱신하지 않습니다.
+Docs-maintenance checks는 편집 품질 점검입니다. Documentation drift, owner mismatch, 영어/한국어 의미 일치 문제, owner 밖의 중복 규범 문구, 깨진 link나 anchor, TODO hygiene 문제를 보고할 수 있습니다. Runtime conformance나 implementation readiness가 아니며, fixture action을 실행하거나, runtime state를 seed하거나, runtime state/events/artifacts/projections/errors를 비교하거나, runtime fixture pass/fail에 포함되지 않습니다. 기준 상태, runtime state, `task_events`, evidence artifact나 Evidence Manifest, QA result나 수동 QA record, Acceptance record, 잔여 위험 수용이나 Residual Risk record, close readiness, projection refresh나 운영 보고서, implementation readiness를 만들거나 갱신하지 않습니다.
 
 Maintain 문서는 documentation review rule, category label, reviewer expectation을 정의할 수 있습니다. Runtime conformance pass/fail, runtime fixture semantics, Core state effect, gate behavior, implementation readiness를 정의하면 안 됩니다. Docs-maintenance finding이 runtime contract를 건드리면 그 contract를 다시 적지 말고 owner Reference 문서를 가리켜야 합니다.
 
 ### 최종 사전 수락 리뷰
 
-Maintainer가 문서 세트를 구현 계획에 사용할 수 있다고 받아들이기 전, 마지막 docs-maintenance pass를 수행합니다. 영어/한국어 활성 파일 맵 일치, 대응 파일의 의미 섹션 일치, 깨진 link와 anchor, owner-boundary drift, owner가 아닌 문서의 중복 contract, Approval, Decision Packet, Evidence, Verification, Manual QA, Acceptance, Residual Risk, Projection, Guarantee Level 용어 drift, TODO hygiene를 확인합니다.
+Maintainer가 문서 세트를 구현 계획에 사용할 수 있다고 받아들이기 전, 마지막 docs-maintenance pass를 수행합니다. 영어/한국어 활성 파일 맵 일치, 대응 파일의 의미 섹션 일치, 깨진 link와 anchor, owner-boundary drift, owner가 아닌 문서의 중복 contract, Approval, Decision Packet, Evidence, Verification, 수동 QA, Acceptance, Residual Risk, Projection, Guarantee Level 용어 drift, TODO hygiene를 확인합니다.
 
 이 최종 리뷰도 편집 리뷰입니다. Maintainer handoff에 사용할 만큼 문서가 일관적인지 요약합니다. Runtime conformance, 기준 상태, evidence, QA, Acceptance, 잔여 위험 수용, close readiness, implementation readiness를 만들지 않습니다. Finding을 기록할 때는 기존 docs-maintenance reporting expectation을 사용하며, 이 최종 pass를 위한 새 필수 report format을 만들지 않습니다.
 

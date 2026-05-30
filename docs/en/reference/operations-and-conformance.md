@@ -184,7 +184,7 @@ flowchart LR
   Start["docs-maintenance smoke profile"] --> Check["check Markdown docs against Authoring Guide categories"]
   Check --> Report["report pass, warn, or fail per category"]
   Report --> Output["console output or ephemeral report"]
-  Output --> Hold["no task_events, artifacts, projections, QA, acceptance, or close state"]
+  Output --> Hold["no task_events, artifacts, projections, QA, final acceptance, or close state"]
 ```
 
 ## connect
@@ -375,7 +375,7 @@ When the access mode is unknown or weaker than the registered profile, operation
 
 ## projection refresh
 
-Projection refresh regenerates Product Repository Markdown from committed state records and artifact refs. It is a derived-view operation: it may report freshness, failed jobs, and reconcile needs, but it must not replace Core state, structured blockers, evidence authority, acceptance, residual-risk acceptance, or Write Authorization.
+Projection refresh regenerates Product Repository Markdown from committed state records and artifact refs. It is a derived-view operation: it may report freshness, failed jobs, and reconcile needs, but it must not replace Core state, structured blockers, evidence authority, final acceptance, residual-risk acceptance, or Write Authorization.
 
 Required behavior:
 
@@ -537,7 +537,7 @@ not done    no earlier task_events rewritten; no evidence silently deleted
 not done    no Markdown projection edited into canonical state
 ```
 
-Captured recovery artifacts can explain what was observed during interruption or repair. They do not prove the interrupted implementation completed successfully and cannot satisfy evidence, verification, QA, acceptance, residual-risk acceptance, or close by themselves.
+Captured recovery artifacts can explain what was observed during interruption or repair. They do not prove the interrupted implementation completed successfully and cannot satisfy evidence, verification, QA, final acceptance, residual-risk acceptance, or close by themselves.
 
 ## export
 

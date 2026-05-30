@@ -25,7 +25,7 @@
 - 코어 권한 조각(v0.1 Core Authority Slice)은 가장 작은 내부 커널 루프를 증명합니다.
 - 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 하네스가 work를 clarify, budget, block, accept, risk-explain하는 방식을 경험하는 첫 MVP입니다.
 
-첫 조각은 의도적으로 좁게 유지합니다. 로컬 project 하나, Task 하나, 기본 scope 하나, write authority path 하나, recorded Run 하나, evidence link 하나, structured blocker/status response 하나를 증명합니다. 이것은 MVP가 아닙니다. 일반적인 work를 scope, judgment, evidence, close-readiness, residual-risk language로 바꾸고 approval, acceptance, risk acceptance를 혼동하지 않게 만드는 단계가 MVP입니다.
+첫 조각은 의도적으로 좁게 유지합니다. 로컬 project 하나, Task 하나, 기본 scope 하나, write authority path 하나, recorded Run 하나, 근거 링크 하나, structured blocker/status response 하나를 증명합니다. 이것은 MVP가 아닙니다. 일반적인 work를 scope, judgment, 근거, close-readiness, 잔여 위험 언어로 바꾸고 approval, 작업 수락, 잔여 위험 수용을 혼동하지 않게 만드는 단계가 MVP입니다.
 
 Projection template polish, dashboard 또는 hosted workflow UI, index, broad connector ecosystem 또는 marketplace, team workflow, surface-specific connector automation, metric, parallel orchestration, broad automation은 authority record와 user-facing value path가 존재한 뒤 유용해질 수 있습니다. 첫 조각의 요구사항은 아닙니다.
 
@@ -33,9 +33,9 @@ Projection template polish, dashboard 또는 hosted workflow UI, index, broad co
 
 | 단계 | 전달 목표 | 증명하는 것 | 아직 증명하지 않는 것 |
 |---|---|---|---|
-| v0.1 | 코어 권한 조각(Core Authority Slice) | 로컬 project 하나, Task 하나, 기본 scope 하나, write authority path 하나, recorded Run 하나, evidence link 하나, structured blocker/status response 하나로 구성된 첫 runnable 내부 kernel loop. | 사용자 대상 MVP 가치, full intake/discovery, full Decision Packet 품질, residual-risk semantics, Manual QA, detached verification, projection completeness, operations readiness. |
-| v0.2 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자가 하네스가 scope, user-owned judgment, evidence, close readiness, final acceptance, residual-risk visibility를 로컬 권한 기록에 보존한다는 것을 경험합니다. | Full agency hardening, detached verification independence, Manual QA matrix, stewardship policy suite, feedback-loop policy, export/recover, release handoff. |
-| v0.3 | 보증과 스튜어드십 팩(Assurance & Stewardship Pack) | MVP path를 assurance, QA, verification, stewardship, design-quality, context-hygiene, TDD, feedback-loop profile로 단단하게 만듭니다. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
+| v0.1 | 코어 권한 조각(Core Authority Slice) | 로컬 project 하나, Task 하나, 기본 scope 하나, write authority path 하나, recorded Run 하나, 근거 링크 하나, structured blocker/status response 하나로 구성된 첫 runnable 내부 kernel loop. | 사용자 대상 MVP 가치, full intake/discovery, full Decision Packet 품질, residual-risk semantics, 수동 QA, 분리 검증, projection completeness, operations readiness. |
+| v0.2 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자가 하네스가 scope, user-owned judgment, 근거, close readiness, 작업 수락, 잔여 위험 표시를 로컬 권한 기록에 보존한다는 것을 경험합니다. | Full agency hardening, 분리 검증 독립성, 수동 QA matrix, stewardship policy suite, feedback-loop policy, export/recover, release handoff. |
+| v0.3 | 보증과 스튜어드십 팩(Assurance & Stewardship Pack) | MVP path를 assurance, 수동 QA, 검증, stewardship, design-quality, context-hygiene, TDD, feedback-loop profile로 단단하게 만듭니다. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
 | v0.4 | 운영과 인계 팩(Operations & Handoff Pack) | 같은 Core model로 doctor/readiness, recover/export, artifact integrity, release handoff, 더 넓은 conformance coverage를 지원합니다. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
 
 ```mermaid
@@ -69,9 +69,9 @@ v0.1은 다음을 증명해야 합니다.
 - current Core state에서 오는 read-only status/next response 하나
 - missing evidence, missing scope, 또는 seeded required user judgment를 위한 structured blocker/status response 하나
 
-v0.1은 full natural-language intake, full Discovery, full Decision Packet quality, product/UX judgment와 architecture judgment의 presentation, residual-risk display, final acceptance, residual-risk acceptance, Manual QA, detached verification, stewardship, feedback-loop policy, export/recover, release handoff, projection/template completeness를 증명하면 안 됩니다. 이것들은 이후 단계의 범위입니다.
+v0.1은 full natural-language intake, full Discovery, full Decision Packet quality, product/UX judgment와 architecture judgment의 presentation, 잔여 위험 표시, 작업 수락, 잔여 위험 수용, 수동 QA, 분리 검증, stewardship, feedback-loop policy, export/recover, release handoff, projection/template completeness를 증명하면 안 됩니다. 이것들은 이후 단계의 범위입니다.
 
-이 시점에 implementer 또는 operator는 Core가 state를 소유하고, scoped write가 허용되거나 차단되며, authorization 하나가 한 번 consume되고, evidence가 recorded Run에 연결되며, read가 state를 바꾸지 않고, close/status output이 structured blocker를 반환할 수 있음을 관찰할 수 있습니다.
+이 시점에 implementer 또는 operator는 Core가 state를 소유하고, scoped write가 허용되거나 차단되며, authorization 하나가 한 번 consume되고, 근거가 recorded Run에 연결되며, read가 state를 바꾸지 않고, close/status output이 structured blocker를 반환할 수 있음을 관찰할 수 있습니다.
 
 ### 계약 필드 단계 구분
 
@@ -79,9 +79,9 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 
 | Stage | Required contract surface | Explicitly later |
 |---|---|---|
-| v0.1 Core Authority Slice | Task identity와 state version, Reference contract상 필요한 경우 Change Unit owner shape로 표현되는 기본 scope 하나, `prepare_write`, single-use Write Authorization, compatible `record_run`, `ArtifactRef` 또는 evidence relation 하나, minimal evidence support/insufficiency, read-only status/next, idempotency conflict behavior, structured blockers. Smoke path에 seeded user judgment가 포함되면 stored Decision Packet은 여전히 `decision_kind`와 `judgment_domain`을 가진다. Full user-facing Decision Packet quality는 필요하지 않다. | Full natural-language judgment presentation, residual-risk display, final acceptance, Manual QA, detached verification, full projection rendering, export/recover, broad operations. |
-| v0.2 User-Facing Harness MVP | User-facing judgment context. 여기서 `decision_kind`는 lifecycle/gate semantics를, `judgment_domain`은 display/grouping을 담당한다. Final acceptance는 Approval과 구분되고, residual-risk visibility 또는 명시적 none이 필요하며, readable derived card 또는 projection이 사용자 이해에 충분해야 한다. | Full detached verification hardening, Manual QA matrix, stewardship validator suite, feedback-loop policy, release handoff, dashboard 또는 hosted UI. |
-| v0.3/v0.4 hardened reference | Detached verification independence, Manual QA policy coverage, stewardship와 context-hygiene validators, feedback-loop와 TDD policy, projection/reconcile completeness, recover/export/artifact integrity, owner docs가 정의한 release handoff. | Owner docs와 fixtures로 승격되지 않은 v1+ Expansion candidates. |
+| v0.1 Core Authority Slice | Task identity와 state version, Reference contract상 필요한 경우 Change Unit owner shape로 표현되는 기본 scope 하나, `prepare_write`, single-use Write Authorization, compatible `record_run`, `ArtifactRef` 또는 evidence relation 하나, minimal evidence support/insufficiency, read-only status/next, idempotency conflict behavior, structured blockers. Smoke path에 seeded user judgment가 포함되면 stored Decision Packet은 여전히 `decision_kind`와 `judgment_domain`을 가진다. Full user-facing Decision Packet quality는 필요하지 않다. | Full natural-language judgment presentation, 잔여 위험 표시, 작업 수락, 수동 QA, 분리 검증, full projection rendering, export/recover, broad operations. |
+| v0.2 User-Facing Harness MVP | User-facing judgment context. 여기서 `decision_kind`는 lifecycle/gate semantics를, `judgment_domain`은 display/grouping을 담당한다. 작업 수락은 Approval과 구분되고, 잔여 위험 표시 또는 명시적 none이 필요하며, readable derived card 또는 projection이 사용자 이해에 충분해야 한다. | Full 분리 검증 hardening, 수동 QA matrix, stewardship validator suite, feedback-loop policy, release handoff, dashboard 또는 hosted UI. |
+| v0.3/v0.4 hardened reference | 분리 검증 독립성, 수동 QA policy coverage, stewardship와 context-hygiene validators, feedback-loop와 TDD policy, projection/reconcile completeness, recover/export/artifact integrity, owner docs가 정의한 release handoff. | Owner docs와 fixtures로 승격되지 않은 v1+ Expansion candidates. |
 
 따라서 API schema에서 required라는 말은 해당 tool call, record, profile이 구현되거나 사용될 때 required라는 뜻입니다. 그 자체로 future-profile field가 가장 작은 runnable slice의 일부가 되지는 않습니다.
 
@@ -116,19 +116,19 @@ v0.2는 첫 제품 MVP입니다. 더 긴 component checklist가 아니라 사용
 
 MVP는 다음을 보여야 합니다.
 
-- 평범한 사용자 요청이 scope, user-owned judgment, evidence, close-readiness language로 정리된다
+- 평범한 사용자 요청이 scope, user-owned judgment, 근거, close-readiness language로 정리된다
 - product/UX judgment와 material technical architecture judgment가 분리되어 제시될 수 있다
 - 작은 변경과 tracked work가 서로 다른 procedural budget을 가지되, small-change label이 authority를 우회하지 않는다
-- status와 next-action output이 current scope, missing decisions, evidence state, close blockers, safe next action을 설명한다
-- required evidence가 없거나 required user judgment가 missing이면 close가 block된다
-- acceptance와 close 전에 residual risk를 표시할 수 있다
-- final user acceptance가 sensitive-action Approval, residual-risk acceptance와 구분된다
+- status와 next-action output이 current scope, missing decisions, 근거 상태, close blockers, safe next action을 설명한다
+- required 근거가 없거나 required user judgment가 missing이면 close가 block된다
+- 작업 수락과 close 전에 잔여 위험을 표시할 수 있다
+- 사용자의 작업 수락이 sensitive-action Approval, 잔여 위험 수용과 구분된다
 - readable projection 또는 card가 user-facing path를 보여 주기에 충분하지만, template polish가 source of truth가 되지는 않는다
 - prose만이 아니라 Core state, events, artifacts, projection/freshness facts, structured errors로 conformance를 증명할 수 있다
 
-v0.2는 특정 user-facing MVP scenario가 최소 display 또는 blocker hook을 요구하지 않는 한 detached verification, full Manual QA policy matrix, stewardship validators, feedback-loop policy, export/recover, release handoff를 staged profile로 남겨 둡니다. Browser QA Capture, Cross-Surface Verification automation, dashboard, broad connectors, Context Index, metrics, team workflow, orchestration은 MVP 밖에 둡니다.
+v0.2는 특정 user-facing MVP scenario가 최소 display 또는 blocker hook을 요구하지 않는 한 분리 검증, full 수동 QA 정책 매트릭스, stewardship validators, feedback-loop policy, export/recover, release handoff를 staged profile로 남겨 둡니다. Browser QA Capture, Cross-Surface Verification automation, dashboard, broad connectors, Context Index, metrics, team workflow, orchestration은 MVP 밖에 둡니다.
 
-v0.2를 통과했다는 것은 사용자가 하네스가 authorization wrapper 이상임을 볼 수 있다는 뜻입니다. Work의 scope, decision, evidence, acceptance, risk boundary가 로컬에서 inspectable하게 유지됩니다.
+v0.2를 통과했다는 것은 사용자가 하네스가 authorization wrapper 이상임을 볼 수 있다는 뜻입니다. Work의 scope, decision, 근거, 작업 수락, risk boundary가 로컬에서 inspectable하게 유지됩니다.
 
 ## 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)
 
@@ -137,9 +137,9 @@ v0.3은 MVP path를 harden하여 local reference path가 assurance, policy, stew
 중점:
 
 - full Decision Packet quality와 user-judgment routing
-- sensitive-action Approval, Decision Packet, Write Authorization, final acceptance, residual-risk acceptance separation
-- same-session verification guard behavior를 포함한 detached verification independence
-- Manual QA policy matrix, Manual QA blockers, valid QA waivers
+- sensitive-action Approval, Decision Packet, Write Authorization, 작업 수락, 잔여 위험 수용 separation
+- same-session verification guard behavior를 포함한 분리 검증 독립성
+- 수동 QA 정책 매트릭스, 수동 QA 차단 조건, valid QA waivers
 - residual-risk accepted close full semantics
 - stewardship validators와 codebase stewardship coverage
 - policy가 요구하는 TDD trace behavior
@@ -174,9 +174,9 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 
 | 후보 | 단계 경계 |
 |---|---|
-| Dashboard, hosted workflow UI, artifact dashboard, rich card expansion | State를 표시할 수는 있지만 authority, implementation readiness, close readiness, acceptance, risk acceptance가 되면 안 됩니다. |
+| Dashboard, hosted workflow UI, artifact dashboard, rich card expansion | State를 표시할 수는 있지만 authority, implementation readiness, close readiness, 작업 수락, 잔여 위험 수용가 되면 안 됩니다. |
 | Broad connector marketplace 또는 surface ecosystem | 나중에 surface를 확장할 수 있지만 reference surface proof를 대체하거나 MCP exposure를 기본적으로 넓히면 안 됩니다. |
-| Browser QA Capture automation | 승격 뒤 Manual QA를 보조할 수 있지만 human QA judgment, final acceptance, detached verification을 대체하면 안 됩니다. |
+| Browser QA Capture automation | 승격 뒤 수동 QA를 보조할 수 있지만 human QA judgment, 작업 수락, 분리 검증을 대체하면 안 됩니다. |
 | Cross-Surface Verification automation | 승격 뒤 evaluator routing을 자동화할 수 있지만 Core-owned return record 없이 Eval 또는 assurance를 충족하면 안 됩니다. |
 | Preventive guard expansion, native hooks, Advanced Sidecar Watcher | Proven pre-tool blocking 또는 observation path가 있을 때 surface를 강화할 수 있지만 label만으로 주장하면 안 됩니다. |
 | Context Index, Local Derived Metrics, long-term metrics | Read-only retrieval 또는 diagnostics를 제공할 수 있지만 write를 authorize하거나, gate를 충족하거나, projection을 refresh하거나, Task를 close하면 안 됩니다. |
@@ -200,7 +200,7 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 - Compatible `record_run`은 authorization을 한 번 consume한다.
 - 두 번째 distinct product-write Run은 consumed authorization을 재사용할 수 없다.
 - Artifact 또는 evidence ref 하나가 등록되어 Run 또는 evidence relation에 연결된다.
-- Minimal evidence state가 selected claim에 대해 support, partial support, insufficiency를 보고할 수 있다.
+- Minimal 근거 상태가 selected claim에 대해 support, partial support, insufficiency를 보고할 수 있다.
 - `status`와 `next`는 state를 변경하지 않고 current state를 반환한다.
 - Structured blocker/status response가 missing scope, evidence, 또는 required seeded user judgment를 보고한다.
 
@@ -210,19 +210,19 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 - User-facing path가 scope, non-goals, acceptance criteria, evidence expectations, close readiness, judgment boundaries를 clarify한다.
 - Product/UX judgment와 material technical architecture judgment를 분리해 제시할 수 있다.
 - Small direct changes와 tracked work가 write authority, evidence, required user judgment를 우회하지 않으면서 서로 다른 procedural budget을 사용한다.
-- Status/next output이 current scope, missing decisions, evidence state, residual-risk display, close blockers, next safe action을 설명한다.
-- Required evidence가 없으면 close가 block된다.
+- Status/next output이 current scope, missing decisions, 근거 상태, 잔여 위험 표시, close blockers, next safe action을 설명한다.
+- Required 근거가 없으면 close가 block된다.
 - Required user judgment가 missing 또는 unresolved이면 close가 block된다.
-- Known close-relevant risk가 있으면 successful acceptance 또는 close 전에 residual risk가 보인다.
-- Final user acceptance가 sensitive-action Approval과 residual-risk acceptance와 별도로 기록되거나 표현된다.
+- Known close-relevant risk가 있으면 작업 수락 또는 close 전에 잔여 위험이 보인다.
+- 사용자의 작업 수락이 sensitive-action Approval과 잔여 위험 수용과 별도로 기록되거나 표현된다.
 - User-facing projection 또는 card는 Core record에서 파생되며, template polish를 authoritative하게 만들지 않고 MVP path에 충분하다.
 
 ### 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack) exit checklist
 
 - Decision Packet quality와 user-judgment routing이 fixture로 증명된다.
-- Sensitive-action Approval이 Decision Packet, Write Authorization, Manual QA, verification, acceptance, residual-risk acceptance를 대체하지 않는다.
-- Detached verification independence와 same-session verification guard behavior가 fixture로 증명된다.
-- Policy가 요구하는 곳에서 Manual QA policy matrix와 QA blocker가 fixture로 증명된다.
+- Sensitive-action Approval이 Decision Packet, Write Authorization, 수동 QA, verification, 작업 수락, 잔여 위험 수용을 대체하지 않는다.
+- 분리 검증 독립성와 same-session verification guard behavior가 fixture로 증명된다.
+- Policy가 요구하는 곳에서 수동 QA 정책 매트릭스와 QA blocker가 fixture로 증명된다.
 - Risk-accepted close는 owner semantics에 따라 accepted Residual Risk refs를 인용한다.
 - Policy가 요구하는 곳에서 stewardship validators, feedback-loop policy, TDD trace behavior, context-hygiene behavior가 cover된다.
 - Agency conformance가 Journey visibility, user judgment, Autonomy Boundary respect, distinct user judgments, residual-risk handling을 증명한다.
@@ -242,8 +242,8 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 | 단계 | 사용자 또는 operator가 볼 수 있는 것 |
 |---|---|
 | 코어 권한 조각(v0.1 Core Authority Slice) | Implementer/operator는 local Task 하나가 scope, `prepare_write`, Write Authorization, `record_run`, artifact/evidence link, read-only status/next, structured blocker를 통과하는 것을 볼 수 있습니다. |
-| 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자는 ordinary work가 scope, judgment, evidence, close readiness, acceptance, residual-risk language로 정리되고 evidence 또는 user judgment가 없으면 close가 block되는 것을 볼 수 있습니다. |
-| 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack) | Local path가 verification, Manual QA, stewardship, TDD, feedback, context hygiene, acceptance, residual-risk acceptance, close behavior를 Core record와 fixture로 설명합니다. |
+| 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자는 ordinary work가 scope, judgment, 근거, close readiness, 작업 수락, 잔여 위험 언어로 정리되고 근거 또는 user judgment가 없으면 close가 block되는 것을 볼 수 있습니다. |
+| 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack) | Local path가 verification, 수동 QA, stewardship, TDD, feedback, context hygiene, 작업 수락, 잔여 위험 수용, close behavior를 Core record와 fixture로 설명합니다. |
 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Operator는 같은 Core state 위에서 diagnose, recover, reconcile, export, artifact check, conformance run, release handoff 준비를 수행할 수 있습니다. |
 
 단계별 전달 이후에는 promoted roadmap item이 owner 문서가 exact contract와 fixture coverage를 정의한 뒤에만 authority loop를 읽고, 표시하고, 감싸고, 확장할 수 있습니다.

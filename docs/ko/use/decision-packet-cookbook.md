@@ -8,7 +8,7 @@
 
 ## 이런 때 읽기
 
-Agent가 혼자 결정하면 안 되는 product, UX, architecture, security, QA, verification, acceptance, 잔여 위험, scope/autonomy 판단 때문에 작업이 막혔을 때 읽습니다.
+Agent가 혼자 결정하면 안 되는 product, UX, architecture, security, QA, verification, 작업 수락, 잔여 위험, scope/autonomy 판단 때문에 작업이 막혔을 때 읽습니다.
 
 ## 읽기 전에
 
@@ -107,7 +107,7 @@ Related risk or evidence: privacy exposure, artifact redaction notes, log sample
 
 ## QA waiver
 
-Required human QA를 완료할 수 없고, 사용자가 waiver를 proof나 risk acceptance처럼 취급하지 않으면서 close를 어떻게 처리할지 결정해야 할 때 사용합니다.
+Required human QA를 완료할 수 없고, 사용자가 waiver를 proof나 잔여 위험 수용처럼 취급하지 않으면서 close를 어떻게 처리할지 결정해야 할 때 사용합니다.
 
 ```text
 Decision title: 반응형 로그인 레이아웃 수동 QA 면제
@@ -116,15 +116,15 @@ Decision title: 반응형 로그인 레이아웃 수동 QA 면제
 Why now: Responsive login flow의 required 수동 QA가 passed가 아니어서 close가 막혔습니다.
 Options:
 - 지금 수동 QA를 수행합니다.
-- 이번 close에 대한 수동 QA waiver를 기록합니다. Close-relevant 잔여 위험이 남아 있다면 잔여 위험 수락 판단도 별도 owner path로 route하거나 기록해야 합니다.
+- 이번 close에 대한 수동 QA waiver를 기록합니다. Close-relevant 잔여 위험이 남아 있다면 잔여 위험 수용 판단도 별도 owner path로 route하거나 기록해야 합니다.
 - Task를 열어 두고 close 전에 QA를 schedule합니다.
 Recommendation: user-facing login workflow라면 수동 QA를 수행합니다. Environment가 unavailable이고 change가 low risk 또는 time-bound일 때만 waive합니다.
 Uncertainty: small-screen layout, keyboard flow, screen-reader interpretation, visual polish를 사람이 아직 inspect하지 않았습니다.
-Deferral consequence: implementation은 complete 상태로 남을 수 있지만, 수동 QA가 passed되거나 valid QA waiver와 필요한 잔여 위험 수락 경로가 기록될 때까지 close는 blocked 상태여야 합니다.
+Deferral consequence: implementation은 complete 상태로 남을 수 있지만, 수동 QA가 passed되거나 valid QA waiver와 필요한 잔여 위험 수용 경로가 기록될 때까지 close는 blocked 상태여야 합니다.
 Related risk or evidence: existing test logs, available screenshot, skipped viewport list, 수동 QA requirement, 잔여 위험 follow-up.
 ```
 
-이 예시가 좋은 이유는 skipped inspection을 이름 붙이기 때문입니다. QA waiver는 QA가 통과했다는 증거가 아니며, 필요한 잔여 위험 수락 경로가 함께 기록되지 않는 한 그 자체로 잔여 위험을 수락하지 않습니다.
+이 예시가 좋은 이유는 skipped inspection을 이름 붙이기 때문입니다. QA waiver는 QA가 통과했다는 증거가 아니며, 필요한 잔여 위험 수용 경로가 함께 기록되지 않는 한 그 자체로 잔여 위험을 수락하지 않습니다.
 
 정확한 QA behavior는 [QA Gate](../reference/kernel.md#qa-gate), [`harness.record_manual_qa`](../reference/mcp-api-and-schemas.md#harnessrecord_manual_qa), [`harness.record_user_decision`](../reference/mcp-api-and-schemas.md#harnessrecord_user_decision)이 담당합니다.
 
@@ -135,13 +135,13 @@ Related risk or evidence: existing test logs, available screenshot, skipped view
 ```text
 Decision title: invoice export fix 분리 검증 면제
 판단 영역: QA / acceptance (`qa_acceptance`)
-결정 경로: verification waiver (`decision_kind=verification_waiver`)
+결정 경로: 검증 면제 (`decision_kind=verification_waiver`)
 Why now: Compatible detached Eval이 없어서 verified close가 blocked이고, 사용자는 오늘 close하기를 원합니다.
 Options:
 - Fresh bundle 또는 fresh worktree에서 분리 검증을 실행합니다.
-- Independent verification을 사용할 수 있을 때까지 Task를 열어 둡니다.
+- Independent 검증을 사용할 수 있을 때까지 Task를 열어 둡니다.
 - Verification을 waive하고, 잔여 위험이 visible이고 accepted일 때만 risk-accepted path로 닫습니다.
-Recommendation: billing/export behavior라면 분리 검증을 실행합니다. Change blast-radius가 낮고 existing self-check evidence가 강할 때만 waive합니다.
+Recommendation: billing/export behavior라면 분리 검증을 실행합니다. Change blast-radius가 낮고 existing self-check 근거가 강할 때만 waive합니다.
 Uncertainty: same-session bias, review되지 않은 export edge cases, stale bundle risk, self-check가 affected formats를 덮었는지.
 Deferral consequence: Task는 detached verified로 닫을 수 없습니다. Close는 기다리거나, 허용될 때 documented risk-accepted path를 사용합니다.
 Related risk or evidence: self-check run refs, missing Eval ref, affected export formats, 잔여 위험 refs, follow-up verification plan.
@@ -151,14 +151,14 @@ Related risk or evidence: self-check run refs, missing Eval ref, affected export
 
 정확한 verification과 close behavior는 [Verification Gate](../reference/kernel.md#verification-gate), [Verification Independence Profiles](../reference/kernel.md#verification-independence-profiles), [잔여 위험](../reference/kernel.md#residual-risk), [`close_task`](../reference/kernel.md#close_task)가 담당합니다.
 
-## 잔여 위험 수락
+## 잔여 위험 수용
 
 Implementation과 evidence 뒤에도 알려진 close-relevant 잔여 위험이 남아 있고, 사용자가 이번 close에서 그 위험을 받아들일지 결정해야 할 때 사용합니다.
 
 ```text
 Decision title: Accept legacy CSV encoding limitation
 판단 영역: Residual risk (`residual_risk`)
-결정 경로: residual-risk acceptance (`decision_kind=residual_risk_acceptance`)
+결정 경로: 잔여 위험 수용 (`decision_kind=residual_risk_acceptance`)
 Why now: Export fix는 current UTF-8 files에는 동작하지만 legacy encodings는 아직 unsupported이며, close에는 risk decision이 필요합니다.
 Options:
 - Close 전에 legacy encoding support를 고칩니다.
@@ -166,7 +166,7 @@ Options:
 - 남은 limitation이 requested outcome을 바꾸므로 Task를 cancel하거나 supersede합니다.
 Recommendation: legacy encoding이 rare하고 documented이며 owner-visible follow-up이 있을 때만 accept합니다. 그렇지 않으면 close 전에 고칩니다.
 Uncertainty: 실제 customer frequency, support impact, existing imports에 legacy files가 있는지.
-Deferral consequence: risk가 resolved되거나 non-close-relevant가 되거나 owner path를 통해 accepted될 때까지 final acceptance 또는 close가 blocked일 수 있습니다.
+Deferral consequence: risk가 resolved되거나 non-close-relevant가 되거나 owner path를 통해 accepted될 때까지 작업 수락 또는 close가 blocked일 수 있습니다.
 Related risk or evidence: passing UTF-8 export tests, missing legacy-encoding test coverage, known limitation note, follow-up ref, visible 잔여 위험 refs.
 ```
 
@@ -184,9 +184,9 @@ Cookbook 예시에서 정확한 behavior가 필요할 때는 다음 Reference ow
 | Public request와 answer shape | [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision), [`harness.record_user_decision`](../reference/mcp-api-and-schemas.md#harnessrecord_user_decision) |
 | Sensitive-action Approval | [Approval](../reference/kernel.md#approval) |
 | Evidence sufficiency | [Evidence Gate](../reference/kernel.md#evidence-gate) |
-| Verification과 verification waiver impact | [Verification Gate](../reference/kernel.md#verification-gate) |
+| Verification과 검증 면제 영향 | [Verification Gate](../reference/kernel.md#verification-gate) |
 | 수동 QA와 QA waiver impact | [QA Gate](../reference/kernel.md#qa-gate) |
-| Final acceptance와 잔여 위험 visibility | [Acceptance Gate](../reference/kernel.md#acceptance-gate), [잔여 위험](../reference/kernel.md#residual-risk) |
+| 작업 수락과 잔여 위험 visibility | [Acceptance Gate](../reference/kernel.md#acceptance-gate), [잔여 위험](../reference/kernel.md#residual-risk) |
 | Close blockers와 close reasons | [`close_task`](../reference/kernel.md#close_task) |
 
 ## 좋은 답변 패턴
@@ -197,4 +197,4 @@ Cookbook 예시에서 정확한 behavior가 필요할 때는 다음 Reference ow
 Inline failed-login feedback을 선택합니다. Message는 generic하게 유지하고, modal은 추가하지 말고, account recovery는 이 Task 범위 밖으로 둡니다.
 ```
 
-이런 답변은 named choice를 해결하면서 다른 모든 권한을 부여하는 것처럼 보이지 않기 때문에 유용합니다. Agent에게는 여전히 쓰기 허가 기록, evidence, QA, verification, acceptance, 잔여 위험 수락 판단, close를 위한 일반 owner path가 필요합니다.
+이런 답변은 named choice를 해결하면서 다른 모든 권한을 부여하는 것처럼 보이지 않기 때문에 유용합니다. Agent에게는 여전히 쓰기 허가 기록, evidence, QA, verification, 작업 수락, 잔여 위험 수용 판단, close를 위한 일반 owner path가 필요합니다.

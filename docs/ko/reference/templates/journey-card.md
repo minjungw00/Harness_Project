@@ -18,10 +18,10 @@
 - active Decision Packet 참조
 - 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 summary
 - blocker owner 표시 summary
-- evidence coverage, verification, Manual QA summary
+- evidence coverage, verification, 수동 QA summary
 - residual-risk summary와 참조
 - 수락과 close-reason summary
-- 최신 evidence, Eval, Manual QA, 보고서 참조
+- 최신 evidence, Eval, 수동 QA, 보고서 참조
 - 읽기용 보기 최신성(projection freshness) 입력
 - state, baseline, evidence, MCP, capability freshness/blocker 표시 summary
 
@@ -91,7 +91,7 @@ Write Authority Summary:
 - 최신 evidence: {latest_evidence_ref|none}
 - 검증: {verification_summary|none}
 - self-check vs detached boundary: {self_check_or_detached_boundary|none}
-- Manual QA: {manual_qa_summary|not_required}
+- 수동 QA: {manual_qa_summary|not_required}
 - 생략/차단된 근거 영향: {redaction_availability_summary|none}
 
 잔여 위험:
@@ -101,7 +101,7 @@ Write Authority Summary:
 
 닫기 맥락:
 - blockers: {close_blockers|none}
-- 수락: {acceptance_summary|not_required}
+- 작업 수락: {acceptance_summary|not_required}
 - close reason: {close_reason|none}
 
 Gates:
@@ -110,7 +110,7 @@ Gates:
 - approval: {approval_gate}
 - evidence: {evidence_gate}
 - verification: {verification_gate}
-- Manual QA: {qa_gate display: not_required|required|pending|passed|failed|waived}
+- 수동 QA: {qa_gate display: not_required|required|pending|passed|failed|waived}
 - acceptance: {acceptance_gate}
 
 읽기용 보기 최신성(projection freshness): {projection_freshness}; source_state_version={source_state_version|unknown} (읽기용 보기의 최신성, Task result 아님)
@@ -121,7 +121,7 @@ Gates:
 
 이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Current source record와 ref에서 렌더링되며, 오래된 chat memory에서 렌더링하지 않습니다. 저장된 `JOURNEY-CARD` Markdown은 선택 사항입니다. `status`, `next`, 중요한 이어가기(resume) 흐름에서 보여주는 현재 위치 Journey Card output도 읽기/표시용 접점입니다.
 
-이 card 안이나 주변에 표시되는 status/next recommendation은 read-only guidance입니다. Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 결과를 수락하거나, 잔여 위험을 받아들이거나, Task를 close하지 않습니다.
+이 card 안이나 주변에 표시되는 status/next recommendation은 read-only guidance입니다. Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 close하지 않습니다.
 
 Journey Card의 닫기 맥락(Close context)은 compact status/resume 표시입니다. `TASK`는 진행 중이거나 최근 닫힌 `work` Task의 이어가기용 Close Summary를 담당하고, `DIRECT-RESULT`는 direct 작업의 가벼운 close impact summary를 담당합니다. 이 표시들은 [projection/report 경계](../document-projection.md#projection-principles)를 따르며, close와 gate effect는 여전히 owner record에서 옵니다.
 

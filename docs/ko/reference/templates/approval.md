@@ -140,7 +140,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - broad approval check: 이 decision은 위의 민감 동작 승인만 기록하며, "go ahead", "proceed", "looks good", "좋아", "진행해" wording이 이를 넓히지 않는다.
 
 ## Boundary
-- Approval은 사용자 소유의 제품 판단이나 중요한 기술 판단을 해소하지 않고, correctness를 증명하지 않고, verification이나 Manual QA를 대체하지 않고, 작업 수락을 암시하지 않으며, 잔여 위험 수용을 대신하지 않는다.
+- Approval은 사용자 소유의 제품 판단이나 중요한 기술 판단을 해소하지 않고, correctness를 증명하지 않고, verification이나 수동 QA를 대체하지 않고, 작업 수락을 암시하지 않으며, 잔여 위험 수용을 대신하지 않는다.
 - Approval은 QA 또는 검증을 면제하지 않는다. 면제 판단은 policy가 허용할 때 별도의 scoped waiver path가 필요하다.
 - Approval은 Write Authorization이 아니다. 이후 호환되는 `prepare_write` retry가 write를 allow해야 implementation 또는 direct `record_run`이 authorization을 consume할 수 있다.
 - dependency install Approval은 그 dependency를 사용하는 architecture 방향을 결정하지 않는다.

@@ -26,7 +26,7 @@ Boundary: projection template only; it does not authorize runtime/server impleme
 - Review Stage display inputs from existing owner records and refs
 - artifact refs and projection freshness
 
-Generated gate group summaries, judgment display text, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists. Rendering schema-owned `judgment_domain` does not create canonical records, gates, `ProjectionKind` values, evidence, QA, verification, acceptance, residual-risk acceptance, close, or Write Authorization.
+Generated gate group summaries, judgment display text, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists. Rendering schema-owned `judgment_domain` does not create canonical records, gates, `ProjectionKind` values, evidence, QA, verification, final acceptance, residual-risk acceptance, close, or Write Authorization.
 
 ## Rendered sections
 
@@ -83,16 +83,18 @@ updated_at: 2026-05-06T09:30:15+09:00
   - blocker / smallest unblocker:
   - what agent may continue:
 - Evidence:
+  - evidence status:
   - supporting refs:
   - missing or stale support:
   - artifact redaction or omission state:
+  - does not replace: verification, Manual QA, final acceptance, or residual-risk acceptance
   - next evidence action:
 - Close Readiness:
   - verification:
   - Manual QA:
+  - final acceptance:
   - residual-risk visibility:
   - residual-risk acceptance:
-  - final acceptance:
   - waiver status:
   - close blockers / close reason:
   - smallest unblocker:
@@ -202,7 +204,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 | 1 | | | | | |
 
 ## Review Stages
-- note: managed display only; Role Lens/playbook labels do not create gates, records, `ProjectionKind` values, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization. Same-session review is not detached verification. Route findings to existing owner records, refs, gates, or blockers.
+- note: managed display only; Role Lens/playbook labels do not create gates, records, `ProjectionKind` values, Approval, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or Write Authorization. Same-session review is not detached verification. Route findings to existing owner records, refs, gates, or blockers.
 
 ### Spec Compliance Review
 - acceptance criteria coverage:
@@ -469,7 +471,7 @@ Stewardship Impact in `TASK` is the `StewardshipImpactSummary` display derived f
 
 Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from or aligned with current Task and Change Unit state. It stays within the projection/report boundary in [Document Projection Reference](../document-projection.md#projection-principles) and never replaces `prepare_write` or owner state changes.
 
-Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. Their exact non-authority rule is owned by [Design Quality Policies](../design-quality-policies.md#two-stage-review-display) and [Agent Integration](../agent-integration.md#role-lens-behavior). They do not create canonical records, `ProjectionKind` values, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization; findings must route to existing owner paths.
+Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. Their exact non-authority rule is owned by [Design Quality Policies](../design-quality-policies.md#two-stage-review-display) and [Agent Integration](../agent-integration.md#role-lens-behavior). They do not create canonical records, `ProjectionKind` values, Approval, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or Write Authorization; findings must route to existing owner paths.
 
 Generated summaries should use ordinary user-facing language first and exact Harness terms as labels or refs where useful. They should not turn the projection into a command language or imply that display text created state.
 
@@ -486,6 +488,8 @@ Close and assurance display in `TASK` must keep self-checked work, `detached_ver
 Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the policy or gate, Task and Change Unit, skipped check or surface, reason, actor, expiry or residual-risk follow-up when needed, relevant refs, close impact, and any close-relevant residual risk that must be visible or accepted through the residual-risk path when required. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
 
 Close Summary in `TASK` is a continuity display summary for active or recently closed `work` tasks. It must not hide gate status or residual risk. When close is successful, blocked, canceled, or residual-risk accepted, the summary should show changed scope, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, waiver status, close reason, and residual-risk follow-up as applicable, with refs back to owner records. Final acceptance and residual-risk acceptance must remain separate lines: final acceptance is the user's result judgment, while residual-risk acceptance must identify the accepted risk and cite accepted Residual Risk refs.
+
+Close Summary must not collapse evidence, verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance into a single "done" flag. If tests pass but Manual QA, final acceptance, or residual-risk acceptance is still pending, the close display should show that exact category as the blocker.
 
 Direct work uses `DIRECT-RESULT` for its low-ceremony close impact summary, and Journey Card close context is compact status/resume display. `TASK` Close Summary remains a continuity display under the [projection/report boundary](../document-projection.md#projection-principles); close and gate effects still come from owner records.
 

@@ -12,13 +12,13 @@
 - verification target
 - verdict
 - independence qualifier
-- 자체 확인(self-check)과 detached verification 경계
+- 자체 확인(self-check)과 분리 검증 경계
 - baseline relationship과 evaluator-bundle freshness
 - performed check
 - 검토한 근거(evidence)
 - blocker
 - artifact ref와 redaction state, input availability
-- 표시되는 claim이 있을 때 관련 Decision Packet, Approval, Evidence Manifest, Manual QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness
+- 표시되는 claim이 있을 때 관련 Decision Packet, Approval, Evidence Manifest, 수동 QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness
 
 ## 렌더링 섹션
 
@@ -57,7 +57,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - Evidence Manifest:
 - Decision Packets:
 - Approval:
-- Manual QA:
+- 수동 QA:
 - Acceptance context:
 - Residual Risk:
 - Artifact refs:
@@ -76,7 +76,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - verification gate impact:
 - detached candidate status:
 - self-check vs detached boundary:
-- Manual QA impact:
+- 수동 QA impact:
 - acceptance impact:
 - next action:
 
@@ -134,7 +134,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - run summary:
 - feedback loop:
 - TDD trace:
-- Manual QA:
+- 수동 QA:
 - evidence manifest:
 - diff:
 - bundle:
@@ -173,7 +173,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 ## User Follow-Up
 - trade-off needing confirmation:
 - remaining options:
-- Manual QA need:
+- 수동 QA 필요성:
 ````
 
 ## 메모

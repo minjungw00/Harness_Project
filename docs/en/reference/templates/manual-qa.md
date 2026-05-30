@@ -87,6 +87,9 @@ updated_at: 2026-05-06T10:05:00+09:00
 - qa_gate: not_required | required | pending | passed | failed | waived
 - qa_gate note: canonical close-relevant gate; this projection is display only
 - QA waiver display: `qa_gate=waived` plus Manual QA record or waiver reason, and QA waiver Decision Packet when required
+- automated check status: {supporting refs only; not a Manual QA result}
+- verification status: {separate Eval/gate status; not created by this template}
+- final acceptance status: {separate user decision; not created by this template}
 - human inspection summary:
 - summary:
 - waiver reason:
@@ -128,6 +131,8 @@ updated_at: 2026-05-06T10:05:00+09:00
 This template is a rendered shape, not canonical state. `qa_gate` is the canonical close-relevant gate; this projection only displays it.
 
 Manual QA display must keep a passed Manual QA record, failed Manual QA record, pending required QA, and QA waiver visually distinct. `qa_gate=waived` is a waiver display with refs and accepted risk/follow-up when required; it is not a passed Manual QA result, final acceptance, or detached verification.
+
+Manual QA is not automated verification. Test results, browser smoke, screenshots, and Browser QA artifacts may support the human inspection context, but the template must not render them as a Manual QA pass unless the Manual QA owner path has recorded a result or valid waiver.
 
 Manual QA projections may show safe omission notes, handles, and blocked artifact notices, but must not embed omitted secret/PII values or blocked capture payloads. A `secret_omitted` artifact can support visible workflow, UI, copy, accessibility, or smoke-test observations; a `blocked` capture is unavailable QA input unless a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the QA path.
 

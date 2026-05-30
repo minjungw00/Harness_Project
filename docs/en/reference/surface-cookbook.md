@@ -46,7 +46,7 @@ Generated or managed recipe outputs must follow the connector manifest contract 
 
 The `guarantee_boundary` blocks below are recipe documentation notes, not public schema, DDL shape, or canonical Capability Profile fields. A connector may record equivalent facts in its Capability Profile or Connector Manifest only according to the [Agent Integration Reference](agent-integration.md) contract. Surface Cookbook names surface-specific paths and examples; it does not redefine guarantee levels.
 
-When a recipe lists a manual verification bundle under `fallback_isolation`, read it as verification/evaluator fallback input. A manual verification bundle does not by itself upgrade the connected surface to `preventive` or `isolated`. An `isolated` guarantee still requires a proven separate worktree, sandbox, process boundary, read-only bundle, or equivalent independence/isolation boundary, and it remains separate from Approval, QA, acceptance, and verification results.
+When a recipe lists a manual verification bundle under `fallback_isolation`, read it as verification/evaluator fallback input. A manual verification bundle does not by itself upgrade the connected surface to `preventive` or `isolated`. An `isolated` guarantee still requires a proven separate worktree, sandbox, process boundary, read-only bundle, or equivalent independence/isolation boundary, and it remains separate from Approval, QA, final acceptance, and verification results.
 
 ## Codex
 

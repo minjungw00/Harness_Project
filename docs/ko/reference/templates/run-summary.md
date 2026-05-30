@@ -105,7 +105,7 @@ npm test -- --runInBand
 - manual_qa_required:
 
 ## Review Stages
-- note: run-local review display only. Record, `ProjectionKind` value, Approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, Write Authorization을 만들지 않습니다. Review-stage 경계는 [Design Quality Policies](../design-quality-policies.md#two-stage-review-display)가 담당합니다. 발견 사항은 기존 ref, gate, blocker로 연결합니다.
+- note: run-local review display only. Record, `ProjectionKind` value, Approval, evidence, verification, QA, 작업 수락, 잔여 위험 수용, close, Write Authorization을 만들지 않습니다. Review-stage 경계는 [Design Quality Policies](../design-quality-policies.md#two-stage-review-display)가 담당합니다. 발견 사항은 기존 ref, gate, blocker로 연결합니다.
 
 ### Spec Compliance Review
 - acceptance criteria coverage:
@@ -113,7 +113,7 @@ npm test -- --runInBand
 - scope / Write Authority compatibility:
 - Decision Packet compatibility:
 - evidence coverage:
-- residual-risk visibility:
+- 잔여 위험 표시:
 - outcome refs (existing path/ref only):
 
 ### Code Quality / Stewardship Review
@@ -153,7 +153,7 @@ npm test -- --runInBand
 ## Evidence Refs
 - evidence manifest:
 - TDD trace:
-- Manual QA:
+- 수동 QA:
 - diff:
 - logs:
 - bundle:
@@ -163,6 +163,6 @@ npm test -- --runInBand
 
 ## 메모
 
-Raw log와 diff는 artifact로 남기고, 보고서에는 link만 둡니다. `RUN-SUMMARY`에 담긴 같은 세션 검토(review) 내용은 자체 확인(self-check) 또는 stewardship signal로만 취급하며 [review-stage 경계](../design-quality-policies.md#two-stage-review-display)를 따릅니다. 발견 사항은 기존 gate, Decision Packet, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit 업데이트, close-blocker ref로 연결하며, report 자체가 그 record나 authority를 만들지는 않습니다.
+Raw log와 diff는 artifact로 남기고, 보고서에는 link만 둡니다. `RUN-SUMMARY`에 담긴 같은 세션 검토(review) 내용은 자체 확인(self-check) 또는 stewardship signal로만 취급하며 [review-stage 경계](../design-quality-policies.md#two-stage-review-display)를 따릅니다. 발견 사항은 기존 gate, Decision Packet, evidence, Eval, 수동 QA, Residual Risk, Approval, Change Unit 업데이트, close-blocker ref로 연결하며, report 자체가 그 record나 authority를 만들지는 않습니다.
 
 이 report의 evidence ref는 `redaction_state`를 보존해야 합니다. `secret_omitted` ref는 보이는 nonsecret evidence만 뒷받침할 수 있고, `blocked` ref는 원본 log, diff, screenshot, bundle이 아니라 사용할 수 없는 입력을 표시하는 committed metadata-only notice입니다.

@@ -27,7 +27,7 @@ The agent should:
 - gather or explain the evidence needed to support completion
 - show what still blocks closing the work
 
-Harness should make AI-assisted work easier to follow, not turn every task into a management ritual. Small work should stay small. Larger or riskier work should gain structure only when scope, judgment, evidence, QA, verification, acceptance, or residual risk actually matter.
+Harness should make AI-assisted work easier to follow, not turn every task into a management ritual. Small work should stay small. Larger or riskier work should gain structure only when scope, judgment, evidence, QA, verification, final acceptance, or residual risk actually matter.
 
 Harness also does not replace the surrounding engineering process. Source control still records product-file history, tests still check executable behavior, review still reviews changes, and user-owned product or material technical judgment still belongs to the user.
 
@@ -67,7 +67,7 @@ Most requests should be explained with plain work shapes:
 |---|---|---|
 | Read/advice work | The agent is reading, explaining, comparing, reviewing, or helping decide without changing product files. | The answer, sources or caveats when useful, and any decision or follow-up that matters. |
 | Small change | The requested change is narrow, low risk, and has an obvious result, such as a typo, copy-only edit, or focused fix. | A short scope, changed path or no-file result, what was checked, and whether anything forced escalation. |
-| Tracked work | The request has unclear scope, multiple parts, product or technical judgment, security/privacy impact, meaningful evidence needs, QA, verification, acceptance, or close-relevant risk. | Scope, judgment, evidence, close readiness, next safe action, and the smallest blocker. |
+| Tracked work | The request has unclear scope, multiple parts, product or technical judgment, security/privacy impact, meaningful evidence needs, QA, verification, final acceptance, or close-relevant risk. | Scope, judgment, evidence, close readiness, next safe action, and the smallest blocker. |
 
 The agent may record more internal detail than it displays. User-facing messages should show the detail that helps you decide, trust, or unblock the work, not a lifecycle checklist for every tiny edit.
 
@@ -231,7 +231,7 @@ As the work progresses, the agent should keep the same shape visible:
 - what residual risk remains
 - what still blocks acceptance or close
 
-The larger the blast radius, the more important this separation becomes. A security-sensitive feature should not be closed just because tests pass. A UI feature should not treat screenshots or browser smoke as user acceptance. A dependency install approval should not be treated as a decision to adopt that dependency as the architecture direction.
+The larger the blast radius, the more important this separation becomes. A security-sensitive feature should not be closed just because tests pass. A UI feature should not treat screenshots or browser smoke as final acceptance. A dependency install approval should not be treated as a decision to adopt that dependency as the architecture direction.
 
 <a id="the-four-display-groups"></a>
 
@@ -244,7 +244,7 @@ Most status should fit into four everyday groups. The agent may use exact Harnes
 | Scope | What work are we doing, and what are we not doing? | Included behavior, out-of-scope items, affected areas, and whether the next action fits. |
 | Judgment | What must the user decide? | Product/UX choices, material technical choices, security or privacy choices, sensitive-action approvals, scoped QA or verification waivers, final acceptance, residual-risk acceptance, or scope changes. |
 | Evidence | What supports the claim that this is done? | Changed paths, tests, logs, screenshots, QA notes, verification results, missing support, or stale support. |
-| Close readiness | What still prevents closing? | Verification, Manual QA, result acceptance, residual-risk visibility or acceptance, close blockers, and the smallest unblocker. |
+| Close readiness | What still prevents closing? | Verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance, close blockers, and the smallest unblocker. |
 
 When the Judgment group needs a formal Decision Packet, Harness records both the decision route and the user-facing domain. `decision_kind` says what lifecycle or gate path the decision uses; `judgment_domain` groups the decision for users as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed. The domain explains the decision; it does not by itself change close readiness or gate aggregation.
 
@@ -327,6 +327,8 @@ The agent should keep these separate:
 | Residual-risk acceptance | Records that the user accepts an identified known remaining risk. | Final acceptance, verification, QA, sensitive-action approval, or a generic task approval. |
 | Sensitive-action approval | Allows a named sensitive step to proceed. | Product judgment, correctness, final acceptance, residual-risk acceptance, or waiver. |
 
+That separation is why work can still be blocked after tests pass. Tests can support evidence or verification, but close may still need human QA for the real experience, your final acceptance of the result, or your explicit acceptance of a known remaining risk.
+
 Residual-risk wording should be precise. "No known close-relevant residual risk" means the system has no known close-relevant risk for this requested action. "Risk not visible yet" means known risk exists but has not been shown clearly enough for acceptance or close.
 
 A casual "go ahead," "proceed," or "looks good" is only usable when the agent has already named the exact thing you are deciding. It is not enough for product trade-offs, architecture choices, QA or verification waivers, accepting the result, or accepting residual risk unless the prompt shows the choice, consequences, relevant refs, and what remains outside that decision. If the phrase could apply to more than one pending decision, the agent should ask which one you mean.
@@ -342,7 +344,7 @@ You can skip this section until an agent shows one of these labels. They are use
 | Autonomy Boundary | The decisions the agent may make alone inside that scope. |
 | Decision Packet | The recorded path for a user-owned product, technical, waiver, acceptance, risk, or scope decision. |
 | Judgment domain | The user-facing grouping on a Decision Packet, such as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed. |
-| Approval | Permission for a named sensitive action; not generic agreement or result acceptance. |
+| Approval | Permission for a named sensitive action; not generic agreement or final acceptance. |
 | Write Authorization | A one-attempt check that the intended product write fits the current task, scope, decisions, and approvals. |
 | Evidence Manifest | The record that maps completion claims to supporting evidence. |
 | Projection | A readable report or card rendered from owner records; useful for orientation, not authority by itself. |

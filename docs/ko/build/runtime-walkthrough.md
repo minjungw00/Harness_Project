@@ -21,7 +21,7 @@
 
 Write-capable tracked work에서는 Harness가 Task, 필요한 Discovery 또는 decision, 첫 scope를 알게 된 뒤에야 요청이 안전한 product work가 됩니다. 제품 파일 쓰기는 그다음 `prepare_write`를 통과해야 하며, 이때 one-attempt Write Authorization이 만들어질 수 있습니다. Run은 그 권한을 consume하고, evidence와 artifact는 claim을 뒷받침하며, projection은 state를 사람이 읽을 수 있게 만들고, `close_task`는 structured blocker를 반환하거나 Task를 닫습니다.
 
-이 walkthrough는 전체 user-facing path를 보여 줍니다. 코어 권한 조각(v0.1 Core Authority Slice)은 그중 가장 작은 내부 부분만 구현합니다. 즉 project 하나, Task 하나, Reference contract상 필요한 경우 Change Unit owner shape로 표현되는 기본 scope 하나, write authority path 하나, recorded Run 하나, evidence link 하나, structured blocker/status response 하나입니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 경험하는 ordinary-language clarification, judgment separation, procedural budget, residual-risk display, acceptance boundary를 추가합니다.
+이 walkthrough는 전체 user-facing path를 보여 줍니다. 코어 권한 조각(v0.1 Core Authority Slice)은 그중 가장 작은 내부 부분만 구현합니다. 즉 project 하나, Task 하나, Reference contract상 필요한 경우 Change Unit owner shape로 표현되는 기본 scope 하나, write authority path 하나, recorded Run 하나, 근거 링크 하나, structured blocker/status response 하나입니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 경험하는 ordinary-language clarification, judgment separation, procedural budget, 잔여 위험 표시, 작업 수락 경계를 추가합니다.
 
 ## 한눈에 보는 walkthrough
 
@@ -56,7 +56,7 @@ flowchart LR
 
 요청이 모호하거나, 위험하거나, 여러 단계이거나, 제품 표면에 닿거나, 사용자 소유 판단이 필요할 가능성이 있을 때 요구사항 구체화(Discovery)를 사용합니다. 이 구체화는 goal, non-goal, acceptance criteria, assumption, technical/product choice, security/privacy concern, QA expectation, scope boundary를 정리합니다.
 
-엄격한 동작: 요구사항 구체화(Discovery)는 shaping input입니다. Approval, Write Authorization, evidence, verification, QA, acceptance, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. Decision routing은 [Decision Packet](../reference/kernel.md#decision-packet)과 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision)의 public decision call이 담당합니다.
+엄격한 동작: 요구사항 구체화(Discovery)는 shaping input입니다. Approval, Write Authorization, evidence, verification, QA, 작업 수락, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. Decision routing은 [Decision Packet](../reference/kernel.md#decision-packet)과 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision)의 public decision call이 담당합니다.
 
 ### 3. 요구사항 구체화(Discovery) -> 안전한 다음 작업 -> Change Unit
 
@@ -106,6 +106,6 @@ Projector는 state record, event, 아티팩트 참조에서 readable Markdown과
 
 코어 권한 조각(v0.1 Core Authority Slice)에서는 path를 좁게 유지합니다. 하나의 local project, 하나의 reference surface, 하나의 Task, 하나의 basic scope, `prepare_write`, `record_run`이 consume하는 Write Authorization 하나, artifact/evidence link 하나, status/next read, structured blocker/status response가 범위입니다.
 
-사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)에서는 user-visible value path를 추가합니다. 즉 ordinary request clarification, separate product/UX and architecture judgment presentation, small-change versus tracked-work budgets, missing evidence 또는 judgment에 대한 close blocking, residual-risk display, Approval 및 residual-risk acceptance와 구분되는 final acceptance입니다.
+사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)에서는 user-visible value path를 추가합니다. 즉 ordinary request clarification, separate product/UX and architecture judgment presentation, small-change versus tracked-work budgets, missing 근거 또는 judgment에 대한 close blocking, 잔여 위험 표시, Approval 및 잔여 위험 수용과 구분되는 작업 수락입니다.
 
 Staged order와 커널 스모크(Kernel Smoke) boundary는 [MVP 계획](mvp-plan.md)에 요약되어 있습니다. Exact fixture body shape와 assertion rule은 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#conformance-fixture-format)에 둡니다.

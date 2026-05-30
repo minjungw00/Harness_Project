@@ -71,7 +71,7 @@ Decision Packet 표시는 decision title, `judgment_domain`, 왜 지금 필요�
 - [Compact Status Card](compact-status-card.md)
 - [Approval Card](approval-card.md)
 - [Verification Result Card](verification-result-card.md)
-- [Manual QA Card](manual-qa-card.md)
+- [수동 QA Card](manual-qa-card.md)
 
 ## 메모
 

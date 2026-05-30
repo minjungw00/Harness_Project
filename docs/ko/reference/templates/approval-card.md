@@ -93,6 +93,6 @@ expires={expires_at|scope_drift|none}; single_use={single_use_behavior|not_appli
 
 이 template은 렌더링 결과인 카드 형태일 뿐 Approval 권한 자체가 아닙니다. Approval은 여전히 기준 Approval 결정 경로를 거쳐야 합니다.
 
-Approval은 사용자 소유의 제품 판단이나 중요한 기술 판단을 해소하지 않고, correctness를 증명하지 않으며, verification이나 Manual QA를 대체하지 않고, 작업 수락을 암시하지 않으며, 잔여 위험 수용을 대신하지 않고, QA나 검증을 면제하지 않고, Write Authorization을 만들지 않습니다. 실제 write에는 이후 호환되는 `prepare_write`와 Write Authorization이 여전히 필요합니다.
+Approval은 사용자 소유의 제품 판단이나 중요한 기술 판단을 해소하지 않고, correctness를 증명하지 않으며, 검증이나 수동 QA를 대체하지 않고, 작업 수락을 암시하지 않으며, 잔여 위험 수용을 대신하지 않고, QA나 검증을 면제하지 않고, Write Authorization을 만들지 않습니다. 실제 write에는 이후 호환되는 `prepare_write`와 Write Authorization이 여전히 필요합니다.
 
 Approval Card는 민감 동작 승인 경계를 명시해야 합니다. 예를 들어 dependency install Approval은 architecture 결정이 아니고, secret access Approval은 secret 값 노출 허가가 아니며, auth 또는 system Approval은 session/JWT/social-login 선택이 아니고, 작업 수락은 추가 write 허가가 아니며, 잔여 위험 수용이나 면제 판단은 별도의 scoped decision path가 필요합니다.

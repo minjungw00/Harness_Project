@@ -75,7 +75,7 @@
 
 한국어 기준 표현: 작업 수락.
 
-Evidence, verification, 수동 QA 상태, 닫기에 영향을 주는 잔여 위험이 보였거나 없다고 확인된 뒤, 작업 결과가 받아들일 만하다는 사용자의 최종 판단입니다. Required Acceptance는 결정 패킷 user decision, `task_gates.acceptance_gate`, `state.sqlite.task_events`를 포함하는 kernel acceptance path를 통해 기록됩니다. 작업 수락은 민감 동작 승인, assurance, verification, 수동 QA, evidence sufficiency, 면제 판단, 잔여 위험 수용과 구분됩니다. 추가 write를 허가하거나, 알려진 위험을 그 자체로 수용하거나, 잔여 위험을 지우거나, 빠진 check를 나중에 충족된 것으로 만들지 않습니다.
+Evidence, verification, 수동 QA 상태, 닫기에 영향을 주는 잔여 위험이 보였거나 없다고 확인된 뒤, 작업 결과가 받아들일 만하다는 사용자의 최종 판단입니다. Required 작업 수락는 결정 패킷 user decision, `task_gates.acceptance_gate`, `state.sqlite.task_events`를 포함하는 kernel 작업 수락 경로를 통해 기록됩니다. 작업 수락은 민감 동작 승인, assurance, verification, 수동 QA, evidence sufficiency, 면제 판단, 잔여 위험 수용과 구분됩니다. 추가 write를 허가하거나, 알려진 위험을 그 자체로 수용하거나, 잔여 위험을 지우거나, 빠진 check를 나중에 충족된 것으로 만들지 않습니다.
 
 ### Acceptance Gate
 
@@ -229,7 +229,7 @@ Fresh session, fresh worktree, sandbox, manual evaluator bundle처럼 의미 있
 
 ### Direct
 
-Scope와 result가 명확한 작고 low-risk인 changes를 위한 work mode입니다. Direct product writes에도 active scoped Change Unit이 필요합니다. Direct에는 trivial typo, single-sentence docs, obvious rename work를 위한 tiny direct profile이 포함됩니다. Tiny는 top-level mode가 아니며 사용자 소유 판단, 민감 동작 승인, security boundary, evidence, scope, 쓰기 허가 기록, residual-risk visibility, close rule을 우회하지 않습니다.
+Scope와 result가 명확한 작고 low-risk인 changes를 위한 work mode입니다. Direct product writes에도 active scoped Change Unit이 필요합니다. Direct에는 trivial typo, single-sentence docs, obvious rename work를 위한 tiny direct profile이 포함됩니다. Tiny는 top-level mode가 아니며 사용자 소유 판단, 민감 동작 승인, security boundary, evidence, scope, 쓰기 허가 기록, 잔여 위험 표시, close rule을 우회하지 않습니다.
 
 ### Docs-Maintenance Conformance
 
@@ -369,7 +369,7 @@ Module 또는 external 경계의 public interface, inputs, outputs, errors, comp
 
 `state.sqlite.task_events`, runs, validator results, projection jobs, reconcile items 같은 local record에서 파생되는 later diagnostic-only metric입니다. Owner 문서로 승격되기 전까지 metric 표시는 rate, count, duration, guard-trigger summary를 읽기 전용 진단으로만 보여줄 수 있습니다. 정확한 권한 없음 경계는 [Roadmap: Local Derived Metrics](../roadmap.md#local-derived-metrics)가 담당합니다.
 
-### Manual QA
+### 수동 QA
 
 한국어 기준 표현: 수동 QA.
 
@@ -379,7 +379,7 @@ Module 또는 external 경계의 public interface, inputs, outputs, errors, comp
 
 Human 또는 separate evaluator에게 verification을 handoff하는 package입니다. task summary, 수용 기준, Change Unit scope, approval scope, diff/log/test artifacts, Evidence Manifest, known risks, Eval verdict를 기록하기에 충분한 context를 포함합니다.
 
-### Manual QA Record
+### 수동 QA Record
 
 한국어 기준 표현: 수동 QA 기록.
 

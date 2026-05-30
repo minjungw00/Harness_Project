@@ -77,7 +77,7 @@ The user's final judgment that the result of the work is acceptable after eviden
 
 ### Acceptance Gate
 
-The kernel gate for required user acceptance. Its value set and compatibility meaning are owned by [Acceptance Gate](kernel.md#acceptance-gate). Acceptance cannot substitute for QA or verification.
+The kernel gate for required final acceptance. Its value set and compatibility meaning are owned by [Acceptance Gate](kernel.md#acceptance-gate). Acceptance cannot substitute for QA or verification.
 
 Required Acceptance in the current reference model is recorded through a Decision Packet user decision, `task_gates.acceptance_gate`, and `state.sqlite.task_events`; there is no separate acceptance record or table.
 
@@ -91,7 +91,7 @@ The kernel gate for sensitive-action Approval. It is required only when sensitiv
 
 ### Assumption Register
 
-A Discovery or Shared Design support/projection list of assumptions the agent is using before implementation planning. It should name source, confidence, owner, and what would change if the assumption fails. These are recommended display/support contents, not a standalone schema or canonical record field list. The register helps shape a Discovery Brief, first implementation candidate, work split, or First Safe Change Unit Candidate, but it is not user approval, sensitive-action Approval, acceptance, residual-risk acceptance, evidence, close readiness, scope authority, or Write Authorization.
+A Discovery or Shared Design support/projection list of assumptions the agent is using before implementation planning. It should name source, confidence, owner, and what would change if the assumption fails. These are recommended display/support contents, not a standalone schema or canonical record field list. The register helps shape a Discovery Brief, first implementation candidate, work split, or First Safe Change Unit Candidate, but it is not user approval, sensitive-action Approval, final acceptance, residual-risk acceptance, evidence, close readiness, scope authority, or Write Authorization.
 
 ### Artifact
 
@@ -207,7 +207,7 @@ Verification performed across a meaningful independence boundary, such as a fres
 
 ### Discovery
 
-A workflow posture before implementation planning and before write authority where the agent clarifies requirements. It separates goal, user value, non-goals, acceptance criteria, facts the agent can inspect from repo/docs/Harness state, assumptions, judgments only the user can make, product/UX judgment candidates, technical architecture judgment candidates, security/privacy judgment candidates, QA and verification expectations, and first implementation candidates or work split proposals. It asks the user only for decisions the codebase and current Harness context cannot answer, may ask multiple targeted questions grouped by decision area, and can pause when inspectable facts and user-owned decisions are separated enough to propose safe next work without hiding unresolved judgment. Discovery outputs route to Shared Design, Decision Packet candidates, and Change Unit shaping. Phrases such as first implementation candidate and work split proposal are proposal/support phrases, not standalone schema fields, canonical record types, gate values, projection kinds, or authority paths. Discovery is not approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, scope authority, or a new authority path.
+A workflow posture before implementation planning and before write authority where the agent clarifies requirements. It separates goal, user value, non-goals, acceptance criteria, facts the agent can inspect from repo/docs/Harness state, assumptions, judgments only the user can make, product/UX judgment candidates, technical architecture judgment candidates, security/privacy judgment candidates, QA and verification expectations, and first implementation candidates or work split proposals. It asks the user only for decisions the codebase and current Harness context cannot answer, may ask multiple targeted questions grouped by decision area, and can pause when inspectable facts and user-owned decisions are separated enough to propose safe next work without hiding unresolved judgment. Discovery outputs route to Shared Design, Decision Packet candidates, and Change Unit shaping. Phrases such as first implementation candidate and work split proposal are proposal/support phrases, not standalone schema fields, canonical record types, gate values, projection kinds, or authority paths. Discovery is not approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, final acceptance, residual-risk acceptance, close, scope authority, or a new authority path.
 
 ### Discovery Brief
 
@@ -283,7 +283,7 @@ A verification independence profile where the evaluator checks baseline, changed
 
 ### Freeze
 
-A user-facing safety control that requests a hold or narrower posture around current work. Freeze can hold product writes, make the next action stricter, or cause `prepare_write` to block or hold when existing scope is incompatible. It does not directly mutate Change Unit scope, allowed paths, Autonomy Boundary, AFK stop conditions, or related owner records; persistent owner-record changes still use the existing Core state-changing path, Decision Packet route, or owner-record update path. Freeze does not create Write Authorization, approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a new authority tier.
+A user-facing safety control that requests a hold or narrower posture around current work. Freeze can hold product writes, make the next action stricter, or cause `prepare_write` to block or hold when existing scope is incompatible. It does not directly mutate Change Unit scope, allowed paths, Autonomy Boundary, AFK stop conditions, or related owner records; persistent owner-record changes still use the existing Core state-changing path, Decision Packet route, or owner-record update path. Freeze does not create Write Authorization, approval, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or a new authority tier.
 
 ### Gate
 
@@ -305,7 +305,7 @@ The honest enforcement strength available for a connected surface or runtime pat
 cooperative | detective | preventive | isolated
 ```
 
-Capability affects validator results, blocked reasons, and display; it is not Approval, Write Authorization, verification, QA, acceptance, residual-risk acceptance, close readiness, or a kernel gate. Exact level meanings are owned by [Runtime Architecture](runtime-architecture.md#guarantee-levels).
+Capability affects validator results, blocked reasons, and display; it is not Approval, Write Authorization, verification, QA, final acceptance, residual-risk acceptance, close readiness, or a kernel gate. Exact level meanings are owned by [Runtime Architecture](runtime-architecture.md#guarantee-levels).
 
 ### Guard
 
@@ -333,7 +333,7 @@ A guarantee level where risky work is separated by a worktree, sandbox, process 
 
 ### Journey Card
 
-A compact human-readable projection of the current Task position: state, next action, scope, active scoped Change Unit, Autonomy Boundary, blockers, active Decision Packet, Write Authority Summary, acceptance criteria, approval status, evidence, verification, QA, acceptance, residual risk, and projection freshness. A Journey Card is display, not canonical state, and it is rendered from current owner records rather than stale chat memory.
+A compact human-readable projection of the current Task position: state, next action, scope, active scoped Change Unit, Autonomy Boundary, blockers, active Decision Packet, Write Authority Summary, acceptance criteria, approval status, evidence, verification, QA, final acceptance, residual risk, and projection freshness. A Journey Card is display, not canonical state, and it is rendered from current owner records rather than stale chat memory.
 
 ### Journey Spine
 
@@ -345,7 +345,7 @@ A canonical support record for durable continuity annotations that cannot be ful
 
 ### Interface Contract
 
-The canonical record of a module or external boundary's public interface, inputs, outputs, errors, compatibility impact, callers, and boundary tests. The canonical source is `interface_contracts`. Public state refs use `record_kind=interface_contract`. The record documents the interface understanding; it is not Approval, acceptance, residual-risk acceptance, or Write Authorization. Public interface or compatibility choices route through the existing design-quality and Decision Packet paths when user-owned judgment is required.
+The canonical record of a module or external boundary's public interface, inputs, outputs, errors, compatibility impact, callers, and boundary tests. The canonical source is `interface_contracts`. Public state refs use `record_kind=interface_contract`. The record documents the interface understanding; it is not Approval, final acceptance, residual-risk acceptance, or Write Authorization. Public interface or compatibility choices route through the existing design-quality and Decision Packet paths when user-owned judgment is required.
 
 ### JSON `TEXT` Field
 
@@ -475,7 +475,7 @@ The named report projection kinds are projections generated from state records a
 
 ### Review Stages
 
-A managed display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages can route findings to validator results, evidence gaps, Decision Packet candidates, Eval or verification needs, Manual QA needs, Approval needs, residual-risk candidates, Change Unit update recommendations, or close blockers. They are not canonical records, `ProjectionKind` values, approval, evidence, verification, QA, acceptance, residual-risk acceptance, close, or Write Authorization. Their exact display-only boundary is owned by [Design Quality Policies](design-quality-policies.md#two-stage-review-display); same-session Review Stages do not create `assurance_level=detached_verified`.
+A managed display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages can route findings to validator results, evidence gaps, Decision Packet candidates, Eval or verification needs, Manual QA needs, Approval needs, residual-risk candidates, Change Unit update recommendations, or close blockers. They are not canonical records, `ProjectionKind` values, approval, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or Write Authorization. Their exact display-only boundary is owned by [Design Quality Policies](design-quality-policies.md#two-stage-review-display); same-session Review Stages do not create `assurance_level=detached_verified`.
 
 ### `request_hash`
 
@@ -535,7 +535,7 @@ The task-scoped state clock stored in `tasks.state_version`. Task-scoped mutatio
 
 ### Strategic Agency
 
-The user's durable authority to understand the work journey and make or withhold judgment over goals, scope, design, trade-offs, codebase stewardship, QA, acceptance, and residual risk. The harness preserves Strategic Agency by making state, decisions, evidence, blockers, and remaining risk explicit outside chat.
+The user's durable authority to understand the work journey and make or withhold judgment over goals, scope, design, trade-offs, codebase stewardship, QA, final acceptance, and residual risk. The harness preserves Strategic Agency by making state, decisions, evidence, blockers, and remaining risk explicit outside chat.
 
 ### Secret Handle
 
@@ -579,7 +579,7 @@ A separation between Harness surfaces, files, callers, or runtime spaces where i
 
 ### Verification
 
-The process of checking whether the result satisfies the relevant criteria. Verification may support assurance when recorded through a valid Eval path and independence profile, but same-session self-check is not detached verification. Verification is separate from approval, Manual QA, acceptance, and residual-risk acceptance. Exact gate and independence behavior is owned by [Verification Gate](kernel.md#verification-gate) and [`harness.record_eval`](mcp-api-and-schemas.md#harnessrecord_eval).
+The process of checking whether the result satisfies the relevant criteria. Verification may support assurance when recorded through a valid Eval path and independence profile, but same-session self-check is not detached verification. Verification is separate from approval, Manual QA, final acceptance, and residual-risk acceptance. Exact gate and independence behavior is owned by [Verification Gate](kernel.md#verification-gate) and [`harness.record_eval`](mcp-api-and-schemas.md#harnessrecord_eval).
 
 ### Verification Gate
 
@@ -603,7 +603,7 @@ An explicit recorded exception to a gate or policy requirement where policy allo
 
 ### Write Authorization
 
-A durable state record created by `prepare_write` for a specific allowed write attempt. It records `basis_state_version`, the affected-scope state version used as the compatibility basis for replay, stale detection, and audit. Distinct compatible `prepare_write` requests create distinct authorizations; idempotent replay may return the committed response. It is single-use for a committed implementation or direct Run, and it does not replace Change Unit scope, sensitive-action Approval, Decision Packet compatibility, evidence, verification, Manual QA, acceptance, or residual-risk visibility.
+A durable state record created by `prepare_write` for a specific allowed write attempt. It records `basis_state_version`, the affected-scope state version used as the compatibility basis for replay, stale detection, and audit. Distinct compatible `prepare_write` requests create distinct authorizations; idempotent replay may return the committed response. It is single-use for a committed implementation or direct Run, and it does not replace Change Unit scope, sensitive-action Approval, Decision Packet compatibility, evidence, verification, Manual QA, final acceptance, or residual-risk visibility.
 
 ### Write Authorization Lifecycle Events
 

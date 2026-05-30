@@ -8,7 +8,7 @@ After reading it, you should be able to ask for a focused user judgment, compare
 
 ## Read this when
 
-Read this when a task is blocked by product, UX, architecture, security, QA, verification, acceptance, residual-risk, or scope/autonomy judgment that the agent should not decide alone.
+Read this when a task is blocked by product, UX, architecture, security, QA, verification, final acceptance, residual-risk acceptance, or scope/autonomy judgment that the agent should not decide alone.
 
 ## Before you read
 
@@ -197,4 +197,4 @@ When you answer a Decision Packet, choose the option in ordinary language and ad
 Choose inline failed-login feedback. Keep the message generic, do not add a modal, and keep account recovery out of scope for this task.
 ```
 
-That kind of answer is useful because it resolves the named choice without pretending to grant every other authority. The agent still needs the normal owner paths for Write Authorization, evidence, QA, verification, acceptance, residual-risk acceptance, and close.
+That kind of answer is useful because it resolves the named choice without pretending to grant every other authority. The agent still needs the normal owner paths for Write Authorization, evidence, QA, verification, final acceptance, residual-risk acceptance, and close.
