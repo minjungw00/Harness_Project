@@ -18,6 +18,8 @@
 
 하네스는 AI 지원 작업을 따라갈 수 있게 몇 가지를 명시합니다. 무엇을 하려는지, 무엇을 바꿀 수 있는지, 사용자가 무엇을 결정해야 하는지, 완료 주장을 무엇이 뒷받침하는지, 어떤 남은 위험이 있는지, 작업을 닫을 수 있는지를 보이게 합니다.
 
+그래도 사용자는 평소처럼 말하면 됩니다. "이 기능 아이디어를 검토하고 구현 전에 필요한 질문을 해줘", "작은 문구 변경을 해줘. 더 큰 제품 판단이 되면 알려줘", "코드를 바꾸기 전에 제품 결정과 기술 결정을 나눠줘" 같은 요청이면 에이전트가 알맞은 하네스 흐름으로 옮겨야 합니다.
+
 아래 예시는 온보딩용 예시이지 schema나 새 authority path가 아닙니다. 정확한 behavior는 끝부분에 연결한 Reference owner에 남아 있습니다.
 
 ## 시나리오 1: 아주 작은 문서 수정
@@ -85,7 +87,7 @@ Reference 문서는 scoped write boundary를 Change Unit, write allow/deny decis
 Login에 remember-me 동작을 추가해줘.
 ```
 
-작아 보이지만 제품 동작, security, session lifetime, UI, test, storage에 닿습니다. 하네스는 구현 계획 전에 Discovery를 사용해야 합니다.
+작아 보이지만 제품 동작, security, session lifetime, UI, test, storage에 닿습니다. 에이전트는 구현 계획 전에 요청을 먼저 구체화해야 합니다.
 
 ```text
 Goal: remember-me 동작 추가.
@@ -95,11 +97,11 @@ Codebase-answerable: 현재 session lifetime이 어디에서 설정되는지.
 User question: remember-me가 이 기기에서 session을 더 오래 유지한다는 뜻인가요, email address를 미리 채운다는 뜻인가요, 아니면 둘 다인가요?
 ```
 
-Discovery는 제품, 기술, security, QA, 운영, scope 질문을 분리합니다. Codebase-answerable question은 repository와 현재 하네스 context에서 답하고, codebase가 답할 수 없는 결정만 사용자에게 묻습니다.
+Reference 문서는 이런 구체화 자세를 Discovery라고 부릅니다. 제품, 기술, security, QA, 운영, scope 질문을 분리하고, codebase-answerable question은 repository와 현재 하네스 context에서 답하며, codebase가 답할 수 없는 결정만 사용자에게 묻습니다.
 
 Discovery는 민감 동작 허가(Approval)도 아니고, 제품 파일 쓰기 허가도 아니며, evidence, verification, QA, 작업 수락(Acceptance), 잔여 위험 수용, close, 새 authority path도 아닙니다. 첫 번째 안전한 scoped slice가 보일 수 있도록 요구사항을 구체화하는 작업입니다.
 
-사용자에게 보이는 흐름은 [사용자 가이드](../use/user-guide.md#처음-읽을-때의-경로)와 [Agent 세션 흐름](../use/agent-session-flow.md)를 사용합니다. 용어 뒤의 정확한 owner behavior는 [Kernel Reference](../reference/kernel.md)와 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 사용합니다.
+사용자에게 보이는 흐름은 [사용자 가이드](../use/user-guide.md#평소-말로-시작하기)와 [Agent 세션 흐름](../use/agent-session-flow.md)를 사용합니다. 용어 뒤의 정확한 owner behavior는 [Kernel Reference](../reference/kernel.md)와 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 사용합니다.
 
 ## 시나리오 4: 사용자 판단이 작업을 막을 때
 
@@ -120,7 +122,7 @@ Uncertainty: 기존 design-system error-message support 확인 필요.
 Deferral consequence: API와 state wiring은 계속할 수 있지만 final UI behavior와 수동 QA는 기다려야 합니다.
 ```
 
-결정이 blocking이면 하네스는 사용자 판단을 결정 패킷 path로 기록합니다. Chat text, 넓은 "go ahead", 읽기용 보고서 문구만으로는 특정 기록된 선택에 답하지 않는 한 결정을 충족하면 안 됩니다. 결정 패킷은 approval-shaped이고 Approval path에 연결된 경우가 아니라면 sensitive-action Approval도 아닙니다.
+결정이 blocking이면 하네스는 사용자 판단을 문서화된 결정 경로로 기록합니다. Reference 문서는 그 기록을 결정 패킷이라고 부릅니다. Chat text, 넓은 "go ahead", 읽기용 보고서 문구만으로는 특정 기록된 선택에 답하지 않는 한 결정을 충족하면 안 됩니다. 결정 패킷은 approval-shaped이고 Approval path에 연결된 경우가 아니라면 sensitive-action Approval도 아닙니다.
 
 실용 예시는 [결정 패킷 Cookbook](../use/decision-packet-cookbook.md)을 읽습니다. 정확한 behavior는 [결정 패킷](../reference/kernel.md#decision-packet), [Decision Gate](../reference/kernel.md#decision-gate), [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision), [`harness.record_user_decision`](../reference/mcp-api-and-schemas.md#harnessrecord_user_decision)을 사용합니다.
 

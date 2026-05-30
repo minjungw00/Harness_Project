@@ -20,6 +20,17 @@
 
 에이전트가 평소 말로 들어온 사용자 요청을 하네스 절차로 바꿉니다. 사용자가 Discovery, Change Unit, Decision Packet, Write Authorization, Evidence Manifest, Projection, Autonomy Boundary, `task_events` 같은 용어를 말해야 작업이 진행되는 구조로 만들면 안 됩니다. 에이전트나 런타임 동작을 정확히 설명해야 할 때는 내부 용어를 쓰되, 사용자에게 보이는 상태에서는 쉬운 설명 뒤에 붙입니다.
 
+다음 같은 요청은 그대로 완성된 사용자 입력으로 다뤄야 합니다. 하네스 용어를 다시 요구할 필요가 없습니다.
+
+```text
+이메일 로그인 흐름을 추가하고 싶어. 비밀번호 재설정은 지금 범위에서 빼고, 먼저 결정해야 할 것들을 정리해줘.
+이 기능 아이디어를 검토하고, 구현 전에 필요한 질문을 해줘.
+작은 문구 변경을 해줘. 다만 이게 더 큰 제품 판단으로 번지면 알려줘.
+코드를 바꾸기 전에 제품 결정과 기술 결정을 나눠서 보여줘.
+```
+
+에이전트는 요청을 이해한 범위, 직접 확인할 수 있는 것, 사용자만 결정할 수 있는 것, 필요한 근거, 무엇이 닫기를 막는지를 정리해야 합니다. 정확한 하네스 라벨은 경계나 출처 참조를 분명히 할 때 뒤에 붙이면 됩니다.
+
 유용한 상태 또는 다음 행동 응답은 쉬운 말로 네 가지 질문에 답해야 합니다.
 
 - 범위: 무엇이 바뀔 수 있고, 무엇이 범위 밖인가?
@@ -193,7 +204,7 @@ Discovery 밖에서는 다음 안전한 행동을 바꾸는 질문만 합니다.
 
 질문하기 전에는 에이전트가 안전하게 직접 확인할 수 있는 답을 사용 가능한 최신 저장소, 코드베이스, 문서, 하네스 state에서 먼저 찾아봅니다. 이미 보이는 파일 경로, 기존 동작, 용어, 제약을 사용자에게 다시 설명해 달라고 요구하지 않습니다. 소스가 없거나 오래됐으면 그것을 현재 사실의 근거로 삼지 말고, 불확실성으로 표시합니다.
 
-한 번에 하나의 막힘 질문을 묻는다는 말이 구체화도 한 번이면 끝난다는 뜻은 아닙니다. 요청이 넓거나 설계 판단이 크면 목표, 범위, 비목표, 수용 기준, 영향받는 제품 영역, 사용자 화면이나 흐름, 모듈, interface, 민감 카테고리(sensitive categories), 사용자가 소유하는 제품 또는 중요한 기술 장단점 판단, 검증 또는 수동 QA 기대 수준, 알려진 제품·구현·검증·QA·후속 위험이 첫 번째 안전한 Change Unit을 제안할 수 있을 만큼 잡힐 때까지 짧은 확인을 여러 차례 이어갈 수 있습니다. Discovery는 필요한 경우 여러 targeted question을 물을 수 있지만, 안전한 첫 Change Unit을 제안할 수 있으면 멈춥니다.
+한 번에 하나의 막힘 질문을 묻는다는 말이 구체화도 한 번이면 끝난다는 뜻은 아닙니다. 요청이 넓거나 설계 판단이 크면 목표, 범위, 비목표, 수용 기준, 영향받는 제품 영역, 사용자 화면이나 흐름, 모듈, interface, 민감 카테고리(sensitive categories), 사용자가 소유하는 제품 또는 중요한 기술 장단점 판단, 검증 또는 수동 QA 기대 수준, 알려진 제품·구현·검증·QA·후속 위험이 첫 번째 안전한 Change Unit을 제안할 수 있을 만큼 잡힐 때까지 짧은 확인을 여러 차례 이어갈 수 있습니다. Discovery는 필요한 경우 여러 targeted question을 물을 수 있습니다. 에이전트가 직접 확인할 수 있는 것과 사용자가 결정해야 하는 것을 나누고, 안전한 다음 행동이나 더 작은 범위를 제안할 수 있으면 잠시 멈출 수 있습니다.
 
 질문하기 전에 각 열린 질문을 분류합니다. Blocking 질문은 다음 안전한 행동 전에 사용자 판단이 필요한 질문입니다. Useful-but-not-blocking 질문은 Discovery Brief, Assumption Register, follow-up work, 이후 결정 패킷 candidate에 남겨둘 수 있습니다. Codebase-answerable 질문은 사용자에게 묻지 말고 current repo, docs, 하네스 state, source refs를 살펴 답해야 합니다.
 
@@ -339,7 +350,7 @@ Decision-centered prompt는 경로와 맞는 동사를 씁니다. 선택, defer,
 - Scope / autonomy: Scope 또는 Autonomy Boundary 확장은 current small scope를 유지할지, requested surface를 추가할지, follow-up Change Unit으로 분리할지 비교합니다. 영향을 받는 paths, user-facing behavior, 계속 범위 밖에 남는 것, write 영향, agent가 혼자 판단해도 되는 일을 설명합니다.
 - Security / privacy: secret 접근, 권한 변경, 데이터 export에 대한 sensitive-action Approval은 Approval 경계일 뿐입니다. 역할, 필드, redaction, audit logging, retention, rollback, user notice에는 별도의 제품 또는 보안 판단이 여전히 필요할 수 있습니다.
 - Security / privacy: PII logging policy는 PII를 log하지 않는 방식, redacted 또는 tokenized identifier, 제한된 diagnostic field를 비교해야 합니다. Privacy exposure, debugging value, retention, redaction, audit trail, policy 준수를 증명할 evidence를 설명합니다.
-- QA / acceptance: QA 또는 verification waiver는 해당 Task에서 요구하는 기존 기록 경로를 사용하고 owner refs를 cite합니다. QA waiver 효과는 수동 QA / QA policy path가 담당하며, product/user risk 또는 policy-required judgment가 있으면 QA waiver 결정 패킷을 사용합니다. Verification waiver 효과는 kernel verification-waiver path가 담당하며, 사용자 소유 판단이 필요하면 관련 결정 패킷을 사용합니다. 생략하는 확인이나 대상, 수용된 잔여 위험, 잔여 위험 후속 작업, 관련 refs, 닫기 영향을 이름 붙입니다. 예를 들어 copy-only 변경에서 mobile Safari 수동 QA를 면제한다면 viewport wrapping에 대한 잔여 위험을 받아들이고 release 전 browser pass를 후속 작업으로 남깁니다.
+- QA / acceptance: QA 또는 verification waiver는 해당 Task에서 요구하는 기존 기록 경로를 사용하고 owner refs를 cite합니다. QA waiver 효과는 수동 QA / QA policy path가 담당하며, product/user risk 또는 policy-required judgment가 있으면 QA waiver 결정 패킷을 사용합니다. Verification waiver 효과는 kernel verification-waiver path가 담당하며, 사용자 소유 판단이 필요하면 관련 결정 패킷을 사용합니다. 생략하는 확인이나 대상, 사용자가 수용한 잔여 위험, 잔여 위험 후속 작업, 관련 refs, 닫기 영향을 이름 붙입니다. 예를 들어 copy-only 변경에서 mobile Safari 수동 QA를 면제하려면 viewport wrapping 잔여 위험을 수용할지 사용자에게 묻고, release 전 browser pass를 후속 작업으로 남깁니다.
 - 잔여 위험: 닫기 전 잔여 위험 수용은 남은 한계, 이미 있는 근거, 그래도 닫을 수 있다고 볼 수 있는 이유, 잔여 위험 후속 작업을 보여줍니다. 잔여 위험을 받아들이고 닫는 흐름은 detached-verified close가 아닙니다.
 
 가능하면 한 번에 하나의 막힘 질문만 묻습니다.
@@ -444,7 +455,7 @@ Evidence가 stale이 되면 이유를 쉬운 말로 말하고 가장 작은 repa
 | Self-checked | 구현 경로가 자기 결과를 확인했을 때. |
 | Detached candidate | Fresh session, fresh worktree, sandbox, manual bundle, 또는 qualifying subagent path가 독립적일 수 있지만 아직 detached assurance를 만들지 않았을 때. |
 | Detached verified | Eval이 valid independence, same-session self-review 문제 없음, stale baseline 또는 bundle input 없음으로 pass했을 때. |
-| Waived with accepted residual risk | Verification 또는 다른 close-relevant check가 waived되었고 보이는 잔여 위험을 받아들이고 close하기로 선택했을 때. |
+| Waived with user-accepted residual risk | Verification 또는 다른 close-relevant check가 waived되었고 사용자가 보이는 잔여 위험을 수용한 뒤 close하기로 선택했을 때. |
 
 수동 QA는 사람이 봐야 하는 품질을 확인했는지에 답합니다. 흔한 대상은 UI/UX, workflow, copy, accessibility 해석, product taste, visual output입니다. 수동 QA 결과가 실제로 기록되었거나 타당하게 면제된 것이 아니라면 browser smoke, screenshot capture, Browser QA Capture artifact, verifier note를 수동 QA처럼 보여주면 안 됩니다. Browser QA Capture는 owner 문서가 명시적으로 승격하고 증명하기 전까지 v1+ Expansion 후보입니다. 사용할 수 있더라도 그 artifact는 supporting ref일 뿐이며, 별도의 Eval 경로가 independence를 충족하지 않는 한 작업 수락이나 분리 검증이 아닙니다. Browser capture가 해당 접점에서 지원되지 않으면 사람이 작성한 수동 QA notes와 수동 제공 artifacts를 사용합니다.
 
@@ -454,7 +465,7 @@ Evidence가 stale이 되면 이유를 쉬운 말로 말하고 가장 작은 repa
 
 작업 수락은 Task 경로가 요구할 때 사용자가 결과를 받아들이는 판단입니다. sensitive-action Approval, 검증, QA, 잔여 위험을 받아들이는 판단, 정확성 증명과 다릅니다.
 
-Verification waiver와 QA waiver는 assurance를 높이지 않습니다. Verification waiver는 분리 검증을 충족하지 않은 상태로 둡니다. close가 otherwise 허용되더라도, 면제된 verification gap에 대한 잔여 위험 수용 경로로만 닫을 수 있습니다. 이를 verified close로 요약하면 안 됩니다. QA waiver는 이름 붙인 QA requirement만 닫고 evidence, verification, acceptance, 잔여 위험 처리는 각각의 경로에 그대로 남깁니다. Waiver prompt와 summary는 이름 붙은 requirement, 수용된 잔여 위험, 잔여 위험 owner refs, 필요할 때 잔여 위험 후속 작업, 영향받는 owner path 또는 close impact를 보여줘야 합니다. 정확한 waiver metadata와 gate effect는 [설계 품질 정책](../reference/design-quality-policies.md#waiver-규칙)과 [커널 참조](../reference/kernel.md#waiver-semantics)가 담당합니다.
+Verification waiver와 QA waiver는 assurance를 높이지 않습니다. Verification waiver는 분리 검증을 충족하지 않은 상태로 둡니다. close가 otherwise 허용되더라도, 면제된 verification gap에 대한 잔여 위험 수용 경로로만 닫을 수 있습니다. 이를 verified close로 요약하면 안 됩니다. QA waiver는 이름 붙인 QA requirement만 닫고 evidence, verification, acceptance, 잔여 위험 처리는 각각의 경로에 그대로 남깁니다. Waiver prompt와 summary는 이름 붙은 requirement, 사용자가 수용한 잔여 위험, 잔여 위험 owner refs, 필요할 때 잔여 위험 후속 작업, 영향받는 owner path 또는 close impact를 보여줘야 합니다. 정확한 waiver metadata와 gate effect는 [설계 품질 정책](../reference/design-quality-policies.md#waiver-규칙)과 [커널 참조](../reference/kernel.md#waiver-semantics)가 담당합니다.
 
 닫기 적용 예시:
 
@@ -462,7 +473,7 @@ Verification waiver와 QA waiver는 assurance를 높이지 않습니다. Verific
 - UI/UX, workflow, copy, accessibility, product-taste, visual-output 작업: 테스트, browser smoke, Browser QA artifacts, 수동 QA, 수락을 각 줄로 분리합니다. 수동 QA를 면제한다면 생략한 대상, 수용된 잔여 위험, 잔여 위험 후속 작업을 보여줍니다.
 - Auth 또는 security 작업: sensitive-action Approval을 security 또는 product decision과 분리해서 보여준 뒤 근거와 검증을 보여줍니다. Secret이나 permission을 만지는 Approval은 redaction, audit, role, retention, user notice 선택을 대신하지 않습니다.
 - Public API 작업: caller compatibility, migration 또는 documentation 영향, 근거, 검증을 따로 보여줍니다. 테스트 통과만으로 API contract 결정이 끝난 것은 아닙니다.
-- 잔여 위험을 받아들이고 닫는 흐름: 남은 한계, 이미 있는 근거, 빠졌거나 면제된 verification 또는 QA, 수용된 잔여 위험, 잔여 위험 후속 작업을 보여줍니다. 결과를 detached verified처럼 표시하면 안 됩니다.
+- 잔여 위험을 받아들이고 닫는 흐름: 남은 한계, 이미 있는 근거, 빠졌거나 면제된 verification 또는 QA, 사용자가 수용한 잔여 위험, 잔여 위험 후속 작업을 보여줍니다. 결과를 detached verified처럼 표시하면 안 됩니다.
 
 ## 닫기
 
@@ -564,9 +575,9 @@ direct로 완료했습니다.
 ```text
 닫기 요약:
 범위: 변경 범위는 로그인 폼, 로그인 API 호출, 세션 저장 안에 머물렀습니다.
-판단: mobile Safari 잔여 위험은 DEC-022에서 받아들였고 작업 수락은 DEC-023에 기록되었습니다.
+판단: 사용자가 표시된 mobile Safari 잔여 위험을 DEC-022에서 수용했고, 작업 수락은 DEC-023에 기록되었습니다.
 근거: Evidence Manifest EM-009가 RUN-018과 ART-TEST-018을 근거로 AC-01과 AC-02를 뒷받침합니다.
-닫기 준비 상태: 검증은 RUN-018에 기록된 자체 확인(self-check)이며, 이 경로에서는 detached Eval이 필요하지 않았습니다. 수동 QA는 MQA-006에서 최종 문구와 레이아웃에 대해 통과했습니다. 잔여 위험 RISK-004에는 후속 TASK-144가 있습니다. close reason: 잔여 위험을 받아들이고 완료.
+닫기 준비 상태: 검증은 RUN-018에 기록된 자체 확인(self-check)이며, 이 경로에서는 detached Eval이 필요하지 않았습니다. 수동 QA는 MQA-006에서 최종 문구와 레이아웃에 대해 통과했습니다. 잔여 위험 RISK-004에는 후속 TASK-144가 있습니다. close reason: 사용자가 잔여 위험을 수용하고 완료.
 ```
 
 좋은 쓰기 멈춤:

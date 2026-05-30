@@ -18,6 +18,8 @@ No Harness background is required. If you want the longer mental model first, re
 
 Harness keeps AI-assisted work followable by making a few things explicit: what is being attempted, what may change, what the user must decide, what supports the completion claim, what risk remains, and whether the work can close.
 
+Users should still speak normally. Requests such as "review this feature idea and ask the questions needed before implementation," "make a small copy change, but tell me if it becomes a broader product decision," or "before changing code, separate the product decisions from the technical decisions" are enough for the agent to choose the right Harness shape.
+
 The examples below are onboarding examples, not schemas or new authority paths. Exact behavior stays with the Reference owners linked at the end.
 
 ## Scenario 1: Tiny docs change
@@ -85,7 +87,7 @@ The user says:
 Add remember-me behavior to login.
 ```
 
-This sounds small, but it affects product behavior, security, session lifetime, UI, tests, and possibly storage. Harness should use Discovery before implementation planning:
+This sounds small, but it affects product behavior, security, session lifetime, UI, tests, and possibly storage. The agent should clarify the request before implementation planning:
 
 ```text
 Goal: add remember-me behavior.
@@ -95,11 +97,11 @@ Possible first safe scoped slice: login checkbox, chosen session behavior, focus
 User question: Should remember-me extend the session on this device, prefill the email address, or both?
 ```
 
-Discovery separates product, technical, security, QA, operational, and scope questions. It answers codebase-answerable questions from the repository and current Harness context, then asks the user only for decisions the codebase cannot answer.
+Reference docs call this clarification posture Discovery. It separates product, technical, security, QA, operational, and scope questions. It answers codebase-answerable questions from the repository and current Harness context, then asks the user only for decisions the codebase cannot answer.
 
 Discovery is not sensitive-action permission (Approval), not permission to write product files, not evidence, not verification, not QA, not final acceptance (Acceptance), not residual-risk acceptance, not close, and not a new authority path. It is the clarification work that can make a first safe scoped slice visible.
 
-For the user-facing flow, use [User Guide](../use/user-guide.md#first-read-path) and [Agent Session Flow](../use/agent-session-flow.md). For exact owner behavior behind the terms, use [Kernel Reference](../reference/kernel.md) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
+For the user-facing flow, use [User Guide](../use/user-guide.md#start-with-ordinary-requests) and [Agent Session Flow](../use/agent-session-flow.md). For exact owner behavior behind the terms, use [Kernel Reference](../reference/kernel.md) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
 
 ## Scenario 4: User judgment blocks work
 
@@ -120,7 +122,7 @@ Uncertainty: confirm existing design-system error-message support.
 Deferral consequence: API and state wiring can continue, but final UI behavior and Manual QA should wait.
 ```
 
-If the decision is blocking, Harness records that user-owned judgment through the Decision Packet path. Chat text, a broad "go ahead," or readable report prose alone should not satisfy the decision unless it answers the specific recorded choice. A Decision Packet is also not sensitive-action Approval unless it is approval-shaped and linked to the Approval path.
+If the decision is blocking, Harness records that user-owned judgment through the documented decision path. Reference docs call that record a Decision Packet. Chat text, a broad "go ahead," or readable report prose alone should not satisfy the decision unless it answers the specific recorded choice. A Decision Packet is also not sensitive-action Approval unless it is approval-shaped and linked to the Approval path.
 
 For practical examples, read [Decision Packet Cookbook](../use/decision-packet-cookbook.md). For exact behavior, use [Decision Packet](../reference/kernel.md#decision-packet), [Decision Gate](../reference/kernel.md#decision-gate), [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision), and [`harness.record_user_decision`](../reference/mcp-api-and-schemas.md#harnessrecord_user_decision).
 

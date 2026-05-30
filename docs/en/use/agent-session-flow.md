@@ -20,6 +20,17 @@ Show only the state, blocker, judgment, and next action that affect the user's n
 
 Agents translate ordinary user requests into Harness procedures. Do not require users to say Discovery, Change Unit, Decision Packet, Write Authorization, Evidence Manifest, Projection, Autonomy Boundary, or `task_events` before the work can proceed. Use those internal terms where agent/runtime behavior needs precision, and place them after the plain-language explanation when showing user-facing status.
 
+Treat requests like these as complete user input, not as invitations to demand Harness terminology:
+
+```text
+I want to add an email login flow. Keep password reset out of scope for now and help me clarify the decisions first.
+Review this feature idea and ask the questions needed before implementation.
+Make a small copy change, but tell me if it turns into a broader product decision.
+Before changing code, separate the product decisions from the technical decisions.
+```
+
+The agent response should translate the request into understood scope, what the agent can inspect itself, what only the user can decide, what evidence would be needed, and what blocks close. Exact Harness labels can follow only when they clarify a boundary or source ref.
+
 A useful status or next-action response answers four questions in ordinary language:
 
 - Scope: what may change, and what is out of bounds?
@@ -193,7 +204,7 @@ Outside Discovery, ask only questions that change the next safe action. During D
 
 Before asking, inspect repo, codebase, docs, and Harness state that are available and current for answers the agent can discover safely. Do not ask the user to restate existing file paths, behavior, terminology, or constraints that are already visible from current context. If a source is unavailable or stale, say so rather than relying on it as authority.
 
-One blocking question at a time does not mean one clarification round total. Broad or design-heavy requests may need several short turns until the goal, scope, non-goals, acceptance criteria, affected product areas, user-facing screens or flows, modules, interfaces, sensitive categories, user-owned product or material technical trade-offs, verification or Manual QA expectations, and known product, implementation, verification, QA, or follow-up risks are shaped enough to propose the first safe Change Unit. Discovery may ask multiple targeted questions, but it stops once a safe first Change Unit can be proposed.
+One blocking question at a time does not mean one clarification round total. Broad or design-heavy requests may need several short turns until the goal, scope, non-goals, acceptance criteria, affected product areas, user-facing screens or flows, modules, interfaces, sensitive categories, user-owned product or material technical trade-offs, verification or Manual QA expectations, and known product, implementation, verification, QA, or follow-up risks are shaped enough to propose the first safe Change Unit. Discovery may ask multiple targeted questions. It can pause once the agent has separated what it can inspect from what the user must decide and can propose a safe next step or smaller scope.
 
 Classify each open question before asking it. Blocking questions need user judgment before the next safe action. Useful-but-not-blocking questions can be parked in the Discovery Brief, Assumption Register, follow-up work, or later Decision Packet candidate. Codebase-answerable questions should be answered by inspecting current repo, docs, Harness state, or source refs instead of asking the user.
 
@@ -339,7 +350,7 @@ Useful examples:
 - Scope / autonomy: scope or Autonomy Boundary expansion should compare keeping the current small scope, adding the requested surface, or splitting a follow-up Change Unit. Explain affected paths, user-facing behavior, what remains out of bounds, write impact, and what the agent can still decide alone.
 - Security / privacy: sensitive-action Approval to access a secret, change permissions, or export data is only an Approval boundary. Separate product or security judgment may still be needed for roles, fields, redaction, audit logging, retention, rollback, and user notice.
 - Security / privacy: PII logging policy should compare options such as no PII in logs, redacted or tokenized identifiers, or limited diagnostic fields. Explain privacy exposure, debugging value, retention, redaction, audit trail, and evidence needed to prove the policy is followed.
-- QA / acceptance: QA or verification waiver should use the existing recording required for the Task and cite the owner refs. QA waiver effects are owned by the Manual QA / QA policy path; product/user risk or policy-required judgment uses a QA waiver Decision Packet. Verification waiver effects are owned by the kernel verification-waiver path; when user-owned judgment is needed, use the relevant Decision Packet. Name the skipped check or surface, accepted residual risk, residual-risk follow-up, relevant refs, and close impact. Example: waive mobile Safari Manual QA for a copy-only change, accept residual risk for viewport wrapping, and keep a browser pass as release follow-up.
+- QA / acceptance: QA or verification waiver should use the existing recording required for the Task and cite the owner refs. QA waiver effects are owned by the Manual QA / QA policy path; product/user risk or policy-required judgment uses a QA waiver Decision Packet. Verification waiver effects are owned by the kernel verification-waiver path; when user-owned judgment is needed, use the relevant Decision Packet. Name the skipped check or surface, user-accepted residual risk, residual-risk follow-up, relevant refs, and close impact. Example: ask the user whether to waive mobile Safari Manual QA for a copy-only change, accept the viewport-wrapping residual risk, and keep a browser pass as release follow-up.
 - Residual risk: residual-risk acceptance before close should show the remaining limitation, the evidence that does exist, why close can still be acceptable, and the follow-up that remains. A residual-risk accepted close is not a detached-verified close.
 
 Ask one blocking question at a time when possible.
@@ -444,7 +455,7 @@ Use these user-facing labels consistently:
 | Self-checked | The implementing path checked its own result. |
 | Detached candidate | A fresh session, fresh worktree, sandbox, manual bundle, or qualifying subagent path may be independent but has not yet produced detached assurance. |
 | Detached verified | The Eval passed with valid independence, no same-session self-review issue, and no stale baseline or bundle input. |
-| Waived with accepted residual risk | Verification or another close-relevant check was waived and the visible remaining residual risk was accepted for residual-risk accepted close. |
+| Waived with user-accepted residual risk | Verification or another close-relevant check was waived and the visible remaining residual risk was accepted by the user for residual-risk accepted close. |
 
 Manual QA answers whether a person inspected qualities that need human judgment, commonly UI/UX, workflow, copy, accessibility interpretation, product taste, or visual output. Do not present a browser smoke run, screenshot capture, Browser QA Capture artifact, or verifier note as Manual QA unless a Manual QA result was actually recorded or validly waived. Browser QA Capture is a v1+ Expansion candidate unless owner docs explicitly promote it; even when available, its artifacts are supporting refs, not result acceptance (Acceptance) or detached verification unless a separate Eval path also satisfies independence. If browser capture is unsupported for the surface, use human Manual QA notes and manually supplied artifacts.
 
@@ -454,15 +465,15 @@ Residual-risk display must distinguish `status=none` from `not_visible`. `status
 
 Acceptance is the user's acceptance of the result when the task path requires it. It is not the same as sensitive-action Approval, verification, QA, residual-risk acceptance, or proof of correctness.
 
-Verification waiver and QA waiver do not upgrade assurance. A verification waiver keeps detached verification unsatisfied. When close is otherwise allowed, it can close only through residual-risk acceptance for the waived verification gap. It must not be summarized as verified close. A QA waiver closes only the QA requirement it names and leaves evidence, verification, acceptance, and residual-risk handling unchanged. Waiver prompts and summaries should show the named requirement, accepted residual risk, residual-risk owner refs, residual-risk follow-up when needed, and affected owner path or close impact; exact waiver metadata and gate effects are owned by [Design Quality Policies](../reference/design-quality-policies.md#waiver-rules) and [Kernel Reference](../reference/kernel.md#waiver-semantics).
+Verification waiver and QA waiver do not upgrade assurance. A verification waiver keeps detached verification unsatisfied. When close is otherwise allowed, it can close only through residual-risk acceptance for the waived verification gap. It must not be summarized as verified close. A QA waiver closes only the QA requirement it names and leaves evidence, verification, acceptance, and residual-risk handling unchanged. Waiver prompts and summaries should show the named requirement, user-accepted residual risk, residual-risk owner refs, residual-risk follow-up when needed, and affected owner path or close impact; exact waiver metadata and gate effects are owned by [Design Quality Policies](../reference/design-quality-policies.md#waiver-rules) and [Kernel Reference](../reference/kernel.md#waiver-semantics).
 
 Applied close examples:
 
 - Direct work: show changed files, evidence refs, self-check, and whether anything escalated. Do not call it detached verified without a qualifying Eval.
-- UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: keep tests, browser smoke, Browser QA artifacts, Manual QA, and acceptance on separate lines. If Manual QA is waived, show the skipped surface, accepted residual risk, and residual-risk follow-up.
+- UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: keep tests, browser smoke, Browser QA artifacts, Manual QA, and acceptance on separate lines. If Manual QA is waived, show the skipped surface, user-accepted residual risk, and residual-risk follow-up.
 - Auth or security work: show sensitive-action Approval separately from the security or product decision, then show evidence and verification. Approval to touch a secret or permission does not settle redaction, audit, role, retention, or user-notice choices.
 - Public API work: show caller compatibility, migration or documentation impact, evidence, and verification separately. Passing tests does not by itself settle the API contract decision.
-- Residual-risk accepted close: show the limitation, existing evidence, missing or waived verification or QA, accepted residual risk, and residual-risk follow-up. Do not present the result as detached verified.
+- Residual-risk accepted close: show the limitation, existing evidence, missing or waived verification or QA, user-accepted residual risk, and residual-risk follow-up. Do not present the result as detached verified.
 
 ## Close
 
@@ -564,9 +575,9 @@ Good work close summary:
 ```text
 Close summary:
 Scope: changed scope stayed inside login form, login API call, and session storage.
-Judgment: mobile Safari residual risk accepted in DEC-022; result acceptance (Acceptance) recorded in DEC-023.
+Judgment: user accepted the shown mobile Safari residual risk in DEC-022; result acceptance (Acceptance) recorded in DEC-023.
 Evidence: AC-01 and AC-02 are covered by Evidence Manifest EM-009, supported by RUN-018 and ART-TEST-018.
-Close Readiness: verification is self-checked in RUN-018; no detached Eval was required for this path. Manual QA passed for final copy and layout in MQA-006. Residual Risk RISK-004 has follow-up TASK-144. Close reason: completed with accepted residual risk.
+Close Readiness: verification is self-checked in RUN-018; no detached Eval was required for this path. Manual QA passed for final copy and layout in MQA-006. Residual Risk RISK-004 has follow-up TASK-144. Close reason: completed with user-accepted residual risk.
 ```
 
 Good write hold:

@@ -4,7 +4,7 @@
 
 이 문서는 엄격한 참고 정의를 읽기 전에, 두 개의 구체적인 작업 흐름으로 하네스를 설명합니다.
 
-읽고 나면 하네스가 언제 Discovery를 사용하는지, 그리고 Task, Change Unit, 결정 패킷, Approval, 쓰기 허가 기록, 근거, 검증, 수동 QA, 수락, 잔여 위험, 닫기를 왜 기록하는지 감을 잡을 수 있습니다. 내부 기록 세부사항을 몰라도 흐름을 따라갈 수 있어야 합니다.
+읽고 나면 어떤 요청이 아주 작게 유지될 수 있는지, 언제 에이전트가 구현 전에 요구를 더 구체화해야 하는지, 사용자 판단이 왜 작업을 막을 수 있는지, 근거가 무엇을 하는지, 왜 아직 닫을 수 없는지를 알 수 있습니다. 끝부분 표에서 이런 쉬운 생각이 더 엄격한 하네스 라벨과 어떻게 연결되는지 보여 줍니다.
 
 ## 이런 때 읽기
 
@@ -16,7 +16,7 @@
 
 ## 핵심 생각
 
-하네스는 하나의 Task 이야기로 보면 이해하기 쉽습니다. 무엇을 하려는지 이름 붙이고, 무엇을 바꿀 수 있는지 경계를 정하고, 필요한 순간에 사용자 판단을 묻고, 근거를 기록하고, 보이는 막힘이 처리되었을 때만 닫습니다.
+하네스는 하나의 작업 이야기로 보면 이해하기 쉽습니다. 사용자는 평소처럼 말하고, 에이전트는 무엇을 하려는지 이름 붙이고, 무엇을 바꿀 수 있는지 경계를 정하고, 필요한 순간에 사용자 판단을 묻고, 근거를 기록하고, 보이는 막힘이 처리되었을 때만 닫습니다.
 
 ## 왜 예시를 먼저 보는가
 
@@ -31,13 +31,13 @@
 
 아래 예시는 여기서 시작합니다. 작은 작업은 가볍게 유지하고, 큰 작업은 따라갈 수 있을 만큼 구조화하는 방식을 보여 줍니다.
 
-## Tiny direct profile 실제 모습
+## 아주 작은 작업의 실제 모습
 
-Tiny direct는 `direct` 아래의 profile이지 새 work mode가 아닙니다. Scope와 result가 이미 분명한 typo, 문서 한 문장, obvious rename에 씁니다.
+가장 작은 작업은 작게 느껴져야 합니다. Reference 문서는 이를 `direct` 아래의 tiny direct profile이라고 부르지만, 새 work mode는 아닙니다. Scope와 result가 이미 분명한 typo, 문서 한 문장, obvious rename에 씁니다.
 
 ```text
 요청: install note의 typo를 고쳐줘.
-Tiny direct result: `docs/help.md` 변경; self-check는 spelling only, meaning 또는 contract change 없음; escalation 없음.
+결과: `docs/help.md` 변경; self-check는 spelling only, meaning 또는 contract change 없음; escalation 없음.
 ```
 
 Tiny가 판단이나 security를 우회하지는 않습니다. 문장이 의미를 바꾸거나, link 또는 rendered output 확인이 필요하거나, 민감 영역이 나타나거나, tiny changed-path/self-check note를 넘는 evidence가 필요해지면 같은 Task를 넓어진 scope에 따라 일반 `direct` 또는 `work`로 옮겨야 합니다.
@@ -76,17 +76,17 @@ Task가 있어야 작업이 하나의 오래 남는 단위가 됩니다. Task가
 
 작은 작업에서도 범위는 중요합니다. 버튼 문구가 여러 화면에서 공유되는 디자인 token으로 만들어진다는 사실이 드러나면, 이 작업은 더 이상 단순한 문구 수정이 아닐 수 있습니다.
 
-### `direct`로 분류하기
+### 가볍게 유지하기
 
 하네스는 이 작업을 `direct`로 봅니다. 변경이 작고, 위험이 낮고, 자체 확인이 쉽기 때문입니다. `direct`는 "기록하지 않는다"는 뜻이 아닙니다. 필요한 기록을 가볍게 유지한다는 뜻입니다.
 
-사용자에게 보이는 예산은 작습니다. Scope를 이름 붙이고, write를 위한 활성 최소 Change Unit을 유지하고, write authority를 확인하고, 좁은 변경을 적용하고, self-check한 뒤 결과를 보고하면 됩니다. 한 줄 문구 변경 때문에 사용자가 양식을 채울 필요는 없습니다.
+사용자에게 보이는 예산은 작습니다. 범위를 이름 붙이고, 쓰기 경계를 좁게 유지하고, 의도한 쓰기가 그 범위에 맞는지 확인하고, 좁은 변경을 적용하고, self-check한 뒤 결과를 보고하면 됩니다. 한 줄 문구 변경 때문에 사용자가 양식을 채울 필요는 없습니다.
 
 에이전트가 이 문구가 checkout, billing, profile 화면에 모두 영향을 준다는 사실을 발견하면 멈춰야 합니다. 그때는 같은 Task를 `work`로 옮기는 편이 맞습니다.
 
-### 최소 Change Unit
+### 작은 쓰기 경계
 
-Change Unit은 요청을 끝내는 데 필요한 가장 작은 제품 쓰기 경계입니다.
+쓰기 경계는 요청을 끝내는 데 필요한 가장 작은 제품 영역입니다. Reference 문서는 이를 Change Unit이라고 부릅니다.
 
 ```text
 Change Unit: 프로필 버튼 문구만.
@@ -103,15 +103,15 @@ UI 문구만 변경: label과 직접 관련된 copy test 변경; 동작, layout,
 좁은 test 변경: 보고된 case에 대한 regression test 하나 추가; Task가 escalation되지 않는 한 implementation edit 없음.
 ```
 
-### 제품 파일을 쓰기 전에 prepare_write 확인하기
+### 제품 파일을 쓰기 전에 확인하기
 
-수정하기 전에 에이전트는 이 쓰기가 지금 허용되는지 하네스에 확인합니다. 사용자가 보는 요약은 구체적이어야 합니다.
+수정하기 전에 에이전트는 이 쓰기가 지금 허용되는지 하네스에 확인합니다. 사용자가 보는 요약은 구체적이고 쉬워야 합니다.
 
 ```text
-쓰기 허가 기록: 프로필 화면 파일과 관련 문구 테스트에 대해 allowed.
+쓰기 확인: 프로필 화면 파일과 관련 문구 테스트에 대해 allowed.
 ```
 
-수정하려는 파일이 Change Unit 밖이면 쓰기는 멈춰야 합니다. 사용자는 예상 밖의 수정 대신 범위 질문을 봐야 합니다.
+Reference 문서는 이 allow/deny 결과를 쓰기 허가 기록이라고 부릅니다. 수정하려는 파일이 제한된 범위 밖이면 쓰기는 멈춰야 합니다. 사용자는 예상 밖의 수정 대신 범위 질문을 봐야 합니다.
 
 실행 뒤 범위 밖 변경 경로가 발견되면 `direct` 결과에 자연스럽게 포함하면 안 됩니다. 에이전트는 불일치를 보여주고, 추가 변경을 제거하거나 분리하거나, 범위 결정을 묻거나, 같은 Task를 `work` 쪽으로 옮겨야 합니다.
 
@@ -164,8 +164,7 @@ UI 문구만 변경: label과 직접 관련된 copy test 변경; 동작, layout,
 
 ```text
 프로필 버튼 문구를 "프로필 업데이트"로 바꿨습니다.
-RUN-031과 diff ART-DIFF-031로 렌더링된 문구를 확인했습니다.
-쓰기 허가 기록 WA-031이 consumed됐고, Evidence Manifest EM-031이 direct claim을 뒷받침합니다.
+직접 관련된 copy test와 diff review로 렌더링된 문구를 확인했습니다.
 작은 `direct` 작업으로 닫았습니다. 잔여 위험: 이번 close에는 없음.
 ```
 
@@ -175,7 +174,7 @@ RUN-031과 diff ART-DIFF-031로 렌더링된 문구를 확인했습니다.
 
 이 튜토리얼에서는 일부러 그 세부 규칙을 펼치지 않습니다.
 
-## 예시 B: `work` 작업
+## 예시 B: 더 큰 작업
 
 ### 사용자 요청: "로그인 플로우에 remember me를 추가해줘."
 
@@ -196,20 +195,18 @@ Task: 로그인 플로우에 remember me 동작을 추가한다.
 예상 모드: work.
 ```
 
-"remember me"가 모호하기 때문에 에이전트는 구현 계획 전에 Discovery를 사용합니다. Discovery는 요구사항 구체화이지 approval, sensitive-action Approval, 쓰기 허가 기록, evidence, verification, QA, acceptance, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. 제품, 기술, security, QA, 운영, scope 판단을 분리하고, codebase-answerable question은 repository와 현재 하네스 context에서 답하며, codebase가 답할 수 없는 결정만 사용자에게 묻습니다.
+"remember me"가 모호하기 때문에 에이전트는 구현 계획 전에 요구를 구체화합니다. Reference 문서는 이런 구체화 자세를 Discovery라고 부릅니다. 이것은 approval, sensitive-action Approval, 쓰기 허가 기록, evidence, verification, QA, acceptance, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. 제품, 기술, security, QA, 운영, scope 판단을 분리하고, codebase-answerable question은 repository와 현재 하네스 context에서 답하며, codebase가 답할 수 없는 결정만 사용자에게 묻습니다.
 
-에이전트는 짧은 Discovery Brief를 유지할 수 있습니다.
+에이전트는 짧은 구체화 요약을 유지할 수 있습니다.
 
 ```text
 Goal: 로그인에 remember-me 동작을 추가한다.
 User value: 반복 로그인을 더 쉽게 한다.
 Non-goals: passwordless login, account recovery, global session redesign.
-Question Queue:
-- Blocking product/security question: "remember me"가 무엇을 의미해야 하는가?
-- Codebase-answerable question: 현재 session lifetime이 어디에서 설정되는가?
-Assumption Register:
-- 기존 login flow에 checkbox를 둘 한 위치가 있다. write planning 전에 code에서 확인한다.
-First Safe Change Unit Candidate: 로그인 폼 checkbox, 선택된 remember-me 동작, focused tests.
+User question: "remember me"가 무엇을 의미해야 하는가?
+Can inspect without asking: 현재 session lifetime이 어디에서 설정되는가.
+Assumption to verify: 기존 login flow에 checkbox를 둘 한 위치가 있다.
+Possible first safe scope: 로그인 폼 checkbox, 선택된 remember-me 동작, focused tests.
 ```
 
 그다음 가장 먼저 도움이 되는 사용자 소유 질문을 쉬운 말로 묻습니다.
@@ -218,7 +215,7 @@ First Safe Change Unit Candidate: 로그인 폼 checkbox, 선택된 remember-me 
 "remember me"가 이 기기에서 로그인 세션을 더 오래 유지한다는 뜻인가요, 이메일 주소를 기억한다는 뜻인가요, 아니면 둘 다인가요?
 ```
 
-답변이 더 많은 사용자 소유 판단을 드러내면 Discovery는 몇 개의 targeted question을 더 이어갈 수 있지만, 첫 번째 안전한 Change Unit을 제안할 수 있으면 멈춥니다.
+답변이 더 많은 사용자 소유 판단을 드러내면 구체화 질문을 몇 개 더 이어갈 수 있습니다. 에이전트가 직접 확인할 수 있는 것과 사용자가 결정해야 하는 것을 나누고, 안전한 다음 행동이나 더 작은 범위를 제안할 수 있으면 잠시 멈출 수 있습니다.
 
 ### 범위 잡기
 
@@ -229,7 +226,7 @@ First Safe Change Unit Candidate: 로그인 폼 checkbox, 선택된 remember-me 
 제외: passwordless login, account recovery, 전체 session-management 재설계.
 ```
 
-이 범위가 Change Unit의 출발점이 됩니다. Change Unit은 단순한 파일 목록이 아닙니다. Task를 만족시키기 위해 에이전트가 바꿀 수 있는 제한된 제품 조각입니다.
+이 범위가 제한된 작업 영역의 출발점이 됩니다. Reference 문서는 이를 Change Unit이라고 부릅니다. 단순한 파일 목록이 아니라, Task를 만족시키기 위해 에이전트가 바꿀 수 있는 제한된 제품 조각입니다.
 
 ### 절충점이 드러나는 순간
 
@@ -240,9 +237,9 @@ First Safe Change Unit Candidate: 로그인 폼 checkbox, 선택된 remember-me 
 
 이 선택이 제품 동작이나 위험을 바꾼다면 에이전트가 조용히 고르면 안 됩니다.
 
-### 결정 패킷
+### 사용자 판단
 
-사용자 판단이 진행을 막을 때 하네스는 결정 패킷을 사용합니다. Packet은 읽기 쉬워야 합니다.
+사용자 판단이 진행을 막을 때 하네스는 문서화된 결정 경로를 사용합니다. Reference 문서는 그 기록을 결정 패킷이라고 부릅니다. Prompt는 읽기 쉬워야 합니다.
 
 ```text
 필요한 결정: 이 제품에서 "remember me"는 무엇을 의미해야 하는가?
@@ -251,30 +248,30 @@ Option B: 현재 기기에서 세션을 더 오래 유지한다.
 추천: 제품이 세션 유지 위험을 받아들이고 그 선택을 기록할 수 있을 때만 Option B를 선택한다.
 ```
 
-결정 패킷이 필요한 이유는 이것이 단순한 수정 승인 문제가 아니기 때문입니다. 제품과 보안의 절충이며, 그 선택은 사용자가 소유합니다.
+기록된 결정이 필요한 이유는 이것이 단순한 수정 승인 문제가 아니기 때문입니다. 제품과 보안의 절충이며, 그 선택은 사용자가 소유합니다.
 
-### Change Unit
+### 정리된 범위
 
-사용자가 선택하면 에이전트는 그 결정에 맞게 Change Unit을 정리합니다.
+사용자가 선택하면 에이전트는 그 결정에 맞게 제한된 범위를 정리합니다.
 
 ```text
-Change Unit: 로그인 폼 checkbox, 선택된 remember-me 동작, test, 직접 관련된 문구.
+정리된 범위: 로그인 폼 checkbox, 선택된 remember-me 동작, test, 직접 관련된 문구.
 ```
 
-사용자가 세션 연장을 선택하면 Change Unit에 세션 유지 코드와 보안 관련 test가 포함될 수 있습니다. 이메일만 기억하는 선택이라면 범위는 더 좁게 유지됩니다.
+사용자가 세션 연장을 선택하면 제한된 범위에 세션 유지 코드와 보안 관련 test가 포함될 수 있습니다. 이메일만 기억하는 선택이라면 범위는 더 좁게 유지됩니다.
 
-### 쓰기 허가 기록
+### 쓰기 확인
 
-제품 파일을 쓰기 전에 에이전트는 의도한 수정이 활성 Task, Change Unit, sensitive-action Approval, 해결된 결정과 맞는지 하네스에 확인합니다.
+제품 파일을 쓰기 전에 에이전트는 의도한 수정이 활성 Task, 제한된 범위, sensitive-action Approval, 해결된 결정과 맞는지 하네스에 확인합니다.
 
 사용자에게 보이는 요약은 무엇이 허용되고 무엇이 아닌지 말해야 합니다.
 
 ```text
-쓰기 허가 기록: 로그인 폼, 세션 유지 코드, 관련 test에 대해 allowed.
+쓰기 확인: 로그인 폼, 세션 유지 코드, 관련 test에 대해 allowed.
 Not allowed: 관련 없는 account recovery 또는 전체 auth 재설계.
 ```
 
-선택한 동작에 sensitive-action Approval이 필요하면 하네스는 쓰기 전에 멈추고 별도 Approval을 요청해야 합니다. Sensitive-action Approval은 "이 민감한 행동을 진행해도 되는가?"에 답합니다. 결정 패킷, 테스트, QA, 잔여 위험을 받아들이는 판단, 최종 수락을 대신하지 않습니다.
+Reference 문서는 이 allow/deny 결과를 쓰기 허가 기록이라고 부릅니다. 선택한 동작에 sensitive-action Approval이 필요하면 하네스는 쓰기 전에 멈추고 별도 Approval을 요청해야 합니다. Sensitive-action Approval은 "이 민감한 행동을 진행해도 되는가?"에 답합니다. 사용자 판단, 테스트, QA, 잔여 위험을 받아들이는 판단, 최종 수락을 대신하지 않습니다.
 
 ### 구현
 
@@ -285,7 +282,7 @@ Not allowed: 관련 없는 account recovery 또는 전체 auth 재설계.
 3. 선택된 동작을 확인하는 test를 추가하거나 수정한다.
 4. 새 범위 결정 없이 관련 없는 auth 정리를 하지 않는다.
 
-현재 세션 시스템이 더 큰 재설계 없이는 선택된 동작을 지원할 수 없다는 사실이 드러나면, 에이전트는 멈추고 더 작은 Change Unit 또는 새 결정 패킷을 제안해야 합니다.
+현재 세션 시스템이 더 큰 재설계 없이는 선택된 동작을 지원할 수 없다는 사실이 드러나면, 에이전트는 멈추고 더 작은 범위 또는 새 사용자 판단을 제안해야 합니다.
 
 ### 근거
 
@@ -327,7 +324,7 @@ Not allowed: 관련 없는 account recovery 또는 전체 auth 재설계.
 
 ### 잔여 위험
 
-결과 수락 또는 위험을 받아들이고 닫기 전에 에이전트는 알려진 남은 불확실성을 보여 줍니다.
+작업 수락 또는 잔여 위험을 수용하고 닫기 전에 에이전트는 알려진 남은 불확실성을 보여 줍니다.
 
 ```text
 잔여 위험: 세션 동작은 로컬 브라우저 경로에서 확인했지만, 지원하는 모든 브라우저 정책 조합에서는 확인하지 않았다.
@@ -335,24 +332,24 @@ Not allowed: 관련 없는 account recovery 또는 전체 auth 재설계.
 
 닫기에 영향을 주는 알려진 잔여 위험이 없다면 에이전트는 그 사실을 분명히 말해야 합니다. 알려진 위험을 숨기는 것과 알려진 위험이 없는 것은 다릅니다.
 
-### 수락
+### 작업 수락
 
-최종 수락이 필요한 경로라면 사용자는 근거, 검증 또는 받아들인 검증 위험, 수동 QA 상태, 잔여 위험을 본 뒤 결과를 받아들입니다.
+최종 작업 수락이 필요한 경로라면 사용자는 근거, 검증 또는 받아들인 검증 위험, 수동 QA 상태, 잔여 위험을 본 뒤 결과를 받아들입니다.
 
 ```text
-수락합니다. remember-me 동작은 선택한 옵션과 맞고, 표시된 잔여 위험도 받아들일 수 있습니다.
+작업을 수락합니다. remember-me 동작은 선택한 옵션과 맞고, 표시된 잔여 위험도 받아들일 수 있습니다.
 ```
 
-수락은 sensitive-action Approval과 다릅니다. Approval은 민감한 단계를 진행하게 할 수 있지만, 수락은 완료된 결과가 충분히 좋은지 판단합니다.
+작업 수락은 sensitive-action Approval과 다릅니다. Approval은 민감한 단계를 진행하게 할 수 있지만, 작업 수락은 완료된 결과가 충분히 좋은지 판단합니다.
 
 ### 닫기
 
-하네스는 관련 blocker가 처리된 뒤에만 닫습니다. 범위가 맞고, 결정이 해결되었거나 유효하게 미뤄졌고, 쓰기가 허용되었고, 근거가 Task에 충분하고, 검증과 QA가 통과했거나 명시적으로 처리되었고, 잔여 위험이 보였고, 필요한 수락이 기록되어야 합니다.
+하네스는 관련 blocker가 처리된 뒤에만 닫습니다. 범위가 맞고, 결정이 해결되었거나 유효하게 미뤄졌고, 쓰기가 허용되었고, 근거가 Task에 충분하고, 검증과 QA가 통과했거나 명시적으로 처리되었고, 잔여 위험이 보였고, 필요한 작업 수락이 기록되어야 합니다.
 
 닫기 요약은 짧아야 합니다.
 
 ```text
-`work` 작업으로 닫음. 근거 기록됨. 검증과 수동 QA 처리됨. 필요한 경우 잔여 위험을 표시하고 받아들인 판단을 기록함.
+`work` 작업으로 닫음. 근거 기록됨. 검증과 수동 QA 처리됨. 필요한 경우 사용자가 표시된 잔여 위험을 수용함.
 ```
 
 ### 사용자가 보는 것
@@ -362,12 +359,14 @@ Not allowed: 관련 없는 account recovery 또는 전체 auth 재설계.
 ```text
 remember me를 현재 기기의 세션 연장으로 구현했습니다.
 로그인 폼, 세션 유지 코드, 테스트를 변경했습니다.
-Evidence Manifest EM-009가 RUN-018과 ART-TEST-018로 AC-01과 AC-02를 뒷받침합니다.
-Eval EVAL-012가 remembered session과 non-remembered session을 검증했습니다.
-수동 QA MQA-006이 로그인 화면 흐름에 대해 통과했습니다.
-잔여 위험 RISK-004가 표시되고 DEC-022에서 받아들여졌습니다. 지원하는 모든 브라우저 정책 조합에서는 확인하지 않았다는 위험입니다.
-최종 수락은 DEC-023에 기록됐고, `work` 작업으로 닫았습니다.
+근거는 focused test run으로 success와 non-remembered-session 기준을 뒷받침합니다.
+독립 확인은 remembered session과 non-remembered session을 검증했습니다.
+수동 QA는 로그인 화면 흐름에 대해 통과했습니다.
+사용자가 표시된 잔여 위험을 수용했습니다: 지원하는 모든 브라우저 정책 조합에서는 확인하지 않았습니다.
+최종 작업 수락이 기록됐고, 더 큰 작업으로 닫았습니다.
 ```
+
+Power-user 표시는 각 줄 뒤의 owner ref를 함께 보여줄 수 있지만, 첫 결과는 참고 문서가 아니라 작업 요약처럼 읽혀야 합니다.
 
 ### 참고 문서가 더 엄격하게 정의하는 것
 
