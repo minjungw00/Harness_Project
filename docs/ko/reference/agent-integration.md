@@ -459,7 +459,7 @@ Connector conformance는 profile이 선언한 capability tier에서 공통 contr
 Overview scenario:
 
 - active Task가 있을 때와 없을 때의 status
-- Use procedure가 요구할 때 significant work 재개 전 current Journey Card 표시
+- Use procedure가 요구할 때 significant work 재개 전 간결한 현재 위치 상태 표시. Persisted Journey Card output은 later/diagnostic profile입니다.
 - intake를 `advisor`, `direct`, `work`로 분류하고, 사용자에게 보일 때는 읽기/조언, 작은 변경, 추적되는 작업으로 표시
 - shared design과 decision을 포함한 work shaping
 - Change Unit scope와 vertical/horizontal exception handling

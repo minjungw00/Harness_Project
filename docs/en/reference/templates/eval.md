@@ -6,6 +6,8 @@ Use `EVAL` when Harness needs a readable verification result with independence c
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
+Implementation tier: future / diagnostic. Use this for detailed Evaluation records in later verification profiles; compact verification display can use the card shape.
+
 ## Source records
 
 - Eval record

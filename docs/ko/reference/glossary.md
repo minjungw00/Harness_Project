@@ -437,11 +437,11 @@ Design-quality policies가 사용하는 standard form입니다. `name`, `applies
 
 ### Projection
 
-읽기용 투영 문서(projection)는 기준 상태 records와 아티팩트 참조를 사람이 읽을 수 있게 렌더링한 것입니다. Projection은 reading과 decision-making에 유용하지만 기준 상태를 override할 수 없습니다.
+읽기용 투영 문서(projection)는 Core 상태 records와 아티팩트 참조에서 생성된 읽기용 파생 view입니다. Projection은 reading과 decision-making에 유용하지만 기준 상태를 override하거나 대체할 수 없습니다.
 
 ### ProjectionKind
 
-Projection job과 template kind를 나타내는 API enum입니다. Tier, values, extension rules는 [Shared schemas](mcp-api-and-schemas.md#shared-schemas)가 담당합니다. `Reference-required` 같은 tier label은 support expectation이지 코어 권한 조각(v0.1 Core Authority Slice) run obligation이 아닙니다. v0.1에는 owner path가 이미 만든 freshness/read fact를 보존하는 것 외의 projection rendering exit requirement가 없습니다. 어떤 ProjectionKind도 projection을 기준 상태로 만들지 않습니다.
+Projection job과 template kind를 나타내는 API enum입니다. Support class, values, extension rules는 [Shared schemas](mcp-api-and-schemas.md#shared-schemas)가 담당합니다. Support class label은 코어 권한 조각(v0.1 Core Authority Slice) run obligation이 아닙니다. v0.1에는 owner path가 이미 만든 freshness/read fact를 보존하는 것 외의 projection rendering exit requirement가 없습니다. 어떤 ProjectionKind도 projection을 기준 상태로 만들지 않습니다.
 
 ### Projection Freshness
 

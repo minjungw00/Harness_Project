@@ -27,7 +27,13 @@
 
 첫 조각은 의도적으로 좁게 유지합니다. 로컬 project 하나, Task 하나, 기본 scope 하나, write authority path 하나, recorded Run 하나, 근거 링크 하나, structured blocker/status response 하나를 증명합니다. 이것은 MVP가 아닙니다. 일반적인 work를 scope, judgment, 근거, close-readiness, 잔여 위험 언어로 바꾸고 approval, 작업 수락, 잔여 위험 수용을 혼동하지 않게 만드는 단계가 MVP입니다.
 
-Projection template polish, dashboard 또는 hosted workflow UI, index, broad connector ecosystem 또는 marketplace, team workflow, surface-specific connector automation, metric, parallel orchestration, broad automation은 authority record와 user-facing value path가 존재한 뒤 유용해질 수 있습니다. 첫 조각의 요구사항은 아닙니다.
+Projection template polish, detailed report, dashboard 또는 hosted workflow UI, index, broad connector ecosystem 또는 marketplace, team workflow, surface-specific connector automation, metric, parallel orchestration, broad automation은 authority record와 user-facing value path가 존재한 뒤 유용해질 수 있습니다. 첫 조각의 요구사항은 아닙니다.
+
+초기 output model은 의도적으로 작게 둡니다.
+
+- v0.1은 Core state에서 오는 read-only current status/next output과 structured blocker가 필요합니다.
+- v0.2는 사용자 읽기용 현재 작업 상태, 판단 요청, 근거 요약, 닫기 준비 상태 / blocker 요약이 필요합니다.
+- Journey Card, Journey Spine, Run Summary, TDD Trace, Module Map, Interface Contract, Export, detailed Evidence Manifest, detailed Eval output은 owner profile이 명시적으로 승격하지 않는 한 optional, diagnostic, later-profile scope로 남습니다.
 
 ## 단계별 전달 계획
 
@@ -65,7 +71,7 @@ v0.1은 다음을 증명해야 합니다.
 - durable single-use Write Authorization 하나
 - 그 authorization을 consume하는 `record_run` 하나
 - Core/API contract가 소유하는 registered `ArtifactRef` 또는 equivalent evidence link 하나
-- selected claim에 대한 support 또는 insufficiency를 보고할 수 있는 minimal Evidence Manifest 또는 evidence relation
+- selected claim에 대한 support 또는 insufficiency를 보고할 수 있는 minimal evidence relation 또는 Evidence Manifest state record 하나. 단 detailed `EVIDENCE-MANIFEST` projection은 요구하지 않습니다.
 - current Core state에서 오는 read-only status/next response 하나
 - missing evidence, missing scope, 또는 seeded required user judgment를 위한 structured blocker/status response 하나
 
@@ -80,7 +86,7 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 | Stage | Required contract surface | Explicitly later |
 |---|---|---|
 | v0.1 Core Authority Slice | Task identity와 state version, Reference contract상 필요한 경우 Change Unit owner shape로 표현되는 기본 scope 하나, `prepare_write`, single-use Write Authorization, compatible `record_run`, `ArtifactRef` 또는 evidence relation 하나, minimal evidence support/insufficiency, read-only status/next, idempotency conflict behavior, structured blockers. Smoke path에 seeded user judgment가 포함되면 stored Decision Packet은 여전히 `decision_kind`와 `judgment_domain`을 가진다. Full user-facing Decision Packet quality는 필요하지 않다. | Full natural-language judgment presentation, 잔여 위험 표시, 작업 수락, 수동 QA, 분리 검증, full projection rendering, export/recover, broad operations. |
-| v0.2 User-Facing Harness MVP | User-facing judgment context. 여기서 `decision_kind`는 lifecycle/gate semantics를, `judgment_domain`은 display/grouping을 담당한다. 작업 수락은 Approval과 구분되고, 잔여 위험 표시 또는 명시적 none이 필요하며, readable derived card 또는 projection이 사용자 이해에 충분해야 한다. | Full 분리 검증 hardening, 수동 QA matrix, stewardship validator suite, feedback-loop policy, release handoff, dashboard 또는 hosted UI. |
+| v0.2 User-Facing Harness MVP | User-facing judgment context. 여기서 `decision_kind`는 lifecycle/gate semantics를, `judgment_domain`은 display/grouping을 담당한다. 작업 수락은 Approval과 구분되고, 잔여 위험 표시 또는 명시적 none이 필요하며, 현재 작업 상태, 판단 요청, 근거 요약, 닫기 준비 상태/blocker output이 사용자 이해에 충분해야 한다. | Full 분리 검증 hardening, 수동 QA matrix, stewardship validator suite, feedback-loop policy, release handoff, dashboard 또는 hosted UI, detailed report projection catalog. |
 | v0.3/v0.4 hardened reference | 분리 검증 독립성, 수동 QA policy coverage, stewardship와 context-hygiene validators, feedback-loop와 TDD policy, projection/reconcile completeness, recover/export/artifact integrity, owner docs가 정의한 release handoff. | Owner docs와 fixtures로 승격되지 않은 v1+ Expansion candidates. |
 
 따라서 API schema에서 required라는 말은 해당 tool call, record, profile이 구현되거나 사용될 때 required라는 뜻입니다. 그 자체로 future-profile field가 가장 작은 runnable slice의 일부가 되지는 않습니다.
@@ -123,10 +129,10 @@ MVP는 다음을 보여야 합니다.
 - required 근거가 없거나 required user judgment가 missing이면 close가 block된다
 - 작업 수락과 close 전에 잔여 위험을 표시할 수 있다
 - 사용자의 작업 수락이 sensitive-action Approval, 잔여 위험 수용과 구분된다
-- readable projection 또는 card가 user-facing path를 보여 주기에 충분하지만, template polish가 source of truth가 되지는 않는다
+- readable summary 또는 card가 현재 작업 상태, 판단 요청, 근거 요약, 닫기 준비 상태/blocker를 보여 주지만, template polish가 source of truth가 되지는 않는다
 - prose만이 아니라 Core state, events, artifacts, projection/freshness facts, structured errors로 conformance를 증명할 수 있다
 
-v0.2는 특정 user-facing MVP scenario가 최소 display 또는 blocker hook을 요구하지 않는 한 분리 검증, full 수동 QA 정책 매트릭스, stewardship validators, feedback-loop policy, export/recover, release handoff를 staged profile로 남겨 둡니다. Browser QA Capture, Cross-Surface Verification automation, dashboard, broad connectors, Context Index, metrics, team workflow, orchestration은 MVP 밖에 둡니다.
+v0.2는 특정 user-facing MVP scenario가 최소 display 또는 blocker hook을 요구하지 않는 한 분리 검증, full 수동 QA 정책 매트릭스, stewardship validators, feedback-loop policy, export/recover, release handoff, Journey Card/Spine polish, Run Summary, TDD Trace, Module Map, Interface Contract, detailed Evidence Manifest, detailed Eval, Export projection을 staged profile로 남겨 둡니다. Browser QA Capture, Cross-Surface Verification automation, dashboard, broad connectors, Context Index, metrics, team workflow, orchestration은 MVP 밖에 둡니다.
 
 v0.2를 통과했다는 것은 사용자가 하네스가 authorization wrapper 이상임을 볼 수 있다는 뜻입니다. Work의 scope, decision, 근거, 작업 수락, risk boundary가 로컬에서 inspectable하게 유지됩니다.
 
@@ -215,7 +221,7 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 - Required user judgment가 missing 또는 unresolved이면 close가 block된다.
 - Known close-relevant risk가 있으면 작업 수락 또는 close 전에 잔여 위험이 보인다.
 - 사용자의 작업 수락이 sensitive-action Approval과 잔여 위험 수용과 별도로 기록되거나 표현된다.
-- User-facing projection 또는 card는 Core record에서 파생되며, template polish를 authoritative하게 만들지 않고 MVP path에 충분하다.
+- User-facing readable summary 또는 card는 Core record에서 파생되며, template polish를 authoritative하게 만들지 않고 MVP path에 충분하다.
 
 ### 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack) exit checklist
 

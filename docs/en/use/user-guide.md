@@ -246,6 +246,8 @@ Most status should fit into four everyday groups. The agent may use exact Harnes
 | Evidence | What supports the claim that this is done? | Changed paths, tests, logs, screenshots, QA notes, verification results, missing support, or stale support. |
 | Close readiness | What still prevents closing? | Verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance, close blockers, and the smallest unblocker. |
 
+These are readable summaries, not authoritative documents. The agent may cite refs behind them, but state changes, evidence records, acceptance, risk acceptance, and close still come from Harness/Core records and actions.
+
 When the Judgment group needs a formal Decision Packet, Harness records both the decision route and the user-facing domain. `decision_kind` says what lifecycle or gate path the decision uses; `judgment_domain` groups the decision for users as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed. The domain explains the decision; it does not by itself change close readiness or gate aggregation.
 
 Useful status:
@@ -347,9 +349,9 @@ You can skip this section until an agent shows one of these labels. They are use
 | Approval | Permission for a named sensitive action; not generic agreement or final acceptance. |
 | Write Authorization | A one-attempt check that the intended product write fits the current task, scope, decisions, and approvals. |
 | Evidence Manifest | The record that maps completion claims to supporting evidence. |
-| Projection | A readable report or card rendered from owner records; useful for orientation, not authority by itself. |
+| Projection | A readable summary rendered from owner records and artifact refs; useful for orientation, not authority by itself. |
 
-These labels do not collapse into each other. Approval is not acceptance. Final acceptance does not erase residual risk. A decision is not write authority. A readable report is not state. Passing tests does not mean Manual QA happened. Accepting residual risk does not make the risk disappear.
+These labels do not collapse into each other. Approval is not acceptance. Final acceptance does not erase residual risk. A decision is not write authority. A readable summary is not state. Passing tests does not mean Manual QA happened. Accepting residual risk does not make the risk disappear.
 
 For exact contracts, use the Reference docs only when needed: [Kernel Reference](../reference/kernel.md), [MCP API And Schemas](../reference/mcp-api-and-schemas.md), and [Agent Integration Reference](../reference/agent-integration.md).
 

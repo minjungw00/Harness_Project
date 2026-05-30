@@ -6,17 +6,30 @@ Use these files when you need the rendered Markdown shape for projection templat
 
 Owner boundary: templates are rendered shapes, not canonical state. They do not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs explicitly promote and prove it.
 
-## Template tiering
+## Output tiers
 
-Projection templates match the API `ProjectionKind` staged/reference support tiers:
+Projection and card shapes serve three output tiers:
 
-| Tier | Templates | Rule |
+| Output tier | What belongs here | Rule |
 |---|---|---|
-| Reference-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Staged/reference projection support must enqueue/render these when their source records exist or change. |
-| Reference-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. |
-| Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Render only when the corresponding optional projection is enabled. |
+| User-readable outputs | Current work status, judgment request, evidence summary, and close readiness / blocker summary. | Required for the user-facing MVP, but may be rendered through status/next text, compact cards, or minimal `TASK` sections. |
+| Agent compact context | Minimal current state needed for the next safe step: active Task, scope, active Change Unit when relevant, pending judgment, evidence/close blockers, next action, refs, and freshness. | Keep compact; do not embed long history or detailed artifacts. |
+| Reference/diagnostic outputs | Detailed manifests, traces, maps, Journey Card or Journey Spine views, run summaries, detailed Eval reports, export bundles, and operator reports. | Pull-on-demand or later-profile outputs; not mandatory for the first runnable slice or minimum user-facing MVP. |
 
-`Reference-required` means required by staged/reference projection support after the relevant owner records exist; it does not mean every v0.1 Core Authority Slice run must render every kind. v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. v0.2 User-Facing Harness MVP provides enough derived projection or card output for users to understand scope, judgment, evidence, close readiness, acceptance, and residual risk. Hardened local reference support covers the full Reference-required projection set when source records exist or change.
+## Template implementation classes
+
+Template classes stage rendered shapes without changing authority:
+
+| Class | Templates | Rule |
+|---|---|---|
+| Required for first runnable kernel slice | [Compact Status Card](compact-status-card.md) or equivalent status/next/blocker response shape | Minimal read-only status from current Core state. No persisted Markdown projection job is required. |
+| Required for user-facing MVP | [TASK](task.md) minimal continuity summary; [Decision Packet display/card shape](decision-packet.md) for judgment requests, not the standalone `DEC` `ProjectionKind` | Enough to show current status, user judgment request, evidence summary, and close readiness/blockers. Standalone persisted `DEC` Markdown remains optional unless the standalone Decision Packet projection feature is enabled. |
+| Optional early | [APR](approval.md), [Approval Card](approval-card.md), [DIRECT-RESULT](direct-result.md), [MANUAL-QA](manual-qa.md), [Manual QA Card](manual-qa-card.md), [Verification Result Card](verification-result-card.md) | Use only when the corresponding approval, direct-work, Manual QA, or verification profile is active. |
+| Future / diagnostic | [RUN-SUMMARY](run-summary.md), [EVIDENCE-MANIFEST](evidence-manifest.md), [EVAL](eval.md), [TDD-TRACE](tdd-trace.md), [DOMAIN-LANGUAGE](domain-language.md), [MODULE-MAP](module-map.md), [INTERFACE-CONTRACT](interface-contract.md), [DESIGN](design.md), [EXPORT](export.md), [JOURNEY-CARD](journey-card.md) | Detailed reference, diagnostic, handoff, stewardship, map, trace, or export views. Keep available for v0.3, v0.4, operations, handoff, or other owner-promoted later profiles without making them mandatory early scope. |
+
+The first runnable kernel slice does not require broad template rendering. v0.2 User-Facing Harness MVP needs enough derived output for users to understand scope, judgment, evidence, close readiness, acceptance, and residual risk; it does not require Run Summary, Evidence Manifest, detailed Eval, TDD Trace, Journey Card, Module Map, Interface Contract, or Export projection polish.
+
+`Future / diagnostic` means later-profile or diagnostic scope, not automatically v1+ only.
 
 `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`, and other report projections are readable views from owner records and refs. They must not redefine kernel fields, MCP schemas, SQLite DDL, gate behavior, or artifact integrity rules.
 
@@ -30,7 +43,7 @@ Rendered examples should make that boundary visible to the reader. `source_state
 
 Managed blocks are projector-owned display. Direct edits inside managed blocks are drift and should become reconcile candidates, not state changes. Human-editable sections such as `User Notes and Proposals` are proposal surfaces: they become state only through proposal -> reconcile item -> accepted Core state-changing action with the relevant `state.sqlite.task_events` row, or they remain rejected, deferred, or note-only content.
 
-Any template that renders artifact refs must preserve `redaction_state`. Large or sensitive artifact bodies are not embedded by default. `secret_omitted` entries may show safe notes or handles and may support only visible nonsecret evidence; `blocked` entries show the committed metadata-only notice as unavailable input. Templates must not inline, reconstruct, summarize, or export omitted secret/PII values or blocked raw payload bytes.
+Any template that renders artifact refs must preserve `redaction_state`. Large logs, diffs, traces, screenshots, bundles, recordings, and sensitive artifact bodies are referenced by `ArtifactRef`, not embedded by default. `secret_omitted` entries may show safe notes or handles and may support only visible nonsecret evidence; `blocked` entries show the committed metadata-only notice as unavailable input. Templates must not inline, reconstruct, summarize, or export omitted secret/PII values or blocked raw payload bytes.
 
 Display fields such as `redaction_availability_summary`, omitted or blocked impact lines, and `Downstream Effect` columns are rendered summaries only. They are derived from `ArtifactRef.redaction_state`, owner records, and downstream gate, evidence, QA, verification, projection, export, or Release Handoff status.
 
@@ -42,36 +55,33 @@ Display cards should distinguish three different problems: a stale projection me
 
 Close and assurance displays must keep distinct labels for self-checked work, `detached_verified` assurance, waived verification, QA waiver, and residual-risk accepted `completed_with_risk_accepted` close. They may appear in the same compact card, but should not be collapsed into "done," "verified," or "accepted" without the owner refs that support each state.
 
-## Reference-required templates
+## Future / Diagnostic Templates
 
-- [TASK](task.md)
-- [APR](approval.md)
-- [RUN-SUMMARY](run-summary.md)
+- [DESIGN](design.md)
+- [DOMAIN-LANGUAGE](domain-language.md)
 - [EVIDENCE-MANIFEST](evidence-manifest.md)
 - [EVAL](eval.md)
-- [DIRECT-RESULT](direct-result.md)
-
-## Reference-optional templates
-
-- [MANUAL-QA](manual-qa.md)
-- [TDD-TRACE](tdd-trace.md)
-- [DOMAIN-LANGUAGE](domain-language.md)
-- [MODULE-MAP](module-map.md)
-- [INTERFACE-CONTRACT](interface-contract.md)
-
-## Extension templates
-
-- [DEC](decision-packet.md)
-- [DESIGN](design.md)
 - [EXPORT](export.md)
+- [INTERFACE-CONTRACT](interface-contract.md)
 - [JOURNEY-CARD](journey-card.md)
+- [MODULE-MAP](module-map.md)
+- [RUN-SUMMARY](run-summary.md)
+- [TDD-TRACE](tdd-trace.md)
 
-## Display cards
+## Required Early Shapes
 
 - [Compact Status Card](compact-status-card.md)
+- [TASK](task.md) minimal continuity summary
+- [Decision Packet judgment-request display shape](decision-packet.md)
+
+## Optional Early Shapes
+
+- [APR](approval.md)
 - [Approval Card](approval-card.md)
-- [Verification Result Card](verification-result-card.md)
+- [DIRECT-RESULT](direct-result.md)
+- [MANUAL-QA](manual-qa.md)
 - [Manual QA Card](manual-qa-card.md)
+- [Verification Result Card](verification-result-card.md)
 
 ## Notes
 

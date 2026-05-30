@@ -8,7 +8,7 @@
 
 ## 이런 때 읽기
 
-하네스를 처음 접하고, 정확한 gate, schema, DDL, projection rule, conformance fixture를 배우기 전에 실용적인 예시를 먼저 보고 싶을 때 읽습니다.
+하네스를 처음 접하고, 정확한 gate, schema, DDL, 읽기용 요약(Projection) rule, conformance fixture를 배우기 전에 실용적인 예시를 먼저 보고 싶을 때 읽습니다.
 
 ## 읽기 전에
 
@@ -166,7 +166,7 @@ Next action: 수동 QA 기록
 source_state_version: 42
 ```
 
-이 report는 유용하지만 운영 기록은 아닙니다. 구현 용어로는 projection, 즉 현재 state record와 아티팩트 참조에서 렌더링된 읽기용 view입니다.
+이 report는 유용하지만 운영 기록은 아닙니다. 구현 용어로는 읽기용 view(Projection), 즉 현재 state record와 아티팩트 참조에서 렌더링된 view입니다.
 
 사람이 report를 이렇게 수정해도:
 
@@ -176,9 +176,9 @@ Evidence: sufficient
 
 그 edit은 Evidence Manifest, gate state, 수동 QA status, Acceptance state, 잔여 위험(Residual Risk), close eligibility를 바꾸지 않습니다. Human-editable section은 note나 reconcile input이 될 수 있지만, accepted state change에는 여전히 owner Core/MCP path가 필요합니다.
 
-실용 규칙은 간단합니다. Projection은 orientation, ref, freshness를 읽는 데 사용하고, 권한은 owner record와 owner action에서 확인합니다. Projection이 stale이거나 틀렸다면 Markdown을 state처럼 취급하지 말고 refresh 또는 reconcile합니다.
+실용 규칙은 간단합니다. 읽기용 view(Projection)는 orientation, ref, freshness를 읽는 데 사용하고, 권한은 owner record와 owner action에서 확인합니다. 읽기용 view가 stale이거나 틀렸다면 Markdown을 state처럼 취급하지 말고 refresh 또는 reconcile합니다.
 
-정확한 projection boundary는 [문서 Projection 참조](../reference/document-projection.md), 특히 [Projection을 쉽게 말하면](../reference/document-projection.md#projection을-쉽게-말하면)을 사용합니다.
+정확한 읽기용 view(Projection) boundary는 [문서 Projection 참조](../reference/document-projection.md), 특히 [Projection을 쉽게 말하면](../reference/document-projection.md#projection을-쉽게-말하면)을 사용합니다.
 
 ## 이 둘러보기의 Reference owner
 
@@ -186,7 +186,7 @@ Evidence: sufficient
 |---|---|
 | Task, Change Unit, 결정 패킷, gate, evidence, verification, QA, Acceptance, 잔여 위험(Residual Risk), close | [Kernel Reference](../reference/kernel.md) |
 | Public tool request와 response shape | [MCP API와 스키마](../reference/mcp-api-and-schemas.md) |
-| Markdown projection authority와 freshness | [문서 Projection 참조](../reference/document-projection.md) |
+| Markdown 읽기용 view authority와 freshness | [문서 Projection 참조](../reference/document-projection.md) |
 | 사용자에게 보이는 session flow와 status 읽기 | [사용자 가이드](../use/user-guide.md), [Agent 세션 흐름](../use/agent-session-flow.md) |
 | 실용 결정 패킷 예시 | [결정 패킷 Cookbook](../use/decision-packet-cookbook.md) |
 

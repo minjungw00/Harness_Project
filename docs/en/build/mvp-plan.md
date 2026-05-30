@@ -27,7 +27,13 @@ Harness value is not merely that a write authority loop exists. Harness should p
 
 The first slice stays intentionally narrow. It proves one local project, one Task, one basic scope, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. It is not the MVP. The MVP comes when the user-facing path can translate normal work into scope, judgment, evidence, close-readiness, and residual-risk language without confusing approval, acceptance, and risk acceptance.
 
-Projection-template polish, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, metrics, parallel orchestration, and broad automation become useful after the authority record and user-facing value path exist. They are not first-slice requirements.
+Projection-template polish, detailed reports, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, metrics, parallel orchestration, and broad automation become useful after the authority record and user-facing value path exist. They are not first-slice requirements.
+
+The early output model is intentionally small:
+
+- v0.1 needs read-only current status/next output and structured blockers from Core state.
+- v0.2 needs user-readable current work status, judgment request, evidence summary, and close readiness / blocker summary.
+- Journey Card, Journey Spine, Run Summary, TDD Trace, Module Map, Interface Contract, Export, detailed Evidence Manifest, and detailed Eval outputs remain optional, diagnostic, or later-profile scope unless an owner profile explicitly promotes them.
 
 ## Staged delivery
 
@@ -65,7 +71,7 @@ v0.1 must prove:
 - one durable single-use Write Authorization
 - one `record_run` that consumes that authorization
 - one registered `ArtifactRef` or equivalent evidence link owned by Core/API contracts
-- one minimal Evidence Manifest or evidence relation sufficient to report support or insufficiency
+- one minimal evidence relation or Evidence Manifest state record sufficient to report support or insufficiency, without requiring the detailed `EVIDENCE-MANIFEST` projection
 - one read-only status/next response from current Core state
 - one structured blocker/status response for missing evidence, missing scope, or a required seeded user judgment
 
@@ -80,7 +86,7 @@ Reference schemas may list fields that become necessary only when the related ca
 | Stage | Required contract surface | Explicitly later |
 |---|---|---|
 | v0.1 Core Authority Slice | Task identity and state version, one basic scope represented by the Change Unit owner shape where the reference contract requires it, `prepare_write`, single-use Write Authorization, compatible `record_run`, one `ArtifactRef` or evidence relation, minimal evidence support/insufficiency, read-only status/next, idempotency conflict behavior, and structured blockers. If a seeded user judgment is part of the smoke path, the stored Decision Packet still carries `decision_kind` and `judgment_domain`; full user-facing Decision Packet quality is not required. | Full natural-language judgment presentation, residual-risk display, final acceptance, Manual QA, detached verification, full projection rendering, export/recover, and broad operations. |
-| v0.2 User-Facing Harness MVP | User-facing judgment context, including `decision_kind` for lifecycle/gate semantics and `judgment_domain` for display/grouping; final acceptance distinct from Approval; residual-risk visibility or explicit none; readable derived cards or projections sufficient for users. | Full detached verification hardening, Manual QA matrix, stewardship validator suite, feedback-loop policy, release handoff, dashboard or hosted UI. |
+| v0.2 User-Facing Harness MVP | User-facing judgment context, including `decision_kind` for lifecycle/gate semantics and `judgment_domain` for display/grouping; final acceptance distinct from Approval; residual-risk visibility or explicit none; current work status, judgment request, evidence summary, and close readiness/blocker output sufficient for users. | Full detached verification hardening, Manual QA matrix, stewardship validator suite, feedback-loop policy, release handoff, dashboard or hosted UI, detailed report projection catalog. |
 | v0.3/v0.4 hardened reference | Detached verification independence, Manual QA policy coverage, stewardship and context-hygiene validators, feedback-loop and TDD policy, projection/reconcile completeness, recover/export/artifact integrity, release handoff where owner docs define it. | v1+ Expansion candidates unless promoted through owner docs and fixtures. |
 
 Required in an API schema therefore means required when that tool call, record, or profile is implemented or used. It does not make a future-profile field part of the smallest runnable slice by itself.
@@ -123,10 +129,10 @@ The MVP must demonstrate:
 - close is blocked when required evidence or required user judgment is missing
 - residual risk can be displayed before acceptance and close
 - final acceptance is distinct from sensitive-action Approval and residual-risk acceptance
-- readable projections or cards are sufficient to show the user-facing path, without template polish becoming the source of truth
+- readable summaries or cards show current work status, judgment request, evidence summary, and close readiness/blockers without template polish becoming the source of truth
 - conformance can prove the path through Core state, events, artifacts, projection/freshness facts, and structured errors rather than prose alone
 
-v0.2 should keep detached verification, the full Manual QA policy matrix, stewardship validators, feedback-loop policy, export/recover, and release handoff as staged profiles unless a specific user-facing MVP scenario needs a minimal display or blocker hook. Browser QA Capture, Cross-Surface Verification automation, dashboards, broad connectors, Context Index, metrics, team workflow, and orchestration remain outside the MVP.
+v0.2 should keep detached verification, the full Manual QA policy matrix, stewardship validators, feedback-loop policy, export/recover, release handoff, Journey Card/Spine polish, Run Summary, TDD Trace, Module Map, Interface Contract, detailed Evidence Manifest, detailed Eval, and Export projections as staged profiles unless a specific user-facing MVP scenario needs a minimal display or blocker hook. Browser QA Capture, Cross-Surface Verification automation, dashboards, broad connectors, Context Index, metrics, team workflow, and orchestration remain outside the MVP.
 
 Passing v0.2 means a user can see why Harness is more than an authorization wrapper: it keeps the work's scope, decisions, evidence, acceptance, and risk boundaries locally inspectable.
 
@@ -215,7 +221,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 - Close blocks when required user judgment is missing or unresolved.
 - Residual risk is visible before successful acceptance or close when known close-relevant risk exists.
 - Final acceptance is recorded or represented separately from sensitive-action Approval and residual-risk acceptance.
-- User-facing projections or cards are derived from Core records and are sufficient for the MVP path without making template polish authoritative.
+- User-facing readable summaries or cards are derived from Core records and are sufficient for the MVP path without making template polish authoritative.
 
 ### v0.3 Assurance & Stewardship Pack exit checklist
 

@@ -380,7 +380,7 @@ Projection refresh regenerates Product Repository Markdown from committed state 
 Required behavior:
 
 - render only the latest projection version for a target
-- render or enqueue Reference-required `ProjectionKind` views when their source records exist or change and the relevant projection support is in scope
+- render or enqueue only the projection views included by the active projection profile, with no persisted Markdown projection required for the first runnable kernel slice
 - preserve human-editable sections
 - compare managed block hashes before overwrite
 - create reconcile items for managed-block drift
@@ -412,9 +412,9 @@ flowchart TD
   Skipped --> Separate
 ```
 
-For staged delivery, Decision Packet visibility is rendered through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources; Journey Card visibility is rendered through status, journey, next, and significant resume surfaces. Dedicated refresh targets in the Extension / optional tier for `DEC`, `DESIGN`, `EXPORT`, and persisted `JOURNEY-CARD` are optional when enabled, not required Kernel Smoke targets.
+For staged delivery, Decision Packet visibility is rendered through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays. Current-position context is rendered through compact status/next output first. Kernel Smoke does not require dedicated refresh targets for standalone `DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`, Run Summary, Evidence Manifest, detailed Eval, TDD Trace, Module Map, and Interface Contract projections; those targets are optional or future/diagnostic when enabled.
 
-Staged-delivery required projection support is source-backed. `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, and `DIRECT-RESULT` must be enqueueable/renderable when their corresponding Task, committed approval-shaped Decision Packet or Approval, Run, Evidence Manifest, Eval, or direct-result source records exist or change. Projection refresh must report missing source records as unavailable or not applicable rather than creating state to satisfy a template.
+Projection support is source-backed. `TASK` minimal summary is the user-facing MVP projection path when persisted projection support is used; `APR`, `DIRECT-RESULT`, and `MANUAL-QA` are optional early when their profiles are active; detailed reports such as `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DESIGN`, `EXPORT`, and persisted `JOURNEY-CARD` are future/diagnostic unless an owner profile promotes them. Projection refresh must report missing source records as unavailable or not applicable rather than creating state to satisfy a template.
 
 Illustrative projection refresh statuses:
 
@@ -424,7 +424,7 @@ Illustrative projection refresh statuses:
 | `TASK stale source_state_version=41 current_task_state_version=44` | State moved ahead of the rendered view. The Task result did not fail; the view needs refresh or reconcile. |
 | `RUN-SUMMARY failed projection_job_id=PJOB-088` | The latest render failed. The committed Run keeps its own `runs.status`; projection failure is reported separately. |
 | `APR skipped managed_block_drift reconcile_item=REC-019` | The projector avoided overwriting a changed managed block and routed the drift to reconcile. |
-| optional `EXPORT` projection enabled: `EXPORT stale artifact ART-204 unavailable` | Applies only when the optional `EXPORT` projection/report surface is enabled. It does not make `EXPORT` a Kernel Smoke or Reference-required refresh target, and it is not proof that the underlying Task state failed. |
+| optional `EXPORT` projection enabled: `EXPORT stale artifact ART-204 unavailable` | Applies only when the optional `EXPORT` projection/report surface is enabled. It does not make `EXPORT` a Kernel Smoke or early mandatory refresh target, and it is not proof that the underlying Task state failed. |
 
 ## reconcile
 

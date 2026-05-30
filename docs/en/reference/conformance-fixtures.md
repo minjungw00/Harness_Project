@@ -280,7 +280,8 @@ The guidance below is for turning catalog families into exact-shape fixtures. It
 
 Use this queue as the first authoring order for v0.1 Core Authority Slice fixture candidates. Kernel Smoke is the narrow conformance authoring profile for that internal runnable target, not for the product MVP. These rows do not imply executable fixture files already exist. The order is for fixture authors, not a dependency between executable fixtures; each executable fixture should remain isolated, seed its own minimum owner records in `initial_state`, use one public Core or operator action, and keep the exact fixture body shape unchanged.
 
-Exact request and response schemas live in [MCP API And Schemas](mcp-api-and-schemas.md). Exact DDL and storage value sets live in [Storage And DDL](storage-and-ddl.md) and [Canonical enum hardening](storage-and-ddl.md#canonical-enum-hardening). Stable event names live in the [Kernel Stable Event Catalog](kernel.md#stable-event-catalog). Primary error selection lives in [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence). `ArtifactRef` is owned by [ArtifactRef](mcp-api-and-schemas.md#artifactref). `ProjectionKind` is owned by [Shared schemas](mcp-api-and-schemas.md#shared-schemas), with tiering and freshness rules in [Document Projection](document-projection.md#template-tiers) and [Freshness and failure rules](document-projection.md#freshness-and-failure-rules).
+Exact request and response schemas live in [MCP API And Schemas](mcp-api-and-schemas.md). Exact DDL and storage value sets live in [Storage And DDL](storage-and-ddl.md) and [Canonical enum hardening](storage-and-ddl.md#canonical-enum-hardening). Stable event names live in the [Kernel Stable Event Catalog](kernel.md#stable-event-catalog). Primary error selection lives in [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence). `ArtifactRef` is owned by [ArtifactRef](mcp-api-and-schemas.md#artifactref). `ProjectionKind` values and API-owned support classes are owned by [Shared schemas](mcp-api-and-schemas.md#shared-schemas).
+Template implementation classes and freshness behavior are owned by [Document Projection](document-projection.md#template-implementation-classes) and [Freshness and failure rules](document-projection.md#freshness-and-failure-rules).
 
 In the table, `None` means the existing fixture field stays empty or `expected_error: null`; it is not a new sentinel value.
 
@@ -1581,7 +1582,7 @@ expected_error:
 This example represents generated/managed manifest drift coverage. Connector conformance also checks stale capability profile detection and profile freshness reporting without adding fixture-only manifest fields here.
 
 ```yaml
-scenario_id: CONN-journey-card-shown-before-significant-resume
+scenario_id: CONN-current-position-context-before-significant-resume
 initial_state:
   surface:
     guarantee_level: cooperative
@@ -1599,11 +1600,11 @@ initial_state:
   active_change_unit:
     change_unit_id: CU-RESUME-001
     allowed_paths: ["src/resume/current.ts"]
-  journey_refs:
-    journey_card_ref:
+  current_position_refs:
+    summary_ref:
       record_kind: projection
-      record_id: JOURNEY-CARD-RESUME-001
-    journey_spine_entry_refs:
+      record_id: STATUS-CONTEXT-RESUME-001
+    continuity_refs:
       - record_kind: journey_spine_entry
         record_id: JSE-RESUME-001
   evidence_refs:
@@ -1639,7 +1640,7 @@ expected_state:
     state:
       lifecycle_phase: executing
     judgment_context:
-      journey_card:
+      current_position_context:
         task_id: TASK-RESUME-001
         active_change_unit_ref:
           record_kind: change_unit
@@ -1822,7 +1823,7 @@ These are catalog entries, not fixture bodies. The concrete fixture examples abo
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
-| `CONN-journey-card-shown-before-significant-resume` | `next` | `next` returns current Task state version, current Journey Card or journey ref, active Change Unit ref, pending Decision Packet refs, residual-risk summary, and projection freshness before returning a significant resume instruction bundle; no state events are appended for the read. |
+| `CONN-current-position-context-before-significant-resume` | `next` | `next` returns current Task state version, compact current-position context or continuity refs, active Change Unit ref, pending Decision Packet refs, residual-risk summary, and projection freshness before returning a significant resume instruction bundle; no state events are appended for the read. |
 | `CONN-recommended-playbooks-read-only-guidance` | `next` | `next` may return `recommended_playbooks` for the current stage, but the read appends no state events, enqueues no projections, creates no artifacts or evidence, does not change any gate, and does not authorize writes. Any playbook that would require user-owned judgment routes to an existing Decision Packet or Decision Packet request path. |
 | `CONN-role-lens-non-authoritative-routing` | `next` | `next` may recommend role-lens playbooks such as `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, or `release-handoff`; the read does not mutate state, satisfy gates, authorize writes, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. Lens outputs that need action are represented as existing Decision Packet refs, `DecisionPacketCandidate` routes, validator/evidence/Manual QA/residual-risk candidates, release-handoff input, or a recommended next playbook. |
 | `CONN-freeze-narrows-current-boundary` | `prepare_write` or `next` | A freeze request is reflected as display guidance, a held write, a stricter next action, post-action validation when a detective profile supports it, or a `prepare_write` block/hold when existing scope is incompatible. If the fixture asserts a persistent Change Unit, allowed-path, Autonomy Boundary, AFK stop-condition, or related owner-record update, that update must occur through the existing Core state-changing path, Decision Packet route, or owner-record update path; the freeze label does not mutate owner records by itself and does not claim prevention without fixture-proven pre-tool blocking for the covered operation. |
@@ -2710,7 +2711,7 @@ Hardened local reference Manual QA coverage remains the existing Manual QA recor
 Hardened local reference suite families:
 
 - core: active status, advisor close, direct close including tiny direct as a Direct profile, write gate, Write Authorization creation/required/invalid coverage, Approval required and Approval lifecycle retry, evidence insufficient, artifact integrity effects on evidence/close readiness, same-session verification guard, QA required, acceptance required, residual-risk visibility before acceptance or close, projection failure separation, current-state versus stale-projection distinction, stale projection write guard
-- connector: natural-language intake without a startup phrase, plain-language routing to Harness records, capability profile, connector profile freshness, stale capability profile detection, surface capability mismatch, local security posture severity for doctor/connect/serve-mcp/artifact checks, MCP unavailable hold, generated/managed manifest drift, changed-path detection, artifact capture, manual artifact capture fallback when native capture is unavailable, fallback guarantee display that does not upgrade cooperative, detective, or manual fallback behavior to preventive or isolated, current Journey Card before significant resume, Decision Packet not broad approval, Autonomy Boundary breach routing, stale chat or PRD context pull-only behavior
+- connector: natural-language intake without a startup phrase, plain-language routing to Harness records, capability profile, connector profile freshness, stale capability profile detection, surface capability mismatch, local security posture severity for doctor/connect/serve-mcp/artifact checks, MCP unavailable hold, generated/managed manifest drift, changed-path detection, artifact capture, manual artifact capture fallback when native capture is unavailable, fallback guarantee display that does not upgrade cooperative, detective, or manual fallback behavior to preventive or isolated, compact current-position context before significant resume, Decision Packet not broad approval, Autonomy Boundary breach routing, stale chat or PRD context pull-only behavior
 - artifact-redaction: registered artifact boundary, `staged_uri` untrusted handling, task-scoped artifact relation validation, `secret_omitted` evidence sufficiency limits, committed `blocked` metadata-only notices, downstream display/evidence effects, artifact integrity checks, secret/PII omission reporting, and export/Release Handoff non-leakage
 - connector guard/freeze: cooperative/detective freeze and guard display, careful-mode non-authority behavior, capability mismatch honesty, MCP-unavailable hold wording, and changed-path/log/artifact detective coverage; preventive `T4` pre-tool blocking only when a surface-specific fixture proves the hook, wrapper, sidecar, or permission layer can block the covered operation before execution
 - agency: Decision Packet required for blocking user-owned judgment, Decision Packet quality with options/trade-offs/recommendation/uncertainty/deferral/residual-risk impact, user-owned product or material technical trade-off write guard, AFK Autonomy Boundary stop conditions, known close-relevant residual-risk visibility before any successful acceptance or close, `ResidualRiskSummary.status=none` for no known close-relevant risk, accepted Residual Risk refs whose risks were visible before acceptance for risk-accepted close, distinct Approval, Manual QA, verification waiver, acceptance, and residual-risk acceptance judgments

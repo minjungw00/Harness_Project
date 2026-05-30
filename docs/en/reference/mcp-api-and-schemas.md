@@ -109,7 +109,7 @@ Fields marked required in a request or response schema are required when that to
 
 For v0.1, the runnable API surface is the narrow authority loop: state envelope and idempotency, Task refs, one basic scope represented by the Change Unit owner shape where the reference contract requires it, `harness.prepare_write`, single-use Write Authorization summary/ref, compatible `harness.record_run`, one committed `ArtifactRef` or evidence relation, read-only `harness.status` / `harness.next`, and structured blockers. `decision_kind` and `judgment_domain` are required whenever Core creates a Decision Packet, including a seeded v0.1 judgment blocker, but full user-facing Decision Packet quality and optional `decision_requests` rows are later than the smallest slice.
 
-For v0.2, user-facing MVP surfaces must expose `judgment_domain` consistently for display/grouping while keeping `decision_kind` as the lifecycle and gate route. v0.2 also needs fields for final acceptance, and fields for residual-risk visibility, sufficient for a user to understand close readiness. Detached verification independence, the full Manual QA policy matrix, stewardship validators, export/recover, release handoff, and optional projection kinds are later profiles unless an owner doc explicitly promotes a subset.
+For v0.2, user-facing MVP surfaces must expose `judgment_domain` consistently for display/grouping while keeping `decision_kind` as the lifecycle and gate route. v0.2 also needs fields for final acceptance and residual-risk visibility sufficient for a user to understand close readiness. The minimum user-readable output set is current work status, judgment request, evidence summary, and close readiness / blocker summary. Detached verification independence, the full Manual QA policy matrix, stewardship validators, export/recover, release handoff, and detailed projection kinds are later profiles unless an owner doc explicitly promotes a subset.
 
 Tool-section lines that say "Projection jobs enqueued" describe committed, non-dry-run behavior when projection support for that kind is in scope. Dry runs, pre-commit state conflicts, and rejected pre-commit requests do not enqueue projection jobs. v0.1 may preserve freshness/read facts without proving full Markdown rendering; projections remain derived views, not authority.
 
@@ -160,9 +160,9 @@ Resource reads must not create Task records, decisions, projection jobs, or reco
 
 Read-only resources may render a primary blocker, secondary blockers, and smallest unblocker when the source records already support those summaries. That rendering is still a read-only view; it must not create authority, clear gates, enqueue projection repair, or mutate canonical state.
 
-The Journey resources are projection-oriented reads over canonical state:
+The journey-oriented resources are projection-oriented reads over canonical state and are not required for the first runnable slice:
 
-- `harness://task/{task_id}/journey` returns the current Journey Card and Journey Spine-oriented refs.
+- `harness://task/{task_id}/journey` returns current-position summary and Journey Card or Journey Spine-oriented refs when those views are enabled.
 - `harness://task/{task_id}/decision-packets` returns active, resolved, deferred, and blocked Decision Packet summaries for the Task.
 - `harness://task/{task_id}/change-unit-dag` returns Change Unit dependency refs and ordering summaries.
 - `harness://task/{task_id}/judgment-context` returns the minimum current context needed for a user judgment, with optional pull refs separated from required context.
@@ -255,17 +255,18 @@ ProjectionJobRef:
 
 Event stability for fixture assertions is owned by the [Kernel Stable Event Catalog](kernel.md#stable-event-catalog). Tool sections below describe possible `EventRef.event_type` values that a response may return or an implementation may store; they do not define a second event taxonomy. Names labeled as stable are catalog names. Names outside the stable catalog may appear as implementation-local detail or audit events, but they are not fixture-stable and must not be required by staged/reference `expected_events` fixtures. ValidatorResult IDs, Core check names, projection status shorthands, and fixture seed shorthand are not event names unless the kernel catalog explicitly lists them.
 
-`ProjectionKind` is an extensible enum with API-owned staged/reference support tiering:
+`ProjectionKind` is an extensible enum with API-owned staged support classes:
 
-| Tier | Values | Requirement |
+| Support class | Values | Requirement |
 |---|---|---|
-| Reference-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Staged/reference projection support must support these kinds and enqueue/render them when their source records exist or change. |
-| Reference-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Implementations support or enqueue these when policy applies, a source record exists, or the user/operator enables the projection. |
-| Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Implementations may support these only when the corresponding optional projection is enabled. |
+| First runnable kernel slice | none required | v0.1 status/next and structured blockers can expose read/freshness facts without any persisted Markdown projection job. |
+| User-facing MVP | `TASK` minimal task-scoped readable summary, when persisted projection support is used | Provides the user-readable status/judgment/evidence/close summary path. Equivalent status/next cards may satisfy MVP output without full `TASK` template rendering. |
+| Optional early | `APR`, `DIRECT-RESULT`, `MANUAL-QA` | Implement only when the corresponding approval, direct-work, or Manual QA profile is active. |
+| Future / diagnostic | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Detailed report, trace, map, export, handoff, standalone Decision Packet, persisted Journey Card, or diagnostic views. Enable only when the corresponding v0.3, v0.4, operations, handoff, or other owner-promoted later profile is in scope. |
 
-Tier labels are not enum values. `Reference-required` means required by staged/reference projection support after the relevant owner records exist; it does not mean every v0.1 Core Authority Slice run must render every kind. v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. v0.2 User-Facing Harness MVP provides enough derived projection or card output for users to understand scope, judgment, evidence, close readiness, acceptance, and residual risk. Hardened local reference support covers the full Reference-required projection set when source records exist or change.
+Support class labels are not enum values. v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. v0.2 User-Facing Harness MVP provides enough derived output for users to understand scope, judgment, evidence, close readiness, acceptance, and residual risk without requiring broad template polish. Future/diagnostic means later-profile or diagnostic scope, not automatically v1+ only; v0.3, v0.4, operations, handoff, or other owner-promoted profiles may enable those projections.
 
-ProjectionKind extensibility does not make projections canonical state. Every projection job still renders a derived view from owner records and artifact refs. No projection tier creates state, evidence, QA, verification, final acceptance, residual-risk acceptance, close authority, or Write Authorization. `DEC` is valid only for standalone Decision Packet Markdown when that feature is enabled, and it is not a Reference-required projection job. Absence of a standalone `DEC` job must not reduce required Decision Packet visibility, which is provided through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows remains required for agency conformance.
+ProjectionKind extensibility does not make projections canonical state. Every projection job still renders a derived view from owner records and artifact refs. No projection support class creates state, evidence, QA, verification, final acceptance, residual-risk acceptance, close authority, or Write Authorization. `DEC` is valid only for standalone Decision Packet Markdown when that feature is enabled. Absence of a standalone `DEC` job must not reduce required Decision Packet visibility, which is provided through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays. The user-facing MVP requires the Decision Packet judgment-request display shape, not the standalone `DEC` `ProjectionKind`. Persisted `JOURNEY-CARD` Markdown is future/diagnostic; current-position context in `harness.status`, `harness.next`, and significant resume flows can be compact status output.
 
 `EXPORT` may include report profiles such as Release Handoff when the export feature is enabled. Such profiles are projection/report surfaces only; they do not create deployment authority, merge authority, production-monitoring authority, final acceptance, residual-risk acceptance, assurance upgrades, or Task close authority.
 
@@ -522,7 +523,7 @@ EndToEndPath:
 
 When a client renders guard, freeze, or careful-mode controls, it uses these existing display shapes rather than adding authority fields. `guarantee_display.level` and `guarantee_display.notes` must describe the actual connected capability and current enforcement path. `blocked_reasons[].message` should name the concrete held or blocked condition, such as scope, MCP availability, sensitive-action Approval, baseline, or capability, and must not rely on a command label like "guard" or "freeze" to imply a stronger guarantee.
 
-`ProjectionKind` values in the Extension / optional tier, such as `DEC`, `DESIGN`, `EXPORT`, and `JOURNEY-CARD`, are valid projection job kinds only when their projection feature is enabled. Required Decision Packet visibility is provided through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Persisted `JOURNEY-CARD` Markdown remains optional even though current-position Journey Card output is required in status, next, and significant resume flows. Full projection template text lives in [Template Reference](templates/README.md), not this API schema file.
+`ProjectionKind` values in optional, future, or diagnostic support classes, such as `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, and `INTERFACE-CONTRACT`, are valid projection job kinds only when their projection feature or profile is enabled. Required Decision Packet visibility is provided through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays; this is the Decision Packet judgment-request display shape, not the standalone `DEC` `ProjectionKind`. Persisted `JOURNEY-CARD` Markdown is future/diagnostic; current-position context in status, next, and significant resume flows can be compact status output. Full projection template text lives in [Template Reference](templates/README.md), not this API schema file.
 
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, Recommended Playbook, acceptance visibility, and residual-risk summaries are public MCP schemas. They describe API payloads only; owner docs define the canonical kernel records. `RecommendedPlaybook` is the display-only exception in this list: it has no canonical kernel record, DDL table, task event, or projection job of its own.
 
@@ -897,7 +898,7 @@ A stale `expected_state_version` is reported as concurrency drift, not as proof 
 
 ### `harness.status`
 
-Purpose: return project, surface, active Task, Journey Card, gate, guarantee, projection, active Decision Packet, Autonomy Boundary, Write Authority Summary, residual-risk, and pending-decision status.
+Purpose: return project, surface, active Task, compact current-position summary, gate, guarantee, projection freshness, active Decision Packet, Autonomy Boundary, Write Authority Summary, residual-risk, and pending-decision status.
 
 User-facing meaning: show the current position. A status display should lead with active Task, current phase, primary blocker when one exists, smallest unblocker, write authority status, guarantee level, and projection freshness. It may include refs and secondary blockers, but it should not make the user read raw schema fields to understand whether work can continue.
 
@@ -954,7 +955,7 @@ Projection jobs enqueued: none.
 
 `recommended_playbooks` is non-authoritative display guidance for the surface or agent stage router, computed from current state and policy/playbook context for status/next display. It may suggest procedures such as shared design, review, TDD, QA, guard checks, release handoff, or browser-QA candidacy. `RecommendedPlaybook.playbook_id` is a stable display/routing string identifier, not a Core-owned closed enum or DDL-backed value set. Known initial IDs include `shared-design`, `product-review`, `eng-review`, `design-review`, `security-review`, `tdd-loop`, `spec-review`, `code-quality-review`, `qa-review`, `guard-check`, `release-handoff`, and `browser-qa-candidate`; this list is not exhaustive for future display/playbook documentation. Recommended Playbook has no canonical kernel record, DDL table, `task_events` entry, or projection job by itself; if following one would require user-owned judgment, the route must point to an existing Decision Packet or normal Decision Packet candidate/request path before any affected write or close proceeds. `route.display_route` values are display routes, not public tool names and not instructions to call a state-changing tool. The full Role Lens/playbook non-authority boundary is owned by [Agent Integration](agent-integration.md#role-lens-behavior).
 
-When both `StatusResponse.recommended_playbooks` and `StatusResponse.journey_card.recommended_playbooks` are present, they are the same computed guidance rendered at different display levels. The top-level field is for status surfaces that do not render the full Journey Card; the Journey Card field keeps the same guidance with the current-position summary.
+When both `StatusResponse.recommended_playbooks` and `StatusResponse.journey_card.recommended_playbooks` are present, they are the same computed guidance rendered at different display levels. The top-level field is for status surfaces that render only compact status; the Journey Card field keeps the same guidance with the current-position summary when that future/diagnostic view is enabled.
 
 `write_authority_summary` is returned when `include.write_authority=true`. When `include.journey_card=true`, the same current Write Authority Summary display may also appear in `journey_card.write_authority_summary`.
 
@@ -1379,7 +1380,7 @@ Non-stable EventRef values that may be returned for implementation-local detail/
 
 Violation or audit Runs may emit `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, or `scope_violation_detected` for audit and recovery. Those Runs cannot satisfy evidence sufficiency, detached verification, QA, final acceptance, or close readiness. Pre-commit rejection responses return no stable EventRef values from `record_run`.
 
-Projection jobs enqueued for committed non-dry-run Run responses when the relevant projection support is in scope: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `DIRECT-RESULT` for `kind=direct`; `TDD-TRACE` when updated. Dry-run and pre-commit rejection responses enqueue no projection jobs.
+Projection jobs enqueued for committed non-dry-run Run responses when the relevant projection support is in scope: `TASK` for the minimal task summary; `DIRECT-RESULT` for `kind=direct` when direct-result display is enabled; `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, or `TDD-TRACE` only when the active projection profile includes those future/diagnostic outputs. Dry-run and pre-commit rejection responses enqueue no projection jobs.
 
 ValidatorResults emitted: `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
 
@@ -1671,7 +1672,7 @@ Stable EventRef values that may be returned: `eval_recorded`, `verification_pass
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `verification_failed`, `verification_blocked`, `assurance_updated`.
 
-Projection jobs enqueued: for a committed non-dry-run Eval record that changes source records, `TASK` and `EVAL` when those projection kinds are in scope; optionally `EVIDENCE-MANIFEST` when evidence-manifest projection support is in scope. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs.
+Projection jobs enqueued: for a committed non-dry-run Eval record that changes source records, `TASK` when task-summary projection support is in scope; `EVAL` only when detailed Evaluation projection support is active; optionally `EVIDENCE-MANIFEST` when the active profile includes that diagnostic projection. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs.
 
 ValidatorResults emitted: `surface_capability_check`.
 
@@ -1735,7 +1736,7 @@ State transition summary: records Manual QA; `passed` can set `qa_gate=passed`; 
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`, `feedback_loop_updated`.
 
-Projection jobs enqueued: for a committed non-dry-run Manual QA record that changes source records, `TASK` and `MANUAL-QA` when those projection kinds are in scope; `DEC` when standalone Decision Packet projection is enabled and a waiver Decision Packet affects visibility; optionally `EVIDENCE-MANIFEST` when evidence-manifest projection support is in scope. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs. Waiver Decision Packet visibility still appears through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
+Projection jobs enqueued: for a committed non-dry-run Manual QA record that changes source records, `TASK` when task-summary projection support is in scope; `MANUAL-QA` when the Manual QA profile is active; `DEC` only when standalone Decision Packet projection is enabled and a waiver Decision Packet affects visibility; optionally `EVIDENCE-MANIFEST` when the active profile includes that diagnostic projection. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs. Waiver Decision Packet visibility still appears through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays.
 
 ValidatorResults emitted: `manual_qa_required`, `decision_quality_check`, `residual_risk_visibility_check`.
 
@@ -1812,7 +1813,7 @@ State transition summary: successful completion moves Task to `completed` with r
 
 Stable EventRef values that may be returned: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `risk_accepted_close_recorded`, `close_blocked`.
 
-Projection jobs enqueued: for a committed non-dry-run successful close or close-blocker state change, `TASK` when Task projection support is in scope; latest required reports as needed for final freshness only when the active projection profile includes those reports. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs. Projection freshness can block a final report/export freshness requirement, but projection text never replaces Core close state or structured close blockers.
+Projection jobs enqueued: for a committed non-dry-run successful close or close-blocker state change, `TASK` when task-summary projection support is in scope; latest profile-required reports as needed for final freshness only when the active projection profile includes those reports. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs. Projection freshness can block a final report/export freshness requirement, but projection text never replaces Core close state or structured close blockers.
 
 ValidatorResults emitted: `decision_gate_check`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, `manual_qa_required`, `residual_risk_visibility_check`, `context_hygiene_check` when projection or context hygiene must be emitted as a ValidatorResult.
 

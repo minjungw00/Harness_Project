@@ -6,6 +6,8 @@ Use the Manual QA card when Manual QA needs a compact human-inspection prompt sh
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
+Implementation tier: optional early. Use when a Manual QA profile is explicitly active; full Manual QA policy coverage remains later staged scope.
+
 ## Source records
 
 - Manual QA requirement and `qa_gate`

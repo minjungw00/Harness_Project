@@ -18,7 +18,7 @@
 
 사용자의 다음 판단에 영향을 주는 상태, 막힘, 판단, 다음 행동만 보여줍니다.
 
-에이전트가 평소 말로 들어온 사용자 요청을 하네스 절차로 바꿉니다. 사용자가 Discovery, Change Unit, Decision Packet, Write Authorization, Evidence Manifest, Projection, Autonomy Boundary, `task_events` 같은 용어를 말해야 작업이 진행되는 구조로 만들면 안 됩니다. 에이전트나 런타임 동작을 정확히 설명해야 할 때는 내부 용어를 쓰되, 사용자에게 보이는 상태에서는 쉬운 설명 뒤에 붙입니다.
+에이전트가 평소 말로 들어온 사용자 요청을 하네스 절차로 바꿉니다. 사용자가 Discovery, Change Unit, Decision Packet, Write Authorization, Evidence Manifest, 읽기용 요약(Projection), Autonomy Boundary, `task_events` 같은 용어를 말해야 작업이 진행되는 구조로 만들면 안 됩니다. 에이전트나 런타임 동작을 정확히 설명해야 할 때는 내부 용어를 쓰되, 사용자에게 보이는 상태에서는 쉬운 설명 뒤에 붙입니다.
 
 다음 같은 요청은 그대로 완성된 사용자 입력으로 다뤄야 합니다. 하네스 용어를 다시 요구할 필요가 없습니다.
 
@@ -40,13 +40,13 @@
 
 Gate 상태는 범위, 판단, 근거, 닫기 준비 상태라는 네 가지 사용자에게 보이는 표시 그룹으로 렌더링합니다. 쉬운 개념을 먼저 설명하고, 정확한 내부 용어나 ref는 경계, 막힘, source ref, runtime rule을 분명히 할 때만 덧붙입니다. 이들은 표시 그룹일 뿐입니다. Kernel gate를 대체하거나, schema field를 추가하거나, recompute rule을 바꾸거나, write를 허가하거나, gate를 충족하거나, 잔여 위험을 받아들이거나, Task를 닫지 않습니다. 정확한 gate 값, recompute 동작, close 의미는 [커널 참조](../reference/kernel.md#gates)와 [`close_task`](../reference/kernel.md#close_task)가 담당합니다.
 
-Turn context는 compact하고 current하며 phase-filtered 상태로 유지합니다. [Agent 통합 참조](../reference/agent-integration.md#context-pushpull-principles)의 10개 이하 compact context rule set에서 시작한 뒤, 현재 phase의 relevant envelope field만 보여줍니다. 예를 들면 current status 또는 Journey Card, 네 가지 display group, next safe action, primary blocker, active Change Unit 또는 결정 패킷 refs, Write Authority Summary, 근거 또는 잔여 위험 refs, guarantee/MCP availability, projection freshness를 next safe action에 relevant할 때만 보여줍니다. 이를 전체 field set을 매번 보내는 checklist로 다루면 안 됩니다. Evidence, Run, Eval, 수동 QA, artifact, log, screenshot, diff, old projection, 오래된 PRD나 design, module map, large trace는 기본적으로 ref와 짧은 결과만 보여주고, 다음 행동이 내용을 실제로 살펴봐야 할 때만 가져옵니다. 오래된 chat memory와 retrieved context는 살펴볼 ref를 가리킬 수 있지만 write를 허가하거나, gate를 충족하거나, 작업 수락을 기록하거나, Task를 닫거나, current state를 대체할 수 없습니다.
+Turn context는 compact하고 current하며 phase-filtered 상태로 유지합니다. [Agent 통합 참조](../reference/agent-integration.md#context-pushpull-principles)의 10개 이하 compact context rule set에서 시작한 뒤, 현재 phase의 relevant envelope field만 보여줍니다. 예를 들면 current status 또는 compact 현재 위치 요약, 네 가지 display group, next safe action, primary blocker, active Change Unit 또는 결정 패킷 refs, Write Authority Summary, 근거 또는 잔여 위험 refs, guarantee/MCP availability, projection freshness를 next safe action에 relevant할 때만 보여줍니다. 이를 전체 field set을 매번 보내는 checklist로 다루면 안 됩니다. Evidence, Run, Eval, 수동 QA, artifact, log, screenshot, diff, old projection, 오래된 PRD나 design, module map, large trace는 기본적으로 ref와 짧은 결과만 보여주고, 다음 행동이 내용을 실제로 살펴봐야 할 때만 가져옵니다. 오래된 chat memory와 retrieved context는 살펴볼 ref를 가리킬 수 있지만 write를 허가하거나, gate를 충족하거나, 작업 수락을 기록하거나, Task를 닫거나, current state를 대체할 수 없습니다.
 
 전체 문서 세트를 agent prompt에 넣지 말고 progressive context loading을 사용합니다. 자세한 context contract는 [Agent 통합 참조](../reference/agent-integration.md#context-pushpull-principles)가 담당하며, 이 사용자용 flow에서는 phase bundle을 좁게 유지합니다.
 
 | Phase | 지금 push | 필요할 때만 pull |
 |---|---|---|
-| Intake | Current status 또는 Journey Card, 예상 작업 모양, 네 가지 display group, next safe action, primary blocker. | Request를 classify하는 데 필요한 task history, user guide, Reference docs. |
+| Intake | Current status 또는 compact 현재 위치 요약, 예상 작업 모양, 네 가지 display group, next safe action, primary blocker. | Request를 classify하는 데 필요한 task history, user guide, Reference docs. |
 | Discovery | 요구사항 구체화 요약, decision area별 blocking question, 확인 가능한 사실, assumption, 사용자 소유 판단 후보, QA/검증 기대 수준, current source refs, 첫 구현 후보 또는 작업 분할 제안. | 에이전트가 확인할 수 있는 사실과 사용자 결정이 필요한 항목을 나누고 안전한 다음 작업을 좁히는 데 필요한 repo docs, module/interface/domain refs, older PRD/design, decision guidance. |
 | Write | Active Change Unit, Autonomy Boundary, intended paths/tools/commands summary, Approval status, active 결정 패킷, Write Authority Summary. | Intended write에 필요한 정확한 `prepare_write`, Kernel, security, approval, policy reference. |
 | Evidence | Run summary, Evidence Manifest ref, 아티팩트 참조, evidence gaps, next evidence action. | Support를 해석하거나 수리하는 데 필요한 log, diff, screenshot, trace, artifact/evidence contract detail. |
@@ -513,7 +513,7 @@ Evidence가 stale이 되면 이유를 쉬운 말로 말하고 가장 작은 repa
 
 추적되는 작업의 닫기 요약은 닫을 수 있는 근거를 보여줘야 합니다. 적용된 변경 범위, 근거 범위, 검증, 수동 QA, 잔여 위험, 작업 수락, close reason을 해당되는 만큼 표시합니다. Gate가 waived, `not_required`, failed, pending, blocked 중 하나라면 일반적인 성공 문장에 묻지 말고 그대로 말해야 합니다.
 
-작업 모양에 맞는 닫기 표시를 사용합니다. `DIRECT-RESULT`는 작은 변경의 간결한 결과 표시이고, `TASK` Close Summary는 진행 중이거나 최근 닫힌 추적되는 작업의 이어가기 표시이며, Journey Card close context는 compact status/resume 표시입니다. 이 표시들은 state, gate, 작업 수락, QA, verification, 잔여 위험 수용, close, write authority를 만들지 않습니다.
+작업 모양에 맞는 닫기 표시를 사용합니다. `DIRECT-RESULT`는 작은 변경의 간결한 결과 표시이고, `TASK` Close Summary는 진행 중이거나 최근 닫힌 추적되는 작업의 이어가기 표시이며, Journey Card close context는 later profile에서 켜졌을 때 compact status/resume 표시입니다. 이 표시들은 state, gate, 작업 수락, QA, verification, 잔여 위험 수용, close, write authority를 만들지 않습니다.
 
 닫기 표시는 같은 네 가지 그룹을 먼저 사용해야 합니다. 범위는 changed scope, 판단은 작업 수락 또는 잔여 위험 수용, 근거는 support refs, 닫기 준비 상태는 검증, 수동 QA, 잔여 위험, close blockers, close reason을 보여줍니다. Raw gate name은 blocker를 설명할 때 뒤에 붙일 수 있지만, 정확한 gate 값과 close 의미는 kernel이 담당합니다.
 
@@ -635,7 +635,7 @@ Power-user 또는 diagnostic 표시는 authority나 support를 설명하는 데 
 좋은 오래된 projection 복구:
 
 ```text
-Journey Card는 stale이지만 Core state는 current입니다. 오래된 Markdown을 권한처럼 쓰지 않고, 읽기용 보기를 refresh 또는 reconcile한 뒤 Core state에서 계속하겠습니다.
+읽기용 상태 보기는 stale이지만 Core state는 current입니다. 오래된 Markdown을 권한처럼 쓰지 않고, 읽기용 보기를 refresh 또는 reconcile한 뒤 Core state에서 계속하겠습니다.
 ```
 
 좋은 관리 영역(managed block) 응답:

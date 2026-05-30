@@ -246,6 +246,8 @@
 | 근거 | 끝났다는 주장을 무엇이 뒷받침하는가? | 변경 경로, test, log, screenshot, QA note, 검증 결과, 빠진 근거, 오래된 근거. |
 | 닫기 준비 상태 | 무엇이 아직 닫기를 막는가? | 검증, 수동 QA, 작업 수락, 잔여 위험 표시 또는 수용, 닫기 막힘, 가장 작은 해소 방법. |
 
+이 네 가지는 읽기용 요약이지 권한 문서가 아닙니다. 에이전트가 뒤에 있는 ref를 보여줄 수는 있지만, 상태 변경, 근거 기록, 작업 수락, 잔여 위험 수용, 닫기는 여전히 Harness/Core 기록과 action에서만 옵니다.
+
 판단 그룹에 formal Decision Packet이 필요하면 Harness는 decision route와 사용자에게 보이는 판단 영역을 함께 기록합니다. `decision_kind`는 어떤 lifecycle 또는 gate path를 쓰는지 말하고, `judgment_domain`은 결정을 Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, Mixed 중 어디에 묶어 설명할지 정합니다. 판단 영역은 결정을 설명하기 위한 값이며, 그 자체로 닫기 준비 상태나 gate aggregation을 바꾸지는 않습니다.
 
 유용한 상태 표시는 이런 모양입니다.
@@ -347,9 +349,9 @@
 | Approval | 이름 붙은 민감한 행동에 대한 민감 동작 승인입니다. 막연한 동의나 작업 수락이 아닙니다. |
 | Write Authorization | 의도한 제품 파일 쓰기가 현재 작업, 범위, 판단, 허가와 맞는지 한 번 확인한 기록입니다. |
 | Evidence Manifest | 완료 주장을 뒷받침하는 근거를 연결한 기록입니다. |
-| Projection | owner record에서 렌더링된 읽기용 보고서나 카드입니다. 방향을 잡는 데 유용하지만 그 자체가 권한은 아닙니다. |
+| 읽기용 요약(Projection) | owner record와 artifact ref에서 렌더링된 읽기용 요약입니다. 방향을 잡는 데 유용하지만 그 자체가 권한은 아닙니다. |
 
-이 라벨들은 서로 대체되지 않습니다. Approval은 작업 수락이 아닙니다. 작업 수락은 잔여 위험을 지우지 않습니다. 판단은 쓰기 권한이 아닙니다. 읽기용 보고서는 state가 아닙니다. 테스트 통과가 수동 QA를 의미하지 않습니다. 잔여 위험을 수용한다고 위험이 사라지지는 않습니다.
+이 라벨들은 서로 대체되지 않습니다. Approval은 작업 수락이 아닙니다. 작업 수락은 잔여 위험을 지우지 않습니다. 판단은 쓰기 권한이 아닙니다. 읽기용 요약은 state가 아닙니다. 테스트 통과가 수동 QA를 의미하지 않습니다. 잔여 위험을 수용한다고 위험이 사라지지는 않습니다.
 
 정확한 계약이 필요할 때만 Reference 문서를 봅니다. [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Agent 통합 참조](../reference/agent-integration.md)가 그 역할을 합니다.
 

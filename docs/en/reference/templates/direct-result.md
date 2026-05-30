@@ -6,6 +6,8 @@ Use `DIRECT-RESULT` for a compact, low-ceremony result report after small direct
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
+Implementation tier: optional early. Use for small direct-work result display when that profile is active; it is not required for the first kernel proof.
+
 ## Source records
 
 - direct run record

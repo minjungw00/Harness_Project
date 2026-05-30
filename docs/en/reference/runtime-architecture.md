@@ -129,7 +129,7 @@ repo/
 ```
 
 
-The repository may hold generated `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, and other report projections. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; human edits become state only when reconcile routes them into a Core state-changing action.
+The repository may hold generated readable summaries and, when an active profile enables them, generated `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `JOURNEY-CARD`, `EXPORT`, and other report projections. Early implementation should start with compact status/next, judgment request, evidence summary, and close readiness/blocker output rather than the full catalog. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; human edits become state only when reconcile routes them into a Core state-changing action.
 
 ## Harness Server / Installation
 
@@ -247,7 +247,7 @@ Within that transaction, Core increments the affected scope clock as part of the
 
 Projection rendering happens after the transaction. A projection failure is state-isolated: it marks projection freshness or job status as stale or failed and leaves the committed state intact. Projection cannot roll back the transaction, rewrite `state.sqlite.task_events`, turn a passed task into a failed task, or repair canonical state without a later reconcile decision.
 
-Projection freshness is a derived-read fact. A status, next-action, export, or operator command may check it and report that a readable view is stale, failed, or unknown, but Core state, structured blockers, evidence records, final acceptance, residual-risk acceptance, and Write Authorization remain authoritative in their owner records. v0.1 Core Authority Slice may expose freshness or read facts without proving the full projection worker; v0.2 needs enough derived card or projection output for user comprehension; hardened reference support owns the complete projection/reconcile path.
+Projection freshness is a derived-read fact. A status, next-action, export, or operator command may check it and report that a readable view is stale, failed, or unknown, but Core state, structured blockers, evidence records, final acceptance, residual-risk acceptance, and Write Authorization remain authoritative in their owner records. v0.1 Core Authority Slice may expose freshness or read facts without proving the full projection worker; v0.2 needs enough derived output for current work status, judgment request, evidence summary, and close readiness/blocker comprehension; hardened or operational profiles own the complete projection/reconcile and diagnostic report path.
 
 ## Artifact store architecture
 
@@ -275,7 +275,7 @@ The boundary is:
 |---|---|---|
 | Raw artifact | Durable evidence file in artifact store | diff, log, screenshot, checkpoint, bundle, manifest file |
 | State record | Canonical structured record in `state.sqlite` | Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Eval, Manual QA record, Evidence Manifest, Shared Design, Artifact record |
-| Markdown report | Human-readable projection from records and artifact refs | TASK, Journey Card/Spine views, Decision Packet views, APR, RUN-SUMMARY, EVAL, DIRECT-RESULT, EVIDENCE-MANIFEST |
+| Markdown report | Human-readable projection from records and artifact refs | TASK, compact status cards, Decision Packet views, APR, DIRECT-RESULT, and later diagnostic views such as Journey Card/Spine, RUN-SUMMARY, EVAL, and EVIDENCE-MANIFEST |
 
 
 These named report kinds are projections generated from state records and artifact refs by default. They may refer to evidence files in the artifact store, and an export may include snapshots of them, but that does not make the Markdown report the canonical evidence file or canonical state.

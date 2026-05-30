@@ -6,6 +6,8 @@ Use `TDD-TRACE` when TDD is required, selected, or recorded for a Change Unit an
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
+Implementation tier: future / diagnostic. TDD Trace output is for later policy or diagnostic profiles and must not inflate the first implementation.
+
 ## Source records
 
 - `tdd_traces`

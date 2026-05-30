@@ -6,6 +6,8 @@ Use `RUN-SUMMARY` when `record_run` commits an execution run and Harness needs a
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
+Implementation tier: future / diagnostic. Keep this as a detailed Run view for later profiles; it is not mandatory early scope.
+
 ## Source records
 
 - run record

@@ -6,6 +6,8 @@ Use `JOURNEY-CARD` when a current-position card needs to show where the work is,
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
+Implementation tier: future / diagnostic. Persisted Journey Card Markdown and Journey Spine-style output are not mandatory early scope; compact status/next output carries the early current-position context.
+
 ## Source records
 
 - current Task state and gates
@@ -119,7 +121,7 @@ State/input freshness: {state_baseline_evidence_freshness_summary|current or non
 
 ## Notes
 
-This template is a rendered shape, not canonical state. It is rendered from current source records and refs, not stale chat memory. Persisted `JOURNEY-CARD` Markdown is optional; current-position Journey Card output in status, next, and significant resume flows remains a read/display surface.
+This template is a rendered shape, not canonical state. It is rendered from current source records and refs, not stale chat memory. Persisted `JOURNEY-CARD` Markdown is future/diagnostic; early current-position context in status, next, and significant resume flows can use compact status output instead.
 
 Status/next recommendations shown in or near this card are read-only guidance. They may point to a Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
 

@@ -417,11 +417,11 @@ A guarantee level where the harness or connector can block a violating action be
 
 ### Projection
 
-A human-readable rendering of canonical state records and artifact references. Projection is useful for reading and decision-making, but it cannot override canonical state.
+A readable derived view generated from Core state records and artifact references. Projection is useful for reading and decision-making, but it cannot override or replace canonical state.
 
 ### ProjectionKind
 
-The API enum for projection job and template kinds. Tiers, values, and extension rules are owned by [Shared schemas](mcp-api-and-schemas.md#shared-schemas). Tier labels such as `Reference-required` are support expectations, not v0.1 Core Authority Slice run obligations; v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. No ProjectionKind makes a projection canonical state.
+The API enum for projection job and template kinds. Support classes, values, and extension rules are owned by [Shared schemas](mcp-api-and-schemas.md#shared-schemas). Support class labels are not v0.1 Core Authority Slice run obligations; v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. No ProjectionKind makes a projection canonical state.
 
 ### Projection Freshness
 

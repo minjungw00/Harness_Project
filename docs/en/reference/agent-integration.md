@@ -459,7 +459,7 @@ Connector conformance should prove that a profile can uphold the common contract
 Overview scenarios:
 
 - status with and without an active Task
-- current Journey Card shown before significant work resumes when required by the Use procedure
+- compact current-position status shown before significant work resumes when required by the Use procedure; persisted Journey Card output is a later/diagnostic profile
 - intake classification into `advisor`, `direct`, or `work`, with user-facing display rendered as read/advice work, small change, or tracked work when shown to users
 - work shaping with shared design and decisions
 - Change Unit scope and vertical/horizontal exception handling

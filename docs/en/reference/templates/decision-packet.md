@@ -6,6 +6,8 @@ Use `DEC` when standalone Decision Packet projection is enabled for user-owned p
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
+Implementation tier: required for user-facing MVP as the Decision Packet display/card shape for judgment requests, not as the standalone `DEC` `ProjectionKind`. A standalone persisted `DEC` Markdown projection remains optional unless the standalone Decision Packet projection feature is enabled; the required prompt can appear through status/next, `TASK`, or decision resources.
+
 ## Source records
 
 - `state.sqlite.decision_packets`

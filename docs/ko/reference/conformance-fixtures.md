@@ -282,7 +282,8 @@ flowchart LR
 
 이 queue는 코어 권한 조각(v0.1 Core Authority Slice) fixture candidate를 처음 작성할 때의 authoring order입니다. 커널 스모크(Kernel Smoke)는 제품 MVP가 아니라 이 내부 실행 목표에 대응하는 좁은 conformance authoring profile입니다. 이 row들은 executable fixture file이 이미 존재한다고 암시하지 않습니다. 이 순서는 fixture author를 위한 것이며 executable fixture 사이의 dependency가 아닙니다. 각 executable fixture는 isolated하게 유지하고, 필요한 최소 owner record를 `initial_state`에 seed하며, 하나의 public Core 또는 operator action을 사용하고, fixture body shape는 그대로 유지해야 합니다.
 
-정확한 request/response schema는 [MCP API와 스키마](mcp-api-and-schemas.md)가 담당합니다. 정확한 DDL과 storage value set은 [Storage와 DDL](storage-and-ddl.md) 및 [Canonical enum hardening](storage-and-ddl.md#canonical-enum-hardening)이 담당합니다. Stable event name은 [Kernel Stable Event Catalog](kernel.md#stable-event-catalog)가 담당합니다. Primary error 선택은 [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence)가 담당합니다. `ArtifactRef`는 [ArtifactRef](mcp-api-and-schemas.md#artifactref)가 담당합니다. `ProjectionKind`는 [Shared schemas](mcp-api-and-schemas.md#shared-schemas)가 담당하며, tier와 freshness rule은 [문서 Projection](document-projection.md#template-tiers) 및 [Freshness and failure rules](document-projection.md#freshness-and-failure-rules)를 따릅니다.
+정확한 request/response schema는 [MCP API와 스키마](mcp-api-and-schemas.md)가 담당합니다. 정확한 DDL과 storage value set은 [Storage와 DDL](storage-and-ddl.md) 및 [Canonical enum hardening](storage-and-ddl.md#canonical-enum-hardening)이 담당합니다. Stable event name은 [Kernel Stable Event Catalog](kernel.md#stable-event-catalog)가 담당합니다. Primary error 선택은 [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence)가 담당합니다. `ArtifactRef`는 [ArtifactRef](mcp-api-and-schemas.md#artifactref)가 담당합니다. `ProjectionKind` 값과 API 소유 지원 계층은 [Shared schemas](mcp-api-and-schemas.md#shared-schemas)가 담당합니다.
+템플릿 구현 계층과 최신성 동작은 [문서 Projection](document-projection.md#템플릿-구현-계층) 및 [Freshness and failure rules](document-projection.md#freshness-and-failure-rules)가 담당합니다.
 
 Table의 `None`은 기존 fixture field를 비워 두거나 `expected_error: null`을 사용한다는 뜻입니다. 새 sentinel value가 아닙니다.
 
@@ -1583,7 +1584,7 @@ expected_error:
 이 예시는 generated/managed manifest drift coverage를 나타냅니다. Connector conformance는 fixture-only manifest field를 여기 추가하지 않고도 오래된 capability profile 감지와 profile 최신성 보고를 함께 확인합니다.
 
 ```yaml
-scenario_id: CONN-journey-card-shown-before-significant-resume
+scenario_id: CONN-current-position-context-before-significant-resume
 initial_state:
   surface:
     guarantee_level: cooperative
@@ -1601,11 +1602,11 @@ initial_state:
   active_change_unit:
     change_unit_id: CU-RESUME-001
     allowed_paths: ["src/resume/current.ts"]
-  journey_refs:
-    journey_card_ref:
+  current_position_refs:
+    summary_ref:
       record_kind: projection
-      record_id: JOURNEY-CARD-RESUME-001
-    journey_spine_entry_refs:
+      record_id: STATUS-CONTEXT-RESUME-001
+    continuity_refs:
       - record_kind: journey_spine_entry
         record_id: JSE-RESUME-001
   evidence_refs:
@@ -1641,7 +1642,7 @@ expected_state:
     state:
       lifecycle_phase: executing
     judgment_context:
-      journey_card:
+      current_position_context:
         task_id: TASK-RESUME-001
         active_change_unit_ref:
           record_kind: change_unit
@@ -1824,7 +1825,7 @@ expected_error:
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
-| `CONN-journey-card-shown-before-significant-resume` | `next` | `next`는 중요한 재개 instruction bundle을 반환하기 전에 current Task state version, 현재 Journey Card 또는 journey ref, active Change Unit ref, pending Decision Packet ref, residual-risk summary, projection freshness를 반환합니다. read에는 state event가 추가되지 않습니다. |
+| `CONN-current-position-context-before-significant-resume` | `next` | `next`는 중요한 재개 instruction bundle을 반환하기 전에 current Task state version, 간결한 현재 위치 맥락 또는 continuity ref, active Change Unit ref, pending Decision Packet ref, residual-risk summary, projection freshness를 반환합니다. read에는 state event가 추가되지 않습니다. |
 | `CONN-recommended-playbooks-read-only-guidance` | `next` | `next`는 current stage에 대한 `recommended_playbooks`를 반환할 수 있지만, 이 read는 state event를 추가하지 않고, projection을 대기열에 넣지 않고, artifact나 evidence를 만들지 않고, gate를 바꾸지 않으며, write 권한을 부여하지 않습니다. 사용자 소유 판단이 필요한 playbook은 existing Decision Packet 또는 Decision Packet request path로 라우팅합니다. |
 | `CONN-role-lens-non-authoritative-routing` | `next` | `next`는 `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, `release-handoff` 같은 role-lens playbooks를 추천할 수 있습니다. 이 read는 상태를 변경하거나, gate를 충족하거나, write 권한을 부여하거나, evidence를 만들거나, verification을 수행 또는 기록하거나, QA를 기록하거나, QA 또는 verification을 면제하거나, 잔여 위험을 받아들이거나, 결과를 수락하거나, Task를 닫거나, assurance를 올리지 않습니다. Action이 필요한 lens output은 existing Decision Packet refs, `DecisionPacketCandidate` routes, validator/evidence/수동 QA/residual-risk candidates, release-handoff input, recommended next playbook으로 표현됩니다. |
 | `CONN-freeze-narrows-current-boundary` | `prepare_write` 또는 `next` | Freeze request는 display guidance, held write, 더 엄격한 next action, detective profile이 지원하는 사후 validation, 또는 existing scope가 incompatible할 때 `prepare_write` 차단/보류로 반영됩니다. Fixture가 persistent Change Unit, allowed-path, Autonomy Boundary, AFK stop-condition, related owner-record update를 검증한다면, 그 update는 기존 Core 상태 변경 경로, Decision Packet route, owner-record update path를 통해 일어나야 합니다. Freeze label은 그 자체로 owner records를 변경하지 않으며, covered operation에 대해 fixture로 입증된 pre-tool blocking이 없으면 prevention을 주장하지 않습니다. |
@@ -2712,7 +2713,7 @@ expected_error: null
 강화된 로컬 기준 suite family:
 
 - core: 활성 상태 확인, advisor close 처리, tiny direct를 Direct profile로 포함하는 direct close 처리, 쓰기 gate, Write Authorization 생성, 필수 조건, invalid case coverage, Approval 필요 조건과 Approval lifecycle retry, 근거 부족 처리, evidence/close readiness에 대한 artifact integrity 영향, same-session verification guard 확인, QA 필요 조건 처리, 작업 수락 필요 조건 처리, acceptance 또는 close 전 잔여 위험 표시, projection failure 분리 확인, current-state와 stale-projection 구분, stale projection write guard
-- connector: startup phrase 없는 자연어 intake, plain-language 요청을 Harness record로 라우팅, capability profile, connector profile 최신성, 오래된 capability profile 감지, surface capability mismatch, doctor/connect/serve-mcp/artifact check의 local security posture severity, MCP unavailable 보류, generated/managed manifest drift 감지, 변경 경로 감지, artifact 수집, native capture가 없을 때 수동 artifact capture fallback, cooperative/detective/manual fallback 동작을 preventive 또는 isolated로 상향 표시하지 않는 fallback 보장 수준 표시, 중요한 재개 전에 현재 Journey Card 표시, Decision Packet을 포괄 승인처럼 다루지 않음, Autonomy Boundary 초과를 Decision Packet 또는 blocker로 라우팅, stale chat 또는 PRD context의 pull-only 동작
+- connector: startup phrase 없는 자연어 intake, plain-language 요청을 Harness record로 라우팅, capability profile, connector profile 최신성, 오래된 capability profile 감지, surface capability mismatch, doctor/connect/serve-mcp/artifact check의 local security posture severity, MCP unavailable 보류, generated/managed manifest drift 감지, 변경 경로 감지, artifact 수집, native capture가 없을 때 수동 artifact capture fallback, cooperative/detective/manual fallback 동작을 preventive 또는 isolated로 상향 표시하지 않는 fallback 보장 수준 표시, 중요한 재개 전 간결한 현재 위치 맥락 표시, Decision Packet을 포괄 승인처럼 다루지 않음, Autonomy Boundary 초과를 Decision Packet 또는 blocker로 라우팅, stale chat 또는 PRD context의 pull-only 동작
 - artifact-redaction: registered artifact 경계 확인, 신뢰할 수 없는 `staged_uri` 처리, Task-scoped artifact relation validation, `secret_omitted`의 evidence sufficiency 한계 확인, 커밋된 `blocked` metadata-only notice 확인, 이후 표시/근거 영향, artifact 무결성 확인, secret/PII omission reporting, export/Release Handoff 비노출
 - connector guard/freeze: cooperative/detective freeze와 guard 표시, careful-mode가 권한을 만들지 않는 동작, capability mismatch honesty, MCP-unavailable hold wording, changed-path/log/artifact detective coverage. Preventive `T4` pre-tool blocking은 접점별 fixture가 hook, wrapper, sidecar, permission layer로 covered operation을 실행 전에 차단할 수 있음을 증명할 때만 포함합니다.
 - agency: 차단하는 사용자 소유 판단에는 Decision Packet 필요, options/trade-offs/recommendation/uncertainty/deferral/residual-risk impact를 갖춘 Decision Packet 품질 확인, 사용자 소유 제품 또는 중요한 technical trade-off write guard, AFK Autonomy Boundary stop conditions, successful acceptance 또는 close 전에 known close-relevant Residual Risk를 보이게 함, known close-relevant risk가 없을 때 `ResidualRiskSummary.status=none`, 잔여 위험을 받아들이고 닫는 경로에는 작업 수락 전에 사용자에게 보였던 risk를 가리키는 accepted Residual Risk refs 필요, Approval, 수동 QA, verification waiver, 작업 수락, 잔여 위험을 받아들이는 판단 구분

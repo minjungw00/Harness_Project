@@ -2,9 +2,9 @@
 
 ## What this document helps you do
 
-Use this reference to check how Harness renders human-readable Markdown projections from canonical state records and artifact references.
+Use this reference to check how Harness renders readable derived views from Core-owned state records and artifact references.
 
-It defines projection authority boundaries, managed block behavior, human-editable sections, artifact reference rendering, template tiers, and projection freshness rules. It does not define canonical kernel state, MCP request/response schemas, SQLite DDL, design-quality policy requirements, or full template bodies. Full template bodies and display card shapes live in the [Template Reference](templates/README.md).
+It defines projection authority boundaries, managed block behavior, human-editable sections, artifact reference rendering, output tiers, template implementation classes, and projection freshness rules. It does not define canonical kernel state, MCP request/response schemas, SQLite DDL, design-quality policy requirements, or full template bodies. Full template bodies and display card shapes live in the [Template Reference](templates/README.md).
 
 This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
@@ -13,7 +13,7 @@ This is reference documentation. It does not authorize runtime/server implementa
 - You need to implement or review Markdown projection behavior.
 - You are confirming that a report, status card, or Journey Card is not canonical state.
 - You are deciding how a human edit to projected Markdown can become state.
-- You need the source records for `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, or `DIRECT-RESULT`.
+- You need to separate user-readable summaries, agent compact context, and reference or diagnostic projections.
 - You are diagnosing stale, failed, or drifted projections.
 
 ## Before you read
@@ -22,7 +22,7 @@ Use [Kernel Reference](kernel.md) for canonical state and gate authority, [MCP A
 
 ## Main idea
 
-Projections are readable views derived from owner records and artifact refs. They can display current state, refs, freshness, and proposed edits, but they do not create authority, mutate canonical state, satisfy gates, or replace the owner Core/MCP paths.
+Projections are readable derived views. They are generated from Core-owned state and artifact references, can display current state, refs, freshness, and proposed edits, and do not replace Core-owned state. Human edits to projections are not state changes unless a future Core/reconcile path accepts them through a state-changing action.
 
 ## Projection in plain language
 
@@ -31,6 +31,27 @@ A Harness projection is a readable view of work that already exists in canonical
 Markdown helps humans understand the work, resume context, inspect evidence, and propose corrections. Markdown does not own the work. A report can summarize a gate, link evidence, display a Write Authorization ref, or show a Decision Packet, but the report text is not the gate, evidence, authorization, or decision.
 
 Projection is also a privacy boundary. The projector renders artifact refs, integrity metadata, redaction state, and notes about redaction, omission, or blocking; it must not expand `secret_omitted` or `blocked` artifacts into Markdown body text.
+
+## Output tiers
+
+Harness keeps three derived-output tiers separate:
+
+| Tier | Purpose | Early implementation rule |
+|---|---|---|
+| User-readable outputs | Short summaries that let the user understand the current work: status, judgment request, evidence summary, and close readiness or blocker summary. | Required for the user-facing MVP, but may be rendered as status/next text, compact cards, or minimal `TASK` sections rather than many separate Markdown files. |
+| Agent compact context | The smallest current state needed for the next safe step: active Task, scope, active Change Unit when relevant, pending user judgment, evidence/close blockers, next action, and freshness. | Keep it compact and current; do not embed long history, logs, traces, screenshots, or full projection bodies. |
+| Reference/diagnostic outputs | Detailed manifests, run summaries, Journey Card or Journey Spine views, TDD traces, Module Map and Interface Contract projections, detailed Eval reports, export bundles, maps, traces, and operator reports. | Pull-on-demand or later-profile scope. These outputs remain derived views and must not become mandatory for the first runnable slice or the minimum user-facing MVP unless an owner profile explicitly promotes them. |
+
+### Minimum user-facing MVP output set
+
+The minimum user-facing MVP output set is:
+
+- current work status
+- judgment request
+- evidence summary
+- close readiness / blocker summary
+
+Those outputs may reuse template shapes, but template variety must not inflate implementation scope. A single compact status/next surface plus a clear judgment-request display can satisfy the MVP display path when it is derived from Core state and refs.
 
 The strict boundary is:
 
@@ -85,7 +106,7 @@ This document owns:
 - managed block rules
 - human-editable section rules
 - artifact reference rendering rules
-- template tiers
+- output tiers and template implementation classes
 - projection source-record rules
 - projection freshness and failure rules
 - source-state-version and managed-hash interpretation at the projection-rule level
@@ -173,10 +194,10 @@ Direct edits inside managed blocks are drift, not accepted state. Direct edits t
 
 ## Projection principles
 
-1. Projection is not source-of-truth.
+1. Projection is a readable derived view, not source-of-truth.
 2. Canonical operational state is `state.sqlite` current records plus `state.sqlite.task_events`.
 3. Raw evidence is canonical in the artifact store.
-4. Markdown reports are rendered from state records and artifact references.
+4. Markdown reports are rendered from Core state records and artifact references.
 5. Markdown reports are not raw artifacts by default.
 6. Front matter carries only identity, projection version or status, `source_state_version`, and timestamp/freshness metadata.
 7. Managed blocks are generated by the projector and may be regenerated.
@@ -212,7 +233,7 @@ Close/readiness displays must keep evidence, verification, Manual QA, final acce
 | Domain Language | `domain_terms` table | `DOMAIN-LANGUAGE` projection | Core transition or reconcile, then projector |
 | Module Map | `module_map_items` table | `MODULE-MAP` projection | Core transition or reconcile, then projector |
 | Interface Contract | `interface_contracts` table | `INTERFACE-CONTRACT` projection | Core transition or reconcile, then projector |
-| Feedback Loop | `feedback_loops` table plus refs to runs, artifacts, TDD traces, Manual QA, and evidence manifests | `TASK` Stewardship Impact and Evidence Manifest design-quality coverage; no standalone Feedback Loop projection in the current reference projection set | `FeedbackLoopUpdate` through `record_run` shaping or evidence update, `record_manual_qa` via `feedback_loop_ref`, or reconcile, then projector |
+| Feedback Loop | `feedback_loops` table plus refs to runs, artifacts, TDD traces, Manual QA, and evidence manifests | `TASK` Stewardship Impact and Evidence Manifest design-quality coverage; no standalone Feedback Loop projection in the current reference catalog | `FeedbackLoopUpdate` through `record_run` shaping or evidence update, `record_manual_qa` via `feedback_loop_ref`, or reconcile, then projector |
 | Approval | `approvals`, approval-shaped Decision Packet, optional decision request routing/replay record if implementation keeps one, and events; never `approval_request_candidate` alone | `APR` projection and approval card | `request_user_decision(decision_kind=approval)` creates the pending Approval record, `record_user_decision` updates the approval decision, then projector |
 | Run summary | `runs` table plus artifact refs | `RUN-SUMMARY` projection | `record_run`, then projector |
 | Direct result | direct run record plus artifact refs | `DIRECT-RESULT` projection | `record_run` / `close_task`, then projector |
@@ -288,6 +309,12 @@ Do not collapse display problems into one status:
 - The projector must preserve human-editable content across refreshes.
 - Human-editable proposals may target Task summary, acceptance criteria, Domain Language, Module Map, Interface Contract, Manual QA notes, or other state-backed records, but the proposal itself is not the target record.
 
+## Embedding vs referencing
+
+User-readable outputs should embed only concise summaries and safe labels. Large logs, diffs, traces, screenshots, recordings, checkpoints, bundles, export components, and sensitive artifacts should be referenced by `ArtifactRef` or `StateRecordRef`, not pasted into readable Markdown.
+
+Reference/diagnostic outputs may list richer artifact inventories, hashes, retention state, and availability notes, but they still reference large or sensitive bytes instead of reconstructing them. A projection may say what a ref supports and whether the input is redacted, omitted, blocked, stale, or missing; it must not inline omitted secret/PII values, blocked payload bytes, or unbounded raw evidence.
+
 ## Artifact reference rendering
 
 Markdown reports render artifact references compactly and consistently. The payload shape is owned by the MCP API document; projection owns only presentation rules.
@@ -314,25 +341,26 @@ Rules:
 - State record refs use record identity and optional projection path; for `record_kind=projection`, identity is `projection_jobs.projection_job_id` and the path is only a locator. They are not rendered as raw artifact refs.
 - `artifact_links.record_kind` must resolve to an existing same-Task state owner or projection ref. Current Task-scoped artifact links remain Task-scoped; `record_kind=projection` resolves to a completed `projection_jobs` row with the same `task_id`, and the link's `record_id` is `projection_jobs.projection_job_id`, while path display uses `StateRecordRef.projection_path` or `projection_jobs.output_path`. Project-level owner rows and project-level projection jobs use state or projection job freshness/output metadata unless a future extension adds project-scoped artifact linking. `EXPORT` is a `ProjectionKind` only; export snapshots and components remain artifacts linked to their owner records or to `record_kind=projection`, not to `record_kind=export`.
 
-## Template tiers
+## Template implementation classes
 
-Projection templates match the API `ProjectionKind` staged/reference support tiers.
+The template catalog is intentionally broader than the early implementation set. Template classes stage rendered shapes without changing projection authority:
 
-| Tier | Templates | Rule | Template reference |
-|---|---|---|---|
-| Reference-required | `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT` | Staged/reference projection support must support enqueueing and rendering these when their source records exist or change. | [TASK](templates/task.md), [APR](templates/approval.md), [RUN-SUMMARY](templates/run-summary.md), [EVIDENCE-MANIFEST](templates/evidence-manifest.md), [EVAL](templates/eval.md), [DIRECT-RESULT](templates/direct-result.md) |
-| Reference-optional | `MANUAL-QA`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT` | Render when policy applies, records exist, or the user/operator enables the projection. | [MANUAL-QA](templates/manual-qa.md), [TDD-TRACE](templates/tdd-trace.md), [DOMAIN-LANGUAGE](templates/domain-language.md), [MODULE-MAP](templates/module-map.md), [INTERFACE-CONTRACT](templates/interface-contract.md) |
-| Extension / optional | `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Render only when the corresponding optional projection is enabled. | [DEC](templates/decision-packet.md), [DESIGN](templates/design.md), [EXPORT](templates/export.md), [JOURNEY-CARD](templates/journey-card.md) |
+| Class | Templates or output shapes | Rule |
+|---|---|---|
+| Required for first runnable kernel slice | Minimal [Compact Status Card](templates/compact-status-card.md) or equivalent status/next/blocker response shape | Required as read-only output from current Core state. It does not require a persisted Markdown projection job. |
+| Required for user-facing MVP | Minimal [TASK](templates/task.md) continuity summary and [Decision Packet](templates/decision-packet.md) display/card shape for judgment requests, not the standalone `DEC` `ProjectionKind` | Required only to the extent needed to show current status, judgment request, evidence summary, and close readiness/blockers. Standalone persisted `DEC` Markdown remains optional unless the standalone Decision Packet projection feature is enabled. |
+| Optional early | [APR](templates/approval.md), [Approval Card](templates/approval-card.md), [DIRECT-RESULT](templates/direct-result.md), [MANUAL-QA](templates/manual-qa.md), [Manual QA Card](templates/manual-qa-card.md), [Verification Result Card](templates/verification-result-card.md) | Useful when the corresponding approval, direct-work, Manual QA, or verification profile is active; not first-slice requirements. |
+| Future / diagnostic | [RUN-SUMMARY](templates/run-summary.md), [EVIDENCE-MANIFEST](templates/evidence-manifest.md), [EVAL](templates/eval.md), [TDD-TRACE](templates/tdd-trace.md), [DOMAIN-LANGUAGE](templates/domain-language.md), [MODULE-MAP](templates/module-map.md), [INTERFACE-CONTRACT](templates/interface-contract.md), [DESIGN](templates/design.md), [EXPORT](templates/export.md), [JOURNEY-CARD](templates/journey-card.md) | Detailed reference, diagnostic, handoff, stewardship, map, trace, or export views. Keep them available for v0.3, v0.4, operations, handoff, or other owner-promoted later profiles without making them mandatory early scope. |
 
-`Reference-required` means required by staged/reference projection support after the relevant owner records exist; it does not mean every v0.1 Core Authority Slice run must render every kind. v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. v0.2 User-Facing Harness MVP provides enough derived projection or card output for users to understand scope, judgment, evidence, close readiness, acceptance, and residual risk. Hardened local reference support covers the full Reference-required projection set when source records exist or change.
+`Future / diagnostic` means later-profile or diagnostic scope, not automatically v1+ only.
 
-`ProjectionKind` tiering controls renderer support expectations only; no tier makes a projection canonical state or creates evidence, QA, verification, final acceptance, residual-risk acceptance, close authority, or Write Authorization. For Reference-required kinds, the render/enqueue condition is source-backed: `TASK` after a Task exists or changes, `APR` after a committed approval-shaped Decision Packet or Approval record exists or changes, `RUN-SUMMARY` after a Run commits, `EVIDENCE-MANIFEST` after evidence coverage exists or changes, `EVAL` after an Eval record exists or changes, and `DIRECT-RESULT` after direct-result source records exist or change. If the source record does not exist, the projector must not invent placeholder state to satisfy template completeness.
+No template class makes a projection canonical state or creates evidence, QA, verification, final acceptance, residual-risk acceptance, close authority, or Write Authorization. If a source record does not exist, the projector must not invent placeholder state to satisfy template completeness.
 
 The `EXPORT` template is an optional projection output. It does not introduce an `export` state record for artifact links. Export projections list artifact refs, hashes, redaction states, and redaction/omission/block notes; they do not embed large or sensitive artifact bodies by default.
 
-Persisted `JOURNEY-CARD` Markdown is optional. Current-position Journey Card output in `harness.status`, `harness.next`, and significant resume flows is required for agency conformance.
+Persisted `JOURNEY-CARD` Markdown, Journey Spine output, Run Summary, TDD Trace, Module Map, Interface Contract, export bundles, and detailed Evaluation views are not mandatory early scope. Current-position context for status, next, and resume can be satisfied by compact user-readable or agent compact context outputs.
 
-Required Decision Packet visibility is provided through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources. Standalone `DEC` Markdown is optional unless the standalone Decision Packet projection feature is enabled.
+Required Decision Packet visibility is provided through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays. That requirement is for the Decision Packet judgment-request display shape, not the standalone `DEC` `ProjectionKind`. Standalone `DEC` Markdown is optional unless the standalone Decision Packet projection feature is enabled.
 
 Decision Packet record IDs use `DEC-*`. `DEC` as a `projection_kind` is only the projection kind label; when a standalone projection needs its own identity, use a separate `projection_id` such as `DEC-PROJ-0001`.
 

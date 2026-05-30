@@ -6,6 +6,8 @@ Use `DOMAIN-LANGUAGE` when domain terms need a readable projection for current m
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
+Implementation tier: future / diagnostic. Domain-language maps remain available for stewardship profiles and are not mandatory early projections.
+
 ## Source records
 
 - `domain_terms`
