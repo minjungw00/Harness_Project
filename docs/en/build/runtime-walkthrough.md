@@ -54,11 +54,13 @@ Strict behavior: Task lifecycle, modes, and state transitions are owned by [Kern
 
 Discovery is used when the request is ambiguous, risky, multi-step, product-facing, or likely to need user-owned judgment. It clarifies goal, non-goals, acceptance criteria, assumptions, technical and product choices, security or privacy concerns, QA expectations, and scope boundaries.
 
-Strict behavior: Discovery is shaping input. It is not Approval, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, or a new authority path. Decision routing is owned by [Decision Packet](../reference/kernel.md#decision-packet) and the public decision call in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision).
+Strict behavior: Discovery is shaping input. It is not Approval, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, scope authority, or a new authority path. Decision routing is owned by [Decision Packet](../reference/kernel.md#decision-packet) and the public decision call in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision).
 
-### 3. Discovery -> Change Unit
+### 3. Discovery -> scoped next work -> Change Unit
 
-The first safe Change Unit turns the request into a scoped implementation unit. It names what work surface may change, what remains out of bounds, and what judgment the agent may exercise inside that scope.
+Discovery separates inspectable facts from user-owned decisions, then proposes scoped next work, a first implementation candidate, or a work split. When product writes are near, that proposal can become a Change Unit candidate. The active Change Unit names what work surface may change, what remains out of bounds, and what judgment the agent may exercise inside that scope.
+
+These proposal phrases are not standalone schema fields, canonical record types, gate values, projection kinds, or authority paths.
 
 Strict behavior: Change Unit and Autonomy Boundary semantics are owned by [Kernel Reference](../reference/kernel.md#change-unit) and [Autonomy Boundary](../reference/kernel.md#autonomy-boundary). A Change Unit scopes work, but it does not authorize a write by itself.
 

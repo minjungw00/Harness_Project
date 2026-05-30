@@ -90,16 +90,16 @@ Login에 remember-me 동작을 추가해줘.
 작아 보이지만 제품 동작, security, session lifetime, UI, test, storage에 닿습니다. 에이전트는 구현 계획 전에 요청을 먼저 구체화해야 합니다.
 
 ```text
-Goal: remember-me 동작 추가.
-Need to clarify: session을 늘릴지, email을 기억할지, 둘 다인지.
-Codebase-answerable: 현재 session lifetime이 어디에서 설정되는지.
-가능한 첫 안전 범위 조각: login checkbox, 선택된 session behavior, focused tests.
-User question: remember-me가 이 기기에서 session을 더 오래 유지한다는 뜻인가요, email address를 미리 채운다는 뜻인가요, 아니면 둘 다인가요?
+목표: remember-me 동작 추가.
+구체화할 것: 세션을 늘릴지, 이메일을 기억할지, 둘 다인지.
+코드베이스에서 확인할 수 있는 것: 현재 세션 수명이 어디에서 설정되는지.
+가능한 다음 작업 후보: 현재 세션 처리 방식을 확인한 뒤, 사용자가 remember-me의 의미를 결정하면 로그인 체크박스, 선택한 세션 동작, 집중 테스트로 나눕니다.
+사용자 질문: remember-me가 이 기기에서 세션을 더 오래 유지한다는 뜻인가요, 이메일 주소를 미리 채운다는 뜻인가요, 아니면 둘 다인가요?
 ```
 
 Reference 문서는 이런 구체화 자세를 Discovery라고 부릅니다. 제품, 기술, security, QA, 운영, scope 질문을 분리하고, codebase-answerable question은 repository와 현재 하네스 context에서 답하며, codebase가 답할 수 없는 결정만 사용자에게 묻습니다.
 
-Discovery는 민감 동작 허가(Approval)도 아니고, 제품 파일 쓰기 허가도 아니며, evidence, verification, QA, 작업 수락(Acceptance), 잔여 위험 수용, close, 새 authority path도 아닙니다. 첫 번째 안전한 scoped slice가 보일 수 있도록 요구사항을 구체화하는 작업입니다.
+요구사항 구체화(Discovery)는 민감 동작 허가(Approval)도 아니고, 제품 파일 쓰기 허가도 아니며, evidence, verification, QA, 작업 수락(Acceptance), 잔여 위험 수용, close, 새 authority path도 아닙니다. 에이전트가 확인할 수 있는 사실과 사용자 소유 결정을 분리하고 안전한 다음 작업을 보이게 하는 구체화 작업입니다.
 
 사용자에게 보이는 흐름은 [사용자 가이드](../use/user-guide.md#평소-말로-시작하기)와 [Agent 세션 흐름](../use/agent-session-flow.md)를 사용합니다. 용어 뒤의 정확한 owner behavior는 [Kernel Reference](../reference/kernel.md)와 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 사용합니다.
 

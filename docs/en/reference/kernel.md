@@ -883,7 +883,7 @@ Catalog-only fixture skeletons in [Conformance Fixtures Reference](conformance-f
 
 ### Intake to `prepare_write` sequence
 
-This sequence shows how a user request becomes scoped write-capable work. Notice that Discovery can shape the Task and Change Unit, but product-write authority appears only at `prepare_write`, and only for the specific compatible attempt that receives a Write Authorization.
+This sequence shows how a user request becomes scoped write-capable work. Notice that Discovery is requirements-clarification behavior that can shape the Task, Shared Design support, user-owned decision routing, and later Change Unit candidates, but product-write authority appears only at `prepare_write`, and only for the specific compatible attempt that receives a Write Authorization.
 
 ```mermaid
 sequenceDiagram
@@ -896,7 +896,7 @@ sequenceDiagram
   User->>Agent: request
   Agent->>Core: intake and classify task shape
   Core->>State: create or update Task
-  Agent->>Core: Discovery results when needed
+  Agent->>Core: clarification results (Discovery) when needed
   Core->>State: record shaping refs through owner paths
   Agent->>Core: propose or select Change Unit
   Core->>State: set active Change Unit and scope gate

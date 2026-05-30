@@ -52,13 +52,15 @@ flowchart LR
 
 ### 2. Task -> Discovery
 
-요청이 모호하거나, 위험하거나, 여러 단계이거나, 제품 표면에 닿거나, 사용자 소유 판단이 필요할 가능성이 있을 때 Discovery를 사용합니다. Discovery는 goal, non-goal, acceptance criteria, assumption, technical/product choice, security/privacy concern, QA expectation, scope boundary를 구체화합니다.
+요청이 모호하거나, 위험하거나, 여러 단계이거나, 제품 표면에 닿거나, 사용자 소유 판단이 필요할 가능성이 있을 때 요구사항 구체화(Discovery)를 사용합니다. 이 구체화는 goal, non-goal, acceptance criteria, assumption, technical/product choice, security/privacy concern, QA expectation, scope boundary를 정리합니다.
 
-엄격한 동작: Discovery는 shaping input입니다. Approval, Write Authorization, evidence, verification, QA, acceptance, 잔여 위험을 받아들이는 판단, close, 새 authority path가 아닙니다. Decision routing은 [Decision Packet](../reference/kernel.md#decision-packet)과 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision)의 public decision call이 담당합니다.
+엄격한 동작: 요구사항 구체화(Discovery)는 shaping input입니다. Approval, Write Authorization, evidence, verification, QA, acceptance, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. Decision routing은 [Decision Packet](../reference/kernel.md#decision-packet)과 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision)의 public decision call이 담당합니다.
 
-### 3. Discovery -> Change Unit
+### 3. 요구사항 구체화(Discovery) -> 안전한 다음 작업 -> Change Unit
 
-첫 안전한 Change Unit은 요청을 scoped implementation unit으로 바꿉니다. 무엇이 바뀔 수 있는지, 무엇이 범위 밖인지, agent가 그 scope 안에서 어떤 판단을 직접 할 수 있는지를 이름 붙입니다.
+요구사항 구체화(Discovery)는 에이전트가 확인할 수 있는 사실과 사용자 소유 결정을 분리한 뒤 안전한 다음 작업, 첫 구현 후보, 또는 작업 분할을 제안합니다. 제품 쓰기가 가까워지면 그 제안이 Change Unit candidate가 될 수 있습니다. Active Change Unit은 무엇이 바뀔 수 있는지, 무엇이 범위 밖인지, agent가 그 scope 안에서 어떤 판단을 직접 할 수 있는지를 이름 붙입니다.
+
+이런 제안 표현은 standalone schema field, canonical record type, gate value, projection kind, authority path가 아닙니다.
 
 엄격한 동작: Change Unit과 Autonomy Boundary 의미는 [커널 참조의 Change Unit](../reference/kernel.md#change-unit)과 [Autonomy Boundary](../reference/kernel.md#autonomy-boundary)가 담당합니다. Change Unit은 work를 scope하지만, 그 자체로 write를 authorize하지 않습니다.
 

@@ -72,8 +72,22 @@ I can inspect: existing login routes, session handling, auth tests, UI form patt
 
 Only you can decide: whether email login should use password credentials, one-time codes, magic links, or an external identity provider; what failed-login UX and copy are acceptable; whether any security or UX trade-off is worth the cost.
 
-Next safe action: inspect the current auth flow, then come back with the smallest safe implementation slice and the user-owned decisions that block it.
+Next safe action: inspect the current auth flow, then come back with what the codebase answers, what only you can decide, and a scoped next-work proposal.
 ```
+
+A good clarification response should separate:
+
+- goal
+- user value
+- non-goals
+- acceptance criteria
+- facts the agent can inspect from the repo, docs, or current Harness state
+- judgments only the user can make
+- product or UX judgment candidates
+- technical architecture judgment candidates
+- security or privacy judgment candidates
+- QA and verification expectations
+- first implementation candidate or work-splitting candidate
 
 When the request needs judgment, the agent should name the kind of judgment instead of asking for broad approval.
 
@@ -118,7 +132,9 @@ Smallest unblocker: choose the failed-login pattern, or ask me to propose a smal
 Use these as ordinary requests. They are not commands you must memorize.
 
 ```text
-Start this work and show the first safe scope.
+Clarify the plan before implementation.
+Ask what you need before changing code.
+Start with goals, non-goals, and acceptance criteria.
 Show the current status and next safe action.
 Resume from the current state, not old chat.
 What is blocking this task now?
@@ -127,6 +143,7 @@ Show close readiness in plain language.
 Show close-relevant residual risk before I accept.
 What evidence is still missing?
 Keep this small unless it turns into a product or technical decision.
+After you inspect, show the first implementation candidate or work split.
 ```
 
 ## Small work should stay light
@@ -299,7 +316,7 @@ You can skip this section until an agent shows one of these labels. They are use
 
 | Harness label | Plain meaning |
 |---|---|
-| Discovery | The agent clarifies the request before implementation planning. |
+| Discovery | The agent's requirements-clarification behavior before implementation planning. |
 | Change Unit | The bounded work area that may change for this task. |
 | Autonomy Boundary | The decisions the agent may make alone inside that scope. |
 | Decision Packet | The recorded path for a user-owned product, technical, waiver, acceptance, risk, or scope decision. |

@@ -200,13 +200,13 @@ Task: 로그인 플로우에 remember me 동작을 추가한다.
 에이전트는 짧은 구체화 요약을 유지할 수 있습니다.
 
 ```text
-Goal: 로그인에 remember-me 동작을 추가한다.
-User value: 반복 로그인을 더 쉽게 한다.
-Non-goals: passwordless login, account recovery, global session redesign.
-User question: "remember me"가 무엇을 의미해야 하는가?
-Can inspect without asking: 현재 session lifetime이 어디에서 설정되는가.
-Assumption to verify: 기존 login flow에 checkbox를 둘 한 위치가 있다.
-Possible first safe scope: 로그인 폼 checkbox, 선택된 remember-me 동작, focused tests.
+목표: 로그인에 remember-me 동작을 추가한다.
+사용자 가치: 반복 로그인을 더 쉽게 한다.
+비목표: passwordless login, account recovery, global session redesign.
+사용자 질문: "remember me"가 무엇을 의미해야 하는가?
+묻지 않고 확인할 수 있는 것: 현재 세션 수명이 어디에서 설정되는가.
+확인할 가정: 기존 로그인 흐름에 체크박스를 둘 위치가 하나 있다.
+가능한 다음 작업 후보: 현재 세션 처리 방식을 확인한 뒤, 사용자가 remember-me의 의미를 결정하면 로그인 체크박스, 선택한 remember-me 동작, 집중 테스트로 나눈다.
 ```
 
 그다음 가장 먼저 도움이 되는 사용자 소유 질문을 쉬운 말로 묻습니다.
@@ -397,7 +397,7 @@ Power-user 표시는 각 줄 뒤의 owner ref를 함께 보여줄 수 있지만,
 | 일상적인 말 | 하네스 term | 왜 필요한가 | 더 읽을 곳 |
 |---|---|---|---|
 | "무엇을 하는 중이지?" | Task | 사용자가 원하는 결과, 상태, blocker, 근거, 닫기 판단을 하나로 묶는다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
-| "쓰기를 계획하기 전에 무엇을 구체화해야 하지?" | Discovery | 쓰기 권한 전에 Discovery Brief, Question Queue, Assumption Register, First Safe Change Unit Candidate를 만들고, 사용자 소유 선택은 결정 패킷 candidate와 기존 shaping path로 라우팅한다. | [사용자 가이드](../use/user-guide.md); [설계 품질 정책](../reference/design-quality-policies.md#shared-design-shared_design). |
+| "쓰기를 계획하기 전에 무엇을 구체화해야 하지?" | Discovery | 에이전트가 확인할 수 있는 사실과 사용자 소유 결정을 분리하고, 쓰기 권한 전에 Discovery Brief, Question Queue, Assumption Register를 만들며, 안전한 다음 작업이나 작업 분할을 제안한다. 사용자 소유 선택은 결정 패킷 candidate와 기존 shaping path로 라우팅한다. | [사용자 가이드](../use/user-guide.md); [설계 품질 정책](../reference/design-quality-policies.md#shared-design-shared_design). |
 | "어디까지 바꿔도 되지?" | Change Unit | 제품 쓰기 범위를 제한해 작업이 조용히 커지지 않게 한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "이건 사용자가 결정해야 해." | 결정 패킷 | 사용자가 소유한 제품 판단이나 중요한 기술 판단을 넓은 승인과 분리한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "이 민감한 단계를 진행해도 되나?" | Approval | 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답한다. 사용자 소유 판단이나 최종 수락을 대신하지 않는다. | [커널 참조](../reference/kernel.md). |

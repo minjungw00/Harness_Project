@@ -93,13 +93,13 @@ This sounds small, but it affects product behavior, security, session lifetime, 
 Goal: add remember-me behavior.
 Need to clarify: extend session, remember email, or both.
 Codebase-answerable: where session lifetime is configured today.
-Possible first safe scoped slice: login checkbox, chosen session behavior, focused tests.
+Possible scoped next work: inspect session handling, then split into login checkbox, chosen session behavior, and focused tests once the user-owned meaning is decided.
 User question: Should remember-me extend the session on this device, prefill the email address, or both?
 ```
 
 Reference docs call this clarification posture Discovery. It separates product, technical, security, QA, operational, and scope questions. It answers codebase-answerable questions from the repository and current Harness context, then asks the user only for decisions the codebase cannot answer.
 
-Discovery is not sensitive-action permission (Approval), not permission to write product files, not evidence, not verification, not QA, not final acceptance (Acceptance), not residual-risk acceptance, not close, and not a new authority path. It is the clarification work that can make a first safe scoped slice visible.
+Discovery is not sensitive-action permission (Approval), not permission to write product files, not evidence, not verification, not QA, not final acceptance (Acceptance), not residual-risk acceptance, not close, and not a new authority path. It is the clarification work that separates inspectable facts from user-owned decisions and makes safe next work visible.
 
 For the user-facing flow, use [User Guide](../use/user-guide.md#start-with-ordinary-requests) and [Agent Session Flow](../use/agent-session-flow.md). For exact owner behavior behind the terms, use [Kernel Reference](../reference/kernel.md) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
 

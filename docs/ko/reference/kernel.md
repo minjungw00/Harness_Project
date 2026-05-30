@@ -882,7 +882,7 @@ Stable event names는 staged/reference conformance fixtures가 `expected_events`
 
 ### Intake에서 `prepare_write`까지의 sequence
 
-이 sequence는 사용자 요청이 어떻게 scoped write-capable work가 되는지 보여줍니다. 눈여겨볼 점은 Discovery가 Task와 Change Unit을 shape할 수 있지만, 제품 파일 쓰기 권한은 `prepare_write`에서만 생기며 Write Authorization을 받은 specific compatible attempt에만 적용된다는 것입니다.
+이 sequence는 사용자 요청이 어떻게 scoped write-capable work가 되는지 보여줍니다. 눈여겨볼 점은 요구사항 구체화(Discovery)가 Task, Shared Design support, 사용자 소유 결정 라우팅, 이후 Change Unit candidate를 shape할 수 있지만, 제품 파일 쓰기 권한은 `prepare_write`에서만 생기며 Write Authorization을 받은 specific compatible attempt에만 적용된다는 것입니다.
 
 ```mermaid
 sequenceDiagram
@@ -895,7 +895,7 @@ sequenceDiagram
   User->>Agent: request
   Agent->>Core: intake and classify task shape
   Core->>State: create or update Task
-  Agent->>Core: Discovery results when needed
+  Agent->>Core: clarification results (Discovery) when needed
   Core->>State: record shaping refs through owner paths
   Agent->>Core: propose or select Change Unit
   Core->>State: set active Change Unit and scope gate

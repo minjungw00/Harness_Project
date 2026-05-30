@@ -206,7 +206,7 @@ Non-goals: passwordless login, account recovery, global session redesign.
 Question to user: what should "remember me" mean?
 Can inspect without asking: where current session lifetime is configured.
 Assumption to verify: existing login flow has a single checkbox location.
-Possible first safe scope: login form checkbox plus selected remember-me behavior and focused tests.
+Possible scoped next work: inspect session handling, then split into login checkbox, selected remember-me behavior, and focused tests once the user-owned meaning is decided.
 ```
 
 Then the agent asks the first useful user-owned question in ordinary language:
@@ -397,7 +397,7 @@ The two flows above are anchors, not the whole universe. Harness should stay pra
 | everyday phrase | Harness term | why it exists | where to read more |
 |---|---|---|---|
 | "What are we doing?" | Task | Keeps the user's desired outcome, status, blockers, evidence, and close decision connected. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
-| "What needs clarifying before we plan writes?" | Discovery | Builds a Discovery Brief, Question Queue, Assumption Register, and First Safe Change Unit Candidate before write authority; routes user-owned choices to Decision Packet candidates and existing shaping paths. | [Use: User Guide](../use/user-guide.md); [Design Quality Policies](../reference/design-quality-policies.md#shared-design-shared_design). |
+| "What needs clarifying before we plan writes?" | Discovery | Separates inspectable facts from user-owned decisions, builds a Discovery Brief, Question Queue, and Assumption Register, and proposes safe next work or a work split before write authority; routes user-owned choices to Decision Packet candidates and existing shaping paths. | [Use: User Guide](../use/user-guide.md); [Design Quality Policies](../reference/design-quality-policies.md#shared-design-shared_design). |
 | "What may change?" | Change Unit | Bounds product writes so the task does not silently expand. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "This needs your call." | Decision Packet | Separates user-owned product or material technical judgment from broad approval. | [Use: User Guide](../use/user-guide.md); [Kernel Reference](../reference/kernel.md). |
 | "May this sensitive step proceed?" | Approval | Allows a sensitive action inside a defined scope without replacing user-owned judgment or final acceptance. | [Kernel Reference](../reference/kernel.md). |

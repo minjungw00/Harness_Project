@@ -91,7 +91,7 @@ The kernel gate for sensitive-action Approval. It is required only when sensitiv
 
 ### Assumption Register
 
-A Discovery or Shared Design support/projection list of assumptions the agent is using before implementation planning. It should name source, confidence, owner, and what would change if the assumption fails. These are recommended display/support contents, not a standalone schema or canonical record field list. The register helps shape a Discovery Brief and First Safe Change Unit Candidate, but it is not user approval, sensitive-action Approval, acceptance, residual-risk acceptance, evidence, close readiness, scope authority, or Write Authorization.
+A Discovery or Shared Design support/projection list of assumptions the agent is using before implementation planning. It should name source, confidence, owner, and what would change if the assumption fails. These are recommended display/support contents, not a standalone schema or canonical record field list. The register helps shape a Discovery Brief, first implementation candidate, work split, or First Safe Change Unit Candidate, but it is not user approval, sensitive-action Approval, acceptance, residual-risk acceptance, evidence, close readiness, scope authority, or Write Authorization.
 
 ### Artifact
 
@@ -207,11 +207,11 @@ Verification performed across a meaningful independence boundary, such as a fres
 
 ### Discovery
 
-A workflow posture before implementation planning and before write authority that clarifies requirements until the first safe Change Unit can be proposed. It separates goal, user value, non-goals, acceptance criteria, assumptions, and product, technical, security, QA, operational, and scope judgments; asks the user only for decisions the codebase and current Harness context cannot answer; and may ask multiple targeted questions without continuing indefinitely. Discovery outputs route to Shared Design, Decision Packet candidates, and Change Unit shaping. Discovery is not approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, scope authority, or a new authority path.
+A workflow posture before implementation planning and before write authority where the agent clarifies requirements. It separates goal, user value, non-goals, acceptance criteria, facts the agent can inspect from repo/docs/Harness state, assumptions, judgments only the user can make, product/UX judgment candidates, technical architecture judgment candidates, security/privacy judgment candidates, QA and verification expectations, and first implementation candidates or work split proposals. It asks the user only for decisions the codebase and current Harness context cannot answer, may ask multiple targeted questions grouped by decision area, and can pause when inspectable facts and user-owned decisions are separated enough to propose safe next work without hiding unresolved judgment. Discovery outputs route to Shared Design, Decision Packet candidates, and Change Unit shaping. Phrases such as first implementation candidate and work split proposal are proposal/support phrases, not standalone schema fields, canonical record types, gate values, projection kinds, or authority paths. Discovery is not approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, scope authority, or a new authority path.
 
 ### Discovery Brief
 
-A compact Discovery or Shared Design support/projection summary of the clarified goal, user value, non-goals, acceptance criteria, question queue, assumption register, separated user-owned judgments, and First Safe Change Unit Candidate. These are recommended display/support contents, not a standalone schema or canonical record field list. A Discovery Brief can inform Shared Design, Decision Packet candidates, and Change Unit shaping, but does not by itself create canonical scope, resolve decisions, authorize writes, prove evidence, record residual-risk acceptance, accept results, or close a task.
+A compact Discovery or Shared Design support/projection summary of the clarified goal, user value, non-goals, acceptance criteria, inspectable facts, question queue, assumption register, separated user-owned judgments, product/UX, technical architecture, security/privacy, QA and verification expectations, and first implementation candidate or work split. It may include a First Safe Change Unit Candidate when product writes are near. These are recommended display/support contents, not a standalone schema or canonical record field list. A Discovery Brief can inform Shared Design, Decision Packet candidates, and Change Unit shaping, but does not by itself create canonical scope, resolve decisions, authorize writes, prove evidence, record residual-risk acceptance, accept results, or close a task.
 
 ### Detective Guarantee
 
@@ -267,7 +267,7 @@ An observed issue, gap, risk, blocker, or noteworthy result from a Run, Eval, Ma
 
 ### First Safe Change Unit Candidate
 
-The smallest proposed Change Unit shape that can safely start work without hiding unresolved user-owned judgment. It is produced during Discovery or Shared Design and should name included behavior, out-of-bounds behavior, completion conditions, known sensitive areas, and stop conditions. These are recommended display/support contents, not a standalone schema or canonical record field list. It is a candidate only: an active Change Unit, compatible scope gate state, and later `prepare_write` are still required before product writes.
+The internal Change Unit-shaped expression of a first implementation candidate when product writes are near. It should name included behavior, out-of-bounds behavior, completion conditions, known sensitive areas, and stop conditions without hiding unresolved user-owned judgment. Discovery or Shared Design may produce it after inspectable facts and user-owned decisions are separated, but Discovery does not exist only to find this candidate. These are recommended display/support contents, not a standalone schema or canonical record field list. It is a candidate only: an active Change Unit, compatible scope gate state, and later `prepare_write` are still required before product writes.
 
 ### Fixture Assertion Semantics
 
@@ -499,7 +499,7 @@ The policy-owned rule for merging multiple applicable task-shape defaults, polic
 
 ### Shared Design
 
-The minimum recorded shared understanding of a task before implementation hardens into a plan: goal, user value, scope, non-goals, acceptance criteria, assumptions, decisions, rejected options, domain/module/interface impact, and first Change Unit shape. Discovery Briefs, Question Queues, Assumption Registers, and First Safe Change Unit Candidates can feed Shared Design. Shared Design can support shaping and `design_gate` readiness, but it is not final approval, sensitive-action Approval, Acceptance, residual-risk acceptance, QA judgment, evidence, close readiness, or Write Authorization. Markdown renderings of Shared Design are projections and proposal surfaces. Exact policy requirements are owned by [Design Quality Policies](design-quality-policies.md#shared-design-shared_design).
+The minimum recorded shared understanding of a task before implementation hardens into a plan: goal, user value, scope, non-goals, acceptance criteria, inspectable facts, assumptions, decisions, rejected options, domain/module/interface impact, QA and verification expectations, and safe next work. Discovery Briefs, Question Queues, Assumption Registers, first implementation candidates or work splits, and First Safe Change Unit Candidates can feed Shared Design. Shared Design can support shaping and `design_gate` readiness, but it is not final approval, sensitive-action Approval, Acceptance, residual-risk acceptance, QA judgment, evidence, close readiness, or Write Authorization. Markdown renderings of Shared Design are projections and proposal surfaces. Exact policy requirements are owned by [Design Quality Policies](design-quality-policies.md#shared-design-shared_design).
 
 ### Source-of-truth
 

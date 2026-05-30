@@ -47,7 +47,7 @@ Use progressive context loading instead of reading the whole documentation set i
 | Phase | Push now | Pull only if needed |
 |---|---|---|
 | Intake | Current status or Journey Card, likely mode, four display groups, next safe action, primary blocker. | Task history, user guide, or Reference docs needed to classify the request. |
-| Discovery | Discovery Brief summary, blocking questions, assumptions, first safe Change Unit candidate, current source refs. | Repo docs, module/interface/domain refs, older PRDs/designs, or decision guidance needed to shape scope. |
+| Discovery | Clarification summary, blocking questions grouped by decision area, inspectable facts, assumptions, user-owned judgment candidates, QA/verification expectations, current source refs, and first implementation candidate or work split. | Repo docs, module/interface/domain refs, older PRDs/designs, or decision guidance needed to separate inspectable facts from user decisions and scope safe next work. |
 | Write | Active Change Unit, Autonomy Boundary, intended paths/tools/commands summary, Approval status, active Decision Packets, Write Authority Summary. | Exact `prepare_write`, Kernel, security, approval, or policy references needed for the intended write. |
 | Evidence | Run summary, Evidence Manifest ref, artifact refs, evidence gaps, next evidence action. | Logs, diffs, screenshots, traces, or artifact/evidence contract details needed to interpret or repair support. |
 | Verification | Acceptance criteria, changed files, evidence refs, artifact refs, relevant decisions, residual-risk summary, Manual QA requirement, independence/freshness notes. | Full evaluator bundle material, source files, logs, Eval/Manual QA contract details, or verification guidance. |
@@ -181,34 +181,54 @@ Prefer the plain phrase first and the exact Harness term in parentheses only whe
 
 Intake turns an everyday request into a usable task shape without forcing the user to speak Harness. The user may say "add email login and keep reset out of scope"; the agent should translate that into mode, scope, possible decisions, evidence needs, write checks, and close-readiness handling.
 
-Discovery is the conditional intake posture for clarifying requirements before implementation planning and before write authority. Use it when clarification is needed because the request is ambiguous, feature-shaped, auth/security-sensitive, UX/copy/workflow-heavy, public-interface or module-boundary-facing, likely to touch policy, or likely to become `work`; do not add it as ceremony for obvious direct work. It is not approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, scope authority, or a new authority path.
+Discovery is the agent's conditional requirements-clarification behavior before implementation planning and before write authority. It is not primarily a user command. Users can trigger the same behavior with plain language such as "clarify the plan before implementation" or "ask what you need before changing code." Use it when clarification is needed because the request is ambiguous, feature-shaped, auth/security-sensitive, UX/copy/workflow-heavy, public-interface or module-boundary-facing, likely to touch policy, or likely to become `work`; do not add it as ceremony for obvious direct work. It is not approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, acceptance, residual-risk acceptance, close, scope authority, or a new authority path.
 
 Listen for the same task-shape triggers used at session start: product writes, scope drift risk, ambiguous requirements, multi-file or structural work, sensitive or policy-relevant areas, user-owned judgment, and evidence, verification, Manual QA, acceptance, or residual-risk needs. When one appears, translate the ordinary request into a proposed mode, scope, out-of-bounds area, and next safe action.
 
 The intake route is:
 
 ```text
-Request -> classify task shape -> use Discovery when clarification is needed -> produce Discovery Brief -> route user-owned decisions -> propose First Safe Change Unit Candidate -> prepare_write path when product writes are intended
+Request -> classify task shape -> clarify requirements when needed -> produce Discovery Brief or equivalent support -> route user-owned decisions -> propose safe next work, a first implementation candidate, or a work split -> prepare_write path when product writes are intended
 ```
 
 Treat Discovery outputs as support or projection concepts that feed existing owner paths unless an owner reference already records the underlying fact:
 
-- Discovery Brief: compact summary of goal, user value, non-goals, acceptance criteria, open assumptions, separated product/technical/security/QA/operational/scope judgments, and the first safe Change Unit candidate.
+- Discovery Brief: compact summary of goal, user value, scope, non-goals, acceptance criteria, facts the agent can inspect from repo/docs/Harness state, judgments only the user can make, product/UX judgment candidates, technical architecture judgment candidates, security/privacy judgment candidates, QA and verification expectations, open assumptions, and a first implementation candidate or work split.
 - Question Queue: ordered questions classified as blocking, useful-but-not-blocking, or codebase-answerable.
 - Assumption Register: assumptions the agent is using, with source, confidence, owner, and what would change if the assumption fails.
-- First Safe Change Unit Candidate: the smallest implementation slice that can be proposed without hiding unresolved user-owned judgment.
+- First Safe Change Unit Candidate: the internal Change Unit-shaped version of the first implementation candidate when product writes are near. It is an advanced/support concept, not the only Discovery output or primary stop condition.
+
+Plain phrases such as "first implementation candidate" and "work split" are proposal/support phrases, not standalone schema fields, canonical record types, gate values, projection kinds, or authority paths.
 
 Route Discovery results into Shared Design, Decision Packet candidates, and Change Unit shaping. Do not treat a Discovery Brief, Question Queue, Assumption Register, or First Safe Change Unit Candidate as scope authority, sensitive-action Approval, Acceptance, residual-risk acceptance, evidence, close readiness, or Write Authorization.
 
-Outside Discovery, ask only questions that change the next safe action. During Discovery, ask targeted questions only when they clarify the first safe Change Unit, expose user-owned judgment, or prevent hidden assumptions. Park useful-but-not-blocking questions instead of interrupting the user. Prefer one blocking question with a recommendation instead of a long form.
+Outside Discovery, ask only questions that change the next safe action. During Discovery, ask targeted questions when they clarify goals, user value, scope, non-goals, acceptance criteria, product/UX behavior, technical architecture, security/privacy posture, QA or verification expectations, first implementation candidates, work splits, user-owned judgment, or hidden assumptions. Group questions by decision area instead of dumping a long questionnaire, and make uncertainty explicit. Park useful-but-not-blocking questions instead of interrupting the user. Prefer the most blocking decision area with a recommendation over a long form.
 
 Before asking, inspect repo, codebase, docs, and Harness state that are available and current for answers the agent can discover safely. Do not ask the user to restate existing file paths, behavior, terminology, or constraints that are already visible from current context. If a source is unavailable or stale, say so rather than relying on it as authority.
 
-One blocking question at a time does not mean one clarification round total. Broad or design-heavy requests may need several short turns until the goal, scope, non-goals, acceptance criteria, affected product areas, user-facing screens or flows, modules, interfaces, sensitive categories, user-owned product or material technical trade-offs, verification or Manual QA expectations, and known product, implementation, verification, QA, or follow-up risks are shaped enough to propose the first safe Change Unit. Discovery may ask multiple targeted questions. It can pause once the agent has separated what it can inspect from what the user must decide and can propose a safe next step or smaller scope.
+One blocking question at a time does not mean one clarification round total. Broad or design-heavy requests may need several short turns until the goal, user value, scope, non-goals, acceptance criteria, affected product areas, user-facing screens or flows, modules, interfaces, sensitive categories, user-owned product or material technical trade-offs, security/privacy choices, verification or Manual QA expectations, and known product, implementation, verification, QA, or follow-up risks are shaped enough to propose safe next work. Discovery may ask multiple targeted questions. It can pause once the agent has separated what it can inspect from what the user must decide and has enough scoped information to propose safe next work, a smaller scope, or a work split.
 
 Classify each open question before asking it. Blocking questions need user judgment before the next safe action. Useful-but-not-blocking questions can be parked in the Discovery Brief, Assumption Register, follow-up work, or later Decision Packet candidate. Codebase-answerable questions should be answered by inspecting current repo, docs, Harness state, or source refs instead of asking the user.
 
 Each user-owned question should name the exact choice, offer realistic options, include the agent's recommendation, state uncertainty, identify affected gates or acceptance criteria when they matter, point to source refs and evidence, risk, or design refs when available or relevant, and say what can continue if the decision is deferred, or why nothing should continue until the decision is made. Record assumptions the agent makes separately from product, technical, security, QA, operational, scope, approval, acceptance, or residual-risk acceptance that belongs to the user.
+
+Examples:
+
+```text
+Product / UX decision area: failed-login behavior.
+Options: inline message, toast, or modal.
+Recommendation: inline message near the form, pending inspection of existing form patterns.
+Uncertainty: existing accessibility patterns may make another option cheaper.
+Can inspect first: current login UI and validation components.
+```
+
+```text
+Technical architecture decision area: authentication architecture.
+Options: local email/password sessions, magic-link email, or OAuth/OIDC.
+Recommendation: inspect the current user/session model before choosing.
+Uncertainty: storage and session support may make one option much safer than the others.
+Can continue if deferred: read-only inspection and a scoped proposal; not implementation.
+```
 
 Good intake:
 
@@ -263,7 +283,7 @@ Before product writes, shape the active scope into a Change Unit. The user-facin
 - known sensitive areas
 - when the agent must stop and ask
 
-Enough is known to propose the First Safe Change Unit Candidate when the agent can state those items without hiding unresolved user judgment. If that cannot be done yet, continue Discovery with the next blocking question, park useful-but-not-blocking questions, answer codebase-answerable questions from current sources, or propose a smaller Change Unit candidate that avoids the unresolved area.
+Enough is known to propose safe next work when the agent can state those items without hiding unresolved user judgment and can separate inspectable facts from user-owned decisions. If that cannot be done yet, continue Discovery with the next grouped blocking question, park useful-but-not-blocking questions, answer codebase-answerable questions from current sources, or propose a smaller implementation candidate or work split that avoids the unresolved area. A First Safe Change Unit Candidate may be the internal expression of that proposal when product writes are near, but it is not the only or primary Discovery stop condition.
 
 Autonomy Boundary is not write authority. It only describes what judgment the agent may exercise without asking again. Change Unit scope answers where and what the work may change; Autonomy Boundary answers which choices the agent may make inside that scope. Actual product writes still require a compatible write check.
 
@@ -294,7 +314,7 @@ Examples:
 - Public API change decision: resolving the API direction decides the contract choice for the Task; it is not deployment authority, merge authority, or a reusable Write Authorization.
 - Result acceptance (Acceptance): accepting the result does not authorize more writes, approve new sensitive actions, or retroactively satisfy missing evidence, QA, verification, or Write Authorization.
 
-Use Shared Design to record the shared understanding from Discovery: goal, user value, scope, non-goals, assumptions, domain/module/interface impact, separated user-owned judgments, and first Change Unit shape. Do not present Shared Design as sensitive-action Approval, Acceptance, residual-risk acceptance, evidence, close readiness, or Write Authorization. If Shared Design exposes a public API/interface choice, domain-language conflict, module boundary move, architecture direction, security/privacy trade-off, QA/verification waiver, scope expansion, or known-risk waiver that the user owns, route that choice to a Decision Packet.
+Use Shared Design to record the shared understanding from Discovery: goal, user value, scope, non-goals, assumptions, domain/module/interface impact, separated user-owned judgments, QA/verification expectations, and safe next work. Do not present Shared Design as sensitive-action Approval, Acceptance, residual-risk acceptance, evidence, close readiness, or Write Authorization. If Shared Design exposes a public API/interface choice, domain-language conflict, module boundary move, architecture direction, security/privacy trade-off, QA/verification waiver, scope expansion, or known-risk waiver that the user owns, route that choice to a Decision Packet.
 
 Inside the Autonomy Boundary, the agent may decide ordinary implementation details: whether to reuse an existing helper, how to split a private function, where to place focused tests, or which conservative internal approach best fits the agreed result. The agent must stop for user judgment before public API or module contract changes, security or privacy trade-offs, UX or product trade-offs, material technical direction such as dependency or migration choices, scope expansion, or residual-risk acceptance.
 
