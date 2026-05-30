@@ -103,6 +103,16 @@ Storage validation is a separate ownership boundary. Public API payloads and API
 6. Record evidence/eval/QA/acceptance when applicable through the matching public tool or Decision Packet path.
 7. Close when blockers clear with `harness.close_task`.
 
+### Stage requirement boundary
+
+Fields marked required in a request or response schema are required when that tool, record, or profile is implemented and used. They are not all v0.1 Core Authority Slice exit criteria.
+
+For v0.1, the runnable API surface is the narrow authority loop: state envelope and idempotency, Task refs, one basic scope represented by the Change Unit owner shape where the reference contract requires it, `harness.prepare_write`, single-use Write Authorization summary/ref, compatible `harness.record_run`, one committed `ArtifactRef` or evidence relation, read-only `harness.status` / `harness.next`, and structured blockers. `decision_kind` and `judgment_domain` are required whenever Core creates a Decision Packet, including a seeded v0.1 judgment blocker, but full user-facing Decision Packet quality and optional `decision_requests` rows are later than the smallest slice.
+
+For v0.2, user-facing MVP surfaces must expose `judgment_domain` consistently for display/grouping while keeping `decision_kind` as the lifecycle and gate route. v0.2 also needs acceptance and residual-risk visibility fields sufficient for a user to understand close readiness. Detached verification independence, the full Manual QA policy matrix, stewardship validators, export/recover, release handoff, and optional projection kinds are later profiles unless an owner doc explicitly promotes a subset.
+
+Tool-section lines that say "Projection jobs enqueued" describe committed, non-dry-run behavior when projection support for that kind is in scope. Dry runs, pre-commit state conflicts, and rejected pre-commit requests do not enqueue projection jobs. v0.1 may preserve freshness/read facts without proving full Markdown rendering; projections remain derived views, not authority.
+
 In user terms:
 
 - `harness.status` answers "where are we, what matters now, and is the display current?"
@@ -554,6 +564,7 @@ DecisionPacket:
   user_context: DecisionPacketUserContext
   approval_scope: ApprovalScope | null
   reconcile_item_id: string | null
+  expires_at: string | null
   created_at: string
   resolved_at: string | null
 
@@ -994,7 +1005,7 @@ Stable EventRef values that may be returned: `task_superseded` when an existing 
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `task_intake_recorded`, `task_created`, `task_resumed`, `change_unit_created`.
 
-Projection jobs enqueued: `TASK`; optionally `DOMAIN-LANGUAGE`, `MODULE-MAP`, or `INTERFACE-CONTRACT` if intake accepted design support records.
+Projection jobs enqueued: for a committed non-dry-run intake that changes source records, `TASK` when Task projection support is in scope; optionally `DOMAIN-LANGUAGE`, `MODULE-MAP`, or `INTERFACE-CONTRACT` if intake accepted design support records and those projection kinds are in scope. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs.
 
 ValidatorResults emitted: `surface_capability_check`.
 
@@ -1167,7 +1178,7 @@ State transition summary: may move Task to `executing`, `waiting_user`, or `bloc
 
 Stable EventRef values that may be returned: `prepare_write_allowed`, `write_authorization_created`, `write_authorization_returned`, `prepare_write_blocked`, `scope_required`, `decision_required`, `autonomy_boundary_exceeded`, `approval_required`, `baseline_stale_detected`, `capability_insufficient_detected`.
 
-Projection jobs enqueued: `TASK`. `prepare_write` must not enqueue `APR` merely because it returned `decision=approval_required` or an `approval_request_candidate`; `APR` is reserved for the committed Approval record and approval-shaped Decision Packet lifecycle.
+Projection jobs enqueued: for a committed non-dry-run state change that affects Task display or blockers, `TASK` when Task projection support is in scope. `prepare_write` must not enqueue `APR` merely because it returned `decision=approval_required` or an `approval_request_candidate`; `APR` is reserved for the committed Approval record and approval-shaped Decision Packet lifecycle. Dry-run, state-conflict, and pure pre-commit rejection paths enqueue no projection jobs; idempotent replay returns the original job refs instead of enqueueing new work.
 
 ValidatorResults emitted: `autonomy_boundary_check`, `decision_gate_check`, `decision_quality_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
 
@@ -1184,11 +1195,11 @@ Idempotency behavior: repeated allowed/blocked decision with same payload return
 Sensitive-action Approval follows this recipe:
 
 1. `harness.prepare_write` detects sensitive categories for the intended product write.
-2. If no compatible granted sensitive-action Approval covers the scope, baseline, sensitive categories, paths, tools, commands, network targets, secret access, and capability requirements, `prepare_write` returns `decision=approval_required`, includes an `approval_request_candidate`, sets both Write Authorization fields to `null`, uses `authorization_effect=none`, and may update Task blockers plus enqueue `TASK`. It must not create an Approval record, Decision Packet, Write Authorization, or `APR` projection job for this non-mutating candidate.
+2. If no compatible granted sensitive-action Approval covers the scope, baseline, sensitive categories, paths, tools, commands, network targets, secret access, and capability requirements, `prepare_write` returns `decision=approval_required`, includes an `approval_request_candidate`, sets both Write Authorization fields to `null`, uses `authorization_effect=none`, and may update Task blockers. It enqueues `TASK` only for a committed non-dry-run state change that affects Task display or blockers and when Task projection support is in scope. It must not create an Approval record, Decision Packet, Write Authorization, or `APR` projection job for this non-mutating candidate.
 3. The caller invokes `harness.request_user_decision` with `decision_kind=approval` and an `approval_scope` derived from the candidate and current intended write.
-4. Core creates a canonical Decision Packet for the approval-shaped user judgment and a pending Approval record. The response includes both `decision_packet_ref` and `approval_id`, and this committed approval request enqueues `APR`.
+4. Core creates a canonical Decision Packet for the approval-shaped user judgment and a pending Approval record. The response includes both `decision_packet_ref` and `approval_id`, and this committed approval request enqueues `APR` when APR projection support is in scope.
 5. The user or operator invokes `harness.record_user_decision` for that Decision Packet.
-6. Core records the Decision Packet resolution, updates the linked Approval record, recomputes `approval_gate` as granted, denied, or expired, and enqueues `APR` again for the updated approval decision.
+6. Core records the Decision Packet resolution, updates the linked Approval record, recomputes `approval_gate` as granted, denied, or expired, and enqueues `APR` again for the updated approval decision when APR projection support is in scope.
 7. If Approval was granted, the caller retries `harness.prepare_write` with a fresh idempotency key and the current `expected_state_version`.
 8. Only that retry may create a Write Authorization. It succeeds only if the granted sensitive-action Approval's scope, baseline, sensitive categories, paths, tools, commands, network targets, secret scope, Decision Packet refs, Approval refs, and capability checks remain compatible with the current intended write.
 
@@ -1364,7 +1375,7 @@ Non-stable EventRef values that may be returned for implementation-local detail/
 
 Violation or audit Runs may emit `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, or `scope_violation_detected` for audit and recovery. Those Runs cannot satisfy evidence sufficiency, detached verification, QA, acceptance, or close readiness. Pre-commit rejection responses return no stable EventRef values from `record_run`.
 
-Projection jobs enqueued for committed Run responses: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `DIRECT-RESULT` for `kind=direct`; `TDD-TRACE` when updated. Pre-commit rejection responses enqueue no projection jobs.
+Projection jobs enqueued for committed non-dry-run Run responses when the relevant projection support is in scope: `TASK`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`; `DIRECT-RESULT` for `kind=direct`; `TDD-TRACE` when updated. Dry-run and pre-commit rejection responses enqueue no projection jobs.
 
 ValidatorResults emitted: `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
 
@@ -1410,7 +1421,7 @@ RequestUserDecisionRequest:
   reconcile_item_id: string | null
 ```
 
-Core stores a canonical `DecisionPacket`. Minimal v0.1 Core Authority Slice implementations may omit `decision_requests`; public request and response schemas remain centered on Decision Packet, not Decision Request. If the implementation also creates or updates `decision_requests`, those rows are routing, interaction, idempotency replay, or compatibility handoff metadata only, and they must link back to the canonical `decision_packet_id` before gate aggregation can consider their metadata. A `decision_request` row alone never satisfies `decision_gate`, sensitive-action Approval, acceptance, waiver, residual-risk acceptance, or close. If `state_summary_at_request` is `null`, Core derives it from current state during the same transaction. The stored `state_summary_at_request` is a request-time snapshot and is not updated by later Task transitions. `approval_scope` is required when `decision_kind=approval`; for all other `decision_kind` values it must be `null` or omitted. `decision_kind=approval` is only the approval-shaped context for sensitive-action Approval and cannot resolve user-owned judgment such as product trade-offs, design direction, architecture or material technical direction, unresolved security or product-security judgment, QA waiver, verification waiver, verification risk, final acceptance, or residual-risk acceptance without separate compatible Decision Packets and gate updates. For `decision_kind=approval`, Core also creates a linked pending Approval record using the approval scope; the Approval is not granted until `harness.record_user_decision` resolves the Decision Packet. `judgment_domain` is required for every user-facing decision request and stored Decision Packet; it is the user-visible judgment grouping, not the lifecycle route. A `residual_risk_acceptance` packet must include the risk visibility context in `user_context.minimum_context` and relevant risk refs in `context.source_refs`. A broad natural-language answer such as "go ahead," "proceed," or "looks good" is not a schema branch; the request must still name the `decision_kind`, `judgment_domain`, option, affected gates, and user context that determine what Core is asking the user to decide.
+Core stores a canonical `DecisionPacket`. Minimal v0.1 Core Authority Slice implementations may omit `decision_requests`; public request and response schemas remain centered on Decision Packet, not Decision Request. If the implementation also creates or updates `decision_requests`, those rows are routing, interaction, idempotency replay, or compatibility handoff metadata only, and they must link back to the canonical `decision_packet_id` before gate aggregation can consider their metadata. A `decision_request` row alone never satisfies `decision_gate`, sensitive-action Approval, acceptance, waiver, residual-risk acceptance, or close. `expires_at` is copied into canonical Decision Packet state when present; optional `decision_requests.expires_at` is routing metadata only and must not replace the packet's expiry. If `state_summary_at_request` is `null`, Core derives it from current state during the same transaction. The stored `state_summary_at_request` is a request-time snapshot and is not updated by later Task transitions. `approval_scope` is required when `decision_kind=approval`; for all other `decision_kind` values it must be `null` or omitted. `decision_kind=approval` is only the approval-shaped context for sensitive-action Approval and cannot resolve user-owned judgment such as product trade-offs, design direction, architecture or material technical direction, unresolved security or product-security judgment, QA waiver, verification waiver, verification risk, final acceptance, or residual-risk acceptance without separate compatible Decision Packets and gate updates. For `decision_kind=approval`, Core also creates a linked pending Approval record using the approval scope; the Approval is not granted until `harness.record_user_decision` resolves the Decision Packet. `judgment_domain` is required for every user-facing decision request and stored Decision Packet; it is the user-visible judgment grouping, not the lifecycle route. A `residual_risk_acceptance` packet must include the risk visibility context in `user_context.minimum_context` and relevant risk refs in `context.source_refs`. A broad natural-language answer such as "go ahead," "proceed," or "looks good" is not a schema branch; the request must still name the `decision_kind`, `judgment_domain`, option, affected gates, and user context that determine what Core is asking the user to decide.
 
 The user-visible prompt derived from this request should be decision-centered: ask the user to choose, defer, reject, waive, accept, or reconcile the named option, and say what that answer will and will not settle. It should not ask for generic approval unless `decision_kind=approval` and `approval_scope` describe the sensitive action being approved. Every user-facing decision request must include the exact thing the user is deciding, `judgment_domain`, `decision_kind`, options, pros/cons or benefits/costs/risks, recommendation when the agent can justify one, uncertainty, what happens if the decision is deferred, affected gates or blocked actions, and related state or artifact refs. If an ordinary answer could map to multiple pending decisions, the surface must clarify instead of recording it against all of them. Surfaces may render friendly labels such as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed from the enum value, but the stored schema value is the snake-case enum above.
 
@@ -1434,7 +1445,7 @@ State transition summary: records a pending Decision Packet and usually moves Ta
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `decision_packet_created`, `user_decision_requested`, `approval_requested`, `scope_confirmation_requested`, `design_choice_requested`, `architecture_choice_requested`, `autonomy_boundary_decision_requested`, `verification_waiver_requested`, `qa_waiver_requested`, `acceptance_requested`, `residual_risk_acceptance_requested`, `reconcile_decision_requested`.
 
-Projection jobs enqueued: `TASK`; `DEC` when standalone Decision Packet projection is enabled; `APR` only for `decision_kind=approval` after Core creates the canonical approval-shaped Decision Packet and linked pending Approval record; affected projection for reconcile.
+Projection jobs enqueued: for a committed non-dry-run Decision Packet creation that changes source records, `TASK` when Task projection support is in scope; `DEC` when standalone Decision Packet projection is enabled; `APR` only for `decision_kind=approval` after Core creates the canonical approval-shaped Decision Packet and linked pending Approval record and APR projection support is in scope; affected reconcile projection only when reconcile/projection support is in scope. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs.
 
 ValidatorResults emitted: `decision_quality_check`, `autonomy_boundary_check` when the packet affects the active Change Unit boundary, `residual_risk_visibility_check` for risk-acceptance decisions.
 
@@ -1520,7 +1531,7 @@ State transition summary: resolves, defers, rejects, or blocks the targeted Deci
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `user_decision_recorded`, `decision_packet_resolved`, `decision_packet_deferred`, `decision_packet_rejected`, `approval_granted`, `approval_denied`, `scope_confirmed`, `scope_rejected`, `design_choice_recorded`, `architecture_choice_recorded`, `autonomy_boundary_decision_recorded`, `verification_waiver_recorded`, `qa_waiver_recorded`, `acceptance_recorded`, `residual_risk_accepted`, `reconcile_resolved`.
 
-Projection jobs enqueued: `TASK`; `DEC` when standalone Decision Packet projection is enabled; `APR` when the targeted Decision Packet is approval-shaped and the linked Approval record is updated; `MANUAL-QA` for QA waiver when represented as a QA record; affected design/task projections for reconcile. Decision Packet visibility still appears through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
+Projection jobs enqueued: for a committed non-dry-run user-decision record that changes source records, `TASK` when Task projection support is in scope; `DEC` when standalone Decision Packet projection is enabled; `APR` when the targeted Decision Packet is approval-shaped, the linked Approval record is updated, and APR projection support is in scope; `MANUAL-QA` for QA waiver when represented as a QA record and Manual QA projection support is in scope; affected design/task projections for reconcile only when reconcile/projection support is in scope. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs. Decision Packet visibility still appears through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
 
 ValidatorResults emitted: `decision_quality_check`, `autonomy_boundary_check`, `residual_risk_visibility_check`.
 
@@ -1577,7 +1588,7 @@ The launch creates a detached candidate, not detached assurance. If the source s
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `verification_launched`, `verification_bundle_created`, `evaluator_run_created`.
 
-Projection jobs enqueued: `TASK`; optionally `EVIDENCE-MANIFEST`.
+Projection jobs enqueued: for a committed non-dry-run verification launch that changes source records, `TASK` when Task projection support is in scope; optionally `EVIDENCE-MANIFEST` when evidence-manifest projection support is in scope. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs.
 
 ValidatorResults emitted: `surface_capability_check`.
 
@@ -1656,7 +1667,7 @@ Stable EventRef values that may be returned: `eval_recorded`, `verification_pass
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `verification_failed`, `verification_blocked`, `assurance_updated`.
 
-Projection jobs enqueued: `TASK`, `EVAL`; optionally `EVIDENCE-MANIFEST`.
+Projection jobs enqueued: for a committed non-dry-run Eval record that changes source records, `TASK` and `EVAL` when those projection kinds are in scope; optionally `EVIDENCE-MANIFEST` when evidence-manifest projection support is in scope. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs.
 
 ValidatorResults emitted: `surface_capability_check`.
 
@@ -1720,7 +1731,7 @@ State transition summary: records Manual QA; `passed` can set `qa_gate=passed`; 
 
 Non-stable EventRef values that may be returned for implementation-local detail/audit: `manual_qa_recorded`, `qa_passed`, `qa_failed`, `qa_waived`, `artifact_registered`, `feedback_loop_updated`.
 
-Projection jobs enqueued: `TASK`, `MANUAL-QA`; `DEC` when standalone Decision Packet projection is enabled and a waiver Decision Packet affects visibility; optionally `EVIDENCE-MANIFEST`. Waiver Decision Packet visibility still appears through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
+Projection jobs enqueued: for a committed non-dry-run Manual QA record that changes source records, `TASK` and `MANUAL-QA` when those projection kinds are in scope; `DEC` when standalone Decision Packet projection is enabled and a waiver Decision Packet affects visibility; optionally `EVIDENCE-MANIFEST` when evidence-manifest projection support is in scope. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs. Waiver Decision Packet visibility still appears through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources.
 
 ValidatorResults emitted: `manual_qa_required`, `decision_quality_check`, `residual_risk_visibility_check`.
 
@@ -1778,7 +1789,7 @@ State transition summary: successful completion moves Task to `completed` with r
 
 Stable EventRef values that may be returned: `close_requested`, `task_closed`, `task_cancelled`, `task_superseded`, `risk_accepted_close_recorded`, `close_blocked`.
 
-Projection jobs enqueued: `TASK`; latest required reports as needed for final freshness.
+Projection jobs enqueued: for a committed non-dry-run successful close or close-blocker state change, `TASK` when Task projection support is in scope; latest required reports as needed for final freshness only when the active projection profile includes those reports. Dry-run, pre-commit state-conflict, and rejected pre-commit requests enqueue no projection jobs. Projection freshness can block a final report/export freshness requirement, but projection text never replaces Core close state or structured close blockers.
 
 ValidatorResults emitted: `decision_gate_check`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, `manual_qa_required`, `residual_risk_visibility_check`, `context_hygiene_check` when projection or context hygiene must be emitted as a ValidatorResult.
 

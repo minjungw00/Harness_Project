@@ -21,7 +21,7 @@
 
 Write-capable tracked work에서는 Harness가 Task, 필요한 Discovery 또는 decision, 첫 scope를 알게 된 뒤에야 요청이 안전한 product work가 됩니다. 제품 파일 쓰기는 그다음 `prepare_write`를 통과해야 하며, 이때 one-attempt Write Authorization이 만들어질 수 있습니다. Run은 그 권한을 consume하고, evidence와 artifact는 claim을 뒷받침하며, projection은 state를 사람이 읽을 수 있게 만들고, `close_task`는 structured blocker를 반환하거나 Task를 닫습니다.
 
-이 walkthrough는 전체 user-facing path를 보여 줍니다. 코어 권한 조각(v0.1 Core Authority Slice)은 그중 가장 작은 내부 부분만 구현합니다. 즉 project 하나, Task 하나, scope 하나, write authority path 하나, recorded Run 하나, evidence link 하나, structured blocker/status response 하나입니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 경험하는 ordinary-language clarification, judgment separation, procedural budget, residual-risk display, acceptance boundary를 추가합니다.
+이 walkthrough는 전체 user-facing path를 보여 줍니다. 코어 권한 조각(v0.1 Core Authority Slice)은 그중 가장 작은 내부 부분만 구현합니다. 즉 project 하나, Task 하나, Reference contract상 필요한 경우 Change Unit owner shape로 표현되는 기본 scope 하나, write authority path 하나, recorded Run 하나, evidence link 하나, structured blocker/status response 하나입니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 경험하는 ordinary-language clarification, judgment separation, procedural budget, residual-risk display, acceptance boundary를 추가합니다.
 
 ## 한눈에 보는 walkthrough
 

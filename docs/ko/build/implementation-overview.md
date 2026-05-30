@@ -38,7 +38,7 @@ Learn 경로에서 하네스의 기본 개념을 먼저 이해해 두는 것이 
 
 첫 권한 루프는 좁게 유지합니다. `prepare_write`는 제품 파일 쓰기에 대한 유일한 권한 판단 지점이고, 반환된 쓰기 허가 기록은 durable하고 single-use이며, `record_run`은 관찰된 변경과 artifact를 기록하면서 하나의 compatible direct Run 또는 implementation Run에 대해 이를 consume하고, `close_task`는 유일한 완료 판단 지점입니다. 정확한 상태 로직은 [커널 참조](../reference/kernel.md#prepare_write)에, public request/response detail은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#public-tools)에 둡니다.
 
-기준 상태, `task_events`, scope 하나, Write Authorization path 하나, recorded Run 하나, artifact/evidence link 하나, Core tool 동작, 그리고 그 경로를 실행해 볼 최소 reference surface와 MCP reachability에서 시작합니다. 초기 구현 가정은 분산 platform이 아니라 모듈을 가진 로컬 프로세스 하나입니다. Projection template 다듬기, dashboard 또는 hosted workflow UI, index, 넓은 connector ecosystem 또는 marketplace, team workflow, 접점별 connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, broad automation은 그 권한 루프가 존재한 뒤 그것을 읽거나 감싸는 권한 없는 요소로 다룹니다.
+기준 상태, `task_events`, Reference contract상 필요한 경우 Change Unit owner shape로 표현되는 기본 scope 하나, Write Authorization path 하나, recorded Run 하나, artifact/evidence link 하나, Core tool 동작, 그리고 그 경로를 실행해 볼 최소 reference surface와 MCP reachability에서 시작합니다. 초기 구현 가정은 분산 platform이 아니라 모듈을 가진 로컬 프로세스 하나입니다. Projection template 다듬기, dashboard 또는 hosted workflow UI, index, 넓은 connector ecosystem 또는 marketplace, team workflow, 접점별 connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, broad automation은 그 권한 루프가 존재한 뒤 그것을 읽거나 감싸는 권한 없는 요소로 다룹니다.
 
 구현 계획이 사용자 대상 MVP, 강화된 로컬 기준 behavior 전체, projection template 다듬기, dashboard 또는 hosted workflow UI, Context Index, connector marketplace, hook expansion, metrics, parallel orchestration, broad automation lane에서 시작한다면 첫 runnable slice보다 큰 곳에서 시작하는 것입니다.
 
@@ -63,7 +63,7 @@ Build 독자는 이 표를 진입 gate로 보아야 합니다. maintainer handof
 
 첫 구현 계획은 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 강화된 로컬 기준 behavior, roadmap automation이 아니라 코어 권한 조각(v0.1 Core Authority Slice) 계획부터 시작한다는 뜻입니다. 아래 조건이 모두 참일 때만 시작할 수 있습니다.
 
-- 최종 docs-maintenance drift pass가 완료되었거나, 남은 알려진 gap이 관련 owner 문서에 `TODO_DECISION` 또는 `TODO_IMPLEMENT`로 기록되어 있다. Docs-maintenance는 읽기 전용 문서 점검으로 남습니다. [문서 작성 가이드](../maintain/authoring-guide.md#docs-maintenance-checks)와 [운영과 Conformance 참조](../reference/operations-and-conformance.md#docs-maintenance-프로필)를 봅니다.
+- 최종 docs-maintenance drift pass가 완료되었거나, 남은 구현 결정이 [MVP 계획: 서버 코딩 전 필요한 구현 결정](mvp-plan.md#서버-코딩-전-필요한-구현-결정)에 기록되어 있다. Docs-maintenance는 읽기 전용 문서 점검으로 남습니다. [문서 작성 가이드](../maintain/authoring-guide.md#docs-maintenance-checks)와 [운영과 Conformance 참조](../reference/operations-and-conformance.md#docs-maintenance-프로필)를 봅니다.
 - 코어 권한 조각(v0.1 Core Authority Slice)의 local-only MCP 노출 baseline이 승인되어 있다. Remote, shared, tunneled, non-loopback 노출은 owner 문서가 connector profile을 승격하고 증명하기 전까지 v0.1 baseline 밖입니다. [런타임 아키텍처](../reference/runtime-architecture.md#로컬-접근-기대사항), [보안 위협 모델 참조](../reference/security-threat-model.md#mcp-local-access와-caller-boundary), [MCP API와 스키마](../reference/mcp-api-and-schemas.md#mcp-경계와-호출자-신뢰)를 봅니다.
 - Reference surface capability profile이 실제 사용하는 host/profile/configuration에 대한 구체적인 declaration으로 승인되어 있다. Version, MCP config, hook, permission, workspace policy, generated file, conformance result, capture method, QA capture method, redaction policy, artifact retention behavior가 바뀌면 refresh되어야 합니다. 정확한 connector profile과 surface recipe detail은 [Agent 통합 참조](../reference/agent-integration.md#capability-profiles)와 [Surface Cookbook](../reference/surface-cookbook.md)에 둡니다.
 - Core-only mutation model이 승인되어 있다. 기준 운영 상태를 변경하는 것은 Core뿐이며, resource, projection, report, diagnostic, MCP caller, operator entrypoint는 Core의 상태 변경 경로에 들어가지 않는 한 read-only 또는 derived로 남습니다. [Core process model](../reference/runtime-architecture.md#core-process-model), [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow), MCP [Idempotency](../reference/mcp-api-and-schemas.md#idempotency)와 [State Conflict 동작](../reference/mcp-api-and-schemas.md#state-conflict-동작)을 봅니다.
@@ -77,7 +77,7 @@ Build 독자는 이 표를 진입 gate로 보아야 합니다. maintainer handof
 
 | 경계 | 증명하는 것 | 사용자 또는 운영자가 관찰할 수 있는 것 |
 |---|---|---|
-| 코어 권한 조각(v0.1 Core Authority Slice) | 하나의 로컬 Task가 첫 Core 권한 루프를 통과할 수 있음을 증명합니다. 여기에는 project registration, Task, scope 하나, `prepare_write`, single-use 쓰기 허가 기록, `record_run`, artifact/evidence link 하나, status/next, structured blocker/status response가 포함됩니다. | Status와 next가 current Task, scope, write authority, evidence state, blocker, safe next action을 보여 줍니다. `prepare_write`가 범위 밖 쓰기 권한을 거절하고, compatible scoped work는 권한을 받아 한 번만 사용되며, evidence 또는 required seeded judgment가 없으면 close/status가 structured blocker와 함께 거절합니다. |
+| 코어 권한 조각(v0.1 Core Authority Slice) | 하나의 로컬 Task가 첫 Core 권한 루프를 통과할 수 있음을 증명합니다. 여기에는 project registration, Task, Reference contract상 필요한 경우 Change Unit owner shape로 표현되는 기본 scope 하나, `prepare_write`, single-use 쓰기 허가 기록, `record_run`, artifact/evidence link 하나, status/next, structured blocker/status response가 포함됩니다. | Status와 next가 current Task, scope, write authority, evidence state, blocker, safe next action을 보여 줍니다. `prepare_write`가 범위 밖 쓰기 권한을 거절하고, compatible scoped work는 권한을 받아 한 번만 사용되며, evidence 또는 required seeded judgment가 없으면 close/status가 structured blocker와 함께 거절합니다. |
 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 평범한 사용자 작업이 scope, user-owned judgment, evidence, close readiness, acceptance, residual-risk language로 정리됨을 증명합니다. | 사용자는 product/UX judgment와 architecture judgment가 분리되고, small change와 tracked work가 서로 다른 procedural budget을 쓰며, evidence 또는 judgment가 없으면 close가 block되고, residual risk가 표시되며, final acceptance가 Approval과 residual-risk acceptance와 구분되는 것을 볼 수 있습니다. |
 | 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack) | MVP path가 full Decision Packet quality, Approval separation, detached verification, Manual QA, residual-risk accepted close, stewardship, TDD, feedback-loop policy, context hygiene를 정직한 경계 안에서 처리함을 증명합니다. | Fixture가 같은 Core record와 error를 통해 work가 진행, verify, QA 요구, accept, risk accept, close될 수 있는지 보여 줍니다. |
 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Operator readiness, recover/export, artifact integrity, release handoff, broader fixture suite coverage, later-boundary checks가 강화된 로컬 기준 목표(hardened local reference target)를 완성합니다. | Operator 진입점이 두 번째 authority model을 만들지 않고 같은 Core state 위에서 diagnose, recover, export, artifact check, conformance run, release handoff 준비를 수행합니다. |
@@ -131,7 +131,7 @@ MCP server에 닿을 수 없으면 해당 call path에서 authoritative Core res
 - 상태와 active Task read
 - Task creation 또는 첫 조각을 위한 validated seed path
 - next-action guidance
-- selected write path를 위한 basic scope 하나
+- selected write path를 위한 기본 scope 하나
 - 제품 파일 쓰기에 대한 유일한 권한 판단 지점으로서의 `prepare_write`
 - 하나의 implementation 또는 direct 제품 파일 쓰기 Run을 위한 compatible 쓰기 허가 기록 하나의 `record_run` consumption
 - 필요한 tool flow를 통한 artifact 등록
@@ -201,7 +201,7 @@ v0.1은 내부 authority loop를 증명하는 단계입니다. Product MVP, temp
 
 - 등록된 프로젝트 하나와 기준 agent 접점 하나
 - current state와 `task_events`를 가진 Task 하나
-- intended change를 위한 basic scope 하나
+- intended change를 위한 기본 scope 하나
 - `prepare_write`가 compatible scope 없는 write authorization을 거절하고 compatible scoped write 하나를 허용함
 - 허용된 `prepare_write`가 durable single-use 쓰기 허가 기록을 만듦
 - `record_run`이 direct Run 또는 implementation Run에서 그 쓰기 허가 기록을 한 번 사용한 것으로 기록하고 observed changes를 기록함

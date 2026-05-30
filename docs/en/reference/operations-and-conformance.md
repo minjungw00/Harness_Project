@@ -135,7 +135,7 @@ Conformance can run incrementally, but staged execution must not change the fixt
 
 Build docs may provide doc-level acceptance checks for planning the first runnable slice and stage exits. Those checks help reviewers keep v0.1 Core Authority Slice narrow, but they are not fixture fields, suite metadata, public request schemas, storage rows, primary errors, or runner comparison modes. Runtime pass/fail still comes only from executable fixtures that use the exact body shape and assertion semantics in [Conformance Fixtures Reference](conformance-fixtures.md).
 
-v0.1 Core Authority Slice is the first runnable conformance target, with Kernel Smoke as the fixture authoring profile. It should prove project registration, Task state, one basic scope, `prepare_write` as the product-write authorization decision point, durable single-use Write Authorization creation, `record_run` authorization consumption, one `ArtifactRef` or evidence ref, minimal evidence support/insufficiency, status/next reads, writes or runs blocked when write authority is missing, consumed authorization reuse blocked, close/status blocked with structured blockers when evidence, scope, authorization, or seeded required judgment is missing, and basic Core fixture execution. Passing Kernel Smoke proves the first runnable kernel authority path; it does not claim User-Facing Harness MVP or hardened local reference target conformance.
+v0.1 Core Authority Slice is the first runnable conformance target, with Kernel Smoke as the fixture authoring profile. It should prove project registration, Task state, one basic scope represented by the Change Unit owner shape where the reference contract requires it, `prepare_write` as the product-write authorization decision point, durable single-use Write Authorization creation, `record_run` authorization consumption, one `ArtifactRef` or evidence ref, minimal evidence support/insufficiency, status/next reads, writes or runs blocked when write authority is missing, consumed authorization reuse blocked, close/status blocked with structured blockers when evidence, scope, authorization, or seeded required judgment is missing, and basic Core fixture execution. Passing Kernel Smoke proves the first runnable kernel authority path; it does not claim User-Facing Harness MVP or hardened local reference target conformance.
 
 The hardened local reference target is the later reference conformance target, reached through v0.2 User-Facing Harness MVP, v0.3 Assurance & Stewardship Pack, and v0.4 Operations & Handoff Pack. It must add ordinary-language routing, procedural-budget behavior, Decision Packet quality, sensitive-action Approval lifecycle separation, residual-risk visibility before acceptance and close, detached verification guards including same-session verification guard coverage, Manual QA policy coverage, stewardship and context-hygiene validators, full feedback-loop checks, TDD trace behavior where policy requires it, codebase stewardship coverage, projection/reconcile completeness, recover/export/artifact integrity behavior, release handoff report/export behavior where owner docs define it, connector guard/freeze honesty, later-boundary checks, and broader fixture coverage. Suite catalog metadata may group scenarios by suite, delivery stage, and tags for runner selection and reporting, but it is not passed to Core; executable fixtures still assert through Core state, events, artifacts, projections, and errors.
 
@@ -151,7 +151,7 @@ flowchart LR
   Evidence --> Agency["v0.3 Assurance & Stewardship Pack"]
   Agency --> Ops["v0.4 Operations & Handoff Pack<br/>hardened local reference target conformance"]
   Ops -. "roadmap boundary" .-> Expansion["v1+ Expansion<br/>roadmap candidates"]
-  Kernel --> K1["project, Task, one scope"]
+  Kernel --> K1["project, Task, one basic scope"]
   Kernel --> K2["prepare_write and Write Authorization"]
   Kernel --> K3["record_run and evidence link"]
   Kernel --> K4["status/next and structured blockers"]
@@ -174,7 +174,7 @@ Minimum report fields:
 - affected file path and heading or anchor when available
 - canonical owner doc and expected source section
 - observed documentation finding or drift
-- suggested fix class: update owner, replace duplicate with summary plus link, mirror translation, repair link, or add `TODO_DECISION` / `TODO_IMPLEMENT`
+- suggested fix class: update owner, replace duplicate with summary plus link, mirror translation, repair link, or add an entry to [Build: MVP Plan: Implementation decisions needed before server coding](../build/mvp-plan.md#implementation-decisions-needed-before-server-coding)
 - runtime effect: none; no canonical state transition was performed and no runtime fixture result was recorded
 
 Smoke categories should reference, not restate, the [Authoring Guide docs-maintenance checks](../maintain/authoring-guide.md#docs-maintenance-checks), including the required categories, review-output expectations, pass/warn/fail meanings, and owner-first drift resolution flow. Operator output may name those categories, but it must not turn Maintain guidance into runtime fixture semantics.
@@ -375,12 +375,12 @@ When the access mode is unknown or weaker than the registered profile, operation
 
 ## projection refresh
 
-Projection refresh regenerates Product Repository Markdown from committed state records and artifact refs.
+Projection refresh regenerates Product Repository Markdown from committed state records and artifact refs. It is a derived-view operation: it may report freshness, failed jobs, and reconcile needs, but it must not replace Core state, structured blockers, evidence authority, acceptance, residual-risk acceptance, or Write Authorization.
 
 Required behavior:
 
 - render only the latest projection version for a target
-- render or enqueue Reference-required `ProjectionKind` views when their source records exist or change
+- render or enqueue Reference-required `ProjectionKind` views when their source records exist or change and the relevant projection support is in scope
 - preserve human-editable sections
 - compare managed block hashes before overwrite
 - create reconcile items for managed-block drift

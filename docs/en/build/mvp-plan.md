@@ -25,7 +25,7 @@ Harness value is not merely that a write authority loop exists. Harness should p
 - v0.1 Core Authority Slice proves the smallest coherent internal kernel loop.
 - v0.2 User-Facing Harness MVP proves that ordinary users can feel the Harness value in how work is clarified, budgeted, blocked, accepted, and risk-explained.
 
-The first slice stays intentionally narrow. It proves one local project, one Task, one scope, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. It is not the MVP. The MVP comes when the user-facing path can translate normal work into scope, judgment, evidence, close-readiness, and residual-risk language without confusing approval, acceptance, and risk acceptance.
+The first slice stays intentionally narrow. It proves one local project, one Task, one basic scope, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. It is not the MVP. The MVP comes when the user-facing path can translate normal work into scope, judgment, evidence, close-readiness, and residual-risk language without confusing approval, acceptance, and risk acceptance.
 
 Projection-template polish, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, metrics, parallel orchestration, and broad automation become useful after the authority record and user-facing value path exist. They are not first-slice requirements.
 
@@ -33,7 +33,7 @@ Projection-template polish, dashboards or hosted workflow UI, indexes, broad con
 
 | Stage | Delivery target | What it proves | What it does not prove |
 |---|---|---|---|
-| v0.1 | Core Authority Slice | A first runnable internal kernel loop over one local project, one Task, one scope, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. | User-facing MVP value, full intake/discovery, full Decision Packet quality, residual-risk semantics, Manual QA, detached verification, projection completeness, operations readiness. |
+| v0.1 | Core Authority Slice | A first runnable internal kernel loop over one local project, one Task, one basic scope, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. | User-facing MVP value, full intake/discovery, full Decision Packet quality, residual-risk semantics, Manual QA, detached verification, projection completeness, operations readiness. |
 | v0.2 | User-Facing Harness MVP | Users can experience Harness preserving scope, user-owned judgment, evidence, close readiness, final acceptance, and residual-risk visibility in a local authority record. | Full agency hardening, detached verification independence, Manual QA matrix, stewardship policy suite, feedback-loop policy, export/recover, release handoff. |
 | v0.3 | Assurance & Stewardship Pack | The MVP path is hardened with assurance, QA, verification, stewardship, design-quality, context-hygiene, TDD, and feedback-loop profiles. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
 | v0.4 | Operations & Handoff Pack | The same Core model supports doctor/readiness, recover/export, artifact integrity, release handoff, and broader conformance coverage. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
@@ -60,7 +60,7 @@ v0.1 must prove:
 
 - project registration and one reference surface
 - one Task with current state and `task_events`
-- one basic scope for the intended change
+- one basic scope for the intended change, represented by the Change Unit owner shape where the reference contract requires it
 - one `prepare_write` allow/block path
 - one durable single-use Write Authorization
 - one `record_run` that consumes that authorization
@@ -72,6 +72,22 @@ v0.1 must prove:
 v0.1 should not prove full natural-language intake, full Discovery, full Decision Packet quality, product/UX versus architecture judgment presentation, residual-risk display, final acceptance, residual-risk acceptance, Manual QA, detached verification, stewardship, feedback-loop policy, export/recover, release handoff, or projection/template completeness. Those are later stages.
 
 At this point, an implementer or operator can observe that Core owns state, a scoped write is allowed or blocked, one authorization is consumed once, evidence is linked to the recorded Run, reads do not mutate state, and close/status output can return structured blockers.
+
+### Contract field staging
+
+Reference schemas may list fields that become necessary only when the related capability is in scope. Stage planning must read those fields through the owner contract and the active stage:
+
+| Stage | Required contract surface | Explicitly later |
+|---|---|---|
+| v0.1 Core Authority Slice | Task identity and state version, one basic scope represented by the Change Unit owner shape where the reference contract requires it, `prepare_write`, single-use Write Authorization, compatible `record_run`, one `ArtifactRef` or evidence relation, minimal evidence support/insufficiency, read-only status/next, idempotency conflict behavior, and structured blockers. If a seeded user judgment is part of the smoke path, the stored Decision Packet still carries `decision_kind` and `judgment_domain`; full user-facing Decision Packet quality is not required. | Full natural-language judgment presentation, residual-risk display, final acceptance, Manual QA, detached verification, full projection rendering, export/recover, and broad operations. |
+| v0.2 User-Facing Harness MVP | User-facing judgment context, including `decision_kind` for lifecycle/gate semantics and `judgment_domain` for display/grouping; final acceptance distinct from Approval; residual-risk visibility or explicit none; readable derived cards or projections sufficient for users. | Full detached verification hardening, Manual QA matrix, stewardship validator suite, feedback-loop policy, release handoff, dashboard or hosted UI. |
+| v0.3/v0.4 hardened reference | Detached verification independence, Manual QA policy coverage, stewardship and context-hygiene validators, feedback-loop and TDD policy, projection/reconcile completeness, recover/export/artifact integrity, release handoff where owner docs define it. | v1+ Expansion candidates unless promoted through owner docs and fixtures. |
+
+Required in an API schema therefore means required when that tool call, record, or profile is implemented or used. It does not make a future-profile field part of the smallest runnable slice by itself.
+
+### Implementation decisions needed before server coding
+
+No open schema-ownership or stage-boundary decision is intentionally left as a scattered TODO in the reference contracts. If implementation planning later finds one, record it here with the owner doc, affected field or behavior, stage impact, and the decision needed before changing server code or DDL.
 
 ### Core Authority Slice flow
 

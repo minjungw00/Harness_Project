@@ -25,7 +25,7 @@
 - 코어 권한 조각(v0.1 Core Authority Slice)은 가장 작은 내부 커널 루프를 증명합니다.
 - 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 하네스가 work를 clarify, budget, block, accept, risk-explain하는 방식을 경험하는 첫 MVP입니다.
 
-첫 조각은 의도적으로 좁게 유지합니다. 로컬 project 하나, Task 하나, scope 하나, write authority path 하나, recorded Run 하나, evidence link 하나, structured blocker/status response 하나를 증명합니다. 이것은 MVP가 아닙니다. 일반적인 work를 scope, judgment, evidence, close-readiness, residual-risk language로 바꾸고 approval, acceptance, risk acceptance를 혼동하지 않게 만드는 단계가 MVP입니다.
+첫 조각은 의도적으로 좁게 유지합니다. 로컬 project 하나, Task 하나, 기본 scope 하나, write authority path 하나, recorded Run 하나, evidence link 하나, structured blocker/status response 하나를 증명합니다. 이것은 MVP가 아닙니다. 일반적인 work를 scope, judgment, evidence, close-readiness, residual-risk language로 바꾸고 approval, acceptance, risk acceptance를 혼동하지 않게 만드는 단계가 MVP입니다.
 
 Projection template polish, dashboard 또는 hosted workflow UI, index, broad connector ecosystem 또는 marketplace, team workflow, surface-specific connector automation, metric, parallel orchestration, broad automation은 authority record와 user-facing value path가 존재한 뒤 유용해질 수 있습니다. 첫 조각의 요구사항은 아닙니다.
 
@@ -33,7 +33,7 @@ Projection template polish, dashboard 또는 hosted workflow UI, index, broad co
 
 | 단계 | 전달 목표 | 증명하는 것 | 아직 증명하지 않는 것 |
 |---|---|---|---|
-| v0.1 | 코어 권한 조각(Core Authority Slice) | 로컬 project 하나, Task 하나, scope 하나, write authority path 하나, recorded Run 하나, evidence link 하나, structured blocker/status response 하나로 구성된 첫 runnable 내부 kernel loop. | 사용자 대상 MVP 가치, full intake/discovery, full Decision Packet 품질, residual-risk semantics, Manual QA, detached verification, projection completeness, operations readiness. |
+| v0.1 | 코어 권한 조각(Core Authority Slice) | 로컬 project 하나, Task 하나, 기본 scope 하나, write authority path 하나, recorded Run 하나, evidence link 하나, structured blocker/status response 하나로 구성된 첫 runnable 내부 kernel loop. | 사용자 대상 MVP 가치, full intake/discovery, full Decision Packet 품질, residual-risk semantics, Manual QA, detached verification, projection completeness, operations readiness. |
 | v0.2 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자가 하네스가 scope, user-owned judgment, evidence, close readiness, final acceptance, residual-risk visibility를 로컬 권한 기록에 보존한다는 것을 경험합니다. | Full agency hardening, detached verification independence, Manual QA matrix, stewardship policy suite, feedback-loop policy, export/recover, release handoff. |
 | v0.3 | 보증과 스튜어드십 팩(Assurance & Stewardship Pack) | MVP path를 assurance, QA, verification, stewardship, design-quality, context-hygiene, TDD, feedback-loop profile로 단단하게 만듭니다. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
 | v0.4 | 운영과 인계 팩(Operations & Handoff Pack) | 같은 Core model로 doctor/readiness, recover/export, artifact integrity, release handoff, 더 넓은 conformance coverage를 지원합니다. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
@@ -60,7 +60,7 @@ v0.1은 다음을 증명해야 합니다.
 
 - project registration과 reference surface 하나
 - current state와 `task_events`를 가진 Task 하나
-- intended change를 위한 basic scope 하나
+- intended change를 위한 기본 scope 하나(Reference contract상 필요한 경우 Change Unit owner shape로 표현된다)
 - `prepare_write` allow/block path 하나
 - durable single-use Write Authorization 하나
 - 그 authorization을 consume하는 `record_run` 하나
@@ -73,12 +73,28 @@ v0.1은 full natural-language intake, full Discovery, full Decision Packet quali
 
 이 시점에 implementer 또는 operator는 Core가 state를 소유하고, scoped write가 허용되거나 차단되며, authorization 하나가 한 번 consume되고, evidence가 recorded Run에 연결되며, read가 state를 바꾸지 않고, close/status output이 structured blocker를 반환할 수 있음을 관찰할 수 있습니다.
 
+### 계약 필드 단계 구분
+
+Reference schema에는 관련 capability가 범위에 들어올 때만 필요한 field도 포함됩니다. Stage planning은 해당 field를 owner contract와 active stage를 기준으로 읽어야 합니다.
+
+| Stage | Required contract surface | Explicitly later |
+|---|---|---|
+| v0.1 Core Authority Slice | Task identity와 state version, Reference contract상 필요한 경우 Change Unit owner shape로 표현되는 기본 scope 하나, `prepare_write`, single-use Write Authorization, compatible `record_run`, `ArtifactRef` 또는 evidence relation 하나, minimal evidence support/insufficiency, read-only status/next, idempotency conflict behavior, structured blockers. Smoke path에 seeded user judgment가 포함되면 stored Decision Packet은 여전히 `decision_kind`와 `judgment_domain`을 가진다. Full user-facing Decision Packet quality는 필요하지 않다. | Full natural-language judgment presentation, residual-risk display, final acceptance, Manual QA, detached verification, full projection rendering, export/recover, broad operations. |
+| v0.2 User-Facing Harness MVP | User-facing judgment context. 여기서 `decision_kind`는 lifecycle/gate semantics를, `judgment_domain`은 display/grouping을 담당한다. Final acceptance는 Approval과 구분되고, residual-risk visibility 또는 명시적 none이 필요하며, readable derived card 또는 projection이 사용자 이해에 충분해야 한다. | Full detached verification hardening, Manual QA matrix, stewardship validator suite, feedback-loop policy, release handoff, dashboard 또는 hosted UI. |
+| v0.3/v0.4 hardened reference | Detached verification independence, Manual QA policy coverage, stewardship와 context-hygiene validators, feedback-loop와 TDD policy, projection/reconcile completeness, recover/export/artifact integrity, owner docs가 정의한 release handoff. | Owner docs와 fixtures로 승격되지 않은 v1+ Expansion candidates. |
+
+따라서 API schema에서 required라는 말은 해당 tool call, record, profile이 구현되거나 사용될 때 required라는 뜻입니다. 그 자체로 future-profile field가 가장 작은 runnable slice의 일부가 되지는 않습니다.
+
+### 서버 코딩 전 필요한 구현 결정
+
+Reference contract에는 schema ownership 또는 stage-boundary decision이 흩어진 TODO로 남아 있지 않습니다. Implementation planning 중 새 문제가 발견되면, server code나 DDL을 바꾸기 전에 owner doc, affected field 또는 behavior, stage impact, 필요한 결정을 이곳에 기록합니다.
+
 ### 코어 권한 조각 흐름
 
 ```mermaid
 flowchart LR
   Register["register project<br/>and reference surface"] --> Task["one Task<br/>and task_events"]
-  Task --> Scope["one basic scope"]
+  Task --> Scope["기본 scope 하나"]
   Scope --> Prepare["prepare_write<br/>allow or block"]
   Prepare -->|allowed| Authorization["single-use<br/>Write Authorization"]
   Prepare -->|blocked| Blocker["structured<br/>blocker/status"]

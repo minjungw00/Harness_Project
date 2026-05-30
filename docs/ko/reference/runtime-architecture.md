@@ -145,11 +145,11 @@ Core runtime의 책임:
 - Core에서 커널 상태 전이를 실행합니다.
 - write 전, Run 기록 후, close 전에 validator를 실행합니다.
 - artifact와 무결성 metadata를 기록합니다.
-- projection job을 대기열에 넣고 렌더링합니다.
+- projection support가 범위에 있을 때 projection job을 대기열에 넣고 렌더링합니다.
 - 사람의 편집이나 managed-block drift에서 reconcile candidate를 감지합니다.
 - 진단, 복구, export, conformance 진입점을 제공합니다.
 
-MCP server는 shell command를 감싼 얇은 wrapper가 아닙니다. MCP server는 높은 수준의 의도 호출을 제공하고, Core는 이를 상태 전이, validator, artifact 기록, projection job으로 변환합니다.
+MCP server는 shell command를 감싼 얇은 wrapper가 아닙니다. MCP server는 높은 수준의 의도 호출을 제공하고, Core는 이를 상태 전이, validator, artifact 기록, applicable한 경우 projection job으로 변환합니다.
 
 ## Harness Runtime Home
 
@@ -243,15 +243,17 @@ Adapters와 sidecars는 접점 capability를 observable facts로 번역합니다
 4. pre-transition validator를 실행
 5. 현재 기록과 affected state/projection version counter를 업데이트
 6. state.sqlite.task_events에 하나 이상의 row를 추가
-7. 변경된 source record에 대해 projection job을 대기열에 넣음
+7. relevant projection support가 범위에 있을 때 변경된 source record에 대해 projection job을 대기열에 넣음
 8. commit
-9. commit 이후 Markdown projections를 렌더링
+9. projection rendering이 범위에 있을 때 commit 이후 Markdown projections를 렌더링
 ```
 
 
 이 transaction 안에서 Core는 current-record update의 일부로 affected scope clock을 증가시킵니다. Task-scoped changes는 `tasks.state_version`을 증가시키고, `task_id=null`인 project-scoped changes는 `project_state.state_version`을 증가시킵니다. Event rows는 각 affected scope의 resulting state version을 기록합니다. State conflict와 idempotency replay 동작은 [MCP API와 스키마의 Idempotency](mcp-api-and-schemas.md#idempotency)와 [State Conflict 동작](mcp-api-and-schemas.md#state-conflict-동작)에 드러나는 public API 계약입니다.
 
 Projection 렌더링은 transaction 이후에 일어납니다. Projection failure는 state-isolated입니다. Projection 최신성 또는 job status를 `stale` 또는 `failed`로 표시하고 커밋된 상태는 그대로 둡니다. Projection은 transaction을 roll back하거나, `state.sqlite.task_events`를 rewrite하거나, passed task를 failed task로 바꾸거나, 나중의 reconcile decision 없이 기준 상태를 repair할 수 없습니다.
+
+Projection freshness는 파생 read fact입니다. Status, next-action, export, operator command가 이를 확인해 readable view가 stale, failed, unknown이라고 보고할 수는 있지만, Core state, structured blockers, evidence records, acceptance, residual-risk acceptance, Write Authorization의 authority는 각 owner record에 남습니다. v0.1 Core Authority Slice는 full projection worker를 증명하지 않고 freshness 또는 read fact를 노출할 수 있습니다. v0.2는 사용자 이해에 충분한 derived card 또는 projection output이 필요하고, hardened reference support는 complete projection/reconcile path를 담당합니다.
 
 ## Artifact store architecture
 
@@ -290,7 +292,7 @@ Projection은 outbox-style flow입니다.
 
 ```text
 상태 전이 commit 완료
-→ projection job이 대기열에 들어감
+→ projection support가 범위에 있을 때 projection job이 대기열에 들어감
 → 상태 기록과 artifact refs에서 managed block 렌더링
 → projected version과 managed hash 기록
 → human-editable area 보존

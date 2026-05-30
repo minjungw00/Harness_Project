@@ -135,7 +135,7 @@ Conformance는 단계적으로 실행할 수 있지만, staged execution이 fixt
 
 Build 문서는 첫 실행 가능한 조각과 stage exit를 계획하기 위한 문서 수준 승인 점검을 제공할 수 있습니다. 이 점검은 reviewer가 코어 권한 조각(v0.1 Core Authority Slice)을 좁게 유지하도록 돕지만 fixture field, suite metadata, public request schema, storage row, primary error, runner comparison mode가 아닙니다. Runtime pass/fail은 [Conformance Fixtures 참조](conformance-fixtures.md)의 exact body shape와 assertion semantics를 사용하는 executable fixture에서만 나옵니다.
 
-코어 권한 조각(v0.1 Core Authority Slice)은 첫 실행 가능한 conformance target이며, 커널 스모크(Kernel Smoke)는 그 fixture authoring profile입니다. Project registration, Task state, basic scope 하나, 제품 파일 쓰기에 대한 권한 판단 지점으로서의 `prepare_write`, durable single-use Write Authorization 생성, `record_run` authorization consumption, `ArtifactRef` 또는 evidence ref 하나, minimal evidence support/insufficiency, status/next read, 쓰기 권한이 없을 때 blocked writes 또는 runs, consumed authorization reuse block, evidence, scope, authorization, seeded required judgment가 없을 때 structured blocker가 있는 close/status block, basic Core fixture 실행을 증명해야 합니다. 커널 스모크(Kernel Smoke) 통과는 첫 runnable kernel 권한 경로를 증명하지만 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)나 강화된 로컬 기준 목표(hardened local reference target) conformance를 주장하지 않습니다.
+코어 권한 조각(v0.1 Core Authority Slice)은 첫 실행 가능한 conformance target이며, 커널 스모크(Kernel Smoke)는 그 fixture authoring profile입니다. Project registration, Task state, Reference contract상 필요한 경우 Change Unit owner shape로 표현되는 기본 scope 하나, 제품 파일 쓰기에 대한 권한 판단 지점으로서의 `prepare_write`, durable single-use Write Authorization 생성, `record_run` authorization consumption, `ArtifactRef` 또는 evidence ref 하나, minimal evidence support/insufficiency, status/next read, 쓰기 권한이 없을 때 blocked writes 또는 runs, consumed authorization reuse block, evidence, scope, authorization, seeded required judgment가 없을 때 structured blocker가 있는 close/status block, basic Core fixture 실행을 증명해야 합니다. 커널 스모크(Kernel Smoke) 통과는 첫 runnable kernel 권한 경로를 증명하지만 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)나 강화된 로컬 기준 목표(hardened local reference target) conformance를 주장하지 않습니다.
 
 강화된 로컬 기준 목표(hardened local reference target)는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 통해 도달하는 향후 reference conformance target입니다. Ordinary-language routing, procedural-budget behavior, Decision Packet quality, sensitive-action Approval lifecycle separation, 결과 수락과 close 전 residual-risk visibility, same-session verification guard coverage를 포함한 detached verification guards, Manual QA policy coverage, stewardship 및 context-hygiene validators, full feedback-loop checks, policy가 요구하는 TDD trace behavior, codebase stewardship coverage, projection/reconcile completeness, recover/export/artifact integrity behavior, owner 문서가 정의하는 release handoff report/export behavior, connector guard/freeze honesty, later 경계 checks, broader fixture coverage를 추가로 증명해야 합니다. Suite catalog metadata는 runner selection과 reporting을 위해 scenario를 suite, delivery stage, tag로 group할 수 있지만 Core에 전달되지 않습니다. Executable fixture는 여전히 Core state, events, artifacts, projections, errors를 통해 검증해야 합니다.
 
@@ -151,7 +151,7 @@ flowchart LR
   Evidence --> Agency["보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)"]
   Agency --> Ops["운영과 인계 팩(v0.4 Operations & Handoff Pack)<br/>강화된 로컬 기준 목표(hardened local reference target) conformance"]
   Ops -. "roadmap boundary" .-> Expansion["v1+ Expansion<br/>roadmap 후보"]
-  Kernel --> K1["project, Task, one scope"]
+  Kernel --> K1["project, Task, 기본 scope 하나"]
   Kernel --> K2["prepare_write and Write Authorization"]
   Kernel --> K3["record_run and evidence link"]
   Kernel --> K4["status/next and structured blockers"]
@@ -174,7 +174,7 @@ Minimum 보고서 fields:
 - 가능한 경우 affected file path와 heading 또는 anchor
 - 기준 owner doc과 expected source section
 - observed documentation finding 또는 drift
-- suggested fix class: update owner, replace duplicate with summary plus link, mirror translation, repair link, 또는 `TODO_DECISION` / `TODO_IMPLEMENT` 추가
+- suggested fix class: update owner, replace duplicate with summary plus link, mirror translation, repair link, 또는 [Build: MVP 계획의 서버 코딩 전 필요한 구현 결정](../build/mvp-plan.md#서버-코딩-전-필요한-구현-결정)에 항목 추가
 - runtime effect: none; 기준 상태 전이가 수행되지 않았고 runtime fixture result가 기록되지 않았다는 statement
 
 Smoke category는 [문서 작성 가이드의 docs-maintenance checks](../maintain/authoring-guide.md#docs-maintenance-checks)를 다시 정의하지 말고 참조해야 합니다. 필수 category, review-output expectation, pass/warn/fail 의미, owner-first drift resolution flow도 그 section을 따릅니다. Operator output은 해당 category를 이름 붙일 수 있지만 Maintain guidance를 runtime fixture semantics로 바꾸면 안 됩니다.
@@ -375,12 +375,12 @@ Access mode가 unknown이거나 registered profile보다 약하면 operations는
 
 ## projection refresh
 
-Projection refresh는 커밋된 상태 기록과 artifact ref에서 제품 저장소 Markdown을 다시 생성합니다.
+Projection refresh는 커밋된 상태 기록과 artifact ref에서 제품 저장소 Markdown을 다시 생성합니다. 이는 파생 view operation입니다. Freshness, failed jobs, reconcile 필요성을 보고할 수 있지만 Core state, structured blockers, evidence authority, acceptance, residual-risk acceptance, Write Authorization을 대체하면 안 됩니다.
 
 필수 동작:
 
 - target의 latest projection version만 렌더링합니다
-- Reference-required `ProjectionKind` view는 source record가 존재하거나 변경될 때 렌더링하거나 대기열에 넣습니다
+- Reference-required `ProjectionKind` view는 source record가 존재하거나 변경되고 relevant projection support가 범위에 있을 때 렌더링하거나 대기열에 넣습니다
 - human-editable section을 보존합니다
 - overwrite 전에 managed block hash를 비교합니다
 - managed-block drift에는 reconcile item을 생성합니다

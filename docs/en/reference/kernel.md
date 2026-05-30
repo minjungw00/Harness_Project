@@ -292,7 +292,7 @@ The Autonomy Boundary does not replace Change Unit scope, sensitive-action Appro
 
 ### Decision Packet
 
-A Decision Packet is the canonical state entity for blocking user-owned judgment. It records the decision needed, `decision_kind`, `judgment_domain`, options, recommendation when available, trade-offs, affected scope, supporting evidence, residual risk, owner, status, and next action.
+A Decision Packet is the canonical state entity for blocking user-owned judgment. It records the decision needed, `decision_kind`, `judgment_domain`, options, recommendation when available, trade-offs, affected scope, supporting evidence, residual risk, owner, status, optional expiry, and next action.
 
 Decision Packets feed `decision_gate`. Blocking user-owned judgment cannot be satisfied by chat text, broad approval, or projection prose alone. The recorded Decision Packet and its resolution, deferral, or blocked status are the canonical state source for that judgment.
 
@@ -482,6 +482,8 @@ Approval and Decision Packet authority are separate. Approval authorizes sensiti
 
 Gates are canonical kernel fields used by `prepare_write`, `close_task`, status display, and conformance fixtures.
 
+Gate fields are always part of the reference state model, but a stage or Task profile decides which gates are required for a specific operation. v0.1 Core Authority Slice must prove scope, write authority, Run/evidence recording, state-version/idempotency behavior, status/next reads, and structured blockers. It may set verification, QA, acceptance, and residual-risk paths to `not_required` or `none` when the selected smoke scenario does not exercise them. v0.2 adds user-facing judgment, final acceptance, and residual-risk visibility where close-relevant risk exists. v0.3 and later profiles harden detached verification, Manual QA, stewardship, feedback-loop, TDD, and operations behavior. A gate being present in this reference does not make its full future-profile behavior required by the smallest runnable slice.
+
 ### Gate Rule Map
 
 | Gate or boundary | Go to | Decides... |
@@ -527,7 +529,7 @@ not_required | required | pending | resolved | deferred | blocked
 
 Recompute precedence is:
 
-1. `blocked` when any relevant blocking Decision Packet is `blocked`, is `rejected` without a compatible replacement, or is incompatible with the active Change Unit, Autonomy Boundary, baseline, intended operation, or close intent.
+1. `blocked` when any relevant blocking Decision Packet is `blocked`, is `rejected` without a compatible replacement, has passed its canonical `expires_at` without a compatible recorded resolution or renewal, or is incompatible with the active Change Unit, Autonomy Boundary, baseline, intended operation, or close intent.
 2. `pending` when any relevant blocking Decision Packet is `pending_user` and no higher-precedence blocked condition exists.
 3. `required` when blocking user-owned judgment is detected but no relevant Decision Packet exists, or only `proposed` packet drafts exist.
 4. `deferred` when all relevant blocking Decision Packets are `deferred`, the deferral explicitly covers the current operation or close intent, and residual risk or follow-up visibility is recorded where relevant.
@@ -934,6 +936,8 @@ allowed | blocked | approval_required | decision_required | state_conflict
 
 These state-level decisions do not define public `ErrorCode` selection. Public tool responses derived from this logic select the primary `ToolError.code` using API-owned [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence).
 
+The decision algorithm checks the gates and preconditions that apply to the Task, intended operation, and active profile. Future-profile checks that are `not_required`, confirmed absent, or not enabled for the scenario do not become hidden v0.1 requirements merely because they appear in this reference.
+
 The decision algorithm is:
 
 1. Check state version expectations. If the caller is acting on stale state, return `state_conflict`.
@@ -952,6 +956,8 @@ The decision algorithm is:
 
 
 Required checks include active Task, active Change Unit, mode write eligibility, active Change Unit scope, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, surface capability profile, and design policy preconditions. Design policy preconditions can affect whether an intended write is a permitted RED-test write, a blocked non-test implementation write, or a write allowed by an explicit TDD waiver with an alternate feedback loop; they do not create a new kernel invariant.
+
+Those checks are applied according to the active Task profile and stage. v0.1 must prove the core state/scope/write-authority path and any seeded judgment blocker it includes; it does not have to enable the full design-quality, TDD, stewardship, Manual QA, detached verification, acceptance, residual-risk, or export profile before those profiles are in scope.
 
 An `allowed` decision must create or reference a Write Authorization with `status=allowed` and a recorded `basis_state_version` for the affected scope used by the allow decision. `authorization_effect=returned` is reserved for idempotent replay of the same committed `prepare_write` request with the same idempotency key, request hash, and `basis_state_version`, or for returning the already committed response. A distinct compatible request creates a distinct Write Authorization; compatibility does not make authorizations reusable. Each created authorization is single-use and can be consumed by only one compatible implementation or direct `record_run`, except for idempotent replay of that same committed Run record. Blocked, approval-required, decision-required, or state-conflict results must not create a consumable Write Authorization for the attempted write. Core may stale, expire, or revoke older unconsumed authorizations if their compatibility basis changes.
 
@@ -1001,6 +1007,8 @@ Read-only Runs may be recorded without consuming Write Authorization, but they m
 When multiple close blockers exist, public responses select the primary `ToolError.code` using API-owned [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence); this section owns the kernel checks and state transitions.
 
 Close blockers must be emitted as structured results in the public close response and corresponding state/check assertions. Prose-only report text may explain those blockers, but it cannot be the only recorded close-blocker result.
+
+The decision algorithm checks the gates that apply to the Task, requested close intent, and active profile. Future-profile gates that are `not_required`, confirmed absent, or not enabled for the scenario do not become hidden v0.1 requirements merely because they appear in this reference.
 
 The decision algorithm is:
 

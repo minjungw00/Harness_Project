@@ -18,7 +18,7 @@ Read [Implementation Overview](implementation-overview.md) first, including its 
 
 ## Main idea
 
-Prove one Task can move through the smallest Core authority record: project registration, one scope, one write authorization decision, one authorized Run, one evidence link, and one structured blocker/status response.
+Prove one Task can move through the smallest Core authority record: project registration, one basic scope represented by the Change Unit owner shape where the reference contract requires it, one write authorization decision, one authorized Run, one evidence link, and one structured blocker/status response.
 
 The first slice should show that Harness state is local, durable, and authoritative without trying to prove the whole user-facing product. It keeps `prepare_write` as the product-write authorization decision point, Write Authorization as durable and single-use, `record_run` as the place where one compatible Run consumes authority, and `close_task` or status as the place where missing evidence or required judgment can be reported as structured blockers.
 

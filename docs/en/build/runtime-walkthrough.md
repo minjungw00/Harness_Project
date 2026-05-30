@@ -21,7 +21,7 @@ Read [Implementation Overview](implementation-overview.md) and [First Runnable S
 
 For write-capable tracked work, a request becomes safe product work only after Harness knows the Task, the needed Discovery or decisions, and the first scope. Product writes then pass through `prepare_write`, which can create a one-attempt Write Authorization. Runs consume that authority, evidence and artifacts support claims, projections make the state readable, and `close_task` either returns structured blockers or closes the Task.
 
-The walkthrough shows the full user-facing path. v0.1 Core Authority Slice implements only the smallest internal part of it: one project, one Task, one scope, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. v0.2 User-Facing Harness MVP adds the ordinary-language clarification, judgment separation, procedural budget, residual-risk display, and acceptance boundaries users experience.
+The walkthrough shows the full user-facing path. v0.1 Core Authority Slice implements only the smallest internal part of it: one project, one Task, one basic scope represented by the Change Unit owner shape where the reference contract requires it, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. v0.2 User-Facing Harness MVP adds the ordinary-language clarification, judgment separation, procedural budget, residual-risk display, and acceptance boundaries users experience.
 
 ## Walkthrough at a glance
 

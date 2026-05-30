@@ -141,11 +141,11 @@ Core runtime responsibilities:
 - execute kernel state transitions in Core
 - run validators before writes, after runs, and before close
 - record artifacts and integrity metadata
-- enqueue and render projection jobs
+- enqueue and render projection jobs when projection support is in scope
 - detect reconcile candidates from human edits or managed-block drift
 - provide diagnostic, recovery, export, and conformance entrypoints
 
-The MCP server is not a thin wrapper around shell commands. It exposes high-level intent calls that Core translates into state transitions, validators, artifact records, and projection jobs.
+The MCP server is not a thin wrapper around shell commands. It exposes high-level intent calls that Core translates into state transitions, validators, artifact records, and projection jobs when applicable.
 
 ## Harness Runtime Home
 
@@ -237,15 +237,17 @@ Every state-changing operation uses one SQLite transaction for current records, 
 4. run pre-transition validators
 5. update current records and affected state/projection version counters
 6. append one or more rows to state.sqlite.task_events
-7. enqueue projection jobs for changed source records
+7. enqueue projection jobs for changed source records when the relevant projection support is in scope
 8. commit
-9. render Markdown projections after commit
+9. render Markdown projections after commit when projection rendering is in scope
 ```
 
 
 Within that transaction, Core increments the affected scope clock as part of the current-record update. Task-scoped changes increment `tasks.state_version`; project-scoped changes with `task_id=null` increment `project_state.state_version`. Event rows record the resulting state version for their affected scope. State conflict and idempotency replay behavior are exposed through the public API contract in [MCP API And Schemas](mcp-api-and-schemas.md#idempotency) and [State conflict behavior](mcp-api-and-schemas.md#state-conflict-behavior).
 
 Projection rendering happens after the transaction. A projection failure is state-isolated: it marks projection freshness or job status as stale or failed and leaves the committed state intact. Projection cannot roll back the transaction, rewrite `state.sqlite.task_events`, turn a passed task into a failed task, or repair canonical state without a later reconcile decision.
+
+Projection freshness is a derived-read fact. A status, next-action, export, or operator command may check it and report that a readable view is stale, failed, or unknown, but Core state, structured blockers, evidence records, acceptance, residual-risk acceptance, and Write Authorization remain authoritative in their owner records. v0.1 Core Authority Slice may expose freshness or read facts without proving the full projection worker; v0.2 needs enough derived card or projection output for user comprehension; hardened reference support owns the complete projection/reconcile path.
 
 ## Artifact store architecture
 
@@ -284,7 +286,7 @@ Projection is an outbox-style flow:
 
 ```text
 state transition committed
-→ projection job queued
+→ projection job queued when projection support is in scope
 → managed block rendered from state records and artifact refs
 → projected version and managed hash recorded
 → human-editable area preserved

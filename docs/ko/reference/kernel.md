@@ -292,7 +292,7 @@ Autonomy Boundary는 Change Unit scope, 민감 동작 승인, policy checks, 근
 
 ### Decision Packet
 
-Decision Packet은 차단하는 사용자 소유 판단을 위한 기준 상태 entity입니다. decision needed, `decision_kind`, `judgment_domain`, options, 가능할 때 recommendation, trade-offs, affected scope, supporting evidence, 잔여 위험, owner, status, next action을 기록합니다.
+Decision Packet은 차단하는 사용자 소유 판단을 위한 기준 상태 entity입니다. decision needed, `decision_kind`, `judgment_domain`, options, 가능할 때 recommendation, trade-offs, affected scope, supporting evidence, 잔여 위험, owner, status, optional expiry, next action을 기록합니다.
 
 Decision Packet은 `decision_gate`에 반영됩니다. 차단하는 사용자 소유 판단은 대화 텍스트, broad approval, projection prose만으로 충족될 수 없습니다. 기록된 Decision Packet과 그 resolution, deferral, blocked status가 해당 judgment에 대한 기준 state source입니다.
 
@@ -482,6 +482,8 @@ Journey Spine은 kernel state, registered artifact references, `state.sqlite.tas
 
 Gate는 `prepare_write`, `close_task`, status display, conformance fixtures가 사용하는 기준 kernel fields입니다.
 
+Gate field는 항상 reference state model의 일부이지만, 특정 operation에서 어떤 gate가 required인지는 stage와 Task profile이 결정합니다. v0.1 Core Authority Slice는 scope, write authority, Run/evidence recording, state-version/idempotency behavior, status/next read, structured blocker를 증명해야 합니다. 선택한 smoke scenario가 사용하지 않는다면 verification, QA, acceptance, residual-risk path는 `not_required` 또는 `none`으로 둘 수 있습니다. v0.2는 user-facing judgment, final acceptance, close-relevant risk가 있을 때 residual-risk visibility를 추가합니다. v0.3 이후 profile은 detached verification, Manual QA, stewardship, feedback-loop, TDD, operations behavior를 harden합니다. 이 reference에 gate가 존재한다는 이유만으로 그 full future-profile behavior가 smallest runnable slice에 required가 되지는 않습니다.
+
 ### Gate 규칙 지도
 
 | Gate 또는 boundary | 볼 곳 | 결정하는 것 |
@@ -527,7 +529,7 @@ not_required | required | pending | resolved | deferred | blocked
 
 Recompute precedence는 다음과 같습니다.
 
-1. relevant blocking Decision Packet이 `blocked`이거나, 호환되는 replacement 없이 `rejected`되었거나, active Change Unit, Autonomy Boundary, baseline, intended operation, close intent와 incompatible하면 `blocked`.
+1. relevant blocking Decision Packet이 `blocked`이거나, 호환되는 replacement 없이 `rejected`되었거나, compatible recorded resolution 또는 renewal 없이 canonical `expires_at`이 지났거나, active Change Unit, Autonomy Boundary, baseline, intended operation, close intent와 incompatible하면 `blocked`.
 2. relevant blocking Decision Packet이 `pending_user`이고 더 높은 precedence의 blocked condition이 없으면 `pending`.
 3. 차단하는 사용자 소유 판단이 감지되었지만 relevant Decision Packet이 없거나 `proposed` packet drafts만 있으면 `required`.
 4. 모든 relevant blocking Decision Packets가 `deferred`이고, deferral이 current operation 또는 close intent를 명시적으로 포괄하며, relevant한 곳에 잔여 위험 또는 follow-up visibility가 기록되어 있으면 `deferred`.
@@ -952,6 +954,8 @@ Decision algorithm은 다음과 같습니다.
 
 필수 확인에는 active Task, active Change Unit, mode의 쓰기 가능 여부, active Change Unit scope, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, 접점 capability profile 정보, design policy 사전 조건이 포함됩니다. Design policy 사전 조건은 intended write가 permitted RED-test write인지, blocked non-test implementation write인지, alternate feedback loop가 있는 explicit TDD waiver로 allowed되는 write인지에 영향을 줄 수 있지만, 새로운 커널 불변 규칙을 만들지는 않습니다.
 
+이 확인들은 active Task profile과 stage에 따라 적용됩니다. v0.1은 core state/scope/write-authority path와 포함된 seeded judgment blocker를 증명해야 하지만, full design-quality, TDD, stewardship, Manual QA, detached verification, acceptance, residual-risk, export profile이 범위에 들어오기 전부터 모두 enable할 필요는 없습니다.
+
 `allowed` decision은 `status=allowed`이고 allow decision이 사용한 affected scope의 `basis_state_version`이 기록된 Write Authorization을 만들거나 reference해야 합니다. `authorization_effect=returned`는 같은 idempotency key, request hash, `basis_state_version`을 가진 동일한 committed `prepare_write` request의 idempotent replay 또는 이미 commit된 response 반환에만 reserved됩니다. 서로 다른 호환 가능한 request는 각각 별도의 Write Authorization을 만듭니다. Compatibility가 authorization을 재사용 가능하게 만들지는 않습니다. 생성된 각 authorization은 single-use이며, 같은 committed Run record의 idempotent replay를 제외하면 하나의 compatible implementation 또는 direct `record_run`에서만 consume될 수 있습니다. Blocked, approval-required, decision-required, state-conflict result는 attempted write에 대해 사용 가능한 Write Authorization을 만들면 안 됩니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 `stale`, expire, revoke할 수 있습니다.
 
 사용자 소유 판단이 필요하면 `prepare_write`는 Decision Packet을 통해 사용자 판단을 요청합니다. 그 판단을 broad approval로 바꾸면 안 됩니다. `approval_required`는 민감 동작 승인에만 사용합니다.
@@ -1000,6 +1004,8 @@ Read-only Runs는 Write Authorization을 사용한 것으로 기록하지 않고
 여러 close blockers가 동시에 존재하면 public responses는 API가 소유한 [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence)에 따라 primary `ToolError.code`를 선택합니다. 이 section은 kernel checks와 상태 전이를 소유합니다.
 
 Close blocker는 public close response와 대응되는 state/check assertion 안에서 structured result로 emit되어야 합니다. Prose-only report text는 blocker를 설명할 수는 있지만, 유일한 recorded close-blocker result가 될 수 없습니다.
+
+Decision algorithm은 Task, 요청된 close intent, active profile에 적용되는 gate를 확인합니다. Future-profile gate가 `not_required`이거나 absent로 확인되었거나 scenario에서 enabled되지 않았다면, 이 reference에 등장한다는 이유만으로 숨은 v0.1 requirement가 되지는 않습니다.
 
 Decision algorithm은 다음과 같습니다.
 

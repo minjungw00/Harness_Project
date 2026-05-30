@@ -40,6 +40,8 @@ Storage gives Harness durable local records, but it does not become a second aut
 
 Harness keeps one global runtime registry and one local state database per registered project. The registry says which projects and surfaces exist. `project.yaml` stores static project configuration. `state.sqlite` stores canonical current records, append-only task events, idempotency replay rows, artifact registry rows, projection jobs, and validator run results.
 
+Storage fields are reference-contract fields, not all first-slice requirements. v0.1 Core Authority Slice needs the rows and columns that make one Task, one basic scope represented by the Change Unit owner shape where the reference contract requires it, `prepare_write`, Write Authorization, `record_run`, one ArtifactRef/evidence relation, state-version/idempotency replay, status/next, and structured blockers durable. Decision Packet rows are required in v0.1 only when the smoke path includes a seeded blocking user judgment; when such a row exists, `decision_kind` and `judgment_domain` are still required. User-facing Decision Packet quality, final acceptance, residual-risk visibility, Manual QA, detached verification, projection rendering completeness, recover/export, and release handoff use the same DDL family but are v0.2 or later profile scope as described in [Build: MVP Plan](../build/mvp-plan.md#contract-field-staging).
+
 Public API shapes are owned by [MCP API And Schemas](mcp-api-and-schemas.md). Storage-owned DDL and storage-only JSON validation are owned here.
 
 ## Reference scope
@@ -474,7 +476,7 @@ CREATE TABLE approvals (
   change_unit_id TEXT,
   -- Optional compatibility ref; leave null when decision_requests is omitted.
   decision_request_id TEXT,
-  decision_packet_id TEXT REFERENCES decision_packets(decision_packet_id),
+  decision_packet_id TEXT NOT NULL REFERENCES decision_packets(decision_packet_id),
   status TEXT NOT NULL,
   sensitive_categories_json TEXT NOT NULL DEFAULT '[]',
   allowed_paths_json TEXT NOT NULL DEFAULT '[]',
@@ -524,9 +526,17 @@ CREATE TABLE decision_packets (
   decision_kind TEXT NOT NULL,
   judgment_domain TEXT NOT NULL,
   status TEXT NOT NULL,
+  state_summary_at_request_json TEXT NOT NULL DEFAULT '{}',
   question TEXT NOT NULL,
+  what_agent_may_decide_without_user_json TEXT NOT NULL DEFAULT '[]',
   options_json TEXT NOT NULL DEFAULT '[]',
   recommendation_json TEXT NOT NULL DEFAULT '{}',
+  affected_gates_json TEXT NOT NULL DEFAULT '[]',
+  affected_acceptance_criteria_json TEXT NOT NULL DEFAULT '[]',
+  deferral_consequence TEXT NOT NULL DEFAULT '',
+  user_context_json TEXT NOT NULL DEFAULT '{}',
+  approval_scope_json TEXT NOT NULL DEFAULT '{}',
+  reconcile_item_id TEXT,
   affected_scope_json TEXT NOT NULL DEFAULT '{}',
   autonomy_boundary_json TEXT NOT NULL DEFAULT '{}',
   context_refs_json TEXT NOT NULL DEFAULT '[]',
@@ -534,6 +544,7 @@ CREATE TABLE decision_packets (
   residual_risk_refs_json TEXT NOT NULL DEFAULT '[]',
   decision_json TEXT NOT NULL DEFAULT '{}',
   superseded_by_decision_packet_id TEXT,
+  expires_at TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   decided_at TEXT
@@ -897,7 +908,15 @@ Stored `write_authorizations` rows require non-null `basis_state_version`, inclu
 
 `record_run` consumption is stored by setting the reciprocal links `write_authorizations.consumed_by_run_id` and `runs.write_authorization_id` in one Core transaction. The unique partial index on `runs.write_authorization_id` enforces storage single-use for committed Runs; idempotent replay returns the original Run and response metadata instead of inserting another Run row. Rejected pre-commit `record_run` calls, such as missing Write Authorization before any Run is committed, do not insert a `runs` row and therefore have no storage Run ID to return; the nullable API `run_id` represents that absence without inventing a placeholder. Runs that attempt an invalid, stale, missing, consumed, or scope-exceeded authorization leave `runs.write_authorization_id` empty; attempted refs may be kept in validator findings, run violation payload, or `task_events.payload_json` for audit. Kernel-owned close and evidence consequences remain in [Kernel `record_run` State Logic](kernel.md#record_run).
 
-`decision_packets` stores Decision Packet state records. `decision_packets.judgment_domain` is part of the current reference schema and DDL, not future-profile display prose. It stores the schema-owned user-visible judgment domain used by projections and decision displays. `decision_kind` remains the lifecycle, payload-branch, gate-meaning, and state-transition field; `judgment_domain` must not directly change gate aggregation, approval behavior, waiver behavior, residual-risk acceptance, or close readiness unless a separate owner rule explicitly defines that effect. `decision_requests` is an optional interaction/routing compatibility table for implementation handoff, replay, or compatibility request flow; a minimal v0.1 Core Authority Slice implementation may omit it, along with its optional indexes and nullable compatibility fields. If retained, unlinked `decision_requests` rows remain non-authoritative routing metadata, approval links use `approvals.decision_packet_id`, and gate aggregation must consider `decision_requests` only through a linked compatible `decision_packet_id`. The decision gate and approval/acceptance/risk authority rules stay in [Kernel Decision Gate](kernel.md#decision-gate) and the related public tools in [MCP API And Schemas](mcp-api-and-schemas.md#public-tools).
+`decision_packets` stores Decision Packet state records. `decision_packets.decision_kind` and `decision_packets.judgment_domain` are part of the current reference schema and DDL, not future-profile display prose. `decision_kind` remains the lifecycle, payload-branch, gate-meaning, and state-transition field. `judgment_domain` stores the schema-owned user-visible judgment domain used by projections and decision displays, and must not directly change gate aggregation, approval behavior, waiver behavior, residual-risk acceptance, or close readiness unless a separate owner rule explicitly defines that effect.
+
+The `decision_packets` columns for request-time state summary, question, agent latitude, affected gates, affected acceptance criteria, deferral consequence, user context, approval scope, reconcile item, context refs, evidence/artifact refs, residual-risk refs, and expiry preserve the API/kernel-owned Decision Packet quality fields even when optional `decision_requests` rows are omitted. `question` is the storage column for `what_user_is_deciding`. `expires_at` is the canonical expiry/timeout field for the Decision Packet when present. Gate aggregation, status/next, and close blockers read expiry from canonical Decision Packet state, not from an unlinked Decision Request row. `approval_scope_json` is meaningful only for `decision_kind=approval`; non-approval packets store `{}` as the agreed absent/null representation, and approval packets must store a valid `ApprovalScope`. `reconcile_item_id` is populated only for reconcile decisions. Storage may keep richer nested API payloads inside JSON columns, but it must not drop fields that the kernel needs to explain the user judgment, recompute gates, or prove that acceptance/risk/waiver context was visible.
+
+For nullable API fields stored in non-null JSON columns, storage uses explicit sentinels only where this paragraph allows them. `recommendation_json='{}'` is the canonical storage representation for `recommendation=null`; a present recommendation must validate as `DecisionPacketRecommendation` with `option_id`, `reason`, `uncertainty`, and `when_to_revisit`. `approval_scope_json='{}'` is the canonical storage representation for `approval_scope=null` only for non-approval Decision Packets; `decision_kind=approval` requires a valid `ApprovalScope` object before commit. `state_summary_at_request_json` must be a real request-time `StateSummary` snapshot in committed canonical Decision Packet state, including `mode`, `lifecycle_phase`, `result`, `close_reason`, `assurance_level`, and the complete `gates` object. When the public request supplies `state_summary_at_request=null`, Core derives and stores that snapshot before commit. `user_context_json` must validate as `DecisionPacketUserContext` because `user_context` is required by the public request; the minimum valid storage shape is an object with `minimum_context: string[]` and `optional_pull_refs: StateRecordRef[]`, and user-facing packets must satisfy the API-owned Decision Packet quality rules for the context contents. `{}` must not remain in committed canonical rows for `state_summary_at_request_json` or `user_context_json` except in explicit invalid-state recovery fixtures or pre-repair corrupt-state observations, and doctor/recover must report it as invalid state if found in ordinary committed rows. Other JSON columns with `{}` defaults are valid empty objects only when their owner schema defines an empty object as meaningful; otherwise seed loaders and Core validation must reject the committed row. Defaults such as `'{}'` and `'[]'` are therefore valid JSON defaults, not permission to commit arbitrary placeholder shapes.
+
+`decision_requests` is an optional interaction/routing compatibility table for implementation handoff, replay, or compatibility request flow; a minimal v0.1 Core Authority Slice implementation may omit it, along with its optional indexes and nullable compatibility fields. If retained, unlinked `decision_requests` rows remain non-authoritative routing metadata, approval links use `approvals.decision_packet_id`, and gate aggregation must consider `decision_requests` only through a linked compatible `decision_packet_id`. Approval rows require a linked `decision_packet_id`; the optional compatibility ref is `decision_request_id`, not the authority link. The decision gate and approval/acceptance/risk authority rules stay in [Kernel Decision Gate](kernel.md#decision-gate) and the related public tools in [MCP API And Schemas](mcp-api-and-schemas.md#public-tools).
+
+Optional `decision_requests.expires_at` is routing and compatibility metadata only. It may help a surface expire a staged prompt or request handoff, but it does not replace `decision_packets.expires_at`, does not satisfy or clear `decision_gate`, and must not be used by close blockers unless the request row is linked to a compatible canonical Decision Packet whose own expiry state is current.
 
 `residual_risks` stores residual-risk rows. Current reference accepted-risk identity is `residual_risk_id`; there is no separate `accepted_risks` table or `ARISK-*` canonical record. Accepted-risk metadata/state stays on `residual_risks.accepted_risk_json`, `status`, and `accepted_at`, while Decision Packets may reference rows through `decision_packets.residual_risk_refs_json`. Visibility and close semantics stay in [Close Semantics](kernel.md#close-result-semantics).
 
@@ -1462,7 +1481,7 @@ The verification independence precondition reads `evals.independence_json`, `eva
 
 No additional evidence/verification profile DDL is required beyond the current reference tables above. Existing JSON fields hold profile metadata: `change_units.autonomy_profile`, `change_units.agent_may_do_json`, `change_units.user_judgment_required_json`, `change_units.afk_stop_conditions_json`, `change_units.end_to_end_path_json`, `decision_packets.context_refs_json`, `decision_packets.context_artifact_refs_json`, `decision_packets.residual_risk_refs_json`, `residual_risks.accepted_risk_json`, `residual_risks.follow_up_requirement_json`, `evidence_manifests.criteria_json`, `evidence_manifests.supporting_refs_json`, `evidence_manifests.stale_if_json`, `evals.evidence_reviewed_json`, `evals.independence_json`, `evals.artifact_refs_json`, `runs.observed_changes_json`, `runs.command_results_json`, `runs.artifact_refs_json`, `approvals.*_json`, `manual_qa_records.findings_json`, `manual_qa_records.residual_risk_refs_json`, and `validator_runs.findings_json`.
 
-If an implementation cannot derive an input above from existing fields, add `TODO_IMPLEMENT` naming the exact table and field before changing DDL.
+If an implementation cannot derive an input above from existing fields, record an implementation decision before server coding that names the exact table, field, owner document, and stage impact before changing DDL.
 
 Validator failure must be visible as state, blocked reasons, or close blockers. It must not be hidden in prose-only agent output.
 
