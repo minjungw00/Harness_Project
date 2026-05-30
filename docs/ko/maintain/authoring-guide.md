@@ -22,6 +22,42 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 각 문서는 독자에게 유용해야 하며 exact contract는 owner Reference 문서에 머물러야 합니다. Docs-maintenance checks는 drift를 보이게 하지만 runtime state, evidence, QA, acceptance, close readiness, implementation readiness를 만들지 않습니다.
 
+## 현재 재설계 범위
+
+이 저장소는 문서 검토와 재설계 단계입니다. 문서 편집은 Harness server/runtime 구현을 시작하지 않습니다. 생성된 runtime artifact나 실행 가능한 fixture를 만들지 않고, 구현 계획도 승인하지 않습니다.
+
+이번 재설계에서는 용어, MVP 단계, 스키마(schema) 구조, 투영(projection) 구조, 보안 표현, 문서 구성이 바뀔 수 있습니다. 정리된 제품 명제나 구현 가능성과 충돌하는 기존 문구는 연속성만으로 보존하지 않습니다.
+
+문서는 향후 Harness runtime artifact와 runtime rule에서 분리되어야 합니다. 문서가 향후 Harness 동작을 설명할 수는 있지만, 문서를 편집하는 행위 자체는 documentation maintenance입니다.
+
+## 보존하는 원칙
+
+구현 세부사항은 바뀔 수 있습니다. 다만 다음 원칙은 유지해야 합니다.
+
+- Harness는 prompt 묶음이 아닙니다. 범위, 사용자 소유 판단, 근거, 닫기 준비 상태를 다루는 로컬 권한 기록입니다.
+- 사용자 소유 판단에는 제품 결정, 중요한 기술 결정, QA 기대치, 작업 수락, 잔여 위험 수용이 포함됩니다.
+- 근거, 검증, 수동 QA, 작업 수락, 잔여 위험은 서로 다른 항목이며 서로를 대체할 수 없습니다.
+- 대화, Markdown으로 렌더링된 투영 문서, connector 출력, 생성 문서는 운영 기준이 아닙니다. Core가 소유한 로컬 상태와 아티팩트 참조가 운영 기준입니다.
+
+문서를 다시 쓰면서 용어, 단계, 스키마 구조, 투영 구조, 보안 표현, 문서 경계를 바꿀 때는 문장을 다듬기 전에 이 원칙이 유지되는지 먼저 확인합니다.
+
+## 알려진 재설계 쟁점 트래커
+
+문서를 다시 쓰는 동안에는 이 tracker를 사용합니다. 아래 항목은 maintainer용 재설계 쟁점입니다. Runtime 구현 작업이나 수락 기준이 아닙니다.
+
+| 쟁점 | 편집 규칙 |
+|---|---|
+| 사용자용 문서에 내부 용어가 너무 많습니다. | 사용자가 보는 상황을 먼저 설명하고, 내부 용어는 행동에 도움이 될 때만 소개합니다. |
+| 이 저장소가 앞으로 Harness Server 소스 저장소가 된다는 점이 분명하지 않습니다. | 현재는 문서 전용임을 분명히 하되, 나중에 Harness Server 소스 저장소가 될 의도도 보존합니다. |
+| 요구사항 탐색(discovery)과 확인이 구현 단위(Change Unit)로 너무 빨리 수렴할 수 있습니다. | 범위가 정해진 구현 단위를 요구하기 전에 초기 discovery 여지를 남깁니다. |
+| 제품/UX 판단과 기술 판단의 표시 범주가 스키마 소유권(schema ownership)과 완전히 맞지 않습니다. | 사용자에게 보이는 판단 범주를 owner schema/reference contract와 맞춥니다. Owner가 아닌 문서에서 future taxonomy를 결정하지 않습니다. |
+| Approval, acceptance, residual-risk acceptance를 혼동하기 쉽습니다. | 진행 허가, 작업 수락, 잔여 위험 수용을 예시와 routing text에서 분리합니다. |
+| 현재 MVP 단계가 너무 크고, 핵심 사용자 가치를 뒤로 미룰 수 있습니다. | MVP 크기와 초기 사용자 가치 사이의 긴장을 드러냅니다. Staging 결정은 owning Build/Reference 문서에 남깁니다. |
+| Projection/template 범위가 초기 구현에 비해 넓을 수 있습니다. | 초기 범위가 넓다는 점을 표시하고, staging 결정은 projection/template owner로 보냅니다. |
+| 보안 보장 표현은 실제 강제 수준과 맞아야 합니다. | Cooperative, detective, preventive, isolated 표현은 해당 surface가 그 수준을 제공할 때만 사용합니다. |
+| Agent context 전략은 prompt/context 부담이 과도해지지 않게 해야 합니다. | 항상 주입되는 agent context는 짧게 유지하고, 세부사항은 담당 문서나 조회 경로로 보냅니다. |
+| 문서는 Harness runtime artifact와 runtime rule에서 분리되어야 합니다. | 문서 유지보수 중에는 generated operational file, runtime state, fixture, product-repository example을 만들지 않습니다. |
+
 ## 문서 작성 원칙
 
 문서는 독자의 다음 행동에서 출발합니다. 독자가 무엇을 이해하고, 결정하고, 사용하고, 구현하고, 검증하고, 유지해야 하는지 분명해야 합니다.
@@ -36,35 +72,37 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 ## 문서 유형
 
+문서 tree는 소유권을 나누기 위한 구조입니다. Learn 문서는 이유를 설명합니다. Use 문서는 사용자와 agent가 어떻게 상호작용하는지 설명합니다. Build 문서는 구현 순서를 설명합니다. Reference 문서는 정확한 계약을 정의합니다. Maintain 문서는 문서 유지보수 규칙을 정의합니다. Normative contract를 여러 경로에 중복하지 말고, 필요한 곳에서는 짧게 요약한 뒤 owner로 연결합니다.
+
 ### Learn
 
 Learn 문서는 독자의 이해 모델을 만듭니다.
 
-목적, 개념, 예시, 절충점을 구현 세부사항보다 먼저 설명합니다. 독자에게 명령, 스키마, 체크리스트보다 방향 감각이 필요할 때 사용합니다.
+Harness가 왜 필요한지, 개념이 왜 중요한지, 어떤 절충점이 있는지를 구현 세부사항보다 먼저 설명합니다. 독자에게 명령, 스키마, 체크리스트보다 방향 감각이 필요할 때 사용합니다.
 
 ### Use
 
 Use 문서는 사용자가 AI 지원 개발 세션에서 Harness를 따라가도록 돕습니다.
 
-사용자에게 보이는 흐름, 상태 해석, 결정 지점, 복구 경로를 중심에 둡니다. 내부 gate는 사용자가 보는 막힘이나 next action을 설명할 때만 이름 붙입니다.
+사용자와 agent가 Harness와 어떻게 상호작용하는지 설명합니다. 사용자에게 보이는 흐름, 상태 해석, 결정 지점, handoff, 복구 경로를 중심에 둡니다. 내부 gate는 사용자가 보는 막힘이나 next action을 설명할 때만 이름 붙입니다.
 
 ### Build
 
 Build 문서는 문서 세트가 구현 계획에 사용할 수 있다고 승인된 뒤 reference system을 구현하는 사람을 돕습니다.
 
-구현 순서, module 경계, 실행 가능한 조각, 검증 전략을 설명합니다. 정확한 스키마, DDL, 불변 조건은 Reference 문서로 연결합니다.
+문서 세트가 구현 계획에 사용할 수 있다고 승인된 뒤의 구현 순서를 설명합니다. 구현 순서, module 경계, 실행 가능한 조각, staging, 검증 전략을 다룹니다. 정확한 스키마, DDL, 불변 조건은 Reference 문서로 연결합니다.
 
 ### Reference
 
 Reference 문서는 정확한 계약을 담당합니다.
 
-엄격한 스키마, gate, DDL, enum value, state transition, 불변 조건, API shape, storage rule, projection rule, fixture 의미, 공식 정의는 Reference 문서에 둡니다.
+엄격한 스키마, gate, DDL, enum value, state transition, 불변 조건, API shape, storage rule, projection rule, fixture 의미, 공식 정의를 정의합니다.
 
 ### Maintain
 
 Maintain 문서는 문서 시스템 자체를 관리합니다.
 
-작성 규칙, 번역 정책, 리뷰 체크리스트, link hygiene, ownership map, documentation-maintenance expectation을 정의합니다. Maintain 문서가 런타임 conformance spec이나 product implementation plan이 되면 안 됩니다.
+문서 유지보수 규칙을 정의합니다. 작성 규칙, 번역 정책, 리뷰 체크리스트, link hygiene, ownership map, documentation-maintenance expectation이 여기에 속합니다. Maintain 문서가 런타임 conformance spec이나 product implementation plan이 되면 안 됩니다.
 
 ## 진입점 규칙
 
@@ -190,6 +228,16 @@ Diagram은 인지 부담을 줄일 때만 사용합니다.
 
 `docs/en`의 의미가 바뀌면 같은 batch에서 `docs/ko`도 반영합니다. 반대 방향도 같습니다.
 
+## 한국어 문서 품질 규칙
+
+한국어 문서는 직역하지 않고 의미를 맞춰 갱신합니다. 같은 의미, owner link, stable identifier는 유지하되, 더 읽기 쉬우면 문장 순서, heading, 문단 묶음은 달라도 됩니다.
+
+한국어 사용자용 문서는 자연스러운 한국어를 먼저 씁니다. Stable English identifier는 독자가 알아보거나 검색하거나 정확한 계약과 맞춰야 할 때만 괄호로 붙입니다. 사용자용 section에서 어색한 bilingual prose를 만들지 않습니다.
+
+가능하면 한국어 문장은 영어 원문보다 짧게 둡니다. 긴 영어 문장 구조를 그대로 옮기지 말고 짧은 한국어 문장으로 나눕니다.
+
+Exact schema identifier, API name, enum value, DDL name, file name, error code, validator ID, code identifier, official product term은 Reference나 maintainer-facing context에서 정확히 보존합니다. Learn과 Use 문서에서는 독자의 next action에 필요한 경우가 아니라면 평범한 한국어 개념을 먼저 소개합니다.
+
 ## 링크와 이름 변경 규칙
 
 문서 이름을 바꾸거나, 옮기거나, 나누거나, 합칠 때는 양쪽 언어의 링크를 같은 batch에서 고칩니다.
@@ -290,7 +338,7 @@ Result 의미:
 | SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` |
 | MVP implementation order and stage exit criteria | `build/mvp-plan.md` |
 | First runnable implementation slice | `build/first-runnable-slice.md` |
-| Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact 참조 표시, template tiers, projection freshness/failure rules | `reference/document-projection.md` |
+| Markdown으로 렌더링되는 projection 원칙, authority matrix, managed blocks, human-editable sections, artifact 참조 표시, template tiers, projection freshness/failure rules | `reference/document-projection.md` |
 | 모든 projection template 본문과 표시 카드 형태 | `reference/templates/*.md` |
 | 설계 품질 정책 계약, validator ID, severity composition 규칙, 정책 waiver 의미, 근거 기대사항, close 영향 | `reference/design-quality-policies.md` |
 | User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` |

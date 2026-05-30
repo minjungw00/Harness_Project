@@ -2,11 +2,19 @@
 
 이 문서는 하네스 한국어 문서 세트의 길잡이입니다.
 
-이 저장소는 문서 재설계 / 피드백 반영 및 문서 검토 단계입니다. 이 페이지는 하네스 server/runtime 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 승인하지 않습니다. 첫 runtime batch 계획은 maintainer가 구현 handoff에서 문서를 명시적으로 승인하기 전까지 시작할 수 없습니다. 첫 제품 MVP 목표는 v0.1 Kernel MVP이며, Kernel Smoke는 이를 좁게 실행하는 conformance profile입니다. v0.2부터 v0.4까지는 Agency-Hardened MVP reference conformance target으로 가는 staged pack이고, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
+이 저장소는 문서 재설계 / 피드백 반영 및 문서 검토 단계입니다. 이 페이지는 하네스 server/runtime 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 승인하지 않습니다. 구현 계획은 maintainer가 구현 handoff에서 문서를 명시적으로 승인한 뒤에만 시작할 수 있습니다. 첫 제품 MVP 목표는 v0.1 Kernel MVP이며, Kernel Smoke는 이를 좁게 실행하는 conformance profile입니다. v0.2부터 v0.4까지는 Agency-Hardened MVP reference conformance target으로 가는 staged pack이고, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
 
 하네스는 AI 지원 제품 작업을 위한 로컬 작업 장부이자 판단 라우터입니다. 무엇을 바꿀 수 있는지, 누가 판단해야 하는지, 어떤 근거가 있는지, 어떤 잔여 위험이 있는지, 작업을 닫아도 되는지를 기록합니다.
 
-하네스는 사용자 판단권을 보존하는 로컬 권한 커널 원칙을 계속 따릅니다. 오래 남아야 하는 작업 사실은 지속 로컬 상태(durable local state), 아티팩트 참조, 읽기용 투영 문서(projection)에 두고, 사용자가 소유한 제품 판단과 중요한 기술 판단은 사용자에게 남겨 둡니다.
+하네스는 사용자 판단권을 보존하는 로컬 권한 커널 원칙을 계속 따릅니다. 오래 남아야 하는 작업 사실은 지속 로컬 상태와 아티팩트 참조에 기록하고, 읽기용 투영 문서는 기준 상태가 아닌 보기로 둡니다. 사용자가 소유한 제품 판단과 중요한 기술 판단은 사용자에게 남겨 둡니다.
+
+## 문서 재설계 범위
+
+현재 저장소 상태는 문서 검토와 재설계에 한정됩니다. 문서 편집은 runtime/server 구현을 시작하지 않습니다. 생성된 runtime artifact를 만들거나 구현 계획을 승인하지도 않습니다.
+
+이번 재설계에서는 용어, MVP 단계, 스키마(schema) 구조, 투영(projection) 구조, 보안 표현, 문서 구성이 바뀔 수 있습니다. 정리된 제품 명제와 구현 가능한 경로를 우선하며, 기존 문구는 연속성만으로 보존하지 않습니다.
+
+전체 재설계 범위, 보존 원칙, 문서군별 역할, [알려진 재설계 쟁점 추적 목록](maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)은 [문서 작성 가이드](maintain/authoring-guide.md#현재-재설계-범위)가 담당합니다.
 
 ## 하네스가 아닌 것
 
@@ -70,7 +78,7 @@ AI 지원 개발 세션을 하네스 기준으로 진행할 때 보는 경로입
 
 구현 방향을 파악하고 계획을 리뷰하기 위한 경로입니다. 첫 경로는 좁게 유지합니다. v0.1 Kernel MVP를 먼저 두고, Kernel Smoke를 그 좁은 conformance profile로 사용하며, v0.2 Evidence & Projection Pack, v0.3 Agency Pack, v0.4 Operations Pack은 Agency-Hardened MVP reference conformance target으로 가는 staged pack으로 다룹니다. v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 staged delivery 밖에 둡니다.
 
-먼저 [문서 승인 상태](build/implementation-overview.md#문서-승인-상태)를 확인합니다. maintainer가 그곳에서 첫 runtime batch 계획을 명시적으로 승인하기 전까지 Build 문서는 계획 지침이며 runtime/server 구현을 승인하지 않습니다.
+먼저 [문서 승인 상태](build/implementation-overview.md#문서-승인-상태)를 확인합니다. maintainer가 그곳에서 구현 계획을 명시적으로 승인하기 전까지 Build 문서는 계획 지침이며 runtime/server 구현을 승인하지 않습니다.
 
 - [구현 개요](build/implementation-overview.md)
 - [첫 실행 가능한 조각](build/first-runnable-slice.md)

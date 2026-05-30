@@ -22,6 +22,42 @@ For exact runtime contracts, use the Reference owner documents linked below. For
 
 Keep each document useful for its reader and keep exact contracts in their owner Reference docs. Documentation-maintenance checks make drift visible, but they do not create runtime state, evidence, QA, acceptance, close readiness, or implementation readiness.
 
+## Current Redesign Scope
+
+This repository is in documentation review/redesign only. Documentation edits do not start Harness server/runtime implementation, create generated runtime artifacts, produce executable fixtures, or authorize implementation planning.
+
+The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization. Do not preserve existing prose merely for continuity when it conflicts with the clarified product thesis or implementation feasibility.
+
+Documentation must remain separate from future harness runtime artifacts and runtime rules. A document may describe future Harness behavior, but the act of editing documentation is documentation maintenance only.
+
+## Preserved Principles
+
+Implementation details may change if these principles remain intact:
+
+- Harness is not a prompt pack. It is a local authority record for scope, user-owned judgment, evidence, and close readiness.
+- User-owned judgments include product decisions, important technical decisions, QA expectations, final acceptance, and residual-risk acceptance.
+- Evidence, verification, manual QA, final acceptance, and residual risk are separate and must not substitute for each other.
+- Chat, Markdown-rendered projections, connector output, and generated documents are not operational truth. Core-owned local state and artifact references are the authority.
+
+When a rewrite changes a term, stage, schema shape, projection shape, security claim, or document boundary, check that these principles still hold before polishing prose.
+
+## Known Redesign Issues Tracker
+
+Use this tracker during the documentation rewrite. These are maintainer-facing redesign issues, not runtime implementation tasks or acceptance criteria.
+
+| Issue | Editing rule |
+|---|---|
+| User-facing docs overuse internal terms. | Explain the user-visible situation first; introduce internal terms only when they help the reader act. |
+| Repository identity as the future Harness Server source repository is unclear. | State that the repo is currently documentation-only while preserving that it is intended to become the Harness Server source repository. |
+| Discovery / requirements clarification may converge too early on a Change Unit. | Leave room for early discovery before requiring a scoped implementation unit. |
+| Product/UX and technical judgment display categories are not fully aligned with schema ownership. | Align user-visible judgment categories with the owning schema/reference contract; do not decide the future taxonomy in non-owner text. |
+| Approval, acceptance, and residual-risk acceptance are too easy to confuse. | Keep permission to proceed, final acceptance, and residual-risk acceptance separate in examples and routing text. |
+| Current MVP staging may be too large while deferring core user-visible value. | Name the tension between MVP size and early user-visible value; leave staging decisions to the owning Build and Reference docs. |
+| Projection/template scope may be too broad for early implementation. | Flag broad early scope and route staging decisions to the projection/template owners. |
+| Security guarantee wording must match actual enforcement level. | Use cooperative, detective, preventive, or isolated wording only when the documented surface can provide that level. |
+| Agent context strategy must prevent excessive prompt/context load. | Keep always-on agent context short and route details to owner docs or retrieval paths. |
+| Documentation must remain separate from harness runtime artifacts and rules. | Do not create generated operational files, runtime state, fixtures, or product-repository examples during docs maintenance. |
+
 ## Documentation principles
 
 Write from the reader's next useful step. A document should make it easier for the reader to understand, decide, use, build, verify, or maintain something specific.
@@ -36,35 +72,37 @@ Write current documentation as current truth. Migration history, removed structu
 
 ## Document types
 
+Use the document tree as an ownership split. Learn docs explain why. Use docs explain how users and agents interact. Build docs explain implementation sequence. Reference docs define exact contracts. Maintain docs define documentation maintenance rules. Avoid duplicating normative contracts across these paths; summarize locally and link to the owner.
+
 ### Learn
 
 Learn docs build the reader's mental model.
 
-They explain purpose, concepts, examples, and trade-offs before implementation details. Use them when the reader needs orientation more than a command, schema, or checklist.
+They explain why Harness exists, why a concept matters, and what trade-offs shape the system before implementation details. Use them when the reader needs orientation more than a command, schema, or checklist.
 
 ### Use
 
 Use docs help a person operate Harness during an AI-assisted work session.
 
-They should emphasize user-facing flow, status interpretation, decisions, and recovery paths. Mention internal gates only when they explain why the user sees a block or next action.
+They explain how users and agents interact with Harness: user-facing flow, status interpretation, decisions, handoffs, and recovery paths. Mention internal gates only when they explain why the user sees a block or next action.
 
 ### Build
 
 Build docs help an implementer construct the reference system after the documentation set is accepted for implementation planning.
 
-They should explain implementation order, module boundaries, runnable slices, and verification strategy. Link to Reference docs for exact schemas, DDL, and invariants.
+They explain implementation sequence after the documentation set is accepted for implementation planning: implementation order, module boundaries, runnable slices, staging, and verification strategy. Link to Reference docs for exact schemas, DDL, and invariants.
 
 ### Reference
 
 Reference docs own exact contracts.
 
-They are the place for strict schemas, gates, DDL, enum values, state transitions, invariants, API shapes, storage rules, projection rules, fixture semantics, and official definitions.
+They define exact contracts: strict schemas, gates, DDL, enum values, state transitions, invariants, API shapes, storage rules, projection rules, fixture semantics, and official definitions.
 
 ### Maintain
 
 Maintain docs govern the documentation system itself.
 
-They define authoring rules, translation policy, review checklists, link hygiene, ownership maps, and documentation-maintenance expectations. They must not become runtime conformance specs or product implementation plans.
+They define documentation maintenance rules: authoring rules, translation policy, review checklists, link hygiene, ownership maps, and documentation-maintenance expectations. They must not become runtime conformance specs or product implementation plans.
 
 ## Entrypoint rule
 
@@ -190,6 +228,16 @@ Paired English/Korean files keep the same active file map and semantic section c
 
 Any semantic change in `docs/en` must be mirrored in `docs/ko` in the same batch, and the reverse is also true.
 
+## Korean documentation quality rule
+
+Update Korean files semantically, not by literal translation. The Korean version should carry the same meaning, owner links, and stable identifiers, but it may use different sentence order, headings, and paragraph grouping when that makes the page easier to read.
+
+In Korean user-facing text, prefer natural Korean first. Put stable English identifiers in parentheses only when they are needed for recognition, searchability, or exact contract alignment. Avoid awkward bilingual prose in user-facing sections.
+
+Keep Korean sentences shorter than the English source where possible. Split long English sentences into shorter Korean sentences instead of copying the structure.
+
+Preserve exact schema identifiers, API names, enum values, DDL names, file names, error codes, validator IDs, code identifiers, and official product terms in reference or maintainer-facing contexts. In Learn and Use docs, introduce the ordinary Korean idea first unless the exact identifier is required for the reader's next action.
+
 ## Link and rename rule
 
 When you rename, move, split, or merge a document, update links in both languages in the same batch.
@@ -290,7 +338,7 @@ Use this map when deciding where exact detail belongs. It identifies the active 
 | SQLite DDL, migrations, storage layout, lock policy, artifact directory layout, baseline capture format, projection job table | `reference/storage-and-ddl.md` |
 | MVP implementation order and stage exit criteria | `build/mvp-plan.md` |
 | First runnable implementation slice | `build/first-runnable-slice.md` |
-| Markdown projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md` |
+| Markdown-rendered projection principles, authority matrix, managed blocks, human-editable sections, artifact reference rendering, template tiers, projection freshness/failure rules | `reference/document-projection.md` |
 | All projection template bodies and display card shapes | `reference/templates/*.md` |
 | Design-quality policy contracts, validators, severity composition, waiver semantics, evidence expectations, close impact | `reference/design-quality-policies.md` |
 | User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` |

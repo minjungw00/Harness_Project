@@ -13,6 +13,14 @@ This repo is in pre-MVP Harness documentation redesign / feedback incorporation 
 - Documentation edits do not require Journey Card, `prepare_write`, Write Authorization, `task_events`, MCP state transitions, evidence, QA, acceptance, residual-risk acceptance, or close.
 - Do not create commits unless the user explicitly asks for commits.
 
+## Documentation Redesign Compass
+
+- The repository is in documentation review/redesign only; runtime/server implementation is not being started by these documentation edits.
+- The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization.
+- Do not preserve existing prose merely for continuity if it conflicts with the clarified product thesis or implementation feasibility.
+- Preserve the product thesis: Harness is not a prompt pack; it is a local authority record for scope, user-owned judgment, evidence, and close readiness. User-owned judgments, evidence/verification/QA/acceptance/risk boundaries, and Core-owned state/artifact authority must stay distinct.
+- The detailed redesign scope, preserved principles, document-family ownership guidance, Korean quality rules, and [known issue tracker](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) live in [Authoring Guide](docs/en/maintain/authoring-guide.md#current-redesign-scope).
+
 ## Harness Compass
 
 - When Harness is connected, no startup phrase is required. Infer Harness use from task shape; users do not need to say "Harness" or know internal labels.

@@ -2,11 +2,19 @@
 
 This is the English routing page for the Harness documentation set.
 
-This repository is in documentation redesign / feedback incorporation and documentation review. This page does not authorize Harness server/runtime implementation, generated operational files, executable fixtures, or runtime data. First runtime-batch planning may not begin until maintainers deliberately accept the docs in the implementation handoff. The first product MVP target is v0.1 Kernel MVP, exercised by the Kernel Smoke conformance profile; v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, and v1+ Expansion stays in the roadmap unless owner docs promote and prove it.
+This repository is in documentation redesign / feedback incorporation and documentation review. This page does not authorize Harness server/runtime implementation, generated operational files, executable fixtures, or runtime data. Implementation planning must wait until maintainers deliberately accept the docs in the implementation handoff. The first product MVP target is v0.1 Kernel MVP, exercised by the Kernel Smoke conformance profile; v0.2 through v0.4 are staged packs toward the Agency-Hardened MVP reference conformance target, and v1+ Expansion stays in the roadmap unless owner docs promote and prove it.
 
 Harness is a local work ledger and judgment router for AI-assisted product work. It records what may change, who must decide, what evidence exists, what risk remains, and whether the work can close.
 
-Harness still follows the agency-preserving local authority kernel principle: durable work facts stay in local state, artifact refs, and readable projections, while user-owned product and material technical judgment stays with the user.
+Harness still follows the agency-preserving local authority kernel principle: durable work facts are recorded in local state and artifact refs, readable projections are non-authoritative views, and user-owned product and material technical judgment stays with the user.
+
+## Documentation Redesign Scope
+
+The current repository state is documentation review/redesign only. Documentation edits do not start runtime/server implementation, create generated runtime artifacts, or authorize implementation planning.
+
+The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization. Preserve the clarified product thesis and feasible implementation path over continuity with existing prose.
+
+The [Authoring Guide](maintain/authoring-guide.md#current-redesign-scope) owns the full redesign scope, preserved principles, document-family guidance, and [known redesign issues tracker](maintain/authoring-guide.md#known-redesign-issues-tracker).
 
 ## What Harness Is Not
 
@@ -70,7 +78,7 @@ Use this path when you want to run an AI-assisted development session under Harn
 
 Use this path for implementation orientation and planning review. These pages keep the first path narrow: v0.1 Kernel MVP first, Kernel Smoke as its narrow conformance profile, v0.2 through v0.4 as staged packs toward Agency-Hardened MVP, and v1+ Expansion outside staged delivery unless owner docs promote and prove it.
 
-Start with the [Documentation Acceptance Status](build/implementation-overview.md#documentation-acceptance-status). Until maintainers deliberately accept first runtime-batch planning there, Build pages remain planning guidance and do not authorize runtime/server implementation.
+Start with the [Documentation Acceptance Status](build/implementation-overview.md#documentation-acceptance-status). Until maintainers deliberately accept implementation planning there, Build pages remain planning guidance and do not authorize runtime/server implementation.
 
 - [Implementation Overview](build/implementation-overview.md)
 - [First Runnable Slice](build/first-runnable-slice.md)

@@ -2,15 +2,37 @@
 
 Harness is a local work ledger and judgment router for AI-assisted product work. It records what may change, who must decide, what evidence exists, what risk remains, and whether the work can close.
 
-Harness still follows the agency-preserving local authority kernel principle: durable work facts stay in local state, artifact refs, and readable projections, while user-owned product and material technical judgment stays with the user.
+Harness still follows the agency-preserving local authority kernel principle: durable work facts are recorded in local state and artifact refs, readable projections are non-authoritative views, and user-owned product and material technical judgment stays with the user.
 
 This repository is currently in documentation redesign / feedback incorporation and documentation review/acceptance. Harness is not implemented here yet as a server or runtime.
 
 Harness는 AI 지원 제품 작업을 위한 로컬 작업 장부이자 판단 라우터입니다. 무엇을 바꿀 수 있는지, 누가 판단해야 하는지, 어떤 근거가 있는지, 어떤 위험이 남았는지, 작업을 닫아도 되는지를 기록합니다.
 
-Harness는 사용자 판단권을 보존하는 로컬 권한 커널이라는 원칙을 계속 따릅니다. 오래 남아야 하는 작업 사실은 지속 로컬 상태, 아티팩트 참조, 읽기용 투영 문서(projection)에 두고, 사용자가 소유한 제품 판단과 중요한 기술 판단은 사용자에게 남겨 둡니다.
+Harness는 사용자 판단권을 보존하는 로컬 권한 커널이라는 원칙을 계속 따릅니다. 오래 남아야 하는 작업 사실은 지속 로컬 상태와 아티팩트 참조에 기록하고, 읽기용 투영 문서는 기준 상태가 아닌 보기로 둡니다. 사용자가 소유한 제품 판단과 중요한 기술 판단은 사용자에게 남겨 둡니다.
 
 이 저장소는 현재 문서 재설계 / 피드백 반영 및 문서 검토/승인 단계에 있습니다. 이 저장소에는 아직 Harness server 또는 runtime이 구현되어 있지 않습니다.
+
+## Documentation Redesign Scope / 문서 재설계 범위
+
+This repository is currently for documentation review and redesign only. Documentation edits do not start Harness server/runtime implementation, create runtime artifacts, or authorize implementation planning.
+
+The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization. Existing prose should not be preserved merely for continuity when it conflicts with the clarified product thesis or implementation feasibility.
+
+이 저장소의 현재 작업은 문서 검토와 재설계에 한정됩니다. 문서 편집은 Harness server/runtime 구현을 시작하지 않으며, runtime artifact를 만들거나 구현 계획을 승인하지 않습니다.
+
+이번 재설계에서는 용어, MVP 단계, 스키마(schema) 구조, 투영(projection) 구조, 보안 표현, 문서 구성이 바뀔 수 있습니다. 기존 문구가 정리된 제품 명제나 구현 가능성과 충돌한다면, 연속성만을 이유로 보존하지 않습니다.
+
+## Preserved Principles / 보존하는 원칙
+
+Preserve the core thesis: Harness is not a prompt pack; it is a local authority record for scope, user-owned judgment, evidence, and close readiness. Product decisions, important technical decisions, QA expectations, final acceptance, and residual-risk acceptance remain user-owned judgments. Evidence, verification, manual QA, final acceptance, and residual risk stay separate. Chat, Markdown-rendered projections, connector output, and generated documents are not operational truth; Core-owned local state and artifact references are authoritative.
+
+핵심 명제는 유지합니다. Harness는 prompt 묶음이 아니라 범위, 사용자 소유 판단, 근거, 닫기 준비 상태를 다루는 로컬 권한 기록입니다. 제품 결정, 중요한 기술 결정, QA 기대치, 작업 수락, 잔여 위험 수용은 사용자 소유 판단입니다. 근거, 검증, 수동 QA, 작업 수락, 잔여 위험은 서로 대체할 수 없습니다. 대화, Markdown으로 렌더링된 투영 문서, connector 출력, 생성 문서는 운영 기준이 아니며, Core가 소유한 로컬 상태와 아티팩트 참조가 운영 기준입니다.
+
+## Known Redesign Issues / 알려진 재설계 쟁점
+
+The authoritative maintainer tracker is in the [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커). Keep entrypoint summaries short and route redesign details there.
+
+재설계 쟁점의 maintainer용 기준 tracker는 [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에 있습니다. 진입점 문서는 짧게 요약하고, 재설계 세부사항은 그곳으로 연결합니다.
 
 ## What Harness Is Not / Harness가 아닌 것
 
@@ -27,10 +49,10 @@ AGENTS.md / agent rule, MCP, spec-driven workflow, hook / sidecar, test runner /
 
 | Check / 확인 | Current status / 현재 상태 |
 |---|---|
-| Documentation redesign / feedback incorporation / 문서 재설계와 피드백 반영 | Active; follow-up cleanup status is reflected, and acceptance still requires a deliberate maintainer update. / 진행 중입니다. 후속 cleanup status가 반영되었으며, acceptance는 여전히 maintainer의 명시적 갱신이 필요합니다. |
-| Docs accepted for first runtime-batch planning / 첫 runtime batch 계획을 위한 문서 승인 | Not yet; maintainers must update the handoff status deliberately. / 아직 아닙니다. maintainer가 handoff 상태를 명시적으로 갱신해야 합니다. |
+| Documentation redesign / feedback incorporation / 문서 재설계와 피드백 반영 | Active; acceptance still requires a deliberate maintainer update. / 진행 중입니다. Acceptance는 여전히 maintainer의 명시적 갱신이 필요합니다. |
+| Docs accepted for implementation planning / 구현 계획을 위한 문서 승인 | Not yet; maintainers must update the handoff status deliberately. / 아직 아닙니다. maintainer가 handoff 상태를 명시적으로 갱신해야 합니다. |
 | Runtime/server implementation / runtime/server 구현 | Not started. / 시작하지 않았습니다. |
-| Open follow-up docs issues / 열려 있는 문서 후속 이슈 | Known non-blocking owner-recorded follow-up remains: `TODO_DECISION(schema-owner)` on whether a future schema-owned display judgment type category is needed. No known blocking docs-maintenance drift remains after the projection-tier, conformance-split, Korean terminology, and residual MVP wording cleanup. Docs accepted for first runtime-batch planning is still No unless maintainers deliberately change it; runtime/server implementation remains Not started. Docs-maintenance status is not runtime conformance or implementation readiness. / 알려진 비차단 owner-recorded follow-up은 남아 있습니다. future schema-owned display judgment type category 필요 여부를 정하는 `TODO_DECISION(schema-owner)`입니다. Projection-tier, conformance-split, 한국어 용어, 잔여 MVP wording cleanup 뒤 알려진 차단 docs-maintenance drift는 없습니다. 첫 runtime batch 계획을 위한 docs accepted는 maintainer가 명시적으로 바꾸기 전까지 여전히 아니오이며, runtime/server 구현은 시작하지 않았습니다. Docs-maintenance status는 runtime conformance나 구현 준비 상태가 아닙니다. |
+| Open follow-up docs issues / 열려 있는 문서 후속 이슈 | Known redesign issues are tracked in the [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker). They are documentation redesign inputs, not runtime conformance, implementation readiness, or authorization to start server/runtime implementation. Docs accepted for implementation planning remains No unless maintainers deliberately change the handoff status. / 알려진 재설계 쟁점은 [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에서 관리합니다. 이 쟁점은 문서 재설계 입력이며 runtime conformance, 구현 준비 상태, server/runtime 구현 시작 승인이 아닙니다. 구현 계획을 위한 docs accepted는 maintainer가 handoff 상태를 명시적으로 바꾸기 전까지 여전히 아니오입니다. |
 
 Until the docs-accepted row is deliberately set to Yes in the maintainer handoff status, work remains documentation maintenance and runtime/server implementation must not start.
 
