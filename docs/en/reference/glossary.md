@@ -30,7 +30,7 @@ Use these words first in user-facing docs, prompts, and status summaries. They a
 |---|---|
 | work | The thing the user wants completed, answered, investigated, or decided. |
 | scope | What may change, what is out of bounds, and where the agent should stop before continuing. |
-| judgment | A user-owned choice, such as a product direction, material technical trade-off, sensitive action, QA waiver, accepting the result, or risk decision. |
+| judgment | A user-owned choice, such as a product direction, material technical trade-off, sensitive-action approval, scoped QA or verification waiver, final acceptance, or residual-risk acceptance. |
 | evidence | Durable support for a claim about the work. |
 | close readiness | What still has to be true before the work can finish or close. |
 | risk | Known uncertainty, limitation, skipped check, trade-off, or possible consequence that should remain visible. |
@@ -55,7 +55,7 @@ These are implementation labels used by references, APIs, schemas, records, and 
 
 | Term family | Reference owner |
 |---|---|
-| Task, Change Unit, gates, close, approval, acceptance, verification, QA, residual risk, write authority | [Kernel Reference](kernel.md) |
+| Task, Change Unit, gates, close, sensitive-action approval, final acceptance, verification, QA, residual risk, write authority | [Kernel Reference](kernel.md) |
 | MCP resources, MCP tools, public schemas, errors, `ValidatorResult`, `ProjectionKind` | [MCP API And Schemas](mcp-api-and-schemas.md) |
 | SQLite records, artifact layout, enum hardening, `tree_hash`, `request_hash` storage use | [Storage And DDL](storage-and-ddl.md) |
 | Projections, managed blocks, projection freshness, Markdown reports, template bodies | [Document Projection Reference](document-projection.md); [Template Reference](templates/README.md) |
@@ -73,7 +73,7 @@ The degree to which harness behavior, projections, validators, and close decisio
 
 ### Acceptance
 
-The user's judgment that the result and remaining trade-offs are acceptable after close-relevant residual risk is visible or confirmed absent. Required Acceptance is recorded through the kernel acceptance path, including a Decision Packet user decision, `task_gates.acceptance_gate`, and `state.sqlite.task_events`. Acceptance is separate from approval, assurance, verification, Manual QA, evidence sufficiency, and residual-risk acceptance. It does not authorize more writes or retroactively satisfy a missing check.
+The user's final judgment that the result of the work is acceptable after evidence, verification, Manual QA status, and close-relevant residual risk are shown or confirmed absent. Required Acceptance is recorded through the kernel acceptance path, including a Decision Packet user decision, `task_gates.acceptance_gate`, and `state.sqlite.task_events`. Acceptance is separate from sensitive-action approval, assurance, verification, Manual QA, evidence sufficiency, waiver, and residual-risk acceptance. It does not authorize more writes, accept known risk by itself, erase residual risk, or retroactively satisfy a missing check.
 
 ### Acceptance Gate
 
@@ -83,11 +83,11 @@ Required Acceptance in the current reference model is recorded through a Decisio
 
 ### Approval
 
-A prior user decision allowing a sensitive action to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. When Approval is requested, Core captures the user judgment through an approval-shaped Decision Packet and linked Approval record; granted sensitive-action Approval still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it does not resolve user-owned product or material technical judgment, prove correctness, record Acceptance, accept residual risk, or replace a Decision Packet.
+A limited prior user authorization allowing a specific sensitive action or bounded sensitive operation to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. When Approval is requested, Core captures the user judgment through an approval-shaped Decision Packet and linked Approval record; granted sensitive-action Approval still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it is not generic agreement, final acceptance, residual-risk acceptance, QA waiver, verification waiver, correctness proof, or a substitute for user-owned product or material technical judgment.
 
 ### Approval Gate
 
-The kernel gate for sensitive-action Approval. It is required only when sensitive categories are present. Granted sensitive-action Approval does not prove correctness, imply acceptance, resolve user-owned judgment, or create Write Authorization.
+The kernel gate for sensitive-action Approval. It is required only when sensitive categories are present. Granted sensitive-action Approval does not prove correctness, imply final acceptance, accept residual risk, waive QA or verification, resolve user-owned judgment, or create Write Authorization.
 
 ### Assumption Register
 
@@ -395,6 +395,10 @@ A public MCP operation that asks Core to validate, record, transition, or close 
 
 A human-readable document generated from state records and artifact references. A Markdown report is not a raw artifact by default and does not become canonical state.
 
+### Natural-Language Consent
+
+A user utterance such as "go ahead," "proceed," or "looks good" that may answer a pending question only when the active prompt makes the exact decision route, option, scope, affected gates, consequences, and remaining non-approved items unambiguous. Natural-language consent is not its own authority path. Ambiguous consent must be clarified rather than broadened into sensitive-action Approval, final acceptance, residual-risk acceptance, QA waiver, verification waiver, or Write Authorization.
+
 ### Module Map
 
 The product's map of modules, responsibilities, public interfaces, dependency direction, internal complexity, test boundaries, owner decisions, and watchpoints. The canonical source is `module_map_items`. A module boundary update records the shared technical understanding; it does not approve writes or accept risk. Boundary changes that shift product commitments, caller obligations, or architecture direction route through design-quality policy and Decision Packet paths when user-owned judgment is required.
@@ -479,7 +483,7 @@ The idempotency hash of a tool request, computed from canonical UTF-8 JSON cover
 
 ### Residual Risk
 
-A canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact. Known close-relevant Residual Risk must be visible before any successful acceptance or close, or `ResidualRiskSummary.status=none` must confirm no known close-relevant risk. User acceptance of risk does not create detached verification, Manual QA pass, sensitive-action Approval, or Acceptance. Accepted risk is metadata/state on the Residual Risk record in the current reference model, not a separate `accepted_risk` state record.
+A canonical close-relevant support record for known remaining uncertainty, trade-off, limitation, or unchecked condition after evidence, verification, QA, and acceptance work. It records source refs, affected scope, related Decision Packet when applicable, visibility status, accepted risk when applicable, follow-up requirement, and close impact. Known close-relevant Residual Risk must be visible before any successful acceptance or close, or `ResidualRiskSummary.status=none` must confirm no known close-relevant risk. Residual-risk acceptance means the user explicitly accepts a named known remaining risk; it does not mean the result is otherwise verified, accepted, approved for sensitive action, or waived. Accepted risk is metadata/state on the Residual Risk record in the current reference model, not a separate `accepted_risk` state record.
 
 ### Risk Accepted Close
 
@@ -595,7 +599,7 @@ A Change Unit shape that connects a thin path from trigger/input through domain 
 
 ### Waiver
 
-An explicit recorded exception to a gate or policy requirement where policy allows it. A waiver names the policy or gate, Task and Change Unit, reason, accepted risk, actor, expiry or follow-up when needed, and affected gate or close impact. Verification waiver, design waiver, and QA waiver are allowed under defined rules. Product-write scope, sensitive-action Approval, required evidence coverage, and required acceptance are not waived for successful completion. Verification waiver and QA waiver do not upgrade assurance or make skipped checks appear passed.
+An explicit recorded exception to a gate or policy requirement where policy allows it. A waiver names the policy or gate, Task and Change Unit, skipped check or surface, reason, actor, expiry or follow-up when needed, affected gate or close impact, and any close-relevant residual risk that must be visible or accepted through the residual-risk path when required. Verification waiver, design waiver, and QA waiver are allowed under defined rules only when explicit and scoped. Product-write scope, sensitive-action Approval, required evidence coverage, and required acceptance are not waived for successful completion. Verification waiver and QA waiver do not upgrade assurance, imply final acceptance, accept unrelated residual risk, or make skipped checks appear passed.
 
 ### Write Authorization
 

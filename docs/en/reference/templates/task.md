@@ -17,7 +17,7 @@ Boundary: projection template only; it does not authorize runtime/server impleme
 - latest Run, Evidence Manifest, Eval, Manual QA record, and approval records
 - compact authority source refs for Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
 - primary blocker, secondary blocker, and smallest unblocker display summaries
-- close summary display inputs, including changed scope, evidence, verification, Manual QA, residual risk, acceptance, and close reason
+- close summary display inputs, including changed scope, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, waivers, and close reason
 - Journey Spine source records
 - `domain_terms`, `module_map_items`, `interface_contracts`, and `feedback_loops`
 - `tdd_traces` when TDD is selected
@@ -90,8 +90,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Close Readiness:
   - verification:
   - Manual QA:
-  - residual risk:
-  - acceptance:
+  - residual-risk visibility:
+  - residual-risk acceptance:
+  - final acceptance:
+  - waiver status:
   - close blockers / close reason:
   - smallest unblocker:
 - note: These are display groups only. Exact gate values, recompute rules, and close semantics are owned by Kernel Reference.
@@ -236,6 +238,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 - close-relevant risk:
 - visibility status:
 - status value:
+- named risk being accepted:
+- residual-risk acceptance status:
 - accepted residual-risk refs:
 - follow-up required:
 - close impact:
@@ -245,8 +249,11 @@ updated_at: 2026-05-06T09:30:15+09:00
 - evidence:
 - verification:
 - Manual QA:
-- residual risk:
-- acceptance:
+- residual-risk visibility:
+- residual-risk acceptance:
+- final acceptance:
+- what final acceptance does not replace:
+- waiver status:
 - authority source refs:
 - display state label (plain text, not a schema value):
 - self-check refs:
@@ -399,7 +406,7 @@ Change Unit block sub-template:
   - product direction:
   - material technical direction:
   - public interface or compatibility commitment:
-  - residual risk acceptance:
+  - residual-risk acceptance:
 - AFK stop conditions:
   - boundary exceeded:
   - evidence cannot be produced:
@@ -470,15 +477,15 @@ Gate Group Summary is the first managed section so readers see the practical blo
 
 Decision Packet display in `TASK` should show the schema-owned `judgment_domain` so users can scan whether they are making a Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed judgment. Use it as the primary display grouping. If a decision is cross-cutting, render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the domain as exclusive. `judgment_domain` is not a gate, status, validator input, close aggregation rule, or authority path, and it must not blur the owner contracts for `decision_kind`, Approval, acceptance, QA, residual-risk acceptance, close, or Write Authorization.
 
-Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to Write Authorization refs, sensitive-action permission to Approval refs, evidence sufficiency to Evidence Manifest refs, detached verification to Eval refs, Manual QA to Manual QA records or valid waiver refs, final acceptance to Acceptance Decision Packet refs, and residual-risk visibility or acceptance to Residual Risk refs or `ResidualRiskSummary.status=none`. Missing refs should render as missing support, not as completed authority.
+Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to Write Authorization refs, sensitive-action permission to Approval refs, evidence sufficiency to Evidence Manifest refs, detached verification to Eval refs, Manual QA to Manual QA records or valid waiver refs, final acceptance to Acceptance Decision Packet refs, residual-risk visibility to Residual Risk refs or `ResidualRiskSummary.status=none`, and residual-risk acceptance to accepted Residual Risk refs. Missing refs should render as missing support, not as completed authority.
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means no known close-relevant residual risk exists for the requested action. `not_visible` means known close-relevant risk exists but has not been made visible enough for acceptance or close; it should remain a blocker or next action until the risk and refs are shown.
 
 Close and assurance display in `TASK` must keep self-checked work, `detached_verified`, verification waiver, QA waiver, and residual-risk accepted close visibly separate. A residual-risk accepted close should cite accepted Residual Risk refs and any required Decision Packet; a verification waiver should cite `verification_gate=waived_by_user` and its Decision Packet when required; a QA waiver should cite `qa_gate=waived`, the Manual QA record or waiver reason, and the QA waiver Decision Packet when required.
 
-Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the policy or gate, Task and Change Unit, skipped check or surface, reason, accepted residual risk, actor, expiry or residual-risk follow-up when needed, relevant refs, and close impact. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
+Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the policy or gate, Task and Change Unit, skipped check or surface, reason, actor, expiry or residual-risk follow-up when needed, relevant refs, close impact, and any close-relevant residual risk that must be visible or accepted through the residual-risk path when required. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
 
-Close Summary in `TASK` is a continuity display summary for active or recently closed `work` tasks. It must not hide gate status or residual risk. When close is successful, blocked, canceled, or residual-risk accepted, the summary should show changed scope, evidence, verification, Manual QA, residual risk, acceptance, close reason, and residual-risk follow-up as applicable, with refs back to owner records.
+Close Summary in `TASK` is a continuity display summary for active or recently closed `work` tasks. It must not hide gate status or residual risk. When close is successful, blocked, canceled, or residual-risk accepted, the summary should show changed scope, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, waiver status, close reason, and residual-risk follow-up as applicable, with refs back to owner records. Final acceptance and residual-risk acceptance must remain separate lines: final acceptance is the user's result judgment, while residual-risk acceptance must identify the accepted risk and cite accepted Residual Risk refs.
 
 Direct work uses `DIRECT-RESULT` for its low-ceremony close impact summary, and Journey Card close context is compact status/resume display. `TASK` Close Summary remains a continuity display under the [projection/report boundary](../document-projection.md#projection-principles); close and gate effects still come from owner records.
 

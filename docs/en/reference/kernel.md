@@ -70,16 +70,17 @@ The kernel makes product writes and close decisions depend on explicit state: ac
 
 ## Judgment route boundaries
 
-User judgment reaches kernel state through specific routes. Broad approval text is valid only when the active prompt and recorded payload name the route, affected scope, options or consequence, and close or write impact.
+User judgment reaches kernel state through specific routes. Broad approval text is valid only when the active prompt and recorded payload name the route, affected scope, options or consequence, and close or write impact. A single "yes" can answer only the specific pending decision it unambiguously maps to.
 
 | Route | Kernel meaning | Must not be treated as |
 |---|---|---|
-| Approval | Sensitive-action permission inside a defined scope and expiry. | Product direction, material technical direction, correctness proof, final acceptance, residual-risk acceptance, QA, verification, evidence, or Write Authorization. |
-| Decision Packet | Canonical route for user-owned product, material technical, waiver, acceptance, residual-risk, or reconcile judgment. | Sensitive-action Approval unless it is approval-shaped and linked to an Approval record; product-write authority; detached verification. |
-| Acceptance | User judgment that the result is acceptable when required, after close-relevant residual risk is visible or confirmed absent. | Evidence sufficiency, verification, Manual QA, sensitive-action Approval, residual-risk acceptance, or permission for more writes. |
-| Residual-risk acceptance | User judgment that visible close-relevant remaining risk is acceptable for the requested close. | Normal no-risk close, detached verification, QA pass, sensitive-action Approval, evidence, or final acceptance unless the acceptance gate is separately satisfied. |
+| Approval | Sensitive-action permission inside a defined scope and expiry. | Generic agreement, product direction, material technical direction, correctness proof, final acceptance, residual-risk acceptance, QA waiver, verification waiver, evidence, or Write Authorization. |
+| Decision Packet | Canonical route for user-owned product, material technical, waiver, final acceptance, residual-risk, or reconcile judgment. | Sensitive-action Approval unless it is approval-shaped and linked to an Approval record; product-write authority; detached verification. |
+| Final acceptance | User judgment that the result is acceptable when required, after evidence, verification, QA status, and close-relevant residual risk are visible or confirmed absent. | Evidence sufficiency, verification, Manual QA, sensitive-action Approval, residual-risk acceptance, waiver, or permission for more writes. |
+| Residual-risk acceptance | User judgment that an identified visible close-relevant remaining risk is acceptable for the requested close. | Normal no-risk close, detached verification, QA pass, sensitive-action Approval, evidence, final acceptance, or waiver unless those separate routes are also satisfied. |
+| QA or verification waiver | Explicit scoped exception to the named QA or verification requirement when policy allows it. | Manual QA pass, detached verification, final acceptance, generic approval, sensitive-action Approval, or acceptance of unrelated residual risk. |
 
-A generic user phrase such as "go ahead" does not decide product trade-offs, architecture choices, QA waivers, verification risk, final acceptance, or residual-risk acceptance unless it is recorded through the compatible route above.
+A generic user phrase such as "go ahead," "proceed," or "looks good" does not decide product trade-offs, architecture choices, QA waivers, verification risk, final acceptance, or residual-risk acceptance unless it is recorded through the compatible route above and the pending decision is unambiguous. If the phrase could plausibly apply to more than one decision type, Core or the agent must clarify instead of over-interpreting it.
 
 ## Reference scope
 
@@ -413,7 +414,7 @@ Residual Risk is a canonical close-relevant support record for known remaining u
 
 Residual Risk records make remaining risk visible before acceptance or risk-accepted close. They do not create detached verification, replace evidence, waive QA, grant sensitive-action Approval, or imply final acceptance.
 
-Accepted risk is not a separate canonical state record in the current reference model. Risk acceptance updates accepted-risk metadata/status on the relevant Residual Risk record and may append residual-risk acceptance events. Any public accepted-risk ref field that remains in an API or projection must point to a `StateRecordRef` with `record_kind=residual_risk`, not to an `accepted_risk` or `ARISK-*` record.
+Accepted risk is not a separate canonical state record in the current reference model. Residual-risk acceptance updates accepted-risk metadata/status on the relevant Residual Risk record and may append residual-risk acceptance events. Any public accepted-risk ref field that remains in an API or projection must point to a `StateRecordRef` with `record_kind=residual_risk`, not to an `accepted_risk` or `ARISK-*` record.
 
 ### Artifact
 
@@ -657,9 +658,9 @@ not_required | required | pending | passed | failed | waived
 not_required | required | pending | accepted | rejected
 ```
 
-`acceptance_gate` records the user's final acceptance judgment where acceptance is required. It does not replace QA or verification.
+`acceptance_gate` records the user's final acceptance judgment where acceptance is required. It does not replace QA or verification, approve sensitive actions, waive checks, or accept known residual risk by itself.
 
-Final acceptance in the current reference model is stored through the canonical Decision Packet user-decision path, the Task's `acceptance_gate`, and `state.sqlite.task_events`. The kernel does not define a separate Acceptance state record.
+Final acceptance in the current reference model is stored through the canonical Decision Packet user-decision path, the Task's `acceptance_gate`, and `state.sqlite.task_events`. The kernel does not define a separate Acceptance state record. If close-relevant residual risk exists, final acceptance can be recorded only after that risk is visible, but accepting the result does not mark the risk accepted unless a residual-risk acceptance decision names the risk and records the accepted Residual Risk refs.
 
 Residual-risk visibility is satisfied in either of two ways. If no known close-relevant Residual Risk exists, the current judgment context reports `ResidualRiskSummary.status=none`. If known close-relevant Residual Risk exists, that risk must be visible in the current judgment context before any successful close. Acceptance, when required, can be recorded only after close-relevant residual risk is visible or confirmed as `ResidualRiskSummary.status=none`. A risk-accepted close additionally requires visible and accepted Residual Risk refs, and residual-risk acceptance never upgrades assurance to `detached_verified`. `ResidualRiskSummary.status=none` must not hide or replace known close-relevant risk.
 
@@ -671,7 +672,7 @@ The kernel interprets `ResidualRiskSummary.status` as follows:
 |---|---|
 | `none` | Core knows of no close-relevant Residual Risk for the current Task and requested action; all risk-ref arrays are empty. |
 | `not_visible` | Known close-relevant risk exists but is not visible in the current judgment context; `not_visible_refs` lists it. |
-| `visible` | Known close-relevant risk is visible to the user; `visible_refs` lists the visible risk refs. Some or all may also appear in `unaccepted_refs` if risk acceptance is needed. |
+| `visible` | Known close-relevant risk is visible to the user; `visible_refs` lists the visible risk refs. Some or all may also appear in `unaccepted_refs` if residual-risk acceptance is needed. |
 | `accepted` | Close-relevant risk required for risk-accepted close has been accepted; `accepted_refs` lists those `residual_risk` refs. |
 | `blocked` | Risk visibility or acceptance cannot currently be resolved; risk-ref arrays should identify the relevant `residual_risk` records where possible. |
 
@@ -1048,12 +1049,12 @@ User-visible close wording must preserve this distinction: `completed_verified` 
 
 ## Waiver semantics
 
-Waivers are explicit user or policy decisions that must be recorded with policy or gate name, Task and Change Unit, reason, accepted risk, actor, time, expiry or follow-up when needed, and affected gate or close impact.
+Waivers are explicit user or policy decisions that must be recorded with policy or gate name, Task and Change Unit, skipped check or surface, reason, actor, time, expiry or follow-up when needed, affected gate or close impact, and any close-relevant residual risk that must be visible or accepted through the residual-risk path when required. A waiver must be scoped to the named requirement; generic Approval, final acceptance, or "looks good" wording cannot imply it.
 
 Allowed waivers:
 
 - `design_gate=waived` when policy allows design-quality waiver.
-- `verification_gate=waived_by_user` when the user accepts remaining verification risk, with the relevant verification-waiver Decision Packet when required.
+- `verification_gate=waived_by_user` when the verification requirement is explicitly waived, with the relevant verification-waiver Decision Packet and residual-risk acceptance path when close-relevant risk must be accepted.
 - `qa_gate=waived` when required QA is waived with reason, with a QA waiver Decision Packet when product/user risk or policy-required judgment is involved.
 
 Not allowed:
@@ -1063,7 +1064,7 @@ Not allowed:
 - Evidence waiver where evidence is required for completion.
 - Acceptance waiver where acceptance is required.
 
-Verification waiver is not detached verification. A task closed through verification waiver uses `close_reason=completed_with_risk_accepted` and `assurance_level=none` or `self_checked`. If accepted verification risk has not been recorded on visible close-relevant Residual Risk refs, close remains blocked instead of falling back to `completed_verified` or `completed_self_checked`.
+Verification waiver is not detached verification. A task closed through verification waiver uses `close_reason=completed_with_risk_accepted` and `assurance_level=none` or `self_checked`. If the waived verification gap is close-relevant and residual-risk acceptance has not been recorded on visible Residual Risk refs, close remains blocked instead of falling back to `completed_verified` or `completed_self_checked`.
 
 QA waiver is not Manual QA pass, verification, acceptance, or assurance upgrade. It only records that the named QA requirement was validly waived and leaves evidence, verification, acceptance, and residual-risk checks to their own gates.
 

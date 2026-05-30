@@ -101,7 +101,7 @@ A good clarification response should separate:
 - QA and verification expectations
 - first implementation candidate or work-splitting candidate
 
-When the request needs judgment, the agent should name the kind of judgment instead of asking for broad approval.
+When the request needs judgment, the agent should name the kind of judgment instead of asking for broad approval. Sensitive-action approval, final acceptance, residual-risk acceptance, and QA or verification waiver are separate decisions.
 
 Product or UX judgment:
 
@@ -242,7 +242,7 @@ Most status should fit into four everyday groups. The agent may use exact Harnes
 | Group | Plain question | What the agent should show |
 |---|---|---|
 | Scope | What work are we doing, and what are we not doing? | Included behavior, out-of-scope items, affected areas, and whether the next action fits. |
-| Judgment | What must the user decide? | Product/UX choices, material technical choices, security or privacy choices, QA or waiver choices, acceptance, risk, or scope changes. |
+| Judgment | What must the user decide? | Product/UX choices, material technical choices, security or privacy choices, sensitive-action approvals, scoped QA or verification waivers, final acceptance, residual-risk acceptance, or scope changes. |
 | Evidence | What supports the claim that this is done? | Changed paths, tests, logs, screenshots, QA notes, verification results, missing support, or stale support. |
 | Close readiness | What still prevents closing? | Verification, Manual QA, result acceptance, residual-risk visibility or acceptance, close blockers, and the smallest unblocker. |
 
@@ -322,13 +322,14 @@ The agent should keep these separate:
 | Evidence | Supports the claim that a result or criterion was met. | The agent saying "done" or the user accepting the result. |
 | Verification | Checks correctness from the appropriate review boundary. | Manual QA or broad confidence. |
 | Manual QA | Records human inspection where human judgment matters. | Automated tests or screenshots alone. |
-| Acceptance | Records the user's result judgment when required. | Evidence, verification, QA, or sensitive-action permission. |
-| Residual risk | Names known remaining uncertainty, limitation, unchecked condition, or trade-off. | Evidence, verification, QA, or acceptance. |
-| Sensitive-action approval | Allows a named sensitive step to proceed. | Product judgment, correctness, acceptance, or residual-risk acceptance. |
+| Final acceptance | Records the user's result judgment when required. | Evidence, verification, QA, sensitive-action permission, waiver, or residual-risk acceptance. |
+| Residual risk | Names known remaining uncertainty, limitation, unchecked condition, or trade-off. | Evidence, verification, QA, final acceptance, or sensitive-action approval. |
+| Residual-risk acceptance | Records that the user accepts an identified known remaining risk. | Final acceptance, verification, QA, sensitive-action approval, or a generic task approval. |
+| Sensitive-action approval | Allows a named sensitive step to proceed. | Product judgment, correctness, final acceptance, residual-risk acceptance, or waiver. |
 
 Residual-risk wording should be precise. "No known close-relevant residual risk" means the system has no known close-relevant risk for this requested action. "Risk not visible yet" means known risk exists but has not been shown clearly enough for acceptance or close.
 
-A casual "go ahead" is only usable when the agent has already named the exact thing you are deciding. It is not enough for product trade-offs, architecture choices, QA or verification waivers, accepting the result, or accepting residual risk unless the prompt shows the choice, consequences, relevant refs, and what remains outside that decision.
+A casual "go ahead," "proceed," or "looks good" is only usable when the agent has already named the exact thing you are deciding. It is not enough for product trade-offs, architecture choices, QA or verification waivers, accepting the result, or accepting residual risk unless the prompt shows the choice, consequences, relevant refs, and what remains outside that decision. If the phrase could apply to more than one pending decision, the agent should ask which one you mean.
 
 ## Advanced: Harness labels you may see
 
@@ -341,12 +342,12 @@ You can skip this section until an agent shows one of these labels. They are use
 | Autonomy Boundary | The decisions the agent may make alone inside that scope. |
 | Decision Packet | The recorded path for a user-owned product, technical, waiver, acceptance, risk, or scope decision. |
 | Judgment domain | The user-facing grouping on a Decision Packet, such as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed. |
-| Approval | Permission for a named sensitive action. |
+| Approval | Permission for a named sensitive action; not generic agreement or result acceptance. |
 | Write Authorization | A one-attempt check that the intended product write fits the current task, scope, decisions, and approvals. |
 | Evidence Manifest | The record that maps completion claims to supporting evidence. |
 | Projection | A readable report or card rendered from owner records; useful for orientation, not authority by itself. |
 
-These labels do not collapse into each other. Approval is not acceptance. A decision is not write authority. A readable report is not state. Passing tests does not mean Manual QA happened. Accepting residual risk does not make the risk disappear.
+These labels do not collapse into each other. Approval is not acceptance. Final acceptance does not erase residual risk. A decision is not write authority. A readable report is not state. Passing tests does not mean Manual QA happened. Accepting residual risk does not make the risk disappear.
 
 For exact contracts, use the Reference docs only when needed: [Kernel Reference](../reference/kernel.md), [MCP API And Schemas](../reference/mcp-api-and-schemas.md), and [Agent Integration Reference](../reference/agent-integration.md).
 

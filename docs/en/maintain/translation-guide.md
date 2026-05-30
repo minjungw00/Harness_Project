@@ -86,7 +86,7 @@ Use these as the preferred terms in Korean prose. Keep exact English strings whe
 | Write Authorization | 쓰기 허가 기록 | Use in prose for the record or result of `prepare_write`. Keep exact API/tool names and fields. |
 | Residual Risk | 잔여 위험 | Use this consistently in user-facing prose. Plain explanatory wording such as `남은 불확실성` is acceptable when not naming the product concept. |
 | Acceptance | 작업 수락 | Use for the user's final result judgment when the task path requires it. Do not use it for sensitive-action permission. |
-| Approval | 민감 동작 승인 | Use for the canonical Approval concept in public Korean. `허가` may explain permission in prose, but it is not a second canonical term. Do not use generic `승인` for result acceptance, product judgment, QA waiver, residual-risk acceptance, or Write Authorization. Keep `Approval` in reference/schema contexts. |
+| Approval | 민감 동작 승인 | Use for the canonical Approval concept in public Korean. `허가` may explain permission in prose, but it is not a second canonical term. Do not use generic `승인` for final acceptance, product judgment, QA waiver, residual-risk acceptance, or Write Authorization. Keep `Approval` in reference/schema contexts. |
 | Manual QA | 수동 QA | Keep `Manual QA` in exact template/schema/API contexts. |
 | detached verification | 분리 검증 | May retain `detached verification` in assurance explanations. |
 | cooperative | 협력형 | Retain the English label in guarantee-level tables. |
@@ -109,10 +109,10 @@ Use the term that fits the sentence and reader context.
 | evidence | Use `evidence` only when it is a product term. Use `근거` or `증거` in Korean prose. |
 | acceptance / final acceptance | When this means the user's judgment that the result is acceptable, prefer `작업 수락`. If the English emphasizes finality, explain that in surrounding prose instead of switching to generic `최종 수락`. |
 | acceptance criteria | Use `수용 기준` for formal acceptance criteria. Use `완료 기준` when the sentence is about task completion rather than formal criteria. Do not use `수락 기준`. |
-| residual-risk acceptance / accepted risk | In user-facing prose, prefer `잔여 위험을 받아들이는 판단` or `잔여 위험을 받아들이다`. Use compact `잔여 위험 수용` when a short Korean term is needed. In schema/reference contexts, keep `residual-risk acceptance` or the exact enum/field name. Do not translate this concept with generic `수락` phrasing. Keep it distinct from `작업 수락(Acceptance)`. |
+| residual-risk acceptance / accepted risk | Use `잔여 위험 수용` for the canonical route. In explanatory prose, `잔여 위험을 받아들이는 판단` or `잔여 위험을 받아들이다` is also acceptable. Keep exact enum/field names in schema/reference contexts. Do not translate this concept with generic `수락` phrasing. Keep it distinct from `작업 수락(Acceptance)`. |
 | Acceptance Gate / acceptance_gate | Keep exact identifiers such as `Acceptance Gate` or `acceptance_gate` where needed. Explain the meaning in Korean prose instead of inventing a new unstable term. |
 | residual risk | Use `잔여 위험` as the canonical term. Plain explanatory wording may describe the uncertainty, but keep terminology consistent. |
-| approval / Approval | Use `민감 동작 승인` in user-facing prose for the sensitive-action permission concept. Use `Approval` when naming the canonical Harness status, gate, record, schema, or exact reference term. Generic `승인` must not mean result acceptance, product judgment, QA waiver, residual-risk acceptance, or Write Authorization. |
+| approval / Approval | Use `민감 동작 승인` in user-facing prose for the sensitive-action permission concept. Use `Approval` when naming the canonical Harness status, gate, record, schema, or exact reference term. Generic `승인` must not mean final acceptance, product judgment, QA waiver, residual-risk acceptance, or Write Authorization. |
 | write authority | Use `쓰기 권한` in ordinary prose. Use `쓰기 허가 기록(Write Authorization)` when naming the Harness record produced by `prepare_write`. |
 | gate | In user-facing flow, prefer `관문`, `확인`, `닫기 확인`, or `막힘` by context. Reference docs may retain `gate` for kernel fields or strict contracts. |
 
@@ -161,7 +161,7 @@ Use patterns like these when polishing Korean prose:
 | `acceptance가 필요하다.` | `작업 수락이 필요하다.` |
 | `risk를 accept한다.` | `잔여 위험을 받아들인다.` |
 | `acceptance criteria를 수락 기준으로 쓴다.` | `수용 기준` 또는 문맥에 따라 `완료 기준`을 쓴다. |
-| `residual-risk acceptance를 결과 수락처럼 쓴다.` | `잔여 위험을 받아들이는 판단`처럼 결과 수락과 구분한다. |
+| `residual-risk acceptance를 작업 수락처럼 쓴다.` | `잔여 위험 수용`처럼 작업 수락과 구분한다. |
 | `acceptance_gate를 수락 게이트로 새로 번역한다.` | `acceptance_gate`를 유지하고 한국어 문장으로 의미를 설명한다. |
 | `surface capability를 확인한다.` | `접점이 실제로 할 수 있는 일을 확인한다.` |
 | `Harness 상태는 local state와 artifact ref에 있다.` | `하네스 상태는 지속 로컬 상태와 아티팩트 참조에 있다.` |
