@@ -70,7 +70,7 @@
 ```mermaid
 flowchart LR
   Repo["제품 저장소<br/>제품 파일"]
-  Server["하네스 서버/설치<br/>문서 승인 뒤 이 저장소에서 구현"]
+  Server["하네스 서버/설치<br/>수락과 준비 뒤 향후 이곳에서 구현"]
   Home["하네스 런타임 홈<br/>상태와 근거"]
 
   Repo -->|요청과 저장소 사실| Server

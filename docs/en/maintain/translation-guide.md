@@ -4,7 +4,7 @@
 
 Use this guide when editing English and Korean Harness documentation together.
 
-This is maintenance documentation for bilingual documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or product state changes before the documentation set is accepted for implementation planning, and it does not define conformance pass/fail, evidence, QA, final acceptance, close readiness, or implementation readiness. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Assurance & Stewardship Pack and v0.4 Operations & Handoff Pack are the packs that reach the glossary-defined hardened local reference target; they do not create a separate stage. v1+ Expansion remains roadmap scope unless owner docs promote and prove an item.
+This is maintenance documentation for bilingual documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or product state changes before documentation acceptance and a separate implementation-planning readiness decision, and it does not define conformance pass/fail, evidence, QA, final acceptance, close readiness, or implementation readiness. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Assurance & Stewardship Pack and v0.4 Operations & Handoff Pack are the packs that reach the glossary-defined hardened local reference target; they do not create a separate stage. v1+ Expansion remains roadmap scope unless owner docs promote and prove an item.
 
 ## Read this when
 
@@ -78,7 +78,7 @@ Use these as the preferred terms in Korean prose. Keep exact English strings whe
 |---|---|---|
 | Harness | 하네스 | Use for the product name in ordinary Korean prose. Keep literal strings such as `HARNESS:BEGIN`. |
 | Harness Server | 하네스 서버 | Use for the local Harness program/installation in the three-space model. Do not use this for the user's product repository or runtime data home. |
-| Harness Server source repository | 하네스 서버 소스 저장소 | Use for this repository's intended future source-code role after documentation acceptance. |
+| Harness Server source repository | 하네스 서버 소스 저장소 | Use for this repository's intended future source-code role. Starting server/runtime implementation still requires documentation acceptance and a separate implementation-planning readiness decision. |
 | Product Repository | 제품 저장소 | Use for the user's product workspace. Add the English label only when disambiguating the three-space model. |
 | Harness Runtime Home | 하네스 런타임 홈 | Use for the per-user/per-installation operational data home. Add the English label only when helpful. |
 | Core-owned state | Core가 소유한 상태 | Use when stressing that Core records are operational authority. In user-facing prose, `운영 기준 상태` may be clearer when the Core boundary is already known. |

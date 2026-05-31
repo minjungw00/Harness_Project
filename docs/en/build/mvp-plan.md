@@ -4,9 +4,9 @@
 
 This document turns the MVP scope material into an implementable staged delivery plan. It separates the first runnable kernel slice from the first user-facing MVP so the word "MVP" is reserved for a milestone where users can experience Harness value, not only observe that an authority loop exists.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before the documentation set is accepted for implementation planning. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. Later packs harden assurance, stewardship, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. Later packs harden assurance, stewardship, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
-Use this when you need to plan what to build after documentation acceptance. Use the reference docs for exact contracts.
+Use this when you need to plan what to build after documentation acceptance and a separate implementation-planning readiness decision. Use the reference docs for exact contracts.
 
 ## Read this when
 
@@ -99,7 +99,7 @@ Required in an API schema therefore means required when that tool call, record, 
 
 ### Implementation decisions needed before server coding
 
-Decision-log baseline: no major implementation decisions are deliberately recorded here at this baseline. This is not proof that no decisions exist. The documentation is available for maintainer acceptance review as a candidate, but it is not accepted until maintainers deliberately update [Implementation Overview: Documentation acceptance status](implementation-overview.md#documentation-acceptance-status).
+Decision-log baseline: the server-coding decision log is empty here at this baseline. This is not proof that no decisions remain. Implementation-readiness criteria still require maintainer judgment, and the documentation is available for maintainer acceptance review only as a candidate until maintainers deliberately update [Implementation Overview: Documentation acceptance status](implementation-overview.md#documentation-acceptance-status).
 
 Do not leave major implementation decisions as scattered TODOs or vague follow-ups. If current review or first runtime-batch planning finds one, record it here with the owner doc, affected behavior or field, affected stage, options considered, and the decision needed before changing server code or DDL.
 
@@ -200,7 +200,7 @@ If a later feature is useful during implementation, keep it as read-only display
 
 ## Exit criteria by stage
 
-Use these as implementation-readable checklists for future runtime planning after documentation acceptance. They restate staged exits; they do not add schemas, fixtures, DDL, or new runtime requirements, and they do not authorize implementation while the [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status) still blocks first runtime-batch planning.
+Use these as implementation-readable checklists for future runtime planning after documentation acceptance and a separate implementation-planning readiness decision. They restate staged exits; they do not add schemas, fixtures, DDL, or new runtime requirements, and they do not authorize implementation while the [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status) still blocks first runtime-batch planning.
 
 ### v0.1 Core Authority Slice exit checklist
 

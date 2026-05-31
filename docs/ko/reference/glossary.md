@@ -4,7 +4,7 @@
 
 다른 문서를 읽다가 하네스의 공식 용어, 대소문자, record name, 서로 대체할 수 없는 경계를 확인할 때 이 용어집을 사용합니다.
 
-이 문서는 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 남습니다.
+이 문서는 참조 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 남습니다.
 
 ## 이런 때 읽기
 
@@ -357,7 +357,7 @@ Connected profile의 actual enforcement 또는 detection layer를 적용하는 u
 
 한국어 기준 표현: 하네스 서버.
 
-에이전트 요청을 받고, Core를 통해 상태 변경을 검증하거나 기록하며, validator를 실행하고, 읽기용 요약을 만드는 로컬 하네스 프로그램과 도구 접점입니다. 이 문서 저장소는 문서 승인 뒤 하네스 서버 소스 저장소가 되는 것을 목표로 합니다. 제품 저장소나 하네스 런타임 홈은 아닙니다.
+에이전트 요청을 받고, Core를 통해 상태 변경을 검증하거나 기록하며, validator를 실행하고, 읽기용 요약을 만드는 로컬 하네스 프로그램과 도구 접점입니다. 이 문서 저장소의 향후 역할은 하네스 서버 소스 저장소입니다. 제품 저장소나 하네스 런타임 홈은 아닙니다. 여기서 서버/런타임 구현을 시작하려면 문서 수락과 별도의 구현 계획 준비 결정이 모두 필요합니다.
 
 ### Harness Runtime Home
 

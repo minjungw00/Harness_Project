@@ -4,7 +4,7 @@
 
 이 문서는 v1+ Expansion 자동화 후보와 능력 확장 항목을 모아 둡니다. 독자가 나중에 다룰 수 있는 일을 볼 수 있게 하되, 그것을 첫 구현 작업, 현재 권한, staged delivery 필수 동작으로 오해하지 않게 하는 것이 목적입니다.
 
-이 문서는 roadmap 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 Build 문서에서 assurance, stewardship, operations, handoff behavior를 단단하게 만들며, 아래 항목은 owner 문서가 승격하고 증명하기 전까지 v1+ Expansion에 둡니다.
+이 문서는 roadmap 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 Build 문서에서 assurance, stewardship, operations, handoff behavior를 단단하게 만들며, 아래 항목은 owner 문서가 승격하고 증명하기 전까지 v1+ Expansion에 둡니다.
 
 ## 이런 때 읽기
 

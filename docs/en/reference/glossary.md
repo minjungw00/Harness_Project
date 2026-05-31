@@ -4,7 +4,7 @@
 
 Use this glossary to confirm official Harness terms, capitalization, record names, and non-substitution boundaries while reading other docs.
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -335,7 +335,7 @@ The runtime component that owns state transitions, gate updates, validator inter
 
 ### Harness Server
 
-The local Harness program and tool surface that receives agent requests, validates or records state changes through Core, runs validators, and produces readable projections. This documentation repository is intended to become the Harness Server source repository after documentation acceptance; it is not a Product Repository or Harness Runtime Home.
+The local Harness program and tool surface that receives agent requests, validates or records state changes through Core, runs validators, and produces readable projections. This documentation repository's intended future role is the Harness Server source repository; it is not a Product Repository or Harness Runtime Home. Server/runtime implementation here may start only after documentation acceptance and a separate implementation-planning readiness decision.
 
 ### Harness Runtime Home
 

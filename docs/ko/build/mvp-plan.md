@@ -4,9 +4,9 @@
 
 이 문서는 MVP 범위를 구현 가능한 staged delivery 계획으로 바꿉니다. 첫 실행 가능한 커널 조각과 첫 사용자 대상 MVP를 분리해, "MVP"라는 이름을 단순히 권한 루프가 존재하는 단계가 아니라 사용자가 하네스의 가치를 경험할 수 있는 단계에만 사용합니다.
 
-이 문서는 구현 계획 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture, fixture 파일, 런타임 데이터를 만들라는 뜻이 아닙니다. Conformance fixture 문서는 향후 적합성 검증 계획이며, 현재 문서 전용 저장소에는 runnable Harness Server conformance test가 없습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance 작성 프로파일입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff 동작을 단계적으로 단단하게 만듭니다. v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 둡니다.
+이 문서는 구현 계획 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture, fixture 파일, 런타임 데이터를 만들라는 뜻이 아닙니다. Conformance fixture 문서는 향후 적합성 검증 계획이며, 현재 문서 전용 저장소에는 runnable Harness Server conformance test가 없습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance 작성 프로파일입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff 동작을 단계적으로 단단하게 만듭니다. v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 둡니다.
 
-문서 승인 이후 무엇을 만들지 계획할 때 이 문서를 사용합니다. 정확한 contract는 Reference 문서를 사용합니다.
+문서 수락과 별도의 구현 계획 준비 결정 이후 무엇을 만들지 계획할 때 이 문서를 사용합니다. 정확한 contract는 Reference 문서를 사용합니다.
 
 ## 읽는 경우
 
@@ -16,7 +16,7 @@
 
 ## 먼저 읽을 것
 
-[구현 개요](implementation-overview.md)의 [문서 승인 상태](implementation-overview.md#문서-승인-상태), [첫 실행 가능한 조각](first-runnable-slice.md), [Runtime Walkthrough](runtime-walkthrough.md)를 먼저 읽습니다. 정확한 API contract는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 사용합니다. Storage detail과 DDL은 [Storage와 DDL](../reference/storage-and-ddl.md)을 사용합니다. Design-quality gate와 validator behavior는 [Design Quality Policies](../reference/design-quality-policies.md)를 사용합니다. Conformance fixture semantics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md)를 사용합니다. Operator procedure와 conformance run overview는 [운영과 Conformance](../reference/operations-and-conformance.md)를 사용합니다. v1+ Expansion 후보와 승격 기준은 [로드맵](../roadmap.md)을 사용합니다.
+[구현 개요](implementation-overview.md)의 [문서 수락 상태](implementation-overview.md#문서-승인-상태), [첫 실행 가능한 조각](first-runnable-slice.md), [Runtime Walkthrough](runtime-walkthrough.md)를 먼저 읽습니다. 정확한 API contract는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 사용합니다. Storage detail과 DDL은 [Storage와 DDL](../reference/storage-and-ddl.md)을 사용합니다. Design-quality gate와 validator behavior는 [Design Quality Policies](../reference/design-quality-policies.md)를 사용합니다. Conformance fixture semantics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md)를 사용합니다. Operator procedure와 conformance run overview는 [운영과 Conformance](../reference/operations-and-conformance.md)를 사용합니다. v1+ Expansion 후보와 승격 기준은 [로드맵](../roadmap.md)을 사용합니다.
 
 ## 핵심 생각
 
@@ -99,7 +99,7 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 
 ### 서버 코딩 전 필요한 구현 결정
 
-결정 기록 기준: 현재 기준에서는 이곳에 의도적으로 기록된 주요 구현 결정이 없습니다. 이것은 결정이 존재하지 않는다는 증명이 아닙니다. 이 문서는 유지보수자 수락 검토 대상 후보이지만, [구현 개요: 문서 승인 상태](implementation-overview.md#문서-승인-상태)를 유지보수자가 명시적으로 바꾸기 전까지 수락된 것이 아닙니다.
+결정 기록 기준: 서버 코딩 전 결정 기록은 현재 기준에서 이곳에 비어 있습니다. 이것은 남은 결정이 없다는 증명이 아닙니다. 구현 준비 조건에는 아직 유지보수자 판단이 필요하며, [구현 개요: 문서 수락 상태](implementation-overview.md#문서-승인-상태)를 유지보수자가 명시적으로 바꾸기 전까지 이 문서는 유지보수자 수락 검토 대상 후보일 뿐입니다.
 
 큰 구현 결정을 흩어진 TODO나 막연한 follow-up으로 남기지 않습니다. 현재 검토 또는 첫 런타임 배치 계획에서 새 결정이 발견되면, server code나 DDL을 바꾸기 전에 담당 문서, 영향받는 동작 또는 field, 영향을 받는 단계, 검토한 option, 필요한 결정을 이곳에 기록합니다.
 
@@ -200,7 +200,7 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 
 ## 단계별 종료 기준
 
-문서 승인 이후 향후 런타임 계획을 위한 구현자가 읽을 수 있는 점검 목록으로 사용합니다. 이들은 staged exit을 다시 말할 뿐이며 schema, fixture, DDL, new runtime requirement를 추가하지 않습니다. [문서 승인 상태](implementation-overview.md#문서-승인-상태)가 첫 런타임 배치 계획을 막고 있는 동안 구현을 승인하지 않습니다.
+문서 수락과 별도의 구현 계획 준비 결정 이후 향후 런타임 계획을 위한 구현자가 읽을 수 있는 점검 목록으로 사용합니다. 이들은 staged exit을 다시 말할 뿐이며 schema, fixture, DDL, new runtime requirement를 추가하지 않습니다. [문서 수락 상태](implementation-overview.md#문서-승인-상태)가 첫 런타임 배치 계획을 막고 있는 동안 구현을 승인하지 않습니다.
 
 ### 코어 권한 조각(v0.1 Core Authority Slice) 종료 점검 목록
 

@@ -4,7 +4,7 @@
 
 This document collects v1+ Expansion automation candidates and capability expansions so readers can see what may come later without treating it as first-implementation work, current authority, or staged-delivery required behavior.
 
-This is roadmap documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior in Build docs, and the items below stay in v1+ Expansion unless owner docs promote and prove them.
+This is roadmap documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior in Build docs, and the items below stay in v1+ Expansion unless owner docs promote and prove them.
 
 ## Read this when
 

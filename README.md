@@ -10,17 +10,17 @@ Harness는 AI 지원 제품 작업에서 작업 범위, 사용자 판단, 근거
 
 ## Repository Identity / 저장소 정체성
 
-This repository is currently a documentation-only redesign/review repository. After documentation acceptance, it is intended to become the Harness Server source repository.
+This repository is currently a documentation-only redesign/review repository. Its intended future role is the Harness Server source repository. Server/runtime implementation in this repository may start only after documentation acceptance and a separate implementation-planning readiness decision.
 
 It is not the user's Product Repository. It is not the Harness Runtime Home. No Harness Server or runtime implementation exists here yet.
 
-The docs are source material for understanding and implementing Harness. They are not runtime objects governed by Harness.
+The docs are source material for understanding and implementing Harness. They are not runtime objects governed by Harness. Documentation acceptance is not runtime conformance and does not authorize server/runtime implementation by itself.
 
-이 저장소는 현재 문서 전용 재설계/검토 저장소입니다. 문서 승인 이후에는 하네스 서버 소스 저장소가 되는 것을 목표로 합니다.
+이 저장소는 현재 문서 전용 재설계/검토 저장소입니다. 향후 역할은 하네스 서버 소스 저장소입니다. 이 저장소에서 서버/런타임 구현을 시작하려면 문서 수락과 별도의 구현 계획 준비 결정이 모두 필요합니다.
 
 이 저장소는 사용자의 제품 저장소가 아닙니다. 하네스 런타임 홈도 아닙니다. 아직 이곳에는 하네스 서버 또는 런타임 구현이 없습니다.
 
-이 문서들은 하네스를 이해하고 구현하기 위한 원천 자료입니다. 하네스가 관리하는 런타임 객체가 아닙니다.
+이 문서들은 하네스를 이해하고 구현하기 위한 원천 자료입니다. 하네스가 관리하는 런타임 객체가 아닙니다. 문서 수락은 런타임 conformance가 아니며 그 자체로 서버/런타임 구현을 승인하지 않습니다.
 
 ## Documentation Redesign Scope / 문서 재설계 범위
 
@@ -47,9 +47,9 @@ Preserve the core thesis: Harness is not a prompt pack; it is a local authority 
 
 ## Known Redesign Issues / 알려진 재설계 쟁점
 
-The maintainer review tracker is in the [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커). It separates observed drift, candidates to verify, regression checks, and baseline status checks. Major implementation decisions belong in the MVP Plan.
+The maintainer review tracker is in the [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커). It separates observed drift, candidates to verify, regression checks, and baseline status checks, and routes confirmed findings as documentation drift, schema/design decisions, stage boundary decisions, implementation-readiness criteria, or future roadmap items. Major implementation decisions belong in the MVP Plan.
 
-유지보수자 검토 tracker는 [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에 있습니다. 현재 문서에서 확인된 drift, 확인 대상 후보, 회귀 방지 점검, 기준 상태 점검을 구분합니다. 서버 코딩 전 결정은 MVP 계획에 기록합니다.
+유지보수자 검토 tracker는 [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에 있습니다. 현재 문서에서 확인된 drift, 확인 대상 후보, 회귀 방지 점검, 기준 상태 점검을 구분하고, 확인된 finding을 문서 drift, 스키마/설계 결정, 단계 경계 결정, 구현 준비 조건, 향후 로드맵 항목으로 라우팅합니다. 서버 코딩 전 결정은 MVP 계획에 기록합니다.
 
 ## What Harness Is Not / Harness가 아닌 것
 
@@ -65,24 +65,24 @@ For role-by-role comparison with AGENTS.md / agent rules, MCP, skills / reusable
 
 AGENTS.md / agent rule, MCP, skill / reusable workflow, test runner, code review, spec과의 역할별 비교는 아래 언어별 진입점을 봅니다.
 
-## Current Review Baseline / 현재 검토 기준
+## Current Status Model / 현재 상태 모델
 
-The current baseline is post-redesign review. This repository remains documentation-only, is intended to become the future Harness Server source repository after documentation acceptance, and has not started runtime/server implementation. It is not fully accepted, implementation-complete, or approved for server coding.
+The current baseline separates three statuses that must not collapse into each other. The documentation is a post-redesign acceptance candidate, implementation planning is not yet accepted, and runtime/server implementation has not started.
 
-현재 기준은 재설계 이후 검토 상태입니다. 이 저장소는 계속 문서 전용이며, 문서 승인 이후 미래의 하네스 서버 소스 저장소가 되는 것을 목표로 하고, 아직 runtime/server 구현은 시작하지 않았습니다. 완전히 수락되었거나, 구현 완료되었거나, 서버 코딩이 승인된 상태가 아닙니다.
+현재 기준은 서로 섞이면 안 되는 세 가지 상태를 분리합니다. 문서는 재설계 이후 수락 후보이고, 구현 계획 준비 상태는 아직 수락되지 않았으며, 런타임/서버 구현은 시작하지 않았습니다.
 
 | Check / 확인 | Current status / 현재 상태 |
 |---|---|
-| Documentation redesign / review / 문서 재설계와 검토 | Post-redesign review state; documentation acceptance candidate only. / 재설계 이후 검토 상태이며 문서 수락 후보일 뿐입니다. |
-| Docs accepted for implementation planning / 구현 계획을 위한 문서 승인 | Not yet; maintainers must update the handoff status deliberately. / 아직 아닙니다. 유지보수자가 인계 상태를 명시적으로 갱신해야 합니다. |
-| Runtime/server implementation / runtime/server 구현 | Not started. / 시작하지 않았습니다. |
-| Major implementation decisions before server coding / 서버 코딩 전 주요 구현 결정 | No major decisions are deliberately recorded at this baseline; current review may uncover one. New major decisions must be added in one place: [MVP Plan](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) / [MVP 계획](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정). / 현재 기준에서 의도적으로 기록된 주요 결정은 없습니다. 다만 현재 검토에서 새 결정이 발견될 수 있습니다. 새 주요 결정은 한 곳에 기록합니다. |
+| Documentation review status / 문서 검토 상태 | Post-redesign review; documentation acceptance candidate only. Maintainers have not accepted the docs yet. / 재설계 이후 검토 상태이며 문서 수락 후보입니다. 유지보수자가 아직 문서를 수락하지 않았습니다. |
+| Implementation planning readiness / 구현 계획 준비 상태 | Not accepted. Maintainers must confirm the implementation-readiness criteria; editorial cleanup alone is not enough if schema/design or stage-boundary decisions remain. / 수락되지 않았습니다. 유지보수자가 구현 준비 조건을 확인해야 하며, 스키마/설계 결정이나 단계 경계 결정이 남아 있다면 편집 정리만으로 충분하지 않습니다. |
+| Runtime implementation status / 런타임 구현 상태 | Not started. No runtime artifacts or conformance results exist here yet; see Implementation Overview for full status detail. / 시작하지 않았습니다. 아직 런타임 아티팩트나 conformance 결과가 없으며, 전체 상태는 구현 개요에서 확인합니다. |
+| Server-coding decision log / 서버 코딩 전 결정 기록 | Empty at this baseline, but that is not a claim that no decisions remain. Current review and readiness review may still uncover decisions; record them in one place: [MVP Plan](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) / [MVP 계획](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정). / 현재 기준에서는 비어 있지만, 남은 결정이 없다는 뜻은 아닙니다. 현재 검토와 구현 준비 검토에서 결정이 드러날 수 있으며, 새 결정은 한 곳에 기록합니다. |
 
-Until the docs-accepted row is deliberately set to Yes in the maintainer handoff status, work remains documentation maintenance and runtime/server implementation must not start.
+Until the maintainer handoff explicitly accepts implementation planning, work remains documentation maintenance and runtime/server implementation must not start.
 
 Maintainer handoff: [English summary](docs/en/build/implementation-overview.md#maintainer-handoff-summary) / [문서 수락 후보 요약](docs/ko/build/implementation-overview.md#문서-수락-후보-요약). Status: [English](docs/en/build/implementation-overview.md#documentation-acceptance-status) / [한국어](docs/ko/build/implementation-overview.md#문서-승인-상태).
 
-유지보수자 인계 상태에서 문서 승인 항목이 Yes/예로 명시적으로 바뀌기 전까지 작업은 문서 유지보수이며 runtime/server 구현을 시작하면 안 됩니다.
+유지보수자 인계 상태에서 구현 계획 준비 상태가 명시적으로 수락되기 전까지 작업은 문서 유지보수이며 런타임/서버 구현을 시작하면 안 됩니다.
 
 Before starting Harness Server code, implementers should read the maintainer handoff summary, the [implementation-readiness criteria](docs/en/build/implementation-overview.md#implementation-readiness-criteria) / [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), the [server-coding decisions section](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) in the MVP Plan, and then the [First Runnable Slice](docs/en/build/first-runnable-slice.md).
 

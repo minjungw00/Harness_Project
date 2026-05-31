@@ -2,7 +2,7 @@
 
 This is the English routing page for the Harness documentation set.
 
-This repository is currently a documentation-only redesign/review repository. After documentation acceptance, it is intended to become the Harness Server source repository. No Harness Server/runtime implementation exists here yet. These docs are source material for understanding and implementing Harness; they are not Harness runtime objects governed by the lifecycle they describe.
+This repository is currently a documentation-only redesign/review repository. Its intended future role is the Harness Server source repository. No Harness Server/runtime implementation exists here yet, and server/runtime implementation may start only after documentation acceptance and a separate implementation-planning readiness decision. These docs are source material for understanding and implementing Harness; they are not Harness runtime objects governed by the lifecycle they describe.
 
 Harness is a local authority record and judgment-routing layer for AI-assisted product work. It keeps scope, user-owned judgments, evidence, verification, QA expectations, final acceptance, and residual-risk status outside fragile chat context.
 
@@ -13,9 +13,17 @@ Harness solves four recurring problems:
 - Evidence, verification, QA, and completion claims get mixed.
 - Chat or Markdown output is mistaken for operational truth.
 
-## Current Review Baseline
+## Current Status Model
 
-The current documentation set is in post-redesign review. This repository is still documentation-only, is intended to become the future Harness Server source repository after documentation acceptance, and has not started runtime/server implementation. The docs are not fully accepted, implementation-complete, or approved for server coding.
+The current status separates documentation review, implementation planning readiness, and runtime implementation:
+
+| Status category | Current status |
+|---|---|
+| Documentation review status | Post-redesign review; documentation acceptance candidate only. Maintainers have not accepted the docs yet. |
+| Implementation planning readiness | Not accepted. Maintainers must confirm the implementation-readiness criteria before first runtime-batch planning. Editorial cleanup is separate from schema/design decisions and stage-boundary decisions. |
+| Runtime implementation status | Not started. No runtime artifacts or conformance results exist here yet. |
+
+Documentation acceptance, when it happens, is a maintainer review milestone. It does not by itself start runtime/server implementation or prove runtime conformance.
 
 ## Primary Reader Path
 
@@ -63,26 +71,26 @@ Harness keeps three spaces separate:
 | Harness Server source repository | The future codebase for the local Harness Server / Installation: API surface, request validation, Core state transitions, validators, projection, reconcile, and operator tools. |
 | Harness Runtime Home | Per-user/per-installation operational data: state database, artifact store, projection output, logs, and local registration/configuration. |
 
-This repository's current role is documentation review/redesign. Its intended future role is the Harness Server source repository. It is not the Product Repository or the Harness Runtime Home. After documentation acceptance, the Harness Server / Installation implementation is expected to be built here.
+This repository's current role is documentation review/redesign. Its intended future role is the Harness Server source repository. It is not the Product Repository or the Harness Runtime Home. Documentation acceptance alone does not create implementation authority, runtime state, conformance, or server code; first implementation planning must be accepted separately before Harness Server / Installation code starts here.
 
 ## Documentation Redesign Scope
 
-Documentation acceptance and implementation-planning status are tracked in [Implementation Overview](build/implementation-overview.md#documentation-acceptance-status). The current revision is a documentation acceptance candidate in post-redesign review, not an accepted implementation start.
+Documentation review status, implementation-planning readiness, and runtime implementation status are tracked in [Implementation Overview](build/implementation-overview.md#documentation-acceptance-status). The current revision is a documentation acceptance candidate in post-redesign review, not an accepted implementation start.
 
 The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization. Preserve the clarified product thesis and feasible implementation path over continuity with existing prose.
 
-The [Authoring Guide](maintain/authoring-guide.md#current-redesign-scope) owns the full redesign scope, preserved principles, document-family guidance, and maintainer review checklist. Its tracker separates observed drift, candidates to verify, regression checks, and baseline status checks.
+The [Authoring Guide](maintain/authoring-guide.md#current-redesign-scope) owns the full redesign scope, preserved principles, document-family guidance, and maintainer review checklist. Its tracker separates observed drift, candidates to verify, regression checks, and baseline status checks, and routes confirmed findings as documentation drift, schema/design decisions, stage boundary decisions, implementation-readiness criteria, or future roadmap items.
 
 ## Maintainer Handoff
 
 Before starting Harness Server code, implementers should read:
 
 1. [Maintainer handoff summary](build/implementation-overview.md#maintainer-handoff-summary) for the current phase, preserved principles, stage model, clarified boundaries, and open-question status.
-2. [Documentation acceptance status](build/implementation-overview.md#documentation-acceptance-status) to confirm maintainers have accepted first runtime-batch planning.
-3. [Implementation-readiness criteria](build/implementation-overview.md#implementation-readiness-criteria) for the checks that must be true before the status changes.
-4. [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding) for any major decisions current review uncovers. At this baseline, none are deliberately recorded there.
+2. [Documentation acceptance status](build/implementation-overview.md#documentation-acceptance-status) to confirm the three-part status model and whether maintainers have accepted first runtime-batch planning.
+3. [Implementation-readiness criteria](build/implementation-overview.md#implementation-readiness-criteria) for the checks that must be true before planning readiness changes.
+4. [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding) for any major decisions current review uncovers. At this baseline, the log is empty, but that is not a claim that no decisions remain.
 
-This handoff says the documentation is available for maintainer acceptance review as a candidate. It does not claim the docs have been accepted, and it does not start server/runtime implementation.
+This handoff says the documentation is available for maintainer acceptance review as a candidate. It does not claim the docs have been accepted, it does not make the docs implementation-ready, and it does not start server/runtime implementation.
 
 ## What Harness Is Not
 

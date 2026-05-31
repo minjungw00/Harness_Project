@@ -70,7 +70,7 @@ Harness Runtime Home:
 ```mermaid
 flowchart LR
   Repo["Product Repository<br/>product files"]
-  Server["Harness Server / Installation<br/>implemented from this repository after acceptance"]
+  Server["Harness Server / Installation<br/>future implementation here after acceptance and readiness"]
   Home["Harness Runtime Home<br/>state and artifacts"]
 
   Repo -->|requests and repo facts| Server
