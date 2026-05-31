@@ -80,9 +80,9 @@ Maintainer handoff: [English summary](docs/en/build/implementation-overview.md#m
 
 유지보수자 인계 상태에서 문서 승인 항목이 Yes/예로 명시적으로 바뀌기 전까지 작업은 문서 유지보수이며 runtime/server 구현을 시작하면 안 됩니다.
 
-Before starting Harness Server code, implementers should read the maintainer handoff summary, the [implementation-readiness criteria](docs/en/build/implementation-overview.md#implementation-readiness-criteria) / [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), the server-coding decisions section in the MVP Plan, and then the First Runnable Slice.
+Before starting Harness Server code, implementers should read the maintainer handoff summary, the [implementation-readiness criteria](docs/en/build/implementation-overview.md#implementation-readiness-criteria) / [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), the [server-coding decisions section](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) in the MVP Plan, and then the [First Runnable Slice](docs/en/build/first-runnable-slice.md).
 
-하네스 서버 코드를 시작하기 전 구현자는 유지보수자용 [문서 수락 후보 요약](docs/ko/build/implementation-overview.md#문서-수락-후보-요약), [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), MVP 계획의 서버 코딩 전 결정 섹션, 그리고 첫 실행 가능한 조각을 차례로 확인해야 합니다.
+하네스 서버 코드를 시작하기 전 구현자는 유지보수자용 [문서 수락 후보 요약](docs/ko/build/implementation-overview.md#문서-수락-후보-요약), [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), MVP 계획의 [서버 코딩 전 결정 섹션](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정), 그리고 [첫 실행 가능한 조각](docs/ko/build/first-runnable-slice.md)을 차례로 확인해야 합니다.
 
 ## Start Here / 시작하기
 

@@ -12,9 +12,9 @@ This repository is currently a documentation-only redesign/review repository. Af
 
 이 저장소는 현재 문서 전용 재설계/검토 저장소입니다. 문서 승인 이후에는 하네스 서버 소스 저장소가 되는 것을 목표로 합니다. 제품 저장소나 하네스 런타임 홈이 아니며, 아직 이곳에는 하네스 서버/런타임 구현이 없습니다.
 
-The [Authoring Guide](en/maintain/authoring-guide.md#current-redesign-scope) owns the full redesign scope and preserved principles. The maintainer handoff summary and implementation-readiness criteria are in [Implementation Overview](en/build/implementation-overview.md#maintainer-handoff-summary).
+The [Authoring Guide](en/maintain/authoring-guide.md#current-redesign-scope) owns the full redesign scope and preserved principles. The [maintainer handoff summary](en/build/implementation-overview.md#maintainer-handoff-summary) and [implementation-readiness criteria](en/build/implementation-overview.md#implementation-readiness-criteria) are in Implementation Overview.
 
-전체 재설계 범위와 보존 원칙은 [문서 작성 가이드](ko/maintain/authoring-guide.md#현재-재설계-범위)가 담당합니다. 유지보수자용 문서 수락 후보 요약과 하네스 서버 구현 준비 조건은 [구현 개요](ko/build/implementation-overview.md#문서-수락-후보-요약)에 있습니다.
+전체 재설계 범위와 보존 원칙은 [문서 작성 가이드](ko/maintain/authoring-guide.md#현재-재설계-범위)가 담당합니다. 유지보수자용 [문서 수락 후보 요약](ko/build/implementation-overview.md#문서-수락-후보-요약)과 [하네스 서버 구현 준비 조건](ko/build/implementation-overview.md#하네스-서버-구현-준비-조건)은 구현 개요에 있습니다.
 
 ## Choose A Language / 언어 선택
 
