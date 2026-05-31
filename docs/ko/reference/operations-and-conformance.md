@@ -6,7 +6,7 @@ Harness 운영자 절차, Conformance staging과 run entrypoint behavior, docs-m
 
 이 문서는 operator, implementer, conformance author, maintainer를 위한 lookup 문서입니다. 온보딩 경로가 아니므로 처음 읽는 사람은 Learn 또는 Build 문서에서 전체 흐름을 잡고, 정확한 운영 또는 Conformance 의미가 필요할 때 여기로 돌아옵니다.
 
-이 문서는 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 강화된 로컬 기준 목표(hardened local reference target)를 향해 assurance, stewardship, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
+이 문서는 향후 operator와 conformance behavior를 위한 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture, fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 현재 저장소는 문서 전용이며 runnable Harness Server conformance test를 담고 있지 않습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
 
 ## 이런 때 읽기
 
@@ -26,13 +26,13 @@ Operations는 Core 주변의 operator-facing command입니다. Repository를 연
 
 중요한 규칙은 operations가 agent와 같은 Core 권한 위에 놓인 접점이라는 점입니다. 기준 운영 상태를 변경하는 것은 Core뿐입니다. Operator command는 진단, repair, export, fixture 실행은 할 수 있지만 두 번째 상태 모델을 만들거나 Markdown을 authoritative하게 만들거나 Core를 우회해 write하면 안 됩니다.
 
-Conformance는 executable fixture로 Harness behavior를 증명합니다. Passing fixture는 Core 또는 operator action을 실행하고 captured state, events, artifacts, projections, errors를 비교해야 합니다.
+Runtime implementation이 존재한 뒤 conformance는 executable fixture로 Harness behavior를 증명합니다. Passing fixture는 Core 또는 operator action을 실행하고 captured state, events, artifacts, projections, errors를 비교해야 합니다.
 
 Runtime suite pass/fail은 실행 가능한 상태 비교에 기반합니다. Runner는 captured Core/API 또는 operator result와 fixture expectation field를 비교해 fixture 결과를 결정합니다. Scenario table, comment, rendered status, Journey Card text, close prose, agent summary는 그 비교를 대신할 수 없습니다.
 
 Rendered prose, status text, Journey Card text, close report, agent summary는 독자에게 도움이 될 수 있지만, 그것만 맞춰서는 conformance를 통과할 수 없습니다. Finding과 close blocker는 prose-only report text가 아니라 structured Core/API result, owner-record ref, validator result, event, artifact, projection freshness, 또는 문서화된 docs-maintenance report label로 assert해야 합니다.
 
-이 문서는 operator-facing procedure와 conformance overview를 담당합니다. [Conformance Fixtures 참조](conformance-fixtures.md)는 exact fixture body shape, assertion semantics, suite catalog metadata, example, catalog-only future candidate를 담당합니다.
+이 문서는 향후 구현을 위한 operator-facing procedure와 conformance overview를 담당합니다. [Conformance Fixtures 참조](conformance-fixtures.md)는 exact fixture body shape, assertion semantics, suite catalog metadata, 검증 프로파일별 증명 동작, example, catalog-only future candidate를 담당합니다.
 
 ## 담당하는 참조 범위
 
@@ -57,7 +57,7 @@ Conformance fixture body shape, fixture assertion semantics, suite catalog detai
 | Operator command 의미 | [운영자 entrypoint](#운영자-entrypoint), 그리고 해당 command section: [connect](#connect), [doctor](#doctor), [serve mcp](#serve-mcp), [projection refresh](#projection-refresh), [reconcile](#reconcile), [recover](#recover), [export](#export), [artifacts check](#artifacts-check), [conformance run](#conformance-run) | Core 상태 권한은 [커널 참조](kernel.md)에 남고, transaction order는 [Runtime Architecture](runtime-architecture.md#state-transaction-flow)에 남습니다. |
 | Operator 진단과 runtime-effect 경계 | [운영 진단은 새 상태가 아니라 사실을 보고합니다](#운영-진단은-새-상태가-아니라-사실을-보고합니다), [docs-maintenance 프로필](#docs-maintenance-프로필), [Release Handoff Export Profile](#release-handoff-export-profile) | Docs-maintenance rule body는 [문서 작성 가이드](../maintain/authoring-guide.md#docs-maintenance-checks)에 남습니다. |
 | Fixture body shape와 runner behavior | [Conformance Fixtures 참조: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format), [Conformance Execution](conformance-fixtures.md#conformance-execution), [Fixture Assertion Semantics](conformance-fixtures.md#fixture-assertion-semantics) | Public request schema, idempotency, state conflict behavior는 [MCP API와 스키마](mcp-api-and-schemas.md)에 남습니다. Storage seeding detail은 [Storage와 DDL](storage-and-ddl.md)에 남습니다. |
-| Fixture 작성 순서와 suite coverage | [Conformance staging](#conformance-staging), 그다음 [커널 스모크(Kernel Smoke) Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), [Hardened Fixture Coverage](conformance-fixtures.md#hardened-fixture-coverage), [Fixture Suites](conformance-fixtures.md#fixture-suites) | Kernel gate와 event name은 [커널 참조](kernel.md)에 남습니다. |
+| Fixture 작성 순서와 suite coverage | [Conformance staging](#conformance-staging), 그다음 [검증 프로파일별 증명 동작](conformance-fixtures.md#검증-프로파일별-증명-동작), [커널 스모크(Kernel Smoke) Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), [Hardened Fixture Coverage](conformance-fixtures.md#hardened-fixture-coverage), [Fixture Suites](conformance-fixtures.md#fixture-suites) | Kernel gate와 event name은 [커널 참조](kernel.md)에 남습니다. |
 | Concern별 fixture 예시 | [Conformance Fixtures 참조: Fixture 예시 지도](conformance-fixtures.md#fixture-예시-지도), 그다음 해당 예시 section | 예시 `input`은 계속 담당 public tool schema를 통과해야 합니다. |
 | Artifact integrity, export, recover, reconcile check | [artifacts check](#artifacts-check), [export](#export), [recover](#recover), [reconcile](#reconcile) | Artifact layout과 DDL은 [Storage와 DDL](storage-and-ddl.md)에 남습니다. |
 | Security와 threat-model 진단 category | [doctor](#doctor), [serve mcp](#serve-mcp), [artifacts check](#artifacts-check) | Threat-model concept은 [보안 위협 모델 참조](security-threat-model.md)에 남습니다. API, storage, kernel detail은 각 owner에 남습니다. |
@@ -131,15 +131,15 @@ Status/next recommendation, Role Lens output, recommended playbook, operator dia
 
 ## Conformance staging
 
-Conformance는 단계적으로 실행할 수 있지만, staged execution이 fixture body shape를 바꾸거나 향후 reference conformance 요구사항을 줄이면 안 됩니다.
+Conformance는 runtime implementation이 존재한 뒤 단계적으로 실행할 수 있지만, staged execution이 fixture body shape를 바꾸거나 향후 reference conformance 요구사항을 줄이면 안 됩니다. 현재 문서 전용 단계에서 이 section은 향후 적합성 검증 계획이며, fixture file, conformance runner, runnable Harness Server conformance test가 이미 존재한다는 뜻으로 읽으면 안 됩니다.
 
-Build 문서는 첫 실행 가능한 조각과 stage exit를 계획하기 위한 문서 수준 승인 점검을 제공할 수 있습니다. 이 점검은 reviewer가 코어 권한 조각(v0.1 Core Authority Slice)을 좁게 유지하도록 돕지만 fixture field, suite metadata, public request schema, storage row, primary error, runner comparison mode가 아닙니다. Runtime pass/fail은 [Conformance Fixtures 참조](conformance-fixtures.md)의 exact body shape와 assertion semantics를 사용하는 executable fixture에서만 나옵니다.
+Build 문서는 첫 실행 가능한 조각과 stage exit를 계획하기 위한 문서 수준 승인 점검을 제공할 수 있습니다. 이 점검은 reviewer가 코어 권한 조각(v0.1 Core Authority Slice)을 좁게 유지하도록 돕지만 fixture field, suite metadata, public request schema, storage row, primary error, runner comparison mode가 아닙니다. 향후 runtime pass/fail은 [Conformance Fixtures 참조](conformance-fixtures.md)의 exact body shape와 assertion semantics를 사용하는 executable fixture에서만 나옵니다.
 
-코어 권한 조각(v0.1 Core Authority Slice)은 첫 실행 가능한 conformance target이며, 커널 스모크(Kernel Smoke)는 그 fixture authoring profile입니다. Stage exit criteria는 Build의 [첫 실행 가능한 조각](../build/first-runnable-slice.md)이 담당합니다. Exact runtime fixture queue는 [Conformance Fixtures 참조: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)가 담당합니다. 커널 스모크(Kernel Smoke) 통과는 첫 runnable kernel 권한 경로를 증명하지만 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)나 강화된 로컬 기준 목표(hardened local reference target) conformance를 주장하지 않습니다.
+코어 권한 조각(v0.1 Core Authority Slice)은 첫 실행 가능한 conformance target이며, 커널 스모크(Kernel Smoke)는 첫 실행 가능한 커널 조각 fixture를 위한 authoring profile입니다. Stage exit criteria는 Build의 [첫 실행 가능한 조각](../build/first-runnable-slice.md)이 담당합니다. Exact future runtime fixture queue는 [Conformance Fixtures 참조: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)가 담당합니다. 커널 스모크(Kernel Smoke) 통과는 첫 runnable kernel 권한 경로를 증명하지만 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)나 agency-hardened/operations conformance를 주장하지 않습니다.
 
-강화된 로컬 기준 목표(hardened local reference target)는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 통해 도달하는 향후 reference conformance target입니다. Delivery sequence는 Build의 [MVP 계획](../build/mvp-plan.md)이 담당합니다. Exact policy, API, storage, projection, connector, fixture requirement는 각 Reference owner에 남습니다. Suite catalog metadata는 runner selection과 reporting을 위해 scenario를 suite, delivery stage, tag로 group할 수 있지만 Core에 전달되지 않습니다. Executable fixture는 여전히 Core state, events, artifacts, projections, errors를 통해 검증해야 합니다.
+이후 conformance profile은 [MVP 계획](../build/mvp-plan.md)의 stage name을 따릅니다. 사용자 대상 MVP fixture는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)에, agency-hardened fixture는 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)에, operations/future fixture는 운영과 인계 팩(v0.4 Operations & Handoff Pack)과 승격된 v1+ Expansion candidate에 대응합니다. Exact policy, API, storage, projection, connector, fixture requirement는 각 Reference owner에 남습니다. Suite catalog metadata는 runner selection과 reporting을 위해 scenario를 suite, delivery stage, tag로 group할 수 있지만 Core에 전달되지 않습니다. 향후 executable fixture는 여전히 Core state, events, artifacts, projections/freshness, errors를 통해 검증해야 합니다.
 
-단계별 전달 계획의 guard/freeze conformance는 cooperative/detective level에서 honest display와 behavior를 검증합니다. Freeze request는 work를 보류하거나, next action을 더 엄격하게 만들거나, existing scope가 incompatible할 때 `prepare_write`가 차단 또는 보류하게 만들 수 있습니다. Persistent owner-record change는 기존 Core 상태 변경 경로, Decision Packet route, owner-record update path를 통해 일어날 때만 검증해야 합니다. Guard display는 현재 경로가 cooperative인지 detective인지, 그리고 어떤 위반이 사후에만 감지될 수 있는지 보고합니다. Preventive `T4` guard fixture는 owner 문서가 해당 reference surface의 구체적인 covered operation에 대해 fixture-backed 도구 실행 전 차단을 승격하고 증명하기 전까지 v1+ Expansion에 남습니다. Isolated-profile conformance는 그 boundary가 verification independence/stale-context control을 뒷받침하는지, 아니면 더 강한 보안 격리를 뒷받침하는지 이름 붙여야 하며, exact mechanism이 증명되지 않은 worktree, fresh evaluator bundle, process split을 OS sandbox 격리나 변조 불가능한 보안 경계로 취급하면 안 됩니다.
+단계별 전달 계획의 guard/freeze conformance는 cooperative/detective level에서 honest display와 behavior를 검증합니다. Freeze request는 work를 보류하거나, next action을 더 엄격하게 만들거나, existing scope가 incompatible할 때 `prepare_write`가 차단 또는 보류하게 만들 수 있습니다. Persistent owner-record change는 기존 Core 상태 변경 경로, Decision Packet route, owner-record update path를 통해 일어날 때만 검증해야 합니다. Guard display는 현재 경로가 cooperative인지 detective인지, 그리고 어떤 위반이 사후에만 감지될 수 있는지 보고합니다. Preventive `T4` guard fixture와 higher guarantee level은 owner 문서가 해당 reference surface의 구체적인 covered operation에 대해 fixture-backed 도구 실행 전 차단을 승격하고 증명하기 전까지 operations/future 또는 v1+ Expansion scope에 남습니다. Isolated-profile conformance는 그 boundary가 verification independence/stale-context control을 뒷받침하는지, 아니면 더 강한 보안 격리를 뒷받침하는지 이름 붙여야 하며, exact mechanism이 증명되지 않은 worktree, fresh evaluator bundle, process split을 OS sandbox 격리나 변조 불가능한 보안 경계로 취급하면 안 됩니다.
 
 Browser QA Capture conformance는 owner 문서가 명시적으로 승격하고 증명하기 전까지 v1+ Expansion roadmap 후보이지 커널 스모크(Kernel Smoke), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 강화된 로컬 기준 요구사항이 아닙니다. [로드맵 승격 규칙](../roadmap.md#승격-규칙)을 통해 승격되기 전까지는 권한 없는 capture support일 뿐입니다. Future fixtures는 capability profile fields, redaction 및 secret/PII handling, browser test environment, artifact 보존, capture artifact mapping, unsupported 접점 fallback 동작, projection-as-canonical 의존성 없음이 정의된 뒤에만 declared `T6 QA Capture` 동작을 증명해야 합니다. Staged-delivery fixtures는 automated browser capture를 요구하지 않고 수동 QA records, artifact refs, QA 면제 동작, 작업 수락 경계, close blockers를 계속 증명합니다.
 
@@ -149,7 +149,7 @@ Connector와 reference-surface smoke coverage도 같은 staged rule을 따릅니
 flowchart LR
   Kernel["코어 권한 조각(v0.1 Core Authority Slice)<br/>커널 스모크(Kernel Smoke) profile"] --> Evidence["사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)"]
   Evidence --> Agency["보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)"]
-  Agency --> Ops["운영과 인계 팩(v0.4 Operations & Handoff Pack)<br/>강화된 로컬 기준 목표(hardened local reference target) conformance"]
+  Agency --> Ops["운영과 인계 팩(v0.4 Operations & Handoff Pack)<br/>operations/future conformance"]
   Ops -. "roadmap boundary" .-> Expansion["v1+ Expansion<br/>roadmap 후보"]
   Kernel --> K1["project, Task, 기본 scope 하나"]
   Kernel --> K2["prepare_write and Write Authorization"]
@@ -702,7 +702,7 @@ Compact artifact check 예시:
 
 ## conformance run
 
-`conformance run`은 선택한 fixture suite 또는 명시적으로 선택한 docs-only maintenance profile을 실행합니다. Runtime suite는 MCP tool과 operator command가 쓰는 것과 같은 Core entrypoint를 사용하며, exact-shape fixture가 captured state, events, artifacts, projections, errors를 비교할 때만 pass/fail이 결정됩니다. Docs-maintenance는 별도의 read-only profile로 남으며 runtime fixture pass/fail과 구현 준비 상태에 포함하지 않습니다.
+향후 `conformance run`은 선택한 fixture suite 또는 명시적으로 선택한 docs-only maintenance profile을 실행합니다. Runtime suite는 MCP tool과 operator command가 쓰는 것과 같은 Core entrypoint를 사용하며, exact-shape fixture가 captured state, events, artifacts, projections/freshness, errors를 비교할 때만 pass/fail이 결정됩니다. Docs-maintenance는 별도의 read-only profile로 남으며 runtime fixture pass/fail과 구현 준비 상태에 포함하지 않습니다.
 
 ### Conformance 탐색 지도
 
@@ -710,10 +710,10 @@ Compact artifact check 예시:
 |---|---|
 | `harness conformance run` entrypoint, runtime/docs-maintenance 분리, operator reporting boundary | 이 section과 [docs-maintenance 프로필](#docs-maintenance-프로필) |
 | 정확한 fixture body field, runner loading/execution, default comparison mode | [Conformance Fixtures 참조](conformance-fixtures.md#conformance-탐색-지도) |
-| Suite intent와 작성 순서 | [Conformance staging](#conformance-staging), 그다음 [커널 스모크(Kernel Smoke) Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)와 [Fixture Suites](conformance-fixtures.md#fixture-suites) |
-| Concern별 executable 예시와 catalog-only future candidate | [Fixture 예시 지도](conformance-fixtures.md#fixture-예시-지도) |
+| Suite intent와 작성 순서 | [Conformance staging](#conformance-staging), 그다음 [검증 프로파일별 증명 동작](conformance-fixtures.md#검증-프로파일별-증명-동작), [커널 스모크(Kernel Smoke) Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), [Fixture Suites](conformance-fixtures.md#fixture-suites) |
+| Concern별 향후 executable 예시와 catalog-only future candidate | [Fixture 예시 지도](conformance-fixtures.md#fixture-예시-지도) |
 
-Operator boundary: 이 문서는 operator entrypoint, runtime/docs-maintenance profile 분리, conformance overview를 담당합니다. [Conformance Fixtures 참조](conformance-fixtures.md)는 fixture body shape, assertion semantics, suite catalog metadata, example, catalog-only future candidate를 담당합니다. Runtime suite pass/fail은 계속 executable-state-based이며, rendered prose만으로는 conformance를 통과할 수 없습니다.
+Operator boundary: 이 문서는 operator entrypoint, runtime/docs-maintenance profile 분리, conformance overview를 담당합니다. [Conformance Fixtures 참조](conformance-fixtures.md)는 fixture body shape, assertion semantics, suite catalog metadata, 검증 프로파일, example, catalog-only future candidate를 담당합니다. Runtime conformance가 구체화되면 runtime suite pass/fail은 계속 executable-state-based이며, rendered prose만으로는 conformance를 통과할 수 없습니다.
 
 ### Conformance Fixture Format
 

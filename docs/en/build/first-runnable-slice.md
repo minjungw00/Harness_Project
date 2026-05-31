@@ -4,7 +4,7 @@
 
 This document turns the Build overview into the smallest runnable kernel slice an implementer should plan first.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. It is an internal implementation milestone, not the user-facing MVP. The first product MVP target is v0.2 User-Facing Harness MVP.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before the documentation set is accepted for implementation planning. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. It is an internal implementation milestone, not the user-facing MVP. The first product MVP target is v0.2 User-Facing Harness MVP.
 
 ## Read this when
 
@@ -71,7 +71,7 @@ A proposed first runnable slice is acceptable when:
 - It stays planning-only until the [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status) explicitly allows first runtime-batch planning.
 - It proves exactly one scoped write path: active Task, one basic scope, `prepare_write` allow/block, durable single-use Write Authorization, `record_run` consumption, artifact/evidence link, read-only status/next, and structured blocker/status response.
 - It blocks or refuses missing authority: missing scope, out-of-scope intended path, missing Write Authorization for product-write Runs, reuse of a consumed Write Authorization, missing required evidence, or missing required seeded user judgment.
-- It keeps status reads, generated prose, and any projection output downstream from Core records; none of them authorize writes, satisfy evidence, close work, or repair state by being read.
+- It keeps status reads, generated prose, and any projection output downstream from Core records; none of them authorize writes, satisfy evidence, close work, repair state, or become conformance truth by being read.
 - It links strict fixture body shape, assertion modes, primary errors, artifact refs, projection assertions, and seed validation to [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format) instead of copying those contracts here.
 - It names excluded capabilities as not yet proven by v0.1 Core Authority Slice, not as failed first-slice requirements.
 
@@ -249,9 +249,9 @@ This slice does not prove the items below. They are stage boundaries, not failed
 
 ## Fixtures to write
 
-Write fixtures that drive Core behavior and assert state, events, artifacts, projections or freshness when applicable, and errors. Do not assert success by matching rendered prose. These rows are future authoring candidates; they do not imply executable fixture files exist now.
+After documentation acceptance and implementation handoff, write first runnable kernel slice fixtures that drive Core behavior and assert state, events, artifacts, projection freshness when applicable, and errors. Do not assert success by matching rendered prose or polished projection output. These rows are future authoring candidates; they do not imply executable fixture files exist now.
 
-Build owns the coverage intent for v0.1: project/status, one active Task, one basic scope, `prepare_write` allow/block, `record_run` consume/block, one artifact/evidence link, minimal evidence sufficiency, read-only status/next, and close/status blockers. The exact fixture queue, body fields, seed rules, assertion modes, stable events, artifact/projection assertions, and primary-error expectations are owned by the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) and [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format).
+Build owns the coverage intent for v0.1: project/status, one active Task, one basic scope, `prepare_write` allow/block, `record_run` consume/block, one artifact/evidence link, minimal evidence sufficiency, read-only status/next, and close/status blockers. Projection polish and detailed templates are not v0.1 fixture requirements. The exact fixture queue, body fields, seed rules, assertion modes, stable events, artifact/projection assertions, and primary-error expectations are owned by the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) and [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format).
 
 Do not add fields to the fixture body to express suite stage, authoring order, or docs-maintenance results.
 

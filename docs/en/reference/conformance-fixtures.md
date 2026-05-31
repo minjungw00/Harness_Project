@@ -2,18 +2,18 @@
 
 ## What this document helps you do
 
-Use this reference to look up exact conformance fixture body shape, runner execution behavior, fixture assertion semantics, suite catalog metadata, Kernel Smoke authoring order, staged fixture coverage, examples, and catalog-only future candidates.
+Use this reference to look up the future conformance fixture design: exact fixture body shape, runner execution behavior, fixture assertion semantics, suite catalog metadata, Kernel Smoke authoring order, staged fixture coverage, examples, and catalog-only future candidates.
 
 This is a lookup document for conformance authors, implementers, and maintainers. It is not an operator procedure; use [Operations And Conformance Reference](operations-and-conformance.md) for operator entrypoints and the `harness conformance run` overview.
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is reference documentation for future conformance work. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before the documentation set is accepted for implementation planning. The current repository is documentation-only and does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
-- You are writing or reviewing fixture-based conformance.
+- You are writing or reviewing the future fixture-based conformance design.
 - You need the exact fixture body fields, seed expansion limits, `ToolEnvelope` expansion convention, or runner isolation behavior.
 - You need fixture assertion modes for state, events, artifacts, projections, errors, validators, close blockers, and redaction effects.
-- You need Kernel Smoke, User-Facing Harness MVP, hardened local reference coverage, staged suite coverage, examples, or catalog-only future candidate guidance.
+- You need Kernel Smoke, User-Facing Harness MVP, agency-hardened, operations/future, staged suite coverage, examples, or catalog-only future candidate guidance.
 
 ## Before you read
 
@@ -21,9 +21,16 @@ Use [Operations And Conformance Reference](operations-and-conformance.md#conform
 
 ## Main idea
 
-Conformance proves Harness behavior with executable fixtures. A passing runtime fixture must drive a Core or operator action and compare captured Core/API or operator results against structured expectations.
+Today this document is a future conformance design, not a set of runnable tests. Do not create actual fixture files from these examples during the documentation-only phase.
 
-Rendered Markdown, Journey Card prose, status text, close report prose, scenario descriptions, comments, and agent summaries can help a reader, but they cannot pass conformance by themselves. Runtime pass/fail comes from captured state, `task_events`, validator results, artifact registry/file integrity, projection job or freshness state, returned primary errors, and structured tool-specific blocker fields.
+After implementation begins, conformance will prove Harness behavior with executable fixtures. A passing runtime fixture will drive a Core or operator action and compare captured Core/API or operator results against structured expectations.
+
+Assertion authority is layered:
+
+- Prose scenario descriptions, comments, rendered Markdown, Journey Card prose, status text, close report prose, and agent summaries are explanatory only.
+- Captured Core state, `task_events`, validator results, returned primary errors, and structured tool-specific blocker fields are authoritative for fixture pass/fail.
+- Artifact reference, owner-link, hash, size, content-type, redaction, and file-integrity assertions are authoritative where the scenario depends on artifacts or evidence bytes.
+- Projection output may be checked for freshness, source-state-version display, readability, and availability, but renderer output must not replace Core state, satisfy evidence, authorize writes, close work, accept results, accept risk, or become the source of conformance truth.
 
 ## Reference scope
 
@@ -35,7 +42,7 @@ This document owns:
 - isolated fixture execution behavior
 - fixture assertion semantics and comparison modes
 - suite catalog metadata boundaries
-- Kernel Smoke authoring queue and staged fixture coverage maps
+- fixture profiles by behavior proved, Kernel Smoke authoring queue, and staged fixture coverage maps
 - core, agency, connector, design-quality, stewardship, context-hygiene, and catalog-only fixture examples
 - catalog-only future candidate guidance for fixture families
 
@@ -51,11 +58,22 @@ This reference does not own operator command procedures, docs-maintenance report
 | How a runner loads, seeds, executes, captures, and compares | [Conformance Execution](#conformance-execution) |
 | Default comparison modes for `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error` | [Fixture Assertion Semantics](#fixture-assertion-semantics) |
 | Suite intent and authoring order | [Conformance staging](operations-and-conformance.md#conformance-staging), [Kernel Smoke Authoring Queue](#kernel-smoke-authoring-queue), and [Fixture Suites](#fixture-suites) |
-| Executable examples by concern | [Fixture Example Map](#fixture-example-map) |
+| Future fixture examples by concern | [Fixture Example Map](#fixture-example-map) |
+
+## Fixture Profiles By Proven Behavior
+
+Fixture profiles are grouped by the behavior they prove, not by how polished the rendered output is. The profile name does not add fixture-body fields, does not require a renderer to be authoritative, and does not imply fixture files exist in this documentation-only repository.
+
+| Profile | Stage name | Behavior proved | Out of scope for that profile |
+|---|---|---|---|
+| First runnable kernel slice fixtures, with Kernel Smoke as the authoring profile | v0.1 Core Authority Slice | Minimal authority loop only: one local project, one Task, one basic scope, `prepare_write` allow/block, one durable single-use Write Authorization, one compatible `record_run`, one artifact/evidence link, read-only status/next, and structured blockers. | User-facing MVP value, projection polish, detailed templates, residual-risk semantics, Manual QA, detached verification, export/recover, release handoff, higher guard guarantees, and broad operations. |
+| User-facing MVP fixtures | v0.2 User-Facing Harness MVP | Ordinary user requests route into scope, user-owned judgment, evidence, close-readiness, final acceptance separation, residual-risk visibility, and readable derived summaries without requiring Harness vocabulary. | Full agency hardening, detached verification independence, Manual QA matrix, stewardship policy suite, export/recover, release handoff, and automation beyond the MVP path. |
+| Agency-hardened fixtures | v0.3 Assurance & Stewardship Pack | User-owned judgment, Approval, Write Authorization, Manual QA, verification, final acceptance, residual-risk acceptance, stewardship, design-quality, context-hygiene, TDD, and feedback-loop boundaries stay separate and fixture-proven through Core records. | Operator recovery/export completeness, release handoff, broad operations coverage, dashboard/hosted workflow UI, broad connector automation, and unproven preventive or isolated guarantee claims. |
+| Operations/future fixtures | v0.4 Operations & Handoff Pack and v1+ Expansion | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, and any promoted future higher guarantee level or automation profile. | Any stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, or automation claim until owner docs define the mechanism and fixtures prove the covered behavior. |
 
 ## Conformance Fixture Format
 
-Conformance is fixture-based. A scenario table is not enough; each test fixture must drive an action and assert state, events, artifacts, projections, and errors.
+Future runtime conformance is fixture-based. A scenario table is not enough; each materialized test fixture must drive an action and assert state, events, artifacts, projections, and errors.
 
 Each fixture must include this shape:
 
@@ -94,21 +112,21 @@ classDiagram
   SuiteCatalogMetadata ..> FixtureBody : groups exact-shape fixtures
 ```
 
-Fixture files and suite catalogs may carry metadata outside the fixture body. The fixture body itself uses only the fields above so conformance runners can compare behavior consistently. Do not add fixture-body fields for suite delivery stage, assertion mode, docs-maintenance result, prose status, or authoring notes; those belong in suite catalog metadata, docs-maintenance reports, or surrounding documentation.
+Future fixture files and suite catalogs may carry metadata outside the fixture body. The fixture body itself uses only the fields above so conformance runners can compare behavior consistently. Do not add fixture-body fields for suite delivery stage, assertion mode, docs-maintenance result, prose status, or authoring notes; those belong in suite catalog metadata, docs-maintenance reports, or surrounding documentation.
 
 Fixture body type notation follows the API [Schema notation convention](mcp-api-and-schemas.md#schema-notation-convention). All top-level fixture body fields above are required. Use `{}` or `[]` when the fixture intentionally supplies an empty object, object map, or array; omitting a required top-level field is an invalid fixture body, not "not asserted."
 
-For an MCP tool action, executable fixture `input` is the tool's public request payload as defined by the API docs. The runner must validate `input` against the request schema for `action`, including `envelope: ToolEnvelope` when that schema requires it. Examples in this document may omit `ToolEnvelope` only under this envelope-expansion convention: before validation, canonicalization, request hashing, or Core execution, the runner supplies a deterministic valid envelope from `initial_state`, suite defaults, and fixture metadata. The expanded request is what Core receives. This convention does not add fixture fields, change the fixture body shape, or create an alternate request schema.
+For an MCP tool action, future executable fixture `input` is the tool's public request payload as defined by the API docs. The runner must validate `input` against the request schema for `action`, including `envelope: ToolEnvelope` when that schema requires it. Examples in this document may omit `ToolEnvelope` only under this envelope-expansion convention: before validation, canonicalization, request hashing, or Core execution, the runner supplies a deterministic valid envelope from `initial_state`, suite defaults, and fixture metadata. The expanded request is what Core receives. This convention does not add fixture fields, change the fixture body shape, or create an alternate request schema.
 
-Fixture shorthand is intentionally narrow. It is allowed for `initial_state` seeding, suite catalog metadata, and documented seed-loader expansion of compact examples such as `owner_records`, `stewardship_findings`, or feedback-loop shorthand. Executable fixture files must map that shorthand to owner records, validator runs, residual risks, or other records owned by DDL/API docs. The shorthand must not create a second API or state model. Public mutation must not be encoded as scenario-only shorthand inside `input`; fixtures must use the public request branch for `record_run`, `record_eval`, `record_manual_qa`, `record_user_decision`, or else seed owner records in `initial_state` when the scenario is about preexisting state. `close_task` fixture `input` is only `CloseTaskRequest` after any documented envelope expansion; evidence profiles, changed paths, artifact refs, acceptance-criteria support, self-check summaries, and Manual QA records must be seeded in `initial_state` or recorded by a preceding public mutation fixture. `StewardshipImpactSummary` assertions are derived display, not canonical current records, and should appear under `expected_state.derived` or projection assertions. `owner_records.feedback_loops` seeds canonical `feedback_loops` rows. Bare `FBL-*` values in example fields such as `feedback_loop_refs` map to `StateRecordRef { record_kind: feedback_loop, record_id: ... }` in executable fixtures. Fixture bodies that exercise public mutation instead of seeded state must express definition changes as `FeedbackLoopUpdate` under `record_run.payload.shaping_update.feedback_loop_updates`, execution/status changes under `evidence_updates.feedback_loop_updates`, or Manual QA execution through `record_manual_qa.feedback_loop_ref`. When an example shows only `feedback_loop_id` and `status`, the fixture runner must derive or supply the remaining required `feedback_loops` storage fields from the surrounding Task, Change Unit, selected-loop, and evidence shorthand before inserting or building the corresponding `FeedbackLoopUpdate`. Accepted residual risk in fixture shorthand is state on seeded `residual_risk` records, not a standalone accepted-risk record. When fixture examples use bare `RISK-*` values in risk-ref arrays such as `visible_refs`, `accepted_refs`, `not_visible_refs`, `unaccepted_refs`, or `residual_risk_refs`, executable fixtures must map them to `StateRecordRef { record_kind: residual_risk, record_id: ... }`. These bare IDs are fixture shorthand only, not DDL/API fields. Executable staged-delivery fixtures must not require standalone `ARISK-*` records.
+Fixture shorthand is intentionally narrow. It is allowed for `initial_state` seeding, suite catalog metadata, and documented seed-loader expansion of compact examples such as `owner_records`, `stewardship_findings`, or feedback-loop shorthand. Future executable fixture files must map that shorthand to owner records, validator runs, residual risks, or other records owned by DDL/API docs. The shorthand must not create a second API or state model. Public mutation must not be encoded as scenario-only shorthand inside `input`; fixtures must use the public request branch for `record_run`, `record_eval`, `record_manual_qa`, `record_user_decision`, or else seed owner records in `initial_state` when the scenario is about preexisting state. `close_task` fixture `input` is only `CloseTaskRequest` after any documented envelope expansion; evidence profiles, changed paths, artifact refs, acceptance-criteria support, self-check summaries, and Manual QA records must be seeded in `initial_state` or recorded by a preceding public mutation fixture. `StewardshipImpactSummary` assertions are derived display, not canonical current records, and should appear under `expected_state.derived` or projection assertions. `owner_records.feedback_loops` seeds canonical `feedback_loops` rows. Bare `FBL-*` values in example fields such as `feedback_loop_refs` map to `StateRecordRef { record_kind: feedback_loop, record_id: ... }` in future executable fixtures. Fixture bodies that exercise public mutation instead of seeded state must express definition changes as `FeedbackLoopUpdate` under `record_run.payload.shaping_update.feedback_loop_updates`, execution/status changes under `evidence_updates.feedback_loop_updates`, or Manual QA execution through `record_manual_qa.feedback_loop_ref`. When an example shows only `feedback_loop_id` and `status`, the fixture runner must derive or supply the remaining required `feedback_loops` storage fields from the surrounding Task, Change Unit, selected-loop, and evidence shorthand before inserting or building the corresponding `FeedbackLoopUpdate`. Accepted residual risk in fixture shorthand is state on seeded `residual_risk` records, not a standalone accepted-risk record. When fixture examples use bare `RISK-*` values in risk-ref arrays such as `visible_refs`, `accepted_refs`, `not_visible_refs`, `unaccepted_refs`, or `residual_risk_refs`, future executable fixtures must map them to `StateRecordRef { record_kind: residual_risk, record_id: ... }`. These bare IDs are fixture shorthand only, not DDL/API fields. Future executable staged-delivery fixtures must not require standalone `ARISK-*` records.
 
-Executable fixtures that seed `write_authorizations` must produce valid stored rows. Each seeded authorization row must include `basis_state_version` explicitly, or the runner must derive it from the seeded affected-scope state version for the row's Task before inserting into `state.sqlite`. This is a storage-loader derivation rule only; it does not add fixture top-level fields or change the fixture body shape. Partial `expected_state.write_authorization` assertions may omit `basis_state_version` unless the fixture is testing idempotent replay, stale detection, expiry, or audit behavior. `basis_state_version` is the allow-decision basis, not the resulting `ToolResponseBase.state_version`.
+Future executable fixtures that seed `write_authorizations` must produce valid stored rows. Each seeded authorization row must include `basis_state_version` explicitly, or the runner must derive it from the seeded affected-scope state version for the row's Task before inserting into `state.sqlite`. This is a storage-loader derivation rule only; it does not add fixture top-level fields or change the fixture body shape. Partial `expected_state.write_authorization` assertions may omit `basis_state_version` unless the fixture is testing idempotent replay, stale detection, expiry, or audit behavior. `basis_state_version` is the allow-decision basis, not the resulting `ToolResponseBase.state_version`.
 
 Suite catalog metadata is not passed to Core and is not part of a fixture body. It can group exact-shape fixtures by suite, delivery stage, and tags:
 
 ```yaml
 suite: agency
-earliest_delivery_stage: v0.3-assurance-stewardship-pack
+earliest_delivery_stage: "v0.3 Assurance & Stewardship Pack"
 tags: [decision-gate, residual-risk, autonomy-boundary]
 fixtures:
   - AGENCY-decision-packet-required-before-product-tradeoff-write
@@ -119,9 +137,9 @@ Runners may use this metadata to choose, order, or report suites. Core receives 
 
 ## Conformance Execution
 
-`harness conformance run` executes fixtures through the same Core entrypoints used by MCP tools and operator commands. It must not assert behavior by inspecting prose output alone.
+Future `harness conformance run` will execute fixtures through the same Core entrypoints used by MCP tools and operator commands. It must not assert behavior by inspecting prose output alone.
 
-Runtime fixture execution semantics:
+Future runtime fixture execution semantics:
 
 1. Load fixture YAML files and validate the exact fixture body shape.
 2. Create a fresh isolated runtime home and temporary Product Repository for the fixture, unless the fixture explicitly targets an existing read-only sample. The runner must not reuse the developer's real Harness Runtime Home or Product Repository for state-changing fixture execution.
@@ -237,13 +255,13 @@ fixtures:
   - CORE-active-status-no-task
 ```
 
-Conformance must prove behavior through captured Core state, `task_events`, validator results, artifact registry/file integrity, projection job or freshness state, returned error codes, and structured tool-specific blocker fields when applicable. Matching rendered Markdown, Journey Card prose, status prose, close report prose, or agent prose alone cannot pass a fixture.
+Future conformance must prove behavior through captured Core state, `task_events`, validator results, artifact registry/file integrity, projection job or freshness state, returned error codes, and structured tool-specific blocker fields when applicable. Matching rendered Markdown, Journey Card prose, status prose, close report prose, or agent prose alone cannot pass a fixture.
 
 Fixture runners must use the same canonicalization rules as the reference implementation for `request_hash`, baseline `tree_hash`, and projection `managed_hash`. The detailed algorithms remain owned by the MCP API, Storage And DDL, and Document Projection docs; conformance fixtures assert deterministic behavior without redefining those source-of-truth boundaries.
 
 ## Agency, Stewardship, Context, And Design-Quality Suites
 
-Agency, stewardship, context hygiene, and design-quality are v0.3 Assurance & Stewardship Pack suites for the hardened local reference target. They test state behavior through Core entrypoints such as `prepare_write`, `request_user_decision`, `record_user_decision`, `record_manual_qa`, `record_eval`, `close_task`, `next`, and operator actions that call Core. They must not pass by matching Journey Card, Decision Packet, residual-risk, review-stage, or status prose.
+Agency, stewardship, context hygiene, and design-quality are v0.3 Assurance & Stewardship Pack agency-hardened suites. They test state behavior through Core entrypoints such as `prepare_write`, `request_user_decision`, `record_user_decision`, `record_manual_qa`, `record_eval`, `close_task`, `next`, and operator actions that call Core. They must not pass by matching Journey Card, Decision Packet, residual-risk, review-stage, or status prose.
 
 Required suite responsibilities:
 
@@ -260,7 +278,7 @@ Status/next recommendations, including Role Lens recommendations, are fixture-ob
 
 ```mermaid
 flowchart LR
-  Suites["Hardened local reference suites"] --> Agency["agency"]
+  Suites["Agency-hardened suites"] --> Agency["agency"]
   Suites --> Stewardship["stewardship"]
   Suites --> Context["context-hygiene"]
   Agency --> A1["Decision Packet and decision gate"]
@@ -278,10 +296,10 @@ The guidance below is for turning catalog families into exact-shape fixtures. It
 
 ### Kernel Smoke Authoring Queue
 
-Use this queue as the first authoring order for v0.1 Core Authority Slice fixture candidates. Kernel Smoke is the narrow conformance authoring profile for that internal runnable target, not for the product MVP. These rows do not imply executable fixture files already exist. The order is for fixture authors, not a dependency between executable fixtures; each executable fixture should remain isolated, seed its own minimum owner records in `initial_state`, use one public Core or operator action, and keep the exact fixture body shape unchanged.
+Use this queue as the first authoring order for v0.1 Core Authority Slice fixture candidates. Kernel Smoke is the narrow conformance authoring profile for that internal runnable target, not for the product MVP. These rows are future authoring guidance and do not imply executable fixture files already exist. The order is for fixture authors, not a dependency between executable fixtures; each future executable fixture should remain isolated, seed its own minimum owner records in `initial_state`, use one public Core or operator action, and keep the exact fixture body shape unchanged.
 
 Exact request and response schemas live in [MCP API And Schemas](mcp-api-and-schemas.md). Exact DDL and storage value sets live in [Storage And DDL](storage-and-ddl.md) and [Canonical enum hardening](storage-and-ddl.md#canonical-enum-hardening). Stable event names live in the [Kernel Stable Event Catalog](kernel.md#stable-event-catalog). Primary error selection lives in [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence). `ArtifactRef` is owned by [ArtifactRef](mcp-api-and-schemas.md#artifactref). `ProjectionKind` values and API-owned support classes are owned by [Shared schemas](mcp-api-and-schemas.md#shared-schemas).
-Template implementation classes and freshness behavior are owned by [Document Projection](document-projection.md#template-implementation-classes) and [Freshness and failure rules](document-projection.md#freshness-and-failure-rules).
+Template implementation classes and freshness behavior are owned by [Document Projection](document-projection.md#template-implementation-classes) and [Freshness and failure rules](document-projection.md#freshness-and-failure-rules). Kernel Smoke may assert no projection requirement, projection freshness, or enqueue/failure facts when they prove the target behavior, but it must not require projection-template polish or detailed report templates.
 
 In the table, `None` means the existing fixture field stays empty or `expected_error: null`; it is not a new sentinel value.
 
@@ -300,9 +318,9 @@ In the table, `None` means the existing fixture field stays empty or `expected_e
 | 11 | `CORE-status-next-read-only-current-state` | `harness.status` or `harness.next` | Active Task with current scope, write authority summary, evidence state, and optional blockers | Read returns current Task, scope, write authority, evidence, blockers, and safe next action; no state mutation, no gate satisfaction, no Write Authorization | None | None | No projection enqueue from read-only status/next | None |
 | 12 | `CORE-close-or-status-structured-blocker` | `harness.close_task`, `harness.status`, or `harness.next` | Active Task with close-compatible scope; evidence absent/partial/insufficient, or a seeded required user judgment missing/unresolved | Task remains non-terminal; structured blocker points to evidence insufficiency or missing required judgment; no close state, final acceptance, residual-risk acceptance, or assurance upgrade is recorded | `close_requested`, `close_blocked` only when `close_task` commits blocker/status state | None unless existing evidence or judgment context uses committed artifacts | No projection requirement; `TASK` stale/enqueued is allowed if blocker/status state commits | `EVIDENCE_INSUFFICIENT`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, or owner-equivalent structured blocker error |
 
-All rows above belong to v0.1 Core Authority Slice through the Kernel Smoke profile. v0.2 User-Facing Harness MVP and later packs keep the same fixture body shape and extend coverage through the staged catalog families below, especially ordinary-language routing, procedural budget, Decision Packet quality, approval separation, residual-risk visibility, final acceptance, surface honesty, artifact redaction/export, stewardship/design-quality, context hygiene, reconcile, detached verification, and Manual QA.
+All rows above belong to the first runnable kernel slice fixture profile for v0.1 Core Authority Slice through Kernel Smoke. v0.2 User-Facing Harness MVP and later packs keep the same fixture body shape and extend coverage through the staged catalog families below, especially ordinary-language routing, procedural budget, Decision Packet quality, approval separation, residual-risk visibility, final acceptance, surface honesty, artifact redaction/export, stewardship/design-quality, context hygiene, reconcile, detached verification, and Manual QA.
 
-Docs-maintenance rows are explicitly outside this runtime fixture queue. A docs-maintenance profile may have checklist rows or report labels, but it is not v0.1 Core Authority Slice, not User-Facing Harness MVP, not hardened runtime conformance, and not a Core fixture pass/fail input.
+Docs-maintenance rows are explicitly outside this runtime fixture queue. A docs-maintenance profile may have checklist rows or report labels, but it is not v0.1 Core Authority Slice, not User-Facing Harness MVP, not agency-hardened or operations runtime conformance, and not a Core fixture pass/fail input.
 
 | Catalog family | Covers | Stage mapping | Likely Core or operator action | Minimum seeded records |
 |---|---|---|---|---|
@@ -312,7 +330,7 @@ Docs-maintenance rows are explicitly outside this runtime fixture queue. A docs-
 | Artifact trust, redaction, omission, integrity, and export non-leakage | `ARTIFACT-*`, `EXPORT-redaction-*`, `EXPORT-secret-pii-*`; Browser QA Capture rows only after promotion | v0.1 Core Authority Slice for one registered artifact/evidence link; v0.2 User-Facing Harness MVP for user-visible evidence sufficiency; v0.4 Operations & Handoff Pack for artifact integrity and export non-leakage; v1+ for Browser QA Capture | `record_run`, `record_manual_qa`, `record_eval`, `launch_verify`, `artifacts_check`, `recover`, `export`, or Release Handoff report read | Task-scoped owner record such as Run, Evidence Manifest, Eval, Manual QA record, Decision Packet, or completed projection job; committed artifact rows and `artifact_links`, or a staged artifact input under approved staging; `redaction_state` and integrity metadata; optional export/projection refs |
 | Stewardship and design-quality catalog rows | `STEWARDSHIP-*` catalog rows, shared-design continuation, codebase-answerable stewardship facts, feedback-loop/TDD/public-interface rows, two-stage review display boundaries | v0.3 Assurance & Stewardship Pack | `intake`, `next`, `prepare_write`, `request_user_decision`, `record_manual_qa`, `record_eval`, or `close_task` | Active Task and scope/Change Unit; Shared Design, domain terms, module map items, interface contracts, feedback loops, TDD traces, validator findings, residual risks, Manual QA policy, evidence refs, and routed owner refs as applicable |
 | Context, projection, reconcile, and verification boundaries | `CONTEXT-HYGIENE-*`, `CORE-projection-stale-state-current-distinction`, `RECONCILE-managed-block-edit-routes-to-reconcile`, `CORE-same-session-self-review-not-detached-verification`, stale PRD/chat-memory and evaluator-bundle freshness rows | v0.2 User-Facing Harness MVP for current-state versus derived display and projection/card sufficiency; v0.3 Assurance & Stewardship Pack for context-hygiene and same-session verification guard coverage; v0.4 Operations & Handoff Pack for reconcile operations | `status`, `next`, `projection_refresh`, `reconcile`, `record_eval`, `close_task`, `launch_verify`, or `prepare_write` | Current Task state version, projection jobs or freshness, stale context refs, Evidence Manifest/Eval/bundle refs, reconcile item or managed-block drift input, and active gates relevant to the block |
-| Docs-maintenance separation | `docs-maintenance` profile and smoke categories | Separate docs-only operator profile; not v0.1 Core Authority Slice, User-Facing Harness MVP, or hardened runtime fixture pass/fail | Explicitly selected docs-maintenance operator profile | Markdown documentation tree only; no Core runtime records, no fixture `initial_state` in `state.sqlite`, no artifacts or projection jobs |
+| Docs-maintenance separation | `docs-maintenance` profile and smoke categories | Separate docs-only operator profile; not v0.1 Core Authority Slice, User-Facing Harness MVP, agency-hardened, operations, or runtime fixture pass/fail | Explicitly selected docs-maintenance operator profile | Markdown documentation tree only; no Core runtime records, no fixture `initial_state` in `state.sqlite`, no artifacts or projection jobs |
 
 Expected assertions should stay in the existing fixture fields:
 
@@ -328,7 +346,7 @@ Expected assertions should stay in the existing fixture fields:
 
 ### Intake And Decision Catalog Entries
 
-These are catalog entries, not fixture bodies. They cover ordinary user-language behavior and Decision Packet quality while preserving the exact fixture shape and the rule that executable fixtures prove behavior through Core state, events, artifacts, projections, and errors.
+These are catalog entries, not fixture bodies. They cover ordinary user-language behavior and Decision Packet quality while preserving the exact fixture shape and the rule that future executable fixtures prove behavior through Core state, events, artifacts, projections, and errors.
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
@@ -343,7 +361,9 @@ These are catalog entries, not fixture bodies. They cover ordinary user-language
 
 ## Hardened Fixture Coverage
 
-The hardened evidence, verification, and connector rules should be covered by fixtures with the required shape. Suite catalogs may map scenario IDs to the earliest delivery stage where the behavior must be implemented, but delivery-stage metadata is not part of the fixture body.
+The future hardened evidence, verification, and connector rules should be covered by fixtures with the required shape after their stage is in implementation scope. Suite catalogs may map scenario IDs to the earliest delivery stage where the behavior must be implemented, but delivery-stage metadata is not part of the fixture body.
+
+The YAML blocks below are future fixture examples for planning. They are not fixture files in the current repository and are not evidence that runnable Harness Server conformance tests already exist. Use them to show assertion shape and owner boundaries; do not make detailed templates or renderer output mandatory unless they prove the target behavior.
 
 ```yaml
 scenario_id: CORE-evidence-direct-docs-only-sufficient
@@ -2696,7 +2716,7 @@ These catalog entries are not fixture bodies. They make projection, reconcile, a
 
 ### v1+ Expansion Browser QA Capture Candidate Entries
 
-These catalog entries are future candidates, not v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, the hardened local reference target, or Kernel Smoke requirements. They become executable only after the Browser QA Capture capability profile, redaction and secret/PII policy, test environment, artifact retention, fixture or conformance target, fallback semantics, and no projection-as-canonical dependency are defined.
+These catalog entries are future candidates, not v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, v0.3 agency-hardened, v0.4 operations, or Kernel Smoke requirements. They become executable only after the Browser QA Capture capability profile, redaction and secret/PII policy, test environment, artifact retention, fixture or conformance target, fallback semantics, and no projection-as-canonical dependency are defined.
 
 Hardened local reference Manual QA coverage remains the existing Manual QA record or valid QA waiver, `qa_gate` behavior, and registered artifact refs supplied through Core owner paths. Automated Browser QA Capture is useful capture assistance after promotion, but it is not required to satisfy staged Manual QA or artifact coverage.
 
@@ -2704,11 +2724,11 @@ Hardened local reference Manual QA coverage remains the existing Manual QA recor
 |---|---|---|
 | `BROWSER-QA-capture-artifacts-attach-to-manual-qa` | `record_manual_qa` | A capable `T6 QA Capture` profile registers supported screenshot, `qa_capture`, log or console log, network trace, accessibility snapshot, or workflow recording artifacts; links them to the Manual QA record or Feedback Loop execution; applies redaction and retention policy; and updates `qa_gate` only through normal Manual QA result semantics. These artifacts support the human QA record; they are not the human judgment. |
 | `BROWSER-QA-capture-not-final-acceptance-or-detached-verification` | `record_manual_qa` or `record_eval` | Browser QA artifacts can support evidence, but they do not record final acceptance, do not replace human Manual QA judgment where required, and do not set `assurance_level=detached_verified` unless a separate Eval path satisfies independence requirements. |
-| `BROWSER-QA-unsupported-surface-falls-back-to-human-notes` | `record_manual_qa` or `next` | A surface without browser capture capability reports the missing `T6` capability, recommends human Manual QA notes and manually supplied artifacts, and does not fail Kernel Smoke, User-Facing Harness MVP, or hardened local reference conformance solely because automated browser capture is unavailable. |
+| `BROWSER-QA-unsupported-surface-falls-back-to-human-notes` | `record_manual_qa` or `next` | A surface without browser capture capability reports the missing `T6` capability, recommends human Manual QA notes and manually supplied artifacts, and does not fail Kernel Smoke, User-Facing Harness MVP, agency-hardened, or operations conformance solely because automated browser capture is unavailable. |
 
 ## Fixture Suites
 
-Hardened local reference suite families:
+Future suite families group under the fixture profiles above:
 
 - core: active status, advisor close, direct close including tiny direct as a Direct profile, write gate, Write Authorization creation/required/invalid coverage, Approval required and Approval lifecycle retry, evidence insufficient, artifact integrity effects on evidence/close readiness, same-session verification guard, QA required, acceptance required, residual-risk visibility before acceptance or close, projection failure separation, current-state versus stale-projection distinction, stale projection write guard
 - connector: natural-language intake without a startup phrase, plain-language routing to Harness records, capability profile, connector profile freshness, stale capability profile detection, surface capability mismatch, local security posture severity for doctor/connect/serve-mcp/artifact checks, MCP unavailable hold, generated/managed manifest drift, changed-path detection, artifact capture, manual artifact capture fallback when native capture is unavailable, fallback guarantee display that does not upgrade cooperative, detective, or manual fallback behavior to preventive or isolated, compact current-position context before significant resume, Decision Packet not broad approval, Autonomy Boundary breach routing, stale chat or PRD context pull-only behavior
@@ -2723,7 +2743,7 @@ v1+ Expansion candidate suites:
 
 - browser-qa-capture: outside staged delivery until promoted; catalog-only future candidates for declared `T6 QA Capture` support, redaction and retention policy, browser test environment, capture artifact mapping, Manual QA attachment, detached-verification boundary, final-acceptance boundary, and unsupported-surface fallback
 
-Conformance output must include fixture id, pass/fail, observed state summary, observed events, artifact integrity result, projection freshness, and error code comparison.
+Future conformance output must include fixture id, pass/fail, observed state summary, observed events, artifact integrity result, projection freshness, and error code comparison.
 
 ## Metrics Boundary
 

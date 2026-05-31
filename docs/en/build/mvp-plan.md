@@ -4,7 +4,7 @@
 
 This document turns the MVP scope material into an implementable staged delivery plan. It separates the first runnable kernel slice from the first user-facing MVP so the word "MVP" is reserved for a milestone where users can experience Harness value, not only observe that an authority loop exists.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before the documentation set is accepted for implementation planning. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. Later packs harden assurance, stewardship, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before the documentation set is accepted for implementation planning. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. Later packs harden assurance, stewardship, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 Use this when you need to plan what to build after documentation acceptance. Use the reference docs for exact contracts.
 
@@ -54,6 +54,8 @@ flowchart LR
 
 Kernel Smoke remains the narrow conformance authoring profile for v0.1 Core Authority Slice. The profile name does not make v0.1 a product MVP; it means the fixture queue proves the internal kernel path.
 
+Conformance fixture profiles follow the same stage names: first runnable kernel slice fixtures for v0.1 Core Authority Slice, user-facing MVP fixtures for v0.2 User-Facing Harness MVP, agency-hardened fixtures for v0.3 Assurance & Stewardship Pack, and operations/future fixtures for v0.4 Operations & Handoff Pack and promoted v1+ Expansion candidates.
+
 ### Boundary after staged delivery: v1+ Expansion
 
 v1+ Expansion is roadmap scope, not a Build-owned staged delivery phase. Dashboard, hosted workflow UI, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, broader connectors, metrics, team workflow, orchestration, and similar candidates stay outside v0.1 through v0.4 unless owner docs explicitly promote and prove a future item.
@@ -76,6 +78,8 @@ v0.1 must prove:
 - one structured blocker/status response for missing evidence, missing scope, or a required seeded user judgment
 
 v0.1 should not prove full natural-language intake, full Discovery, full Decision Packet quality, product/UX versus architecture judgment presentation, residual-risk display, final acceptance, residual-risk acceptance, Manual QA, detached verification, stewardship, feedback-loop policy, export/recover, release handoff, or projection/template completeness. Those are later stages.
+
+Kernel Smoke fixture candidates for v0.1 should assert the minimal authority loop through Core state, events, artifact/evidence refs, freshness facts when relevant, and structured blockers. Projection polish, detailed templates, and renderer output are not first-slice conformance truth.
 
 At this point, an implementer or operator can observe that Core owns state, a scoped write is allowed or blocked, one authorization is consumed once, evidence is linked to the recorded Run, reads do not mutate state, and close/status output can return structured blockers.
 
@@ -129,7 +133,7 @@ The MVP must demonstrate:
 - residual risk can be displayed before acceptance and close
 - final acceptance is distinct from sensitive-action Approval and residual-risk acceptance
 - readable summaries or cards show current work status, judgment request, evidence summary, and close readiness/blockers without template polish becoming the source of truth
-- conformance can prove the path through Core state, events, artifacts, projection/freshness facts, and structured errors rather than prose alone
+- conformance can prove the path through Core state, events, artifacts, projection/freshness facts, and structured errors rather than prose or renderer output alone
 
 v0.2 should keep detached verification, the full Manual QA policy matrix, stewardship validators, feedback-loop policy, export/recover, release handoff, Journey Card/Spine polish, Run Summary, TDD Trace, Module Map, Interface Contract, detailed Evidence Manifest, detailed Eval, and Export projections as staged profiles unless a specific user-facing MVP scenario needs a minimal display or blocker hook. Browser QA Capture, Cross-Surface Verification automation, dashboards, broad connectors, Context Index, metrics, team workflow, and orchestration remain outside the MVP.
 
@@ -150,7 +154,7 @@ Focus on:
 - TDD trace behavior where policy requires it
 - feedback-loop policy where policy requires it
 - context-hygiene validators and current-state versus stale-context boundaries
-- agency conformance fixtures that prove behavior through Core state, events, artifacts, projections, and errors
+- agency-hardened conformance fixtures that prove judgment, QA, verification, residual-risk, and acceptance separation through Core state, events, artifacts, projection/freshness facts, and errors
 
 Passing this pack means the user-facing MVP path is agency-preserving and policy-aware. It does not promote v1+ Expansion automation into staged delivery.
 
@@ -166,12 +170,12 @@ Focus on:
 - artifact integrity checks
 - release handoff report/export profile where owner docs define it
 - operator smoke over connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifacts check, and conformance run
-- broader fixture suite coverage for the hardened local reference target
+- operations/future fixture coverage for export/recover, artifact integrity, release handoff, operator readiness, and higher guarantee levels only where owner docs define and prove them
 - later-boundary checks that keep roadmap items in v1+ Expansion unless separately proven and promoted
 
 Do not create a second state model for operator commands. Operators diagnose, repair, export, or run fixtures over the same Core state model.
 
-Docs-maintenance remains a separate read-only documentation profile. It may report documentation drift, but it is not v0.1 Core Authority Slice, not v0.2 User-Facing Harness MVP, not hardened runtime conformance, and not an implementation-readiness signal.
+Docs-maintenance remains a separate read-only documentation profile. It may report documentation drift, but it is not v0.1 Core Authority Slice, not v0.2 User-Facing Harness MVP, not agency-hardened or operations runtime conformance, and not an implementation-readiness signal.
 
 ## Roadmap-scoped v1+ Expansion candidates
 
@@ -239,7 +243,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 - Export includes state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, and retained, expired, or unavailable artifact status.
 - Artifact integrity check reports missing or mismatched artifacts through existing diagnostics.
 - Release handoff report/export behavior follows its owner profile without taking over deployment, merge, rollback, or production authority.
-- Broader fixture suite coverage proves the hardened local reference target through exact-shape fixtures, not prose.
+- Operations/future fixture coverage proves export/recover, artifact integrity, release handoff, operator readiness, and promoted higher guarantee levels through exact-shape fixtures, not prose.
 - Later-boundary checks keep v1+ Expansion items out of staged delivery unless owner docs promote and prove them.
 
 ## Observable by stage

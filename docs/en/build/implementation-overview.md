@@ -4,7 +4,7 @@
 
 This document tells implementers what to build before they dive into the full reference specs. It is the bridge between the reader-centered docs and the detailed contracts in the kernel, runtime, MCP, storage, projection, and conformance references.
 
-This is planning documentation for documentation redesign / feedback incorporation and handoff review. The repository is documentation-only today and is intended to become the Harness Server source repository after documentation acceptance; no Harness Server/runtime implementation exists here yet. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile: one local process with modules proving the smallest authority loop. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is planning documentation for documentation redesign / feedback incorporation and handoff review. The repository is documentation-only today and is intended to become the Harness Server source repository after documentation acceptance; no Harness Server/runtime implementation, executable fixture files, or runnable Harness Server conformance tests exist here yet. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile: one local process with modules proving the smallest authority loop. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 Use it to answer three questions:
 
@@ -67,7 +67,7 @@ First implementation planning means v0.1 Core Authority Slice planning first, no
 - The local-only MCP exposure baseline is accepted for v0.1 Core Authority Slice. Remote, shared, tunneled, or non-loopback exposure remains outside the v0.1 baseline unless owner docs promote and prove a connector profile; see [Runtime Architecture](../reference/runtime-architecture.md#local-access-expectations), [Security Threat Model Reference](../reference/security-threat-model.md#mcp-local-access-and-caller-boundaries), and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#mcp-boundary-and-caller-trust).
 - The reference surface capability profile is accepted as a concrete declaration for the actual host/profile/configuration in use, with refresh triggers for version, MCP config, hooks, permissions, workspace policy, generated files, conformance result, capture method, QA capture method, redaction policy, and artifact retention behavior. Exact connector profile and surface recipe details stay in [Agent Integration Reference](../reference/agent-integration.md#capability-profiles) and [Surface Cookbook](../reference/surface-cookbook.md).
 - The Core-only mutation model is accepted: Core alone changes canonical operational state, while resources, projections, reports, diagnostics, MCP callers, and operator entrypoints remain read-only or derived unless they enter a Core state-changing path. See [Core process model](../reference/runtime-architecture.md#core-process-model), [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow), and the MCP [Idempotency](../reference/mcp-api-and-schemas.md#idempotency) and [State conflict behavior](../reference/mcp-api-and-schemas.md#state-conflict-behavior) sections.
-- The Kernel Smoke fixture queue is identified as the v0.1 Core Authority Slice conformance authoring order. Exact fixture format, assertions, and catalog semantics stay in [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue).
+- The Kernel Smoke fixture queue is identified as the v0.1 Core Authority Slice conformance authoring order and future verification plan. Exact fixture format, assertions, and catalog semantics stay in [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue); this checkpoint does not mean fixture files or runnable conformance tests already exist.
 - The first runnable slice remains local, single-project, single-reference-surface, and fixture-proven. Use [First Runnable Slice](first-runnable-slice.md) for the planning checklist.
 - v1+ Expansion features remain outside v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, the v0.3 through v0.4 staged packs, and hardened local reference target unless promoted by owner docs through the [Roadmap promotion rule](../roadmap.md#promotion-rule).
 
@@ -163,7 +163,7 @@ Operator entrypoints are surfaces over Core behavior, not a second state model. 
 - recover interrupted or stale operational state through documented owner paths
 - export state/report/artifact snapshots without leaking omitted secrets
 - check artifact integrity
-- run conformance fixtures
+- run future conformance fixtures after they are materialized
 
 Exact command names and flags can come later. The important part is the command-independent behavior contract: operator behavior uses the same Core state, `task_events`, artifacts, projections, and existing errors or diagnostics as MCP tools. State-changing operator outcomes must enter Core or a documented recovery path that preserves Core ordering; operator output must not become a parallel source of state truth.
 
@@ -204,7 +204,7 @@ It should show:
 - minimal evidence state records support, partial support, or insufficiency
 - status and next reads are non-mutating
 - close/status output blocks with structured blockers when evidence, scope, authorization, or a required seeded judgment is missing
-- the same behavior is executable through basic Core fixture candidates
+- the same behavior can be mapped to future basic Core fixture candidates
 
 v0.1 Core Authority Slice is not the User-Facing Harness MVP. It proves the write authority path is alive. Use [First Runnable Slice](first-runnable-slice.md#doc-level-acceptance-checks) for doc-level acceptance checks, and use [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format) for exact fixture semantics.
 
@@ -239,7 +239,7 @@ The later hardened local reference target is reached through v0.3 Assurance & St
 - later-boundary checks that keep broad automation in v1+ Expansion
 - fixture coverage for required agency conformance
 
-The hardened local reference target is complete only when conformance proves behavior through Core state, events, artifacts, projections, and errors rather than rendered prose alone.
+The hardened local reference target is complete only when future conformance proves behavior through Core state, events, artifacts, projection/freshness facts, and errors rather than rendered prose or renderer output alone.
 
 ## Build reading path
 
