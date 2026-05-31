@@ -1442,7 +1442,7 @@ flowchart TD
   Return -->|Core applies blocker, gate, or display consequence| CoreOutcome["Core transition outcome"]
 ```
 
-Hardened local reference ValidatorResult IDs:
+v0.3/v0.4 staged hardening ValidatorResult IDs:
 
 | Validator | Purpose |
 |---|---|

@@ -4,7 +4,7 @@
 
 영어와 한국어 하네스 문서를 함께 고칠 때 이 가이드를 사용합니다.
 
-이 문서는 이중 언어 문서 유지보수를 위한 Maintain 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data, 제품 상태 변경을 승인하지 않으며, conformance pass/fail, evidence, QA, 작업 수락, 닫기 준비 상태, 구현 준비 상태를 정의하지 않습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 강화된 로컬 기준 목표(hardened local reference target)를 단단하게 만드는 단계입니다. v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 남습니다.
+이 문서는 이중 언어 문서 유지보수를 위한 Maintain 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data, 제품 상태 변경을 승인하지 않으며, conformance pass/fail, evidence, QA, 작업 수락, 닫기 준비 상태, 구현 준비 상태를 정의하지 않습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 glossary가 정의하는 강화된 로컬 기준 목표(hardened local reference target)에 도달하는 단계이지 별도 stage를 만들지 않습니다. v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 남습니다.
 
 ## 이런 때 읽기
 
@@ -64,7 +64,7 @@ Code block 안의 code, API method name, enum value, field name, file path, stab
 
 `HARNESS:BEGIN` 같은 marker, `ArtifactRef`, `ProjectionKind`, `decision_kind=approval`, `approval_gate`, `ResidualRiskSummary.status=none`, validator ID, error code, file path, API/tool/schema 이름은 번역하지 않습니다.
 
-Stage label을 한국어 prose에서 쓸 때는 한국어 설명을 먼저 두고 canonical English label을 괄호에 둡니다. 예를 들어 `코어 권한 조각(v0.1 Core Authority Slice)`, `커널 스모크(Kernel Smoke)`, `사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)`, `보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)`, `운영과 인계 팩(v0.4 Operations & Handoff Pack)`, `강화된 로컬 기준 목표(hardened local reference target)`, `v1+ Expansion`을 사용합니다. 세 공간 모델을 한국어 prose로 설명할 때는 `제품 저장소`, 이 저장소의 향후 source 역할을 가리킬 때는 `하네스 서버 소스 저장소`, 운영 데이터 공간은 `하네스 런타임 홈`을 사용합니다. Architecture term을 구분해야 할 때만 영어 label을 괄호로 덧붙입니다.
+Stage label을 한국어 prose에서 쓸 때는 한국어 설명을 먼저 두고 canonical English label을 괄호에 둡니다. 예를 들어 `코어 권한 조각(v0.1 Core Authority Slice)`, `커널 스모크(Kernel Smoke)`, `사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)`, `보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)`, `운영과 인계 팩(v0.4 Operations & Handoff Pack)`, `v1+ Expansion`을 사용합니다. `강화된 로컬 기준 목표(hardened local reference target)`는 stage label이 아니라 v0.2 이후 v0.3과 v0.4를 거쳐 도달하는 glossary-defined 상위 기준 목표이며, fixture profile name으로 쓰지 않습니다. 세 공간 모델을 한국어 prose로 설명할 때는 `제품 저장소`, 이 저장소의 향후 source 역할을 가리킬 때는 `하네스 서버 소스 저장소`, 운영 데이터 공간은 `하네스 런타임 홈`을 사용합니다. Architecture term을 구분해야 할 때만 영어 label을 괄호로 덧붙입니다.
 
 Lookup anchor로 쓰이는 Reference heading은 전용 link/anchor migration으로 모든 link를 함께 고치지 않는 한 안정적으로 유지합니다. 사용자용 prose에서는 자연스러운 한국어를 우선합니다. 안정적인 Reference heading 아래에는 한국어 alias line으로 자연스러운 표현을 제공할 수 있습니다.
 

@@ -13,7 +13,7 @@
 - 향후 fixture 기반 conformance 설계를 작성하거나 리뷰할 때.
 - 정확한 fixture body field, seed expansion limit, `ToolEnvelope` expansion convention, runner isolation behavior가 필요할 때.
 - State, event, artifact, projection, error, validator, close blocker, redaction effect를 위한 fixture assertion mode가 필요할 때.
-- 커널 스모크(Kernel Smoke), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), agency-hardened, operations/future, staged suite coverage, 예시, catalog-only future candidate guidance가 필요할 때.
+- first runnable kernel slice fixtures, user-facing MVP fixtures, agency-hardened fixtures, operations/future fixtures, staged suite coverage, 예시, catalog-only future candidate guidance가 필요할 때.
 
 ## 읽기 전에
 
@@ -42,7 +42,7 @@ Conformance run entrypoint, suite-selection overview, docs-maintenance profile b
 - isolated fixture execution behavior
 - fixture assertion semantics와 comparison mode
 - suite catalog metadata boundary
-- 검증 프로파일별 증명 동작, 커널 스모크(Kernel Smoke) authoring queue, staged fixture coverage map
+- first runnable kernel slice fixtures, user-facing MVP fixtures, agency-hardened fixtures, operations/future fixtures, staged fixture coverage map
 - core, agency, connector, design-quality, stewardship, context-hygiene, catalog-only fixture examples
 - fixture family를 위한 catalog-only future candidate guidance
 
@@ -64,12 +64,14 @@ Conformance run entrypoint, suite-selection overview, docs-maintenance profile b
 
 검증 프로파일은 rendered output의 polish가 아니라 무엇을 증명하는지로 묶습니다. Profile 이름은 fixture-body field를 추가하지 않고, renderer를 권위 있게 만들지 않으며, 현재 문서 전용 저장소에 fixture file이 존재한다는 뜻도 아닙니다.
 
+강화된 로컬 기준 목표(hardened local reference target)는 v0.3과 v0.4의 staged profiles를 통해 도달하는 종합 목표입니다. 다섯 번째 fixture profile이 아니며 suite name으로 쓰면 안 됩니다.
+
 | 프로파일 | 단계 이름 | 증명하는 동작 | 해당 프로파일 밖의 범위 |
 |---|---|---|---|
-| 첫 실행 가능한 커널 조각 fixture, 작성 프로파일은 커널 스모크(Kernel Smoke) | v0.1 Core Authority Slice | Minimal authority loop만 증명합니다. Local project 하나, Task 하나, 기본 scope 하나, `prepare_write` allow/block, durable single-use Write Authorization 하나, compatible `record_run` 하나, artifact/evidence link 하나, read-only status/next, structured blocker가 포함됩니다. | 사용자 대상 MVP 가치, projection polish, detailed template, residual-risk semantics, 수동 QA, 분리 검증, export/recover, release handoff, higher guard guarantee, broad operations. |
-| 사용자 대상 MVP fixture | v0.2 User-Facing Harness MVP | 평범한 사용자 요청이 Harness vocabulary 없이 scope, user-owned judgment, evidence, close-readiness, final acceptance separation, residual-risk visibility, readable derived summary로 이어짐을 증명합니다. | Full agency hardening, detached verification independence, 수동 QA matrix, stewardship policy suite, export/recover, release handoff, MVP path 밖의 automation. |
-| Agency-hardened fixture | v0.3 Assurance & Stewardship Pack | User-owned judgment, Approval, Write Authorization, 수동 QA, verification, final acceptance, residual-risk acceptance, stewardship, design-quality, context-hygiene, TDD, feedback-loop boundary가 Core record를 통해 분리되어 fixture-proven 상태임을 증명합니다. | Operator recovery/export completeness, release handoff, broad operations coverage, dashboard/hosted workflow UI, broad connector automation, 증명되지 않은 preventive 또는 isolated guarantee claim. |
-| Operations/future fixture | v0.4 Operations & Handoff Pack 및 v1+ Expansion | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, 승격된 future higher guarantee level 또는 automation profile을 증명합니다. | Owner 문서가 mechanism을 정의하고 fixture가 covered behavior를 증명하기 전의 stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, automation claim. |
+| first runnable kernel slice fixtures, 작성 프로파일은 커널 스모크(Kernel Smoke) | v0.1 Core Authority Slice | Minimal authority loop만 증명합니다. Local project 하나, Task 하나, 기본 scope 하나, `prepare_write` allow/block, durable single-use Write Authorization 하나, compatible `record_run` 하나, artifact/evidence link 하나, read-only status/next, structured blocker가 포함됩니다. | 사용자 대상 MVP 가치, projection polish, detailed template, residual-risk semantics, 수동 QA, 분리 검증, export/recover, release handoff, higher guard guarantee, broad operations. |
+| user-facing MVP fixtures | v0.2 User-Facing Harness MVP | 평범한 사용자 요청이 Harness vocabulary 없이 scope, user-owned judgment, evidence, close-readiness, final acceptance separation, residual-risk visibility, readable derived summary로 이어짐을 증명합니다. | Full agency hardening, detached verification independence, 수동 QA matrix, stewardship policy suite, export/recover, release handoff, MVP path 밖의 automation. |
+| agency-hardened fixtures | v0.3 Assurance & Stewardship Pack | User-owned judgment, Approval, Write Authorization, 수동 QA, verification, final acceptance, residual-risk acceptance, stewardship, design-quality, context-hygiene, TDD, feedback-loop boundary가 Core record를 통해 분리되어 fixture-proven 상태임을 증명합니다. | Operator recovery/export completeness, release handoff, broad operations coverage, dashboard/hosted workflow UI, broad connector automation, 증명되지 않은 preventive 또는 isolated guarantee claim. |
+| operations/future fixtures | v0.4 Operations & Handoff Pack 및 v1+ Expansion | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, 승격된 future higher guarantee level 또는 automation profile을 증명합니다. | Owner 문서가 mechanism을 정의하고 fixture가 covered behavior를 증명하기 전의 stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, automation claim. |
 
 ## Conformance Fixture Format
 
@@ -320,7 +322,7 @@ Table의 `None`은 기존 fixture field를 비워 두거나 `expected_error: nul
 | 11 | `CORE-status-next-read-only-current-state` | `harness.status` 또는 `harness.next` | Current scope, write authority summary, evidence state, optional blocker를 가진 active Task | Read가 current Task, scope, write authority, evidence, blockers, safe next action을 반환함. State mutation, gate satisfaction, Write Authorization 없음 | 없음 | 없음 | Read-only status/next는 projection enqueue 없음 | 없음 |
 | 12 | `CORE-close-or-status-structured-blocker` | `harness.close_task`, `harness.status`, 또는 `harness.next` | Close-compatible scope가 있는 active Task. Evidence가 absent/partial/insufficient이거나 seeded required user judgment가 missing/unresolved | Task가 non-terminal로 남음. Structured blocker가 evidence insufficiency 또는 missing required judgment를 가리킴. Close state, acceptance, 잔여 위험 수용, assurance upgrade가 기록되지 않음 | `close_task`가 blocker/status state를 commit할 때만 `close_requested`, `close_blocked` | Existing evidence 또는 judgment context가 committed artifact를 사용할 때만 있음 | Projection requirement 없음. Blocker/status state가 committed되면 `TASK` stale/enqueued 허용 | `EVIDENCE_INSUFFICIENT`, `DECISION_REQUIRED`, `DECISION_UNRESOLVED`, 또는 owner-equivalent structured blocker error |
 
-위 row는 모두 Kernel Smoke를 통한 코어 권한 조각(v0.1 Core Authority Slice)의 첫 실행 가능한 커널 조각 fixture profile에 속합니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)와 later pack은 같은 fixture body shape를 유지한 채 아래 staged catalog family로 coverage를 확장합니다. 특히 ordinary-language routing, procedural budget, Decision Packet quality, approval separation, 잔여 위험 표시, 작업 수락, surface honesty, artifact redaction/export, stewardship/design-quality, context hygiene, reconcile, 분리 검증, 수동 QA를 추가합니다.
+위 row는 모두 Kernel Smoke를 통한 코어 권한 조각(v0.1 Core Authority Slice)의 first runnable kernel slice fixtures profile에 속합니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)와 later pack은 같은 fixture body shape를 유지한 채 아래 staged catalog family로 coverage를 확장합니다. 특히 ordinary-language routing, procedural budget, Decision Packet quality, approval separation, 잔여 위험 표시, 작업 수락, surface honesty, artifact redaction/export, stewardship/design-quality, context hygiene, reconcile, 분리 검증, 수동 QA를 추가합니다.
 
 Docs-maintenance row는 이 runtime fixture queue 밖에 명시적으로 둡니다. Docs-maintenance profile은 checklist row나 report label을 가질 수 있지만 코어 권한 조각(v0.1 Core Authority Slice)도, 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)도, agency-hardened 또는 operations runtime conformance도, Core fixture pass/fail input도 아닙니다.
 
@@ -361,9 +363,9 @@ Expected assertions는 기존 fixture field 안에 머물러야 합니다.
 | `AGENCY-residual-risk-visible-before-acceptance-or-close` | `record_user_decision` 또는 `close_task` | Known close-relevant residual risk는 acceptance 전과 successful close 전에 사용자에게 보여야 합니다. Fixture는 hidden, stale, not-yet-visible risk가 acceptance 또는 close를 차단함을 검증합니다. `ResidualRiskSummary.status=none`은 known close-relevant risk가 없을 때만 유효하며, risk-accepted close는 작업 수락 전에 보였던 accepted Residual Risk refs를 가리켜야 합니다. |
 | `AGENCY-approval-qa-acceptance-risk-judgments-distinct` | `record_user_decision`, `record_manual_qa`, `record_eval`, 또는 `close_task` | Sensitive-action Approval, 수동 QA judgment 또는 waiver, 작업 수락, verification waiver, 잔여 위험 수용은 서로 다른 owner judgment입니다. Fixture는 하나가 satisfied 상태로 seed되어도 다른 owner record가 없거나 incompatible하면 계속 blocked됨을 검증할 수 있습니다. Broad approval이나 QA pass가 작업 수락, 잔여 위험 수용, 분리 검증, close를 imply하면 안 됩니다. |
 
-## Hardened Fixture Coverage
+## Staged Fixture Coverage
 
-향후 hardened evidence, verification, connector rule은 해당 단계가 구현 범위에 들어온 뒤 required shape를 가진 fixture로 cover해야 합니다. Suite catalog는 scenario ID를 behavior가 구현되어야 하는 가장 이른 delivery stage에 매핑할 수 있지만, delivery-stage metadata는 fixture body의 일부가 아닙니다.
+향후 evidence, verification, connector, stewardship, operations rule은 해당 단계가 구현 범위에 들어온 뒤 required shape를 가진 fixture로 cover해야 합니다. Suite catalog는 scenario ID를 behavior가 구현되어야 하는 가장 이른 delivery stage에 매핑할 수 있지만, delivery-stage metadata는 fixture body의 일부가 아닙니다.
 
 아래 YAML block은 planning을 위한 향후 fixture 예시입니다. 현재 저장소의 fixture file이 아니며 runnable Harness Server conformance test가 이미 존재한다는 증거도 아닙니다. Assertion shape와 owner boundary를 보여 주기 위한 예시로 사용하고, target behavior를 증명하지 않는 detailed template이나 renderer output을 필수로 만들지 않습니다.
 
@@ -2720,7 +2722,7 @@ expected_error: null
 
 이 catalog entries는 future candidates이지 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), v0.3 agency-hardened, v0.4 operations, 커널 스모크(Kernel Smoke) 요구사항이 아닙니다. Browser QA Capture capability profile, redaction 및 secret/PII policy, test environment, artifact retention, fixture 또는 conformance target, fallback 의미, projection-as-canonical 의존성 없음이 정의된 뒤에만 executable이 됩니다.
 
-강화된 로컬 기준 수동 QA 적용 범위는 기존 수동 QA record 또는 valid QA waiver, `qa_gate` behavior, Core owner path를 통해 제공된 registered artifact refs입니다. Automated Browser QA Capture는 승격 이후에 유용한 capture 보조 수단이지만, staged 수동 QA 또는 artifact coverage를 충족하기 위해 요구되지 않습니다.
+v0.3/v0.4 staged 수동 QA 적용 범위는 기존 수동 QA record 또는 valid QA waiver, `qa_gate` behavior, Core owner path를 통해 제공된 registered artifact refs입니다. Automated Browser QA Capture는 승격 이후에 유용한 capture 보조 수단이지만, staged 수동 QA 또는 artifact coverage를 충족하기 위해 요구되지 않습니다.
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|

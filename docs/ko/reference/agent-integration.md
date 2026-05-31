@@ -8,7 +8,7 @@
 
 사용자에게 보이는 agent 절차는 [에이전트 세션 흐름](../use/agent-session-flow.md)을 봅니다. 접점별 설정 메모는 [Surface Cookbook](surface-cookbook.md)을 봅니다.
 
-이 문서는 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 강화된 로컬 기준 목표(hardened local reference target)를 향해 assurance, stewardship, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
+이 문서는 참조 문서입니다. 문서 세트가 구현 계획에 사용할 수 있다고 승인되기 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
 
 ## 이런 때 읽기
 
@@ -70,7 +70,7 @@ user conversation surface
 | `T5 Isolation` | 접점이 verification 또는 risky work를 문서화된 separation boundary 뒤에서 실행할 수 있습니다. Worktree와 fresh evaluator bundle은 verification independence 또는 stale-context control을 제공할 수 있고, sandbox 격리, 권한 격리, locked-down runner, process boundary, container boundary는 exact profile proof가 필요합니다. | worktree, sandbox, fresh process, isolated runner |
 | `T6 QA Capture` | 접점이 browser, screenshot, walkthrough, workflow-recording, 수동 QA artifact를 구조화할 수 있습니다. | browser runner, screenshot capture, console/network capture, accessibility snapshot, QA note capture |
 
-일반적인 interactive Harness 사용은 `T2` 이상에서 가장 자연스럽습니다. Reliable 분리 검증에는 보통 `T3` capture와 실제 independence boundary가 필요합니다. High-risk work에는 가능하면 fixture로 입증된 `T4` guard 또는 `T5` isolation을 사용해야 합니다. `T6`는 UI/UX evidence를 보강하지만 수동 QA judgment, 작업 수락, 분리 검증을 대체하지 않으며, human 수동 QA note와 수동으로 제공된 artifact를 기록할 수 있다면 v0.1/default reference posture나 강화된 로컬 기준 수동 QA 적용 범위의 필수 조건이 아닙니다.
+일반적인 interactive Harness 사용은 `T2` 이상에서 가장 자연스럽습니다. Reliable 분리 검증에는 보통 `T3` capture와 실제 independence boundary가 필요합니다. High-risk work에는 가능하면 fixture로 입증된 `T4` guard 또는 `T5` isolation을 사용해야 합니다. `T6`는 UI/UX evidence를 보강하지만 수동 QA judgment, 작업 수락, 분리 검증을 대체하지 않으며, human 수동 QA note와 수동으로 제공된 artifact를 기록할 수 있다면 v0.1/default reference posture나 v0.3/v0.4 staged 수동 QA 적용 범위의 필수 조건이 아닙니다.
 
 v0.1과 v0.2에서 connector는 구체적인 profile이 다르게 증명하지 않는 한 cooperative/detective behavior를 전제로 삼아야 합니다. `T4`와 `T5` 행은 더 강한 향후 또는 profile별 capability를 설명할 뿐이며, 사용자 대상 MVP가 기본으로 OS 수준 격리, 임의 도구 sandbox 격리, 변조 불가능한 로컬 파일, 도구 실행 전 차단을 제공한다는 뜻이 아닙니다.
 

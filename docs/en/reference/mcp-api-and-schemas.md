@@ -723,7 +723,7 @@ ValidatorResult:
 
 The `surface_capability_check` validator uses this schema with `validator_kind=capability`.
 
-Hardened local reference ValidatorResult IDs are:
+v0.3/v0.4 staged hardening ValidatorResult IDs are:
 
 - `decision_gate_check`
 - `decision_quality_check`

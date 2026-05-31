@@ -40,7 +40,7 @@ Learn 경로에서 하네스의 기본 개념을 먼저 이해해 두는 것이 
 
 기준 상태, `task_events`, Reference 계약상 필요한 경우 Change Unit 소유자 형태로 표현되는 기본 범위 하나, Write Authorization 경로 하나, 기록된 Run 하나, artifact/evidence link 하나, Core tool 동작, 그리고 그 경로를 실행해 볼 최소 reference surface와 MCP reachability에서 시작합니다. 초기 구현 가정은 분산 platform이 아니라 모듈을 가진 로컬 프로세스 하나입니다. 읽기용 요약(Projection) 템플릿 다듬기, dashboard 또는 hosted workflow UI, index, 넓은 connector ecosystem 또는 marketplace, team workflow, 접점별 connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, broad automation은 그 권한 루프가 존재한 뒤 그것을 읽거나 감싸는 권한 없는 요소로 다룹니다.
 
-구현 계획이 사용자 대상 MVP, 강화된 로컬 기준 behavior 전체, 읽기용 요약 템플릿 다듬기, dashboard 또는 hosted workflow UI, Context Index, connector marketplace, hook expansion, metrics, parallel orchestration, broad automation lane에서 시작한다면 첫 runnable slice보다 큰 곳에서 시작하는 것입니다.
+구현 계획이 사용자 대상 MVP, v0.3과 v0.4에서 다룰 강화 동작 전체, 읽기용 요약 템플릿 다듬기, dashboard 또는 hosted workflow UI, Context Index, connector marketplace, hook expansion, metrics, parallel orchestration, broad automation lane에서 시작한다면 첫 runnable slice보다 큰 곳에서 시작하는 것입니다.
 
 ## 문서 승인 상태
 
@@ -103,7 +103,7 @@ Build 독자는 이 표를 진입 기준으로 보아야 합니다. 유지보수
 
 이 checkpoint는 유지보수자가 문서 승인 상태를 문서 유지보수에서 첫 런타임 배치 계획으로 바꾸기 전에 무엇이 참이어야 하는지 판단할 때 사용합니다. 이것은 계획 인계일 뿐입니다. 그 자체로 runtime/server 구현을 승인하지 않으며, 정확한 schema, DDL, fixture 의미, runtime contract를 정의하지 않습니다.
 
-첫 구현 계획은 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 강화된 로컬 기준 behavior, roadmap automation이 아니라 코어 권한 조각(v0.1 Core Authority Slice) 계획부터 시작한다는 뜻입니다. 아래 조건이 모두 참일 때만 시작할 수 있습니다.
+첫 구현 계획은 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 이후 v0.3과 v0.4를 거쳐 도달하는 기준 목표, roadmap automation이 아니라 코어 권한 조각(v0.1 Core Authority Slice) 계획부터 시작한다는 뜻입니다. 아래 조건이 모두 참일 때만 시작할 수 있습니다.
 
 - Root README, docs README, 언어별 README, Build 문서, 관련 Reference 문서에서 저장소 정체성이 명확하다. 지금은 문서 전용이며, 수락 이후 향후 하네스 서버 소스 저장소이고, 제품 저장소나 하네스 런타임 홈이 아니다.
 - 사용자가 보는 흐름이 내부 용어를 먼저 알아야만 시작, 재개, unblock, 작업 수락, close를 할 수 있는 형태가 아니다.
@@ -122,9 +122,9 @@ Build 독자는 이 표를 진입 기준으로 보아야 합니다. 유지보수
 - Core-only mutation model이 승인되어 있다. 기준 운영 상태를 변경하는 것은 Core뿐이며, resource, projection, report, diagnostic, MCP caller, operator entrypoint는 Core의 상태 변경 경로에 들어가지 않는 한 read-only 또는 derived로 남습니다. [Core process model](../reference/runtime-architecture.md#core-process-model), [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow), MCP [Idempotency](../reference/mcp-api-and-schemas.md#idempotency)와 [State Conflict 동작](../reference/mcp-api-and-schemas.md#state-conflict-동작)을 봅니다.
 - 커널 스모크(Kernel Smoke) fixture queue가 코어 권한 조각(v0.1 Core Authority Slice) conformance 작성 순서이자 향후 적합성 검증 계획으로 확인되어 있다. 정확한 fixture format, assertion, catalog semantics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue)에 둡니다. 이 checkpoint는 fixture file이나 runnable conformance test가 이미 존재한다는 뜻이 아닙니다.
 - 첫 실행 가능한 조각은 로컬, 단일 프로젝트, 단일 reference surface, fixture-proven 범위를 유지한다. 계획 점검 목록은 [첫 실행 가능한 조각](first-runnable-slice.md)을 사용합니다.
-- v1+ Expansion 기능은 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따라 담당 문서가 승격하기 전까지 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), v0.3과 v0.4 단계, 강화된 로컬 기준 목표(hardened local reference target) 밖에 남아 있다.
+- v1+ Expansion 기능은 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따라 담당 문서가 승격하기 전까지 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), v0.3과 v0.4 단계 밖에 남아 있다.
 
-이 인계는 roadmap 항목, dashboard 또는 hosted workflow UI, Browser QA Capture automation, Context Index, broad connector ecosystem 또는 marketplace, team workflow, remote MCP exposure, preventive guard expansion, Local Derived Metrics 또는 long-term metrics, parallel orchestration을 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), v0.3과 v0.4 단계, 강화된 로컬 기준 목표(hardened local reference target)로 승격하지 않습니다. 정확한 계약은 Reference 문서에 두고, 이 섹션은 짧은 readiness checkpoint로만 사용합니다.
+이 인계는 roadmap 항목, dashboard 또는 hosted workflow UI, Browser QA Capture automation, Context Index, broad connector ecosystem 또는 marketplace, team workflow, remote MCP exposure, preventive guard expansion, Local Derived Metrics 또는 long-term metrics, parallel orchestration을 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), v0.3과 v0.4 단계로 승격하지 않습니다. 정확한 계약은 Reference 문서에 두고, 이 섹션은 짧은 readiness checkpoint로만 사용합니다.
 
 ## 증명 경계
 
@@ -133,7 +133,7 @@ Build 독자는 이 표를 진입 기준으로 보아야 합니다. 유지보수
 | 코어 권한 조각(v0.1 Core Authority Slice) | 하나의 로컬 Task가 첫 Core 권한 루프를 통과할 수 있음을 증명합니다. 여기에는 project registration, Task, Reference 계약상 필요한 경우 Change Unit 소유자 형태로 표현되는 기본 scope 하나, `prepare_write`, single-use 쓰기 허가 기록, `record_run`, artifact/근거 링크 하나, status/next, 구조화된 막힘/상태 응답이 포함됩니다. | Status와 next가 현재 Task, scope, 쓰기 권한, 근거 상태, blocker, 안전한 다음 행동을 보여 줍니다. `prepare_write`가 범위 밖 쓰기 권한을 거절하고, 호환되는 scoped work는 권한을 받아 한 번만 사용되며, 근거 또는 필요한 seeded judgment가 없으면 close/status가 구조화된 막힘과 함께 거절합니다. |
 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 평범한 사용자 작업이 scope, user-owned judgment, 근거, close readiness, 작업 수락, 잔여 위험 언어로 정리됨을 증명합니다. | 사용자는 product/UX judgment와 architecture judgment가 분리되고, small change와 tracked work가 서로 다른 procedural budget을 쓰며, 근거 또는 judgment가 없으면 close가 block되고, 잔여 위험이 표시되며, 작업 수락이 Approval과 잔여 위험 수용과 구분되는 것을 볼 수 있습니다. |
 | 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack) | MVP path가 full Decision Packet quality, Approval separation, 분리 검증, 수동 QA, 잔여 위험 수용 close, stewardship, TDD, feedback-loop policy, context hygiene를 정직한 경계 안에서 처리함을 증명합니다. | Fixture가 같은 Core record와 error를 통해 work가 진행, 검증, 수동 QA 요구, 작업 수락, 잔여 위험 수용, close될 수 있는지 보여 줍니다. |
-| 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Operator readiness, recover/export, artifact integrity, release handoff, broader fixture suite coverage, later-boundary checks가 강화된 로컬 기준 목표(hardened local reference target)를 완성합니다. | Operator 진입점이 두 번째 authority model을 만들지 않고 같은 Core state 위에서 diagnose, recover, export, artifact check, conformance run, release handoff 준비를 수행합니다. |
+| 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Operator readiness, recover/export, artifact integrity, release handoff, broader fixture suite coverage, later-boundary checks가 [강화된 로컬 기준 목표](../reference/glossary.md#강화된-로컬-기준-목표)를 완성합니다. | Operator 진입점이 두 번째 authority model을 만들지 않고 같은 Core state 위에서 diagnose, recover, export, artifact check, conformance run, release handoff 준비를 수행합니다. |
 | Roadmap 경계: v1+ Expansion | 로컬 kernel과 agency 증명이 안정된 뒤에만 later surface 또는 automation을 검토할 수 있음을 분리합니다. | 선택 capability는 담당자가 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따라 exact contract와 fixture로 승격하기 전까지 read-only, display-only, metadata-only, 또는 artifact 후보 제공 전용으로 남습니다. |
 
 ## 무엇을 만드는가
@@ -278,7 +278,7 @@ v0.1은 내부 authority loop를 증명하는 단계입니다. Product MVP, temp
 
 ## 강화된 로컬 기준 증명
 
-강화된 로컬 기준 목표(hardened local reference target)는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) 이후 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 통해 도달하는 향후 reference 목표이지 첫 구현 batch가 아닙니다. Agent가 정직한 경계 안에서 행동하기 위해 필요한 나머지 conformance를 추가합니다.
+[강화된 로컬 기준 목표](../reference/glossary.md#강화된-로컬-기준-목표)(hardened local reference target)는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) 이후 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 통해 도달하는 향후 reference 목표이지 첫 구현 batch가 아닙니다. 별도 stage, fixture profile, alternate implementation path도 아닙니다. Agent가 정직한 경계 안에서 행동하기 위해 필요한 나머지 conformance를 추가합니다.
 
 - 결정 패킷 품질과 사용자 판단 라우팅
 - sensitive-action Approval, 결정 패킷, 쓰기 허가 기록의 분리
@@ -290,7 +290,7 @@ v0.1은 내부 authority loop를 증명하는 단계입니다. Product MVP, temp
 - recovery, export, artifact integrity 동작
 - 담당 문서가 정의하는 release handoff report/export behavior
 - broad automation을 v1+ Expansion에 두는 later 경계 확인
-- 필수 agency conformance fixture 적용 범위
+- named agency-hardened fixtures와 operations/future fixtures를 통한 fixture coverage
 
 강화된 로컬 기준 목표(hardened local reference target)는 향후 conformance가 생성된 문장이나 renderer output만이 아니라 Core 상태, events, artifacts, projection/freshness facts, errors로 동작을 증명할 때 완료됩니다.
 

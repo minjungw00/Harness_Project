@@ -56,6 +56,8 @@ Kernel Smoke remains the narrow conformance authoring profile for v0.1 Core Auth
 
 Conformance fixture profiles follow the same stage names: first runnable kernel slice fixtures for v0.1 Core Authority Slice, user-facing MVP fixtures for v0.2 User-Facing Harness MVP, agency-hardened fixtures for v0.3 Assurance & Stewardship Pack, and operations/future fixtures for v0.4 Operations & Handoff Pack and promoted v1+ Expansion candidates.
 
+These fixture profile names remain the conformance labels. The hardened local reference target is only the aggregate target reached by v0.3 and v0.4, not a profile name or separate delivery stage.
+
 ### Boundary after staged delivery: v1+ Expansion
 
 v1+ Expansion is roadmap scope, not a Build-owned staged delivery phase. Dashboard, hosted workflow UI, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, broader connectors, metrics, team workflow, orchestration, and similar candidates stay outside v0.1 through v0.4 unless owner docs explicitly promote and prove a future item.
@@ -91,7 +93,7 @@ Reference schemas may list fields that become necessary only when the related ca
 |---|---|---|
 | v0.1 Core Authority Slice | Use only the owner-defined fields needed to prove the narrow authority loop. If the smoke path uses a Decision Packet, required Decision Packet fields still apply even though full user-facing Decision Packet quality is later. | [Kernel Reference](../reference/kernel.md), [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Storage And DDL](../reference/storage-and-ddl.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
 | v0.2 User-Facing Harness MVP | Add the fields and display summaries needed for users to understand judgment context, evidence, close readiness, final acceptance separation, and residual-risk visibility. | [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Kernel Reference](../reference/kernel.md), [Document Projection Reference](../reference/document-projection.md), [Template Reference](../reference/templates/README.md). |
-| v0.3/v0.4 hardened reference | Add assurance, QA, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, and release-handoff profiles only where owner docs define them. | [Design Quality Policies](../reference/design-quality-policies.md), [Operations And Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md), [Storage And DDL](../reference/storage-and-ddl.md). |
+| v0.3/v0.4 staged hardening | Add assurance, QA, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, and release-handoff profiles only where owner docs define them. | [Design Quality Policies](../reference/design-quality-policies.md), [Operations And Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md), [Storage And DDL](../reference/storage-and-ddl.md). |
 
 Required in an API schema therefore means required when that tool call, record, or profile is implemented or used. It does not make a future-profile field part of the smallest runnable slice by itself.
 

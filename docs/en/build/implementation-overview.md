@@ -40,7 +40,7 @@ The first authority loop is narrow: `prepare_write` is the only product-write au
 
 Start with canonical state, `task_events`, one basic scope represented by the Change Unit owner shape where the reference contract requires it, one Write Authorization path, one recorded Run, one artifact/evidence link, Core tool behavior, and the minimal reference surface and MCP reachability needed to exercise that path. The initial implementation assumption is one local process with modules, not a distributed platform. Treat projection-template polish, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, and broad automation as non-authoritative things that read from or wrap that authority loop after it exists.
 
-If a proposed implementation starts with the user-facing MVP, hardened local reference behavior as one large first batch, projection template polish, a dashboard or hosted workflow UI, a Context Index, a connector marketplace, hook expansion, metrics, parallel orchestration, or broad automation lanes, it is starting beyond the first runnable slice.
+If a proposed implementation starts with the user-facing MVP, v0.3/v0.4 hardening behavior as one large first batch, projection template polish, a dashboard or hosted workflow UI, a Context Index, a connector marketplace, hook expansion, metrics, parallel orchestration, or broad automation lanes, it is starting beyond the first runnable slice.
 
 ## Documentation acceptance status
 
@@ -103,7 +103,7 @@ Remaining open questions:
 
 Use this checkpoint to decide what must be true before maintainers can switch the documentation acceptance status from documentation maintenance to first runtime-batch planning. It is a planning handoff only: it does not authorize runtime or server implementation by itself, and it does not define exact schemas, DDL, fixture semantics, or runtime contracts.
 
-First implementation planning means v0.1 Core Authority Slice planning first, not User-Facing Harness MVP, hardened local reference behavior, or roadmap automation. It may start only when all of these are true:
+First implementation planning means v0.1 Core Authority Slice planning first, not User-Facing Harness MVP, later v0.3/v0.4 hardening work, or roadmap automation. It may start only when all of these are true:
 
 - Repository identity is clear in the root README, docs README, language READMEs, Build docs, and relevant Reference docs: documentation-only now; intended future Harness Server source repository after acceptance; not a Product Repository; not a Harness Runtime Home.
 - The user-facing flow is understandable without requiring users to know internal terms before they can start, resume, unblock, accept, or close work.
@@ -122,9 +122,9 @@ First implementation planning means v0.1 Core Authority Slice planning first, no
 - The Core-only mutation model is accepted: Core alone changes canonical operational state, while resources, projections, reports, diagnostics, MCP callers, and operator entrypoints remain read-only or derived unless they enter a Core state-changing path. See [Core process model](../reference/runtime-architecture.md#core-process-model), [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow), and the MCP [Idempotency](../reference/mcp-api-and-schemas.md#idempotency) and [State conflict behavior](../reference/mcp-api-and-schemas.md#state-conflict-behavior) sections.
 - The Kernel Smoke fixture queue is identified as the v0.1 Core Authority Slice conformance authoring order and future verification plan. Exact fixture format, assertions, and catalog semantics stay in [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue); this checkpoint does not mean fixture files or runnable conformance tests already exist.
 - The first runnable slice remains local, single-project, single-reference-surface, and fixture-proven. Use [First Runnable Slice](first-runnable-slice.md) for the planning checklist.
-- v1+ Expansion features remain outside v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, the v0.3 through v0.4 staged packs, and hardened local reference target unless promoted by owner docs through the [Roadmap promotion rule](../roadmap.md#promotion-rule).
+- v1+ Expansion features remain outside v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, and the v0.3 through v0.4 staged packs unless promoted by owner docs through the [Roadmap promotion rule](../roadmap.md#promotion-rule).
 
-This handoff does not promote roadmap items, dashboards or hosted workflow UI, Browser QA Capture automation, Context Index, broad connector ecosystems or marketplaces, team workflow, remote MCP exposure, preventive guard expansion, Local Derived Metrics or long-term metrics, or parallel orchestration into v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, the v0.3 through v0.4 staged packs, or the hardened local reference target. Keep exact contracts in Reference docs and use this section only as the short readiness checkpoint.
+This handoff does not promote roadmap items, dashboards or hosted workflow UI, Browser QA Capture automation, Context Index, broad connector ecosystems or marketplaces, team workflow, remote MCP exposure, preventive guard expansion, Local Derived Metrics or long-term metrics, or parallel orchestration into v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, or the v0.3 through v0.4 staged packs. Keep exact contracts in Reference docs and use this section only as the short readiness checkpoint.
 
 ## Proof boundaries
 
@@ -133,7 +133,7 @@ This handoff does not promote roadmap items, dashboards or hosted workflow UI, B
 | v0.1 Core Authority Slice | One local Task can go through the first Core authority loop: project registration, Task, one basic scope represented by the Change Unit owner shape where the reference contract requires it, `prepare_write`, single-use Write Authorization, `record_run`, one artifact/evidence link, status/next, and structured blocker/status response. | Status and next show current Task, scope, write authority, evidence state, blockers, and safe next action. `prepare_write` refuses out-of-scope write authorization, compatible scoped work is authorized and consumed once, and close/status refuses missing evidence or required seeded judgment with structured blockers. |
 | v0.2 User-Facing Harness MVP | Ordinary user work is clarified into scope, user-owned judgment, evidence, close readiness, acceptance, and residual-risk language. | Users can see product/UX and architecture judgments separately, small changes and tracked work using different procedural budgets, close blocked by missing evidence or judgment, residual risk displayed, and final acceptance kept distinct from Approval and residual-risk acceptance. |
 | v0.3 Assurance & Stewardship Pack | The MVP path handles full Decision Packet quality, Approval separation, detached verification, Manual QA, residual-risk accepted close, stewardship, TDD, feedback-loop policy, and context hygiene with honest boundaries. | Fixtures show why work can or cannot proceed, verify, require QA, accept, accept risk, or close through the same Core records and errors. |
-| v0.4 Operations & Handoff Pack | Operator readiness, recover/export, artifact integrity, release handoff, broader fixture suite coverage, and later-boundary checks complete the hardened local reference target. | Operator entrypoints diagnose, recover, export, check artifacts, run conformance, and prepare release handoff over the same Core state without creating a second authority model. |
+| v0.4 Operations & Handoff Pack | Operator readiness, recover/export, artifact integrity, release handoff, broader fixture suite coverage, and later-boundary checks complete the [hardened local reference target](../reference/glossary.md#hardened-local-reference-target). | Operator entrypoints diagnose, recover, export, check artifacts, run conformance, and prepare release handoff over the same Core state without creating a second authority model. |
 | Roadmap boundary: v1+ Expansion | Later surfaces or automation can be considered only after the local kernel and agency proof are stable. | Optional capabilities remain read-only, display-only, metadata-only, or artifact-candidate-only until an owner promotes them through the [Roadmap promotion rule](../roadmap.md#promotion-rule) with exact contracts and fixtures. |
 
 ## What you are building
@@ -278,7 +278,7 @@ It should show:
 
 ## The hardened local reference proof
 
-The later hardened local reference target is reached through v0.3 Assurance & Stewardship Pack and v0.4 Operations & Handoff Pack after v0.2 User-Facing Harness MVP, not as the first implementation batch. It adds the remaining conformance needed for an agent to act with honest boundaries:
+The later [hardened local reference target](../reference/glossary.md#hardened-local-reference-target) is reached through v0.3 Assurance & Stewardship Pack and v0.4 Operations & Handoff Pack after v0.2 User-Facing Harness MVP, not as the first implementation batch. It is an umbrella target rather than a separate stage, fixture profile, or alternate implementation path. It adds the remaining conformance needed for an agent to act with honest boundaries:
 
 - Decision Packet quality and user-judgment routing
 - separation between sensitive-action Approval, Decision Packets, and Write Authorizations
@@ -290,7 +290,7 @@ The later hardened local reference target is reached through v0.3 Assurance & St
 - recovery, export, and artifact integrity behavior
 - release handoff report/export behavior where owner docs define it
 - later-boundary checks that keep broad automation in v1+ Expansion
-- fixture coverage for required agency conformance
+- fixture coverage through the named agency-hardened fixtures and operations/future fixtures
 
 The hardened local reference target is complete only when future conformance proves behavior through Core state, events, artifacts, projection/freshness facts, and errors rather than rendered prose or renderer output alone.
 

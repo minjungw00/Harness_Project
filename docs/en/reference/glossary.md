@@ -323,6 +323,12 @@ Capability affects validator results, blocked reasons, and display; it is not Ap
 
 A user-facing safety control that applies the connected profile's actual enforcement or detection layer. Guard may be cooperative, detective, preventive, or isolated; the name does not imply pre-execution blocking unless a proven `T4` path covers the operation.
 
+### Hardened Local Reference Target
+
+The aggregate local reference behavior reached after v0.2 User-Facing Harness MVP by completing the owner-defined v0.3 Assurance & Stewardship Pack and v0.4 Operations & Handoff Pack profiles. It is an umbrella target, not a separate delivery stage, not the first implementation batch, and not a fixture profile or suite name.
+
+The hardened local reference target does not replace the boundaries for v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, or v1+ Expansion. Conformance is still proven through the named fixture profiles: first runnable kernel slice fixtures, user-facing MVP fixtures, agency-hardened fixtures, and operations/future fixtures.
+
 ### Harness Core
 
 The runtime component that owns state transitions, gate updates, validator interpretation, artifact registration, projection job enqueueing, and close decisions.

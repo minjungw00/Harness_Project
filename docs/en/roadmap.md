@@ -26,13 +26,13 @@ This document is not part of the Build-owned staged delivery.
 
 It does not own kernel invariants, public MCP schemas, staged-delivery implementation requirements, or required staged-delivery conformance. The Build layer owns staged delivery: v0.1 Core Authority Slice first, then v0.2 User-Facing Harness MVP, v0.3 Assurance & Stewardship Pack, and v0.4 Operations & Handoff Pack. The items below are useful follow-ons after those basics are stable. For staged delivery order, use [Build: MVP Plan](build/mvp-plan.md); for strict API, storage, projection, and fixture contracts, use the Reference docs.
 
-The first runnable target is v0.1 Core Authority Slice. The first product MVP target is v0.2 User-Facing Harness MVP. The hardened local reference target is reached later through the v0.3 and v0.4 packs. This roadmap starts at v1+ Expansion, after those Build-owned proof targets have clear owner-doc coverage. It is not an alternate route around v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, the hardened local reference target, or the Core state/`task_events`/artifact path. Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, Native Hook Expansion, Advanced Sidecar Watcher, Local Derived Metrics, connector marketplaces, team workflow, and orchestration can collect, display, or extend Harness behavior later; they do not replace the first runnable authority loop.
+The first runnable target is v0.1 Core Authority Slice. The first product MVP target is v0.2 User-Facing Harness MVP. The hardened local reference target is the umbrella target reached later through the v0.3 and v0.4 packs; it is not a separate stage or fixture profile. This roadmap starts at v1+ Expansion only after the v0.1, v0.2, v0.3, and v0.4 boundaries are respected and have clear owner-doc coverage. It is not an alternate route around those boundaries or the Core state/`task_events`/artifact path. Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, Native Hook Expansion, Advanced Sidecar Watcher, Local Derived Metrics, connector marketplaces, team workflow, and orchestration can collect, display, or extend Harness behavior later; they do not replace the first runnable authority loop.
 
 ```mermaid
 flowchart LR
   Kernel["v0.1 Core Authority Slice"] --> MVP["v0.2 User-Facing Harness MVP"]
   MVP --> Agency["v0.3 Assurance & Stewardship Pack"]
-  Agency --> Ops["v0.4 Operations & Handoff Pack<br/>hardened local reference target"]
+  Agency --> Ops["v0.4 Operations & Handoff Pack"]
   Ops -. roadmap boundary .-> Later["v1+ roadmap candidates"]
   Later --> Promote["future version only after owner decision"]
 ```
@@ -92,7 +92,7 @@ Unsupported surfaces should fall back to human Manual QA notes and manually supp
 
 Cross-surface verification can send a verification bundle to a different agent surface or evaluator environment.
 
-Later because the staged hardened local reference target can prove detached verification with bundles and manual evaluator instructions on the local reference path. Until explicitly promoted through owner docs, Cross-Surface Verification is non-authoritative: sending a bundle to another surface must not record an Eval, satisfy verification, raise assurance, accept a result, or close a Task by itself. Promotion must satisfy the rule above and define how any resulting Eval or finding returns through Core without depending on projections as canonical state.
+Later because the v0.3/v0.4 staged profiles can prove detached verification with bundles and manual evaluator instructions on the local reference path. Until explicitly promoted through owner docs, Cross-Surface Verification is non-authoritative: sending a bundle to another surface must not record an Eval, satisfy verification, raise assurance, accept a result, or close a Task by itself. Promotion must satisfy the rule above and define how any resulting Eval or finding returns through Core without depending on projections as canonical state.
 
 ### Native Hook Expansion
 

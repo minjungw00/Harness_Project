@@ -249,7 +249,7 @@ Owner contract: status/next schema는 [`harness.status`](../reference/mcp-api-an
 
 ## 작성할 Fixture
 
-문서 승인과 구현 인계 이후에는 Core 동작을 실행하고 state, events, artifacts, applicable한 projection freshness, errors를 검증하는 첫 실행 가능한 커널 조각 fixture를 작성합니다. Rendered prose나 polished projection output matching만으로 success를 검증하지 않습니다. 이 행들은 future authoring candidate이며 executable fixture file이 지금 존재한다고 암시하지 않습니다.
+문서 승인과 구현 인계 이후에는 Core 동작을 실행하고 state, events, artifacts, applicable한 projection freshness, errors를 검증하는 first runnable kernel slice fixtures를 작성합니다. Rendered prose나 polished projection output matching만으로 success를 검증하지 않습니다. 이 행들은 future authoring candidate이며 executable fixture file이 지금 존재한다고 암시하지 않습니다.
 
 Build는 v0.1 coverage intent만 담당합니다. 범위는 project/status, active Task 하나, basic scope 하나, `prepare_write` allow/block, `record_run` consume/block, artifact/evidence link 하나, minimal evidence sufficiency, `status`/`next` 읽기 전용 응답, close/status blocker입니다. Projection polish와 detailed template은 v0.1 fixture requirement가 아닙니다. Exact fixture queue, body field, seed rule, assertion mode, stable event, artifact/projection assertion, primary-error expectation은 [커널 스모크(Kernel Smoke) Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue)와 [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format)이 담당합니다.
 

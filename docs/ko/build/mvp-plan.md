@@ -54,7 +54,9 @@ flowchart LR
 
 커널 스모크(Kernel Smoke)는 코어 권한 조각(v0.1 Core Authority Slice)을 위한 좁은 conformance authoring profile로 남습니다. 이 profile 이름은 v0.1이 제품 MVP라는 뜻이 아니라 내부 kernel path를 증명한다는 뜻입니다.
 
-Conformance fixture 검증 프로파일은 같은 stage name을 따릅니다. 첫 실행 가능한 커널 조각 fixture는 v0.1 Core Authority Slice, 사용자 대상 MVP fixture는 v0.2 User-Facing Harness MVP, agency-hardened fixture는 v0.3 Assurance & Stewardship Pack, operations/future fixture는 v0.4 Operations & Handoff Pack과 승격된 v1+ Expansion candidate에 대응합니다.
+Conformance fixture 검증 프로파일은 같은 stage name을 따릅니다. first runnable kernel slice fixtures는 v0.1 Core Authority Slice, user-facing MVP fixtures는 v0.2 User-Facing Harness MVP, agency-hardened fixtures는 v0.3 Assurance & Stewardship Pack, operations/future fixtures는 v0.4 Operations & Handoff Pack과 승격된 v1+ Expansion candidate에 대응합니다.
+
+이 fixture profile 이름들이 conformance label로 남습니다. 강화된 로컬 기준 목표(hardened local reference target)는 v0.3과 v0.4를 거쳐 도달하는 종합 목표일 뿐, profile name이나 별도 delivery stage가 아닙니다.
 
 ### 단계별 전달 이후의 경계: v1+ Expansion
 
@@ -91,7 +93,7 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 |---|---|---|
 | v0.1 Core Authority Slice | 좁은 authority loop를 증명하는 데 필요한 owner-defined field만 사용합니다. Smoke path가 Decision Packet을 사용한다면 required Decision Packet field는 그대로 적용됩니다. 다만 full user-facing Decision Packet quality는 이후 범위입니다. | [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Storage와 DDL](../reference/storage-and-ddl.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
 | v0.2 User-Facing Harness MVP | 사용자가 judgment context, evidence, close readiness, 작업 수락 분리, 잔여 위험 표시를 이해하는 데 필요한 field와 display summary를 추가합니다. | [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [커널 참조](../reference/kernel.md), [읽기용 요약(Projection) 참조](../reference/document-projection.md), [Template 참조](../reference/templates/README.md). |
-| v0.3/v0.4 hardened reference | Assurance, QA, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, release-handoff profile은 담당 문서가 정의한 곳에서만 추가합니다. | [설계 품질 정책](../reference/design-quality-policies.md), [운영과 Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md), [Storage와 DDL](../reference/storage-and-ddl.md). |
+| v0.3/v0.4 staged hardening | Assurance, QA, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, release-handoff profile은 담당 문서가 정의한 곳에서만 추가합니다. | [설계 품질 정책](../reference/design-quality-policies.md), [운영과 Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md), [Storage와 DDL](../reference/storage-and-ddl.md). |
 
 따라서 API schema에서 required라는 말은 해당 tool call, record, profile이 구현되거나 사용될 때 required라는 뜻입니다. 그 자체로 future-profile field가 가장 작은 runnable slice의 일부가 되지는 않습니다.
 

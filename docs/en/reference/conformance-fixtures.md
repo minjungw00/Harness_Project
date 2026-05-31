@@ -13,7 +13,7 @@ This is reference documentation for future conformance work. It does not authori
 - You are writing or reviewing the future fixture-based conformance design.
 - You need the exact fixture body fields, seed expansion limits, `ToolEnvelope` expansion convention, or runner isolation behavior.
 - You need fixture assertion modes for state, events, artifacts, projections, errors, validators, close blockers, and redaction effects.
-- You need Kernel Smoke, User-Facing Harness MVP, agency-hardened, operations/future, staged suite coverage, examples, or catalog-only future candidate guidance.
+- You need first runnable kernel slice fixtures, user-facing MVP fixtures, agency-hardened fixtures, operations/future fixtures, staged suite coverage, examples, or catalog-only future candidate guidance.
 
 ## Before you read
 
@@ -64,12 +64,14 @@ This reference does not own operator command procedures, docs-maintenance report
 
 Fixture profiles are grouped by the behavior they prove, not by how polished the rendered output is. The profile name does not add fixture-body fields, does not require a renderer to be authoritative, and does not imply fixture files exist in this documentation-only repository.
 
+The hardened local reference target is an umbrella target reached through the v0.3 and v0.4 staged profiles. It is not a fifth fixture profile and must not be used as a suite name.
+
 | Profile | Stage name | Behavior proved | Out of scope for that profile |
 |---|---|---|---|
-| First runnable kernel slice fixtures, with Kernel Smoke as the authoring profile | v0.1 Core Authority Slice | Minimal authority loop only: one local project, one Task, one basic scope, `prepare_write` allow/block, one durable single-use Write Authorization, one compatible `record_run`, one artifact/evidence link, read-only status/next, and structured blockers. | User-facing MVP value, projection polish, detailed templates, residual-risk semantics, Manual QA, detached verification, export/recover, release handoff, higher guard guarantees, and broad operations. |
-| User-facing MVP fixtures | v0.2 User-Facing Harness MVP | Ordinary user requests route into scope, user-owned judgment, evidence, close-readiness, final acceptance separation, residual-risk visibility, and readable derived summaries without requiring Harness vocabulary. | Full agency hardening, detached verification independence, Manual QA matrix, stewardship policy suite, export/recover, release handoff, and automation beyond the MVP path. |
-| Agency-hardened fixtures | v0.3 Assurance & Stewardship Pack | User-owned judgment, Approval, Write Authorization, Manual QA, verification, final acceptance, residual-risk acceptance, stewardship, design-quality, context-hygiene, TDD, and feedback-loop boundaries stay separate and fixture-proven through Core records. | Operator recovery/export completeness, release handoff, broad operations coverage, dashboard/hosted workflow UI, broad connector automation, and unproven preventive or isolated guarantee claims. |
-| Operations/future fixtures | v0.4 Operations & Handoff Pack and v1+ Expansion | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, and any promoted future higher guarantee level or automation profile. | Any stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, or automation claim until owner docs define the mechanism and fixtures prove the covered behavior. |
+| first runnable kernel slice fixtures, with Kernel Smoke as the authoring profile | v0.1 Core Authority Slice | Minimal authority loop only: one local project, one Task, one basic scope, `prepare_write` allow/block, one durable single-use Write Authorization, one compatible `record_run`, one artifact/evidence link, read-only status/next, and structured blockers. | User-facing MVP value, projection polish, detailed templates, residual-risk semantics, Manual QA, detached verification, export/recover, release handoff, higher guard guarantees, and broad operations. |
+| user-facing MVP fixtures | v0.2 User-Facing Harness MVP | Ordinary user requests route into scope, user-owned judgment, evidence, close-readiness, final acceptance separation, residual-risk visibility, and readable derived summaries without requiring Harness vocabulary. | Full agency hardening, detached verification independence, Manual QA matrix, stewardship policy suite, export/recover, release handoff, and automation beyond the MVP path. |
+| agency-hardened fixtures | v0.3 Assurance & Stewardship Pack | User-owned judgment, Approval, Write Authorization, Manual QA, verification, final acceptance, residual-risk acceptance, stewardship, design-quality, context-hygiene, TDD, and feedback-loop boundaries stay separate and fixture-proven through Core records. | Operator recovery/export completeness, release handoff, broad operations coverage, dashboard/hosted workflow UI, broad connector automation, and unproven preventive or isolated guarantee claims. |
+| operations/future fixtures | v0.4 Operations & Handoff Pack and v1+ Expansion | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, and any promoted future higher guarantee level or automation profile. | Any stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, or automation claim until owner docs define the mechanism and fixtures prove the covered behavior. |
 
 ## Conformance Fixture Format
 
@@ -359,9 +361,9 @@ These are catalog entries, not fixture bodies. They cover ordinary user-language
 | `AGENCY-residual-risk-visible-before-acceptance-or-close` | `record_user_decision` or `close_task` | Known close-relevant residual risks must be visible to the user before acceptance and before any successful close. Fixtures assert hidden, stale, or not-yet-visible risks block acceptance or close; `ResidualRiskSummary.status=none` is valid only when no known close-relevant risk exists; risk-accepted close cites accepted Residual Risk refs that were visible before acceptance. |
 | `AGENCY-approval-qa-acceptance-risk-judgments-distinct` | `record_user_decision`, `record_manual_qa`, `record_eval`, or `close_task` | Sensitive-action Approval, Manual QA judgment or waiver, final acceptance, verification waiver, and residual-risk acceptance remain distinct owner judgments. A fixture may seed one as satisfied and assert the others still block when their owner records are missing or incompatible; no broad approval or QA pass may imply final acceptance, risk acceptance, detached verification, or close. |
 
-## Hardened Fixture Coverage
+## Staged Fixture Coverage
 
-The future hardened evidence, verification, and connector rules should be covered by fixtures with the required shape after their stage is in implementation scope. Suite catalogs may map scenario IDs to the earliest delivery stage where the behavior must be implemented, but delivery-stage metadata is not part of the fixture body.
+The future evidence, verification, connector, stewardship, and operations rules should be covered by fixtures with the required shape after their stage is in implementation scope. Suite catalogs may map scenario IDs to the earliest delivery stage where the behavior must be implemented, but delivery-stage metadata is not part of the fixture body.
 
 The YAML blocks below are future fixture examples for planning. They are not fixture files in the current repository and are not evidence that runnable Harness Server conformance tests already exist. Use them to show assertion shape and owner boundaries; do not make detailed templates or renderer output mandatory unless they prove the target behavior.
 
@@ -2718,7 +2720,7 @@ These catalog entries are not fixture bodies. They make projection, reconcile, a
 
 These catalog entries are future candidates, not v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, v0.3 agency-hardened, v0.4 operations, or Kernel Smoke requirements. They become executable only after the Browser QA Capture capability profile, redaction and secret/PII policy, test environment, artifact retention, fixture or conformance target, fallback semantics, and no projection-as-canonical dependency are defined.
 
-Hardened local reference Manual QA coverage remains the existing Manual QA record or valid QA waiver, `qa_gate` behavior, and registered artifact refs supplied through Core owner paths. Automated Browser QA Capture is useful capture assistance after promotion, but it is not required to satisfy staged Manual QA or artifact coverage.
+v0.3/v0.4 staged Manual QA coverage remains the existing Manual QA record or valid QA waiver, `qa_gate` behavior, and registered artifact refs supplied through Core owner paths. Automated Browser QA Capture is useful capture assistance after promotion, but it is not required to satisfy staged Manual QA or artifact coverage.
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
