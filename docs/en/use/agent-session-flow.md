@@ -6,9 +6,11 @@ This document describes how an agent session should behave for users. It is proc
 
 It does not define connector contracts, full capability profiles, MCP schemas, or surface cookbooks. Those belong in [Agent Integration Reference](../reference/agent-integration.md) and [Surface Cookbook](../reference/surface-cookbook.md).
 
+This is agent/integration guidance. It is not a required read for ordinary users; [User Guide](user-guide.md) is the user-facing entry.
+
 ## Read this when
 
-Read this when checking how the agent should present status, blockers, writes, checks, and close.
+Read this when checking how the agent should present status, blockers, writes, checks, and close, or when integrating an agent surface with the user-facing Harness flow.
 
 ## Before you read
 

@@ -2,22 +2,52 @@
 
 This is the English routing page for the Harness documentation set.
 
-This repository is currently a documentation-only redesign/review repository. After documentation acceptance, it is intended to become the Harness Server source repository. No Harness Server/runtime implementation exists here yet.
+This repository is currently a documentation-only redesign/review repository. After documentation acceptance, it is intended to become the Harness Server source repository. No Harness Server/runtime implementation exists here yet. These docs are source material for understanding and implementing Harness; they are not Harness runtime objects governed by the lifecycle they describe.
 
-These docs are source material for understanding and implementing Harness. They are not Harness runtime objects governed by the lifecycle they describe.
+Harness is a local authority record and judgment-routing layer for AI-assisted product work. It keeps scope, user-owned judgments, evidence, verification, QA expectations, final acceptance, and residual-risk status outside fragile chat context.
 
-## Product Thesis
-
-One sentence: Harness is a local authority record and judgment-routing layer for AI-assisted product work, keeping scope, user-owned judgments, evidence, verification, QA expectations, final acceptance, and residual-risk status outside fragile chat context.
-
-One paragraph: In practice, Harness gives the user and agent a local record of what work is in scope, which judgments belong to the user, what supports completion claims, what still needs verification or QA, whether final acceptance has been given, and what risk remains. Chat stays conversation. Markdown projections are readable views. Core-owned local state and artifact references are the source of operational truth. Harness may use agent instructions, MCP, reusable workflows, tests, reviews, and specs, but it is not identical to any of them.
-
-Harness focuses on four recurring problems:
+Harness solves four recurring problems:
 
 - Scope drifts or becomes implicit.
 - User-owned judgment is silently replaced by agent judgment.
 - Evidence, verification, QA, and completion claims get mixed.
 - Chat or Markdown output is mistaken for operational truth.
+
+## Primary Reader Path
+
+Use this path when you do not know where to start:
+
+1. [Overview](learn/overview.md) for the first mental model.
+2. [User Guide](use/user-guide.md) for how to interact with Harness during work.
+3. [Concepts](learn/concepts.md) for the vocabulary that appears in examples, status, and specs.
+4. [Implementation Overview](build/implementation-overview.md) and [MVP Plan](build/mvp-plan.md) when you are reviewing or building the server plan.
+5. [Reference](#reference) only when you need exact contracts, schemas, gates, storage, projection, security, or template details.
+
+## Reader Paths By Role
+
+| Reader | Start | Then use |
+|---|---|---|
+| User | [Overview](learn/overview.md) | [User Guide](use/user-guide.md), [Concepts](learn/concepts.md), then [Decision Packet Cookbook](use/decision-packet-cookbook.md) only when decisions get complex. |
+| Agent integrator | [Overview](learn/overview.md) | [User Guide](use/user-guide.md), [Agent Session Flow](use/agent-session-flow.md), [Agent Integration Reference](reference/agent-integration.md), [Surface Cookbook](reference/surface-cookbook.md), and [MCP API And Schemas](reference/mcp-api-and-schemas.md). |
+| Implementer | [Overview](learn/overview.md) | [Concepts](learn/concepts.md), [Implementation Overview](build/implementation-overview.md), [First Runnable Slice](build/first-runnable-slice.md), [MVP Plan](build/mvp-plan.md), [Runtime Walkthrough](build/runtime-walkthrough.md), then the relevant Reference owner. |
+| Reviewer / maintainer | [Overview](learn/overview.md) | [Authoring Guide](maintain/authoring-guide.md), [Translation Guide](maintain/translation-guide.md), [Roadmap](roadmap.md), and Reference owners when checking strict meaning. |
+
+Operators and conformance authors usually begin in Reference: [Operations And Conformance Reference](reference/operations-and-conformance.md), [Conformance Fixtures Reference](reference/conformance-fixtures.md), [Runtime Architecture Reference](reference/runtime-architecture.md), [Security Threat Model Reference](reference/security-threat-model.md), [MCP API And Schemas](reference/mcp-api-and-schemas.md), [Storage And DDL](reference/storage-and-ddl.md), and [Kernel Reference](reference/kernel.md).
+
+## Document Roles
+
+The Learn and Use pages are kept separate, but each has a narrower job:
+
+| Page | Role |
+|---|---|
+| [Overview](learn/overview.md) | Primary first read. Explains the product thesis, the three spaces, what Harness records, and what Harness is not. |
+| [Purpose and Principles](learn/purpose-and-principles.md) | Values, non-goals, failure model, and MVP boundary. Use it when reviewing whether wording or scope still matches the thesis. |
+| [Concepts](learn/concepts.md) | Vocabulary bridge from ordinary user language to implementation terms. It is not another overview or tutorial. |
+| [Harness in 15 Minutes](learn/harness-in-15-minutes.md) | Scenario sampler. Six short examples show common Harness moments before strict specs. |
+| [Harness in One Task](learn/harness-in-one-task.md) | Tutorial walkthrough. One small change and one tracked task show the full work journey. |
+| [User Guide](use/user-guide.md) | Primary user-facing entry for starting, resuming, unblocking, and closing work. |
+| [Decision Packet Cookbook](use/decision-packet-cookbook.md) | Advanced usage and reference-adjacent examples for writing focused user-decision prompts. |
+| [Agent Session Flow](use/agent-session-flow.md) | Agent/integration guidance for presentation, context, blockers, writes, and close. It is not a required user read. |
 
 ## Where Am I?
 
@@ -33,7 +63,7 @@ This repository's current role is documentation review/redesign. Its intended fu
 
 ## Documentation Redesign Scope
 
-The current repository state is documentation review/redesign. Documentation acceptance and implementation-planning status are tracked in [Implementation Overview](build/implementation-overview.md#documentation-acceptance-status).
+Documentation acceptance and implementation-planning status are tracked in [Implementation Overview](build/implementation-overview.md#documentation-acceptance-status).
 
 The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization. Preserve the clarified product thesis and feasible implementation path over continuity with existing prose.
 
@@ -56,48 +86,25 @@ Harness is also not a prompt pack, chat script, evaluation harness, dashboard, o
 | Code review | Provides human or team review of changes. | Harness can reference review outcomes, but it does not replace review or turn review into final acceptance, residual-risk acceptance, or close. |
 | Specs | Describe intended behavior, design, or constraints. | Harness can use specs as input, but it records operational state for live work: scope, decisions, evidence, QA expectations, final acceptance, and remaining risk. |
 
-## Reader Routes
-
-| Reader role | Start here | Then use |
-|---|---|---|
-| New reader | [Harness in 15 Minutes](learn/harness-in-15-minutes.md) | [Overview](learn/overview.md), [Harness in One Task](learn/harness-in-one-task.md), then [Concepts](learn/concepts.md) |
-| User | [User Guide](use/user-guide.md) | [Decision Packet Cookbook](use/decision-packet-cookbook.md), then [Agent Session Flow](use/agent-session-flow.md) when you need the agent-facing flow |
-| Implementer | [Implementation Overview](build/implementation-overview.md) | [First Runnable Slice](build/first-runnable-slice.md), [Runtime Walkthrough](build/runtime-walkthrough.md), [MVP Plan](build/mvp-plan.md), then the relevant Reference owner |
-| Operator | [Operations And Conformance Reference](reference/operations-and-conformance.md#contract-map) | [Runtime Architecture](reference/runtime-architecture.md), [Security Threat Model](reference/security-threat-model.md), [MCP API And Schemas](reference/mcp-api-and-schemas.md), [Storage And DDL](reference/storage-and-ddl.md) |
-| Conformance author | [Conformance Fixtures Reference](reference/conformance-fixtures.md#conformance-navigation-map) | [Operations And Conformance Reference](reference/operations-and-conformance.md#conformance-run), [MCP API And Schemas](reference/mcp-api-and-schemas.md), [Storage And DDL](reference/storage-and-ddl.md), [Kernel Reference](reference/kernel.md) |
-| Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md) |
-
-## Reader Paths By Need
-
-| Need | Go to |
-|---|---|
-| Overview and concepts | [Learn](#learn): why Harness exists and what the concepts mean. |
-| Usage | [Use](#use): how users and agents interact during work. |
-| Implementation sequence | [Build](#build): staged delivery plan, first runnable slice, and exit criteria. |
-| Exact contracts | [Reference](#reference): schemas, APIs, algorithms, security model, storage model, fixtures, and template bodies. |
-| Documentation maintenance | [Maintain](#maintain): authoring rules, review checks, translation rules, and owner-boundary guidance. |
-
 ## Ownership Rule
 
 Reference docs own exact contracts: schemas, DDL, gates, state transitions, enum values, fixture semantics, template bodies, and official definitions. Learn, Use, and Build docs explain the idea for their reader and link to Reference instead of copying strict contract blocks.
 
 Documentation-maintenance checks are editorial quality checks for drift, owner boundaries, links, and language parity. They are not runtime conformance or implementation readiness. Use the [Authoring Guide](maintain/authoring-guide.md#docs-maintenance-checks) for drift categories and owner-first resolution; use [Operations And Conformance](reference/operations-and-conformance.md#docs-maintenance-profile) only for the docs-maintenance profile reporting boundary.
 
-Operators use [Operations And Conformance Reference](reference/operations-and-conformance.md) for procedures and the conformance run overview. Fixture authors use [Conformance Fixtures Reference](reference/conformance-fixtures.md) for fixture body shape, assertion semantics, suite catalogs, examples, and catalog-only future candidates.
-
 ## Learn
 
 Use Learn when you want the mental model before exact contracts.
 
 - [Overview](learn/overview.md)
+- [Purpose and Principles](learn/purpose-and-principles.md)
+- [Concepts](learn/concepts.md)
 - [Harness in 15 Minutes](learn/harness-in-15-minutes.md)
 - [Harness in One Task](learn/harness-in-one-task.md)
-- [Concepts](learn/concepts.md)
-- [Purpose and Principles](learn/purpose-and-principles.md)
 
 ## Use
 
-Use this path when you want to run an AI-assisted development session under Harness. These pages prioritize user-facing flow, status interpretation, decisions, and recovery paths.
+Use this path when you want to run an AI-assisted development session under Harness. The primary user-facing entry is [User Guide](use/user-guide.md). [Decision Packet Cookbook](use/decision-packet-cookbook.md) is for advanced decision examples. [Agent Session Flow](use/agent-session-flow.md) is agent/integration guidance, not a required user read.
 
 - [User Guide](use/user-guide.md)
 - [Decision Packet Cookbook](use/decision-packet-cookbook.md)
@@ -105,9 +112,7 @@ Use this path when you want to run an AI-assisted development session under Harn
 
 ## Build
 
-Use this path for implementation orientation and planning review. These pages keep the first path narrow: v0.1 Core Authority Slice first, Kernel Smoke as its narrow conformance authoring profile, v0.2 User-Facing Harness MVP as the first product MVP, v0.3 Assurance & Stewardship Pack and v0.4 Operations & Handoff Pack as hardening stages, and v1+ Expansion outside staged delivery unless owner docs promote and prove it.
-
-Start with the [Documentation Acceptance Status](build/implementation-overview.md#documentation-acceptance-status). Until maintainers deliberately accept implementation planning there, Build pages remain planning guidance and do not authorize runtime/server implementation.
+Use this path for implementation orientation and planning review. Start with the [Documentation Acceptance Status](build/implementation-overview.md#documentation-acceptance-status). Until maintainers deliberately accept implementation planning there, Build pages remain planning guidance and do not authorize runtime/server implementation.
 
 - [Implementation Overview](build/implementation-overview.md)
 - [First Runnable Slice](build/first-runnable-slice.md)

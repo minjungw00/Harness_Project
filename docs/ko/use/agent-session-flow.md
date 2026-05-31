@@ -4,11 +4,13 @@
 
 이 문서는 하네스를 쓰는 에이전트 세션이 사용자에게 어떻게 보여야 하는지 설명합니다. 무엇을 보여주고, 언제 묻고, 언제 계속하고, 언제 멈춰야 하는지를 다룹니다.
 
-커넥터 계약, 전체 능력 프로필, MCP 스키마, 접점별 cookbook은 여기서 정의하지 않습니다. 그런 내용은 [Agent 통합 참조](../reference/agent-integration.md)와 [Surface Cookbook](../reference/surface-cookbook.md)이 담당합니다.
+커넥터 계약, 전체 능력 프로필, MCP 스키마, 접점별 cookbook은 여기서 정의하지 않습니다. 그런 내용은 [에이전트 통합 참조](../reference/agent-integration.md)와 [Surface Cookbook](../reference/surface-cookbook.md)이 담당합니다.
+
+이 문서는 에이전트/통합 지침입니다. 일반 사용자가 반드시 읽어야 하는 문서가 아니며, 사용자용 진입점은 [사용자 가이드](user-guide.md)입니다.
 
 ## 이런 때 읽기
 
-에이전트가 상태, 막힘, 쓰기, 확인, 닫기를 사용자에게 어떻게 보여줘야 하는지 확인할 때 읽습니다.
+에이전트가 상태, 막힘, 쓰기, 확인, 닫기를 사용자에게 어떻게 보여줘야 하는지 확인할 때, 또는 에이전트 접점을 사용자용 하네스 흐름에 통합할 때 읽습니다.
 
 ## 읽기 전에
 
@@ -42,7 +44,7 @@ Gate 상태는 범위, 판단, 근거, 닫기 준비 상태라는 네 가지 사
 
 Turn context는 작고 최신이며 단계별 맥락으로 걸러져야 합니다. 항상 주입되는 운영 맥락은 한 화면 안팎으로 제한하고, 역할 또는 접점 자세, 현재 단계/context profile, 현재 상태 요약, 활성 blocker, 대기 중인 사용자 소유 판단, 다음 허용 행동만 포함합니다. 여기에 source ref나 최신성 표시를 붙일 수는 있지만, 전체 reference 문서, schema, 오래된 task history, historical event log, 관련 없는 template, projection 전체 본문, evidence body 복사본을 넣으면 안 됩니다.
 
-전체 문서 세트를 agent prompt에 넣지 말고 progressive context loading을 사용합니다. 자세한 context contract는 [Agent 통합 참조](../reference/agent-integration.md#context-pushpull-principles)가 담당하며, 이 사용자용 flow에서는 단계별 맥락을 좁게 유지합니다.
+전체 문서 세트를 에이전트 prompt에 넣지 말고 progressive context loading을 사용합니다. 자세한 context contract는 [에이전트 통합 참조](../reference/agent-integration.md#context-pushpull-principles)가 담당하며, 이 사용자용 flow에서는 단계별 맥락을 좁게 유지합니다.
 
 | 맥락 profile | 지금 보여줄 것 | 필요할 때만 가져올 것 |
 |---|---|---|
@@ -367,7 +369,7 @@ Decision-centered prompt는 경로와 맞는 동사를 씁니다. 선택, defer,
 - Technical architecture(`technical_architecture`): Domain-language conflict는 현재 product term을 유지할지, 좁은 code alias를 추가할지, 새 term으로 migration할지 비교합니다. Product meaning, public docs, API/interface naming, caller expectation, module responsibility, migration cost, 결정을 미뤘을 때 계속할 수 있는 일을 설명합니다.
 - Technical architecture(`technical_architecture`): Schema/data-model migration은 additive migration, compatibility shim, breaking cleanup을 비교합니다. Migration evidence, data-backfill risk, rollback path, test boundary, 유지보수 비용을 설명합니다.
 - Technical architecture(`technical_architecture`): Public API/interface 또는 module boundary는 현재 interface를 유지할지, 좁은 extension을 추가할지, 책임을 module boundary 너머로 옮길지 비교합니다. Caller 영향, compatibility 또는 breaking-change risk, boundary test, documentation promise, migration path, future-change cost를 설명합니다.
-- Scope / autonomy(`scope_autonomy`): Scope 또는 Autonomy Boundary 확장은 current small scope를 유지할지, requested surface를 추가할지, follow-up Change Unit으로 분리할지 비교합니다. 영향을 받는 paths, user-facing behavior, 계속 범위 밖에 남는 것, write 영향, agent가 혼자 판단해도 되는 일을 설명합니다.
+- Scope / autonomy(`scope_autonomy`): Scope 또는 Autonomy Boundary 확장은 current small scope를 유지할지, requested surface를 추가할지, follow-up Change Unit으로 분리할지 비교합니다. 영향을 받는 paths, user-facing behavior, 계속 범위 밖에 남는 것, write 영향, 에이전트가 혼자 판단해도 되는 일을 설명합니다.
 - Security / privacy(`security_privacy`): secret 접근, 권한 변경, 데이터 export에 대한 민감 동작 승인은 Approval 경계일 뿐입니다. 역할, 필드, redaction, audit logging, retention, rollback, user notice에는 별도의 제품 또는 보안 판단이 여전히 필요할 수 있습니다.
 - Security / privacy(`security_privacy`): PII logging policy는 PII를 log하지 않는 방식, redacted 또는 tokenized identifier, 제한된 diagnostic field를 비교해야 합니다. Privacy exposure, debugging value, retention, redaction, audit trail, policy 준수를 증명할 근거를 설명합니다.
 - QA / acceptance(`qa_acceptance`): QA 또는 검증 면제 판단은 해당 Task에서 요구하는 기존 기록 경로를 사용하고 owner refs를 cite합니다. QA 면제 판단 효과는 수동 QA / QA policy path가 담당하며, product/user risk 또는 policy-required judgment가 있으면 QA 면제 판단 결정 패킷을 사용합니다. 검증 면제 판단 효과는 kernel 검증 면제 path가 담당하며, 사용자 소유 판단이 필요하면 관련 결정 패킷을 사용합니다. 생략하는 확인이나 대상, 사용자가 수용한 잔여 위험, 잔여 위험 후속 작업, 관련 refs, 닫기 영향을 이름 붙입니다. 예를 들어 copy-only 변경에서 mobile Safari 수동 QA를 면제하려면 viewport wrapping 잔여 위험을 수용할지 사용자에게 묻고, release 전 browser pass를 후속 작업으로 남깁니다.

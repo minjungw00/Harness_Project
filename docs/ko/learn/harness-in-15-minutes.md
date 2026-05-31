@@ -2,7 +2,7 @@
 
 ## 이 문서로 할 수 있는 일
 
-무거운 Reference 문서를 읽기 전에 여섯 개의 짧은 시나리오로, 일상적인 AI 지원 작업에서 하네스가 어떻게 느껴지는지 이해합니다.
+무거운 Reference 문서를 읽기 전에 여섯 개의 짧은 시나리오로, 일상적인 AI 지원 작업에서 하네스가 어떻게 느껴지는지 이해합니다. 이 문서는 빠른 시나리오 모음이며, 기본 첫 읽기나 전체 작업 튜토리얼이 아닙니다.
 
 읽고 나면 어떤 작업이 아주 작게 유지될 수 있는지, 언제 요구사항 구체화가 필요한지, 사용자 판단이 왜 작업을 막을 수 있는지, 근거가 어떤 역할을 하는지, 왜 close가 아직 막힐 수 있는지, 읽기용 Markdown 보고서가 왜 state가 아닌지 구분할 수 있어야 합니다.
 
@@ -12,7 +12,7 @@
 
 ## 읽기 전에
 
-하네스 배경지식은 필요하지 않습니다. 더 긴 이해 모델을 먼저 보고 싶다면 [개요](overview.md)를 읽습니다. 이 문서 뒤에 하나의 전체 작업 흐름을 보고 싶다면 [하나의 작업으로 보는 하네스](harness-in-one-task.md)를 읽습니다.
+하네스 배경지식은 필요하지 않지만, 주요 경로는 [개요](overview.md)에서 시작합니다. 이 문서 뒤에 하나의 전체 작업 흐름을 보고 싶다면 [하나의 작업으로 보는 하네스](harness-in-one-task.md)를 읽습니다.
 
 ## 핵심 생각
 
@@ -101,7 +101,7 @@ Reference 문서는 이런 구체화 자세를 Discovery라고 부릅니다. 제
 
 요구사항 구체화(Discovery)는 민감 동작 허가(Approval)도 아니고, 제품 파일 쓰기 허가도 아니며, evidence, verification, QA, 작업 수락, 잔여 위험 수용, close, 새 authority path도 아닙니다. 에이전트가 확인할 수 있는 사실과 사용자 소유 결정을 분리하고 안전한 다음 작업을 보이게 하는 구체화 작업입니다.
 
-사용자에게 보이는 흐름은 [사용자 가이드](../use/user-guide.md#평소-말로-시작하기)와 [Agent 세션 흐름](../use/agent-session-flow.md)를 사용합니다. 용어 뒤의 정확한 owner behavior는 [Kernel Reference](../reference/kernel.md)와 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 사용합니다.
+사용자에게 보이는 흐름은 [사용자 가이드](../use/user-guide.md#평소-말로-시작하기)와 [에이전트 세션 흐름](../use/agent-session-flow.md)를 사용합니다. 용어 뒤의 정확한 owner behavior는 [Kernel Reference](../reference/kernel.md)와 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 사용합니다.
 
 ## 시나리오 4: 사용자 판단이 작업을 막을 때
 
@@ -187,7 +187,7 @@ Evidence: sufficient
 | Task, Change Unit, 결정 패킷, gate, evidence, verification, QA, Acceptance, 잔여 위험(Residual Risk), close | [Kernel Reference](../reference/kernel.md) |
 | Public tool request와 response shape | [MCP API와 스키마](../reference/mcp-api-and-schemas.md) |
 | Markdown 읽기용 view authority와 freshness | [문서 Projection 참조](../reference/document-projection.md) |
-| 사용자에게 보이는 session flow와 status 읽기 | [사용자 가이드](../use/user-guide.md), [Agent 세션 흐름](../use/agent-session-flow.md) |
+| 사용자에게 보이는 session flow와 status 읽기 | [사용자 가이드](../use/user-guide.md), [에이전트 세션 흐름](../use/agent-session-flow.md) |
 | 실용 결정 패킷 예시 | [결정 패킷 Cookbook](../use/decision-packet-cookbook.md) |
 
 ## 다음에 읽을 문서

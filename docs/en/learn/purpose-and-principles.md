@@ -14,9 +14,9 @@ Read this when you want the values and boundaries behind Harness before reading 
 
 ## Main idea
 
-One sentence version: Harness is a local authority record and judgment-routing layer for AI-assisted product work, keeping scope, user-owned judgments, evidence, verification, QA expectations, final acceptance, and residual-risk status outside fragile chat context.
+This page is the values and boundaries companion to [Overview](overview.md). It is not the primary onboarding page, a task tutorial, or a vocabulary list.
 
-One paragraph version: In practice, Harness gives the user and agent a local record of what work is in scope, which judgments belong to the user, what supports completion claims, what still needs verification or QA, whether final acceptance has been given, and what risk remains. Chat stays conversation. Markdown projections are readable views. Core-owned local state and artifact references are the source of operational truth. Harness may use agent instructions, MCP, reusable workflows, tests, reviews, and specs, but it is not identical to any of them.
+Use it to check whether wording, staging, implementation plans, and future proposals still preserve the thesis: Harness keeps the local operating record around scope, user-owned judgment, evidence, verification, QA, final acceptance, residual risk, and close readiness without treating chat or generated Markdown as operational truth.
 
 ## Purpose
 

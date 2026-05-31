@@ -2,13 +2,13 @@
 
 ## 이 문서로 할 수 있는 일
 
-엄격한 schema를 복사하지 않고도 좋은 결정 패킷 prompt를 알아보고 작성할 수 있도록 실용 예시를 사용합니다.
+엄격한 schema를 복사하지 않고도 좋은 결정 패킷 prompt를 알아보고 작성할 수 있도록 실용 예시를 사용합니다. 이 문서는 고급 사용 예시이자 Reference에 가까운 예시 자료이며, 기본 사용자 진입점은 아닙니다.
 
 읽고 나면 초점을 좁힌 사용자 판단을 요청하고, 현실적인 선택지를 비교하고, 경로를 추천하고, 불확실성을 이름 붙이고, 사용자가 미룰 때 어떤 일이 생기는지 설명하고, 필요할 때 관련 위험이나 근거를 연결할 수 있어야 합니다.
 
 ## 이런 때 읽기
 
-Agent가 혼자 결정하면 안 되는 product, UX, architecture, security, QA, verification, 작업 수락, 잔여 위험, scope/autonomy 판단 때문에 작업이 막혔을 때 읽습니다.
+[사용자 가이드](user-guide.md)를 읽은 뒤, 에이전트가 혼자 결정하면 안 되는 product, UX, architecture, security, QA, verification, 작업 수락, 잔여 위험, scope/autonomy 판단 때문에 작업이 막혔을 때 읽습니다.
 
 ## 읽기 전에
 

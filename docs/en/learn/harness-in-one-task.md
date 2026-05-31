@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-This document teaches Harness through two concrete task flows before you read the stricter reference definitions.
+This document teaches Harness through two concrete task flows before you read the stricter reference definitions. It is the tutorial walkthrough; [Harness in 15 Minutes](harness-in-15-minutes.md) is the shorter scenario sampler.
 
 After reading it, you should be able to recognize when a request can stay tiny, when the agent should clarify before implementation, why user judgment can block work, what evidence is doing, and why close can still be blocked. The table at the end connects those everyday ideas to stricter Harness labels.
 
@@ -12,7 +12,7 @@ Read this when you want to understand Harness through concrete task flow before 
 
 ## Before you read
 
-[Overview](overview.md) is recommended first, but not required. This page assumes only that you know Harness keeps durable work facts outside the chat.
+[Overview](overview.md) is recommended first. This page assumes only that you know Harness keeps durable work facts outside the chat.
 
 ## Main idea
 

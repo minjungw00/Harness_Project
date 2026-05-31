@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use Harness through normal conversation. You should be able to start work, understand what the agent is doing, see when your judgment is needed, and know why the work can or cannot be closed without learning Harness's internal vocabulary first.
+Use Harness through normal conversation. This is the primary user-facing entry after [Overview](../learn/overview.md). You should be able to start work, understand what the agent is doing, see when your judgment is needed, and know why the work can or cannot be closed without learning Harness's internal vocabulary first.
 
 ## Read this when
 
@@ -12,7 +12,7 @@ Read this when Harness is connected and you are starting, resuming, unblocking, 
 
 No startup phrase or Harness label is required. You do not need to know internal record names, gate names, or tool names to use Harness well.
 
-[Harness in One Task](../learn/harness-in-one-task.md) is useful background, but it is not required.
+[Overview](../learn/overview.md) is the recommended first read. [Harness in One Task](../learn/harness-in-one-task.md) is useful background, but it is not required.
 
 ## Main idea
 
@@ -363,6 +363,8 @@ For exact contracts, use the Reference docs only when needed: [Kernel Reference]
 
 ## Where to go next
 
-For the agent-side procedure, read [Agent Session Flow](agent-session-flow.md).
+Read [Concepts](../learn/concepts.md) for the vocabulary behind the user-facing words.
 
-For examples before strict reference details, read [Harness in 15 Minutes](../learn/harness-in-15-minutes.md) and [Harness in One Task](../learn/harness-in-one-task.md).
+Use [Decision Packet Cookbook](decision-packet-cookbook.md) when a product, UX, architecture, security, QA, verification, acceptance, risk, or scope decision needs a focused prompt.
+
+Agent integrators should read [Agent Session Flow](agent-session-flow.md). Ordinary users do not need it for the primary path.

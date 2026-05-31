@@ -2,7 +2,7 @@
 
 ## 이 문서로 할 수 있는 일
 
-하네스를 평소 대화처럼 사용합니다. 내부 용어를 먼저 배우지 않아도 작업을 시작하고, 에이전트가 무엇을 하는지 이해하고, 언제 내 판단이 필요한지 보고, 왜 아직 작업을 닫을 수 없는지 알 수 있어야 합니다.
+하네스를 평소 대화처럼 사용합니다. 이 문서는 [개요](../learn/overview.md) 다음에 읽는 기본 사용자 문서입니다. 내부 용어를 먼저 배우지 않아도 작업을 시작하고, 에이전트가 무엇을 하는지 이해하고, 언제 내 판단이 필요한지 보고, 왜 아직 작업을 닫을 수 없는지 알 수 있어야 합니다.
 
 ## 이런 때 읽기
 
@@ -12,7 +12,7 @@
 
 별도의 시작 문장이나 하네스 내부 라벨 지식은 필요하지 않습니다. 내부 기록 이름, 관문 이름, 도구 이름을 몰라도 하네스를 사용할 수 있어야 합니다.
 
-[하나의 작업으로 보는 하네스](../learn/harness-in-one-task.md)를 먼저 보면 도움이 되지만 필수는 아닙니다.
+[개요](../learn/overview.md)를 먼저 읽는 것을 권장합니다. [하나의 작업으로 보는 하네스](../learn/harness-in-one-task.md)를 보면 도움이 되지만 필수는 아닙니다.
 
 ## 핵심 생각
 
@@ -359,10 +359,12 @@
 
 이 라벨들은 서로 대체되지 않습니다. Approval은 작업 수락이 아닙니다. 작업 수락은 잔여 위험을 지우지 않습니다. 판단은 쓰기 권한이 아닙니다. 읽기용 요약은 state가 아닙니다. 테스트 통과가 수동 QA를 의미하지 않습니다. 잔여 위험을 수용한다고 위험이 사라지지는 않습니다.
 
-정확한 계약이 필요할 때만 Reference 문서를 봅니다. [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Agent 통합 참조](../reference/agent-integration.md)가 그 역할을 합니다.
+정확한 계약이 필요할 때만 Reference 문서를 봅니다. [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [에이전트 통합 참조](../reference/agent-integration.md)가 그 역할을 합니다.
 
 ## 다음에 볼 문서
 
-에이전트가 세션을 어떻게 진행해야 하는지는 [에이전트 세션 흐름](agent-session-flow.md)을 봅니다.
+[핵심 개념](../learn/concepts.md)에서 사용자용 표현 뒤에 있는 어휘를 봅니다.
 
-엄격한 참고 문서 전에 예시를 보고 싶다면 [15분 만에 보는 하네스](../learn/harness-in-15-minutes.md)와 [하나의 작업으로 보는 하네스](../learn/harness-in-one-task.md)를 읽습니다.
+제품, UX, architecture, security, QA, verification, 작업 수락, 위험, scope 판단에 초점 있는 질문이 필요하면 [결정 패킷 Cookbook](decision-packet-cookbook.md)을 봅니다.
+
+에이전트 통합자는 [에이전트 세션 흐름](agent-session-flow.md)을 읽습니다. 일반 사용자의 주요 경로에는 필수가 아닙니다.

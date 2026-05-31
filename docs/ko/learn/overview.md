@@ -10,7 +10,9 @@
 
 ## 읽기 전에
 
-하네스를 미리 알 필요는 없습니다. 이 문서를 읽은 뒤 구체적인 흐름을 보고 싶다면 [하나의 작업으로 보는 하네스](harness-in-one-task.md)를 읽습니다.
+하네스를 미리 알 필요는 없습니다. 이 문서가 문서 세트의 기본 첫 읽기입니다.
+
+이 문서 다음에는 [사용자 가이드](../use/user-guide.md)에서 작업 중 하네스와 상호작용하는 법을 보고, [핵심 개념](concepts.md)에서 예시와 reference 사양에 나오는 어휘를 정리합니다. 용어보다 예시를 먼저 보고 싶다면 [15분 만에 보는 하네스](harness-in-15-minutes.md)를 짧은 시나리오 모음으로, [하나의 작업으로 보는 하네스](harness-in-one-task.md)를 더 긴 튜토리얼로 읽습니다.
 
 ## 핵심 생각
 
@@ -90,8 +92,8 @@ AGENTS.md / agent rules, MCP, skills / reusable workflows, test runners, code re
 
 ## 다음에 읽을 문서
 
-- [핵심 개념](concepts.md)에서 참고 사양을 읽기 전에 필요한 가장 작은 용어 묶음을 봅니다.
-- [목적과 원칙](purpose-and-principles.md)에서 시스템 뒤의 가치와 경계를 봅니다.
-- 엄격한 커널 동작은 [커널 참조](../reference/kernel.md)를 봅니다.
-- 런타임 아키텍처는 [런타임 아키텍처 참조](../reference/runtime-architecture.md)를 봅니다.
-- 읽기용 문서 렌더링은 [문서 Projection 참조](../reference/document-projection.md)를 봅니다.
+- [사용자 가이드](../use/user-guide.md)에서 작업을 시작하고, 이어가고, 막힘을 풀고, 닫는 법을 봅니다.
+- [핵심 개념](concepts.md)에서 reference 사양을 읽기 전에 필요한 가장 작은 용어 묶음을 봅니다.
+- [목적과 원칙](purpose-and-principles.md)에서 시스템 뒤의 가치, 비목표, 실패 모델, MVP 경계를 봅니다.
+- 짧은 시나리오는 [15분 만에 보는 하네스](harness-in-15-minutes.md), 더 긴 튜토리얼은 [하나의 작업으로 보는 하네스](harness-in-one-task.md)를 봅니다.
+- 엄격한 계약은 관련 Reference owner를 봅니다. 예: [커널 참조](../reference/kernel.md), [런타임 아키텍처 참조](../reference/runtime-architecture.md), [문서 Projection 참조](../reference/document-projection.md).

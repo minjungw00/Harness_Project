@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use six short scenarios to understand how Harness feels in ordinary AI-assisted work before you read the heavier Reference docs.
+Use six short scenarios to understand how Harness feels in ordinary AI-assisted work before you read the heavier Reference docs. This is the quick scenario sampler, not the primary first read or the full task tutorial.
 
 After reading it, you should be able to tell when a task can stay tiny, when it needs clarification, why user judgment can block work, what evidence is doing, why close can still be blocked, and why a readable Markdown report is not state.
 
@@ -12,7 +12,7 @@ Read this when you are new to Harness and want practical examples before learnin
 
 ## Before you read
 
-No Harness background is required. If you want the longer mental model first, read [Overview](overview.md). If you want a full task story after this page, read [Harness in One Task](harness-in-one-task.md).
+No Harness background is required, but the primary path starts with [Overview](overview.md). If you want a full task story after this page, read [Harness in One Task](harness-in-one-task.md).
 
 ## Main idea
 

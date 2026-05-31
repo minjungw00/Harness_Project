@@ -2,13 +2,13 @@
 
 ## What this document helps you do
 
-Use practical examples to recognize and write good Decision Packet prompts without copying the strict schema.
+Use practical examples to recognize and write good Decision Packet prompts without copying the strict schema. This is advanced usage and reference-adjacent example material, not the primary user-facing entry.
 
 After reading it, you should be able to ask for a focused user judgment, compare realistic options, recommend a path, name uncertainty, explain what happens if the user defers, and link relevant risk or evidence when it matters.
 
 ## Read this when
 
-Read this when a task is blocked by product, UX, architecture, security, QA, verification, final acceptance, residual-risk acceptance, or scope/autonomy judgment that the agent should not decide alone.
+Read this after [User Guide](user-guide.md) when a task is blocked by product, UX, architecture, security, QA, verification, final acceptance, residual-risk acceptance, or scope/autonomy judgment that the agent should not decide alone.
 
 ## Before you read
 

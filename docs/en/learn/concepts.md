@@ -8,6 +8,8 @@ Harness should be usable even when you do not know the internal labels. You can 
 
 The exact kernel, runtime, MCP API, and document-rendering contracts live in the reference path.
 
+In the primary reader path, read this after [Overview](overview.md) and [User Guide](../use/user-guide.md). This page is a vocabulary bridge, not another product overview or task tutorial.
+
 ## Read this when
 
 Read this when Harness terms are starting to appear in examples, status summaries, or reference specs and you want the plain meaning first.

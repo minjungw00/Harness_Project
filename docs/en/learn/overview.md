@@ -10,7 +10,9 @@ Read this when you are new to Harness, when an AI-assisted task has become hard 
 
 ## Before you read
 
-No Harness background is required. If you want a concrete story after this page, read [Harness in One Task](harness-in-one-task.md).
+No Harness background is required. This is the primary first read for the documentation set.
+
+After this page, read [User Guide](../use/user-guide.md) to see how users interact with Harness during work, then [Concepts](concepts.md) for the vocabulary that appears in examples and reference specs. If you want examples before vocabulary, use [Harness in 15 Minutes](harness-in-15-minutes.md) as a scenario sampler or [Harness in One Task](harness-in-one-task.md) as the fuller tutorial.
 
 ## Main idea
 
@@ -90,8 +92,8 @@ For a side-by-side comparison with AGENTS.md / agent rules, MCP, skills / reusab
 
 ## Where to go next
 
+- Read [User Guide](../use/user-guide.md) for how to start, resume, unblock, and close work.
 - Read [Concepts](concepts.md) for the smallest vocabulary you need before reference specs.
-- Read [Purpose and Principles](purpose-and-principles.md) for the values and boundaries behind the system.
-- For strict kernel behavior, read [Kernel Reference](../reference/kernel.md).
-- For runtime architecture, read [Runtime Architecture Reference](../reference/runtime-architecture.md).
-- For readable document rendering, read [Document Projection Reference](../reference/document-projection.md).
+- Read [Purpose and Principles](purpose-and-principles.md) for the values, non-goals, failure model, and MVP boundary behind the system.
+- Read [Harness in 15 Minutes](harness-in-15-minutes.md) for short scenarios, or [Harness in One Task](harness-in-one-task.md) for the tutorial walkthrough.
+- For strict contracts, use the relevant Reference owner: [Kernel Reference](../reference/kernel.md), [Runtime Architecture Reference](../reference/runtime-architecture.md), or [Document Projection Reference](../reference/document-projection.md).

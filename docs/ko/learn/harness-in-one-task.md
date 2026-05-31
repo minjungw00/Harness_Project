@@ -2,7 +2,7 @@
 
 ## 이 문서로 할 수 있는 일
 
-이 문서는 엄격한 참고 정의를 읽기 전에, 두 개의 구체적인 작업 흐름으로 하네스를 설명합니다.
+이 문서는 엄격한 참고 정의를 읽기 전에, 두 개의 구체적인 작업 흐름으로 하네스를 설명합니다. 이 문서는 튜토리얼이며, [15분 만에 보는 하네스](harness-in-15-minutes.md)는 더 짧은 시나리오 모음입니다.
 
 읽고 나면 어떤 요청이 아주 작게 유지될 수 있는지, 언제 에이전트가 구현 전에 요구를 더 구체화해야 하는지, 사용자 판단이 왜 작업을 막을 수 있는지, 근거가 무엇을 하는지, 왜 아직 닫을 수 없는지를 알 수 있습니다. 끝부분 표에서 이런 쉬운 생각이 더 엄격한 하네스 라벨과 어떻게 연결되는지 보여 줍니다.
 
@@ -12,7 +12,7 @@
 
 ## 읽기 전에
 
-[개요](overview.md)를 먼저 읽는 것을 권장하지만 필수는 아닙니다. 이 문서는 하네스가 중요한 작업 사실을 대화 밖에 오래 남기는 시스템이라는 점만 알고 있다고 가정합니다.
+[개요](overview.md)를 먼저 읽는 것을 권장합니다. 이 문서는 하네스가 중요한 작업 사실을 대화 밖에 오래 남기는 시스템이라는 점만 알고 있다고 가정합니다.
 
 ## 핵심 생각
 
@@ -401,13 +401,13 @@ Power-user 표시는 각 줄 뒤의 owner ref를 함께 보여줄 수 있지만,
 | "어디까지 바꿔도 되지?" | Change Unit | 제품 쓰기 범위를 제한해 작업이 조용히 커지지 않게 한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "이건 사용자가 결정해야 해." | 결정 패킷 | 사용자가 소유한 제품 판단이나 중요한 기술 판단을 넓은 승인과 분리한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "이 민감한 단계를 진행해도 되나?" | Approval | 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답한다. 사용자 소유 판단이나 작업 수락을 대신하지 않는다. | [커널 참조](../reference/kernel.md). |
-| "지금 이 파일을 수정해도 되나?" | 쓰기 허가 기록 | 의도한 쓰기가 현재 Task, Change Unit, 결정, sensitive-action Approval과 맞는지 확인한다. | 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md); agent 접점 동작: [Agent 통합 참조](../reference/agent-integration.md). |
+| "지금 이 파일을 수정해도 되나?" | 쓰기 허가 기록 | 의도한 쓰기가 현재 Task, Change Unit, 결정, sensitive-action Approval과 맞는지 확인한다. | 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md); 에이전트 접점 동작: [에이전트 통합 참조](../reference/agent-integration.md). |
 | "이 주장을 뒷받침하는 것은 이것이다." | 근거 | diff, log, check, screenshot 같은 기록으로 "끝났다"는 말을 확인 가능하게 만든다. | [사용자 가이드](../use/user-guide.md); 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Storage와 DDL](../reference/storage-and-ddl.md), [운영과 Conformance 참조](../reference/operations-and-conformance.md). |
 | "독립적으로 확인했나?" | 검증 | 자체 확인과 분리 검증을 구분한다. | [사용자 가이드](../use/user-guide.md); 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [운영과 Conformance 참조](../reference/operations-and-conformance.md). |
 | "사람이 실제 경험을 봤나?" | 수동 QA | 테스트가 놓칠 수 있는 UX, 문구, 접근성, 시각 품질, 작업 흐름 판단을 다룬다. | [사용자 가이드](../use/user-guide.md); 엄격한 동작: [설계 품질 정책](../reference/design-quality-policies.md), [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [운영과 Conformance 참조](../reference/operations-and-conformance.md). |
 | "이 결과를 받아들일 수 있나?" | 수락 | Task 경로가 요구할 때 사용자의 최종 판단을 기록한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "아직 어떤 불확실성이 남았나?" | 잔여 위험 | 닫기나 수락 전에 알려진 제한과 위험을 보이게 한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
-| "이제 끝났다고 해도 되나?" | 닫기 | 관련 blocker가 처리된 뒤에만 Task를 완료한다. | [커널 참조](../reference/kernel.md); agent 접점 세부 담당: [Agent 통합 참조](../reference/agent-integration.md). |
+| "이제 끝났다고 해도 되나?" | 닫기 | 관련 blocker가 처리된 뒤에만 Task를 완료한다. | [커널 참조](../reference/kernel.md); 에이전트 접점 세부 담당: [에이전트 통합 참조](../reference/agent-integration.md). |
 
 ## 다음에 읽을 문서
 

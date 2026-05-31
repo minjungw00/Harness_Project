@@ -2,15 +2,9 @@
 
 이 문서는 하네스 한국어 문서 세트의 길잡이입니다.
 
-이 저장소는 현재 문서 전용 재설계/검토 저장소입니다. 문서 승인 이후에는 하네스 서버 소스 저장소가 되는 것을 목표로 합니다. 아직 이곳에는 하네스 서버/런타임 구현이 없습니다.
+이 저장소는 현재 문서 전용 재설계/검토 저장소입니다. 문서 승인 이후에는 하네스 서버 소스 저장소가 되는 것을 목표로 합니다. 아직 이곳에는 하네스 서버/런타임 구현이 없습니다. 이 문서들은 하네스를 이해하고 구현하기 위한 원천 자료이며, 문서가 설명하는 생명주기를 따라 관리되는 하네스 런타임 객체가 아닙니다.
 
-이 문서들은 하네스를 이해하고 구현하기 위한 원천 자료입니다. 문서가 설명하는 생명주기를 따라 관리되는 하네스 런타임 객체가 아닙니다.
-
-## 제품 명제
-
-한 문장으로 말하면, 하네스는 AI 지원 제품 작업에서 작업 범위, 사용자 판단, 근거, 검증, QA 기대, 최종 작업 수락, 남은 위험 상태를 깨지기 쉬운 대화 맥락 밖에 두는 로컬 기준 기록이자 판단 경로입니다.
-
-조금 풀어 말하면, 하네스는 어떤 작업이 범위 안에 있는지, 어떤 판단이 사용자에게 남아 있는지, 완료 주장을 무엇이 뒷받침하는지, 어떤 검증이나 QA가 아직 필요한지, 작업 수락이 이루어졌는지, 어떤 위험이 남았는지를 사용자와 에이전트가 함께 볼 수 있는 로컬 기록으로 남깁니다. 대화는 대화로 남습니다. Markdown 투영 문서는 사람이 읽는 보기입니다. Core가 소유한 로컬 상태와 아티팩트 참조가 운영상 기준입니다. 하네스는 agent instruction, MCP, reusable workflow, 테스트, 리뷰, spec을 사용할 수 있지만 그중 어느 하나와 같은 것은 아닙니다.
+하네스는 AI 지원 제품 작업에서 작업 범위, 사용자 판단, 근거, 검증, QA 기대, 최종 작업 수락, 남은 위험 상태를 깨지기 쉬운 대화 맥락 밖에 두는 로컬 기준 기록이자 판단 경로입니다.
 
 하네스가 집중하는 문제는 네 가지입니다.
 
@@ -18,6 +12,42 @@
 - 사용자 판단이 조용히 에이전트 판단으로 바뀝니다.
 - 근거, 검증, QA, 완료 주장이 뒤섞입니다.
 - 대화나 Markdown 출력이 운영상 기준으로 오해됩니다.
+
+## 주요 읽기 경로
+
+어디서 시작해야 할지 모를 때는 이 순서로 읽습니다.
+
+1. [개요](learn/overview.md)에서 첫 번째 이해 모델을 잡습니다.
+2. [사용자 가이드](use/user-guide.md)에서 작업 중 하네스와 상호작용하는 방법을 봅니다.
+3. [핵심 개념](learn/concepts.md)에서 예시, 상태, 사양에 나오는 어휘를 정리합니다.
+4. 서버 구현을 검토하거나 계획할 때 [구현 개요](build/implementation-overview.md)와 [MVP 계획](build/mvp-plan.md)을 봅니다.
+5. 정확한 계약, 스키마, gate, storage, projection, 보안, 템플릿이 필요할 때만 [참조 문서](#참조-문서)를 봅니다.
+
+## 독자별 경로
+
+| 독자 | 먼저 읽기 | 이어서 보기 |
+|---|---|---|
+| 사용자 | [개요](learn/overview.md) | [사용자 가이드](use/user-guide.md), [핵심 개념](learn/concepts.md), 결정이 복잡해질 때 [결정 패킷 Cookbook](use/decision-packet-cookbook.md). |
+| 에이전트 통합자 | [개요](learn/overview.md) | [사용자 가이드](use/user-guide.md), [에이전트 세션 흐름](use/agent-session-flow.md), [에이전트 통합 참조](reference/agent-integration.md), [Surface Cookbook](reference/surface-cookbook.md), [MCP API와 스키마](reference/mcp-api-and-schemas.md). |
+| 구현자 | [개요](learn/overview.md) | [핵심 개념](learn/concepts.md), [구현 개요](build/implementation-overview.md), [첫 실행 가능한 조각](build/first-runnable-slice.md), [MVP 계획](build/mvp-plan.md), [Runtime Walkthrough](build/runtime-walkthrough.md), 관련 Reference owner. |
+| 검토자 / 문서 유지보수자 | [개요](learn/overview.md) | [문서 작성 가이드](maintain/authoring-guide.md), [번역 가이드](maintain/translation-guide.md), [로드맵](roadmap.md), 엄격한 의미를 확인할 때 관련 Reference owner. |
+
+운영자와 conformance 작성자는 보통 Reference에서 시작합니다. [운영과 Conformance 참조](reference/operations-and-conformance.md), [Conformance Fixtures 참조](reference/conformance-fixtures.md), [런타임 아키텍처 참조](reference/runtime-architecture.md), [보안 위협 모델 참조](reference/security-threat-model.md), [MCP API와 스키마](reference/mcp-api-and-schemas.md), [Storage와 DDL](reference/storage-and-ddl.md), [커널 참조](reference/kernel.md)를 사용합니다.
+
+## 문서별 역할
+
+Learn과 Use 문서는 삭제하지 않고 역할을 좁혀 둡니다.
+
+| 문서 | 역할 |
+|---|---|
+| [개요](learn/overview.md) | 가장 먼저 읽는 문서입니다. 제품 명제, 세 공간, 하네스가 기록하는 것, 하네스가 아닌 것을 설명합니다. |
+| [목적과 원칙](learn/purpose-and-principles.md) | 가치, 비목표, 실패 모델, MVP 경계를 담습니다. 문구나 범위가 제품 명제와 맞는지 검토할 때 씁니다. |
+| [핵심 개념](learn/concepts.md) | 평소 말에서 구현 용어로 넘어가는 어휘 다리입니다. 또 하나의 개요나 튜토리얼이 아닙니다. |
+| [15분 만에 보는 하네스](learn/harness-in-15-minutes.md) | 짧은 시나리오 모음입니다. 엄격한 사양 전에 흔히 만나는 하네스 순간을 빠르게 보여 줍니다. |
+| [하나의 작업으로 보는 하네스](learn/harness-in-one-task.md) | 튜토리얼입니다. 작은 변경 하나와 추적되는 작업 하나로 전체 작업 흐름을 보여 줍니다. |
+| [사용자 가이드](use/user-guide.md) | 작업을 시작하고, 이어가고, 막힘을 풀고, 닫는 기본 사용자 문서입니다. |
+| [결정 패킷 Cookbook](use/decision-packet-cookbook.md) | 초점 있는 사용자 판단 요청을 만들기 위한 고급 사용 예시이자 Reference 인접 예시입니다. |
+| [에이전트 세션 흐름](use/agent-session-flow.md) | 상태 표시, 맥락, blocker, 쓰기, 닫기를 다루는 에이전트/통합 지침입니다. 일반 사용자가 반드시 읽어야 하는 문서는 아닙니다. |
 
 ## 지금 보는 저장소
 
@@ -33,7 +63,7 @@
 
 ## 문서 재설계 범위
 
-현재 저장소 상태는 문서 검토와 재설계입니다. 문서 승인과 구현 계획 상태는 [구현 개요](build/implementation-overview.md#문서-승인-상태)에서 확인합니다.
+문서 승인과 구현 계획 상태는 [구현 개요](build/implementation-overview.md#문서-승인-상태)에서 확인합니다.
 
 이번 재설계에서는 용어, MVP 단계, 스키마(schema) 구조, 투영(projection) 구조, 보안 표현, 문서 구성이 바뀔 수 있습니다. 정리된 제품 명제와 구현 가능한 경로를 우선하며, 기존 문구는 연속성만으로 보존하지 않습니다.
 
@@ -56,65 +86,40 @@
 | Code review | 변경을 사람이 또는 팀이 검토합니다. | 하네스는 리뷰 결과를 참조할 수 있지만, 리뷰를 대체하거나 리뷰를 작업 수락 또는 잔여 위험 수용으로 바꾸지 않습니다. |
 | Spec | 의도한 동작, 설계, 제약을 설명합니다. | 하네스는 spec을 입력으로 사용할 수 있지만, 실제 작업의 운영 상태인 범위, 결정, 근거, QA 기대, 작업 수락, 남은 위험을 기록합니다. |
 
-## 독자별 경로
-
-| 독자 역할 | 먼저 읽을 문서 | 이어서 볼 문서 |
-|---|---|---|
-| 처음 읽는 사람 | [15분 만에 보는 하네스](learn/harness-in-15-minutes.md) | [개요](learn/overview.md), [하나의 작업으로 보는 하네스](learn/harness-in-one-task.md), 그다음 [핵심 개념](learn/concepts.md) |
-| 사용자 | [사용자 가이드](use/user-guide.md) | [결정 패킷 Cookbook](use/decision-packet-cookbook.md), 그다음 Agent-facing 흐름이 필요하면 [Agent 세션 흐름](use/agent-session-flow.md) |
-| 구현자 | [구현 개요](build/implementation-overview.md) | [첫 실행 가능한 조각](build/first-runnable-slice.md), [Runtime Walkthrough](build/runtime-walkthrough.md), [MVP 계획](build/mvp-plan.md), 그다음 관련 Reference owner |
-| 운영자 | [운영과 Conformance 참조](reference/operations-and-conformance.md#계약-위치-지도) | [런타임 아키텍처](reference/runtime-architecture.md), [보안 위협 모델](reference/security-threat-model.md), [MCP API와 스키마](reference/mcp-api-and-schemas.md), [Storage와 DDL](reference/storage-and-ddl.md) |
-| Conformance 작성자 | [Conformance Fixtures 참조](reference/conformance-fixtures.md#conformance-탐색-지도) | [운영과 Conformance 참조](reference/operations-and-conformance.md#conformance-run), [MCP API와 스키마](reference/mcp-api-and-schemas.md), [Storage와 DDL](reference/storage-and-ddl.md), [커널 참조](reference/kernel.md) |
-| 문서 유지보수 담당자 | [문서 작성 가이드](maintain/authoring-guide.md) | [번역 가이드](maintain/translation-guide.md) |
-
-## 필요별 읽기 경로
-
-| 필요한 것 | 갈 곳 |
-|---|---|
-| 개요와 개념 | [Learn](#learn): 하네스가 왜 필요한지, 개념이 무슨 뜻인지 설명합니다. |
-| 사용 방법 | [Use](#use): 사용자와 agent가 작업 중 어떻게 상호작용하는지 설명합니다. |
-| 구현 순서 | [Build](#build): 단계별 전달 계획, 첫 실행 가능한 조각, exit criteria를 설명합니다. |
-| 정확한 계약 | [Reference](#reference): schema, API, algorithm, security model, storage model, fixture, template body를 정의합니다. |
-| 문서 유지보수 | [Maintain](#maintain): 작성 규칙, review check, 번역 규칙, owner 경계 지침을 둡니다. |
-
 ## 소유권 규칙
 
 정확한 계약은 Reference 문서가 담당합니다. Schema, DDL, 관문(gate), state transition, enum value, fixture 의미, template 본문, 공식 정의가 여기에 속합니다. Learn, Use, Build 문서는 독자에게 필요한 생각을 설명하고 Reference로 연결하며, 엄격한 계약 블록을 복사하지 않습니다.
 
 Docs-maintenance check는 drift, owner boundary, link, 언어 의미 일치를 살피는 편집 품질 점검입니다. Runtime conformance나 implementation readiness가 아닙니다. Drift category와 owner-first resolution은 [문서 작성 가이드](maintain/authoring-guide.md#docs-maintenance-checks)를 사용하고, docs-maintenance profile reporting boundary는 [운영과 Conformance](reference/operations-and-conformance.md#docs-maintenance-프로필)를 사용합니다.
 
-운영자는 procedure와 conformance run overview를 위해 [운영과 Conformance 참조](reference/operations-and-conformance.md)를 사용합니다. Fixture 작성자는 fixture body shape, assertion semantics, suite catalog, example, catalog-only future candidate를 위해 [Conformance Fixtures 참조](reference/conformance-fixtures.md)를 사용합니다.
-
-## Learn
+## 학습 문서
 
 정확한 계약에 들어가기 전에 전체 그림을 잡는 경로입니다.
 
 - [개요](learn/overview.md)
+- [목적과 원칙](learn/purpose-and-principles.md)
+- [핵심 개념](learn/concepts.md)
 - [15분 만에 보는 하네스](learn/harness-in-15-minutes.md)
 - [하나의 작업으로 보는 하네스](learn/harness-in-one-task.md)
-- [핵심 개념](learn/concepts.md)
-- [목적과 원칙](learn/purpose-and-principles.md)
 
-## Use
+## 사용 문서
 
-AI 지원 개발 세션을 하네스 기준으로 진행할 때 보는 경로입니다. 이 문서들은 사용자에게 보이는 흐름, 상태 해석, 결정 지점, 복구 경로를 우선합니다.
+AI 지원 개발 세션을 하네스 기준으로 진행할 때 보는 경로입니다. 기본 사용자 문서는 [사용자 가이드](use/user-guide.md)입니다. [결정 패킷 Cookbook](use/decision-packet-cookbook.md)은 고급 결정 예시이며, [에이전트 세션 흐름](use/agent-session-flow.md)은 일반 사용자의 필수 읽기가 아니라 에이전트/통합 지침입니다.
 
 - [사용자 가이드](use/user-guide.md)
 - [결정 패킷 Cookbook](use/decision-packet-cookbook.md)
-- [Agent 세션 흐름](use/agent-session-flow.md)
+- [에이전트 세션 흐름](use/agent-session-flow.md)
 
-## Build
+## 구현 문서
 
-구현 방향을 파악하고 계획을 리뷰하기 위한 경로입니다. 첫 경로는 좁게 유지합니다. 코어 권한 조각(v0.1 Core Authority Slice)을 먼저 두고, 커널 스모크(Kernel Smoke)를 그 좁은 conformance authoring profile로 사용하며, 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)를 첫 제품 MVP로, 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 hardening stage로 다룹니다. v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 staged delivery 밖에 둡니다.
-
-먼저 [문서 승인 상태](build/implementation-overview.md#문서-승인-상태)를 확인합니다. maintainer가 그곳에서 구현 계획을 명시적으로 승인하기 전까지 Build 문서는 계획 지침이며 하네스 서버/런타임 구현을 승인하지 않습니다.
+구현 방향을 파악하고 계획을 리뷰하기 위한 경로입니다. 먼저 [문서 승인 상태](build/implementation-overview.md#문서-승인-상태)를 확인합니다. maintainer가 그곳에서 구현 계획을 명시적으로 승인하기 전까지 Build 문서는 계획 지침이며 하네스 서버/런타임 구현을 승인하지 않습니다.
 
 - [구현 개요](build/implementation-overview.md)
 - [첫 실행 가능한 조각](build/first-runnable-slice.md)
 - [Runtime Walkthrough](build/runtime-walkthrough.md)
 - [MVP 계획](build/mvp-plan.md)
 
-## Reference
+## 참조 문서
 
 엄격한 계약을 찾아보는 경로입니다. 다른 경로에서 엄격한 규칙을 요약했다면 먼저 고쳐야 할 기준 문서는 해당 Reference owner입니다.
 
@@ -125,21 +130,21 @@ AI 지원 개발 세션을 하네스 기준으로 진행할 때 보는 경로입
 - [Storage와 DDL](reference/storage-and-ddl.md)
 - [문서 Projection 참조](reference/document-projection.md)
 - [설계 품질 정책](reference/design-quality-policies.md)
-- [Agent 통합 참조](reference/agent-integration.md)
+- [에이전트 통합 참조](reference/agent-integration.md)
 - [Surface Cookbook](reference/surface-cookbook.md)
 - [운영과 Conformance 참조](reference/operations-and-conformance.md)
 - [Conformance Fixtures 참조](reference/conformance-fixtures.md)
 - [용어집 참조](reference/glossary.md)
 - [Template 참조](reference/templates/README.md)
 
-## Maintain
+## 유지보수 문서
 
 문서와 이후 하네스 시스템의 일관성을 유지하기 위한 경로입니다. Maintain 문서는 런타임 동작이 아니라 문서 유지보수를 관리합니다.
 
 - [문서 작성 가이드](maintain/authoring-guide.md)
 - [번역 가이드](maintain/translation-guide.md)
 
-## Roadmap
+## 로드맵
 
 - [로드맵](roadmap.md)
 
