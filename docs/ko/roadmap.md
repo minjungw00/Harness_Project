@@ -14,7 +14,7 @@
 
 ## 읽기 전에
 
-현재 구현 계획은 [구현 개요](build/implementation-overview.md), [첫 실행 가능한 조각](build/first-runnable-slice.md), [MVP 계획](build/mvp-plan.md)에서 시작합니다. 정확한 계약은 Reference 문서를 사용합니다.
+현재 handoff와 구현 계획은 [구현 개요의 문서 수락 후보 요약](build/implementation-overview.md#문서-수락-후보-요약)에서 시작한 뒤 [서버 코딩 전 필요한 구현 결정](build/mvp-plan.md#서버-코딩-전-필요한-구현-결정), [첫 실행 가능한 조각](build/first-runnable-slice.md), [MVP 계획](build/mvp-plan.md)을 확인합니다. 정확한 계약은 Reference 문서를 사용합니다.
 
 ## 핵심 생각
 

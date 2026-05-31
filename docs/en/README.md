@@ -29,7 +29,7 @@ Use this path when you do not know where to start:
 |---|---|---|
 | User | [Overview](learn/overview.md) | [User Guide](use/user-guide.md), [Concepts](learn/concepts.md), then [Decision Packet Cookbook](use/decision-packet-cookbook.md) only when decisions get complex. |
 | Agent integrator | [Overview](learn/overview.md) | [User Guide](use/user-guide.md), [Agent Session Flow](use/agent-session-flow.md), [Agent Integration Reference](reference/agent-integration.md), [Surface Cookbook](reference/surface-cookbook.md), and [MCP API And Schemas](reference/mcp-api-and-schemas.md). |
-| Implementer | [Overview](learn/overview.md) | [Concepts](learn/concepts.md), [Implementation Overview](build/implementation-overview.md), [First Runnable Slice](build/first-runnable-slice.md), [MVP Plan](build/mvp-plan.md), [Runtime Walkthrough](build/runtime-walkthrough.md), then the relevant Reference owner. |
+| Implementer | [Overview](learn/overview.md) | [Concepts](learn/concepts.md), [Implementation Overview handoff](build/implementation-overview.md#maintainer-handoff-summary), [MVP Plan decisions](build/mvp-plan.md#implementation-decisions-needed-before-server-coding), [First Runnable Slice](build/first-runnable-slice.md), [MVP Plan](build/mvp-plan.md), [Runtime Walkthrough](build/runtime-walkthrough.md), then the relevant Reference owner. |
 | Reviewer / maintainer | [Overview](learn/overview.md) | [Authoring Guide](maintain/authoring-guide.md), [Translation Guide](maintain/translation-guide.md), [Roadmap](roadmap.md), and Reference owners when checking strict meaning. |
 
 Operators and conformance authors usually begin in Reference: [Operations And Conformance Reference](reference/operations-and-conformance.md), [Conformance Fixtures Reference](reference/conformance-fixtures.md), [Runtime Architecture Reference](reference/runtime-architecture.md), [Security Threat Model Reference](reference/security-threat-model.md), [MCP API And Schemas](reference/mcp-api-and-schemas.md), [Storage And DDL](reference/storage-and-ddl.md), and [Kernel Reference](reference/kernel.md).
@@ -63,11 +63,22 @@ This repository's current role is documentation review/redesign. Its intended fu
 
 ## Documentation Redesign Scope
 
-Documentation acceptance and implementation-planning status are tracked in [Implementation Overview](build/implementation-overview.md#documentation-acceptance-status).
+Documentation acceptance and implementation-planning status are tracked in [Implementation Overview](build/implementation-overview.md#documentation-acceptance-status). The current revision is a documentation acceptance candidate for maintainer review, not an accepted implementation start.
 
 The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization. Preserve the clarified product thesis and feasible implementation path over continuity with existing prose.
 
-The [Authoring Guide](maintain/authoring-guide.md#current-redesign-scope) owns the full redesign scope, preserved principles, document-family guidance, and [known redesign issues tracker](maintain/authoring-guide.md#known-redesign-issues-tracker).
+The [Authoring Guide](maintain/authoring-guide.md#current-redesign-scope) owns the full redesign scope, preserved principles, document-family guidance, and maintainer review checklist.
+
+## Maintainer Handoff
+
+Before starting Harness Server code, implementers should read:
+
+1. [Maintainer handoff summary](build/implementation-overview.md#maintainer-handoff-summary) for the current phase, preserved principles, stage model, clarified boundaries, and open-question status.
+2. [Documentation acceptance status](build/implementation-overview.md#documentation-acceptance-status) to confirm maintainers have accepted first runtime-batch planning.
+3. [Implementation-readiness criteria](build/implementation-overview.md#implementation-readiness-criteria) for the checks that must be true before the status changes.
+4. [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding) for any remaining decisions. As of this handoff, none are intentionally recorded.
+
+This handoff says the documentation is ready for maintainer acceptance review as a candidate. It does not claim the docs have been accepted, and it does not start server/runtime implementation.
 
 ## What Harness Is Not
 
@@ -115,6 +126,7 @@ Use this path when you want to run an AI-assisted development session under Harn
 Use this path for implementation orientation and planning review. Start with the [Documentation Acceptance Status](build/implementation-overview.md#documentation-acceptance-status). Until maintainers deliberately accept implementation planning there, Build pages remain planning guidance and do not authorize runtime/server implementation.
 
 - [Implementation Overview](build/implementation-overview.md)
+- [Maintainer Handoff Summary](build/implementation-overview.md#maintainer-handoff-summary)
 - [First Runnable Slice](build/first-runnable-slice.md)
 - [Runtime Walkthrough](build/runtime-walkthrough.md)
 - [MVP Plan](build/mvp-plan.md)

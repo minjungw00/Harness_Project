@@ -97,7 +97,9 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 
 ### 서버 코딩 전 필요한 구현 결정
 
-Reference contract에는 schema ownership 또는 stage-boundary decision이 흩어진 TODO로 남아 있지 않습니다. Implementation planning 중 새 문제가 발견되면, server code나 DDL을 바꾸기 전에 owner doc, affected field 또는 behavior, stage impact, 필요한 결정을 이곳에 기록합니다.
+이 인계에서는 schema ownership, stage boundary, security guarantee, projection scope, judgment model, repository identity에 대해 기록된 구현 시작 전 결정이 없습니다. 이 문서는 maintainer review를 위한 문서 수락 후보로 준비되어 있지만, [구현 개요: 문서 승인 상태](implementation-overview.md#문서-승인-상태)를 maintainer가 명시적으로 바꾸기 전까지 수락된 것이 아닙니다.
+
+큰 구현 결정을 흩어진 TODO로 남기지 않습니다. Maintainer review 또는 첫 runtime batch planning에서 새 결정이 발견되면, server code나 DDL을 바꾸기 전에 owner doc, affected field 또는 behavior, stage impact, 검토한 option, 필요한 결정을 이곳에 기록합니다.
 
 ### 코어 권한 조각 흐름
 

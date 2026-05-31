@@ -40,7 +40,7 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 ## 현재 재설계 범위
 
-이 저장소는 문서 검토와 재설계 단계입니다. 문서 편집은 문서 원본을 바꿀 수 있지만, 하네스 서버/런타임 구현을 시작하거나 구현 계획을 승인하지 않습니다.
+이 저장소는 문서 검토와 재설계 단계입니다. 현재 문서 세트는 maintainer review를 위한 문서 수락 후보이지만, 첫 runtime batch planning 전에 maintainer가 명시적으로 수락해야 합니다. 문서 편집은 문서 원본을 바꿀 수 있지만, 하네스 서버/런타임 구현을 시작하거나 구현 계획을 승인하지 않습니다.
 
 이번 재설계에서는 용어, MVP 단계, 스키마(schema) 구조, 투영(projection) 구조, 보안 표현, 문서 구성이 바뀔 수 있습니다. 정리된 제품 명제나 구현 가능성과 충돌하는 기존 문구는 연속성만으로 보존하지 않습니다.
 
@@ -52,18 +52,24 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 구현 세부사항은 바뀔 수 있습니다. 다만 다음 원칙은 유지해야 합니다.
 
-- Harness는 prompt 묶음이 아닙니다. 범위, 사용자 소유 판단, 근거, 닫기 준비 상태를 다루는 로컬 권한 기록입니다.
-- 사용자 소유 판단에는 제품 결정, 중요한 기술 결정, QA 기대치, 작업 수락, 잔여 위험 수용이 포함됩니다.
-- 근거, 검증, 수동 QA, 작업 수락, 잔여 위험은 서로 다른 항목이며 서로를 대체할 수 없습니다.
+- Harness는 prompt 묶음이 아닙니다. Scope, 사용자 소유 판단, 근거, 검증, QA 기대, 작업 수락, 잔여 위험 상태, 닫기 준비 상태를 다루는 로컬 권한 기록입니다.
+- 사용자 소유 판단은 보존되어야 합니다. 제품 결정, 중요한 기술 결정, QA 기대치, 작업 수락, waiver, 잔여 위험 수용은 소유자 계약이 달리 정하지 않는 한 사용자 판단으로 남습니다.
+- 근거, 검증, 수동 QA, 작업 수락, 잔여 위험은 서로 다른 기록과 판단이며 서로를 대체할 수 없습니다.
 - 대화, Markdown으로 렌더링된 읽기용 요약(Projection), connector 출력, 생성 문서는 운영 기준이 아닙니다. Core가 소유한 로컬 상태와 아티팩트 참조가 운영 기준입니다.
 
 문서를 다시 쓰면서 용어, 단계, 스키마 구조, 투영 구조, 보안 표현, 문서 경계를 바꿀 때는 문장을 다듬기 전에 이 원칙이 유지되는지 먼저 확인합니다.
 
+## 문서 수락 후보 규칙
+
+[구현 개요: 문서 수락 후보 요약](../build/implementation-overview.md#문서-수락-후보-요약)이 짧은 인계 요약을 담당합니다. 여기에 현재 단계, 향후 저장소 역할, 보존 원칙, 현재 단계 모델, 하네스 서버 구현 준비 조건, 남은 질문 상태를 둡니다.
+
+[MVP 계획: 서버 코딩 전 필요한 구현 결정](../build/mvp-plan.md#서버-코딩-전-필요한-구현-결정)은 maintainer 검토나 첫 runtime batch planning에서 발견된 큰 구현 결정을 기록하는 단일 위치입니다. 큰 결정을 active docs 곳곳의 `TODO_DECISION`으로 남기지 않습니다. 열린 결정이 없다면 문서가 maintainer 수락 검토를 받을 준비가 된 후보라고 말하되, maintainer가 상태 표를 바꾸기 전까지 수락은 아직 pending이라는 사실을 유지합니다.
+
 ## 알려진 재설계 쟁점 트래커
 
-문서를 다시 쓰는 동안에는 이 tracker를 사용합니다. 아래 항목은 maintainer용 재설계 쟁점입니다. Runtime 구현 작업이나 수용 기준이 아닙니다.
+이 tracker는 drift가 자주 생기는 영역을 확인하는 maintainer 검토 checklist로 사용합니다. 아래 항목은 maintainer용 review risk이지 열린 구현 결정, runtime 구현 작업, runtime conformance, acceptance record가 아닙니다. 이 인계 기준으로 아래 항목 중 서버 코딩 전 결정으로 의도적으로 남긴 것은 없습니다. Review 중 결정이 발견되면 [MVP 계획: 서버 코딩 전 필요한 구현 결정](../build/mvp-plan.md#서버-코딩-전-필요한-구현-결정)에 기록합니다.
 
-| 쟁점 | 편집 규칙 |
+| 검토 risk | 편집 규칙 |
 |---|---|
 | 사용자용 문서에 내부 용어가 너무 많습니다. | 사용자가 보는 상황을 먼저 설명하고, 내부 용어는 행동에 도움이 될 때만 소개합니다. |
 | 이 저장소가 앞으로 하네스 서버 소스 저장소가 된다는 설명이 흐려질 수 있습니다. | 현재는 문서 전용이며, 문서 승인 이후 하네스 서버 소스 저장소가 될 의도임을 진입점 문서에서 분명히 유지합니다. |
@@ -283,6 +289,8 @@ Maintain 문서는 documentation review rule, category label, reviewer expectati
 ### 최종 사전 수락 리뷰
 
 Maintainer가 문서 세트를 구현 계획에 사용할 수 있다고 받아들이기 전, 마지막 docs-maintenance pass를 수행합니다. 영어/한국어 활성 파일 맵 일치, 대응 파일의 의미 섹션 일치, 깨진 link와 anchor, owner-boundary drift, owner가 아닌 문서의 중복 contract, Approval, Decision Packet, Evidence, Verification, 수동 QA, Acceptance, Residual Risk, Projection, Guarantee Level 용어 drift, TODO hygiene를 확인합니다.
+
+[구현 개요](../build/implementation-overview.md#하네스-서버-구현-준비-조건)의 하네스 서버 구현 준비 조건도 확인합니다. 저장소 정체성, user-facing flow, schema-aligned judgment model, Approval/작업 수락/잔여 위험 수용 분리, coherent MVP stages, Kernel/API/storage/reference agreement, 단계화된 projection scope, 실제 보장 수준에 맞는 security wording, agent context strategy, 단계화되고 future-oriented인 conformance fixture plan, link/TODO/terminology 정리가 포함됩니다.
 
 이 최종 리뷰도 편집 리뷰입니다. Maintainer handoff에 사용할 만큼 문서가 일관적인지 요약합니다. Runtime conformance, 기준 상태, evidence, QA, Acceptance, 잔여 위험 수용, close readiness, implementation readiness를 만들지 않습니다. Finding을 기록할 때는 기존 docs-maintenance reporting expectation을 사용하며, 이 최종 pass를 위한 새 필수 report format을 만들지 않습니다.
 

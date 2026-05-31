@@ -4,7 +4,7 @@
 
 이 문서는 구현자가 전체 reference 명세에 들어가기 전에 무엇을 먼저 계획해야 하는지 알려 줍니다. 독자 중심 문서가 kernel, runtime, MCP, storage, Projection, conformance reference와 어떻게 이어지는지 보여 주는 Build 계층입니다.
 
-이 문서는 문서 재설계 / 피드백 반영과 인계 리뷰를 위한 구현 계획 문서입니다. 이 저장소는 현재 문서 전용이며, 문서 승인을 받으면 하네스 서버 소스 저장소가 되는 것을 목표로 합니다. 아직 이곳에는 하네스 서버/런타임 구현, executable fixture file, runnable Harness Server conformance test가 없습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance 작성 프로파일입니다. 모듈을 가진 로컬 프로세스 하나로 가장 작은 권한 루프를 증명하는 경로입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff 동작을 단단하게 만듭니다. v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
+이 문서는 문서 재설계 / 검토와 maintainer용 문서 수락 후보 리뷰를 위한 구현 계획 문서입니다. 이 저장소는 현재 문서 전용이며, 문서 승인을 받으면 하네스 서버 소스 저장소가 되는 것을 목표로 합니다. 아직 이곳에는 하네스 서버/런타임 구현, executable fixture file, runnable Harness Server conformance test가 없습니다. 이 revision은 maintainer review를 위한 문서 수락 후보이지 구현 시작 승인이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance 작성 프로파일입니다. 모듈을 가진 로컬 프로세스 하나로 가장 작은 권한 루프를 증명하는 경로입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff 동작을 단단하게 만듭니다. v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
 
 이 문서로 다음을 확인합니다.
 
@@ -46,23 +46,76 @@ Learn 경로에서 하네스의 기본 개념을 먼저 이해해 두는 것이 
 
 이 항목은 maintainer가 직접 갱신하는 문서 인계 표시입니다. Reference 계약, conformance 결과, 생성된 운영 record, runtime 구현 승인으로 쓰지 않습니다. 아래 checkpoint에서 acceptance를 자동 추론하지 않습니다. maintainer가 이 표를 명시적으로 바꿔야 합니다.
 
-현재 revision status: maintainer가 명시적으로 바꾸기 전까지 문서 승인은 여전히 아니오입니다. 이 상태 표시는 runtime/server 구현, runtime conformance, 구현 준비 상태가 아닙니다.
+현재 revision status: maintainer review를 위한 문서 수락 후보입니다. Maintainer가 명시적으로 바꾸기 전까지 문서 승인은 여전히 아니오입니다. 이 상태 표시는 runtime/server 구현, runtime conformance, 구현 준비 상태가 아닙니다.
 
 | 질문 | 현재 상태 |
 |---|---|
-| 문서 재설계 / 피드백 반영이 아직 active인가? | 예. 문서 재설계 / 피드백 반영은 계속 진행 중이며, 구현 인계는 여전히 maintainer의 명시적 갱신이 필요합니다. |
+| 문서 재설계 / 검토가 현재 저장소 단계인가? | 예. 이 revision은 문서 수락 후보이며 maintainer 수락은 아직 남아 있습니다. 문서 편집은 계속될 수 있지만, runtime/server 구현은 시작하지 않았습니다. |
 | 첫 runtime batch 계획을 위한 문서가 승인되었는가? | 아니오. 아래 checkpoint가 충족된 뒤 maintainer가 이 행을 예로 바꾸기 전까지 첫 runtime batch 계획은 시작할 수 없습니다. |
 | 하네스 서버/런타임 구현이 시작되었는가? | 아니오. 이 저장소는 아직 문서만 담고 있으며 하네스 서버/런타임 구현을 담고 있지 않습니다. |
-| 열려 있는 문서 후속 issue가 있는가? | 알려진 재설계 쟁점은 [문서 작성 가이드](../maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에서 관리합니다. 이 쟁점은 문서 재설계 입력이며 runtime conformance, 구현 준비 상태, 서버/런타임 구현 시작 승인이 아닙니다. 구현 계획을 위한 docs accepted는 maintainer가 인계 상태를 명시적으로 바꾸기 전까지 여전히 아니오입니다. 하네스 서버/런타임 구현은 시작하지 않았습니다. |
+| 서버 코딩 전 필요한 구현 결정이 남아 있는가? | 아니오. 이 인계에서 의도적으로 남긴 구현 시작 전 결정은 없습니다. Maintainer 검토에서 새 결정이 발견되면 [MVP 계획: 서버 코딩 전 필요한 구현 결정](mvp-plan.md#서버-코딩-전-필요한-구현-결정)에 소유자, 영향, 필요한 결정을 기록합니다. [문서 작성 가이드](../maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)의 검토 risk는 문서 검토 항목이지 runtime conformance, 구현 준비 상태, 서버/런타임 구현 시작 승인이 아닙니다. |
 
 Build 독자는 이 표를 진입 기준으로 보아야 합니다. maintainer 인계가 두 번째 행을 예로 바꾸기 전까지 코어 권한 조각(v0.1 Core Authority Slice)도 이 저장소에서는 계획 전용이며 하네스 서버/런타임 구현을 시작하면 안 됩니다.
 
-## 구현 handoff checkpoint
+## 문서 수락 후보 요약
+
+이 섹션은 문서 세트의 maintainer용 짧은 수락 후보 요약입니다. 현재 하네스가 무엇인지, 무엇이 정리되었는지, 무엇이 열려 있는지, 이 저장소에서 하네스 서버 구현을 시작하기 전에 무엇이 참이어야 하는지 보여 줍니다. 이것은 문서 수락 후보 요약일 뿐이며 runtime state, Acceptance record, generated projection, conformance result, server code를 만들지 않습니다.
+
+현재 단계와 향후 저장소 역할:
+
+- 이 저장소는 문서 재설계 / 검토 단계이며 문서 수락 후보입니다.
+- 문서 수락 이후에만 하네스 서버 소스 저장소가 되는 것을 목표로 합니다.
+- 사용자의 제품 저장소가 아니며 하네스 런타임 홈도 아닙니다.
+- 아직 하네스 서버/런타임 구현, runtime state, generated operational artifact, executable fixture, runnable Harness Server conformance test가 없습니다.
+
+보존하는 하네스 원칙:
+
+- Harness는 scope, 사용자 소유 판단, 근거, 검증, QA 기대, 작업 수락, 잔여 위험 상태, 닫기 준비 상태를 위한 로컬 기준 기록입니다.
+- Harness는 사용자 소유 판단을 보존합니다. 제품 결정, 중요한 기술 결정, QA 기대치, 작업 수락, waiver, 잔여 위험 수용은 소유자 계약이 달리 정하지 않는 한 사용자 판단으로 남습니다.
+- 근거, 검증, 수동 QA, 작업 수락, 잔여 위험은 서로 다른 기록과 판단입니다. 어느 것도 다른 것을 대신하지 않습니다.
+- 대화, connector 출력, 생성 문서, Markdown으로 렌더링된 읽기용 요약(Projection)은 운영 기준이 아닙니다. Core가 소유한 로컬 상태와 아티팩트 참조가 기준입니다.
+
+현재 단계 모델:
+
+- 코어 권한 조각(v0.1 Core Authority Slice)은 가장 작은 로컬 Core 권한 루프를 증명합니다. Kernel Smoke는 이 단계의 좁은 conformance 작성 프로파일입니다.
+- 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 일반 사용자가 느끼는 가치를 증명합니다. Scope 보존, 사용자 소유 판단 라우팅, 근거, 닫기 준비 상태, 작업 수락 분리, 잔여 위험 표시가 여기에 속합니다.
+- 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)은 Decision Packet, Approval separation, detached verification, 수동 QA, residual-risk accepted close, stewardship, TDD, feedback-loop policy, context hygiene를 단단하게 만듭니다.
+- 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 doctor/readiness, recover/export, artifact integrity, release handoff, 더 넓은 fixture coverage, later-boundary check를 단단하게 만듭니다.
+- v1+ Expansion은 향후 소유자 결정이 exact contract, fixture, fallback behavior, projection-as-canonical dependency 없음으로 승격하기 전까지 roadmap 범위입니다.
+
+정리된 내용:
+
+- 저장소 정체성이 명확합니다. 지금은 문서 전용이고, 수락 이후 향후 하네스 서버 소스 저장소입니다.
+- 제품 명제가 명확합니다. Harness는 prompt 묶음, dashboard, broad hosted agent platform, generated Markdown 시스템이 아닙니다.
+- 판단 모델은 Approval, Decision Packet, 작업 수락, 잔여 위험 수용, QA/검증 waiver decision, Write Authorization을 분리합니다.
+- Projection과 대화는 읽기/대화 접점이며 운영 기준이 아닙니다.
+- Projection scope는 단계화되어 있습니다. v0.1은 freshness/read fact를 노출할 수 있고, v0.2는 MVP 이해에 필요한 사용자 읽기용 출력을 제공하며, detailed report/template은 승격되기 전까지 later-profile scope입니다.
+- 보안 표현은 실제 enforcement level에 묶입니다. Cooperative, detective, preventive, isolated 주장은 해당 동작에 대해 문서화된 capability와 fixture-proven path가 있을 때만 사용합니다.
+- Agent context는 제한됩니다. 항상 주입되는 맥락은 짧고 최신이어야 하며, 상세 contract는 필요할 때 owner 문서나 retrieval path에서 가져옵니다.
+- Conformance fixture 문서는 단계화된 향후 검증 계획입니다. 현재 executable fixture file이나 runnable conformance test가 있다는 뜻이 아닙니다.
+
+남은 질문:
+
+- 현재 기록된 구현 시작 전 결정은 없습니다. 이 문서는 maintainer review를 위한 문서 수락 후보로 준비되어 있지만, [문서 승인 상태](#문서-승인-상태)를 maintainer가 명시적으로 바꾸기 전까지 수락된 것이 아닙니다.
+- Maintainer 검토에서 서버 코딩 전 필요한 구현 결정이 발견되면 [MVP 계획: 서버 코딩 전 필요한 구현 결정](mvp-plan.md#서버-코딩-전-필요한-구현-결정)에 기록합니다. 큰 결정을 흩어진 TODO로 남기지 않습니다.
+
+## 하네스 서버 구현 준비 조건
 
 이 checkpoint는 maintainer가 문서 승인 상태를 문서 유지보수에서 첫 runtime batch 계획으로 바꾸기 전에 무엇이 참이어야 하는지 판단할 때 사용합니다. 이것은 계획 인계일 뿐입니다. 그 자체로 runtime/server 구현을 승인하지 않으며, 정확한 schema, DDL, fixture 의미, runtime contract를 정의하지 않습니다.
 
 첫 구현 계획은 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 강화된 로컬 기준 behavior, roadmap automation이 아니라 코어 권한 조각(v0.1 Core Authority Slice) 계획부터 시작한다는 뜻입니다. 아래 조건이 모두 참일 때만 시작할 수 있습니다.
 
+- Root README, docs README, 언어별 README, Build 문서, 관련 Reference 문서에서 저장소 정체성이 명확하다. 지금은 문서 전용이며, 수락 이후 향후 하네스 서버 소스 저장소이고, 제품 저장소나 하네스 런타임 홈이 아니다.
+- 사용자가 보는 흐름이 내부 용어를 먼저 알아야만 시작, 재개, unblock, 작업 수락, close를 할 수 있는 형태가 아니다.
+- 판단 모델이 Kernel, MCP/API schema, storage, template, fixture, Learn/Use 설명, glossary term과 schema-aligned 상태다.
+- Approval, 작업 수락, 잔여 위험 수용이 예시, template, API/schema 문구, close behavior, user-facing routing에서 분리되어 있다.
+- MVP stage가 일관적이다. v0.1 Core Authority Slice는 제품 MVP가 아니고, v0.2가 첫 사용자 대상 MVP이며, v0.3과 v0.4는 assurance, stewardship, operations, handoff를 단단하게 만들고, v1+ Expansion은 승격 전까지 roadmap 범위다.
+- Kernel, API, storage, reference, Build contract가 Core ownership, state transition, write authority, evidence, judgment record, close semantics, idempotency, state conflict behavior, artifact, projection job, fixture semantics에서 서로 맞는다.
+- Projection scope가 단계화되어 있고 권한이 없다. 읽기용 Projection과 card는 Core record와 artifact ref에서 파생되며, 권한을 만들거나 첫 증명이 되지 않는다.
+- 보안 보장이 실제 enforcement level과 맞다. Cooperative, detective, preventive, isolated 표현은 해당 동작에 대해 문서화된 surface와 fixture-proven path가 있을 때만 사용한다.
+- Agent context 전략이 정의되어 있다. 항상 주입되는 맥락은 한 화면 안팎, current-state 기반, profile-scoped로 유지하고, 전체 reference docs, schema, old log, projection body는 알맞은 owner/retrieval path로만 가져온다.
+- Conformance fixture plan이 단계화되고 향후 검증 계획으로 유지된다. Kernel Smoke는 v0.1 authoring profile이고, 이후 suite profile은 v0.2, v0.3, v0.4, 승격된 v1+ item에 맞으며, fixture file이나 runnable conformance test가 이미 존재한다고 암시하지 않는다.
+- Link, TODO, terminology, 영어/한국어 의미 일치가 정리되어 있다. Active docs에 흩어진 unresolved major-decision TODO가 없고, 서버 코딩 전 필요한 구현 결정은 [MVP 계획](mvp-plan.md#서버-코딩-전-필요한-구현-결정)에 기록한다.
 - 최종 docs-maintenance drift pass가 완료되었거나, 남은 구현 결정이 [MVP 계획: 서버 코딩 전 필요한 구현 결정](mvp-plan.md#서버-코딩-전-필요한-구현-결정)에 기록되어 있다. Docs-maintenance는 읽기 전용 문서 점검으로 남습니다. [문서 작성 가이드](../maintain/authoring-guide.md#docs-maintenance-checks)와 [운영과 Conformance 참조](../reference/operations-and-conformance.md#docs-maintenance-프로필)를 봅니다.
 - 코어 권한 조각(v0.1 Core Authority Slice)의 local-only MCP 노출 baseline이 승인되어 있다. Remote, shared, tunneled, non-loopback 노출은 owner 문서가 connector profile을 승격하고 증명하기 전까지 v0.1 baseline 밖입니다. [런타임 아키텍처](../reference/runtime-architecture.md#로컬-접근-기대사항), [보안 위협 모델 참조](../reference/security-threat-model.md#mcp-local-access와-caller-boundary), [MCP API와 스키마](../reference/mcp-api-and-schemas.md#mcp-경계와-호출자-신뢰)를 봅니다.
 - Reference surface capability profile이 실제 사용하는 host/profile/configuration에 대한 구체적인 declaration으로 승인되어 있다. Version, MCP config, hook, permission, workspace policy, generated file, conformance result, capture method, QA capture method, redaction policy, artifact retention behavior가 바뀌면 refresh되어야 합니다. 정확한 connector profile과 surface recipe detail은 [Agent 통합 참조](../reference/agent-integration.md#capability-profiles)와 [Surface Cookbook](../reference/surface-cookbook.md)에 둡니다.

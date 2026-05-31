@@ -14,7 +14,7 @@ This is roadmap documentation. It does not authorize runtime/server implementati
 
 ## Before you read
 
-For current implementation planning, start with [Build: Implementation Overview](build/implementation-overview.md), [Build: First Runnable Slice](build/first-runnable-slice.md), and [Build: MVP Plan](build/mvp-plan.md). For exact contracts, use the Reference docs.
+For current handoff and implementation planning, start with [Build: Implementation Overview](build/implementation-overview.md#maintainer-handoff-summary), then check [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding), [Build: First Runnable Slice](build/first-runnable-slice.md), and [Build: MVP Plan](build/mvp-plan.md). For exact contracts, use the Reference docs.
 
 ## Main idea
 

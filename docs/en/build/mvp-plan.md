@@ -97,7 +97,9 @@ Required in an API schema therefore means required when that tool call, record, 
 
 ### Implementation decisions needed before server coding
 
-No open schema-ownership or stage-boundary decision is intentionally left as a scattered TODO in the reference contracts. If implementation planning later finds one, record it here with the owner doc, affected field or behavior, stage impact, and the decision needed before changing server code or DDL.
+No open schema-ownership, stage-boundary, security-guarantee, projection-scope, judgment-model, or repository-identity decision is currently recorded for this handoff. The documentation is ready for maintainer acceptance review as a candidate, but it is not accepted until maintainers deliberately update [Implementation Overview: Documentation acceptance status](implementation-overview.md#documentation-acceptance-status).
+
+Do not leave major implementation decisions as scattered TODOs. If maintainer review or first runtime-batch planning later finds one, record it here with the owner doc, affected field or behavior, stage impact, options considered, and the decision needed before changing server code or DDL.
 
 ### Core Authority Slice flow
 

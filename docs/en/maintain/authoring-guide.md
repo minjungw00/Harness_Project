@@ -40,7 +40,7 @@ Family boundaries:
 
 ## Current Redesign Scope
 
-This repository is in documentation review/redesign only. Documentation edits may change source docs, but they do not start Harness server/runtime implementation or authorize implementation planning.
+This repository is in documentation review/redesign only. The current documentation set is a documentation acceptance candidate for maintainer review, but maintainers must still accept it deliberately before first runtime-batch planning. Documentation edits may change source docs, but they do not start Harness server/runtime implementation or authorize implementation planning.
 
 The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization. Do not preserve existing prose merely for continuity when it conflicts with the clarified product thesis or implementation feasibility.
 
@@ -52,18 +52,24 @@ Documentation files are source material for understanding and implementing Harne
 
 Implementation details may change if these principles remain intact:
 
-- Harness is not a prompt pack. It is a local authority record for scope, user-owned judgment, evidence, and close readiness.
-- User-owned judgments include product decisions, important technical decisions, QA expectations, final acceptance, and residual-risk acceptance.
-- Evidence, verification, manual QA, final acceptance, and residual risk are separate and must not substitute for each other.
+- Harness is not a prompt pack. It is a local authority record for scope, user-owned judgment, evidence, verification, QA expectations, final acceptance, residual-risk status, and close readiness.
+- User-owned judgment must be preserved. Product decisions, important technical decisions, QA expectations, final acceptance, waivers, and residual-risk acceptance stay with the user unless an owner contract explicitly says otherwise.
+- Evidence, verification, manual QA, final acceptance, and residual risk are separate records and judgments. They must not substitute for each other.
 - Chat, Markdown-rendered projections, connector output, and generated documents are not operational truth. Core-owned local state and artifact references are the authority.
 
 When a rewrite changes a term, stage, schema shape, projection shape, security claim, or document boundary, check that these principles still hold before polishing prose.
 
+## Maintainer Handoff Rule
+
+[Implementation Overview: Maintainer handoff summary](../build/implementation-overview.md#maintainer-handoff-summary) owns the short handoff: current phase, future repository role, preserved principles, current stage model, implementation-readiness criteria, and remaining open-question status.
+
+[MVP Plan: Implementation decisions needed before server coding](../build/mvp-plan.md#implementation-decisions-needed-before-server-coding) is the single place for major implementation decisions found during maintainer review or first runtime-batch planning. Do not leave major decisions as scattered `TODO_DECISION` markers in active docs. If no open decisions remain, say the documentation is ready for maintainer acceptance review as a candidate, while preserving the separate fact that acceptance is still pending until maintainers update the status table.
+
 ## Known Redesign Issues Tracker
 
-Use this tracker during the documentation rewrite. These are maintainer-facing redesign issues, not runtime implementation tasks or acceptance criteria.
+Use this tracker as the maintainer handoff review checklist for areas that commonly drift. These are maintainer-facing review risks, not open implementation decisions, runtime implementation tasks, runtime conformance, or acceptance records. At handoff, no item below is intentionally left as a server-coding decision; if review finds one, record it in [MVP Plan: Implementation decisions needed before server coding](../build/mvp-plan.md#implementation-decisions-needed-before-server-coding).
 
-| Issue | Editing rule |
+| Review risk | Editing rule |
 |---|---|
 | User-facing docs overuse internal terms. | Explain the user-visible situation first; introduce internal terms only when they help the reader act. |
 | Repository identity as the future Harness Server source repository can drift. | Keep entry points clear that the repo is currently documentation-only and is intended to become the Harness Server source repository after documentation acceptance. |
@@ -283,6 +289,8 @@ Maintain docs may define documentation review rules, category labels, and review
 ### Final pre-acceptance review
 
 Before maintainers accept the documentation set for implementation planning, do one final docs-maintenance pass. Check English/Korean active file map parity, semantic section parity in paired files, broken links and anchors, owner-boundary drift, non-owner duplicate contracts, terminology drift for Approval, Decision Packet, Evidence, Verification, Manual QA, Acceptance, Residual Risk, Projection, and Guarantee Level, and TODO hygiene.
+
+Also check the implementation-readiness criteria in [Implementation Overview](../build/implementation-overview.md#implementation-readiness-criteria): repository identity, user-facing flow, schema-aligned judgment model, Approval/final acceptance/residual-risk acceptance separation, coherent MVP stages, Kernel/API/storage/reference agreement, staged projection scope, honest security guarantee wording, agent context strategy, staged future-oriented conformance fixture plan, and clean links/TODOs/terminology.
 
 This final review is still editorial review. It summarizes whether the docs are coherent enough for maintainer handoff; it does not create runtime conformance, canonical state, evidence, QA, Acceptance, residual-risk acceptance, close readiness, or implementation readiness. Use the existing docs-maintenance reporting expectations when recording findings; do not create a new required report format for this final pass.
 

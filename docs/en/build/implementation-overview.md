@@ -4,7 +4,7 @@
 
 This document tells implementers what to build before they dive into the full reference specs. It is the bridge between the reader-centered docs and the detailed contracts in the kernel, runtime, MCP, storage, projection, and conformance references.
 
-This is planning documentation for documentation redesign / feedback incorporation and handoff review. The repository is documentation-only today and is intended to become the Harness Server source repository after documentation acceptance; no Harness Server/runtime implementation, executable fixture files, or runnable Harness Server conformance tests exist here yet. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile: one local process with modules proving the smallest authority loop. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is planning documentation for documentation redesign / review and maintainer handoff. The repository is documentation-only today and is intended to become the Harness Server source repository after documentation acceptance; no Harness Server/runtime implementation, executable fixture files, or runnable Harness Server conformance tests exist here yet. This revision is a documentation acceptance candidate for maintainer review, not an accepted implementation start. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile: one local process with modules proving the smallest authority loop. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 Use it to answer three questions:
 
@@ -46,24 +46,77 @@ If a proposed implementation starts with the user-facing MVP, hardened local ref
 
 This is a maintainer-updated documentation handoff marker. It is not a Reference contract, conformance result, generated operational record, or runtime implementation authorization. Do not infer acceptance from the checklist below; maintainers must change this table deliberately.
 
-Current revision status: documentation acceptance remains No unless maintainers deliberately change it. This status marker is not runtime/server implementation, runtime conformance, or implementation readiness.
+Current revision status: documentation acceptance candidate for maintainer review. Documentation acceptance remains No unless maintainers deliberately change it. This status marker is not runtime/server implementation, runtime conformance, or implementation readiness.
 
 | Question | Current status |
 |---|---|
-| Is documentation redesign / feedback incorporation still active? | Yes. Documentation redesign / feedback incorporation remains active, and implementation handoff still requires a deliberate maintainer update. |
+| Is documentation redesign / review still the current repository phase? | Yes. This revision is a documentation acceptance candidate, and maintainer acceptance is still pending. Documentation edits may still happen; runtime/server implementation has not started. |
 | Are docs accepted for first runtime-batch planning? | No. First runtime-batch planning may not begin until maintainers change this row to Yes after the checkpoint below is satisfied. |
 | Has runtime/server implementation started? | No. This repository still contains documentation, not Harness runtime/server implementation. |
-| Are there open follow-up docs issues? | Known redesign issues are tracked in the [Authoring Guide](../maintain/authoring-guide.md#known-redesign-issues-tracker). They are documentation redesign inputs, not runtime conformance, implementation readiness, or authorization to start server/runtime implementation. Docs accepted for implementation planning remains No unless maintainers deliberately change the handoff status. Harness Server/runtime implementation remains not started. |
+| Are there open implementation decisions before server coding? | No open implementation decisions are intentionally recorded in this handoff. If maintainer review finds one, record it only in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding) with owner, impact, and decision needed. Known handoff review risks remain in the [Authoring Guide](../maintain/authoring-guide.md#known-redesign-issues-tracker), but they are documentation review checks, not runtime conformance, implementation readiness, or authorization to start server/runtime implementation. |
 
 Build readers should treat this table as the entry gate. Until maintainer handoff changes the second row to Yes, even v0.1 Core Authority Slice remains planning-only in this repository and runtime/server implementation must not start.
 
-## Implementation handoff checkpoint
+## Maintainer handoff summary
+
+This section is the short maintainer handoff for the documentation set. It explains what Harness now is, what has been clarified, what remains open, and what must be true before Harness Server implementation begins in this repository. It is a documentation handoff only; it does not create runtime state, acceptance records, generated projections, conformance results, or server code.
+
+Current phase and future repository role:
+
+- The repository is in documentation redesign / review and is a documentation acceptance candidate.
+- The repository is intended to become the Harness Server source repository only after documentation acceptance.
+- It is not the user's Product Repository and not a Harness Runtime Home.
+- No Harness Server/runtime implementation, runtime state, generated operational artifacts, executable fixtures, or runnable Harness Server conformance tests exist here yet.
+
+Preserved Harness principles:
+
+- Harness is a local authority record for scope, user-owned judgment, evidence, verification, QA expectations, final acceptance, residual-risk status, and close readiness.
+- Harness preserves user-owned judgment. Product decisions, material technical decisions, QA expectations, final acceptance, waivers, and residual-risk acceptance remain user decisions unless the owner contracts explicitly say otherwise.
+- Evidence, verification, Manual QA, final acceptance, and residual risk are separate records and judgments. None of them substitutes for the others.
+- Chat, connector output, generated documents, and Markdown-rendered projections are not operational authority. Core-owned local state and artifact references are authoritative.
+
+Current stage model:
+
+- v0.1 Core Authority Slice proves the smallest local Core authority loop with Kernel Smoke as the narrow conformance authoring profile.
+- v0.2 User-Facing Harness MVP proves ordinary user value: scope preservation, user-owned judgment routing, evidence, close readiness, final acceptance separation, and residual-risk visibility.
+- v0.3 Assurance & Stewardship Pack hardens Decision Packets, Approval separation, detached verification, Manual QA, residual-risk accepted close, stewardship, TDD, feedback-loop policy, and context hygiene.
+- v0.4 Operations & Handoff Pack hardens doctor/readiness, recover/export, artifact integrity, release handoff, broader fixture coverage, and later-boundary checks.
+- v1+ Expansion remains roadmap scope unless a future owner decision promotes an item with exact contracts, fixtures, fallback behavior, and no projection-as-canonical dependency.
+
+What has been clarified:
+
+- Repository identity is explicit: documentation-only now, future Harness Server source repository after acceptance.
+- The product thesis is explicit: Harness is not a prompt pack, dashboard, broad hosted agent platform, or generated Markdown system.
+- The judgment model separates Approval, Decision Packets, final acceptance, residual-risk acceptance, QA/verification waiver decisions, and Write Authorization.
+- Projections and chat are readable or conversational surfaces, not the operational source of truth.
+- Projection scope is staged: v0.1 may expose freshness/read facts, v0.2 needs enough user-readable output for MVP comprehension, and detailed reports/templates are later-profile scope unless promoted.
+- Security wording is bounded to actual enforcement levels: cooperative, detective, preventive, and isolated claims require the documented capability and fixture-proven path for the covered operation.
+- Agent context is bounded: always-on context stays short and current, with detailed contracts loaded from owner docs or retrieval paths only when needed.
+- Conformance fixture documentation is a staged, future-oriented verification plan. It does not mean executable fixture files or runnable conformance tests exist today.
+
+Remaining open questions:
+
+- No open implementation decisions are currently recorded. The documentation is ready for maintainer acceptance review as a candidate, but it is not accepted until maintainers deliberately update [Documentation acceptance status](#documentation-acceptance-status).
+- If maintainer review finds an implementation decision needed before server coding, record it in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding). Do not leave scattered major-decision TODOs.
+
+## Implementation-readiness criteria
 
 Use this checkpoint to decide what must be true before maintainers can switch the documentation acceptance status from documentation maintenance to first runtime-batch planning. It is a planning handoff only: it does not authorize runtime or server implementation by itself, and it does not define exact schemas, DDL, fixture semantics, or runtime contracts.
 
 First implementation planning means v0.1 Core Authority Slice planning first, not User-Facing Harness MVP, hardened local reference behavior, or roadmap automation. It may start only when all of these are true:
 
-- The final docs-maintenance drift pass is complete, or remaining implementation decisions are recorded in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding). Docs-maintenance remains a read-only documentation check; see [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks) and [Operations And Conformance Reference](../reference/operations-and-conformance.md#docs-maintenance-profile).
+- Repository identity is clear in the root README, docs README, language READMEs, Build docs, and relevant Reference docs: documentation-only now; intended future Harness Server source repository after acceptance; not a Product Repository; not a Harness Runtime Home.
+- The user-facing flow is understandable without requiring users to know internal terms before they can start, resume, unblock, accept, or close work.
+- The judgment model is schema-aligned across Kernel, MCP/API schemas, storage, templates, fixtures, Learn/Use explanations, and glossary terms.
+- Approval, final acceptance, and residual-risk acceptance are distinct in examples, templates, API/schema wording, close behavior, and user-facing routing.
+- MVP stages are coherent: v0.1 Core Authority Slice is not the product MVP; v0.2 is the first user-facing MVP; v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior; v1+ Expansion stays roadmap scope until promoted.
+- Kernel, API, storage, reference, and Build contracts agree on Core ownership, state transitions, write authority, evidence, judgment records, close semantics, idempotency, state conflict behavior, artifacts, projection jobs, and fixture semantics.
+- Projection scope is staged and non-authoritative: readable projections and cards derive from Core records and artifact refs, do not create authority, and do not become the first proof.
+- Security guarantees match actual enforcement levels. Cooperative, detective, preventive, and isolated claims are used only where the documented surface and fixture-proven path support that guarantee for the covered operation.
+- Agent context strategy is defined: always-on context stays one screen or less, current-state based, and profile-scoped; full reference docs, schemas, old logs, and projection bodies are loaded only through appropriate owner/retrieval paths.
+- The conformance fixture plan is staged and future-oriented: Kernel Smoke is the v0.1 authoring profile; later suite profiles align with v0.2, v0.3, v0.4, and promoted v1+ items; no text implies fixture files or runnable conformance tests already exist.
+- Links, TODOs, terminology, and English/Korean semantic parity are clean. There are no unresolved major-decision TODOs scattered through active docs; any implementation decision needed before server coding is recorded in [MVP Plan](mvp-plan.md#implementation-decisions-needed-before-server-coding).
+- The final docs-maintenance drift pass is complete, or any remaining implementation decision is recorded in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding). Docs-maintenance remains a read-only documentation check; see [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks) and [Operations And Conformance Reference](../reference/operations-and-conformance.md#docs-maintenance-profile).
 - The local-only MCP exposure baseline is accepted for v0.1 Core Authority Slice. Remote, shared, tunneled, or non-loopback exposure remains outside the v0.1 baseline unless owner docs promote and prove a connector profile; see [Runtime Architecture](../reference/runtime-architecture.md#local-access-expectations), [Security Threat Model Reference](../reference/security-threat-model.md#mcp-local-access-and-caller-boundaries), and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#mcp-boundary-and-caller-trust).
 - The reference surface capability profile is accepted as a concrete declaration for the actual host/profile/configuration in use, with refresh triggers for version, MCP config, hooks, permissions, workspace policy, generated files, conformance result, capture method, QA capture method, redaction policy, and artifact retention behavior. Exact connector profile and surface recipe details stay in [Agent Integration Reference](../reference/agent-integration.md#capability-profiles) and [Surface Cookbook](../reference/surface-cookbook.md).
 - The Core-only mutation model is accepted: Core alone changes canonical operational state, while resources, projections, reports, diagnostics, MCP callers, and operator entrypoints remain read-only or derived unless they enter a Core state-changing path. See [Core process model](../reference/runtime-architecture.md#core-process-model), [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow), and the MCP [Idempotency](../reference/mcp-api-and-schemas.md#idempotency) and [State conflict behavior](../reference/mcp-api-and-schemas.md#state-conflict-behavior) sections.

@@ -47,9 +47,9 @@ Preserve the core thesis: Harness is not a prompt pack; it is a local authority 
 
 ## Known Redesign Issues / 알려진 재설계 쟁점
 
-The authoritative maintainer tracker is in the [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커). Keep entrypoint summaries short and route redesign details there.
+The authoritative maintainer review checklist is in the [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커). It is not a list of open implementation decisions. Keep entrypoint summaries short and route redesign details there.
 
-재설계 쟁점의 maintainer용 기준 tracker는 [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에 있습니다. 진입점 문서는 짧게 요약하고, 재설계 세부사항은 그곳으로 연결합니다.
+재설계 쟁점의 maintainer용 검토 목록은 [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에 있습니다. 이것은 열린 구현 결정 목록이 아닙니다. 진입점 문서는 짧게 요약하고, 재설계 세부사항은 그곳으로 연결합니다.
 
 ## What Harness Is Not / Harness가 아닌 것
 
@@ -69,16 +69,20 @@ AGENTS.md / agent rule, MCP, skill / reusable workflow, test runner, code review
 
 | Check / 확인 | Current status / 현재 상태 |
 |---|---|
-| Documentation redesign / feedback incorporation / 문서 재설계와 피드백 반영 | Active; acceptance still requires a deliberate maintainer update. / 진행 중입니다. Acceptance는 여전히 maintainer의 명시적 갱신이 필요합니다. |
+| Documentation redesign / review / 문서 재설계와 검토 | Documentation acceptance candidate; maintainer acceptance still requires a deliberate update. / 문서 수락 후보입니다. Acceptance는 여전히 maintainer의 명시적 갱신이 필요합니다. |
 | Docs accepted for implementation planning / 구현 계획을 위한 문서 승인 | Not yet; maintainers must update the handoff status deliberately. / 아직 아닙니다. maintainer가 handoff 상태를 명시적으로 갱신해야 합니다. |
 | Runtime/server implementation / runtime/server 구현 | Not started. / 시작하지 않았습니다. |
-| Open follow-up docs issues / 열려 있는 문서 후속 이슈 | Known redesign issues are tracked in the [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker). They are documentation redesign inputs only: not runtime conformance, not implementation readiness, and not authorization to start server/runtime implementation. Docs accepted for implementation planning remains No unless maintainers deliberately change the handoff status. / 알려진 재설계 쟁점은 [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에서 관리합니다. 이 쟁점은 문서 재설계 입력일 뿐이며, runtime conformance도, 구현 준비 상태도, server/runtime 구현 시작 승인도 아닙니다. 구현 계획을 위한 docs accepted는 maintainer가 handoff 상태를 명시적으로 바꾸기 전까지 여전히 아니오입니다. |
+| Open implementation decisions before server coding / 서버 코딩 전 남은 구현 결정 | None intentionally recorded. New major decisions must be added in one place: [MVP Plan](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) / [MVP 계획](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정). / 의도적으로 남긴 결정은 없습니다. 새 큰 결정은 한 곳에 기록합니다. |
 
 Until the docs-accepted row is deliberately set to Yes in the maintainer handoff status, work remains documentation maintenance and runtime/server implementation must not start.
 
-Handoff status: [English](docs/en/build/implementation-overview.md#documentation-acceptance-status) / [한국어](docs/ko/build/implementation-overview.md#문서-승인-상태).
+Maintainer handoff: [English summary](docs/en/build/implementation-overview.md#maintainer-handoff-summary) / [문서 수락 후보 요약](docs/ko/build/implementation-overview.md#문서-수락-후보-요약). Status: [English](docs/en/build/implementation-overview.md#documentation-acceptance-status) / [한국어](docs/ko/build/implementation-overview.md#문서-승인-상태).
 
 maintainer handoff status에서 문서 승인 항목이 Yes/예로 명시적으로 바뀌기 전까지 작업은 문서 유지보수이며 runtime/server 구현을 시작하면 안 됩니다.
+
+Before starting Harness Server code, implementers should read the maintainer handoff summary, the [implementation-readiness criteria](docs/en/build/implementation-overview.md#implementation-readiness-criteria) / [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), the server-coding decisions section in the MVP Plan, and then the First Runnable Slice.
+
+하네스 서버 코드를 시작하기 전 구현자는 maintainer용 [문서 수락 후보 요약](docs/ko/build/implementation-overview.md#문서-수락-후보-요약), [implementation-readiness criteria](docs/en/build/implementation-overview.md#implementation-readiness-criteria) / [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), MVP 계획의 서버 코딩 전 결정 section, 그리고 첫 실행 가능한 조각을 차례로 확인해야 합니다.
 
 ## Start Here / 시작하기
 
