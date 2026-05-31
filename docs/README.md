@@ -16,6 +16,12 @@ The [Authoring Guide](en/maintain/authoring-guide.md#current-redesign-scope) own
 
 전체 재설계 범위와 보존 원칙은 [문서 작성 가이드](ko/maintain/authoring-guide.md#현재-재설계-범위)가 담당합니다. 유지보수자용 [문서 수락 후보 요약](ko/build/implementation-overview.md#문서-수락-후보-요약)과 [하네스 서버 구현 준비 조건](ko/build/implementation-overview.md#하네스-서버-구현-준비-조건)은 구현 개요에 있습니다.
 
+## Current Review Baseline / 현재 검토 기준
+
+The current documentation set is in post-redesign review. It is not fully accepted, implementation-complete, or approved for server coding. Runtime/server implementation has not started.
+
+현재 문서 세트는 재설계 이후 검토 상태입니다. 완전히 수락되었거나, 구현 완료되었거나, 서버 코딩이 승인된 상태가 아닙니다. Runtime/server 구현은 시작하지 않았습니다.
+
 ## Choose A Language / 언어 선택
 
 | Language / 언어 | Entry point / 진입점 |
@@ -67,6 +73,6 @@ Use the language-specific entrypoints for detailed document roles, Reference own
 | Full task tutorial / 전체 작업 튜토리얼 | [Harness in One Task](en/learn/harness-in-one-task.md) | [하나의 작업으로 보는 하네스](ko/learn/harness-in-one-task.md) |
 | Decision examples / 판단 예시 | [Decision Packet Cookbook](en/use/decision-packet-cookbook.md) | [결정 패킷 Cookbook](ko/use/decision-packet-cookbook.md) |
 
-Maintainer review risks are tracked in the [English Authoring Guide](en/maintain/authoring-guide.md#known-redesign-issues-tracker) and [Korean Authoring Guide](ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커). They are not open implementation decisions.
+Maintainer review risks are tracked in the [English Authoring Guide](en/maintain/authoring-guide.md#known-redesign-issues-tracker) and [Korean Authoring Guide](ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커). The tracker separates observed drift, candidates to verify, regression checks, and baseline status checks. Server-coding decisions belong in the MVP Plan.
 
-유지보수자 검토 위험은 [영어 문서 작성 가이드](en/maintain/authoring-guide.md#known-redesign-issues-tracker)와 [한국어 문서 작성 가이드](ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에서 관리합니다. 열린 구현 결정이 아닙니다.
+유지보수자 검토 위험은 [영어 문서 작성 가이드](en/maintain/authoring-guide.md#known-redesign-issues-tracker)와 [한국어 문서 작성 가이드](ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에서 관리합니다. 이 tracker는 현재 문서에서 확인된 drift, 확인 대상 후보, 회귀 방지 점검, 기준 상태 점검을 구분합니다. 서버 코딩 전 결정은 MVP 계획에 기록합니다.

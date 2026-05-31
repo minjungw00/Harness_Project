@@ -99,9 +99,9 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 
 ### 서버 코딩 전 필요한 구현 결정
 
-이 인계에서는 schema ownership, stage boundary, security guarantee, projection scope, judgment model, repository identity에 대해 기록된 구현 시작 전 결정이 없습니다. 이 문서는 유지보수자 검토를 위한 문서 수락 후보로 준비되어 있지만, [구현 개요: 문서 승인 상태](implementation-overview.md#문서-승인-상태)를 유지보수자가 명시적으로 바꾸기 전까지 수락된 것이 아닙니다.
+결정 기록 기준: 현재 기준에서는 이곳에 의도적으로 기록된 주요 구현 결정이 없습니다. 이것은 결정이 존재하지 않는다는 증명이 아닙니다. 이 문서는 유지보수자 수락 검토 대상 후보이지만, [구현 개요: 문서 승인 상태](implementation-overview.md#문서-승인-상태)를 유지보수자가 명시적으로 바꾸기 전까지 수락된 것이 아닙니다.
 
-큰 구현 결정을 흩어진 TODO로 남기지 않습니다. 유지보수자 검토 또는 첫 런타임 배치 계획에서 새 결정이 발견되면, server code나 DDL을 바꾸기 전에 담당 문서, 영향받는 field 또는 동작, 단계 영향, 검토한 option, 필요한 결정을 이곳에 기록합니다.
+큰 구현 결정을 흩어진 TODO나 막연한 follow-up으로 남기지 않습니다. 현재 검토 또는 첫 런타임 배치 계획에서 새 결정이 발견되면, server code나 DDL을 바꾸기 전에 담당 문서, 영향받는 동작 또는 field, 영향을 받는 단계, 검토한 option, 필요한 결정을 이곳에 기록합니다.
 
 ### 코어 권한 조각 흐름
 

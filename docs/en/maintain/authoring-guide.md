@@ -40,7 +40,11 @@ Family boundaries:
 
 ## Current Redesign Scope
 
-This repository is in documentation review/redesign only. The current documentation set is a documentation acceptance candidate for maintainer review, but maintainers must still accept it deliberately before first runtime-batch planning. Documentation edits may change source docs, but they do not start Harness server/runtime implementation or authorize implementation planning.
+### Current Review Baseline
+
+This repository is in documentation review/redesign only. The current documentation set is in post-redesign review and is a documentation acceptance candidate for maintainer review, but maintainers must still accept it deliberately before first runtime-batch planning. The repository remains documentation-only and is intended to become the Harness Server source repository after documentation acceptance. Runtime/server implementation has not started. Do not describe the current docs as fully accepted, implementation-complete, or ready for server coding unless the maintainer handoff status explicitly defines that acceptance.
+
+Documentation edits may change source docs, but they do not start Harness server/runtime implementation or authorize implementation planning.
 
 The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization. Do not preserve existing prose merely for continuity when it conflicts with the clarified product thesis or implementation feasibility.
 
@@ -63,24 +67,43 @@ When a rewrite changes a term, stage, schema shape, projection shape, security c
 
 [Implementation Overview: Maintainer handoff summary](../build/implementation-overview.md#maintainer-handoff-summary) owns the short handoff: current phase, future repository role, preserved principles, current stage model, implementation-readiness criteria, and remaining open-question status.
 
-[MVP Plan: Implementation decisions needed before server coding](../build/mvp-plan.md#implementation-decisions-needed-before-server-coding) is the single place for major implementation decisions found during maintainer review or first runtime-batch planning. Do not leave major decisions as scattered `TODO_DECISION` markers in active docs. If no open decisions remain, say the documentation is ready for maintainer acceptance review as a candidate, while preserving the separate fact that acceptance is still pending until maintainers update the status table.
+[MVP Plan: Implementation decisions needed before server coding](../build/mvp-plan.md#implementation-decisions-needed-before-server-coding) is the single place for major implementation decisions found during maintainer review or first runtime-batch planning. Do not leave major decisions as scattered `TODO_DECISION` markers in active docs. If no major decisions are deliberately recorded at the current baseline, say exactly that and preserve the separate facts that review may still uncover decisions and acceptance is still pending until maintainers update the status table.
 
 ## Known Redesign Issues Tracker
 
-Use this tracker as the maintainer handoff review checklist for areas that commonly drift. These are maintainer-facing review risks, not open implementation decisions, runtime implementation tasks, runtime conformance, or acceptance records. At handoff, no item below is intentionally left as a server-coding decision; if review finds one, record it in [MVP Plan: Implementation decisions needed before server coding](../build/mvp-plan.md#implementation-decisions-needed-before-server-coding).
+Use this tracker as the maintainer handoff review checklist for areas that commonly drift. These are maintainer-facing review risks, not open implementation decisions, runtime implementation tasks, runtime conformance, or acceptance records. They do not prove implementation readiness, and they do not authorize server/runtime implementation.
 
-| Review risk | Editing rule |
-|---|---|
-| User-facing docs overuse internal terms. | Explain the user-visible situation first; introduce internal terms only when they help the reader act. |
-| Repository identity as the future Harness Server source repository can drift. | Keep entry points clear that the repo is currently documentation-only and is intended to become the Harness Server source repository after documentation acceptance. |
-| Discovery / requirements clarification may converge too early on a Change Unit. | Leave room for early discovery before requiring a scoped implementation unit. |
-| `judgment_domain` documentation can drift from the schema-owned enum. | Keep user-facing labels, examples, templates, fixtures, storage owner maps, and Decision Packet docs aligned with the schema-owned `judgment_domain` enum; do not reintroduce provisional display-only category language. |
-| Approval, acceptance, and residual-risk acceptance are too easy to confuse. | Keep permission to proceed, final acceptance, and residual-risk acceptance separate in examples and routing text. |
-| Current MVP staging may be too large while deferring core user-visible value. | Name the tension between MVP size and early user-visible value; leave staging decisions to the owning Build and Reference docs. |
-| Projection/template scope may be too broad for early implementation. | Flag broad early scope and route staging decisions to the projection/template owners. |
-| Security guarantee wording must match actual enforcement level. | Use cooperative, detective, preventive, or isolated wording only when the documented surface can provide that level. |
-| Agent context strategy must prevent excessive prompt/context load. | Keep always-on agent context short and route details to owner docs or retrieval paths. |
-| Documentation can drift into runtime-object language. | Use the separation rule in Current Redesign Scope: maintain docs as source material, not runtime state or generated projections. |
+Tracker status meanings:
+
+- Observed in the current docs: this pass or a maintainer review found the drift in active docs. The row should name enough location/context to route the fix.
+- Candidate to verify in the current docs: the risk is plausible, but this pass has not proved it is present. Verify before treating it as observed drift or a server-coding blocker.
+- Regression-prevention check: current wording is believed acceptable for this baseline, but future edits must not reintroduce the drift.
+- Baseline status check: entrypoints and handoff sections must preserve the current repository status.
+
+Do not label an issue "non-blocking" unless the docs name what stage it does not block and what later stage it may block. Do not hide implementation-readiness concerns under vague "follow-up" wording; name the owner, affected stage, and decision or edit needed.
+
+Rows marked "Candidate to verify in the current docs" are not assertions that the drift is currently present. If verification shows a major implementation decision is needed, record it in [MVP Plan: Implementation decisions needed before server coding](../build/mvp-plan.md#implementation-decisions-needed-before-server-coding) with owner doc, affected behavior or field, affected stage, options, and decision needed.
+
+| Review risk | Tracker status | Editing rule |
+|---|---|---|
+| Repository identity as the future Harness Server source repository can drift. | Baseline status check. | Keep entrypoints clear that the repo is currently documentation-only, is in post-redesign review, is intended to become the Harness Server source repository after documentation acceptance, and has not started runtime/server implementation. |
+| Stage names can still imply v0.1, Kernel Smoke, or a legacy "v0.1 Kernel MVP" label is the product MVP. | Candidate to verify in the current docs. | Say v0.1 Core Authority Slice is an internal authority-loop milestone, Kernel Smoke is its narrow conformance authoring profile, and v0.2 User-Facing Harness MVP is the first product MVP. |
+| User-facing docs may open with heavy implementation disclaimers. | Candidate to verify in the current docs. | For user-facing docs, lead with the user-visible problem and route status caveats to entrypoints or Build docs. Keep required implementation disclaimers compact and away from the first user mental model when possible. |
+| User-facing docs overuse internal terms. | Candidate to verify in the current docs. | Explain the user-visible situation first; introduce internal terms only when they help the reader act. |
+| Discovery / requirements clarification may converge too early on a Change Unit or the first safe implementation unit. | Candidate to verify in the current docs. | Leave room for early discovery, shared understanding, and user-owned decisions before requiring a scoped implementation unit. |
+| `judgment_domain` ownership/status can drift. | Regression-prevention check. | Active owner docs define `judgment_domain` as schema-owned. Keep non-owner docs aligned with those owners, and do not describe it as display-only in one place and schema-owned in another. If the intended ownership changes, owner docs must make that explicit before non-owner docs follow. |
+| Decision Packet schema and examples may feel too heavy for small decisions. | Candidate to verify in the current docs. | Keep the schema owner authoritative, but make small-decision examples and stage profiles lightweight. If field requiredness or payload shape needs a real implementation change, record it in the MVP Plan with stage impact. |
+| Approval, acceptance, and residual-risk acceptance are too easy to confuse. | Regression-prevention check. | Keep permission to proceed, final acceptance, and residual-risk acceptance separate in examples and routing text. |
+| Storage/DDL can present future-profile tables, fields, or gates as required too early. | Candidate to verify in the current docs. | Distinguish reference-schema presence from staged implementation requirement. Required fields apply when the owning tool, record, or profile is implemented or used; they do not by themselves expand the smallest runnable slice. |
+| Conformance fixture docs may be too detailed for the current implementation stage. | Candidate to verify in the current docs. | Keep fixture documentation future-oriented and staged. Do not imply executable fixture files or runnable Harness Server conformance tests exist now. |
+| Operations entrypoints may appear required too early. | Candidate to verify in the current docs. | Keep operator entrypoints staged and future-oriented unless the relevant Build stage explicitly includes them. They must not become a prerequisite for v0.1 by wording drift. |
+| Korean user-facing docs may still contain excessive English technical nouns. | Candidate to verify in the current docs. | Use natural Korean first. Preserve exact English identifiers only for stable labels, schema names, file names, enum values, API fields, and places where precision needs the identifier. |
+| "No open implementation decisions" wording can sound too optimistic. | Regression-prevention check. | Prefer "no major implementation decisions are deliberately recorded at this baseline" and say review may still uncover a decision. Do not imply full acceptance, implementation completeness, or server-coding readiness. |
+| Current MVP staging may be too large while deferring core user-visible value. | Candidate to verify in the current docs. | Name the tension between MVP size and early user-visible value; leave staging decisions to the owning Build and Reference docs. |
+| Projection/template scope may be too broad for early implementation. | Candidate to verify in the current docs. | Flag broad early scope and route staging decisions to the projection/template owners. |
+| Security guarantee wording must match actual enforcement level. | Regression-prevention check. | Use cooperative, detective, preventive, or isolated wording only when the documented surface can provide that level. |
+| Agent context strategy must prevent excessive prompt/context load. | Regression-prevention check. | Keep always-on agent context short and route details to owner docs or retrieval paths. |
+| Documentation can drift into runtime-object language. | Regression-prevention check. | Use the separation rule in Current Redesign Scope: maintain docs as source material, not runtime state or generated projections. |
 
 ## Documentation principles
 
@@ -319,7 +342,7 @@ Use these result meanings:
 | Result | Meaning |
 |---|---|
 | `FAIL` | Drift can make active docs contradictory or non-actionable, such as broken owner links, schema/DDL/enum/stable event/`ValidatorResult`/`ProjectionKind` mismatch, missing paired active files, missing semantic section coverage, or non-owner text redefining an owner contract. Idiomatic heading text or minor grouping differences are not failures when owner links, stable identifiers, and reviewability remain clear. |
-| `WARN` | Drift should be cleaned up but does not yet contradict an owner contract, such as minor glossary phrasing drift, duplicate explanatory prose that is not normative, stale but non-blocking cross-reference wording, or incomplete TODO metadata that is still understandable. |
+| `WARN` | Drift should be cleaned up but does not yet contradict an owner contract, such as minor glossary phrasing drift, duplicate explanatory prose that is not normative, stale cross-reference wording whose affected stage is explicit, or incomplete TODO metadata that is still understandable. |
 | `PASS` | No relevant drift is found for the category. |
 
 Required check categories:

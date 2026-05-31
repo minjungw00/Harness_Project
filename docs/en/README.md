@@ -13,6 +13,10 @@ Harness solves four recurring problems:
 - Evidence, verification, QA, and completion claims get mixed.
 - Chat or Markdown output is mistaken for operational truth.
 
+## Current Review Baseline
+
+The current documentation set is in post-redesign review. This repository is still documentation-only, is intended to become the future Harness Server source repository after documentation acceptance, and has not started runtime/server implementation. The docs are not fully accepted, implementation-complete, or approved for server coding.
+
 ## Primary Reader Path
 
 Use this path when you do not know where to start:
@@ -63,11 +67,11 @@ This repository's current role is documentation review/redesign. Its intended fu
 
 ## Documentation Redesign Scope
 
-Documentation acceptance and implementation-planning status are tracked in [Implementation Overview](build/implementation-overview.md#documentation-acceptance-status). The current revision is a documentation acceptance candidate for maintainer review, not an accepted implementation start.
+Documentation acceptance and implementation-planning status are tracked in [Implementation Overview](build/implementation-overview.md#documentation-acceptance-status). The current revision is a documentation acceptance candidate in post-redesign review, not an accepted implementation start.
 
 The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization. Preserve the clarified product thesis and feasible implementation path over continuity with existing prose.
 
-The [Authoring Guide](maintain/authoring-guide.md#current-redesign-scope) owns the full redesign scope, preserved principles, document-family guidance, and maintainer review checklist.
+The [Authoring Guide](maintain/authoring-guide.md#current-redesign-scope) owns the full redesign scope, preserved principles, document-family guidance, and maintainer review checklist. Its tracker separates observed drift, candidates to verify, regression checks, and baseline status checks.
 
 ## Maintainer Handoff
 
@@ -76,9 +80,9 @@ Before starting Harness Server code, implementers should read:
 1. [Maintainer handoff summary](build/implementation-overview.md#maintainer-handoff-summary) for the current phase, preserved principles, stage model, clarified boundaries, and open-question status.
 2. [Documentation acceptance status](build/implementation-overview.md#documentation-acceptance-status) to confirm maintainers have accepted first runtime-batch planning.
 3. [Implementation-readiness criteria](build/implementation-overview.md#implementation-readiness-criteria) for the checks that must be true before the status changes.
-4. [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding) for any remaining decisions. As of this handoff, none are intentionally recorded.
+4. [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding) for any major decisions current review uncovers. At this baseline, none are deliberately recorded there.
 
-This handoff says the documentation is ready for maintainer acceptance review as a candidate. It does not claim the docs have been accepted, and it does not start server/runtime implementation.
+This handoff says the documentation is available for maintainer acceptance review as a candidate. It does not claim the docs have been accepted, and it does not start server/runtime implementation.
 
 ## What Harness Is Not
 

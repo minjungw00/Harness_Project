@@ -40,7 +40,11 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 ## 현재 재설계 범위
 
-이 저장소는 문서 검토와 재설계 단계입니다. 현재 문서 세트는 유지보수자 검토를 위한 문서 수락 후보이지만, 첫 런타임 배치 계획 전에 유지보수자가 명시적으로 수락해야 합니다. 문서 편집은 문서 원본을 바꿀 수 있지만, 하네스 서버/런타임 구현을 시작하거나 구현 계획을 승인하지 않습니다.
+### 현재 검토 기준
+
+이 저장소는 문서 검토와 재설계 단계입니다. 현재 문서 세트는 재설계 이후 검토 상태이며 유지보수자 검토를 위한 문서 수락 후보입니다. 첫 런타임 배치 계획 전에 유지보수자가 명시적으로 수락해야 합니다. 이 저장소는 아직 문서 전용이며, 문서 승인 이후 하네스 서버 소스 저장소가 되는 것을 목표로 합니다. Runtime/server 구현은 시작하지 않았습니다. 유지보수자 인계 상태가 명시적으로 정의하기 전까지 현재 문서를 완전히 수락되었거나, 구현 완료되었거나, 서버 코딩을 시작해도 되는 상태로 설명하지 않습니다.
+
+문서 편집은 문서 원본을 바꿀 수 있지만, 하네스 서버/런타임 구현을 시작하거나 구현 계획을 승인하지 않습니다.
 
 이번 재설계에서는 용어, MVP 단계, 스키마(schema) 구조, 투영(projection) 구조, 보안 표현, 문서 구성이 바뀔 수 있습니다. 정리된 제품 명제나 구현 가능성과 충돌하는 기존 문구는 연속성만으로 보존하지 않습니다.
 
@@ -63,24 +67,43 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 [구현 개요: 문서 수락 후보 요약](../build/implementation-overview.md#문서-수락-후보-요약)이 짧은 인계 요약을 담당합니다. 여기에 현재 단계, 향후 저장소 역할, 보존 원칙, 현재 단계 모델, 하네스 서버 구현 준비 조건, 남은 질문 상태를 둡니다.
 
-[MVP 계획: 서버 코딩 전 필요한 구현 결정](../build/mvp-plan.md#서버-코딩-전-필요한-구현-결정)은 유지보수자 검토나 첫 런타임 배치 계획에서 발견된 큰 구현 결정을 기록하는 단일 위치입니다. 큰 결정을 active docs 곳곳의 `TODO_DECISION`으로 남기지 않습니다. 열린 결정이 없다면 문서가 유지보수자 수락 검토를 받을 준비가 된 후보라고 말하되, 유지보수자가 상태 표를 바꾸기 전까지 수락은 아직 pending이라는 사실을 유지합니다.
+[MVP 계획: 서버 코딩 전 필요한 구현 결정](../build/mvp-plan.md#서버-코딩-전-필요한-구현-결정)은 유지보수자 검토나 첫 런타임 배치 계획에서 발견된 큰 구현 결정을 기록하는 단일 위치입니다. 큰 결정을 active docs 곳곳의 `TODO_DECISION`으로 남기지 않습니다. 현재 기준에서 의도적으로 기록된 주요 결정이 없다면 정확히 그렇게 말하고, 검토에서 새 결정이 드러날 수 있으며 유지보수자가 상태 표를 바꾸기 전까지 수락은 아직 pending이라는 사실을 함께 유지합니다.
 
 ## 알려진 재설계 쟁점 트래커
 
-이 tracker는 drift가 자주 생기는 영역을 확인하는 maintainer 검토 checklist로 사용합니다. 아래 항목은 maintainer용 review risk이지 열린 구현 결정, runtime 구현 작업, runtime conformance, acceptance record가 아닙니다. 이 인계 기준으로 아래 항목 중 서버 코딩 전 결정으로 의도적으로 남긴 것은 없습니다. Review 중 결정이 발견되면 [MVP 계획: 서버 코딩 전 필요한 구현 결정](../build/mvp-plan.md#서버-코딩-전-필요한-구현-결정)에 기록합니다.
+이 tracker는 drift가 자주 생기는 영역을 확인하는 maintainer 검토 checklist로 사용합니다. 아래 항목은 maintainer용 review risk이지 열린 구현 결정, runtime 구현 작업, runtime conformance, acceptance record가 아닙니다. 이 tracker는 구현 준비 상태를 증명하지 않으며 server/runtime 구현을 승인하지 않습니다.
 
-| 검토 risk | 편집 규칙 |
-|---|---|
-| 사용자용 문서에 내부 용어가 너무 많습니다. | 사용자가 보는 상황을 먼저 설명하고, 내부 용어는 행동에 도움이 될 때만 소개합니다. |
-| 이 저장소가 앞으로 하네스 서버 소스 저장소가 된다는 설명이 흐려질 수 있습니다. | 현재는 문서 전용이며, 문서 승인 이후 하네스 서버 소스 저장소가 될 의도임을 진입점 문서에서 분명히 유지합니다. |
-| 요구사항 탐색(discovery)과 확인이 구현 단위(Change Unit)로 너무 빨리 수렴할 수 있습니다. | 범위가 정해진 구현 단위를 요구하기 전에 초기 discovery 여지를 남깁니다. |
-| `judgment_domain` 문서가 schema-owned enum과 어긋날 수 있습니다. | 사용자에게 보이는 label, 예시, template, fixture, storage owner map, Decision Packet 문서를 schema-owned `judgment_domain` enum과 맞춥니다. 임시 display-only category 표현을 다시 도입하지 않습니다. |
-| Approval, acceptance, 잔여 위험 수용을 혼동하기 쉽습니다. | 진행 허가, 작업 수락, 잔여 위험 수용을 예시와 routing text에서 분리합니다. |
-| 현재 MVP 단계가 너무 크고, 핵심 사용자 가치를 뒤로 미룰 수 있습니다. | MVP 크기와 초기 사용자 가치 사이의 긴장을 드러냅니다. Staging 결정은 owning Build/Reference 문서에 남깁니다. |
-| Projection/template 범위가 초기 구현에 비해 넓을 수 있습니다. | 초기 범위가 넓다는 점을 표시하고, staging 결정은 projection/template owner로 보냅니다. |
-| 보안 보장 표현은 실제 강제 수준과 맞아야 합니다. | Cooperative, detective, preventive, isolated 표현은 해당 surface가 그 수준을 제공할 때만 사용합니다. |
-| Agent context 전략은 prompt/context 부담이 과도해지지 않게 해야 합니다. | 항상 주입되는 agent context는 짧게 유지하고, 세부사항은 담당 문서나 조회 경로로 보냅니다. |
-| 문서가 런타임 객체처럼 읽힐 수 있습니다. | 현재 재설계 범위의 분리 규칙을 따릅니다. 문서는 원천 자료이며 runtime state나 generated projection이 아닙니다. |
+Tracker 상태 의미:
+
+- 현재 문서에서 확인된 drift: 이번 pass 또는 유지보수자 검토에서 활성 문서 안의 drift를 확인한 상태입니다. 고칠 위치를 잡을 수 있을 만큼의 맥락을 함께 남깁니다.
+- 확인 대상 후보: 그럴 가능성이 있는 risk이지만, 이번 pass에서 실제 존재를 증명하지 않았습니다. 확인 전에는 관찰된 drift나 서버 코딩 blocker로 취급하지 않습니다.
+- 회귀 방지 점검: 현재 기준에서는 문구가 괜찮다고 보지만, 이후 편집에서 같은 drift를 다시 들여오면 안 됩니다.
+- 기준 상태 점검: 진입점과 인계 섹션이 현재 저장소 상태를 계속 정확히 말해야 합니다.
+
+문제를 "non-blocking"이라고 부르려면 어떤 단계에는 막지 않는지, 어떤 이후 단계에는 막을 수 있는지 함께 적어야 합니다. 구현 준비 우려를 막연한 "follow-up"으로 숨기지 말고 담당 문서, 영향을 받는 단계, 필요한 결정 또는 편집을 이름 붙입니다.
+
+상태가 "확인 대상 후보"인 행은 현재 drift가 실제로 존재한다는 주장으로 읽지 않습니다. 확인 결과 서버 코딩 전 결정이 필요하면 [MVP 계획: 서버 코딩 전 필요한 구현 결정](../build/mvp-plan.md#서버-코딩-전-필요한-구현-결정)에 담당 문서, 영향을 받는 동작 또는 field, 영향을 받는 단계, 선택지, 필요한 결정을 기록합니다.
+
+| 검토 risk | Tracker 상태 | 편집 규칙 |
+|---|---|---|
+| 이 저장소가 앞으로 하네스 서버 소스 저장소가 된다는 설명이 흐려질 수 있습니다. | 기준 상태 점검. | 현재는 문서 전용이고, 재설계 이후 검토 상태이며, 문서 승인 이후 하네스 서버 소스 저장소가 될 의도이고, runtime/server 구현은 시작하지 않았다는 점을 진입점 문서에서 분명히 유지합니다. |
+| Stage 이름이 v0.1, Kernel Smoke, 또는 예전 "v0.1 Kernel MVP" 표현을 제품 MVP처럼 보이게 할 수 있습니다. | 확인 대상 후보. | v0.1 Core Authority Slice는 내부 authority loop milestone이고, Kernel Smoke는 그 좁은 conformance 작성 프로파일이며, v0.2 User-Facing Harness MVP가 첫 제품 MVP라고 말합니다. |
+| 사용자용 문서가 무거운 구현 disclaimer로 시작할 수 있습니다. | 확인 대상 후보. | 사용자용 문서는 사용자가 보는 문제부터 시작하고 상태 caveat는 진입점이나 Build 문서로 보냅니다. 필요한 구현 disclaimer도 작게 유지하고 가능하면 첫 이해 모델 앞을 차지하지 않게 합니다. |
+| 사용자용 문서에 내부 용어가 너무 많습니다. | 확인 대상 후보. | 사용자가 보는 상황을 먼저 설명하고, 내부 용어는 행동에 도움이 될 때만 소개합니다. |
+| 요구사항 탐색(discovery)과 확인이 Change Unit 또는 첫 안전한 구현 단위로 너무 빨리 수렴할 수 있습니다. | 확인 대상 후보. | 범위가 정해진 구현 단위를 요구하기 전에 초기 discovery, 공유 이해, 사용자 소유 판단의 여지를 남깁니다. |
+| `judgment_domain` 소유권과 상태가 drift될 수 있습니다. | 회귀 방지 점검. | 활성 담당 문서는 `judgment_domain`을 schema-owned로 정의합니다. 담당 문서 밖의 설명은 그 기준과 맞추고, 한곳에서는 display-only라고 하면서 다른 곳에서는 schema-owned라고 말하지 않습니다. 의도한 소유권이 바뀐다면 먼저 담당 문서가 명시해야 합니다. |
+| 작은 결정을 다루기에 Decision Packet schema와 예시가 너무 무거워 보일 수 있습니다. | 확인 대상 후보. | Schema owner는 유지하되 작은 결정 예시와 stage profile은 가볍게 보여줍니다. Field requiredness나 payload shape에 실제 구현 변경이 필요하면 단계 영향을 적어 MVP 계획에 기록합니다. |
+| Approval, 작업 수락, 잔여 위험 수용을 혼동하기 쉽습니다. | 회귀 방지 점검. | 진행 허가, 작업 수락, 잔여 위험 수용을 예시와 routing text에서 분리합니다. |
+| Storage/DDL이 future-profile table, field, gate를 너무 이른 필수 범위처럼 보이게 할 수 있습니다. | 확인 대상 후보. | Reference schema에 존재한다는 사실과 단계별 구현 요구를 구분합니다. Required field는 담당 tool, record, profile이 구현되거나 사용될 때 적용되며, 그 자체로 가장 작은 runnable slice를 키우지 않습니다. |
+| Conformance fixture 문서가 현재 구현 단계에 비해 너무 자세할 수 있습니다. | 확인 대상 후보. | Fixture 문서는 단계화된 향후 계획으로 유지합니다. 현재 executable fixture file이나 runnable Harness Server conformance test가 있다는 인상을 주지 않습니다. |
+| Operations entrypoint가 너무 이른 단계의 필수 요소처럼 보일 수 있습니다. | 확인 대상 후보. | 관련 Build 단계가 명시적으로 포함하기 전까지 operator entrypoint는 단계화된 향후 범위로 둡니다. 문구 drift 때문에 v0.1 전제 조건이 되면 안 됩니다. |
+| 한국어 사용자용 문서에 영어 기술 명사가 과도하게 남을 수 있습니다. | 확인 대상 후보. | 자연스러운 한국어를 먼저 씁니다. 정확한 English identifier는 stable label, schema name, file name, enum value, API field, 또는 정밀도가 필요한 곳에서만 유지합니다. |
+| "No open implementation decisions" 문구가 지나치게 낙관적으로 들릴 수 있습니다. | 회귀 방지 점검. | "현재 기준에서는 주요 구현 결정이 의도적으로 기록되어 있지 않음"처럼 쓰고, 검토에서 새 결정이 발견될 수 있음을 함께 말합니다. 완전 수락, 구현 완료, 서버 코딩 준비 상태를 암시하지 않습니다. |
+| 현재 MVP 단계가 너무 크고, 핵심 사용자 가치를 뒤로 미룰 수 있습니다. | 확인 대상 후보. | MVP 크기와 초기 사용자 가치 사이의 긴장을 드러냅니다. Staging 결정은 owning Build/Reference 문서에 남깁니다. |
+| Projection/template 범위가 초기 구현에 비해 넓을 수 있습니다. | 확인 대상 후보. | 초기 범위가 넓다는 점을 표시하고, staging 결정은 projection/template owner로 보냅니다. |
+| 보안 보장 표현은 실제 강제 수준과 맞아야 합니다. | 회귀 방지 점검. | Cooperative, detective, preventive, isolated 표현은 해당 surface가 그 수준을 제공할 때만 사용합니다. |
+| Agent context 전략은 prompt/context 부담이 과도해지지 않게 해야 합니다. | 회귀 방지 점검. | 항상 주입되는 agent context는 짧게 유지하고, 세부사항은 담당 문서나 조회 경로로 보냅니다. |
+| 문서가 런타임 객체처럼 읽힐 수 있습니다. | 회귀 방지 점검. | 현재 재설계 범위의 분리 규칙을 따릅니다. 문서는 원천 자료이며 runtime state나 generated projection이 아닙니다. |
 
 ## 문서 작성 원칙
 
@@ -319,7 +342,7 @@ Result 의미:
 | Result | Meaning |
 |---|---|
 | `FAIL` | 깨진 owner 링크, schema/DDL/enum/stable event/`ValidatorResult`/`ProjectionKind` 불일치, 대응되는 활성 파일 누락, 의미상 같은 섹션 범위 누락, owner 계약을 다시 정의하는 owner가 아닌 문서의 본문처럼 활성 문서를 모순되거나 실행하기 어렵게 만들 수 있는 drift입니다. Owner 링크, stable identifier, 검토 가능성이 분명하다면 자연스러운 heading text나 작은 묶음 차이는 실패가 아닙니다. |
-| `WARN` | 작은 용어집 표현 차이, 규범적이지 않은 중복 설명문, 오래되었지만 차단적이지 않은 교차 참조 문구, incomplete하지만 이해 가능한 TODO metadata처럼 정리해야 하지만 아직 owner 계약과 모순되지는 않는 drift입니다. |
+| `WARN` | 작은 용어집 표현 차이, 규범적이지 않은 중복 설명문, 영향을 받는 단계가 명확한 오래된 교차 참조 문구, incomplete하지만 이해 가능한 TODO metadata처럼 정리해야 하지만 아직 owner 계약과 모순되지는 않는 drift입니다. |
 | `PASS` | 해당 category에서 relevant drift가 발견되지 않았습니다. |
 
 필수 점검 범주:

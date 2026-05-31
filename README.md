@@ -47,9 +47,9 @@ Preserve the core thesis: Harness is not a prompt pack; it is a local authority 
 
 ## Known Redesign Issues / 알려진 재설계 쟁점
 
-The authoritative maintainer review checklist is in the [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커). It is not a list of open implementation decisions. Keep entrypoint summaries short and route redesign details there.
+The maintainer review tracker is in the [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커). It separates observed drift, candidates to verify, regression checks, and baseline status checks. Major implementation decisions belong in the MVP Plan.
 
-재설계 쟁점의 유지보수자용 검토 점검 목록은 [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에 있습니다. 이것은 열린 구현 결정 목록이 아닙니다. 진입점 문서는 짧게 요약하고, 재설계 세부사항은 그곳으로 연결합니다.
+유지보수자 검토 tracker는 [Authoring Guide](docs/en/maintain/authoring-guide.md#known-redesign-issues-tracker) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)에 있습니다. 현재 문서에서 확인된 drift, 확인 대상 후보, 회귀 방지 점검, 기준 상태 점검을 구분합니다. 서버 코딩 전 결정은 MVP 계획에 기록합니다.
 
 ## What Harness Is Not / Harness가 아닌 것
 
@@ -65,14 +65,18 @@ For role-by-role comparison with AGENTS.md / agent rules, MCP, skills / reusable
 
 AGENTS.md / agent rule, MCP, skill / reusable workflow, test runner, code review, spec과의 역할별 비교는 아래 언어별 진입점을 봅니다.
 
-## Current Phase / 현재 단계
+## Current Review Baseline / 현재 검토 기준
+
+The current baseline is post-redesign review. This repository remains documentation-only, is intended to become the future Harness Server source repository after documentation acceptance, and has not started runtime/server implementation. It is not fully accepted, implementation-complete, or approved for server coding.
+
+현재 기준은 재설계 이후 검토 상태입니다. 이 저장소는 계속 문서 전용이며, 문서 승인 이후 미래의 하네스 서버 소스 저장소가 되는 것을 목표로 하고, 아직 runtime/server 구현은 시작하지 않았습니다. 완전히 수락되었거나, 구현 완료되었거나, 서버 코딩이 승인된 상태가 아닙니다.
 
 | Check / 확인 | Current status / 현재 상태 |
 |---|---|
-| Documentation redesign / review / 문서 재설계와 검토 | Documentation acceptance candidate; maintainer acceptance still requires a deliberate update. / 문서 수락 후보입니다. 수락은 여전히 유지보수자의 명시적 갱신이 필요합니다. |
+| Documentation redesign / review / 문서 재설계와 검토 | Post-redesign review state; documentation acceptance candidate only. / 재설계 이후 검토 상태이며 문서 수락 후보일 뿐입니다. |
 | Docs accepted for implementation planning / 구현 계획을 위한 문서 승인 | Not yet; maintainers must update the handoff status deliberately. / 아직 아닙니다. 유지보수자가 인계 상태를 명시적으로 갱신해야 합니다. |
 | Runtime/server implementation / runtime/server 구현 | Not started. / 시작하지 않았습니다. |
-| Open implementation decisions before server coding / 서버 코딩 전 남은 구현 결정 | None intentionally recorded. New major decisions must be added in one place: [MVP Plan](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) / [MVP 계획](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정). / 의도적으로 남긴 결정은 없습니다. 새 큰 결정은 한 곳에 기록합니다. |
+| Major implementation decisions before server coding / 서버 코딩 전 주요 구현 결정 | No major decisions are deliberately recorded at this baseline; current review may uncover one. New major decisions must be added in one place: [MVP Plan](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) / [MVP 계획](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정). / 현재 기준에서 의도적으로 기록된 주요 결정은 없습니다. 다만 현재 검토에서 새 결정이 발견될 수 있습니다. 새 주요 결정은 한 곳에 기록합니다. |
 
 Until the docs-accepted row is deliberately set to Yes in the maintainer handoff status, work remains documentation maintenance and runtime/server implementation must not start.
 

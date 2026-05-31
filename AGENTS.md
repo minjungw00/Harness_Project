@@ -1,12 +1,13 @@
 # Codex Working Rules
 
-This repo is in pre-MVP Harness documentation redesign / feedback incorporation and documentation review / documentation acceptance mode. It is documentation-only now and is intended to become the Harness Server source repository after documentation acceptance. This file is a short always-on compass for agents working here, not a Harness runtime procedure, schema reference, or project history.
+This repo is in pre-MVP Harness documentation redesign / feedback incorporation and post-redesign review / documentation acceptance mode. It is documentation-only now and is intended to become the Harness Server source repository after documentation acceptance. Runtime/server implementation has not started, and the current docs must not be described as fully accepted or implementation-complete unless the maintainer handoff status explicitly says so. This file is a short always-on compass for agents working here, not a Harness runtime procedure, schema reference, or project history.
 
 ## Repo Phase
 
 - Do not implement the Harness server, runtime code, product implementation code, generated operational files, or state/projection/artifact outputs.
 - This repo is not the user's Product Repository and not a Harness Runtime Home.
 - No Harness Server/runtime implementation exists here yet.
+- Treat the current documentation as a post-redesign review baseline, not a final accepted implementation-ready state.
 - Documentation edits are allowed in this phase.
 - Do not run or simulate Harness runtime procedures for documentation edits: no `prepare_write`, MCP state transitions, `close_task`, runtime state, `task_events`, Write Authorizations, Evidence Manifests, Manual QA records, Acceptance records, Residual Risk records, Journey Cards, generated projections, or other generated operational/projection documents for docs work. These terms may be documented only as future Harness behavior.
 - When changing meaning, work in `docs/en` first and mirror semantic changes in `docs/ko` in the same batch.

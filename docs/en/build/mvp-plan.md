@@ -99,9 +99,9 @@ Required in an API schema therefore means required when that tool call, record, 
 
 ### Implementation decisions needed before server coding
 
-No open schema-ownership, stage-boundary, security-guarantee, projection-scope, judgment-model, or repository-identity decision is currently recorded for this handoff. The documentation is ready for maintainer acceptance review as a candidate, but it is not accepted until maintainers deliberately update [Implementation Overview: Documentation acceptance status](implementation-overview.md#documentation-acceptance-status).
+Decision-log baseline: no major implementation decisions are deliberately recorded here at this baseline. This is not proof that no decisions exist. The documentation is available for maintainer acceptance review as a candidate, but it is not accepted until maintainers deliberately update [Implementation Overview: Documentation acceptance status](implementation-overview.md#documentation-acceptance-status).
 
-Do not leave major implementation decisions as scattered TODOs. If maintainer review or first runtime-batch planning later finds one, record it here with the owner doc, affected field or behavior, stage impact, options considered, and the decision needed before changing server code or DDL.
+Do not leave major implementation decisions as scattered TODOs or vague follow-ups. If current review or first runtime-batch planning finds one, record it here with the owner doc, affected behavior or field, affected stage, options considered, and the decision needed before changing server code or DDL.
 
 ### Core Authority Slice flow
 

@@ -4,7 +4,7 @@
 
 This document tells implementers what to build before they dive into the full reference specs. It is the bridge between the reader-centered docs and the detailed contracts in the kernel, runtime, MCP, storage, projection, and conformance references.
 
-This is planning documentation for documentation redesign / review and maintainer handoff. The repository is documentation-only today and is intended to become the Harness Server source repository after documentation acceptance; no Harness Server/runtime implementation, executable fixture files, or runnable Harness Server conformance tests exist here yet. This revision is a documentation acceptance candidate for maintainer review, not an accepted implementation start. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile: one local process with modules proving the smallest authority loop. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is planning documentation for documentation redesign / review and maintainer handoff. The repository is documentation-only today and is intended to become the Harness Server source repository after documentation acceptance; no Harness Server/runtime implementation, executable fixture files, or runnable Harness Server conformance tests exist here yet. This revision is in post-redesign review and is a documentation acceptance candidate for maintainer review, not an accepted implementation start. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile: one local process with modules proving the smallest authority loop. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 Use it to answer three questions:
 
@@ -42,18 +42,24 @@ Start with canonical state, `task_events`, one basic scope represented by the Ch
 
 If a proposed implementation starts with the user-facing MVP, v0.3/v0.4 hardening behavior as one large first batch, projection template polish, a dashboard or hosted workflow UI, a Context Index, a connector marketplace, hook expansion, metrics, parallel orchestration, or broad automation lanes, it is starting beyond the first runnable slice.
 
+## Current review baseline
+
+The current documentation set is still documentation-only and in post-redesign review. This repository is intended to become the future Harness Server source repository after documentation acceptance, but runtime/server implementation has not started. The current state is not fully accepted, implementation-complete, or approved for server coding unless the maintainer-updated status table below explicitly says so.
+
+Remaining drift and review risks are tracked in the [Authoring Guide](../maintain/authoring-guide.md#known-redesign-issues-tracker). That tracker separates observed drift, candidates to verify, regression-prevention checks, and baseline status checks. Review risks are not open implementation decisions by default, but if verification exposes a server-coding decision or stage blocker, record it in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding) with owner doc, affected behavior or field, affected stage, options, and decision needed.
+
 ## Documentation acceptance status
 
 This is a maintainer-updated documentation handoff marker. It is not a Reference contract, conformance result, generated operational record, or runtime implementation authorization. Do not infer acceptance from the checklist below; maintainers must change this table deliberately.
 
-Current revision status: documentation acceptance candidate for maintainer review. Documentation acceptance remains No unless maintainers deliberately change it. This status marker is not runtime/server implementation, runtime conformance, or implementation readiness.
+Current revision status: post-redesign documentation review and documentation acceptance candidate for maintainer review. Documentation acceptance remains No unless maintainers deliberately change it. This status marker is not runtime/server implementation, runtime conformance, implementation completeness, or implementation readiness.
 
 | Question | Current status |
 |---|---|
-| Is documentation redesign / review still the current repository phase? | Yes. This revision is a documentation acceptance candidate, and maintainer acceptance is still pending. Documentation edits may still happen; runtime/server implementation has not started. |
+| Is documentation redesign / review still the current repository phase? | Yes. This revision is in post-redesign review and is a documentation acceptance candidate only. Maintainer acceptance is still pending. Documentation edits may still happen; runtime/server implementation has not started. |
 | Are docs accepted for first runtime-batch planning? | No. First runtime-batch planning may not begin until maintainers change this row to Yes after the checkpoint below is satisfied. |
 | Has runtime/server implementation started? | No. This repository still contains documentation, not Harness runtime/server implementation. |
-| Are there open implementation decisions before server coding? | No open implementation decisions are intentionally recorded in this handoff. If maintainer review finds one, record it only in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding) with owner, impact, and decision needed. Known handoff review risks remain in the [Authoring Guide](../maintain/authoring-guide.md#known-redesign-issues-tracker), but they are documentation review checks, not runtime conformance, implementation readiness, or authorization to start server/runtime implementation. |
+| Are there major implementation decisions before server coding? | No major decisions are deliberately recorded at this baseline. This is a decision-log status, not proof that no decisions exist. If maintainer review finds one, record it only in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding) with owner, affected behavior or field, affected stage, options, and decision needed. Known handoff review risks remain in the [Authoring Guide](../maintain/authoring-guide.md#known-redesign-issues-tracker), but they are documentation review checks, not runtime conformance, implementation readiness, or authorization to start server/runtime implementation. |
 
 Build readers should treat this table as the entry gate. Until maintainer handoff changes the second row to Yes, even v0.1 Core Authority Slice remains planning-only in this repository and runtime/server implementation must not start.
 
@@ -63,7 +69,7 @@ This section is the short maintainer handoff for the documentation set. It expla
 
 Current phase and future repository role:
 
-- The repository is in documentation redesign / review and is a documentation acceptance candidate.
+- The repository is in post-redesign documentation review and is a documentation acceptance candidate only.
 - The repository is intended to become the Harness Server source repository only after documentation acceptance.
 - It is not the user's Product Repository and not a Harness Runtime Home.
 - No Harness Server/runtime implementation, runtime state, generated operational artifacts, executable fixtures, or runnable Harness Server conformance tests exist here yet.
@@ -94,9 +100,10 @@ What has been clarified:
 - Agent context is bounded: always-on context stays short and current, with detailed contracts loaded from owner docs or retrieval paths only when needed.
 - Conformance fixture documentation is a staged, future-oriented verification plan. It does not mean executable fixture files or runnable conformance tests exist today.
 
-Remaining open questions:
+Remaining decision-log status and review risks:
 
-- No open implementation decisions are currently recorded. The documentation is ready for maintainer acceptance review as a candidate, but it is not accepted until maintainers deliberately update [Documentation acceptance status](#documentation-acceptance-status).
+- Decision-log baseline: no major implementation decisions are deliberately recorded at this baseline. This is not proof that no decisions exist. The documentation is available for maintainer acceptance review as a candidate, but it is not accepted until maintainers deliberately update [Documentation acceptance status](#documentation-acceptance-status).
+- This wording is not an implementation-readiness claim. The [Authoring Guide tracker](../maintain/authoring-guide.md#known-redesign-issues-tracker) records baseline checks, candidates to verify, and regression-prevention checks for stage-name drift, heavy user-facing disclaimers, early Discovery/Change Unit convergence, `judgment_domain` ownership drift, small-decision Decision Packet weight, early Storage/DDL scope, conformance-fixture detail, early operations entrypoints, Korean technical-noun load, and optimistic decision-log wording.
 - If maintainer review finds an implementation decision needed before server coding, record it in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding). Do not leave scattered major-decision TODOs.
 
 ## Implementation-readiness criteria
