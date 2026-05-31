@@ -105,11 +105,9 @@ Storage validation is a separate ownership boundary. Public API payloads and API
 
 ### Stage requirement boundary
 
-Fields marked required in a request or response schema are required when that tool, record, or profile is implemented and used. They are not all v0.1 Core Authority Slice exit criteria.
+Fields marked required in a request or response schema are required when that tool, record, or profile is implemented and used. They are not all v0.1 Core Authority Slice exit criteria. Build owns the staged delivery plan; use [Build: MVP Plan](../build/mvp-plan.md#contract-field-staging) and [First Runnable Slice](../build/first-runnable-slice.md) for stage scope.
 
-For v0.1, the runnable API surface is the narrow authority loop: state envelope and idempotency, Task refs, one basic scope represented by the Change Unit owner shape where the reference contract requires it, `harness.prepare_write`, single-use Write Authorization summary/ref, compatible `harness.record_run`, one committed `ArtifactRef` or evidence relation, read-only `harness.status` / `harness.next`, and structured blockers. `decision_kind` and `judgment_domain` are required whenever Core creates a Decision Packet, including a seeded v0.1 judgment blocker, but full user-facing Decision Packet quality and optional `decision_requests` rows are later than the smallest slice.
-
-For v0.2, user-facing MVP surfaces must expose `judgment_domain` consistently for display/grouping while keeping `decision_kind` as the lifecycle and gate route. v0.2 also needs fields for final acceptance and residual-risk visibility sufficient for a user to understand close readiness. The minimum user-readable output set is current work status, judgment request, evidence summary, and close readiness / blocker summary. Detached verification independence, the full Manual QA policy matrix, stewardship validators, export/recover, release handoff, and detailed projection kinds are later profiles unless an owner doc explicitly promotes a subset.
+This reference owns valid API shape once a tool or profile is in scope. For example, if any stage creates a Decision Packet, the Decision Packet fields required here still apply; a stage may defer full user-facing quality, but it cannot emit an invalid public shape.
 
 Tool-section lines that say "Projection jobs enqueued" describe committed, non-dry-run behavior when projection support for that kind is in scope. Dry runs, pre-commit state conflicts, and rejected pre-commit requests do not enqueue projection jobs. v0.1 may preserve freshness/read facts without proving full Markdown rendering; projections remain derived views, not authority.
 

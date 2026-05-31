@@ -67,6 +67,16 @@
 | Conformance 작성자 | [Conformance Fixtures 참조](reference/conformance-fixtures.md#conformance-탐색-지도) | [운영과 Conformance 참조](reference/operations-and-conformance.md#conformance-run), [MCP API와 스키마](reference/mcp-api-and-schemas.md), [Storage와 DDL](reference/storage-and-ddl.md), [커널 참조](reference/kernel.md) |
 | 문서 유지보수 담당자 | [문서 작성 가이드](maintain/authoring-guide.md) | [번역 가이드](maintain/translation-guide.md) |
 
+## 필요별 읽기 경로
+
+| 필요한 것 | 갈 곳 |
+|---|---|
+| 개요와 개념 | [Learn](#learn): 하네스가 왜 필요한지, 개념이 무슨 뜻인지 설명합니다. |
+| 사용 방법 | [Use](#use): 사용자와 agent가 작업 중 어떻게 상호작용하는지 설명합니다. |
+| 구현 순서 | [Build](#build): 단계별 전달 계획, 첫 실행 가능한 조각, exit criteria를 설명합니다. |
+| 정확한 계약 | [Reference](#reference): schema, API, algorithm, security model, storage model, fixture, template body를 정의합니다. |
+| 문서 유지보수 | [Maintain](#maintain): 작성 규칙, review check, 번역 규칙, owner 경계 지침을 둡니다. |
+
 ## 소유권 규칙
 
 정확한 계약은 Reference 문서가 담당합니다. Schema, DDL, 관문(gate), state transition, enum value, fixture 의미, template 본문, 공식 정의가 여기에 속합니다. Learn, Use, Build 문서는 독자에게 필요한 생각을 설명하고 Reference로 연결하며, 엄격한 계약 블록을 복사하지 않습니다.

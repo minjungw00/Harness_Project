@@ -40,7 +40,7 @@ Storage는 Harness에 오래 남는 local record를 제공하지만 두 번째 a
 
 Harness는 등록된 project 전체를 관리하는 전역 runtime registry 하나와 project별 local state database 하나를 둡니다. Registry는 어떤 project와 접점이 있는지 기록합니다. `project.yaml`은 정적 프로젝트 설정을 저장합니다. `state.sqlite`는 기준 current record 및 추가 전용 task event를 저장합니다. 또한 idempotency replay용 row, artifact registry row, projection job, validator run result를 저장합니다.
 
-Storage field는 reference contract field이지 모두 first-slice requirement가 아닙니다. v0.1 Core Authority Slice에는 Task 하나, 기본 scope 하나(Reference contract상 필요한 경우 Change Unit owner shape로 표현), `prepare_write`, Write Authorization, `record_run`, ArtifactRef/evidence relation 하나, state-version/idempotency replay, status/next, structured blocker를 durable하게 만드는 row와 column이 필요합니다. Decision Packet row는 smoke path에 seeded blocking user judgment가 포함될 때만 v0.1에서 필요합니다. 그런 row가 존재하면 `decision_kind`와 `judgment_domain`은 여전히 required입니다. User-facing Decision Packet quality, 작업 수락, 잔여 위험 표시, 수동 QA, 분리 검증, projection rendering completeness, recover/export, release handoff는 같은 DDL family를 사용하지만 [Build: MVP 계획](../build/mvp-plan.md#계약-필드-단계-구분)에 설명된 v0.2 이후 profile 범위입니다.
+Storage field는 reference contract field이지 모두 first-slice requirement가 아닙니다. 이 문서는 owner path가 storage를 사용할 때의 storage shape를 담당합니다. 어떤 capability가 어느 stage에 들어오는지는 [Build: MVP 계획](../build/mvp-plan.md#계약-필드-단계-구분)이 담당합니다. Stage가 capability를 미룰 수는 있지만, 해당 record family를 저장하기 시작하면 여기서 정의한 DDL, storage-owned JSON validation, owner-bound value rule을 지켜야 합니다.
 
 Public API shape는 [MCP API와 스키마](mcp-api-and-schemas.md)가 담당합니다. Storage-owned DDL과 storage-only JSON validation은 이 문서가 담당합니다.
 
@@ -938,7 +938,7 @@ Core는 commit 전에 모든 JSON ref array를 검증해야 합니다. `selected
 
 `artifact_links.record_kind=projection`에서 `artifact_links.record_id`는 `projection_jobs.projection_job_id`를 저장합니다. 이 link는 Core가 해당 job을 linked 렌더링된 projection output으로 찾을 수 있을 때만 valid합니다. 즉 job이 artifact link와 같은 `task_id`로 Task-scoped이고, matching `projection_kind`와 `target_ref`, `status=completed`, 그리고 렌더링된 output을 위한 `output_path` 또는 documented projection ref가 필요합니다. `projection_jobs.target_ref`와 `output_path`는 validation and locator metadata이며 `artifact_links.record_id`를 대체하지 않습니다. Project-level projection job은 projection owner docs가 허용하는 곳에서 여전히 `projection_jobs`에 track될 수 있지만, current Task-scoped artifact DDL은 그 job을 위한 project-scoped artifact row 또는 artifact link를 만들지 않습니다. 이 contract는 current reference storage를 `projection_jobs`에 유지하며 `projections` table을 도입하지 않습니다.
 
-`manual_qa_records.waiver_decision_packet_id`와 `manual_qa_records.residual_risk_refs_json`은 QA 면제 decision과 close-relevant risk ref를 위한 storage hook입니다. Waiver contract는 [Kernel Waiver Semantics](kernel.md#waiver-semantics)와 [설계 품질 정책](design-quality-policies.md#manual-qa-manual_qa)의 수동 QA policy가 담당합니다.
+`manual_qa_records.waiver_decision_packet_id`와 `manual_qa_records.residual_risk_refs_json`은 QA 면제 decision과 close-relevant risk ref를 위한 storage hook입니다. Waiver contract는 [Kernel Waiver Semantics](kernel.md#waiver-semantics)와 [설계 품질 정책](design-quality-policies.md#수동-qa-manual_qa)의 수동 QA policy가 담당합니다.
 
 `change_unit_dependencies`는 shaping, ordering, close visibility를 위한 current reference DAG metadata입니다. Parallel orchestration scheduler가 아니며 multiple active implementation lanes를 허가하지 않습니다.
 

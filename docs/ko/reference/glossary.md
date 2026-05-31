@@ -373,7 +373,7 @@ Module 또는 external 경계의 public interface, inputs, outputs, errors, comp
 
 한국어 기준 표현: 수동 QA.
 
-수동 QA는 UX, workflow, copy, visual output, accessibility, product fit 같은 experiential product quality에 대한 human inspection입니다. Required인 경우 수동 QA는 수동 QA record 또는 valid QA 면제 판단 path로 기록됩니다. Browser smoke, screenshots, Browser QA artifacts, tests, verifier notes는 context를 뒷받침할 수 있지만 그 자체로 수동 QA judgment가 아닙니다. 정확한 gate behavior는 [QA Gate](kernel.md#qa-gate)가 담당하고, policy requirements는 [설계 품질 정책](design-quality-policies.md#manual-qa-manual_qa)이 담당합니다.
+수동 QA는 UX, workflow, copy, visual output, accessibility, product fit 같은 experiential product quality에 대한 human inspection입니다. Required인 경우 수동 QA는 수동 QA record 또는 valid QA 면제 판단 path로 기록됩니다. Browser smoke, screenshots, Browser QA artifacts, tests, verifier notes는 context를 뒷받침할 수 있지만 그 자체로 수동 QA judgment가 아닙니다. 정확한 gate behavior는 [QA Gate](kernel.md#qa-gate)가 담당하고, policy requirements는 [설계 품질 정책](design-quality-policies.md#수동-qa-manual_qa)이 담당합니다.
 
 ### Manual Bundle
 

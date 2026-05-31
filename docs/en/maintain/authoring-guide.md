@@ -22,6 +22,22 @@ For exact runtime contracts, use the Reference owner documents linked below. For
 
 Keep each document useful for its reader and keep exact contracts in their owner Reference docs. The docs are source material for understanding and implementing Harness; they are not runtime objects governed by Harness.
 
+## One owner rule
+
+Every normative contract has one owner document. The owner is the only place to define exact fields, enum values, DDL, schemas, algorithms, state transitions, gate rules, fixture body shapes, template bodies, storage rules, security guarantees, error precedence, and official definitions.
+
+Other document families may name the reader-facing consequence of a contract and link to the owner, but they must not create a second definition. If a local explanation needs a full table, schema block, DDL block, transition matrix, fixture mini-language, gate matrix, validator table, or algorithm, it belongs in the owning Reference document.
+
+Family boundaries:
+
+| Family | Role | Boundary |
+|---|---|---|
+| Learn | Why Harness exists and what concepts mean. | Do not define strict schemas, gates, or implementation sequences. |
+| Use | How users and agents interact. | Include low-level contract detail only when it helps user trust or explains a visible blocker. |
+| Build | Implementation sequence and staged delivery plan. | Keep stage goals, sequencing, and exit criteria; link to Reference for exact schemas, gates, DDL, APIs, storage, and fixture details. |
+| Reference | Exact contracts, schemas, algorithms, security model, and storage model. | Include enough context to understand the contract, but do not turn Reference docs into tutorials or reader journeys. |
+| Maintain | Documentation authoring and review rules. | Govern docs work only; do not define runtime behavior or conformance pass/fail. |
+
 ## Current Redesign Scope
 
 This repository is in documentation review/redesign only. Documentation edits may change source docs, but they do not start Harness server/runtime implementation or authorize implementation planning.
@@ -173,7 +189,13 @@ Avoid opening a Learn doc with a dense definition list unless the page is explic
 
 Strict schemas, gates, DDL, enum values, state transitions, invariants, API shapes, storage rules, projection contract details, and fixture semantics belong in Reference docs.
 
-Learn, Use, Build, and Maintain docs may summarize a contract in one or two sentences when needed, then link to the owning Reference document. They should not duplicate full tables, schema bodies, transition matrices, DDL blocks, or fixture mini-languages.
+Learn, Use, Build, and Maintain docs may summarize a contract in one or two sentences when needed, then link to the owning Reference document. They should not duplicate full tables, schema bodies, transition matrices, DDL blocks, gate matrices, algorithm steps, or fixture mini-languages.
+
+Build docs should describe what to implement first, what to defer, and what proves a stage complete. They should not copy public request/response schemas, DDL, storage validation rules, close-blocker taxonomies, gate compatibility matrices, or fixture assertion fields. When a Build checklist needs precision, link to the owner Reference section and state only the local sequencing consequence.
+
+Use docs should stay at the user trust boundary. They may mention the contract that explains a user-visible hold, blocker, decision prompt, evidence gap, or close result, but should not expose low-level field lists, storage rows, or validator internals unless the user needs that detail to make a judgment.
+
+Reference docs should stay contract-shaped. A short plain-language introduction is useful, but long tutorials, staged delivery plans, and reader walkthroughs should move to Learn, Use, or Build and link back to the Reference owner for exact rules.
 
 Runtime conformance fixture body shape, assertion modes, isolated execution behavior, JSON `TEXT` validation, and owner-bound enum/status validation are owned by [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format). Other docs should summarize that conformance is executable-state-based and link to the owner instead of restating the full contract.
 
@@ -184,6 +206,8 @@ Do not repeat long source-of-truth paragraphs across docs.
 When another document needs the same idea, write a short local summary and link to the owner. If the source text changes, update the owner first, then check summaries for drift.
 
 Repeated explanatory examples are allowed when they serve different readers, but repeated normative contract language is a drift risk.
+
+Before adding or accepting a long contract paragraph in Build or Reference, search for the same field, gate, API, storage, fixture, or security wording in the other family. If Build is repeating Reference, shorten Build to sequencing plus an owner link. If Reference is mostly teaching the implementation journey, move or link that explanation to Build and keep only the contract needed to interpret the section.
 
 For the non-authority boundaries that are easy to repeat, use these owners:
 

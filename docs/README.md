@@ -53,6 +53,16 @@ The docs are source material for understanding and implementing Harness. They ar
 | English | [en/README.md](en/README.md) |
 | 한국어 | [ko/README.md](ko/README.md) |
 
+## Reader Paths / 독자 경로
+
+| Need / 필요한 것 | English | 한국어 |
+|---|---|---|
+| Overview and concepts / 개요와 개념 | [Learn overview](en/learn/overview.md) | [개요](ko/learn/overview.md) |
+| Usage / 사용 방법 | [User Guide](en/use/user-guide.md) | [사용자 가이드](ko/use/user-guide.md) |
+| Implementation sequence / 구현 순서 | [Implementation Overview](en/build/implementation-overview.md) | [구현 개요](ko/build/implementation-overview.md) |
+| Exact contracts / 정확한 계약 | [Reference path](en/README.md#reference) | [Reference 경로](ko/README.md#reference) |
+| Documentation maintenance / 문서 유지보수 | [Authoring Guide](en/maintain/authoring-guide.md) | [문서 작성 가이드](ko/maintain/authoring-guide.md) |
+
 ## Quick First Reads / 빠른 첫 읽기
 
 | Path / 경로 | English | 한국어 |

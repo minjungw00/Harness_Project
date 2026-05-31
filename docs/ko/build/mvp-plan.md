@@ -81,13 +81,13 @@ v0.1은 full natural-language intake, full Discovery, full Decision Packet quali
 
 ### 계약 필드 단계 구분
 
-Reference schema에는 관련 capability가 범위에 들어올 때만 필요한 field도 포함됩니다. Stage planning은 해당 field를 owner contract와 active stage를 기준으로 읽어야 합니다.
+Reference schema에는 관련 capability가 범위에 들어올 때만 필요한 field도 포함됩니다. Build는 field requiredness를 다시 정의하지 않습니다. 어떤 capability가 어느 stage에 들어오는지만 말합니다. Field는 owner contract와 active stage를 함께 보고 읽습니다.
 
-| Stage | Required contract surface | Explicitly later |
+| Stage | Build 읽기 규칙 | 적용할 owner contract |
 |---|---|---|
-| v0.1 Core Authority Slice | Task identity와 state version, Reference contract상 필요한 경우 Change Unit owner shape로 표현되는 기본 scope 하나, `prepare_write`, single-use Write Authorization, compatible `record_run`, `ArtifactRef` 또는 evidence relation 하나, minimal evidence support/insufficiency, read-only status/next, idempotency conflict behavior, structured blockers. Smoke path에 seeded user judgment가 포함되면 stored Decision Packet은 여전히 `decision_kind`와 `judgment_domain`을 가진다. Full user-facing Decision Packet quality는 필요하지 않다. | Full natural-language judgment presentation, 잔여 위험 표시, 작업 수락, 수동 QA, 분리 검증, full projection rendering, export/recover, broad operations. |
-| v0.2 User-Facing Harness MVP | User-facing judgment context. 여기서 `decision_kind`는 lifecycle/gate semantics를, `judgment_domain`은 display/grouping을 담당한다. 작업 수락은 Approval과 구분되고, 잔여 위험 표시 또는 명시적 none이 필요하며, 현재 작업 상태, 판단 요청, 근거 요약, 닫기 준비 상태/blocker output이 사용자 이해에 충분해야 한다. | Full 분리 검증 hardening, 수동 QA matrix, stewardship validator suite, feedback-loop policy, release handoff, dashboard 또는 hosted UI, detailed report projection catalog. |
-| v0.3/v0.4 hardened reference | 분리 검증 독립성, 수동 QA policy coverage, stewardship와 context-hygiene validators, feedback-loop와 TDD policy, projection/reconcile completeness, recover/export/artifact integrity, owner docs가 정의한 release handoff. | Owner docs와 fixtures로 승격되지 않은 v1+ Expansion candidates. |
+| v0.1 Core Authority Slice | 좁은 authority loop를 증명하는 데 필요한 owner-defined field만 사용합니다. Smoke path가 Decision Packet을 사용한다면 required Decision Packet field는 그대로 적용됩니다. 다만 full user-facing Decision Packet quality는 이후 범위입니다. | [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Storage와 DDL](../reference/storage-and-ddl.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
+| v0.2 User-Facing Harness MVP | 사용자가 judgment context, evidence, close readiness, 작업 수락 분리, 잔여 위험 표시를 이해하는 데 필요한 field와 display summary를 추가합니다. | [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [커널 참조](../reference/kernel.md), [문서 Projection 참조](../reference/document-projection.md), [Template 참조](../reference/templates/README.md). |
+| v0.3/v0.4 hardened reference | Assurance, QA, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, release-handoff profile은 owner 문서가 정의한 곳에서만 추가합니다. | [설계 품질 정책](../reference/design-quality-policies.md), [운영과 Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md), [Storage와 DDL](../reference/storage-and-ddl.md). |
 
 따라서 API schema에서 required라는 말은 해당 tool call, record, profile이 구현되거나 사용될 때 required라는 뜻입니다. 그 자체로 future-profile field가 가장 작은 runnable slice의 일부가 되지는 않습니다.
 

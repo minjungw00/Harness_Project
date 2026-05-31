@@ -110,7 +110,7 @@ Agents, MCP tools, operator commands, projectors, and recovery flows must either
 
 ### State Store
 
-The state store keeps canonical operational state: project state, Tasks, gates, Change Units, Decision Packets, Approval records, Write Authorizations, Runs, evidence manifests, Eval records, Manual QA records, residual risks, projection jobs, reconcile items, and `task_events`.
+The state store keeps canonical operational state for the authority loop: project and Task state, scope, write authority, Runs, evidence, judgment records, projection/reconcile tracking, and `task_events`.
 
 Do not design this from scratch in the Build layer. Storage details and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
@@ -118,7 +118,7 @@ Do not design this from scratch in the Build layer. Storage details and DDL are 
 
 The artifact store keeps durable evidence files and integrity metadata. Raw artifacts may include diffs, logs, screenshots, bundles, manifests, checkpoints, export components, or other evidence files.
 
-The artifact store is not a loose file dump. Every artifact that supports Harness state needs a registered artifact ref, hash, size, redaction state, and relation to the Task or owner record that uses it.
+The artifact store is not a loose file dump. Any artifact that supports Harness state must be registered through the artifact owner path and linked to the Task or owner record that uses it. Exact artifact refs, integrity fields, redaction states, and retention rules belong to [MCP API And Schemas](../reference/mcp-api-and-schemas.md#artifactref) and [Storage And DDL](../reference/storage-and-ddl.md#artifact-directory-layout).
 
 ### MCP API
 
@@ -128,15 +128,11 @@ If the MCP server cannot be reached, no authoritative Core response is available
 
 For v0.1 Core Authority Slice, prioritize:
 
-- status and active Task reads
-- Task creation or a validated seed path for the first slice
-- next-action guidance
-- one basic scope for the selected write path
-- `prepare_write` as the only product-write authorization decision point
-- `record_run` consumption of one compatible Write Authorization for one implementation or direct product-write Run
-- artifact registration through the tool flows that need it
-- one evidence relation or minimal Evidence Manifest update
-- `close_task` blocker behavior as the only completion decision point
+- status/next reads over current Core state
+- one owner-valid path to create or seed the first Task and scope
+- the write-authority path: `prepare_write`, one compatible Write Authorization, and `record_run`
+- one artifact/evidence owner path
+- close/status blocker behavior for missing scope, evidence, authorization, or seeded required judgment
 
 For v0.2 User-Facing Harness MVP, broaden the same API surface so ordinary requests can be clarified into scope, user-owned judgments, evidence expectations, close readiness, final acceptance, and residual-risk display.
 
@@ -161,13 +157,11 @@ Human-editable projection sections are proposal surfaces. The implementation pat
 
 Operator entrypoints are surfaces over Core behavior, not a second state model. Build them as command-independent capabilities first:
 
-- connect or register a project
-- report doctor/readiness status across runtime home, project state, artifact store, reference surface, MCP availability, projections, reconcile, validators/checks, and agency/stewardship/context
-- serve or expose the MCP boundary
-- refresh projections
-- reconcile human edits, generated-file drift, or managed-block drift without silently overwriting the existing file or treating it as state
-- recover interrupted or stale operational state, including baseline drift, approval drift, evaluator repo drift, artifact missing or hash mismatch, projection failure, managed Markdown direct edits, MCP unavailable, and surface capability mismatch, without treating recovery artifacts as successful completion proof
-- export state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, and retained, expired, or unavailable artifact status
+- connect/register a project and expose the MCP boundary
+- report doctor/readiness facts
+- refresh projections and reconcile generated-file or managed-block drift
+- recover interrupted or stale operational state through documented owner paths
+- export state/report/artifact snapshots without leaking omitted secrets
 - check artifact integrity
 - run conformance fixtures
 

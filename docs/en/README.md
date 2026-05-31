@@ -67,6 +67,16 @@ Harness is also not a prompt pack, chat script, evaluation harness, dashboard, o
 | Conformance author | [Conformance Fixtures Reference](reference/conformance-fixtures.md#conformance-navigation-map) | [Operations And Conformance Reference](reference/operations-and-conformance.md#conformance-run), [MCP API And Schemas](reference/mcp-api-and-schemas.md), [Storage And DDL](reference/storage-and-ddl.md), [Kernel Reference](reference/kernel.md) |
 | Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md) |
 
+## Reader Paths By Need
+
+| Need | Go to |
+|---|---|
+| Overview and concepts | [Learn](#learn): why Harness exists and what the concepts mean. |
+| Usage | [Use](#use): how users and agents interact during work. |
+| Implementation sequence | [Build](#build): staged delivery plan, first runnable slice, and exit criteria. |
+| Exact contracts | [Reference](#reference): schemas, APIs, algorithms, security model, storage model, fixtures, and template bodies. |
+| Documentation maintenance | [Maintain](#maintain): authoring rules, review checks, translation rules, and owner-boundary guidance. |
+
 ## Ownership Rule
 
 Reference docs own exact contracts: schemas, DDL, gates, state transitions, enum values, fixture semantics, template bodies, and official definitions. Learn, Use, and Build docs explain the idea for their reader and link to Reference instead of copying strict contract blocks.

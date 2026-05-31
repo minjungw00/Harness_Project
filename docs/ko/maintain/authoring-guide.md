@@ -22,6 +22,22 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 각 문서는 독자에게 유용해야 하며 exact contract는 owner Reference 문서에 머물러야 합니다. 문서는 하네스를 이해하고 구현하기 위한 원천 자료이지, 하네스가 관리하는 런타임 객체가 아닙니다.
 
+## 하나의 계약에는 하나의 owner
+
+규범 계약마다 owner 문서가 하나만 있어야 합니다. Exact field, enum value, DDL, schema, algorithm, state transition, gate rule, fixture body shape, template body, storage rule, security guarantee, error precedence, official definition은 그 owner 문서에서만 정의합니다.
+
+다른 문서군은 독자에게 필요한 결과를 짧게 설명하고 owner로 연결할 수 있습니다. 하지만 두 번째 정의를 만들면 안 됩니다. Local 설명에 full table, schema block, DDL block, transition matrix, fixture mini-language, gate matrix, validator table, algorithm이 필요하다면 그 내용은 owner Reference 문서에 둡니다.
+
+문서군 경계:
+
+| 문서군 | 역할 | 경계 |
+|---|---|---|
+| Learn | Harness가 왜 필요한지, 개념이 무슨 뜻인지 설명합니다. | Strict schema, gate, 구현 순서를 정의하지 않습니다. |
+| Use | 사용자와 agent가 어떻게 상호작용하는지 설명합니다. | 사용자가 신뢰하거나 blocker를 이해하는 데 필요할 때만 낮은 수준의 계약 detail을 씁니다. |
+| Build | 구현 순서와 단계별 전달 계획을 설명합니다. | Stage goal, 순서, exit criteria를 유지하고, exact schema, gate, DDL, API, storage, fixture detail은 Reference로 연결합니다. |
+| Reference | Exact contract, schema, algorithm, security model, storage model을 정의합니다. | Contract를 이해할 만큼의 설명은 두되, tutorial이나 reader journey로 만들지 않습니다. |
+| Maintain | 문서 작성과 review 규칙을 정의합니다. | Docs work만 다룹니다. Runtime behavior나 conformance pass/fail을 정의하지 않습니다. |
+
 ## 현재 재설계 범위
 
 이 저장소는 문서 검토와 재설계 단계입니다. 문서 편집은 문서 원본을 바꿀 수 있지만, 하네스 서버/런타임 구현을 시작하거나 구현 계획을 승인하지 않습니다.
@@ -173,7 +189,13 @@ Learn 문서를 조밀한 정의 목록으로 시작하지 않습니다. Glossar
 
 엄격한 스키마, gate, DDL, enum value, state transition, 불변 조건, API shape, storage rule, projection contract detail, fixture 의미는 Reference 문서에 둡니다.
 
-Learn, Use, Build, Maintain 문서는 필요할 때 계약을 한두 문장으로 요약하고 owner Reference 문서에 링크합니다. 전체 table, schema body, transition matrix, DDL block, fixture mini-language를 중복하지 않습니다.
+Learn, Use, Build, Maintain 문서는 필요할 때 계약을 한두 문장으로 요약하고 owner Reference 문서에 링크합니다. 전체 table, schema body, transition matrix, DDL block, gate matrix, algorithm step, fixture mini-language를 중복하지 않습니다.
+
+Build 문서는 무엇을 먼저 만들지, 무엇을 미룰지, 무엇이 stage 완료를 증명하는지 설명합니다. Public request/response schema, DDL, storage validation rule, close-blocker taxonomy, gate compatibility matrix, fixture assertion field를 복사하지 않습니다. Build checklist에 정확한 detail이 필요하면 owner Reference section으로 연결하고, 현재 순서에서 의미하는 점만 짧게 씁니다.
+
+Use 문서는 user trust boundary에 머뭅니다. 사용자가 보는 hold, blocker, decision prompt, evidence gap, close result를 이해해야 할 때는 관련 contract를 이름 붙일 수 있습니다. 하지만 사용자가 판단하는 데 필요하지 않다면 field list, storage row, validator 내부 detail을 드러내지 않습니다.
+
+Reference 문서는 contract 중심이어야 합니다. 짧은 쉬운 설명은 도움이 되지만 긴 tutorial, staged delivery plan, reader walkthrough는 Learn, Use, Build로 보내고, Reference는 정확한 규칙을 이해하는 데 필요한 계약만 유지합니다.
 
 Runtime conformance fixture body shape, assertion mode, isolated execution behavior, JSON `TEXT` validation, owner-bound enum/status validation은 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#conformance-fixture-format)가 담당합니다. 다른 문서는 conformance가 executable-state-based라는 점만 요약하고 owner로 링크해야 하며, 전체 계약을 다시 적지 않습니다.
 
@@ -184,6 +206,8 @@ Runtime conformance fixture body shape, assertion mode, isolated execution behav
 다른 문서에 같은 생각이 필요하면 짧게 요약하고 owner 문서로 링크합니다. 원문이 바뀌면 owner 문서를 먼저 고친 뒤 요약문이 어긋나지 않았는지 확인합니다.
 
 독자가 다른 예시를 필요로 한다면 설명용 예시는 반복할 수 있습니다. 하지만 규범적인 계약 문구를 반복하면 불일치 위험이 큽니다.
+
+Build 또는 Reference에 긴 계약 문단을 추가하거나 받아들이기 전에는 같은 field, gate, API, storage, fixture, security wording이 다른 문서군에 있는지 검색합니다. Build가 Reference를 반복한다면 Build는 순서와 owner link만 남깁니다. Reference가 구현 여정을 설명하는 데 치우쳤다면 그 설명은 Build로 보내거나 Build에 연결하고, 해당 section을 이해하는 데 필요한 contract만 남깁니다.
 
 반복되기 쉬운 권한 없음 경계는 다음 owner를 사용합니다.
 

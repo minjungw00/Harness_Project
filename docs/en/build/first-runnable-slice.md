@@ -83,14 +83,11 @@ The build order below is a post-acceptance planning sequence. The headings use i
 
 Plan enough runtime home support to create local Harness authority outside chat history and generated Markdown, then register exactly one local product repository.
 
-Checklist:
+Planning focus:
 
-- Create or select a configurable runtime home.
-- Initialize the registry store, one project runtime area, one project state store, and an artifact store.
-- Record a project-level state version before project-scoped mutations depend on it.
-- Store the project id, display name, repo root, runtime path, and static project configuration.
-- Register one reference surface with an honest cooperative or detective guarantee level.
-- Provide a read-only status that can report "no active Task."
+- Make one local project and one reference surface resolvable for later Task-scoped actions.
+- Keep the runtime home, registry, project state, artifact store, and static project configuration in the storage owner path.
+- Provide a read-only status that can report an unregistered, registered-idle, or active-work state.
 
 Done when:
 
@@ -98,15 +95,16 @@ Done when:
 - Core can resolve the current project for all later Task-scoped actions.
 - Status can distinguish an unregistered or idle project from an active Task.
 
+Owner contracts: runtime home layout and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md); local spaces and surface guarantees are owned by [Runtime Architecture Reference](../reference/runtime-architecture.md) and [Agent Integration Reference](../reference/agent-integration.md).
+
 ### 2. One Task Record
 
 Create the first Task through Core or a fixture seed path that uses the same validation rules.
 
-Checklist:
+Planning focus:
 
-- Store the Task id, lifecycle phase, state version, current summary, and minimal gate/status state needed by the slice.
-- Append a task event when the Task is created or changed.
-- Expose active Task reads through status.
+- Create or seed exactly one active Task through an owner-valid path.
+- Keep enough current state and event history for status and later Core actions to refer to the Task.
 - Keep mode policy depth, intake quality, and procedural budget routing for v0.2 User-Facing Harness MVP.
 
 Done when:
@@ -114,15 +112,17 @@ Done when:
 - The system can show one active Task and its state version.
 - A state-changing request with a stale expected state version is rejected or returns a state conflict where the owner contract requires it.
 
+Owner contracts: Task lifecycle and state conflict behavior are owned by [Kernel Reference](../reference/kernel.md#task), [Lifecycle and transitions](../reference/kernel.md#lifecycle-and-transitions), and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#state-conflict-behavior).
+
 ### 3. One Basic Scope
 
 Add the smallest scope record that can constrain one intended product write. A Change Unit may be the owner shape, but the first slice should not expand into dependency graphs, full Autonomy Boundary policy, or multi-lane orchestration.
 
-Checklist:
+Planning focus:
 
-- Record the intended operation and allowed paths or command/tool class needed by the selected write.
-- Attach the scope to the active Task.
-- Record only the minimum evidence expectation needed by the selected claim.
+- Attach one owner-valid scope to the active Task.
+- Make the selected intended write checkable against that scope.
+- Keep only the evidence expectation needed for the first selected claim.
 - Keep full Discovery and user-facing procedural budget routing for v0.2.
 
 Done when:
@@ -130,18 +130,17 @@ Done when:
 - Status can explain what may change.
 - Product writes without an active compatible scope cannot receive write authority.
 
+Owner contracts: Change Unit and Autonomy Boundary semantics are owned by [Kernel Reference](../reference/kernel.md#change-unit) and [Autonomy Boundary](../reference/kernel.md#autonomy-boundary).
+
 ### 4. `prepare_write` Allow/Block
 
 Implement the first meaningful write gate.
 
-Checklist:
+Planning focus:
 
-- Validate the request envelope, idempotency key, project id, Task id, and expected state version where required.
-- Resolve the active Task and active scope.
-- Check intended paths, tools, commands, network targets, secrets, and sensitive categories at the minimal level needed for the selected write.
-- Check baseline freshness at the level needed for the first slice.
-- Return a structured blocker when scope, state version, baseline, capability, or seeded required judgment is incompatible.
-- When allowed, create a durable single-use Write Authorization compatible with one later direct Run or implementation Run.
+- Route the selected product-write attempt through the owner `prepare_write` path.
+- Allow exactly one compatible scoped write or return an owner-shaped blocker.
+- Keep candidate Approval or Decision Packet material as candidate context until the owning path commits it.
 
 Done when:
 
@@ -150,17 +149,17 @@ Done when:
 - A compatible scoped write returns a Write Authorization ref.
 - No product write can be recorded by a product-write Run without that ref.
 
+Owner contracts: write-gate semantics are owned by [Kernel Reference: prepare_write](../reference/kernel.md#prepare_write); public request/response shape and error precedence are owned by [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write) and [Primary Error Code Precedence](../reference/mcp-api-and-schemas.md#primary-error-code-precedence).
+
 ### 5. `record_run`
 
 Record one direct Run or implementation Run and consume the Write Authorization.
 
-Checklist:
+Planning focus:
 
-- Require a compatible, unexpired, unconsumed Write Authorization for the selected product-write Run.
-- Mark the Write Authorization consumed exactly once on successful commit.
-- Record actor, surface, kind, intended operation, observed changes, artifact refs or evidence inputs, summary, and Run status at the minimal level needed for the slice.
-- Validate observed changed paths and artifact refs against the authorization and scope.
-- Append `task_events` in the same transaction as current record updates.
+- Record one owner-valid Run for the selected direct or implementation write.
+- Consume the compatible Write Authorization once.
+- Keep observed changes, artifacts, events, and state updates in the Core transaction model.
 
 Done when:
 
@@ -168,31 +167,33 @@ Done when:
 - `record_run` with compatible authority succeeds once.
 - A second distinct Run cannot reuse the consumed authorization.
 
+Owner contracts: Run semantics are owned by [Kernel Reference: record_run](../reference/kernel.md#record_run); public schema is owned by [`harness.record_run`](../reference/mcp-api-and-schemas.md#harnessrecord_run); transaction ordering is owned by [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow).
+
 ### 6. Artifact Or Evidence Link
 
 Register one durable evidence file or equivalent evidence ref through the owner path.
 
-Checklist:
+Planning focus:
 
-- Accept an approved staged file or existing committed artifact ref.
-- Verify hash and size when provided.
-- Apply redaction or secret omission before final storage when relevant.
-- Store artifact metadata and relation to the Task, Run, evidence relation, or other owner record.
-- Return an `ArtifactRef` or owner-defined evidence ref that uses the public shape from the API docs.
+- Register one artifact or evidence ref through an owner path.
+- Link it to the Run, evidence relation, or other owner record that uses it.
+- Preserve redaction, omission, integrity, and retention boundaries through the storage/API owners.
 
 Done when:
 
 - A Run can cite a registered artifact or evidence ref.
 - Raw secrets are omitted or blocked rather than stored as evidence.
 
+Owner contracts: artifact refs are owned by [ArtifactRef](../reference/mcp-api-and-schemas.md#artifactref); storage layout and registration details are owned by [Artifact directory layout](../reference/storage-and-ddl.md#artifact-directory-layout) and [Artifact Registration Contract](../reference/storage-and-ddl.md#artifact-registration-contract).
+
 ### 7. Minimal Evidence State
 
 Create the smallest evidence relation needed to explain whether the selected claim is supported.
 
-Checklist:
+Planning focus:
 
-- Map one completion condition or acceptance criterion to the Run and artifact/evidence ref.
-- Distinguish supported, partial, and insufficient evidence at the level needed for a close/status blocker.
+- Map one selected claim to the Run and artifact/evidence ref.
+- Preserve the distinction between supported, partial, and insufficient evidence through the owner gate semantics.
 - Avoid treating chat text, status prose, or projection prose as evidence.
 
 Done when:
@@ -200,14 +201,16 @@ Done when:
 - A completed Run can produce a supported or partial evidence state.
 - Missing required evidence causes close/status output to block.
 
+Owner contracts: evidence records and close-support categories are owned by [Evidence Manifest](../reference/kernel.md#evidence-manifest), [Evidence Gate](../reference/kernel.md#evidence-gate), and [`harness.close_task`](../reference/mcp-api-and-schemas.md#harnessclose_task).
+
 ### 8. Status, Next, And Structured Blockers
 
 Expose current work state and safe next action without mutation, and return structured blockers when the first slice cannot close or proceed.
 
-Checklist:
+Planning focus:
 
-- Read project, active Task, current scope, write authority summary, evidence status, close/status blockers, and next safe action.
-- Report missing scope, missing evidence, missing Write Authorization, reused authorization, or seeded required user judgment as structured blockers.
+- Return current Task, scope, write-authority summary, evidence status, blockers, and next safe action from canonical records.
+- Keep blocker identity structured enough for fixtures without making prose authoritative.
 - Do not append events, enqueue projections, create artifacts, satisfy gates, authorize writes, or close the Task from a read.
 
 Done when:
@@ -215,6 +218,8 @@ Done when:
 - Repeated status/next reads return the same state version unless another action changed state.
 - The structured blocker can be compared by fixtures without matching prose.
 - Close/status results are based on canonical records, not rendered reports.
+
+Owner contracts: status/next schemas are owned by [`harness.status`](../reference/mcp-api-and-schemas.md#harnessstatus) and [`harness.next`](../reference/mcp-api-and-schemas.md#harnessnext); close behavior is owned by [Kernel Reference: close_task](../reference/kernel.md#close_task).
 
 ## What this proves
 
@@ -246,27 +251,9 @@ This slice does not prove the items below. They are stage boundaries, not failed
 
 Write fixtures that drive Core behavior and assert state, events, artifacts, projections or freshness when applicable, and errors. Do not assert success by matching rendered prose. These rows are future authoring candidates; they do not imply executable fixture files exist now.
 
-Each runtime fixture should execute in an isolated runtime home and temporary Product Repository, seed its own starting records and files, run one Core or operator action, and compare the captured executable result. Fixture body fields, assertion modes such as `partial_deep` and `contains_ordered`, JSON `TEXT` validation, and owner-bound status value validation are owned by [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format).
+Build owns the coverage intent for v0.1: project/status, one active Task, one basic scope, `prepare_write` allow/block, `record_run` consume/block, one artifact/evidence link, minimal evidence sufficiency, read-only status/next, and close/status blockers. The exact fixture queue, body fields, seed rules, assertion modes, stable events, artifact/projection assertions, and primary-error expectations are owned by the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) and [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format).
 
-Minimum first-slice fixture candidates:
-
-- no-active-task status read returns idle state and appends no events
-- project registration creates project state and reference surface
-- Task creation or seed produces one active Task and task event behavior
-- basic scope allows one intended path and does not create write authority by itself
-- `prepare_write` blocks when scope is missing
-- `prepare_write` blocks an out-of-scope path
-- `prepare_write` allows one compatible scoped write and creates one Write Authorization
-- `record_run` blocks when write authority is missing
-- `record_run` consumes a compatible Write Authorization once
-- second distinct `record_run` cannot reuse a consumed authorization
-- artifact or evidence ref registration stores integrity/redaction metadata and owner relation
-- minimal evidence state reports supported, partial, or insufficient support
-- status and next reads report current Task, scope, write authority, evidence, blockers, and next safe action without mutation
-- close/status output blocks missing evidence with a structured blocker
-- close/status output blocks a seeded required user judgment with a structured blocker
-
-Use the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) for practical order, seed guidance, stable event targets, artifact/projection assertions, and primary-error expectations. Do not add fields to the fixture body to express suite stage, authoring order, or docs-maintenance results.
+Do not add fields to the fixture body to express suite stage, authoring order, or docs-maintenance results.
 
 ## Reference docs to consult
 
