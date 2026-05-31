@@ -18,9 +18,11 @@ Read [Authoring Guide](authoring-guide.md) for owner boundaries, docs-maintenanc
 
 ## Main idea
 
+English docs define the reference meaning for the bilingual documentation set. Korean docs preserve that meaning, but they should not sound like line-by-line English copies.
+
 The goal is semantic parity, not sentence-by-sentence translation. Korean should read like natural technical Korean while preserving official identifiers, exact contracts, code-like names, and stable product terms.
 
-In user-facing Korean, prefer the natural public phrase first and add the exact Harness label only when the label helps precision. For example, use `범위(Change Unit)`, `판단 요청/기록(Decision Packet)`, `쓰기 허가 기록(Write Authorization)`, `잔여 위험(Residual Risk)`, `수동 QA(Manual QA)`, `분리 검증(detached verification)`, or `작업 수락(Acceptance)` when both the reader-friendly phrase and the Harness label matter.
+In user-facing Korean, prefer the natural public phrase first and add the exact Harness label only when the label helps precision. For example, use `범위(Change Unit)`, `판단 요청/기록(Decision Packet)`, `쓰기 허가 기록(Write Authorization)`, `잔여 위험(Residual Risk)`, `수동 QA(Manual QA)`, `분리 검증(detached verification)`, or `작업 수락(Acceptance)` when both the reader-friendly phrase and the Harness label matter. Reference Korean may preserve exact schema identifiers, enum values, field names, and API terms whenever precision matters.
 
 ## User-Facing Vocabulary Rule
 
@@ -37,10 +39,14 @@ Keep these unchanged across English and Korean docs:
 - enum values
 - DDL names
 - code identifiers
+- field names
 - file names and path names
+- stable identifiers
 - error codes and validator IDs
 
-Keep these exact when they refer to literal identifiers, schema/API values, file/template names, heading anchors, or code-like references. In ordinary Korean prose, prefer the stable Korean terms in [Korean Canonical Terms](#korean-canonical-terms).
+Do not translate code, API method names, enum values, field names, file paths, stable identifiers, or other exact strings inside code blocks.
+
+Keep these exact when they refer to literal identifiers, schema/API values, file/template names, heading anchors, or code-like references. In ordinary Korean prose, prefer the stable Korean terms in the [Bilingual Terminology Table](#korean-canonical-terms).
 
 - Task
 - Change Unit
@@ -62,32 +68,45 @@ Keep exact stage labels exact: `v0.1 Core Authority Slice`, `Kernel Smoke`, `v0.
 
 Reference headings that serve as lookup anchors should remain stable unless a dedicated link/anchor migration updates all links. User-facing prose should prefer natural Korean. A Korean alias line may provide the natural term under a stable reference heading.
 
-## Korean Canonical Terms
+<a id="korean-canonical-terms"></a>
+
+## Bilingual Terminology Table
 
 Use these as the preferred terms in Korean prose. Keep exact English strings where the sentence refers to an identifier or contract value, and add the English label in parentheses when it helps the reader.
 
 | English term | Korean canonical term | Usage note |
 |---|---|---|
 | Harness | 하네스 | Use for the product name in ordinary Korean prose. Keep literal strings such as `HARNESS:BEGIN`. |
-| Product Repository | 제품 저장소 | Use for the user's product workspace. Add the English label only when disambiguating the three-space model. |
+| Harness Server | 하네스 서버 | Use for the local Harness program/installation in the three-space model. Do not use this for the user's product repository or runtime data home. |
 | Harness Server source repository | 하네스 서버 소스 저장소 | Use for this repository's intended future source-code role after documentation acceptance. |
+| Product Repository | 제품 저장소 | Use for the user's product workspace. Add the English label only when disambiguating the three-space model. |
 | Harness Runtime Home | 하네스 런타임 홈 | Use for the per-user/per-installation operational data home. Add the English label only when helpful. |
+| Core-owned state | Core가 소유한 상태 | Use when stressing that Core records are operational authority. In user-facing prose, `운영 기준 상태` may be clearer when the Core boundary is already known. |
 | durable local state | 지속 로컬 상태 | First use may include `지속 로컬 상태(durable local state)`. |
 | work | 작업 | Use in user-facing docs for the thing the user wants done, answered, investigated, or decided. Keep `work` exact for mode values or code-like references. |
 | scope | 범위 | Use in user-facing docs for what may change and what is out of bounds. Add `Change Unit` only when naming the internal scoped-write record. |
+| Discovery | 요구사항 구체화 | Explain as the agent's requirements-clarification posture before implementation planning, not as a command name alone. Keep `Discovery` exact in reference/schema contexts. |
+| Change Unit | 범위 / Change Unit | In user-facing prose, explain the scoped work boundary as `범위` first. Keep `Change Unit` exact when naming the record or reference term. |
 | judgment | 판단 | Use for user-owned choices. Add `Decision Packet` only when naming the recorded implementation route. |
+| `judgment_domain` | 판단 영역 | Preserve the field name in schema/API/reference contexts. In user-facing display, explain it as the area of judgment, such as Product / UX or Security / privacy. |
+| `decision_kind` | 결정 경로 | Preserve the field name and enum values. In user-facing display, explain which decision route or lifecycle path the decision uses. |
+| Decision Packet | 결정 패킷 | Keep `Decision Packet` in literal record/API/schema/anchor contexts when needed. In user-facing prose, `판단 요청/기록` may be clearer before the exact label. |
+| Write Authorization | 쓰기 허가 기록 | Use in prose for the record or result of `prepare_write`. Keep exact API/tool names and fields. |
 | evidence | 근거 | Use in user-facing prose for support behind a claim. Keep `Evidence`, `Evidence Manifest`, and schema fields exact when naming records or APIs. |
+| Evidence Manifest | 근거 매니페스트 | Use the Korean phrase only when helpful in prose. Keep `Evidence Manifest` exact in record/template/schema contexts. |
+| Verification | 검증 | Use for recorded correctness checking. Use `확인` for ordinary checking only when the formal Verification concept is not meant. |
+| Manual QA | 수동 QA | Keep `Manual QA` in exact template/schema/API contexts. |
+| final acceptance / Acceptance | 작업 수락 | Use for the user's final result judgment when the task path requires it. Do not use it for sensitive-action permission. Avoid generic `최종 수락` unless quoting or explaining the English phrase. |
+| Approval | 민감 동작 승인 | Use for the canonical Approval concept in public Korean. `허가` may explain permission in prose, but it is not a second canonical term. Do not use generic `승인` for final acceptance, product judgment, QA waiver, residual-risk acceptance, or Write Authorization. Keep `Approval` in reference/schema contexts. |
+| Residual Risk | 잔여 위험 | Use this consistently in user-facing prose. Plain explanatory wording such as `남은 불확실성` is acceptable when not naming the product concept. |
+| residual-risk acceptance | 잔여 위험 수용 | Use for the user's explicit acceptance of a named remaining risk. Keep it distinct from `작업 수락(Acceptance)`. |
 | close readiness | 닫기 준비 상태 | Use consistently for the public summary of what remains before finish or close. Keep `Close Readiness` only when mirroring the English display-group label or exact docs heading. |
-| artifact ref | 아티팩트 참조 | In evidence contexts, `증거 아티팩트 참조` is also acceptable. Keep the `ArtifactRef` schema name exact. |
+| blocker | 막힘 | User-facing prose may use `막힘` for the thing preventing progress or close. API/reference contexts should keep `blocker`, or explain it as `차단 조건(blocker)` when clarity helps. Do not translate exact field names, template keys, enum-like values, or schema names such as `blockers` or `CloseBlockerCategory`. |
+| ArtifactRef | `ArtifactRef` / 아티팩트 참조 | Keep the schema name exact. In prose, use `아티팩트 참조`; in evidence contexts, `근거 아티팩트 참조` is also acceptable. |
+| artifact ref | 아티팩트 참조 | In evidence contexts, `근거 아티팩트 참조` is also acceptable. Keep the `ArtifactRef` schema name exact. |
 | projection / Projection | 읽기용 요약 | Use `읽기용 요약` or `읽기용 보기` for the first user-facing explanation, then map to `Projection` only when useful. `투영 문서` or `projection` may remain in reference-adjacent explanations that connect to the exact Projection concept. Projection is not operational authority. Keep `Projection`, `ProjectionKind`, `projection freshness`, API fields, template kinds, or `projection view` in reference/schema contexts. |
 | kernel | 커널 | Use `커널` outside exact headings and owner links. |
 | gate | 관문 | Prefer `관문` in Learn/Use docs. Reference docs may retain `gate` when referring to kernel fields or values. |
-| Decision Packet | 결정 패킷 | Keep `Decision Packet` in literal record/API/schema/anchor contexts when needed. |
-| Write Authorization | 쓰기 허가 기록 | Use in prose for the record or result of `prepare_write`. Keep exact API/tool names and fields. |
-| Residual Risk | 잔여 위험 | Use this consistently in user-facing prose. Plain explanatory wording such as `남은 불확실성` is acceptable when not naming the product concept. |
-| Acceptance | 작업 수락 | Use for the user's final result judgment when the task path requires it. Do not use it for sensitive-action permission. |
-| Approval | 민감 동작 승인 | Use for the canonical Approval concept in public Korean. `허가` may explain permission in prose, but it is not a second canonical term. Do not use generic `승인` for final acceptance, product judgment, QA waiver, residual-risk acceptance, or Write Authorization. Keep `Approval` in reference/schema contexts. |
-| Manual QA | 수동 QA | Keep `Manual QA` in exact template/schema/API contexts. |
 | detached verification | 분리 검증 | May retain `detached verification` in assurance explanations. |
 | cooperative | 협력형 | Retain the English label in guarantee-level tables. |
 | detective | 탐지형 | Retain the English label in guarantee-level tables. |

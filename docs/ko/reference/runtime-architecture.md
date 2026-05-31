@@ -58,7 +58,7 @@
 
 ```text
 제품 저장소:
-  제품 코드, 테스트, 사람이 읽는 투영 문서, 사람이 편집할 수 있는 제안 영역
+  제품 코드, 테스트, 사람이 읽는 Projection, 사람이 편집할 수 있는 제안 영역
 
 하네스 서버/설치:
   MCP server, Core, validators, connectors, projector, reconcile worker, operator tools

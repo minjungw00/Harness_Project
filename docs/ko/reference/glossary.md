@@ -105,7 +105,7 @@ Evidence, recovery, audit에 사용하는 recorded output입니다. 기준 evide
 
 한국어 기준 표현: 아티팩트 참조.
 
-Artifact store에 등록된 raw artifact file을 가리키는 구조화된 포인터입니다. identity, kind, URI 또는 path, hash, size, content type, redaction state, task/run relationship을 포함합니다. [Storage와 DDL](storage-and-ddl.md)에서 아티팩트 참조와 `artifact_links`는 Task-scoped입니다. `bundle`, `manifest`, `export_component` 같은 artifact kind는 file을 설명합니다. Owner link는 여전히 existing state 또는 Task-scoped projection record를 가리킵니다.
+Artifact store에 등록된 raw artifact file을 가리키는 구조화된 포인터입니다. identity, kind, URI 또는 path, hash, size, content type, redaction state, task/run 관계를 포함합니다. `ArtifactRef`는 이 pointer shape의 정확한 schema name입니다. [Storage와 DDL](storage-and-ddl.md)에서 아티팩트 참조와 `artifact_links`는 Task-scoped입니다. `bundle`, `manifest`, `export_component` 같은 artifact kind는 file을 설명합니다. Owner link는 여전히 기존 상태 또는 Task-scoped projection record를 가리킵니다.
 
 ### Autonomy Boundary
 
@@ -126,6 +126,12 @@ Eval verdict만으로 assurance가 올라가지 않습니다. `detached_verified
 ### Baseline
 
 Scope, approval drift, evidence freshness, verification validity를 판단하는 데 사용하는 captured repository state입니다.
+
+### Blocker
+
+한국어 기준 표현: 막힘.
+
+진행, 쓰기, 닫기 또는 요청된 다음 단계를 해결하거나 유효하게 미루기 전까지 막는 구체적인 조건입니다. 사용자용 prose에서는 `막힘`을 쓸 수 있고, API/reference 문맥에서는 `blocker`를 유지하거나 `차단 조건(blocker)`으로 설명합니다. 정확한 field name, template key, enum-like value, schema name은 번역하지 않습니다. 유용한 막힘 표시는 무엇이 막혔는지, 다음 움직임을 누가 소유하는지, 가장 작은 해소 방법이 무엇인지, 관련 소유자 ref가 무엇인지 보여줍니다. 막힘은 일반 note, evidence 자체, 작업 수락, 잔여 위험 수용, 민감 동작 승인이 아닙니다.
 
 ### `tree_hash`
 
@@ -167,6 +173,12 @@ completed_with_risk_accepted | cancelled | superseded
 
 Public MCP tool calls가 공통으로 갖는 fields입니다. `request_id`, `idempotency_key`, `expected_state_version`, `project_id`, optional `task_id`, `surface_id`, optional `run_id`, `actor_kind`, `dry_run`을 포함합니다.
 
+### Core-owned State
+
+한국어 기준 표현: Core가 소유한 상태.
+
+Harness Core가 커밋된 소유자 기록과 `state.sqlite.task_events`를 통해 소유하는 운영 상태입니다. Core가 소유한 상태는 gate, decision, 쓰기 허가 기록, 근거 상태, QA, verification, 작업 수락, 잔여 위험, 닫기의 기준입니다. Chat, 생성된 Markdown 읽기용 요약, connector 파일, 제품 저장소 문서는 소유자 경로를 통해 Core에 정보를 줄 수 있지만 Core가 소유한 상태를 대체하지 않습니다.
+
 ### Cooperative Guarantee
 
 연결된 agent 접점에서 하네스 instructions와 MCP decisions를 따르는 협력형(cooperative) integration을 기대하는 guarantee level입니다. 하네스는 behavior를 guide할 수 있지만 hard pre-execution enforcement가 제공되지 않을 수 있습니다.
@@ -177,9 +189,9 @@ Connector가 생성하거나 관리하는 path, MCP config snippet, managed bloc
 
 ### Context Hygiene
 
-항상 주입되는 맥락을 짧고 최신으로 유지하는 policy입니다. Compact rule set은 10개 이하로 유지하고, current status 또는 현재 위치 맥락을 먼저 읽으며, Journey Card는 해당 projection/profile이 활성화되어 있고 최신일 때만 사용하고, 현재 context profile을 push하고, 더 큰 record는 pull-on-demand로 둡니다. Profile-relevant할 때 compact status card, 활성화된 최신 Journey Card ref, active 결정 패킷, Autonomy Boundary, Write Authority Summary, active scoped Change Unit, 수용 기준, approval status, evidence refs, residual-risk summary, gate summary, projection freshness를 push할 수 있습니다. 오래된 PRD, design, log, module map, old projection, closed issue, Reference contract, oversized raw artifact는 현재 세션 시작, 요구사항 구체화/Discovery, 판단 요청, 쓰기 준비, 실행/근거, 닫기 준비 상태, 오류/복구 또는 verification bundle이 필요로 할 때만 pull합니다. Indexed, retrieved, remembered, summarized context는 ref나 source에 연결된 excerpt로 여기에 포함될 수 있습니다. 무엇을 살펴볼지 정하는 데 도움을 줄 뿐, 무엇이 허가되었는지, 검증되었는지, 결과가 수락되었는지, 요구사항이 면제되었는지, risk-accepted 되었는지, Task가 닫혔는지를 결정하지는 않습니다.
+항상 주입되는 맥락을 짧고 최신으로 유지하는 policy입니다. Compact rule set은 10개 이하로 유지하고, current status 또는 현재 위치 맥락을 먼저 읽으며, Journey Card는 해당 projection/profile이 활성화되어 있고 최신일 때만 사용하고, 현재 context profile을 push하고, 더 큰 record는 pull-on-demand로 둡니다. Profile-relevant할 때 compact status card, 활성화된 최신 Journey Card ref, active 결정 패킷, Autonomy Boundary, Write Authority Summary, active scoped Change Unit, 수용 기준, approval status, evidence refs, residual-risk summary, gate summary, 읽기용 요약 최신성을 push할 수 있습니다. 오래된 PRD, design, log, module map, old projection, closed issue, Reference contract, oversized raw artifact는 현재 세션 시작, 요구사항 구체화/Discovery, 판단 요청, 쓰기 준비, 실행/근거, 닫기 준비 상태, 오류/복구 또는 verification bundle이 필요로 할 때만 pull합니다. Indexed, retrieved, remembered, summarized context는 ref나 source에 연결된 excerpt로 여기에 포함될 수 있습니다. 무엇을 살펴볼지 정하는 데 도움을 줄 뿐, 무엇이 허가되었는지, 검증되었는지, 결과가 수락되었는지, 요구사항이 면제되었는지, risk-accepted 되었는지, Task가 닫혔는지를 결정하지는 않습니다.
 
-오래된 chat memory는 pull-only context입니다. 담당 owner path가 관련 변화를 기록하지 않는 한 write를 허가하거나, gate를 충족하거나, Task를 close하거나, 결과를 수락하거나, QA 또는 verification을 면제하거나, 잔여 위험을 받아들이거나, current state를 대체하거나, stale projection을 고칠 수 없습니다.
+오래된 chat memory는 pull-only context입니다. 담당 소유자 경로가 관련 변화를 기록하지 않는 한 write를 허가하거나, gate를 충족하거나, Task를 close하거나, 결과를 수락하거나, QA 또는 verification을 면제하거나, 잔여 위험을 받아들이거나, 현재 상태를 대체하거나, stale projection을 고칠 수 없습니다.
 
 ### Context Index
 
@@ -189,13 +201,19 @@ Relevant projection, 아티팩트 참조, repo file, doc, note를 보여줄 수 
 
 진행, write, close 전에 필요한 차단하는 사용자 소유 판단을 나타내는 Task-level aggregate gate입니다. 기준 field는 `decision_gate`이며 value set과 recompute rule은 [Decision Gate](kernel.md#decision-gate)가 담당합니다. 관련 blocking 결정 패킷과 감지된 blockers에서 다시 계산되며 민감 동작 승인, verification, 수동 QA, 작업 수락을 대신하지 않습니다.
 
+### Decision Kind
+
+한국어 기준 표현: 결정 경로.
+
+Decision Packet의 schema field인 `decision_kind`입니다. Lifecycle, payload branch, gate 의미, state-transition semantics를 제어합니다. 사용자에게 보이는 묶음인 `judgment_domain`과 구분됩니다. 표시는 쉬운 말로 결정 경로를 설명할 수 있지만 schema/API 문맥에서는 field name과 enum value를 정확히 유지합니다.
+
 ### Decision Packet
 
 한국어 기준 표현: 결정 패킷.
 
-차단하는 사용자 소유 판단을 위한 기준 kernel state record입니다. decision needed, `decision_kind`, `judgment_domain`, options, 가능할 때 recommendation, trade-offs, affected scope, evidence, 잔여 위험, owner, status, next action을 명시합니다. 결정 패킷 record ID는 `DEC-*`를 사용합니다. Record-level status는 [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute)와 public `DecisionPacket` schema가 담당하며, 관련 statuses가 Task-level `decision_gate`에 반영됩니다. Required Decision Packet visibility는 Task/status/next/judgment-context 및 decision-packet 접점을 통해 제공되며, standalone `DEC` Markdown 렌더링 결과는 기능이 켜져 있을 때만 optional projection 또는 proposal 접점입니다. Public API/interface 선택, architecture direction, domain-language conflict, module boundary change, 면제 판단, 작업 수락, 잔여 위험 선택은 사용자 소유 제품 판단 또는 중요한 기술 판단이 진행, write, close를 막거나 public commitment를 만들 때 이 경로를 사용합니다. 넓은 approval text는 특정 recorded route와 option에 답하지 않는 한 결정 패킷을 충족하지 않습니다.
+차단하는 사용자 소유 판단을 위한 기준 kernel state record입니다. 필요한 결정, `decision_kind`, `judgment_domain`, options, 가능할 때 recommendation, trade-offs, 영향받는 scope, evidence, 잔여 위험, owner, status, next action을 명시합니다. 결정 패킷 record ID는 `DEC-*`를 사용합니다. Record-level status는 [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute)와 public `DecisionPacket` schema가 담당하며, 관련 statuses가 Task-level `decision_gate`에 반영됩니다. Required Decision Packet visibility는 Task/status/next/judgment-context 및 decision-packet 접점을 통해 제공되며, standalone `DEC` Markdown 렌더링 결과는 기능이 켜져 있을 때만 optional projection 또는 제안용 접점입니다. Public API/interface 선택, architecture direction, domain-language conflict, module boundary change, 면제 판단, 작업 수락, 잔여 위험 선택은 사용자 소유 제품 판단 또는 중요한 기술 판단이 진행, write, close를 막거나 public commitment를 만들 때 이 경로를 사용합니다. 넓은 approval text는 특정 recorded route와 option에 답하지 않는 한 결정 패킷을 충족하지 않습니다.
 
-`judgment_domain`은 결정 패킷의 schema-owned 판단 영역입니다. 값은 `product_ux`, `technical_architecture`, `security_privacy`, `qa_acceptance`, `residual_risk`, `scope_autonomy`, `mixed`이며, 표시는 Product / UX 또는 Security / privacy 같은 자연스러운 label로 바꿔 보여줄 수 있습니다. `decision_kind`는 lifecycle, payload branch, gate 의미, state transition semantics를 제어합니다. `judgment_domain`은 사용자가 어떤 종류의 판단을 요구받는지 이해하도록 돕지만 status, gate, owner record, validator input, close aggregation rule, authority path가 아닙니다. 여러 영역에 걸친 결정은 domain을 배타적으로 다루지 말고 부차적인 고려사항을 trade-offs, affected gates, risk, evidence, follow-up에 보여줘야 합니다. 표시는 decision title, 사용자가 정확히 결정하는 것, 왜 지금 필요한지, options, trade-offs, recommendation, uncertainty, deferral consequence, 해당하는 경우 잔여 위험을 보이게 하되 `decision_kind`, 민감 동작 승인, 작업 수락, QA, 잔여 위험 수용, close, 쓰기 허가 기록의 owner contract를 바꾸면 안 됩니다.
+`judgment_domain`은 결정 패킷의 schema-owned 판단 영역입니다. 값은 `product_ux`, `technical_architecture`, `security_privacy`, `qa_acceptance`, `residual_risk`, `scope_autonomy`, `mixed`이며, 표시는 Product / UX 또는 Security / privacy 같은 자연스러운 label로 바꿔 보여줄 수 있습니다. `decision_kind`는 lifecycle, payload branch, gate 의미, state transition semantics를 제어합니다. `judgment_domain`은 사용자가 어떤 종류의 판단을 요구받는지 이해하도록 돕지만 status, gate, owner record, validator input, close aggregation rule, authority path가 아닙니다. 여러 영역에 걸친 결정은 domain을 배타적으로 다루지 말고 부차적인 고려사항을 trade-offs, 영향받는 gates, risk, evidence, follow-up에 보여줘야 합니다. 표시는 결정 제목, 사용자가 정확히 결정하는 것, 왜 지금 필요한지, options, trade-offs, recommendation, uncertainty, deferral consequence, 해당하는 경우 잔여 위험을 보이게 하되 `decision_kind`, 민감 동작 승인, 작업 수락, QA, 잔여 위험 수용, close, 쓰기 허가 기록의 owner contract를 바꾸면 안 됩니다.
 
 ### Decision Request
 
@@ -269,7 +287,7 @@ Verification result record입니다. verdict, checks performed, evidence reviewe
 
 ### Feedback Loop
 
-Checks와 findings가 state, scope, design, evidence, follow-up work, close status로 되돌아가는 기준 support record이자 recorded path입니다. Inputs에는 tests, typecheck, lint, build, browser smoke, TDD red/green/refactor traces, 수동 QA, Eval findings, user decisions, operational findings, residual-risk decisions가 포함될 수 있습니다. Public refs는 `StateRecordRef.record_kind=feedback_loop`를 사용하며, public mutation은 `record_run`의 `FeedbackLoopUpdate` 또는 수동 QA execution link를 사용합니다. Feedback loops는 findings가 chat 속에서 사라지지 않게 하며, applicable한 경우 Evidence Manifest coverage, 결정 패킷, Change Unit update, 잔여 위험 record, 수동 QA 또는 Eval record, close blocker, follow-up Task/Change Unit record 같은 기존 owner path로 연결합니다.
+Checks와 findings가 state, scope, design, evidence, follow-up work, close status로 되돌아가는 기준 support record이자 recorded path입니다. Inputs에는 tests, typecheck, lint, build, browser smoke, TDD red/green/refactor traces, 수동 QA, Eval findings, user decisions, operational findings, residual-risk decisions가 포함될 수 있습니다. Public refs는 `StateRecordRef.record_kind=feedback_loop`를 사용하며, public mutation은 `record_run`의 `FeedbackLoopUpdate` 또는 수동 QA execution link를 사용합니다. Feedback loops는 findings가 chat 속에서 사라지지 않게 하며, applicable한 경우 Evidence Manifest coverage, 결정 패킷, Change Unit update, 잔여 위험 record, 수동 QA 또는 Eval record, close blocker, follow-up Task/Change Unit record 같은 기존 소유자 경로로 연결합니다.
 
 ### Finding
 
@@ -325,7 +343,13 @@ Connected profile의 actual enforcement 또는 detection layer를 적용하는 u
 
 한국어 기준 표현: 하네스 Core.
 
-State transitions, gate updates, validator interpretation, artifact registration, projection job 대기열 추가, close decisions를 담당하는 runtime component입니다.
+상태 전이, gate updates, validator interpretation, artifact registration, projection job 대기열 추가, close decisions를 담당하는 runtime component입니다.
+
+### Harness Server
+
+한국어 기준 표현: 하네스 서버.
+
+에이전트 요청을 받고, Core를 통해 상태 변경을 검증하거나 기록하며, validator를 실행하고, 읽기용 요약을 만드는 로컬 하네스 프로그램과 도구 접점입니다. 이 문서 저장소는 문서 승인 뒤 하네스 서버 소스 저장소가 되는 것을 목표로 합니다. 제품 저장소나 하네스 런타임 홈은 아닙니다.
 
 ### Harness Runtime Home
 
@@ -347,7 +371,13 @@ Work 또는 verification이 문서화된 separation boundary 뒤에서 실행되
 
 ### Journey Card
 
-Current Task position을 compact하게 보여주는 human-readable projection입니다. state, next action, scope, active scoped Change Unit, Autonomy Boundary, blockers, active 결정 패킷, Write Authority Summary, 수용 기준, 민감 동작 승인 status, evidence, verification, QA, 작업 수락, 잔여 위험, projection freshness를 포함합니다. Journey Card는 display이며 기준 상태가 아니고, 오래된 chat memory가 아니라 current owner record에서 렌더링됩니다.
+현재 Task 위치를 간결하게 보여주는 human-readable projection입니다. state, next action, scope, active scoped Change Unit, Autonomy Boundary, blockers, active 결정 패킷, Write Authority Summary, 수용 기준, 민감 동작 승인 status, evidence, verification, QA, 작업 수락, 잔여 위험, 읽기용 요약 최신성을 포함합니다. Journey Card는 display이며 기준 상태가 아니고, 오래된 chat memory가 아니라 current owner record에서 렌더링됩니다.
+
+### Judgment Domain
+
+한국어 기준 표현: 판단 영역.
+
+Decision Packet의 schema field인 `judgment_domain`입니다. `product_ux`, `technical_architecture`, `security_privacy`, `qa_acceptance`, `residual_risk`, `scope_autonomy`, `mixed`처럼 사용자에게 보이는 판단 영역을 묶습니다. 사용자가 어떤 판단을 요청받는지 이해하도록 돕지만 gate, status, authority path, validator input, close aggregation rule, `decision_kind`의 대체물이 아닙니다.
 
 ### Journey Spine
 
@@ -435,13 +465,21 @@ Design-quality policies가 사용하는 standard form입니다. `name`, `applies
 
 하네스 또는 connector가 violating action을 execution 전에 block할 수 있는 예방형(preventive) guarantee level입니다.
 
+### Product Repository
+
+한국어 기준 표현: 제품 저장소.
+
+사용자의 실제 제품 작업 공간입니다. 소스 코드, 테스트, 제품 문서, 제품 저장소에 쓰이는 읽기용 하네스 보고서가 여기에 속합니다. 제품 저장소는 제품 내용의 기준 위치로 남습니다. 하네스 런타임 홈이 아니며, 제품 파일은 기존 Core, artifact-registration, reconcile, owner-record path가 관련 Harness fact를 기록할 때만 하네스 운영 사실이 됩니다.
+
 ### Projection
 
-읽기용 투영 문서(projection)는 Core 상태 records와 아티팩트 참조에서 생성된 읽기용 파생 view입니다. Projection은 reading과 decision-making에 유용하지만 기준 상태를 override하거나 대체할 수 없습니다.
+한국어 기준 표현: 읽기용 요약.
+
+Projection은 Core 상태 record와 아티팩트 참조에서 생성된 읽기용 파생 보기입니다. 읽고 판단하는 데 유용하지만 기준 상태를 덮어쓰거나 대체할 수 없습니다.
 
 ### ProjectionKind
 
-Projection job과 template kind를 나타내는 API enum입니다. Support class, values, extension rules는 [Shared schemas](mcp-api-and-schemas.md#shared-schemas)가 담당합니다. Support class label은 코어 권한 조각(v0.1 Core Authority Slice) run obligation이 아닙니다. v0.1에는 owner path가 이미 만든 freshness/read fact를 보존하는 것 외의 projection rendering exit requirement가 없습니다. 어떤 ProjectionKind도 projection을 기준 상태로 만들지 않습니다.
+Projection job과 template kind를 나타내는 API enum입니다. Support class, values, extension rules는 [Shared schemas](mcp-api-and-schemas.md#shared-schemas)가 담당합니다. Support class label은 코어 권한 조각(v0.1 Core Authority Slice) run obligation이 아닙니다. v0.1에는 소유자 경로가 이미 만든 freshness/read fact를 보존하는 것 외의 projection rendering exit requirement가 없습니다. 어떤 ProjectionKind도 Projection을 기준 상태로 만들지 않습니다.
 
 ### Projection Freshness
 
@@ -449,11 +487,11 @@ Projection과 source record, managed hash, 아티팩트 참조, projection job s
 
 ### Projection Job
 
-Committed state records와 아티팩트 참조에서 Markdown projection을 렌더링하도록 projector에 요청하는 durable outbox record입니다. `record_kind=projection` identity는 `projection_jobs.projection_job_id`입니다. Project-level projection jobs는 current Task-scoped artifact DDL에서 그 자체로 project-scoped artifact links를 만들지 않습니다.
+Committed state records와 아티팩트 참조에서 Markdown projection을 렌더링하도록 projector에 요청하는 지속 outbox record입니다. `record_kind=projection` identity는 `projection_jobs.projection_job_id`입니다. Project-level projection jobs는 현재 Task-scoped artifact DDL에서 그 자체로 project-scoped artifact links를 만들지 않습니다.
 
 ### Question Queue
 
-Open questions를 blocking, useful-but-not-blocking, codebase-answerable로 분류한 Discovery 또는 Shared Design support/projection 목록입니다. 이는 권장 display/support 내용이지 standalone schema나 canonical record field list가 아닙니다. Blocking question은 사용자 소유 판단이 필요할 때 결정 패킷 candidate로 라우팅될 수 있습니다. Useful-but-not-blocking question은 남겨 두거나, defer하거나, follow-up work로 바꿀 수 있습니다. Codebase-answerable question은 사용자에게 묻지 말고 current repo, docs, 하네스 state, source refs에서 답해야 합니다. Queue는 결정 패킷, gate, 민감 동작 승인, evidence, 작업 수락, close, 쓰기 허가 기록이 아닙니다.
+Open questions를 blocking, useful-but-not-blocking, codebase-answerable로 분류한 Discovery 또는 Shared Design support/projection 목록입니다. 이는 권장 display/support 내용이지 standalone schema나 canonical record field list가 아닙니다. Blocking question은 사용자 소유 판단이 필요할 때 결정 패킷 candidate로 라우팅될 수 있습니다. Useful-but-not-blocking question은 남겨 두거나, defer하거나, follow-up work로 바꿀 수 있습니다. Codebase-answerable question은 사용자에게 묻지 말고 current repo, docs, 하네스 state, 출처 참조에서 답해야 합니다. Queue는 결정 패킷, gate, 민감 동작 승인, evidence, 작업 수락, close, 쓰기 허가 기록이 아닙니다.
 
 ### QA Gate
 
@@ -483,7 +521,7 @@ Current state와 policy/playbook context에서 계산되는 non-authoritative st
 
 ### Release Handoff
 
-External PR, review, deployment, rollback, monitoring process를 위한 release readiness를 요약하는 optional 보고서/export profile입니다. Close readiness, blocker, evidence ref, verification ref, 수동 QA ref, residual-risk ref, changed file, projection freshness, redaction note, suggested checklist item을 포함합니다. 정확한 보고서/export 권한 경계는 [Operations And Conformance](operations-and-conformance.md#release-handoff-export-profile)가 담당합니다.
+External PR, review, deployment, rollback, monitoring process를 위한 release readiness를 요약하는 optional 보고서/export profile입니다. Close readiness, blocker, evidence ref, verification ref, 수동 QA ref, residual-risk ref, changed file, 읽기용 요약 최신성, redaction note, suggested checklist item을 포함합니다. 정확한 보고서/export 권한 경계는 [Operations And Conformance](operations-and-conformance.md#release-handoff-export-profile)가 담당합니다.
 
 ### Role Lens
 
@@ -507,7 +545,7 @@ Spec Compliance Review와 Code Quality / Stewardship Review를 분리하는 mana
 
 한국어 기준 표현: 잔여 위험.
 
-잔여 위험은 Evidence, verification, QA, 작업 수락 이후에도 남는 알려진 불확실성, trade-off, limitation, unchecked condition을 위한 기준 close-relevant support record입니다. source refs, affected scope, applicable한 경우 related 결정 패킷, visibility status, 받아들인 위험, follow-up requirement, close impact를 기록합니다. Known close-relevant 잔여 위험은 successful acceptance 또는 close 전에 보여야 하며, known close-relevant risk가 없으면 `ResidualRiskSummary.status=none`으로 확인되어야 합니다. 잔여 위험 수용은 사용자가 이름 붙은 알려진 남은 위험을 명시적으로 받아들이는 판단입니다. 이는 결과가 달리 검증, 작업 수락, 민감 동작 승인, 면제 판단되었다는 뜻이 아닙니다. Current reference model에서 받아들인 위험은 잔여 위험 record 위의 metadata/state이며 별도의 `accepted_risk` state record가 아닙니다.
+잔여 위험은 Evidence, verification, QA, 작업 수락 이후에도 남는 알려진 불확실성, trade-off, limitation, unchecked condition을 위한 기준 close-relevant support record입니다. 출처 참조, 영향받는 scope, 해당하는 경우 관련 결정 패킷, 표시 상태, 받아들인 위험, 후속 작업 필요 여부, 닫기 영향을 기록합니다. 닫기에 영향을 주는 것으로 알려진 잔여 위험은 성공적인 작업 수락 또는 close 전에 보여야 하며, known close-relevant risk가 없으면 `ResidualRiskSummary.status=none`으로 확인되어야 합니다. 잔여 위험 수용은 사용자가 이름 붙은 알려진 잔여 위험을 명시적으로 받아들이는 판단입니다. 이는 결과가 달리 검증, 작업 수락, 민감 동작 승인, 면제 판단되었다는 뜻이 아닙니다. 현재 Reference 모델에서 받아들인 위험은 잔여 위험 record 위의 메타데이터/상태이며 별도의 `accepted_risk` state record가 아닙니다.
 
 ### Risk Accepted Close
 
@@ -527,7 +565,7 @@ Product writes가 active scoped Change Unit으로 covered되어야 함을 요구
 
 ### Shared Design
 
-Implementation이 plan으로 굳어지기 전에 Task에 대해 최소한으로 기록한 shared understanding입니다. goal, user value, scope, non-goals, 수용 기준, 확인 가능한 사실, assumptions, decisions, rejected options, domain/module/interface impact, QA와 verification 기대 수준, 안전한 다음 작업을 포함합니다. Discovery Brief, Question Queue, Assumption Register, 첫 구현 후보 또는 작업 분할 제안, First Safe Change Unit Candidate가 Shared Design에 입력될 수 있습니다. Shared Design은 shaping과 `design_gate` readiness를 도울 수 있지만 최종 승인, 민감 동작 승인, 작업 수락, 잔여 위험 수용, QA judgment, evidence, 닫기 준비 상태, 쓰기 허가 기록은 아닙니다. Shared Design의 Markdown 렌더링 결과는 projections이자 proposal 접점입니다. 정확한 policy requirements는 [설계 품질 정책](design-quality-policies.md#shared-design-shared_design)이 담당합니다.
+Implementation이 plan으로 굳어지기 전에 Task에 대해 최소한으로 기록한 shared understanding입니다. goal, user value, scope, non-goals, 수용 기준, 확인 가능한 사실, assumptions, decisions, rejected options, domain/module/interface impact, QA와 verification 기대 수준, 안전한 다음 작업을 포함합니다. Discovery Brief, Question Queue, Assumption Register, 첫 구현 후보 또는 작업 분할 제안, First Safe Change Unit Candidate가 Shared Design에 입력될 수 있습니다. Shared Design은 shaping과 `design_gate` readiness를 도울 수 있지만 최종 승인, 민감 동작 승인, 작업 수락, 잔여 위험 수용, QA judgment, evidence, 닫기 준비 상태, 쓰기 허가 기록은 아닙니다. Shared Design의 Markdown 렌더링 결과는 projections이자 제안용 접점입니다. 정확한 policy requirements는 [설계 품질 정책](design-quality-policies.md#shared-design-shared_design)이 담당합니다.
 
 ### Source-of-truth
 
@@ -547,7 +585,7 @@ Kernel state 안의 기준 structured record입니다. Task, Change Unit, 결정
 
 ### State Version
 
-Core-resolved state scope를 위한 optimistic-concurrency clock입니다. 적용되는 경우 Core는 envelope, tool-specific input, 또는 active Task에서 primary Task를 찾습니다. `expected_state_version`, `ToolResponseBase.state_version`, `EventRef.state_version`, `task_events.state_version`은 하나의 global event-store sequence가 아니라 해당 affected scope에 따라 해석됩니다.
+Core-resolved state scope를 위한 optimistic-concurrency clock입니다. 적용되는 경우 Core는 envelope, tool-specific input, 또는 active Task에서 primary Task를 찾습니다. `expected_state_version`, `ToolResponseBase.state_version`, `EventRef.state_version`, `task_events.state_version`은 하나의 global event-store sequence가 아니라 해당 영향받는 scope에 따라 해석됩니다.
 
 ### Project State Version
 
@@ -567,7 +605,7 @@ Credential, token, certificate, key, 기타 secret value 같은 민감한 materi
 
 ### Security Threat Model
 
-하네스 security asset, trust boundary, threat category, control expectation을 담당하는 reference owner입니다. Repo docs의 prompt injection, projection tampering, stale approval replay, out-of-scope write, MCP unavailable 상태에서의 state claim, evidence artifact를 통한 secret leakage, artifact hash mismatch, 악성 generated connector file, capability overclaiming, stale context poisoning 같은 risk를 설명합니다. Exact DDL, public API schema, kernel transition은 담당하지 않습니다.
+하네스 security asset, trust boundary, threat category, control expectation을 담당하는 reference owner입니다. Repo docs의 prompt injection, projection tampering, stale approval replay, out-of-scope write, MCP unavailable 상태에서의 state claim, evidence artifact를 통한 secret leakage, artifact hash mismatch, 악성 generated connector 파일, capability overclaiming, stale context poisoning 같은 risk를 설명합니다. Exact DDL, public API schema, kernel transition은 담당하지 않습니다.
 
 ### Surface Capability Check
 
@@ -599,7 +637,7 @@ Typo, 문서 한 문장, obvious rename처럼 scope, result, 사용자 판단이
 
 ### Trust Boundary
 
-하네스 surface, file, caller, runtime space 사이의 분리입니다. 한쪽의 input은 owner path 없이 다른 쪽의 authority로 취급하면 안 됩니다. 예를 들어 chat text, 제품 저장소 문서, projection, generated connector file, artifact bytes, MCP caller claim은 하네스에 정보를 줄 수 있지만, Core 또는 문서화된 다른 owner path가 그 의미를 받아들이기 전까지 canonical operational state가 되지 않습니다. Trust-boundary map은 [보안 위협 모델 참조](security-threat-model.md)가 담당합니다.
+하네스 surface, file, caller, runtime space 사이의 분리입니다. 한쪽의 input은 소유자 경로 없이 다른 쪽의 authority로 취급하면 안 됩니다. 예를 들어 chat text, 제품 저장소 문서, projection, generated connector 파일, artifact bytes, MCP caller claim은 하네스에 정보를 줄 수 있지만, Core 또는 문서화된 다른 소유자 경로가 그 의미를 받아들이기 전까지 canonical operational state가 되지 않습니다. Trust-boundary map은 [보안 위협 모델 참조](security-threat-model.md)가 담당합니다.
 
 ### Verification
 
@@ -625,7 +663,7 @@ Trigger/input에서 domain logic, persistence 또는 state, caller/API 경계, o
 
 한국어 기준 표현: 면제 판단.
 
-Policy가 허용하는 gate 또는 policy requirement에 대한 explicit recorded exception입니다. 면제 판단은 policy 또는 gate, Task와 Change Unit, 생략하는 check 또는 surface, reason, actor, 필요할 때 expiry 또는 follow-up, 영향받는 gate 또는 close impact, 그리고 필요할 때 잔여 위험 경로로 보여주거나 수용해야 하는 close-relevant 잔여 위험을 이름 붙입니다. 검증 면제 판단, design waiver, QA 면제 판단은 정의된 rules 아래 명시적이고 범위가 정해진 경우에만 허용됩니다. Successful completion을 위해 product-write scope, 민감 동작 승인, required evidence coverage, required 작업 수락은 waived되지 않습니다. 검증 면제 판단과 QA 면제 판단은 assurance를 높이거나, 작업 수락을 암시하거나, unrelated 잔여 위험을 수용하거나, 생략된 check가 passed된 것처럼 만들지 않습니다.
+Policy가 허용하는 gate 또는 policy requirement에 대한 명시적으로 기록된 예외입니다. 면제 판단은 policy 또는 gate, Task와 Change Unit, 생략하는 check 또는 surface, reason, actor, 필요할 때 expiry 또는 follow-up, 영향받는 gate 또는 닫기 영향, 그리고 필요할 때 잔여 위험 경로로 보여주거나 수용해야 하는 close-relevant 잔여 위험을 이름 붙입니다. 검증 면제 판단, design waiver, QA 면제 판단은 정의된 rules 아래 명시적이고 범위가 정해진 경우에만 허용됩니다. Successful completion을 위해 product-write scope, 민감 동작 승인, required evidence coverage, required 작업 수락은 waived되지 않습니다. 검증 면제 판단과 QA 면제 판단은 assurance를 높이거나, 작업 수락을 암시하거나, unrelated 잔여 위험을 수용하거나, 생략된 check가 passed된 것처럼 만들지 않습니다.
 
 ### Write Authorization
 

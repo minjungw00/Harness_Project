@@ -286,7 +286,7 @@ Manifest는 다음을 해야 합니다.
 - surface version, MCP config, hook, permission, workspace policy, wrapper, sidecar, generated file, managed file, conformance result, capture method, QA capture method, redaction policy, artifact retention behavior가 바뀌면 profile 또는 generated block을 stale로 표시
 - 사람의 편집을 덮어쓰기 전에 drift 탐지
 - drift가 감지되면 explicit reconcile 또는 reconnect decision이 replacement를 허가하기 전까지 existing file 또는 managed block을 그대로 유지
-- 필요하면 drift를 reconcile로 라우팅하고, 편집된 generated file이 canonical Task state가 아님을 보고
+- 필요하면 drift를 reconcile로 라우팅하고, 편집된 generated file이 기준 Task 상태가 아님을 보고
 
 Manifest concept은 공통입니다. 접점별 생성 파일 이름은 [Surface Cookbook](surface-cookbook.md)이 담당합니다.
 
@@ -313,7 +313,7 @@ Implementation agent에게는 매 turn마다 compact한, 항상 주입되는 Har
 2. Product/runtime/code write에는 compatible `prepare_write`와 Write Authorization이 필요합니다.
 3. 사용자 소유 제품 판단 또는 중요한 기술 판단은 Decision Packet으로 라우팅합니다.
 4. Approval은 product judgment, 작업 수락, 잔여 위험 수용이 아닙니다.
-5. Projection은 읽기용 output이지 canonical state가 아닙니다.
+5. Projection은 읽기용 요약이지 기준 상태가 아닙니다.
 6. Evidence는 artifact ref와 state ref를 사용하며, 붙여 넣은 log나 복사한 evidence body를 권한으로 삼지 않습니다.
 7. Same-session review는 self-checking context이지 분리 검증이 아닙니다.
 8. MCP unavailable이면 authoritative state update, gate update, evidence, 작업 수락과 잔여 위험, projection repair, close 주장을 하지 않습니다.

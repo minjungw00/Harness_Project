@@ -1071,7 +1071,7 @@ NextResponse:
 | `record_manual_qa` | Human 수동 QA outcome 또는 valid waiver path를 기록합니다. | Browser artifact, smoke run, note만으로는 수동 QA가 아니며 수동 QA record 또는 valid waiver가 필요합니다. |
 | `request_acceptance` | Evidence, verification, 수동 QA, 잔여 위험 표시를 보여준 뒤 작업 수락을 요청합니다. | 작업 수락은 evidence, verification, 수동 QA, 민감 동작 승인, scope, 잔여 위험 표시, 잔여 위험 수용을 대체하지 않습니다. |
 | `close_task` | `harness.close_task`로 close, cancel, supersede를 시도합니다. | Close attempt는 여전히 blocker를 반환할 수 있으며, status text나 report만으로 Task가 닫히지 않습니다. |
-| `reconcile` | 오래된 projection, managed-block drift, proposal text, state/display mismatch를 refresh 또는 reconcile합니다. | Reconcile 표시는 기존 reconcile/owner path가 받아들이기 전에는 state가 아닙니다. |
+| `reconcile` | 오래된 projection, managed-block drift, proposal text, state/display mismatch를 refresh 또는 reconcile합니다. | Reconcile 표시는 기존 reconcile/owner path가 받아들이기 전에는 상태가 아닙니다. |
 | `idle` | 요청한 focus에 필요한 즉시 Harness action이 없습니다. | Task가 닫혔거나, 수락됐거나, verified됐거나, risk-free라는 뜻이 아닙니다. |
 
 State transition summary: state transition 없음.

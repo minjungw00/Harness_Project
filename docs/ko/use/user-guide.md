@@ -35,7 +35,7 @@
 
 하네스는 보안에 민감한 AI 작업을 더 잘 보이고 올바른 경로로 보내게 해 주지만, 초기 로컬 하네스 자체가 sandbox는 아닙니다. OS 권한을 자동으로 바꾸거나, 임의 도구를 sandbox 격리하거나, 로컬 파일을 변조 불가능하게 만들거나, 지시받은 agent를 사전 차단 보안 경계로 바꾸지 않습니다.
 
-네 가지 보장 수준을 볼 수 있습니다. `cooperative`는 agent에게 규칙을 따르라고 지시하는 협력적/지시 기반 수준입니다. `detective`는 mismatch를 실행 뒤에 탐지하거나 기록할 수 있는 탐지 가능 수준입니다. `preventive`는 입증된 control이 operation을 실행 전에 사전 차단한다는 뜻입니다. `isolated`는 work 또는 verification이 문서화된 separation boundary 뒤에서 실행된다는 뜻입니다. Worktree나 fresh evaluator bundle은 자동으로 OS sandbox 격리, 권한 경계, 변조 불가능한 보안 경계가 아닙니다. 초기 로컬 사용에서는 agent가 실제 차단 control 또는 정확히 입증된 separation boundary를 이름 붙일 수 있을 때가 아니라면 cooperative/detective 수준의 표현을 기대해야 합니다.
+네 가지 보장 수준을 볼 수 있습니다. `cooperative`는 에이전트에게 규칙을 따르라고 지시하는 협력형 수준입니다. `detective`는 불일치를 실행 뒤에 탐지하거나 기록할 수 있는 탐지형 수준입니다. `preventive`는 입증된 통제가 실행 전에 동작을 막는다는 뜻입니다. `isolated`는 작업이나 검증이 문서화된 분리 경계 뒤에서 실행된다는 뜻입니다. Worktree나 fresh evaluator bundle은 자동으로 OS sandbox 격리, 권한 경계, 변조 불가능한 보안 경계가 아닙니다. 초기 로컬 사용에서는 에이전트가 실제 차단 통제나 입증된 분리 경계를 정확히 이름 붙일 수 있을 때가 아니라면 cooperative/detective 수준의 표현을 기대해야 합니다.
 
 ## 평소 말로 시작하기
 
@@ -86,7 +86,7 @@
 ```text
 이해한 범위: 이메일 로그인만 추가합니다. 비밀번호 재설정, 계정 생성, 소셜 로그인, 전체 인증 재설계는 범위 밖입니다.
 
-제가 확인할 수 있는 것: 기존 로그인 route, 세션 처리, 인증 테스트, UI form 패턴, validation helper, 현재 인증 동작 문서.
+제가 확인할 수 있는 것: 기존 로그인 경로, 세션 처리, 인증 테스트, UI 폼 패턴, validation helper, 현재 인증 동작 문서.
 
 사용자만 결정할 수 있는 것: 이메일 로그인이 비밀번호 방식인지, 일회용 코드인지, magic link인지, 외부 identity provider인지; 로그인 실패 UX와 문구; 보안과 UX 장단점을 어느 정도 받아들일지.
 
@@ -99,7 +99,7 @@
 - 사용자 가치
 - 비목표
 - 수용 기준
-- 에이전트가 repo, docs, 현재 Harness state에서 확인할 수 있는 사실
+- 에이전트가 저장소, 문서, 현재 하네스 상태에서 확인할 수 있는 사실
 - 사용자만 결정할 수 있는 판단
 - 제품 또는 UX 판단 후보
 - 기술 아키텍처 판단 후보
@@ -113,9 +113,9 @@
 
 ```text
 필요한 판단: 로그인 실패 경험.
-선택지: form 근처 inline layer, toast, modal.
-추천: form 근처 inline layer. 계속 보이고 접근성 대응이 비교적 쉽습니다.
-미뤄도 계속할 수 있는 일: 최종 UI 동작을 확정하지 않는 API wiring과 test.
+선택지: 폼 근처 인라인 메시지, 토스트, 모달.
+추천: 폼 근처 인라인 메시지. 계속 보이고 접근성 대응이 비교적 쉽습니다.
+미뤄도 계속할 수 있는 일: 최종 UI 동작을 확정하지 않는 API 연결과 테스트.
 아직 닫을 수 없는 것: 최종 UX, 문구, 수동 QA.
 ```
 
@@ -124,7 +124,7 @@
 ```text
 필요한 판단: 로그인 구조.
 선택지: session cookie, bearer/JWT, OAuth/OIDC, social-login provider integration.
-추천: 먼저 기존 session과 user model을 확인합니다. 코드베이스가 이미 지원하는 것과 identity-provider 요구사항을 알기 전에는 고르지 않습니다.
+추천: 먼저 기존 세션과 사용자 모델을 확인합니다. 코드베이스가 이미 지원하는 것과 identity provider 요구사항을 알기 전에는 고르지 않습니다.
 미뤄도 계속할 수 있는 일: 읽기 전용 조사와 범위가 제한된 구현 제안.
 아직 닫을 수 없는 것: 구현, 보안 근거, 선택한 인증 경로의 수용 기준.
 ```
@@ -132,7 +132,7 @@
 필요한 근거:
 
 ```text
-"끝났다"고 말하기 전에 필요한 근거: 변경 경로, 성공/실패 경로의 focused auth test, 보안상 민감한 redaction note, 로그인 화면 문구와 오류 상태가 바뀐다면 수동 QA.
+"끝났다"고 말하기 전에 필요한 근거: 변경 경로, 성공/실패 경로의 집중 인증 테스트, 보안상 민감한 가림(redaction) 메모, 로그인 화면 문구와 오류 상태가 바뀐다면 수동 QA.
 ```
 
 왜 아직 닫을 수 없는지:
@@ -196,7 +196,7 @@
 예시:
 
 - 오타나 문구만 바꾸는 수정은 한 곳의 분명한 표면에 머물고 의미, 동작, localization 전략, 보안 자세, 필요한 QA가 바뀌지 않으면 가볍게 유지할 수 있습니다.
-- "이 modal에서 Enter 키가 닫기 대신 제출하게 해줘"는 UI 동작, 접근성 기대, 제품 흐름을 바꿀 수 있으므로 제품/UX 판단이 필요한 추적되는 작업으로 상향합니다.
+- "이 모달에서 Enter 키가 닫기 대신 제출하게 해줘"는 UI 동작, 접근성 기대, 제품 흐름을 바꿀 수 있으므로 제품/UX 판단이 필요한 추적되는 작업으로 상향합니다.
 - "로그인을 magic link로 바꿔줘"는 인증 구조와 보안/개인정보 동작을 바꾸므로 상향합니다. 에이전트가 먼저 조사할 수는 있지만, 구현에는 추적되는 범위, 사용자 소유 기술/보안 판단, 근거, QA/검증이 필요할 가능성이 큽니다.
 
 ## 큰 일에는 구조가 필요합니다
@@ -214,14 +214,14 @@
 ```text
 제가 들은 범위: 이메일 로그인 추가. 지금 범위 밖: 비밀번호 재설정, 계정 생성, 소셜 로그인, 전체 인증 재설계.
 
-제가 확인할 것: 기존 auth route, user/session model, 로그인 UI 패턴, validation과 error handling, 현재 test와 문서.
+제가 확인할 것: 기존 인증 경로, user/session model, 로그인 UI 패턴, validation과 error handling, 현재 test와 문서.
 
 사용자 판단이 필요할 가능성이 큰 것:
 - 제품 / UX: credential flow, 로그인 실패 동작, 로그인 문구, 복구 안내.
 - 기술 아키텍처: session model, token/cookie 전략, password storage 또는 identity-provider 경로, migration 영향, dependency 선택.
 - 보안 / 개인정보: account-enumeration 위험, audit log, rate limit 또는 lockout 동작, redaction, secret handling.
 
-필요할 가능성이 큰 근거: 성공/실패 경로 focused test, 변경 경로 요약, 보안상 민감한 note, 로그인 화면이 바뀐다면 UI 수동 QA.
+필요할 가능성이 큰 근거: 성공/실패 경로의 집중 테스트, 변경 경로 요약, 보안상 민감한 메모, 로그인 화면이 바뀐다면 UI 수동 QA.
 
 아직 닫을 수 없는 이유: 범위, 사용자 판단, 근거, QA 기대 수준, 잔여 위험이 정리되지 않았습니다.
 ```
@@ -254,7 +254,7 @@
 
 이 네 가지는 읽기용 요약이지 권한 문서가 아닙니다. 에이전트가 뒤에 있는 ref를 보여줄 수는 있지만, 상태 변경, 근거 기록, 작업 수락, 잔여 위험 수용, 닫기는 여전히 Harness/Core 기록과 action에서만 옵니다.
 
-판단 그룹에 formal Decision Packet이 필요하면 Harness는 decision route와 사용자에게 보이는 판단 영역을 함께 기록합니다. `decision_kind`는 어떤 lifecycle 또는 gate path를 쓰는지 말하고, `judgment_domain`은 결정을 Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, Mixed 중 어디에 묶어 설명할지 정합니다. 판단 영역은 결정을 설명하기 위한 값이며, 그 자체로 닫기 준비 상태나 gate aggregation을 바꾸지는 않습니다.
+판단 그룹에 정식 결정 패킷(Decision Packet)이 필요하면 하네스는 결정 경로와 사용자에게 보이는 판단 영역을 함께 기록합니다. `decision_kind`는 어떤 lifecycle 또는 gate path를 쓰는지 말하고, `judgment_domain`은 결정을 Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, Mixed 중 어디에 묶어 설명할지 정합니다. 판단 영역은 결정을 설명하기 위한 값이며, 그 자체로 닫기 준비 상태나 gate aggregation을 바꾸지는 않습니다.
 
 ```mermaid
 flowchart LR
@@ -281,7 +281,7 @@ flowchart LR
 
 ## 에이전트가 혼자 결정해도 되는 것
 
-범위가 분명해지면 에이전트는 일상적인 구현 세부사항을 매번 묻지 않고 판단할 수 있습니다. 예를 들면 기존 helper를 재사용할지, private function을 어떻게 나눌지, focused test를 어디에 둘지, local naming convention을 따를지, 합의한 결과에 맞는 보수적인 내부 접근을 고를지 같은 일입니다.
+범위가 분명해지면 에이전트는 일상적인 구현 세부사항을 매번 묻지 않고 판단할 수 있습니다. 예를 들면 기존 helper를 재사용할지, 비공개 함수를 어떻게 나눌지, 집중 테스트를 어디에 둘지, 저장소의 이름 짓기 규칙을 따를지, 합의한 결과에 맞는 보수적인 내부 접근을 고를지 같은 일입니다.
 
 하지만 사용자, caller, future work가 의존할 수 있는 약속이 바뀌면 멈춰야 합니다.
 
@@ -292,7 +292,7 @@ flowchart LR
 - 범위 확장
 - QA 또는 검증 면제
 - 알려진 잔여 위험 수용
-- 요구되는 경우 최종 작업 수락
+- 요구되는 경우 작업 수락
 
 자주 쓰는 말:
 
@@ -307,7 +307,7 @@ flowchart LR
 
 ## 작업이 막혔을 때
 
-막힘은 구체적이어야 합니다. 다음 움직임을 누가 소유하는지, 가장 작은 해소 방법이 무엇인지 말해야 합니다.
+막힘은 구체적이어야 합니다. 다음 움직임을 누가 소유하는지, 가장 작은 해소 방법이 무엇인지 말해야 합니다. 사용자에게는 `막힘`처럼 쉬운 말을 쓰고, API나 Reference 문맥에서만 `blocker` 또는 `차단 조건(blocker)`을 덧붙입니다.
 
 ```text
 막혔습니다.
@@ -356,7 +356,7 @@ flowchart LR
 | 수동 QA | 사람의 판단이 중요한 영역을 사람이 봤음을 기록합니다. | 자동 테스트나 screenshot만 있는 상태. |
 | 작업 수락 | 필요할 때 사용자가 결과를 받아들인다는 판단을 기록합니다. | 근거, 검증, QA, 민감 동작 승인, 면제 판단, 잔여 위험 수용. |
 | 잔여 위험 | 알려진 남은 불확실성, 한계, 확인하지 못한 조건, 장단점을 이름 붙입니다. | 근거, 검증, QA, 작업 수락, 민감 동작 승인. |
-| 잔여 위험 수용 | 식별된 잔여 위험을 사용자가 받아들였음을 기록합니다. | 작업 수락, 검증, QA, 민감 동작 승인, 막연한 작업 승인. |
+| 잔여 위험 수용 | 식별된 잔여 위험을 사용자가 받아들였음을 기록합니다. | 작업 수락, 검증, QA, 민감 동작 승인, 막연한 "진행해" 식 동의. |
 | 민감 동작 승인 | 이름 붙은 민감한 단계를 진행해도 된다는 허가입니다. | 제품 판단, 정확성, 작업 수락, 잔여 위험 수용, 면제 판단. |
 
 이 분리 때문에 테스트가 통과해도 작업이 여전히 막힐 수 있습니다. 테스트는 근거나 검증을 뒷받침할 수 있지만, 실제 경험에 대한 수동 QA, 사용자의 작업 수락, 또는 알려진 잔여 위험에 대한 명시적 수용이 아직 필요할 수 있습니다.
@@ -379,9 +379,9 @@ flowchart LR
 | Approval | 이름 붙은 민감한 행동에 대한 민감 동작 승인입니다. 막연한 동의나 작업 수락이 아닙니다. |
 | Write Authorization | 의도한 제품 파일 쓰기가 현재 작업, 범위, 판단, 허가와 맞는지 한 번 확인한 기록입니다. |
 | Evidence Manifest | 완료 주장을 뒷받침하는 근거를 연결한 기록입니다. |
-| 읽기용 요약(Projection) | owner record와 artifact ref에서 렌더링된 읽기용 요약입니다. 방향을 잡는 데 유용하지만 그 자체가 권한은 아닙니다. |
+| 읽기용 요약(Projection) | 소유자 기록과 아티팩트 참조에서 렌더링된 읽기용 요약입니다. 방향을 잡는 데 유용하지만 그 자체가 권한은 아닙니다. |
 
-이 라벨들은 서로 대체되지 않습니다. Approval은 작업 수락이 아닙니다. 작업 수락은 잔여 위험을 지우지 않습니다. 판단은 쓰기 권한이 아닙니다. 읽기용 요약은 state가 아닙니다. 테스트 통과가 수동 QA를 의미하지 않습니다. 잔여 위험을 수용한다고 위험이 사라지지는 않습니다.
+이 라벨들은 서로 대체되지 않습니다. Approval은 작업 수락이 아닙니다. 작업 수락은 잔여 위험을 지우지 않습니다. 판단은 쓰기 권한이 아닙니다. 읽기용 요약은 상태가 아닙니다. 테스트 통과가 수동 QA를 의미하지 않습니다. 잔여 위험을 수용한다고 위험이 사라지지는 않습니다.
 
 정확한 계약이 필요할 때만 Reference 문서를 봅니다. [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [에이전트 통합 참조](../reference/agent-integration.md)가 그 역할을 합니다.
 
@@ -389,6 +389,6 @@ flowchart LR
 
 [핵심 개념](../learn/concepts.md)에서 사용자용 표현 뒤에 있는 어휘를 봅니다.
 
-제품, UX, architecture, security, QA, verification, 작업 수락, 위험, scope 판단에 초점 있는 질문이 필요하면 [결정 패킷 Cookbook](decision-packet-cookbook.md)을 봅니다.
+제품, UX, 아키텍처, 보안, QA, 검증, 작업 수락, 위험, 범위 판단에 초점 있는 질문이 필요하면 [결정 패킷 Cookbook](decision-packet-cookbook.md)을 봅니다.
 
 에이전트 통합자는 [에이전트 세션 흐름](agent-session-flow.md)을 읽습니다. 일반 사용자의 주요 경로에는 필수가 아닙니다.

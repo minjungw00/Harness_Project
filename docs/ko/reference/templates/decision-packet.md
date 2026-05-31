@@ -53,7 +53,7 @@ Approval 형태 표시 항목인 "이 Approval이 포괄하는 것", "이 Approv
 
 다음과 같은 Decision Packet에도 같은 렌더링 섹션을 사용합니다. 이 단서는 추가 template section이 아닙니다.
 
-- Product/UX trade-off(`judgment_domain=product_ux`): 로그인 실패 피드백을 inline layer, toast, modal 중에서 고르는 경우입니다. 흐름, 방해 정도, 접근성, 문구, 제품 위험의 차이는 Options와 Recommendation에 둡니다.
+- Product/UX trade-off(`judgment_domain=product_ux`): 로그인 실패 피드백을 인라인 메시지, 토스트, 모달 중에서 고르는 경우입니다. 흐름, 방해 정도, 접근성, 문구, 제품 위험의 차이는 Options와 Recommendation에 둡니다.
 - Product/copy trade-off: 로그인 실패 문구를 일반적인 문구, 더 구체적인 문구, hybrid 문구 중에서 고르는 경우입니다. 계정 열거(account-enumeration) 위험, 복구 도움 정도, 지원 부담, 명확성, 제품 톤은 Options와 Minimum Context To Judge에 둡니다.
 - 기술 아키텍처 선택(`judgment_domain=technical_architecture`): session cookie, bearer/JWT token, OAuth/OIDC provider, social-login provider integration 중에서 고르는 경우입니다. 폐기 가능성, CSRF/XSS 노출, client 호환성, 구현 비용, identity-provider 경계, migration 영향은 Options와 Minimum Context To Judge에 둡니다.
 - Dependency Approval과 dependency decision 구분: 사용자가 install command나 dependency-file edit을 승인하는 경우 그 sensitive-action 경계는 Approval-Shaped Context에 둡니다. 그 dependency가 올바른 architecture 방향인지 선택하는 경우에는 technical choice를 What User Is Deciding과 Options에 둡니다.
