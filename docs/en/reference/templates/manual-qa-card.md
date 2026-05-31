@@ -42,13 +42,13 @@ Close context and waiver placeholders are derived display summaries from QA reco
 Manual QA is required.
 Display only: `qa_gate` and QA records remain canonical.
 Human inspection only: automated checks, screenshots, browser logs, and Browser QA artifacts can support context, but they are not Manual QA by themselves.
-Browser QA Capture: useful when promoted and supported; not final acceptance, not detached verification without an independent Eval, and not a replacement for required human judgment.
+Browser QA Capture: useful when promoted and supported; not final acceptance, not detached verification without an independent Eval, and not a replacement for required human inspection.
 
 Record: {manual_qa_record_id|none until recorded}
 Gate: {qa_gate display: not_required|required|pending|passed|failed|waived}
 Refs: manual_qa={manual_qa_record_id|none}; qa_waiver_decision={qa_waiver_decision_packet_ref|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 Profile: {profile}
-Human judgment requested: {human_inspection_summary}
+Human inspection requested: {human_inspection_summary}
 Target: {screen_or_flow}
 Checklist:
 - {checklist_item}

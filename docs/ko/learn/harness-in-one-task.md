@@ -401,7 +401,7 @@ Power-user 표시는 각 줄 뒤의 소유자 ref를 함께 보여줄 수 있지
 | "무엇을 하는 중이지?" | Task | 사용자가 원하는 결과, 상태, 막힘, 근거, 닫기 판단을 하나로 묶는다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "쓰기를 계획하기 전에 무엇을 구체화해야 하지?" | Discovery | 에이전트가 확인할 수 있는 사실과 사용자 소유 결정을 분리합니다. 쓰기 권한 전에 Discovery Brief, Question Queue, Assumption Register를 만들 수 있고, 안전한 다음 작업이나 작업 분할을 제안합니다. 사용자 소유 선택은 결정 패킷 candidate와 기존 shaping path로 라우팅합니다. | [사용자 가이드](../use/user-guide.md); [설계 품질 정책](../reference/design-quality-policies.md#shared-design-shared_design). |
 | "어디까지 바꿔도 되지?" | Change Unit | 제품 쓰기 범위를 제한해 작업이 조용히 커지지 않게 한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
-| "이건 사용자가 결정해야 해." | 결정 패킷 | 사용자가 소유한 제품 판단이나 중요한 기술 판단을 넓은 승인과 분리한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
+| "이건 사용자가 결정해야 해." | 결정 패킷 | 사용자가 소유한 제품 판단이나 기술 구조 판단을 넓은 승인과 분리한다. | [사용자 가이드](../use/user-guide.md); [커널 참조](../reference/kernel.md). |
 | "이 민감한 단계를 진행해도 되나?" | Approval | 정해진 범위 안에서 민감한 행동을 진행해도 되는지 답한다. 사용자 소유 판단이나 작업 수락을 대신하지 않는다. | [커널 참조](../reference/kernel.md). |
 | "지금 이 파일을 수정해도 되나?" | 쓰기 허가 기록 | 의도한 쓰기가 현재 Task, Change Unit, 결정, 민감 동작 승인과 맞는지 확인한다. | 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md); 에이전트 접점 동작: [에이전트 통합 참조](../reference/agent-integration.md). |
 | "이 주장을 뒷받침하는 것은 이것이다." | 근거 | diff, log, check, screenshot 같은 기록으로 "끝났다"는 말을 확인 가능하게 만든다. | [사용자 가이드](../use/user-guide.md); 엄격한 동작: [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Storage와 DDL](../reference/storage-and-ddl.md), [운영과 Conformance 참조](../reference/operations-and-conformance.md). |

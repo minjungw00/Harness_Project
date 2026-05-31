@@ -87,7 +87,7 @@ Current phase and future repository role:
 Preserved Harness principles:
 
 - Harness is a local authority record for scope, user-owned judgment, evidence, verification, QA expectations, final acceptance, residual-risk status, and close readiness.
-- Harness preserves user-owned judgment. Product decisions, material technical decisions, QA expectations, final acceptance, waivers, and residual-risk acceptance remain user decisions unless the owner contracts explicitly say otherwise.
+- Harness preserves user-owned judgment. Product/UX judgment, technical architecture judgment, security/privacy judgment, QA expectations, final acceptance, waivers, and residual-risk acceptance remain user-owned judgments unless the owner contracts explicitly say otherwise.
 - Evidence, verification, Manual QA, final acceptance, and residual risk are separate records and judgments. None of them substitutes for the others.
 - Chat, connector output, generated documents, and Markdown-rendered projections are not operational authority. Core-owned local state and artifact references are authoritative.
 
@@ -148,7 +148,7 @@ This handoff does not promote roadmap items, dashboards or hosted workflow UI, B
 | Boundary | What it proves | What the user or operator can observe |
 |---|---|---|
 | v0.1 Core Authority Slice | One local Task can go through the first Core authority loop: project registration, Task, one basic scope represented by the Change Unit owner shape where the reference contract requires it, `prepare_write`, single-use Write Authorization, `record_run`, one artifact/evidence link, status/next, and structured blocker/status response. | Status and next show current Task, scope, write authority, evidence state, blockers, and safe next action. `prepare_write` refuses out-of-scope write authorization, compatible scoped work is authorized and consumed once, and close/status refuses missing evidence or required seeded judgment with structured blockers. |
-| v0.2 User-Facing Harness MVP | Ordinary user work is clarified into scope, user-owned judgment, evidence, close readiness, acceptance, and residual-risk language. | Users can see product/UX and architecture judgments separately, small changes and tracked work using different procedural budgets, close blocked by missing evidence or judgment, residual risk displayed, and final acceptance kept distinct from Approval and residual-risk acceptance. |
+| v0.2 User-Facing Harness MVP | Ordinary user work is clarified into scope, user-owned judgment, evidence, close readiness, final-acceptance, and residual-risk language. | Users can see product/UX and architecture judgments separately, small changes and tracked work using different procedural budgets, close blocked by missing evidence or required user-owned decisions, residual risk displayed, and final acceptance kept distinct from Approval and residual-risk acceptance. |
 | v0.3 Agency Assurance Pack | The MVP path handles verification, Manual QA, residual-risk accepted close, final acceptance separation, stewardship, full Decision Packet quality, Approval separation, TDD, feedback-loop policy, and context hygiene with honest boundaries. | Fixtures show why work can or cannot proceed, verify, require QA, accept, accept risk, or close through the same Core records and errors. |
 | v0.4 Operations & Handoff Pack | Operator readiness, recover/export, artifact integrity, release handoff, broader fixture suite coverage, and later-boundary checks complete the [hardened local reference target](../reference/glossary.md#hardened-local-reference-target). | Operator entrypoints diagnose, recover, export, check artifacts, run conformance, and prepare release handoff over the same Core state without creating a second authority model. |
 | Roadmap boundary: v1+ Expansion | Later surfaces or automation can be considered only after the local kernel and agency proof are stable. | Optional capabilities remain read-only, display-only, metadata-only, or artifact-candidate-only until an owner promotes them through the [Roadmap promotion rule](../roadmap.md#promotion-rule) with exact contracts and fixtures. |
@@ -204,7 +204,7 @@ For v0.1 Core Authority Slice, prioritize:
 - one artifact/evidence owner path
 - close/status blocker behavior for missing scope, evidence, authorization, or seeded required judgment
 
-For v0.2 User-Facing Harness MVP, broaden the same API surface so ordinary requests can be clarified into scope, user-owned judgments, evidence expectations, close readiness, final acceptance, and residual-risk display.
+For v0.2 User-Facing Harness MVP, broaden the same API surface so ordinary requests can be clarified into scope, user-owned judgment, evidence expectations, close readiness, final acceptance, and residual-risk display.
 
 The public request and response contracts belong to [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
 
@@ -214,7 +214,7 @@ State conflict and idempotency replay behavior are part of that public tool cont
 
 Projections are readable derived views from Core state records and artifact refs. `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`, and other report projections are not canonical state.
 
-Build projection output from the Core source records it depends on, such as Task, gate, Run, artifact, evidence, Eval, QA, and other owner records after those records exist. v0.1 Core Authority Slice may report projection freshness if the owner path already produces it, but projection rendering is not the proof. v0.2 User-Facing Harness MVP should provide enough readable summary or card output for current work status, judgment request, evidence summary, close readiness, acceptance, and residual risk. Projection templates cannot create authority, satisfy evidence, replace state, shape the state model, or become the first proof.
+Build projection output from the Core source records it depends on, such as Task, gate, Run, artifact, evidence, Eval, QA, and other owner records after those records exist. v0.1 Core Authority Slice may report projection freshness if the owner path already produces it, but projection rendering is not the proof. v0.2 User-Facing Harness MVP should provide enough readable summary or card output for current work status, user decision request, evidence summary, close readiness, final acceptance, and residual risk. Projection templates cannot create authority, satisfy evidence, replace state, shape the state model, or become the first proof.
 
 Later packs may enable optional, future, and diagnostic `ProjectionKind` values when their source records exist or change and an owner profile promotes them. `ProjectionKind` values and API-owned support classes belong to [MCP API And Schemas](../reference/mcp-api-and-schemas.md#shared-schemas).
 [Document Projection Reference](../reference/document-projection.md#template-implementation-classes) owns projection authority boundaries, source-record rules, freshness rules, and template implementation classes; [Template Reference](../reference/templates/README.md) owns rendered template bodies and display cards.
@@ -280,7 +280,7 @@ v0.1 Core Authority Slice is not the User-Facing Harness MVP. It proves the writ
 
 ## The user-facing MVP proof
 
-The first product MVP target is v0.2 User-Facing Harness MVP. It is reached after v0.1 Core Authority Slice, not by expanding the first runnable batch. It proves that Harness helps users preserve scope, user-owned judgments, evidence, close readiness, acceptance, and residual risk in a local authority record.
+The first product MVP target is v0.2 User-Facing Harness MVP. It is reached after v0.1 Core Authority Slice, not by expanding the first runnable batch. It proves that Harness helps users preserve scope, user-owned judgment, evidence, close readiness, final acceptance, and residual risk in a local authority record.
 
 It should show:
 

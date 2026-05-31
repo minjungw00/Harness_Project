@@ -20,19 +20,19 @@ Read [Implementation Overview](implementation-overview.md), including its [Docum
 
 ## Main idea
 
-Harness value is not merely that a write authority loop exists. Harness should preserve scope, user-owned judgments, evidence, close readiness, and residual risk in a local authority record. Delivery therefore has two early targets:
+Harness value is not merely that a write authority loop exists. Harness should preserve scope, user-owned judgment, evidence, close readiness, and residual risk in a local authority record. Delivery therefore has two early targets:
 
 - v0.1 Core Authority Slice proves the smallest coherent internal Core authority loop.
 - v0.2 User-Facing Harness MVP proves that ordinary users can feel the Harness value in how work is clarified, budgeted, blocked, accepted, and risk-explained.
 
-The first slice stays intentionally narrow. It proves one local project, one Task, one basic scope, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. It is not the MVP. The MVP comes when the user-facing path can translate normal work into scope, judgment, evidence, close-readiness, and residual-risk language without confusing approval, acceptance, and risk acceptance.
+The first slice stays intentionally narrow. It proves one local project, one Task, one basic scope, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. It is not the MVP. The MVP comes when the user-facing path can translate normal work into scope, user-owned judgment, evidence, close-readiness, and residual-risk language without confusing sensitive-action approval, final acceptance, and residual-risk acceptance.
 
 Projection-template polish, detailed reports, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, metrics, parallel orchestration, and broad automation become useful after the authority record and user-facing value path exist. They are not first-slice requirements.
 
 The early output model is intentionally small:
 
 - v0.1 needs read-only current status/next output and structured blockers from Core state.
-- v0.2 needs user-readable current work status, judgment request, evidence summary, and close readiness / blocker summary.
+- v0.2 needs user-readable current work status, user decision request, evidence summary, and close readiness / blocker summary.
 - Journey Card, Journey Spine, Run Summary, TDD Trace, Module Map, Interface Contract, Export, detailed Evidence Manifest, and detailed Eval outputs remain optional, diagnostic, or later-profile scope unless an owner profile explicitly promotes them.
 
 ## Staged delivery
@@ -77,7 +77,7 @@ v0.1 must prove:
 - one registered `ArtifactRef` or equivalent evidence link owned by Core/API contracts
 - one minimal evidence relation or Evidence Manifest state record sufficient to report support or insufficiency, without requiring the detailed `EVIDENCE-MANIFEST` projection
 - one read-only status/next response from current Core state
-- one structured blocker/status response for missing evidence, missing scope, or a required seeded user judgment
+- one structured blocker/status response for missing evidence, missing scope, or a required seeded user decision
 
 v0.1 should not prove full natural-language intake, full Discovery, full Decision Packet quality, product/UX versus architecture judgment presentation, residual-risk display, final acceptance, residual-risk acceptance, Manual QA, detached verification, stewardship, feedback-loop policy, export/recover, release handoff, or projection/template completeness. Those are later stages.
 
@@ -92,7 +92,7 @@ Reference schemas may list fields that become necessary only when the related ca
 | Stage | Build reading rule | Owner contracts to apply |
 |---|---|---|
 | v0.1 Core Authority Slice | Use only the owner-defined fields needed to prove the narrow authority loop. If the smoke path uses a Decision Packet, required Decision Packet fields still apply even though full user-facing Decision Packet quality is later. | [Kernel Reference](../reference/kernel.md), [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Storage And DDL](../reference/storage-and-ddl.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
-| v0.2 User-Facing Harness MVP | Add the fields and display summaries needed for users to understand judgment context, evidence, close readiness, final acceptance separation, and residual-risk visibility. | [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Kernel Reference](../reference/kernel.md), [Document Projection Reference](../reference/document-projection.md), [Template Reference](../reference/templates/README.md). |
+| v0.2 User-Facing Harness MVP | Add the fields and display summaries needed for users to understand the pending user decision context, evidence, close readiness, final acceptance separation, and residual-risk visibility. | [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Kernel Reference](../reference/kernel.md), [Document Projection Reference](../reference/document-projection.md), [Template Reference](../reference/templates/README.md). |
 | v0.3 Agency Assurance Pack / v0.4 Operations & Handoff Pack | Add verification, QA, residual-risk, final-acceptance, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, and release-handoff profiles only where owner docs define them. | [Design Quality Policies](../reference/design-quality-policies.md), [Operations And Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md), [Storage And DDL](../reference/storage-and-ddl.md). |
 
 Required in an API schema therefore means required when that tool call, record, or profile is implemented or used. It does not make a future-profile field part of the smallest runnable slice by itself.
@@ -130,13 +130,13 @@ v0.2 is the first product MVP. It is defined by experienced user value, not by a
 The MVP must demonstrate:
 
 - an ordinary user request is clarified into scope, user-owned judgment, evidence, and close-readiness language
-- product/UX judgments and material technical architecture judgments can be presented separately
+- product/UX judgments and material technical architecture judgments can be presented separately from sensitive-action approval, final acceptance, and residual-risk acceptance
 - small changes and tracked work have different procedural budgets without letting small-change labeling bypass authority
 - status and next-action output explain current scope, missing decisions, evidence state, close blockers, and safe next action
-- close is blocked when required evidence or required user judgment is missing
+- close is blocked when required evidence or a required user-owned decision is missing
 - residual risk can be displayed before acceptance and close
 - final acceptance is distinct from sensitive-action Approval and residual-risk acceptance
-- readable summaries or cards show current work status, judgment request, evidence summary, and close readiness/blockers without template polish becoming the source of truth
+- readable summaries or cards show current work status, user decision request, evidence summary, and close readiness/blockers without template polish becoming the source of truth
 - conformance can prove the path through Core state, events, artifacts, projection/freshness facts, and structured errors rather than prose or renderer output alone
 
 v0.2 should keep detached verification, the full Manual QA policy matrix, stewardship validators, feedback-loop policy, export/recover, release handoff, Journey Card/Spine polish, Run Summary, TDD Trace, Module Map, Interface Contract, detailed Evidence Manifest, detailed Eval, and Export projections as staged profiles unless a specific user-facing MVP scenario needs a minimal display or blocker hook. Browser QA Capture, Cross-Surface Verification automation, dashboards, broad connectors, Context Index, metrics, team workflow, and orchestration remain outside the MVP.
@@ -215,17 +215,17 @@ Use these as implementation-readable checklists for future runtime planning afte
 - One artifact or evidence ref is registered and linked to the Run or evidence relation.
 - Minimal evidence state can report support, partial support, or insufficiency for the selected claim.
 - `status` and `next` return current state without mutating state.
-- A structured blocker/status response reports missing scope, evidence, or required seeded user judgment.
+- A structured blocker/status response reports missing scope, evidence, or a required seeded user decision.
 
 ### v0.2 User-Facing Harness MVP exit checklist
 
 - Ordinary user language can start or resume tracked work without requiring Harness vocabulary.
 - The user-facing path clarifies scope, non-goals, acceptance criteria, evidence expectations, close readiness, and judgment boundaries.
 - Product/UX judgment and material technical architecture judgment can be presented separately.
-- Small direct changes and tracked work use different procedural budgets without bypassing write authority, evidence, or required user judgment.
+- Small direct changes and tracked work use different procedural budgets without bypassing write authority, evidence, or a required user decision.
 - Status/next output explains current scope, missing decisions, evidence state, residual-risk display, close blockers, and next safe action.
 - Close blocks when required evidence is missing.
-- Close blocks when required user judgment is missing or unresolved.
+- Close blocks when a required user decision is missing or unresolved.
 - Residual risk is visible before successful acceptance or close when known close-relevant risk exists.
 - Final acceptance is recorded or represented separately from sensitive-action Approval and residual-risk acceptance.
 - User-facing readable summaries or cards are derived from Core records and are sufficient for the MVP path without making template polish authoritative.
@@ -238,7 +238,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 - Manual QA policy matrix and QA blockers are fixture-proven where policy requires them.
 - Risk-accepted close cites accepted Residual Risk refs under the owner semantics.
 - Stewardship validators, feedback-loop policy, TDD trace behavior, and context-hygiene behavior are covered where policy requires them.
-- Agency conformance proves Journey visibility, user judgment, Autonomy Boundary respect, distinct user judgments, and residual-risk handling.
+- Agency conformance proves Journey visibility, user-owned decision routing, Autonomy Boundary respect, distinct decision types, and residual-risk handling.
 
 ### v0.4 Operations & Handoff Pack exit checklist
 
@@ -255,7 +255,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 | Stage | What the user or operator can observe |
 |---|---|
 | v0.1 Core Authority Slice | An implementer/operator can see one local Task move through scope, `prepare_write`, Write Authorization, `record_run`, artifact/evidence link, read-only status/next, and structured blockers. |
-| v0.2 User-Facing Harness MVP | A user can see ordinary work clarified into scope, judgment, evidence, close readiness, acceptance, and residual-risk language, with close blocked when evidence or user judgment is missing. |
+| v0.2 User-Facing Harness MVP | A user can see ordinary work clarified into scope, user-owned judgment, evidence, close readiness, final-acceptance, and residual-risk language, with close blocked when evidence or a required user decision is missing. |
 | v0.3 Agency Assurance Pack | The local path explains verification, Manual QA, residual-risk acceptance, final acceptance, stewardship, TDD, feedback, context hygiene, and close behavior through Core records and fixtures. |
 | v0.4 Operations & Handoff Pack | Operators can diagnose, recover, reconcile, export, check artifacts, run conformance, and prepare release handoff over the same Core state. |
 

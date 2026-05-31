@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-작업의 현재 위치, 범위와 범위 밖, 다음 움직임을 막는 것, 대기 중인 판단, Autonomy Boundary, Write Authority Summary, 수용 기준, 근거와 확인, 잔여 위험, 닫기 맥락(close context), gate, 읽기용 보기 최신성을 현재 위치 카드로 보여줄 때 `JOURNEY-CARD`를 사용합니다.
+작업의 현재 위치, 범위와 범위 밖, 다음 움직임을 막는 것, 대기 중인 사용자 결정, Autonomy Boundary, Write Authority Summary, 수용 기준, 근거와 확인, 잔여 위험, 닫기 맥락(close context), gate, 읽기용 보기 최신성을 현재 위치 카드로 보여줄 때 `JOURNEY-CARD`를 사용합니다.
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
@@ -27,7 +27,7 @@
 - 읽기용 보기 최신성(projection freshness) 입력
 - state, baseline, evidence, MCP, capability freshness/blocker 표시 summary
 
-Judgment, write-authority, close-impact, residual-risk, freshness placeholder는 위 기록에서 파생한 표시 binding입니다. 실제 사용자 decision이 필요하면 이 card를 judgment-context source로 취급하지 말고 Decision Packet 또는 decision prompt를 렌더링합니다.
+Decision, write-authority, close-impact, residual-risk, freshness placeholder는 위 기록에서 파생한 표시 binding입니다. 실제 사용자 decision이 필요하면 이 card를 사용자 결정 맥락 source로 취급하지 말고 Decision Packet 또는 decision prompt를 렌더링합니다.
 
 ## 렌더링 섹션
 
@@ -70,7 +70,7 @@ TASK-{id} {title}
 Autonomy Boundary:
 - profile: {autonomy_profile}
 - agent가 할 수 있는 일: {agent_may_do}
-- 필요한 사용자 판단: {user_judgment_required}
+- 필요한 사용자 결정: {user_decision_required}
 - AFK stop conditions: {afk_stop_conditions}
 
 Write Authority Summary:

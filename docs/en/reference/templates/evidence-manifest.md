@@ -163,7 +163,7 @@ Example coverage mappings:
 | AC-01 docs typo corrected without meaning change | RUN-DOCS-001 | ART-DIFF-001 | | Sufficient only when the changed doc path and self-check cover the stated docs-only condition. |
 | AC-02 login form submits email | RUN-FEATURE-001 | ART-DIFF-002, ART-TEST-002 | FBL-001 | Supported when the Run, diff, and test/log refs map to this AC rather than only to the Task in general. |
 | AC-03 final button copy is readable in target viewport | RUN-UI-001 | ART-SCREENSHOT-001, ART-DIFF-003 | QA-0001 | If Manual QA is required, screenshot or browser smoke alone does not satisfy the QA path. |
-| AC-04 export contains only approved redacted fields | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | Approval and Decision refs show scope or judgment context; redacted artifact refs still need to prove the nonsecret claim. |
+| AC-04 export contains only approved redacted fields | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | Approval and Decision refs show scope or user decision context; redacted artifact refs still need to prove the nonsecret claim. |
 | Completion condition: independent verifier reviewed the changed scope | RUN-VERIFY-001 | ART-BUNDLE-001 | EVAL-0001 | Valid only when the Eval reviewed current refs and has the required independence for the requested close. |
 
 Evidence Manifest supports claims; it does not prove correctness by itself, create detached verification, record Manual QA, imply final acceptance, make residual risk visible, or accept residual risk. When a close summary is rendered from this template, it should keep those lines separate so a passing test, a self-check, a QA waiver, or final acceptance is not mistaken for another close condition.

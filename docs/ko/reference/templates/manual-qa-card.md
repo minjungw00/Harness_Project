@@ -42,13 +42,13 @@
 수동 QA가 필요합니다.
 표시 전용: `qa_gate`와 QA record가 기준으로 남습니다.
 사람의 확인만 수동 QA입니다. 자동 검사, screenshot, browser log, Browser QA artifact는 맥락을 뒷받침할 수 있지만 그 자체로 수동 QA가 되지는 않습니다.
-Browser QA Capture: 승격되고 지원될 때 유용합니다. 작업 수락이 아니며, independent Eval 없이는 분리 검증이 아니고, required human judgment를 대체하지 않습니다.
+Browser QA Capture: 승격되고 지원될 때 유용합니다. 작업 수락이 아니며, independent Eval 없이는 분리 검증이 아니고, required human inspection을 대체하지 않습니다.
 
 기록: {manual_qa_record_id|none until recorded}
 Gate: {qa_gate display: not_required|required|pending|passed|failed|waived}
 Refs: manual_qa={manual_qa_record_id|none}; qa_waiver_decision={qa_waiver_decision_packet_ref|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 프로필(Profile): {profile}
-요청되는 사람의 판단: {human_inspection_summary}
+요청되는 사람의 확인: {human_inspection_summary}
 대상(Target): {screen_or_flow}
 확인 목록(Checklist):
 - {checklist_item}

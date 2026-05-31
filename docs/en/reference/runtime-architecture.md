@@ -129,7 +129,7 @@ repo/
 ```
 
 
-The repository may hold generated readable summaries and, when an active profile enables them, generated `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `JOURNEY-CARD`, `EXPORT`, and other report projections. Early implementation should start with compact status/next, judgment request, evidence summary, and close readiness/blocker output rather than the full catalog. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; human edits become state only when reconcile routes them into a Core state-changing action.
+The repository may hold generated readable summaries and, when an active profile enables them, generated `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `JOURNEY-CARD`, `EXPORT`, and other report projections. Early implementation should start with compact status/next, user decision request, evidence summary, and close readiness/blocker output rather than the full catalog. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; human edits become state only when reconcile routes them into a Core state-changing action.
 
 ## Harness Server / Installation
 
@@ -247,7 +247,7 @@ Within that transaction, Core increments the affected scope clock as part of the
 
 Projection rendering happens after the transaction. A projection failure is state-isolated: it marks projection freshness or job status as stale or failed and leaves the committed state intact. Projection cannot roll back the transaction, rewrite `state.sqlite.task_events`, turn a passed task into a failed task, or repair canonical state without a later reconcile decision.
 
-Projection freshness is a derived-read fact. A status, next-action, export, or operator command may check it and report that a readable view is stale, failed, or unknown, but Core state, structured blockers, evidence records, final acceptance, residual-risk acceptance, and Write Authorization remain authoritative in their owner records. v0.1 Core Authority Slice may expose freshness or read facts without proving the full projection worker; v0.2 needs enough derived output for current work status, judgment request, evidence summary, and close readiness/blocker comprehension; hardened or operational profiles own the complete projection/reconcile and diagnostic report path.
+Projection freshness is a derived-read fact. A status, next-action, export, or operator command may check it and report that a readable view is stale, failed, or unknown, but Core state, structured blockers, evidence records, final acceptance, residual-risk acceptance, and Write Authorization remain authoritative in their owner records. v0.1 Core Authority Slice may expose freshness or read facts without proving the full projection worker; v0.2 needs enough derived output for current work status, user decision request, evidence summary, and close readiness/blocker comprehension; hardened or operational profiles own the complete projection/reconcile and diagnostic report path.
 
 ## Artifact store architecture
 

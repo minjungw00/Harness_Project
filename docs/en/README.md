@@ -70,7 +70,7 @@ The Learn and Use pages are kept separate, but each has a narrower job:
 | [Harness in 15 Minutes](learn/harness-in-15-minutes.md) | Scenario sampler. Six short examples show common Harness moments before strict specs. |
 | [Harness in One Task](learn/harness-in-one-task.md) | Tutorial walkthrough. One small change and one tracked task show the full work journey. |
 | [User Guide](use/user-guide.md) | Primary user-facing entry for starting, resuming, unblocking, and closing work. |
-| [Decision Packet Cookbook](use/decision-packet-cookbook.md) | Advanced usage and reference-adjacent examples for writing focused user-decision prompts. |
+| [Decision Packet Cookbook](use/decision-packet-cookbook.md) | Advanced usage and reference-adjacent examples for writing focused user decision prompts. |
 | [Agent Session Flow](use/agent-session-flow.md) | Agent/integration guidance for presentation, context, blockers, writes, and close. It is not a required user read. |
 
 ## Where Am I?
@@ -114,7 +114,7 @@ Harness is also not a prompt pack, chat script, evaluation harness, dashboard, o
 
 | Nearby piece | Role it plays | Harness role |
 |---|---|---|
-| AGENTS.md / agent instruction files | Tell agents how to behave in a repository or session. | Harness may rely on those instructions, but it keeps the local record of scope, judgment, evidence, close readiness, and risk. |
+| AGENTS.md / agent instruction files | Tell agents how to behave in a repository or session. | Harness may rely on those instructions, but it keeps the local record of scope, user-owned judgment, evidence, close readiness, and risk. |
 | MCP | Defines a protocol boundary for tools and resources. | Harness may expose MCP tools or resources, but its authority comes from Core-owned local state and artifact references. |
 | Skills / reusable workflows | Package repeated instructions or procedures for an agent to follow. | Harness can be used by those workflows, but it records the current work state and routes judgments for this task. |
 | Test runners | Execute checks and produce results. | Harness links relevant results as evidence and keeps verification strength separate from final acceptance. |

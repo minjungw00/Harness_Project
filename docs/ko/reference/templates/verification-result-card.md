@@ -88,7 +88,7 @@ Assurance 영향: {assurance_impact}
 
 검증(Verification)은 기록된 review boundary에서 correctness를 확인합니다. 수동 QA를 기록하거나, 사용자 작업 수락을 암시하거나, 잔여 위험을 받아들이지 않습니다. 같은 세션의 self-review는 자체 확인(self-check) 또는 review note로 보여줄 수 있지만 분리 검증으로 렌더링하면 안 됩니다. Verification waiver는 required인 경우 사용자 소유 waiver를 기록한 Decision Packet, `verification_gate=waived_by_user`, 생략한 확인, 받아들이는 위험, 후속 작업, 관련 refs, 닫기 영향을 보여줘야 하며, 분리 검증을 만들거나 assurance를 높이지 않습니다.
 
-검증 통과는 작업 수락이 기록됐다는 뜻이 아닙니다. 작업 수락이 required이면 이 card는 작업 수락 상태나 필요한 action을 보여줄 수 있지만, 작업 수락은 계속 Decision Packet/user-decision path에 남습니다.
+검증 통과는 작업 수락이 기록됐다는 뜻이 아닙니다. 작업 수락이 required이면 이 card는 작업 수락 상태나 필요한 action을 보여줄 수 있지만, 작업 수락은 계속 Decision Packet path에 남습니다.
 
 Verification을 표시하는 동안 QA가 waive됐다면 QA waiver는 Eval verdict와 assurance line과 분리해 둡니다. QA waiver display는 `qa_gate=waived`, 수동 QA record 또는 waiver reason, 필요한 경우 QA waiver Decision Packet을 cite합니다. Passed 수동 QA result나 분리 검증이 아닙니다.
 

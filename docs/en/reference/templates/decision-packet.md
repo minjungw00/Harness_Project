@@ -2,17 +2,18 @@
 
 ## Used when
 
-Use `DEC` when standalone Decision Packet projection is enabled for user-owned product or material technical judgment, approval-shaped judgment, waiver, final acceptance, residual-risk acceptance, or reconcile decisions.
+Use `DEC` when standalone Decision Packet projection is enabled for a specific user-owned decision: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, residual-risk acceptance, or reconcile decision.
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: required for user-facing MVP as the Decision Packet display/card shape for judgment requests, not as the standalone `DEC` `ProjectionKind`. A standalone persisted `DEC` Markdown projection remains optional unless the standalone Decision Packet projection feature is enabled; the required prompt can appear through status/next, `TASK`, or decision resources.
+Implementation tier: required for user-facing MVP as the Decision Packet display/card shape for user decision requests, not as the standalone `DEC` `ProjectionKind`. A standalone persisted `DEC` Markdown projection remains optional unless the standalone Decision Packet projection feature is enabled; the required prompt can appear through status/next, `TASK`, or decision resources.
 
 ## Source records
 
 - `state.sqlite.decision_packets`
 - related Task and Change Unit refs
 - `decision_kind` and schema-owned `judgment_domain`
+- display decision type derived from `decision_kind`, `judgment_domain`, and related owner records
 - related `decision_gate` state and decision events
 - approval records for approval-shaped decisions
 - related reconcile records, if applicable
@@ -22,16 +23,17 @@ Implementation tier: required for user-facing MVP as the Decision Packet display
 - affected scope display inputs: product areas, screens or flows, modules, interfaces, paths, acceptance criteria, gates, and sensitive categories
 - projection freshness inputs
 
-Approval-shaped display bullets such as "what this approval covers," "what this approval does not cover," and "secret exposure boundary" are derived display summaries from linked Approval records, approval scope, related Decision Packet refs, and current write or close context. They explain the boundary only; they do not grant Approval or settle separate user-owned judgment.
+Approval-shaped display bullets such as "what this approval covers," "what this approval does not cover," and "secret exposure boundary" are derived display summaries from linked Approval records, approval scope, related Decision Packet refs, and current write or close context. They explain the boundary only; they do not grant Approval or settle separate user-owned judgment. Approval-shaped displays must be labeled as sensitive-action approval and must not look like final acceptance.
 
-A resolved Decision Packet is not sensitive-action Approval unless it is the approval-shaped Decision Packet linked to an Approval record. Other Decision Packet resolutions may settle user-owned judgment, waivers, residual-risk acceptance, final acceptance, or reconcile choices, but they do not grant sensitive-action Approval.
+A resolved Decision Packet is not sensitive-action Approval unless it is the approval-shaped Decision Packet linked to an Approval record. Other Decision Packet resolutions may settle user-owned decisions, waivers, residual-risk acceptance, final acceptance, or reconcile choices, but they do not grant sensitive-action Approval.
 
-`judgment_domain` is the schema-owned user-visible judgment grouping. Render it with a friendly label, but keep `decision_kind` as the lifecycle and gate route. Render affected gates from `affected_gates` and related owner refs, not from the domain label. `judgment_domain` does not directly change close gate aggregation, sensitive-action Approval, waiver behavior, or residual-risk acceptance unless a separate owner rule says so.
+`judgment_domain` is the schema-owned user-visible judgment grouping. Render it with a friendly label, but keep `decision_kind` as the lifecycle and gate route and render a concrete decision type. Render affected gates from `affected_gates` and related owner refs, not from the domain label. `judgment_domain` does not directly change close gate aggregation, sensitive-action Approval, waiver behavior, or residual-risk acceptance unless a separate owner rule says so.
 
 ## Rendered sections
 
 - Why Now
 - Current State
+- Decision Type And Route
 - Approval-Shaped Context, If Applicable
 - What User Is Deciding
 - What Agent May Decide Without User
@@ -41,13 +43,14 @@ A resolved Decision Packet is not sensitive-action Approval unless it is the app
 - Recommendation
 - Consequence Of Deferring
 - Minimum Context To Judge
-- User Decision And Accepted Risk
+- User Decision
+- Residual-Risk Acceptance, If Applicable
 - Follow-Up
 - References
 
 A sufficient rendered Decision Packet uses these sections to answer one user-owned decision, not to ask for broad permission. The exact public request and response fields are owned by [`harness.request_user_decision`](../mcp-api-and-schemas.md#harnessrequest_user_decision), and the canonical authority rules are owned by [Decision Packet](../kernel.md#decision-packet) and [Decision Gate](../kernel.md#decision-gate). This template may summarize the existing fields, including `judgment_domain`, but it must not add additional schema fields, gates, or alternate authority.
 
-The user-facing question should ask for the decision directly: choose an option, defer it with the stated consequence, reject the path, waive the named check, accept the named risk, accept the result, or reconcile the named drift. Use "approve" only for the approval-shaped context linked to Approval. For other packet kinds, ask what choice should be recorded and what remains outside that choice.
+The user-facing question should ask for the decision directly: choose an option, defer it with the stated consequence, reject the path, waive the named check, accept the named risk, accept the result, or reconcile the named drift. Use "approve" only for the approval-shaped context linked to Approval. For other packet kinds, ask what choice should be recorded and what remains outside that choice. If several decisions are pending, render separate prompts or separate lines; do not combine approval, acceptance, and risk acceptance into one answer.
 
 **Example content cues:**
 
@@ -61,8 +64,8 @@ Use the same rendered sections for these common Decision Packet shapes. These cu
 - Scope or Autonomy Boundary expansion: put the proposed additional surface, why current scope or latitude is insufficient, what remains out of bounds, and whether a smaller Change Unit can continue under Consequence Of Deferring.
 - Security/privacy decision (`judgment_domain=security_privacy`): for PII logging, exported fields, redaction, audit logging, retention, rollback, user notice, or role exposure, compare privacy exposure, debugging value, proof needed, and follow-up. If a sensitive action is also needed, put that Approval boundary under Approval-Shaped Context and do not treat the Approval packet as resolving the security/privacy judgment.
 - Public API/interface decision: put caller compatibility, migration path, documentation promise, and rollback risk under Options and Minimum Context To Judge. Do not treat a resolved API decision as merge authority, deployment authority, or Write Authorization.
-- QA or acceptance decision (`judgment_domain=qa_acceptance`): for Manual QA, verification waiver, or final acceptance, put the skipped check or accepted result, accepted user/product/technical risk, relevant refs, close impact, and smallest credible follow-up under User Decision And Accepted Risk and Follow-Up.
-- Residual-risk acceptance before close (`judgment_domain=residual_risk`): put the visible limitation, existing evidence, risk refs the user is being asked to accept, and remaining follow-up under Current State, Minimum Context To Judge, User Decision And Accepted Risk, and Follow-Up.
+- QA or acceptance decision (`judgment_domain=qa_acceptance`): for Manual QA, verification waiver, or final acceptance, put the skipped check or accepted result, accepted user/product/technical risk, relevant refs, close impact, and smallest credible follow-up under User Decision, Residual-Risk Acceptance when applicable, and Follow-Up.
+- Residual-risk acceptance before close (`judgment_domain=residual_risk`): put the visible limitation, existing evidence, risk refs the user is being asked to accept, and remaining follow-up under Current State, Minimum Context To Judge, Residual-Risk Acceptance, and Follow-Up.
 - Final acceptance: put the final result, evidence status, Manual QA and verification status, and close-relevant residual-risk visibility under Current State and Minimum Context To Judge. Do not treat final acceptance as approval for new sensitive actions, additional writes, deployment, or merge.
 - Broad "go ahead" answers: show why the packet asks for this specific route and option. A generic approval phrase does not resolve product trade-off, architecture choice, QA waiver, verification risk, final acceptance, or residual-risk acceptance unless this packet records that exact judgment.
 
@@ -101,18 +104,31 @@ updated_at: 2026-05-06T09:30:15+09:00
 - residual risk:
 - source refs: decision={decision_packet_id}; write={write_authorization_ref|none}; approval={approval_refs|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 
+## Decision Type And Route
+- decision type: Product/UX judgment | technical architecture judgment | security/privacy judgment | scope/autonomy judgment | sensitive-action approval | QA waiver | verification waiver | final acceptance | residual-risk acceptance | reconcile
+- decision_kind:
+- judgment_domain:
+- display label:
+- route verb: choose | defer | reject | approve | waive | accept result | accept named risk | reconcile
+- what this route can record:
+- what this route cannot record:
+- generic consent handling:
+
 ## Approval-Shaped Context, If Applicable
+- card label: Sensitive-action approval
 - decision_kind=approval scope:
 - linked approval record:
 - sensitive categories:
 - what this approval covers:
 - what this approval does not cover:
-- user-owned judgment requiring separate Decision Packet:
+- must not be rendered as: final acceptance or residual-risk acceptance
+- user-owned decision requiring separate Decision Packet:
 - approval boundary:
 - write authorization boundary:
 - secret exposure boundary:
 
 ## What User Is Deciding
+- decision type:
 - judgment_domain:
 - display label:
 - decision_kind:
@@ -131,7 +147,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Autonomy Boundary Impact, If Any
 - current boundary impact:
 - proposed boundary update:
-- user judgment required:
+- user decision required:
 
 ## Affected Scope And Boundaries
 - in scope:
@@ -185,17 +201,22 @@ updated_at: 2026-05-06T09:30:15+09:00
 - residual risk refs:
 - related decisions:
 
-## User Decision And Accepted Risk
+## User Decision
 - status: proposed | pending_user | resolved | deferred | rejected | blocked | superseded
 - selected option:
 - user decision:
 - decision note:
 - broad approval handling:
+- decided by:
+- decided at:
+
+## Residual-Risk Acceptance, If Applicable
+- named risk being accepted:
+- residual-risk visibility status:
 - accepted residual-risk summary:
 - accepted residual-risk refs:
 - accepted consequence:
-- decided by:
-- decided at:
+- what risk acceptance does not replace:
 
 ## Follow-Up
 - [ ]
@@ -221,5 +242,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 This template is a rendered shape, not canonical state. Required Decision Packet visibility still comes through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources unless standalone `DEC` projection is enabled.
 
 Decision Packet projections should keep authority context refs compact and explicit. Displaying a Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, artifact, redaction, or freshness ref in this template does not make the packet prose the authority for that record.
+
+Decision Packet cards should display one decision type at a time. Approval cards use sensitive-action approval language, acceptance prompts use final acceptance language, and residual-risk acceptance prompts name the specific risk being accepted.
 
 Repeat option subsections as needed. Some product choices have more than two realistic options.

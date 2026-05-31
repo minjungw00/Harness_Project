@@ -14,8 +14,8 @@ Projection and card shapes serve three output tiers:
 
 | Output tier | What belongs here | Rule |
 |---|---|---|
-| User-readable outputs | Current work status, judgment request, evidence summary, and close readiness / blocker summary. | Required for the user-facing MVP, but may be rendered through status/next text, compact cards, or minimal `TASK` sections. |
-| Agent compact context | Minimal current state needed for the next safe step: active Task, scope, active Change Unit when relevant, pending judgment, evidence/close blockers, next action, refs, and freshness. | Keep compact; do not embed long history or detailed artifacts. |
+| User-readable outputs | Current work status, user decision request, evidence summary, and close readiness / blocker summary. | Required for the user-facing MVP, but may be rendered through status/next text, compact cards, or minimal `TASK` sections. |
+| Agent compact context | Minimal current state needed for the next safe step: active Task, scope, active Change Unit when relevant, pending user decision, evidence/close blockers, next action, refs, and freshness. | Keep compact; do not embed long history or detailed artifacts. |
 | Reference/diagnostic outputs | Detailed manifests, traces, maps, Journey Card or Journey Spine views, run summaries, detailed Eval reports, export bundles, and operator reports. | Pull-on-demand or later-profile outputs; not mandatory for the first runnable slice or minimum user-facing MVP. |
 
 ## Template implementation classes
@@ -25,11 +25,11 @@ Template classes stage rendered shapes without changing authority:
 | Class | Templates | Rule |
 |---|---|---|
 | Required for v0.1 Core Authority Slice | [Compact Status Card](compact-status-card.md) or equivalent status/next/blocker response shape | Minimal read-only status from current Core state. No persisted Markdown projection job is required. |
-| Required for user-facing MVP | [TASK](task.md) minimal continuity summary; [Decision Packet display/card shape](decision-packet.md) for judgment requests, not the standalone `DEC` `ProjectionKind` | Enough to show current status, user judgment request, evidence summary, and close readiness/blockers. Standalone persisted `DEC` Markdown remains optional unless the standalone Decision Packet projection feature is enabled. |
+| Required for user-facing MVP | [TASK](task.md) minimal continuity summary; [Decision Packet display/card shape](decision-packet.md) for user decision requests, not the standalone `DEC` `ProjectionKind` | Enough to show current status, user decision request, evidence summary, and close readiness/blockers. Standalone persisted `DEC` Markdown remains optional unless the standalone Decision Packet projection feature is enabled. |
 | Optional early | [APR](approval.md), [Approval Card](approval-card.md), [DIRECT-RESULT](direct-result.md), [MANUAL-QA](manual-qa.md), [Manual QA Card](manual-qa-card.md), [Verification Result Card](verification-result-card.md) | Use only when the corresponding approval, direct-work, Manual QA, or verification profile is active. |
 | Future / diagnostic | [RUN-SUMMARY](run-summary.md), [EVIDENCE-MANIFEST](evidence-manifest.md), [EVAL](eval.md), [TDD-TRACE](tdd-trace.md), [DOMAIN-LANGUAGE](domain-language.md), [MODULE-MAP](module-map.md), [INTERFACE-CONTRACT](interface-contract.md), [DESIGN](design.md), [EXPORT](export.md), [JOURNEY-CARD](journey-card.md) | Detailed reference, diagnostic, handoff, stewardship, map, trace, or export views. Keep available for v0.3 Agency Assurance Pack, v0.4 Operations & Handoff Pack, or other owner-promoted later profiles without making them mandatory early scope. |
 
-v0.1 Core Authority Slice does not require broad template rendering. v0.2 User-Facing Harness MVP needs enough derived output for users to understand scope, judgment, evidence, close readiness, acceptance, and residual risk; it does not require Run Summary, Evidence Manifest, detailed Eval, TDD Trace, Journey Card, Module Map, Interface Contract, or Export projection polish.
+v0.1 Core Authority Slice does not require broad template rendering. v0.2 User-Facing Harness MVP needs enough derived output for users to understand scope, user decisions, evidence, close readiness, final acceptance, and residual risk; it does not require Run Summary, Evidence Manifest, detailed Eval, TDD Trace, Journey Card, Module Map, Interface Contract, or Export projection polish.
 
 `Future / diagnostic` means later-profile or diagnostic scope, not automatically v1+ only.
 
@@ -74,7 +74,7 @@ Close and assurance displays must keep distinct labels for self-checked work, `d
 
 - [Compact Status Card](compact-status-card.md)
 - [TASK](task.md) minimal continuity summary
-- [Decision Packet judgment-request display shape](decision-packet.md)
+- [Decision Packet user decision request display shape](decision-packet.md)
 
 ## Optional Early Shapes
 

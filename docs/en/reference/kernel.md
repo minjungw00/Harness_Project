@@ -110,7 +110,7 @@ Stage support follows the staged MVP boundary:
 | Stage/profile | What it can represent |
 |---|---|
 | v0.1 Core Authority Slice / Kernel Smoke | A narrow runnable authority loop: active Task, one basic scope represented by the Change Unit owner shape where the reference contract requires it, write authority, compatible Run/evidence recording, idempotency/state-version checks, status/next reads, and structured blockers. Verification, Manual QA, final acceptance, and residual-risk paths may be `not_required` or `none` unless the smoke scenario explicitly exercises them. |
-| v0.2 User-Facing Harness MVP | User-facing status must show scope, judgment, evidence, close readiness, final acceptance when required, and residual-risk visibility when close-relevant risk exists. It must explain why close remains blocked even when tests pass. |
+| v0.2 User-Facing Harness MVP | User-facing status must show scope, user decisions, evidence, close readiness, final acceptance when required, and residual-risk visibility when close-relevant risk exists. It must explain why close remains blocked even when tests pass. |
 | v0.3 and later hardened profiles | Detached verification independence, richer Manual QA, stewardship, feedback-loop, TDD, operations, export/recover, and handoff behavior are hardened. Future-profile checks are close blockers only when the active profile or owner docs enable them. |
 
 ## Reference scope
@@ -371,7 +371,7 @@ Strict Decision Packet semantics are owned by [Decision Packet](#decision-packet
 
 ### Journey Spine
 
-A Journey Spine is the state-derived continuity model for the ordered work journey of a Task. It is reconstructed from Task, Change Unit, Run, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Residual Risk, `task_gates.acceptance_gate`, acceptance Decision Packet user-decision state, close events, artifact references, and `state.sqlite.task_events`.
+A Journey Spine is the state-derived continuity model for the ordered work journey of a Task. It is reconstructed from Task, Change Unit, Run, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Residual Risk, `task_gates.acceptance_gate`, acceptance Decision Packet state, close events, artifact references, and `state.sqlite.task_events`.
 
 Journey Spine is not a separate source of truth. Journey Card and Journey Spine Markdown views are projections. They help humans resume and inspect work, but they do not override Task state, gate fields, Decision Packets, Evidence Manifests, Residual Risk records, artifact records, or `state.sqlite.task_events`.
 
@@ -699,7 +699,7 @@ not_required | required | pending | accepted | rejected
 
 `acceptance_gate` records the user's final acceptance judgment where acceptance is required. It does not replace QA or verification, approve sensitive actions, waive checks, or accept known residual risk by itself.
 
-Final acceptance in the current reference model is stored through the canonical Decision Packet user-decision path, the Task's `acceptance_gate`, and `state.sqlite.task_events`. The kernel does not define a separate Acceptance state record. If close-relevant residual risk exists, final acceptance can be recorded only after that risk is visible, but accepting the result does not mark the risk accepted unless a residual-risk acceptance decision names the risk and records the accepted Residual Risk refs.
+Final acceptance in the current reference model is stored through the canonical Decision Packet path, the Task's `acceptance_gate`, and `state.sqlite.task_events`. The kernel does not define a separate Acceptance state record. If close-relevant residual risk exists, final acceptance can be recorded only after that risk is visible, but accepting the result does not mark the risk accepted unless a residual-risk acceptance decision names the risk and records the accepted Residual Risk refs.
 
 Residual-risk visibility is satisfied in either of two ways. If no known close-relevant Residual Risk exists, the current judgment context reports `ResidualRiskSummary.status=none`. If known close-relevant Residual Risk exists, that risk must be visible in the current judgment context before any successful close. Final acceptance, when required, can be recorded only after close-relevant residual risk is visible or confirmed as `ResidualRiskSummary.status=none`. A risk-accepted close additionally requires visible and accepted Residual Risk refs, and residual-risk acceptance never upgrades assurance to `detached_verified`. `ResidualRiskSummary.status=none` must not hide or replace known close-relevant risk.
 

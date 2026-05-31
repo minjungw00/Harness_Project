@@ -4,7 +4,7 @@
 
 This document gives you the smallest vocabulary for using Harness in ordinary work. It starts with public user-facing words, then lists the internal implementation terms you may see in reference docs, status cards, or API-shaped examples.
 
-Harness should be usable even when you do not know the internal labels. You can talk about work, scope, judgment, evidence, close readiness, and risk; the agent translates that into Harness records and procedures when precision is needed.
+Harness should be usable even when you do not know the internal labels. You can talk about work, scope, user decisions, evidence, close readiness, and risk; the agent translates that into Harness records and procedures when precision is needed.
 
 The exact kernel, runtime, MCP API, and document-rendering contracts live in the reference path.
 
@@ -24,7 +24,7 @@ Start with ordinary questions:
 
 - What work are we trying to do?
 - What is in scope, and what is out of scope?
-- What judgment belongs to the user?
+- Which user-owned decision is pending, and what type is it?
 - What evidence supports the claim that the work is done?
 - What still affects close readiness?
 - What risk remains?
@@ -39,7 +39,7 @@ Use these words in user-facing docs, prompts, and status summaries.
 |---|---|
 | Work | The thing the user wants completed, answered, investigated, or decided. |
 | Scope | What may change, what must stay out of bounds, and where the agent should stop before continuing. |
-| Judgment | A choice the user owns, such as a product direction, important technical trade-off, sensitive action, QA waiver, accepting the result, or risk decision. |
+| Judgment / user decision | A choice the user owns. Displays should name the type instead of flattening it into approval: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, or residual-risk acceptance. |
 | Evidence | Durable support for a claim, such as changed paths, diffs, test output, logs, screenshots, run summaries, QA notes, or verification results. |
 | Close readiness | What still has to be true before the work can finish: checks, QA, final acceptance, risk visibility, and blockers. |
 | Risk | Known uncertainty, limitation, skipped check, trade-off, or possible consequence that should stay visible instead of disappearing behind "done." |
@@ -53,11 +53,11 @@ When Harness status is shown to users, the many internal details should usually 
 | Display group | Plain question | What it usually shows |
 |---|---|---|
 | Scope | What may change? | The agreed work area, out-of-bounds items, and whether the next intended action fits. |
-| Judgment | What must the user decide? | Product, technical, security, QA, final acceptance, risk, permission, or scope choices that need the user. |
+| User decisions | What must the user decide? | Each pending item on its own line, labeled as Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, or residual-risk acceptance. |
 | Evidence | What supports completion claims? | The current support, missing support, stale support, and evidence refs when they matter. |
 | Close readiness | What still prevents finish or close? | Verification, Manual QA, accepting the result, visible risk, accepted risk when relevant, and close blockers. |
 
-These groups are a reading aid, not a replacement for the kernel gate taxonomy. They do not create schema fields, gate values, recompute inputs, authority paths, or close rules. Strict gate behavior stays in [Kernel Reference](../reference/kernel.md#gates), public API behavior stays in [MCP API and Schemas](../reference/mcp-api-and-schemas.md), and readable document rendering rules stay in [Document Projection Reference](../reference/document-projection.md).
+These groups are a reading aid, not a replacement for the kernel gate taxonomy. The User decisions display group is structured: sensitive-action approval is permission for a named sensitive step, final acceptance is the user's result judgment, and residual-risk acceptance must name the risk being accepted. They should not be shown as one checklist of approvals. The groups do not create schema fields, gate values, recompute inputs, authority paths, or close rules. Strict gate behavior stays in [Kernel Reference](../reference/kernel.md#gates), public API behavior stays in [MCP API and Schemas](../reference/mcp-api-and-schemas.md), and readable document rendering rules stay in [Document Projection Reference](../reference/document-projection.md).
 
 ## How Users Can Speak
 

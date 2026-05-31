@@ -30,7 +30,7 @@ Use these words first in user-facing docs, prompts, and status summaries. They a
 |---|---|
 | work | The thing the user wants completed, answered, investigated, or decided. |
 | scope | What may change, what is out of bounds, and where the agent should stop before continuing. |
-| judgment | A user-owned choice, such as a product direction, material technical trade-off, sensitive-action approval, scoped QA or verification waiver, final acceptance, or residual-risk acceptance. |
+| judgment / user decision | A user-owned choice. User-facing displays should name the specific type: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, or residual-risk acceptance. |
 | evidence | Durable support for a claim about the work. |
 | close readiness | What still has to be true before the work can finish or close. |
 | risk | Known uncertainty, limitation, skipped check, trade-off, or possible consequence that should remain visible. |
@@ -44,7 +44,7 @@ These are implementation labels used by references, APIs, schemas, records, and 
 | Internal term | Plain-language explanation |
 |---|---|
 | Change Unit | The bounded work scope for product writes. It says what may change but does not authorize a write by itself. |
-| Decision Packet | The recorded path for a specific user-owned judgment that blocks progress, write, waiver, final acceptance, risk handling, or close. |
+| Decision Packet | The recorded path for a specific user-owned decision that blocks progress, write, waiver, final acceptance, risk handling, or close. |
 | Write Authorization | The Harness result that one specific product-write attempt may proceed now after scope and other checks. |
 | Evidence Manifest | A record mapping completion conditions or acceptance criteria to supporting evidence refs. |
 | Projection | A readable view rendered from Harness state, such as a report or Journey Card. It displays state but does not replace it. |
@@ -91,7 +91,7 @@ The kernel gate for sensitive-action Approval. It is required only when sensitiv
 
 ### Assumption Register
 
-A Discovery or Shared Design support/projection list of assumptions the agent is using before implementation planning. It should name source, confidence, owner, and what would change if the assumption fails. These are recommended display/support contents, not a standalone schema or canonical record field list. The register helps shape a Discovery Brief, safe next-work candidate, work split, or First Safe Change Unit Candidate, but it is not user approval, sensitive-action Approval, final acceptance, residual-risk acceptance, evidence, close readiness, scope authority, or Write Authorization.
+A Discovery or Shared Design support/projection list of assumptions the agent is using before implementation planning. It should name source, confidence, owner, and what would change if the assumption fails. These are recommended display/support contents, not a standalone schema or canonical record field list. The register helps shape a Discovery Brief, safe next-work candidate, work split, or First Safe Change Unit Candidate, but it is not generic user consent, sensitive-action Approval, final acceptance, residual-risk acceptance, evidence, close readiness, scope authority, or Write Authorization.
 
 ### Artifact
 
@@ -195,11 +195,29 @@ The Task-level aggregate gate for blocking user-owned judgment before progress, 
 
 The schema field `decision_kind` on a Decision Packet. It controls lifecycle, payload branch, gate meaning, and state-transition semantics. It is distinct from `judgment_domain`, which is the user-facing grouping. Displays may describe the decision route in plain language, but schema/API contexts keep the exact field name and enum values.
 
+### Decision Type Display
+
+A user-facing label for the specific kind of pending user-owned decision. It is derived from the Decision Packet route, `judgment_domain`, and related owner records; it is not a separate schema field, gate, or authority path.
+
+Use distinct labels rather than a flat approval checklist:
+
+- Product/UX judgment
+- Technical architecture judgment
+- Security/privacy judgment
+- Scope/autonomy judgment
+- Sensitive-action approval
+- QA waiver
+- Verification waiver
+- Final acceptance
+- Residual-risk acceptance
+
+Sensitive-action approval permits only the named sensitive step. Final acceptance records the user's result judgment and does not accept known residual risk by itself. Residual-risk acceptance must name the risk being accepted and does not make verification or QA pass.
+
 ### Decision Packet
 
-A canonical kernel state record for blocking user-owned judgment. It names the decision needed, `decision_kind`, `judgment_domain`, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Decision Packet record IDs use `DEC-*`; record-level status is owned by [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute) and the public `DecisionPacket` schema, and relevant statuses feed the Task-level `decision_gate`. Required Decision Packet visibility is provided through Task/status/next/judgment-context and decision-packet surfaces; standalone `DEC` Markdown renderings are optional projections or proposal surfaces unless enabled. Public API/interface choices, architecture direction, domain-language conflicts, module boundary changes, waivers, final acceptance, and residual-risk choices use this path when user-owned product judgment or material technical judgment blocks progress, writes, close, or a public commitment. Broad approval text does not satisfy a Decision Packet unless it answers the specific recorded route and option.
+A canonical kernel state record for a blocking user-owned decision. It names the decision needed, `decision_kind`, `judgment_domain`, options, recommendation when available, trade-offs, affected scope, evidence, residual risk, owner, status, and next action. Decision Packet record IDs use `DEC-*`; record-level status is owned by [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute) and the public `DecisionPacket` schema, and relevant statuses feed the Task-level `decision_gate`. Required Decision Packet visibility is provided through Task/status/next/judgment-context and decision-packet surfaces; standalone `DEC` Markdown renderings are optional projections or proposal surfaces unless enabled. Public API/interface choices, architecture direction, domain-language conflicts, module boundary changes, waivers, final acceptance, and residual-risk choices use this path when Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, QA waiver, verification waiver, final acceptance, or residual-risk acceptance blocks progress, writes, close, or a public commitment. Broad approval text does not satisfy a Decision Packet unless it answers the specific recorded route and option.
 
-`judgment_domain` is the schema-owned user-visible grouping for a Decision Packet. Values are `product_ux`, `technical_architecture`, `security_privacy`, `qa_acceptance`, `residual_risk`, `scope_autonomy`, and `mixed`; displays may translate them to friendly labels such as Product / UX or Security / privacy. `decision_kind` controls lifecycle, payload branch, gate meaning, and state-transition semantics. Affected gates or blocked actions are recorded separately through `affected_gates` and related owner records. `judgment_domain` helps readers understand the kind of judgment being asked, but it is not a status, gate, owner record, validator input, close aggregation rule, or authority path. Cross-cutting decisions should show secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up rather than treating the domain as exclusive. Displays should make the decision title, what the user is deciding, why it is needed now, options, trade-offs, recommendation, uncertainty, deferral consequence, and residual risk when relevant visible without changing the owner contracts for `decision_kind`, Approval, final acceptance, QA, residual-risk acceptance, close, or Write Authorization.
+`judgment_domain` is the schema-owned user-visible grouping for a Decision Packet. Values are `product_ux`, `technical_architecture`, `security_privacy`, `qa_acceptance`, `residual_risk`, `scope_autonomy`, and `mixed`; displays may translate them to friendly labels such as Product / UX or Security / privacy. `decision_kind` controls lifecycle, payload branch, gate meaning, and state-transition semantics. Affected gates or blocked actions are recorded separately through `affected_gates` and related owner records. `judgment_domain` helps readers understand the kind of judgment being asked, but it is not a status, gate, owner record, validator input, close aggregation rule, or authority path. Cross-cutting decisions should show secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up rather than treating the domain as exclusive. Displays should make the decision type, decision title, what the user is deciding, why it is needed now, options, trade-offs, recommendation, uncertainty, deferral consequence, and residual risk when relevant visible without changing the owner contracts for `decision_kind`, Approval, final acceptance, QA, residual-risk acceptance, close, or Write Authorization.
 
 ### Decision Request
 
@@ -359,11 +377,11 @@ A compact human-readable projection of the current Task position: state, next ac
 
 ### Judgment Domain
 
-The schema field `judgment_domain` on a Decision Packet. It groups the user-facing decision area, such as `product_ux`, `technical_architecture`, `security_privacy`, `qa_acceptance`, `residual_risk`, `scope_autonomy`, or `mixed`. It helps readers understand the judgment being requested, but it is not a gate, status, authority path, validator input, close aggregation rule, affected-gate relation, or replacement for `decision_kind`.
+The schema field `judgment_domain` on a Decision Packet. It groups the user-facing decision area, such as `product_ux`, `technical_architecture`, `security_privacy`, `qa_acceptance`, `residual_risk`, `scope_autonomy`, or `mixed`. It helps readers understand the judgment being requested, but it is not the full decision type and is not a gate, status, authority path, validator input, close aggregation rule, affected-gate relation, or replacement for `decision_kind`. Displays still distinguish sensitive-action approval, QA waiver, verification waiver, final acceptance, and residual-risk acceptance when those are the pending route.
 
 ### Journey Spine
 
-The state-derived continuity model for a Task's ordered work journey. It is reconstructed from Task, Change Unit, Run, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Residual Risk, `task_gates.acceptance_gate`, final-acceptance Decision Packet user-decision state, close events, artifact references, and `state.sqlite.task_events`, not from chat memory. Journey Card and Journey Spine Markdown views are projections.
+The state-derived continuity model for a Task's ordered work journey. It is reconstructed from Task, Change Unit, Run, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Residual Risk, `task_gates.acceptance_gate`, final-acceptance Decision Packet state, close events, artifact references, and `state.sqlite.task_events`, not from chat memory. Journey Card and Journey Spine Markdown views are projections.
 
 ### Journey Spine Entry
 
@@ -533,7 +551,7 @@ The policy-owned rule for merging multiple applicable task-shape defaults, polic
 
 ### Shared Design
 
-The minimum recorded shared understanding of a task before implementation hardens into a plan: goal, user value, scope, non-goals, acceptance criteria, inspectable facts, assumptions, decisions, rejected options, remaining uncertainty, domain/module/interface impact, QA and verification expectations, and safe next work. Discovery Briefs, Question Queues, Assumption Registers, safe next-work candidates or work splits, and First Safe Change Unit Candidates can feed Shared Design. Shared Design can support shaping and `design_gate` readiness, but it is not final approval, sensitive-action Approval, final acceptance, residual-risk acceptance, QA judgment, evidence, close readiness, or Write Authorization. Markdown renderings of Shared Design are projections and proposal surfaces. Exact policy requirements are owned by [Design Quality Policies](design-quality-policies.md#shared-design-shared_design).
+The minimum recorded shared understanding of a task before implementation hardens into a plan: goal, user value, scope, non-goals, acceptance criteria, inspectable facts, assumptions, decisions, rejected options, remaining uncertainty, domain/module/interface impact, QA and verification expectations, and safe next work. Discovery Briefs, Question Queues, Assumption Registers, safe next-work candidates or work splits, and First Safe Change Unit Candidates can feed Shared Design. Shared Design can support shaping and `design_gate` readiness, but it is not sensitive-action Approval, final acceptance, residual-risk acceptance, QA judgment, evidence, close readiness, or Write Authorization. Markdown renderings of Shared Design are projections and proposal surfaces. Exact policy requirements are owned by [Design Quality Policies](design-quality-policies.md#shared-design-shared_design).
 
 ### Source-of-truth
 

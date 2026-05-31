@@ -6,7 +6,7 @@
 
 에이전트는 왜 지금 결정이 필요한지, 현실적인 선택지가 무엇인지, 어떤 장단점이 사용자 판단인지, 코드베이스나 현재 근거가 답할 수 있는 것은 무엇인지, 근거·QA·검증·작업 수락·잔여 위험 처리가 어떻게 영향을 받을 수 있는지 구체화해야 합니다.
 
-하네스는 사용자 소유 판단을 넓은 승인, 구현 근거, 작업 수락, 잔여 위험 수용과 분리해 보존하도록 돕습니다. 사용자는 필드 목록이 아니라, 짧고 집중된 판단 요청을 볼 수 있어야 합니다.
+하네스는 사용자 소유 결정을 넓은 승인, 구현 근거, 작업 수락, 잔여 위험 수용과 분리해 보존하도록 돕습니다. 사용자는 필드 목록이 아니라, 짧고 집중된 사용자 결정 요청을 볼 수 있어야 합니다.
 
 이 문서는 고급 사용 예시입니다. 기본 사용자 진입점도 아니고, 결정 패킷 동작의 정확한 계약도 아닙니다.
 
@@ -111,7 +111,7 @@
 
 ```text
 결정 제목: 반응형 로그인 레이아웃 수동 QA 면제
-판단 영역: QA / acceptance (`qa_acceptance`)
+판단 영역: QA/작업 수락 (`qa_acceptance`)
 결정 경로: QA waiver (`decision_kind=qa_waiver`)
 지금 필요한 이유: 반응형 로그인 흐름의 required 수동 QA가 passed가 아니어서 닫기가 막혔습니다.
 선택지:
@@ -134,7 +134,7 @@
 
 ```text
 결정 제목: invoice export fix 분리 검증 면제
-판단 영역: QA / acceptance (`qa_acceptance`)
+판단 영역: QA/작업 수락 (`qa_acceptance`)
 결정 경로: 검증 면제 (`decision_kind=verification_waiver`)
 지금 필요한 이유: compatible detached Eval이 없어서 verified close가 blocked이고, 사용자는 오늘 닫기를 원합니다.
 선택지:
@@ -157,7 +157,7 @@
 
 ```text
 결정 제목: 레거시 CSV 인코딩 한계 수용
-판단 영역: Residual risk (`residual_risk`)
+판단 영역: 잔여 위험 (`residual_risk`)
 결정 경로: 잔여 위험 수용 (`decision_kind=residual_risk_acceptance`)
 지금 필요한 이유: Export fix는 현재 UTF-8 파일에는 동작하지만 레거시 인코딩은 아직 지원되지 않으며, 닫기에는 risk decision이 필요합니다.
 선택지:

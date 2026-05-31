@@ -59,7 +59,7 @@ An implementer can run a local Harness process against a temporary product repos
 8. Status and next reads show current Task, scope, write authority, evidence state, and blockers without mutating state.
 9. Close or status output returns a structured blocker when required evidence, scope, or required seeded user judgment is missing.
 
-Passing this story means v0.1 Core Authority Slice works. It does not mean users have experienced the Harness MVP yet. The user-facing MVP begins when ordinary requests are clarified into scope, judgment, evidence, close-readiness, acceptance, and residual-risk language.
+Passing this story means v0.1 Core Authority Slice works. It does not mean users have experienced the Harness MVP yet. The user-facing MVP begins when ordinary requests are clarified into scope, user-owned judgment, evidence, close-readiness, final-acceptance, and residual-risk language.
 
 ## Doc-level acceptance checks
 

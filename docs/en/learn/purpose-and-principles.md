@@ -74,7 +74,7 @@ This thesis has three practical consequences.
 
 First, chat is an operating surface, not durable state. It is where people and agents coordinate, but it is not the record that decides whether work can write or close.
 
-Second, Harness state is the operating record. It stores the work, scope, user-owned decisions, sensitive-action permission, evidence refs, verification, QA, final acceptance, and residual risk needed to reason about the work.
+Second, Harness state is the operating record. It stores the work, scope, user-owned judgment, sensitive-action permission, evidence refs, verification, QA, final acceptance, and residual risk needed to reason about the work.
 
 Third, readable documents are projections and proposal areas. They help humans inspect and edit the story of the work, but accepted changes enter the operating record only through an explicit state-changing path. Projection freshness is a display fact, not a substitute for current state, evidence, tests, review, or final acceptance.
 

@@ -2,18 +2,18 @@
 
 ## Used when
 
-Use `TASK` as the continuity projection for active work. It summarizes the four user-facing gate display groups first: Scope, Judgment, Evidence, and Close Readiness. It also shows where the work is, current judgment context, blocker ownership, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, next evidence, residual risk, close summary, kernel gate detail when useful, active Change Unit, pending decisions, evidence, report refs, and projection freshness.
+Use `TASK` as the continuity projection for active work. It summarizes the four user-facing gate display groups first: Scope, User Decisions, Evidence, and Close Readiness. It also shows where the work is, current decision context, blocker ownership, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, next evidence, residual risk, close summary, kernel gate detail when useful, active Change Unit, pending decisions, evidence, report refs, and projection freshness.
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: required for user-facing MVP as a minimal continuity summary. Only the status, judgment request, evidence summary, and close readiness/blocker portions are early-required; the fuller TASK body is later profile polish.
+Implementation tier: required for user-facing MVP as a minimal continuity summary. Only the status, user decision request, evidence summary, and close readiness/blocker portions are early-required; the fuller TASK body is later profile polish.
 
 ## Source records
 
 - `state.sqlite` Task and task gates
 - active Change Unit and Change Unit dependencies
 - current-state display inputs for mode, lifecycle, next action, primary blocker, smallest unblocker, guarantee level, and projection freshness
-- display inputs for Scope, Judgment, Evidence, and Close Readiness groups derived from existing owner records, gates, blockers, and refs
+- display inputs for Scope, User Decisions, Evidence, and Close Readiness groups derived from existing owner records, gates, blockers, and refs
 - Write Authorization records and Write Authority Summary display inputs
 - Decision Packets and Residual Risks, including schema-owned Decision Packet `judgment_domain` when rendered
 - latest Run, Evidence Manifest, Eval, Manual QA record, and approval records
@@ -28,14 +28,14 @@ Implementation tier: required for user-facing MVP as a minimal continuity summar
 - Review Stage display inputs from existing owner records and refs
 - artifact refs and projection freshness
 
-Generated gate group summaries, judgment display text, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists. Rendering schema-owned `judgment_domain` does not create canonical records, gates, `ProjectionKind` values, evidence, QA, verification, final acceptance, residual-risk acceptance, close, or Write Authorization.
+Generated gate group summaries, user decision display text, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists. Rendering schema-owned `judgment_domain` does not create canonical records, gates, `ProjectionKind` values, evidence, QA, verification, final acceptance, residual-risk acceptance, close, or Write Authorization.
 
 ## Rendered sections
 
 - Gate Group Summary
 - Current Summary
 - Where We Are
-- Judgment Context
+- User Decision Context
 - Authority Source Refs
 - Autonomy Boundary
 - Write Authority Summary
@@ -79,9 +79,24 @@ updated_at: 2026-05-06T09:30:15+09:00
   - write authority:
   - blocker / smallest unblocker:
   - source refs:
-- Judgment:
-  - user decision needed:
-  - decision / approval / acceptance refs:
+- User Decisions:
+  - pending items (one line per decision; do not merge):
+  - direction judgments:
+    - Product/UX judgment:
+    - technical architecture judgment:
+    - security/privacy judgment:
+    - scope/autonomy judgment:
+  - permission:
+    - sensitive-action approval:
+  - waivers:
+    - QA waiver:
+    - verification waiver:
+  - acceptance:
+    - final acceptance:
+  - risk acceptance:
+    - residual-risk acceptance:
+    - named risk being accepted:
+  - decision / approval / waiver / acceptance / risk refs:
   - blocker / smallest unblocker:
   - what agent may continue:
 - Evidence:
@@ -118,9 +133,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 - smallest unblocker:
 - secondary blockers:
 - pending decision:
+- pending decision type:
 - user is deciding:
 - risk:
-- gate display groups: Scope=; Judgment=; Evidence=; Close Readiness=
+- gate display groups: Scope=; User Decisions=; Evidence=; Close Readiness=
 - guarantee level:
 - kernel gate detail: scope=; decision=; approval=; design=; evidence=; verification=; Manual QA=; acceptance=
 - active change unit:
@@ -142,8 +158,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 - latest meaningful evidence:
 - next state transition:
 
-## Judgment Context
+## User Decision Context
 - pending decision packets:
+- pending decision items:
+- decision type:
 - decision title:
 - judgment_domain:
 - display label:
@@ -156,7 +174,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 - uncertainty:
 - deferral consequence:
 - residual risk when relevant:
+- named risk being accepted:
 - what agent may decide without user:
+- what this decision does not settle:
+- generic consent handling:
 - reversibility:
 - affected scope:
 - minimum context to judge:
@@ -179,7 +200,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Autonomy Boundary
 - profile:
 - agent may do:
-- user judgment required:
+- user decision required:
 - AFK stop conditions:
 - boundary status:
 
@@ -305,7 +326,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 | CU-01 | | | vertical | trace status: required \| recorded \| waived \| not_required; show RED/GREEN refs | pending | |
 
 ## Pending Decisions
--
+| Type | Question | Route / refs | Status | Next action |
+|---|---|---|---|---|
+| Product/UX judgment \| technical architecture judgment \| security/privacy judgment \| scope/autonomy judgment \| sensitive-action approval \| QA waiver \| verification waiver \| final acceptance \| residual-risk acceptance | | | | |
 
 ## Evidence And Reports
 - Evidence Manifest:
@@ -406,9 +429,15 @@ Change Unit block sub-template:
   - implementation detail:
   - local refactor inside scope:
   - evidence collection:
-- user judgment required:
-  - product direction:
-  - material technical direction:
+- user decision required:
+  - Product/UX judgment:
+  - technical architecture judgment:
+  - security/privacy judgment:
+  - scope/autonomy judgment:
+  - sensitive-action approval:
+  - QA waiver:
+  - verification waiver:
+  - final acceptance:
   - public interface or compatibility commitment:
   - residual-risk acceptance:
 - AFK stop conditions:
@@ -477,9 +506,11 @@ Review Stages in `TASK` are managed display sections for Role Lens, playbook, or
 
 Generated summaries should use ordinary user-facing language first and exact Harness terms as labels or refs where useful. They should not turn the projection into a command language or imply that display text created state.
 
-Gate Group Summary is the first managed section so readers see the practical blocker story before raw gate detail. Scope, Judgment, Evidence, and Close Readiness are display groups derived from existing owner records, gates, blockers, and refs. They are not canonical fields, aliases for exact gate values, new gates, recompute inputs, close semantics, or authority paths. Exact gate values and recompute rules remain in [Kernel Reference](../kernel.md#gates), and close behavior remains in [`close_task`](../kernel.md#close_task).
+Gate Group Summary is the first managed section so readers see the practical blocker story before raw gate detail. Scope, User Decisions, Evidence, and Close Readiness are display groups derived from existing owner records, gates, blockers, and refs. They are not canonical fields, aliases for exact gate values, new gates, recompute inputs, close semantics, or authority paths. User Decisions is structured and must not be rendered as one broad judgment or approval bucket. Exact gate values and recompute rules remain in [Kernel Reference](../kernel.md#gates), and close behavior remains in [`close_task`](../kernel.md#close_task).
 
-Decision Packet display in `TASK` should show the schema-owned `judgment_domain` so users can scan whether they are making a Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed judgment. Use it as the primary display grouping. If a decision is cross-cutting, render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the domain as exclusive. `judgment_domain` is not a gate, status, validator input, close aggregation rule, or authority path, and it must not blur the owner contracts for `decision_kind`, Approval, acceptance, QA, residual-risk acceptance, close, or Write Authorization.
+Decision Packet display in `TASK` should show the schema-owned `judgment_domain` so users can scan whether they are making a Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed judgment. It must also show the concrete decision type derived from the route and owner refs: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, or residual-risk acceptance. If a decision is cross-cutting, render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the domain as exclusive. `judgment_domain` is not a gate, status, validator input, close aggregation rule, or authority path, and it must not blur the owner contracts for `decision_kind`, Approval, acceptance, QA, residual-risk acceptance, close, or Write Authorization.
+
+Pending decisions must not be merged into one line. If sensitive-action approval, final acceptance, and residual-risk acceptance are all pending, render three items with three labels. Approval cards should not look like final acceptance, and residual-risk acceptance should name the risk being accepted.
 
 Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to Write Authorization refs, sensitive-action permission to Approval refs, evidence sufficiency to Evidence Manifest refs, detached verification to Eval refs, Manual QA to Manual QA records or valid waiver refs, final acceptance to Acceptance Decision Packet refs, residual-risk visibility to Residual Risk refs or `ResidualRiskSummary.status=none`, and residual-risk acceptance to accepted Residual Risk refs. Missing refs should render as missing support, not as completed authority.
 

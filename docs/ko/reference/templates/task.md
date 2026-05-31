@@ -2,18 +2,18 @@
 
 ## 사용 시점
 
-진행 중인 작업을 이어서 파악할 수 있는 Projection이 필요할 때 `TASK`를 사용합니다. 이 template은 Scope, Judgment, Evidence, Close Readiness라는 네 가지 사용자에게 보이는 관문 표시 그룹을 먼저 요약합니다. 또한 작업의 현재 위치, 판단 맥락, 막힘 소유자, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, 다음 근거, Residual Risk, Close Summary, 필요할 때의 kernel gate detail, active Change Unit, 대기 중인 decision을 보여줍니다. 관련 보고서 참조와 읽기용 보기 최신성도 함께 보여줍니다.
+진행 중인 작업을 이어서 파악할 수 있는 Projection이 필요할 때 `TASK`를 사용합니다. 이 template은 범위, 사용자 결정, 근거, 닫기 준비 상태라는 네 가지 사용자에게 보이는 관문 표시 그룹을 먼저 요약합니다. 또한 작업의 현재 위치, 사용자 결정 맥락, 막힘 소유자, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Review Stages, Stewardship Impact, 다음 근거, Residual Risk, Close Summary, 필요할 때의 kernel gate detail, active Change Unit, 대기 중인 decision을 보여줍니다. 관련 보고서 참조와 읽기용 보기 최신성도 함께 보여줍니다.
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 사용자 대상 MVP에 필요한 최소 continuity summary입니다. 상태, 판단 요청, 근거 요약, 닫기 준비 상태/blocker 부분만 early-required이며 전체 TASK body는 later profile polish입니다.
+구현 계층: 사용자 대상 MVP에 필요한 최소 continuity summary입니다. 상태, 사용자 결정 요청, 근거 요약, 닫기 준비 상태/blocker 부분만 early-required이며 전체 TASK body는 later profile polish입니다.
 
 ## 기준 기록
 
 - `state.sqlite` Task와 task gate
 - active Change Unit과 Change Unit dependency
 - mode, lifecycle, next action, 가장 먼저 해소할 막힘, 가장 작은 해소 방법, guarantee level, 읽기용 보기 최신성(projection freshness)을 위한 현재 상태 표시 input
-- 기존 owner 기록, gate, blocker, ref에서 파생되는 Scope, Judgment, Evidence, Close Readiness 표시 그룹 input
+- 기존 owner 기록, gate, blocker, ref에서 파생되는 범위, 사용자 결정, 근거, 닫기 준비 상태 표시 그룹 input
 - Write Authorization 기록과 Write Authority Summary 표시 input
 - Decision Packet과 Residual Risk, 렌더링할 때의 schema가 소유하는 Decision Packet `judgment_domain`
 - 최신 Run, Evidence Manifest, Eval, 수동 QA 기록, approval 기록
@@ -28,14 +28,14 @@
 - 기존 owner 기록과 ref에서 온 Review Stage 표시 input
 - artifact ref 및 읽기용 보기 최신성(projection freshness)
 
-`TASK`의 생성된 gate group summary, judgment display text, close, waiver, review-stage, stewardship, projection-freshness 항목은 표시 binding입니다. 위에 나열한 owner record, gate, artifact, ref로 해소되어야 하며, 그런 source가 없으면 명시적인 absence/blocking 상태로 렌더링해야 합니다. Schema-owned `judgment_domain`을 렌더링해도 기준 기록, gate, `ProjectionKind` value, 근거, 수동 QA, 검증, 작업 수락, 잔여 위험 수용, close, Write Authorization을 만들지 않습니다.
+`TASK`의 생성된 gate group summary, 사용자 결정 표시 text, close, waiver, review-stage, stewardship, projection-freshness 항목은 표시 binding입니다. 위에 나열한 owner record, gate, artifact, ref로 해소되어야 하며, 그런 source가 없으면 명시적인 absence/blocking 상태로 렌더링해야 합니다. Schema-owned `judgment_domain`을 렌더링해도 기준 기록, gate, `ProjectionKind` value, 근거, 수동 QA, 검증, 작업 수락, 잔여 위험 수용, close, Write Authorization을 만들지 않습니다.
 
 ## 렌더링 섹션
 
 - Gate Group Summary
 - Current Summary
 - Where We Are
-- Judgment Context
+- User Decision Context
 - Authority Source Refs
 - Autonomy Boundary
 - Write Authority Summary
@@ -79,9 +79,24 @@ updated_at: 2026-05-06T09:30:15+09:00
   - write authority:
   - blocker / smallest unblocker:
   - source refs:
-- Judgment:
-  - user decision needed:
-  - decision / approval / acceptance refs:
+- 사용자 결정:
+  - pending items (one line per decision; merge하지 않음):
+  - direction judgments:
+    - 제품/UX 판단:
+    - 기술 구조 판단:
+    - 보안/개인정보 판단:
+    - 범위/자율성 판단:
+  - permission:
+    - 민감 동작 승인:
+  - waivers:
+    - QA 면제 판단:
+    - 검증 면제 판단:
+  - acceptance:
+    - 작업 수락:
+  - risk acceptance:
+    - 잔여 위험 수용:
+    - 수용하는 named risk:
+  - decision / approval / waiver / acceptance / risk refs:
   - blocker / smallest unblocker:
   - what agent may continue:
 - Evidence:
@@ -117,10 +132,11 @@ updated_at: 2026-05-06T09:30:15+09:00
 - blocker owner:
 - smallest unblocker:
 - secondary blockers:
-- 대기 중인 판단:
+- 대기 중인 decision:
+- 대기 중인 decision type:
 - user is deciding:
 - risk:
-- gate display groups: Scope=; Judgment=; Evidence=; Close Readiness=
+- gate display groups: 범위=; 사용자 결정=; 근거=; 닫기 준비 상태=
 - guarantee level:
 - kernel gate detail: scope=; decision=; approval=; design=; evidence=; verification=; 수동 QA=; acceptance=
 - active change unit:
@@ -142,8 +158,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 - latest meaningful evidence:
 - next state transition:
 
-## Judgment Context
+## User Decision Context
 - 대기 중인 Decision Packet:
+- 대기 중인 decision items:
+- decision type:
 - decision title:
 - judgment_domain:
 - display label:
@@ -156,7 +174,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 - uncertainty:
 - deferral consequence:
 - residual risk when relevant:
+- 수용하는 named risk:
 - what agent may decide without user:
+- 이 decision이 확정하지 않는 것:
+- generic consent handling:
 - reversibility:
 - affected scope:
 - minimum context to judge:
@@ -179,7 +200,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Autonomy Boundary
 - profile:
 - agent may do:
-- user judgment required:
+- user decision required:
 - AFK stop conditions:
 - boundary status:
 
@@ -305,7 +326,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 | CU-01 | | | vertical | trace 상태: required \| recorded \| waived \| not_required; RED/GREEN ref 표시 | pending | |
 
 ## Pending Decisions
--
+| Type | Question | Route / refs | Status | Next action |
+|---|---|---|---|---|
+| 제품/UX 판단 \| 기술 구조 판단 \| 보안/개인정보 판단 \| 범위/자율성 판단 \| 민감 동작 승인 \| QA 면제 판단 \| 검증 면제 판단 \| 작업 수락 \| 잔여 위험 수용 | | | | |
 
 ## Evidence And Reports
 - Evidence Manifest:
@@ -406,9 +429,15 @@ Change Unit block sub-template:
   - implementation detail:
   - local refactor inside scope:
   - evidence collection:
-- user judgment required:
-  - 제품 방향:
-  - 중요한 기술 방향:
+- user decision required:
+  - 제품/UX 판단:
+  - 기술 구조 판단:
+  - 보안/개인정보 판단:
+  - 범위/자율성 판단:
+  - 민감 동작 승인:
+  - QA 면제 판단:
+  - 검증 면제 판단:
+  - 작업 수락:
   - public interface 또는 호환성 약속:
   - 잔여 위험 수용:
 - AFK stop conditions:
@@ -477,9 +506,11 @@ Change Unit block sub-template:
 
 생성된 summary는 사용자가 읽기 쉬운 평범한 말을 먼저 쓰고, 정확한 Harness term은 유용한 label이나 ref로 붙입니다. Projection이 명령어처럼 보이거나 표시 문구만으로 상태가 만들어진 것처럼 암시하면 안 됩니다.
 
-Gate Group Summary는 읽는 사람이 raw gate detail보다 실제 막힘 이야기를 먼저 보도록 첫 managed section으로 둡니다. Scope, Judgment, Evidence, Close Readiness는 기존 owner 기록, gate, blocker, ref에서 파생되는 표시 그룹입니다. 기준 field, 정확한 gate value의 alias, 새 gate, recompute input, close semantics, authority path가 아닙니다. 정확한 gate 값과 recompute rule은 [커널 참조](../kernel.md#gates)가 담당하고, close 동작은 [`close_task`](../kernel.md#close_task)가 담당합니다.
+Gate Group Summary는 읽는 사람이 raw gate detail보다 실제 막힘 이야기를 먼저 보도록 첫 managed section으로 둡니다. 범위, 사용자 결정, 근거, 닫기 준비 상태는 기존 owner 기록, gate, blocker, ref에서 파생되는 표시 그룹입니다. 기준 field, 정확한 gate value의 alias, 새 gate, recompute input, close semantics, authority path가 아닙니다. 사용자 결정은 구조화되어 있으며 하나의 넓은 판단 또는 승인 bucket처럼 렌더링하면 안 됩니다. 정확한 gate 값과 recompute rule은 [커널 참조](../kernel.md#gates)가 담당하고, close 동작은 [`close_task`](../kernel.md#close_task)가 담당합니다.
 
-`TASK`의 Decision Packet 표시는 schema가 소유하는 `judgment_domain`을 보여줘야 합니다. 사용자는 이를 통해 Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, Mixed 중 어떤 판단 영역인지 빠르게 볼 수 있습니다. 이를 주 표시 grouping으로 사용합니다. 결정이 여러 영역에 걸쳐 있으면 domain을 배타적으로 다루지 말고 부차적인 고려사항을 장단점, 영향받는 gate, risk, evidence, follow-up에 렌더링해야 합니다. `judgment_domain`은 gate, status, validator input, close aggregation rule, authority path가 아니며 `decision_kind`, 민감 동작 승인, 작업 수락, QA, 잔여 위험 수용, close, Write Authorization의 owner contract를 흐리면 안 됩니다.
+`TASK`의 Decision Packet 표시는 schema가 소유하는 `judgment_domain`을 보여줘야 합니다. 사용자는 이를 통해 제품/UX 판단, 기술 구조 판단, 보안/개인정보 판단, QA/작업 수락, 잔여 위험, 범위/자율성 판단, 복합 중 어떤 판단 영역인지 빠르게 볼 수 있습니다. 동시에 route와 owner refs에서 파생되는 구체적인 결정 유형도 보여줘야 합니다. 제품/UX 판단, 기술 구조 판단, 보안/개인정보 판단, 범위/자율성 판단, 민감 동작 승인, QA 면제 판단, 검증 면제 판단, 작업 수락, 잔여 위험 수용을 구분합니다. 결정이 여러 영역에 걸쳐 있으면 domain을 배타적으로 다루지 말고 부차적인 고려사항을 장단점, 영향받는 gate, risk, evidence, follow-up에 렌더링해야 합니다. `judgment_domain`은 gate, status, validator input, close aggregation rule, authority path가 아니며 `decision_kind`, 민감 동작 승인, 작업 수락, QA, 잔여 위험 수용, close, Write Authorization의 owner contract를 흐리면 안 됩니다.
+
+대기 중인 결정은 한 줄로 합치면 안 됩니다. 민감 동작 승인, 작업 수락, 잔여 위험 수용이 모두 대기 중이면 세 가지 label로 세 항목을 렌더링합니다. Approval card는 작업 수락처럼 보이면 안 되고, 잔여 위험 수용은 수용하는 위험을 이름 붙여야 합니다.
 
 `TASK`의 authority claim은 source ref 또는 명시적 absence로 해소되어야 합니다. Write authority claim은 Write Authorization ref를, 민감 동작 permission은 Approval ref를, 근거 충분성은 Evidence Manifest ref를, 분리 검증은 Eval ref를, 수동 QA는 수동 QA record 또는 valid waiver ref를, 작업 수락은 Acceptance Decision Packet ref를, 잔여 위험 표시는 Residual Risk refs 또는 `ResidualRiskSummary.status=none`을, 잔여 위험 수용은 accepted Residual Risk refs를 가리켜야 합니다. Ref가 없으면 completed authority가 아니라 missing support로 렌더링해야 합니다.
 

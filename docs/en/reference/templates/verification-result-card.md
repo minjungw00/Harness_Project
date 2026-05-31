@@ -88,7 +88,7 @@ This template is a rendered card shape, not verification authority. Eval records
 
 Verification checks correctness from the recorded review boundary. It does not record Manual QA, imply final acceptance, or accept residual risk. Same-session self-review may be shown as a self-check or review note, but it must not be rendered as detached verification. A verification waiver should show the Decision Packet that records the user-owned waiver when required, `verification_gate=waived_by_user`, skipped check, accepted risk, follow-up, relevant refs, and close impact; it does not create detached verification or upgrade assurance.
 
-Passing verification does not mean the user accepted the result. If final acceptance is required, this card may show the final acceptance status or needed action, but final acceptance remains on the Decision Packet/user-decision path.
+Passing verification does not mean the user accepted the result. If final acceptance is required, this card may show the final acceptance status or needed action, but final acceptance remains on the Decision Packet path.
 
 If QA is waived while verification is displayed, keep the QA waiver separate from the Eval verdict and assurance line. QA waiver display cites `qa_gate=waived`, the Manual QA record or waiver reason, and a QA waiver Decision Packet when required; it is not a passed Manual QA result or detached verification.
 

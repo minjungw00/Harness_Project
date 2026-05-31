@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use `JOURNEY-CARD` when a current-position card needs to show where the work is, what is in and out of scope, what is blocking the next move, what judgment is pending, the Autonomy Boundary, Write Authority Summary, acceptance criteria, evidence and checks, residual risk, close context, gates, and projection freshness.
+Use `JOURNEY-CARD` when a current-position card needs to show where the work is, what is in and out of scope, what is blocking the next move, what user decision is pending, the Autonomy Boundary, Write Authority Summary, acceptance criteria, evidence and checks, residual risk, close context, gates, and projection freshness.
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
@@ -27,7 +27,7 @@ Implementation tier: future / diagnostic. Persisted Journey Card Markdown and Jo
 - projection freshness inputs
 - state, baseline, evidence, MCP, and capability freshness/blocker display summaries
 
-Judgment, write-authority, close-impact, residual-risk, and freshness placeholders are display bindings derived from the records above. If a user decision is actually needed, render a Decision Packet or decision prompt rather than treating this card as the judgment-context source.
+Decision, write-authority, close-impact, residual-risk, and freshness placeholders are display bindings derived from the records above. If a user decision is actually needed, render a Decision Packet or decision prompt rather than treating this card as the decision context source.
 
 ## Rendered sections
 
@@ -70,7 +70,7 @@ Judgment context:
 Autonomy boundary:
 - profile: {autonomy_profile}
 - agent may do: {agent_may_do}
-- user judgment required: {user_judgment_required}
+- user decision required: {user_decision_required}
 - AFK stop conditions: {afk_stop_conditions}
 
 Write Authority Summary:

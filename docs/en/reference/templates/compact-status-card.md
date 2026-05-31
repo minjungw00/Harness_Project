@@ -31,7 +31,7 @@ Implementation tier: required for v0.1 Core Authority Slice as a minimal read-on
 - state, baseline, evidence, MCP, and capability freshness/blocker display summaries
 - latest report, Evidence Manifest, Run, Eval, Manual QA, and ArtifactRef refs
 
-Summary placeholders in this card are display bindings derived from the records above. Decision, close-blocker, residual-risk, and freshness summaries should show refs or explicit absence; they do not create judgment context or authority.
+Summary placeholders in this card are display bindings derived from the records above. Decision, close-blocker, residual-risk, and freshness summaries should show refs or explicit absence; they do not create user decision context or authority.
 
 ## Rendered sections
 
@@ -106,11 +106,11 @@ Residual-risk display must distinguish `status=none` from `not_visible`. `status
 
 Do not collapse display problems into one line. A stale projection means the readable card may lag. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient. MCP or capability unavailable means the surface cannot reach or provide the required Harness/Core capability.
 
-The primary blocker should come from the primary `ToolError` when an API response supplies one, or from the first close blocker when rendering a failed `harness.close_task` response. The owner label should say whether the next move is user-owned, agent-resolvable, or surface/system-owned, and should render as `none` or be omitted when there is no primary blocker. Secondary blockers should be grouped compactly and shown only when they change the next action, close readiness, or user judgment. These labels are display text, not new schema values or error codes.
+The primary blocker should come from the primary `ToolError` when an API response supplies one, or from the first close blocker when rendering a failed `harness.close_task` response. The owner label should say whether the next move is user-owned, agent-resolvable, or surface/system-owned, and should render as `none` or be omitted when there is no primary blocker. Secondary blockers should be grouped compactly and shown only when they change the next action, close readiness, or pending user decision. These labels are display text, not new schema values or error codes.
 
 Design/stewardship is separate from Close status. It may affect shaping, write blockers, close blockers, or Decision Packet needs, but it is not merely a close-status field.
 
-This is not judgment-context. If user judgment is needed, render a separate decision prompt with options, recommendation, uncertainty, deferral effect, and relevant refs.
+This is not user decision context. If a user decision is needed, render a separate decision prompt with the decision type, options, recommendation, uncertainty, deferral effect, and relevant refs.
 
 Close status should preserve the close-reason distinction. Render `completed_with_risk_accepted` as successful close with accepted residual risk, not as ordinary done, verified, or self-checked close. Keep self-checked, `detached_verified`, verification-waived, QA-waived, and risk-accepted-close labels on separate display slots with refs or explicit absence. If final acceptance is the next action, the separate acceptance prompt must show evidence, verification, Manual QA, residual-risk visibility or `none`, and what acceptance does not replace.
 

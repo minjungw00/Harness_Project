@@ -13,7 +13,7 @@ The agent should:
 - gather or explain the evidence needed to support completion
 - show the next safe action and what still blocks closing the work
 
-Harness helps preserve scope, user-owned judgment, evidence, verification, QA expectations, final acceptance, and residual-risk status outside fragile chat context. It should make AI-assisted work easier to follow, not turn every task into a management ritual. Small work should stay small. Larger or riskier work should gain structure only when scope, judgment, evidence, QA, verification, final acceptance, or residual risk actually matter.
+Harness helps preserve scope, user-owned judgment, evidence, verification, QA expectations, final acceptance, and residual-risk status outside fragile chat context. It should make AI-assisted work easier to follow, not turn every task into a management ritual. Small work should stay small. Larger or riskier work should gain structure only when scope, user-owned judgment, evidence, QA, verification, final acceptance, or residual risk actually matter.
 
 You should expect to see plain work facts: what is in scope, what is out of scope, what the agent can inspect, what only you can decide, what changed, what was checked, what evidence exists, what risk remains, and whether close is blocked. You should not need to learn internal record names, gate names, or tool names before starting.
 
@@ -53,7 +53,7 @@ Most requests should be explained with plain work shapes:
 |---|---|---|
 | Read/advice work | The agent is reading, explaining, comparing, reviewing, or helping decide without changing product files. | The answer, sources or caveats when useful, and any decision or follow-up that matters. |
 | Small change | The requested change is narrow, low risk, and has an obvious result, such as a typo, copy-only edit, or focused fix. | A short scope, changed path or no-file result, what was checked, and whether anything forced escalation. |
-| Tracked work | The request has unclear scope, multiple parts, product or technical judgment, security/privacy impact, meaningful evidence needs, QA, verification, final acceptance, or close-relevant risk. | Scope, judgment, evidence, close readiness, next safe action, and the smallest blocker. |
+| Tracked work | The request has unclear scope, multiple parts, product or technical judgment, security/privacy impact, meaningful evidence needs, QA, verification, final acceptance, or close-relevant risk. | Scope, pending user decisions, evidence, close readiness, next safe action, and the smallest blocker. |
 
 The agent may record more internal detail than it displays. User-facing messages should show the detail that helps you decide, trust, or unblock the work, not a lifecycle checklist for every tiny edit.
 
@@ -88,7 +88,7 @@ A good clarification response should separate:
 - remaining uncertainty
 - safe next-work candidate or work-splitting candidate
 
-When the request needs judgment, the agent should name the kind of judgment instead of asking for broad approval. Sensitive-action approval, final acceptance, residual-risk acceptance, and QA or verification waiver are separate decisions.
+When the request needs a user-owned decision, the agent should name the decision type instead of asking for broad approval. Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, and residual-risk acceptance are separate decisions.
 
 Product or UX judgment:
 
@@ -222,7 +222,7 @@ Likely user-owned decisions:
 
 Evidence likely needed: focused tests for success and failure paths, changed-path summary, security-sensitive notes, and UI/Manual QA if the login screen changes.
 
-Close cannot happen yet because scope, user-owned decisions, evidence, QA expectations, and residual risk are not settled.
+Close cannot happen yet because scope, required user-owned decisions, evidence, QA expectations, and residual risk are not settled.
 ```
 
 As the work progresses, the agent should keep the same shape visible:
@@ -247,17 +247,17 @@ Most status should fit into four everyday groups. The agent may use exact Harnes
 | Group | Plain question | What the agent should show |
 |---|---|---|
 | Scope | What work are we doing, and what are we not doing? | Included behavior, out-of-scope items, affected areas, and whether the next action fits. |
-| Judgment | What must the user decide? | Product/UX choices, material technical choices, security or privacy choices, sensitive-action approvals, scoped QA or verification waivers, final acceptance, residual-risk acceptance, or scope changes. |
+| User decisions | What must the user decide? | Each pending item separately, labeled by type: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, or residual-risk acceptance. |
 | Evidence | What supports the claim that this is done? | Changed paths, tests, logs, screenshots, QA notes, verification results, missing support, or stale support. |
 | Close readiness | What still prevents closing? | Verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance, close blockers, and the smallest unblocker. |
 
-These are readable summaries, not authoritative documents. The agent may cite refs behind them, but state changes, evidence records, acceptance, risk acceptance, and close still come from Harness/Core records and actions.
+These are readable summaries, not authoritative documents. The agent may cite refs behind them, but state changes, evidence records, acceptance, risk acceptance, and close still come from Harness/Core records and actions. The User decisions display group should not appear as a flat checklist of approvals: approval permits a named sensitive step, acceptance records the result judgment, and residual-risk acceptance records that a named remaining risk is acceptable.
 
-When the Judgment group needs a formal Decision Packet, Harness records both the decision route and the user-facing judgment domain. The route says what lifecycle or gate path the decision uses. The domain groups the decision for users as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed. The domain explains the decision; affected gates or blocked actions are recorded separately and determine what the decision influences.
+When the User Decisions display group needs a formal Decision Packet, Harness records both the decision route and the user-facing judgment domain. The route says what lifecycle or gate path the decision uses. The domain groups the decision for users as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed. The display should still name the concrete decision type, such as sensitive-action approval, final acceptance, QA waiver, verification waiver, or residual-risk acceptance. The domain explains the decision; affected gates or blocked actions are recorded separately and determine what the decision influences.
 
 ```mermaid
 flowchart LR
-  Need["user owned judgment"] --> Kind["decision_kind"]
+  Need["user decision"] --> Kind["decision_kind"]
   Need --> Domain["judgment_domain"]
   Kind --> Prompt["options and recommendation"]
   Domain --> Prompt
@@ -270,10 +270,19 @@ Useful status:
 
 ```text
 Scope: login form and login API call; password reset and account creation remain out of scope.
-Judgment: failed-login UX needs your choice.
+User decisions: Product/UX judgment needed for failed-login UX.
 Evidence: repository inspection is done; implementation evidence does not exist yet.
 Close readiness: close is blocked until UX choice, implementation evidence, QA expectations, and residual risk are handled.
 Next safe action: choose failed-login UX, or ask me to propose a smaller slice.
+```
+
+When several decisions are pending, the agent should split them:
+
+```text
+User decisions:
+- Product/UX judgment: choose failed-login feedback pattern.
+- Sensitive-action approval: approve or deny installing the auth helper package.
+- Residual-risk acceptance: accept or reject the named mobile Safari wrapping risk.
 ```
 
 <a id="judgment"></a>
@@ -317,7 +326,7 @@ A blocker should be concrete. It should say who owns the next move and what the 
 ```text
 Blocked.
 Scope: the requested copy edit appears to affect account behavior outside the original label.
-Judgment: user-owned product decision is needed before expanding the change.
+User decisions: Product/UX judgment is needed before expanding the change.
 Evidence: the agent can inspect call sites and show the affected screens.
 Close readiness: close is blocked until scope is either narrowed back to the label or expanded deliberately.
 Smallest unblocker: choose whether to keep this as a label-only change or include account behavior.
@@ -379,7 +388,7 @@ You can skip this section until an agent shows one of these labels. They are use
 | Discovery | The internal name for the agent's requirements-clarification behavior before implementation planning. Users can ask for this as "clarify the plan before implementation." |
 | Change Unit | The bounded work area that may change for this task. |
 | Autonomy Boundary | The decisions the agent may make alone inside that scope. |
-| Decision Packet | The recorded path for a user-owned product, technical, waiver, acceptance, risk, or scope decision. |
+| Decision Packet | The recorded path for a user-owned product/UX, technical architecture, security/privacy, scope/autonomy, waiver, final acceptance, residual-risk acceptance, or reconcile decision. |
 | Judgment domain | The user-facing grouping on a Decision Packet, such as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed. |
 | Approval | Permission for a named sensitive action; not generic agreement or final acceptance. |
 | Write Authorization | A one-attempt check that the intended product write fits the current task, scope, decisions, and approvals. |
