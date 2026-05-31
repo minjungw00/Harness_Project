@@ -8,7 +8,7 @@ It owns the common connector contract: capability tiers, capability profiles, ge
 
 For the user-facing agent procedure, read [Agent Session Flow](../use/agent-session-flow.md). For surface-specific setup notes, read [Surface Cookbook](surface-cookbook.md).
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -70,7 +70,7 @@ Always-on rules and context should stay short, current, and non-authoritative. T
 | `T5 Isolation` | Surface can run verification or risky work behind a documented separation boundary. Worktrees and fresh evaluator bundles may provide verification independence or stale-context control; sandboxing, permission isolation, locked-down runners, process boundaries, or container boundaries require exact profile proof. | worktree, sandbox, fresh process, isolated runner |
 | `T6 QA Capture` | Surface can structure browser, screenshot, walkthrough, workflow-recording, or Manual QA artifacts. | browser runner, screenshot capture, console/network capture, accessibility snapshot, QA note capture |
 
-Normal interactive Harness use is most natural at `T2` or higher. Reliable detached verification usually needs `T3` capture plus a real independence boundary. High-risk work should use a fixture-proven `T4` guard or `T5` isolation when available. `T6` improves UI/UX evidence, but it does not replace Manual QA judgment, final acceptance, or detached verification, and it is not required by the v0.1/default reference posture or v0.3/v0.4 staged Manual QA coverage when human Manual QA notes and manually supplied artifacts can be recorded.
+Normal interactive Harness use is most natural at `T2` or higher. Reliable detached verification usually needs `T3` capture plus a real independence boundary. High-risk work should use a fixture-proven `T4` guard or `T5` isolation when available. `T6` improves UI/UX evidence, but it does not replace Manual QA judgment, final acceptance, or detached verification, and it is not required by the v0.1/default reference posture or Agency Assurance Pack / Operations & Handoff Pack staged Manual QA coverage when human Manual QA notes and manually supplied artifacts can be recorded.
 
 For v0.1 and v0.2, connectors should assume cooperative/detective behavior unless the concrete profile proves otherwise. `T4` and `T5` rows describe stronger future or profile-specific capabilities; they do not imply OS-level isolation, arbitrary-tool sandboxing, tamper-proof local files, or pre-tool blocking for the user-facing MVP by default.
 
@@ -252,7 +252,7 @@ Integration uses the guarantee levels defined in [Runtime Architecture Reference
 
 This reference owns how connector profiles report and display those levels. It must not infer a stronger level from a surface name, product name, recipe name, or mode label, and it must not treat guarantee level as Approval, Write Authorization, verification, QA, final acceptance, residual-risk acceptance, close readiness, or a kernel gate.
 
-The first runnable kernel slice and the user-facing MVP should display the reference surface as cooperative/detective unless a fixture-proven guard or documented separation boundary is implemented and proven for the operation being described. Future preventive or isolated profiles may be documented, but they must stay labeled as future/profile-specific until owner docs and conformance promote them.
+The v0.1 Core Authority Slice and v0.2 User-Facing Harness MVP should display the reference surface as cooperative/detective unless a fixture-proven guard or documented separation boundary is implemented and proven for the operation being described. Future preventive or isolated profiles may be documented, but they must stay labeled as future/profile-specific until owner docs and conformance promote them.
 
 | Level | Display responsibility |
 |---|---|

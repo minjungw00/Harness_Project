@@ -6,7 +6,7 @@
 
 SQLite DDL과 storage layout, 전체 kernel transition table, projection template text, CLI command semantics, connector cookbook detail은 이 문서의 담당 범위가 아닙니다. Storage-owned JSON과 DDL 규칙은 [Storage와 DDL](storage-and-ddl.md)이 담당합니다.
 
-이 문서는 참조 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
+이 문서는 참조 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
 
 ## 이런 때 읽기
 
@@ -259,12 +259,12 @@ Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](ke
 
 | 지원 계층 | Values | Requirement |
 |---|---|---|
-| 첫 runnable kernel slice | required 없음 | v0.1 status/next와 structured blocker는 persisted Markdown projection job 없이 read/freshness fact를 노출할 수 있습니다. |
+| 코어 권한 조각(v0.1 Core Authority Slice) | required 없음 | v0.1 status/next와 structured blocker는 persisted Markdown projection job 없이 read/freshness fact를 노출할 수 있습니다. |
 | 사용자 대상 MVP | persisted projection support를 사용할 때 `TASK` minimal task-scoped readable summary | 사용자 읽기용 status/judgment/evidence/close summary path를 제공합니다. 동등한 status/next card로도 full `TASK` template rendering 없이 MVP output을 충족할 수 있습니다. |
 | 초기 선택 사항 | `APR`, `DIRECT-RESULT`, `MANUAL-QA` | 해당 approval, direct-work, Manual QA profile이 active일 때만 구현합니다. |
-| 미래 / 진단 | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Detailed report, trace, map, export, handoff, standalone Decision Packet, persisted Journey Card, diagnostic view입니다. v0.3, v0.4, operations, handoff 또는 owner가 승격한 다른 later profile이 범위에 있을 때만 켭니다. |
+| 미래 / 진단 | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Detailed report, trace, map, export, handoff, standalone Decision Packet, persisted Journey Card, diagnostic view입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack) 또는 owner가 승격한 다른 later profile이 범위에 있을 때만 켭니다. |
 
-지원 계층 label은 enum value가 아닙니다. v0.1에는 owner path가 이미 만든 freshness/read fact를 보존하는 것 외의 projection rendering exit requirement가 없습니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 scope, judgment, 근거, close readiness, 작업 수락, 잔여 위험을 이해할 만큼의 파생 output을 제공하지만 broad template polish를 요구하지 않습니다. 미래/진단은 later-profile 또는 diagnostic 범위라는 뜻이며 자동으로 v1+ 전용이라는 뜻은 아닙니다. v0.3, v0.4, operations, handoff 또는 owner가 승격한 다른 profile에서 해당 projection을 켤 수 있습니다.
+지원 계층 label은 enum value가 아닙니다. v0.1에는 owner path가 이미 만든 freshness/read fact를 보존하는 것 외의 projection rendering exit requirement가 없습니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 scope, judgment, 근거, close readiness, 작업 수락, 잔여 위험을 이해할 만큼의 파생 output을 제공하지만 broad template polish를 요구하지 않습니다. 미래/진단은 later-profile 또는 diagnostic 범위라는 뜻이며 자동으로 v1+ 전용이라는 뜻은 아닙니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack) 또는 owner가 승격한 다른 profile에서 해당 projection을 켤 수 있습니다.
 
 ProjectionKind extensibility가 projection을 기준 상태로 만들지는 않습니다. 모든 projection job은 여전히 owner 기록 및 아티팩트 참조에서 파생된 보기를 렌더링합니다. 어떤 ProjectionKind 지원 계층도 state, 근거, 수동 QA, 검증, 작업 수락, 잔여 위험 수용, close authority, Write Authorization을 만들지 않습니다. `DEC`는 해당 기능이 켜졌을 때 standalone Decision Packet Markdown에만 유효합니다. Standalone `DEC` job이 없어도 required Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 status/next responses, judgment-context resources, decision-packet resources, 최소 `TASK` 또는 card display를 통해 제공되어야 합니다. 사용자 대상 MVP에 필요한 것은 standalone `DEC` `ProjectionKind`가 아니라 Decision Packet 판단 요청 display shape입니다. Persisted `JOURNEY-CARD` Markdown은 미래/진단 범위입니다. `harness.status`, `harness.next`, significant resume flow의 현재 위치 맥락은 간결한 상태 출력으로 충족할 수 있습니다.
 
@@ -725,7 +725,7 @@ ValidatorResult:
 
 `surface_capability_check` validator는 이 schema를 `validator_kind=capability`로 사용합니다.
 
-v0.3/v0.4 staged hardening ValidatorResult ID는 다음과 같습니다.
+에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)의 ValidatorResult ID는 다음과 같습니다.
 
 - `decision_gate_check`
 - `decision_quality_check`

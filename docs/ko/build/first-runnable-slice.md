@@ -2,7 +2,7 @@
 
 ## 이 문서가 도와주는 일
 
-이 문서는 Build 개요를 구현자가 가장 먼저 계획해야 하는 실행 가능한 가장 작은 커널 조각으로 바꿉니다.
+이 문서는 Build 개요를 구현자가 가장 먼저 계획해야 하는 코어 권한 조각(v0.1 Core Authority Slice)으로 바꿉니다.
 
 이 문서는 구현 계획 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture, fixture 파일, 런타임 데이터를 만들라는 뜻이 아닙니다. Conformance fixture 문서는 향후 적합성 검증 계획이며, 현재 문서 전용 저장소에는 runnable Harness Server conformance test가 없습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance 작성 프로파일입니다. 이것은 내부 구현 단계이지 사용자 대상 MVP가 아닙니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다.
 
@@ -243,13 +243,13 @@ Owner contract: status/next schema는 [`harness.status`](../reference/mcp-api-an
 | 이후 단계 | 코어 권한 조각(v0.1 Core Authority Slice)이 아직 증명하지 않는 것 |
 |---|---|
 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 자연어 intake 품질, Discovery, product/UX judgment와 architecture judgment 제시 방식, small-change와 tracked-work의 budget 구분, 잔여 위험 표시, 작업 수락의 분리, 사용자에게 보이는 Projection/card 충분성. |
-| 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack) | Full Decision Packet quality, full Approval lifecycle and drift handling, 분리 검증 독립성, 수동 QA 정책 매트릭스, residual-risk accepted close, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
+| 에이전시 보증 팩(v0.3 Agency Assurance Pack) | Full Decision Packet quality, full Approval lifecycle and drift handling, 분리 검증 독립성, 수동 QA 정책 매트릭스, residual-risk accepted close, 작업 수락 분리, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage. |
 | v1+ Expansion | Dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification automation, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow. |
 
 ## 작성할 Fixture
 
-문서 수락과 구현 계획 준비 인계 이후에는 Core 동작을 실행하고 state, events, artifacts, applicable한 projection freshness, errors를 검증하는 first runnable kernel slice fixtures를 작성합니다. Rendered prose나 polished projection output matching만으로 success를 검증하지 않습니다. 이 행들은 future authoring candidate이며 executable fixture file이 지금 존재한다고 암시하지 않습니다.
+문서 수락과 구현 계획 준비 인계 이후에는 Core 동작을 실행하고 state, events, artifacts, applicable한 projection freshness, errors를 검증하는 Core Authority Slice fixtures를 작성합니다. Rendered prose나 polished projection output matching만으로 success를 검증하지 않습니다. 이 행들은 future authoring candidate이며 executable fixture file이 지금 존재한다고 암시하지 않습니다.
 
 Build는 v0.1 coverage intent만 담당합니다. 범위는 project/status, active Task 하나, basic scope 하나, `prepare_write` allow/block, `record_run` consume/block, artifact/evidence link 하나, minimal evidence sufficiency, `status`/`next` 읽기 전용 응답, close/status blocker입니다. Projection polish와 detailed template은 v0.1 fixture requirement가 아닙니다. Exact fixture queue, body field, seed rule, assertion mode, stable event, artifact/projection assertion, primary-error expectation은 [커널 스모크(Kernel Smoke) Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue)와 [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format)이 담당합니다.
 

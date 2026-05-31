@@ -84,6 +84,14 @@ Maintainer handoff: [English summary](docs/en/build/implementation-overview.md#m
 
 유지보수자 인계 상태에서 구현 계획 준비 상태가 명시적으로 수락되기 전까지 작업은 문서 유지보수이며 런타임/서버 구현을 시작하면 안 됩니다.
 
+## Stage Taxonomy / 단계 분류
+
+- v0.1 Core Authority Slice: first internal Core authority loop; not the product MVP. / 첫 내부 Core 권한 루프이며 제품 MVP가 아닙니다.
+- v0.2 User-Facing Harness MVP: first product MVP where users experience scope, judgment, evidence, close readiness, final acceptance, and residual-risk value. / 사용자가 범위, 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 가치를 경험하는 첫 제품 MVP입니다.
+- v0.3 Agency Assurance Pack: verification, QA, residual risk, acceptance, and stewardship hardening. / 검증, QA, 잔여 위험, 작업 수락, stewardship를 단단하게 만드는 단계입니다.
+- v0.4 Operations & Handoff Pack: recover, export, release handoff, artifact integrity, and operator behavior. / 복구, 내보내기, 릴리스 인계, 아티팩트 무결성, 운영자 동작을 다루는 단계입니다.
+- v1+ Expansion: dashboard, hosted UI, browser capture automation, team workflows, and other promoted expansion candidates. / 대시보드, hosted UI, browser capture 자동화, 팀 workflow 등 승격된 확장 후보입니다.
+
 Before starting Harness Server code, implementers should read the maintainer handoff summary, the [implementation-readiness criteria](docs/en/build/implementation-overview.md#implementation-readiness-criteria) / [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), the [server-coding decisions section](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) in the MVP Plan, and then the [First Runnable Slice](docs/en/build/first-runnable-slice.md).
 
 하네스 서버 코드를 시작하기 전 구현자는 유지보수자용 [문서 수락 후보 요약](docs/ko/build/implementation-overview.md#문서-수락-후보-요약), [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), MVP 계획의 [서버 코딩 전 결정 섹션](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정), 그리고 [첫 실행 가능한 조각](docs/ko/build/first-runnable-slice.md)을 차례로 확인해야 합니다.

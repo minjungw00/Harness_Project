@@ -25,6 +25,16 @@
 
 문서 수락은 유지보수자 검토 이정표입니다. 문서가 수락되더라도 그것만으로 런타임/서버 구현이 시작되거나 런타임 conformance가 증명되지는 않습니다.
 
+## 단계 분류
+
+| 단계 | 의미 |
+|---|---|
+| 코어 권한 조각(v0.1 Core Authority Slice) | 가장 작은 권한 경로를 증명하는 첫 내부 Core 권한 루프입니다. 제품 MVP가 아닙니다. |
+| 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자가 범위 보존, 판단 라우팅, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 가치를 경험하는 첫 제품 MVP입니다. |
+| 에이전시 보증 팩(v0.3 Agency Assurance Pack) | 검증, QA, 잔여 위험, 작업 수락, stewardship 동작을 단단하게 만듭니다. |
+| 운영과 인계 팩(v0.4 Operations & Handoff Pack) | 복구/export, release handoff, artifact integrity, 더 넓은 conformance coverage, operator behavior를 추가합니다. |
+| v1+ Expansion | Dashboard, hosted UI, browser capture 자동화, team workflow, 그 밖의 후보는 승격되기 전까지 staged delivery 밖에 남습니다. |
+
 ## 주요 읽기 경로
 
 어디서 시작해야 할지 모를 때는 이 순서로 읽습니다.

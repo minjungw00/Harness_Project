@@ -6,7 +6,7 @@
 
 Projection의 권한 경계, managed block 동작, 사람이 편집할 수 있는 영역, 아티팩트 참조 표시 방식, 산출물 계층, 템플릿 구현 계층, projection 최신성 규칙을 정의합니다. 기준 kernel state, MCP request/response schema, SQLite DDL, 설계 품질 정책 요구사항, 전체 template 본문은 이 문서가 정의하지 않습니다. 전체 template 본문과 표시 카드 형태는 [Template 참조](templates/README.md)에 있습니다.
 
-이 문서는 참조 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
+이 문서는 참조 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
 
 ## 이런 때 읽기
 
@@ -342,10 +342,10 @@ Template catalog는 초기 구현 set보다 의도적으로 넓습니다. 템플
 
 | 계층 | Template 또는 산출물 shape | Rule |
 |---|---|---|
-| 첫 runnable kernel slice에 필요 | 최소 [Compact Status Card](templates/compact-status-card.md) 또는 동등한 status/next/blocker response shape | Current Core state에서 오는 read-only output으로 필요합니다. Persisted Markdown projection job을 요구하지 않습니다. |
+| 코어 권한 조각(v0.1 Core Authority Slice)에 필요 | 최소 [Compact Status Card](templates/compact-status-card.md) 또는 동등한 status/next/blocker response shape | Current Core state에서 오는 read-only output으로 필요합니다. Persisted Markdown projection job을 요구하지 않습니다. |
 | 사용자 대상 MVP에 필요 | 최소 [TASK](templates/task.md) continuity summary와 standalone `DEC` `ProjectionKind`가 아닌 [Decision Packet](templates/decision-packet.md) 판단 요청 display/card shape | 현재 상태, 판단 요청, 근거 요약, 닫기 준비 상태/blocker를 보여주는 데 필요한 만큼만 필요합니다. Standalone persisted `DEC` Markdown은 standalone Decision Packet projection 기능이 켜진 경우에만 사용합니다. |
 | 초기 선택 사항 | [APR](templates/approval.md), [Approval Card](templates/approval-card.md), [DIRECT-RESULT](templates/direct-result.md), [MANUAL-QA](templates/manual-qa.md), [Manual QA Card](templates/manual-qa-card.md), [Verification Result Card](templates/verification-result-card.md) | 해당 approval, direct-work, 수동 QA, verification profile이 active일 때 유용합니다. 첫 slice requirement가 아닙니다. |
-| 미래 / 진단 | [RUN-SUMMARY](templates/run-summary.md), [EVIDENCE-MANIFEST](templates/evidence-manifest.md), [EVAL](templates/eval.md), [TDD-TRACE](templates/tdd-trace.md), [DOMAIN-LANGUAGE](templates/domain-language.md), [MODULE-MAP](templates/module-map.md), [INTERFACE-CONTRACT](templates/interface-contract.md), [DESIGN](templates/design.md), [EXPORT](templates/export.md), [JOURNEY-CARD](templates/journey-card.md) | Detailed reference, diagnostic, handoff, stewardship, map, trace, export view입니다. v0.3, v0.4, operations, handoff 또는 owner가 승격한 다른 later profile에서 사용할 수 있게 유지하되 초기 필수 범위로 만들지 않습니다. |
+| 미래 / 진단 | [RUN-SUMMARY](templates/run-summary.md), [EVIDENCE-MANIFEST](templates/evidence-manifest.md), [EVAL](templates/eval.md), [TDD-TRACE](templates/tdd-trace.md), [DOMAIN-LANGUAGE](templates/domain-language.md), [MODULE-MAP](templates/module-map.md), [INTERFACE-CONTRACT](templates/interface-contract.md), [DESIGN](templates/design.md), [EXPORT](templates/export.md), [JOURNEY-CARD](templates/journey-card.md) | Detailed reference, diagnostic, handoff, stewardship, map, trace, export view입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack) 또는 owner가 승격한 다른 later profile에서 사용할 수 있게 유지하되 초기 필수 범위로 만들지 않습니다. |
 
 `미래 / 진단`은 later-profile 또는 diagnostic 범위라는 뜻이며, 자동으로 v1+ 전용이라는 뜻은 아닙니다.
 

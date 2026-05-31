@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-This document turns the Build overview into the smallest runnable kernel slice an implementer should plan first.
+This document turns the Build overview into the v0.1 Core Authority Slice an implementer should plan first.
 
 This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. It is an internal implementation milestone, not the user-facing MVP. The first product MVP target is v0.2 User-Facing Harness MVP.
 
@@ -243,13 +243,13 @@ This slice does not prove the items below. They are stage boundaries, not failed
 | Later stage | Not yet proven by v0.1 Core Authority Slice |
 |---|---|
 | v0.2 User-Facing Harness MVP | Natural-language intake quality, Discovery, product/UX versus architecture judgment presentation, small-change versus tracked-work budgets, residual-risk display, final acceptance separation, user-facing projection/card sufficiency. |
-| v0.3 Assurance & Stewardship Pack | Full Decision Packet quality, full Approval lifecycle and drift handling, detached verification independence, Manual QA policy matrix, residual-risk accepted close, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
+| v0.3 Agency Assurance Pack | Full Decision Packet quality, full Approval lifecycle and drift handling, detached verification independence, Manual QA policy matrix, residual-risk accepted close, final acceptance separation, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
 | v0.4 Operations & Handoff Pack | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage. |
 | v1+ Expansion | Dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification automation, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow. |
 
 ## Fixtures to write
 
-After documentation acceptance and implementation-planning readiness handoff, write first runnable kernel slice fixtures that drive Core behavior and assert state, events, artifacts, projection freshness when applicable, and errors. Do not assert success by matching rendered prose or polished projection output. These rows are future authoring candidates; they do not imply executable fixture files exist now.
+After documentation acceptance and implementation-planning readiness handoff, write Core Authority Slice fixtures that drive Core behavior and assert state, events, artifacts, projection freshness when applicable, and errors. Do not assert success by matching rendered prose or polished projection output. These rows are future authoring candidates; they do not imply executable fixture files exist now.
 
 Build owns the coverage intent for v0.1: project/status, one active Task, one basic scope, `prepare_write` allow/block, `record_run` consume/block, one artifact/evidence link, minimal evidence sufficiency, read-only status/next, and close/status blockers. Projection polish and detailed templates are not v0.1 fixture requirements. The exact fixture queue, body fields, seed rules, assertion modes, stable events, artifact/projection assertions, and primary-error expectations are owned by the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) and [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format).
 

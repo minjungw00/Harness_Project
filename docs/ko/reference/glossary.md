@@ -4,7 +4,7 @@
 
 다른 문서를 읽다가 하네스의 공식 용어, 대소문자, record name, 서로 대체할 수 없는 경계를 확인할 때 이 용어집을 사용합니다.
 
-이 문서는 참조 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 남습니다.
+이 문서는 참조 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 남습니다.
 
 ## 이런 때 읽기
 
@@ -343,9 +343,9 @@ Connected profile의 actual enforcement 또는 detection layer를 적용하는 u
 
 영어 label: hardened local reference target.
 
-사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) 이후 담당 문서가 정의한 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 완료해 도달하는 로컬 기준 동작 전체입니다. 별도 delivery stage도, 첫 구현 batch도, fixture profile이나 suite name도 아닙니다.
+사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) 이후 담당 문서가 정의한 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 완료해 도달하는 로컬 기준 동작 전체입니다. 별도 delivery stage도, 첫 구현 batch도, fixture profile이나 suite name도 아닙니다.
 
-강화된 로컬 기준 목표는 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), v1+ Expansion 경계를 대체하지 않습니다. Conformance는 first runnable kernel slice fixtures, user-facing MVP fixtures, agency-hardened fixtures, operations/future fixtures라는 이름의 fixture profile로 증명합니다.
+강화된 로컬 기준 목표는 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), v1+ Expansion 경계를 대체하지 않습니다. Conformance는 Core Authority Slice fixtures, User-Facing Harness MVP fixtures, Agency Assurance Pack fixtures, Operations & Handoff Pack 또는 promoted-expansion fixtures라는 이름의 fixture profile로 증명합니다.
 
 ### Harness Core
 

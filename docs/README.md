@@ -30,6 +30,16 @@ The current status has three separate categories:
 - 구현 계획 준비 상태: 아직 수락되지 않았습니다. 첫 런타임 배치 계획 전에 유지보수자가 구현 준비 조건을 확인해야 합니다.
 - 런타임 구현 상태: 시작하지 않았습니다. 아직 런타임 아티팩트나 conformance 결과가 없습니다.
 
+## Stage Taxonomy / 단계 분류
+
+| Stage / 단계 | Meaning / 의미 |
+|---|---|
+| v0.1 Core Authority Slice / 코어 권한 조각 | First internal Core authority loop; not the product MVP. / 첫 내부 Core 권한 루프이며 제품 MVP가 아닙니다. |
+| v0.2 User-Facing Harness MVP / 사용자 대상 하네스 MVP | First product MVP where users experience Harness value. / 사용자가 하네스 가치를 경험하는 첫 제품 MVP입니다. |
+| v0.3 Agency Assurance Pack / 에이전시 보증 팩 | Verification, QA, residual risk, acceptance, and stewardship hardening. / 검증, QA, 잔여 위험, 작업 수락, stewardship를 단단하게 만듭니다. |
+| v0.4 Operations & Handoff Pack / 운영과 인계 팩 | Recover, export, release handoff, artifact integrity, and operator behavior. / 복구, 내보내기, 릴리스 인계, 아티팩트 무결성, 운영자 동작을 다룹니다. |
+| v1+ Expansion / 확장 | Dashboard, hosted UI, browser capture automation, team workflows, and other candidates only after promotion. / 대시보드, hosted UI, browser capture 자동화, 팀 workflow 등은 승격 뒤에만 포함됩니다. |
+
 ## Choose A Language / 언어 선택
 
 | Language / 언어 | Entry point / 진입점 |

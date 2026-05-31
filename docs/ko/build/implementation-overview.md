@@ -4,12 +4,12 @@
 
 이 문서는 구현자가 전체 Reference 명세에 들어가기 전에 무엇을 먼저 계획해야 하는지 알려 줍니다. 독자 중심 문서가 kernel, runtime, MCP, storage, 읽기용 요약(Projection), conformance reference와 어떻게 이어지는지 보여 주는 Build 계층입니다.
 
-이 문서는 문서 재설계 / 검토와 유지보수자용 문서 수락 후보 검토를 위한 구현 계획 문서입니다. 이 저장소는 현재 문서 전용이며, 향후 역할은 하네스 서버 소스 저장소입니다. 이 저장소에서 서버/런타임 구현을 시작하려면 문서 수락과 별도의 구현 계획 준비 결정이 모두 필요합니다. 아직 이곳에는 하네스 서버/런타임 구현, 실행 가능한 fixture 파일, 생성된 런타임 기록, 생성된 읽기용 요약, 실행 가능한 하네스 서버 conformance test가 없습니다. 이 리비전은 재설계 이후 검토 상태의 문서 수락 후보이지 구현 시작 승인이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance 작성 프로파일입니다. 모듈을 가진 로컬 프로세스 하나로 가장 작은 권한 루프를 증명하는 경로입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 assurance, stewardship, operations, handoff 동작을 단단하게 만듭니다. v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 둡니다.
+이 문서는 문서 재설계 / 검토와 유지보수자용 문서 수락 후보 검토를 위한 구현 계획 문서입니다. 이 저장소는 현재 문서 전용이며, 향후 역할은 하네스 서버 소스 저장소입니다. 이 저장소에서 서버/런타임 구현을 시작하려면 문서 수락과 별도의 구현 계획 준비 결정이 모두 필요합니다. 아직 이곳에는 하네스 서버/런타임 구현, 실행 가능한 fixture 파일, 생성된 런타임 기록, 생성된 읽기용 요약, 실행 가능한 하네스 서버 conformance test가 없습니다. 이 리비전은 재설계 이후 검토 상태의 문서 수락 후보이지 구현 시작 승인이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance 작성 프로파일입니다. 모듈을 가진 로컬 프로세스 하나로 가장 작은 권한 루프를 증명하는 경로입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff 동작을 단단하게 만듭니다. v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 둡니다.
 
 이 문서로 다음을 확인합니다.
 
 - 먼저 필요한 런타임 구성 요소는 무엇인가?
-- 첫 실행 가능한 커널 조각은 어떤 증명을 보여야 하는가?
+- 코어 권한 조각(v0.1 Core Authority Slice)은 어떤 증명을 보여야 하는가?
 - 첫 사용자 대상 하네스 MVP를 완료했다고 말하려면 무엇이 참이어야 하는가?
 
 이 문서는 SQLite DDL, public MCP 스키마, 읽기용 요약(Projection) 템플릿 본문, 명령 문법을 정의하지 않습니다. 그런 세부 계약은 Reference 문서에 둡니다.
@@ -28,7 +28,7 @@ Learn 경로에서 하네스의 기본 개념을 먼저 이해해 두는 것이 
 
 하네스는 AI 지원 제품 작업을 위한 로컬 작업 장부이자 판단 라우터입니다. 무엇을 바꿀 수 있는지, 누가 판단해야 하는지, 어떤 근거가 있는지, 어떤 위험이 남았는지, 작업을 닫아도 되는지를 기록합니다. 첫 구현 경로는 가장 작은 Core 권한 루프로 그 로컬 장부를 증명한 뒤, 첫 사용자 대상 MVP 가치를 증명해야 합니다.
 
-코어 권한 조각(v0.1 Core Authority Slice)을 먼저 만듭니다. 즉 가장 작은 로컬 Core 권한 경로를 증명하며, 커널 스모크(Kernel Smoke)는 그 좁은 conformance 작성 프로파일입니다. 이것은 내부 실행 단계이지 제품 MVP가 아닙니다. 그다음 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)를 만들어 사용자가 scope 보존, 판단 라우팅, 근거, 닫기 준비 상태, 작업 수락의 분리, 잔여 위험 표시를 경험할 수 있게 합니다. 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)이 그 경로를 단단하게 만듭니다.
+코어 권한 조각(v0.1 Core Authority Slice)을 먼저 만듭니다. 즉 가장 작은 로컬 Core 권한 경로를 증명하며, 커널 스모크(Kernel Smoke)는 그 좁은 conformance 작성 프로파일입니다. 이것은 내부 실행 단계이지 제품 MVP가 아닙니다. 그다음 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)를 만들어 사용자가 scope 보존, 판단 라우팅, 근거, 닫기 준비 상태, 작업 수락의 분리, 잔여 위험 표시를 경험할 수 있게 합니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)이 그 경로를 단단하게 만듭니다.
 
 이 Build 경로의 모든 구현 동사는 유지보수자 인계가 그 배치를 위한 구현 계획 준비 상태를 명시적으로 수락한 뒤의 향후 런타임 배치 계획을 설명합니다. [문서 수락 상태](#문서-승인-상태)가 구현 계획 준비 상태를 수락하지 않는 동안에는 이 문서를 범위와 인계 준비 상태를 검토하는 용도로만 사용합니다. 문서 수락만으로 구현이 시작되거나 런타임 conformance가 증명되지는 않습니다.
 
@@ -40,7 +40,7 @@ Learn 경로에서 하네스의 기본 개념을 먼저 이해해 두는 것이 
 
 기준 상태, `task_events`, Reference 계약상 필요한 경우 Change Unit 소유자 형태로 표현되는 기본 범위 하나, Write Authorization 경로 하나, 기록된 Run 하나, artifact/evidence link 하나, Core tool 동작, 그리고 그 경로를 실행해 볼 최소 reference surface와 MCP reachability에서 시작합니다. 초기 구현 가정은 분산 platform이 아니라 모듈을 가진 로컬 프로세스 하나입니다. 읽기용 요약(Projection) 템플릿 다듬기, dashboard 또는 hosted workflow UI, index, 넓은 connector ecosystem 또는 marketplace, team workflow, 접점별 connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, broad automation은 그 권한 루프가 존재한 뒤 그것을 읽거나 감싸는 권한 없는 요소로 다룹니다.
 
-구현 계획이 사용자 대상 MVP, v0.3과 v0.4에서 다룰 강화 동작 전체, 읽기용 요약 템플릿 다듬기, dashboard 또는 hosted workflow UI, Context Index, connector marketplace, hook expansion, metrics, parallel orchestration, broad automation lane에서 시작한다면 첫 runnable slice보다 큰 곳에서 시작하는 것입니다.
+구현 계획이 사용자 대상 MVP, 에이전시 보증 팩(v0.3 Agency Assurance Pack)이나 운영과 인계 팩(v0.4 Operations & Handoff Pack)의 동작 전체, 읽기용 요약 템플릿 다듬기, dashboard 또는 hosted workflow UI, Context Index, connector marketplace, hook expansion, metrics, parallel orchestration, broad automation lane에서 시작한다면 첫 runnable slice보다 큰 곳에서 시작하는 것입니다.
 
 ## 현재 검토 기준
 
@@ -52,7 +52,7 @@ Learn 경로에서 하네스의 기본 개념을 먼저 이해해 두는 것이 
 |---|---|---|---|
 | 문서 drift | 문구, 소유자 경계, link, TODO, 용어, 영어/한국어 의미 일치 문제입니다. | 문서 작성 가이드 tracker와 영향을 받는 문서. | 문서가 서로 모순되거나 실행하기 어렵게 만들면 문서 수락을 막을 수 있습니다. 그 자체로 런타임 conformance나 서버 코드는 아닙니다. |
 | 스키마/설계 결정 | 상태, API, DDL, 보안 보장, fixture 의미, 그 밖의 담당 계약에 관한 실제 선택입니다. | 담당 Reference 문서와, 서버 코딩 전에 결정해야 할 때 MVP 계획의 결정 기록. | 결정되거나 단계 영향과 함께 명시적으로 미뤄지기 전까지 영향을 받는 동작의 구현 계획이나 서버 코딩을 막습니다. |
-| 단계 경계 결정 | capability가 v0.1, v0.2, v0.3/v0.4, v1+ Expansion 중 어디에 속하는지에 대한 선택입니다. | 구현 개요, MVP 계획, 담당 문서, 필요한 경우 로드맵 승격 항목. | 경계가 수락되기 전까지 영향을 받는 단계 구현을 막습니다. 명시적으로 기록되어 있으면 문서 검토에는 막힘이 아닐 수 있습니다. |
+| 단계 경계 결정 | capability가 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack), v1+ Expansion 중 어디에 속하는지에 대한 선택입니다. | 구현 개요, MVP 계획, 담당 문서, 필요한 경우 로드맵 승격 항목. | 경계가 수락되기 전까지 영향을 받는 단계 구현을 막습니다. 명시적으로 기록되어 있으면 문서 검토에는 막힘이 아닐 수 있습니다. |
 | 구현 준비 조건 | 첫 런타임 배치 계획 전에 유지보수자가 확인해야 하는 조건입니다. | 이 문서의 [하네스 서버 구현 준비 조건](#하네스-서버-구현-준비-조건). | 충족되거나 유지보수자가 다른 범주로 명시적으로 재분류하기 전까지 첫 런타임 배치 계획을 막습니다. |
 | 향후 로드맵 항목 | 승격되기 전까지 v0.1부터 v0.4 밖에 있는 유용한 capability입니다. | [로드맵](../roadmap.md)과 승격 뒤 담당 문서. | 담당자가 단계 목표로 승격하지 않는 한 문서 검토, v0.1, v0.2를 막지 않습니다. |
 
@@ -93,7 +93,7 @@ Build 독자는 이 표를 진입 기준으로 보아야 합니다. 유지보수
 
 - 코어 권한 조각(v0.1 Core Authority Slice)은 가장 작은 로컬 Core 권한 루프를 증명합니다. Kernel Smoke는 이 단계의 좁은 conformance 작성 프로파일입니다.
 - 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 일반 사용자가 느끼는 가치를 증명합니다. Scope 보존, 사용자 소유 판단 라우팅, 근거, 닫기 준비 상태, 작업 수락 분리, 잔여 위험 표시가 여기에 속합니다.
-- 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)은 Decision Packet, Approval 분리, detached verification, 수동 QA, 잔여 위험 수용 close, stewardship, TDD, feedback-loop policy, context hygiene를 단단하게 만듭니다.
+- 에이전시 보증 팩(v0.3 Agency Assurance Pack)은 verification, 수동 QA, 잔여 위험 수용 close, 작업 수락 분리, stewardship, Decision Packet, Approval 분리, TDD, feedback-loop policy, context hygiene를 단단하게 만듭니다.
 - 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 doctor/readiness, recover/export, artifact integrity, release handoff, 더 넓은 fixture coverage, later-boundary check를 단단하게 만듭니다.
 - v1+ Expansion은 향후 소유자 결정이 exact contract, fixture, fallback behavior, 읽기용 요약을 기준으로 삼는 의존성 없음으로 승격하기 전까지 로드맵 범위입니다.
 
@@ -118,18 +118,18 @@ Build 독자는 이 표를 진입 기준으로 보아야 합니다. 유지보수
 
 이 checkpoint는 유지보수자가 구현 계획 준비 상태를 문서 유지보수에서 첫 런타임 배치 계획으로 바꾸기 전에 무엇이 참이어야 하는지 판단할 때 사용합니다. 이것은 계획 인계일 뿐입니다. 그 자체로 런타임/서버 구현을 승인하지 않으며, 정확한 schema, DDL, fixture 의미, runtime contract를 정의하지 않습니다.
 
-첫 구현 계획은 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 이후 v0.3과 v0.4를 거쳐 도달하는 기준 목표, roadmap automation이 아니라 코어 권한 조각(v0.1 Core Authority Slice) 계획부터 시작한다는 뜻입니다. 편집 정리는 필요하지만 그것만으로 충분하지 않습니다. 스키마/설계 결정과 단계 경계 결정은 담당 문서에서 정리되거나, 서버 코딩 전에 MVP 계획에 단계 영향과 함께 기록되어야 합니다. 아래 조건이 모두 참일 때만 첫 구현 계획을 시작할 수 있습니다.
+첫 구현 계획은 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack), roadmap automation이 아니라 코어 권한 조각(v0.1 Core Authority Slice) 계획부터 시작한다는 뜻입니다. 편집 정리는 필요하지만 그것만으로 충분하지 않습니다. 스키마/설계 결정과 단계 경계 결정은 담당 문서에서 정리되거나, 서버 코딩 전에 MVP 계획에 단계 영향과 함께 기록되어야 합니다. 아래 조건이 모두 참일 때만 첫 구현 계획을 시작할 수 있습니다.
 
 - Root README, docs README, 언어별 README, Build 문서, 관련 Reference 문서에서 저장소 정체성이 명확하다. 지금은 문서 전용이며, 향후 역할은 하네스 서버 소스 저장소이고, 서버/런타임 구현은 문서 수락과 별도의 구현 계획 준비 결정 이후에만 시작할 수 있으며, 제품 저장소나 하네스 런타임 홈이 아니다.
 - 사용자가 보는 흐름이 내부 용어를 먼저 알아야만 시작, 재개, unblock, 작업 수락, close를 할 수 있는 형태가 아니다.
 - 판단 모델이 Kernel, MCP/API schema, storage, template, fixture, Learn/Use 설명, glossary term과 schema-aligned 상태다.
 - Approval, 작업 수락, 잔여 위험 수용이 예시, template, API/schema 문구, close behavior, user-facing routing에서 분리되어 있다.
-- MVP stage가 일관적이다. v0.1 Core Authority Slice는 제품 MVP가 아니고, v0.2가 첫 사용자 대상 MVP이며, v0.3과 v0.4는 assurance, stewardship, operations, handoff를 단단하게 만들고, v1+ Expansion은 승격 전까지 roadmap 범위다.
+- MVP stage가 일관적이다. v0.1 Core Authority Slice는 제품 MVP가 아니고, v0.2가 첫 사용자 대상 MVP이며, v0.3 Agency Assurance Pack은 검증, QA, 잔여 위험, 작업 수락, stewardship를 단단하게 만들고, v0.4 Operations & Handoff Pack은 operational handoff capability를 추가하며, v1+ Expansion은 승격 전까지 roadmap 범위다.
 - Kernel, API, storage, reference, Build contract가 Core ownership, state transition, write authority, evidence, judgment record, close semantics, idempotency, state conflict behavior, artifact, projection job, fixture semantics에서 서로 맞는다.
 - 읽기용 요약(Projection) 범위가 단계화되어 있고 권한이 없다. 읽기용 요약과 card는 Core record와 artifact ref에서 파생되며, 권한을 만들거나 첫 증명이 되지 않는다.
 - 보안 보장이 실제 enforcement level과 맞다. Cooperative, detective, preventive, isolated 표현은 해당 동작에 대해 문서화된 surface와 fixture-proven path가 있을 때만 사용한다.
 - Agent context 전략이 정의되어 있다. 항상 주입되는 맥락은 한 화면 안팎, current-state 기반, profile-scoped로 유지하고, 전체 Reference 문서, schema, old log, 읽기용 요약 본문은 알맞은 담당 문서/조회 경로로만 가져온다.
-- Conformance fixture plan이 단계화되고 향후 검증 계획으로 유지된다. Kernel Smoke는 v0.1 authoring profile이고, 이후 suite profile은 v0.2, v0.3, v0.4, 승격된 v1+ item에 맞으며, fixture file이나 runnable conformance test가 이미 존재한다고 암시하지 않는다.
+- Conformance fixture plan이 단계화되고 향후 검증 계획으로 유지된다. Kernel Smoke는 v0.1 authoring profile이고, 이후 suite profile은 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack), 승격된 v1+ item에 맞으며, fixture file이나 runnable conformance test가 이미 존재한다고 암시하지 않는다.
 - Link, TODO, terminology, 영어/한국어 의미 일치가 정리되어 있다. Active docs에 흩어진 unresolved major-decision TODO가 없고, 서버 코딩 전 필요한 구현 결정은 범주가 정해져 [MVP 계획](mvp-plan.md#서버-코딩-전-필요한-구현-결정)에 기록되어 있다.
 - 마지막 docs-maintenance drift pass가 완료되어 있다. 남은 항목은 문서 drift, 스키마/설계 결정, 단계 경계 결정, 구현 준비 조건, 향후 로드맵 항목 중 하나로 명시되어 있다. 문서 검토에는 막힘이 아니지만 구현 계획이나 서버 코딩 전에는 막힘이라면 그 이후 막힘을 이름 붙인다. Docs-maintenance는 읽기 전용 문서 점검으로 남습니다. [문서 작성 가이드](../maintain/authoring-guide.md#docs-maintenance-checks)와 [운영과 Conformance 참조](../reference/operations-and-conformance.md#docs-maintenance-프로필)를 봅니다.
 - 코어 권한 조각(v0.1 Core Authority Slice)의 local-only MCP 노출 baseline이 승인되어 있다. Remote, shared, tunneled, non-loopback 노출은 담당 문서가 connector profile을 승격하고 증명하기 전까지 v0.1 baseline 밖입니다. [런타임 아키텍처](../reference/runtime-architecture.md#로컬-접근-기대사항), [보안 위협 모델 참조](../reference/security-threat-model.md#mcp-local-access와-caller-boundary), [MCP API와 스키마](../reference/mcp-api-and-schemas.md#mcp-경계와-호출자-신뢰)를 봅니다.
@@ -137,9 +137,9 @@ Build 독자는 이 표를 진입 기준으로 보아야 합니다. 유지보수
 - Core-only mutation model이 승인되어 있다. 기준 운영 상태를 변경하는 것은 Core뿐이며, resource, projection, report, diagnostic, MCP caller, operator entrypoint는 Core의 상태 변경 경로에 들어가지 않는 한 read-only 또는 derived로 남습니다. [Core process model](../reference/runtime-architecture.md#core-process-model), [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow), MCP [Idempotency](../reference/mcp-api-and-schemas.md#idempotency)와 [State Conflict 동작](../reference/mcp-api-and-schemas.md#state-conflict-동작)을 봅니다.
 - 커널 스모크(Kernel Smoke) fixture queue가 코어 권한 조각(v0.1 Core Authority Slice) conformance 작성 순서이자 향후 적합성 검증 계획으로 확인되어 있다. 정확한 fixture format, assertion, catalog semantics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue)에 둡니다. 이 checkpoint는 fixture file이나 runnable conformance test가 이미 존재한다는 뜻이 아닙니다.
 - 첫 실행 가능한 조각은 로컬, 단일 프로젝트, 단일 reference surface, fixture-proven 범위를 유지한다. 계획 점검 목록은 [첫 실행 가능한 조각](first-runnable-slice.md)을 사용합니다.
-- v1+ Expansion 기능은 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따라 담당 문서가 승격하기 전까지 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), v0.3과 v0.4 단계 밖에 남아 있다.
+- v1+ Expansion 기능은 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따라 담당 문서가 승격하기 전까지 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack) 밖에 남아 있다.
 
-이 인계는 roadmap 항목, dashboard 또는 hosted workflow UI, Browser QA Capture automation, Context Index, broad connector ecosystem 또는 marketplace, team workflow, remote MCP exposure, preventive guard expansion, Local Derived Metrics 또는 long-term metrics, parallel orchestration을 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), v0.3과 v0.4 단계로 승격하지 않습니다. 정확한 계약은 Reference 문서에 두고, 이 섹션은 짧은 readiness checkpoint로만 사용합니다.
+이 인계는 roadmap 항목, dashboard 또는 hosted workflow UI, Browser QA Capture automation, Context Index, broad connector ecosystem 또는 marketplace, team workflow, remote MCP exposure, preventive guard expansion, Local Derived Metrics 또는 long-term metrics, parallel orchestration을 코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack)으로 승격하지 않습니다. 정확한 계약은 Reference 문서에 두고, 이 섹션은 짧은 readiness checkpoint로만 사용합니다.
 
 ## 증명 경계
 
@@ -147,7 +147,7 @@ Build 독자는 이 표를 진입 기준으로 보아야 합니다. 유지보수
 |---|---|---|
 | 코어 권한 조각(v0.1 Core Authority Slice) | 하나의 로컬 Task가 첫 Core 권한 루프를 통과할 수 있음을 증명합니다. 여기에는 project registration, Task, Reference 계약상 필요한 경우 Change Unit 소유자 형태로 표현되는 기본 scope 하나, `prepare_write`, single-use 쓰기 허가 기록, `record_run`, artifact/근거 링크 하나, status/next, 구조화된 막힘/상태 응답이 포함됩니다. | Status와 next가 현재 Task, scope, 쓰기 권한, 근거 상태, blocker, 안전한 다음 행동을 보여 줍니다. `prepare_write`가 범위 밖 쓰기 권한을 거절하고, 호환되는 scoped work는 권한을 받아 한 번만 사용되며, 근거 또는 필요한 seeded judgment가 없으면 close/status가 구조화된 막힘과 함께 거절합니다. |
 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 평범한 사용자 작업이 scope, user-owned judgment, 근거, close readiness, 작업 수락, 잔여 위험 언어로 정리됨을 증명합니다. | 사용자는 product/UX judgment와 architecture judgment가 분리되고, small change와 tracked work가 서로 다른 procedural budget을 쓰며, 근거 또는 judgment가 없으면 close가 block되고, 잔여 위험이 표시되며, 작업 수락이 Approval과 잔여 위험 수용과 구분되는 것을 볼 수 있습니다. |
-| 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack) | MVP path가 full Decision Packet quality, Approval separation, 분리 검증, 수동 QA, 잔여 위험 수용 close, stewardship, TDD, feedback-loop policy, context hygiene를 정직한 경계 안에서 처리함을 증명합니다. | Fixture가 같은 Core record와 error를 통해 work가 진행, 검증, 수동 QA 요구, 작업 수락, 잔여 위험 수용, close될 수 있는지 보여 줍니다. |
+| 에이전시 보증 팩(v0.3 Agency Assurance Pack) | MVP path가 verification, 수동 QA, 잔여 위험 수용 close, 작업 수락 분리, stewardship, full Decision Packet quality, Approval separation, TDD, feedback-loop policy, context hygiene를 정직한 경계 안에서 처리함을 증명합니다. | Fixture가 같은 Core record와 error를 통해 work가 진행, 검증, 수동 QA 요구, 작업 수락, 잔여 위험 수용, close될 수 있는지 보여 줍니다. |
 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Operator readiness, recover/export, artifact integrity, release handoff, broader fixture suite coverage, later-boundary checks가 [강화된 로컬 기준 목표](../reference/glossary.md#강화된-로컬-기준-목표)를 완성합니다. | Operator 진입점이 두 번째 authority model을 만들지 않고 같은 Core state 위에서 diagnose, recover, export, artifact check, conformance run, release handoff 준비를 수행합니다. |
 | Roadmap 경계: v1+ Expansion | 로컬 kernel과 agency 증명이 안정된 뒤에만 later surface 또는 automation을 검토할 수 있음을 분리합니다. | 선택 capability는 담당자가 [로드맵 승격 규칙](../roadmap.md#승격-규칙)에 따라 exact contract와 fixture로 승격하기 전까지 read-only, display-only, metadata-only, 또는 artifact 후보 제공 전용으로 남습니다. |
 
@@ -293,7 +293,7 @@ v0.1은 내부 authority loop를 증명하는 단계입니다. Product MVP, temp
 
 ## 강화된 로컬 기준 증명
 
-[강화된 로컬 기준 목표](../reference/glossary.md#강화된-로컬-기준-목표)(hardened local reference target)는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) 이후 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 통해 도달하는 향후 reference 목표이지 첫 구현 batch가 아닙니다. 별도 stage, fixture profile, alternate implementation path도 아닙니다. Agent가 정직한 경계 안에서 행동하기 위해 필요한 나머지 conformance를 추가합니다.
+[강화된 로컬 기준 목표](../reference/glossary.md#강화된-로컬-기준-목표)(hardened local reference target)는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) 이후 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 통해 도달하는 향후 reference 목표이지 첫 구현 batch가 아닙니다. 별도 stage, fixture profile, alternate implementation path도 아닙니다. Agent가 정직한 경계 안에서 행동하기 위해 필요한 나머지 conformance를 추가합니다.
 
 - 결정 패킷 품질과 사용자 판단 라우팅
 - sensitive-action Approval, 결정 패킷, 쓰기 허가 기록의 분리
@@ -305,7 +305,7 @@ v0.1은 내부 authority loop를 증명하는 단계입니다. Product MVP, temp
 - recovery, export, artifact integrity 동작
 - 담당 문서가 정의하는 release handoff report/export behavior
 - broad automation을 v1+ Expansion에 두는 later 경계 확인
-- named agency-hardened fixtures와 operations/future fixtures를 통한 fixture coverage
+- named Agency Assurance Pack fixtures와 Operations & Handoff Pack 또는 promoted-expansion fixtures를 통한 fixture coverage
 
 강화된 로컬 기준 목표(hardened local reference target)는 향후 conformance가 생성된 문장이나 renderer output만이 아니라 Core 상태, events, artifacts, projection/freshness facts, errors로 동작을 증명할 때 완료됩니다.
 

@@ -6,7 +6,7 @@ Use this guide when you add, rewrite, split, rename, or review Harness documenta
 
 It helps you keep the current documentation readable for the intended reader, clear about where each kind of detail belongs, and aligned between English and Korean.
 
-This is maintenance documentation. It governs documentation maintenance only. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is maintenance documentation. It governs documentation maintenance only. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -98,7 +98,7 @@ Use these item categories when routing confirmed tracker findings or docs-mainte
 |---|---|
 | Documentation drift | The fix is wording, owner-boundary cleanup, link repair, TODO hygiene, terminology, or English/Korean parity. |
 | Schema/design decision | The fix requires a real choice in schema, state, API, DDL, security guarantee, fixture semantics, or another owner contract. |
-| Stage boundary decision | The fix requires deciding whether a capability belongs in v0.1, v0.2, v0.3/v0.4, or v1+ Expansion. |
+| Stage boundary decision | The fix requires deciding whether a capability belongs in v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, v0.3 Agency Assurance Pack, v0.4 Operations & Handoff Pack, or v1+ Expansion. |
 | Implementation-readiness criterion | The item must be true before maintainers accept first runtime-batch planning. |
 | Future roadmap item | The item is useful later and remains outside v0.1 through v0.4 unless promoted. |
 
@@ -107,7 +107,7 @@ Potential item category after verification:
 | Review risk | Default routing if confirmed |
 |---|---|
 | Repository identity as the future Harness Server source repository can drift. | Implementation-readiness criterion |
-| Stage names can still imply v0.1, Kernel Smoke, or a legacy "v0.1 Kernel MVP" label is the product MVP. | Stage boundary decision |
+| Stage names can still imply v0.1, Kernel Smoke, or a legacy kernel-stage label is the product MVP. | Stage boundary decision |
 | User-facing docs may open with heavy implementation disclaimers. | Documentation drift |
 | User-facing docs overuse internal terms. | Documentation drift |
 | Discovery / requirements clarification may converge too early on a Change Unit or the first safe implementation unit. | Stage boundary decision |
@@ -129,7 +129,7 @@ Potential item category after verification:
 | Review risk | Tracker status | Editing rule |
 |---|---|---|
 | Repository identity as the future Harness Server source repository can drift. | Baseline status check. | Keep entrypoints clear that the repo is currently documentation-only, is in post-redesign review, its intended future role is the Harness Server source repository, and server/runtime implementation has not started and may start only after documentation acceptance and a separate implementation-planning readiness decision. |
-| Stage names can still imply v0.1, Kernel Smoke, or a legacy "v0.1 Kernel MVP" label is the product MVP. | Candidate to verify in the current docs. | Say v0.1 Core Authority Slice is an internal authority-loop milestone, Kernel Smoke is its narrow conformance authoring profile, and v0.2 User-Facing Harness MVP is the first product MVP. |
+| Stage names can still imply v0.1, Kernel Smoke, or a legacy kernel-stage label is the product MVP. | Candidate to verify in the current docs. | Say v0.1 Core Authority Slice is an internal authority-loop milestone, Kernel Smoke is its narrow conformance authoring profile, and v0.2 User-Facing Harness MVP is the first product MVP. |
 | User-facing docs may open with heavy implementation disclaimers. | Candidate to verify in the current docs. | For user-facing docs, lead with the user-visible problem and route status caveats to entrypoints or Build docs. Keep required implementation disclaimers compact and away from the first user mental model when possible. |
 | User-facing docs overuse internal terms. | Candidate to verify in the current docs. | Explain the user-visible situation first; introduce internal terms only when they help the reader act. |
 | Discovery / requirements clarification may converge too early on a Change Unit or the first safe implementation unit. | Candidate to verify in the current docs. | Leave room for early discovery, shared understanding, and user-owned decisions before requiring a scoped implementation unit. |

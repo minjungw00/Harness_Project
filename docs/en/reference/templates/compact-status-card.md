@@ -6,7 +6,7 @@ Use the compact status card when a short current-state display needs to show the
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: required for first runnable kernel slice as a minimal read-only status/next/blocker shape. It may be returned as card or response text; it is not a persisted state record.
+Implementation tier: required for v0.1 Core Authority Slice as a minimal read-only status/next/blocker shape. It may be returned as card or response text; it is not a persisted state record.
 
 ## Source records
 

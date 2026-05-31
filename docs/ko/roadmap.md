@@ -4,7 +4,7 @@
 
 이 문서는 v1+ Expansion 자동화 후보와 능력 확장 항목을 모아 둡니다. 독자가 나중에 다룰 수 있는 일을 볼 수 있게 하되, 그것을 첫 구현 작업, 현재 권한, staged delivery 필수 동작으로 오해하지 않게 하는 것이 목적입니다.
 
-이 문서는 roadmap 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. v0.3과 v0.4는 Build 문서에서 assurance, stewardship, operations, handoff behavior를 단단하게 만들며, 아래 항목은 owner 문서가 승격하고 증명하기 전까지 v1+ Expansion에 둡니다.
+이 문서는 roadmap 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 Build 문서에서 agency assurance, operations, handoff behavior를 단단하게 만들며, 아래 항목은 owner 문서가 승격하고 증명하기 전까지 v1+ Expansion에 둡니다.
 
 ## 이런 때 읽기
 
@@ -24,20 +24,20 @@ Roadmap 항목은 유용한 미래 후보이지 현재 authority path나 staged-
 
 이 문서는 Build-owned staged delivery의 일부가 아닙니다.
 
-Kernel invariant, public MCP schema, staged-delivery 구현 요구사항, staged-delivery 필수 conformance는 이 문서가 소유하지 않습니다. Build 계층은 staged delivery를 소유합니다. 즉 코어 권한 조각(v0.1 Core Authority Slice)을 먼저 만들고, 그 뒤 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack)으로 진행합니다. 아래 항목들은 이 기본 요소가 안정된 뒤에 이어갈 수 있는 후속 후보입니다. 단계별 전달 순서는 [MVP 계획](build/mvp-plan.md)을 보고, 엄밀한 API, storage, projection, fixture 계약은 Reference 문서를 봅니다.
+Kernel invariant, public MCP schema, staged-delivery 구현 요구사항, staged-delivery 필수 conformance는 이 문서가 소유하지 않습니다. Build 계층은 staged delivery를 소유합니다. 즉 코어 권한 조각(v0.1 Core Authority Slice)을 먼저 만들고, 그 뒤 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack)으로 진행합니다. 아래 항목들은 이 기본 요소가 안정된 뒤에 이어갈 수 있는 후속 후보입니다. 단계별 전달 순서는 [MVP 계획](build/mvp-plan.md)을 보고, 엄밀한 API, storage, projection, fixture 계약은 Reference 문서를 봅니다.
 
-첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 강화된 로컬 기준 목표(hardened local reference target)는 이후 v0.3과 v0.4를 거쳐 도달하는 기준 목표이며, 별도 stage나 fixture profile이 아닙니다. 이 roadmap은 v0.1, v0.2, v0.3, v0.4 경계가 지켜지고 owner 문서에서 증명 범위가 명확해진 뒤의 v1+ Expansion 후보만 다룹니다. 이 roadmap은 그 경계나 Core state/`task_events`/artifact 경로를 우회하는 대체 경로가 아닙니다. Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, Native Hook Expansion, Advanced Sidecar Watcher, Local Derived Metrics, connector marketplace, team workflow, orchestration은 나중에 Harness 동작을 수집하거나 보여 주거나 확장할 수 있지만, 첫 실행 가능한 권한 루프를 대체하지 않습니다.
+첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 강화된 로컬 기준 목표(hardened local reference target)는 이후 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 거쳐 도달하는 기준 목표이며, 별도 stage나 fixture profile이 아닙니다. 이 roadmap은 v0.1, v0.2, v0.3, v0.4 경계가 지켜지고 owner 문서에서 증명 범위가 명확해진 뒤의 v1+ Expansion 후보만 다룹니다. 이 roadmap은 그 경계나 Core state/`task_events`/artifact 경로를 우회하는 대체 경로가 아닙니다. Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, Native Hook Expansion, Advanced Sidecar Watcher, Local Derived Metrics, connector marketplace, team workflow, orchestration은 나중에 Harness 동작을 수집하거나 보여 주거나 확장할 수 있지만, 첫 실행 가능한 권한 루프를 대체하지 않습니다.
 
 ```mermaid
 flowchart LR
   Kernel["코어 권한 조각(v0.1 Core Authority Slice)"] --> MVP["사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)"]
-  MVP --> Agency["보증과 스튜어드십 팩(v0.3 Assurance & Stewardship Pack)"]
+  MVP --> Agency["에이전시 보증 팩(v0.3 Agency Assurance Pack)"]
   Agency --> Ops["운영과 인계 팩(v0.4 Operations & Handoff Pack)"]
   Ops -. roadmap boundary .-> Later["v1+ roadmap 후보"]
   Later --> Promote["future version은 owner 결정 이후에만 가능"]
 ```
 
-코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), v0.3부터 v0.4까지의 단계는 Build-owned staged delivery이지 roadmap 범위가 아닙니다. 이 roadmap은 staged-delivery owner 문서가 요구하는 kernel 권한, Decision Packet, 잔여 위험 표시, 분리 검증(분리 검증), 수동 QA, recover/export, release handoff, fixture conformance 동작을 흡수하면 안 됩니다. Roadmap 항목은 owner 문서가 제한적으로 허용할 때만 읽기, 표시, 추천, artifact 후보 제공, fixture 후보 역할을 할 수 있습니다. 지속 artifact 등록이나 연결은 여전히 기존 Core/MCP artifact owner path 또는 향후 승격된 owner contract를 거쳐야 합니다. 여기에 이름이 있다는 이유만으로 권한 경로가 되지는 않습니다.
+코어 권한 조각(v0.1 Core Authority Slice), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 Build-owned staged delivery이지 roadmap 범위가 아닙니다. 이 roadmap은 staged-delivery owner 문서가 요구하는 kernel 권한, Decision Packet, 잔여 위험 표시, 분리 검증(분리 검증), 수동 QA, recover/export, release handoff, fixture conformance 동작을 흡수하면 안 됩니다. Roadmap 항목은 owner 문서가 제한적으로 허용할 때만 읽기, 표시, 추천, artifact 후보 제공, fixture 후보 역할을 할 수 있습니다. 지속 artifact 등록이나 연결은 여전히 기존 Core/MCP artifact owner path 또는 향후 승격된 owner contract를 거쳐야 합니다. 여기에 이름이 있다는 이유만으로 권한 경로가 되지는 않습니다.
 
 ## 승격 규칙
 
@@ -92,7 +92,7 @@ Owner 문서가 명시적으로 승격하기 전까지 Browser QA Capture는 can
 
 Cross-surface verification은 verification bundle을 다른 agent 접점 또는 evaluator environment로 보낼 수 있습니다.
 
-v0.3과 v0.4의 staged profiles는 local reference path에서 bundle과 manual evaluator instruction으로 분리 검증을 증명할 수 있으므로 Cross-Surface Verification은 v1+ Expansion 후보입니다. Owner 문서가 명시적으로 승격하기 전까지 Cross-Surface Verification은 권한이 없습니다. Bundle을 다른 접점으로 보내는 것만으로 Eval을 기록하거나, verification을 충족하거나, assurance를 올리거나, 결과를 수락하거나, Task를 close하면 안 됩니다. 승격하려면 위 규칙을 만족하고, 결과 Eval 또는 finding이 projection을 canonical state로 의존하지 않으면서 Core를 통해 돌아오는 방식을 정의해야 합니다.
+에이전시 보증 팩(v0.3 Agency Assurance Pack)은 local reference path에서 bundle과 manual evaluator instruction으로 분리 검증을 증명할 수 있고, 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 cross-surface automation 없이 operator와 handoff depth를 추가하므로 Cross-Surface Verification은 v1+ Expansion 후보입니다. Owner 문서가 명시적으로 승격하기 전까지 Cross-Surface Verification은 권한이 없습니다. Bundle을 다른 접점으로 보내는 것만으로 Eval을 기록하거나, verification을 충족하거나, assurance를 올리거나, 결과를 수락하거나, Task를 close하면 안 됩니다. 승격하려면 위 규칙을 만족하고, 결과 Eval 또는 finding이 projection을 canonical state로 의존하지 않으면서 Core를 통해 돌아오는 방식을 정의해야 합니다.
 
 ### Native Hook Expansion
 

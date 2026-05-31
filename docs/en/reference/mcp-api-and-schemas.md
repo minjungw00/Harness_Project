@@ -6,7 +6,7 @@ Use this reference to implement, test, or review the public MCP resource and too
 
 It does not own SQLite DDL, storage layout, the full kernel transition table, projection template text, CLI command semantics, or connector cookbook details. Storage-owned JSON and DDL rules live in [Storage And DDL](storage-and-ddl.md).
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 and v0.4 harden assurance, stewardship, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -257,12 +257,12 @@ Event stability for fixture assertions is owned by the [Kernel Stable Event Cata
 
 | Support class | Values | Requirement |
 |---|---|---|
-| First runnable kernel slice | none required | v0.1 status/next and structured blockers can expose read/freshness facts without any persisted Markdown projection job. |
+| v0.1 Core Authority Slice | none required | v0.1 status/next and structured blockers can expose read/freshness facts without any persisted Markdown projection job. |
 | User-facing MVP | `TASK` minimal task-scoped readable summary, when persisted projection support is used | Provides the user-readable status/judgment/evidence/close summary path. Equivalent status/next cards may satisfy MVP output without full `TASK` template rendering. |
 | Optional early | `APR`, `DIRECT-RESULT`, `MANUAL-QA` | Implement only when the corresponding approval, direct-work, or Manual QA profile is active. |
-| Future / diagnostic | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Detailed report, trace, map, export, handoff, standalone Decision Packet, persisted Journey Card, or diagnostic views. Enable only when the corresponding v0.3, v0.4, operations, handoff, or other owner-promoted later profile is in scope. |
+| Future / diagnostic | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Detailed report, trace, map, export, handoff, standalone Decision Packet, persisted Journey Card, or diagnostic views. Enable only when the corresponding v0.3 Agency Assurance Pack, v0.4 Operations & Handoff Pack, or other owner-promoted later profile is in scope. |
 
-Support class labels are not enum values. v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. v0.2 User-Facing Harness MVP provides enough derived output for users to understand scope, judgment, evidence, close readiness, acceptance, and residual risk without requiring broad template polish. Future/diagnostic means later-profile or diagnostic scope, not automatically v1+ only; v0.3, v0.4, operations, handoff, or other owner-promoted profiles may enable those projections.
+Support class labels are not enum values. v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. v0.2 User-Facing Harness MVP provides enough derived output for users to understand scope, judgment, evidence, close readiness, acceptance, and residual risk without requiring broad template polish. Future/diagnostic means later-profile or diagnostic scope, not automatically v1+ only; v0.3 Agency Assurance Pack, v0.4 Operations & Handoff Pack, or other owner-promoted profiles may enable those projections.
 
 ProjectionKind extensibility does not make projections canonical state. Every projection job still renders a derived view from owner records and artifact refs. No projection support class creates state, evidence, QA, verification, final acceptance, residual-risk acceptance, close authority, or Write Authorization. `DEC` is valid only for standalone Decision Packet Markdown when that feature is enabled. Absence of a standalone `DEC` job must not reduce required Decision Packet visibility, which is provided through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays. The user-facing MVP requires the Decision Packet judgment-request display shape, not the standalone `DEC` `ProjectionKind`. Persisted `JOURNEY-CARD` Markdown is future/diagnostic; current-position context in `harness.status`, `harness.next`, and significant resume flows can be compact status output.
 
@@ -723,7 +723,7 @@ ValidatorResult:
 
 The `surface_capability_check` validator uses this schema with `validator_kind=capability`.
 
-v0.3/v0.4 staged hardening ValidatorResult IDs are:
+Agency Assurance Pack and Operations & Handoff Pack ValidatorResult IDs are:
 
 - `decision_gate_check`
 - `decision_quality_check`

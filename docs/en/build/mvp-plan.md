@@ -2,15 +2,15 @@
 
 ## What this document helps you do
 
-This document turns the MVP scope material into an implementable staged delivery plan. It separates the first runnable kernel slice from the first user-facing MVP so the word "MVP" is reserved for a milestone where users can experience Harness value, not only observe that an authority loop exists.
+This document turns the MVP scope material into an implementable staged delivery plan. It separates v0.1 Core Authority Slice from the first user-facing MVP so the word "MVP" is reserved for a milestone where users can experience Harness value, not only observe that an authority loop exists.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. Later packs harden assurance, stewardship, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. Later packs harden agency assurance, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 Use this when you need to plan what to build after documentation acceptance and a separate implementation-planning readiness decision. Use the reference docs for exact contracts.
 
 ## Read this when
 
-- You are separating the first runnable kernel proof from the first user-facing product MVP.
+- You are separating the first internal authority proof from the first user-facing product MVP.
 - You need to review staged delivery scope without expanding the first implementation batch.
 - You want to keep implementation order separate from storage, schema, fixture, and template details.
 
@@ -22,7 +22,7 @@ Read [Implementation Overview](implementation-overview.md), including its [Docum
 
 Harness value is not merely that a write authority loop exists. Harness should preserve scope, user-owned judgments, evidence, close readiness, and residual risk in a local authority record. Delivery therefore has two early targets:
 
-- v0.1 Core Authority Slice proves the smallest coherent internal kernel loop.
+- v0.1 Core Authority Slice proves the smallest coherent internal Core authority loop.
 - v0.2 User-Facing Harness MVP proves that ordinary users can feel the Harness value in how work is clarified, budgeted, blocked, accepted, and risk-explained.
 
 The first slice stays intentionally narrow. It proves one local project, one Task, one basic scope, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. It is not the MVP. The MVP comes when the user-facing path can translate normal work into scope, judgment, evidence, close-readiness, and residual-risk language without confusing approval, acceptance, and risk acceptance.
@@ -39,24 +39,24 @@ The early output model is intentionally small:
 
 | Stage | Delivery target | What it proves | What it does not prove |
 |---|---|---|---|
-| v0.1 | Core Authority Slice | A first runnable internal kernel loop over one local project, one Task, one basic scope, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. | User-facing MVP value, full intake/discovery, full Decision Packet quality, residual-risk semantics, Manual QA, detached verification, projection completeness, operations readiness. |
-| v0.2 | User-Facing Harness MVP | Users can experience Harness preserving scope, user-owned judgment, evidence, close readiness, final acceptance, and residual-risk visibility in a local authority record. | Full agency hardening, detached verification independence, Manual QA matrix, stewardship policy suite, feedback-loop policy, export/recover, release handoff. |
-| v0.3 | Assurance & Stewardship Pack | The MVP path is hardened with assurance, QA, verification, stewardship, design-quality, context-hygiene, TDD, and feedback-loop profiles. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
+| v0.1 | Core Authority Slice | A first runnable internal Core authority loop over one local project, one Task, one basic scope, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. | User-facing MVP value, full intake/discovery, full Decision Packet quality, residual-risk semantics, Manual QA, detached verification, projection completeness, operations readiness. |
+| v0.2 | User-Facing Harness MVP | Users can experience Harness preserving scope, user-owned judgment, evidence, close readiness, final acceptance, and residual-risk visibility in a local authority record. | Full agency assurance hardening, detached verification independence, Manual QA matrix, stewardship policy suite, feedback-loop policy, export/recover, release handoff. |
+| v0.3 | Agency Assurance Pack | The MVP path is hardened with verification, QA, residual-risk, final-acceptance, and stewardship profiles. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
 | v0.4 | Operations & Handoff Pack | The same Core model supports doctor/readiness, recover/export, artifact integrity, release handoff, and broader conformance coverage. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
 
 ```mermaid
 flowchart LR
-  Core["v0.1<br/>Core Authority Slice<br/>first runnable kernel slice"] --> MVP["v0.2<br/>User-Facing Harness MVP<br/>first user value"]
-  MVP --> Assurance["v0.3<br/>Assurance and Stewardship Pack<br/>agency security policy hardening"]
+  Core["v0.1<br/>Core Authority Slice<br/>first internal authority loop"] --> MVP["v0.2<br/>User-Facing Harness MVP<br/>first user value"]
+  MVP --> Assurance["v0.3<br/>Agency Assurance Pack<br/>verification, QA, risk, acceptance"]
   Assurance --> Ops["v0.4<br/>Operations and Handoff Pack<br/>operator readiness"]
   Ops -. roadmap boundary .-> Expansion["v1+<br/>Expansion candidates"]
 ```
 
-Kernel Smoke remains the narrow conformance authoring profile for v0.1 Core Authority Slice. The profile name does not make v0.1 a product MVP; it means the fixture queue proves the internal kernel path.
+Kernel Smoke remains the narrow conformance authoring profile for v0.1 Core Authority Slice. The profile name does not make v0.1 a product MVP; it means the fixture queue proves the internal Core authority path.
 
-Conformance fixture profiles follow the same stage names: first runnable kernel slice fixtures for v0.1 Core Authority Slice, user-facing MVP fixtures for v0.2 User-Facing Harness MVP, agency-hardened fixtures for v0.3 Assurance & Stewardship Pack, and operations/future fixtures for v0.4 Operations & Handoff Pack and promoted v1+ Expansion candidates.
+Conformance fixture profiles follow the same stage names: Core Authority Slice fixtures for v0.1 Core Authority Slice, User-Facing Harness MVP fixtures for v0.2 User-Facing Harness MVP, Agency Assurance Pack fixtures for v0.3 Agency Assurance Pack, and Operations & Handoff Pack or promoted-expansion fixtures for v0.4 Operations & Handoff Pack and promoted v1+ Expansion candidates.
 
-These fixture profile names remain the conformance labels. The hardened local reference target is only the aggregate target reached by v0.3 and v0.4, not a profile name or separate delivery stage.
+These fixture profile names remain the conformance labels. The hardened local reference target is only the aggregate target reached by v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack, not a profile name or separate delivery stage.
 
 ### Boundary after staged delivery: v1+ Expansion
 
@@ -93,7 +93,7 @@ Reference schemas may list fields that become necessary only when the related ca
 |---|---|---|
 | v0.1 Core Authority Slice | Use only the owner-defined fields needed to prove the narrow authority loop. If the smoke path uses a Decision Packet, required Decision Packet fields still apply even though full user-facing Decision Packet quality is later. | [Kernel Reference](../reference/kernel.md), [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Storage And DDL](../reference/storage-and-ddl.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
 | v0.2 User-Facing Harness MVP | Add the fields and display summaries needed for users to understand judgment context, evidence, close readiness, final acceptance separation, and residual-risk visibility. | [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Kernel Reference](../reference/kernel.md), [Document Projection Reference](../reference/document-projection.md), [Template Reference](../reference/templates/README.md). |
-| v0.3/v0.4 staged hardening | Add assurance, QA, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, and release-handoff profiles only where owner docs define them. | [Design Quality Policies](../reference/design-quality-policies.md), [Operations And Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md), [Storage And DDL](../reference/storage-and-ddl.md). |
+| v0.3 Agency Assurance Pack / v0.4 Operations & Handoff Pack | Add verification, QA, residual-risk, final-acceptance, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, and release-handoff profiles only where owner docs define them. | [Design Quality Policies](../reference/design-quality-policies.md), [Operations And Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md), [Storage And DDL](../reference/storage-and-ddl.md). |
 
 Required in an API schema therefore means required when that tool call, record, or profile is implemented or used. It does not make a future-profile field part of the smallest runnable slice by itself.
 
@@ -143,9 +143,9 @@ v0.2 should keep detached verification, the full Manual QA policy matrix, stewar
 
 Passing v0.2 means a user can see why Harness is more than an authorization wrapper: it keeps the work's scope, decisions, evidence, acceptance, and risk boundaries locally inspectable.
 
-## v0.3 Assurance & Stewardship Pack
+## v0.3 Agency Assurance Pack
 
-v0.3 hardens the MVP path so the local reference path can route assurance, policy, and stewardship with honest boundaries.
+v0.3 hardens the MVP path so the local reference path can route verification, QA, residual risk, final acceptance, and stewardship with honest boundaries.
 
 Focus on:
 
@@ -158,9 +158,9 @@ Focus on:
 - TDD trace behavior where policy requires it
 - feedback-loop policy where policy requires it
 - context-hygiene validators and current-state versus stale-context boundaries
-- agency-hardened conformance fixtures that prove judgment, QA, verification, residual-risk, and acceptance separation through Core state, events, artifacts, projection/freshness facts, and errors
+- Agency Assurance Pack conformance fixtures that prove judgment, QA, verification, residual-risk, and acceptance separation through Core state, events, artifacts, projection/freshness facts, and errors
 
-Passing this pack means the user-facing MVP path is agency-preserving and policy-aware. It does not promote v1+ Expansion automation into staged delivery.
+Passing this pack means the user-facing MVP path is agency-preserving, policy-aware, and honest about verification, QA, residual risk, acceptance, and stewardship boundaries. It does not promote v1+ Expansion automation into staged delivery.
 
 ## v0.4 Operations & Handoff Pack
 
@@ -179,7 +179,7 @@ Focus on:
 
 Do not create a second state model for operator commands. Operators diagnose, repair, export, or run fixtures over the same Core state model.
 
-Docs-maintenance remains a separate read-only documentation profile. It may report documentation drift, but it is not v0.1 Core Authority Slice, not v0.2 User-Facing Harness MVP, not agency-hardened or operations runtime conformance, and not an implementation-readiness signal.
+Docs-maintenance remains a separate read-only documentation profile. It may report documentation drift, but it is not v0.1 Core Authority Slice, not v0.2 User-Facing Harness MVP, not Agency Assurance Pack or operations runtime conformance, and not an implementation-readiness signal.
 
 ## Roadmap-scoped v1+ Expansion candidates
 
@@ -230,7 +230,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 - Final acceptance is recorded or represented separately from sensitive-action Approval and residual-risk acceptance.
 - User-facing readable summaries or cards are derived from Core records and are sufficient for the MVP path without making template polish authoritative.
 
-### v0.3 Assurance & Stewardship Pack exit checklist
+### v0.3 Agency Assurance Pack exit checklist
 
 - Decision Packet quality and user-judgment routing are fixture-proven.
 - Sensitive-action Approval does not substitute for Decision Packets, Write Authorization, Manual QA, verification, final acceptance, or residual-risk acceptance.
@@ -256,7 +256,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 |---|---|
 | v0.1 Core Authority Slice | An implementer/operator can see one local Task move through scope, `prepare_write`, Write Authorization, `record_run`, artifact/evidence link, read-only status/next, and structured blockers. |
 | v0.2 User-Facing Harness MVP | A user can see ordinary work clarified into scope, judgment, evidence, close readiness, acceptance, and residual-risk language, with close blocked when evidence or user judgment is missing. |
-| v0.3 Assurance & Stewardship Pack | The local path explains verification, Manual QA, stewardship, TDD, feedback, context hygiene, final acceptance, residual-risk acceptance, and close behavior through Core records and fixtures. |
+| v0.3 Agency Assurance Pack | The local path explains verification, Manual QA, residual-risk acceptance, final acceptance, stewardship, TDD, feedback, context hygiene, and close behavior through Core records and fixtures. |
 | v0.4 Operations & Handoff Pack | Operators can diagnose, recover, reconcile, export, check artifacts, run conformance, and prepare release handoff over the same Core state. |
 
 After staged delivery, promoted roadmap items can read, display, wrap, or extend the authority loop only after owner docs define exact contracts and fixture coverage.

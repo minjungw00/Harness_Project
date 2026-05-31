@@ -4,7 +4,7 @@
 
 Follow one Harness work item from user request to close outcome without reading every strict contract first.
 
-This is Build documentation. It summarizes the runtime path for implementers and reviewers, but it does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or new schemas before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. Later packs harden assurance, stewardship, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is Build documentation. It summarizes the runtime path for implementers and reviewers, but it does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or new schemas before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
