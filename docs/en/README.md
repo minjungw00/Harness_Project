@@ -56,7 +56,7 @@ Use this path when you do not know where to start:
 | Implementer | [Overview](learn/overview.md) | [Concepts](learn/concepts.md), [Implementation Overview handoff](build/implementation-overview.md#maintainer-handoff-summary), [MVP Plan decisions](build/mvp-plan.md#implementation-decisions-needed-before-server-coding), [First Runnable Slice](build/first-runnable-slice.md), [MVP Plan](build/mvp-plan.md), [Runtime Walkthrough](build/runtime-walkthrough.md), then the relevant Reference owner. |
 | Reviewer / maintainer | [Overview](learn/overview.md) | [Authoring Guide](maintain/authoring-guide.md), [Translation Guide](maintain/translation-guide.md), [Roadmap](roadmap.md), and Reference owners when checking strict meaning. |
 
-Operators and conformance authors usually begin in Reference: [Operations And Conformance Reference](reference/operations-and-conformance.md), [Conformance Fixtures Reference](reference/conformance-fixtures.md), [Runtime Architecture Reference](reference/runtime-architecture.md), [Security Threat Model Reference](reference/security-threat-model.md), [MCP API And Schemas](reference/mcp-api-and-schemas.md), [Storage And DDL](reference/storage-and-ddl.md), and [Kernel Reference](reference/kernel.md).
+Operators and conformance authors usually begin in Reference: [Operations And Conformance Reference](reference/operations-and-conformance.md), [Conformance Fixtures Reference](reference/conformance-fixtures.md), [Future Fixture Catalog](reference/future-fixture-catalog.md), [Runtime Architecture Reference](reference/runtime-architecture.md), [Security Threat Model Reference](reference/security-threat-model.md), [MCP API And Schemas](reference/mcp-api-and-schemas.md), [Storage And DDL](reference/storage-and-ddl.md), and [Kernel Reference](reference/kernel.md).
 
 ## Document Roles
 
@@ -170,6 +170,7 @@ Use this path to look up strict contracts. If another path summarizes a strict r
 - [Surface Cookbook](reference/surface-cookbook.md)
 - [Operations And Conformance Reference](reference/operations-and-conformance.md)
 - [Conformance Fixtures Reference](reference/conformance-fixtures.md)
+- [Future Fixture Catalog](reference/future-fixture-catalog.md)
 - [Glossary Reference](reference/glossary.md)
 - [Template Reference](reference/templates/README.md)
 

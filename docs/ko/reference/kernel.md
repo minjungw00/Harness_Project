@@ -882,7 +882,7 @@ Stable event names는 staged/reference conformance fixtures가 `expected_events`
 
 이 catalog는 의도적으로 compact합니다. Non-stable implementation-local detail 또는 audit events와 future extension events는 여전히 `task_events`에 기록될 수 있지만, staged/reference fixture authors는 이 이름들이 여기 추가되기 전까지 `expected_events`에서 요구하면 안 됩니다.
 
-[Conformance Fixtures 참조](conformance-fixtures.md#catalog-only-fixture-skeleton-guidance)의 catalog-only fixture skeleton은 family level에서 expected event behavior를 언급할 수 있습니다. Catalog entry가 executable fixture가 될 때에도 `expected_events`는 위 stable names만 assert합니다. Read-only status/next와 docs-maintenance scenario는 documented Core action이 state를 commit하지 않는 한 일반적으로 stable event를 요구하지 않아야 합니다.
+[Conformance Fixtures 참조](conformance-fixtures.md#catalog-only-fixture-skeleton-guidance)의 catalog-only fixture skeleton guidance와 [향후 Fixture Catalog](future-fixture-catalog.md)의 detailed row는 family level에서 expected event behavior를 언급할 수 있습니다. Catalog entry가 executable fixture가 될 때에도 `expected_events`는 위 stable names만 assert합니다. Read-only status/next와 docs-maintenance scenario는 documented Core action이 state를 commit하지 않는 한 일반적으로 stable event를 요구하지 않아야 합니다.
 
 
 | Trigger | From | To | Gate or record effect |

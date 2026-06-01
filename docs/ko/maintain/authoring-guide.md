@@ -281,6 +281,8 @@ Reference 문서는 contract 중심이어야 합니다. 짧은 쉬운 설명은 
 
 Runtime conformance fixture body shape, assertion mode, isolated execution behavior, JSON `TEXT` validation, owner-bound enum/status validation은 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#conformance-fixture-format)가 담당합니다. 다른 문서는 conformance가 executable-state-based라는 점만 요약하고 owner로 링크해야 하며, 전체 계약을 다시 적지 않습니다.
 
+향후 상세 scenario 후보, concern별 향후 fixture example, staged fixture coverage map, fixture suite family summary, catalog-only future candidate는 [향후 Fixture Catalog](../reference/future-fixture-catalog.md)가 담당합니다. Future catalog row는 설계 inventory일 뿐이며, 정확한 fixture body, public MCP schema, DDL, stage exit, runtime readiness, generated artifact, fixture가 이미 실행된다는 증거를 다시 정의하면 안 됩니다.
+
 ## 반복 규칙
 
 긴 기준 기록 문단을 여러 문서에 반복하지 않습니다.
@@ -408,12 +410,12 @@ Result 의미:
 | 영어/한국어 의미 섹션 일치 | 대응 파일은 같은 활성 파일 맵, 독자 목적, 의미상 같은 섹션 범위, owner link, 계약 세부사항을 유지합니다. Stable identifier, schema name, enum value, DDL name, validator ID, code identifier, 검토 가능성이 분명하다면 heading text와 작은 묶음 방식은 자연스럽게 조정할 수 있습니다. |
 | 시작 방식 준수 | 활성 문서는 시작 부분에서 독자의 다음 행동을 분명히 보여줍니다. Reference, Build, Maintain 문서는 구조화된 시작 방식을 쓸 수 있고, Learn/Use 문서는 사용자 흐름 우선 도입부를 쓸 수 있습니다. 예전 네 heading 이름이 없다는 이유만으로 Learn/Use 문서를 실패로 보지 않습니다. `docs/*/reference/templates/README.md`는 `사용 시점`, 산출물 계층, 템플릿 구현 계층을 사용하고, `docs/*/reference/templates/` 아래의 `README.md`가 아닌 개별 template file은 `사용 시점`, 구현 계층, `기준 기록`, `렌더링 섹션`, `전체 템플릿`과 명확한 권한 없음 경계를 사용합니다. |
 | 깨진 교차 참조 탐지 | Markdown links, heading anchors, template/reference links, same-language README routes, paired-language entry links, owner-section links가 활성 문서와 현재 anchor로 연결됩니다. |
-| Owner 경계 불일치 | 정확한 계약과 active owner concept은 활성 owner 문서에 머뭅니다. 여기에는 `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/security-threat-model.md`, `reference/operations-and-conformance.md`, `reference/conformance-fixtures.md`, `reference/glossary.md`가 포함됩니다. Owner가 아닌 문서는 이 contract를 다시 정의하지 않고 요약하고 link합니다. |
-| Fixture/action schema 불일치 | Conformance fixture examples의 `action`과 실행 가능한 `input`은 `reference/mcp-api-and-schemas.md`의 public MCP request schemas 및 `reference/conformance-fixtures.md`의 `ToolEnvelope` expansion convention과 일치해야 합니다. Docs-maintenance는 drift를 flag할 수 있지만 fixture action을 실행하거나 fixture 의미를 여기서 다시 설명하지 않습니다. |
+| Owner 경계 불일치 | 정확한 계약과 active owner concept은 활성 owner 문서에 머뭅니다. 여기에는 `reference/kernel.md`, `reference/mcp-api-and-schemas.md`, `reference/storage-and-ddl.md`, `reference/document-projection.md`, `reference/templates/*.md`, `reference/design-quality-policies.md`, `reference/security-threat-model.md`, `reference/operations-and-conformance.md`, `reference/conformance-fixtures.md`, `reference/future-fixture-catalog.md`, `reference/glossary.md`가 포함됩니다. Owner가 아닌 문서는 이 contract를 다시 정의하지 않고 요약하고 link합니다. |
+| Fixture/action schema 불일치 | `reference/future-fixture-catalog.md`의 exact-shape 또는 example-shaped example을 포함한 conformance fixture examples의 `action`과 실행 가능한 `input`은 `reference/mcp-api-and-schemas.md`의 public MCP request schemas 및 `reference/conformance-fixtures.md`의 `ToolEnvelope` expansion convention과 일치해야 합니다. Future catalog entry는 정확한 fixture body, public MCP schema, DDL, stage exit, runtime readiness를 다시 정의하면 안 됩니다. Docs-maintenance는 drift를 flag할 수 있지만 fixture action을 실행하거나 fixture 의미를 여기서 다시 설명하지 않습니다. |
 | Enum, event, validator, projection 불일치 | State/gate/result values와 Kernel Stable Event Catalog names는 `reference/kernel.md`, error, stable `ValidatorResult` IDs, `ProjectionKind` 값, API 소유 ProjectionKind 지원 계층은 `reference/mcp-api-and-schemas.md`, storage values는 `reference/storage-and-ddl.md`, 템플릿 구현 계층과 projection 최신성 동작은 `reference/document-projection.md`, 렌더링된 template ownership은 `reference/templates/*.md`와 일치해야 합니다. |
 | Glossary와 기준 기록 표현 불일치 | 공식 용어, 대소문자, record ID prefixes, source-of-truth wording, authority-boundary phrases는 `reference/glossary.md`와 관련 담당 문서에 맞아야 하며 추가 상태 권한을 암시하지 않아야 합니다. |
 | TODO 준수 | `TODO_DECISION`과 `TODO_IMPLEMENT`는 허용된 의미로 쓰고 gap을 명확히 이름 붙이며, action에 필요한 owner/context를 충분히 포함하고, 완료된 기준 섹션에 `TODO_REWRITE` marker를 남기지 않습니다. |
-| Owner가 아닌 문서의 중복 전체 계약 | Owner doc 밖의 전체 schema, DDL, transition table, fixture mini-language, template body, enum table, validator table, projection table, glossary definition은 짧은 요약과 owner link로 바꿉니다. |
+| Owner가 아닌 문서의 중복 전체 계약 | Owner doc 밖의 전체 schema, DDL, transition table, fixture mini-language, template body, enum table, validator table, projection table, glossary definition은 짧은 요약과 owner link로 바꿉니다. Fixture 관련 내용은 정확한 mechanics는 `reference/conformance-fixtures.md`로, 향후 상세 catalog content는 `reference/future-fixture-catalog.md`로 연결합니다. |
 
 ## 리뷰 체크리스트
 
@@ -461,7 +463,8 @@ Result 의미:
 | 접점별 recipes | `reference/surface-cookbook.md` |
 | Generic capability profile examples | `reference/agent-integration.md` |
 | Operator procedures, conformance run overview, doctor/recover/reconcile/export/artifact integrity, docs-maintenance 보고 | `reference/operations-and-conformance.md` |
-| Conformance fixture bodies, fixture assertion 의미, suite catalog metadata, fixture example, catalog-only future candidate | `reference/conformance-fixtures.md` |
+| 핵심 적합성 모델, 정확한 fixture body, runner execution, assertion semantics, 현재 단계 상태, 검증 프로파일별 증명 동작, suite metadata boundary, 축소된 Kernel Smoke 작성 순서 | `reference/conformance-fixtures.md` |
+| 향후 상세 scenario 후보, concern별 향후 fixture example, staged fixture coverage map, fixture suite family summary, catalog-only future candidate | `reference/future-fixture-catalog.md` |
 | Official term definitions and capitalization | `reference/glossary.md` |
 | v1+ Expansion roadmap | `roadmap.md` |
 | Documentation authoring rules | `maintain/authoring-guide.md` |

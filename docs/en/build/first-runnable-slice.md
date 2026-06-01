@@ -247,4 +247,5 @@ Do not add fields to the fixture body to express suite stage, authoring order, o
 - [MCP API And Schemas](../reference/mcp-api-and-schemas.md): public resources, tool envelopes, request/response schemas, error taxonomy, artifact refs, and `ProjectionKind`.
 - [Storage And DDL](../reference/storage-and-ddl.md): runtime layout, staged schema profiles, migrations, locks, artifacts, baselines, projection jobs, and validator-run storage.
 - [Operations And Conformance Reference](../reference/operations-and-conformance.md): operator semantics and conformance staging.
-- [Conformance Fixtures Reference](../reference/conformance-fixtures.md): fixture format, execution, assertion rules, suite catalogs, and examples.
+- [Conformance Fixtures Reference](../reference/conformance-fixtures.md): core conformance model, fixture format, execution, assertion rules, and the reduced Kernel Smoke queue.
+- [Future Fixture Catalog](../reference/future-fixture-catalog.md): detailed later scenario candidates that are not v0.1 requirements.

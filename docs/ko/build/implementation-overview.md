@@ -328,4 +328,5 @@ v1+ Expansion 후보와 승격 규칙은 [로드맵](../roadmap.md)을 사용합
 - [MCP API와 스키마](../reference/mcp-api-and-schemas.md): public resource, tool, schema, error, 아티팩트 참조, idempotency, state conflict behavior.
 - [Storage와 DDL](../reference/storage-and-ddl.md): runtime layout과 DDL, migration, lock, artifact, baseline, projection job, validator-run storage를 다룹니다.
 - [운영과 Conformance 참조](../reference/operations-and-conformance.md): operator semantics와 conformance run overview.
-- [Conformance Fixtures 참조](../reference/conformance-fixtures.md): fixture body shape, assertion semantics, suite catalog, example.
+- [Conformance Fixtures 참조](../reference/conformance-fixtures.md): 핵심 적합성 모델, fixture body shape, assertion semantics, 축소된 Kernel Smoke queue.
+- [향후 Fixture Catalog](../reference/future-fixture-catalog.md): 그 자체로 early-stage requirement가 아닌 detailed later scenario candidate.

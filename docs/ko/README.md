@@ -56,7 +56,7 @@
 | 구현자 | [개요](learn/overview.md) | [핵심 개념](learn/concepts.md), [구현 개요의 문서 수락 후보 요약](build/implementation-overview.md#문서-수락-후보-요약), [MVP 계획의 구현 시작 전 결정](build/mvp-plan.md#서버-코딩-전-필요한-구현-결정), [첫 실행 가능한 조각](build/first-runnable-slice.md), [MVP 계획](build/mvp-plan.md), [Runtime Walkthrough](build/runtime-walkthrough.md), 관련 기준 문서 소유자. |
 | 검토자 / 문서 유지보수자 | [개요](learn/overview.md) | [문서 작성 가이드](maintain/authoring-guide.md), [번역 가이드](maintain/translation-guide.md), [로드맵](roadmap.md), 엄격한 의미를 확인할 때 관련 기준 문서 소유자. |
 
-운영자와 conformance 작성자는 보통 Reference에서 시작합니다. [운영과 Conformance 참조](reference/operations-and-conformance.md), [Conformance Fixtures 참조](reference/conformance-fixtures.md), [런타임 아키텍처 참조](reference/runtime-architecture.md), [보안 위협 모델 참조](reference/security-threat-model.md), [MCP API와 스키마](reference/mcp-api-and-schemas.md), [Storage와 DDL](reference/storage-and-ddl.md), [커널 참조](reference/kernel.md)를 사용합니다.
+운영자와 conformance 작성자는 보통 Reference에서 시작합니다. [운영과 Conformance 참조](reference/operations-and-conformance.md), [Conformance Fixtures 참조](reference/conformance-fixtures.md), [향후 Fixture Catalog](reference/future-fixture-catalog.md), [런타임 아키텍처 참조](reference/runtime-architecture.md), [보안 위협 모델 참조](reference/security-threat-model.md), [MCP API와 스키마](reference/mcp-api-and-schemas.md), [Storage와 DDL](reference/storage-and-ddl.md), [커널 참조](reference/kernel.md)를 사용합니다.
 
 ## 문서별 역할
 
@@ -170,6 +170,7 @@ AI 지원 개발 세션을 하네스 기준으로 진행할 때 보는 경로입
 - [Surface Cookbook](reference/surface-cookbook.md)
 - [운영과 Conformance 참조](reference/operations-and-conformance.md)
 - [Conformance Fixtures 참조](reference/conformance-fixtures.md)
+- [향후 Fixture Catalog](reference/future-fixture-catalog.md)
 - [용어집 참조](reference/glossary.md)
 - [Template 참조](reference/templates/README.md)
 

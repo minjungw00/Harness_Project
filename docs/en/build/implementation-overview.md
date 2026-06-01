@@ -328,4 +328,5 @@ Then use the reference docs and current owners for exact behavior:
 - [MCP API And Schemas](../reference/mcp-api-and-schemas.md) for public resources, tools, schemas, errors, artifact refs, idempotency, and state conflict behavior.
 - [Storage And DDL](../reference/storage-and-ddl.md) for runtime layout, DDL, migrations, locks, artifacts, baselines, projection jobs, and validator-run storage.
 - [Operations And Conformance Reference](../reference/operations-and-conformance.md) for operator semantics and conformance run overview.
-- [Conformance Fixtures Reference](../reference/conformance-fixtures.md) for fixture body shape, assertion semantics, suite catalogs, and examples.
+- [Conformance Fixtures Reference](../reference/conformance-fixtures.md) for the core conformance model, fixture body shape, assertion semantics, and the reduced Kernel Smoke queue.
+- [Future Fixture Catalog](../reference/future-fixture-catalog.md) for detailed later scenario candidates that are not early-stage requirements by themselves.

@@ -883,7 +883,7 @@ Stable event names are the `event_type` values that staged/reference conformance
 
 The catalog is deliberately compact. Non-stable implementation-local detail or audit events, plus future extension events, may still be recorded in `task_events`, but staged/reference fixture authors must not require them in `expected_events` until they are added here.
 
-Catalog-only fixture skeletons in [Conformance Fixtures Reference](conformance-fixtures.md#catalog-only-fixture-skeleton-guidance) may name expected event behavior at a family level. When a catalog entry becomes executable, `expected_events` still asserts only the stable names above; read-only status/next and docs-maintenance scenarios should normally require no stable events unless a documented Core action commits state.
+Catalog-only fixture skeleton guidance in [Conformance Fixtures Reference](conformance-fixtures.md#catalog-only-fixture-skeleton-guidance) and detailed rows in [Future Fixture Catalog](future-fixture-catalog.md) may name expected event behavior at a family level. When a catalog entry becomes executable, `expected_events` still asserts only the stable names above; read-only status/next and docs-maintenance scenarios should normally require no stable events unless a documented Core action commits state.
 
 
 | Trigger | From | To | Gate or record effect |

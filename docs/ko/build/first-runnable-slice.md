@@ -247,4 +247,5 @@ Suite stage, authoring order, docs-maintenance result를 표현하기 위해 fix
 - [MCP API와 스키마](../reference/mcp-api-and-schemas.md): public resource, tool envelope, request/response schema, error taxonomy, 아티팩트 참조, `ProjectionKind`.
 - [Storage와 DDL](../reference/storage-and-ddl.md): runtime layout, staged schema profile, migration, lock, artifact, baseline, projection job, validator-run storage를 다룹니다.
 - [운영과 Conformance 참조](../reference/operations-and-conformance.md): operator 의미와 conformance 단계화.
-- [Conformance Fixtures 참조](../reference/conformance-fixtures.md): fixture 형식, 실행, assertion rule, suite catalog, example.
+- [Conformance Fixtures 참조](../reference/conformance-fixtures.md): 핵심 적합성 모델, fixture 형식, 실행, assertion rule, 축소된 Kernel Smoke queue.
+- [향후 Fixture Catalog](../reference/future-fixture-catalog.md): v0.1 requirement가 아닌 detailed later scenario candidate.

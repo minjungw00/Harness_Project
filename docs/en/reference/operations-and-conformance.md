@@ -14,11 +14,11 @@ This is reference documentation for future operator and conformance behavior. It
 - You need the conformance run entrypoint overview, staged suite boundary, or runtime/docs-maintenance separation.
 - You need to tell runtime Core fixture conformance apart from docs-only maintenance checks.
 - You are diagnosing an operations mismatch across state, artifacts, projections, MCP availability, or generated files.
-- You need detailed fixture body shape, assertion semantics, suite catalogs, or examples; start here for the overview, then use [Conformance Fixtures Reference](conformance-fixtures.md).
+- You need detailed fixture body shape or assertion semantics; start here for the overview, then use [Conformance Fixtures Reference](conformance-fixtures.md). For detailed future scenario candidates, use [Future Fixture Catalog](future-fixture-catalog.md).
 
 ## Before you read
 
-Use [Conformance Fixtures Reference](conformance-fixtures.md) for fixture body shape, execution, assertion semantics, suite catalogs, and examples. Use [Runtime Architecture](runtime-architecture.md#state-transaction-flow) for Core transaction ordering, [Security Threat Model Reference](security-threat-model.md) for security assets, trust boundaries, threats, and controls, [MCP API And Schemas](mcp-api-and-schemas.md) for public tool schemas and replay behavior, [Storage And DDL](storage-and-ddl.md) for storage layout, and [Kernel Reference](kernel.md) for state transition semantics.
+Use [Conformance Fixtures Reference](conformance-fixtures.md) for the core conformance model, fixture body shape, execution, assertion semantics, current-phase status, and Kernel Smoke authoring order. Use [Future Fixture Catalog](future-fixture-catalog.md) for detailed future scenario candidates. Use [Runtime Architecture](runtime-architecture.md#state-transaction-flow) for Core transaction ordering, [Security Threat Model Reference](security-threat-model.md) for security assets, trust boundaries, threats, and controls, [MCP API And Schemas](mcp-api-and-schemas.md) for public tool schemas and replay behavior, [Storage And DDL](storage-and-ddl.md) for storage layout, and [Kernel Reference](kernel.md) for state transition semantics.
 
 ## Main idea
 
@@ -32,7 +32,7 @@ Runtime suite pass/fail is executable-state-based. The runner decides a fixture 
 
 Rendered prose, status text, Journey Card text, close reports, or agent summaries can help a reader, but they cannot pass conformance by themselves. Findings and close blockers must be asserted through structured Core/API results, owner-record refs, validator results, events, artifacts, projection freshness, or documented docs-maintenance report labels, not as prose-only report text.
 
-This document owns the operator-facing procedure and conformance overview for future implementation. [Conformance Fixtures Reference](conformance-fixtures.md) owns the exact fixture body shape, assertion semantics, suite catalog metadata, examples, fixture profiles by behavior proved, and catalog-only future candidates.
+This document owns the operator-facing procedure and conformance overview for future implementation. [Conformance Fixtures Reference](conformance-fixtures.md) owns the core conformance model, exact fixture body shape, assertion semantics, suite catalog metadata boundaries, fixture profiles by behavior proved, and the reduced Kernel Smoke queue. [Future Fixture Catalog](future-fixture-catalog.md) owns detailed future scenario candidates.
 
 ## Reference scope
 
@@ -42,13 +42,13 @@ This document owns:
 - operator diagnostic and runtime-effect boundaries
 - conformance staging and conformance run entrypoint overview
 - recover, reconcile, export, artifact-check, and docs-maintenance operator profiles
-- compatibility stubs for fixture-detail anchors moved to [Conformance Fixtures Reference](conformance-fixtures.md)
+- compatibility stubs for fixture-detail anchors moved to [Conformance Fixtures Reference](conformance-fixtures.md) or [Future Fixture Catalog](future-fixture-catalog.md)
 
 ## Not covered here
 
 This reference does not claim runtime implementation readiness. It defines required semantics for future implementation and conformance work.
 
-It also does not own conformance fixture body shape, fixture assertion semantics, suite catalog details, public MCP schemas, SQLite DDL, projection template bodies, Learn/Use workflow, or long-term analytics. Fixture details are owned by [Conformance Fixtures Reference](conformance-fixtures.md). Docs-maintenance rule bodies are owned by the [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks); this reference owns only the operator profile boundary below.
+It also does not own conformance fixture body shape, fixture assertion semantics, detailed future scenario catalog entries, public MCP schemas, SQLite DDL, projection template bodies, Learn/Use workflow, or long-term analytics. Core fixture mechanics are owned by [Conformance Fixtures Reference](conformance-fixtures.md), and detailed future catalog entries are owned by [Future Fixture Catalog](future-fixture-catalog.md). Docs-maintenance rule bodies are owned by the [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks); this reference owns only the operator profile boundary below.
 
 ## Contract map
 
@@ -57,8 +57,8 @@ It also does not own conformance fixture body shape, fixture assertion semantics
 | Operator command semantics | [Operator entrypoints](#operator-entrypoints), then the command section: [connect](#connect), [doctor](#doctor), [serve mcp](#serve-mcp), [projection refresh](#projection-refresh), [reconcile](#reconcile), [recover](#recover), [export](#export), [artifacts check](#artifacts-check), or [conformance run](#conformance-run) | Core state authority remains in [Kernel Reference](kernel.md), with transaction ordering in [Runtime Architecture](runtime-architecture.md#state-transaction-flow). |
 | Operator diagnostics and runtime-effect boundaries | [Operator diagnostics report facts, not new state](#operator-diagnostics-report-facts-not-new-state), [Docs-maintenance profile](#docs-maintenance-profile), [Release Handoff Export Profile](#release-handoff-export-profile) | Docs-maintenance rule bodies stay in [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks). |
 | Fixture body shape and runner behavior | [Conformance Fixtures Reference: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format), [Conformance Execution](conformance-fixtures.md#conformance-execution), [Fixture Assertion Semantics](conformance-fixtures.md#fixture-assertion-semantics) | Public request schemas, idempotency, and state conflict behavior stay in [MCP API And Schemas](mcp-api-and-schemas.md). Storage seeding details stay in [Storage And DDL](storage-and-ddl.md). |
-| Fixture authoring order and suite coverage | [Conformance staging](#conformance-staging), then [Fixture Profiles By Proven Behavior](conformance-fixtures.md#fixture-profiles-by-proven-behavior), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), [Staged Fixture Coverage](conformance-fixtures.md#staged-fixture-coverage), and [Fixture Suites](conformance-fixtures.md#fixture-suites) | Kernel gate and event names stay in [Kernel Reference](kernel.md). |
-| Fixture examples by concern | [Conformance Fixtures Reference: Fixture Example Map](conformance-fixtures.md#fixture-example-map), then the matching example section | Example `input` still validates against the owning public tool schema. |
+| Fixture authoring order and suite coverage | [Conformance staging](#conformance-staging), then [Fixture Profiles By Proven Behavior](conformance-fixtures.md#fixture-profiles-by-proven-behavior), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), [Future Fixture Catalog: Staged Fixture Coverage](future-fixture-catalog.md#staged-fixture-coverage), and [Fixture Suites](future-fixture-catalog.md#fixture-suites) | Kernel gate and event names stay in [Kernel Reference](kernel.md). |
+| Fixture examples by concern | [Future Fixture Catalog: Fixture Example Map](future-fixture-catalog.md#fixture-example-map), then the matching example section | Example `input` still validates against the owning public tool schema. |
 | Artifact integrity, export, recover, and reconcile checks | [artifacts check](#artifacts-check), [export](#export), [recover](#recover), [reconcile](#reconcile) | Artifact layout and DDL stay in [Storage And DDL](storage-and-ddl.md). |
 | Security and threat-model diagnostic categories | [doctor](#doctor), [serve mcp](#serve-mcp), and [artifacts check](#artifacts-check) | Threat-model concepts stay in [Security Threat Model Reference](security-threat-model.md). API, storage, and kernel details stay with their owners. |
 
@@ -708,10 +708,10 @@ Future `conformance run` will execute selected fixture suites or explicitly sele
 |---|---|
 | The `harness conformance run` entrypoint, runtime/docs-maintenance separation, and operator reporting boundary | This section, plus [Docs-maintenance profile](#docs-maintenance-profile) |
 | The exact fixture body fields, runner loading/execution, and default comparison modes | [Conformance Fixtures Reference](conformance-fixtures.md#conformance-navigation-map) |
-| Suite intent and authoring order | [Conformance staging](#conformance-staging), then [Fixture Profiles By Proven Behavior](conformance-fixtures.md#fixture-profiles-by-proven-behavior), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), and [Fixture Suites](conformance-fixtures.md#fixture-suites) |
-| Future executable examples by concern and catalog-only future candidates | [Fixture Example Map](conformance-fixtures.md#fixture-example-map) |
+| Suite intent and authoring order | [Conformance staging](#conformance-staging), then [Fixture Profiles By Proven Behavior](conformance-fixtures.md#fixture-profiles-by-proven-behavior), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), and [Future Fixture Catalog: Fixture Suites](future-fixture-catalog.md#fixture-suites) |
+| Future executable examples by concern and catalog-only future candidates | [Future Fixture Catalog: Fixture Example Map](future-fixture-catalog.md#fixture-example-map) |
 
-Operator boundary: this document owns the operator entrypoint, runtime/docs-maintenance profile separation, and conformance overview. [Conformance Fixtures Reference](conformance-fixtures.md) owns fixture body shape, assertion semantics, suite catalog metadata, fixture profiles, examples, and catalog-only future candidates. When runtime conformance is materialized, runtime suite pass/fail remains executable-state-based; rendered prose alone cannot pass conformance.
+Operator boundary: this document owns the operator entrypoint, runtime/docs-maintenance profile separation, and conformance overview. [Conformance Fixtures Reference](conformance-fixtures.md) owns fixture body shape, assertion semantics, suite catalog metadata boundaries, fixture profiles, and the reduced Kernel Smoke queue. [Future Fixture Catalog](future-fixture-catalog.md) owns detailed future examples and catalog-only candidates. When runtime conformance is materialized, runtime suite pass/fail remains executable-state-based; rendered prose alone cannot pass conformance.
 
 ### Conformance Fixture Format
 
@@ -727,7 +727,7 @@ Moved to [Conformance Fixtures Reference: Fixture Assertion Semantics](conforman
 
 ### Agency, Stewardship, Context, And Design-Quality Suites
 
-Moved to [Conformance Fixtures Reference: Agency, Stewardship, Context, And Design-Quality Suites](conformance-fixtures.md#agency-stewardship-context-and-design-quality-suites). Suite responsibilities and read-only recommendation boundaries are owned there.
+Moved to [Future Fixture Catalog: Agency, Stewardship, Context, And Design-Quality Suites](future-fixture-catalog.md#agency-stewardship-context-and-design-quality-suites). Suite responsibilities and read-only recommendation boundaries are future catalog guidance until promoted.
 
 #### Catalog-Only Fixture Skeleton Guidance
 
@@ -739,63 +739,63 @@ Moved to [Conformance Fixtures Reference: Kernel Smoke Authoring Queue](conforma
 
 #### Intake And Decision Catalog Entries
 
-Moved to [Conformance Fixtures Reference: Intake And Decision Catalog Entries](conformance-fixtures.md#intake-and-decision-catalog-entries). Catalog rows remain guidance until materialized as exact-shape fixtures.
+Moved to [Future Fixture Catalog: Intake And Decision Catalog Entries](future-fixture-catalog.md#intake-and-decision-catalog-entries). Catalog rows remain guidance until materialized as exact-shape fixtures.
 
 ### Staged Fixture Coverage
 
-Moved to [Conformance Fixtures Reference: Staged Fixture Coverage](conformance-fixtures.md#staged-fixture-coverage). Staged suite coverage maps are owned there.
+Moved to [Future Fixture Catalog: Staged Fixture Coverage](future-fixture-catalog.md#staged-fixture-coverage). Staged suite coverage maps are future catalog guidance until promoted.
 
 ### Fixture Example Map
 
-Moved to [Conformance Fixtures Reference: Fixture Example Map](conformance-fixtures.md#fixture-example-map). Concern-specific fixture examples are owned there.
+Moved to [Future Fixture Catalog: Fixture Example Map](future-fixture-catalog.md#fixture-example-map). Concern-specific fixture examples are owned there.
 
 ### Core Fixture Examples
 
-Moved to [Conformance Fixtures Reference: Core Fixture Examples](conformance-fixtures.md#core-fixture-examples).
+Moved to [Future Fixture Catalog: Core Fixture Examples](future-fixture-catalog.md#core-fixture-examples).
 
 ### Agency Fixture Examples
 
-Moved to [Conformance Fixtures Reference: Agency Fixture Examples](conformance-fixtures.md#agency-fixture-examples).
+Moved to [Future Fixture Catalog: Agency Fixture Examples](future-fixture-catalog.md#agency-fixture-examples).
 
 ### Connector Fixture Examples
 
-Moved to [Conformance Fixtures Reference: Connector Fixture Examples](conformance-fixtures.md#connector-fixture-examples).
+Moved to [Future Fixture Catalog: Connector Fixture Examples](future-fixture-catalog.md#connector-fixture-examples).
 
 #### Connector Agency Catalog Entries
 
-Moved to [Conformance Fixtures Reference: Connector Agency Catalog Entries](conformance-fixtures.md#connector-agency-catalog-entries).
+Moved to [Future Fixture Catalog: Connector Agency Catalog Entries](future-fixture-catalog.md#connector-agency-catalog-entries).
 
 ### Design-Quality Fixture Examples
 
-Moved to [Conformance Fixtures Reference: Design-Quality Fixture Examples](conformance-fixtures.md#design-quality-fixture-examples).
+Moved to [Future Fixture Catalog: Design-Quality Fixture Examples](future-fixture-catalog.md#design-quality-fixture-examples).
 
 ### Stewardship Fixture Examples
 
-Moved to [Conformance Fixtures Reference: Stewardship Fixture Examples](conformance-fixtures.md#stewardship-fixture-examples).
+Moved to [Future Fixture Catalog: Stewardship Fixture Examples](future-fixture-catalog.md#stewardship-fixture-examples).
 
 #### Stewardship Catalog Entries
 
-Moved to [Conformance Fixtures Reference: Stewardship Catalog Entries](conformance-fixtures.md#stewardship-catalog-entries).
+Moved to [Future Fixture Catalog: Stewardship Catalog Entries](future-fixture-catalog.md#stewardship-catalog-entries).
 
 ### Context Hygiene Fixture Examples
 
-Moved to [Conformance Fixtures Reference: Context Hygiene Fixture Examples](conformance-fixtures.md#context-hygiene-fixture-examples).
+Moved to [Future Fixture Catalog: Context Hygiene Fixture Examples](future-fixture-catalog.md#context-hygiene-fixture-examples).
 
 #### Context Hygiene Catalog Entries
 
-Moved to [Conformance Fixtures Reference: Context Hygiene Catalog Entries](conformance-fixtures.md#context-hygiene-catalog-entries).
+Moved to [Future Fixture Catalog: Context Hygiene Catalog Entries](future-fixture-catalog.md#context-hygiene-catalog-entries).
 
 #### Core, Projection, Reconcile, And Verification Boundary Catalog Entries
 
-Moved to [Conformance Fixtures Reference: Core, Projection, Reconcile, And Verification Boundary Catalog Entries](conformance-fixtures.md#core-projection-reconcile-and-verification-boundary-catalog-entries).
+Moved to [Future Fixture Catalog: Core, Projection, Reconcile, And Verification Boundary Catalog Entries](future-fixture-catalog.md#core-projection-reconcile-and-verification-boundary-catalog-entries).
 
 #### v1+ Expansion Browser QA Capture Candidate Entries
 
-Moved to [Conformance Fixtures Reference: v1+ Expansion Browser QA Capture Candidate Entries](conformance-fixtures.md#v1-expansion-browser-qa-capture-candidate-entries). These remain catalog-only future candidates unless owner docs promote and prove them.
+Moved to [Future Fixture Catalog: v1+ Expansion Browser QA Capture Candidate Entries](future-fixture-catalog.md#v1-expansion-browser-qa-capture-candidate-entries). These remain catalog-only future candidates unless owner docs promote and prove them.
 
 ### Fixture Suites
 
-Moved to [Conformance Fixtures Reference: Fixture Suites](conformance-fixtures.md#fixture-suites). Suite catalog grouping and fixture-family summaries are owned there.
+Moved to [Future Fixture Catalog: Fixture Suites](future-fixture-catalog.md#fixture-suites). Suite catalog grouping and fixture-family summaries are future catalog guidance until promoted.
 
 ### Metrics Boundary
 

@@ -46,7 +46,7 @@ Idempotency와 state conflict 동작은 Core state 위에 놓인 API-owned surfa
 - `ValidatorResult`
 - public API shape로서의 artifact input과 artifact ref schema
 
-Conformance fixture에서는 이 public request schema가 정확한 기준입니다. [Conformance Fixtures 참조](conformance-fixtures.md#catalog-only-fixture-skeleton-guidance)의 catalog-only skeleton guidance는 scenario가 어떤 action을 실행해야 하는지 말할 수 있지만, request field, alternate payload branch, fixture-only API shortcut을 추가하지 않습니다. Executable fixture의 `input`은 documented `ToolEnvelope` expansion 이후 선택한 action의 public request schema를 통과해야 합니다.
+Conformance fixture에서는 이 public request schema가 정확한 기준입니다. [Conformance Fixtures 참조](conformance-fixtures.md#catalog-only-fixture-skeleton-guidance)의 catalog-only skeleton guidance와 [향후 Fixture Catalog](future-fixture-catalog.md)의 scenario row는 scenario가 어떤 action을 실행해야 하는지 말할 수 있지만, request field, alternate payload branch, fixture-only API shortcut을 추가하지 않습니다. Executable fixture의 `input`은 documented `ToolEnvelope` expansion 이후 선택한 action의 public request schema를 통과해야 합니다.
 
 ## 여기서 다루지 않는 것
 
