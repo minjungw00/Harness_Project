@@ -275,7 +275,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Notes
 
-This template is a rendered shape, not canonical state. Required Decision Packet visibility still comes through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources unless standalone `DEC` projection is enabled.
+This template is a rendered shape, not canonical state. Decision Packet visibility required by the active stage/profile still comes through `TASK` projections, status/next responses, judgment-context resources, and decision-packet resources unless standalone `DEC` projection is enabled.
 
 Decision Packet projections should keep authority context refs compact and explicit. Displaying a Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, artifact, redaction, or freshness ref in this template does not make the packet prose the authority for that record.
 

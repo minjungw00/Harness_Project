@@ -378,7 +378,7 @@ Context profiles are context discipline, not new schemas or gates. Moving from o
 
 The compact status card renders the envelope for "where are we and what happens next?" Judgment-context is separate. Use judgment-context only when user judgment is needed, and include the decision question, decision profile, profile-appropriate options or chosen outcome, relevant refs, and full-profile recommendation, uncertainty, or deferral effect when the profile requires them, without turning the full evidence or artifact body into always-on context.
 
-Status, next-action, recommendation, and recommended-playbook outputs are read-only guidance. They may recommend `prepare_write`, a Decision Packet, a Change Unit update, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state or satisfy a gate unless the recommended action later runs through the existing MCP/Core mutation path.
+Status, next-action, recommendation, and recommended-playbook outputs are read-only guidance. They may recommend `prepare_write`, a Decision Packet, a Change Unit update, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, satisfy gates, authorize writes, create evidence, perform verification, record Manual QA, waive QA or verification, record final acceptance, record residual-risk acceptance, close Tasks, or upgrade assurance by themselves. State effects happen only when the recommended action later runs through the existing MCP/Core mutation path.
 
 Evaluators should receive a tighter verification bundle: acceptance criteria, changed files, approval scope, relevant Decision Packets, residual risk summary, Autonomy Boundary, deferred decisions, codebase stewardship refs, evidence manifest refs, required TDD trace refs, Manual QA requirement, artifact refs, freshness state, and forbidden patterns.
 
@@ -431,7 +431,7 @@ Role Lens output may surface or recommend routes for:
 - release handoff report input
 - a recommended next playbook
 
-These are display and routing outputs until an existing Core/MCP state-changing path records the underlying action. Role Lens output, like status/next recommendation output, must not introduce schemas or canonical records, mutate canonical state by itself, authorize writes, grant Approval, satisfy a Decision Packet, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. When a lens identifies work that needs a state change, the surface routes through the normal MCP tool and Core path.
+These are display and routing outputs until an existing Core/MCP state-changing path records the underlying action. Role Lens output, like status/next recommendation output, must not introduce schemas or canonical records, mutate canonical state by itself, satisfy gates, authorize writes, grant Approval, satisfy a Decision Packet, create evidence, perform verification, record Manual QA, waive QA or verification, record final acceptance, record residual-risk acceptance, close a Task, or upgrade assurance. When a lens identifies work that needs a state change, the surface routes through the normal MCP tool and Core path.
 
 Two-stage review display should keep the stages visibly separate:
 
@@ -452,44 +452,56 @@ Display the stop according to the capability profile. On cooperative profiles, t
 
 ## Reference Surface Contract
 
-v0.1 Core Authority Slice uses only the reference-surface support needed to exercise one local project registration and the Core authority path. That path should demonstrate the kernel rather than broad ecosystem support.
+v0.1 Core Authority Slice uses only the reference-surface support needed to exercise one local project registration and the Core authority path. That path should demonstrate the kernel rather than broad ecosystem support. Later bullets in this section are profile targets, not v0.1 requirements.
 
-Minimum reference expectations:
+v0.1 minimum reference expectations:
 
-- `T2 MCP` available for public tools and resources
-- cooperative `prepare_write` before product writes
+- `T2 MCP` available for the v0.1 public tool/resource subset needed by the Core Authority Slice, not the full later-profile MCP surface documented in MCP API And Schemas
+- local-only or otherwise owner-approved access posture for the registered project surface
+- cooperative `prepare_write` before product writes and compatible Write Authorization before any product-write Run
 - detective changed-path and artifact validation after runs
 - no default OS sandbox, arbitrary-tool sandboxing, tamper-proof local files, or pre-tool blocking claim
-- run summary and artifact capture sufficient for evidence manifests
-- manual verification bundle or fresh evaluator instructions
-- Manual QA note artifact support
-- connector manifest for generated files, managed blocks, MCP config snippets, and profile freshness
-- manual artifact capture fallback when native capture is unavailable
-- artifact integrity status for captured or manually supplied artifacts
+- run summary and at least one manually supplied or captured artifact/evidence ref sufficient for the minimal authority loop
 - actual block-vs-detect status when guard, freeze, or careful-mode labels are shown
-- conformance smoke covering the common state, MCP availability, surface capability and mismatch handling, generated-file drift, reconcile, artifact integrity, artifact/capture fallback, stale context, evaluator bundle freshness, projection freshness, and security/threat-model categories named in [Operations And Conformance Reference](operations-and-conformance.md#doctor)
+
+Later profile expectations:
+
+| Profile | Connector support target |
+|---|---|
+| v0.2 User-Facing Harness MVP | User-readable status/next cards, Decision Packet display, pending user judgment routing, evidence/close-readiness summaries, final-acceptance separation, and residual-risk visibility when relevant. |
+| v0.3 Agency Assurance Pack | Evidence Manifest support, manual verification bundle or fresh evaluator instructions, Manual QA note/artifact support, artifact integrity status for captured or manually supplied artifacts, and assurance/QA/waiver displays. |
+| v0.4 Operations & Handoff Pack | Connector manifest for generated files, managed blocks, MCP config snippets, and profile freshness; projection freshness and reconcile flow; operator smoke for MCP availability, surface capability mismatch, generated-file drift, artifact integrity, artifact/capture fallback, stale context, evaluator bundle freshness, projection freshness, and security/threat-model categories named in [Operations And Conformance Reference](operations-and-conformance.md#doctor). |
 
 Reference surface behavior details and surface-specific setup belong in [Surface Cookbook](surface-cookbook.md) only when they name a concrete surface.
 
 ## Connector Conformance Overview
 
-Connector conformance should prove that a profile can uphold the common contract at its declared capability tier.
+Connector conformance should prove that a profile can uphold the common contract at its declared capability tier. The scenarios below are an aggregate profile map, not a single v0.1 checklist.
 
-Overview scenarios:
+Core Authority Slice connector checks:
 
 - status with and without an active Task
 - compact current-position status shown before significant work resumes when required by the Use procedure; persisted Journey Card output is a later/diagnostic profile
-- intake classification into `advisor`, `direct`, or `work`, with user-facing display rendered as read/advice work, small change, or tracked work when shown to users
-- work shaping with shared design and decisions
-- Change Unit scope and vertical/horizontal exception handling
-- one blocking question with recommendation and uncertainty when available
-- Decision Packet shown instead of broad approval for blocking user-owned judgment
-- Autonomy Boundary breach stops or routes to Decision Packet
-- AFK work remains covered by active Change Unit scope, Autonomy Boundary latitude, any granted sensitive-action Approval that applies, and compatible `prepare_write` / Write Authorization before actual product writes, with stop wording matched to the proven guarantee level
-- public commitments route to Decision Packet or another existing owner path when they require user-owned product or material technical judgment
+- basic Change Unit scope for the selected path/tool/command, without full vertical/horizontal exception policy
+- Autonomy Boundary breach stops or reports a structured blocker; Decision Packet routing is later-profile unless that profile is enabled
 - `prepare_write` allowed and blocked paths
 - Write Authorization created for allowed writes and exposed through Write Authority Summary
 - write-capable `record_run` consumes a compatible Write Authorization
+- `record_run` with a minimal artifact/evidence ref
+- local-only MCP default, with off-profile remote or shared exposure held, failed, or reported as capability-insufficient
+- MCP unavailable product-write hold
+- status recommendations, and `next` recommendations when `harness.next` is implemented, remain read-only guidance unless the recommended action follows the existing Core mutation path
+- if a connected v0.1 surface also exposes Role Lens or recommended-playbook output, that output is read-only guidance and does not become a v0.1 requirement
+
+Later profile scenarios:
+
+- intake classification into `advisor`, `direct`, or `work`, with user-facing display rendered as read/advice work, small change, or tracked work when shown to users
+- work shaping with shared design and decisions
+- full Change Unit vertical/horizontal exception handling
+- one blocking question with recommendation and uncertainty when available
+- Decision Packet shown instead of broad approval for blocking user-owned judgment
+- public commitments route to Decision Packet or another existing owner path when they require user-owned product or material technical judgment
+- AFK work remains covered by active Change Unit scope, Autonomy Boundary latitude, any granted sensitive-action Approval that applies, and compatible `prepare_write` / Write Authorization before actual product writes, with stop wording matched to the proven guarantee level
 - sensitive-action Approval request, granted, denied, and expired paths
 - `record_run` with artifacts and evidence update
 - `DIRECT-RESULT` projection
@@ -510,10 +522,7 @@ Overview scenarios:
 - profile refresh after version, MCP config, hook, permission, workspace policy, generated-file, conformance-result, capture-method, QA-capture-method, redaction-policy, or artifact-retention changes
 - capability fallback when a required tier is missing
 - surface capability mismatch holds unsafe writes and reports the reduced guarantee
-- local-only MCP default, with off-profile remote or shared exposure held, failed, or reported as capability-insufficient
-- MCP unavailable product-write hold
 - stale PRDs, stale chat memory, and other pull-only context do not authorize writes, satisfy gates, accept results, or close tasks until reconciled through owner paths
 - artifact integrity mismatch keeps dependent evidence, verification, export, or close-readiness claims stale, blocked, or insufficient
-- status/next recommendations and Role Lens output remain read-only guidance unless the recommended action follows the existing Core mutation path
 
 Exact fixture format is owned by [Conformance Fixtures Reference](conformance-fixtures.md), and operational commands are owned by [Operations And Conformance Reference](operations-and-conformance.md).

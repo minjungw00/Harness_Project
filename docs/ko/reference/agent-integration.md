@@ -378,7 +378,7 @@ Context profile은 context discipline이지 새 schema나 gate가 아닙니다. 
 
 Compact status card는 "현재 어디이고 다음은 무엇인가?"를 위해 envelope를 렌더링합니다. Judgment-context는 별도입니다. Judgment-context는 사용자 판단이 필요할 때만 사용하며, decision question, decision profile, profile에 맞는 options 또는 chosen outcome, relevant refs, 그리고 profile이 요구할 때 full-profile recommendation, uncertainty, deferral effect를 포함하되 전체 evidence나 artifact body를 항상 주입되는 맥락으로 만들지 않습니다.
 
-Status, next-action, recommendation, recommended-playbook output은 read-only guidance입니다. `prepare_write`, Decision Packet, Change Unit update, evidence collection, verification, QA, reconcile, close attempt를 추천할 수는 있지만, 그 추천 자체가 state를 mutate하거나 gate를 충족하지는 않습니다. 추천된 action이 기존 MCP/Core mutation path를 거친 뒤에만 state effect가 생깁니다.
+Status, next-action, recommendation, recommended-playbook output은 read-only guidance입니다. `prepare_write`, Decision Packet, Change Unit update, evidence collection, verification, QA, reconcile, close attempt를 추천할 수는 있지만, 그 output 자체가 state를 mutate하거나, gate를 충족하거나, write를 허가하거나, evidence를 만들거나, verification을 수행하거나, 수동 QA를 기록하거나, QA 또는 verification을 면제하거나, 작업 수락을 기록하거나, 잔여 위험 수용을 기록하거나, Task를 닫거나, assurance를 올리면 안 됩니다. 추천된 action이 기존 MCP/Core mutation path를 거친 뒤에만 state effect가 생깁니다.
 
 Evaluator는 더 좁은 verification bundle을 받아야 합니다. 여기에는 수용 기준, changed file, approval scope, relevant Decision Packet, residual risk summary, Autonomy Boundary, deferred decision, codebase stewardship ref, evidence manifest ref, required TDD trace ref, 수동 QA requirement, artifact ref, freshness state, forbidden pattern이 포함됩니다.
 
@@ -431,7 +431,7 @@ Role Lens output은 다음 항목을 표시하거나 경로로 추천할 수 있
 - release handoff 보고서 input
 - recommended next playbook
 
-이 항목들은 기존 Core/MCP state-changing path가 실제 동작을 기록하기 전까지 display 및 routing output일 뿐입니다. Role Lens output은 status/next recommendation output과 마찬가지로 schema나 기준 record를 도입하거나, 그 자체로 기준 상태를 변경하거나, write를 허가하거나, Approval을 부여하거나, Decision Packet을 충족하거나, QA 또는 verification을 면제하거나, 잔여 위험을 받아들이거나, 결과를 수락하거나, Task를 닫거나, assurance를 올리면 안 됩니다. Lens가 상태 변경이 필요한 일을 찾아내면 접점은 normal MCP tool과 Core path로 라우팅합니다.
+이 항목들은 기존 Core/MCP state-changing path가 실제 동작을 기록하기 전까지 display 및 routing output일 뿐입니다. Role Lens output은 status/next recommendation output과 마찬가지로 schema나 기준 record를 도입하거나, 그 자체로 기준 상태를 변경하거나, gate를 충족하거나, write를 허가하거나, Approval을 부여하거나, Decision Packet을 충족하거나, evidence를 만들거나, verification을 수행하거나, 수동 QA를 기록하거나, QA 또는 verification을 면제하거나, 작업 수락을 기록하거나, 잔여 위험 수용을 기록하거나, Task를 닫거나, assurance를 올리면 안 됩니다. Lens가 상태 변경이 필요한 일을 찾아내면 접점은 normal MCP tool과 Core path로 라우팅합니다.
 
 Two-stage review display는 두 stage가 분명히 분리되어 보이게 해야 합니다.
 
@@ -452,44 +452,56 @@ Surface는 scope expansion, Autonomy Boundary breach, Approval 없는 새 sensit
 
 ## 기준 접점 계약
 
-코어 권한 조각(v0.1 Core Authority Slice)은 local project registration 하나와 Core 권한 경로를 실행하는 데 필요한 reference-surface support만 사용합니다. 이 경로는 넓은 ecosystem 지원이 아니라 kernel을 증명해야 합니다.
+코어 권한 조각(v0.1 Core Authority Slice)은 local project registration 하나와 Core 권한 경로를 실행하는 데 필요한 reference-surface support만 사용합니다. 이 경로는 넓은 ecosystem 지원이 아니라 kernel을 증명해야 합니다. 이 section의 later bullet은 profile target이지 v0.1 requirement가 아닙니다.
 
-Minimum reference expectations:
+v0.1 minimum reference expectations:
 
-- public tool과 resource에 `T2 MCP` 사용 가능
-- product write 전 cooperative `prepare_write`
+- v0.1 Core Authority Slice에 필요한 public tool/resource 하위 집합에 `T2 MCP` 사용 가능. 전체 later-profile MCP surface가 v0.1 필수라는 뜻이 아닙니다.
+- registered project surface에 대한 local-only 또는 owner-approved access posture
+- product write 전 cooperative `prepare_write`, 그리고 product-write Run 전 compatible Write Authorization
 - run 이후 detective changed-path와 artifact validation
 - 기본 OS sandbox 격리, 임의 도구 sandbox 격리, 변조 불가능한 로컬 파일, 도구 실행 전 차단을 주장하지 않음
-- evidence manifest에 충분한 run summary와 artifact capture
-- manual verification bundle 또는 fresh evaluator instruction
-- 수동 QA note artifact support
-- generated file, managed block, MCP config snippet, profile freshness용 connector manifest
-- native capture가 없을 때 manual artifact capture fallback
-- captured 또는 manually supplied artifact의 artifact integrity status
+- minimal authority loop에 충분한 run summary와 manually supplied 또는 captured artifact/evidence ref 하나
 - guard, freeze, careful-mode label이 표시될 때 실제 차단 가능 범위와 사후 감지 범위 표시
-- [운영과 Conformance 참조](operations-and-conformance.md#doctor)가 이름 붙인 common state, MCP availability, surface capability와 mismatch handling, generated-file drift, reconcile, artifact integrity, artifact/capture fallback, stale context, evaluator bundle freshness, projection freshness, security/threat-model category를 다루는 conformance smoke
+
+Later profile expectations:
+
+| Profile | Connector support target |
+|---|---|
+| v0.2 User-Facing Harness MVP | User-readable status/next card, Decision Packet display, pending user judgment routing, evidence/close-readiness summary, final-acceptance separation, relevant한 residual-risk visibility. |
+| v0.3 Agency Assurance Pack | Evidence Manifest support, manual verification bundle 또는 fresh evaluator instruction, 수동 QA note/artifact support, captured 또는 manually supplied artifact의 artifact integrity status, assurance/QA/waiver display. |
+| v0.4 Operations & Handoff Pack | Generated file, managed block, MCP config snippet, profile freshness용 connector manifest; projection freshness와 reconcile flow; [운영과 Conformance 참조](operations-and-conformance.md#doctor)가 이름 붙인 MCP availability, surface capability mismatch, generated-file drift, artifact integrity, artifact/capture fallback, stale context, evaluator bundle freshness, projection freshness, security/threat-model category에 대한 operator smoke. |
 
 Reference surface 동작 세부사항과 접점별 설정은 concrete surface를 이름으로 부를 때만 [Surface Cookbook](surface-cookbook.md)에 둡니다.
 
 ## Connector Conformance 개요
 
-Connector conformance는 profile이 선언한 capability tier에서 공통 contract를 지킬 수 있음을 입증해야 합니다.
+Connector conformance는 profile이 선언한 capability tier에서 공통 contract를 지킬 수 있음을 입증해야 합니다. 아래 scenarios는 aggregate profile map이지 단일 v0.1 checklist가 아닙니다.
 
-Overview scenario:
+Core Authority Slice connector checks:
 
 - active Task가 있을 때와 없을 때의 status
 - Use procedure가 요구할 때 significant work 재개 전 간결한 현재 위치 상태 표시. Persisted Journey Card output은 later/diagnostic profile입니다.
-- intake를 `advisor`, `direct`, `work`로 분류하고, 사용자에게 보일 때는 읽기/조언, 작은 변경, 추적되는 작업으로 표시
-- shared design과 decision을 포함한 work shaping
-- Change Unit scope와 vertical/horizontal exception handling
-- 가능할 때 recommendation과 uncertainty가 있는 one blocking question
-- 차단하는 사용자 소유 판단에 broad approval 대신 Decision Packet 표시
-- Autonomy Boundary breach가 stop하거나 Decision Packet으로 route
-- AFK work가 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive-action Approval, 실제 product write 전 compatible `prepare_write` / Write Authorization 안에 머무르고, stop wording이 입증된 guarantee level과 맞음
-- public commitment가 사용자 소유 제품 판단 또는 기술 구조 판단을 필요로 하면 Decision Packet 또는 다른 기존 owner path로 route
+- selected path/tool/command에 대한 basic Change Unit scope. Full vertical/horizontal exception policy는 제외합니다.
+- Autonomy Boundary breach가 stop하거나 structured blocker를 보고합니다. Decision Packet routing은 해당 profile이 enabled될 때의 later-profile입니다.
 - `prepare_write` allowed/blocked path
 - allowed write에 Write Authorization 생성 및 Write Authority Summary 표시
 - write-capable `record_run`이 compatible Write Authorization consume
+- minimal artifact/evidence ref가 있는 `record_run`
+- local-only MCP 기본값과, profile 밖 remote/shared 노출이 held, failed, 또는 capability-insufficient로 보고되는 동작
+- MCP unavailable product-write 보류
+- status recommendation과, `harness.next`가 구현된 경우의 `next` recommendation이 추천된 action이 기존 Core mutation path를 따르기 전까지 read-only guidance로 남는 동작
+- connected v0.1 surface가 Role Lens 또는 recommended-playbook output을 함께 노출한다면, 그 output은 read-only 안내일 뿐이며 v0.1 필수 기능이 아님
+
+Later profile scenarios:
+
+- intake를 `advisor`, `direct`, `work`로 분류하고, 사용자에게 보일 때는 읽기/조언, 작은 변경, 추적되는 작업으로 표시
+- shared design과 decision을 포함한 work shaping
+- full Change Unit vertical/horizontal exception handling
+- 가능할 때 recommendation과 uncertainty가 있는 one blocking question
+- 차단하는 사용자 소유 판단에 broad approval 대신 Decision Packet 표시
+- public commitment가 사용자 소유 제품 판단 또는 기술 구조 판단을 필요로 하면 Decision Packet 또는 다른 기존 owner path로 route
+- AFK work가 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive-action Approval, 실제 product write 전 compatible `prepare_write` / Write Authorization 안에 머무르고, stop wording이 입증된 guarantee level과 맞음
 - sensitive-action Approval request, granted, denied, expired path
 - artifact와 evidence update를 포함한 `record_run`
 - `DIRECT-RESULT` projection
@@ -510,10 +522,7 @@ Overview scenario:
 - version, MCP config, hook, permission, workspace policy, generated-file, conformance-result, capture-method, QA-capture-method, redaction-policy, artifact-retention 변경 이후 profile refresh
 - required tier가 없을 때 capability fallback
 - surface capability mismatch가 unsafe write를 보류하고 낮아진 guarantee를 보고
-- local-only MCP 기본값과, profile 밖 remote/shared 노출이 held, failed, 또는 capability-insufficient로 보고되는 동작
-- MCP unavailable product-write 보류
 - stale PRD, stale chat memory, 기타 pull-only context가 owner path로 reconcile되기 전에는 write를 허가하거나, gate를 충족하거나, 결과를 수락하거나, Task를 close하지 않는 동작
 - artifact integrity mismatch가 dependent evidence, verification, export, close-readiness claim을 stale, blocked, insufficient 상태로 유지
-- status/next recommendation과 Role Lens output이 추천된 action이 기존 Core mutation path를 따르기 전까지 read-only guidance로 남는 동작
 
 정확한 fixture 형식은 [Conformance Fixtures 참조](conformance-fixtures.md)가 담당하고, operator command 의미는 [운영과 Conformance 참조](operations-and-conformance.md)가 담당합니다.

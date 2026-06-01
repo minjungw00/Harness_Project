@@ -24,6 +24,8 @@ The first slice should show that Harness state is local, durable, and authoritat
 
 Use [Kernel Reference](../reference/kernel.md#prepare_write) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#public-tools) for the exact contracts.
 
+For API staging, read the MCP reference through its v0.1 surface: minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, one owner-valid Task/scope setup path, and optional minimal `harness.next` or narrow `harness.close_task` blocker smoke. Schema-required fields in later profiles remain exact when those profiles are implemented, but they are not first-slice exit criteria.
+
 ## Goal
 
 Plan v0.1 Core Authority Slice: the smallest Harness path that can prove local authority over one Task.

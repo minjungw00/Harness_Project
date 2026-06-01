@@ -58,6 +58,17 @@ Conformance fixture profiles follow the same stage names: Core Authority Slice f
 
 These fixture profile names remain the conformance labels. The hardened local reference target is only the aggregate target reached by v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack, not a profile name or separate delivery stage.
 
+### API surface by stage
+
+The MCP API reference defines exact schemas for every method it documents, but staged delivery decides when a method/profile must be implemented. A schema-required field is required when that method/profile is active; it is not automatically stage-required for v0.1.
+
+| Stage | Stage-required API surface | Later-profile fields to keep out of the stage exit |
+|---|---|---|
+| v0.1 Core Authority Slice | Minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, one owner-valid Task/scope setup path, and optionally minimal `harness.next` or a narrow `harness.close_task` blocker smoke. | Full natural-language intake, Decision Packet storage, Evidence Manifest, Manual QA, Eval, final acceptance semantics, residual-risk acceptance, projection rendering, reconcile, export/recover, broad operations. |
+| v0.2 User-Facing Harness MVP | Fuller `harness.status`/`harness.next`, user-facing `harness.intake`, `harness.request_user_decision`, `harness.record_user_decision`, evidence summaries through `harness.record_run`, and close-readiness/blockers through `harness.close_task`. | Detached verification independence, full Manual QA matrix, Approval hardening, full residual-risk accepted close, stewardship validators, export/recover, broad operations. |
+| v0.3 Agency Assurance Pack | `harness.launch_verify`, `harness.record_eval`, `harness.record_manual_qa`, assurance/waiver/approval/risk profiles of Decision Packet methods, evidence/feedback/TDD profiles of `harness.record_run`, and ValidatorResult-emitting assurance paths. | Operator recover/export completeness, broad projection/reconcile operations, release handoff. |
+| v0.4 Operations & Handoff Pack | Projection freshness in API responses, reconcile decision profile, operator readiness/recover/export/artifact-integrity/conformance surfaces owned by Operations. | Dashboard, hosted workflow UI, broad connectors, automation, team workflow, orchestration unless promoted later. |
+
 ### Boundary after staged delivery: v1+ Expansion
 
 v1+ Expansion is roadmap scope, not a Build-owned staged delivery phase. Dashboard, hosted workflow UI, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, broader connectors, metrics, team workflow, orchestration, and similar candidates stay outside v0.1 through v0.4 unless owner docs explicitly promote and prove a future item.

@@ -359,7 +359,7 @@ The `EXPORT` template is an optional projection output. It does not introduce an
 
 Persisted `JOURNEY-CARD` Markdown, Journey Spine output, Run Summary, TDD Trace, Module Map, Interface Contract, export bundles, and detailed Evaluation views are not mandatory early scope. Current-position context for status, next, and resume can be satisfied by compact user-readable or agent compact context outputs.
 
-Required Decision Packet visibility is provided through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays. That requirement is for the Decision Packet user decision request display shape, not the standalone `DEC` `ProjectionKind`. Standalone `DEC` Markdown is optional unless the standalone Decision Packet projection feature is enabled.
+Decision Packet visibility required by the active stage/profile is provided through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays. That requirement is for the Decision Packet user decision request display shape, not the standalone `DEC` `ProjectionKind`. Standalone `DEC` Markdown is optional unless the standalone Decision Packet projection feature is enabled.
 
 Decision Packet record IDs use `DEC-*`. `DEC` as a `projection_kind` is only the projection kind label; when a standalone projection needs its own identity, use a separate `projection_id` such as `DEC-PROJ-0001`.
 

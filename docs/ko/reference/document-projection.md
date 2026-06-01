@@ -359,7 +359,7 @@ Template catalog는 초기 구현 set보다 의도적으로 넓습니다. 템플
 
 Persisted `JOURNEY-CARD` Markdown, Journey Spine output, Run Summary, TDD Trace, Module Map, Interface Contract, export bundle, detailed Evaluation view는 초기 필수 범위가 아닙니다. Status, next, resume의 현재 위치 맥락은 사용자 읽기용 간결한 산출물 또는 에이전트용 간결한 현재 맥락으로 충족할 수 있습니다.
 
-Required Decision Packet visibility는 status/next responses, judgment-context resources, decision-packet resources, 최소 `TASK` 또는 card display를 통해 제공됩니다. 이 요구사항은 standalone `DEC` `ProjectionKind`가 아니라 Decision Packet 사용자 결정 요청 display shape에 대한 것입니다. Standalone `DEC` Markdown은 standalone Decision Packet projection 기능이 켜진 경우에만 사용합니다.
+Active stage/profile이 요구하는 Decision Packet visibility는 status/next responses, judgment-context resources, decision-packet resources, 최소 `TASK` 또는 card display를 통해 제공됩니다. 이 요구사항은 standalone `DEC` `ProjectionKind`가 아니라 Decision Packet 사용자 결정 요청 display shape에 대한 것입니다. Standalone `DEC` Markdown은 standalone Decision Packet projection 기능이 켜진 경우에만 사용합니다.
 
 Decision Packet record ID는 `DEC-*`를 사용합니다. `projection_kind`의 `DEC`는 projection kind label일 뿐입니다. Standalone projection에 별도 identity가 필요하면 `DEC-PROJ-0001` 같은 별도 `projection_id`를 사용합니다.
 

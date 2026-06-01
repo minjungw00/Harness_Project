@@ -107,7 +107,13 @@ The v0.1 Core Authority Slice uses only the narrow subset of this flow needed to
 
 ### Stage requirement boundary
 
-Fields marked required in a request or response schema are required when that tool, record, or profile is implemented and used. They are not all v0.1 Core Authority Slice exit criteria. Build owns the staged delivery plan; use [Build: MVP Plan](../build/mvp-plan.md#contract-field-staging) and [First Runnable Slice](../build/first-runnable-slice.md) for stage scope.
+Read `required` through three separate meanings:
+
+- **Schema-required**: required by this API schema when the named method, schema object, or profile is implemented and emits or accepts that payload.
+- **Stage-required**: required to exit a named delivery stage, such as v0.1 Core Authority Slice or v0.2 User-Facing Harness MVP.
+- **Reference target**: documented target behavior for a reference profile; it may be later-profile, optional, diagnostic, or future until the staged plan promotes it.
+
+Fields marked required in a request or response schema are schema-required when that tool, record, or profile is implemented and used. They are not all v0.1 Core Authority Slice exit criteria. Build owns stage-required delivery; use [Build: MVP Plan](../build/mvp-plan.md#contract-field-staging) and [First Runnable Slice](../build/first-runnable-slice.md) for stage scope. When this page uses "required" without another qualifier inside a schema block or branch rule, it means schema-required, not stage-required.
 
 This reference owns valid API shape once a tool or profile is in scope. For example, if any stage creates a Decision Packet, the Decision Packet fields required here still apply; a stage may defer full user-facing quality, but it cannot emit an invalid public shape.
 
@@ -268,7 +274,7 @@ Event stability for fixture assertions is owned by the [Kernel Stable Event Cata
 
 Support class labels are not enum values. v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. v0.2 User-Facing Harness MVP provides enough derived output for users to understand scope, user decisions, evidence, close readiness, final acceptance, and residual risk without requiring broad template polish. Future/diagnostic means later-profile or diagnostic scope, not automatically v1+ only; v0.3 Agency Assurance Pack, v0.4 Operations & Handoff Pack, or other owner-promoted profiles may enable those projections.
 
-ProjectionKind extensibility does not make projections canonical state. Every projection job still renders a derived view from owner records and artifact refs. No projection support class creates state, evidence, QA, verification, final acceptance, residual-risk acceptance, close authority, or Write Authorization. `DEC` is valid only for standalone Decision Packet Markdown when that feature is enabled. Absence of a standalone `DEC` job must not reduce required Decision Packet visibility, which is provided through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays. The user-facing MVP requires the Decision Packet user decision request display shape, not the standalone `DEC` `ProjectionKind`. Persisted `JOURNEY-CARD` Markdown is future/diagnostic; current-position context in `harness.status`, `harness.next`, and significant resume flows can be compact status output.
+ProjectionKind extensibility does not make projections canonical state. Every projection job still renders a derived view from owner records and artifact refs. No projection support class creates state, evidence, QA, verification, final acceptance, residual-risk acceptance, close authority, or Write Authorization. `DEC` is valid only for standalone Decision Packet Markdown when that feature is enabled. Absence of a standalone `DEC` job must not reduce Decision Packet visibility required by the active stage/profile, which is provided through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays. The user-facing MVP requires the Decision Packet user decision request display shape, not the standalone `DEC` `ProjectionKind`. Persisted `JOURNEY-CARD` Markdown is future/diagnostic; current-position context in `harness.status`, `harness.next`, and significant resume flows can be compact status output.
 
 `EXPORT` may include report profiles such as Release Handoff when the export feature is enabled. Such profiles are projection/report surfaces only; they do not create deployment authority, merge authority, production-monitoring authority, final acceptance, residual-risk acceptance, assurance upgrades, or Task close authority.
 
@@ -300,6 +306,19 @@ StateSummary:
     qa_gate: not_required | required | pending | passed | failed | waived
     acceptance_gate: not_required | required | pending | accepted | rejected
 ```
+
+Major schema objects carry stage/profile meaning through their owner sections and the table below. The `introduced_in/profile` labels are documentation metadata, not payload fields and not new schema members.
+
+| Schema object or family | introduced_in/profile | Requiredness meaning |
+|---|---|---|
+| `ToolEnvelope`, `ToolResponseBase`, `ToolError`, `StateSummary`, `EventRef` | v0.1 Core Authority Slice | Common contract shapes. Required fields are schema-required for every emitted or accepted payload that uses the object. |
+| `WriteAuthorizationSummary`, `WriteAuthoritySummary`, `ApprovalScope` | v0.1 core write authority; Approval records in v0.3 Agency Assurance | Write Authorization summary is v0.1 when an allowed write is produced. Approval-specific refs and lifecycle are later-profile unless the Approval profile is enabled. |
+| `ArtifactRef`, `ArtifactInput`, `EvidenceRefs`, `StateRecordRef` | v0.1 minimal artifact/evidence ref; richer owner relations in later profiles | v0.1 needs one registered artifact/evidence ref and compatible owner link. Later owner record kinds are valid only when their storage/API profile exists. |
+| `DecisionPacket`, `DecisionPacketCandidate`, `JudgmentContext`, `AcceptanceVisibilityContext` | v0.2 User-Facing Harness MVP, with full approval/waiver/risk/reconcile profiles in v0.3/v0.4 | Required fields apply when a Decision Packet or candidate is created. v0.1 does not require Decision Packet storage. |
+| `ResidualRiskSummary` and residual-risk refs | v0.2 visibility; v0.3 full residual-risk acceptance semantics | `status=none` may be a summary claim. Accepted risk is state on `residual_risk` refs, not a standalone record kind. |
+| `ValidatorResult` | v0.3 Agency Assurance and v0.4 Operations, except owner-promoted capability/status checks | Required fields apply when a validator result is emitted. Core checks may block without becoming validator IDs. |
+| `ProjectionJobRef`, `ProjectionKind`, projection freshness objects | v0.4 Operations when persisted projection support is enabled; v0.2 may use minimal `TASK`/card output | No `ProjectionKind` is stage-required for v0.1. Projection refs and jobs are derived-view metadata, not authority. |
+| `JourneyCardSummary`, `RecommendedPlaybook`, Role Lens routing fields | v0.2 display guidance or later diagnostic views depending on profile | These are read-only display/routing schemas. They never authorize writes, satisfy gates, accept risk, or close Tasks by themselves. |
 
 ### Sensitive Categories
 
@@ -525,7 +544,7 @@ EndToEndPath:
 
 When a client renders guard, freeze, or careful-mode controls, it uses these existing display shapes rather than adding authority fields. `guarantee_display.level` and `guarantee_display.notes` must describe the actual connected capability and current enforcement path. `blocked_reasons[].message` should name the concrete held or blocked condition, such as scope, MCP availability, sensitive-action Approval, baseline, or capability, and must not rely on a command label like "guard" or "freeze" to imply a stronger guarantee.
 
-`ProjectionKind` values in optional, future, or diagnostic support classes, such as `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, and `INTERFACE-CONTRACT`, are valid projection job kinds only when their projection feature or profile is enabled. Required Decision Packet visibility is provided through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays; this is the Decision Packet user decision request display shape, not the standalone `DEC` `ProjectionKind`. Persisted `JOURNEY-CARD` Markdown is future/diagnostic; current-position context in status, next, and significant resume flows can be compact status output. Full projection template text lives in [Template Reference](templates/README.md), not this API schema file.
+`ProjectionKind` values in optional, future, or diagnostic support classes, such as `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, and `INTERFACE-CONTRACT`, are valid projection job kinds only when their projection feature or profile is enabled. Decision Packet visibility required by the active stage/profile is provided through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays; this is the Decision Packet user decision request display shape, not the standalone `DEC` `ProjectionKind`. Persisted `JOURNEY-CARD` Markdown is future/diagnostic; current-position context in status, next, and significant resume flows can be compact status output. Full projection template text lives in [Template Reference](templates/README.md), not this API schema file.
 
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, Recommended Playbook, acceptance visibility, and residual-risk summaries are public MCP schemas. They describe API payloads only; owner docs define the canonical kernel records. `RecommendedPlaybook` is the display-only exception in this list: it has no canonical kernel record, DDL table, task event, or projection job of its own.
 
@@ -930,6 +949,56 @@ A stale `expected_state_version` is reported as concurrency drift, not as proof 
 
 ### Public Tool Schema Map
 
+Public methods are grouped by staged surface. The same method may appear in more than one stage when a later profile expands its payload meaning; that does not make the later profile stage-required earlier. The tool sections below remain the exact request/response contract once a method/profile is in scope.
+
+#### v0.1 Core Authority Slice surface
+
+| Method or capability | Stage requirement | Scope boundary |
+|---|---|---|
+| `harness.status` | Stage-required minimal status/blocker read. | Returns current Core state, write-authority summary, and structured blockers with future-profile values represented as `null`, empty arrays, `unknown`, or `not_required` where the schema allows. It does not require projection rendering. |
+| `harness.prepare_write` | Stage-required product-write authorization check. | Produces one allowed/blocked path and one durable single-use Write Authorization when allowed. Approval-shaped Decision Packet and Approval record lifecycle remain later-profile. |
+| `harness.record_run` | Stage-required Run recording and Write Authorization consumption. | Records one compatible implementation/direct Run, consumes one authorization once, and registers one artifact/evidence ref through the owner path. Full Evidence Manifest, TDD, Eval, and Manual QA updates are later-profile. |
+| `harness.intake` or owner-valid setup path | Stage-required setup capability; method optional for v0.1. | v0.1 needs a local project, Task, and scoped work boundary. If this public method is used, use only the minimal setup shape; full natural-language intake/discovery is v0.2. |
+| `harness.next` | Optional v0.1 read. | If implemented for the smoke path, returns only the next minimal authority-loop action or smallest unblocker. Verification, QA, acceptance, and reconcile action kinds are later-profile. |
+| `harness.close_task` | Optional narrow blocker/status smoke only. | May be used when it is the simplest way to show a structured blocker, but v0.1 does not prove final acceptance, residual-risk acceptance, or full close semantics. |
+
+#### v0.2 User-Facing Harness MVP surface
+
+| Method or capability | Stage requirement | Scope boundary |
+|---|---|---|
+| `harness.status` and `harness.next` | Stage-required fuller user-facing status/next display. | Shows ordinary-language current position, pending user decisions, evidence summary, close readiness, final-acceptance need/status, residual-risk visibility when relevant, and smallest unblocker. |
+| `harness.intake` | Stage-required user-facing intake/resume path. | Classifies ordinary user work into schema mode while keeping scope, non-goals, acceptance criteria, and user-owned judgment boundaries visible. |
+| `harness.request_user_decision` and `harness.record_user_decision` | Stage-required for user-owned decisions and final acceptance when they block progress or close. | Decision Packet fields are schema-required when packets/candidates are created. Approval, waiver, full residual-risk acceptance, and reconcile profiles enter when their owner profiles are enabled. |
+| `harness.record_run` | Stage-required evidence/artifact summary path. | Evidence is visible enough for the MVP path; full Evidence Manifest projection and assurance records remain later-profile unless explicitly enabled. |
+| `harness.close_task` | Stage-required close-readiness and blocker response. | Close remains Core-owned. Structured blockers distinguish evidence, user decision, final acceptance, and residual-risk visibility. |
+| Minimal `TASK` projection or compact status/card output | Stage-required display capability, not necessarily a persisted projection job. | Persisted Markdown rendering is optional when status/next/card output already satisfies the user-readable MVP display. |
+
+#### v0.3 Agency Assurance surface
+
+| Method or capability | Stage requirement | Scope boundary |
+|---|---|---|
+| `harness.launch_verify` and `harness.record_eval` | Stage-required when detached verification profile is enabled. | Launch creates a detached candidate or bundle; only a recorded qualifying Eval can update verification/assurance. |
+| `harness.record_manual_qa` | Stage-required when Manual QA profile is enabled. | Human QA judgment and valid waiver paths remain distinct from screenshots, browser captures, final acceptance, and verification. |
+| `harness.request_user_decision` and `harness.record_user_decision` assurance profiles | Stage-required for approval-shaped decisions, QA/verification waivers, full residual-risk acceptance, and final acceptance separation when those profiles are enabled. | Approval is not Write Authorization; waivers and accepted risks do not create detached verification or generic acceptance. |
+| `harness.record_run` assurance payloads | Stage-required when evidence manifest, feedback-loop, or TDD profiles are enabled. | Rich evidence, feedback-loop, and TDD records are schema-required only for those enabled profiles. |
+| `ValidatorResult` emitting paths | Stage-required for agency assurance validators that the active profile enables. | Core checks can still block separately; only listed stable validator IDs are validator results. |
+
+#### v0.4 Operations surface
+
+| Method or capability | Stage requirement | Scope boundary |
+|---|---|---|
+| Projection freshness in `harness.status`, `harness.next`, `harness.close_task`, and response `projection_jobs` | Stage-required only when Operations projection support is enabled. | Projection jobs and refs are derived views over Core state. They do not create evidence, acceptance, risk acceptance, close authority, or write authority. |
+| Reconcile profile in `harness.request_user_decision` / `harness.record_user_decision` | Stage-required only when reconcile storage/operations support is enabled. | Reconcile candidates do not become state until the existing Decision Packet/owner path commits an outcome. |
+| Operator diagnostics, recover/export, artifact integrity, conformance commands | v0.4 Operations owner surface, not public MCP tools in this document today. | Exact command semantics live in [Operations And Conformance Reference](operations-and-conformance.md). If future MCP tools are promoted for these capabilities, add them to this stage with matching storage profile support. |
+
+#### v1+ / future candidates
+
+Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration, and similar candidates have no current public MCP method here unless an owner document promotes them. They may read or display current state, refs, artifacts, or projections after promotion, but they must not become authority by appearing in a UI or derived response.
+
+#### Method index
+
+There is no standalone `harness.record_evidence` method in the current public MCP tool set. Evidence enters through `harness.record_run` artifact/evidence updates and, in later profiles, through `harness.launch_verify`, `harness.record_eval`, and `harness.record_manual_qa` owner records and artifact refs. Projection refresh, recover/export, artifact integrity checks, and conformance execution are likewise not current public MCP tool sections here; Operations owns those command surfaces until an owner document promotes a public MCP method.
+
 | Tool | Use this section for... |
 |---|---|
 | [`harness.status`](#harnessstatus) | status, gates, projection freshness when in scope, write authority, guarantees, residual risk, and recommended playbooks |
@@ -947,6 +1016,8 @@ A stale `expected_state_version` is reported as concurrency drift, not as proof 
 ### `harness.status`
 
 Purpose: return project, surface, active Task, compact current-position summary, gate, guarantee, projection freshness when in scope, active Decision Packet, Autonomy Boundary, Write Authority Summary, residual-risk, and pending-decision status.
+
+Stage/profile: v0.1 uses the minimal status/blocker profile; v0.2 adds the fuller user-facing status/card profile; v0.3 adds assurance summaries when verification, QA, evidence, residual-risk, or validator profiles are enabled; v0.4 adds projection/reconcile/operations freshness where Operations storage exists. The response schema stays exact, but future-profile fields can carry `null`, empty arrays, `unknown`, or `not_required` values rather than forcing those capabilities into v0.1.
 
 v0.1 Core Authority Slice may use this as the minimal status/blocker output for the internal authority loop. Future-profile fields can be `null`, empty, `unknown`, or `not_required` according to their schema meaning when their capability is not in v0.1 scope.
 
@@ -995,6 +1066,14 @@ StatusResponse:
     notes: string[]
 ```
 
+Status response profiles:
+
+| Profile | Profile-scoped response meaning |
+|---|---|
+| v0.1 minimal | Return the active Task/status when present, a compact `status_card`, current state version, write-authority summary when requested and available, guarantee display, and any primary structured blocker. Future-profile arrays are empty and future-profile objects are `null` or `unknown` according to the schema. |
+| v0.2 user-facing | Add pending-decision visibility, residual-risk summary when relevant, close-readiness display, final-acceptance need/status, and user-readable evidence/status summaries. |
+| v0.3/v0.4 assurance and operations | Add verification, Manual QA, validator, projection freshness, reconcile, and diagnostic/export-related refs only when those profiles and their storage are enabled. |
+
 State transition summary: no state transition.
 
 EventRef values that may be returned: none.
@@ -1022,6 +1101,8 @@ Idempotency behavior: read-only; repeated requests do not mutate state.
 ### `harness.intake`
 
 Purpose: create or resume a Task from user intent and classify it as schema mode `advisor`, `direct`, or `work`, while user-facing displays may describe the result as read/advice work, small change, or tracked work.
+
+Stage/profile: v0.1 may use this method only as a minimal owner-valid Task/scope setup path if the implementation chooses public API setup. Full natural-language intake, discovery quality, procedural budget display, and ordinary-user resume behavior are v0.2 User-Facing Harness MVP scope.
 
 Allowed actor: `user`, `lead_agent`, `operator`.
 
@@ -1074,6 +1155,8 @@ Idempotency behavior: same key returns the same Task/resume decision; different 
 
 Purpose: return the next safe action, instruction bundle, and pending decisions for the current Task.
 
+Stage/profile: optional v0.1 minimal next-action read; v0.2 fuller user-facing next action and smallest-unblocker display; v0.3/v0.4 assurance, QA, acceptance, verification, and reconcile action kinds only when their owner profiles are enabled.
+
 User-facing meaning: show what should happen next. `next_action.summary` should be ordinary action language such as ask the user, prepare this write, record evidence, run verification, record Manual QA, request final acceptance, refresh or reconcile, or close. `next_action.required_tool` is a caller hint, not a command the user must see unless power-user detail is useful.
 
 Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
@@ -1108,6 +1191,14 @@ NextResponse:
   judgment_context: JudgmentContext | null
   autonomy_boundary: AutonomyBoundarySummary | null
 ```
+
+Next response profiles:
+
+| Profile | Profile-scoped response meaning |
+|---|---|
+| v0.1 minimal | If implemented, return only the next authority-loop action or smallest blocker: prepare the scoped write, record the authorized Run, report missing scope/write authority, or report missing artifact/evidence support. `recommended_playbooks` and future-profile refs may be empty; `judgment_context` and `autonomy_boundary` may be `null` unless owner state exists. |
+| v0.2 user-facing | Return ordinary-language next action, pending Decision Packet refs, judgment context when a user-owned decision is needed, evidence/close-readiness context, and final-acceptance/residual-risk visibility when relevant. |
+| v0.3/v0.4 assurance and operations | Return verification, Eval, Manual QA, acceptance, reconcile, projection freshness, and operations-oriented next actions only when those profiles are enabled and backed by matching storage. |
 
 For v0.1 Core Authority Slice, `harness.next` is optional. If used, it should return only the next minimal authority-loop action, such as prepare the scoped write, record the authorized Run, report missing scope, or report missing artifact/evidence support. `verification`, `qa`, `acceptance`, and `reconcile` focus values and their action kinds are future-profile behavior.
 
@@ -1153,6 +1244,8 @@ Idempotency behavior: read-only; repeated requests do not mutate state.
 ### `harness.prepare_write`
 
 Purpose: decide whether an intended product write is allowed before the agent writes. This is the only public product-write authorization decision point.
+
+Stage/profile: v0.1 stage-required for the core authority loop. Approval candidates can be returned without creating Approval state; committed Approval records and approval-shaped Decision Packet lifecycle require the later Approval/Agency Assurance profile and matching storage.
 
 User-facing meaning: answer whether this exact product write may happen now. The answer is based on the current active Task, active Change Unit scope, Autonomy Boundary, baseline freshness, sensitive-action Approval, Decision Packet coverage, design policy, and surface capability. If `decision=allowed`, show the allowed operation, scope basis, durable single-use Write Authorization ref or summary, guarantee limit, and any detective/cooperative limitation. If the write is blocked, show the primary reason and smallest unblocker; candidate Approval or Decision Packet payloads are only candidates until committed by their owning tool path.
 
@@ -1269,6 +1362,8 @@ Approval authorizes sensitive categories inside the defined scope. Approval does
 ### `harness.record_run`
 
 Purpose: record shaping, implementation, direct-result, or verification-input run data, including artifacts and evidence updates. For implementation and direct product-write Runs, this tool consumes a compatible Write Authorization; it does not decide write authorization.
+
+Stage/profile: v0.1 stage-required for one implementation/direct Run consuming one Write Authorization and registering one artifact/evidence ref. v0.2 uses the same method for user-readable evidence summaries. Evidence Manifest, feedback-loop, TDD, verification-input, and richer artifact relations are schema-required only when their v0.3+ owner profiles are enabled.
 
 User-facing meaning: say what happened and what changed in evidence, artifacts, or next action. If Core rejects the request before committing a Run, do not claim a Run exists. If Core records a violation or audit Run after an observed product write, label it as audit/recovery context and do not present it as satisfying evidence, detached verification, QA, final acceptance, or close readiness.
 
@@ -1452,6 +1547,8 @@ Idempotency behavior: repeated request returns the same run, artifact records, e
 
 Purpose: create a structured Decision Packet for a user judgment that blocks progress, write, close, residual-risk acceptance, waiver, or reconcile.
 
+Stage/profile: not v0.1 stage-required. v0.2 introduces user-facing Decision Packet prompts when user-owned judgment or final acceptance blocks progress or close. Approval-shaped decisions, QA/verification waivers, full residual-risk acceptance, and reconcile are enabled only when the matching v0.3/v0.4 owner profiles and storage are in scope. Fields such as `decision_profile` and `judgment_domain` are schema-required whenever a packet or candidate is created, not v0.1 requirements.
+
 Allowed actor: `lead_agent`, `evaluator`, `operator`.
 
 Request schema:
@@ -1524,6 +1621,8 @@ Idempotency behavior: repeated request returns the same Decision Packet, related
 ### `harness.record_user_decision`
 
 Purpose: record the user's answer to a pending Decision Packet and optionally record accepted residual risk.
+
+Stage/profile: not v0.1 stage-required. v0.2 records user-owned decisions and final acceptance when those paths are in the MVP scope. Approval grants/denials, waivers, residual-risk acceptance metadata, and reconcile outcomes require their later owner profiles. This method records a user's answer to an existing canonical Decision Packet; it does not create broad approval or write authority.
 
 Allowed actor: `user`, `operator`.
 
@@ -1618,6 +1717,8 @@ Idempotency behavior: repeated decision returns the same Decision Packet resolut
 
 Purpose: create a detached verification run or manual evaluator bundle.
 
+Stage/profile: v0.3 Agency Assurance behavior. It is not required for v0.1 and does not by itself create detached assurance; it creates a candidate/bundle that `harness.record_eval` may later qualify.
+
 Allowed actor: `lead_agent`, `operator`.
 
 Request schema:
@@ -1676,6 +1777,8 @@ Idempotency behavior: repeated request returns the same evaluator run and bundle
 ### `harness.record_eval`
 
 Purpose: record a verification result and update verification gate/assurance when independence is valid.
+
+Stage/profile: v0.3 Agency Assurance behavior. Required fields apply when Eval recording is enabled. Same-session checks, self-check summaries, or a passed command are not detached verification unless this method records a qualifying Eval and Core updates the gate/assurance state.
 
 Allowed actor: `evaluator`, `operator`.
 
@@ -1758,6 +1861,8 @@ Idempotency behavior: repeated request returns the same Eval and assurance decis
 
 Purpose: record an individual human QA outcome and update `qa_gate` when required QA is satisfied, failed, or waived.
 
+Stage/profile: v0.3 Agency Assurance behavior when Manual QA policy/profile is enabled. It is not v0.1 stage-required, and browser captures or notes do not replace the human QA record or valid waiver path.
+
 Allowed actor: `user`, `operator`, `evaluator`.
 
 Request schema:
@@ -1823,6 +1928,8 @@ Idempotency behavior: repeated request returns the same Manual QA record and gat
 ### `harness.close_task`
 
 Purpose: close, cancel, or supersede a Task after Core checks all close-relevant gates. This is the only public completion decision point.
+
+Stage/profile: v0.1 may use only a narrow structured blocker/status smoke if an implementation chooses that path. v0.2 requires user-facing close readiness and blocker display, including final-acceptance separation and residual-risk visibility. v0.3 enables full assurance, QA, waiver, and accepted-risk close semantics. v0.4 may add projection/report freshness blockers for enabled Operations profiles.
 
 Allowed actor: `user`, `lead_agent`, `operator`.
 

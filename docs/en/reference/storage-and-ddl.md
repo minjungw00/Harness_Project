@@ -280,6 +280,16 @@ Schema profiles are additive. A later profile may reference earlier tables, but 
 | Operations schema | v0.4 Operations & Handoff Pack | connector manifest drift, projection outbox, reconcile workflow, persistent locks, operator readiness | v0.1 authority proof and user-facing MVP value | operational support over Core state; projections stay derived | projection support and diagnostic/operational state |
 | Future / diagnostic schema | v1+ or promoted diagnostic profile | Journey reconstruction and richer stewardship/context diagnostics when promoted | v0.1-v0.4 exit criteria unless owner docs promote them | supplemental records; not projection-as-authority | future-only or diagnostic state |
 
+API/storage alignment is stage-gated. A public method can expose schema fields for later profiles without making the backing storage stage-required earlier. If a method commits records from a profile, that profile's storage must be installed in the same or an earlier stage:
+
+| API surface | Earliest storage profile needed for committed state | Storage boundary |
+|---|---|---|
+| v0.1 `harness.status`, `harness.prepare_write`, `harness.record_run`, minimal artifact/evidence refs | Core Authority Slice schema | No Decision Packet, Evidence Manifest, Manual QA, Eval, projection job, reconcile, validator-run, or Journey table is needed for the first authority loop. |
+| v0.2 user-facing `harness.intake`, fuller `status`/`next`, Decision Packet prompts, residual-risk visibility, close-readiness display | User-Facing Harness MVP schema, plus Core Authority Slice schema | `decision_packets` and `residual_risks` become storage authority when those API profiles are committed. Persisted Markdown projection remains optional if status/next/card output satisfies the display path. |
+| v0.3 verification, Manual QA, Approval, full evidence, feedback-loop/TDD, validator result profiles | Agency Assurance schema, plus earlier profiles | These API methods must not claim persisted assurance records unless the matching tables and artifact-link rules are installed. |
+| v0.4 projection freshness, reconcile, recover/export/operator readiness, artifact integrity operations | Operations schema, plus earlier profiles | `projection_jobs`, `reconcile_items`, connector manifests, and locks are operations support over Core state; they do not replace Core-owned state or structured blockers. |
+| v1+ promoted candidates | Future / diagnostic schema or a future owner profile | Add storage only after owner docs define exact authority, refs, retention/redaction, and conformance boundaries. |
+
 ### Core Authority Slice schema
 
 The v0.1 minimum schema comes first because it is the only storage profile required for the first runnable internal authority loop. It intentionally excludes future-profile tables. Structured blocker/status output is computed from the authoritative rows below; v0.1 does not need a separate `blockers` table or a rendered projection to explain missing scope, missing write authority, or missing artifact/evidence support.

@@ -284,6 +284,16 @@ Schema profile은 더하는 방식입니다. Later profile은 earlier table을 r
 | Operations schema | v0.4 Operations & Handoff Pack | connector manifest drift, projection outbox, reconcile workflow, persistent lock, operator readiness | v0.1 authority proof와 user-facing MVP value | Core state 위의 operational support. Projection은 계속 derived view | projection support and diagnostic/operational state |
 | Future / diagnostic schema | v1+ 또는 promoted diagnostic profile | promoted될 때 Journey reconstruction과 더 풍부한 stewardship/context diagnostic | owner docs가 승격하기 전의 v0.1-v0.4 exit criteria | supplemental record. projection-as-authority가 아님 | future-only or diagnostic state |
 
+API/storage alignment는 stage-gated입니다. Public method가 later profile field를 노출할 수는 있지만 그 backing storage가 earlier stage에서 stage-required가 되지는 않습니다. 어떤 method가 profile record를 commit한다면 그 profile의 storage는 같은 stage 또는 더 이른 stage에 설치되어 있어야 합니다.
+
+| API surface | Committed state에 필요한 earliest storage profile | Storage boundary |
+|---|---|---|
+| v0.1 `harness.status`, `harness.prepare_write`, `harness.record_run`, minimal artifact/evidence refs | Core Authority Slice schema | 첫 authority loop에는 Decision Packet, Evidence Manifest, Manual QA, Eval, projection job, reconcile, validator-run, Journey table이 필요하지 않습니다. |
+| v0.2 user-facing `harness.intake`, fuller `status`/`next`, Decision Packet prompt, residual-risk visibility, close-readiness display | User-Facing Harness MVP schema와 Core Authority Slice schema | 해당 API profile이 commit되면 `decision_packets`와 `residual_risks`가 storage authority가 됩니다. Status/next/card output이 display path를 충족하면 persisted Markdown projection은 optional입니다. |
+| v0.3 verification, Manual QA, Approval, full evidence, feedback-loop/TDD, validator result profiles | Agency Assurance schema와 earlier profiles | Matching table과 artifact-link rule이 설치되지 않은 상태에서 API method가 persisted assurance record를 주장하면 안 됩니다. |
+| v0.4 projection freshness, reconcile, recover/export/operator readiness, artifact integrity operations | Operations schema와 earlier profiles | `projection_jobs`, `reconcile_items`, connector manifest, lock은 Core state 위의 operations support이며 Core-owned state 또는 structured blocker를 대체하지 않습니다. |
+| v1+ promoted candidates | Future / diagnostic schema 또는 future owner profile | Owner docs가 exact authority, refs, retention/redaction, conformance boundary를 정의한 뒤에만 storage를 추가합니다. |
+
 ### Core Authority Slice schema
 
 v0.1 minimum schema를 먼저 둡니다. 이 profile만 첫 실행 가능한 내부 authority loop에 required입니다. Future-profile table은 의도적으로 제외합니다. Structured blocker/status output은 아래 authoritative row에서 계산합니다. v0.1은 missing scope, missing write authority, missing artifact/evidence support를 설명하기 위해 별도 `blockers` table이나 rendered projection이 필요하지 않습니다.

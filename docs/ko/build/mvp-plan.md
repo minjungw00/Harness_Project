@@ -58,6 +58,17 @@ Conformance fixture 검증 프로파일은 같은 stage name을 따릅니다. Co
 
 이 fixture profile 이름들이 conformance label로 남습니다. 강화된 로컬 기준 목표(hardened local reference target)는 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 거쳐 도달하는 종합 목표일 뿐, profile name이나 별도 delivery stage가 아닙니다.
 
+### Stage별 API surface
+
+MCP API reference는 문서화한 모든 method의 정확한 schema를 정의하지만, staged delivery는 method/profile을 언제 구현해야 하는지 결정합니다. Schema-required field는 해당 method/profile이 active일 때 required이며, 자동으로 v0.1 stage-required가 되지 않습니다.
+
+| Stage | Stage-required API surface | Stage exit에 넣지 않을 later-profile fields |
+|---|---|---|
+| v0.1 Core Authority Slice | Minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, owner-valid Task/scope setup path 하나, optional minimal `harness.next` 또는 narrow `harness.close_task` blocker smoke. | Full natural-language intake, Decision Packet storage, Evidence Manifest, Manual QA, Eval, 작업 수락 의미, 잔여 위험 수용, projection rendering, reconcile, export/recover, broad operations. |
+| v0.2 User-Facing Harness MVP | Fuller `harness.status`/`harness.next`, user-facing `harness.intake`, `harness.request_user_decision`, `harness.record_user_decision`, `harness.record_run`을 통한 evidence summaries, `harness.close_task`를 통한 close-readiness/blockers. | Detached verification independence, full Manual QA matrix, Approval hardening, full residual-risk accepted close, stewardship validators, export/recover, broad operations. |
+| v0.3 Agency Assurance Pack | `harness.launch_verify`, `harness.record_eval`, `harness.record_manual_qa`, Decision Packet method의 assurance/waiver/approval/risk profiles, `harness.record_run`의 evidence/feedback/TDD profiles, ValidatorResult-emitting assurance paths. | Operator recover/export completeness, broad projection/reconcile operations, release handoff. |
+| v0.4 Operations & Handoff Pack | API response의 projection freshness, reconcile decision profile, Operations가 담당하는 operator readiness/recover/export/artifact-integrity/conformance surfaces. | Dashboard, hosted workflow UI, broad connectors, automation, team workflow, orchestration은 later promotion 전까지 제외합니다. |
+
 ### 단계별 전달 이후의 경계: v1+ Expansion
 
 v1+ Expansion은 로드맵 범위이며 Build가 소유하는 staged delivery phase가 아닙니다. Dashboard, hosted workflow UI, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, broader connectors, metrics, team workflow, orchestration 같은 후보는 담당 문서가 future item을 명시적으로 승격하고 증명하기 전까지 v0.1부터 v0.4 밖에 둡니다.
