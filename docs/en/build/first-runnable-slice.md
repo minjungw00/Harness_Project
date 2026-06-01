@@ -41,6 +41,8 @@ The slice should create or seed:
 
 This is a command-independent implementation guide. It describes capabilities and observable behavior, not CLI syntax. Do not include or duplicate full DDL here. Storage details and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
+For storage planning, use only the [Core Authority Slice schema](../reference/storage-and-ddl.md#core-authority-slice-schema) for v0.1. Later storage profiles such as Decision Packets, Approvals, Evidence Manifests, Manual QA, Eval, projection jobs, reconcile items, validator runs, Journey records, and diagnostics are not first-slice requirements.
+
 The first slice is deliberately not the User-Facing Harness MVP, the hardened local reference target as a whole, full Decision Packet quality, full Evidence Manifest, Manual QA, detached verification, residual-risk acceptance semantics, final acceptance semantics, a projection-template-polish milestone, multiple projection kinds, dashboard or hosted-workflow-UI milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, export/recover path, release handoff path, broad operator-entrypoint path, full conformance suite, future fixture catalog, or parallel automation path.
 
 ## Success story
@@ -94,7 +96,7 @@ Done when:
 - Core can resolve the current project for all later Task-scoped actions.
 - Status can distinguish an unregistered or idle project from an active Task.
 
-Owner contracts: runtime home layout and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md); local spaces and surface guarantees are owned by [Runtime Architecture Reference](../reference/runtime-architecture.md) and [Agent Integration Reference](../reference/agent-integration.md).
+Owner contracts: runtime home layout and the v0.1 Core Authority Slice schema are owned by [Storage And DDL](../reference/storage-and-ddl.md#core-authority-slice-schema); local spaces and surface guarantees are owned by [Runtime Architecture Reference](../reference/runtime-architecture.md) and [Agent Integration Reference](../reference/agent-integration.md).
 
 ### 2. One Task Record
 
@@ -241,6 +243,6 @@ Do not add fields to the fixture body to express suite stage, authoring order, o
 - [Kernel Reference](../reference/kernel.md): Task, Change Unit, Decision Packet, gates, `prepare_write`, Write Authorization, `record_run` semantics, and `close_task`.
 - [Runtime Architecture Reference](../reference/runtime-architecture.md): three spaces, Core process model, transaction flow, artifact store, projection/reconcile, guarantee levels, and failure handling.
 - [MCP API And Schemas](../reference/mcp-api-and-schemas.md): public resources, tool envelopes, request/response schemas, error taxonomy, artifact refs, and `ProjectionKind`.
-- [Storage And DDL](../reference/storage-and-ddl.md): runtime layout, DDL, migrations, locks, artifacts, baselines, projection jobs, and validator-run storage.
+- [Storage And DDL](../reference/storage-and-ddl.md): runtime layout, staged schema profiles, migrations, locks, artifacts, baselines, projection jobs, and validator-run storage.
 - [Operations And Conformance Reference](../reference/operations-and-conformance.md): operator semantics and conformance staging.
 - [Conformance Fixtures Reference](../reference/conformance-fixtures.md): fixture format, execution, assertion rules, suite catalogs, and examples.

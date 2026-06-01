@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference to implement or review the Harness runtime storage model. It owns the runtime home layout, `registry.sqlite`, `project.yaml`, `state.sqlite`, `task_events`, DDL draft, JSON `TEXT` validation, migrations, lock policy, artifact directory layout, baseline capture format, projection job table, and validator runner skeleton.
+Use this reference to implement or review the Harness runtime storage model. It owns the runtime home layout, `registry.sqlite`, `project.yaml`, `state.sqlite`, `task_events`, staged DDL profiles, JSON `TEXT` validation, migrations, lock policy, artifact directory layout, baseline capture format, projection job table, and validator runner skeleton.
 
 This is storage reference material. It does not define staged-pack sequencing; for stage order and exit criteria, see [Build: MVP Plan](../build/mvp-plan.md).
 
@@ -10,7 +10,7 @@ This is reference documentation. It does not authorize runtime/server implementa
 
 ## Read this when
 
-- You need the exact reference storage layout or DDL draft.
+- You need the exact reference storage layout or staged DDL profiles.
 - You are checking which table owns a persisted state record.
 - You are validating JSON `TEXT` fields, enum-like `TEXT` fields, locks, migrations, artifacts, baselines, or projection jobs.
 - You are keeping API schemas separate from storage implementation details.
@@ -21,14 +21,14 @@ Use [MCP API And Schemas](mcp-api-and-schemas.md) for public request/response co
 
 ## Main idea
 
-Storage gives Harness durable local records, but it does not become a second authority model. Public API shapes, kernel transitions, projection rules, and operator semantics stay with their owner documents while this page owns the storage layout and DDL draft.
+Storage gives Harness durable local records, but it does not become a second authority model. Public API shapes, kernel transitions, projection rules, and operator semantics stay with their owner documents while this page owns the storage layout and staged DDL profiles.
 
 ## Contract map
 
 | If you need... | Start here | Related owner |
 |---|---|---|
 | Runtime home and local file posture | [Runtime home layout](#runtime-home-layout), [Runtime home permissions and tampering](#runtime-home-permissions-and-tampering) | Operator reporting stays in [Operations And Conformance Reference](operations-and-conformance.md#doctor). |
-| Storage DDL | [DDL draft](#ddl-draft), then [DDL Section Map](#ddl-section-map) | Public API shapes stay in [MCP API And Schemas](mcp-api-and-schemas.md). |
+| Storage DDL | [Staged DDL profiles](#staged-ddl-profiles), then [DDL Section Map](#ddl-section-map) | Public API shapes stay in [MCP API And Schemas](mcp-api-and-schemas.md). |
 | Storage-owned JSON and enum hardening | [Storage hardening as an authority boundary](#storage-hardening-as-an-authority-boundary), [JSON TEXT validation](#json-text-validation), [Canonical enum hardening](#canonical-enum-hardening) | Kernel values stay in [Kernel Reference](kernel.md). |
 | Migrations and locks | [Migrations](#migrations), [Lock policy](#lock-policy) | Operator recovery semantics stay in [Operations And Conformance Reference](operations-and-conformance.md#recover). |
 | Artifact storage and registration | [Artifact directory layout](#artifact-directory-layout), [Artifact Kind Storage Notes](#artifact-kind-storage-notes), [Artifact Registration Contract](#artifact-registration-contract) | Artifact API refs stay in [ArtifactRef](mcp-api-and-schemas.md#artifactref). |
@@ -38,7 +38,7 @@ Storage gives Harness durable local records, but it does not become a second aut
 
 ## Storage model in plain language
 
-Harness keeps one global runtime registry and one local state database per registered project. The registry says which projects and surfaces exist. `project.yaml` stores static project configuration. `state.sqlite` stores canonical current records, append-only task events, idempotency replay rows, artifact registry rows, projection jobs, and validator run results.
+Harness keeps one global runtime registry and one local state database per registered project. The registry says which projects and surfaces exist. `project.yaml` stores static project configuration. `state.sqlite` stores the active profile's canonical current records, append-only task events, idempotency replay rows, and artifact registry rows. Later profiles add tables such as projection jobs and validator run results only when their owner path is in scope.
 
 Storage fields are reference-contract fields, not all first-slice requirements. This document owns the storage shape whenever an owner path uses it; [Build: MVP Plan](../build/mvp-plan.md#contract-field-staging) owns when a capability enters the staged delivery plan. v0.1 Core Authority Slice needs only the storage needed for local project registration, one Task, one scoped work boundary, one Write Authorization, one Run, one artifact/evidence ref, and one structured status/blocker response. A stage may defer a capability, but once it stores that record family it must satisfy the DDL, storage-owned JSON validation, and owner-bound value rules defined here.
 
@@ -53,7 +53,7 @@ This document owns:
 - `project.yaml`
 - `state.sqlite`
 - `task_events`
-- DDL draft
+- staged DDL profiles
 - JSON `TEXT` validation for storage-owned fields
 - canonical enum hardening
 - migrations
@@ -120,13 +120,13 @@ Permission diagnostics should be concrete enough for an operator to act on:
 | Runtime Home or project storage is writable by unrelated users, groups, shared containers, or broad local processes. | `doctor` reports a tampering risk and may fail write-capable readiness. Core still validates rows, events, owner links, hashes, and artifact registration before accepting meaning. |
 | Artifact storage is readable by unrelated users, groups, shared containers, or broad local processes. | `doctor`, export, and operation reports describe the confidentiality risk for logs, screenshots, tokens, PII, verification bundles, and exports without echoing sensitive values. |
 
-## DDL draft
+## Staged DDL profiles
 
-The reference storage uses SQLite for registry and per-project state. The DDL is a draft implementation contract for the full reference model; field names may gain indexes or migration helpers, but table ownership and authority boundaries should remain stable. The full table set below is not a v0.1 implementation checklist.
+The reference storage uses SQLite for registry and per-project state. The DDL is organized into staged schema profiles so an implementer can build the smallest authority slice first without treating every future support table as a v0.1 requirement. Field names may gain indexes or migration helpers, but table ownership and authority boundaries should remain stable once a profile is implemented.
+
+`required` in this section always means required for the named profile or capability. It does not mean every table in this reference is required for v0.1 Core Authority Slice. v0.1 storage is the first profile below: project registration, Task state, gates/status, one scoped work boundary, durable Write Authorizations, Runs, artifact refs and links, append-only events, and idempotency replay rows. Later profiles add user-facing decisions, residual risk, assurance records, projection/reconcile operations, and diagnostics only when their staged owner path is in scope.
 
 `task_spine_entries` is the current reference table for public `journey_spine_entry` records and Journey Spine Entry wording. Public MCP/API naming remains `journey_spine_entry`; the table name preserves the task-local implementation shape.
-
-This ER diagram is an overview of the DDL relationships below. Relationship labels describe storage links, not authority to grant or mutate records. The SQL DDL remains the exact implementation contract.
 
 ### DDL Section Map
 
@@ -134,44 +134,15 @@ This ER diagram is an overview of the DDL relationships below. Relationship labe
 |---|---|---|
 | Storage hardening | [Storage hardening as an authority boundary](#storage-hardening-as-an-authority-boundary), [JSON TEXT validation](#json-text-validation), [Canonical enum hardening](#canonical-enum-hardening) | value validation and owner-bound enum-like `TEXT` fields |
 | Project config | [`project.yaml`](#projectyaml) | static project defaults, policies, and surface config |
-| Runtime registry | [`registry.sqlite`](#registrysqlite) | registered projects, project surfaces, and connector manifests |
-| Project state database | [`state.sqlite`](#statesqlite) | Full reference table set for Task, gate, Change Unit, Run, approval, decision, evidence, artifact, projection, reconcile, design support, feedback-loop, validator, and lock records. v0.1 uses only the subset required by Build. |
+| Schema profiles | [Schema profile metadata](#schema-profile-metadata) | the staged table groups, introduced profile, required-for scope, and authority role |
+| Core Authority Slice schema | [Core Authority Slice schema](#core-authority-slice-schema) | v0.1 minimum registry and `state.sqlite` tables |
+| User-Facing Harness MVP schema | [User-Facing Harness MVP schema](#user-facing-harness-mvp-schema) | Decision Packet, residual-risk visibility, and user-facing design support records |
+| Agency Assurance schema | [Agency Assurance schema](#agency-assurance-schema) | baseline, approval, evidence, Eval, Manual QA, feedback-loop, TDD, and validator records |
+| Operations schema | [Operations schema](#operations-schema) | connector manifests, projection jobs, reconcile items, and persistent locks |
+| Future / diagnostic schema | [Future / diagnostic schema](#future--diagnostic-schema) | Journey Spine support and stewardship/context diagnostics |
 | Event rows | [`task_events`](#task_events) | append-only event storage and stable-event owner boundary |
 
-```mermaid
-erDiagram
-  projects ||--o{ project_surfaces : registers
-  projects ||--o{ connector_manifests : has
-  project_surfaces ||--o{ connector_manifests : describes
-  projects ||--|| project_state : has
-  tasks ||--|| task_gates : has
-  tasks ||--o{ change_units : has
-  tasks ||--o{ baselines : tracks
-  tasks ||--o{ write_authorizations : tracks
-  change_units ||--o{ write_authorizations : scopes
-  write_authorizations ||--o| runs : consumed_by
-  tasks ||--o{ runs : has
-  tasks ||--o{ approvals : tracks
-  decision_packets ||--o{ approvals : links
-  tasks ||--o{ decision_packets : has
-  tasks ||--o{ residual_risks : tracks
-  decision_packets ||--o{ residual_risks : links
-  tasks ||--o{ shared_designs : tracks
-  tasks ||--o{ task_spine_entries : has
-  change_units ||--o{ change_unit_dependencies : depends
-  tasks ||--o{ evidence_manifests : has
-  tasks ||--o{ evals : has
-  tasks ||--o{ manual_qa_records : has
-  decision_packets ||--o{ manual_qa_records : links
-  tasks ||--o{ artifacts : links
-  artifacts ||--o{ artifact_links : links
-  tasks ||--o{ task_events : has
-  tasks ||--o{ projection_jobs : tracks
-  tasks ||--o{ reconcile_items : tracks
-  tasks ||--o{ feedback_loops : has
-  tasks ||--o{ tdd_traces : has
-  tasks ||--o{ validator_runs : has
-```
+The fragments below are the profile contract. They are intentionally not presented as one giant early schema. An implementation may assemble multiple fragments once the corresponding stage is in scope; the assembled result is a profile-enabled reference, not the v0.1 minimum.
 
 ### Storage hardening as an authority boundary
 
@@ -197,7 +168,7 @@ Recommended hardening: where the deployed SQLite build supports JSON functions, 
 
 Canonical enum columns use `TEXT` in the reference DDL for readability, but they are not open strings. Core validation remains authoritative. Database checks, lookup-table validation, generated checks, and migration assertions are defense in depth and should first cover the state fields that drive write, close, replay, and projection behavior.
 
-Minimum enum hardening targets:
+Profile-aware enum hardening targets:
 
 | Field(s) | Owner/value source for hardening |
 | --- | --- |
@@ -206,7 +177,7 @@ Minimum enum hardening targets:
 | `tasks.result` | [Result](kernel.md#result) and [Close Semantics](kernel.md#close-result-semantics). |
 | `tasks.close_reason` | [Close Reason](kernel.md#close-reason) and [Close Semantics](kernel.md#close-result-semantics). |
 | `tasks.assurance_level` | [Assurance Level](kernel.md#assurance-level) and [Verification Gate](kernel.md#verification-gate). |
-| `tasks.projection_status` | TASK projection freshness semantics in this document and [Document Projection Reference](document-projection.md). |
+| `tasks.projection_status` | Optional Operations profile TASK projection freshness semantics in this document and [Document Projection Reference](document-projection.md). |
 | `task_gates.scope_gate` | [Scope Gate](kernel.md#scope-gate). |
 | `task_gates.decision_gate` | [Decision Gate](kernel.md#decision-gate). |
 | `task_gates.approval_gate` | [Approval Gate](kernel.md#approval-gate). |
@@ -297,7 +268,36 @@ secret_policy:
   allow_secret_access_without_approval: false
 ```
 
-### `registry.sqlite`
+### Schema profile metadata
+
+Schema profiles are additive. A later profile may reference earlier tables, but an earlier profile must not need later tables to boot or prove its exit criteria. If a later profile is installed at database creation time, it may use stronger foreign keys across profiles; when it is added by migration, Core validation or a table rebuild must provide the same owner/link guarantees.
+
+| Profile | introduced_in | required_for | not_required_for | Authority role | Storage class |
+|---|---|---|---|---|---|
+| Core Authority Slice schema | v0.1 Core Authority Slice | local project registration, one active Task, scoped write boundary, `prepare_write`, single-use Write Authorization, `record_run`, one artifact/evidence ref, structured status/blockers | Decision Packet quality, Evidence Manifest, Manual QA, Eval, residual-risk acceptance, projections, reconcile, export/recover, Journey views | authoritative minimum Core state | state authority and artifact metadata |
+| User-Facing Harness MVP schema | v0.2 User-Facing Harness MVP | user-owned decisions, user-visible residual-risk state, design-support context needed for ordinary users | v0.1 authority proof, full assurance hardening, projection renderer, operations handoff | authoritative user judgment and visible risk records | state authority |
+| Agency Assurance schema | v0.3 Agency Assurance Pack | sensitive-action approval records, baselines, evidence coverage, verification, Manual QA, feedback-loop/TDD, validators | v0.1 minimum and ordinary v0.2 paths unless a scenario explicitly enables the profile | authoritative assurance, QA, waiver, and validator records | state authority and artifact-linked assurance metadata |
+| Operations schema | v0.4 Operations & Handoff Pack | connector manifest drift, projection outbox, reconcile workflow, persistent locks, operator readiness | v0.1 authority proof and user-facing MVP value | operational support over Core state; projections stay derived | projection support and diagnostic/operational state |
+| Future / diagnostic schema | v1+ or promoted diagnostic profile | Journey reconstruction and richer stewardship/context diagnostics when promoted | v0.1-v0.4 exit criteria unless owner docs promote them | supplemental records; not projection-as-authority | future-only or diagnostic state |
+
+### Core Authority Slice schema
+
+The v0.1 minimum schema comes first because it is the only storage profile required for the first runnable internal authority loop. It intentionally excludes future-profile tables. Structured blocker/status output is computed from the authoritative rows below; v0.1 does not need a separate `blockers` table or a rendered projection to explain missing scope, missing write authority, or missing artifact/evidence support.
+
+| Table or group | introduced_in | required_for | not_required_for | Authority role | Storage class |
+|---|---|---|---|---|---|
+| `projects`, `project_surfaces` | v0.1 | local project registration and minimal surface identity | connector marketplace, generated manifest drift | resolves project and surface context | state authority |
+| `project_state`, `tasks`, `task_gates` | v0.1 | project clock, active Task, gate/status summary | full close semantics or final acceptance proof | authoritative current Task and status | state authority |
+| `change_units` | v0.1 | scoped work boundary / minimal Change Unit equivalent | dependency graph, parallel orchestration | authoritative scope for product writes | state authority |
+| `write_authorizations` | v0.1 | durable `prepare_write` allow decision | sensitive-action Approval, final acceptance | single-use write authority | state authority |
+| `runs` | v0.1 | `record_run` and authorization consumption | Eval, Manual QA, verification verdicts | authoritative observed Run record | state authority |
+| `artifacts`, `artifact_links` | v0.1 | registered ArtifactRef or evidence ref linked to the Run or owner relation | Evidence Manifest, export bundle, projection snapshot | artifact registry and owner-link authority | artifact metadata |
+| `task_events` | v0.1 | minimal append-only event log | Journey Spine/Card | event ordering and audit support | state authority |
+| `tool_invocations` | v0.1 | idempotency replay for committed Core tool calls | surface diagnostics or dry-run replay | durable replay identity | state authority |
+
+<a id="registrysqlite"></a>
+
+Core `registry.sqlite` fragment:
 
 ```sql
 CREATE TABLE projects (
@@ -324,22 +324,11 @@ CREATE TABLE project_surfaces (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
-
-CREATE TABLE connector_manifests (
-  manifest_id TEXT PRIMARY KEY,
-  project_id TEXT NOT NULL REFERENCES projects(project_id),
-  surface_id TEXT NOT NULL REFERENCES project_surfaces(surface_id),
-  manifest_version INTEGER NOT NULL,
-  generated_paths_json TEXT NOT NULL,
-  managed_hash TEXT NOT NULL,
-  capability_profile_json TEXT NOT NULL,
-  status TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
 ```
 
-### `state.sqlite`
+<a id="statesqlite"></a>
+
+Core `state.sqlite` fragment:
 
 ```sql
 CREATE TABLE project_state (
@@ -361,12 +350,6 @@ CREATE TABLE tasks (
   acceptance_criteria_json TEXT NOT NULL DEFAULT '[]',
   active_change_unit_id TEXT,
   active_run_id TEXT,
-  latest_evidence_manifest_id TEXT,
-  latest_eval_id TEXT,
-  latest_manual_qa_record_id TEXT,
-  projection_version INTEGER NOT NULL DEFAULT 0,
-  projected_version INTEGER NOT NULL DEFAULT 0,
-  projection_status TEXT NOT NULL DEFAULT 'unknown',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -384,6 +367,10 @@ CREATE TABLE task_gates (
   waiver_json TEXT NOT NULL DEFAULT '{}',
   updated_at TEXT NOT NULL
 );
+
+-- In v0.1, task_gates is the minimal structured status/blocker record.
+-- A gate field can report the current kernel value without installing the
+-- later profile tables that harden that gate's full behavior.
 
 CREATE TABLE change_units (
   change_unit_id TEXT PRIMARY KEY,
@@ -405,25 +392,6 @@ CREATE TABLE change_units (
   allowed_network_json TEXT NOT NULL DEFAULT '[]',
   secret_scope_json TEXT NOT NULL DEFAULT '[]',
   sensitive_categories_json TEXT NOT NULL DEFAULT '[]',
-  validator_profile_json TEXT NOT NULL DEFAULT '[]',
-  completion_conditions_json TEXT NOT NULL DEFAULT '[]',
-  evaluator_focus_json TEXT NOT NULL DEFAULT '[]',
-  status TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
-
-CREATE TABLE baselines (
-  baseline_ref TEXT PRIMARY KEY,
-  task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  change_unit_id TEXT,
-  repo_head TEXT NOT NULL,
-  branch TEXT NOT NULL,
-  dirty INTEGER NOT NULL,
-  tree_hash TEXT NOT NULL,
-  included_paths_json TEXT NOT NULL DEFAULT '[]',
-  ignored_paths_json TEXT NOT NULL DEFAULT '[]',
-  diff_artifact_id TEXT REFERENCES artifacts(artifact_id),
   status TEXT NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
@@ -434,7 +402,6 @@ CREATE TABLE write_authorizations (
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
   change_unit_id TEXT NOT NULL REFERENCES change_units(change_unit_id),
   basis_state_version INTEGER NOT NULL,
-  baseline_ref TEXT REFERENCES baselines(baseline_ref),
   intended_operation TEXT NOT NULL,
   intended_paths_json TEXT NOT NULL DEFAULT '[]',
   intended_tools_json TEXT NOT NULL DEFAULT '[]',
@@ -442,8 +409,6 @@ CREATE TABLE write_authorizations (
   intended_network_json TEXT NOT NULL DEFAULT '[]',
   intended_secrets_json TEXT NOT NULL DEFAULT '[]',
   sensitive_categories_json TEXT NOT NULL DEFAULT '[]',
-  approval_refs_json TEXT NOT NULL DEFAULT '[]',
-  decision_packet_refs_json TEXT NOT NULL DEFAULT '[]',
   guarantee_level TEXT NOT NULL,
   status TEXT NOT NULL,
   created_at TEXT NOT NULL,
@@ -460,7 +425,6 @@ CREATE TABLE runs (
   kind TEXT NOT NULL,
   actor_kind TEXT NOT NULL,
   surface_id TEXT NOT NULL,
-  baseline_ref TEXT,
   write_authorization_id TEXT REFERENCES write_authorizations(write_authorization_id),
   summary TEXT NOT NULL DEFAULT '',
   observed_changes_json TEXT NOT NULL DEFAULT '{}',
@@ -471,54 +435,74 @@ CREATE TABLE runs (
   completed_at TEXT
 );
 
-CREATE TABLE approvals (
-  approval_id TEXT PRIMARY KEY,
+CREATE TABLE artifacts (
+  artifact_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  change_unit_id TEXT,
-  -- Optional compatibility ref; leave null when decision_requests is omitted.
-  decision_request_id TEXT,
-  decision_packet_id TEXT NOT NULL REFERENCES decision_packets(decision_packet_id),
-  status TEXT NOT NULL,
-  sensitive_categories_json TEXT NOT NULL DEFAULT '[]',
-  allowed_paths_json TEXT NOT NULL DEFAULT '[]',
-  allowed_tools_json TEXT NOT NULL DEFAULT '[]',
-  allowed_commands_json TEXT NOT NULL DEFAULT '[]',
-  allowed_network_targets_json TEXT NOT NULL DEFAULT '[]',
-  secret_scope_json TEXT NOT NULL DEFAULT '[]',
-  baseline_ref TEXT,
-  expires_at TEXT,
-  decision_note TEXT,
-  created_at TEXT NOT NULL,
-  decided_at TEXT
+  run_id TEXT,
+  kind TEXT NOT NULL,
+  relative_path TEXT NOT NULL,
+  sha256 TEXT NOT NULL,
+  size_bytes INTEGER NOT NULL,
+  content_type TEXT NOT NULL,
+  redaction_state TEXT NOT NULL CHECK (redaction_state IN ('none', 'redacted', 'secret_omitted', 'blocked')),
+  produced_by TEXT NOT NULL,
+  retention_class TEXT NOT NULL,
+  created_at TEXT NOT NULL
 );
 
--- Optional compatibility/routing table for routing, interaction, replay, or compatibility handoff metadata only.
--- Minimal v0.1 Core Authority Slice implementations may omit this table.
--- decision_packet_id may remain null for routing/replay staging; unlinked rows are non-authoritative.
--- Gate aggregation may consider a row only through a linked compatible decision_packet_id.
-CREATE TABLE decision_requests (
-  decision_request_id TEXT PRIMARY KEY,
-  decision_packet_id TEXT REFERENCES decision_packets(decision_packet_id),
+CREATE TABLE artifact_links (
+  artifact_link_id TEXT PRIMARY KEY,
+  artifact_id TEXT NOT NULL REFERENCES artifacts(artifact_id),
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  change_unit_id TEXT,
-  decision_kind TEXT NOT NULL,
-  decision_profile TEXT NOT NULL,
-  judgment_domain TEXT NOT NULL,
-  status TEXT NOT NULL,
-  prompt TEXT NOT NULL,
-  options_json TEXT NOT NULL DEFAULT '[]',
-  recommendation TEXT,
-  approval_scope_json TEXT NOT NULL DEFAULT '{}',
-  reconcile_item_id TEXT,
-  expires_at TEXT,
-  decided_option_id TEXT,
-  decision_json TEXT NOT NULL DEFAULT '{}',
-  note TEXT,
-  waiver_reason TEXT,
-  created_at TEXT NOT NULL,
-  decided_at TEXT
+  record_kind TEXT NOT NULL,
+  record_id TEXT NOT NULL,
+  relation_kind TEXT NOT NULL,
+  created_at TEXT NOT NULL
 );
 
+CREATE TABLE task_events (
+  event_id TEXT PRIMARY KEY,
+  event_seq INTEGER NOT NULL UNIQUE,
+  task_id TEXT,
+  state_version INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  actor_kind TEXT NOT NULL,
+  surface_id TEXT,
+  request_id TEXT,
+  idempotency_key TEXT,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE tool_invocations (
+  invocation_id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL,
+  task_id TEXT,
+  tool_name TEXT NOT NULL,
+  request_id TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  response_json TEXT NOT NULL DEFAULT '{}',
+  state_version INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  completed_at TEXT,
+  UNIQUE(project_id, tool_name, idempotency_key)
+);
+```
+
+### User-Facing Harness MVP schema
+
+This profile adds records needed for ordinary users to see pending decisions, final-acceptance separation, and residual-risk visibility. It is not required for v0.1. Projections may display these records later, but the projection text is not authority.
+
+| Table or group | introduced_in | required_for | not_required_for | Authority role | Storage class |
+|---|---|---|---|---|---|
+| `decision_packets` | v0.2 | user-owned judgment, final acceptance, residual-risk acceptance path when enabled | v0.1 Core Authority Slice | canonical user decision record | state authority |
+| `decision_requests` | v0.2 optional | routing, interaction, replay, or handoff metadata for Decision Packets | gate satisfaction by itself, v0.1 | non-authoritative routing linked to `decision_packets` | state metadata |
+| `residual_risks` | v0.2 | visible close-relevant risk and accepted-risk state when relevant | v0.1, no-risk summary-only `none` state | canonical residual-risk row | state authority |
+| `shared_designs` | v0.2 optional | design-support context for user-facing trade-offs when enabled | v0.1, full stewardship map | design support basis | state authority |
+
+```sql
 CREATE TABLE decision_packets (
   decision_packet_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
@@ -550,6 +534,32 @@ CREATE TABLE decision_packets (
   expires_at TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
+  decided_at TEXT
+);
+
+-- Optional compatibility/routing table for interaction, replay, or handoff metadata only.
+-- decision_packet_id may remain null for routing/replay staging; unlinked rows are non-authoritative.
+-- Gate aggregation may consider a row only through a linked compatible decision_packet_id.
+CREATE TABLE decision_requests (
+  decision_request_id TEXT PRIMARY KEY,
+  decision_packet_id TEXT REFERENCES decision_packets(decision_packet_id),
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  decision_kind TEXT NOT NULL,
+  decision_profile TEXT NOT NULL,
+  judgment_domain TEXT NOT NULL,
+  status TEXT NOT NULL,
+  prompt TEXT NOT NULL,
+  options_json TEXT NOT NULL DEFAULT '[]',
+  recommendation TEXT,
+  approval_scope_json TEXT NOT NULL DEFAULT '{}',
+  reconcile_item_id TEXT,
+  expires_at TEXT,
+  decided_option_id TEXT,
+  decision_json TEXT NOT NULL DEFAULT '{}',
+  note TEXT,
+  waiver_reason TEXT,
+  created_at TEXT NOT NULL,
   decided_at TEXT
 );
 
@@ -597,24 +607,72 @@ CREATE TABLE shared_designs (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+```
 
-CREATE TABLE task_spine_entries (
-  task_spine_entry_id TEXT PRIMARY KEY,
+### Agency Assurance schema
+
+This profile hardens the user-facing path with baseline freshness, sensitive-action Approval records, evidence coverage, detached verification, Manual QA, feedback-loop/TDD discipline, and validator results. None of these tables is required for the v0.1 Core Authority Slice.
+
+| Table or group | introduced_in | required_for | not_required_for | Authority role | Storage class |
+|---|---|---|---|---|---|
+| `baselines` | v0.3 | baseline freshness for approvals, evidence, verification, and guarded writes | v0.1 minimum | repository state basis | state authority |
+| `approvals` | v0.3 | sensitive-action Approval lifecycle | generic user agreement, final acceptance, v0.1 | sensitive-action permission record linked to Decision Packet | state authority |
+| `change_unit_dependencies` | v0.3 | dependency visibility and close impact | scheduler or parallel lanes, v0.1 | ordering and close-risk metadata | state authority |
+| `evidence_manifests` | v0.3 | criteria-to-evidence coverage | single v0.1 artifact ref | evidence sufficiency owner | state authority |
+| `evals` | v0.3 | verification outcome and independence | self-check or Manual QA | detached verification owner | state authority |
+| `manual_qa_records` | v0.3 | human QA result and QA waiver linkage | automated browser capture as a substitute, v0.1 | Manual QA owner | state authority |
+| `feedback_loops`, `tdd_traces` | v0.3 | selected feedback loop, TDD RED/GREEN/refactor evidence | v0.1 and ordinary v0.2 unless profile requires | design/stewardship support records | state authority |
+| `validator_runs` | v0.3 | persisted validator results when assurance profile requires them | v0.1 status/blocker output | validator result record | diagnostic state |
+
+```sql
+-- Optional Agency Assurance profile columns. They are not part of the v0.1
+-- Core Authority Slice and do not replace the owning assurance rows.
+ALTER TABLE tasks ADD COLUMN latest_evidence_manifest_id TEXT;
+ALTER TABLE tasks ADD COLUMN latest_eval_id TEXT;
+ALTER TABLE tasks ADD COLUMN latest_manual_qa_record_id TEXT;
+ALTER TABLE change_units ADD COLUMN validator_profile_json TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE change_units ADD COLUMN completion_conditions_json TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE change_units ADD COLUMN evaluator_focus_json TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE write_authorizations ADD COLUMN baseline_ref TEXT;
+ALTER TABLE write_authorizations ADD COLUMN approval_refs_json TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE write_authorizations ADD COLUMN decision_packet_refs_json TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE runs ADD COLUMN baseline_ref TEXT;
+
+CREATE TABLE baselines (
+  baseline_ref TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
   change_unit_id TEXT,
-  sequence_no INTEGER NOT NULL,
-  entry_kind TEXT NOT NULL,
-  lifecycle_phase TEXT,
-  actor_kind TEXT NOT NULL,
-  source_record_kind TEXT,
-  source_record_id TEXT,
-  summary TEXT NOT NULL DEFAULT '',
-  refs_json TEXT NOT NULL DEFAULT '[]',
-  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  repo_head TEXT NOT NULL,
+  branch TEXT NOT NULL,
+  dirty INTEGER NOT NULL,
+  tree_hash TEXT NOT NULL,
+  included_paths_json TEXT NOT NULL DEFAULT '[]',
+  ignored_paths_json TEXT NOT NULL DEFAULT '[]',
+  diff_artifact_id TEXT REFERENCES artifacts(artifact_id),
   status TEXT NOT NULL,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  UNIQUE(task_id, sequence_no)
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE approvals (
+  approval_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  -- Optional compatibility ref; leave null when decision_requests is omitted.
+  decision_request_id TEXT,
+  decision_packet_id TEXT NOT NULL REFERENCES decision_packets(decision_packet_id),
+  status TEXT NOT NULL,
+  sensitive_categories_json TEXT NOT NULL DEFAULT '[]',
+  allowed_paths_json TEXT NOT NULL DEFAULT '[]',
+  allowed_tools_json TEXT NOT NULL DEFAULT '[]',
+  allowed_commands_json TEXT NOT NULL DEFAULT '[]',
+  allowed_network_targets_json TEXT NOT NULL DEFAULT '[]',
+  secret_scope_json TEXT NOT NULL DEFAULT '[]',
+  baseline_ref TEXT,
+  expires_at TEXT,
+  decision_note TEXT,
+  created_at TEXT NOT NULL,
+  decided_at TEXT
 );
 
 CREATE TABLE change_unit_dependencies (
@@ -677,136 +735,6 @@ CREATE TABLE manual_qa_records (
   created_at TEXT NOT NULL
 );
 
-CREATE TABLE artifacts (
-  artifact_id TEXT PRIMARY KEY,
-  task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  run_id TEXT,
-  kind TEXT NOT NULL,
-  relative_path TEXT NOT NULL,
-  sha256 TEXT NOT NULL,
-  size_bytes INTEGER NOT NULL,
-  content_type TEXT NOT NULL,
-  redaction_state TEXT NOT NULL CHECK (redaction_state IN ('none', 'redacted', 'secret_omitted', 'blocked')),
-  produced_by TEXT NOT NULL,
-  retention_class TEXT NOT NULL,
-  created_at TEXT NOT NULL
-);
-
-CREATE TABLE artifact_links (
-  artifact_link_id TEXT PRIMARY KEY,
-  artifact_id TEXT NOT NULL REFERENCES artifacts(artifact_id),
-  task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  record_kind TEXT NOT NULL,
-  record_id TEXT NOT NULL,
-  relation_kind TEXT NOT NULL,
-  created_at TEXT NOT NULL
-);
-
-CREATE TABLE task_events (
-  event_id TEXT PRIMARY KEY,
-  event_seq INTEGER NOT NULL UNIQUE,
-  task_id TEXT,
-  state_version INTEGER NOT NULL,
-  event_type TEXT NOT NULL,
-  actor_kind TEXT NOT NULL,
-  surface_id TEXT,
-  request_id TEXT,
-  idempotency_key TEXT,
-  payload_json TEXT NOT NULL DEFAULT '{}',
-  created_at TEXT NOT NULL
-);
-
-CREATE TABLE tool_invocations (
-  invocation_id TEXT PRIMARY KEY,
-  project_id TEXT NOT NULL,
-  task_id TEXT,
-  tool_name TEXT NOT NULL,
-  request_id TEXT NOT NULL,
-  idempotency_key TEXT NOT NULL,
-  request_hash TEXT NOT NULL,
-  response_json TEXT NOT NULL DEFAULT '{}',
-  state_version INTEGER NOT NULL,
-  status TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  completed_at TEXT,
-  UNIQUE(project_id, tool_name, idempotency_key)
-);
-
-CREATE TABLE projection_jobs (
-  projection_job_id TEXT PRIMARY KEY,
-  task_id TEXT,
-  projection_kind TEXT NOT NULL,
-  target_ref TEXT NOT NULL,
-  projection_version INTEGER NOT NULL,
-  source_state_version INTEGER,
-  status TEXT NOT NULL,
-  attempts INTEGER NOT NULL DEFAULT 0,
-  output_path TEXT,
-  managed_hash TEXT,
-  error_json TEXT NOT NULL DEFAULT '{}',
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
-
-CREATE TABLE reconcile_items (
-  reconcile_item_id TEXT PRIMARY KEY,
-  task_id TEXT,
-  source_kind TEXT NOT NULL,
-  source_path TEXT,
-  source_hash TEXT,
-  target_record_kind TEXT,
-  target_record_id TEXT,
-  proposed_change_json TEXT NOT NULL DEFAULT '{}',
-  status TEXT NOT NULL,
-  decision_json TEXT NOT NULL DEFAULT '{}',
-  created_at TEXT NOT NULL,
-  resolved_at TEXT
-);
-
-CREATE TABLE domain_terms (
-  domain_term_id TEXT PRIMARY KEY,
-  term TEXT NOT NULL,
-  meaning TEXT NOT NULL,
-  code_representation TEXT,
-  not_this_json TEXT NOT NULL DEFAULT '[]',
-  related_terms_json TEXT NOT NULL DEFAULT '[]',
-  source_ref TEXT,
-  status TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
-
-CREATE TABLE module_map_items (
-  module_map_item_id TEXT PRIMARY KEY,
-  module_path TEXT NOT NULL,
-  responsibility TEXT NOT NULL,
-  public_interface_json TEXT NOT NULL DEFAULT '[]',
-  dependencies_json TEXT NOT NULL DEFAULT '[]',
-  internal_complexity TEXT NOT NULL DEFAULT '',
-  test_boundary TEXT,
-  owner_decision TEXT,
-  watchpoints_json TEXT NOT NULL DEFAULT '[]',
-  status TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
-
-CREATE TABLE interface_contracts (
-  interface_contract_id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  owner_module TEXT NOT NULL,
-  change_type TEXT NOT NULL,
-  inputs_json TEXT NOT NULL DEFAULT '[]',
-  outputs_json TEXT NOT NULL DEFAULT '[]',
-  errors_json TEXT NOT NULL DEFAULT '[]',
-  compatibility_impact TEXT NOT NULL,
-  callers_impacted_json TEXT NOT NULL DEFAULT '[]',
-  boundary_tests_json TEXT NOT NULL DEFAULT '[]',
-  review_status TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
-
 CREATE TABLE feedback_loops (
   feedback_loop_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
@@ -854,6 +782,69 @@ CREATE TABLE validator_runs (
   blocked_reasons_json TEXT NOT NULL DEFAULT '[]',
   created_at TEXT NOT NULL
 );
+```
+
+### Operations schema
+
+This profile supports operator readiness, managed-output drift, projection outbox processing, reconcile decisions, and persistent locking. Projection jobs are support for derived views; they never replace Core-owned state, events, artifact refs, or structured blockers.
+
+| Table or group | introduced_in | required_for | not_required_for | Authority role | Storage class |
+|---|---|---|---|---|---|
+| `connector_manifests` | v0.4 | connector-managed file drift detection | v0.1 local project registration | manifest and drift facts for operations | diagnostic/operational state |
+| `projection_jobs` | v0.4 | durable projection outbox and freshness metadata | v0.1 status/blocker output | derived-view job record, not authority | projection support |
+| `reconcile_items` | v0.4 | managed-output or human-edit drift decisions | v0.1-v0.3 unless reconcile enabled | reconcile candidate/outcome record | operational state |
+| `locks` | v0.4 | persistent cross-process coordination | single-process v0.1 proof | operation coordination, not product authority | diagnostic/operational state |
+
+```sql
+-- Optional Operations profile TASK projection summary caches. They are not part
+-- of v0.1 and are never authority for the underlying Task state.
+ALTER TABLE tasks ADD COLUMN projection_version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE tasks ADD COLUMN projected_version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE tasks ADD COLUMN projection_status TEXT NOT NULL DEFAULT 'unknown';
+
+CREATE TABLE connector_manifests (
+  manifest_id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(project_id),
+  surface_id TEXT NOT NULL REFERENCES project_surfaces(surface_id),
+  manifest_version INTEGER NOT NULL,
+  generated_paths_json TEXT NOT NULL,
+  managed_hash TEXT NOT NULL,
+  capability_profile_json TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE projection_jobs (
+  projection_job_id TEXT PRIMARY KEY,
+  task_id TEXT,
+  projection_kind TEXT NOT NULL,
+  target_ref TEXT NOT NULL,
+  projection_version INTEGER NOT NULL,
+  source_state_version INTEGER,
+  status TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  output_path TEXT,
+  managed_hash TEXT,
+  error_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE reconcile_items (
+  reconcile_item_id TEXT PRIMARY KEY,
+  task_id TEXT,
+  source_kind TEXT NOT NULL,
+  source_path TEXT,
+  source_hash TEXT,
+  target_record_kind TEXT,
+  target_record_id TEXT,
+  proposed_change_json TEXT NOT NULL DEFAULT '{}',
+  status TEXT NOT NULL,
+  decision_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  resolved_at TEXT
+);
 
 CREATE TABLE locks (
   lock_id TEXT PRIMARY KEY,
@@ -865,7 +856,83 @@ CREATE TABLE locks (
 );
 ```
 
-Current reference TDD discipline uses the existing `feedback_loops` and `tdd_traces` tables. `feedback_loops` owns the selected feedback loop and any alternate loop for a waiver; `tdd_traces` owns RED, GREEN, refactor/check artifacts, and non-TDD justification. Evidence Manifest rows remain the coverage owner for acceptance criteria and changed files.
+### Future / diagnostic schema
+
+These tables are reference shapes for promoted diagnostics, stewardship/context records, or Journey reconstruction. They are future-only for staging purposes unless an owner document promotes them with exit criteria and tests. They do not participate in v0.1 Core Authority Slice.
+
+| Table or group | introduced_in | required_for | not_required_for | Authority role | Storage class |
+|---|---|---|---|---|---|
+| `task_spine_entries` | future / diagnostic | Journey Spine continuity when promoted | v0.1-v0.4 required exits | supplemental reconstruction record | future-only diagnostic |
+| `domain_terms` | future / diagnostic | domain vocabulary stewardship when promoted | v0.1-v0.4 required exits | accepted term record if promoted | future-only diagnostic |
+| `module_map_items` | future / diagnostic | module map stewardship when promoted | v0.1-v0.4 required exits | accepted module map item if promoted | future-only diagnostic |
+| `interface_contracts` | future / diagnostic | interface contract stewardship when promoted | v0.1-v0.4 required exits | accepted interface review state if promoted | future-only diagnostic |
+
+```sql
+CREATE TABLE task_spine_entries (
+  task_spine_entry_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT,
+  sequence_no INTEGER NOT NULL,
+  entry_kind TEXT NOT NULL,
+  lifecycle_phase TEXT,
+  actor_kind TEXT NOT NULL,
+  source_record_kind TEXT,
+  source_record_id TEXT,
+  summary TEXT NOT NULL DEFAULT '',
+  refs_json TEXT NOT NULL DEFAULT '[]',
+  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(task_id, sequence_no)
+);
+
+CREATE TABLE domain_terms (
+  domain_term_id TEXT PRIMARY KEY,
+  term TEXT NOT NULL,
+  meaning TEXT NOT NULL,
+  code_representation TEXT,
+  not_this_json TEXT NOT NULL DEFAULT '[]',
+  related_terms_json TEXT NOT NULL DEFAULT '[]',
+  source_ref TEXT,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE module_map_items (
+  module_map_item_id TEXT PRIMARY KEY,
+  module_path TEXT NOT NULL,
+  responsibility TEXT NOT NULL,
+  public_interface_json TEXT NOT NULL DEFAULT '[]',
+  dependencies_json TEXT NOT NULL DEFAULT '[]',
+  internal_complexity TEXT NOT NULL DEFAULT '',
+  test_boundary TEXT,
+  owner_decision TEXT,
+  watchpoints_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE interface_contracts (
+  interface_contract_id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  owner_module TEXT NOT NULL,
+  change_type TEXT NOT NULL,
+  inputs_json TEXT NOT NULL DEFAULT '[]',
+  outputs_json TEXT NOT NULL DEFAULT '[]',
+  errors_json TEXT NOT NULL DEFAULT '[]',
+  compatibility_impact TEXT NOT NULL,
+  callers_impacted_json TEXT NOT NULL DEFAULT '[]',
+  boundary_tests_json TEXT NOT NULL DEFAULT '[]',
+  review_status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+```
+
+Current reference TDD discipline uses the Agency Assurance profile's `feedback_loops` and `tdd_traces` tables. `feedback_loops` owns the selected feedback loop and any alternate loop for a waiver; `tdd_traces` owns RED, GREEN, refactor/check artifacts, and non-TDD justification. Evidence Manifest rows remain the coverage owner for acceptance criteria and changed files. None of these tables is part of the v0.1 minimum unless a later owner profile is deliberately enabled.
 
 `project_state.state_version` is the project-scoped state clock. Core initializes exactly one `project_state` row for the registered project during runtime bootstrap, before any project-scoped mutation can compare `expected_state_version` with `project_state.state_version`.
 
@@ -893,15 +960,15 @@ flowchart TD
   CompareProject -->|yes| Commit
 ```
 
-`task_events` remains append-only event history inside `state.sqlite`; reference storage does not introduce a separate event store. `task_events.event_seq` is the deterministic global append sequence for all events in the database. Core allocates it under the same write transaction as the state change, and Journey reconstruction, API event lists, and conformance ordering use ascending `event_seq`, never timestamps. `task_events.state_version` records the resulting version for the affected scope. For task events this is `tasks.state_version`; for project-level events with `task_id=null` this is `project_state.state_version`. Multiple events may share an affected-scope `state_version`; `event_seq` still defines their order.
+`task_events` remains append-only event history inside `state.sqlite`; reference storage does not introduce a separate event store. `task_events.event_seq` is the deterministic global append sequence for all events in the database. Core allocates it under the same write transaction as the state change, and API event lists, conformance ordering, and future diagnostic Journey reconstruction use ascending `event_seq`, never timestamps. `task_events.state_version` records the resulting version for the affected scope. For task events this is `tasks.state_version`; for project-level events with `task_id=null` this is `project_state.state_version`. Multiple events may share an affected-scope `state_version`; `event_seq` still defines their order.
 
 `tool_invocations` stores request replay metadata needed to return the original committed response. Only committed, non-dry-run tool calls create or update `tool_invocations`; `dry_run=true` creates no replay row and does not consume the idempotency key for authoritative replay. Non-authoritative diagnostics, if an implementation keeps them, must not be stored in `tool_invocations` or used to replay state-changing responses. `tool_invocations.request_hash` stores the canonical request hash defined by the MCP API idempotency rules: canonical JSON, UTF-8, `tool_name`, schema-normalized request body and optional fields, sorted object keys, schema-ordered arrays unless explicitly order-insignificant, NFC Unicode strings, and envelope coverage that excludes only `request_id` and `idempotency_key`. `tool_invocations.state_version` stores the same primary affected-scope version returned in `ToolResponseBase.state_version`: Task State Version when Core resolves a primary Task, otherwise Project State Version. Reusing an idempotency key with a different `request_hash` returns `STATE_CONFLICT`.
 
 Replay lookup uses the committed row before current state-version freshness for the same idempotency scope. If the stored `request_hash` matches, Core returns the original committed response as replay of an already committed result; it does not re-run current `expected_state_version` checks, append events, register artifacts, enqueue projections, alter owner relations, or update the replay row even if current state has advanced. If the hash differs, the mismatch is a storage safety signal: the caller is trying to reuse a mutation key for a different request body, artifact input set, envelope authority basis, or owner relation. Core must return `STATE_CONFLICT`, preserve the original committed replay row, and avoid merging the new payload into the old response.
 
-`tasks.projection_version` is the TASK projection/template/job version used to prevent older TASK renders from replacing newer ones. It is not a state clock. `tasks.projected_version`, if retained, is only the TASK projection summary cache of the last rendered source state version. It must not be treated as the storage location for every task-related `ProjectionKind`.
+When the Operations profile installs optional TASK projection summary caches, `tasks.projection_version` is the TASK projection/template/job version used to prevent older TASK renders from replacing newer ones. It is not a state clock. `tasks.projected_version` is only the TASK projection summary cache of the last rendered source state version. It must not be treated as the storage location for every task-related `ProjectionKind`.
 
-`tasks.projection_status` is the TASK projection status summary. Per-kind projection freshness is tracked through `projection_jobs.source_state_version`, job status, managed hashes, and the relevant projection records or artifact refs for API-owned projection kinds enabled by the active support class or profile. These are staged support labels, not v0.1 Core Authority Slice scope: v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts, while v0.2 User-Facing Harness MVP provides enough derived summary or card output for users to understand current status, judgment, evidence, close readiness, acceptance, and residual risk. Optional, future, or diagnostic projection kinds are tracked only when enabled. `APR` freshness starts from committed Approval records and their approval-shaped Decision Packets, not from non-mutating `approval_request_candidate` payloads. Do not treat one Task field as owning all projection freshness.
+`tasks.projection_status`, when installed by the Operations profile, is the TASK projection status summary. Per-kind projection freshness is tracked through `projection_jobs.source_state_version`, job status, managed hashes, and the relevant projection records or artifact refs for API-owned projection kinds enabled by the active support class or profile. These are staged support labels, not v0.1 Core Authority Slice scope: v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts, while v0.2 User-Facing Harness MVP provides enough derived summary or card output for users to understand current status, judgment, evidence, close readiness, acceptance, and residual risk. Optional, future, or diagnostic projection kinds are tracked only when enabled. `APR` freshness starts from committed Approval records and their approval-shaped Decision Packets, not from non-mutating `approval_request_candidate` payloads. Do not treat one Task field as owning all projection freshness.
 
 `write_authorizations` stores durable `prepare_write` allow decisions. The allow/block contract is owned by [Kernel `prepare_write` State Logic](kernel.md#prepare_write) and the public response shape by [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write). Storage-specific requirements are: each distinct committed non-dry-run allowed request inserts a distinct row; idempotent return is only replay of the same committed request under the same idempotency key, request hash, and compatible basis; `basis_state_version` stores the affected-scope state version used as the compatibility basis; `updated_at` changes whenever authorization status changes; and status history remains in `task_events`.
 
@@ -911,13 +978,13 @@ Stored `write_authorizations` rows require non-null `basis_state_version`, inclu
 
 `record_run` consumption is stored by setting the reciprocal links `write_authorizations.consumed_by_run_id` and `runs.write_authorization_id` in one Core transaction. The unique partial index on `runs.write_authorization_id` enforces storage single-use for committed Runs; idempotent replay returns the original Run and response metadata instead of inserting another Run row. Rejected pre-commit `record_run` calls, such as missing Write Authorization before any Run is committed, do not insert a `runs` row and therefore have no storage Run ID to return; the nullable API `run_id` represents that absence without inventing a placeholder. Runs that attempt an invalid, stale, missing, consumed, or scope-exceeded authorization leave `runs.write_authorization_id` empty; attempted refs may be kept in validator findings, run violation payload, or `task_events.payload_json` for audit. Kernel-owned close and evidence consequences remain in [Kernel `record_run` State Logic](kernel.md#record_run).
 
-`decision_packets` stores Decision Packet state records. `decision_packets.decision_kind`, `decision_packets.decision_profile`, and `decision_packets.judgment_domain` are part of the current reference schema and DDL, not future-profile display prose. When the v0.1 Core Authority Slice or any later stage stores a Decision Packet, `judgment_domain` is non-null and validates against the MCP `JudgmentDomain` enum, and `decision_profile` is non-null and validates against the MCP `DecisionProfile` enum. The optional `decision_requests` table may be omitted in minimal v0.1 implementations, but if retained it must carry the same required `decision_profile` and `judgment_domain` for request/routing parity. User-facing v0.2 display quality renders friendly labels from the stored values. `decision_kind` remains the lifecycle, payload-branch, gate-meaning, and state-transition field. `decision_profile` stores the selected Decision Packet validation/display profile, such as `minimal_decision`, `architecture_tradeoff`, `approval_shaped`, `waiver`, `acceptance`, `residual_risk_acceptance`, or `reconcile`. `judgment_domain` stores the schema-owned user-visible judgment domain used by projections and decision displays. Neither `decision_profile` nor `judgment_domain` directly changes gate aggregation, approval behavior, waiver behavior, residual-risk acceptance, or close readiness unless a separate owner rule explicitly defines that effect.
+`decision_packets` stores Decision Packet state records in the User-Facing Harness MVP profile and later profiles. It is not part of the v0.1 minimum schema. Once a profile stores a Decision Packet, `decision_packets.decision_kind`, `decision_packets.decision_profile`, and `decision_packets.judgment_domain` are current reference fields, not display-only prose. `judgment_domain` is non-null and validates against the MCP `JudgmentDomain` enum, and `decision_profile` is non-null and validates against the MCP `DecisionProfile` enum. The optional `decision_requests` table may be omitted even when Decision Packets are present, but if retained it must carry the same required `decision_profile` and `judgment_domain` for request/routing parity. User-facing v0.2 display quality renders friendly labels from the stored values. `decision_kind` remains the lifecycle, payload-branch, gate-meaning, and state-transition field. `decision_profile` stores the selected Decision Packet validation/display profile, such as `minimal_decision`, `architecture_tradeoff`, `approval_shaped`, `waiver`, `acceptance`, `residual_risk_acceptance`, or `reconcile`. `judgment_domain` stores the schema-owned user-visible judgment domain used by projections and decision displays. Neither `decision_profile` nor `judgment_domain` directly changes gate aggregation, approval behavior, waiver behavior, residual-risk acceptance, or close readiness unless a separate owner rule explicitly defines that effect.
 
 The `decision_packets` columns for request-time state summary, question, agent latitude, affected gates, affected acceptance criteria, deferral consequence, user context, approval scope, reconcile item, affected scope, context refs, evidence/artifact refs, residual-risk refs, and expiry preserve the API/kernel-owned Decision Packet quality fields even when optional `decision_requests` rows are omitted. `question` is the storage column for `what_user_is_deciding`. `expires_at` is the canonical expiry/timeout field for the Decision Packet when present. Gate aggregation, status/next, and close blockers read expiry from canonical Decision Packet state, not from an unlinked Decision Request row. `approval_scope_json` is meaningful only for `decision_kind=approval` and `decision_profile=approval_shaped`; non-approval packets store `{}` as the agreed absent/null representation, and approval packets must store a valid `ApprovalScope`. `reconcile_item_id` is populated only for reconcile decisions. Storage may keep richer nested API payloads inside JSON columns, but it must not drop common fields that every profile needs to explain the user judgment or prove related refs, and it must not drop profile-specific fields that the selected profile needs to recompute gates or prove acceptance/risk/waiver context was visible.
 
 For nullable or profile-specific API fields stored in non-null JSON columns, storage uses explicit sentinels only where this paragraph allows them. `recommendation_json='{}'` is the canonical storage representation for `recommendation=null`; a present recommendation must validate as `DecisionPacketRecommendation` with `option_id`, `reason`, `uncertainty`, and `when_to_revisit`. `decision_profile=minimal_decision` may store `recommendation_json='{}'`, empty detail arrays inside `options_json`, `affected_acceptance_criteria_json='[]'`, and `deferral_consequence=''` when those details are not material to the concise decision, but it must still preserve the decision question, profile, domain, route, relevant scope, and related state/artifact refs. Full profiles must populate the profile-specific fields required by the MCP profile rules before commit. `approval_scope_json='{}'` is the canonical storage representation for `approval_scope=null` only for non-approval Decision Packets; `decision_kind=approval` with `decision_profile=approval_shaped` requires a valid `ApprovalScope` object before commit. `state_summary_at_request_json` must be a real request-time `StateSummary` snapshot in committed canonical Decision Packet state, including `mode`, `lifecycle_phase`, `result`, `close_reason`, `assurance_level`, and the complete `gates` object. When the public request supplies `state_summary_at_request=null`, Core derives and stores that snapshot before commit. `user_context_json` must validate as `DecisionPacketUserContext`; for `minimal_decision` the arrays may be compact, while full profiles must include the minimum context needed for informed judgment. `{}` must not remain in committed canonical rows for `state_summary_at_request_json` or `user_context_json` except in explicit invalid-state recovery fixtures or pre-repair corrupt-state observations, and doctor/recover must report it as invalid state if found in ordinary committed rows. Other JSON columns with `{}` defaults are valid empty objects only when their owner schema defines an empty object as meaningful for the selected profile; otherwise seed loaders and Core validation must reject the committed row. Defaults such as `'{}'` and `'[]'` are therefore valid JSON defaults, not permission to commit arbitrary placeholder shapes.
 
-`decision_requests` is an optional interaction/routing compatibility table for implementation handoff, replay, or compatibility request flow; a minimal v0.1 Core Authority Slice implementation may omit it, along with its optional indexes and nullable compatibility fields. If retained, unlinked `decision_requests` rows remain non-authoritative routing metadata, approval links use `approvals.decision_packet_id`, and gate aggregation must consider `decision_requests` only through a linked compatible `decision_packet_id`. Approval rows require a linked `decision_packet_id`; the optional compatibility ref is `decision_request_id`, not the authority link. The decision gate and approval/acceptance/risk authority rules stay in [Kernel Decision Gate](kernel.md#decision-gate) and the related public tools in [MCP API And Schemas](mcp-api-and-schemas.md#public-tools).
+`decision_requests` is an optional interaction/routing compatibility table for implementation handoff, replay, or compatibility request flow. It is not installed by the v0.1 minimum schema, and later profiles may still omit it along with its optional indexes and nullable compatibility fields. If retained, unlinked `decision_requests` rows remain non-authoritative routing metadata, approval links use `approvals.decision_packet_id`, and gate aggregation must consider `decision_requests` only through a linked compatible `decision_packet_id`. Approval rows require a linked `decision_packet_id`; the optional compatibility ref is `decision_request_id`, not the authority link. The decision gate and approval/acceptance/risk authority rules stay in [Kernel Decision Gate](kernel.md#decision-gate) and the related public tools in [MCP API And Schemas](mcp-api-and-schemas.md#public-tools).
 
 Optional `decision_requests.expires_at` is routing and compatibility metadata only. It may help a surface expire a staged prompt or request handoff, but it does not replace `decision_packets.expires_at`, does not satisfy or clear `decision_gate`, and must not be used by close blockers unless the request row is linked to a compatible canonical Decision Packet whose own expiry state is current.
 
@@ -931,37 +998,27 @@ Final acceptance in the current reference model has no `acceptance_records` tabl
 
 Core must validate every JSON ref array before commit. `selected_loop_refs_json` and `execution_refs_json` store `StateRecordRef` arrays; `tdd_trace_refs_json`, `manual_qa_record_refs_json`, and `evidence_manifest_refs_json` are restricted to their matching record kinds. `artifact_refs_json` stores committed `ArtifactRef` values resolved from the public update payload or related tool request. `operation=create` requires a non-empty `loop_kind`, `loop_profile`, `planned_loop`, and valid `status`; `feedback_loop_id` may be Core-assigned or caller-supplied for deterministic fixture/import creation and must be unique. `operation=update` requires an existing row with the same `task_id` and compatible `change_unit_id`; nullable scalar payload fields leave stored values unchanged, while ref arrays and artifact refs are additive. `status=waived` requires `waiver_reason` or a referenced compatible waiver/decision record. `status=executed` requires at least one resulting execution, artifact, TDD trace, Manual QA, or evidence manifest ref. `tdd_traces` remains the canonical red/green/refactor evidence record when TDD is selected; it does not replace the `feedback_loops` row. `feedback_loop_check` reads these records as a validator and does not add a new kernel gate.
 
-`artifact_links` is the queryable many-to-many attachment table for artifacts. In the current Task-scoped artifact model, each row has a non-null `task_id` matching the registered artifact and the owner record's Task. Use it to attach artifacts only to existing owner records that are Task-scoped for the same `task_id`, such as `task`, `change_unit`, `run`, `decision_packet`, `shared_design`, `residual_risk`, `evidence_manifest`, `feedback_loop`, `tdd_trace`, `manual_qa_record`, `eval`, `journey_spine_entry`, and `projection`. If an owner kind can also have project-scoped rows, those rows use their own state/projection metadata and are not artifact-link targets until a future extension adds project-scoped artifact storage/API. Exported files use artifact kinds or retention classes such as `export_component` and `retention_class=export`; they do not attach to an `export` state record unless a future extension deliberately adds a matching table, `StateRecordRef` value, and integrity semantics. Existing `artifact_refs_json` fields may preserve ordered or record-local context, but multi-record artifact reuse and artifact integrity checks should use `artifact_links`.
+`artifact_links` is the queryable many-to-many attachment table for artifacts. In the current Task-scoped artifact model, each row has a non-null `task_id` matching the registered artifact and the owner record's Task. v0.1 needs only links to the Task, Change Unit, Run, or other owner relation used by the minimal artifact/evidence ref. Later profiles may attach artifacts to profile-enabled owner records that are Task-scoped for the same `task_id`, such as `decision_packet`, `shared_design`, `residual_risk`, `evidence_manifest`, `feedback_loop`, `tdd_trace`, `manual_qa_record`, `eval`, `journey_spine_entry`, and `projection`. If an owner kind can also have project-scoped rows, those rows use their own state/projection metadata and are not artifact-link targets until a future extension adds project-scoped artifact storage/API. Exported files use artifact kinds or retention classes such as `export_component` and `retention_class=export`; they do not attach to an `export` state record unless a future extension deliberately adds a matching table, `StateRecordRef` value, and integrity semantics. Existing `artifact_refs_json` fields may preserve ordered or record-local context, but multi-record artifact reuse and artifact integrity checks should use `artifact_links`.
 
 This Task-scoped link is an artifact-poisoning control. An `artifacts` registry row without the required compatible `artifact_links` row is not enough to satisfy evidence, QA, verification, projection, export, or close-related checks. A link that crosses Task scope, points at a missing owner, or uses an owner kind incompatible with the artifact kind must be rejected; ordered `artifact_refs_json` display context cannot override the registry plus owner-link checks.
 
-For `artifact_links.record_kind=projection`, `artifact_links.record_id` stores `projection_jobs.projection_job_id`. The link is valid only when Core can resolve that job to the rendered projection output it links: the job is Task-scoped to the same `task_id` as the artifact link, has matching `projection_kind` and `target_ref`, has `status=completed`, and has an `output_path` or documented projection ref for the rendered output. `projection_jobs.target_ref` and `output_path` are validation and locator metadata, not replacements for `artifact_links.record_id`. Project-level projection jobs may still be tracked in `projection_jobs` where projection owner docs allow them, but the current Task-scoped artifact DDL does not create project-scoped artifact rows or artifact links for those jobs. This keeps current reference storage on `projection_jobs` and does not introduce a `projections` table.
+For `artifact_links.record_kind=projection`, which is Operations-profile behavior, `artifact_links.record_id` stores `projection_jobs.projection_job_id`. The link is valid only when Core can resolve that job to the rendered projection output it links: the job is Task-scoped to the same `task_id` as the artifact link, has matching `projection_kind` and `target_ref`, has `status=completed`, and has an `output_path` or documented projection ref for the rendered output. `projection_jobs.target_ref` and `output_path` are validation and locator metadata, not replacements for `artifact_links.record_id`. Project-level projection jobs may still be tracked in `projection_jobs` where projection owner docs allow them, but the current Task-scoped artifact DDL does not create project-scoped artifact rows or artifact links for those jobs. This keeps current reference storage on `projection_jobs` and does not introduce a `projections` table.
 
 `manual_qa_records.waiver_decision_packet_id` and `manual_qa_records.residual_risk_refs_json` are the storage hooks for QA waiver decisions and close-relevant risk refs. The waiver contract is owned by [Kernel Waiver Semantics](kernel.md#waiver-semantics) and the Manual QA policy in [Design Quality Policies](design-quality-policies.md#manual-qa-manual_qa).
 
 `change_unit_dependencies` is current reference DAG metadata for shaping, ordering, and close visibility. It is not a parallel orchestration scheduler and does not authorize multiple active implementation lanes.
 
-`baselines` stores BaselineCapture records in state with repo head, branch, dirty flag, tree hash, included/ignored paths, optional diff artifact, and status. `baseline_ref` fields in other tables refer to `baselines.baseline_ref`.
+`baselines` stores BaselineCapture records in the Agency Assurance profile with repo head, branch, dirty flag, tree hash, included/ignored paths, optional diff artifact, and status. `baseline_ref` fields in other tables refer to `baselines.baseline_ref` only when that profile is installed; before then they are nullable compatibility fields validated by Core when present.
 
-Recommended indexes:
+Recommended indexes are profile fragments too. Install only the indexes whose tables are present.
+
+Core Authority Slice indexes:
 
 ```sql
 CREATE INDEX idx_task_events_task_version ON task_events(task_id, state_version);
 CREATE INDEX idx_task_events_task_seq ON task_events(task_id, event_seq);
-CREATE INDEX idx_decision_requests_task_status ON decision_requests(task_id, status); -- optional; omit when decision_requests is omitted
-CREATE INDEX idx_decision_requests_packet ON decision_requests(decision_packet_id); -- optional; omit when decision_requests is omitted
-CREATE INDEX idx_decision_packets_task_status ON decision_packets(task_id, status);
-CREATE INDEX idx_residual_risks_task_status ON residual_risks(task_id, status);
-CREATE INDEX idx_shared_designs_task_status ON shared_designs(task_id, status);
-CREATE INDEX idx_feedback_loops_task_status ON feedback_loops(task_id, status);
-CREATE INDEX idx_feedback_loops_change_unit ON feedback_loops(change_unit_id);
-CREATE INDEX idx_task_spine_entries_task_seq ON task_spine_entries(task_id, sequence_no);
-CREATE INDEX idx_change_unit_dependencies_task ON change_unit_dependencies(task_id, change_unit_id);
-CREATE INDEX idx_baselines_task_change_unit ON baselines(task_id, change_unit_id);
 CREATE INDEX idx_write_authorizations_task_status ON write_authorizations(task_id, status);
 CREATE INDEX idx_write_authorizations_change_unit ON write_authorizations(change_unit_id);
-CREATE INDEX idx_approvals_decision_packet ON approvals(decision_packet_id);
-CREATE INDEX idx_projection_jobs_status ON projection_jobs(status, projection_version);
 CREATE INDEX idx_artifacts_task_run ON artifacts(task_id, run_id);
 CREATE INDEX idx_artifact_links_artifact ON artifact_links(artifact_id);
 CREATE INDEX idx_artifact_links_record ON artifact_links(record_kind, record_id);
@@ -970,9 +1027,41 @@ CREATE INDEX idx_runs_write_authorization ON runs(write_authorization_id);
 CREATE UNIQUE INDEX uq_runs_write_authorization_consumed
 ON runs(write_authorization_id)
 WHERE write_authorization_id IS NOT NULL;
+```
+
+User-Facing Harness MVP indexes:
+
+```sql
+CREATE INDEX idx_decision_requests_task_status ON decision_requests(task_id, status); -- optional; omit when decision_requests is omitted
+CREATE INDEX idx_decision_requests_packet ON decision_requests(decision_packet_id); -- optional; omit when decision_requests is omitted
+CREATE INDEX idx_decision_packets_task_status ON decision_packets(task_id, status);
+CREATE INDEX idx_residual_risks_task_status ON residual_risks(task_id, status);
+CREATE INDEX idx_shared_designs_task_status ON shared_designs(task_id, status);
+```
+
+Agency Assurance indexes:
+
+```sql
+CREATE INDEX idx_feedback_loops_task_status ON feedback_loops(task_id, status);
+CREATE INDEX idx_feedback_loops_change_unit ON feedback_loops(change_unit_id);
+CREATE INDEX idx_change_unit_dependencies_task ON change_unit_dependencies(task_id, change_unit_id);
+CREATE INDEX idx_baselines_task_change_unit ON baselines(task_id, change_unit_id);
+CREATE INDEX idx_approvals_decision_packet ON approvals(decision_packet_id);
 CREATE INDEX idx_evals_task_change_unit ON evals(task_id, change_unit_id);
 CREATE INDEX idx_manual_qa_records_task_change_unit ON manual_qa_records(task_id, change_unit_id);
+```
+
+Operations indexes:
+
+```sql
+CREATE INDEX idx_projection_jobs_status ON projection_jobs(status, projection_version);
 CREATE INDEX idx_reconcile_items_status ON reconcile_items(status);
+```
+
+Future / diagnostic indexes:
+
+```sql
+CREATE INDEX idx_task_spine_entries_task_seq ON task_spine_entries(task_id, sequence_no);
 ```
 
 <a id="task_events"></a>
@@ -1010,6 +1099,8 @@ Storage hardening migrations should use this checklist before tightening tables 
 - Run fixture seed and import loaders through the same JSON, enum/status, state-version, idempotency, projection, connector-manifest, artifact registry, and artifact-link validation used by Core storage. Compact fixture shorthand must expand to valid owner records before insert.
 
 ## Lock policy
+
+Persistent `locks` rows are Operations profile storage. The locking rules below still describe the reference coordination policy, but the v0.1 Core Authority Slice may prove the single-process authority loop without installing the persistent `locks` table.
 
 State-changing operations acquire a lock at the narrowest practical scope:
 
@@ -1077,6 +1168,8 @@ Reference layout:
         exports/
         tmp/
 ```
+
+The layout lists all reference artifact areas so profile-enabled records have stable homes. A v0.1 implementation needs only the artifact directories required to register its minimal artifact/evidence ref; later directories may be created lazily when the matching profile is enabled.
 
 ```mermaid
 flowchart TD
@@ -1206,7 +1299,7 @@ Owner validation is part of integrity, not a display convenience. An artifact th
 
 ## Baseline capture format
 
-Baseline capture records the repository state used by write, approval, evidence, and verification checks.
+Baseline capture is Agency Assurance profile storage. It records the repository state used by write, approval, evidence, and verification checks when that profile is in scope; it is not part of the v0.1 minimum schema.
 
 Reference storage stores each capture in `baselines`; `baseline_ref` is the primary key used by Runs, approvals, evidence manifests, verification bundles, and validators. If a dirty diff is captured, `baselines.diff_artifact_id` points to the registered diff artifact and an `artifact_links` row attaches it to the baseline context.
 
@@ -1259,7 +1352,7 @@ flowchart LR
 
 ## Verification Bundle Shape
 
-`harness.launch_verify` creates a bundle artifact for detached verification or manual evaluator handoff. The bundle is raw evidence metadata, not an Eval verdict.
+`harness.launch_verify` is Agency Assurance profile behavior. It creates a bundle artifact for detached verification or manual evaluator handoff. The bundle is raw evidence metadata, not an Eval verdict, and it is not required for v0.1.
 
 Minimum bundle contents:
 
@@ -1323,7 +1416,7 @@ Launching verification sets or keeps `verification_gate=pending`. Only `harness.
 
 ## Projection job table
 
-Projection jobs are the durable outbox between committed state and Product Repository Markdown files. The `projection_jobs` table above owns job persistence and the canonical per-projection `source_state_version` metadata.
+Projection jobs are Operations profile storage. They are the durable outbox between committed state and Product Repository Markdown files when projection support is enabled. The `projection_jobs` table above owns job persistence and the canonical per-projection `source_state_version` metadata, but it is not part of the v0.1 Core Authority Slice schema.
 
 Reference storage does not define a separate `projections` table. A rendered projection ref resolves through `projection_jobs.projection_job_id` plus the row's `projection_kind`, `target_ref`, and `output_path` metadata.
 
@@ -1412,7 +1505,7 @@ Projection refresh retries `failed` jobs by creating or resetting a `pending` jo
 
 ## Validator runner skeleton
 
-Reference validators use one shared result shape from the API document. The runner is intentionally small.
+Reference validators are Agency Assurance profile behavior unless an owner document promotes a narrower validator earlier. They use one shared result shape from the API document. The runner is intentionally small, and persisted `validator_runs` are not part of the v0.1 minimum.
 
 Reference validator rollout uses the [Reference Severity Defaults](design-quality-policies.md#reference-severity-defaults) matrix and its [Severity Composition Rule](design-quality-policies.md#severity-composition-rule) as the default severity router. The runner may initially implement shallow checks for each stable ID, but it must keep all relevant findings visible, merge their policy impacts through the policy-owned rule, and expose the merged outcome through gate/blocker-compatible results rather than by rewriting API finding severity. Public primary `ToolError` selection still follows API-owned [Primary Error Code Precedence](mcp-api-and-schemas.md#primary-error-code-precedence).
 
@@ -1480,11 +1573,11 @@ These aliases are compatibility inputs for non-stable validator outputs or non-s
 
 ### Evidence and Verification Profile Implementation Notes
 
-The evidence sufficiency precondition reads only committed records and registered artifacts. Inputs are: Task, `task_gates`, Change Units, Decision Packets, Residual Risks, Shared Designs, Journey Spine Entries, Runs, approvals, Evidence Manifests, Evals, Manual QA records, artifacts, artifact links, and the relevant baseline ref. It computes whether the applicable Evidence Profile is absent, partial, sufficient, stale, or blocked, then updates or blocks through Core according to the kernel rules.
+The evidence sufficiency precondition reads only committed records and registered artifacts from the profiles that are installed and relevant to the active scenario. Inputs can include Task, `task_gates`, Change Units, Decision Packets, Residual Risks, Shared Designs, Journey Spine Entries, Runs, approvals, Evidence Manifests, Evals, Manual QA records, artifacts, artifact links, and the relevant baseline ref. It computes whether the applicable Evidence Profile is absent, partial, sufficient, stale, or blocked, then updates or blocks through Core according to the kernel rules.
 
 The verification independence precondition reads `evals.independence_json`, `evaluator_run_id`, `target_run_id`, evaluator and target `surface_id`, `baseline_ref`, bundle artifact refs, and `actor_kind`. It confirms whether the Eval profile is `same_session`, `subagent_context`, `fresh_session`, `fresh_worktree`, `sandbox`, or `manual_bundle`, and whether that profile can support detached assurance for the target close path.
 
-No additional evidence/verification profile DDL is required beyond the current reference tables above. Existing JSON fields hold profile metadata: `change_units.autonomy_profile`, `change_units.agent_may_do_json`, `change_units.user_judgment_required_json`, `change_units.afk_stop_conditions_json`, `change_units.end_to_end_path_json`, `decision_packets.context_refs_json`, `decision_packets.context_artifact_refs_json`, `decision_packets.residual_risk_refs_json`, `residual_risks.accepted_risk_json`, `residual_risks.follow_up_requirement_json`, `evidence_manifests.criteria_json`, `evidence_manifests.supporting_refs_json`, `evidence_manifests.stale_if_json`, `evals.evidence_reviewed_json`, `evals.independence_json`, `evals.artifact_refs_json`, `runs.observed_changes_json`, `runs.command_results_json`, `runs.artifact_refs_json`, `approvals.*_json`, `manual_qa_records.findings_json`, `manual_qa_records.residual_risk_refs_json`, and `validator_runs.findings_json`.
+No additional evidence/verification profile DDL is required beyond the staged profile fragments above. Existing JSON fields hold profile metadata when their table profile is installed: `change_units.autonomy_profile`, `change_units.agent_may_do_json`, `change_units.user_judgment_required_json`, `change_units.afk_stop_conditions_json`, `change_units.end_to_end_path_json`, `decision_packets.context_refs_json`, `decision_packets.context_artifact_refs_json`, `decision_packets.residual_risk_refs_json`, `residual_risks.accepted_risk_json`, `residual_risks.follow_up_requirement_json`, `evidence_manifests.criteria_json`, `evidence_manifests.supporting_refs_json`, `evidence_manifests.stale_if_json`, `evals.evidence_reviewed_json`, `evals.independence_json`, `evals.artifact_refs_json`, `runs.observed_changes_json`, `runs.command_results_json`, `runs.artifact_refs_json`, `approvals.*_json`, `manual_qa_records.findings_json`, `manual_qa_records.residual_risk_refs_json`, and `validator_runs.findings_json`.
 
 If an implementation cannot derive an input above from existing fields, record an implementation decision before server coding that names the exact table, field, owner document, and stage impact before changing DDL.
 
