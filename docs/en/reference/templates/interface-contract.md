@@ -6,7 +6,7 @@ Use `INTERFACE-CONTRACT` when a module interface, caller impact, compatibility r
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: future / diagnostic. Interface Contract output is a later reference view unless an owner profile explicitly promotes it.
+Implementation tier: Future/diagnostic projections. Interface Contract output is a later reference view unless an owner profile explicitly promotes it.
 
 ## Source records
 

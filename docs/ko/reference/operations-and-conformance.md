@@ -419,9 +419,9 @@ flowchart TD
 
 단계별 전달 계획에서 Decision Packet visibility는 status/next responses, judgment-context resources, decision-packet resources, 최소 `TASK` 또는 card display를 통해 렌더링합니다. 현재 위치 맥락은 먼저 간결한 status/next 출력으로 렌더링합니다.
 
-Standalone `DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`, Run Summary, Evidence Manifest, detailed Eval, TDD Trace, Module Map, Interface Contract projection을 위한 dedicated refresh target은 기능이 켜져 있을 때만 사용하는 optional 또는 미래/진단 target이며, 커널 스모크(Kernel Smoke) 필수 대상이 아닙니다.
+Standalone `DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`, Run Summary, Evidence Manifest, detailed Eval, TDD Trace, Module Map, Interface Contract projection을 위한 dedicated refresh target은 기능이 켜져 있을 때만 사용하는 profile-gated Future/diagnostic projections 또는 Operations/export reports이며, 커널 스모크(Kernel Smoke) 필수 대상이 아닙니다.
 
-Projection support는 source-backed입니다. Persisted projection support를 사용할 때 `TASK` minimal summary는 사용자 대상 MVP projection path입니다. `APR`, `DIRECT-RESULT`, `MANUAL-QA`는 해당 profile이 active일 때 초기 선택 사항입니다. `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD` 같은 detailed report는 owner profile이 승격하지 않는 한 미래/진단입니다. Projection refresh는 template을 채우기 위해 state를 만들지 말고 source record가 없음을 unavailable 또는 not applicable로 보고해야 합니다.
+Projection support는 source-backed입니다. Persisted projection support를 사용할 때 `TASK` minimal summary는 User-facing MVP summaries path이고, `DIRECT-RESULT`는 해당 profile이 active일 때만 compact direct-work summary입니다. `APR`과 `MANUAL-QA`는 해당 profile이 active일 때 Agency assurance reports에 속합니다. `EXPORT`는 export 또는 handoff support가 enabled될 때 Operations/export reports에 속합니다. `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DESIGN`, persisted `JOURNEY-CARD` 같은 detailed report는 owner profile이 승격하지 않는 한 Future/diagnostic projections입니다. Projection refresh는 template을 채우기 위해 state를 만들지 말고 source record가 없음을 unavailable 또는 not applicable로 보고해야 합니다.
 
 Projection refresh status 예시:
 

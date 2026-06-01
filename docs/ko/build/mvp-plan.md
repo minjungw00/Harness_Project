@@ -32,8 +32,8 @@
 초기 output model은 의도적으로 작게 둡니다.
 
 - v0.1은 Core state에서 오는 최소 상태/막힘 출력만 필요합니다. 전체 읽기용 요약 renderer는 필요하지 않습니다.
-- v0.2의 읽기용 출력은 현재 작업 상태, 사용자 결정 요청, 근거 요약, 닫기 준비 상태 / blocker 요약을 보여주어야 하며, 필요한 경우 작업 수락 필요 여부/상태와 잔여 위험 표시도 분명히 포함해야 합니다.
-- Journey Card, Journey Spine, Run Summary, TDD Trace, Module Map, Interface Contract, Export, detailed Evidence Manifest, detailed Eval output은 담당 profile이 명시적으로 승격하지 않는 한 optional, diagnostic, later-profile scope로 남습니다.
+- v0.2의 필수 읽기용 요약은 현재 작업 상태, 사용자 결정 요청, 근거 요약, 닫기 준비 상태 / blocker 요약으로 최소화합니다. 작업 수락과 잔여 위험 사실은 관련 있을 때 distinct하게 남지만, 별도 필수 projection kind가 아니라 그 요약 안에 나타납니다.
+- Journey Card, Journey Spine, Run Summary, TDD Trace, Module Map, Interface Contract, Export, detailed Evidence Manifest, detailed Eval output은 담당 profile이 명시적으로 승격하지 않는 한 Future/diagnostic projections 또는 다른 later-profile scope로 남습니다.
 
 ## 단계별 전달 계획
 
@@ -76,7 +76,7 @@ Operator command는 예시적인 구현 선택지입니다. Stage requirement는
 | Stage | 범위에 들어오는 운영자 동작 | Stage 밖에 남기는 운영자 동작 |
 |---|---|---|
 | v0.1 Core Authority Slice | 최소 local connect/register, 기본 상태 또는 진단 읽기, 첫 조각이 그 boundary를 요구할 때만 local API/MCP exposure. | Projection refresh, reconcile, recover, export, artifacts check, full conformance run, release handoff, broad doctor/readiness. |
-| v0.2 User-Facing Harness MVP | 같은 최소 surface에 더해 현재 작업, 사용자 결정, 근거 상태, close blocker, 작업 수락 필요 여부/상태, 잔여 위험 표시를 위한 user-facing status/next diagnostic. | Assurance operations, recover/export, release handoff, broad projection/reconcile operations, full conformance run, broad operations coverage. |
+| v0.2 User-Facing Harness MVP | 같은 최소 surface에 더해 현재 작업, 사용자 결정, 근거 상태, close blocker를 위한 user-facing status/next diagnostic입니다. 작업 수락과 잔여 위험 사실은 관련 있을 때 그 안에 나타납니다. | Assurance operations, recover/export, release handoff, broad projection/reconcile operations, full conformance run, broad operations coverage. |
 | v0.3 Agency Assurance Pack | Owner path를 통한 verification, Manual QA, residual-risk, 작업 수락, stewardship, context-hygiene behavior의 assurance-profile support. | Operator recover/export completeness, release handoff, broad projection/reconcile operations, full operations conformance. |
 | v0.4 Operations & Handoff Pack | Full local operations support입니다. Doctor/readiness, projection refresh, reconcile, recover, export, artifacts check, 담당 문서가 정의한 release handoff, runtime suite가 materialized된 뒤 conformance run을 포함합니다. | Remote/shared operations, dashboard, hosted workflow UI, broad connector automation, team workflow, orchestration은 later promotion 전까지 제외합니다. |
 | v1+ Expansion | Owner docs가 exact contract, guarantee level, fixture, fallback behavior를 정의한 뒤 승격한 roadmap operations만 포함합니다. | 승격되지 않은 roadmap candidate는 staged delivery 밖에 남습니다. |
@@ -115,7 +115,7 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 | Stage | Build 읽기 규칙 | 적용할 owner contract |
 |---|---|---|
 | v0.1 Core Authority Slice | 좁은 authority loop와 [Core Authority Slice schema](../reference/storage-and-ddl.md#core-authority-slice-schema)를 증명하는 데 필요한 owner-defined field만 사용합니다. 넓은 checklist를 만족하려고 future-profile record를 만들지 않습니다. Minimal seeded blocker가 owner ref를 사용한다면, full user-facing Decision Packet quality가 아니라 그 owner path의 valid shape만 적용합니다. | [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Storage와 DDL](../reference/storage-and-ddl.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
-| v0.2 User-Facing Harness MVP | 사용자가 대기 중인 사용자 결정 맥락, 근거, 닫기 준비 상태, 작업 수락 분리, 잔여 위험 표시를 이해하는 데 필요한 field와 display summary를 추가합니다. | [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [커널 참조](../reference/kernel.md), [읽기용 요약(Projection) 참조](../reference/document-projection.md), [Template 참조](../reference/templates/README.md). |
+| v0.2 User-Facing Harness MVP | 사용자가 대기 중인 사용자 결정 맥락, 근거, 닫기 막힘을 이해하는 데 필요한 field와 display summary를 추가합니다. 작업 수락과 잔여 위험 사실은 관련 있을 때 distinct하게 남지만 최소 요약 안에 들어갑니다. | [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [커널 참조](../reference/kernel.md), [읽기용 요약(Projection) 참조](../reference/document-projection.md), [Template 참조](../reference/templates/README.md). |
 | 에이전시 보증 팩(v0.3 Agency Assurance Pack) / 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Verification, QA, 잔여 위험, 작업 수락, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, release-handoff profile은 담당 문서가 정의한 곳에서만 추가합니다. | [설계 품질 정책](../reference/design-quality-policies.md), [운영과 Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md), [향후 Fixture Catalog](../reference/future-fixture-catalog.md), [Storage와 DDL](../reference/storage-and-ddl.md). |
 
 따라서 API schema에서 required라는 말은 해당 tool call, record, profile이 구현되거나 사용될 때 required라는 뜻입니다. 그 자체로 future-profile field가 가장 작은 runnable slice의 일부가 되지는 않습니다.
@@ -159,7 +159,7 @@ MVP는 다음을 보여야 합니다.
 - 필요한 근거가 없거나 필요한 사용자 결정이 missing이면 close가 block된다
 - 작업 수락과 close 전에 잔여 위험을 표시할 수 있다
 - 사용자의 작업 수락이 sensitive-action Approval, 잔여 위험 수용과 구분된다
-- readable summary 또는 card가 현재 작업 상태, 사용자 결정 요청, 근거 요약, 닫기 준비 상태/blocker, 작업 수락 필요 여부/상태, 잔여 위험 표시를 보여 주지만, template polish가 source of truth가 되지는 않는다
+- readable summary 또는 card가 현재 작업 상태, 사용자 결정 요청, 근거 요약, 닫기 준비 상태/blocker를 보여 주지만, template polish가 source of truth가 되지는 않는다. 작업 수락과 잔여 위험 사실은 관련 있을 때 이 요약 안에서 distinct하게 남는다
 - prose나 renderer output만이 아니라 Core state, events, artifacts, projection/freshness facts, structured errors로 conformance를 증명할 수 있다
 
 근거 기록, 읽기 쉬운 요약, projection 최신성은 이 경험을 지원합니다. 이것들이 단계의 정체성은 아니며, 이 사용자 읽기 경로를 넘어서는 projection polish는 범위 밖에 둡니다.

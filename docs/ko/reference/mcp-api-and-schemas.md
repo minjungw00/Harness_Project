@@ -269,14 +269,15 @@ Fixture assertions를 위한 event stability는 [Kernel Stable Event Catalog](ke
 
 | 지원 계층 | Values | Requirement |
 |---|---|---|
-| 코어 권한 조각(v0.1 Core Authority Slice) | required 없음 | v0.1 status/blocker output은 persisted Markdown projection job 없이 read/freshness fact를 노출할 수 있습니다. |
-| 사용자 대상 MVP | persisted projection support를 사용할 때 `TASK` minimal task-scoped readable summary | 사용자 읽기용 status/judgment/evidence/close summary path를 제공합니다. 동등한 status/next card로도 full `TASK` template rendering 없이 MVP output을 충족할 수 있습니다. |
-| 초기 선택 사항 | `APR`, `DIRECT-RESULT`, `MANUAL-QA` | 해당 approval, direct-work, Manual QA profile이 active일 때만 구현합니다. |
-| 미래 / 진단 | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Detailed report, trace, map, export, handoff, standalone Decision Packet, persisted Journey Card, diagnostic view입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack) 또는 owner가 승격한 다른 later profile이 범위에 있을 때만 켭니다. |
+| Core status output | required 없음 | v0.1 status/blocker output은 persisted Markdown projection job 없이 read/freshness fact를 노출할 수 있습니다. |
+| User-facing MVP summaries | persisted projection support를 사용할 때 `TASK` minimal task-scoped readable summary; active direct-work compact-result display에만 `DIRECT-RESULT` | 읽기용 status/judgment/evidence/close summary path를 제공합니다. 동등한 status/next card로도 full `TASK` template rendering이나 persisted projection job 없이 MVP output을 충족할 수 있습니다. |
+| Agency assurance reports | `APR`, `MANUAL-QA` | 해당 approval, 수동 QA, waiver, verification, assurance profile이 active일 때만 구현합니다. Compact verification은 card output을 사용할 수 있으며 detailed `EVAL` Markdown은 later diagnostic scope로 남습니다. |
+| Operations/export reports | `EXPORT` | Export, release-handoff, operations report profile이 범위에 있을 때만 켭니다. Export report projection은 읽기용 snapshot이지 authority가 아닙니다. |
+| Future/diagnostic projections | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `JOURNEY-CARD` | Detailed report, trace, map, standalone Decision Packet, persisted Journey Card, Journey Spine-style, detailed Evaluation, diagnostic view입니다. Owner가 승격한 later profile이 범위에 있을 때만 켭니다. |
 
-지원 계층 label은 enum value가 아닙니다. v0.1에는 owner path가 이미 만든 freshness/read fact를 보존하는 것 외의 projection rendering exit requirement가 없습니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험을 이해할 만큼의 파생 output을 제공하지만 broad template polish를 요구하지 않습니다. 미래/진단은 later-profile 또는 diagnostic 범위라는 뜻이며 자동으로 v1+ 전용이라는 뜻은 아닙니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack) 또는 owner가 승격한 다른 profile에서 해당 projection을 켤 수 있습니다.
+지원 계층 label은 enum value가 아닙니다. v0.1에는 owner path가 이미 만든 freshness/read fact를 보존하는 것 외의 projection rendering exit requirement가 없습니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 현재 작업, 사용자 결정, 근거, 닫기 막힘을 이해할 만큼의 파생 output을 제공하지만 broad template polish를 요구하지 않습니다. 작업 수락과 잔여 위험 사실은 관련 있을 때 distinct하게 남지만 필수 projection kind를 늘리지는 않습니다. Agency assurance와 operations/export support는 later profile class입니다. Future/diagnostic projections는 자동으로 v1+ 전용이라는 뜻은 아니며 owner가 승격한 profile에서 켤 수 있지만, v0.1이나 최소 v0.2 요구사항은 아닙니다.
 
-ProjectionKind extensibility가 projection을 기준 상태로 만들지는 않습니다. 모든 projection job은 여전히 owner 기록 및 아티팩트 참조에서 파생된 보기를 렌더링합니다. 어떤 ProjectionKind 지원 계층도 state, 근거, 수동 QA, 검증, 작업 수락, 잔여 위험 수용, close authority, Write Authorization을 만들지 않습니다. `DEC`는 해당 기능이 켜졌을 때 standalone Decision Packet Markdown에만 유효합니다. Standalone `DEC` job이 없어도 active stage/profile이 요구하는 Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 status/next responses, judgment-context resources, decision-packet resources, 최소 `TASK` 또는 card display를 통해 제공되어야 합니다. 사용자 대상 MVP에 필요한 것은 standalone `DEC` `ProjectionKind`가 아니라 Decision Packet 사용자 결정 요청 display shape입니다. Persisted `JOURNEY-CARD` Markdown은 미래/진단 범위입니다. `harness.status`, `harness.next`, significant resume flow의 현재 위치 맥락은 간결한 상태 출력으로 충족할 수 있습니다.
+ProjectionKind extensibility가 projection을 기준 상태로 만들지는 않습니다. 모든 projection job은 여전히 owner 기록 및 아티팩트 참조에서 파생된 보기를 렌더링합니다. 어떤 ProjectionKind 지원 계층도 state, 근거, 수동 QA, 검증, 작업 수락, 잔여 위험 수용, close authority, Write Authorization을 만들지 않습니다. `DEC`는 해당 기능이 켜졌을 때 standalone Decision Packet Markdown에만 유효합니다. Standalone `DEC` job이 없어도 active stage/profile이 요구하는 Decision Packet visibility가 줄어들면 안 되며, 이 visibility는 status/next responses, judgment-context resources, decision-packet resources, 최소 `TASK` 또는 card display를 통해 제공되어야 합니다. 사용자 대상 MVP에 필요한 것은 standalone `DEC` `ProjectionKind`가 아니라 Decision Packet 사용자 결정 요청 display shape입니다. Persisted `JOURNEY-CARD` Markdown과 Journey Spine-style output은 future/diagnostic 범위입니다. `harness.status`, `harness.next`, significant resume flow의 현재 위치 맥락은 간결한 상태 출력으로 충족할 수 있습니다.
 
 `EXPORT`는 export 기능이 켜졌을 때 Release Handoff 같은 보고서 profile을 포함할 수 있습니다. 이런 profile은 projection/보고서 접점일 뿐입니다. Deployment 권한, merge 권한, production-monitoring 권한, 작업 수락, 잔여 위험 수용, assurance 향상, Task close 권한을 만들지 않습니다.
 
@@ -319,7 +320,7 @@ StateSummary:
 | `DecisionPacket`, `DecisionPacketCandidate`, `JudgmentContext`, `AcceptanceVisibilityContext` | v0.2 User-Facing Harness MVP. Full approval/waiver/risk/reconcile profile은 v0.3/v0.4 | Decision Packet 또는 candidate가 만들어질 때 required field가 적용됩니다. v0.1은 Decision Packet storage를 요구하지 않습니다. |
 | `ResidualRiskSummary`와 residual-risk refs | v0.2 visibility. v0.3 full residual-risk acceptance semantics | `status=none`은 summary claim일 수 있습니다. Accepted risk는 standalone record kind가 아니라 `residual_risk` ref의 state입니다. |
 | `ValidatorResult` | v0.3 Agency Assurance와 v0.4 Operations. Owner가 승격한 capability/status check는 예외 | Validator result가 emitted될 때 required field가 적용됩니다. Core check는 validator ID가 되지 않고도 block할 수 있습니다. |
-| `ProjectionJobRef`, `ProjectionKind`, projection freshness object | persisted projection support가 켜진 v0.4 Operations. v0.2는 minimal `TASK`/card output을 사용할 수 있음 | v0.1에서 stage-required인 `ProjectionKind`는 없습니다. Projection ref와 job은 derived-view metadata이며 authority가 아닙니다. |
+| `ProjectionJobRef`, `ProjectionKind`, projection freshness object | v0.1에서 stage-required인 `ProjectionKind`는 없음. v0.2는 minimal `TASK`/card output을 사용할 수 있고, assurance, operations/export, future/diagnostic class는 profile-gated | Projection ref와 job은 derived-view metadata이며 authority가 아닙니다. Kind는 해당 projection support를 enabled한 stage/profile에서만 valid reference target입니다. |
 | `JourneyCardSummary`, `RecommendedPlaybook`, Role Lens routing field | profile에 따라 v0.2 display guidance 또는 later diagnostic view | 읽기 전용 display/routing schema입니다. 그 자체로 write를 authorize하거나, gate를 충족하거나, risk를 accept하거나, Task를 close하지 않습니다. |
 
 ### Sensitive Categories
@@ -546,7 +547,7 @@ EndToEndPath:
 
 Client가 guard, freeze, careful-mode control을 렌더링할 때는 권한 field를 추가하지 않고 이 기존 display shape를 사용합니다. `guarantee_display.level`과 `guarantee_display.notes`는 실제 연결된 capability와 현재 적용 경로를 설명해야 합니다. `blocked_reasons[].message`는 scope, MCP availability, Approval, baseline, capability 같은 구체적인 보류 또는 차단 조건을 이름 붙여야 하며, "guard"나 "freeze" 같은 command label만으로 더 강한 guarantee를 암시하면 안 됩니다.
 
-`DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, `INTERFACE-CONTRACT` 같은 optional, future, diagnostic 지원 계층의 `ProjectionKind` 값은 해당 projection 기능 또는 profile이 켜졌을 때만 projection job kind로 유효합니다. Active stage/profile이 요구하는 Decision Packet visibility는 status/next responses, judgment-context resources, decision-packet resources, 최소 `TASK` 또는 card display를 통해 제공됩니다. 이는 standalone `DEC` `ProjectionKind`가 아니라 Decision Packet 사용자 결정 요청 display shape에 대한 요구사항입니다. Persisted `JOURNEY-CARD` Markdown은 미래/진단 범위이며 status, next, significant resume flow의 현재 위치 맥락은 간결한 상태 출력으로 충족할 수 있습니다. 전체 projection template text는 [Template 참조](templates/README.md)에 있으며, 이 API schema file이 담당하지 않습니다.
+`DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, `INTERFACE-CONTRACT`처럼 active stage/profile 밖에 있는 `ProjectionKind` 값은 해당 projection 기능 또는 profile이 켜졌을 때만 projection job kind로 유효합니다. Active stage/profile이 요구하는 Decision Packet visibility는 status/next responses, judgment-context resources, decision-packet resources, 최소 `TASK` 또는 card display를 통해 제공됩니다. 이는 standalone `DEC` `ProjectionKind`가 아니라 Decision Packet 사용자 결정 요청 display shape에 대한 요구사항입니다. Persisted `JOURNEY-CARD` Markdown과 Journey Spine-style output은 future/diagnostic 범위이며 status, next, significant resume flow의 현재 위치 맥락은 간결한 상태 출력으로 충족할 수 있습니다. 전체 projection template text는 [Template 참조](templates/README.md)에 있으며, 이 API schema file이 담당하지 않습니다.
 
 Decision Packet, Write Authorization, Write Authority Summary, Journey Card, Judgment Context, Autonomy Boundary, Recommended Playbook, acceptance visibility, residual-risk summaries는 public MCP schemas입니다. 이 schemas는 API payload만 설명합니다. 기준 kernel records는 owner docs가 정의합니다. 이 목록에서 `RecommendedPlaybook`은 표시 전용 예외입니다. 자체 기준 kernel record, DDL table, task event, projection job이 없습니다.
 
@@ -968,12 +969,12 @@ Public method는 staged surface별로 묶어 읽습니다. 같은 method가 late
 
 | Method 또는 capability | Stage requirement | Scope boundary |
 |---|---|---|
-| `harness.status`와 `harness.next` | Stage-required fuller user-facing status/next display. | 현재 위치, pending user decision, evidence summary, close readiness, final-acceptance need/status, relevant한 residual-risk visibility, smallest unblocker를 사용자 언어로 보여줍니다. |
+| `harness.status`와 `harness.next` | Stage-required fuller user-facing status/next display. | 현재 위치, pending user decision, evidence summary, close readiness/blocker, smallest unblocker를 사용자 언어로 보여줍니다. 작업 수락과 잔여 위험 사실은 관련 있을 때 distinct하게 남지만 필수 projection kind를 늘리지는 않습니다. |
 | `harness.intake` | Stage-required user-facing intake/resume path. | Ordinary user work를 schema mode로 분류하면서 scope, non-goals, acceptance criteria, user-owned judgment boundary를 보존합니다. |
 | `harness.request_user_decision`과 `harness.record_user_decision` | User-owned decision과 final acceptance가 progress 또는 close를 막을 때 stage-required입니다. | Packet/candidate가 만들어질 때 Decision Packet field는 schema-required입니다. Approval, waiver, full residual-risk acceptance, reconcile profile은 owner profile이 켜질 때 들어옵니다. |
 | `harness.record_run` | Stage-required evidence/artifact summary path. | MVP path에서 evidence가 충분히 visible해야 합니다. Full Evidence Manifest projection과 assurance record는 명시적으로 enabled되기 전까지 later-profile입니다. |
 | `harness.close_task` | Stage-required close-readiness and blocker response. | Close는 Core-owned로 남습니다. Structured blocker는 evidence, user decision, final acceptance, residual-risk visibility를 구분합니다. |
-| Minimal `TASK` projection 또는 compact status/card output | Stage-required display capability이지만 persisted projection job일 필요는 없습니다. | Status/next/card output이 user-readable MVP display를 충족하면 persisted Markdown rendering은 optional입니다. |
+| Minimal `TASK` projection 또는 compact status/card output | Stage-required display capability이지만 persisted projection job일 필요는 없습니다. | Status/next/card output이 최소 사용자 읽기용 MVP summary를 충족하면 persisted Markdown rendering은 optional입니다. |
 
 #### v0.3 Agency Assurance surface
 
@@ -1073,7 +1074,7 @@ Status response profiles:
 | Profile | Profile-scoped response meaning |
 |---|---|
 | v0.1 minimal | Present하면 active Task/status, compact `status_card`, current state version, 요청되고 사용 가능할 때 write-authority summary, guarantee display, primary structured blocker를 반환합니다. Future-profile array는 empty이고 future-profile object는 schema에 따라 `null` 또는 `unknown`입니다. |
-| v0.2 user-facing | Pending-decision visibility, relevant한 residual-risk summary, close-readiness display, final-acceptance need/status, user-readable evidence/status summary를 추가합니다. |
+| v0.2 user-facing | Pending-decision visibility, evidence/status summary, close-readiness/blocker display를 추가합니다. 작업 수락과 잔여 위험 사실은 관련 있을 때 나타나지만 별도 projection kind를 요구하지 않습니다. |
 | v0.3/v0.4 assurance and operations | Verification, Manual QA, validator, projection freshness, reconcile, diagnostic/export-related ref는 해당 profile과 storage가 enabled될 때만 추가합니다. |
 
 State transition summary: state transition 없음.
@@ -1086,7 +1087,7 @@ Projection job 대기열 추가: 없음.
 
 `recommended_playbooks`는 접점 또는 agent stage router를 위한 non-authoritative display guidance이며, status/next display를 위해 현재 상태와 policy/playbook context에서 계산됩니다. Shared design, review, TDD, QA, guard check, release handoff, browser-QA candidacy 같은 절차를 제안할 수 있습니다. `RecommendedPlaybook.playbook_id`는 stable display/routing string identifier이지 Core-owned closed enum이나 DDL-backed value set이 아닙니다. Known initial ID에는 `shared-design`, `product-review`, `eng-review`, `design-review`, `security-review`, `tdd-loop`, `spec-review`, `code-quality-review`, `qa-review`, `guard-check`, `release-handoff`, `browser-qa-candidate`가 포함되며, 이 목록은 future display/playbook documentation 전체를 포괄하지 않습니다. Recommended Playbook은 자체 기준 kernel 기록, DDL table, `task_events` entry, projection job이 없습니다. Recommendation을 따를 때 사용자 소유 판단이 필요하면 route는 affected write 또는 close가 진행되기 전에 existing Decision Packet 또는 normal Decision Packet candidate/request path를 가리켜야 합니다. `route.display_route` 값은 display route이지 public tool name이 아니며 상태 변경 tool call 지시도 아닙니다. Role Lens/playbook의 전체 권한 없음 경계는 [Agent Integration](agent-integration.md#role-lens-동작)이 담당합니다.
 
-`StatusResponse.recommended_playbooks`와 `StatusResponse.journey_card.recommended_playbooks`가 둘 다 present이면, 둘은 같은 computed guidance를 다른 display level에 렌더링한 것입니다. Top-level field는 compact status만 렌더링하는 status 접점용이고, Journey Card field는 해당 미래/진단 view가 켜졌을 때 같은 guidance를 현재 위치 요약과 함께 유지합니다.
+`StatusResponse.recommended_playbooks`와 `StatusResponse.journey_card.recommended_playbooks`가 둘 다 present이면, 둘은 같은 computed guidance를 다른 display level에 렌더링한 것입니다. Top-level field는 compact status만 렌더링하는 status 접점용이고, Journey Card field는 해당 future/diagnostic view가 켜졌을 때 같은 guidance를 현재 위치 요약과 함께 유지합니다.
 
 `write_authority_summary`는 `include.write_authority=true`일 때 반환됩니다. `include.journey_card=true`이면 같은 current Write Authority Summary display가 `journey_card.write_authority_summary`에도 나타날 수 있습니다.
 
@@ -1199,7 +1200,7 @@ Next response profiles:
 | Profile | Profile-scoped response meaning |
 |---|---|
 | v0.1 minimal | 구현된 경우 scoped write 준비, authorized Run 기록, missing scope/write authority 보고, missing artifact/evidence support 보고 같은 다음 authority-loop action 또는 smallest blocker만 반환합니다. `recommended_playbooks`와 future-profile refs는 empty일 수 있고, owner state가 없으면 `judgment_context`와 `autonomy_boundary`는 `null`일 수 있습니다. |
-| v0.2 user-facing | Ordinary-language next action, user-owned decision이 필요할 때 pending Decision Packet refs와 judgment context, evidence/close-readiness context, relevant한 final-acceptance/residual-risk visibility를 반환합니다. |
+| v0.2 user-facing | Ordinary-language next action, user-owned decision이 필요할 때 pending Decision Packet refs와 judgment context, evidence/close-readiness context를 반환합니다. 작업 수락과 잔여 위험 사실은 관련 있을 때 나타나지만 별도 projection kind를 요구하지 않습니다. |
 | v0.3/v0.4 assurance and operations | Verification, Eval, Manual QA, acceptance, reconcile, projection freshness, operations-oriented next action은 해당 profile이 enabled되고 matching storage가 있을 때만 반환합니다. |
 
 v0.1 Core Authority Slice에서 `harness.next`는 optional입니다. 사용한다면 scoped write 준비, authorized Run 기록, missing scope 보고, missing artifact/evidence support 보고 같은 minimal authority-loop action만 반환해야 합니다. `verification`, `qa`, `acceptance`, `reconcile` focus value와 관련 action kind는 future-profile behavior입니다.
@@ -1533,7 +1534,7 @@ implementation-local detail/audit를 위해 반환될 수 있는 non-stable Even
 
 Violation 또는 audit Run은 audit 및 recovery를 위해 `write_authorization_violation_detected`, `write_authorization_staled`, `write_authorization_revoked`, `write_authorization_expired`, `scope_violation_detected`를 내보낼 수 있습니다. 그런 Run은 evidence sufficiency, 분리 검증, QA, 작업 수락, close readiness를 충족할 수 없습니다. Pre-commit rejection response는 `record_run`에서 stable EventRef value를 반환하지 않습니다.
 
-Committed non-dry-run Run response에서 relevant projection support가 범위에 있을 때 대기열에 들어가는 projection job: 최소 task summary를 위한 `TASK`; direct-result display가 켜져 있고 `kind=direct`일 때 `DIRECT-RESULT`; active projection profile이 해당 미래/진단 output을 포함할 때만 `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `TDD-TRACE`. Dry-run과 pre-commit rejection response는 projection job을 대기열에 넣지 않습니다.
+Committed non-dry-run Run response에서 relevant projection support가 범위에 있을 때 대기열에 들어가는 projection job: 최소 task summary를 위한 `TASK`; direct-result display가 켜져 있고 `kind=direct`일 때 `DIRECT-RESULT`; active projection profile이 해당 future/diagnostic output을 포함할 때만 `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `TDD-TRACE`. Dry-run과 pre-commit rejection response는 projection job을 대기열에 넣지 않습니다.
 
 ValidatorResults emitted: `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `codebase_stewardship_check`, applicable design-quality validators, `surface_capability_check`.
 
@@ -1937,7 +1938,7 @@ Idempotency behavior: repeated request는 같은 수동 QA 기록과 gate update
 
 Purpose: Core가 모든 close-relevant gates를 check한 뒤 Task를 close, cancel, supersede합니다. 이는 public completion에 대한 유일한 decision point입니다.
 
-Stage/profile: v0.1은 implementation이 그 경로를 선택한 경우 narrow structured blocker/status smoke로만 사용할 수 있습니다. v0.2는 final-acceptance separation과 residual-risk visibility를 포함한 user-facing close readiness와 blocker display를 요구합니다. v0.3은 full assurance, QA, waiver, accepted-risk close semantics를 enabled합니다. v0.4는 enabled Operations profile에서 projection/report freshness blocker를 추가할 수 있습니다.
+Stage/profile: v0.1은 implementation이 그 경로를 선택한 경우 narrow structured blocker/status smoke로만 사용할 수 있습니다. v0.2는 user-facing close readiness와 blocker display를 요구하며, 작업 수락 분리와 잔여 위험 표시는 관련 있을 때 그 안에 나타납니다. v0.3은 full assurance, QA, waiver, accepted-risk close semantics를 enabled합니다. v0.4는 enabled Operations profile에서 projection/report freshness blocker를 추가할 수 있습니다.
 
 Allowed actor: `user`, `lead_agent`, `operator`.
 

@@ -6,7 +6,7 @@ Use `TASK` as the continuity projection for active work. It summarizes the four 
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: required for user-facing MVP as a minimal continuity summary. Only the status, user decision request, evidence summary, and close readiness/blocker portions are early-required; the fuller TASK body is later profile polish.
+Implementation tier: User-facing MVP summaries. Only the status, user decision request, evidence summary, and close readiness/blocker portions are v0.2-required; the fuller TASK body is later profile polish.
 
 ## Source records
 

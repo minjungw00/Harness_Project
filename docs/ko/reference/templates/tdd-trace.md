@@ -6,7 +6,7 @@ Change Unit에서 TDD가 필요하거나 선택 또는 기록된 상태이고 RE
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 미래 / 진단입니다. TDD Trace output은 later policy 또는 diagnostic profile용이며 첫 구현 범위를 키우면 안 됩니다.
+구현 계층: Future/diagnostic projections입니다. TDD Trace output은 later policy 또는 diagnostic profile용이며 첫 구현 범위를 키우면 안 됩니다.
 
 ## 기준 기록
 

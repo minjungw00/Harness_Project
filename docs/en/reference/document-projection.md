@@ -34,15 +34,17 @@ Projection is also a privacy boundary. The projector renders artifact refs, inte
 
 ## Output tiers
 
-Harness keeps three derived-output tiers separate:
+Harness keeps derived-output tiers aligned with staged delivery:
 
-| Tier | Purpose | Early implementation rule |
+| Tier | Stage boundary | Purpose and rule |
 |---|---|---|
-| User-readable outputs | Short summaries that let the user understand the current work: status, user decision request, evidence summary, close readiness or blocker summary, final-acceptance need/status, and residual-risk visibility when relevant. | Required to support the user-facing MVP, but may be rendered as status/next text, compact cards, or minimal `TASK` sections rather than many separate Markdown files. |
-| Agent compact context | The smallest current state needed for the next safe step: role or surface posture, current phase, current Task summary, active blockers, pending user-owned decisions, next allowed action, and freshness. | Keep it compact and current; do not embed long history, logs, traces, screenshots, full projection bodies, full schemas, or reference docs. |
-| Reference/diagnostic outputs | Detailed manifests, run summaries, Journey Card or Journey Spine views, TDD traces, Module Map and Interface Contract projections, detailed Eval reports, export bundles, maps, traces, and operator reports. | Pull-on-demand or later-profile scope. These outputs remain derived views and must not become mandatory for the first runnable slice or the minimum user-facing MVP unless an owner profile explicitly promotes them. |
+| Core status output | v0.1 Core Authority Slice | Minimal structured status/blocker output from current Core state. It may be plain API text or a compact card; it does not require persisted Markdown, a projection job, multiple `ProjectionKind` values, or a full renderer. |
+| User-facing MVP summaries | v0.2 User-Facing Harness MVP | Minimal readable summaries for current work status, user decision request, evidence summary, and close readiness / blocker summary. If final acceptance or residual risk matters, show that fact inside the relevant status, decision, or close-blocker summary instead of adding required projection kinds. These may be status/next text, compact cards, or minimal `TASK` sections rather than separate Markdown files. |
+| Agency assurance reports | v0.3 Agency Assurance Pack profiles | Compact approval, Manual QA, verification, waiver, and assurance displays when those profiles are enabled. They are report/card views over owner records and refs, not first-slice or minimum MVP requirements. |
+| Operations/export reports | v0.4 Operations & Handoff Pack profiles | Projection freshness, reconcile/readiness, export, release-handoff, artifact-integrity, and operator report views when operations support is enabled. They do not replace Core state or artifact authority. |
+| Future/diagnostic projections | Owner-promoted later profiles or diagnostics | Detailed Journey Card or Journey Spine views, Run Summary, TDD Trace, Module Map, Interface Contract, standalone Decision Packet Markdown, detailed Evidence Manifest, detailed Eval, design/domain-language maps, and other diagnostic views. Pull on demand or enable only through a promoted profile. |
 
-Agent compact context may use projections as a readable summary only when their `source_state_version` and freshness are suitable for the next action. If state matters and the projection is stale, failed, unknown, or too broad, retrieve current Core state or a state-derived compact context instead. Do not turn Markdown projections, Journey Cards, status cards, old reports, or generated summaries into always-on prompt payloads or authority. They can point to current refs to inspect; they cannot authorize writes, satisfy gates, create evidence, perform verification, record Manual QA, accept results, accept residual risk, or close a Task.
+Agent compact context is a consumer of current Core status output or user-facing summaries, not a separate authority tier. It may use projections as a readable summary only when their `source_state_version` and freshness are suitable for the next action. If state matters and the projection is stale, failed, unknown, or too broad, retrieve current Core state or a state-derived compact context instead. Do not turn Markdown projections, Journey Cards, status cards, old reports, or generated summaries into always-on prompt payloads or authority. They can point to current refs to inspect; they cannot authorize writes, satisfy gates, create evidence, perform verification, record Manual QA, accept results, accept residual risk, or close a Task.
 
 ### Minimum user-facing MVP output set
 
@@ -52,10 +54,8 @@ The minimum user-facing MVP output set supports v0.2; it is not the product valu
 - user decision request
 - evidence summary
 - close readiness / blocker summary
-- final-acceptance need/status
-- residual-risk visibility when relevant
 
-Those outputs may reuse template shapes, but template variety must not inflate implementation scope. A single compact status/next surface plus a clear user decision request display can satisfy the MVP display path when it is derived from Core state and refs.
+Those outputs may reuse template shapes, but template variety must not inflate implementation scope. Final-acceptance need/status and residual-risk visibility remain distinct Core meanings when relevant, but they appear inside the minimal status, decision, or close-blocker summaries rather than as extra required projection kinds. A single compact status/next surface plus a clear user decision request display can satisfy the MVP display path when it is derived from Core state and refs.
 
 The strict boundary is:
 
@@ -346,18 +346,19 @@ The template catalog is intentionally broader than the early implementation set.
 
 | Class | Templates or output shapes | Rule |
 |---|---|---|
-| Allowed for v0.1 Core Authority Slice | Minimal [Compact Status Card](templates/compact-status-card.md) or equivalent status/blocker response shape | Optional rendering for the structured status/blocker output from current Core state. A plain structured response is enough; no persisted Markdown projection job or full renderer is required. |
-| Required for user-facing MVP | Minimal [TASK](templates/task.md) continuity summary and [Decision Packet](templates/decision-packet.md) display/card shape for user decision requests, not the standalone `DEC` `ProjectionKind` | Required only as supporting display needed to show current status, user decision request, evidence summary, close readiness/blockers, final-acceptance need/status, and residual-risk visibility. Standalone persisted `DEC` Markdown remains optional unless the standalone Decision Packet projection feature is enabled. |
-| Optional early | [APR](templates/approval.md), [Approval Card](templates/approval-card.md), [DIRECT-RESULT](templates/direct-result.md), [MANUAL-QA](templates/manual-qa.md), [Manual QA Card](templates/manual-qa-card.md), [Verification Result Card](templates/verification-result-card.md) | Useful when the corresponding approval, direct-work, Manual QA, or verification profile is active; not first-slice requirements. |
-| Future / diagnostic | [RUN-SUMMARY](templates/run-summary.md), [EVIDENCE-MANIFEST](templates/evidence-manifest.md), [EVAL](templates/eval.md), [TDD-TRACE](templates/tdd-trace.md), [DOMAIN-LANGUAGE](templates/domain-language.md), [MODULE-MAP](templates/module-map.md), [INTERFACE-CONTRACT](templates/interface-contract.md), [DESIGN](templates/design.md), [EXPORT](templates/export.md), [JOURNEY-CARD](templates/journey-card.md) | Detailed reference, diagnostic, handoff, stewardship, map, trace, or export views. Keep them available for v0.3 Agency Assurance Pack, v0.4 Operations & Handoff Pack, or other owner-promoted later profiles without making them mandatory early scope. |
+| Core status output | Minimal [Compact Status Card](templates/compact-status-card.md) or equivalent status/blocker response shape | Optional rendering for the structured status/blocker output from current Core state in v0.1. A plain structured response is enough; no persisted Markdown projection job or full renderer is required. |
+| User-facing MVP summaries | Minimal [TASK](templates/task.md) continuity summary, [Decision Packet](templates/decision-packet.md) display/card shape for user decision requests, and optional [DIRECT-RESULT](templates/direct-result.md) compact result display for active direct-work profiles | Required only as supporting display needed to show current status, user decision request, evidence summary, and close readiness/blockers. Final-acceptance and residual-risk facts remain distinct when relevant, but they do not add required projection kinds. Standalone persisted `DEC` Markdown remains optional unless the standalone Decision Packet projection feature is enabled. |
+| Agency assurance reports | [APR](templates/approval.md), [Approval Card](templates/approval-card.md), [MANUAL-QA](templates/manual-qa.md), [Manual QA Card](templates/manual-qa-card.md), and [Verification Result Card](templates/verification-result-card.md) | Use only when the corresponding approval, Manual QA, waiver, verification, or assurance profile is active. These are not v0.1 or minimum v0.2 requirements. |
+| Operations/export reports | [EXPORT](templates/export.md) and release-handoff/export report shapes when that operations profile is enabled | Later operations output. Export reports list refs, hashes, redaction state, omission/block notes, and included projection snapshots without replacing Core state or artifact authority. |
+| Future/diagnostic projections | [RUN-SUMMARY](templates/run-summary.md), [EVIDENCE-MANIFEST](templates/evidence-manifest.md), [EVAL](templates/eval.md), [TDD-TRACE](templates/tdd-trace.md), [DOMAIN-LANGUAGE](templates/domain-language.md), [MODULE-MAP](templates/module-map.md), [INTERFACE-CONTRACT](templates/interface-contract.md), [DESIGN](templates/design.md), [JOURNEY-CARD](templates/journey-card.md), and standalone `DEC` Markdown when enabled | Detailed reference, diagnostic, stewardship, map, trace, persisted Journey Card, Journey Spine-style, standalone Decision Packet, and detailed Evaluation views. Keep them pull-on-demand or owner-promoted without making them mandatory early scope. |
 
-`Future / diagnostic` means later-profile or diagnostic scope, not automatically v1+ only.
+`Future/diagnostic projections` means later-profile or diagnostic scope, not automatically v1+ only.
 
 No template class makes a projection canonical state or creates evidence, QA, verification, final acceptance, residual-risk acceptance, close authority, or Write Authorization. If a source record does not exist, the projector must not invent placeholder state to satisfy template completeness.
 
 The `EXPORT` template is an optional projection output. It does not introduce an `export` state record for artifact links. Export projections list artifact refs, hashes, redaction states, and redaction/omission/block notes; they do not embed large or sensitive artifact bodies by default.
 
-Persisted `JOURNEY-CARD` Markdown, Journey Spine output, Run Summary, TDD Trace, Module Map, Interface Contract, export bundles, and detailed Evaluation views are not mandatory early scope. Current-position context for status, next, and resume can be satisfied by compact user-readable or agent compact context outputs.
+Persisted `JOURNEY-CARD` Markdown, Journey Spine output, Run Summary, TDD Trace, Module Map, Interface Contract, export bundles, and detailed Evaluation views are not mandatory early scope. Current-position context for status, next, and resume can be satisfied by core status output, compact user-facing summaries, or agent compact context outputs.
 
 Decision Packet visibility required by the active stage/profile is provided through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays. That requirement is for the Decision Packet user decision request display shape, not the standalone `DEC` `ProjectionKind`. Standalone `DEC` Markdown is optional unless the standalone Decision Packet projection feature is enabled.
 

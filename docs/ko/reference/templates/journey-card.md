@@ -6,7 +6,7 @@
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 미래 / 진단입니다. Persisted Journey Card Markdown과 Journey Spine-style output은 초기 필수 범위가 아니며, 간결한 status/next 출력이 초기 현재 위치 맥락을 담당합니다.
+구현 계층: Future/diagnostic projections입니다. Persisted Journey Card Markdown과 Journey Spine-style output은 초기 필수 범위가 아니며, 간결한 status/next 출력이 초기 현재 위치 맥락을 담당합니다.
 
 ## 기준 기록
 
@@ -121,7 +121,7 @@ Gates:
 
 ## 메모
 
-이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Current source record와 ref에서 렌더링되며, 오래된 chat memory에서 렌더링하지 않습니다. 저장된 `JOURNEY-CARD` Markdown은 미래/진단 범위입니다. `status`, `next`, 중요한 이어가기(resume) 흐름의 초기 현재 위치 맥락은 간결한 상태 출력을 사용할 수 있습니다.
+이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Current source record와 ref에서 렌더링되며, 오래된 chat memory에서 렌더링하지 않습니다. 저장된 `JOURNEY-CARD` Markdown은 Future/diagnostic projections 범위입니다. `status`, `next`, 중요한 이어가기(resume) 흐름의 초기 현재 위치 맥락은 간결한 상태 출력을 사용할 수 있습니다.
 
 이 card 안이나 주변에 표시되는 status/next recommendation은 read-only guidance입니다. Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 close하지 않습니다.
 

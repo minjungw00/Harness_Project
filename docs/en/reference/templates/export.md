@@ -6,7 +6,7 @@ Use `EXPORT` when an optional export or report projection is generated for revie
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: future / diagnostic. Export and handoff bundles are later operational/profile outputs and never replace Core state or artifacts.
+Implementation tier: Operations/export reports. Export and handoff bundles are later operational/profile outputs and never replace Core state or artifacts.
 
 ## Source records
 

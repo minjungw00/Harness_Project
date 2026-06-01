@@ -32,8 +32,8 @@ Projection-template polish, detailed reports, dashboards or hosted workflow UI, 
 The early output model is intentionally small:
 
 - v0.1 needs only minimal status/blocker output from Core state; it does not need a projection renderer.
-- v0.2 needs user-readable current work status, user decision request, evidence summary, close readiness / blocker summary, final-acceptance need/status, and residual-risk visibility when relevant.
-- Journey Card, Journey Spine, Run Summary, TDD Trace, Module Map, Interface Contract, Export, detailed Evidence Manifest, and detailed Eval outputs remain optional, diagnostic, or later-profile scope unless an owner profile explicitly promotes them.
+- v0.2 needs only the minimum user-readable summaries for current work status, user decision request, evidence summary, and close readiness / blocker summary. Final-acceptance and residual-risk facts remain distinct when relevant, but they appear inside those summaries instead of becoming extra required projection kinds.
+- Journey Card, Journey Spine, Run Summary, TDD Trace, Module Map, Interface Contract, Export, detailed Evidence Manifest, and detailed Eval outputs remain Future/diagnostic projections or other later-profile scope unless an owner profile explicitly promotes them.
 
 ## Staged delivery
 
@@ -76,7 +76,7 @@ Operator commands are illustrative implementation choices. The stage requirement
 | Stage | Operator behavior in scope | Operator behavior outside the stage |
 |---|---|---|
 | v0.1 Core Authority Slice | Minimal local connect/register, basic status or diagnostic read, and local API/MCP exposure only if the first slice requires that boundary. | Projection refresh, reconcile, recover, export, artifacts check, full conformance run, release handoff, and broad doctor/readiness. |
-| v0.2 User-Facing Harness MVP | The same minimal surface plus user-facing status/next diagnostics for current work, user decisions, evidence state, close blockers, final-acceptance need/status, and residual-risk visibility. | Assurance operations, recover/export, release handoff, broad projection/reconcile operations, full conformance run, and broad operations coverage. |
+| v0.2 User-Facing Harness MVP | The same minimal surface plus user-facing status/next diagnostics for current work, user decisions, evidence state, and close blockers. Final-acceptance and residual-risk facts appear there when relevant. | Assurance operations, recover/export, release handoff, broad projection/reconcile operations, full conformance run, and broad operations coverage. |
 | v0.3 Agency Assurance Pack | Assurance-profile support for verification, Manual QA, residual-risk, final-acceptance, stewardship, and context-hygiene behavior through owner paths. | Operator recover/export completeness, release handoff, broad projection/reconcile operations, and full operations conformance. |
 | v0.4 Operations & Handoff Pack | Full local operations support: doctor/readiness, projection refresh, reconcile, recover, export, artifacts check, release handoff where defined, and conformance run after runtime suites are materialized. | Remote/shared operations, dashboards, hosted workflow UI, broad connector automation, team workflow, and orchestration unless later promoted. |
 | v1+ Expansion | Promoted roadmap operations only after owner docs define exact contracts, guarantee level, fixtures, and fallback behavior. | Unpromoted roadmap candidates remain outside staged delivery. |
@@ -115,7 +115,7 @@ Reference schemas may list fields that become necessary only when the related ca
 | Stage | Build reading rule | Owner contracts to apply |
 |---|---|---|
 | v0.1 Core Authority Slice | Use only the owner-defined fields needed to prove the narrow authority loop and the [Core Authority Slice schema](../reference/storage-and-ddl.md#core-authority-slice-schema). Avoid creating future-profile records just to satisfy a broad checklist; if a minimal seeded blocker uses an owner ref, apply only the valid shape for that owner path, not full user-facing Decision Packet quality. | [Kernel Reference](../reference/kernel.md), [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Storage And DDL](../reference/storage-and-ddl.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
-| v0.2 User-Facing Harness MVP | Add the fields and display summaries needed for users to understand the pending user decision context, evidence, close readiness, final acceptance separation, and residual-risk visibility. | [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Kernel Reference](../reference/kernel.md), [Document Projection Reference](../reference/document-projection.md), [Template Reference](../reference/templates/README.md). |
+| v0.2 User-Facing Harness MVP | Add the fields and display summaries needed for users to understand the pending user decision context, evidence, and close blockers. Final acceptance and residual-risk facts stay distinct when relevant, but they fit inside the minimal summaries. | [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Kernel Reference](../reference/kernel.md), [Document Projection Reference](../reference/document-projection.md), [Template Reference](../reference/templates/README.md). |
 | v0.3 Agency Assurance Pack / v0.4 Operations & Handoff Pack | Add verification, QA, residual-risk, final-acceptance, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, and release-handoff profiles only where owner docs define them. | [Design Quality Policies](../reference/design-quality-policies.md), [Operations And Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md), [Future Fixture Catalog](../reference/future-fixture-catalog.md), [Storage And DDL](../reference/storage-and-ddl.md). |
 
 Required in an API schema therefore means required when that tool call, record, or profile is implemented or used. It does not make a future-profile field part of the smallest runnable slice by itself.
@@ -159,7 +159,7 @@ The MVP must demonstrate:
 - close is blocked when required evidence or a required user-owned decision is missing
 - residual risk can be displayed before acceptance and close
 - final acceptance is distinct from sensitive-action Approval and residual-risk acceptance
-- readable summaries or cards show current work status, user decision request, evidence summary, close readiness/blockers, final-acceptance need/status, and residual-risk visibility without template polish becoming the source of truth
+- readable summaries or cards show current work status, user decision request, evidence summary, and close readiness/blockers without template polish becoming the source of truth; final-acceptance and residual-risk facts remain distinct inside those summaries when relevant
 - conformance can prove the path through Core state, events, artifacts, projection/freshness facts, and structured errors rather than prose or renderer output alone
 
 Evidence records, readable summaries, and projection freshness support this experience. They are not the identity of the stage, and projection polish beyond this user-readable path stays out of scope.

@@ -6,7 +6,7 @@ Use the verification result card when an Eval result needs a compact user-facing
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: optional early. Use when verification/Eval display is active; the detailed `EVAL` projection remains future/diagnostic.
+Implementation tier: Agency assurance reports. Use when verification/Eval display is active; the detailed `EVAL` projection remains future/diagnostic.
 
 ## Source records
 

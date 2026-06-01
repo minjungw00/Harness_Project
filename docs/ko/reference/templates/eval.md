@@ -6,7 +6,7 @@
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 미래 / 진단입니다. Later verification profile의 detailed Evaluation record에 사용하며 compact verification display는 card shape를 사용할 수 있습니다.
+구현 계층: Future/diagnostic projections입니다. Later verification profile의 detailed Evaluation record에 사용하며 compact verification display는 card shape를 사용할 수 있습니다.
 
 ## 기준 기록
 

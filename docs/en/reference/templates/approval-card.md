@@ -6,7 +6,7 @@ Use the approval card when a pending approval needs a compact user-facing displa
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: optional early. Use only when sensitive-action approval is in the active profile; ordinary user decision requests do not require an approval card.
+Implementation tier: Agency assurance reports. Use only when sensitive-action approval is in the active profile; ordinary user decision requests do not require an approval card.
 
 ## Source records
 
