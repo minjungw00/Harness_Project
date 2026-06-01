@@ -142,8 +142,8 @@ Core runtime responsibilities:
 - run validators before writes, after runs, and before close
 - record artifacts and integrity metadata
 - enqueue and render projection jobs when projection support is in scope
-- detect reconcile candidates from human edits or managed-block drift
-- provide diagnostic, recovery, export, and conformance entrypoints
+- detect reconcile candidates from human edits or managed-block drift when reconcile support is in scope
+- provide stage-introduced operator entrypoints: minimal local diagnostics/status in early stages, then recovery, export, artifact, handoff, and conformance surfaces when v0.4 or later profiles bring them into scope
 
 The MCP server is not a thin wrapper around shell commands. It exposes high-level intent calls that Core translates into state transitions, validators, artifact records, and projection jobs when applicable.
 

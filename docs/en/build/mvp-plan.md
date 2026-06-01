@@ -69,6 +69,18 @@ The MCP API reference defines exact schemas for every method it documents, but s
 | v0.3 Agency Assurance Pack | `harness.launch_verify`, `harness.record_eval`, `harness.record_manual_qa`, assurance/waiver/approval/risk profiles of Decision Packet methods, evidence/feedback/TDD profiles of `harness.record_run`, and ValidatorResult-emitting assurance paths. | Operator recover/export completeness, broad projection/reconcile operations, release handoff. |
 | v0.4 Operations & Handoff Pack | Projection freshness in API responses, reconcile decision profile, operator readiness/recover/export/artifact-integrity/conformance surfaces owned by Operations. | Dashboard, hosted workflow UI, broad connectors, automation, team workflow, orchestration unless promoted later. |
 
+### Operator surface by stage
+
+Operator commands are illustrative implementation choices. The stage requirement is the behavior, not the final command spelling.
+
+| Stage | Operator behavior in scope | Operator behavior outside the stage |
+|---|---|---|
+| v0.1 Core Authority Slice | Minimal local connect/register, basic status or diagnostic read, and local API/MCP exposure only if the first slice requires that boundary. | Projection refresh, reconcile, recover, export, artifacts check, full conformance run, release handoff, and broad doctor/readiness. |
+| v0.2 User-Facing Harness MVP | The same minimal surface plus user-facing status/next diagnostics for current work, user decisions, evidence state, close blockers, final-acceptance need/status, and residual-risk visibility. | Assurance operations, recover/export, release handoff, broad projection/reconcile operations, full conformance run, and broad operations coverage. |
+| v0.3 Agency Assurance Pack | Assurance-profile support for verification, Manual QA, residual-risk, final-acceptance, stewardship, and context-hygiene behavior through owner paths. | Operator recover/export completeness, release handoff, broad projection/reconcile operations, and full operations conformance. |
+| v0.4 Operations & Handoff Pack | Full local operations support: doctor/readiness, projection refresh, reconcile, recover, export, artifacts check, release handoff where defined, and conformance run after runtime suites are materialized. | Remote/shared operations, dashboards, hosted workflow UI, broad connector automation, team workflow, and orchestration unless later promoted. |
+| v1+ Expansion | Promoted roadmap operations only after owner docs define exact contracts, guarantee level, fixtures, and fallback behavior. | Unpromoted roadmap candidates remain outside staged delivery. |
+
 ### Boundary after staged delivery: v1+ Expansion
 
 v1+ Expansion is roadmap scope, not a Build-owned staged delivery phase. Dashboard, hosted workflow UI, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, broader connectors, metrics, team workflow, orchestration, and similar candidates stay outside v0.1 through v0.4 unless owner docs explicitly promote and prove a future item.
@@ -186,7 +198,7 @@ Focus on:
 - export behavior for state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, and retained, expired, or unavailable artifact status
 - artifact integrity checks
 - release handoff report/export profile where owner docs define it
-- operator smoke over connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifacts check, and conformance run
+- operator smoke over the v0.4 operations profile: connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifacts check, and conformance run, with earlier stages retaining only their smaller subsets
 - operations/future fixture coverage for export/recover, artifact integrity, release handoff, operator readiness, and higher guarantee levels only where owner docs define and prove them
 - later-boundary checks that keep roadmap items in v1+ Expansion unless separately proven and promoted
 

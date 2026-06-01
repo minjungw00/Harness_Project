@@ -146,8 +146,8 @@ Core runtime의 책임:
 - write 전, Run 기록 후, close 전에 validator를 실행합니다.
 - artifact와 무결성 metadata를 기록합니다.
 - projection support가 범위에 있을 때 projection job을 대기열에 넣고 렌더링합니다.
-- 사람의 편집이나 managed-block drift에서 reconcile candidate를 감지합니다.
-- 진단, 복구, export, conformance 진입점을 제공합니다.
+- reconcile support가 범위에 있을 때 사람의 편집이나 managed-block drift에서 reconcile candidate를 감지합니다.
+- 단계별로 도입되는 운영자 진입점을 제공합니다. 초기 단계에는 최소 local 진단/상태를 두고, v0.4 또는 나중 profile이 범위에 넣을 때 recover, export, artifact, handoff, conformance surface를 추가합니다.
 
 MCP server는 shell command를 감싼 얇은 wrapper가 아닙니다. MCP server는 높은 수준의 의도 호출을 제공하고, Core는 이를 상태 전이, validator, artifact 기록, applicable한 경우 projection job으로 변환합니다.
 

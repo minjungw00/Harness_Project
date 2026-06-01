@@ -227,13 +227,13 @@ Human-editable projection sections are proposal surfaces. The implementation pat
 
 Operator entrypoints are surfaces over Core behavior, not a second state model. They are not broad v0.1 requirements. Build them as command-independent capabilities only when the relevant stage or owner profile brings them into scope:
 
-- connect/register a project and expose the MCP boundary
-- report doctor/readiness facts
-- refresh projections and reconcile generated-file or managed-block drift
-- recover interrupted or stale operational state through documented owner paths
-- export state/report/artifact snapshots without leaking omitted secrets
-- check artifact integrity
-- run future conformance fixtures after they are materialized
+| Stage | Operator capability boundary |
+|---|---|
+| v0.1 Core Authority Slice | Minimal connect/register, basic status or diagnostic read, and local MCP/API exposure only if the first slice requires that boundary. |
+| v0.2 User-Facing Harness MVP | User-facing status/next diagnostics for current work, user decisions, evidence state, close blockers, final-acceptance need/status, and residual-risk visibility. |
+| v0.3 Agency Assurance Pack | Assurance-profile diagnostics and owner-path support for verification, Manual QA, residual risk, final acceptance, stewardship, and context hygiene. |
+| v0.4 Operations & Handoff Pack | Full local operations: doctor/readiness, projection refresh, reconcile, recover, export, artifact integrity, release handoff where defined, and conformance run after suites are materialized. |
+| v1+ Expansion | Remote/shared operations, dashboards, broad connector automation, team workflow, orchestration, and higher automation only after promotion. |
 
 Exact command names and flags can come later. The important part is the command-independent behavior contract: operator behavior uses the same Core state, `task_events`, artifacts, projections, and existing errors or diagnostics as MCP tools. State-changing operator outcomes must enter Core or a documented recovery path that preserves Core ordering; operator output must not become a parallel source of state truth.
 

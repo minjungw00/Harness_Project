@@ -18,7 +18,7 @@ Runtime 구현 계획에 들어가기 전에 Harness security asset, trust bound
 
 ## 읽기 전에
 
-Runtime space, Core process model, transaction ordering, guarantee-level definition은 [런타임 아키텍처 참조](runtime-architecture.md)를 사용합니다. Connector capability profile, generated manifest, context push/pull, fallback display는 [Agent 통합 참조](agent-integration.md)를 사용합니다. `doctor`, `serve mcp`, artifact check, recover, reconcile은 [운영과 Conformance 참조](operations-and-conformance.md)를 사용하고, fixture semantics는 [Conformance Fixtures 참조](conformance-fixtures.md)를 사용합니다.
+Runtime space, Core process model, transaction ordering, guarantee-level definition은 [런타임 아키텍처 참조](runtime-architecture.md)를 사용합니다. Connector capability profile, generated manifest, context push/pull, fallback display는 [Agent 통합 참조](agent-integration.md)를 사용합니다. 단계별 `doctor`, `serve mcp`, artifact check, recover, reconcile behavior는 [운영과 Conformance 참조](operations-and-conformance.md)를 사용하고, fixture semantics는 [Conformance Fixtures 참조](conformance-fixtures.md)를 사용합니다.
 
 Public tool envelope, error, replay behavior는 [MCP API와 스키마](mcp-api-and-schemas.md)를 사용합니다. Exact storage layout, artifact row, DDL은 [Storage와 DDL](storage-and-ddl.md)을 사용합니다. State transition, gate, Approval, `prepare_write`, Write Authorization, acceptance, residual risk, close는 [커널 참조](kernel.md)를 사용합니다.
 
@@ -32,7 +32,9 @@ Canonical operational meaning은 Core가 소유한 state-changing path를 통해
 
 Security display는 실제 control과 일치해야 합니다. Cooperative와 detective 접점은 instruction으로 보류하거나 실행 뒤 감지할 수 있습니다. Preventive 표현에는 covered operation에 대해 fixture로 입증된 도구 실행 전 차단이 필요하고, isolated 표현에는 문서화되고 입증된 separation boundary가 필요합니다. Preventive 또는 isolated control이 필요한 high-risk work는 cooperative-only claim에 의존하면 안 됩니다.
 
-초기 로컬 하네스 단계는 OS 권한을 자동으로 제공하거나, 임의 도구를 sandbox 격리하거나, 로컬 파일을 변조 불가능하게 만들거나, 지시 기반 agent behavior를 사전 차단 보안으로 바꾸지 않습니다. v0.1과 v0.2는 authority가 없는 state-changing action을 거부하고, state를 기록하고, artifact를 검증하고, stale 또는 mismatched fact를 보고하고, 낮아진 guarantee level을 표시할 수 있습니다. Preventive control은 owner 문서와 conformance가 exact covered operation을 증명하기 전까지 향후 또는 profile별 범위입니다. Isolated control은 exact separation boundary를 증명하기 전까지 향후 또는 profile별 범위입니다.
+초기 로컬 하네스 단계는 OS 권한을 자동으로 제공하거나, 임의 도구를 sandbox 격리하거나, 로컬 파일을 변조 불가능하게 만들거나, 지시 기반 agent behavior를 사전 차단 보안으로 바꾸지 않습니다. v0.1과 v0.2는 authority가 없는 state-changing action을 거부하고, state를 기록하고, active Core path에 필요한 최소 artifact/evidence ref를 검증하고, stale 또는 mismatched fact를 보고하고, 낮아진 guarantee level을 표시할 수 있습니다. Preventive control은 owner 문서와 conformance가 exact covered operation을 증명하기 전까지 향후 또는 profile별 범위입니다. Isolated control은 exact separation boundary를 증명하기 전까지 향후 또는 profile별 범위입니다.
+
+운영자 진입점은 그것을 도입한 stage와 connector profile의 guarantee level을 그대로 따릅니다. 나중 단계의 recover, export, reconcile, artifact check, conformance run, release handoff surface도 입증된 cooperative, detective, preventive, isolated capability보다 더 강하게 prevention이나 enforcement를 제공한다고 설명하면 안 됩니다.
 
 격리 주장은 어떤 종류의 분리를 주장하는지 이름 붙여야 합니다. Fresh evaluator bundle, fresh session, separate worktree는 verification independence, stale-context control, blast-radius reduction을 뒷받침할 수 있습니다. Sandbox 격리, 권한 계층, locked-down runner, process boundary, container boundary는 connector profile이 exact mechanism을 이름 붙이고 증명한 경우에만 더 강한 보안 격리를 뒷받침합니다.
 
@@ -54,7 +56,7 @@ Security display는 실제 control과 일치해야 합니다. Cooperative와 det
 - public MCP request/response schema, public error shape, idempotency/replay contract. [MCP API와 스키마](mcp-api-and-schemas.md)를 참고합니다.
 - SQLite DDL, storage layout, canonical enum hardening, artifact row shape, exact file layout. [Storage와 DDL](storage-and-ddl.md)을 참고합니다.
 - kernel state transition, gate, Approval lifecycle, `prepare_write`, Write Authorization, acceptance, 잔여 위험 수용, close. [커널 참조](kernel.md)를 참고합니다.
-- operator command semantics, diagnostic severity baseline, recover/reconcile/export behavior. [운영과 Conformance 참조](operations-and-conformance.md)를 참고합니다.
+- 단계별 operator command semantics, diagnostic severity baseline, recover/reconcile/export behavior. [운영과 Conformance 참조](operations-and-conformance.md)를 참고합니다.
 - fixture assertion semantics. [Conformance Fixtures 참조](conformance-fixtures.md)를 참고합니다.
 - connector capability-profile field detail, generated-manifest contract, surface recipe. [Agent 통합 참조](agent-integration.md)와 [Surface Cookbook](surface-cookbook.md)을 참고합니다.
 - projection template body 또는 managed-block rendering rule. [문서 Projection 참조](document-projection.md)를 참고합니다.
@@ -175,6 +177,6 @@ Guard, freeze, careful-mode, recipe name, product name, surface name, friendly m
 | `state.sqlite`, `task_events`, artifact storage row, DDL, enum hardening, hash, storage layout | [Storage와 DDL](storage-and-ddl.md) |
 | Runtime space, Core transaction ordering, artifact architecture, guarantee level definition | [런타임 아키텍처 참조](runtime-architecture.md) |
 | Connector capability profile, generated manifest, context push/pull, fallback display | [Agent 통합 참조](agent-integration.md) |
-| Operator diagnostic, severity baseline, `doctor`, `serve mcp`, artifact check, recover, reconcile | [운영과 Conformance 참조](operations-and-conformance.md) |
+| 단계별 operator diagnostic, severity baseline, `doctor`, `serve mcp`, artifact check, recover, reconcile | [운영과 Conformance 참조](operations-and-conformance.md) |
 | Conformance fixture body shape, assertion semantics, suite catalog, example | [Conformance Fixtures 참조](conformance-fixtures.md) |
 | Projection freshness, managed block, reconcile behavior, template ownership | [문서 Projection 참조](document-projection.md)와 [Template 참조](templates/README.md) |

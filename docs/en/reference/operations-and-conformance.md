@@ -10,7 +10,7 @@ This is reference documentation for future operator and conformance behavior. It
 
 ## Read this when
 
-- You need the required behavior for `harness connect`, `harness doctor`, `harness serve mcp`, projection refresh, reconcile, recover, export, artifact checks, or conformance runs.
+- You need the stage-specific behavior contract for operator surfaces such as `harness connect`, `harness doctor`, `harness serve mcp`, projection refresh, reconcile, recover, export, artifact checks, or conformance runs.
 - You need the conformance run entrypoint overview, staged suite boundary, or runtime/docs-maintenance separation.
 - You need to tell runtime Core fixture conformance apart from docs-only maintenance checks.
 - You are diagnosing an operations mismatch across state, artifacts, projections, MCP availability, or generated files.
@@ -22,7 +22,7 @@ Use [Conformance Fixtures Reference](conformance-fixtures.md) for the core confo
 
 ## Main idea
 
-Operations are the operator-facing commands around Core. They can connect a repository, diagnose readiness, serve MCP, refresh projections, reconcile human edits, recover interrupted state, export bundles, and check artifacts.
+Operations are the operator-facing capabilities around Core. They are introduced by stage: early stages keep only the minimal local surface needed to connect a project, expose the active local API/MCP boundary when required, and report basic status or diagnostics; later operations profiles add projection refresh, reconcile, recovery, export, artifact checks, release handoff, and conformance execution.
 
 The important rule is that operations are surfaces over the same Core authority used by agents. Core alone changes canonical operational state. Operator commands may diagnose, repair, export, or run fixtures, but they must not create a second state model, make Markdown authoritative, or write around Core.
 
@@ -46,7 +46,7 @@ This document owns:
 
 ## Not covered here
 
-This reference does not claim runtime implementation readiness. It defines required semantics for future implementation and conformance work.
+This reference does not claim runtime implementation readiness. It defines stage-specific semantics for future implementation and conformance work.
 
 It also does not own conformance fixture body shape, fixture assertion semantics, detailed future scenario catalog entries, public MCP schemas, SQLite DDL, projection template bodies, Learn/Use workflow, or long-term analytics. Core fixture mechanics are owned by [Conformance Fixtures Reference](conformance-fixtures.md), and detailed future catalog entries are owned by [Future Fixture Catalog](future-fixture-catalog.md). Docs-maintenance rule bodies are owned by the [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks); this reference owns only the operator profile boundary below.
 
@@ -66,58 +66,55 @@ It also does not own conformance fixture body shape, fixture assertion semantics
 
 Every operator entrypoint is a surface over the same Core rules used by the agent. Operator tools may diagnose, repair, export, or run fixtures, but they must not create a second state model. State-changing operator outcomes must enter Core or a documented recovery path that preserves Core state-version, idempotency, event, artifact, and projection-enqueue semantics.
 
-Required staged-delivery operator entrypoints:
+The sections below define behavior contracts when a stage or owner profile introduces the relevant capability. A "Required behavior" list inside a command section means required by the stage or profile where that behavior is in scope; it is not a blanket v0.1 or v0.2 requirement. Command names are illustrative implementation choices.
 
-```text
-harness connect
-harness doctor
-harness serve mcp
-harness projection refresh
-harness reconcile
-harness recover
-harness export
-harness artifacts check
-harness conformance run
-```
+Stage-specific operator behavior:
+
+| Stage | Operator behavior introduced by the stage | Later behavior kept out |
+|---|---|---|
+| v0.1 Core Authority Slice | Minimal local project registration or reconnect; basic status/diagnostic read over the active Core state; local API/MCP exposure only if the first slice uses that boundary; optional pointer to the narrow Kernel Smoke check after runtime tooling exists. | Projection refresh, reconcile, recover, export, artifacts check, full conformance run, release handoff, remote/shared MCP exposure, and broad connector automation. |
+| v0.2 User-Facing Harness MVP | User-facing support around the same minimal operator surface: status/next diagnostics for current work, missing user decisions, evidence state, close blockers, final-acceptance need/status, and residual-risk visibility. | Detached assurance operations, full doctor/readiness categories, projection refresh as an operator surface, reconcile, recover, export, artifacts check, full conformance run, and release handoff. |
+| v0.3 Agency Assurance Pack | Assurance-oriented support for verification, Manual QA, residual-risk, final-acceptance, stewardship, and context-hygiene profiles through the owner paths that are active in this stage. | Operator recovery/export completeness, broad projection/reconcile operations, release handoff, and the full operations conformance profile. |
+| v0.4 Operations & Handoff Pack | Full local operations profile: doctor/readiness categories, projection refresh, reconcile, recover, export, artifact integrity check, release handoff report/export profile where defined, and conformance run over materialized runtime suites. | Dashboard, hosted workflow UI, broad connector ecosystems, remote/shared operations, Browser QA Capture automation, Cross-Surface Verification automation, team workflow, and orchestration unless separately promoted. |
+| v1+ Expansion | Promoted roadmap operations such as broader connector automation, remote/shared access profiles, richer UI/operator dashboards, and higher automation only after owner docs define and prove exact contracts. | Anything not promoted remains outside staged delivery. |
 
 ```mermaid
 flowchart TD
   Core["Core rules and state authority"]
-  Core --> Connect["harness connect"]
-  Core --> Doctor["harness doctor"]
-  Core --> Serve["harness serve mcp"]
-  Core --> Refresh["harness projection refresh"]
-  Core --> Reconcile["harness reconcile"]
-  Core --> Recover["harness recover"]
-  Core --> Export["harness export"]
-  Core --> Artifacts["harness artifacts check"]
-  Core --> Conformance["harness conformance run"]
-  Connect --> Setup["link repo, runtime home, surface"]
-  Doctor --> Readiness["report readiness, drift, repair options"]
-  Serve --> MCP["expose MCP resources and tools through Core"]
-  Refresh --> Projection["regenerate derived Markdown views"]
-  Reconcile --> Decisions["turn edits or drift into explicit decisions"]
-  Recover --> Repair["repair interrupted operational state"]
-  Export --> Bundle["create review or archival bundle"]
-  Artifacts --> Integrity["compare artifact records with files"]
-  Conformance --> Fixtures["execute exact-shape fixtures"]
+  Core --> V01["v0.1 minimal local surface"]
+  Core --> V02["v0.2 user-facing support"]
+  Core --> V03["v0.3 assurance support"]
+  Core --> V04["v0.4 operations and handoff support"]
+  V04 -. promoted later .-> V1["v1+ expansion"]
+  V01 --> Connect["connect/register local project"]
+  V01 --> Status["basic status/diagnostic"]
+  V01 --> Serve["serve or expose minimal local MCP/API if required"]
+  V02 --> MVPDiag["status, decision, evidence, close, acceptance, risk diagnostics"]
+  V03 --> Assurance["verification, QA, risk, stewardship, context diagnostics"]
+  V04 --> Refresh["projection refresh"]
+  V04 --> Reconcile["reconcile"]
+  V04 --> Recover["recover"]
+  V04 --> Export["export and release handoff"]
+  V04 --> Artifacts["artifacts check"]
+  V04 --> Conformance["conformance run for materialized suites"]
+  V1 --> Expansion["remote/shared profiles, broader automation, dashboards"]
 ```
 
-Exact command names and flags may vary by implementation, but the behavior contract below is required for the reference model. Operator behavior is command-independent: it is defined by Core state records, `state.sqlite.task_events`, artifact refs and files, projection jobs and freshness, and API-owned errors or operator diagnostic labels. Console text, report prose, flag spelling, and shell exit formatting are display surfaces; they must not become a second state model.
+Exact command names and flags may vary by implementation. The reference target is the command-independent behavior contract: operator behavior is defined by Core state records, `state.sqlite.task_events`, artifact refs and files, projection jobs and freshness where those profiles exist, and API-owned errors or operator diagnostic labels. Console text, report prose, flag spelling, and shell exit formatting are display surfaces; they must not become a second state model.
 
-Operator command map:
+Operator command map by behavior family:
 
-| Entrypoint | Use this section when you need... |
-|---|---|
-| [`harness connect`](#connect) | repository/runtime registration semantics and first-connection expectations |
-| [`harness doctor`](#doctor) | readiness, diagnostics, repair suggestions, and no-new-state reporting boundaries |
-| [`harness serve mcp`](#serve-mcp) | MCP serving behavior, local availability, and Core authority boundaries |
-| [`harness projection refresh`](#projection-refresh) | projection job refresh behavior and managed-block drift handling |
-| [`harness reconcile`](#reconcile) | human edit, generated file, and managed-block drift routing |
-| [`harness recover`](#recover) | interrupted operation repair and compensating event expectations |
-| [`harness export`](#export) | bundle and Release Handoff export behavior |
-| [`harness artifacts check`](#artifacts-check) | artifact registry/file integrity and redaction boundary checks |
-| [`harness conformance run`](#conformance-run) | runtime fixture execution and docs-maintenance profile separation |
+| Entrypoint family | Stage where the behavior first appears | Use this section when you need... |
+|---|---|---|
+| [`harness connect`](#connect) | v0.1 minimal registration; fuller connector-profile behavior later as promoted | repository/runtime registration semantics and first-connection expectations |
+| [`harness doctor`](#doctor) | v0.1 basic diagnostic subset; full category set in v0.4 | readiness, diagnostics, repair suggestions, and no-new-state reporting boundaries |
+| [`harness serve mcp`](#serve-mcp) | v0.1 only if the active first slice exposes MCP/API through this local boundary | MCP serving behavior, local availability, and Core authority boundaries |
+| [`harness projection refresh`](#projection-refresh) | v0.4 unless a narrow owner profile explicitly promotes earlier freshness behavior | projection job refresh behavior and managed-block drift handling |
+| [`harness reconcile`](#reconcile) | v0.4 unless a narrow owner profile explicitly promotes earlier proposal/drift handling | human edit, generated file, and managed-block drift routing |
+| [`harness recover`](#recover) | v0.4 | interrupted operation repair and compensating event expectations |
+| [`harness export`](#export) | v0.4 | bundle and Release Handoff export behavior |
+| [`harness artifacts check`](#artifacts-check) | v0.4 | artifact registry/file integrity and redaction boundary checks |
+| [`harness conformance run`](#conformance-run) | v0.4 after runtime suites are materialized; docs-maintenance remains explicitly selected and separate | runtime fixture execution and docs-maintenance profile separation |
 
 ## Operator diagnostics report facts, not new state
 
@@ -189,20 +186,26 @@ flowchart LR
 
 ## connect
 
-`connect` links a Product Repository, Harness Runtime Home, and one reference agent surface.
+`connect` links a Product Repository, Harness Runtime Home, and one reference agent surface. The command name is illustrative; another local registration entrypoint may satisfy the same behavior.
 
-Required behavior:
+v0.1 minimum:
 
 - identify the repository root
 - register or reuse the local project
 - create or validate static project configuration
-- initialize per-project state and artifact storage
+- initialize the per-project state and artifact storage needed for the Core Authority Slice
+- register the reference surface only to the level needed for the active local profile
+- record local-only MCP/API exposure posture if the stage uses that boundary
+- confirm minimal MCP/API reachability or report a diagnostic when the stage depends on it
+
+Later connector/operator profile behavior, required only when the active stage or owner profile includes it:
+
 - register the reference surface and a capability profile declared and proven for the actual host/profile/configuration in use, not inferred from the surface name
 - record MCP exposure posture as local-only by default, with any documented access-control contract and material class, in the connector manifest without storing raw token, secret, or private configuration values
 - create or refresh connector-managed files through a manifest
 - record connector profile freshness, capability profile version, detected version, last verification time, and conformance or operator-check basis in the connector manifest
 - confirm MCP configuration can reach the harness server
-- run a conformance smoke check or print the command to run it
+- run a profile-specific smoke check or print the command to run it
 
 ```mermaid
 sequenceDiagram
@@ -211,17 +214,17 @@ sequenceDiagram
   participant Runtime as Harness Runtime Home
   participant Surface as Reference Surface
   participant MCP as MCP Config
-  participant Core as Core Smoke
+  participant Core as Stage Check
   Op->>Repo: identify repository root
   Op->>Runtime: register or reuse project
   Runtime->>Runtime: initialize state and artifact storage
-  Op->>Surface: register capability profile
-  Op->>Repo: create or refresh connector-managed files via manifest
-  Runtime->>MCP: confirm server reachability
-  Op->>Core: run smoke or print command
+  Op->>Surface: register active profile if required
+  Op->>Repo: create or refresh managed files if profile requires
+  Runtime->>MCP: confirm local reachability if stage depends on MCP
+  Op->>Core: run profile check if required
 ```
 
-Connect must report generated/managed manifest drift instead of overwriting human edits silently. This includes generated files, managed blocks, MCP config snippets, and stale capability profile freshness. The existing file or managed block stays unchanged until reconcile or an explicit reconnect decision chooses replacement; the edited generated file is not Task state. Surface-specific generated file names belong in the surface cookbook.
+When connector-managed files or managed blocks are in scope, connect must report generated/managed manifest drift instead of overwriting human edits silently. This includes generated files, managed blocks, MCP config snippets, and stale capability profile freshness. The existing file or managed block stays unchanged until reconcile or an explicit reconnect decision chooses replacement; the edited generated file is not Task state. Surface-specific generated file names belong in the surface cookbook.
 
 Illustrative connect drift output:
 
@@ -237,7 +240,9 @@ authority   edited generated file is not Task state and was not silently overwri
 
 `doctor` reports readiness, drift, and repair options.
 
-Required doctor/readiness categories:
+The full doctor/readiness category set is v0.4 Operations & Handoff behavior. Earlier stages may expose only the basic status/diagnostic subset needed for the active stage and must not claim the full operations profile.
+
+Full doctor/readiness categories:
 
 | Category | Checks |
 |---|---|
@@ -339,9 +344,9 @@ Security diagnostic display examples:
 
 ## serve mcp
 
-`serve mcp` starts or prints connection information for the local MCP server.
+`serve mcp` starts or prints connection information for the local MCP server. The command name is illustrative; v0.1 may satisfy the contract through any minimal local API/MCP exposure required by the first slice.
 
-Required behavior:
+Behavior when local MCP/API exposure is in scope:
 
 - report whether access is local process/localhost only or covered by a documented connector capability profile
 - default to local-only exposure for the v0.1/default reference posture and avoid non-loopback binding or shared/remote endpoints unless the connector profile explicitly covers them
@@ -377,7 +382,7 @@ When the access mode is unknown or weaker than the registered profile, operation
 
 Projection refresh regenerates Product Repository Markdown from committed state records and artifact refs. It is a derived-view operation: it may report freshness, failed jobs, and reconcile needs, but it must not replace Core state, structured blockers, evidence authority, final acceptance, residual-risk acceptance, or Write Authorization.
 
-Required behavior:
+Behavior required when projection refresh is in scope, normally v0.4 unless an owner profile explicitly promotes a narrower earlier path:
 
 - render only the latest projection version for a target
 - render or enqueue only the projection views included by the active projection profile, with no persisted Markdown projection required for v0.1 Core Authority Slice
@@ -700,7 +705,7 @@ Compact artifact check examples:
 
 ## conformance run
 
-Future `conformance run` will execute selected fixture suites or explicitly selected docs-only maintenance profiles. Runtime suites use the same Core entrypoints as MCP tools and operator commands, and pass/fail only when exact-shape fixtures compare captured state, events, artifacts, projections/freshness, and errors. Docs-maintenance remains separate, read-only, and excluded from runtime fixture pass/fail and implementation readiness.
+Future `conformance run` is an operations-profile surface, normally v0.4 or later after runtime suites are materialized. It will execute selected fixture suites or explicitly selected docs-only maintenance profiles. Runtime suites use the same Core entrypoints as MCP tools and operator commands, and pass/fail only when exact-shape fixtures compare captured state, events, artifacts, projections/freshness, and errors. Docs-maintenance remains separate, read-only, and excluded from runtime fixture pass/fail and implementation readiness.
 
 ### Conformance Navigation Map
 
