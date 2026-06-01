@@ -129,7 +129,7 @@ repo/
 ```
 
 
-The repository may hold generated readable summaries and, when an active profile enables them, generated `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `JOURNEY-CARD`, `EXPORT`, and other report projections. Early implementation should start with compact status/next, user decision request, evidence summary, and close readiness/blocker output rather than the full catalog. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; human edits become state only when reconcile routes them into a Core state-changing action.
+The repository may hold generated readable summaries and, when an active profile enables them, generated `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `JOURNEY-CARD`, `EXPORT`, and other report projections. v0.1 should start with structured status/blocker output rather than the full catalog; user decision request display, evidence summaries, and close-readiness output grow in v0.2 and later profiles. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; human edits become state only when reconcile routes them into a Core state-changing action.
 
 ## Harness Server / Installation
 
@@ -189,19 +189,19 @@ Native hooks, sidecars, command wrappers, file watchers, and worktree isolation 
 
 ### Core modules
 
-v0.1 Core Authority Slice Core can run as a single process with these internal modules:
+Core can run as a single local process in the first slices. The full server may grow into the internal responsibilities below, but v0.1 Core Authority Slice is not required to implement them as separate modules. Its implementation can collapse everything outside local registration, one Task, one scoped work boundary, `prepare_write`, one single-use Write Authorization, one `record_run`, one artifact/evidence ref, and one structured status/blocker response into stubs, absent paths, or later-profile scope.
 
 | Module | Runtime responsibility |
 |---|---|
 | State store | current records, state versions, locks, and `state.sqlite.task_events` |
-| Task workflow | intake, mode selection, next action, gate updates, close decisions |
-| Journey module | Journey Spine reconstruction, Journey Spine Entry support records, Journey Card inputs, and continuity refs |
-| Decision module | Decision Packet lifecycle, `decision_gate` aggregation, user judgment routing, and residual-risk visibility inputs |
-| Approval module | scope-bound approval request, decision, expiry, and drift handling |
-| Evidence module | run records, artifact refs, evidence manifests, and coverage checks |
+| Task workflow | Task state, scoped work boundary, minimal status/blocker response, and later intake, mode selection, next action, gate updates, close decisions |
+| Journey module | Journey Spine reconstruction, Journey Spine Entry support records, Journey Card inputs, and continuity refs when the relevant profile is active |
+| Decision module | Decision Packet lifecycle, `decision_gate` aggregation, user judgment routing, and residual-risk visibility inputs when the relevant profile is active |
+| Approval module | scope-bound approval request, decision, expiry, and drift handling when sensitive-action approval is in scope |
+| Evidence module | run records and artifact/evidence refs first; evidence manifests and coverage checks when the relevant profile is active |
 | Verification module | verification bundles, evaluator runs, Eval records, and independence checks |
 | Manual QA module | QA records and `qa_gate` aggregation |
-| Projection module | projection jobs, managed blocks, freshness, and report paths |
+| Projection module | optional freshness/read facts first; projection jobs, managed blocks, and report paths when projection support is in scope |
 | Reconcile module | human-editable proposals, managed drift, and accepted-state routing |
 | Validator runner | core, decision, autonomy/boundary, design-quality, artifact, projection, and connector checks |
 | Autonomy/Boundary validator responsibility | Autonomy Boundary compatibility, agent latitude, user-judgment requirements, AFK stop conditions, and boundary drift findings |
@@ -322,7 +322,7 @@ Guarantee levels apply to staged delivery as follows:
 
 | Stage | Honest guarantee posture |
 |---|---|
-| v0.1 Core Authority Slice / Kernel Smoke | Demonstrates Core authority, state-version checks, scoped write-authority decisions, artifact registration, and basic detective validation. The reference surface should be displayed as cooperative/detective unless a fixture-proven pre-tool guard or documented and proven separation boundary is explicitly implemented for the covered operation. No OS-level permissions, arbitrary-tool sandboxing, tamper-proof local files, or automatic pre-tool blocking are implied. |
+| v0.1 Core Authority Slice / Kernel Smoke | Demonstrates Core authority over one minimal scoped work loop: local registration, Task, scoped boundary, `prepare_write`, single-use Write Authorization, `record_run`, artifact/evidence ref, and structured status/blocker response. The reference surface should be displayed as cooperative/detective unless a fixture-proven pre-tool guard or documented and proven separation boundary is explicitly implemented for the covered operation. No OS-level permissions, arbitrary-tool sandboxing, tamper-proof local files, or automatic pre-tool blocking are implied. |
 | v0.2 User-Facing Harness MVP | Adds user-facing status, judgment, evidence, and close-readiness comprehension over the same local-only posture. It must not claim OS-level isolation, sandboxing, tamper-proof storage, or pre-tool blocking unless the connected profile proves that exact stronger control. |
 | v0.3-v0.4 hardened local profiles | May promote preventive controls for covered operations or isolated work/verification profiles only when owner docs, connector profiles, and conformance prove the exact covered operation or separation boundary. Until then, stronger controls remain future or profile-specific notes. |
 | v1+ Expansion | Remote, shared, cloud, or broader isolated profiles remain roadmap scope unless promoted by owner docs and conformance. They must keep the same Core authority, trust-boundary, and honest guarantee display rules. |

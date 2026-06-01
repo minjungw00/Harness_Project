@@ -6,7 +6,7 @@ Use this guide when you add, rewrite, split, rename, or review Harness documenta
 
 It helps you keep the current documentation readable for the intended reader, clear about where each kind of detail belongs, and aligned between English and Korean.
 
-This is maintenance documentation. It governs documentation maintenance only. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is maintenance documentation. It governs documentation maintenance only. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as a narrow future smoke-check authoring label. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -131,7 +131,7 @@ Potential item category after verification:
 | Review risk | Tracker status | Editing rule |
 |---|---|---|
 | Repository identity as the future Harness Server source repository can drift. | Baseline status check. | Keep entrypoints clear that the repo is currently documentation-only, is in post-redesign review, its intended future role is the Harness Server source repository, and server/runtime implementation has not started and may start only after documentation acceptance and a separate implementation-planning readiness decision. |
-| Stage names can still imply v0.1, Kernel Smoke, or a legacy kernel-stage label is the product MVP. | Candidate to verify in the current docs. | Say v0.1 Core Authority Slice is an internal authority-loop milestone, Kernel Smoke is its narrow conformance authoring profile, and v0.2 User-Facing Harness MVP is the first product MVP. |
+| Stage names can still imply v0.1, Kernel Smoke, or a legacy kernel-stage label is the product MVP. | Candidate to verify in the current docs. | Say v0.1 Core Authority Slice is an internal authority-loop milestone, Kernel Smoke is its narrow future smoke-check authoring label, and v0.2 User-Facing Harness MVP is the first product MVP. |
 | User-facing docs may open with heavy implementation disclaimers. | Candidate to verify in the current docs. | For user-facing Learn and Use docs, prefer a workflow-first opening that starts with what users can ask, what the agent should clarify, what Harness preserves, and what users should expect to see. Route detailed phase/status warnings to the root README, language READMEs, Build handoff docs, and Maintain guidance. Keep any local status note brief. |
 | User-facing docs overuse internal terms. | Candidate to verify in the current docs. | Explain the user-visible situation first; introduce internal terms only when they help the reader act. |
 | Discovery / requirements clarification may converge too early on a Change Unit or the first safe implementation unit. | Candidate to verify in the current docs. | Leave room for early discovery, shared understanding, and user-owned judgment before requiring a scoped implementation unit. |

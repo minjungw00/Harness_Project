@@ -4,7 +4,7 @@
 
 This document turns the Build overview into the v0.1 Core Authority Slice an implementer should plan first.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. It is an internal implementation milestone, not the user-facing MVP. The first product MVP target is v0.2 User-Facing Harness MVP.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as a narrow future smoke-check authoring label. It is an internal implementation milestone, not the user-facing MVP. The first product MVP target is v0.2 User-Facing Harness MVP.
 
 ## Read this when
 
@@ -18,9 +18,9 @@ Read [Implementation Overview](implementation-overview.md) first, including its 
 
 ## Main idea
 
-Prove one Task can move through the smallest Core authority record: project registration, one basic scope represented by the Change Unit owner shape where the reference contract requires it, one write authorization decision, one authorized Run, one evidence link, and one structured blocker/status response.
+Prove one Task can move through the smallest Core authority record: local project registration, one scoped work boundary represented by the Change Unit owner shape only where the reference contract requires it, one write authorization decision, one authorized Run, one artifact/evidence reference, and one structured blocker/status response.
 
-The first slice should show that Harness state is local, durable, and authoritative without trying to prove the whole user-facing product. It keeps `prepare_write` as the product-write authorization decision point, Write Authorization as durable and single-use, `record_run` as the place where one compatible Run consumes authority, and `close_task` or status as the place where missing evidence or required judgment can be reported as structured blockers.
+The first slice should show that Harness state is local, durable, and authoritative without trying to prove the whole user-facing product. It keeps `prepare_write` as the product-write authorization decision point, Write Authorization as durable and single-use, `record_run` as the place where one compatible Run consumes authority, and status/blocker output as the place where missing scope, missing write authority, or missing artifact/evidence support can be reported as structured blockers. A `close_task` smoke may be used if the owner path already makes that the simplest blocker response, but v0.1 does not prove final acceptance or close semantics.
 
 Use [Kernel Reference](../reference/kernel.md#prepare_write) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#public-tools) for the exact contracts.
 
@@ -30,34 +30,32 @@ Plan v0.1 Core Authority Slice: the smallest Harness path that can prove local a
 
 The slice should create or seed:
 
-- one project and one reference surface
+- one local project registration
 - one Task
 - one basic scope for the intended change
 - one allowed `prepare_write` decision and at least one blocked decision
 - one durable single-use Write Authorization
 - one compatible recorded Run that consumes the authorization
-- one artifact or evidence ref linked to the Run or evidence relation
-- one minimal evidence state that can support or fail the selected claim
-- one read-only status/next response
-- one structured blocker/status response when scope, evidence, or required seeded user judgment is missing
+- one artifact/evidence ref linked to the Run or minimal owner relation
+- one structured blocker/status response when scope, write authority, or artifact/evidence support is missing
 
 This is a command-independent implementation guide. It describes capabilities and observable behavior, not CLI syntax. Do not include or duplicate full DDL here. Storage details and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
-The first slice is deliberately not the User-Facing Harness MVP, the hardened local reference target as a whole, a projection-template-polish milestone, dashboard or hosted-workflow-UI milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, export/recover path, release handoff path, or parallel automation path.
+The first slice is deliberately not the User-Facing Harness MVP, the hardened local reference target as a whole, full Decision Packet quality, full Evidence Manifest, Manual QA, detached verification, residual-risk acceptance semantics, final acceptance semantics, a projection-template-polish milestone, multiple projection kinds, dashboard or hosted-workflow-UI milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, export/recover path, release handoff path, broad operator-entrypoint path, full conformance suite, future fixture catalog, or parallel automation path.
 
 ## Success story
 
 An implementer can run a local Harness process against a temporary product repository and observe this story:
 
-1. Harness registers one project and one reference surface.
-2. A Task exists in Core state and changes append `task_events`.
-3. A basic scope names the intended product change.
+1. Harness registers one local project.
+2. A Task exists in Core-owned state.
+3. A scoped work boundary names the intended product change.
 4. `prepare_write` blocks a missing or incompatible scope.
 5. `prepare_write` allows one compatible scoped write and creates a durable single-use Write Authorization.
 6. `record_run` records one compatible Run and consumes that authorization once.
-7. One artifact or evidence ref is registered and linked to the Run or evidence relation.
-8. Status and next reads show current Task, scope, write authority, evidence state, and blockers without mutating state.
-9. Close or status output returns a structured blocker when required evidence, scope, or required seeded user judgment is missing.
+7. One artifact/evidence ref is registered and linked to the Run or minimal owner relation.
+8. Status/blocker output shows current Task, scope, write authority, artifact/evidence support, and blockers without mutating state.
+9. Status or a close-task smoke returns a structured blocker when scope, write authority, or artifact/evidence support is missing.
 
 Passing this story means v0.1 Core Authority Slice works. It does not mean users have experienced the Harness MVP yet. The user-facing MVP begins when ordinary requests are clarified into scope, user-owned judgment, evidence, close-readiness, final-acceptance, and residual-risk language.
 
@@ -67,12 +65,13 @@ Use these checks to review the planned v0.1 Core Authority Slice before executab
 
 A proposed first runnable slice is acceptable when:
 
-- It remains local, single-project, single-reference-surface, and focused on one Task authority loop.
+- It remains local, single-project, and focused on one Task authority loop.
 - It stays planning-only until the [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status) explicitly marks implementation-planning readiness as accepted for the first runtime batch.
-- It proves exactly one scoped write path: active Task, one basic scope, `prepare_write` allow/block, durable single-use Write Authorization, `record_run` consumption, artifact/evidence link, read-only status/next, and structured blocker/status response.
-- It blocks or refuses missing authority: missing scope, out-of-scope intended path, missing Write Authorization for product-write Runs, reuse of a consumed Write Authorization, missing required evidence, or missing required seeded user judgment.
+- It proves exactly one scoped write path: active Task, one scoped work boundary, `prepare_write` allow/block, durable single-use Write Authorization, `record_run` consumption, artifact/evidence ref, and structured blocker/status response.
+- It blocks or refuses missing authority: missing scope, out-of-scope intended path, missing Write Authorization for product-write Runs, reuse of a consumed Write Authorization, or missing artifact/evidence support.
 - It keeps status reads, generated prose, and any projection output downstream from Core records; none of them authorize writes, satisfy evidence, close work, repair state, or become conformance truth by being read.
-- It links strict fixture body shape, assertion modes, primary errors, artifact refs, projection assertions, and seed validation to [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format) instead of copying those contracts here.
+- It treats projection-like output as status/blocker output for v0.1; no full projection renderer, multiple projection kinds, or detailed templates are required.
+- It links any future strict fixture body shape, assertion modes, primary errors, artifact refs, optional projection assertions, and seed validation to [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format) instead of copying those contracts here.
 - It names excluded capabilities as not yet proven by v0.1 Core Authority Slice, not as failed first-slice requirements.
 
 The build order below is a post-acceptance, post-readiness planning sequence. The headings use implementation verbs so the future runtime batch is easy to execute, but this document still does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision.
@@ -85,7 +84,7 @@ Plan enough runtime home support to create local Harness authority outside chat 
 
 Planning focus:
 
-- Make one local project and one reference surface resolvable for later Task-scoped actions.
+- Make one local project resolvable for later Task-scoped actions.
 - Keep the runtime home, registry, project state, artifact store, and static project configuration in the storage owner path.
 - Provide a read-only status that can report an unregistered, registered-idle, or active-work state.
 
@@ -104,7 +103,7 @@ Create the first Task through Core or a fixture seed path that uses the same val
 Planning focus:
 
 - Create or seed exactly one active Task through an owner-valid path.
-- Keep enough current state and event history for status and later Core actions to refer to the Task.
+- Keep enough current state for status and later Core actions to refer to the Task.
 - Keep mode policy depth, intake quality, and procedural budget routing for v0.2 User-Facing Harness MVP.
 
 Done when:
@@ -122,7 +121,7 @@ Planning focus:
 
 - Attach one owner-valid scope to the active Task.
 - Make the selected intended write checkable against that scope.
-- Keep only the evidence expectation needed for the first selected claim.
+- Keep only the artifact/evidence support needed for the first authority-loop claim.
 - Keep full Discovery and user-facing procedural budget routing for v0.2.
 
 Done when:
@@ -171,7 +170,7 @@ Owner contracts: Run semantics are owned by [Kernel Reference: record_run](../re
 
 ### 6. Artifact Or Evidence Link
 
-Register one durable evidence file or equivalent evidence ref through the owner path.
+Register one durable evidence file or equivalent evidence ref through the owner path. v0.1 needs the reference and owner link, not the full Evidence Manifest model or rendered `EVIDENCE-MANIFEST` output.
 
 Planning focus:
 
@@ -186,37 +185,20 @@ Done when:
 
 Owner contracts: artifact refs are owned by [ArtifactRef](../reference/mcp-api-and-schemas.md#artifactref); storage layout and registration details are owned by [Artifact directory layout](../reference/storage-and-ddl.md#artifact-directory-layout) and [Artifact Registration Contract](../reference/storage-and-ddl.md#artifact-registration-contract).
 
-### 7. Minimal Evidence State
+### 7. Status And Structured Blockers
 
-Create the smallest evidence relation needed to explain whether the selected claim is supported.
-
-Planning focus:
-
-- Map one selected claim to the Run and artifact/evidence ref.
-- Preserve the distinction between supported, partial, and insufficient evidence through the owner gate semantics.
-- Avoid treating chat text, status prose, or projection prose as evidence.
-
-Done when:
-
-- A completed Run can produce a supported or partial evidence state.
-- Missing required evidence causes close/status output to block.
-
-Owner contracts: evidence records and close-support categories are owned by [Evidence Manifest](../reference/kernel.md#evidence-manifest), [Evidence Gate](../reference/kernel.md#evidence-gate), and [`harness.close_task`](../reference/mcp-api-and-schemas.md#harnessclose_task).
-
-### 8. Status, Next, And Structured Blockers
-
-Expose current work state and safe next action without mutation, and return structured blockers when the first slice cannot close or proceed.
+Expose current work state without mutation, and return structured blockers when the first slice cannot proceed.
 
 Planning focus:
 
-- Return current Task, scope, write-authority summary, evidence status, blockers, and next safe action from canonical records.
-- Keep blocker identity structured enough for fixtures without making prose authoritative.
+- Return current Task, scope, write-authority summary, artifact/evidence support, and blockers from canonical records.
+- Keep blocker identity structured enough for smoke checks without making prose authoritative.
 - Do not append events, enqueue projections, create artifacts, satisfy gates, authorize writes, or close the Task from a read.
 
 Done when:
 
-- Repeated status/next reads return the same state version unless another action changed state.
-- The structured blocker can be compared by fixtures without matching prose.
+- Repeated status reads return the same state version unless another action changed state.
+- The structured blocker can be compared without matching prose.
 - Close/status results are based on canonical records, not rendered reports.
 
 Owner contracts: status/next schemas are owned by [`harness.status`](../reference/mcp-api-and-schemas.md#harnessstatus) and [`harness.next`](../reference/mcp-api-and-schemas.md#harnessnext); close behavior is owned by [Kernel Reference: close_task](../reference/kernel.md#close_task).
@@ -226,15 +208,14 @@ Owner contracts: status/next schemas are owned by [`harness.status`](../referenc
 The first runnable slice proves:
 
 - Core can own state transitions.
-- The state store and `task_events` are usable.
 - A scoped record is required for product writes.
 - `prepare_write` is the product-write authorization decision point.
 - Write Authorization is durable and single-use.
 - `record_run` consumes write authority once and records observed work.
 - One artifact/evidence link can support the recorded Run.
-- Evidence can be insufficient without relying on chat.
-- Status and next are read-only.
-- Structured blockers can report missing scope, evidence, authorization, or seeded required user judgment.
+- Artifact/evidence support can be missing without relying on chat.
+- Status/blocker reads are read-only.
+- Structured blockers can report missing scope, missing write authority, or missing artifact/evidence support.
 
 ## What this does not prove yet
 
@@ -242,16 +223,16 @@ This slice does not prove the items below. They are stage boundaries, not failed
 
 | Later stage | Not yet proven by v0.1 Core Authority Slice |
 |---|---|
-| v0.2 User-Facing Harness MVP | Natural-language intake quality, Discovery, product/UX versus architecture judgment presentation, small-change versus tracked-work budgets, residual-risk display, final acceptance separation, user-facing projection/card sufficiency. |
+| v0.2 User-Facing Harness MVP | Natural-language intake quality, Discovery, product/UX versus architecture judgment presentation, small-change versus tracked-work budgets, residual-risk display, final acceptance separation, minimal user-facing status/card sufficiency. |
 | v0.3 Agency Assurance Pack | Full Decision Packet quality, full Approval lifecycle and drift handling, detached verification independence, Manual QA policy matrix, residual-risk accepted close, final acceptance separation, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
-| v0.4 Operations & Handoff Pack | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage. |
+| v0.4 Operations & Handoff Pack | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage, full projection/reconcile operations. |
 | v1+ Expansion | Dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification automation, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow. |
 
-## Fixtures to write
+## Future Smoke Checks
 
-After documentation acceptance and implementation-planning readiness handoff, write Core Authority Slice fixtures that drive Core behavior and assert state, events, artifacts, projection freshness when applicable, and errors. Do not assert success by matching rendered prose or polished projection output. These rows are future authoring candidates; they do not imply executable fixture files exist now.
+After documentation acceptance and implementation-planning readiness handoff, map the Core Authority Slice to the smallest Kernel Smoke checks that drive Core behavior and assert the minimal owner records, artifact/evidence ref, structured blocker/status response, and errors. Do not assert success by matching rendered prose or polished projection output. These rows are future authoring candidates; they do not imply executable fixture files exist now, and they are not a full conformance suite.
 
-Build owns the coverage intent for v0.1: project/status, one active Task, one basic scope, `prepare_write` allow/block, `record_run` consume/block, one artifact/evidence link, minimal evidence sufficiency, read-only status/next, and close/status blockers. Projection polish and detailed templates are not v0.1 fixture requirements. The exact fixture queue, body fields, seed rules, assertion modes, stable events, artifact/projection assertions, and primary-error expectations are owned by the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) and [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format).
+Build owns the v0.1 scope intent: local project registration, one active Task, one scoped work boundary, `prepare_write` allow/block, one single-use Write Authorization, one `record_run` consume/block, one artifact/evidence ref, and one structured status/blocker output. Projection polish, detailed templates, full Evidence Manifest behavior, and broad fixture catalogs are not v0.1 requirements. The exact future fixture queue, body fields, seed rules, assertion modes, stable events, artifact/projection assertions, and primary-error expectations are owned by the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) and [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format).
 
 Do not add fields to the fixture body to express suite stage, authoring order, or docs-maintenance results.
 

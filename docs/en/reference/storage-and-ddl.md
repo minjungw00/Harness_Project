@@ -6,7 +6,7 @@ Use this reference to implement or review the Harness runtime storage model. It 
 
 This is storage reference material. It does not define staged-pack sequencing; for stage order and exit criteria, see [Build: MVP Plan](../build/mvp-plan.md).
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as a narrow future smoke-check authoring label. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -40,7 +40,7 @@ Storage gives Harness durable local records, but it does not become a second aut
 
 Harness keeps one global runtime registry and one local state database per registered project. The registry says which projects and surfaces exist. `project.yaml` stores static project configuration. `state.sqlite` stores canonical current records, append-only task events, idempotency replay rows, artifact registry rows, projection jobs, and validator run results.
 
-Storage fields are reference-contract fields, not all first-slice requirements. This document owns the storage shape whenever an owner path uses it; [Build: MVP Plan](../build/mvp-plan.md#contract-field-staging) owns when a capability enters the staged delivery plan. A stage may defer a capability, but once it stores that record family it must satisfy the DDL, storage-owned JSON validation, and owner-bound value rules defined here.
+Storage fields are reference-contract fields, not all first-slice requirements. This document owns the storage shape whenever an owner path uses it; [Build: MVP Plan](../build/mvp-plan.md#contract-field-staging) owns when a capability enters the staged delivery plan. v0.1 Core Authority Slice needs only the storage needed for local project registration, one Task, one scoped work boundary, one Write Authorization, one Run, one artifact/evidence ref, and one structured status/blocker response. A stage may defer a capability, but once it stores that record family it must satisfy the DDL, storage-owned JSON validation, and owner-bound value rules defined here.
 
 Public API shapes are owned by [MCP API And Schemas](mcp-api-and-schemas.md). Storage-owned DDL and storage-only JSON validation are owned here.
 
@@ -122,7 +122,7 @@ Permission diagnostics should be concrete enough for an operator to act on:
 
 ## DDL draft
 
-The reference storage uses SQLite for registry and per-project state. The DDL is a draft implementation contract; field names may gain indexes or migration helpers, but table ownership and authority boundaries should remain stable.
+The reference storage uses SQLite for registry and per-project state. The DDL is a draft implementation contract for the full reference model; field names may gain indexes or migration helpers, but table ownership and authority boundaries should remain stable. The full table set below is not a v0.1 implementation checklist.
 
 `task_spine_entries` is the current reference table for public `journey_spine_entry` records and Journey Spine Entry wording. Public MCP/API naming remains `journey_spine_entry`; the table name preserves the task-local implementation shape.
 
@@ -135,7 +135,7 @@ This ER diagram is an overview of the DDL relationships below. Relationship labe
 | Storage hardening | [Storage hardening as an authority boundary](#storage-hardening-as-an-authority-boundary), [JSON TEXT validation](#json-text-validation), [Canonical enum hardening](#canonical-enum-hardening) | value validation and owner-bound enum-like `TEXT` fields |
 | Project config | [`project.yaml`](#projectyaml) | static project defaults, policies, and surface config |
 | Runtime registry | [`registry.sqlite`](#registrysqlite) | registered projects, project surfaces, and connector manifests |
-| Project state database | [`state.sqlite`](#statesqlite) | Task, gate, Change Unit, Run, approval, decision, evidence, artifact, projection, reconcile, design support, feedback-loop, validator, and lock tables |
+| Project state database | [`state.sqlite`](#statesqlite) | Full reference table set for Task, gate, Change Unit, Run, approval, decision, evidence, artifact, projection, reconcile, design support, feedback-loop, validator, and lock records. v0.1 uses only the subset required by Build. |
 | Event rows | [`task_events`](#task_events) | append-only event storage and stable-event owner boundary |
 
 ```mermaid
@@ -1331,9 +1331,9 @@ Reference storage does not define a separate `projections` table. A rendered pro
 
 Sensitive-approval projection jobs follow the APR source rule owned by the [APR Template](templates/approval.md#source-records) and [Document Projection Reference](document-projection.md#document-authority-matrix), plus the non-mutating candidate contract owned by [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write): an `approval_request_candidate` may affect `TASK` display or blockers, but it is never an `APR` source. `APR` jobs start from committed approval state changes.
 
-For staged support, Decision Packet visibility is rendered through status/next responses, judgment-context resources, decision-packet read resources, and minimal `TASK` or card displays. A standalone `DEC` projection is optional unless the standalone Decision Packet projection feature is enabled. Persisted `JOURNEY-CARD` Markdown is future/diagnostic; current-position context in status, next, and significant resume flows can be compact status output. This document does not define extension template text.
+For staged support, v0.1 uses status/blocker output and does not require persisted Markdown projection support. Decision Packet visibility in later stages is rendered through status/next responses, judgment-context resources, decision-packet read resources, and minimal `TASK` or card displays. A standalone `DEC` projection is optional unless the standalone Decision Packet projection feature is enabled. Persisted `JOURNEY-CARD` Markdown is future/diagnostic; current-position context in status, next, and significant resume flows can be compact status output. This document does not define extension template text.
 
-The job lifecycle below applies to every enqueued `ProjectionKind`. Stage sequencing and proof scope are owned by [Build: MVP Plan](../build/mvp-plan.md).
+The job lifecycle below applies only when a projection job is enqueued because projection support for that kind is in scope. v0.1 has no full projection-rendering exit requirement. Stage sequencing and proof scope are owned by [Build: MVP Plan](../build/mvp-plan.md).
 
 Projection job lifecycle:
 

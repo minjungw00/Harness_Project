@@ -6,7 +6,7 @@ Harness 운영자 절차, Conformance staging과 run entrypoint behavior, docs-m
 
 이 문서는 operator, implementer, conformance author, maintainer를 위한 lookup 문서입니다. 온보딩 경로가 아니므로 처음 읽는 사람은 Learn 또는 Build 문서에서 전체 흐름을 잡고, 정확한 운영 또는 Conformance 의미가 필요할 때 여기로 돌아옵니다.
 
-이 문서는 향후 operator와 conformance behavior를 위한 참조 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture, fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 현재 저장소는 문서 전용이며 runnable Harness Server conformance test를 담고 있지 않습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
+이 문서는 향후 operator와 conformance behavior를 위한 참조 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture, fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 현재 저장소는 문서 전용이며 runnable Harness Server conformance test를 담고 있지 않습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 좁은 future smoke-check 작성 label입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
 
 ## 이런 때 읽기
 
@@ -135,7 +135,7 @@ Conformance는 runtime implementation이 존재한 뒤 단계적으로 실행할
 
 Build 문서는 첫 실행 가능한 조각과 stage exit를 계획하기 위한 문서 수준 수락 점검을 제공할 수 있습니다. 이 점검은 reviewer가 코어 권한 조각(v0.1 Core Authority Slice)을 좁게 유지하도록 돕지만 fixture field, suite metadata, public request schema, storage row, primary error, runner comparison mode가 아닙니다. 향후 runtime pass/fail은 [Conformance Fixtures 참조](conformance-fixtures.md)의 exact body shape와 assertion semantics를 사용하는 executable fixture에서만 나옵니다.
 
-코어 권한 조각(v0.1 Core Authority Slice)은 첫 실행 가능한 conformance target이며, 커널 스모크(Kernel Smoke)는 Core Authority Slice fixtures를 위한 authoring profile입니다. Stage exit criteria는 Build의 [첫 실행 가능한 조각](../build/first-runnable-slice.md)이 담당합니다. Exact future runtime fixture queue는 [Conformance Fixtures 참조: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)가 담당합니다. 커널 스모크(Kernel Smoke) 통과는 첫 내부 Core 권한 경로를 증명하지만 user-facing MVP fixtures, Agency Assurance Pack fixtures, operations conformance를 주장하지 않습니다.
+코어 권한 조각(v0.1 Core Authority Slice)은 첫 실행 가능한 authority-loop target이며, 커널 스모크(Kernel Smoke)는 그 좁은 경로를 실행하는 향후 smoke-check label입니다. Stage exit criteria는 Build의 [첫 실행 가능한 조각](../build/first-runnable-slice.md)이 담당합니다. Exact future runtime fixture queue는 [Conformance Fixtures 참조: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)가 담당합니다. 최소 Kernel Smoke subset 통과는 첫 내부 Core 권한 경로를 증명하지만 full conformance suite를 요구하지 않고 user-facing MVP fixtures, Agency Assurance Pack fixtures, operations conformance를 주장하지 않습니다.
 
 이후 conformance profile은 [MVP 계획](../build/mvp-plan.md)의 stage name을 따릅니다. Core Authority Slice fixtures는 코어 권한 조각(v0.1 Core Authority Slice)에, User-Facing Harness MVP fixtures는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)에, Agency Assurance Pack fixtures는 에이전시 보증 팩(v0.3 Agency Assurance Pack)에, Operations & Handoff Pack 또는 promoted-expansion fixtures는 운영과 인계 팩(v0.4 Operations & Handoff Pack)과 승격된 v1+ Expansion candidate에 대응합니다. Exact policy, API, storage, projection, connector, fixture requirement는 각 Reference owner에 남습니다. Suite catalog metadata는 runner selection과 reporting을 위해 scenario를 suite, delivery stage, tag로 group할 수 있지만 Core에 전달되지 않습니다. 향후 executable fixture는 여전히 Core state, events, artifacts, projections/freshness, errors를 통해 검증해야 합니다.
 
@@ -147,14 +147,14 @@ Connector와 reference-surface smoke coverage도 같은 staged rule을 따릅니
 
 ```mermaid
 flowchart LR
-  Kernel["코어 권한 조각(v0.1 Core Authority Slice)<br/>커널 스모크(Kernel Smoke) profile"] --> Evidence["사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)"]
+  Kernel["코어 권한 조각(v0.1 Core Authority Slice)<br/>커널 스모크(Kernel Smoke) smoke-check label"] --> Evidence["사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)"]
   Evidence --> Agency["에이전시 보증 팩(v0.3 Agency Assurance Pack)"]
   Agency --> Ops["운영과 인계 팩(v0.4 Operations & Handoff Pack)<br/>operations/future conformance"]
   Ops -. roadmap boundary .-> Expansion["v1+ Expansion<br/>roadmap 후보"]
   Kernel --> K1["project, Task, 기본 scope 하나"]
   Kernel --> K2["prepare_write and Write Authorization"]
   Kernel --> K3["record_run and evidence link"]
-  Kernel --> K4["status/next and structured blockers"]
+  Kernel --> K4["status/blocker output"]
 ```
 
 ## docs-maintenance 프로필

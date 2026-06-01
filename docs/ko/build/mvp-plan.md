@@ -4,7 +4,7 @@
 
 이 문서는 MVP 범위를 구현 가능한 staged delivery 계획으로 바꿉니다. 코어 권한 조각(v0.1 Core Authority Slice)과 첫 사용자 대상 MVP를 분리해, "MVP"라는 이름을 단순히 권한 루프가 존재하는 단계가 아니라 사용자가 하네스의 가치를 경험할 수 있는 단계에만 사용합니다.
 
-이 문서는 구현 계획 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture, fixture 파일, 런타임 데이터를 만들라는 뜻이 아닙니다. Conformance fixture 문서는 향후 적합성 검증 계획이며, 현재 문서 전용 저장소에는 runnable Harness Server conformance test가 없습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance 작성 프로파일입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff 동작을 단계적으로 단단하게 만듭니다. v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 둡니다.
+이 문서는 구현 계획 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture, fixture 파일, 런타임 데이터를 만들라는 뜻이 아닙니다. Conformance fixture 문서는 향후 적합성 검증 계획이며, 현재 문서 전용 저장소에는 runnable Harness Server conformance test가 없습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 좁은 future smoke-check 작성 label입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff 동작을 단계적으로 단단하게 만듭니다. v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 둡니다.
 
 문서 수락과 별도의 구현 계획 준비 결정 이후 무엇을 만들지 계획할 때 이 문서를 사용합니다. 정확한 contract는 Reference 문서를 사용합니다.
 
@@ -25,13 +25,13 @@
 - 코어 권한 조각(v0.1 Core Authority Slice)은 가장 작은 내부 Core 권한 루프를 증명합니다.
 - 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 하네스가 작업을 구체화하고, 적절한 절차 규모로 다루고, 필요한 경우 막고, 수락하고, 위험을 설명하는 방식을 경험하는 첫 MVP입니다.
 
-첫 조각은 의도적으로 좁게 유지합니다. 로컬 프로젝트 하나, Task 하나, 기본 범위 하나, 쓰기 권한 경로 하나, 기록된 Run 하나, 근거 링크 하나, 구조화된 막힘/상태 응답 하나를 증명합니다. 이것은 MVP가 아닙니다. 일반적인 작업을 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 잔여 위험 언어로 바꾸고 민감 동작 승인(Approval), 작업 수락, 잔여 위험 수용을 혼동하지 않게 만드는 단계가 MVP입니다.
+첫 조각은 의도적으로 좁게 유지합니다. 로컬 프로젝트 등록 하나, Task 하나, 범위가 정해진 작업 경계 하나, `prepare_write` 권한 경로 하나, 한 번만 쓰는 Write Authorization 하나, 기록된 Run 하나, artifact/evidence 참조 하나, 구조화된 막힘/상태 응답 하나를 증명합니다. 이것은 MVP가 아닙니다. 일반적인 작업을 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 잔여 위험 언어로 바꾸고 민감 동작 승인(Approval), 작업 수락, 잔여 위험 수용을 혼동하지 않게 만드는 단계가 MVP입니다.
 
 읽기용 요약(Projection) 템플릿 다듬기, 상세 보고서, dashboard 또는 hosted workflow UI, index, broad connector ecosystem 또는 marketplace, team workflow, surface-specific connector automation, metric, parallel orchestration, broad automation은 authority record와 user-facing value path가 존재한 뒤 유용해질 수 있습니다. 첫 조각의 요구사항은 아닙니다.
 
 초기 output model은 의도적으로 작게 둡니다.
 
-- v0.1은 Core state에서 오는 현재 상태/다음 행동 읽기 전용 출력과 구조화된 막힘이 필요합니다.
+- v0.1은 Core state에서 오는 최소 상태/막힘 출력만 필요합니다. 전체 읽기용 요약 renderer는 필요하지 않습니다.
 - v0.2는 사용자 읽기용 현재 작업 상태, 사용자 결정 요청, 근거 요약, 닫기 준비 상태 / blocker 요약이 필요합니다.
 - Journey Card, Journey Spine, Run Summary, TDD Trace, Module Map, Interface Contract, Export, detailed Evidence Manifest, detailed Eval output은 담당 profile이 명시적으로 승격하지 않는 한 optional, diagnostic, later-profile scope로 남습니다.
 
@@ -39,7 +39,7 @@
 
 | 단계 | 전달 목표 | 증명하는 것 | 아직 증명하지 않는 것 |
 |---|---|---|---|
-| v0.1 | 코어 권한 조각(Core Authority Slice) | 로컬 프로젝트 하나, Task 하나, 기본 범위 하나, 쓰기 권한 경로 하나, 기록된 Run 하나, 근거 링크 하나, 구조화된 막힘/상태 응답 하나로 구성된 첫 실행 가능한 내부 Core 권한 루프. | 사용자 대상 MVP 가치, full intake/discovery, full Decision Packet 품질, 잔여 위험 semantics, 수동 QA, 분리 검증, 읽기용 요약 완전성, operations readiness. |
+| v0.1 | 코어 권한 조각(Core Authority Slice) | 로컬 프로젝트 등록 하나, Task 하나, 범위가 정해진 작업 경계 하나, `prepare_write` 권한 경로 하나, 한 번만 쓰는 Write Authorization 하나, 기록된 Run 하나, artifact/evidence 참조 하나, 구조화된 막힘/상태 응답 하나로 구성된 첫 실행 가능한 내부 Core 권한 루프. | 사용자 대상 MVP 가치, full intake/discovery, full Decision Packet 품질, full Evidence Manifest, 수동 QA, 분리 검증, 잔여 위험 수용 의미, 작업 수락 의미, 여러 projection kind, recover/export, 넓은 operator entrypoint, full conformance suite, future fixture catalog, dashboard/UI behavior. |
 | v0.2 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자가 하네스가 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 표시를 로컬 권한 기록에 보존한다는 것을 경험합니다. | Full agency assurance hardening, 분리 검증 독립성, 수동 QA matrix, stewardship policy suite, feedback-loop policy, export/recover, release handoff. |
 | v0.3 | 에이전시 보증 팩(Agency Assurance Pack) | MVP path를 검증, 수동 QA, 잔여 위험, 작업 수락, stewardship profile로 단단하게 만듭니다. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
 | v0.4 | 운영과 인계 팩(Operations & Handoff Pack) | 같은 Core model로 doctor/readiness, recover/export, artifact integrity, release handoff, 더 넓은 conformance coverage를 지원합니다. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
@@ -52,7 +52,7 @@ flowchart LR
   Ops -. roadmap boundary .-> Expansion["v1+<br/>확장 후보"]
 ```
 
-커널 스모크(Kernel Smoke)는 코어 권한 조각(v0.1 Core Authority Slice)을 위한 좁은 conformance authoring profile로 남습니다. 이 profile 이름은 v0.1이 제품 MVP라는 뜻이 아니라 내부 Core 권한 경로를 증명한다는 뜻입니다.
+커널 스모크(Kernel Smoke)는 코어 권한 조각(v0.1 Core Authority Slice)을 위한 좁은 향후 작성 label로 남습니다. 이 label은 v0.1이 제품 MVP라는 뜻이 아니며, full conformance suite나 future fixture catalog가 있어야 내부 Core 권한 경로를 확인할 수 있다는 뜻도 아닙니다.
 
 Conformance fixture 검증 프로파일은 같은 stage name을 따릅니다. Core Authority Slice fixtures는 v0.1 Core Authority Slice, User-Facing Harness MVP fixtures는 v0.2 User-Facing Harness MVP, Agency Assurance Pack fixtures는 v0.3 Agency Assurance Pack, Operations & Handoff Pack 또는 promoted-expansion fixtures는 v0.4 Operations & Handoff Pack과 승격된 v1+ Expansion candidate에 대응합니다.
 
@@ -64,26 +64,24 @@ v1+ Expansion은 로드맵 범위이며 Build가 소유하는 staged delivery ph
 
 ## 코어 권한 조각(v0.1 Core Authority Slice)
 
-v0.1은 내부 구현 단계입니다. 하네스가 chat memory나 generated Markdown이 아니라 로컬 권한 기록임을 보여 주는 가장 작은 coherent loop만 증명해야 합니다.
+v0.1은 구현자 확신을 위한 내부 구현 조각입니다. 하네스가 chat memory나 generated Markdown이 아니라 로컬 권한 기록임을 보여 주는 가장 작은 coherent loop만 증명해야 합니다. 사용자 가치 검증 단계가 아니며 첫 제품 MVP라고 부르면 안 됩니다.
 
 v0.1은 다음을 증명해야 합니다.
 
-- project registration과 reference surface 하나
-- 현재 상태와 `task_events`를 가진 Task 하나
-- intended change를 위한 기본 scope 하나(Reference 계약상 필요한 경우 Change Unit 소유자 형태로 표현된다)
+- local project registration 하나
+- Core가 소유한 상태 안의 Task 하나
+- intended change를 위한 범위가 정해진 작업 경계 하나. Reference 계약상 필요한 경우에만 Change Unit 소유자 형태로 표현된다.
 - `prepare_write` allow/block path 하나
 - 지속적이며 한 번만 쓸 수 있는 Write Authorization 하나
 - 그 authorization을 consume하는 `record_run` 하나
-- Core/API contract가 소유하는 registered `ArtifactRef` 또는 equivalent evidence link 하나
-- selected claim에 대한 support 또는 insufficiency를 보고할 수 있는 minimal evidence relation 또는 Evidence Manifest state record 하나. 단 detailed `EVIDENCE-MANIFEST` projection은 요구하지 않습니다.
-- 현재 Core state에서 오는 `status`/`next` 읽기 전용 응답 하나
-- 누락된 근거, missing scope, 또는 seeded 필요한 사용자 결정을 위한 구조화된 막힘/상태 응답 하나
+- Core/API contract가 소유하는 registered `ArtifactRef` 또는 equivalent evidence reference 하나
+- missing scope, missing write authority, 또는 missing artifact/evidence support를 위한 구조화된 막힘/상태 응답 하나
 
-v0.1은 full natural-language intake, full Discovery, full Decision Packet quality, product/UX judgment와 architecture judgment의 presentation, 잔여 위험 표시, 작업 수락, 잔여 위험 수용, 수동 QA, 분리 검증, stewardship, feedback-loop policy, export/recover, release handoff, projection/template completeness를 증명하면 안 됩니다. 이것들은 이후 단계의 범위입니다.
+v0.1은 full natural-language intake, full Discovery, full Decision Packet quality, full Evidence Manifest, 수동 QA, 분리 검증, 잔여 위험 수용 의미, 작업 수락 의미, product/UX judgment와 architecture judgment의 presentation, stewardship, feedback-loop policy, 여러 projection kind, full projection rendering, export/recover, 넓은 operator entrypoint, full conformance suite, future fixture catalog, full dashboard/UI behavior, release handoff를 증명하면 안 됩니다. 이것들은 이후 단계 또는 roadmap 범위입니다.
 
-v0.1 Kernel Smoke fixture candidate는 Core state, events, artifact/evidence refs, 관련되는 경우 freshness facts, structured blocker를 통해 minimal authority loop를 검증해야 합니다. 읽기용 요약 다듬기, detailed template, renderer output은 first-slice conformance truth가 아닙니다.
+v0.1 Kernel Smoke candidate는 Core state, 그 루프에 필요한 owner record, artifact/evidence refs, structured blocker를 통해 minimal authority loop만 확인해야 합니다. 읽기용 요약 다듬기, detailed template, renderer output, 넓은 fixture catalog는 first-slice conformance truth가 아닙니다.
 
-이 시점에 implementer 또는 operator는 Core가 상태를 소유하고, scoped write가 허용되거나 차단되며, authorization 하나가 한 번 소비되고, 근거가 기록된 Run에 연결되며, 읽기 동작이 상태를 바꾸지 않고, 닫기/상태 출력이 구조화된 막힘을 반환할 수 있음을 관찰할 수 있습니다.
+이 시점에 implementer는 Core가 최소 상태를 소유하고, scoped write가 허용되거나 차단되며, authorization 하나가 한 번 소비되고, artifact/evidence ref가 기록된 Run에 연결되며, 상태/막힘 출력이 구조화된 막힘을 반환할 수 있음을 관찰할 수 있습니다. 이것은 구현자 확신이지 사용자가 Harness 가치를 경험했다는 증명이 아닙니다.
 
 ### 계약 필드 단계 구분
 
@@ -91,7 +89,7 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 
 | Stage | Build 읽기 규칙 | 적용할 owner contract |
 |---|---|---|
-| v0.1 Core Authority Slice | 좁은 authority loop를 증명하는 데 필요한 owner-defined field만 사용합니다. Smoke path가 Decision Packet을 사용한다면 required Decision Packet field는 그대로 적용됩니다. 다만 full user-facing Decision Packet quality는 이후 범위입니다. | [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Storage와 DDL](../reference/storage-and-ddl.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
+| v0.1 Core Authority Slice | 좁은 authority loop를 증명하는 데 필요한 owner-defined field만 사용합니다. 넓은 checklist를 만족하려고 future-profile record를 만들지 않습니다. Minimal seeded blocker가 owner ref를 사용한다면, full user-facing Decision Packet quality가 아니라 그 owner path의 valid shape만 적용합니다. | [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Storage와 DDL](../reference/storage-and-ddl.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
 | v0.2 User-Facing Harness MVP | 사용자가 대기 중인 사용자 결정 맥락, 근거, 닫기 준비 상태, 작업 수락 분리, 잔여 위험 표시를 이해하는 데 필요한 field와 display summary를 추가합니다. | [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [커널 참조](../reference/kernel.md), [읽기용 요약(Projection) 참조](../reference/document-projection.md), [Template 참조](../reference/templates/README.md). |
 | 에이전시 보증 팩(v0.3 Agency Assurance Pack) / 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Verification, QA, 잔여 위험, 작업 수락, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, release-handoff profile은 담당 문서가 정의한 곳에서만 추가합니다. | [설계 품질 정책](../reference/design-quality-policies.md), [운영과 Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md), [Storage와 DDL](../reference/storage-and-ddl.md). |
 
@@ -119,9 +117,9 @@ flowchart LR
   Status --> Close["닫기 상태 막힘"]
 ```
 
-정확한 state와 close behavior는 [커널 참조](../reference/kernel.md)가, public tool shape는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)가, projection rule은 [읽기용 요약(Projection) 참조](../reference/document-projection.md)가, fixture semantics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#conformance-fixture-format)가 담당합니다. 이 흐름은 pack gate나 fixture body requirement를 추가하지 않습니다.
+정확한 state와 blocker behavior는 [커널 참조](../reference/kernel.md)가, public tool shape는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)가, future fixture semantics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#conformance-fixture-format)가 담당합니다. 이 흐름은 pack gate, projection renderer requirement, fixture body requirement를 추가하지 않습니다.
 
-실제 fixture 작성 순서는 [커널 스모크(Kernel Smoke) Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue)를 사용합니다. 이 queue는 v0.1 fixture candidate를 이 내부 조각에 매핑하지만 executable fixture file이 이미 존재한다고 암시하지 않습니다.
+향후 smoke 작성 순서는 [커널 스모크(Kernel Smoke) Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue)를 사용합니다. 이 queue는 candidate check를 이 내부 조각에 매핑하지만 executable fixture file이 이미 존재하거나 v0.1에 full conformance suite가 필요하다고 암시하지 않습니다.
 
 ## 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)
 
@@ -188,7 +186,7 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 | 후보 | 단계 경계 |
 |---|---|
 | Dashboard, hosted workflow UI, artifact dashboard, rich card expansion | State를 표시할 수는 있지만 authority, implementation readiness, close readiness, 작업 수락, 잔여 위험 수용이 되면 안 됩니다. |
-| Broad connector marketplace 또는 surface ecosystem | 나중에 surface를 확장할 수 있지만 reference surface proof를 대체하거나 MCP exposure를 기본적으로 넓히면 안 됩니다. |
+| Broad connector marketplace 또는 surface ecosystem | 나중에 surface를 확장할 수 있지만 첫 Core authority-loop proof를 대체하거나 MCP exposure를 기본적으로 넓히면 안 됩니다. |
 | Browser QA Capture automation | 승격 뒤 수동 QA를 보조할 수 있지만 human QA judgment, 작업 수락, 분리 검증을 대체하면 안 됩니다. |
 | Cross-Surface Verification automation | 승격 뒤 evaluator routing을 자동화할 수 있지만 Core-owned return record 없이 Eval 또는 assurance를 충족하면 안 됩니다. |
 | Preventive guard expansion, native hooks, Advanced Sidecar Watcher | Proven pre-tool blocking 또는 observation path가 있을 때 surface를 강화할 수 있지만 label만으로 주장하면 안 됩니다. |
@@ -204,18 +202,17 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 
 ### 코어 권한 조각(v0.1 Core Authority Slice) 종료 점검 목록
 
-- 프로젝트 하나와 reference surface 하나가 등록된다.
-- Task 하나를 만들고, 읽고, 최소한으로 advance하고, `task_events`에 나타낼 수 있다.
-- Scope record 하나가 intended change boundary를 이름 붙인다.
+- local project 하나가 등록된다.
+- Task 하나가 Core-owned state 안에 존재한다.
+- 범위가 정해진 작업 경계 하나가 intended change boundary를 이름 붙인다.
 - Compatible scope 없는 product write는 block된다.
 - Out-of-scope intended write는 block된다.
 - 허용된 `prepare_write`는 지속적이며 한 번만 쓸 수 있는 Write Authorization을 만든다.
 - Compatible `record_run`은 authorization을 한 번 consume한다.
 - 두 번째 distinct product-write Run은 consumed authorization을 재사용할 수 없다.
-- Artifact 또는 evidence ref 하나가 등록되어 Run 또는 evidence relation에 연결된다.
-- Minimal 근거 상태가 selected claim에 대해 support, partial support, insufficiency를 보고할 수 있다.
-- `status`와 `next`는 상태를 변경하지 않고 현재 상태를 반환한다.
-- Structured blocker/status response가 missing scope, evidence, 또는 필요한 seeded 사용자 결정을 보고한다.
+- Artifact/evidence ref 하나가 등록되어 Run 또는 minimal owner relation에 연결된다.
+- 상태/막힘 출력이 상태를 변경하지 않고 현재 상태 또는 blocker를 반환한다.
+- Structured blocker/status response가 missing scope, missing write authority, 또는 missing artifact/evidence support를 보고한다.
 
 ### 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) 종료 점검 목록
 
@@ -254,7 +251,7 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 
 | 단계 | 사용자 또는 operator가 볼 수 있는 것 |
 |---|---|
-| 코어 권한 조각(v0.1 Core Authority Slice) | Implementer/operator는 로컬 Task 하나가 scope, `prepare_write`, Write Authorization, `record_run`, artifact/evidence link, `status`/`next` 읽기 전용 응답, 구조화된 막힘을 통과하는 것을 볼 수 있습니다. |
+| 코어 권한 조각(v0.1 Core Authority Slice) | Implementer는 로컬 Task 하나가 scoped work boundary, `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref, 구조화된 상태/막힘 출력을 통과하는 것을 볼 수 있습니다. |
 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자는 평범한 작업이 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 언어로 정리되고 근거 또는 필요한 사용자 결정이 없으면 close가 block되는 것을 볼 수 있습니다. |
 | 에이전시 보증 팩(v0.3 Agency Assurance Pack) | Local path가 verification, 수동 QA, 잔여 위험 수용, 작업 수락, stewardship, TDD, feedback, context hygiene, close behavior를 Core record와 fixture로 설명합니다. |
 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Operator는 같은 Core state 위에서 diagnose, recover, reconcile, export, artifact check, conformance run, release handoff 준비를 수행할 수 있습니다. |

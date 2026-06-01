@@ -94,7 +94,7 @@ Chat or Markdown output is mistaken for operational truth. A stale report, edite
 
 The staged MVP model separates the first internal Core Authority Slice from the first user-facing MVP. It proves the local authority record and agency model, not a broad platform.
 
-v0.1 Core Authority Slice should prove one local project, one reference agent surface, local runtime state, public MCP tools, write gating, one recorded Run, one evidence link, one structured blocker/status response, and fixture-based Kernel Smoke conformance.
+v0.1 Core Authority Slice should prove only the first internal Core authority loop: one local project registration, one Task, one scoped work boundary, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence reference, and one structured blocker/status response. Kernel Smoke is a future smoke-check label for that loop, not a product MVP or full conformance suite.
 
 v0.2 User-Facing Harness MVP is the first product MVP: it makes ordinary requests visible as scope, user-owned judgment, evidence, close readiness, final acceptance, and residual-risk boundaries. v0.3 Agency Assurance Pack then hardens verification, Manual QA, residual risk, acceptance, and stewardship, and v0.4 Operations & Handoff Pack adds projection/reconcile depth, recovery, export, release handoff, and operator behavior. Early slices can be small as long as they do not redefine the boundary by hiding critical decisions, evidence, or close behavior.
 

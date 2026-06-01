@@ -6,7 +6,7 @@
 
 처음 읽는 독자는 Learn 경로에서 전체 그림을 먼저 보고, 정확한 상태 규칙이 필요할 때 이 문서로 돌아오는 것을 권장합니다.
 
-이 문서는 참조 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
+이 문서는 참조 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들라는 뜻이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 좁은 future smoke-check 작성 label입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
 
 ## 이런 때 읽기
 
@@ -109,7 +109,7 @@ Stage support는 단계별 MVP 경계를 따릅니다.
 
 | Stage/profile | 표현할 수 있는 것 |
 |---|---|
-| v0.1 Core Authority Slice / Kernel Smoke | 좁은 runnable authority loop입니다. Active Task, 기본 scope 하나를 표현합니다. Reference contract상 필요한 경우 Change Unit owner shape로 표현하고, 쓰기 권한, 호환되는 Run/근거 기록, idempotency/state-version check, status/next read, structured blocker를 표현합니다. Smoke scenario가 명시적으로 다루지 않으면 검증, 수동 QA, 작업 수락, 잔여 위험 경로는 `not_required` 또는 `none`일 수 있습니다. |
+| v0.1 Core Authority Slice / Kernel Smoke | 좁은 내부 authority loop입니다. Local project registration, active Task, reference contract상 필요한 경우에만 Change Unit owner shape로 표현하는 범위가 정해진 작업 경계 하나, `prepare_write` 권한 경로 하나, 한 번만 쓰는 Write Authorization 하나, artifact/evidence ref 하나가 붙은 compatible Run 하나, structured status/blocker response 하나를 표현합니다. Smoke path가 루프에 필요한 최소 owner record를 명시적으로 포함하지 않으면 검증, 수동 QA, 작업 수락, 잔여 위험 수용, full Decision Packet quality, full Evidence Manifest path는 `not_required`, `none`, absent 또는 future-profile scope일 수 있습니다. |
 | v0.2 User-Facing Harness MVP | 사용자에게 보이는 status는 범위, 사용자 결정, 근거, 닫기 준비 상태, required일 때 작업 수락, close-relevant risk가 있을 때 잔여 위험 표시를 보여야 합니다. 테스트가 통과해도 왜 close가 막히는지 설명해야 합니다. |
 | v0.3 이후 hardened profile | 분리 검증 독립성, 더 풍부한 수동 QA, stewardship, feedback-loop, TDD, operations, export/recover, handoff behavior를 harden합니다. Future-profile check는 active profile 또는 owner 문서가 켰을 때만 close blocker입니다. |
 
@@ -517,7 +517,7 @@ Journey Spine은 kernel state, registered artifact references, `state.sqlite.tas
 
 Gate는 `prepare_write`, `close_task`, status display, conformance fixtures가 사용하는 기준 kernel fields입니다.
 
-Gate field는 항상 reference state model의 일부이지만, 특정 operation에서 어떤 gate가 required인지는 stage와 Task profile이 결정합니다. v0.1 Core Authority Slice는 scope, write authority, Run/근거 recording, state-version/idempotency behavior, status/next read, structured blocker를 증명해야 합니다. 선택한 smoke scenario가 사용하지 않는다면 검증, 수동 QA, 작업 수락, 잔여 위험 path는 `not_required` 또는 `none`으로 둘 수 있습니다. v0.2는 user-facing judgment, 작업 수락, close-relevant risk가 있을 때 잔여 위험 표시를 추가합니다. v0.3 이후 profile은 분리 검증, 수동 QA, stewardship, feedback-loop, TDD, operations behavior를 harden합니다. 이 reference에 gate가 존재한다는 이유만으로 그 full future-profile behavior가 smallest runnable slice에 required가 되지는 않습니다.
+Gate field는 항상 reference state model의 일부이지만, 특정 operation에서 어떤 gate가 required인지는 stage와 Task profile이 결정합니다. v0.1 Core Authority Slice는 Build가 이름 붙인 최소 authority loop만 증명해야 합니다. 범위는 scope, write authority, single-use Write Authorization consumption, Run recording, artifact/evidence ref 하나, structured status/blocker response입니다. 선택한 smoke scenario가 사용하지 않는다면 검증, 수동 QA, 작업 수락, 잔여 위험 path는 `not_required` 또는 `none`으로 둘 수 있습니다. v0.2는 user-facing judgment, 작업 수락, close-relevant risk가 있을 때 잔여 위험 표시를 추가합니다. v0.3 이후 profile은 분리 검증, 수동 QA, stewardship, feedback-loop, TDD, operations behavior를 harden합니다. 이 reference에 gate가 존재한다는 이유만으로 그 full future-profile behavior가 smallest runnable slice에 required가 되지는 않습니다.
 
 Gate는 모든 stage에서 분리되어 남습니다. Early slice는 어떤 범주를 `not_required`로 보고할 수 있지만, 근거, 검증, 수동 QA, 작업 수락, 잔여 위험을 하나의 완료 flag로 합치면 안 됩니다.
 
@@ -995,7 +995,7 @@ Decision algorithm은 다음과 같습니다.
 
 필수 확인에는 active Task, active Change Unit, mode의 쓰기 가능 여부, active Change Unit scope, Autonomy Boundary compatibility, baseline freshness, intended paths, intended tools, intended commands, network targets, secret access, sensitive categories, approval scope, Decision Packet state, 접점 capability profile 정보, design policy 사전 조건이 포함됩니다. Design policy 사전 조건은 intended write가 permitted RED-test write인지, blocked non-test implementation write인지, alternate feedback loop가 있는 explicit TDD waiver로 allowed되는 write인지에 영향을 줄 수 있지만, 새로운 커널 불변 규칙을 만들지는 않습니다.
 
-이 확인들은 active Task profile과 stage에 따라 적용됩니다. v0.1은 core state/scope/write-authority path와 포함된 seeded judgment blocker를 증명해야 하지만, full design-quality, TDD, stewardship, 수동 QA, 분리 검증, 작업 수락, 잔여 위험, export profile이 범위에 들어오기 전부터 모두 enable할 필요는 없습니다.
+이 확인들은 active Task profile과 stage에 따라 적용됩니다. v0.1은 core state/scope/write-authority path와 이름 붙은 smoke path에 포함된 structured blocker만 증명하면 됩니다. Full design-quality, TDD, stewardship, 수동 QA, 분리 검증, 작업 수락, 잔여 위험, export profile은 범위에 들어오기 전부터 모두 enable할 필요가 없습니다.
 
 `allowed` decision은 `status=allowed`이고 allow decision이 사용한 affected scope의 `basis_state_version`이 기록된 Write Authorization을 만들거나 reference해야 합니다. `authorization_effect=returned`는 같은 idempotency key, request hash, `basis_state_version`을 가진 동일한 committed `prepare_write` request의 idempotent replay 또는 이미 commit된 response 반환에만 reserved됩니다. 서로 다른 호환 가능한 request는 각각 별도의 Write Authorization을 만듭니다. Compatibility가 authorization을 재사용 가능하게 만들지는 않습니다. 생성된 각 authorization은 single-use이며, 같은 committed Run record의 idempotent replay를 제외하면 하나의 compatible implementation 또는 direct `record_run`에서만 consume될 수 있습니다. Blocked, approval-required, decision-required, state-conflict result는 attempted write에 대해 사용 가능한 Write Authorization을 만들면 안 됩니다. Compatibility basis가 바뀌면 Core는 오래된 unconsumed authorization을 `stale`, expire, revoke할 수 있습니다.
 

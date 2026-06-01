@@ -6,7 +6,7 @@ Use this reference to implement, test, or review the public MCP resource and too
 
 It does not own SQLite DDL, storage layout, the full kernel transition table, projection template text, CLI command semantics, or connector cookbook details. Storage-owned JSON and DDL rules live in [Storage And DDL](storage-and-ddl.md).
 
-This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is reference documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as a narrow future smoke-check authoring label. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -21,9 +21,9 @@ Use [Runtime Architecture](runtime-architecture.md#state-transaction-flow) for t
 
 ## Main idea
 
-MCP resources are read-only views. They can report current state, projection freshness, and user-facing summaries, but they must not create or repair state.
+MCP resources are read-only views. They can report current state, projection freshness when projection support exists, and user-facing summaries, but they must not create or repair state.
 
-All state changes go through public tools and Core. The MCP envelope carries caller claims for Core to validate; it is not a second state model. A tool response may include projection paths and artifact refs, but those are references to canonical state records or durable evidence files, not replacements for canonical state.
+All state changes go through public tools and Core. The MCP envelope carries caller claims for Core to validate; it is not a second state model. A tool response may include projection paths when projection support is in scope and artifact refs when artifacts are in scope, but those are references to canonical state records or durable evidence files, not replacements for canonical state.
 
 Status and next-action displays should translate public MCP concepts into ordinary user language before showing them. A user should see what is blocking, the smallest unblocker, and any important secondary blockers. Raw `ToolError`, `ErrorCode`, and schema field names may appear as optional detail for implementers, logs, or conformance output, but they should not be the only user-facing explanation.
 
@@ -103,13 +103,17 @@ Storage validation is a separate ownership boundary. Public API payloads and API
 6. Record evidence/eval/QA/acceptance when applicable through the matching public tool or Decision Packet path.
 7. Close when blockers clear with `harness.close_task`.
 
+The v0.1 Core Authority Slice uses only the narrow subset of this flow needed to prove Core-owned authority: status/blocker read, Task and scoped-boundary setup, `prepare_write`, one single-use Write Authorization, `record_run`, one artifact/evidence ref, and one structured blocker/status response. Evidence manifests, Eval, Manual QA, final acceptance, residual-risk acceptance, and full close semantics are later-profile behavior.
+
 ### Stage requirement boundary
 
 Fields marked required in a request or response schema are required when that tool, record, or profile is implemented and used. They are not all v0.1 Core Authority Slice exit criteria. Build owns the staged delivery plan; use [Build: MVP Plan](../build/mvp-plan.md#contract-field-staging) and [First Runnable Slice](../build/first-runnable-slice.md) for stage scope.
 
 This reference owns valid API shape once a tool or profile is in scope. For example, if any stage creates a Decision Packet, the Decision Packet fields required here still apply; a stage may defer full user-facing quality, but it cannot emit an invalid public shape.
 
-Tool-section lines that say "Projection jobs enqueued" describe committed, non-dry-run behavior when projection support for that kind is in scope. Dry runs, pre-commit state conflicts, and rejected pre-commit requests do not enqueue projection jobs. v0.1 may preserve freshness/read facts without proving full Markdown rendering; projections remain derived views, not authority.
+Tool-section lines that say "Projection jobs enqueued" describe committed, non-dry-run behavior when projection support for that kind is in scope. Dry runs, pre-commit state conflicts, and rejected pre-commit requests do not enqueue projection jobs. v0.1 may return status/blocker output and preserve freshness/read facts only if an owner path already produces them; it has no full Markdown rendering or multiple-projection-kind requirement. Projections remain derived views, not authority.
+
+For v0.1 Core Authority Slice, read this API as the minimal subset needed for one authority loop: status/blocker read, local project and Task setup through an owner-valid path, one scoped work boundary, `prepare_write`, one single-use Write Authorization, one compatible `record_run`, one artifact/evidence ref, and one structured blocker/status response. Tools and response meanings for full Decision Packet quality, full Evidence Manifest, Manual QA, detached verification, final acceptance, residual-risk acceptance, recover/export, broad operator flows, and rich projection rendering are future-profile capabilities, not v0.1 exit criteria.
 
 API surfaces must preserve the close-support categories even when a stage does not require all of them. Evidence, verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance are separate response meanings. A status, next-action, decision, or close response may say a category is `not_required`, but it must not use a test pass, Eval verdict, QA waiver, final acceptance note, or accepted residual risk as a generic substitute for another category.
 
@@ -257,7 +261,7 @@ Event stability for fixture assertions is owned by the [Kernel Stable Event Cata
 
 | Support class | Values | Requirement |
 |---|---|---|
-| v0.1 Core Authority Slice | none required | v0.1 status/next and structured blockers can expose read/freshness facts without any persisted Markdown projection job. |
+| v0.1 Core Authority Slice | none required | v0.1 status/blocker output can expose read/freshness facts without any persisted Markdown projection job. |
 | User-facing MVP | `TASK` minimal task-scoped readable summary, when persisted projection support is used | Provides the user-readable status/judgment/evidence/close summary path. Equivalent status/next cards may satisfy MVP output without full `TASK` template rendering. |
 | Optional early | `APR`, `DIRECT-RESULT`, `MANUAL-QA` | Implement only when the corresponding approval, direct-work, or Manual QA profile is active. |
 | Future / diagnostic | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD` | Detailed report, trace, map, export, handoff, standalone Decision Packet, persisted Journey Card, or diagnostic views. Enable only when the corresponding v0.3 Agency Assurance Pack, v0.4 Operations & Handoff Pack, or other owner-promoted later profile is in scope. |
@@ -928,7 +932,7 @@ A stale `expected_state_version` is reported as concurrency drift, not as proof 
 
 | Tool | Use this section for... |
 |---|---|
-| [`harness.status`](#harnessstatus) | status, gates, projection freshness, write authority, guarantees, residual risk, and recommended playbooks |
+| [`harness.status`](#harnessstatus) | status, gates, projection freshness when in scope, write authority, guarantees, residual risk, and recommended playbooks |
 | [`harness.intake`](#harnessintake) | starting or resuming tracked work and initial Task/Change Unit shaping |
 | [`harness.next`](#harnessnext) | next-action and smallest-unblocker display payloads |
 | [`harness.prepare_write`](#harnessprepare_write) | write precondition checks, blocked reasons, approval candidates, and Write Authorization summaries |
@@ -942,7 +946,9 @@ A stale `expected_state_version` is reported as concurrency drift, not as proof 
 
 ### `harness.status`
 
-Purpose: return project, surface, active Task, compact current-position summary, gate, guarantee, projection freshness, active Decision Packet, Autonomy Boundary, Write Authority Summary, residual-risk, and pending-decision status.
+Purpose: return project, surface, active Task, compact current-position summary, gate, guarantee, projection freshness when in scope, active Decision Packet, Autonomy Boundary, Write Authority Summary, residual-risk, and pending-decision status.
+
+v0.1 Core Authority Slice may use this as the minimal status/blocker output for the internal authority loop. Future-profile fields can be `null`, empty, `unknown`, or `not_required` according to their schema meaning when their capability is not in v0.1 scope.
 
 User-facing meaning: show the current position. A status display should lead with active Task, current phase, primary blocker when one exists, smallest unblocker, write authority status, guarantee level, and projection freshness. It may include refs and secondary blockers, but it should not make the user read raw schema fields to understand whether work can continue.
 
@@ -1102,6 +1108,8 @@ NextResponse:
   judgment_context: JudgmentContext | null
   autonomy_boundary: AutonomyBoundarySummary | null
 ```
+
+For v0.1 Core Authority Slice, `harness.next` is optional. If used, it should return only the next minimal authority-loop action, such as prepare the scoped write, record the authorized Run, report missing scope, or report missing artifact/evidence support. `verification`, `qa`, `acceptance`, and `reconcile` focus values and their action kinds are future-profile behavior.
 
 `next_action.action_kind` meanings:
 

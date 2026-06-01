@@ -6,7 +6,7 @@
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 코어 권한 조각(v0.1 Core Authority Slice)에 필요한 최소 read-only status/next/blocker shape입니다. Card 또는 response text로 반환할 수 있으며 persisted state record가 아닙니다.
+구현 계층: 코어 권한 조각(v0.1 Core Authority Slice)의 상태/막힘 응답을 렌더링할 때 선택할 수 있는 shape입니다. 최소 Core 권한 조각은 이 card 대신 plain structured response를 반환해도 됩니다. 이 template은 persisted state record가 아니며 full projection support의 증거도 아닙니다.
 
 ## 기준 기록
 

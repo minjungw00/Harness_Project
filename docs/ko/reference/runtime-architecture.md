@@ -131,7 +131,7 @@ repo/
 ```
 
 
-제품 저장소는 생성된 읽기용 요약과, active profile이 켠 경우 생성된 `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `JOURNEY-CARD`, `EXPORT`, 그 밖의 report projection Markdown 보고서를 담을 수 있습니다. 초기 구현은 전체 catalog가 아니라 compact status/next, 사용자 결정 요청, 근거 요약, 닫기 준비 상태/blocker output부터 시작해야 합니다. 이 파일들은 사람과 agent가 작업을 읽는 데 도움을 주지만 기준 상태가 아닙니다. 사람이 편집할 수 있는 영역은 입력 접점입니다. 사람이 남긴 edit은 reconcile이 Core 상태 변경 action으로 라우팅할 때만 상태 기록이 됩니다.
+제품 저장소는 생성된 읽기용 요약과, active profile이 켠 경우 생성된 `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `JOURNEY-CARD`, `EXPORT`, 그 밖의 report projection Markdown 보고서를 담을 수 있습니다. v0.1은 전체 catalog가 아니라 structured status/blocker output부터 시작해야 합니다. 사용자 결정 요청 표시, 근거 요약, 닫기 준비 상태 output은 v0.2와 이후 profile에서 자랍니다. 이 파일들은 사람과 agent가 작업을 읽는 데 도움을 주지만 기준 상태가 아닙니다. 사람이 편집할 수 있는 영역은 입력 접점입니다. 사람이 남긴 edit은 reconcile이 Core 상태 변경 action으로 라우팅할 때만 상태 기록이 됩니다.
 
 ## Harness Server / Installation
 
@@ -195,19 +195,19 @@ Native hooks, sidecars, command wrappers, file watchers, worktree isolation은 c
 
 ### Core modules
 
-코어 권한 조각(v0.1 Core Authority Slice) Core는 다음 내부 모듈을 가진 단일 프로세스로 실행할 수 있습니다.
+Core는 첫 조각에서 단일 로컬 프로세스로 실행할 수 있습니다. 전체 server는 아래 내부 책임으로 자랄 수 있지만, 코어 권한 조각(v0.1 Core Authority Slice)이 이들을 별도 모듈로 모두 구현해야 하는 것은 아닙니다. v0.1 구현은 local registration, Task 하나, 범위가 정해진 작업 경계 하나, `prepare_write`, 한 번만 쓰는 Write Authorization 하나, `record_run` 하나, artifact/evidence ref 하나, structured status/blocker response 하나 밖의 기능을 stub, absent path 또는 later-profile scope로 둘 수 있습니다.
 
 | Module | Runtime responsibility |
 |---|---|
 | State store | 현재 기록, state version, locks, `state.sqlite.task_events` |
-| Task workflow | intake, mode selection, next action, gate 갱신, 닫기 판단 |
-| Journey module | Journey Spine reconstruction, Journey Spine Entry support records, Journey Card inputs, continuity refs |
-| Decision module | Decision Packet lifecycle, `decision_gate` aggregation, 사용자 판단 연결, 잔여 위험 표시 inputs |
-| Approval module | scope-bound Approval 요청, decision, expiry, drift handling |
-| Evidence module | run records, artifact refs, evidence manifests, coverage checks |
+| Task workflow | Task state, 범위가 정해진 작업 경계, 최소 status/blocker response, 이후 profile의 intake, mode selection, next action, gate 갱신, 닫기 판단 |
+| Journey module | 관련 profile이 active일 때 Journey Spine reconstruction, Journey Spine Entry support records, Journey Card inputs, continuity refs |
+| Decision module | 관련 profile이 active일 때 Decision Packet lifecycle, `decision_gate` aggregation, 사용자 판단 연결, 잔여 위험 표시 inputs |
+| Approval module | sensitive-action approval이 범위에 있을 때 scope-bound Approval 요청, decision, expiry, drift handling |
+| Evidence module | 먼저 run records와 artifact/evidence refs. 관련 profile이 active일 때 evidence manifests, coverage checks |
 | Verification module | verification bundles, evaluator runs, Eval records, independence checks |
 | 수동 QA module | QA records, `qa_gate` aggregation |
-| Projection module | projection jobs, managed blocks, freshness, 보고서 paths |
+| Projection module | 먼저 optional freshness/read facts. Projection support가 범위에 있을 때 projection jobs, managed blocks, 보고서 paths |
 | Reconcile module | human-editable proposals, managed drift, accepted-state routing |
 | Validator runner | core, decision, autonomy/boundary, design-quality, artifact, projection, connector checks |
 | Autonomy/Boundary validator responsibility | Autonomy Boundary compatibility, agent latitude, user-judgment 요구사항, AFK stop conditions, boundary drift findings |
@@ -328,7 +328,7 @@ Reconcile은 merge, reject, note로 convert, decision 생성, design support rec
 
 | 단계 | 정직한 보장 자세 |
 |---|---|
-| v0.1 Core Authority Slice / Kernel Smoke | Core 권한, state-version check, 범위가 정해진 write-authority decision, artifact registration, 기본 탐지 가능 validation을 증명합니다. Covered operation에 대해 fixture로 입증된 도구 실행 전 guard 또는 문서화되고 입증된 separation boundary를 명시적으로 구현하지 않는 한 reference 접점은 cooperative/detective로 표시해야 합니다. OS 권한, 임의 도구 sandbox 격리, 변조 불가능한 로컬 파일, 자동 도구 실행 전 차단은 암시되지 않습니다. |
+| v0.1 Core Authority Slice / Kernel Smoke | Local registration, Task, 범위가 정해진 boundary, `prepare_write`, single-use Write Authorization, `record_run`, artifact/evidence ref, structured status/blocker response로 구성된 최소 scoped work loop에 대한 Core 권한을 증명합니다. Covered operation에 대해 fixture로 입증된 도구 실행 전 guard 또는 문서화되고 입증된 separation boundary를 명시적으로 구현하지 않는 한 reference 접점은 cooperative/detective로 표시해야 합니다. OS 권한, 임의 도구 sandbox 격리, 변조 불가능한 로컬 파일, 자동 도구 실행 전 차단은 암시되지 않습니다. |
 | v0.2 User-Facing Harness MVP | 같은 local-only 자세 위에 사용자용 status, judgment, evidence, close-readiness 이해를 추가합니다. 연결된 profile이 exact stronger control을 증명하지 않는 한 OS 수준 격리, sandbox 격리, 변조 불가능한 저장소, 도구 실행 전 차단을 주장하면 안 됩니다. |
 | v0.3-v0.4 hardened local profiles | Owner 문서, connector profile, conformance가 exact covered operation 또는 separation boundary를 증명한 경우에만 covered operation에 대한 preventive control 또는 isolated work/verification profile을 승격할 수 있습니다. 그 전까지 더 강한 control은 향후 또는 profile별 범위 note로 남습니다. |
 | v1+ Expansion | Remote, shared, cloud 또는 더 넓은 isolated profile은 owner 문서와 conformance가 승격하기 전까지 roadmap 범위에 남습니다. 승격되더라도 같은 Core authority, trust-boundary, 정직한 guarantee display 규칙을 유지해야 합니다. |

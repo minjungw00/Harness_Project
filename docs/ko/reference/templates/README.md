@@ -4,7 +4,7 @@
 
 Projection 템플릿과 표시 카드가 렌더링하는 Markdown 형태를 확인할 때 이 파일들을 사용합니다. Projection 규칙, 권한 경계, 최신성 동작은 [문서 Projection 참조](../document-projection.md)가 정의합니다.
 
-Owner 경계: 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들 권한을 주지 않습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만들고, v1+ Expansion은 owner 문서가 명시적으로 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
+Owner 경계: 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data를 만들 권한을 주지 않습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 좁은 future smoke-check 작성 label입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만들고, v1+ Expansion은 owner 문서가 명시적으로 승격하고 증명하기 전까지 roadmap 범위에 남습니다.
 
 이 디렉터리를 초기 구현에 모두 필요한 목록처럼 읽으면 안 됩니다. 아래 계층 표는 초기 필수 표시 형태, 초기 선택 표시 형태, 미래/진단 템플릿을 구분합니다.
 
@@ -24,12 +24,12 @@ Projection과 card shape는 세 산출물 계층을 지원합니다.
 
 | 계층 | Templates | Rule |
 |---|---|---|
-| 코어 권한 조각(v0.1 Core Authority Slice)에 필요 | [Compact Status Card](compact-status-card.md) 또는 동등한 status/next/blocker response shape | Current Core state에서 오는 최소 read-only status입니다. Persisted Markdown projection job은 필요하지 않습니다. |
+| 코어 권한 조각(v0.1 Core Authority Slice)에서 허용 | [Compact Status Card](compact-status-card.md) 또는 동등한 status/blocker response shape | 구현자가 card shape를 선택할 때 current Core state에서 오는 최소 read-only status입니다. Plain structured response만으로 충분하며 persisted Markdown projection job이나 template renderer는 필요하지 않습니다. |
 | 사용자 대상 MVP에 필요 | [TASK](task.md) 최소 continuity summary; standalone `DEC` `ProjectionKind`가 아닌 [Decision Packet 사용자 결정 요청 display/card shape](decision-packet.md) | 현재 상태, 사용자 결정 요청, 근거 요약, 닫기 준비 상태/blocker를 보여줄 만큼이면 됩니다. Standalone persisted `DEC` Markdown은 standalone Decision Packet projection 기능이 켜진 경우에만 사용합니다. |
 | 초기 선택 사항 | [APR](approval.md), [Approval Card](approval-card.md), [DIRECT-RESULT](direct-result.md), [MANUAL-QA](manual-qa.md), [Manual QA Card](manual-qa-card.md), [Verification Result Card](verification-result-card.md) | 해당 approval, direct-work, 수동 QA, verification profile이 active일 때만 사용합니다. |
 | 미래 / 진단 | [RUN-SUMMARY](run-summary.md), [EVIDENCE-MANIFEST](evidence-manifest.md), [EVAL](eval.md), [TDD-TRACE](tdd-trace.md), [DOMAIN-LANGUAGE](domain-language.md), [MODULE-MAP](module-map.md), [INTERFACE-CONTRACT](interface-contract.md), [DESIGN](design.md), [EXPORT](export.md), [JOURNEY-CARD](journey-card.md) | Detailed reference, diagnostic, handoff, stewardship, map, trace, export view입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack) 또는 owner가 승격한 다른 later profile에서 사용할 수 있게 유지하되 초기 필수 범위로 만들지 않습니다. |
 
-코어 권한 조각(v0.1 Core Authority Slice)은 넓은 template rendering을 요구하지 않습니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 범위, 사용자 결정, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험을 이해할 만큼의 파생 산출물이 필요합니다. Run Summary, Evidence Manifest, detailed Eval, TDD Trace, Journey Card, Module Map, Interface Contract, Export projection polish를 요구하지는 않습니다.
+코어 권한 조각(v0.1 Core Authority Slice)은 넓은 template rendering이나 full projection renderer를 요구하지 않습니다. 필요한 산출물은 Build가 이름 붙인 구조화된 상태/막힘 응답이며, 그 compact card가 가장 단순한 구현 선택일 때만 이 템플릿으로 렌더링할 수 있습니다. 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 사용자가 범위, 사용자 결정, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험을 이해할 만큼의 파생 산출물이 필요합니다. Run Summary, Evidence Manifest, detailed Eval, TDD Trace, Journey Card, Module Map, Interface Contract, Export projection polish를 요구하지는 않습니다.
 
 `미래 / 진단`은 later-profile 또는 diagnostic 범위라는 뜻이며, 자동으로 v1+ 전용이라는 뜻은 아닙니다.
 

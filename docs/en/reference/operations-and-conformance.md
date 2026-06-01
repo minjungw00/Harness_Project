@@ -6,7 +6,7 @@ Use this reference to look up Harness operator procedures, conformance staging a
 
 It is a lookup document for operators, implementers, conformance authors, and maintainers. It is not an onboarding path; first-time readers should start with Learn or Build docs and return here when they need exact operational or conformance semantics.
 
-This is reference documentation for future operator and conformance behavior. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The current repository is documentation-only and does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is reference documentation for future operator and conformance behavior. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The current repository is documentation-only and does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as a narrow future smoke-check authoring label. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -135,7 +135,7 @@ Conformance will run incrementally after runtime implementation exists, but stag
 
 Build docs may provide doc-level acceptance checks for planning the first runnable slice and stage exits. Those checks help reviewers keep v0.1 Core Authority Slice narrow, but they are not fixture fields, suite metadata, public request schemas, storage rows, primary errors, or runner comparison modes. Future runtime pass/fail still comes only from executable fixtures that use the exact body shape and assertion semantics in [Conformance Fixtures Reference](conformance-fixtures.md).
 
-v0.1 Core Authority Slice is the first runnable conformance target, with Kernel Smoke as the fixture authoring profile for Core Authority Slice fixtures. Build owns the stage exit criteria in [First Runnable Slice](../build/first-runnable-slice.md); the exact future runtime fixture queue is owned by [Conformance Fixtures Reference: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue). Passing Kernel Smoke proves the first internal Core authority path; it does not claim User-Facing Harness MVP, Agency Assurance Pack, or operations conformance.
+v0.1 Core Authority Slice is the first runnable authority-loop target, and Kernel Smoke is a future smoke-check label for the narrow checks that exercise that path. Build owns the stage exit criteria in [First Runnable Slice](../build/first-runnable-slice.md); the exact future runtime fixture queue is owned by [Conformance Fixtures Reference: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue). Passing the minimal Kernel Smoke subset proves the first internal Core authority path; it does not require a full conformance suite and does not claim User-Facing Harness MVP, Agency Assurance Pack, or operations conformance.
 
 The later conformance profiles follow the stage names in [MVP Plan](../build/mvp-plan.md): User-Facing Harness MVP fixtures for v0.2 User-Facing Harness MVP, Agency Assurance Pack fixtures for v0.3 Agency Assurance Pack, and Operations & Handoff Pack or promoted-expansion fixtures for v0.4 Operations & Handoff Pack and promoted v1+ Expansion candidates. Exact policy, API, storage, projection, connector, and fixture requirements stay in their Reference owners. Suite catalog metadata may group scenarios by suite, delivery stage, and tags for runner selection and reporting, but it is not passed to Core; future executable fixtures still assert through Core state, events, artifacts, projections/freshness, and errors.
 
@@ -147,14 +147,14 @@ Connector and reference-surface smoke coverage follows the same staged rule. v0.
 
 ```mermaid
 flowchart LR
-  Kernel["v0.1 Core Authority Slice<br/>Kernel Smoke profile"] --> Evidence["v0.2 User-Facing Harness MVP"]
+  Kernel["v0.1 Core Authority Slice<br/>Kernel Smoke smoke-check label"] --> Evidence["v0.2 User-Facing Harness MVP"]
   Evidence --> Agency["v0.3 Agency Assurance Pack"]
   Agency --> Ops["v0.4 Operations & Handoff Pack<br/>operations/future conformance"]
   Ops -. roadmap boundary .-> Expansion["v1+ Expansion<br/>roadmap candidates"]
   Kernel --> K1["project, Task, one basic scope"]
   Kernel --> K2["prepare_write and Write Authorization"]
   Kernel --> K3["record_run and evidence link"]
-  Kernel --> K4["status/next and structured blockers"]
+  Kernel --> K4["status/blocker output"]
 ```
 
 ## Docs-maintenance profile

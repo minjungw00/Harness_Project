@@ -6,7 +6,7 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 목표는 현재 문서가 독자에게 읽기 쉽고, 세부 계약의 위치가 분명하며, 영어와 한국어 문서가 같은 의미를 유지하도록 돕는 것입니다.
 
-이 문서는 Maintain 문서입니다. 문서 유지보수만 다룹니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
+이 문서는 Maintain 문서입니다. 문서 유지보수만 다룹니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 좁은 future smoke-check 작성 label입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
 
 ## 이런 때 읽기
 
@@ -131,7 +131,7 @@ Tracker 상태 의미:
 | 검토 risk | Tracker 상태 | 편집 규칙 |
 |---|---|---|
 | 이 저장소가 앞으로 하네스 서버 소스 저장소가 된다는 설명이 흐려질 수 있습니다. | 기준 상태 점검. | 현재는 문서 전용이고, 재설계 이후 검토 상태이며, 향후 역할은 하네스 서버 소스 저장소이고, 런타임/서버 구현은 아직 시작하지 않았으며 문서 수락과 별도의 구현 계획 준비 결정 이후에만 시작할 수 있다는 점을 진입점 문서에서 분명히 유지합니다. |
-| Stage 이름이 v0.1, Kernel Smoke, 또는 예전 kernel-stage label을 제품 MVP처럼 보이게 할 수 있습니다. | 확인 대상 후보. | v0.1 Core Authority Slice는 내부 authority loop milestone이고, Kernel Smoke는 그 좁은 conformance 작성 프로파일이며, v0.2 User-Facing Harness MVP가 첫 제품 MVP라고 말합니다. |
+| Stage 이름이 v0.1, Kernel Smoke, 또는 예전 kernel-stage label을 제품 MVP처럼 보이게 할 수 있습니다. | 확인 대상 후보. | v0.1 Core Authority Slice는 내부 authority loop milestone이고, Kernel Smoke는 그 좁은 future smoke-check 작성 label이며, v0.2 User-Facing Harness MVP가 첫 제품 MVP라고 말합니다. |
 | 사용자용 문서가 무거운 구현 disclaimer로 시작할 수 있습니다. | 확인 대상 후보. | 사용자 대상 Learn/Use 문서는 사용자가 무엇을 요청할 수 있는지, 에이전트가 무엇을 구체화해야 하는지, 하네스가 무엇을 보존하는지, 사용자가 무엇을 보게 되는지를 먼저 보여주는 사용자 흐름 우선 도입부를 선호합니다. 상세 단계와 상태 경고는 root README, 언어별 README, Build 인계 문서, Maintain 지침으로 보냅니다. 문서 안의 상태 메모는 짧게 유지합니다. |
 | 사용자용 문서에 내부 용어가 너무 많습니다. | 확인 대상 후보. | 사용자가 보는 상황을 먼저 설명하고, 내부 용어는 행동에 도움이 될 때만 소개합니다. |
 | 요구사항 탐색(discovery)과 확인이 Change Unit 또는 첫 안전한 구현 단위로 너무 빨리 수렴할 수 있습니다. | 확인 대상 후보. | 범위가 정해진 구현 단위를 요구하기 전에 초기 discovery, 공유 이해, 사용자 소유 판단의 여지를 남깁니다. |

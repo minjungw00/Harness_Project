@@ -4,7 +4,7 @@
 
 Follow one Harness work item from user request to close outcome without reading every strict contract first.
 
-This is Build documentation. It summarizes the runtime path for implementers and reviewers, but it does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or new schemas before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as its narrow conformance authoring profile. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is Build documentation. It summarizes the runtime path for implementers and reviewers, but it does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or new schemas before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as a narrow future smoke-check authoring label. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -19,9 +19,9 @@ Read [Implementation Overview](implementation-overview.md) and [First Runnable S
 
 ## Main idea
 
-For write-capable tracked work, a request becomes safe product work only after Harness knows the Task, the needed requirements clarification or decisions, and the initial scope. Product writes then pass through `prepare_write`, which can create a one-attempt Write Authorization. Runs consume that authority, evidence and artifacts support claims, projections make the state readable, and `close_task` either returns structured blockers or closes the Task.
+For write-capable tracked work, a request becomes safe product work only after Harness knows the Task, the needed requirements clarification or decisions, and the initial scope. Product writes then pass through `prepare_write`, which can create a one-attempt Write Authorization. Runs consume that authority, evidence and artifacts support claims, status/blocker output makes the current state readable, and later projection or close paths can explain blockers or close the Task when their stage is in scope.
 
-The walkthrough shows the full user-facing path. v0.1 Core Authority Slice implements only the smallest internal part of it: one project, one Task, one basic scope represented by the Change Unit owner shape where the reference contract requires it, one write authority path, one recorded Run, one evidence link, and one structured blocker/status response. v0.2 User-Facing Harness MVP adds the ordinary-language clarification, judgment separation, procedural budget, residual-risk display, and acceptance boundaries users experience.
+The walkthrough shows the full user-facing path. v0.1 Core Authority Slice implements only the smallest internal part of it: one local project registration, one Task, one scoped work boundary represented by the Change Unit owner shape only where the reference contract requires it, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence ref, and one structured blocker/status response. v0.1 does not require a full projection renderer, final acceptance, residual-risk acceptance semantics, Manual QA, detached verification, recover/export, or broad operator entrypoints. v0.2 User-Facing Harness MVP adds the ordinary-language clarification, judgment separation, procedural budget, residual-risk display, and acceptance boundaries users experience.
 
 ## Walkthrough at a glance
 
@@ -35,14 +35,14 @@ flowchart LR
   Prepare -->|allowed| Authorization["Write Authorization"]
   Prepare -->|blocked or needs judgment| Blocker["blocker or<br/>Decision Packet / Approval path"]
   Authorization --> Run["Run"]
-  Run --> Evidence["Evidence Manifest<br/>and ArtifactRefs"]
-  Evidence --> Projection["Projection<br/>readable view"]
-  Projection --> CloseCheck["close_task"]
+  Run --> Evidence["ArtifactRefs<br/>and evidence records"]
+  Evidence --> Readable["status/blocker output<br/>or projection"]
+  Readable --> CloseCheck["close_task"]
   CloseCheck -->|blocked| CloseBlocker["structured close blocker"]
   CloseCheck -->|compatible| Close["Task closed"]
 ```
 
-What to notice: the diagram is a reader path, not a second source of truth. Requirements clarification and projections help shape or read work, but write authority is `prepare_write`, execution is recorded by `record_run`, and completion is decided by `close_task`. Exact state and gate behavior lives in [Kernel Reference](../reference/kernel.md); public calls live in [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
+What to notice: the diagram is a reader path, not a second source of truth. Requirements clarification and projection-like output help shape or read work, but write authority is `prepare_write`, execution is recorded by `record_run`, and completion is decided by `close_task`. For v0.1, the readable output can be only status/blocker output. Exact state and gate behavior lives in [Kernel Reference](../reference/kernel.md); public calls live in [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
 
 ## Step-by-step runtime path
 
@@ -90,13 +90,13 @@ Evidence maps completion claims or acceptance criteria to supporting owner recor
 
 Strict behavior: evidence and gate semantics are owned by [Evidence Manifest](../reference/kernel.md#evidence-manifest), [Evidence Gate](../reference/kernel.md#evidence-gate), and [Artifact](../reference/kernel.md#artifact). Artifact storage and DDL details are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
-### 8. Evidence -> Projection
+### 8. Evidence -> status/blocker output or projection
 
-The projector renders readable Markdown and cards from state records, events, and artifact refs. Projection freshness helps people know whether a readable view is current, but Markdown does not become state or evidence authority.
+The minimal path can return status/blocker output directly from state records and artifact refs. Later profiles may render readable Markdown and cards from those records. Projection freshness helps people know whether a readable view is current, but Markdown does not become state or evidence authority.
 
 Strict behavior: projection authority, managed blocks, human-editable sections, and freshness rules are owned by [Document Projection Reference](../reference/document-projection.md). Rendered template bodies live in [Template Reference](../reference/templates/README.md).
 
-### 9. Projection -> close blocker or close
+### 9. Status/blocker output or projection -> close blocker or close
 
 Near completion, `close_task` checks close-relevant state and either closes the Task or returns structured blockers. Close Readiness is a user-facing summary of those blockers, not a new gate.
 
@@ -104,7 +104,7 @@ Strict behavior: completion checks are owned by [`close_task`](../reference/kern
 
 ## First implementation boundary
 
-For v0.1 Core Authority Slice, keep the path narrow: one local project, one reference surface, one Task, one basic scope, `prepare_write`, one Write Authorization consumed by `record_run`, one artifact/evidence link, status/next reads, and structured blocker/status response.
+For v0.1 Core Authority Slice, keep the path narrow: one local project registration, one Task, one scoped work boundary, `prepare_write`, one single-use Write Authorization consumed by `record_run`, one artifact/evidence ref, and structured status/blocker output. Treat any projection-like output as status/blocker output; do not require full projection support.
 
 For v0.2 User-Facing Harness MVP, add the user-visible value path: ordinary request clarification, separate product/UX and architecture judgment presentation, small-change versus tracked-work budgets, close blocking for missing evidence or judgment, residual-risk display, and final acceptance distinct from Approval and residual-risk acceptance.
 

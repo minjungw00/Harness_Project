@@ -4,7 +4,7 @@
 
 영어와 한국어 하네스 문서를 함께 고칠 때 이 가이드를 사용합니다.
 
-이 문서는 이중 언어 문서 유지보수를 위한 Maintain 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data, 제품 상태 변경을 승인하지 않으며, conformance pass/fail, evidence, QA, 작업 수락, 닫기 준비 상태, 구현 준비 상태를 정의하지 않습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 이 조각을 위한 좁은 conformance authoring profile입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 glossary가 정의하는 강화된 로컬 기준 목표(hardened local reference target)에 도달하는 단계이지 별도 stage를 만들지 않습니다. v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 남습니다.
+이 문서는 이중 언어 문서 유지보수를 위한 Maintain 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, runtime data, 제품 상태 변경을 승인하지 않으며, conformance pass/fail, evidence, QA, 작업 수락, 닫기 준비 상태, 구현 준비 상태를 정의하지 않습니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 좁은 future smoke-check 작성 label입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 glossary가 정의하는 강화된 로컬 기준 목표(hardened local reference target)에 도달하는 단계이지 별도 stage를 만들지 않습니다. v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 남습니다.
 
 ## 이런 때 읽기
 
