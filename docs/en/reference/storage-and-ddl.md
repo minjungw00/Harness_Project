@@ -953,17 +953,17 @@ For a new mutation attempt with no committed replay row for the supplied idempot
 ```mermaid
 flowchart TD
   Request["state-changing request<br/>expected_state_version"]
-  Scope{"Primary affected scope?"}
-  TaskClock["Task State Version<br/>tasks.state_version"]
-  ProjectClock["Project State Version<br/>project_state.state_version"]
-  CompareTask{"expected matches task clock?"}
-  CompareProject{"expected matches project clock?"}
+  Scope{"affected scope?"}
+  TaskClock["Task clock<br/>tasks.state_version"]
+  ProjectClock["Project clock<br/>project_state.state_version"]
+  CompareTask{"matches Task clock?"}
+  CompareProject{"matches Project clock?"}
   Conflict["STATE_CONFLICT<br/>before mutation"]
-  Commit["Core transaction<br/>update records, append state.sqlite.task_events, increment affected clock"]
+  Commit["Core transaction<br/>commit records and events"]
 
   Request --> Scope
-  Scope -->|primary Task resolved| TaskClock --> CompareTask
-  Scope -->|project-scoped, task_id=null| ProjectClock --> CompareProject
+  Scope -->|Task| TaskClock --> CompareTask
+  Scope -->|project| ProjectClock --> CompareProject
   CompareTask -->|no| Conflict
   CompareProject -->|no| Conflict
   CompareTask -->|yes| Commit
@@ -1132,13 +1132,13 @@ State-changing operations acquire a lock at the narrowest practical scope:
 ```mermaid
 flowchart LR
   Operation["state-changing operation"]
-  Project["project<br/>registration"]
-  Task["task<br/>intake, close, shaping, decisions"]
-  ChangeUnit["task + affected Change Unit<br/>prepare_write, baseline, shaping"]
-  Run["task + run + Write Authorization<br/>record_run"]
-  Projection["projection job<br/>projection render"]
-  Artifact["artifact path / artifact + target record<br/>artifact registration and links"]
-  Reconcile["reconcile item + affected task/design record"]
+  Project["project lock"]
+  Task["task lock"]
+  ChangeUnit["Change Unit lock"]
+  Run["run and authorization lock"]
+  Projection["projection job lock"]
+  Artifact["artifact lock"]
+  Reconcile["reconcile lock"]
 
   Operation --> Project
   Operation --> Task
@@ -1338,15 +1338,15 @@ Baseline is stale when relevant HEAD, dirty diff, allowed path contents, approva
 
 ```mermaid
 flowchart LR
-  Repo["git HEAD, branch, dirty flag"]
-  Files["included and ignored path snapshot"]
-  Diff["optional dirty diff artifact"]
-  Manifest["deterministic tree manifest"]
-  Baseline["baselines row<br/>baseline_ref"]
-  Write["prepare_write and Write Authorization"]
-  Approval["approval scope drift checks"]
+  Repo["repo state"]
+  Files["path snapshot"]
+  Diff["diff artifact"]
+  Manifest["tree manifest"]
+  Baseline["baseline_ref"]
+  Write["write authority"]
+  Approval["approval drift"]
   Evidence["evidence freshness"]
-  Verify["verification bundle inputs"]
+  Verify["verify inputs"]
 
   Repo --> Manifest
   Files --> Manifest
@@ -1478,15 +1478,15 @@ Projection worker steps:
 sequenceDiagram
   participant Worker as projection worker
   participant Jobs as projection_jobs
-  participant Lock as projection-job lock
-  participant State as state records and artifact refs
-  participant Repo as Product Repository Markdown
+  participant Lock as job lock
+  participant State as records and refs
+  participant Repo as Markdown
   participant Reconcile as reconcile_items
 
   Worker->>Jobs: select oldest pending job
-  Worker->>Lock: acquire projection-job lock
+  Worker->>Lock: acquire lock
   Worker->>Jobs: mark running
-  Worker->>State: read latest records, refs, previous managed_hash
+  Worker->>State: read records, refs, managed_hash
   Worker->>Worker: resolve source_state_version
   alt older projection_version
     Worker->>Jobs: mark skipped
@@ -1537,15 +1537,15 @@ run_validators(context, validator_ids):
 ```mermaid
 flowchart TD
   Start["run_validators(context, validator_ids)"]
-  Load["load validator definition"]
-  Inputs["read declared state, artifact, and repo inputs"]
+  Load["load definition"]
+  Inputs["read declared inputs"]
   Execute["execute validator"]
-  Normalize["normalize output to ValidatorResult"]
-  Persist["persist result in validator_runs"]
-  Return["return results to Core"]
+  Normalize["normalize ValidatorResult"]
+  Persist["persist validator_runs"]
+  Return["return to Core"]
 
   Start --> Load --> Inputs --> Execute --> Normalize --> Persist --> Return
-  Return -->|Core applies blocker, gate, or display consequence| CoreOutcome["Core transition outcome"]
+  Return -->|Core applies result| CoreOutcome["transition outcome"]
 ```
 
 Agency Assurance Pack and Operations & Handoff Pack ValidatorResult IDs:

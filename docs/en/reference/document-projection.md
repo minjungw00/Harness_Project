@@ -75,17 +75,17 @@ This diagram shows the authority boundary that generated Markdown must preserve.
 flowchart LR
   Core["Core state"]
   ArtifactRefs["ArtifactRefs"]
-  Projector["projector"]
-  Markdown["Markdown projection<br/>readable view"]
-  Human["human edits<br/>input only"]
-  Reconcile["reconcile request<br/>candidate only"]
+  Projector["Projector"]
+  Views["derived views"]
+  Human["human edit"]
+  Reconcile["Core or reconcile path"]
 
   Core --> Projector
   ArtifactRefs --> Projector
-  Projector --> Markdown
-  Markdown -. editable notes only .-> Human
-  Human -. candidate input .-> Reconcile
-  Reconcile -->|accepted through Core path| Core
+  Projector --> Views
+  Views -. edit is input .-> Human
+  Human -. candidate .-> Reconcile
+  Reconcile -->|accepted update| Core
 ```
 
 Strict projection behavior is owned by this reference, especially the [Document authority matrix](#document-authority-matrix), [Managed block rules](#managed-block-rules), and [Freshness and failure rules](#freshness-and-failure-rules). Canonical state and gates are owned by [Kernel Reference](kernel.md), artifact relation storage is owned by [Storage And DDL](storage-and-ddl.md), and public projection refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md). The diagram summarizes authority direction only.

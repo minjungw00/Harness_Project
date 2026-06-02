@@ -70,13 +70,13 @@ Harness Runtime Home:
 ```mermaid
 flowchart LR
   Repo["Product Repository<br/>product files"]
-  Server["Harness Server / Installation<br/>future implementation here after acceptance and readiness"]
+  Server["Harness Server<br/>source repo and installation"]
   Home["Harness Runtime Home<br/>state and artifacts"]
 
-  Repo -->|requests and repo facts| Server
-  Server -->|write checks and projections| Repo
-  Server -->|state changes and artifact refs| Home
-  Home -->|current records| Server
+  Repo -->|requests and facts| Server
+  Server -->|scoped writes and projections| Repo
+  Server -->|state and ArtifactRefs| Home
+  Home -->|Core records| Server
 ```
 
 This split keeps chat, Markdown reports, generated connector files, operator output, MCP caller claims, and product source files outside canonical operational state. Only a Core state-changing path can commit canonical operational state.
@@ -320,9 +320,9 @@ flowchart TB
   Core --> Decision{"allowed"}
   Decision -->|yes| Authorization["Write Authorization"]
   Authorization --> Run["record_run"]
-  Run --> Owner["owner records"]
+  Run --> Records["owner records"]
   Decision -->|no| Blocker["hold or blocker"]
-  Blocker --> Owner
+  Blocker --> Records
 ```
 
 Preventive labels apply only where the connected profile has fixture-proven coverage for the operation being described. Isolated labels apply only where the connected profile documents and proves the separation boundary being claimed. A fresh evaluator bundle, fresh session, or separate worktree can support verification independence and stale-context control; sandbox, permission layer, locked-down runner, process boundary, or container boundary wording is security-isolation wording only when the profile names and proves that exact mechanism. These labels do not approve work, create Write Authorization, satisfy gates, create evidence, perform verification, accept risk, or close Tasks. Strict `prepare_write` and `record_run` behavior is owned by [Kernel Reference](kernel.md#prepare_write) and [Kernel Reference](kernel.md#record_run). Public response shapes and error precedence are owned by [MCP API And Schemas](mcp-api-and-schemas.md). Concrete profile declarations are owned by [Agent Integration Reference](agent-integration.md#capability-profiles). This diagram is only a control-orientation view.

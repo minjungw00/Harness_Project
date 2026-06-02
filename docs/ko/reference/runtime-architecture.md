@@ -70,13 +70,13 @@
 ```mermaid
 flowchart LR
   Repo["제품 저장소<br/>제품 파일"]
-  Server["하네스 서버/설치<br/>수락과 준비 뒤 향후 이곳에서 구현"]
+  Server["하네스 서버<br/>소스 저장소와 설치"]
   Home["하네스 런타임 홈<br/>상태와 근거"]
 
-  Repo -->|요청과 저장소 사실| Server
-  Server -->|쓰기 확인과 읽기용 보기| Repo
-  Server -->|상태 변경과 아티팩트 참조| Home
-  Home -->|현재 기록| Server
+  Repo -->|요청과 사실| Server
+  Server -->|범위 내 쓰기와 요약| Repo
+  Server -->|상태와 ArtifactRef| Home
+  Home -->|Core 기록| Server
 ```
 
 이 분리는 대화, Markdown 보고서, 생성된 connector 파일, operator output, MCP caller claim, 제품 소스 파일을 기준 운영 상태 밖에 둡니다. Core 상태 변경 경로만 기준 운영 상태를 commit할 수 있습니다.
@@ -317,7 +317,7 @@ Architecture 관점의 stage default는 다음과 같습니다. v0.1은 cooperat
 
 ```mermaid
 flowchart TB
-  Operation["의도한 작업"] --> Profile["연결된 profile<br/>보장 수준 표시"]
+  Operation["의도한 작업"] --> Profile["보장 표시"]
   Profile --> Cooperative["cooperative"]
   Profile --> Detective["detective"]
   Profile --> Preventive["preventive"]
@@ -326,9 +326,9 @@ flowchart TB
   Core --> Decision{"허용"}
   Decision -->|예| Authorization["쓰기 허가"]
   Authorization --> Run["record_run"]
-  Run --> Owner["상태와 근거 갱신"]
+  Run --> Records["소유 기록"]
   Decision -->|아니오| Blocker["보류 또는 막힘"]
-  Blocker --> Owner
+  Blocker --> Records
 ```
 
 Preventive label은 connected profile이 설명 중인 operation에 대한 fixture-proven coverage를 가질 때만 적용됩니다. Isolated label은 connected profile이 주장하는 separation boundary를 문서화하고 증명한 경우에만 적용됩니다. Fresh evaluator bundle, fresh session, separate worktree는 verification independence와 stale-context control을 뒷받침할 수 있습니다. Sandbox 격리, 권한 계층, locked-down runner, process boundary, container boundary 표현은 profile이 exact mechanism을 이름 붙이고 증명한 경우에만 보안 격리 표현으로 씁니다. 이 label은 work를 approve하거나, Write Authorization을 만들거나, gate를 충족하거나, evidence를 만들거나, verification을 수행하거나, risk를 accept하거나, Task를 close하지 않습니다. 엄격한 `prepare_write`와 `record_run` 동작은 [커널 참조](kernel.md#prepare_write)와 [커널 참조](kernel.md#record_run)가 담당합니다. Public response shape와 error precedence는 [MCP API와 스키마](mcp-api-and-schemas.md)가 담당합니다. 구체적인 profile declaration은 [Agent 통합 참조](agent-integration.md#capability-profiles)가 담당합니다. 이 diagram은 통제 방향을 보여주는 참고일 뿐입니다.

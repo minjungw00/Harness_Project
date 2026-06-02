@@ -27,17 +27,17 @@ One paragraph version: In practice, Harness gives the user and agent a local rec
 ```mermaid
 flowchart LR
   Chat["Chat<br/>conversation"]
-  Harness["Harness<br/>local authority record"]
-  Scope["scope"]
-  Judgment["user judgment"]
-  Evidence["evidence"]
-  Close["close readiness"]
+  Core["Core state"]
+  Scope["Scope"]
+  Judgment["User judgment"]
+  Evidence["Evidence"]
+  Close["Close readiness"]
 
-  Chat --> Harness
-  Harness --> Scope
-  Harness --> Judgment
-  Harness --> Evidence
-  Harness --> Close
+  Chat --> Core
+  Core --> Scope
+  Core --> Judgment
+  Core --> Evidence
+  Core --> Close
 ```
 
 ## The problem Harness solves
@@ -66,13 +66,13 @@ Harness keeps three spaces separate so product files, operational records, and h
 ```mermaid
 flowchart LR
   Product["Product Repository<br/>real project files"]
-  Server["Harness Server source repo<br/>this repo after acceptance"]
+  Server["Harness Server<br/>source repo and installation"]
   Home["Harness Runtime Home<br/>local state and artifacts"]
 
-  Product -->|requests and repo facts| Server
-  Server -->|write checks and projections| Product
-  Server -->|state changes and artifact refs| Home
-  Home -->|current records| Server
+  Product -->|requests and facts| Server
+  Server -->|scoped writes and projections| Product
+  Server -->|state and ArtifactRefs| Home
+  Home -->|Core records| Server
 ```
 
 This documentation repository is being prepared for its intended future role as the Harness Server source repository. It is not a Product Repository or a Harness Runtime Home. Server/runtime implementation here may start only after documentation acceptance and a separate implementation-planning readiness decision.

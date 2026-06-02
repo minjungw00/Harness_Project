@@ -45,16 +45,16 @@ Status/next recommendations는 Role Lens recommendations를 포함해 read respo
 
 ```mermaid
 flowchart LR
-  Suites["Agency Assurance Pack suites"] --> Agency["agency"]
+  Suites["Agency Assurance Pack"] --> Agency["agency"]
   Suites --> Stewardship["stewardship"]
   Suites --> Context["context-hygiene"]
-  Agency --> A1["Decision Packet과 decision gate"]
-  Agency --> A2["approval, residual risk, Autonomy Boundary"]
-  Stewardship --> S1["design-quality validators와 policy composition"]
-  Stewardship --> S2["domain, module, interface, feedback loop"]
-  Stewardship --> S3["two-stage review routing"]
-  Context --> C1["current Task state와 현재 위치 refs"]
-  Context --> C2["stale context는 reconcile 전 pull-only"]
+  Agency --> A1["Decision Packet과 gate"]
+  Agency --> A2["Approval과 Residual Risk"]
+  Stewardship --> S1["design-quality validators"]
+  Stewardship --> S2["domain, module, interface"]
+  Stewardship --> S3["two-stage review"]
+  Context --> C1["현재 Task state"]
+  Context --> C2["stale context"]
 ```
 
 ### Catalog-Only Fixture Skeleton Guidance

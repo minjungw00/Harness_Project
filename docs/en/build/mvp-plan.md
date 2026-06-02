@@ -48,10 +48,10 @@ The early output model is intentionally small:
 
 ```mermaid
 flowchart LR
-  Core["v0.1<br/>Core Authority Slice<br/>first internal authority loop"] --> MVP["v0.2<br/>User-Facing Harness MVP<br/>first user value"]
-  MVP --> Assurance["v0.3<br/>Agency Assurance Pack<br/>verification, QA, risk, acceptance"]
-  Assurance --> Ops["v0.4<br/>Operations and Handoff Pack<br/>operator readiness"]
-  Ops -. roadmap boundary .-> Expansion["v1+<br/>Expansion candidates"]
+  Core["v0.1 Core Authority Slice"] --> MVP["v0.2 User-Facing Harness MVP"]
+  MVP --> Assurance["v0.3 Agency Assurance Pack"]
+  Assurance --> Ops["v0.4 Operations & Handoff Pack"]
+  Ops -. roadmap .-> Expansion["v1+ Expansion"]
 ```
 
 Kernel Smoke remains a narrow future authoring label for v0.1 Core Authority Slice checks. The label does not make v0.1 a product MVP, and it does not require a full conformance suite or future fixture catalog before the internal Core authority path is proven.
@@ -144,16 +144,15 @@ Do not leave major implementation decisions as scattered TODOs or vague follow-u
 
 ```mermaid
 flowchart LR
-  Register["project registered"] --> Task["Task created"]
-  Task --> Scope["scope set"]
-  Scope --> Check["write check"]
+  Register["project registered"] --> Task["Task"]
+  Task --> Scope["scope"]
+  Scope --> Check["prepare_write"]
   Check -->|allowed| Authorization["Write Authorization"]
-  Authorization --> Run["Run recorded"]
-  Run --> Evidence["evidence linked"]
+  Authorization --> Run["record_run"]
+  Run --> Evidence["ArtifactRef"]
   Check -->|not allowed| Blocker["structured blocker"]
-  Evidence --> Status["status and next"]
+  Evidence --> Status["status / next action<br/>or blocker"]
   Blocker --> Status
-  Status --> Close["close/status blocker"]
 ```
 
 Exact state and blocker behavior is owned by [Kernel Reference](../reference/kernel.md), public tool shapes by [MCP API And Schemas](../reference/mcp-api-and-schemas.md), and future fixture semantics by [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format). This flow does not add pack gates, projection-renderer requirements, or fixture body requirements.

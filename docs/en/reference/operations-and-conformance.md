@@ -91,23 +91,23 @@ Operator guarantee posture follows the [Security Threat Model stage map](securit
 ```mermaid
 flowchart TD
   Core["Core rules and state authority"]
-  Core --> V01["v0.1 minimal local surface"]
-  Core --> V02["v0.2 user-facing support"]
-  Core --> V03["v0.3 assurance support"]
-  Core --> V04["v0.4 operations and handoff support"]
-  V04 -. promoted later .-> V1["v1+ expansion"]
-  V01 --> Connect["connect/register local project"]
-  V01 --> Status["basic status/diagnostic"]
-  V01 --> Serve["serve or expose minimal local MCP/API if required"]
-  V02 --> MVPDiag["status, decision, evidence, close, acceptance, risk diagnostics"]
-  V03 --> Assurance["verification, QA, risk, stewardship, context diagnostics"]
+  Core --> V01["v0.1 Core Authority Slice"]
+  Core --> V02["v0.2 User-Facing Harness MVP"]
+  Core --> V03["v0.3 Agency Assurance Pack"]
+  Core --> V04["v0.4 Operations & Handoff Pack"]
+  V04 -. roadmap .-> V1["v1+ Expansion"]
+  V01 --> Connect["connect/register"]
+  V01 --> Status["basic status"]
+  V01 --> Serve["minimal local MCP/API<br/>if needed"]
+  V02 --> MVPDiag["status, decisions,<br/>evidence, close,<br/>acceptance/risk"]
+  V03 --> Assurance["verification, QA, risk"]
   V04 --> Refresh["projection refresh"]
   V04 --> Reconcile["reconcile"]
   V04 --> Recover["recover"]
-  V04 --> Export["export and release handoff"]
-  V04 --> Artifacts["artifacts check"]
-  V04 --> Conformance["conformance run for materialized suites"]
-  V1 --> Expansion["remote/shared profiles, broader automation, dashboards"]
+  V04 --> Export["export and handoff"]
+  V04 --> Artifacts["artifact check"]
+  V04 --> Conformance["conformance run"]
+  V1 --> Expansion["promoted candidates"]
 ```
 
 Exact command names and flags may vary by implementation. The reference target is the command-independent behavior contract: operator behavior is defined by Core state records, `state.sqlite.task_events`, artifact refs and files, projection jobs and freshness where those profiles exist, and API-owned errors or operator diagnostic labels. Console text, report prose, flag spelling, and shell exit formatting are display surfaces; they must not become a second state model.
@@ -154,10 +154,10 @@ Connector and reference-surface smoke coverage follows the same staged rule. v0.
 
 ```mermaid
 flowchart LR
-  Kernel["v0.1 Core Authority Slice<br/>Kernel Smoke smoke-check label"] --> MVP["v0.2 User-Facing Harness MVP"]
+  Kernel["v0.1 Core Authority Slice"] --> MVP["v0.2 User-Facing Harness MVP"]
   MVP --> Agency["v0.3 Agency Assurance Pack"]
-  Agency --> Ops["v0.4 Operations & Handoff Pack<br/>operations/future conformance"]
-  Ops -. roadmap boundary .-> Expansion["v1+ Expansion<br/>roadmap candidates"]
+  Agency --> Ops["v0.4 Operations & Handoff Pack"]
+  Ops -. roadmap .-> Expansion["v1+ Expansion"]
   Kernel --> K1["project, Task, one basic scope"]
   Kernel --> K2["prepare_write and Write Authorization"]
   Kernel --> K3["record_run and evidence link"]
@@ -188,9 +188,9 @@ Smoke categories should reference, not restate, the [Authoring Guide docs-mainte
 
 ```mermaid
 flowchart LR
-  Start["docs-maintenance smoke profile"] --> Check["check Markdown docs against Authoring Guide categories"]
-  Check --> Report["report pass, warn, or fail per category"]
-  Report --> Output["console output or ephemeral report"]
+  Start["docs-maintenance smoke"] --> Check["check Markdown docs"]
+  Check --> Report["category result"]
+  Report --> Output["ephemeral output"]
   Output --> Hold["no task_events, artifacts, projections, QA, final acceptance, or close state"]
 ```
 
@@ -228,10 +228,10 @@ sequenceDiagram
   Op->>Repo: identify repository root
   Op->>Runtime: register or reuse project
   Runtime->>Runtime: initialize state and artifact storage
-  Op->>Surface: register active profile if required
-  Op->>Repo: create or refresh managed files if profile requires
-  Runtime->>MCP: confirm local reachability if stage depends on MCP
-  Op->>Core: run profile check if required
+  Op->>Surface: register profile if needed
+  Op->>Repo: refresh managed files if required
+  Runtime->>MCP: check local reachability if stage needs MCP
+  Op->>Core: run profile check if needed
 ```
 
 When connector-managed files or managed blocks are in scope, connect must report generated/managed manifest drift instead of overwriting human edits silently. This includes generated files, managed blocks, MCP config snippets, and stale capability profile freshness. The existing file or managed block stays unchanged until reconcile or an explicit reconnect decision chooses replacement; the edited generated file is not Task state. Surface-specific generated file names belong in the surface cookbook.

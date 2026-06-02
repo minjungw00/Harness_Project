@@ -36,17 +36,19 @@ The agent response should translate the request into understood scope, what the 
 ```mermaid
 flowchart LR
   Request["ordinary user request"] --> Clarify["requirements clarification"]
-  Clarify --> Decision["user decision request"]
+  Clarify --> Decision["user-owned decision"]
   Clarify --> ReadOnly["read or advice path"]
-  Clarify --> WriteNeed{"product write needed?"}
+  Clarify --> WriteNeed{"product write?"}
   Decision --> WriteNeed
-  ReadOnly --> Status["status or next action"]
+  ReadOnly --> Status["status / next action"]
   WriteNeed -->|yes| Authority["scoped write authority"]
   WriteNeed -->|no| Status
   Authority --> Run["run and evidence record"]
   Run --> Status
-  Status -->|blocked| Blockers["show blockers"]
-  Status -->|ready| Close["close when close path applies"]
+  Status -->|blocked| Blocker["show blocker"]
+  Status -->|close path applies| CloseCheck["close readiness check"]
+  CloseCheck -->|blocked| CloseBlocker["close blocker"]
+  CloseCheck -->|ready| Close["ready to close"]
 ```
 
 A useful status or next-action response answers four questions in ordinary language:

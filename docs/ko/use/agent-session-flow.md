@@ -36,17 +36,19 @@
 ```mermaid
 flowchart LR
   Request["일상 요청"] --> Clarify["요구사항 구체화"]
-  Clarify --> Decision["사용자 결정 요청"]
+  Clarify --> Decision["사용자 판단"]
   Clarify --> ReadOnly["읽기 또는 조언"]
-  Clarify --> WriteNeed{"제품 쓰기 필요?"}
+  Clarify --> WriteNeed{"제품 쓰기?"}
   Decision --> WriteNeed
-  ReadOnly --> Status["상태 또는 다음 행동"]
+  ReadOnly --> Status["상태 / 다음 행동"]
   WriteNeed -->|예| Authority["범위 내 쓰기 권한"]
   WriteNeed -->|아니오| Status
-  Authority --> Run["실행 기록과 근거"]
+  Authority --> Run["Run과 근거 기록"]
   Run --> Status
-  Status -->|막힘| Blockers["막힘 표시"]
-  Status -->|준비됨| Close["필요할 때 닫기"]
+  Status -->|막힘| Blocker["막힘 표시"]
+  Status -->|닫기 경로 적용| CloseCheck["닫기 준비 확인"]
+  CloseCheck -->|막힘| CloseBlocker["닫기 막힘"]
+  CloseCheck -->|준비| Close["닫기 가능"]
 ```
 
 유용한 상태 또는 다음 행동 응답은 쉬운 말로 네 가지 질문에 답해야 합니다.

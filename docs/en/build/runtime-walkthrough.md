@@ -27,19 +27,20 @@ The walkthrough shows the full user-facing path. v0.1 Core Authority Slice imple
 
 ```mermaid
 flowchart LR
-  Request["request"] --> Task["Task"]
-  Task --> Discovery["Requirements clarification<br/>(Discovery when needed)"]
-  Discovery --> ChangeUnit["Change Unit<br/>scoped work"]
-  Task --> ChangeUnit
-  ChangeUnit --> Prepare["prepare_write"]
+  Request["ordinary request"] --> Clarify["requirements clarification"]
+  Clarify --> Decision["user-owned decision"]
+  Clarify --> Scope["scoped work"]
+  Decision --> Scope
+  Scope --> Prepare["prepare_write"]
   Prepare -->|allowed| Authorization["Write Authorization"]
-  Prepare -->|blocked or needs judgment| Blocker["blocker or<br/>Decision Packet / Approval path"]
-  Authorization --> Run["Run"]
-  Run --> Evidence["ArtifactRefs<br/>and evidence records"]
-  Evidence --> Readable["status/blocker output<br/>or projection"]
-  Readable --> CloseCheck["close_task"]
-  CloseCheck -->|blocked| CloseBlocker["structured close blocker"]
-  CloseCheck -->|compatible| Close["Task closed"]
+  Prepare -->|blocked| Blocker["structured blocker"]
+  Authorization --> Run["record_run"]
+  Run --> Evidence["run and evidence record"]
+  Evidence --> Readable["status/blocker output"]
+  Blocker --> Readable
+  Readable --> CloseCheck["close readiness"]
+  CloseCheck -->|blocked| CloseBlocker["close blocker"]
+  CloseCheck -->|ready| Close["Task closed"]
 ```
 
 What to notice: the diagram is a reader path, not a second source of truth. Requirements clarification and projection-like output help shape or read work, but write authority is `prepare_write`, execution is recorded by `record_run`, and completion is decided by `close_task`. For v0.1, the readable output can be only status/blocker output. Exact state and gate behavior lives in [Kernel Reference](../reference/kernel.md); public calls live in [MCP API And Schemas](../reference/mcp-api-and-schemas.md).

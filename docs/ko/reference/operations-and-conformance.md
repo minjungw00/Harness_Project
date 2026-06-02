@@ -90,24 +90,24 @@ Operator guarantee posture는 [보안 위협 모델의 단계별 guarantee level
 
 ```mermaid
 flowchart TD
-  Core["Core rule과 상태 권한"]
-  Core --> V01["v0.1 최소 local surface"]
-  Core --> V02["v0.2 사용자 대상 지원"]
-  Core --> V03["v0.3 assurance 지원"]
-  Core --> V04["v0.4 운영과 인계 지원"]
-  V04 -. later promotion .-> V1["v1+ expansion"]
-  V01 --> Connect["local project connect/register"]
-  V01 --> Status["기본 상태/진단"]
-  V01 --> Serve["필요할 때 최소 local MCP/API 제공"]
-  V02 --> MVPDiag["상태, 결정, 근거, close, 수락, 위험 진단"]
-  V03 --> Assurance["검증, QA, 위험, stewardship, context 진단"]
+  Core["Core 규칙과 상태 권한"]
+  Core --> V01["v0.1 Core Authority Slice"]
+  Core --> V02["v0.2 User-Facing Harness MVP"]
+  Core --> V03["v0.3 Agency Assurance Pack"]
+  Core --> V04["v0.4 Operations & Handoff Pack"]
+  V04 -. roadmap .-> V1["v1+ Expansion"]
+  V01 --> Connect["connect/register"]
+  V01 --> Status["기본 상태"]
+  V01 --> Serve["필요할 때<br/>최소 local MCP/API"]
+  V02 --> MVPDiag["상태, 결정,<br/>근거, 닫기,<br/>수락/위험"]
+  V03 --> Assurance["검증, QA, 위험"]
   V04 --> Refresh["projection refresh"]
   V04 --> Reconcile["reconcile"]
   V04 --> Recover["recover"]
-  V04 --> Export["export와 release handoff"]
-  V04 --> Artifacts["artifacts check"]
-  V04 --> Conformance["materialized suite conformance run"]
-  V1 --> Expansion["remote/shared profile, 더 넓은 automation, dashboard"]
+  V04 --> Export["export와 handoff"]
+  V04 --> Artifacts["artifact check"]
+  V04 --> Conformance["conformance run"]
+  V1 --> Expansion["승격된 후보"]
 ```
 
 정확한 command name과 flag는 구현마다 달라질 수 있습니다. Reference target은 command-independent behavior contract입니다. Operator behavior의 기준은 Core 상태 기록, `state.sqlite.task_events`, artifact ref와 file, 해당 profile이 존재할 때의 projection job과 freshness, API-owned error 또는 operator diagnostic label입니다. Console text, report prose, flag spelling, shell exit formatting은 표시 접점일 뿐이며 두 번째 상태 모델이 되면 안 됩니다.
@@ -154,14 +154,14 @@ Connector와 reference-surface smoke coverage도 같은 staged rule을 따릅니
 
 ```mermaid
 flowchart LR
-  Kernel["코어 권한 조각(v0.1 Core Authority Slice)<br/>커널 스모크(Kernel Smoke) smoke-check label"] --> MVP["사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)"]
-  MVP --> Agency["에이전시 보증 팩(v0.3 Agency Assurance Pack)"]
-  Agency --> Ops["운영과 인계 팩(v0.4 Operations & Handoff Pack)<br/>operations/future conformance"]
-  Ops -. roadmap boundary .-> Expansion["v1+ Expansion<br/>roadmap 후보"]
-  Kernel --> K1["project, Task, 기본 scope 하나"]
-  Kernel --> K2["prepare_write and Write Authorization"]
-  Kernel --> K3["record_run and evidence link"]
-  Kernel --> K4["status/blocker output"]
+  Kernel["v0.1 Core Authority Slice"] --> MVP["v0.2 User-Facing Harness MVP"]
+  MVP --> Agency["v0.3 Agency Assurance Pack"]
+  Agency --> Ops["v0.4 Operations & Handoff Pack"]
+  Ops -. roadmap .-> Expansion["v1+ Expansion"]
+  Kernel --> K1["project, Task, 기본 scope"]
+  Kernel --> K2["prepare_write와 쓰기 권한"]
+  Kernel --> K3["record_run과 근거"]
+  Kernel --> K4["상태와 막힘"]
 ```
 
 ## docs-maintenance 프로필
@@ -188,10 +188,10 @@ Smoke category는 [문서 작성 가이드의 docs-maintenance checks](../mainta
 
 ```mermaid
 flowchart LR
-  Start["docs-maintenance smoke profile"] --> Check["Authoring Guide category 기준으로 Markdown docs check"]
-  Check --> Report["category별 pass, warn, fail report"]
-  Report --> Output["console output 또는 ephemeral report"]
-  Output --> Hold["task_events, artifacts, projections, QA state, 작업 수락 상태, close state 없음"]
+  Start["docs-maintenance smoke"] --> Check["Markdown docs 확인"]
+  Check --> Report["category 결과"]
+  Report --> Output["임시 출력"]
+  Output --> Hold["state 변경 없음"]
 ```
 
 ## connect
@@ -222,14 +222,14 @@ sequenceDiagram
   participant Op as Operator
   participant Repo as 제품 저장소
   participant Runtime as 하네스 런타임 홈
-  participant Surface as Reference Surface
-  participant MCP as MCP Config
-  participant Core as Stage Check
-  Op->>Repo: repository root 식별
-  Op->>Runtime: project 등록 또는 재사용
-  Runtime->>Runtime: state와 artifact storage 초기화
-  Op->>Surface: 필요하면 active profile 등록
-  Op->>Repo: profile이 요구하면 managed file 생성 또는 refresh
+  participant Surface as 기준 접점
+  participant MCP as MCP 설정
+  participant Core as 단계 확인
+  Op->>Repo: 루트 식별
+  Op->>Runtime: project 등록
+  Runtime->>Runtime: state와 artifact 초기화
+  Op->>Surface: 필요하면 profile 등록
+  Op->>Repo: profile이 요구하면 managed file 갱신
   Runtime->>MCP: stage가 MCP에 의존하면 local reachability 확인
   Op->>Core: profile check가 필요하면 실행
 ```
@@ -270,19 +270,19 @@ Full doctor/readiness category:
 ```mermaid
 flowchart TD
   Doctor["harness doctor"] --> Runtime["runtime home"]
-  Doctor --> State["project state"]
+  Doctor --> State["project 상태"]
   Doctor --> MCP["MCP availability"]
-  Doctor --> Surface["reference surface"]
-  Doctor --> Artifacts["artifact store"]
+  Doctor --> Surface["기준 접점"]
+  Doctor --> Artifacts["artifact 저장소"]
   Doctor --> Projections["projections"]
   Doctor --> Reconcile["reconcile"]
   Doctor --> Validators["validators/checks"]
-  Doctor --> Agency["agency/stewardship/context"]
-  Doctor --> Security["security/threat model"]
-  Runtime --> Perms["storage와 permission posture"]
-  State --> JSON["JSON TEXT 파싱과 shape 유효성"]
-  Projections --> Freshness["freshness와 렌더링 실패"]
-  Validators --> Stable["stable ValidatorResult ID와 Core check"]
+  Doctor --> Agency["agency와 context"]
+  Doctor --> Security["보안 posture"]
+  Runtime --> Perms["storage 권한"]
+  State --> JSON["JSON shape"]
+  Projections --> Freshness["freshness와 실패"]
+  Validators --> Stable["ValidatorResult ID"]
 ```
 
 Output level:
@@ -369,13 +369,13 @@ Local MCP/API exposure가 범위에 있을 때의 동작:
 
 ```mermaid
 flowchart TD
-  Start["harness serve mcp"] --> Server["server가 runtime state와 artifact storage에 닿을 수 있음?"]
-  Server -- no --> ServerFail["diagnostic<br/>MCP_SERVER_UNAVAILABLE<br/>authoritative Core response 없음"]
-  Server -- yes --> Core["public tool을 위한 Core reachable"]
-  Core --> Resources["변경 없이 read resource 제공"]
-  Resources --> Surface["연결된 접점이 required MCP tools를 사용할 수 있음?"]
-  Surface -- yes --> Ready["이 접점에 대해 MCP server ready"]
-  Surface -- no --> SurfaceFail["diagnostic<br/>SURFACE_MCP_UNAVAILABLE<br/>접점이 required MCP tools를 사용할 수 없음"]
+  Start["harness serve mcp"] --> Server{"runtime에 닿음?"}
+  Server -- no --> ServerFail["MCP_SERVER_UNAVAILABLE"]
+  Server -- yes --> Core["Core reachable"]
+  Core --> Resources["read resources"]
+  Resources --> Surface{"접점이 MCP 사용 가능?"}
+  Surface -- yes --> Ready["MCP ready"]
+  Surface -- no --> SurfaceFail["SURFACE_MCP_UNAVAILABLE"]
 ```
 
 MCP를 사용할 수 없으면 operations는 진단 조건인 `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`을 구분해야 합니다. 이 이름들은 추가 public `ErrorCode` 값이 아닙니다. 이 조건들을 `ToolError`로 드러낼 때 operations는 API-owned error selection과 details shape를 사용해야 합니다. `MCP_UNAVAILABLE`은 stable public availability code로 남고, 접점-side availability 또는 capability case는 문맥에 따라 `MCP_UNAVAILABLE` 또는 `CAPABILITY_INSUFFICIENT`와 `details.mcp_unavailable_kind`로 표현될 수 있습니다. `MCP_SERVER_UNAVAILABLE`에서는 tool 호출이 Core에 닿을 수 없어 authoritative Core response가 불가능하므로, 상태 변경 주장 전에 server diagnosis 또는 reconnect가 next action입니다. `SURFACE_MCP_UNAVAILABLE`에서는 Core 또는 operator가 연결된 접점에서 사용할 수 있는 MCP가 없거나 MCP configuration이 최신이 아니거나 required MCP tools를 호출할 수 없음을 관찰할 수 있습니다. Cooperative 접점은 product/runtime/code write를 instruction으로 보류해야 하며, stronger profile은 fixture로 입증된 blocking이 해당 operation을 cover할 때만 예방적으로, 또는 입증된 isolation boundary로 보류를 강제할 수 있습니다. Operations는 실제 보장 수준을 그대로 보고해야 합니다.
@@ -414,15 +414,15 @@ Task의 approval/run/evidence/eval/direct reports
 
 ```mermaid
 flowchart TD
-  Target["refresh target 선택"] --> Latest["latest projection version render"]
-  Latest --> Preserve["human-editable section 보존"]
-  Preserve --> Hash["managed block hash compare"]
-  Hash -- hash drift --> Reconcile["reconcile item 생성"]
-  Hash -- matches --> Write["파생 Markdown view write"]
-  Reconcile --> Skipped["job을 skipped 또는 pending으로 표시"]
-  Write --> Completed["job을 completed로 mark"]
-  Latest -- render error --> Failed["job을 failed로 표시"]
-  Completed --> Separate["projection status를 Task result와 분리"]
+  Target["대상 선택"] --> Latest["latest projection render"]
+  Latest --> Preserve["사람 편집 영역 보존"]
+  Preserve --> Hash["managed hash 비교"]
+  Hash -- drift --> Reconcile["reconcile item 생성"]
+  Hash -- matches --> Write["파생 Markdown 쓰기"]
+  Reconcile --> Skipped["job skipped 또는 pending"]
+  Write --> Completed["job completed"]
+  Latest -- error --> Failed["job failed"]
+  Completed --> Separate["Task result와 분리"]
   Failed --> Separate
   Skipped --> Separate
 ```
@@ -471,18 +471,18 @@ Decision outcome:
 
 ```mermaid
 flowchart TD
-  Input["human edit 또는 managed/generated drift"] --> Item["reconcile item 생성"]
-  Item --> Review["기준 상태와 owner docs 기준 review"]
+  Input["사람 편집 또는 drift"] --> Item["reconcile item 생성"]
+  Item --> Review["기준 상태와 owner 확인"]
   Review --> Merge["merge"]
   Review --> Reject["reject"]
   Review --> Note["convert_to_note"]
   Review --> Decision["create_decision"]
   Review --> Defer["defer"]
-  Merge --> Core["Core를 통해 apply하고 state history 추가"]
-  Reject --> Refresh["기준 상태 unchanged; 필요하면 refresh"]
-  Note --> Human["human note로 보존"]
-  Decision --> Pending["pending user decision"]
-  Defer --> Open["reconcile item open 유지"]
+  Merge --> Core["Core 경로로 적용"]
+  Reject --> Refresh["기준 상태 유지"]
+  Note --> Human["사람 note 보존"]
+  Decision --> Pending["사용자 결정 대기"]
+  Defer --> Open["open 유지"]
 ```
 
 Reconcile은 edited Markdown 자체를 기준 상태로 취급하면 안 됩니다.
@@ -513,29 +513,29 @@ Recover는 history를 rewrite하지 않고 interrupted 또는 inconsistent 운�
 
 ```mermaid
 flowchart TD
-  Scenario["failure scenario"] --> Classify["recovery path 분류"]
-  Classify --> Interrupted["interrupted agent write<br/>runs.status=interrupted"]
+  Scenario["failure scenario"] --> Classify["recovery path"]
+  Classify --> Interrupted["interrupted write"]
   Classify --> Baseline["baseline drift"]
   Classify --> Approval["approval drift"]
-  Classify --> Eval["evaluator repo drift"]
-  Classify --> Evidence["artifact missing 또는 hash mismatch"]
-  Classify --> Projection["projection failure 또는 managed Markdown direct edit"]
-  Classify --> Storage["malformed 또는 schema-incompatible storage JSON"]
-  Classify --> Replay["idempotency replay mismatch"]
+  Classify --> Eval["evaluator drift"]
+  Classify --> Evidence["artifact 문제"]
+  Classify --> Projection["projection 문제"]
+  Classify --> Storage["storage JSON 문제"]
+  Classify --> Replay["replay mismatch"]
   Classify --> Lock["expired lock"]
   Classify --> MCP["MCP unavailable"]
-  Classify --> Capability["surface capability mismatch"]
-  Classify --> Security["local security posture weak 또는 unknown"]
-  Interrupted --> Event["compensating event 추가"]
-  Baseline --> Stale["affected readiness stale/blocked 표시"]
-  Approval --> Reapprove["approval expire, narrow, 또는 re-request"]
-  Eval --> Verify["fresh bundle/path 전까지 verification block"]
-  Evidence --> Artifact["hash 보존; exact bytes restore 또는 replacement 등록"]
-  Projection --> Recon["retry, fail, 또는 reconcile guidance 생성"]
-  Storage --> Repair["기준 상태 또는 원본 artifact에서만 repair"]
-  Replay --> Conflict["original replay 보존 및 STATE_CONFLICT 보고"]
-  Lock --> Release["policy에 따라 release 또는 reacquire"]
-  MCP --> Hold["product/runtime/code write hold와 diagnose"]
+  Classify --> Capability["capability mismatch"]
+  Classify --> Security["security posture"]
+  Interrupted --> Event["event 추가"]
+  Baseline --> Stale["readiness stale"]
+  Approval --> Reapprove["approval 갱신"]
+  Eval --> Verify["verification block"]
+  Evidence --> Artifact["artifact repair"]
+  Projection --> Recon["retry 또는 reconcile"]
+  Storage --> Repair["기준에서 repair"]
+  Replay --> Conflict["STATE_CONFLICT"]
+  Lock --> Release["lock release"]
+  MCP --> Hold["write hold"]
   Capability --> Hold
   Security --> Hold
 ```
@@ -575,13 +575,13 @@ Export는 Task에 대한 review 또는 archival bundle을 만듭니다.
 flowchart TD
   Export["Task export bundle"] --> Manifest["export manifest"]
   Export --> State["state snapshots"]
-  Export --> Decisions["Decision Packets와 user decisions"]
-  Export --> Risks["residual risks와 accepted-risk refs"]
-  Export --> Journey["Journey Spine 또는 continuity refs"]
-  Export --> Projections["report projection snapshots"]
-  Export --> Artifacts["artifact refs, retention, allowed raw files"]
-  Export --> Integrity["artifact integrity manifest"]
-  Export --> Redaction["redaction, omission, block notes"]
+  Export --> Decisions["Decision Packets"]
+  Export --> Risks["Residual Risk refs"]
+  Export --> Journey["Journey refs"]
+  Export --> Projections["projection snapshots"]
+  Export --> Artifacts["artifact refs"]
+  Export --> Integrity["integrity manifest"]
+  Export --> Redaction["redaction notes"]
 ```
 
 Exported projection snapshot은 hash를 가질 수 있지만, 그렇다고 Markdown projection이 기준 evidence가 되지는 않습니다. Raw evidence는 artifact file과 registered ref로 남습니다.
@@ -683,14 +683,14 @@ Artifact integrity check는 artifact record와 stored file을 비교합니다.
 
 ```mermaid
 flowchart TD
-  Check["artifact integrity check"] --> Record["artifact record exists and links resolve"]
-  Check --> File["stored file 존재"]
-  Check --> Hash["hash and size match"]
-  Check --> Type["content type and redaction state valid"]
-  Check --> Relation["task/run 또는 artifact-link relation valid"]
-  Check --> Retention["retention class valid"]
-  Check --> ProjectionRefs["projection 또는 evidence refs resolve"]
-  Record --> Consequence["failure 시 related evidence, projection freshness, close readiness를 stale/blocked로 표시"]
+  Check["artifact integrity check"] --> Record["artifact record"]
+  Check --> File["stored file"]
+  Check --> Hash["hash와 size"]
+  Check --> Type["content type"]
+  Check --> Relation["owner relation"]
+  Check --> Retention["retention class"]
+  Check --> ProjectionRefs["projection/evidence refs"]
+  Record --> Consequence["failure면 stale/blocked"]
   File --> Consequence
   Hash --> Consequence
   Type --> Consequence

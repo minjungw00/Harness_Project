@@ -27,19 +27,20 @@
 
 ```mermaid
 flowchart LR
-  Request["request"] --> Task["Task"]
-  Task --> Discovery["요구사항 구체화<br/>(Discovery when needed)"]
-  Discovery --> ChangeUnit["Change Unit<br/>scoped work"]
-  Task --> ChangeUnit
-  ChangeUnit --> Prepare["prepare_write"]
-  Prepare -->|allowed| Authorization["Write Authorization"]
-  Prepare -->|blocked or needs judgment| Blocker["blocker or<br/>Decision Packet / Approval path"]
-  Authorization --> Run["Run"]
-  Run --> Evidence["ArtifactRefs<br/>and evidence records"]
-  Evidence --> Readable["status/blocker output<br/>or projection"]
-  Readable --> CloseCheck["close_task"]
-  CloseCheck -->|blocked| CloseBlocker["structured close blocker"]
-  CloseCheck -->|compatible| Close["Task closed"]
+  Request["일상 요청"] --> Clarify["요구사항 구체화"]
+  Clarify --> Decision["사용자 판단"]
+  Clarify --> Scope["범위 정한 작업"]
+  Decision --> Scope
+  Scope --> Prepare["prepare_write"]
+  Prepare -->|허용| Authorization["Write Authorization"]
+  Prepare -->|막힘| Blocker["구조화된 막힘"]
+  Authorization --> Run["record_run"]
+  Run --> Evidence["Run과 근거 기록"]
+  Evidence --> Readable["상태/막힘 출력"]
+  Blocker --> Readable
+  Readable --> CloseCheck["닫기 준비"]
+  CloseCheck -->|막힘| CloseBlocker["닫기 막힘"]
+  CloseCheck -->|준비| Close["Task 닫힘"]
 ```
 
 눈여겨볼 점은 이 diagram이 reader path이며 두 번째 source of truth가 아니라는 것입니다. 요구사항 구체화와 projection-like output은 work를 구체화하거나 읽는 데 도움을 주지만, 쓰기 권한은 `prepare_write`, 실행 기록은 `record_run`, 완료 판단은 `close_task`가 담당합니다. v0.1에서 readable output은 상태/막힘 출력만으로 충분합니다. 정확한 state와 gate behavior는 [커널 참조](../reference/kernel.md)에 있고, public call은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)에 있습니다.

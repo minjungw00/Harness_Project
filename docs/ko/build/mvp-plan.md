@@ -48,10 +48,10 @@
 
 ```mermaid
 flowchart LR
-  Core["v0.1<br/>코어 권한 조각<br/>첫 내부 권한 루프"] --> MVP["v0.2<br/>사용자 대상 MVP<br/>첫 사용자 가치"]
-  MVP --> Assurance["v0.3<br/>에이전시 보증 팩<br/>검증, QA, 위험, 수락"]
-  Assurance --> Ops["v0.4<br/>운영과 인계<br/>운영 준비"]
-  Ops -. roadmap boundary .-> Expansion["v1+<br/>확장 후보"]
+  Core["v0.1 Core Authority Slice"] --> MVP["v0.2 User-Facing Harness MVP"]
+  MVP --> Assurance["v0.3 Agency Assurance Pack"]
+  Assurance --> Ops["v0.4 Operations & Handoff Pack"]
+  Ops -. roadmap .-> Expansion["v1+ Expansion"]
 ```
 
 커널 스모크(Kernel Smoke)는 코어 권한 조각(v0.1 Core Authority Slice)을 위한 좁은 향후 작성 label로 남습니다. 이 label은 v0.1이 제품 MVP라는 뜻이 아니며, full conformance suite나 future fixture catalog가 있어야 내부 Core 권한 경로를 확인할 수 있다는 뜻도 아닙니다.
@@ -144,16 +144,15 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 
 ```mermaid
 flowchart LR
-  Register["프로젝트 등록"] --> Task["Task 생성"]
-  Task --> Scope["범위 설정"]
+  Register["프로젝트 등록"] --> Task["Task"]
+  Task --> Scope["범위"]
   Scope --> Check["쓰기 확인"]
-  Check -->|허용| Authorization["쓰기 허가"]
+  Check -->|허용| Authorization["쓰기 권한"]
   Authorization --> Run["Run 기록"]
-  Run --> Evidence["근거 연결"]
+  Run --> Evidence["ArtifactRef"]
   Check -->|허용 안 됨| Blocker["구조화된 막힘"]
-  Evidence --> Status["상태와 다음 행동"]
+  Evidence --> Status["상태 / 다음 행동<br/>또는 막힘"]
   Blocker --> Status
-  Status --> Close["닫기 상태 막힘"]
 ```
 
 정확한 state와 blocker behavior는 [커널 참조](../reference/kernel.md)가, public tool shape는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)가, future fixture semantics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#conformance-fixture-format)가 담당합니다. 이 흐름은 pack gate, projection renderer requirement, fixture body requirement를 추가하지 않습니다.

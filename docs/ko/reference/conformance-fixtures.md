@@ -127,7 +127,7 @@ classDiagram
     assertion_modes
     fixtures
   }
-  SuiteCatalogMetadata ..> FixtureBody : exact-shape fixture grouping
+  SuiteCatalogMetadata ..> FixtureBody : fixture grouping
 ```
 
 향후 fixture file과 suite catalog는 fixture body 밖에 metadata를 가질 수 있습니다. Fixture body 자체는 위 field만 사용해야 conformance runner가 behavior를 일관되게 비교할 수 있습니다. Suite delivery stage, assertion mode, docs-maintenance result, prose status, authoring note를 표현하기 위해 fixture body field를 추가하지 않습니다. 그런 정보는 suite catalog metadata, docs-maintenance report, 주변 문서에 둡니다.
@@ -169,17 +169,17 @@ Runner는 이 metadata를 suite 선택, 순서 지정, reporting에 사용할 �
 
 ```mermaid
 sequenceDiagram
-  participant Runner as Conformance Runner
+  participant Runner as conformance runner
   participant Fixture as Fixture YAML
-  participant Runtime as Isolated Runtime
-  participant Core as Core Entrypoint
-  participant Report as Conformance Report
-  Runner->>Fixture: exact body shape load and validate
-  Runner->>Runtime: state, artifacts, projections, manifests seed
-  Runner->>Core: action execute
-  Core-->>Runner: state, events, artifacts, projection status, error
-  Runner->>Runner: expected_state/events/artifacts/projection/error compare
-  Runner->>Report: fixture id, pass/fail, observed summary emit
+  participant Runtime as isolated runtime
+  participant Core as Core entrypoint
+  participant Report as conformance report
+  Runner->>Fixture: body shape 검증
+  Runner->>Runtime: state와 artifact seed
+  Runner->>Core: action 실행
+  Core-->>Runner: state, events, artifacts, error
+  Runner->>Runner: expected 결과 비교
+  Runner->>Report: fixture 결과 보고
 ```
 
 Fixture action이 `expected_state_version`을 포함하면 runner는 `ToolEnvelope.task_id`만이 아니라 Core-resolved primary Task에 따라 비교합니다. Task-scoped actions는 seeded 또는 Core-resolved primary Task State Version과 비교하고, resolved primary Task가 없는 project-scoped actions는 Project State Version과 비교합니다. Captured response와 `task_events`의 `state_version` values는 resulting affected-scope versions로 비교합니다. Read-only fixtures는 primary read scope의 unchanged version을 검증할 수 있습니다. 이 설명은 fixture body shape를 바꾸지 않고 comparison 의미만 명확히 합니다.

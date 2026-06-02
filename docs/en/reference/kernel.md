@@ -177,128 +177,59 @@ Direct must escalate to `work` when the target is no longer obvious, observed or
 These diagrams show the record relationships at a navigation level. They do not add fields or storage contracts; the entity subsections and [Storage And DDL](storage-and-ddl.md) remain authoritative.
 
 ```mermaid
-classDiagram
-  class Task {
-    +mode
-    +lifecycle_phase
-    +result
-    +close_reason
-    +assurance_level
-    +gate_states
-    +state_version
-  }
-  class ChangeUnit {
-    +scope
-    +autonomy_boundary
-    +sensitive_categories
-    +completion_conditions
-  }
-  class DecisionPacket {
-    +status
-    +decision_kind
-    +judgment_domain
-    +affected_gates
-  }
-  class Run {
-    +actor
-    +baseline
-    +intended_operation
-    +observed_changes
-  }
-  class Approval {
-    +sensitive_categories
-    +scope
-    +expiry
-  }
-  class WriteAuthorization {
-    +basis_state_version
-    +status
-    +guarantee_level
-  }
-  class EvidenceManifest {
-    +criterion_support
-    +status
-  }
-  class Eval {
-    +verdict
-    +independence_qualifier
-  }
-  class ManualQA {
-    +result
-  }
-  class ResidualRisk {
-    +visibility_status
-    +accepted_risk_metadata
-  }
-  class Artifact {
-    +kind
-    +sha256
-    +uri
-  }
+flowchart TB
+  Task["Task"]
+  Scope["Change Unit<br/>scope"]
+  Decision["Decision Packet<br/>user judgment"]
+  Approval["Approval<br/>sensitive action"]
+  WriteAuth["Write Authorization<br/>write authority"]
+  Run["Run<br/>execution record"]
+  Evidence["Evidence Manifest<br/>evidence support"]
+  Eval["Eval<br/>verification"]
+  QA["Manual QA<br/>human check"]
+  Risk["Residual Risk<br/>known risk"]
+  Artifact["ArtifactRef<br/>durable ref"]
 
-  Task "1" o-- "0..*" ChangeUnit : owns
-  Task "1" o-- "0..*" DecisionPacket : has
-  Task "1" o-- "0..*" Run : records
-  Task "1" o-- "0..*" Approval : links
-  Task "1" o-- "0..*" WriteAuthorization : links
-  Task "1" o-- "0..*" EvidenceManifest : uses
-  Task "1" o-- "0..*" Eval : verifies
-  Task "1" o-- "0..*" ManualQA : checks
-  Task "1" o-- "0..*" ResidualRisk : tracks
-  Run "0..1" --> "0..1" WriteAuthorization : consumes
-  ChangeUnit "1" --> "0..*" WriteAuthorization : bounds
-  EvidenceManifest "1" --> "0..*" Artifact : cites
-  Run "1" --> "0..*" Artifact : produces
-  Eval "1" --> "0..*" Artifact : reviews
-  ManualQA "1" --> "0..*" Artifact : captures
-  ResidualRisk "0..*" --> "0..1" DecisionPacket : may relate
+  Task --> Scope
+  Task --> Decision
+  Task --> Approval
+  Scope --> WriteAuth
+  Approval -. context .-> WriteAuth
+  WriteAuth --> Run
+  Task --> Run
+  Task --> Evidence
+  Run --> Artifact
+  Evidence --> Artifact
+  Task --> Eval
+  Eval --> Artifact
+  Task --> QA
+  QA --> Artifact
+  Task --> Risk
+  Risk -. may need .-> Decision
 ```
 
 Design and continuity support records are kernel-owned support records, while their policy and storage details stay in their owning documents.
 
 ```mermaid
-classDiagram
-  class Task
-  class JourneySpineEntry {
-    +annotation_kind
-    +source_refs
-  }
-  class ReconcileItem {
-    +candidate_change
-    +decision
-  }
-  class SharedDesign {
-    +goals
-    +assumptions
-    +decisions
-  }
-  class DomainTerm {
-    +term
-    +meaning
-  }
-  class ModuleMapItem {
-    +module
-    +boundary
-  }
-  class InterfaceContract {
-    +provider
-    +consumer
-  }
-  class TddTrace {
-    +red
-    +green
-    +refactor
-  }
-  class EvidenceManifest
+flowchart LR
+  Task["Task"]
+  Journey["Journey Spine Entry"]
+  Reconcile["Reconcile Item"]
+  Design["Shared Design"]
+  TDD["TDD Trace"]
+  Terms["Domain Terms"]
+  Modules["Module Map"]
+  Contracts["Interface Contracts"]
+  Evidence["Evidence Manifest"]
 
-  Task "1" o-- "0..*" JourneySpineEntry : continuity
-  Task "1" o-- "0..*" ReconcileItem : drift candidates
-  Task "1" o-- "0..*" SharedDesign : design support
-  Task "1" o-- "0..*" TddTrace : test discipline
-  SharedDesign "1" --> "0..*" DomainTerm : uses
-  SharedDesign "1" --> "0..*" ModuleMapItem : maps
-  ModuleMapItem "1" --> "0..*" InterfaceContract : constrains
-  TddTrace "0..*" --> "0..1" EvidenceManifest : supports
+  Task --> Journey
+  Task --> Reconcile
+  Task --> Design
+  Task --> TDD
+  Design --> Terms
+  Design --> Modules
+  Modules --> Contracts
+  TDD --> Evidence
 ```
 
 ### Task
@@ -330,6 +261,34 @@ Decision Packets feed `decision_gate`. Blocking user-owned judgment cannot be sa
 A Decision Packet is sufficient for kernel use only when it records a decision, not a blank permission request. All profiles must make the user-owned question explicit, name the schema-owned `judgment_domain`, record the schema-owned `decision_profile`, identify relevant scope and related state/artifact refs, show the pending option labels or selected outcome, and say what the agent may decide without the user. Detailed options, pros/cons, recommendation, uncertainty, deferral consequence, affected gates, affected acceptance criteria, user context, expiry, approval scope, and reconcile target are required only by the selected profile or decision route. `minimal_decision` may stay concise for a simple unblocker; `product_ux_tradeoff`, `architecture_tradeoff`, `approval_shaped`, `waiver`, `acceptance`, `residual_risk_acceptance`, `reconcile`, and `mixed` require the additional context needed to make that specific judgment safe and reviewable. These are quality requirements for the Decision Packet record and public request shape owned by [MCP API And Schemas](mcp-api-and-schemas.md#harnessrequest_user_decision); they do not add gates or an alternate authority path.
 
 `decision_kind` controls lifecycle, payload branch, gate meaning, and state-transition semantics. `decision_profile` controls the required depth of the Decision Packet record, from a concise `minimal_decision` to detailed trade-off, approval-shaped, waiver, acceptance, residual-risk acceptance, reconcile, or mixed profiles. `judgment_domain` controls how the decision is explained and grouped for users, using the schema-owned values `product_ux`, `technical_architecture`, `security_privacy`, `qa_acceptance`, `residual_risk`, `scope_autonomy`, or `mixed`. `affected_gates` is the separate field that records which gates or blocked actions the decision can influence. Neither `judgment_domain` nor `decision_profile` directly overrides close-gate aggregation or other gate recompute behavior unless a separate kernel or API rule explicitly says so. A Decision Packet can affect one or more gates independently from its display domain and prompt profile.
+
+The field map is:
+
+```mermaid
+flowchart LR
+  Packet["Decision Packet"]
+  Kind["decision_kind<br/>lifecycle and gate route"]
+  Profile["decision_profile<br/>prompt depth<br/>required context"]
+  Domain["judgment_domain<br/>display group"]
+  Options["options and recommendation"]
+  Impact["affected gates<br/>or blocked actions"]
+  Response["user response"]
+  Update["Core state update"]
+  Outcome["gates or blockers"]
+
+  Packet --> Kind
+  Packet --> Profile
+  Packet --> Domain
+  Packet --> Options
+  Packet --> Impact
+  Profile --> Options
+  Options --> Response
+  Impact --> Response
+  Response --> Update
+  Kind --> Update
+  Impact --> Update
+  Update --> Outcome
+```
 
 The v0.1 Core Authority Slice does not require Decision Packet storage or `decision_requests`. Once the User-Facing Harness MVP or another enabled profile stores Decision Packets, `decision_requests` may still be omitted. If an implementation keeps them, they are routing, interaction, replay, or compatibility handoff metadata only. They are not authority for user-owned judgment, and a `decision_request` row alone never satisfies `decision_gate`, sensitive-action Approval, final acceptance, waiver, residual-risk acceptance, or close.
 
@@ -520,6 +479,30 @@ Gates are canonical kernel fields used by `prepare_write`, `close_task`, status 
 Gate fields are always part of the reference state model, but a stage or Task profile decides which gates are required for a specific operation. v0.1 Core Authority Slice must prove only the minimal authority loop named by Build: scope, write authority, single-use Write Authorization consumption, Run recording, one artifact/evidence ref, and a structured status/blocker response. It may set verification, QA, final acceptance, and residual-risk paths to `not_required` or `none` when the selected smoke scenario does not exercise them. v0.2 adds user-facing judgment, final acceptance, and residual-risk visibility where close-relevant risk exists. v0.3 and later profiles harden detached verification, Manual QA, stewardship, feedback-loop, TDD, and operations behavior. A gate being present in this reference does not make its full future-profile behavior required by the smallest runnable slice.
 
 The gates remain separate in every stage. Early slices may report a category as not required, but they must not collapse evidence, verification, Manual QA, final acceptance, and residual risk into a single completed flag.
+
+### Close Readiness Separation
+
+```mermaid
+flowchart TB
+  Evidence["Evidence"]
+  Verification["Verification"]
+  ManualQA["Manual QA"]
+  Acceptance["Final acceptance"]
+  RiskVisibility["Residual-risk visibility"]
+  RiskAcceptance["Residual-risk acceptance<br/>when required"]
+  Check["close readiness"]
+  Blocker["category blocker"]
+  Ready["close path ready"]
+
+  Evidence --> Check
+  Verification --> Check
+  ManualQA --> Check
+  Acceptance --> Check
+  RiskVisibility --> Check
+  RiskAcceptance --> Check
+  Check -->|missing or stale| Blocker
+  Check -->|satisfied or not required| Ready
+```
 
 ### Gate Rule Map
 
@@ -935,29 +918,29 @@ This sequence shows how a user request becomes scoped write-capable work. Notice
 ```mermaid
 sequenceDiagram
   participant User
-  participant Agent as Agent surface
+  participant Agent as agent surface
   participant Core
   participant State as state.sqlite
   participant Projector
 
   User->>Agent: request
-  Agent->>Core: intake and classify task shape
+  Agent->>Core: intake
   Core->>State: create or update Task
-  Agent->>Core: clarification results (Discovery) when needed
-  Core->>State: record shaping refs through owner paths
-  Agent->>Core: propose or select Change Unit
-  Core->>State: set active Change Unit and scope gate
-  Agent->>Core: prepare_write(intended operation)
-  Core->>State: check state, scope, autonomy, approvals, decisions, baseline, capability
+  Agent->>Core: clarification results
+  Core->>State: record shaping refs
+  Agent->>Core: choose Change Unit
+  Core->>State: set scope gate
+  Agent->>Core: prepare_write
+  Core->>State: check authority context
   alt allowed
     Core->>State: create Write Authorization
-    Core-->>Agent: allowed with authorization ref
+    Core-->>Agent: authorization ref
   else not allowed
-    Core-->>Agent: blocker, approval_required, decision_required, or state_conflict
+    Core-->>Agent: structured blocker
   end
-  opt committed state/event changes affect readable projection
-    Core->>State: enqueue projection job after commit
-    State-->>Projector: projection job available
+  opt projection support is in scope
+    Core->>State: enqueue after commit
+    State-->>Projector: job available
   end
 ```
 
