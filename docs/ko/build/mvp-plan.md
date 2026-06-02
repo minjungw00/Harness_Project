@@ -41,10 +41,10 @@
 
 | 단계 | 전달 목표 | 증명하는 것 | 아직 증명하지 않는 것 |
 |---|---|---|---|
-| v0.1 | 코어 권한 조각(Core Authority Slice) | 로컬 프로젝트 등록 하나, Task 하나, 범위가 정해진 작업 경계 하나, `prepare_write` 권한 경로 하나, 한 번만 쓰는 Write Authorization 하나, 기록된 Run 하나, artifact/evidence 참조 하나, 구조화된 막힘/상태 응답 하나로 구성된 첫 실행 가능한 내부 Core 권한 루프. | 사용자 대상 MVP 가치, full intake/discovery, full Decision Packet 품질, full Evidence Manifest, 수동 QA, 분리 검증, 잔여 위험 수용 의미, 작업 수락 의미, 여러 projection kind, recover/export, 넓은 operator entrypoint, full conformance suite, future fixture catalog, dashboard/UI behavior. |
+| v0.1 | 코어 권한 조각(v0.1 Core Authority Slice) | 로컬 프로젝트 등록 하나, Task 하나, 범위가 정해진 작업 경계 하나, `prepare_write` 권한 경로 하나, 한 번만 쓰는 Write Authorization 하나, 기록된 Run 하나, artifact/evidence 참조 하나, 구조화된 막힘/상태 응답 하나로 구성된 첫 실행 가능한 내부 Core 권한 루프. | 사용자 대상 MVP 가치, full intake/discovery, full Decision Packet 품질, full Evidence Manifest, 수동 QA, 분리 검증, 잔여 위험 수용 의미, 작업 수락 의미, 여러 projection kind, recover/export, 넓은 operator entrypoint, full conformance suite, future fixture catalog, dashboard/UI behavior. |
 | v0.2 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자가 하네스가 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 표시를 로컬 권한 기록에 보존한다는 것을 경험합니다. | Full agency assurance hardening, 분리 검증 독립성, 수동 QA matrix, stewardship policy suite, feedback-loop policy, export/recover, release handoff. |
-| v0.3 | 에이전시 보증 팩(Agency Assurance Pack) | MVP path를 검증, 수동 QA, 잔여 위험, 작업 수락, stewardship profile로 단단하게 만듭니다. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
-| v0.4 | 운영과 인계 팩(Operations & Handoff Pack) | 같은 Core model로 doctor/readiness, recover/export, artifact integrity, release handoff, 더 넓은 conformance coverage를 지원합니다. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
+| v0.3 | 에이전시 보증 팩(v0.3 Agency Assurance Pack) | MVP path를 검증, 수동 QA, 잔여 위험, 작업 수락, stewardship profile로 단단하게 만듭니다. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
+| v0.4 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | 같은 Core model로 doctor/readiness, recover/export, artifact integrity, release handoff, 더 넓은 conformance coverage를 지원합니다. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
 
 ```mermaid
 flowchart LR
@@ -56,7 +56,7 @@ flowchart LR
 
 커널 스모크(Kernel Smoke)는 코어 권한 조각(v0.1 Core Authority Slice)을 위한 좁은 향후 작성 label로 남습니다. 이 label은 v0.1이 제품 MVP라는 뜻이 아니며, full conformance suite나 future fixture catalog가 있어야 내부 Core 권한 경로를 확인할 수 있다는 뜻도 아닙니다.
 
-Conformance fixture 검증 프로파일은 같은 stage name을 따릅니다. Core Authority Slice fixtures는 v0.1 Core Authority Slice, User-Facing Harness MVP fixtures는 v0.2 User-Facing Harness MVP, Agency Assurance Pack fixtures는 v0.3 Agency Assurance Pack, Operations & Handoff Pack 또는 promoted-expansion fixtures는 v0.4 Operations & Handoff Pack과 승격된 v1+ Expansion candidate에 대응합니다.
+Conformance fixture 검증 프로파일은 같은 stage name을 따릅니다. Core Authority Slice fixture 프로파일은 코어 권한 조각(v0.1 Core Authority Slice)에, User-Facing Harness MVP fixture 프로파일은 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)에, Agency Assurance Pack fixture 프로파일은 에이전시 보증 팩(v0.3 Agency Assurance Pack)에 대응합니다. Operations & Handoff Pack fixture 프로파일 또는 승격된 v1+ Expansion 후보 fixture 프로파일은 운영과 인계 팩(v0.4 Operations & Handoff Pack)과 승격된 v1+ Expansion 후보에 대응합니다.
 
 이 fixture profile 이름들이 conformance label로 남습니다. 강화된 로컬 기준 목표(hardened local reference target)는 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 거쳐 도달하는 종합 목표일 뿐, profile name이나 별도 delivery stage가 아닙니다.
 

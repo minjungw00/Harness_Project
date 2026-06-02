@@ -146,7 +146,7 @@
 관련 위험 또는 근거: 기존 테스트 로그, 사용할 수 있는 화면 캡처, 건너뛴 뷰포트 목록, 수동 QA 요구, 잔여 위험 후속 작업.
 ```
 
-이 예시가 좋은 이유는 생략한 확인을 이름 붙이기 때문입니다. QA 면제는 QA가 통과했다는 근거가 아니며, 필요한 잔여 위험 수용 경로가 함께 기록되지 않는 한 그 자체로 잔여 위험을 수락하지 않습니다.
+이 예시가 좋은 이유는 생략한 확인을 이름 붙이기 때문입니다. QA 면제는 QA가 통과했다는 근거가 아니며, 필요한 잔여 위험 수용 경로가 함께 기록되지 않는 한 그 자체로 잔여 위험을 수용하지 않습니다.
 
 정확한 QA 동작은 [QA Gate](../reference/kernel.md#qa-gate), [`harness.record_manual_qa`](../reference/mcp-api-and-schemas.md#harnessrecord_manual_qa), [`harness.record_user_decision`](../reference/mcp-api-and-schemas.md#harnessrecord_user_decision)이 담당합니다.
 

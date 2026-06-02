@@ -307,7 +307,7 @@ v0.1은 내부 authority loop를 증명하는 단계입니다. Product MVP, temp
 - recovery, export, artifact integrity 동작
 - 담당 문서가 정의하는 release handoff report/export behavior
 - broad automation을 v1+ Expansion에 두는 later 경계 확인
-- named Agency Assurance Pack fixtures와 Operations & Handoff Pack 또는 promoted-expansion fixtures를 통한 fixture coverage
+- 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack), 또는 승격된 v1+ Expansion 후보 fixture를 통한 fixture coverage
 
 강화된 로컬 기준 목표(hardened local reference target)는 향후 conformance가 생성된 문장이나 renderer output만이 아니라 Core 상태, events, artifacts, projection/freshness facts, errors로 동작을 증명할 때 완료됩니다.
 

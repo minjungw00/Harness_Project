@@ -11,7 +11,7 @@
 - Reference 계약에 들어가기 전에 runtime 관점의 개념 지도가 필요할 때.
 - 요구사항이 어떻게 scoped work가 되는지 확인할 때.
 - state, artifact, projection, close blocker의 차이를 설명해야 할 때.
-- 첫 코어 권한 조각(Core Authority Slice) path를 user-facing MVP로 키우지 않고 리뷰할 때.
+- 코어 권한 조각(v0.1 Core Authority Slice) path를 사용자 대상 MVP로 키우지 않고 리뷰할 때.
 
 ## 먼저 읽을 것
 

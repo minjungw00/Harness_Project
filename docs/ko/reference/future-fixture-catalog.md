@@ -2457,7 +2457,7 @@ expected_error: null
 |---|---|---|
 | `BROWSER-QA-capture-artifacts-attach-to-manual-qa` | `record_manual_qa` | Capable `T6 QA Capture` profile이 supported screenshot, `qa_capture`, log 또는 console log, network trace, accessibility snapshot, workflow recording artifacts를 등록하고, 이를 수동 QA record 또는 Feedback Loop execution에 link하며, redaction과 retention policy를 적용하고, normal 수동 QA result semantics를 통해서만 `qa_gate`를 업데이트합니다. 이 artifacts는 human QA record를 뒷받침하지만 human judgment 자체는 아닙니다. |
 | `BROWSER-QA-capture-not-final-acceptance-or-detached-verification` | `record_manual_qa` 또는 `record_eval` | Browser QA artifacts는 evidence를 보강할 수 있지만 작업 수락을 기록하지 않고, required human 수동 QA judgment를 대체하지 않으며, separate Eval path가 independence 요구사항을 충족하지 않는 한 `assurance_level=detached_verified`를 설정하지 않습니다. |
-| `BROWSER-QA-unsupported-surface-falls-back-to-human-notes` | `record_manual_qa` 또는 `next` | Browser capture capability가 없는 접점은 missing `T6` capability를 보고하고, 사람이 작성한 수동 QA notes와 수동 제공 artifacts를 추천하며, automated browser capture가 unavailable하다는 이유만으로 커널 스모크(Kernel Smoke), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), Agency Assurance Pack, operations conformance를 fail하지 않습니다. |
+| `BROWSER-QA-unsupported-surface-falls-back-to-human-notes` | `record_manual_qa` 또는 `next` | Browser capture capability가 없는 접점은 missing `T6` capability를 보고하고, 사람이 작성한 수동 QA notes와 수동 제공 artifacts를 추천하며, 자동 브라우저 캡처를 사용할 수 없다는 이유만으로 커널 스모크(Kernel Smoke), 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack)의 conformance 실패로 처리하지 않습니다. |
 
 ## Fixture Suites
 
