@@ -62,11 +62,11 @@ flowchart LR
 
 턴 맥락(Turn context)은 작고 최신이며 단계별 맥락으로 걸러져야 합니다. 항상 주입되는 운영 맥락은 한 화면 안팎으로 제한하고, 역할 또는 접점 자세, 현재 단계와 맥락 프로필, 현재 상태 요약, 활성 막힘, 대기 중인 사용자 소유 결정, 다음 허용 행동만 포함합니다. 여기에 출처 참조나 최신성 표시를 붙일 수는 있지만, 전체 참조 문서, 스키마, 오래된 작업 이력, 과거 이벤트 로그, 관련 없는 템플릿, 읽기용 요약 전체 본문, 근거 본문 복사본을 넣으면 안 됩니다.
 
-전체 문서 세트를 에이전트 프롬프트에 넣지 말고 단계적으로 맥락을 불러옵니다. 자세한 맥락 계약은 [에이전트 통합 참조](../reference/agent-integration.md#context-pushpull-principles)가 담당하며, 이 사용자용 흐름에서는 단계별 맥락을 좁게 유지하고 다음 행동을 설명하는 소유자 섹션만 필요할 때 불러옵니다.
+전체 문서 세트를 에이전트에게 항상 주입하지 말고 단계적으로 맥락을 불러옵니다. 자세한 맥락 계약은 [에이전트 통합 참조](../reference/agent-integration.md#context-pushpull-principles)가 담당하며, 이 사용자용 흐름에서는 단계별 맥락을 좁게 유지하고 다음 행동을 설명하는 소유자 섹션만 필요할 때 불러옵니다.
 
 | 맥락 프로필 | 지금 보여줄 것 | 필요할 때 불러오는 최소 소유자 문서 또는 참조 | 기본으로 불러오지 않는 것 |
 |---|---|---|---|
-| 세션 시작 | 현재 상태 또는 간결한 요약, 예상 작업 모양, 활성 막힘, 대기 중인 사용자 결정, 다음 허용 행동, 보장 수준/MCP 사용 가능 여부. | [세션 시작](#세션-시작), [이어가기](#이어가기), 현재 `harness.status` / `harness.next`, 읽기용 보기가 오래됐거나 다음 행동에 쓰일 때만 읽기용 요약 최신성 규칙. | 전체 작업 이력, 전체 참조 문서, 전체 schema, 오래된 projection, 관련 없는 template, 관련 없는 Roadmap. |
+| 세션 시작 | 현재 상태 또는 간결한 요약, 예상 작업 모양, 활성 막힘, 대기 중인 사용자 결정, 다음 허용 행동, 보장 수준/MCP 사용 가능 여부. | [세션 시작](#세션-시작), [이어가기](#이어가기), 현재 `harness.status` / `harness.next`, 읽기용 보기가 오래됐거나 다음 행동에 쓰일 때만 읽기용 요약 최신성 규칙. | 전체 작업 이력, 전체 참조 문서, 전체 schema, 오래된 읽기용 요약, 관련 없는 template, 관련 없는 Roadmap. |
 | 요구사항 구체화 (Discovery) | 목표, 사용자 가치, 범위와 비목표, 수용 기준, 확인 가능한 사실, 추적되는 불확실성, 결정 영역별 막힘 질문, 사용자 소유 결정 후보, QA/검증 기대 수준, 안전한 다음 작업 후보 또는 작업 분할 제안. | [사용자 가이드: 에이전트가 처음 답해야 할 것](user-guide.md#에이전트가-처음-답해야-할-것), [요청 정리](#요청-정리), [범위와 Change Unit](#범위와-change-unit), 관련 현재 Task/Change Unit/Shared Design 참조. | 전체 module map, 오래된 PRD/design, design-policy catalog, 전체 Storage DDL, 전체 Conformance 카탈로그, 관련 없는 template. |
 | 사용자 결정 요청 | 결정 내용, 결정 프로필, 프로필에 맞는 선택지 또는 선택된 결과, 영향을 받는 범위, 관련 참조, 답변이 확정하지 않는 것, 답변 뒤의 다음 행동. 상세 프로필은 추천, 불확실성, 영향을 받는 관문/수용 기준, 미루면 생기는 일도 보여줍니다. | [사용자 소유 결정으로 막힐 때](#사용자-소유-결정으로-막힐-때), 관련 Decision Packet 소유자 섹션, 정확한 field가 필요할 때만 특정 MCP 메서드. | 포괄적 approval 표현, 관련 없는 decision, 전체 근거 본문, 전체 log, 전체 schema reference, 전체 Template 세트. |
 | 쓰기 준비 | Active Change Unit, Autonomy Boundary, 의도한 경로/도구/명령 요약, 민감 동작 승인 상태, 활성 결정 패킷, Write Authority Summary, 기준선/최신성. | [제품 파일 쓰기](#제품-파일-쓰기), [커널: prepare_write](../reference/kernel.md#prepare_write), intended write에 필요한 [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write). | 전체 Kernel/reference 문서, 관련 없는 schema, historical event log, 큰 diff/log, 전체 Storage DDL. |
@@ -122,9 +122,9 @@ flowchart LR
 활성 작업을 찾았습니다. 현재 범위는 X입니다. 다음 안전한 행동은 Y입니다. 제품 파일 쓰기는 아직 허용되지 않았습니다. 대기 중인 결정은 Z 하나입니다.
 ```
 
-읽기용 요약(Projection), `source_state_version`, 읽기용 상태가 stale이거나 unknown이면 그 사실을 말하고, 거기에 의존하기 전에 refresh 또는 reconcile합니다. 기준 상태를 직접 읽을 수 있으면 그 상태에서 계속할 수 있지만, Projection은 운영 권한의 출처가 아니라고 알려야 합니다.
+읽기용 요약(Projection), `source_state_version`, 읽기용 상태가 stale이거나 unknown이면 그 사실을 말하고, 거기에 의존하기 전에 새로 고치거나 조정(reconcile)합니다. 기준 상태를 직접 읽을 수 있으면 그 상태에서 계속할 수 있지만, Projection은 운영 권한의 출처가 아니라고 알려야 합니다.
 
-표시 문제는 구분해서 말합니다. 오래된 읽기용 요약(stale projection)은 읽기용 카드나 보고서가 뒤처졌을 수 있으므로 신뢰할 수 있는 맥락으로 쓰기 전에 refresh 또는 reconcile이 필요하다는 뜻입니다. 오래된 상태, baseline, 근거는 실제 입력이 이동했거나 부족해져 쓰기나 닫기를 막을 수 있다는 뜻입니다. MCP에 닿지 못하는 상태(MCP unavailable)는 에이전트가 필요한 하네스/Core 기능에 닿지 못한다는 뜻입니다. 그 기능이 다시 사용 가능해지기 전에는 기준 상태 변경, Approval, 작업 수락, 잔여 위험 수용, gate 갱신, 읽기용 요약 복구, 닫기가 처리됐다고 주장하면 안 됩니다.
+표시 문제는 구분해서 말합니다. 오래된 읽기용 요약(stale projection)은 읽기용 카드나 보고서가 뒤처졌을 수 있으므로 신뢰할 수 있는 맥락으로 쓰기 전에 새로 고치거나 조정해야 한다는 뜻입니다. 오래된 상태, baseline, 근거는 실제 입력이 이동했거나 부족해져 쓰기나 닫기를 막을 수 있다는 뜻입니다. MCP에 닿지 못하는 상태(MCP unavailable)는 에이전트가 필요한 하네스/Core 기능에 닿지 못한다는 뜻입니다. 그 기능이 다시 사용 가능해지기 전에는 기준 상태 변경, Approval, 작업 수락, 잔여 위험 수용, gate 갱신, 읽기용 요약 복구, 닫기가 처리됐다고 주장하면 안 됩니다.
 
 Core 자체에 닿을 수 없으면 표시 문제는 `MCP_SERVER_UNAVAILABLE`입니다. Core에 닿지 않는다고 말하고, 상태가 바뀌었다고 주장하기 전에 다시 연결하거나 진단합니다. Core 또는 operator가 현재 접점에서 MCP를 사용할 수 없다고 알 수 있으면 표시 문제는 `SURFACE_MCP_UNAVAILABLE`입니다. 이 접점이 필요한 하네스 도구를 사용할 수 없다고 말한 뒤, 제품 파일 쓰기는 지시로 보류하거나 필요한 기능을 가진 접점으로 전환합니다. 접점 이름만으로는 기능이 증명되지 않습니다. Preventive guard가 해당 동작에 대해 도구 실행 전 차단을 입증한 경우에만 실행 전에 차단됐다고 말합니다.
 
@@ -195,7 +195,7 @@ status, next, 결과, 작업 수락, 닫기 표시에서 권한을 주장할 때
 | `WRITE_AUTHORIZATION_REQUIRED` 또는 `WRITE_AUTHORIZATION_INVALID` | 쓰기 권한이 없거나 최신이 아닙니다. | 정확한 의도한 쓰기에 대해 `harness.prepare_write`를 다시 시도합니다. |
 | `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED` | 사용자 결정이 필요합니다. | 결정 패킷 또는 간결한 결정 요청을 보여줍니다. |
 | `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, 또는 `APPROVAL_EXPIRED` | Sensitive-action Approval이 필요하거나 사용할 수 없습니다. | Approval을 요청, 해소, 갱신한 뒤 쓰기 확인을 다시 시도합니다. |
-| `PROJECTION_STALE` | 읽기용 상태 요약이 오래됐습니다. | 그 요약에 의존하기 전에 읽기용 요약(projection)을 refresh 또는 reconcile합니다. |
+| `PROJECTION_STALE` | 읽기용 상태 요약이 오래됐습니다. | 그 요약에 의존하기 전에 읽기용 요약(projection)을 새로 고치거나 조정합니다. |
 | `ARTIFACT_MISSING` | Artifact가 없거나 무결성 확인에 실패했습니다. | Artifact를 근거로 쓰기 전에 다시 첨부하거나, 생성하거나, 교체합니다. |
 
 정확한 하네스 용어는 도움이 될 때만 괄호 안에 붙이고, 평범한 문장을 먼저 둡니다. 예: "쓰기 권한이 최신이 아닙니다(`WRITE_AUTHORIZATION_INVALID`). 가장 작은 해소 방법: 현재 파일 목록으로 `harness.prepare_write`를 다시 실행합니다."
@@ -380,7 +380,7 @@ Autonomy Boundary 안에서는 에이전트가 기존 helper를 재사용할지,
 
 결정 프로필(`decision_profile`)은 스키마가 소유하는 질문 깊이와 검증 분류입니다. 작은 명시적 막힘 해소에는 `minimal_decision`, 상세 절충에는 `product_ux_tradeoff` 또는 `architecture_tradeoff`, 민감 동작 승인에는 `approval_shaped`, QA 또는 검증 면제에는 `waiver`, 최종 결과 수락에는 `acceptance`, 이름 붙은 닫기 관련 위험 수용에는 `residual_risk_acceptance`, 관리 중인 상태 변화나 제안/상태 불일치에는 `reconcile`, 실제로 여러 영역에 걸친 하나의 결정에는 `mixed`를 사용합니다. 판단 영역은 사용자가 어떤 종류의 판단을 하는지 이해하도록 돕는, 스키마가 소유하는 분류입니다. 이를 주 표시 묶음으로 사용합니다. 결정이 여러 영역에 걸쳐 있으면 `mixed`를 쓰거나, 영역이 배타적인 것처럼 다루지 말고 부차적인 고려사항을 장단점, 영향을 받는 `gate`, 위험, 근거, 후속 작업에 보여줘야 합니다. `decision_kind`는 수명주기, payload 분기, `gate` 의미, 상태 전이 의미를 제어하고, `decision_profile`은 질문 깊이와 프로필별 필수 정보를 제어하며, `judgment_domain`은 설명과 표시 묶음을 제어합니다. 영향을 받는 `gate`나 막힌 행동은 별도 필드와 소유자 기록이 담당합니다. `decision_profile`과 `judgment_domain`은 `gate`, 검증기 입력, 닫기 집계 규칙, 권한 경로가 아닙니다. 정확한 공개 필드는 [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision)이 소유하고, 기준 권한은 [결정 패킷](../reference/kernel.md#decision-packet)과 [Decision Gate](../reference/kernel.md#decision-gate)가 소유합니다. 사용자에게 보이는 질문에 스키마 본문을 복사하지 말고, 쉬운 말로 결정을 보여준 뒤 필요한 참조를 더 살펴볼 수 있게 둡니다.
 
-결정 중심 질문은 경로와 맞는 동사를 씁니다. 선택, defer, reject, waive, accept, reconcile입니다. "approve" 또는 "승인"은 민감 동작 승인일 때만 사용합니다. 좋은 질문 형태는 다음과 같습니다.
+결정 중심 질문은 경로와 맞는 동사를 씁니다. 선택, 미루기(defer), 거절(reject), 면제(waive), 수락(accept), 조정(reconcile)입니다. "approve" 또는 "승인"은 민감 동작 승인일 때만 사용합니다. 좋은 질문 형태는 다음과 같습니다.
 
 ```text
 결정: 설정 버튼 문구
@@ -682,7 +682,7 @@ AFK stop을 보여줄 때는 보장 수준을 이름 붙입니다. 협력형 또
 좋은 오래된 읽기용 요약 복구:
 
 ```text
-읽기용 상태 요약은 오래됐지만 Core state는 최신입니다. 오래된 Markdown을 권한처럼 쓰지 않고, 읽기용 요약을 refresh 또는 reconcile한 뒤 Core state에서 계속하겠습니다.
+읽기용 상태 요약은 오래됐지만 Core state는 최신입니다. 오래된 Markdown을 권한처럼 쓰지 않고, 읽기용 요약을 새로 고치거나 조정한 뒤 Core state에서 계속하겠습니다.
 ```
 
 좋은 관리 영역(managed block) 응답:

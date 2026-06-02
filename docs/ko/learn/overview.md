@@ -104,13 +104,13 @@ flowchart LR
 
 에이전트 지침은 에이전트가 어떻게 행동해야 하는지 알려 줍니다. MCP는 도구와 리소스를 연결합니다. Skill과 workflow는 반복 행동을 묶습니다. 테스트 실행기는 검사를 실행합니다. 코드 리뷰는 변경을 검토합니다. Spec은 의도한 동작이나 설계를 설명합니다. 하네스는 이런 것들을 사용할 수 있지만, 역할은 다릅니다. 지금 작업의 로컬 운영 기록을 유지하고, 작업에 사용자 판단이 필요할 때 그 판단을 사용자에게 돌려보냅니다.
 
-하네스는 prompt 묶음, 대화 스크립트, evaluation harness, dashboard, 넓은 hosted agent platform도 아닙니다.
+하네스는 질문 묶음, 대화 스크립트, 평가용 하네스, 대시보드, 넓은 호스팅형 에이전트 플랫폼도 아닙니다.
 
 하네스는 대화 기록을 진실의 기준으로 삼지 않습니다. 생성된 Markdown을 운영 기록으로 삼지도 않습니다. 대화는 대화입니다. Markdown 읽기용 요약은 사람이 읽는 표시입니다. Core가 소유한 로컬 상태와 아티팩트 참조가 운영상 기준입니다. 목표, 범위, 설계 판단, 제품 판단과 기술 구조 판단, QA 판단, 작업 수락, 잔여 위험 수용은 여전히 사용자가 합니다.
 
 하네스는 AI 지원 작업 주변에 로컬 기록과 결정 경로를 둡니다. 더 빠르게 일하되, 작업의 모양을 잃지 않게 돕습니다.
 
-AGENTS.md / agent rules, MCP, skills / reusable workflows, test runners, code review, specs와의 나란한 비교는 [한국어 문서 진입점](../README.md#비교)을 봅니다. 그 차이 뒤의 가치는 [목적과 원칙](purpose-and-principles.md)을 읽습니다.
+AGENTS.md / 에이전트 규칙, MCP, skills / reusable workflows, test runners, code review, specs와의 나란한 비교는 [한국어 문서 진입점](../README.md#비교)을 봅니다. 그 차이 뒤의 가치는 [목적과 원칙](purpose-and-principles.md)을 읽습니다.
 
 ## 다음에 읽을 문서
 

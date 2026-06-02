@@ -97,7 +97,7 @@
 | Acceptance | 작업 경로가 요구할 때 결과를 받아들일 수 있다는 사용자의 작업 수락 판단입니다. |
 | Residual Risk | 작업 뒤에도 남는 알려진 불확실성, 한계, 절충입니다. |
 | 읽기용 요약 / Projection | 하네스 상태에서 만든 읽기용 요약입니다. 상태를 보여 주지만 상태를 대체하지 않습니다. |
-| Reconcile | 읽기용 요약의 사람 편집이나 어긋남을 의도적으로 처리하는 경로입니다. |
+| 조정 / Reconcile | 읽기용 요약의 사람 편집이나 어긋남을 의도적으로 처리하는 경로입니다. |
 | `task_events` | 작업 상태 변화를 남기는 내부 event log table입니다. 사용자용 어휘가 아니라 reference/schema 용어입니다. |
 
 참조 문서에는 기록, API, 저장소, conformance를 정확히 설명해야 하므로 더 많은 용어가 나옵니다. Learn과 Use 문서는 내부 라벨이 실제 경계를 설명할 때가 아니라면 공개 어휘를 우선해야 합니다.
@@ -119,7 +119,7 @@
 - <a id="acceptance"></a>Acceptance: 작업 경로가 요구하는 작업 수락입니다.
 - <a id="residual-risk"></a>Residual Risk: 알려진 남은 불확실성, 한계, 절충입니다.
 - <a id="projection"></a>읽기용 요약(Projection): 하네스 상태에서 만든 읽기용 요약이며 운영 권한은 아닙니다.
-- <a id="reconcile"></a>Reconcile: 읽기용 요약의 어긋남이나 사람 편집을 처리하는 경로입니다.
+- <a id="reconcile"></a>조정(Reconcile): 읽기용 요약의 어긋남이나 사람 편집을 처리하는 경로입니다.
 
 ## 특히 구분할 것
 
