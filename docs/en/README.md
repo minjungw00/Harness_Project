@@ -127,6 +127,12 @@ Reference docs own exact contracts: schemas, DDL, gates, state transitions, enum
 
 Documentation-maintenance checks are editorial quality checks for drift, owner boundaries, links, and language parity. They are not runtime conformance or implementation readiness. Use the [Authoring Guide](maintain/authoring-guide.md#docs-maintenance-checks) for drift categories and owner-first resolution; use [Operations And Conformance](reference/operations-and-conformance.md#docs-maintenance-profile) only for the docs-maintenance profile reporting boundary.
 
+## Agent Context Loading
+
+Reader paths are not prompt-loading bundles. Connected agents should keep always-on context to one screen or less: role, current phase/context profile, current Task summary, active blockers, pending user-owned judgments, and next allowed action. The detailed phase profile map lives in [Agent Integration Reference: Context Push/Pull Principles](reference/agent-integration.md#context-pushpull-principles), with user-facing behavior summarized in [Agent Session Flow](use/agent-session-flow.md).
+
+Use owner sections by phase: requirements clarification uses User Guide plus Agent Session Flow and relevant current Task state; decision requests use Agent Session Flow plus the Decision Packet owner section; prepare-write uses the kernel `prepare_write` section and the relevant MCP method only; run/evidence uses `record_run`, evidence owner records, and artifact refs; close readiness uses `close_task` plus current evidence, verification, QA, acceptance, and residual-risk state; recovery uses current status or error owner sections and fallback rules. Do not load full Storage DDL, full Conformance catalogs, the full Template set, unrelated Roadmap items, old task history, or full projection bodies by default.
+
 ## Learn
 
 Use Learn when you want the mental model before exact contracts.

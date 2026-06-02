@@ -4,7 +4,7 @@
 
 Use this reference to check how Harness renders readable derived views from Core-owned state records and artifact references.
 
-It defines projection authority boundaries, managed block behavior, human-editable sections, artifact reference rendering, output tiers, template implementation classes, and projection freshness rules. It does not define canonical kernel state, MCP request/response schemas, SQLite DDL, design-quality policy requirements, or full template bodies. Full template bodies and display card shapes live in the [Template Reference](templates/README.md).
+It defines projection authority boundaries, managed block behavior, human-editable sections, artifact reference rendering, output tiers, template implementation classes, and projection freshness rules. It does not define canonical kernel state, MCP request/response schemas, SQLite DDL, design-quality policy requirements, or full template bodies. Full template bodies and display card shapes live in the [Template Reference](templates/README.md) and should be loaded only when the current projection or display repair needs a specific template.
 
 This is reference documentation for future Harness behavior. Current repository phase and implementation handoff status are tracked in [Implementation Overview](../build/implementation-overview.md#documentation-acceptance-status).
 
@@ -18,7 +18,7 @@ This is reference documentation for future Harness behavior. Current repository 
 
 ## Before you read
 
-Use [Kernel Reference](kernel.md) for canonical state and gate authority, [MCP API And Schemas](mcp-api-and-schemas.md) for `ProjectionKind` and projection refs, [Storage And DDL](storage-and-ddl.md) for projection job storage, and [Template Reference](templates/README.md) for full rendered bodies and display cards.
+Use [Kernel Reference](kernel.md) for canonical state and gate authority, [MCP API And Schemas](mcp-api-and-schemas.md) for `ProjectionKind` and projection refs, [Storage And DDL](storage-and-ddl.md) for projection job storage, and [Template Reference](templates/README.md) for full rendered bodies and display cards only when that owner section is needed. This reading list is not a default context bundle; agents should follow the phase profile map in [Agent Integration: Context Push/Pull Principles](agent-integration.md#context-pushpull-principles).
 
 ## Main idea
 
@@ -44,7 +44,7 @@ Harness keeps derived-output tiers aligned with staged delivery:
 | Operations/export reports | v0.4 Operations & Handoff Pack profiles | Projection freshness, reconcile/readiness, export, release-handoff, artifact-integrity, and operator report views when operations support is enabled. They do not replace Core state or artifact authority. |
 | Future/diagnostic projections | Owner-promoted later profiles or diagnostics | Detailed Journey Card or Journey Spine views, Run Summary, TDD Trace, Module Map, Interface Contract, standalone Decision Packet Markdown, detailed Evidence Manifest, detailed Eval, design/domain-language maps, and other diagnostic views. Pull on demand or enable only through a promoted profile. |
 
-Agent compact context is a consumer of current Core status output or user-facing summaries, not a separate authority tier. It may use projections as a readable summary only when their `source_state_version` and freshness are suitable for the next action. If state matters and the projection is stale, failed, unknown, or too broad, retrieve current Core state or a state-derived compact context instead. Do not turn Markdown projections, Journey Cards, status cards, old reports, or generated summaries into always-on prompt payloads or authority. They can point to current refs to inspect; they cannot authorize writes, satisfy gates, create evidence, perform verification, record Manual QA, accept results, accept residual risk, or close a Task.
+Agent compact context is a consumer of current Core status output or user-facing summaries, not a separate authority tier. It may use projections as a readable summary only when their `source_state_version` and freshness are suitable for the next action. If state matters and the projection is stale, failed, unknown, or too broad, retrieve current Core state or a state-derived compact context instead. Do not turn Markdown projections, Journey Cards, status cards, old reports, generated summaries, or full projection bodies into always-on prompt payloads or authority. Full projection bodies are pull-on-demand for a phase that needs their specific content; by default, push only refs, one-line summaries, and freshness. They can point to current refs to inspect; they cannot authorize writes, satisfy gates, create evidence, perform verification, record Manual QA, accept results, accept residual risk, or close a Task.
 
 ### Minimum user-facing MVP output set
 

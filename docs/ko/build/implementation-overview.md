@@ -2,7 +2,7 @@
 
 ## 이 문서가 도와주는 일
 
-이 문서는 구현자가 전체 Reference 명세에 들어가기 전에 무엇을 먼저 계획해야 하는지 알려 줍니다. 독자 중심 문서가 kernel, runtime, MCP, storage, 읽기용 요약(Projection), conformance reference와 어떻게 이어지는지 보여 주는 Build 계층입니다.
+이 문서는 구현자가 계획 또는 구현 질문에 필요한 특정 Reference owner 명세를 보기 전에 무엇을 먼저 계획해야 하는지 알려 줍니다. 독자 중심 문서가 kernel, runtime, MCP, storage, 읽기용 요약(Projection), conformance reference와 어떻게 이어지는지 보여 주는 Build 계층입니다.
 
 이 문서는 문서 재설계 / 검토와 유지보수자용 문서 수락 후보 검토를 위한 구현 계획 문서입니다. 이 저장소는 현재 문서 전용이며, 향후 역할은 하네스 서버 소스 저장소입니다. 이 저장소에서 서버/런타임 구현을 시작하려면 문서 수락과 별도의 구현 계획 준비 결정이 모두 필요합니다. 아직 이곳에는 하네스 서버/런타임 구현, 실행 가능한 fixture 파일, 생성된 런타임 기록, 생성된 읽기용 요약, 실행 가능한 하네스 서버 conformance test가 없습니다. 이 리비전은 재설계 이후 검토 상태의 문서 수락 후보이지 구현 시작 승인이 아닙니다. 첫 실행 목표는 코어 권한 조각(v0.1 Core Authority Slice)이며, 커널 스모크(Kernel Smoke)는 가장 작은 로컬 권한 루프를 위한 좁은 future smoke-check 작성 label입니다. 첫 제품 MVP 목표는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff 동작을 단단하게 만듭니다. v1+ Expansion은 담당 문서가 승격하고 증명하기 전까지 로드맵 범위에 둡니다.
 

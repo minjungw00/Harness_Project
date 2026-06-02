@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-This document tells implementers what to build before they dive into the full reference specs. It is the bridge between the reader-centered docs and the detailed contracts in the kernel, runtime, MCP, storage, projection, and conformance references.
+This document tells implementers what to build before they consult the specific Reference owner specs needed for a planning or implementation question. It is the bridge between the reader-centered docs and the detailed contracts in the kernel, runtime, MCP, storage, projection, and conformance references.
 
 This is planning documentation for documentation redesign / review and maintainer handoff. The repository is documentation-only today, and its intended future role is the Harness Server source repository. Server/runtime implementation in this repository may start only after documentation acceptance and a separate implementation-planning readiness decision; no Harness Server/runtime implementation, executable fixture files, generated runtime records, generated projections, or runnable Harness Server conformance tests exist here yet. This revision is in post-redesign review and is a documentation acceptance candidate for maintainer review, not an accepted implementation start. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as a narrow future smoke-check authoring label for the smallest local authority loop. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior. v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
 

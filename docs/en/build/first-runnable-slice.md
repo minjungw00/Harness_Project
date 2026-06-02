@@ -61,7 +61,7 @@ An implementer can run a local Harness process against a temporary product repos
 8. Status/blocker output shows current Task, scope, write authority, artifact/evidence support, and blockers without mutating state.
 9. Status or a close-task smoke returns a structured blocker when scope, write authority, or artifact/evidence support is missing.
 
-Passing this story means v0.1 Core Authority Slice works. It does not mean users have experienced the Harness MVP yet. The user-facing MVP begins when ordinary requests are clarified into scope, user-owned judgment, evidence, close-readiness, final-acceptance, and residual-risk language.
+Passing this story means v0.1 Core Authority Slice works. It does not mean users have experienced the Harness MVP yet. The user-facing MVP begins when ordinary requests are clarified into scope, user-owned judgment, evidence, close readiness, final-acceptance, and residual-risk language.
 
 ## Doc-level acceptance checks
 

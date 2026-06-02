@@ -56,7 +56,7 @@ flowchart LR
 
 요청이 모호하거나, 위험하거나, 여러 단계이거나, 제품 표면에 닿거나, 사용자 소유 판단이 필요할 가능성이 있을 때 요구사항 구체화(내부 이름 Discovery)를 사용합니다. 이 구체화는 goal, user value, non-goal, acceptance criteria, 확인 가능한 사실, assumption, technical/product choice, security/privacy concern, QA expectation, 남은 불확실성, scope boundary를 정리합니다.
 
-엄격한 동작: 요구사항 구체화/Discovery는 shaping input입니다. Approval, Write Authorization, evidence, verification, QA, 작업 수락, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. Decision routing은 [Decision Packet](../reference/kernel.md#decision-packet)과 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision)의 public decision call이 담당합니다.
+엄격한 동작: 요구사항 구체화(Discovery)는 shaping input입니다. Approval, Write Authorization, evidence, verification, QA, 작업 수락, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. Decision routing은 [Decision Packet](../reference/kernel.md#decision-packet)과 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision)의 public decision call이 담당합니다.
 
 ### 3. 요구사항 구체화 -> 안전한 다음 작업 -> Change Unit
 

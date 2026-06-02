@@ -127,6 +127,12 @@ Learn과 Use 문서는 삭제하지 않고 역할을 좁혀 둡니다.
 
 문서 유지보수 점검은 drift, 소유자 경계, 링크, 언어 의미 일치를 살피는 편집 품질 점검입니다. Runtime conformance나 구현 준비 상태가 아닙니다. Drift category와 owner-first resolution은 [문서 작성 가이드](maintain/authoring-guide.md#docs-maintenance-checks)를 사용하고, docs-maintenance profile reporting boundary는 [운영과 Conformance](reference/operations-and-conformance.md#docs-maintenance-프로필)를 사용합니다.
 
+## 에이전트 맥락 불러오기
+
+독자별 읽기 경로를 프롬프트 묶음처럼 통째로 넣으면 안 됩니다. 연결된 에이전트의 항상 주입되는 맥락은 한 화면 이하로 유지합니다. 역할, 현재 단계와 맥락 프로필, 현재 Task 요약, 활성 blocker, 대기 중인 사용자 소유 판단, 다음 허용 행동만 기본으로 둡니다. 자세한 단계별 맥락 지도는 [Agent 통합 참조: Context Push/Pull Principles](reference/agent-integration.md#context-pushpull-principles)가 담당하고, 사용자에게 보이는 동작은 [에이전트 세션 흐름](use/agent-session-flow.md)이 요약합니다.
+
+단계별로 소유자 섹션만 골라 봅니다. 요구사항 구체화는 사용자 가이드, 에이전트 세션 흐름, 관련 현재 Task 상태를 사용합니다. 사용자 결정 요청은 에이전트 세션 흐름과 Decision Packet 소유자 섹션을 사용합니다. 쓰기 준비는 kernel `prepare_write` 섹션과 관련 MCP 메서드만 사용합니다. 실행/근거는 `record_run`, 근거 소유자 기록, 아티팩트 참조를 사용합니다. 닫기 준비 상태는 `close_task`와 현재 근거, 검증, 수동 QA, 작업 수락, 잔여 위험 상태를 사용합니다. 복구는 현재 상태/오류 소유자 섹션과 fallback 의미를 사용합니다. 전체 Storage DDL, 전체 Conformance 카탈로그, 전체 Template 세트, 관련 없는 Roadmap 항목, 오래된 작업 이력, 읽기용 요약 전체 본문은 기본으로 불러오지 않습니다.
+
 ## 학습 문서
 
 정확한 계약에 들어가기 전에 전체 그림을 잡는 경로입니다.

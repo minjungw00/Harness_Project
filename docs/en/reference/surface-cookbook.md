@@ -16,7 +16,7 @@ This is reference documentation for future Harness behavior. Current repository 
 
 ## Before you read
 
-Read [Agent Integration Reference](agent-integration.md) for the common connector contract and capability profiles. Use [Runtime Architecture](runtime-architecture.md), [MCP API And Schemas](mcp-api-and-schemas.md), and [Operations And Conformance Reference](operations-and-conformance.md) for local access, API errors, and conformance boundaries.
+Read [Agent Integration Reference](agent-integration.md) for the common connector contract, capability profiles, and phase context profiles. Use only the specific [Runtime Architecture](runtime-architecture.md), [MCP API And Schemas](mcp-api-and-schemas.md), or [Operations And Conformance Reference](operations-and-conformance.md) owner section needed for the current local-access, API-error, or conformance question. This cookbook is not a prompt-loading bundle and does not ask a connector to load all Reference docs.
 
 ## Main idea
 
@@ -36,12 +36,12 @@ Each recipe should keep only surface-specific material:
 - MCP exposure posture and local transport assumptions when they vary by surface
 - host/profile-specific capability differences, including version, hooks, permissions, workspace policy, generated files, capture methods, QA capture methods, redaction policy, artifact retention behavior, and conformance result differences that require a refreshed profile under the [Agent Integration Reference](agent-integration.md#capability-profiles)
 - capture, guard, and isolation options
-- surface-specific context strategy: how the recipe keeps always-on context to role, current phase, current task summary, active blockers, pending user-owned judgments, and next allowed action; how it switches among session start, discovery, decision request, prepare-write, run/evidence, close-readiness, and error/recovery profiles
+- surface-specific context strategy: how the recipe keeps always-on context to role, current phase/context profile, current task summary, active blockers, pending user-owned judgments, and next allowed action; how it switches among session start, requirements clarification (Discovery), decision request, prepare-write, run/evidence, close readiness, and recovery/error profiles; and which minimal owner section it pulls for each profile according to [Agent Integration: Context Push/Pull Principles](agent-integration.md#context-pushpull-principles)
 - guarantee boundary notes: what the named surface can block before execution, what it can only detect after action, what capture is native, and what falls back to manual artifacts or a manual verification bundle
 - common fallbacks
 - conformance risks
 
-Do not repeat generic kernel rules, public API schemas, policy contracts, full reference docs, unrelated templates, or historical logs here. The common contract determines what cooperative, detective, preventive, and isolated mean. A recipe only names the surface-specific path that can provide that behavior. Guard, freeze, and careful-mode labels may appear only as labels over the connected profile's actual capability. When a recipe uses one of those labels, it must say whether the behavior is a scope hold, a post-action detector, a fixture-proven pre-tool block, or a documented separation boundary. Those labels do not authorize writes, satisfy gates, record verification, record acceptance, or create a new authority tier.
+Do not repeat generic kernel rules, public API schemas, policy contracts, full reference docs, unrelated templates, historical logs, full Storage DDL, full Conformance catalogs, unrelated Roadmap items, or full projection bodies here. The common contract determines what cooperative, detective, preventive, and isolated mean. A recipe only names the surface-specific path that can provide that behavior. Guard, freeze, and careful-mode labels may appear only as labels over the connected profile's actual capability. When a recipe uses one of those labels, it must say whether the behavior is a scope hold, a post-action detector, a fixture-proven pre-tool block, or a documented separation boundary. Those labels do not authorize writes, satisfy gates, record verification, record acceptance, or create a new authority tier.
 
 Generated or managed recipe outputs must follow the connector manifest contract in [Agent Integration Reference](agent-integration.md#generated-manifest-expectations). Recipes may name the surface-specific files, config snippets, or managed blocks, but drift is reported before overwrite. The existing file or managed block stays in place until reconcile or an explicit reconnect decision chooses replacement, and the drifted generated file is not treated as canonical Task state.
 

@@ -25,7 +25,7 @@ Harness value is not merely that a write authority loop exists. Harness should p
 - v0.1 Core Authority Slice proves the smallest coherent internal Core authority loop.
 - v0.2 User-Facing Harness MVP proves that ordinary users can feel the core Harness value in how work is clarified, budgeted, blocked, accepted, and risk-explained.
 
-The first slice stays intentionally narrow. It proves one local project registration, one Task, one scoped work boundary, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence reference, and one structured blocker/status response. It is not the MVP. The MVP comes when the user-facing path can translate normal work into scope, user-owned judgment, evidence, close-readiness, and residual-risk language without confusing sensitive-action approval, final acceptance, and residual-risk acceptance.
+The first slice stays intentionally narrow. It proves one local project registration, one Task, one scoped work boundary, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence reference, and one structured blocker/status response. It is not the MVP. The MVP comes when the user-facing path can translate normal work into scope, user-owned judgment, evidence, close readiness, and residual-risk language without confusing sensitive-action approval, final acceptance, and residual-risk acceptance.
 
 Projection-template polish, detailed reports, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, metrics, parallel orchestration, and broad automation become useful after the authority record and user-facing value path exist. They are not first-slice requirements.
 
@@ -65,7 +65,7 @@ The MCP API reference defines exact schemas for every method it documents, but s
 | Stage | Stage-required API surface | Later-profile fields to keep out of the stage exit |
 |---|---|---|
 | v0.1 Core Authority Slice | Minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, one owner-valid Task/scope setup path, and optionally minimal `harness.next` or a narrow `harness.close_task` blocker smoke. | Full natural-language intake, Decision Packet storage, Evidence Manifest, Manual QA, Eval, final acceptance semantics, residual-risk acceptance, projection rendering, reconcile, export/recover, broad operations. |
-| v0.2 User-Facing Harness MVP | Fuller `harness.status`/`harness.next`, user-facing `harness.intake`, `harness.request_user_decision`, `harness.record_user_decision`, evidence summaries through `harness.record_run`, and close-readiness/blockers through `harness.close_task`. | Detached verification independence, full Manual QA matrix, Approval hardening, full residual-risk accepted close, stewardship validators, export/recover, broad operations. |
+| v0.2 User-Facing Harness MVP | Fuller `harness.status`/`harness.next`, user-facing `harness.intake`, `harness.request_user_decision`, `harness.record_user_decision`, evidence summaries through `harness.record_run`, and close readiness/blockers through `harness.close_task`. | Detached verification independence, full Manual QA matrix, Approval hardening, full residual-risk accepted close, stewardship validators, export/recover, broad operations. |
 | v0.3 Agency Assurance Pack | `harness.launch_verify`, `harness.record_eval`, `harness.record_manual_qa`, assurance/waiver/approval/risk profiles of Decision Packet methods, evidence/feedback/TDD profiles of `harness.record_run`, and ValidatorResult-emitting assurance paths. | Operator recover/export completeness, broad projection/reconcile operations, release handoff. |
 | v0.4 Operations & Handoff Pack | Projection freshness in API responses, reconcile decision profile, operator readiness/recover/export/artifact-integrity/conformance surfaces owned by Operations. | Dashboard, hosted workflow UI, broad connectors, automation, team workflow, orchestration unless promoted later. |
 
@@ -152,7 +152,7 @@ v0.2 is the first product MVP and the first stage where users experience core Ha
 
 The MVP must demonstrate:
 
-- an ordinary user request is clarified into scope, user-owned judgment, evidence, and close-readiness language
+- an ordinary user request is clarified into scope, user-owned judgment, evidence, and close readiness language
 - product/UX judgments and material technical architecture judgments can be presented separately from each other and from sensitive-action approval, final acceptance, and residual-risk acceptance
 - small changes and tracked work have different procedural budgets without letting small-change labeling bypass authority
 - status and next-action output explain current scope, missing decisions, evidence state, close blockers, and safe next action
