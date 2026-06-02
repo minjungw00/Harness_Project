@@ -86,6 +86,20 @@ Choice to record: Save | Update
 Does not settle: broader settings flow behavior, localization strategy, final acceptance, residual-risk acceptance, or write authority.
 ```
 
+**Rendered example: approval-shaped decision**
+
+```text
+Decision: Dependency install approval
+Profile: sensitive-action approval (`approval_shaped`)
+Route/domain: approval (`decision_kind=approval`), Security / privacy (`security_privacy`)
+Question: Do you approve the named dependency install/update action for this task?
+Approval scope: named install command or dependency-file update; named manifest/lockfile paths; current task and approval window only.
+Covers: the scoped sensitive action.
+Does not cover: deciding the dependency is the right architecture direction, future installs, unrelated product writes, QA or verification waiver, final acceptance, or residual-risk acceptance.
+Separate decisions required: use an `architecture_tradeoff` packet if the dependency choice itself is still user-owned judgment.
+Refs: approval scope refs, prepare-write candidate refs, dependency comparison refs, and affected file refs when available.
+```
+
 **Rendered example: full architecture trade-off**
 
 ```text

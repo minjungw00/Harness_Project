@@ -18,21 +18,29 @@ Use these examples when a task is blocked by product, UX, architecture, security
 
 ## Main idea
 
-A Decision Packet should feel like decision support, not a blank permission slip. It names the real user-owned choice, shows options and trade-offs, recommends a path, states uncertainty, explains deferral, and links evidence or residual risk where relevant.
+A Decision Packet should feel like decision support, not a blank permission slip. It names the real user-owned choice, uses the prompt depth that fits the decision, and links evidence or residual risk where relevant. A concise `minimal_decision` can stay small; detailed trade-off, approval-shaped, waiver, final acceptance, residual-risk acceptance, reconcile, and mixed profiles carry the extra context their route requires.
 
 The examples below are prompt examples, not contract definitions. Exact behavior stays with the Reference owners.
 
-## What every example shows
+## Common And Profile-Specific Cues
 
-Each cookbook example includes:
+Every cookbook example keeps the common decision cues visible:
 
 - the decision area
 - the prompt depth, when useful
 - the decision route, when useful
 - why the decision is needed now
 - realistic options or a chosen outcome
-- a recommendation, uncertainty, and deferral consequence when the profile needs them
 - related risk, evidence links, recorded runs, saved decisions, or files where applicable
+
+Profile-specific cues appear only when the selected profile needs them:
+
+- recommendation, uncertainty, and deferral consequence for detailed trade-offs and other full profiles that require them
+- approval scope for `approval_shaped`
+- skipped check and close impact for `waiver`
+- evidence, verification, QA, and residual-risk visibility for `acceptance`
+- accepted scope, consequence, follow-up, and risk refs for `residual_risk_acceptance`
+- reconcile item and target refs for `reconcile`
 
 Implementation labels live in the Reference docs. These examples use plain decision prompts first.
 
@@ -101,6 +109,31 @@ Related risk or evidence: CSRF/XSS exposure, revocation evidence, session-lifeti
 ```
 
 Why this works: it uses the full architecture profile because this choice affects storage, revocation, client behavior, security posture, migration, tests, and review. It also separates identity-provider choice from session/storage choice. OAuth/OIDC may still need a local session or token strategy, so the packet does not pretend those are interchangeable.
+
+## Sensitive-action approval: dependency install
+
+Use this when the user must approve a sensitive action, such as a package install or dependency-file update, without treating that approval as the architecture decision.
+
+```text
+Decision title: Approve one dependency install command
+Decision area: Security / privacy
+Prompt depth: sensitive-action approval
+Decision route: sensitive-action approval
+Why now: the agent cannot run the package install or update dependency files until the sensitive action is approved for this task.
+Approval scope:
+- Command or action: install the named dependency/version for this task.
+- Paths or records covered: dependency manifest and lockfile updates named in the prompt.
+- Expiry: this task and approval window only.
+Covers: the named install/update action inside the stated scope.
+Does not cover: choosing the dependency as the architecture direction, future dependency installs, product writes outside scope, QA or verification waiver, final acceptance, or residual-risk acceptance.
+Options:
+- Approve this scoped install action.
+- Deny the install action and continue with a no-new-dependency path if one exists.
+- Ask for a separate architecture Decision Packet before any install approval.
+Related support: dependency comparison, current package policy, prepare-write candidate, and affected file refs when available.
+```
+
+Why this works: it uses the `approval_shaped` profile for sensitive-action permission only. If the real question is whether the dependency is the right technical direction, that needs a separate `architecture_tradeoff` Decision Packet.
 
 Exact sensitive-action approval and user-owned architecture judgment boundaries are owned by [Approval](../reference/kernel.md#approval), [Decision Packet](../reference/kernel.md#decision-packet), and [Sensitive Categories](../reference/mcp-api-and-schemas.md#sensitive-categories).
 

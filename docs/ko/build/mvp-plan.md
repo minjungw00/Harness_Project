@@ -41,7 +41,7 @@
 
 | 단계 | 전달 목표 | 증명하는 것 | 아직 증명하지 않는 것 |
 |---|---|---|---|
-| v0.1 | 코어 권한 조각(v0.1 Core Authority Slice) | 로컬 프로젝트 등록 하나, Task 하나, 범위가 정해진 작업 경계 하나, `prepare_write` 권한 경로 하나, 한 번만 쓰는 Write Authorization 하나, 기록된 Run 하나, artifact/evidence 참조 하나, 구조화된 막힘/상태 응답 하나로 구성된 첫 실행 가능한 내부 Core 권한 루프. | 사용자 대상 MVP 가치, full intake/discovery, full Decision Packet 품질, full Evidence Manifest, 수동 QA, 분리 검증, 잔여 위험 수용 의미, 작업 수락 의미, 여러 projection kind, recover/export, 넓은 operator entrypoint, full conformance suite, future fixture catalog, dashboard/UI behavior. |
+| v0.1 | 코어 권한 조각(v0.1 Core Authority Slice) | 로컬 프로젝트 등록 하나, Task 하나, 범위가 정해진 작업 경계 하나, `prepare_write` 권한 경로 하나, 한 번만 쓰는 Write Authorization 하나, 기록된 Run 하나, artifact/evidence 참조 하나, 구조화된 막힘/상태 응답 하나로 구성된 첫 실행 가능한 내부 Core 권한 루프. | 사용자 대상 MVP 가치, full intake/discovery, profile별 Decision Packet 품질, full Evidence Manifest, 수동 QA, 분리 검증, 잔여 위험 수용 의미, 작업 수락 의미, 여러 projection kind, recover/export, 넓은 operator entrypoint, full conformance suite, future fixture catalog, dashboard/UI behavior. |
 | v0.2 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자가 하네스가 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 표시를 로컬 권한 기록에 보존한다는 것을 경험합니다. | Full agency assurance hardening, 분리 검증 독립성, 수동 QA matrix, stewardship policy suite, feedback-loop policy, export/recover, release handoff. |
 | v0.3 | 에이전시 보증 팩(v0.3 Agency Assurance Pack) | MVP path를 검증, 수동 QA, 잔여 위험, 작업 수락, stewardship profile로 단단하게 만듭니다. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
 | v0.4 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | 같은 Core model로 doctor/readiness, recover/export, artifact integrity, release handoff, 더 넓은 conformance coverage를 지원합니다. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
@@ -128,7 +128,7 @@ v0.1은 다음을 증명해야 합니다.
 
 이에 맞는 storage profile은 [Storage와 DDL: Core Authority Slice schema](../reference/storage-and-ddl.md#core-authority-slice-schema)입니다. 이 profile이 v0.1 minimum입니다. User-facing Decision Packet table, Approval record, Evidence Manifest, Manual QA, Eval, residual-risk acceptance record, projection job, reconcile item, validator run, Journey record, diagnostic/stewardship table은 profile owner가 명시적으로 승격하기 전까지 later-profile storage로 남습니다.
 
-v0.1은 full natural-language intake, full Discovery, full Decision Packet quality, full Evidence Manifest, 수동 QA, 분리 검증, 잔여 위험 수용 의미, 작업 수락 의미, product/UX judgment와 architecture judgment의 presentation, stewardship, feedback-loop policy, 여러 projection kind, full projection rendering, export/recover, 넓은 operator entrypoint, full conformance suite, future fixture catalog, full dashboard/UI behavior, release handoff를 증명하면 안 됩니다. 이것들은 이후 단계 또는 roadmap 범위입니다.
+v0.1은 full natural-language intake, full Discovery, profile별 Decision Packet 품질, full Evidence Manifest, 수동 QA, 분리 검증, 잔여 위험 수용 의미, 작업 수락 의미, product/UX judgment와 architecture judgment의 presentation, stewardship, feedback-loop policy, 여러 projection kind, full projection rendering, export/recover, 넓은 operator entrypoint, full conformance suite, future fixture catalog, full dashboard/UI behavior, release handoff를 증명하면 안 됩니다. 이것들은 이후 단계 또는 roadmap 범위입니다.
 
 v0.1 Kernel Smoke candidate는 Core state, 그 루프에 필요한 owner record, artifact/evidence refs, structured blocker를 통해 minimal authority loop만 확인해야 합니다. 읽기용 요약 다듬기, detailed template, renderer output, 넓은 fixture catalog는 first-slice conformance truth가 아닙니다.
 
@@ -140,7 +140,7 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 
 | Stage | Build 읽기 규칙 | 적용할 owner contract |
 |---|---|---|
-| v0.1 Core Authority Slice | 좁은 authority loop와 [Core Authority Slice schema](../reference/storage-and-ddl.md#core-authority-slice-schema)를 증명하는 데 필요한 owner-defined field만 사용합니다. 넓은 checklist를 만족하려고 future-profile record를 만들지 않습니다. Minimal seeded blocker가 owner ref를 사용한다면, full user-facing Decision Packet quality가 아니라 그 owner path의 valid shape만 적용합니다. | [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Storage와 DDL](../reference/storage-and-ddl.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
+| v0.1 Core Authority Slice | 좁은 authority loop와 [Core Authority Slice schema](../reference/storage-and-ddl.md#core-authority-slice-schema)를 증명하는 데 필요한 owner-defined field만 사용합니다. 넓은 checklist를 만족하려고 future-profile record를 만들지 않습니다. Minimal seeded blocker가 owner ref를 사용한다면, profile별 user-facing Decision Packet 품질이 아니라 그 owner path의 valid shape만 적용합니다. | [커널 참조](../reference/kernel.md), [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [Storage와 DDL](../reference/storage-and-ddl.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
 | v0.2 User-Facing Harness MVP | 사용자가 대기 중인 사용자 결정 맥락, 근거, 닫기 막힘을 이해하는 데 필요한 field와 display summary를 추가합니다. 작업 수락과 잔여 위험 사실은 관련 있을 때 distinct하게 남지만 최소 요약 안에 들어갑니다. | [MCP API와 스키마](../reference/mcp-api-and-schemas.md), [커널 참조](../reference/kernel.md), [읽기용 요약(Projection) 참조](../reference/document-projection.md), [Template 참조](../reference/templates/README.md). |
 | 에이전시 보증 팩(v0.3 Agency Assurance Pack) / 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Verification, QA, 잔여 위험, 작업 수락, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, release-handoff profile은 담당 문서가 정의한 곳에서만 추가합니다. | [설계 품질 정책](../reference/design-quality-policies.md), [운영과 Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md), [향후 Fixture Catalog](../reference/future-fixture-catalog.md), [Storage와 DDL](../reference/storage-and-ddl.md). |
 
@@ -212,7 +212,7 @@ v0.3은 MVP path를 강화하여 로컬 reference path가 검증, QA, 잔여 위
 
 중점:
 
-- full Decision Packet quality와 user-judgment routing
+- profile별 Decision Packet 품질과 user-judgment routing
 - sensitive-action Approval, Decision Packet, Write Authorization, 작업 수락, 잔여 위험 수용 분리
 - same-session verification guard behavior를 포함한 분리 검증 독립성
 - 수동 QA 정책 매트릭스, 수동 QA 막힘 조건, 유효한 QA 면제 판단

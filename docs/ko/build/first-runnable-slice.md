@@ -45,7 +45,7 @@ API staging에서는 MCP reference를 v0.1 surface로 읽습니다. 범위는 mi
 
 Storage planning에서는 v0.1에 [Core Authority Slice schema](../reference/storage-and-ddl.md#core-authority-slice-schema)만 사용합니다. Decision Packet, Approval, Evidence Manifest, Manual QA, Eval, projection job, reconcile item, validator run, Journey record, diagnostic 같은 later storage profile은 first-slice requirement가 아닙니다.
 
-첫 조각은 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 강화된 로컬 기준 목표(hardened local reference target) 전체, full Decision Packet quality, full Evidence Manifest, 수동 QA, 분리 검증, 잔여 위험 수용 의미, 작업 수락 의미, Projection 템플릿 다듬기 단계, 여러 projection kind, dashboard 또는 hosted-workflow-UI 단계, 넓은 connector ecosystem 또는 marketplace 단계, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, export/recover path, release handoff path, 넓은 operator-entrypoint path, full conformance suite, future fixture catalog, parallel automation path가 아닙니다.
+첫 조각은 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP), 강화된 로컬 기준 목표(hardened local reference target) 전체, profile별 Decision Packet 품질, full Evidence Manifest, 수동 QA, 분리 검증, 잔여 위험 수용 의미, 작업 수락 의미, Projection 템플릿 다듬기 단계, 여러 projection kind, dashboard 또는 hosted-workflow-UI 단계, 넓은 connector ecosystem 또는 marketplace 단계, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, export/recover path, release handoff path, 넓은 operator-entrypoint path, full conformance suite, future fixture catalog, parallel automation path가 아닙니다.
 
 ## 성공 이야기
 
@@ -228,7 +228,7 @@ Owner contract: status/next schema는 [`harness.status`](../reference/mcp-api-an
 | 이후 단계 | 코어 권한 조각(v0.1 Core Authority Slice)이 아직 증명하지 않는 것 |
 |---|---|
 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 자연어 intake 품질, Discovery, product/UX judgment와 architecture judgment 제시 방식, small-change와 tracked-work의 budget 구분, 잔여 위험 표시, 작업 수락의 분리, 사용자에게 보이는 최소 status/card 충분성. |
-| 에이전시 보증 팩(v0.3 Agency Assurance Pack) | Full Decision Packet quality, full Approval lifecycle and drift handling, 분리 검증 독립성, 수동 QA 정책 매트릭스, residual-risk accepted close, 작업 수락 분리, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
+| 에이전시 보증 팩(v0.3 Agency Assurance Pack) | Profile별 Decision Packet 품질, full Approval lifecycle and drift handling, 분리 검증 독립성, 수동 QA 정책 매트릭스, residual-risk accepted close, 작업 수락 분리, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage, full projection/reconcile operations. |
 | v1+ Expansion | Dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification automation, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow. |
 

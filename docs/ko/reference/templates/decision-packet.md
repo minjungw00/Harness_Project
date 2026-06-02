@@ -77,27 +77,41 @@ Profile별 rendering은 선택된 MCP `profile_payload` branch를 따릅니다. 
 **Rendered example: minimal decision**
 
 ```text
-Decision: Settings label wording
-Profile: 간단한 판단 기록 (`minimal_decision`)
-Route/domain: product trade-off (`decision_kind=product_tradeoff`), Product / UX (`product_ux`)
-Question: 이 scoped settings label을 "Save"로 둘까요, "Update"로 둘까요?
-Scope/refs: CU-04의 settings form copy; source ref TASK-012/CU-04; sensitive action이나 close-risk ref 없음.
-Choice to record: Save | Update
-Does not settle: broader settings flow behavior, localization strategy, final acceptance, residual-risk acceptance, write authority.
+결정: 설정 라벨 문구
+프로필: 간단한 판단 기록(`minimal_decision`)
+경로/영역: 제품 장단점 판단(`decision_kind=product_tradeoff`), 제품/UX(`product_ux`)
+질문: 이 범위의 설정 라벨을 "Save"로 둘까요, "Update"로 둘까요?
+범위/ref: CU-04의 설정 폼 문구, source ref TASK-012/CU-04, 민감 동작이나 닫기 위험 ref 없음.
+기록할 선택: Save | Update
+확정하지 않는 것: 더 넓은 설정 흐름, 현지화 전략, 작업 수락, 잔여 위험 수용, 쓰기 권한.
+```
+
+**Rendered example: approval-shaped decision**
+
+```text
+결정: 의존성 설치 승인
+프로필: 민감 동작 승인(`approval_shaped`)
+경로/영역: 승인(`decision_kind=approval`), 보안/개인정보(`security_privacy`)
+질문: 이 작업에서 이름 붙은 의존성 설치 또는 업데이트 동작을 승인할까요?
+승인 범위: 이름 붙은 설치 명령 또는 의존성 파일 업데이트, 이름 붙은 manifest/lockfile 경로, 현재 작업과 승인 창 안에서만 유효.
+포괄하는 것: 범위가 정해진 민감 동작.
+포괄하지 않는 것: 그 의존성이 올바른 기술 방향인지에 대한 결정, 이후 설치, 관련 없는 제품 쓰기, QA 또는 검증 면제, 작업 수락, 잔여 위험 수용.
+별도 결정 필요: 의존성 선택 자체가 사용자 소유 기술 판단이면 기술 구조 판단(`architecture_tradeoff`) 패킷을 사용합니다.
+Refs: 승인 범위 ref, 쓰기 준비 후보 ref, 의존성 비교 ref, 영향을 받는 파일 ref가 있으면 그 ref.
 ```
 
 **Rendered example: full architecture trade-off**
 
 ```text
-Decision: Login session architecture
-Profile: 상세 기술 구조 판단 (`architecture_tradeoff`)
-Route/domain: architecture choice (`decision_kind=architecture_choice`), Technical architecture (`technical_architecture`)
-Question: 이 login 작업은 어떤 session model을 사용해야 하나요?
-Options: server-side session cookie; client-held bearer/JWT; OAuth/OIDC provider plus local session strategy; social-login provider integration.
-Recommendation: first-party web app이면 현재 requirement가 third-party identity, non-browser client, social sign-in을 지금 요구하지 않는 한 server-side session cookie.
-Uncertainty: existing session middleware, revocation requirements, SSO requirement, CSRF posture, migration constraints.
-Deferral consequence: read-only inspection과 UI scaffolding은 storage, token lifetime, provider, middleware behavior를 확정하지 않는 범위에서만 계속할 수 있습니다.
-Refs: auth model refs, affected acceptance criteria, 사용 가능할 때 security evidence refs, residual-risk 또는 migration refs.
+결정: 로그인 세션 구조
+프로필: 상세 기술 구조 판단(`architecture_tradeoff`)
+경로/영역: 아키텍처 선택(`decision_kind=architecture_choice`), 기술 구조(`technical_architecture`)
+질문: 이 로그인 작업은 어떤 세션 모델을 사용해야 하나요?
+선택지: 서버 측 세션 쿠키, 클라이언트 보관 Bearer/JWT, 로컬 세션 전략을 포함한 OAuth/OIDC 제공자, 소셜 로그인 제공자 연동.
+추천: 자사 웹 앱이면 현재 요구사항이 외부 ID, 브라우저 밖 클라이언트, 소셜 로그인을 지금 요구하지 않는 한 서버 측 세션 쿠키를 선택합니다.
+불확실성: 기존 세션 미들웨어, 폐기 요구사항, SSO 요구사항, CSRF 자세, 이전 제약.
+미룰 때의 결과: 읽기 전용 조사와 UI 뼈대 작업은 저장 방식, 토큰 수명, 제공자, 미들웨어 동작을 확정하지 않는 범위에서만 계속할 수 있습니다.
+Refs: 인증 모델 ref, 영향을 받는 수용 기준, 사용할 수 있는 보안 근거 ref, 잔여 위험 또는 이전 ref.
 ```
 
 ## 전체 템플릿

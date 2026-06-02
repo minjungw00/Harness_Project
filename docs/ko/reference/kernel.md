@@ -109,7 +109,7 @@ Stage support는 단계별 MVP 경계를 따릅니다.
 
 | Stage/profile | 표현할 수 있는 것 |
 |---|---|
-| v0.1 Core Authority Slice / Kernel Smoke | 좁은 내부 authority loop입니다. Local project registration, active Task, reference contract상 필요한 경우에만 Change Unit owner shape로 표현하는 범위가 정해진 작업 경계 하나, `prepare_write` 권한 경로 하나, 한 번만 쓰는 Write Authorization 하나, artifact/evidence ref 하나가 붙은 compatible Run 하나, structured status/blocker response 하나를 표현합니다. Smoke path가 루프에 필요한 최소 owner record를 명시적으로 포함하지 않으면 검증, 수동 QA, 작업 수락, 잔여 위험 수용, full Decision Packet quality, full Evidence Manifest path는 `not_required`, `none`, absent 또는 future-profile scope일 수 있습니다. |
+| v0.1 Core Authority Slice / Kernel Smoke | 좁은 내부 authority loop입니다. Local project registration, active Task, reference contract상 필요한 경우에만 Change Unit owner shape로 표현하는 범위가 정해진 작업 경계 하나, `prepare_write` 권한 경로 하나, 한 번만 쓰는 Write Authorization 하나, artifact/evidence ref 하나가 붙은 compatible Run 하나, structured status/blocker response 하나를 표현합니다. Smoke path가 루프에 필요한 최소 owner record를 명시적으로 포함하지 않으면 검증, 수동 QA, 작업 수락, 잔여 위험 수용, profile별 Decision Packet 품질, full Evidence Manifest path는 `not_required`, `none`, absent 또는 future-profile scope일 수 있습니다. |
 | v0.2 User-Facing Harness MVP | 사용자에게 보이는 status는 범위, 사용자 결정, 근거, 닫기 준비 상태, 해당될 때 민감 동작 승인, required일 때 작업 수락, close-relevant risk가 있을 때 잔여 위험 표시, 잔여 위험 수용 close 경로를 요청할 때 잔여 위험 수용을 보여야 합니다. 테스트가 통과해도 왜 close가 막히는지 설명해야 합니다. |
 | v0.3 이후 hardened profile | 분리 검증 독립성, 더 풍부한 수동 QA, stewardship, feedback-loop, TDD, operations, export/recover, handoff behavior를 harden합니다. Future-profile check는 active profile 또는 owner 문서가 켰을 때만 close blocker입니다. |
 

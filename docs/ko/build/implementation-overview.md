@@ -136,7 +136,8 @@ Build 독자는 이 표를 진입 기준으로 보아야 합니다. 유지보수
 
 - 현재 기준에서 active docs 곳곳에 흩어진 major implementation-decision TODO를 의도적으로 남기지 않습니다.
 - [문서 작성 가이드 tracker](../maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)는 candidate drift와 regression risk를 확인하는 checklist로 남아 있습니다. 확인된 finding은 문서 drift, 스키마/설계 결정, 단계 경계 결정, 구현 준비 조건, 향후 로드맵 항목 중 하나로 routing합니다.
-- Maintainer가 확인해야 할 candidate review 영역에는 stage 이름 drift, 사용자용 문서의 무거운 disclaimer, Discovery/Change Unit 조기 수렴, `judgment_domain`과 `decision_kind` 정렬, 작은 결정에 비해 무거운 Decision Packet, Storage/API/DDL의 이른 범위 암시, projection/template 범위, conformance fixture detail, 너무 이른 operations entrypoint, security guarantee wording, agent context load, 한국어 기술 명사 과다, roadmap 경계 drift, 낙관적인 decision-log wording이 포함됩니다.
+- `decision_kind`, `decision_profile`, `judgment_domain`, 작은 결정에 비해 무거운 Decision Packet과 관련해 추적하던 판단 모델 drift는 이 문서 기준에서 해소되었습니다. Review에서 남은 owner-contract decision이 드러나면 흩어진 TODO가 아니라 MVP 계획 decision log로 routing합니다.
+- Maintainer가 확인해야 할 candidate review 영역에는 stage 이름 drift, 사용자용 문서의 무거운 disclaimer, Discovery/Change Unit 조기 수렴, Storage/API/DDL의 이른 범위 암시, projection/template 범위, conformance fixture detail, 너무 이른 operations entrypoint, security guarantee wording, agent context load, 한국어 기술 명사 과다, roadmap 경계 drift, 낙관적인 decision-log wording이 포함됩니다.
 
 maintainer 수락 조건:
 
@@ -185,7 +186,7 @@ maintainer 수락 조건:
 |---|---|---|
 | 코어 권한 조각(v0.1 Core Authority Slice) | 하나의 로컬 Task가 첫 Core 권한 루프를 통과할 수 있음을 증명합니다. 여기에는 local project registration, Task, Reference 계약상 필요한 경우에만 Change Unit 소유자 형태로 표현되는 범위가 정해진 작업 경계 하나, `prepare_write`, single-use 쓰기 허가 기록, `record_run`, artifact/evidence ref 하나, 구조화된 막힘/상태 응답이 포함됩니다. | 상태/막힘 출력이 현재 Task, scope, 쓰기 권한, artifact/evidence support, blocker를 보여 줍니다. `prepare_write`가 범위 밖 쓰기 권한을 거절하고, 호환되는 scoped work는 권한을 받아 한 번만 사용되며, scope, write authority, 또는 artifact/evidence support가 없으면 status 또는 좁은 close-task smoke가 구조화된 막힘과 함께 거절합니다. |
 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 평범한 사용자 작업이 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 언어로 정리됨을 증명합니다. | 사용자는 제품/UX 판단과 기술 구조 판단이 분리되고, small change와 tracked work가 서로 다른 procedural budget을 쓰며, 근거 또는 필요한 사용자 소유 결정이 없으면 close가 block되고, 잔여 위험이 표시되며, 작업 수락이 Approval과 잔여 위험 수용과 구분되는 것을 볼 수 있습니다. |
-| 에이전시 보증 팩(v0.3 Agency Assurance Pack) | MVP path가 verification, 수동 QA, 잔여 위험 수용 close, 작업 수락 분리, stewardship, full Decision Packet quality, Approval separation, TDD, feedback-loop policy, context hygiene를 정직한 경계 안에서 처리함을 증명합니다. | Fixture가 같은 Core record와 error를 통해 work가 진행, 검증, 수동 QA 요구, 작업 수락, 잔여 위험 수용, close될 수 있는지 보여 줍니다. |
+| 에이전시 보증 팩(v0.3 Agency Assurance Pack) | MVP path가 verification, 수동 QA, 잔여 위험 수용 close, 작업 수락 분리, stewardship, profile별 Decision Packet 품질, Approval separation, TDD, feedback-loop policy, context hygiene를 정직한 경계 안에서 처리함을 증명합니다. | Fixture가 같은 Core record와 error를 통해 work가 진행, 검증, 수동 QA 요구, 작업 수락, 잔여 위험 수용, close될 수 있는지 보여 줍니다. |
 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Operator readiness, recover/export, artifact integrity, release handoff, broader fixture suite coverage, later-boundary checks가 [강화된 로컬 기준 목표](../reference/glossary.md#강화된-로컬-기준-목표)를 완성합니다. | Operator 진입점이 두 번째 authority model을 만들지 않고 같은 Core state 위에서 diagnose, recover, export, artifact check, conformance run, release handoff 준비를 수행합니다. |
 | Roadmap 경계: v1+ Expansion | 로컬 kernel과 agency 증명이 안정된 뒤에만 later surface 또는 automation을 검토할 수 있음을 분리합니다. | 선택 capability는 담당자가 [로드맵 단계 승격 조건](../roadmap.md#단계-승격-조건)에 따라 exact contract와 fixture로 승격하기 전까지 read-only, display-only, metadata-only, 또는 artifact 후보 제공 전용으로 남습니다. |
 
