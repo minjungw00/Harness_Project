@@ -2,195 +2,74 @@
 
 ## What this document helps you do
 
-This document collects v1+ Expansion automation candidates and capability expansions so readers can see what may come later without treating it as first-implementation work, current authority, or staged-delivery required behavior.
+This document collects future Harness candidates that are not yet part of Build-owned staged delivery. It lets readers see possible later directions without treating them as current requirements, authority paths, acceptance paths, QA paths, verification paths, or runtime guarantees.
 
-This is roadmap documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Slice, with Kernel Smoke as a narrow future smoke-check authoring label. The first product MVP target is v0.2 User-Facing Harness MVP. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior in Build docs, and the items below stay in v1+ Expansion unless owner docs promote and prove them.
+This is roadmap documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, projections, databases, or runtime data before documentation acceptance and a separate implementation-planning readiness decision.
 
 ## Read this when
 
-- You want to know which ideas are intentionally outside Build-owned staged delivery.
-- You are checking whether a future capability needs policy, fixture, and fallback decisions before promotion.
-- You need to keep roadmap items non-authoritative until an owner explicitly scopes and promotes them.
+- You want to know which ideas are intentionally outside staged delivery.
+- You are checking whether a future capability is ready to be promoted into a stage plan.
+- You need to keep useful future ideas non-authoritative until an owner explicitly scopes and proves them.
 
 ## Before you read
 
-For current handoff and implementation planning, start with [Build: Implementation Overview](build/implementation-overview.md#maintainer-handoff-summary), then check [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding), [Build: First Runnable Slice](build/first-runnable-slice.md), and [Build: MVP Plan](build/mvp-plan.md). For exact contracts, use the Reference docs.
+Staged delivery is owned by [Build: MVP Plan](build/mvp-plan.md). For current handoff and implementation planning, start with [Build: Implementation Overview](build/implementation-overview.md#maintainer-handoff-summary), then check [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding), [Build: First Runnable Slice](build/first-runnable-slice.md), and [Build: MVP Plan](build/mvp-plan.md). For exact contracts, use the Reference docs.
+
+Current stage names are:
+
+- v0.1 Core Authority Slice
+- v0.2 User-Facing Harness MVP
+- v0.3 Agency Assurance Pack
+- v0.4 Operations & Handoff Pack
+- v1+ Expansion
 
 ## Main idea
 
-Roadmap items are useful future candidates, not current authority paths or staged-delivery requirements. A roadmap item may become scoped work only after an owner decision promotes it with clear capability, policy, fixture, fallback, and projection-authority boundaries.
+Roadmap items are candidates, not staged-delivery commitments. Listing an item here does not create authority, conformance, implementation readiness, user acceptance, QA completion, verification satisfaction, residual-risk acceptance, security guarantees, or runtime behavior.
 
-## Not Staged Delivery
+A roadmap candidate stays outside v0.1 through v0.4 unless a future owner document explicitly promotes it. When promoted, it must still preserve user-owned judgment, route durable state and artifacts through Core-owned authority paths, keep evidence/verification/QA/final acceptance/residual risk separate, and use honest security wording for the capability actually proven.
 
-This document is not part of the Build-owned staged delivery.
+## Roadmap Boundary
 
-It does not own kernel invariants, public MCP schemas, staged-delivery implementation requirements, or conformance required to exit a staged-delivery profile. The Build layer owns staged delivery: v0.1 Core Authority Slice first, then v0.2 User-Facing Harness MVP, v0.3 Agency Assurance Pack, and v0.4 Operations & Handoff Pack. The items below are useful follow-ons after those basics are stable. For staged delivery order, use [Build: MVP Plan](build/mvp-plan.md); for strict API, storage, projection, and fixture contracts, use the Reference docs.
+This document does not own kernel invariants, public MCP schemas, storage profiles, fixture profile exits, stage-required API surface, operator surface, or implementation checklists. Those details belong in Build and Reference owner docs.
 
-The first runnable target is v0.1 Core Authority Slice. The first product MVP target is v0.2 User-Facing Harness MVP, the first stage where ordinary users experience core Harness value. The hardened local reference target is the umbrella target reached later through v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack; it is not a separate stage or fixture profile. This roadmap starts at v1+ Expansion only after the v0.1, v0.2, v0.3, and v0.4 boundaries are respected and have clear owner-doc coverage. It is not an alternate route around those boundaries or the Core state/`task_events`/artifact path. Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Context Index, Native Hook Expansion, Advanced Sidecar Watcher, Local Derived Metrics, connector marketplaces, team workflow, and orchestration can collect, display, or extend Harness behavior later; they do not replace the first runnable authority loop or the first user-facing MVP.
+Roadmap candidates may be useful as read-only displays, metadata, artifact candidates, fixture candidates, prototypes, or planning notes only when the relevant owner docs allow that limited use. They must not become a shortcut around Core-owned state, `task_events`, artifact refs, Decision Packets, Manual QA, Eval records, final acceptance, residual-risk acceptance, projection freshness, close readiness, or implementation readiness.
 
-```mermaid
-flowchart LR
-  Kernel["v0.1 Core Authority Slice"] --> MVP["v0.2 User-Facing Harness MVP"]
-  MVP --> Agency["v0.3 Agency Assurance Pack"]
-  Agency --> Ops["v0.4 Operations & Handoff Pack"]
-  Ops -. roadmap boundary .-> Later["v1+ roadmap candidates"]
-  Later --> Promote["future version only after owner decision"]
-```
+Any durable artifact registration, evidence attachment, state change, gate result, QA record, verification result, acceptance record, or residual-risk record must go through an existing Core/MCP owner path or a future promoted owner contract. Being listed here is never an authority path.
 
-v0.1 Core Authority Slice, v0.2 User-Facing Harness MVP, v0.3 Agency Assurance Pack, and v0.4 Operations & Handoff Pack are Build-owned staged delivery, not roadmap scope. This roadmap must not absorb kernel authority, Decision Packet, residual-risk visibility, detached verification, Manual QA, recover/export, release handoff, or fixture-conformance behavior that staged-delivery owner documents require. A roadmap item may read, display, recommend, provide artifact candidates, or act as a fixture candidate only when an owner doc allows that limited use. Any durable artifact registration or attachment must still go through an existing Core/MCP artifact owner path or a future promoted owner contract. Being listed here is never an authority path.
+## Promotion Criteria
 
-## Promotion rule
+A candidate cannot enter staged delivery unless a future owner decision defines and proves all of the following:
 
-A roadmap candidate can become v1+ Expansion scoped work only after a future owner decision gives it all of the following:
+- an explicit future-version or future-stage owner decision with narrow scope
+- preservation of user-owned judgment, including final acceptance, residual-risk acceptance, product judgment, material technical judgment, and QA waiver judgment where relevant
+- no bypass of Core authority, Core-owned state, artifact refs, gate semantics, close semantics, or owner-record lifecycles
+- stage-appropriate security guarantee wording that matches the Security Threat Model; preventive or isolation claims require a proven covered mechanism and fallback
+- clear evidence, verification, QA, final-acceptance, and residual-risk implications, including what the candidate can assist and what it must not satisfy
+- exact contracts and owner-doc placement for new API, storage, artifact, projection, fixture, operator, connector, or UI behavior
+- redaction, secret/PII handling, test-environment, and artifact-retention rules when the candidate captures or stores runtime surfaces
+- a fixture or conformance target for the promoted behavior
+- fallback behavior for unsupported surfaces, missing capability, unavailable tools, stale data, or partial capture
+- no dependency on treating projections, dashboards, indexes, connector output, or generated documents as canonical state
+- an early-stage inflation check showing that the candidate does not add requirements to v0.1 through v0.4 or make unsupported surfaces fail earlier stages by default
 
-- an explicit future-version owner decision; usefulness during staged delivery is not promotion
-- a clear capability profile requirement
-- a redaction and secret/PII handling policy
-- a test environment and artifact retention policy when it captures runtime surfaces
-- a fixture or conformance target
-- a fallback behavior for unsupported surfaces
-- no dependency on treating projections as canonical state
+If any criterion is missing, the item remains a roadmap candidate.
 
-The same rule applies to Dashboard, hosted workflow UI, Browser QA Capture, Cross-Surface Verification, Broad Connector Ecosystem, Native Hook Expansion, Preventive Guard Expansion, Advanced Sidecar Watcher, Context Index, Local Derived Metrics, and every other item below. Item-specific notes may add constraints, but they do not relax this promotion rule.
+## Candidate Inventory
 
-```mermaid
-flowchart TD
-  Candidate["later capability candidate"] --> Profile["clear capability profile requirement"]
-  Profile --> Policy["redaction, test environment, and retention policy"]
-  Policy --> Fixture["fixture or conformance target"]
-  Fixture --> Fallback["fallback behavior for unsupported surfaces"]
-  Fallback --> Projection["no projection-as-canonical dependency"]
-  Projection --> Promote["eligible for explicit re-scope decision only"]
-  Candidate -- missing any criterion --> Later["remains v1+ Expansion roadmap item"]
-```
+These examples describe candidate areas only. They do not add stage requirements and do not relax the promotion criteria above.
 
-## Roadmap Items
+| Candidate area | Boundary before promotion |
+|---|---|
+| Dashboard, hosted workflow UI, artifact dashboard, richer cards, richer visualizations | May display Core-derived state or projections. Must not become authority, implementation readiness, close readiness, final acceptance, residual-risk acceptance, QA completion, verification satisfaction, projection freshness, workflow routing, or metric interpretation. |
+| Browser capture automation | May collect screenshots, console logs, network traces, accessibility snapshots, and workflow recordings as artifact candidates. Must not replace human Manual QA judgment, final acceptance, detached verification, redaction policy, or the existing Manual QA/artifact path. |
+| Cross-surface verification | May route verification bundles to another agent surface or evaluator environment after promotion. Must not record an Eval, satisfy verification, raise assurance, accept a result, or close a Task without Core-owned return records and the required independence semantics. |
+| Broad connector ecosystem, connector marketplace, hosted UI, hosted/remote runtime | May extend surfaces later. Must not widen MCP exposure, create authority, bypass Core, replace the local reference proof, imply remote/runtime guarantees, or make unsupported surfaces fail earlier stages by default. |
+| Native hooks, preventive guard expansion, advanced sidecar watcher | May strengthen guard display, artifact capture, command observation, or file-write observation where a surface proves the mechanism. Must not claim pre-execution blocking, OS isolation, tamper-proof storage, or arbitrary-tool control by label alone. Observations route through Core records, validators, artifact registration, or reconcile before affecting state. |
+| Context Index, local derived metrics, long-term metrics | May provide read-only retrieval or diagnostics. Must not authorize writes, create Write Authorization, resolve Decision Packets, grant Approval, satisfy gates, create evidence, record verification or QA, refresh projections, declare readiness, accept risk, accept results, upgrade assurance, or close Tasks. |
+| Team workflows, permissions, shared profiles, export/import, orchestration, parallel lanes | May coordinate future work. Must not become required for staged delivery, single-project local authority, user acceptance, QA, verification, residual-risk acceptance, or close. |
+| Advanced exports, release/deployment/canary/rollback/merge/production-monitoring automation | May become future integration work. Release handoff remains a report/export boundary unless owner docs promote more; deployment, merge, rollback, and production authority stay external until explicitly scoped and proven. |
+| Advanced validators and language or interface checks | May become future stewardship or diagnostic coverage. Must not become early-stage fixture failure, acceptance, QA, or close criteria until owner docs define the exact policy, severity, waiver, and fixture behavior. |
 
-### Dashboard
-
-A dashboard or hosted workflow UI can visualize active Tasks, gates, approvals, evidence coverage, projection freshness, artifact integrity, and reconcile items.
-
-Later because staged delivery should first stabilize the records, projections, and conformance fixtures that the dashboard or hosted UI would display. Until explicitly promoted through owner docs, a dashboard or hosted workflow UI is a read-only diagnostic/workflow display over `state.sqlite`, artifact refs, and projection job status. It must not become the source of truth for Task state, evidence, acceptance, implementation readiness, close readiness, projection freshness, workflow routing, or metric interpretation.
-
-### Broad Connector Ecosystem
-
-A broad connector ecosystem or marketplace can add more agent surfaces, evaluator environments, or workflow integrations after the reference surface is stable.
-
-Later because v0.1 Core Authority Slice assumes one local project, one reference surface, local MCP reachability, and one Core authority path. Until explicitly promoted through owner docs, connector ecosystem work is documentation, prototype, or fixture-candidate material only. It must not widen MCP exposure, create authority, bypass Core, replace the reference surface proof, or make unsupported surfaces fail v0.1 by default.
-
-### Browser QA Capture
-
-Browser QA Capture is a v1+ Expansion candidate, not the first build target and not a staged-delivery requirement. Automatic or assisted capture can gather screenshots, console logs, network traces, accessibility snapshots, and workflow recordings for Manual QA records where the connected surface supports it.
-
-Promotion requires a declared `T6 QA Capture` capability profile, redaction and secret/PII handling policy, test environment setup, artifact retention rules, fixture or conformance target, fallback behavior for unsupported surfaces, and no projection-as-canonical dependency.
-
-Until explicitly promoted through owner docs, Browser QA Capture may be discussed as a candidate, prototype, manual capture aid, or artifact-candidate source. Captured browser QA material can improve QA evidence only when it is registered and linked through existing Manual QA/artifact paths or through a promoted owner contract, commonly as `qa_capture`, `screenshot`, `log`, or `other` when the captured file is a console log, network trace, accessibility snapshot, or workflow recording. It is useful but non-authoritative: it is not final acceptance, does not replace Manual QA judgment when UI/UX, copy, accessibility interpretation, workflow, product taste, or visual output needs human judgment, does not replace detached verification unless the verification independence requirements are also met, and does not replace the existing Manual QA/artifact flow.
-
-Unsupported surfaces should fall back to human Manual QA notes and manually supplied artifacts. Staged delivery supports Manual QA records and artifact refs without requiring automated browser capture.
-
-### Cross-Surface Verification
-
-Cross-surface verification can send a verification bundle to a different agent surface or evaluator environment.
-
-Later because v0.3 Agency Assurance Pack can prove detached verification with bundles and manual evaluator instructions on the local reference path, while v0.4 Operations & Handoff Pack adds operator and handoff depth without requiring cross-surface automation. Until explicitly promoted through owner docs, Cross-Surface Verification is non-authoritative: sending a bundle to another surface must not record an Eval, satisfy verification, raise assurance, accept a result, or close a Task by itself. Promotion must satisfy the rule above and define how any resulting Eval or finding returns through Core without depending on projections as canonical state.
-
-### Native Hook Expansion
-
-Native hooks can provide stronger pre-tool guards, command interception, file write blocking, or richer artifact capture in surfaces that support them.
-
-Later because hook APIs vary by surface. v0.1 may use a concrete hook only when the reference surface actually supports it; otherwise native hooks are a capability-dependent enhancement. Until explicitly promoted through owner docs, Native Hook Expansion is non-authoritative: a hook can support `prepare_write`, capture artifacts, or improve guard display, but it must not replace the Core authority path, grant Approval, satisfy gates, or make unsupported surfaces fail v0.1 by default.
-
-### Preventive Guard Expansion
-
-Preventive guard expansion can become future work only for surfaces that prove a concrete pre-tool blocking path for the covered operation.
-
-Later because staged delivery may honestly start with cooperative or detective guarantees. Until explicitly promoted through owner docs, preventive guard expansion is not a staged-delivery requirement and must not be claimed by label alone. Cooperative or detective guard/freeze displays can hold, warn, or detect within their proven capability, but they must not be described as pre-execution blocking.
-
-### Advanced Sidecar Watcher
-
-An advanced sidecar watcher can observe file writes, command execution, generated-file drift, artifact capture opportunities, and repo baseline drift in near real time.
-
-Later because staged delivery can start with cooperative `prepare_write`, git diff checks, artifact registration, and detective validators. Until explicitly promoted through owner docs, an Advanced Sidecar Watcher is a non-authoritative observer. Its observations must route through Core records, validators, artifact registration, or reconcile before they affect Harness state, and it should not be required for the core state model to work.
-
-### Parallel Orchestration
-
-Parallel Change Unit orchestration can split work into multiple active implementation lanes, manage dependency DAGs, isolate baselines, and reconcile concurrent evidence.
-
-Later because parallel execution depends on stable locks, baseline freshness, Approval scope composition, artifact partitioning, and close semantics. Until explicitly promoted through owner docs, dependency DAG support remains metadata-only and no concurrent lane scheduler is required for staged delivery.
-
-### Context Index
-
-A Context Index is a read-only context provider that may help an agent find relevant projections, artifact refs, repo files, docs, or user notes without treating indexed knowledge as Harness state or authority. It is not the first build target and not a staged-delivery prerequisite.
-
-Later because indexed memory can blur local authority if introduced before the kernel and source-of-truth boundaries are stable. Compact always-on rules and profile-based context loading do not require a Context Index; they are connector context discipline. Until explicitly promoted through owner docs, a Context Index is non-authoritative retrieval only and remains a v1+ Expansion candidate. A future Context Index may rank, summarize, or retrieve context, but it cannot replace existing authority paths unless the owner docs for those paths explicitly change. Retrieved context may inform work, compact status, status interpretation, source excerpts, and pull refs; it cannot authorize writes or create Write Authorization, resolve Decision Packets, grant Approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA/verification or any other gate/close-relevant requirement, record final acceptance, record residual-risk acceptance, upgrade assurance, enqueue or refresh projections or change projection freshness, declare implementation readiness, or close Tasks. Stale retrieved context cannot satisfy gates or write authority; it can only point to owner records that must be refreshed, reconciled, or inspected through existing paths.
-
-```mermaid
-flowchart LR
-  Projections["projections"] --> Index["Context Index<br/>read-only retrieval"]
-  Artifacts["artifact refs"] --> Index
-  Repo["repo files"] --> Index
-  Docs["docs and notes"] --> Index
-  Index --> Agent["agent context"]
-  Index --> Boundary["non-authoritative context only"]
-```
-
-In addition to the promotion rule, a Context Index should become v1+ Expansion work only if a future decision assigns freshness and staleness rules, privacy/redaction behavior, connector capability expectations, fixture coverage, and a display rule that distinguishes retrieved context from canonical state.
-
-### Local Derived Metrics
-
-Local Derived Metrics can derive diagnostic rates, counts, durations, and guard-trigger summaries from `state.sqlite.task_events`, runs, validator results, projection jobs, and reconcile items.
-
-Later because metrics are derived values, not authority. Until explicitly promoted through owner docs, local metrics are read-only diagnostic displays. They may help users spot process bottlenecks, reporting gaps, and recurring operational patterns, but they are diagnostic only. Metric readouts must not mutate state, satisfy gates, authorize writes, grant Approval, create evidence, enqueue or refresh projections, change projection freshness, change close readiness or implementation readiness, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, upgrade assurance, or close Tasks.
-
-```mermaid
-flowchart LR
-  Events["state.sqlite.task_events"] --> Metrics["derived metrics"]
-  Runs["runs"] --> Metrics
-  Validators["validator results"] --> Metrics
-  Projections["projection jobs"] --> Metrics
-  Reconcile["reconcile items"] --> Metrics
-  Metrics --> Interpretation["future user-facing interpretation rule"]
-  Metrics --> Boundary["non-authoritative diagnostics only"]
-```
-
-Candidate derived metrics:
-
-- `direct_to_work_escalation_rate`
-- `approval_turnaround_time`
-- `verify_latency`
-- `reopen_within_7d`
-- `evaluator_blocked_due_to_missing_evidence`
-- `same_session_verify_guard_triggered`
-- `surface_fallback_rate`
-- `mcp_connection_failure_rate`
-- `projection_stale_duration`
-- `reconcile_pending_count`
-- `shaping_unresolved_decision_count`
-- `horizontal_exception_rate`
-- `tdd_red_missing_rate`
-- `manual_qa_pending_duration`
-- `evidence_insufficiency_rate`
-- `architecture_drift_warning_count`
-- `domain_language_mismatch_count`
-- `interface_review_required_count`
-
-In addition to the promotion rule, these metrics should become v1+ Expansion work only if a future decision assigns fixture coverage or conformance target, retention behavior, privacy/redaction behavior when needed, fallback behavior for unsupported inputs, and a user-facing interpretation rule. Even then, the metric value remains derived; any state change must still go through the normal Core owner path.
-
-### Team Profile Export And Import
-
-Team profile export/import can share policy defaults, connector profiles, surface capability assumptions, validator profiles, and project setup templates across a team.
-
-Later because v0.1 Core Authority Slice is a local kernel. Team workflow, shared workspaces, permissions, and profile sharing need versioning, privacy review, secret handling, and conflict behavior before they should affect runtime state. Until explicitly promoted through owner docs, team workflow is not a staged-delivery requirement and must not become an authority or acceptance path.
-
-## Additional Later Candidates
-
-The following are also later and non-authoritative unless a future batch promotes them with owner docs, fixtures, fallback behavior, retention/redaction decisions where relevant, and implementation ownership:
-
-- deployment, canary, rollback, merge, and production-monitoring automation; Release Handoff may exist earlier only as a v1+ Expansion report/export profile that leaves those authorities external
-- artifact dashboard
-- worktree-based fresh verify automation
-- advanced architecture drift validator
-- advanced public interface validator
-- semantic domain language consistency checks
-- status/approval/acceptance/Manual QA card UX expansion
-- multi-agent policy and scheduling
+Use [Build: MVP Plan](build/mvp-plan.md#roadmap-scoped-v1-expansion-candidates) for the staged-delivery boundary, and use this page only to track candidates that remain outside staged delivery until promoted.

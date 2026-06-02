@@ -98,7 +98,7 @@ Maintainer handoff: [English summary](docs/en/build/implementation-overview.md#m
 - v0.2 User-Facing Harness MVP: first product MVP where ordinary requests show core Harness value: scope, judgment, evidence, close readiness, final acceptance, and residual-risk boundaries. / 평범한 요청에서 범위, 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 경계를 통해 사용자가 하네스의 핵심 가치를 처음 체감하는 제품 MVP입니다.
 - v0.3 Agency Assurance Pack: verification, QA, residual risk, acceptance, and stewardship hardening. / 검증, QA, 잔여 위험, 작업 수락, stewardship를 단단하게 만드는 단계입니다.
 - v0.4 Operations & Handoff Pack: recover, export, release handoff, artifact integrity, and operator behavior. / 복구, 내보내기, 릴리스 인계, 아티팩트 무결성, 운영자 동작을 다루는 단계입니다.
-- v1+ Expansion: dashboard, hosted UI, browser capture automation, team workflows, and other promoted expansion candidates. / 대시보드, hosted UI, browser capture 자동화, 팀 workflow 등 승격된 확장 후보입니다.
+- v1+ Expansion: roadmap candidate space for dashboard, hosted UI, browser capture automation, team workflows, and other future items; candidates stay outside staged delivery until promoted through Roadmap criteria. / 대시보드, 호스팅 UI, 브라우저 캡처 자동화, 팀 작업 흐름 등 향후 항목을 다루는 로드맵 후보 공간입니다. 후보 항목은 로드맵의 단계 승격 조건을 통과하기 전까지 staged delivery 밖에 남습니다.
 
 Before starting Harness Server code, implementers should read the maintainer handoff summary, the [implementation-readiness criteria](docs/en/build/implementation-overview.md#implementation-readiness-criteria) / [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), the [server-coding decisions section](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) in the MVP Plan, and then the [First Runnable Slice](docs/en/build/first-runnable-slice.md).
 

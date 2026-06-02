@@ -467,7 +467,7 @@ Domain term, module map item, interface contract, Feedback Loop records, TDD가 
 
 예시: Task가 일주일 뒤 resume되면 current status 또는 현재 위치 맥락을 먼저 읽고, Journey Card는 해당 projection/profile이 활성화되어 있고 최신일 때만 사용합니다. 그다음 active 세션 시작, 요구사항 구체화(Discovery), 사용자 결정 요청, 쓰기 준비, 실행/근거, 닫기 준비 상태, 복구/오류 맥락 프로필을 고른 뒤, 해당 프로필이 필요로 하는 current Task/현재 위치 맥락/Change Unit/Decision Packet/Write Authority/Evidence/Residual Risk/Gate/Projection freshness의 refs-first summary만 보여줍니다. Old PRD, old projection, log, screenshot, diff, raw artifact, module map은 다음 safe action이 inspection을 요구할 때만 가져오고 최신이 아닌 input으로 표시합니다.
 
-Retrieved, indexed, remembered, summarized context는 context hygiene input이지 권한 출처가 아닙니다. Agent가 compact status, pull ref, source excerpt를 찾는 데 도움을 줄 수는 있지만 write authority, gate, evidence, verification, QA, 작업 수락, 잔여 위험을 받아들이는 판단, projection 최신성, 구현 준비 상태, close effect는 여전히 해당 owner record가 결정합니다. Context Index와 retrieved-context의 전체 경계는 [Roadmap: Context Index](../roadmap.md#context-index)가 담당하고, connector 처리는 [Agent Integration](agent-integration.md#context-pushpull-principles)이 담당합니다.
+Retrieved, indexed, remembered, summarized context는 context hygiene input이지 권한 출처가 아닙니다. Agent가 compact status, pull ref, source excerpt를 찾는 데 도움을 줄 수는 있지만 write authority, gate, evidence, verification, QA, 작업 수락, 잔여 위험을 받아들이는 판단, projection 최신성, 구현 준비 상태, close effect는 여전히 해당 owner record가 결정합니다. Context Index는 로드맵 후보로 남습니다. [로드맵: 후보 항목 목록](../roadmap.md#후보-항목-목록)을 보고, connector 처리는 [Agent Integration](agent-integration.md#context-pushpull-principles)을 봅니다.
 
 | Field | Contract |
 |---|---|

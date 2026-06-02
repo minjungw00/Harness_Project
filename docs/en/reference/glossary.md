@@ -186,7 +186,7 @@ Stale chat memory is pull-only context. It cannot authorize writes, satisfy gate
 
 ### Context Index
 
-A later read-only context provider that may surface relevant projections, artifact refs, repo files, docs, or notes. Until promoted through owner docs, it is a v1+ Expansion candidate and non-authoritative retrieval only; even after promotion, it cannot replace existing authority paths unless those owner docs explicitly change. Retrieved context may point to sources to inspect, but it must not authorize writes, resolve decisions, grant Approval, create evidence, perform verification, accept risk, satisfy gates, or close Tasks. The exact future-feature boundary is owned by [Roadmap: Context Index](../roadmap.md#context-index), with connector handling in [Agent Integration](agent-integration.md#context-pushpull-principles).
+A later read-only context provider that may surface relevant projections, artifact refs, repo files, docs, or notes. Until promoted through owner docs, it is a v1+ Expansion candidate and non-authoritative retrieval only; even after promotion, it cannot replace existing authority paths unless those owner docs explicitly change. Retrieved context may point to sources to inspect, but it must not authorize writes, resolve decisions, grant Approval, create evidence, perform verification, accept risk, satisfy gates, or close Tasks. Context Index remains a roadmap candidate; see [Roadmap: Candidate Inventory](../roadmap.md#candidate-inventory), with connector handling in [Agent Integration](agent-integration.md#context-pushpull-principles).
 
 ### Decision Gate
 
@@ -402,7 +402,7 @@ A SQLite `TEXT` column whose stored value is JSON. The `TEXT` type is reference 
 
 ### Local Derived Metrics
 
-Later diagnostic-only metrics derived from local records such as `state.sqlite.task_events`, runs, validator results, projection jobs, and reconcile items. Until promoted through owner docs, metric readouts may report rates, counts, durations, or guard-trigger summaries only as read-only diagnostics. The exact non-authority boundary is owned by [Roadmap: Local Derived Metrics](../roadmap.md#local-derived-metrics).
+Later diagnostic-only metrics derived from local records such as `state.sqlite.task_events`, runs, validator results, projection jobs, and reconcile items. Until promoted through owner docs, metric readouts may report rates, counts, durations, or guard-trigger summaries only as read-only diagnostics. Local Derived Metrics remain a roadmap candidate; see [Roadmap: Candidate Inventory](../roadmap.md#candidate-inventory).
 
 ### Manual QA
 

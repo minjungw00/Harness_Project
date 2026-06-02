@@ -393,7 +393,7 @@ Status, next-action, recommendation, and recommended-playbook outputs are read-o
 
 Evaluators should receive a tighter verification bundle: acceptance criteria, changed files, approval scope, relevant Decision Packets, residual risk summary, Autonomy Boundary, deferred decisions, codebase stewardship refs, evidence manifest refs, required TDD trace refs, Manual QA requirement, artifact refs, freshness state, and forbidden patterns.
 
-A later Context Index may help retrieve relevant projections, artifact refs, repo files, docs, or notes. Until owner docs promote it, it is a read-only context provider, not a connector authority path. The full Context Index and retrieved-context non-authority boundary is owned by [Roadmap: Context Index](../roadmap.md#context-index).
+A later Context Index may help retrieve relevant projections, artifact refs, repo files, docs, or notes. Until owner docs promote it, it is a read-only context provider, not a connector authority path. Context Index remains a roadmap candidate; see [Roadmap: Candidate Inventory](../roadmap.md#candidate-inventory).
 
 ## Fallback Semantics
 

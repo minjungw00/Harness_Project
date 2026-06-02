@@ -35,7 +35,7 @@
 | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 평범한 요청에서 범위 보존, 판단 라우팅, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 경계를 통해 사용자가 하네스의 핵심 가치를 처음 체감하는 제품 MVP입니다. |
 | 에이전시 보증 팩(v0.3 Agency Assurance Pack) | 검증, QA, 잔여 위험, 작업 수락, stewardship 동작을 단단하게 만듭니다. |
 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | 복구/export, release handoff, artifact integrity, 더 넓은 conformance coverage, operator behavior를 추가합니다. |
-| v1+ Expansion | Dashboard, hosted UI, browser capture 자동화, team workflow, 그 밖의 후보는 승격되기 전까지 staged delivery 밖에 남습니다. |
+| v1+ Expansion | 대시보드, 호스팅 UI, 브라우저 캡처 자동화, 팀 작업 흐름 등 향후 항목을 다루는 로드맵 후보 공간입니다. 후보 항목은 로드맵의 단계 승격 조건을 통과하기 전까지 staged delivery 밖에 남습니다. |
 
 ## 주요 읽기 경로
 
@@ -190,7 +190,7 @@ AI 지원 개발 세션을 하네스 기준으로 진행할 때 보는 경로입
 
 - [로드맵](roadmap.md)
 
-Post-MVP 항목은 Roadmap에 둡니다. 향후 담당자가 범위, fixture, fallback 동작을 정해 항목을 명시적으로 승격하기 전까지 Roadmap 항목은 Build-owned staged delivery에 포함되지 않습니다.
+향후 후보 항목은 로드맵에 둡니다. 향후 담당자가 로드맵의 단계 승격 조건에 따라 범위, Core 권한 경계, fixture, fallback 동작, 정직한 보안 표현을 정해 항목을 명시적으로 승격하기 전까지 로드맵 항목은 Build-owned staged delivery에 포함되지 않습니다.
 
 ## 언어 의미 일치
 

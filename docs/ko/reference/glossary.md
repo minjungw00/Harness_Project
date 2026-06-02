@@ -196,7 +196,7 @@ Connector가 생성하거나 관리하는 path, MCP config snippet, managed bloc
 
 ### Context Index
 
-Relevant projection, 아티팩트 참조, repo file, doc, note를 보여줄 수 있는 later read-only context provider입니다. 담당 문서로 승격되기 전까지는 v1+ Expansion 후보이자 권한 없는 retrieval only입니다. 승격 이후에도 해당 담당 문서가 명시적으로 바뀌지 않는 한 기존 권한 경로를 대체할 수 없습니다. Retrieved context는 살펴볼 source를 가리킬 수 있지만 write를 허가하거나, decision을 해소하거나, Approval을 부여하거나, evidence를 만들거나, verification을 수행하거나, 위험을 받아들이거나, gate를 충족하거나, Task를 close하면 안 됩니다. 정확한 future-feature 경계는 [Roadmap: Context Index](../roadmap.md#context-index)가 담당하고, connector 처리는 [Agent Integration](agent-integration.md#context-pushpull-principles)이 담당합니다.
+Relevant projection, 아티팩트 참조, repo file, doc, note를 보여줄 수 있는 later read-only context provider입니다. 담당 문서로 승격되기 전까지는 v1+ Expansion 후보이자 권한 없는 retrieval only입니다. 승격 이후에도 해당 담당 문서가 명시적으로 바뀌지 않는 한 기존 권한 경로를 대체할 수 없습니다. Retrieved context는 살펴볼 source를 가리킬 수 있지만 write를 허가하거나, decision을 해소하거나, Approval을 부여하거나, evidence를 만들거나, verification을 수행하거나, 위험을 받아들이거나, gate를 충족하거나, Task를 close하면 안 됩니다. Context Index는 로드맵 후보로 남습니다. [로드맵: 후보 항목 목록](../roadmap.md#후보-항목-목록)을 보고, connector 처리는 [Agent Integration](agent-integration.md#context-pushpull-principles)을 봅니다.
 
 ### Decision Gate
 
@@ -432,7 +432,7 @@ Existing state events나 owner records만으로 완전히 재구성하기 어려
 
 ### Local Derived Metrics
 
-`state.sqlite.task_events`, runs, validator results, projection jobs, reconcile items 같은 local record에서 파생되는 later diagnostic-only metric입니다. Owner 문서로 승격되기 전까지 metric 표시는 rate, count, duration, guard-trigger summary를 읽기 전용 진단으로만 보여줄 수 있습니다. 정확한 권한 없음 경계는 [Roadmap: Local Derived Metrics](../roadmap.md#local-derived-metrics)가 담당합니다.
+`state.sqlite.task_events`, runs, validator results, projection jobs, reconcile items 같은 local record에서 파생되는 later diagnostic-only metric입니다. Owner 문서로 승격되기 전까지 metric 표시는 rate, count, duration, guard-trigger summary를 읽기 전용 진단으로만 보여줄 수 있습니다. Local Derived Metrics는 로드맵 후보로 남습니다. [로드맵: 후보 항목 목록](../roadmap.md#후보-항목-목록)을 봅니다.
 
 ### Manual QA
 

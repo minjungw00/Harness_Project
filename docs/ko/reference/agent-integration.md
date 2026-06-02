@@ -393,7 +393,7 @@ Status, next-action, recommendation, recommended-playbook output은 read-only gu
 
 Evaluator는 더 좁은 verification bundle을 받아야 합니다. 여기에는 수용 기준, changed file, approval scope, relevant Decision Packet, residual risk summary, Autonomy Boundary, deferred decision, codebase stewardship ref, evidence manifest ref, required TDD trace ref, 수동 QA requirement, artifact ref, freshness state, forbidden pattern이 포함됩니다.
 
-이후 Context Index는 relevant projection, artifact ref, repo file, docs, note를 찾아오는 데 도움을 줄 수 있습니다. 하지만 owner 문서가 승격하기 전까지는 읽기 전용 context provider일 뿐 connector 권한 경로가 아닙니다. Context Index와 retrieved-context의 전체 권한 없음 경계는 [Roadmap: Context Index](../roadmap.md#context-index)가 담당합니다.
+이후 Context Index는 relevant projection, artifact ref, repo file, docs, note를 찾아오는 데 도움을 줄 수 있습니다. 하지만 owner 문서가 승격하기 전까지는 읽기 전용 context provider일 뿐 connector 권한 경로가 아닙니다. Context Index는 로드맵 후보로 남습니다. [로드맵: 후보 항목 목록](../roadmap.md#후보-항목-목록)을 봅니다.
 
 ## Fallback Semantics
 

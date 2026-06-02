@@ -315,8 +315,8 @@ For the non-authority boundaries that are easy to repeat, use these owners:
 
 | Boundary | Owner for exact wording |
 |---|---|
-| Context Index and retrieved/indexed context | [Roadmap: Context Index](../roadmap.md#context-index) for future feature boundary; [Agent Integration: Context Push/Pull Principles](../reference/agent-integration.md#context-pushpull-principles) for connector context handling |
-| Local Derived Metrics | [Roadmap: Local Derived Metrics](../roadmap.md#local-derived-metrics) |
+| Context Index and retrieved/indexed context | [Roadmap: Candidate Inventory](../roadmap.md#candidate-inventory) for future feature boundary; [Agent Integration: Context Push/Pull Principles](../reference/agent-integration.md#context-pushpull-principles) for connector context handling |
+| Local Derived Metrics | [Roadmap: Candidate Inventory](../roadmap.md#candidate-inventory) |
 | Role Lens | [Agent Integration: Role Lens Behavior](../reference/agent-integration.md#role-lens-behavior) |
 | Review Stages | [Design Quality Policies: Two-stage Review Display](../reference/design-quality-policies.md#two-stage-review-display) |
 | Release Handoff and export | [Operations And Conformance: Release Handoff Export Profile](../reference/operations-and-conformance.md#release-handoff-export-profile); rendered shape in [EXPORT Template](../reference/templates/export.md) |

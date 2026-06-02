@@ -220,20 +220,20 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 
 ## Roadmap 범위의 v1+ Expansion 후보
 
-아래 항목은 향후 계획이 담당 문서를 통해 capability profile, exact contracts, redaction/secret/PII policy, runtime surface capture 시 artifact retention과 test-environment rule, fixture 또는 conformance target, fallback behavior, 읽기용 요약을 기준으로 삼는 의존성 없음을 갖춰 승격하기 전까지 staged delivery 밖에 둡니다.
+아래 항목은 향후 계획이 담당 문서를 통해 [로드맵 단계 승격 조건](../roadmap.md#단계-승격-조건)을 만족시켜 승격하기 전까지 staged delivery 밖에 둡니다. 승격하려면 사용자 소유 판단을 보존하고, Core 권한을 우회하지 않으며, 단계에 맞는 보안 보장 표현을 사용하고, 근거/검증/QA/작업 수락/잔여 위험에 미치는 영향을 밝히며, v0.1부터 v0.4까지의 범위를 부풀리지 않아야 합니다. 또한 필요한 능력 프로필, 정확한 계약, redaction/secret/PII 정책, 런타임 접점 캡처 시 아티팩트 보존 규칙과 test environment 규칙, fixture 또는 적합성 목표, fallback 동작, 읽기용 요약을 기준 상태로 삼지 않는다는 조건을 담당 문서가 정의해야 합니다.
 
 | 후보 | 단계 경계 |
 |---|---|
-| Dashboard, hosted workflow UI, artifact dashboard, rich card expansion | State를 표시할 수는 있지만 authority, implementation readiness, close readiness, 작업 수락, 잔여 위험 수용이 되면 안 됩니다. |
-| Broad connector marketplace 또는 surface ecosystem | 나중에 surface를 확장할 수 있지만 첫 Core authority-loop proof를 대체하거나 MCP exposure를 기본적으로 넓히면 안 됩니다. |
-| Browser QA Capture automation | 승격 뒤 수동 QA를 보조할 수 있지만 human QA judgment, 작업 수락, 분리 검증을 대체하면 안 됩니다. |
-| Cross-Surface Verification automation | 승격 뒤 evaluator routing을 자동화할 수 있지만 Core-owned return record 없이 Eval 또는 assurance를 충족하면 안 됩니다. |
-| Preventive guard expansion, native hooks, Advanced Sidecar Watcher | Proven pre-tool blocking 또는 observation path가 있을 때 surface를 강화할 수 있지만 label만으로 주장하면 안 됩니다. |
-| Context Index, Local Derived Metrics, long-term metrics | Read-only retrieval 또는 diagnostics를 제공할 수 있지만 write를 authorize하거나, gate를 충족하거나, 읽기용 요약을 refresh하거나, Task를 close하면 안 됩니다. |
-| Team workflow, permissions, orchestration, parallel lanes | Future work를 조율할 수 있지만 staged delivery나 single-project local authority의 필수 요소가 되면 안 됩니다. |
-| Deployment, canary, rollback, merge, production monitoring | Future integration work가 될 수 있습니다. Release handoff는 담당 문서가 더 많은 권한을 승격하기 전까지 report/export boundary로 남습니다. |
+| 대시보드, 호스팅된 작업 UI, 아티팩트 대시보드, 풍부한 카드 확장 | 상태를 표시할 수는 있지만 권한, 구현 준비 상태, 닫기 준비 상태, 작업 수락, 잔여 위험 수용이 되면 안 됩니다. |
+| 넓은 커넥터 시장 또는 접점 생태계 | 나중에 접점을 확장할 수 있지만 첫 Core 권한 루프 증명을 대체하거나 MCP 노출을 기본적으로 넓히면 안 됩니다. |
+| 브라우저 QA 캡처 자동화 | 승격 뒤 수동 QA를 보조할 수 있지만 사람의 QA 판단, 작업 수락, 분리 검증을 대체하면 안 됩니다. |
+| 여러 접점 검증 자동화 | 승격 뒤 evaluator routing을 자동화할 수 있지만 Core 소유 반환 기록 없이 Eval 또는 assurance를 충족하면 안 됩니다. |
+| 예방적 가드 확장, 네이티브 후크, 고급 사이드카 워처 | 증명된 pre-tool blocking 또는 관찰 경로가 있을 때 접점을 강화할 수 있지만 label만으로 주장하면 안 됩니다. |
+| 맥락 색인, 로컬 파생 지표, 장기 지표 | 읽기 전용 검색이나 진단을 제공할 수 있지만 write를 authorize하거나, gate를 충족하거나, 읽기용 요약을 refresh하거나, Task를 close하면 안 됩니다. |
+| 팀 작업 흐름, 권한, 오케스트레이션, 병렬 lane | 향후 작업을 조율할 수 있지만 staged delivery나 single-project local authority의 필수 요소가 되면 안 됩니다. |
+| 배포, canary, rollback, merge, production monitoring | 향후 통합 작업이 될 수 있습니다. Release handoff는 담당 문서가 더 많은 권한을 승격하기 전까지 report/export boundary로 남습니다. |
 
-구현 중 향후 feature가 유용해 보이더라도 담당 문서가 권한 경로를 정의하고 증명하기 전까지는 읽기 전용 표시, metadata, artifact 후보, fixture candidate로 유지합니다.
+구현 중 향후 기능이 유용해 보이더라도 담당 문서가 권한 경로를 정의하고 증명하기 전까지는 읽기 전용 표시, 메타데이터, 아티팩트 후보, fixture 후보로 유지합니다. Build 문서는 단계별 전달을 소유하고, 로드맵은 후보 예시만 추적합니다.
 
 ## 단계별 종료 기준
 

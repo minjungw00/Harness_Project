@@ -35,7 +35,7 @@ Documentation acceptance, when it happens, is a maintainer review milestone. It 
 | v0.2 User-Facing Harness MVP | First product MVP where ordinary requests show core Harness value: scope preservation, judgment routing, evidence, close readiness, final acceptance, and residual-risk boundaries. |
 | v0.3 Agency Assurance Pack | Hardens verification, QA, residual risk, final acceptance, and stewardship behavior. |
 | v0.4 Operations & Handoff Pack | Adds recover/export, release handoff, artifact integrity, broader conformance coverage, and operator behavior. |
-| v1+ Expansion | Dashboard, hosted UI, browser capture automation, team workflows, and other candidates remain outside staged delivery until promoted. |
+| v1+ Expansion | Roadmap candidate space for dashboard, hosted UI, browser capture automation, team workflows, and other future items. Candidates remain outside staged delivery until promoted through Roadmap criteria. |
 
 ## Primary Reader Path
 
@@ -190,7 +190,7 @@ Use this path to keep the docs and future Harness system coherent over time. Mai
 
 - [Roadmap](roadmap.md)
 
-Post-MVP items live in the roadmap. The roadmap is not part of Build-owned staged delivery unless a future owner explicitly promotes an item with scope, fixtures, and fallback behavior.
+Future candidate items live in the roadmap. The roadmap is not part of Build-owned staged delivery unless a future owner explicitly promotes an item through the Roadmap criteria, including scope, Core authority boundaries, fixtures, fallback behavior, and honest security wording.
 
 ## Language Parity
 
