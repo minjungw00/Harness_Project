@@ -255,6 +255,16 @@ Integration은 [보안 위협 모델 참조](security-threat-model.md#정직한-
 
 코어 권한 조각(v0.1 Core Authority Slice)과 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 설명 중인 operation에 대해 fixture로 입증된 guard 또는 문서화된 separation boundary가 구현되고 증명되지 않는 한 reference surface를 cooperative/detective로 표시해야 합니다. Future preventive 또는 isolated profile을 문서화할 수는 있지만, owner 문서와 conformance가 승격하기 전까지는 향후 또는 profile별 범위로 label해야 합니다.
 
+Stage display default는 [보안 위협 모델의 단계별 guarantee level](security-threat-model.md#단계별-guarantee-level)을 따릅니다.
+
+| 단계 | Connector display 기본값 |
+|---|---|
+| v0.1 Core Authority Slice | `prepare_write`, Write Authorization, `record_run`, changed path, 최소 artifact/evidence ref 주변의 지시 기반/협력적 discipline과 제한된 탐지 가능 check를 표시합니다. 기본 도구 실행 전 사전 차단이나 격리를 암시하지 않습니다. |
+| v0.2 User-Facing Harness MVP | 사용자에게 보이는 막힘, MCP availability, close readiness, decision/evidence gap, 그리고 surface가 지시로만 보류할 수 있는지 실행 뒤에만 탐지할 수 있는지 표시합니다. |
+| v0.3 Agency Assurance Pack | Verification, 수동 QA, waiver, residual risk, 작업 수락, stewardship finding의 더 강한 분리를 보여 주되, 더 강한 profile이 증명되지 않는 한 여전히 cooperative/detective로 표시합니다. |
+| v0.4 Operations & Handoff Pack | Operator diagnostic, generated-file drift, projection freshness, artifact integrity, recover/export posture를 표시하고, exact coverage가 증명되지 않은 항목은 보장 한계를 정직하게 표시하며 탐지/보고 동작으로 설명합니다. |
+| v1+ Expansion | Owner-doc promotion과 conformance proof가 있는 named covered operation 또는 separation boundary에 대해서만 preventive 또는 isolated로 표시합니다. |
+
 | Level | 표시 책임 |
 |---|---|
 | `cooperative` | 접점이 Harness 결정을 따르도록 지시받음을 보여줍니다. 보류는 지시에 따른 것이며 Harness가 실행 전 물리적 차단을 주장하지 않습니다. |
@@ -267,7 +277,7 @@ Guard, freeze, careful-mode label은 실제 profile 위에 얹힌 safety-control
 | 사용자 표현 | 실제 경계 |
 |---|---|
 | Freeze | 현재 work 주변의 눈에 보이는 범위 보류 또는 다음 행동을 더 엄격하게 제한하는 상태입니다. Cooperative profile에서는 지시에 따른 보류입니다. Detective profile에서는 사후 validation과 함께 표시할 수 있습니다. Covered operation에 대해 fixture로 입증된 도구 실행 전 차단이 있을 때만 hard prevention입니다. Persistent owner-record change는 여전히 normal Core path를 거칩니다. |
-| Guard | 입증된 profile과 현재 적용 경로에 따른 cooperative, detective, preventive, isolated protection입니다. Preventive 표현은 fixture로 입증된 도구 실행 전 차단이 있는 covered operation에만 씁니다. |
+| Guard | 입증된 profile과 현재 적용 경로에 따른 cooperative, detective, preventive, isolated control posture입니다. Preventive 표현은 fixture로 입증된 도구 실행 전 차단이 있는 covered operation에만 씁니다. |
 | Careful mode | 더 엄격한 `prepare_write`, scope, evidence, status refresh, user-question posture입니다. 새로운 authority tier가 아니며 그 자체로 차단하지 않고 gate나 decision을 충족하지 않습니다. |
 
 ## Generated Manifest 기대사항
@@ -463,7 +473,7 @@ v0.1 minimum reference expectations:
 - run 이후 detective changed-path와 artifact validation
 - 기본 OS sandbox 격리, 임의 도구 sandbox 격리, 변조 불가능한 로컬 파일, 도구 실행 전 차단을 주장하지 않음
 - minimal authority loop에 충분한 run summary와 manually supplied 또는 captured artifact/evidence ref 하나
-- guard, freeze, careful-mode label이 표시될 때 실제 차단 가능 범위와 사후 감지 범위 표시
+- guard, freeze, careful-mode label이 표시될 때 실제 실행 전 멈춤 가능 범위와 사후 감지 범위 표시
 
 Later profile expectations:
 
@@ -485,7 +495,7 @@ Core Authority Slice connector checks:
 - Use procedure가 요구할 때 significant work 재개 전 간결한 현재 위치 상태 표시. Persisted Journey Card output은 later/diagnostic profile입니다.
 - selected path/tool/command에 대한 basic Change Unit scope. Full vertical/horizontal exception policy는 제외합니다.
 - Autonomy Boundary breach가 stop하거나 structured blocker를 보고합니다. Decision Packet routing은 해당 profile이 enabled될 때의 later-profile입니다.
-- `prepare_write` allowed/blocked path
+- `prepare_write` allowed/structured-blocker path
 - allowed write에 Write Authorization 생성 및 Write Authority Summary 표시
 - write-capable `record_run`이 compatible Write Authorization consume
 - minimal artifact/evidence ref가 있는 `record_run`
@@ -500,7 +510,7 @@ Later profile scenarios:
 - shared design과 decision을 포함한 work shaping
 - full Change Unit vertical/horizontal exception handling
 - 가능할 때 recommendation과 uncertainty가 있는 one blocking question
-- 차단하는 사용자 소유 판단에 broad approval 대신 Decision Packet 표시
+- 막힘을 만드는 사용자 소유 판단에 broad approval 대신 Decision Packet 표시
 - public commitment가 사용자 소유 제품 판단 또는 기술 구조 판단을 필요로 하면 Decision Packet 또는 다른 기존 owner path로 route
 - AFK work가 active Change Unit scope, Autonomy Boundary latitude, 적용되는 granted sensitive-action Approval, 실제 product write 전 compatible `prepare_write` / Write Authorization 안에 머무르고, stop wording이 입증된 guarantee level과 맞음
 - sensitive-action Approval request, granted, denied, expired path
@@ -516,13 +526,13 @@ Later profile scenarios:
 - acceptance 또는 successful close 전 close-relevant residual risk visible
 - risk-accepted close에는 accepted Residual Risk refs 추가 요구
 - 최신이 아닌 projection과 reconcile flow
-- stale projection write guard
+- stale projection write hold/status
 - generated file drift detection
 - generated file과 managed block의 safe non-overwrite 동작 및 reconcile로의 drift routing
 - connector manifest profile freshness와 stale capability profile detection
 - version, MCP config, hook, permission, workspace policy, generated-file, conformance-result, capture-method, QA-capture-method, redaction-policy, artifact-retention 변경 이후 profile refresh
 - required tier가 없을 때 capability fallback
-- surface capability mismatch가 unsafe write를 보류하고 낮아진 guarantee를 보고
+- surface capability mismatch가 unsafe write를 보류하고 보장 한계를 정직하게 보고
 - stale PRD, stale chat memory, 기타 pull-only context가 owner path로 reconcile되기 전에는 write를 허가하거나, gate를 충족하거나, 결과를 수락하거나, Task를 close하지 않는 동작
 - artifact integrity mismatch가 dependent evidence, verification, export, close readiness claim을 stale, blocked, insufficient 상태로 유지
 

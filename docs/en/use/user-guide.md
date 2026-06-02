@@ -327,6 +327,8 @@ Harness makes security-sensitive AI work easier to see and route, but early loca
 
 You may see four guarantee levels. `cooperative` means the agent is instructed to follow the rules. `detective` means a mismatch can be detected or recorded after action. `preventive` means a proven control blocks the operation before it happens. `isolated` means work or verification runs behind a documented separation boundary; a worktree or fresh evaluator bundle is not automatically an OS sandbox, permission boundary, or tamper-proof security. For early local use, expect cooperative/detective wording unless the agent can name the exact blocking control or exact proven separation boundary in use.
 
+When a status says something is blocked, read it as "Harness cannot honestly proceed or close under the current record" unless the agent also names a proven preventive control. Early local Harness may reveal, record, or hold by instruction; it should say plainly when it can stop something before it happens and when it can only report it.
+
 ## When blocked
 
 A blocker should be concrete. It should say who owns the next move and what the smallest unblocker is.

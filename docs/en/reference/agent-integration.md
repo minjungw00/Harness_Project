@@ -255,6 +255,16 @@ This reference owns how connector profiles report and display those levels. It m
 
 The v0.1 Core Authority Slice and v0.2 User-Facing Harness MVP should display the reference surface as cooperative/detective unless a fixture-proven guard or documented separation boundary is implemented and proven for the operation being described. Future preventive or isolated profiles may be documented, but they must stay labeled as future/profile-specific until owner docs and conformance promote them.
 
+Stage display defaults mirror the [Security Threat Model stage map](security-threat-model.md#guarantee-levels-by-stage):
+
+| Stage | Connector display default |
+|---|---|
+| v0.1 Core Authority Slice | Show cooperative discipline and limited detective checks around `prepare_write`, Write Authorization, `record_run`, changed paths, and the minimal artifact/evidence ref. Do not imply default pre-tool blocking or isolation. |
+| v0.2 User-Facing Harness MVP | Show user-visible blockers, MCP availability, close readiness, decision/evidence gaps, and whether the surface can only hold by instruction or detect later. |
+| v0.3 Agency Assurance Pack | Show stronger separation of verification, Manual QA, waivers, residual risk, final acceptance, and stewardship findings, still as cooperative/detective unless a stronger profile is proven. |
+| v0.4 Operations & Handoff Pack | Show operator diagnostics, generated-file drift, projection freshness, artifact integrity, recover/export posture, and honest guarantee limits as detective/reporting behavior unless exact coverage is proven. |
+| v1+ Expansion | Show preventive or isolated only for the named covered operation or separation boundary with owner-doc promotion and conformance proof. |
+
 | Level | Display responsibility |
 |---|---|
 | `cooperative` | Show that the surface is expected to follow Harness decisions; holds are by instruction, and Harness does not claim physical blocking before execution. |
@@ -267,7 +277,7 @@ Guard, freeze, and careful-mode labels are safety-control labels over the actual
 | User wording | Actual boundary |
 |---|---|
 | Freeze | A visible scope hold or stricter next-action posture around current work. On cooperative profiles it is an instruction to hold. On detective profiles it may be paired with post-action validation. It is hard prevention only when fixture-proven pre-tool blocking covers the operation; persistent owner-record changes still route through the normal Core path. |
-| Guard | Cooperative, detective, preventive, or isolated protection according to the proven profile and current enforcement path. Use preventive wording only for covered operations with fixture-proven pre-tool blocking. |
+| Guard | Cooperative, detective, preventive, or isolated control posture according to the proven profile and current control path. Use preventive wording only for covered operations with fixture-proven pre-tool blocking. |
 | Careful mode | Stricter `prepare_write`, scope, evidence, status refresh, and user-question posture. It is not a new authority tier, does not block by itself, and does not satisfy gates or decisions. |
 
 ## Generated Manifest Expectations
@@ -463,7 +473,7 @@ v0.1 minimum reference expectations:
 - detective changed-path and artifact validation after runs
 - no default OS sandbox, arbitrary-tool sandboxing, tamper-proof local files, or pre-tool blocking claim
 - run summary and at least one manually supplied or captured artifact/evidence ref sufficient for the minimal authority loop
-- actual block-vs-detect status when guard, freeze, or careful-mode labels are shown
+- actual pre-action stop versus after-action detection status when guard, freeze, or careful-mode labels are shown
 
 Later profile expectations:
 
@@ -485,7 +495,7 @@ Core Authority Slice connector checks:
 - compact current-position status shown before significant work resumes when required by the Use procedure; persisted Journey Card output is a later/diagnostic profile
 - basic Change Unit scope for the selected path/tool/command, without full vertical/horizontal exception policy
 - Autonomy Boundary breach stops or reports a structured blocker; Decision Packet routing is later-profile unless that profile is enabled
-- `prepare_write` allowed and blocked paths
+- `prepare_write` allowed and structured-blocker paths
 - Write Authorization created for allowed writes and exposed through Write Authority Summary
 - write-capable `record_run` consumes a compatible Write Authorization
 - `record_run` with a minimal artifact/evidence ref
@@ -516,13 +526,13 @@ Later profile scenarios:
 - close-relevant residual risk visible before acceptance or successful close
 - risk-accepted close additionally requires accepted Residual Risk refs
 - stale projection and reconcile flow
-- stale projection write guard
+- stale projection write hold/status
 - generated file drift detection
 - safe non-overwrite behavior for generated files and managed blocks, with drift routed to reconcile
 - connector manifest profile freshness and stale capability profile detection
 - profile refresh after version, MCP config, hook, permission, workspace policy, generated-file, conformance-result, capture-method, QA-capture-method, redaction-policy, or artifact-retention changes
 - capability fallback when a required tier is missing
-- surface capability mismatch holds unsafe writes and reports the reduced guarantee
+- surface capability mismatch holds unsafe writes and reports honest guarantee limits
 - stale PRDs, stale chat memory, and other pull-only context do not authorize writes, satisfy gates, accept results, or close tasks until reconciled through owner paths
 - artifact integrity mismatch keeps dependent evidence, verification, export, or close readiness claims stale, blocked, or insufficient
 

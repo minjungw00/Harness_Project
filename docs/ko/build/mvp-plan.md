@@ -23,7 +23,7 @@
 하네스의 가치는 단지 write authority loop가 있다는 데 있지 않습니다. 하네스는 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 잔여 위험을 로컬 권한 기록에 보존해야 합니다. 그래서 초기 전달에는 두 단계가 있습니다.
 
 - 코어 권한 조각(v0.1 Core Authority Slice)은 가장 작은 내부 Core 권한 루프를 증명합니다.
-- 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 평범한 요청에서 사용자가 하네스가 작업을 구체화하고, 적절한 절차 규모로 다루고, 필요한 경우 막고, 수락하고, 위험을 설명하는 핵심 가치를 처음 체감하는 제품 MVP입니다.
+- 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)는 평범한 요청에서 사용자가 하네스가 작업을 구체화하고, 적절한 절차 규모로 다루고, 필요한 경우 보이는 막힘으로 보류하고, 수락하고, 위험을 설명하는 핵심 가치를 처음 체감하는 제품 MVP입니다.
 
 첫 조각은 의도적으로 좁게 유지합니다. 로컬 프로젝트 등록 하나, Task 하나, 범위가 정해진 작업 경계 하나, `prepare_write` 권한 경로 하나, 한 번만 쓰는 Write Authorization 하나, 기록된 Run 하나, artifact/evidence 참조 하나, 구조화된 막힘/상태 응답 하나를 증명합니다. 이것은 MVP가 아닙니다. 일반적인 작업을 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 잔여 위험 언어로 바꾸고 민감 동작 승인(Approval), 작업 수락, 잔여 위험 수용을 혼동하지 않게 만드는 단계가 MVP입니다.
 
@@ -57,6 +57,18 @@ flowchart LR
 Conformance fixture 검증 프로파일은 같은 stage name을 따릅니다. Core Authority Slice fixtures는 v0.1 Core Authority Slice, User-Facing Harness MVP fixtures는 v0.2 User-Facing Harness MVP, Agency Assurance Pack fixtures는 v0.3 Agency Assurance Pack, Operations & Handoff Pack 또는 promoted-expansion fixtures는 v0.4 Operations & Handoff Pack과 승격된 v1+ Expansion candidate에 대응합니다.
 
 이 fixture profile 이름들이 conformance label로 남습니다. 강화된 로컬 기준 목표(hardened local reference target)는 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)을 거쳐 도달하는 종합 목표일 뿐, profile name이나 별도 delivery stage가 아닙니다.
+
+### 보안 guarantee 단계 구분
+
+Build staging 자체가 security guarantee를 올려 주지는 않습니다. Security wording은 [보안 위협 모델의 단계별 guarantee level](../reference/security-threat-model.md#단계별-guarantee-level)을 따릅니다.
+
+| 단계 | 계획할 guarantee posture |
+|---|---|
+| v0.1 Core Authority Slice | 지시 기반/협력적 behavior에 제한된 탐지 가능 behavior가 더해진 수준입니다. Core는 invalid state change를 거부하고 구조화된 막힘을 반환할 수 있지만, reference path가 기본으로 arbitrary local process를 멈추거나 tool을 격리하지는 않습니다. |
+| v0.2 User-Facing Harness MVP | 사용자에게 보이는 막힘, MCP availability, evidence gap, close readiness, 정직한 보장 표시를 갖춘 cooperative/detective behavior입니다. |
+| v0.3 Agency Assurance Pack | Verification, 수동 QA, residual risk, 작업 수락, Approval, stewardship 주변의 더 강한 분리와 탐지 가능 assurance입니다. |
+| v0.4 Operations & Handoff Pack | Doctor/readiness, recover/export, artifact integrity, projection freshness, release handoff 주변의 탐지 가능 operations입니다. |
+| v1+ Expansion | Owner docs가 exact covered operation 또는 real isolation boundary를 구현하고 증명한 뒤의 preventive 또는 isolated candidate만 포함합니다. |
 
 ### Stage별 API surface
 
@@ -94,7 +106,7 @@ v0.1은 다음을 증명해야 합니다.
 - local project registration 하나
 - Core가 소유한 상태 안의 Task 하나
 - intended change를 위한 범위가 정해진 작업 경계 하나. Reference 계약상 필요한 경우에만 Change Unit 소유자 형태로 표현된다.
-- `prepare_write` allow/block path 하나
+- `prepare_write` allow/structured-blocker path 하나
 - 지속적이며 한 번만 쓸 수 있는 Write Authorization 하나
 - 그 authorization을 consume하는 `record_run` 하나
 - Core/API contract가 소유하는 registered `ArtifactRef` 또는 equivalent evidence reference 하나
@@ -106,7 +118,7 @@ v0.1은 full natural-language intake, full Discovery, full Decision Packet quali
 
 v0.1 Kernel Smoke candidate는 Core state, 그 루프에 필요한 owner record, artifact/evidence refs, structured blocker를 통해 minimal authority loop만 확인해야 합니다. 읽기용 요약 다듬기, detailed template, renderer output, 넓은 fixture catalog는 first-slice conformance truth가 아닙니다.
 
-이 시점에 implementer는 Core가 최소 상태를 소유하고, scoped write가 허용되거나 차단되며, authorization 하나가 한 번 소비되고, artifact/evidence ref가 기록된 Run에 연결되며, 상태/막힘 출력이 구조화된 막힘을 반환할 수 있음을 관찰할 수 있습니다. 이것은 구현자 확신이지 사용자가 Harness 가치를 경험했다는 증명이 아닙니다.
+이 시점에 implementer는 Core가 최소 상태를 소유하고, scoped write가 허용되거나 구조화된 막힘으로 거부되며, authorization 하나가 한 번 소비되고, artifact/evidence ref가 기록된 Run에 연결되며, 상태/막힘 출력이 구조화된 막힘을 반환할 수 있음을 관찰할 수 있습니다. 이것은 구현자 확신이지 사용자가 Harness 가치를 경험했다는 증명이 아닙니다.
 
 ### 계약 필드 단계 구분
 
@@ -136,7 +148,7 @@ flowchart LR
   Check -->|허용| Authorization["쓰기 허가"]
   Authorization --> Run["Run 기록"]
   Run --> Evidence["근거 연결"]
-  Check -->|막힘| Blocker["구조화된 막힘"]
+  Check -->|허용 안 됨| Blocker["구조화된 막힘"]
   Evidence --> Status["상태와 다음 행동"]
   Blocker --> Status
   Status --> Close["닫기 상태 막힘"]
@@ -156,7 +168,7 @@ MVP는 다음을 보여야 합니다.
 - product/UX judgment와 기술 구조 판단이 서로 분리되고, 민감 동작 승인, 작업 수락, 잔여 위험 수용과도 분리되어 제시될 수 있다
 - 작은 변경과 tracked work가 서로 다른 procedural budget을 가지되, small-change label이 authority를 우회하지 않는다
 - status와 next-action output이 현재 scope, 누락된 decisions, 근거 상태, close blockers, 안전한 다음 행동을 설명한다
-- 필요한 근거가 없거나 필요한 사용자 결정이 missing이면 close가 block된다
+- 필요한 근거가 없거나 필요한 사용자 결정이 missing이면 close가 막힘을 보고한다
 - 작업 수락과 close 전에 잔여 위험을 표시할 수 있다
 - 사용자의 작업 수락이 sensitive-action Approval, 잔여 위험 수용과 구분된다
 - readable summary 또는 card가 현재 작업 상태, 사용자 결정 요청, 근거 요약, 닫기 준비 상태/blocker를 보여 주지만, template polish가 source of truth가 되지는 않는다. 작업 수락과 잔여 위험 사실은 관련 있을 때 이 요약 안에서 distinct하게 남는다
@@ -177,7 +189,7 @@ v0.3은 MVP path를 강화하여 로컬 reference path가 검증, QA, 잔여 위
 - full Decision Packet quality와 user-judgment routing
 - sensitive-action Approval, Decision Packet, Write Authorization, 작업 수락, 잔여 위험 수용 분리
 - same-session verification guard behavior를 포함한 분리 검증 독립성
-- 수동 QA 정책 매트릭스, 수동 QA 차단 조건, 유효한 QA 면제 판단
+- 수동 QA 정책 매트릭스, 수동 QA 막힘 조건, 유효한 QA 면제 판단
 - 잔여 위험 수용 close의 전체 의미
 - stewardship validators와 codebase stewardship coverage
 - policy가 요구하는 TDD trace behavior
@@ -232,8 +244,8 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 - local project 하나가 등록된다.
 - Task 하나가 Core-owned state 안에 존재한다.
 - 범위가 정해진 작업 경계 하나가 intended change boundary를 이름 붙인다.
-- Compatible scope 없는 product write는 block된다.
-- Out-of-scope intended write는 block된다.
+- Compatible scope 없는 product write는 Core가 구조화된 막힘으로 거부합니다. 이것은 기본 도구 실행 전 보안 차단이 아닙니다.
+- Out-of-scope intended write는 Core가 구조화된 막힘으로 거부합니다. 이것은 기본 도구 실행 전 보안 차단이 아닙니다.
 - 허용된 `prepare_write`는 지속적이며 한 번만 쓸 수 있는 Write Authorization을 만든다.
 - Compatible `record_run`은 authorization을 한 번 consume한다.
 - 두 번째 distinct product-write Run은 consumed authorization을 재사용할 수 없다.
@@ -248,8 +260,8 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 - Product/UX judgment와 기술 구조 판단을 서로 분리하고, 민감 동작 승인, 작업 수락, 잔여 위험 수용과도 분리해 제시할 수 있다.
 - Small direct changes와 tracked work가 write authority, evidence, 필요한 사용자 결정을 우회하지 않으면서 서로 다른 procedural budget을 사용한다.
 - Status/next output이 현재 scope, missing decisions, 근거 상태, 잔여 위험 표시, close blockers, 안전한 다음 행동을 설명한다.
-- Required 근거가 없으면 close가 block된다.
-- 필요한 사용자 결정이 missing 또는 unresolved이면 close가 block된다.
+- Required 근거가 없으면 close가 막힘을 보고한다.
+- 필요한 사용자 결정이 missing 또는 unresolved이면 close가 막힘을 보고한다.
 - 알려진 닫기 관련 위험이 있으면 작업 수락 또는 close 전에 잔여 위험이 보인다.
 - 사용자의 작업 수락이 sensitive-action Approval과 잔여 위험 수용과 별도로 기록되거나 표현된다.
 - 잔여 위험 수용을 지원하는 경우, 이것이 작업 수락과 뚜렷하게 구분되어 보인다.
@@ -280,7 +292,7 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 | 단계 | 사용자 또는 operator가 볼 수 있는 것 |
 |---|---|
 | 코어 권한 조각(v0.1 Core Authority Slice) | Implementer는 로컬 Task 하나가 scoped work boundary, `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref, 구조화된 상태/막힘 출력을 통과하는 것을 볼 수 있습니다. |
-| 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자는 평범한 작업이 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 언어로 정리되고 근거 또는 필요한 사용자 결정이 없으면 close가 block되는 것을 볼 수 있습니다. |
+| 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 사용자는 평범한 작업이 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 언어로 정리되고 근거 또는 필요한 사용자 결정이 없으면 close가 막힘을 보고하는 것을 볼 수 있습니다. |
 | 에이전시 보증 팩(v0.3 Agency Assurance Pack) | Local path가 verification, 수동 QA, 잔여 위험 수용, 작업 수락, stewardship, TDD, feedback, context hygiene, close behavior를 Core record와 fixture로 설명합니다. |
 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Operator는 같은 Core state 위에서 diagnose, recover, reconcile, export, artifact check, conformance run, release handoff 준비를 수행할 수 있습니다. |
 

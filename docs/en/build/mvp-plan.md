@@ -23,7 +23,7 @@ Read [Implementation Overview](implementation-overview.md), including its [Docum
 Harness value is not merely that a write authority loop exists. Harness should preserve scope, user-owned judgment, evidence, close readiness, and residual risk in a local authority record. Delivery therefore has two early targets:
 
 - v0.1 Core Authority Slice proves the smallest coherent internal Core authority loop.
-- v0.2 User-Facing Harness MVP proves that ordinary users can feel the core Harness value in how work is clarified, budgeted, blocked, accepted, and risk-explained.
+- v0.2 User-Facing Harness MVP proves that ordinary users can feel the core Harness value in how work is clarified, budgeted, held with visible blockers when needed, accepted, and risk-explained.
 
 The first slice stays intentionally narrow. It proves one local project registration, one Task, one scoped work boundary, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence reference, and one structured blocker/status response. It is not the MVP. The MVP comes when the user-facing path can translate normal work into scope, user-owned judgment, evidence, close readiness, and residual-risk language without confusing sensitive-action approval, final acceptance, and residual-risk acceptance.
 
@@ -57,6 +57,18 @@ Kernel Smoke remains a narrow future authoring label for v0.1 Core Authority Sli
 Conformance fixture profiles follow the same stage names: Core Authority Slice fixtures for v0.1 Core Authority Slice, User-Facing Harness MVP fixtures for v0.2 User-Facing Harness MVP, Agency Assurance Pack fixtures for v0.3 Agency Assurance Pack, and Operations & Handoff Pack or promoted-expansion fixtures for v0.4 Operations & Handoff Pack and promoted v1+ Expansion candidates.
 
 These fixture profile names remain the conformance labels. The hardened local reference target is only the aggregate target reached by v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack, not a profile name or separate delivery stage.
+
+### Security guarantee staging
+
+Build staging does not upgrade security guarantees by itself. Security wording follows the [Security Threat Model stage map](../reference/security-threat-model.md#guarantee-levels-by-stage):
+
+| Stage | Guarantee posture to plan for |
+|---|---|
+| v0.1 Core Authority Slice | Cooperative plus limited detective behavior. Core can refuse invalid state changes and return structured blockers, but the reference path does not stop arbitrary local processes or isolate tools by default. |
+| v0.2 User-Facing Harness MVP | Cooperative/detective behavior with honest user-visible blockers, MCP availability, evidence gaps, close readiness, and honest guarantee display. |
+| v0.3 Agency Assurance Pack | Stronger separation and detective assurance around verification, Manual QA, residual risk, final acceptance, Approval, and stewardship. |
+| v0.4 Operations & Handoff Pack | Detective operations around doctor/readiness, recover/export, artifact integrity, projection freshness, and release handoff. |
+| v1+ Expansion | Preventive or isolated candidates only after owner docs implement and prove exact covered operations or real isolation boundaries. |
 
 ### API surface by stage
 
@@ -94,7 +106,7 @@ v0.1 must prove:
 - one local project registration
 - one Task in Core-owned state
 - one scoped work boundary for the intended change, represented by the Change Unit owner shape only where the reference contract requires it
-- one `prepare_write` allow/block path
+- one `prepare_write` allow/structured-blocker path
 - one durable single-use Write Authorization
 - one `record_run` that consumes that authorization
 - one registered `ArtifactRef` or equivalent evidence reference owned by Core/API contracts
@@ -106,7 +118,7 @@ v0.1 explicitly excludes full natural-language intake, full Discovery, full Deci
 
 Kernel Smoke candidates for v0.1 should assert only the minimal authority loop through Core state, the required owner records for that loop, artifact/evidence refs, and structured blockers. Projection polish, detailed templates, renderer output, and broad fixture catalogs are not first-slice conformance truth.
 
-At this point, an implementer can observe that Core owns the minimal state, a scoped write is allowed or blocked, one authorization is consumed once, an artifact/evidence ref is linked to the recorded Run, and status/blocker output can return structured blockers. This is implementer confidence, not proof that users experience Harness value.
+At this point, an implementer can observe that Core owns the minimal state, a scoped write is allowed or rejected with a structured blocker, one authorization is consumed once, an artifact/evidence ref is linked to the recorded Run, and status/blocker output can return structured blockers. This is implementer confidence, not proof that users experience Harness value.
 
 ### Contract field staging
 
@@ -136,7 +148,7 @@ flowchart LR
   Check -->|allowed| Authorization["Write Authorization"]
   Authorization --> Run["Run recorded"]
   Run --> Evidence["evidence linked"]
-  Check -->|blocked| Blocker["structured blocker"]
+  Check -->|not allowed| Blocker["structured blocker"]
   Evidence --> Status["status and next"]
   Blocker --> Status
   Status --> Close["close/status blocker"]
@@ -156,7 +168,7 @@ The MVP must demonstrate:
 - product/UX judgments and material technical architecture judgments can be presented separately from each other and from sensitive-action approval, final acceptance, and residual-risk acceptance
 - small changes and tracked work have different procedural budgets without letting small-change labeling bypass authority
 - status and next-action output explain current scope, missing decisions, evidence state, close blockers, and safe next action
-- close is blocked when required evidence or a required user-owned decision is missing
+- close reports a blocker when required evidence or a required user-owned decision is missing
 - residual risk can be displayed before acceptance and close
 - final acceptance is distinct from sensitive-action Approval and residual-risk acceptance
 - readable summaries or cards show current work status, user decision request, evidence summary, and close readiness/blockers without template polish becoming the source of truth; final-acceptance and residual-risk facts remain distinct inside those summaries when relevant
@@ -232,8 +244,8 @@ Use these as implementation-readable checklists for future runtime planning afte
 - One local project is registered.
 - One Task exists in Core-owned state.
 - One scoped work boundary names the intended change boundary.
-- Product writes without compatible scope block.
-- Out-of-scope intended writes block.
+- Product writes without compatible scope are refused by Core with a structured blocker; this is not a default pre-tool security block.
+- Out-of-scope intended writes are refused by Core with a structured blocker; this is not a default pre-tool security block.
 - Allowed `prepare_write` creates a durable single-use Write Authorization.
 - A compatible `record_run` consumes the authorization once.
 - A second distinct product-write Run cannot reuse the consumed authorization.
@@ -248,8 +260,8 @@ Use these as implementation-readable checklists for future runtime planning afte
 - Product/UX judgment and material technical architecture judgment can be presented separately from each other and from approval, final acceptance, and residual-risk acceptance.
 - Small direct changes and tracked work use different procedural budgets without bypassing write authority, evidence, or a required user decision.
 - Status/next output explains current scope, missing decisions, evidence state, residual-risk display, close blockers, and next safe action.
-- Close blocks when required evidence is missing.
-- Close blocks when a required user decision is missing or unresolved.
+- Close reports a blocker when required evidence is missing.
+- Close reports a blocker when a required user decision is missing or unresolved.
 - Residual risk is visible before successful acceptance or close when known close-relevant risk exists.
 - Final acceptance is recorded or represented separately from sensitive-action Approval and residual-risk acceptance.
 - Residual-risk acceptance, when supported, is visibly distinct from final acceptance.
@@ -280,7 +292,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 | Stage | What the user or operator can observe |
 |---|---|
 | v0.1 Core Authority Slice | An implementer can see one local Task move through a scoped work boundary, `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref, and structured status/blocker output. |
-| v0.2 User-Facing Harness MVP | A user can see ordinary work clarified into scope, user-owned judgment, evidence, close readiness, final-acceptance, and residual-risk language, with close blocked when evidence or a required user decision is missing. |
+| v0.2 User-Facing Harness MVP | A user can see ordinary work clarified into scope, user-owned judgment, evidence, close readiness, final-acceptance, and residual-risk language, with close reporting a blocker when evidence or a required user decision is missing. |
 | v0.3 Agency Assurance Pack | The local path explains verification, Manual QA, residual-risk acceptance, final acceptance, stewardship, TDD, feedback, context hygiene, and close behavior through Core records and fixtures. |
 | v0.4 Operations & Handoff Pack | Operators can diagnose, recover, reconcile, export, check artifacts, run conformance, and prepare release handoff over the same Core state. |
 

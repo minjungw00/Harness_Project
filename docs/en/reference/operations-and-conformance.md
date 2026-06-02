@@ -78,6 +78,16 @@ Stage-specific operator behavior:
 | v0.4 Operations & Handoff Pack | Full local operations profile: doctor/readiness categories, projection refresh, reconcile, recover, export, artifact integrity check, release handoff report/export profile where defined, and conformance run over materialized runtime suites. | Dashboard, hosted workflow UI, broad connector ecosystems, remote/shared operations, Browser QA Capture automation, Cross-Surface Verification automation, team workflow, and orchestration unless separately promoted. |
 | v1+ Expansion | Promoted roadmap operations such as broader connector automation, remote/shared access profiles, richer UI/operator dashboards, and higher automation only after owner docs define and prove exact contracts. | Anything not promoted remains outside staged delivery. |
 
+Operator guarantee posture follows the [Security Threat Model stage map](security-threat-model.md#guarantee-levels-by-stage):
+
+| Stage | Security wording allowed for operator surfaces |
+|---|---|
+| v0.1 Core Authority Slice | Cooperative/local diagnostic wording plus limited detective reporting for the active Core path. Structured blockers are Core/API results, not proof of pre-action tool blocking. |
+| v0.2 User-Facing Harness MVP | User-visible status and blocker wording may explain what cannot proceed under Harness authority and what only the user can decide. It must still say when the surface can only hold by instruction or detect later. |
+| v0.3 Agency Assurance Pack | Assurance diagnostics may report missing verification independence, Manual QA, residual-risk acceptance, final acceptance, or stewardship evidence without implying isolation or prevention. |
+| v0.4 Operations & Handoff Pack | Doctor, recover, export, artifact check, projection refresh, and reconcile are primarily detective/repair/report surfaces unless an exact profile proves stronger coverage. |
+| v1+ Expansion | Preventive or isolated operator claims require promoted owner docs, exact covered operations, fixture proof, and fallback behavior. |
+
 ```mermaid
 flowchart TD
   Core["Core rules and state authority"]
@@ -136,7 +146,7 @@ v0.1 Core Authority Slice is the first runnable authority-loop target, and Kerne
 
 The later conformance profiles follow the stage names in [MVP Plan](../build/mvp-plan.md): User-Facing Harness MVP fixtures for v0.2 User-Facing Harness MVP, Agency Assurance Pack fixtures for v0.3 Agency Assurance Pack, and Operations & Handoff Pack or promoted-expansion fixtures for v0.4 Operations & Handoff Pack and promoted v1+ Expansion candidates. Exact policy, API, storage, projection, connector, and fixture requirements stay in their Reference owners. Suite catalog metadata may group scenarios by suite, delivery stage, and tags for runner selection and reporting, but it is not passed to Core; future executable fixtures still assert through Core state, events, artifacts, projections/freshness, and errors.
 
-Guard/freeze conformance in staged delivery asserts honest display and behavior at cooperative/detective levels: freeze requests can hold work, make the next action stricter, or cause `prepare_write` to block or hold when existing scope is incompatible; persistent owner-record changes must be asserted only when they happen through an existing Core state-changing path, Decision Packet route, or owner-record update path. Guard displays report whether the current path is cooperative or detective and what violations can only be detected after the fact. Preventive `T4` guard fixtures and higher guarantee levels remain operations/future or v1+ Expansion scope unless owner docs promote and prove a concrete covered operation with fixture-backed pre-tool blocking for the relevant reference surface. Isolated-profile conformance must name whether the boundary supports verification independence/stale-context control or stronger security isolation, and must not treat a worktree, fresh evaluator bundle, or process split as OS sandboxing or tamper-proof security unless that exact mechanism is proven.
+Guard/freeze conformance in staged delivery asserts honest display and behavior at cooperative/detective levels: freeze requests can hold work, make the next action stricter, or cause `prepare_write` to return a structured blocker or hold when existing scope is incompatible; persistent owner-record changes must be asserted only when they happen through an existing Core state-changing path, Decision Packet route, or owner-record update path. Guard displays report whether the current path is cooperative or detective and what violations can only be detected after the fact. Preventive `T4` guard fixtures and higher guarantee levels remain operations/future or v1+ Expansion scope unless owner docs promote and prove a concrete covered operation with fixture-backed pre-tool blocking for the relevant reference surface. Isolated-profile conformance must name whether the boundary supports verification independence/stale-context control or stronger security isolation, and must not treat a worktree, fresh evaluator bundle, or process split as OS sandboxing or tamper-proof security unless that exact mechanism is proven.
 
 Browser QA Capture conformance is a v1+ Expansion candidate, not a requirement of Core Authority Slice fixtures, User-Facing Harness MVP fixtures, Agency Assurance Pack fixtures, or Operations & Handoff Pack / promoted-expansion fixtures. Until promoted through the [Roadmap promotion rule](../roadmap.md#promotion-rule), it is non-authoritative capture support only. Future fixtures should prove declared `T6 QA Capture` behavior only after capability profile fields, redaction and secret/PII handling, browser test environment, artifact retention, capture artifact mapping, unsupported-surface fallback behavior, and no projection-as-canonical dependency are defined. Staged-delivery fixtures still prove Manual QA records, artifact refs, QA waiver behavior, acceptance boundaries, and close blockers without requiring automated browser capture.
 
@@ -517,7 +527,7 @@ flowchart TD
   Interrupted --> Event["append compensating event"]
   Baseline --> Stale["mark affected readiness stale/blocked"]
   Approval --> Reapprove["expire, narrow, or re-request approval"]
-  Eval --> Verify["block verification until fresh bundle/path"]
+  Eval --> Verify["mark verification blocked until fresh bundle/path"]
   Evidence --> Artifact["preserve hash; restore exact bytes or register replacement"]
   Projection --> Recon["retry, fail, or create reconcile guidance"]
   Storage --> Repair["repair only from canonical state or raw artifacts"]

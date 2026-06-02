@@ -32,11 +32,37 @@ Canonical operational meaning은 Core가 소유한 state-changing path를 통해
 
 Security display는 실제 control과 일치해야 합니다. Cooperative와 detective 접점은 instruction으로 보류하거나 실행 뒤 감지할 수 있습니다. Preventive 표현에는 covered operation에 대해 fixture로 입증된 도구 실행 전 차단이 필요하고, isolated 표현에는 문서화되고 입증된 separation boundary가 필요합니다. Preventive 또는 isolated control이 필요한 high-risk work는 cooperative-only claim에 의존하면 안 됩니다.
 
-초기 로컬 하네스 단계는 OS 권한을 자동으로 제공하거나, 임의 도구를 sandbox 격리하거나, 로컬 파일을 변조 불가능하게 만들거나, 지시 기반 agent behavior를 사전 차단 보안으로 바꾸지 않습니다. v0.1과 v0.2는 authority가 없는 state-changing action을 거부하고, state를 기록하고, active Core path에 필요한 최소 artifact/evidence ref를 검증하고, stale 또는 mismatched fact를 보고하고, 낮아진 guarantee level을 표시할 수 있습니다. Preventive control은 owner 문서와 conformance가 exact covered operation을 증명하기 전까지 향후 또는 profile별 범위입니다. Isolated control은 exact separation boundary를 증명하기 전까지 향후 또는 profile별 범위입니다.
+초기 로컬 하네스 단계는 OS 권한을 자동으로 제공하거나, 임의 도구를 sandbox 격리하거나, 로컬 파일을 변조 불가능하게 만들거나, 지시 기반 agent behavior를 사전 차단 보안으로 바꾸지 않습니다. v0.1과 v0.2는 authority가 없는 state-changing action을 거부하고, state를 기록하고, active Core path에 필요한 최소 artifact/evidence ref를 검증하고, stale 또는 mismatched fact를 보고하고, 정직한 보장 한계를 표시할 수 있습니다. 구조화된 막힘은 Core 또는 연결된 접점이 Harness 권한 경로로 진행할 수 없다고 보고한다는 뜻이며, Harness가 실행 전에 process를 물리적으로 멈췄다는 주장이 아닙니다. Preventive control은 owner 문서와 conformance가 exact covered operation을 증명하기 전까지 향후 또는 profile별 범위입니다. Isolated control은 exact separation boundary를 증명하기 전까지 향후 또는 profile별 범위입니다.
 
 운영자 진입점은 그것을 도입한 stage와 connector profile의 guarantee level을 그대로 따릅니다. 나중 단계의 recover, export, reconcile, artifact check, conformance run, release handoff surface도 입증된 cooperative, detective, preventive, isolated capability보다 더 강하게 prevention이나 enforcement를 제공한다고 설명하면 안 됩니다.
 
 격리 주장은 어떤 종류의 분리를 주장하는지 이름 붙여야 합니다. Fresh evaluator bundle, fresh session, separate worktree는 verification independence, stale-context control, blast-radius reduction을 뒷받침할 수 있습니다. Sandbox 격리, 권한 계층, locked-down runner, process boundary, container boundary는 connector profile이 exact mechanism을 이름 붙이고 증명한 경우에만 더 강한 보안 격리를 뒷받침합니다.
+
+## 단계별 guarantee level
+
+아래는 로컬 reference path의 기본 단계별 guarantee입니다. 구체적인 connector, operator path, later profile은 exact covered operation 또는 separation boundary를 이름 붙이고 owner documentation과 conformance proof를 제시할 때만 더 강한 level을 주장할 수 있습니다.
+
+| 단계 | 기본 guarantee posture | 정직한 주장 경계 |
+|---|---|---|
+| v0.1 Core Authority Slice | 지시 기반/협력적(cooperative) + 제한된 탐지 가능(detective) behavior. | Core는 authority가 없는 state-changing call을 거부하고, 구조화된 상태/막힘 출력을 만들고, compatible Write Authorization 하나를 consume하고, Run 하나를 기록하며, active path에 필요한 최소 artifact/evidence ref를 검증할 수 있습니다. 별도의 preventive profile이 증명되지 않는 한 local process나 agent가 Harness 밖에서 file을 edit하는 것을 멈추지 않습니다. |
+| v0.2 User-Facing Harness MVP | 지시 기반/협력적(cooperative) + 사용자에게 보이는 blocker/status와 제한된 탐지 가능(detective) behavior. | 사용자는 missing scope, missing decision, missing evidence, close blocker, MCP availability, 정직한 보장 상태를 볼 수 있습니다. Authority를 확인할 수 없으면 product/runtime/code write는 지시로 보류됩니다. 이것은 여전히 기본 도구 실행 전 차단이나 격리가 아닙니다. |
+| v0.3 Agency Assurance Pack | Verification, QA, residual risk, 작업 수락, sensitive-action Approval 분리를 더 강하게 보여 주는 cooperative/detective assurance. | Harness는 assurance gap, stale evidence, missing independence, QA blocker, waiver/risk/acceptance boundary, context-hygiene finding을 기록하고 보고할 수 있습니다. 특정 profile이 capability를 증명하지 않는 한 preventive 또는 isolated가 되지 않습니다. |
+| v0.4 Operations & Handoff Pack | Recover, export, readiness, artifact integrity, projection freshness, handoff reporting 주변의 탐지 가능(detective) operational behavior. | Operator surface는 진단, 보고, owner path를 통한 repair, safe bundle export, artifact integrity check를 수행할 수 있습니다. 기본적으로 Runtime Home을 변조 불가능하게 만들거나, projection을 authoritative하게 만들거나, 임의 도구를 격리하지 않습니다. |
+| v1+ Expansion | 구현되고 증명된 경우에만 사전 차단(preventive) 또는 격리(isolated) 후보. | 더 강한 주장은 exact contract, covered operation, fixture proof, fallback behavior가 필요하며, 격리의 경우 proven sandbox, permission boundary, locked-down runner, process boundary, container boundary 같은 실제 separation boundary를 이름 붙여야 합니다. |
+
+이 단계 지도는 Core 권한을 낮추지 않습니다. Core는 active owner contract에 따라 invalid state transition을 거부하거나, Write Authorization을 내주지 않거나, gate 또는 파생 view를 `stale`/`blocked`로 표시하거나, 구조화된 막힘을 보고할 수 있습니다. 이 지도는 Harness가 action을 실행 전에 물리적으로 멈출 수 있는지, 또는 security boundary 뒤에 격리할 수 있는지에 대한 보안 표현만 제한합니다.
+
+## 단계별 scenario posture
+
+| Scenario | v0.1 Core Authority Slice | v0.2 User-Facing Harness MVP | v0.3 Agency Assurance Pack | v0.4 Operations & Handoff Pack | v1+ Expansion |
+|---|---|---|---|---|---|
+| MCP unavailable | Authority가 필요한 call은 fail 또는 hold됩니다. Chat이나 cached text에서 Core state, Write Authorization, evidence, 작업 수락, 잔여 위험 수용, close claim을 만들어 내지 않습니다. | 사용자는 availability 막힘/status와 다음 reconnect 또는 diagnosis action을 봅니다. 입증된 더 강한 profile이 해당 operation을 cover하지 않는 한 product/runtime/code write는 지시로 보류됩니다. | Assurance path는 unavailable path를 통해 verification, QA, waiver, risk, acceptance state를 신뢰할 수 없다고 보고합니다. | `serve mcp`, `doctor`, `recover`는 `MCP_SERVER_UNAVAILABLE`과 `SURFACE_MCP_UNAVAILABLE`을 구분하고 public `MCP_UNAVAILABLE`/capability error boundary를 보존합니다. | 승격된 guard는 증명된 path에서만 covered write를 실행 전에 멈출 수 있고, 승격된 isolation profile은 실제 boundary를 통해 work를 route할 수 있습니다. |
+| Out-of-scope write | `prepare_write`는 Write Authorization을 거부하고 구조화된 막힘을 반환할 수 있습니다. External edit는 active path가 관찰할 때만 탐지됩니다. | 사용자는 무엇이 scope 밖인지 보고, 올바른 decision path를 통해 scope를 줄이거나 의도적으로 넓힐 수 있습니다. | Autonomy, approval, evidence, changed-path check가 run, evidence, verification, close readiness를 stale/blocked/insufficient로 표시할 수 있습니다. | Doctor, recover, reconcile이 changed-path 또는 generated-file drift를 보고하고 repair를 owner path로 route할 수 있습니다. | Preventive profile은 fixture proof가 해당 operation을 cover할 때만 covered path/command/network/secret을 실행 전에 멈출 수 있습니다. |
+| Sensitive-action approval | Full Approval semantics는 owner profile이 좁은 case를 승격하지 않는 한 최소 조각 밖입니다. Active scope 밖의 sensitive action은 보류되거나 unsupported로 취급됩니다. | 사용자는 이름 붙은 sensitive step, permission 필요/부여 여부, 그리고 permission이 작업 수락이나 잔여 위험 수용이 아니라는 점을 봅니다. | Approval은 Decision Packet, Write Authorization, QA/verification waiver, 작업 수락, 잔여 위험 수용과 분리됩니다. | Operator diagnostic과 export/handoff report는 외부 approval 또는 deployment authority를 만들지 않고 Approval status를 보여줄 수 있습니다. | Policy wrapper 또는 permission system은 exact covered action에 대한 proof가 있을 때만 preventive가 될 수 있습니다. |
+| Stale projection | Persisted projection은 필수가 아닙니다. 오래된 readable text는 Core state가 아닙니다. | Readable summary/card는 freshness warning을 표시할 수 있으며 stale이면 authority로 쓰면 안 됩니다. | Assurance와 context-hygiene check는 verification/QA/close가 view에 의존하기 전에 fresh state, fresh evaluator bundle, reconcile을 요구할 수 있습니다. | Projection refresh, reconcile, doctor, export, recover가 committed state를 유지하면서 freshness를 owner path로 보고하거나 repair할 수 있습니다. | Richer projection/UI system은 owner docs가 mutation path를 정의하고 증명하기 전까지 read-only로 남습니다. |
+| Artifact tampering | Active path에서 registered artifact ref와 최소 integrity fact를 확인합니다. Direct file edit는 evidence authority가 아닙니다. | Evidence와 close summary는 missing, stale, mismatched artifact support를 보여줍니다. | Evidence, Eval, Manual QA, waiver, risk, close path는 replacement 또는 owner decision이 gap을 해소할 때까지 stale, insufficient, blocked, unresolved가 될 수 있습니다. | Artifact check, recover, export는 hash, retention, redaction, omitted-secret, blocked-payload metadata를 검증하되 staged file이나 Markdown을 신뢰하지 않습니다. | Storage hardening 또는 locked artifact handling은 실제 boundary와 conformance proof가 있을 때만 더 강해질 수 있습니다. |
+| Prompt injection | Repo doc, generated file, old projection, chat은 input입니다. Authority를 만들거나 Core를 우회할 수 없습니다. | User-facing status와 decision prompt는 broad approval처럼 보이는 prose를 authority로 취급하지 않고 current scope와 decision을 보여줘야 합니다. | Context-hygiene, stewardship, evaluator freshness, Decision Packet route는 assurance claim이 stale 또는 malicious context에 의존하기 전에 이를 보이게 합니다. | Doctor와 reconcile은 generated-file drift, stale context, projection tampering, managed-block edit를 보고할 수 있습니다. | Content filter, isolated evaluator, 더 강한 prompt-containment mechanism은 exact boundary가 증명되기 전까지 Expansion 후보입니다. |
+| Secret leakage | Raw secret은 artifact, manifest, projection, prompt context가 되면 안 됩니다. 최소 evidence path는 필요할 때 redaction, omission, safe handle을 사용합니다. | 사용자는 raw value 없이 evidence gap, omitted-secret note, safe secret handle을 봅니다. | Evidence, QA, Eval, waiver, residual-risk path는 assurance 또는 close claim이 의존하기 전에 redaction, omission, blocked payload를 반영합니다. | Artifact check와 export/handoff는 omission/block metadata를 보존하고 raw staged, omitted, blocked, secret, PII value를 복사하지 않습니다. | Secret scanner, permission wrapper, data-loss-prevention control은 storage 또는 transmission 전에 covered leakage를 막고 그 path를 증명할 때만 preventive입니다. |
 
 ## 담당하는 참조 범위
 
@@ -162,10 +188,10 @@ Security wording은 입증된 control과 일치해야 합니다.
 
 | Guarantee | Honest security meaning |
 |---|---|
-| `cooperative` | Surface가 Core decision을 따르거나 보류하라고 지시받는 협력적/지시 기반 수준입니다. 강한 보안 경계나 실행 전 차단이 아닙니다. |
-| `detective` | Harness가 실행 뒤 violation을 탐지하거나 기록할 수 있는 탐지 가능 수준입니다. Prevention이 아니라 after-the-fact detection입니다. |
+| `cooperative` | Surface가 Core decision을 따르거나 보류하라고 지시받는 협력적/지시 기반 수준입니다. 강한 보안 경계나 실행 전 차단이 아니라 instruction-following behavior입니다. |
+| `detective` | Harness가 위반을 관찰할 수 있을 때 또는 행동 뒤에 이를 감지, 기록, 보고할 수 있는 탐지 가능 수준입니다. 이는 탐지와 보고이지 예방이 아닙니다. |
 | `preventive` | Concrete hook, wrapper, permission layer, policy engine, sidecar 또는 equivalent가 covered operation을 실행 전에 사전 차단하며, exact path에 대한 fixture 증명이 있습니다. |
-| `isolated` | Work 또는 verification이 문서화된 separation boundary 뒤에서 실행되는 격리 수준입니다. Worktree 또는 fresh evaluator bundle은 scope, freshness, blast-radius 분리를 제공할 수 있지만, profile이 exact isolation mechanism을 증명하지 않는 한 자동으로 OS sandbox 격리, 권한 경계, 변조 불가능한 보안 경계가 되지는 않습니다. Isolation만으로 approval, verification, 작업 수락, 잔여 위험 수용, close, assurance upgrade가 생기지 않습니다. |
+| `isolated` | 주장하는 내용에 맞는 실제 문서화된 separation boundary 뒤에서 work 또는 verification이 실행되는 격리 수준입니다. Worktree 또는 fresh evaluator bundle은 scope, freshness, blast-radius 분리를 제공할 수 있지만, profile이 exact isolation mechanism을 증명하지 않는 한 자동으로 OS sandbox 격리, 권한 경계, 변조 불가능한 보안 경계가 되지는 않습니다. Isolation만으로 approval, verification, 작업 수락, 잔여 위험 수용, close, assurance upgrade가 생기지 않습니다. |
 
 Guard, freeze, careful-mode, recipe name, product name, surface name, friendly mode label은 guarantee를 올려 주지 않습니다. High-risk work는 실제 사용하는 control을 보여야 하며, preventive 또는 isolated control이 필요한 경우 cooperative-only claim에 의존하면 안 됩니다.
 

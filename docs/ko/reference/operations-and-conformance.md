@@ -78,6 +78,16 @@ Conformance fixture body shape, fixture assertion semantics, detailed future sce
 | v0.4 Operations & Handoff Pack | Full local operations profile입니다. Doctor/readiness category, projection refresh, reconcile, recover, export, artifact integrity check, 담당 문서가 정의한 release handoff report/export profile, materialized runtime suite에 대한 conformance run을 포함합니다. | Dashboard, hosted workflow UI, broad connector ecosystem, remote/shared operations, Browser QA Capture automation, Cross-Surface Verification automation, team workflow, orchestration은 별도로 승격하기 전까지 제외합니다. |
 | v1+ Expansion | Owner docs가 exact contract를 정의하고 증명한 뒤 승격한 broader connector automation, remote/shared access profile, richer UI/operator dashboard, higher automation 같은 roadmap operations입니다. | 승격되지 않은 것은 staged delivery 밖에 남습니다. |
 
+Operator guarantee posture는 [보안 위협 모델의 단계별 guarantee level](security-threat-model.md#단계별-guarantee-level)을 따릅니다.
+
+| 단계 | Operator surface에서 허용되는 보안 표현 |
+|---|---|
+| v0.1 Core Authority Slice | Active Core path에 대한 지시 기반/협력적 local diagnostic 표현과 제한된 탐지 가능 보고. 구조화된 막힘은 Core/API 결과이지 도구 실행 전 사전 차단 증명이 아닙니다. |
+| v0.2 User-Facing Harness MVP | 사용자가 보는 status와 막힘 표현은 Harness authority 안에서 무엇이 진행될 수 없는지, 무엇을 사용자만 결정할 수 있는지 설명할 수 있습니다. 그래도 surface가 지시로만 보류할 수 있는지, 실행 뒤에만 탐지할 수 있는지 표시해야 합니다. |
+| v0.3 Agency Assurance Pack | Assurance diagnostic은 verification independence, 수동 QA, 잔여 위험 수용, 작업 수락, stewardship evidence의 누락을 보고할 수 있지만, 격리나 사전 차단을 암시하면 안 됩니다. |
+| v0.4 Operations & Handoff Pack | Doctor, recover, export, artifact check, projection refresh, reconcile은 exact profile이 더 강한 coverage를 증명하지 않는 한 주로 탐지 가능/repair/report surface입니다. |
+| v1+ Expansion | Preventive 또는 isolated operator claim에는 승격된 owner docs, exact covered operation, fixture proof, fallback behavior가 필요합니다. |
+
 ```mermaid
 flowchart TD
   Core["Core rule과 상태 권한"]
@@ -136,7 +146,7 @@ Build 문서는 첫 실행 가능한 조각과 stage exit를 계획하기 위한
 
 이후 conformance profile은 [MVP 계획](../build/mvp-plan.md)의 stage name을 따릅니다. Core Authority Slice fixtures는 코어 권한 조각(v0.1 Core Authority Slice)에, User-Facing Harness MVP fixtures는 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)에, Agency Assurance Pack fixtures는 에이전시 보증 팩(v0.3 Agency Assurance Pack)에, Operations & Handoff Pack 또는 promoted-expansion fixtures는 운영과 인계 팩(v0.4 Operations & Handoff Pack)과 승격된 v1+ Expansion candidate에 대응합니다. Exact policy, API, storage, projection, connector, fixture requirement는 각 Reference owner에 남습니다. Suite catalog metadata는 runner selection과 reporting을 위해 scenario를 suite, delivery stage, tag로 group할 수 있지만 Core에 전달되지 않습니다. 향후 executable fixture는 여전히 Core state, events, artifacts, projections/freshness, errors를 통해 검증해야 합니다.
 
-단계별 전달 계획의 guard/freeze conformance는 cooperative/detective level에서 honest display와 behavior를 검증합니다. Freeze request는 work를 보류하거나, next action을 더 엄격하게 만들거나, existing scope가 incompatible할 때 `prepare_write`가 차단 또는 보류하게 만들 수 있습니다. Persistent owner-record change는 기존 Core 상태 변경 경로, Decision Packet route, owner-record update path를 통해 일어날 때만 검증해야 합니다. Guard display는 현재 경로가 cooperative인지 detective인지, 그리고 어떤 위반이 사후에만 감지될 수 있는지 보고합니다. Preventive `T4` guard fixture와 higher guarantee level은 owner 문서가 해당 reference surface의 구체적인 covered operation에 대해 fixture-backed 도구 실행 전 차단을 승격하고 증명하기 전까지 operations/future 또는 v1+ Expansion scope에 남습니다. Isolated-profile conformance는 그 boundary가 verification independence/stale-context control을 뒷받침하는지, 아니면 더 강한 보안 격리를 뒷받침하는지 이름 붙여야 하며, exact mechanism이 증명되지 않은 worktree, fresh evaluator bundle, process split을 OS sandbox 격리나 변조 불가능한 보안 경계로 취급하면 안 됩니다.
+단계별 전달 계획의 guard/freeze conformance는 cooperative/detective level에서 honest display와 behavior를 검증합니다. Freeze request는 work를 보류하거나, next action을 더 엄격하게 만들거나, existing scope가 incompatible할 때 `prepare_write`가 구조화된 막힘을 반환하거나 보류하게 만들 수 있습니다. Persistent owner-record change는 기존 Core 상태 변경 경로, Decision Packet route, owner-record update path를 통해 일어날 때만 검증해야 합니다. Guard display는 현재 경로가 cooperative인지 detective인지, 그리고 어떤 위반이 사후에만 감지될 수 있는지 보고합니다. Preventive `T4` guard fixture와 higher guarantee level은 owner 문서가 해당 reference surface의 구체적인 covered operation에 대해 fixture-backed 도구 실행 전 차단을 승격하고 증명하기 전까지 operations/future 또는 v1+ Expansion scope에 남습니다. Isolated-profile conformance는 그 boundary가 verification independence/stale-context control을 뒷받침하는지, 아니면 더 강한 보안 격리를 뒷받침하는지 이름 붙여야 하며, exact mechanism이 증명되지 않은 worktree, fresh evaluator bundle, process split을 OS sandbox 격리나 변조 불가능한 보안 경계로 취급하면 안 됩니다.
 
 Browser QA Capture conformance는 owner 문서가 명시적으로 승격하고 증명하기 전까지 v1+ Expansion roadmap 후보이지 Core Authority Slice fixtures, User-Facing Harness MVP fixtures, Agency Assurance Pack fixtures, Operations & Handoff Pack / promoted-expansion fixtures의 requirement가 아닙니다. [로드맵 승격 규칙](../roadmap.md#승격-규칙)을 통해 승격되기 전까지는 권한 없는 capture support일 뿐입니다. Future fixtures는 capability profile fields, redaction 및 secret/PII handling, browser test environment, artifact 보존, capture artifact mapping, unsupported 접점 fallback 동작, projection-as-canonical 의존성 없음이 정의된 뒤에만 declared `T6 QA Capture` 동작을 증명해야 합니다. Staged-delivery fixtures는 automated browser capture를 요구하지 않고 수동 QA records, artifact refs, QA 면제 동작, 작업 수락 경계, close blockers를 계속 증명합니다.
 

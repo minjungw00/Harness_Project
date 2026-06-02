@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference to understand where Harness runs, where canonical state lives, how Core commits state transitions, how artifacts and projections move through the system, and what enforcement strength the runtime can honestly claim.
+Use this reference to understand where Harness runs, where canonical state lives, how Core commits state transitions, how artifacts and projections move through the system, and what control strength the runtime can honestly claim.
 
 It is a lookup document for implementers and operators. It does not repeat the Learn overview or teach the whole Harness model from first principles.
 
@@ -176,7 +176,7 @@ state.sqlite / artifact store / validators / projector / reconcile worker
 
 The conversation surface gathers user intent, decisions, approvals, QA judgments, and acceptance. The agent surface performs reading, editing, and checking. Harness rules and skills keep the agent oriented. The MCP server provides the tool boundary. Core owns the state machine. Validators, artifact capture, projection, and reconcile attach evidence and readable output to state transitions.
 
-Native hooks, sidecars, command wrappers, file watchers, and worktree isolation are capability-dependent enforcement layers. v0.1 Core Authority Slice and the early user-facing MVP rely on cooperative/detective behavior for the reference surface unless a concrete capability profile has fixture-proven stronger enforcement for the covered operation.
+Native hooks, sidecars, command wrappers, file watchers, and worktree isolation are capability-dependent control layers. v0.1 Core Authority Slice and the early user-facing MVP rely on cooperative/detective behavior for the reference surface unless a concrete capability profile has fixture-proven stronger control for the covered operation.
 
 
 ### Core modules
@@ -207,7 +207,7 @@ Decision, Journey, and Autonomy/Boundary modules do not create a new authority t
 
 ### Validators and adapter placement
 
-Validators sit beside Core and return structured results to Core. Core decides whether the result blocks a transition, marks a gate stale/partial/blocked, requests a user decision, or only affects display.
+Validators sit beside Core and return structured results to Core. Core decides whether to decline the transition, mark a gate stale/partial/blocked, request a user decision, or only affect display.
 
 The Agency Assurance Pack and Operations & Handoff Pack ValidatorResult ID set is API-owned and listed in [MCP API And Schemas](mcp-api-and-schemas.md#validatorresult). This runtime reference owns where those validators sit relative to Core and adapters, not a second copy of the ID registry.
 
@@ -301,9 +301,13 @@ Reconcile can merge, reject, convert to note, create a decision, create or updat
 
 The exact meanings of `cooperative`, `detective`, `preventive`, and `isolated`, plus the staged honest-display rules for those labels, are owned by [Security Threat Model Reference: Honest guarantee display](security-threat-model.md#honest-guarantee-display). This architecture section owns only where the reported label appears in the runtime flow: connector profiles and adapters report it, Core still performs the authority decision, and operator or recovery surfaces use it as display and risk context.
 
-### Guarantee level enforcement map
+Architecturally, the stage defaults are: v0.1 cooperative plus limited detective Core status behavior; v0.2 cooperative/detective user-visible blockers and status; v0.3 cooperative/detective assurance separation for verification, QA, risk, and acceptance; v0.4 detective operations, recovery, export, and integrity checks; v1+ preventive or isolated profiles only where a concrete operation or boundary is implemented and proven. The [Security Threat Model stage map](security-threat-model.md#guarantee-levels-by-stage) owns the full table.
 
-This diagram shows where the guarantee label changes enforcement strength and where it does not. Notice that Core makes the authority decision first. Guarantee level does not create authority; it only describes whether a denied or held operation is handled by instruction, after-action detection, fixture-proven pre-execution blocking, or isolation for the covered operation.
+<a id="guarantee-level-enforcement-map"></a>
+
+### Guarantee level behavior map
+
+This diagram shows where the guarantee label changes control behavior and where it does not. Notice that Core makes the authority decision first. Guarantee level does not create authority; it only describes whether a denied or held operation is handled by instruction, after-action detection, fixture-proven pre-execution blocking, or isolation for the covered operation.
 
 ```mermaid
 flowchart TB
@@ -321,7 +325,7 @@ flowchart TB
   Blocker --> Owner
 ```
 
-Preventive labels apply only where the connected profile has fixture-proven coverage for the operation being described. Isolated labels apply only where the connected profile documents and proves the separation boundary being claimed. A fresh evaluator bundle, fresh session, or separate worktree can support verification independence and stale-context control; sandbox, permission layer, locked-down runner, process boundary, or container boundary wording is security-isolation wording only when the profile names and proves that exact mechanism. These labels do not approve work, create Write Authorization, satisfy gates, create evidence, perform verification, accept risk, or close Tasks. Strict `prepare_write` and `record_run` behavior is owned by [Kernel Reference](kernel.md#prepare_write) and [Kernel Reference](kernel.md#record_run). Public response shapes and error precedence are owned by [MCP API And Schemas](mcp-api-and-schemas.md). Concrete profile declarations are owned by [Agent Integration Reference](agent-integration.md#capability-profiles). This diagram is only an enforcement-orientation view.
+Preventive labels apply only where the connected profile has fixture-proven coverage for the operation being described. Isolated labels apply only where the connected profile documents and proves the separation boundary being claimed. A fresh evaluator bundle, fresh session, or separate worktree can support verification independence and stale-context control; sandbox, permission layer, locked-down runner, process boundary, or container boundary wording is security-isolation wording only when the profile names and proves that exact mechanism. These labels do not approve work, create Write Authorization, satisfy gates, create evidence, perform verification, accept risk, or close Tasks. Strict `prepare_write` and `record_run` behavior is owned by [Kernel Reference](kernel.md#prepare_write) and [Kernel Reference](kernel.md#record_run). Public response shapes and error precedence are owned by [MCP API And Schemas](mcp-api-and-schemas.md). Concrete profile declarations are owned by [Agent Integration Reference](agent-integration.md#capability-profiles). This diagram is only a control-orientation view.
 
 
 Guarantee display should name both sides of the boundary: what the connected profile can actually block before execution, and what it can only detect after action. A surface name, product name, recipe name, or friendly mode label is never proof of capability; the declaration must come from the actual host/profile capability profile and its current proof basis. Guard, freeze, and careful-mode labels inherit the connected profile's proven capability; they do not upgrade a cooperative or detective profile into preventive blocking, and they do not create authority tiers.
@@ -339,7 +343,7 @@ Failures are recorded rather than hidden:
 | Agent crash during write | mark the active Run with `runs.status=interrupted` or commit an equivalent interrupted recovery Run; capture diff/log snapshots when possible and register them as recovery artifacts, not proof of successful completion |
 | Baseline drift | mark baseline-dependent write, verification, evidence, approval, or close-readiness paths stale or blocked until a fresh baseline or compatible owner path exists |
 | Approval drift | expire, narrow, or re-request approval when scope, baseline, sensitive category, expiry, or actor context no longer matches; do not turn a stale approval into broad authorization |
-| Evaluator observes repo drift | block or stale verification; require a fresh baseline, evaluator bundle, or Eval path, and do not set detached verification passed from the drifted observation |
+| Evaluator observes repo drift | mark verification blocked or stale; require a fresh baseline, evaluator bundle, or Eval path, and do not set detached verification passed from the drifted observation |
 | Artifact file missing or hash mismatch | mark the artifact and dependent evidence, projection, export, or close-readiness view stale or blocked; rescan, restore the exact registered bytes, or register a replacement through recovery |
 | Projection job failed | keep state current; mark projection failed and retry or reconcile; do not roll back Core state, fail the Task result, or fabricate state from rendered Markdown |
 | Managed Markdown edited directly | create reconcile item; do not mutate state directly |
