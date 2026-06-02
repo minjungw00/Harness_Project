@@ -16,10 +16,10 @@ Implementation tier: User-facing MVP summaries. Only the status, user decision r
 - display inputs for Scope, User Decisions, Evidence, and Close Readiness groups derived from existing owner records, gates, blockers, and refs
 - Write Authorization records and Write Authority Summary display inputs
 - Decision Packets and Residual Risks, including schema-owned Decision Packet `judgment_domain` when rendered
-- latest Run, Evidence Manifest, Eval, Manual QA record, and approval records
+- latest Run, Evidence Manifest, Eval, Manual QA record, and sensitive-action approval records
 - compact authority source refs for Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
 - primary blocker, secondary blocker, and smallest unblocker display summaries
-- close summary display inputs, including changed scope, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, waivers, and close reason
+- close summary display inputs, including changed scope, sensitive-action approval, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, waivers, and close reason
 - Journey Spine source records
 - `domain_terms`, `module_map_items`, `interface_contracts`, and `feedback_loops`
 - `tdd_traces` when TDD is selected
@@ -109,6 +109,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Close Readiness:
   - verification:
   - Manual QA:
+  - sensitive-action approval:
   - final acceptance:
   - residual-risk visibility:
   - residual-risk acceptance:
@@ -275,6 +276,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - evidence:
 - verification:
 - Manual QA:
+- sensitive-action approval:
 - residual-risk visibility:
 - residual-risk acceptance:
 - final acceptance:
@@ -509,7 +511,7 @@ Generated summaries should use ordinary user-facing language first and exact Har
 
 Gate Group Summary is the first managed section so readers see the practical blocker story before raw gate detail. Scope, User Decisions, Evidence, and Close Readiness are display groups derived from existing owner records, gates, blockers, and refs. They are not canonical fields, aliases for exact gate values, new gates, recompute inputs, close semantics, or authority paths. User Decisions is structured and must not be rendered as one broad judgment or approval bucket. Exact gate values and recompute rules remain in [Kernel Reference](../kernel.md#gates), and close behavior remains in [`close_task`](../kernel.md#close_task).
 
-Decision Packet display in `TASK` should show the schema-owned `judgment_domain` so users can scan whether they are making a Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed judgment. It must also show the concrete decision type derived from the route and owner refs: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, or residual-risk acceptance. If a decision is cross-cutting, render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the domain as exclusive. `judgment_domain` is not a gate, status, validator input, close aggregation rule, or authority path, and it must not blur the owner contracts for `decision_kind`, Approval, acceptance, QA, residual-risk acceptance, close, or Write Authorization.
+Decision Packet display in `TASK` should show the schema-owned `judgment_domain` so users can scan whether they are making a Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed judgment. It must also show the concrete decision type derived from the route and owner refs: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, or residual-risk acceptance. If a decision is cross-cutting, render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the domain as exclusive. `judgment_domain` is not a gate, status, validator input, close aggregation rule, or authority path, and it must not blur the owner contracts for `decision_kind`, Approval, final acceptance, QA, residual-risk acceptance, close, or Write Authorization.
 
 Pending decisions must not be merged into one line. If sensitive-action approval, final acceptance, and residual-risk acceptance are all pending, render three items with three labels. Approval cards should not look like final acceptance, and residual-risk acceptance should name the risk being accepted.
 
@@ -521,9 +523,9 @@ Close and assurance display in `TASK` must keep self-checked work, `detached_ver
 
 Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver Decision Packet when required, or `verification_gate=waived_by_user` and its Decision Packet when required. They should also show the policy or gate, Task and Change Unit, skipped check or surface, reason, actor, expiry or residual-risk follow-up when needed, relevant refs, close impact, and any close-relevant residual risk that must be visible or accepted through the residual-risk path when required. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
 
-Close Summary in `TASK` is a continuity display summary for active or recently closed `work` tasks. It must not hide gate status or residual risk. When close is successful, blocked, canceled, or residual-risk accepted, the summary should show changed scope, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, waiver status, close reason, and residual-risk follow-up as applicable, with refs back to owner records. Final acceptance and residual-risk acceptance must remain separate lines: final acceptance is the user's result judgment, while residual-risk acceptance must identify the accepted risk and cite accepted Residual Risk refs.
+Close Summary in `TASK` is a continuity display summary for active or recently closed `work` tasks. It must not hide gate status or residual risk. When close is successful, blocked, canceled, or residual-risk accepted, the summary should show changed scope, sensitive-action approval, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, waiver status, close reason, and residual-risk follow-up as applicable, with refs back to owner records. Sensitive-action approval, final acceptance, and residual-risk acceptance must remain separate lines: approval is permission for the named sensitive action, final acceptance is the user's result judgment, and residual-risk acceptance must identify the accepted risk and cite accepted Residual Risk refs.
 
-Close Summary must not collapse evidence, verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance into a single "done" flag. If tests pass but Manual QA, final acceptance, or residual-risk acceptance is still pending, the close display should show that exact category as the blocker.
+Close Summary must not collapse sensitive-action approval, evidence, verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance into a single "done" flag. If tests pass but sensitive-action approval, Manual QA, final acceptance, or residual-risk acceptance is still pending, the close display should show that exact category as the blocker.
 
 Direct work uses `DIRECT-RESULT` for its low-ceremony close impact summary, and Journey Card close context is compact status/resume display. `TASK` Close Summary remains a continuity display under the [projection/report boundary](../document-projection.md#projection-principles); close and gate effects still come from owner records.
 

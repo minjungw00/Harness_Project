@@ -6,7 +6,7 @@
 
 처음 읽는 독자는 Learn 경로에서 전체 그림을 먼저 보고, 정확한 상태 규칙이 필요할 때 이 문서로 돌아오는 것을 권장합니다.
 
-이 문서는 향후 Harness 동작을 위한 참조 문서입니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-승인-상태)에 있습니다.
+이 문서는 향후 Harness 동작을 위한 참조 문서입니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-수락-상태)에 있습니다.
 
 ## 이런 때 읽기
 
@@ -66,11 +66,11 @@ Kernel은 제품 파일 쓰기와 닫기 판단이 명시적인 상태에 의존
 
 4. 이 Task를 close할 수 있는가?
 
-   `close_task`는 active Run 상태, scope, decision, 민감 동작 승인, design, 근거, 검증, 수동 QA, 잔여 위험 표시, 작업 수락, 요청된 닫기 사유를 확인해 닫기 가능 여부를 판단합니다.
+   `close_task`는 active Run 상태, scope, decision, 민감 동작 승인, design, 근거, 검증, 수동 QA, 잔여 위험 표시, 요청한 닫기 경로에 필요한 잔여 위험 수용, 작업 수락, 요청된 닫기 사유를 확인해 닫기 가능 여부를 판단합니다.
 
 ## 판단 경로 경계
 
-사용자 판단은 특정 경로를 통해 kernel state에 도달합니다. 넓은 승인 문구는 active prompt와 기록 payload가 경로, affected scope, 선택지 또는 결과, close 또는 write 영향을 이름 붙였을 때만 유효합니다. 하나의 "예"는 모호하지 않게 연결되는 특정 대기 중인 판단 하나에만 답할 수 있습니다.
+사용자 판단은 특정 경로를 통해 kernel state에 도달합니다. 막연한 동의 문구는 active prompt와 기록 payload가 경로, affected scope, 선택지 또는 결과, close 또는 write 영향을 이름 붙였을 때만 유효합니다. 하나의 "예"는 모호하지 않게 연결되는 특정 대기 중인 판단 하나에만 답할 수 있습니다.
 
 | 경로 | Kernel 의미 | 이렇게 취급하면 안 되는 것 |
 |---|---|---|
@@ -78,7 +78,7 @@ Kernel은 제품 파일 쓰기와 닫기 판단이 명시적인 상태에 의존
 | Decision Packet | 사용자 소유 제품 판단, 기술 구조 판단, 면제 판단, 작업 수락, 잔여 위험, reconcile 판단을 위한 기준 경로. | Approval 형태이고 Approval record에 연결된 경우를 제외한 민감 동작 승인, product-write authority, 분리 검증. |
 | 작업 수락 | Required일 때, 근거, 검증, 수동 QA 상태, 닫기 관련 잔여 위험이 보이거나 부재가 확인된 뒤 결과가 받아들일 만하다는 사용자 판단. | 근거 충분성, 검증, 수동 QA, 민감 동작 승인, 잔여 위험 수용, 면제 판단, 추가 write permission. |
 | 잔여 위험 수용 | Requested close에 대해 식별되고 보이는 닫기 관련 잔여 위험을 받아들일 수 있다는 사용자 판단. | 위험 없는 일반 close, 분리 검증, 수동 QA 통과, 민감 동작 승인, 근거, 작업 수락, 또는 별도 경로가 충족되지 않은 면제 판단. |
-| QA 또는 검증 면제 판단 | Policy가 허용할 때 이름 붙은 QA 또는 검증 요구사항에 대한 명시적이고 범위가 정해진 exception. | 수동 QA 통과, 분리 검증, 작업 수락, generic approval, 민감 동작 승인, 관련 없는 잔여 위험 수용. |
+| QA 또는 검증 면제 판단 | Policy가 허용할 때 이름 붙은 QA 또는 검증 요구사항에 대한 명시적이고 범위가 정해진 exception. | 수동 QA 통과, 분리 검증, 작업 수락, 막연한 동의, 민감 동작 승인, 관련 없는 잔여 위험 수용. |
 
 "go ahead", "proceed", "looks good", "좋아", "진행해" 같은 일반 문구는 위의 호환되는 경로로 기록되고 대기 중인 판단이 모호하지 않은 경우가 아니라면 제품 장단점, architecture 선택, QA 면제 판단, 검증 위험, 작업 수락, 잔여 위험 수용을 결정하지 않습니다. 그 문구가 둘 이상의 decision type에 적용될 수 있으면 Core 또는 agent는 넓게 해석하지 말고 다시 확인해야 합니다.
 
@@ -110,7 +110,7 @@ Stage support는 단계별 MVP 경계를 따릅니다.
 | Stage/profile | 표현할 수 있는 것 |
 |---|---|
 | v0.1 Core Authority Slice / Kernel Smoke | 좁은 내부 authority loop입니다. Local project registration, active Task, reference contract상 필요한 경우에만 Change Unit owner shape로 표현하는 범위가 정해진 작업 경계 하나, `prepare_write` 권한 경로 하나, 한 번만 쓰는 Write Authorization 하나, artifact/evidence ref 하나가 붙은 compatible Run 하나, structured status/blocker response 하나를 표현합니다. Smoke path가 루프에 필요한 최소 owner record를 명시적으로 포함하지 않으면 검증, 수동 QA, 작업 수락, 잔여 위험 수용, full Decision Packet quality, full Evidence Manifest path는 `not_required`, `none`, absent 또는 future-profile scope일 수 있습니다. |
-| v0.2 User-Facing Harness MVP | 사용자에게 보이는 status는 범위, 사용자 결정, 근거, 닫기 준비 상태, required일 때 작업 수락, close-relevant risk가 있을 때 잔여 위험 표시를 보여야 합니다. 테스트가 통과해도 왜 close가 막히는지 설명해야 합니다. |
+| v0.2 User-Facing Harness MVP | 사용자에게 보이는 status는 범위, 사용자 결정, 근거, 닫기 준비 상태, 해당될 때 민감 동작 승인, required일 때 작업 수락, close-relevant risk가 있을 때 잔여 위험 표시, 잔여 위험 수용 close 경로를 요청할 때 잔여 위험 수용을 보여야 합니다. 테스트가 통과해도 왜 close가 막히는지 설명해야 합니다. |
 | v0.3 이후 hardened profile | 분리 검증 독립성, 더 풍부한 수동 QA, stewardship, feedback-loop, TDD, operations, export/recover, handoff behavior를 harden합니다. Future-profile check는 active profile 또는 owner 문서가 켰을 때만 close blocker입니다. |
 
 ## 담당하는 참조 범위
@@ -123,7 +123,7 @@ Stage support는 단계별 MVP 경계를 따릅니다.
 - `prepare_write` 상태 로직
 - `close_task` 상태 로직
 - invariant enforcement mapping
-- Approval, 사용자 소유 판단, 쓰기 권한, 검증, QA, 수용, 잔여 위험 수용 사이의 경계와 대체 불가능한 관계
+- Approval, 사용자 소유 판단, 쓰기 권한, 검증, QA, 작업 수락, 잔여 위험 수용 사이의 경계와 대체 불가능한 관계
 
 ## 여기서 다루지 않는 것
 
@@ -1186,4 +1186,4 @@ Decision deferral은 waiver가 아닙니다. Deferred Decision Packet은 affecte
 
 `close_ready`는 `lifecycle_phase`가 아닙니다. Task에 open Run이 없고 close-relevant required gates가 요청된 닫기 의도와 모두 호환된다는 파생 condition입니다. Task를 `lifecycle_phase=completed`로 옮기는 것은 `close_task`뿐입니다.
 
-닫기 준비 상태 display는 해당되는 경우 근거, 검증, 수동 QA, 작업 수락, 잔여 위험 표시, 잔여 위험 수용을 별도 줄로 보여줘야 합니다. 어떤 범주는 `not_required`라고 말할 수 있지만, pending, waived, failed, blocked, stale, accepted-with-risk 범주가 있을 때 하나의 "완료" 상태로 대체하면 안 됩니다.
+닫기 준비 상태 display는 해당되는 경우 민감 동작 승인, 근거, 검증, 수동 QA, 작업 수락, 잔여 위험 표시, 잔여 위험 수용을 별도 줄로 보여줘야 합니다. 어떤 범주는 `not_required`라고 말할 수 있지만, pending, waived, failed, blocked, stale, accepted-with-risk 범주가 있을 때 하나의 "완료" 상태로 대체하면 안 됩니다.

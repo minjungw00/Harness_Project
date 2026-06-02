@@ -66,7 +66,7 @@ The kernel makes product writes and close decisions depend on explicit state: ac
 
 4. Can this Task close?
 
-   `close_task` decides close by checking active Run state, scope, decisions, sensitive-action Approval, design, evidence, verification, QA, residual-risk visibility, final acceptance, and the requested close reason.
+   `close_task` decides close by checking active Run state, scope, decisions, sensitive-action Approval, design, evidence, verification, QA, residual-risk visibility, residual-risk acceptance when the requested close path needs it, final acceptance, and the requested close reason.
 
 ## Judgment route boundaries
 
@@ -78,7 +78,7 @@ User judgment reaches kernel state through specific routes. Broad approval text 
 | Decision Packet | Canonical route for user-owned product, material technical, waiver, final acceptance, residual-risk acceptance, or reconcile judgment. | Sensitive-action Approval unless it is approval-shaped and linked to an Approval record; product-write authority; detached verification. |
 | Final acceptance | User judgment that the result is acceptable when required, after evidence, verification, QA status, and close-relevant residual risk are visible or confirmed absent. | Evidence sufficiency, verification, Manual QA, sensitive-action Approval, residual-risk acceptance, waiver, or permission for more writes. |
 | Residual-risk acceptance | User judgment that an identified visible close-relevant remaining risk is acceptable for the requested close. | Normal no-risk close, detached verification, QA pass, sensitive-action Approval, evidence, final acceptance, or waiver unless those separate routes are also satisfied. |
-| QA or verification waiver | Explicit scoped exception to the named QA or verification requirement when policy allows it. | Manual QA pass, detached verification, final acceptance, generic approval, sensitive-action Approval, or acceptance of unrelated residual risk. |
+| QA or verification waiver | Explicit scoped exception to the named QA or verification requirement when policy allows it. | Manual QA pass, detached verification, final acceptance, generic consent, sensitive-action Approval, or acceptance of unrelated residual risk. |
 
 A generic user phrase such as "go ahead," "proceed," or "looks good" does not decide product trade-offs, architecture choices, QA waivers, verification risk, final acceptance, or residual-risk acceptance unless it is recorded through the compatible route above and the pending decision is unambiguous. If the phrase could plausibly apply to more than one decision type, Core or the agent must clarify instead of over-interpreting it.
 
@@ -110,7 +110,7 @@ Stage support follows the staged MVP boundary:
 | Stage/profile | What it can represent |
 |---|---|
 | v0.1 Core Authority Slice / Kernel Smoke | A narrow internal authority loop: local project registration, active Task, one scoped work boundary represented by the Change Unit owner shape only where the reference contract requires it, one `prepare_write` authority path, one single-use Write Authorization, one compatible Run with one artifact/evidence ref, and one structured status/blocker response. Verification, Manual QA, final acceptance, residual-risk acceptance, full Decision Packet quality, and full Evidence Manifest paths may be `not_required`, `none`, absent, or future-profile scope unless the smoke path explicitly includes the minimal owner record needed for the loop. |
-| v0.2 User-Facing Harness MVP | User-facing status must show scope, user decisions, evidence, close readiness, final acceptance when required, and residual-risk visibility when close-relevant risk exists. It must explain why close remains blocked even when tests pass. |
+| v0.2 User-Facing Harness MVP | User-facing status must show scope, user decisions, evidence, close readiness, sensitive-action approval when applicable, final acceptance when required, residual-risk visibility when close-relevant risk exists, and residual-risk acceptance when a risk-accepted close path is requested. It must explain why close remains blocked even when tests pass. |
 | v0.3 and later hardened profiles | Detached verification independence, richer Manual QA, stewardship, feedback-loop, TDD, operations, export/recover, and handoff behavior are hardened. Future-profile checks are close blockers only when the active profile or owner docs enable them. |
 
 ## Reference scope
@@ -1189,4 +1189,4 @@ The following combinations are invalid and must be rejected or repaired by the k
 
 `close_ready` is not a `lifecycle_phase`. It is a derived condition meaning that the Task has no open Run and all close-relevant required gates are compatible with the requested close intent. Only `close_task` moves a Task to `lifecycle_phase=completed`.
 
-Close readiness displays should show separate category lines for evidence, verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance when those categories are applicable. A display may say a category is `not_required`, but it must not replace those category lines with a single "done" status when any category is pending, waived, failed, blocked, stale, or accepted-with-risk.
+Close readiness displays should show separate category lines for sensitive-action Approval, evidence, verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance when those categories are applicable. A display may say a category is `not_required`, but it must not replace those category lines with a single "done" status when any category is pending, waived, failed, blocked, stale, or accepted-with-risk.

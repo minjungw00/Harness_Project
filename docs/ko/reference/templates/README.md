@@ -4,7 +4,7 @@
 
 Projection 템플릿과 표시 카드가 렌더링하는 Markdown 형태를 확인할 때 이 파일들을 사용합니다. Projection 규칙, 권한 경계, 최신성 동작은 [문서 Projection 참조](../document-projection.md)가 정의합니다.
 
-Owner 경계: 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../../build/implementation-overview.md#문서-승인-상태)에 있습니다.
+Owner 경계: 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../../build/implementation-overview.md#문서-수락-상태)에 있습니다.
 
 이 디렉터리를 초기 구현에 모두 필요한 목록처럼 읽으면 안 됩니다. 아래 계층 표는 Core status output, 최소 사용자 대상 읽기용 요약, agency assurance report, operations/export report, future/diagnostic projection을 구분합니다.
 
@@ -44,7 +44,7 @@ Projection과 card shape는 다섯 단계의 산출물 계층을 지원합니다
 
 파생 표시 요약에는 `approval_covers`, `approval_does_not_cover`, `secret_exposure_boundary` 같은 Approval boundary line, close context, close blocker, waiver path, projection freshness, redaction availability, compact context, Journey Card, Review Stages, judgment-context 관련 summary가 포함됩니다. 이 이름들은 새로운 기준 기록, schema field, DDL column, `ProjectionKind` value, gate, 권한을 만드는 입력이나 권한 경로가 아닙니다. 요약 대상인 owner record, ref, gate, artifact, Decision Packet을 통하지 않고 validator input으로 사용하면 안 됩니다.
 
-렌더링 예시는 이 경계를 독자가 바로 볼 수 있어야 합니다. `source_state_version`은 렌더링에 사용한 상태 clock을 가리키고, `projection_version` 또는 projection status는 렌더/template/job 보기를 가리키며, `updated_at`은 그 보기가 만들어진 시각을 가리킵니다. 최신성 줄(freshness line)은 이 보기가 source record와 아직 맞는지 표시할 뿐이며 Task result, gate value, Approval, acceptance, evidence, close readiness, Core state rollback이 아닙니다.
+렌더링 예시는 이 경계를 독자가 바로 볼 수 있어야 합니다. `source_state_version`은 렌더링에 사용한 상태 clock을 가리키고, `projection_version` 또는 projection status는 렌더/template/job 보기를 가리키며, `updated_at`은 그 보기가 만들어진 시각을 가리킵니다. 최신성 줄(freshness line)은 이 보기가 source record와 아직 맞는지 표시할 뿐이며 Task result, gate value, 민감 동작 승인, 작업 수락, evidence, close readiness, Core state rollback이 아닙니다.
 
 관리 영역(managed block)은 projector가 소유하는 표시 영역입니다. 관리 영역을 직접 편집한 내용은 상태 변경이 아니라 drift이며 reconcile candidate가 되어야 합니다. `User Notes and Proposals` 같은 사람이 편집할 수 있는 section은 제안 접점입니다. Proposal -> reconcile item -> 관련 `state.sqlite.task_events` row가 있는 accepted Core state-changing action을 거쳐야 상태가 되며, 그렇지 않으면 rejected, deferred, note-only content로 남습니다.
 

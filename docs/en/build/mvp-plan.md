@@ -257,7 +257,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 
 - Ordinary user language can start or resume tracked work without requiring Harness vocabulary.
 - The user-facing path clarifies scope, non-goals, acceptance criteria, evidence expectations, close readiness, and judgment boundaries.
-- Product/UX judgment and material technical architecture judgment can be presented separately from each other and from approval, final acceptance, and residual-risk acceptance.
+- Product/UX judgment and material technical architecture judgment can be presented separately from each other and from sensitive-action approval, final acceptance, and residual-risk acceptance.
 - Small direct changes and tracked work use different procedural budgets without bypassing write authority, evidence, or a required user decision.
 - Status/next output explains current scope, missing decisions, evidence state, residual-risk display, close blockers, and next safe action.
 - Close reports a blocker when required evidence is missing.

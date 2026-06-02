@@ -95,8 +95,8 @@ Use these as the preferred terms in Korean prose. Keep exact English strings whe
 | technical architecture judgment | 기술 구조 판단 | Use for architecture, dependency, migration, interface, or material technical direction choices owned by the user. |
 | security/privacy judgment | 보안/개인정보 판단 | Use for security, privacy, retention, redaction, audit, or exposure choices owned by the user. |
 | scope/autonomy judgment | 범위/자율성 판단 | Use for scope expansion, work split, or Autonomy Boundary choices owned by the user. |
-| QA waiver | QA 면제 판단 | Use for a user decision to waive a required QA path. Do not translate it as generic approval. |
-| verification waiver | 검증 면제 판단 | Use for a user decision to waive a required verification path. Do not translate it as generic approval. |
+| QA waiver | QA 면제 판단 | Use for a user decision to waive a required QA path. Do not translate it with a generic `승인` term. |
+| verification waiver | 검증 면제 판단 | Use for a user decision to waive a required verification path. Do not translate it with a generic `승인` term. |
 | `judgment_domain` | 판단 영역 | Preserve the field name in schema/API/reference contexts. In user-facing display, explain it as the area of judgment, such as `제품/UX 판단`, `보안/개인정보 판단`, `QA/작업 수락`, `잔여 위험`, or `복합`. |
 | `decision_kind` | 결정 경로 | Preserve the field name and enum values. In user-facing display, explain which decision route or lifecycle path the decision uses. |
 | Decision Packet | 결정 패킷 | Keep `Decision Packet` in literal record/API/schema/anchor contexts when needed. In user-facing prose, `사용자 결정 요청/기록` may be clearer before the exact label. |

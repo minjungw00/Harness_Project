@@ -250,7 +250,7 @@ Most status should fit into four plain groups. The agent may save precise record
 | What are we doing? | What is in scope, what is out of scope, and what happens next? | Included behavior, excluded items, affected areas, and whether the next action still fits the agreed scope. |
 | What must you decide? | Which choices belong to the user? | Each pending choice separately, such as a product/UX choice, technical architecture choice, security/privacy choice, permission for a sensitive step, final result acceptance, or acceptance of a named remaining risk. |
 | What do we know? | What supports the current claim? | Changed paths, focused tests, command output, logs, screenshots, human QA notes, evidence links, recorded runs, saved decisions, related files or artifacts, and anything missing or stale. |
-| Why can or can't we close this? | Is the work ready to call done? | The remaining blocker, the smallest unblocker, whether verification or human QA is still needed, whether the user has accepted the result when required, and any known remaining risk. |
+| Why can or can't we close this? | Is the work ready to call done? | The remaining blocker, the smallest unblocker, whether sensitive-action approval, verification, or human QA is still needed, whether the user has accepted the result when required, and any known remaining risk or residual-risk acceptance need. |
 
 These groups are readable summaries, not a new checklist. The agent should show what helps you decide, trust, or unblock the work. It should not make you read internal record names before you understand the status.
 
@@ -367,7 +367,7 @@ The agent should keep these separate:
 | Human QA | Captures a person's inspection where judgment matters. | Automated tests or screenshots alone. |
 | Final acceptance | Captures the user's result judgment when required. | Evidence, verification, QA, permission for a sensitive step, waiver, or risk acceptance. |
 | Remaining risk | Names known uncertainty, limitation, unchecked condition, or trade-off. | Evidence, verification, QA, final acceptance, or sensitive-step permission. |
-| Accepting remaining risk | Captures that the user accepts an identified known remaining risk. | Final acceptance, verification, QA, sensitive-step permission, or generic approval. |
+| Accepting remaining risk | Captures that the user accepts an identified known remaining risk. | Final acceptance, verification, QA, sensitive-step permission, or generic consent. |
 | Permission for a sensitive step | Allows a named sensitive step to proceed. | Product judgment, correctness, final acceptance, risk acceptance, or waiver. |
 
 That separation is why work can still be blocked after tests pass. Tests can support evidence or verification, but close may still need human QA for the real experience, your final acceptance of the result, or your explicit acceptance of a known remaining risk.

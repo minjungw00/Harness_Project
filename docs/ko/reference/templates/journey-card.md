@@ -15,14 +15,14 @@
 - active Change Unit
 - Autonomy Boundary summary
 - current 수용 기준 snapshot
-- Write Authorization, approval, baseline, 보장 수준 참조
-- approval status
+- Write Authorization, 민감 동작 승인, baseline, 보장 수준 참조
+- 민감 동작 승인 status
 - active Decision Packet 참조
 - 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 summary
 - blocker owner 표시 summary
 - evidence coverage, verification, 수동 QA summary
 - residual-risk summary와 참조
-- 수락과 close-reason summary
+- 작업 수락, 잔여 위험 수용, close-reason summary
 - 최신 evidence, Eval, 수동 QA, 보고서 참조
 - 읽기용 보기 최신성(projection freshness) 입력
 - state, baseline, evidence, MCP, capability freshness/blocker 표시 summary
@@ -104,6 +104,7 @@ Write Authority Summary:
 닫기 맥락:
 - blockers: {close_blockers|none}
 - 작업 수락: {acceptance_summary|not_required}
+- 잔여 위험 수용: {accepted_residual_risk_record_refs|none}
 - close reason: {close_reason|none}
 
 Gates:

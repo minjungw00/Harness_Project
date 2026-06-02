@@ -72,7 +72,7 @@ Use the same rendered sections for these common Decision Packet shapes. These cu
 - QA or acceptance decision (`judgment_domain=qa_acceptance`): for Manual QA, verification waiver, or final acceptance, put the skipped check or accepted result, accepted user/product/technical risk, relevant refs, close impact, and smallest credible follow-up under User Decision, Residual-Risk Acceptance when applicable, and Follow-Up.
 - Residual-risk acceptance before close (`judgment_domain=residual_risk`): put the visible limitation, existing evidence, risk refs the user is being asked to accept, and remaining follow-up under Current State, Minimum Context To Judge, Residual-Risk Acceptance, and Follow-Up.
 - Final acceptance: put the final result, evidence status, Manual QA and verification status, and close-relevant residual-risk visibility under Current State and Minimum Context To Judge. Do not treat final acceptance as approval for new sensitive actions, additional writes, deployment, or merge.
-- Broad "go ahead" answers: show why the packet asks for this specific route and option. A generic approval phrase does not resolve product trade-off, architecture choice, QA waiver, verification risk, final acceptance, or residual-risk acceptance unless this packet records that exact judgment.
+- Broad "go ahead" answers: show why the packet asks for this specific route and option. A generic consent phrase does not resolve product trade-off, architecture choice, QA waiver, verification risk, final acceptance, or residual-risk acceptance unless this packet records that exact judgment.
 
 **Rendered example: minimal decision**
 
@@ -83,7 +83,7 @@ Route/domain: product trade-off (`decision_kind=product_tradeoff`), Product / UX
 Question: Should this scoped settings label say "Save" or "Update"?
 Scope/refs: settings form copy in CU-04; source ref TASK-012/CU-04; no sensitive action or close-risk ref.
 Choice to record: Save | Update
-Does not settle: broader settings flow behavior, localization strategy, final acceptance, or write authority.
+Does not settle: broader settings flow behavior, localization strategy, final acceptance, residual-risk acceptance, or write authority.
 ```
 
 **Rendered example: full architecture trade-off**

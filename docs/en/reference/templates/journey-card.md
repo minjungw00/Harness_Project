@@ -15,14 +15,14 @@ Implementation tier: Future/diagnostic projections. Persisted Journey Card Markd
 - active Change Unit
 - Autonomy Boundary summary
 - current acceptance criteria snapshot
-- Write Authorization, approval, baseline, and guarantee refs
-- approval status
+- Write Authorization, sensitive-action approval, baseline, and guarantee refs
+- sensitive-action approval status
 - active Decision Packet refs
 - primary blocker, secondary blocker, and smallest unblocker display summaries
 - blocker owner display summary
 - evidence coverage, verification, and Manual QA summaries
 - residual-risk summary and refs
-- acceptance and close-reason summaries
+- final acceptance, residual-risk acceptance, and close-reason summaries
 - latest evidence, Eval, Manual QA, and report refs
 - projection freshness inputs
 - state, baseline, evidence, MCP, and capability freshness/blocker display summaries
@@ -103,7 +103,8 @@ Residual risk:
 
 Close context:
 - blockers: {close_blockers|none}
-- acceptance: {acceptance_summary|not_required}
+- final acceptance: {acceptance_summary|not_required}
+- residual-risk acceptance: {accepted_residual_risk_record_refs|none}
 - close reason: {close_reason|none}
 
 Gates:

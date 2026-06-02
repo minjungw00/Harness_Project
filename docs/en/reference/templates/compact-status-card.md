@@ -8,7 +8,7 @@ Boundary: projection template only; it does not authorize runtime/server impleme
 
 Implementation tier: Core status output. This is optional rendering for the v0.1 Core Authority Slice status/blocker response. The minimal Core Authority Slice may return a plain structured response instead of this card; this template is not a persisted state record and is not evidence of full projection support.
 
-For v0.2 User-Facing Harness MVP display, this card can support the user-readable path when final-acceptance need/status and residual-risk visibility remain explicit within the relevant status, decision, or close-blocker lines instead of becoming extra required projection kinds.
+For v0.2 User-Facing Harness MVP display, this card can support the user-readable path when sensitive-action approval, final-acceptance need/status, residual-risk visibility, and residual-risk acceptance remain explicit within the relevant status, decision, or close-blocker lines instead of becoming extra required projection kinds.
 
 ## Source records
 
@@ -25,8 +25,8 @@ For v0.2 User-Facing Harness MVP display, this card can support the user-readabl
 - evidence coverage summary
 - verification summary
 - Manual QA summary
-- acceptance summary
-- scope, approval, decision, design, evidence, verification, QA, and acceptance gates
+- final acceptance summary
+- scope, sensitive-action approval, decision, design, evidence, verification, QA, and final acceptance gates
 - close blocker, close reason, and Manual QA summary
 - primary blocker, secondary blocker, and smallest unblocker display summaries derived from API errors, close blockers, gates, and refs
 - projection freshness and `source_state_version`
@@ -55,7 +55,7 @@ Summary placeholders in this card are display bindings derived from the records 
 - evidence and verification
 - Manual QA
 - residual risk
-- acceptance and close status
+- final acceptance, residual-risk acceptance, and close status
 - projection freshness
 - state/input freshness and capability availability
 - latest refs
@@ -87,7 +87,8 @@ Evidence: {evidence_summary|none}; gate={evidence_gate}
 Verification: {verification_summary|none}; gate={verification_gate}
 Manual QA: {manual_qa_summary|not_required}; gate={qa_gate}
 Residual risk: status={residual_risk_status|none}; {residual_risk_summary|none}; refs={residual_risk_refs|none}
-Acceptance: {acceptance_summary|not_required}; gate={acceptance_gate}
+Final acceptance: {acceptance_summary|not_required}; gate={acceptance_gate}
+Residual-risk acceptance: {accepted_residual_risk_refs|none}
 Close status: blockers={close_blockers|none}; reason={close_reason|none}
 Close/assurance display: self_checked={self_check_refs|none}; detached_verified={eval_ref|none}; verification_waived={verification_waiver_ref|none}; qa_waived={manual_qa_waiver_ref|none}; risk_accepted_close={accepted_residual_risk_refs|none}
 Projection freshness (view only): {current|stale|failed|unknown}; source_state_version={source_state_version|unknown}; {refresh_or_reconcile_needed|none}
@@ -102,7 +103,7 @@ This template is a rendered card shape, not canonical state. It is rendered from
 
 Status/next recommendations in this card are read-only guidance. They may point to a Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
 
-Authority lines must be refs-first. If the card says writes are allowed, cite the Write Authorization ref. If it says evidence is sufficient, cite the Evidence Manifest ref. If it says detached verification passed, cite the Eval ref. If it says Manual QA passed or was waived, cite the Manual QA record or waiver path. If it says final acceptance was recorded or residual-risk acceptance was recorded, cite the Acceptance Decision Packet or Residual Risk refs. If the source ref is absent, render the claim as unsupported or not yet recorded.
+Authority lines must be refs-first. If the card says writes are allowed, cite the Write Authorization ref. If it says sensitive-action permission was granted, cite the Approval ref. If it says evidence is sufficient, cite the Evidence Manifest ref. If it says detached verification passed, cite the Eval ref. If it says Manual QA passed or was waived, cite the Manual QA record or waiver path. If it says final acceptance was recorded, cite the Acceptance Decision Packet; if it says residual-risk acceptance was recorded, cite accepted Residual Risk refs. If the source ref is absent, render the claim as unsupported or not yet recorded.
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means no known close-relevant residual risk exists for the requested action and should render with an explicit empty risk-ref set. `not_visible` means known close-relevant risk exists but is not yet visible enough for acceptance or close, and should show the blocking risk refs or the refs that explain why the risk is hidden.
 

@@ -6,7 +6,7 @@
 
 이 문서는 접점마다 달라지는 로컬 설정 메모, 생성 파일 이름, MCP 설정 힌트, 캡처·가드·격리 선택지, 공통 fallback, conformance 관점의 위험을 담당합니다. 공통 커넥터 계약은 [Agent 통합 참조](agent-integration.md)가 담당합니다.
 
-이 문서는 향후 Harness 동작을 위한 참조 문서입니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-승인-상태)에 있습니다.
+이 문서는 향후 Harness 동작을 위한 참조 문서입니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-수락-상태)에 있습니다.
 
 ## 이런 때 읽기
 

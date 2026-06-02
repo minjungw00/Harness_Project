@@ -6,7 +6,7 @@ Runtime 구현 계획에 들어가기 전에 Harness security asset, trust bound
 
 이 문서는 local authority boundary를 명확하게 유지해야 하는 implementer, operator, connector author, conformance author를 위한 lookup 문서입니다. Architecture, API, storage, kernel, connector, operations owner 문서를 대체하지 않습니다.
 
-이 문서는 향후 Harness 동작을 위한 참조 문서입니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-승인-상태)에 있습니다.
+이 문서는 향후 Harness 동작을 위한 참조 문서입니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-수락-상태)에 있습니다.
 
 ## 이런 때 읽기
 
@@ -191,7 +191,7 @@ Security wording은 입증된 control과 일치해야 합니다.
 | `cooperative` | Surface가 Core decision을 따르거나 보류하라고 지시받는 협력적/지시 기반 수준입니다. 강한 보안 경계나 실행 전 차단이 아니라 instruction-following behavior입니다. |
 | `detective` | Harness가 위반을 관찰할 수 있을 때 또는 행동 뒤에 이를 감지, 기록, 보고할 수 있는 탐지 가능 수준입니다. 이는 탐지와 보고이지 예방이 아닙니다. |
 | `preventive` | Concrete hook, wrapper, permission layer, policy engine, sidecar 또는 equivalent가 covered operation을 실행 전에 사전 차단하며, exact path에 대한 fixture 증명이 있습니다. |
-| `isolated` | 주장하는 내용에 맞는 실제 문서화된 separation boundary 뒤에서 work 또는 verification이 실행되는 격리 수준입니다. Worktree 또는 fresh evaluator bundle은 scope, freshness, blast-radius 분리를 제공할 수 있지만, profile이 exact isolation mechanism을 증명하지 않는 한 자동으로 OS sandbox 격리, 권한 경계, 변조 불가능한 보안 경계가 되지는 않습니다. Isolation만으로 approval, verification, 작업 수락, 잔여 위험 수용, close, assurance upgrade가 생기지 않습니다. |
+| `isolated` | 주장하는 내용에 맞는 실제 문서화된 separation boundary 뒤에서 work 또는 verification이 실행되는 격리 수준입니다. Worktree 또는 fresh evaluator bundle은 scope, freshness, blast-radius 분리를 제공할 수 있지만, profile이 exact isolation mechanism을 증명하지 않는 한 자동으로 OS sandbox 격리, 권한 경계, 변조 불가능한 보안 경계가 되지는 않습니다. Isolation만으로 민감 동작 승인, verification, 작업 수락, 잔여 위험 수용, close, assurance upgrade가 생기지 않습니다. |
 
 Guard, freeze, careful-mode, recipe name, product name, surface name, friendly mode label은 guarantee를 올려 주지 않습니다. High-risk work는 실제 사용하는 control을 보여야 하며, preventive 또는 isolated control이 필요한 경우 cooperative-only claim에 의존하면 안 됩니다.
 

@@ -190,7 +190,7 @@ A later read-only context provider that may surface relevant projections, artifa
 
 ### Decision Gate
 
-The Task-level aggregate gate for blocking user-owned judgment before progress, write, or close can continue. The canonical field is `decision_gate`; its value set and recompute rule are owned by [Decision Gate](kernel.md#decision-gate). It is recomputed from relevant blocking Decision Packets and detected blockers, and it does not substitute for approval, verification, Manual QA, or final acceptance.
+The Task-level aggregate gate for blocking user-owned judgment before progress, write, or close can continue. The canonical field is `decision_gate`; its value set and recompute rule are owned by [Decision Gate](kernel.md#decision-gate). It is recomputed from relevant blocking Decision Packets and detected blockers, and it does not substitute for sensitive-action approval, verification, Manual QA, final acceptance, or residual-risk acceptance.
 
 ### Decision Kind
 
@@ -226,7 +226,7 @@ A canonical kernel state record for a blocking user-owned decision. It names the
 
 ### Decision Request
 
-Optional routing, interaction, idempotency replay, or compatibility handoff metadata that may point to a canonical Decision Packet. A minimal v0.1 Core Authority Slice implementation may omit it. A Decision Request is not decision authority, never satisfies `decision_gate`, approval, final acceptance, waiver, residual-risk acceptance, or close by itself, and is only relevant to gate aggregation through a linked compatible `decision_packet_id`.
+Optional routing, interaction, idempotency replay, or compatibility handoff metadata that may point to a canonical Decision Packet. A minimal v0.1 Core Authority Slice implementation may omit it. A Decision Request is not decision authority, never satisfies `decision_gate`, sensitive-action Approval, final acceptance, waiver, residual-risk acceptance, or close by itself, and is only relevant to gate aggregation through a linked compatible `decision_packet_id`.
 
 ### Design Gate
 

@@ -16,7 +16,7 @@
 
 ## 먼저 읽을 것
 
-[구현 개요](implementation-overview.md)의 [문서 수락 상태](implementation-overview.md#문서-승인-상태), [첫 실행 가능한 조각](first-runnable-slice.md), [Runtime Walkthrough](runtime-walkthrough.md)를 먼저 읽습니다. 정확한 API contract는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 사용합니다. Storage detail과 DDL은 [Storage와 DDL](../reference/storage-and-ddl.md)을 사용합니다. Design-quality gate와 validator behavior는 [Design Quality Policies](../reference/design-quality-policies.md)를 사용합니다. 핵심 적합성 모델과 fixture semantics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md)를 사용합니다. Detailed future scenario candidate는 [향후 Fixture Catalog](../reference/future-fixture-catalog.md)를 사용합니다. Operator procedure와 conformance run overview는 [운영과 Conformance](../reference/operations-and-conformance.md)를 사용합니다. v1+ Expansion 후보와 승격 기준은 [로드맵](../roadmap.md)을 사용합니다.
+[구현 개요](implementation-overview.md)의 [문서 수락 상태](implementation-overview.md#문서-수락-상태), [첫 실행 가능한 조각](first-runnable-slice.md), [Runtime Walkthrough](runtime-walkthrough.md)를 먼저 읽습니다. 정확한 API contract는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)를 사용합니다. Storage detail과 DDL은 [Storage와 DDL](../reference/storage-and-ddl.md)을 사용합니다. Design-quality gate와 validator behavior는 [Design Quality Policies](../reference/design-quality-policies.md)를 사용합니다. 핵심 적합성 모델과 fixture semantics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md)를 사용합니다. Detailed future scenario candidate는 [향후 Fixture Catalog](../reference/future-fixture-catalog.md)를 사용합니다. Operator procedure와 conformance run overview는 [운영과 Conformance](../reference/operations-and-conformance.md)를 사용합니다. v1+ Expansion 후보와 승격 기준은 [로드맵](../roadmap.md)을 사용합니다.
 
 ## 핵심 생각
 
@@ -134,7 +134,7 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 
 ### 서버 코딩 전 필요한 구현 결정
 
-결정 기록 기준: 서버 코딩 전 결정 기록은 현재 기준에서 이곳에 비어 있습니다. 이것은 남은 결정이 없다는 증명이 아닙니다. 구현 준비 조건에는 아직 유지보수자 판단이 필요하며, [구현 개요: 문서 수락 상태](implementation-overview.md#문서-승인-상태)를 유지보수자가 명시적으로 바꾸기 전까지 이 문서는 유지보수자 수락 검토 대상 후보일 뿐입니다.
+결정 기록 기준: 서버 코딩 전 결정 기록은 현재 기준에서 이곳에 비어 있습니다. 이것은 남은 결정이 없다는 증명이 아닙니다. 구현 준비 조건에는 아직 유지보수자 판단이 필요하며, [구현 개요: 문서 수락 상태](implementation-overview.md#문서-수락-상태)를 유지보수자가 명시적으로 바꾸기 전까지 이 문서는 유지보수자 수락 검토 대상 후보일 뿐입니다.
 
 큰 구현 결정을 흩어진 TODO나 막연한 follow-up으로 남기지 않습니다. 현재 검토 또는 첫 런타임 배치 계획에서 새 결정이 발견되면, server code나 DDL을 바꾸기 전에 담당 문서, 영향받는 동작 또는 field, 영향을 받는 단계, 검토한 option, 필요한 결정을 이곳에 기록합니다.
 
@@ -237,7 +237,7 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 
 ## 단계별 종료 기준
 
-문서 수락과 별도의 구현 계획 준비 결정 이후 향후 런타임 계획을 위한 구현자가 읽을 수 있는 점검 목록으로 사용합니다. 이들은 staged exit을 다시 말할 뿐이며 schema, fixture, DDL, new runtime requirement를 추가하지 않습니다. [문서 수락 상태](implementation-overview.md#문서-승인-상태)가 첫 런타임 배치 계획을 막고 있는 동안 구현을 승인하지 않습니다.
+문서 수락과 별도의 구현 계획 준비 결정 이후 향후 런타임 계획을 위한 구현자가 읽을 수 있는 점검 목록으로 사용합니다. 이들은 staged exit을 다시 말할 뿐이며 schema, fixture, DDL, new runtime requirement를 추가하지 않습니다. [문서 수락 상태](implementation-overview.md#문서-수락-상태)가 첫 런타임 배치 계획을 막고 있는 동안 구현을 허가하지 않습니다.
 
 ### 코어 권한 조각(v0.1 Core Authority Slice) 종료 점검 목록
 

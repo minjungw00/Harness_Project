@@ -4,7 +4,7 @@
 
 다른 문서를 읽다가 하네스의 공식 용어, 대소문자, record name, 서로 대체할 수 없는 경계를 확인할 때 이 용어집을 사용합니다.
 
-이 문서는 향후 Harness 동작을 위한 참조 문서입니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-승인-상태)에 있습니다.
+이 문서는 향후 Harness 동작을 위한 참조 문서입니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-수락-상태)에 있습니다.
 
 ## 이런 때 읽기
 
@@ -200,7 +200,7 @@ Relevant projection, 아티팩트 참조, repo file, doc, note를 보여줄 수 
 
 ### Decision Gate
 
-진행, write, close 전에 필요한 차단하는 사용자 소유 판단을 나타내는 Task-level aggregate gate입니다. 기준 field는 `decision_gate`이며 value set과 recompute rule은 [Decision Gate](kernel.md#decision-gate)가 담당합니다. 관련 blocking 결정 패킷과 감지된 blockers에서 다시 계산되며 민감 동작 승인, verification, 수동 QA, 작업 수락을 대신하지 않습니다.
+진행, write, close 전에 필요한 차단하는 사용자 소유 판단을 나타내는 Task-level aggregate gate입니다. 기준 field는 `decision_gate`이며 value set과 recompute rule은 [Decision Gate](kernel.md#decision-gate)가 담당합니다. 관련 blocking 결정 패킷과 감지된 blockers에서 다시 계산되며 민감 동작 승인, 검증, 수동 QA, 작업 수락, 잔여 위험 수용을 대신하지 않습니다.
 
 ### Decision Kind
 
@@ -220,7 +220,7 @@ Decision Packet의 schema field인 `decision_profile`입니다. `minimal_decisio
 
 대기 중인 사용자 소유 결정의 구체적인 종류를 보여주는 사용자용 label입니다. 결정 패킷의 경로, `decision_profile`, `judgment_domain`, 관련 소유자 기록에서 파생되는 표시이며 별도 schema 필드, `gate`, 권한 경로가 아닙니다.
 
-하나의 승인 checklist로 만들지 말고 다음 label을 구분해 사용합니다.
+하나의 동의 checklist로 만들지 말고 다음 label을 구분해 사용합니다.
 
 - 제품/UX 판단
 - 기술 구조 판단
@@ -244,7 +244,7 @@ Decision Packet의 schema field인 `decision_profile`입니다. `minimal_decisio
 
 ### Decision Request
 
-기준 결정 패킷을 가리킬 수 있는 optional routing, interaction, idempotency replay, compatibility handoff metadata입니다. Minimal 코어 권한 조각(v0.1 Core Authority Slice) 구현은 이를 생략할 수 있습니다. Decision Request는 decision authority가 아니며 그 자체로 `decision_gate`, approval, 작업 수락, 면제 판단, 잔여 위험 수용, close를 절대 충족하지 않습니다. Gate aggregation에는 linked compatible `decision_packet_id`를 통해서만 relevant합니다.
+기준 결정 패킷을 가리킬 수 있는 optional routing, interaction, idempotency replay, compatibility handoff metadata입니다. Minimal 코어 권한 조각(v0.1 Core Authority Slice) 구현은 이를 생략할 수 있습니다. Decision Request는 decision authority가 아니며 그 자체로 `decision_gate`, 민감 동작 승인, 작업 수락, 면제 판단, 잔여 위험 수용, close를 절대 충족하지 않습니다. Gate aggregation에는 linked compatible `decision_packet_id`를 통해서만 relevant합니다.
 
 ### Design Gate
 
@@ -262,7 +262,7 @@ Fresh session, fresh worktree, sandbox, manual evaluator bundle처럼 의미 있
 
 ### Discovery
 
-구현 계획과 쓰기 권한 전에 에이전트가 요구사항을 구체화하는 작업 자세의 내부 이름입니다. 목표, 사용자 가치, 비목표, 수용 기준, 저장소/문서/하네스 상태에서 에이전트가 확인할 수 있는 사실, 가정, 사용자만 결정할 수 있는 판단, 제품/UX 판단 후보, 기술 구조 판단 후보, 보안/개인정보 판단 후보, QA와 검증 기대 수준, 남은 불확실성, 안전한 다음 작업 후보 또는 작업 분할 제안을 분리합니다. Codebase와 현재 하네스 맥락이 답할 수 없는 결정만 사용자에게 묻고, 결정 영역별로 여러 초점을 맞춘 질문을 물을 수 있으며, 확인 가능한 사실과 사용자 소유 결정이 분리되고, 목표/비목표/수용 기준과 중요한 판단 후보가 충분히 분명하며, 해소되지 않은 판단을 숨기지 않고 안전한 다음 작업 또는 작업 분할을 제안할 수 있고, 남은 불확실성이 명시되면 잠시 멈추거나 진행할 수 있습니다. 요구사항 구체화 출력은 Shared Design, 결정 패킷 후보, Change Unit 모양 잡기로 라우팅합니다. `안전한 다음 작업 후보`와 `작업 분할 제안` 같은 표현은 제안 또는 보조 표현이며 독립 schema 필드, 기준 record type, `gate` 값, 읽기용 요약 종류, 권한 경로가 아닙니다. 이 자세는 일반 승인, 민감 동작 승인, 쓰기 허가 기록, 근거, 검증, QA, 작업 수락, 잔여 위험 수용, 닫기, 범위 권한, 새 권한 경로가 아닙니다.
+구현 계획과 쓰기 권한 전에 에이전트가 요구사항을 구체화하는 작업 자세의 내부 이름입니다. 목표, 사용자 가치, 비목표, 수용 기준, 저장소/문서/하네스 상태에서 에이전트가 확인할 수 있는 사실, 가정, 사용자만 결정할 수 있는 판단, 제품/UX 판단 후보, 기술 구조 판단 후보, 보안/개인정보 판단 후보, QA와 검증 기대 수준, 남은 불확실성, 안전한 다음 작업 후보 또는 작업 분할 제안을 분리합니다. Codebase와 현재 하네스 맥락이 답할 수 없는 결정만 사용자에게 묻고, 결정 영역별로 여러 초점을 맞춘 질문을 물을 수 있으며, 확인 가능한 사실과 사용자 소유 결정이 분리되고, 목표/비목표/수용 기준과 중요한 판단 후보가 충분히 분명하며, 해소되지 않은 판단을 숨기지 않고 안전한 다음 작업 또는 작업 분할을 제안할 수 있고, 남은 불확실성이 명시되면 잠시 멈추거나 진행할 수 있습니다. 요구사항 구체화 출력은 Shared Design, 결정 패킷 후보, Change Unit 모양 잡기로 라우팅합니다. `안전한 다음 작업 후보`와 `작업 분할 제안` 같은 표현은 제안 또는 보조 표현이며 독립 schema 필드, 기준 record type, `gate` 값, 읽기용 요약 종류, 권한 경로가 아닙니다. 이 자세는 일반 동의, 민감 동작 승인, 쓰기 허가 기록, 근거, 검증, QA, 작업 수락, 잔여 위험 수용, 닫기, 범위 권한, 새 권한 경로가 아닙니다.
 
 ### Discovery Brief
 
@@ -402,7 +402,7 @@ Connected profile의 actual enforcement 또는 detection layer를 적용하는 u
 
 ### Isolated Guarantee
 
-Work 또는 verification이 문서화된 separation boundary 뒤에서 실행되는 격리형(isolated) guarantee level입니다. Worktree 또는 fresh evaluator bundle은 scope, freshness, blast-radius 분리를 제공할 수 있지만, profile이 exact isolation mechanism을 증명하지 않는 한 자동으로 OS sandbox 격리, 권한 경계, 변조 불가능한 보안 경계가 되지는 않습니다. Isolation만으로 approval, verification, 작업 수락, 잔여 위험 수용, close, assurance upgrade가 생기지 않습니다.
+Work 또는 verification이 문서화된 separation boundary 뒤에서 실행되는 격리형(isolated) guarantee level입니다. Worktree 또는 fresh evaluator bundle은 scope, freshness, blast-radius 분리를 제공할 수 있지만, profile이 exact isolation mechanism을 증명하지 않는 한 자동으로 OS sandbox 격리, 권한 경계, 변조 불가능한 보안 경계가 되지는 않습니다. Isolation만으로 민감 동작 승인, verification, 작업 수락, 잔여 위험 수용, close, assurance upgrade가 생기지 않습니다.
 
 ### Journey Card
 

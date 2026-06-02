@@ -8,7 +8,7 @@
 
 구현 계층: Core status output입니다. 코어 권한 조각(v0.1 Core Authority Slice)의 상태/막힘 응답을 렌더링할 때 선택할 수 있는 shape입니다. 최소 Core 권한 조각은 이 card 대신 plain structured response를 반환해도 됩니다. 이 template은 persisted state record가 아니며 full projection support의 증거도 아닙니다.
 
-사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) 표시에서 이 card를 사용할 때는 작업 수락 필요 여부/상태와 잔여 위험 표시가 별도 필수 projection kind가 되지 않고 관련 status, decision, close-blocker line 안에서 분명히 보여야 합니다.
+사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) 표시에서 이 card를 사용할 때는 민감 동작 승인, 작업 수락 필요 여부/상태, 잔여 위험 표시, 잔여 위험 수용이 별도 필수 projection kind가 되지 않고 관련 status, decision, close-blocker line 안에서 분명히 보여야 합니다.
 
 ## 기준 기록
 
@@ -55,7 +55,7 @@
 - 근거와 검증
 - 수동 QA
 - 잔여 위험
-- 수락과 닫기 상태
+- 작업 수락, 잔여 위험 수용, 닫기 상태
 - 읽기용 보기 최신성
 - state/input 최신성과 capability 사용 가능 여부
 - 최신 refs
@@ -88,6 +88,7 @@ Design/stewardship: {design_summary|none}; gate={design_gate}
 수동 QA: {manual_qa_summary|not_required}; gate={qa_gate}
 잔여 위험: status={residual_risk_status|none}; {residual_risk_summary|none}; refs={residual_risk_refs|none}
 작업 수락: {acceptance_summary|not_required}; gate={acceptance_gate}
+잔여 위험 수용: {accepted_residual_risk_refs|none}
 닫기 상태: blockers={close_blockers|none}; reason={close_reason|none}
 닫기/assurance 표시: self_checked={self_check_refs|none}; detached_verified={eval_ref|none}; verification_waived={verification_waiver_ref|none}; qa_waived={manual_qa_waiver_ref|none}; risk_accepted_close={accepted_residual_risk_refs|none}
 읽기용 보기 최신성(projection freshness): {current|stale|failed|unknown}; source_state_version={source_state_version|unknown}; {refresh_or_reconcile_needed|none}
@@ -102,7 +103,7 @@ MCP/capability: {mcp_or_capability_summary|available}
 
 이 card의 status/next recommendation은 read-only guidance입니다. Decision Packet, `prepare_write`, 근거 수집, 검증, 수동 QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 close하지 않습니다.
 
-Authority line은 refs-first여야 합니다. Card가 write allowed라고 말하면 Write Authorization ref를 cite합니다. 근거가 sufficient라고 말하면 Evidence Manifest ref를 cite합니다. 분리 검증이 passed라고 말하면 Eval ref를 cite합니다. 수동 QA가 passed 또는 waived라고 말하면 수동 QA record 또는 waiver path를 cite합니다. 작업 수락 또는 잔여 위험 수용이 recorded라고 말하면 Acceptance Decision Packet 또는 Residual Risk refs를 cite합니다. Source ref가 없으면 claim을 unsupported 또는 not yet recorded로 렌더링합니다.
+Authority line은 refs-first여야 합니다. Card가 write allowed라고 말하면 Write Authorization ref를 cite합니다. 민감 동작 permission이 granted라고 말하면 Approval ref를 cite합니다. 근거가 sufficient라고 말하면 Evidence Manifest ref를 cite합니다. 분리 검증이 passed라고 말하면 Eval ref를 cite합니다. 수동 QA가 passed 또는 waived라고 말하면 수동 QA record 또는 waiver path를 cite합니다. 작업 수락이 recorded라고 말하면 Acceptance Decision Packet을 cite하고, 잔여 위험 수용이 recorded라고 말하면 accepted Residual Risk refs를 cite합니다. Source ref가 없으면 claim을 unsupported 또는 not yet recorded로 렌더링합니다.
 
 Residual-risk display는 `status=none`과 `not_visible`을 구분해야 합니다. `status=none`은 requested action에 알려진 close-relevant 잔여 위험이 없다는 뜻이며 명시적인 empty risk-ref set과 함께 렌더링해야 합니다. `not_visible`은 알려진 close-relevant risk가 있지만 작업 수락 또는 close에 충분히 보이지 않았다는 뜻이므로 blocking risk refs 또는 risk가 hidden인 이유를 설명하는 refs를 보여줘야 합니다.
 

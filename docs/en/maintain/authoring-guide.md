@@ -133,7 +133,7 @@ Potential item category after verification:
 | Discovery / requirements clarification may converge too early on a Change Unit or the first safe implementation unit. | Stage boundary decision |
 | `judgment_domain` ownership/status can drift. | Schema/design decision |
 | Decision Packet schema and examples may feel too heavy for small decisions. | Schema/design decision |
-| Approval, acceptance, and residual-risk acceptance are too easy to confuse. | Schema/design decision |
+| Approval, final acceptance, and residual-risk acceptance are too easy to confuse. | Schema/design decision |
 | Storage/DDL can present future-profile tables, fields, or gates as required too early. | Stage boundary decision |
 | Conformance fixture docs may be too detailed for the current implementation stage. | Implementation-readiness criterion |
 | Operations entrypoints may appear required too early. | Stage boundary decision |
@@ -155,7 +155,7 @@ Potential item category after verification:
 | Discovery / requirements clarification may converge too early on a Change Unit or the first safe implementation unit. | Candidate to verify in the current docs. | Leave room for early discovery, shared understanding, and user-owned judgment before requiring a scoped implementation unit. |
 | `judgment_domain` ownership/status can drift. | Resolved design; regression-prevention check. | Active owner docs define `judgment_domain` as schema-owned. Keep non-owner docs aligned with those owners, and do not describe it as display-only in one place and schema-owned in another. `decision_kind` owns lifecycle/gate semantics, while affected gates are recorded separately. If the intended ownership changes, owner docs must make that explicit before non-owner docs follow. |
 | Decision Packet schema and examples may feel too heavy for small decisions. | Resolved design; regression-prevention check. | Small decisions may use `minimal_decision`. Full trade-off, approval, waiver, acceptance, residual-risk, reconcile, and mixed profiles must still include their required context. Future edits must not make every Decision Packet require full trade-off fields. |
-| Approval, acceptance, and residual-risk acceptance are too easy to confuse. | Regression-prevention check. | Keep permission to proceed, final acceptance, and residual-risk acceptance separate in examples and routing text. |
+| Approval, final acceptance, and residual-risk acceptance are too easy to confuse. | Regression-prevention check. | Keep sensitive-action permission, final acceptance, and residual-risk acceptance separate in examples and routing text. |
 | Storage/DDL can present future-profile tables, fields, or gates as required too early. | Candidate to verify in the current docs. | Distinguish reference-schema presence from staged implementation requirement. Required fields apply when the owning tool, record, or profile is implemented or used; they do not by themselves expand the smallest runnable slice. |
 | Conformance fixture docs may be too detailed for the current implementation stage. | Candidate to verify in the current docs. | Keep fixture documentation future-oriented and staged. Do not imply executable fixture files or runnable Harness Server conformance tests exist now. |
 | Operations entrypoints may appear required too early. | Candidate to verify in the current docs. | Keep operator entrypoints staged and future-oriented unless the relevant Build stage explicitly includes them. They must not become a prerequisite for v0.1 by wording drift. |
