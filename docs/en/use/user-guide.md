@@ -2,24 +2,16 @@
 
 ## Start with ordinary requests
 
-Speak normally. Describe the work you want, the boundary you already know, and how cautious you want the agent to be. You can ask the agent to clarify the plan before implementation, keep a change small unless it turns into a product or technical decision, separate product judgment from architecture judgment, show what evidence is missing, or explain what still blocks close.
+Speak normally. Start with the work, not Harness vocabulary:
 
-The agent should:
+```text
+Before implementing, help me make the plan concrete.
+Separate product decisions from technical decisions.
+Treat this as a small change unless the scope grows.
+Show what still blocks closing this work.
+```
 
-- clarify scope before important writes
-- inspect the repository, docs, and current Harness context before asking questions it can answer itself
-- identify decisions that only you can own
-- separate product or UX judgment from technical architecture judgment
-- gather or explain the evidence needed to support completion
-- show the next safe action and what still blocks closing the work
-
-Harness helps preserve scope, user-owned judgment, evidence, verification, QA expectations, final acceptance, and residual-risk status outside fragile chat context. It should make AI-assisted work easier to follow, not turn every task into a management ritual. Small work should stay small. Larger or riskier work should gain structure only when scope, user-owned judgment, evidence, QA, verification, final acceptance, or residual risk actually matter.
-
-You should expect to see plain work facts: what is in scope, what is out of scope, what the agent can inspect, what only you can decide, what changed, what was checked, what evidence exists, what risk remains, and whether close is blocked. You should not need to learn internal record names, gate names, or tool names before starting.
-
-Harness also does not replace the surrounding engineering process. Source control still records product-file history, tests still check executable behavior, review still reviews changes, and user-owned product or material technical judgment still belongs to the user.
-
-Good Harness requests sound like normal work requests:
+Other good requests sound just as ordinary:
 
 ```text
 I want to add an email login flow. Keep password reset out of scope for now and help me clarify the decisions first.
@@ -33,9 +25,24 @@ Review this feature idea and ask the questions needed before implementation.
 Make a small copy change, but tell me if it turns into a broader product decision.
 ```
 
-```text
-Before changing code, separate the product decisions from the technical decisions.
-```
+You can describe the work you want, the boundary you already know, and how cautious you want the agent to be. The agent should translate that into scope, facts it can inspect, choices only you can make, evidence needs, close readiness, and the next safe action. You should not need to learn internal record names, gate names, or tool names before starting.
+
+Using Harness terms is optional and advanced. You may say "Discovery," "Change Unit," "Decision Packet," "Write Authorization," "Evidence Manifest," or "Projection" if you already know those labels, but normal use should not require them. The agent can show exact labels later when they clarify a boundary, source record, or reference contract.
+
+The agent should:
+
+- clarify scope before important writes
+- inspect the repository, existing docs, tests, current Harness state, accepted decisions, and current task artifacts before asking questions it can answer itself
+- identify decisions that only you can own
+- separate product or UX judgment from technical architecture judgment
+- gather or explain the evidence needed to support completion
+- show the next safe action and what still blocks closing the work
+
+Harness helps preserve scope, user-owned judgment, evidence, verification, QA expectations, final acceptance, and residual-risk status outside fragile chat context. It should make AI-assisted work easier to follow, not turn every task into a management ritual. Small work should stay small. Larger or riskier work should gain structure only when scope, user-owned judgment, evidence, QA, verification, final acceptance, or residual risk actually matter.
+
+You should expect to see plain work facts: what is in scope, what is out of scope, what the agent can inspect, what only you can decide, what changed, what was checked, what evidence exists, what risk remains, and whether close is blocked.
+
+Harness also does not replace the surrounding engineering process. Source control still records product-file history, tests still check executable behavior, review still reviews changes, and user-owned product or material technical judgment still belongs to the user.
 
 You can be more explicit if you want:
 
@@ -53,7 +60,7 @@ Most requests should be explained with plain work shapes:
 |---|---|---|
 | Read/advice work | The agent is reading, explaining, comparing, reviewing, or helping decide without changing product files. | The answer, sources or caveats when useful, and any decision or follow-up that matters. |
 | Small change | The requested change is narrow, low risk, and has an obvious result, such as a typo, copy-only edit, or focused fix. | A short scope, changed path or no-file result, what was checked, and whether anything forced escalation. |
-| Tracked work | The request has unclear scope, multiple parts, product or technical judgment, security/privacy impact, meaningful evidence needs, QA, verification, final acceptance, or close-relevant risk. | Scope, pending user decisions, evidence, close readiness, next safe action, and the smallest blocker. |
+| Tracked work | The request has unclear scope, multiple parts, product or technical judgment, security/privacy impact, meaningful evidence needs, QA, verification, final acceptance, or close-relevant risk. | Scope, pending user judgments, evidence, close readiness, next safe action, and the smallest blocker. |
 
 The agent may record more internal detail than it displays. User-facing messages should show the detail that helps you decide, trust, or unblock the work, not a lifecycle checklist for every tiny edit.
 
@@ -88,12 +95,25 @@ A good clarification response should separate:
 - remaining uncertainty
 - safe next-work candidate or work-splitting candidate
 
-When the request needs a user-owned decision, the agent should name the decision type instead of asking for broad approval. Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, and residual-risk acceptance are separate decisions. Small decisions can be asked as short, explicit prompts; complex or risky decisions should include fuller trade-offs and evidence.
+Clarification is enough to proceed only when:
+
+- the goal can be summarized in one sentence
+- at least one non-goal or boundary is known when a boundary matters
+- success criteria, acceptance criteria, or the desired end state are known
+- questions answerable from the repository, existing docs, tests, current Harness state, accepted decisions, or current task artifacts have been checked before asking you
+- user-only judgments are separated from facts the agent can check
+- blocking questions are separated from useful-but-not-blocking questions
+- the next safe action is classified as advice/read-only work, a small direct change, or tracked work
+- remaining uncertainty is visible instead of hidden inside a confident plan
+
+If those conditions are not met, the agent should either inspect the available sources, ask the smallest blocking question, park useful-but-not-blocking questions, or propose a smaller safe slice that avoids the unresolved area.
+
+When the request needs a user-owned judgment, the agent should show a user judgment request instead of asking for broad approval. Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, and residual-risk acceptance are separate judgments. Small judgments can be asked as short, explicit prompts; complex or risky judgments should include fuller trade-offs and evidence. The internal label for the saved record/template may be "Decision Packet," but that label should not be the main way the agent asks ordinary users to decide.
 
 Product or UX judgment:
 
 ```text
-Decision needed: failed-login experience.
+Judgment request: choose the failed-login experience.
 Options: inline layer, toast, or modal.
 Recommendation: inline layer near the form because it is persistent and easier to make accessible.
 What can continue if you defer: API wiring and tests that do not commit to final UI behavior.
@@ -103,7 +123,7 @@ What cannot close yet: final UX, copy, and the human check of the login screen.
 Technical architecture judgment:
 
 ```text
-Decision needed: login architecture.
+Judgment request: choose the login architecture.
 Options: session cookie, bearer/JWT, OAuth/OIDC, or social-login provider integration.
 Recommendation: inspect existing session and user model first; do not choose until we know what the codebase already supports or what identity-provider requirement exists.
 What can continue if you defer: read-only inspection and a scoped implementation proposal.
@@ -131,6 +151,7 @@ Smallest unblocker: choose the failed-login pattern, or ask me to propose a smal
 Use these as ordinary requests. They are not commands you must memorize.
 
 ```text
+Before implementing, help me make the plan concrete.
 Clarify the plan before implementation.
 Ask what you need before changing code.
 Start with goals, non-goals, and acceptance criteria.
@@ -141,6 +162,8 @@ What one decision or check would unblock it?
 Show close readiness in plain language.
 Show close-relevant residual risk before I accept.
 What evidence is still missing?
+Separate product decisions from technical decisions.
+Treat this as a small change unless the scope grows.
 Keep this small unless it turns into a product or technical decision.
 After you inspect, show the safe next work or work split.
 ```
@@ -189,7 +212,7 @@ Write check: allowed for this focused change.
 No broader product decision appeared, and no close-relevant residual risk is known for this small change.
 ```
 
-The light display does not mean the agent bypasses Harness internally. If product files may change, the agent still keeps scope narrow, uses the appropriate internal write checks, records what changed, and reports if the work grows beyond the original request. You should not need to see internal boundary labels for every tiny edit unless a label helps explain a boundary or blocker.
+The light display does not mean the agent bypasses Harness internally. If product files may change, the scope, write, evidence, and close boundary still matters. The agent still keeps scope narrow, uses the appropriate internal write checks, records what changed, preserves the evidence needed for the claim, and reports if the work grows beyond the original request. You should not need to see internal boundary labels for every tiny edit unless a label helps explain a boundary or blocker.
 
 Small work should escalate when it stops being small. Escalate to tracked work when scope is unclear; multiple files, product areas, or subsystems are involved; a product or UX judgment is needed; an important technical architecture judgment is needed; a public interface or API may be affected; security or privacy may be affected; a sensitive action is needed; QA or verification requirements increase; evidence is insufficient; residual risk is non-trivial; or multi-step delivery is needed.
 
@@ -344,6 +367,15 @@ Smallest unblocker: choose whether to keep this as a label-only change or includ
 
 Do not let the agent turn an agent-resolvable issue into a user burden. If the agent can inspect code, refresh status, rerun a test, collect missing evidence, or narrow the work without changing your judgment, it should say what it will do next.
 
+Close blockers should be readable without knowing gate names. A close blocker display should show:
+
+- what user judgment remains, if any
+- what evidence is missing, stale, or insufficient
+- whether verification or human QA is required by the active profile
+- whether final acceptance is required
+- what residual risk is visible, not yet visible, accepted, or still unresolved
+- the next smallest resolving action
+
 ## Before close
 
 Before close, ask:
@@ -374,7 +406,7 @@ That separation is why work can still be blocked after tests pass. Tests can sup
 
 Residual-risk wording should be precise. "No known close-relevant residual risk" means the system has no known close-relevant risk for this requested action. "Risk not visible yet" means known risk exists but has not been shown clearly enough for acceptance or close.
 
-A casual "go ahead," "proceed," or "looks good" is only usable when the agent has already named the exact thing you are deciding. It is not enough for product trade-offs, architecture choices, QA or verification waivers, accepting the result, or accepting residual risk unless the prompt shows the choice, consequences, relevant evidence links or saved decisions, and what remains outside that decision. If the phrase could apply to more than one pending decision, the agent should ask which one you mean.
+A casual "go ahead," "proceed," "looks good," "진행해," or "좋아" is only usable when the agent has already named the exact thing you are deciding. It must not automatically resolve every pending judgment. If the response could mean approval for a sensitive step, final acceptance of the result, residual-risk acceptance, or simple continuation, the agent should route or clarify before recording it. It is not enough for product trade-offs, architecture choices, QA or verification waivers, accepting the result, or accepting residual risk unless the prompt shows the choice, consequences, relevant evidence links or saved decisions, and what remains outside that decision. If the phrase could apply to more than one pending judgment, the agent should ask which one you mean.
 
 ## Advanced: exact close labels
 
@@ -400,8 +432,8 @@ You can skip this section until an agent shows one of these labels. They are use
 | Discovery | The internal name for the agent's requirements-clarification behavior before implementation planning. Users can ask for this as "clarify the plan before implementation." |
 | Change Unit | The bounded work area that may change for this task. |
 | Autonomy Boundary | The decisions the agent may make alone inside that scope. |
-| Decision Packet | The recorded path for a user-owned product/UX, technical architecture, security/privacy, scope/autonomy, waiver, final acceptance, residual-risk acceptance, or reconcile decision. It can be concise for a small unblocker or detailed for complex/risky choices. |
-| Judgment domain | The user-facing grouping on a Decision Packet, such as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed. |
+| Decision Packet | The internal record/template label behind a user judgment request. It records a user-owned product/UX, technical architecture, security/privacy, scope/autonomy, waiver, final acceptance, residual-risk acceptance, or reconcile judgment. It can be concise for a small unblocker or detailed for complex/risky choices. |
+| Judgment domain | The grouping on an internal Decision Packet record, such as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed. |
 | Approval | Permission for a named sensitive action; not generic agreement or final acceptance. |
 | Write Authorization | A one-attempt check that the intended product write fits the current task, scope, decisions, and approvals. |
 | Evidence Manifest | The record that maps completion claims to supporting evidence. |
@@ -417,6 +449,6 @@ For exact contracts, use the Reference docs only when needed: [Kernel Reference]
 
 Read [Concepts](../learn/concepts.md) for the vocabulary behind the user-facing words.
 
-Use [Decision Packet Cookbook](decision-packet-cookbook.md) when a product, UX, architecture, security, QA, verification, acceptance, risk, or scope decision needs a focused prompt.
+Use [Judgment Request Cookbook](decision-packet-cookbook.md) when a product, UX, architecture, security, QA, verification, acceptance, risk, or scope judgment needs a focused prompt.
 
 Agent integrators should read [Agent Session Flow](agent-session-flow.md). Ordinary users do not need it for the primary path.

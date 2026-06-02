@@ -1,241 +1,268 @@
-# Decision Packet Cookbook
+# Judgment Request Cookbook
 
-## Ask for one focused decision
+## Ask For One Focused Judgment
 
-Use this after [User Guide](user-guide.md) when work is blocked by a choice the agent should not make alone. You can ask the agent to show the options, recommend one path, name uncertainty, explain what can continue if you defer, and say what still blocks close.
+Use this after [User Guide](user-guide.md) when work is blocked by a choice the agent should not make alone. A good judgment request shows the choice, realistic options, consequence, what can still continue, and what remains blocked. It should feel like decision support, not a schema form or a blank permission slip.
 
-The agent should clarify why the decision is needed now, what the realistic options are, which trade-offs belong to you, what the codebase or current evidence can answer, and what evidence, QA, verification, acceptance, or residual-risk handling may be affected.
+The everyday label is "judgment request." The internal record or template label may be "Decision Packet" when a reference page, tool result, or saved record needs precision. Users should not need that label to answer the prompt.
 
-Harness helps preserve the user-owned decision separately from broad approval, implementation evidence, final acceptance, and residual-risk acceptance. You should expect a compact decision prompt, not a field list.
+Before asking, the agent should check what the repository, docs, tests, current Harness state, accepted decisions, current task artifacts, or available evidence already answer. Do not ask the user to re-answer facts the project can answer. Ask only for judgments the user owns, and keep blocking questions separate from useful-but-not-blocking questions.
 
-Decision prompts can be concise or detailed. A tiny unblocker can show only the question, scope, concise options, and related evidence links; omitted pros/cons, recommendation, uncertainty, or deferral analysis are valid when the selected profile is `minimal_decision` and those details are not material. Complex or high-risk choices should include detailed options, trade-offs, recommendation or explicit no-recommendation reason, uncertainty, deferral consequence, and affected evidence or risk links.
+## Use It For
 
-This is advanced usage and example material, not the primary user entrypoint and not the exact contract for Decision Packet behavior.
+Use a judgment request when the next safe action depends on one of these user-owned choices:
 
-## When to use it
+- product or UX judgment
+- technical architecture judgment
+- security or privacy judgment
+- scope or autonomy judgment
+- permission for a sensitive step
+- QA or verification expectation, waiver, or skipped check
+- final acceptance of the result when required
+- acceptance of a named residual risk
+- reconcile choice when proposal and current state differ
 
-Use these examples when a task is blocked by product, UX, architecture, security, QA, verification, final acceptance, residual-risk acceptance, or scope/autonomy judgment that the agent should not decide alone.
+Do not merge these into one "approve?" prompt. Permission to install a dependency is not the same as adopting that dependency as the architecture. Final acceptance is not the same as accepting known residual risk. A QA waiver is not evidence that QA passed.
 
-## Main idea
+## Good Shape
 
-A Decision Packet should feel like decision support, not a blank permission slip. It names the real user-owned choice, uses the prompt depth that fits the decision, and links evidence or residual risk where relevant. A concise `minimal_decision` can stay small; detailed trade-off, approval-shaped, waiver, final acceptance, residual-risk acceptance, reconcile, and mixed profiles carry the extra context their route requires.
+A good judgment request normally answers:
 
-The examples below are prompt examples, not contract definitions. Exact behavior stays with the Reference owners.
+- what judgment is needed now
+- why it blocks the next safe action or close
+- which options are realistic
+- what the agent recommends, when a recommendation is appropriate
+- what is uncertain
+- what can continue if the user defers
+- what does not get settled by the answer
+- what evidence, QA, verification, acceptance, or residual risk may be affected
 
-## Common And Profile-Specific Cues
+Small unblockers can stay short. Complex, security-sensitive, close-relevant, or architecture-shaping choices need fuller trade-offs.
 
-Every cookbook example keeps the common decision cues visible:
+## Tiny Product Judgment
 
-- the decision area
-- the prompt depth, when useful
-- the decision route, when useful
-- why the decision is needed now
-- realistic options or a chosen outcome
-- related risk, evidence links, recorded runs, saved decisions, or files where applicable
-
-Profile-specific cues appear only when the selected profile needs them:
-
-- recommendation, uncertainty, and deferral consequence for detailed trade-offs and other full profiles that require them
-- approval scope for `approval_shaped`
-- skipped check and close impact for `waiver`
-- evidence, verification, QA, and residual-risk visibility for `acceptance`
-- accepted scope, consequence, follow-up, and risk refs for `residual_risk_acceptance`
-- reconcile item and target refs for `reconcile`
-
-Implementation labels live in the Reference docs. These examples use plain decision prompts first.
-
-## Tiny decision: label wording
-
-Use this when a simple product or technical unblocker needs the user's choice, but a full trade-off packet would be ceremony without extra safety.
+Use this when a small user-visible choice is real but does not need a full trade-off prompt.
 
 ```text
-Decision title: Settings form button label
-Decision area: Product / UX
-Prompt depth: concise
-Decision route: product trade-off
-Why now: the scoped settings copy change needs one label before the agent updates the text and related snapshot.
+Judgment request: choose the settings form button label.
+
 Options:
-- Save.
-- Update.
-Related support: settings form copy scope and related snapshot or test evidence link if present.
-Does not settle: broader settings workflow, localization strategy, final acceptance, residual-risk acceptance, or write authority.
+- "Save"
+- "Update"
+
+Why now: the scoped copy change needs one label before the agent updates the text and related snapshot.
+
+This settles only the label for this settings form. It does not settle the broader settings workflow, localization strategy, final acceptance, residual-risk acceptance, or write authority.
 ```
 
-Why this works: it records the user-owned choice explicitly without forcing pros/cons, uncertainty, or architecture-style detail where the decision is small and bounded.
+Why this works: it asks for one bounded product/UX judgment without pretending the answer approves every later step.
 
-## UX decision: inline layer vs toast vs modal
+## Product/UX Judgment: Inline Message Vs Toast Vs Modal
 
-Use this when a user-visible behavior must be chosen before implementation or QA can finish.
+Use this when user-visible behavior must be chosen before implementation or QA can finish.
 
 ```text
-Decision title: Failed-login feedback pattern
-Decision area: Product / UX
-Prompt depth: detailed trade-off
-Decision route: product trade-off
-Why now: the login flow needs one failure-feedback pattern before final UI wiring, copy tests, and human QA.
+Judgment request: choose the failed-login feedback pattern.
+
 Options:
-- Inline layer near the form fields.
+- Inline message near the form fields.
 - Toast after failed submit.
 - Modal that interrupts the flow.
-Recommendation: choose inline layer.
-Uncertainty: confirm existing design-system support for inline errors and screen-reader announcement behavior.
-Deferral consequence: API error mapping and state plumbing can continue, but final UI behavior, copy, screenshots, and human QA should wait.
-Related risk or evidence: account-enumeration copy risk, accessibility evidence, screenshots or browser-smoke evidence links, and QA notes after implementation.
+
+Recommendation: choose the inline message. It stays visible, fits the form context, and is usually easier to make accessible.
+
+Uncertainty: the agent still needs to confirm existing design-system support for inline errors and screen-reader announcement behavior.
+
+If you defer: API error mapping and state plumbing can continue, but final UI behavior, final copy, screenshots, and human QA should wait.
+
+This does not settle: login architecture, account recovery, final acceptance, residual-risk acceptance, or permission for sensitive steps.
 ```
 
-Why this works: it asks for the UX choice instead of asking the user to "approve the login change." It also says what can continue while the user decides.
+Why this works: it asks for the UX choice instead of asking the user to "approve the login change."
 
-Exact Decision Packet behavior is owned by [Decision Packet](../reference/kernel.md#decision-packet) and [Decision Gate](../reference/kernel.md#decision-gate). Manual QA behavior is owned by [QA Gate](../reference/kernel.md#qa-gate).
+## Technical Architecture Judgment: Auth Direction
 
-## Auth decision: session cookie vs bearer/JWT vs OAuth/OIDC vs social login
-
-Use this when an authentication direction affects storage, revocation, client behavior, or security posture.
+Use this when an authentication direction affects storage, revocation, client behavior, migration, or security posture.
 
 ```text
-Decision title: Login session architecture
-Decision area: Technical architecture
-Prompt depth: detailed architecture trade-off
-Decision route: architecture choice
-Why now: the implementation must choose the session model before storage, middleware, tests, and threat review can be scoped.
+Judgment request: choose the login session architecture.
+
 Options:
 - Server-side session cookie for first-party web login.
 - JWT or bearer token handled by the client.
 - OAuth/OIDC identity provider, with a separate local session or token strategy when needed.
 - Social-login provider integration, with provider-specific account linking and support implications.
-Recommendation: choose server-side session cookie for a first-party web app unless the product requires third-party identity provider sign-in, social-login conversion, or non-browser clients now.
-Uncertainty: current client mix, existing auth middleware, revocation requirements, SSO requirements, and deployment constraints.
-Deferral consequence: the agent can inspect current auth code and draft a narrow work slice, but implementation should not commit to storage, token lifetime, or middleware behavior.
-Related risk or evidence: CSRF/XSS exposure, revocation evidence, session-lifetime tests, migration notes, and security review evidence links.
+
+Recommendation: inspect the current user/session model before choosing. If this is a first-party web app and there is no current third-party identity-provider requirement, server-side session cookie is likely the conservative default.
+
+Uncertainty: current client mix, existing auth middleware, revocation requirements, SSO requirements, deployment constraints, and migration cost.
+
+If you defer: the agent can inspect current auth code and draft a narrow work slice, but should not commit to storage, token lifetime, middleware behavior, or identity-provider integration.
+
+This does not settle: failed-login UX, audit logging, rate limits, final acceptance, or permission to install dependencies.
 ```
 
-Why this works: it uses the full architecture profile because this choice affects storage, revocation, client behavior, security posture, migration, tests, and review. It also separates identity-provider choice from session/storage choice. OAuth/OIDC may still need a local session or token strategy, so the packet does not pretend those are interchangeable.
+Why this works: it separates identity-provider choice from session/storage strategy. OAuth/OIDC may still need a local session or token strategy.
 
-## Sensitive-action approval: dependency install
-
-Use this when the user must approve a sensitive action, such as a package install or dependency-file update, without treating that approval as the architecture decision.
-
-```text
-Decision title: Approve one dependency install command
-Decision area: Security / privacy
-Prompt depth: sensitive-action approval
-Decision route: sensitive-action approval
-Why now: the agent cannot run the package install or update dependency files until the sensitive action is approved for this task.
-Approval scope:
-- Command or action: install the named dependency/version for this task.
-- Paths or records covered: dependency manifest and lockfile updates named in the prompt.
-- Expiry: this task and approval window only.
-Covers: the named install/update action inside the stated scope.
-Does not cover: choosing the dependency as the architecture direction, future dependency installs, product writes outside scope, QA or verification waiver, final acceptance, or residual-risk acceptance.
-Options:
-- Approve this scoped install action.
-- Deny the install action and continue with a no-new-dependency path if one exists.
-- Ask for a separate architecture Decision Packet before any install approval.
-Related support: dependency comparison, current package policy, prepare-write candidate, and affected file refs when available.
-```
-
-Why this works: it uses the `approval_shaped` profile for sensitive-action permission only. If the real question is whether the dependency is the right technical direction, that needs a separate `architecture_tradeoff` Decision Packet.
-
-Exact sensitive-action approval and user-owned architecture judgment boundaries are owned by [Approval](../reference/kernel.md#approval), [Decision Packet](../reference/kernel.md#decision-packet), and [Sensitive Categories](../reference/mcp-api-and-schemas.md#sensitive-categories).
-
-## Security decision: PII logging
+## Security/Privacy Judgment: PII Logging
 
 Use this when a feature, debug path, run, export, or artifact might expose personal data.
 
 ```text
-Decision title: PII logging policy for login diagnostics
-Decision area: Security / privacy
-Decision route: design choice
-Why now: the agent needs to know what may be written to logs and evidence artifacts before adding diagnostics or tests.
+Judgment request: choose the login diagnostics logging policy.
+
 Options:
 - Do not log PII; use request IDs and nonidentifying error codes.
 - Log redacted or tokenized identifiers.
 - Log limited raw fields for a short retention window with audit controls.
-Recommendation: do not log raw PII; use request IDs plus redacted or tokenized identifiers only if debugging needs them.
-Uncertainty: support/debugging requirements, retention policy, compliance obligations, and whether existing log redaction is proven.
-Deferral consequence: implementation can continue without PII logging, but diagnostics that require user identifiers should wait.
-Related risk or evidence: privacy exposure, artifact redaction notes, log sample evidence, retention/audit evidence links, and any residual risk if debugging value is reduced.
+
+Recommendation: do not log raw PII. Use request IDs, plus redacted or tokenized identifiers only if debugging truly needs them.
+
+Uncertainty: support requirements, retention policy, compliance obligations, and whether existing log redaction is proven.
+
+If you defer: implementation can continue without PII logging, but diagnostics that require user identifiers should wait.
+
+This does not settle: permission for any sensitive command, artifact redaction evidence, final acceptance, or residual-risk acceptance.
 ```
 
-Why this works: it treats privacy as a product/security judgment, not as a hidden implementation detail. If a sensitive action is also required, that approval is separate from the policy decision.
+Why this works: it treats privacy as a user-owned product/security judgment, not a hidden implementation detail.
 
-Exact security concepts live in [Security Threat Model Reference](../reference/security-threat-model.md). Exact approval and evidence authority live in [Approval](../reference/kernel.md#approval) and [Evidence Gate](../reference/kernel.md#evidence-gate).
+## Sensitive-Step Permission: Dependency Install
 
-## QA waiver
-
-Use this when required human QA cannot be completed, and the user must decide how to handle close without treating the waiver as proof or risk acceptance.
+Use this when the user must permit a named sensitive action without treating that permission as the architecture judgment.
 
 ```text
-Decision title: Waive Manual QA for responsive login layout
-Decision area: QA / acceptance
-Decision route: QA waiver
-Why now: close is blocked because required Manual QA has not passed for the responsive login flow.
+Permission request: allow one dependency install/update action for this task.
+
+Allowed if you approve:
+- install the named dependency and version for this task
+- update the named dependency manifest and lockfile
+- use the approval only within this task and approval window
+
+Options:
+- Allow this scoped install/update action.
+- Deny it and continue with a no-new-dependency path if one exists.
+- Ask for a separate architecture judgment before any install approval.
+
+This does not settle: whether the dependency is the right architecture direction, future installs, product writes outside scope, QA or verification waiver, final acceptance, or residual-risk acceptance.
+```
+
+Why this works: permission for a sensitive step is separate from the technical judgment to adopt a dependency.
+
+## QA Expectation Or Waiver
+
+Use this when human QA is expected or required, but the user must decide whether to perform it, waive it, or keep close blocked.
+
+```text
+Judgment request: decide how to handle Manual QA for the responsive login layout.
+
 Options:
 - Perform Manual QA now.
-- Record a Manual QA waiver for this close; if close-relevant residual risk remains, also route or record residual-risk acceptance through the owner path.
+- Waive Manual QA for this close and separately handle any visible residual risk.
 - Keep the task open and schedule QA before close.
-Recommendation: perform Manual QA for a user-facing login workflow; waive only if the environment is unavailable and the change is low risk or time-bound.
+
+Recommendation: perform Manual QA for a user-facing login workflow. Waive only if the environment is unavailable and the change is low risk or time-bound.
+
 Uncertainty: small-screen layout, keyboard flow, screen-reader interpretation, and visual polish have not been inspected by a human.
-Deferral consequence: implementation can remain complete, but close should stay blocked until Manual QA passes or a valid QA waiver and any required residual-risk acceptance path are recorded.
-Related risk or evidence: existing test logs, screenshots if available, skipped viewport list, the Manual QA requirement, and residual-risk follow-up.
+
+If you defer: implementation can remain complete, but close should stay blocked until Manual QA passes or a valid waiver and any required residual-risk acceptance are recorded.
+
+This does not settle: evidence sufficiency, verification, final acceptance, or residual-risk acceptance.
 ```
 
-Why this works: it names the skipped inspection. A QA waiver does not prove QA passed and does not by itself accept residual risk unless the required residual-risk acceptance path is also recorded.
+Why this works: it names the skipped human inspection. A QA waiver does not prove QA passed.
 
-Exact QA behavior is owned by [QA Gate](../reference/kernel.md#qa-gate), [`harness.record_manual_qa`](../reference/mcp-api-and-schemas.md#harnessrecord_manual_qa), and [`harness.record_user_decision`](../reference/mcp-api-and-schemas.md#harnessrecord_user_decision).
+## Verification Expectation Or Waiver
 
-## Verification waiver
-
-Use this when detached verification is required or expected, but the user wants to proceed without it.
+Use this when independent verification is required or expected, but the user wants to proceed without it.
 
 ```text
-Decision title: Waive detached verification for invoice export fix
-Decision area: QA / acceptance
-Decision route: verification waiver
-Why now: close as verified is blocked because no compatible independent verification exists, and the user is asking to close today.
+Judgment request: decide whether to waive detached verification for the invoice export fix.
+
 Options:
 - Run detached verification from a fresh bundle or fresh worktree.
 - Keep the task open until independent verification is available.
 - Waive verification and close only through a risk-accepted path if the remaining risk is visible and accepted.
-Recommendation: run detached verification for billing/export behavior; waive only if the change is low blast-radius and existing self-check evidence is strong.
-Uncertainty: same-session bias, unreviewed export edge cases, stale bundle risk, and whether the self-check covered the affected formats.
-Deferral consequence: the task cannot close as detached verified; close either waits or uses the documented risk-accepted path when allowed.
-Related risk or evidence: self-check recorded run, missing independent-verification link, affected export formats, residual-risk link, and follow-up verification plan.
+
+Recommendation: run detached verification for billing/export behavior. Waive only if blast radius is low and self-check evidence is strong.
+
+Uncertainty: same-session bias, unreviewed export edge cases, stale bundle risk, and whether self-checks covered affected formats.
+
+If you defer: the task cannot close as detached verified. Close either waits or uses the documented risk-accepted path when allowed.
+
+This does not settle: final acceptance, Manual QA, or acceptance of any named residual risk.
 ```
 
-Why this works: it keeps assurance language honest. A verification waiver may unblock a risk-accepted close path, but it does not create detached verification.
+Why this works: it keeps assurance language honest. A waiver does not create verification.
 
-Exact verification and close behavior is owned by [Verification Gate](../reference/kernel.md#verification-gate), [Verification Independence Profiles](../reference/kernel.md#verification-independence-profiles), [Residual Risk](../reference/kernel.md#residual-risk), and [`close_task`](../reference/kernel.md#close_task).
+## Final Acceptance
 
-## Residual risk acceptance
-
-Use this when known close-relevant risk remains after implementation and evidence, and the user must decide whether that risk is acceptable for this close.
+Use this when the task path requires the user to accept the result after the close basis is visible.
 
 ```text
-Decision title: Accept legacy CSV encoding limitation
-Decision area: Residual risk
-Decision route: residual-risk acceptance
-Why now: the export fix works for current UTF-8 files, but legacy encodings remain unsupported and close needs a risk decision.
+Judgment request: decide whether you accept the completed result for this task.
+
+Shown before you answer:
+- scope that was completed
+- evidence that supports each completion claim
+- verification status
+- Manual QA status or valid waiver
+- close-relevant residual risk, or an explicit "no known close-relevant residual risk" report
+
+Options:
+- Accept the result for this task.
+- Do not accept it; name what must change.
+- Defer acceptance until one listed blocker is resolved.
+
+This does not settle: new writes, new sensitive-step permission, missing evidence, verification or QA waiver, or acceptance of named residual risk.
+```
+
+Why this works: final acceptance is a result judgment after the close basis is visible. It is not proof, permission, or risk acceptance.
+
+## Residual Risk Acceptance
+
+Use this when known close-relevant risk remains after implementation and evidence.
+
+```text
+Judgment request: decide whether to accept the legacy CSV encoding limitation for this close.
+
+Visible risk: the export fix works for current UTF-8 files, but legacy encodings remain unsupported.
+
 Options:
 - Fix legacy encoding support before close.
 - Accept the bounded risk for this close and create a follow-up.
 - Cancel or supersede the task because the remaining limitation changes the requested outcome.
-Recommendation: accept only if legacy encoding is rare, documented, and has an owner-visible follow-up; otherwise fix before close.
+
+Recommendation: accept only if legacy encoding is rare, documented, and has an owner-visible follow-up. Otherwise fix before close.
+
 Uncertainty: real customer frequency, support impact, and whether existing imports include legacy files.
-Deferral consequence: final acceptance or close may remain blocked until the risk is resolved, made non-close-relevant, or accepted through the owner path.
-Related risk or evidence: passing UTF-8 export tests, missing legacy-encoding test coverage, known limitation note, follow-up link, and visible residual-risk link.
+
+If you defer: final acceptance or close may remain blocked until the risk is resolved, made non-close-relevant, or accepted through the owner path.
+
+This does not settle: final acceptance, verification, QA, or proof that the risk is harmless.
 ```
 
-Why this works: it makes the remaining limitation visible before acceptance. The user is not just accepting the result; they are also deciding whether a named remaining risk is acceptable for this close.
+Why this works: it makes the remaining limitation visible before acceptance and asks about the named risk, not a vague "looks good."
 
-Exact residual-risk behavior is owned by [Residual Risk](../reference/kernel.md#residual-risk), [Acceptance Gate](../reference/kernel.md#acceptance-gate), [`harness.record_user_decision`](../reference/mcp-api-and-schemas.md#harnessrecord_user_decision), and [`close_task`](../reference/kernel.md#close_task).
+## Answering A Judgment Request
 
-## Owner links
+Answer in ordinary language and add the boundary you care about:
 
-Use these Reference owners when the cookbook examples need exact behavior:
+```text
+Choose inline failed-login feedback. Keep the message generic, do not add a modal, and keep account recovery out of scope for this task.
+```
+
+That kind of answer resolves the named judgment without granting every other authority. The agent still needs the normal owner paths for write authority, evidence, QA, verification, final acceptance, residual-risk acceptance, and close.
+
+If you answer "go ahead," "looks good," "진행해," or "좋아" and more than one judgment is pending, the agent should ask which judgment you mean before recording it.
+
+## Exact Owners
+
+Use these Reference owners when exact behavior is needed:
 
 | Need | Owner |
 |---|---|
-| Decision Packet meaning and gate aggregation | [Decision Packet](../reference/kernel.md#decision-packet), [Decision Gate](../reference/kernel.md#decision-gate) |
+| Internal Decision Packet behavior and gate aggregation | [Decision Packet](../reference/kernel.md#decision-packet), [Decision Gate](../reference/kernel.md#decision-gate) |
 | Public request and answer shapes | [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision), [`harness.record_user_decision`](../reference/mcp-api-and-schemas.md#harnessrecord_user_decision) |
 | Sensitive-action Approval | [Approval](../reference/kernel.md#approval) |
 | Evidence sufficiency | [Evidence Gate](../reference/kernel.md#evidence-gate) |
@@ -243,13 +270,3 @@ Use these Reference owners when the cookbook examples need exact behavior:
 | Manual QA and QA waiver impact | [QA Gate](../reference/kernel.md#qa-gate) |
 | Final acceptance and residual-risk visibility | [Acceptance Gate](../reference/kernel.md#acceptance-gate), [Residual Risk](../reference/kernel.md#residual-risk) |
 | Close blockers and close reasons | [`close_task`](../reference/kernel.md#close_task) |
-
-## Good answer pattern
-
-When you answer a Decision Packet, choose the option in ordinary language and add any boundary you care about:
-
-```text
-Choose inline failed-login feedback. Keep the message generic, do not add a modal, and keep account recovery out of scope for this task.
-```
-
-That kind of answer is useful because it resolves the named choice without pretending to grant every other authority. The agent still needs the normal owner paths for Write Authorization, evidence, QA, verification, final acceptance, residual-risk acceptance, and close.
