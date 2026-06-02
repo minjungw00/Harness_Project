@@ -367,7 +367,7 @@ Then use the [Reference Index](../reference/README.md) to pick the current owner
 - [Kernel Reference](../reference/kernel.md) for entities, gates, state logic, `prepare_write`, and `close_task`.
 - [Runtime Architecture Reference](../reference/runtime-architecture.md) for runtime spaces, Core flow, artifacts, projection/reconcile, and guarantee levels.
 - [MCP API And Schemas](../reference/mcp-api-and-schemas.md) for public resources, tools, schemas, errors, artifact refs, idempotency, and state conflict behavior.
-- [Storage And DDL](../reference/storage-and-ddl.md) for runtime layout, DDL, migrations, locks, artifacts, baselines, projection jobs, and validator-run storage.
+- [Storage And DDL](../reference/storage-and-ddl.md) for runtime layout, staged DDL, migrations, locks, artifacts, and later-profile baseline, projection-job, and validator-run candidates.
 - [Operations And Conformance Reference](../reference/operations-and-conformance.md) for operator semantics and conformance run overview.
 - [Conformance Fixtures Reference](../reference/conformance-fixtures.md) for the core conformance model, fixture body shape, assertion semantics, and the reduced Kernel Smoke queue.
 - [Future Fixture Catalog](../reference/future-fixture-catalog.md) for detailed later scenario candidates that are not early-stage requirements by themselves.

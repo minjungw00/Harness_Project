@@ -245,7 +245,7 @@ Do not add fields to the fixture body to express suite stage, authoring order, o
 - [Kernel Reference](../reference/kernel.md): Task, Change Unit, Decision Packet, gates, `prepare_write`, Write Authorization, `record_run` semantics, and `close_task`.
 - [Runtime Architecture Reference](../reference/runtime-architecture.md): three spaces, Core process model, transaction flow, artifact store, projection/reconcile, guarantee levels, and failure handling.
 - [MCP API And Schemas](../reference/mcp-api-and-schemas.md): public resources, tool envelopes, request/response schemas, error taxonomy, artifact refs, and `ProjectionKind`.
-- [Storage And DDL](../reference/storage-and-ddl.md): runtime layout, staged schema profiles, migrations, locks, artifacts, baselines, projection jobs, and validator-run storage.
+- [Storage And DDL](../reference/storage-and-ddl.md): runtime layout, staged schema profiles, migrations, locks, artifacts, and later-profile baseline, projection-job, and validator-run candidates.
 - [Operations And Conformance Reference](../reference/operations-and-conformance.md): operator semantics and conformance staging.
 - [Conformance Fixtures Reference](../reference/conformance-fixtures.md): core conformance model, fixture format, execution, assertion rules, and the reduced Kernel Smoke queue.
 - [Future Fixture Catalog](../reference/future-fixture-catalog.md): detailed later scenario candidates that are not v0.1 requirements.

@@ -245,7 +245,7 @@ Suite stage, authoring order, docs-maintenance result를 표현하기 위해 fix
 - [커널 참조](../reference/kernel.md): Task, Change Unit, Decision Packet, gate, `prepare_write`, Write Authorization, `record_run` semantics, `close_task`.
 - [런타임 아키텍처 참조](../reference/runtime-architecture.md): 세 공간, Core process model, transaction flow, artifact store, projection/reconcile, guarantee level, failure handling.
 - [MCP API와 스키마](../reference/mcp-api-and-schemas.md): public resource, tool envelope, request/response schema, error taxonomy, 아티팩트 참조, `ProjectionKind`.
-- [Storage와 DDL](../reference/storage-and-ddl.md): runtime layout, staged schema profile, migration, lock, artifact, baseline, projection job, validator-run storage를 다룹니다.
+- [Storage와 DDL](../reference/storage-and-ddl.md): runtime layout, staged schema profile, migration, lock, artifact와 later-profile baseline, projection job, validator-run candidate를 다룹니다.
 - [운영과 Conformance 참조](../reference/operations-and-conformance.md): operator 의미와 conformance 단계화.
 - [Conformance Fixtures 참조](../reference/conformance-fixtures.md): 핵심 적합성 모델, fixture 형식, 실행, assertion rule, 축소된 Kernel Smoke queue.
 - [향후 Fixture Catalog](../reference/future-fixture-catalog.md): v0.1 requirement가 아닌 detailed later scenario candidate.
