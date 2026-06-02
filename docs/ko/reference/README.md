@@ -2,6 +2,8 @@
 
 Reference는 schema, gate, 상태 전이, DDL profile, projection 규칙, template body, 보안 의미, conformance 규칙, connector behavior, policy, 용어의 정확한 owner 계약이 필요할 때 사용합니다.
 
+이 owner 문서들은 향후 하네스 서버 계약을 계획하고 검토하기 위한 문서입니다. 지금 이 저장소에 서버/런타임, Harness Runtime Home, conformance runner, 생성된 읽기용 요약 시스템, 구현이 있다는 뜻이 아닙니다.
+
 Reference 전체를 기본으로 읽지 않습니다. 지금 앞에 있는 질문의 owner를 고른 뒤, 그 owner가 더 엄격한 세부사항을 위임할 때만 링크를 따라갑니다.
 
 ## Owner-Contract 지도

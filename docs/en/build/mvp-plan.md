@@ -152,7 +152,7 @@ This section is the central server-coding decision log for decisions found durin
 
 | Decision-log item | Current status | Decision condition |
 |---|---|---|
-| Confirmed server-coding decision-log entries | None recorded at this baseline. This is not proof that no decisions remain. | If maintainer review or first runtime-batch planning finds a schema/design decision, stage boundary decision, or other server-coding decision, add it here before changing server code or DDL. |
+| Confirmed server-coding decision-log entries | None recorded at this baseline. No server/runtime implementation decisions have been formally accepted for coding, and this is not proof that no decisions remain. | If maintainer review or first runtime-batch planning finds a schema/design decision, stage boundary decision, or other server-coding decision, add it here before changing server code or DDL. |
 | Implementation-readiness judgment | Not accepted. | Maintainers must deliberately update [Implementation Overview: Documentation acceptance status](implementation-overview.md#documentation-acceptance-status) after the readiness criteria are satisfied or remaining blockers are reclassified. |
 | Documentation drift | Not a server-coding decision by default. | If a docs-maintenance finding exposes a real owner-contract decision or stage blocker, promote it into this log with stage impact; otherwise route it through the Authoring Guide tracker. |
 

@@ -66,6 +66,8 @@ This repository is in documentation review/redesign only. Keep three statuses se
 - Implementation planning readiness: not accepted yet. Maintainers must deliberately confirm the implementation-readiness criteria before first runtime-batch planning.
 - Runtime implementation status: not started. The repository remains documentation-only. Its intended future role is the Harness Server source repository, but server/runtime implementation may start only after documentation acceptance and a separate implementation-planning readiness decision.
 
+No server/runtime implementation decisions have been formally accepted for coding in this repository phase. An empty decision log is only a content status, not proof that no design issues remain.
+
 Do not describe the current docs as fully accepted, implementation-complete, implementation-ready, or ready for server coding unless the maintainer handoff status explicitly defines that acceptance.
 
 Documentation edits may change source docs, but they do not start Harness server/runtime implementation or authorize implementation planning.
@@ -77,6 +79,29 @@ The redesign may change terminology, MVP staging, schema structure, projection s
 Documentation editing in this repository does not require Harness runtime procedures. Do not create runtime state, `task_events`, Write Authorizations, Evidence Manifests, Manual QA records, Acceptance records, Residual Risk records, generated projections, generated operational files, executable fixtures, fixture files, runtime records, or product-repository examples for documentation edits. These terms may be documented as future Harness behavior only.
 
 Documentation files are source material for understanding and implementing Harness. They are not Harness projections unless a future Harness Server explicitly generates them as projections. Do not make documentation pages obey the runtime lifecycle they describe; explain the lifecycle, link to owner contracts, and keep editorial checks editorial.
+
+### Redesign Editing Contract
+
+During redesign, optimize for clarity, implementability, and the product thesis, not for preserving existing wording.
+
+- Do not keep prose only because it already exists. Rewrite, move, compress, or delete text that makes Harness look like a broad workflow engine, ALM system, evaluation harness, QA automation platform, report generator, or generic MCP wrapper.
+- Preserve the core Harness principles and value proposition: local Core-owned authority for scope, user-owned judgment, evidence references, close readiness, final acceptance, and residual risk outside chat.
+- Future, profile-specific, diagnostic, or roadmap material must read as staged or candidate material. It must not look like a current MVP requirement or proof that implementation exists.
+- User-facing docs must not require readers to know internal Harness vocabulary before they can understand what to ask, what the agent will clarify, what is blocked, what needs user judgment, or what close means.
+- Exact contracts belong in owner Reference docs. Other docs should summarize reader-visible outcomes and link to the owner instead of duplicating schemas, DDL, gates, fixture bodies, projection templates, or state-transition rules.
+- Documentation files are not Harness runtime objects. They are not governed by future runtime Write Authorization, Evidence Manifest, `task_events`, Acceptance, residual-risk, projection, conformance, or generated operational-output rules.
+
+### Redesign Backlog Frame
+
+Use this short backlog frame to keep redesign findings small and routable:
+
+- Product definition drift: keep Harness defined as a local authority record and judgment-routing layer, not a prompt pack, workflow engine, report generator, dashboard, or broad hosted agent platform.
+- MVP/stage boundary drift: keep v0.1 as the internal Core Authority Slice, v0.2 as the first User-Facing Harness MVP, and future/profile/diagnostic material outside current-stage requirements unless an owner promotes it.
+- Judgment model complexity: keep user-owned judgment visible, proportional, and separated from agent judgment, sensitive-action Approval, final acceptance, and residual-risk acceptance.
+- Close/verification ambiguity: keep evidence, verification, Manual QA, final acceptance, close readiness, and residual risk distinct. None of them substitutes for another.
+- Security guarantee overstatement risk: match cooperative, detective, preventive, and isolated wording to the exact documented mechanism and proof level.
+- Context/token overload risk: keep always-on agent context short and current; route detailed contracts to owner docs or retrieval paths.
+- User-facing terminology burden: write the user-visible situation first. Introduce internal terms only when they help the reader act or interpret a visible blocker.
 
 ## Preserved Principles
 

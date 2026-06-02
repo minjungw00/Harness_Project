@@ -4,7 +4,7 @@ This is the English routing page for the Harness documentation set.
 
 Harness is a local authority record and judgment-routing layer for AI-assisted product work. It keeps scope, user-owned judgments, evidence, verification, QA expectations, final acceptance, and residual-risk status outside fragile chat context.
 
-This repository is currently documentation-only. Its intended future role is the Harness Server source repository. It is not a Product Repository or a Harness Runtime Home, and no Harness Server/runtime implementation exists here yet. Server/runtime implementation may start only after documentation acceptance and a separate implementation-planning readiness decision.
+This repository is currently a documentation review/redesign repository. Its intended future role is the Harness Server source repository. It is not a Product Repository or a Harness Runtime Home. No Harness Server, runtime, generated projection system, conformance runner, runtime data, or implementation exists here yet. Documentation acceptance does not authorize implementation by itself; server/runtime implementation may start only after documentation acceptance and a separate implementation-planning readiness decision.
 
 ## Minimal First-Read Path
 
@@ -104,6 +104,7 @@ The current status separates documentation review, implementation planning readi
 | Documentation review status | Post-redesign review; documentation acceptance candidate only. Maintainers have not accepted the docs yet. |
 | Implementation planning readiness | Not accepted. Maintainers must confirm the implementation-readiness criteria before first runtime-batch planning. |
 | Runtime implementation status | Not started. No runtime artifacts or conformance results exist here yet. |
+| Implementation decision status | No server/runtime implementation decisions have been formally accepted for coding. The decision log has no confirmed entries at this baseline, but review may still uncover open design issues. |
 
 Documentation acceptance, when it happens, is a maintainer review milestone. It does not by itself start runtime/server implementation or prove runtime conformance.
 
@@ -116,7 +117,7 @@ Before starting Harness Server code, implementers should read:
 3. [Implementation-readiness criteria](build/implementation-overview.md#implementation-readiness-criteria).
 4. [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding).
 
-This handoff says the documentation is available for maintainer acceptance review as a candidate. It also centralizes remaining decision and drift status. It does not claim the docs have been accepted, it does not make the docs implementation-ready, and it does not start server/runtime implementation.
+This handoff says the documentation is available for maintainer acceptance review as a candidate. It also centralizes remaining decision and drift status. No server/runtime implementation decisions have been formally accepted for coding yet, and open design issues may still exist. The handoff does not claim the docs have been accepted, it does not make the docs implementation-ready, and it does not start server/runtime implementation.
 
 ## Where Am I?
 

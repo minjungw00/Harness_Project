@@ -21,7 +21,7 @@
 
 ## 핵심 생각
 
-하네스는 사용자의 제품 저장소 옆에서 실행되는 로컬 권한 계층입니다. 제품 저장소는 실제 제품 작업이 일어나는 곳이고, 하네스 런타임 홈은 운영 권한을 저장하며, 하네스 서버/설치(Harness Server / Installation)는 Core, validators, projection, reconcile, 공개 MCP tool을 통해 둘을 연결합니다.
+구현된 뒤 하네스는 사용자의 제품 저장소 옆에서 실행되는 로컬 권한 계층입니다. 제품 저장소는 실제 제품 작업이 일어나는 곳이고, 하네스 런타임 홈은 운영 권한을 저장하며, 하네스 서버/설치(Harness Server / Installation)는 Core, validators, projection, reconcile, 공개 MCP tool을 통해 둘을 연결합니다.
 
 중요한 규칙은 분리입니다. 기준 운영 상태를 변경하는 것은 Core뿐입니다. 제품 소스 파일, 대화 텍스트, 생성된 Markdown, connector 파일, operator output, MCP caller claim은 system에 정보를 줄 수 있지만 기준 운영 상태는 `state.sqlite` 현재 기록과 `state.sqlite.task_events`에 있고, 원본 근거는 artifact store에 있습니다.
 
@@ -81,7 +81,7 @@ flowchart LR
 
 이 분리는 대화, Markdown 보고서, 생성된 connector 파일, operator output, MCP caller claim, 제품 소스 파일을 기준 운영 상태 밖에 둡니다. Core 상태 변경 경로만 기준 운영 상태를 commit할 수 있습니다.
 
-이 문서 저장소는 세 공간 중 향후 하네스 서버/설치 공간의 소스 저장소에 해당하며, 제품 저장소나 하네스 런타임 홈이 아닙니다.
+이 문서 저장소는 세 공간 중 향후 하네스 서버/설치 공간의 소스 저장소에 해당하며, 제품 저장소나 하네스 런타임 홈이 아닙니다. 아직 하네스 서버/런타임 구현이나 런타임 데이터는 없습니다.
 
 ## 로컬 위협 모델
 

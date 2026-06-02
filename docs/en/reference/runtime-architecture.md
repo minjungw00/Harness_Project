@@ -21,7 +21,7 @@ Use the [Kernel Reference](kernel.md) for exact state transitions, [MCP API And 
 
 ## Main idea
 
-Harness runs as a local authority layer beside the user's product repository. The product repository stays the place where product work happens; Harness Runtime Home stores operational authority; the Harness Server / Installation connects the two through Core, validators, projection, reconcile, and public MCP tools.
+When implemented, Harness runs as a local authority layer beside the user's product repository. The product repository stays the place where product work happens; Harness Runtime Home stores operational authority; the Harness Server / Installation connects the two through Core, validators, projection, reconcile, and public MCP tools.
 
 The important rule is separation. Core alone changes canonical operational state. Product source files, chat text, generated Markdown, connector files, operator output, and MCP caller claims can inform the system, but canonical operational state lives in `state.sqlite` current records plus `state.sqlite.task_events`, and raw evidence lives in the artifact store.
 
@@ -81,7 +81,7 @@ flowchart LR
 
 This split keeps chat, Markdown reports, generated connector files, operator output, MCP caller claims, and product source files outside canonical operational state. Only a Core state-changing path can commit canonical operational state.
 
-This documentation repository maps to the future Harness Server / Installation source space, not to a Product Repository or a Harness Runtime Home.
+This documentation repository maps to the future Harness Server / Installation source space, not to a Product Repository or a Harness Runtime Home. No Harness Server/runtime implementation or runtime data exists here yet.
 
 ## Local threat model
 

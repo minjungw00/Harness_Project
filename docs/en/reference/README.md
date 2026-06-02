@@ -2,6 +2,8 @@
 
 Use Reference when you need the exact owner contract for a schema, gate, state transition, DDL profile, projection rule, template body, security meaning, conformance rule, connector behavior, policy, or term.
 
+These owner docs describe future Harness Server contracts for planning and review. They do not mean a server/runtime, Harness Runtime Home, conformance runner, generated projection system, or implementation exists in this repository today.
+
 Do not read the whole Reference set by default. Choose the owner for the question in front of you, then follow its links only when that owner delegates a stricter detail.
 
 ## Owner-Contract Map

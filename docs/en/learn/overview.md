@@ -75,7 +75,7 @@ flowchart LR
   Home -->|Core records| Server
 ```
 
-This documentation repository is being prepared for its intended future role as the Harness Server source repository. It is not a Product Repository or a Harness Runtime Home. Server/runtime implementation here may start only after documentation acceptance and a separate implementation-planning readiness decision.
+This documentation repository is being prepared for its intended future role as the Harness Server source repository. It is not a Product Repository or a Harness Runtime Home. No server/runtime implementation exists here yet; implementation may start only after documentation acceptance and a separate implementation-planning readiness decision.
 
 The separation matters because a Markdown report should not silently become operational truth, a chat transcript should not be treated as durable state, and product files should not be mixed with Harness's internal operating record.
 

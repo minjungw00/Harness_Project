@@ -4,9 +4,9 @@ Harness is a local authority record and judgment-routing layer for AI-assisted p
 
 Harness는 AI 지원 제품 작업에서 작업 범위, 사용자 판단, 근거, 검증, QA 기대, 작업 수락, 잔여 위험 상태를 깨지기 쉬운 대화 맥락 밖에 두는 로컬 기준 기록이자 판단 경로입니다.
 
-This repository is documentation-only today. Its intended future role is the Harness Server source repository. It is not a Product Repository or a Harness Runtime Home, and no Harness Server/runtime implementation exists here yet. Server/runtime implementation may start only after documentation acceptance and a separate implementation-planning readiness decision.
+This repository is a documentation review/redesign repository today. Its intended future role is the Harness Server source repository. It is not a Product Repository or a Harness Runtime Home. No Harness Server, runtime, generated projection system, conformance runner, runtime data, or implementation exists here yet. Documentation acceptance does not authorize implementation by itself; server/runtime implementation may start only after documentation acceptance and a separate implementation-planning readiness decision.
 
-이 저장소는 현재 문서 전용입니다. 향후 역할은 하네스 서버 소스 저장소입니다. 제품 저장소나 하네스 런타임 홈이 아니며, 아직 하네스 서버/런타임 구현은 없습니다. 서버/런타임 구현은 문서 수락과 별도의 구현 계획 준비 결정 이후에만 시작할 수 있습니다.
+이 저장소는 현재 문서 검토/재설계 저장소입니다. 향후 역할은 하네스 서버 소스 저장소입니다. 제품 저장소나 하네스 런타임 홈이 아닙니다. 아직 하네스 서버, 런타임, 생성된 읽기용 요약 시스템, conformance runner, 런타임 데이터, 구현은 없습니다. 문서 수락만으로 구현은 허가되지 않으며, 서버/런타임 구현은 문서 수락과 별도의 구현 계획 준비 결정 이후에만 시작할 수 있습니다.
 
 ## Choose A Language / 언어 선택
 

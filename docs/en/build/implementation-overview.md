@@ -48,6 +48,8 @@ If a proposed implementation starts with the user-facing MVP, v0.3 Agency Assura
 
 The current documentation set is still documentation-only and in post-redesign review. This repository's intended future role is the Harness Server source repository. Runtime/server implementation has not started and may start only after documentation acceptance and a separate implementation-planning readiness decision. The current state is not fully accepted, implementation-complete, implementation-ready, or approved for server coding unless the maintainer-updated status table below explicitly says so.
 
+No server/runtime implementation decisions have been formally accepted for coding in this repository phase. Open design issues may still exist until maintainer review and implementation-readiness review deliberately close or route them.
+
 Remaining drift and review risks are tracked in the [Authoring Guide](../maintain/authoring-guide.md#known-redesign-issues-tracker). That tracker separates observed drift, candidates to verify, regression-prevention checks, and baseline status checks, and routes confirmed findings into the categories below. Review risks are not open implementation decisions by default, but if verification exposes a server-coding decision or stage blocker, record it in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding) with owner doc, affected behavior or field, affected stage, options, and decision needed.
 
 | Remaining item category | Meaning | Where it belongs | Blocking meaning |
@@ -69,7 +71,7 @@ Current revision status: post-redesign documentation review and documentation ac
 | Documentation review status | Post-redesign review; documentation acceptance candidate only. Maintainer acceptance is still pending. | Documentation may be in review, candidate, or accepted state only when this table says so. Acceptance does not automatically start runtime implementation or create runtime conformance. |
 | Implementation planning readiness | Not accepted. First runtime-batch planning may not begin until maintainers change this row after the readiness criteria below are satisfied. | Editorial cleanup is separate from schema/design decisions and stage boundary decisions. Remaining implementation-readiness criteria require maintainer judgment. |
 | Runtime implementation status | Not started. This repository still contains documentation, not Harness runtime/server implementation. | No server/runtime code, runtime state, generated operational artifacts, executable fixtures, fixture files, generated projections, runtime records, or runnable Harness Server conformance tests exist here yet. |
-| Server-coding decision log | Empty at this baseline. This is a decision-log content statement, not proof that no decisions remain. | If maintainer review finds a schema/design decision, stage boundary decision, or other server-coding decision, record it only in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding) with owner, affected behavior or field, affected stage, options, and decision needed. |
+| Server-coding decision log | Empty at this baseline. No server/runtime implementation decisions have been formally accepted for coding. This is a decision-log content statement, not proof that no decisions remain. | If maintainer review finds a schema/design decision, stage boundary decision, or other server-coding decision, record it only in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding) with owner, affected behavior or field, affected stage, options, and decision needed. |
 
 Build readers should treat this table as the entry gate. Until maintainer handoff explicitly accepts implementation planning, even v0.1 Core Authority Slice remains planning-only in this repository and runtime/server implementation must not start.
 
@@ -125,10 +127,11 @@ Current readiness status:
 - Documentation acceptance: pending. This revision is a candidate for maintainer acceptance review, not accepted documentation.
 - Implementation planning readiness: not accepted. First runtime-batch planning must not begin until maintainers explicitly accept the readiness criteria below or reclassify remaining blockers.
 - Runtime implementation: not started. Server coding, fixture materialization, runtime conformance, and generated operational output remain out of scope for this repository phase.
+- Server/runtime implementation decisions: not formally accepted for coding. Open design issues may still be found during maintainer review or implementation-readiness review.
 
 Server-coding decision-log status:
 
-- Confirmed server-coding decision-log entries: none are recorded at this baseline in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding).
+- Confirmed server-coding decision-log entries: none are recorded at this baseline in [MVP Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding), and no server/runtime implementation decisions have been formally accepted for coding.
 - This is not a "no open decisions" claim. The implementation-readiness review may still uncover schema/design decisions, stage boundary decisions, or other server-coding decisions.
 - If a decision is found, record it only in the MVP Plan with owner doc, affected behavior or field, affected stage, options, and the decision condition before changing server code or DDL.
 

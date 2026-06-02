@@ -358,7 +358,7 @@ The runtime component that owns state transitions, gate updates, validator inter
 
 ### Harness Server
 
-The local Harness program and tool surface that receives agent requests, validates or records state changes through Core, runs validators, and produces readable projections. This documentation repository's intended future role is the Harness Server source repository; it is not a Product Repository or Harness Runtime Home. Server/runtime implementation here may start only after documentation acceptance and a separate implementation-planning readiness decision.
+The future local Harness program and tool surface that receives agent requests, validates or records state changes through Core, runs validators, and produces readable projections. This documentation repository's intended future role is the Harness Server source repository; it is not a Product Repository or Harness Runtime Home. No Harness Server/runtime implementation exists here yet, and server/runtime implementation may start only after documentation acceptance and a separate implementation-planning readiness decision.
 
 ### Harness Runtime Home
 

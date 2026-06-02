@@ -66,6 +66,8 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 - 구현 계획 준비 상태: 아직 수락되지 않았습니다. 첫 런타임 배치 계획 전에 유지보수자가 구현 준비 조건을 명시적으로 확인해야 합니다.
 - 런타임 구현 상태: 시작하지 않았습니다. 이 저장소는 아직 문서 전용입니다. 향후 역할은 하네스 서버 소스 저장소이지만, 서버/런타임 구현은 문서 수락과 별도의 구현 계획 준비 결정 이후에만 시작할 수 있습니다.
 
+이 저장소 단계에서는 서버/런타임 구현 결정을 코드 작성용으로 공식 수락하지 않았습니다. 결정 기록이 비어 있다는 말은 현재 기록된 내용이 없다는 뜻일 뿐, 남은 설계 쟁점이 없다는 증거가 아닙니다.
+
 유지보수자 인계 상태가 명시적으로 정의하기 전까지 현재 문서를 완전히 수락되었거나, 구현 완료되었거나, 구현 준비가 끝났거나, 서버 코딩을 시작해도 되는 상태로 설명하지 않습니다.
 
 문서 편집은 문서 원본을 바꿀 수 있지만, 하네스 서버/런타임 구현을 시작하거나 구현 계획을 허가하지 않습니다.
@@ -77,6 +79,29 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 이 저장소에서 문서를 편집할 때는 하네스 런타임 절차가 필요하지 않습니다. 문서 편집을 위해 runtime state, `task_events`, Write Authorization, Evidence Manifest, 수동 QA record, Acceptance record, Residual Risk record, generated projection, 운영 파일, executable fixture, fixture 파일, 런타임 기록, 제품 저장소 예시를 만들지 않습니다. 이런 용어는 향후 Harness 동작을 설명할 때만 문서화할 수 있습니다.
 
 문서 파일은 Harness를 이해하고 구현하기 위한 원천 자료입니다. 향후 Harness Server가 명시적으로 projection으로 생성하지 않는 한 Harness projection이 아닙니다. 문서 페이지가 자신이 설명하는 런타임 생명주기를 따르게 만들지 않습니다. 생명주기는 설명하고, owner contract로 연결하며, 편집 점검은 편집 점검으로 유지합니다.
+
+### 재설계 편집 계약
+
+재설계 중에는 기존 문구 보존보다 명확성, 구현 가능성, 제품 명제를 우선합니다.
+
+- 이미 있다는 이유만으로 문장을 보존하지 않습니다. Harness가 넓은 workflow engine, ALM system, evaluation harness, QA automation platform, report generator, generic MCP wrapper처럼 보이게 하는 내용은 다시 쓰거나, 옮기거나, 줄이거나, 삭제합니다.
+- 보존할 것은 핵심 Harness 원칙과 가치입니다. Scope, 사용자 소유 판단, 근거 참조, 닫기 준비 상태, 작업 수락, 잔여 위험을 대화 밖의 Core-owned 로컬 권한 기록에 둔다는 점을 지킵니다.
+- Future, profile-specific, diagnostic, roadmap 내용은 단계화된 후보로 읽혀야 합니다. 현재 MVP requirement처럼 보이거나 구현이 이미 있다는 증거처럼 보이면 안 됩니다.
+- 사용자 대상 문서는 독자가 internal Harness vocabulary를 알아야만 무엇을 요청할지, 에이전트가 무엇을 확인할지, 무엇이 막혔는지, 어떤 사용자 판단이 필요한지, close가 무슨 뜻인지 이해하는 형태가 아니어야 합니다.
+- Exact contract는 owner Reference 문서에 둡니다. 다른 문서는 독자에게 보이는 결과를 요약하고 owner로 연결합니다. Schema, DDL, gate, fixture body, projection template, state-transition rule을 중복하지 않습니다.
+- Documentation file은 Harness runtime object가 아닙니다. 향후 runtime Write Authorization, Evidence Manifest, `task_events`, Acceptance, residual-risk, projection, conformance, generated operational-output rule의 지배를 받지 않습니다.
+
+### 재설계 백로그 틀
+
+재설계 finding은 아래 틀로 작게 나누어 라우팅합니다.
+
+- 제품 정의 drift: Harness를 local authority record와 judgment-routing layer로 유지합니다. Prompt 묶음, workflow engine, report generator, dashboard, broad hosted agent platform으로 만들지 않습니다.
+- MVP/단계 경계 drift: v0.1은 내부 Core Authority Slice, v0.2는 첫 User-Facing Harness MVP로 둡니다. Future/profile/diagnostic 내용은 owner가 승격하기 전까지 현재 단계 요구사항 밖에 둡니다.
+- 판단 모델 복잡도: 사용자 소유 판단을 보이게 유지하고, 결정의 크기에 맞춥니다. Agent 판단, sensitive-action Approval, 작업 수락, 잔여 위험 수용과 섞지 않습니다.
+- Close/verification 모호성: 근거, 검증, 수동 QA, 작업 수락, close readiness, 잔여 위험을 분리합니다. 어느 것도 다른 것을 대신하지 않습니다.
+- 보안 보장 과장 위험: Cooperative, detective, preventive, isolated 표현은 문서화된 mechanism과 증명 수준에 맞게 씁니다.
+- Context/token 과부하 위험: 항상 주입되는 agent context는 짧고 최신으로 유지합니다. 자세한 contract는 owner 문서나 조회 경로로 보냅니다.
+- 사용자 대상 용어 부담: 사용자가 보는 상황을 먼저 씁니다. 내부 용어는 독자가 행동하거나 보이는 막힘을 해석하는 데 도움이 될 때만 소개합니다.
 
 ## 보존하는 원칙
 
