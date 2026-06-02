@@ -143,7 +143,7 @@ Reference storage는 registry와 project별 상태를 저장하기 위해 SQLite
 | User-Facing Harness MVP schema | [User-Facing Harness MVP schema](#user-facing-harness-mvp-schema) | Decision Packet, residual-risk visibility, user-facing design support record |
 | Agency Assurance schema | [Agency Assurance schema](#agency-assurance-schema) | baseline, approval, evidence, Eval, Manual QA, feedback-loop, TDD, validator record |
 | Operations schema | [Operations schema](#operations-schema) | connector manifest, projection job, reconcile item, persistent lock |
-| Future / diagnostic schema | [Future / diagnostic schema](#future--diagnostic-schema) | Journey Spine support와 stewardship/context diagnostic |
+| Future / diagnostic schema | [Future / diagnostic schema](#future-diagnostic-schema) | Journey Spine support와 stewardship/context diagnostic |
 | Event rows | [`task_events`](#task_events) | append-only event storage와 stable-event owner boundary |
 
 아래 fragment들이 profile contract입니다. 의도적으로 하나의 거대한 early schema로 제시하지 않습니다. 구현은 해당 stage가 범위에 들어온 뒤 여러 fragment를 조합할 수 있습니다. 그렇게 조합한 결과는 profile-enabled reference이지 v0.1 minimum이 아닙니다.
@@ -869,6 +869,8 @@ CREATE TABLE locks (
   heartbeat_at TEXT NOT NULL
 );
 ```
+
+<a id="future-diagnostic-schema"></a>
 
 ### Future / diagnostic schema
 

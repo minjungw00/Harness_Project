@@ -15,6 +15,8 @@ This repository is documentation-only today. Its intended future role is the Har
 | English | [en/README.md](en/README.md) |
 | 한국어 | [ko/README.md](ko/README.md) |
 
+<a id="minimal-first-read-path"></a>
+
 ## Minimal First-Read Path / 최소 첫 읽기 경로
 
 | Step / 순서 | English | 한국어 |
@@ -24,6 +26,8 @@ This repository is documentation-only today. Its intended future role is the Har
 | 3, only if terms are unclear / 용어가 필요할 때만 | [Concepts](en/learn/concepts.md) | [핵심 개념](ko/learn/concepts.md) |
 | 4, implementers only / 구현자만 | [Implementation Overview](en/build/implementation-overview.md) | [구현 개요](ko/build/implementation-overview.md) |
 | Lookup only / 찾아볼 때만 | [Reference Index](en/reference/README.md) | [Reference 색인](ko/reference/README.md) |
+
+<a id="reader-paths"></a>
 
 ## Reader Paths / 독자별 경로
 

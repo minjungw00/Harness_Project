@@ -139,7 +139,7 @@ The reference storage uses SQLite for registry and per-project state. The DDL is
 | User-Facing Harness MVP schema | [User-Facing Harness MVP schema](#user-facing-harness-mvp-schema) | Decision Packet, residual-risk visibility, and user-facing design support records |
 | Agency Assurance schema | [Agency Assurance schema](#agency-assurance-schema) | baseline, approval, evidence, Eval, Manual QA, feedback-loop, TDD, and validator records |
 | Operations schema | [Operations schema](#operations-schema) | connector manifests, projection jobs, reconcile items, and persistent locks |
-| Future / diagnostic schema | [Future / diagnostic schema](#future--diagnostic-schema) | Journey Spine support and stewardship/context diagnostics |
+| Future / diagnostic schema | [Future / diagnostic schema](#future-diagnostic-schema) | Journey Spine support and stewardship/context diagnostics |
 | Event rows | [`task_events`](#task_events) | append-only event storage and stable-event owner boundary |
 
 The fragments below are the profile contract. They are intentionally not presented as one giant early schema. An implementation may assemble multiple fragments once the corresponding stage is in scope; the assembled result is a profile-enabled reference, not the v0.1 minimum.
@@ -865,6 +865,8 @@ CREATE TABLE locks (
   heartbeat_at TEXT NOT NULL
 );
 ```
+
+<a id="future-diagnostic-schema"></a>
 
 ### Future / diagnostic schema
 

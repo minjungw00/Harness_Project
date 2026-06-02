@@ -66,7 +66,6 @@ Decision Packet 표시는 decision title, `decision_profile`, `judgment_domain`,
 - [DOMAIN-LANGUAGE](domain-language.md)
 - [EVIDENCE-MANIFEST](evidence-manifest.md)
 - [EVAL](eval.md)
-- [EXPORT](export.md)
 - [INTERFACE-CONTRACT](interface-contract.md)
 - [JOURNEY-CARD](journey-card.md)
 - [MODULE-MAP](module-map.md)

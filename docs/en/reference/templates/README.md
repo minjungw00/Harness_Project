@@ -66,7 +66,6 @@ Close and assurance displays must keep distinct labels for self-checked work, `d
 - [DOMAIN-LANGUAGE](domain-language.md)
 - [EVIDENCE-MANIFEST](evidence-manifest.md)
 - [EVAL](eval.md)
-- [EXPORT](export.md)
 - [INTERFACE-CONTRACT](interface-contract.md)
 - [JOURNEY-CARD](journey-card.md)
 - [MODULE-MAP](module-map.md)

@@ -110,8 +110,8 @@ Start at [docs/README.md](docs/README.md) for compact bilingual routing, the min
 
 | Need / 필요 | Start / 시작 |
 |---|---|
-| Minimal first-read path / 최소 첫 읽기 경로 | [docs/README.md](docs/README.md#minimal-first-read-path--최소-첫-읽기-경로) |
-| Reader paths by role / 독자별 경로 | [docs/README.md](docs/README.md#reader-paths--독자별-경로) |
+| Minimal first-read path / 최소 첫 읽기 경로 | [docs/README.md](docs/README.md#minimal-first-read-path) |
+| Reader paths by role / 독자별 경로 | [docs/README.md](docs/README.md#reader-paths) |
 | English reader paths / 영어 독자 경로 | [docs/en/README.md](docs/en/README.md) |
 | Korean reader paths / 한국어 독자 경로 | [docs/ko/README.md](docs/ko/README.md) |
 | Reference owner lookup / Reference owner 찾기 | [English Reference Index](docs/en/reference/README.md) / [한국어 Reference 색인](docs/ko/reference/README.md) |
