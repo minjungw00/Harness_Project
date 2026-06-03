@@ -25,8 +25,8 @@ A `TASK` template existing in this repository does not mean full `TASK` Markdown
 - display inputs for Scope, User Judgments, Evidence, and Close Readiness groups derived from existing owner records, gates, blockers, and refs
 - Write Authorization records and Write Authority Summary display inputs
 - Decision Packets and Residual Risks, including schema-owned Decision Packet `judgment_category` when rendered
-- latest Run, Evidence Manifest, Eval, Manual QA record, and sensitive-action approval records
-- compact authority source refs for Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
+- latest Run, evidence summary, ArtifactRefs, and, when the matching profile is active, Evidence Manifest, Eval, Manual QA record, and sensitive-action approval records
+- compact authority source refs for Write Authorization, Decision Packet, approval-shaped Decision Packet / judgment refs, later Approval refs, evidence summary refs, Evidence Manifest when active, Eval, Manual QA, work-acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
 - primary blocker, secondary blocker, and smallest unblocker display summaries
 - close summary display inputs, including changed scope, sensitive-action approval, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, work acceptance, waivers, and close reason
 - Journey Spine source records
@@ -155,7 +155,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - kernel gate detail: scope=; decision=; approval=; design=; evidence=; verification=; Manual QA=; acceptance=
 - active change unit:
 - write authority summary:
-- authority source refs: write=; decision=; approval=; evidence=; eval=; manual_qa=; acceptance=; residual_risk=; artifacts=
+- authority source refs: write=; decision=; sensitive_action_permission=; evidence_summary=; evidence_manifest_when_active=; eval=; manual_qa=; work_acceptance=; residual_risk=; artifacts=
 - redaction state:
 - latest report:
 - projection freshness:
@@ -202,8 +202,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Authority Source Refs
 - Write Authorization:
 - Decision Packet:
-- Approval:
-- Evidence Manifest:
+- Approval-shaped Decision Packet / Approval:
+- Evidence summary / Evidence Manifest when active:
 - Eval:
 - Manual QA:
 - Acceptance Decision Packet:
@@ -347,7 +347,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 | Product/UX judgment \| technical architecture judgment \| security/privacy judgment \| scope/autonomy judgment \| sensitive-action approval \| QA waiver \| verification waiver \| work acceptance \| residual-risk acceptance | | | | |
 
 ## Evidence And Reports
-- Evidence Manifest:
+- Evidence summary / Evidence Manifest when active:
 - Run Summary:
 - Eval:
 - Direct Result:
@@ -528,7 +528,7 @@ Decision Packet display in `TASK` should keep canonical schema fields separate f
 
 Pending decisions must not be merged into one line. If sensitive-action approval, work acceptance, and residual-risk acceptance are all pending, render three items with three labels. Approval cards should not look like work acceptance, and residual-risk acceptance should name the risk being accepted.
 
-Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to Write Authorization refs, sensitive-action permission to Approval refs, evidence sufficiency to Evidence Manifest refs, detached verification to Eval refs, Manual QA to Manual QA records or valid waiver refs, work acceptance to Acceptance Decision Packet refs, residual-risk visibility to Residual Risk refs or `ResidualRiskSummary.status=none`, and residual-risk acceptance to accepted Residual Risk refs. Missing refs should render as missing support, not as completed authority.
+Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to Write Authorization refs. Sensitive-action permission points to a resolved approval-shaped Decision Packet or judgment ref in minimum v0.2, and to an Approval ref only when the later Approval profile is active. Minimum v0.2 evidence display points to `evidence_summary_ref` when present, Run refs, ArtifactRefs, and visible gap summaries; it should not claim full evidence sufficiency unless the active owner path can establish it. Full criteria-to-evidence sufficiency points to Evidence Manifest refs only when the Evidence Manifest profile is active. Detached verification points to Eval refs only when that profile is active. Manual QA points to Manual QA records or valid waiver refs when that profile is active. Work acceptance points to the work-acceptance judgment / Decision Packet path, residual-risk visibility points to Residual Risk refs or `ResidualRiskSummary.status=none`, and residual-risk acceptance points to accepted Residual Risk refs. Missing refs should render as missing support, not as completed authority.
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means no known close-relevant residual risk exists for the requested action. `not_visible` means known close-relevant risk exists but has not been made visible enough for acceptance or close; it should remain a blocker or next action until the risk and refs are shown.
 

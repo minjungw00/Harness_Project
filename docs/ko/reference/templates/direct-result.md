@@ -15,7 +15,7 @@
 - 변경 경로
 - 범위 밖 또는 유지된 범위 summary
 - 실행한 check
-- 표시되는 claim이 있을 때 Decision Packet, Approval, Evidence Manifest, Eval, 수동 QA, Acceptance Decision Packet, Residual Risk, Artifact refs
+- 표시되는 claim이 있을 때 Decision Packet, Approval 형태 Decision Packet / judgment refs, later Approval refs, evidence summary refs, full evidence profile이 active일 때 Evidence Manifest, Eval, 수동 QA, 작업 수락 Decision Packet, Residual Risk, Artifact refs
 - redaction state와 availability를 포함한 artifact 참조
 - 읽기용 보기 최신성(projection freshness) 입력
 - escalation flag
@@ -64,6 +64,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 - limits:
 - write authorization ref:
 - allowed paths:
+- approval-shaped Decision Packet refs (minimum v0.2 sensitive-action permission, when applicable):
 - approval refs (later Approval profile only; 그 외에는 none):
 
 ## Outcome
@@ -95,8 +96,9 @@ updated_at: 2026-05-06T09:40:00+09:00
 ## Authority Refs
 - write authorization:
 - Decision Packet:
-- approval:
-- Evidence Manifest:
+- approval-shaped Decision Packet / Approval:
+- evidence summary refs:
+- Evidence Manifest (full evidence profile only):
 - Eval:
 - 수동 QA:
 - Acceptance Decision Packet:
@@ -141,7 +143,7 @@ Direct Result는 self-checked, `detached_verified`, verification-waived, QA-waiv
 
 Direct Result의 checks와 tests는 근거 또는 자체 확인(self-check) 맥락입니다. 조건을 충족하는 Eval 없이는 분리 검증이 되지 않고, 수동 QA 결과 또는 유효한 waiver 없이는 수동 QA가 되지 않으며, 작업 수락을 암시하지도 않습니다. Direct 작업이 잔여 위험 수용으로 닫힌다면 닫기 영향 요약은 결과를 detached verified처럼 보여주는 대신 받아들인 Residual Risk refs, 필요한 경우 잔여 위험 수용을 기록한 Decision Packet, 후속 작업을 가리켜야 합니다. 알려진 close-relevant risk가 없다면 gate 목록을 덧붙이기보다 그 사실을 직접 말합니다.
 
-Direct Result의 authority claim은 source ref 또는 명시적인 absence를 cite해야 합니다. Write permission에는 Write Authorization, 민감 동작 permission에는 Approval, evidence sufficiency에는 Evidence Manifest, 분리 검증에는 Eval, QA에는 수동 QA record 또는 waiver path, 작업 수락에는 Acceptance Decision Packet, 잔여 위험 표시에는 Residual Risk refs 또는 `ResidualRiskSummary.status=none`, 잔여 위험 수용에는 accepted Residual Risk refs를 사용합니다. `not_visible` 잔여 위험을 "none"처럼 렌더링하면 안 됩니다.
+Direct Result의 authority claim은 source ref 또는 명시적인 absence를 cite해야 합니다. Write permission에는 Write Authorization을 사용합니다. Minimum v0.2 민감 동작 permission에는 resolved Approval 형태 Decision Packet 또는 judgment ref를 사용하고, later Approval profile이 active일 때만 Approval ref를 사용합니다. v0.2 근거 표시는 있을 때 `evidence_summary_ref`, Run refs, ArtifactRefs, 보이는 gap summary를 사용합니다. Result가 full criteria-to-evidence sufficiency를 claim하고 full evidence profile이 active일 때만 Evidence Manifest를 사용합니다. 분리 검증은 해당 profile이 active일 때 Eval을, QA는 해당 profile이 active일 때 수동 QA record 또는 waiver path를, 작업 수락은 작업 수락 judgment / Decision Packet path를, 잔여 위험 표시는 Residual Risk refs 또는 `ResidualRiskSummary.status=none`을, 잔여 위험 수용은 accepted Residual Risk refs를 사용합니다. `not_visible` 잔여 위험을 "none"처럼 렌더링하면 안 됩니다.
 
 `DIRECT-RESULT`는 direct 작업을 위한 가벼운 close impact 표시입니다. `TASK`는 진행 중이거나 최근 닫힌 `work` Task의 이어가기용 Close Summary 표시를 담당하고, Journey Card close context는 간결한 status/resume 표시입니다. 이 표시들은 [projection/report 경계](../document-projection.md#projection-principles)를 따르며, close와 gate effect는 여전히 owner record에서 옵니다.
 

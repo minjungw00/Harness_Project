@@ -317,7 +317,7 @@ A canonical structured record in `domain_terms` that stores a product term, mean
 
 ### Evidence
 
-Recorded support for claims about the work, such as diffs, logs, tests, run summaries, screenshots, Eval records, Manual QA records, and registered artifact refs. Evidence supports specific acceptance criteria, completion conditions, or close-relevant claims through owner records such as Evidence Manifests and ArtifactRefs; it is not the agent merely saying the work is done, and it is not made sufficient by Markdown report prose alone.
+Recorded support for claims about the work, such as diffs, logs, tests, run summaries, screenshots, Eval records, Manual QA records, evidence summaries, and registered artifact refs. Minimum v0.2 evidence display can use `evidence_summary_ref`, Run refs, ArtifactRefs, and visible gaps. The full Evidence Manifest profile adds criteria-to-evidence mapping through Evidence Manifest records. Evidence is not the agent merely saying the work is done, and it is not made sufficient by Markdown report prose alone.
 
 ### Evidence Gate
 
@@ -325,7 +325,7 @@ The kernel gate for required evidence coverage. Its value set and close meaning 
 
 ### Evidence Manifest
 
-A state record mapping acceptance criteria or completion conditions to supporting evidence references. Sufficiency depends on the coverage of those criteria and conditions by current owner records and `ArtifactRef` refs, not on artifact count or report prose.
+A full evidence-profile state record mapping acceptance criteria or completion conditions to supporting evidence references. Sufficiency depends on the coverage of those criteria and conditions by current owner records and `ArtifactRef` refs, not on artifact count or report prose. Minimum v0.2 can show evidence summaries, Run refs, ArtifactRefs, and visible gaps without requiring this full record.
 
 ### Evidence Profile
 
@@ -333,7 +333,7 @@ A named evidence sufficiency profile, such as `advisor`, `direct docs-only`, `di
 
 ### Evidence Sufficiency
 
-The close-relevant judgment that required acceptance criteria or completion conditions are supported by the Evidence Manifest plus related state records and artifact refs. It is criteria-based: each required row needs compatible current support. It is not judged from chat text or Markdown report prose alone, and evidence can become stale through baseline drift, changed files, approval drift, missing artifacts, or relevant design record changes.
+The close-relevant judgment that required acceptance criteria or completion conditions have compatible current support. Minimum v0.2 displays known evidence through evidence summaries, Run refs, ArtifactRefs, and visible gaps. Full criteria-to-evidence sufficiency uses Evidence Manifest records only when the full Evidence Manifest profile is active. Sufficiency is not judged from chat text or Markdown report prose alone, and evidence can become stale through baseline drift, changed files, sensitive-action permission or Approval drift, missing artifacts, or relevant design record changes.
 
 ### Eval
 
@@ -575,7 +575,7 @@ The named report projection kinds are projections generated from state records a
 
 ### Review Stages
 
-A managed display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages can route findings to validator results, evidence gaps, Decision Packet candidates, Eval or verification needs, Manual QA needs, Approval needs, residual-risk candidates, Change Unit update recommendations, or close blockers. They are not canonical records, `ProjectionKind` values, approval, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or Write Authorization. Their exact display-only boundary is owned by [Design Quality Policies](design-quality-policies.md#two-stage-review-display); same-session Review Stages do not create `assurance_level=detached_verified`.
+A managed display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages can route findings to validator results, evidence gaps, Decision Packet candidates, Eval or verification needs, Manual QA needs, sensitive-action permission needs, later Approval needs when that profile is active, residual-risk candidates, Change Unit update recommendations, or close blockers. They are not canonical records, `ProjectionKind` values, sensitive-action permission / Approval, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or Write Authorization. Their exact display-only boundary is owned by [Design Quality Policies](design-quality-policies.md#two-stage-review-display); same-session Review Stages do not create `assurance_level=detached_verified`.
 
 ### `request_hash`
 

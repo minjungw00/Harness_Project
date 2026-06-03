@@ -42,7 +42,7 @@ Card는 평범한 말을 먼저 쓰고, 정확한 Harness label은 권한 경계
 - 현재 Core 상태에서 나온 next safe action
 - 읽기용 보기 최신성(projection freshness)과 `source_state_version`
 - 표시되는 claim을 뒷받침할 때 필요한 artifact refs와 redaction state
-- 해당 claim이 card에 나타날 때만 Write Authorization, Approval, Evidence Manifest, Eval, 수동 QA, Acceptance Decision Packet, Residual Risk를 위한 optional authority refs
+- 해당 claim이 card에 나타날 때만 Write Authorization, Approval 형태 Decision Packet / judgment refs, later Approval refs, evidence summary, Run refs, ArtifactRefs, full evidence profile이 active일 때 Evidence Manifest, Eval, 수동 QA, 작업 수락 Decision Packet, Residual Risk를 위한 optional authority refs
 
 이 card의 summary placeholder는 위 기록에서 파생한 표시 binding입니다. Decision, evidence, close-blocker, residual-risk, freshness summary는 ref 또는 명시적인 absence를 보여줘야 하며 사용자 판단 맥락이나 권한을 만들지 않습니다.
 
@@ -101,7 +101,7 @@ freshness:
 
 이 card의 status/next recommendation은 read-only guidance입니다. Decision Packet, `prepare_write`, 근거 수집, 검증, 수동 QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 close하지 않습니다.
 
-Authority line은 refs-first여야 합니다. Card가 write allowed라고 말하면 Write Authorization ref를 cite합니다. 민감 동작 permission이 granted라고 말하면 Approval ref를 cite합니다. 근거가 sufficient라고 말하면 Evidence Manifest ref를 cite합니다. 분리 검증이 passed라고 말하면 Eval ref를 cite합니다. 수동 QA가 passed 또는 waived라고 말하면 수동 QA record 또는 waiver path를 cite합니다. 작업 수락이 recorded라고 말하면 Acceptance Decision Packet을 cite하고, 잔여 위험 수용이 recorded라고 말하면 accepted Residual Risk refs를 cite합니다. Source ref가 없으면 claim을 unsupported 또는 not yet recorded로 렌더링합니다.
+Authority line은 refs-first이고 profile-aware여야 합니다. Card가 write allowed라고 말하면 Write Authorization ref를 cite합니다. Minimum v0.2에서 민감 동작 permission이 granted라고 말하면 resolved Approval 형태 Decision Packet 또는 judgment ref를 cite합니다. Later Approval profile이 active일 때만 Approval ref를 cite합니다. v0.2 근거 표시는 "알려진 근거", "현재 알려진 근거", "근거 공백", "evidence summary/ref가 뒷받침함" 같은 표현을 우선하고, 있을 때 `evidence_summary_ref`, Run refs, ArtifactRefs, 보이는 gaps를 cite합니다. "근거가 충분하다"는 active owner path가 충분성을 세울 수 있을 때만 사용합니다. Full Evidence Manifest profile이 active이면 full criteria-to-evidence sufficiency에 Evidence Manifest ref를 cite합니다. 분리 검증이 passed라고 말하면 해당 profile이 active일 때 Eval ref를 cite합니다. 수동 QA가 passed 또는 waived라고 말하면 해당 profile이 active일 때 수동 QA record 또는 waiver path를 cite합니다. 작업 수락이 recorded라고 말하면 작업 수락 judgment / Decision Packet path를 cite합니다. 잔여 위험 표시가 clear라고 말하면 Residual Risk refs 또는 명시적 `ResidualRiskSummary.status=none`을 cite하고, 잔여 위험 수용이 recorded라고 말하면 accepted Residual Risk refs를 cite합니다. Source ref가 없으면 claim을 unsupported 또는 not yet recorded로 렌더링합니다.
 
 Residual-risk display는 `status=none`과 `not_visible`을 구분해야 합니다. `status=none`은 requested action에 알려진 close-relevant 잔여 위험이 없다는 뜻이며 명시적인 empty risk-ref set과 함께 렌더링해야 합니다. `not_visible`은 알려진 close-relevant risk가 있지만 작업 수락 또는 close에 충분히 보이지 않았다는 뜻이므로 blocking risk refs 또는 risk가 hidden인 이유를 설명하는 refs를 보여줘야 합니다.
 

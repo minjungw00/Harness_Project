@@ -4,7 +4,7 @@
 
 Use this guide when editing English and Korean Harness documentation together.
 
-This is maintenance documentation for bilingual documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or product state changes before documentation acceptance and a separate implementation-planning readiness decision, and it does not define conformance pass/fail, evidence, QA, final acceptance, close readiness, or implementation readiness. The first runnable target is v0.1 Core Authority Smoke, with Kernel Smoke as a narrow future smoke-check authoring label. The first user-value target is v0.2 First User-Value Slice. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack are real named stages/packs in the stage taxonomy. Completing the owner-defined profiles for those stages after v0.2 reaches the glossary-defined hardened local reference target; the target itself is an umbrella target only, not an additional stage, fixture profile, or suite name. v1+ Expansion remains roadmap scope unless owner docs promote and prove an item.
+This is maintenance documentation for bilingual documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or product state changes before documentation acceptance and a separate implementation-planning readiness decision, and it does not define conformance pass/fail, evidence, QA, work acceptance, close readiness, or implementation readiness. The first runnable target is v0.1 Core Authority Smoke, with Kernel Smoke as a narrow future smoke-check authoring label. The first user-value target is v0.2 First User-Value Slice. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack are real named stages/packs in the stage taxonomy. Completing the owner-defined profiles for those stages after v0.2 reaches the glossary-defined hardened local reference target; the target itself is an umbrella target only, not an additional stage, fixture profile, or suite name. v1+ Expansion remains roadmap scope unless owner docs promote and prove an item.
 
 ## Read this when
 
@@ -238,5 +238,5 @@ Heading order and document meaning should remain aligned with the English docume
 [ ] In user-facing docs, do natural Korean phrases appear before Harness labels when both are needed?
 [ ] Are headings idiomatic while preserving the same document structure and scope?
 [ ] Were English and Korean link changes made in the same batch?
-[ ] Does the review avoid treating translation drift as runtime state, evidence, QA, final acceptance, close readiness, or implementation readiness?
+[ ] Does the review avoid treating translation drift as runtime state, evidence, QA, work acceptance, close readiness, or implementation readiness?
 ```

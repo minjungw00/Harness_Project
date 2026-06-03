@@ -634,7 +634,7 @@ Boundary:
 
 - Deployment, merge, external approval, production monitoring, and VCS review authority remain external to Harness.
 - Release Handoff does not close a Task, deploy, merge, approve, accept residual risk, accept the result, waive QA or verification, upgrade assurance, or satisfy gates by itself.
-- Suggested checklist items are advisory. If they reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, or approval needs, those needs route to the existing Decision Packet, evidence, Manual QA, Eval, residual-risk, approval, or close paths.
+- Suggested checklist items are advisory. If they reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, sensitive-action permission needs, or later Approval needs when that profile is active, those needs route to the existing Decision Packet, evidence, Manual QA, Eval, residual-risk, sensitive-action permission / Approval, or close paths.
 
 Diagnostic and reporting boundary: future Local Derived Metrics may appear in reports or operator diagnostics only as read-only derived displays until owner docs promote them. They do not create operational authority; see [Roadmap: Candidate Inventory](../roadmap.md#candidate-inventory) for the candidate boundary.
 
@@ -642,7 +642,7 @@ Release Handoff catalog entry:
 
 | Scenario ID | Operator action | Required assertions |
 |---|---|---|
-| `EXPORT-release-handoff-does-not-close-or-deploy` | `export` or report read | Generating or returning a Release Handoff report/export may include close readiness, blockers, evidence refs, verification refs, Manual QA refs, residual-risk refs, changed files, projection freshness, artifact retention/availability, redaction/omission/block notes, and advisory PR/deploy/rollback/monitoring checklist items. The report/export alone must not mutate Task lifecycle, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, merge, deploy, monitor production, upgrade assurance, or create deployment/merge authority. Checklist findings that reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, or approval needs route to existing Decision Packet, evidence, Manual QA, Eval, residual-risk, approval, or close paths. |
+| `EXPORT-release-handoff-does-not-close-or-deploy` | `export` or report read | Generating or returning a Release Handoff report/export may include close readiness, blockers, evidence refs, verification refs, Manual QA refs, residual-risk refs, changed files, projection freshness, artifact retention/availability, redaction/omission/block notes, and advisory PR/deploy/rollback/monitoring checklist items. The report/export alone must not mutate Task lifecycle, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, merge, deploy, monitor production, upgrade assurance, or create deployment/merge authority. Checklist findings that reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, sensitive-action permission needs, or later Approval needs when that profile is active route to existing Decision Packet, evidence, Manual QA, Eval, residual-risk, sensitive-action permission / Approval, or close paths. |
 
 ## artifacts check
 
