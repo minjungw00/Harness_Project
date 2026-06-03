@@ -1376,13 +1376,13 @@ Next response profiles:
 
 | `action_kind` | User-facing meaning | Authority boundary |
 |---|---|---|
-| `ask_user` | A user-owned judgment, sensitive-action Approval, QA judgment, work-acceptance judgment, residual-risk acceptance judgment, or other answer is needed before the named path can continue. | The prompt must name what the user is judging and cite relevant refs; it does not authorize writes or close by itself. |
+| `ask_user` | A user-owned judgment, sensitive-action permission, profile-enabled QA/risk/waiver judgment, or other focused answer is needed before the named path can continue. Use `request_acceptance` instead when work acceptance itself blocks progress or close. | The prompt must name what the user is judging and cite relevant refs; it does not authorize writes or close by itself. |
 | `prepare_write` | Check whether the exact intended product write may happen now. | No product write is authorized until `harness.prepare_write` returns a compatible Write Authorization. |
 | `implement` | Carry out the already-scoped work; for product writes, use only current compatible Write Authorization. | Does not widen scope, reuse an old authorization, or settle user-owned judgment. |
 | `launch_verify` | Prepare or launch a verification path from current evidence and source refs. | Creates at most a detached candidate; it is not a passing Eval or assurance upgrade. |
 | `record_eval` | Record the evaluator's result and reviewed refs. | Verification is not passed until Core records a qualifying Eval and updates the gate or assurance state. |
 | `record_manual_qa` | Record a human Manual QA outcome or valid waiver path. | Browser artifacts, smoke runs, or notes are not Manual QA unless a Manual QA record or valid waiver is recorded. |
-| `request_acceptance` | Ask for work acceptance after known evidence, active-profile verification/Manual QA status, and residual-risk visibility are shown. | Work acceptance does not replace evidence, verification, Manual QA, sensitive-action Approval, scope, residual-risk visibility, or residual-risk acceptance. |
+| `request_acceptance` | Ask for work acceptance after known evidence, active-profile verification/Manual QA status, and residual-risk visibility are shown. | Work acceptance does not replace evidence, verification, Manual QA, sensitive-action permission, scope, residual-risk visibility, residual-risk acceptance, or close. |
 | `close_task` | Attempt close, cancel, or supersede through `harness.close_task`. | A close attempt may still return blockers; status text or reports cannot close the Task. |
 | `reconcile` | Refresh or reconcile stale projection, managed-block drift, proposal text, or state/display mismatch. | Reconcile display does not become state until the existing reconcile/owner path accepts it. |
 | `idle` | No immediate Harness action is required for the requested focus. | Does not imply the Task is closed, accepted, verified, or risk-free. |
