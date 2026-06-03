@@ -249,7 +249,7 @@ Keep entrypoints current and compact. Do not use them to preserve migration hist
 
 README pages may summarize path ownership, but they should not copy strict contracts. Link to Reference owners for exact schemas, DDL, gates, state transitions, fixture semantics, template bodies, and official definitions.
 
-First-time reader routes should include the fast practical tour before deeper Learn and Reference paths. Use routes should include practical Decision Packet examples near the User Guide so readers can understand judgment prompts before reading strict Reference contracts.
+First-time reader routes should include the fast practical tour before deeper Learn and Reference paths. Use routes should include practical user-owned judgment examples near the User Guide so readers can understand judgment requests before reading strict Reference contracts.
 
 ## Opening patterns
 
@@ -502,7 +502,7 @@ Use this map for broad document routing. For strict Reference contracts, use [Re
 | All projection template bodies and display card shapes | `reference/templates/*.md` |
 | Design-quality policy contracts, validators, severity composition, waiver semantics, evidence expectations, close impact | `reference/design-quality-policies.md` |
 | User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` |
-| Practical Decision Packet examples and user-facing judgment prompt patterns | `use/decision-packet-cookbook.md` for examples; `reference/kernel.md` and `reference/mcp-api-and-schemas.md` for exact Decision Packet behavior |
+| Practical user-owned judgment examples and user-facing judgment request patterns | `use/decision-packet-cookbook.md` for examples; `reference/kernel.md` and `reference/mcp-api-and-schemas.md` for exact Decision Packet behavior |
 | User/agent session procedure | `use/agent-session-flow.md` |
 | Agent surface capability profiles, common connector contract, fallback semantics, Role Lens, connector conformance overview | `reference/agent-integration.md` |
 | Surface-specific recipes | `reference/surface-cookbook.md` |
