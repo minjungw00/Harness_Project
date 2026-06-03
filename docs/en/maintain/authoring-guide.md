@@ -85,7 +85,7 @@ Documentation files are source material for understanding and implementing Harne
 During redesign, optimize for clarity, implementability, and the product thesis, not for preserving existing wording.
 
 - Do not keep prose only because it already exists. Rewrite, move, compress, or delete text that makes Harness look like a broad workflow engine, ALM system, evaluation harness, QA automation platform, report generator, or generic MCP wrapper.
-- Preserve the core Harness principles and value proposition: local Core-owned authority for scope, user-owned judgment, evidence references, close readiness, final acceptance, and residual risk outside chat.
+- Preserve the core Harness principles and value proposition: local Core-owned authority for scope, user-owned judgment, evidence references, close readiness, work acceptance, and residual risk outside chat.
 - Future, profile-specific, diagnostic, or roadmap material must read as staged or candidate material. It must not look like a current MVP requirement or proof that implementation exists.
 - User-facing docs must not require readers to know internal Harness vocabulary before they can understand what to ask, what the agent will clarify, what is blocked, what needs user judgment, or what close means.
 - Exact contracts belong in owner Reference docs. Other docs should summarize reader-visible outcomes and link to the owner instead of duplicating schemas, DDL, gates, fixture bodies, projection templates, or state-transition rules.
@@ -97,8 +97,8 @@ Use this short backlog frame to keep redesign findings small and routable:
 
 - Product definition drift: keep Harness defined as a local authority record and judgment-routing layer, not a prompt pack, workflow engine, report generator, dashboard, or broad hosted agent platform.
 - MVP/stage boundary drift: keep v0.1 as the internal Core Authority Smoke, v0.2 as the first First User-Value Slice, and future/profile/diagnostic material outside current-stage requirements unless an owner promotes it.
-- Judgment model complexity: keep user-owned judgment visible, proportional, and separated from agent judgment, sensitive-action Approval, final acceptance, and residual-risk acceptance.
-- Close/verification ambiguity: keep evidence, verification, Manual QA, final acceptance, close readiness, and residual risk distinct. None of them substitutes for another.
+- Judgment model complexity: keep user-owned judgment visible, proportional, and separated from agent judgment, sensitive-action Approval, work acceptance, and residual-risk acceptance.
+- Close/verification ambiguity: keep evidence, verification, Manual QA, work acceptance, close readiness, and residual risk distinct. None of them substitutes for another.
 - Security guarantee overstatement risk: match cooperative, detective, preventive, and isolated wording to the exact documented mechanism and proof level.
 - Context/token overload risk: keep always-on agent context short and current; route detailed contracts to owner docs or retrieval paths.
 - User-facing terminology burden: write the user-visible situation first. Do not require users to say internal labels such as Discovery, Change Unit, Decision Packet, Write Authorization, Evidence Manifest, Projection, Gate, or `task_events`. Introduce internal terms only when they help the reader act, interpret a visible blocker, or drill into a reference contract.
@@ -107,9 +107,9 @@ Use this short backlog frame to keep redesign findings small and routable:
 
 Implementation details may change if these principles remain intact:
 
-- Harness is not a prompt pack. It is a local authority record for scope, user-owned judgment, evidence, verification, QA expectations, final acceptance, residual-risk status, and close readiness.
-- User-owned judgment must be preserved. Product decisions, important technical decisions, QA expectations, final acceptance, waivers, and residual-risk acceptance stay with the user unless an owner contract explicitly says otherwise.
-- Evidence, verification, manual QA, final acceptance, and residual risk are separate records and judgments. They must not substitute for each other.
+- Harness is not a prompt pack. It is a local authority record for scope, user-owned judgment, evidence, verification, QA expectations, work acceptance, residual-risk status, and close readiness.
+- User-owned judgment must be preserved. Product decisions, important technical decisions, QA expectations, work acceptance, waivers, and residual-risk acceptance stay with the user unless an owner contract explicitly says otherwise.
+- Evidence, verification, manual QA, work acceptance, and residual risk are separate records and judgments. They must not substitute for each other.
 - Chat, Markdown-rendered projections, connector output, and generated documents are not operational truth. Core-owned local state and artifact references are the authority.
 
 When a rewrite changes a term, stage, schema shape, projection shape, security claim, or document boundary, check that these principles still hold before polishing prose.
@@ -158,7 +158,7 @@ Potential item category after verification:
 | Discovery / requirements clarification may converge too early on a Change Unit or the first safe implementation unit. | Stage boundary decision |
 | Legacy judgment alias mapping can drift. | Schema/design decision |
 | Decision Packet schema and examples may feel too heavy for small decisions. | Schema/design decision |
-| Approval, final acceptance, and residual-risk acceptance are too easy to confuse. | Schema/design decision |
+| Approval, work acceptance, and residual-risk acceptance are too easy to confuse. | Schema/design decision |
 | Storage/DDL can present future-profile tables, fields, or gates as required too early. | Stage boundary decision |
 | Conformance fixture docs may be too detailed for the current implementation stage. | Implementation-readiness criterion |
 | Operations entrypoints may appear required too early. | Stage boundary decision |
@@ -180,7 +180,7 @@ Potential item category after verification:
 | Discovery / requirements clarification may converge too early on a Change Unit or the first safe implementation unit. | Candidate to verify in the current docs. | Leave room for early discovery, shared understanding, and user-owned judgment before requiring a scoped implementation unit. |
 | Legacy judgment alias mapping can drift. | Resolved design; regression-prevention check. | Active owner docs use `judgment_category`, `judgment_route`, and `display_depth`. `judgment_domain`, `decision_kind`, and `decision_profile` are compatibility aliases for older request shapes, not independent user-facing axes. New examples should prefer the active judgment names, and affected gates or blocked actions stay in separate owner fields. |
 | Decision Packet schema and examples may feel too heavy for small decisions. | Resolved design; regression-prevention check. | Small decisions may use `minimal_decision`. Full trade-off, approval, waiver, acceptance, residual-risk, reconcile, and mixed profiles must still include their required context. Future edits must not make every Decision Packet require full trade-off fields. |
-| Approval, final acceptance, and residual-risk acceptance are too easy to confuse. | Regression-prevention check. | Keep sensitive-action permission, final acceptance, and residual-risk acceptance separate in examples and routing text. |
+| Approval, work acceptance, and residual-risk acceptance are too easy to confuse. | Regression-prevention check. | Keep sensitive-action permission, work acceptance, and residual-risk acceptance separate in examples and routing text. |
 | Storage/DDL can present future-profile tables, fields, or gates as required too early. | Candidate to verify in the current docs. | Distinguish reference-schema presence from staged implementation requirement. Required fields apply when the owning tool, record, or profile is implemented or used; they do not by themselves expand the smallest runnable slice. |
 | Conformance fixture docs may be too detailed for the current implementation stage. | Candidate to verify in the current docs. | Keep fixture documentation future-oriented and staged. Do not imply executable fixture files or runnable Harness Server conformance tests exist now. |
 | Operations entrypoints may appear required too early. | Candidate to verify in the current docs. | Keep operator entrypoints staged and future-oriented unless the relevant Build stage explicitly includes them. They must not become a prerequisite for v0.1 by wording drift. |
@@ -411,7 +411,7 @@ Maintain docs may define documentation review rules, category labels, and review
 
 Before maintainers accept the documentation set for implementation planning, do one final docs-maintenance pass. Check English/Korean active file map parity, semantic section parity in paired files, broken links and anchors, owner-boundary drift, non-owner duplicate contracts, terminology drift for Approval, Decision Packet, Evidence, Verification, Manual QA, Acceptance, Residual Risk, Projection, and Guarantee Level, and TODO hygiene.
 
-Also check the implementation-readiness criteria in [Implementation Overview](../build/implementation-overview.md#implementation-readiness-criteria): repository identity, user-facing flow without internal-term burden, Discovery as requirements clarification rather than premature Change Unit convergence, active judgment fields with mapped legacy aliases, proportional Decision Packet profiles, Approval/final acceptance/residual-risk acceptance separation, coherent stages, Kernel/API/storage/reference agreement, staged Storage/API scope, staged projection/template scope, honest security guarantee wording, agent context strategy, staged future-oriented conformance fixture plan, staged operations surface, Korean user-facing readability, and clean links/TODOs/terminology.
+Also check the implementation-readiness criteria in [Implementation Overview](../build/implementation-overview.md#implementation-readiness-criteria): repository identity, user-facing flow without internal-term burden, Discovery as requirements clarification rather than premature Change Unit convergence, active judgment fields with mapped legacy aliases, proportional Decision Packet profiles, Approval/work acceptance/residual-risk acceptance separation, coherent stages, Kernel/API/storage/reference agreement, staged Storage/API scope, staged projection/template scope, honest security guarantee wording, agent context strategy, staged future-oriented conformance fixture plan, staged operations surface, Korean user-facing readability, and clean links/TODOs/terminology.
 
 This final review is still editorial review. It summarizes whether the docs are coherent enough for maintainer handoff; it does not create runtime conformance, canonical state, evidence, QA, Acceptance, residual-risk acceptance, close readiness, or implementation readiness. Use the existing docs-maintenance reporting expectations when recording findings; do not create a new required report format for this final pass.
 

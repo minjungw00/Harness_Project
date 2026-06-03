@@ -2,7 +2,7 @@
 
 This is the English routing page for the Harness documentation set.
 
-Harness keeps AI-assisted product work grounded in local Core-owned state by tracking scope, user-owned judgments, evidence references, close readiness, acceptance, and residual risk outside the chat.
+Harness keeps AI-assisted product work grounded in local Core-owned state by tracking scope, user-owned judgments, evidence references, close readiness, work acceptance, and residual risk outside the chat.
 
 This repository is currently a documentation review/redesign repository. Its intended future role is the Harness Server source repository. It is not a Product Repository or a Harness Runtime Home. No Harness Server, runtime, generated projection system, conformance runner, runtime data, or implementation exists here yet. Documentation acceptance does not authorize implementation by itself; server/runtime implementation may start only after documentation acceptance and a separate implementation-planning readiness decision.
 
@@ -147,9 +147,9 @@ Harness is not the same kind of thing as agent instructions, MCP, reusable workf
 | AGENTS.md / agent instruction files | Tell agents how to behave in a repository or session. | Harness may rely on those instructions, but it keeps the local record of scope, user-owned judgment, evidence, close readiness, and risk. |
 | MCP | Defines a protocol boundary for tools and resources. | Harness may expose MCP tools or resources, but its authority comes from Core-owned local state and artifact references. |
 | Skills / reusable workflows | Package repeated instructions or procedures for an agent to follow. | Harness can be used by those workflows, but it records the current work state and routes judgments for this task. |
-| Test runners | Execute checks and produce results. | Harness links relevant results as evidence and keeps verification strength separate from final acceptance. |
-| Code review | Provides human or team review of changes. | Harness can reference review outcomes, but it does not replace review or turn review into final acceptance, residual-risk acceptance, or close. |
-| Specs | Describe intended behavior, design, or constraints. | Harness can use specs as input, but it records operational state for live work: scope, decisions, evidence, QA expectations, final acceptance, and remaining risk. |
+| Test runners | Execute checks and produce results. | Harness links relevant results as evidence and keeps verification strength separate from work acceptance. |
+| Code review | Provides human or team review of changes. | Harness can reference review outcomes, but it does not replace review or turn review into work acceptance, residual-risk acceptance, or close. |
+| Specs | Describe intended behavior, design, or constraints. | Harness can use specs as input, but it records operational state for live work: scope, decisions, evidence, QA expectations, work acceptance, and remaining risk. |
 
 ## Agent Context Loading
 

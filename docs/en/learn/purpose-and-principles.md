@@ -4,7 +4,7 @@
 
 Read this when you want the thesis, values, and non-goals behind Harness before reading strict contracts or future implementation plans.
 
-Harness keeps AI-assisted product work grounded in local Core-owned state by tracking scope, user-owned judgments, evidence references, close readiness, acceptance, and residual risk outside the chat.
+Harness keeps AI-assisted product work grounded in local Core-owned state by tracking scope, user-owned judgments, evidence references, close readiness, work acceptance, and residual risk outside the chat.
 
 This page is a principles document. It is not an implementation status report and not a claim that the Harness Server already exists. This repository currently contains documentation only.
 
@@ -14,7 +14,7 @@ Harness exists to make AI-assisted product work followable while preserving user
 
 The user should be able to begin in ordinary language. The agent should be able to clarify, inspect, recommend, implement when appropriate, check, and report. But authority over the work should not leak into chat phrasing, generated Markdown, connector output, test logs, or agent confidence.
 
-Harness keeps the local authority record small and explicit. It tracks the work boundary, the choices the user owns, the evidence references behind claims, the remaining close blockers, the user's acceptance when required, and any residual risk that still matters.
+Harness keeps the local authority record small and explicit. It tracks the work boundary, the choices the user owns, the evidence references behind claims, the remaining close blockers, the user's work acceptance when required, and any residual risk that still matters.
 
 ## Core Principles
 
@@ -22,7 +22,7 @@ Harness keeps authority local. The durable work record should not depend on a re
 
 Harness separates unlike things. Scope, sensitive-action permission, product judgment, technical judgment, evidence, verification, manual QA, work acceptance, and residual-risk acceptance answer different questions.
 
-Harness preserves user agency. The user owns goals, scope, product direction, material technical trade-offs, security/privacy judgment, QA expectations, final acceptance, and residual-risk acceptance.
+Harness preserves user agency. The user owns goals, scope, product direction, material technical trade-offs, security/privacy judgment, QA expectations, work acceptance, and residual-risk acceptance.
 
 Harness is honest about support. It should say what was checked, what kind of check it was, what evidence supports the claim, what remains unverified, and what still needs a person.
 
@@ -54,9 +54,9 @@ That thesis has three consequences.
 
 First, chat is coordination, not durable state. It can propose, explain, and summarize. It should not decide by implication that work may write, close, accept risk, or resolve every pending judgment.
 
-Second, Core-owned state is the operating record. It stores the facts needed to reason about scope, user-owned judgment, evidence references, close readiness, acceptance, and residual risk.
+Second, Core-owned state is the operating record. It stores the facts needed to reason about scope, user-owned judgment, evidence references, close readiness, work acceptance, and residual risk.
 
-Third, readable Markdown is a view, not the record. A report can help a person inspect the work, but editing report prose does not change the saved evidence, acceptance, QA status, verification status, risk state, or close readiness.
+Third, readable Markdown is a view, not the record. A report can help a person inspect the work, but editing report prose does not change the saved evidence, work acceptance, QA status, verification status, risk state, or close readiness.
 
 ## Failure Model
 
@@ -64,7 +64,7 @@ Harness is designed around recurring failures in AI-assisted work.
 
 Scope becomes implicit. A request starts narrow, then expands through "while you are there" changes. Harness responds by making the current boundary visible and requiring scope growth to be named.
 
-User judgment is silently replaced. The agent makes a product, UX, architecture, security, QA, acceptance, or risk choice as though it were an implementation detail. Harness responds by routing the named user-owned judgment back to the user.
+User judgment is silently replaced. The agent makes a product, UX, architecture, security, QA, work acceptance, or risk choice as though it were an implementation detail. Harness responds by routing the named user-owned judgment back to the user.
 
 Evidence, verification, QA, and completion claims collapse into one "done." Harness responds by keeping support types distinct: evidence references support claims, tests check what they check, manual QA covers human inspection, and detached verification is stronger than self-check.
 
@@ -74,11 +74,11 @@ Readable surfaces look authoritative. A chat summary, tool output, or Markdown r
 
 Harness should be visible to users as a small set of work shapes, not as a vocabulary quiz.
 
-Advice/read-only work is for explanation, comparison, planning, investigation, or recommendation. It can cite sources and inspect current context, but it does not imply product writes, acceptance, or residual-risk acceptance.
+Advice/read-only work is for explanation, comparison, planning, investigation, or recommendation. It can cite sources and inspect current context, but it does not imply product writes, work acceptance, or residual-risk acceptance.
 
 Small direct change is for narrow, clear edits. It can stay light when scope and result are obvious. It should stop and reshape when the work grows beyond the small boundary.
 
-Tracked work is for meaningful product changes, multi-step delivery, user-owned decisions, evidence mapping, QA, verification, acceptance, or residual risk. It keeps blockers visible until close readiness is clear.
+Tracked work is for meaningful product changes, multi-step delivery, user-owned decisions, evidence mapping, QA, verification, work acceptance, or residual risk. It keeps blockers visible until close readiness is clear.
 
 Users can ask for these shapes in ordinary language:
 
@@ -93,7 +93,7 @@ Show me what still prevents closing this work.
 
 The MVP boundary is about proving the local authority model, not building a broad platform.
 
-The first future slices should prove that ordinary AI-assisted work can be represented as local scope, user-owned judgment, evidence references, close readiness, acceptance, and residual risk without confusing those records with chat, Markdown, tool output, or product files.
+The first future slices should prove that ordinary AI-assisted work can be represented as local scope, user-owned judgment, evidence references, close readiness, work acceptance, and residual risk without confusing those records with chat, Markdown, tool output, or product files.
 
 Broader automation, richer projections, connector ecosystems, hosted workflows, analytics, and large conformance suites are outside the first user-value slice thesis. They may become useful later only if they preserve the authority boundary instead of hiding it.
 

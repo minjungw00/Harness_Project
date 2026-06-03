@@ -23,12 +23,12 @@ Card는 평범한 말을 먼저 쓰고, 정확한 Harness label은 권한 경계
 - 작업 모양
 - 현재 범위와 하지 않을 일
 - 대기 중인 사용자 판단
-- 활성 blocker
+- 활성 막힘
 - 다음 안전한 행동
-- 알려진 근거 또는 근거 gap
-- close blocker
+- 알려진 근거 또는 근거 공백
+- 닫기 막힘
 - 보이는 잔여 위험
-- guarantee level
+- 보장 수준
 - source/freshness ref
 
 ## 기준 기록과 ref
@@ -37,7 +37,7 @@ Card는 평범한 말을 먼저 쓰고, 정확한 Harness label은 권한 경계
 - 관련 있을 때 현재 scope, non-goal, active Change Unit summary
 - 대기 중인 Decision Packet refs와 compact judgment summary
 - 알려진 evidence refs와 evidence-gap summary
-- close blocker refs와 있는 경우 close reason
+- 닫기 막힘 refs와 있는 경우 close reason
 - residual-risk refs 또는 명시적인 absence / 아직 보이지 않음 상태
 - 현재 Core 상태에서 나온 next safe action
 - 읽기용 보기 최신성(projection freshness)과 `source_state_version`
@@ -60,14 +60,14 @@ Task 요약: {task_summary}
 현재 범위: {scope_summary|none}
 하지 않을 일: {non_goals_summary|none}
 대기 중인 사용자 판단: {pending_user_judgments_summary|none}
-활성 blocker: {active_blockers_summary|none}
+활성 막힘: {active_blockers_summary|none}
 다음 안전한 행동: {next_safe_actions_summary}
 근거: {known_evidence_summary|none}
-근거 gap: {evidence_gaps_summary|none}
-Close blocker: {close_blockers_summary|none}
+근거 공백: {evidence_gaps_summary|none}
+닫기 막힘: {close_blockers_summary|none}
 보이는 잔여 위험: {residual_risk_summary|none}
-Guarantee level: {guarantee_level}; {guarantee_limit_summary}
-Source/freshness: state={source_state_version|unknown}; refs={source_refs_summary|none}; rendered={updated_at|unknown}; freshness={projection_freshness}
+보장 수준: {guarantee_level}; {guarantee_limit_summary}
+출처/최신성: state={source_state_version|unknown}; refs={source_refs_summary|none}; rendered={updated_at|unknown}; freshness={projection_freshness}
 ````
 
 ## Agent compact framing

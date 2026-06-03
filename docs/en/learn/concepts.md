@@ -30,7 +30,7 @@ Use these words in user-facing explanations.
 | Work | The thing the user wants completed, answered, investigated, or decided. |
 | Scope | What may change and where the agent should stop before continuing. |
 | Out of scope | What must not change, be decided, or be claimed as done for this work. |
-| User judgment | A choice the user owns, such as product direction, UX behavior, architecture trade-off, security/privacy call, QA waiver, final acceptance, or residual-risk acceptance. |
+| User judgment | A choice the user owns, such as product direction, UX behavior, architecture trade-off, security/privacy call, QA waiver, work acceptance, or residual-risk acceptance. |
 | Judgment request | A focused request for one user-owned choice. The user should see the choice, options, consequence, and next action before any internal label. |
 | Evidence reference | A durable pointer to support for a claim: changed paths, diffs, logs, test output, screenshots, inspection notes, or other artifacts. |
 | Check | An ordinary confirmation such as a test, diff review, inspection, or source lookup. |
@@ -40,7 +40,7 @@ Use these words in user-facing explanations.
 | Work acceptance | The user's judgment that the result is acceptable when the task path requires it. |
 | Residual risk | Known remaining uncertainty, limitation, skipped check, or consequence that should stay visible. |
 | Close blocker | A concrete reason the work cannot finish or close yet. |
-| Next safe action | The next action that can proceed without hiding unresolved scope, judgment, evidence, QA, verification, acceptance, or risk. |
+| Next safe action | The next action that can proceed without hiding unresolved scope, judgment, evidence, QA, verification, work acceptance, or risk. |
 
 ## User-Visible Work Shapes
 
@@ -50,7 +50,7 @@ Harness should usually feel like one of three work shapes.
 |---|---|---|
 | Advice/read-only work | The user asks for explanation, planning, comparison, investigation, or recommendation. | What was inspected or cited, what is fact versus recommendation, and what decisions still belong to the user. |
 | Small direct change | The user asks for a narrow edit with clear scope and low risk. | The small scope, changed paths, focused check or self-check, and whether anything made the scope grow. |
-| Tracked work | The work has meaningful scope, user-owned judgment, evidence, QA, verification, acceptance, or residual risk. | Scope, pending judgments, evidence references, QA/verification state, close blockers, acceptance, and residual risk. |
+| Tracked work | The work has meaningful scope, user-owned judgment, evidence, QA, verification, work acceptance, or residual risk. | Scope, pending judgments, evidence references, QA/verification state, close blockers, work acceptance, and residual risk. |
 
 The user does not need to name these shapes. The agent should infer them from the task and explain scope growth when it happens.
 
@@ -82,7 +82,7 @@ These rules keep one kind of signal from being treated as another kind of author
 | Sensitive-action approval is not work acceptance. | Permission to do a named sensitive step does not mean the completed result is accepted. |
 | Test pass is not manual QA. | Automated checks do not prove human experience, copy, accessibility, or visual quality. |
 | Self-check is not detached verification. | The same agent/session reviewing its own work can be useful, but it is weaker than an independent enough check. |
-| "Proceed" or "looks good" does not automatically resolve every pending judgment. | A general phrase must not be stretched to cover unrelated product, technical, QA, acceptance, or risk decisions. |
+| "Proceed" or "looks good" does not automatically resolve every pending judgment. | A general phrase must not be stretched to cover unrelated product, technical, QA, work acceptance, or risk decisions. |
 
 ## Display Groups
 
@@ -109,14 +109,14 @@ The labels below are implementation or reference labels. Users do not need to us
 | Change Unit | Optional/internal label for bounded product-write scope. It names what may change, but does not authorize a write by itself. |
 | Autonomy Boundary | Internal label for choices the agent may make inside the active scope without asking again. |
 | Decision Packet | Optional/internal label for the recorded path for a specific user-owned judgment. Users can simply answer the named decision. |
-| Approval | Permission for a named sensitive action. It is not acceptance of the completed work. |
+| Approval | Permission for a named sensitive action. It is not work acceptance for the completed work. |
 | Write Authorization | Internal record that a specific product-write attempt is compatible with current Harness authority. |
 | Evidence Manifest | Internal record mapping completion conditions or acceptance criteria to evidence references. |
 | Eval | Internal verification result record. |
 | Gate | Internal readiness or compatibility condition. User-facing status should usually show the blocker or check first. |
 | Verification | Recorded correctness check, with stronger meaning when it crosses an independent enough boundary. |
 | Manual QA | Human inspection for UX, copy, accessibility, visual quality, workflow, or other human-judgment surfaces. |
-| Acceptance | User's final result judgment when required. |
+| Acceptance | User's work acceptance judgment when required. |
 | Residual Risk | Known remaining uncertainty, limitation, trade-off, or consequence. |
 | Projection | Readable view derived from Harness state. It displays state but does not replace it. |
 | Reconcile | Deliberate path for handling human edits or drift in a readable view. |
@@ -137,7 +137,7 @@ These anchors keep links stable. They do not make the terms required user vocabu
 - <a id="gate"></a>Gate: optional/internal label for a readiness or compatibility condition.
 - <a id="verification"></a>Verification: recorded correctness check.
 - <a id="manual-qa"></a>Manual QA: human inspection where human judgment matters.
-- <a id="acceptance"></a>Acceptance: final result judgment when required.
+- <a id="acceptance"></a>Acceptance: work acceptance judgment when required.
 - <a id="residual-risk"></a>Residual Risk: known remaining uncertainty, limitation, trade-off, or consequence.
 - <a id="projection"></a>Projection: readable view derived from state, not authority itself.
 - <a id="reconcile"></a>Reconcile: path for readable-view drift or human edits.

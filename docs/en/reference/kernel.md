@@ -367,7 +367,7 @@ Close readiness must not be represented as one "done" bit. Keep these dimensions
 | Close reason | Why the Task closed, such as `completed_self_checked`, `completed_verified`, `completed_with_risk_accepted`, `cancelled`, or `superseded`. |
 | Assurance level | What technical checking level is supported: `none`, `self_checked`, or `detached_verified`. |
 | Residual risk state | Whether close-relevant risk is absent, not visible, visible, accepted, or blocked. |
-| Acceptance state | Whether final result acceptance is not required, pending, accepted, rejected, or blocked. |
+| Acceptance state | Whether work acceptance is not required, pending, accepted, rejected, or blocked. |
 
 ### Gate Rule Map
 
@@ -468,7 +468,7 @@ not_required | required | pending | passed | failed | waived
 not_required | required | pending | accepted | rejected
 ```
 
-`acceptance_gate` records final result acceptance when required. Acceptance can be recorded only after the close basis is visible: evidence status, verification status when applicable, Manual QA status when applicable, and residual-risk visibility or confirmed absence.
+`acceptance_gate` records work acceptance when required. Acceptance can be recorded only after the close basis is visible: evidence status, verification status when applicable, Manual QA status when applicable, and residual-risk visibility or confirmed absence.
 
 Residual-risk visibility is separate. If no known close-relevant risk exists, `ResidualRiskSummary.status=none` satisfies visibility. If known close-relevant risk exists, it must be visible before work acceptance or successful close. A risk-accepted close additionally requires accepted Residual Risk refs through the `accept-risk` route.
 

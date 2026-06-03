@@ -2,7 +2,7 @@
 
 ## 이 문서로 할 수 있는 일
 
-Runtime 구현 계획에 들어가기 전에 Harness security asset, trust boundary, threat category, control expectation을 식별할 때 이 참조 문서를 사용합니다.
+Runtime 구현 계획에 들어가기 전에 Harness 보안 asset, trust boundary, threat category, control expectation을 식별할 때 이 참조 문서를 사용합니다.
 
 이 문서는 local authority boundary를 명확하게 유지해야 하는 implementer, operator, connector author, conformance author를 위한 lookup 문서입니다. Architecture, API, storage, kernel, connector, operations owner 문서를 대체하지 않습니다.
 
@@ -13,7 +13,7 @@ Runtime 구현 계획에 들어가기 전에 Harness security asset, trust bound
 - 어떤 file, call, artifact, generated connector output이 security-sensitive인지 정해야 할 때.
 - Repo document, projection, generated file, chat transcript, caller claim이 왜 operational authority가 아닌지 설명해야 할 때.
 - MCP exposure, artifact handling, connector generation, stale context, approval replay, capability claim을 검토할 때.
-- Security-sensitive path에서 cooperative, detective, preventive, isolated 표현 중 무엇이 정직한지 정해야 할 때.
+- 보안 민감 경로에서 cooperative, detective, preventive, isolated 표현 중 무엇이 정직한지 정해야 할 때.
 - Security 또는 threat-model finding을 이름 붙이는 operator diagnostic이나 conformance coverage를 작성할 때.
 
 ## 읽기 전에
@@ -26,7 +26,7 @@ Public tool envelope, error, replay behavior는 [MCP API와 스키마](mcp-api-a
 
 ## 핵심 생각
 
-Harness는 local authority layer이지 일반적인 운영체제 보안 경계가 아닙니다. 로컬 파일, local process, generated connector output, external command, agent surface가 Harness에 영향을 주려고 할 수 있지만, 가까이에 있다는 이유만으로 authority가 되지는 않습니다.
+Harness는 로컬 권한 계층이지 일반적인 운영체제 보안 경계가 아닙니다. 로컬 파일, local process, generated connector output, external command, agent surface가 Harness에 영향을 주려고 할 수 있지만, 가까이에 있다는 이유만으로 authority가 되지는 않습니다.
 
 Canonical operational meaning은 Core가 소유한 state-changing path를 통해서만 흐릅니다. Product repository document, chat text, generated connector file, projection, artifact, external command output, MCP caller claim, remembered context는 관련 owner path가 받아들이기 전까지 input입니다.
 

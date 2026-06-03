@@ -61,7 +61,7 @@ Storage planning에서는 v0.1에 [Core Authority Smoke schema](../reference/sto
 8. status/blocker 출력이 상태를 변경하지 않고 현재 Task, scope, 쓰기 권한, artifact/evidence support, blocker를 보여 준다.
 9. Scope, write authority, 또는 artifact/evidence support가 없으면 status 또는 close-task smoke가 structured blocker를 반환한다.
 
-이 흐름을 통과하면 v0.1 Core Authority Smoke이 동작한다는 뜻입니다. 사용자가 Harness value를 경험했다는 뜻은 아닙니다. v0.2 First User-Value Slice는 평범한 요청이 tracked work로 시작/재개되고 scope, non-goals, success criteria, user-owned judgment, evidence summary, close blockers, work acceptance display, residual-risk visibility로 요약될 때 시작됩니다.
+이 흐름을 통과하면 v0.1 Core Authority Smoke이 동작한다는 뜻입니다. 사용자가 Harness value를 경험했다는 뜻은 아닙니다. v0.2 First User-Value Slice는 평범한 요청이 tracked work로 시작/재개되고 scope, non-goals, success criteria, user-owned judgment, evidence summary, 닫기 막힘, work acceptance display, residual-risk visibility로 요약될 때 시작됩니다.
 
 ## 문서 수준 수락 점검
 
@@ -227,7 +227,7 @@ Owner contract: status/next schema는 [`harness.status`](../reference/mcp-api-an
 
 | 이후 단계 | v0.1 Core Authority Smoke이 아직 증명하지 않는 것 |
 |---|---|
-| v0.2 First User-Value Slice | Ordinary-language start/resume, work-shape classification, natural-language intake 품질, scope/non-goals/success criteria summary, minimal user judgment request/record, product/UX judgment와 architecture judgment 제시 방식, small direct와 tracked-work의 budget 구분, evidence summary, close blocker summary, residual-risk visibility, work-acceptance display, sensitive approval display, risk-acceptance display, compact Core-derived status card 충분성. |
+| v0.2 First User-Value Slice | Ordinary-language start/resume, work-shape classification, natural-language intake 품질, scope/non-goals/success criteria summary, minimal user judgment request/record, product/UX judgment와 architecture judgment 제시 방식, small direct와 tracked-work의 budget 구분, evidence summary, 닫기 막힘 요약, residual-risk visibility, work-acceptance display, sensitive approval display, risk-acceptance display, compact Core-derived status card 충분성. |
 | 에이전시 보증 팩(v0.3 Agency Assurance Pack) | Profile별 Decision Packet 품질, full Approval lifecycle and drift handling, 분리 검증 독립성, 수동 QA 정책 매트릭스, residual-risk accepted close, 작업 수락 분리, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage, full projection/reconcile operations. |
 | v1+ Expansion | Dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification automation, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow. |

@@ -97,7 +97,7 @@
 - 범위를 보이게 유지합니다.
 - 완료 주장을 근거 참조와 연결합니다.
 - 필요할 때 검증과 수동 QA 기대를 보여줍니다.
-- 최종 수락이나 닫기 전에 잔여 위험을 보여줍니다.
+- 작업 수락이나 닫기 전에 잔여 위험을 보여줍니다.
 
 에이전트는 평소 말로 물을 수 있습니다.
 
@@ -155,9 +155,9 @@
 QA 결과를 기록하거나, 생략한 표면과 닫기 영향을 이름 붙여 QA를 면제합니다. 그런 다음 작업 수락을 요청하기 전에 잔여 위험을 보여줍니다.
 ```
 
-경계는 이렇습니다. 테스트 통과는 수동 QA가 아닙니다. 자체 확인은 분리 검증이 아닙니다. 작업 수락은 민감 동작 허가와 다릅니다.
+경계는 이렇습니다. 테스트 통과는 수동 QA가 아닙니다. 자체 확인은 분리 검증이 아닙니다. 작업 수락은 민감 동작 승인과 다릅니다.
 
-## 시나리오 6: Markdown은 보기임
+## 시나리오 6: Markdown은 읽기용 보기임
 
 생성된 Markdown 상태에 이렇게 보입니다.
 
@@ -177,7 +177,7 @@ Evidence: sufficient
 
 그 편집은 저장된 근거 참조, QA 상태, 작업 수락, 잔여 위험, 닫기 준비 상태를 바꾸지 않습니다. 향후 하네스 시스템은 그 편집을 메모나 조정 입력으로 다뤄야지, 그 자체를 권한으로 다루면 안 됩니다.
 
-경계는 이렇습니다. Markdown projection은 상태가 아닙니다.
+경계는 이렇습니다. 읽기용 Markdown 보기(`Projection`)는 상태가 아닙니다.
 
 ## Reference 담당 문서
 
@@ -187,7 +187,7 @@ Evidence: sufficient
 |---|---|
 | 범위, 사용자 소유 판단, 근거, 검증, QA, 작업 수락, 잔여 위험, 닫기 규칙 | [Kernel Reference](../reference/kernel.md) |
 | 공개 도구 형태와 schema 세부사항 | [MCP API와 스키마](../reference/mcp-api-and-schemas.md) |
-| 읽기용 문서 경계와 최신성 | [Document Projection Reference](../reference/document-projection.md) |
+| 읽기용 문서 경계와 최신성 | [문서 Projection 참조](../reference/document-projection.md) |
 | 사용자에게 보이는 세션 동작 | [사용자 가이드](../use/user-guide.md), [에이전트 세션 흐름](../use/agent-session-flow.md) |
 
 ## 다음에 읽을 문서

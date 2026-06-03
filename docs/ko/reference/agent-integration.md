@@ -14,7 +14,7 @@
 
 - agent 접점용 connector를 구현하거나 검토할 때.
 - 접점 capability profile을 선언하거나 점검할 때.
-- 연결된 profile이 guarantee level, guard, freeze, fallback, MCP availability를 어떻게 표시해야 하는지 정할 때.
+- 연결된 profile이 보장 수준, guard, freeze, fallback, MCP availability를 어떻게 표시해야 하는지 정할 때.
 - connector conformance coverage를 작성할 때.
 - 공통 contract와 surface recipe의 경계를 확인해야 할 때.
 
@@ -30,7 +30,7 @@ Connector는 agent에게 작고 최신인 context를 주고, 상태 변경을 Ha
 
 Agent 접점은 사용자가 agent와 대화하는 접점입니다. Harness는 Task 상태, 쓰기 권한, 근거, verification, 수동 QA, 작업 수락, projection, reconcile 동작을 대화 기록 밖에 두는 로컬 권한 계층입니다.
 
-Connector는 agent에게 작고 최신인 context를 주고, 상태 변경을 Harness MCP tool로 라우팅하고, 접점이 할 수 있으면 실제로 일어난 일을 캡처하며, 연결된 profile의 실제 guarantee level을 이름 붙여야 합니다. Capability는 구체적이어야 합니다. 실제 host, target profile, version/configuration, workspace policy, capture path, guard 또는 isolation path별로 선언되고 입증되어야 합니다. 접점 이름만으로 해당 capability를 갖췄다고 주장하면 안 됩니다.
+Connector는 agent에게 작고 최신인 context를 주고, 상태 변경을 Harness MCP tool로 라우팅하고, 접점이 할 수 있으면 실제로 일어난 일을 캡처하며, 연결된 profile의 실제 보장 수준을 이름 붙여야 합니다. Capability는 구체적이어야 합니다. 실제 host, target profile, version/configuration, workspace policy, capture path, guard 또는 isolation path별로 선언되고 입증되어야 합니다. 접점 이름만으로 해당 capability를 갖췄다고 주장하면 안 됩니다.
 
 공통 구조는 다음과 같습니다.
 

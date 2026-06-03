@@ -14,7 +14,7 @@ This repository is documentation-only. The examples describe the intended future
 
 ## Main Idea
 
-Harness keeps AI-assisted product work grounded in local Core-owned state by tracking scope, user-owned judgments, evidence references, close readiness, acceptance, and residual risk outside the chat.
+Harness keeps AI-assisted product work grounded in local Core-owned state by tracking scope, user-owned judgments, evidence references, close readiness, work acceptance, and residual risk outside the chat.
 
 The task story below keeps returning to the same non-substitution rules:
 
@@ -152,9 +152,9 @@ If the user answers:
 Extend the login session on this device.
 ```
 
-that answers the product meaning. It does not automatically answer the technical storage decision, manual QA expectation, residual risk, or final acceptance.
+that answers the product meaning. It does not automatically answer the technical storage decision, manual QA expectation, residual risk, or work acceptance.
 
-## Step 5: A Sensitive Step Is Not Acceptance
+## Step 5: A Sensitive Step Is Not Work Acceptance
 
 Suppose the chosen implementation needs to read a local secret or update a dependency lockfile. The agent may need permission for that sensitive step.
 
@@ -167,7 +167,7 @@ May I update the dependency lockfile to add the session helper required by the c
 This permission only covers that step. It does not accept the final result, waive QA, or accept residual risk.
 ```
 
-If the user says "proceed," that permission applies to the named sensitive step. It should not be stretched into acceptance of the completed feature.
+If the user says "proceed," that permission applies to the named sensitive step. It should not be stretched into work acceptance for the completed feature.
 
 ## Step 6: Evidence Supports Claims
 
@@ -210,7 +210,7 @@ The boundary matters:
 
 If manual QA is waived, the skipped surface and close impact should be named. If verification is waived, the remaining verification risk should stay visible.
 
-## Step 8: Residual Risk Before Acceptance
+## Step 8: Residual Risk Before Work Acceptance
 
 Before asking the user to accept the result, the agent should show known remaining uncertainty:
 
@@ -225,14 +225,14 @@ If the user says:
 Looks good.
 ```
 
-that phrase should not automatically accept every unresolved risk or judgment. The agent should connect it to the specific acceptance request:
+that phrase should not automatically accept every unresolved risk or judgment. The agent should connect it to the specific work acceptance request:
 
 ```text
 To close this tracked work, please confirm:
 Do you accept the remember-me result with the shown residual risk?
 ```
 
-Acceptance is the user's result judgment. It is separate from sensitive-action permission, test output, manual QA, and verification.
+Work acceptance is the user's result judgment. It is separate from sensitive-action permission, test output, manual QA, and verification.
 
 ## Step 9: Close Readiness
 
@@ -245,7 +245,7 @@ Close readiness:
 - Evidence references cover remembered and non-remembered session behavior.
 - Verification and manual QA are handled, or their waivers and risks are visible.
 - Residual risk was shown.
-- Final acceptance was requested for the named result and risk.
+- Work acceptance was requested for the named result and risk.
 ```
 
 If anything is missing, the summary should name the smallest unblocker:
@@ -261,7 +261,7 @@ The learning path is not a feature list. It is an authority-boundary model:
 
 - advice can guide work without authorizing writes;
 - a small direct change can stay light while the boundary holds;
-- tracked work makes decisions, evidence, QA, verification, acceptance, risk, and close readiness visible;
+- tracked work makes decisions, evidence, QA, verification, work acceptance, risk, and close readiness visible;
 - chat, Markdown, tool output, tests, approvals, and self-checks are useful, but none of them silently substitutes for another authority.
 
 ## Where To Go Next

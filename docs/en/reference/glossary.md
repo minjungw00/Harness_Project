@@ -94,7 +94,7 @@ These labels may appear in roadmap, reference, template, or diagnostic material.
 |---|---|
 | Context Index | Later read-only retrieval support. It can suggest sources to inspect but does not authorize writes, satisfy gates, accept risk, or close work. |
 | Journey Card / Journey Spine | Later continuity display. It helps orientation when enabled and fresh, but it is not Core-owned state. |
-| Browser QA Capture | v1+ candidate capture support for browser artifacts. It is not Manual QA, final acceptance, or detached verification by itself. |
+| Browser QA Capture | v1+ candidate capture support for browser artifacts. It is not Manual QA, work acceptance, or detached verification by itself. |
 | Standalone `DEC` projection | Optional Decision Packet Markdown rendering when enabled. User judgment visibility does not depend on users reading standalone `DEC` files. |
 | Operations & Handoff displays | Later or profile-gated operational/reporting surfaces. They display or export owner records; they do not replace Core authority. |
 

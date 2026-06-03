@@ -11,7 +11,7 @@ Keep this as a small change and tell me if the scope grows.
 Show me what still prevents closing this work.
 ```
 
-Harness keeps AI-assisted product work grounded in local Core-owned state by tracking scope, user-owned judgments, evidence references, close readiness, acceptance, and residual risk outside the chat.
+Harness keeps AI-assisted product work grounded in local Core-owned state by tracking scope, user-owned judgments, evidence references, close readiness, work acceptance, and residual risk outside the chat.
 
 This page shows the product feel in short scenarios. It is not an API guide and not a claim that this documentation repository already contains a running Harness Server.
 
@@ -19,7 +19,7 @@ This page shows the product feel in short scenarios. It is not an API guide and 
 
 Every scenario below is about one question: which surface is allowed to carry authority?
 
-Chat can coordinate. Tool output can support claims. Markdown can summarize. Product files can contain the work result. Core-owned state is where Harness keeps scope, user-owned judgments, evidence references, close readiness, acceptance, and residual risk.
+Chat can coordinate. Tool output can support claims. Markdown can summarize. Product files can contain the work result. Core-owned state is where Harness keeps scope, user-owned judgments, evidence references, close readiness, work acceptance, and residual risk.
 
 ## Scenario 1: Advice/Read-Only Work
 
@@ -54,7 +54,7 @@ Safe next step:
 Choose the product meaning first, then keep implementation scoped to login form, selected session behavior, and focused tests.
 ```
 
-The boundary: advice is not acceptance, cited output is not user judgment, and a plan is not write authority.
+The boundary: advice is not work acceptance, cited output is not user judgment, and a plan is not write authority.
 
 ## Scenario 2: Small Direct Change
 
@@ -97,7 +97,7 @@ This sounds simple, but it may change authentication behavior, session lifetime,
 - keep the scope visible;
 - connect completion claims to evidence references;
 - show verification and manual QA expectations when they matter;
-- show residual risk before final acceptance or close.
+- show residual risk before work acceptance or close.
 
 The agent can ask in ordinary language:
 
@@ -149,10 +149,10 @@ That may still be insufficient to close. A useful close-readiness response names
 ```text
 Close still blocked:
 - Human QA is pending for the login error workflow.
-- Residual session-risk limits have not been shown for acceptance.
+- Residual session-risk limits have not been shown for work acceptance.
 
 Smallest unblocker:
-Record the QA result, or explicitly waive that QA with the skipped surface and close impact named. Then show the residual risk before asking for acceptance.
+Record the QA result, or explicitly waive that QA with the skipped surface and close impact named. Then show the residual risk before asking for work acceptance.
 ```
 
 The boundary: test pass is not manual QA, self-check is not detached verification, and work acceptance is not the same thing as permission for a sensitive action.
@@ -175,7 +175,7 @@ If a person edits the Markdown to say:
 Evidence: sufficient
 ```
 
-the edit does not change saved evidence references, QA status, acceptance, residual risk, or close readiness. The future Harness system should treat that edit as a note or reconciliation input, not as authority by itself.
+the edit does not change saved evidence references, QA status, work acceptance, residual risk, or close readiness. The future Harness system should treat that edit as a note or reconciliation input, not as authority by itself.
 
 The boundary: Markdown projection is not state.
 
@@ -185,7 +185,7 @@ This tour intentionally avoids API detail. For exact future contracts, use:
 
 | Need | Owner |
 |---|---|
-| Scope, user-owned judgment, evidence, verification, QA, acceptance, residual risk, and close rules | [Kernel Reference](../reference/kernel.md) |
+| Scope, user-owned judgment, evidence, verification, QA, work acceptance, residual risk, and close rules | [Kernel Reference](../reference/kernel.md) |
 | Public tool shapes and schema details | [MCP API and Schemas](../reference/mcp-api-and-schemas.md) |
 | Readable document boundaries and freshness | [Document Projection Reference](../reference/document-projection.md) |
 | User-facing session behavior | [User Guide](../use/user-guide.md) and [Agent Session Flow](../use/agent-session-flow.md) |

@@ -21,7 +21,7 @@
 
 - `state.sqlite` Task와 task gate
 - active Change Unit과 Change Unit dependency
-- mode, lifecycle, next action, 가장 먼저 해소할 막힘, 가장 작은 해소 방법, guarantee level, 읽기용 보기 최신성(projection freshness)을 위한 현재 상태 표시 input
+- mode, lifecycle, next action, 가장 먼저 해소할 막힘, 가장 작은 해소 방법, 보장 수준, 읽기용 보기 최신성(projection freshness)을 위한 현재 상태 표시 input
 - 기존 owner 기록, gate, blocker, ref에서 파생되는 범위, 사용자 판단, 근거, 닫기 준비 상태 표시 그룹 input
 - Write Authorization 기록과 Write Authority Summary 표시 input
 - Decision Packet과 Residual Risk, 렌더링할 때의 schema가 소유하는 Decision Packet `judgment_category`
@@ -106,7 +106,7 @@ updated_at: 2026-05-06T09:30:15+09:00
     - 검증 면제 판단:
   - acceptance:
     - 작업 수락:
-  - risk acceptance:
+  - 잔여 위험 수용:
     - 잔여 위험 수용:
     - 수용하는 named risk:
   - decision / approval / waiver / acceptance / risk refs:
@@ -127,7 +127,7 @@ updated_at: 2026-05-06T09:30:15+09:00
   - 잔여 위험 표시:
   - 잔여 위험 수용:
   - waiver status:
-  - close blockers / close reason:
+  - 닫기 막힘 / close reason:
   - smallest unblocker:
 - note: These are display groups only. Exact gate values, recompute rules, and close semantics are owned by Kernel Reference.
 
@@ -151,7 +151,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - user is judging:
 - risk:
 - gate display groups: 범위=; 사용자 판단=; 근거=; 닫기 준비 상태=
-- guarantee level:
+- 보장 수준:
 - kernel gate detail: scope=; decision=; approval=; design=; evidence=; verification=; 수동 QA=; acceptance=
 - active change unit:
 - Write Authority Summary:

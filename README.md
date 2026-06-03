@@ -1,8 +1,8 @@
 # Harness Project / 하네스 프로젝트
 
-Harness is a local authority record and judgment-routing layer for AI-assisted product work, keeping scope, user-owned judgments, evidence, verification, QA expectations, final acceptance, and residual-risk status outside fragile chat context.
+Harness is a local authority record and judgment-routing layer for AI-assisted product work, keeping scope, user-owned judgments, evidence, verification, QA expectations, work acceptance, and residual-risk status outside fragile chat context.
 
-In practice, Harness gives the user and agent a local record of what work is in scope, which judgments belong to the user, what supports completion claims, what still needs verification or QA, whether final acceptance has been given, and what risk remains. Chat stays conversation. Markdown projections are readable views. Core-owned local state and artifact references are the source of operational truth.
+In practice, Harness gives the user and agent a local record of what work is in scope, which judgments belong to the user, what supports completion claims, what still needs verification or QA, whether work acceptance has been given, and what risk remains. Chat stays conversation. Markdown projections are readable views. Core-owned local state and artifact references are the source of operational truth.
 
 Harness는 AI 지원 제품 작업에서 작업 범위, 사용자 판단, 근거, 검증, QA 기대, 작업 수락, 잔여 위험 상태를 깨지기 쉬운 대화 맥락 밖에 두는 로컬 기준 기록이자 판단 경로입니다.
 
@@ -42,7 +42,7 @@ The redesign may change terminology, MVP staging, schema structure, projection s
 
 ## Preserved Principles / 보존하는 원칙
 
-Preserve the core thesis: Harness is not a prompt pack; it is a local authority record and judgment-routing layer for scope, user-owned judgment, evidence, verification, QA expectations, final acceptance, and residual-risk status. Product decisions, important technical decisions, QA expectations, final acceptance, and residual-risk acceptance remain user-owned judgments. Evidence, verification, manual QA, final acceptance, and residual risk stay separate. Chat, Markdown-rendered projections, connector output, and generated documents are not operational truth; Core-owned local state and artifact references are authoritative.
+Preserve the core thesis: Harness is not a prompt pack; it is a local authority record and judgment-routing layer for scope, user-owned judgment, evidence, verification, QA expectations, work acceptance, and residual-risk status. Product decisions, important technical decisions, QA expectations, work acceptance, and residual-risk acceptance remain user-owned judgments. Evidence, verification, manual QA, work acceptance, and residual risk stay separate. Chat, Markdown-rendered projections, connector output, and generated documents are not operational truth; Core-owned local state and artifact references are authoritative.
 
 핵심 명제는 유지합니다. Harness는 prompt 묶음이 아니라 작업 범위, 사용자 판단, 근거, 검증, QA 기대, 작업 수락, 잔여 위험 상태를 다루는 로컬 기준 기록이자 판단 경로입니다. 제품 결정, 중요한 기술 결정, QA 기대치, 작업 수락, 잔여 위험 수용은 사용자 판단입니다. 근거, 검증, 수동 QA, 작업 수락, 잔여 위험은 서로 대체할 수 없습니다. 대화, Markdown으로 렌더링된 읽기용 요약, connector 출력, 생성 문서는 운영 기준이 아니며, Core가 소유한 로컬 상태와 아티팩트 참조가 운영 기준입니다.
 
@@ -103,8 +103,8 @@ Maintainer handoff: [English summary](docs/en/build/implementation-overview.md#m
 ## Stage Taxonomy / 단계 분류
 
 - v0.1 Core Authority Smoke: first internal Core authority loop; not a product MVP or the first user-value slice. / 첫 내부 Core 권한 루프이며 제품 MVP나 첫 사용자 가치 조각이 아닙니다.
-- v0.2 First User-Value Slice: first narrow user-value slice where ordinary requests show core Harness value: scope, judgment, evidence, close readiness, final acceptance, and residual-risk boundaries. / 평범한 요청에서 범위, 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 경계를 통해 사용자가 하네스의 핵심 가치를 처음 체감하는 좁은 사용자 가치 조각입니다.
-- v0.3 Agency Assurance Pack: verification, QA, residual risk, acceptance, and stewardship hardening. / 검증, QA, 잔여 위험, 작업 수락, stewardship를 단단하게 만드는 단계입니다.
+- v0.2 First User-Value Slice: first narrow user-value slice where ordinary requests show core Harness value: scope, judgment, evidence, close readiness, work acceptance, and residual-risk boundaries. / 평범한 요청에서 범위, 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 경계를 통해 사용자가 하네스의 핵심 가치를 처음 체감하는 좁은 사용자 가치 조각입니다.
+- v0.3 Agency Assurance Pack: verification, QA, residual risk, work acceptance, and stewardship hardening. / 검증, QA, 잔여 위험, 작업 수락, stewardship를 단단하게 만드는 단계입니다.
 - v0.4 Operations & Handoff Pack: recover, export, release handoff, artifact integrity, and operator behavior. / 복구, 내보내기, 릴리스 인계, 아티팩트 무결성, 운영자 동작을 다루는 단계입니다.
 - v1+ Expansion: roadmap candidate space for dashboard, hosted UI, browser capture automation, team workflows, and other future items; candidates stay outside staged delivery until promoted through Roadmap criteria. / 대시보드, 호스팅 UI, 브라우저 캡처 자동화, 팀 작업 흐름 등 향후 항목을 다루는 로드맵 후보 공간입니다. 후보 항목은 로드맵의 단계 승격 조건을 통과하기 전까지 staged delivery 밖에 남습니다.
 

@@ -61,9 +61,9 @@ A useful status or next-action response answers four questions in ordinary langu
 - Scope: what may change, and what is out of bounds?
 - User judgments: what, if anything, must the user decide, and which judgment type is pending?
 - Evidence: what has already been checked, and by which refs?
-- Close Readiness: what remains before sensitive-action approval, verification, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, or close?
+- Close Readiness: what remains before sensitive-action approval, verification, Manual QA, work acceptance, residual-risk visibility, residual-risk acceptance, or close?
 
-Render gate state through four user-facing display groups: Scope, User Judgments, Evidence, and Close Readiness. Explain the easy concept first, then add exact internal terms or refs only when they clarify a boundary, blocker, source ref, or runtime rule. User Judgments is structured, not one broad judgment bucket: label each item as Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, or residual-risk acceptance. These are display groups only; they do not replace kernel gates, add schema fields, change recompute rules, authorize writes, satisfy gates, accept residual risk, or close the Task. Exact gate values, recompute behavior, and close semantics are owned by [Kernel Reference](../reference/kernel.md#gates) and [`close_task`](../reference/kernel.md#close_task).
+Render gate state through four user-facing display groups: Scope, User Judgments, Evidence, and Close Readiness. Explain the easy concept first, then add exact internal terms or refs only when they clarify a boundary, blocker, source ref, or runtime rule. User Judgments is structured, not one broad judgment bucket: label each item as Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, work acceptance, or residual-risk acceptance. These are display groups only; they do not replace kernel gates, add schema fields, change recompute rules, authorize writes, satisfy gates, accept residual risk, or close the Task. Exact gate values, recompute behavior, and close semantics are owned by [Kernel Reference](../reference/kernel.md#gates) and [`close_task`](../reference/kernel.md#close_task).
 
 The turn context should stay compact, current, and profile-filtered. The always-on context budget should fit on one screen or less and include only current Task summary, work shape, scope and non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, residual-risk summary, guarantee level, and source refs/freshness. A field may be `none` or `unknown`, but token savings must not hide a close-relevant blocker, judgment, evidence gap, or residual risk.
 
@@ -78,7 +78,7 @@ Use progressive context loading instead of reading the whole documentation set i
 | Write preparation | Active scope or Change Unit, Autonomy Boundary, intended paths/tools/commands summary, Approval status, active judgment requests or Decision Packets, Write Authority Summary, baseline/freshness. | [Product writes](#product-writes), [Kernel: prepare_write](../reference/kernel.md#prepare_write), and [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write) for the intended write. | Full Kernel/reference docs, unrelated schemas, historical event logs, large diffs/logs, full Storage DDL, future catalog. |
 | Execution/run recording | Run summary, changed-path summary, consumed Write Authorization or no-write basis, artifact refs, redaction/integrity notes, and immediate next action. | [Evidence and checks](#evidence-and-checks), [Kernel: record_run](../reference/kernel.md#record_run), [`harness.record_run`](../reference/mcp-api-and-schemas.md#harnessrecord_run), and artifact-ref display rules only when display or repair needs them. | Full logs, raw diffs, screenshots, traces, bundles, artifact inventories, full projection bodies, full Template set, future catalog. |
 | Evidence review | Evidence coverage or Evidence Manifest ref when active, artifact refs, evidence gaps, stale or insufficient support, affected acceptance criteria or claims, redaction/integrity notes, and next evidence action. | [Evidence and checks](#evidence-and-checks), [Kernel: Evidence Manifest](../reference/kernel.md#evidence-manifest), [`harness.record_run`](../reference/mcp-api-and-schemas.md#harnessrecord_run), and artifact-ref display rules only when the gap or repair needs them. | Full evidence bodies, full logs, raw diffs, screenshots, traces, bundles, artifact inventories, full projection bodies, full Template set, future catalog. |
-| Close readiness | Close readiness summary, blockers, sensitive-action approval status, evidence/verification/QA/final acceptance status, residual-risk visibility or accepted refs, projection freshness, smallest unblocker. | [Close](#close), [Verification, Manual QA, residual risk, acceptance](#verification-manual-qa-residual-risk-acceptance), [Kernel: close_task](../reference/kernel.md#close_task), and [`harness.close_task`](../reference/mcp-api-and-schemas.md#harnessclose_task). | Generic all-done rollups, full report bodies, full historical logs, unrelated templates, full Conformance catalog, full projection bodies, future catalog. |
+| Close readiness | Close readiness summary, blockers, sensitive-action approval status, evidence/verification/QA/work acceptance status, residual-risk visibility or accepted refs, projection freshness, smallest unblocker. | [Close](#close), [Verification, Manual QA, residual risk, work acceptance](#verification-manual-qa-residual-risk-work-acceptance), [Kernel: close_task](../reference/kernel.md#close_task), and [`harness.close_task`](../reference/mcp-api-and-schemas.md#harnessclose_task). | Generic all-done rollups, full report bodies, full historical logs, unrelated templates, full Conformance catalog, full projection bodies, future catalog. |
 | User judgment request | Exact user-owned judgment, options or selected outcome, consequences, uncertainty, affected scope, relevant refs, what the agent is not deciding for the user, what the answer does not settle, and next action after the answer. Full profiles also show recommendation, affected gates/acceptance criteria, and consequence of deferral. Use the internal Decision Packet owner only when exact record behavior is needed. | [Blocking User-Owned Judgments](#blocking-user-owned-judgments), the relevant Decision Packet owner section, and the specific MCP method only if exact fields are needed. | Broad approval language, unrelated judgments, full evidence bodies, full logs, full schema references, full Template set, future catalog. |
 | Recovery/error | Primary error or blocker, owner, last safe/current state known, stale or unavailable source, affected authority claims, next recovery action, and whether writes or close must hold. | [Resume](#resume), [Reading status and blockers](#reading-status-and-blockers), [Agent Integration: Fallback Semantics](../reference/agent-integration.md#fallback-semantics), and the specific recovery or error owner section. | Historical event logs, stack traces, full artifacts, unrelated status, full Storage DDL, full Conformance catalog, unrelated Roadmap. |
 
@@ -96,7 +96,7 @@ Track ordinary-language requests when their shape suggests scope, user judgments
 - changes to public APIs, public interfaces, domain language, module boundaries, or shared design that other people, callers, docs, or future work may rely on
 - sensitive or policy-relevant areas such as auth, security, billing, destructive/data-loss risk, privacy, compliance, accessibility, or design quality
 - user-owned product judgment or material technical judgment with cost, compatibility, security, maintenance, migration, interface, dependency, or risk impact
-- evidence, verification, Manual QA, final acceptance, or residual-risk needs
+- evidence, verification, Manual QA, work acceptance, or residual-risk needs
 
 Keep small changes light. Do not add ceremony just to answer a question, inspect code, explain a result, or handle a tiny low-risk change with an already narrow shape. A typo, one docs sentence, or an obvious rename can use the internal tiny profile under `direct` when no user-owned decision, sensitive category, security boundary, or evidence beyond the tiny changed-path/self-check note is hiding inside it. User-facing display should say the plain scope, result, and check, not expose the internal profile unless it clarifies a boundary.
 
@@ -106,19 +106,19 @@ Show:
 - Scope: the current or proposed scope, what is out of bounds, and any active Change Unit or write-authority boundary that affects the next action
 - User Judgments: any user-owned question, judgment request, internal Decision Packet record, or sensitive-action approval that blocks progress, labeled by judgment type and not merged with other pending items
 - Evidence: supporting refs, missing support, stale support, or checks already run
-- Close Readiness: sensitive-action approval, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, and close-blocker status when those affect the next decision or close
+- Close Readiness: sensitive-action approval, verification, Manual QA, residual-risk visibility, residual-risk acceptance, work acceptance, and close-blocker status when those affect the next decision or close
 - the next safe action
 - the primary blocker, who owns the next move, and the smallest unblocker
 - secondary blockers only when they still affect the follow-on path
 - write authority status when writes are possible or near
-- guarantee level and what the surface can actually block or only detect, as display and risk context rather than sensitive-action Approval, verification, final acceptance, or a gate
+- guarantee level and what the surface can actually block or only detect, as display and risk context rather than sensitive-action Approval, verification, work acceptance, or a gate
 - optional raw gate names or refs only when they clarify a boundary; do not make the user read the full gate taxonomy to understand the next action
 - projection freshness status
 - when guard, freeze, or careful mode is relevant, what can actually be blocked before execution and what can only be detected after action
 
 Do not begin product writes from a broad natural-language request alone. First establish scope and compatible write authority for the intended change.
 
-Natural-language consent such as "go ahead," "proceed," "looks good," "진행해," or "좋아" can be mapped to a pending judgment only when one active prompt has already made the judgment type, option, scope, affected gates, consequences, and what remains outside the answer unambiguous. If one prompt has multiple pending items, the phrase applies only to the unambiguous item; otherwise clarify before recording it. If the same utterance could mean sensitive-action approval, final acceptance, residual-risk acceptance, QA waiver, verification waiver, scope confirmation, or simple continuation, clarify before recording it.
+Natural-language consent such as "go ahead," "proceed," "looks good," "진행해," or "좋아" can be mapped to a pending judgment only when one active prompt has already made the judgment type, option, scope, affected gates, consequences, and what remains outside the answer unambiguous. If one prompt has multiple pending items, the phrase applies only to the unambiguous item; otherwise clarify before recording it. If the same utterance could mean sensitive-action approval, work acceptance, residual-risk acceptance, QA waiver, verification waiver, scope confirmation, or simple continuation, clarify before recording it.
 
 ## Resume
 
@@ -132,7 +132,7 @@ I found the active task. Current scope is X. The next safe action is Y. Product 
 
 If projection, `source_state_version`, or readable status is stale or unknown, say that and refresh or reconcile before depending on it. If canonical state is available directly, the agent may continue from that state while warning that the readable projection is not the source of authority.
 
-Keep display failures separate. A stale projection means the readable card/report may lag and needs refresh or reconcile before it becomes dependable context. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient and may block writes or close. MCP unavailable means the agent cannot reach the required Harness/Core capability; do not claim authoritative state changes, Approval, final acceptance (Acceptance), residual-risk acceptance, gate updates, projection repairs, or close until that capability is available again.
+Keep display failures separate. A stale projection means the readable card/report may lag and needs refresh or reconcile before it becomes dependable context. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient and may block writes or close. MCP unavailable means the agent cannot reach the required Harness/Core capability; do not claim authoritative state changes, Approval, work acceptance (Acceptance), residual-risk acceptance, gate updates, projection repairs, or close until that capability is available again.
 
 If Core itself is unreachable, the display issue is `MCP_SERVER_UNAVAILABLE`: say Core cannot be reached and reconnect or diagnose before claiming state changed. If Core or the operator can tell that the current surface lacks usable MCP, the display issue is `SURFACE_MCP_UNAVAILABLE`: say this surface cannot use the required Harness tools, then hold writes by instruction or switch to a capable surface. Surface name alone does not prove capability. Only say execution was blocked before action when a preventive guard has proven pre-tool blocking for that covered operation.
 
@@ -178,13 +178,13 @@ When `harness.next` returns an `action_kind`, render the plain action before the
 
 The exact enum and API contract are owned by [`harness.next`](../reference/mcp-api-and-schemas.md#harnessnext). This table is display guidance, not a new route or gate.
 
-Every authority claim in status, next, result, acceptance, or close display must be traceable to its source ref or explicit absence. Use a Write Authorization ref for "write allowed," an Approval ref for sensitive-action permission, an Evidence Manifest ref for evidence sufficiency, an Eval ref for detached verification, a Manual QA record or valid waiver ref for Manual QA, an Acceptance Decision Packet ref for final acceptance (Acceptance), Residual Risk refs or `ResidualRiskSummary.status=none` for residual-risk visibility, accepted Residual Risk refs for residual-risk acceptance, and artifact refs for logs, diffs, screenshots, traces, or bundles. If the ref is missing, say the claim is not yet supported.
+Every authority claim in status, next, result, acceptance, or close display must be traceable to its source ref or explicit absence. Use a Write Authorization ref for "write allowed," an Approval ref for sensitive-action permission, an Evidence Manifest ref for evidence sufficiency, an Eval ref for detached verification, a Manual QA record or valid waiver ref for Manual QA, an Acceptance Decision Packet ref for work acceptance (Acceptance), Residual Risk refs or `ResidualRiskSummary.status=none` for residual-risk visibility, accepted Residual Risk refs for residual-risk acceptance, and artifact refs for logs, diffs, screenshots, traces, or bundles. If the ref is missing, say the claim is not yet supported.
 
 When a response contains errors or blockers, lead with one primary blocker. Use the first `ToolError` chosen by API precedence, or the first `close_task` blocker when close returned blockers. Then show the smallest unblocker in ordinary language. Keep secondary blockers visible only when they will still matter after the primary blocker is resolved.
 
 Every blocker display should also name ownership in user-facing terms:
 
-- User-owned: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, Manual QA judgment, QA waiver, verification waiver, residual-risk acceptance, final acceptance (Acceptance), or another choice the user must make.
+- User-owned: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, Manual QA judgment, QA waiver, verification waiver, residual-risk acceptance, work acceptance (Acceptance), or another choice the user must make.
 - Agent-resolvable: refresh or reconcile status, retry `prepare_write`, collect missing evidence, run an in-scope check, repair or replace an artifact, or narrow the Change Unit without changing a user-owned judgment.
 - Surface or system: Core unavailable, surface MCP unavailable, capability insufficient, or another condition that needs reconnection, a different surface, or operator repair.
 
@@ -212,9 +212,9 @@ Prefer the plain phrase first and the exact Harness term in parentheses only whe
 
 Intake turns an everyday request into a usable task shape without forcing the user to speak Harness. The user may say "add email login and keep reset out of scope"; the agent should translate that into a plain work shape, scope, possible decisions, evidence needs, write checks, and close readiness handling.
 
-Requirements clarification is the agent's conditional behavior before implementation planning and before write authority. `Discovery` is the stable internal name for that behavior, not a user command to memorize. Users can trigger the same behavior with plain language such as "clarify the plan before implementation" or "ask what you need before changing code." Use it when clarification is needed because the request is ambiguous, feature-shaped, auth/security-sensitive, UX/copy/workflow-heavy, public-interface or module-boundary-facing, likely to touch policy, or likely to become tracked work; do not add it as ceremony for an obvious small change. It is not approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, final acceptance, residual-risk acceptance, close, scope authority, or a new authority path.
+Requirements clarification is the agent's conditional behavior before implementation planning and before write authority. `Discovery` is the stable internal name for that behavior, not a user command to memorize. Users can trigger the same behavior with plain language such as "clarify the plan before implementation" or "ask what you need before changing code." Use it when clarification is needed because the request is ambiguous, feature-shaped, auth/security-sensitive, UX/copy/workflow-heavy, public-interface or module-boundary-facing, likely to touch policy, or likely to become tracked work; do not add it as ceremony for an obvious small change. It is not approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, work acceptance, residual-risk acceptance, close, scope authority, or a new authority path.
 
-Listen for the same task-shape triggers used at session start: product writes, scope drift risk, ambiguous requirements, multi-file or structural work, sensitive or policy-relevant areas, user-owned decisions, and evidence, verification, Manual QA, final acceptance, or residual-risk needs. When one appears, translate the ordinary request into a proposed work shape, scope, out-of-bounds area, and next safe action.
+Listen for the same task-shape triggers used at session start: product writes, scope drift risk, ambiguous requirements, multi-file or structural work, sensitive or policy-relevant areas, user-owned decisions, and evidence, verification, Manual QA, work acceptance, or residual-risk needs. When one appears, translate the ordinary request into a proposed work shape, scope, out-of-bounds area, and next safe action.
 
 The intake route is:
 
@@ -351,8 +351,8 @@ Use this distinction when explaining stops and permissions:
 | Change Unit scope | What work area is in bounds? | Names the behavior, files, paths, tools, commands, network targets, and sensitive categories the work is scoped around. | Does not decide user-owned product or material technical judgment or create Write Authorization by itself. |
 | Autonomy Boundary | What may the agent decide alone inside that scope? | Lets the agent choose covered implementation details without another user judgment. | Does not grant paths, tools, commands, network, secrets, sensitive categories, sensitive-action Approval, or write authority. |
 | Approval | May this sensitive step proceed? | Allows a named sensitive action within its recorded scope and expiry. | Does not decide user-owned product, technical, security/privacy, scope/autonomy, waiver, acceptance, or residual-risk questions; prove correctness; waive QA or verification; accept the result; accept residual risk; or create Write Authorization. |
-| User judgment request (Decision Packet internally) | What user-owned judgment is being recorded? | Resolves, defers, rejects, or blocks the named Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, QA waiver, verification waiver, final acceptance, residual-risk acceptance, or reconcile choice. It may be concise or detailed depending on the profile. | Does not grant sensitive-action approval unless it is the approval-shaped packet linked to an Approval record. |
-| Acceptance | Is the result acceptable when Final acceptance is required? | Records the user's final result judgment after close-relevant residual risk is visible or confirmed absent. | Does not replace evidence, verification, Manual QA, Approval, Write Authorization, waiver, or residual-risk acceptance. |
+| User judgment request (Decision Packet internally) | What user-owned judgment is being recorded? | Resolves, defers, rejects, or blocks the named Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, QA waiver, verification waiver, work acceptance, residual-risk acceptance, or reconcile choice. It may be concise or detailed depending on the profile. | Does not grant sensitive-action approval unless it is the approval-shaped packet linked to an Approval record. |
+| Acceptance | Is the result acceptable when work acceptance is required? | Records the user's work acceptance judgment after close-relevant residual risk is visible or confirmed absent. | Does not replace evidence, verification, Manual QA, Approval, Write Authorization, waiver, or residual-risk acceptance. |
 | Residual-risk acceptance | Is this known remaining risk acceptable for close? | Records acceptance of visible close-relevant risk and supports residual-risk accepted close when other gates allow it. | Does not create detached verification, prove correctness, waive QA, or make the close a normal no-risk close. |
 | Write Authorization | May this exact write attempt happen now? | Records that Core allowed one compatible write attempt after the required checks. | Is not reusable and does not expand scope, Autonomy Boundary, or Approval. |
 
@@ -361,7 +361,7 @@ For small changes, the internal active Change Unit may be generated from the use
 - Docs or copy edit: purpose "change this phrase"; non-goals "no behavior or contract change"; scoped paths "the named doc/component and related test if present"; stop if "meaning, localization strategy, or public promise changes."
 - Focused test edit: purpose "cover the reported case"; non-goals "no implementation refactor"; scoped paths "the relevant test"; stop if "the fix requires product code."
 
-When a prompt or status uses the word "approved," name the exact authority or recorded judgment: sensitive-action Approval, scope confirmation, judgment request resolution, internal Decision Packet resolution, scoped waiver, residual-risk acceptance, final acceptance (Acceptance), or Write Authorization status. Do not use "approved" as a catch-all label.
+When a prompt or status uses the word "approved," name the exact authority or recorded judgment: sensitive-action Approval, scope confirmation, judgment request resolution, internal Decision Packet resolution, scoped waiver, residual-risk acceptance, work acceptance (Acceptance), or Write Authorization status. Do not use "approved" as a catch-all label.
 
 Examples:
 
@@ -369,7 +369,7 @@ Examples:
 - Secret access sensitive-action Approval: Approval to read or use a secret inside the requested scope does not permit exposing secret values in artifacts, projections, exports, logs, screenshots, or summaries.
 - Auth/system change sensitive-action Approval: Approval to touch auth files, permissions, or system configuration does not choose the identity-provider or session/storage model, such as local session cookie, bearer token/JWT, OAuth/OIDC sign-in, or social-login provider integration; it also does not decide role model, lockout behavior, or user notice.
 - Public API change decision: resolving the API direction decides the contract choice for the Task; it is not deployment authority, merge authority, or a reusable Write Authorization.
-- Result acceptance (Acceptance): accepting the result does not authorize more writes, approve new sensitive actions, accept known residual risk, or retroactively satisfy missing evidence, QA, verification, waiver, or Write Authorization.
+- Work acceptance (Acceptance): accepting the result does not authorize more writes, approve new sensitive actions, accept known residual risk, or retroactively satisfy missing evidence, QA, verification, waiver, or Write Authorization.
 
 Use Shared Design to record the shared understanding from requirements clarification: goal, user value, scope, non-goals, assumptions, remaining uncertainty, domain/module/interface impact, separated user-owned judgments, QA/verification expectations, and safe next work. Do not present Shared Design as sensitive-action Approval, Acceptance, residual-risk acceptance, waiver, evidence, close readiness, or Write Authorization. If Shared Design exposes a public API/interface choice, domain-language conflict, module boundary move, architecture direction, security/privacy trade-off, QA/verification waiver, scope expansion, or known-risk acceptance that the user owns, route that choice to a judgment request.
 
@@ -380,16 +380,16 @@ Inside the Autonomy Boundary, the agent may decide ordinary implementation detai
 
 ## Blocking User-Owned Judgments
 
-When user-owned Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, QA waiver, verification waiver, final acceptance, or residual-risk acceptance blocks progress, show a user judgment request. The internal record or template label may be Decision Packet, but ordinary prompts should start with the judgment, options, consequence, and next action. When a named sensitive action blocks progress, use the sensitive-action approval route. Do not replace any of these with broad approval or a vague "continue?" prompt.
+When user-owned Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, QA waiver, verification waiver, work acceptance, or residual-risk acceptance blocks progress, show a user judgment request. The internal record or template label may be Decision Packet, but ordinary prompts should start with the judgment, options, consequence, and next action. When a named sensitive action blocks progress, use the sensitive-action approval route. Do not replace any of these with broad approval or a vague "continue?" prompt.
 
-The word "approved" or a casual "go ahead," "proceed," "looks good," "진행해," or "좋아" is not enough when the underlying choice is a product trade-off, architecture direction, security/privacy trade-off, scope/autonomy change, QA waiver, verification waiver, final acceptance (Acceptance), residual-risk acceptance, or simple continuation. The prompt must name the judgment type, what the user is deciding, what is not being decided, the relevant scope and refs, what the agent may decide without the user, and the close or write impact.
+The word "approved" or a casual "go ahead," "proceed," "looks good," "진행해," or "좋아" is not enough when the underlying choice is a product trade-off, architecture direction, security/privacy trade-off, scope/autonomy change, QA waiver, verification waiver, work acceptance (Acceptance), residual-risk acceptance, or simple continuation. The prompt must name the judgment type, what the user is deciding, what is not being decided, the relevant scope and refs, what the agent may decide without the user, and the close or write impact.
 
 Token saving must not remove the context the user needs to decide. Even a compact judgment request must show the decision, options or selected outcome, consequences, uncertainty, and what the agent is not deciding for the user.
 
 A user-facing judgment request should include:
 
 - judgment title
-- judgment type: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, or residual-risk acceptance
+- judgment type: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, work acceptance, or residual-risk acceptance
 - why the decision is needed now
 - what the user is deciding / exact choice
 - options or selected outcome
@@ -418,7 +418,7 @@ Decision: should this scoped settings copy change use "Save" or "Update"?
 Options: "Save" or "Update".
 Consequence: the chosen label becomes the copy target for this Change Unit.
 Uncertainty: none beyond normal copy preference.
-Agent is not deciding: broader settings behavior, localization strategy, final acceptance, residual-risk acceptance, or write authority.
+Agent is not deciding: broader settings behavior, localization strategy, work acceptance, residual-risk acceptance, or write authority.
 ```
 
 Tradeoff judgment:
@@ -431,7 +431,7 @@ Options: inline message, toast, or modal.
 Recommendation: inline message because it preserves flow and accessibility.
 Consequence: the choice sets the UX target and Manual QA expectation for this flow.
 Uncertainty: existing accessibility patterns may make another option cheaper.
-Agent is not deciding: account-enumeration policy, final acceptance, residual-risk acceptance, or write authority.
+Agent is not deciding: account-enumeration policy, work acceptance, residual-risk acceptance, or write authority.
 If deferred: backend auth wiring may continue only if it does not claim the final failed-login UX is done.
 ```
 
@@ -458,7 +458,7 @@ Options: waive the named Manual QA check, keep close blocked, or defer close.
 Recommendation: keep close blocked unless release timing requires the waiver.
 Consequence: a waiver changes close readiness for the named check only.
 Uncertainty: visual wrapping risk remains until a human check or accepted risk resolves it.
-Agent is not deciding: any remaining wrapping-risk acceptance, final acceptance, detached verification, or write authority.
+Agent is not deciding: any remaining wrapping-risk acceptance, work acceptance, detached verification, or write authority.
 Affected group: Close Readiness; owner path/gate ref: Manual QA / qa_gate; affected criterion: AC-03 onboarding copy layout.
 ```
 
@@ -491,7 +491,7 @@ For review output, keep the two questions separate:
 - Spec Compliance Review: did we build the requested thing under current scope and authority?
 - Code Quality / Stewardship Review: is the result maintainable and coherent in the codebase?
 
-Review Stages are managed display/procedure only. They are not canonical records; they are not new `ProjectionKind` values, Approval, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or Write Authorization. Same-session review is self-check or stewardship signal unless a qualifying independent Eval or verification record exists. Findings must route through the existing paths before affected writes or close proceed.
+Review Stages are managed display/procedure only. They are not canonical records; they are not new `ProjectionKind` values, Approval, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or Write Authorization. Same-session review is self-check or stewardship signal unless a qualifying independent Eval or verification record exists. Findings must route through the existing paths before affected writes or close proceed.
 
 When a check, review, Eval, Manual QA result, or Run produces a finding, name the route instead of leaving the finding in chat:
 
@@ -499,7 +499,7 @@ When a check, review, Eval, Manual QA result, or Run produces a finding, name th
 - User-owned product, technical, waiver, acceptance, or risk choice: show a judgment request candidate or existing Decision Packet ref.
 - Scope, completion, or autonomy mismatch: recommend a Change Unit update, smaller Change Unit, or follow-up Change Unit.
 - Stewardship or design-quality issue: show the existing design, decision, QA, evidence, residual-risk, close-blocker, or Change Unit recommendation route that carries the impact.
-- Known remaining uncertainty or skipped check: show a Residual Risk candidate or ref before acceptance or residual-risk accepted close.
+- Known remaining uncertainty or skipped check: show a Residual Risk candidate or ref before work acceptance or residual-risk accepted close.
 - QA or verification outcome: point to the Manual QA or Eval record and its gate effect.
 - Close blocker: show the structured close blocker and smallest unblocker.
 - Follow-up work: create or reference the existing follow-up Task, Change Unit, or Journey continuity route rather than burying the note in a summary.
@@ -559,7 +559,7 @@ Task shape changes what "enough" looks like. Read/advice work usually cites sour
 
 If evidence becomes stale, say why in ordinary language and name the smallest repair. Common causes are baseline drift, changed files after the supporting Run or Eval, approval drift or expiry, missing or failed-integrity artifacts, and relevant Shared Design, domain term, module map, or interface contract changes.
 
-## Verification, Manual QA, residual risk, acceptance
+## Verification, Manual QA, Residual Risk, Work Acceptance
 
 Keep these separate in the agent response.
 
@@ -568,7 +568,7 @@ Keep these separate in the agent response.
 | Evidence | What supports the claim that a result or acceptance criterion was met. |
 | Verification | What checked correctness, and whether the verifier was independent enough for detached assurance. |
 | Manual QA | What a person inspected because human judgment matters. |
-| Final acceptance | Whether the user accepts the result when that judgment is required. |
+| Work acceptance | Whether the user accepts the result when that judgment is required. |
 | Residual risk | What uncertainty, limitation, unchecked condition, or trade-off remains. |
 
 Do-not-substitute reminders:
@@ -593,20 +593,20 @@ Use these user-facing labels consistently:
 | Detached verified | The Eval passed with valid independence, no same-session self-review issue, and no stale baseline or bundle input. |
 | Waived with user-accepted residual risk | Verification or another close-relevant check was waived and the visible remaining residual risk was accepted by the user for residual-risk accepted close. |
 
-Manual QA answers whether a person inspected qualities that need human judgment, commonly UI/UX, workflow, copy, accessibility interpretation, product taste, or visual output. Do not present a browser smoke run, screenshot capture, Browser QA Capture artifact, or verifier note as Manual QA unless a Manual QA result was actually recorded or validly waived. Browser QA Capture is a v1+ Expansion candidate unless owner docs explicitly promote it; even when available, its artifacts are supporting refs, not final acceptance (Acceptance) or detached verification unless a separate Eval path also satisfies independence. If browser capture is unsupported for the surface, use human Manual QA notes and manually supplied artifacts.
+Manual QA answers whether a person inspected qualities that need human judgment, commonly UI/UX, workflow, copy, accessibility interpretation, product taste, or visual output. Do not present a browser smoke run, screenshot capture, Browser QA Capture artifact, or verifier note as Manual QA unless a Manual QA result was actually recorded or validly waived. Browser QA Capture is a v1+ Expansion candidate unless owner docs explicitly promote it; even when available, its artifacts are supporting refs, not work acceptance (Acceptance) or detached verification unless a separate Eval path also satisfies independence. If browser capture is unsupported for the surface, use human Manual QA notes and manually supplied artifacts.
 
-Residual risk is a known remaining limitation, uncertainty, unchecked condition, or trade-off. It must be visible before residual-risk accepted close or final acceptance (Acceptance). Residual-risk acceptance does not upgrade assurance and does not replace verification or QA.
+Residual risk is a known remaining limitation, uncertainty, unchecked condition, or trade-off. It must be visible before residual-risk accepted close or work acceptance (Acceptance). Residual-risk acceptance does not upgrade assurance and does not replace verification or QA.
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means Core has no known close-relevant residual risk for the current Task and requested action. `not_visible` means known close-relevant risk exists but has not yet been shown with enough context for acceptance or close, so the next action is to surface that risk and refs. Do not summarize `not_visible` as "no risk."
 
-Final acceptance is the user's final acceptance of the result when the task path requires it. It is not the same as sensitive-action Approval, verification, QA, residual-risk acceptance, waiver, or proof of correctness. It does not erase residual risk; risk that remains close-relevant needs separate visibility and, when applicable, residual-risk acceptance refs.
+Work acceptance is the user's result judgment when the task path requires it. It is not the same as sensitive-action Approval, verification, QA, residual-risk acceptance, waiver, or proof of correctness. It does not erase residual risk; risk that remains close-relevant needs separate visibility and, when applicable, residual-risk acceptance refs.
 
-Verification waiver and QA waiver do not upgrade assurance. A verification waiver keeps detached verification unsatisfied. When close is otherwise allowed, it can close only through residual-risk acceptance for a close-relevant waived verification gap. It must not be summarized as verified close. A QA waiver closes only the QA requirement it names and leaves evidence, verification, final acceptance, and residual-risk handling unchanged. Waiver prompts and summaries should show the named requirement, skipped check or surface, reason, affected owner path or close impact, and any close-relevant residual risk that must be visible or accepted through the residual-risk path when required; exact waiver metadata and gate effects are owned by [Design Quality Policies](../reference/design-quality-policies.md#waiver-rules) and [Kernel Reference](../reference/kernel.md#waiver-semantics).
+Verification waiver and QA waiver do not upgrade assurance. A verification waiver keeps detached verification unsatisfied. When close is otherwise allowed, it can close only through residual-risk acceptance for a close-relevant waived verification gap. It must not be summarized as verified close. A QA waiver closes only the QA requirement it names and leaves evidence, verification, work acceptance, and residual-risk handling unchanged. Waiver prompts and summaries should show the named requirement, skipped check or surface, reason, affected owner path or close impact, and any close-relevant residual risk that must be visible or accepted through the residual-risk path when required; exact waiver metadata and gate effects are owned by [Design Quality Policies](../reference/design-quality-policies.md#waiver-rules) and [Kernel Reference](../reference/kernel.md#waiver-semantics).
 
 Applied close examples:
 
 - Small change: show changed files, evidence refs, self-check, and whether anything escalated. Do not call it detached verified without a qualifying Eval.
-- UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: keep tests, browser smoke, Browser QA artifacts, Manual QA, and acceptance on separate lines. If Manual QA is waived, show the skipped surface, user-accepted residual risk, and residual-risk follow-up.
+- UI/UX, workflow, copy, accessibility, product-taste, or visual-output work: keep tests, browser smoke, Browser QA artifacts, Manual QA, and work acceptance on separate lines. If Manual QA is waived, show the skipped surface, user-accepted residual risk, and residual-risk follow-up.
 - Auth or security work: show sensitive-action Approval separately from the security or product decision, then show evidence and verification. Approval to touch a secret or permission does not settle redaction, audit, role, retention, or user-notice choices.
 - Public API work: show caller compatibility, migration or documentation impact, evidence, and verification separately. Passing tests does not by itself settle the API contract decision.
 - Residual-risk accepted close: show the limitation, existing evidence, missing or waived verification or QA, user-accepted residual risk, and residual-risk follow-up. Do not present the result as detached verified.
@@ -617,11 +617,11 @@ Close only when blockers are clear for the active task path.
 
 For small changes, keep the result low-ceremony: request, scope, changed files or no-file outcome, checks, escalation status, and any close-relevant risk or follow-up.
 
-For tracked work, the close summary must make the close basis visible. Show changed scope, sensitive-action approval, evidence coverage, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, and close reason when applicable. If a gate is waived, `not_required`, failed, pending, or blocked, the close display should say so instead of folding it into a generic success line.
+For tracked work, the close summary must make the close basis visible. Show changed scope, sensitive-action approval, evidence coverage, verification, Manual QA, residual-risk visibility, residual-risk acceptance, work acceptance, and close reason when applicable. If a gate is waived, `not_required`, failed, pending, or blocked, the close display should say so instead of folding it into a generic success line.
 
-Use the close display that matches the task shape: `DIRECT-RESULT` is the compact result display for small changes, `TASK` Close Summary is continuity display for active or recently closed tracked work, and Journey Card close context, when enabled by a later profile, is compact status/resume display. None of these displays creates state, gates, acceptance, QA, verification, residual-risk acceptance, close, or write authority.
+Use the close display that matches the task shape: `DIRECT-RESULT` is the compact result display for small changes, `TASK` Close Summary is continuity display for active or recently closed tracked work, and Journey Card close context, when enabled by a later profile, is compact status/resume display. None of these displays creates state, gates, work acceptance, QA, verification, residual-risk acceptance, close, or write authority.
 
-Close displays should lead with the same four groups: Scope for changed scope, User Judgments for final acceptance, residual-risk acceptance, QA waiver, verification waiver, or sensitive-action approval when relevant, Evidence for support refs, and Close Readiness for sensitive-action approval, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, close blockers, and close reason. Raw gate names can follow when they explain a blocker, but exact gate values and close semantics remain kernel-owned.
+Close displays should lead with the same four groups: Scope for changed scope, User Judgments for work acceptance, residual-risk acceptance, QA waiver, verification waiver, or sensitive-action approval when relevant, Evidence for support refs, and Close Readiness for sensitive-action approval, verification, Manual QA, residual-risk visibility, residual-risk acceptance, work acceptance, close blockers, and close reason. Raw gate names can follow when they explain a blocker, but exact gate values and close semantics remain kernel-owned.
 
 Before successful close, show or confirm:
 
@@ -631,13 +631,13 @@ Before successful close, show or confirm:
 - verification status, including stale evaluator bundle or baseline drift when present, or the kernel-owned verification-waiver path with the relevant judgment request / Decision Packet and accepted Residual Risk refs when required
 - Manual QA status or valid waiver
 - close-relevant residual risk shown or no known close-relevant residual risk reported
-- final acceptance recorded when required
+- work acceptance recorded when required
 
-Do not ask for final acceptance (Acceptance) from a generic "all good?" prompt. The Acceptance prompt must show the close basis: evidence, verification, Manual QA, residual-risk visibility or `none`, what final acceptance does not replace, and whether the requested close is normal close or residual-risk accepted close.
+Do not ask for work acceptance (Acceptance) from a generic "all good?" prompt. The Acceptance prompt must show the close basis: evidence, verification, Manual QA, residual-risk visibility or `none`, what work acceptance does not replace, and whether the requested close is normal close or residual-risk accepted close.
 
-If close is blocked, say exactly why and name the smallest next unblocker. A user-readable close blocker display should show what judgment remains, what evidence is missing or stale, whether verification or Manual QA is required by the active profile, whether final acceptance is required, what residual risk is visible or still not visible enough, and the next smallest resolving action.
+If close is blocked, say exactly why and name the smallest next unblocker. A user-readable close blocker display should show what judgment remains, what evidence is missing or stale, whether verification or Manual QA is required by the active profile, whether work acceptance is required, what residual risk is visible or still not visible enough, and the next smallest resolving action.
 
-When more than one category blocks close, lead with the primary blocker but keep the others visible. Do not compress evidence, verification, Manual QA, final acceptance, the residual-risk visibility line, residual-risk acceptance, and projection freshness into one "not done" or "done" line.
+When more than one category blocks close, lead with the primary blocker but keep the others visible. Do not compress evidence, verification, Manual QA, work acceptance, the residual-risk visibility line, residual-risk acceptance, and projection freshness into one "not done" or "done" line.
 
 ## Good and bad agent response examples
 
@@ -683,7 +683,7 @@ Good close block:
 Close is blocked.
 User Judgments: Manual QA judgment for the onboarding copy is still needed.
 Evidence: AC-02 evidence is still missing, which the agent can collect after Manual QA.
-Close Readiness: close cannot proceed until the Manual QA judgment is recorded. Verification is not the active blocker for this profile, final acceptance has not been requested yet, and no residual-risk acceptance has been recorded.
+Close Readiness: close cannot proceed until the Manual QA judgment is recorded. Verification is not the active blocker for this profile, work acceptance has not been requested yet, and no residual-risk acceptance has been recorded.
 Smallest unblocker: record whether the copy is acceptable.
 ```
 
@@ -716,7 +716,7 @@ Good tracked-work close result:
 ```text
 Close summary:
 Scope: changed scope stayed inside login form, login API call, and session storage.
-User Judgments: residual-risk acceptance for the shown mobile Safari risk was recorded in DEC-022; final acceptance (Acceptance) was recorded separately in DEC-023.
+User Judgments: residual-risk acceptance for the shown mobile Safari risk was recorded in DEC-022; work acceptance (Acceptance) was recorded separately in DEC-023.
 Evidence: AC-01 and AC-02 are covered by Evidence Manifest EM-009, supported by RUN-018 and ART-TEST-018.
 Close Readiness: verification is self-checked in RUN-018; no detached Eval was required for this path. Manual QA passed for final copy and layout in MQA-006. Residual Risk RISK-004 has follow-up TASK-144. Close reason: completed with user-accepted residual risk.
 ```
@@ -736,7 +736,7 @@ Harness is unhappy, so I stopped.
 Good MCP-unavailable hold:
 
 ```text
-I cannot reach Harness/Core from this surface, so I am holding product writes and will not claim state changes, gate updates, Approval, final acceptance (Acceptance), residual-risk acceptance, or close. Smallest unblocker: reconnect Core or continue from a capable surface.
+I cannot reach Harness/Core from this surface, so I am holding product writes and will not claim state changes, gate updates, Approval, work acceptance (Acceptance), residual-risk acceptance, or close. Smallest unblocker: reconnect Core or continue from a capable surface.
 ```
 
 Good projection-stale recovery:

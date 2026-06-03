@@ -28,13 +28,13 @@ Current stage names are:
 
 Roadmap items are candidates, not staged-delivery commitments. Listing an item here does not create authority, conformance, implementation readiness, user acceptance, QA completion, verification satisfaction, residual-risk acceptance, security guarantees, or runtime behavior.
 
-A roadmap candidate stays outside v0.1 through v0.4 unless a future owner document explicitly promotes it. When promoted, it must still preserve user-owned judgment, route durable state and artifacts through Core-owned authority paths, keep evidence/verification/QA/final acceptance/residual risk separate, and use honest security wording for the capability actually proven.
+A roadmap candidate stays outside v0.1 through v0.4 unless a future owner document explicitly promotes it. When promoted, it must still preserve user-owned judgment, route durable state and artifacts through Core-owned authority paths, keep evidence/verification/QA/work acceptance/residual risk separate, and use honest security wording for the capability actually proven.
 
 ## Roadmap Boundary
 
 This document does not own kernel invariants, public MCP schemas, storage profiles, fixture profile exits, stage-required API surface, operator surface, or implementation checklists. Those details belong in Build and Reference owner docs.
 
-Roadmap candidates may be useful as read-only displays, metadata, artifact candidates, fixture candidates, prototypes, or planning notes only when the relevant owner docs allow that limited use. They must not become a shortcut around Core-owned state, `task_events`, artifact refs, Decision Packets, Manual QA, Eval records, final acceptance, residual-risk acceptance, projection freshness, close readiness, or implementation readiness.
+Roadmap candidates may be useful as read-only displays, metadata, artifact candidates, fixture candidates, prototypes, or planning notes only when the relevant owner docs allow that limited use. They must not become a shortcut around Core-owned state, `task_events`, artifact refs, Decision Packets, Manual QA, Eval records, work acceptance, residual-risk acceptance, projection freshness, close readiness, or implementation readiness.
 
 Any durable artifact registration, evidence attachment, state change, gate result, QA record, verification result, acceptance record, or residual-risk record must go through an existing Core/MCP owner path or a future promoted owner contract. Being listed here is never an authority path.
 
@@ -43,7 +43,7 @@ Any durable artifact registration, evidence attachment, state change, gate resul
 A candidate cannot enter staged delivery unless a future owner decision defines and proves all of the following:
 
 - an explicit future-version or future-stage owner decision with narrow scope
-- preservation of user-owned judgment, including final acceptance, residual-risk acceptance, product judgment, material technical judgment, and QA waiver judgment where relevant
+- preservation of user-owned judgment, including work acceptance, residual-risk acceptance, product judgment, material technical judgment, and QA waiver judgment where relevant
 - no bypass of Core authority, Core-owned state, artifact refs, gate semantics, close semantics, or owner-record lifecycles
 - stage-appropriate security guarantee wording that matches the Security Threat Model; preventive or isolation claims require a proven covered mechanism and fallback
 - clear evidence, verification, QA, final-acceptance, and residual-risk implications, including what the candidate can assist and what it must not satisfy
@@ -62,8 +62,8 @@ These examples describe candidate areas only. They do not add stage requirements
 
 | Candidate area | Boundary before promotion |
 |---|---|
-| Dashboard, hosted workflow UI, artifact dashboard, richer cards, richer visualizations | May display Core-derived state or projections. Must not become authority, implementation readiness, close readiness, final acceptance, residual-risk acceptance, QA completion, verification satisfaction, projection freshness, workflow routing, or metric interpretation. |
-| Browser capture automation | May collect screenshots, console logs, network traces, accessibility snapshots, and workflow recordings as artifact candidates. Must not replace human Manual QA judgment, final acceptance, profile-required detached verification, redaction policy, or the existing Manual QA/artifact path. |
+| Dashboard, hosted workflow UI, artifact dashboard, richer cards, richer visualizations | May display Core-derived state or projections. Must not become authority, implementation readiness, close readiness, work acceptance, residual-risk acceptance, QA completion, verification satisfaction, projection freshness, workflow routing, or metric interpretation. |
+| Browser capture automation | May collect screenshots, console logs, network traces, accessibility snapshots, and workflow recordings as artifact candidates. Must not replace human Manual QA judgment, work acceptance, profile-required detached verification, redaction policy, or the existing Manual QA/artifact path. |
 | Cross-surface verification | May route verification bundles to another agent surface or evaluator environment after promotion. Must not record an Eval, satisfy verification, raise assurance, accept a result, or close a Task without Core-owned return records and any independence semantics required by the active profile. |
 | Broad connector ecosystem, connector marketplace, hosted UI, hosted/remote runtime | May extend surfaces later. Must not widen MCP exposure, create authority, bypass Core, replace the local reference proof, imply remote/runtime guarantees, or make unsupported surfaces fail earlier stages by default. |
 | Native hooks, preventive guard expansion, advanced sidecar watcher | May strengthen guard display, artifact capture, command observation, or file-write observation where a surface proves the mechanism. Must not claim pre-execution blocking, OS isolation, tamper-proof storage, or arbitrary-tool control by label alone. Observations route through Core records, validators, artifact registration, or reconcile before affecting state. |

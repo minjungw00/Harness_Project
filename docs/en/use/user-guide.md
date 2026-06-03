@@ -38,7 +38,7 @@ The agent should:
 - gather or explain the evidence needed to support completion
 - show the next safe action and what still blocks closing the work
 
-Harness helps preserve scope, user-owned judgment, evidence, verification, QA expectations, final acceptance, and residual-risk status outside fragile chat context. It should make AI-assisted work easier to follow, not turn every task into a management ritual. Small work should stay small. Larger or riskier work should gain structure only when scope, user-owned judgment, evidence, QA, verification, final acceptance, or residual risk actually matter.
+Harness helps preserve scope, user-owned judgment, evidence, verification, QA expectations, work acceptance, and residual-risk status outside fragile chat context. It should make AI-assisted work easier to follow, not turn every task into a management ritual. Small work should stay small. Larger or riskier work should gain structure only when scope, user-owned judgment, evidence, QA, verification, work acceptance, or residual risk actually matter.
 
 You should expect to see plain work facts: what is in scope, what is out of scope, what the agent can inspect, what only you can decide, what changed, what was checked, what evidence exists, what risk remains, and whether close is blocked.
 
@@ -60,7 +60,7 @@ Most requests should be explained with plain work shapes:
 |---|---|---|
 | Read/advice work | The agent is reading, explaining, comparing, reviewing, or helping decide without changing product files. | The answer, sources or caveats when useful, and any decision or follow-up that matters. |
 | Small change | The requested change is narrow, low risk, and has an obvious result, such as a typo, copy-only edit, or focused fix. | A short scope, changed path or no-file result, what was checked, and whether anything forced escalation. |
-| Tracked work | The request has unclear scope, multiple parts, product or technical judgment, security/privacy impact, meaningful evidence needs, QA, verification, final acceptance, or close-relevant risk. | Scope, pending user judgments, evidence, close readiness, next safe action, and the smallest blocker. |
+| Tracked work | The request has unclear scope, multiple parts, product or technical judgment, security/privacy impact, meaningful evidence needs, QA, verification, work acceptance, or close-relevant risk. | Scope, pending user judgments, evidence, close readiness, next safe action, and the smallest blocker. |
 
 The agent may record more internal detail than it displays. User-facing messages should show the detail that helps you decide, trust, or unblock the work, not a lifecycle checklist for every tiny edit.
 
@@ -108,7 +108,7 @@ Clarification is enough to proceed only when:
 
 If those conditions are not met, the agent should either inspect the available sources, ask the smallest blocking question, park useful-but-not-blocking questions, or propose a smaller safe slice that avoids the unresolved area.
 
-When the request needs a user-owned judgment, the agent should show a user judgment request instead of asking for broad approval. Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, and residual-risk acceptance are separate judgments. Small judgments can be asked as short, explicit prompts; complex or risky judgments should include fuller trade-offs and evidence. The internal label for the saved record/template may be "Decision Packet," but that label should not be the main way the agent asks ordinary users to decide.
+When the request needs a user-owned judgment, the agent should show a user judgment request instead of asking for broad approval. Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, work acceptance, and residual-risk acceptance are separate judgments. Small judgments can be asked as short, explicit prompts; complex or risky judgments should include fuller trade-offs and evidence. The internal label for the saved record/template may be "Decision Packet," but that label should not be the main way the agent asks ordinary users to decide.
 
 Product or UX judgment:
 
@@ -258,9 +258,9 @@ As the work progresses, the agent should keep the same shape visible:
 - what evidence supports each completion claim
 - whether verification or a human QA check is needed
 - what residual risk remains
-- what still blocks acceptance or close
+- what still blocks work acceptance or close
 
-The larger the blast radius, the more important this separation becomes. A security-sensitive feature should not be closed just because tests pass. A UI feature should not treat screenshots or browser smoke as final acceptance. A dependency install approval should not be treated as a decision to adopt that dependency as the architecture direction.
+The larger the blast radius, the more important this separation becomes. A security-sensitive feature should not be closed just because tests pass. A UI feature should not treat screenshots or browser smoke as work acceptance. A dependency install approval should not be treated as a decision to adopt that dependency as the architecture direction.
 
 <a id="the-four-display-groups"></a>
 
@@ -271,7 +271,7 @@ Most status should fit into four plain groups. The agent may save precise record
 | Display group | What it answers | What the agent should show |
 |---|---|---|
 | What are we doing? | What is in scope, what is out of scope, and what happens next? | Included behavior, excluded items, affected areas, and whether the next action still fits the agreed scope. |
-| What must you decide? | Which choices belong to the user? | Each pending choice separately, such as a product/UX choice, technical architecture choice, security/privacy choice, permission for a sensitive step, final result acceptance, or acceptance of a named remaining risk. |
+| What must you decide? | Which choices belong to the user? | Each pending choice separately, such as a product/UX choice, technical architecture choice, security/privacy choice, permission for a sensitive step, work acceptance, or acceptance of a named remaining risk. |
 | What do we know? | What supports the current claim? | Changed paths, focused tests, command output, logs, screenshots, human QA notes, evidence links, recorded runs, saved decisions, related files or artifacts, and anything missing or stale. |
 | Why can or can't we close this? | Is the work ready to call done? | The remaining blocker, the smallest unblocker, whether sensitive-action approval, verification, or human QA is still needed, whether the user has accepted the result when required, and any known remaining risk or residual-risk acceptance need. |
 
@@ -372,7 +372,7 @@ Close blockers should be readable without knowing gate names. A close blocker di
 - what user judgment remains, if any
 - what evidence is missing, stale, or insufficient
 - whether verification or human QA is required by the active profile
-- whether final acceptance is required
+- whether work acceptance is required
 - what residual risk is visible, not yet visible, accepted, or still unresolved
 - the next smallest resolving action
 
@@ -397,16 +397,16 @@ The agent should keep these separate:
 | Evidence | Supports the claim that a result or criterion was met. | The agent saying "done" or the user accepting the result. |
 | Verification | Checks correctness from the appropriate review boundary. | Human QA or broad confidence. |
 | Human QA | Captures a person's inspection where judgment matters. | Automated tests or screenshots alone. |
-| Final acceptance | Captures the user's result judgment when required. | Evidence, verification, QA, permission for a sensitive step, waiver, or risk acceptance. |
-| Remaining risk | Names known uncertainty, limitation, unchecked condition, or trade-off. | Evidence, verification, QA, final acceptance, or sensitive-step permission. |
-| Accepting remaining risk | Captures that the user accepts an identified known remaining risk. | Final acceptance, verification, QA, sensitive-step permission, or generic consent. |
-| Permission for a sensitive step | Allows a named sensitive step to proceed. | Product judgment, correctness, final acceptance, risk acceptance, or waiver. |
+| Work acceptance | Captures the user's result judgment when required. | Evidence, verification, QA, permission for a sensitive step, waiver, or risk acceptance. |
+| Remaining risk | Names known uncertainty, limitation, unchecked condition, or trade-off. | Evidence, verification, QA, work acceptance, or sensitive-step permission. |
+| Accepting remaining risk | Captures that the user accepts an identified known remaining risk. | Work acceptance, verification, QA, sensitive-step permission, or generic consent. |
+| Permission for a sensitive step | Allows a named sensitive step to proceed. | Product judgment, correctness, work acceptance, risk acceptance, or waiver. |
 
-That separation is why work can still be blocked after tests pass. Tests can support evidence or verification, but close may still need human QA for the real experience, your final acceptance of the result, or your explicit acceptance of a known remaining risk.
+That separation is why work can still be blocked after tests pass. Tests can support evidence or verification, but close may still need human QA for the real experience, your work acceptance, or your explicit acceptance of a known remaining risk.
 
 Residual-risk wording should be precise. "No known close-relevant residual risk" means the system has no known close-relevant risk for this requested action. "Risk not visible yet" means known risk exists but has not been shown clearly enough for acceptance or close.
 
-A casual "go ahead," "proceed," "looks good," "진행해," or "좋아" is only usable when the agent has already named the exact thing you are deciding. It must not automatically resolve every pending judgment. If the response could mean approval for a sensitive step, final acceptance of the result, residual-risk acceptance, or simple continuation, the agent should route or clarify before recording it. It is not enough for product trade-offs, architecture choices, QA or verification waivers, accepting the result, or accepting residual risk unless the prompt shows the choice, consequences, relevant evidence links or saved decisions, and what remains outside that decision. If the phrase could apply to more than one pending judgment, the agent should ask which one you mean.
+A casual "go ahead," "proceed," "looks good," "진행해," or "좋아" is only usable when the agent has already named the exact thing you are deciding. It must not automatically resolve every pending judgment. If the response could mean approval for a sensitive step, work acceptance, residual-risk acceptance, or simple continuation, the agent should route or clarify before recording it. It is not enough for product trade-offs, architecture choices, QA or verification waivers, accepting the result, or accepting residual risk unless the prompt shows the choice, consequences, relevant evidence links or saved decisions, and what remains outside that decision. If the phrase could apply to more than one pending judgment, the agent should ask which one you mean.
 
 ## Advanced: exact close labels
 
@@ -432,18 +432,18 @@ You can skip this section until an agent shows one of these labels. They are use
 | Discovery | The internal name for the agent's requirements-clarification behavior before implementation planning. Users can ask for this as "clarify the plan before implementation." |
 | Change Unit | The bounded work area that may change for this task. |
 | Autonomy Boundary | The decisions the agent may make alone inside that scope. |
-| Decision Packet | The internal record/template label behind a user judgment request. It records a user-owned product/UX, technical architecture, security/privacy, scope/autonomy, waiver, final acceptance, residual-risk acceptance, or reconcile judgment. It can be concise for a small unblocker or detailed for complex/risky choices. |
+| Decision Packet | The internal record/template label behind a user judgment request. It records a user-owned product/UX, technical architecture, security/privacy, scope/autonomy, waiver, work acceptance, residual-risk acceptance, or reconcile judgment. It can be concise for a small unblocker or detailed for complex/risky choices. |
 | `judgment_category` | Schema field for the judgment grouping, such as Product / UX, Technical architecture, Security / privacy, QA / verification, Work acceptance, Residual risk, Scope / autonomy, or Mixed. Ordinary prompts should show the friendly judgment type first. |
 | `judgment_route` | Schema field for the answer route, such as choose, waive, accept result, accept risk, approve a sensitive step, or reconcile. Ordinary prompts should use the matching verb. |
 | `display_depth` | Schema field for prompt depth. Ordinary users should see the practical result: a short question, a trade-off question, a high-risk question, or a close-affecting question. |
-| Approval | Permission for a named sensitive action; not generic agreement or final acceptance. |
+| Approval | Permission for a named sensitive action; not generic agreement or work acceptance. |
 | Write Authorization | A one-attempt check that the intended product write fits the current task, scope, decisions, and approvals. |
 | Evidence Manifest | The record that maps completion claims to supporting evidence. |
 | Projection | A readable summary derived from owner records and related files or artifacts. Early use may be compact status text or a card, not a full Markdown report; it helps orientation and is not authority by itself. |
 | ProjectionJob | The internal job that creates or refreshes a readable projection. |
 | `task_events` | Low-level event history for implementers and diagnostics. |
 
-These labels do not collapse into each other. Approval is not acceptance. Final acceptance does not erase residual risk. A decision is not write authority. A readable summary is not state. Passing tests does not mean Manual QA happened. Accepting residual risk does not make the risk disappear.
+These labels do not collapse into each other. Approval is not work acceptance. Work acceptance does not erase residual risk. A decision is not write authority. A readable summary is not state. Passing tests does not mean Manual QA happened. Accepting residual risk does not make the risk disappear.
 
 For exact contracts, use the Reference docs only when needed: [Kernel Reference](../reference/kernel.md), [MCP API And Schemas](../reference/mcp-api-and-schemas.md), and [Agent Integration Reference](../reference/agent-integration.md).
 
@@ -451,6 +451,6 @@ For exact contracts, use the Reference docs only when needed: [Kernel Reference]
 
 Read [Concepts](../learn/concepts.md) for the vocabulary behind the user-facing words.
 
-Use [Judgment Request Cookbook](decision-packet-cookbook.md) when a product, UX, architecture, security, QA, verification, acceptance, risk, or scope judgment needs a focused prompt.
+Use [Judgment Request Cookbook](decision-packet-cookbook.md) when a product, UX, architecture, security, QA, verification, work acceptance, risk, or scope judgment needs a focused prompt.
 
 Agent integrators should read [Agent Session Flow](agent-session-flow.md). Ordinary users do not need it for the primary path.

@@ -6,7 +6,7 @@ Read this first if Harness is new to you.
 
 Harness is easiest to understand as an authority-boundary tool for AI-assisted product work. It keeps the important facts of the work somewhere sturdier than chat, tool output, generated Markdown, or a confident summary.
 
-Harness keeps AI-assisted product work grounded in local Core-owned state by tracking scope, user-owned judgments, evidence references, close readiness, acceptance, and residual risk outside the chat.
+Harness keeps AI-assisted product work grounded in local Core-owned state by tracking scope, user-owned judgments, evidence references, close readiness, work acceptance, and residual risk outside the chat.
 
 This repository is documentation-only today. It is being prepared for a possible future role as the Harness Server source repository, but no Harness Server or runtime implementation exists here yet. It is not a Product Repository and not a Harness Runtime Home.
 
@@ -16,7 +16,7 @@ AI-assisted work often moves faster than the record around it. A small request b
 
 Harness exists to stop those substitutions.
 
-It does not make conversation less useful. It makes conversation less dangerous as a source of authority. The user and agent can still plan, debate, implement, inspect, and report in ordinary language. Harness keeps the parts that affect scope, judgment, evidence, close readiness, acceptance, and risk in local Core-owned state.
+It does not make conversation less useful. It makes conversation less dangerous as a source of authority. The user and agent can still plan, debate, implement, inspect, and report in ordinary language. Harness keeps the parts that affect scope, judgment, evidence, close readiness, work acceptance, and risk in local Core-owned state.
 
 ## Authority Boundaries
 
@@ -24,11 +24,11 @@ Harness separates the surfaces people use from the records that carry authority.
 
 | Surface | Useful for | Not authority for |
 |---|---|---|
-| Chat | Coordination, questions, explanation, summaries, proposed next steps. | Durable state, final acceptance, residual-risk acceptance, or resolving every pending judgment by implication. |
+| Chat | Coordination, questions, explanation, summaries, proposed next steps. | Durable state, work acceptance, residual-risk acceptance, or resolving every pending judgment by implication. |
 | Product files | Source code, tests, product docs, project assets, generated readable files. | Harness operational state. |
 | Tool output | Checks, logs, diffs, screenshots, connector responses, search results. | User judgment or work acceptance by itself. |
-| Readable reports (`Projection` internally) | Human-readable status and reports derived from recorded facts. | Core state, evidence records, acceptance, or close eligibility. |
-| Core-owned local state | Scope, user-owned judgments, evidence references, close readiness, acceptance, and residual risk. | A replacement for source control, tests, code review, or product specifications. |
+| Readable reports (`Projection` internally) | Human-readable status and reports derived from recorded facts. | Core state, evidence records, work acceptance, or close eligibility. |
+| Core-owned local state | Scope, user-owned judgments, evidence references, close readiness, work acceptance, and residual risk. | A replacement for source control, tests, code review, or product specifications. |
 
 The practical rule is simple: read surfaces for context, but treat Core-owned state and artifact references as the operating record.
 
@@ -69,7 +69,7 @@ Harness tracks the parts of AI-assisted work that need to survive the conversati
 - which choices belong to the user;
 - which evidence references support completion or correctness claims;
 - whether close is blocked and why;
-- whether required acceptance has been given;
+- whether required work acceptance has been given;
 - which residual risks are known, visible, or accepted.
 
 Reference docs give these records exact implementation names. You do not need those names for the first mental model.
@@ -108,9 +108,9 @@ Users should not need to request internal modes. In ordinary work, Harness shoul
 
 | Work shape | What it feels like | Authority boundary |
 |---|---|---|
-| Advice/read-only work | The user asks for explanation, planning, comparison, investigation, or a recommendation. | The agent may inspect and cite, but product writes, acceptance, and risk acceptance do not happen just because advice was given. |
+| Advice/read-only work | The user asks for explanation, planning, comparison, investigation, or a recommendation. | The agent may inspect and cite, but product writes, work acceptance, and risk acceptance do not happen just because advice was given. |
 | Small direct change | The user asks for a narrow, clear edit, such as a typo fix, focused copy change, or leaf bug fix. | Scope stays small; if meaning, risk, public behavior, UX, sensitive action, or shared contract impact appears, the work must be reshaped before continuing. |
-| Tracked work | The work has meaningful scope, user-owned judgment, evidence, QA, verification, acceptance, or residual risk. | Harness keeps the boundary visible until blockers are handled and close readiness is clear. |
+| Tracked work | The work has meaningful scope, user-owned judgment, evidence, QA, verification, work acceptance, or residual risk. | Harness keeps the boundary visible until blockers are handled and close readiness is clear. |
 
 The user can speak normally:
 
