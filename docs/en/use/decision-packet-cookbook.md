@@ -195,7 +195,7 @@ This does not settle: work acceptance, Manual QA, or acceptance of any named res
 
 Why this works: it keeps assurance language honest. A waiver does not create verification.
 
-## Final Acceptance
+## Work Acceptance
 
 Use this when the task path requires the user to accept the result after the close basis is visible.
 
