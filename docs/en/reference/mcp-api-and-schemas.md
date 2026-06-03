@@ -1131,7 +1131,7 @@ Public methods are grouped by staged surface. The same method may appear in more
 | `harness.prepare_write` | Active product-write authorization check. | Produces one allowed/blocked path and one durable single-use Write Authorization when allowed. Minimum v0.2 can use resolved approval-shaped Decision Packet coverage; committed Approval records remain later-profile. |
 | `harness.record_run` | Active Run recording and Write Authorization consumption. | Records one compatible implementation/direct Run, consumes one authorization once, and registers one artifact/evidence ref through the owner path. Full Evidence Manifest, TDD, Eval, and Manual QA updates are later-profile. |
 | `harness.intake` or owner-valid setup path | Active setup capability; method optional for v0.1. | v0.1 needs a local project, Task, and scoped work boundary. If this public method is used, use only the minimal setup shape; full natural-language intake/discovery is v0.2. |
-| `harness.next` | Optional v0.1 read. | If implemented for the smoke path, returns only the next minimal authority-loop action or smallest unblocker. Verification, QA, acceptance, and reconcile action kinds are later-profile. |
+| `harness.next` | Optional v0.1 read. | If implemented for the smoke path, returns only the next minimal authority-loop action or smallest unblocker. v0.1 does not return `ask_user`, `request_acceptance`, verification, QA, or reconcile action kinds; those enter only in v0.2 or later owner profiles as listed in the action-kind stage table. |
 | `harness.close_task` | Optional narrow blocker/status smoke only. | May be used when it is the simplest way to show a structured blocker, but v0.1 does not prove work acceptance, residual-risk acceptance, or full close semantics. |
 
 #### v0.2 active API surface
@@ -1330,7 +1330,7 @@ Idempotency behavior: same key returns the same Task/resume decision; different 
 
 Purpose: return the next safe action, instruction bundle, and pending judgments for the current Task.
 
-Stage/profile: optional v0.1 minimal next-action read; v0.2 fuller user-facing next action and smallest-unblocker display; v0.3/v0.4 assurance, QA, acceptance, verification, and reconcile action kinds only when their owner profiles are enabled.
+Stage/profile: optional v0.1 minimal next-action read; v0.2 fuller user-facing next action and smallest-unblocker display, including `request_acceptance` when work acceptance blocks progress or close; v0.3/v0.4 add verification, Eval, Manual QA, reconcile, operations, and profile-expanded acceptance/risk behavior only when their owner profiles are enabled.
 
 User-facing meaning: show what should happen next. `next_action.summary` should be ordinary action language such as ask the user, prepare this write, record evidence, run verification, record Manual QA, request work acceptance, refresh or reconcile, or close. `next_action.required_tool` is a caller hint, not a command the user must see unless power-user detail is useful.
 
@@ -1369,8 +1369,8 @@ Next response profiles:
 | Profile | Profile-scoped response meaning |
 |---|---|
 | v0.1 minimal | If implemented, return only the next authority-loop action or smallest blocker: prepare the scoped write, record the authorized Run, report missing scope/write authority, or report missing artifact/evidence support. `recommended_playbooks` and future-profile refs may be empty; `judgment_context` and `autonomy_boundary` may be `null` unless owner state exists. |
-| v0.2 user-facing | Return ordinary-language next action, pending Decision Packet refs, judgment context when a user-owned judgment is needed, and evidence/close-readiness context. Work-acceptance and residual-risk facts appear when relevant without requiring separate projection kinds. |
-| v0.3/v0.4 assurance and operations | Return verification, Eval, Manual QA, acceptance, reconcile, projection freshness, and operations-oriented next actions only when those profiles are enabled and backed by matching storage. |
+| v0.2 user-facing | Return ordinary-language next action, pending Decision Packet refs, judgment context when a user-owned judgment is needed, and evidence/close-readiness context. When work acceptance blocks progress or close, `next_action.action_kind` may be `request_acceptance`; work-acceptance and residual-risk facts appear with acceptance visibility and without requiring separate projection kinds. |
+| v0.3/v0.4 assurance and operations | Return verification, Eval, Manual QA, reconcile, projection freshness, operations-oriented next actions, and profile-expanded acceptance/risk behavior only when those profiles are enabled and backed by matching storage. |
 
 `next_action.action_kind` meanings:
 
@@ -1382,7 +1382,7 @@ Next response profiles:
 | `launch_verify` | Prepare or launch a verification path from current evidence and source refs. | Creates at most a detached candidate; it is not a passing Eval or assurance upgrade. |
 | `record_eval` | Record the evaluator's result and reviewed refs. | Verification is not passed until Core records a qualifying Eval and updates the gate or assurance state. |
 | `record_manual_qa` | Record a human Manual QA outcome or valid waiver path. | Browser artifacts, smoke runs, or notes are not Manual QA unless a Manual QA record or valid waiver is recorded. |
-| `request_acceptance` | Ask for work acceptance after evidence, verification, Manual QA, and residual-risk visibility are shown. | Work acceptance does not replace evidence, verification, Manual QA, sensitive-action Approval, scope, or residual-risk visibility. |
+| `request_acceptance` | Ask for work acceptance after known evidence, active-profile verification/Manual QA status, and residual-risk visibility are shown. | Work acceptance does not replace evidence, verification, Manual QA, sensitive-action Approval, scope, residual-risk visibility, or residual-risk acceptance. |
 | `close_task` | Attempt close, cancel, or supersede through `harness.close_task`. | A close attempt may still return blockers; status text or reports cannot close the Task. |
 | `reconcile` | Refresh or reconcile stale projection, managed-block drift, proposal text, or state/display mismatch. | Reconcile display does not become state until the existing reconcile/owner path accepts it. |
 | `idle` | No immediate Harness action is required for the requested focus. | Does not imply the Task is closed, accepted, verified, or risk-free. |
