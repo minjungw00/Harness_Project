@@ -111,7 +111,7 @@ The current status separates documentation review, implementation planning readi
 | Documentation review status | Post-redesign review; documentation acceptance candidate only. Maintainers have not accepted the docs yet. |
 | Implementation planning readiness | Not accepted. Maintainers must confirm the implementation-readiness criteria before first runtime-batch planning. |
 | Runtime implementation status | Not started. No runtime artifacts or conformance results exist here yet. |
-| Implementation decision status | No server/runtime implementation decisions have been formally accepted for coding. The decision log has no confirmed entries at this baseline, but review may still uncover open design issues. |
+| Implementation decision status | Open server-coding decision-ledger items are recorded in the [MVP Plan](build/mvp-plan.md#implementation-decisions-needed-before-server-coding). No server/runtime implementation decision has been formally accepted for coding. Affected implementation work must wait until the relevant decision is accepted or explicitly deferred with stage impact. |
 
 Documentation acceptance, when it happens, is a maintainer review milestone. It does not by itself start runtime/server implementation or prove runtime conformance.
 
@@ -124,7 +124,7 @@ Before starting Harness Server code, implementers should read:
 3. [Implementation-readiness criteria](build/implementation-overview.md#implementation-readiness-criteria).
 4. [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding).
 
-This handoff says the documentation is available for maintainer acceptance review as a candidate. It also centralizes remaining decision and drift status. No server/runtime implementation decisions have been formally accepted for coding yet, and open design issues may still exist. The handoff does not claim the docs have been accepted, it does not make the docs implementation-ready, and it does not start server/runtime implementation.
+This handoff says the documentation is available for maintainer acceptance review as a candidate. It also separates documentation acceptance status in the Implementation Overview from the open server-coding decision ledger in the MVP Plan. No server/runtime implementation decisions have been formally accepted for coding yet, and affected implementation work must wait until the relevant decision is accepted or explicitly deferred with stage impact. The handoff does not claim the docs have been accepted, it does not make the docs implementation-ready, and it does not start server/runtime implementation.
 
 ## Where Am I?
 

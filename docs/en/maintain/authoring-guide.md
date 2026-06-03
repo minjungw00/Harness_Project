@@ -66,7 +66,7 @@ This repository is in documentation review/redesign only. Keep three statuses se
 - Implementation planning readiness: not accepted yet. Maintainers must deliberately confirm the implementation-readiness criteria before first runtime-batch planning.
 - Runtime implementation status: not started. The repository remains documentation-only. Its intended future role is the Harness Server source repository, but server/runtime implementation may start only after documentation acceptance and a separate implementation-planning readiness decision.
 
-No server/runtime implementation decisions have been formally accepted for coding in this repository phase. An empty decision log is only a content status, not proof that no design issues remain.
+No server/runtime implementation decisions have been formally accepted for coding in this repository phase. Open server-coding decision-ledger items are recorded in the MVP Plan and must be accepted or explicitly deferred, with stage impact, before coding the affected behavior.
 
 Do not describe the current docs as fully accepted, implementation-complete, implementation-ready, or ready for server coding unless the maintainer handoff status explicitly defines that acceptance.
 
@@ -120,7 +120,7 @@ When a rewrite changes a term, stage, schema shape, projection shape, security c
 
 [Implementation Overview: Maintainer handoff summary](../build/implementation-overview.md#maintainer-handoff-summary) owns the short handoff: what the documentation set defines, documentation review status, implementation planning readiness, runtime implementation status, future repository role, preserved principles, current stage model, implementation-readiness criteria, remaining open-question status, remaining documentation drift status, and maintainer acceptance conditions.
 
-[MVP Plan: Implementation decisions needed before server coding](../build/mvp-plan.md#implementation-decisions-needed-before-server-coding) is the single place for major implementation decisions found during maintainer review or first runtime-batch planning. Do not leave major decisions as scattered `TODO_DECISION` markers in active docs. If the decision log is empty at the current baseline, say exactly that; do not turn it into a "no open decisions" claim while implementation-readiness criteria still require maintainer judgment. If only editorial cleanup remains, say which docs-maintenance category owns it and why it does not block the current stage.
+[MVP Plan: Implementation decisions needed before server coding](../build/mvp-plan.md#implementation-decisions-needed-before-server-coding) is the single place for major implementation decisions found during maintainer review or first runtime-batch planning. Do not leave major decisions as scattered `TODO_DECISION` markers in active docs. The current baseline has open server-coding decision-ledger items; entrypoint and handoff status must say that, without treating documentation acceptance as implementation-planning readiness or server-coding authorization. If a future baseline's decision log is empty, say exactly that; do not turn it into a "no open decisions" claim while implementation-readiness criteria still require maintainer judgment. If only editorial cleanup remains, say which docs-maintenance category owns it and why it does not block the current stage.
 
 ## Known Redesign Issues Tracker
 
@@ -165,7 +165,7 @@ Potential item category after verification:
 | Conformance fixture docs may be too detailed for the current implementation stage. | Implementation-readiness criterion |
 | Operations entrypoints may appear required too early. | Stage boundary decision |
 | Korean user-facing docs may still contain excessive English technical nouns. | Documentation drift |
-| Empty-decision-log wording can sound too optimistic. | Implementation-readiness criterion |
+| Decision-ledger status wording can drift. | Implementation-readiness criterion |
 | Current MVP staging may be too large while deferring core user-visible value. | Stage boundary decision |
 | Projection/template scope may be too broad for early implementation. | Stage boundary decision |
 | Security guarantee wording must match actual enforcement level. | Schema/design decision |
@@ -187,7 +187,7 @@ Potential item category after verification:
 | Conformance fixture docs may be too detailed for the current implementation stage. | Candidate to verify in the current docs. | Keep fixture documentation future-oriented and staged. Do not imply executable fixture files or runnable Harness Server conformance tests exist now. |
 | Operations entrypoints may appear required too early. | Candidate to verify in the current docs. | Keep operator entrypoints staged and future-oriented unless the relevant Build stage explicitly includes them. They must not become a prerequisite for v0.1 by wording drift. |
 | Korean user-facing docs may still contain excessive English technical nouns. | Candidate to verify in the current docs. | Use natural Korean first. Preserve exact English identifiers only for stable labels, schema names, file names, enum values, API fields, and places where precision needs the identifier. |
-| Empty-decision-log wording can sound too optimistic. | Regression-prevention check. | Prefer "the server-coding decision log is empty at this baseline" and say review may still uncover a decision. Do not imply full acceptance, implementation completeness, implementation readiness, or server-coding readiness. |
+| Decision-ledger status wording can drift. | Regression-prevention check. | Keep entrypoint, handoff, and authoring-guide status aligned with the MVP Plan ledger. If open items exist, say they exist and that no server/runtime implementation decision has been accepted for coding. If a future ledger is empty, say only that content status and do not imply full acceptance, implementation completeness, implementation readiness, or server-coding readiness. |
 | Current MVP staging may be too large while deferring core user-visible value. | Candidate to verify in the current docs. | Name the tension between MVP size and early user-visible value; leave staging decisions to the owning Build and Reference docs. |
 | Projection/template scope may be too broad for early implementation. | Candidate to verify in the current docs. | Flag broad early scope and route staging decisions to the projection/template owners. |
 | Security guarantee wording must match actual enforcement level. | Regression-prevention check. | Use cooperative, detective, preventive, or isolated wording only when the documented surface can provide that level. |

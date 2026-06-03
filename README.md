@@ -83,16 +83,16 @@ AGENTS.md / agent rule, MCP, skill / reusable workflow, test runner, code review
 
 ## Current Status Model / 현재 상태 모델
 
-The current baseline separates statuses that must not collapse into each other. The documentation is a post-redesign acceptance candidate, implementation planning is not yet accepted, and runtime/server implementation has not started. No server/runtime implementation decisions have been formally accepted for coding yet. Open design issues may still be found during review, and documentation acceptance would not authorize implementation by itself.
+The current baseline separates statuses that must not collapse into each other. The documentation is a post-redesign acceptance candidate, implementation planning is not yet accepted, and runtime/server implementation has not started. Open server-coding decision-ledger items are recorded in the MVP Plan, and no server/runtime implementation decision has been formally accepted for coding yet. Documentation acceptance would not authorize implementation by itself.
 
-현재 기준은 서로 섞이면 안 되는 상태를 분리합니다. 문서는 재설계 이후 수락 후보이고, 구현 계획 준비 상태는 아직 수락되지 않았으며, 런타임/서버 구현은 시작하지 않았습니다. 서버/런타임 구현 결정을 코드 작성용으로 공식 수락한 상태도 아닙니다. 검토 중 열린 설계 쟁점이 발견될 수 있으며, 문서 수락만으로 구현이 허가되지 않습니다.
+현재 기준은 서로 섞이면 안 되는 상태를 분리합니다. 문서는 재설계 이후 수락 후보이고, 구현 계획 준비 상태는 아직 수락되지 않았으며, 런타임/서버 구현은 시작하지 않았습니다. 서버 코딩 전 열린 결정은 MVP 계획에 기록되어 있고, 서버/런타임 구현 결정을 코드 작성용으로 공식 수락한 상태는 아닙니다. 문서 수락만으로 구현이 허가되지 않습니다.
 
 | Check / 확인 | Current status / 현재 상태 |
 |---|---|
 | Documentation review status / 문서 검토 상태 | Post-redesign review; documentation acceptance candidate only. Maintainers have not accepted the docs yet. / 재설계 이후 검토 상태이며 문서 수락 후보입니다. 유지보수자가 아직 문서를 수락하지 않았습니다. |
 | Implementation planning readiness / 구현 계획 준비 상태 | Not accepted. Maintainers must confirm the implementation-readiness criteria; editorial cleanup alone is not enough if schema/design or stage-boundary decisions remain. / 수락되지 않았습니다. 유지보수자가 구현 준비 조건을 확인해야 하며, 스키마/설계 결정이나 단계 경계 결정이 남아 있다면 편집 정리만으로 충분하지 않습니다. |
 | Runtime implementation status / 런타임 구현 상태 | Not started. No runtime artifacts or conformance results exist here yet; see Implementation Overview for full status detail. / 시작하지 않았습니다. 아직 런타임 아티팩트나 conformance 결과가 없으며, 전체 상태는 구현 개요에서 확인합니다. |
-| Implementation decision status / 구현 결정 상태 | No server/runtime implementation decisions have been formally accepted for coding. The server-coding decision log has no confirmed entries at this baseline, but that is not a claim that no decisions remain. Current review and readiness review may still uncover decisions; record them in one place: [MVP Plan](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) / [MVP 계획](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정). / 서버/런타임 구현 결정은 코드 작성용으로 공식 수락되지 않았습니다. 현재 기준에서 서버 코딩 전 결정 기록에는 확인된 항목이 없지만, 남은 결정이 없다는 뜻은 아닙니다. 현재 검토와 구현 준비 검토에서 결정이 드러날 수 있으며, 새 결정은 한 곳에 기록합니다. |
+| Implementation decision status / 구현 결정 상태 | Open server-coding decision-ledger items are recorded in [MVP Plan](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) / [MVP 계획](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정). No server/runtime implementation decision has been formally accepted for coding. Affected API, DDL, state transition, local access, status card, evidence, acceptance, or residual-risk work must wait until the relevant decision is accepted or explicitly deferred with stage impact. / 서버 코딩 전 열린 결정은 MVP 계획에 기록되어 있습니다. 서버/런타임 구현 결정은 코드 작성용으로 공식 수락되지 않았습니다. 영향을 받는 API, DDL, state transition, local access, status card, evidence, acceptance, residual-risk 작업은 관련 결정이 수락되거나 단계 영향과 함께 명시적으로 미뤄질 때까지 기다려야 합니다. |
 
 Until the maintainer handoff explicitly accepts implementation planning, work remains documentation maintenance and runtime/server implementation must not start.
 
