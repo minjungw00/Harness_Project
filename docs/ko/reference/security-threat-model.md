@@ -62,7 +62,7 @@ v0.1과 v0.2 reference path는 사전 차단형(preventive) 또는 격리형(iso
 - active owner path가 요구하는 artifact 경로 검증, owner 관계 확인, 기본 fingerprint/hash 확인
 - 상태 변경 호출을 위한 `expected_state_version` freshness check와 idempotency key
 - `prepare_write`가 반환하고 compatible `record_run`이 consume하는 1회용 Write Authorization
-- 오래된 projection, approval, baseline, connector profile, evaluator bundle, retrieved context에 대한 stale context blocker 또는 warning
+- 오래된 민감 동작 permission 또는 later Approval record, projection, baseline, connector profile, evaluator bundle, retrieved context에 대한 stale context blocker 또는 warning
 - MCP/Core를 사용할 수 없을 때 authority claim을 fail closed로 처리
 - Core가 authorize할 수 없는 것 또는 surface가 탐지할 수 있는 것을 보여 주되 물리적 pre-tool enforcement를 암시하지 않는 cooperative/detective blocker display
 
@@ -204,7 +204,7 @@ Artifact hash mismatch는 security 및 evidence-integrity finding입니다. Mark
 
 ### Freshness, replay, stale context
 
-Baseline과 state-version check는 authority가 이에 의존하기 전에 replay와 stale context를 드러내는 데 도움을 줍니다. Old approval, old status text, old projection, old evaluator bundle, chat memory는 current write나 current work close를 authorize할 수 없습니다. Authority가 이에 의존한다면 owner path를 통해 refresh, reconcile, supersede, replace해야 합니다.
+Baseline과 state-version check는 authority가 이에 의존하기 전에 replay와 stale context를 드러내는 데 도움을 줍니다. Old 민감 동작 permission 또는 later Approval record, old status text, old projection, old evaluator bundle, chat memory는 current write나 current work close를 authorize할 수 없습니다. Authority가 이에 의존한다면 owner path를 통해 refresh, reconcile, supersede, replace해야 합니다.
 
 Expected state version, idempotency, baseline compatibility, approval expiry, projection freshness, connector profile freshness는 서로 다른 control입니다. 이 문서는 그 threat-model 이유를 이름 붙입니다. Exact field와 behavior는 API, kernel, storage, projection, connector, operations owner에 남습니다.
 

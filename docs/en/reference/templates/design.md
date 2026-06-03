@@ -12,7 +12,7 @@ Implementation tier: Future/diagnostic projections. Standalone design projection
 
 - shared design records and events
 - Task and Change Unit refs
-- related Decision Packets and approvals
+- related Decision Packets and sensitive-action permission refs
 - `domain_terms`
 - `module_map_items`
 - `interface_contracts`
@@ -109,7 +109,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## References
 - TASK:
 - DEC:
-- APR:
+- APR (later Approval profile only):
 - design-support owner refs:
   - domain term refs:
   - module map item refs:

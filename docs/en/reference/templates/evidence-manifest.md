@@ -15,7 +15,7 @@ Implementation tier: Future/diagnostic projections. The v0.2 compact status card
 - completion conditions
 - changed file coverage
 - design-quality coverage
-- approval refs
+- approval refs (later Approval profile only; otherwise none)
 - artifact refs with hash, size, redaction state, retention/availability, owner relation, and downstream evidence impact
 - related Run, Eval, Feedback Loop, Manual QA, and TDD trace refs
 - close-relevant verification, Manual QA, work acceptance, and Residual Risk summaries when rendered with close context
@@ -80,6 +80,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 ## Authority And Close Refs
 - compact refs: write={write_authorization_ref|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
+- approval refs are `none` in minimum v0.2; approval-shaped sensitive-action coverage appears through `decision_packet_refs` unless a later Approval owner profile is active.
 - redaction state:
 - projection freshness:
 
@@ -116,6 +117,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 `Coverage / Gate Display` is the evidence coverage or close-relevant gate display state for this manifest. Values such as `pending` in this column are not `ValidatorResult.status` values.
 
 ## Approval Refs
+- Populate only when a later Approval owner profile is active. In minimum v0.2, approval-shaped sensitive-action coverage belongs under Decision Packet refs.
 - APR-0001:
 
 ## Evidence Refs
@@ -163,7 +165,7 @@ Example coverage mappings:
 | AC-01 docs typo corrected without meaning change | RUN-DOCS-001 | ART-DIFF-001 | | Sufficient only when the changed doc path and self-check cover the stated docs-only condition. |
 | AC-02 login form submits email | RUN-FEATURE-001 | ART-DIFF-002, ART-TEST-002 | FBL-001 | Supported when the Run, diff, and test/log refs map to this AC rather than only to the Task in general. |
 | AC-03 final button copy is readable in target viewport | RUN-UI-001 | ART-SCREENSHOT-001, ART-DIFF-003 | QA-0001 | If Manual QA is required, screenshot or browser smoke alone does not satisfy the QA path. |
-| AC-04 export contains only approved redacted fields | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | Approval and Decision refs show scope or user judgment context; redacted artifact refs still need to prove the nonsecret claim. |
+| AC-04 export contains only approved redacted fields | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | `APR-0001` is present only when a later Approval profile is active. Approval and Decision refs show scope or user judgment context; redacted artifact refs still need to prove the nonsecret claim. |
 | Completion condition: independent verifier reviewed the changed scope | RUN-VERIFY-001 | ART-BUNDLE-001 | EVAL-0001 | Valid only when the Eval reviewed current refs and has the required independence for the requested close. |
 
 Evidence Manifest supports claims; it does not prove correctness by itself, create detached verification, record Manual QA, imply work acceptance, make residual risk visible, or accept residual risk. When a close summary is rendered from this template, it should keep those lines separate so a passing test, a self-check, a QA waiver, or work acceptance is not mistaken for another close condition.

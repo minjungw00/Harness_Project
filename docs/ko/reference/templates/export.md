@@ -13,7 +13,7 @@
 - 포함된 Task와 gate 기록, 안전한 state/event version range facts
 - Change Unit
 - Run
-- approval
+- approval (later Approval profile only)
 - Evidence Manifest
 - Eval 기록
 - 수동 QA 기록
@@ -67,7 +67,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 - task gates:
 - change units:
 - runs:
-- approvals:
+- approvals (later Approval profile only; 그 외에는 none):
 - evidence manifests:
 - Eval records:
 - 수동 QA records:
@@ -76,7 +76,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 
 ## Report Projection Snapshots
 - TASK:
-- APR:
+- APR (later Approval profile only):
 - RUN-SUMMARY:
 - EVIDENCE-MANIFEST:
 - EVAL:
@@ -111,6 +111,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 - close readiness:
 - close blockers:
 - authority refs: write={write_authorization_refs|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_refs|none}; eval={eval_refs|none}; manual_qa={manual_qa_refs|none}; acceptance={acceptance_context_refs|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_status_summary}; freshness={projection_freshness}
+- approval refs는 minimum v0.2에서 `none`입니다. Approval 형태 민감 동작 coverage는 later Approval owner profile이 active가 아닌 한 `decision_packet_refs`로 나타납니다.
 - evidence refs:
 - verification refs:
 - 수동 QA refs:

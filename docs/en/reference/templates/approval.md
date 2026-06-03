@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use `APR` after an approval request has been committed and Harness needs a readable approval request and decision record for a sensitive action. `APR` shows sensitive-action permission scope; it does not decide user-owned product or material technical judgment, correctness, work acceptance, residual-risk acceptance, QA waiver, verification waiver, deployment, merge, or Write Authorization.
+Use `APR` after a later Approval profile has committed an Approval request record and Harness needs a readable approval request and decision record for a sensitive action. `APR` shows sensitive-action permission scope; it does not decide user-owned product or material technical judgment, correctness, work acceptance, residual-risk acceptance, QA waiver, verification waiver, deployment, merge, or Write Authorization.
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
@@ -10,7 +10,7 @@ Implementation tier: Agency assurance reports. `APR` is used only after committe
 
 ## Source records
 
-- approval record
+- committed Approval record
 - related approval-shaped Decision Packet
 - optional decision request routing/replay record, if implementation keeps one
 - Change Unit scope

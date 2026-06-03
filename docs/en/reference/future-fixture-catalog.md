@@ -668,15 +668,16 @@ The examples below are future exact-shape examples for Core behavior broadly. Th
 
 `prepare_write` allowed examples expect the Task to move from `ready` to `executing` because the kernel transition table owns and defines that transition.
 
-Approval lifecycle coverage should be materialized as separate exact-shape fixtures or as suite catalog sequencing, not by adding fixture body fields. These fixtures assert owner-defined observable effects from [Kernel `prepare_write` State Logic](kernel.md#prepare_write), [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write), and the [APR Template source records](templates/approval.md#source-records), rather than redefining the lifecycle.
+Sensitive-action approval coverage should be materialized as separate exact-shape fixtures or as suite catalog sequencing, not by adding fixture body fields. Minimum v0.2 fixtures assert the approval-shaped Decision Packet route from [Kernel `prepare_write` State Logic](kernel.md#prepare_write) and [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write). Later Approval-profile fixtures may additionally assert [APR Template source records](templates/approval.md#source-records). Do not redefine the lifecycle inside fixture bodies.
 
 Fixture authors should keep these observable assertions:
 
 - the first uncovered sensitive `prepare_write` returns `approval_required`, includes an approval candidate, returns no Write Authorization, and sets or keeps `approval_gate=required` when blocker state is committed
 - committed blocker state may enqueue `TASK`, but the non-mutating candidate must not enqueue `APR`
 - dry-run or candidate-display-only paths must not assert committed `TASK` changes unless blocker state was actually committed
-- `request_user_judgment(judgment_route=approve-sensitive-action)` creates the approval-shaped Decision Packet plus pending Approval state, sets `approval_gate=pending`, and enqueues `APR`
-- `record_user_judgment` updates Approval/Decision Packet state and `approval_gate`, may enqueue `APR`, but still creates no Write Authorization
+- in minimum v0.2, `request_user_judgment(judgment_route=approve-sensitive-action)` creates the approval-shaped Decision Packet, sets or keeps `approval_gate=pending`, returns `approval_id=null`, and does not enqueue `APR`
+- in minimum v0.2, `record_user_judgment` updates Decision Packet state and `approval_gate`, still creates no Write Authorization, and does not enqueue `APR`
+- later Approval-profile fixtures may additionally assert committed Approval record creation/update, non-null `approval_id`, `approval_refs`, and `APR` projection jobs
 - only a later compatible `prepare_write` retry with a fresh idempotency key and current `expected_state_version` may create the Write Authorization
 
 UI or status assertions for the first payload must call it candidate display, not an `APR` projection.
@@ -1298,11 +1299,18 @@ initial_state:
       status: active
       what_agent_may_do: ["Refactor internal handler code."]
       stop_conditions: ["public_api_change"]
-  approvals:
-    - approval_id: APR-API-001
-      sensitive_categories: ["public_api_change"]
-      allowed_paths: ["src/api/public.ts"]
-      status: granted
+  decision_packets:
+    - decision_packet_id: DEC-API-APPROVAL-001
+      judgment_route: approve-sensitive-action
+      display_depth: high-risk
+      judgment_category: sensitive_action
+      status: resolved
+      judgment_payload:
+        approval_scope:
+          sensitive_categories: ["public_api_change"]
+          allowed_paths: ["src/api/public.ts"]
+          baseline_ref: BASE-API-001
+      result: granted
 input:
   task_id: TASK-API-001
   change_unit_id: CU-API-001
@@ -1980,12 +1988,18 @@ initial_state:
       module_map_items: []
       interface_contracts: []
       feedback_loop_refs: [FBL-PUBLIC-API-001]
-  approvals:
-    - approval_id: APR-PUBLIC-API-001
-      sensitive_categories: ["public_api_change"]
-      allowed_paths: ["src/api/public.ts"]
-      status: granted
   decision_packets:
+    - decision_packet_id: DEC-PUBLIC-API-APPROVAL-001
+      judgment_route: approve-sensitive-action
+      display_depth: high-risk
+      judgment_category: sensitive_action
+      status: resolved
+      judgment_payload:
+        approval_scope:
+          sensitive_categories: ["public_api_change"]
+          allowed_paths: ["src/api/public.ts"]
+          baseline_ref: BASE-PUBLIC-API-001
+      result: granted
     - decision_packet_id: DEC-PUBLIC-API-001
       judgment_route: choose
       display_depth: tradeoff

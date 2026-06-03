@@ -135,11 +135,11 @@ Required 작업 수락을 위한 kernel gate입니다. Value set과 compatibilit
 
 한국어 기준 표현: 민감 동작 승인.
 
-정의된 scope 안에서 특정 sensitive action 또는 경계가 정해진 민감 동작을 진행할 수 있게 하는 제한된 사전 user authorization입니다. 민감 동작 승인은 paths, tools, commands 또는 command classes, network targets, secret scope, baseline, sensitive categories, expiry conditions에 묶입니다. 민감 동작 승인이 요청되면 Core는 approval-shaped Decision Packet과 linked Approval record를 통해 user judgment를 기록합니다. Granted 민감 동작 승인이 있어도 쓰기 허가 기록이 생기려면 이후 compatible `prepare_write` result가 필요합니다. Approval은 민감 동작 승인일 뿐입니다. 막연한 동의, 작업 수락, 잔여 위험 수용, QA 면제 판단, 검증 면제 판단, correctness proof, 사용자 소유 제품/UX 판단이나 기술 구조 판단의 대체물이 아닙니다.
+정의된 scope 안에서 특정 sensitive action 또는 경계가 정해진 민감 동작을 진행할 수 있게 하는 제한된 사전 user authorization입니다. 민감 동작 승인은 paths, tools, commands 또는 command classes, network targets, secret scope, baseline, sensitive categories, expiry conditions에 묶입니다. Minimum v0.2에서 Core는 `judgment_payload.approval_scope`를 가진 Approval 형태 Decision Packet으로 user judgment를 기록합니다. Later Approval profile은 연결된 committed Approval record를 추가로 만들 수 있습니다. Granted 민감 동작 permission이 있어도 쓰기 허가 기록이 생기려면 이후 compatible `prepare_write` result가 필요합니다. Approval은 민감 동작 승인일 뿐입니다. 막연한 동의, 작업 수락, 잔여 위험 수용, QA 면제 판단, 검증 면제 판단, correctness proof, 사용자 소유 제품/UX 판단이나 기술 구조 판단의 대체물이 아닙니다.
 
 ### Approval Gate
 
-민감 동작 승인을 위한 kernel gate입니다. Sensitive categories가 있을 때만 required입니다. Granted 민감 동작 승인은 correctness를 증명하지 않고, 작업 수락을 뜻하지 않으며, 잔여 위험을 수용하거나 QA/검증 면제 판단을 기록하지 않습니다. 사용자 소유 판단을 해소하거나 쓰기 허가 기록을 만들지도 않습니다.
+민감 동작 permission을 위한 kernel gate입니다. Sensitive categories가 있을 때만 required입니다. Granted 민감 동작 permission은 correctness를 증명하지 않고, 작업 수락을 뜻하지 않으며, 잔여 위험을 수용하거나 QA/검증 면제 판단을 기록하지 않습니다. 사용자 소유 판단을 해소하거나 쓰기 허가 기록을 만들지도 않습니다.
 
 ### Assumption Register
 

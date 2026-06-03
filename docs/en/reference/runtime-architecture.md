@@ -116,7 +116,7 @@ repo/
   AGENTS.md
   docs/
     tasks/
-    approvals/
+    approvals/  # later Approval profile
     reports/
     design/
   .harness/
@@ -178,7 +178,7 @@ state.sqlite / artifact store / validators / projector / reconcile worker
 ```
 
 
-The conversation surface gathers user intent, decisions, approvals, QA judgments, and acceptance. The agent surface performs reading, editing, and checking. Harness rules and skills keep the agent oriented. The MCP server provides the tool boundary. Core owns the state machine. Validators, artifact capture, projection, and reconcile attach evidence and readable output to state transitions.
+The conversation surface gathers user intent, decisions, sensitive-action permission prompts, QA judgments, and acceptance. The agent surface performs reading, editing, and checking. Harness rules and skills keep the agent oriented. The MCP server provides the tool boundary. Core owns the state machine. Validators, artifact capture, projection, and reconcile attach evidence and readable output to state transitions.
 
 Native hooks, sidecars, command wrappers, file watchers, and worktree isolation are capability-dependent control layers. v0.1 Core Authority Smoke and the early First User-Value Slice rely on cooperative/detective behavior for the reference surface unless a concrete capability profile has fixture-proven stronger control for the covered operation.
 
@@ -354,4 +354,4 @@ Failures are recorded rather than hidden:
 | Surface capability mismatch | record validator result, adjust guarantee display, and decline Write Authorization or show the write as not allowed by Harness authority state when required checks cannot be satisfied; cooperative surfaces hold by instruction, and pre-execution physical blocking still depends on fixture-proven connected profile coverage |
 
 
-Recovery tools may repair projection freshness, rescan artifacts, interrupt stale runs, expire drifted approvals, or create reconcile items. They must preserve the same authority rules: `state.sqlite` is operational state, `state.sqlite.task_events` is the event history inside that state store, raw evidence lives in the artifact store, and Markdown reports remain projections. Recovery artifacts and compensating events explain what recovery observed or changed; they do not prove successful implementation, satisfy evidence, pass verification or QA, accept results or residual risk, or close a Task by themselves.
+Recovery tools may repair projection freshness, rescan artifacts, interrupt stale runs, expire drifted sensitive-action permissions or later Approval records, or create reconcile items. They must preserve the same authority rules: `state.sqlite` is operational state, `state.sqlite.task_events` is the event history inside that state store, raw evidence lives in the artifact store, and Markdown reports remain projections. Recovery artifacts and compensating events explain what recovery observed or changed; they do not prove successful implementation, satisfy evidence, pass verification or QA, accept results or residual risk, or close a Task by themselves.

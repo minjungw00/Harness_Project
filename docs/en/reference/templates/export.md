@@ -13,7 +13,7 @@ Implementation tier: Operations/export reports. Export and handoff bundles are l
 - included Task and gate records, with safe state/event version range facts
 - Change Units
 - Runs
-- approvals
+- approvals (later Approval profile only)
 - Evidence Manifests
 - Eval records
 - Manual QA records
@@ -67,7 +67,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 - task gates:
 - change units:
 - runs:
-- approvals:
+- approvals (later Approval profile only; otherwise none):
 - evidence manifests:
 - Eval records:
 - Manual QA records:
@@ -76,7 +76,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 
 ## Report Projection Snapshots
 - TASK:
-- APR:
+- APR (later Approval profile only):
 - RUN-SUMMARY:
 - EVIDENCE-MANIFEST:
 - EVAL:
@@ -111,6 +111,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 - close readiness:
 - close blockers:
 - authority refs: write={write_authorization_refs|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_refs|none}; eval={eval_refs|none}; manual_qa={manual_qa_refs|none}; acceptance={acceptance_context_refs|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_status_summary}; freshness={projection_freshness}
+- approval refs are `none` in minimum v0.2; approval-shaped sensitive-action coverage appears through `decision_packet_refs` unless a later Approval owner profile is active.
 - evidence refs:
 - verification refs:
 - Manual QA refs:

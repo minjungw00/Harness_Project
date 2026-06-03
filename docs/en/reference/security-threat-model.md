@@ -62,7 +62,7 @@ The v0.1 and v0.2 reference path can use these controls without claiming a preve
 - artifact path validation, owner relation checks, and basic fingerprint/hash checks where the active owner path requires them
 - `expected_state_version` freshness checks and idempotency keys for state-changing calls
 - single-use Write Authorization returned by `prepare_write` and consumed by a compatible `record_run`
-- stale context blockers or warnings for stale projections, stale approvals, stale baselines, stale connector profiles, stale evaluator bundles, and stale retrieved context
+- stale context blockers or warnings for stale projections, stale sensitive-action permissions or later Approval records, stale baselines, stale connector profiles, stale evaluator bundles, and stale retrieved context
 - fail-closed authority claims when MCP/Core is unavailable
 - cooperative/detective blocker display that says what Core cannot authorize or what the surface can detect, without implying physical pre-tool enforcement
 
@@ -204,7 +204,7 @@ An artifact hash mismatch is a security and evidence-integrity finding. It does 
 
 ### Freshness, replay, and stale context
 
-Baseline and state-version checks help catch replay and stale context before authority depends on them. Old approvals, old status text, old projections, old evaluator bundles, and chat memory cannot authorize current writes or close current work. If authority depends on them, they must be refreshed, reconciled, superseded, or replaced through an owner path.
+Baseline and state-version checks help catch replay and stale context before authority depends on them. Old sensitive-action permissions or later Approval records, old status text, old projections, old evaluator bundles, and chat memory cannot authorize current writes or close current work. If authority depends on them, they must be refreshed, reconciled, superseded, or replaced through an owner path.
 
 Expected state version, idempotency, baseline compatibility, approval expiry, projection freshness, and connector profile freshness are separate controls. This document names the threat-model reason for them; their exact fields and behavior stay with the API, kernel, storage, projection, connector, and operations owners.
 

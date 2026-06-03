@@ -74,7 +74,7 @@ updated_at: 2026-05-06T09:45:10+09:00
 - allowed network targets:
 - secret scope:
 - sensitive categories:
-- approval refs:
+- approval refs (later Approval profile only; 그 외에는 none):
 
 ## Changed Files
 - `path/to/file`

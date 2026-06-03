@@ -131,11 +131,11 @@ Required Acceptance in the current reference model is recorded through a Decisio
 
 ### Approval
 
-A limited prior user authorization allowing a specific sensitive action or bounded sensitive operation to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. When Approval is requested, Core captures the user judgment through an approval-shaped Decision Packet and linked Approval record; granted sensitive-action Approval still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it is not generic agreement, work acceptance, residual-risk acceptance, QA waiver, verification waiver, correctness proof, or a substitute for user-owned product or material technical judgment.
+A limited prior user authorization allowing a specific sensitive action or bounded sensitive operation to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. In minimum v0.2, Core captures the user judgment through an approval-shaped Decision Packet with `judgment_payload.approval_scope`; later Approval profiles may also create a linked committed Approval record. Granted sensitive-action permission still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it is not generic agreement, work acceptance, residual-risk acceptance, QA waiver, verification waiver, correctness proof, or a substitute for user-owned product or material technical judgment.
 
 ### Approval Gate
 
-The kernel gate for sensitive-action Approval. It is required only when sensitive categories are present. Granted sensitive-action Approval does not prove correctness, imply work acceptance, accept residual risk, waive QA or verification, resolve user-owned judgment, or create Write Authorization.
+The kernel gate for sensitive-action permission. It is required only when sensitive categories are present. Granted sensitive-action permission does not prove correctness, imply work acceptance, accept residual risk, waive QA or verification, resolve user-owned judgment, or create Write Authorization.
 
 ### Assumption Register
 

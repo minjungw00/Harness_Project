@@ -142,7 +142,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - bundle:
 - logs:
 - artifact refs only; large evidence bodies not embedded:
-- approvals:
+- approvals (later Approval profile only; otherwise none):
 - decisions:
 
 ## Redaction And Availability

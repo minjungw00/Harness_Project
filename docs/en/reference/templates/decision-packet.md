@@ -15,7 +15,7 @@ Implementation tier: User judgment prompt shape. Use it for the Decision Packet 
 - `judgment_category`, `judgment_route`, and `display_depth`
 - display judgment type derived from `judgment_category`, `judgment_route`, `display_depth`, and related owner records
 - related `decision_gate` state and decision events
-- approval records for approval-shaped decisions
+- `approval_scope` for approval-shaped decisions, plus Approval records only when a later Approval profile is active
 - related reconcile records, if applicable
 - residual risk refs
 - evidence and artifact refs
@@ -23,9 +23,9 @@ Implementation tier: User judgment prompt shape. Use it for the Decision Packet 
 - affected scope display inputs: product areas, screens or flows, modules, interfaces, paths, acceptance criteria, gates, and sensitive categories
 - projection freshness inputs
 
-Approval-shaped display bullets such as "what this approval covers," "what this approval does not cover," and "secret exposure boundary" are derived display summaries from linked Approval records, approval scope, related Decision Packet refs, and current write or close context. They explain the boundary only; they do not grant Approval or settle separate user-owned judgment. Approval-shaped displays must be labeled as sensitive-action approval and must not look like work acceptance.
+Approval-shaped display bullets such as "what this approval covers," "what this approval does not cover," and "secret exposure boundary" are derived display summaries from `judgment_payload.approval_scope`, related Decision Packet refs, linked Approval records only when that later profile is active, and current write or close context. They explain the boundary only; they do not settle separate user-owned judgment, create Write Authorization, or imply a committed Approval record in minimum v0.2. Approval-shaped displays must be labeled as sensitive-action approval and must not look like work acceptance.
 
-A resolved Decision Packet is not sensitive-action Approval unless it is the approval-shaped Decision Packet linked to an Approval record. Other Decision Packet resolutions may settle user-owned judgments, waivers, work acceptance, residual-risk acceptance, or reconcile choices, but they do not grant sensitive-action Approval.
+A resolved Decision Packet grants sensitive-action permission only when it uses `judgment_route=approve-sensitive-action` with compatible `approval_scope`; in minimum v0.2 that resolved packet is the authority for the sensitive-action route. Later Approval profiles may additionally require or display a linked Approval record. Other Decision Packet resolutions may settle user-owned judgments, waivers, work acceptance, residual-risk acceptance, or reconcile choices, but they do not grant sensitive-action permission.
 
 `judgment_category` is the user-facing category for grouping and display. Render it with a friendly label, but keep `judgment_route` visible as the route that controls the owner path and recorded-answer rules. Render affected gates from `affected_gates` and related owner refs, not from the category label. `judgment_category` does not directly change close gate aggregation, sensitive-action Approval, waiver behavior, work acceptance, or residual-risk acceptance unless a separate owner rule says so.
 
@@ -54,7 +54,7 @@ A sufficient rendered Decision Packet uses these sections to answer one user-own
 
 Route-specific rendering follows the selected MCP `judgment_payload` and `judgment_route`: common fields remain visible, while route-specific sections may be omitted when the selected route and display depth do not require them. The final recorded answer is separate: `judgment_route` selects the user-judgment route and `RecordUserJudgmentPayload` value rules. A `display_depth=simple` card should still show the question, route, category, scope, concise options or selected outcome, related refs, and what the answer does not settle, but it does not need full pros/cons, recommendation, uncertainty, and deferral analysis unless those are material. Higher-depth prompts should render the detailed sections needed for the user to judge risk, trade-offs, approval scope, waiver impact, acceptance basis, residual-risk consequence, or reconcile target.
 
-The user-facing question should ask for the decision directly: choose an option, defer it with the stated consequence, reject the path, waive the named check, accept the named risk, accept the result, or reconcile the named drift. Use "approve" only for the approval-shaped context linked to Approval. For other packet kinds, ask what choice should be recorded and what remains outside that choice. If several decisions are pending, render separate prompts or separate lines; do not combine approval, acceptance, and risk acceptance into one answer.
+The user-facing question should ask for the decision directly: choose an option, defer it with the stated consequence, reject the path, waive the named check, accept the named risk, accept the result, or reconcile the named drift. Use "approve" only for the approval-shaped context with `judgment_route=approve-sensitive-action` and `approval_scope`; later Approval profiles may also show a linked Approval record. For other packet kinds, ask what choice should be recorded and what remains outside that choice. If several decisions are pending, render separate prompts or separate lines; do not combine approval, acceptance, and risk acceptance into one answer.
 
 **Example content cues:**
 
@@ -166,7 +166,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## Approval-Shaped Context, If Applicable
 - card label: Sensitive-action approval
 - judgment_route=approve-sensitive-action scope:
-- linked approval record:
+- linked approval record (later profile only):
 - sensitive categories:
 - what this approval covers:
 - what this approval does not cover:
@@ -276,7 +276,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Change Unit:
 - Write Authorization:
 - DESIGN:
-- APR:
+- APR (later Approval profile only):
 - EVIDENCE-MANIFEST:
 - EVAL:
 - MANUAL-QA:

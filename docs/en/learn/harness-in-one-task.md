@@ -262,7 +262,7 @@ The learning path is not a feature list. It is an authority-boundary model:
 - advice can guide work without authorizing writes;
 - a small direct change can stay light while the boundary holds;
 - tracked work makes decisions, evidence, QA, verification, work acceptance, risk, and close readiness visible;
-- chat, Markdown, tool output, tests, approvals, and self-checks are useful, but none of them silently substitutes for another authority.
+- chat, Markdown, tool output, tests, sensitive-action permission, and self-checks are useful, but none of them silently substitutes for another authority.
 
 ## Where To Go Next
 

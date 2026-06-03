@@ -668,15 +668,16 @@ expected_error:
 
 `prepare_write` allowed 예시는 Task가 `ready`에서 `executing`으로 이동한다고 기대합니다. 이 transition은 kernel transition table이 소유하고 정의합니다.
 
-Approval lifecycle coverage는 fixture body field를 추가하지 말고 별도의 exact-shape fixture 또는 suite catalog sequencing으로 구체화해야 합니다. 이러한 fixture는 lifecycle을 다시 정의하지 않고 [Kernel `prepare_write` State Logic](kernel.md#prepare_write), [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write), [APR Template 기준 기록](templates/approval.md#기준-기록)이 정의한 observable effect를 검증합니다.
+민감 동작 approval coverage는 fixture body field를 추가하지 말고 별도의 exact-shape fixture 또는 suite catalog sequencing으로 구체화해야 합니다. Minimum v0.2 fixture는 [Kernel `prepare_write` State Logic](kernel.md#prepare_write)과 [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write)의 Approval 형태 Decision Packet route를 검증합니다. Later Approval-profile fixture는 [APR Template 기준 기록](templates/approval.md#기준-기록)도 추가로 검증할 수 있습니다. Lifecycle을 fixture body 안에서 다시 정의하지 않습니다.
 
 Fixture authors는 다음 observable assertions를 유지해야 합니다.
 
 - 첫 uncovered sensitive `prepare_write`는 `approval_required`를 반환하고, approval candidate를 포함하며, Write Authorization을 반환하지 않고, blocker state가 committed된 경우 `approval_gate=required`를 set 또는 keep합니다.
 - Committed blocker state는 `TASK`를 대기열에 넣을 수 있지만, non-mutating candidate는 `APR`을 대기열에 넣으면 안 됩니다.
 - Dry-run 또는 candidate 표시 전용 path는 blocker state가 실제로 committed되지 않았다면 committed `TASK` changes를 검증하면 안 됩니다.
-- `request_user_judgment(judgment_route=approve-sensitive-action)`은 Approval 형태 Decision Packet과 pending Approval 상태를 만들고, `approval_gate=pending`을 설정하며, `APR`을 대기열에 넣습니다.
-- `record_user_judgment`은 Approval/Decision Packet state와 `approval_gate`를 업데이트하고, `APR`을 대기열에 넣을 수 있지만, 여전히 Write Authorization을 만들지 않습니다.
+- minimum v0.2에서 `request_user_judgment(judgment_route=approve-sensitive-action)`은 Approval 형태 Decision Packet을 만들고, `approval_gate=pending`을 set 또는 keep하며, `approval_id=null`을 반환하고, `APR`을 대기열에 넣지 않습니다.
+- minimum v0.2에서 `record_user_judgment`는 Decision Packet state와 `approval_gate`를 업데이트하고, 여전히 Write Authorization을 만들지 않으며, `APR`을 대기열에 넣지 않습니다.
+- later Approval-profile fixture는 committed Approval record creation/update, non-null `approval_id`, `approval_refs`, `APR` projection job을 추가로 검증할 수 있습니다.
 - Fresh idempotency key와 current `expected_state_version`을 사용한 later compatible `prepare_write` retry만 Write Authorization을 만들 수 있습니다.
 
 첫 payload에 대한 UI 또는 status assertion은 이를 candidate 표시라고 불러야 하며 `APR` projection이라고 부르면 안 됩니다.
@@ -1298,11 +1299,18 @@ initial_state:
       status: active
       what_agent_may_do: ["Refactor internal handler code."]
       stop_conditions: ["public_api_change"]
-  approvals:
-    - approval_id: APR-API-001
-      sensitive_categories: ["public_api_change"]
-      allowed_paths: ["src/api/public.ts"]
-      status: granted
+  decision_packets:
+    - decision_packet_id: DEC-API-APPROVAL-001
+      judgment_route: approve-sensitive-action
+      display_depth: high-risk
+      judgment_category: sensitive_action
+      status: resolved
+      judgment_payload:
+        approval_scope:
+          sensitive_categories: ["public_api_change"]
+          allowed_paths: ["src/api/public.ts"]
+          baseline_ref: BASE-API-001
+      result: granted
 input:
   task_id: TASK-API-001
   change_unit_id: CU-API-001
@@ -1980,12 +1988,18 @@ initial_state:
       module_map_items: []
       interface_contracts: []
       feedback_loop_refs: [FBL-PUBLIC-API-001]
-  approvals:
-    - approval_id: APR-PUBLIC-API-001
-      sensitive_categories: ["public_api_change"]
-      allowed_paths: ["src/api/public.ts"]
-      status: granted
   decision_packets:
+    - decision_packet_id: DEC-PUBLIC-API-APPROVAL-001
+      judgment_route: approve-sensitive-action
+      display_depth: high-risk
+      judgment_category: sensitive_action
+      status: resolved
+      judgment_payload:
+        approval_scope:
+          sensitive_categories: ["public_api_change"]
+          allowed_paths: ["src/api/public.ts"]
+          baseline_ref: BASE-PUBLIC-API-001
+      result: granted
     - decision_packet_id: DEC-PUBLIC-API-001
       judgment_route: choose
       display_depth: tradeoff

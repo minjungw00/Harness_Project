@@ -15,7 +15,7 @@
 - completion condition
 - changed file coverage
 - design-quality coverage
-- approval 참조
+- approval refs (later Approval profile only; 그 외에는 none)
 - hash, size, redaction state, retention/availability, owner relation, 후속 evidence 영향을 포함한 artifact 참조
 - 관련 Run, Eval, Feedback Loop, 수동 QA, TDD trace 참조
 - 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, 수동 QA, 작업 수락, 잔여 위험 요약
@@ -80,6 +80,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 ## Authority And Close Refs
 - compact refs: write={write_authorization_ref|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
+- approval refs는 minimum v0.2에서 `none`입니다. Approval 형태 민감 동작 coverage는 later Approval owner profile이 active가 아닌 한 `decision_packet_refs`로 나타납니다.
 - redaction state:
 - projection freshness:
 
@@ -116,6 +117,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 `Coverage / 관문 표시 상태`는 이 manifest의 evidence coverage 또는 close와 관련된 관문 표시 상태입니다. 이 column의 `pending` 같은 값은 `ValidatorResult.status` 값이 아닙니다.
 
 ## Approval Refs
+- Later Approval owner profile이 active일 때만 채웁니다. Minimum v0.2의 Approval 형태 민감 동작 coverage는 Decision Packet refs에 둡니다.
 - APR-0001:
 
 ## Evidence Refs
@@ -163,7 +165,7 @@ Example coverage mappings:
 | AC-01 docs typo corrected without meaning change | RUN-DOCS-001 | ART-DIFF-001 | | Changed doc path와 self-check가 stated docs-only condition을 cover할 때만 sufficient입니다. |
 | AC-02 login form submits email | RUN-FEATURE-001 | ART-DIFF-002, ART-TEST-002 | FBL-001 | Run, diff, test/log refs가 Task 전체가 아니라 이 AC에 map될 때 supported입니다. |
 | AC-03 final button copy is readable in target viewport | RUN-UI-001 | ART-SCREENSHOT-001, ART-DIFF-003 | QA-0001 | 수동 QA가 required이면 screenshot이나 browser smoke만으로 QA path를 충족하지 않습니다. |
-| AC-04 export contains only approved redacted fields | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | Approval과 Decision refs는 scope 또는 사용자 판단 맥락을 보여줍니다. Redacted artifact refs는 여전히 nonsecret claim을 증명해야 합니다. |
+| AC-04 export contains only approved redacted fields | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | `APR-0001`은 later Approval profile이 active일 때만 있습니다. Approval과 Decision refs는 scope 또는 사용자 판단 맥락을 보여줍니다. Redacted artifact refs는 여전히 nonsecret claim을 증명해야 합니다. |
 | Completion condition: independent verifier reviewed the changed scope | RUN-VERIFY-001 | ART-BUNDLE-001 | EVAL-0001 | Eval이 current refs를 review했고 requested close에 필요한 independence가 있을 때만 valid합니다. |
 
 Evidence Manifest는 주장을 뒷받침하지만 그 자체로 correctness를 증명하거나 분리 검증을 만들거나 수동 QA를 기록하거나 작업 수락을 암시하거나 잔여 위험을 보이게 하거나 잔여 위험을 수용하지 않습니다. 이 template에서 닫기 영향 요약을 렌더링할 때는 테스트 통과, 자체 확인(self-check), QA 면제 판단, 사용자의 작업 수락이 서로 다른 닫기 조건으로 오해되지 않도록 각 줄을 분리해 보여줘야 합니다.

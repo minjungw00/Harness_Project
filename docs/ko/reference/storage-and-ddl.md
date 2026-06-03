@@ -109,7 +109,7 @@ v0.1과 v0.2 storage는 다른 profile이 더 강한 control을 증명하기 전
 
 이 matrix가 main table list입니다. 작은 v0.1/v0.2 storage와 later profile candidate를 분리합니다.
 
-Public API ref는 [MCP API와 스키마](mcp-api-and-schemas.md#artifactref)가 담당합니다. Minimum v0.2 storage slice에서는 `evidence_summaries.evidence_summary_id`를 `StateRecordRef.record_kind=evidence_summary`로, `close_readiness.close_readiness_id`를 `StateRecordRef.record_kind=close_readiness`로 가리킬 수 있습니다. `change_unit_dependencies`는 future/diagnostic storage로 남으므로 `record_kind=change_unit_dependency`는 v0.2 active public ref가 아닙니다.
+Public API ref는 [MCP API와 스키마](mcp-api-and-schemas.md#artifactref)가 담당합니다. Minimum v0.2 storage slice에서는 `evidence_summaries.evidence_summary_id`를 `StateRecordRef.record_kind=evidence_summary`로, `close_readiness.close_readiness_id`를 `StateRecordRef.record_kind=close_readiness`로 가리킬 수 있습니다. Approval 형태 민감 동작 승인은 `StateRecordRef.record_kind=decision_packet`으로 참조합니다. `StateRecordRef.record_kind=approval`은 `approvals` table이 명시적으로 승격되기 전까지 later-profile입니다. `change_unit_dependencies`는 future/diagnostic storage로 남으므로 `record_kind=change_unit_dependency`는 v0.2 active public ref가 아닙니다.
 
 | Table | Purpose | First active stage | Authority or auxiliary | User-facing or internal | Later status |
 |---|---|---|---|---|---|
@@ -365,7 +365,7 @@ Compatible owner link가 없는 `artifacts` row만으로는 evidence, QA, verifi
 
 ## v0.2 Additions
 
-v0.2는 첫 사용자 가치 조각(First User-Value Slice)입니다. 사람이 작업을 이해하는 데 필요한 record를 추가합니다. Intake state, simplified user judgment, visible residual risk, evidence summary, close blocker/readiness, optional status-card freshness가 핵심입니다. 그래도 full assurance, projection job, reconciliation, operations system은 피합니다.
+v0.2는 첫 사용자 가치 조각(First User-Value Slice)입니다. 사람이 작업을 이해하는 데 필요한 record를 추가합니다. Intake state, simplified user judgment, Approval 형태 민감 동작 Decision Packet, visible residual risk, evidence summary, close blocker/readiness, optional status-card freshness가 핵심입니다. 그래도 committed Approval lifecycle storage, full assurance, projection job, reconciliation, operations system은 피합니다.
 
 ### First User-Value Slice schema
 
@@ -389,6 +389,7 @@ CREATE TABLE decision_packets (
   judgment_route TEXT NOT NULL,
   judgment_category TEXT NOT NULL,
   display_depth TEXT NOT NULL,
+  judgment_payload_json TEXT NOT NULL DEFAULT '{}',
   status TEXT NOT NULL,
   question TEXT NOT NULL,
   options_json TEXT NOT NULL DEFAULT '[]',
@@ -461,6 +462,8 @@ CREATE TABLE decision_requests (
 
 `decision_requests`는 그 자체로 judgment, gate, waiver, residual-risk acceptance, close condition을 satisfy하지 않습니다. Compatible `decision_packets` row를 위한 routing 또는 replay metadata일 뿐입니다.
 
+`judgment_route=approve-sensitive-action`에서 minimum v0.2는 요청된 `judgment_payload.approval_scope`를 `decision_packets.judgment_payload_json`에 저장하고, 사용자의 grant, denial, expiry를 Decision Packet에서 해소합니다. `approvals` row, Approval `StateRecordRef`, `approval_id`, `approval_refs`, `APR` projection은 요구하지 않습니다.
+
 Optional v0.2 status-card freshness table:
 
 ```sql
@@ -488,7 +491,7 @@ Agency Assurance profile storage는 v0.3 또는 profile-promoted 범위입니다
 
 | Candidate table | 나중에 필요한 이유 | Required가 아닌 범위 |
 |---|---|---|
-| `approvals` | Sensitive-action approval lifecycle과 drift handling | v0.1 authority loop, ordinary v0.2 judgment display |
+| `approvals` | Sensitive-action approval lifecycle과 drift handling | v0.1 authority loop, Approval 형태 Decision Packet을 포함한 ordinary v0.2 judgment display |
 | `baselines` | Assurance, approval, verification freshness를 위한 repository baseline capture | promoted profile이 baseline check를 요구하지 않는 v0.1/v0.2 |
 | `evidence_manifests` | Full criteria-to-evidence coverage | v0.1 single artifact/evidence ref, v0.2 evidence summary |
 | `evals` | Detached verification 또는 evaluator review | v0.1/v0.2 |

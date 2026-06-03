@@ -109,7 +109,7 @@ v0.1 and v0.2 storage are cooperative/detective unless a later profile proves st
 
 This matrix is the main table list. It separates small v0.1/v0.2 storage from later profile candidates.
 
-Public API refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md#artifactref). For the minimum v0.2 storage slice, `evidence_summaries.evidence_summary_id` is addressable as `StateRecordRef.record_kind=evidence_summary`, and `close_readiness.close_readiness_id` is addressable as `StateRecordRef.record_kind=close_readiness`. `change_unit_dependencies` remains future/diagnostic storage, so `record_kind=change_unit_dependency` is not a v0.2 active public ref.
+Public API refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md#artifactref). For the minimum v0.2 storage slice, `evidence_summaries.evidence_summary_id` is addressable as `StateRecordRef.record_kind=evidence_summary`, and `close_readiness.close_readiness_id` is addressable as `StateRecordRef.record_kind=close_readiness`. Approval-shaped sensitive-action permission is addressable through `StateRecordRef.record_kind=decision_packet`; `StateRecordRef.record_kind=approval` remains later-profile unless the `approvals` table is explicitly promoted. `change_unit_dependencies` remains future/diagnostic storage, so `record_kind=change_unit_dependency` is not a v0.2 active public ref.
 
 | Table | Purpose | First active stage | Authority or auxiliary | User-facing or internal | Later status |
 |---|---|---|---|---|---|
@@ -365,7 +365,7 @@ An `artifacts` row without a compatible owner link is not enough to satisfy evid
 
 ## v0.2 Additions
 
-v0.2 is the First User-Value Slice. It should add records that help a person understand the work: intake state, simplified user judgments, visible residual risk, evidence summaries, close blockers/readiness, and optional status-card freshness. It should still avoid full assurance, projection job, reconciliation, and operations systems.
+v0.2 is the First User-Value Slice. It should add records that help a person understand the work: intake state, simplified user judgments, approval-shaped sensitive-action Decision Packets, visible residual risk, evidence summaries, close blockers/readiness, and optional status-card freshness. It should still avoid committed Approval lifecycle storage, full assurance, projection job, reconciliation, and operations systems.
 
 ### First User-Value Slice schema
 
@@ -389,6 +389,7 @@ CREATE TABLE decision_packets (
   judgment_route TEXT NOT NULL,
   judgment_category TEXT NOT NULL,
   display_depth TEXT NOT NULL,
+  judgment_payload_json TEXT NOT NULL DEFAULT '{}',
   status TEXT NOT NULL,
   question TEXT NOT NULL,
   options_json TEXT NOT NULL DEFAULT '[]',
@@ -461,6 +462,8 @@ CREATE TABLE decision_requests (
 
 `decision_requests` never satisfies a judgment, gate, waiver, residual-risk acceptance, or close condition by itself. It is only routing or replay metadata for a compatible `decision_packets` row.
 
+For `judgment_route=approve-sensitive-action`, minimum v0.2 stores the requested `judgment_payload.approval_scope` in `decision_packets.judgment_payload_json` and resolves the user's grant, denial, or expiry on the Decision Packet. It does not require a row in `approvals`, an Approval `StateRecordRef`, `approval_id`, `approval_refs`, or an `APR` projection.
+
 Optional v0.2 status-card freshness table:
 
 ```sql
@@ -488,7 +491,7 @@ Agency Assurance profile storage is v0.3 or profile-promoted, not v0.1/v0.2. Can
 
 | Candidate table | Why it may matter later | Not required for |
 |---|---|---|
-| `approvals` | Sensitive-action approval lifecycle and drift handling | v0.1 authority loop, ordinary v0.2 judgment display |
+| `approvals` | Sensitive-action approval lifecycle and drift handling | v0.1 authority loop, ordinary v0.2 judgment display including approval-shaped Decision Packets |
 | `baselines` | Repository baseline capture for assurance, approval, and verification freshness | v0.1/v0.2 unless a promoted profile needs baseline checks |
 | `evidence_manifests` | Full criteria-to-evidence coverage | v0.1 single artifact/evidence ref, v0.2 evidence summary |
 | `evals` | Detached verification or evaluator review | v0.1/v0.2 |

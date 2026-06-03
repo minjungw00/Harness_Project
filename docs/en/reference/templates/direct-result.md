@@ -64,7 +64,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 - limits:
 - write authorization ref:
 - allowed paths:
-- approval refs:
+- approval refs (later Approval profile only; otherwise none):
 
 ## Outcome
 - result summary:

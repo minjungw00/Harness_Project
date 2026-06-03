@@ -118,7 +118,7 @@ repo/
   AGENTS.md
   docs/
     tasks/
-    approvals/
+    approvals/  # later Approval profile
     reports/
     design/
   .harness/
@@ -184,7 +184,7 @@ state.sqlite / artifact store / validators / projector / reconcile worker
 ```
 
 
-대화 접점은 사용자 의도, decision, approval, QA 판단, acceptance를 모읍니다. Agent 접점은 읽기, 편집, 확인을 수행합니다. 하네스 rules와 skills는 agent가 현재 상태를 놓치지 않게 합니다. MCP server는 tool 경계를 제공합니다. Core는 상태 모델을 담당합니다. Validator, artifact 수집, projection, reconcile은 근거와 읽기용 출력을 상태 전이에 붙입니다.
+대화 접점은 사용자 의도, decision, 민감 동작 permission prompt, QA 판단, acceptance를 모읍니다. Agent 접점은 읽기, 편집, 확인을 수행합니다. 하네스 rules와 skills는 agent가 현재 상태를 놓치지 않게 합니다. MCP server는 tool 경계를 제공합니다. Core는 상태 모델을 담당합니다. Validator, artifact 수집, projection, reconcile은 근거와 읽기용 출력을 상태 전이에 붙입니다.
 
 Native hooks, sidecars, command wrappers, file watchers, worktree isolation은 capability에 따라 달라지는 통제 계층입니다. 구체적인 capability profile이 covered operation에 대해 fixture로 더 강한 통제를 증명하지 않는 한 코어 권한 스모크(v0.1 Core Authority Smoke)과 초기 첫 사용자 가치 조각는 reference 접점에서 cooperative/detective behavior에 의존합니다.
 
@@ -360,4 +360,4 @@ Failures는 숨기지 않고 기록합니다.
 | Surface capability mismatch | validator result를 기록하고 보장 수준 표시를 조정하며, required checks를 충족할 수 없으면 Write Authorization을 거부하거나 Harness 권한 상태상 write가 허용되지 않음을 표시합니다. Cooperative surface는 지시로 보류하며, 실행 전 물리적 차단은 여전히 connected profile에서 fixture로 입증된 coverage에 달려 있습니다 |
 
 
-Recovery tools는 projection 최신성 repair, artifact rescan, 최신이 아닌 runs interrupt, drifted approvals expire, reconcile items create를 수행할 수 있습니다. 다만 같은 권한 규칙을 보존해야 합니다. `state.sqlite`는 운영 상태이고, `state.sqlite.task_events`는 그 state store 안의 event 이력이며, 원본 근거는 artifact store에 있고, Markdown 보고서는 projection으로 남습니다. Recovery artifact와 compensating event는 recovery가 관찰하거나 변경한 내용을 설명합니다. 그 자체로 successful implementation을 증명하거나, evidence를 충족하거나, verification 또는 QA를 pass하거나, 작업 수락이나 잔여 위험 수용을 기록하거나, Task를 close하지 않습니다.
+Recovery tools는 projection 최신성 repair, artifact rescan, 최신이 아닌 runs interrupt, drifted 민감 동작 permission 또는 later Approval record expire, reconcile items create를 수행할 수 있습니다. 다만 같은 권한 규칙을 보존해야 합니다. `state.sqlite`는 운영 상태이고, `state.sqlite.task_events`는 그 state store 안의 event 이력이며, 원본 근거는 artifact store에 있고, Markdown 보고서는 projection으로 남습니다. Recovery artifact와 compensating event는 recovery가 관찰하거나 변경한 내용을 설명합니다. 그 자체로 successful implementation을 증명하거나, evidence를 충족하거나, verification 또는 QA를 pass하거나, 작업 수락이나 잔여 위험 수용을 기록하거나, Task를 close하지 않습니다.

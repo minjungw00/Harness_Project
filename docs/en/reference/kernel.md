@@ -59,7 +59,7 @@ These are the small Core invariants the rest of the Kernel contract serves:
 5. Tracked work keeps scope, blockers, evidence, user judgment, and close readiness visible until the Task can close.
 6. `prepare_write` is the product-write authorization decision point.
 7. `record_run` records what happened and consumes compatible write authority for product-write Runs.
-8. Decision Packets record user-owned judgment; Approvals record sensitive-action permission.
+8. Decision Packets record user-owned judgment. In minimum v0.2, approval-shaped Decision Packets can record sensitive-action permission; later Approval records add a hardened committed lifecycle.
 9. `close_task` is the completion decision point and checks only the gates required by the active profile and close intent.
 10. Projections help humans read state, but Core state, events, and registered artifact refs remain the authority.
 
@@ -71,15 +71,15 @@ These are the small Core invariants the rest of the Kernel contract serves:
 
 2. What work is allowed now?
 
-   Allowed work is computed from the active Task, work shape, active Change Unit, scope, Autonomy Boundary, baseline freshness, sensitive-action Approval, user-owned judgments, applicable policy, surface capability, and the requested operation.
+   Allowed work is computed from the active Task, work shape, active Change Unit, scope, Autonomy Boundary, baseline freshness, sensitive-action permission, user-owned judgments, applicable policy, surface capability, and the requested operation.
 
 3. What user judgment is still blocking progress?
 
-   Blocking user-owned judgment is represented by Decision Packet state and the aggregate `decision_gate`. Sensitive-action permission is represented separately by Approval state and `approval_gate`.
+   Blocking user-owned judgment is represented by Decision Packet state and the aggregate `decision_gate`. Sensitive-action permission is represented separately by `approval_gate`; in minimum v0.2 the gate may derive from an approval-shaped Decision Packet, and in later profiles it may derive from committed Approval state.
 
 4. Can this Task close?
 
-   `close_task` checks the close intent against open Run state, scope, required decisions, sensitive-action Approval, evidence, verification when required, Manual QA when required, residual-risk visibility and acceptance when required, work acceptance when required, projection freshness when relevant, and artifact availability.
+   `close_task` checks the close intent against open Run state, scope, required decisions, sensitive-action permission, evidence, verification when required, Manual QA when required, residual-risk visibility and acceptance when required, work acceptance when required, projection freshness when relevant, and artifact availability.
 
 ## Work modes
 
@@ -99,7 +99,7 @@ User-facing surfaces should lead with the plain work shapes below. These labels 
 
 Small direct changes must stay small. Escalate the same Task to tracked work when scope becomes unclear, changed paths exceed the active scope, multiple product areas or subsystems are involved, product/UX judgment or material technical architecture judgment appears, public API or module contract impact appears, security/privacy impact appears, a sensitive action appears, evidence expectations grow, QA or verification becomes required, residual risk becomes non-trivial, or multi-step delivery is needed.
 
-The tiny direct profile is only a display/profile choice inside `mode=direct`. It is appropriate for a typo, one docs sentence with no meaning change, or an obvious rename. It must not bypass scope, write authority, sensitive-action Approval, user-owned judgment, evidence requirements that actually apply, residual-risk visibility, or close rules.
+The tiny direct profile is only a display/profile choice inside `mode=direct`. It is appropriate for a typo, one docs sentence with no meaning change, or an obvious rename. It must not bypass scope, write authority, sensitive-action permission, user-owned judgment, evidence requirements that actually apply, residual-risk visibility, or close rules.
 
 ## Judgment route boundaries
 
@@ -122,12 +122,12 @@ Harness separates what the user is judging from how the judgment is routed inter
 
 | Route | Kernel meaning | Must not be treated as |
 |---|---|---|
-| `choose` | The user chooses among product, technical, security/privacy, or scope/autonomy options. | Sensitive-action Approval, write authority, acceptance, waiver, or risk acceptance. |
+| `choose` | The user chooses among product, technical, security/privacy, or scope/autonomy options. | Sensitive-action permission, write authority, acceptance, waiver, or risk acceptance. |
 | `defer` | The user intentionally defers a user-owned judgment, with recorded effect on progress, close, risk, and follow-up. | Resolution, waiver, acceptance, or permission to hide the blocker. |
-| `approve-sensitive-action` | The user grants scoped sensitive-action permission through Approval. | Product direction, technical direction, correctness proof, work acceptance, risk acceptance, QA, verification, evidence, or Write Authorization. |
+| `approve-sensitive-action` | The user grants scoped sensitive-action permission through an approval-shaped Decision Packet; later Approval profiles may also commit an Approval record. | Product direction, technical direction, correctness proof, work acceptance, risk acceptance, QA, verification, evidence, or Write Authorization. |
 | `waive` | The user or policy waives a named requirement when waiver is allowed. | The skipped QA/check/verification itself, assurance upgrade, or generic consent. |
-| `accept-result` | The user accepts the result when work acceptance is required, after the close basis is visible. | Evidence, QA, verification, Approval, waiver, residual-risk acceptance, or new write authority. |
-| `accept-risk` | The user accepts a named visible close-relevant Residual Risk for the requested close. | No-risk close, detached verification, QA pass, evidence sufficiency, work acceptance, or sensitive-action Approval. |
+| `accept-result` | The user accepts the result when work acceptance is required, after the close basis is visible. | Evidence, QA, verification, sensitive-action permission, waiver, residual-risk acceptance, or new write authority. |
+| `accept-risk` | The user accepts a named visible close-relevant Residual Risk for the requested close. | No-risk close, detached verification, QA pass, evidence sufficiency, work acceptance, or sensitive-action permission. |
 | `reconcile` | The user or operator resolves human-editable or generated/projection drift into accepted state, note, rejection, decision request, or deferral. | Direct state mutation from Markdown, report prose, or chat. |
 
 This route map is the design contract for user-owned judgment. The route verb determines which owner path can change; broad approval is intentionally absent.
@@ -136,7 +136,7 @@ This route map is the design contract for user-owned judgment. The route verb de
 flowchart LR
   Need["user-owned judgment needed"]
   Need --> Choose["choose<br/>product, technical, security, or scope"]
-  Need --> Approve["approve-sensitive-action<br/>Approval only"]
+  Need --> Approve["approve-sensitive-action<br/>sensitive permission only"]
   Need --> Waive["waive<br/>named requirement only"]
   Need --> Accept["accept-result<br/>work acceptance"]
   Need --> Risk["accept-risk<br/>visible Residual Risk"]
@@ -261,7 +261,7 @@ Decision Packet status is record-level:
 proposed | pending_user | resolved | deferred | rejected | blocked | superseded
 ```
 
-Resolving a Decision Packet records user-owned judgment. It does not create sensitive-action Approval unless it follows the approval route and linked Approval path, does not create Write Authorization, does not create evidence, and does not close a Task by itself.
+Resolving a Decision Packet records user-owned judgment. It creates sensitive-action permission only when the packet uses `judgment_route=approve-sensitive-action` with compatible `approval_scope`; later Approval profiles may also require the linked Approval path. It does not create Write Authorization, does not create evidence, and does not close a Task by itself.
 
 #### Decision Packet lifecycle map
 
@@ -281,13 +281,13 @@ A Run is an execution or observation attempt. It records actor, surface, mode, C
 
 ### Approval
 
-An Approval is scoped sensitive-action permission. It can cover paths, tools, commands, network targets, secret scope, sensitive categories, baseline, expiry, and user judgment for that sensitive action.
+Approval is scoped sensitive-action permission. In minimum v0.2 it can be represented by a resolved approval-shaped Decision Packet with `judgment_route=approve-sensitive-action` and `judgment_payload.approval_scope`. In later Approval/Agency Assurance profiles it can also be represented by a committed Approval record. It can cover paths, tools, commands, network targets, secret scope, sensitive categories, baseline, expiry, and user judgment for that sensitive action.
 
 Approval does not prove correctness, choose product direction, choose technical architecture, create evidence, satisfy QA, verify work, accept a result, accept residual risk, or authorize a product write by itself.
 
 ### Write Authorization
 
-A Write Authorization is the durable single-use state record created when `prepare_write` allows a product-file write. It records the Task, Change Unit, compatibility basis, intended operation, intended write surface, relevant approvals and decisions, guarantee level, status, and consumption by a compatible Run.
+A Write Authorization is the durable single-use state record created when `prepare_write` allows a product-file write. It records the Task, Change Unit, compatibility basis, intended operation, intended write surface, relevant sensitive-action coverage and decisions, guarantee level, status, and consumption by a compatible Run.
 
 Write Authorization status is record-level:
 
@@ -418,7 +418,7 @@ A stored gate value that disagrees with recomputation is stale and must be repai
 not_required | required | pending | granted | denied | expired
 ```
 
-`approval_gate` applies only when sensitive categories are present. `granted` means a compatible Approval covers the sensitive scope. It is not Write Authorization, product judgment, evidence, verification, QA, work acceptance, or residual-risk acceptance.
+`approval_gate` applies only when sensitive categories are present. The gate can summarize whether sensitive-action permission is needed, pending, granted, denied, or expired. In minimum v0.2, `granted` means a compatible resolved approval-shaped Decision Packet covers the sensitive scope. In later Approval profiles, it may derive from committed Approval records. It is not Write Authorization, product judgment, evidence, verification, QA, work acceptance, or residual-risk acceptance.
 
 ### Design Gate
 
@@ -560,13 +560,13 @@ The minimal write sequence is:
 5. If allowed, use the returned Write Authorization for one compatible product-write Run.
 6. Record the Run, artifacts, evidence refs, and any blockers through `record_run`.
 
-This write-authority sequence is the Kernel design contract. Scope, required user judgment, and sensitive-action Approval are inputs to `prepare_write`; only an allowed `prepare_write` creates a single-use Write Authorization, and `record_run` records what happened rather than authorizing it retroactively.
+This write-authority sequence is the Kernel design contract. Scope, required user judgment, and sensitive-action permission are inputs to `prepare_write`; only an allowed `prepare_write` creates a single-use Write Authorization, and `record_run` records what happened rather than authorizing it retroactively.
 
 ```mermaid
 flowchart LR
   Scope["scoped Task / Change Unit"] --> Prepare["prepare_write"]
   Judgment["required user judgment<br/>Decision Packet if needed"] --> Prepare
-  Approval["sensitive-action Approval<br/>if needed"] --> Prepare
+  Approval["sensitive-action permission<br/>if needed"] --> Prepare
   Prepare -->|allowed| Auth["single-use Write Authorization"]
   Prepare -->|not allowed| Blocker["structured blocker"]
   Auth --> Run["product-write Run"]
@@ -595,12 +595,12 @@ The decision checks only the gates and preconditions that apply to the Task, int
 5. Check intended paths, tools, commands, network targets, secret access, sensitive categories, and other write surfaces against scope.
 6. Check the Autonomy Boundary. If the operation exceeds agent latitude, request user judgment when judgment can resolve it.
 7. Check baseline freshness.
-8. Check sensitive-action Approval when sensitive categories apply.
+8. Check sensitive-action permission when sensitive categories apply.
 9. Check required Decision Packets for user-owned judgment.
 10. Check enabled design/policy and capability preconditions.
 11. If all required checks pass, create or return the compatible single-use Write Authorization and record the decision.
 
-Blocked, approval-required, decision-required, or state-conflict results must not create a consumable Write Authorization. Approval-required means sensitive-action Approval is missing or unusable; it must not be converted into broad approval or product judgment. Decision-required means user-owned judgment is needed; it must not be converted into Approval.
+Blocked, approval-required, decision-required, or state-conflict results must not create a consumable Write Authorization. Approval-required means sensitive-action permission is missing or unusable; it must not be converted into broad approval or product judgment. Decision-required means user-owned judgment is needed; it must not be converted into sensitive-action permission.
 
 If MCP is unavailable on a cooperative-only surface, product writes are held by instruction. Preventive or isolated claims require a proven guard or documented separation boundary for the covered operation.
 
@@ -630,7 +630,7 @@ The decision algorithm checks the close intent and required gates:
 4. Check active Change Unit completion, deferral, or supersession according to the active profile.
 5. Check scope.
 6. Check blocking Decision Packets and `decision_gate`.
-7. Check sensitive-action Approval when sensitive categories applied.
+7. Check sensitive-action permission when sensitive categories applied.
 8. Check enabled design policy.
 9. Check evidence when evidence is required.
 10. Check verification only when verification is required.
@@ -658,7 +658,7 @@ flowchart TD
   Close --> Events["append close events"]
 ```
 
-Structured close blockers must name the category that blocks close, such as open Run, scope, user-owned judgment, sensitive-action Approval, design policy, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, work acceptance, projection freshness, or artifact availability. Public responses may choose one primary error code, but secondary blockers and refs must remain visible.
+Structured close blockers must name the category that blocks close, such as open Run, scope, user-owned judgment, sensitive-action permission, design policy, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, work acceptance, projection freshness, or artifact availability. Public responses may choose one primary error code, but secondary blockers and refs must remain visible.
 
 ### Close matrix by work shape and active profile
 
@@ -708,7 +708,7 @@ Verification waiver is not detached verification. If the waived verification gap
 | Core state is authority. | State-changing actions create Core records and events; projections and chat cannot mutate state without an owner path. |
 | Product writes require explicit scope and write authority. | `prepare_write` blocks missing scope and creates a single-use Write Authorization only when required checks pass; `record_run` consumes it. |
 | User-owned judgment cannot be replaced by agent judgment. | Decision Packets and `decision_gate` block affected writes or close until compatible resolution, deferral, or risk handling is recorded. |
-| Sensitive-action approval is separate. | Approval records and `approval_gate` cover sensitive permission only. |
+| Sensitive-action approval is separate. | Approval-shaped Decision Packets, later Approval records, and `approval_gate` cover sensitive permission only. |
 | Evidence, verification, QA, acceptance, and residual risk stay separate. | Separate gates, refs, and close blockers prevent substitution. |
 | Close exposes blockers and residual risk. | `close_task` returns structured blockers and separate close reason, assurance, acceptance, and residual-risk state. |
 | Active profile determines required gates. | Gate checks apply only when required by stage/profile, user request, task type, security/criticality profile, policy, or explicit requirement. |
@@ -742,10 +742,10 @@ The following combinations are invalid or require repair:
 |---|---|
 | Product write attempted with no active Task, no active Change Unit, out-of-scope path/tool/command/network/secret, or incompatible Autonomy Boundary | Block `prepare_write`; request scope or user judgment when appropriate. |
 | Product write attempted in `advisor` mode | Block `prepare_write`. |
-| Product write attempted without required sensitive-action Approval | Return approval-required; do not create Write Authorization. |
+| Product write attempted without required sensitive-action permission | Return approval-required; do not create Write Authorization. |
 | Product write attempted with unresolved user-owned judgment | Return decision-required or decision-unresolved. |
 | Implementation/direct Run recorded without compatible unconsumed Write Authorization | Reject or record violation/recovery state without treating authority as consumed. |
-| Approval used as product/UX or technical judgment | Reject or repair through Decision Packet. |
+| Sensitive-action approval used as product/UX or technical judgment | Reject or repair through Decision Packet. |
 | Generic "go ahead" used to satisfy incompatible routes | Clarify or split routes before recording state. |
 | Required evidence missing but `evidence_gate=not_required` | Recompute and repair. |
 | Required verification skipped without waiver | Keep verification pending/blocked. |
@@ -760,4 +760,4 @@ The following combinations are invalid or require repair:
 
 `close_ready` is not a `lifecycle_phase`. It is a derived condition meaning the Task has no open Run and every close-relevant required gate is compatible with the requested close intent. Only `close_task` moves a Task to `lifecycle_phase=completed`.
 
-Close displays should show separate category lines for evidence, verification, Manual QA, work acceptance, residual-risk visibility, residual-risk acceptance, sensitive-action Approval, and projection freshness when those categories apply. A display may say a category is `not_required`, but it must not replace pending, waived, failed, blocked, stale, or accepted-with-risk categories with a single "done" line.
+Close displays should show separate category lines for evidence, verification, Manual QA, work acceptance, residual-risk visibility, residual-risk acceptance, sensitive-action permission, and projection freshness when those categories apply. A display may say a category is `not_required`, but it must not replace pending, waived, failed, blocked, stale, or accepted-with-risk categories with a single "done" line.

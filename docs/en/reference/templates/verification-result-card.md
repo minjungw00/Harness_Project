@@ -59,7 +59,8 @@ Evidence reviewed:
 - TDD trace: {tdd_trace_ref}
 - diff: {diff_ref}
 - logs: {logs_ref}
-- approvals: {approval_refs}
+- approvals: {approval_refs|none}
+- approval refs are `none` in minimum v0.2 unless a later Approval owner profile is active.
 - design refs: {design_refs}
 - redaction or blocked input: {redaction_availability_summary|none}
 

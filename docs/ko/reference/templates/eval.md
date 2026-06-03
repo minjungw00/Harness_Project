@@ -142,7 +142,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - bundle:
 - logs:
 - artifact refs only; 큰 evidence 본문은 포함하지 않음:
-- approvals:
+- approvals (later Approval profile only; 그 외에는 none):
 - decisions:
 
 ## Redaction And Availability
