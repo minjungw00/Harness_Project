@@ -32,7 +32,7 @@ Canonical operational meaning은 Core가 소유한 state-changing path를 통해
 
 Security display는 실제 control과 일치해야 합니다. Cooperative와 detective 접점은 instruction으로 보류하거나 실행 뒤 감지할 수 있습니다. Preventive 표현에는 covered operation에 대해 fixture로 입증된 도구 실행 전 차단이 필요하고, isolated 표현에는 문서화되고 입증된 separation boundary가 필요합니다. Preventive 또는 isolated control이 필요한 high-risk work는 cooperative-only claim에 의존하면 안 됩니다.
 
-초기 로컬 하네스 단계는 OS 권한을 자동으로 제공하거나, 임의 도구를 sandbox 격리하거나, 로컬 파일을 변조 불가능하게 만들거나, 지시 기반 agent behavior를 사전 차단 보안으로 바꾸지 않습니다. v0.1과 v0.2는 authority가 없는 state-changing action을 거부하고, state를 기록하고, active Core path에 필요한 최소 artifact/evidence ref를 검증하고, stale 또는 mismatched fact를 보고하고, 정직한 보장 한계를 표시할 수 있습니다. 구조화된 막힘은 Core 또는 연결된 접점이 Harness 권한 경로로 진행할 수 없다고 보고한다는 뜻이며, Harness가 실행 전에 process를 물리적으로 멈췄다는 주장이 아닙니다. Preventive control은 owner 문서와 conformance가 exact covered operation을 증명하기 전까지 향후 또는 profile별 범위입니다. Isolated control은 exact separation boundary를 증명하기 전까지 향후 또는 profile별 범위입니다.
+초기 로컬 하네스 단계는 OS 권한을 자동으로 제공하거나, 임의 도구를 sandbox 격리하거나, 로컬 파일을 변조 불가능하게 만들거나, 지시 기반 agent behavior를 사전 차단 보안으로 바꾸지 않습니다. v0.1과 v0.2는 authority가 없는 Core state-changing action을 거부하고, state를 기록하고, active Core path에 필요한 최소 artifact/evidence ref를 검증하고, stale 또는 mismatched fact를 보고하고, 정직한 보장 한계를 표시할 수 있습니다. 구조화된 막힘은 Core 또는 연결된 접점이 Harness 권한 경로로 진행할 수 없다고 보고한다는 뜻이며, Harness가 실행 전에 process를 물리적으로 멈췄다는 주장이 아닙니다. 사용자에게 보이는 문구는 "Harness 권한 상태상 허용되지 않음" 또는 "지시로 보류됨"과 "runtime이 물리적으로 막음"을 구분해야 합니다. Preventive control은 owner 문서와 conformance가 exact covered operation을 증명하기 전까지 향후 또는 profile별 범위입니다. Isolated control은 exact separation boundary를 증명하기 전까지 향후 또는 profile별 범위입니다.
 
 운영자 진입점은 그것을 도입한 stage와 connector profile의 guarantee level을 그대로 따릅니다. 나중 단계의 recover, export, reconcile, artifact check, conformance run, release handoff surface도 입증된 cooperative, detective, preventive, isolated capability보다 더 강하게 prevention이나 enforcement를 제공한다고 설명하면 안 됩니다.
 
@@ -51,6 +51,36 @@ Security display는 실제 control과 일치해야 합니다. Cooperative와 det
 | v1+ Expansion | 구현되고 증명된 경우에만 사전 차단(preventive) 또는 격리(isolated) 후보. | 더 강한 주장은 exact contract, covered operation, fixture proof, fallback behavior가 필요하며, 격리의 경우 proven sandbox, permission boundary, locked-down runner, process boundary, container boundary 같은 실제 separation boundary를 이름 붙여야 합니다. |
 
 이 단계 지도는 Core 권한을 낮추지 않습니다. Core는 active owner contract에 따라 invalid state transition을 거부하거나, Write Authorization을 내주지 않거나, gate 또는 파생 view를 `stale`/`blocked`로 표시하거나, 구조화된 막힘을 보고할 수 있습니다. 이 지도는 Harness가 action을 실행 전에 물리적으로 멈출 수 있는지, 또는 security boundary 뒤에 격리할 수 있는지에 대한 보안 표현만 제한합니다.
+
+## v0.1/v0.2에서 가능한 기본 통제
+
+v0.1과 v0.2 reference path는 사전 차단형(preventive) 또는 격리형(isolated) runtime boundary를 주장하지 않고도 다음 통제를 사용할 수 있습니다.
+
+- 등록된 project surface의 local-only 접근 상태 표시
+- 제품 저장소 / 하네스 서버 / 하네스 런타임 홈의 명확한 분리
+- raw secret과 token 응답 금지, 표시해도 안전한 handle, redaction, omission, blocked-payload notice 사용
+- active owner path가 요구하는 artifact 경로 검증, owner 관계 확인, 기본 fingerprint/hash 확인
+- 상태 변경 호출을 위한 `expected_state_version` freshness check와 idempotency key
+- `prepare_write`가 반환하고 compatible `record_run`이 consume하는 1회용 Write Authorization
+- 오래된 projection, approval, baseline, connector profile, evaluator bundle, retrieved context에 대한 stale context blocker 또는 warning
+- MCP/Core를 사용할 수 없을 때 authority claim을 fail closed로 처리
+- Core가 authorize할 수 없는 것 또는 surface가 탐지할 수 있는 것을 보여 주되 물리적 pre-tool enforcement를 암시하지 않는 cooperative/detective blocker display
+
+이 통제들은 Core state change를 거부하거나, authority claim이 만들어지지 않게 하거나, inconsistency를 보이게 할 수 있습니다. 기본 reference path에서는 임의의 로컬 프로세스나 도구가 파일을 쓰는 일을 물리적으로 막지 않습니다.
+
+## 향후 또는 profile 승격 통제
+
+다음 통제는 owner 문서가 mechanism을 구현하고, covered operation 또는 separation boundary를 이름 붙이며, conformance가 이를 증명하기 전까지 향후 또는 profile별 범위입니다.
+
+- 운영체제 sandboxing
+- 임의 도구 격리
+- 변조 불가능한 Harness Runtime Home storage
+- product/runtime/code write에 대한 사전 차단형(preventive) pre-tool blocking
+- 강화된 다중 사용자 권한
+- local, remote, shared, cloud, CI, cross-user posture 전반의 broad connector security model
+- full secret manager 또는 data-loss-prevention system
+
+그렇게 승격되기 전까지 guard, freeze mode, careful mode, sidecar, hook, wrapper, worktree, bundle, local file에 대한 언급은 exact preventive 또는 isolated boundary가 증명되지 않는 한 cooperative 또는 detective control 설명입니다.
 
 ## 단계별 scenario posture
 
@@ -151,6 +181,8 @@ v0.1 baseline과 staged-delivery default의 MCP posture는 registered project su
 Transport에 origin, caller identity, authentication token, socket path, filesystem permission, bind address가 있다면 connector profile과 operations display는 raw secret을 출력하지 않고 access-control class를 보여야 합니다. Non-loopback binding, forwarded 또는 tunneled endpoint, shared socket, cloud/CI relay, cross-user path, remote caller, stale access material은 connector owner가 해당 posture를 승격하고 증명하기 전까지 off-profile입니다.
 
 MCP reachability는 authorization이 아닙니다. Public tool call은 계속 Core envelope validation, `project_id`, `task_id`, `surface_id`, `run_id`, `actor_kind` compatibility, idempotency, expected state version, API-owned error handling에 의존합니다.
+
+Core에 닿을 수 없으면 authoritative Core response는 존재하지 않으며 API-visible path는 `MCP_UNAVAILABLE` 또는 `MCP_SERVER_UNAVAILABLE` 같은 operations diagnostic입니다. Core 또는 operator가 reachable local caller나 access path가 registered local profile 밖이라고 분류할 수 있으면 API-visible path는 display-safe detail을 포함한 `LOCAL_ACCESS_MISMATCH`입니다. Caller가 recognized profile 위에 있지만 required capability가 없으면 `CAPABILITY_INSUFFICIENT`를 사용합니다.
 
 ### Least privilege와 high-risk allowlist
 

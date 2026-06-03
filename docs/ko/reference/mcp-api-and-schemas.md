@@ -27,9 +27,11 @@ MCP resource는 읽기 전용 보기로 동작합니다. 현재 상태, projecti
 
 Status와 next-action 표시는 public MCP 개념을 사용자에게 보이기 전에 평범한 말로 바꿔 보여줘야 합니다. 사용자는 무엇이 막고 있는지, 가장 작은 해소 방법이 무엇인지, 중요한 추가 막힘이 무엇인지 볼 수 있어야 합니다. Raw `ToolError`, `ErrorCode`, schema field name은 구현자, log, conformance output을 위한 선택 세부 정보로는 보일 수 있지만, 사용자 설명이 그것만으로 끝나면 안 됩니다.
 
+Public API 문맥에서 `blocked`, `blocker`, `blocked_reasons`는 Harness 권한 경로가 진행할 수 없거나, 관련 gate/check가 충족되지 않았거나, surface가 지시에 따라 보류해야 한다는 뜻입니다. `guarantee_display.level=preventive`가 해당 정확한 작업에 대해 fixture-proven coverage를 갖지 않는 한 런타임이 도구, 명령, 파일 쓰기를 물리적으로 막았다는 뜻이 아닙니다.
+
 이 문서의 public request와 response schema는 API payload의 검증 기준입니다. 여기에는 Core가 나중에 저장하는 API-shaped payload도 포함됩니다. Core는 commit 전에 모든 storage JSON 값을 이 문서의 API-owned shape 또는 [Storage와 DDL](storage-and-ddl.md)의 storage-owned shape에 맞게 검증해야 합니다. 잘못된 JSON이나 schema와 맞지 않는 JSON은 유효하지 않은 상태입니다.
 
-Idempotency와 state conflict 동작은 Core state 위에 놓인 API-owned surface입니다. Exact replay는 original committed response를 반환하고, changed-payload replay는 `STATE_CONFLICT`를 반환하며, stale `expected_state_version`은 Core가 commit하기 전에 new mutation을 차단합니다. Durable storage detail은 [Storage와 DDL](storage-and-ddl.md)에 남습니다.
+Idempotency와 state conflict 동작은 Core state 위에 놓인 API-owned surface입니다. Exact replay는 original committed response를 반환하고, changed-payload replay는 `STATE_CONFLICT`를 반환하며, stale `expected_state_version`이면 Core가 commit 전에 new mutation을 거부합니다. Durable storage detail은 [Storage와 DDL](storage-and-ddl.md)에 남습니다.
 
 ## 담당하는 참조 범위
 
@@ -616,7 +618,7 @@ EndToEndPath:
 
 `WriteAuthorizationSummary`와 `WriteAuthoritySummary`는 API payload shape일 뿐입니다. 이 문서는 Write Authorization 기록에 대한 SQLite DDL을 정의하지 않습니다. `WriteAuthorizationSummary`는 `harness.prepare_write`가 반환한 durable single-use authorization을 나타냅니다. 같은 Run request의 idempotent replay를 제외하면 하나의 committed implementation 또는 direct `harness.record_run` consumption과만 호환됩니다. `WriteAuthoritySummary`는 client가 Write Authority Summary를 Autonomy Boundary 판단 재량 옆에 표시하기 위해 사용하는 display/read shape입니다.
 
-Client가 guard, freeze, careful-mode control을 렌더링할 때는 권한 field를 추가하지 않고 이 기존 display shape를 사용합니다. `guarantee_display.level`과 `guarantee_display.notes`는 실제 연결된 capability와 현재 적용 경로를 설명해야 합니다. `blocked_reasons[].message`는 scope, MCP availability, Approval, baseline, capability 같은 구체적인 보류 또는 차단 조건을 이름 붙여야 하며, "guard"나 "freeze" 같은 command label만으로 더 강한 guarantee를 암시하면 안 됩니다.
+Client가 guard, freeze, careful-mode control을 렌더링할 때는 권한 field를 추가하지 않고 이 기존 display shape를 사용합니다. `guarantee_display.level`과 `guarantee_display.notes`는 실제 연결된 capability와 현재 통제 경로를 설명해야 합니다. `blocked_reasons[].message`는 scope, MCP availability, Approval, baseline, capability 같은 구체적인 authority-state 또는 지시상 보류 조건을 이름 붙여야 하며, "guard"나 "freeze" 같은 command label만으로 더 강한 guarantee를 암시하면 안 됩니다.
 
 `DEC`, `DESIGN`, `EXPORT`, `JOURNEY-CARD`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, `INTERFACE-CONTRACT`처럼 active stage/profile 밖에 있는 `ProjectionKind` 값은 해당 projection 기능 또는 profile이 켜졌을 때만 projection job kind로 유효합니다. Active stage/profile이 요구하는 Decision Packet visibility는 status/next responses, judgment-context resources, decision-packet resources, 최소 `TASK` 또는 card display를 통해 제공됩니다. 이는 standalone `DEC` `ProjectionKind`가 아니라 Decision Packet 사용자 판단 요청 display shape에 대한 요구사항입니다. Persisted `JOURNEY-CARD` Markdown과 Journey Spine-style output은 future/diagnostic 범위이며 status, next, significant resume flow의 현재 위치 맥락은 간결한 상태 출력으로 충족할 수 있습니다. 전체 projection template text는 [Template 참조](templates/README.md)에 있으며, 이 API schema file이 담당하지 않습니다.
 
@@ -1361,7 +1363,7 @@ Purpose: agent가 write하기 전에 intended product write가 allowed인지 결
 
 Stage/profile: v0.1 core authority loop에서 active입니다. Approval candidate는 Approval state를 만들지 않고 반환할 수 있습니다. Committed Approval record와 approval-shaped Decision Packet lifecycle은 later Approval/Agency Assurance profile과 matching storage가 필요합니다.
 
-사용자에게 보이는 의미: 지금 이 정확한 product write를 해도 되는지 답합니다. 이 답은 현재 active Task, active Change Unit scope, Autonomy Boundary, baseline freshness, 민감 동작 승인, Decision Packet coverage, design policy, surface capability에 기반합니다. `decision=allowed`이면 허용된 작업, 범위 근거, durable single-use Write Authorization ref 또는 summary, 보장 수준의 한계, detective/cooperative limitation을 보여줍니다. 쓰기가 blocked이면 가장 먼저 해소할 이유와 가장 작은 해소 방법을 보여줍니다. Approval 또는 Decision Packet candidate payload는 담당 tool path로 commit되기 전까지 candidate일 뿐입니다.
+사용자에게 보이는 의미: 지금 이 정확한 product write를 해도 되는지 답합니다. 이 답은 현재 active Task, active Change Unit scope, Autonomy Boundary, baseline freshness, 민감 동작 승인, Decision Packet coverage, design policy, surface capability에 기반합니다. `decision=allowed`이면 허용된 작업, 범위 근거, durable single-use Write Authorization ref 또는 summary, 보장 수준의 한계, detective/cooperative limitation을 보여줍니다. Harness 권한 상태상 쓰기가 허용되지 않으면 가장 먼저 해소할 이유와 가장 작은 해소 방법을 보여줍니다. Approval 또는 Decision Packet candidate payload는 담당 tool path로 commit되기 전까지 candidate일 뿐입니다.
 
 Allowed actor: `lead_agent`, `operator`.
 

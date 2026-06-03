@@ -32,7 +32,7 @@ Canonical operational meaning flows through Core-owned state-changing paths. Pro
 
 Security display must match the real control. Cooperative and detective surfaces can hold by instruction or detect after action. Preventive wording requires fixture-proven pre-tool blocking for the covered operation, and isolated wording requires a documented and proven separation boundary. High-risk work must not rely on cooperative-only claims when the work requires preventive or isolated controls.
 
-Early local Harness stages do not automatically provide operating-system permissions, sandbox arbitrary tools, make local files tamper-proof, or convert cooperative agent behavior into preventive security. v0.1 and v0.2 may refuse state-changing actions that lack authority, record state, validate the minimal artifact/evidence refs required by the active Core path, report stale or mismatched facts, and display honest guarantee limits. A structured blocker means Core or a connected surface reports that the Harness authority path cannot proceed; it is not a claim that Harness physically stopped a process before execution. Preventive controls are future/profile-specific until owner docs and conformance prove the exact covered operation; isolated controls are future/profile-specific until they prove the exact separation boundary.
+Early local Harness stages do not automatically provide operating-system permissions, sandbox arbitrary tools, make local files tamper-proof, or convert cooperative agent behavior into preventive security. v0.1 and v0.2 may refuse Core state-changing actions that lack authority, record state, validate the minimal artifact/evidence refs required by the active Core path, report stale or mismatched facts, and display honest guarantee limits. A structured blocker means Core or a connected surface reports that the Harness authority path cannot proceed; it is not a claim that Harness physically stopped a process before execution. User-facing wording should distinguish "not allowed by Harness authority state" or "held by instruction" from "physically prevented by runtime." Preventive controls are future/profile-specific until owner docs and conformance prove the exact covered operation; isolated controls are future/profile-specific until they prove the exact separation boundary.
 
 Operator entrypoints inherit the same guarantee level as the stage and connector profile that introduced them. A later recover, export, reconcile, artifact check, conformance run, or release handoff surface must not be described as preventing or enforcing more than its proven cooperative, detective, preventive, or isolated capability allows.
 
@@ -51,6 +51,36 @@ These are the default staged guarantees for the local reference path. A concrete
 | v1+ Expansion | Preventive or isolated candidates only when implemented and proven. | Stronger claims require exact contracts, covered operations, fixture proof, fallback behavior, and, for isolation, a real named separation boundary such as a proven sandbox, permission boundary, locked-down runner, process boundary, or container boundary. |
 
 The stage map does not lower Core authority. Core may always refuse an invalid state transition, deny Write Authorization, mark a gate or derived view stale/blocked, or report a structured blocker according to the active owner contract. The map only limits security wording about whether Harness can physically stop an action before it happens or isolate the action behind a security boundary.
+
+## v0.1/v0.2 feasible control baseline
+
+The v0.1 and v0.2 reference path can use these controls without claiming a preventive or isolated runtime boundary:
+
+- local-only posture display for the registered project surface
+- clear Product Repository / Harness Server / Harness Runtime Home separation
+- raw secret and token response prohibition, with display-safe handles, redaction, omission, or blocked-payload notices
+- artifact path validation, owner relation checks, and basic fingerprint/hash checks where the active owner path requires them
+- `expected_state_version` freshness checks and idempotency keys for state-changing calls
+- single-use Write Authorization returned by `prepare_write` and consumed by a compatible `record_run`
+- stale context blockers or warnings for stale projections, stale approvals, stale baselines, stale connector profiles, stale evaluator bundles, and stale retrieved context
+- fail-closed authority claims when MCP/Core is unavailable
+- cooperative/detective blocker display that says what Core cannot authorize or what the surface can detect, without implying physical pre-tool enforcement
+
+These controls can refuse Core state changes, keep authority claims from being invented, or make inconsistencies visible. By default they do not physically prevent arbitrary local processes or tools from writing files.
+
+## Future or profile-promoted controls
+
+The following controls are future or profile-specific until an owner document implements the mechanism, names the covered operation or separation boundary, and conformance proves it:
+
+- operating-system sandboxing
+- arbitrary-tool isolation
+- tamper-proof Harness Runtime Home storage
+- preventive pre-tool blocking for product/runtime/code writes
+- hardened multi-user permissions
+- broad connector security model across local, remote, shared, cloud, CI, and cross-user postures
+- full secret manager or data-loss-prevention system
+
+Until promoted that way, references to guards, freeze modes, careful modes, sidecars, hooks, wrappers, worktrees, bundles, or local files are cooperative or detective control descriptions unless the exact preventive or isolated boundary is proven.
 
 ## Scenario posture by stage
 
@@ -151,6 +181,8 @@ The v0.1 baseline and staged-delivery default MCP posture is local-only for a re
 Where a transport has an origin, caller identity, authentication token, socket path, filesystem permission, or bind address, the connector profile and operations display must make the access-control class visible without printing raw secrets. Non-loopback binding, forwarded or tunneled endpoints, shared sockets, cloud/CI relays, cross-user paths, remote callers, and stale access material are off-profile unless a connector owner has promoted and proven that posture.
 
 MCP reachability is not authorization. Public tool calls still rely on Core envelope validation, `project_id`, `task_id`, `surface_id`, `run_id`, and `actor_kind` compatibility, idempotency, expected state version, and API-owned error handling.
+
+If Core cannot be reached, no authoritative Core response exists and the API-visible path is `MCP_UNAVAILABLE` or an operations diagnostic such as `MCP_SERVER_UNAVAILABLE`. If Core or an operator can classify a reachable local caller or access path as outside the registered local profile, the API-visible path is `LOCAL_ACCESS_MISMATCH` with display-safe details. If the caller is on a recognized profile but the profile lacks a required capability, use `CAPABILITY_INSUFFICIENT`.
 
 ### Least privilege and high-risk allowlists
 
