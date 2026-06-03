@@ -232,7 +232,7 @@ The artifact store is not a loose file dump. Any artifact that supports Harness 
 
 ### MCP API
 
-The MCP server exposes read resources and public tools. MCP resources are read-only. State-changing work goes through public tools and Core.
+The future MCP server contract exposes read resources and public tools. MCP resources are read-only. State-changing work goes through public tools and Core.
 
 If the MCP server cannot be reached, no authoritative Core response is available from that call path. The first implementation should report that as MCP unavailable, hold write-capable work according to the actual local caller or surface guarantee level when one is declared, and avoid inventing state from cached projections, generated files, or chat text.
 

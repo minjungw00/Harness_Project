@@ -359,6 +359,11 @@ ToolErrorLocalAccessDetails:
   profile_ref: string | null
   safe_handle: string | null
 
+ToolErrorWriteAuthorityDetails:
+  write_authorization_issue: missing | expired | stale | revoked | already_consumed | incompatible | absent | unknown
+  write_authorization_ref: StateRecordRef | null
+  basis_state_version: integer | null
+
 StateSummary:
   mode: advisor | direct | work
   lifecycle_phase: intake | shaping | ready | executing | verifying | qa | waiting_user | blocked | completed | cancelled
@@ -664,7 +669,7 @@ DecisionPacket:
   affected_gates: DecisionPacketGateRef[]
   affected_acceptance_criteria: DecisionPacketCriterionRef[]
   judgment_payload: JudgmentPayload
-  resolution: JudgmentResolution | null
+  resolution: DecisionPacketResolution | null
   expires_at: string | null
   created_at: string
   updated_at: string
@@ -956,13 +961,13 @@ Tool descriptions below separate `ValidatorResults emitted` from Core checks/pre
 | `BASELINE_STALE` | baseline no longer matches the repository state required by the operation |
 | `VALIDATOR_FAILED` | generic fallback when one or more required validators or close/blocker checks failed and no more specific typed `ErrorCode` applies |
 
-`WRITE_AUTHORIZATION_REQUIRED` and `WRITE_AUTHORIZATION_INVALID` are used only for missing or invalid Write Authorization. Scope violations still use `SCOPE_VIOLATION` when observed paths, tools, commands, network targets, secrets, or sensitive categories exceed authorized or active scope.
+`WRITE_AUTHORIZATION_REQUIRED` and `WRITE_AUTHORIZATION_INVALID` are used only for missing or invalid Write Authorization. Scope violations still use `SCOPE_VIOLATION` when observed paths, tools, commands, network targets, secrets, or sensitive categories exceed authorized or active scope. When a `ToolError` object is available, write-authority failures should include `ToolErrorWriteAuthorityDetails`: use `write_authorization_issue=missing` for `WRITE_AUTHORIZATION_REQUIRED`, and `expired`, `stale`, `revoked`, `already_consumed`, `incompatible`, `absent`, or `unknown` for `WRITE_AUTHORIZATION_INVALID`.
 
 MCP availability, local access/profile mismatch, and capability insufficiency are distinct:
 
 - `MCP_UNAVAILABLE` with diagnostic `MCP_SERVER_UNAVAILABLE`: the tool call cannot reach Core, so no authoritative Core response is possible. The caller must diagnose or reconnect before claiming state changes.
 - `MCP_UNAVAILABLE` with diagnostic `SURFACE_MCP_UNAVAILABLE`: Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools.
-- `LOCAL_ACCESS_MISMATCH`: Core or an operator can classify a reachable local endpoint or caller path as outside the registered local access/profile boundary. Details use `ToolErrorLocalAccessDetails` and must not expose raw tokens, private config, or sensitive file contents.
+- `LOCAL_ACCESS_MISMATCH`: Core or an operator can classify a reachable local endpoint or caller path as outside the registered local access/profile boundary, including off-profile or unauthorized local access. Details use `ToolErrorLocalAccessDetails` and must not expose raw tokens, private config, or sensitive file contents. This reference does not add a separate `ACCESS_DENIED` code for local-profile mismatch.
 - `CAPABILITY_INSUFFICIENT`: the caller is on a recognized surface/profile, but the profile cannot satisfy a required capability, validator, or enforcement condition.
 
 When a `ToolError` object is available for an MCP availability problem, `details.mcp_unavailable_kind` may be `server_unavailable`, `surface_mcp_unavailable`, `stale_connection`, or `unknown`.
@@ -990,7 +995,7 @@ User-facing displays should map `ErrorCode` values to display labels and next-ac
 | `ARTIFACT_MISSING` | artifact issue | Reattach, regenerate, or replace the missing or failed artifact before relying on it as evidence. |
 | `VALIDATOR_FAILED` | check or blocker failed | Show the specific validator or blocker finding when available and name the smallest concrete fix; use this fallback only when no more specific typed blocker applies. |
 
-`DECISION_REQUIRED`, `DECISION_UNRESOLVED`, `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID`, `AUTONOMY_BOUNDARY_EXCEEDED`, `RESIDUAL_RISK_NOT_VISIBLE`, `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, and `VALIDATION_FAILED` are stable public `ErrorCode` values. Validator-specific detail still belongs in `ValidatorResult.findings`.
+All codes in the taxonomy table are public `ErrorCode` values for this reference. Validator-specific detail still belongs in `ValidatorResult.findings`; write-authority, MCP availability, and local-access/profile details belong in the matching `ToolError.details` diagnostic object.
 
 ### Primary Error Code Precedence
 
@@ -1132,9 +1137,7 @@ There is no standalone `harness.record_evidence` method in the current public MC
 
 Purpose: return project, surface, active Task, compact current-position summary, gate, guarantee, projection freshness when in scope, active Decision Packet, Autonomy Boundary, Write Authority Summary, residual-risk, and pending-decision status.
 
-Stage/profile: v0.1 uses the minimal status/blocker profile; v0.2 adds the fuller user-facing status/card profile; v0.3 adds assurance summaries when verification, QA, evidence, residual-risk, or validator profiles are enabled; v0.4 adds projection/reconcile/operations freshness where Operations storage exists. The response schema stays exact, but future-profile fields can carry `null`, empty arrays, `unknown`, or `not_required` values rather than forcing those capabilities into v0.1.
-
-v0.1 Core Authority Slice may use this as the minimal status/blocker output for the internal authority loop. Future-profile fields can be `null`, empty, `unknown`, or `not_required` according to their schema meaning when their capability is not in v0.1 scope.
+Stage/profile: v0.1 uses the minimal status/blocker profile. v0.2 adds the user-facing status/card profile with `next_actions`. v0.3+ adds assurance, projection, reconcile, and operations fields only through the activation tables above.
 
 User-facing meaning: show the current position. A status display should lead with active Task, current phase, primary blocker when one exists, smallest unblocker, write authority status, guarantee level, and projection freshness. It may include refs and secondary blockers, but it should not make the user read raw schema fields to understand whether work can continue.
 
@@ -1312,8 +1315,6 @@ Next response profiles:
 | v0.1 minimal | If implemented, return only the next authority-loop action or smallest blocker: prepare the scoped write, record the authorized Run, report missing scope/write authority, or report missing artifact/evidence support. `recommended_playbooks` and future-profile refs may be empty; `judgment_context` and `autonomy_boundary` may be `null` unless owner state exists. |
 | v0.2 user-facing | Return ordinary-language next action, pending Decision Packet refs, judgment context when a user-owned judgment is needed, and evidence/close-readiness context. Work-acceptance and residual-risk facts appear when relevant without requiring separate projection kinds. |
 | v0.3/v0.4 assurance and operations | Return verification, Eval, Manual QA, acceptance, reconcile, projection freshness, and operations-oriented next actions only when those profiles are enabled and backed by matching storage. |
-
-For v0.1 Core Authority Slice, `harness.next` is optional. If used, it should return only the next minimal authority-loop action, such as prepare the scoped write, record the authorized Run, report missing scope, or report missing artifact/evidence support. `verification`, `qa`, `acceptance`, and `reconcile` focus values and their action kinds are future-profile behavior.
 
 `next_action.action_kind` meanings:
 
@@ -1661,7 +1662,7 @@ Idempotency behavior: repeated request returns the same run, artifact records, e
 
 Compatibility alias: `harness.request_user_decision`.
 
-Purpose: create a structured Decision Packet for a user judgment that blocks progress, write, close, residual-risk acceptance, waiver, or reconcile.
+Purpose: create a structured Decision Packet for a user judgment that blocks progress, write, close, or an active profile-specific acceptance, waiver, risk, or reconcile path.
 
 Stage/profile: not active in v0.1. v0.2 introduces user-facing Decision Packet prompts when user-owned judgment or work acceptance blocks progress or close. Approval hardening, QA/verification waivers, full residual-risk acceptance, and reconcile are later-profile extensions unless their owner profile is active.
 
@@ -1738,7 +1739,7 @@ Idempotency behavior: repeated request returns the same Decision Packet, related
 
 Compatibility alias: `harness.record_user_decision`.
 
-Purpose: record the user's answer to a pending Decision Packet and optionally record accepted residual risk.
+Purpose: record the user's answer to a pending Decision Packet and, when the active route/profile allows it, record accepted residual risk.
 
 Stage/profile: not active in v0.1. v0.2 records user-owned judgments and work acceptance when those paths are in the MVP scope. Approval grants/denials, waivers, residual-risk acceptance metadata, and reconcile outcomes require their later owner profiles unless explicitly active. This method records a user's answer to an existing canonical Decision Packet; it does not create broad approval or write authority.
 
@@ -1839,8 +1840,7 @@ CloseTaskRequest:
 Response schema:
 
 ```yaml
-CloseState:
-  value: open | blocked | closed | cancelled | superseded
+CloseState: open | blocked | closed | cancelled | superseded
 
 CloseBlockerCategory:
   enum:

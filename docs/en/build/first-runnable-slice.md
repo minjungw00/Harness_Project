@@ -24,7 +24,7 @@ The first slice should show that Harness state is local, durable, and authoritat
 
 Use [Kernel Reference](../reference/kernel.md#prepare_write) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#public-tools) for the exact contracts.
 
-For API staging, read the MCP reference through its v0.1 surface: minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, one owner-valid Task/scope setup path, and optional minimal `harness.next` or narrow `harness.close_task` blocker smoke. Later-profile fields remain exact when their profiles are active, but they are not first-slice exit criteria.
+For API staging, start from the MCP API [Stage Profile Manifest](../reference/mcp-api-and-schemas.md#stage-profile-manifest) and use only its v0.1 surface: minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, one owner-valid Task/scope setup path, and optional minimal `harness.next` or narrow `harness.close_task` blocker smoke. Later-profile fields remain exact when their profiles are active, but they are not first-slice exit criteria.
 
 ## Goal
 
@@ -49,7 +49,7 @@ The first slice is deliberately not the User-Facing Harness MVP, the hardened lo
 
 ## Success story
 
-An implementer can run a local Harness process against a temporary product repository and observe this story:
+After a future v0.1 implementation exists, an implementer should be able to run a local Harness process against a temporary product repository and observe this story:
 
 1. Harness registers one local project.
 2. A Task exists in Core-owned state.

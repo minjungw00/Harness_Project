@@ -74,7 +74,7 @@ Build staging 자체가 security guarantee를 올려 주지는 않습니다. Sec
 
 ### Stage별 API surface
 
-MCP API reference는 문서화한 모든 method의 정확한 schema를 정의합니다. Staged delivery는 method/profile이 언제 active인지 결정합니다. Later-profile field는 해당 profile에서 exact하게 남지만 더 이른 stage exit에 들어가지 않습니다.
+MCP API reference는 문서화한 모든 method의 정확한 schema를 정의합니다. Staged delivery는 method/profile이 언제 active인지 결정합니다. API [Stage Profile Manifest](../reference/mcp-api-and-schemas.md#stage-profile-manifest)를 owner table로 사용합니다. Later-profile field는 해당 profile에서 exact하게 남지만 더 이른 stage exit에 들어가지 않습니다.
 
 | Stage | Active API surface | Stage exit에 넣지 않을 later-profile fields |
 |---|---|---|
