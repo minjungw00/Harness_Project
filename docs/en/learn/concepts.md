@@ -104,7 +104,7 @@ The labels below are implementation or reference labels. Users do not need to us
 | Shared Design | Internal record of shared understanding for goal, value, scope, non-goals, assumptions, decisions, and safe next work. |
 | Change Unit | Optional/internal label for bounded product-write scope. It names what may change, but does not authorize a write by itself. |
 | Autonomy Boundary | Internal label for choices the agent may make inside the active scope without asking again. |
-| Decision Packet | Optional/internal label for the recorded path for a specific user-owned judgment. Users can simply answer the named decision. |
+| Decision Packet | Optional/internal label for a full-format presentation of a specific user-owned judgment. Users can simply answer the named judgment request. |
 | Approval | Permission for a named sensitive action. It is not work acceptance for the completed work. |
 | Write Authorization | Internal record that a specific product-write attempt is compatible with current Harness authority. |
 | Evidence Manifest | Internal record mapping completion conditions or acceptance criteria to evidence references. |
@@ -127,7 +127,7 @@ These anchors keep links stable. They do not make the terms required user vocabu
 - <a id="shared-design"></a>Shared Design: optional/internal label for recorded shared understanding.
 - <a id="change-unit"></a>Change Unit: optional/internal label for bounded product-write scope.
 - <a id="autonomy-boundary"></a>Autonomy Boundary: optional/internal label for in-scope agent choices.
-- <a id="decision-packet"></a>Decision Packet: optional/internal label for recording a specific user-owned judgment.
+- <a id="decision-packet"></a>Decision Packet: optional/internal label for full-format presentation of a specific user-owned judgment.
 - <a id="evidence"></a>Evidence: support for a completion or correctness claim.
 - <a id="approval"></a>Approval: permission for a named sensitive action.
 - <a id="write-authorization"></a>Write Authorization: optional/internal label for a compatible write attempt.

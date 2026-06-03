@@ -21,7 +21,7 @@ Read [Implementation Overview](implementation-overview.md) and [First Runnable S
 
 For write-capable tracked work, a request becomes safe product work only after Harness knows the Task and the initial scope, and after any stage-required clarification or user-owned judgments are recorded. Product writes then pass through `prepare_write`, which can create a one-attempt Write Authorization. Runs consume that authority, evidence and artifacts support claims, and status/blocker output makes the current state readable. Later user-value, assurance, projection, and close paths explain blockers or close the Task only when their stage is in scope.
 
-The walkthrough shows a staged reader path. The Engineering Checkpoint design target covers only the smallest internal part of it: one local project registration, one active Task, one scoped boundary represented by the Change Unit owner shape only where the reference contract requires it, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence ref, and one structured status/blocker response. Engineering Checkpoint does not require natural-language intake, full Discovery, full Decision Packet, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, recover/export, operations suite, dashboards, connectors, or detached verification. MVP-1 User Work Loop adds ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria summary, minimal user judgment request/record, small direct vs tracked work distinction, status/next output, evidence summary, close blocker summary, residual-risk visibility, separated sensitive approval / work acceptance / risk acceptance display, and a compact Core-derived status card.
+The walkthrough shows a staged reader path. The Engineering Checkpoint design target covers only the smallest internal part of it: one local project registration, one active Task, one scoped boundary represented by the Change Unit owner shape only where the reference contract requires it, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence ref, and one structured status/blocker response. Engineering Checkpoint does not require natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, recover/export, operations suite, dashboards, connectors, or detached verification. MVP-1 User Work Loop adds ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria summary, minimal user judgment request/record, small direct vs tracked work distinction, status/next output, evidence summary, close blocker summary, residual-risk visibility, separated sensitive approval / work acceptance / risk acceptance display, and a compact Core-derived status card.
 
 ## Walkthrough at a glance
 
@@ -59,7 +59,7 @@ Strict behavior: Task lifecycle, modes, and state transitions are owned by [Kern
 
 Requirements clarification, internally named Discovery, is MVP-1-and-later behavior, not a Engineering Checkpoint requirement. It is used when the request is ambiguous, risky, multi-step, product-facing, or likely to need user-owned judgment. It clarifies goal, user value, non-goals, success criteria, inspectable facts, assumptions, technical and product choices, security or privacy concerns, QA expectations, remaining uncertainty, and scope boundaries.
 
-Strict behavior: requirements clarification / Discovery is shaping input. It is not Approval, Write Authorization, evidence, verification, QA, work acceptance, residual-risk acceptance, close, scope authority, or a new authority path. Judgment routing is owned by [Decision Packet](../reference/kernel.md#decision-packet) and the public judgment call in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#harnessrequest_user_judgment).
+Strict behavior: requirements clarification / Discovery is shaping input. It is not Approval, Write Authorization, evidence, verification, QA, work acceptance, residual-risk acceptance, close, scope authority, or a new authority path. Judgment routing is owned by [User Judgment](../reference/kernel.md#user-judgment) and the public judgment call in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#harnessrequest_user_judgment).
 
 ### 3. Requirements clarification -> scoped next work -> Change Unit
 
@@ -71,15 +71,15 @@ Strict behavior: Change Unit and Autonomy Boundary semantics are owned by [Kerne
 
 ### 4. Change Unit -> `prepare_write`
 
-Before a product write, the agent asks Core for write authority for the intended operation. Core checks current state, Change Unit scope, Autonomy Boundary where in scope, and any active-stage requirements such as baseline freshness, sensitive-action Approval, Decision Packets, applicable design policy, and surface capability. Engineering Checkpoint needs only the scope/write-authority checks required for Engineering Checkpoint.
+Before a product write, the agent asks Core for write authority for the intended operation. Core checks current state, Change Unit scope, Autonomy Boundary where in scope, and any active-stage requirements such as baseline freshness, sensitive-action Approval, user judgments, applicable design policy, and surface capability. Engineering Checkpoint needs only the scope/write-authority checks required for Engineering Checkpoint.
 
 Strict behavior: `prepare_write` is owned by [Kernel Reference](../reference/kernel.md#prepare_write). Public request and response shapes are owned by [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write).
 
 ### 5. `prepare_write` -> Write Authorization or blocker
 
-If the checks pass, Core creates or returns a compatible Write Authorization for one specific attempt. If the checks do not pass, the response routes to a blocker, state conflict, sensitive-action Approval path, or Decision Packet path.
+If the checks pass, Core creates or returns a compatible Write Authorization for one specific attempt. If the checks do not pass, the response routes to a blocker, state conflict, sensitive-action Approval path, or user judgment path.
 
-Strict behavior: Write Authorization semantics are owned by [Write Authorization](../reference/kernel.md#write-authorization). Approval and Decision Packet non-substitution rules are owned by [Judgment route boundaries](../reference/kernel.md#judgment-route-boundaries).
+Strict behavior: Write Authorization semantics are owned by [Write Authorization](../reference/kernel.md#write-authorization). Approval and User Judgment non-substitution rules are owned by [Judgment route boundaries](../reference/kernel.md#judgment-route-boundaries).
 
 ### 6. Write Authorization -> Run
 

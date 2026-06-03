@@ -186,7 +186,7 @@ conformance_risks:
   - extension wording alone must not be reported as a guard
 ```
 
-Gemini connector는 단계별 맥락에 필요한 compact context만 전달하는 편이 좋습니다. 예를 들면 current Harness status, active Decision Packet summary, Autonomy Boundary summary, Change Unit scope, close 근처의 residual-risk summary입니다. Longer standard, domain language, module map, interface contract, schema, template는 현재 profile이 필요로 할 때만 MCP resource로 가져오게 합니다.
+Gemini connector는 단계별 맥락에 필요한 compact context만 전달하는 편이 좋습니다. 예를 들면 current Harness status, active user judgment summary, Autonomy Boundary summary, Change Unit scope, close 근처의 residual-risk summary입니다. Longer standard, domain language, module map, interface contract, schema, template는 현재 profile이 필요로 할 때만 MCP resource로 가져오게 합니다.
 
 ## GitHub Copilot
 

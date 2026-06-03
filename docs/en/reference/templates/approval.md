@@ -11,8 +11,8 @@ Implementation tier: Assurance Profile reports. `APR` is used only after committ
 ## Source records
 
 - committed Approval record
-- related approval-shaped Decision Packet
-- optional decision request routing/replay record, if implementation keeps one
+- related Sensitive action approval `user_judgment`
+- optional user-judgment request routing/replay record, if implementation keeps one
 - Change Unit scope
 - sensitive categories
 - allowed paths, tools, commands, network targets, and secrets
@@ -21,14 +21,14 @@ Implementation tier: Assurance Profile reports. `APR` is used only after committ
 
 A non-mutating `approval_request_candidate` returned by `prepare_write` is not an `APR` source and must be displayed, if at all, as candidate display.
 
-Boundary Summary is a derived display block from approval scope, linked Approval records, related Decision Packet refs, and current write or close context. It is a user-facing boundary reminder, not an independent authority source or gate.
+Boundary Summary is a derived display block from approval scope, linked Approval records, related user judgment refs, and current write or close context. It is a user-facing boundary reminder, not an independent authority source or gate.
 
 ## Rendered sections
 
 - Request Summary
 - Source Refs
 - Boundary Summary
-- Related Decision Packet
+- Related User Judgment
 - Requested Scope
 - Expiry And Use
 - Why This Is Needed
@@ -63,7 +63,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Source Refs
 - Approval record:
-- Decision Packet:
+- User judgment:
 - related Write Authorization:
 - artifact refs:
 - redaction state:
@@ -78,9 +78,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 - waiver boundary:
 - secret exposure boundary:
 
-## Related Decision Packet
-- approval-shaped Decision Packet:
-- separate Decision Packet for user-owned product or material technical judgment, if required:
+## Related User Judgment
+- Sensitive action approval judgment:
+- separate Product/UX or Technical judgment, if required:
 - decision gate impact:
 - approval gate impact:
 
@@ -155,6 +155,6 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 This template is a rendered projection, not approval authority. The Approval record and approval decision path remain authoritative; this Markdown only displays the request, decision, and boundary.
 
-The Boundary section is the user-facing reminder. Decision request routing records are not decision authority and cannot affect `decision_gate` except through a linked compatible Decision Packet.
+The Boundary section is the user-facing reminder. User-judgment request routing records are not judgment authority and cannot affect `decision_gate` except through a linked compatible `user_judgment`.
 
-The approval wording should not invite a broad answer. If the user says "go ahead," "proceed," or "looks good," the rendered decision must still show that only the named sensitive action and scope were approved. If that answer could also refer to work acceptance, residual-risk acceptance, QA waiver, verification waiver, or another pending Decision Packet, clarify before recording it.
+The approval wording should not invite a broad answer. If the user says "go ahead," "proceed," or "looks good," the rendered decision must still show that only the named sensitive action and scope were approved. If that answer could also refer to work acceptance, residual-risk acceptance, QA waiver, verification waiver, or another pending user judgment, clarify before recording it.

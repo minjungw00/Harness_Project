@@ -114,7 +114,7 @@ For example, "projection `TASK` is stale" means the readable view is behind the 
 
 These examples are display guidance. They do not add command flags, state tables, event names, public `ErrorCode` values, or fixture fields.
 
-Status/next recommendations, Role Lens output, recommended playbooks, and operator diagnostics are read-only guidance unless a later existing Core/MCP mutation path records the underlying action. They may suggest a Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, repair, export, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close a Task by themselves.
+Status/next recommendations, Role Lens output, recommended playbooks, and operator diagnostics are read-only guidance unless a later existing Core/MCP mutation path records the underlying action. They may suggest a user judgment request, `prepare_write`, evidence collection, verification, QA, reconcile, repair, export, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close a Task by themselves.
 
 ## Conformance staging
 
@@ -128,7 +128,7 @@ MVP-1 User Work Loop uses the small user-value fixture set in [Conformance Fixtu
 
 The later conformance profiles follow the stage names in [MVP Plan](../build/mvp-plan.md): Assurance Profile fixtures for Assurance Profile, and Operations Profile or promoted-expansion fixtures for Operations Profile and promoted Roadmap candidates. Exact policy, API, storage, projection, connector, and fixture requirements stay in their Reference owners. Suite catalog metadata may group scenarios by suite, delivery stage, and tags for runner selection and reporting, but it is not passed to Core; future executable fixtures still assert through Core state, events, artifacts, projections/freshness, and errors.
 
-Guard/freeze conformance in staged delivery asserts honest display and behavior at cooperative/detective levels: freeze requests can hold work, make the next action stricter, or cause `prepare_write` to return a structured blocker or hold when existing scope is incompatible; persistent owner-record changes must be asserted only when they happen through an existing Core state-changing path, Decision Packet route, or owner-record update path. Guard displays report whether the current path is cooperative or detective and what violations can only be detected after the fact. Preventive `T4` guard fixtures and higher guarantee levels remain operations/future or Roadmap scope unless owner docs promote and prove a concrete covered operation with fixture-backed pre-tool blocking for the relevant reference surface. Isolated-profile conformance must name whether the boundary supports verification independence/stale-context control or stronger security isolation, and must not treat a worktree, fresh evaluator bundle, or process split as OS sandboxing or tamper-proof security unless that exact mechanism is proven.
+Guard/freeze conformance in staged delivery asserts honest display and behavior at cooperative/detective levels: freeze requests can hold work, make the next action stricter, or cause `prepare_write` to return a structured blocker or hold when existing scope is incompatible; persistent owner-record changes must be asserted only when they happen through an existing Core state-changing path, User Judgment route, or owner-record update path. Guard displays report whether the current path is cooperative or detective and what violations can only be detected after the fact. Preventive `T4` guard fixtures and higher guarantee levels remain operations/future or Roadmap scope unless owner docs promote and prove a concrete covered operation with fixture-backed pre-tool blocking for the relevant reference surface. Isolated-profile conformance must name whether the boundary supports verification independence/stale-context control or stronger security isolation, and must not treat a worktree, fresh evaluator bundle, or process split as OS sandboxing or tamper-proof security unless that exact mechanism is proven.
 
 Browser QA Capture conformance is a Roadmap candidate, not a requirement of Engineering Checkpoint fixtures, MVP-1 User Work Loop fixtures, Assurance Profile fixtures, or Operations Profile / promoted-expansion fixtures. Until promoted through the [Roadmap promotion criteria](../roadmap.md#promotion-criteria), it is non-authoritative capture support only. Future fixtures should prove declared `T6 QA Capture` behavior only after capability profile fields, redaction and secret/PII handling, browser test environment, artifact retention, capture artifact mapping, unsupported-surface fallback behavior, and no projection-as-canonical dependency are defined. Staged-delivery fixtures still prove Manual QA records, artifact refs, QA waiver behavior, acceptance boundaries, and close blockers without requiring automated browser capture.
 
@@ -240,7 +240,7 @@ Full doctor/readiness categories:
 | projections | queued jobs, freshness, managed hash drift, failed renders |
 | reconcile | pending human edits, managed block drift, generated/managed manifest drift |
 | validators/checks | required stable ValidatorResult-emitting validators, plus separately captured Core check/precondition categories |
-| agency/stewardship/context | Decision Packet and decision gate readiness, Autonomy Boundary readiness, residual-risk visibility, codebase stewardship, context freshness, stale chat/pull-only context not treated as authority |
+| agency/stewardship/context | User Judgment and decision gate readiness, Autonomy Boundary readiness, residual-risk visibility, codebase stewardship, context freshness, stale chat/pull-only context not treated as authority |
 | security/threat model | local binding/access expectation, registered project/task/surface consistency, connector drift, sensitive-category side effects, redaction, omission, or block coverage that cuts across runtime home, artifact store, reference surface, and MCP availability; threat concepts are owned by [Security Threat Model Reference](security-threat-model.md) |
 
 Doctor summary: `doctor` reads readiness categories and reports diagnostic levels; it does not repair, mutate, or certify runtime state by the diagram alone.
@@ -301,10 +301,10 @@ Compact doctor examples:
 | projections | `projections FAIL RUN-SUMMARY failed render_error=template_input_missing` | The projection job failed; the Run record is not converted into a failed Run by this display failure. |
 | reconcile | `reconcile MANUAL generated-file drift .harness/agent/generated/reference-instructions.md` | The generated file is reported and routed for review; it is not silently overwritten or treated as state. |
 | validators/checks | `validators/checks WARN context_hygiene_check stale projection refs` | Stable validators and Core checks are reported separately; a mechanical projection freshness issue is not a new validator ID. |
-| agency/stewardship/context | `agency/stewardship/context FAIL Decision Packet required for user-owned trade-off` | The blocker routes to the Decision Packet path; broad approval or status prose cannot satisfy the decision. |
+| agency/stewardship/context | `agency/stewardship/context FAIL User Judgment required for user-owned trade-off` | The blocker routes to the User Judgment path; broad approval or status prose cannot satisfy the judgment. |
 | security/threat model | `security/threat model WARN socket permissions broader than profile` | The finding changes the reported guarantee and may block write-capable readiness, but file permissions are diagnostic rather than canonical state. |
 
-Security-oriented doctor output is diagnostic and does not create new runtime authority. It applies the threat concepts in [Security Threat Model Reference](security-threat-model.md) and should report when the MCP access mode does not match the local process/localhost expectation or the documented connector profile, when project/task/surface claims do not match registered state, when connector-managed files drift, when artifacts lack redaction, omission, or block metadata required by their sensitive category, and when sensitive operations including `destructive_write`, `network_write`, `external_service_write`, `secret_access`, `privacy_or_pii_change`, `data_export`, `infra_or_deployment_change`, `production_config_change`, `ci_cd_change`, `billing_or_cost_change`, or `telemetry_or_logging_change` appear outside the recorded scope/approval/Decision Packet/Write Authorization path.
+Security-oriented doctor output is diagnostic and does not create new runtime authority. It applies the threat concepts in [Security Threat Model Reference](security-threat-model.md) and should report when the MCP access mode does not match the local process/localhost expectation or the documented connector profile, when project/task/surface claims do not match registered state, when connector-managed files drift, when artifacts lack redaction, omission, or block metadata required by their sensitive category, and when sensitive operations including `destructive_write`, `network_write`, `external_service_write`, `secret_access`, `privacy_or_pii_change`, `data_export`, `infra_or_deployment_change`, `production_config_change`, `ci_cd_change`, `billing_or_cost_change`, or `telemetry_or_logging_change` appear outside the recorded scope/approval/user judgment/Write Authorization path.
 
 Doctor should also check the runtime-home file trust posture at the documentation-contract level. It should warn or fail, according to risk and platform observability, when `state.sqlite`, `registry.sqlite`, `project.yaml`, connector config snippets, connector manifests, generated manifests, artifact directories, staging files, or generated operational files are readable or writable beyond the documented local control profile in a way that enables tampering, spoofed configuration, or secret/PII exposure. File-permission findings are diagnostic; they do not make direct file edits authoritative and they do not replace Core shape, owner, integrity, and artifact checks.
 
@@ -409,7 +409,7 @@ flowchart TD
   Skipped --> Separate
 ```
 
-For staged delivery, Decision Packet visibility is rendered through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays. Current-position context is rendered through compact status/next output first. Kernel Smoke does not require dedicated refresh targets for standalone `DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`, Run Summary, Evidence Manifest, detailed Eval, TDD Trace, Module Map, and Interface Contract projections; those targets are profile-gated Future/diagnostic projections or Operations/export reports when enabled.
+For staged delivery, user judgment visibility is rendered through status/next responses, judgment-context resources, user-judgment resources, compatibility decision-packet resources when enabled, and minimal `TASK` or card displays. Current-position context is rendered through compact status/next output first. Kernel Smoke does not require dedicated refresh targets for standalone `DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`, Run Summary, Evidence Manifest, detailed Eval, TDD Trace, Module Map, and Interface Contract projections; those targets are profile-gated Future/diagnostic projections or Operations/export reports when enabled.
 
 Projection support is source-backed. `TASK` minimal summary is the MVP-1 User Work Loop summaries path when persisted projection support is used, and `DIRECT-RESULT` is a compact direct-work summary only when that profile is active. `APR` and `MANUAL-QA` belong to Assurance Profile reports when their profiles are active. `EXPORT` belongs to Operations/export reports when export or handoff support is enabled. Detailed reports such as `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DESIGN`, and persisted `JOURNEY-CARD` are Future/diagnostic projections unless an owner profile promotes them. Projection refresh must report missing source records as unavailable or not applicable rather than creating state to satisfy a template.
 
@@ -548,7 +548,7 @@ Required contents:
 
 - export manifest with created time, Task id or ids, included state/event version range, projection freshness, export profile, and redaction status summary
 - state snapshots for the Task and related Core records, plus safe state/event version facts needed to understand the snapshot without creating new DDL or a second state store
-- Decision Packets, user judgments, residual risks with accepted-risk metadata/refs, Journey Spine entries or continuity refs, and relevant Change Unit Autonomy Boundary summaries
+- user judgments, residual risks with accepted-risk metadata/refs, Journey Spine entries or continuity refs, and relevant Change Unit Autonomy Boundary summaries
 - report projection snapshots for relevant reports, including current/stale/failed/omitted freshness status
 - artifact references, owner relations, integrity metadata, redaction status, retention/availability, and included raw artifact files only when allowed
 - artifact integrity manifest
@@ -561,7 +561,7 @@ Export summary: export bundles are derived from Core state, event-version facts,
 flowchart TD
   Export["Task export bundle"] --> Manifest["export manifest"]
   Export --> State["state snapshots"]
-  Export --> Decisions["Decision Packets and user judgments"]
+  Export --> Decisions["User judgments"]
   Export --> Risks["residual risks and accepted-risk refs"]
   Export --> Journey["Journey Spine or continuity refs"]
   Export --> Projections["report projection snapshots"]
@@ -589,8 +589,8 @@ included_projection_freshness:
   TASK: current
   EVAL: stale
 export_bundle_status: current
-decision_packet_refs:
-  included: [DEC-010, DEC-011]
+user_judgment_refs:
+  included: [UJ-010, UJ-011]
 residual_risks:
   visible_refs: [RISK-004]
   accepted_refs: [RISK-002]
@@ -612,7 +612,7 @@ omitted_artifacts:
     note: metadata-only notice included; raw payload unavailable
 ```
 
-This display shape is illustrative. The required behavior is that export reports freshness for included projections, artifact integrity, Decision Packets, residual risks, omitted or blocked artifacts, and redaction/omission/block effects without copying raw staged, omitted, blocked, secret, or PII values into the bundle. `export_bundle_status` is report status for the bundle being produced; it is not a canonical state record or a required `EXPORT` projection job.
+This display shape is illustrative. The required behavior is that export reports freshness for included projections, artifact integrity, user judgments, residual risks, omitted or blocked artifacts, and redaction/omission/block effects without copying raw staged, omitted, blocked, secret, or PII values into the bundle. `export_bundle_status` is report status for the bundle being produced; it is not a canonical state record or a required `EXPORT` projection job.
 
 ### Release Handoff Export Profile
 
@@ -634,7 +634,7 @@ Boundary:
 
 - Deployment, merge, external approval, production monitoring, and VCS review authority remain external to Harness.
 - Release Handoff does not close a Task, deploy, merge, approve, accept residual risk, accept the result, waive QA or verification, upgrade assurance, or satisfy gates by itself.
-- Suggested checklist items are advisory. If they reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, sensitive-action permission needs, or later Approval needs when that profile is active, those needs route to the existing Decision Packet, evidence, Manual QA, Eval, residual-risk, sensitive-action permission / Approval, or close paths.
+- Suggested checklist items are advisory. If they reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, sensitive-action permission needs, or later Approval needs when that profile is active, those needs route to the existing User Judgment, evidence, Manual QA, Eval, residual-risk, sensitive-action permission / Approval, or close paths.
 
 Diagnostic and reporting boundary: future Local Derived Metrics may appear in reports or operator diagnostics only as read-only derived displays until owner docs promote them. They do not create operational authority; see [Roadmap: Candidate Inventory](../roadmap.md#candidate-inventory) for the candidate boundary.
 
@@ -642,7 +642,7 @@ Release Handoff catalog entry:
 
 | Scenario ID | Operator action | Required assertions |
 |---|---|---|
-| `EXPORT-release-handoff-does-not-close-or-deploy` | `export` or report read | Generating or returning a Release Handoff report/export may include close readiness, blockers, evidence refs, verification refs, Manual QA refs, residual-risk refs, changed files, projection freshness, artifact retention/availability, redaction/omission/block notes, and advisory PR/deploy/rollback/monitoring checklist items. The report/export alone must not mutate Task lifecycle, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, merge, deploy, monitor production, upgrade assurance, or create deployment/merge authority. Checklist findings that reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, sensitive-action permission needs, or later Approval needs when that profile is active route to existing Decision Packet, evidence, Manual QA, Eval, residual-risk, sensitive-action permission / Approval, or close paths. |
+| `EXPORT-release-handoff-does-not-close-or-deploy` | `export` or report read | Generating or returning a Release Handoff report/export may include close readiness, blockers, evidence refs, verification refs, Manual QA refs, residual-risk refs, changed files, projection freshness, artifact retention/availability, redaction/omission/block notes, and advisory PR/deploy/rollback/monitoring checklist items. The report/export alone must not mutate Task lifecycle, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, merge, deploy, monitor production, upgrade assurance, or create deployment/merge authority. Checklist findings that reveal blocking user-owned judgment, risk acceptance, Manual QA, evidence, verification, sensitive-action permission needs, or later Approval needs when that profile is active route to existing User Judgment, evidence, Manual QA, Eval, residual-risk, sensitive-action permission / Approval, or close paths. |
 
 ## artifacts check
 
@@ -689,7 +689,7 @@ flowchart TD
 
 Failures should mark related evidence, projection freshness, or close readiness stale/blocked according to Core rules. Missing artifacts are not fixed by editing Markdown reports.
 
-When an artifact check observes `secret_omitted` or `blocked`, downstream operations report the effect instead of hiding it: Evidence Manifest and QA views show omitted or blocked refs, detached verification treats unavailable raw bytes as missing input unless the Eval path accepts the omission or another documented resolution applies, projection displays show the redaction state rather than embedded content, and export/Release Handoff summaries list the omission or block without leaking the value. `secret_omitted` can support claims whose nonsecret evidence remains visible; `blocked` keeps the attempted capture auditable but leaves dependent evidence, QA, Eval, projection, export, or Release Handoff inputs blocked, insufficient, unavailable, or unresolved until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the path.
+When an artifact check observes `secret_omitted` or `blocked`, downstream operations report the effect instead of hiding it: Evidence Manifest and QA views show omitted or blocked refs, detached verification treats unavailable raw bytes as missing input unless the Eval path accepts the omission or another documented resolution applies, projection displays show the redaction state rather than embedded content, and export/Release Handoff summaries list the omission or block without leaking the value. `secret_omitted` can support claims whose nonsecret evidence remains visible; `blocked` keeps the attempted capture auditable but leaves dependent evidence, QA, Eval, projection, export, or Release Handoff inputs blocked, insufficient, unavailable, or unresolved until a replacement, waiver, User Judgment outcome, accepted risk, or documented fallback resolves the path.
 
 Artifact check diagnostics should also show boundary failures for staged inputs. A `staged_uri` that resolves outside project `artifacts/tmp/`, escapes through a symlink, uses parent traversal, names an arbitrary absolute path, or points at a repo-local file outside an approved capture adapter is reported as outside the approved staging/capture boundary. The report names the affected locator and owner relation when safe, marks the artifact input invalid or unavailable through existing artifact/check results, and must not copy, hash, display, or export the forbidden target as Harness evidence.
 

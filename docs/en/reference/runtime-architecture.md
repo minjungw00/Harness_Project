@@ -192,7 +192,7 @@ Core can run as a single local process in the first slices. The full server may 
 | State store | current records, state versions, locks, and `state.sqlite.task_events` |
 | Task workflow | Task state, scoped work boundary, minimal status/blocker response, and later intake, mode selection, next action, gate updates, close decisions |
 | Journey module | Journey Spine reconstruction, Journey Spine Entry support records, Journey Card inputs, and continuity refs when the relevant profile is active |
-| Decision module | Decision Packet lifecycle, `decision_gate` aggregation, user judgment routing, and residual-risk visibility inputs when the relevant profile is active |
+| User Judgment module | User Judgment lifecycle, `decision_gate` aggregation, user judgment routing, optional full-format Decision Packet presentation, and residual-risk visibility inputs when the relevant profile is active |
 | Approval module | scope-bound approval request, decision, expiry, and drift handling when sensitive-action approval is in scope |
 | Evidence module | run records and artifact/evidence refs first; evidence manifests and coverage checks when the relevant profile is active |
 | Verification module | verification bundles, evaluator runs, Eval records, and independence checks |
@@ -255,7 +255,7 @@ An artifact has two parts:
 - the registered artifact ref and artifact state record in `state.sqlite` that name its kind, path, hash, size, redaction state, retention class, and Task-scoped owner relation
 
 
-Core records artifact refs on existing Task-scoped owner records such as runs, evidence manifests, Eval records, Manual QA records, Decision Packets, and rendered Task-scoped projection refs. In the current Task-scoped artifact model, `artifact_links` to rendered projection refs stay within the artifact's `task_id`; project-level projection jobs may still be tracked by `projection_jobs` metadata where owner docs allow them, but they are not project-scoped artifact links. Export snapshots and components remain artifact files linked back to valid owners or Task-scoped projections. The MCP API, Storage And DDL, Document Projection, and Operations docs own the exact relation rules. Large logs, diffs, screenshots, traces, and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
+Core records artifact refs on existing Task-scoped owner records such as runs, evidence manifests, Eval records, Manual QA records, user judgments, and rendered Task-scoped projection refs. In the current Task-scoped artifact model, `artifact_links` to rendered projection refs stay within the artifact's `task_id`; project-level projection jobs may still be tracked by `projection_jobs` metadata where owner docs allow them, but they are not project-scoped artifact links. Export snapshots and components remain artifact files linked back to valid owners or Task-scoped projections. The MCP API, Storage And DDL, Document Projection, and Operations docs own the exact relation rules. Large logs, diffs, screenshots, traces, and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
 
 Raw secrets should not be stored as artifacts. If secret-related evidence is required, Core records a redacted artifact, a secret handle, or an operator note that passed the relevant validator.
 
@@ -270,8 +270,8 @@ The boundary is:
 | Item | Authority | Examples |
 |---|---|---|
 | Raw artifact | Durable evidence file in artifact store | diff, log, screenshot, checkpoint, bundle, manifest file |
-| State record | Canonical structured record in `state.sqlite` | Task, Change Unit, Decision Packet, Journey Spine Entry, Residual Risk, Run, Approval, Eval, Manual QA record, Evidence Manifest, Shared Design, Artifact record |
-| Markdown report | Human-readable projection from records and artifact refs | TASK, compact status cards, Decision Packet views, APR, DIRECT-RESULT, and later diagnostic views such as Journey Card/Spine, RUN-SUMMARY, EVAL, and EVIDENCE-MANIFEST |
+| State record | Canonical structured record in `state.sqlite` | Task, Change Unit, User Judgment, Journey Spine Entry, Residual Risk, Run, Approval, Eval, Manual QA record, Evidence Manifest, Shared Design, Artifact record |
+| Markdown report | Human-readable projection from records and artifact refs | TASK, compact status cards, optional full-format Decision Packet views, APR, DIRECT-RESULT, and later diagnostic views such as Journey Card/Spine, RUN-SUMMARY, EVAL, and EVIDENCE-MANIFEST |
 
 
 These named report kinds are projections generated from state records and artifact refs by default. They may refer to evidence files in the artifact store, and an export may include snapshots of them, but that does not make the Markdown report the canonical evidence file or canonical state.

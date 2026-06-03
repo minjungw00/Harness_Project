@@ -12,7 +12,7 @@ Implementation tier: Future/diagnostic projections. Standalone design projection
 
 - shared design records and events
 - Task and Change Unit refs
-- related Decision Packets and sensitive-action permission refs
+- related user judgments and sensitive-action permission refs
 - `domain_terms`
 - `module_map_items`
 - `interface_contracts`
@@ -49,7 +49,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # DESIGN-0001 Design Title
 
-> Projection view: rendered from `source_state_version` at `updated_at`; summarizes owner records and proposals. Editing it does not replace Domain Language, Module Map, Interface Contract, Decision Packet, or Task state.
+> Projection view: rendered from `source_state_version` at `updated_at`; summarizes owner records and proposals. Editing it does not replace Domain Language, Module Map, Interface Contract, User Judgment, or Task state.
 
 ## Problem
 - design problem:

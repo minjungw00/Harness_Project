@@ -186,7 +186,7 @@ conformance_risks:
   - extension wording alone must not be reported as a guard
 ```
 
-Gemini connectors should push only the profile-relevant compact context: current Harness status, active Decision Packet summary, Autonomy Boundary summary, Change Unit scope, and residual-risk summary near close. Longer standards, domain language, module maps, interface contracts, schemas, and templates should be pulled through MCP resources only when the current profile needs them.
+Gemini connectors should push only the profile-relevant compact context: current Harness status, active user judgment summary, Autonomy Boundary summary, Change Unit scope, and residual-risk summary near close. Longer standards, domain language, module maps, interface contracts, schemas, and templates should be pulled through MCP resources only when the current profile needs them.
 
 ## GitHub Copilot
 

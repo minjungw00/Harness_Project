@@ -2,42 +2,49 @@
 
 ## Used when
 
-Use `DEC` when standalone Decision Packet projection is enabled for a specific user-owned judgment: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA/verification waiver, work acceptance, residual-risk acceptance, or reconcile judgment.
+Use `DEC` only when standalone full-format Decision Packet presentation is enabled for a specific `user_judgment` record. The ordinary MVP-1 path is a compact judgment request through status, next-action, or user-judgment resources. Small unblockers should fit on one screen and should not expose this full template unless the user asks for drill-down.
+
+Supported user-facing display labels are:
+
+- Product/UX judgment
+- Technical judgment
+- Sensitive action approval
+- Work acceptance
+- Residual risk acceptance
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: User judgment prompt shape. Use it for the Decision Packet display/card shape when a user-owned judgment is pending, not as the MVP-1 User Work Loop projection and not as the standalone `DEC` `ProjectionKind`. A standalone persisted `DEC` Markdown projection remains optional unless the standalone Decision Packet projection feature is enabled; the required prompt can appear through the compact status card, status/next, or decision resources.
+Implementation tier: optional full-format judgment presentation. A standalone persisted `DEC` Markdown projection remains optional unless the standalone Decision Packet projection feature is enabled. "Decision Packet" is the presentation label; `user_judgment` is the canonical record family.
 
 ## Source records
 
-- `state.sqlite.decision_packets`
+- `state.sqlite.user_judgments`
 - related Task and Change Unit refs
-- `judgment_category`, `judgment_route`, and `display_depth`
-- display judgment type derived from `judgment_category`, `judgment_route`, `display_depth`, and related owner records
-- related `decision_gate` state and decision events
-- `approval_scope` and approval-shaped Decision Packet refs for minimum MVP-1 sensitive-action permission, plus Approval records only when a later Approval profile is active
-- related reconcile records, if applicable
+- `judgment_type`, `presentation`, and `display_label`
+- related `decision_gate` state and user-judgment events
+- `approval_scope` for `judgment_type=sensitive_action_approval`, plus Approval records only when a later Approval profile is active
+- related reconcile records, if applicable and enabled by a later profile
 - residual risk refs
 - evidence summaries, Run refs, ArtifactRefs, and visible evidence gaps in minimum MVP-1; Evidence Manifest refs only when the full Evidence Manifest profile is active
 - Write Authorization, sensitive-action permission, Eval, Manual QA, work-acceptance context, residual-risk refs, ArtifactRefs, redaction state, and projection freshness when displayed as related authority context
 - affected scope display inputs: product areas, screens or flows, modules, interfaces, paths, acceptance criteria, gates, and sensitive categories
 - projection freshness inputs
 
-Approval-shaped display bullets such as "what this approval covers," "what this approval does not cover," and "secret exposure boundary" are derived display summaries from `judgment_payload.approval_scope`, related Decision Packet refs, linked Approval records only when that later profile is active, and current write or close context. They explain the boundary only; they do not settle separate user-owned judgment, create Write Authorization, or imply a committed Approval record in minimum MVP-1. Approval-shaped displays must be labeled as sensitive-action approval and must not look like work acceptance.
+Legacy names such as `decision_packet_id`, `judgment_category`, `judgment_route`, and `display_depth` may appear only in migration notes or compatibility drill-down. New templates, examples, and fixtures should use `user_judgment_id`, `judgment_type`, `presentation`, `display_label`, and `record_kind=user_judgment`.
 
-A resolved Decision Packet grants sensitive-action permission only when it uses `judgment_route=approve-sensitive-action` with compatible `approval_scope`; in minimum MVP-1 that resolved packet is the authority for the sensitive-action route. Later Approval profiles may additionally require or display a linked Approval record. Other Decision Packet resolutions may settle user-owned judgments, waivers, work acceptance, residual-risk acceptance, or reconcile choices, but they do not grant sensitive-action permission.
+Sensitive-action approval display bullets such as "what this approval covers," "what this approval does not cover," and "secret exposure boundary" are derived display summaries from `judgment_payload.approval_scope`, the related `user_judgment` ref, linked Approval records only when that later profile is active, and current write or close context. They explain the boundary only; they do not settle separate user-owned judgment, create Write Authorization, or imply a committed Approval record in minimum MVP-1. Sensitive action approval displays must not look like work acceptance or residual risk acceptance.
 
-`judgment_category` is the user-facing category for grouping and display. Render it with a friendly label, but keep `judgment_route` visible as the route that controls the owner path and recorded-answer rules. Render affected gates from `affected_gates` and related owner refs, not from the category label. `judgment_category` does not directly change close gate aggregation, sensitive-action Approval, waiver behavior, work acceptance, or residual-risk acceptance unless a separate owner rule says so.
+A resolved user judgment grants sensitive-action permission only when it uses `judgment_type=sensitive_action_approval` with compatible `approval_scope`. Other user judgment resolutions may settle product/UX judgments, technical judgments, work acceptance, residual-risk acceptance, or later-profile waiver/reconcile choices, but they do not grant sensitive-action permission.
 
-`display_depth` is the prompt depth for the rendered packet. Render `simple` as a concise explicit judgment, not as an incomplete full trade-off packet. Render `tradeoff`, `high-risk`, and `close-affecting` with the additional context that the route and risk level require. Display depth does not change authority by itself and must not merge separate approval, work acceptance, waiver, residual-risk acceptance, and product/technical judgments into one answer.
+`presentation=short` is the default for simple unblockers and compact prompts. `presentation=full` is the full-format Decision Packet-style presentation for complex, high-risk, close-affecting, reconcile, or later-profile judgments. Presentation changes how much context is rendered; it does not change authority.
 
 ## Rendered sections
 
 - Why Now
 - Current State
-- Judgment Category, Route, And Display Depth
-- Approval-Shaped Context, If Applicable
-- What User Is Deciding
+- Judgment Type And Presentation
+- Sensitive Action Approval Context, If Applicable
+- What User Is Judging
 - What Agent May Decide Without User
 - Autonomy Boundary Impact, If Any
 - Affected Scope And Boundaries
@@ -50,62 +57,61 @@ A resolved Decision Packet grants sensitive-action permission only when it uses 
 - Follow-Up
 - References
 
-A sufficient rendered Decision Packet uses these sections to answer one user-owned judgment, not to ask for broad permission. The exact public request and response fields are owned by [`harness.request_user_judgment`](../mcp-api-and-schemas.md#harnessrequest_user_judgment), and the canonical authority rules are owned by [Decision Packet](../kernel.md#decision-packet) and [Decision Gate](../kernel.md#decision-gate). This template may summarize the existing fields, including `judgment_category`, `judgment_route`, and `display_depth`, but it must not add additional schema fields, gates, or alternate authority.
+A sufficient rendered Decision Packet answers one user-owned judgment, not broad permission. The exact public request and response fields are owned by [`harness.request_user_judgment`](../mcp-api-and-schemas.md#harnessrequest_user_judgment), and the canonical authority rules are owned by [User Judgment](../kernel.md#user-judgment) and [Decision Gate](../kernel.md#decision-gate). This template may summarize existing user judgment fields, but it must not add schema fields, gates, or alternate authority.
 
-Route-specific rendering follows the selected MCP `judgment_payload` and `judgment_route`: common fields remain visible, while route-specific sections may be omitted when the selected route and display depth do not require them. The final recorded answer is separate: `judgment_route` selects the user-judgment route and `RecordUserJudgmentPayload` value rules. A `display_depth=simple` card should still show the question, route, category, scope, concise options or selected outcome, related refs, and what the answer does not settle, but it does not need full pros/cons, recommendation, uncertainty, and deferral analysis unless those are material. Higher-depth prompts should render the detailed sections needed for the user to judge risk, trade-offs, approval scope, waiver impact, acceptance basis, residual-risk consequence, or reconcile target.
-
-The user-facing question should ask for the decision directly: choose an option, defer it with the stated consequence, reject the path, waive the named check, accept the named risk, accept the result, or reconcile the named drift. Use "approve" only for the approval-shaped context with `judgment_route=approve-sensitive-action` and `approval_scope`; later Approval profiles may also show a linked Approval record. For other packet kinds, ask what choice should be recorded and what remains outside that choice. If several decisions are pending, render separate prompts or separate lines; do not combine approval, acceptance, and risk acceptance into one answer.
+The user-facing question should ask for the judgment directly: choose an option, defer it with the stated consequence, reject the path, grant or deny sensitive action approval, accept or reject the result, accept or reject a named residual risk, or record a later-profile waiver/reconcile outcome when enabled. Use "approve" only for Sensitive action approval or a later Approval record. If several judgments are pending, render separate prompts or separate lines; do not combine approval, work acceptance, and residual risk acceptance into one answer.
 
 **Example content cues:**
 
-Use the same rendered sections for these common Decision Packet shapes. These cues are not extra template sections.
+Use the same rendered sections for these common full-format user judgment shapes. These cues are not extra template sections.
 
-- Tiny unblocker (`display_depth=simple`, `judgment_route=choose`): e.g., choose whether a button label should say "Save" or "Update" inside an already scoped settings copy change. Put the concise choice, scope, refs, and non-effects under What User Is Deciding and References. Do not force a full architecture-tradeoff layout.
-- Product/UX trade-off (`judgment_category=product_ux`, `display_depth=tradeoff`): failed-login feedback as inline layer, toast, or modal. Put flow, interruption, accessibility, copy, and product-risk differences under Options and Recommendation.
-- Product/copy trade-off: failed-login wording as generic, specific, or hybrid. Put account-enumeration risk, recovery usefulness, support burden, clarity, and product tone under Options and Minimum Context To Judge.
-- Technical architecture choice (`judgment_category=technical_architecture`, `display_depth=tradeoff`): session cookie, bearer/JWT token, OAuth/OIDC provider, or social-login provider integration. Put revocation, CSRF/XSS exposure, client compatibility, implementation cost, identity-provider boundaries, and migration impact under Options and Minimum Context To Judge.
-- Dependency approval versus dependency decision: if the user is approving an install command or dependency-file edit, put that sensitive-action boundary under Approval-Shaped Context. If the user is choosing whether the dependency is the right architecture direction, put the technical choice under What User Is Deciding and Options.
-- Schema/data-model decision: put additive migration, compatibility shim, breaking cleanup, data backfill, migration evidence, rollback risk, and test boundary under Options and Minimum Context To Judge.
-- Scope or Autonomy Boundary expansion: put the proposed additional surface, why current scope or latitude is insufficient, what remains out of bounds, and whether a smaller Change Unit can continue under Consequence Of Deferring.
-- Security/privacy judgment (`judgment_category=security_privacy`): for PII logging, exported fields, redaction, audit logging, retention, rollback, user notice, or role exposure, compare privacy exposure, debugging value, proof needed, and follow-up. If a sensitive action is also needed, put that Approval boundary under Approval-Shaped Context and do not treat the Approval packet as resolving the security/privacy judgment.
-- Public API/interface decision: put caller compatibility, migration path, documentation promise, and rollback risk under Options and Minimum Context To Judge. Do not treat a resolved API decision as merge authority, deployment authority, or Write Authorization.
-- QA/verification waiver (`judgment_category=qa_verification`, `judgment_route=waive`): put the skipped check, accepted user/product/technical risk, relevant refs, close impact, and smallest credible follow-up under User Judgment, Residual-Risk Acceptance when applicable, and Follow-Up.
-- Work acceptance (`judgment_category=work_acceptance`, `judgment_route=accept-result`): put the final result, evidence status, Manual QA and verification status, and close-relevant residual-risk visibility under Current State and Minimum Context To Judge. Do not treat work acceptance as approval for new sensitive actions, additional writes, deployment, or merge.
-- Residual-risk acceptance before close (`judgment_category=residual_risk`, `judgment_route=accept-risk`): put the visible limitation, existing evidence, risk refs the user is being asked to accept, and remaining follow-up under Current State, Minimum Context To Judge, Residual-Risk Acceptance, and Follow-Up.
-- Broad "go ahead" answers: show why the packet asks for this specific route and option. A generic consent phrase does not resolve product trade-off, architecture choice, QA waiver, verification risk, work acceptance, or residual-risk acceptance unless this packet records that exact judgment.
+- Tiny unblocker (`judgment_type=product_choice`, `presentation=short`): choose whether a button label should say "Save" or "Update" inside an already scoped settings copy change. Put the concise choice, scope, refs, and non-effects under What User Is Judging and References. Do not force a full architecture-tradeoff layout.
+- Product/UX judgment (`judgment_type=product_choice`): failed-login feedback as inline layer, toast, or modal; failed-login wording as generic, specific, or hybrid. Put flow, interruption, accessibility, copy, product tone, and user-risk differences under Options and Recommendation.
+- Technical judgment (`judgment_type=technical_choice`): session cookie, bearer/JWT token, OAuth/OIDC provider, or social-login provider integration. Put revocation, CSRF/XSS exposure, client compatibility, implementation cost, identity-provider boundaries, and migration impact under Options and Minimum Context To Judge.
+- Technical judgment (`judgment_type=technical_choice`): dependency adoption, schema/data-model migration, public API/interface direction, module boundary changes, privacy/logging policy, QA expectation, verification expectation, waiver, scope/autonomy expansion, or reconcile choice when that later profile is active.
+- Sensitive action approval (`judgment_type=sensitive_action_approval`): dependency install, secret access, network write, destructive write, or other scoped sensitive step. Put the approval boundary under Sensitive Action Approval Context and do not treat it as resolving a product/UX or technical judgment.
+- Work acceptance (`judgment_type=work_acceptance`): put the final result, evidence status, Manual QA and verification status, and close-relevant residual-risk visibility under Current State and Minimum Context To Judge. Do not treat work acceptance as approval for new sensitive actions, additional writes, deployment, merge, or residual-risk acceptance.
+- Residual risk acceptance (`judgment_type=residual_risk_acceptance`): put the visible limitation, existing evidence, risk refs the user is being asked to accept, and remaining follow-up under Current State, Minimum Context To Judge, Residual-Risk Acceptance, and Follow-Up.
+- Broad "go ahead" answers: show why the prompt asks for this specific judgment type and option. A generic consent phrase does not resolve product/UX judgment, technical judgment, sensitive action approval, work acceptance, or residual risk acceptance unless this prompt records that exact judgment.
 
-**Rendered example: minimal decision**
+**Rendered example: minimal judgment**
 
 ```text
-Decision: Settings label wording
-Display depth: simple
-Route/category: choose, Product / UX (`product_ux`)
+Judgment request: Settings label wording
+Record: user_judgment_id=UJ-0001
+Judgment type: product_choice
+Presentation: short
+Display label: Product/UX judgment
 Question: Should this scoped settings label say "Save" or "Update"?
 Scope/refs: settings form copy in CU-04; source ref TASK-012/CU-04; no sensitive action or close-risk ref.
 Choice to record: Save | Update
 Does not settle: broader settings flow behavior, localization strategy, work acceptance, residual-risk acceptance, or write authority.
 ```
 
-**Rendered example: approval-shaped decision**
+**Rendered example: sensitive action approval**
 
 ```text
-Decision: Dependency install approval
-Display depth: high-risk
-Route/category: approve-sensitive-action, Security / privacy (`security_privacy`)
-Question: Do you approve the named dependency install/update action for this task?
+Judgment request: Dependency install approval
+Record: user_judgment_id=UJ-0002
+Judgment type: sensitive_action_approval
+Presentation: short
+Display label: Sensitive action approval
+Question: Do you grant this named dependency install/update action for this task?
 Approval scope: named install command or dependency-file update; named manifest/lockfile paths; current task and approval window only.
 Covers: the scoped sensitive action.
 Does not cover: resolving whether the dependency is the right architecture direction, future installs, unrelated product writes, QA or verification waiver, work acceptance, or residual-risk acceptance.
-Separate judgments required: use a `judgment_category=technical_architecture`, `display_depth=tradeoff` packet if the dependency choice itself is still user-owned judgment.
+Separate judgments required: use `judgment_type=technical_choice` if the dependency choice itself is still user-owned judgment.
 Refs: approval scope refs, prepare-write candidate refs, dependency comparison refs, and affected file refs when available.
 ```
 
-**Rendered example: full architecture trade-off**
+**Rendered example: full technical trade-off**
 
 ```text
-Decision: Login session architecture
-Display depth: tradeoff
-Route/category: choose, Technical architecture (`technical_architecture`)
+Judgment request: Login session architecture
+Record: user_judgment_id=UJ-0003
+Judgment type: technical_choice
+Presentation: full
+Display label: Technical judgment
 Question: Which session model should this login work use?
 Options: server-side session cookie; client-held bearer/JWT; OAuth/OIDC provider plus local session strategy; social-login provider integration.
 Recommendation: server-side session cookie for a first-party web app unless current requirements need third-party identity, non-browser clients, or social sign-in now.
@@ -118,23 +124,23 @@ Refs: auth model refs, affected acceptance criteria, security evidence refs when
 
 ````md
 ---
-doc_type: decision_packet
+doc_type: user_judgment_decision_packet
 projection_kind: DEC
 projection_id: DEC-PROJ-0001
-decision_packet_id: DEC-0001
+user_judgment_id: UJ-0001
 task_id: TASK-0001
 change_unit_id: CU-01
-judgment_category: product_ux
-judgment_route: choose
-display_depth: tradeoff
+judgment_type: product_choice
+presentation: full
+display_label: Product/UX judgment
 status: pending_user
 source_state_version: 42
 updated_at: 2026-05-06T09:30:15+09:00
 ---
 
-# DEC-0001 Decision Packet Title
+# UJ-0001 Judgment Request Title
 
-> Projection view: rendered from `source_state_version` at `updated_at`; displays `decision_packet_id` and related refs from state. Editing this Markdown does not resolve the Decision Packet; decisions are recorded through the decision path.
+> Projection view: rendered from `source_state_version` at `updated_at`; displays `user_judgment_id` and related refs from state. Editing this Markdown does not resolve the judgment; answers are recorded through `harness.record_user_judgment`.
 
 ## Why Now
 - trigger:
@@ -148,40 +154,33 @@ updated_at: 2026-05-06T09:30:15+09:00
 - current gates:
 - latest evidence:
 - residual risk:
-- source refs: decision={decision_packet_id}; write={write_authorization_ref|none}; sensitive_action_permission={approval_shaped_decision_packet_ref|approval_ref_when_profile_active|none}; evidence={evidence_summary_ref|evidence_manifest_ref_when_profile_active|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
+- source refs: judgment={user_judgment_id}; write={write_authorization_ref|none}; sensitive_action_permission={user_judgment_ref|approval_ref_when_profile_active|none}; evidence={evidence_summary_ref|evidence_manifest_ref_when_profile_active|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={work_acceptance_user_judgment_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 
-## Judgment Category, Route, And Display Depth
-- judgment_category: product_ux | technical_architecture | security_privacy | scope_autonomy | qa_verification | work_acceptance | residual_risk | mixed
-- judgment_route: choose | defer | approve-sensitive-action | waive | accept-result | accept-risk | reconcile
-- display_depth: simple | tradeoff | high-risk | close-affecting
-- display type: Product/UX judgment | technical architecture judgment | security/privacy judgment | scope/autonomy judgment | sensitive-action approval | QA/verification waiver | work acceptance | residual-risk acceptance | reconcile
-- route-specific detail: common fields plus the selected `judgment_payload` branch validated by `judgment_route`; simple prompts may omit non-material detailed fields or render them as null where the schema allows null
-- final recorded answer: `judgment_route` chooses the user-judgment route and `RecordUserJudgmentPayload` value rules
-- display label:
-- route verb: choose | defer | reject | approve | waive | accept result | accept named risk | reconcile
-- what this route can record:
-- what this route cannot record:
+## Judgment Type And Presentation
+- judgment_type: product_choice | technical_choice | sensitive_action_approval | work_acceptance | residual_risk_acceptance
+- presentation: short | full
+- display_label: Product/UX judgment | Technical judgment | Sensitive action approval | Work acceptance | Residual risk acceptance
+- final recorded answer:
+- what this judgment can record:
+- what this judgment cannot record:
 - generic consent handling:
 
-## Approval-Shaped Context, If Applicable
-- card label: Sensitive-action approval
-- judgment_route=approve-sensitive-action scope:
+## Sensitive Action Approval Context, If Applicable
+- card label: Sensitive action approval
+- judgment_type=sensitive_action_approval scope:
 - linked approval record (later profile only):
 - sensitive categories:
 - what this approval covers:
 - what this approval does not cover:
 - must not be rendered as: work acceptance or residual-risk acceptance
-- user-owned judgment requiring separate Decision Packet:
+- separate user-owned judgment still required:
 - approval boundary:
 - write authorization boundary:
 - secret exposure boundary:
 
 ## What User Is Judging
 - judgment type:
-- judgment_category:
 - display label:
-- judgment_route:
-- display_depth:
 - user-facing question:
 - decision:
 - what this decision settles:
@@ -218,7 +217,6 @@ updated_at: 2026-05-06T09:30:15+09:00
 - risks:
 - reversibility: reversible | partially_reversible | irreversible | unknown
 - confidence: low | medium | high
-- evidence refs:
 
 ### Option B
 - choice:
@@ -228,71 +226,62 @@ updated_at: 2026-05-06T09:30:15+09:00
 - risks:
 - reversibility: reversible | partially_reversible | irreversible | unknown
 - confidence: low | medium | high
-- evidence refs:
 
 ## Recommendation
-- recommendation:
-- reason:
-- uncertainty:
+- recommended option:
+- rationale:
+- confidence:
+- what would change the recommendation:
 
 ## Consequence Of Deferring
-- consequence:
-- can continue if deferred:
-- must stop until decided:
-- operation impact:
+- what can continue:
+- what remains blocked:
 - close impact:
-- residual risk or follow-up visibility:
 
 ## Minimum Context To Judge
-- relevant facts:
-- assumptions:
-- constraints:
-- evidence refs:
-- residual risk refs:
-- related decisions:
+- evidence visible:
+- unknowns:
+- QA/verification state:
+- residual risk visibility:
+- close or write impact:
 
 ## User Judgment
-- status: proposed | pending_user | resolved | deferred | rejected | blocked | superseded
 - selected option:
-- user judgment:
-- decision note:
-- broad approval handling:
+- value: selected | rejected | deferred | granted | denied | expired | accepted
+- note:
 - decided by:
 - decided at:
+- broad consent check: "proceed", "go ahead", and "looks good" do not automatically become sensitive-action approval, work acceptance, or residual-risk acceptance.
 
 ## Residual-Risk Acceptance, If Applicable
-- named risk being accepted:
-- residual-risk visibility status:
-- accepted residual-risk summary:
-- accepted residual-risk refs:
-- accepted consequence:
-- what risk acceptance does not replace:
+- named risk:
+- visible risk refs:
+- acceptance scope:
+- consequence of accepting:
+- follow-up:
 
 ## Follow-Up
-- [ ]
+- required before write:
+- required before close:
+- suggested follow-up:
 
 ## References
-- TASK:
-- Change Unit:
-- Write Authorization:
-- DESIGN:
-- APR (later Approval profile only):
-- EVIDENCE-MANIFEST:
-- EVAL:
-- MANUAL-QA:
-- Acceptance context:
-- Residual Risk:
+- task:
+- change unit:
+- user judgment:
+- write authority:
+- evidence:
+- verification:
+- Manual QA:
+- residual risk:
 - artifacts:
-- redaction state:
 - projection freshness:
 ````
 
 ## Notes
 
-This template is a rendered shape, not canonical state. Decision Packet visibility required by the active stage/profile can come through the compact status card, status/next responses, judgment-context resources, decision-packet resources, or a dedicated prompt. `TASK` may also show it when a later continuity profile is active. Standalone `DEC` projection remains optional.
+This template is a rendered shape, not canonical state. User judgment visibility required by the active stage/profile can come through compact status cards, status/next responses, judgment-context resources, user-judgment resources, or a dedicated prompt. Standalone `DEC` projection remains optional.
 
-Decision Packet projections should keep authority context refs compact and explicit. Displaying a Write Authorization, sensitive-action permission ref, evidence summary, Evidence Manifest when its profile is active, Eval, Manual QA, work acceptance, residual-risk visibility, residual-risk acceptance, artifact, redaction, or freshness ref in this template does not make the packet prose the authority for that record.
+Decision Packet projections should keep authority context refs compact and explicit. Displaying a Write Authorization, sensitive-action permission ref, evidence summary, Evidence Manifest when its profile is active, Eval, Manual QA, work acceptance, residual-risk visibility, residual-risk acceptance, artifact, redaction, or freshness ref in this template does not make the prose authoritative for that record.
 
-Decision Packet cards should display one judgment type at a time. Approval cards use sensitive-action approval language, work-acceptance prompts use work-acceptance language, and residual-risk acceptance prompts name the specific risk being accepted.
-
-Repeat option subsections as needed. Some product choices have more than two realistic options.
+Decision Packet cards should display one judgment type at a time. Sensitive action approval prompts use approval language, work acceptance prompts use work-acceptance language, and residual-risk acceptance prompts name the specific risk being accepted.

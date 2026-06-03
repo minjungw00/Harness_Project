@@ -43,9 +43,9 @@ API staging에서는 MCP API [Stage Profile Manifest](../reference/mcp-api-and-s
 
 이 문서는 특정 command에 묶이지 않는 구현 안내서입니다. CLI 문법이 아니라 기능과 관찰 가능한 동작을 설명합니다. 여기에 전체 DDL을 포함하거나 반복하지 않습니다. Storage와 DDL의 세부 내용은 [Storage와 DDL](../reference/storage-and-ddl.md)이 담당합니다.
 
-Storage planning에서는 내부 엔지니어링 점검에 [내부 엔지니어링 점검 schema](../reference/storage-and-ddl.md#core-authority-smoke-schema)만 사용합니다. Decision Packet, Approval, Evidence Manifest, Manual QA, Eval, projection job, reconcile item, validator run, Journey record, diagnostic 같은 later storage profile은 first-slice requirement가 아닙니다.
+Storage planning에서는 내부 엔지니어링 점검에 [내부 엔지니어링 점검 schema](../reference/storage-and-ddl.md#core-authority-smoke-schema)만 사용합니다. Full user judgment, Approval, Evidence Manifest, Manual QA, Eval, projection job, reconcile item, validator run, Journey record, diagnostic 같은 later storage profile은 first-slice requirement가 아닙니다.
 
-첫 조각은 MVP-1 사용자 작업 루프, 제품 MVP, 강화된 로컬 기준 목표(hardened local reference target) 전체, natural-language intake, full Discovery, full Decision Packet, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, work-acceptance semantics, projection rendering, Projection 템플릿 다듬기 단계, 여러 projection kind, dashboard 또는 hosted-workflow-UI 단계, 넓은 connector ecosystem 또는 marketplace 단계, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, operations/export/recover path, release handoff path, conformance runner, 넓은 operator-entrypoint path, 향후 fixture catalog, parallel automation path가 아닙니다.
+첫 조각은 MVP-1 사용자 작업 루프, 제품 MVP, 강화된 로컬 기준 목표(hardened local reference target) 전체, natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, work-acceptance semantics, projection rendering, Projection 템플릿 다듬기 단계, 여러 projection kind, dashboard 또는 hosted-workflow-UI 단계, 넓은 connector ecosystem 또는 marketplace 단계, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, operations/export/recover path, release handoff path, conformance runner, 넓은 operator-entrypoint path, 향후 fixture catalog, parallel automation path가 아닙니다.
 
 ## 성공 이야기
 
@@ -143,7 +143,7 @@ Owner contract: Change Unit과 Autonomy Boundary semantics는 [커널 참조](..
 
 - 선택한 product-write attempt를 owner `prepare_write` path로 보낸다.
 - 호환되는 scoped write 하나만 허용하거나 owner-shaped blocker를 반환한다.
-- Candidate Approval 또는 Decision Packet material은 owning path가 commit하기 전까지 candidate context로 유지한다.
+- Candidate Approval 또는 user judgment material은 owning path가 commit하기 전까지 candidate context로 유지한다.
 
 완료 기준:
 
@@ -228,7 +228,7 @@ Owner contract: status/next schema는 [`harness.status`](../reference/mcp-api-an
 | 이후 단계 | 내부 엔지니어링 점검이 아직 증명하지 않는 것 |
 |---|---|
 | MVP-1 사용자 작업 루프 | Ordinary-language start/resume, work-shape classification, natural-language intake 품질, scope/non-goals/success criteria summary, minimal user judgment request/record, product/UX judgment와 architecture judgment 제시 방식, small direct와 tracked-work의 budget 구분, evidence summary, 닫기 막힘 요약, residual-risk visibility, work-acceptance display, sensitive approval display, risk-acceptance display, compact Core-derived status card 충분성. |
-| 보증 프로필 | Profile별 Decision Packet 품질, full Approval lifecycle and drift handling, 분리 검증 독립성, 수동 QA 정책 매트릭스, residual-risk accepted close, 작업 수락 분리, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
+| 보증 프로필 | Profile별 user judgment 품질, full Approval lifecycle and drift handling, 분리 검증 독립성, 수동 QA 정책 매트릭스, residual-risk accepted close, 작업 수락 분리, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
 | 운영 프로필 | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage, full projection/reconcile operations. |
 | 로드맵 | Dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification automation, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow. |
 
@@ -242,7 +242,7 @@ Suite stage, authoring order, docs-maintenance result를 표현하기 위해 fix
 
 ## 참고할 Reference 문서
 
-- [커널 참조](../reference/kernel.md): Task, Change Unit, Decision Packet, gate, `prepare_write`, Write Authorization, `record_run` semantics, `close_task`.
+- [커널 참조](../reference/kernel.md): Task, Change Unit, User Judgment, gate, `prepare_write`, Write Authorization, `record_run` semantics, `close_task`.
 - [런타임 아키텍처 참조](../reference/runtime-architecture.md): 세 공간, Core process model, transaction flow, artifact store, projection/reconcile, guarantee level, failure handling.
 - [MCP API와 스키마](../reference/mcp-api-and-schemas.md): public resource, tool envelope, request/response schema, error taxonomy, 아티팩트 참조, `ProjectionKind`.
 - [Storage와 DDL](../reference/storage-and-ddl.md): runtime layout, staged schema profile, migration, lock, artifact와 later-profile baseline, projection job, validator-run candidate를 다룹니다.

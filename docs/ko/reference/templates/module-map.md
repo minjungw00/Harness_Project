@@ -13,7 +13,7 @@
 - `module_map_items`
 - module map 항목에 저장된 모듈 단위 watchpoint
 - module map 변경을 제안하는 reconcile item
-- 관련 Decision Packet과 design ref
+- 관련 user judgment와 design ref
 - `deep_module_interface` 또는 `codebase_stewardship` 관련 design-quality validator 결과
 - 표시되는 경우 module 또는 boundary ref에 영향을 주는 routed stewardship finding
 - 읽기용 보기 최신성(projection freshness) 입력
@@ -74,4 +74,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. 기준 module 참조는 `StateRecordRef.record_kind=module_map_item`을 사용합니다. Review, watchpoint, stewardship rollup text는 owner record 위의 display이며 Approval, evidence, QA, verification, 작업 수락, 잔여 위험 수용, close, Write Authorization을 만들지 않습니다.
 
-제안된 module boundary change가 product commitment, public interface, caller obligation, dependency direction, architecture direction을 바꾸면 해당 판단은 기존 design-quality 및 Decision Packet 경로로 라우팅합니다. Proposal을 여기에 렌더링하는 것만으로 `design_gate`, `decision_gate`, close impact가 해소되지는 않습니다.
+제안된 module boundary change가 product commitment, public interface, caller obligation, dependency direction, architecture direction을 바꾸면 해당 판단은 기존 design-quality 및 user judgment 경로로 라우팅합니다. Proposal을 여기에 렌더링하는 것만으로 `design_gate`, `decision_gate`, close impact가 해소되지는 않습니다.

@@ -22,7 +22,7 @@
 - artifact 참조, owner relation, redaction status, retention/availability, integrity metadata
 - redaction, omission, blocked-artifact summary
 - omitted-secret note와 retained/expired artifact summary
-- review 또는 Release Handoff display에 포함될 때 Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, 수동 QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness를 보여주는 compact authority refs
+- review 또는 Release Handoff display에 포함될 때 Write Authorization, User Judgment, Approval, Evidence Manifest, Eval, 수동 QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness를 보여주는 compact authority refs
 - export profile boundary와 non-deployment/non-merge reminder 표시
 
 ## 렌더링 섹션
@@ -110,8 +110,8 @@ updated_at: 2026-05-06T10:30:00+09:00
 ## Release Handoff
 - close readiness:
 - close blockers:
-- authority refs: write={write_authorization_refs|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_refs|none}; eval={eval_refs|none}; manual_qa={manual_qa_refs|none}; acceptance={acceptance_context_refs|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_status_summary}; freshness={projection_freshness}
-- approval refs는 minimum MVP-1에서 `none`입니다. Approval 형태 민감 동작 coverage는 later Approval owner profile이 active가 아닌 한 `decision_packet_refs`로 나타납니다.
+- authority refs: write={write_authorization_refs|none}; judgment={user_judgment_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_refs|none}; eval={eval_refs|none}; manual_qa={manual_qa_refs|none}; acceptance={acceptance_context_refs|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_status_summary}; freshness={projection_freshness}
+- approval refs는 minimum MVP-1에서 `none`입니다. 민감 동작 coverage는 later Approval owner profile이 active가 아닌 한 `judgment_type=sensitive_action_approval`인 `user_judgment_refs`로 나타납니다.
 - evidence refs:
 - verification refs:
 - 수동 QA refs:
@@ -137,6 +137,6 @@ updated_at: 2026-05-06T10:30:00+09:00
 
 Export profile이 report projection snapshot, raw artifact, state snapshot을 생략한다면 bundle이 완전한 것처럼 암시하지 말고 무엇이 빠졌는지와 review 또는 Release Handoff에 미치는 영향을 보여줍니다. Retained artifact는 owner relation, integrity, redaction status, retention policy, export profile이 raw 포함을 허용할 때만 복사할 수 있습니다. Expired, unavailable, `secret_omitted`, `blocked` artifact는 ref, safe metadata, omission/block note로만 남습니다. Export는 projection, Markdown report, chat text, staging path에서 raw bytes를 다시 만들면 안 됩니다.
 
-`secret_omitted`에서는 export가 안전한 omission note 또는 handle, 안전하게 저장된 bytes에 대한 hash를 포함할 수 있지만 생략된 값을 포함하면 안 됩니다. `blocked`에서는 export가 커밋된 metadata-only notice artifact와 그 hash, size, content type을 포함할 수 있습니다. 이 field들은 금지된 원본 payload가 아니라 notice bytes를 설명합니다. Release Handoff section은 export 전에 documented replacement, waiver, Decision Packet outcome, 받아들인 위험, fallback으로 해소되지 않은 omission 또는 block impact를 unavailable, insufficient, unresolved input 중 적절한 상태로 표시해야 합니다.
+`secret_omitted`에서는 export가 안전한 omission note 또는 handle, 안전하게 저장된 bytes에 대한 hash를 포함할 수 있지만 생략된 값을 포함하면 안 됩니다. `blocked`에서는 export가 커밋된 metadata-only notice artifact와 그 hash, size, content type을 포함할 수 있습니다. 이 field들은 금지된 원본 payload가 아니라 notice bytes를 설명합니다. Release Handoff section은 export 전에 documented replacement, waiver, user judgment outcome, 받아들인 위험, fallback으로 해소되지 않은 omission 또는 block impact를 unavailable, insufficient, unresolved input 중 적절한 상태로 표시해야 합니다.
 
 Recovery artifact가 export에 나타나면 recovery observation으로 label합니다. 별도의 owner record가 이미 그 path를 해결한 경우가 아니면, recovery artifact는 successful completion의 증거가 아니며 evidence, verification, QA, 작업 수락, close proof로 계산하면 안 됩니다.

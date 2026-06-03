@@ -19,7 +19,7 @@ Implementation tier: Future/diagnostic projections. The MVP-1 compact status car
 - artifact refs with hash, size, redaction state, retention/availability, owner relation, and downstream evidence impact
 - related Run, Eval, Feedback Loop, Manual QA, and TDD trace refs
 - close-relevant verification, Manual QA, work acceptance, and Residual Risk summaries when rendered with close context
-- compact authority refs for Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when rendered with close context
+- compact authority refs for Write Authorization, User Judgment, Approval, Evidence Manifest, Eval, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when rendered with close context
 
 ## Rendered sections
 
@@ -79,8 +79,8 @@ updated_at: 2026-05-06T09:50:00+09:00
 - next close action:
 
 ## Authority And Close Refs
-- compact refs: write={write_authorization_ref|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
-- approval refs are `none` in minimum MVP-1; approval-shaped sensitive-action coverage appears through `decision_packet_refs` unless a later Approval owner profile is active.
+- compact refs: write={write_authorization_ref|none}; judgment={user_judgment_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
+- approval refs are `none` in minimum MVP-1; sensitive-action coverage appears through `user_judgment_refs` with `judgment_type=sensitive_action_approval` unless a later Approval owner profile is active.
 - redaction state:
 - projection freshness:
 
@@ -105,11 +105,11 @@ updated_at: 2026-05-06T09:50:00+09:00
 | Item | Coverage / Gate Display | Evidence Refs | Notes |
 |---|---|---|---|
 | vertical_slice_shape | passed | CU-01 | |
-| decision_quality_check | passed | DEC-0001 | |
+| decision_quality_check | passed | UJ-0001 | |
 | autonomy_boundary_check | passed | CU-01 | |
 | feedback_loop_check | passed | FBL-0001, TDD-0001, LOG-0001 | |
 | tdd_trace_required | passed | TDD-0001, RED-LOG-0001, GREEN-LOG-0001 | RED, GREEN, and relevant refactor/check coverage link back to acceptance criteria and changed files. |
-| module_interface_review | passed | module_map_item: MMI-0001, interface_contract: IFACE-0001, DEC-0001 | |
+| module_interface_review | passed | module_map_item: MMI-0001, interface_contract: IFACE-0001, UJ-0001 | |
 | codebase_stewardship_check | passed | domain_term: TERM-0001, module_map_item: MMI-0001, interface_contract: IFACE-0001, feedback_loop: FBL-0001 | |
 | residual_risk_visibility_check | pending | RR-0001 | |
 | manual_qa_required | pending | qa_gate; no satisfying Manual QA record yet | |
@@ -117,7 +117,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 `Coverage / Gate Display` is the evidence coverage or close-relevant gate display state for this manifest. Values such as `pending` in this column are not `ValidatorResult.status` values.
 
 ## Approval Refs
-- Populate only when a later Approval owner profile is active. In minimum MVP-1, approval-shaped sensitive-action coverage belongs under Decision Packet refs.
+- Populate only when a later Approval owner profile is active. In minimum MVP-1, sensitive-action coverage belongs under `user_judgment_refs` with `judgment_type=sensitive_action_approval`.
 - APR-0001:
 
 ## Evidence Refs
@@ -178,4 +178,4 @@ Chat text and Markdown report prose may explain the evidence story, but they are
 
 Large logs, diffs, screenshots, traces, and bundles should stay as registered ArtifactRef refs with short outcomes. The manifest should show redaction state and availability before any reader drills into the artifact body.
 
-`secret_omitted` artifacts may support claims whose nonsecret evidence remains visible, but not claims that require omitted values. `blocked` artifacts are committed metadata-only notices, not available raw evidence; dependent criteria remain unsupported, insufficient, or blocked until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the evidence path. This template must not include omitted secret/PII values or blocked payload bytes.
+`secret_omitted` artifacts may support claims whose nonsecret evidence remains visible, but not claims that require omitted values. `blocked` artifacts are committed metadata-only notices, not available raw evidence; dependent criteria remain unsupported, insufficient, or blocked until a replacement, waiver, user judgment outcome, accepted risk, or documented fallback resolves the evidence path. This template must not include omitted secret/PII values or blocked payload bytes.

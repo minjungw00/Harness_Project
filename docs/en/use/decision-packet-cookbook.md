@@ -4,9 +4,9 @@
 
 Use this after [User Guide](user-guide.md) when work is blocked by a choice the agent should not make alone. A good judgment request shows the choice, realistic options, consequence, what can still continue, and what remains blocked. It should feel like decision support, not a schema form or a blank permission slip.
 
-Status note: these are documentation examples for planned Harness behavior. They are not Decision Packet records, acceptance records, evidence manifests, or other runtime outputs from this repository.
+Status note: these are documentation examples for planned Harness behavior. They are not `user_judgment` records, acceptance records, evidence manifests, or other runtime outputs from this repository.
 
-The everyday label is "judgment request." The internal record or template label may be "Decision Packet" when a reference page, tool result, or saved record needs precision. Users should not need that label to answer the prompt.
+The everyday label is "judgment request." The internal record family is `user_judgment`. "Decision Packet" is a full-format or legacy presentation label for complex judgments; users should not need that label to answer ordinary prompts.
 
 Before asking, the agent should check what the repository, docs, tests, current Harness state, accepted decisions, current task artifacts, or available evidence already answer. Do not ask the user to re-answer facts the project can answer. Ask only for judgments the user owns, and keep answerable facts, blocking questions, and useful non-blocking questions separate.
 
@@ -14,15 +14,11 @@ Before asking, the agent should check what the repository, docs, tests, current 
 
 Use a judgment request when the next safe action depends on one of these user-owned choices:
 
-- product or UX judgment
-- technical architecture judgment
-- security or privacy judgment
-- scope or autonomy judgment
-- permission for a sensitive step
-- QA or verification expectation, waiver, or skipped check
-- work acceptance when required
-- acceptance of a named residual risk
-- reconcile choice when proposal and current state differ
+- Product/UX judgment
+- Technical judgment
+- Sensitive action approval
+- Work acceptance
+- Residual risk acceptance
 
 Do not merge these into one "approve?" prompt. Permission to install a dependency is not the same as adopting that dependency as the architecture. Work acceptance is not the same as accepting known residual risk. A QA waiver is not evidence that QA passed.
 
@@ -85,7 +81,7 @@ This does not settle: login architecture, account recovery, work acceptance, res
 
 Why this works: it asks for the UX choice instead of asking the user to "approve the login change."
 
-## Technical Architecture Judgment: Auth Direction
+## Technical Judgment: Auth Direction
 
 Use this when an authentication direction affects storage, revocation, client behavior, migration, or security posture.
 
@@ -109,7 +105,7 @@ This does not settle: failed-login UX, audit logging, rate limits, work acceptan
 
 Why this works: it separates identity-provider choice from session/storage strategy. OAuth/OIDC may still need a local session or token strategy.
 
-## Security/Privacy Judgment: PII Logging
+## Technical Judgment: PII Logging
 
 Use this when a feature, debug path, run, export, or artifact might expose personal data.
 
@@ -130,14 +126,14 @@ If you defer: implementation can continue without PII logging, but diagnostics t
 This does not settle: permission for any sensitive command, artifact redaction evidence, work acceptance, or residual-risk acceptance.
 ```
 
-Why this works: it treats privacy as a user-owned product/security judgment, not a hidden implementation detail.
+Why this works: it treats privacy as a user-owned technical judgment, not a hidden implementation detail.
 
-## Sensitive-Step Permission: Dependency Install
+## Sensitive Action Approval: Dependency Install
 
 Use this when the user must permit a named sensitive action without treating that permission as the architecture judgment.
 
 ```text
-Permission request: allow one dependency install/update action for this task.
+Judgment request: allow one dependency install/update action for this task.
 
 Allowed if you approve:
 - install the named dependency and version for this task
@@ -152,9 +148,9 @@ Options:
 This does not settle: whether the dependency is the right architecture direction, future installs, product writes outside scope, QA or verification waiver, work acceptance, or residual-risk acceptance.
 ```
 
-Why this works: permission for a sensitive step is separate from the technical judgment to adopt a dependency.
+Why this works: sensitive action approval is separate from the technical judgment to adopt a dependency.
 
-## QA Expectation Or Waiver
+## Technical Judgment: QA Expectation Or Waiver
 
 Use this when human QA is expected or required, but the user must decide whether to perform it, waive it, or keep close blocked.
 
@@ -177,7 +173,7 @@ This does not settle: evidence sufficiency, verification, work acceptance, or re
 
 Why this works: it names the skipped human inspection. A QA waiver does not prove QA passed.
 
-## Verification Expectation Or Waiver
+## Technical Judgment: Verification Expectation Or Waiver
 
 Use this when independent verification is required or expected, but the user wants to proceed without it.
 
@@ -259,7 +255,7 @@ Choose inline failed-login feedback. Keep the message generic, do not add a moda
 
 That kind of answer resolves the named judgment without granting every other authority. The agent still needs the normal owner paths for write authority, evidence, QA, verification, work acceptance, residual-risk acceptance, and close.
 
-If you answer "go ahead," "looks good," "진행해," or "좋아" and more than one judgment is pending, the agent should ask which judgment you mean before recording it.
+If you answer "proceed," "go ahead," "looks good," "진행해," or "좋아," the agent must not automatically treat that phrase as sensitive action approval, work acceptance, or residual risk acceptance. If more than one judgment is pending, or if the phrase could mean permission, acceptance, risk acceptance, waiver, scope confirmation, or simple continuation, the agent should ask which judgment you mean before recording it.
 
 ## Exact Owners
 
@@ -267,7 +263,7 @@ Use these Reference owners when exact behavior is needed:
 
 | Need | Owner |
 |---|---|
-| Internal Decision Packet behavior and gate aggregation | [Decision Packet](../reference/kernel.md#decision-packet), [Decision Gate](../reference/kernel.md#decision-gate) |
+| Internal user judgment behavior and gate aggregation | [User Judgment](../reference/kernel.md#user-judgment), [Decision Gate](../reference/kernel.md#decision-gate) |
 | Public request and answer shapes | [`harness.request_user_judgment`](../reference/mcp-api-and-schemas.md#harnessrequest_user_judgment), [`harness.record_user_judgment`](../reference/mcp-api-and-schemas.md#harnessrecord_user_judgment) |
 | Sensitive-action Approval | [Approval](../reference/kernel.md#approval) |
 | Evidence sufficiency | [Evidence Gate](../reference/kernel.md#evidence-gate) |

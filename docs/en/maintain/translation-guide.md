@@ -68,6 +68,13 @@ Keep these exact when they refer to literal identifiers, schema/API values, file
 - Core
 - state.sqlite
 - task_events
+- user_judgment
+- UserJudgment
+- judgment_type
+- presentation
+- display_label
+- request_user_judgment
+- record_user_judgment
 - judgment_category
 - judgment_route
 - display_depth
@@ -106,24 +113,22 @@ Use these as the preferred terms in Korean prose. Keep exact English strings whe
 | out of scope | 범위 밖 | Use for excluded behavior, files, decisions, or claims. Avoid `out-of-scope` as a mixed Korean adjective unless quoting an identifier. |
 | Discovery | 요구사항 구체화 | Explain as the agent's requirements-clarification posture before implementation planning, not as a command name alone. Keep `Discovery` exact in reference/schema contexts. |
 | Change Unit | 범위 / Change Unit | In user-facing prose, explain the scoped work boundary as `범위` first. Keep `Change Unit` exact when naming the record or reference term. |
-| judgment | 판단 | Use for user-owned choices. Add `Decision Packet` only when naming the recorded implementation route. |
+| judgment | 판단 | Use for user-owned choices. Add `Decision Packet` only when naming optional full-format presentation or legacy/compatibility material. |
 | judgment request | 판단 요청 | Use for the ordinary user-facing prompt. Prefer `무엇을 결정해야 하나요?` or another natural question when that reads better. |
 | user-owned judgment | 사용자 소유 판단 | Use for the broad agency-preserving principle. Do not replace it globally with `사용자 결정`. |
-| User Decisions display group | 사용자 결정 | Use only for the user-facing display group that lists pending decision items. Do not treat it as a schema field, gate, route, or authority path. |
-| decision type | 결정 유형 | Use when labeling a concrete pending decision item. |
 | Product/UX judgment | 제품/UX 판단 | Use for product behavior, copy, flow, and UX choices owned by the user. |
-| technical architecture judgment | 기술 구조 판단 | Use for architecture, dependency, migration, interface, or material technical direction choices owned by the user. |
-| security/privacy judgment | 보안/개인정보 판단 | Use for security, privacy, retention, redaction, audit, or exposure choices owned by the user. |
-| scope/autonomy judgment | 범위/자율성 판단 | Use for scope expansion, work split, or Autonomy Boundary choices owned by the user. |
-| QA waiver | QA 면제 판단 | Use for a user decision to waive a required QA path. Do not translate it with a generic `승인` term. |
-| verification waiver | 검증 면제 판단 | Use for a user decision to waive a required verification path. Do not translate it with a generic `승인` term. |
-| `judgment_category` | 판단 묶음 / 판단 유형 | Preserve the field name and enum values in schema/API/reference contexts. User-facing display should show labels such as `제품/UX 판단`, `기술 구조 판단`, `보안/개인정보 판단`, `QA/검증`, `작업 수락`, or `잔여 위험`. |
-| `judgment_route` | 판단 경로 | Preserve the field name and enum values in schema/API/reference contexts. In user-facing display, use the actual verb: choose, defer, waive, accept the result, accept risk, approve a sensitive step, or reconcile. |
-| `display_depth` | 표시 깊이 | Preserve the field name in schema/API/reference contexts. Do not make ordinary users learn it; render the practical result as a short question, a trade-off question, a high-risk question, or a close-affecting question. |
-| `judgment_domain` | 판단 영역 | Compatibility alias for `judgment_category`. Preserve the field name in old schema/API/reference contexts. New examples should prefer `judgment_category` when exact fields are needed. |
-| `decision_kind` | 결정 경로 | Compatibility alias for `judgment_route`. Preserve the field name and enum values in old schema/API/reference contexts. |
-| `decision_profile` | 결정 표시 깊이 | Compatibility alias for `display_depth`. Preserve the field name in old schema/API/reference contexts. |
-| Decision Packet | Decision Packet / 판단 요청 기록 | Keep `Decision Packet` in literal record/API/schema/anchor contexts when needed. In user-facing prose, use `판단 요청` before the exact label, or omit the label when it does not help. |
+| Technical judgment | 기술 판단 | Use for architecture, dependency, migration, interface, security/privacy, scope/autonomy, QA/verification expectation, waiver, or other material technical direction choices owned by the user. |
+| Sensitive action approval | 민감 동작 승인 | Use for scoped permission for a named sensitive step. Keep distinct from product/UX judgment, technical judgment, work acceptance, and residual-risk acceptance. |
+| Work acceptance | 작업 수락 | Use for the user's result judgment when the work path requires acceptance. |
+| Residual risk acceptance | 잔여 위험 수용 | Use for explicit acceptance of a named visible remaining risk. |
+| `user_judgment` | 사용자 판단 기록 | Canonical record family. Preserve the identifier in schema/API/reference contexts. |
+| `UserJudgment` | UserJudgment | Canonical schema shape. Preserve exact. |
+| `judgment_type` | 판단 유형 | Canonical compact type field. Preserve field name and enum-like values in schema/API/reference contexts. |
+| `presentation` | 표시 형식 | Canonical prompt/detail field. Use `short` for compact prompts and `full` for full-format Decision Packet presentation. Preserve exact in schema/API contexts. |
+| `display_label` | 표시 라벨 | User-facing label field. Allowed labels are `제품/UX 판단`, `기술 판단`, `민감 동작 승인`, `작업 수락`, and `잔여 위험 수용`. |
+| `judgment_category`, `judgment_route`, `display_depth` | legacy 판단 field | Legacy or implementation routing terms from older Decision Packet drafts. Preserve exact only in old schema/API/reference compatibility contexts. New examples should prefer `judgment_type`, `presentation`, and `display_label`. |
+| `judgment_domain`, `decision_kind`, `decision_profile` | legacy 판단 alias | Compatibility aliases for older request shapes. Preserve exact only in old payloads or migration notes. |
+| Decision Packet | Decision Packet / full-format 판단 요청 | Keep `Decision Packet` when naming optional full-format presentation, legacy refs, template files, anchors, or migration notes. In user-facing prose, use `판단 요청` first or omit the label when it does not help. |
 | Write Authorization | 쓰기 허가 기록 | Use in prose for the record or result of `prepare_write`. Keep exact API/tool names and fields. |
 | evidence | 근거 | Use in user-facing prose for support behind a claim. Keep `Evidence`, `Evidence Manifest`, and schema fields exact when naming records or APIs. |
 | Evidence Manifest | 근거 매니페스트 | Use the Korean phrase only when helpful in prose. Keep `Evidence Manifest` exact in record/template/schema contexts. |

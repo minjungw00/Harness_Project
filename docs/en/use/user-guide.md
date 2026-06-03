@@ -38,7 +38,7 @@ The agent should:
 - separate answerable facts from missing information before asking you
 - identify decisions that only you can own
 - separate blocking questions from useful non-blocking questions
-- separate product or UX judgment from technical architecture judgment when that distinction matters
+- separate Product/UX judgment from Technical judgment when that distinction matters
 - gather or explain the evidence needed to support completion claims
 - run or explain the checks and verification that matter for the work
 - show what still blocks close and the next safe action
@@ -65,7 +65,7 @@ Most requests should be explained with plain work shapes:
 |---|---|---|
 | Read/advice work | The agent is reading, explaining, comparing, reviewing, or helping decide without changing product files. | The answer, sources or caveats when useful, and any decision or follow-up that matters. |
 | Small change | The requested change is narrow, low risk, and has an obvious result, such as a typo, copy-only edit, or focused fix. | A short scope, changed path or no-file result, what was checked, and whether anything forced escalation. |
-| Tracked work | The request has unclear scope, multiple parts, product or technical judgment, security/privacy impact, meaningful evidence needs, QA, verification, work acceptance, or close-relevant risk. | Scope, pending user judgments, evidence, close readiness, next safe action, and the smallest blocker. |
+| Tracked work | The request has unclear scope, multiple parts, Product/UX or Technical judgment, security/privacy impact, meaningful evidence needs, QA, verification, work acceptance, or close-relevant risk. | Scope, pending user judgments, evidence, close readiness, next safe action, and the smallest blocker. |
 
 The agent may record more internal detail than it displays. User-facing messages should show the detail that helps you decide, trust, or unblock the work, not a lifecycle checklist for every tiny edit.
 
@@ -97,8 +97,7 @@ A good clarification response should separate:
 - blocking questions
 - useful non-blocking questions
 - product or UX judgment candidates
-- technical architecture judgment candidates
-- security or privacy judgment candidates
+- technical judgment candidates, including security or privacy considerations when relevant
 - human review and verification expectations
 - remaining uncertainty
 - safe next-work candidate or work-splitting candidate
@@ -116,7 +115,7 @@ Clarification is enough to proceed only when:
 
 If those conditions are not met, the agent should either inspect the available sources, ask the smallest blocking question, park useful non-blocking questions, or propose a smaller safe slice that avoids the unresolved area. Larger requests may take several short clarification turns; that is fine as long as each turn checks available context first and moves toward the next safe action instead of becoming a questionnaire.
 
-When the request needs a user-owned judgment, the agent should show a user judgment request instead of asking for broad approval. Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, work acceptance, and residual-risk acceptance are separate judgments. Small judgments can be asked as short, explicit prompts; complex or risky judgments should include fuller trade-offs and evidence. Any internal saved-record label should stay behind the plain question unless it helps explain a real boundary or source link.
+When the request needs a user-owned judgment, the agent should show a user judgment request instead of asking for broad approval. User-facing labels are Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, and Residual risk acceptance. Security/privacy, scope/autonomy, QA waiver, and verification-waiver details may appear as context, affected gates, or owner refs, but they should not become extra display categories the user has to learn. Small judgments can be asked as short, explicit prompts; complex or risky judgments should include fuller trade-offs and evidence. Any internal saved-record label should stay behind the plain question unless it helps explain a real boundary or source link.
 
 Product or UX judgment:
 
@@ -193,7 +192,7 @@ For technical planning, you can say:
 I want to replace our login approach, but I do not know whether sessions, magic links, or OAuth/OIDC fit best. Inspect the current auth shape first and show the decisions before implementation.
 ```
 
-A useful response should inspect existing auth, session, user model, tests, and docs before asking; separate technical architecture choices from security/privacy choices; name verification and human QA expectations; and propose either a safe investigation slice or a work split. It should not treat the first plausible implementation path as enough to stop clarifying if acceptance criteria, major judgment candidates, or remaining uncertainty are still unclear.
+A useful response should inspect existing auth, session, user model, tests, and docs before asking; separate technical choices from security/privacy considerations; name verification and human QA expectations; and propose either a safe investigation slice or a work split. It should not treat the first plausible implementation path as enough to stop clarifying if acceptance criteria, major judgment candidates, or remaining uncertainty are still unclear.
 
 ## Small work should stay light
 
@@ -223,13 +222,13 @@ No broader product decision appeared, and no close-relevant residual risk is kno
 
 The light display does not mean the agent bypasses Harness internally. If product files may change, the scope, write, evidence, and close boundary still matters. The agent still keeps scope narrow, uses the appropriate internal write checks, records what changed, preserves the evidence needed for the claim, and reports if the work grows beyond the original request. You should not need to see internal boundary labels for every tiny edit unless a label helps explain a boundary or blocker.
 
-Small work should escalate when it stops being small. Escalate to tracked work when scope is unclear; multiple files, product areas, or subsystems are involved; a product or UX judgment is needed; an important technical architecture judgment is needed; a public interface or API may be affected; security or privacy may be affected; a sensitive action is needed; QA or verification requirements increase; evidence is insufficient; residual risk is non-trivial; or multi-step delivery is needed.
+Small work should escalate when it stops being small. Escalate to tracked work when scope is unclear; multiple files, product areas, or subsystems are involved; a Product/UX judgment is needed; an important Technical judgment is needed; a public interface or API may be affected; security or privacy may be affected; a sensitive action is needed; QA or verification requirements increase; evidence is insufficient; residual risk is non-trivial; or multi-step delivery is needed.
 
 Examples:
 
 - A typo or copy-only change can stay lightweight when it touches one obvious surface and does not change meaning, behavior, localization strategy, security posture, or required QA.
 - "Make Enter submit this modal instead of closing it" should escalate if it changes UI behavior, accessibility expectations, or product workflow. That is a product/UX decision, not just a small edit.
-- "Change login to magic links" should escalate because it changes authentication architecture and security/privacy behavior. The agent can inspect first, but implementation needs tracked scope, user-owned technical/security judgment, evidence, and likely QA/verification.
+- "Change login to magic links" should escalate because it changes authentication architecture and security/privacy behavior. The agent can inspect first, but implementation needs tracked scope, user-owned Technical judgment, evidence, and likely QA/verification.
 
 ## Larger work gets more structure
 
@@ -250,8 +249,7 @@ I will inspect: existing auth routes, user/session model, login UI patterns, val
 
 Likely user-owned decisions:
 - Product / UX: credential flow, failed-login behavior, login copy, and recovery messaging.
-- Technical architecture: session model, token/cookie strategy, password storage or identity-provider path, migration impact, and dependency choices.
-- Security / privacy: account-enumeration risk, audit logging, rate limiting or lockout behavior, redaction, and secret handling.
+- Technical judgment: session model, token/cookie strategy, password storage or identity-provider path, migration impact, dependency choices, account-enumeration risk, audit logging, rate limiting or lockout behavior, redaction, and secret handling.
 
 Evidence likely needed: focused tests for success and failure paths, changed-path summary, security-sensitive notes, and a human QA note if the login screen changes.
 
@@ -281,7 +279,7 @@ Most status should fit into six plain concepts. The agent may save precise recor
 |---|---|---|
 | Work | What are we trying to do? | The requested result, current work shape, affected area, and next safe action. |
 | Scope | What may change, and what stays out? | Included behavior, excluded items, affected paths or areas, and whether the next action still fits the agreed scope. |
-| Judgment | What must you decide? | Each pending choice separately, such as a product/UX choice, technical architecture choice, security/privacy choice, permission for a sensitive step, work acceptance, or acceptance of a named remaining risk. |
+| Judgment | What must you decide? | Each pending choice separately, using Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance. |
 | Evidence | What supports the current claim? | Changed paths, command output, logs, screenshots, human QA notes, evidence links, recorded runs, related files or artifacts, and anything missing or stale. |
 | Check or verification | What was checked, and from what review boundary? | Focused tests, diff review, inspection, source lookup, verification result, or required human QA expectation. |
 | Close | Can this honestly finish? | The remaining blocker, the smallest unblocker, whether work acceptance is required, and any known remaining risk or residual-risk acceptance need. |
@@ -450,10 +448,11 @@ You can skip this section until an agent shows one of these labels. They are use
 | Discovery | The internal name for the agent's requirements-clarification behavior before implementation planning. Users can ask for this as "help me clarify the plan before implementation." |
 | Change Unit | The bounded work area that may change for this task. |
 | Autonomy Boundary | The decisions the agent may make alone inside that scope. |
-| Decision Packet | The internal record/template label behind a user judgment request. It records a user-owned product/UX, technical architecture, security/privacy, scope/autonomy, waiver, work acceptance, residual-risk acceptance, or reconcile judgment. It can be concise for a small unblocker or detailed for complex/risky choices. |
-| `judgment_category` | Schema field for the judgment grouping, such as Product / UX, Technical architecture, Security / privacy, QA / verification, Work acceptance, Residual risk, Scope / autonomy, or Mixed. Ordinary prompts should show the friendly judgment type first. |
-| `judgment_route` | Schema field for the answer route, such as choose, waive, accept result, accept risk, approve a sensitive step, or reconcile. Ordinary prompts should use the matching verb. |
-| `display_depth` | Schema field for prompt depth. Ordinary users should see the practical result: a short question, a trade-off question, a high-risk question, or a close-affecting question. |
+| User Judgment | The internal record family behind a user judgment request. It records the user's answer for `judgment_type` values such as `product_choice`, `technical_choice`, `sensitive_action_approval`, `work_acceptance`, or `residual_risk_acceptance`. |
+| `judgment_type` | Internal judgment type. It should be shown through a plain label first, not as a taxonomy the user must learn. |
+| `presentation` | Prompt/detail shape. `short` is the compact default; `full` is the optional Decision Packet-style presentation for complex judgments. |
+| `display_label` | User-facing label: Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance. |
+| Decision Packet | Optional full-format or legacy presentation label for a `user_judgment`; not the default mechanism for every small judgment. |
 | Approval | Permission for a named sensitive action; not generic agreement or work acceptance. |
 | Write Authorization | A one-attempt check that the intended product write fits the current task, scope, user judgments, and sensitive-action permissions. |
 | Evidence Manifest | The later/profile record that maps completion claims to supporting evidence. Minimum MVP-1 can use evidence summaries, Run refs, ArtifactRefs, and visible gaps without a full Evidence Manifest. |

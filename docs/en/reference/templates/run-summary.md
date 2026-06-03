@@ -113,7 +113,7 @@ npm test -- --runInBand
 - acceptance criteria coverage:
 - Change Unit completion conditions:
 - scope / Write Authority compatibility:
-- Decision Packet compatibility:
+- User judgment compatibility:
 - evidence coverage:
 - residual-risk visibility:
 - outcome refs (existing path/ref only):
@@ -165,6 +165,6 @@ npm test -- --runInBand
 
 ## Notes
 
-Raw logs and diffs stay as artifacts; the report links to them. Same-session review content in a `RUN-SUMMARY` is self-check or stewardship signal only and follows the [review-stage boundary](../design-quality-policies.md#two-stage-review-display). Findings route to existing gate, Decision Packet, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit update, or close-blocker refs; the report does not create those records or authorities by itself.
+Raw logs and diffs stay as artifacts; the report links to them. Same-session review content in a `RUN-SUMMARY` is self-check or stewardship signal only and follows the [review-stage boundary](../design-quality-policies.md#two-stage-review-display). Findings route to existing gate, user judgment, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit update, or close-blocker refs; the report does not create those records or authorities by itself.
 
 Evidence refs in this report must preserve `redaction_state`. `secret_omitted` refs may support only visible nonsecret evidence, and `blocked` refs are committed metadata-only notices for unavailable input, not raw logs, diffs, screenshots, or bundles.

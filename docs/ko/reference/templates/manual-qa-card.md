@@ -17,11 +17,11 @@
 - 대상 화면(screen) 또는 흐름(flow)
 - checklist item
 - 예상 screenshot, walkthrough note, browser log, Browser QA artifact, 수동 제공 artifact 근거
-- QA가 면제되거나 미뤄질 때 waiver reason, 필요한 경우 QA waiver Decision Packet refs, Residual Risk refs
+- QA가 면제되거나 미뤄질 때 waiver reason, 필요한 경우 QA waiver user judgment refs, Residual Risk refs
 - 검증, 작업 수락, 닫기 영향 요약
-- 수동 QA record, QA waiver Decision Packet, Evidence Manifest, Eval, 작업 수락 context, Residual Risk, Artifact refs, redaction state, projection freshness를 위한 compact refs
+- 수동 QA record, QA waiver user judgment, Evidence Manifest, Eval, 작업 수락 context, Residual Risk, Artifact refs, redaction state, projection freshness를 위한 compact refs
 
-닫기 맥락과 waiver placeholder는 QA 기록, `qa_gate`, 관련 gate 상태, Decision Packet ref, Residual Risk ref에서 파생한 표시 전용 요약입니다. Waiver path는 그런 ref를 렌더링하거나 아직 기록이 필요하다고 표시해야 합니다.
+닫기 맥락과 waiver placeholder는 QA 기록, `qa_gate`, 관련 gate 상태, user judgment ref, Residual Risk ref에서 파생한 표시 전용 요약입니다. Waiver path는 그런 ref를 렌더링하거나 아직 기록이 필요하다고 표시해야 합니다.
 
 ## 렌더링 섹션
 
@@ -46,7 +46,7 @@ Browser QA Capture: 승격되고 지원될 때 유용합니다. 작업 수락이
 
 기록: {manual_qa_record_id|none until recorded}
 Gate: {qa_gate display: not_required|required|pending|passed|failed|waived}
-Refs: manual_qa={manual_qa_record_id|none}; qa_waiver_decision={qa_waiver_decision_packet_ref|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
+Refs: manual_qa={manual_qa_record_id|none}; qa_waiver_judgment={qa_waiver_user_judgment_ref|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 프로필(Profile): {profile}
 요청되는 사람의 확인: {human_inspection_summary}
 대상(Target): {screen_or_flow}
@@ -75,18 +75,18 @@ Refs: manual_qa={manual_qa_record_id|none}; qa_waiver_decision={qa_waiver_decisi
 - 후속 작업:
 - 관련 refs:
 - 닫기 영향:
-- waiver source: {manual_qa_record_id와 waiver_reason; 사용자 소유 위험이 있으면 waiver_decision_packet_ref}
+- waiver source: {manual_qa_record_id와 waiver_reason; 사용자 소유 위험이 있으면 qa_waiver_user_judgment_ref}
 
-수동 QA 결과를 기록하거나, 허용된 낮은 위험의 QA waiver 사유를 기록하거나, 사용자 소유 위험이 있으면 QA waiver Decision Packet을 요청하시겠습니까?
+수동 QA 결과를 기록하거나, 허용된 낮은 위험의 QA waiver 사유를 기록하거나, 사용자 소유 위험이 있으면 QA waiver user judgment를 요청하시겠습니까?
 ````
 
 ## 메모
 
 이 template은 렌더링 결과인 카드 형태일 뿐 기준 QA 상태가 아닙니다. `qa_gate`는 close-relevant gate로 남습니다.
 
-수동 QA는 사람이 확인한 기록입니다. 테스트 통과, browser smoke, screenshot capture, Browser QA Capture artifact, 검증, 사용자의 작업 수락은 닫기 맥락을 뒷받침할 수 있지만, `record_manual_qa`가 수동 QA 결과를 기록했거나 유효한 QA waiver가 waiver reason과 함께 `qa_gate=waived`를 갱신하고, 사용자 소유 위험이 있으면 호환되는 QA waiver Decision Packet을 포함한 경우가 아니면 수동 QA가 되지 않습니다. Browser QA Capture는 owner 문서가 명시적으로 승격하고 증명하기 전까지 로드맵 후보이며, captured artifact는 별도 Eval 경로가 independence를 충족하지 않는 한 작업 수락 또는 분리 검증을 기록하지 않습니다. Waiver에 닫기 영향이나 위험을 받아들이는 판단이 걸려 있는 경우 가벼운 채팅 문장만으로는 충분하지 않습니다.
+수동 QA는 사람이 확인한 기록입니다. 테스트 통과, browser smoke, screenshot capture, Browser QA Capture artifact, 검증, 사용자의 작업 수락은 닫기 맥락을 뒷받침할 수 있지만, `record_manual_qa`가 수동 QA 결과를 기록했거나 유효한 QA waiver가 waiver reason과 함께 `qa_gate=waived`를 갱신하고, 사용자 소유 위험이 있으면 호환되는 QA waiver user judgment를 포함한 경우가 아니면 수동 QA가 되지 않습니다. Browser QA Capture는 owner 문서가 명시적으로 승격하고 증명하기 전까지 로드맵 후보이며, captured artifact는 별도 Eval 경로가 independence를 충족하지 않는 한 작업 수락 또는 분리 검증을 기록하지 않습니다. Waiver에 닫기 영향이나 위험을 받아들이는 판단이 걸려 있는 경우 가벼운 채팅 문장만으로는 충분하지 않습니다.
 
-이 card는 pending QA, passed QA, failed QA, waived QA를 별도 표시 상태로 렌더링해야 합니다. Waived QA는 수동 QA record 또는 waiver reason, 필요한 경우 QA waiver Decision Packet, 해당되는 Residual Risk refs, close impact를 cite하며 passed inspection이 아닙니다.
+이 card는 pending QA, passed QA, failed QA, waived QA를 별도 표시 상태로 렌더링해야 합니다. Waived QA는 수동 QA record 또는 waiver reason, 필요한 경우 QA waiver user judgment, 해당되는 Residual Risk refs, close impact를 cite하며 passed inspection이 아닙니다.
 
 결과 안내는 수동 QA result 또는 QA waiver path만 물어야 합니다. 작업 수락이나 잔여 위험 수용을 같은 답변처럼 요청하면 안 됩니다.
 

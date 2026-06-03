@@ -13,7 +13,7 @@ Implementation tier: Future/diagnostic projections. Module Map output is a later
 - `module_map_items`
 - module-local watchpoints stored on module map items
 - reconcile items that propose module map changes
-- related Decision Packets and design refs
+- related user judgments and design refs
 - design-quality validator results related to `deep_module_interface` or `codebase_stewardship`
 - routed stewardship findings that affect module or boundary refs, when displayed
 - projection freshness inputs
@@ -74,4 +74,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 This template is a rendered shape, not canonical state. Canonical module refs use `StateRecordRef.record_kind=module_map_item`. Review, watchpoint, and stewardship rollup text is display over owner records; it does not create Approval, evidence, QA, verification, work acceptance, residual-risk acceptance, close, or Write Authorization.
 
-When a proposed module boundary change shifts product commitments, public interfaces, caller obligations, dependency direction, or architecture direction, route the judgment through the existing design-quality and Decision Packet paths. Rendering the proposal here does not resolve the `design_gate`, `decision_gate`, or close impact by itself.
+When a proposed module boundary change shifts product commitments, public interfaces, caller obligations, dependency direction, or architecture direction, route the judgment through the existing design-quality and user judgment paths. Rendering the proposal here does not resolve the `design_gate`, `decision_gate`, or close impact by itself.

@@ -17,7 +17,7 @@
 - current 수용 기준 snapshot
 - Write Authorization, 민감 동작 승인, baseline, 보장 수준 참조
 - 민감 동작 승인 status
-- active Decision Packet 참조
+- active user judgment refs
 - 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 summary
 - blocker owner 표시 summary
 - evidence coverage, verification, 수동 QA summary
@@ -27,7 +27,7 @@
 - 읽기용 보기 최신성(projection freshness) 입력
 - state, baseline, evidence, MCP, capability freshness/blocker 표시 summary
 
-Decision, write-authority, close-impact, residual-risk, freshness placeholder는 위 기록에서 파생한 표시 binding입니다. 실제 사용자 judgment가 필요하면 이 card를 사용자 판단 맥락 source로 취급하지 말고 Decision Packet 또는 judgment prompt를 렌더링합니다.
+Judgment, write-authority, close-impact, residual-risk, freshness placeholder는 위 기록에서 파생한 표시 binding입니다. 실제 사용자 judgment가 필요하면 이 card를 사용자 판단 맥락 source로 취급하지 말고 compact 판단 요청 또는 선택적 full-format Decision Packet presentation을 렌더링합니다.
 
 ## 렌더링 섹션
 
@@ -63,7 +63,7 @@ TASK-{id} {title}
 - 추가로 막는 것: {secondary_blockers_summary|none}
 
 판단 맥락:
-- 대기 중인 judgment: {decision_packet_ref|none}
+- 대기 중인 judgment: {user_judgment_ref|none}
 - 사용자가 판단할 것: {user_judgment_question|none}
 - 에이전트가 판단해도 되는 것: {what_agent_may_decide_without_user}
 
@@ -124,7 +124,7 @@ Gates:
 
 이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. Current source record와 ref에서 렌더링되며, 오래된 chat memory에서 렌더링하지 않습니다. 저장된 `JOURNEY-CARD` Markdown은 Future/diagnostic projections 범위입니다. `status`, `next`, 중요한 이어가기(resume) 흐름의 초기 현재 위치 맥락은 간결한 상태 출력을 사용할 수 있습니다.
 
-이 card 안이나 주변에 표시되는 status/next recommendation은 read-only guidance입니다. Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 close하지 않습니다.
+이 card 안이나 주변에 표시되는 status/next recommendation은 read-only guidance입니다. 사용자 판단 요청, 선택적 full-format Decision Packet presentation, `prepare_write`, evidence collection, verification, QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 close하지 않습니다.
 
 Journey Card의 닫기 맥락(Close context)은 간결한 status/resume 표시입니다. `TASK`는 진행 중이거나 최근 닫힌 `work` Task의 이어가기용 Close Summary를 담당하고, `DIRECT-RESULT`는 direct 작업의 가벼운 close impact summary를 담당합니다. 이 표시들은 [projection/report 경계](../document-projection.md#projection-principles)를 따르며, close와 gate effect는 여전히 owner record에서 옵니다.
 

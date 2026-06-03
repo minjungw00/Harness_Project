@@ -20,7 +20,7 @@
 - 검토한 근거(evidence)
 - blocker
 - artifact ref와 redaction state, input availability
-- 표시되는 claim이 있을 때 관련 Decision Packet, Approval, Evidence Manifest, 수동 QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness
+- 표시되는 claim이 있을 때 관련 User Judgment, Approval, Evidence Manifest, 수동 QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness
 
 ## 렌더링 섹션
 
@@ -57,7 +57,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Source Refs
 - Evidence Manifest:
-- Decision Packets:
+- User Judgments:
 - Approval:
 - 수동 QA:
 - Acceptance context:
@@ -127,7 +127,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 ## Evidence Reviewed
 - task summary:
 - Journey Spine:
-- Decision Packets:
+- User Judgments:
 - Residual Risks:
 - Autonomy Boundary:
 - domain term refs:
@@ -157,7 +157,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Design Quality Review
 - vertical slice:
-- Decision Packets:
+- User Judgments:
 - Autonomy Boundary:
 - Residual Risks:
 - feedback loop:
@@ -184,8 +184,8 @@ Eval verdict만으로는 assurance를 높일 수 없습니다. `detached_verifie
 
 Independence가 유효하지 않거나 같은 세션 자체 확인(self-check)에 그치는 review라면 그 경계를 명시하고 detached assurance는 그대로 둡니다. `subagent_context` review는 기본적으로 detached가 아닙니다. 기록된 context가 `fresh_session`, `fresh_worktree`, `sandbox`, `manual_bundle` 요구를 충족할 때만 detached candidate로 렌더링합니다.
 
-Evaluator bundle, baseline, included artifacts, Evidence Manifest, approval/Decision Packet refs, close-relevant Residual Risk refs가 stale이면 stale input을 렌더링하고 replacement 또는 compatible re-verification이 기록될 때까지 assurance를 그대로 둡니다.
+Evaluator bundle, baseline, included artifacts, Evidence Manifest, approval/user judgment refs, close-relevant Residual Risk refs가 stale이면 stale input을 렌더링하고 replacement 또는 compatible re-verification이 기록될 때까지 assurance를 그대로 둡니다.
 
-Eval projection은 생략되었거나 차단된 원본 bytes를 검토한 것처럼 암시하면 안 됩니다. `secret_omitted` evidence는 보이는 nonsecret claim만 뒷받침할 수 있습니다. Eval이 `blocked` payload에 의존한다면 replacement, waiver, Decision Packet outcome, 받아들인 위험, documented fallback이 verification 경로를 해소할 때까지 result는 `blocked` 또는 `inconclusive`로 남거나 `EVIDENCE_INSUFFICIENT`를 반환해야 합니다.
+Eval projection은 생략되었거나 차단된 원본 bytes를 검토한 것처럼 암시하면 안 됩니다. `secret_omitted` evidence는 보이는 nonsecret claim만 뒷받침할 수 있습니다. Eval이 `blocked` payload에 의존한다면 replacement, waiver, user judgment outcome, 받아들인 위험, documented fallback이 verification 경로를 해소할 때까지 result는 `blocked` 또는 `inconclusive`로 남거나 `EVIDENCE_INSUFFICIENT`를 반환해야 합니다.
 
 Eval template은 검토한 근거 ref를 간결하게 유지해야 합니다. 큰 log, bundle, screenshot, diff, trace는 redaction state와 availability가 있는 ArtifactRef ref로 남깁니다. Eval 본문은 무엇을 검토했는지 기록할 뿐이며 원본 evidence payload를 붙여 넣지 않습니다.

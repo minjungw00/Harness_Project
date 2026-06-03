@@ -40,7 +40,7 @@ The local kernel is a coordination and authority record, not a replacement for t
 
 The first authority loop is narrow: `prepare_write` is the only product-write authorization decision point, a returned Write Authorization is durable and single-use, and `record_run` consumes it for one compatible direct Run or implementation Run while recording observed changes and one artifact/evidence ref. Engineering Checkpoint may use status or a narrow close-task smoke for blockers, but it does not prove work acceptance or residual-risk close semantics. Exact state logic lives in [Kernel Reference](../reference/kernel.md#prepare_write) and public request/response details live in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#public-tools).
 
-Start with canonical state, one local project registration, one active Task, one scoped boundary represented by the Change Unit owner shape only where the reference contract requires it, one Write Authorization path, one recorded Run, one artifact/evidence link, Core tool behavior, and only the MCP reachability needed to exercise that path. The initial implementation assumption is one local process with modules, not a distributed platform. Treat natural-language intake, full Discovery, full Decision Packet, full Evidence Manifest behavior, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, projection rendering, conformance runner, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, operations/export/recover, broad operator entrypoints, and broad automation as later or non-authoritative things that read from or wrap that authority loop after it exists.
+Start with canonical state, one local project registration, one active Task, one scoped boundary represented by the Change Unit owner shape only where the reference contract requires it, one Write Authorization path, one recorded Run, one artifact/evidence link, Core tool behavior, and only the MCP reachability needed to exercise that path. The initial implementation assumption is one local process with modules, not a distributed platform. Treat natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest behavior, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, projection rendering, conformance runner, dashboards or hosted workflow UI, indexes, broad connector ecosystems or marketplaces, team workflow, surface-specific connector automation, hook expansion, Browser QA automation, derived metrics, parallel orchestration, operations/export/recover, broad operator entrypoints, and broad automation as later or non-authoritative things that read from or wrap that authority loop after it exists.
 
 If a proposed implementation starts with the full user-facing system, Assurance Profile or Operations Profile behavior as one large first batch, projection template polish, a dashboard or hosted workflow UI, a Context Index, a connector marketplace, hook expansion, metrics, parallel orchestration, or broad automation lanes, it is starting beyond the first runnable smoke slice.
 
@@ -99,7 +99,7 @@ Current phase and future repository role:
 Preserved Harness principles:
 
 - Harness is a local authority record for scope, user-owned judgment, evidence, verification, QA expectations, work acceptance, residual-risk status, and close readiness.
-- Harness preserves user-owned judgment. Product/UX judgment, technical architecture judgment, security/privacy judgment, QA expectations, work acceptance, waivers, and residual-risk acceptance remain user-owned judgments unless the owner contracts explicitly say otherwise.
+- Harness preserves user-owned judgment. Product/UX judgment, Technical judgment including architecture and security/privacy considerations, QA expectations, Work acceptance, waivers, and Residual risk acceptance remain user-owned judgments unless the owner contracts explicitly say otherwise.
 - Evidence, verification, Manual QA, work acceptance, and residual risk are separate records and judgments. None of them substitutes for the others.
 - Chat, connector output, generated documents, and Markdown-rendered projections are not operational authority. Core-owned local state and artifact references are authoritative.
 
@@ -107,7 +107,7 @@ Current delivery model:
 
 - Engineering Checkpoint proves the smallest local Core authority loop with Kernel Smoke as a narrow future smoke-check authoring label.
 - MVP-1 User Work Loop proves ordinary user value at narrow scope: start/resume, work-shape classification, scope/non-goals/success criteria, user-owned judgment routing, evidence summary, close blocker summary, work acceptance display, and residual-risk visibility.
-- Assurance Profile hardens verification, Manual QA, residual-risk accepted close, work acceptance separation, stewardship, Decision Packets, Approval separation, TDD, feedback-loop policy, and context hygiene.
+- Assurance Profile hardens verification, Manual QA, residual-risk accepted close, work acceptance separation, stewardship, user judgment quality, Approval separation, TDD, feedback-loop policy, and context hygiene.
 - Operations Profile hardens doctor/readiness, recover/export, artifact integrity, release handoff, broader fixture coverage, and later-boundary checks.
 - Roadmap remains future scope unless a future owner decision promotes an item with exact contracts, fixtures, fallback behavior, and no projection-as-canonical dependency.
 
@@ -115,7 +115,7 @@ What has been clarified:
 
 - Repository identity is explicit: documentation-only now; intended future role is the Harness Server source repository; server/runtime implementation is separately gated.
 - The product thesis is explicit: Harness is not a prompt pack, dashboard, broad hosted agent platform, or generated Markdown system.
-- The judgment model separates Approval, Decision Packets, work acceptance, residual-risk acceptance, QA/verification waiver decisions, and Write Authorization.
+- The judgment model separates Approval, User Judgments, work acceptance, residual-risk acceptance, QA/verification waiver judgments, and Write Authorization.
 - Projections and chat are readable or conversational surfaces, not the operational source of truth.
 - Projection scope is staged: Engineering Checkpoint may expose freshness/read facts only when an owner path already produces them, MVP-1 needs a compact Core-derived status card and minimal user-readable output, and detailed reports/templates are later-profile scope unless promoted.
 - Security wording is bounded to actual enforcement levels: cooperative, detective, preventive, and isolated claims require the documented capability and fixture-proven path for the covered operation.
@@ -127,19 +127,19 @@ Current readiness status:
 - Documentation acceptance: pending. This revision is a candidate for maintainer acceptance review, not accepted documentation.
 - Implementation planning readiness: not accepted. First runtime-batch planning must not begin until maintainers explicitly accept the readiness criteria below or reclassify remaining blockers.
 - Runtime implementation: not started. Server coding, fixture materialization, runtime conformance, and generated operational output remain out of scope for this repository phase.
-- Server/runtime implementation decisions: open decision-ledger items exist, but none have been formally accepted for coding. Additional design issues may still be found during maintainer review or implementation-readiness review.
+- Server/runtime implementation decisions: open decision-ledger items remain, and documentation-resolved items still require maintainer acceptance before coding. Additional design issues may still be found during maintainer review or implementation-readiness review.
 
 Server-coding decision-log status:
 
 - Open server-coding decision-ledger items are recorded in [Staged Delivery Plan: Implementation decisions needed before server coding](mvp-plan.md#implementation-decisions-needed-before-server-coding).
-- The current open items include simplified judgment model and naming, `request_user_decision` vs `request_user_judgment`, `harness.next` vs `status.next_actions`, MVP-1 storage minimum, local access error taxonomy, compact status card scope, small direct change evidence requirement, and acceptance/residual-risk minimal records.
-- No server/runtime implementation decision has been formally accepted for coding. Resolve or explicitly defer the affected ledger item before changing server code or DDL for that behavior.
+- The current open items include `harness.next` vs `status.next_actions`, MVP-1 storage minimum, local access error taxonomy, compact status card scope, small direct change evidence requirement, and acceptance/residual-risk minimal records. The simplified judgment model and `request_user_judgment` naming are resolved in this documentation baseline but not yet accepted for coding.
+- No server/runtime implementation decision has been formally accepted for coding. Resolve, accept, or explicitly defer the affected ledger item before changing server code or DDL for that behavior.
 
 Documentation drift and review-risk status:
 
 - No major implementation-decision TODOs are intentionally left scattered through active docs at this baseline.
 - The [Authoring Guide tracker](../maintain/authoring-guide.md#known-redesign-issues-tracker) remains the review checklist for candidate drift and regression risks. It gives default routing for confirmed findings as documentation drift, schema/design decisions, stage boundary decisions, implementation-readiness criteria, or future roadmap items.
-- The previously tracked judgment-model drift around user-facing category, internal route, display depth, and small Decision Packet weight is resolved in this documentation baseline. If review exposes a remaining owner-contract decision, route it to the Staged Delivery Plan decision log instead of scattering TODOs.
+- The previously tracked judgment-model drift is resolved in this documentation baseline: canonical docs use `user_judgment`, `harness.request_user_judgment`, `judgment_type`, `presentation`, and `display_label`, and treat Decision Packet as optional full-format/legacy presentation. If review exposes a remaining owner-contract decision, route it to the Staged Delivery Plan decision log instead of scattering TODOs.
 - Candidate review areas still requiring maintainer verification include stage-name drift, heavy user-facing disclaimers, early Discovery/Change Unit convergence, early Storage/API/DDL scope, projection/template scope, conformance-fixture detail, early operations entrypoints, security guarantee wording, agent context load, Korean technical-noun load, roadmap-boundary drift, and optimistic decision-log wording.
 
 Maintainer acceptance conditions:
@@ -169,8 +169,8 @@ First implementation planning means Engineering Checkpoint planning first, not M
 - Repository identity is clear in the root README, docs README, language READMEs, Build docs, and relevant Reference docs: documentation-only now; intended future role is the Harness Server source repository; server/runtime implementation may start only after documentation acceptance and a separate implementation-planning readiness decision; not a Product Repository; not a Harness Runtime Home.
 - The user-facing flow is understandable without requiring users to know internal terms before they can start, resume, unblock, accept, or close work.
 - Discovery and requirements clarification preserve shared understanding and user-owned judgment before convergence on a Change Unit or first safe implementation unit. A Change Unit may express scoped work when the owner path requires it, but Discovery is not premature Change Unit selection.
-- The judgment model is schema-aligned across Kernel, MCP/API schemas, storage, templates, fixtures, Learn/Use explanations, and glossary terms. `judgment_category` owns the user-facing category, `judgment_route` owns the internal owner path and recorded-answer route, and `display_depth` owns prompt depth; affected gates or blocked actions stay in separate owner fields.
-- Decision Packet prompts are proportional to the judgment. Small explicit unblockers can use `display_depth=simple`; trade-off, high-risk, close-affecting, approval-shaped, waiver, work-acceptance, residual-risk acceptance, reconcile, and mixed prompts carry the extra context their owner contracts require without making every small judgment heavyweight.
+- The judgment model is schema-aligned across Kernel, MCP/API schemas, storage, templates, fixtures, Learn/Use explanations, and glossary terms. `judgment_type` owns the internal judgment type, `presentation` owns compact/full display shape, and `display_label` is limited to Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance; affected gates or blocked actions stay in separate owner fields.
+- Judgment prompts are proportional to the judgment. Small explicit unblockers use `presentation=short`; complex, high-risk, close-affecting, sensitive-action approval, waiver, work-acceptance, residual-risk acceptance, or reconcile prompts may use `presentation=full` or optional full-format Decision Packet presentation without making every small judgment heavyweight.
 - Approval, work acceptance, and residual-risk acceptance are distinct in examples, templates, API/schema wording, close behavior, and user-facing routing.
 - Stages are coherent: Engineering Checkpoint is not a product MVP; MVP-1 User Work Loop is the first narrow user-value slice, not a full assurance/evaluation/QA/reporting system; Assurance Profile hardens verification, QA, residual risk, work acceptance, and stewardship; Operations Profile adds operational handoff capabilities; Roadmap stays future scope until promoted.
 - Kernel, API, storage, reference, and Build contracts agree on Core ownership, state transitions, write authority, evidence, judgment records, close semantics, idempotency, state conflict behavior, artifacts, projection jobs, and fixture semantics.
@@ -198,7 +198,7 @@ This handoff does not promote roadmap items, dashboards or hosted workflow UI, B
 |---|---|---|
 | Engineering Checkpoint | One local Task can go through the first Core authority loop: local project registration, active Task, one scoped boundary represented by the Change Unit owner shape only where the reference contract requires it, `prepare_write`, single-use Write Authorization, `record_run`, one artifact/evidence ref, and structured status/blocker response. | Status/blocker output shows current Task, scope, write authority, artifact/evidence support, and blockers. `prepare_write` refuses out-of-scope write authorization, compatible scoped work is authorized and consumed once, and status or a narrow close-task smoke refuses missing scope, write authority, or artifact/evidence support with structured blockers. |
 | MVP-1 User Work Loop | Ordinary user work is clarified into scope, non-goals, success criteria, user-owned judgment, evidence summary, close blocker summary, work-acceptance display, and residual-risk visibility. | Users can see work shape classification, product/UX and architecture judgments separately, codebase-answerable facts checked before questions, small direct changes and tracked work using different procedural budgets, ambiguous feature requests held for clarification, close blocked by missing evidence or required user-owned judgments, residual risk displayed, ambiguous consent not treated as judgment resolution, MCP/Core unavailability not fabricated as authority, a compact Core-derived status card, detached verification required only when active profile/user request/task type/risk profile requires it, waiver only when required verification is intentionally skipped, and work acceptance kept distinct from Approval and residual-risk acceptance. |
-| Assurance Profile | The MVP-1 user-value path handles verification, Manual QA, residual-risk accepted close, work-acceptance separation, stewardship, profile-specific Decision Packet quality, Approval separation, TDD, feedback-loop policy, and context hygiene with honest boundaries. | Fixtures show why work can or cannot proceed, verify, require QA, accept, accept risk, or close through the same Core records and errors. |
+| Assurance Profile | The MVP-1 user-value path handles verification, Manual QA, residual-risk accepted close, work-acceptance separation, stewardship, profile-specific user judgment quality, Approval separation, TDD, feedback-loop policy, and context hygiene with honest boundaries. | Fixtures show why work can or cannot proceed, verify, require QA, accept, accept risk, or close through the same Core records and errors. |
 | Operations Profile | Operator readiness, recover/export, artifact integrity, release handoff, broader fixture suite coverage, and later-boundary checks complete the [hardened local reference target](../reference/glossary.md#hardened-local-reference-target). | Operator entrypoints diagnose, recover, export, check artifacts, run conformance, and prepare release handoff over the same Core state without creating a second authority model. |
 | Roadmap boundary | Later surfaces or automation can be considered only after the local kernel and agency proof are stable. | Optional capabilities remain read-only, display-only, metadata-only, or artifact-candidate-only until an owner promotes them through the [Roadmap promotion criteria](../roadmap.md#promotion-criteria) with exact contracts and fixtures. |
 
@@ -337,8 +337,8 @@ It should show:
 - the work is clarified into scope, non-goals, success criteria, evidence expectations, close readiness, and judgment boundaries
 - codebase-answerable or state-answerable facts are checked before asking the user to repeat them
 - clarification separates blocking questions from useful-but-not-blocking questions without becoming a long questionnaire
-- product/UX judgment and material technical architecture judgment can be presented separately
-- a minimal user judgment request and record exists without requiring full Decision Packet machinery
+- Product/UX judgment and Technical judgment can be presented separately
+- a minimal user judgment request and record exists without requiring full-format judgment presentation machinery
 - small direct changes and tracked work use different procedural budgets without bypassing authority
 - ambiguous feature requests enter clarification instead of premature implementation
 - close blocks when required evidence or user judgment is missing
@@ -356,8 +356,8 @@ It should show:
 
 The later [hardened local reference target](../reference/glossary.md#hardened-local-reference-target) is reached through Assurance Profile and Operations Profile after MVP-1 User Work Loop, not as the first implementation batch. It is an umbrella target rather than a separate stage, fixture profile, or alternate implementation path. It adds the remaining conformance needed for an agent to act with honest boundaries:
 
-- Decision Packet quality and user-judgment routing
-- separation between sensitive-action Approval, Decision Packets, and Write Authorizations
+- User judgment quality and routing
+- separation between Sensitive action approval, User Judgments, and Write Authorizations
 - residual-risk visibility before acceptance and close
 - detached verification independence
 - Manual QA records and QA blockers

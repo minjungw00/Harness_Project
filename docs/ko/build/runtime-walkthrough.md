@@ -21,7 +21,7 @@
 
 쓰기 가능한 tracked work에서는 Harness가 Task와 초기 scope를 알고, stage가 요구하는 요구사항 구체화나 user-owned judgment가 기록된 뒤에야 요청이 안전한 제품 작업이 됩니다. 제품 파일 쓰기는 그다음 `prepare_write`를 통과해야 하며, 이때 한 번만 쓸 수 있는 Write Authorization이 만들어질 수 있습니다. Run은 그 권한을 소비하고, evidence와 artifact는 주장을 뒷받침하며, status/blocker 출력은 현재 상태를 사람이 읽을 수 있게 만듭니다. 이후 단계의 user-value, assurance, projection, close path는 해당 stage가 범위에 있을 때만 blocker를 설명하거나 Task를 닫을 수 있습니다.
 
-이 walkthrough는 staged reader path를 보여 줍니다. 내부 엔지니어링 점검의 설계 목표는 그중 가장 작은 내부 부분만 다룹니다. 즉 local project registration 하나, active Task 하나, Reference 계약이 요구하는 경우에만 Change Unit owner shape로 표현되는 scoped boundary 하나, `prepare_write` authority path 하나, 한 번만 쓰는 Write Authorization 하나, 기록된 Run 하나, artifact/evidence ref 하나, structured status/blocker 응답 하나입니다. 내부 엔지니어링 점검은 natural-language intake, full Discovery, full Decision Packet, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, recover/export, operations suite, dashboards, connectors, detached verification을 요구하지 않습니다. MVP-1 사용자 작업 루프는 ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria summary, minimal user judgment request/record, small direct work와 tracked work의 구분, status/next output, evidence summary, 닫기 막힘 요약, residual-risk visibility, 민감 동작 승인 / 작업 수락 / 잔여 위험 수용의 분리 표시, Core-derived 간결한 상태 카드(compact status card)를 추가합니다.
+이 walkthrough는 staged reader path를 보여 줍니다. 내부 엔지니어링 점검의 설계 목표는 그중 가장 작은 내부 부분만 다룹니다. 즉 local project registration 하나, active Task 하나, Reference 계약이 요구하는 경우에만 Change Unit owner shape로 표현되는 scoped boundary 하나, `prepare_write` authority path 하나, 한 번만 쓰는 Write Authorization 하나, 기록된 Run 하나, artifact/evidence ref 하나, structured status/blocker 응답 하나입니다. 내부 엔지니어링 점검은 natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, recover/export, operations suite, dashboards, connectors, detached verification을 요구하지 않습니다. MVP-1 사용자 작업 루프는 ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria summary, minimal user judgment request/record, small direct work와 tracked work의 구분, status/next output, evidence summary, 닫기 막힘 요약, residual-risk visibility, 민감 동작 승인 / 작업 수락 / 잔여 위험 수용의 분리 표시, Core-derived 간결한 상태 카드(compact status card)를 추가합니다.
 
 ## 한눈에 보는 walkthrough
 
@@ -59,7 +59,7 @@ flowchart LR
 
 요구사항 구체화(내부 이름 Discovery)는 MVP-1 이후 동작이며 내부 엔지니어링 점검 requirement가 아닙니다. 요청이 모호하거나, 위험하거나, 여러 단계이거나, 제품 표면에 닿거나, 사용자 소유 판단이 필요할 가능성이 있을 때 사용합니다. 이 구체화는 goal, user value, non-goals, success criteria, 확인 가능한 사실, assumption, technical/product choice, security/privacy concern, QA expectation, 남은 불확실성, scope boundary를 정리합니다.
 
-엄격한 동작: 요구사항 구체화(Discovery)는 shaping input입니다. Approval, Write Authorization, evidence, verification, QA, 작업 수락, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. Judgment routing은 [Decision Packet](../reference/kernel.md#decision-packet)과 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#harnessrequest_user_judgment)의 public judgment call이 담당합니다.
+엄격한 동작: 요구사항 구체화(Discovery)는 shaping input입니다. Approval, Write Authorization, evidence, verification, QA, 작업 수락, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. Judgment routing은 [User Judgment](../reference/kernel.md#user-judgment)와 [MCP API와 스키마](../reference/mcp-api-and-schemas.md#harnessrequest_user_judgment)의 public judgment call이 담당합니다.
 
 ### 3. 요구사항 구체화 -> 안전한 다음 작업 -> Change Unit
 
@@ -71,15 +71,15 @@ flowchart LR
 
 ### 4. Change Unit -> `prepare_write`
 
-제품 파일을 쓰기 전에 agent는 intended operation에 대한 쓰기 권한을 Core에 요청합니다. Core는 현재 상태, Change Unit scope, 범위에 들어온 Autonomy Boundary, 그리고 active stage가 요구하는 baseline freshness, sensitive-action Approval, Decision Packets, 적용되는 design policy, surface capability 같은 조건을 확인합니다. 내부 엔지니어링 점검은 내부 엔지니어링 점검에 필요한 scope/write-authority check만 요구합니다.
+제품 파일을 쓰기 전에 agent는 intended operation에 대한 쓰기 권한을 Core에 요청합니다. Core는 현재 상태, Change Unit scope, 범위에 들어온 Autonomy Boundary, 그리고 active stage가 요구하는 baseline freshness, sensitive-action Approval, user judgment, 적용되는 design policy, surface capability 같은 조건을 확인합니다. 내부 엔지니어링 점검은 내부 엔지니어링 점검에 필요한 scope/write-authority check만 요구합니다.
 
 엄격한 동작: `prepare_write`는 [커널 참조](../reference/kernel.md#prepare_write)가 담당합니다. Public request/response shape는 [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write)가 담당합니다.
 
 ### 5. `prepare_write` -> Write Authorization 또는 blocker
 
-확인이 통과하면 Core는 specific attempt 하나에 맞는 Write Authorization을 만들거나 반환합니다. 통과하지 못하면 response는 blocker, state conflict, sensitive-action Approval path, Decision Packet path로 이어집니다.
+확인이 통과하면 Core는 specific attempt 하나에 맞는 Write Authorization을 만들거나 반환합니다. 통과하지 못하면 response는 blocker, state conflict, sensitive-action Approval path, user judgment path로 이어집니다.
 
-엄격한 동작: Write Authorization 의미는 [Write Authorization](../reference/kernel.md#write-authorization)이 담당합니다. Approval과 Decision Packet의 non-substitution rule은 [판단 경로 경계](../reference/kernel.md#판단-경로-경계)가 담당합니다.
+엄격한 동작: Write Authorization 의미는 [Write Authorization](../reference/kernel.md#write-authorization)이 담당합니다. Approval과 User Judgment의 non-substitution rule은 [판단 경로 경계](../reference/kernel.md#판단-경로-경계)가 담당합니다.
 
 ### 6. Write Authorization -> Run
 

@@ -41,7 +41,7 @@ The early output model is intentionally small:
 
 | Concept | What it proves | What it does not prove |
 |---|---|---|
-| Engineering Checkpoint | A first runnable internal Core authority loop over one local project registration, one active Task, one scoped boundary, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence ref, and one structured status/blocker response. | User-facing product value, natural-language intake, full Discovery, full Decision Packet, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, operations/export/recover, dashboards, and connectors. |
+| Engineering Checkpoint | A first runnable internal Core authority loop over one local project registration, one active Task, one scoped boundary, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence ref, and one structured status/blocker response. | User-facing product value, natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, operations/export/recover, dashboards, and connectors. |
 | MVP-1 User Work Loop | Users can start or resume tracked work in ordinary language and see Core-derived scope, non-goals, success criteria, judgment separation, status/next output, evidence summary, close blockers, residual-risk visibility, and separated sensitive approval / work acceptance / risk acceptance display. | Full detached verification independence unless an active profile requires it, full Manual QA matrix, full waiver machinery, polished Journey/Spine/reporting, detailed Eval, TDD Trace, Module Map, Interface Contract, Export/Recover, broad connectors, operations suite, and dashboard. |
 | Assurance Profile | The MVP-1 user-value path is hardened with verification, QA, residual-risk, work-acceptance, and stewardship profiles. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
 | Operations Profile | The same Core model supports doctor/readiness, recover/export, artifact integrity, release handoff, and broader conformance coverage. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
@@ -91,7 +91,7 @@ The MCP API reference defines exact schemas for every method it documents. Stage
 
 | Stage | Active API surface | Later-profile fields to keep out of the stage exit |
 |---|---|---|
-| Engineering Checkpoint | Minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, one owner-valid active Task/scope setup path, and optionally minimal `harness.next` or a narrow `harness.close_task` blocker smoke. | Natural-language intake, full Discovery, full Decision Packet, Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, reconcile, export/recover, broad operations. |
+| Engineering Checkpoint | Minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, one owner-valid active Task/scope setup path, and optionally minimal `harness.next` or a narrow `harness.close_task` blocker smoke. | Natural-language intake, full Discovery, full-format user judgment presentation, Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, reconcile, export/recover, broad operations. |
 | MVP-1 User Work Loop | User-facing intake/start/resume behavior, work-shape classification, `harness.status.next_actions` with optional `harness.next`, minimal `harness.request_user_judgment` / `harness.record_user_judgment` or successor naming, evidence summaries through `harness.record_run`, close blocker summaries through `harness.close_task`, and a compact Core-derived status card. | Full detached verification independence unless required by active profile/user request/task type/risk profile, full Manual QA matrix, full waiver machinery, Approval hardening, detailed Eval, TDD Trace, Module Map, Interface Contract, export/recover, broad operations. |
 | Assurance Profile | `harness.launch_verify`, `harness.record_eval`, `harness.record_manual_qa`, assurance/waiver/approval/risk profiles of judgment methods, evidence/feedback/TDD profiles of `harness.record_run`, and ValidatorResult-emitting assurance paths. | Operator recover/export completeness, broad projection/reconcile operations, release handoff. |
 | Operations Profile | Projection freshness in API responses, reconcile judgment profile, operator readiness/recover/export/artifact-integrity/conformance surfaces owned by Operations. | Dashboard, hosted workflow UI, broad connectors, automation, team workflow, orchestration unless promoted later. |
@@ -102,7 +102,7 @@ MCP resources are read-only and follow the same staged delivery boundary as publ
 
 | Stage | Resource scope in stage | Keep out of the stage exit |
 |---|---|---|
-| Engineering Checkpoint | `harness://project/current`, `harness://task/active`, `harness://task/{task_id}`, and optional `harness://task/{task_id}/summary` / `harness://status/card` for current state, blockers, write authority, and minimal Run/artifact/evidence refs. | Journey, Spine, Decision Packet storage, Evidence Manifest, bundle, reports, design/domain maps, module maps, interface contracts, projection jobs, and full projection rendering. |
+| Engineering Checkpoint | `harness://project/current`, `harness://task/active`, `harness://task/{task_id}`, and optional `harness://task/{task_id}/summary` / `harness://status/card` for current state, blockers, write authority, and minimal Run/artifact/evidence refs. | Journey, Spine, full user judgment storage/presentation, Evidence Manifest, bundle, reports, design/domain maps, module maps, interface contracts, projection jobs, and full projection rendering. |
 | MVP-1 User Work Loop | Engineering Checkpoint resources plus minimal user-judgment context for current work. Evidence summary, close blocker summary, work-acceptance display, sensitive-approval display, and residual-risk visibility can appear through status/card or task summary output. | Detailed Evidence Manifest resource, detached verification/QA resources unless profile-required, reports, bundles, Journey/Spine polish, design maps, module maps, interface contracts, export/recover. |
 | Assurance Profile | Profile-gated assurance reads such as `harness://policy/sensitive-categories` and `harness://task/{task_id}/evidence-manifest` when evidence/assurance support is enabled. | Operator report/export completeness and broad operations resources. |
 | Operations Profile | Operations reads such as broad `harness://project/surfaces`, `harness://task/{task_id}/reports/latest`, and `harness://task/{task_id}/bundle/current` when connector freshness, report, export, recover, or handoff profiles are in scope. | Dashboard, hosted workflow UI, broad connector automation, and roadmap resources unless promoted later. |
@@ -139,9 +139,9 @@ Engineering Checkpoint must prove:
 - one registered `ArtifactRef` or equivalent evidence reference owned by Core/API contracts
 - one structured status/blocker response for missing scope, missing write authority, or missing artifact/evidence support
 
-The matching storage profile is [Storage And DDL: Engineering Checkpoint schema](../reference/storage-and-ddl.md#core-authority-smoke-schema). That profile is the Engineering Checkpoint minimum. User-facing Decision Packet tables, Approval records, Evidence Manifest, Manual QA, Eval, residual-risk acceptance records, projection jobs, reconcile items, validator runs, Journey records, and diagnostic/stewardship tables remain later-profile storage unless a profile owner explicitly promotes them.
+The matching storage profile is [Storage And DDL: Engineering Checkpoint schema](../reference/storage-and-ddl.md#core-authority-smoke-schema). That profile is the Engineering Checkpoint minimum. User-facing user judgment tables/presentations, Approval records, Evidence Manifest, Manual QA, Eval, residual-risk acceptance records, projection jobs, reconcile items, validator runs, Journey records, and diagnostic/stewardship tables remain later-profile storage unless a profile owner explicitly promotes them.
 
-Engineering Checkpoint explicitly excludes natural-language intake, full Discovery, full Decision Packet, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, product/UX versus architecture judgment presentation, stewardship, feedback-loop policy, projection rendering, conformance runner, operations/export/recover, dashboards, connectors, broad operator entrypoints, future fixture catalog, and release handoff. Those are later stages or future scope.
+Engineering Checkpoint explicitly excludes natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, Product/UX judgment versus Technical judgment presentation, stewardship, feedback-loop policy, projection rendering, conformance runner, operations/export/recover, dashboards, connectors, broad operator entrypoints, future fixture catalog, and release handoff. Those are later stages or future scope.
 
 Kernel Smoke candidates for Engineering Checkpoint should assert only the minimal authority loop through Core state, the required owner records for that loop, artifact/evidence refs, and structured blockers. Projection polish, detailed templates, renderer output, and broad fixture catalogs are not first-slice conformance truth.
 
@@ -153,7 +153,7 @@ Reference schemas may list fields that become necessary only when the related ca
 
 | Stage | Build reading rule | Owner contracts to apply |
 |---|---|---|
-| Engineering Checkpoint | Use only the owner-defined fields needed to prove the narrow authority loop and the [Engineering Checkpoint schema](../reference/storage-and-ddl.md#core-authority-smoke-schema). Avoid creating future-profile records just to satisfy a broad checklist; if a minimal seeded blocker uses an owner ref, apply only the valid shape for that owner path, not profile-specific user-facing Decision Packet quality. | [Kernel Reference](../reference/kernel.md), [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Storage And DDL](../reference/storage-and-ddl.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
+| Engineering Checkpoint | Use only the owner-defined fields needed to prove the narrow authority loop and the [Engineering Checkpoint schema](../reference/storage-and-ddl.md#core-authority-smoke-schema). Avoid creating future-profile records just to satisfy a broad checklist; if a minimal seeded blocker uses an owner ref, apply only the valid shape for that owner path, not profile-specific user-facing judgment presentation quality. | [Kernel Reference](../reference/kernel.md), [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Storage And DDL](../reference/storage-and-ddl.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
 | MVP-1 User Work Loop | Add the fields and display summaries needed for users to understand current work shape, scope/non-goals/success criteria, pending user judgment, evidence summary, close blockers, residual-risk visibility, and separated approval/acceptance/risk-acceptance displays. Work-acceptance and residual-risk facts stay distinct when relevant, but they fit inside the minimal summaries. | [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Kernel Reference](../reference/kernel.md), [Document Projection Reference](../reference/document-projection.md), [Template Reference](../reference/templates/README.md). |
 | Assurance Profile / Operations Profile | Add verification, QA, residual-risk, work-acceptance, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, and release-handoff profiles only where owner docs define them. | [Design Quality Policies](../reference/design-quality-policies.md), [Operations And Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md), [Future Fixture Catalog](../reference/future-fixture-catalog.md), [Storage And DDL](../reference/storage-and-ddl.md). |
 
@@ -165,8 +165,8 @@ This open decision ledger is the central server-coding decision log for decision
 
 | Decision-log item | Current status | Decision condition |
 |---|---|---|
-| Simplified judgment model and naming | Open. Current docs point toward user-facing judgment categories and internal routes, but MVP-1 must settle the minimum model before API/DDL coding. | Decide the MVP-1 record names, required fields, display labels, and relationship to later full Decision Packet semantics. |
-| `request_user_decision` vs `request_user_judgment` | Open. Current docs mostly use `harness.request_user_judgment`; naming still needs maintainer acceptance before public API freeze. | Choose the method name and migration path, or explicitly accept `harness.request_user_judgment` as the MVP-1 public name. |
+| Simplified judgment model and naming | Resolved in the documentation baseline; still requires maintainer acceptance with the rest of the docs before coding. Canonical docs use `UserJudgment` / `user_judgment`, `harness.request_user_judgment`, `harness.record_user_judgment`, `judgment_type`, `presentation`, and `display_label`. | Implementation planning must preserve those names unless maintainers reopen this ledger item before API/DDL coding. |
+| `request_user_decision` vs `request_user_judgment` | Resolved in the documentation baseline as `harness.request_user_judgment`; `harness.request_user_decision` is a compatibility alias only. | Public API freeze should either accept this documented direction or explicitly reopen the item with a migration impact. |
 | `harness.next` separate method vs `status.next_actions` | Open. Engineering Checkpoint / MVP-1 may not need both. | Decide whether MVP-1 exposes next action as a separate method, a field on `harness.status`, or both with one canonical source. |
 | MVP-1 storage minimum | Open. MVP-1 needs minimal user judgment, status/card, evidence summary, blocker, acceptance display, and residual-risk visibility, but not later assurance tables by default. | Accept the exact minimum tables/fields and explicitly defer later-profile storage. |
 | Local access error taxonomy | Open. MCP/Core unavailable, local access denied/untrusted, stale state, and unsupported surface need stable user-visible and API error handling. | Accept error codes, precedence, and display wording for Engineering Checkpoint / MVP-1. |
@@ -230,7 +230,7 @@ The slice must demonstrate:
 - scope, non-goals, and success criteria summary
 - codebase-answerable or state-answerable facts are checked before asking the user to repeat them
 - clarification asks enough to unblock the next safe action without dumping a long questionnaire
-- product/UX judgments and material technical architecture judgments can be presented separately from each other and from sensitive-action approval, work acceptance, and risk acceptance
+- Product/UX judgment and Technical judgment can be presented separately from each other and from Sensitive action approval, Work acceptance, and Residual risk acceptance
 - minimal user judgment request and record
 - small changes and tracked work have different procedural budgets without letting small-change labeling bypass authority
 - ambiguous feature requests enter clarification instead of premature implementation
@@ -259,8 +259,8 @@ Assurance Profile hardens the MVP-1 user-value path so the local reference path 
 
 Focus on:
 
-- profile-specific Decision Packet quality and user-judgment routing
-- sensitive-action Approval, Decision Packet, Write Authorization, work acceptance, and residual-risk acceptance separation
+- profile-specific user judgment quality and routing
+- sensitive-action Approval, User Judgment, Write Authorization, work acceptance, and residual-risk acceptance separation
 - detached verification independence, including same-session verification guard behavior
 - Manual QA policy matrix, Manual QA blockers, and valid QA waivers
 - residual-risk accepted close full semantics
@@ -333,8 +333,8 @@ Use these as implementation-readable checklists for future runtime planning afte
 - The user-facing path summarizes scope, non-goals, success criteria, evidence expectations, close readiness, and judgment boundaries.
 - Codebase-answerable or state-answerable facts are checked before asking the user to repeat them.
 - Clarification quality is sufficient for the next safe action: it does not stop at one superficial question, does not dump a long questionnaire, separates blocking from useful-but-not-blocking questions, and gives choices and consequences for user-owned judgments.
-- Product/UX judgment and material technical architecture judgment can be presented separately from each other and from sensitive-action approval, work acceptance, and risk acceptance.
-- Minimal user judgment requests and records exist for MVP-1 decisions without requiring full Decision Packet machinery.
+- Product/UX judgment and Technical judgment can be presented separately from each other and from Sensitive action approval, Work acceptance, and Residual risk acceptance.
+- Minimal user judgment requests and records exist for MVP-1 decisions without requiring full-format judgment presentation machinery.
 - Small direct changes and tracked work use different procedural budgets without bypassing write authority, evidence, or a required user judgment.
 - Ambiguous feature requests enter clarification instead of premature implementation.
 - Status/next output explains current scope, missing judgments, evidence summary, residual-risk visibility, close blockers, next output, and next safe action.
@@ -353,8 +353,8 @@ Use these as implementation-readable checklists for future runtime planning afte
 
 ### Assurance Profile exit checklist
 
-- Decision Packet quality and user-judgment routing are fixture-proven.
-- Sensitive-action Approval does not substitute for Decision Packets, Write Authorization, Manual QA, verification, work acceptance, or residual-risk acceptance.
+- User judgment quality and routing are fixture-proven.
+- Sensitive-action Approval does not substitute for User Judgments, Write Authorization, Manual QA, verification, work acceptance, or residual-risk acceptance.
 - Detached verification independence and same-session verification guard behavior are fixture-proven.
 - Manual QA policy matrix and QA blockers are fixture-proven where policy requires them.
 - Risk-accepted close cites accepted Residual Risk refs under the owner semantics.

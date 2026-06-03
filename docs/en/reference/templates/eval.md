@@ -20,7 +20,7 @@ Implementation tier: Future/diagnostic projections. Use this for detailed Evalua
 - evidence reviewed
 - blockers
 - artifact refs with redaction state and input availability
-- related Decision Packet, Approval, Evidence Manifest, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
+- related User Judgment, Approval, Evidence Manifest, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
 
 ## Rendered sections
 
@@ -57,7 +57,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Source Refs
 - Evidence Manifest:
-- Decision Packets:
+- User Judgments:
 - Approval:
 - Manual QA:
 - Acceptance context:
@@ -127,7 +127,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 ## Evidence Reviewed
 - task summary:
 - Journey Spine:
-- Decision Packets:
+- User Judgments:
 - Residual Risks:
 - Autonomy Boundary:
 - domain term refs:
@@ -157,7 +157,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 ## Design Quality Review
 - vertical slice:
-- Decision Packets:
+- User Judgments:
 - Autonomy Boundary:
 - Residual Risks:
 - feedback loop:
@@ -184,8 +184,8 @@ An Eval verdict alone does not upgrade assurance. `detached_verified` requires a
 
 If independence is invalid or the review is same-session self-check only, render that boundary explicitly and leave detached assurance unchanged. A `subagent_context` review is not detached by default; render it as a detached candidate only when the recorded context satisfies `fresh_session`, `fresh_worktree`, `sandbox`, or `manual_bundle` requirements.
 
-If the evaluator bundle, baseline, included artifacts, Evidence Manifest, approval/Decision Packet refs, or close-relevant Residual Risk refs are stale, render the stale input and keep assurance unchanged until replacement or compatible re-verification is recorded.
+If the evaluator bundle, baseline, included artifacts, Evidence Manifest, approval/user judgment refs, or close-relevant Residual Risk refs are stale, render the stale input and keep assurance unchanged until replacement or compatible re-verification is recorded.
 
-Eval projections must not imply omitted or blocked raw bytes were reviewed. `secret_omitted` evidence can support only visible nonsecret claims. If the Eval depends on a `blocked` payload, the result must remain `blocked` or `inconclusive`, or surface `EVIDENCE_INSUFFICIENT`, until a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the verification path.
+Eval projections must not imply omitted or blocked raw bytes were reviewed. `secret_omitted` evidence can support only visible nonsecret claims. If the Eval depends on a `blocked` payload, the result must remain `blocked` or `inconclusive`, or surface `EVIDENCE_INSUFFICIENT`, until a replacement, waiver, user judgment outcome, accepted risk, or documented fallback resolves the verification path.
 
 Eval templates should keep reviewed evidence refs compact. Large logs, bundles, screenshots, diffs, and traces stay as ArtifactRef refs with redaction state and availability; the Eval body records what was reviewed, not the raw evidence payload.

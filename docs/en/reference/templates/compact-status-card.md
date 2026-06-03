@@ -35,14 +35,14 @@ The card should use ordinary language first and exact Harness labels only where 
 
 - current Task state and lifecycle phase
 - current scope, non-goals, and active Change Unit summary when relevant
-- pending Decision Packet refs and compact judgment summaries
+- pending user judgment refs and compact judgment summaries
 - known evidence refs and evidence-gap summaries
 - close blocker refs and close reason when present
 - residual-risk refs or explicit absence / not-yet-visible status
 - next safe action from current Core state
 - projection freshness and `source_state_version`
 - artifact refs and redaction state when needed to support a displayed claim
-- optional authority refs for Write Authorization, approval-shaped Decision Packet / judgment refs, later Approval refs, evidence summaries, Run refs, ArtifactRefs, Evidence Manifest when the full evidence profile is active, Eval, Manual QA, work-acceptance Decision Packet, and Residual Risk only when the card displays the related claim
+- optional authority refs for Write Authorization, sensitive-action approval user judgment refs, later Approval refs, evidence summaries, Run refs, ArtifactRefs, Evidence Manifest when the full evidence profile is active, Eval, Manual QA, work-acceptance user judgment refs, and Residual Risk only when the card displays the related claim
 
 Summary placeholders in this card are display bindings derived from the records above. Decision, evidence, close-blocker, residual-risk, and freshness summaries should show refs or explicit absence; they do not create user judgment context or authority.
 
@@ -81,7 +81,7 @@ work_shape: {work_shape}
 scope_and_non_goals:
   scope_ref: {scope_ref|none}
   non_goals_ref: {non_goals_ref|none}
-pending_user_judgments: {decision_packet_refs|none}
+pending_user_judgments: {user_judgment_refs|none}
 active_blockers: {active_blocker_refs|none}
 next_safe_actions: {next_safe_actions_summary}
 evidence_gaps: {evidence_gaps_summary|none}
@@ -99,9 +99,9 @@ freshness:
 
 This template is a rendered card shape, not canonical state. It is rendered from current source records and refs, not stale chat memory. Gate values remain owned by canonical state, and projection freshness is readable-view freshness only. Use the [projection/report boundary](../document-projection.md#projection-principles) for the exact non-authority rule.
 
-Status/next recommendations in this card are read-only guidance. They may point to a Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
+Status/next recommendations in this card are read-only guidance. They may point to a user judgment prompt, optional full-format Decision Packet presentation, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
 
-Authority lines must be refs-first and profile-aware. If the card says writes are allowed, cite the Write Authorization ref. If it says sensitive-action permission was granted in minimum MVP-1, cite the resolved approval-shaped Decision Packet or judgment ref; cite an Approval ref only when the later Approval profile is active. For MVP-1 evidence display, prefer "known evidence," "evidence currently known," "evidence gap," or "supported by evidence summary/ref," and cite `evidence_summary_ref` when present, Run refs, ArtifactRefs, and visible gaps. Reserve "evidence is sufficient" for an active owner path that can establish sufficiency; when the full Evidence Manifest profile is active, cite the Evidence Manifest ref for full criteria-to-evidence sufficiency. If it says detached verification passed, cite the Eval ref when that profile is active. If it says Manual QA passed or was waived, cite the Manual QA record or waiver path when that profile is active. If it says work acceptance was recorded, cite the work-acceptance judgment / Decision Packet path; if it says residual-risk visibility is clear, cite Residual Risk refs or explicit `ResidualRiskSummary.status=none`; if it says residual-risk acceptance was recorded, cite accepted Residual Risk refs. If the source ref is absent, render the claim as unsupported or not yet recorded.
+Authority lines must be refs-first and profile-aware. If the card says writes are allowed, cite the Write Authorization ref. If it says sensitive-action permission was granted in minimum MVP-1, cite the resolved `user_judgment` with `judgment_type=sensitive_action_approval`; cite an Approval ref only when the later Approval profile is active. For MVP-1 evidence display, prefer "known evidence," "evidence currently known," "evidence gap," or "supported by evidence summary/ref," and cite `evidence_summary_ref` when present, Run refs, ArtifactRefs, and visible gaps. Reserve "evidence is sufficient" for an active owner path that can establish sufficiency; when the full Evidence Manifest profile is active, cite the Evidence Manifest ref for full criteria-to-evidence sufficiency. If it says detached verification passed, cite the Eval ref when that profile is active. If it says Manual QA passed or was waived, cite the Manual QA record or waiver path when that profile is active. If it says work acceptance was recorded, cite the work-acceptance user judgment path; if it says residual-risk visibility is clear, cite Residual Risk refs or explicit `ResidualRiskSummary.status=none`; if it says residual-risk acceptance was recorded, cite accepted Residual Risk refs. If the source ref is absent, render the claim as unsupported or not yet recorded.
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means no known close-relevant residual risk exists for the requested action and should render with an explicit empty risk-ref set. `not_visible` means known close-relevant risk exists but is not yet visible enough for acceptance or close, and should show the blocking risk refs or the refs that explain why the risk is hidden.
 
@@ -109,7 +109,7 @@ Do not collapse display problems into one line. A stale projection means the rea
 
 The primary blocker should come from the primary `ToolError` when an API response supplies one, or from the first close blocker when rendering a failed `harness.close_task` response. The owner label should say whether the next move is user-owned, agent-resolvable, or surface/system-owned, and should render as `none` or be omitted when there is no primary blocker. Secondary blockers should be grouped compactly and shown only when they change the next action, close readiness, or pending user judgment. These labels are display text, not new schema values or error codes.
 
-This is not user judgment context. If a user judgment is needed, render a separate judgment prompt with `judgment_route`, `display_depth`, display-depth-appropriate options or chosen outcome, relevant refs, and higher-depth recommendation, uncertainty, or deferral effect when required.
+This is not user judgment context. If a user judgment is needed, render a separate judgment prompt with `judgment_type`, `presentation`, display-appropriate options or chosen outcome, relevant refs, and a recommendation, uncertainty, or deferral effect when required.
 
 Close status should preserve the close-reason distinction. Render `completed_with_risk_accepted` as successful close with accepted residual risk, not as ordinary done, verified, or self-checked close. Keep self-checked, `detached_verified`, verification-waived, QA-waived, and risk-accepted-close labels on separate display slots with refs or explicit absence. If work acceptance is the next action, the separate acceptance prompt must show evidence, verification, Manual QA, residual-risk visibility or `none`, and what acceptance does not replace.
 

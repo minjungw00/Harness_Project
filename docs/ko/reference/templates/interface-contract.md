@@ -13,7 +13,7 @@
 - `interface_contracts`
 - impacted caller 참조
 - 관련 module map item
-- 관련 Decision Packet 또는 design 참조
+- 관련 user judgment 또는 design 참조
 - boundary, integration, contract test 참조
 - `deep_module_interface` 관련 design-quality validator 결과
 - 표시되는 경우 interface 또는 compatibility ref에 영향을 주는 routed stewardship finding
@@ -89,4 +89,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. 기준 interface 참조는 `StateRecordRef.record_kind=interface_contract`를 사용합니다. `Review` section은 interface, validator, decision ref 위의 projection display이며 Approval, evidence, QA, verification, 작업 수락, 잔여 위험 수용, close, Write Authorization이 아닙니다.
 
-Public interface change, compatibility risk, breaking change, caller-impact choice에 사용자 소유 제품 판단이나 기술 구조 판단이 필요하면 기존 design-quality 및 Decision Packet 경로로 라우팅합니다. Contract를 여기에 렌더링하는 것만으로 `design_gate`, `decision_gate`, close impact가 해소되지는 않습니다.
+Public interface change, compatibility risk, breaking change, caller-impact choice에 사용자 소유 제품 판단이나 기술 판단이 필요하면 기존 design-quality 및 user judgment 경로로 라우팅합니다. Contract를 여기에 렌더링하는 것만으로 `design_gate`, `decision_gate`, close impact가 해소되지는 않습니다.

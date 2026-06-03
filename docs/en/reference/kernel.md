@@ -29,7 +29,7 @@ The active stage and profile decide which gates are required for a specific oper
 |---|---|---|
 | Core invariants | [Kernel invariants](#kernel-invariants) | This document. |
 | Work shape and mode meaning | [Work modes](#work-modes) | API enum values stay in [MCP API And Schemas](mcp-api-and-schemas.md). |
-| User judgment categories and routes | [Judgment route boundaries](#judgment-route-boundaries), [Decision Packet](#decision-packet), [Decision Gate](#decision-gate) | Public request fields stay in [`harness.request_user_judgment`](mcp-api-and-schemas.md#harnessrequest_user_judgment). |
+| User judgment types and routes | [Judgment route boundaries](#judgment-route-boundaries), [User Judgment](#user-judgment), [Decision Gate](#decision-gate) | Public request fields stay in [`harness.request_user_judgment`](mcp-api-and-schemas.md#harnessrequest_user_judgment). |
 | Entity relationship semantics | [Entity model](#entity-model) | Physical tables stay in [Storage And DDL](storage-and-ddl.md). |
 | Gate meaning | [Gates](#gates), [Gate Rule Map](#gate-rule-map) | Public blockers and errors stay in [MCP API And Schemas](mcp-api-and-schemas.md#primary-error-code-precedence). |
 | Write authority | [`prepare_write`](#prepare_write), [Write Authorization](#write-authorization), [`record_run`](#record_run) | Public request/response shape stays in [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write) and [`harness.record_run`](mcp-api-and-schemas.md#harnessrecord_run). |
@@ -59,7 +59,7 @@ These are the small Core invariants the rest of the Kernel contract serves:
 5. Tracked work keeps scope, blockers, evidence, user judgment, and close readiness visible until the Task can close.
 6. `prepare_write` is the product-write authorization decision point.
 7. `record_run` records what happened and consumes compatible write authority for product-write Runs.
-8. Decision Packets record user-owned judgment. In minimum MVP-1, approval-shaped Decision Packets can record sensitive-action permission; later Approval records add a hardened committed lifecycle.
+8. `user_judgment` records preserve user-owned judgment. In minimum MVP-1, a sensitive-action approval judgment can record scoped sensitive-action permission; later Approval records add a hardened committed lifecycle.
 9. `close_task` is the completion decision point and checks only the gates required by the active profile and close intent.
 10. Projections help humans read state, but Core state, events, and registered artifact refs remain the authority.
 
@@ -75,7 +75,7 @@ These are the small Core invariants the rest of the Kernel contract serves:
 
 3. What user judgment is still blocking progress?
 
-   Blocking user-owned judgment is represented by Decision Packet state and the aggregate `decision_gate`. Sensitive-action permission is represented separately by `approval_gate`; in minimum MVP-1 the gate may derive from an approval-shaped Decision Packet, and in later profiles it may derive from committed Approval state.
+   Blocking user-owned judgment is represented by `user_judgment` state and the aggregate `decision_gate`. Sensitive-action permission is represented separately by `approval_gate`; in minimum MVP-1 the gate may derive from a sensitive-action approval user judgment, and in later profiles it may derive from committed Approval state.
 
 4. Can this Task close?
 
@@ -94,29 +94,26 @@ User-facing surfaces should lead with the plain work shapes below. These labels 
 | Plain work shape | Internal mode | Kernel implication |
 |---|---|---|
 | Advice/read-only | `advisor` | No product-file write is allowed. Scope can be informal unless the advice is converted into product work. Evidence, verification, QA, acceptance, and residual risk are normally not required unless the user request, policy, or active profile requires them. |
-| Small direct change | `direct` | Product-file writes are allowed only through explicit scope and compatible `prepare_write` / Write Authorization. The Change Unit may be minimal when the request is obvious. Evidence may be lightweight. Decision Packets, Manual QA, detached verification, work acceptance, and residual-risk acceptance are not created as ceremony; they apply only when triggered by the active profile, task type, user request, sensitive/security/criticality profile, detected risk, or explicit requirement. |
+| Small direct change | `direct` | Product-file writes are allowed only through explicit scope and compatible `prepare_write` / Write Authorization. The Change Unit may be minimal when the request is obvious. Evidence may be lightweight. User judgment records, Manual QA, detached verification, work acceptance, and residual-risk acceptance are not created as ceremony; they apply only when triggered by the active profile, task type, user request, sensitive/security/criticality profile, detected risk, or explicit requirement. |
 | Tracked work | `work` | Used for structured, multi-step, risky, user-facing, public-interface, security/privacy, architecture, or otherwise non-trivial work. It keeps scope, user judgment, evidence, close blockers, acceptance, and residual risk visible. It does not automatically require every future gate; the active profile decides which gates are required. |
 
-Small direct changes must stay small. Escalate the same Task to tracked work when scope becomes unclear, changed paths exceed the active scope, multiple product areas or subsystems are involved, product/UX judgment or material technical architecture judgment appears, public API or module contract impact appears, security/privacy impact appears, a sensitive action appears, evidence expectations grow, QA or verification becomes required, residual risk becomes non-trivial, or multi-step delivery is needed.
+Small direct changes must stay small. Escalate the same Task to tracked work when scope becomes unclear, changed paths exceed the active scope, multiple product areas or subsystems are involved, Product/UX judgment or Technical judgment appears, public API or module contract impact appears, security/privacy impact appears, a sensitive action appears, evidence expectations grow, QA or verification becomes required, residual risk becomes non-trivial, or multi-step delivery is needed.
 
 The tiny direct profile is only a display/profile choice inside `mode=direct`. It is appropriate for a typo, one docs sentence with no meaning change, or an obvious rename. It must not bypass scope, write authority, sensitive-action permission, user-owned judgment, evidence requirements that actually apply, residual-risk visibility, or close rules.
 
 ## Judgment route boundaries
 
-Harness separates what the user is judging from how the judgment is routed internally. User-facing docs should not expose three independent axes as if the user must reason about them. The user sees a category, the route uses a specific verb, and display depth scales with risk.
+Harness separates what the user is judging from the internal owner path that records it. User-facing docs should not expose a field taxonomy as if the user must reason about it. The user sees one of five display types, the prompt asks the concrete question, and the record stores enough context for the owner path to validate the answer.
 
-### User-facing categories
+### User-facing display types
 
-| Category | Use when the user owns... | Schema category |
+| Display type | Use when the user owns... | Internal `judgment_type` examples |
 |---|---|---|
-| Product/UX | Product behavior, wording, interaction, taste, user value, or release-facing promise. | `judgment_category=product_ux` |
-| Technical architecture | Public API, module boundary, dependency, migration, compatibility, cost, maintainability, or material implementation direction. | `judgment_category=technical_architecture` |
-| Security/privacy | Data exposure, secrets, auth, permission, retention, logging, redaction, user notice, or security/privacy trade-off. | `judgment_category=security_privacy` |
-| Scope/autonomy | Scope expansion, non-goals, agent latitude, Change Unit update, or Autonomy Boundary update. | `judgment_category=scope_autonomy` |
-| QA/verification | Whether to require, perform, defer, or waive a named QA or verification path. | `judgment_category=qa_verification` |
-| Work acceptance | Whether the user accepts the result when work acceptance is required. | `judgment_category=work_acceptance` with `judgment_route=accept-result` |
-| Residual risk | Whether a visible close-relevant remaining risk is acceptable for this close. | `judgment_category=residual_risk` |
-| Mixed | One genuinely cross-cutting judgment that cannot be split without losing meaning. | `judgment_category=mixed` |
+| Product/UX judgment | Product behavior, wording, interaction, taste, user value, or release-facing promise. | `product_choice` |
+| Technical judgment | Public API, module boundary, dependency, migration, compatibility, security/privacy trade-off, QA/verification expectation, scope/autonomy choice, or material implementation direction. | `technical_choice` |
+| Sensitive action approval | Permission for a named sensitive step inside a bounded scope. | `sensitive_action_approval` |
+| Work acceptance | Whether the user accepts the result when work acceptance is required. | `work_acceptance` |
+| Residual risk acceptance | Whether a visible close-relevant remaining risk is acceptable for this close. | `residual_risk_acceptance` |
 
 ### Internal routes
 
@@ -124,18 +121,18 @@ Harness separates what the user is judging from how the judgment is routed inter
 |---|---|---|
 | `choose` | The user chooses among product, technical, security/privacy, or scope/autonomy options. | Sensitive-action permission, write authority, acceptance, waiver, or risk acceptance. |
 | `defer` | The user intentionally defers a user-owned judgment, with recorded effect on progress, close, risk, and follow-up. | Resolution, waiver, acceptance, or permission to hide the blocker. |
-| `approve-sensitive-action` | The user grants scoped sensitive-action permission through an approval-shaped Decision Packet; later Approval profiles may also commit an Approval record. | Product direction, technical direction, correctness proof, work acceptance, risk acceptance, QA, verification, evidence, or Write Authorization. |
+| `approve-sensitive-action` | The user grants scoped sensitive-action permission through a sensitive-action approval user judgment; later Approval profiles may also commit an Approval record. | Product direction, technical direction, correctness proof, work acceptance, risk acceptance, QA, verification, evidence, or Write Authorization. |
 | `waive` | The user or policy waives a named requirement when waiver is allowed. | The skipped QA/check/verification itself, assurance upgrade, or generic consent. |
 | `accept-result` | The user accepts the result when work acceptance is required, after the close basis is visible. | Evidence, QA, verification, sensitive-action permission, waiver, residual-risk acceptance, or new write authority. |
 | `accept-risk` | The user accepts a named visible close-relevant Residual Risk for the requested close. | No-risk close, detached verification, QA pass, evidence sufficiency, work acceptance, or sensitive-action permission. |
 | `reconcile` | The user or operator resolves human-editable or generated/projection drift into accepted state, note, rejection, decision request, or deferral. | Direct state mutation from Markdown, report prose, or chat. |
 
-This route map is the design contract for user-owned judgment. The route verb determines which owner path can change; broad approval is intentionally absent.
+This route map is the design contract for user-owned judgment. The route verb is internal owner-path metadata; broad approval is intentionally absent from the user-facing model.
 
 ```mermaid
 flowchart LR
   Need["user-owned judgment needed"]
-  Need --> Choose["choose<br/>product, technical, security, or scope"]
+  Need --> Choose["choose<br/>product/UX or technical"]
   Need --> Approve["approve-sensitive-action<br/>sensitive permission only"]
   Need --> Waive["waive<br/>named requirement only"]
   Need --> Accept["accept-result<br/>work acceptance"]
@@ -143,7 +140,7 @@ flowchart LR
   Need --> Reconcile["reconcile<br/>projection or generated drift"]
   Need --> Defer["defer<br/>recorded effect"]
 
-  Choose --> Decision["Decision Packet route"]
+  Choose --> Decision["user_judgment route"]
   Waive --> Decision
   Accept --> Decision
   Risk --> Decision
@@ -163,12 +160,13 @@ Each route remains separate after recording: Approval does not choose product di
 | `high-risk` | Security/privacy, sensitive categories, public API, migration, dependency, or costly rollback. | Trade-offs plus risk, evidence refs when available, approval boundary when relevant, rollback/follow-up effect. |
 | `close-affecting` | Acceptance, waiver, residual-risk acceptance, or a decision whose deferral affects close. | Close basis, blockers, residual risk visibility, affected gates, required refs, and the exact close impact. |
 
-Canonical schema fields for this model:
+Canonical schema direction for this model:
 
-- `judgment_category` stores the user-facing category. It does not select a payload branch, recompute gates by itself, or replace route semantics.
-- `judgment_route` stores the internal owner path and resolution branch.
-- `display_depth` stores display/validation depth for the selected route. It is not a gate, approval substitute, waiver, work acceptance, residual-risk acceptance, or close rule.
-- `affected_gates`, owner refs, and the Decision Packet status determine what the judgment can influence.
+- `judgment_type` stores the compact internal type. MVP-1 examples are `product_choice`, `technical_choice`, `sensitive_action_approval`, `work_acceptance`, and `residual_risk_acceptance`.
+- User-facing display is limited to Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, and Residual risk acceptance.
+- Route-like and depth-like details are validation or presentation metadata, not separate concepts users must learn.
+- `affected_gates`, owner refs, and the user judgment status determine what the judgment can influence.
+- Legacy fields such as `judgment_domain`, `decision_kind`, and `decision_profile` may appear only in migration or compatibility notes.
 
 Ambiguous consent is deliberately narrow. Phrases such as "proceed," "go ahead," "looks good," "좋아," or "진행해" cannot resolve incompatible routes by default. A single user reply may satisfy multiple routes only when the request made those routes explicit, the reply is compatible with each route, and the recorded payload names the scope, consequence, and affected close/write impact for each route. Otherwise Core or the agent must clarify.
 
@@ -191,7 +189,7 @@ Does-not-substitute table:
 | Chat text, generated Markdown, or report prose | Core state, evidence, decisions, Approval, close blockers, or write authority. |
 | Evidence, logs, screenshots, or artifact refs | Manual QA, verification, work acceptance, or residual-risk acceptance. |
 | Test pass, build pass, browser smoke, or self-check | Work acceptance, required Manual QA, or detached verification without a qualifying Eval. |
-| Sensitive-action Approval | Product/UX judgment, technical architecture judgment, correctness, evidence, QA, verification, work acceptance, residual-risk acceptance, or Write Authorization. |
+| Sensitive-action Approval | Product/UX judgment, Technical judgment, correctness, evidence, QA, verification, work acceptance, residual-risk acceptance, or Write Authorization. |
 | Work acceptance | Evidence sufficiency, QA, verification, Approval, waiver, residual-risk acceptance, or more write authority. |
 | Residual-risk acceptance | Verification, Manual QA, evidence sufficiency, no-risk close, work acceptance, or Approval. |
 | QA waiver | QA pass, verification, evidence sufficiency, work acceptance, or acceptance of unrelated risk. |
@@ -201,7 +199,7 @@ Stage/profile support:
 
 | Stage/profile | What it can represent |
 |---|---|
-| Engineering Checkpoint / Kernel Smoke | The narrow internal authority loop: local project registration, active Task, scoped work boundary, `prepare_write`, one single-use Write Authorization, one compatible Run, one artifact/evidence ref, and one structured status/blocker response. Verification, Manual QA, work acceptance, residual-risk acceptance, full Evidence Manifest, and profile-specific Decision Packet quality are not Engineering Checkpoint requirements unless the named smoke path explicitly includes them. |
+| Engineering Checkpoint / Kernel Smoke | The narrow internal authority loop: local project registration, active Task, scoped work boundary, `prepare_write`, one single-use Write Authorization, one compatible Run, one artifact/evidence ref, and one structured status/blocker response. Verification, Manual QA, work acceptance, residual-risk acceptance, full Evidence Manifest, and profile-specific full-format user judgment presentation are not Engineering Checkpoint requirements unless the named smoke path explicitly includes them. |
 | MVP-1 User Work Loop | User-facing status for scope, pending user judgments, evidence summary, close readiness, work acceptance when required, and residual-risk visibility when close-relevant risk exists. MVP-1 must not imply detached verification is always required. |
 | Later assurance and operations profiles | Detached verification independence, richer Manual QA, stewardship, feedback-loop/TDD policy, projection/reconcile operations, export/recover, and handoff behavior. These are blockers only when the active profile or owner doc enables them. |
 
@@ -249,31 +247,33 @@ An Autonomy Boundary is the judgment latitude inside a Change Unit. Scope says w
 
 The Autonomy Boundary is not scope, Approval, write authority, evidence, verification, QA, acceptance, or risk acceptance. It must not be read as permission to change the goal, expand scope, choose user-owned product direction, choose material technical direction, or accept residual risk for the user.
 
-### Decision Packet
+<a id="decision-packet"></a>
 
-A Decision Packet is the canonical state record for user-owned judgment. It records the question, category, route, display depth, status, options or selected outcome, affected scope, related refs, deferral effect when relevant, and route-specific context for approval, waiver, acceptance, risk acceptance, or reconcile.
+### User Judgment
 
-Decision Packets feed `decision_gate`. Blocking user-owned judgment cannot be satisfied by chat text, broad approval, or projection prose alone. The recorded Decision Packet and its resolution, deferral, rejection, blocked state, or supersession are the authority for that judgment.
+A `user_judgment` record is the canonical state record for user-owned judgment. It records the question, judgment type, status, options or selected outcome, affected scope, related refs, deferral effect when relevant, and route-specific context for sensitive-action approval, waiver, work acceptance, residual-risk acceptance, or reconcile.
 
-Decision Packet status is record-level:
+User judgment records feed `decision_gate`. Blocking user-owned judgment cannot be satisfied by chat text, broad approval, or projection prose alone. The recorded `user_judgment` and its resolution, deferral, rejection, blocked state, or supersession are the authority for that judgment.
+
+User judgment status is record-level:
 
 ```text
 proposed | pending_user | resolved | deferred | rejected | blocked | superseded
 ```
 
-Resolving a Decision Packet records user-owned judgment. It creates sensitive-action permission only when the packet uses `judgment_route=approve-sensitive-action` with compatible `approval_scope`; later Approval profiles may also require the linked Approval path. It does not create Write Authorization, does not create evidence, and does not close a Task by itself.
+Resolving a user judgment records user-owned judgment. It creates sensitive-action permission only when the judgment is a sensitive-action approval with compatible `approval_scope`; later Approval profiles may also require the linked Approval path. It does not create Write Authorization, does not create evidence, and does not close a Task by itself.
 
-#### Decision Packet lifecycle map
+#### User judgment lifecycle map
 
-The lifecycle is intentionally small: draft or detect a needed judgment, ask the user when needed, record the compatible response, and preserve deferral, rejection, blocked, or superseded outcomes. Exact public fields are owned by [`harness.request_user_judgment`](mcp-api-and-schemas.md#harnessrequest_user_judgment) and [`harness.record_user_judgment`](mcp-api-and-schemas.md#harnessrecord_user_judgment).
+The lifecycle is intentionally small: draft or detect a needed judgment, ask the user when needed, record the compatible response, and preserve deferral, rejection, blocked, or superseded outcomes. Exact public fields are owned by [`harness.request_user_judgment`](mcp-api-and-schemas.md#harnessrequest_user_judgment) and [`harness.record_user_judgment`](mcp-api-and-schemas.md#harnessrecord_user_judgment). "Decision Packet" is the legacy or full-format presentation label for a complex user judgment prompt; it is not the canonical record family.
 
 ### Journey Spine
 
-Journey Spine is derived continuity over Task state, Change Units, Runs, Decision Packets, Approvals, evidence, verification, QA, acceptance state, residual risk, close events, artifact refs, and `state.sqlite.task_events`. It is not a separate source of truth.
+Journey Spine is derived continuity over Task state, Change Units, Runs, user judgments, Approvals, evidence, verification, QA, acceptance state, residual risk, close events, artifact refs, and `state.sqlite.task_events`. It is not a separate source of truth.
 
 ### Journey Spine Entry
 
-A Journey Spine Entry is a durable continuity annotation only when the note cannot be reconstructed from existing state and events. It supplements owner records; it does not replace Task, Change Unit, Run, Decision Packet, evidence, verification, QA, risk, acceptance, close, or artifact state.
+A Journey Spine Entry is a durable continuity annotation only when the note cannot be reconstructed from existing state and events. It supplements owner records; it does not replace Task, Change Unit, Run, user judgment, evidence, verification, QA, risk, acceptance, close, or artifact state.
 
 ### Run
 
@@ -281,7 +281,7 @@ A Run is an execution or observation attempt. It records actor, surface, mode, C
 
 ### Approval
 
-Approval is scoped sensitive-action permission. In minimum MVP-1 it can be represented by a resolved approval-shaped Decision Packet with `judgment_route=approve-sensitive-action` and `judgment_payload.approval_scope`. In later Approval/Assurance Profiles it can also be represented by a committed Approval record. It can cover paths, tools, commands, network targets, secret scope, sensitive categories, baseline, expiry, and user judgment for that sensitive action.
+Approval is scoped sensitive-action permission. In minimum MVP-1 it can be represented by a resolved sensitive-action approval user judgment with `approval_scope`. In later Approval/Assurance Profiles it can also be represented by a committed Approval record. It can cover paths, tools, commands, network targets, secret scope, sensitive categories, baseline, expiry, and user judgment for that sensitive action.
 
 Approval does not prove correctness, choose product direction, choose technical architecture, create evidence, satisfy QA, verify work, accept a result, accept residual risk, or authorize a product write by itself.
 
@@ -311,7 +311,7 @@ Manual QA is a human inspection record. Automated checks and capture artifacts c
 
 ### Finding routing
 
-Findings from commands, Runs, Evals, QA, reviews, validators, or diagnostics are not a separate authority path. They affect state only when routed through existing owner records: Evidence Manifest, Decision Packet, Change Unit, Approval, Eval, Manual QA, Residual Risk, Reconcile Item, structured close blocker, or another enabled owner path.
+Findings from commands, Runs, Evals, QA, reviews, validators, or diagnostics are not a separate authority path. They affect state only when routed through existing owner records: Evidence Manifest, user judgment, Change Unit, Approval, Eval, Manual QA, Residual Risk, Reconcile Item, structured close blocker, or another enabled owner path.
 
 ### Residual Risk
 
@@ -325,7 +325,7 @@ An Artifact is a durable evidence file or bundle with integrity metadata, such a
 
 ### Reconcile Item
 
-A Reconcile Item is the candidate record for human-editable or generated/projection drift. Reconcile may merge, reject, convert to note, create a Decision Packet, or defer. Markdown or generated text becomes state only through the accepted reconcile/owner path.
+A Reconcile Item is the candidate record for human-editable or generated/projection drift. Reconcile may merge, reject, convert to note, create a user judgment, or defer. Markdown or generated text becomes state only through the accepted reconcile/owner path.
 
 ### Design Support Records
 
@@ -339,7 +339,7 @@ Shared Design, Domain Term, Module Map Item, Interface Contract, Feedback Loop, 
 - Raw artifacts are evidence files; Markdown that links to them is a readable projection.
 - Review displays and future Review Stages are procedure or display unless routed through owner records.
 - Autonomy Boundary records judgment latitude only; it is not scope or write authority.
-- Approval and Decision Packet authority are separate.
+- Sensitive-action approval and other user judgments are separate.
 - Write Authorization is single-use write authority for one compatible attempt, not reusable scope.
 - Evidence sufficiency is not inferred from prose alone.
 - Eval verdict alone does not create `detached_verified`.
@@ -401,11 +401,11 @@ not_required | required | pending | resolved | deferred | blocked
 
 #### Decision Gate Aggregate Recompute
 
-`decision_gate` is recomputed from relevant Decision Packets and currently detected user-owned judgment needs. Recompute precedence is:
+`decision_gate` is recomputed from relevant user judgments and currently detected user-owned judgment needs. Recompute precedence is:
 
 1. `blocked` when any relevant judgment is incompatible, rejected without replacement, expired, or blocked.
-2. `pending` when any relevant Decision Packet waits for the user.
-3. `required` when a blocking user-owned judgment is detected and no compatible Decision Packet exists.
+2. `pending` when any relevant user judgment waits for the user.
+3. `required` when a blocking user-owned judgment is detected and no compatible user judgment exists.
 4. `deferred` when all relevant blockers are explicitly deferred and the deferral covers the current operation or close intent, with residual-risk/follow-up visibility where needed.
 5. `resolved` when all relevant blocking judgments are resolved or superseded by compatible replacement state.
 6. `not_required` when no user-owned judgment blocks the current operation or close intent.
@@ -418,7 +418,7 @@ A stored gate value that disagrees with recomputation is stale and must be repai
 not_required | required | pending | granted | denied | expired
 ```
 
-`approval_gate` applies only when sensitive categories are present. The gate can summarize whether sensitive-action permission is needed, pending, granted, denied, or expired. In minimum MVP-1, `granted` means a compatible resolved approval-shaped Decision Packet covers the sensitive scope. In later Approval profiles, it may derive from committed Approval records. It is not Write Authorization, product judgment, evidence, verification, QA, work acceptance, or residual-risk acceptance.
+`approval_gate` applies only when sensitive categories are present. The gate can summarize whether sensitive-action permission is needed, pending, granted, denied, or expired. In minimum MVP-1, `granted` means a compatible resolved sensitive-action approval user judgment covers the sensitive scope. In later Approval profiles, it may derive from committed Approval records. It is not Write Authorization, product judgment, evidence, verification, QA, work acceptance, or residual-risk acceptance.
 
 ### Design Gate
 
@@ -535,7 +535,7 @@ Compatibility is profile-driven. A mode or close reason is compatible only when 
 
 ### Decision Gate Compatibility
 
-Resolved decisions are compatible only for the scope, baseline, operation, and close intent they cover. Deferred decisions are compatible only when the deferral explicitly covers the current operation and any residual risk or follow-up is visible.
+Resolved user judgments are compatible only for the scope, baseline, operation, and close intent they cover. Deferred judgments are compatible only when the deferral explicitly covers the current operation and any residual risk or follow-up is visible.
 
 ### Completion Compatibility
 
@@ -543,11 +543,11 @@ Successful close requires no open Run, compatible scope, and every close-relevan
 
 ### Transition table
 
-This reference does not duplicate a full state machine table. The invariant is that write-capable transitions route through `prepare_write` and `record_run`, user-owned judgment routes through Decision Packets and Approvals as applicable, and completion routes through `close_task`.
+This reference does not duplicate a full state machine table. The invariant is that write-capable transitions route through `prepare_write` and `record_run`, user-owned judgment routes through `user_judgment` records and Approvals as applicable, and completion routes through `close_task`.
 
 #### Stable Event Catalog
 
-Stable event names are append-only state history labels, not authority by themselves. Storage and API docs own exact payload shapes. Event names should describe state changes such as Task lifecycle updates, `prepare_write` decisions, Write Authorization creation/consumption/staling, Run recording, Decision Packet updates, Approval updates, gate recompute, evidence updates, residual-risk visibility or acceptance, waiver recording, close attempts, close success, projection freshness changes, and reconcile outcomes.
+Stable event names are append-only state history labels, not authority by themselves. Storage and API docs own exact payload shapes. Event names should describe state changes such as Task lifecycle updates, `prepare_write` decisions, Write Authorization creation/consumption/staling, Run recording, user judgment updates, Approval updates, gate recompute, evidence updates, residual-risk visibility or acceptance, waiver recording, close attempts, close success, projection freshness changes, and reconcile outcomes.
 
 ### Intake to `prepare_write` sequence
 
@@ -565,7 +565,7 @@ This write-authority sequence is the Kernel design contract. Scope, required use
 ```mermaid
 flowchart LR
   Scope["scoped Task / Change Unit"] --> Prepare["prepare_write"]
-  Judgment["required user judgment<br/>Decision Packet if needed"] --> Prepare
+  Judgment["required user judgment<br/>record if needed"] --> Prepare
   Approval["sensitive-action permission<br/>if needed"] --> Prepare
   Prepare -->|allowed| Auth["single-use Write Authorization"]
   Prepare -->|not allowed| Blocker["structured blocker"]
@@ -578,7 +578,7 @@ flowchart LR
 
 ## prepare_write
 
-`prepare_write` is the unique product-write authorization decision point. Approval, Decision Packet resolution, `record_run`, `close_task`, reports, projections, and agent prose can provide inputs or context, but none of them authorize a product-file write or create a consumable Write Authorization.
+`prepare_write` is the unique product-write authorization decision point. Approval, user judgment resolution, `record_run`, `close_task`, reports, projections, and agent prose can provide inputs or context, but none of them authorize a product-file write or create a consumable Write Authorization.
 
 It returns one of these state-level decisions:
 
@@ -596,7 +596,7 @@ The decision checks only the gates and preconditions that apply to the Task, int
 6. Check the Autonomy Boundary. If the operation exceeds agent latitude, request user judgment when judgment can resolve it.
 7. Check baseline freshness.
 8. Check sensitive-action permission when sensitive categories apply.
-9. Check required Decision Packets for user-owned judgment.
+9. Check required user judgments.
 10. Check enabled design/policy and capability preconditions.
 11. If all required checks pass, create or return the compatible single-use Write Authorization and record the decision.
 
@@ -604,7 +604,7 @@ Blocked, approval-required, decision-required, or state-conflict results must no
 
 If MCP is unavailable on a cooperative-only surface, product writes are held by instruction. Preventive or isolated claims require a proven guard or documented separation boundary for the covered operation.
 
-External side effects keep the same authority meaning. Before execution, `prepare_write` evaluates the intended side effect. After execution, `record_run` records what happened. `record_run` cannot retroactively authorize an effect that lacked compatible scope, Approval, Decision Packet coverage, or Write Authorization.
+External side effects keep the same authority meaning. Before execution, `prepare_write` evaluates the intended side effect. After execution, `record_run` records what happened. `record_run` cannot retroactively authorize an effect that lacked compatible scope, Approval, user judgment coverage, or Write Authorization.
 
 ## record_run
 
@@ -629,7 +629,7 @@ The decision algorithm checks the close intent and required gates:
 3. Reject completion if an active Run is still open.
 4. Check active Change Unit completion, deferral, or supersession according to the active profile.
 5. Check scope.
-6. Check blocking Decision Packets and `decision_gate`.
+6. Check blocking user judgments and `decision_gate`.
 7. Check sensitive-action permission when sensitive categories applied.
 8. Check enabled design policy.
 9. Check evidence when evidence is required.
@@ -707,8 +707,8 @@ Verification waiver is not detached verification. If the waived verification gap
 |---|---|
 | Core state is authority. | State-changing actions create Core records and events; projections and chat cannot mutate state without an owner path. |
 | Product writes require explicit scope and write authority. | `prepare_write` blocks missing scope and creates a single-use Write Authorization only when required checks pass; `record_run` consumes it. |
-| User-owned judgment cannot be replaced by agent judgment. | Decision Packets and `decision_gate` block affected writes or close until compatible resolution, deferral, or risk handling is recorded. |
-| Sensitive-action approval is separate. | Approval-shaped Decision Packets, later Approval records, and `approval_gate` cover sensitive permission only. |
+| User-owned judgment cannot be replaced by agent judgment. | User judgment records and `decision_gate` block affected writes or close until compatible resolution, deferral, or risk handling is recorded. |
+| Sensitive-action approval is separate. | Sensitive-action approval user judgments, later Approval records, and `approval_gate` cover sensitive permission only. |
 | Evidence, verification, QA, acceptance, and residual risk stay separate. | Separate gates, refs, and close blockers prevent substitution. |
 | Close exposes blockers and residual risk. | `close_task` returns structured blockers and separate close reason, assurance, acceptance, and residual-risk state. |
 | Active profile determines required gates. | Gate checks apply only when required by stage/profile, user request, task type, security/criticality profile, policy, or explicit requirement. |
@@ -745,7 +745,7 @@ The following combinations are invalid or require repair:
 | Product write attempted without required sensitive-action permission | Return approval-required; do not create Write Authorization. |
 | Product write attempted with unresolved user-owned judgment | Return decision-required or decision-unresolved. |
 | Implementation/direct Run recorded without compatible unconsumed Write Authorization | Reject or record violation/recovery state without treating authority as consumed. |
-| Sensitive-action approval used as product/UX or technical judgment | Reject or repair through Decision Packet. |
+| Sensitive-action approval used as product/UX or technical judgment | Reject or repair through user judgment. |
 | Generic "go ahead" used to satisfy incompatible routes | Clarify or split routes before recording state. |
 | Required evidence missing but `evidence_gate=not_required` | Recompute and repair. |
 | Required verification skipped without waiver | Keep verification pending/blocked. |

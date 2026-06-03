@@ -17,7 +17,7 @@ Implementation tier: Future/diagnostic projections. Persisted Journey Card Markd
 - current acceptance criteria snapshot
 - Write Authorization, sensitive-action approval, baseline, and guarantee refs
 - sensitive-action approval status
-- active Decision Packet refs
+- active user judgment refs
 - primary blocker, secondary blocker, and smallest unblocker display summaries
 - blocker owner display summary
 - evidence coverage, verification, and Manual QA summaries
@@ -27,7 +27,7 @@ Implementation tier: Future/diagnostic projections. Persisted Journey Card Markd
 - projection freshness inputs
 - state, baseline, evidence, MCP, and capability freshness/blocker display summaries
 
-Decision, write-authority, close-impact, residual-risk, and freshness placeholders are display bindings derived from the records above. If a user judgment is actually needed, render a Decision Packet or judgment prompt rather than treating this card as the judgment context source.
+Judgment, write-authority, close-impact, residual-risk, and freshness placeholders are display bindings derived from the records above. If a user judgment is actually needed, render a compact user judgment prompt or optional full-format Decision Packet presentation rather than treating this card as the judgment context source.
 
 ## Rendered sections
 
@@ -63,7 +63,7 @@ Blocking now:
 - also blocking: {secondary_blockers_summary|none}
 
 Judgment context:
-- pending judgment: {decision_packet_ref|none}
+- pending judgment: {user_judgment_ref|none}
 - user judging: {user_judgment_question|none}
 - agent may decide: {what_agent_may_decide_without_user}
 
@@ -124,7 +124,7 @@ State/input freshness: {state_baseline_evidence_freshness_summary|current or non
 
 This template is a rendered shape, not canonical state. It is rendered from current source records and refs, not stale chat memory. Persisted `JOURNEY-CARD` Markdown is future/diagnostic; early current-position context in status, next, and significant resume flows can use compact status output instead.
 
-Status/next recommendations shown in or near this card are read-only guidance. They may point to a Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
+Status/next recommendations shown in or near this card are read-only guidance. They may point to a user judgment prompt, optional full-format Decision Packet presentation, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
 
 Close context in a Journey Card is compact status/resume display. `TASK` owns the continuity Close Summary for active or recently closed `work` tasks, while `DIRECT-RESULT` owns the low-ceremony close impact summary for direct work. These displays follow the [projection/report boundary](../document-projection.md#projection-principles); close and gate effects still come from owner records.
 

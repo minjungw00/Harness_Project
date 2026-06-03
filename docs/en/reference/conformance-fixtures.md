@@ -85,7 +85,7 @@ The hardened local reference target is an umbrella target reached through Assura
 
 | Profile | Stage name | Behavior proved | Out of scope for that profile |
 |---|---|---|---|
-| Engineering Checkpoint fixtures, with Kernel Smoke as the authoring label | Engineering Checkpoint | Minimal authority loop only: project/Task/scope setup, in-scope `prepare_write` allow, out-of-scope write block from Harness authority state, durable single-use Write Authorization, compatible `record_run` consumption/linking, missing artifact/evidence blocker/status, and non-mutating status read. | MVP-1 User Work Loop value, profile-specific Decision Packet quality, full Evidence Manifest, projection renderer support, multiple projection kinds, residual-risk acceptance semantics, work acceptance semantics, Manual QA, detached verification, export/recover, release handoff, full conformance suite, future fixture catalog, higher guard guarantees, and broad operations. |
+| Engineering Checkpoint fixtures, with Kernel Smoke as the authoring label | Engineering Checkpoint | Minimal authority loop only: project/Task/scope setup, in-scope `prepare_write` allow, out-of-scope write block from Harness authority state, durable single-use Write Authorization, compatible `record_run` consumption/linking, missing artifact/evidence blocker/status, and non-mutating status read. | MVP-1 User Work Loop value, profile-specific user judgment quality, full Evidence Manifest, projection renderer support, multiple projection kinds, residual-risk acceptance semantics, work acceptance semantics, Manual QA, detached verification, export/recover, release handoff, full conformance suite, future fixture catalog, higher guard guarantees, and broad operations. |
 | MVP-1 User Work Loop fixtures | MVP-1 User Work Loop | Ordinary requests become tracked work without Harness vocabulary; clarification quality, judgment separation, evidence blockers, residual-risk visibility, honest authority/fallback behavior, and derived-summary non-authority are visible through Core-owned state and structured responses. | Full agency assurance hardening, detached verification independence, full Manual QA matrix, stewardship policy suite, TDD/module/interface catalogs, export/recover, release handoff, and automation beyond the MVP-1 user-value path. |
 | Assurance Profile fixtures | Assurance Profile | User-owned judgment, Approval, Write Authorization, Manual QA, verification, work acceptance, residual-risk acceptance, stewardship, design-quality, context-hygiene, TDD, and feedback-loop boundaries stay separate and fixture-proven through Core records. | Operator recovery/export completeness, release handoff, broad operations coverage, dashboard/hosted workflow UI, broad connector automation, and unproven preventive or isolated guarantee claims. |
 | Operations Profile / promoted-expansion fixtures | Operations Profile and Roadmap | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, and any promoted future higher guarantee level or automation profile. | Any stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, or automation claim until owner docs define the mechanism and fixtures prove the covered behavior. |
@@ -120,9 +120,9 @@ MVP-1 fixtures prove user-visible Harness value without growing into the broad a
 |---|---|
 | `MVP-v02-natural-language-starts-tracked-work` | Ordinary user language starts or resumes tracked work without requiring "Harness," `Task`, `Change Unit`, `Decision Packet`, or another startup phrase; the request alone does not authorize product writes. |
 | `MVP-v02-codebase-answerable-facts-checked-before-question` | Current seeded repo/codebase refs, Harness state refs, or connector/session facts are used before asking the user to repeat facts that are already answerable; unresolved user-owned judgments still route to focused questions. |
-| `MVP-v02-product-ux-and-architecture-judgments-separated` | Product/UX judgment and material technical architecture judgment are represented as separate user-owned routes or candidates, distinct from sensitive-action Approval, work acceptance, and residual-risk acceptance. |
+| `MVP-v02-product-ux-and-architecture-judgments-separated` | Product/UX judgment and Technical judgment are represented as separate user-owned judgment requests or candidates, distinct from Sensitive action approval, Work acceptance, and Residual risk acceptance. |
 | `MVP-v02-small-typo-direct-change-stays-light` | A small typo or direct change keeps a light procedural budget while still preserving scope, write authority where product writes apply, evidence/self-check support, and any relevant user-owned judgment. |
-| `MVP-v02-ambiguous-feature-enters-clarification` | An ambiguous feature request enters clarification or Decision Packet routing instead of premature implementation or broad approval. |
+| `MVP-v02-ambiguous-feature-enters-clarification` | An ambiguous feature request enters clarification or user judgment routing instead of premature implementation or broad approval. |
 | `MVP-v02-missing-user-judgment-blocks-write-or-close` | When a relevant product, UX, architecture, work-acceptance, or risk judgment is missing, affected write or close is blocked through structured Core/API results. |
 | `MVP-v02-missing-evidence-blocks-close-when-required` | When the active profile requires evidence, missing evidence or artifact refs block close with structured status/blockers rather than report prose. |
 | `MVP-v02-residual-risk-visible-before-acceptance-risk-close` | Known close-relevant residual risk is visible before successful work acceptance or risk-accepted close; hidden or stale risk blocks the relevant route. |
@@ -133,7 +133,7 @@ MVP-1 fixtures prove user-visible Harness value without growing into the broad a
 
 ### Clarification Quality Fixture Group
 
-Clarification-quality fixtures belong to the MVP-1 User Work Loop path when they prove that Harness asks for user judgment without substituting for it. Deeper policy-specific Decision Packet coverage remains Assurance Profile unless a MVP-1 path needs a minimal blocker.
+Clarification-quality fixtures belong to the MVP-1 User Work Loop path when they prove that Harness asks for user judgment without substituting for it. Deeper policy-specific user judgment coverage remains Assurance Profile unless a MVP-1 path needs a minimal blocker.
 
 | Fixture ID | Required behavior assertion |
 |---|---|
@@ -204,7 +204,7 @@ suite: agency
 earliest_delivery_stage: "Assurance Profile"
 tags: [decision-gate, residual-risk, autonomy-boundary]
 fixtures:
-  - AGENCY-decision-packet-required-before-product-tradeoff-write
+  - AGENCY-user-judgment-required-before-product-tradeoff-write
   - AGENCY-residual-risk-visible-before-acceptance
 ```
 
@@ -285,7 +285,7 @@ Fixture authors should use `VALIDATOR_FAILED` as `expected_error.code` only when
 
 Validator assertions nested under `expected_state.validators` are keyed by validator ID. Each listed validator ID must exist in the captured validator results and match the listed fields partially; unlisted validator IDs and unlisted validator fields are not asserted.
 
-When fixtures assert design-quality severity, all relevant validator findings should remain visible under `expected_state.validators`, while fixtures assert the merged gate, write-blocker, close-blocker, waiver, or Decision Packet outcome produced by the policy-owned [Severity Composition Rule](design-quality-policies.md#severity-composition-rule). Fixtures must not add policy schemas or suppress lower-severity findings merely because a stronger merged blocker is also present.
+When fixtures assert design-quality severity, all relevant validator findings should remain visible under `expected_state.validators`, while fixtures assert the merged gate, write-blocker, close-blocker, waiver, or user judgment outcome produced by the policy-owned [Severity Composition Rule](design-quality-policies.md#severity-composition-rule). Fixtures must not add policy schemas or suppress lower-severity findings merely because a stronger merged blocker is also present.
 
 Core check and precondition assertions nested under `expected_state.checks` are keyed by check/precondition name. These entries are compared against captured Core check output, blocked reasons, response summaries, or equivalent runner-observed check status. They are not validator IDs and must not be nested under `expected_state.validators` unless the MCP API or Storage And DDL explicitly promotes that ID to a stable ValidatorResult.
 

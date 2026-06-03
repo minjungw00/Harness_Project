@@ -16,7 +16,7 @@ Implementation tier: Future/diagnostic projections. TDD Trace output is for late
 - RED, GREEN, and refactor/check artifact refs
 - Evidence Manifest coverage refs
 - waiver or non-TDD justification refs
-- finding routes through Evidence Manifest, Decision Packet, Change Unit, Residual Risk, Manual QA, Eval, close-blocker, or follow-up refs when applicable
+- finding routes through Evidence Manifest, User Judgment, Change Unit, Residual Risk, Manual QA, Eval, close-blocker, or follow-up refs when applicable
 - design-quality validator results related to `tdd_trace`
 - projection freshness inputs
 
@@ -91,7 +91,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 ## Finding Routing
 - evidence gaps or support:
-- Decision Packet candidates or refs:
+- User judgment candidates or refs:
 - Change Unit update or follow-up:
 - residual-risk candidates or refs:
 - Manual QA or Eval refs:

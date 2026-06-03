@@ -109,7 +109,7 @@ Engineering Checkpoint and MVP-1 storage are cooperative/detective unless a late
 
 This matrix is the main table list. It separates small Engineering Checkpoint / MVP-1 storage from later profile candidates.
 
-Public API refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md#artifactref). For the minimum MVP-1 storage slice, `evidence_summaries.evidence_summary_id` is addressable as `StateRecordRef.record_kind=evidence_summary`, and `close_readiness.close_readiness_id` is addressable as `StateRecordRef.record_kind=close_readiness`. Approval-shaped sensitive-action permission is addressable through `StateRecordRef.record_kind=decision_packet`; `StateRecordRef.record_kind=approval` remains later-profile unless the `approvals` table is explicitly promoted. `change_unit_dependencies` remains future/diagnostic storage, so `record_kind=change_unit_dependency` is not a MVP-1 active public ref.
+Public API refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md#artifactref). For the minimum MVP-1 storage slice, `evidence_summaries.evidence_summary_id` is addressable as `StateRecordRef.record_kind=evidence_summary`, and `close_readiness.close_readiness_id` is addressable as `StateRecordRef.record_kind=close_readiness`. Sensitive-action permission is addressable through the canonical user judgment family as `StateRecordRef.record_kind=user_judgment`; `StateRecordRef.record_kind=decision_packet` is a legacy compatibility alias or full-format projection label only. `StateRecordRef.record_kind=approval` remains later-profile unless the `approvals` table is explicitly promoted. `change_unit_dependencies` remains future/diagnostic storage, so `record_kind=change_unit_dependency` is not a MVP-1 active public ref.
 
 | Table | Purpose | First active stage | Authority or auxiliary | User-facing or internal | Later status |
 |---|---|---|---|---|---|
@@ -127,8 +127,8 @@ Public API refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md#artifa
 | `task_events` | Append-only audit and event-order trail | Engineering Checkpoint | audit trail and projection support | mostly internal | active early |
 | `tool_invocations` | Committed idempotency replay row | Engineering Checkpoint | replay support | internal | active early |
 | `task_intake` | Ordinary-language intake and tracked clarification state | MVP-1 | auxiliary shaping state | user-facing | not Engineering Checkpoint |
-| `decision_packets` | Simplified user judgment records and recorded answers | MVP-1 | authority for user judgments | user-facing | not Engineering Checkpoint |
-| `decision_requests` | Optional prompt routing, replay, or handoff metadata linked to Decision Packets | MVP-1 optional | auxiliary routing state | internal/user-facing prompt support | optional, not authority by itself |
+| `user_judgments` | Simplified user judgment records and recorded answers | MVP-1 | authority for user judgments | user-facing | not Engineering Checkpoint |
+| `user_judgment_requests` | Optional prompt routing, replay, or handoff metadata linked to user judgments | MVP-1 optional | auxiliary routing state | internal/user-facing prompt support | optional, not authority by itself |
 | `residual_risks` | Minimal visible residual-risk rows | MVP-1 | authority for stored residual risks | user-facing | not Engineering Checkpoint |
 | `evidence_summaries` | Minimal evidence summary over artifact/run refs | MVP-1 | auxiliary summary over authority refs | user-facing | not Engineering Checkpoint |
 | `close_readiness` | Minimal close readiness and close-blocker snapshot | MVP-1 | auxiliary display/check snapshot | user-facing | not Engineering Checkpoint |
@@ -165,7 +165,7 @@ The DDL below is a reference fragment for planning. It is not proof that a migra
 
 | Profile | Stage | Required for | Explicitly not required for this profile |
 |---|---|---|---|
-| Engineering Checkpoint schema | Engineering Checkpoint | narrow local authority loop | Decision Packets, Evidence Manifests, Manual QA, Eval, residual-risk acceptance, projection jobs, reconcile, validators, Journey, stewardship maps |
+| Engineering Checkpoint schema | Engineering Checkpoint | narrow local authority loop | user judgments, Evidence Manifests, Manual QA, Eval, residual-risk acceptance, projection jobs, reconcile, validators, Journey, stewardship maps |
 | MVP-1 User Work Loop schema | MVP-1 | first user-value records and readable status | detached verification, full Manual QA, full projection job system, export/recover, broad operations |
 | Assurance Profile schema | Assurance Profile or promoted profile | verification, QA, approval, feedback/TDD, validator support | Engineering Checkpoint / MVP-1 exit unless promoted |
 | Operations schema | Operations Profile or promoted profile | projection jobs, reconcile, connector manifests, recover/export | Engineering Checkpoint / MVP-1 exit unless promoted |
@@ -367,11 +367,11 @@ An `artifacts` row without a compatible owner link is not enough to satisfy evid
 
 ## MVP-1 Additions
 
-MVP-1 means the MVP-1 User Work Loop. It should add records that help a person understand the work: intake state, simplified user judgments, approval-shaped sensitive-action Decision Packets, visible residual risk, evidence summaries, close blockers/readiness, and optional status-card freshness. It should still avoid committed Approval lifecycle storage, full assurance, projection job, reconciliation, and operations systems.
+MVP-1 means the MVP-1 User Work Loop. It should add records that help a person understand the work: intake state, simplified user judgments, sensitive-action approval user judgments, visible residual risk, evidence summaries, close blockers/readiness, and optional status-card freshness. It should still avoid committed Approval lifecycle storage, full assurance, projection job, reconciliation, and operations systems.
 
 ### MVP-1 User Work Loop schema
 
-Main MVP-1 addition count: 5 tables, plus optional `decision_requests` and `projection_status_cards` tables. These tables build on the Engineering Checkpoint schema.
+Main MVP-1 addition count: 5 tables, plus optional `user_judgment_requests` and `projection_status_cards` tables. These tables build on the Engineering Checkpoint schema.
 
 ```sql
 CREATE TABLE task_intake (
@@ -385,12 +385,12 @@ CREATE TABLE task_intake (
   updated_at TEXT NOT NULL
 );
 
-CREATE TABLE decision_packets (
-  decision_packet_id TEXT PRIMARY KEY,
+CREATE TABLE user_judgments (
+  user_judgment_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  judgment_route TEXT NOT NULL,
-  judgment_category TEXT NOT NULL,
-  display_depth TEXT NOT NULL,
+  judgment_type TEXT NOT NULL,
+  presentation TEXT NOT NULL,
+  display_label TEXT NOT NULL,
   judgment_payload_json TEXT NOT NULL DEFAULT '{}',
   status TEXT NOT NULL,
   question TEXT NOT NULL,
@@ -414,7 +414,7 @@ CREATE TABLE residual_risks (
   summary TEXT NOT NULL,
   impact TEXT,
   mitigation TEXT,
-  related_decision_packet_id TEXT REFERENCES decision_packets(decision_packet_id),
+  related_user_judgment_id TEXT REFERENCES user_judgments(user_judgment_id),
   accepted_at TEXT,
   accepted_by TEXT,
   accepted_risk_json TEXT NOT NULL DEFAULT '{}',
@@ -450,10 +450,10 @@ Optional MVP-1 prompt routing table:
 Public refs for these MVP-1 additions are intentionally small. `evidence_summaries` and `close_readiness` may be surfaced through `StateRecordRef` as `evidence_summary` and `close_readiness`; they summarize or check authority refs and do not imply the full `evidence_manifests`, verification, Manual QA, projection, or report/export profiles are active.
 
 ```sql
-CREATE TABLE decision_requests (
-  decision_request_id TEXT PRIMARY KEY,
+CREATE TABLE user_judgment_requests (
+  user_judgment_request_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  decision_packet_id TEXT REFERENCES decision_packets(decision_packet_id),
+  user_judgment_id TEXT REFERENCES user_judgments(user_judgment_id),
   status TEXT NOT NULL,
   request_payload_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
@@ -462,9 +462,11 @@ CREATE TABLE decision_requests (
 );
 ```
 
-`decision_requests` never satisfies a judgment, gate, waiver, residual-risk acceptance, or close condition by itself. It is only routing or replay metadata for a compatible `decision_packets` row.
+`user_judgment_requests` never satisfies a judgment, gate, waiver, residual-risk acceptance, or close condition by itself. It is only routing or replay metadata for a compatible `user_judgments` row.
 
-For `judgment_route=approve-sensitive-action`, minimum MVP-1 stores the requested `judgment_payload.approval_scope` in `decision_packets.judgment_payload_json` and resolves the user's grant, denial, or expiry on the Decision Packet. It does not require a row in `approvals`, an Approval `StateRecordRef`, `approval_id`, `approval_refs`, or an `APR` projection.
+For `judgment_type=sensitive_action_approval`, minimum MVP-1 stores the requested `judgment_payload.approval_scope` in `user_judgments.judgment_payload_json` and resolves the user's grant, denial, or expiry on the user judgment. It does not require a row in `approvals`, an Approval `StateRecordRef`, `approval_id`, `approval_refs`, or an `APR` projection.
+
+Older storage drafts may have used `decision_packets` and `decision_requests`. Those names are migration aliases only: new DDL, fixtures, examples, and public refs should use `user_judgments`, `user_judgment_requests`, and `record_kind=user_judgment`. A full-format Decision Packet view, when enabled, is a presentation/projection over a user judgment, not a separate authority table.
 
 Optional MVP-1 status-card freshness table:
 
@@ -493,7 +495,7 @@ Assurance Profile storage is Assurance Profile or profile-promoted, not Engineer
 
 | Candidate table | Why it may matter later | Not required for |
 |---|---|---|
-| `approvals` | Sensitive-action approval lifecycle and drift handling | Engineering Checkpoint authority loop, ordinary MVP-1 judgment display including approval-shaped Decision Packets |
+| `approvals` | Sensitive-action approval lifecycle and drift handling | Engineering Checkpoint authority loop, ordinary MVP-1 sensitive-action approval user judgments |
 | `baselines` | Repository baseline capture for assurance, approval, and verification freshness | Engineering Checkpoint / MVP-1 unless a promoted profile needs baseline checks |
 | `evidence_manifests` | Full criteria-to-evidence coverage | Engineering Checkpoint single artifact/evidence ref, MVP-1 evidence summary |
 | `evals` | Detached verification or evaluator review | Engineering Checkpoint / MVP-1 |
@@ -561,7 +563,7 @@ Full evidence sufficiency, detached verification, Manual QA, and validator-backe
 Current state tables are authoritative:
 
 - `tasks`, `change_units`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, and `task_blockers` are Engineering Checkpoint authority records.
-- `decision_packets`, `residual_risks`, and other MVP-1 rows become authority only for their own record family when their profile is active.
+- `user_judgments`, `residual_risks`, and other MVP-1 rows become authority only for their own record family when their profile is active.
 - Events support audit, debugging, idempotency explanation, projection freshness, and recovery history.
 
 Deterministic event order is ascending `event_seq` in `state.sqlite`. Task-scoped readers filter by `task_id`. `created_at` is audit metadata; it is not enough for ordering when events share a timestamp.
@@ -580,7 +582,7 @@ Required event emission:
 | Engineering Checkpoint | Blocker resolved or superseded | Emit blocker-resolved or blocker-superseded event. |
 | Engineering Checkpoint | Idempotent replay returning an existing committed response | Do not append a new semantic event. The original event remains the committed audit fact. |
 | MVP-1 | Intake state create/update | Emit intake-updated event when persisted. |
-| MVP-1 | User judgment requested, answered, expired, or superseded | Emit decision event tied to the `decision_packets` row. |
+| MVP-1 | User judgment requested, answered, expired, or superseded | Emit user-judgment event tied to the `user_judgments` row. |
 | MVP-1 | Residual risk opened, changed, accepted, mitigated, deferred, or superseded | Emit residual-risk event. |
 | MVP-1 | Evidence summary or close readiness changes | Emit evidence-summary-updated or close-readiness-updated event when persisted. |
 | MVP-1 optional | Projection/status-card freshness changes | Emit freshness/status-card event only if that optional table is installed. |
@@ -631,7 +633,7 @@ Early hardening should cover:
 | `runs.kind`, `runs.status` | [`harness.record_run`](mcp-api-and-schemas.md#harnessrecord_run) and storage compatibility notes |
 | `task_blockers.status`, `blocked_action`, `blocker_kind` | Kernel/API blocker owners |
 | `tool_invocations.status` | storage idempotency replay semantics |
-| `decision_packets.status`, `judgment_route`, `judgment_category`, `display_depth` | user-judgment API/kernel owners |
+| `user_judgments.status`, `judgment_type`, `presentation` | user-judgment API/kernel owners |
 | `residual_risks.status`, `visibility_status` | close and residual-risk owners |
 | `evidence_summaries.status`, `close_readiness.status` | evidence/close-readiness owner behavior |
 | Future `projection_jobs.status`, `projection_jobs.projection_kind` | Projection/API owners when Operations profile is active |
@@ -640,7 +642,7 @@ Early hardening should cover:
 | Future `approvals.status` | Approval lifecycle owner when approval profile is active |
 | Future `evidence_manifests.status` | Evidence profile owner when full Evidence Manifest profile is active |
 | Future `feedback_loops.loop_kind`, `feedback_loops.status`, `tdd_traces.status` | Design-quality/API owners when feedback/TDD profiles are active |
-| Future `connector_manifests.status`, `baselines.status`, `decision_requests.status`, `task_spine_entries.status`, `change_unit_dependencies.status`, `shared_designs.status`, `reconcile_items.status`, `domain_terms.status`, `module_map_items.status`, `interface_contracts.review_status` | Storage compatibility values below, only when the optional/future table is retained, seeded, or active |
+| Future `connector_manifests.status`, `baselines.status`, `user_judgment_requests.status`, `task_spine_entries.status`, `change_unit_dependencies.status`, `shared_designs.status`, `reconcile_items.status`, `domain_terms.status`, `module_map_items.status`, `interface_contracts.review_status` | Storage compatibility values below, only when the optional/future table is retained, seeded, or active |
 
 Unknown owner-bound values are invalid state unless a fixture explicitly exercises invalid-state recovery. Migrations must stop before tightening if unknown values are present; they must not silently map unknown values to fallback values that no owner defines.
 
@@ -661,7 +663,7 @@ Profile-only compatibility values retained for future seed loaders and optional 
 |---|---|---|
 | `baselines.status` | `captured`, `stale` | Baseline freshness for assurance profiles. |
 | `connector_manifests.status` | `current`, `drifted` | Connector-managed file state; drift must route through the owning reconcile/operations path. |
-| `decision_requests.status` | `open`, `linked`, `closed`, `expired`, `cancelled`, `superseded` | Prompt routing lifecycle only; authority comes through linked `decision_packets`. |
+| `user_judgment_requests.status` | `open`, `linked`, `closed`, `expired`, `cancelled`, `superseded` | Prompt routing lifecycle only; authority comes through linked `user_judgments`. |
 | `task_spine_entries.status` | `current`, `superseded` | Journey/spine continuity support, not current state authority. |
 | `change_unit_dependencies.status` | `open`, `satisfied`, `blocked`, `deferred`, `superseded` | Dependency visibility; not a scheduler or parallel-lane authority. |
 | `shared_designs.status` | `proposed`, `active`, `stale`, `deferred`, `superseded` | Design-support basis; not Approval, work acceptance, or residual-risk acceptance. |

@@ -19,7 +19,7 @@
 - hash, size, redaction state, retention/availability, owner relation, 후속 evidence 영향을 포함한 artifact 참조
 - 관련 Run, Eval, Feedback Loop, 수동 QA, TDD trace 참조
 - 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, 수동 QA, 작업 수락, 잔여 위험 요약
-- 닫기 맥락으로 렌더링할 때 Write Authorization, Decision Packet, Approval, Evidence Manifest, Eval, 수동 QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness를 보여주는 compact authority refs
+- 닫기 맥락으로 렌더링할 때 Write Authorization, User Judgment, Approval, Evidence Manifest, Eval, 수동 QA, acceptance context, Residual Risk, Artifact refs, redaction state, projection freshness를 보여주는 compact authority refs
 
 ## 렌더링 섹션
 
@@ -79,8 +79,8 @@ updated_at: 2026-05-06T09:50:00+09:00
 - 다음 close 조치:
 
 ## Authority And Close Refs
-- compact refs: write={write_authorization_ref|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
-- approval refs는 minimum MVP-1에서 `none`입니다. Approval 형태 민감 동작 coverage는 later Approval owner profile이 active가 아닌 한 `decision_packet_refs`로 나타납니다.
+- compact refs: write={write_authorization_ref|none}; judgment={user_judgment_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
+- approval refs는 minimum MVP-1에서 `none`입니다. 민감 동작 coverage는 later Approval owner profile이 active가 아닌 한 `judgment_type=sensitive_action_approval`인 `user_judgment_refs`로 나타납니다.
 - redaction state:
 - projection freshness:
 
@@ -105,11 +105,11 @@ updated_at: 2026-05-06T09:50:00+09:00
 | Item | Coverage / 관문 표시 상태 | Evidence Refs | Notes |
 |---|---|---|---|
 | vertical_slice_shape | passed | CU-01 | |
-| decision_quality_check | passed | DEC-0001 | |
+| decision_quality_check | passed | UJ-0001 | |
 | autonomy_boundary_check | passed | CU-01 | |
 | feedback_loop_check | passed | FBL-0001, TDD-0001, LOG-0001 | |
 | tdd_trace_required | passed | TDD-0001, RED-LOG-0001, GREEN-LOG-0001 | RED, GREEN, relevant refactor/check coverage가 수용 기준 및 changed files로 link된다. |
-| module_interface_review | passed | module_map_item: MMI-0001, interface_contract: IFACE-0001, DEC-0001 | |
+| module_interface_review | passed | module_map_item: MMI-0001, interface_contract: IFACE-0001, UJ-0001 | |
 | codebase_stewardship_check | passed | domain_term: TERM-0001, module_map_item: MMI-0001, interface_contract: IFACE-0001, feedback_loop: FBL-0001 | |
 | residual_risk_visibility_check | pending | RR-0001 | |
 | manual_qa_required | pending | qa_gate; no satisfying 수동 QA record yet | |
@@ -117,7 +117,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 `Coverage / 관문 표시 상태`는 이 manifest의 evidence coverage 또는 close와 관련된 관문 표시 상태입니다. 이 column의 `pending` 같은 값은 `ValidatorResult.status` 값이 아닙니다.
 
 ## Approval Refs
-- Later Approval owner profile이 active일 때만 채웁니다. Minimum MVP-1의 Approval 형태 민감 동작 coverage는 Decision Packet refs에 둡니다.
+- Later Approval owner profile이 active일 때만 채웁니다. Minimum MVP-1의 민감 동작 coverage는 `judgment_type=sensitive_action_approval`인 `user_judgment_refs`에 둡니다.
 - APR-0001:
 
 ## Evidence Refs
@@ -178,4 +178,4 @@ Chat text와 Markdown report prose는 evidence story를 설명할 수 있지만,
 
 Large log, diff, screenshot, trace, bundle은 짧은 결과와 함께 registered ArtifactRef ref로 남겨야 합니다. Manifest는 reader가 artifact body를 열어 보기 전에 redaction state와 availability를 먼저 보여줘야 합니다.
 
-`secret_omitted` artifact는 secret이 아닌 evidence가 보이는 주장만 뒷받침할 수 있으며, 생략된 값이 필요한 주장은 뒷받침하지 못합니다. `blocked` artifact는 커밋된 metadata-only notice이지 사용 가능한 원본 근거가 아닙니다. 의존하는 criteria는 replacement, waiver, Decision Packet outcome, 받아들인 위험, documented fallback이 evidence 경로를 해소할 때까지 unsupported, insufficient, blocked 중 적절한 상태로 남습니다. 이 template은 생략된 secret/PII 값 또는 차단된 payload를 포함하면 안 됩니다.
+`secret_omitted` artifact는 secret이 아닌 evidence가 보이는 주장만 뒷받침할 수 있으며, 생략된 값이 필요한 주장은 뒷받침하지 못합니다. `blocked` artifact는 커밋된 metadata-only notice이지 사용 가능한 원본 근거가 아닙니다. 의존하는 criteria는 replacement, waiver, user judgment outcome, 받아들인 위험, documented fallback이 evidence 경로를 해소할 때까지 unsupported, insufficient, blocked 중 적절한 상태로 남습니다. 이 template은 생략된 secret/PII 값 또는 차단된 payload를 포함하면 안 됩니다.

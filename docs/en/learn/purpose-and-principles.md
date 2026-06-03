@@ -22,7 +22,7 @@ Harness keeps authority local. The durable work record should not depend on a re
 
 Harness separates unlike things. Scope, sensitive-action permission, product judgment, technical judgment, evidence, verification, manual QA, work acceptance, and residual-risk acceptance answer different questions.
 
-Harness preserves user agency. The user owns goals, scope, product direction, material technical trade-offs, security/privacy judgment, QA expectations, work acceptance, and residual-risk acceptance.
+Harness preserves user agency. The user owns goals, scope, Product/UX judgment, Technical judgment including material technical trade-offs and security/privacy considerations, QA expectations, Work acceptance, and Residual risk acceptance.
 
 Harness is honest about support. It should say what was checked, what kind of check it was, what evidence supports the claim, what remains unverified, and what still needs a person.
 

@@ -35,7 +35,7 @@ These catalog rows are future scenario guidance. They become executable only whe
 | Scenario ID | Action | Required assertions |
 |---|---|---|
 | `ARTIFACT-secret-omitted-supports-visible-evidence-only` | `record_run`, `record_manual_qa`, or `record_eval` | `expected_artifacts` includes the committed artifact with `redaction_state: secret_omitted`; evidence, QA, or Eval assertions credit only the visible nonsecret evidence; any claim requiring the omitted value remains unsupported, partial, blocked, or insufficient; projections and reports show omission notes or handles without asserting the omitted secret or PII value. |
-| `ARTIFACT-blocked-notice-is-committed-but-unavailable-input` | `record_run`, `record_manual_qa`, `launch_verify`, or `artifacts_check` | `expected_artifacts` includes the committed artifact with `redaction_state: blocked`, and optional hash/size/content-type assertions match the metadata-only notice bytes; downstream evidence, QA, Eval, projection, export, or Release Handoff assertions show blocked, insufficient, unavailable input, or unresolved impact unless a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback is part of the scenario. |
+| `ARTIFACT-blocked-notice-is-committed-but-unavailable-input` | `record_run`, `record_manual_qa`, `launch_verify`, or `artifacts_check` | `expected_artifacts` includes the committed artifact with `redaction_state: blocked`, and optional hash/size/content-type assertions match the metadata-only notice bytes; downstream evidence, QA, Eval, projection, export, or Release Handoff assertions show blocked, insufficient, unavailable input, or unresolved impact unless a replacement, waiver, user judgment outcome, accepted risk, or documented fallback is part of the scenario. |
 | `ARTIFACT-staged-uri-untrusted-task-scope-required` | `record_run`, `record_manual_qa`, `record_eval`, or `artifacts_check` | An arbitrary caller-supplied `staged_uri`, absolute path, traversal path, symlink escape, repo-local path, or cross-Task artifact relation is not accepted as a committed artifact; no evidence, QA, Eval, projection, export, or Release Handoff claim is credited from it; committed artifact links resolve only to trusted staging/capture bytes and a same-Task owner relation, or to a completed same-Task projection job when `record_kind=projection`. |
 | `ARTIFACT-integrity-mismatch-blocks-dependent-claims` | `artifacts_check`, `recover`, `export`, or `close_task` | A missing artifact file, hash mismatch, size mismatch, or owner-link mismatch is reported through artifact integrity results and dependent evidence, QA, Eval, projection, export, or close-readiness assertions become stale, blocked, or insufficient according to the owner path. The check does not silently rewrite artifact records, credit unverified bytes, leak blocked content, or repair close readiness without an existing recovery, replacement, or reconcile path. |
 | `EXPORT-redaction-notes-do-not-leak-omitted-or-blocked-values` | `export` or Release Handoff report read | Export or Release Handoff assertions list artifact refs, redaction states, omission/block notes, and affected displays; raw omitted values and forbidden blocked payload bytes are not present in exported snapshots, raw-file copies, report text, or fixture assertions. |
@@ -43,18 +43,18 @@ These catalog rows are future scenario guidance. They become executable only whe
 
 ## Agency, Stewardship, Context, And Design-Quality Suites
 
-Agency, stewardship, context hygiene, and design-quality are Assurance Profile suites. They test state behavior through Core entrypoints such as `prepare_write`, `request_user_judgment`, `record_user_judgment`, `record_manual_qa`, `record_eval`, `close_task`, `next`, and operator actions that call Core. They must not pass by matching Journey Card, Decision Packet, residual-risk, review-stage, or status prose.
+Agency, stewardship, context hygiene, and design-quality are Assurance Profile suites. They test state behavior through Core entrypoints such as `prepare_write`, `request_user_judgment`, `record_user_judgment`, `record_manual_qa`, `record_eval`, `close_task`, `next`, and operator actions that call Core. They must not pass by matching Journey Card, user judgment, residual-risk, review-stage, or status prose.
 
 Catalog suite responsibilities after owner promotion:
 
 | Suite | Catalog behavior after owner promotion |
 |---|---|
-| agency | Blocking user-owned judgment requires a compatible Decision Packet before affected write or close; judgment request routing metadata is optional compatibility data and alone must not satisfy `decision_gate`; writes blocked on user-owned product or material technical trade-offs are held; sensitive-action permission and later Approval-profile lifecycle keep Approval, Decision Packet, and Write Authorization distinct; Manual QA, work acceptance, and residual-risk acceptance are separate user judgments with separate owner paths; AFK Autonomy Boundary stop conditions block public commitments; known close-relevant residual risk must be visible before any successful work acceptance or close; if no known close-relevant risk exists, `ResidualRiskSummary.status=none` satisfies residual-risk visibility; risk-accepted close additionally requires accepted Residual Risk refs whose risks were visible before acceptance. |
+| agency | Blocking user-owned judgment requires a compatible user judgment before affected write or close; judgment request routing metadata is optional compatibility data and alone must not satisfy `decision_gate`; writes blocked on user-owned product or material technical trade-offs are held; sensitive-action permission and later Approval-profile lifecycle keep Approval, user judgment, and Write Authorization distinct; Manual QA, work acceptance, and residual-risk acceptance are separate user judgments with separate owner paths; AFK Autonomy Boundary stop conditions block public commitments; known close-relevant residual risk must be visible before any successful work acceptance or close; if no known close-relevant risk exists, `ResidualRiskSummary.status=none` satisfies residual-risk visibility; risk-accepted close additionally requires accepted Residual Risk refs whose risks were visible before acceptance. |
 | stewardship | Design-quality and codebase-stewardship validators affect `design_gate`, `decision_gate`, `qa_gate`, close blockers, and waiver eligibility through canonical owner records, refs, and policy-owned severity composition; shared design, public interface, module, domain-language, feedback-loop, TDD, Manual QA, and waiver checks route findings through existing owner paths instead of duplicating schemas or DDL; generated-file and managed-block drift stays in reconcile; Review Stage displays separate Spec Compliance Review from Code Quality / Stewardship Review without creating canonical records, `ProjectionKind` values, Approval, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or Write Authorization. |
 | context-hygiene | Current Task state, current-position refs, evidence refs, verification bundles, and freshness state are authoritative only when current; stale PRDs, stale projections, stale chat memory, closed issues, old design docs, and long logs are pull-only context until reconciled or refreshed; stale context cannot authorize writes, close, acceptance, verification, residual-risk acceptance, or current-state replacement. |
-| design-quality | Policy-pack smoke coverage composes agency, stewardship, context-hygiene, and close-impact validators through existing ValidatorResult and gate behavior; fixtures assert the merged blocker, waiver, Decision Packet, Manual QA, or close outcome produced by owner policy composition while keeping individual findings visible. Design-quality coverage must not redefine kernel authority, create new gates, or hide lower-severity findings merely because a stronger blocker is also present. |
+| design-quality | Policy-pack smoke coverage composes agency, stewardship, context-hygiene, and close-impact validators through existing ValidatorResult and gate behavior; fixtures assert the merged blocker, waiver, user judgment, Manual QA, or close outcome produced by owner policy composition while keeping individual findings visible. Design-quality coverage must not redefine kernel authority, create new gates, or hide lower-severity findings merely because a stronger blocker is also present. |
 
-Status/next recommendations, including Role Lens recommendations, are fixture-observable only as read responses. Fixtures may assert `recommended_playbooks` when relevant, but must also prove no state event, gate satisfaction, projection enqueue, artifact, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or assurance upgrade resulted from the recommendation itself. If a recommendation or role lens implies user-owned judgment, the expected behavior is a Decision Packet ref or Decision Packet request path, not a satisfied `decision_gate`. If it identifies validator, evidence, Manual QA, residual-risk, or release-handoff work, the expected behavior is a routed recommendation or candidate, not a committed owner record unless a later public mutation fixture records it through Core.
+Status/next recommendations, including Role Lens recommendations, are fixture-observable only as read responses. Fixtures may assert `recommended_playbooks` when relevant, but must also prove no state event, gate satisfaction, projection enqueue, artifact, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or assurance upgrade resulted from the recommendation itself. If a recommendation or role lens implies user-owned judgment, the expected behavior is a user judgment ref or user judgment request path, not a satisfied `decision_gate`. If it identifies validator, evidence, Manual QA, residual-risk, or release-handoff work, the expected behavior is a routed recommendation or candidate, not a committed owner record unless a later public mutation fixture records it through Core.
 
 `browser-qa-candidate` recommendations are subject to the same read-only rule. A recommendation may name Browser QA Capture as useful for a `T6 QA Capture` surface, but the recommendation alone must not mutate state, enqueue projections, create artifacts, create or satisfy evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. If the surface does not support browser capture, the recommendation should name the fallback of human Manual QA notes and manually supplied artifacts rather than treating unsupported capture as a staged-delivery failure. Actual artifacts, Manual QA records, QA gate updates, Eval results, or close effects require a later public mutation through Core.
 
@@ -65,7 +65,7 @@ flowchart LR
   Suites["Assurance Profile suites"] --> Agency["agency"]
   Suites --> Stewardship["stewardship"]
   Suites --> Context["context-hygiene"]
-  Agency --> A1["Decision Packet and decision gate"]
+  Agency --> A1["user judgment and decision gate"]
   Agency --> A2["approval, residual risk, Autonomy Boundary"]
   Stewardship --> S1["design-quality validators and policy composition"]
   Stewardship --> S2["domain, module, interface, feedback loop"]
@@ -92,16 +92,16 @@ Accepted-risk shorthand is later-profile state on seeded `residual_risk` records
 
 ### Intake And Decision Catalog Entries
 
-These are catalog entries, not fixture bodies. They cover ordinary user-language behavior and Decision Packet quality while preserving the exact fixture shape and the rule that future executable fixtures prove behavior through Core state, events, artifacts, projections, and errors.
+These are catalog entries, not fixture bodies. They cover ordinary user-language behavior and user judgment quality while preserving the exact fixture shape and the rule that future executable fixtures prove behavior through Core state, events, artifacts, projections, and errors.
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
-| `INTAKE-natural-language-starts-without-startup-phrase` | `intake`, `status`, or `next` | A user request whose shape should be tracked by Harness is recognized even when the user does not say "Harness," `Task`, `Change Unit`, `Decision Packet`, or any required startup phrase. An `intake` action may start or resume the intake path. A `next` read may recommend or route to the next safe intake action. A `status` read may report current or no-active state and show that intake is needed, but must not claim intake started or mutate state. The fixture asserts the current or proposed Task mode, scope, out-of-bounds area, next safe action, blockers, and guarantee display, and also asserts that the natural-language request alone does not authorize product writes or create a Write Authorization. |
-| `INTAKE-user-plain-language-maps-to-harness-records` | `intake`, `prepare_write`, or `request_user_judgment` | The user may use ordinary phrases such as "change the checkout flow" or "which option should we pick?" without naming `Change Unit` or `Decision Packet`; Core routes the request to the compatible Task, proposed or active Change Unit, Decision Packet ref or candidate, and current blockers. The fixture must not require exact Harness vocabulary in user text and must still assert the owner records, refs, gates, projections, and errors that result. |
+| `INTAKE-natural-language-starts-without-startup-phrase` | `intake`, `status`, or `next` | A user request whose shape should be tracked by Harness is recognized even when the user does not say "Harness," `Task`, `Change Unit`, `user judgment`, or any required startup phrase. An `intake` action may start or resume the intake path. A `next` read may recommend or route to the next safe intake action. A `status` read may report current or no-active state and show that intake is needed, but must not claim intake started or mutate state. The fixture asserts the current or proposed Task mode, scope, out-of-bounds area, next safe action, blockers, and guarantee display, and also asserts that the natural-language request alone does not authorize product writes or create a Write Authorization. |
+| `INTAKE-user-plain-language-maps-to-harness-records` | `intake`, `prepare_write`, or `request_user_judgment` | The user may use ordinary phrases such as "change the checkout flow" or "which option should we pick?" without naming `Change Unit` or `user judgment`; Core routes the request to the compatible Task, proposed or active Change Unit, user judgment ref or candidate, and current blockers. The fixture must not require exact Harness vocabulary in user text and must still assert the owner records, refs, gates, projections, and errors that result. |
 | `INTAKE-tiny-direct-profile-no-authority-bypass` | `intake`, `status`, `next`, `prepare_write`, or `close_task` | A typo, single docs sentence, or obvious rename may be classified with the tiny direct profile only as `mode=direct`. Fixtures assert there is no `tiny` mode value, no Write Authorization from classification alone, no bypass of active scope or compatible `prepare_write` where product writes apply, no bypass of user-owned judgment or sensitive-action permission / Approval, and no ability to use Tiny for auth, security, privacy, secrets, infra, public interface/API, UX workflow, schema, or multi-step work. If scope broadens or evidence beyond the tiny changed-path/self-check note is needed, the displayed next action escalates to ordinary Direct; if product judgment, architecture choice, public interface/API impact, UX workflow, sensitive category, schema, or multi-step delivery appears, it escalates to Work and uses Discovery or Shared Design when shaping is needed. |
-| `INTAKE-codebase-answerable-before-user-question` | `intake` or `next` | Before asking the user, facts already present in seeded current context, explicit repo/codebase refs, Harness state refs, or connector/session-provided facts are used when they are current and safe to rely on. The fixture asserts those provided refs or facts are used instead of asking the user to repeat them; it does not require Core to perform unbounded repository, docs, or codebase search. Any remaining unresolved user-owned product or material technical judgment routes to a focused question or Decision Packet. |
-| `AGENCY-decision-packet-quality-complete-context` | `request_user_judgment`, `prepare_write`, or `next` | A Decision Packet or `DecisionPacketCandidate` for user-owned product or material technical judgment includes `judgment_category`, `judgment_route`, `display_depth`, the exact question, relevant scope, pending option labels or selected outcome, minimum current context, source/evidence refs, and affected refs. `display_depth=tradeoff` or `high-risk` also includes realistic options, trade-offs through benefits/costs/risks, recommendation, uncertainty, deferral consequence, affected gates or acceptance criteria, and residual-risk impact when relevant. A vague "continue?" prompt or broad approval request does not satisfy `decision_gate`. A packet may make one strong recommendation when it still shows rejected alternatives, no-op/defer/reduce-scope paths, or why other paths are unsafe or out of scope, so the user can make a real judgment. |
-| `AGENCY-approval-does-not-substitute-for-judgment-or-close` | `prepare_write`, `record_user_judgment`, or `close_task` | Granted sensitive-action permission remains separate from product judgment, Decision Packet resolution, Write Authorization, evidence, verification, Manual QA, work acceptance, and residual-risk acceptance. Minimum MVP-1 may represent the grant through a resolved approval-shaped Decision Packet; later Approval profiles may seed a committed Approval as granted. Fixtures assert that missing compatible owner records still block affected writes or close, and that permission or approval alone does not create Write Authorization, satisfy work acceptance, produce detached verification, waive QA, accept risk, or close a Task. |
+| `INTAKE-codebase-answerable-before-user-question` | `intake` or `next` | Before asking the user, facts already present in seeded current context, explicit repo/codebase refs, Harness state refs, or connector/session-provided facts are used when they are current and safe to rely on. The fixture asserts those provided refs or facts are used instead of asking the user to repeat them; it does not require Core to perform unbounded repository, docs, or codebase search. Any remaining unresolved user-owned product or material technical judgment routes to a focused question or user judgment. |
+| `AGENCY-user-judgment-quality-complete-context` | `request_user_judgment`, `prepare_write`, or `next` | A user judgment or `UserJudgmentCandidate` for user-owned product or material technical judgment includes `judgment_type`, `presentation`, `display_label`, the exact question, relevant scope, pending option labels or selected outcome, minimum current context, source/evidence refs, and affected refs. `presentation=full` also includes realistic options, trade-offs through benefits/costs/risks, recommendation, uncertainty, deferral consequence, affected gates or acceptance criteria, and residual-risk impact when relevant. A vague "continue?" prompt or broad approval request does not satisfy `decision_gate`. A full-format judgment request may make one strong recommendation when it still shows rejected alternatives, no-op/defer/reduce-scope paths, or why other paths are unsafe or out of scope, so the user can make a real judgment. |
+| `AGENCY-approval-does-not-substitute-for-judgment-or-close` | `prepare_write`, `record_user_judgment`, or `close_task` | Granted sensitive-action permission remains separate from product judgment, user judgment resolution, Write Authorization, evidence, verification, Manual QA, work acceptance, and residual-risk acceptance. Minimum MVP-1 may represent the grant through a resolved sensitive-action approval user judgment; later Approval profiles may seed a committed Approval as granted. Fixtures assert that missing compatible owner records still block affected writes or close, and that permission or approval alone does not create Write Authorization, satisfy work acceptance, produce detached verification, waive QA, accept risk, or close a Task. |
 | `AGENCY-residual-risk-visible-before-acceptance-or-close` | `record_user_judgment` or `close_task` | Known close-relevant residual risks must be visible to the user before acceptance and before any successful close. Fixtures assert hidden, stale, or not-yet-visible risks block acceptance or close; `ResidualRiskSummary.status=none` is valid only when no known close-relevant risk exists; risk-accepted close cites accepted Residual Risk refs that were visible before acceptance. |
 | `AGENCY-approval-qa-acceptance-risk-judgments-distinct` | `record_user_judgment`, `record_manual_qa`, `record_eval`, or `close_task` | Sensitive-action permission / Approval, Manual QA judgment or waiver, work acceptance, verification waiver, and residual-risk acceptance remain distinct owner judgments. A fixture may seed one as satisfied and assert the others still block when their owner records are missing or incompatible; no broad approval or QA pass may imply work acceptance, risk acceptance, detached verification, or close. |
 
@@ -480,16 +480,16 @@ initial_state:
       close_relevant: true
       visibility: visible
       accepted: true
-  decision_packets:
-    - decision_packet_id: DEC-VERIFY-WAIVER-001
-      judgment_route: waive
-      display_depth: high-risk
-      judgment_category: qa_verification
+  user_judgments:
+    - user_judgment_id: UJ-VERIFY-WAIVER-001
+      judgment_type: technical_choice
+      presentation: full
+      display_label: Technical judgment
       status: resolved
-    - decision_packet_id: DEC-RISK-ACCEPT-001
-      judgment_route: accept-risk
-      display_depth: close-affecting
-      judgment_category: residual_risk
+    - user_judgment_id: UJ-RISK-ACCEPT-001
+      judgment_type: residual_risk_acceptance
+      presentation: full
+      display_label: Residual risk acceptance
       status: resolved
       residual_risk_refs: [RISK-VERIFY-001]
 input:
@@ -536,11 +536,11 @@ initial_state:
       close_relevant: true
       visibility: not_visible
       accepted: false
-  decision_packets:
-    - decision_packet_id: DEC-VERIFY-WAIVER-002
-      judgment_route: waive
-      display_depth: high-risk
-      judgment_category: qa_verification
+  user_judgments:
+    - user_judgment_id: UJ-VERIFY-WAIVER-002
+      judgment_type: technical_choice
+      presentation: full
+      display_label: Technical judgment
       status: resolved
 input:
   task_id: TASK-VERIFY-RISK-HIDDEN-001
@@ -583,10 +583,10 @@ input:
     task: false
     gates: false
     projections: false
-    pending_decisions: false
+    pending_user_judgments: false
     guarantees: true
     journey_card: false
-    decision_packets: false
+    user_judgments: false
     autonomy_boundary: false
     write_authority: false
     residual_risk: false
@@ -655,7 +655,7 @@ expected_error:
 | Example section | Use it for... |
 |---|---|
 | [Core Fixture Examples](#core-fixture-examples) | Task state, Change Unit scope, `prepare_write`, Write Authorization, `record_run`, projection basics, close blockers, and MCP/Core boundary cases |
-| [Agency Fixture Examples](#agency-fixture-examples) | Decision Packets, user-owned judgment, residual-risk visibility, acceptance, autonomy boundary, and sensitive-action Approval separation |
+| [Agency Fixture Examples](#agency-fixture-examples) | user judgments, user-owned judgment, residual-risk visibility, acceptance, autonomy boundary, and sensitive-action Approval separation |
 | [Connector Fixture Examples](#connector-fixture-examples) | connector capability, MCP availability, generated files, guard/freeze, and connector agency catalog entries |
 | [Design-Quality Fixture Examples](#design-quality-fixture-examples) | design policy validators, Manual QA, TDD, feedback loops, and shared design requirements |
 | [Stewardship Fixture Examples](#stewardship-fixture-examples) | codebase stewardship, domain language, module/interface review, and managed-block drift |
@@ -668,15 +668,15 @@ The examples below are future exact-shape examples for Core behavior broadly. Th
 
 `prepare_write` allowed examples expect the Task to move from `ready` to `executing` because the kernel transition table owns and defines that transition.
 
-Sensitive-action approval coverage should be materialized as separate exact-shape fixtures or as suite catalog sequencing, not by adding fixture body fields. Minimum MVP-1 fixtures assert the approval-shaped Decision Packet route from [Kernel `prepare_write` State Logic](kernel.md#prepare_write) and [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write). Later Approval-profile fixtures may additionally assert [APR Template source records](templates/approval.md#source-records). Do not redefine the lifecycle inside fixture bodies.
+Sensitive-action approval coverage should be materialized as separate exact-shape fixtures or as suite catalog sequencing, not by adding fixture body fields. Minimum MVP-1 fixtures assert the sensitive-action approval user judgment route from [Kernel `prepare_write` State Logic](kernel.md#prepare_write) and [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write). Later Approval-profile fixtures may additionally assert [APR Template source records](templates/approval.md#source-records). Do not redefine the lifecycle inside fixture bodies.
 
 Fixture authors should keep these observable assertions:
 
 - the first uncovered sensitive `prepare_write` returns `approval_required`, includes an approval candidate, returns no Write Authorization, and sets or keeps `approval_gate=required` when blocker state is committed
 - committed blocker state may enqueue `TASK`, but the non-mutating candidate must not enqueue `APR`
 - dry-run or candidate-display-only paths must not assert committed `TASK` changes unless blocker state was actually committed
-- in minimum MVP-1, `request_user_judgment(judgment_route=approve-sensitive-action)` creates the approval-shaped Decision Packet, sets or keeps `approval_gate=pending`, returns `approval_id=null`, and does not enqueue `APR`
-- in minimum MVP-1, `record_user_judgment` updates Decision Packet state and `approval_gate`, still creates no Write Authorization, and does not enqueue `APR`
+- in minimum MVP-1, `request_user_judgment(judgment_type=sensitive_action_approval)` creates the sensitive-action approval user judgment, sets or keeps `approval_gate=pending`, returns `approval_id=null`, and does not enqueue `APR`
+- in minimum MVP-1, `record_user_judgment` updates user judgment state and `approval_gate`, still creates no Write Authorization, and does not enqueue `APR`
 - later Approval-profile fixtures may additionally assert committed Approval record creation/update, non-null `approval_id`, `approval_refs`, and `APR` projection jobs
 - only a later compatible `prepare_write` retry with a fresh idempotency key and current `expected_state_version` may create the Write Authorization
 
@@ -1066,7 +1066,7 @@ expected_error:
 ## Agency Fixture Examples
 
 ```yaml
-scenario_id: AGENCY-decision-packet-required-before-product-tradeoff-write
+scenario_id: AGENCY-user-judgment-required-before-product-tradeoff-write
 initial_state:
   active_task:
     task_id: TASK-TRADEOFF-001
@@ -1087,9 +1087,9 @@ initial_state:
       what_agent_may_do: ["Implement the selected checkout discount behavior."]
       what_requires_user_judgment: ["Choose the revenue versus conversion trade-off."]
     blocking_decision_requirements:
-      - judgment_route: choose
-        display_depth: tradeoff
-        judgment_category: product_ux
+      - judgment_type: product_choice
+        presentation: full
+        display_label: Product/UX judgment
         status: absent
         affected_paths: ["src/pricing/checkout.ts"]
         topic: revenue_vs_conversion
@@ -1111,10 +1111,10 @@ expected_state:
   gates:
     decision_gate: required
   write_decision: decision_required
-  decision_packet_candidate:
-    judgment_route: choose
-    display_depth: tradeoff
-    judgment_category: product_ux
+  user_judgment_candidate:
+    judgment_type: product_choice
+    presentation: full
+    display_label: Product/UX judgment
     affected_gates: [decision_gate]
 expected_events:
   - prepare_write_blocked
@@ -1142,20 +1142,19 @@ initial_state:
       close_relevant: true
       visibility: not_visible
       accepted: false
-  decision_packets:
-    - decision_packet_id: DEC-ACCEPT-001
-      judgment_route: accept-result
-      display_depth: close-affecting
-      judgment_category: work_acceptance
+  user_judgments:
+    - user_judgment_id: UJ-ACCEPT-001
+      judgment_type: work_acceptance
+      presentation: full
+      display_label: Work acceptance
       status: pending_user
       user_context:
         minimum_context: ["acceptance criteria", "evidence summary"]
 input:
-  decision_packet_id: DEC-ACCEPT-001
-  judgment_route: accept-result
+  user_judgment_id: UJ-ACCEPT-001
+  judgment_type: work_acceptance
   selected_option_id: accept
   judgment:
-    route: accept-result
     value: accepted
     value_note: null
   note: "Acceptance attempted before close-relevant residual risk was visible."
@@ -1169,8 +1168,8 @@ expected_state:
   residual_risk_summary:
     status: not_visible
     not_visible_refs: [RISK-ACCEPT-001]
-  decision_packets:
-    DEC-ACCEPT-001: pending_user
+  user_judgments:
+    UJ-ACCEPT-001: pending_user
 expected_events: []
 expected_artifacts: []
 expected_projection: {}
@@ -1190,20 +1189,19 @@ initial_state:
       qa_gate: passed
       acceptance_gate: pending
   residual_risks: []
-  decision_packets:
-    - decision_packet_id: DEC-ACCEPT-NONE-001
-      judgment_route: accept-result
-      display_depth: close-affecting
-      judgment_category: work_acceptance
+  user_judgments:
+    - user_judgment_id: UJ-ACCEPT-NONE-001
+      judgment_type: work_acceptance
+      presentation: full
+      display_label: Work acceptance
       status: pending_user
       user_context:
         minimum_context: ["acceptance criteria", "evidence summary", "ResidualRiskSummary.status=none"]
 input:
-  decision_packet_id: DEC-ACCEPT-NONE-001
-  judgment_route: accept-result
+  user_judgment_id: UJ-ACCEPT-NONE-001
+  judgment_type: work_acceptance
   selected_option_id: accept
   judgment:
-    route: accept-result
     value: accepted
     value_note: null
   note: "Acceptance recorded after confirming no known close-relevant residual risk."
@@ -1217,8 +1215,8 @@ expected_state:
   residual_risk_summary:
     status: none
     close_relevant_count: 0
-  decision_packets:
-    DEC-ACCEPT-NONE-001: resolved
+  user_judgments:
+    UJ-ACCEPT-NONE-001: resolved
 expected_events: []
 expected_artifacts: []
 expected_projection:
@@ -1299,11 +1297,11 @@ initial_state:
       status: active
       what_agent_may_do: ["Refactor internal handler code."]
       stop_conditions: ["public_api_change"]
-  decision_packets:
-    - decision_packet_id: DEC-API-APPROVAL-001
-      judgment_route: approve-sensitive-action
-      display_depth: high-risk
-      judgment_category: sensitive_action
+  user_judgments:
+    - user_judgment_id: UJ-API-APPROVAL-001
+      judgment_type: sensitive_action_approval
+      presentation: full
+      display_label: Sensitive action approval
       status: resolved
       judgment_payload:
         approval_scope:
@@ -1399,11 +1397,11 @@ initial_state:
     artifact_refs:
       - artifact_id: ART-DIFF-RESUME-001
         kind: diff
-  decision_packets:
-    - decision_packet_id: DEC-RESUME-001
-      judgment_route: choose
-      display_depth: tradeoff
-      judgment_category: product_ux
+  user_judgments:
+    - user_judgment_id: UJ-RESUME-001
+      judgment_type: product_choice
+      presentation: full
+      display_label: Product/UX judgment
       status: pending_user
   residual_risks:
     - risk_id: RISK-RESUME-001
@@ -1441,9 +1439,9 @@ expected_state:
             level: cooperative
             notes: []
           note: "Autonomy Boundary is judgment latitude, not write authority."
-        active_decision_packet_refs:
-          - record_kind: decision_packet
-            record_id: DEC-RESUME-001
+        active_user_judgment_refs:
+          - record_kind: user_judgment
+            record_id: UJ-RESUME-001
         residual_risk_summary:
           status: visible
           close_relevant_count: 1
@@ -1461,9 +1459,9 @@ expected_state:
             record_id: EVIDENCE-RESUME-001
         artifact_refs:
           - artifact_id: ART-DIFF-RESUME-001
-      active_decision_packet_refs:
-        - record_kind: decision_packet
-          record_id: DEC-RESUME-001
+      active_user_judgment_refs:
+        - record_kind: user_judgment
+          record_id: UJ-RESUME-001
     instruction_bundle:
       relevant_refs:
         - record_kind: journey_spine_entry
@@ -1472,9 +1470,9 @@ expected_state:
           record_id: EVIDENCE-RESUME-001
       artifact_refs:
         - artifact_id: ART-DIFF-RESUME-001
-    pending_decisions:
-      - record_kind: decision_packet
-        record_id: DEC-RESUME-001
+    pending_user_judgments:
+      - record_kind: user_judgment
+        record_id: UJ-RESUME-001
 expected_events: []
 expected_artifacts: []
 expected_projection: {}
@@ -1482,33 +1480,33 @@ expected_error: null
 ```
 
 ```yaml
-scenario_id: CONN-decision-packet-not-broad-approval
+scenario_id: CONN-user-judgment-not-broad-approval
 initial_state:
   active_task:
-    task_id: TASK-CONN-DEC-001
+    task_id: TASK-CONN-UJ-001
     mode: work
     lifecycle_phase: ready
-    active_change_unit_id: CU-CONN-DEC-001
+    active_change_unit_id: CU-CONN-UJ-001
     gates:
       scope_gate: passed
       decision_gate: not_required
       approval_gate: not_required
   active_change_unit:
-    change_unit_id: CU-CONN-DEC-001
+    change_unit_id: CU-CONN-UJ-001
     allowed_paths: ["src/pricing/discount.ts"]
-    baseline_ref: BASE-CONN-DEC-001
+    baseline_ref: BASE-CONN-UJ-001
     autonomy_boundary:
       status: active
       what_agent_may_do: ["Implement the already selected pricing rule."]
       what_requires_user_judgment: ["Choose a margin versus conversion trade-off."]
     blocking_decision_requirements:
-      - judgment_route: choose
-        display_depth: tradeoff
-        judgment_category: product_ux
+      - judgment_type: product_choice
+        presentation: full
+        display_label: Product/UX judgment
         broad_approval_requested: false
 input:
-  task_id: TASK-CONN-DEC-001
-  change_unit_id: CU-CONN-DEC-001
+  task_id: TASK-CONN-UJ-001
+  change_unit_id: CU-CONN-UJ-001
   intended_operation: "Choose and implement a new discount priority."
   intended_paths: ["src/pricing/discount.ts"]
   intended_tools: ["edit"]
@@ -1516,7 +1514,7 @@ input:
   intended_network: []
   intended_secrets: []
   sensitive_categories: []
-  baseline_ref: BASE-CONN-DEC-001
+  baseline_ref: BASE-CONN-UJ-001
 action: prepare_write
 expected_state:
   lifecycle_phase: waiting_user
@@ -1526,10 +1524,10 @@ expected_state:
   write_decision: decision_required
   approval_request_candidate: null
   write_authorization_ref: null
-  decision_packet_candidate:
-    judgment_route: choose
-    display_depth: tradeoff
-    judgment_category: product_ux
+  user_judgment_candidate:
+    judgment_type: product_choice
+    presentation: full
+    display_label: Product/UX judgment
     affected_gates: [decision_gate]
   validators:
     decision_quality_check:
@@ -1587,10 +1585,10 @@ expected_state:
     triggered_stop_conditions: ["product_positioning_change"]
   write_decision: decision_required
   write_held: true
-  decision_packet_candidate:
-    judgment_route: choose
-    display_depth: high-risk
-    judgment_category: scope_autonomy
+  user_judgment_candidate:
+    judgment_type: technical_choice
+    presentation: full
+    display_label: Technical judgment
     affected_gates: [decision_gate]
   validators:
     autonomy_boundary_check:
@@ -1612,20 +1610,20 @@ These are catalog entries, not fixture bodies. The concrete fixture examples abo
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
-| `CONN-current-position-context-before-significant-resume` | `next` | `next` returns current Task state version, compact current-position context or continuity refs, active Change Unit ref, pending Decision Packet refs, residual-risk summary, and projection freshness before returning a significant resume instruction bundle; no state events are appended for the read. |
-| `CONN-recommended-playbooks-read-only-guidance` | `next` | `next` may return `recommended_playbooks` for the current stage, but the read appends no state events, enqueues no projections, creates no artifacts or evidence, does not change any gate, and does not authorize writes. Any playbook that would require user-owned judgment routes to an existing Decision Packet or Decision Packet request path. |
-| `CONN-role-lens-non-authoritative-routing` | `next` | `next` may recommend role-lens playbooks such as `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, or `release-handoff`; the read does not mutate state, satisfy gates, authorize writes, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. Lens outputs that need action are represented as existing Decision Packet refs, `DecisionPacketCandidate` routes, validator/evidence/Manual QA/residual-risk candidates, release-handoff input, or a recommended next playbook. |
-| `CONN-freeze-narrows-current-boundary` | `prepare_write` or `next` | A freeze request is reflected as display guidance, a held write, a stricter next action, post-action validation when a detective profile supports it, or a `prepare_write` block/hold when existing scope is incompatible. If the fixture asserts a persistent Change Unit, allowed-path, Autonomy Boundary, AFK stop-condition, or related owner-record update, that update must occur through the existing Core state-changing path, Decision Packet route, or owner-record update path; the freeze label does not mutate owner records by itself and does not claim prevention without fixture-proven pre-tool blocking for the covered operation. |
+| `CONN-current-position-context-before-significant-resume` | `next` | `next` returns current Task state version, compact current-position context or continuity refs, active Change Unit ref, pending user judgment refs, residual-risk summary, and projection freshness before returning a significant resume instruction bundle; no state events are appended for the read. |
+| `CONN-recommended-playbooks-read-only-guidance` | `next` | `next` may return `recommended_playbooks` for the current stage, but the read appends no state events, enqueues no projections, creates no artifacts or evidence, does not change any gate, and does not authorize writes. Any playbook that would require user-owned judgment routes to an existing user judgment or user judgment request path. |
+| `CONN-role-lens-non-authoritative-routing` | `next` | `next` may recommend role-lens playbooks such as `product-review`, `eng-review`, `design-review`, `security-review`, `qa-review`, or `release-handoff`; the read does not mutate state, satisfy gates, authorize writes, create evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. Lens outputs that need action are represented as existing user judgment refs, `UserJudgmentCandidate` routes, validator/evidence/Manual QA/residual-risk candidates, release-handoff input, or a recommended next playbook. |
+| `CONN-freeze-narrows-current-boundary` | `prepare_write` or `next` | A freeze request is reflected as display guidance, a held write, a stricter next action, post-action validation when a detective profile supports it, or a `prepare_write` block/hold when existing scope is incompatible. If the fixture asserts a persistent Change Unit, allowed-path, Autonomy Boundary, AFK stop-condition, or related owner-record update, that update must occur through the existing Core state-changing path, user judgment route, or owner-record update path; the freeze label does not mutate owner records by itself and does not claim prevention without fixture-proven pre-tool blocking for the covered operation. |
 | `CONN-guard-display-matches-capability` | `status` or `prepare_write` | Guard display reports the connected profile's actual `guarantee_level` and limitation notes. Cooperative guard does not claim prevention; detective guard requires changed-path/log/artifact validation assertions; preventive guard is not required for staged delivery unless a fixture-proven pre-tool blocking path exists for the covered operations. |
 | `CONN-surface-capability-mismatch-holds-unsafe-write` | `status`, `prepare_write`, or `doctor` | When required capability such as MCP access, artifact capture, QA capture, redaction, isolation, or pre-tool guard coverage is missing, stale, or weaker than the connected profile claims, fixtures assert `surface_capability_check` or equivalent blocked reason, honest reduced guarantee display, no Write Authorization for the unsafe path, and `CAPABILITY_INSUFFICIENT` or `MCP_UNAVAILABLE` according to API precedence. The mismatch does not create approval, evidence, QA, verification, work acceptance, residual-risk acceptance, close readiness, or a stronger guarantee by label. |
 | `CONN-cooperative-freeze-does-not-claim-prevention` | `status`, `next`, or `prepare_write` | A cooperative guard or freeze reports that product/runtime/code writes are held by instruction or routed to stricter `prepare_write` checks, not that the surface prevented execution before it happened. The fixture asserts the actual guarantee level, no preventive `T4` claim or pre-tool block event unless fixture coverage proves one for the covered operation, and changed-path/log/artifact validation only as detective or after-the-fact coverage. |
 | `CONN-mcp-unavailable-holds-product-runtime-code-writes` | `prepare_write`, `next`, `status`, or operator diagnostic | `MCP_SERVER_UNAVAILABLE` or `SURFACE_MCP_UNAVAILABLE` is surfaced through the API-owned `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` path with diagnostic details where available; no authoritative Core state-change claim, Write Authorization, projection repair, approval, gate update, evidence, QA, work acceptance, risk acceptance, or close is recorded from the unavailable path; product/runtime/code writes remain held until MCP or a capable surface is available. |
 | `CONN-local-only-mcp-default-and-off-profile-remote-held` | `connect`, `serve mcp`, `status`, or `prepare_write` | The default connector profile reports local-only MCP exposure. A non-loopback bind, forwarded/tunneled endpoint, unauthenticated shared endpoint, weak socket/config permission, or remote caller outside the profile is reported as off-profile with reduced guarantee; state-changing, write-capable, or close-relevant paths hold, fail, or return `MCP_UNAVAILABLE`/`CAPABILITY_INSUFFICIENT` according to the API-owned taxonomy. The fixture asserts Core still validates `project_id`, `task_id`, `surface_id`, `run_id`, and `actor_kind` claims and that remote reachability alone creates no authority. |
 | `CONN-doctor-local-security-posture-severity` | `doctor`, `connect`, `serve mcp`, or `artifacts_check` | Doctor reports `OK`, `WARN`, `FAIL`, or `MANUAL` consistently for Runtime Home permissions, artifact directory exposure, non-loopback/forwarded/tunneled MCP reachability, stale MCP config or capability profile, and broad local file access risk. Fixtures assert the affected category, observed posture facts, reduced guarantee when applicable, no raw secret/PII or blocked payload leakage, and no weak local exposure reported as `OK`. |
-| `CONN-careful-mode-does-not-create-authority` | `next` or `prepare_write` | Careful mode may narrow scope posture, increase status refresh, require stricter `prepare_write`, ask more user-owned questions, or hold writes when existing checks fail. It must not create a new authority tier, mutate owner records by itself, upgrade guarantee level, grant Approval, satisfy Decision Packets, create Write Authorization, perform verification, record QA, accept residual risk, accept the result, close a Task, or upgrade assurance. If the scenario asserts persistent state changes, they must happen through existing Core state-changing paths, Decision Packet routes, or owner-record update paths. |
+| `CONN-careful-mode-does-not-create-authority` | `next` or `prepare_write` | Careful mode may narrow scope posture, increase status refresh, require stricter `prepare_write`, ask more user-owned questions, or hold writes when existing checks fail. It must not create a new authority tier, mutate owner records by itself, upgrade guarantee level, grant Approval, satisfy user judgments, create Write Authorization, perform verification, record QA, accept residual risk, accept the result, close a Task, or upgrade assurance. If the scenario asserts persistent state changes, they must happen through existing Core state-changing paths, user judgment routes, or owner-record update paths. |
 | `CONN-generated-file-drift-is-reconcile-only` | `doctor`, `projection_refresh`, or `reconcile` | Connector-generated file or managed instruction-block drift is detected from the connector manifest or managed hash and routed to reconcile. Fixtures assert safe non-overwrite behavior, no owner-record mutation from the drift report alone, no projection repair from edited generated text alone, and accepted changes only through an existing Core state-changing or reconcile decision path. |
-| `CONN-decision-packet-not-broad-approval` | `prepare_write` | User-owned product or material technical judgment outside the active Decision Packet returns `decision_required` with a `decision_packet_candidate`; any decision request metadata is optional routing/replay compatibility data and cannot satisfy `decision_gate` without a compatible Decision Packet; it does not return `approval_required`, does not create a broad approval candidate, and does not set `approval_gate=granted`. |
-| `CONN-autonomy-boundary-breach-stops-or-routes-to-decision` | `prepare_write` | Exceeding the active Autonomy Boundary returns `blocked` or `decision_required`, appends `autonomy_boundary_exceeded`, keeps the write held, and either references an existing compatible Decision Packet or returns a candidate decision packet. |
+| `CONN-user-judgment-not-broad-approval` | `prepare_write` | User-owned product or material technical judgment outside the active user judgment returns `decision_required` with a `user_judgment_candidate`; any decision request metadata is optional routing/replay compatibility data and cannot satisfy `decision_gate` without a compatible user judgment; it does not return `approval_required`, does not create a broad approval candidate, and does not set `approval_gate=granted`. |
+| `CONN-autonomy-boundary-breach-stops-or-routes-to-decision` | `prepare_write` | Exceeding the active Autonomy Boundary returns `blocked` or `decision_required`, appends `autonomy_boundary_exceeded`, keeps the write held, and either references an existing compatible user judgment or returns a candidate decision packet. |
 
 ## Design-Quality Fixture Examples
 
@@ -1889,7 +1887,7 @@ initial_state:
       decision_gate: not_required
   manual_qa_policy:
     required: true
-    waiver_decision_packet_required: false
+    waiver_user_judgment_required: false
     waiver_reason_required: true
 input:
   task_id: TASK-QA-WAIVER-001
@@ -1900,7 +1898,7 @@ input:
   findings: []
   artifact_inputs: []
   waiver_reason: null
-  waiver_decision_packet_ref: null
+  waiver_user_judgment_ref: null
   feedback_loop_ref: null
   next_action: waive
 action: record_manual_qa
@@ -1920,7 +1918,7 @@ expected_error:
 ```
 
 ```yaml
-scenario_id: STEWARDSHIP-qa-waiver-product-risk-requires-decision-packet
+scenario_id: STEWARDSHIP-qa-waiver-product-risk-requires-user-judgment
 initial_state:
   active_task:
     task_id: TASK-QA-WAIVER-RISK-001
@@ -1931,7 +1929,7 @@ initial_state:
       decision_gate: not_required
   manual_qa_policy:
     required: true
-    waiver_decision_packet_required: true
+    waiver_user_judgment_required: true
     waiver_reason_required: true
     product_or_user_risk: true
 input:
@@ -1943,7 +1941,7 @@ input:
   findings: []
   artifact_inputs: []
   waiver_reason: "Known workflow risk accepted for a time-sensitive release."
-  waiver_decision_packet_ref: null
+  waiver_user_judgment_ref: null
   feedback_loop_ref: null
   next_action: waive
 action: record_manual_qa
@@ -1988,11 +1986,11 @@ initial_state:
       module_map_items: []
       interface_contracts: []
       feedback_loop_refs: [FBL-PUBLIC-API-001]
-  decision_packets:
-    - decision_packet_id: DEC-PUBLIC-API-APPROVAL-001
-      judgment_route: approve-sensitive-action
-      display_depth: high-risk
-      judgment_category: sensitive_action
+  user_judgments:
+    - user_judgment_id: UJ-PUBLIC-API-APPROVAL-001
+      judgment_type: sensitive_action_approval
+      presentation: full
+      display_label: Sensitive action approval
       status: resolved
       judgment_payload:
         approval_scope:
@@ -2000,10 +1998,10 @@ initial_state:
           allowed_paths: ["src/api/public.ts"]
           baseline_ref: BASE-PUBLIC-API-001
       result: granted
-    - decision_packet_id: DEC-PUBLIC-API-001
-      judgment_route: choose
-      display_depth: tradeoff
-      judgment_category: technical_architecture
+    - user_judgment_id: UJ-PUBLIC-API-001
+      judgment_type: technical_choice
+      presentation: full
+      display_label: Technical judgment
       topic: public_interface_commitment
       status: resolved
   owner_records:
@@ -2236,10 +2234,10 @@ expected_state:
           record_id: RISK-PUBLIC-FUTURE-001
         - record_kind: interface_contract
           record_id: IFACE-PUBLIC-EXPORT-001
-  decision_packet_candidate:
-    judgment_route: accept-risk
-    display_depth: close-affecting
-    judgment_category: residual_risk
+  user_judgment_candidate:
+    judgment_type: residual_risk_acceptance
+    presentation: full
+    display_label: Residual risk acceptance
     topic: public_interface_future_change_risk
     affected_gates: [decision_gate, design_gate]
     residual_risk_refs: [RISK-PUBLIC-FUTURE-001]
@@ -2271,10 +2269,10 @@ The intake codebase-answerable entry covers general session behavior. The stewar
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
 | `STEWARDSHIP-shared-design-required-for-ambiguous-work` | `prepare_write` | Ambiguous `work` without a Shared Design record keeps or sets `design_gate=pending` or `partial`, reports `shared_design_alignment` failed or blocked with a shared-design finding, and returns `VALIDATOR_FAILED` or `DECISION_REQUIRED` according to whether user judgment can resolve it. |
-| `STEWARDSHIP-shared-design-continues-while-key-unknowns-remain` | `intake`, `request_user_judgment`, or `prepare_write` | Shared Design shaping does not stop after one shallow question when key unknowns remain. Fixtures seed unresolved goal, non-goal, acceptance criteria, affected flow, module/interface, sensitive category, verification, Manual QA, or risk fields and assert `design_gate=pending` or `partial`, visible unresolved findings or Decision Packet candidates, and no Write Authorization or close readiness until inspectable facts are separated from user-owned judgments and enough current context exists to propose safe next work, a smaller scope, or a work split. |
+| `STEWARDSHIP-shared-design-continues-while-key-unknowns-remain` | `intake`, `request_user_judgment`, or `prepare_write` | Shared Design shaping does not stop after one shallow question when key unknowns remain. Fixtures seed unresolved goal, non-goal, acceptance criteria, affected flow, module/interface, sensitive category, verification, Manual QA, or risk fields and assert `design_gate=pending` or `partial`, visible unresolved findings or user judgment candidates, and no Write Authorization or close readiness until inspectable facts are separated from user-owned judgments and enough current context exists to propose safe next work, a smaller scope, or a work split. |
 | `STEWARDSHIP-codebase-answerable-question-investigated-first` | `intake`, `next`, or `prepare_write` | When design-quality or stewardship-relevant facts such as module ownership, domain language, public interface impact, affected paths, or test/QA affordances are available from seeded current context, explicit repo/codebase refs, Harness state refs, or connector/session-provided facts, fixtures assert those sources are referenced before asking the user. User questions are reserved for unresolved product judgment or material technical trade-offs, not for stewardship facts already available in current context or refs. |
 | `STEWARDSHIP-feedback-loop-required-before-behavior-write` | `prepare_write` | Behavior-affecting write without a feedback-loop record keeps the write held, reports `feedback_loop_check` blocked, keeps `design_gate=pending` or `partial`, and does not rely on agent prose claiming a check will happen later. |
-| `STEWARDSHIP-findings-route-to-owner-paths` | `record_run`, `record_eval`, `record_manual_qa`, `prepare_write`, or `close_task` | Findings from Run/Eval/Manual QA/design-quality review are asserted through existing owner paths instead of chat-only prose: Evidence Manifest support or gaps, Decision Packet candidates or refs, Change Unit update or follow-up refs, Feedback Loop or TDD Trace updates, Manual QA or Eval records, Residual Risk candidates or refs, validator results, `qa_gate`/`verification_gate`/`design_gate` effects, or structured close blockers. Fixtures must not require a new finding schema or table. |
+| `STEWARDSHIP-findings-route-to-owner-paths` | `record_run`, `record_eval`, `record_manual_qa`, `prepare_write`, or `close_task` | Findings from Run/Eval/Manual QA/design-quality review are asserted through existing owner paths instead of chat-only prose: Evidence Manifest support or gaps, user judgment candidates or refs, Change Unit update or follow-up refs, Feedback Loop or TDD Trace updates, Manual QA or Eval records, Residual Risk candidates or refs, validator results, `qa_gate`/`verification_gate`/`design_gate` effects, or structured close blockers. Fixtures must not require a new finding schema or table. |
 | `STEWARDSHIP-generated-file-drift-routes-through-reconcile` | `projection_refresh`, `doctor`, or `reconcile` | Generated-file or managed-block drift discovered during stewardship review is a reconcile concern, not a new stewardship state store. Fixtures assert the drift finding or reconcile item, unchanged owner records until an accepted reconcile decision applies through Core, and no silent overwrite of the managed file or block. |
 | `STEWARDSHIP-tdd-required-test-path-write-can-create-red-check` | `prepare_write` | When `tdd_trace_required` applies and the intended write is limited to the scoped test path that creates the failing RED check described by the RED target or plan, `prepare_write` may allow the write if all other scope, baseline, approval, autonomy, decision, and capability checks pass; the fixture must still assert the RED target or plan does not satisfy Evidence Manifest coverage and no GREEN evidence is credited until a later run records it. |
 | `STEWARDSHIP-two-stage-review-display-is-not-authority` | `close_task` | Review Stage display text may summarize passed or failed findings, but close depends on canonical gates, evidence, residual-risk visibility, QA, work acceptance, and close blockers; a passed display alone cannot close, accept risk, create Approval, create evidence, satisfy QA or verification, create Write Authorization, or create detached assurance. |
@@ -2383,11 +2381,11 @@ initial_state:
     artifact_refs:
       - artifact_id: ART-CONTEXT-TEST-001
         kind: log
-  decision_packets:
-    - decision_packet_id: DEC-CONTEXT-001
-      judgment_route: waive
-      display_depth: high-risk
-      judgment_category: qa_verification
+  user_judgments:
+    - user_judgment_id: UJ-CONTEXT-001
+      judgment_type: technical_choice
+      presentation: full
+      display_label: Technical judgment
       status: pending_user
   projection_freshness:
     status: stale
@@ -2438,9 +2436,9 @@ expected_state:
             record_id: RUN-CONTEXT-001
         artifact_refs:
           - artifact_id: ART-CONTEXT-TEST-001
-      active_decision_packet_refs:
-        - record_kind: decision_packet
-          record_id: DEC-CONTEXT-001
+      active_user_judgment_refs:
+        - record_kind: user_judgment
+          record_id: UJ-CONTEXT-001
       stale_or_missing_refs:
         - record_kind: projection
           record_id: TASK-PROJECTION-OLD-001
@@ -2452,9 +2450,9 @@ expected_state:
           record_id: EVIDENCE-CONTEXT-001
       artifact_refs:
         - artifact_id: ART-CONTEXT-TEST-001
-    pending_decisions:
-      - record_kind: decision_packet
-        record_id: DEC-CONTEXT-001
+    pending_user_judgments:
+      - record_kind: user_judgment
+        record_id: UJ-CONTEXT-001
   context_hygiene:
     stale_chat_claim_refs: [CHAT-MEM-OLD-001]
     stale_chat_claim_treated_as: pull_only_non_authoritative
@@ -2477,10 +2475,10 @@ These catalog entries are not fixture bodies. Materialized fixtures, including t
 |---|---|---|
 | `CONTEXT-HYGIENE-stale-task-projection-cannot-authorize-write` | `prepare_write` | A stale `TASK` projection that lists broader paths or older acceptance criteria cannot authorize the write; current Change Unit scope and current Task state win, `context_hygiene_check` fails or warns, and the write returns `SCOPE_VIOLATION`, `BASELINE_STALE`, or `PROJECTION_STALE` according to the seeded state. |
 | `CONTEXT-HYGIENE-stale-prd-remains-pull-only` | `prepare_write`, `next`, or `request_user_judgment` | A stale PRD, old design doc, closed issue, or long-log summary may point to refs that should be inspected, but it cannot replace current acceptance criteria, Change Unit scope, product judgment, or gate state. Fixtures assert the stale ref is reported as pull-only context and affected writes, acceptance, or close remain blocked until the owner path reconciles or supersedes it. |
-| `CONTEXT-HYGIENE-resume-uses-current-state-not-chat-memory` | `next` | Resume reads current state, current-position refs, evidence refs, active Decision Packets, and projection freshness from Core; stale chat-memory claims are treated as non-authoritative input and do not mutate state or satisfy gates. |
+| `CONTEXT-HYGIENE-resume-uses-current-state-not-chat-memory` | `next` | Resume reads current state, current-position refs, evidence refs, active user judgments, and projection freshness from Core; stale chat-memory claims are treated as non-authoritative input and do not mutate state or satisfy gates. |
 | `CONTEXT-HYGIENE-compact-context-loads-by-phase` | `status`, `next`, `prepare_write`, `record_run`, `launch_verify`, or `close_task` | Agent context uses the compact always-on envelope and the current planning/clarification, write preparation, execution/run recording, evidence review, close-readiness, user judgment request, error/recovery, or verification bundle material instead of a full documentation or task-history dump. Fixtures assert pushed context is refs-first, current, and profile-relevant; larger Reference docs, schemas, DDL, historical records, full artifact contents, raw artifacts, unrelated templates, and future catalog material remain pull-on-demand and do not create new gates or authority. |
-| `CONTEXT-HYGIENE-retrieved-indexed-context-non-authority` | `prepare_write`, `request_user_judgment`, `record_run`, `record_eval`, `record_manual_qa`, or `close_task` | Retrieved, indexed, remembered, or summarized context may provide refs or source-linked excerpts, but cannot authorize writes, create Write Authorization, resolve Decision Packets, grant Approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept results, accept residual risk, update projection freshness, or close Tasks. Context Index remains a read-only Roadmap candidate unless separately promoted. |
-| `CONTEXT-HYGIENE-evaluator-bundle-freshness-required` | `launch_verify` or `record_eval` | An evaluator bundle must be fresh enough for the asserted verification: current acceptance criteria, changed files, baseline, approval scope, relevant Decision Packets, residual-risk summary, evidence refs, Manual QA requirement, and forbidden patterns are checked as applicable. Stale or missing bundle material cannot set detached verification passed; `verification_gate` remains pending or blocked and the fixture returns `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, or `VALIDATOR_FAILED` according to API precedence. |
+| `CONTEXT-HYGIENE-retrieved-indexed-context-non-authority` | `prepare_write`, `request_user_judgment`, `record_run`, `record_eval`, `record_manual_qa`, or `close_task` | Retrieved, indexed, remembered, or summarized context may provide refs or source-linked excerpts, but cannot authorize writes, create Write Authorization, resolve user judgments, grant Approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept results, accept residual risk, update projection freshness, or close Tasks. Context Index remains a read-only Roadmap candidate unless separately promoted. |
+| `CONTEXT-HYGIENE-evaluator-bundle-freshness-required` | `launch_verify` or `record_eval` | An evaluator bundle must be fresh enough for the asserted verification: current acceptance criteria, changed files, baseline, approval scope, relevant user judgments, residual-risk summary, evidence refs, Manual QA requirement, and forbidden patterns are checked as applicable. Stale or missing bundle material cannot set detached verification passed; `verification_gate` remains pending or blocked and the fixture returns `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, or `VALIDATOR_FAILED` according to API precedence. |
 
 ### Core, Projection, Reconcile, And Verification Boundary Catalog Entries
 
@@ -2509,10 +2507,10 @@ Assurance Profile / Operations Profile staged Manual QA coverage remains the exi
 Future suite families group under the fixture profiles in [Conformance Fixtures Reference](conformance-fixtures.md#fixture-profiles-by-proven-behavior). The `core` family below is broader than the Engineering Checkpoint smoke subset; Engineering Checkpoint uses only the minimal authority-loop checks called out in Build and the Kernel Smoke queue.
 
 - core: active status, advisor close, direct close including tiny direct as a Direct profile, write gate, Write Authorization creation/required/invalid coverage, sensitive-action permission required, later Approval lifecycle retry when that owner profile is active, evidence insufficient, artifact integrity effects on evidence/close readiness, same-session verification guard, QA required, acceptance required, residual-risk visibility before acceptance or close, projection failure separation, current-state versus stale-projection distinction, stale projection write guard
-- connector: natural-language intake without a startup phrase, plain-language routing to Harness records, capability profile, connector profile freshness, stale capability profile detection, surface capability mismatch, local security posture severity for doctor/connect/serve-mcp/artifact checks, MCP unavailable hold, generated/managed manifest drift, changed-path detection, artifact capture, manual artifact capture fallback when native capture is unavailable, fallback guarantee display that does not upgrade cooperative, detective, or manual fallback behavior to preventive or isolated, compact current-position context before significant resume, Decision Packet not broad approval, Autonomy Boundary breach routing, stale chat or PRD context pull-only behavior
+- connector: natural-language intake without a startup phrase, plain-language routing to Harness records, capability profile, connector profile freshness, stale capability profile detection, surface capability mismatch, local security posture severity for doctor/connect/serve-mcp/artifact checks, MCP unavailable hold, generated/managed manifest drift, changed-path detection, artifact capture, manual artifact capture fallback when native capture is unavailable, fallback guarantee display that does not upgrade cooperative, detective, or manual fallback behavior to preventive or isolated, compact current-position context before significant resume, user judgment not broad approval, Autonomy Boundary breach routing, stale chat or PRD context pull-only behavior
 - artifact-redaction: registered artifact boundary, `staged_uri` untrusted handling, task-scoped artifact relation validation, `secret_omitted` evidence sufficiency limits, committed `blocked` metadata-only notices, downstream display/evidence effects, artifact integrity checks, secret/PII omission reporting, and export/Release Handoff non-leakage
 - connector guard/freeze: cooperative/detective freeze and guard display, careful-mode non-authority behavior, capability mismatch honesty, MCP-unavailable hold wording, and changed-path/log/artifact detective coverage; preventive `T4` pre-tool blocking only when a surface-specific fixture proves the hook, wrapper, sidecar, or permission layer can block the covered operation before execution
-- agency: Decision Packet required for blocking user-owned judgment, Decision Packet quality with display-depth-appropriate options or chosen outcome and higher-depth trade-offs/recommendation/uncertainty/deferral/residual-risk impact when required, user-owned product or material technical trade-off write guard, AFK Autonomy Boundary stop conditions, known close-relevant residual-risk visibility before any successful acceptance or close, `ResidualRiskSummary.status=none` for no known close-relevant risk, accepted Residual Risk refs whose risks were visible before acceptance for risk-accepted close, distinct Approval, Manual QA, verification waiver, acceptance, and residual-risk acceptance judgments
+- agency: user judgment required for blocking user-owned judgment, user judgment quality with display-depth-appropriate options or chosen outcome and higher-depth trade-offs/recommendation/uncertainty/deferral/residual-risk impact when required, user-owned product or material technical trade-off write guard, AFK Autonomy Boundary stop conditions, known close-relevant residual-risk visibility before any successful acceptance or close, `ResidualRiskSummary.status=none` for no known close-relevant risk, accepted Residual Risk refs whose risks were visible before acceptance for risk-accepted close, distinct Approval, Manual QA, verification waiver, acceptance, and residual-risk acceptance judgments
 - stewardship: shared design required, shared design continuation while key unknowns remain, codebase-answerable investigation before user questions, codebase stewardship close blockers, domain language conflicts, vertical slice or exception, feedback loop and TDD trace required, waived, or advisory, finding routing through existing owner paths, public interface module/interface review, public interface stewardship close blocker, generated-file or managed-block drift routed to reconcile, two-stage review display and close-blocker routing, Manual QA policy and waiver checks
 - context-hygiene: current-state bundle, compact profile-based context loading, stale projection and stale PRD handling, stale `TASK` projection write guard, stale chat memory and retrieved/indexed context pull-only behavior, evaluator bundle freshness, resume from current state rather than chat memory
 - design-quality: policy-pack smoke coverage that composes agency, stewardship, context-hygiene, and close-impact validators without redefining kernel authority, duplicating validator IDs, hiding lower-severity findings, or adding new gates

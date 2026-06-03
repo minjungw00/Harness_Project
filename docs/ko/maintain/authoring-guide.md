@@ -183,8 +183,8 @@ Tracker 상태 의미:
 | 사용자용 문서가 무거운 구현 disclaimer로 시작할 수 있습니다. | 확인 대상 후보. | 사용자 대상 Learn/Use 문서는 사용자가 무엇을 요청할 수 있는지, 에이전트가 무엇을 구체화해야 하는지, 하네스가 무엇을 보존하는지, 사용자가 무엇을 보게 되는지를 먼저 보여주는 사용자 흐름 우선 도입부를 선호합니다. 상세 단계와 상태 경고는 root README, 언어별 README, Build 인계 문서, Maintain 지침으로 보냅니다. 문서 안의 상태 메모는 짧게 유지합니다. |
 | 사용자용 문서에 내부 용어가 너무 많습니다. | 확인 대상 후보. | 사용자가 보는 상황을 먼저 설명하고, 내부 용어는 행동에 도움이 될 때만 소개합니다. |
 | 요구사항 탐색(discovery)과 확인이 Change Unit 또는 첫 안전한 구현 단위로 너무 빨리 수렴할 수 있습니다. | 확인 대상 후보. | 범위가 정해진 구현 단위를 요구하기 전에 초기 discovery, 공유 이해, 사용자 소유 판단의 여지를 남깁니다. |
-| 예전 판단 field alias mapping이 drift될 수 있습니다. | 설계 해소됨; 회귀 방지 점검. | 활성 담당 문서는 `judgment_category`, `judgment_route`, `display_depth`를 사용합니다. `judgment_domain`, `decision_kind`, `decision_profile`은 오래된 request shape를 위한 compatibility alias이지 사용자가 이해해야 하는 독립 축이 아닙니다. 새 예시는 활성 judgment 이름을 우선하고, 영향을 받는 gate나 막힌 행동은 별도의 owner field에 남깁니다. |
-| 작은 결정을 다루기에 Decision Packet schema와 예시가 너무 무거워 보일 수 있습니다. | 설계 해소됨; 회귀 방지 점검. | 작은 결정은 `minimal_decision`을 사용할 수 있습니다. Full trade-off, approval, waiver, acceptance, residual-risk, reconcile, mixed profile은 여전히 필요한 context를 포함해야 합니다. 이후 편집에서 모든 Decision Packet이 full trade-off field를 요구하도록 만들면 안 됩니다. |
+| 예전 판단 field alias mapping이 drift될 수 있습니다. | 설계 해소됨; 회귀 방지 점검. | 활성 담당 문서는 기준 이름인 `UserJudgment` / `user_judgment`, `harness.request_user_judgment`, `judgment_type`, `presentation`, `display_label`을 사용합니다. `request_user_decision`, `judgment_domain`, `decision_kind`, `decision_profile`, `judgment_category`, `judgment_route`, `display_depth`는 compatibility 또는 legacy 용어이지 사용자가 이해해야 하는 독립 축이 아닙니다. 새 예시는 기준 judgment 이름을 우선하고, 영향을 받는 gate나 막힌 행동은 별도의 owner field에 남깁니다. |
+| 작은 판단을 다루기에 Decision Packet schema와 예시가 너무 무거워 보일 수 있습니다. | 설계 해소됨; 회귀 방지 점검. | 작은 판단은 `presentation=short`를 사용하고 한 화면에 들어가야 합니다. Full-format Decision Packet presentation은 optional/later-profile이거나 복잡한 판단을 위한 형식입니다. 모든 사용자 소유 판단의 기본 prompt 구조가 되면 안 됩니다. |
 | Approval, 작업 수락, 잔여 위험 수용을 혼동하기 쉽습니다. | 회귀 방지 점검. | 민감 동작 승인, 작업 수락, 잔여 위험 수용을 예시와 routing text에서 분리합니다. |
 | Storage/DDL이 future-profile table, field, gate를 너무 이른 필수 범위처럼 보이게 할 수 있습니다. | 확인 대상 후보. | Reference schema에 존재한다는 사실과 단계별 구현 요구를 구분합니다. Required field는 담당 tool, record, profile이 활성 상태이거나 사용될 때 적용되며, 그 자체로 가장 작은 runnable slice를 키우지 않습니다. |
 | Conformance fixture 문서가 현재 구현 단계에 비해 너무 자세할 수 있습니다. | 확인 대상 후보. | Fixture 문서는 단계화된 향후 계획으로 유지합니다. 현재 executable fixture file이나 runnable Harness Server conformance test가 있다는 인상을 주지 않습니다. |
@@ -416,7 +416,7 @@ Maintain 문서는 documentation review rule, category label, reviewer expectati
 
 Maintainer가 문서 세트를 구현 계획에 사용할 수 있다고 받아들이기 전, 마지막 docs-maintenance pass를 수행합니다. 영어/한국어 활성 파일 맵 일치, 대응 파일의 의미 섹션 일치, 깨진 link와 anchor, owner-boundary drift, owner가 아닌 문서의 중복 contract, Approval, Decision Packet, Evidence, Verification, 수동 QA, Acceptance, Residual Risk, Projection, Guarantee Level 용어 drift, TODO hygiene를 확인합니다.
 
-[구현 개요](../build/implementation-overview.md#하네스-서버-구현-준비-조건)의 하네스 서버 구현 준비 조건도 확인합니다. 저장소 정체성, 내부 용어 부담 없는 사용자 대상 흐름, Change Unit 조기 수렴이 아닌 요구사항 확인으로서의 Discovery, 활성 judgment field와 mapped legacy alias, 결정 크기에 맞는 Decision Packet profile, Approval/작업 수락/잔여 위험 수용 분리, coherent stage, Kernel/API/storage/reference agreement, 단계화된 Storage/API scope, 단계화된 projection/template scope, 실제 보장 수준에 맞는 security wording, agent context strategy, 단계화되고 future-oriented인 conformance fixture plan, 단계화된 operations surface, 한국어 사용자 대상 문서 가독성, link/TODO/terminology 정리가 포함됩니다.
+[구현 개요](../build/implementation-overview.md#하네스-서버-구현-준비-조건)의 하네스 서버 구현 준비 조건도 확인합니다. 저장소 정체성, 내부 용어 부담 없는 사용자 대상 흐름, Change Unit 조기 수렴이 아닌 요구사항 확인으로서의 Discovery, canonical `user_judgment` naming과 mapped legacy alias, 판단 크기에 맞는 prompt, Approval/작업 수락/잔여 위험 수용 분리, coherent stage, Kernel/API/storage/reference agreement, 단계화된 Storage/API scope, 단계화된 projection/template scope, 실제 보장 수준에 맞는 security wording, agent context strategy, 단계화되고 future-oriented인 conformance fixture plan, 단계화된 operations surface, 한국어 사용자 대상 문서 가독성, link/TODO/terminology 정리가 포함됩니다.
 
 이 최종 리뷰도 편집 리뷰입니다. Maintainer handoff에 사용할 만큼 문서가 일관적인지 요약합니다. Runtime conformance, 기준 상태, evidence, QA, Acceptance, 잔여 위험 수용, close readiness, implementation readiness를 만들지 않습니다. Finding을 기록할 때는 기존 docs-maintenance reporting expectation을 사용하며, 이 최종 pass를 위한 새 필수 report format을 만들지 않습니다.
 
@@ -505,7 +505,7 @@ Result 의미:
 | 모든 projection template 본문과 표시 카드 형태 | `reference/templates/*.md` |
 | 설계 품질 정책 계약, validator ID, severity composition 규칙, 정책 waiver 의미, 근거 기대사항, close 영향 | `reference/design-quality-policies.md` |
 | User-facing conversation, status reading, user judgments, close checklist | `use/user-guide.md` |
-| 실용적인 사용자 소유 판단 예시와 사용자 대상 판단 요청 패턴 | 예시는 `use/decision-packet-cookbook.md`; 정확한 Decision Packet 동작은 `reference/kernel.md`와 `reference/mcp-api-and-schemas.md` |
+| 실용적인 사용자 소유 판단 예시와 사용자 대상 판단 요청 패턴 | 예시는 `use/decision-packet-cookbook.md`; 정확한 사용자 판단 동작은 `reference/kernel.md`와 `reference/mcp-api-and-schemas.md` |
 | User/agent session procedure | `use/agent-session-flow.md` |
 | Agent 접점 capability profiles, 공통 커넥터 계약, fallback 의미, Role Lens, connector conformance 개요 | `reference/agent-integration.md` |
 | 접점별 recipes | `reference/surface-cookbook.md` |

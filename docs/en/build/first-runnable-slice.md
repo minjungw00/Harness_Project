@@ -43,9 +43,9 @@ The slice should create or seed:
 
 This is a command-independent implementation guide. It describes capabilities and observable behavior, not CLI syntax. Do not include or duplicate full DDL here. Storage details and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
-For storage planning, use only the [Engineering Checkpoint schema](../reference/storage-and-ddl.md#core-authority-smoke-schema) for Engineering Checkpoint. Later storage profiles such as Decision Packets, Approvals, Evidence Manifests, Manual QA, Eval, projection jobs, reconcile items, validator runs, Journey records, and diagnostics are not first-slice requirements.
+For storage planning, use only the [Engineering Checkpoint schema](../reference/storage-and-ddl.md#core-authority-smoke-schema) for Engineering Checkpoint. Later storage profiles such as full user judgments, Approvals, Evidence Manifests, Manual QA, Eval, projection jobs, reconcile items, validator runs, Journey records, and diagnostics are not first-slice requirements.
 
-The first slice is deliberately not the MVP-1 User Work Loop, a product MVP, the hardened local reference target as a whole, natural-language intake, full Discovery, full Decision Packet, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, work-acceptance semantics, projection rendering, a projection-template-polish milestone, multiple projection kinds, dashboard or hosted-workflow-UI milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, operations/export/recover path, release handoff path, conformance runner, broad operator-entrypoint path, future fixture catalog, or parallel automation path.
+The first slice is deliberately not the MVP-1 User Work Loop, a product MVP, the hardened local reference target as a whole, natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, work-acceptance semantics, projection rendering, a projection-template-polish milestone, multiple projection kinds, dashboard or hosted-workflow-UI milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, operations/export/recover path, release handoff path, conformance runner, broad operator-entrypoint path, future fixture catalog, or parallel automation path.
 
 ## Success story
 
@@ -143,7 +143,7 @@ Planning focus:
 
 - Route the selected product-write attempt through the owner `prepare_write` path.
 - Allow exactly one compatible scoped write or return an owner-shaped blocker.
-- Keep candidate Approval or Decision Packet material as candidate context until the owning path commits it.
+- Keep candidate Approval or user judgment material as candidate context until the owning path commits it.
 
 Done when:
 
@@ -228,7 +228,7 @@ This slice does not prove the items below. They are stage boundaries, not failed
 | Later stage | Not yet proven by Engineering Checkpoint |
 |---|---|
 | MVP-1 User Work Loop | Ordinary-language start/resume, work-shape classification, natural-language intake quality, scope/non-goals/success criteria summary, minimal user judgment request/record, product/UX versus architecture judgment presentation, small direct vs tracked-work budgets, evidence summary, close blocker summary, residual-risk visibility, work-acceptance display, sensitive approval display, risk-acceptance display, compact Core-derived status card sufficiency. |
-| Assurance Profile | Profile-specific Decision Packet quality, full Approval lifecycle and drift handling, detached verification independence, Manual QA policy matrix, residual-risk accepted close, work-acceptance separation, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
+| Assurance Profile | Profile-specific user judgment quality, full Approval lifecycle and drift handling, detached verification independence, Manual QA policy matrix, residual-risk accepted close, work-acceptance separation, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
 | Operations Profile | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage, full projection/reconcile operations. |
 | Roadmap | Dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification automation, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow. |
 
@@ -242,7 +242,7 @@ Do not add fields to the fixture body to express suite stage, authoring order, o
 
 ## Reference docs to consult
 
-- [Kernel Reference](../reference/kernel.md): Task, Change Unit, Decision Packet, gates, `prepare_write`, Write Authorization, `record_run` semantics, and `close_task`.
+- [Kernel Reference](../reference/kernel.md): Task, Change Unit, User Judgment, gates, `prepare_write`, Write Authorization, `record_run` semantics, and `close_task`.
 - [Runtime Architecture Reference](../reference/runtime-architecture.md): three spaces, Core process model, transaction flow, artifact store, projection/reconcile, guarantee levels, and failure handling.
 - [MCP API And Schemas](../reference/mcp-api-and-schemas.md): public resources, tool envelopes, request/response schemas, error taxonomy, artifact refs, and `ProjectionKind`.
 - [Storage And DDL](../reference/storage-and-ddl.md): runtime layout, staged schema profiles, migrations, locks, artifacts, and later-profile baseline, projection-job, and validator-run candidates.
