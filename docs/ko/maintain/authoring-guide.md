@@ -80,6 +80,8 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 문서 파일은 Harness를 이해하고 구현하기 위한 원천 자료입니다. 향후 Harness Server가 명시적으로 projection으로 생성하지 않는 한 Harness projection이 아닙니다. 문서 페이지가 자신이 설명하는 런타임 생명주기를 따르게 만들지 않습니다. 생명주기는 설명하고, owner contract로 연결하며, 편집 점검은 편집 점검으로 유지합니다.
 
+문서 편집을 위한 path allowlist, 언어 쌍 batch, review batch boundary는 일반적인 maintainer editing control입니다. Harness runtime override capability, Core authorization, Write Authorization, evidence, QA, Acceptance, 잔여 위험 수용, close, projection, `task_events`, runtime state transition이 아닙니다.
+
 ### 재설계 편집 계약
 
 재설계 중에는 기존 문구 보존보다 명확성, 구현 가능성, 제품 명제를 우선합니다.

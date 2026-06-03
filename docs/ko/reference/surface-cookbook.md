@@ -83,7 +83,7 @@ common_fallbacks:
   - detective changed-path validation
   - manual artifact capture
   - manual verification bundle
-  - docs-authoring override only for exact pre-MVP docs allowlists
+  - Authoring Guide가 명시적으로 범위에 둔 non-runtime docs-maintenance edit만 진행하며, path allowlist와 batch boundary는 maintainer editing control로 취급
 conformance_risks:
   - 도구 실행 전 guard 강도는 host environment에 따라 달라지며 fixture로 입증해야 함
   - artifact capture may need a wrapper or explicit record_run discipline

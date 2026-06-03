@@ -80,6 +80,8 @@ Documentation editing in this repository does not require Harness runtime proced
 
 Documentation files are source material for understanding and implementing Harness. They are not Harness projections unless a future Harness Server explicitly generates them as projections. Do not make documentation pages obey the runtime lifecycle they describe; explain the lifecycle, link to owner contracts, and keep editorial checks editorial.
 
+Path allowlists, language-pair batches, and review batch boundaries for documentation edits are normal maintainer editing controls. They are not Harness runtime override capabilities, Core authorization, Write Authorization, evidence, QA, Acceptance, residual-risk acceptance, close, projections, `task_events`, or runtime state transitions.
+
 ### Redesign Editing Contract
 
 During redesign, optimize for clarity, implementability, and the product thesis, not for preserving existing wording.
