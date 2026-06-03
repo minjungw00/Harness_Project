@@ -46,7 +46,7 @@ A candidate cannot enter staged delivery unless a future owner decision defines 
 - preservation of user-owned judgment, including work acceptance, residual-risk acceptance, product judgment, material technical judgment, and QA waiver judgment where relevant
 - no bypass of Core authority, Core-owned state, artifact refs, gate semantics, close semantics, or owner-record lifecycles
 - stage-appropriate security guarantee wording that matches the Security Threat Model; preventive or isolation claims require a proven covered mechanism and fallback
-- clear evidence, verification, QA, final-acceptance, and residual-risk implications, including what the candidate can assist and what it must not satisfy
+- clear evidence, verification, QA, work acceptance, and residual-risk implications, including what the candidate can assist and what it must not satisfy
 - exact contracts and owner-doc placement for new API, storage, artifact, projection, fixture, operator, connector, or UI behavior
 - redaction, secret/PII handling, test-environment, and artifact-retention rules when the candidate captures or stores runtime surfaces
 - a fixture or conformance target for the promoted behavior

@@ -360,7 +360,7 @@ Always-on envelope contract:
 
 Attach only source refs or one-line summaries when relevant; do not add their bodies to the always-on envelope:
 
-- Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, Acceptance, Run, report, artifact, and residual-risk refs
+- Write Authorization, sensitive-action permission refs, approval-shaped Decision Packet refs in minimum v0.2, Approval refs only when the later Approval profile is active, evidence summary refs, Evidence Manifest refs only when that profile is active, Eval, Manual QA, work-acceptance, Run, report, artifact, and residual-risk refs
 - relevant policy, TDD trace, stewardship, module/interface, and domain refs only when the active profile or current question needs them
 
 Keep these refs-first and pull the body only when needed:
@@ -459,9 +459,9 @@ Same-session review may be useful self-checking, but it is not detached verifica
 
 ## AFK and Public Commitment Display
 
-AFK, unattended, or "continue while I am away" instructions are connector display and posture concerns; they do not create new authority. A connector should keep AFK work inside the active Change Unit, active Autonomy Boundary, granted sensitive-action Approvals, and compatible `prepare_write` / Write Authorization before actual product writes.
+AFK, unattended, or "continue while I am away" instructions are connector display and posture concerns; they do not create new authority. A connector should keep AFK work inside the active Change Unit, active Autonomy Boundary, granted sensitive-action permission, and compatible `prepare_write` / Write Authorization before actual product writes. Minimum v0.2 uses an approval-shaped Decision Packet for that permission; later Approval profiles may use Approval records.
 
-The surface should stop and show the smallest unblocker before scope expansion, an Autonomy Boundary breach, a new sensitive action without Approval, residual-risk acceptance, work acceptance, QA or verification waiver, public API or module contract change, release/support promise, documentation promise that changes what readers may rely on, or another public commitment that requires user-owned product or material technical judgment.
+The surface should stop and show the smallest unblocker before scope expansion, an Autonomy Boundary breach, a new sensitive action without compatible sensitive-action permission, residual-risk acceptance, work acceptance, QA or verification waiver, public API or module contract change, release/support promise, documentation promise that changes what readers may rely on, or another public commitment that requires user-owned product or material technical judgment.
 
 Display the stop according to the capability profile. On cooperative profiles, the connector instructs the agent to hold. On detective profiles, it may also describe after-action validation that can detect and report mismatches. Preventive wording is allowed only for operations covered by fixture-proven pre-tool blocking. Isolated wording is allowed only when the work uses the documented separation boundary named and proven by the connector profile.
 
@@ -516,8 +516,8 @@ Later profile scenarios:
 - one blocking question with recommendation and uncertainty when available
 - Decision Packet shown instead of broad approval for blocking user-owned judgment
 - public commitments route to Decision Packet or another existing owner path when they require user-owned product or material technical judgment
-- AFK work remains covered by active Change Unit scope, Autonomy Boundary latitude, any granted sensitive-action Approval that applies, and compatible `prepare_write` / Write Authorization before actual product writes, with stop wording matched to the proven guarantee level
-- sensitive-action Approval request, granted, denied, and expired paths
+- AFK work remains covered by active Change Unit scope, Autonomy Boundary latitude, any granted sensitive-action permission that applies, and compatible `prepare_write` / Write Authorization before actual product writes, with stop wording matched to the proven guarantee level
+- sensitive-action permission request, granted, denied, and expired paths; minimum v0.2 uses approval-shaped Decision Packets, while later Approval profiles may use Approval records
 - `record_run` with artifacts and evidence update
 - `DIRECT-RESULT` projection
 - verification launch or manual verification bundle

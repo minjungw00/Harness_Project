@@ -506,9 +506,9 @@ Feedback Loop는 선택된 루프와 루프 발견사항을 위한 기준 근거
 
 ## AFK 작업과 공개 약속
 
-사용자가 자리를 비운 동안 계속하라고 했더라도, 그것은 이미 기록된 latitude를 쓰라는 뜻이지 새 권한을 만든다는 뜻이 아닙니다. 에이전트는 active Change Unit, active Autonomy Boundary, granted 민감 동작 승인, 각 제품 파일 쓰기에 맞는 `prepare_write` / 쓰기 허가 기록 안에서만 계속할 수 있습니다.
+사용자가 자리를 비운 동안 계속하라고 했더라도, 그것은 이미 기록된 latitude를 쓰라는 뜻이지 새 권한을 만든다는 뜻이 아닙니다. 에이전트는 active Change Unit, active Autonomy Boundary, 허가된 민감 동작 permission, 각 제품 파일 쓰기에 맞는 `prepare_write` / 쓰기 허가 기록 안에서만 계속할 수 있습니다. Minimum v0.2에서는 이 permission을 Approval 형태 Decision Packet으로 표현하고, later Approval profile은 Approval record를 사용할 수 있습니다.
 
-범위 확장, 민감 동작 승인 없는 새 민감 동작, Autonomy Boundary 위반, 잔여 위험 수용, 작업 수락, QA 또는 검증 면제 판단, 공개 API 또는 모듈 계약 변경, 공개 의미에 영향을 주는 도메인 언어 변경, 릴리스/지원 약속, 사용자나 다른 시스템이 의존할 수 있는 다른 공개 약속 전에는 멈추고 가장 작은 해소 방법을 보여줘야 합니다.
+범위 확장, compatible 민감 동작 permission 없는 새 민감 동작, Autonomy Boundary 위반, 잔여 위험 수용, 작업 수락, QA 또는 검증 면제 판단, 공개 API 또는 모듈 계약 변경, 공개 의미에 영향을 주는 도메인 언어 변경, 릴리스/지원 약속, 사용자나 다른 시스템이 의존할 수 있는 다른 공개 약속 전에는 멈추고 가장 작은 해소 방법을 보여줘야 합니다.
 
 AFK stop을 보여줄 때는 보장 수준을 이름 붙입니다. 협력형 또는 탐지형 접점에서 "멈춤"은 지시에 따른 보류이거나, 프로필이 지원할 때 실행 뒤 감지 및 보고가 가능하다는 뜻입니다. 해당 동작에 대해 연결된 프로필이 도구 실행 전 차단을 입증한 경우에만 사전 차단 표현을 씁니다. Careful mode는 진행 자세를 좁힐 수 있지만 새 권한 계층이 아닙니다.
 

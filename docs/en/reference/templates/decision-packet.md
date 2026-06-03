@@ -15,11 +15,11 @@ Implementation tier: User judgment prompt shape. Use it for the Decision Packet 
 - `judgment_category`, `judgment_route`, and `display_depth`
 - display judgment type derived from `judgment_category`, `judgment_route`, `display_depth`, and related owner records
 - related `decision_gate` state and decision events
-- `approval_scope` for approval-shaped decisions, plus Approval records only when a later Approval profile is active
+- `approval_scope` and approval-shaped Decision Packet refs for minimum v0.2 sensitive-action permission, plus Approval records only when a later Approval profile is active
 - related reconcile records, if applicable
 - residual risk refs
-- evidence and artifact refs
-- Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, work-acceptance context, Artifact refs, redaction state, and projection freshness when displayed as related authority context
+- evidence summaries, Run refs, ArtifactRefs, and visible evidence gaps in minimum v0.2; Evidence Manifest refs only when the full Evidence Manifest profile is active
+- Write Authorization, sensitive-action permission, Eval, Manual QA, work-acceptance context, residual-risk refs, ArtifactRefs, redaction state, and projection freshness when displayed as related authority context
 - affected scope display inputs: product areas, screens or flows, modules, interfaces, paths, acceptance criteria, gates, and sensitive categories
 - projection freshness inputs
 
@@ -148,7 +148,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - current gates:
 - latest evidence:
 - residual risk:
-- source refs: decision={decision_packet_id}; write={write_authorization_ref|none}; approval={approval_refs|none}; evidence={evidence_manifest_ref|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
+- source refs: decision={decision_packet_id}; write={write_authorization_ref|none}; sensitive_action_permission={approval_shaped_decision_packet_ref|approval_ref_when_profile_active|none}; evidence={evidence_summary_ref|evidence_manifest_ref_when_profile_active|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 
 ## Judgment Category, Route, And Display Depth
 - judgment_category: product_ux | technical_architecture | security_privacy | scope_autonomy | qa_verification | work_acceptance | residual_risk | mixed
@@ -291,7 +291,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 This template is a rendered shape, not canonical state. Decision Packet visibility required by the active stage/profile can come through the compact status card, status/next responses, judgment-context resources, decision-packet resources, or a dedicated prompt. `TASK` may also show it when a later continuity profile is active. Standalone `DEC` projection remains optional.
 
-Decision Packet projections should keep authority context refs compact and explicit. Displaying a Write Authorization, Approval, Evidence Manifest, Eval, Manual QA, work acceptance, residual-risk visibility, residual-risk acceptance, artifact, redaction, or freshness ref in this template does not make the packet prose the authority for that record.
+Decision Packet projections should keep authority context refs compact and explicit. Displaying a Write Authorization, sensitive-action permission ref, evidence summary, Evidence Manifest when its profile is active, Eval, Manual QA, work acceptance, residual-risk visibility, residual-risk acceptance, artifact, redaction, or freshness ref in this template does not make the packet prose the authority for that record.
 
 Decision Packet cards should display one judgment type at a time. Approval cards use sensitive-action approval language, work-acceptance prompts use work-acceptance language, and residual-risk acceptance prompts name the specific risk being accepted.
 
