@@ -12,6 +12,21 @@ The core conformance model, exact fixture body, execution rules, assertion seman
 
 Future catalog scenarios become executable only after an owner promotes the behavior, identifies the delivery stage or local suite, and materializes exact-shape fixtures that prove Core-owned state and artifact assertions. Projection output may be checked for freshness, readability, and availability, but it must not replace Core state or become conformance truth.
 
+## Catalog-Only Future Families
+
+The families below are intentionally parked in this catalog. They are not required for v0.1 Core Authority Slice or v0.2 User-Facing Harness MVP, and the catalog listing alone does not make them stage-required later. A future owner must promote the exact behavior, stage, fallback, security wording, and exact-shape fixtures before any row becomes executable conformance.
+
+| Future family | Catalog boundary |
+|---|---|
+| Full Manual QA | Full policy matrix, browser/manual capture expansion, QA waiver detail, and QA dashboards stay future or v0.3+ owner-profile scope. v0.2 may show a missing-QA or evidence blocker only when a minimal active profile requires it. |
+| Eval systems and detached verification automation | Cross-surface/evaluator orchestration, Eval detail reports, same-session independence hardening, and assurance upgrades stay future or v0.3+ owner-profile scope. v0.2 only requires honest non-claiming unless a compatible verification record actually exists. |
+| TDD trace and feedback-loop policy | RED/GREEN trace, feedback-loop execution policy, and policy-specific test-path fixtures stay future or v0.3+ owner-profile scope. |
+| Module map and interface contract | Domain/module/interface stewardship fixtures stay future catalog candidates until owner docs promote exact records and validators. |
+| Journey, Spine, and detailed report projections | Journey Card, Journey Spine, Run Summary, detailed Evidence Manifest, detailed Eval, and polished report projections are derived-output candidates; they do not become state or MVP-required projection kinds. |
+| Export, recover, release handoff, and artifact-integrity operations | Operations fixtures for export/recover, release handoff, retention, redaction export, and artifact checks stay v0.4+ or promoted owner-profile scope. |
+| Dashboard, team workflow, and orchestration fixtures | Hosted UI, dashboard, shared/team workflow, permission, parallel-lane, and orchestration fixtures stay roadmap candidates until promoted. |
+| Advanced connector and security fixtures | Broad connector ecosystems, remote/shared MCP, browser capture automation, preventive guards, isolated profiles, hooks, sidecars, and higher security claims require owner-defined mechanisms and fixture proof for the covered operation before promotion. |
+
 ## Artifact Redaction And Export Non-Leakage Catalog Entries
 
 These catalog rows are future scenario guidance. They become executable only when a promoted owner path materializes exact-shape fixtures that assert artifact metadata, owner links, redaction state, integrity, and downstream state effects without exposing omitted secret or PII values.

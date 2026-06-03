@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference to look up the core conformance model for future Harness Server runtime tests: what conformance proves, exact fixture body shape, runner execution behavior, fixture assertion semantics, current-phase status, the narrow Kernel Smoke authoring order, and the boundary to the future fixture catalog.
+Use this reference to look up the core conformance model for future Harness Server runtime tests: what conformance proves, the small v0.1 and v0.2 fixture sets, exact fixture body shape, runner execution behavior, fixture assertion semantics, current-phase status, and the boundary to the future fixture catalog.
 
 This is a lookup document for conformance authors, implementers, and maintainers. It is not an operator procedure; use [Operations And Conformance Reference](operations-and-conformance.md) for operator entrypoints and the `harness conformance run` overview.
 
@@ -13,7 +13,7 @@ This is reference documentation for future conformance work. The current reposit
 - You are writing or reviewing the future fixture-based conformance design.
 - You need the exact fixture body fields, seed expansion limits, `ToolEnvelope` expansion convention, or runner isolation behavior.
 - You need fixture assertion modes for state, events, artifacts, projections, errors, validators, close blockers, and redaction effects.
-- You need the small v0.1 Kernel Smoke authoring queue or the boundary between the core conformance model and the future fixture catalog.
+- You need the small v0.1 Core Authority Slice fixture set, the v0.2 User-Facing Harness MVP fixture set, the clarification-quality group, or the boundary between these sets and the future fixture catalog.
 
 ## Before you read
 
@@ -21,9 +21,9 @@ Use [Operations And Conformance Reference](operations-and-conformance.md#conform
 
 ## Main idea
 
-Today this document is a future conformance design, not a set of runnable tests. Do not create actual fixture files from these examples during the documentation-only phase.
+Today this document is a future conformance design, not a set of runnable tests. It defines candidate fixture IDs and required behavior for later implementation planning; it does not create fixture files, runner code, generated outputs, runtime state, or a runnable Harness Server conformance suite. Do not create actual fixture files from these examples during the documentation-only phase.
 
-Conformance has two conceptual layers: the core conformance model in this file, and the [Future Fixture Catalog](future-fixture-catalog.md) for detailed later scenarios. The core model stays small enough to explain v0.1 Kernel Smoke without making later catalog coverage look like an early implementation requirement.
+Conformance has two conceptual layers: the core conformance model and small staged fixture sets in this file, and the [Future Fixture Catalog](future-fixture-catalog.md) for detailed later scenarios. The core model stays small enough to explain v0.1 Kernel Smoke and v0.2 user-facing value without making later catalog coverage look like an early implementation requirement.
 
 After implementation begins, conformance will prove Harness behavior with executable fixtures. A passing runtime fixture will drive a Core or operator action and compare captured Core/API or operator results against structured expectations.
 
@@ -44,7 +44,7 @@ This document owns:
 - isolated fixture execution behavior
 - fixture assertion semantics and comparison modes
 - suite catalog metadata boundaries
-- fixture profiles by behavior proved and the reduced Kernel Smoke authoring queue
+- fixture profiles by behavior proved, the reduced v0.1/v0.2 fixture sets, and the reduced Kernel Smoke authoring queue
 - current-phase status and the boundary between runtime conformance and docs-maintenance checks
 - links to the future-oriented catalog without making its scenarios v0.1 or v0.2 requirements
 
@@ -59,6 +59,7 @@ This reference does not own operator command procedures, docs-maintenance report
 | The exact fixture body fields | [Conformance Fixture Format](#conformance-fixture-format) |
 | How a runner loads, seeds, executes, captures, and compares | [Conformance Execution](#conformance-execution) |
 | Default comparison modes for `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error` | [Fixture Assertion Semantics](#fixture-assertion-semantics) |
+| Small stage fixture sets | [v0.1 Core Authority Slice Fixture Set](#v01-core-authority-slice-fixture-set), [v0.2 User-Facing Harness MVP Fixture Set](#v02-user-facing-harness-mvp-fixture-set), and [Clarification Quality Fixture Group](#clarification-quality-fixture-group) |
 | Suite intent and authoring order | [Conformance staging](operations-and-conformance.md#conformance-staging), [Kernel Smoke Authoring Queue](#kernel-smoke-authoring-queue), and [Future Fixture Catalog: Fixture Suites](future-fixture-catalog.md#fixture-suites) |
 | Core model and current-phase boundary | [Core Conformance Model](#core-conformance-model) and [Fixture Current-Phase Status](#fixture-current-phase-status) |
 | Future fixture examples by concern | [Future Fixture Catalog](future-fixture-catalog.md) |
@@ -84,10 +85,60 @@ The hardened local reference target is an umbrella target reached through v0.3 A
 
 | Profile | Stage name | Behavior proved | Out of scope for that profile |
 |---|---|---|---|
-| Core Authority Slice fixtures, with Kernel Smoke as the authoring label | v0.1 Core Authority Slice | Minimal authority loop only: one local project registration, one Task, one scoped work boundary, `prepare_write` allow/block, one durable single-use Write Authorization, one compatible `record_run`, one artifact/evidence ref, and one structured status/blocker response. | User-facing MVP value, profile-specific Decision Packet quality, full Evidence Manifest, projection renderer support, multiple projection kinds, residual-risk acceptance semantics, work acceptance semantics, Manual QA, detached verification, export/recover, release handoff, full conformance suite, future fixture catalog, higher guard guarantees, and broad operations. |
-| user-facing MVP fixtures | v0.2 User-Facing Harness MVP | Ordinary user requests route into scope, user-owned judgment, evidence, close-readiness, work acceptance separation, residual-risk visibility, and readable derived summaries without requiring Harness vocabulary. | Full agency assurance hardening, detached verification independence, Manual QA matrix, stewardship policy suite, export/recover, release handoff, and automation beyond the MVP path. |
+| Core Authority Slice fixtures, with Kernel Smoke as the authoring label | v0.1 Core Authority Slice | Minimal authority loop only: project/Task/scope setup, in-scope `prepare_write` allow, out-of-scope write block from Harness authority state, durable single-use Write Authorization, compatible `record_run` consumption/linking, missing artifact/evidence blocker/status, and non-mutating status read. | User-facing MVP value, profile-specific Decision Packet quality, full Evidence Manifest, projection renderer support, multiple projection kinds, residual-risk acceptance semantics, work acceptance semantics, Manual QA, detached verification, export/recover, release handoff, full conformance suite, future fixture catalog, higher guard guarantees, and broad operations. |
+| User-Facing Harness MVP fixtures | v0.2 User-Facing Harness MVP | Ordinary requests become tracked work without Harness vocabulary; clarification quality, judgment separation, evidence blockers, residual-risk visibility, honest authority/fallback behavior, and derived-summary non-authority are visible through Core-owned state and structured responses. | Full agency assurance hardening, detached verification independence, full Manual QA matrix, stewardship policy suite, TDD/module/interface catalogs, export/recover, release handoff, and automation beyond the MVP path. |
 | Agency Assurance Pack fixtures | v0.3 Agency Assurance Pack | User-owned judgment, Approval, Write Authorization, Manual QA, verification, work acceptance, residual-risk acceptance, stewardship, design-quality, context-hygiene, TDD, and feedback-loop boundaries stay separate and fixture-proven through Core records. | Operator recovery/export completeness, release handoff, broad operations coverage, dashboard/hosted workflow UI, broad connector automation, and unproven preventive or isolated guarantee claims. |
 | Operations & Handoff Pack / promoted-expansion fixtures | v0.4 Operations & Handoff Pack and v1+ Expansion | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, and any promoted future higher guarantee level or automation profile. | Any stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, or automation claim until owner docs define the mechanism and fixtures prove the covered behavior. |
+
+## Small Staged Fixture Sets
+
+The fixture sets below are documentation/specification targets for future executable fixtures. They are intentionally short and testable so early conformance stays focused on Harness differentiation: local authority state, user-owned judgment routing, evidence and risk visibility, and honest guarantee wording. They are not fixture files today, and they do not require the broad future catalog to pass v0.1 or v0.2.
+
+### v0.1 Core Authority Slice Fixture Set
+
+v0.1 fixtures prove only the first local authority loop. Each candidate must assert Core-owned state, events when stable owner events exist, artifact refs where relevant, and structured errors or blockers. Projection assertions default to no requirement.
+
+| Fixture ID | Primary action | Required behavior assertion |
+|---|---|---|
+| `CORE-v01-project-task-scope-setup` | owner setup path, `harness.intake`, or validated seed path | One local project, one active Task, and one scoped work boundary exist in Core-owned state; setup alone creates no Write Authorization and no product-write Run. |
+| `CORE-v01-prepare-write-in-scope-allowed` | `harness.prepare_write` | A compatible in-scope product-write request returns no primary error and creates one durable Write Authorization tied to the Task, scope/Change Unit, intended operation, and basis state version. |
+| `CORE-v01-prepare-write-out-of-scope-blocked` | `harness.prepare_write` | An out-of-scope intended write is refused by Harness authority state with a structured blocker or `SCOPE_VIOLATION`-equivalent primary error; no Write Authorization, Run, artifact, projection job, or state-authorizing side effect is created. |
+| `CORE-v01-write-authorization-single-use` | `harness.record_run` | The first compatible product-write Run may consume an unconsumed authorization; a second distinct Run using the same authorization is blocked with `WRITE_AUTHORIZATION_CONSUMED`, `WRITE_AUTHORIZATION_INVALID`, or owner-equivalent error, and no second consumption is recorded. |
+| `CORE-v01-record-run-consumes-and-links-authorization` | `harness.record_run` | A compatible Run records observed work, links `consumed_by_run_id` or the owner-equivalent relation to the Write Authorization, and preserves the authorization basis instead of treating chat/tool output as authority. |
+| `CORE-v01-missing-artifact-evidence-ref-blocker` | `harness.status`, narrow `harness.close_task` smoke, or owner blocker read | Missing required artifact/evidence support is reported as structured status/blocker state such as `ARTIFACT_MISSING` or `EVIDENCE_INSUFFICIENT`; rendered prose or Markdown cannot satisfy the missing ref. |
+| `CORE-v01-status-read-no-mutation` | `harness.status` or `harness.next` read | Status returns current Task, scope, write-authority summary, evidence/artifact support, blockers, and state version without appending events, creating artifacts, enqueueing projections, authorizing writes, satisfying evidence, or closing work. |
+
+### v0.2 User-Facing Harness MVP Fixture Set
+
+v0.2 fixtures prove user-visible Harness value without growing into the broad assurance or operations catalog. These candidates may use `harness.intake`, `harness.status`, `harness.next`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.prepare_write`, `harness.record_run`, and `harness.close_task` where those methods are active for the stage.
+
+| Fixture ID | Required behavior assertion |
+|---|---|
+| `MVP-v02-natural-language-starts-tracked-work` | Ordinary user language starts or resumes tracked work without requiring "Harness," `Task`, `Change Unit`, `Decision Packet`, or another startup phrase; the request alone does not authorize product writes. |
+| `MVP-v02-codebase-answerable-facts-checked-before-question` | Current seeded repo/codebase refs, Harness state refs, or connector/session facts are used before asking the user to repeat facts that are already answerable; unresolved user-owned judgments still route to focused questions. |
+| `MVP-v02-product-ux-and-architecture-judgments-separated` | Product/UX judgment and material technical architecture judgment are represented as separate user-owned routes or candidates, distinct from sensitive-action Approval, work acceptance, and residual-risk acceptance. |
+| `MVP-v02-small-typo-direct-change-stays-light` | A small typo or direct change keeps a light procedural budget while still preserving scope, write authority where product writes apply, evidence/self-check support, and any relevant user-owned judgment. |
+| `MVP-v02-ambiguous-feature-enters-clarification` | An ambiguous feature request enters clarification or Decision Packet routing instead of premature implementation or broad approval. |
+| `MVP-v02-missing-user-judgment-blocks-write-or-close` | When a relevant product, UX, architecture, work-acceptance, or risk judgment is missing, affected write or close is blocked through structured Core/API results. |
+| `MVP-v02-missing-evidence-blocks-close-when-required` | When the active profile requires evidence, missing evidence or artifact refs block close with structured status/blockers rather than report prose. |
+| `MVP-v02-residual-risk-visible-before-acceptance-risk-close` | Known close-relevant residual risk is visible before successful work acceptance or risk-accepted close; hidden or stale risk blocks the relevant route. |
+| `MVP-v02-ambiguous-go-ahead-does-not-resolve-route` | Ambiguous consent phrases such as "go ahead," "looks good," "좋아," or "진행해" do not resolve ambiguous user-judgment routes, waive evidence, accept residual risk, or authorize out-of-scope work. |
+| `MVP-v02-mcp-core-unavailable-does-not-fabricate-authority` | If MCP/Core is unavailable, the surface reports inability to read or mutate authority state and does not fabricate Task state, Write Authorization, evidence, close readiness, approval, or acceptance. |
+| `MVP-v02-projection-template-output-not-state` | Projection, template, status-card, or Markdown output remains derived; reading or editing it cannot create state, satisfy gates, authorize writes, attach evidence, accept work/risk, or close a Task. |
+| `MVP-v02-detached-verification-not-claimed-unless-recorded` | Detached verification is not claimed unless the active profile requires it and a compatible recorded Eval or owner verification path exists; same-session review or prose alone does not upgrade assurance. |
+
+### Clarification Quality Fixture Group
+
+Clarification-quality fixtures belong to the user-facing MVP path when they prove that Harness asks for user judgment without substituting for it. Deeper policy-specific Decision Packet coverage remains v0.3 unless a v0.2 path needs a minimal blocker.
+
+| Fixture ID | Required behavior assertion |
+|---|---|
+| `CLARIFY-codebase-answerable-question-not-asked` | The system does not ask the user for facts already available in current seeded repo/codebase refs, Harness state refs, or connector/session facts. |
+| `CLARIFY-unclear-requirements-not-one-superficial-question` | When requirements remain materially unclear, the system does not stop after one superficial question or proceed as if scope is settled. |
+| `CLARIFY-no-long-questionnaire-dump` | Clarification does not dump a long questionnaire; it asks the smallest useful set for the next safe action. |
+| `CLARIFY-blocking-vs-useful-questions-separated` | Blocking questions are separated from useful-but-not-blocking questions so the user can tell what prevents write or close. |
+| `CLARIFY-user-owned-judgment-choices-and-consequences` | User-owned judgments present choices, consequences, and any recommended route without broad approval language substituting for the judgment. |
+| `CLARIFY-product-and-technical-decisions-separated` | Product/UX decisions and material technical architecture decisions are separated when they ask the user to own different kinds of judgment. |
 
 ## Conformance Fixture Format
 
@@ -282,21 +333,21 @@ Detailed future catalog scenarios live in [Future Fixture Catalog](future-fixtur
 
 ## Kernel Smoke Authoring Queue
 
-Use this queue as future authoring guidance for v0.1 Core Authority Slice smoke-check candidates. Kernel Smoke is the narrow authoring label for the first internal authority loop, not the product MVP, not a full conformance suite, and not the future fixture catalog. These rows do not imply executable fixture files already exist. They are a compact authoring order; a first implementation plan may materialize only the smallest subset that proves the one authority loop named by Build.
+Use this queue as future authoring guidance for the [v0.1 Core Authority Slice Fixture Set](#v01-core-authority-slice-fixture-set). Kernel Smoke is the narrow authoring label for the first internal authority loop, not the product MVP, not a full conformance suite, and not the future fixture catalog. These rows do not imply executable fixture files already exist. They are a compact authoring order; a first implementation plan may materialize only the smallest subset that proves the one authority loop named by Build.
 
-Kernel Smoke should default to no projection requirement. A fixture may assert projection freshness or enqueue/failure facts only when the minimal owner path already produces those facts and they help prove the target behavior. Projection-template polish, detailed report templates, multiple projection kinds, browser QA capture, export/recover, reconcile, stewardship, context hygiene, full operations, and future guarantee-level fixtures stay outside v0.1 unless owner docs later promote a specific narrow path.
+Kernel Smoke defaults to no projection requirement. A fixture may assert projection freshness or enqueue/failure facts only when the minimal owner path already produces those facts and they help prove the target behavior. Projection-template polish, detailed report templates, multiple projection kinds, browser QA capture, export/recover, reconcile, stewardship, context hygiene, full operations, and future guarantee-level fixtures stay outside v0.1 unless owner docs later promote a specific narrow path.
 
 In the table, `None` means the existing fixture field stays empty or `expected_error: null`; it is not a new sentinel value.
 
 | Queue | Fixture candidate | Intended Core or operator action | Minimum seeded records | Main expected state assertion | Expected stable event assertion | Expected artifact assertion | Expected projection assertion | Expected primary error |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `CORE-project-registration` | `connect`, project registration, or owner registration action | Empty or unregistered isolated runtime home and temporary Product Repository | One local project is registered idempotently; registration alone creates no active Task and no Write Authorization | Registration event only when the owner stable event catalog defines one | None | No projection requirement | None |
-| 2 | `CORE-task-one-active-record` | `harness.intake`, task creation owner path, or validated seed path | Registered local project; no active Task | One active Task exists with lifecycle phase, state version, minimal gate/status state, and no Write Authorization from Task creation alone | None for ordinary create unless the owner stable event catalog promotes one | None | No projection requirement; `TASK` enqueue is allowed only if the owner path already invalidates projections | None |
-| 3 | `CORE-scope-boundary-one-path` | Owner scope action or `harness.record_run` with `kind=shaping_update` if that is the minimal owner path | Active Task with current state version; no product-write Run | One active scope or Change Unit constrains the selected path/tool/command; scope itself does not create write authority | `run_recorded` only when a shaping Run is committed, or owner-promoted scope event if defined | None unless the shaping update registers a context artifact through `ArtifactInput` | No projection requirement; `TASK` stale/enqueued is allowed when state changes | None |
-| 4 | `CORE-prepare-write-allowed-creates-write-authorization` | `harness.prepare_write` | Active Task, compatible scope, compatible baseline if required, compatible surface guarantee, no unresolved seeded required judgment | Durable Write Authorization is created for the compatible Task, scope/Change Unit, intended operation, `basis_state_version`, status, and `consumed_by_run_id=null` | `prepare_write_allowed`, `write_authorization_created` when those stable events are promoted | None | No projection requirement; `TASK` stale/enqueued is allowed if state changes | None |
-| 5 | `CORE-record-run-consumes-write-authorization` | `harness.record_run` with `kind=direct` or `kind=implementation` | Active Task, compatible scope, compatible unconsumed Write Authorization, baseline if required | Run commits once and consumes the supplied Write Authorization; a second distinct Run cannot reuse the consumed authorization | `run_recorded`, `write_authorization_consumed` when promoted; no stable event for pre-commit reuse rejection unless owner catalog promotes one | None unless the Run also registers an artifact | No projection requirement; no projection job for pre-commit rejection | None for first use; `WRITE_AUTHORIZATION_CONSUMED`, `WRITE_AUTHORIZATION_INVALID`, or owner-equivalent error for reuse |
-| 6 | `CORE-record-run-registers-artifact-evidence-ref` | `harness.record_run` | Active Task, compatible scope, compatible Write Authorization if product-write, staged artifact or evidence input | Run or minimal owner relation links one registered `ArtifactRef` or equivalent evidence ref with integrity/redaction metadata and same-Task ownership | `run_recorded`; evidence/artifact event only when promoted by owner catalog | Registered `ArtifactRef` or owner evidence ref with hash/size/content-type/redaction metadata where applicable | No projection requirement; `TASK` stale/enqueued is allowed if state changes | None |
-| 7 | `CORE-status-structured-blocker-and-idempotency-minimal` | `harness.status`, `harness.next` if implemented for the smoke path, or one minimal state-conflict/idempotency tool call | Active Task with current scope/write-authority/evidence summary, or a seeded stale/idempotent request case | Read returns current Task, scope, write authority, artifact/evidence support, blockers, and no mutation; minimal stale/idempotent case preserves Core state and replay semantics | None for read-only status; no stable events for rejected stale request unless owner catalog promotes one | None | No projection enqueue from read-only status/blocker output | None for status; `STATE_CONFLICT` or owner-equivalent conflict for the minimal stale/idempotency case |
+| 1 | `CORE-v01-project-task-scope-setup` | Owner setup path, `harness.intake`, or validated seed path | Registered local project, or empty isolated runtime home if the setup action registers it | One local project, one active Task, and one scoped work boundary exist; setup alone creates no Write Authorization or product-write Run | Owner-promoted setup events only | None | No projection requirement | None |
+| 2 | `CORE-v01-prepare-write-in-scope-allowed` | `harness.prepare_write` | Active Task, compatible scope, compatible baseline if required, compatible surface guarantee, no unresolved required judgment | One durable Write Authorization is created for the compatible Task, scope/Change Unit, intended operation, `basis_state_version`, status, and `consumed_by_run_id=null` | `prepare_write_allowed`, `write_authorization_created` only when stable events are promoted | None | No projection requirement; `TASK` stale/enqueued is allowed only if the owner path already invalidates projections | None |
+| 3 | `CORE-v01-prepare-write-out-of-scope-blocked` | `harness.prepare_write` | Active Task with scoped boundary that excludes the requested path/tool/operation | Out-of-scope intended write is blocked by Harness authority state; no Write Authorization, Run, artifact, or state-authorizing side effect is created | No stable event for pre-commit rejection unless owner catalog promotes one | None | No projection job for pre-commit rejection | `SCOPE_VIOLATION` or owner-equivalent structured blocker/error |
+| 4 | `CORE-v01-write-authorization-single-use` | `harness.record_run` | Active Task, compatible scope, compatible Write Authorization already consumed by a prior Run | Reuse of a consumed authorization is blocked; the original consumed relation remains unchanged and no second Run is committed | No stable event for pre-commit reuse rejection unless owner catalog promotes one | None | No projection job for pre-commit rejection | `WRITE_AUTHORIZATION_CONSUMED`, `WRITE_AUTHORIZATION_INVALID`, or owner-equivalent error |
+| 5 | `CORE-v01-record-run-consumes-and-links-authorization` | `harness.record_run` with `kind=direct` or `kind=implementation` | Active Task, compatible scope, compatible unconsumed Write Authorization, baseline if required | Run commits once, records observed work, and links consumption to the supplied Write Authorization | `run_recorded`, `write_authorization_consumed` only when promoted | None unless the Run also registers an artifact | No projection requirement; `TASK` stale/enqueued is allowed if state changes | None |
+| 6 | `CORE-v01-missing-artifact-evidence-ref-blocker` | `harness.status`, narrow `harness.close_task` smoke, or owner blocker read | Active Task whose current path requires artifact/evidence support but has no compatible ref | Missing artifact/evidence support is visible as structured blocker/status; report prose, Markdown, or tool text does not satisfy the ref | `close_blocked` only when a close-task smoke is the owner path and stable event is promoted | None | No projection requirement | `ARTIFACT_MISSING`, `EVIDENCE_INSUFFICIENT`, or owner-equivalent blocker/error |
+| 7 | `CORE-v01-status-read-no-mutation` | `harness.status` or `harness.next` read | Active Task with current scope, write-authority summary, and artifact/evidence summary | Read returns current state, blockers, and state version without appending events, creating artifacts, enqueueing projections, authorizing writes, satisfying evidence, or closing work | None | None | No projection enqueue from read-only status/blocker output | None |
 
 The queue above is intentionally small. v0.1 does not require a full conformance suite, broad catalog family coverage, work acceptance semantics, Manual QA, detached verification, export/recover, reconcile, stewardship, context hygiene, browser QA capture, or future guarantee-level checks.
 

@@ -188,7 +188,7 @@ maintainer 수락 조건:
 | 경계 | 증명하는 것 | 사용자 또는 운영자가 관찰할 수 있는 것 |
 |---|---|---|
 | 코어 권한 조각(v0.1 Core Authority Slice) | 하나의 로컬 Task가 첫 Core 권한 루프를 통과할 수 있음을 증명합니다. 여기에는 local project registration, Task, Reference 계약상 필요한 경우에만 Change Unit 소유자 형태로 표현되는 범위가 정해진 작업 경계 하나, `prepare_write`, single-use 쓰기 허가 기록, `record_run`, artifact/evidence ref 하나, 구조화된 막힘/상태 응답이 포함됩니다. | 상태/막힘 출력이 현재 Task, scope, 쓰기 권한, artifact/evidence support, blocker를 보여 줍니다. `prepare_write`가 범위 밖 쓰기 권한을 거절하고, 호환되는 scoped work는 권한을 받아 한 번만 사용되며, scope, write authority, 또는 artifact/evidence support가 없으면 status 또는 좁은 close-task smoke가 구조화된 막힘과 함께 거절합니다. |
-| 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 평범한 사용자 작업이 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 언어로 정리됨을 증명합니다. | 사용자는 제품/UX 판단과 기술 구조 판단이 분리되고, small change와 tracked work가 서로 다른 procedural budget을 쓰며, 근거 또는 필요한 사용자 소유 판단이 없으면 close가 block되고, 잔여 위험이 표시되며, 작업 수락이 Approval과 잔여 위험 수용과 구분되는 것을 볼 수 있습니다. |
+| 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | 평범한 사용자 작업이 범위, 사용자 소유 판단, 근거, 닫기 준비 상태, 작업 수락, 잔여 위험 언어로 정리됨을 증명합니다. | 사용자는 제품/UX 판단과 기술 구조 판단이 분리되고, 사용자에게 묻기 전에 codebase-answerable fact가 확인되며, small change와 tracked work가 서로 다른 procedural budget을 쓰고, ambiguous feature request가 clarification으로 보류되며, 근거 또는 필요한 사용자 소유 판단이 없으면 close가 block되고, 잔여 위험이 표시되며, ambiguous consent가 판단 해소로 취급되지 않고, MCP/Core unavailable 상태가 authority를 만들어내지 않으며, derived projection이 non-authoritative로 남고, required 및 recorded 상태가 아니면 detached verification을 주장하지 않으며, 작업 수락이 Approval과 잔여 위험 수용과 구분되는 것을 볼 수 있습니다. |
 | 에이전시 보증 팩(v0.3 Agency Assurance Pack) | MVP path가 verification, 수동 QA, 잔여 위험 수용 close, 작업 수락 분리, stewardship, profile별 Decision Packet 품질, Approval separation, TDD, feedback-loop policy, context hygiene를 정직한 경계 안에서 처리함을 증명합니다. | Fixture가 같은 Core record와 error를 통해 work가 진행, 검증, 수동 QA 요구, 작업 수락, 잔여 위험 수용, close될 수 있는지 보여 줍니다. |
 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | Operator readiness, recover/export, artifact integrity, release handoff, broader fixture suite coverage, later-boundary checks가 [강화된 로컬 기준 목표](../reference/glossary.md#강화된-로컬-기준-목표)를 완성합니다. | Operator 진입점이 두 번째 authority model을 만들지 않고 같은 Core state 위에서 diagnose, recover, export, artifact check, conformance run, release handoff 준비를 수행합니다. |
 | Roadmap 경계: v1+ Expansion | 로컬 kernel과 agency 증명이 안정된 뒤에만 later surface 또는 automation을 검토할 수 있음을 분리합니다. | 선택 capability는 담당자가 [로드맵 단계 승격 조건](../roadmap.md#단계-승격-조건)에 따라 exact contract와 fixture로 승격하기 전까지 read-only, display-only, metadata-only, 또는 artifact 후보 제공 전용으로 남습니다. |
@@ -325,13 +325,19 @@ v0.1은 내부 authority loop를 증명하는 단계입니다. Product MVP, temp
 
 - ordinary user language가 Harness vocabulary를 요구하지 않고 tracked work를 시작하거나 resume할 수 있음
 - work가 scope, non-goals, acceptance criteria, 근거 기대 수준, close readiness, judgment boundaries로 정리됨
+- Codebase-answerable 또는 state-answerable fact는 사용자에게 반복 질문하기 전에 확인됨
+- Clarification은 blocking question과 useful-but-not-blocking question을 분리하고 긴 questionnaire가 되지 않음
 - product/UX judgment와 기술 구조 판단를 분리해 제시할 수 있음
 - small direct changes와 tracked work가 authority를 우회하지 않고 서로 다른 procedural budget을 사용함
+- ambiguous feature request는 premature implementation이 아니라 clarification으로 들어감
 - required 근거 또는 user judgment가 없으면 close가 block됨
 - 닫기 관련 위험이 있으면 작업 수락 또는 close 전에 잔여 위험이 보임
+- "go ahead", "looks good", "좋아", "진행해" 같은 ambiguous consent가 ambiguous route 해소나 risk acceptance로 취급되지 않음
+- MCP/Core unavailable status가 authority를 만들어내지 않음
 - 사용자의 작업 수락이 sensitive-action Approval과 잔여 위험 수용과 구분됨
 - 잔여 위험 수용을 지원하는 경우, 이것이 작업 수락과 뚜렷하게 구분되어 보임
 - 사용자에게 보이는 읽기용 요약(Projection) 또는 card가 Core records에서 파생되며, template polish가 기준 권한이 되지 않아도 충분함
+- Detached verification은 실제로 required이고 compatible owner path에 기록된 경우에만 주장됨
 
 ## 강화된 로컬 기준 증명
 

@@ -12,6 +12,21 @@
 
 향후 catalog scenario는 담당 문서가 동작을 승격하고, delivery stage 또는 local suite를 식별하고, Core-owned state와 artifact assertion을 증명하는 exact-shape fixture로 구체화한 뒤에만 executable이 됩니다. Projection output은 freshness, readability, availability를 확인할 수 있지만 Core state를 대체하거나 conformance truth가 되면 안 됩니다.
 
+## Catalog 전용 Future Families
+
+아래 family는 의도적으로 이 catalog에 둡니다. 코어 권한 조각(v0.1 Core Authority Slice)이나 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP)의 요구사항이 아니며, catalog에 나열되어 있다는 사실만으로 이후 단계의 필수 항목이 되지도 않습니다. 어떤 row가 executable conformance가 되려면 향후 담당 owner가 exact behavior, stage, fallback, security wording, exact-shape fixture를 먼저 승격해야 합니다.
+
+| Future family | Catalog boundary |
+|---|---|
+| Full Manual QA | Full policy matrix, browser/manual capture expansion, QA waiver detail, QA dashboard는 future 또는 v0.3+ owner-profile scope에 남습니다. v0.2는 minimal active profile이 요구할 때 missing-QA 또는 evidence blocker를 보여 줄 수 있을 뿐입니다. |
+| Eval systems와 detached verification automation | Cross-surface/evaluator orchestration, Eval detail report, same-session independence hardening, assurance upgrade는 future 또는 v0.3+ owner-profile scope에 남습니다. v0.2는 compatible verification record가 실제로 있을 때가 아니면 검증을 주장하지 않는 정직한 동작만 요구합니다. |
+| TDD trace와 feedback-loop policy | RED/GREEN trace, feedback-loop execution policy, policy-specific test-path fixture는 future 또는 v0.3+ owner-profile scope에 남습니다. |
+| Module map과 interface contract | Domain/module/interface stewardship fixture는 owner docs가 exact record와 validator를 승격하기 전까지 future catalog candidate입니다. |
+| Journey, Spine, detailed report projection | Journey Card, Journey Spine, Run Summary, detailed Evidence Manifest, detailed Eval, polished report projection은 derived-output candidate입니다. State가 되거나 MVP-required projection kind가 되지 않습니다. |
+| Export, recover, release handoff, artifact-integrity operations | Export/recover, release handoff, retention, redaction export, artifact check를 위한 operations fixture는 v0.4+ 또는 promoted owner-profile scope에 남습니다. |
+| Dashboard, team workflow, orchestration fixture | Hosted UI, dashboard, shared/team workflow, permission, parallel-lane, orchestration fixture는 승격 전까지 roadmap candidate입니다. |
+| Advanced connector와 security fixture | Broad connector ecosystem, remote/shared MCP, browser capture automation, preventive guard, isolated profile, hook, sidecar, higher security claim은 covered operation에 대해 owner-defined mechanism과 fixture proof가 있어야 promotion할 수 있습니다. |
+
 ## Artifact Redaction And Export Non-Leakage Catalog Entries
 
 이 catalog row들은 향후 scenario guidance입니다. 담당 owner path가 artifact metadata, owner link, redaction state, integrity, downstream state effect를 assert하면서 omitted secret 또는 PII value를 노출하지 않는 exact-shape fixture로 구체화할 때에만 executable이 됩니다.

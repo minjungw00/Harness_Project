@@ -191,14 +191,21 @@ v0.2 is the first product MVP and the first stage where users experience core Ha
 The MVP must demonstrate:
 
 - an ordinary user request is clarified into scope, user-owned judgment, evidence, and close readiness language
+- codebase-answerable or state-answerable facts are checked before asking the user to repeat them
+- clarification asks enough to unblock the next safe action without dumping a long questionnaire
 - product/UX judgments and material technical architecture judgments can be presented separately from each other and from sensitive-action approval, work acceptance, and residual-risk acceptance
 - small changes and tracked work have different procedural budgets without letting small-change labeling bypass authority
+- ambiguous feature requests enter clarification instead of premature implementation
 - status and next-action output explain current scope, missing judgments, evidence state, close blockers, and safe next action
 - close reports a blocker when required evidence or a required user-owned judgment is missing
 - residual risk can be displayed before acceptance and close
 - work acceptance is distinct from sensitive-action Approval and residual-risk acceptance
+- ambiguous consent such as "go ahead" or "looks good" does not resolve ambiguous judgment routes, waive evidence, accept residual risk, or authorize out-of-scope work
+- MCP/Core unavailable status does not fabricate authority state
+- projection/template output remains derived and cannot become state
+- detached verification is not claimed unless the active profile requires it and a compatible verification record exists
 - readable summaries or cards show current work status, user judgment request, evidence summary, and close readiness/blockers without template polish becoming the source of truth; work-acceptance and residual-risk facts remain distinct inside those summaries when relevant
-- conformance can prove the path through Core state, events, artifacts, projection/freshness facts, and structured errors rather than prose or renderer output alone
+- conformance can prove the path through the small v0.2 fixture set in [Conformance Fixtures Reference](../reference/conformance-fixtures.md#v02-user-facing-harness-mvp-fixture-set), using Core state, events, artifacts, projection/freshness facts where relevant, and structured errors rather than prose or renderer output alone
 
 Evidence records, readable summaries, and projection freshness support this experience. They are not the identity of the stage, and projection polish beyond this user-readable path stays out of scope.
 
@@ -283,15 +290,21 @@ Use these as implementation-readable checklists for future runtime planning afte
 
 - Ordinary user language can start or resume tracked work without requiring Harness vocabulary.
 - The user-facing path clarifies scope, non-goals, acceptance criteria, evidence expectations, close readiness, and judgment boundaries.
+- Codebase-answerable or state-answerable facts are checked before asking the user to repeat them.
+- Clarification quality is sufficient for the next safe action: it does not stop at one superficial question, does not dump a long questionnaire, separates blocking from useful-but-not-blocking questions, and gives choices and consequences for user-owned judgments.
 - Product/UX judgment and material technical architecture judgment can be presented separately from each other and from sensitive-action approval, work acceptance, and residual-risk acceptance.
 - Small direct changes and tracked work use different procedural budgets without bypassing write authority, evidence, or a required user judgment.
+- Ambiguous feature requests enter clarification instead of premature implementation.
 - Status/next output explains current scope, missing judgments, evidence state, residual-risk display, close blockers, and next safe action.
 - Close reports a blocker when required evidence is missing.
 - Close reports a blocker when a required user judgment is missing or unresolved.
 - Residual risk is visible before successful acceptance or close when known close-relevant risk exists.
+- Ambiguous consent phrases such as "go ahead," "looks good," "좋아," or "진행해" do not resolve ambiguous routes, waive evidence, accept residual risk, or authorize out-of-scope work.
+- MCP/Core unavailable status reports the lack of authority access and does not fabricate Task state, Write Authorization, evidence, approval, acceptance, or close readiness.
 - Work acceptance is recorded or represented separately from sensitive-action Approval and residual-risk acceptance.
 - Residual-risk acceptance, when supported, is visibly distinct from work acceptance.
 - User-facing readable summaries or cards are derived from Core records and are sufficient for the MVP path without making template polish authoritative.
+- Projection/template output does not become state, and detached verification is not claimed unless required and recorded through a compatible owner path.
 
 ### v0.3 Agency Assurance Pack exit checklist
 

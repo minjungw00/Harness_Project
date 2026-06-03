@@ -191,14 +191,21 @@ v0.2는 사용자가 하네스의 핵심 가치를 처음 체감하는 제품 MV
 MVP는 다음을 보여야 합니다.
 
 - 평범한 사용자 요청이 범위, 사용자 소유 판단, 근거, 닫기 준비 상태 언어로 정리된다
+- Codebase-answerable 또는 state-answerable fact는 사용자에게 반복 질문하기 전에 확인된다
+- Clarification은 긴 questionnaire를 쏟아내지 않으면서 다음 safe action을 unblock할 만큼 충분히 묻는다
 - product/UX judgment와 기술 구조 판단이 서로 분리되고, 민감 동작 승인, 작업 수락, 잔여 위험 수용과도 분리되어 제시될 수 있다
 - 작은 변경과 tracked work가 서로 다른 procedural budget을 가지되, small-change label이 authority를 우회하지 않는다
+- Ambiguous feature request는 premature implementation이 아니라 clarification으로 들어간다
 - status와 next-action output이 현재 scope, 누락된 judgments, 근거 상태, close blockers, 안전한 다음 행동을 설명한다
 - 필요한 근거가 없거나 필요한 사용자 판단이 missing이면 close가 막힘을 보고한다
 - 작업 수락과 close 전에 잔여 위험을 표시할 수 있다
 - 사용자의 작업 수락이 sensitive-action Approval, 잔여 위험 수용과 구분된다
+- "go ahead" 또는 "looks good" 같은 ambiguous consent는 ambiguous judgment route를 해소하거나, evidence를 waive하거나, residual risk를 accept하거나, out-of-scope work를 authorize하지 않는다
+- MCP/Core unavailable status는 authority state를 만들어내지 않는다
+- Projection/template output은 derived 상태로 남고 state가 될 수 없다
+- Detached verification은 active profile이 요구하고 compatible verification record가 있을 때만 주장한다
 - readable summary 또는 card가 현재 작업 상태, 사용자 판단 요청, 근거 요약, 닫기 준비 상태/blocker를 보여 주지만, template polish가 source of truth가 되지는 않는다. 작업 수락과 잔여 위험 사실은 관련 있을 때 이 요약 안에서 distinct하게 남는다
-- prose나 renderer output만이 아니라 Core state, events, artifacts, projection/freshness facts, structured errors로 conformance를 증명할 수 있다
+- prose나 renderer output만이 아니라 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#v02-user-facing-harness-mvp-fixture-set)의 작은 v0.2 fixture set을 통해 Core state, events, artifacts, 관련 projection/freshness facts, structured errors로 conformance를 증명할 수 있다
 
 근거 기록, 읽기 쉬운 요약, projection 최신성은 이 경험을 지원합니다. 이것들이 단계의 정체성은 아니며, 이 사용자 읽기 경로를 넘어서는 projection polish는 범위 밖에 둡니다.
 
@@ -283,15 +290,21 @@ Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Docu
 
 - 평범한 사용자 언어가 Harness vocabulary를 요구하지 않고 tracked work를 시작하거나 resume할 수 있다.
 - User-facing path가 scope, non-goals, acceptance criteria, evidence expectations, close readiness, judgment boundaries를 clarify한다.
+- Codebase-answerable 또는 state-answerable fact는 사용자에게 반복 질문하기 전에 확인된다.
+- Clarification quality가 다음 safe action에 충분하다. 얕은 질문 하나에서 멈추지 않고, 긴 questionnaire를 쏟아내지 않으며, blocking question과 useful-but-not-blocking question을 분리하고, user-owned judgment에는 choices와 consequences를 준다.
 - Product/UX judgment와 기술 구조 판단을 서로 분리하고, 민감 동작 승인, 작업 수락, 잔여 위험 수용과도 분리해 제시할 수 있다.
 - Small direct changes와 tracked work가 write authority, evidence, 필요한 사용자 판단을 우회하지 않으면서 서로 다른 procedural budget을 사용한다.
+- Ambiguous feature request는 premature implementation이 아니라 clarification으로 들어간다.
 - Status/next output이 현재 scope, missing decisions, 근거 상태, 잔여 위험 표시, close blockers, 안전한 다음 행동을 설명한다.
 - Required 근거가 없으면 close가 막힘을 보고한다.
 - 필요한 사용자 판단이 missing 또는 unresolved이면 close가 막힘을 보고한다.
 - 알려진 닫기 관련 위험이 있으면 작업 수락 또는 close 전에 잔여 위험이 보인다.
+- "go ahead", "looks good", "좋아", "진행해" 같은 ambiguous consent phrase는 ambiguous route를 해소하거나, evidence를 waive하거나, residual risk를 accept하거나, out-of-scope work를 authorize하지 않는다.
+- MCP/Core unavailable status는 authority access가 없음을 보고하고 Task state, Write Authorization, evidence, approval, acceptance, close readiness를 만들어내지 않는다.
 - 사용자의 작업 수락이 sensitive-action Approval과 잔여 위험 수용과 별도로 기록되거나 표현된다.
 - 잔여 위험 수용을 지원하는 경우, 이것이 작업 수락과 뚜렷하게 구분되어 보인다.
 - 사용자에게 보이는 readable summary 또는 card는 Core record에서 파생되며, template polish를 기준 권한으로 만들지 않고 MVP path에 충분하다.
+- Projection/template output은 state가 되지 않으며, detached verification은 required이고 compatible owner path에 기록된 경우에만 주장한다.
 
 ### 에이전시 보증 팩(v0.3 Agency Assurance Pack) 종료 점검 목록
 

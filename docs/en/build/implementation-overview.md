@@ -188,7 +188,7 @@ This handoff does not promote roadmap items, dashboards or hosted workflow UI, B
 | Boundary | What it proves | What the user or operator can observe |
 |---|---|---|
 | v0.1 Core Authority Slice | One local Task can go through the first Core authority loop: local project registration, Task, one scoped work boundary represented by the Change Unit owner shape only where the reference contract requires it, `prepare_write`, single-use Write Authorization, `record_run`, one artifact/evidence ref, and structured blocker/status response. | Status/blocker output shows current Task, scope, write authority, artifact/evidence support, and blockers. `prepare_write` refuses out-of-scope write authorization, compatible scoped work is authorized and consumed once, and status or a narrow close-task smoke refuses missing scope, write authority, or artifact/evidence support with structured blockers. |
-| v0.2 User-Facing Harness MVP | Ordinary user work is clarified into scope, user-owned judgment, evidence, close readiness, work-acceptance, and residual-risk language. | Users can see product/UX and architecture judgments separately, small changes and tracked work using different procedural budgets, close blocked by missing evidence or required user-owned judgments, residual risk displayed, and work acceptance kept distinct from Approval and residual-risk acceptance. |
+| v0.2 User-Facing Harness MVP | Ordinary user work is clarified into scope, user-owned judgment, evidence, close readiness, work-acceptance, and residual-risk language. | Users can see product/UX and architecture judgments separately, codebase-answerable facts checked before questions, small changes and tracked work using different procedural budgets, ambiguous feature requests held for clarification, close blocked by missing evidence or required user-owned judgments, residual risk displayed, ambiguous consent not treated as judgment resolution, MCP/Core unavailability not fabricated as authority, derived projections kept non-authoritative, detached verification not claimed unless required and recorded, and work acceptance kept distinct from Approval and residual-risk acceptance. |
 | v0.3 Agency Assurance Pack | The MVP path handles verification, Manual QA, residual-risk accepted close, work-acceptance separation, stewardship, profile-specific Decision Packet quality, Approval separation, TDD, feedback-loop policy, and context hygiene with honest boundaries. | Fixtures show why work can or cannot proceed, verify, require QA, accept, accept risk, or close through the same Core records and errors. |
 | v0.4 Operations & Handoff Pack | Operator readiness, recover/export, artifact integrity, release handoff, broader fixture suite coverage, and later-boundary checks complete the [hardened local reference target](../reference/glossary.md#hardened-local-reference-target). | Operator entrypoints diagnose, recover, export, check artifacts, run conformance, and prepare release handoff over the same Core state without creating a second authority model. |
 | Roadmap boundary: v1+ Expansion | Later surfaces or automation can be considered only after the local kernel and agency proof are stable. | Optional capabilities remain read-only, display-only, metadata-only, or artifact-candidate-only until an owner promotes them through the [Roadmap promotion criteria](../roadmap.md#promotion-criteria) with exact contracts and fixtures. |
@@ -325,13 +325,19 @@ It should show:
 
 - ordinary user language can start or resume tracked work without requiring Harness vocabulary
 - the work is clarified into scope, non-goals, acceptance criteria, evidence expectations, close readiness, and judgment boundaries
+- codebase-answerable or state-answerable facts are checked before asking the user to repeat them
+- clarification separates blocking questions from useful-but-not-blocking questions without becoming a long questionnaire
 - product/UX judgment and material technical architecture judgment can be presented separately
 - small direct changes and tracked work use different procedural budgets without bypassing authority
+- ambiguous feature requests enter clarification instead of premature implementation
 - close blocks when required evidence or user judgment is missing
 - residual risk is visible before successful acceptance or close when close-relevant risk exists
+- ambiguous consent such as "go ahead," "looks good," "좋아," or "진행해" does not resolve ambiguous routes or accept risk
+- MCP/Core unavailable status does not fabricate authority
 - work acceptance is distinct from sensitive-action Approval and residual-risk acceptance
 - residual-risk acceptance, when supported, is visibly distinct from work acceptance
 - user-facing projections or cards are derived from Core records and are sufficient without template polish becoming authoritative
+- detached verification is not claimed unless actually required and recorded through a compatible owner path
 
 ## The hardened local reference proof
 
