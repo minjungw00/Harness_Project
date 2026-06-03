@@ -354,7 +354,7 @@ Artifact registration is the storage boundary for artifact poisoning. A staged p
 
 A committed artifact that supports state needs:
 
-- a registered `ArtifactRef` shape owned by [MCP API And Schemas](mcp-api-and-schemas.md#artifactref)
+- a registered `ArtifactRef` shape, using the active stage value sets, owned by [MCP API And Schemas](mcp-api-and-schemas.md#artifactref)
 - an `artifacts` row with `sha256`, `size_bytes`, `redaction_state`, and `retention_class`
 - at least one compatible `artifact_links` row for the Task-scoped owner record
 - a `task_events` row for the committed artifact registration or the state mutation that registered it

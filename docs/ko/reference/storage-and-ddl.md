@@ -354,7 +354,7 @@ Artifact registration은 artifact poisoning을 막는 storage boundary입니다.
 
 State를 support하는 committed artifact에는 다음이 필요합니다.
 
-- [MCP API와 스키마](mcp-api-and-schemas.md#artifactref)가 담당하는 registered `ArtifactRef` shape
+- [MCP API와 스키마](mcp-api-and-schemas.md#artifactref)가 담당하는 registered `ArtifactRef` shape와 active stage value set
 - `sha256`, `size_bytes`, `redaction_state`, `retention_class`를 가진 `artifacts` row
 - Task-scoped owner record를 위한 compatible `artifact_links` row 하나 이상
 - committed artifact registration 또는 이를 등록한 state mutation을 나타내는 `task_events` row

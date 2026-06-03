@@ -76,7 +76,7 @@ Build staging does not upgrade security guarantees by itself. Security wording f
 
 ### API surface by stage
 
-The MCP API reference defines exact schemas for every method it documents. Staged delivery decides when a method/profile is active. Use the API [Stage Profile Manifest](../reference/mcp-api-and-schemas.md#stage-profile-manifest) as the owner table; later-profile fields stay exact for their profile, but they are not part of an earlier stage exit.
+The MCP API reference defines exact schemas for every method it documents. Staged delivery decides when a method/profile is active. Use the API [Stage Profile Manifest](../reference/mcp-api-and-schemas.md#stage-profile-manifest) as the owner table, and use its [stage-specific active value sets](../reference/mcp-api-and-schemas.md#stage-specific-active-value-sets) for artifact and owner-ref enum validation. Later-profile fields stay exact for their profile, but they are not part of an earlier stage exit.
 
 | Stage | Active API surface | Later-profile fields to keep out of the stage exit |
 |---|---|---|
