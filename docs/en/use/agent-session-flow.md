@@ -159,9 +159,9 @@ These groups are not gate aliases and do not define exact enum values. When exac
 - `harness.record_run` means "what happened, what evidence changed, and what is next?"
 - `harness.close_task` means "can this Task finish or cancel now?"
 
-`harness.status`, `harness.next`, compact status cards, and recommendation lines are read-only displays. They can recommend a judgment request, internal Decision Packet, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but the recommendation itself does not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
+`harness.status`, `harness.next`, compact status cards, and recommendation lines are read-only displays. They can recommend a judgment request, internal Decision Packet, `prepare_write`, evidence collection, work-acceptance request, verification, QA, reconcile, or close attempt, but the recommendation itself does not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
 
-When `harness.next` returns an `action_kind`, render the plain action before the enum. Use the exact enum only when it helps a power user or explains a boundary. The table is a display superset: minimum v0.2 can use the baseline rows, while `launch_verify`, `record_eval`, `record_manual_qa`, and `reconcile` appear only when the matching owner profile is enabled.
+When `harness.next` returns an `action_kind`, render the plain action before the enum. Use the exact enum only when it helps a power user or explains a boundary. The table is a display superset: minimum v0.2 can use the baseline rows, including `request_acceptance` when work acceptance is required, while `launch_verify`, `record_eval`, `record_manual_qa`, and `reconcile` appear only when the matching owner profile is enabled.
 
 | `action_kind` | Stage/profile | Say to the user |
 |---|---|---|

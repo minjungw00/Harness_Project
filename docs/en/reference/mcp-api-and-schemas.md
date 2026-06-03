@@ -136,7 +136,7 @@ v0.2 implementers add user value without taking on later assurance/operations wo
 |---|---|---|---|
 | `harness.status` | Active: current state/status/blockers/write authority. | Active: ordinary-language status plus `next_actions`, pending judgments, evidence summary, and close readiness. | Adds assurance, operations, projection, and diagnostic refs only when profiles enable them. |
 | `harness.intake` | Optional minimal setup if chosen. | Active ordinary-language intake/resume. | May add richer discovery and design-support routing. |
-| `harness.next` | Optional smoke read. | Optional expanded/compatibility read; `harness.status.next_actions` is the preferred v0.2 path. | May include assurance, QA, reconcile, and operations action kinds only when active. |
+| `harness.next` | Optional smoke read. | Optional expanded/compatibility read; may return `request_acceptance` when work acceptance blocks progress or close; `harness.status.next_actions` is the preferred v0.2 path. | May include verification, Eval, Manual QA, reconcile, operations, and profile-expanded work-acceptance or residual-risk next-action context only when owner profiles are active. |
 | `harness.prepare_write` | Active. | Active. | Adds approval/assurance/profile-specific blockers when active. |
 | `harness.record_run` | Active for one compatible implementation/direct Run and one artifact/evidence ref. | Active for evidence/artifact summary. | Adds Evidence Manifest, feedback-loop, TDD, and verification-input payloads when active. |
 | `harness.request_user_judgment` | Not active. | Active for user-owned judgment, approval-shaped sensitive-action permission, and work-acceptance prompts that block progress or close. | Adds committed Approval records, approval hardening, waivers, full residual-risk acceptance, and reconcile profiles when active. |
@@ -1131,14 +1131,14 @@ Public methods are grouped by staged surface. The same method may appear in more
 | `harness.prepare_write` | Active product-write authorization check. | Produces one allowed/blocked path and one durable single-use Write Authorization when allowed. Minimum v0.2 can use resolved approval-shaped Decision Packet coverage; committed Approval records remain later-profile. |
 | `harness.record_run` | Active Run recording and Write Authorization consumption. | Records one compatible implementation/direct Run, consumes one authorization once, and registers one artifact/evidence ref through the owner path. Full Evidence Manifest, TDD, Eval, and Manual QA updates are later-profile. |
 | `harness.intake` or owner-valid setup path | Active setup capability; method optional for v0.1. | v0.1 needs a local project, Task, and scoped work boundary. If this public method is used, use only the minimal setup shape; full natural-language intake/discovery is v0.2. |
-| `harness.next` | Optional v0.1 read. | If implemented for the smoke path, returns only the next minimal authority-loop action or smallest unblocker. v0.1 does not return `ask_user`, `request_acceptance`, verification, QA, or reconcile action kinds; those enter only in v0.2 or later owner profiles as listed in the action-kind stage table. |
+| `harness.next` | Optional v0.1 read. | If implemented for the smoke path, returns only the next minimal authority-loop action or smallest unblocker. v0.1 does not return `ask_user`, `request_acceptance`, verification, QA, or reconcile action kinds. `ask_user` and `request_acceptance` enter in v0.2; verification, QA, and reconcile action kinds enter only when their later owner profiles are enabled, as listed in the action-kind stage table. |
 | `harness.close_task` | Optional narrow blocker/status smoke only. | May be used when it is the simplest way to show a structured blocker, but v0.1 does not prove work acceptance, residual-risk acceptance, or full close semantics. |
 
 #### v0.2 active API surface
 
 | Method or capability | Activation | Scope boundary |
 |---|---|---|
-| `harness.status.next_actions`; optional `harness.next` | Active fuller user-facing status/next display. | Shows ordinary-language current position, pending user judgments, evidence summary, close readiness/blockers, and smallest unblocker. Work-acceptance and residual-risk facts remain distinct when relevant without adding required projection kinds. |
+| `harness.status.next_actions`; optional `harness.next` | Active fuller user-facing status/next display. | Shows ordinary-language current position, pending user judgments, evidence summary, close readiness/blockers, and smallest unblocker. May return `request_acceptance` when work acceptance blocks progress or close. Work-acceptance need/status and residual-risk visibility remain distinct when relevant without adding required projection kinds. |
 | `harness.intake` | Active user-facing intake/resume path. | Classifies ordinary user work into schema mode while keeping scope, non-goals, acceptance criteria, and user-owned judgment boundaries visible. |
 | `harness.request_user_judgment` and `harness.record_user_judgment` | Active for user-owned judgments and work acceptance when they block progress or close. | Decision Packet fields are active when packets/candidates are created. `harness.request_user_decision` and `harness.record_user_decision` are compatibility aliases only. Approval hardening, waiver, full residual-risk acceptance, and reconcile profiles enter when their owner profiles are enabled. |
 | `harness.record_run` | Active evidence/artifact summary path. | Evidence is visible enough for the First User-Value Slice path; full Evidence Manifest projection and assurance records remain later-profile unless explicitly enabled. |
@@ -1330,7 +1330,7 @@ Idempotency behavior: same key returns the same Task/resume decision; different 
 
 Purpose: return the next safe action, instruction bundle, and pending judgments for the current Task.
 
-Stage/profile: optional v0.1 minimal next-action read; v0.2 fuller user-facing next action and smallest-unblocker display, including `request_acceptance` when work acceptance blocks progress or close; v0.3/v0.4 add verification, Eval, Manual QA, reconcile, operations, and profile-expanded acceptance/risk behavior only when their owner profiles are enabled.
+Stage/profile: optional v0.1 minimal next-action read; v0.1 does not return `request_acceptance`. v0.2 is a fuller user-facing next action and smallest-unblocker display, and may return `request_acceptance` when work acceptance blocks progress or close. v0.3/v0.4 add verification, Eval, Manual QA, reconcile, operations, and any profile-expanded work-acceptance or residual-risk actions only when their owner profiles are enabled.
 
 User-facing meaning: show what should happen next. `next_action.summary` should be ordinary action language such as ask the user, prepare this write, record evidence, run verification, record Manual QA, request work acceptance, refresh or reconcile, or close. `next_action.required_tool` is a caller hint, not a command the user must see unless power-user detail is useful.
 
@@ -1369,8 +1369,8 @@ Next response profiles:
 | Profile | Profile-scoped response meaning |
 |---|---|
 | v0.1 minimal | If implemented, return only the next authority-loop action or smallest blocker: prepare the scoped write, record the authorized Run, report missing scope/write authority, or report missing artifact/evidence support. `recommended_playbooks` and future-profile refs may be empty; `judgment_context` and `autonomy_boundary` may be `null` unless owner state exists. |
-| v0.2 user-facing | Return ordinary-language next action, pending Decision Packet refs, judgment context when a user-owned judgment is needed, and evidence/close-readiness context. When work acceptance blocks progress or close, `next_action.action_kind` may be `request_acceptance`; work-acceptance and residual-risk facts appear with acceptance visibility and without requiring separate projection kinds. |
-| v0.3/v0.4 assurance and operations | Return verification, Eval, Manual QA, reconcile, projection freshness, operations-oriented next actions, and profile-expanded acceptance/risk behavior only when those profiles are enabled and backed by matching storage. |
+| v0.2 user-facing | Return ordinary-language next action, pending Decision Packet refs, judgment context when a user-owned judgment or work acceptance is needed, and evidence/close-readiness context. When work acceptance blocks progress or close, `next_action.action_kind` may be `request_acceptance`; the work-acceptance need/status and residual-risk visibility remain distinct and do not require separate projection kinds. |
+| v0.3/v0.4 assurance and operations | Return verification, Eval, Manual QA, reconcile, projection freshness, operations-oriented next actions, and profile-expanded work-acceptance or residual-risk behavior only when those profiles are enabled and backed by matching storage. |
 
 `next_action.action_kind` meanings:
 
@@ -1757,7 +1757,7 @@ Idempotency behavior: repeated request returns the same run, artifact records, e
 
 Compatibility alias: `harness.request_user_decision`.
 
-Purpose: create a structured Decision Packet for a user judgment that blocks progress, write, close, or an active profile-specific acceptance, waiver, risk, or reconcile path.
+Purpose: create a structured Decision Packet for a user judgment that blocks progress, write, close, or v0.2 work acceptance. Active profile-specific waiver, residual-risk, and reconcile paths use the same route when enabled.
 
 Stage/profile: not active in v0.1. v0.2 introduces user-facing Decision Packet prompts when user-owned judgment, sensitive-action approval, or work acceptance blocks progress or close. Committed Approval records, approval hardening, QA/verification waivers, full residual-risk acceptance, and reconcile are later-profile extensions unless their owner profile is active.
 

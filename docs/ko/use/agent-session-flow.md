@@ -159,9 +159,9 @@ MCP 결과를 기준으로 삼되, 사용자에게는 이해하기 쉬운 말로
 - `harness.record_run`은 "무슨 일이 일어났고, 어떤 근거가 바뀌었으며, 다음은 무엇인가?"라는 뜻입니다.
 - `harness.close_task`는 "이 Task를 지금 끝내거나 취소할 수 있는가?"라는 뜻입니다.
 
-`harness.status`, `harness.next`, 간결한 상태 카드, 추천 줄은 읽기 전용 표시입니다. 판단 요청, 내부 Decision Packet, `prepare_write`, 근거 수집, 검증, 수동 QA, 조정(`reconcile`), 닫기 시도를 추천할 수는 있지만, 추천 자체가 상태를 변경하거나, 쓰기를 허가하거나, `gate`를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 닫지 않습니다.
+`harness.status`, `harness.next`, 간결한 상태 카드, 추천 줄은 읽기 전용 표시입니다. 판단 요청, 내부 Decision Packet, `prepare_write`, 근거 수집, 작업 수락 요청, 검증, 수동 QA, 조정(`reconcile`), 닫기 시도를 추천할 수는 있지만, 추천 자체가 상태를 변경하거나, 쓰기를 허가하거나, `gate`를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 닫지 않습니다.
 
-`harness.next`가 `action_kind`를 반환하면 enum보다 쉬운 행동을 먼저 보여줍니다. 정확한 enum 값은 고급 세부사항이 도움이 되거나 경계를 설명할 때만 보여줍니다. 이 표는 display superset입니다. Minimum v0.2는 baseline row를 사용할 수 있고, `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile`은 matching owner profile이 enabled될 때만 나타납니다.
+`harness.next`가 `action_kind`를 반환하면 enum보다 쉬운 행동을 먼저 보여줍니다. 정확한 enum 값은 고급 세부사항이 도움이 되거나 경계를 설명할 때만 보여줍니다. 이 표는 display superset입니다. Minimum v0.2는 작업 수락이 required일 때 `request_acceptance`를 포함한 baseline row를 사용할 수 있고, `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile`은 matching owner profile이 enabled될 때만 나타납니다.
 
 | `action_kind` | Stage/profile | 사용자에게 말할 내용 |
 |---|---|---|
