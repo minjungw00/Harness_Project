@@ -1141,7 +1141,7 @@ Purpose: project, surface, active Task, 간결한 현재 위치 요약, gate, gu
 
 Stage/profile: v0.1은 minimal status/blocker profile을 사용합니다. v0.2는 `next_actions`가 있는 사용자 대상 status/card profile을 추가합니다. v0.3+ assurance, projection, reconcile, operations field는 위 activation table을 통해서만 들어옵니다.
 
-사용자에게 보이는 의미: 현재 위치를 보여줍니다. Status 표시는 active Task, 현재 phase, 가장 먼저 해소할 막힘이 있으면 그 막힘, 가장 작은 해소 방법, 쓰기 권한 상태, 보장 수준, projection freshness를 먼저 보여야 합니다. Ref와 추가 막힘을 함께 보여줄 수 있지만, 사용자가 계속 진행할 수 있는지 이해하려고 raw schema field만 읽게 만들면 안 됩니다.
+사용자에게 보이는 의미: 현재 위치를 보여줍니다. Status 표시는 active Task, 작업 모양, 알려진 범위/하지 않을 일, 가장 먼저 해소할 막힘이 있으면 그 막힘, 대기 중인 사용자 판단, 가장 작은 해소 방법, 근거 gap, close blocker, 잔여 위험 요약, guarantee level, source/freshness refs를 먼저 보여야 합니다. Ref와 추가 막힘을 함께 보여줄 수 있지만, 사용자가 계속 진행할 수 있는지 이해하려고 raw schema field만 읽게 만들면 안 됩니다. 전체 reference docs, 전체 schema, 전체 DDL, 전체 historical event log, 읽기용 요약 전체 본문, full artifact contents, 관련 없는 template, future catalog 자료를 embed하면 안 됩니다.
 
 Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
 
@@ -1210,6 +1210,8 @@ Projection job 대기열 추가: 없음.
 `write_authority_summary`는 `include.write_authority=true`일 때 반환됩니다. `include.journey_card=true`이면 같은 current Write Authority Summary display가 `journey_card.write_authority_summary`에도 나타날 수 있습니다.
 
 `projection_freshness.status`가 `stale`, `failed`, `unknown`이면 `status_card`가 사용자의 현재 위치 파악에는 도움을 줄 수 있습니다. 하지만 읽기용 보기가 stale, failed, unknown임을 표시해야 하며, 그 보기를 신뢰할 수 있는 context로 쓰기 전에는 refresh 또는 reconcile을 가장 작은 해소 방법으로 가리키는 것이 좋습니다.
+
+`status_card`와 agent compact context/reference payload는 compact한 파생 display이지 그 자체로 구현된 authority path가 아닙니다. 기본으로 담을 수 있는 것은 현재 Task 요약, 작업 모양, 범위/하지 않을 일, 대기 중인 사용자 판단, 활성 blocker, 다음 안전한 행동, 근거 gap, close blocker, 잔여 위험 요약, guarantee level, source refs/freshness뿐입니다. 추가 본문은 정확한 단계와 다음 행동이 필요로 할 때만 pull-on-demand로 둡니다.
 
 ValidatorResults emitted: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`.
 
@@ -1340,6 +1342,8 @@ State transition summary: state transition 없음.
 Projection job 대기열 추가: 없음.
 
 `pending_decisions`는 해소되지 않은 user-action Decision Packets를 포함합니다. 현재 phase 또는 requested action에 아직 영향을 주는 deferred, blocked, recently resolved packet은 `judgment_context.active_decision_packet_refs`를 통해 나타납니다.
+
+`judgment_context`가 non-null이고 다음 행동이 사용자에게 묻는 것이라면, 토큰을 아낀다는 이유로 판단에 필요한 맥락을 빼면 안 됩니다. Context는 decision, options 또는 selected outcome, consequence, uncertainty, 영향을 받는 범위, 관련 refs 또는 명시적 absence, agent가 사용자 대신 판단하지 않는 것, 답변이 확정하지 않는 것을 보여줘야 합니다. 전체 evidence body, log, artifact contents, schema, template body는 기본 prompt에 붙여 넣지 않습니다.
 
 `recommended_playbooks`는 반환된 next safe action에 맞는 절차를 호출자가 선택하도록 돕습니다. 이는 현재 상태와 policy/playbook context에서 계산되는 API/display guidance일 뿐입니다. `playbook_id`는 display/routing string identifier로 남으며 기준 kernel enum이 아닙니다. 그 자체로 state transition, event, projection, gate, write, evidence, verification, QA, risk, 작업 수락, close 효과를 만들지 않습니다. 사용자 소유 판단을 새로 요구하는 playbook recommendation은 affected write 또는 close가 진행되기 전에 Decision Packet candidate/request path 또는 existing Decision Packet으로 라우팅해야 합니다. `route.display_route` 값은 display route이지 public tool name이 아니며 상태 변경 tool call 지시도 아닙니다. 전체 Role Lens/playbook 경계는 [Agent Integration](agent-integration.md#role-lens-동작)이 담당합니다.
 

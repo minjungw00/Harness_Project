@@ -1141,7 +1141,7 @@ Purpose: return project, surface, active Task, compact current-position summary,
 
 Stage/profile: v0.1 uses the minimal status/blocker profile. v0.2 adds the user-facing status/card profile with `next_actions`. v0.3+ adds assurance, projection, reconcile, and operations fields only through the activation tables above.
 
-User-facing meaning: show the current position. A status display should lead with active Task, current phase, primary blocker when one exists, smallest unblocker, write authority status, guarantee level, and projection freshness. It may include refs and secondary blockers, but it should not make the user read raw schema fields to understand whether work can continue.
+User-facing meaning: show the current position. A status display should lead with active Task, work shape, scope/non-goals when known, primary blocker when one exists, pending user judgments, smallest unblocker, evidence gaps, close blockers, residual-risk summary, guarantee level, and source/freshness refs. It may include refs and secondary blockers, but it should not make the user read raw schema fields to understand whether work can continue. It must not embed full reference docs, full schemas, full DDL, full historical event logs, full projection bodies, full artifact contents, unrelated templates, or future catalog material.
 
 Allowed actor: `user`, `lead_agent`, `evaluator`, `operator`.
 
@@ -1210,6 +1210,8 @@ When both `StatusResponse.recommended_playbooks` and `StatusResponse.journey_car
 `write_authority_summary` is returned when `include.write_authority=true`. When `include.journey_card=true`, the same current Write Authority Summary display may also appear in `journey_card.write_authority_summary`.
 
 When `projection_freshness.status` is `stale`, `failed`, or `unknown`, `status_card` may still help the user orient, but it must label the readable view as stale, failed, or unknown and should point to refresh or reconcile as the smallest unblocker before the view is treated as dependable context.
+
+`status_card` and agent compact context/reference payloads are compact derived displays, not implemented authority paths by themselves. They may carry only the current Task summary, work shape, scope/non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, residual-risk summary, guarantee level, and source refs/freshness by default. Additional bodies remain pull-on-demand for the exact phase and next action.
 
 ValidatorResults emitted: optional `surface_capability_check`, optional `decision_gate_check`, optional `autonomy_boundary_check`.
 
@@ -1340,6 +1342,8 @@ EventRef values that may be returned: none.
 Projection jobs enqueued: none.
 
 `pending_decisions` contains unresolved user-action Decision Packets. Deferred, blocked, or recently resolved packets that still affect the current phase or requested action appear through `judgment_context.active_decision_packet_refs`.
+
+When `judgment_context` is non-null because the next action asks the user, token saving must not remove the context needed to decide. The context must show the decision, options or selected outcome, consequences, uncertainty, affected scope, relevant refs or explicit absence, what the agent is not deciding for the user, and what the answer does not settle. It must not paste full evidence bodies, logs, artifact contents, schemas, or template bodies into the prompt by default.
 
 `recommended_playbooks` helps the caller choose a procedure for the returned next safe action. It is API/display guidance only, computed from current state and policy/playbook context. `playbook_id` remains a display/routing string identifier, not a canonical kernel enum; it has no state-transition, event, projection, gate, write, evidence, verification, QA, risk, acceptance, or close effect by itself. A playbook recommendation that would introduce user-owned judgment must route to a Decision Packet candidate/request path or existing Decision Packet before any affected write or close proceeds. `route.display_route` values are display routes, not public tool names and not instructions to call a state-changing tool. The full Role Lens/playbook boundary is owned by [Agent Integration](agent-integration.md#role-lens-behavior).
 

@@ -119,7 +119,7 @@ Build 독자는 이 표를 진입 기준으로 보아야 합니다. 유지보수
 - 읽기용 요약(Projection)과 대화는 읽기/대화 접점이며 운영 기준이 아닙니다.
 - 읽기용 요약(Projection) 범위는 단계화되어 있습니다. v0.1은 owner path가 이미 만든 경우에만 freshness/read fact를 노출할 수 있고, v0.2는 Core-derived compact status card와 최소 사용자 읽기용 출력을 제공하며, detailed report/template은 승격되기 전까지 later-profile scope입니다.
 - 보안 표현은 실제 enforcement level에 묶입니다. Cooperative, detective, preventive, isolated 주장은 해당 동작에 대해 문서화된 capability와 fixture-proven path가 있을 때만 사용합니다.
-- Agent context는 제한됩니다. 항상 주입되는 맥락은 짧고 최신이어야 하며, 상세 contract는 필요할 때 담당 문서나 retrieval path에서 가져옵니다.
+- Agent context는 제한됩니다. 항상 주입되는 맥락은 현재 Task 요약, 작업 모양, 범위/하지 않을 일, 대기 중인 사용자 판단, 활성 blocker, 다음 안전한 행동, 근거 gap, close blocker, 잔여 위험 요약, guarantee level, source refs/freshness만 담고, 상세 contract와 큰 본문은 필요할 때 담당 문서나 retrieval path에서 가져옵니다.
 - Conformance fixture 문서는 단계화된 향후 검증 계획입니다. 현재 executable fixture file이나 runnable conformance test가 있다는 뜻이 아닙니다.
 
 현재 준비 상태:
@@ -177,7 +177,7 @@ maintainer 수락 조건:
 - Storage와 API는 단계화되어 있다. Reference schema와 DDL은 future-profile field나 table을 정의할 수 있지만, implementation은 active method, record, profile을 따른다. Future-profile 존재 자체가 v0.1 범위를 넓히지는 않는다.
 - 읽기용 요약(Projection) 범위가 단계화되어 있고 권한이 없다. 읽기용 요약과 card는 Core record와 artifact ref에서 파생되며, 권한을 만들거나 첫 증명이 되지 않는다.
 - 보안 보장이 실제 enforcement level과 맞다. Cooperative, detective, preventive, isolated 표현은 해당 동작에 대해 문서화된 surface와 fixture-proven path가 있을 때만 사용한다.
-- Agent context 전략이 정의되어 있다. 항상 주입되는 맥락은 한 화면 안팎, current-state 기반, profile-scoped로 유지하고, 전체 Reference 문서, schema, old log, 읽기용 요약 본문은 알맞은 담당 문서/조회 경로로만 가져온다.
+- Agent context 전략이 정의되어 있다. 항상 주입되는 맥락은 한 화면 안팎으로 유지하고 현재 Task 요약, 작업 모양, 범위/하지 않을 일, 대기 중인 사용자 판단, 활성 blocker, 다음 안전한 행동, 근거 gap, close blocker, 잔여 위험 요약, guarantee level, source refs/freshness만 담는다. 전체 Reference 문서, schema, DDL, historical log, 읽기용 요약 본문, artifact contents, 관련 없는 template, future catalog material은 알맞은 담당 문서/조회 경로로만 가져온다.
 - Conformance fixture plan이 단계화되고 향후 검증 계획으로 유지된다. Kernel Smoke는 작은 smoke check를 위한 좁은 v0.1 작성 label일 뿐이고, 이후 suite profile은 v0.2 First User-Value Slice, 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack), 승격된 v1+ item에 맞으며, fixture file, future fixture catalog, full v0.1 conformance suite, runnable conformance test가 이미 존재한다고 암시하지 않는다.
 - Operations surface가 단계화되어 있다. Minimal local status/diagnostic behavior는 초기 stage를 도울 수 있지만, doctor/readiness, reconcile, recover, export, artifact check, release handoff, conformance run entrypoint는 owner stage가 포함하기 전까지 v0.1 requirement가 아니다.
 - 한국어 사용자 대상 문서는 읽기 쉽고 일관적이다. 자연스러운 한국어를 먼저 쓰고, stable schema identifier, API name, enum value, DDL name, file name, validator ID, official product/stage name은 정밀도가 필요할 때 정확히 유지한다.

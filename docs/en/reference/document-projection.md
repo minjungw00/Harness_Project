@@ -46,7 +46,7 @@ Harness keeps derived-output tiers aligned with staged delivery:
 | Tier | Stage boundary | Purpose and rule |
 |---|---|---|
 | Core status output | v0.1 Core Authority Slice | Minimal structured status/blocker output from current Core state. It may be plain API text or a compact card; it does not require persisted Markdown, a projection job, multiple `ProjectionKind` values, or a full renderer. |
-| User-facing MVP projection | v0.2 User-Facing Harness MVP | One compact status card derived from Core state and refs. It shows what is happening, scope, pending user judgments, evidence or gaps, close blockers, visible residual risk, next safe action, and source/freshness refs. It does not require `TASK`, Journey, Run Summary, Evidence Manifest, Eval, Manual QA, Export, or report polish. |
+| User-facing MVP projection | v0.2 User-Facing Harness MVP | One compact status card derived from Core state and refs. It shows current Task summary, work shape, scope/non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, visible residual risk, guarantee level, and source/freshness refs. It does not require `TASK`, Journey, Run Summary, Evidence Manifest, Eval, Manual QA, Export, or report polish. |
 | Agent compact context/reference payload | v0.2 support surface and later | A compact machine-readable or prompt-sized payload derived from the same Core state and refs. It may carry ids, refs, blocker labels, and freshness for the next action, but it is not user-facing authority and should not include full projection bodies by default. |
 | Agency assurance reports | v0.3 Agency Assurance Pack profiles | Compact approval, Manual QA, verification, waiver, and assurance displays when those profiles are enabled. They are report/card views over owner records and refs, not first-slice or minimum MVP requirements. |
 | Operations/export reports | v0.4 Operations & Handoff Pack profiles | Projection freshness, reconcile/readiness, export, release-handoff, artifact-integrity, and operator report views when operations support is enabled. They do not replace Core state or artifact authority. |
@@ -54,22 +54,25 @@ Harness keeps derived-output tiers aligned with staged delivery:
 
 MCP read-only resource staging follows the same tiers. v0.1 resources expose current project/current task/status output for the first authority loop. v0.2 resources may expose the compact status card, user-judgment prompt context, and agent compact context/reference payloads. Evidence Manifest, reports, bundles, Journey/Spine, and design/domain resources remain later-profile or diagnostic reads unless an owner profile explicitly promotes them. Resource reads over projections are still reads; they must not create projection jobs or make projections authoritative.
 
-Agent compact context is a consumer of current Core status output or the v0.2 compact card, not a separate authority tier. It may use projections as a readable summary only when their `source_state_version` and freshness are suitable for the next action. If state matters and the projection is stale, failed, unknown, or too broad, retrieve current Core state or a state-derived compact context instead. Do not turn Markdown projections, Journey Cards, status cards, old reports, generated summaries, or full projection bodies into always-on prompt payloads or authority. Full projection bodies are pull-on-demand for a phase that needs their specific content; by default, push only refs, one-line summaries, and freshness. They can point to current refs to inspect; they cannot authorize writes, satisfy gates, create evidence, perform verification, record Manual QA, accept results, accept residual risk, or close a Task.
+Agent compact context is a consumer of current Core status output or the v0.2 compact card, not a separate authority tier or proof that a context API is implemented. It may use projections as a readable summary only when their `source_state_version` and freshness are suitable for the next action. If state matters and the projection is stale, failed, unknown, or too broad, retrieve current Core state or a state-derived compact context instead. Do not turn Markdown projections, Journey Cards, status cards, old reports, generated summaries, full projection bodies, full artifact contents, unrelated templates, or future catalog material into always-on prompt payloads or authority. Full projection bodies are pull-on-demand for a phase that needs their specific content; by default, push only refs, one-line summaries, and freshness. They can point to current refs to inspect; they cannot authorize writes, satisfy gates, create evidence, perform verification, record Manual QA, accept results, accept residual risk, or close a Task.
 
 ### v0.2 compact status card
 
 The v0.2 MVP projection is one compact status card. The card is not the product value by itself; it is the small readable surface that makes Core authority understandable. It must show:
 
-- what we are doing
+- current Task summary
+- work shape
 - current scope and non-goals
 - pending user judgments
+- active blockers
+- next safe actions
 - known evidence and evidence gaps
 - close blockers
 - visible residual risk, or an explicit `none`/not-yet-visible status
-- next safe action
+- guarantee level
 - source and freshness references, including source state version, relevant owner refs, artifact refs when needed, render time, and freshness state
 
-The card must stay readable for users and compact for agents. It must not dump schema fields, DDL, event logs, full artifacts, full reference docs, full Evidence Manifests, or full report bodies. Work-acceptance need/status and residual-risk visibility remain distinct Core meanings when relevant, but they appear inside the compact status card or the separate user judgment prompt rather than becoming extra required projection kinds.
+The card must stay readable for users and compact for agents. It must not dump schema fields, DDL, event logs, full artifacts, full artifact contents, full reference docs, full Evidence Manifests, full report bodies, unrelated templates, or future catalog material. Work-acceptance need/status and residual-risk visibility remain distinct Core meanings when relevant, but they appear inside the compact status card or the separate user judgment prompt rather than becoming extra required projection kinds.
 
 Projection audiences stay separate:
 

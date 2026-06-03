@@ -46,7 +46,7 @@ Projection은 secret/PII를 보호하는 표시 경계이기도 합니다. Proje
 | 계층 | 단계 경계 | 목적과 규칙 |
 |---|---|---|
 | Core status output | 코어 권한 조각(v0.1 Core Authority Slice) | 현재 Core 상태에서 나온 최소 구조화 상태/막힘 출력입니다. Plain API text나 compact card일 수 있으며, persisted Markdown, projection job, 여러 `ProjectionKind` 값, full renderer를 요구하지 않습니다. |
-| User-facing MVP projection | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | Core 상태와 ref에서 파생한 하나의 compact status card입니다. 무엇을 하는지, 범위, 대기 중인 사용자 판단, 근거 또는 근거 gap, close blocker, 보이는 잔여 위험, 다음 안전한 행동, source/freshness ref를 보여줍니다. `TASK`, Journey, Run Summary, Evidence Manifest, Eval, 수동 QA, Export, polished report를 요구하지 않습니다. |
+| User-facing MVP projection | 사용자 대상 하네스 MVP(v0.2 User-Facing Harness MVP) | Core 상태와 ref에서 파생한 하나의 compact status card입니다. 현재 Task 요약, 작업 모양, 범위/하지 않을 일, 대기 중인 사용자 판단, 활성 blocker, 다음 안전한 행동, 근거 gap, close blocker, 보이는 잔여 위험, guarantee level, source/freshness ref를 보여줍니다. `TASK`, Journey, Run Summary, Evidence Manifest, Eval, 수동 QA, Export, polished report를 요구하지 않습니다. |
 | Agent compact context/reference payload | v0.2 지원 접점과 이후 단계 | 같은 Core 상태와 ref에서 파생한 에이전트용 간결한 payload입니다. 다음 행동에 필요한 id, ref, blocker label, freshness를 담을 수 있지만 사용자 대상 권한이 아니며 기본으로 full projection body를 넣지 않습니다. |
 | Agency assurance reports | 에이전시 보증 팩(v0.3 Agency Assurance Pack) profile | 해당 profile이 켜졌을 때의 compact approval, 수동 QA, verification, waiver, assurance display입니다. Owner record와 ref에서 나온 report/card view이며 첫 조각이나 최소 MVP 요구사항이 아닙니다. |
 | Operations/export reports | 운영과 인계 팩(v0.4 Operations & Handoff Pack) profile | Operations support가 켜졌을 때의 projection freshness, reconcile/readiness, export, release-handoff, artifact-integrity, operator report view입니다. Core 상태나 artifact 권한을 대체하지 않습니다. |
@@ -54,22 +54,25 @@ Projection은 secret/PII를 보호하는 표시 경계이기도 합니다. Proje
 
 MCP read-only resource staging도 같은 계층을 따릅니다. v0.1 resource는 첫 authority loop를 위한 current project/current task/status output을 노출합니다. v0.2 resource는 compact status card, 사용자 판단 prompt context, agent compact context/reference payload를 노출할 수 있습니다. Evidence Manifest, reports, bundles, Journey/Spine, design/domain resource는 owner profile이 명시적으로 승격하기 전까지 later-profile 또는 diagnostic read로 남습니다. Projection을 읽는 resource도 여전히 read입니다. Projection job을 만들거나 projection을 authority로 만들면 안 됩니다.
 
-에이전트용 간결한 현재 맥락은 별도 권한 계층이 아니라 current Core status output 또는 v0.2 compact card를 소비하는 쪽입니다. `source_state_version`과 최신성이 다음 행동에 맞을 때만 projection을 읽기용 요약으로 사용할 수 있습니다. 상태가 중요하고 projection이 stale, failed, unknown이거나 너무 넓다면 current Core state 또는 state-derived compact context를 가져와야 합니다. Markdown projection, Journey Card, status card, old report, generated summary, 읽기용 요약 전체 본문을 항상 주입되는 prompt payload나 authority로 만들면 안 됩니다. 읽기용 요약 전체 본문은 특정 단계가 그 내용을 요구할 때만 pull-on-demand로 읽고, 기본으로는 ref, 한 줄 summary, freshness만 push합니다. 이들은 살펴볼 current ref를 가리킬 수는 있지만 write를 허가하거나, gate를 충족하거나, 근거를 만들거나, 검증을 수행하거나, 수동 QA를 기록하거나, 결과를 수락하거나, 잔여 위험을 받아들이거나, Task를 close할 수 없습니다.
+에이전트용 간결한 현재 맥락은 별도 권한 계층이 아니며 context API가 구현되어 있음을 증명하지도 않습니다. Current Core status output 또는 v0.2 compact card를 소비하는 쪽입니다. `source_state_version`과 최신성이 다음 행동에 맞을 때만 projection을 읽기용 요약으로 사용할 수 있습니다. 상태가 중요하고 projection이 stale, failed, unknown이거나 너무 넓다면 current Core state 또는 state-derived compact context를 가져와야 합니다. Markdown projection, Journey Card, status card, old report, generated summary, 읽기용 요약 전체 본문, full artifact contents, 관련 없는 template, future catalog material을 항상 주입되는 prompt payload나 authority로 만들면 안 됩니다. 읽기용 요약 전체 본문은 특정 단계가 그 내용을 요구할 때만 pull-on-demand로 읽고, 기본으로는 ref, 한 줄 summary, freshness만 push합니다. 이들은 살펴볼 current ref를 가리킬 수는 있지만 write를 허가하거나, gate를 충족하거나, 근거를 만들거나, 검증을 수행하거나, 수동 QA를 기록하거나, 결과를 수락하거나, 잔여 위험을 받아들이거나, Task를 close할 수 없습니다.
 
 ### v0.2 compact status card
 
 v0.2 MVP projection은 하나의 compact status card입니다. 이 card 자체가 제품 가치는 아니지만, Core 권한을 사용자가 읽을 수 있게 만드는 작은 표시 접점입니다. 반드시 다음을 보여줘야 합니다.
 
-- 무엇을 하고 있는지
+- 현재 Task 요약
+- 작업 모양
 - 현재 범위와 하지 않을 일
 - 대기 중인 사용자 판단
+- 활성 blocker
+- 다음 안전한 행동
 - 알려진 근거와 근거 gap
 - close blocker
 - 보이는 잔여 위험, 또는 명시적인 `none`/아직 보이지 않음 상태
-- 다음 안전한 행동
+- guarantee level
 - source/freshness ref. 여기에는 source state version, 관련 owner ref, 필요할 때 artifact ref, 렌더링 시각, freshness state가 포함됩니다.
 
-Card는 사용자가 읽기 쉬우면서도 에이전트가 부담 없이 다룰 만큼 작아야 합니다. Schema field, DDL, event log, full artifact, full reference doc, full Evidence Manifest, full report body를 쏟아내면 안 됩니다. 작업 수락 필요 여부/상태와 잔여 위험 표시는 관련 있을 때 distinct Core meaning으로 남지만, 별도 필수 projection kind가 아니라 compact status card 또는 별도 사용자 판단 prompt 안에 나타납니다.
+Card는 사용자가 읽기 쉬우면서도 에이전트가 부담 없이 다룰 만큼 작아야 합니다. Schema field, DDL, event log, full artifact, full artifact contents, full reference doc, full Evidence Manifest, full report body, 관련 없는 template, future catalog material을 쏟아내면 안 됩니다. 작업 수락 필요 여부/상태와 잔여 위험 표시는 관련 있을 때 distinct Core meaning으로 남지만, 별도 필수 projection kind가 아니라 compact status card 또는 별도 사용자 판단 prompt 안에 나타납니다.
 
 Projection audience는 분리합니다.
 

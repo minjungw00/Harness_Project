@@ -19,13 +19,16 @@ The card should use ordinary language first and exact Harness labels only where 
 
 ## Required contents
 
-- what we are doing
+- current task summary
+- work shape
 - current scope and non-goals
 - pending user judgments
+- active blockers
+- next safe actions
 - known evidence or evidence gaps
 - close blockers
 - visible residual risk
-- next safe action
+- guarantee level
 - source/freshness references
 
 ## Source records and refs
@@ -43,7 +46,7 @@ The card should use ordinary language first and exact Harness labels only where 
 
 Summary placeholders in this card are display bindings derived from the records above. Decision, evidence, close-blocker, residual-risk, and freshness summaries should show refs or explicit absence; they do not create user judgment context or authority.
 
-Do not include schema dumps, DDL, event logs, full artifacts, full reference docs, full Evidence Manifests, full Eval bodies, full Manual QA records, or report bodies in the card.
+Do not include schema dumps, full DDL, full event logs, full projection bodies, full artifact contents, raw logs/screenshots/diffs/traces, full reference docs, unrelated templates, future catalog material, full Evidence Manifests, full Eval bodies, full Manual QA records, or report bodies in the card.
 
 ## User-facing framing
 
@@ -52,36 +55,40 @@ Use this shape when the reader is the user. Keep each line short and readable.
 ````text
 TASK-{id} {title}
 Display only: derived from Core state and refs; not Core state and not write authority.
-Doing: {doing_summary}
+Work shape: {work_shape}
+Task summary: {task_summary}
 Scope now: {scope_summary|none}
 Non-goals: {non_goals_summary|none}
 Pending user judgments: {pending_user_judgments_summary|none}
+Active blockers: {active_blockers_summary|none}
+Next safe actions: {next_safe_actions_summary}
 Evidence: {known_evidence_summary|none}
 Evidence gaps: {evidence_gaps_summary|none}
 Close blockers: {close_blockers_summary|none}
 Visible residual risk: {residual_risk_summary|none}
-Next safe action: {next_safe_action}
+Guarantee level: {guarantee_level}; {guarantee_limit_summary}
 Sources/freshness: state={source_state_version|unknown}; refs={source_refs_summary|none}; rendered={updated_at|unknown}; freshness={projection_freshness}
 ````
 
 ## Agent compact framing
 
-Use this shape when the consumer is an agent context/reference payload. This is not a public schema; it is an example of the compactness target.
+Use this shape when the consumer is an agent context/reference payload. This is not a public schema and not evidence that a context API is implemented; it is an example of the compactness target.
 
 ````yaml
 task: {task_id}
-title: {title}
-mode: {mode}
-phase: {lifecycle_phase}
-doing: {doing_summary}
-scope_ref: {scope_ref|none}
-non_goals_ref: {non_goals_ref|none}
-pending_judgment_refs: {decision_packet_refs|none}
-evidence_refs: {evidence_refs|none}
+task_summary: {task_summary}
+work_shape: {work_shape}
+scope_and_non_goals:
+  scope_ref: {scope_ref|none}
+  non_goals_ref: {non_goals_ref|none}
+pending_user_judgments: {decision_packet_refs|none}
+active_blockers: {active_blocker_refs|none}
+next_safe_actions: {next_safe_actions_summary}
 evidence_gaps: {evidence_gaps_summary|none}
-close_blocker_refs: {close_blocker_refs|none}
-residual_risk_refs: {residual_risk_refs|none}
-next_safe_action: {next_safe_action}
+close_blockers: {close_blocker_refs|none}
+residual_risk_summary: {residual_risk_summary|none}
+guarantee_level: {guarantee_level}
+source_refs: {source_refs_summary|none}
 freshness:
   source_state_version: {source_state_version|unknown}
   rendered_at: {updated_at|unknown}
@@ -106,4 +113,4 @@ This is not user judgment context. If a user judgment is needed, render a separa
 
 Close status should preserve the close-reason distinction. Render `completed_with_risk_accepted` as successful close with accepted residual risk, not as ordinary done, verified, or self-checked close. Keep self-checked, `detached_verified`, verification-waived, QA-waived, and risk-accepted-close labels on separate display slots with refs or explicit absence. If work acceptance is the next action, the separate acceptance prompt must show evidence, verification, Manual QA, residual-risk visibility or `none`, and what acceptance does not replace.
 
-Large records stay refs-first. Evidence, Run, Eval, Manual QA, artifacts, logs, screenshots, diffs, and large traces are not embedded by default.
+Large records stay refs-first. Evidence, Run, Eval, Manual QA, artifacts, logs, screenshots, diffs, large traces, full projection bodies, unrelated templates, and future catalog material are not embedded by default.

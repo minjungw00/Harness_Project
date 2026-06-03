@@ -29,13 +29,16 @@ Keep these audiences separate:
 
 The v0.2 MVP projection is one compact status card. It must show:
 
-- what we are doing
+- current Task summary
+- work shape
 - current scope and non-goals
 - pending user judgments
+- active blockers
+- next safe actions
 - known evidence or evidence gaps
 - close blockers
 - visible residual risk
-- next safe action
+- guarantee level
 - source/freshness references
 
 The card must be readable for users and compact for agents. It should not dump schema fields, DDL, event logs, full artifacts, full reference docs, full Evidence Manifests, or full report bodies.

@@ -153,7 +153,7 @@ Harness is not the same kind of thing as agent instructions, MCP, reusable workf
 
 ## Agent Context Loading
 
-Reader paths are not prompt-loading bundles. Connected agents should keep always-on context to one screen or less: role or surface posture, current phase/context profile, current Task summary, active blockers, pending user-owned judgments, and next allowed action.
+Reader paths are not prompt-loading bundles. Connected agents should keep always-on context to one screen or less: current Task summary, work shape, scope/non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, residual-risk summary, guarantee level, and source refs/freshness.
 
 Use owner sections by phase and pull only what explains the next action. The detailed phase profile map lives in [Agent Integration Reference: Context Push/Pull Principles](reference/agent-integration.md#context-pushpull-principles), with user-facing behavior summarized in [Agent Session Flow](use/agent-session-flow.md).
 

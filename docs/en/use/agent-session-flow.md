@@ -65,21 +65,24 @@ A useful status or next-action response answers four questions in ordinary langu
 
 Render gate state through four user-facing display groups: Scope, User Judgments, Evidence, and Close Readiness. Explain the easy concept first, then add exact internal terms or refs only when they clarify a boundary, blocker, source ref, or runtime rule. User Judgments is structured, not one broad judgment bucket: label each item as Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, final acceptance, or residual-risk acceptance. These are display groups only; they do not replace kernel gates, add schema fields, change recompute rules, authorize writes, satisfy gates, accept residual risk, or close the Task. Exact gate values, recompute behavior, and close semantics are owned by [Kernel Reference](../reference/kernel.md#gates) and [`close_task`](../reference/kernel.md#close_task).
 
-The turn context should stay compact, current, and profile-filtered. The always-on context budget should fit on one screen or less and include only role or surface posture, current phase/context profile, current Task summary, active blockers, pending user-owned judgments, and the next allowed action. A source ref or freshness marker may be attached to those items, but do not inject full reference docs, schemas, old task history, historical event logs, unrelated templates, full projection bodies, or copied evidence bodies.
+The turn context should stay compact, current, and profile-filtered. The always-on context budget should fit on one screen or less and include only current Task summary, work shape, scope and non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, residual-risk summary, guarantee level, and source refs/freshness. A field may be `none` or `unknown`, but token savings must not hide a close-relevant blocker, judgment, evidence gap, or residual risk.
+
+Do not always inject full reference docs, full schemas, full Storage DDL, full historical event logs, full projection bodies, full artifact contents, raw logs/screenshots/diffs/traces, unrelated templates, future catalog material, old task history, or unrelated Roadmap material. Those stay pull-on-demand for the exact next action that needs them.
 
 Use progressive context loading instead of reading the whole documentation set into the agent prompt. The detailed context contract is in [Agent Integration Reference](../reference/agent-integration.md#context-pushpull-principles); in this user-facing flow, keep the context profile narrow and pull only the owner section that explains the next action:
 
 | Context profile | Show now | Minimal owner docs or refs to pull | Do not load by default |
 |---|---|---|---|
-| Session start | Current status or compact current-position summary, likely work shape, active blockers, pending user judgments, next allowed action, guarantee/MCP availability. | [Session start](#session-start), [Resume](#resume), current `harness.status` / `harness.next`, and projection freshness rules only if the readable view is stale or used for the next action. | Full task history, full Reference docs, full schemas, old projections, unrelated templates, unrelated Roadmap. |
-| Requirements clarification (`Discovery` internally) | Goal, user value, scope and non-goals, acceptance criteria, inspectable facts, tracked uncertainty, blocking questions grouped by judgment area, user-owned judgment candidates, QA/verification expectations, and safe next-work candidate or work split. | [User Guide: What the agent should answer first](user-guide.md#what-the-agent-should-answer-first), [Intake](#intake), [Scope and write boundary](#scope-and-write-boundary), and relevant current Task/Change Unit/Shared Design refs. | Whole module maps, old PRDs/designs, design-policy catalogs, full Storage DDL, full Conformance catalog, unrelated templates. |
-| Judgment request | Exact user-owned judgment, profile-appropriate options or chosen outcome, affected scope, relevant refs, what the answer does not settle, and next action after the answer. Full profiles also show recommendation, uncertainty, affected gates/acceptance criteria, and consequence of deferral. Use the internal Decision Packet owner only when exact record behavior is needed. | [Blocking User-Owned Judgments](#blocking-user-owned-decisions), the relevant Decision Packet owner section, and the specific MCP method only if exact fields are needed. | Broad approval language, unrelated judgments, full evidence bodies, full logs, full schema references, full Template set. |
-| Prepare-write | Active scope or Change Unit, Autonomy Boundary, intended paths/tools/commands summary, Approval status, active judgment requests or Decision Packets, Write Authority Summary, baseline/freshness. | [Product writes](#product-writes), [Kernel: prepare_write](../reference/kernel.md#prepare_write), and [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write) for the intended write. | Full Kernel/reference docs, unrelated schemas, historical event logs, large diffs/logs, full Storage DDL. |
-| Run/evidence | Run summary, changed-path summary, evidence coverage or Evidence Manifest ref, artifact refs, evidence gaps, redaction/integrity notes, next evidence action. | [Evidence and checks](#evidence-and-checks), [Kernel: record_run](../reference/kernel.md#record_run), [`harness.record_run`](../reference/mcp-api-and-schemas.md#harnessrecord_run), and artifact-ref display rules only when display or repair needs them. | Full logs, raw diffs, screenshots, traces, bundles, artifact inventories, full projection bodies, full Template set. |
-| Close readiness | Close readiness summary, blockers, sensitive-action approval status, evidence/verification/QA/final acceptance status, residual-risk visibility or accepted refs, projection freshness, smallest unblocker. | [Close](#close), [Verification, Manual QA, residual risk, acceptance](#verification-manual-qa-residual-risk-acceptance), [Kernel: close_task](../reference/kernel.md#close_task), and [`harness.close_task`](../reference/mcp-api-and-schemas.md#harnessclose_task). | Generic all-done rollups, full report bodies, full historical logs, unrelated templates, full Conformance catalog, full projection bodies. |
+| Session start | Current status or compact current-position summary, likely work shape, scope/non-goals when known, active blockers, pending user judgments, next safe action, evidence gaps, close blockers, residual-risk summary, guarantee level, source/freshness refs. | [Session start](#session-start), [Resume](#resume), current `harness.status` / `harness.next`, and projection freshness rules only if the readable view is stale or used for the next action. | Full task history, full Reference docs, full schemas, old projections, unrelated templates, unrelated Roadmap, future catalog. |
+| Planning/clarification (`Discovery` internally) | Goal, user value, scope and non-goals, acceptance criteria, inspectable facts, tracked uncertainty, blocking questions grouped by judgment area, user-owned judgment candidates, QA/verification expectations, and safe next-work candidate or work split. | [User Guide: What the agent should answer first](user-guide.md#what-the-agent-should-answer-first), [Intake](#intake), [Scope and write boundary](#scope-and-write-boundary), and relevant current Task/Change Unit/Shared Design refs. | Whole module maps, old PRDs/designs, design-policy catalogs, full Storage DDL, full Conformance catalog, unrelated templates, future catalog. |
+| Write preparation | Active scope or Change Unit, Autonomy Boundary, intended paths/tools/commands summary, Approval status, active judgment requests or Decision Packets, Write Authority Summary, baseline/freshness. | [Product writes](#product-writes), [Kernel: prepare_write](../reference/kernel.md#prepare_write), and [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write) for the intended write. | Full Kernel/reference docs, unrelated schemas, historical event logs, large diffs/logs, full Storage DDL, future catalog. |
+| Execution/run recording | Run summary, changed-path summary, consumed Write Authorization or no-write basis, artifact refs, redaction/integrity notes, and immediate next action. | [Evidence and checks](#evidence-and-checks), [Kernel: record_run](../reference/kernel.md#record_run), [`harness.record_run`](../reference/mcp-api-and-schemas.md#harnessrecord_run), and artifact-ref display rules only when display or repair needs them. | Full logs, raw diffs, screenshots, traces, bundles, artifact inventories, full projection bodies, full Template set, future catalog. |
+| Evidence review | Evidence coverage or Evidence Manifest ref when active, artifact refs, evidence gaps, stale or insufficient support, affected acceptance criteria or claims, redaction/integrity notes, and next evidence action. | [Evidence and checks](#evidence-and-checks), [Kernel: Evidence Manifest](../reference/kernel.md#evidence-manifest), [`harness.record_run`](../reference/mcp-api-and-schemas.md#harnessrecord_run), and artifact-ref display rules only when the gap or repair needs them. | Full evidence bodies, full logs, raw diffs, screenshots, traces, bundles, artifact inventories, full projection bodies, full Template set, future catalog. |
+| Close readiness | Close readiness summary, blockers, sensitive-action approval status, evidence/verification/QA/final acceptance status, residual-risk visibility or accepted refs, projection freshness, smallest unblocker. | [Close](#close), [Verification, Manual QA, residual risk, acceptance](#verification-manual-qa-residual-risk-acceptance), [Kernel: close_task](../reference/kernel.md#close_task), and [`harness.close_task`](../reference/mcp-api-and-schemas.md#harnessclose_task). | Generic all-done rollups, full report bodies, full historical logs, unrelated templates, full Conformance catalog, full projection bodies, future catalog. |
+| User judgment request | Exact user-owned judgment, options or selected outcome, consequences, uncertainty, affected scope, relevant refs, what the agent is not deciding for the user, what the answer does not settle, and next action after the answer. Full profiles also show recommendation, affected gates/acceptance criteria, and consequence of deferral. Use the internal Decision Packet owner only when exact record behavior is needed. | [Blocking User-Owned Judgments](#blocking-user-owned-judgments), the relevant Decision Packet owner section, and the specific MCP method only if exact fields are needed. | Broad approval language, unrelated judgments, full evidence bodies, full logs, full schema references, full Template set, future catalog. |
 | Recovery/error | Primary error or blocker, owner, last safe/current state known, stale or unavailable source, affected authority claims, next recovery action, and whether writes or close must hold. | [Resume](#resume), [Reading status and blockers](#reading-status-and-blockers), [Agent Integration: Fallback Semantics](../reference/agent-integration.md#fallback-semantics), and the specific recovery or error owner section. | Historical event logs, stack traces, full artifacts, unrelated status, full Storage DDL, full Conformance catalog, unrelated Roadmap. |
 
-Agent memory, chat history, retrieved context, indexed context, and projections stay read-only. They can suggest what to inspect, but they cannot authorize writes, satisfy gates, create evidence, perform verification, accept risk, close a Task, or make any other authority claim. When state matters, retrieve current Core state or state-derived compact context before acting. Token savings must not hide user-owned decisions, blockers, scope limits, safety boundaries, or close-relevant residual risk, and decision requests must include enough context for an informed answer.
+Agent memory, chat history, retrieved context, indexed context, and projections stay read-only. They can suggest what to inspect, but they cannot authorize writes, satisfy gates, create evidence, perform verification, accept risk, close a Task, or make any other authority claim. When state matters, retrieve current Core state or state-derived compact context before acting. Token savings must not hide user-owned decisions, blockers, scope limits, safety boundaries, evidence gaps, close blockers, or close-relevant residual risk. A judgment request must include the decision, options, consequences, uncertainty, and what the agent is not deciding for the user.
 
 ## Session start
 
@@ -372,6 +375,7 @@ Use Shared Design to record the shared understanding from requirements clarifica
 
 Inside the Autonomy Boundary, the agent may decide ordinary implementation details: whether to reuse an existing helper, how to split a private function, where to place focused tests, or which conservative internal approach best fits the agreed result. The agent must stop for the relevant user judgment before public API or module contract changes, security or privacy trade-offs, UX or product trade-offs, material technical direction such as dependency or migration choices, scope expansion, or residual-risk acceptance.
 
+<a id="blocking-user-owned-judgments"></a>
 <a id="blocking-user-owned-decisions"></a>
 
 ## Blocking User-Owned Judgments
@@ -379,6 +383,8 @@ Inside the Autonomy Boundary, the agent may decide ordinary implementation detai
 When user-owned Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, QA waiver, verification waiver, final acceptance, or residual-risk acceptance blocks progress, show a user judgment request. The internal record or template label may be Decision Packet, but ordinary prompts should start with the judgment, options, consequence, and next action. When a named sensitive action blocks progress, use the sensitive-action approval route. Do not replace any of these with broad approval or a vague "continue?" prompt.
 
 The word "approved" or a casual "go ahead," "proceed," "looks good," "진행해," or "좋아" is not enough when the underlying choice is a product trade-off, architecture direction, security/privacy trade-off, scope/autonomy change, QA waiver, verification waiver, final acceptance (Acceptance), residual-risk acceptance, or simple continuation. The prompt must name the judgment type, what the user is deciding, what is not being decided, the relevant scope and refs, what the agent may decide without the user, and the close or write impact.
+
+Token saving must not remove the context the user needs to decide. Even a compact judgment request must show the decision, options or selected outcome, consequences, uncertainty, and what the agent is not deciding for the user.
 
 A user-facing judgment request should include:
 
@@ -401,24 +407,59 @@ Use the Kernel's simpler judgment model behind user-facing prompts, but render t
 
 `judgment_domain`, `decision_kind`, and `decision_profile` are compatibility aliases for older request shapes. Do not present either the current fields or the aliases as independent axes the user has to understand. Affected gates or blocked actions are owned by separate fields and owner records. The exact public fields are owned by [`harness.request_user_judgment`](../reference/mcp-api-and-schemas.md#harnessrequest_user_judgment), and canonical authority is owned by [Decision Packet](../reference/kernel.md#decision-packet) and [Decision Gate](../reference/kernel.md#decision-gate). Render the judgment in ordinary language and keep refs available for drill-down.
 
-Judgment-centered prompts use verbs that match the route: choose, defer, reject, waive, accept, or reconcile. Use "approve" only when the route is a sensitive-action Approval. Good prompt shapes:
+Judgment-centered prompts use verbs that match the route: choose, defer, reject, waive, accept, or reconcile. Use "approve" only when the route is a sensitive-action Approval. Compact prompt examples:
+
+Simple judgment:
 
 ```text
 Judgment request: Settings button label
 Judgment type: Product / UX (`product_ux`)
-Should this scoped settings copy change use "Save" or "Update"? This only settles the label wording for this work; it does not settle broader settings behavior, localization strategy, final acceptance, residual-risk acceptance, or write authority.
+Decision: should this scoped settings copy change use "Save" or "Update"?
+Options: "Save" or "Update".
+Consequence: the chosen label becomes the copy target for this Change Unit.
+Uncertainty: none beyond normal copy preference.
+Agent is not deciding: broader settings behavior, localization strategy, final acceptance, residual-risk acceptance, or write authority.
 ```
+
+Tradeoff judgment:
 
 ```text
 Judgment request: Failed-login feedback pattern
 Judgment type: Product / UX (`product_ux`)
-Which failed-login experience should this scoped work use: inline layer, toast, or modal? Recommendation: inline layer because it preserves flow and accessibility. If deferred, I can continue backend auth wiring but not claim the final failed-login UX is done.
+Decision: which failed-login experience should this scoped work use?
+Options: inline message, toast, or modal.
+Recommendation: inline message because it preserves flow and accessibility.
+Consequence: the choice sets the UX target and Manual QA expectation for this flow.
+Uncertainty: existing accessibility patterns may make another option cheaper.
+Agent is not deciding: account-enumeration policy, final acceptance, residual-risk acceptance, or write authority.
+If deferred: backend auth wiring may continue only if it does not claim the final failed-login UX is done.
 ```
+
+Security/privacy judgment:
+
+```text
+Judgment request: PII logging policy
+Judgment type: Security / privacy (`security_privacy`)
+Decision: what user identifier, if any, may appear in diagnostic login logs?
+Options: no PII, redacted/tokenized id, or limited email/domain fields.
+Recommendation: redacted/tokenized id unless support needs require a narrower visible field.
+Consequence: the choice sets the evidence needed to prove logging follows the policy.
+Uncertainty: support workflows may need a visible field the repo cannot confirm.
+Agent is not deciding: legal/compliance acceptance, data-retention policy, sensitive-action Approval for external log access, or residual-risk acceptance.
+```
+
+Close-affecting judgment:
 
 ```text
 Judgment request: Mobile Safari Manual QA waiver
 Judgment type: QA / verification (`qa_verification`)
-Should I waive the mobile Safari Manual QA requirement for this close, or keep close blocked until Manual QA runs? Recommendation: keep it blocked unless release timing requires the waiver. This does not accept any remaining wrapping risk; if that risk remains close-relevant, show a separate residual-risk acceptance request. Affected group: Close Readiness; owner path/gate ref: Manual QA / qa_gate; affected criterion: AC-03 onboarding copy layout.
+Decision: waive the mobile Safari Manual QA requirement for this close, or keep close blocked until Manual QA runs?
+Options: waive the named Manual QA check, keep close blocked, or defer close.
+Recommendation: keep close blocked unless release timing requires the waiver.
+Consequence: a waiver changes close readiness for the named check only.
+Uncertainty: visual wrapping risk remains until a human check or accepted risk resolves it.
+Agent is not deciding: any remaining wrapping-risk acceptance, final acceptance, detached verification, or write authority.
+Affected group: Close Readiness; owner path/gate ref: Manual QA / qa_gate; affected criterion: AC-03 onboarding copy layout.
 ```
 
 Useful examples:

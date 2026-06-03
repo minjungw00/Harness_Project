@@ -29,13 +29,16 @@ Audience를 분리합니다.
 
 v0.2 MVP projection은 하나의 compact status card입니다. 반드시 다음을 보여줘야 합니다.
 
-- 무엇을 하고 있는지
+- 현재 Task 요약
+- 작업 모양
 - 현재 범위와 하지 않을 일
 - 대기 중인 사용자 판단
+- 활성 blocker
+- 다음 안전한 행동
 - 알려진 근거 또는 근거 gap
 - close blocker
 - 보이는 잔여 위험
-- 다음 안전한 행동
+- guarantee level
 - source/freshness ref
 
 Card는 사용자가 읽기 쉬우면서도 에이전트가 부담 없이 다룰 만큼 작아야 합니다. Schema field, DDL, event log, full artifact, full reference doc, full Evidence Manifest, full report body를 쏟아내면 안 됩니다.
