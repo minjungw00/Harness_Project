@@ -25,6 +25,8 @@ The walkthrough shows a staged reader path. v0.1 Core Authority Smoke implements
 
 ## Walkthrough at a glance
 
+Walkthrough summary: this planning diagram follows one intended request-to-close path; it is a reader aid, not a second source of truth or proof of an implemented runtime.
+
 ```mermaid
 flowchart LR
   Request["ordinary request"] --> Clarify["requirements clarification"]

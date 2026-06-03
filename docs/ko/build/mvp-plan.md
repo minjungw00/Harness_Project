@@ -46,6 +46,8 @@
 | v0.3 | 에이전시 보증 팩(v0.3 Agency Assurance Pack) | v0.2 user-value path를 verification, QA, residual-risk, work-acceptance, stewardship profile로 단단하게 만듭니다. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
 | v0.4 | 운영과 인계 팩(v0.4 Operations & Handoff Pack) | 같은 Core model로 doctor/readiness, recover/export, artifact integrity, release handoff, 더 넓은 conformance coverage를 지원합니다. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
 
+단계 지도 요약: 단계별 전달은 좁은 Core authority smoke loop에서 첫 사용자 가치로, 그다음 assurance와 operations/handoff로 확장됩니다. v1+는 promoted roadmap scope로 남습니다.
+
 ```mermaid
 flowchart LR
   Core["v0.1 Core Authority Smoke"] --> Value["v0.2 First User-Value Slice"]
@@ -186,6 +188,8 @@ Reference schema에는 관련 capability가 범위에 들어올 때만 필요한
 - v0.2 promotion criteria accepted.
 
 ### Core Authority Smoke 흐름
+
+Core Authority Smoke 요약: 이 계획 흐름은 project/Task setup, scope, `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref, structured status/blocker output으로 이루어진 하나의 authority loop를 검토하기 위한 것입니다. 이 저장소에 구현된 runtime flow를 뜻하지 않습니다.
 
 ```mermaid
 flowchart LR

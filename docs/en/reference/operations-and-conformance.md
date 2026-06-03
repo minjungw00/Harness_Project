@@ -88,27 +88,7 @@ Operator guarantee posture follows the [Security Threat Model stage map](securit
 | v0.4 Operations & Handoff Pack | Doctor, recover, export, artifact check, projection refresh, and reconcile are primarily detective/repair/report surfaces unless an exact profile proves stronger coverage. |
 | v1+ Expansion | Preventive or isolated operator claims require promoted owner docs, exact covered operations, fixture proof, and fallback behavior. |
 
-```mermaid
-flowchart TD
-  Core["Core rules and state authority"]
-  Core --> V01["v0.1 Core Authority Slice"]
-  Core --> V02["v0.2 User-Facing Harness MVP"]
-  Core --> V03["v0.3 Agency Assurance Pack"]
-  Core --> V04["v0.4 Operations & Handoff Pack"]
-  V04 -. roadmap .-> V1["v1+ Expansion"]
-  V01 --> Connect["connect/register"]
-  V01 --> Status["basic status"]
-  V01 --> Serve["minimal local MCP/API<br/>if needed"]
-  V02 --> MVPDiag["status, decisions,<br/>evidence, close,<br/>acceptance/risk"]
-  V03 --> Assurance["verification, QA, risk"]
-  V04 --> Refresh["projection refresh"]
-  V04 --> Reconcile["reconcile"]
-  V04 --> Recover["recover"]
-  V04 --> Export["export and handoff"]
-  V04 --> Artifacts["artifact check"]
-  V04 --> Conformance["conformance run"]
-  V1 --> Expansion["promoted candidates"]
-```
+Summary: operator behavior is staged. v0.1 keeps only minimal local registration/status and local API/MCP exposure if the first slice needs it; v0.2 adds user-facing status and blocker support; v0.3 adds assurance support; v0.4 adds operations and handoff; v1+ remains promoted roadmap scope.
 
 Exact command names and flags may vary by implementation. The reference target is the command-independent behavior contract: operator behavior is defined by Core state records, `state.sqlite.task_events`, artifact refs and files, projection jobs and freshness where those profiles exist, and API-owned errors or operator diagnostic labels. Console text, report prose, flag spelling, and shell exit formatting are display surfaces; they must not become a second state model.
 
@@ -154,17 +134,7 @@ Browser QA Capture conformance is a v1+ Expansion candidate, not a requirement o
 
 Connector and reference-surface smoke coverage follows the same staged rule. v0.1 needs only enough reference-surface coverage to exercise the Kernel Smoke path named by the fixture owner. Later packs broaden this into connector honesty, generated-file drift reporting, manual artifact/verification/QA fallbacks, projection/card display, and the connector conformance scenarios owned by [Agent Integration Reference](agent-integration.md#connector-conformance-overview). Preventive `T4`, automated `T6`, remote/shared MCP exposure, and broad connector automation stay outside v0.1 unless owner docs promote and prove a concrete reference path.
 
-```mermaid
-flowchart LR
-  Kernel["v0.1 Core Authority Slice"] --> MVP["v0.2 User-Facing Harness MVP"]
-  MVP --> Agency["v0.3 Agency Assurance Pack"]
-  Agency --> Ops["v0.4 Operations & Handoff Pack"]
-  Ops -. roadmap .-> Expansion["v1+ Expansion"]
-  Kernel --> K1["project, Task, one basic scope"]
-  Kernel --> K2["prepare_write and Write Authorization"]
-  Kernel --> K3["record_run and evidence link"]
-  Kernel --> K4["status/blocker output"]
-```
+Summary: v0.1 conformance scope is the narrow Core authority loop: project/Task setup, one scoped boundary, `prepare_write` plus Write Authorization, `record_run` plus evidence link, and status/blocker output. Later stages add user-facing, assurance, and operations coverage without making the broad future catalog an early-stage requirement.
 
 ## Docs-maintenance profile
 
@@ -187,6 +157,8 @@ Minimum report fields:
 - runtime effect: none; no canonical state transition was performed and no runtime fixture result was recorded
 
 Smoke categories should reference, not restate, the [Authoring Guide docs-maintenance checks](../maintain/authoring-guide.md#docs-maintenance-checks), including the required categories, review-output expectations, pass/warn/fail meanings, and owner-first drift resolution flow. Operator output may name those categories, but it must not turn Maintain guidance into runtime fixture semantics.
+
+Docs-maintenance summary: this smoke path reads Markdown and emits an ephemeral report only; it does not create Harness runtime state, artifacts, projections, QA, acceptance, risk, or close facts.
 
 ```mermaid
 flowchart LR
@@ -218,6 +190,8 @@ Later connector/operator profile behavior, required only when the active stage o
 - record connector profile freshness, capability profile version, detected version, last verification time, and conformance or operator-check basis in the connector manifest
 - confirm MCP configuration can reach the harness server
 - run a profile-specific smoke check or print the command to run it
+
+Connect sequence summary: registration links a Product Repository, Runtime Home, surface profile, optional MCP reachability check, and stage/profile check without treating generated files as state.
 
 ```mermaid
 sequenceDiagram
@@ -268,6 +242,8 @@ Full doctor/readiness categories:
 | validators/checks | required stable ValidatorResult-emitting validators, plus separately captured Core check/precondition categories |
 | agency/stewardship/context | Decision Packet and decision gate readiness, Autonomy Boundary readiness, residual-risk visibility, codebase stewardship, context freshness, stale chat/pull-only context not treated as authority |
 | security/threat model | local binding/access expectation, registered project/task/surface consistency, connector drift, sensitive-category side effects, redaction, omission, or block coverage that cuts across runtime home, artifact store, reference surface, and MCP availability; threat concepts are owned by [Security Threat Model Reference](security-threat-model.md) |
+
+Doctor summary: `doctor` reads readiness categories and reports diagnostic levels; it does not repair, mutate, or certify runtime state by the diagram alone.
 
 ```mermaid
 flowchart TD
@@ -369,6 +345,8 @@ Behavior when local MCP/API exposure is in scope:
 - report the active project and connected surface profile
 - fail clearly when the server cannot reach runtime state or artifact storage
 
+MCP serving summary: the server path is usable only when Core can reach Runtime Home and the connected surface can call the required local MCP tools.
+
 ```mermaid
 flowchart TD
   Start["harness serve mcp"] --> Server["server can reach runtime state and artifact storage?"]
@@ -413,6 +391,8 @@ all active Tasks
 approval/run/evidence/eval/direct reports for a Task
 design-quality projections when enabled
 ```
+
+Projection refresh summary: refresh renders from committed records and artifact refs, preserves editable areas, and routes managed-block drift to reconcile instead of changing Core state.
 
 ```mermaid
 flowchart TD
@@ -469,6 +449,8 @@ Decision outcomes:
 | create_decision | turn the proposal into a pending user judgment |
 | defer | keep the reconcile item open |
 
+Reconcile summary: human edits and generated drift become explicit reconcile items; only a merge path through Core can change canonical state.
+
 ```mermaid
 flowchart TD
   Input["human edit or managed/generated drift"] --> Item["create reconcile item"]
@@ -510,6 +492,8 @@ Required recovery classes:
 | MCP unavailable | report diagnostic condition `MCP_SERVER_UNAVAILABLE` or `SURFACE_MCP_UNAVAILABLE`, keep product/runtime/code writes held, and give the next diagnosis or reconnect step |
 | surface capability mismatch | report or emit `surface_capability_check` where the owner path allows it, reduce guarantee display, and hold or fail unsafe writes with existing `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, or blocked-reason paths rather than claiming preventive blocking |
 | local security posture weak or unknown | report the same `OK`/`WARN`/`FAIL`/`MANUAL` posture classes as doctor for Runtime Home permissions, artifact directory exposure, MCP reachability, stale MCP config, or broad local file access; hold write-capable or close-relevant recovery until the posture is diagnosed |
+
+Recovery summary: recover classifies the failure, records compensating facts when needed, and keeps failed projections, interrupted writes, stale baselines, and missing artifacts from becoming success claims.
 
 ```mermaid
 flowchart TD
@@ -570,6 +554,8 @@ Required contents:
 - artifact integrity manifest
 - retention status for included refs, including retained raw files copied into the bundle and expired or unavailable artifacts omitted from the bundle
 - redaction, omission, and block notes for omitted secrets, sensitive logs, screenshots, network traces, telemetry/logging content, and PII
+
+Export summary: export bundles are derived from Core state, event-version facts, registered artifacts, projection snapshots, and redaction/omission metadata; they are not a new authority space.
 
 ```mermaid
 flowchart TD
@@ -680,6 +666,8 @@ Required checks:
 - `blocked` artifacts are committed metadata-only notices and do not contain the forbidden capture payload; hash, size, and content type must match the metadata-only notice bytes
 - retention class is valid, and retained bytes or expired/unavailable refs are reported without treating expired or unavailable bytes as current evidence
 - projection or evidence refs resolve
+
+Artifact check summary: artifact integrity compares registered records with stored files and marks dependent evidence, projection freshness, or close readiness stale or blocked when the registered bytes cannot be trusted.
 
 ```mermaid
 flowchart TD

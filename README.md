@@ -46,9 +46,9 @@ Preserve the core thesis: Harness is not a prompt pack; it is a local authority 
 
 핵심 명제는 유지합니다. Harness는 prompt 묶음이 아니라 작업 범위, 사용자 판단, 근거, 검증, QA 기대, 작업 수락, 잔여 위험 상태를 다루는 로컬 기준 기록이자 판단 경로입니다. 제품 결정, 중요한 기술 결정, QA 기대치, 작업 수락, 잔여 위험 수용은 사용자 판단입니다. 근거, 검증, 수동 QA, 작업 수락, 잔여 위험은 서로 대체할 수 없습니다. 대화, Markdown으로 렌더링된 읽기용 요약, connector 출력, 생성 문서는 운영 기준이 아니며, Core가 소유한 로컬 상태와 아티팩트 참조가 운영 기준입니다.
 
-Decision records keep the current decision dimensions separate: `decision_kind` owns lifecycle, recorded user-decision route, resolution branch, gate, and state-transition semantics; `decision_profile` owns prompt depth, profile-specific requiredness, and the Decision Packet `profile_payload` branch; `judgment_domain` is the schema-owned user-visible judgment grouping; affected gates or blocked actions are recorded separately and define what the decision blocks or influences.
+User-owned judgments use explicit routes such as choose, approve-sensitive-action, waive, accept-result, accept-risk, reconcile, or defer. Sensitive-action approval, work acceptance, waiver, and residual-risk acceptance do not substitute for one another. Exact schema fields and compatibility aliases are owned by the Kernel and MCP/API reference docs.
 
-결정 기록은 현재 결정 모델의 각 차원을 분리합니다. `decision_kind`는 lifecycle, 사용자가 기록하는 답변 route, resolution branch, gate, state transition 의미를 담당하고, `decision_profile`은 질문 깊이, profile별 필수 정보, Decision Packet `profile_payload` branch를 담당합니다. `judgment_domain`은 schema가 소유하는 사용자 표시 판단 묶음이며, 영향을 받는 gate나 막힌 행동은 별도로 기록해 그 결정이 무엇을 막거나 바꾸는지 나타냅니다.
+사용자 소유 판단은 choose, approve-sensitive-action, waive, accept-result, accept-risk, reconcile, defer 같은 명시적인 route로 기록합니다. 민감 동작 승인, 작업 수락, waiver, 잔여 위험 수용은 서로 대체하지 않습니다. 정확한 schema field와 호환 alias는 Kernel 및 MCP/API reference 문서가 담당합니다.
 
 ## Problems Harness Solves / Harness가 해결하는 문제
 
@@ -108,9 +108,9 @@ Maintainer handoff: [English summary](docs/en/build/implementation-overview.md#m
 - v0.4 Operations & Handoff Pack: recover, export, release handoff, artifact integrity, and operator behavior. / 복구, 내보내기, 릴리스 인계, 아티팩트 무결성, 운영자 동작을 다루는 단계입니다.
 - v1+ Expansion: roadmap candidate space for dashboard, hosted UI, browser capture automation, team workflows, and other future items; candidates stay outside staged delivery until promoted through Roadmap criteria. / 대시보드, 호스팅 UI, 브라우저 캡처 자동화, 팀 작업 흐름 등 향후 항목을 다루는 로드맵 후보 공간입니다. 후보 항목은 로드맵의 단계 승격 조건을 통과하기 전까지 staged delivery 밖에 남습니다.
 
-Before starting Harness Server code, implementers should read the maintainer handoff summary, the [implementation-readiness criteria](docs/en/build/implementation-overview.md#implementation-readiness-criteria) / [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), the [server-coding decisions section](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) in the MVP Plan, and then the [First Runnable Slice](docs/en/build/first-runnable-slice.md).
+Before starting Harness Server code, implementers should read the maintainer handoff summary, the [implementation-readiness criteria](docs/en/build/implementation-overview.md#implementation-readiness-criteria) / [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), the [server-coding decisions section](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) in the MVP Plan, the [First Runnable Slice](docs/en/build/first-runnable-slice.md), and then the strict owner contracts for [Kernel](docs/en/reference/kernel.md), [MCP API and schemas](docs/en/reference/mcp-api-and-schemas.md), and [Storage/DDL](docs/en/reference/storage-and-ddl.md).
 
-하네스 서버 코드를 시작하기 전 구현자는 유지보수자용 [문서 인계 요약](docs/ko/build/implementation-overview.md#문서-인계-요약), [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), MVP 계획의 [서버 코딩 전 결정 섹션](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정), 그리고 [첫 실행 가능한 조각](docs/ko/build/first-runnable-slice.md)을 차례로 확인해야 합니다.
+하네스 서버 코드를 시작하기 전 구현자는 유지보수자용 [문서 인계 요약](docs/ko/build/implementation-overview.md#문서-인계-요약), [하네스 서버 구현 준비 조건](docs/ko/build/implementation-overview.md#하네스-서버-구현-준비-조건), MVP 계획의 [서버 코딩 전 결정 섹션](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정), [첫 실행 가능한 조각](docs/ko/build/first-runnable-slice.md), 그리고 엄격한 owner 계약인 [커널](docs/ko/reference/kernel.md), [MCP API와 스키마](docs/ko/reference/mcp-api-and-schemas.md), [Storage/DDL](docs/ko/reference/storage-and-ddl.md)을 차례로 확인해야 합니다.
 
 ## Start Here / 시작하기
 
@@ -119,10 +119,11 @@ Start at [docs/README.md](docs/README.md) for compact bilingual routing, the min
 | Need / 필요 | Start / 시작 |
 |---|---|
 | Minimal first-read path / 최소 첫 읽기 경로 | [docs/README.md](docs/README.md#minimal-first-read-path) |
-| Reader paths by role / 독자별 경로 | [docs/README.md](docs/README.md#reader-paths) |
-| English reader paths / 영어 독자 경로 | [docs/en/README.md](docs/en/README.md) |
-| Korean reader paths / 한국어 독자 경로 | [docs/ko/README.md](docs/ko/README.md) |
-| Reference owner lookup / Reference owner 찾기 | [English Reference Index](docs/en/reference/README.md) / [한국어 Reference 색인](docs/ko/reference/README.md) |
+| First-time reader / 처음 읽는 독자 | [Overview](docs/en/learn/overview.md) / [개요](docs/ko/learn/overview.md), then the user guide. |
+| User working with an agent / 에이전트와 작업하는 사용자 | [User Guide](docs/en/use/user-guide.md) / [사용자 가이드](docs/ko/use/user-guide.md) |
+| Implementer / 구현자 | [docs/README.md](docs/README.md#reader-paths), then Build and the Kernel/API/Storage owner docs. |
+| Documentation maintainer / 문서 유지보수자 | [Authoring Guide](docs/en/maintain/authoring-guide.md) / [문서 작성 가이드](docs/ko/maintain/authoring-guide.md) |
+| Future/reference reader / 향후/참조 독자 | [English Reference Index](docs/en/reference/README.md) / [한국어 Reference 색인](docs/ko/reference/README.md), then only the needed owner doc. |
 
 Strict contracts live in the Reference owner docs linked from the Reference indexes. Learn, Use, and Build pages should explain and route rather than duplicate those contracts.
 

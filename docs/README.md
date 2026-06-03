@@ -27,18 +27,22 @@ This repository is a documentation review/redesign repository today. Its intende
 | 4, implementers only / 구현자만 | [Implementation Overview](en/build/implementation-overview.md) | [구현 개요](ko/build/implementation-overview.md) |
 | Lookup only / 찾아볼 때만 | [Reference Index](en/reference/README.md) | [Reference 색인](ko/reference/README.md) |
 
+This first-read path intentionally stops before large Reference docs. Use Reference only when you need an exact owner contract.
+
+이 첫 읽기 경로는 큰 Reference 문서를 먼저 읽지 않도록 설계되어 있습니다. 정확한 owner 계약이 필요할 때만 Reference를 엽니다.
+
 <a id="reader-paths"></a>
 
 ## Reader Paths / 독자별 경로
 
 | Reader / 독자 | English path | 한국어 경로 |
 |---|---|---|
-| New user / 처음 읽는 사용자 | [Overview](en/learn/overview.md) -> [User Guide](en/use/user-guide.md); then [Concepts](en/learn/concepts.md) only when terms appear. | [개요](ko/learn/overview.md) -> [사용자 가이드](ko/use/user-guide.md); 용어가 나오면 [핵심 개념](ko/learn/concepts.md). |
-| User or product lead working with an agent / 에이전트와 작업하는 사용자 | [User Guide](en/use/user-guide.md) -> [Harness in One Task](en/learn/harness-in-one-task.md); use [Decision Packet Cookbook](en/use/decision-packet-cookbook.md) for complex choices. | [사용자 가이드](ko/use/user-guide.md) -> [하나의 작업으로 보는 하네스](ko/learn/harness-in-one-task.md); 복잡한 판단은 [결정 패킷 예시 모음](ko/use/decision-packet-cookbook.md). |
+| First-time reader / 처음 읽는 독자 | [Overview](en/learn/overview.md) -> [User Guide](en/use/user-guide.md); then [Concepts](en/learn/concepts.md) only when terms appear. | [개요](ko/learn/overview.md) -> [사용자 가이드](ko/use/user-guide.md); 용어가 나오면 [핵심 개념](ko/learn/concepts.md). |
+| User / 사용자 | [User Guide](en/use/user-guide.md) -> [Harness in One Task](en/learn/harness-in-one-task.md); use [Decision Packet Cookbook](en/use/decision-packet-cookbook.md) for complex choices. | [사용자 가이드](ko/use/user-guide.md) -> [하나의 작업으로 보는 하네스](ko/learn/harness-in-one-task.md); 복잡한 판단은 [결정 패킷 예시 모음](ko/use/decision-packet-cookbook.md). |
 | Agent behavior/integration author / 에이전트 통합자 | [Agent Session Flow](en/use/agent-session-flow.md) -> [Agent Integration Reference](en/reference/agent-integration.md) -> [Surface Cookbook](en/reference/surface-cookbook.md). | [에이전트 세션 흐름](ko/use/agent-session-flow.md) -> [에이전트 통합 참조](ko/reference/agent-integration.md) -> [Surface Cookbook](ko/reference/surface-cookbook.md). |
-| Harness Server implementer / 하네스 서버 구현자 | [Implementation Overview](en/build/implementation-overview.md) -> [MVP Plan](en/build/mvp-plan.md) -> [First Runnable Slice](en/build/first-runnable-slice.md) -> [Runtime Walkthrough](en/build/runtime-walkthrough.md). | [구현 개요](ko/build/implementation-overview.md) -> [MVP 계획](ko/build/mvp-plan.md) -> [첫 실행 가능한 조각](ko/build/first-runnable-slice.md) -> [Runtime Walkthrough](ko/build/runtime-walkthrough.md). |
-| Schema/reference reader / reference 확인자 | [Reference Index](en/reference/README.md), then the one owner doc for the contract you need. | [Reference 색인](ko/reference/README.md), 그다음 필요한 계약의 owner 문서 하나. |
+| Implementer / 구현자 | [Implementation Overview](en/build/implementation-overview.md) -> [MVP Plan](en/build/mvp-plan.md) -> [First Runnable Slice](en/build/first-runnable-slice.md) -> [Runtime Walkthrough](en/build/runtime-walkthrough.md) -> [Kernel](en/reference/kernel.md) -> [MCP/API schemas](en/reference/mcp-api-and-schemas.md) -> [Storage/DDL](en/reference/storage-and-ddl.md). | [구현 개요](ko/build/implementation-overview.md) -> [MVP 계획](ko/build/mvp-plan.md) -> [첫 실행 가능한 조각](ko/build/first-runnable-slice.md) -> [Runtime Walkthrough](ko/build/runtime-walkthrough.md) -> [커널](ko/reference/kernel.md) -> [MCP/API 스키마](ko/reference/mcp-api-and-schemas.md) -> [Storage/DDL](ko/reference/storage-and-ddl.md). |
 | Documentation maintainer / 문서 유지보수자 | [Authoring Guide](en/maintain/authoring-guide.md) -> [Translation Guide](en/maintain/translation-guide.md), with owner docs only for strict meaning. | [문서 작성 가이드](ko/maintain/authoring-guide.md) -> [번역 가이드](ko/maintain/translation-guide.md), 엄격한 의미 확인에는 owner 문서만. |
+| Future/reference reader / 향후/참조 독자 | [Reference Index](en/reference/README.md), then the one owner doc for the contract you need; use [Roadmap](en/roadmap.md) and [Future Fixture Catalog](en/reference/future-fixture-catalog.md) only for future or diagnostic material. | [Reference 색인](ko/reference/README.md), 그다음 필요한 계약의 owner 문서 하나만 엽니다. 향후 또는 diagnostic material은 [로드맵](ko/roadmap.md)과 [향후 Fixture Catalog](ko/reference/future-fixture-catalog.md)에서 따로 봅니다. |
 
 ## Status And Handoff / 상태와 인계
 

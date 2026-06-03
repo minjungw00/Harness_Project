@@ -67,16 +67,18 @@ Harness Runtime Home:
   registry.sqlite, project.yaml, state.sqlite, and the artifact store
 ```
 
+The diagram below is the implementation-facing version of the three-space design contract. It shows intended future placement only; no Harness Server/runtime implementation or runtime data exists in this repository today.
+
 ```mermaid
 flowchart LR
-  Repo["Product Repository<br/>product files"]
-  Server["Harness Server<br/>source repo and installation"]
-  Home["Harness Runtime Home<br/>state and artifacts"]
+  Repo["Product Repository<br/>product files and projections"]
+  Server["Harness Server / Installation<br/>MCP, Core, validators, projector, reconcile"]
+  Home["Harness Runtime Home<br/>registry, state.sqlite, artifact store"]
 
   Repo -->|requests and facts| Server
   Server -->|scoped writes and projections| Repo
-  Server -->|state and ArtifactRefs| Home
-  Home -->|Core records| Server
+  Server -->|Core state changes and ArtifactRefs| Home
+  Home -->|current records and events| Server
 ```
 
 This split keeps chat, Markdown reports, generated connector files, operator output, MCP caller claims, and product source files outside canonical operational state. Only a Core state-changing path can commit canonical operational state.

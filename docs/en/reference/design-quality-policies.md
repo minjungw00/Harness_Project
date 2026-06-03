@@ -230,6 +230,8 @@ Example: The agent may refactor local helper names inside scope, but must stop b
 | `evidence` | User request refs, task constraints, policy refs, Decision Packet refs, stop-condition events, user response refs. |
 | `close_impact` | At `prepare_write`, triggered stop conditions or boundary gaps block the write. User-owned judgment gaps should request or reference a Decision Packet and affect `decision_gate`; design-quality gaps may affect `design_gate`. Scope, sensitive-action Approval, and capability gaps remain visible as their own blockers. Unresolved stop conditions can block close until resolved, deferred, or accepted with recorded risk. |
 
+Autonomy Boundary summary: the boundary separates low-risk implementation latitude from user-owned judgment, stop conditions, and `prepare_write` blockers; it does not grant write authority by itself.
+
 ```mermaid
 flowchart TD
   Intent["agent work intent"] --> Boundary["active Change Unit Autonomy Boundary"]
@@ -519,6 +521,8 @@ Waivers must be explicit, scoped, and recorded. A policy waiver must include:
 Policy waivers can satisfy a design-quality requirement only where the policy contract allows it. They do not waive product-write scope, sensitive-action Approval, required evidence coverage, required acceptance, or any other kernel blocker. Verification waivers are owned by the kernel close semantics and must not produce `assurance_level=detached_verified`.
 
 Waivers that involve verification, QA, public API/interface commitment, scope expansion, technical/architecture direction, dependency direction, schema/data-model migration, module boundary change, or acceptance with known risk should also satisfy `decision_quality` and respect any active `autonomy_boundary`.
+
+Policy waiver summary: a policy waiver can affect only the policy-owned impact that allows waiver; kernel blockers, decision quality, and Autonomy Boundary requirements remain separate.
 
 ```mermaid
 flowchart TD

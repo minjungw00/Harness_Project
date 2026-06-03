@@ -58,6 +58,8 @@ Status/next recommendations, including Role Lens recommendations, are fixture-ob
 
 `browser-qa-candidate` recommendations are subject to the same read-only rule. A recommendation may name Browser QA Capture as useful for a `T6 QA Capture` surface, but the recommendation alone must not mutate state, enqueue projections, create artifacts, create or satisfy evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. If the surface does not support browser capture, the recommendation should name the fallback of human Manual QA notes and manually supplied artifacts rather than treating unsupported capture as a staged-delivery failure. Actual artifacts, Manual QA records, QA gate updates, Eval results, or close effects require a later public mutation through Core.
 
+Future suite map summary: these are catalog-only Agency Assurance Pack suite families and concerns; they are not runnable fixtures or early MVP requirements by being listed here.
+
 ```mermaid
 flowchart LR
   Suites["Agency Assurance Pack suites"] --> Agency["agency"]

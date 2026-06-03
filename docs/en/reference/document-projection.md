@@ -91,26 +91,35 @@ A Markdown report can link to evidence and summarize state, but it is neither th
 
 ### Projection, state, and artifact authority map
 
-This diagram shows the authority boundary that generated Markdown must preserve. Notice that state records and artifact refs feed projection, while human edits to Markdown return only as reconcile input until Core accepts a state-changing action.
+This source-of-truth map is a design contract for future projection behavior. Core current records, event history, and registered artifact refs are authority; projection, chat, connector output, and tool output are readable or input surfaces until a Core path records a state-changing action.
 
 ```mermaid
 flowchart LR
-  Core["Core state"]
-  ArtifactRefs["ArtifactRefs"]
+  Chat["chat, connector, and tool output"]
+  Projection["Markdown projection"]
+  Edit["human edit or proposal"]
+  Reconcile["reconcile candidate"]
+  CorePath["Core state-changing path"]
+  Records["Core current records"]
+  Events["state.sqlite.task_events"]
+  Artifacts["artifact store and ArtifactRefs"]
   Projector["Projector"]
-  Views["derived views"]
-  Human["human edit"]
-  Reconcile["Core or reconcile path"]
 
-  Core --> Projector
-  ArtifactRefs --> Projector
-  Projector --> Views
-  Views -. edit is input .-> Human
-  Human -. candidate .-> Reconcile
-  Reconcile -->|accepted update| Core
+  Chat -. input only .-> CorePath
+  Projection -. readable view .-> Chat
+  Projection -. edit input .-> Edit
+  Edit -. candidate .-> Reconcile
+  Reconcile --> CorePath
+  CorePath --> Records
+  CorePath --> Events
+  CorePath --> Artifacts
+  Records --> Projector
+  Events --> Projector
+  Artifacts --> Projector
+  Projector --> Projection
 ```
 
-Strict projection behavior is owned by this reference, especially the [Document authority matrix](#document-authority-matrix), [Managed block rules](#managed-block-rules), and [Freshness and failure rules](#freshness-and-failure-rules). Canonical state and gates are owned by [Kernel Reference](kernel.md), artifact relation storage is owned by [Storage And DDL](storage-and-ddl.md), and public projection refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md). The diagram summarizes authority direction only.
+Strict projection behavior is owned by this reference, especially the [Document authority matrix](#document-authority-matrix), [Managed block rules](#managed-block-rules), and [Freshness and failure rules](#freshness-and-failure-rules). Canonical state and gates are owned by [Kernel Reference](kernel.md), artifact relation storage is owned by [Storage And DDL](storage-and-ddl.md), and public projection refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md). The diagram summarizes authority direction only and does not imply a projection system is implemented in this repository today.
 
 Generated reports should make this visible without requiring the reader to know this reference first. In examples and templates, `source_state_version` names the state clock used for the render, `projection_version` or projection status names the rendered view, `updated_at` names when the view was produced, and freshness lines say whether the view still matches its source records. None of those fields make Markdown the owner of Task state, gates, approvals, evidence, verification, Manual QA, Decision Packets, work acceptance, residual-risk visibility, and residual-risk acceptance.
 

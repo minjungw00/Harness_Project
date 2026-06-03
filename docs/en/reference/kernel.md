@@ -130,6 +130,30 @@ Harness separates what the user is judging from how the judgment is routed inter
 | `accept-risk` | The user accepts a named visible close-relevant Residual Risk for the requested close. | No-risk close, detached verification, QA pass, evidence sufficiency, work acceptance, or sensitive-action Approval. |
 | `reconcile` | The user or operator resolves human-editable or generated/projection drift into accepted state, note, rejection, decision request, or deferral. | Direct state mutation from Markdown, report prose, or chat. |
 
+This route map is the design contract for user-owned judgment. The route verb determines which owner path can change; broad approval is intentionally absent.
+
+```mermaid
+flowchart LR
+  Need["user-owned judgment needed"]
+  Need --> Choose["choose<br/>product, technical, security, or scope"]
+  Need --> Approve["approve-sensitive-action<br/>Approval only"]
+  Need --> Waive["waive<br/>named requirement only"]
+  Need --> Accept["accept-result<br/>work acceptance"]
+  Need --> Risk["accept-risk<br/>visible Residual Risk"]
+  Need --> Reconcile["reconcile<br/>projection or generated drift"]
+  Need --> Defer["defer<br/>recorded effect"]
+
+  Choose --> Decision["Decision Packet route"]
+  Waive --> Decision
+  Accept --> Decision
+  Risk --> Decision
+  Defer --> Decision
+  Approve --> Approval["Approval route"]
+  Reconcile --> CorePath["Core or reconcile path"]
+```
+
+Each route remains separate after recording: Approval does not choose product direction, waiver does not perform the skipped check, work acceptance does not accept risk, and reconcile does not turn Markdown into state without a Core path.
+
 ### Display depth
 
 | Display depth | Use for | Minimum display |
@@ -536,6 +560,22 @@ The minimal write sequence is:
 5. If allowed, use the returned Write Authorization for one compatible product-write Run.
 6. Record the Run, artifacts, evidence refs, and any blockers through `record_run`.
 
+This write-authority sequence is the Kernel design contract. Scope, required user judgment, and sensitive-action Approval are inputs to `prepare_write`; only an allowed `prepare_write` creates a single-use Write Authorization, and `record_run` records what happened rather than authorizing it retroactively.
+
+```mermaid
+flowchart LR
+  Scope["scoped Task / Change Unit"] --> Prepare["prepare_write"]
+  Judgment["required user judgment<br/>Decision Packet if needed"] --> Prepare
+  Approval["sensitive-action Approval<br/>if needed"] --> Prepare
+  Prepare -->|allowed| Auth["single-use Write Authorization"]
+  Prepare -->|not allowed| Blocker["structured blocker"]
+  Auth --> Run["product-write Run"]
+  Run --> Record["record_run"]
+  Record --> Artifacts["artifacts and evidence refs"]
+  Record --> Status["status or blockers"]
+  Blocker --> Status
+```
+
 ## prepare_write
 
 `prepare_write` is the unique product-write authorization decision point. Approval, Decision Packet resolution, `record_run`, `close_task`, reports, projections, and agent prose can provide inputs or context, but none of them authorize a product-file write or create a consumable Write Authorization.
@@ -600,6 +640,23 @@ The decision algorithm checks the close intent and required gates:
 14. Assign result, close reason, assurance level, residual-risk state, and acceptance state as separate facts.
 15. Report projection freshness when projection support is enabled.
 16. Append close events and enqueue projection refresh when projection support is enabled.
+
+This close-decision flow is a design-contract summary. Verification, Manual QA, work acceptance, and residual-risk acceptance are checked only when the active profile, task, user request, or explicit requirement makes them relevant; they are not always-required detached steps.
+
+```mermaid
+flowchart TD
+  Intent["close_task intent"] --> Safe["no unsafe open Run"]
+  Safe --> Judgments["blocking judgments and Approval"]
+  Judgments --> Evidence["evidence when required"]
+  Evidence --> Verify["verification when required"]
+  Verify --> QA["Manual QA when required"]
+  QA --> Acceptance["work acceptance when required"]
+  Acceptance --> Risk["residual risk visible and accepted when required"]
+  Risk --> Ready{"all required close facts compatible?"}
+  Ready -->|no| Blockers["return close blockers"]
+  Ready -->|yes| Close["record close result"]
+  Close --> Events["append close events"]
+```
 
 Structured close blockers must name the category that blocks close, such as open Run, scope, user-owned judgment, sensitive-action Approval, design policy, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, work acceptance, projection freshness, or artifact availability. Public responses may choose one primary error code, but secondary blockers and refs must remain visible.
 

@@ -25,6 +25,8 @@
 
 ## 한눈에 보는 walkthrough
 
+Walkthrough 요약: 이 계획 도식은 의도한 request-to-close path 하나를 따라가는 독자용 지도입니다. 두 번째 source of truth도 아니고 구현된 runtime의 증거도 아닙니다.
+
 ```mermaid
 flowchart LR
   Request["일상 요청"] --> Clarify["요구사항 구체화"]
@@ -43,7 +45,7 @@ flowchart LR
   CloseCheck -->|준비| Close["Task 닫힘"]
 ```
 
-눈여겨볼 점은 이 diagram이 reader path이며 두 번째 source of truth나 v0.1 requirement list가 아니라는 것입니다. 요구사항 구체화와 projection-like output은 stage가 범위에 있을 때 work를 구체화하거나 읽는 데 도움을 주지만, 쓰기 권한은 `prepare_write`, 실행 기록은 `record_run`, 완료 blocker는 close/status owner path가 담당합니다. v0.1에서 readable output은 status/blocker 출력만으로 충분합니다. v0.2의 close-facing output은 full later assurance close model이 아니라 close blocker summary와 compact status card입니다. 정확한 state와 gate behavior는 [커널 참조](../reference/kernel.md)에 있고, public call은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)에 있습니다.
+눈여겨볼 점은 이 도식이 reader path이며 두 번째 source of truth나 v0.1 requirement list가 아니라는 것입니다. 요구사항 구체화와 projection-like output은 stage가 범위에 있을 때 work를 구체화하거나 읽는 데 도움을 주지만, 쓰기 권한은 `prepare_write`, 실행 기록은 `record_run`, 완료 blocker는 close/status owner path가 담당합니다. v0.1에서 readable output은 status/blocker 출력만으로 충분합니다. v0.2의 close-facing output은 full later assurance close model이 아니라 close blocker summary와 compact status card입니다. 정확한 state와 gate behavior는 [커널 참조](../reference/kernel.md)에 있고, public call은 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)에 있습니다.
 
 ## 단계별 runtime path
 

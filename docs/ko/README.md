@@ -16,16 +16,18 @@
 4. 향후 하네스 서버 구현을 검토하거나 계획할 때만 [구현 개요](build/implementation-overview.md)를 봅니다.
 5. 정확한 계약이 필요할 때만 [Reference 색인](reference/README.md)을 봅니다.
 
+이 경로는 일부러 짧게 잡았습니다. 하네스를 처음 이해하기 위해 큰 Reference 문서부터 읽을 필요는 없습니다.
+
 ## 독자별 경로
 
 | 독자 | 먼저 읽기 | 이어서 보기 |
 |---|---|---|
-| 처음 읽는 사용자 | [개요](learn/overview.md) | [사용자 가이드](use/user-guide.md); 빠른 권한 경계 예시는 [15분 만에 보는 하네스](learn/harness-in-15-minutes.md); 용어 이름이 필요할 때만 [핵심 개념](learn/concepts.md). |
-| 에이전트와 작업하는 사용자 | [사용자 가이드](use/user-guide.md) | 전체 작업 흐름은 [하나의 작업으로 보는 하네스](learn/harness-in-one-task.md); 복잡한 선택은 [사용자 소유 판단 예시](use/decision-packet-cookbook.md). |
+| 처음 읽는 독자 | [개요](learn/overview.md) | [사용자 가이드](use/user-guide.md); 빠른 권한 경계 예시는 [15분 만에 보는 하네스](learn/harness-in-15-minutes.md); 용어 이름이 필요할 때만 [핵심 개념](learn/concepts.md). |
+| 사용자 | [사용자 가이드](use/user-guide.md) | 전체 작업 흐름은 [하나의 작업으로 보는 하네스](learn/harness-in-one-task.md); 복잡한 선택은 [사용자 소유 판단 예시](use/decision-packet-cookbook.md). |
 | 에이전트 통합자 | [에이전트 세션 흐름](use/agent-session-flow.md) | [에이전트 통합 참조](reference/agent-integration.md), [Surface Cookbook](reference/surface-cookbook.md), 정확한 필드가 필요할 때 특정 API 담당 문서. |
-| 하네스 서버 구현자 | [구현 개요](build/implementation-overview.md) | 단계 계획은 [MVP 계획](build/mvp-plan.md), v0.1 구현 순서는 [첫 실행 가능한 조각](build/first-runnable-slice.md), request-to-close 경로는 [Runtime Walkthrough](build/runtime-walkthrough.md), 그다음 관련 Reference 담당 문서. |
-| 참조 문서 확인자 | [Reference 색인](reference/README.md) | kernel, API/schema, storage, projection/template, security, operations/conformance, agent integration, design policy, glossary, runtime architecture 중 필요한 계약 담당 문서만 엽니다. |
+| 구현자 | [구현 개요](build/implementation-overview.md) | [MVP 계획](build/mvp-plan.md), [첫 실행 가능한 조각](build/first-runnable-slice.md), [Runtime Walkthrough](build/runtime-walkthrough.md), 그다음 첫 strict owner 문서인 [커널](reference/kernel.md), [MCP/API 스키마](reference/mcp-api-and-schemas.md), [Storage/DDL](reference/storage-and-ddl.md). |
 | 문서 유지보수자 | [문서 작성 가이드](maintain/authoring-guide.md) | [번역 가이드](maintain/translation-guide.md), [로드맵](roadmap.md), 엄격한 의미를 확인할 때만 Reference 담당 문서. |
+| 향후/참조 독자 | [Reference 색인](reference/README.md) | 지금 필요한 계약의 owner 문서만 엽니다. [로드맵](roadmap.md), [향후 Fixture Catalog](reference/future-fixture-catalog.md), future/diagnostic projection 문서는 MVP 구현 입력이 아니라 분리된 고급/향후 자료로 봅니다. |
 
 ## 문서별 역할
 
@@ -69,6 +71,11 @@ Build 문서는 이 순서로 읽습니다.
 2. [MVP 계획](build/mvp-plan.md): v0.1부터 v0.4까지의 단계 계획과 서버 코딩 전 결정 기록.
 3. [첫 실행 가능한 조각](build/first-runnable-slice.md): v0.1 구현 순서.
 4. [Runtime Walkthrough](build/runtime-walkthrough.md): request-to-close runtime path.
+5. [커널 참조](reference/kernel.md): Core authority, gate, 쓰기 권한, close semantics.
+6. [MCP API와 스키마](reference/mcp-api-and-schemas.md): public tool/resource, envelope, schema, error.
+7. [Storage와 DDL](reference/storage-and-ddl.md): persisted runtime layout, state table, lock, artifact, migration.
+
+Future/diagnostic material은 Build 또는 Reference owner가 해당 단계로 명시적으로 승격하기 전까지 MVP 구현 경로 밖에 둡니다.
 
 ## 참조 문서
 

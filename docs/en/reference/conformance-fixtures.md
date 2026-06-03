@@ -158,6 +158,8 @@ expected_projection: object
 expected_error: object | null
 ```
 
+Fixture shape summary: suite metadata can group fixtures, but the fixture body keeps one exact action-and-expectation shape for future executable conformance.
+
 ```mermaid
 classDiagram
   class FixtureBody {
@@ -217,6 +219,8 @@ Future runtime fixture execution semantics:
 5. Capture resulting state summaries, appended owner events, validator results when emitted, artifact registry/file integrity, projection job status when relevant, reconcile items when relevant, and returned error code.
 6. Compare the captured results with `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error`; empty expected sections mean the fixture asserts no relevant effect for that section.
 7. Report fixture id, pass/fail, observed state summary, observed events, artifact integrity result, projection freshness, and error comparison.
+
+Runner sequence summary: a future runner loads an exact fixture body, seeds an isolated runtime, executes through Core, compares state/events/artifacts/projection/errors, and emits a report.
 
 ```mermaid
 sequenceDiagram

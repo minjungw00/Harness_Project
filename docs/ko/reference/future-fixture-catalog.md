@@ -58,6 +58,8 @@ Status/next recommendations는 Role Lens recommendations를 포함해 read respo
 
 `browser-qa-candidate` recommendation도 같은 read-only rule을 따릅니다. Recommendation은 `T6 QA Capture` 접점에서 Browser QA Capture가 유용하다고 이름 붙일 수 있지만, recommendation alone으로 상태를 변경하거나, projection을 대기열에 넣거나, artifact를 만들거나, evidence를 만들거나 충족하거나, verification을 수행 또는 기록하거나, QA를 기록하거나, QA 또는 verification을 면제하거나, 잔여 위험을 받아들이거나, 결과를 수락하거나, Task를 닫거나, assurance를 올리면 안 됩니다. 접점이 browser capture를 지원하지 않으면 unsupported capture를 staged-delivery failure로 다루는 대신 사람이 작성한 수동 QA notes와 수동 제공 artifacts fallback을 이름 붙여야 합니다. Actual artifacts, 수동 QA records, QA gate updates, Eval results, close effects에는 이후 Core를 통한 public mutation이 필요합니다.
 
+향후 suite 지도 요약: 이 항목들은 catalog-only Agency Assurance Pack suite family와 concern입니다. 여기에 나열됐다는 이유만으로 runnable fixture나 초기 MVP requirement가 되지 않습니다.
+
 ```mermaid
 flowchart LR
   Suites["Agency Assurance Pack"] --> Agency["agency"]

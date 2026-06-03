@@ -230,20 +230,22 @@ Shared Design은 기록된 shared understanding이지 final approval, sensitive-
 | `evidence` | User request ref, task constraint, policy ref, Decision Packet ref, stop-condition event, user response ref. |
 | `close_impact` | `prepare_write`에서 발생한 중지 조건 또는 경계 공백은 write를 차단한다. 사용자 소유 판단 gap은 Decision Packet을 요청하거나 참조해야 하며 `decision_gate`에 영향을 준다. Design-quality gap은 `design_gate`에 영향을 줄 수 있다. Scope, sensitive-action Approval, capability gap은 각자의 blocker로 남는다. 해소되지 않은 중지 조건은 해소되거나, deferred되거나, recorded risk로 accepted될 때까지 close를 차단할 수 있다. |
 
+Autonomy Boundary 요약: 이 경계는 scope 안의 낮은 위험 구현 재량과 사용자 소유 판단, 중지 조건, `prepare_write` blocker를 나눕니다. 그 자체로 쓰기 권한을 주지는 않습니다.
+
 ```mermaid
 flowchart TD
-  Intent["agent 작업 의도"] --> Boundary["active Autonomy Boundary"]
-  Boundary --> MayDo["agent가 할 수 있음"]
-  Boundary --> UserJudgment["사용자 판단 필요"]
+  Intent["agent 작업 의도"] --> Boundary["active Change Unit Autonomy Boundary"]
+  Boundary --> MayDo["scope 안의 낮은 위험 구현 세부사항"]
+  Boundary --> UserJudgment["사용자 판단 필요: 제품/기술 방향, residual risk, public/module commitment, policy waiver"]
   Boundary --> Stops["중지 조건"]
   Boundary --> Prepare["prepare_write"]
 
   UserJudgment --> Packet["Decision Packet"]
   Stops --> StopTriggered{"triggered?"}
-  StopTriggered -- yes --> Hold["보류 또는 해소"]
+  StopTriggered -- yes --> Hold["보류, 해소, defer, 또는 recorded risk"]
   StopTriggered -- no --> Prepare
-  Prepare --> Blockers["scope, approval, capability gap"]
-  Prepare --> WriteAuth["Write Authorization"]
+  Prepare --> Blockers["scope, approval, capability, boundary gap"]
+  Prepare --> WriteAuth["모든 write check 통과 시 Write Authorization"]
 ```
 
 ### Vertical Slice (`vertical_slice`)
@@ -521,19 +523,21 @@ Waiver는 explicit, scoped, recorded여야 합니다. 정책 waiver에는 다음
 
 Verification, QA, public API/interface 약속, 범위 확장, 기술/아키텍처 방향, dependency 방향, schema/data-model migration, module boundary change, 알려진 위험이 있는 작업 수락과 관련된 waiver는 `decision_quality`도 충족하고 active `autonomy_boundary`를 따라야 합니다.
 
+Policy waiver 요약: policy waiver는 waiver를 허용한 policy-owned impact에만 영향을 줄 수 있습니다. Kernel blocker, decision quality, Autonomy Boundary requirement는 따로 남습니다.
+
 ```mermaid
 flowchart TD
   Gap["정책 요구 미충족"] --> Allowed{"waiver 허용?"}
-  Allowed -- no --> KeepImpact["impact 유지"]
-  Allowed -- yes --> Record["waiver 기록"]
-  Record --> Kernel["kernel blocker 유지"]
-  Record --> Decision{"사용자 판단 관련?"}
+  Allowed -- no --> KeepImpact["gate, write, close, decision impact 유지"]
+  Allowed -- yes --> Record["policy, Task/Change Unit, reason, accepted risk, actor, expiry/follow-up, affected impact 기록"]
+  Record --> Kernel["kernel authority blocker는 따로 유지"]
+  Record --> Decision{"verification, QA, public API/interface, scope, technical/architecture, dependency/schema/module boundary, known risk 관련?"}
   Decision -- yes --> Quality["decision_quality_check"]
   Decision -- yes --> Boundary["autonomy_boundary"]
-  Decision -- no --> Waived["policy impact waive"]
-  Quality --> Conditions["조건 충족"]
+  Decision -- no --> Waived["policy-owned impact waive 가능"]
+  Quality --> Conditions["필요한 waiver 조건을 함께 충족"]
   Boundary --> Conditions
-  Kernel --> Separate["따로 유지"]
+  Kernel --> Separate["policy waiver로 면제되지 않음"]
   Conditions --> Waived
 ```
 

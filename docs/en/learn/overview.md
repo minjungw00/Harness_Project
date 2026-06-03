@@ -42,6 +42,22 @@ The future Harness system keeps three local spaces distinct.
 | Harness Server / Installation | The future local Harness program and tool surface that will mediate Harness requests and maintain authority records. This implementation does not exist in this repository yet. |
 | Harness Runtime Home | The future local data home for registered project state and durable evidence artifacts. This repository is not that runtime home. |
 
+This design-contract diagram gives first-time readers the location of Harness without requiring the architecture reference. It describes the intended future runtime shape, not an implemented server in this repository.
+
+```mermaid
+flowchart LR
+  Product["Product Repository<br/>product work and readable views"]
+  Server["Harness Server / Installation<br/>future local authority layer"]
+  Home["Harness Runtime Home<br/>Core state and artifacts"]
+
+  Product -->|requests and product facts| Server
+  Server -->|scoped writes and readable projections| Product
+  Server -->|Core state changes and ArtifactRefs| Home
+  Home -->|current records and events| Server
+```
+
+Core state and artifact refs live in the Runtime Home. Product files, chat, and projections remain outside authority unless routed through Core.
+
 This separation matters because generated reports should not become state, chat should not become state, and product files should not be confused with Harness's operating record.
 
 ## What Harness Tracks

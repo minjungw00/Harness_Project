@@ -67,16 +67,18 @@
   registry.sqlite, project.yaml, state.sqlite, artifact store
 ```
 
+아래 도식은 세 공간에 대한 구현 관점의 설계 계약입니다. 향후 의도한 배치만 보여주며, 이 저장소에 하네스 서버/런타임 구현이나 런타임 데이터가 있다는 뜻은 아닙니다.
+
 ```mermaid
 flowchart LR
-  Repo["제품 저장소<br/>제품 파일"]
-  Server["하네스 서버<br/>소스 저장소와 설치"]
-  Home["하네스 런타임 홈<br/>상태와 근거"]
+  Repo["제품 저장소<br/>제품 파일과 projection"]
+  Server["하네스 서버/설치<br/>MCP, Core, validator, projector, reconcile"]
+  Home["하네스 런타임 홈<br/>registry, state.sqlite, artifact store"]
 
   Repo -->|요청과 사실| Server
-  Server -->|범위 내 쓰기와 요약| Repo
-  Server -->|상태와 ArtifactRef| Home
-  Home -->|Core 기록| Server
+  Server -->|범위가 정해진 쓰기와 projection| Repo
+  Server -->|Core 상태 변경과 ArtifactRef| Home
+  Home -->|현재 기록과 events| Server
 ```
 
 이 분리는 대화, Markdown 보고서, 생성된 connector 파일, operator output, MCP caller claim, 제품 소스 파일을 기준 운영 상태 밖에 둡니다. Core 상태 변경 경로만 기준 운영 상태를 commit할 수 있습니다.
@@ -315,7 +317,7 @@ Architecture 관점의 stage default는 다음과 같습니다. v0.1은 cooperat
 
 ### 보장 수준 동작 지도
 
-이 diagram은 guarantee label이 어디에서 통제 behavior를 바꾸고, 어디에서는 바꾸지 않는지 보여줍니다. 눈여겨볼 점은 Core가 먼저 authority decision을 내린다는 것입니다. Guarantee level은 authority를 만들지 않습니다. Denied 또는 held operation이 covered operation에 대해 instruction, after-action detection, fixture-proven 실행 전 차단, isolation 중 무엇으로 처리되는지 설명할 뿐입니다.
+이 도식은 guarantee label이 어디에서 통제 behavior를 바꾸고, 어디에서는 바꾸지 않는지 보여줍니다. 눈여겨볼 점은 Core가 먼저 authority decision을 내린다는 것입니다. Guarantee level은 authority를 만들지 않습니다. Denied 또는 held operation이 covered operation에 대해 instruction, after-action detection, fixture-proven 실행 전 차단, isolation 중 무엇으로 처리되는지 설명할 뿐입니다.
 
 ```mermaid
 flowchart TB
@@ -333,7 +335,7 @@ flowchart TB
   Blocker --> Records
 ```
 
-Preventive label은 connected profile이 설명 중인 operation에 대한 fixture-proven coverage를 가질 때만 적용됩니다. Isolated label은 connected profile이 주장하는 separation boundary를 문서화하고 증명한 경우에만 적용됩니다. Fresh evaluator bundle, fresh session, separate worktree는 verification independence와 stale-context control을 뒷받침할 수 있습니다. Sandbox 격리, 권한 계층, locked-down runner, process boundary, container boundary 표현은 profile이 exact mechanism을 이름 붙이고 증명한 경우에만 보안 격리 표현으로 씁니다. 이 label은 work를 approve하거나, Write Authorization을 만들거나, gate를 충족하거나, evidence를 만들거나, verification을 수행하거나, risk를 accept하거나, Task를 close하지 않습니다. 엄격한 `prepare_write`와 `record_run` 동작은 [커널 참조](kernel.md#prepare_write)와 [커널 참조](kernel.md#record_run)가 담당합니다. Public response shape와 error precedence는 [MCP API와 스키마](mcp-api-and-schemas.md)가 담당합니다. 구체적인 profile declaration은 [Agent 통합 참조](agent-integration.md#capability-profiles)가 담당합니다. 이 diagram은 통제 방향을 보여주는 참고일 뿐입니다.
+Preventive label은 connected profile이 설명 중인 operation에 대한 fixture-proven coverage를 가질 때만 적용됩니다. Isolated label은 connected profile이 주장하는 separation boundary를 문서화하고 증명한 경우에만 적용됩니다. Fresh evaluator bundle, fresh session, separate worktree는 verification independence와 stale-context control을 뒷받침할 수 있습니다. Sandbox 격리, 권한 계층, locked-down runner, process boundary, container boundary 표현은 profile이 exact mechanism을 이름 붙이고 증명한 경우에만 보안 격리 표현으로 씁니다. 이 label은 work를 approve하거나, Write Authorization을 만들거나, gate를 충족하거나, evidence를 만들거나, verification을 수행하거나, risk를 accept하거나, Task를 close하지 않습니다. 엄격한 `prepare_write`와 `record_run` 동작은 [커널 참조](kernel.md#prepare_write)와 [커널 참조](kernel.md#record_run)가 담당합니다. Public response shape와 error precedence는 [MCP API와 스키마](mcp-api-and-schemas.md)가 담당합니다. 구체적인 profile declaration은 [Agent 통합 참조](agent-integration.md#capability-profiles)가 담당합니다. 이 도식은 통제 방향을 보여주는 참고일 뿐입니다.
 
 
 보장 수준 표시는 경계의 양쪽을 모두 이름 붙여야 합니다. 연결된 profile이 실행 전에 실제로 막을 수 있는 것과, 실행 뒤에만 감지할 수 있는 것을 나눠 보여줘야 합니다. Surface name, product name, recipe name, friendly mode label만으로는 capability가 증명되지 않습니다. 선언은 실제 host/profile capability profile과 현재 proof basis에서 나와야 합니다. Guard, freeze, careful-mode label은 connected profile이 입증한 capability를 그대로 따르며, cooperative 또는 detective profile을 preventive blocking으로 올려 주지 않고 새 authority tier도 만들지 않습니다.

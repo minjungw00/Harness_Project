@@ -36,6 +36,8 @@ Make a small copy change, but tell me if it turns into a broader product decisio
 
 The agent response should translate the request into understood scope, what the agent can inspect itself, what only the user can judge, what evidence would be needed, and what blocks close. Exact Harness labels can follow only when they clarify a boundary or source ref.
 
+This intended-runtime diagram summarizes the ordinary request flow: clarify the request, route user-owned judgment, use write authority only when needed, record runs/evidence, then report status or close blockers. It is design guidance for future Harness behavior, not evidence that this repository contains an implementation.
+
 ```mermaid
 flowchart LR
   Request["ordinary user request"] --> Clarify["requirements clarification"]

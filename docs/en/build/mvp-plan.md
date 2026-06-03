@@ -46,6 +46,8 @@ The early output model is intentionally small:
 | v0.3 | Agency Assurance Pack | The v0.2 user-value path is hardened with verification, QA, residual-risk, work-acceptance, and stewardship profiles. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
 | v0.4 | Operations & Handoff Pack | The same Core model supports doctor/readiness, recover/export, artifact integrity, release handoff, and broader conformance coverage. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
 
+Stage map summary: staged delivery moves from a narrow Core authority smoke loop to first user value, then assurance, then operations and handoff; v1+ remains promoted roadmap scope.
+
 ```mermaid
 flowchart LR
   Core["v0.1 Core Authority Smoke"] --> Value["v0.2 First User-Value Slice"]
@@ -186,6 +188,8 @@ This checklist is not accepted yet. Maintainers must accept each item, or explic
 - v0.2 promotion criteria accepted.
 
 ### Core Authority Smoke flow
+
+Core Authority Smoke summary: this planning flow proves one authority loop around project/Task setup, scope, `prepare_write`, Write Authorization, `record_run`, artifact/evidence refs, and structured status/blocker output. It is not an implemented runtime flow in this repository today.
 
 ```mermaid
 flowchart LR
