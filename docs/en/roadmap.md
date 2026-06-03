@@ -14,12 +14,12 @@ This is roadmap documentation. It does not authorize runtime/server implementati
 
 ## Before you read
 
-Staged delivery is owned by [Build: MVP Plan](build/mvp-plan.md). For current handoff and implementation planning, start with [Build: Implementation Overview](build/implementation-overview.md#maintainer-handoff-summary), then check [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding), [Build: First Runnable Slice](build/first-runnable-slice.md), and [Build: MVP Plan](build/mvp-plan.md). For exact contracts, use the Reference docs.
+Staged delivery is owned by [Build: Staged Delivery Plan](build/mvp-plan.md). For current handoff and implementation planning, start with [Build: Implementation Overview](build/implementation-overview.md#maintainer-handoff-summary), then check [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding), [Build: First Runnable Slice](build/first-runnable-slice.md), and [Build: Staged Delivery Plan](build/mvp-plan.md). For exact contracts, use the Reference docs.
 
 Current stage names are:
 
-- v0.1 Core Authority Slice
-- v0.2 User-Facing Harness MVP
+- v0.1 Core Authority Smoke
+- v0.2 First User-Value Slice
 - v0.3 Agency Assurance Pack
 - v0.4 Operations & Handoff Pack
 - v1+ Expansion
@@ -63,8 +63,8 @@ These examples describe candidate areas only. They do not add stage requirements
 | Candidate area | Boundary before promotion |
 |---|---|
 | Dashboard, hosted workflow UI, artifact dashboard, richer cards, richer visualizations | May display Core-derived state or projections. Must not become authority, implementation readiness, close readiness, final acceptance, residual-risk acceptance, QA completion, verification satisfaction, projection freshness, workflow routing, or metric interpretation. |
-| Browser capture automation | May collect screenshots, console logs, network traces, accessibility snapshots, and workflow recordings as artifact candidates. Must not replace human Manual QA judgment, final acceptance, detached verification, redaction policy, or the existing Manual QA/artifact path. |
-| Cross-surface verification | May route verification bundles to another agent surface or evaluator environment after promotion. Must not record an Eval, satisfy verification, raise assurance, accept a result, or close a Task without Core-owned return records and the required independence semantics. |
+| Browser capture automation | May collect screenshots, console logs, network traces, accessibility snapshots, and workflow recordings as artifact candidates. Must not replace human Manual QA judgment, final acceptance, profile-required detached verification, redaction policy, or the existing Manual QA/artifact path. |
+| Cross-surface verification | May route verification bundles to another agent surface or evaluator environment after promotion. Must not record an Eval, satisfy verification, raise assurance, accept a result, or close a Task without Core-owned return records and any independence semantics required by the active profile. |
 | Broad connector ecosystem, connector marketplace, hosted UI, hosted/remote runtime | May extend surfaces later. Must not widen MCP exposure, create authority, bypass Core, replace the local reference proof, imply remote/runtime guarantees, or make unsupported surfaces fail earlier stages by default. |
 | Native hooks, preventive guard expansion, advanced sidecar watcher | May strengthen guard display, artifact capture, command observation, or file-write observation where a surface proves the mechanism. Must not claim pre-execution blocking, OS isolation, tamper-proof storage, or arbitrary-tool control by label alone. Observations route through Core records, validators, artifact registration, or reconcile before affecting state. |
 | Context Index, local derived metrics, long-term metrics | May provide read-only retrieval or diagnostics. Must not authorize writes, create Write Authorization, resolve Decision Packets, grant Approval, satisfy gates, create evidence, record verification or QA, refresh projections, declare readiness, accept risk, accept results, upgrade assurance, or close Tasks. |
@@ -72,4 +72,4 @@ These examples describe candidate areas only. They do not add stage requirements
 | Advanced exports, release/deployment/canary/rollback/merge/production-monitoring automation | May become future integration work. Release handoff remains a report/export boundary unless owner docs promote more; deployment, merge, rollback, and production authority stay external until explicitly scoped and proven. |
 | Advanced validators and language or interface checks | May become future stewardship or diagnostic coverage. Must not become early-stage fixture failure, acceptance, QA, or close criteria until owner docs define the exact policy, severity, waiver, and fixture behavior. |
 
-Use [Build: MVP Plan](build/mvp-plan.md#roadmap-scoped-v1-expansion-candidates) for the staged-delivery boundary, and use this page only to track candidates that remain outside staged delivery until promoted.
+Use [Build: Staged Delivery Plan](build/mvp-plan.md#roadmap-scoped-v1-expansion-candidates) for the staged-delivery boundary, and use this page only to track candidates that remain outside staged delivery until promoted.
