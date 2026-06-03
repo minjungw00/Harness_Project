@@ -37,12 +37,42 @@ The early output model is intentionally small:
 - MVP-1 needs only a compact Core-derived status card and minimum user-readable summaries for current work status, next output, user judgment request/record, evidence summary, close blocker summary, residual-risk visibility, and separate display of sensitive approval, work acceptance, and risk acceptance. These summaries are not a full projection/reporting system.
 - Journey Card, Journey Spine, Run Summary, TDD Trace, Module Map, Interface Contract, Export, detailed Evidence Manifest, and detailed Eval outputs remain Future/diagnostic projections or other later-profile scope unless an owner profile explicitly promotes them.
 
+## MVP-1 User Work Loop implementation contract
+
+MVP-1 User Work Loop is the first user-value implementation contract. It is reached after Engineering Checkpoint and must not be pulled into the first runnable internal smoke. Its target statement is:
+
+When a user starts work in plain language, Harness preserves a local basis for the work scope, pending user judgments, evidence summary, close blockers, next safe action, and minimal separation between work acceptance and residual-risk acceptance.
+
+MVP-1 includes:
+
+- plain-language work intake and resume
+- scope, non-goals, and success criteria
+- user judgment request and record through `harness.request_user_judgment` and `harness.record_user_judgment`
+- cooperative pre-write scope check through Core and `prepare_write`, not OS-level blocking or arbitrary-tool isolation
+- run and evidence reference recording through the `record_run` / artifact-ref path
+- compact status and next-action summary, with `harness.status.next_actions` as the preferred minimum path and `harness.next` optional
+- close-blocker display through status or close responses
+- minimal work acceptance and residual-risk separation through user-judgment and residual-risk records when those routes are required
+
+MVP-1 excludes:
+
+- dashboard
+- hosted UI
+- full Decision Packet output for every judgment
+- OS-level sandbox or permission isolation
+- detailed Evidence Manifest
+- full report/export
+- runtime conformance suite
+- operations, recovery, and handoff pack
+
+This contract is deliberately user-visible but small. It does not require detached verification by default, a full Manual QA matrix, full Approval lifecycle hardening, projection job infrastructure, broad connector support, operations tooling, or any roadmap automation. Later profiles may add those behaviors only through their owner contracts.
+
 ## Delivery Model
 
 | Concept | What it proves | What it does not prove |
 |---|---|---|
 | Engineering Checkpoint | A first runnable internal Core authority loop over one local project registration, one active Task, one scoped boundary, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence ref, and one structured status/blocker response. | User-facing product value, natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, operations/export/recover, dashboards, and connectors. |
-| MVP-1 User Work Loop | Users can start or resume tracked work in ordinary language and see Core-derived scope, non-goals, success criteria, judgment separation, status/next output, evidence summary, close blockers, residual-risk visibility, and separated sensitive approval / work acceptance / risk acceptance display. | Full detached verification independence unless an active profile requires it, full Manual QA matrix, full waiver machinery, polished Journey/Spine/reporting, detailed Eval, TDD Trace, Module Map, Interface Contract, Export/Recover, broad connectors, operations suite, and dashboard. |
+| MVP-1 User Work Loop | Users can start or resume tracked work in ordinary language and see Core-derived scope, non-goals, success criteria, judgment requests/records, status/next output, evidence summary, close blockers, residual-risk visibility, and separated sensitive approval / work acceptance / risk acceptance display. | Dashboard, hosted UI, full Decision Packet output for every judgment, OS-level sandbox or permission isolation, detailed Evidence Manifest, full report/export, runtime conformance suite, operations/recovery/handoff pack, full detached verification unless an active profile requires it, full Manual QA matrix, full waiver machinery, polished Journey/Spine/reporting, detailed Eval, TDD Trace, Module Map, Interface Contract, broad connectors, and operations suite. |
 | Assurance Profile | The MVP-1 user-value path is hardened with verification, QA, residual-risk, work-acceptance, and stewardship profiles. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
 | Operations Profile | The same Core model supports doctor/readiness, recover/export, artifact integrity, release handoff, and broader conformance coverage. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
 | Roadmap | Future expansion candidates can be promoted only after owner docs define exact contracts, guarantee level, fixtures, fallback behavior, and no projection-as-canonical dependency. | No roadmap candidate is required for Engineering Checkpoint, MVP-1, Assurance Profile, or Operations Profile unless explicitly promoted. |
@@ -92,7 +122,7 @@ The MCP API reference defines exact schemas for every method it documents. Stage
 | Stage | Active API surface | Later-profile fields to keep out of the stage exit |
 |---|---|---|
 | Engineering Checkpoint | Minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, one owner-valid active Task/scope setup path, and optionally minimal `harness.next` or a narrow `harness.close_task` blocker smoke. | Natural-language intake, full Discovery, full-format user judgment presentation, Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, reconcile, export/recover, broad operations. |
-| MVP-1 User Work Loop | User-facing intake/start/resume behavior, work-shape classification, `harness.status.next_actions` with optional `harness.next`, minimal `harness.request_user_judgment` / `harness.record_user_judgment` or successor naming, evidence summaries through `harness.record_run`, close blocker summaries through `harness.close_task`, and a compact Core-derived status card. | Full detached verification independence unless required by active profile/user request/task type/risk profile, full Manual QA matrix, full waiver machinery, Approval hardening, detailed Eval, TDD Trace, Module Map, Interface Contract, export/recover, broad operations. |
+| MVP-1 User Work Loop | User-facing intake/start/resume behavior, work-shape classification, `harness.status.next_actions` as the preferred next-safe-action path with optional `harness.next`, minimal `harness.request_user_judgment` / `harness.record_user_judgment`, evidence summaries through `harness.record_run`, close blocker summaries through `harness.close_task`, and a compact Core-derived status card. | Full detached verification independence unless required by active profile/user request/task type/risk profile, full Manual QA matrix, full waiver machinery, Approval hardening, detailed Eval, TDD Trace, Module Map, Interface Contract, export/recover, broad operations. |
 | Assurance Profile | `harness.launch_verify`, `harness.record_eval`, `harness.record_manual_qa`, assurance/waiver/approval/risk profiles of judgment methods, evidence/feedback/TDD profiles of `harness.record_run`, and ValidatorResult-emitting assurance paths. | Operator recover/export completeness, broad projection/reconcile operations, release handoff. |
 | Operations Profile | Projection freshness in API responses, reconcile judgment profile, operator readiness/recover/export/artifact-integrity/conformance surfaces owned by Operations. | Dashboard, hosted workflow UI, broad connectors, automation, team workflow, orchestration unless promoted later. |
 
@@ -154,26 +184,39 @@ Reference schemas may list fields that become necessary only when the related ca
 | Stage | Build reading rule | Owner contracts to apply |
 |---|---|---|
 | Engineering Checkpoint | Use only the owner-defined fields needed to prove the narrow authority loop and the [Engineering Checkpoint schema](../reference/storage-and-ddl.md#core-authority-smoke-schema). Avoid creating future-profile records just to satisfy a broad checklist; if a minimal seeded blocker uses an owner ref, apply only the valid shape for that owner path, not profile-specific user-facing judgment presentation quality. | [Kernel Reference](../reference/kernel.md), [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Storage And DDL](../reference/storage-and-ddl.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
-| MVP-1 User Work Loop | Add the fields and display summaries needed for users to understand current work shape, scope/non-goals/success criteria, pending user judgment, evidence summary, close blockers, residual-risk visibility, and separated approval/acceptance/risk-acceptance displays. Work-acceptance and residual-risk facts stay distinct when relevant, but they fit inside the minimal summaries. | [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Kernel Reference](../reference/kernel.md), [Document Projection Reference](../reference/document-projection.md), [Template Reference](../reference/templates/README.md). |
+| MVP-1 User Work Loop | Add the fields and display summaries needed for users to understand current work shape, scope/non-goals/success criteria, pending user judgments, evidence summary, close blockers, next safe action, residual-risk visibility, and separated approval/work-acceptance/risk-acceptance displays. Work-acceptance and residual-risk facts stay distinct when relevant, but they fit inside the minimal summaries. | [MCP API And Schemas](../reference/mcp-api-and-schemas.md), [Kernel Reference](../reference/kernel.md), [Document Projection Reference](../reference/document-projection.md), [Template Reference](../reference/templates/README.md). |
 | Assurance Profile / Operations Profile | Add verification, QA, residual-risk, work-acceptance, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, and release-handoff profiles only where owner docs define them. | [Design Quality Policies](../reference/design-quality-policies.md), [Operations And Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md), [Future Fixture Catalog](../reference/future-fixture-catalog.md), [Storage And DDL](../reference/storage-and-ddl.md). |
 
 Required in an API schema therefore means required when that tool call, record, or profile is active or used. It does not make a future-profile field part of the smallest runnable slice by itself.
 
 ### Implementation decisions needed before server coding
 
-This open decision ledger is the central server-coding decision log for decisions found during maintainer review or first runtime-batch planning. Do not create scattered `TODO_DECISION` markers or vague follow-ups for major implementation choices.
+This section is the central server-coding decision log for decisions found during maintainer review or first runtime-batch planning. Do not create scattered `TODO_DECISION` markers or vague follow-ups for major implementation choices.
+
+#### Documentation-resolved decisions for MVP-1
+
+The items below are resolved in the documentation baseline. They still require maintainer acceptance with the rest of the documentation before coding, but they are no longer open Build-scope questions.
+
+| Decision-log item | Documentation baseline decision | Coding boundary |
+|---|---|---|
+| Simplified judgment model and naming | Canonical docs use `UserJudgment` / `user_judgment`, `harness.request_user_judgment`, `harness.record_user_judgment`, `judgment_type`, `presentation`, and `display_label`. Decision Packet is optional full-format presentation, not the default record family. | Preserve these names unless maintainers explicitly reopen the item before API/DDL coding. |
+| `request_user_decision` vs `request_user_judgment` | `harness.request_user_judgment` and `harness.record_user_judgment` are canonical. `harness.request_user_decision` and `harness.record_user_decision` are compatibility aliases only. | Compatibility aliases must not create extra methods, state paths, or authority. |
+| `harness.next` separate method vs `status.next_actions` | `harness.status.next_actions` is the preferred MVP-1 next-safe-action output. `harness.next` is optional expanded/compatibility read output derived from the same Core state. | MVP-1 can satisfy the minimum next-action requirement without a separate `harness.next` method if status clearly returns the next safe action and smallest unblocker. |
+| MVP-1 storage minimum | MVP-1 builds on the Engineering Checkpoint schema with `task_intake`, `user_judgments`, `residual_risks`, `evidence_summaries`, and `close_readiness`; `user_judgment_requests` and `projection_status_cards` are optional. | Do not add later-profile `approvals`, `evidence_manifests`, Manual QA, Eval, projection job, reconcile, export/recover, validator-run, or operations tables to the MVP-1 exit unless an owner profile promotes them. |
+| Local access error taxonomy | API-visible early failures use the MCP/API owner taxonomy: `MCP_UNAVAILABLE`, `LOCAL_ACCESS_MISMATCH`, `STATE_CONFLICT` for stale expected state or replay conflict, `CAPABILITY_INSUFFICIENT` for recognized surfaces lacking required capability, and `PROJECTION_STALE` only for stale readable views. Operations may distinguish `MCP_SERVER_UNAVAILABLE` from `SURFACE_MCP_UNAVAILABLE`. | Build docs do not define new error codes. Use the MCP/API and Security owner contracts for precedence and display-safe details. |
+| Compact status card scope | MVP-1 status/card output is a Core-derived display of current work shape, scope/non-goals/success criteria, pending judgments, evidence summary or gaps, close blockers, residual-risk summary, next safe action, guarantee level, and source/freshness refs. Optional card persistence is not required. | A compact card must not authorize writes, satisfy evidence, record acceptance, accept residual risk, close a Task, or become canonical state. Stale, failed, or unknown freshness must be visible. |
+| Small direct change evidence requirement | Small direct changes still use explicit scope, compatible `prepare_write`, and `record_run`. Evidence may be lightweight, but the completion claim must be backed by the Run/artifact/evidence refs or evidence summary required by the active path. | Missing required evidence blocks close; small-change labeling must not bypass authority, user judgment, evidence, or risk visibility. Detailed Evidence Manifest remains later-profile scope. |
+| Acceptance and residual risk minimal records | MVP-1 separates sensitive-action approval, work acceptance, and residual-risk acceptance through `user_judgment` records when those routes are required. Visible residual risks use `residual_risks`; accepted risk is state on the residual-risk row, not a separate accepted-risk record kind. | Work acceptance is not sensitive-action approval, and residual-risk acceptance is not work acceptance. Committed Approval lifecycle, full residual-risk acceptance metadata, and assurance hardening remain later-profile unless promoted. |
+
+#### Implementation decisions still open
+
+No old MVP-1 scope item from the ledger above remains open as a Build-contract question after this pass. The remaining open items are implementation-readiness and future-review gates, not scattered product-contract TODOs.
 
 | Decision-log item | Current status | Decision condition |
 |---|---|---|
-| Simplified judgment model and naming | Resolved in the documentation baseline; still requires maintainer acceptance with the rest of the docs before coding. Canonical docs use `UserJudgment` / `user_judgment`, `harness.request_user_judgment`, `harness.record_user_judgment`, `judgment_type`, `presentation`, and `display_label`. | Implementation planning must preserve those names unless maintainers reopen this ledger item before API/DDL coding. |
-| `request_user_decision` vs `request_user_judgment` | Resolved in the documentation baseline as `harness.request_user_judgment`; `harness.request_user_decision` is a compatibility alias only. | Public API freeze should either accept this documented direction or explicitly reopen the item with a migration impact. |
-| `harness.next` separate method vs `status.next_actions` | Open. Engineering Checkpoint / MVP-1 may not need both. | Decide whether MVP-1 exposes next action as a separate method, a field on `harness.status`, or both with one canonical source. |
-| MVP-1 storage minimum | Open. MVP-1 needs minimal user judgment, status/card, evidence summary, blocker, acceptance display, and residual-risk visibility, but not later assurance tables by default. | Accept the exact minimum tables/fields and explicitly defer later-profile storage. |
-| Local access error taxonomy | Open. MCP/Core unavailable, local access denied/untrusted, stale state, and unsupported surface need stable user-visible and API error handling. | Accept error codes, precedence, and display wording for Engineering Checkpoint / MVP-1. |
-| Compact status card scope | Open. MVP-1 needs a Core-derived compact card, but the included fields and freshness rules are not yet accepted. | Decide required card fields, omitted fields, stale/unavailable behavior, and whether it is a resource, status payload, or both. |
-| Small direct change evidence requirement | Open. Small direct work must not bypass authority, but the minimum evidence expectation needs a stage decision. | Decide what evidence summary/ref is required for small direct changes and when a missing ref blocks close. |
-| Acceptance and residual risk minimal records | Open. MVP-1 displays sensitive approval, work acceptance, and risk acceptance separately, but the minimum record shape needs acceptance. | Decide whether MVP-1 creates minimal records, display-only derived state, or a staged subset of later acceptance/risk records. |
 | Implementation-readiness judgment | Not accepted. | Maintainers must deliberately update [Implementation Overview: Documentation acceptance status](implementation-overview.md#documentation-acceptance-status) after the readiness criteria are satisfied or remaining blockers are reclassified. |
+| Public API/DDL coding acceptance | Not accepted for coding. The documentation baseline records the intended Engineering Checkpoint and MVP-1 contracts, but maintainer acceptance is still required before server code, DDL, migrations, fixtures, or runtime data are created. | Before coding a behavior, maintainers must accept the relevant owner docs or explicitly defer a behavior with stage impact. |
+| Newly discovered owner-contract conflict | None currently recorded in this Build ledger. | If maintainer review or runtime-batch planning discovers a real schema/design, stage-boundary, guarantee-level, fixture-semantics, or storage/API conflict, add it here with stage impact before coding the affected behavior. |
 | Documentation drift | Not a server-coding decision by default. | If a docs-maintenance finding exposes a real owner-contract decision or stage blocker, promote it into this log with stage impact; otherwise route it through the Authoring Guide tracker. |
 
 When a confirmed decision is added, record:
@@ -221,7 +264,7 @@ For future smoke authoring order, use the [Kernel Smoke Authoring Queue](../refe
 
 ## MVP-1 User Work Loop
 
-MVP-1 is the first user-value slice. It is not a full product MVP, assurance system, QA matrix, evaluation harness, reporting suite, operations suite, or dashboard. It is defined by the smallest ordinary-language experience that lets a user see Harness preserving scope, user-owned judgment, evidence summary, close blockers, and residual-risk visibility in Core-owned local state.
+MVP-1 is the first user-value slice. It is not a full product MVP, assurance system, QA matrix, evaluation harness, reporting suite, operations suite, dashboard, or hosted UI. It is defined by the smallest ordinary-language experience that lets a user see Harness preserving the local basis for work scope, pending user judgments, evidence summary, close blockers, next safe action, work acceptance, and residual risk in Core-owned local state.
 
 The slice must demonstrate:
 
@@ -235,6 +278,8 @@ The slice must demonstrate:
 - small changes and tracked work have different procedural budgets without letting small-change labeling bypass authority
 - ambiguous feature requests enter clarification instead of premature implementation
 - status and next-output explain current scope, missing judgments, evidence state, close blockers, residual-risk visibility, and safe next action
+- pre-write scope checking is cooperative Core authority behavior through `prepare_write`, not OS-level blocking, arbitrary-tool isolation, or tamper-proof local storage
+- run and evidence references are recorded through `record_run`, registered artifacts, or the minimum evidence summary path
 - evidence summary
 - close blocker summary when required evidence or a required user-owned judgment is missing
 - residual risk visibility before acceptance and close when known close-relevant risk exists
@@ -249,7 +294,7 @@ The slice must demonstrate:
 
 Evidence records, readable summaries, and projection freshness support this experience. They are not the identity of the stage, and projection polish beyond this compact user-readable path stays out of scope.
 
-MVP-1 explicitly excludes full detached verification independence unless an active profile requires it, the full Manual QA matrix, full waiver machinery, polished Journey/Spine/reporting, detailed Eval, TDD Trace, Module Map, Interface Contract, Export/Recover, broad connectors, operations suite, dashboard, stewardship validators, feedback-loop policy, release handoff, detailed Evidence Manifest, Browser QA Capture, Cross-Surface Verification automation, Context Index, metrics, team workflow, and orchestration.
+MVP-1 explicitly excludes dashboard, hosted UI, full Decision Packet output for every judgment, OS-level sandbox or permission isolation, detailed Evidence Manifest, full report/export, runtime conformance suite, operations/recovery/handoff pack, full detached verification independence unless an active profile requires it, the full Manual QA matrix, full waiver machinery, polished Journey/Spine/reporting, detailed Eval, TDD Trace, Module Map, Interface Contract, broad connectors, operations suite, stewardship validators, feedback-loop policy, release handoff, Browser QA Capture, Cross-Surface Verification automation, Context Index, metrics, team workflow, and orchestration.
 
 Passing MVP-1 means a user can see why Harness is more than an authorization wrapper: it keeps the work's scope, judgments, evidence summary, close blockers, acceptance boundaries, and risk visibility locally inspectable.
 
@@ -336,6 +381,8 @@ Use these as implementation-readable checklists for future runtime planning afte
 - Product/UX judgment and Technical judgment can be presented separately from each other and from Sensitive action approval, Work acceptance, and Residual risk acceptance.
 - Minimal user judgment requests and records exist for MVP-1 decisions without requiring full-format judgment presentation machinery.
 - Small direct changes and tracked work use different procedural budgets without bypassing write authority, evidence, or a required user judgment.
+- Pre-write scope checking is cooperative Harness authority behavior through Core and `prepare_write`; MVP-1 does not claim OS-level blocking, permission isolation, or arbitrary-tool sandboxing.
+- Run/evidence references are recorded through `record_run`, registered artifacts, or the minimum evidence summary path.
 - Ambiguous feature requests enter clarification instead of premature implementation.
 - Status/next output explains current scope, missing judgments, evidence summary, residual-risk visibility, close blockers, next output, and next safe action.
 - Close blocker summary reports when required evidence is missing.
@@ -346,6 +393,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 - Work acceptance is recorded or represented separately from sensitive-action Approval and residual-risk acceptance.
 - Residual-risk acceptance, when supported, is visibly distinct from work acceptance.
 - A compact status card is derived from Core records and is sufficient for the MVP-1 path without making template polish authoritative.
+- Dashboard, hosted UI, detailed Evidence Manifest, full report/export, runtime conformance suite, and operations/recovery/handoff pack are not MVP-1 exit requirements.
 - Projection/template output does not become state.
 - Detached verification is not required by default.
 - Verification is required only when the active profile, user request, task type, or risk profile requires it.
@@ -376,7 +424,7 @@ Use these as implementation-readable checklists for future runtime planning afte
 | Stage | What the user or operator can observe |
 |---|---|
 | Engineering Checkpoint | An implementer can see one local Task move through a scoped boundary, `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref, and structured status/blocker output. |
-| MVP-1 User Work Loop | A user can see ordinary work clarified into scope, non-goals, success criteria, user-owned judgment, evidence summary, close blockers, work acceptance display, and residual-risk visibility, with close reporting a blocker when required evidence or a required user judgment is missing. |
+| MVP-1 User Work Loop | A user can see ordinary work clarified into scope, non-goals, success criteria, user-owned judgment, evidence summary, close blockers, next safe action, work acceptance display, and residual-risk visibility, with close reporting a blocker when required evidence or a required user judgment is missing and work acceptance kept separate from residual-risk acceptance. |
 | Assurance Profile | The local path explains verification, Manual QA, residual-risk acceptance, work acceptance, stewardship, TDD, feedback, context hygiene, and close behavior through Core records and fixtures. |
 | Operations Profile | Operators can diagnose, recover, reconcile, export, check artifacts, run conformance, and prepare release handoff over the same Core state. |
 

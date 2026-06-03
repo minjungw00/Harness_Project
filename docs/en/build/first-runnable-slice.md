@@ -61,7 +61,7 @@ After a future Engineering Checkpoint implementation exists, an implementer shou
 8. Status/blocker output shows current Task, scope, write authority, artifact/evidence support, and blockers without mutating state.
 9. Status or a close-task smoke returns a structured blocker when scope, write authority, or artifact/evidence support is missing.
 
-Passing this story means Engineering Checkpoint works. It does not mean users have experienced Harness value yet. MVP-1 User Work Loop begins when ordinary requests can start or resume tracked work and be summarized as scope, non-goals, success criteria, user-owned judgment, evidence summary, close blockers, work acceptance display, and residual-risk visibility.
+Passing this story means Engineering Checkpoint works. It does not mean users have experienced Harness value yet. MVP-1 User Work Loop begins when ordinary requests can start or resume tracked work and Harness preserves a local basis for scope, non-goals, success criteria, pending user judgments, evidence summary, close blockers, next safe action, and minimal separation between work acceptance and residual-risk acceptance.
 
 ## Doc-level acceptance checks
 
@@ -227,7 +227,7 @@ This slice does not prove the items below. They are stage boundaries, not failed
 
 | Later stage | Not yet proven by Engineering Checkpoint |
 |---|---|
-| MVP-1 User Work Loop | Ordinary-language start/resume, work-shape classification, natural-language intake quality, scope/non-goals/success criteria summary, minimal user judgment request/record, product/UX versus architecture judgment presentation, small direct vs tracked-work budgets, evidence summary, close blocker summary, residual-risk visibility, work-acceptance display, sensitive approval display, risk-acceptance display, compact Core-derived status card sufficiency. |
+| MVP-1 User Work Loop | Ordinary-language start/resume, work-shape classification, natural-language intake quality, scope/non-goals/success criteria summary, minimal user judgment request/record, product/UX versus architecture judgment presentation, cooperative pre-write scope checking, small direct vs tracked-work budgets, run/evidence reference recording, evidence summary, close blocker summary, next safe action, residual-risk visibility, work-acceptance display, sensitive approval display, risk-acceptance display, compact Core-derived status card sufficiency. |
 | Assurance Profile | Profile-specific user judgment quality, full Approval lifecycle and drift handling, detached verification independence, Manual QA policy matrix, residual-risk accepted close, work-acceptance separation, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
 | Operations Profile | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage, full projection/reconcile operations. |
 | Roadmap | Dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification automation, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow. |
