@@ -722,7 +722,7 @@ Operator boundary: 이 문서는 operator entrypoint, runtime/docs-maintenance p
 
 ### Conformance Fixture Format
 
-[Conformance Fixtures 참조: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format)으로 이동했습니다. 이 stub은 이전 anchor를 보존합니다. Fixture body shape, seed shorthand limit, `ToolEnvelope` expansion convention은 그 문서가 담당합니다.
+[Conformance Fixtures 참조: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format)으로 이동했습니다. 이 stub은 이전 anchor를 보존합니다. Fixture body shape, active-path shorthand boundary, `ToolEnvelope` expansion convention은 그 문서가 담당합니다. Later-profile shorthand detail은 승격 전까지 [향후 Fixture Catalog: Later-Profile Fixture Shorthand Notes](future-fixture-catalog.md#later-profile-fixture-shorthand-notes)에 남습니다.
 
 ### Conformance Execution
 
@@ -738,7 +738,7 @@ Operator boundary: 이 문서는 operator entrypoint, runtime/docs-maintenance p
 
 #### Catalog-Only Fixture Skeleton Guidance
 
-[Conformance Fixtures 참조: Catalog-Only Fixture Skeleton Guidance](conformance-fixtures.md#catalog-only-fixture-skeleton-guidance)로 이동했습니다. Catalog skeleton guidance는 executable fixture body가 아닙니다.
+[Conformance Fixtures 참조: Catalog-Only Fixture Skeleton Guidance](conformance-fixtures.md#catalog-only-fixture-skeleton-guidance)로 이동했습니다. Catalog skeleton guidance는 executable fixture body가 아닙니다. Later-profile shorthand detail은 [향후 Fixture Catalog: Later-Profile Fixture Shorthand Notes](future-fixture-catalog.md#later-profile-fixture-shorthand-notes)에 남습니다.
 
 #### Kernel Smoke Authoring Queue
 

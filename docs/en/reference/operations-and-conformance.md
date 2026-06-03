@@ -720,7 +720,7 @@ Operator boundary: this document owns the operator entrypoint, runtime/docs-main
 
 ### Conformance Fixture Format
 
-Moved to [Conformance Fixtures Reference: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format). This stub preserves the old anchor; fixture body shape, seed shorthand limits, and `ToolEnvelope` expansion convention are owned there.
+Moved to [Conformance Fixtures Reference: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format). This stub preserves the old anchor; fixture body shape, active-path shorthand boundary, and `ToolEnvelope` expansion convention are owned there. Later-profile shorthand details stay in [Future Fixture Catalog: Later-Profile Fixture Shorthand Notes](future-fixture-catalog.md#later-profile-fixture-shorthand-notes) until promoted.
 
 ### Conformance Execution
 
@@ -736,7 +736,7 @@ Moved to [Future Fixture Catalog: Agency, Stewardship, Context, And Design-Quali
 
 #### Catalog-Only Fixture Skeleton Guidance
 
-Moved to [Conformance Fixtures Reference: Catalog-Only Fixture Skeleton Guidance](conformance-fixtures.md#catalog-only-fixture-skeleton-guidance). Catalog skeleton guidance is not an executable fixture body.
+Moved to [Conformance Fixtures Reference: Catalog-Only Fixture Skeleton Guidance](conformance-fixtures.md#catalog-only-fixture-skeleton-guidance). Catalog skeleton guidance is not an executable fixture body. Later-profile shorthand details stay in [Future Fixture Catalog: Later-Profile Fixture Shorthand Notes](future-fixture-catalog.md#later-profile-fixture-shorthand-notes).
 
 #### Kernel Smoke Authoring Queue
 

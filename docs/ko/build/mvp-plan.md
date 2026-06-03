@@ -204,7 +204,7 @@ flowchart LR
   Blocker --> Status
 ```
 
-정확한 state와 blocker behavior는 [커널 참조](../reference/kernel.md)가, public tool shape는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)가, future fixture semantics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#conformance-fixture-format)가 담당합니다. 이 흐름은 pack gate, projection renderer requirement, fixture body requirement를 추가하지 않습니다.
+정확한 state와 blocker behavior는 [커널 참조](../reference/kernel.md)가, public tool shape는 [MCP API와 스키마](../reference/mcp-api-and-schemas.md)가, active-path fixture body/assertion mechanics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#conformance-fixture-format)가 담당합니다. Later-profile scenario와 shorthand catalog는 [향후 Fixture Catalog](../reference/future-fixture-catalog.md)에 남고 이 흐름에 requirement를 추가하지 않습니다. 이 흐름은 pack gate, projection renderer requirement, fixture body requirement를 추가하지 않습니다.
 
 향후 smoke 작성 순서는 [커널 스모크(Kernel Smoke) Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue)를 사용합니다. 이 queue는 candidate check를 이 내부 조각에 매핑하지만 executable fixture file이 이미 존재하거나 v0.1에 전체 conformance suite가 필요하다고 암시하지 않습니다.
 

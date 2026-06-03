@@ -78,6 +78,18 @@ flowchart LR
 
 아래 지침은 catalog family를 exact-shape fixture로 옮길 때 쓰는 skeleton guidance입니다. 이것은 catalog-only guidance이며 executable fixture body, public request schema, DDL extension, runner design이 아닙니다. Delivery-stage mapping은 suite catalog metadata에 두며 fixture body에 넣지 않습니다. "Minimum seeded records"는 Storage And DDL 규칙으로 expansion 및 validation을 거친 뒤 `initial_state`에 들어가는 owner record를 뜻합니다. Public mutation은 계속 정확한 MCP request payload를 `input`으로 사용합니다.
 
+### Later-Profile Fixture Shorthand Notes
+
+이 note는 catalog-only future guidance입니다. 코어 권한 스모크(v0.1 Core Authority Smoke)나 첫 사용자 가치 조각(v0.2 First User-Value Slice)의 stage requirement가 아니며, 현재 문서 전용 저장소의 executable runner contract도 아니고, 두 번째 API도 아닙니다. 향후 owner가 관련 later profile을 승격하고 public mutation이 계속 public request schema를 통과하는 exact-shape fixture를 구체화한 뒤에만 사용할 수 있습니다.
+
+Later-profile catalog example은 `owner_records`, `stewardship_findings`, selected-loop shorthand, full 수동 QA/Eval owner records, TDD Trace records, accepted residual risk state 같은 compact `initial_state` 또는 suite metadata shorthand를 사용할 수 있습니다. 어떤 fixture가 executable이 되기 전에는 이 shorthand가 DDL/API 문서가 명시적으로 소유하는 owner record, validator run, residual-risk record, 또는 다른 state로 expand되어야 합니다. Fixture-only storage row나 alternate request payload branch를 만들면 안 됩니다.
+
+Public mutation example은 계속 documented public request branch를 사용합니다. `close_task`의 `input`은 `ToolEnvelope` expansion 이후에도 `CloseTaskRequest`입니다. Evidence profile, changed paths, artifact refs, acceptance-criteria support, self-check summary, full 수동 QA record, Eval record, risk-acceptance state는 `initial_state`에 seed하거나 `record_run`, `record_eval`, `record_manual_qa`, `record_user_judgment` 같은 preceding public mutation fixture에서 record해야 합니다.
+
+Later feedback-loop와 TDD example에서 bare `FBL-*` ref 같은 shorthand는 catalog example 안에서만 나타날 수 있습니다. 향후 executable fixture는 이를 `StateRecordRef { record_kind: feedback_loop, record_id: ... }`로 매핑하고, documented schema를 통해 underlying owner record를 store 또는 mutate해야 합니다. Public mutation fixture는 definition change를 `record_run.payload.shaping_update.feedback_loop_updates` 아래의 `FeedbackLoopUpdate`로, execution/status change를 `evidence_updates.feedback_loop_updates`로, 수동 QA execution을 public `record_manual_qa` request branch로 표현합니다. Catalog row가 loop id와 status만 나열한다면, 향후 seed loader는 insert 또는 public request construction 전에 surrounding Task, Change Unit, selected-loop, evidence context에서 required owner field를 제공해야 합니다.
+
+Accepted-risk shorthand는 later-profile state이며 seeded `residual_risk` record 위에 존재합니다. Standalone accepted-risk record가 아닙니다. Catalog example에서 `visible_refs`, `accepted_refs`, `not_visible_refs`, `unaccepted_refs`, `residual_risk_refs` 같은 곳에 있는 bare `RISK-*` 값은 실행 전에 `StateRecordRef { record_kind: residual_risk, record_id: ... }`로 매핑해야 합니다. 향후 staged-delivery fixture는 standalone `ARISK-*` record를 요구하면 안 됩니다.
+
 ### Intake와 Decision Catalog Entries
 
 이 항목들은 fixture body가 아닙니다. 평범한 사용자 언어 동작과 Decision Packet 품질을 다루되, exact fixture shape와 향후 executable fixture가 Core state, events, artifacts, projections, errors로 behavior를 증명해야 한다는 규칙은 유지합니다.

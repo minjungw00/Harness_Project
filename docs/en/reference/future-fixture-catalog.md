@@ -78,6 +78,18 @@ flowchart LR
 
 The guidance below is for turning catalog families into exact-shape fixtures. It is catalog-only skeleton guidance, not an executable fixture body, public request schema, DDL extension, or runner design. Delivery-stage mapping belongs in suite catalog metadata, not in the fixture body. "Minimum seeded records" means owner records placed in `initial_state` after expansion and validation by the Storage And DDL rules; public mutations still use the exact MCP request payload under `input`.
 
+### Later-Profile Fixture Shorthand Notes
+
+These notes are catalog-only future guidance. They are not stage-required for v0.1 Core Authority Smoke or v0.2 First User-Value Slice, not an executable runner contract in this documentation-only repository, and not a second API. A future owner may use them only after promoting the relevant later profile and materializing exact-shape fixtures whose public mutations still validate against public request schemas.
+
+Later-profile catalog examples may use compact `initial_state` or suite metadata shorthand such as `owner_records`, `stewardship_findings`, selected-loop shorthand, full Manual QA/Eval owner records, TDD Trace records, or accepted residual risk state. Before any fixture becomes executable, that shorthand must expand to owner records, validator runs, residual-risk records, or other state explicitly owned by DDL/API docs. It must not create fixture-only storage rows or alternate request payload branches.
+
+Public mutation examples still use the documented public request branch. `close_task` `input` remains `CloseTaskRequest` after any `ToolEnvelope` expansion; evidence profiles, changed paths, artifact refs, acceptance-criteria support, self-check summaries, full Manual QA records, Eval records, and risk-acceptance state are seeded in `initial_state` or recorded by a preceding public mutation fixture such as `record_run`, `record_eval`, `record_manual_qa`, or `record_user_judgment`.
+
+For later feedback-loop and TDD examples, shorthand such as bare `FBL-*` refs may appear only in catalog examples. Future executable fixtures must map it to `StateRecordRef { record_kind: feedback_loop, record_id: ... }` and store or mutate the underlying owner records through documented schemas. Public mutation fixtures express definition changes as `FeedbackLoopUpdate` under `record_run.payload.shaping_update.feedback_loop_updates`, execution/status changes under `evidence_updates.feedback_loop_updates`, and Manual QA execution through the public `record_manual_qa` request branch. If a catalog row lists only a loop id and status, the future seed loader must supply the required owner fields from the surrounding Task, Change Unit, selected-loop, and evidence context before insertion or public request construction.
+
+Accepted-risk shorthand is later-profile state on seeded `residual_risk` records, not a standalone accepted-risk record. Bare `RISK-*` values in catalog examples such as `visible_refs`, `accepted_refs`, `not_visible_refs`, `unaccepted_refs`, or `residual_risk_refs` must map to `StateRecordRef { record_kind: residual_risk, record_id: ... }` before execution. Future staged-delivery fixtures must not require standalone `ARISK-*` records.
+
 ### Intake And Decision Catalog Entries
 
 These are catalog entries, not fixture bodies. They cover ordinary user-language behavior and Decision Packet quality while preserving the exact fixture shape and the rule that future executable fixtures prove behavior through Core state, events, artifacts, projections, and errors.

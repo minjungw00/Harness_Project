@@ -204,7 +204,7 @@ flowchart LR
   Blocker --> Status
 ```
 
-Exact state and blocker behavior is owned by [Kernel Reference](../reference/kernel.md), public tool shapes by [MCP API And Schemas](../reference/mcp-api-and-schemas.md), and future fixture semantics by [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format). This flow does not add pack gates, projection-renderer requirements, or fixture body requirements.
+Exact state and blocker behavior is owned by [Kernel Reference](../reference/kernel.md), public tool shapes by [MCP API And Schemas](../reference/mcp-api-and-schemas.md), and active-path fixture body/assertion mechanics by [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format). Later-profile scenario and shorthand catalogs stay in [Future Fixture Catalog](../reference/future-fixture-catalog.md) and do not add requirements to this flow. This flow does not add pack gates, projection-renderer requirements, or fixture body requirements.
 
 For future smoke authoring order, use the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). It maps candidate checks to this internal slice without implying executable fixture files already exist or that v0.1 requires a full conformance suite.
 
