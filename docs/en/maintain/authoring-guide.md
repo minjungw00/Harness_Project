@@ -101,7 +101,7 @@ Use this short backlog frame to keep redesign findings small and routable:
 - Close/verification ambiguity: keep evidence, verification, Manual QA, final acceptance, close readiness, and residual risk distinct. None of them substitutes for another.
 - Security guarantee overstatement risk: match cooperative, detective, preventive, and isolated wording to the exact documented mechanism and proof level.
 - Context/token overload risk: keep always-on agent context short and current; route detailed contracts to owner docs or retrieval paths.
-- User-facing terminology burden: write the user-visible situation first. Introduce internal terms only when they help the reader act or interpret a visible blocker.
+- User-facing terminology burden: write the user-visible situation first. Do not require users to say internal labels such as Discovery, Change Unit, Decision Packet, Write Authorization, Evidence Manifest, Projection, Gate, or `task_events`. Introduce internal terms only when they help the reader act, interpret a visible blocker, or drill into a reference contract.
 
 ## Preserved Principles
 
@@ -305,7 +305,7 @@ Start with a concrete situation, show what problem the concept solves, and then 
 Preferred shape:
 
 ```text
-When an agent wants to change product state, Harness first needs to know which scoped implementation unit the write belongs to. That unit is the Change Unit. The larger user-value item the user wants finished or answered is the Task.
+When an agent wants to change product state, Harness first needs the work scope: what may change, what stays out of scope, and where the agent must stop. The internal scoped-write record is the Change Unit. The larger user-value item the user wants finished or answered is the Task.
 ```
 
 Avoid opening a Learn doc with a dense definition list unless the page is explicitly a glossary or reference table.

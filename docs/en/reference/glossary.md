@@ -28,28 +28,75 @@ Use these words first in user-facing docs, prompts, and status summaries. They a
 
 | Public term | Plain meaning |
 |---|---|
-| work | The thing the user wants completed, answered, investigated, or decided. |
-| scope | What may change, what is out of bounds, and where the agent should stop before continuing. |
+| work / task | The thing the user wants completed, answered, investigated, or decided. Use `Task` only when naming the internal record. |
+| scope | What may change and where the agent should stop before continuing. |
+| out of scope | What must not change, be decided, or be claimed as done for this work. |
 | judgment / user judgment | A user-owned choice. User-facing displays should name the specific type: Product/UX judgment, technical architecture judgment, security/privacy judgment, scope/autonomy judgment, sensitive-action approval, QA waiver, verification waiver, work acceptance, or residual-risk acceptance. |
+| judgment request | A focused request for one user-owned choice. The internal saved record may be a Decision Packet, but ordinary prompts should start with the choice, options, consequence, and next action. |
 | evidence | Durable support for a claim about the work. |
+| check | An ordinary confirmation such as a test, diff review, inspection, or source lookup. Use `Verification` only for the formal recorded correctness-check path. |
+| verification | A recorded correctness check, especially one that may need an independent enough review boundary. |
+| Manual QA | Human inspection for UI, copy, workflow, accessibility, visual quality, product taste, or another human-judgment surface. |
+| work acceptance | The user's judgment that the completed result is acceptable when that judgment is required. |
+| residual risk | Known remaining uncertainty, limitation, skipped check, trade-off, or possible consequence that should remain visible. |
+| close blocker | A concrete condition that prevents finish or close until it is resolved, deferred, waived, or accepted through the right path. |
 | close readiness | What still has to be true before the work can finish or close. |
-| risk | Known uncertainty, limitation, skipped check, trade-off, or possible consequence that should remain visible. |
+| next safe action | The next action that can proceed without hiding unresolved scope, judgment, evidence, QA, verification, acceptance, or risk. |
 
 User-facing docs should explain the plain concept first. Add exact Harness labels in parentheses only when they help explain a boundary, blocker, source ref, or reference link.
 
-## Internal Implementation Terms
+## User-Facing Term Rules
+
+- Do not start user examples with internal terms. Start with the work, scope, judgment, evidence, blocker, or next safe action.
+- Do not require the user to say "Discovery," "Change Unit," "Decision Packet," "Write Authorization," "Evidence Manifest," "Projection," "Gate," or `task_events`.
+- Use "judgment request" in English user-facing docs for the ordinary interaction. In Korean user-facing docs, use natural Korean such as `판단 요청`, `무엇을 결정해야 하나요?`, or another sentence that fits the page.
+- Introduce internal labels only as optional or internal explanations, and only after the plain meaning is clear.
+- Broad phrases such as "approve," "go ahead," "proceed," or "looks good" must not be stretched across unrelated sensitive-action approval, product judgment, work acceptance, residual-risk acceptance, QA waiver, verification waiver, or write authority.
+
+## Internal / Reference Terms
 
 These are implementation labels used by references, APIs, schemas, records, and status refs. Users do not need to use these terms in prompts; agents should translate ordinary requests into the right Harness procedure.
 
 | Internal term | Plain-language explanation |
 |---|---|
+| Task | The durable internal unit for the work the user wants completed, answered, investigated, or decided. Use plain "work" for first-read user prose. |
+| Discovery | The internal name for requirements clarification before implementation planning or write authority. Users can ask for this as "clarify the plan before implementation." |
 | Change Unit | The bounded work scope for product writes. It says what may change but does not authorize a write by itself. |
 | Decision Packet | The recorded path for a specific user-owned judgment that blocks progress, write, waiver, work acceptance, risk handling, or close. |
 | Write Authorization | The Harness result that one specific product-write attempt may proceed now after scope and other checks. |
 | Evidence Manifest | A record mapping completion conditions or acceptance criteria to supporting evidence refs. |
+| Eval | A verification result record. It records the target, verdict, checks performed, evidence reviewed, independence qualifier, freshness, blockers, and artifact refs. |
 | Projection | A readable view rendered from Harness state, such as a report or Journey Card. It displays state but does not replace it. |
+| Gate | A kernel readiness or compatibility condition. User-facing docs should usually show the blocker or check in plain language before naming a gate. |
 | Autonomy Boundary | The choices the agent may make inside the active scope without asking the user again. |
 | `task_events` | The internal event log table for task state changes. It is a reference/schema term, not user-facing vocabulary. |
+
+## Schema/API Identifiers
+
+Keep these exact in schemas, API docs, code-like examples, records, and diagnostic output. User-facing explanations should translate their meaning into ordinary language.
+
+| Identifier | Meaning and display guidance |
+|---|---|
+| `judgment_category` | Current schema field for the judgment grouping: Product/UX, technical architecture, security/privacy, scope/autonomy, QA/verification, work acceptance, residual risk, or mixed. |
+| `judgment_route` | Current schema field for the owner path and recorded-answer route, such as choose, waive, accept result, accept risk, approve sensitive action, or reconcile. |
+| `display_depth` | Current schema field for prompt depth: simple, tradeoff, high-risk, or close-affecting. Do not make users learn this as a separate concept. |
+| `judgment_domain` | Compatibility alias mapped to `judgment_category`. Preserve the field name where it appears in compatibility docs or old payloads. |
+| `decision_kind` | Compatibility alias mapped to `judgment_route`. Preserve enum values in schema/API contexts. |
+| `decision_profile` | Compatibility alias mapped to `display_depth`. Preserve the field name in schema/API contexts. |
+| `Task`, `DecisionPacket`, `ArtifactRef`, `ProjectionKind`, `ValidatorResult` | Schema or API shape names. Keep exact when naming contracts. |
+| `prepare_write`, `record_run`, `close_task`, `harness.request_user_judgment`, `harness.record_user_judgment` | Tool/API identifiers. Keep exact and explain their user-visible result in plain language. |
+
+## Future / Later-Profile Terms
+
+These labels may appear in roadmap, reference, template, or diagnostic material. They should not be first-read user vocabulary or required commands unless an owner profile promotes the feature.
+
+| Later-profile term | Status and display guidance |
+|---|---|
+| Context Index | Later read-only retrieval support. It can suggest sources to inspect but does not authorize writes, satisfy gates, accept risk, or close work. |
+| Journey Card / Journey Spine | Later continuity display. It helps orientation when enabled and fresh, but it is not Core-owned state. |
+| Browser QA Capture | v1+ candidate capture support for browser artifacts. It is not Manual QA, final acceptance, or detached verification by itself. |
+| Standalone `DEC` projection | Optional Decision Packet Markdown rendering when enabled. User judgment visibility does not depend on users reading standalone `DEC` files. |
+| Operations & Handoff displays | Later or profile-gated operational/reporting surfaces. They display or export owner records; they do not replace Core authority. |
 
 ## Owner map
 

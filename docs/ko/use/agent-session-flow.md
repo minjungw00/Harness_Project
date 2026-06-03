@@ -70,10 +70,10 @@ flowchart LR
 | 맥락 프로필 | 지금 보여줄 것 | 필요할 때 불러오는 최소 소유자 문서 또는 참조 | 기본으로 불러오지 않는 것 |
 |---|---|---|---|
 | 세션 시작 | 현재 상태 또는 간결한 요약, 예상 작업 모양, 활성 막힘, 대기 중인 사용자 판단, 다음 허용 행동, 보장 수준/MCP 사용 가능 여부. | [세션 시작](#세션-시작), [이어가기](#이어가기), 현재 `harness.status` / `harness.next`, 읽기용 보기가 오래됐거나 다음 행동에 쓰일 때만 읽기용 요약 최신성 규칙. | 전체 작업 이력, 전체 참조 문서, 전체 schema, 오래된 읽기용 요약, 관련 없는 template, 관련 없는 Roadmap. |
-| 요구사항 구체화 (Discovery) | 목표, 사용자 가치, 범위와 비목표, 수용 기준, 확인 가능한 사실, 추적되는 불확실성, 판단 영역별 막힘 질문, 사용자 소유 판단 후보, QA/검증 기대 수준, 안전한 다음 작업 후보 또는 작업 분할 제안. | [사용자 가이드: 에이전트가 처음 답해야 할 것](user-guide.md#에이전트가-처음-답해야-할-것), [요청 정리](#요청-정리), [범위와 Change Unit](#범위와-change-unit), 관련 현재 Task/Change Unit/Shared Design 참조. | 전체 module map, 오래된 PRD/design, design-policy catalog, 전체 Storage DDL, 전체 Conformance 카탈로그, 관련 없는 template. |
+| 요구사항 구체화(`Discovery` 내부 라벨) | 목표, 사용자 가치, 범위와 비목표, 수용 기준, 확인 가능한 사실, 추적되는 불확실성, 판단 영역별 막힘 질문, 사용자 소유 판단 후보, QA/검증 기대 수준, 안전한 다음 작업 후보 또는 작업 분할 제안. | [사용자 가이드: 에이전트가 처음 답해야 할 것](user-guide.md#에이전트가-처음-답해야-할-것), [요청 정리](#요청-정리), [범위와 쓰기 경계](#범위와-쓰기-경계), 관련 현재 Task/Change Unit/Shared Design 참조. | 전체 module map, 오래된 PRD/design, design-policy catalog, 전체 Storage DDL, 전체 Conformance 카탈로그, 관련 없는 template. |
 | 사용자 판단 요청 | 사용자 소유 판단 내용, 선택지 또는 선택된 결과, 영향을 받는 범위, 관련 참조, 답변이 확정하지 않는 것, 답변 뒤의 다음 행동. 상세 요청은 추천, 불확실성, 영향을 받는 관문/수용 기준, 미루면 생기는 일도 보여줍니다. 정확한 기록 동작이 필요할 때만 내부 Decision Packet 소유자를 봅니다. | [사용자 소유 판단으로 막힐 때](#사용자-소유-결정으로-막힐-때), 관련 Decision Packet 소유자 섹션, 정확한 field가 필요할 때만 특정 MCP 메서드. | 포괄적 approval 표현, 관련 없는 판단, 전체 근거 본문, 전체 log, 전체 schema reference, 전체 Template 세트. |
-| 쓰기 준비 | Active Change Unit, Autonomy Boundary, 의도한 경로/도구/명령 요약, 민감 동작 승인 상태, 활성 판단 요청 또는 Decision Packet, Write Authority Summary, 기준선/최신성. | [제품 파일 쓰기](#제품-파일-쓰기), [커널: prepare_write](../reference/kernel.md#prepare_write), intended write에 필요한 [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write). | 전체 Kernel/reference 문서, 관련 없는 schema, historical event log, 큰 diff/log, 전체 Storage DDL. |
-| 실행 / 근거 | 실행 요약, 변경 경로 요약, Evidence Manifest 참조, 아티팩트 참조, 근거 공백, 가림/무결성 메모, 다음 근거 행동. | [근거와 확인](#근거와-확인), [커널: record_run](../reference/kernel.md#record_run), [`harness.record_run`](../reference/mcp-api-and-schemas.md#harnessrecord_run), 표시나 복구에 필요할 때만 artifact-ref 표시 규칙. | 전체 log, raw diff, 화면 캡처, trace, bundle, artifact inventory, 읽기용 요약 전체 본문, 전체 Template 세트. |
+| 쓰기 준비 | 활성 범위 또는 Change Unit, Autonomy Boundary, 의도한 경로/도구/명령 요약, 민감 동작 승인 상태, 활성 판단 요청 또는 Decision Packet, Write Authority Summary, 기준선/최신성. | [제품 파일 쓰기](#제품-파일-쓰기), [커널: prepare_write](../reference/kernel.md#prepare_write), intended write에 필요한 [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write). | 전체 Kernel/reference 문서, 관련 없는 schema, historical event log, 큰 diff/log, 전체 Storage DDL. |
+| 실행 / 근거 | 실행 요약, 변경 경로 요약, 근거 범위 또는 Evidence Manifest 참조, 아티팩트 참조, 근거 공백, 가림/무결성 메모, 다음 근거 행동. | [근거와 확인](#근거와-확인), [커널: record_run](../reference/kernel.md#record_run), [`harness.record_run`](../reference/mcp-api-and-schemas.md#harnessrecord_run), 표시나 복구에 필요할 때만 artifact-ref 표시 규칙. | 전체 log, raw diff, 화면 캡처, trace, bundle, artifact inventory, 읽기용 요약 전체 본문, 전체 Template 세트. |
 | 닫기 준비 상태 | 닫기 준비 요약, 막힘, 민감 동작 승인 상태, 근거/검증/수동 QA/작업 수락 상태, 잔여 위험 표시 또는 수용된 참조, 읽기용 요약 최신성, 가장 작은 해소 방법. | [닫기](#닫기), [검증, 수동 QA, 잔여 위험, 작업 수락](#검증-수동-qa-잔여-위험-작업-수락), [커널: close_task](../reference/kernel.md#close_task), [`harness.close_task`](../reference/mcp-api-and-schemas.md#harnessclose_task). | 일반적인 all-done rollup, 전체 report 본문, 전체 historical log, 관련 없는 template, 전체 Conformance 카탈로그, 읽기용 요약 전체 본문. |
 | 복구/오류 | 주요 오류 또는 막힘, 소유자, 마지막으로 안전하게 아는 현재 상태, 오래됐거나 사용할 수 없는 출처, 영향을 받는 권한 주장, 다음 복구 행동, 쓰기나 닫기를 보류해야 하는지. | [이어가기](#이어가기), [상태와 막힘 읽기](#상태와-막힘-읽기), [Agent 통합: Fallback Semantics](../reference/agent-integration.md#fallback-semantics), 특정 복구 또는 오류 소유자 섹션. | 과거 event log, stack trace, 전체 artifact, 관련 없는 status, 전체 Storage DDL, 전체 Conformance 카탈로그, 관련 없는 Roadmap. |
 
@@ -214,19 +214,19 @@ status, next, 결과, 작업 수락, 닫기 표시에서 권한을 주장할 때
 요청 정리 경로는 다음과 같습니다.
 
 ```text
-요청 -> 작업 모양 분류 -> 필요하면 요구사항 구체화 -> Discovery Brief 또는 동등한 보조 정보 작성 -> 사용자 소유 판단 요청 경로 지정 -> 안전한 다음 작업 또는 작업 분할 제안 -> 제품 쓰기가 의도되면 prepare_write 경로
+요청 -> 작업 모양 분류 -> 필요하면 요구사항 구체화 -> 요구사항 요약 또는 동등한 보조 정보 작성 -> 사용자 소유 판단 요청 경로 지정 -> 안전한 다음 작업 또는 작업 분할 제안 -> 제품 쓰기가 의도되면 prepare_write 경로
 ```
 
 요구사항 구체화 출력은 Discovery에서 나온 보조 정보를 포함해, 소유자 참조가 이미 바탕 사실을 기록하는 경우가 아니라면 보조 정보 또는 읽기용 요약(Projection) 개념으로 다루고, 기존 소유자 경로로 보냅니다.
 
-- Discovery Brief: 목표, 사용자 가치, 범위, 비목표, 수용 기준, 저장소/문서/테스트/현재 하네스 상태/수락된 결정/현재 작업 아티팩트에서 에이전트가 확인할 수 있는 사실, 사용자만 할 수 있는 판단, 제품/UX 판단 후보, 기술 구조 판단 후보, 보안/개인정보 판단 후보, QA와 검증 기대 수준, 열린 가정, 남은 불확실성, 안전한 다음 작업 후보 또는 작업 분할 제안을 담은 간결한 요약.
+- 요구사항 요약(`Discovery Brief` 내부 라벨): 목표, 사용자 가치, 범위, 비목표, 수용 기준, 저장소/문서/테스트/현재 하네스 상태/수락된 결정/현재 작업 아티팩트에서 에이전트가 확인할 수 있는 사실, 사용자만 할 수 있는 판단, 제품/UX 판단 후보, 기술 구조 판단 후보, 보안/개인정보 판단 후보, QA와 검증 기대 수준, 열린 가정, 남은 불확실성, 안전한 다음 작업 후보 또는 작업 분할 제안을 담은 간결한 요약.
 - Question Queue: 열린 질문을 blocking, useful-but-not-blocking, codebase-answerable로 분류한 순서 있는 목록.
 - Assumption Register: agent가 사용하는 가정, source, confidence, owner, 가정이 틀릴 때 바뀌는 일을 기록한 목록.
-- First Safe Change Unit Candidate: 제품 쓰기가 가까워졌을 때 안전한 다음 작업 후보를 내부 Change Unit 모양으로 표현한 것입니다. 고급 근거 개념이며, Discovery의 유일한 출력이나 주된 중지 조건이 아닙니다.
+- 안전한 다음 작업 범위 후보(`First Safe Change Unit Candidate` 내부 라벨): 제품 쓰기가 가까워졌을 때 안전한 다음 작업 후보를 내부 Change Unit 모양으로 표현한 것입니다. 고급 근거 개념이며, 요구사항 구체화의 유일한 출력이나 주된 중지 조건이 아닙니다.
 
 `안전한 다음 작업 후보`와 `작업 분할 제안` 같은 쉬운 표현은 제안이나 근거를 설명하는 말이며, 독립 schema 필드, 기준 record type, `gate` 값, 읽기용 요약 종류, 권한 경로가 아닙니다.
 
-요구사항 구체화 결과는 Shared Design, 판단 요청 후보, 내부 Decision Packet 후보, Change Unit 모양 잡기로 보냅니다. Discovery Brief, Question Queue, Assumption Register, First Safe Change Unit Candidate를 범위 권한, 민감 동작 승인, 작업 수락, 잔여 위험 수용, 근거, 닫기 준비 상태, 쓰기 허가 기록으로 취급하지 않습니다.
+요구사항 구체화 결과는 Shared Design, 판단 요청 후보, 내부 Decision Packet 후보, Change Unit 모양 잡기로 보냅니다. 요구사항 요약, Question Queue, Assumption Register, 안전한 다음 작업 범위 후보를 범위 권한, 민감 동작 승인, 작업 수락, 잔여 위험 수용, 근거, 닫기 준비 상태, 쓰기 허가 기록으로 취급하지 않습니다.
 
 요구사항 구체화 밖에서는 다음 안전한 행동을 바꾸는 질문만 합니다. 구체화 중에는 목표, 사용자 가치, 범위, 비목표, 수용 기준, 제품/UX 동작, 기술 구조, 보안/개인정보 자세, QA 또는 검증 기대 수준, 안전한 다음 작업 후보, 작업 분할, 사용자 소유 판단, 숨은 가정을 구체화하는 목적이 분명한 질문을 묻습니다. 긴 질문지를 한꺼번에 던지지 말고 판단 영역별로 묶어 묻고, 불확실성을 명시합니다. Useful-but-not-blocking 질문은 사용자를 계속 방해하지 말고 따로 남겨 둡니다. 긴 양식보다 추천이 딸린 가장 막힘이 큰 판단 영역 하나가 낫습니다.
 
@@ -247,7 +247,7 @@ status, next, 결과, 작업 수락, 닫기 표시에서 권한을 주장할 때
 
 이 조건을 충족할 수 없으면 에이전트는 사용 가능한 출처를 더 확인하거나, 다음으로 가장 작은 막힘 질문을 묻거나, useful-but-not-blocking 질문은 따로 두거나, 해결되지 않은 판단을 피하는 더 작은 안전한 조각을 제안해야 합니다.
 
-질문하기 전에 각 열린 질문을 분류합니다. Blocking 질문은 다음 안전한 행동 전에 사용자 판단이 필요한 질문입니다. Useful-but-not-blocking 질문은 Discovery Brief, Assumption Register, follow-up work, 이후 판단 요청 후보에 남겨둘 수 있습니다. Codebase-answerable 질문은 사용자에게 묻지 말고 현재 저장소, 문서, 테스트, 하네스 상태, 수락된 결정, 현재 작업 아티팩트, 출처 참조를 살펴 답해야 합니다.
+질문하기 전에 각 열린 질문을 분류합니다. Blocking 질문은 다음 안전한 행동 전에 사용자 판단이 필요한 질문입니다. Useful-but-not-blocking 질문은 요구사항 요약, Assumption Register, follow-up work, 이후 판단 요청 후보에 남겨둘 수 있습니다. Codebase-answerable 질문은 사용자에게 묻지 말고 현재 저장소, 문서, 테스트, 하네스 상태, 수락된 결정, 현재 작업 아티팩트, 출처 참조를 살펴 답해야 합니다.
 
 각 사용자 소유 질문은 사용자가 정확히 판단하는 것을 이름 붙이고, 가능한 선택지, 에이전트의 추천안, 불확실성, 의미 있을 때 영향을 받는 `gate` 또는 수용 기준, 사용 가능하거나 관련 있을 때 출처/근거/위험/설계 참조, 판단을 미뤄도 계속할 수 있는 일 또는 판단 전에는 진행하면 안 되는 이유를 함께 보여줘야 합니다. 에이전트가 둔 가정은 사용자에게 속한 제품, 기술, 보안, QA, 운영, 범위, 민감 동작 승인, 작업 수락, 잔여 위험 수용과 따로 기록합니다.
 
@@ -270,8 +270,8 @@ status, next, 결과, 작업 수락, 닫기 표시에서 권한을 주장할 때
 고급/내부 사용자 판단 요청 예시:
 
 ```text
-판단 영역: Product / UX (`product_ux`)
-판단 영역: 로그인 실패 동작.
+판단 유형: Product / UX (`product_ux`)
+판단 대상: 로그인 실패 동작.
 선택지: 폼 근처 인라인 메시지, 토스트, 모달.
 추천: 기존 폼 패턴을 확인한다는 전제에서 폼 근처 인라인 메시지.
 불확실성: 기존 접근성 패턴 때문에 다른 선택이 더 저렴할 수 있습니다.
@@ -279,8 +279,8 @@ status, next, 결과, 작업 수락, 닫기 표시에서 권한을 주장할 때
 ```
 
 ```text
-판단 영역: 기술 구조 판단 (`technical_architecture`)
-판단 영역: 인증 구조.
+판단 유형: 기술 구조 판단 (`technical_architecture`)
+판단 대상: 인증 구조.
 선택지: 세션 쿠키, Bearer/JWT, OAuth/OIDC, 소셜 로그인 제공자 연동.
 추천: 선택 전에 현재 user/session model을 먼저 확인합니다.
 불확실성: storage와 session 지원 상태에 따라 어떤 선택이 훨씬 더 안전할 수 있습니다.
@@ -323,9 +323,11 @@ Task 모양, policy, 변경된 표면, 감지된 위험, 사용자 요청 때문
 
 대상이 더 이상 분명하지 않거나, 범위가 불분명하거나, 변경 경로가 활성 Change Unit을 넘거나, 여러 파일·제품 영역·subsystem에 영향을 주거나, public API 또는 모듈 계약을 바꿀 수 있거나, 제품/UX 판단이 필요하거나, 중요한 기술 구조 판단이 필요하거나, 보안/개인정보 영향이 있거나, 민감한 행동이 나타나거나, QA/검증 요구가 커지거나, 근거가 부족하거나, 잔여 위험이 작지 않거나, multi-step delivery가 필요하면 같은 Task를 추적되는 작업으로 전환합니다.
 
-## 범위와 Change Unit
+<a id="범위와-change-unit"></a>
 
-제품 파일을 쓰기 전에 활성 범위를 Change Unit으로 구체화합니다. 사용자에게는 다음이 보여야 합니다.
+## 범위와 쓰기 경계
+
+제품 파일을 쓰기 전에 활성 범위를 쓰기 경계로 구체화합니다. 내부 기록은 Change Unit입니다. 사용자에게는 다음이 보여야 합니다.
 
 - 포함되는 동작이나 파일
 - 범위 밖 동작이나 파일
@@ -333,7 +335,7 @@ Task 모양, policy, 변경된 표면, 감지된 위험, 사용자 요청 때문
 - 알려진 민감 영역
 - 에이전트가 멈추고 물어야 하는 조건
 
-안전한 다음 작업을 제안할 만큼 충분히 안다는 것은 위 항목들을 해소되지 않은 사용자 판단을 숨기지 않고 말할 수 있고, 확인 가능한 사실과 사용자 소유 판단을 분리할 수 있으며, 목표, 비목표, 수용 기준, 중요한 판단 후보가 충분히 분명하고, 다음 안전한 행동이 읽기/조언, 작은 직접 변경, 추적되는 작업 중 무엇인지 분류됐으며, 남은 불확실성이 명시적으로 추적된다는 뜻입니다. 아직 그러지 못하면 요구사항 구체화를 이어가며 다음 판단 영역의 막힘 질문을 하거나, 유용하지만 막지는 않는 질문은 남겨 두거나, 저장소/문서/테스트/상태/아티팩트에서 답할 수 있는 질문은 현재 소스에서 답하거나, 해소되지 않은 영역을 피하는 더 작은 안전한 다음 작업 후보 또는 작업 분할을 제안합니다. First Safe Change Unit Candidate는 제품 쓰기가 가까워졌을 때 그 제안을 내부적으로 표현하는 방식일 수 있지만, Discovery의 유일하거나 주된 중지 조건은 아닙니다.
+안전한 다음 작업을 제안할 만큼 충분히 안다는 것은 위 항목들을 해소되지 않은 사용자 판단을 숨기지 않고 말할 수 있고, 확인 가능한 사실과 사용자 소유 판단을 분리할 수 있으며, 목표, 비목표, 수용 기준, 중요한 판단 후보가 충분히 분명하고, 다음 안전한 행동이 읽기/조언, 작은 직접 변경, 추적되는 작업 중 무엇인지 분류됐으며, 남은 불확실성이 명시적으로 추적된다는 뜻입니다. 아직 그러지 못하면 요구사항 구체화를 이어가며 다음 판단 영역의 막힘 질문을 하거나, 유용하지만 막지는 않는 질문은 남겨 두거나, 저장소/문서/테스트/상태/아티팩트에서 답할 수 있는 질문은 현재 소스에서 답하거나, 해소되지 않은 영역을 피하는 더 작은 안전한 다음 작업 후보 또는 작업 분할을 제안합니다. 안전한 다음 작업 범위 후보는 제품 쓰기가 가까워졌을 때 그 제안을 내부적으로 표현하는 방식일 수 있지만, 요구사항 구체화의 유일하거나 주된 중지 조건은 아닙니다.
 
 Autonomy Boundary는 쓰기 권한이 아닙니다. 사용자가 다시 판단하지 않아도 에이전트가 어디까지 판단할 수 있는지만 설명합니다. Change Unit의 범위는 어디에서 무엇이 바뀔 수 있는지 답하고, Autonomy Boundary는 그 범위 안에서 에이전트가 어떤 선택을 혼자 할 수 있는지 답합니다. 실제 제품 쓰기에는 여전히 의도한 변경과 맞는 쓰기 확인이 필요합니다.
 
@@ -393,35 +395,35 @@ Autonomy Boundary 안에서는 에이전트가 기존 helper를 재사용할지,
 
 사용자 소유 판단이 둘 이상 대기 중이면 한 질문 안에서도 별도 줄이나 별도 질문으로 나눠 보여줍니다. "설치 승인", "결과 수락", "이름 붙은 위험 수용"을 하나의 동의 요청으로 합치면 안 됩니다. 간단한 막힘 해소에는 간결하게 묻고, 선택이 복잡하거나 위험하거나 닫기에 영향을 주면 더 자세히 묻습니다.
 
-사용자에게 보이는 질문에는 Kernel의 단순한 판단 모델을 씁니다. 먼저 category, route 동사, 표시 깊이를 보여줍니다. Category는 제품/UX, 기술 구조, 보안/개인정보, 범위/자율성, QA/검증, 작업 수락, 잔여 위험, 복합입니다. Route는 choose, defer, approve-sensitive-action, waive, accept-result, accept-risk, reconcile입니다. 표시 깊이는 simple, tradeoff, high-risk, close-affecting입니다.
+사용자에게 보이는 질문 뒤에는 Kernel의 단순한 판단 모델이 있습니다. 다만 질문은 쉬운 말로 보여줍니다. 현재 정확한 field는 `judgment_category`, `judgment_route`, `display_depth`입니다. Category는 판단을 묶고, route는 owner path와 답변 동사를 고르며, display depth는 질문에 필요한 맥락의 양을 정합니다. 사용자는 친숙한 판단 유형, 구체적인 선택지, 결과, 다음 행동을 먼저 봐야 합니다. 정확한 field는 구현자나 자세한 참조가 필요할 때 나중에 보여줍니다.
 
-`judgment_domain`, `decision_kind`, `decision_profile`은 계속 schema field입니다. 하지만 사용자가 세 개의 독립 축을 이해해야 하는 것처럼 보여주면 안 됩니다. `judgment_domain`은 category에, `decision_kind`는 route에, `decision_profile`은 선택한 route의 prompt depth와 validation에 mapping됩니다. 영향을 받는 `gate`나 막힌 행동은 별도 field와 owner record가 담당합니다. 정확한 public field는 [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision)이 소유하고, 기준 권한은 [Decision Packet](../reference/kernel.md#decision-packet)과 [Decision Gate](../reference/kernel.md#decision-gate)가 소유합니다. 사용자에게는 쉬운 말로 판단을 보여주고, 필요한 참조는 drill-down할 수 있게 둡니다.
+`judgment_domain`, `decision_kind`, `decision_profile`은 오래된 요청 형태를 위한 compatibility alias입니다. 현재 field든 alias든 사용자가 독립된 축 세 개를 이해해야 하는 것처럼 보여주면 안 됩니다. 영향을 받는 `gate`나 막힌 행동은 별도 field와 owner record가 담당합니다. 정확한 public field는 [`harness.request_user_judgment`](../reference/mcp-api-and-schemas.md#harnessrequest_user_judgment)이 소유하고, 기준 권한은 [Decision Packet](../reference/kernel.md#decision-packet)과 [Decision Gate](../reference/kernel.md#decision-gate)가 소유합니다. 사용자에게는 쉬운 말로 판단을 보여주고, 필요한 참조는 자세히 볼 수 있게 둡니다.
 
 판단 중심 질문은 경로와 맞는 동사를 씁니다. 선택, 미루기(defer), 거절(reject), 면제(waive), 수락(accept), 조정(reconcile)입니다. "approve" 또는 "승인"은 민감 동작 승인일 때만 사용합니다. 좋은 질문 형태는 다음과 같습니다.
 
 ```text
 판단 요청: 설정 버튼 문구
-판단 영역: 제품/UX 판단 (`product_ux`)
-이 설정 문구 변경에는 "Save"와 "Update" 중 어떤 버튼 문구를 기록할까요? 이 답은 CU-04의 버튼 문구만 확정하며, 더 넓은 설정 동작, 현지화 전략, 작업 수락, 잔여 위험 수용, 쓰기 권한은 확정하지 않습니다.
+판단 유형: 제품/UX 판단 (`product_ux`)
+이 설정 문구 변경에는 "Save"와 "Update" 중 어떤 버튼 문구를 쓸까요? 이 답은 이번 작업의 버튼 문구만 확정하며, 더 넓은 설정 동작, 현지화 전략, 작업 수락, 잔여 위험 수용, 쓰기 권한은 확정하지 않습니다.
 ```
 
 ```text
 판단 요청: 로그인 실패 피드백 패턴
-판단 영역: 제품/UX 판단 (`product_ux`)
-이 작업 범위에는 어떤 로그인 실패 경험을 기록할까요: 인라인 메시지, 토스트, 모달? 추천은 흐름과 접근성을 유지하는 인라인 메시지입니다. 판단을 미루면 백엔드 인증 연결은 계속할 수 있지만 최종 로그인 실패 경험이 완료됐다고 말할 수는 없습니다.
+판단 유형: 제품/UX 판단 (`product_ux`)
+이 작업 범위에는 어떤 로그인 실패 경험을 쓸까요: 인라인 메시지, 토스트, 모달? 추천은 흐름과 접근성을 유지하는 인라인 메시지입니다. 판단을 미루면 백엔드 인증 연결은 계속할 수 있지만 최종 로그인 실패 경험이 완료됐다고 말할 수는 없습니다.
 ```
 
 ```text
-판단 요청: 모바일 Safari QA 면제 판단
-판단 영역: QA/작업 수락 (`qa_acceptance`)
-이번 닫기에서 모바일 Safari 줄바꿈 잔여 위험을 받아들이겠다고 기록할까요, 아니면 수동 QA를 실행할 때까지 닫기를 막아 둘까요? 추천은 릴리스 일정 때문에 면제가 꼭 필요한 경우가 아니라면 막아 두는 것입니다. 영향받는 그룹: 닫기 준비 상태; 소유자 경로/gate 참조: 수동 QA / qa_gate; 영향받는 기준: AC-03 온보딩 문구 레이아웃.
+판단 요청: 모바일 Safari 수동 QA 면제 판단
+판단 유형: QA/검증 (`qa_verification`)
+이번 닫기에서 모바일 Safari 수동 QA 요구를 면제할까요, 아니면 수동 QA를 실행할 때까지 닫기를 막아 둘까요? 추천은 릴리스 일정 때문에 면제가 꼭 필요한 경우가 아니라면 막아 두는 것입니다. 이 답은 남은 줄바꿈 위험을 수용하지 않습니다. 그 위험이 닫기에 영향을 주면 잔여 위험 수용 요청을 따로 보여줘야 합니다. 영향받는 그룹: 닫기 준비 상태; 소유자 경로/gate 참조: 수동 QA / qa_gate; 영향받는 기준: AC-03 온보딩 문구 레이아웃.
 ```
 
 유용한 예시:
 
 - 제품/UX 판단(`product_ux`): 로그인 실패 UX는 인라인 메시지, 토스트, 모달을 비교하고, 흐름, 접근성, 방해 정도, 문구 위험을 기준으로 하나를 추천합니다. 판단을 미루면 백엔드 인증 작업은 계속할 수 있지만 최종 로그인 실패 경험이 완료됐다고 말하면 안 됩니다.
 - 제품/UX 판단(`product_ux`): 로그인 실패 문구는 일반적인 문구, 더 구체적인 문구, 혼합 문구를 비교합니다. 계정 존재 여부 노출(account enumeration) 위험, 명확성, 복구 도움 정도, 지원 부담, 제품 톤을 기준으로 추천합니다. 판단을 미루면 유효성 검사 연결은 계속할 수 있지만 출시 가능한 문구와 수동 QA는 열어 둬야 합니다.
-- QA/작업 수락(`qa_acceptance`): 제품 감각과 수동 QA 필요성은 사람이 시각적으로 확인해야 하는 완성도 높은 상호작용과 테스트 및 브라우저 간단 확인으로 확인 가능한 더 보수적인 동작을 비교합니다. 감각상의 장단점, QA 비용, 사용자 영향, 수동 QA를 미뤘을 때 계속할 수 있는 일 또는 결정 전에는 진행하면 안 되는 이유를 설명합니다.
+- QA/검증(`qa_verification`): 제품 감각과 수동 QA 필요성은 사람이 시각적으로 확인해야 하는 완성도 높은 상호작용과 테스트 및 브라우저 간단 확인으로 확인 가능한 더 보수적인 동작을 비교합니다. 감각상의 장단점, QA 비용, 사용자 영향, 수동 QA를 미뤘을 때 계속할 수 있는 일 또는 결정 전에는 진행하면 안 되는 이유를 설명합니다.
 - 기술 구조 판단(`technical_architecture`): 인증 방식은 세션 쿠키, Bearer/JWT 토큰, OAuth/OIDC, 소셜 로그인 제공자 연동을 비교할 수 있습니다. 다만 OAuth/OIDC도 결과적으로 로컬 세션이나 토큰 전략을 만들 수 있으므로, 둘 다 중요하면 ID 제공자 선택과 세션/저장 모델을 분리해야 합니다. 폐기 가능성, CSRF/XSS 노출, 클라이언트 호환성, 운영 복잡도, 이전 비용을 설명합니다. 판단을 미루면 세션 모델에 약속을 만들지 않는 범위에서만 폼 골격을 계속할 수 있습니다.
 - 기술 구조 판단(`technical_architecture`): 의존성 선택은 설치 또는 의존성 파일 갱신을 허용하는 민감 동작 승인과, 그 의존성을 채택하는 아키텍처 결정을 분리합니다. 의존성을 추가할지, 기존 유틸리티를 쓸지, 기능을 미룰지 비교하고 호환성, 되돌리기, 비용, 유지보수 영향을 설명합니다.
 - 기술 구조 판단(`technical_architecture`): 도메인 언어 충돌은 현재 제품 용어를 유지할지, 좁은 코드 별칭을 추가할지, 새 용어로 마이그레이션할지 비교합니다. 제품 의미, 공개 문서, API/인터페이스 이름, 호출자 기대, 모듈 책임, 마이그레이션 비용, 결정을 미뤘을 때 계속할 수 있는 일을 설명합니다.
@@ -430,7 +432,7 @@ Autonomy Boundary 안에서는 에이전트가 기존 helper를 재사용할지,
 - 범위/자율성 판단(`scope_autonomy`): 범위 또는 Autonomy Boundary 확장은 현재 작은 범위를 유지할지, 요청된 대상을 추가할지, 후속 Change Unit으로 분리할지 비교합니다. 영향을 받는 경로, 사용자에게 보이는 동작, 계속 범위 밖에 남는 것, 쓰기 영향, 에이전트가 혼자 판단해도 되는 일을 설명합니다.
 - 보안/개인정보 판단(`security_privacy`): 비밀값 접근, 권한 변경, 데이터 내보내기에 대한 민감 동작 승인은 Approval 경계일 뿐입니다. 역할, 필드, 가림 처리, 감사 기록, 보관 기간, 되돌리기, 사용자 고지에는 별도의 제품 또는 보안 판단이 여전히 필요할 수 있습니다.
 - 보안/개인정보 판단(`security_privacy`): 개인정보(PII) 로그 정책은 개인정보를 로그에 남기지 않는 방식, 가림 처리(redacted) 또는 토큰화된 식별자, 제한된 진단 필드를 비교해야 합니다. 개인정보 노출, 디버깅 가치, 보관 기간, 가림 처리, 감사 기록, 정책 준수를 증명할 근거를 설명합니다.
-- QA/작업 수락(`qa_acceptance`): QA 또는 검증 면제 판단은 해당 Task에서 요구하는 기존 기록 경로를 사용하고 소유자 참조를 인용합니다. QA 면제 판단 효과는 수동 QA / QA 정책 경로가 담당하며, 제품/사용자 위험 또는 정책상 필요한 판단이 있으면 QA 면제 판단 요청을 사용하고 필요하면 내부 기록으로 남깁니다. 검증 면제 판단 효과는 커널의 검증 면제 경로가 담당하며, 사용자 소유 판단이 필요하면 관련 판단 요청 또는 Decision Packet 기록을 사용합니다. 생략하는 확인이나 대상, 별도로 수용된 잔여 위험, 잔여 위험 후속 작업, 관련 참조, 닫기 영향을 이름 붙입니다. 면제 판단과 잔여 위험 수용이 모두 필요하면 별도 판단 줄 또는 별도 판단 요청으로 렌더링합니다. 예를 들어 문구만 바꾸는 변경에서 mobile Safari 수동 QA를 면제하려면 viewport wrapping 잔여 위험을 별도로 수용할지 사용자에게 묻고, 릴리스 전 브라우저 확인을 후속 작업으로 남깁니다.
+- QA/검증(`qa_verification`): QA 또는 검증 면제 판단은 해당 Task에서 요구하는 기존 기록 경로를 사용하고 소유자 참조를 인용합니다. QA 면제 판단 효과는 수동 QA / QA 정책 경로가 담당하며, 제품/사용자 위험 또는 정책상 필요한 판단이 있으면 QA 면제 판단 요청을 사용하고 필요하면 내부 기록으로 남깁니다. 검증 면제 판단 효과는 커널의 검증 면제 경로가 담당하며, 사용자 소유 판단이 필요하면 관련 판단 요청 또는 Decision Packet 기록을 사용합니다. 생략하는 확인이나 대상, 별도로 수용된 잔여 위험, 잔여 위험 후속 작업, 관련 참조, 닫기 영향을 이름 붙입니다. 면제 판단과 잔여 위험 수용이 모두 필요하면 별도 판단 줄 또는 별도 판단 요청으로 렌더링합니다. 예를 들어 문구만 바꾸는 변경에서 mobile Safari 수동 QA를 면제하려면 viewport wrapping 잔여 위험을 별도로 수용할지 사용자에게 묻고, 릴리스 전 브라우저 확인을 후속 작업으로 남깁니다.
 - 잔여 위험(`residual_risk`): 닫기 전에 잔여 위험 수용을 물을 때는 남은 한계, 이미 있는 근거, 닫기가 여전히 받아들일 만한 이유, 남은 후속 작업을 보여줘야 합니다. 잔여 위험 수용으로 닫는 흐름은 분리 검증된 닫기가 아닙니다.
 
 가능하면 한 번에 하나의 막힘 질문만 묻습니다.
@@ -477,7 +479,7 @@ AFK stop을 보여줄 때는 보장 수준을 이름 붙입니다. 협력형 또
 
 ```text
 쓰기 권한: src/auth/login.ts와 tests/auth/login.test.ts에 허용됨
-범위 근거: email login Change Unit
+범위 근거: email login 작업 범위(필요하면 Change Unit 참조를 함께 표시)
 한계: 협력형 접점이라서 범위를 벗어난 쓰기는 사후 변경 경로 검증으로만 감지합니다.
 ```
 

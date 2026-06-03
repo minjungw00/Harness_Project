@@ -139,7 +139,7 @@ Build 독자는 이 표를 진입 기준으로 보아야 합니다. 유지보수
 
 - 현재 기준에서 active docs 곳곳에 흩어진 major implementation-decision TODO를 의도적으로 남기지 않습니다.
 - [문서 작성 가이드 tracker](../maintain/authoring-guide.md#알려진-재설계-쟁점-트래커)는 candidate drift와 regression risk를 확인하는 checklist로 남아 있습니다. 확인된 finding은 문서 drift, 스키마/설계 결정, 단계 경계 결정, 구현 준비 조건, 향후 로드맵 항목 중 하나로 routing합니다.
-- 사용자-facing category, internal route, display depth, 작은 Decision Packet weight와 관련해 추적하던 판단 모델 drift는 이 문서 기준에서 해소되었습니다. Review에서 남은 owner-contract decision이 드러나면 흩어진 TODO가 아니라 단계별 전달 계획 decision log로 routing합니다.
+- 사용자에게 보이는 판단 묶음, 내부 기록 경로, 표시 깊이, 작은 Decision Packet의 무게와 관련해 추적하던 판단 모델 drift는 이 문서 기준에서 해소되었습니다. Review에서 남은 owner-contract decision이 드러나면 흩어진 TODO가 아니라 단계별 전달 계획 decision log로 routing합니다.
 - Maintainer가 확인해야 할 candidate review 영역에는 stage 이름 drift, 사용자용 문서의 무거운 disclaimer, Discovery/Change Unit 조기 수렴, Storage/API/DDL의 이른 범위 암시, projection/template 범위, conformance fixture detail, 너무 이른 operations entrypoint, security guarantee wording, agent context load, 한국어 기술 명사 과다, roadmap 경계 drift, 낙관적인 decision-log wording이 포함됩니다.
 
 maintainer 수락 조건:
@@ -169,7 +169,7 @@ maintainer 수락 조건:
 - Root README, docs README, 언어별 README, Build 문서, 관련 Reference 문서에서 저장소 정체성이 명확하다. 지금은 문서 전용이며, 향후 역할은 하네스 서버 소스 저장소이고, 서버/런타임 구현은 문서 수락과 별도의 구현 계획 준비 결정 이후에만 시작할 수 있으며, 제품 저장소나 하네스 런타임 홈이 아니다.
 - 사용자가 보는 흐름이 내부 용어를 먼저 알아야만 시작, 재개, unblock, 작업 수락, close를 할 수 있는 형태가 아니다.
 - Discovery와 요구사항 확인은 Change Unit 또는 first safe implementation unit으로 너무 빨리 수렴하지 않고, shared understanding과 사용자 소유 판단을 먼저 보존한다. Owner path가 필요로 할 때 Change Unit이 범위가 정해진 작업을 표현할 수 있지만, Discovery 자체가 조기 Change Unit 선택은 아니다.
-- 판단 모델이 Kernel, MCP/API schema, storage, template, fixture, Learn/Use 설명, glossary term과 schema-aligned 상태다. `judgment_category`는 사용자-facing category를 담당하고, `judgment_route`는 internal owner path와 recorded-answer route를 담당하며, `display_depth`는 prompt depth를 담당한다. Affected gate와 blocked action은 별도의 owner field에 남는다.
+- 판단 모델이 Kernel, MCP/API schema, storage, template, fixture, Learn/Use 설명, glossary term과 schema-aligned 상태다. `judgment_category`는 사용자에게 보이는 판단 묶음을 담당하고, `judgment_route`는 internal owner path와 recorded-answer route를 담당하며, `display_depth`는 prompt depth를 담당한다. Affected gate와 blocked action은 별도의 owner field에 남는다.
 - Decision Packet prompt는 판단의 크기에 맞다. 작은 명시적 unblocker는 `display_depth=simple`을 사용할 수 있고, trade-off, high-risk, close-affecting, approval-shaped, waiver, 작업 수락, residual-risk acceptance, reconcile, mixed prompt는 owner contract가 요구하는 추가 context를 담되 모든 작은 판단을 무겁게 만들지 않는다.
 - Approval, 작업 수락, 잔여 위험 수용이 예시, template, API/schema 문구, close behavior, user-facing routing에서 분리되어 있다.
 - Stage가 일관적이다. v0.1 Core Authority Smoke는 product MVP가 아니고, v0.2 First User-Value Slice는 첫 narrow user-value slice이지 full assurance/Eval/QA/reporting system이 아니며, v0.3 Agency Assurance Pack은 verification, QA, residual risk, work acceptance, stewardship를 단단하게 만들고, v0.4 Operations & Handoff Pack은 operational handoff capability를 추가하며, v1+ Expansion은 승격 전까지 roadmap 범위다.

@@ -70,10 +70,10 @@ Use progressive context loading instead of reading the whole documentation set i
 | Context profile | Show now | Minimal owner docs or refs to pull | Do not load by default |
 |---|---|---|---|
 | Session start | Current status or compact current-position summary, likely work shape, active blockers, pending user judgments, next allowed action, guarantee/MCP availability. | [Session start](#session-start), [Resume](#resume), current `harness.status` / `harness.next`, and projection freshness rules only if the readable view is stale or used for the next action. | Full task history, full Reference docs, full schemas, old projections, unrelated templates, unrelated Roadmap. |
-| Requirements clarification (Discovery) | Goal, user value, scope and non-goals, acceptance criteria, inspectable facts, tracked uncertainty, blocking questions grouped by judgment area, user-owned judgment candidates, QA/verification expectations, and safe next-work candidate or work split. | [User Guide: What the agent should answer first](user-guide.md#what-the-agent-should-answer-first), [Intake](#intake), [Scope and Change Unit](#scope-and-change-unit), and relevant current Task/Change Unit/Shared Design refs. | Whole module maps, old PRDs/designs, design-policy catalogs, full Storage DDL, full Conformance catalog, unrelated templates. |
+| Requirements clarification (`Discovery` internally) | Goal, user value, scope and non-goals, acceptance criteria, inspectable facts, tracked uncertainty, blocking questions grouped by judgment area, user-owned judgment candidates, QA/verification expectations, and safe next-work candidate or work split. | [User Guide: What the agent should answer first](user-guide.md#what-the-agent-should-answer-first), [Intake](#intake), [Scope and write boundary](#scope-and-write-boundary), and relevant current Task/Change Unit/Shared Design refs. | Whole module maps, old PRDs/designs, design-policy catalogs, full Storage DDL, full Conformance catalog, unrelated templates. |
 | Judgment request | Exact user-owned judgment, profile-appropriate options or chosen outcome, affected scope, relevant refs, what the answer does not settle, and next action after the answer. Full profiles also show recommendation, uncertainty, affected gates/acceptance criteria, and consequence of deferral. Use the internal Decision Packet owner only when exact record behavior is needed. | [Blocking User-Owned Judgments](#blocking-user-owned-decisions), the relevant Decision Packet owner section, and the specific MCP method only if exact fields are needed. | Broad approval language, unrelated judgments, full evidence bodies, full logs, full schema references, full Template set. |
-| Prepare-write | Active Change Unit, Autonomy Boundary, intended paths/tools/commands summary, Approval status, active judgment requests or Decision Packets, Write Authority Summary, baseline/freshness. | [Product writes](#product-writes), [Kernel: prepare_write](../reference/kernel.md#prepare_write), and [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write) for the intended write. | Full Kernel/reference docs, unrelated schemas, historical event logs, large diffs/logs, full Storage DDL. |
-| Run/evidence | Run summary, changed-path summary, Evidence Manifest ref, artifact refs, evidence gaps, redaction/integrity notes, next evidence action. | [Evidence and checks](#evidence-and-checks), [Kernel: record_run](../reference/kernel.md#record_run), [`harness.record_run`](../reference/mcp-api-and-schemas.md#harnessrecord_run), and artifact-ref display rules only when display or repair needs them. | Full logs, raw diffs, screenshots, traces, bundles, artifact inventories, full projection bodies, full Template set. |
+| Prepare-write | Active scope or Change Unit, Autonomy Boundary, intended paths/tools/commands summary, Approval status, active judgment requests or Decision Packets, Write Authority Summary, baseline/freshness. | [Product writes](#product-writes), [Kernel: prepare_write](../reference/kernel.md#prepare_write), and [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write) for the intended write. | Full Kernel/reference docs, unrelated schemas, historical event logs, large diffs/logs, full Storage DDL. |
+| Run/evidence | Run summary, changed-path summary, evidence coverage or Evidence Manifest ref, artifact refs, evidence gaps, redaction/integrity notes, next evidence action. | [Evidence and checks](#evidence-and-checks), [Kernel: record_run](../reference/kernel.md#record_run), [`harness.record_run`](../reference/mcp-api-and-schemas.md#harnessrecord_run), and artifact-ref display rules only when display or repair needs them. | Full logs, raw diffs, screenshots, traces, bundles, artifact inventories, full projection bodies, full Template set. |
 | Close readiness | Close readiness summary, blockers, sensitive-action approval status, evidence/verification/QA/final acceptance status, residual-risk visibility or accepted refs, projection freshness, smallest unblocker. | [Close](#close), [Verification, Manual QA, residual risk, acceptance](#verification-manual-qa-residual-risk-acceptance), [Kernel: close_task](../reference/kernel.md#close_task), and [`harness.close_task`](../reference/mcp-api-and-schemas.md#harnessclose_task). | Generic all-done rollups, full report bodies, full historical logs, unrelated templates, full Conformance catalog, full projection bodies. |
 | Recovery/error | Primary error or blocker, owner, last safe/current state known, stale or unavailable source, affected authority claims, next recovery action, and whether writes or close must hold. | [Resume](#resume), [Reading status and blockers](#reading-status-and-blockers), [Agent Integration: Fallback Semantics](../reference/agent-integration.md#fallback-semantics), and the specific recovery or error owner section. | Historical event logs, stack traces, full artifacts, unrelated status, full Storage DDL, full Conformance catalog, unrelated Roadmap. |
 
@@ -214,19 +214,19 @@ Listen for the same task-shape triggers used at session start: product writes, s
 The intake route is:
 
 ```text
-Request -> classify task shape -> clarify requirements when needed -> produce Discovery Brief or equivalent support -> route user-owned judgment requests -> propose safe next work or a work split -> prepare_write path when product writes are intended
+Request -> classify task shape -> clarify requirements when needed -> produce requirements brief or equivalent support -> route user-owned judgment requests -> propose safe next work or a work split -> prepare_write path when product writes are intended
 ```
 
 Treat requirements-clarification outputs, including Discovery support, as support or projection concepts that feed existing owner paths unless an owner reference already records the underlying fact:
 
-- Discovery Brief: compact summary of goal, user value, scope, non-goals, acceptance criteria, facts the agent can inspect from repo/docs/tests/current Harness state/accepted decisions/current task artifacts, judgments only the user can make, product/UX judgment candidates, technical architecture judgment candidates, security/privacy judgment candidates, QA and verification expectations, open assumptions, remaining uncertainty, and a safe next-work candidate or work split.
+- Requirements brief (`Discovery Brief` internally): compact summary of goal, user value, scope, non-goals, acceptance criteria, facts the agent can inspect from repo/docs/tests/current Harness state/accepted decisions/current task artifacts, judgments only the user can make, product/UX judgment candidates, technical architecture judgment candidates, security/privacy judgment candidates, QA and verification expectations, open assumptions, remaining uncertainty, and a safe next-work candidate or work split.
 - Question Queue: ordered questions classified as blocking, useful-but-not-blocking, or codebase-answerable.
 - Assumption Register: assumptions the agent is using, with source, confidence, owner, and what would change if the assumption fails.
-- First Safe Change Unit Candidate: the internal Change Unit-shaped version of a safe next-work candidate when product writes are near. It is an advanced/support concept, not the only Discovery output or primary stop condition.
+- Safe next-work scope candidate (`First Safe Change Unit Candidate` internally): the internal Change Unit-shaped version of a safe next-work candidate when product writes are near. It is an advanced/support concept, not the only Discovery output or primary stop condition.
 
 Plain phrases such as "safe next-work candidate" and "work split" are proposal/support phrases, not standalone schema fields, canonical record types, gate values, projection kinds, or authority paths.
 
-Route requirements-clarification results into Shared Design, judgment request candidates, internal Decision Packet candidates, and Change Unit shaping. Do not treat a Discovery Brief, Question Queue, Assumption Register, or First Safe Change Unit Candidate as scope authority, sensitive-action Approval, Acceptance, residual-risk acceptance, evidence, close readiness, or Write Authorization.
+Route requirements-clarification results into Shared Design, judgment request candidates, internal Decision Packet candidates, and Change Unit shaping. Do not treat a requirements brief, Question Queue, Assumption Register, or safe next-work scope candidate as scope authority, sensitive-action Approval, Acceptance, residual-risk acceptance, evidence, close readiness, or Write Authorization.
 
 Outside requirements clarification, ask only questions that change the next safe action. During requirements clarification, ask targeted questions when they clarify goals, user value, scope, non-goals, acceptance criteria, product/UX behavior, technical architecture, security/privacy posture, QA or verification expectations, safe next-work candidates, work splits, user-owned decisions, or hidden assumptions. Group questions by decision area instead of dumping a long questionnaire, and make uncertainty explicit. Park useful-but-not-blocking questions instead of interrupting the user. Prefer the most blocking decision area with a recommendation over a long form.
 
@@ -247,7 +247,7 @@ Clarification is enough to proceed only when:
 
 If the agent cannot satisfy those conditions, it must inspect available sources, ask the next smallest blocking question, park useful-but-not-blocking questions, or propose a narrower safe slice that avoids the unresolved judgment.
 
-Classify each open question before asking it. Blocking questions need a user judgment before the next safe action. Useful-but-not-blocking questions can be parked in the Discovery Brief, Assumption Register, follow-up work, or later judgment request candidate. Codebase-answerable questions should be answered by inspecting current repo, docs, tests, current Harness state, accepted decisions, current task artifacts, or source refs instead of asking the user.
+Classify each open question before asking it. Blocking questions need a user judgment before the next safe action. Useful-but-not-blocking questions can be parked in the requirements brief, Assumption Register, follow-up work, or later judgment request candidate. Codebase-answerable questions should be answered by inspecting current repo, docs, tests, current Harness state, accepted decisions, current task artifacts, or source refs instead of asking the user.
 
 Each user-owned question should name the exact choice, offer realistic options, include the agent's recommendation, state uncertainty, identify affected gates or acceptance criteria when they matter, point to source refs and evidence, risk, or design refs when available or relevant, and say what can continue if the decision is deferred, or why nothing should continue until the decision is made. Record assumptions the agent makes separately from product, technical, security, QA, operational, scope, approval, acceptance, or residual-risk acceptance that belongs to the user.
 
@@ -267,10 +267,10 @@ User: I want to replace our login approach, but I do not know whether sessions, 
 Agent: I will inspect the current user/session model, auth routes, tests, dependency posture, and security notes before recommending an architecture. User-owned decisions likely include credential model, session lifetime, account enumeration posture, identity-provider dependency, verification expectations, and Manual QA for the login flow. Next safe action: read-only inspection and a scoped architecture proposal, not implementation.
 ```
 
-Advanced/internal judgment request examples:
+Advanced/internal field examples:
 
 ```text
-Judgment domain: Product / UX (`product_ux`)
+Judgment type: Product / UX (`product_ux`)
 Decision area: failed-login behavior.
 Options: inline layer, toast, or modal.
 Recommendation: inline layer near the form, pending inspection of existing form patterns.
@@ -279,7 +279,7 @@ Can inspect first: current login UI and validation components.
 ```
 
 ```text
-Judgment domain: Technical architecture (`technical_architecture`)
+Judgment type: Technical architecture (`technical_architecture`)
 Decision area: authentication architecture.
 Options: session cookie, bearer/JWT, OAuth/OIDC, or social-login provider integration.
 Recommendation: inspect the current user/session model before choosing.
@@ -323,9 +323,11 @@ Do not create a user judgment request, internal Decision Packet record, require 
 
 Escalate the same Task to tracked work when the target stops being obvious, scope is unclear, the changed paths cross the active Change Unit, the edit affects multiple files, product areas, or subsystems, the change may alter a public API or module contract, product/UX judgment is needed, important technical architecture judgment is needed, security/privacy impact appears, a sensitive action appears, QA or verification requirements increase, evidence is insufficient, residual risk is non-trivial, or multi-step delivery is needed.
 
-## Scope and Change Unit
+<a id="scope-and-change-unit"></a>
 
-Before product writes, shape the active scope into a Change Unit. The user-facing explanation should answer:
+## Scope and Write Boundary
+
+Before product writes, shape the active scope into a write boundary. The internal record is a Change Unit; the user-facing explanation should answer:
 
 - included behavior or files
 - out-of-bounds behavior or files
@@ -333,7 +335,7 @@ Before product writes, shape the active scope into a Change Unit. The user-facin
 - known sensitive areas
 - when the agent must stop and ask
 
-Enough is known to propose safe next work when the agent can state those items without hiding unresolved user judgments, separate inspectable facts from user-owned judgments, show that goals, non-goals, acceptance criteria, and major judgment candidates are clear enough, classify the next safe action as advice/read-only, small direct change, or tracked work, and explicitly track remaining uncertainty. If that cannot be done yet, continue requirements clarification with the next grouped blocking question, park useful-but-not-blocking questions, answer repository/docs/tests/state/artifact-answerable questions from current sources, or propose a smaller safe next-work candidate or work split that avoids the unresolved area. A First Safe Change Unit Candidate may be the internal expression of that proposal when product writes are near, but it is not the only or primary Discovery stop condition.
+Enough is known to propose safe next work when the agent can state those items without hiding unresolved user judgments, separate inspectable facts from user-owned judgments, show that goals, non-goals, acceptance criteria, and major judgment candidates are clear enough, classify the next safe action as advice/read-only, small direct change, or tracked work, and explicitly track remaining uncertainty. If that cannot be done yet, continue requirements clarification with the next grouped blocking question, park useful-but-not-blocking questions, answer repository/docs/tests/state/artifact-answerable questions from current sources, or propose a smaller safe next-work candidate or work split that avoids the unresolved area. A safe next-work scope candidate may be the internal expression of that proposal when product writes are near, but it is not the only or primary requirements-clarification stop condition.
 
 Autonomy Boundary is not write authority. It only describes what judgment the agent may exercise without asking again. Change Unit scope answers where and what the work may change; Autonomy Boundary answers which choices the agent may make inside that scope. Actual product writes still require a compatible write check.
 
@@ -393,35 +395,35 @@ A user-facing judgment request should include:
 
 If more than one user-owned judgment is pending, render separate prompts or separate lines in one prompt. Do not merge "approve install," "accept the result," and "accept the named risk" into one approval request. Use concise wording for simple unblockers and fuller prompts when the choice is complex, high-risk, or close-relevant.
 
-Use the Kernel's simpler judgment model in user-facing prompts: show the category, the route verb, and the display depth. Categories include Product/UX, technical architecture, security/privacy, scope/autonomy, QA/verification, work acceptance, residual risk, and mixed. Routes are choose, defer, approve-sensitive-action, waive, accept-result, accept-risk, and reconcile. Display depth is simple, tradeoff, high-risk, or close-affecting.
+Use the Kernel's simpler judgment model behind user-facing prompts, but render the prompt in ordinary language. The current exact fields are `judgment_category`, `judgment_route`, and `display_depth`: category groups the judgment, route selects the owner path and answer verb, and display depth controls how much context the prompt needs. Users should see the friendly judgment type, the concrete choice, the consequence, and the next action first. Exact fields can appear later for implementers or drill-down.
 
-`judgment_domain`, `decision_kind`, and `decision_profile` remain schema fields, but do not present them as three independent axes the user has to understand. `judgment_domain` maps to the category, `decision_kind` maps to the route, and `decision_profile` controls prompt depth and validation for the chosen route. Affected gates or blocked actions are owned by separate fields and owner records. The exact public fields are owned by [`harness.request_user_decision`](../reference/mcp-api-and-schemas.md#harnessrequest_user_decision), and canonical authority is owned by [Decision Packet](../reference/kernel.md#decision-packet) and [Decision Gate](../reference/kernel.md#decision-gate). Render the judgment in ordinary language and keep refs available for drill-down.
+`judgment_domain`, `decision_kind`, and `decision_profile` are compatibility aliases for older request shapes. Do not present either the current fields or the aliases as independent axes the user has to understand. Affected gates or blocked actions are owned by separate fields and owner records. The exact public fields are owned by [`harness.request_user_judgment`](../reference/mcp-api-and-schemas.md#harnessrequest_user_judgment), and canonical authority is owned by [Decision Packet](../reference/kernel.md#decision-packet) and [Decision Gate](../reference/kernel.md#decision-gate). Render the judgment in ordinary language and keep refs available for drill-down.
 
 Judgment-centered prompts use verbs that match the route: choose, defer, reject, waive, accept, or reconcile. Use "approve" only when the route is a sensitive-action Approval. Good prompt shapes:
 
 ```text
 Judgment request: Settings button label
-Judgment domain: Product / UX (`product_ux`)
-Should I record "Save" or "Update" for this scoped settings copy change? This only settles the label wording for CU-04; it does not settle broader settings behavior, localization strategy, final acceptance, residual-risk acceptance, or write authority.
+Judgment type: Product / UX (`product_ux`)
+Should this scoped settings copy change use "Save" or "Update"? This only settles the label wording for this work; it does not settle broader settings behavior, localization strategy, final acceptance, residual-risk acceptance, or write authority.
 ```
 
 ```text
 Judgment request: Failed-login feedback pattern
-Judgment domain: Product / UX (`product_ux`)
-Which failed-login UX should I record for this Change Unit: inline layer, toast, or modal? Recommendation: inline layer because it preserves flow and accessibility. If deferred, I can continue backend auth wiring but not claim the final failed-login UX is done.
+Judgment type: Product / UX (`product_ux`)
+Which failed-login experience should this scoped work use: inline layer, toast, or modal? Recommendation: inline layer because it preserves flow and accessibility. If deferred, I can continue backend auth wiring but not claim the final failed-login UX is done.
 ```
 
 ```text
-Judgment request: Mobile Safari QA waiver
-Judgment domain: QA / acceptance (`qa_acceptance`)
-Should I record acceptance of the remaining mobile Safari wrapping risk for this close, or keep close blocked until Manual QA runs? Recommendation: keep it blocked unless release timing requires the waiver. Affected group: Close Readiness; owner path/gate ref: Manual QA / qa_gate; affected criterion: AC-03 onboarding copy layout.
+Judgment request: Mobile Safari Manual QA waiver
+Judgment type: QA / verification (`qa_verification`)
+Should I waive the mobile Safari Manual QA requirement for this close, or keep close blocked until Manual QA runs? Recommendation: keep it blocked unless release timing requires the waiver. This does not accept any remaining wrapping risk; if that risk remains close-relevant, show a separate residual-risk acceptance request. Affected group: Close Readiness; owner path/gate ref: Manual QA / qa_gate; affected criterion: AC-03 onboarding copy layout.
 ```
 
 Useful examples:
 
 - Product / UX (`product_ux`): failed-login feedback should compare inline layer, toast, and modal; recommend one based on flow, accessibility, interruption, and copy risk. If deferred, backend auth work may continue, but the final failed-login experience should not be claimed done.
 - Product / UX (`product_ux`): failed-login copy should compare generic, specific, and hybrid wording; recommend one based on account enumeration risk, clarity, recovery usefulness, support burden, and product tone. If deferred, validation wiring may continue, but release-ready copy and Manual QA should stay open.
-- QA / acceptance (`qa_acceptance`): product taste and Manual QA need should compare a polished interaction that needs human visual review with a simpler conservative behavior that can be checked by tests and browser smoke. Explain the taste trade-off, QA cost, user impact, and what can continue if Manual QA is deferred, or why nothing should continue until the decision is made.
+- QA / verification (`qa_verification`): product taste and Manual QA need should compare a polished interaction that needs human visual review with a simpler conservative behavior that can be checked by tests and browser smoke. Explain the taste trade-off, QA cost, user impact, and what can continue if Manual QA is deferred, or why nothing should continue until the decision is made.
 - Technical architecture (`technical_architecture`): auth approach should compare session cookie, bearer token/JWT, OAuth/OIDC, or social-login provider integration. OAuth/OIDC may still produce a local session or token strategy, so separate identity-provider choice from session/storage model when both matter. Explain revocation, CSRF/XSS exposure, client compatibility, operational complexity, and migration cost. If deferred, form scaffolding may continue only if it does not commit to the session model.
 - Technical architecture (`technical_architecture`): dependency choice should separate sensitive-action Approval to install or update dependency files from the architecture decision to adopt the dependency. Compare adding the dependency, using existing utilities, or postponing the capability, and explain compatibility, rollback, cost, and maintenance impact.
 - Technical architecture (`technical_architecture`): domain-language conflict should compare preserving the current product term, adding a narrow code alias, or migrating to a new term. Explain product meaning, public docs, API/interface naming, caller expectations, module responsibility, migration cost, and what can continue if the decision is deferred.
@@ -430,7 +432,7 @@ Useful examples:
 - Scope / autonomy (`scope_autonomy`): scope or Autonomy Boundary expansion should compare keeping the current small scope, adding the requested surface, or splitting a follow-up Change Unit. Explain affected paths, user-facing behavior, what remains out of bounds, write impact, and what the agent can still decide alone.
 - Security / privacy (`security_privacy`): sensitive-action Approval to access a secret, change permissions, or export data is only an Approval boundary. Separate product or security judgment may still be needed for roles, fields, redaction, audit logging, retention, rollback, and user notice.
 - Security / privacy (`security_privacy`): PII logging policy should compare options such as no PII in logs, redacted or tokenized identifiers, or limited diagnostic fields. Explain privacy exposure, debugging value, retention, redaction, audit trail, and evidence needed to prove the policy is followed.
-- QA / acceptance (`qa_acceptance`): QA or verification waiver should use the existing recording required for the Task and cite the owner refs. QA waiver effects are owned by the Manual QA / QA policy path; product/user risk or policy-required judgment uses a QA waiver judgment request, recorded internally as needed. Verification waiver effects are owned by the kernel verification-waiver path; when a user-owned judgment is needed, use the relevant judgment request or Decision Packet record. Name the skipped check or surface, any separately accepted residual risk, residual-risk follow-up, relevant refs, and close impact. If waiver and residual-risk acceptance are both needed, render them as separate judgment lines or requests. Example: ask the user whether to waive mobile Safari Manual QA for a copy-only change, separately accept the viewport-wrapping residual risk, and keep a browser pass as release follow-up.
+- QA / verification (`qa_verification`): QA or verification waiver should use the existing recording required for the Task and cite the owner refs. QA waiver effects are owned by the Manual QA / QA policy path; product/user risk or policy-required judgment uses a QA waiver judgment request, recorded internally as needed. Verification waiver effects are owned by the kernel verification-waiver path; when a user-owned judgment is needed, use the relevant judgment request or Decision Packet record. Name the skipped check or surface, any separately accepted residual risk, residual-risk follow-up, relevant refs, and close impact. If waiver and residual-risk acceptance are both needed, render them as separate judgment lines or requests. Example: ask the user whether to waive mobile Safari Manual QA for a copy-only change, separately accept the viewport-wrapping residual risk, and keep a browser pass as release follow-up.
 - Residual risk (`residual_risk`): residual-risk acceptance before close should show the remaining limitation, the evidence that does exist, why close can still be acceptable, and the follow-up that remains. A residual-risk accepted close is not a detached-verified close.
 
 Ask one blocking question at a time when possible.
@@ -477,7 +479,7 @@ Show a short Write Authority Summary:
 
 ```text
 Write authority: allowed for src/auth/login.ts and tests/auth/login.test.ts
-Scope basis: email login Change Unit
+Scope basis: email login work scope (Change Unit ref available for drill-down)
 Limitation: cooperative surface; changed-path validation detects violations after the fact
 ```
 

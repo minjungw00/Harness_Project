@@ -28,28 +28,75 @@
 
 | 공개 용어 | 쉬운 뜻 |
 |---|---|
-| 작업 | 사용자가 끝내거나, 답을 얻거나, 조사하거나, 결정하고 싶은 일. |
-| 범위 | 무엇이 바뀔 수 있고, 무엇은 범위 밖이며, 에이전트가 어디에서 멈춰야 하는지. |
+| 작업 | 사용자가 끝내거나, 답을 얻거나, 조사하거나, 결정하고 싶은 일. 내부 기록을 이름 붙일 때만 `Task`를 씁니다. |
+| 범위 | 무엇이 바뀔 수 있고, 에이전트가 어디에서 멈춰야 하는지. |
+| 범위 밖 | 이번 작업에서 바꾸거나, 결정하거나, 완료됐다고 말하면 안 되는 것. |
 | 판단 / 사용자 판단 | 사용자가 소유하는 선택입니다. 사용자에게 보이는 표시는 구체적인 유형을 이름 붙여야 합니다. 제품/UX 판단, 기술 구조 판단, 보안/개인정보 판단, 범위/자율성 판단, 민감 동작 승인, QA 면제 판단, 검증 면제 판단, 작업 수락, 잔여 위험 수용을 구분합니다. |
+| 판단 요청 | 사용자가 소유한 선택 하나를 묻는 요청입니다. 내부 저장 기록은 Decision Packet일 수 있지만, 일반 질문은 판단할 내용, 선택지, 결과, 다음 행동에서 시작해야 합니다. |
 | 근거 | 작업에 대한 주장을 뒷받침하는 오래 남는 자료. |
+| 확인 | 테스트, 변경 차이 검토, 사람의 확인, 출처 확인처럼 일반적인 확인입니다. 공식 기록 경로를 말할 때만 `Verification` 또는 `검증`을 씁니다. |
+| 검증 | 정확성을 확인하는 기록입니다. 충분히 독립적인 검토 경계가 필요할 수 있습니다. |
+| 수동 QA | UI, 문구, 작업 흐름, 접근성, 시각 품질, 제품 감각처럼 사람의 판단이 필요한 부분을 사람이 확인하는 일. |
+| 작업 수락 | 필요한 경우 완료 결과를 받아들일 수 있다는 사용자의 판단. |
+| 잔여 위험 | 계속 보여야 하는 알려진 불확실성, 한계, 생략된 확인, 절충, 가능한 영향. |
+| 닫기 막힘 | 해소, 보류, 면제, 수용 같은 올바른 경로가 처리되기 전까지 완료나 닫기를 막는 구체적인 조건. |
 | 닫기 준비 상태 | 작업을 끝내거나 닫기 전에 아직 확인하거나 처리해야 하는 것. |
-| 위험 | 계속 보여야 하는 알려진 불확실성, 한계, 생략된 확인, 절충, 가능한 영향. |
+| 다음 안전한 행동 | 해결되지 않은 범위, 판단, 근거, QA, 검증, 작업 수락, 위험을 숨기지 않고 진행할 수 있는 다음 행동. |
 
 사용자용 문서는 쉬운 개념을 먼저 설명해야 합니다. 정확한 하네스 라벨은 경계, 막힘, 출처 참조, Reference 링크를 설명하는 데 도움이 될 때만 괄호로 덧붙입니다.
 
-## 내부 구현 용어
+## 사용자용 용어 규칙
+
+- 사용자 예시를 내부 용어로 시작하지 않습니다. 작업, 범위, 판단, 근거, 막힘, 다음 안전한 행동을 먼저 말합니다.
+- 사용자가 "Discovery", "Change Unit", "Decision Packet", "Write Authorization", "Evidence Manifest", "Projection", "Gate", `task_events` 같은 말을 해야만 진행되는 구조로 쓰지 않습니다.
+- 사용자용 한국어에서는 `판단 요청`, `무엇을 결정해야 하나요?`처럼 자연스러운 말을 씁니다. 영어 문서에서는 "judgment request"를 기본 표현으로 씁니다.
+- 내부 라벨은 쉬운 의미가 먼저 분명해진 뒤, 선택적/내부 설명으로만 소개합니다.
+- "승인", "진행해", "좋아" 같은 넓은 표현을 민감 동작 승인, 제품 판단, 작업 수락, 잔여 위험 수용, QA 면제, 검증 면제, 쓰기 권한까지 넓혀 해석하면 안 됩니다.
+
+## 내부 / 참조 용어
 
 아래 용어는 reference, API, schema, record, 상태 참조에서 쓰는 구현 라벨입니다. 사용자가 프롬프트에서 이 용어를 쓸 필요는 없습니다. 에이전트가 평소 말로 들어온 요청을 알맞은 하네스 절차로 바꿔야 합니다.
 
 | 내부 용어 | 쉬운 설명 |
 |---|---|
+| Task | 사용자가 끝내거나, 답을 얻거나, 조사하거나, 결정하고 싶은 일을 오래 남기는 내부 단위입니다. 처음 읽는 사용자용 prose에서는 `작업`을 씁니다. |
+| Discovery | 구현 계획이나 쓰기 권한 전에 요구사항을 구체화하는 행동의 내부 이름입니다. 사용자는 "구현 전에 계획을 구체화해줘"처럼 말하면 됩니다. |
 | Change Unit | 제품 파일 쓰기의 경계를 정하는 작업 범위입니다. 무엇이 바뀔 수 있는지 말하지만 그 자체로 쓰기를 허가하지는 않습니다. |
 | Decision Packet | 진행, 쓰기, 면제, 작업 수락, 위험 처리, 닫기를 막는 특정 사용자 소유 판단을 기록하는 경로입니다. |
 | Write Authorization | 범위와 필요한 확인 뒤에 특정 제품 파일 쓰기 시도 하나를 지금 진행해도 된다는 하네스 결과입니다. |
 | Evidence Manifest | 완료 조건이나 수용 기준이 어떤 근거 참조로 뒷받침되는지 연결하는 기록입니다. |
+| Eval | 검증 결과 기록입니다. 대상, verdict, 수행한 확인, 검토한 근거, 독립성, 최신성, 막힘, artifact ref를 남깁니다. |
 | Projection | 하네스 상태에서 만든 읽기용 요약입니다. 상태를 보여 주지만 상태를 대체하지 않습니다. |
+| Gate | 커널의 준비 상태 또는 호환성 조건입니다. 사용자용 문서에서는 보통 `gate` 이름보다 막힘이나 확인을 쉬운 말로 먼저 보여줍니다. |
 | Autonomy Boundary | 활성 범위 안에서 에이전트가 다시 묻지 않고 판단해도 되는 선택의 경계입니다. |
 | `task_events` | 작업 상태 변화를 남기는 내부 event log table입니다. 사용자용 어휘가 아니라 reference/schema 용어입니다. |
+
+## Schema/API 식별자
+
+Schema, API 문서, code-like example, record, 진단 출력에서는 아래 이름을 정확히 유지합니다. 사용자에게 설명할 때는 뜻을 쉬운 말로 풉니다.
+
+| 식별자 | 의미와 표시 원칙 |
+|---|---|
+| `judgment_category` | 현재 schema field입니다. 제품/UX, 기술 구조, 보안/개인정보, 범위/자율성, QA/검증, 작업 수락, 잔여 위험, 복합 같은 판단 묶음을 나타냅니다. |
+| `judgment_route` | 현재 schema field입니다. choose, waive, accept result, accept risk, approve sensitive action, reconcile 같은 owner path와 기록 답변 경로를 나타냅니다. |
+| `display_depth` | 현재 schema field입니다. `simple`, `tradeoff`, `high-risk`, `close-affecting`처럼 질문 깊이를 나타냅니다. 사용자가 별도 개념으로 외우게 만들지 않습니다. |
+| `judgment_domain` | `judgment_category`로 mapping되는 호환 alias입니다. Compatibility 문서나 오래된 payload에서는 field name을 그대로 둡니다. |
+| `decision_kind` | `judgment_route`로 mapping되는 호환 alias입니다. Schema/API 문맥에서는 field name과 enum value를 유지합니다. |
+| `decision_profile` | `display_depth`로 mapping되는 호환 alias입니다. Schema/API 문맥에서는 field name을 유지합니다. |
+| `Task`, `DecisionPacket`, `ArtifactRef`, `ProjectionKind`, `ValidatorResult` | Schema/API shape 이름입니다. Contract를 이름 붙일 때 정확히 유지합니다. |
+| `prepare_write`, `record_run`, `close_task`, `harness.request_user_judgment`, `harness.record_user_judgment` | Tool/API 식별자입니다. 정확히 유지하고, 사용자에게 보이는 결과는 쉬운 말로 설명합니다. |
+
+## 향후 / 나중 프로필 용어
+
+아래 라벨은 roadmap, reference, template, diagnostic material에서 보일 수 있습니다. 담당 profile이 기능을 승격하기 전에는 첫 설명의 사용자 어휘나 필수 명령으로 만들지 않습니다.
+
+| 나중 프로필 용어 | 상태와 표시 원칙 |
+|---|---|
+| Context Index | 나중의 읽기 전용 retrieval 지원입니다. 살펴볼 source를 제안할 수 있지만 write 허가, gate 충족, 위험 수용, close를 대신하지 않습니다. |
+| Journey Card / Journey Spine | 나중의 continuity display입니다. 활성화되고 최신일 때 방향을 잡는 데 도움을 주지만 Core가 소유한 상태는 아닙니다. |
+| Browser QA Capture | Browser artifact capture를 위한 v1+ 후보입니다. 그 자체로 수동 QA, 작업 수락, 분리 검증이 아닙니다. |
+| Standalone `DEC` projection | 기능이 켜졌을 때 가능한 선택적 Decision Packet Markdown rendering입니다. 사용자가 standalone `DEC` 파일을 읽어야만 판단을 볼 수 있는 구조가 되면 안 됩니다. |
+| Operations & Handoff 표시 | 나중 또는 profile-gated 운영/보고 표면입니다. Owner record를 보여주거나 내보낼 뿐 Core 권한을 대체하지 않습니다. |
 
 ## 담당 문서 지도
 
@@ -240,7 +287,7 @@ Decision Packet의 schema field인 `display_depth`입니다. Prompt 깊이와 pr
 
 차단하는 사용자 소유 판단을 위한 기준 커널 상태 기록입니다. 필요한 판단, `judgment_category`, `judgment_route`, `display_depth`, 대기 중인 선택지 또는 선택된 결과, 영향받는 범위, 뒷받침하는 참조, 소유자, 상태, 다음 행동을 명시합니다. 높은 표시 깊이는 필요할 때 추천, 불확실성, 상세 절충, 근거, 잔여 위험, Approval 범위, 면제 맥락, 작업 수락 맥락, reconcile 대상을 보여줍니다. Decision Packet record ID는 `DEC-*`를 사용합니다. Record-level status는 [Decision Gate Aggregate Recompute](kernel.md#decision-gate-aggregate-recompute)와 public `DecisionPacket` schema가 담당하며, 관련 상태가 Task-level `decision_gate`에 반영됩니다. Active stage/profile이 요구하는 Decision Packet 표시는 Task/status/next/judgment-context 및 decision-packet surface를 통해 제공됩니다. Standalone `DEC` Markdown rendering은 기능이 켜져 있을 때만 optional projection 또는 proposal surface입니다. Public API/interface choice, architecture direction, domain-language conflict, module boundary change, waiver, 작업 수락, 잔여 위험 선택은 제품/UX 판단, 기술 구조 판단, 보안/개인정보 판단, 범위/자율성 판단, QA/verification waiver, 작업 수락, 잔여 위험 수용이 progress, write, close, public commitment를 막을 때 이 path를 사용합니다. 막연한 동의 문구는 specific recorded route와 option에 답하지 않는 한 Decision Packet을 충족하지 않습니다.
 
-`judgment_category`는 Decision Packet에서 schema가 소유한 사용자-facing grouping입니다. 값은 `product_ux`, `technical_architecture`, `security_privacy`, `scope_autonomy`, `qa_verification`, `work_acceptance`, `residual_risk`, `mixed`입니다. 표시는 제품/UX 또는 보안/개인정보 같은 자연스러운 label로 바꿔 보여줄 수 있습니다. `judgment_route`는 internal owner path와 recorded-answer branch를 제어합니다. `display_depth`는 prompt depth와 필요한 context를 제어합니다. 영향을 받는 `gate`나 막힌 행동은 `affected_gates`와 관련 owner record로 별도 기록합니다. `judgment_category`는 enum 값으로 validate되지만 payload branch를 고르거나 gate를 다시 계산하거나 close aggregation rule, authority path, affected-gate relation, `judgment_route`를 대체하지 않습니다. `display_depth`는 status, `gate`, owner record, close aggregation rule, authority path, Approval substitute, waiver substitute, 작업 수락 substitute, 잔여 위험 수용 substitute가 아닙니다. 여러 영역에 걸친 judgment는 category를 배타적으로 다루지 말고 부차적인 고려사항을 trade-off, affected gate, risk, evidence, follow-up에 보여줘야 합니다. 표시용 label은 schema field나 validator input이 아닙니다.
+`judgment_category`는 Decision Packet에서 schema가 소유한, 사용자에게 보이는 판단 묶음입니다. 값은 `product_ux`, `technical_architecture`, `security_privacy`, `scope_autonomy`, `qa_verification`, `work_acceptance`, `residual_risk`, `mixed`입니다. 표시는 제품/UX 또는 보안/개인정보 같은 자연스러운 label로 바꿔 보여줄 수 있습니다. `judgment_route`는 internal owner path와 recorded-answer branch를 제어합니다. `display_depth`는 prompt depth와 필요한 context를 제어합니다. 영향을 받는 `gate`나 막힌 행동은 `affected_gates`와 관련 owner record로 별도 기록합니다. `judgment_category`는 enum 값으로 validate되지만 payload branch를 고르거나 gate를 다시 계산하거나 close aggregation rule, authority path, affected-gate relation, `judgment_route`를 대체하지 않습니다. `display_depth`는 status, `gate`, owner record, close aggregation rule, authority path, Approval substitute, waiver substitute, 작업 수락 substitute, 잔여 위험 수용 substitute가 아닙니다. 여러 영역에 걸친 judgment는 category를 배타적으로 다루지 말고 부차적인 고려사항을 trade-off, affected gate, risk, evidence, follow-up에 보여줘야 합니다. 표시용 label은 schema field나 validator input이 아닙니다.
 
 ### Decision Request
 

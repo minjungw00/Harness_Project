@@ -28,12 +28,19 @@ Use these words in user-facing explanations.
 | Public term | Plain meaning |
 |---|---|
 | Work | The thing the user wants completed, answered, investigated, or decided. |
-| Scope | What may change, what must stay out of bounds, and where the agent should stop before continuing. |
+| Scope | What may change and where the agent should stop before continuing. |
+| Out of scope | What must not change, be decided, or be claimed as done for this work. |
 | User judgment | A choice the user owns, such as product direction, UX behavior, architecture trade-off, security/privacy call, QA waiver, final acceptance, or residual-risk acceptance. |
+| Judgment request | A focused request for one user-owned choice. The user should see the choice, options, consequence, and next action before any internal label. |
 | Evidence reference | A durable pointer to support for a claim: changed paths, diffs, logs, test output, screenshots, inspection notes, or other artifacts. |
+| Check | An ordinary confirmation such as a test, diff review, inspection, or source lookup. |
+| Verification | A recorded correctness check, especially when the work needs an independent enough review boundary. |
+| Manual QA | Human inspection for UX, copy, accessibility, visual quality, workflow, or another human-judgment surface. |
 | Close readiness | The visible answer to "what still prevents this work from finishing?" |
-| Acceptance | The user's judgment that the result is acceptable when the task path requires it. |
+| Work acceptance | The user's judgment that the result is acceptable when the task path requires it. |
 | Residual risk | Known remaining uncertainty, limitation, skipped check, or consequence that should stay visible. |
+| Close blocker | A concrete reason the work cannot finish or close yet. |
+| Next safe action | The next action that can proceed without hiding unresolved scope, judgment, evidence, QA, verification, acceptance, or risk. |
 
 ## User-Visible Work Shapes
 
@@ -70,7 +77,7 @@ These rules keep one kind of signal from being treated as another kind of author
 | Rule | Meaning |
 |---|---|
 | Chat is not state. | Chat can coordinate and summarize, but it is not the durable operating record. |
-| Markdown projection is not state. | A readable report can display state, but editing it does not change Core-owned state. |
+| Readable report is not state. | A readable report can display state, but editing it does not change Core-owned state. `Projection` is the internal/reference label. |
 | Tool output is not user judgment. | A log, diff, connector response, or test result can inform a decision; it cannot make the user's decision. |
 | Sensitive-action approval is not work acceptance. | Permission to do a named sensitive step does not mean the completed result is accepted. |
 | Test pass is not manual QA. | Automated checks do not prove human experience, copy, accessibility, or visual quality. |
@@ -105,12 +112,15 @@ The labels below are implementation or reference labels. Users do not need to us
 | Approval | Permission for a named sensitive action. It is not acceptance of the completed work. |
 | Write Authorization | Internal record that a specific product-write attempt is compatible with current Harness authority. |
 | Evidence Manifest | Internal record mapping completion conditions or acceptance criteria to evidence references. |
+| Eval | Internal verification result record. |
+| Gate | Internal readiness or compatibility condition. User-facing status should usually show the blocker or check first. |
 | Verification | Recorded correctness check, with stronger meaning when it crosses an independent enough boundary. |
 | Manual QA | Human inspection for UX, copy, accessibility, visual quality, workflow, or other human-judgment surfaces. |
 | Acceptance | User's final result judgment when required. |
 | Residual Risk | Known remaining uncertainty, limitation, trade-off, or consequence. |
 | Projection | Readable view derived from Harness state. It displays state but does not replace it. |
 | Reconcile | Deliberate path for handling human edits or drift in a readable view. |
+| task_events | Low-level internal event history for implementers and diagnostics. |
 
 ## Stable Anchors For Older Links
 
@@ -124,6 +134,7 @@ These anchors keep links stable. They do not make the terms required user vocabu
 - <a id="evidence"></a>Evidence: support for a completion or correctness claim.
 - <a id="approval"></a>Approval: permission for a named sensitive action.
 - <a id="write-authorization"></a>Write Authorization: optional/internal label for a compatible write attempt.
+- <a id="gate"></a>Gate: optional/internal label for a readiness or compatibility condition.
 - <a id="verification"></a>Verification: recorded correctness check.
 - <a id="manual-qa"></a>Manual QA: human inspection where human judgment matters.
 - <a id="acceptance"></a>Acceptance: final result judgment when required.

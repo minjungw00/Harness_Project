@@ -27,7 +27,7 @@ Harness separates the surfaces people use from the records that carry authority.
 | Chat | Coordination, questions, explanation, summaries, proposed next steps. | Durable state, final acceptance, residual-risk acceptance, or resolving every pending judgment by implication. |
 | Product files | Source code, tests, product docs, project assets, generated readable files. | Harness operational state. |
 | Tool output | Checks, logs, diffs, screenshots, connector responses, search results. | User judgment or work acceptance by itself. |
-| Markdown projections | Human-readable status and reports derived from recorded facts. | Core state, evidence records, acceptance, or close eligibility. |
+| Readable reports (`Projection` internally) | Human-readable status and reports derived from recorded facts. | Core state, evidence records, acceptance, or close eligibility. |
 | Core-owned local state | Scope, user-owned judgments, evidence references, close readiness, acceptance, and residual risk. | A replacement for source control, tests, code review, or product specifications. |
 
 The practical rule is simple: read surfaces for context, but treat Core-owned state and artifact references as the operating record.
@@ -77,7 +77,7 @@ Harness may integrate with prompts, MCP tools, workflows, tests, reviews, report
 These are the learning-path rules to keep close:
 
 - Chat is not state.
-- Markdown projection is not state.
+- A readable report is not state.
 - Tool output is not user judgment.
 - Sensitive-action approval is not work acceptance.
 - Test pass is not manual QA.

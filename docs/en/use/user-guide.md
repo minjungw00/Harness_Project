@@ -433,13 +433,15 @@ You can skip this section until an agent shows one of these labels. They are use
 | Change Unit | The bounded work area that may change for this task. |
 | Autonomy Boundary | The decisions the agent may make alone inside that scope. |
 | Decision Packet | The internal record/template label behind a user judgment request. It records a user-owned product/UX, technical architecture, security/privacy, scope/autonomy, waiver, final acceptance, residual-risk acceptance, or reconcile judgment. It can be concise for a small unblocker or detailed for complex/risky choices. |
-| Judgment domain | The grouping on an internal Decision Packet record, such as Product / UX, Technical architecture, Security / privacy, QA / acceptance, Residual risk, Scope / autonomy, or Mixed. |
+| `judgment_category` | Schema field for the judgment grouping, such as Product / UX, Technical architecture, Security / privacy, QA / verification, Work acceptance, Residual risk, Scope / autonomy, or Mixed. Ordinary prompts should show the friendly judgment type first. |
+| `judgment_route` | Schema field for the answer route, such as choose, waive, accept result, accept risk, approve a sensitive step, or reconcile. Ordinary prompts should use the matching verb. |
+| `display_depth` | Schema field for prompt depth. Ordinary users should see the practical result: a short question, a trade-off question, a high-risk question, or a close-affecting question. |
 | Approval | Permission for a named sensitive action; not generic agreement or final acceptance. |
 | Write Authorization | A one-attempt check that the intended product write fits the current task, scope, decisions, and approvals. |
 | Evidence Manifest | The record that maps completion claims to supporting evidence. |
 | Projection | A readable summary derived from owner records and related files or artifacts. Early use may be compact status text or a card, not a full Markdown report; it helps orientation and is not authority by itself. |
 | ProjectionJob | The internal job that creates or refreshes a readable projection. |
-| task_events | Low-level event history for implementers and diagnostics. |
+| `task_events` | Low-level event history for implementers and diagnostics. |
 
 These labels do not collapse into each other. Approval is not acceptance. Final acceptance does not erase residual risk. A decision is not write authority. A readable summary is not state. Passing tests does not mean Manual QA happened. Accepting residual risk does not make the risk disappear.
 
