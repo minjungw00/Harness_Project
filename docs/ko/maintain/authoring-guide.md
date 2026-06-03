@@ -6,7 +6,7 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 
 목표는 현재 문서가 독자에게 읽기 쉽고, 세부 계약의 위치가 분명하며, 영어와 한국어 문서가 같은 의미를 유지하도록 돕는 것입니다.
 
-이 문서는 Maintain 문서입니다. 문서 유지보수만 다룹니다. 첫 실행 목표는 코어 권한 스모크(v0.1 Core Authority Smoke)이며, 커널 스모크(Kernel Smoke)는 좁은 future smoke-check 작성 label입니다. 첫 사용자 가치 목표는 첫 사용자 가치 조각(v0.2 First User-Value Slice)입니다. 에이전시 보증 팩(v0.3 Agency Assurance Pack)과 운영과 인계 팩(v0.4 Operations & Handoff Pack)은 agency assurance, operations, handoff behavior를 단단하게 만드는 단계이며, v1+ Expansion은 owner 문서가 승격하고 증명하기 전까지 roadmap 범위에 둡니다.
+이 문서는 Maintain 문서입니다. 문서 유지보수만 다룹니다. 첫 실행 목표는 내부 엔지니어링 점검입니다. 이는 제품 MVP가 아니라 내부 authority-loop smoke입니다. 커널 스모크(Kernel Smoke)는 이 점검 아래의 좁은 future smoke-check 작성 label일 뿐입니다. 첫 사용자 가치 목표는 MVP-1 사용자 작업 루프입니다. 보증 프로필과 운영 프로필은 agency assurance, operations, handoff behavior를 나중에 단단하게 만들고, 로드맵은 owner 문서가 승격하고 증명하기 전까지 향후 범위에 둡니다.
 
 ## 이런 때 읽기
 
@@ -101,7 +101,7 @@ Harness 문서를 새로 쓰거나, 나누거나, 이름을 바꾸거나, 리뷰
 재설계 finding은 아래 틀로 작게 나누어 라우팅합니다.
 
 - 제품 정의 drift: Harness를 local authority record와 judgment-routing layer로 유지합니다. Prompt 묶음, workflow engine, report generator, dashboard, broad hosted agent platform으로 만들지 않습니다.
-- MVP/단계 경계 drift: v0.1은 내부 Core Authority Smoke, v0.2는 첫 First User-Value Slice로 둡니다. Future/profile/diagnostic 내용은 owner가 승격하기 전까지 현재 단계 요구사항 밖에 둡니다.
+- 단계/프로필 경계 drift: 내부 엔지니어링 점검은 내부 authority-loop smoke로, MVP-1 사용자 작업 루프는 첫 사용자 가치 이정표로 유지합니다. 보증, 운영, diagnostic, 로드맵 내용은 owner가 승격하기 전까지 더 이른 요구사항 밖에 둡니다.
 - 판단 모델 복잡도: 사용자 소유 판단을 보이게 유지하고, 결정의 크기에 맞춥니다. Agent 판단, sensitive-action Approval, 작업 수락, 잔여 위험 수용과 섞지 않습니다.
 - Close/verification 모호성: 근거, 검증, 수동 QA, 작업 수락, close readiness, 잔여 위험을 분리합니다. 어느 것도 다른 것을 대신하지 않습니다.
 - 보안 보장 과장 위험: Cooperative, detective, preventive, isolated 표현은 문서화된 mechanism과 증명 수준에 맞게 씁니다.
@@ -148,16 +148,16 @@ Tracker 상태 의미:
 |---|---|
 | 문서 drift | 필요한 조치가 문구 정리, 소유자 경계 정리, link 수정, TODO 정리, 용어 정리, 영어/한국어 의미 일치일 때. |
 | 스키마/설계 결정 | schema, state, API, DDL, security guarantee, fixture 의미, 그 밖의 owner contract에서 실제 선택이 필요할 때. |
-| 단계 경계 결정 | capability가 코어 권한 스모크(v0.1 Core Authority Smoke), 첫 사용자 가치 조각(v0.2 First User-Value Slice), 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack), v1+ Expansion 중 어디에 속하는지 결정해야 할 때. |
+| 단계 경계 결정 | capability가 내부 엔지니어링 점검, MVP-1 사용자 작업 루프, 보증 프로필, 운영 프로필, 로드맵 중 어디에 속하는지 결정해야 할 때. |
 | 구현 준비 조건 | 첫 런타임 배치 계획을 수락하기 전에 유지보수자가 확인해야 하는 조건일 때. |
-| 향후 로드맵 항목 | 유용하지만 승격되기 전까지 v0.1부터 v0.4 밖에 남아야 하는 항목일 때. |
+| 향후 로드맵 항목 | 유용하지만 승격되기 전까지 내부 엔지니어링 점검부터 운영 프로필 밖에 남아야 하는 항목일 때. |
 
 확인 뒤 예상 항목 범주:
 
 | 검토 risk | 확인되었을 때 기본 routing |
 |---|---|
 | 이 저장소가 앞으로 하네스 서버 소스 저장소가 된다는 설명이 흐려질 수 있습니다. | 구현 준비 조건 |
-| Stage 이름이 v0.1, Kernel Smoke, 또는 예전 kernel-stage label을 제품 MVP처럼 보이게 할 수 있습니다. | 단계 경계 결정 |
+| Stage 이름이 내부 엔지니어링 점검, Kernel Smoke, 또는 예전 kernel-stage label을 제품 MVP나 첫 사용자 가치 조각처럼 보이게 할 수 있습니다. | 단계 경계 결정 |
 | 사용자용 문서가 무거운 구현 disclaimer로 시작할 수 있습니다. | 문서 drift |
 | 사용자용 문서에 내부 용어가 너무 많습니다. | 문서 drift |
 | 요구사항 탐색(discovery)과 확인이 Change Unit 또는 첫 안전한 구현 단위로 너무 빨리 수렴할 수 있습니다. | 단계 경계 결정 |
@@ -179,7 +179,7 @@ Tracker 상태 의미:
 | 검토 risk | Tracker 상태 | 편집 규칙 |
 |---|---|---|
 | 이 저장소가 앞으로 하네스 서버 소스 저장소가 된다는 설명이 흐려질 수 있습니다. | 기준 상태 점검. | 현재는 문서 전용이고, 재설계 이후 검토 상태이며, 향후 역할은 하네스 서버 소스 저장소이고, 런타임/서버 구현은 아직 시작하지 않았으며 문서 수락과 별도의 구현 계획 준비 결정 이후에만 시작할 수 있다는 점을 진입점 문서에서 분명히 유지합니다. |
-| Stage 이름이 v0.1, Kernel Smoke, 또는 예전 kernel-stage label을 첫 사용자 가치 조각처럼 보이게 할 수 있습니다. | 확인 대상 후보. | v0.1 Core Authority Smoke는 내부 authority loop milestone이고, Kernel Smoke는 그 좁은 future smoke-check 작성 label이며, v0.2 First User-Value Slice가 첫 좁은 사용자 가치 조각이라고 말합니다. |
+| Stage 이름이 내부 엔지니어링 점검, Kernel Smoke, 또는 예전 kernel-stage label을 제품 MVP나 첫 사용자 가치 조각처럼 보이게 할 수 있습니다. | 확인 대상 후보. | 내부 엔지니어링 점검은 내부 authority loop milestone이고, Kernel Smoke는 그 좁은 future smoke-check 작성 label이며, MVP-1 사용자 작업 루프가 첫 좁은 사용자 가치 조각이라고 말합니다. |
 | 사용자용 문서가 무거운 구현 disclaimer로 시작할 수 있습니다. | 확인 대상 후보. | 사용자 대상 Learn/Use 문서는 사용자가 무엇을 요청할 수 있는지, 에이전트가 무엇을 구체화해야 하는지, 하네스가 무엇을 보존하는지, 사용자가 무엇을 보게 되는지를 먼저 보여주는 사용자 흐름 우선 도입부를 선호합니다. 상세 단계와 상태 경고는 root README, 언어별 README, Build 인계 문서, Maintain 지침으로 보냅니다. 문서 안의 상태 메모는 짧게 유지합니다. |
 | 사용자용 문서에 내부 용어가 너무 많습니다. | 확인 대상 후보. | 사용자가 보는 상황을 먼저 설명하고, 내부 용어는 행동에 도움이 될 때만 소개합니다. |
 | 요구사항 탐색(discovery)과 확인이 Change Unit 또는 첫 안전한 구현 단위로 너무 빨리 수렴할 수 있습니다. | 확인 대상 후보. | 범위가 정해진 구현 단위를 요구하기 전에 초기 discovery, 공유 이해, 사용자 소유 판단의 여지를 남깁니다. |
@@ -188,7 +188,7 @@ Tracker 상태 의미:
 | Approval, 작업 수락, 잔여 위험 수용을 혼동하기 쉽습니다. | 회귀 방지 점검. | 민감 동작 승인, 작업 수락, 잔여 위험 수용을 예시와 routing text에서 분리합니다. |
 | Storage/DDL이 future-profile table, field, gate를 너무 이른 필수 범위처럼 보이게 할 수 있습니다. | 확인 대상 후보. | Reference schema에 존재한다는 사실과 단계별 구현 요구를 구분합니다. Required field는 담당 tool, record, profile이 활성 상태이거나 사용될 때 적용되며, 그 자체로 가장 작은 runnable slice를 키우지 않습니다. |
 | Conformance fixture 문서가 현재 구현 단계에 비해 너무 자세할 수 있습니다. | 확인 대상 후보. | Fixture 문서는 단계화된 향후 계획으로 유지합니다. 현재 executable fixture file이나 runnable Harness Server conformance test가 있다는 인상을 주지 않습니다. |
-| Operations entrypoint가 너무 이른 단계의 필수 요소처럼 보일 수 있습니다. | 확인 대상 후보. | 관련 Build 단계가 명시적으로 포함하기 전까지 operator entrypoint는 단계화된 향후 범위로 둡니다. 문구 drift 때문에 v0.1 전제 조건이 되면 안 됩니다. |
+| Operations entrypoint가 너무 이른 단계의 필수 요소처럼 보일 수 있습니다. | 확인 대상 후보. | 관련 Build 단계가 명시적으로 포함하기 전까지 operator entrypoint는 단계화된 향후 범위로 둡니다. 문구 drift 때문에 내부 엔지니어링 점검 전제 조건이 되면 안 됩니다. |
 | 한국어 사용자용 문서에 영어 기술 명사가 과도하게 남을 수 있습니다. | 확인 대상 후보. | 자연스러운 한국어를 먼저 씁니다. 정확한 English identifier는 stable label, schema name, file name, enum value, API field, 또는 정밀도가 필요한 곳에서만 유지합니다. |
 | 결정 기록 상태 표현이 drift될 수 있습니다. | 회귀 방지 점검. | 진입점, 인계, Authoring Guide 상태가 MVP 계획의 ledger와 맞아야 합니다. 열린 항목이 있으면 그 사실과 아직 코드 작성용으로 수락된 서버/런타임 구현 결정이 없다는 점을 함께 말합니다. 이후 ledger가 비면 그것은 내용 상태로만 말하고, 완전 수락, 구현 완료, 구현 준비 상태, 서버 코딩 준비 상태를 암시하지 않습니다. |
 | 현재 MVP 단계가 너무 크고, 핵심 사용자 가치를 뒤로 미룰 수 있습니다. | 확인 대상 후보. | MVP 크기와 초기 사용자 가치 사이의 긴장을 드러냅니다. Staging 결정은 owning Build/Reference 문서에 남깁니다. |
@@ -196,7 +196,7 @@ Tracker 상태 의미:
 | 보안 보장 표현은 실제 강제 수준과 맞아야 합니다. | 회귀 방지 점검. | Cooperative, detective, preventive, isolated 표현은 해당 surface가 그 수준을 제공할 때만 사용합니다. |
 | Agent context 전략은 prompt/context 부담이 과도해지지 않게 해야 합니다. | 회귀 방지 점검. | 항상 주입되는 agent context는 짧게 유지하고, 세부사항은 담당 문서나 조회 경로로 보냅니다. |
 | 문서가 런타임 객체처럼 읽힐 수 있습니다. | 회귀 방지 점검. | 현재 재설계 범위의 분리 규칙을 따릅니다. 문서는 원천 자료이며 runtime state나 generated projection이 아닙니다. |
-| 로드맵 후보가 승격 없이 단계별 전달 범위로 들어올 수 있습니다. | 회귀 방지 점검. | v1+ Expansion 항목은 담당자가 scope, fixture, fallback 동작, 읽기용 요약을 기준으로 삼는 의존성 없음으로 승격하기 전까지 로드맵에 둡니다. 향후 로드맵 항목을 문서 검토, v0.1, v0.2의 선행 조건처럼 다루지 않습니다. |
+| 로드맵 후보가 승격 없이 단계별 전달 범위로 들어올 수 있습니다. | 회귀 방지 점검. | 로드맵 항목은 담당자가 scope, fixture, fallback 동작, 읽기용 요약을 기준으로 삼는 의존성 없음으로 승격하기 전까지 로드맵에 둡니다. 향후 로드맵 항목을 문서 검토, 내부 엔지니어링 점검, MVP-1의 선행 조건처럼 다루지 않습니다. |
 
 ## 문서 작성 원칙
 
@@ -514,7 +514,7 @@ Result 의미:
 | 핵심 적합성 모델, 정확한 fixture body, runner execution, assertion semantics, 현재 단계 상태, 검증 프로파일별 증명 동작, suite metadata boundary, 축소된 Kernel Smoke 작성 순서 | `reference/conformance-fixtures.md` |
 | 향후 상세 scenario 후보, concern별 향후 fixture example, staged fixture coverage map, fixture suite family summary, catalog-only future candidate | `reference/future-fixture-catalog.md` |
 | Official term definitions and capitalization | `reference/glossary.md` |
-| v1+ Expansion roadmap | `roadmap.md` |
+| 로드맵 roadmap | `roadmap.md` |
 | Documentation authoring rules | `maintain/authoring-guide.md` |
 | Translation and bilingual prose rules | `maintain/translation-guide.md` |
 | 재작성 계획 분류와 재설계 분류 기준 | `maintain/rewrite-plan.md` |

@@ -6,7 +6,7 @@ Use this guide when you add, rewrite, split, rename, or review Harness documenta
 
 It helps you keep the current documentation readable for the intended reader, clear about where each kind of detail belongs, and aligned between English and Korean.
 
-This is maintenance documentation. It governs documentation maintenance only. The first runnable target is v0.1 Core Authority Smoke, with Kernel Smoke as a narrow future smoke-check authoring label. The first user-value target is v0.2 First User-Value Slice. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is maintenance documentation. It governs documentation maintenance only. The first runnable target is Engineering Checkpoint, an internal authority-loop smoke that is not the product MVP. Kernel Smoke is only a narrow future smoke-check authoring label under that checkpoint. The first user-value target is MVP-1 User Work Loop. Assurance Profile and Operations Profile harden agency assurance, operations, and handoff behavior later, and Roadmap remains future scope unless owner docs promote and prove it.
 
 ## Read this when
 
@@ -76,7 +76,7 @@ Documentation edits may change source docs, but they do not start Harness server
 
 Detailed phase/status warnings belong in the root README, language READMEs, Build handoff docs, and this Maintain guidance. Learn and Use pages may link to those owners, but their openings should lead with what users can ask, what the agent should clarify, what Harness preserves, and what users can expect to see.
 
-The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization. Do not preserve existing prose merely for continuity when it conflicts with the clarified product thesis or implementation feasibility.
+The redesign may change terminology, staging, schema structure, projection structure, security wording, and document organization. Do not preserve existing prose merely for continuity when it conflicts with the clarified product thesis or implementation feasibility.
 
 Documentation editing in this repository does not require Harness runtime procedures. Do not create runtime state, `task_events`, Write Authorizations, Evidence Manifests, Manual QA records, Acceptance records, Residual Risk records, generated projections, generated operational files, executable fixtures, fixture files, runtime records, or product-repository examples for documentation edits. These terms may be documented as future Harness behavior only.
 
@@ -101,7 +101,7 @@ During redesign, optimize for clarity, implementability, and the product thesis,
 Use this short backlog frame to keep redesign findings small and routable:
 
 - Product definition drift: keep Harness defined as a local authority record and judgment-routing layer, not a prompt pack, workflow engine, report generator, dashboard, or broad hosted agent platform.
-- MVP/stage boundary drift: keep v0.1 as the internal Core Authority Smoke, v0.2 as the first First User-Value Slice, and future/profile/diagnostic material outside current-stage requirements unless an owner promotes it.
+- Stage/profile boundary drift: keep Engineering Checkpoint as the internal authority-loop smoke, keep MVP-1 User Work Loop as the first user-value milestone, and keep assurance, operations, diagnostic, and roadmap material outside earlier requirements unless an owner promotes it.
 - Judgment model complexity: keep user-owned judgment visible, proportional, and separated from agent judgment, sensitive-action Approval, work acceptance, and residual-risk acceptance.
 - Close/verification ambiguity: keep evidence, verification, Manual QA, work acceptance, close readiness, and residual risk distinct. None of them substitutes for another.
 - Security guarantee overstatement risk: match cooperative, detective, preventive, and isolated wording to the exact documented mechanism and proof level.
@@ -121,7 +121,7 @@ When a rewrite changes a term, stage, schema shape, projection shape, security c
 
 ## Maintainer Handoff Rule
 
-[Implementation Overview: Maintainer handoff summary](../build/implementation-overview.md#maintainer-handoff-summary) owns the short handoff: what the documentation set defines, documentation review status, implementation planning readiness, runtime implementation status, future repository role, preserved principles, current stage model, implementation-readiness criteria, remaining open-question status, remaining documentation drift status, and maintainer acceptance conditions.
+[Implementation Overview: Maintainer handoff summary](../build/implementation-overview.md#maintainer-handoff-summary) owns the short handoff: what the documentation set defines, documentation review status, implementation planning readiness, runtime implementation status, future repository role, preserved principles, current delivery model, implementation-readiness criteria, remaining open-question status, remaining documentation drift status, and maintainer acceptance conditions.
 
 [MVP Plan: Implementation decisions needed before server coding](../build/mvp-plan.md#implementation-decisions-needed-before-server-coding) is the single place for major implementation decisions found during maintainer review or first runtime-batch planning. Do not leave major decisions as scattered `TODO_DECISION` markers in active docs. The current baseline has open server-coding decision-ledger items; entrypoint and handoff status must say that, without treating documentation acceptance as implementation-planning readiness or server-coding authorization. If a future baseline's decision log is empty, say exactly that; do not turn it into a "no open decisions" claim while implementation-readiness criteria still require maintainer judgment. If only editorial cleanup remains, say which docs-maintenance category owns it and why it does not block the current stage.
 
@@ -148,16 +148,16 @@ Use these item categories when routing confirmed tracker findings or docs-mainte
 |---|---|
 | Documentation drift | The fix is wording, owner-boundary cleanup, link repair, TODO hygiene, terminology, or English/Korean parity. |
 | Schema/design decision | The fix requires a real choice in schema, state, API, DDL, security guarantee, fixture semantics, or another owner contract. |
-| Stage boundary decision | The fix requires deciding whether a capability belongs in v0.1 Core Authority Smoke, v0.2 First User-Value Slice, v0.3 Agency Assurance Pack, v0.4 Operations & Handoff Pack, or v1+ Expansion. |
+| Stage boundary decision | The fix requires deciding whether a capability belongs in Engineering Checkpoint, MVP-1 User Work Loop, Assurance Profile, Operations Profile, or Roadmap. |
 | Implementation-readiness criterion | The item must be true before maintainers accept first runtime-batch planning. |
-| Future roadmap item | The item is useful later and remains outside v0.1 through v0.4 unless promoted. |
+| Future roadmap item | The item is useful later and remains outside Engineering Checkpoint through Operations Profile unless promoted. |
 
 Potential item category after verification:
 
 | Review risk | Default routing if confirmed |
 |---|---|
 | Repository identity as the future Harness Server source repository can drift. | Implementation-readiness criterion |
-| Stage names can still imply v0.1, Kernel Smoke, or a legacy kernel-stage label is the first user-value slice. | Stage boundary decision |
+| Stage names can still imply Engineering Checkpoint, Kernel Smoke, or a legacy kernel-stage label is a product MVP or the first user-value slice. | Stage boundary decision |
 | User-facing docs may open with heavy implementation disclaimers. | Documentation drift |
 | User-facing docs overuse internal terms. | Documentation drift |
 | Discovery / requirements clarification may converge too early on a Change Unit or the first safe implementation unit. | Stage boundary decision |
@@ -169,7 +169,7 @@ Potential item category after verification:
 | Operations entrypoints may appear required too early. | Stage boundary decision |
 | Korean user-facing docs may still contain excessive English technical nouns. | Documentation drift |
 | Decision-ledger status wording can drift. | Implementation-readiness criterion |
-| Current MVP staging may be too large while deferring core user-visible value. | Stage boundary decision |
+| Current staging may be too large while deferring core user-visible value. | Stage boundary decision |
 | Projection/template scope may be too broad for early implementation. | Stage boundary decision |
 | Security guarantee wording must match actual enforcement level. | Schema/design decision |
 | Agent context strategy must prevent excessive prompt/context load. | Implementation-readiness criterion |
@@ -179,7 +179,7 @@ Potential item category after verification:
 | Review risk | Tracker status | Editing rule |
 |---|---|---|
 | Repository identity as the future Harness Server source repository can drift. | Baseline status check. | Keep entrypoints clear that the repo is currently documentation-only, is in post-redesign review, its intended future role is the Harness Server source repository, and server/runtime implementation has not started and may start only after documentation acceptance and a separate implementation-planning readiness decision. |
-| Stage names can still imply v0.1, Kernel Smoke, or a legacy kernel-stage label is the first user-value slice. | Candidate to verify in the current docs. | Say v0.1 Core Authority Smoke is an internal authority-loop milestone, Kernel Smoke is its narrow future smoke-check authoring label, and v0.2 First User-Value Slice is the first narrow user-value slice. |
+| Stage names can still imply Engineering Checkpoint, Kernel Smoke, or a legacy kernel-stage label is a product MVP or the first user-value slice. | Candidate to verify in the current docs. | Say Engineering Checkpoint is an internal authority-loop milestone, Kernel Smoke is its narrow future smoke-check authoring label, and MVP-1 User Work Loop is the first narrow user-value slice. |
 | User-facing docs may open with heavy implementation disclaimers. | Candidate to verify in the current docs. | For user-facing Learn and Use docs, prefer a workflow-first opening that starts with what users can ask, what the agent should clarify, what Harness preserves, and what users should expect to see. Route detailed phase/status warnings to the root README, language READMEs, Build handoff docs, and Maintain guidance. Keep any local status note brief. |
 | User-facing docs overuse internal terms. | Candidate to verify in the current docs. | Explain the user-visible situation first; introduce internal terms only when they help the reader act. |
 | Discovery / requirements clarification may converge too early on a Change Unit or the first safe implementation unit. | Candidate to verify in the current docs. | Leave room for early discovery, shared understanding, and user-owned judgment before requiring a scoped implementation unit. |
@@ -188,15 +188,15 @@ Potential item category after verification:
 | Approval, work acceptance, and residual-risk acceptance are too easy to confuse. | Regression-prevention check. | Keep sensitive-action permission, work acceptance, and residual-risk acceptance separate in examples and routing text. |
 | Storage/DDL can present future-profile tables, fields, or gates as required too early. | Candidate to verify in the current docs. | Distinguish reference-schema presence from staged implementation requirement. Required fields apply when the owning tool, record, or profile is active or used; they do not by themselves expand the smallest runnable slice. |
 | Conformance fixture docs may be too detailed for the current implementation stage. | Candidate to verify in the current docs. | Keep fixture documentation future-oriented and staged. Do not imply executable fixture files or runnable Harness Server conformance tests exist now. |
-| Operations entrypoints may appear required too early. | Candidate to verify in the current docs. | Keep operator entrypoints staged and future-oriented unless the relevant Build stage explicitly includes them. They must not become a prerequisite for v0.1 by wording drift. |
+| Operations entrypoints may appear required too early. | Candidate to verify in the current docs. | Keep operator entrypoints staged and future-oriented unless the relevant Build stage explicitly includes them. They must not become a prerequisite for Engineering Checkpoint by wording drift. |
 | Korean user-facing docs may still contain excessive English technical nouns. | Candidate to verify in the current docs. | Use natural Korean first. Preserve exact English identifiers only for stable labels, schema names, file names, enum values, API fields, and places where precision needs the identifier. |
 | Decision-ledger status wording can drift. | Regression-prevention check. | Keep entrypoint, handoff, and authoring-guide status aligned with the MVP Plan ledger. If open items exist, say they exist and that no server/runtime implementation decision has been accepted for coding. If a future ledger is empty, say only that content status and do not imply full acceptance, implementation completeness, implementation readiness, or server-coding readiness. |
-| Current MVP staging may be too large while deferring core user-visible value. | Candidate to verify in the current docs. | Name the tension between MVP size and early user-visible value; leave staging decisions to the owning Build and Reference docs. |
+| Current staging may be too large while deferring core user-visible value. | Candidate to verify in the current docs. | Name the tension between MVP size and early user-visible value; leave staging decisions to the owning Build and Reference docs. |
 | Projection/template scope may be too broad for early implementation. | Candidate to verify in the current docs. | Flag broad early scope and route staging decisions to the projection/template owners. |
 | Security guarantee wording must match actual enforcement level. | Regression-prevention check. | Use cooperative, detective, preventive, or isolated wording only when the documented surface can provide that level. |
 | Agent context strategy must prevent excessive prompt/context load. | Regression-prevention check. | Keep always-on agent context short and route details to owner docs or retrieval paths. |
 | Documentation can drift into runtime-object language. | Regression-prevention check. | Use the separation rule in Current Redesign Scope: maintain docs as source material, not runtime state or generated projections. |
-| Roadmap candidates can drift into staged delivery without promotion. | Regression-prevention check. | Keep v1+ Expansion items in the Roadmap unless an owner promotes them with scope, fixtures, fallback behavior, and no projection-as-canonical dependency. Do not treat future roadmap items as prerequisites for documentation review, v0.1, or v0.2. |
+| Roadmap candidates can drift into staged delivery without promotion. | Regression-prevention check. | Keep Roadmap items in the Roadmap unless an owner promotes them with scope, fixtures, fallback behavior, and no projection-as-canonical dependency. Do not treat future roadmap items as prerequisites for documentation review, Engineering Checkpoint, or MVP-1. |
 
 ## Documentation principles
 
@@ -514,7 +514,7 @@ Use this map for broad document routing. For strict Reference contracts, use [Re
 | Core conformance model, exact fixture body shape, runner execution, assertion semantics, current-phase status, fixture profiles by proven behavior, suite metadata boundaries, reduced Kernel Smoke authoring queue | `reference/conformance-fixtures.md` |
 | Detailed future scenario candidates, future fixture examples by concern, staged fixture coverage maps, fixture suite family summaries, catalog-only future candidates | `reference/future-fixture-catalog.md` |
 | Official term definitions and capitalization | `reference/glossary.md` |
-| v1+ Expansion roadmap | `roadmap.md` |
+| Roadmap roadmap | `roadmap.md` |
 | Documentation authoring rules | `maintain/authoring-guide.md` |
 | Translation and bilingual prose rules | `maintain/translation-guide.md` |
 | Rewrite planning categories and redesign triage | `maintain/rewrite-plan.md` |

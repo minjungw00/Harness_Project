@@ -6,7 +6,7 @@ Use the Manual QA card when Manual QA needs a compact human-inspection prompt sh
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: Agency assurance reports. Use when a Manual QA profile is explicitly active; full Manual QA policy coverage remains later staged scope.
+Implementation tier: Assurance Profile reports. Use when a Manual QA profile is explicitly active; full Manual QA policy coverage remains later staged scope.
 
 ## Source records
 
@@ -84,7 +84,7 @@ Record the Manual QA result, record an allowed low-risk QA waiver reason, or req
 
 This template is a rendered card shape, not canonical QA state. `qa_gate` remains the close-relevant gate.
 
-Manual QA is human inspection. Passing tests, browser smoke, screenshot capture, Browser QA Capture artifacts, verification, or work acceptance may support the close context, but they do not become Manual QA unless `record_manual_qa` records a Manual QA result or a valid QA waiver updates `qa_gate=waived` with a waiver reason and, when user-owned risk is involved, a compatible QA waiver Decision Packet. Browser QA Capture remains a v1+ Expansion candidate unless owner docs explicitly promote it, and captured artifacts do not record work acceptance or detached verification unless a separate Eval path satisfies independence. A chat statement alone is not enough when the waiver affects close or accepted risk.
+Manual QA is human inspection. Passing tests, browser smoke, screenshot capture, Browser QA Capture artifacts, verification, or work acceptance may support the close context, but they do not become Manual QA unless `record_manual_qa` records a Manual QA result or a valid QA waiver updates `qa_gate=waived` with a waiver reason and, when user-owned risk is involved, a compatible QA waiver Decision Packet. Browser QA Capture remains a Roadmap candidate unless owner docs explicitly promote it, and captured artifacts do not record work acceptance or detached verification unless a separate Eval path satisfies independence. A chat statement alone is not enough when the waiver affects close or accepted risk.
 
 The card should render pending QA, passed QA, failed QA, and waived QA as separate display states. Waived QA cites the Manual QA record or waiver reason, the QA waiver Decision Packet when required, residual-risk refs when applicable, and close impact; it is not a passed inspection.
 

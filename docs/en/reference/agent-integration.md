@@ -71,9 +71,9 @@ Always-on rules and context should stay short, current, and non-authoritative. T
 | `T5 Isolation` | Surface can run verification or risky work behind a documented separation boundary. Worktrees and fresh evaluator bundles may provide verification independence or stale-context control; sandboxing, permission isolation, locked-down runners, process boundaries, or container boundaries require exact profile proof. | worktree, sandbox, fresh process, isolated runner |
 | `T6 QA Capture` | Surface can structure browser, screenshot, walkthrough, workflow-recording, or Manual QA artifacts. | browser runner, screenshot capture, console/network capture, accessibility snapshot, QA note capture |
 
-Normal interactive Harness use is most natural at `T2` or higher. Reliable detached verification usually needs `T3` capture plus a real independence boundary. High-risk work should use a fixture-proven `T4` guard or `T5` isolation when available. `T6` improves UI/UX evidence, but it does not replace Manual QA judgment, work acceptance, or detached verification, and it is not required by the v0.1/default reference posture or Agency Assurance Pack / Operations & Handoff Pack staged Manual QA coverage when human Manual QA notes and manually supplied artifacts can be recorded.
+Normal interactive Harness use is most natural at `T2` or higher. Reliable detached verification usually needs `T3` capture plus a real independence boundary. High-risk work should use a fixture-proven `T4` guard or `T5` isolation when available. `T6` improves UI/UX evidence, but it does not replace Manual QA judgment, work acceptance, or detached verification, and it is not required by the Engineering Checkpoint/default reference posture or Assurance Profile / Operations Profile staged Manual QA coverage when human Manual QA notes and manually supplied artifacts can be recorded.
 
-For v0.1 and v0.2, connectors should assume cooperative/detective behavior unless the concrete profile proves otherwise. `T4` and `T5` rows describe stronger future or profile-specific capabilities; they do not imply OS-level isolation, arbitrary-tool sandboxing, tamper-proof local files, or pre-tool blocking for the First User-Value Slice by default.
+For Engineering Checkpoint and MVP-1, connectors should assume cooperative/detective behavior unless the concrete profile proves otherwise. `T4` and `T5` rows describe stronger future or profile-specific capabilities; they do not imply OS-level isolation, arbitrary-tool sandboxing, tamper-proof local files, or pre-tool blocking for the MVP-1 User Work Loop by default.
 
 `T6 QA Capture` profiles must name supported capture types and fallback behavior. Candidate capture types include screenshot, console log, network trace, accessibility snapshot, and workflow recording. Captured files must follow redaction and secret/PII handling before durable storage and should be registered as artifact refs attached to the Manual QA record or feedback loop execution.
 
@@ -131,7 +131,7 @@ Target profile values may include:
 
 Every capability profile must state MCP exposure posture at a contract level. The exact field names are connector-owned, but the profile must make these facts visible:
 
-- whether the v0.1 baseline and staged-delivery `local_only` posture is in effect
+- whether the Engineering Checkpoint baseline and staged-delivery `local_only` posture is in effect
 - the assumed local transport, such as localhost TCP, local socket, in-process/stdio, process-scoped configuration material, or equivalent local IPC
 - the access-control material class, such as bind scope, socket path class, process pipe/stdio, per-project token handle, process-scoped config handle, or equivalent local control, without raw token, secret, or private configuration values
 - the access-control contract that keeps unrelated callers from using the endpoint
@@ -140,7 +140,7 @@ Every capability profile must state MCP exposure posture at a contract level. Th
 
 The security reason for these fields is owned by [Security Threat Model Reference](security-threat-model.md); this reference owns how connector profiles report them.
 
-Capability profiles must be refreshed when detected version, MCP config, hooks, permissions, workspace policy, generated files or managed blocks, conformance result, capture method, QA capture method, browser test environment, redaction policy, artifact retention behavior, access-control material class, local bind/reachability posture, or isolation/guard wrapper behavior changes. Beyond-local exposure remains outside the v0.1 baseline and staged delivery until promoted by owner docs and conformance; connector prose must not present it as the safe v0.1 or staged-delivery default.
+Capability profiles must be refreshed when detected version, MCP config, hooks, permissions, workspace policy, generated files or managed blocks, conformance result, capture method, QA capture method, browser test environment, redaction policy, artifact retention behavior, access-control material class, local bind/reachability posture, or isolation/guard wrapper behavior changes. Beyond-local exposure remains outside the Engineering Checkpoint baseline and staged delivery until promoted by owner docs and conformance; connector prose must not present it as the safe Engineering Checkpoint or staged-delivery default.
 
 ## Capability Profile Examples
 
@@ -253,17 +253,17 @@ Integration uses the guarantee levels defined in [Security Threat Model Referenc
 
 This reference owns how connector profiles report and display those levels. It must not infer a stronger level from a surface name, product name, recipe name, or mode label, and it must not treat guarantee level as Approval, Write Authorization, verification, QA, work acceptance, residual-risk acceptance, close readiness, or a kernel gate.
 
-The v0.1 Core Authority Smoke and v0.2 First User-Value Slice should display the reference surface as cooperative/detective unless a fixture-proven guard or documented separation boundary is promoted and proven for the operation being described. Future preventive or isolated profiles may be documented, but they must stay labeled as future/profile-specific until owner docs and conformance promote them.
+The Engineering Checkpoint and MVP-1 User Work Loop should display the reference surface as cooperative/detective unless a fixture-proven guard or documented separation boundary is promoted and proven for the operation being described. Future preventive or isolated profiles may be documented, but they must stay labeled as future/profile-specific until owner docs and conformance promote them.
 
 Stage display defaults mirror the [Security Threat Model stage map](security-threat-model.md#guarantee-levels-by-stage):
 
 | Stage | Connector display default |
 |---|---|
-| v0.1 Core Authority Smoke | Show cooperative discipline and limited detective checks around `prepare_write`, Write Authorization, `record_run`, changed paths, and the minimal artifact/evidence ref. Do not imply default pre-tool blocking or isolation. |
-| v0.2 First User-Value Slice | Show user-visible blockers, MCP availability, close readiness, decision/evidence gaps, and whether the surface can only hold by instruction or detect later. |
-| v0.3 Agency Assurance Pack | Show stronger separation of verification, Manual QA, waivers, residual risk, work acceptance, and stewardship findings, still as cooperative/detective unless a stronger profile is proven. |
-| v0.4 Operations & Handoff Pack | Show operator diagnostics, generated-file drift, projection freshness, artifact integrity, recover/export posture, and honest guarantee limits as detective/reporting behavior unless exact coverage is proven. |
-| v1+ Expansion | Show preventive or isolated only for the named covered operation or separation boundary with owner-doc promotion and conformance proof. |
+| Engineering Checkpoint | Show cooperative discipline and limited detective checks around `prepare_write`, Write Authorization, `record_run`, changed paths, and the minimal artifact/evidence ref. Do not imply default pre-tool blocking or isolation. |
+| MVP-1 User Work Loop | Show user-visible blockers, MCP availability, close readiness, decision/evidence gaps, and whether the surface can only hold by instruction or detect later. |
+| Assurance Profile | Show stronger separation of verification, Manual QA, waivers, residual risk, work acceptance, and stewardship findings, still as cooperative/detective unless a stronger profile is proven. |
+| Operations Profile | Show operator diagnostics, generated-file drift, projection freshness, artifact integrity, recover/export posture, and honest guarantee limits as detective/reporting behavior unless exact coverage is proven. |
+| Roadmap | Show preventive or isolated only for the named covered operation or separation boundary with owner-doc promotion and conformance proof. |
 
 | Level | Display responsibility |
 |---|---|
@@ -360,7 +360,7 @@ Always-on envelope contract:
 
 Attach only source refs or one-line summaries when relevant; do not add their bodies to the always-on envelope:
 
-- Write Authorization, sensitive-action permission refs, approval-shaped Decision Packet refs in minimum v0.2, Approval refs only when the later Approval profile is active, evidence summary refs, Evidence Manifest refs only when that profile is active, Eval, Manual QA, work-acceptance, Run, report, artifact, and residual-risk refs
+- Write Authorization, sensitive-action permission refs, approval-shaped Decision Packet refs in minimum MVP-1, Approval refs only when the later Approval profile is active, evidence summary refs, Evidence Manifest refs only when that profile is active, Eval, Manual QA, work-acceptance, Run, report, artifact, and residual-risk refs
 - relevant policy, TDD trace, stewardship, module/interface, and domain refs only when the active profile or current question needs them
 
 Keep these refs-first and pull the body only when needed:
@@ -372,7 +372,7 @@ Keep these refs-first and pull the body only when needed:
 
 Refs-first means the connector should push stable ids, paths, hashes, summaries, outcomes, and freshness, not paste large bodies into the default prompt. Embed excerpts only when the next safe action requires inspecting the content, and keep the excerpt tied to its source ref. Retrieved, indexed, remembered, or summarized context follows the same rule: it can tell the agent what to inspect next, but it remains pull-only context until an owner path records an actual state change. It must not authorize writes or create Write Authorization, resolve Decision Packets, grant Approval, satisfy gates, create evidence, perform or record verification, record QA, waive QA or verification, accept results, accept residual risk, update projection freshness, or close tasks.
 
-Use context profiles so agents do not load the whole documentation set. Each profile narrows both the current state envelope and the owner sections the connector may pull. MCP resource pulls follow the staged [Read-only resources](mcp-api-and-schemas.md#read-only-resources) map: v0.1 uses only the current project/current task/status subset, v0.2 adds decision-packet and judgment-context reads only when user judgment context is needed, and v0.3/v0.4/future resources stay profile-gated or pull-on-demand. A connector may push refs, one-line summaries, and freshness markers from enabled resources, but it should not inject full resource outputs by default. The default exclusions apply to every profile unless that exact phase and next action require a specific section: full [Storage And DDL](storage-and-ddl.md) DDL, the full [Conformance Fixtures Reference](conformance-fixtures.md) or [Future Fixture Catalog](future-fixture-catalog.md), any future catalog, the full [Template Reference](templates/README.md) set, unrelated [Roadmap](../roadmap.md) items, old task history, historical event logs, full projection bodies, old projections, full artifact contents, raw logs/screenshots/diffs/traces, full MCP schemas, and full Reference documents.
+Use context profiles so agents do not load the whole documentation set. Each profile narrows both the current state envelope and the owner sections the connector may pull. MCP resource pulls follow the staged [Read-only resources](mcp-api-and-schemas.md#read-only-resources) map: Engineering Checkpoint uses only the current project/current task/status subset, MVP-1 adds decision-packet and judgment-context reads only when user judgment context is needed, and Assurance Profile/Operations Profile/future resources stay profile-gated or pull-on-demand. A connector may push refs, one-line summaries, and freshness markers from enabled resources, but it should not inject full resource outputs by default. The default exclusions apply to every profile unless that exact phase and next action require a specific section: full [Storage And DDL](storage-and-ddl.md) DDL, the full [Conformance Fixtures Reference](conformance-fixtures.md) or [Future Fixture Catalog](future-fixture-catalog.md), any future catalog, the full [Template Reference](templates/README.md) set, unrelated [Roadmap](../roadmap.md) items, old task history, historical event logs, full projection bodies, old projections, full artifact contents, raw logs/screenshots/diffs/traces, full MCP schemas, and full Reference documents.
 
 | Profile | Minimal current state | Minimal docs or owner references | Do not load by default | User-visible summary | Authority and freshness |
 |---|---|---|---|---|---|
@@ -459,7 +459,7 @@ Same-session review may be useful self-checking, but it is not detached verifica
 
 ## AFK and Public Commitment Display
 
-AFK, unattended, or "continue while I am away" instructions are connector display and posture concerns; they do not create new authority. A connector should keep AFK work inside the active Change Unit, active Autonomy Boundary, granted sensitive-action permission, and compatible `prepare_write` / Write Authorization before actual product writes. Minimum v0.2 uses an approval-shaped Decision Packet for that permission; later Approval profiles may use Approval records.
+AFK, unattended, or "continue while I am away" instructions are connector display and posture concerns; they do not create new authority. A connector should keep AFK work inside the active Change Unit, active Autonomy Boundary, granted sensitive-action permission, and compatible `prepare_write` / Write Authorization before actual product writes. Minimum MVP-1 uses an approval-shaped Decision Packet for that permission; later Approval profiles may use Approval records.
 
 The surface should stop and show the smallest unblocker before scope expansion, an Autonomy Boundary breach, a new sensitive action without compatible sensitive-action permission, residual-risk acceptance, work acceptance, QA or verification waiver, public API or module contract change, release/support promise, documentation promise that changes what readers may rely on, or another public commitment that requires user-owned product or material technical judgment.
 
@@ -467,11 +467,11 @@ Display the stop according to the capability profile. On cooperative profiles, t
 
 ## Reference Surface Contract
 
-v0.1 Core Authority Smoke uses only the reference-surface support needed to exercise one local project registration and the Core authority path. That path should demonstrate the kernel rather than broad ecosystem support. Later bullets in this section are profile targets, not v0.1 requirements.
+Engineering Checkpoint uses only the reference-surface support needed to exercise one local project registration and the Core authority path. That path should demonstrate the kernel rather than broad ecosystem support. Later bullets in this section are profile targets, not Engineering Checkpoint requirements.
 
-v0.1 minimum reference expectations:
+Engineering Checkpoint minimum reference expectations:
 
-- `T2 MCP` available for the v0.1 public tool/resource subset needed by the Core Authority Smoke, including only the current project/current task/status resources needed for the first authority loop, not the full later-profile MCP surface documented in MCP API And Schemas
+- `T2 MCP` available for the Engineering Checkpoint public tool/resource subset needed by the Engineering Checkpoint, including only the current project/current task/status resources needed for the first authority loop, not the full later-profile MCP surface documented in MCP API And Schemas
 - local-only or otherwise owner-approved access posture for the registered project surface
 - cooperative `prepare_write` before product writes and compatible Write Authorization before any product-write Run
 - detective changed-path and artifact validation after runs
@@ -483,17 +483,17 @@ Later profile expectations:
 
 | Profile | Connector support target |
 |---|---|
-| v0.2 First User-Value Slice | User-readable status/next cards, Decision Packet display, pending user judgment routing, evidence and close readiness summaries, work-acceptance separation, and residual-risk visibility when relevant. |
-| v0.3 Agency Assurance Pack | Evidence Manifest support, manual verification bundle or fresh evaluator instructions, Manual QA note/artifact support, artifact integrity status for captured or manually supplied artifacts, and assurance/QA/waiver displays. |
-| v0.4 Operations & Handoff Pack | Connector manifest for generated files, managed blocks, MCP config snippets, and profile freshness; projection freshness and reconcile flow; operator smoke for MCP availability, surface capability mismatch, generated-file drift, artifact integrity, artifact/capture fallback, stale context, evaluator bundle freshness, projection freshness, and security/threat-model categories named in [Operations And Conformance Reference](operations-and-conformance.md#doctor). |
+| MVP-1 User Work Loop | User-readable status/next cards, Decision Packet display, pending user judgment routing, evidence and close readiness summaries, work-acceptance separation, and residual-risk visibility when relevant. |
+| Assurance Profile | Evidence Manifest support, manual verification bundle or fresh evaluator instructions, Manual QA note/artifact support, artifact integrity status for captured or manually supplied artifacts, and assurance/QA/waiver displays. |
+| Operations Profile | Connector manifest for generated files, managed blocks, MCP config snippets, and profile freshness; projection freshness and reconcile flow; operator smoke for MCP availability, surface capability mismatch, generated-file drift, artifact integrity, artifact/capture fallback, stale context, evaluator bundle freshness, projection freshness, and security/threat-model categories named in [Operations And Conformance Reference](operations-and-conformance.md#doctor). |
 
 Reference surface behavior details and surface-specific setup belong in [Surface Cookbook](surface-cookbook.md) only when they name a concrete surface.
 
 ## Connector Conformance Overview
 
-Connector conformance should prove that a profile can uphold the common contract at its declared capability tier. The scenarios below are an aggregate profile map, not a single v0.1 checklist.
+Connector conformance should prove that a profile can uphold the common contract at its declared capability tier. The scenarios below are an aggregate profile map, not a single Engineering Checkpoint checklist.
 
-Core Authority Smoke connector checks:
+Engineering Checkpoint connector checks:
 
 - status with and without an active Task
 - compact current-position status shown before significant work resumes when required by the Use procedure; persisted Journey Card output is a later/diagnostic profile
@@ -506,7 +506,7 @@ Core Authority Smoke connector checks:
 - local-only MCP default, with off-profile remote or shared exposure held, failed, or reported as capability-insufficient
 - MCP unavailable product-write hold
 - status recommendations, and `next` recommendations when `harness.next` is included in the active profile, remain read-only guidance unless the recommended action follows the existing Core mutation path
-- if a connected v0.1 surface also exposes Role Lens or recommended-playbook output, that output is read-only guidance and does not become a v0.1 requirement
+- if a connected Engineering Checkpoint surface also exposes Role Lens or recommended-playbook output, that output is read-only guidance and does not become a Engineering Checkpoint requirement
 
 Later profile scenarios:
 
@@ -517,7 +517,7 @@ Later profile scenarios:
 - Decision Packet shown instead of broad approval for blocking user-owned judgment
 - public commitments route to Decision Packet or another existing owner path when they require user-owned product or material technical judgment
 - AFK work remains covered by active Change Unit scope, Autonomy Boundary latitude, any granted sensitive-action permission that applies, and compatible `prepare_write` / Write Authorization before actual product writes, with stop wording matched to the proven guarantee level
-- sensitive-action permission request, granted, denied, and expired paths; minimum v0.2 uses approval-shaped Decision Packets, while later Approval profiles may use Approval records
+- sensitive-action permission request, granted, denied, and expired paths; minimum MVP-1 uses approval-shaped Decision Packets, while later Approval profiles may use Approval records
 - `record_run` with artifacts and evidence update
 - `DIRECT-RESULT` projection
 - verification launch or manual verification bundle

@@ -6,7 +6,7 @@
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: Agency assurance reports입니다. Manual QA record 또는 active QA profile이 있을 때만 렌더링하며 v0.2 compact-card MVP의 일부가 아닙니다.
+구현 계층: Agency assurance reports입니다. Manual QA record 또는 active QA profile이 있을 때만 렌더링하며 MVP-1 compact-card MVP의 일부가 아닙니다.
 
 ## 기준 기록
 
@@ -138,4 +138,4 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 수동 QA projection은 안전한 omission note, handle, blocked artifact notice를 보여줄 수 있지만 생략된 secret/PII 값이나 차단된 capture payload를 포함하면 안 됩니다. `secret_omitted` artifact는 보이는 workflow, UI, copy, accessibility, smoke-test observation을 뒷받침할 수 있습니다. `blocked` capture는 replacement, waiver, Decision Packet outcome, 받아들인 위험, documented fallback이 QA 경로를 해소하지 않는 한 사용할 수 없는 QA 입력입니다.
 
-Screenshot, browser log, video, `qa_capture` output, workflow recording, note는 QA evidence ref입니다. Browser QA Capture는 owner 문서가 명시적으로 승격하고 증명하기 전까지 v1+ Expansion 후보입니다. 수동 QA result는 기록된 사람의 확인 또는 유효한 waiver이지, 이런 capture가 존재한다는 사실만으로 만들어지지 않습니다. Browser QA artifact는 별도의 Eval 경로가 verification independence를 충족하지 않는 한 작업 수락 또는 분리 검증도 기록하지 않습니다. 어떤 접점이 browser capture를 지원하지 않으면 사람이 작성한 수동 QA notes와 수동 제공 artifacts를 fallback으로 사용합니다.
+Screenshot, browser log, video, `qa_capture` output, workflow recording, note는 QA evidence ref입니다. Browser QA Capture는 owner 문서가 명시적으로 승격하고 증명하기 전까지 로드맵 후보입니다. 수동 QA result는 기록된 사람의 확인 또는 유효한 waiver이지, 이런 capture가 존재한다는 사실만으로 만들어지지 않습니다. Browser QA artifact는 별도의 Eval 경로가 verification independence를 충족하지 않는 한 작업 수락 또는 분리 검증도 기록하지 않습니다. 어떤 접점이 browser capture를 지원하지 않으면 사람이 작성한 수동 QA notes와 수동 제공 artifacts를 fallback으로 사용합니다.

@@ -6,7 +6,7 @@ Use `DIRECT-RESULT` for a compact, low-ceremony result report after small direct
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: Future/diagnostic projections. Use as an optional compact direct-work result display when that profile is active; it is not required for v0.2 First User-Value Slice projection or the first kernel proof.
+Implementation tier: Future/diagnostic projections. Use as an optional compact direct-work result display when that profile is active; it is not required for MVP-1 User Work Loop projection or the first kernel proof.
 
 ## Source records
 
@@ -64,7 +64,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 - limits:
 - write authorization ref:
 - allowed paths:
-- approval-shaped Decision Packet refs (minimum v0.2 sensitive-action permission, when applicable):
+- approval-shaped Decision Packet refs (minimum MVP-1 sensitive-action permission, when applicable):
 - approval refs (later Approval profile only; otherwise none):
 
 ## Outcome
@@ -143,7 +143,7 @@ Direct Result should display self-checked, `detached_verified`, verification-wai
 
 Checks and tests in a Direct Result are evidence or self-check context. They do not become detached verification without a qualifying Eval, do not become Manual QA without a Manual QA result or valid waiver, and do not imply work acceptance. If direct work closes with accepted risk, the Close Summary should point to accepted Residual Risk refs, the Decision Packet that recorded the risk acceptance when one was required, and follow-up instead of presenting the result as detached verified. If no close-relevant risk is known, say that directly rather than adding gate inventory.
 
-Authority claims in a Direct Result should cite source refs or explicit absence: Write Authorization for write permission; a resolved approval-shaped Decision Packet or judgment ref for minimum v0.2 sensitive-action permission; an Approval ref only when the later Approval profile is active; `evidence_summary_ref` when present, Run refs, ArtifactRefs, and visible gap summaries for v0.2 evidence display; Evidence Manifest only when the full evidence profile is active and the result claims full criteria-to-evidence sufficiency; Eval for detached verification when that profile is active; Manual QA record or waiver path for QA when that profile is active; the work-acceptance judgment / Decision Packet path for work acceptance; Residual Risk refs or `ResidualRiskSummary.status=none` for residual-risk visibility; and accepted Residual Risk refs for residual-risk acceptance. Do not render `not_visible` residual risk as "none."
+Authority claims in a Direct Result should cite source refs or explicit absence: Write Authorization for write permission; a resolved approval-shaped Decision Packet or judgment ref for minimum MVP-1 sensitive-action permission; an Approval ref only when the later Approval profile is active; `evidence_summary_ref` when present, Run refs, ArtifactRefs, and visible gap summaries for MVP-1 evidence display; Evidence Manifest only when the full evidence profile is active and the result claims full criteria-to-evidence sufficiency; Eval for detached verification when that profile is active; Manual QA record or waiver path for QA when that profile is active; the work-acceptance judgment / Decision Packet path for work acceptance; Residual Risk refs or `ResidualRiskSummary.status=none` for residual-risk visibility; and accepted Residual Risk refs for residual-risk acceptance. Do not render `not_visible` residual risk as "none."
 
 `DIRECT-RESULT` is the low-ceremony close impact display for direct work. `TASK` owns continuity Close Summary display for active or recently closed `work` tasks, and Journey Card close context is compact status/resume display. These displays follow the [projection/report boundary](../document-projection.md#projection-principles); close and gate effects still come from owner records.
 

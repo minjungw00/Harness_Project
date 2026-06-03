@@ -76,8 +76,8 @@ Use Build for implementation orientation and planning review. Until [Documentati
 Read Build in this order:
 
 1. [Implementation Overview](build/implementation-overview.md) for current status, maintainer handoff, and the future system shape.
-2. [MVP Plan](build/mvp-plan.md) for v0.1 through v0.4 stage plan and server-coding decision log.
-3. [First Runnable Slice](build/first-runnable-slice.md) for the v0.1 implementation sequence.
+2. [MVP Plan](build/mvp-plan.md) for Engineering Checkpoint through Operations Profile stage plan and server-coding decision log.
+3. [First Runnable Slice](build/first-runnable-slice.md) for the Engineering Checkpoint implementation sequence.
 4. [Runtime Walkthrough](build/runtime-walkthrough.md) for the request-to-close runtime path.
 5. [Kernel Reference](reference/kernel.md) for Core authority, gates, write authority, and close semantics.
 6. [MCP API And Schemas](reference/mcp-api-and-schemas.md) for public tools/resources, envelopes, schemas, and errors.

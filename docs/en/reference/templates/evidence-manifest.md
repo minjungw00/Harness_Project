@@ -6,7 +6,7 @@ Use `EVIDENCE-MANIFEST` when Harness needs a readable map from acceptance criter
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: Future/diagnostic projections. The v0.2 compact status card shows evidence summary/gaps; the full detailed Evidence Manifest projection is later/profile scope.
+Implementation tier: Future/diagnostic projections. The MVP-1 compact status card shows evidence summary/gaps; the full detailed Evidence Manifest projection is later/profile scope.
 
 ## Source records
 
@@ -80,7 +80,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 ## Authority And Close Refs
 - compact refs: write={write_authorization_ref|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
-- approval refs are `none` in minimum v0.2; approval-shaped sensitive-action coverage appears through `decision_packet_refs` unless a later Approval owner profile is active.
+- approval refs are `none` in minimum MVP-1; approval-shaped sensitive-action coverage appears through `decision_packet_refs` unless a later Approval owner profile is active.
 - redaction state:
 - projection freshness:
 
@@ -117,7 +117,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 `Coverage / Gate Display` is the evidence coverage or close-relevant gate display state for this manifest. Values such as `pending` in this column are not `ValidatorResult.status` values.
 
 ## Approval Refs
-- Populate only when a later Approval owner profile is active. In minimum v0.2, approval-shaped sensitive-action coverage belongs under Decision Packet refs.
+- Populate only when a later Approval owner profile is active. In minimum MVP-1, approval-shaped sensitive-action coverage belongs under Decision Packet refs.
 - APR-0001:
 
 ## Evidence Refs

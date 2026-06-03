@@ -6,7 +6,7 @@ Use `MANUAL-QA` when Manual QA is required, performed, waived, pending, or repre
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: Agency assurance reports. Render only when a Manual QA record or active QA profile exists; it is not part of the v0.2 compact-card MVP.
+Implementation tier: Assurance Profile reports. Render only when a Manual QA record or active QA profile exists; it is not part of the MVP-1 compact-card MVP.
 
 ## Source records
 
@@ -138,4 +138,4 @@ Manual QA is not automated verification. Test results, browser smoke, screenshot
 
 Manual QA projections may show safe omission notes, handles, and blocked artifact notices, but must not embed omitted secret/PII values or blocked capture payloads. A `secret_omitted` artifact can support visible workflow, UI, copy, accessibility, or smoke-test observations; a `blocked` capture is unavailable QA input unless a replacement, waiver, Decision Packet outcome, accepted risk, or documented fallback resolves the QA path.
 
-Screenshots, browser logs, videos, `qa_capture` outputs, workflow recordings, and notes are QA evidence refs. Browser QA Capture remains a v1+ Expansion candidate until owner docs explicitly promote it. The Manual QA result is the recorded human inspection or valid waiver, not the existence of those captures alone. Browser QA artifacts also do not record work acceptance or detached verification unless a separate Eval path satisfies verification independence. When a surface does not support browser capture, the fallback is human Manual QA notes and manually supplied artifacts.
+Screenshots, browser logs, videos, `qa_capture` outputs, workflow recordings, and notes are QA evidence refs. Browser QA Capture remains a Roadmap candidate until owner docs explicitly promote it. The Manual QA result is the recorded human inspection or valid waiver, not the existence of those captures alone. Browser QA artifacts also do not record work acceptance or detached verification unless a separate Eval path satisfies verification independence. When a surface does not support browser capture, the fallback is human Manual QA notes and manually supplied artifacts.

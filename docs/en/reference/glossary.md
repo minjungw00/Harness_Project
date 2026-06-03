@@ -94,9 +94,9 @@ These labels may appear in roadmap, reference, template, or diagnostic material.
 |---|---|
 | Context Index | Later read-only retrieval support. It can suggest sources to inspect but does not authorize writes, satisfy gates, accept risk, or close work. |
 | Journey Card / Journey Spine | Later continuity display. It helps orientation when enabled and fresh, but it is not Core-owned state. |
-| Browser QA Capture | v1+ candidate capture support for browser artifacts. It is not Manual QA, work acceptance, or detached verification by itself. |
+| Browser QA Capture | Roadmap candidate capture support for browser artifacts. It is not Manual QA, work acceptance, or detached verification by itself. |
 | Standalone `DEC` projection | Optional Decision Packet Markdown rendering when enabled. User judgment visibility does not depend on users reading standalone `DEC` files. |
-| Operations & Handoff displays | Later or profile-gated operational/reporting surfaces. They display or export owner records; they do not replace Core authority. |
+| Operations Profile displays | Later or profile-gated operational/reporting surfaces. They display or export owner records; they do not replace Core authority. |
 
 ## Owner map
 
@@ -131,7 +131,7 @@ Required Acceptance in the current reference model is recorded through a Decisio
 
 ### Approval
 
-A limited prior user authorization allowing a specific sensitive action or bounded sensitive operation to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. In minimum v0.2, Core captures the user judgment through an approval-shaped Decision Packet with `judgment_payload.approval_scope`; later Approval profiles may also create a linked committed Approval record. Granted sensitive-action permission still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it is not generic agreement, work acceptance, residual-risk acceptance, QA waiver, verification waiver, correctness proof, or a substitute for user-owned product or material technical judgment.
+A limited prior user authorization allowing a specific sensitive action or bounded sensitive operation to proceed within a defined scope. Approval is bound to paths, tools, commands or command classes, network targets, secret scope, baseline, sensitive categories, and expiry conditions. In minimum MVP-1, Core captures the user judgment through an approval-shaped Decision Packet with `judgment_payload.approval_scope`; later Approval profiles may also create a linked committed Approval record. Granted sensitive-action permission still requires a later compatible `prepare_write` result before any Write Authorization exists. Approval is sensitive-action permission only: it is not generic agreement, work acceptance, residual-risk acceptance, QA waiver, verification waiver, correctness proof, or a substitute for user-owned product or material technical judgment.
 
 ### Approval Gate
 
@@ -233,7 +233,7 @@ Stale chat memory is pull-only context. It cannot authorize writes, satisfy gate
 
 ### Context Index
 
-A later read-only context provider that may surface relevant projections, artifact refs, repo files, docs, or notes. Until promoted through owner docs, it is a v1+ Expansion candidate and non-authoritative retrieval only; even after promotion, it cannot replace existing authority paths unless those owner docs explicitly change. Retrieved context may point to sources to inspect, but it must not authorize writes, resolve decisions, grant Approval, create evidence, perform verification, accept risk, satisfy gates, or close Tasks. Context Index remains a roadmap candidate; see [Roadmap: Candidate Inventory](../roadmap.md#candidate-inventory), with connector handling in [Agent Integration](agent-integration.md#context-pushpull-principles).
+A later read-only context provider that may surface relevant projections, artifact refs, repo files, docs, or notes. Until promoted through owner docs, it is a Roadmap candidate and non-authoritative retrieval only; even after promotion, it cannot replace existing authority paths unless those owner docs explicitly change. Retrieved context may point to sources to inspect, but it must not authorize writes, resolve decisions, grant Approval, create evidence, perform verification, accept risk, satisfy gates, or close Tasks. Context Index remains a roadmap candidate; see [Roadmap: Candidate Inventory](../roadmap.md#candidate-inventory), with connector handling in [Agent Integration](agent-integration.md#context-pushpull-principles).
 
 ### Decision Gate
 
@@ -273,7 +273,7 @@ A canonical kernel state record for a blocking user-owned judgment. It names the
 
 ### Decision Request
 
-Optional routing, interaction, idempotency replay, or compatibility handoff metadata that may point to a canonical Decision Packet. A minimal v0.1 Core Authority Smoke implementation may omit it. A Decision Request is not decision authority, never satisfies `decision_gate`, sensitive-action Approval, work acceptance, waiver, residual-risk acceptance, or close by itself, and is only relevant to gate aggregation through a linked compatible `decision_packet_id`.
+Optional routing, interaction, idempotency replay, or compatibility handoff metadata that may point to a canonical Decision Packet. A minimal Engineering Checkpoint implementation may omit it. A Decision Request is not decision authority, never satisfies `decision_gate`, sensitive-action Approval, work acceptance, waiver, residual-risk acceptance, or close by itself, and is only relevant to gate aggregation through a linked compatible `decision_packet_id`.
 
 ### Design Gate
 
@@ -317,7 +317,7 @@ A canonical structured record in `domain_terms` that stores a product term, mean
 
 ### Evidence
 
-Recorded support for claims about the work, such as diffs, logs, tests, run summaries, screenshots, Eval records, Manual QA records, evidence summaries, and registered artifact refs. Minimum v0.2 evidence display can use `evidence_summary_ref`, Run refs, ArtifactRefs, and visible gaps. The full Evidence Manifest profile adds criteria-to-evidence mapping through Evidence Manifest records. Evidence is not the agent merely saying the work is done, and it is not made sufficient by Markdown report prose alone.
+Recorded support for claims about the work, such as diffs, logs, tests, run summaries, screenshots, Eval records, Manual QA records, evidence summaries, and registered artifact refs. Minimum MVP-1 evidence display can use `evidence_summary_ref`, Run refs, ArtifactRefs, and visible gaps. The full Evidence Manifest profile adds criteria-to-evidence mapping through Evidence Manifest records. Evidence is not the agent merely saying the work is done, and it is not made sufficient by Markdown report prose alone.
 
 ### Evidence Gate
 
@@ -325,7 +325,7 @@ The kernel gate for required evidence coverage. Its value set and close meaning 
 
 ### Evidence Manifest
 
-A full evidence-profile state record mapping acceptance criteria or completion conditions to supporting evidence references. Sufficiency depends on the coverage of those criteria and conditions by current owner records and `ArtifactRef` refs, not on artifact count or report prose. Minimum v0.2 can show evidence summaries, Run refs, ArtifactRefs, and visible gaps without requiring this full record.
+A full evidence-profile state record mapping acceptance criteria or completion conditions to supporting evidence references. Sufficiency depends on the coverage of those criteria and conditions by current owner records and `ArtifactRef` refs, not on artifact count or report prose. Minimum MVP-1 can show evidence summaries, Run refs, ArtifactRefs, and visible gaps without requiring this full record.
 
 ### Evidence Profile
 
@@ -333,7 +333,7 @@ A named evidence sufficiency profile, such as `advisor`, `direct docs-only`, `di
 
 ### Evidence Sufficiency
 
-The close-relevant judgment that required acceptance criteria or completion conditions have compatible current support. Minimum v0.2 displays known evidence through evidence summaries, Run refs, ArtifactRefs, and visible gaps. Full criteria-to-evidence sufficiency uses Evidence Manifest records only when the full Evidence Manifest profile is active. Sufficiency is not judged from chat text or Markdown report prose alone, and evidence can become stale through baseline drift, changed files, sensitive-action permission or Approval drift, missing artifacts, or relevant design record changes.
+The close-relevant judgment that required acceptance criteria or completion conditions have compatible current support. Minimum MVP-1 displays known evidence through evidence summaries, Run refs, ArtifactRefs, and visible gaps. Full criteria-to-evidence sufficiency uses Evidence Manifest records only when the full Evidence Manifest profile is active. Sufficiency is not judged from chat text or Markdown report prose alone, and evidence can become stale through baseline drift, changed files, sensitive-action permission or Approval drift, missing artifacts, or relevant design record changes.
 
 ### Eval
 
@@ -395,9 +395,9 @@ A user-facing safety control that applies the connected profile's actual enforce
 
 ### Hardened Local Reference Target
 
-The aggregate local reference behavior reached after v0.2 First User-Value Slice by completing the owner-defined v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack profiles. It is an umbrella target, not a separate delivery stage, not the first implementation batch, and not a fixture profile or suite name.
+The aggregate local reference behavior reached after MVP-1 User Work Loop by completing the owner-defined Assurance Profile and Operations Profile profiles. It is an umbrella target, not a separate delivery stage, not the first implementation batch, and not a fixture profile or suite name.
 
-The hardened local reference target does not replace the boundaries for v0.1 Core Authority Smoke, v0.2 First User-Value Slice, or v1+ Expansion. Conformance is still proven through the named fixture profiles: Core Authority Smoke fixtures, First User-Value Slice fixtures, Agency Assurance Pack fixtures, and Operations & Handoff Pack or promoted-expansion fixtures.
+The hardened local reference target does not replace the boundaries for Engineering Checkpoint, MVP-1 User Work Loop, or Roadmap. Conformance is still proven through the named fixture profiles: Engineering Checkpoint fixtures, MVP-1 User Work Loop fixtures, Assurance Profile fixtures, and Operations Profile or promoted-expansion fixtures.
 
 ### Harness Core
 
@@ -521,7 +521,7 @@ A readable derived view generated from Core state records and artifact reference
 
 ### ProjectionKind
 
-The API enum for projection job and template kinds. Support classes, values, and extension rules are owned by [Shared schemas](mcp-api-and-schemas.md#shared-schemas). Support class labels are not v0.1 Core Authority Smoke run obligations; v0.1 has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. No ProjectionKind makes a projection canonical state.
+The API enum for projection job and template kinds. Support classes, values, and extension rules are owned by [Shared schemas](mcp-api-and-schemas.md#shared-schemas). Support class labels are not Engineering Checkpoint run obligations; Engineering Checkpoint has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. No ProjectionKind makes a projection canonical state.
 
 ### Projection Freshness
 
@@ -553,7 +553,7 @@ The canonical candidate record created from human-editable input or projection d
 
 ### Reference Surface
 
-The single agent surface targeted by v0.1 Core Authority Smoke. It demonstrates the kernel and connector contract without implying broad connector-surface support.
+The single agent surface targeted by Engineering Checkpoint. It demonstrates the kernel and connector contract without implying broad connector-surface support.
 
 ### Recommended Playbook
 

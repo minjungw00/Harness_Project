@@ -97,9 +97,9 @@ Local-only MCP exposure, secret/PII handling, command/path/network allowlists fo
 
 ### Local access expectations
 
-At the architecture level, the v0.1 baseline and staged-delivery default MCP posture is local-only for a registered project surface. Local-only means the runtime is expected to use a local process, local socket, localhost-loopback, in-process/stdio, process-scoped configuration material, a per-project token or handle, or an equivalent local IPC/control path for the expected local user/profile.
+At the architecture level, the Engineering Checkpoint baseline and staged-delivery default MCP posture is local-only for a registered project surface. Local-only means the runtime is expected to use a local process, local socket, localhost-loopback, in-process/stdio, process-scoped configuration material, a per-project token or handle, or an equivalent local IPC/control path for the expected local user/profile.
 
-Remote, shared, tunneled, forwarded, non-loopback, cross-user, or cloud/CI relay exposure remains outside the v0.1 baseline and staged delivery unless owner docs promote and prove a connector posture. The full asset, trust-boundary, threat, and control model is owned by [Security Threat Model Reference](security-threat-model.md#mcp-local-access-and-caller-boundaries); connector profile reporting stays in [Agent Integration Reference](agent-integration.md#capability-profiles), API validation stays in [MCP API And Schemas](mcp-api-and-schemas.md#mcp-boundary-and-caller-trust), and operator diagnostics stay in [Operations And Conformance Reference](operations-and-conformance.md#serve-mcp).
+Remote, shared, tunneled, forwarded, non-loopback, cross-user, or cloud/CI relay exposure remains outside the Engineering Checkpoint baseline and staged delivery unless owner docs promote and prove a connector posture. The full asset, trust-boundary, threat, and control model is owned by [Security Threat Model Reference](security-threat-model.md#mcp-local-access-and-caller-boundaries); connector profile reporting stays in [Agent Integration Reference](agent-integration.md#capability-profiles), API validation stays in [MCP API And Schemas](mcp-api-and-schemas.md#mcp-boundary-and-caller-trust), and operator diagnostics stay in [Operations And Conformance Reference](operations-and-conformance.md#serve-mcp).
 
 MCP reachability is not authorization. Public tool calls still rely on Core envelope validation, state-version checks, idempotency, registered project/task/surface compatibility, and the actual connected surface guarantee level.
 
@@ -125,11 +125,11 @@ repo/
 ```
 
 
-The repository may hold generated readable summaries and, when an active profile enables them, generated `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `JOURNEY-CARD`, `EXPORT`, and other report projections. v0.1 should start with structured status/blocker output rather than the full catalog; user judgment request display, evidence summaries, and close-readiness output grow in v0.2 and later profiles. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; human edits become state only when reconcile routes them into a Core state-changing action.
+The repository may hold generated readable summaries and, when an active profile enables them, generated `TASK`, `APR`, `RUN-SUMMARY`, `EVAL`, `DIRECT-RESULT`, `EVIDENCE-MANIFEST`, `TDD-TRACE`, `MANUAL-QA`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `JOURNEY-CARD`, `EXPORT`, and other report projections. Engineering Checkpoint should start with structured status/blocker output rather than the full catalog; user judgment request display, evidence summaries, and close-readiness output grow in MVP-1 and later profiles. These files help humans and agents read the work, but they are not canonical state. A human-editable section is an input surface; human edits become state only when reconcile routes them into a Core state-changing action.
 
 ## Harness Server / Installation
 
-The Harness Server / Installation is the control plane. v0.1 Core Authority Smoke can implement it as one local process with internal modules rather than a fleet of services.
+The Harness Server / Installation is the control plane. Engineering Checkpoint can implement it as one local process with internal modules rather than a fleet of services.
 
 Core runtime responsibilities:
 
@@ -139,7 +139,7 @@ Core runtime responsibilities:
 - record artifacts and integrity metadata
 - enqueue and render projection jobs when projection support is in scope
 - detect reconcile candidates from human edits or managed-block drift when reconcile support is in scope
-- provide stage-introduced operator entrypoints: minimal local diagnostics/status in early stages, then recovery, export, artifact, handoff, and conformance surfaces when v0.4 or later profiles bring them into scope
+- provide stage-introduced operator entrypoints: minimal local diagnostics/status in early stages, then recovery, export, artifact, handoff, and conformance surfaces when Operations Profile or later profiles bring them into scope
 
 The MCP server is not a thin wrapper around shell commands. It exposes high-level intent calls that Core translates into state transitions, validators, artifact records, and projection jobs when applicable.
 
@@ -180,12 +180,12 @@ state.sqlite / artifact store / validators / projector / reconcile worker
 
 The conversation surface gathers user intent, decisions, sensitive-action permission prompts, QA judgments, and acceptance. The agent surface performs reading, editing, and checking. Harness rules and skills keep the agent oriented. The MCP server provides the tool boundary. Core owns the state machine. Validators, artifact capture, projection, and reconcile attach evidence and readable output to state transitions.
 
-Native hooks, sidecars, command wrappers, file watchers, and worktree isolation are capability-dependent control layers. v0.1 Core Authority Smoke and the early First User-Value Slice rely on cooperative/detective behavior for the reference surface unless a concrete capability profile has fixture-proven stronger control for the covered operation.
+Native hooks, sidecars, command wrappers, file watchers, and worktree isolation are capability-dependent control layers. Engineering Checkpoint and the early MVP-1 User Work Loop rely on cooperative/detective behavior for the reference surface unless a concrete capability profile has fixture-proven stronger control for the covered operation.
 
 
 ### Core modules
 
-Core can run as a single local process in the first slices. The full server may grow into the internal responsibilities below, but v0.1 Core Authority Smoke is not required to implement them as separate modules. Its implementation can collapse everything outside local registration, one Task, one scoped work boundary, `prepare_write`, one single-use Write Authorization, one `record_run`, one artifact/evidence ref, and one structured status/blocker response into stubs, absent paths, or later-profile scope.
+Core can run as a single local process in the first slices. The full server may grow into the internal responsibilities below, but Engineering Checkpoint is not required to implement them as separate modules. Its implementation can collapse everything outside local registration, one Task, one scoped work boundary, `prepare_write`, one single-use Write Authorization, one `record_run`, one artifact/evidence ref, and one structured status/blocker response into stubs, absent paths, or later-profile scope.
 
 | Module | Runtime responsibility |
 |---|---|
@@ -213,7 +213,7 @@ Decision, Journey, and Autonomy/Boundary modules do not create a new authority t
 
 Validators sit beside Core and return structured results to Core. Core decides whether to decline the transition, mark a gate stale/partial/blocked, request a user judgment, or only affect display.
 
-The Agency Assurance Pack and Operations & Handoff Pack ValidatorResult ID set is API-owned and listed in [MCP API And Schemas](mcp-api-and-schemas.md#validatorresult). This runtime reference owns where those validators sit relative to Core and adapters, not a second copy of the ID registry.
+The Assurance Profile and Operations Profile ValidatorResult ID set is API-owned and listed in [MCP API And Schemas](mcp-api-and-schemas.md#validatorresult). This runtime reference owns where those validators sit relative to Core and adapters, not a second copy of the ID registry.
 
 `feedback_loop_check` reads Feedback Loop support records and related execution evidence; it does not introduce a separate kernel gate. Its consequences flow through `design_gate`, evidence sufficiency, blockers, or display in the same validator placement model as the other design-quality checks.
 
@@ -243,7 +243,7 @@ Within that transaction, Core increments the affected scope clock as part of the
 
 Projection rendering happens after the transaction. A projection failure is state-isolated: it marks projection freshness or job status as stale or failed and leaves the committed state intact. Projection cannot roll back the transaction, rewrite `state.sqlite.task_events`, turn a passed task into a failed task, or repair canonical state without a later reconcile decision.
 
-Projection freshness is a derived-read fact. A status, next-action, export, or operator command may check it and report that a readable view is stale, failed, or unknown, but Core state, structured blockers, evidence records, work acceptance, residual-risk acceptance, and Write Authorization remain authoritative in their owner records. v0.1 Core Authority Smoke may expose freshness or read facts without proving the full projection worker; v0.2 needs enough derived output for current work status, user judgment request, evidence summary, and close readiness/blocker comprehension; hardened or operational profiles own the complete projection/reconcile and diagnostic report path.
+Projection freshness is a derived-read fact. A status, next-action, export, or operator command may check it and report that a readable view is stale, failed, or unknown, but Core state, structured blockers, evidence records, work acceptance, residual-risk acceptance, and Write Authorization remain authoritative in their owner records. Engineering Checkpoint may expose freshness or read facts without proving the full projection worker; MVP-1 needs enough derived output for current work status, user judgment request, evidence summary, and close readiness/blocker comprehension; hardened or operational profiles own the complete projection/reconcile and diagnostic report path.
 
 ## Artifact store architecture
 
@@ -305,7 +305,7 @@ Reconcile can merge, reject, convert to note, create a decision, create or updat
 
 The exact meanings of `cooperative`, `detective`, `preventive`, and `isolated`, plus the staged honest-display rules for those labels, are owned by [Security Threat Model Reference: Honest guarantee display](security-threat-model.md#honest-guarantee-display). This architecture section owns only where the reported label appears in the runtime flow: connector profiles and adapters report it, Core still performs the authority decision, and operator or recovery surfaces use it as display and risk context.
 
-Architecturally, the stage defaults are: v0.1 cooperative plus limited detective Core status behavior; v0.2 cooperative/detective user-visible blockers and status; v0.3 cooperative/detective assurance separation for verification, QA, risk, and acceptance; v0.4 detective operations, recovery, export, and integrity checks; v1+ preventive or isolated profiles only where a concrete operation or boundary is promoted and proven. The [Security Threat Model stage map](security-threat-model.md#guarantee-levels-by-stage) owns the full table.
+Architecturally, the stage defaults are: Engineering Checkpoint cooperative plus limited detective Core status behavior; MVP-1 cooperative/detective user-visible blockers and status; Assurance Profile cooperative/detective assurance separation for verification, QA, risk, and acceptance; Operations Profile detective operations, recovery, export, and integrity checks; Roadmap preventive or isolated profiles only where a concrete operation or boundary is promoted and proven. The [Security Threat Model stage map](security-threat-model.md#guarantee-levels-by-stage) owns the full table.
 
 ### Guarantee level behavior map
 
@@ -332,7 +332,7 @@ Preventive labels apply only where the connected profile has fixture-proven cove
 
 Guarantee display should name both sides of the boundary: what the connected profile can actually block before execution, and what it can only detect after action. A surface name, product name, recipe name, or friendly mode label is never proof of capability; the declaration must come from the actual host/profile capability profile and its current proof basis. Guard, freeze, and careful-mode labels inherit the connected profile's proven capability; they do not upgrade a cooperative or detective profile into preventive blocking, and they do not create authority tiers.
 
-Current reference behavior is cooperative/detective unless the connected surface has a concrete, fixture-proven pre-tool guard for covered operations or a documented and proven separation boundary. In v0.1 and v0.2, "blocked" means the Harness authority path cannot proceed or the surface is instructed to hold; it does not mean the runtime physically prevented arbitrary file writes unless a preventive profile proves that exact operation. Native hook expansion, advanced sidecar watching, and broad isolated execution are later roadmap items unless explicitly promoted for the reference surface. Until promoted through owner docs, they may improve observation, freshness, or display only; they do not authorize writes, satisfy gates, grant Approval, prove verification or QA, record acceptance, or replace Core authority.
+Current reference behavior is cooperative/detective unless the connected surface has a concrete, fixture-proven pre-tool guard for covered operations or a documented and proven separation boundary. In Engineering Checkpoint and MVP-1, "blocked" means the Harness authority path cannot proceed or the surface is instructed to hold; it does not mean the runtime physically prevented arbitrary file writes unless a preventive profile proves that exact operation. Native hook expansion, advanced sidecar watching, and broad isolated execution are later roadmap items unless explicitly promoted for the reference surface. Until promoted through owner docs, they may improve observation, freshness, or display only; they do not authorize writes, satisfy gates, grant Approval, prove verification or QA, record acceptance, or replace Core authority.
 
 Guarantee level is display and risk context. It is not Approval, Write Authorization, verification, QA, work acceptance, residual-risk acceptance, close readiness, or a kernel gate.
 

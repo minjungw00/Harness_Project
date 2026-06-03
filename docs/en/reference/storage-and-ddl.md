@@ -8,7 +8,7 @@ Use this page to review storage authority, Runtime Home identity, staged SQLite 
 
 ## Read This When
 
-- You need to know which storage tables are required for v0.1 or v0.2.
+- You need to know which storage tables are required for Engineering Checkpoint or MVP-1.
 - You are separating Core-owned state from chat, Markdown projections, connector output, and tool output.
 - You are checking Runtime Home risks, artifact poisoning controls, event/audit behavior, JSON validation, enum hardening, or future schema candidates.
 - You are making sure later profile tables do not inflate the first server batch.
@@ -96,7 +96,7 @@ default_checks:
 
 Runtime Home contains local operational authority and sensitive support data. Broad write access is a tampering and artifact-poisoning risk. Broad read access can expose secrets, PII, tokens, logs, screenshots, diffs, verification bundles, and exports.
 
-v0.1 and v0.2 storage are cooperative/detective unless a later profile proves stronger controls. File permissions, owner checks, hashes, and `doctor` findings are defense in depth; they do not create OS-level sandboxing, arbitrary-tool control, tamper-proof storage, or pre-execution blocking by themselves.
+Engineering Checkpoint and MVP-1 storage are cooperative/detective unless a later profile proves stronger controls. File permissions, owner checks, hashes, and `doctor` findings are defense in depth; they do not create OS-level sandboxing, arbitrary-tool control, tamper-proof storage, or pre-execution blocking by themselves.
 
 | Observation | Storage meaning |
 |---|---|
@@ -107,46 +107,46 @@ v0.1 and v0.2 storage are cooperative/detective unless a later profile proves st
 
 ## Table-To-Stage Matrix
 
-This matrix is the main table list. It separates small v0.1/v0.2 storage from later profile candidates.
+This matrix is the main table list. It separates small Engineering Checkpoint / MVP-1 storage from later profile candidates.
 
-Public API refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md#artifactref). For the minimum v0.2 storage slice, `evidence_summaries.evidence_summary_id` is addressable as `StateRecordRef.record_kind=evidence_summary`, and `close_readiness.close_readiness_id` is addressable as `StateRecordRef.record_kind=close_readiness`. Approval-shaped sensitive-action permission is addressable through `StateRecordRef.record_kind=decision_packet`; `StateRecordRef.record_kind=approval` remains later-profile unless the `approvals` table is explicitly promoted. `change_unit_dependencies` remains future/diagnostic storage, so `record_kind=change_unit_dependency` is not a v0.2 active public ref.
+Public API refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md#artifactref). For the minimum MVP-1 storage slice, `evidence_summaries.evidence_summary_id` is addressable as `StateRecordRef.record_kind=evidence_summary`, and `close_readiness.close_readiness_id` is addressable as `StateRecordRef.record_kind=close_readiness`. Approval-shaped sensitive-action permission is addressable through `StateRecordRef.record_kind=decision_packet`; `StateRecordRef.record_kind=approval` remains later-profile unless the `approvals` table is explicitly promoted. `change_unit_dependencies` remains future/diagnostic storage, so `record_kind=change_unit_dependency` is not a MVP-1 active public ref.
 
 | Table | Purpose | First active stage | Authority or auxiliary | User-facing or internal | Later status |
 |---|---|---|---|---|---|
-| `registry_meta` | Runtime Home id and registry schema version | v0.1 | auxiliary identity | internal | active early |
-| `projects` | Registered project identity and state location | v0.1 | authority for registration | user-facing via project selection | active early |
-| `project_surfaces` | Surface/capability declaration and guarantee display when surface profiles are installed | v0.3/v0.4 or profile-promoted | auxiliary capability state | internal/user-facing diagnostics | future/later |
-| `project_state` | Project-local clock and active Task pointer | v0.1 | authority | internal | active early |
-| `tasks` | Current Task record and task state clock | v0.1 | authority | user-facing summary | active early |
-| `change_units` | Minimal scoped work boundary for writes | v0.1 | authority | user-facing when scope is explained | active early |
-| `write_authorizations` | Durable single-use `prepare_write` allow record | v0.1 | authority | internal with user-visible blockers | active early |
-| `runs` | Committed observed Run record | v0.1 | authority | user-facing evidence/status refs | active early |
-| `artifacts` | Registered artifact/evidence file metadata | v0.1 | artifact metadata authority | internal, surfaced by refs | active early |
-| `artifact_links` | Compatible link from artifact to Task/Run/owner record | v0.1 | artifact owner-link authority | internal | active early |
-| `task_blockers` | Structured status/blocker rows | v0.1 | authority for stored blockers | user-facing | active early |
-| `task_events` | Append-only audit and event-order trail | v0.1 | audit trail and projection support | mostly internal | active early |
-| `tool_invocations` | Committed idempotency replay row | v0.1 | replay support | internal | active early |
-| `task_intake` | Ordinary-language intake and tracked clarification state | v0.2 | auxiliary shaping state | user-facing | not v0.1 |
-| `decision_packets` | Simplified user judgment records and recorded answers | v0.2 | authority for user judgments | user-facing | not v0.1 |
-| `decision_requests` | Optional prompt routing, replay, or handoff metadata linked to Decision Packets | v0.2 optional | auxiliary routing state | internal/user-facing prompt support | optional, not authority by itself |
-| `residual_risks` | Minimal visible residual-risk rows | v0.2 | authority for stored residual risks | user-facing | not v0.1 |
-| `evidence_summaries` | Minimal evidence summary over artifact/run refs | v0.2 | auxiliary summary over authority refs | user-facing | not v0.1 |
-| `close_readiness` | Minimal close readiness and close-blocker snapshot | v0.2 | auxiliary display/check snapshot | user-facing | not v0.1 |
-| `projection_status_cards` | Optional freshness/status card state without a projection job system | v0.2 optional | auxiliary derived display state | user-facing | optional, not authority |
-| `approvals` | Sensitive-action approval lifecycle | v0.3 or profile-promoted | authority when profile is active | user-facing | future/later |
-| `baselines` | Repository baseline capture | v0.3 or profile-promoted | auxiliary support for assurance | internal | future/later |
-| `evidence_manifests` | Full criteria-to-evidence coverage | v0.3 or profile-promoted | authority for full evidence profile | user-facing summary | future/later |
-| `evals` | Detached verification/eval records | v0.3 or profile-promoted | authority when profile is active | user-facing summary | future/later |
-| `manual_qa_records` | Manual QA profile, result, findings | v0.3 or profile-promoted | authority when profile is active | user-facing summary | future/later |
-| `validator_runs` | Persisted validator results | v0.3 or profile-promoted | diagnostic state | internal/user-facing findings | future/later |
-| `feedback_loops` | Feedback-loop policy records | v0.3 or profile-promoted | policy support | internal/user-facing summary | future/later |
-| `tdd_traces` | TDD trace records | v0.3 or profile-promoted | policy/evidence support | internal/user-facing summary | future/later |
-| `projection_jobs` | Durable projection outbox and rendered-output freshness | v0.4 or profile-promoted | auxiliary derived-view job state | internal/user-facing freshness | future/later |
-| `reconcile_items` | Human-editable projection drift/proposal handling | v0.4 or profile-promoted | auxiliary until accepted through Core | user-facing | future/later |
-| `connector_manifests` | Connector-managed file manifest and drift state | v0.4 or profile-promoted | diagnostic/support | internal | future/later |
-| `persistent_locks` | Durable lock/recovery metadata if process locks are insufficient | v0.4 or profile-promoted | auxiliary | internal | future/later |
-| `export_manifests` | Export/recover package manifest | v0.4 or profile-promoted | auxiliary support | internal/user-facing report | future/later |
-| `recover_items` | Recovery findings and repair plan state | v0.4 or profile-promoted | diagnostic/support | internal/user-facing report | future/later |
+| `registry_meta` | Runtime Home id and registry schema version | Engineering Checkpoint | auxiliary identity | internal | active early |
+| `projects` | Registered project identity and state location | Engineering Checkpoint | authority for registration | user-facing via project selection | active early |
+| `project_surfaces` | Surface/capability declaration and guarantee display when surface profiles are installed | Assurance Profile/Operations Profile or profile-promoted | auxiliary capability state | internal/user-facing diagnostics | future/later |
+| `project_state` | Project-local clock and active Task pointer | Engineering Checkpoint | authority | internal | active early |
+| `tasks` | Current Task record and task state clock | Engineering Checkpoint | authority | user-facing summary | active early |
+| `change_units` | Minimal scoped work boundary for writes | Engineering Checkpoint | authority | user-facing when scope is explained | active early |
+| `write_authorizations` | Durable single-use `prepare_write` allow record | Engineering Checkpoint | authority | internal with user-visible blockers | active early |
+| `runs` | Committed observed Run record | Engineering Checkpoint | authority | user-facing evidence/status refs | active early |
+| `artifacts` | Registered artifact/evidence file metadata | Engineering Checkpoint | artifact metadata authority | internal, surfaced by refs | active early |
+| `artifact_links` | Compatible link from artifact to Task/Run/owner record | Engineering Checkpoint | artifact owner-link authority | internal | active early |
+| `task_blockers` | Structured status/blocker rows | Engineering Checkpoint | authority for stored blockers | user-facing | active early |
+| `task_events` | Append-only audit and event-order trail | Engineering Checkpoint | audit trail and projection support | mostly internal | active early |
+| `tool_invocations` | Committed idempotency replay row | Engineering Checkpoint | replay support | internal | active early |
+| `task_intake` | Ordinary-language intake and tracked clarification state | MVP-1 | auxiliary shaping state | user-facing | not Engineering Checkpoint |
+| `decision_packets` | Simplified user judgment records and recorded answers | MVP-1 | authority for user judgments | user-facing | not Engineering Checkpoint |
+| `decision_requests` | Optional prompt routing, replay, or handoff metadata linked to Decision Packets | MVP-1 optional | auxiliary routing state | internal/user-facing prompt support | optional, not authority by itself |
+| `residual_risks` | Minimal visible residual-risk rows | MVP-1 | authority for stored residual risks | user-facing | not Engineering Checkpoint |
+| `evidence_summaries` | Minimal evidence summary over artifact/run refs | MVP-1 | auxiliary summary over authority refs | user-facing | not Engineering Checkpoint |
+| `close_readiness` | Minimal close readiness and close-blocker snapshot | MVP-1 | auxiliary display/check snapshot | user-facing | not Engineering Checkpoint |
+| `projection_status_cards` | Optional freshness/status card state without a projection job system | MVP-1 optional | auxiliary derived display state | user-facing | optional, not authority |
+| `approvals` | Sensitive-action approval lifecycle | Assurance Profile or profile-promoted | authority when profile is active | user-facing | future/later |
+| `baselines` | Repository baseline capture | Assurance Profile or profile-promoted | auxiliary support for assurance | internal | future/later |
+| `evidence_manifests` | Full criteria-to-evidence coverage | Assurance Profile or profile-promoted | authority for full evidence profile | user-facing summary | future/later |
+| `evals` | Detached verification/eval records | Assurance Profile or profile-promoted | authority when profile is active | user-facing summary | future/later |
+| `manual_qa_records` | Manual QA profile, result, findings | Assurance Profile or profile-promoted | authority when profile is active | user-facing summary | future/later |
+| `validator_runs` | Persisted validator results | Assurance Profile or profile-promoted | diagnostic state | internal/user-facing findings | future/later |
+| `feedback_loops` | Feedback-loop policy records | Assurance Profile or profile-promoted | policy support | internal/user-facing summary | future/later |
+| `tdd_traces` | TDD trace records | Assurance Profile or profile-promoted | policy/evidence support | internal/user-facing summary | future/later |
+| `projection_jobs` | Durable projection outbox and rendered-output freshness | Operations Profile or profile-promoted | auxiliary derived-view job state | internal/user-facing freshness | future/later |
+| `reconcile_items` | Human-editable projection drift/proposal handling | Operations Profile or profile-promoted | auxiliary until accepted through Core | user-facing | future/later |
+| `connector_manifests` | Connector-managed file manifest and drift state | Operations Profile or profile-promoted | diagnostic/support | internal | future/later |
+| `persistent_locks` | Durable lock/recovery metadata if process locks are insufficient | Operations Profile or profile-promoted | auxiliary | internal | future/later |
+| `export_manifests` | Export/recover package manifest | Operations Profile or profile-promoted | auxiliary support | internal/user-facing report | future/later |
+| `recover_items` | Recovery findings and repair plan state | Operations Profile or profile-promoted | diagnostic/support | internal/user-facing report | future/later |
 | `task_spine_entries` | Journey/spine continuity records | future/diagnostic | supplemental | user-facing | non-stage-required |
 | `journey_cards` | Render/cache support for journey views, if ever stored | future/diagnostic | derived display support | user-facing | non-stage-required |
 | `shared_designs` | Shared design basis records when design-support profiles are promoted | future/diagnostic | policy support | user-facing summary | non-stage-required |
@@ -155,9 +155,9 @@ Public API refs are owned by [MCP API And Schemas](mcp-api-and-schemas.md#artifa
 | `module_map_items` | Module map/stewardship records | future/diagnostic | policy support | internal/user-facing summary | non-stage-required |
 | `interface_contracts` | Interface contract/stewardship records | future/diagnostic | policy support | internal/user-facing summary | non-stage-required |
 
-## v0.1 Physical Schema
+## Engineering Checkpoint Physical Schema
 
-v0.1 is the Core Authority Smoke. It is intentionally small. It should be enough to register a project, create or load one Task, define one scoped work boundary, authorize one write, record one Run, register one artifact/evidence ref, append events, and return structured blockers.
+Engineering Checkpoint is the internal authority-loop checkpoint. It is intentionally small. It should be enough to register a project, create or load one Task, define one scoped work boundary, authorize one write, record one Run, register one artifact/evidence ref, append events, and return structured blockers.
 
 The DDL below is a reference fragment for planning. It is not proof that a migration runner exists.
 
@@ -165,15 +165,17 @@ The DDL below is a reference fragment for planning. It is not proof that a migra
 
 | Profile | Stage | Required for | Explicitly not required for this profile |
 |---|---|---|---|
-| Core Authority Smoke schema | v0.1 | narrow local authority loop | Decision Packets, Evidence Manifests, Manual QA, Eval, residual-risk acceptance, projection jobs, reconcile, validators, Journey, stewardship maps |
-| First User-Value Slice schema | v0.2 | first user-value records and readable status | detached verification, full Manual QA, full projection job system, export/recover, broad operations |
-| Agency Assurance schema | v0.3 or promoted profile | verification, QA, approval, feedback/TDD, validator support | v0.1/v0.2 exit unless promoted |
-| Operations schema | v0.4 or promoted profile | projection jobs, reconcile, connector manifests, recover/export | v0.1/v0.2 exit unless promoted |
+| Engineering Checkpoint schema | Engineering Checkpoint | narrow local authority loop | Decision Packets, Evidence Manifests, Manual QA, Eval, residual-risk acceptance, projection jobs, reconcile, validators, Journey, stewardship maps |
+| MVP-1 User Work Loop schema | MVP-1 | first user-value records and readable status | detached verification, full Manual QA, full projection job system, export/recover, broad operations |
+| Assurance Profile schema | Assurance Profile or promoted profile | verification, QA, approval, feedback/TDD, validator support | Engineering Checkpoint / MVP-1 exit unless promoted |
+| Operations schema | Operations Profile or promoted profile | projection jobs, reconcile, connector manifests, recover/export | Engineering Checkpoint / MVP-1 exit unless promoted |
 | Future / diagnostic schema | future/diagnostic | journey/spine, domain/module/interface diagnostics | all current stage exits unless promoted |
 
-### Core Authority Smoke schema
+<a id="core-authority-smoke-schema"></a>
 
-Main v0.1 table count: 12 tables total, with 2 in `registry.sqlite` and 10 in project `state.sqlite`. This count is intentionally small enough for a first implementation slice.
+### Engineering Checkpoint schema
+
+Main Engineering Checkpoint table count: 12 tables total, with 2 in `registry.sqlite` and 10 in project `state.sqlite`. This count is intentionally small enough for a first implementation slice.
 
 #### `registry.sqlite`
 
@@ -195,7 +197,7 @@ CREATE TABLE projects (
 );
 ```
 
-Required `registry_meta` keys for v0.1 are `runtime_home_id` and `schema_version`. A later implementation may replace this with a more formal metadata table, but v0.1 only needs durable identity and version facts.
+Required `registry_meta` keys for Engineering Checkpoint are `runtime_home_id` and `schema_version`. A later implementation may replace this with a more formal metadata table, but Engineering Checkpoint only needs durable identity and version facts.
 
 #### `state.sqlite`
 
@@ -326,7 +328,7 @@ CREATE TABLE tool_invocations (
 );
 ```
 
-Recommended v0.1 indexes:
+Recommended Engineering Checkpoint indexes:
 
 ```sql
 CREATE INDEX idx_tasks_project_phase ON tasks(project_id, lifecycle_phase);
@@ -340,11 +342,11 @@ CREATE INDEX idx_task_blockers_task_status ON task_blockers(task_id, status);
 CREATE INDEX idx_task_events_task_seq ON task_events(task_id, event_seq);
 ```
 
-v0.1 may store initial task creation through a narrow owner-valid setup path instead of a full natural-language intake system. It may return status/blocker output directly from `tasks`, `change_units`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, and `task_blockers`.
+Engineering Checkpoint may store initial task creation through a narrow owner-valid setup path instead of a full natural-language intake system. It may return status/blocker output directly from `tasks`, `change_units`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, and `task_blockers`.
 
 ### Artifact directory layout
 
-The directory layout is staged. v0.1 needs only the directories it actually writes, usually `artifacts/tmp/`, `artifacts/diffs/`, `artifacts/logs/`, and possibly `artifacts/bundles/`. Other directories in the reference layout are allowed but not v0.1 requirements.
+The directory layout is staged. Engineering Checkpoint needs only the directories it actually writes, usually `artifacts/tmp/`, `artifacts/diffs/`, `artifacts/logs/`, and possibly `artifacts/bundles/`. Other directories in the reference layout are allowed but not Engineering Checkpoint requirements.
 
 ### Artifact Kind Storage Notes
 
@@ -363,13 +365,13 @@ A committed artifact that supports state needs:
 
 An `artifacts` row without a compatible owner link is not enough to satisfy evidence, QA, verification, projection, export, or close-related checks.
 
-## v0.2 Additions
+## MVP-1 Additions
 
-v0.2 is the First User-Value Slice. It should add records that help a person understand the work: intake state, simplified user judgments, approval-shaped sensitive-action Decision Packets, visible residual risk, evidence summaries, close blockers/readiness, and optional status-card freshness. It should still avoid committed Approval lifecycle storage, full assurance, projection job, reconciliation, and operations systems.
+MVP-1 means the MVP-1 User Work Loop. It should add records that help a person understand the work: intake state, simplified user judgments, approval-shaped sensitive-action Decision Packets, visible residual risk, evidence summaries, close blockers/readiness, and optional status-card freshness. It should still avoid committed Approval lifecycle storage, full assurance, projection job, reconciliation, and operations systems.
 
-### First User-Value Slice schema
+### MVP-1 User Work Loop schema
 
-Main v0.2 addition count: 5 tables, plus optional `decision_requests` and `projection_status_cards` tables. These tables build on the v0.1 schema.
+Main MVP-1 addition count: 5 tables, plus optional `decision_requests` and `projection_status_cards` tables. These tables build on the Engineering Checkpoint schema.
 
 ```sql
 CREATE TABLE task_intake (
@@ -443,9 +445,9 @@ CREATE TABLE close_readiness (
 );
 ```
 
-Optional v0.2 prompt routing table:
+Optional MVP-1 prompt routing table:
 
-Public refs for these v0.2 additions are intentionally small. `evidence_summaries` and `close_readiness` may be surfaced through `StateRecordRef` as `evidence_summary` and `close_readiness`; they summarize or check authority refs and do not imply the full `evidence_manifests`, verification, Manual QA, projection, or report/export profiles are active.
+Public refs for these MVP-1 additions are intentionally small. `evidence_summaries` and `close_readiness` may be surfaced through `StateRecordRef` as `evidence_summary` and `close_readiness`; they summarize or check authority refs and do not imply the full `evidence_manifests`, verification, Manual QA, projection, or report/export profiles are active.
 
 ```sql
 CREATE TABLE decision_requests (
@@ -462,9 +464,9 @@ CREATE TABLE decision_requests (
 
 `decision_requests` never satisfies a judgment, gate, waiver, residual-risk acceptance, or close condition by itself. It is only routing or replay metadata for a compatible `decision_packets` row.
 
-For `judgment_route=approve-sensitive-action`, minimum v0.2 stores the requested `judgment_payload.approval_scope` in `decision_packets.judgment_payload_json` and resolves the user's grant, denial, or expiry on the Decision Packet. It does not require a row in `approvals`, an Approval `StateRecordRef`, `approval_id`, `approval_refs`, or an `APR` projection.
+For `judgment_route=approve-sensitive-action`, minimum MVP-1 stores the requested `judgment_payload.approval_scope` in `decision_packets.judgment_payload_json` and resolves the user's grant, denial, or expiry on the Decision Packet. It does not require a row in `approvals`, an Approval `StateRecordRef`, `approval_id`, `approval_refs`, or an `APR` projection.
 
-Optional v0.2 status-card freshness table:
+Optional MVP-1 status-card freshness table:
 
 ```sql
 CREATE TABLE projection_status_cards (
@@ -479,39 +481,39 @@ CREATE TABLE projection_status_cards (
 );
 ```
 
-`projection_status_cards` is not a projection job system. It is an optional display/freshness cache for status or next-action cards. If omitted, v0.2 can compute freshness directly by comparing current `tasks.state_version` with the source version returned in a read response.
+`projection_status_cards` is not a projection job system. It is an optional display/freshness cache for status or next-action cards. If omitted, MVP-1 can compute freshness directly by comparing current `tasks.state_version` with the source version returned in a read response.
 
 ## Future / Later Profile Schema Candidates
 
-This section preserves useful future schema candidates without putting them on the v0.1/v0.2 implementation path. Do not treat this inventory as a required DDL bundle.
+This section preserves useful future schema candidates without putting them on the Engineering Checkpoint / MVP-1 implementation path. Do not treat this inventory as a required DDL bundle.
 
-### Agency Assurance schema
+### Assurance Profile schema
 
-Agency Assurance profile storage is v0.3 or profile-promoted, not v0.1/v0.2. Candidate tables:
+Assurance Profile storage is Assurance Profile or profile-promoted, not Engineering Checkpoint / MVP-1. Candidate tables:
 
 | Candidate table | Why it may matter later | Not required for |
 |---|---|---|
-| `approvals` | Sensitive-action approval lifecycle and drift handling | v0.1 authority loop, ordinary v0.2 judgment display including approval-shaped Decision Packets |
-| `baselines` | Repository baseline capture for assurance, approval, and verification freshness | v0.1/v0.2 unless a promoted profile needs baseline checks |
-| `evidence_manifests` | Full criteria-to-evidence coverage | v0.1 single artifact/evidence ref, v0.2 evidence summary |
-| `evals` | Detached verification or evaluator review | v0.1/v0.2 |
-| `manual_qa_records` | Manual QA result, findings, setup, evidence refs | v0.1/v0.2 |
-| `validator_runs` | Persisted `ValidatorResult` rows | v0.1/v0.2 unless a narrow owner promotes a validator |
-| `feedback_loops` | Policy support for selected feedback loop | v0.1/v0.2 |
-| `tdd_traces` | Red/green/refactor evidence when TDD profile is selected | v0.1/v0.2 |
+| `approvals` | Sensitive-action approval lifecycle and drift handling | Engineering Checkpoint authority loop, ordinary MVP-1 judgment display including approval-shaped Decision Packets |
+| `baselines` | Repository baseline capture for assurance, approval, and verification freshness | Engineering Checkpoint / MVP-1 unless a promoted profile needs baseline checks |
+| `evidence_manifests` | Full criteria-to-evidence coverage | Engineering Checkpoint single artifact/evidence ref, MVP-1 evidence summary |
+| `evals` | Detached verification or evaluator review | Engineering Checkpoint / MVP-1 |
+| `manual_qa_records` | Manual QA result, findings, setup, evidence refs | Engineering Checkpoint / MVP-1 |
+| `validator_runs` | Persisted `ValidatorResult` rows | Engineering Checkpoint / MVP-1 unless a narrow owner promotes a validator |
+| `feedback_loops` | Policy support for selected feedback loop | Engineering Checkpoint / MVP-1 |
+| `tdd_traces` | Red/green/refactor evidence when TDD profile is selected | Engineering Checkpoint / MVP-1 |
 
 ### Operations schema
 
-Operations profile storage is v0.4 or profile-promoted. Candidate tables:
+Operations profile storage is Operations Profile or profile-promoted. Candidate tables:
 
 | Candidate table | Why it may matter later | Not required for |
 |---|---|---|
-| `projection_jobs` | Durable outbox for rendered Markdown or managed outputs | v0.1/v0.2; optional status cards do not require it |
-| `reconcile_items` | Route human edits or projection drift into Core decisions | v0.1/v0.2 |
-| `connector_manifests` | Track connector-managed files and drift | v0.1/v0.2 |
-| `persistent_locks` | Durable lock/recovery metadata if needed beyond process locks | v0.1/v0.2 |
-| `export_manifests` | Release handoff or export package metadata | v0.1/v0.2 |
-| `recover_items` | Recovery findings, repair plan, and operator follow-up | v0.1/v0.2 |
+| `projection_jobs` | Durable outbox for rendered Markdown or managed outputs | Engineering Checkpoint / MVP-1; optional status cards do not require it |
+| `reconcile_items` | Route human edits or projection drift into Core decisions | Engineering Checkpoint / MVP-1 |
+| `connector_manifests` | Track connector-managed files and drift | Engineering Checkpoint / MVP-1 |
+| `persistent_locks` | Durable lock/recovery metadata if needed beyond process locks | Engineering Checkpoint / MVP-1 |
+| `export_manifests` | Release handoff or export package metadata | Engineering Checkpoint / MVP-1 |
+| `recover_items` | Recovery findings, repair plan, and operator follow-up | Engineering Checkpoint / MVP-1 |
 
 ### Future / diagnostic schema
 
@@ -522,19 +524,19 @@ Future or diagnostic schema candidates are non-stage-required until an owner pro
 - Rich design support: `shared_designs`, `change_unit_dependencies`
 - Diagnostics and polish: metrics, dashboards, context indexes, connector analytics, export/recover detail tables, richer projection caches
 
-These records may be useful, but they must not become prerequisites for v0.1 Core Authority Smoke or v0.2 First User-Value Slice.
+These records may be useful, but they must not become prerequisites for Engineering Checkpoint or MVP-1 User Work Loop.
 
 ### Baseline capture format
 
-Baseline capture is a future assurance/profile feature. When promoted, baseline storage should record enough data to prove the repository state used for approval, verification, or evidence freshness. Until that profile is active, v0.1/v0.2 do not need a `baselines` table or a baseline capture runner.
+Baseline capture is a future assurance/profile feature. When promoted, baseline storage should record enough data to prove the repository state used for approval, verification, or evidence freshness. Until that profile is active, Engineering Checkpoint / MVP-1 do not need a `baselines` table or a baseline capture runner.
 
 ### Verification Bundle Shape
 
-Verification bundles are future assurance/profile artifacts. They may combine baseline refs, run refs, artifact refs, evaluator inputs, and validation output after the verification profile is active. They are not required to record a v0.1 Run or a v0.2 evidence summary.
+Verification bundles are future assurance/profile artifacts. They may combine baseline refs, run refs, artifact refs, evaluator inputs, and validation output after the verification profile is active. They are not required to record a Engineering Checkpoint Run or a MVP-1 evidence summary.
 
 ### Projection job table
 
-`projection_jobs` is Operations profile storage. It is the durable outbox for projection rendering when full projection support is enabled. It is not part of v0.1 and is not required for v0.2 status or next-action cards.
+`projection_jobs` is Operations profile storage. It is the durable outbox for projection rendering when full projection support is enabled. It is not part of Engineering Checkpoint and is not required for MVP-1 status or next-action cards.
 
 When promoted, projection jobs should record `projection_kind`, `target_ref`, `source_state_version`, job status, output location or artifact ref, and failure information. These fields describe derived output freshness; they do not make rendered Markdown authoritative.
 
@@ -544,7 +546,7 @@ Projection workers consume committed Core state and produce derived files or car
 
 ### Validator runner skeleton
 
-Persisted `validator_runs` are Agency Assurance profile behavior unless an owner explicitly promotes a narrow validator earlier. v0.1/v0.2 can return structured blockers without creating persisted validator-run storage.
+Persisted `validator_runs` are Assurance Profile behavior unless an owner explicitly promotes a narrow validator earlier. Engineering Checkpoint / MVP-1 can return structured blockers without creating persisted validator-run storage.
 
 ### Evidence and Verification Profile Implementation Notes
 
@@ -554,12 +556,12 @@ Full evidence sufficiency, detached verification, Manual QA, and validator-backe
 
 ### `task_events`
 
-`task_events` is an append-only audit trail and event-order support table. It records what Core committed and in what order. It is not the normal authority source for current state, and v0.1/v0.2 state should not be reconstructed by replaying events during ordinary operation.
+`task_events` is an append-only audit trail and event-order support table. It records what Core committed and in what order. It is not the normal authority source for current state, and Engineering Checkpoint / MVP-1 state should not be reconstructed by replaying events during ordinary operation.
 
 Current state tables are authoritative:
 
-- `tasks`, `change_units`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, and `task_blockers` are v0.1 authority records.
-- `decision_packets`, `residual_risks`, and other v0.2 rows become authority only for their own record family when their profile is active.
+- `tasks`, `change_units`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, and `task_blockers` are Engineering Checkpoint authority records.
+- `decision_packets`, `residual_risks`, and other MVP-1 rows become authority only for their own record family when their profile is active.
 - Events support audit, debugging, idempotency explanation, projection freshness, and recovery history.
 
 Deterministic event order is ascending `event_seq` in `state.sqlite`. Task-scoped readers filter by `task_id`. `created_at` is audit metadata; it is not enough for ordering when events share a timestamp.
@@ -568,20 +570,20 @@ Required event emission:
 
 | Stage | Mutation | Event expectation |
 |---|---|---|
-| v0.1 | Project registration or project path/config update | Emit a project or task-scoped event if the project state changes; registry-only events may use `task_id=NULL`. |
-| v0.1 | Task create/update/close state change | Emit an event with the new state version. |
-| v0.1 | Change Unit or task boundary create/update | Emit an event and update affected state version. |
-| v0.1 | `prepare_write` allow creates or refreshes a Write Authorization | Emit authorization-created or authorization-updated event. |
-| v0.1 | `prepare_write` blocks and stores/updates a structured blocker | Emit blocker-opened or blocker-updated event. |
-| v0.1 | `record_run` commits a Run | Emit run-recorded event. If a Write Authorization is consumed, emit the authorization-consumed relation in the same transaction or payload. |
-| v0.1 | Artifact registration/link commit | Emit artifact-registered or include artifact refs in the owning mutation event. |
-| v0.1 | Blocker resolved or superseded | Emit blocker-resolved or blocker-superseded event. |
-| v0.1 | Idempotent replay returning an existing committed response | Do not append a new semantic event. The original event remains the committed audit fact. |
-| v0.2 | Intake state create/update | Emit intake-updated event when persisted. |
-| v0.2 | User judgment requested, answered, expired, or superseded | Emit decision event tied to the `decision_packets` row. |
-| v0.2 | Residual risk opened, changed, accepted, mitigated, deferred, or superseded | Emit residual-risk event. |
-| v0.2 | Evidence summary or close readiness changes | Emit evidence-summary-updated or close-readiness-updated event when persisted. |
-| v0.2 optional | Projection/status-card freshness changes | Emit freshness/status-card event only if that optional table is installed. |
+| Engineering Checkpoint | Project registration or project path/config update | Emit a project or task-scoped event if the project state changes; registry-only events may use `task_id=NULL`. |
+| Engineering Checkpoint | Task create/update/close state change | Emit an event with the new state version. |
+| Engineering Checkpoint | Change Unit or task boundary create/update | Emit an event and update affected state version. |
+| Engineering Checkpoint | `prepare_write` allow creates or refreshes a Write Authorization | Emit authorization-created or authorization-updated event. |
+| Engineering Checkpoint | `prepare_write` blocks and stores/updates a structured blocker | Emit blocker-opened or blocker-updated event. |
+| Engineering Checkpoint | `record_run` commits a Run | Emit run-recorded event. If a Write Authorization is consumed, emit the authorization-consumed relation in the same transaction or payload. |
+| Engineering Checkpoint | Artifact registration/link commit | Emit artifact-registered or include artifact refs in the owning mutation event. |
+| Engineering Checkpoint | Blocker resolved or superseded | Emit blocker-resolved or blocker-superseded event. |
+| Engineering Checkpoint | Idempotent replay returning an existing committed response | Do not append a new semantic event. The original event remains the committed audit fact. |
+| MVP-1 | Intake state create/update | Emit intake-updated event when persisted. |
+| MVP-1 | User judgment requested, answered, expired, or superseded | Emit decision event tied to the `decision_packets` row. |
+| MVP-1 | Residual risk opened, changed, accepted, mitigated, deferred, or superseded | Emit residual-risk event. |
+| MVP-1 | Evidence summary or close readiness changes | Emit evidence-summary-updated or close-readiness-updated event when persisted. |
+| MVP-1 optional | Projection/status-card freshness changes | Emit freshness/status-card event only if that optional table is installed. |
 
 Malformed requests, dry runs, pre-commit state conflicts, and invalid requests that do not mutate state do not need `task_events` rows. If a blocked request creates or updates a stored blocker, that blocker mutation is the event-worthy state change.
 
@@ -589,9 +591,9 @@ Malformed requests, dry runs, pre-commit state conflicts, and invalid requests t
 
 Projection freshness is a comparison between a readable output's `source_state_version` and current Core state. It does not make the readable output a state authority.
 
-- v0.1 may have no projection freshness table. Reads can return current state directly.
-- v0.2 may store optional `projection_status_cards` for status or next-action cards.
-- v0.4 or a promoted profile may add `projection_jobs` for durable rendering.
+- Engineering Checkpoint may have no projection freshness table. Reads can return current state directly.
+- MVP-1 may store optional `projection_status_cards` for status or next-action cards.
+- Operations Profile or a promoted profile may add `projection_jobs` for durable rendering.
 
 In every stage, stale Markdown or a stale card can warn or block user trust through the owner path, but it cannot authorize writes, satisfy evidence, record acceptance, accept residual risk, or close a Task.
 
@@ -681,10 +683,10 @@ Future migrations should:
 - Stop on unknown owner-bound enum/status values instead of inventing fallback meanings.
 - Treat projection/card/job freshness as derived state, not as canonical state.
 
-These notes do not require a specific migration runner, migration file format, or CLI command in v0.1.
+These notes do not require a specific migration runner, migration file format, or CLI command in Engineering Checkpoint.
 
 ### Lock policy
 
-Runtime mutations should serialize through the Core transaction order owned by [Runtime Architecture](runtime-architecture.md#state-transaction-flow). v0.1 can use ordinary SQLite transactions plus a process/project lock if needed. `persistent_locks` is a later Operations candidate, not a v0.1 table.
+Runtime mutations should serialize through the Core transaction order owned by [Runtime Architecture](runtime-architecture.md#state-transaction-flow). Engineering Checkpoint can use ordinary SQLite transactions plus a process/project lock if needed. `persistent_locks` is a later Operations candidate, not a Engineering Checkpoint table.
 
 Locks protect concurrent writes; they do not provide OS sandboxing, artifact integrity, or tamper-proof storage.

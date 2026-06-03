@@ -8,22 +8,22 @@
 
 ## Catalog 경계
 
-핵심 적합성 모델, 정확한 fixture body, execution rule, assertion semantics, 좁은 v0.1 Kernel Smoke 작성 순서는 [Conformance Fixtures 참조](conformance-fixtures.md)에 남습니다. 이 catalog는 의도적으로 그 모델의 downstream입니다. Catalog row는 fixture body, public API schema, DDL, stage exit, 이미 실행되는 fixture의 증거가 아닙니다.
+핵심 적합성 모델, 정확한 fixture body, execution rule, assertion semantics, 좁은 내부 엔지니어링 점검 Kernel Smoke 작성 순서는 [Conformance Fixtures 참조](conformance-fixtures.md)에 남습니다. 이 catalog는 의도적으로 그 모델의 downstream입니다. Catalog row는 fixture body, public API schema, DDL, stage exit, 이미 실행되는 fixture의 증거가 아닙니다.
 
 향후 catalog scenario는 담당 문서가 동작을 승격하고, delivery stage 또는 local suite를 식별하고, Core-owned state와 artifact assertion을 증명하는 exact-shape fixture로 구체화한 뒤에만 executable이 됩니다. Projection output은 freshness, readability, availability를 확인할 수 있지만 Core state를 대체하거나 conformance truth가 되면 안 됩니다.
 
 ## Catalog 전용 Future Families
 
-아래 family는 의도적으로 이 catalog에 둡니다. 코어 권한 스모크(v0.1 Core Authority Smoke)이나 첫 사용자 가치 조각(v0.2 First User-Value Slice)의 요구사항이 아니며, catalog에 나열되어 있다는 사실만으로 이후 단계의 필수 항목이 되지도 않습니다. 어떤 row가 executable conformance가 되려면 향후 담당 owner가 exact behavior, stage, fallback, security wording, exact-shape fixture를 먼저 승격해야 합니다.
+아래 family는 의도적으로 이 catalog에 둡니다. 내부 엔지니어링 점검이나 MVP-1 사용자 작업 루프의 요구사항이 아니며, catalog에 나열되어 있다는 사실만으로 이후 단계의 필수 항목이 되지도 않습니다. 어떤 row가 executable conformance가 되려면 향후 담당 owner가 exact behavior, stage, fallback, security wording, exact-shape fixture를 먼저 승격해야 합니다.
 
 | Future family | Catalog boundary |
 |---|---|
-| Full Manual QA | Full policy matrix, browser/manual capture expansion, QA waiver detail, QA dashboard는 future 또는 v0.3+ owner-profile scope에 남습니다. v0.2는 minimal active profile이 요구할 때 missing-QA 또는 evidence blocker를 보여 줄 수 있을 뿐입니다. |
-| Eval systems와 detached verification automation | Cross-surface/evaluator orchestration, Eval detail report, same-session independence hardening, assurance upgrade는 future 또는 v0.3+ owner-profile scope에 남습니다. v0.2는 compatible verification record가 실제로 있을 때가 아니면 검증을 주장하지 않는 정직한 동작만 요구합니다. |
-| TDD trace와 feedback-loop policy | RED/GREEN trace, feedback-loop execution policy, policy-specific test-path fixture는 future 또는 v0.3+ owner-profile scope에 남습니다. |
+| Full Manual QA | Full policy matrix, browser/manual capture expansion, QA waiver detail, QA dashboard는 future 또는 보증 프로필 이후 owner-profile scope에 남습니다. MVP-1은 minimal active profile이 요구할 때 missing-QA 또는 evidence blocker를 보여 줄 수 있을 뿐입니다. |
+| Eval systems와 detached verification automation | Cross-surface/evaluator orchestration, Eval detail report, same-session independence hardening, assurance upgrade는 future 또는 보증 프로필 이후 owner-profile scope에 남습니다. MVP-1은 compatible verification record가 실제로 있을 때가 아니면 검증을 주장하지 않는 정직한 동작만 요구합니다. |
+| TDD trace와 feedback-loop policy | RED/GREEN trace, feedback-loop execution policy, policy-specific test-path fixture는 future 또는 보증 프로필 이후 owner-profile scope에 남습니다. |
 | Module map과 interface contract | Domain/module/interface stewardship fixture는 owner docs가 exact record와 validator를 승격하기 전까지 future catalog candidate입니다. |
 | Journey, Spine, detailed report projection | Journey Card, Journey Spine, Run Summary, detailed Evidence Manifest, detailed Eval, polished report projection은 derived-output candidate입니다. State가 되거나 MVP-required projection kind가 되지 않습니다. |
-| Export, recover, release handoff, artifact-integrity operations | Export/recover, release handoff, retention, redaction export, artifact check를 위한 operations fixture는 v0.4+ 또는 promoted owner-profile scope에 남습니다. |
+| Export, recover, release handoff, artifact-integrity operations | Export/recover, release handoff, retention, redaction export, artifact check를 위한 operations fixture는 운영 프로필 이후 또는 promoted owner-profile scope에 남습니다. |
 | Dashboard, team workflow, orchestration fixture | Hosted UI, dashboard, shared/team workflow, permission, parallel-lane, orchestration fixture는 승격 전까지 roadmap candidate입니다. |
 | Advanced connector와 security fixture | Broad connector ecosystem, remote/shared MCP, browser capture automation, preventive guard, isolated profile, hook, sidecar, higher security claim은 covered operation에 대해 owner-defined mechanism과 fixture proof가 있어야 promotion할 수 있습니다. |
 
@@ -43,7 +43,7 @@
 
 ## Agency, Stewardship, Context, Design-Quality Suite
 
-Agency, stewardship, context hygiene, design-quality는 에이전시 보증 팩(v0.3 Agency Assurance Pack)의 suite입니다. 이 suite들은 `prepare_write`, `request_user_judgment`, `record_user_judgment`, `record_manual_qa`, `record_eval`, `close_task`, `next` 같은 Core entrypoint와 Core를 호출하는 operator action을 통해 state behavior를 검증합니다. Journey Card, Decision Packet, residual-risk, review-stage, status prose의 문구가 맞는지만 보고 통과 처리하면 안 됩니다.
+Agency, stewardship, context hygiene, design-quality는 보증 프로필의 suite입니다. 이 suite들은 `prepare_write`, `request_user_judgment`, `record_user_judgment`, `record_manual_qa`, `record_eval`, `close_task`, `next` 같은 Core entrypoint와 Core를 호출하는 operator action을 통해 state behavior를 검증합니다. Journey Card, Decision Packet, residual-risk, review-stage, status prose의 문구가 맞는지만 보고 통과 처리하면 안 됩니다.
 
 담당 문서가 승격한 뒤의 catalog suite 책임:
 
@@ -58,11 +58,11 @@ Status/next recommendations는 Role Lens recommendations를 포함해 read respo
 
 `browser-qa-candidate` recommendation도 같은 read-only rule을 따릅니다. Recommendation은 `T6 QA Capture` 접점에서 Browser QA Capture가 유용하다고 이름 붙일 수 있지만, recommendation alone으로 상태를 변경하거나, projection을 대기열에 넣거나, artifact를 만들거나, evidence를 만들거나 충족하거나, verification을 수행 또는 기록하거나, QA를 기록하거나, QA 또는 verification을 면제하거나, 잔여 위험을 받아들이거나, 결과를 수락하거나, Task를 닫거나, assurance를 올리면 안 됩니다. 접점이 browser capture를 지원하지 않으면 unsupported capture를 staged-delivery failure로 다루는 대신 사람이 작성한 수동 QA notes와 수동 제공 artifacts fallback을 이름 붙여야 합니다. Actual artifacts, 수동 QA records, QA gate updates, Eval results, close effects에는 이후 Core를 통한 public mutation이 필요합니다.
 
-향후 suite 지도 요약: 이 항목들은 catalog-only Agency Assurance Pack suite family와 concern입니다. 여기에 나열됐다는 이유만으로 runnable fixture나 초기 MVP requirement가 되지 않습니다.
+향후 suite 지도 요약: 이 항목들은 catalog-only 보증 프로필 suite family와 concern입니다. 여기에 나열됐다는 이유만으로 runnable fixture나 초기 MVP requirement가 되지 않습니다.
 
 ```mermaid
 flowchart LR
-  Suites["Agency Assurance Pack"] --> Agency["agency"]
+  Suites["보증 프로필"] --> Agency["agency"]
   Suites --> Stewardship["stewardship"]
   Suites --> Context["context-hygiene"]
   Agency --> A1["Decision Packet과 gate"]
@@ -80,7 +80,7 @@ flowchart LR
 
 ### Later-Profile Fixture Shorthand Notes
 
-이 note는 catalog-only future guidance입니다. 코어 권한 스모크(v0.1 Core Authority Smoke)나 첫 사용자 가치 조각(v0.2 First User-Value Slice)의 stage requirement가 아니며, 현재 문서 전용 저장소의 executable runner contract도 아니고, 두 번째 API도 아닙니다. 향후 owner가 관련 later profile을 승격하고 public mutation이 계속 public request schema를 통과하는 exact-shape fixture를 구체화한 뒤에만 사용할 수 있습니다.
+이 note는 catalog-only future guidance입니다. 내부 엔지니어링 점검나 MVP-1 사용자 작업 루프의 stage requirement가 아니며, 현재 문서 전용 저장소의 executable runner contract도 아니고, 두 번째 API도 아닙니다. 향후 owner가 관련 later profile을 승격하고 public mutation이 계속 public request schema를 통과하는 exact-shape fixture를 구체화한 뒤에만 사용할 수 있습니다.
 
 Later-profile catalog example은 `owner_records`, `stewardship_findings`, selected-loop shorthand, full 수동 QA/Eval owner records, TDD Trace records, accepted residual risk state 같은 compact `initial_state` 또는 suite metadata shorthand를 사용할 수 있습니다. 어떤 fixture가 executable이 되기 전에는 이 shorthand가 DDL/API 문서가 명시적으로 소유하는 owner record, validator run, residual-risk record, 또는 다른 state로 expand되어야 합니다. Fixture-only storage row나 alternate request payload branch를 만들면 안 됩니다.
 
@@ -101,13 +101,13 @@ Accepted-risk shorthand는 later-profile state이며 seeded `residual_risk` reco
 | `INTAKE-tiny-direct-profile-no-authority-bypass` | `intake`, `status`, `next`, `prepare_write`, 또는 `close_task` | Typo, 문서 한 문장, obvious rename은 tiny direct profile로 분류될 수 있지만 오직 `mode=direct`로만 표현됩니다. Fixture는 `tiny` mode value가 없고, classification만으로 Write Authorization이 생기지 않으며, 제품 파일 쓰기에 적용되는 active scope 또는 compatible `prepare_write`, 사용자 소유 판단, sensitive-action permission / Approval을 우회하지 않고, Tiny를 auth, security, privacy, secrets, infra, public interface/API, UX workflow, schema, multi-step work에 사용할 수 없음을 검증합니다. Scope가 넓어지거나 tiny changed-path/self-check note를 넘는 evidence가 필요하면 displayed next action은 일반 Direct로 상향됩니다. Product judgment, architecture choice, public interface/API impact, UX workflow, sensitive category, schema, multi-step delivery가 나타나면 Work로 상향되고, shaping이 필요하면 Discovery 또는 Shared Design을 사용합니다. |
 | `INTAKE-codebase-answerable-before-user-question` | `intake` 또는 `next` | 사용자에게 묻기 전에, seeded current context, explicit repo/codebase refs, Harness state refs, connector/session-provided facts에 이미 있고 현재적이며 안전하게 의존할 수 있는 사실을 사용합니다. Fixture는 제공된 ref 또는 fact를 사용해 사용자가 같은 사실을 반복 설명하지 않아도 되는지 검증합니다. Core가 repository, docs, codebase를 제한 없이 search해야 한다는 요구는 아닙니다. 남은 unresolved user-owned product judgment 또는 기술 구조 판단는 focused question 또는 Decision Packet으로 라우팅합니다. |
 | `AGENCY-decision-packet-quality-complete-context` | `request_user_judgment`, `prepare_write`, 또는 `next` | 사용자 소유 product judgment 또는 기술 구조 판단을 위한 Decision Packet 또는 `DecisionPacketCandidate`는 `judgment_category`, `judgment_route`, `display_depth`, 정확한 question, relevant scope, pending option label 또는 selected outcome, minimum current context, source/evidence refs, affected refs를 포함합니다. `display_depth=tradeoff` 또는 `high-risk`는 현실적인 options, benefits/costs/risks를 통한 trade-offs, recommendation, uncertainty, deferral consequence, affected gates 또는 수용 기준, 관련되는 경우 residual-risk impact도 포함합니다. 모호한 "계속할까요?" prompt나 broad approval request는 `decision_gate`를 충족하지 못합니다. Packet은 rejected alternatives, no-op/defer/reduce-scope paths, 또는 다른 path가 unsafe하거나 out of scope인 이유를 함께 보여 주면 하나의 강한 recommendation을 제시할 수 있습니다. 사용자가 실제 판단을 할 수 있어야 합니다. |
-| `AGENCY-approval-does-not-substitute-for-judgment-or-close` | `prepare_write`, `record_user_judgment`, 또는 `close_task` | Granted 민감 동작 permission은 product judgment, Decision Packet resolution, Write Authorization, evidence, verification, 수동 QA, 작업 수락, 잔여 위험을 받아들이는 판단과는 별개로 남습니다. Minimum v0.2에서는 resolved Approval 형태 Decision Packet으로 grant를 표현할 수 있고, later Approval profile은 committed Approval을 granted로 seed할 수 있습니다. Fixture는 compatible owner record가 없으면 affected write 또는 close가 계속 blocked되며, permission 또는 approval만으로 Write Authorization 생성, 작업 수락 충족, 분리 검증 생성, QA waiver, 잔여 위험을 받아들이는 판단, Task close가 일어나지 않음을 검증합니다. |
+| `AGENCY-approval-does-not-substitute-for-judgment-or-close` | `prepare_write`, `record_user_judgment`, 또는 `close_task` | Granted 민감 동작 permission은 product judgment, Decision Packet resolution, Write Authorization, evidence, verification, 수동 QA, 작업 수락, 잔여 위험을 받아들이는 판단과는 별개로 남습니다. Minimum MVP-1에서는 resolved Approval 형태 Decision Packet으로 grant를 표현할 수 있고, later Approval profile은 committed Approval을 granted로 seed할 수 있습니다. Fixture는 compatible owner record가 없으면 affected write 또는 close가 계속 blocked되며, permission 또는 approval만으로 Write Authorization 생성, 작업 수락 충족, 분리 검증 생성, QA waiver, 잔여 위험을 받아들이는 판단, Task close가 일어나지 않음을 검증합니다. |
 | `AGENCY-residual-risk-visible-before-acceptance-or-close` | `record_user_judgment` 또는 `close_task` | Known close-relevant residual risk는 acceptance 전과 successful close 전에 사용자에게 보여야 합니다. Fixture는 hidden, stale, not-yet-visible risk가 acceptance 또는 close를 차단함을 검증합니다. `ResidualRiskSummary.status=none`은 known close-relevant risk가 없을 때만 유효하며, risk-accepted close는 작업 수락 전에 보였던 accepted Residual Risk refs를 가리켜야 합니다. |
 | `AGENCY-approval-qa-acceptance-risk-judgments-distinct` | `record_user_judgment`, `record_manual_qa`, `record_eval`, 또는 `close_task` | Sensitive-action permission / Approval, 수동 QA judgment 또는 waiver, 작업 수락, verification waiver, 잔여 위험 수용은 서로 다른 owner judgment입니다. Fixture는 하나가 satisfied 상태로 seed되어도 다른 owner record가 없거나 incompatible하면 계속 blocked됨을 검증할 수 있습니다. Broad approval이나 QA pass가 작업 수락, 잔여 위험 수용, 분리 검증, close를 imply하면 안 됩니다. |
 
 ## Staged Fixture Coverage
 
-아래 row는 evidence, verification, connector, stewardship, projection, reconcile, operations, assurance 동작을 위한 향후 catalog candidate입니다. 담당 문서가 해당 동작을 구현 단계나 local suite로 승격한 뒤에만 executable requirement가 됩니다. Suite catalog는 planning을 위해 scenario ID를 candidate stage에 매핑할 수 있지만, 그 metadata는 fixture body의 일부가 아니며 그 자체로 v0.1 또는 v0.2 exit criterion을 만들지 않습니다.
+아래 row는 evidence, verification, connector, stewardship, projection, reconcile, operations, assurance 동작을 위한 향후 catalog candidate입니다. 담당 문서가 해당 동작을 구현 단계나 local suite로 승격한 뒤에만 executable requirement가 됩니다. Suite catalog는 planning을 위해 scenario ID를 candidate stage에 매핑할 수 있지만, 그 metadata는 fixture body의 일부가 아니며 그 자체로 내부 엔지니어링 점검 또는 MVP-1 exit criterion을 만들지 않습니다.
 
 아래 YAML block은 planning을 위한 향후 fixture 예시입니다. 현재 저장소의 fixture file이 아니며 runnable Harness Server conformance test가 이미 존재한다는 증거도 아닙니다. Assertion shape와 owner boundary를 보여 주기 위한 예시로 사용하고, promoted owner path가 target behavior를 증명하는 데 필요하지 않은 detailed template, renderer output, broad scenario coverage를 필수로 만들지 않습니다.
 
@@ -664,19 +664,19 @@ expected_error:
 
 ## Core Fixture 예시
 
-아래 예시는 Core behavior 전반을 위한 향후 exact-shape 예시입니다. Minimal v0.1 Kernel Smoke subset을 넘을 수 있으므로, 첫 Core Authority Smoke가 무엇을 증명해야 하는지는 [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)와 Build scope를 기준으로 판단합니다.
+아래 예시는 Core behavior 전반을 위한 향후 exact-shape 예시입니다. Minimal 내부 엔지니어링 점검 Kernel Smoke subset을 넘을 수 있으므로, 첫 내부 엔지니어링 점검이 무엇을 증명해야 하는지는 [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)와 Build scope를 기준으로 판단합니다.
 
 `prepare_write` allowed 예시는 Task가 `ready`에서 `executing`으로 이동한다고 기대합니다. 이 transition은 kernel transition table이 소유하고 정의합니다.
 
-민감 동작 approval coverage는 fixture body field를 추가하지 말고 별도의 exact-shape fixture 또는 suite catalog sequencing으로 구체화해야 합니다. Minimum v0.2 fixture는 [Kernel `prepare_write` State Logic](kernel.md#prepare_write)과 [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write)의 Approval 형태 Decision Packet route를 검증합니다. Later Approval-profile fixture는 [APR Template 기준 기록](templates/approval.md#기준-기록)도 추가로 검증할 수 있습니다. Lifecycle을 fixture body 안에서 다시 정의하지 않습니다.
+민감 동작 approval coverage는 fixture body field를 추가하지 말고 별도의 exact-shape fixture 또는 suite catalog sequencing으로 구체화해야 합니다. Minimum MVP-1 fixture는 [Kernel `prepare_write` State Logic](kernel.md#prepare_write)과 [`harness.prepare_write`](mcp-api-and-schemas.md#harnessprepare_write)의 Approval 형태 Decision Packet route를 검증합니다. Later Approval-profile fixture는 [APR Template 기준 기록](templates/approval.md#기준-기록)도 추가로 검증할 수 있습니다. Lifecycle을 fixture body 안에서 다시 정의하지 않습니다.
 
 Fixture authors는 다음 observable assertions를 유지해야 합니다.
 
 - 첫 uncovered sensitive `prepare_write`는 `approval_required`를 반환하고, approval candidate를 포함하며, Write Authorization을 반환하지 않고, blocker state가 committed된 경우 `approval_gate=required`를 set 또는 keep합니다.
 - Committed blocker state는 `TASK`를 대기열에 넣을 수 있지만, non-mutating candidate는 `APR`을 대기열에 넣으면 안 됩니다.
 - Dry-run 또는 candidate 표시 전용 path는 blocker state가 실제로 committed되지 않았다면 committed `TASK` changes를 검증하면 안 됩니다.
-- minimum v0.2에서 `request_user_judgment(judgment_route=approve-sensitive-action)`은 Approval 형태 Decision Packet을 만들고, `approval_gate=pending`을 set 또는 keep하며, `approval_id=null`을 반환하고, `APR`을 대기열에 넣지 않습니다.
-- minimum v0.2에서 `record_user_judgment`는 Decision Packet state와 `approval_gate`를 업데이트하고, 여전히 Write Authorization을 만들지 않으며, `APR`을 대기열에 넣지 않습니다.
+- minimum MVP-1에서 `request_user_judgment(judgment_route=approve-sensitive-action)`은 Approval 형태 Decision Packet을 만들고, `approval_gate=pending`을 set 또는 keep하며, `approval_id=null`을 반환하고, `APR`을 대기열에 넣지 않습니다.
+- minimum MVP-1에서 `record_user_judgment`는 Decision Packet state와 `approval_gate`를 업데이트하고, 여전히 Write Authorization을 만들지 않으며, `APR`을 대기열에 넣지 않습니다.
 - later Approval-profile fixture는 committed Approval record creation/update, non-null `approval_id`, `approval_refs`, `APR` projection job을 추가로 검증할 수 있습니다.
 - Fresh idempotency key와 current `expected_state_version`을 사용한 later compatible `prepare_write` retry만 Write Authorization을 만들 수 있습니다.
 
@@ -2479,7 +2479,7 @@ expected_error: null
 | `CONTEXT-HYGIENE-stale-prd-remains-pull-only` | `prepare_write`, `next`, 또는 `request_user_judgment` | 오래된 PRD, old design doc, closed issue, long-log summary는 살펴볼 ref를 가리킬 수 있지만 current acceptance criteria, Change Unit scope, product judgment, gate state를 대체할 수 없습니다. Fixture는 stale ref가 pull-only context로 보고되고, owner path가 reconcile하거나 supersede하기 전까지 affected write, acceptance, close가 blocked로 남음을 검증합니다. |
 | `CONTEXT-HYGIENE-resume-uses-current-state-not-chat-memory` | `next` | Resume은 current state, 현재 위치 ref, evidence ref, active Decision Packet, projection freshness를 Core에서 읽습니다. 최신이 아닌 chat-memory 주장은 non-authoritative input으로 취급되며 상태를 변경하거나 gate를 충족하지 않습니다. |
 | `CONTEXT-HYGIENE-compact-context-loads-by-phase` | `status`, `next`, `prepare_write`, `record_run`, `launch_verify`, 또는 `close_task` | Agent context는 전체 documentation 또는 task-history dump 대신 compact한 always-on envelope와 현재 계획/구체화, 쓰기 준비, 실행/Run 기록, 근거 검토, 닫기 준비 상태, 사용자 판단 요청, 오류/복구 또는 verification bundle material을 사용합니다. Fixture는 pushed context가 refs-first이고 current이며 profile-relevant하다는 점을 검증합니다. 더 큰 Reference docs, schema, DDL, historical record, full artifact contents, raw artifact, 관련 없는 template, future catalog material은 pull-on-demand로 남고 새 gate나 권한을 만들지 않습니다. |
-| `CONTEXT-HYGIENE-retrieved-indexed-context-non-authority` | `prepare_write`, `request_user_judgment`, `record_run`, `record_eval`, `record_manual_qa`, 또는 `close_task` | Retrieved, indexed, remembered, summarized context는 ref 또는 source-linked excerpt를 제공할 수 있지만 write를 허가하거나, Write Authorization을 만들거나, Decision Packet을 해소하거나, Approval을 부여하거나, gate를 충족하거나, evidence를 만들거나, verification을 수행 또는 기록하거나, QA를 기록하거나, QA 또는 verification을 면제하거나, 결과를 수락하거나, 잔여 위험을 받아들이거나, projection freshness를 바꾸거나, Task를 close할 수 없습니다. Context Index는 별도로 승격되기 전까지 읽기 전용 v1+ Expansion 후보로 남습니다. |
+| `CONTEXT-HYGIENE-retrieved-indexed-context-non-authority` | `prepare_write`, `request_user_judgment`, `record_run`, `record_eval`, `record_manual_qa`, 또는 `close_task` | Retrieved, indexed, remembered, summarized context는 ref 또는 source-linked excerpt를 제공할 수 있지만 write를 허가하거나, Write Authorization을 만들거나, Decision Packet을 해소하거나, Approval을 부여하거나, gate를 충족하거나, evidence를 만들거나, verification을 수행 또는 기록하거나, QA를 기록하거나, QA 또는 verification을 면제하거나, 결과를 수락하거나, 잔여 위험을 받아들이거나, projection freshness를 바꾸거나, Task를 close할 수 없습니다. Context Index는 별도로 승격되기 전까지 읽기 전용 로드맵 후보로 남습니다. |
 | `CONTEXT-HYGIENE-evaluator-bundle-freshness-required` | `launch_verify` 또는 `record_eval` | Evaluator bundle은 asserted verification에 충분히 fresh해야 합니다. Current acceptance criteria, changed files, baseline, approval scope, relevant Decision Packets, residual-risk summary, evidence refs, 수동 QA requirement, forbidden patterns가 applicable하게 확인됩니다. Stale 또는 missing bundle material은 분리 검증을 passed로 설정할 수 없고, `verification_gate`는 pending 또는 blocked로 남으며, fixture는 API precedence에 따라 `EVIDENCE_INSUFFICIENT`, `VERIFY_NOT_DETACHED`, `VALIDATOR_FAILED`를 반환합니다. |
 
 ### Core, Projection, Reconcile, Verification Boundary Catalog Entries
@@ -2492,9 +2492,9 @@ expected_error: null
 | `RECONCILE-managed-block-edit-routes-to-reconcile` | `projection_refresh` 또는 `reconcile` | Managed block 안의 human edit 또는 generated/managed manifest drift는 reconcile item을 만들고, explicit reconcile decision이 기록될 때까지 canonical state를 바꾸지 않습니다. Accepted proposal은 Core state-changing action과 추가된 `state.sqlite.task_events` row를 통해서만 적용되며, rejected, deferred, note outcome은 owner record를 변경하지 않습니다. Projection output은 reconcile outcome에 따라 skipped, stale, failed, refreshed 중 하나로 처리되며, fixture assertion은 edited Markdown text만 비교하지 않고 reconcile item, projection status, events, error를 비교합니다. |
 | `CORE-same-session-self-review-not-detached-verification` | `record_eval` 또는 `close_task` | 이것이 same-session verification guard입니다. Same-session self-review, 같은 chat transcript, independence가 없는 bundle은 useful context가 될 수 있지만 분리 검증을 passed로 설정하거나 assurance를 올릴 수 없습니다. Fixture는 same-session violation 또는 independence finding을 검증하고, 분리 검증이 required이면 `verification_gate`를 pending 또는 blocked로 유지하며, 다른 valid Eval path, waiver, accepted risk가 해결하지 않는 한 close가 blocked로 남는지 검증합니다. |
 
-### v1+ Expansion Browser QA Capture Candidate Entries
+### 로드맵 Browser QA Capture Candidate Entries
 
-이 catalog entries는 future candidates이지 코어 권한 스모크(v0.1 Core Authority Smoke), 첫 사용자 가치 조각(v0.2 First User-Value Slice), 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack), 커널 스모크(Kernel Smoke) 요구사항이 아닙니다. Browser QA Capture capability profile, redaction 및 secret/PII policy, test environment, artifact retention, fixture 또는 conformance target, fallback 의미, projection-as-canonical 의존성 없음이 정의된 뒤에만 executable이 됩니다.
+이 catalog entries는 future candidates이지 내부 엔지니어링 점검, MVP-1 사용자 작업 루프, 보증 프로필, 운영 프로필, 커널 스모크(Kernel Smoke) 요구사항이 아닙니다. Browser QA Capture capability profile, redaction 및 secret/PII policy, test environment, artifact retention, fixture 또는 conformance target, fallback 의미, projection-as-canonical 의존성 없음이 정의된 뒤에만 executable이 됩니다.
 
 에이전시 보증 팩 / 운영과 인계 팩의 staged 수동 QA 적용 범위는 기존 수동 QA record 또는 valid QA waiver, `qa_gate` behavior, Core owner path를 통해 제공된 registered artifact refs입니다. Automated Browser QA Capture는 승격 이후에 유용한 capture 보조 수단이지만, staged 수동 QA 또는 artifact coverage를 충족하기 위해 요구되지 않습니다.
 
@@ -2502,11 +2502,11 @@ expected_error: null
 |---|---|---|
 | `BROWSER-QA-capture-artifacts-attach-to-manual-qa` | `record_manual_qa` | Capable `T6 QA Capture` profile이 supported screenshot, `qa_capture`, log 또는 console log, network trace, accessibility snapshot, workflow recording artifacts를 등록하고, 이를 수동 QA record 또는 Feedback Loop execution에 link하며, redaction과 retention policy를 적용하고, normal 수동 QA result semantics를 통해서만 `qa_gate`를 업데이트합니다. 이 artifacts는 human QA record를 뒷받침하지만 human judgment 자체는 아닙니다. |
 | `BROWSER-QA-capture-not-work-acceptance-or-detached-verification` | `record_manual_qa` 또는 `record_eval` | Browser QA artifacts는 evidence를 보강할 수 있지만 작업 수락을 기록하지 않고, required human 수동 QA judgment를 대체하지 않으며, separate Eval path가 independence 요구사항을 충족하지 않는 한 `assurance_level=detached_verified`를 설정하지 않습니다. |
-| `BROWSER-QA-unsupported-surface-falls-back-to-human-notes` | `record_manual_qa` 또는 `next` | Browser capture capability가 없는 접점은 missing `T6` capability를 보고하고, 사람이 작성한 수동 QA notes와 수동 제공 artifacts를 추천하며, 자동 브라우저 캡처를 사용할 수 없다는 이유만으로 커널 스모크(Kernel Smoke), 첫 사용자 가치 조각(v0.2 First User-Value Slice), 에이전시 보증 팩(v0.3 Agency Assurance Pack), 운영과 인계 팩(v0.4 Operations & Handoff Pack)의 conformance 실패로 처리하지 않습니다. |
+| `BROWSER-QA-unsupported-surface-falls-back-to-human-notes` | `record_manual_qa` 또는 `next` | Browser capture capability가 없는 접점은 missing `T6` capability를 보고하고, 사람이 작성한 수동 QA notes와 수동 제공 artifacts를 추천하며, 자동 브라우저 캡처를 사용할 수 없다는 이유만으로 커널 스모크(Kernel Smoke), MVP-1 사용자 작업 루프, 보증 프로필, 운영 프로필의 conformance 실패로 처리하지 않습니다. |
 
 ## Fixture Suites
 
-향후 suite family는 [Conformance Fixtures 참조](conformance-fixtures.md#검증-프로파일별-증명-동작)의 검증 프로파일 아래에 묶습니다. 아래 `core` family는 v0.1 Core Authority Smoke smoke subset보다 넓습니다. v0.1은 Build와 Kernel Smoke queue가 지정한 minimal authority-loop check만 사용합니다.
+향후 suite family는 [Conformance Fixtures 참조](conformance-fixtures.md#검증-프로파일별-증명-동작)의 검증 프로파일 아래에 묶습니다. 아래 `core` family는 내부 엔지니어링 점검 smoke subset보다 넓습니다. 내부 엔지니어링 점검은 Build와 Kernel Smoke queue가 지정한 minimal authority-loop check만 사용합니다.
 
 - core: 활성 상태 확인, advisor close 처리, tiny direct를 Direct profile로 포함하는 direct close 처리, 쓰기 gate, Write Authorization 생성, 필수 조건, invalid case coverage, 민감 동작 permission 필요 조건, 해당 owner profile이 active일 때 later Approval lifecycle retry, 근거 부족 처리, evidence/close readiness에 대한 artifact integrity 영향, same-session verification guard 확인, QA 필요 조건 처리, 작업 수락 필요 조건 처리, acceptance 또는 close 전 잔여 위험 표시, projection failure 분리 확인, current-state와 stale-projection 구분, stale projection write guard
 - connector: startup phrase 없는 자연어 intake, plain-language 요청을 Harness record로 라우팅, capability profile, connector profile 최신성, 오래된 capability profile 감지, surface capability mismatch, doctor/connect/serve-mcp/artifact check의 local security posture severity, MCP unavailable 보류, generated/managed manifest drift 감지, 변경 경로 감지, artifact 수집, native capture가 없을 때 수동 artifact capture fallback, cooperative/detective/manual fallback 동작을 preventive 또는 isolated로 상향 표시하지 않는 fallback 보장 수준 표시, 중요한 재개 전 간결한 현재 위치 맥락 표시, Decision Packet을 포괄 동의처럼 다루지 않음, Autonomy Boundary 초과를 Decision Packet 또는 blocker로 라우팅, stale chat 또는 PRD context의 pull-only 동작
@@ -2517,7 +2517,7 @@ expected_error: null
 - context-hygiene: 현재 상태 bundle, compact profile 기반 맥락 로딩, 최신이 아닌 projection과 오래된 PRD 처리, `stale` `TASK` projection write guard, stale chat memory와 retrieved/indexed context를 pull-only로만 사용하는 동작, evaluator bundle 최신성, chat memory가 아니라 현재 상태에서 재개
 - design-quality: kernel 권한을 다시 정의하지 않고, validator ID를 duplicate하지 않고, lower-severity finding을 숨기지 않고, 새 gate를 추가하지 않으면서 agency, stewardship, context-hygiene, 닫기 영향 validator를 조합하는 policy-pack smoke coverage 확인
 
-v1+ Expansion candidate suites:
+로드맵 candidate suites:
 
 - browser-qa-capture: 승격 전까지 staged delivery 밖에 있음. Declared `T6 QA Capture` support, redaction and retention policy, browser test environment, capture artifact mapping, 수동 QA attachment, detached-verification 경계, 작업 수락 경계, unsupported 접점 fallback을 위한 catalog-only future candidate입니다.
 

@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference to look up the core conformance model for future Harness Server runtime tests: what conformance proves, the small v0.1 and v0.2 fixture sets, exact fixture body shape, runner execution behavior, fixture assertion semantics, current-phase status, and the boundary to the future fixture catalog.
+Use this reference to look up the core conformance model for future Harness Server runtime tests: what conformance proves, the small Engineering Checkpoint and MVP-1 fixture sets, exact fixture body shape, runner execution behavior, fixture assertion semantics, current-phase status, and the boundary to the future fixture catalog.
 
 This is a lookup document for conformance authors, implementers, and maintainers. It is not an operator procedure; use [Operations And Conformance Reference](operations-and-conformance.md) for operator entrypoints and the `harness conformance run` overview.
 
@@ -13,7 +13,7 @@ This is reference documentation for future conformance work. The current reposit
 - You are writing or reviewing the future fixture-based conformance design.
 - You need the exact fixture body fields, fixture shorthand boundary, `ToolEnvelope` expansion convention, or runner isolation behavior.
 - You need fixture assertion modes for state, events, artifacts, projections, errors, validators, close blockers, and redaction effects.
-- You need the small v0.1 Core Authority Smoke fixture set, the v0.2 First User-Value Slice fixture set, the clarification-quality group, or the boundary between these sets and the future fixture catalog.
+- You need the small Engineering Checkpoint fixture set, the MVP-1 User Work Loop fixture set, the clarification-quality group, or the boundary between these sets and the future fixture catalog.
 
 ## Before you read
 
@@ -23,7 +23,7 @@ Use [Operations And Conformance Reference](operations-and-conformance.md#conform
 
 Today this document is a future conformance design, not a set of runnable tests. It defines candidate fixture IDs and required behavior for later implementation planning; it does not create fixture files, runner code, generated outputs, runtime state, or a runnable Harness Server conformance suite. Do not create actual fixture files from these examples during the documentation-only phase.
 
-Conformance has two conceptual layers: the core conformance model and small staged fixture sets in this file, and the [Future Fixture Catalog](future-fixture-catalog.md) for detailed later scenarios. The core model stays small enough to explain v0.1 Kernel Smoke and v0.2 user-facing value without making later catalog coverage look like an early implementation requirement.
+Conformance has two conceptual layers: the core conformance model and small delivery fixture sets in this file, and the [Future Fixture Catalog](future-fixture-catalog.md) for detailed later scenarios. The core model stays small enough to explain Engineering Checkpoint Kernel Smoke and MVP-1 user-facing value without making later catalog coverage look like an early implementation requirement.
 
 After implementation begins, conformance will prove Harness behavior with executable fixtures. A passing runtime fixture will drive a Core or operator action and compare captured Core/API or operator results against structured expectations.
 
@@ -32,21 +32,21 @@ Assertion authority is layered:
 - Prose scenario descriptions, comments, rendered Markdown, Journey Card prose, status text, close report prose, and agent summaries are explanatory only.
 - Captured Core state, `task_events`, validator results, returned primary errors, and structured tool-specific blocker fields are authoritative for fixture pass/fail.
 - Artifact reference, owner-link, hash, size, content-type, redaction, and file-integrity assertions are authoritative where the scenario depends on artifacts or evidence bytes.
-- Projection output may be checked for freshness, source-state-version display, readability, and availability when projection support is in scope, but renderer output must not replace Core state, satisfy evidence, authorize writes, close work, accept results, accept risk, or become the source of conformance truth. v0.1 Core Authority Smoke does not require projection assertions beyond an empty or "no projection requirement" field.
+- Projection output may be checked for freshness, source-state-version display, readability, and availability when projection support is in scope, but renderer output must not replace Core state, satisfy evidence, authorize writes, close work, accept results, accept risk, or become the source of conformance truth. Engineering Checkpoint does not require projection assertions beyond an empty or "no projection requirement" field.
 
 ## Reference scope
 
 This document owns:
 
 - conformance fixture body shape
-- fixture shorthand boundary for the active v0.1/v0.2 path
+- fixture shorthand boundary for the active Engineering Checkpoint / MVP-1 path
 - `ToolEnvelope` expansion convention for examples
 - isolated fixture execution behavior
 - fixture assertion semantics and comparison modes
 - suite catalog metadata boundaries
-- fixture profiles by behavior proved, the reduced v0.1/v0.2 fixture sets, and the reduced Kernel Smoke authoring queue
+- fixture profiles by behavior proved, the reduced Engineering Checkpoint / MVP-1 fixture sets, and the reduced Kernel Smoke authoring queue
 - current-phase status and the boundary between runtime conformance and docs-maintenance checks
-- links to the future-oriented catalog without making its scenarios v0.1 or v0.2 requirements
+- links to the future-oriented catalog without making its scenarios Engineering Checkpoint or MVP-1 requirements
 
 ## Not covered here
 
@@ -59,7 +59,7 @@ This reference does not own operator command procedures, docs-maintenance report
 | The exact fixture body fields | [Conformance Fixture Format](#conformance-fixture-format) |
 | How a runner loads, seeds, executes, captures, and compares | [Conformance Execution](#conformance-execution) |
 | Default comparison modes for `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error` | [Fixture Assertion Semantics](#fixture-assertion-semantics) |
-| Small stage fixture sets | [v0.1 Core Authority Smoke Fixture Set](#v01-core-authority-smoke-fixture-set), [v0.2 First User-Value Slice Fixture Set](#v02-first-user-value-slice-fixture-set), and [Clarification Quality Fixture Group](#clarification-quality-fixture-group) |
+| Small delivery fixture sets | [Engineering Checkpoint Fixture Set](#v01-core-authority-smoke-fixture-set), [MVP-1 User Work Loop Fixture Set](#v02-first-user-value-slice-fixture-set), and [Clarification Quality Fixture Group](#clarification-quality-fixture-group) |
 | Suite intent and authoring order | [Conformance staging](operations-and-conformance.md#conformance-staging), [Kernel Smoke Authoring Queue](#kernel-smoke-authoring-queue), and [Future Fixture Catalog: Fixture Suites](future-fixture-catalog.md#fixture-suites) |
 | Core model and current-phase boundary | [Core Conformance Model](#core-conformance-model) and [Fixture Current-Phase Status](#fixture-current-phase-status) |
 | Future fixture examples by concern | [Future Fixture Catalog](future-fixture-catalog.md) |
@@ -81,22 +81,24 @@ State assertions answer "what did Core own after the action?" Artifact assertion
 
 Fixture profiles are grouped by the behavior they prove, not by how polished the rendered output is. The profile name does not add fixture-body fields, does not require a renderer to be authoritative, and does not imply fixture files exist in this documentation-only repository.
 
-The hardened local reference target is an umbrella target reached through v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack. It is not a fifth fixture profile and must not be used as a suite name.
+The hardened local reference target is an umbrella target reached through Assurance Profile and Operations Profile. It is not a fifth fixture profile and must not be used as a suite name.
 
 | Profile | Stage name | Behavior proved | Out of scope for that profile |
 |---|---|---|---|
-| Core Authority Smoke fixtures, with Kernel Smoke as the authoring label | v0.1 Core Authority Smoke | Minimal authority loop only: project/Task/scope setup, in-scope `prepare_write` allow, out-of-scope write block from Harness authority state, durable single-use Write Authorization, compatible `record_run` consumption/linking, missing artifact/evidence blocker/status, and non-mutating status read. | First User-Value Slice value, profile-specific Decision Packet quality, full Evidence Manifest, projection renderer support, multiple projection kinds, residual-risk acceptance semantics, work acceptance semantics, Manual QA, detached verification, export/recover, release handoff, full conformance suite, future fixture catalog, higher guard guarantees, and broad operations. |
-| First User-Value Slice fixtures | v0.2 First User-Value Slice | Ordinary requests become tracked work without Harness vocabulary; clarification quality, judgment separation, evidence blockers, residual-risk visibility, honest authority/fallback behavior, and derived-summary non-authority are visible through Core-owned state and structured responses. | Full agency assurance hardening, detached verification independence, full Manual QA matrix, stewardship policy suite, TDD/module/interface catalogs, export/recover, release handoff, and automation beyond the v0.2 user-value path. |
-| Agency Assurance Pack fixtures | v0.3 Agency Assurance Pack | User-owned judgment, Approval, Write Authorization, Manual QA, verification, work acceptance, residual-risk acceptance, stewardship, design-quality, context-hygiene, TDD, and feedback-loop boundaries stay separate and fixture-proven through Core records. | Operator recovery/export completeness, release handoff, broad operations coverage, dashboard/hosted workflow UI, broad connector automation, and unproven preventive or isolated guarantee claims. |
-| Operations & Handoff Pack / promoted-expansion fixtures | v0.4 Operations & Handoff Pack and v1+ Expansion | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, and any promoted future higher guarantee level or automation profile. | Any stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, or automation claim until owner docs define the mechanism and fixtures prove the covered behavior. |
+| Engineering Checkpoint fixtures, with Kernel Smoke as the authoring label | Engineering Checkpoint | Minimal authority loop only: project/Task/scope setup, in-scope `prepare_write` allow, out-of-scope write block from Harness authority state, durable single-use Write Authorization, compatible `record_run` consumption/linking, missing artifact/evidence blocker/status, and non-mutating status read. | MVP-1 User Work Loop value, profile-specific Decision Packet quality, full Evidence Manifest, projection renderer support, multiple projection kinds, residual-risk acceptance semantics, work acceptance semantics, Manual QA, detached verification, export/recover, release handoff, full conformance suite, future fixture catalog, higher guard guarantees, and broad operations. |
+| MVP-1 User Work Loop fixtures | MVP-1 User Work Loop | Ordinary requests become tracked work without Harness vocabulary; clarification quality, judgment separation, evidence blockers, residual-risk visibility, honest authority/fallback behavior, and derived-summary non-authority are visible through Core-owned state and structured responses. | Full agency assurance hardening, detached verification independence, full Manual QA matrix, stewardship policy suite, TDD/module/interface catalogs, export/recover, release handoff, and automation beyond the MVP-1 user-value path. |
+| Assurance Profile fixtures | Assurance Profile | User-owned judgment, Approval, Write Authorization, Manual QA, verification, work acceptance, residual-risk acceptance, stewardship, design-quality, context-hygiene, TDD, and feedback-loop boundaries stay separate and fixture-proven through Core records. | Operator recovery/export completeness, release handoff, broad operations coverage, dashboard/hosted workflow UI, broad connector automation, and unproven preventive or isolated guarantee claims. |
+| Operations Profile / promoted-expansion fixtures | Operations Profile and Roadmap | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, and any promoted future higher guarantee level or automation profile. | Any stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, or automation claim until owner docs define the mechanism and fixtures prove the covered behavior. |
 
 ## Small Staged Fixture Sets
 
-The fixture sets below are documentation/specification targets for future executable fixtures. They are intentionally short and testable so early conformance stays focused on Harness differentiation: local authority state, user-owned judgment routing, evidence and risk visibility, and honest guarantee wording. They are not fixture files today, and they do not require the broad future catalog to pass v0.1 or v0.2.
+The fixture sets below are documentation/specification targets for future executable fixtures. They are intentionally short and testable so early conformance stays focused on Harness differentiation: local authority state, user-owned judgment routing, evidence and risk visibility, and honest guarantee wording. They are not fixture files today, and they do not require the broad future catalog to pass Engineering Checkpoint or MVP-1.
 
-### v0.1 Core Authority Smoke Fixture Set
+<a id="v01-core-authority-smoke-fixture-set"></a>
 
-v0.1 fixtures prove only the first local authority loop. Each candidate must assert Core-owned state, events when stable owner events exist, artifact refs where relevant, and structured errors or blockers. Projection assertions default to no requirement.
+### Engineering Checkpoint Fixture Set
+
+Engineering Checkpoint fixtures prove only the first local authority loop. Each candidate must assert Core-owned state, events when stable owner events exist, artifact refs where relevant, and structured errors or blockers. Projection assertions default to no requirement.
 
 | Fixture ID | Primary action | Required behavior assertion |
 |---|---|---|
@@ -108,9 +110,11 @@ v0.1 fixtures prove only the first local authority loop. Each candidate must ass
 | `CORE-v01-missing-artifact-evidence-ref-blocker` | `harness.status`, narrow `harness.close_task` smoke, or owner blocker read | Missing required artifact/evidence support is reported as structured status/blocker state such as `ARTIFACT_MISSING` or `EVIDENCE_INSUFFICIENT`; rendered prose or Markdown cannot satisfy the missing ref. |
 | `CORE-v01-status-read-no-mutation` | `harness.status` or `harness.next` read | Status returns current Task, scope, write-authority summary, evidence/artifact support, blockers, and state version without appending events, creating artifacts, enqueueing projections, authorizing writes, satisfying evidence, or closing work. |
 
-### v0.2 First User-Value Slice Fixture Set
+<a id="v02-first-user-value-slice-fixture-set"></a>
 
-v0.2 fixtures prove user-visible Harness value without growing into the broad assurance or operations catalog. These candidates may use `harness.intake`, `harness.status`, `harness.next`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.prepare_write`, `harness.record_run`, and `harness.close_task` where those methods are active for the stage.
+### MVP-1 User Work Loop Fixture Set
+
+MVP-1 fixtures prove user-visible Harness value without growing into the broad assurance or operations catalog. These candidates may use `harness.intake`, `harness.status`, `harness.next`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.prepare_write`, `harness.record_run`, and `harness.close_task` where those methods are active for the stage.
 
 | Fixture ID | Required behavior assertion |
 |---|---|
@@ -129,7 +133,7 @@ v0.2 fixtures prove user-visible Harness value without growing into the broad as
 
 ### Clarification Quality Fixture Group
 
-Clarification-quality fixtures belong to the First User-Value Slice path when they prove that Harness asks for user judgment without substituting for it. Deeper policy-specific Decision Packet coverage remains v0.3 unless a v0.2 path needs a minimal blocker.
+Clarification-quality fixtures belong to the MVP-1 User Work Loop path when they prove that Harness asks for user judgment without substituting for it. Deeper policy-specific Decision Packet coverage remains Assurance Profile unless a MVP-1 path needs a minimal blocker.
 
 | Fixture ID | Required behavior assertion |
 |---|---|
@@ -185,11 +189,11 @@ classDiagram
 
 Future fixture files and suite catalogs may carry metadata outside the fixture body. The fixture body itself uses only the fields above so conformance runners can compare behavior consistently. Do not add fixture-body fields for suite delivery stage, assertion mode, docs-maintenance result, prose status, or authoring notes; those belong in suite catalog metadata, docs-maintenance reports, or surrounding documentation.
 
-Fixture body type notation follows the API [Schema notation convention](mcp-api-and-schemas.md#schema-notation-convention). All top-level fixture body fields above are required. Use `{}` or `[]` when the fixture intentionally supplies an empty object, object map, or array; omitting a required top-level field is an invalid fixture body, not "not asserted." For v0.1 Core Authority Smoke checks, `expected_projection` may be `{}` or an explicit no-requirement assertion because projection rendering is not a v0.1 exit criterion.
+Fixture body type notation follows the API [Schema notation convention](mcp-api-and-schemas.md#schema-notation-convention). All top-level fixture body fields above are required. Use `{}` or `[]` when the fixture intentionally supplies an empty object, object map, or array; omitting a required top-level field is an invalid fixture body, not "not asserted." For Engineering Checkpoint checks, `expected_projection` may be `{}` or an explicit no-requirement assertion because projection rendering is not a Engineering Checkpoint exit criterion.
 
 For an MCP tool action, future executable fixture `input` is the tool's public request payload as defined by the API docs. The runner must validate `input` against the request schema for `action`, including `envelope: ToolEnvelope` when that schema requires it. Examples in this document may omit `ToolEnvelope` only under this envelope-expansion convention: before validation, canonicalization, request hashing, or Core execution, the runner supplies a deterministic valid envelope from `initial_state`, suite defaults, and fixture metadata. The expanded request is what Core receives. This convention does not add fixture fields, change the fixture body shape, or create an alternate request schema.
 
-Fixture shorthand is not a second API. In the main v0.1/v0.2 path, shorthand may compact only `initial_state` seeding or suite catalog metadata while preserving owner-defined records and public schemas. Public mutations must use the documented public request branch for the selected `action` under `input` after any `ToolEnvelope` expansion. Later-profile shorthand details belong in [Future Fixture Catalog: Later-Profile Fixture Shorthand Notes](future-fixture-catalog.md#later-profile-fixture-shorthand-notes) and are not active requirements for v0.1 or v0.2.
+Fixture shorthand is not a second API. In the main Engineering Checkpoint / MVP-1 path, shorthand may compact only `initial_state` seeding or suite catalog metadata while preserving owner-defined records and public schemas. Public mutations must use the documented public request branch for the selected `action` under `input` after any `ToolEnvelope` expansion. Later-profile shorthand details belong in [Future Fixture Catalog: Later-Profile Fixture Shorthand Notes](future-fixture-catalog.md#later-profile-fixture-shorthand-notes) and are not active requirements for Engineering Checkpoint or MVP-1.
 
 Future executable fixtures that seed `write_authorizations` must produce valid stored rows. Each seeded authorization row must include `basis_state_version` explicitly, or the runner must derive it from the seeded affected-scope state version for the row's Task before inserting into `state.sqlite`. This is a storage-loader derivation rule only; it does not add fixture top-level fields or change the fixture body shape. Partial `expected_state.write_authorization` assertions may omit `basis_state_version` unless the fixture is testing idempotent replay, stale detection, expiry, or audit behavior. `basis_state_version` is the allow-decision basis, not the resulting `ToolResponseBase.state_version`.
 
@@ -197,7 +201,7 @@ Suite catalog metadata is not passed to Core and is not part of a fixture body. 
 
 ```yaml
 suite: agency
-earliest_delivery_stage: "v0.3 Agency Assurance Pack"
+earliest_delivery_stage: "Assurance Profile"
 tags: [decision-gate, residual-risk, autonomy-boundary]
 fixtures:
   - AGENCY-decision-packet-required-before-product-tradeoff-write
@@ -249,7 +253,7 @@ Seed validation happens before action execution, and captured-state validation h
 
 Conformance runners must seed and inspect JSON `TEXT` fields through the same Core storage loaders used by MCP tools and operator commands. A fixture with malformed JSON or schema-incompatible JSON in `initial_state` must surface invalid state, or a repairable state issue when the fixture action is a recovery path and safe reconstruction is possible. The runner must not skip shape validation by treating JSON fields as opaque strings, and this expectation does not change the fixture body shape.
 
-Conformance runners must also seed and inspect status-like `TEXT` fields through the owner-bound hardening map in [Storage And DDL](storage-and-ddl.md#canonical-enum-hardening). For the main v0.1/v0.2 path, fixture seed loaders validate only the owner values actually present in the active stage's seeded records, and artifact/ref enum assertions use the API [stage-specific active value sets](mcp-api-and-schemas.md#stage-specific-active-value-sets). Examples include registry/project surface guarantee, Run kind/status, Write Authorization status/guarantee, Approval status when that owner path is active, Evidence Manifest status when evidence support is active, residual-risk visibility/status when risk visibility is active, projection job kind/status when projection assertions are in scope, and current Task or Change Unit status when those owner records are used. Later-profile status fields stay with promoted owner docs and the future catalog until those profiles are active. Unknown status values remain invalid unless a scenario explicitly tests recovery from invalid state; expected-state status assertions compare captured owner values, not prose labels.
+Conformance runners must also seed and inspect status-like `TEXT` fields through the owner-bound hardening map in [Storage And DDL](storage-and-ddl.md#canonical-enum-hardening). For the main Engineering Checkpoint / MVP-1 path, fixture seed loaders validate only the owner values actually present in the active stage's seeded records, and artifact/ref enum assertions use the API [stage-specific active value sets](mcp-api-and-schemas.md#stage-specific-active-value-sets). Examples include registry/project surface guarantee, Run kind/status, Write Authorization status/guarantee, Approval status when that owner path is active, Evidence Manifest status when evidence support is active, residual-risk visibility/status when risk visibility is active, projection job kind/status when projection assertions are in scope, and current Task or Change Unit status when those owner records are used. Later-profile status fields stay with promoted owner docs and the future catalog until those profiles are active. Unknown status values remain invalid unless a scenario explicitly tests recovery from invalid state; expected-state status assertions compare captured owner values, not prose labels.
 
 ## Fixture Assertion Semantics
 
@@ -271,7 +275,7 @@ Default comparison modes:
 
 Because `expected_events` defaults to `contains_ordered`, `expected_events: []` means the fixture requires no specific stable events; it does not by itself assert that the captured stable-event stream is empty. To assert no stable events, suite metadata must set `expected_events: exact` for that fixture or suite. Similarly, `expected_artifacts: []` and `expected_projection: {}` assert no required artifact or projection entries under their default modes; they do not ban captured artifacts or projection observations unless compatible exact-mode metadata says so.
 
-`expected_events` comparisons are over the [Kernel Stable Event Catalog](kernel.md#stable-event-catalog) projection of captured `task_events`. API tool detail/audit event lists do not expand this set. Non-catalog detail or local-audit events captured in `task_events` must not make a normal staged-delivery fixture fail. When suite metadata sets `expected_events: exact`, exactness applies to the stable-event projection of the captured stream unless a future v1+/local suite explicitly opts into implementation-specific detail-event assertions. Validator IDs, Core check names, projection status shorthands, fixture shorthand labels, and scenario catalog IDs are not event names. Prose examples may mention non-catalog event names as illustrative or future extension ideas, but executable staged-delivery fixtures must not require them until the kernel catalog promotes them.
+`expected_events` comparisons are over the [Kernel Stable Event Catalog](kernel.md#stable-event-catalog) projection of captured `task_events`. API tool detail/audit event lists do not expand this set. Non-catalog detail or local-audit events captured in `task_events` must not make a normal staged-delivery fixture fail. When suite metadata sets `expected_events: exact`, exactness applies to the stable-event projection of the captured stream unless a future Roadmap/local suite explicitly opts into implementation-specific detail-event assertions. Validator IDs, Core check names, projection status shorthands, fixture shorthand labels, and scenario catalog IDs are not event names. Prose examples may mention non-catalog event names as illustrative or future extension ideas, but executable staged-delivery fixtures must not require them until the kernel catalog promotes them.
 
 Conformance runners order captured `task_events` by `event_seq`. `state_version`, `created_at`, and `event_id` are not tie-breakers for `expected_events` ordering.
 
@@ -337,9 +341,9 @@ Detailed future catalog scenarios live in [Future Fixture Catalog](future-fixtur
 
 ## Kernel Smoke Authoring Queue
 
-Use this queue as future authoring guidance for the [v0.1 Core Authority Smoke Fixture Set](#v01-core-authority-smoke-fixture-set). Kernel Smoke is the narrow authoring label for the first internal authority loop, not the first user-value slice, not a full conformance suite, and not the future fixture catalog. These rows do not imply executable fixture files already exist. They are a compact authoring order; a first implementation plan may materialize only the smallest subset that proves the one authority loop named by Build.
+Use this queue as future authoring guidance for the [Engineering Checkpoint Fixture Set](#v01-core-authority-smoke-fixture-set). Kernel Smoke is the narrow authoring label for the first internal authority loop, not the first user-value slice, not a full conformance suite, and not the future fixture catalog. These rows do not imply executable fixture files already exist. They are a compact authoring order; a first implementation plan may materialize only the smallest subset that proves the one authority loop named by Build.
 
-Kernel Smoke defaults to no projection requirement. A fixture may assert projection freshness or enqueue/failure facts only when the minimal owner path already produces those facts and they help prove the target behavior. Projection-template polish, detailed report templates, multiple projection kinds, browser QA capture, export/recover, reconcile, stewardship, context hygiene, full operations, and future guarantee-level fixtures stay outside v0.1 unless owner docs later promote a specific narrow path.
+Kernel Smoke defaults to no projection requirement. A fixture may assert projection freshness or enqueue/failure facts only when the minimal owner path already produces those facts and they help prove the target behavior. Projection-template polish, detailed report templates, multiple projection kinds, browser QA capture, export/recover, reconcile, stewardship, context hygiene, full operations, and future guarantee-level fixtures stay outside Engineering Checkpoint unless owner docs later promote a specific narrow path.
 
 In the table, `None` means the existing fixture field stays empty or `expected_error: null`; it is not a new sentinel value.
 
@@ -353,13 +357,13 @@ In the table, `None` means the existing fixture field stays empty or `expected_e
 | 6 | `CORE-v01-missing-artifact-evidence-ref-blocker` | `harness.status`, narrow `harness.close_task` smoke, or owner blocker read | Active Task whose current path requires artifact/evidence support but has no compatible ref | Missing artifact/evidence support is visible as structured blocker/status; report prose, Markdown, or tool text does not satisfy the ref | `close_blocked` only when a close-task smoke is the owner path and stable event is promoted | None | No projection requirement | `ARTIFACT_MISSING`, `EVIDENCE_INSUFFICIENT`, or owner-equivalent blocker/error |
 | 7 | `CORE-v01-status-read-no-mutation` | `harness.status` or `harness.next` read | Active Task with current scope, write-authority summary, and artifact/evidence summary | Read returns current state, blockers, and state version without appending events, creating artifacts, enqueueing projections, authorizing writes, satisfying evidence, or closing work | None | None | No projection enqueue from read-only status/blocker output | None |
 
-The queue above is intentionally small. v0.1 does not require a full conformance suite, broad catalog family coverage, work acceptance semantics, Manual QA, detached verification, export/recover, reconcile, stewardship, context hygiene, browser QA capture, or future guarantee-level checks.
+The queue above is intentionally small. Engineering Checkpoint does not require a full conformance suite, broad catalog family coverage, work acceptance semantics, Manual QA, detached verification, export/recover, reconcile, stewardship, context hygiene, browser QA capture, or future guarantee-level checks.
 
 ## Future Fixture Catalog
 
 Detailed scenario families have moved to [Future Fixture Catalog](future-fixture-catalog.md) so the early reference stays focused on the core conformance model. That catalog contains future-oriented entries for browser QA capture, cross-surface behavior, export non-leakage, context hygiene, reconcile, stewardship, full operations, advanced projection rendering, artifact redaction and integrity, and future guarantee-level fixtures.
 
-Those catalog entries are design inventory only until a promoted owner path materializes exact-shape executable fixtures. They are not required for v0.1, do not expand v0.2 by themselves, and do not count as runtime conformance while this repository remains documentation-only.
+Those catalog entries are design inventory only until a promoted owner path materializes exact-shape executable fixtures. They are not required for Engineering Checkpoint, do not expand MVP-1 by themselves, and do not count as runtime conformance while this repository remains documentation-only.
 
 ## Metrics Boundary
 

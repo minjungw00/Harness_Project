@@ -18,17 +18,17 @@
 
 현재 단계 이름은 다음과 같습니다.
 
-- v0.1 Core Authority Smoke
-- v0.2 First User-Value Slice
-- 에이전시 보증 팩(v0.3 Agency Assurance Pack)
-- 운영과 인계 팩(v0.4 Operations & Handoff Pack)
-- v1+ Expansion
+- 내부 엔지니어링 점검
+- MVP-1 사용자 작업 루프
+- 보증 프로필
+- 운영 프로필
+- 로드맵
 
 ## 핵심 생각
 
 로드맵 항목은 후보 항목이지 staged delivery 약속이 아닙니다. 이곳에 이름이 있다고 해서 권한, 적합성, 구현 준비 상태, 사용자 작업 수락, QA 완료, 검증 충족, 잔여 위험 수용, 보안 보장, 런타임 동작이 생기지 않습니다.
 
-후보 항목은 향후 담당 문서가 명시적으로 승격하기 전까지 v0.1부터 v0.4까지의 단계 밖에 남습니다. 승격되더라도 사용자 소유 판단을 보존하고, 지속 상태와 아티팩트는 Core 소유 권한 경로로 보내며, 근거/검증/QA/작업 수락/잔여 위험을 분리하고, 실제로 증명된 능력에 맞는 정직한 보안 표현을 사용해야 합니다.
+후보 항목은 향후 담당 문서가 명시적으로 승격하기 전까지 내부 엔지니어링 점검부터 운영 프로필까지의 단계 밖에 남습니다. 승격되더라도 사용자 소유 판단을 보존하고, 지속 상태와 아티팩트는 Core 소유 권한 경로로 보내며, 근거/검증/QA/작업 수락/잔여 위험을 분리하고, 실제로 증명된 능력에 맞는 정직한 보안 표현을 사용해야 합니다.
 
 ## 로드맵 경계
 
@@ -52,7 +52,7 @@
 - 승격된 동작을 위한 fixture 또는 적합성 목표
 - 지원하지 않는 접점, 빠진 능력, 사용할 수 없는 도구, 오래된 데이터, 부분 캡처에 대한 fallback 동작
 - 읽기용 요약, dashboard, index, connector output, 생성 문서를 기준 상태로 취급하는 의존성 없음
-- 후보 항목이 v0.1부터 v0.4까지의 요구사항을 부풀리거나 지원하지 않는 접점을 초기 단계 실패로 만들지 않는다는 초기 단계 범위 부풀림 점검
+- 후보 항목이 내부 엔지니어링 점검부터 운영 프로필까지의 요구사항을 부풀리거나 지원하지 않는 접점을 초기 단계 실패로 만들지 않는다는 초기 단계 범위 부풀림 점검
 
 어느 조건이라도 빠지면 그 항목은 로드맵 후보로 남습니다.
 
@@ -72,4 +72,4 @@
 | 고급 export, release/deployment/canary/rollback/merge/production-monitoring automation | 향후 통합 작업이 될 수 있습니다. 담당 문서가 더 많은 권한을 승격하기 전까지 release handoff는 report/export 경계로 남고, deployment, merge, rollback, production authority는 외부에 둡니다. |
 | 고급 validator, language 또는 interface check | 향후 stewardship 또는 진단 범위가 될 수 있습니다. 담당 문서가 정확한 policy, severity, waiver, fixture 동작을 정의하기 전까지 초기 단계 fixture failure, 작업 수락, QA, close 기준이 되면 안 됩니다. |
 
-단계별 전달 경계는 [단계별 전달 계획의 Roadmap 범위의 v1+ Expansion 후보](build/mvp-plan.md#roadmap-범위의-v1-expansion-후보)를 사용합니다. 이 문서는 승격 전까지 staged delivery 밖에 남는 후보 항목을 추적하는 데만 사용합니다.
+단계별 전달 경계는 [단계별 전달 계획의 로드맵 범위의 후보](build/mvp-plan.md#roadmap-범위의-v1-expansion-후보)를 사용합니다. 이 문서는 승격 전까지 staged delivery 밖에 남는 후보 항목을 추적하는 데만 사용합니다.

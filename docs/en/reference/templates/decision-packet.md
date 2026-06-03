@@ -6,7 +6,7 @@ Use `DEC` when standalone Decision Packet projection is enabled for a specific u
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: User judgment prompt shape. Use it for the Decision Packet display/card shape when a user-owned judgment is pending, not as the v0.2 First User-Value Slice projection and not as the standalone `DEC` `ProjectionKind`. A standalone persisted `DEC` Markdown projection remains optional unless the standalone Decision Packet projection feature is enabled; the required prompt can appear through the compact status card, status/next, or decision resources.
+Implementation tier: User judgment prompt shape. Use it for the Decision Packet display/card shape when a user-owned judgment is pending, not as the MVP-1 User Work Loop projection and not as the standalone `DEC` `ProjectionKind`. A standalone persisted `DEC` Markdown projection remains optional unless the standalone Decision Packet projection feature is enabled; the required prompt can appear through the compact status card, status/next, or decision resources.
 
 ## Source records
 
@@ -15,17 +15,17 @@ Implementation tier: User judgment prompt shape. Use it for the Decision Packet 
 - `judgment_category`, `judgment_route`, and `display_depth`
 - display judgment type derived from `judgment_category`, `judgment_route`, `display_depth`, and related owner records
 - related `decision_gate` state and decision events
-- `approval_scope` and approval-shaped Decision Packet refs for minimum v0.2 sensitive-action permission, plus Approval records only when a later Approval profile is active
+- `approval_scope` and approval-shaped Decision Packet refs for minimum MVP-1 sensitive-action permission, plus Approval records only when a later Approval profile is active
 - related reconcile records, if applicable
 - residual risk refs
-- evidence summaries, Run refs, ArtifactRefs, and visible evidence gaps in minimum v0.2; Evidence Manifest refs only when the full Evidence Manifest profile is active
+- evidence summaries, Run refs, ArtifactRefs, and visible evidence gaps in minimum MVP-1; Evidence Manifest refs only when the full Evidence Manifest profile is active
 - Write Authorization, sensitive-action permission, Eval, Manual QA, work-acceptance context, residual-risk refs, ArtifactRefs, redaction state, and projection freshness when displayed as related authority context
 - affected scope display inputs: product areas, screens or flows, modules, interfaces, paths, acceptance criteria, gates, and sensitive categories
 - projection freshness inputs
 
-Approval-shaped display bullets such as "what this approval covers," "what this approval does not cover," and "secret exposure boundary" are derived display summaries from `judgment_payload.approval_scope`, related Decision Packet refs, linked Approval records only when that later profile is active, and current write or close context. They explain the boundary only; they do not settle separate user-owned judgment, create Write Authorization, or imply a committed Approval record in minimum v0.2. Approval-shaped displays must be labeled as sensitive-action approval and must not look like work acceptance.
+Approval-shaped display bullets such as "what this approval covers," "what this approval does not cover," and "secret exposure boundary" are derived display summaries from `judgment_payload.approval_scope`, related Decision Packet refs, linked Approval records only when that later profile is active, and current write or close context. They explain the boundary only; they do not settle separate user-owned judgment, create Write Authorization, or imply a committed Approval record in minimum MVP-1. Approval-shaped displays must be labeled as sensitive-action approval and must not look like work acceptance.
 
-A resolved Decision Packet grants sensitive-action permission only when it uses `judgment_route=approve-sensitive-action` with compatible `approval_scope`; in minimum v0.2 that resolved packet is the authority for the sensitive-action route. Later Approval profiles may additionally require or display a linked Approval record. Other Decision Packet resolutions may settle user-owned judgments, waivers, work acceptance, residual-risk acceptance, or reconcile choices, but they do not grant sensitive-action permission.
+A resolved Decision Packet grants sensitive-action permission only when it uses `judgment_route=approve-sensitive-action` with compatible `approval_scope`; in minimum MVP-1 that resolved packet is the authority for the sensitive-action route. Later Approval profiles may additionally require or display a linked Approval record. Other Decision Packet resolutions may settle user-owned judgments, waivers, work acceptance, residual-risk acceptance, or reconcile choices, but they do not grant sensitive-action permission.
 
 `judgment_category` is the user-facing category for grouping and display. Render it with a friendly label, but keep `judgment_route` visible as the route that controls the owner path and recorded-answer rules. Render affected gates from `affected_gates` and related owner refs, not from the category label. `judgment_category` does not directly change close gate aggregation, sensitive-action Approval, waiver behavior, work acceptance, or residual-risk acceptance unless a separate owner rule says so.
 

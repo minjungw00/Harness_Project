@@ -21,13 +21,13 @@ Audience를 분리합니다.
 
 | Audience | Shape | Rule |
 |---|---|---|
-| 사용자용 간결한 카드 | [Compact Status Card](compact-status-card.md) | v0.2 First User-Value Slice projection입니다. 하나의 작은 현재 상태 카드입니다. |
+| 사용자용 간결한 카드 | [Compact Status Card](compact-status-card.md) | MVP-1 사용자 작업 루프 projection입니다. 하나의 작은 현재 상태 카드입니다. |
 | Agent compact context/reference payload | Structured refs, blocker label, source clock, freshness, next-action hint | 파생된 지원 payload입니다. 기본은 compact이며, 단계상 꼭 필요할 때만 full report body를 pull합니다. |
 | Future/diagnostic reports | `TASK`, Journey Card/Spine, Run Summary, detailed Evidence Manifest, detailed Eval, full 수동 QA, TDD Trace, Domain Language, Module Map, Interface Contract, Design, Export, full Approval Card, 그 밖의 polished report | Later/profile 또는 diagnostic output입니다. 표시 전용이며 authority가 아닙니다. |
 
-## v0.2 First User-Value Slice projection
+## MVP-1 사용자 작업 루프 projection
 
-v0.2 First User-Value Slice projection은 하나의 간결한 상태 카드(compact status card)입니다. 반드시 다음을 보여줘야 합니다.
+MVP-1 사용자 작업 루프 projection은 하나의 간결한 상태 카드(compact status card)입니다. 반드시 다음을 보여줘야 합니다.
 
 - 현재 Task 요약
 - 작업 모양
@@ -47,27 +47,27 @@ Card는 사용자가 읽기 쉬우면서도 에이전트가 부담 없이 다룰
 
 | Template | Audience | First active stage | Authority status | Notes |
 |---|---|---|---|---|
-| [Compact Status Card](compact-status-card.md) | 사용자용 간결한 카드; agent compact context source | v0.2 First User-Value Slice projection; v0.1 status rendering에서는 optional | 파생 표시 전용 | 유일한 v0.2 First User-Value Slice projection shape입니다. v0.1은 plain structured output만으로도 충분합니다. |
-| [Decision Packet display](decision-packet.md) | 사용자 판단 prompt/display | 사용자 판단 flow가 active인 v0.2 | `state.sqlite.decision_packets`에서 파생된 표시입니다. Standalone authority가 아닙니다. | 필요한 판단은 status/next 또는 resource를 통해 나타날 수 있습니다. Standalone `DEC` Markdown은 later optional입니다. |
-| [TASK](task.md) | Continuity/reference report | Later/profile 또는 diagnostic | 파생 표시 전용 | v0.2 First User-Value Slice projection이 아닙니다. Expanded continuity section은 later polish입니다. |
+| [Compact Status Card](compact-status-card.md) | 사용자용 간결한 카드; agent compact context source | MVP-1 사용자 작업 루프 projection; 내부 엔지니어링 점검 status rendering에서는 optional | 파생 표시 전용 | 유일한 MVP-1 사용자 작업 루프 projection shape입니다. 내부 엔지니어링 점검은 plain structured output만으로도 충분합니다. |
+| [Decision Packet display](decision-packet.md) | 사용자 판단 prompt/display | 사용자 판단 flow가 active인 MVP-1 | `state.sqlite.decision_packets`에서 파생된 표시입니다. Standalone authority가 아닙니다. | 필요한 판단은 status/next 또는 resource를 통해 나타날 수 있습니다. Standalone `DEC` Markdown은 later optional입니다. |
+| [TASK](task.md) | Continuity/reference report | Later/profile 또는 diagnostic | 파생 표시 전용 | MVP-1 사용자 작업 루프 projection이 아닙니다. Expanded continuity section은 later polish입니다. |
 | [DIRECT-RESULT](direct-result.md) | Compact direct-work result | Direct-work display가 active인 later/profile | 파생 표시 전용 | Optional convenience shape입니다. Compact status card MVP에는 필요하지 않습니다. |
-| [APR](approval.md) | Sensitive-action approval report | v0.3 agency assurance profile | Committed Approval과 Decision Packet ref를 표시합니다. Approval을 부여하지 않습니다. | Committed Approval support/profile이 active인 뒤에만 사용합니다. Minimum v0.2는 Approval 형태 request를 Decision Packet display로 보여줄 수 있습니다. |
-| [Approval Card](approval-card.md) | Sensitive-action approval prompt/card | v0.3 agency assurance profile | Committed approval boundary를 표시합니다. Write를 허가하지 않습니다. | Full Approval Card는 v0.2 First User-Value Slice가 아닙니다. v0.2 path는 Approval 형태 Decision Packet prompt를 사용할 수 있습니다. |
-| [MANUAL-QA](manual-qa.md) | 수동 QA report | v0.3 agency assurance profile | `manual_qa_records`/`qa_gate`를 표시합니다. QA를 수행하지 않습니다. | Full 수동 QA projection은 later/profile scope입니다. |
-| [Manual QA Card](manual-qa-card.md) | 수동 QA prompt/card | v0.3 agency assurance profile | QA requirement/waiver ref를 표시합니다. QA를 기록하지 않습니다. | Full Manual QA Card는 later/profile scope입니다. |
-| [Verification Result Card](verification-result-card.md) | Verification/Eval display | v0.3 agency assurance profile | Eval/gate ref를 표시합니다. 그 자체로 verification을 만들지 않습니다. | Verification profile이 active일 때의 compact assurance display입니다. |
-| [RUN-SUMMARY](run-summary.md) | Diagnostic run report | Future/diagnostic 또는 owner-promoted profile | Run/artifact ref에서 파생된 표시입니다. | v0.2에 필요하지 않습니다. |
-| [EVIDENCE-MANIFEST](evidence-manifest.md) | Detailed evidence report | Future/diagnostic 또는 owner-promoted profile | Evidence record와 artifact ref를 표시합니다. Evidence 자체가 아닙니다. | v0.2 card는 evidence summary/gap만 보여줍니다. |
-| [EVAL](eval.md) | Detailed verification report | Future/diagnostic 또는 owner-promoted profile | Eval ref를 표시합니다. Assurance를 만들지 않습니다. | Detailed Eval은 v0.2가 아닙니다. |
+| [APR](approval.md) | Sensitive-action approval report | 보증 프로필 | Committed Approval과 Decision Packet ref를 표시합니다. Approval을 부여하지 않습니다. | Committed Approval support/profile이 active인 뒤에만 사용합니다. Minimum MVP-1은 Approval 형태 request를 Decision Packet display로 보여줄 수 있습니다. |
+| [Approval Card](approval-card.md) | Sensitive-action approval prompt/card | 보증 프로필 | Committed approval boundary를 표시합니다. Write를 허가하지 않습니다. | Full Approval Card는 MVP-1 사용자 작업 루프가 아닙니다. MVP-1 path는 Approval 형태 Decision Packet prompt를 사용할 수 있습니다. |
+| [MANUAL-QA](manual-qa.md) | 수동 QA report | 보증 프로필 | `manual_qa_records`/`qa_gate`를 표시합니다. QA를 수행하지 않습니다. | Full 수동 QA projection은 later/profile scope입니다. |
+| [Manual QA Card](manual-qa-card.md) | 수동 QA prompt/card | 보증 프로필 | QA requirement/waiver ref를 표시합니다. QA를 기록하지 않습니다. | Full Manual QA Card는 later/profile scope입니다. |
+| [Verification Result Card](verification-result-card.md) | Verification/Eval display | 보증 프로필 | Eval/gate ref를 표시합니다. 그 자체로 verification을 만들지 않습니다. | Verification profile이 active일 때의 compact assurance display입니다. |
+| [RUN-SUMMARY](run-summary.md) | Diagnostic run report | Future/diagnostic 또는 owner-promoted profile | Run/artifact ref에서 파생된 표시입니다. | MVP-1에 필요하지 않습니다. |
+| [EVIDENCE-MANIFEST](evidence-manifest.md) | Detailed evidence report | Future/diagnostic 또는 owner-promoted profile | Evidence record와 artifact ref를 표시합니다. Evidence 자체가 아닙니다. | MVP-1 card는 evidence summary/gap만 보여줍니다. |
+| [EVAL](eval.md) | Detailed verification report | Future/diagnostic 또는 owner-promoted profile | Eval ref를 표시합니다. Assurance를 만들지 않습니다. | Detailed Eval은 MVP-1이 아닙니다. |
 | [TDD-TRACE](tdd-trace.md) | TDD diagnostic/reference | Future/diagnostic 또는 owner-promoted profile | TDD ref를 표시합니다. 그 자체로 gate가 아닙니다. | Later policy/profile output입니다. |
 | [DOMAIN-LANGUAGE](domain-language.md) | Stewardship/reference report | Future/diagnostic 또는 owner-promoted profile | `domain_terms`를 표시합니다. Term authority가 아닙니다. | Later reference view입니다. |
 | [MODULE-MAP](module-map.md) | Stewardship/reference report | Future/diagnostic 또는 owner-promoted profile | `module_map_items`를 표시합니다. Module authority가 아닙니다. | Later reference view입니다. |
 | [INTERFACE-CONTRACT](interface-contract.md) | Stewardship/reference report | Future/diagnostic 또는 owner-promoted profile | `interface_contracts`를 표시합니다. Contract authority가 아닙니다. | Later reference view입니다. |
 | [DESIGN](design.md) | Design/reference report | Future/diagnostic 또는 owner-promoted profile | Design record/proposal을 표시합니다. Design authority가 아닙니다. | Later standalone projection입니다. |
-| [JOURNEY-CARD](journey-card.md) | Journey/resume diagnostic card | Future/diagnostic 또는 owner-promoted profile | 파생 current-position display일 뿐입니다. | v0.2는 간결한 상태 카드(compact status card)를 사용합니다. |
-| [EXPORT](export.md) | Operations/export report | v0.4 operations/export profile | Snapshot과 artifact ref를 나열합니다. Core state나 artifact authority가 아닙니다. | Optional handoff/report output입니다. |
+| [JOURNEY-CARD](journey-card.md) | Journey/resume diagnostic card | Future/diagnostic 또는 owner-promoted profile | 파생 current-position display일 뿐입니다. | MVP-1은 간결한 상태 카드(compact status card)를 사용합니다. |
+| [EXPORT](export.md) | Operations/export report | 운영 프로필 operations/export profile | Snapshot과 artifact ref를 나열합니다. Core state나 artifact authority가 아닙니다. | Optional handoff/report output입니다. |
 
-`Future/diagnostic projections`는 later-profile 또는 diagnostic 범위라는 뜻이며, 자동으로 v1+ 전용이라는 뜻은 아닙니다.
+`Future/diagnostic projections`는 later-profile 또는 diagnostic 범위라는 뜻이며, 자동으로 로드맵 전용이라는 뜻은 아닙니다.
 
 `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`, 그 밖의 report projection은 owner record와 ref에서 나온 readable view입니다. Kernel field, MCP schema, SQLite DDL, gate behavior, artifact integrity rule을 재정의하면 안 됩니다.
 
@@ -115,7 +115,7 @@ Decision Packet 표시는 decision title, `judgment_category`, `judgment_route`,
 
 - [Decision Packet 사용자 판단 요청 display shape](decision-packet.md), standalone `DEC` Markdown 아님
 
-## Agency Assurance Report Shapes
+## 보증 프로필 Report Shapes
 
 - [APR](approval.md)
 - [Approval Card](approval-card.md)

@@ -18,7 +18,7 @@ This is reference documentation for future operator and conformance behavior. Th
 
 ## Before you read
 
-Use [Conformance Fixtures Reference](conformance-fixtures.md) for the core conformance model, the small v0.1/v0.2 fixture sets, fixture body shape, execution, assertion semantics, current-phase status, and Kernel Smoke authoring order. Use [Future Fixture Catalog](future-fixture-catalog.md) for detailed future scenario candidates that are not stage-required by catalog listing alone. Use [Runtime Architecture](runtime-architecture.md#state-transaction-flow) for Core transaction ordering, [Security Threat Model Reference](security-threat-model.md) for security assets, trust boundaries, threats, and controls, [MCP API And Schemas](mcp-api-and-schemas.md) for public tool schemas and replay behavior, [Storage And DDL](storage-and-ddl.md) for storage layout, and [Kernel Reference](kernel.md) for state transition semantics.
+Use [Conformance Fixtures Reference](conformance-fixtures.md) for the core conformance model, the small Engineering Checkpoint / MVP-1 fixture sets, fixture body shape, execution, assertion semantics, current-phase status, and Kernel Smoke authoring order. Use [Future Fixture Catalog](future-fixture-catalog.md) for detailed future scenario candidates that are not stage-required by catalog listing alone. Use [Runtime Architecture](runtime-architecture.md#state-transaction-flow) for Core transaction ordering, [Security Threat Model Reference](security-threat-model.md) for security assets, trust boundaries, threats, and controls, [MCP API And Schemas](mcp-api-and-schemas.md) for public tool schemas and replay behavior, [Storage And DDL](storage-and-ddl.md) for storage layout, and [Kernel Reference](kernel.md) for state transition semantics.
 
 ## Main idea
 
@@ -32,7 +32,7 @@ Runtime suite pass/fail is executable-state-based. The runner decides a fixture 
 
 Rendered prose, status text, Journey Card text, close reports, or agent summaries can help a reader, but they cannot pass conformance by themselves. Findings and close blockers must be asserted through structured Core/API results, owner-record refs, validator results, events, artifacts, projection freshness, or documented docs-maintenance report labels, not as prose-only report text.
 
-This document owns the operator-facing procedure and conformance overview for future implementation. [Conformance Fixtures Reference](conformance-fixtures.md) owns the core conformance model, exact fixture body shape, assertion semantics, suite catalog metadata boundaries, fixture profiles by behavior proved, the small v0.1/v0.2 fixture sets, and the reduced Kernel Smoke queue. [Future Fixture Catalog](future-fixture-catalog.md) owns detailed future scenario candidates that stay catalog-only until promoted.
+This document owns the operator-facing procedure and conformance overview for future implementation. [Conformance Fixtures Reference](conformance-fixtures.md) owns the core conformance model, exact fixture body shape, assertion semantics, suite catalog metadata boundaries, fixture profiles by behavior proved, the small Engineering Checkpoint / MVP-1 fixture sets, and the reduced Kernel Smoke queue. [Future Fixture Catalog](future-fixture-catalog.md) owns detailed future scenario candidates that stay catalog-only until promoted.
 
 ## Reference scope
 
@@ -57,7 +57,7 @@ It also does not own conformance fixture body shape, fixture assertion semantics
 | Operator command semantics | [Operator entrypoints](#operator-entrypoints), then the command section: [connect](#connect), [doctor](#doctor), [serve mcp](#serve-mcp), [projection refresh](#projection-refresh), [reconcile](#reconcile), [recover](#recover), [export](#export), [artifacts check](#artifacts-check), or [conformance run](#conformance-run) | Core state authority remains in [Kernel Reference](kernel.md), with transaction ordering in [Runtime Architecture](runtime-architecture.md#state-transaction-flow). |
 | Operator diagnostics and runtime-effect boundaries | [Operator diagnostics report facts, not new state](#operator-diagnostics-report-facts-not-new-state), [Docs-maintenance profile](#docs-maintenance-profile), [Release Handoff Export Profile](#release-handoff-export-profile) | Docs-maintenance rule bodies stay in [Authoring Guide](../maintain/authoring-guide.md#docs-maintenance-checks). |
 | Fixture body shape and runner behavior | [Conformance Fixtures Reference: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format), [Conformance Execution](conformance-fixtures.md#conformance-execution), [Fixture Assertion Semantics](conformance-fixtures.md#fixture-assertion-semantics) | Public request schemas, idempotency, and state conflict behavior stay in [MCP API And Schemas](mcp-api-and-schemas.md). Storage seeding details stay in [Storage And DDL](storage-and-ddl.md). |
-| Fixture authoring order and suite coverage | [Conformance staging](#conformance-staging), then [Fixture Profiles By Proven Behavior](conformance-fixtures.md#fixture-profiles-by-proven-behavior), [v0.1 Core Authority Smoke Fixture Set](conformance-fixtures.md#v01-core-authority-smoke-fixture-set), [v0.2 First User-Value Slice Fixture Set](conformance-fixtures.md#v02-first-user-value-slice-fixture-set), [Clarification Quality Fixture Group](conformance-fixtures.md#clarification-quality-fixture-group), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), and [Future Fixture Catalog: Fixture Suites](future-fixture-catalog.md#fixture-suites) | Kernel gate and event names stay in [Kernel Reference](kernel.md). Future catalog suites are not early-stage requirements by listing alone. |
+| Fixture authoring order and suite coverage | [Conformance staging](#conformance-staging), then [Fixture Profiles By Proven Behavior](conformance-fixtures.md#fixture-profiles-by-proven-behavior), [Engineering Checkpoint Fixture Set](conformance-fixtures.md#v01-core-authority-smoke-fixture-set), [MVP-1 User Work Loop Fixture Set](conformance-fixtures.md#v02-first-user-value-slice-fixture-set), [Clarification Quality Fixture Group](conformance-fixtures.md#clarification-quality-fixture-group), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), and [Future Fixture Catalog: Fixture Suites](future-fixture-catalog.md#fixture-suites) | Kernel gate and event names stay in [Kernel Reference](kernel.md). Future catalog suites are not early-stage requirements by listing alone. |
 | Fixture examples by concern | [Future Fixture Catalog: Fixture Example Map](future-fixture-catalog.md#fixture-example-map), then the matching example section | Example `input` still validates against the owning public tool schema. |
 | Artifact integrity, export, recover, and reconcile checks | [artifacts check](#artifacts-check), [export](#export), [recover](#recover), [reconcile](#reconcile) | Artifact layout and DDL stay in [Storage And DDL](storage-and-ddl.md). |
 | Security and threat-model diagnostic categories | [doctor](#doctor), [serve mcp](#serve-mcp), and [artifacts check](#artifacts-check) | Threat-model concepts stay in [Security Threat Model Reference](security-threat-model.md). API, storage, and kernel details stay with their owners. |
@@ -66,29 +66,29 @@ It also does not own conformance fixture body shape, fixture assertion semantics
 
 Every operator entrypoint is a surface over the same Core rules used by the agent. Operator tools may diagnose, repair, export, or run fixtures, but they must not create a second state model. State-changing operator outcomes must enter Core or a documented recovery path that preserves Core state-version, idempotency, event, artifact, and projection-enqueue semantics.
 
-The sections below define behavior contracts when a stage or owner profile introduces the relevant capability. A "Required behavior" list inside a command section means required by the stage or profile where that behavior is in scope; it is not a blanket v0.1 or v0.2 requirement. Command names are illustrative implementation choices.
+The sections below define behavior contracts when a stage or owner profile introduces the relevant capability. A "Required behavior" list inside a command section means required by the stage or profile where that behavior is in scope; it is not a blanket Engineering Checkpoint or MVP-1 requirement. Command names are illustrative implementation choices.
 
 Stage-specific operator behavior:
 
 | Stage | Operator behavior introduced by the stage | Later behavior kept out |
 |---|---|---|
-| v0.1 Core Authority Smoke | Minimal local project registration or reconnect; basic status/diagnostic read over the active Core state; local API/MCP exposure only if the first slice uses that boundary; optional pointer to the narrow Kernel Smoke check after runtime tooling exists. | Projection refresh, reconcile, recover, export, artifacts check, full conformance run, release handoff, remote/shared MCP exposure, and broad connector automation. |
-| v0.2 First User-Value Slice | User-facing support around the same minimal operator surface: status/next diagnostics for current work, missing user judgments, evidence state, close blockers, work-acceptance need/status, and residual-risk visibility. | Detached assurance operations, full doctor/readiness categories, projection refresh as an operator surface, reconcile, recover, export, artifacts check, full conformance run, and release handoff. |
-| v0.3 Agency Assurance Pack | Assurance-oriented support for verification, Manual QA, residual-risk, work-acceptance, stewardship, and context-hygiene profiles through the owner paths that are active in this stage. | Operator recovery/export completeness, broad projection/reconcile operations, release handoff, and the full operations conformance profile. |
-| v0.4 Operations & Handoff Pack | Full local operations profile: doctor/readiness categories, projection refresh, reconcile, recover, export, artifact integrity check, release handoff report/export profile where defined, and conformance run over materialized runtime suites. | Dashboard, hosted workflow UI, broad connector ecosystems, remote/shared operations, Browser QA Capture automation, Cross-Surface Verification automation, team workflow, and orchestration unless separately promoted. |
-| v1+ Expansion | Promoted roadmap operations such as broader connector automation, remote/shared access profiles, richer UI/operator dashboards, and higher automation only after owner docs define and prove exact contracts. | Anything not promoted remains outside staged delivery. |
+| Engineering Checkpoint | Minimal local project registration or reconnect; basic status/diagnostic read over the active Core state; local API/MCP exposure only if the first slice uses that boundary; optional pointer to the narrow Kernel Smoke check after runtime tooling exists. | Projection refresh, reconcile, recover, export, artifacts check, full conformance run, release handoff, remote/shared MCP exposure, and broad connector automation. |
+| MVP-1 User Work Loop | User-facing support around the same minimal operator surface: status/next diagnostics for current work, missing user judgments, evidence state, close blockers, work-acceptance need/status, and residual-risk visibility. | Detached assurance operations, full doctor/readiness categories, projection refresh as an operator surface, reconcile, recover, export, artifacts check, full conformance run, and release handoff. |
+| Assurance Profile | Assurance-oriented support for verification, Manual QA, residual-risk, work-acceptance, stewardship, and context-hygiene profiles through the owner paths that are active in this stage. | Operator recovery/export completeness, broad projection/reconcile operations, release handoff, and the full operations conformance profile. |
+| Operations Profile | Full local operations profile: doctor/readiness categories, projection refresh, reconcile, recover, export, artifact integrity check, release handoff report/export profile where defined, and conformance run over materialized runtime suites. | Dashboard, hosted workflow UI, broad connector ecosystems, remote/shared operations, Browser QA Capture automation, Cross-Surface Verification automation, team workflow, and orchestration unless separately promoted. |
+| Roadmap | Promoted roadmap operations such as broader connector automation, remote/shared access profiles, richer UI/operator dashboards, and higher automation only after owner docs define and prove exact contracts. | Anything not promoted remains outside staged delivery. |
 
 Operator guarantee posture follows the [Security Threat Model stage map](security-threat-model.md#guarantee-levels-by-stage):
 
 | Stage | Security wording allowed for operator surfaces |
 |---|---|
-| v0.1 Core Authority Smoke | Cooperative/local diagnostic wording plus limited detective reporting for the active Core path. Structured blockers are Core/API results, not proof of pre-action tool blocking. |
-| v0.2 First User-Value Slice | User-visible status and blocker wording may explain what cannot proceed under Harness authority and what only the user can decide. It must still say when the surface can only hold by instruction or detect later. |
-| v0.3 Agency Assurance Pack | Assurance diagnostics may report missing verification independence, Manual QA, residual-risk acceptance, work acceptance, or stewardship evidence without implying isolation or prevention. |
-| v0.4 Operations & Handoff Pack | Doctor, recover, export, artifact check, projection refresh, and reconcile are primarily detective/repair/report surfaces unless an exact profile proves stronger coverage. |
-| v1+ Expansion | Preventive or isolated operator claims require promoted owner docs, exact covered operations, fixture proof, and fallback behavior. |
+| Engineering Checkpoint | Cooperative/local diagnostic wording plus limited detective reporting for the active Core path. Structured blockers are Core/API results, not proof of pre-action tool blocking. |
+| MVP-1 User Work Loop | User-visible status and blocker wording may explain what cannot proceed under Harness authority and what only the user can decide. It must still say when the surface can only hold by instruction or detect later. |
+| Assurance Profile | Assurance diagnostics may report missing verification independence, Manual QA, residual-risk acceptance, work acceptance, or stewardship evidence without implying isolation or prevention. |
+| Operations Profile | Doctor, recover, export, artifact check, projection refresh, and reconcile are primarily detective/repair/report surfaces unless an exact profile proves stronger coverage. |
+| Roadmap | Preventive or isolated operator claims require promoted owner docs, exact covered operations, fixture proof, and fallback behavior. |
 
-Summary: operator behavior is staged. v0.1 keeps only minimal local registration/status and local API/MCP exposure if the first slice needs it; v0.2 adds user-facing status and blocker support; v0.3 adds assurance support; v0.4 adds operations and handoff; v1+ remains promoted roadmap scope.
+Summary: operator behavior is staged. Engineering Checkpoint keeps only minimal local registration/status and local API/MCP exposure if the first slice needs it; MVP-1 adds user-facing status and blocker support; Assurance Profile adds assurance support; Operations Profile adds operations and handoff; Roadmap remains promoted future scope.
 
 Exact command names and flags may vary by implementation. The reference target is the command-independent behavior contract: operator behavior is defined by Core state records, `state.sqlite.task_events`, artifact refs and files, projection jobs and freshness where those profiles exist, and API-owned errors or operator diagnostic labels. Console text, report prose, flag spelling, and shell exit formatting are display surfaces; they must not become a second state model.
 
@@ -96,15 +96,15 @@ Operator command map by behavior family:
 
 | Entrypoint family | Stage where the behavior first appears | Use this section when you need... |
 |---|---|---|
-| [`harness connect`](#connect) | v0.1 minimal registration; fuller connector-profile behavior later as promoted | repository/runtime registration semantics and first-connection expectations |
-| [`harness doctor`](#doctor) | v0.1 basic diagnostic subset; full category set in v0.4 | readiness, diagnostics, repair suggestions, and no-new-state reporting boundaries |
-| [`harness serve mcp`](#serve-mcp) | v0.1 only if the active first slice exposes MCP/API through this local boundary | MCP serving behavior, local availability, and Core authority boundaries |
-| [`harness projection refresh`](#projection-refresh) | v0.4 unless a narrow owner profile explicitly promotes earlier freshness behavior | projection job refresh behavior and managed-block drift handling |
-| [`harness reconcile`](#reconcile) | v0.4 unless a narrow owner profile explicitly promotes earlier proposal/drift handling | human edit, generated file, and managed-block drift routing |
-| [`harness recover`](#recover) | v0.4 | interrupted operation repair and compensating event expectations |
-| [`harness export`](#export) | v0.4 | bundle and Release Handoff export behavior |
-| [`harness artifacts check`](#artifacts-check) | v0.4 | artifact registry/file integrity and redaction boundary checks |
-| [`harness conformance run`](#conformance-run) | v0.4 after runtime suites are materialized; docs-maintenance remains explicitly selected and separate | runtime fixture execution and docs-maintenance profile separation |
+| [`harness connect`](#connect) | Engineering Checkpoint minimal registration; fuller connector-profile behavior later as promoted | repository/runtime registration semantics and first-connection expectations |
+| [`harness doctor`](#doctor) | Engineering Checkpoint basic diagnostic subset; full category set in Operations Profile | readiness, diagnostics, repair suggestions, and no-new-state reporting boundaries |
+| [`harness serve mcp`](#serve-mcp) | Engineering Checkpoint only if the active first slice exposes MCP/API through this local boundary | MCP serving behavior, local availability, and Core authority boundaries |
+| [`harness projection refresh`](#projection-refresh) | Operations Profile unless a narrow owner profile explicitly promotes earlier freshness behavior | projection job refresh behavior and managed-block drift handling |
+| [`harness reconcile`](#reconcile) | Operations Profile unless a narrow owner profile explicitly promotes earlier proposal/drift handling | human edit, generated file, and managed-block drift routing |
+| [`harness recover`](#recover) | Operations Profile | interrupted operation repair and compensating event expectations |
+| [`harness export`](#export) | Operations Profile | bundle and Release Handoff export behavior |
+| [`harness artifacts check`](#artifacts-check) | Operations Profile | artifact registry/file integrity and redaction boundary checks |
+| [`harness conformance run`](#conformance-run) | Operations Profile after runtime suites are materialized; docs-maintenance remains explicitly selected and separate | runtime fixture execution and docs-maintenance profile separation |
 
 ## Operator diagnostics report facts, not new state
 
@@ -120,21 +120,21 @@ Status/next recommendations, Role Lens output, recommended playbooks, and operat
 
 Conformance will run incrementally after runtime implementation exists, but staged execution must not change the fixture body shape or reduce later reference conformance requirements. In the current documentation-only phase, this section is a future verification plan and must not be read as evidence that fixture files, a conformance runner, or runnable Harness Server conformance tests already exist.
 
-Build docs may provide doc-level acceptance checks for planning the first runnable slice and stage exits. Those checks help reviewers keep v0.1 Core Authority Smoke narrow, but they are not fixture fields, suite metadata, public request schemas, storage rows, primary errors, or runner comparison modes. Future runtime pass/fail still comes only from executable fixtures that use the exact body shape and assertion semantics in [Conformance Fixtures Reference](conformance-fixtures.md).
+Build docs may provide doc-level acceptance checks for planning the first runnable slice and stage exits. Those checks help reviewers keep Engineering Checkpoint narrow, but they are not fixture fields, suite metadata, public request schemas, storage rows, primary errors, or runner comparison modes. Future runtime pass/fail still comes only from executable fixtures that use the exact body shape and assertion semantics in [Conformance Fixtures Reference](conformance-fixtures.md).
 
-v0.1 Core Authority Smoke is the first runnable authority-loop target, and Kernel Smoke is a future smoke-check label for the narrow checks that exercise that path. Build owns the stage exit criteria in [First Runnable Slice](../build/first-runnable-slice.md); the exact future runtime fixture queue is owned by [Conformance Fixtures Reference: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue). Passing the minimal Kernel Smoke subset proves the first internal Core authority path; it does not require a full conformance suite and does not claim First User-Value Slice, Agency Assurance Pack, or operations conformance.
+Engineering Checkpoint is the first runnable authority-loop target, and Kernel Smoke is a future smoke-check label for the narrow checks that exercise that path. Build owns the stage exit criteria in [First Runnable Slice](../build/first-runnable-slice.md); the exact future runtime fixture queue is owned by [Conformance Fixtures Reference: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue). Passing the minimal Kernel Smoke subset proves the first internal Core authority path; it does not require a full conformance suite and does not claim MVP-1 User Work Loop, Assurance Profile, or operations conformance.
 
-v0.2 First User-Value Slice uses the small user-value fixture set in [Conformance Fixtures Reference](conformance-fixtures.md#v02-first-user-value-slice-fixture-set), including the [Clarification Quality Fixture Group](conformance-fixtures.md#clarification-quality-fixture-group). It is not a requirement to run the broad future catalog, full Manual QA, Eval systems, TDD trace, module map, interface contract, Journey/Spine projections, export/recover, dashboard/team/orchestration, or advanced connector/security fixtures.
+MVP-1 User Work Loop uses the small user-value fixture set in [Conformance Fixtures Reference](conformance-fixtures.md#v02-first-user-value-slice-fixture-set), including the [Clarification Quality Fixture Group](conformance-fixtures.md#clarification-quality-fixture-group). It is not a requirement to run the broad future catalog, full Manual QA, Eval systems, TDD trace, module map, interface contract, Journey/Spine projections, export/recover, dashboard/team/orchestration, or advanced connector/security fixtures.
 
-The later conformance profiles follow the stage names in [MVP Plan](../build/mvp-plan.md): Agency Assurance Pack fixtures for v0.3 Agency Assurance Pack, and Operations & Handoff Pack or promoted-expansion fixtures for v0.4 Operations & Handoff Pack and promoted v1+ Expansion candidates. Exact policy, API, storage, projection, connector, and fixture requirements stay in their Reference owners. Suite catalog metadata may group scenarios by suite, delivery stage, and tags for runner selection and reporting, but it is not passed to Core; future executable fixtures still assert through Core state, events, artifacts, projections/freshness, and errors.
+The later conformance profiles follow the stage names in [MVP Plan](../build/mvp-plan.md): Assurance Profile fixtures for Assurance Profile, and Operations Profile or promoted-expansion fixtures for Operations Profile and promoted Roadmap candidates. Exact policy, API, storage, projection, connector, and fixture requirements stay in their Reference owners. Suite catalog metadata may group scenarios by suite, delivery stage, and tags for runner selection and reporting, but it is not passed to Core; future executable fixtures still assert through Core state, events, artifacts, projections/freshness, and errors.
 
-Guard/freeze conformance in staged delivery asserts honest display and behavior at cooperative/detective levels: freeze requests can hold work, make the next action stricter, or cause `prepare_write` to return a structured blocker or hold when existing scope is incompatible; persistent owner-record changes must be asserted only when they happen through an existing Core state-changing path, Decision Packet route, or owner-record update path. Guard displays report whether the current path is cooperative or detective and what violations can only be detected after the fact. Preventive `T4` guard fixtures and higher guarantee levels remain operations/future or v1+ Expansion scope unless owner docs promote and prove a concrete covered operation with fixture-backed pre-tool blocking for the relevant reference surface. Isolated-profile conformance must name whether the boundary supports verification independence/stale-context control or stronger security isolation, and must not treat a worktree, fresh evaluator bundle, or process split as OS sandboxing or tamper-proof security unless that exact mechanism is proven.
+Guard/freeze conformance in staged delivery asserts honest display and behavior at cooperative/detective levels: freeze requests can hold work, make the next action stricter, or cause `prepare_write` to return a structured blocker or hold when existing scope is incompatible; persistent owner-record changes must be asserted only when they happen through an existing Core state-changing path, Decision Packet route, or owner-record update path. Guard displays report whether the current path is cooperative or detective and what violations can only be detected after the fact. Preventive `T4` guard fixtures and higher guarantee levels remain operations/future or Roadmap scope unless owner docs promote and prove a concrete covered operation with fixture-backed pre-tool blocking for the relevant reference surface. Isolated-profile conformance must name whether the boundary supports verification independence/stale-context control or stronger security isolation, and must not treat a worktree, fresh evaluator bundle, or process split as OS sandboxing or tamper-proof security unless that exact mechanism is proven.
 
-Browser QA Capture conformance is a v1+ Expansion candidate, not a requirement of Core Authority Smoke fixtures, First User-Value Slice fixtures, Agency Assurance Pack fixtures, or Operations & Handoff Pack / promoted-expansion fixtures. Until promoted through the [Roadmap promotion criteria](../roadmap.md#promotion-criteria), it is non-authoritative capture support only. Future fixtures should prove declared `T6 QA Capture` behavior only after capability profile fields, redaction and secret/PII handling, browser test environment, artifact retention, capture artifact mapping, unsupported-surface fallback behavior, and no projection-as-canonical dependency are defined. Staged-delivery fixtures still prove Manual QA records, artifact refs, QA waiver behavior, acceptance boundaries, and close blockers without requiring automated browser capture.
+Browser QA Capture conformance is a Roadmap candidate, not a requirement of Engineering Checkpoint fixtures, MVP-1 User Work Loop fixtures, Assurance Profile fixtures, or Operations Profile / promoted-expansion fixtures. Until promoted through the [Roadmap promotion criteria](../roadmap.md#promotion-criteria), it is non-authoritative capture support only. Future fixtures should prove declared `T6 QA Capture` behavior only after capability profile fields, redaction and secret/PII handling, browser test environment, artifact retention, capture artifact mapping, unsupported-surface fallback behavior, and no projection-as-canonical dependency are defined. Staged-delivery fixtures still prove Manual QA records, artifact refs, QA waiver behavior, acceptance boundaries, and close blockers without requiring automated browser capture.
 
-Connector and reference-surface smoke coverage follows the same staged rule. v0.1 needs only enough reference-surface coverage to exercise the Kernel Smoke path named by the fixture owner. Later packs broaden this into connector honesty, generated-file drift reporting, manual artifact/verification/QA fallbacks, projection/card display, and the connector conformance scenarios owned by [Agent Integration Reference](agent-integration.md#connector-conformance-overview). Preventive `T4`, automated `T6`, remote/shared MCP exposure, and broad connector automation stay outside v0.1 unless owner docs promote and prove a concrete reference path.
+Connector and reference-surface smoke coverage follows the same staged rule. Engineering Checkpoint needs only enough reference-surface coverage to exercise the Kernel Smoke path named by the fixture owner. Later profiles broaden this into connector honesty, generated-file drift reporting, manual artifact/verification/QA fallbacks, projection/card display, and the connector conformance scenarios owned by [Agent Integration Reference](agent-integration.md#connector-conformance-overview). Preventive `T4`, automated `T6`, remote/shared MCP exposure, and broad connector automation stay outside Engineering Checkpoint unless owner docs promote and prove a concrete reference path.
 
-Summary: v0.1 conformance scope is the narrow Core authority loop: project/Task setup, one scoped boundary, `prepare_write` plus Write Authorization, `record_run` plus evidence link, and status/blocker output. Later stages add user-facing, assurance, and operations coverage without making the broad future catalog an early-stage requirement.
+Summary: Engineering Checkpoint conformance scope is the narrow Core authority loop: project/Task setup, one scoped boundary, `prepare_write` plus Write Authorization, `record_run` plus evidence link, and status/blocker output. Later profiles add user-facing, assurance, and operations coverage without making the broad future catalog an early-stage requirement.
 
 ## Docs-maintenance profile
 
@@ -172,12 +172,12 @@ flowchart LR
 
 `connect` links a Product Repository, Harness Runtime Home, and one reference agent surface. The command name is illustrative; another local registration entrypoint may satisfy the same behavior.
 
-v0.1 minimum:
+Engineering Checkpoint minimum:
 
 - identify the repository root
 - register or reuse the local project
 - create or validate static project configuration
-- initialize the per-project state and artifact storage needed for the Core Authority Smoke
+- initialize the per-project state and artifact storage needed for the Engineering Checkpoint
 - register the reference surface only to the level needed for the active local profile
 - record local-only MCP/API exposure posture if the stage uses that boundary
 - confirm minimal MCP/API reachability or report a diagnostic when the stage depends on it
@@ -226,7 +226,7 @@ authority   edited generated file is not Task state and was not silently overwri
 
 `doctor` reports readiness, drift, and repair options.
 
-The full doctor/readiness category set is v0.4 Operations & Handoff behavior. Earlier stages may expose only the basic status/diagnostic subset needed for the active stage and must not claim the full operations profile.
+The full doctor/readiness category set is Operations Profile behavior. Earlier stages may expose only the basic status/diagnostic subset needed for the active stage and must not claim the full operations profile.
 
 Full doctor/readiness categories:
 
@@ -332,12 +332,12 @@ Security diagnostic display examples:
 
 ## serve mcp
 
-`serve mcp` starts or prints connection information for the local MCP server. The command name is illustrative; v0.1 may satisfy the contract through any minimal local API/MCP exposure required by the first slice.
+`serve mcp` starts or prints connection information for the local MCP server. The command name is illustrative; Engineering Checkpoint may satisfy the contract through any minimal local API/MCP exposure required by the first slice.
 
 Behavior when local MCP/API exposure is in scope:
 
 - report whether access is local process/localhost only or covered by a documented connector capability profile
-- default to local-only exposure for the v0.1/default reference posture and avoid non-loopback binding or shared/remote endpoints unless the connector profile explicitly covers them
+- default to local-only exposure for the Engineering Checkpoint/default reference posture and avoid non-loopback binding or shared/remote endpoints unless the connector profile explicitly covers them
 - report the documented access-control contract and material class when MCP is exposed to a caller, such as localhost-only binding, Unix-domain socket, per-project token, process-scoped configuration material, or equivalent local control, without printing raw token, secret, or private configuration values
 - expose read resources without mutation
 - expose public tools through Core, not shell shortcuts
@@ -362,7 +362,7 @@ If MCP is unavailable, operations must distinguish diagnostic condition `MCP_SER
 
 `serve mcp` should treat unexpected callers, callers outside the documented local process/localhost expectation or connector access contract, weak socket or config permissions, forwarded or tunneled endpoints, and stale connector configuration as threat-model issues defined by [Security Threat Model Reference](security-threat-model.md). It reports access mode, active project, surface identity, and capability profile so a user can see when a surface is not the one Core expects. It must not present a spoofed `surface_id`, `actor_kind`, or project/task selection as proof of authority; the public tool contract still resolves and validates those claims through Core.
 
-Remote or shared MCP exposure is an opt-in connector posture, not a v0.1 Core Authority Smoke or staged-delivery `serve mcp` default. Before operations may present it as usable, the connector profile must cover the access-control contract, secret/PII handling, redaction or omission behavior, guarantee display, and conformance scenario that proves the exposed path does not bypass Core envelope validation or compatibility checks.
+Remote or shared MCP exposure is an opt-in connector posture, not a Engineering Checkpoint or staged-delivery `serve mcp` default. Before operations may present it as usable, the connector profile must cover the access-control contract, secret/PII handling, redaction or omission behavior, guarantee display, and conformance scenario that proves the exposed path does not bypass Core envelope validation or compatibility checks.
 
 When the access mode is unknown or weaker than the registered profile, operations should choose a diagnostic severity that matches the exposed authority. Read-only resource exposure can be a warning when the user can still understand the reduced guarantee. State-changing tools, product/runtime/code write paths, or close-relevant flows should fail, hold, or report `CAPABILITY_INSUFFICIENT`/`MCP_UNAVAILABLE` rather than silently continuing under an overstated guarantee.
 
@@ -372,10 +372,10 @@ When the access mode is unknown or weaker than the registered profile, operation
 
 Projection refresh regenerates Product Repository Markdown from committed state records and artifact refs. It is a derived-view operation: it may report freshness, failed jobs, and reconcile needs, but it must not replace Core state, structured blockers, evidence authority, work acceptance, residual-risk acceptance, or Write Authorization.
 
-Behavior required when projection refresh is in scope, normally v0.4 unless an owner profile explicitly promotes a narrower earlier path:
+Behavior required when projection refresh is in scope, normally Operations Profile unless an owner profile explicitly promotes a narrower earlier path:
 
 - render only the latest projection version for a target
-- render or enqueue only the projection views included by the active projection profile, with no persisted Markdown projection required for v0.1 Core Authority Smoke
+- render or enqueue only the projection views included by the active projection profile, with no persisted Markdown projection required for Engineering Checkpoint
 - preserve human-editable sections
 - compare managed block hashes before overwrite
 - create reconcile items for managed-block drift
@@ -411,7 +411,7 @@ flowchart TD
 
 For staged delivery, Decision Packet visibility is rendered through status/next responses, judgment-context resources, decision-packet resources, and minimal `TASK` or card displays. Current-position context is rendered through compact status/next output first. Kernel Smoke does not require dedicated refresh targets for standalone `DEC`, `DESIGN`, `EXPORT`, persisted `JOURNEY-CARD`, Run Summary, Evidence Manifest, detailed Eval, TDD Trace, Module Map, and Interface Contract projections; those targets are profile-gated Future/diagnostic projections or Operations/export reports when enabled.
 
-Projection support is source-backed. `TASK` minimal summary is the First User-Value Slice summaries path when persisted projection support is used, and `DIRECT-RESULT` is a compact direct-work summary only when that profile is active. `APR` and `MANUAL-QA` belong to Agency assurance reports when their profiles are active. `EXPORT` belongs to Operations/export reports when export or handoff support is enabled. Detailed reports such as `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DESIGN`, and persisted `JOURNEY-CARD` are Future/diagnostic projections unless an owner profile promotes them. Projection refresh must report missing source records as unavailable or not applicable rather than creating state to satisfy a template.
+Projection support is source-backed. `TASK` minimal summary is the MVP-1 User Work Loop summaries path when persisted projection support is used, and `DIRECT-RESULT` is a compact direct-work summary only when that profile is active. `APR` and `MANUAL-QA` belong to Assurance Profile reports when their profiles are active. `EXPORT` belongs to Operations/export reports when export or handoff support is enabled. Detailed reports such as `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DESIGN`, and persisted `JOURNEY-CARD` are Future/diagnostic projections unless an owner profile promotes them. Projection refresh must report missing source records as unavailable or not applicable rather than creating state to satisfy a template.
 
 Illustrative projection refresh statuses:
 
@@ -705,7 +705,7 @@ Compact artifact check examples:
 
 ## conformance run
 
-Future `conformance run` is an operations-profile surface, normally v0.4 or later after runtime suites are materialized. It will execute selected fixture suites or explicitly selected docs-only maintenance profiles. Runtime suites use the same Core entrypoints as MCP tools and operator commands, and pass/fail only when exact-shape fixtures compare captured state, events, artifacts, projections/freshness, and errors. Docs-maintenance remains separate, read-only, and excluded from runtime fixture pass/fail and implementation readiness.
+Future `conformance run` is an operations-profile surface, normally Operations Profile or later after runtime suites are materialized. It will execute selected fixture suites or explicitly selected docs-only maintenance profiles. Runtime suites use the same Core entrypoints as MCP tools and operator commands, and pass/fail only when exact-shape fixtures compare captured state, events, artifacts, projections/freshness, and errors. Docs-maintenance remains separate, read-only, and excluded from runtime fixture pass/fail and implementation readiness.
 
 ### Conformance Navigation Map
 
@@ -713,10 +713,10 @@ Future `conformance run` is an operations-profile surface, normally v0.4 or late
 |---|---|
 | The `harness conformance run` entrypoint, runtime/docs-maintenance separation, and operator reporting boundary | This section, plus [Docs-maintenance profile](#docs-maintenance-profile) |
 | The exact fixture body fields, runner loading/execution, and default comparison modes | [Conformance Fixtures Reference](conformance-fixtures.md#conformance-navigation-map) |
-| Suite intent and authoring order | [Conformance staging](#conformance-staging), then [Fixture Profiles By Proven Behavior](conformance-fixtures.md#fixture-profiles-by-proven-behavior), [v0.1 Core Authority Smoke Fixture Set](conformance-fixtures.md#v01-core-authority-smoke-fixture-set), [v0.2 First User-Value Slice Fixture Set](conformance-fixtures.md#v02-first-user-value-slice-fixture-set), [Clarification Quality Fixture Group](conformance-fixtures.md#clarification-quality-fixture-group), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), and [Future Fixture Catalog: Fixture Suites](future-fixture-catalog.md#fixture-suites) |
+| Suite intent and authoring order | [Conformance staging](#conformance-staging), then [Fixture Profiles By Proven Behavior](conformance-fixtures.md#fixture-profiles-by-proven-behavior), [Engineering Checkpoint Fixture Set](conformance-fixtures.md#v01-core-authority-smoke-fixture-set), [MVP-1 User Work Loop Fixture Set](conformance-fixtures.md#v02-first-user-value-slice-fixture-set), [Clarification Quality Fixture Group](conformance-fixtures.md#clarification-quality-fixture-group), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), and [Future Fixture Catalog: Fixture Suites](future-fixture-catalog.md#fixture-suites) |
 | Future executable examples by concern and catalog-only future candidates | [Future Fixture Catalog: Fixture Example Map](future-fixture-catalog.md#fixture-example-map) |
 
-Operator boundary: this document owns the operator entrypoint, runtime/docs-maintenance profile separation, and conformance overview. [Conformance Fixtures Reference](conformance-fixtures.md) owns fixture body shape, assertion semantics, suite catalog metadata boundaries, fixture profiles, the small v0.1/v0.2 fixture sets, and the reduced Kernel Smoke queue. [Future Fixture Catalog](future-fixture-catalog.md) owns detailed future examples and catalog-only candidates. When runtime conformance is materialized, runtime suite pass/fail remains executable-state-based; rendered prose alone cannot pass conformance.
+Operator boundary: this document owns the operator entrypoint, runtime/docs-maintenance profile separation, and conformance overview. [Conformance Fixtures Reference](conformance-fixtures.md) owns fixture body shape, assertion semantics, suite catalog metadata boundaries, fixture profiles, the small Engineering Checkpoint / MVP-1 fixture sets, and the reduced Kernel Smoke queue. [Future Fixture Catalog](future-fixture-catalog.md) owns detailed future examples and catalog-only candidates. When runtime conformance is materialized, runtime suite pass/fail remains executable-state-based; rendered prose alone cannot pass conformance.
 
 ### Conformance Fixture Format
 
@@ -794,9 +794,9 @@ Moved to [Future Fixture Catalog: Context Hygiene Catalog Entries](future-fixtur
 
 Moved to [Future Fixture Catalog: Core, Projection, Reconcile, And Verification Boundary Catalog Entries](future-fixture-catalog.md#core-projection-reconcile-and-verification-boundary-catalog-entries).
 
-#### v1+ Expansion Browser QA Capture Candidate Entries
+#### Roadmap Browser QA Capture Candidate Entries
 
-Moved to [Future Fixture Catalog: v1+ Expansion Browser QA Capture Candidate Entries](future-fixture-catalog.md#v1-expansion-browser-qa-capture-candidate-entries). These remain catalog-only future candidates unless owner docs promote and prove them.
+Moved to [Future Fixture Catalog: Roadmap Browser QA Capture Candidate Entries](future-fixture-catalog.md#v1-expansion-browser-qa-capture-candidate-entries). These remain catalog-only future candidates unless owner docs promote and prove them.
 
 ### Fixture Suites
 

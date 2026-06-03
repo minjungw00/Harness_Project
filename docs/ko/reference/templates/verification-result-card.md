@@ -60,7 +60,7 @@ Assurance 영향: {assurance_impact}
 - diff: {diff_ref}
 - logs: {logs_ref}
 - approvals: {approval_refs|none}
-- approval refs는 later Approval owner profile이 active가 아닌 한 minimum v0.2에서 `none`입니다.
+- approval refs는 later Approval owner profile이 active가 아닌 한 minimum MVP-1에서 `none`입니다.
 - design refs: {design_refs}
 - redaction 또는 차단 입력: {redaction_availability_summary|none}
 

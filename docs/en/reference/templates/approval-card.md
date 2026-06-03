@@ -6,7 +6,7 @@ Use the approval card when a later Approval profile needs a compact user-facing 
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: Agency assurance reports. Use only when committed sensitive-action approval support is in the active profile; minimum v0.2 approval-shaped user judgment requests can use the Decision Packet display and do not require an approval card.
+Implementation tier: Assurance Profile reports. Use only when committed sensitive-action approval support is in the active profile; minimum MVP-1 approval-shaped user judgment requests can use the Decision Packet display and do not require an approval card.
 
 ## Source records
 
@@ -93,7 +93,7 @@ If you say "go ahead," "proceed," or "looks good," Harness records only this sen
 
 ## Notes
 
-This template is a rendered card shape, not approval authority. Committed Approval records are later-profile; minimum v0.2 approval-shaped requests can be displayed through the Decision Packet prompt instead.
+This template is a rendered card shape, not approval authority. Committed Approval records are later-profile; minimum MVP-1 approval-shaped requests can be displayed through the Decision Packet prompt instead.
 
 Approval does not resolve user-owned product or material technical judgment, prove correctness, replace verification, replace Manual QA, imply work acceptance, accept residual risk, waive QA or verification, or create Write Authorization; actual writes still require a later compatible `prepare_write` and Write Authorization.
 

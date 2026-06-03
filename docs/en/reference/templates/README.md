@@ -21,13 +21,13 @@ Keep these audiences separate:
 
 | Audience | Shape | Rule |
 |---|---|---|
-| User-facing compact card | [Compact Status Card](compact-status-card.md) | The v0.2 First User-Value Slice projection: one small current-state card. |
+| User-facing compact card | [Compact Status Card](compact-status-card.md) | The MVP-1 User Work Loop projection: one small current-state card. |
 | Agent compact context/reference payload | Structured refs, blocker labels, source clocks, freshness, and next-action hints | Derived support payload. Compact by default; no full report bodies unless pulled for a phase-specific reason. |
 | Future/diagnostic reports | `TASK`, Journey Card/Spine, Run Summary, detailed Evidence Manifest, detailed Eval, full Manual QA, TDD Trace, Domain Language, Module Map, Interface Contract, Design, Export, full Approval Card, and other polished reports | Later/profile or diagnostic output. Display-only, never authority. |
 
-## v0.2 First User-Value Slice projection
+## MVP-1 User Work Loop projection
 
-The v0.2 First User-Value Slice projection is one compact status card. It must show:
+The MVP-1 User Work Loop projection is one compact status card. It must show:
 
 - current Task summary
 - work shape
@@ -47,27 +47,27 @@ The card must be readable for users and compact for agents. It should not dump s
 
 | Template | Audience | First active stage | Authority status | Notes |
 |---|---|---|---|---|
-| [Compact Status Card](compact-status-card.md) | User-facing compact card; agent compact context source | v0.2 First User-Value Slice projection; optional as v0.1 status rendering | Derived display only | The only v0.2 First User-Value Slice projection shape. Plain structured output is still enough for v0.1. |
-| [Decision Packet display](decision-packet.md) | User judgment prompt/display | v0.2 when user judgment flow is active | Derived display over `state.sqlite.decision_packets`; not standalone authority | Required judgments can appear through status/next or resources. Standalone `DEC` Markdown is optional later. |
-| [TASK](task.md) | Continuity/reference report | Later/profile or diagnostic | Derived display only | Not the v0.2 First User-Value Slice projection. Expanded continuity sections are later polish. |
+| [Compact Status Card](compact-status-card.md) | User-facing compact card; agent compact context source | MVP-1 User Work Loop projection; optional as Engineering Checkpoint status rendering | Derived display only | The only MVP-1 User Work Loop projection shape. Plain structured output is still enough for Engineering Checkpoint. |
+| [Decision Packet display](decision-packet.md) | User judgment prompt/display | MVP-1 when user judgment flow is active | Derived display over `state.sqlite.decision_packets`; not standalone authority | Required judgments can appear through status/next or resources. Standalone `DEC` Markdown is optional later. |
+| [TASK](task.md) | Continuity/reference report | Later/profile or diagnostic | Derived display only | Not the MVP-1 User Work Loop projection. Expanded continuity sections are later polish. |
 | [DIRECT-RESULT](direct-result.md) | Compact direct-work result | Later/profile when direct-work display is active | Derived display only | Optional convenience shape; not needed for the compact status card MVP. |
-| [APR](approval.md) | Sensitive-action approval report | v0.3 agency assurance profile | Displays committed Approval and Decision Packet refs; does not grant approval | Use only after committed Approval support/profile is active. Minimum v0.2 uses the Decision Packet display for approval-shaped requests. |
-| [Approval Card](approval-card.md) | Sensitive-action approval prompt/card | v0.3 agency assurance profile | Displays committed approval boundary; does not authorize writes | Full approval card is not v0.2 First User-Value Slice; the v0.2 path can use the approval-shaped Decision Packet prompt. |
-| [MANUAL-QA](manual-qa.md) | Manual QA report | v0.3 agency assurance profile | Displays `manual_qa_records`/`qa_gate`; does not perform QA | Full Manual QA projection is later/profile scope. |
-| [Manual QA Card](manual-qa-card.md) | Manual QA prompt/card | v0.3 agency assurance profile | Displays QA requirement/waiver refs; does not record QA | Full Manual QA card is later/profile scope. |
-| [Verification Result Card](verification-result-card.md) | Verification/Eval display | v0.3 agency assurance profile | Displays Eval/gate refs; does not verify by itself | Compact assurance display when verification profile is active. |
-| [RUN-SUMMARY](run-summary.md) | Diagnostic run report | Future/diagnostic or owner-promoted profile | Derived display over Run/artifact refs | Not required for v0.2. |
-| [EVIDENCE-MANIFEST](evidence-manifest.md) | Detailed evidence report | Future/diagnostic or owner-promoted profile | Displays evidence records and artifact refs; not evidence itself | v0.2 card shows evidence summary/gaps only. |
-| [EVAL](eval.md) | Detailed verification report | Future/diagnostic or owner-promoted profile | Displays Eval refs; does not create assurance | Detailed Eval is not v0.2. |
+| [APR](approval.md) | Sensitive-action approval report | Assurance Profile | Displays committed Approval and Decision Packet refs; does not grant approval | Use only after committed Approval support/profile is active. Minimum MVP-1 uses the Decision Packet display for approval-shaped requests. |
+| [Approval Card](approval-card.md) | Sensitive-action approval prompt/card | Assurance Profile | Displays committed approval boundary; does not authorize writes | Full approval card is not MVP-1 User Work Loop; the MVP-1 path can use the approval-shaped Decision Packet prompt. |
+| [MANUAL-QA](manual-qa.md) | Manual QA report | Assurance Profile | Displays `manual_qa_records`/`qa_gate`; does not perform QA | Full Manual QA projection is later/profile scope. |
+| [Manual QA Card](manual-qa-card.md) | Manual QA prompt/card | Assurance Profile | Displays QA requirement/waiver refs; does not record QA | Full Manual QA card is later/profile scope. |
+| [Verification Result Card](verification-result-card.md) | Verification/Eval display | Assurance Profile | Displays Eval/gate refs; does not verify by itself | Compact assurance display when verification profile is active. |
+| [RUN-SUMMARY](run-summary.md) | Diagnostic run report | Future/diagnostic or owner-promoted profile | Derived display over Run/artifact refs | Not required for MVP-1. |
+| [EVIDENCE-MANIFEST](evidence-manifest.md) | Detailed evidence report | Future/diagnostic or owner-promoted profile | Displays evidence records and artifact refs; not evidence itself | MVP-1 card shows evidence summary/gaps only. |
+| [EVAL](eval.md) | Detailed verification report | Future/diagnostic or owner-promoted profile | Displays Eval refs; does not create assurance | Detailed Eval is not MVP-1. |
 | [TDD-TRACE](tdd-trace.md) | TDD diagnostic/reference | Future/diagnostic or owner-promoted profile | Displays TDD refs; not a gate by itself | Later policy/profile output. |
 | [DOMAIN-LANGUAGE](domain-language.md) | Stewardship/reference report | Future/diagnostic or owner-promoted profile | Displays `domain_terms`; not term authority | Later reference view. |
 | [MODULE-MAP](module-map.md) | Stewardship/reference report | Future/diagnostic or owner-promoted profile | Displays `module_map_items`; not module authority | Later reference view. |
 | [INTERFACE-CONTRACT](interface-contract.md) | Stewardship/reference report | Future/diagnostic or owner-promoted profile | Displays `interface_contracts`; not contract authority | Later reference view. |
 | [DESIGN](design.md) | Design/reference report | Future/diagnostic or owner-promoted profile | Displays design records/proposals; not design authority | Later standalone projection. |
-| [JOURNEY-CARD](journey-card.md) | Journey/resume diagnostic card | Future/diagnostic or owner-promoted profile | Derived current-position display only | v0.2 uses compact status card instead. |
-| [EXPORT](export.md) | Operations/export report | v0.4 operations/export profile | Lists snapshots and artifact refs; not Core state or artifact authority | Optional handoff/report output. |
+| [JOURNEY-CARD](journey-card.md) | Journey/resume diagnostic card | Future/diagnostic or owner-promoted profile | Derived current-position display only | MVP-1 uses compact status card instead. |
+| [EXPORT](export.md) | Operations/export report | Operations Profile operations/export profile | Lists snapshots and artifact refs; not Core state or artifact authority | Optional handoff/report output. |
 
-`Future/diagnostic projections` means later-profile or diagnostic scope, not automatically v1+ only.
+`Future/diagnostic projections` means later-profile or diagnostic scope, not automatically Roadmap only.
 
 `TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`, and other report projections are readable views from owner records and refs. They must not redefine kernel fields, MCP schemas, SQLite DDL, gate behavior, or artifact integrity rules.
 
@@ -115,7 +115,7 @@ Close and assurance displays must keep distinct labels for self-checked work, `d
 
 - [Decision Packet user judgment request display shape](decision-packet.md), not standalone `DEC` Markdown
 
-## Agency Assurance Report Shapes
+## Assurance Profile Report Shapes
 
 - [APR](approval.md)
 - [Approval Card](approval-card.md)

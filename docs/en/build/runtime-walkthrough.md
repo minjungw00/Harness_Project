@@ -4,14 +4,14 @@
 
 Follow one Harness work item from user request to close outcome without reading every strict contract first.
 
-This is Build documentation. It summarizes the runtime path for implementers and reviewers, but it does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or new schemas before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is v0.1 Core Authority Smoke, with Kernel Smoke as a narrow future smoke-check authoring label. The first user-value target is v0.2 First User-Value Slice. v0.3 Agency Assurance Pack and v0.4 Operations & Handoff Pack harden agency assurance, operations, and handoff behavior, and v1+ Expansion remains roadmap scope unless owner docs promote and prove it.
+This is Build documentation. It summarizes the runtime path for implementers and reviewers, but it does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or new schemas before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is Engineering Checkpoint, with Kernel Smoke as a narrow future smoke-check authoring label. The first user-value target is MVP-1 User Work Loop. Assurance Profile and Operations Profile harden agency assurance, operations, and handoff behavior, and Roadmap remains future scope unless owner docs promote and prove it.
 
 ## Read this when
 
 - You want a runtime-shaped mental model before reading the reference contracts.
 - You are checking how requirements become scoped work.
 - You need to explain the difference between state, artifacts, projections, and close blockers.
-- You are reviewing the first Core Authority Smoke path without expanding it into the first user-value slice.
+- You are reviewing the first Engineering Checkpoint path without expanding it into the first user-value slice.
 
 ## Before you read
 
@@ -21,7 +21,7 @@ Read [Implementation Overview](implementation-overview.md) and [First Runnable S
 
 For write-capable tracked work, a request becomes safe product work only after Harness knows the Task and the initial scope, and after any stage-required clarification or user-owned judgments are recorded. Product writes then pass through `prepare_write`, which can create a one-attempt Write Authorization. Runs consume that authority, evidence and artifacts support claims, and status/blocker output makes the current state readable. Later user-value, assurance, projection, and close paths explain blockers or close the Task only when their stage is in scope.
 
-The walkthrough shows a staged reader path. The v0.1 Core Authority Smoke design target covers only the smallest internal part of it: one local project registration, one active Task, one scoped boundary represented by the Change Unit owner shape only where the reference contract requires it, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence ref, and one structured status/blocker response. v0.1 does not require natural-language intake, full Discovery, full Decision Packet, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, recover/export, operations suite, dashboards, connectors, or detached verification. v0.2 First User-Value Slice adds ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria summary, minimal user judgment request/record, small direct vs tracked work distinction, status/next output, evidence summary, close blocker summary, residual-risk visibility, separated sensitive approval / work acceptance / risk acceptance display, and a compact Core-derived status card.
+The walkthrough shows a staged reader path. The Engineering Checkpoint design target covers only the smallest internal part of it: one local project registration, one active Task, one scoped boundary represented by the Change Unit owner shape only where the reference contract requires it, one `prepare_write` authority path, one single-use Write Authorization, one recorded Run, one artifact/evidence ref, and one structured status/blocker response. Engineering Checkpoint does not require natural-language intake, full Discovery, full Decision Packet, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, recover/export, operations suite, dashboards, connectors, or detached verification. MVP-1 User Work Loop adds ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria summary, minimal user judgment request/record, small direct vs tracked work distinction, status/next output, evidence summary, close blocker summary, residual-risk visibility, separated sensitive approval / work acceptance / risk acceptance display, and a compact Core-derived status card.
 
 ## Walkthrough at a glance
 
@@ -45,19 +45,19 @@ flowchart LR
   CloseCheck -->|ready| Close["Task closed"]
 ```
 
-What to notice: the diagram is a reader path, not a second source of truth or a v0.1 requirement list. Requirements clarification and projection-like output help shape or read work when their stage is in scope, but write authority is `prepare_write`, execution is recorded by `record_run`, and completion blockers are reported by the close/status owner paths. For v0.1, the readable output can be only status/blocker output. For v0.2, the close-facing output is a blocker summary and compact status card, not the full later assurance close model. Exact state and gate behavior lives in [Kernel Reference](../reference/kernel.md); public calls live in [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
+What to notice: the diagram is a reader path, not a second source of truth or a Engineering Checkpoint requirement list. Requirements clarification and projection-like output help shape or read work when their stage is in scope, but write authority is `prepare_write`, execution is recorded by `record_run`, and completion blockers are reported by the close/status owner paths. For Engineering Checkpoint, the readable output can be only status/blocker output. For MVP-1, the close-facing output is a blocker summary and compact status card, not the full later assurance close model. Exact state and gate behavior lives in [Kernel Reference](../reference/kernel.md); public calls live in [MCP API And Schemas](../reference/mcp-api-and-schemas.md).
 
 ## Step-by-step runtime path
 
 ### 1. Request -> Task
 
-The user describes work in ordinary language. In v0.2 and later, Harness intake classifies the task shape and creates or updates Task state when tracking is useful. v0.1 may use an owner-valid seed/setup path instead of natural-language intake.
+The user describes work in ordinary language. In MVP-1 and later, Harness intake classifies the task shape and creates or updates Task state when tracking is useful. Engineering Checkpoint may use an owner-valid seed/setup path instead of natural-language intake.
 
 Strict behavior: Task lifecycle, modes, and state transitions are owned by [Kernel Reference](../reference/kernel.md#lifecycle-and-transitions). Storage layout is owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
 ### 2. Task -> requirements clarification
 
-Requirements clarification, internally named Discovery, is v0.2-and-later behavior, not a v0.1 requirement. It is used when the request is ambiguous, risky, multi-step, product-facing, or likely to need user-owned judgment. It clarifies goal, user value, non-goals, success criteria, inspectable facts, assumptions, technical and product choices, security or privacy concerns, QA expectations, remaining uncertainty, and scope boundaries.
+Requirements clarification, internally named Discovery, is MVP-1-and-later behavior, not a Engineering Checkpoint requirement. It is used when the request is ambiguous, risky, multi-step, product-facing, or likely to need user-owned judgment. It clarifies goal, user value, non-goals, success criteria, inspectable facts, assumptions, technical and product choices, security or privacy concerns, QA expectations, remaining uncertainty, and scope boundaries.
 
 Strict behavior: requirements clarification / Discovery is shaping input. It is not Approval, Write Authorization, evidence, verification, QA, work acceptance, residual-risk acceptance, close, scope authority, or a new authority path. Judgment routing is owned by [Decision Packet](../reference/kernel.md#decision-packet) and the public judgment call in [MCP API And Schemas](../reference/mcp-api-and-schemas.md#harnessrequest_user_judgment).
 
@@ -71,7 +71,7 @@ Strict behavior: Change Unit and Autonomy Boundary semantics are owned by [Kerne
 
 ### 4. Change Unit -> `prepare_write`
 
-Before a product write, the agent asks Core for write authority for the intended operation. Core checks current state, Change Unit scope, Autonomy Boundary where in scope, and any active-stage requirements such as baseline freshness, sensitive-action Approval, Decision Packets, applicable design policy, and surface capability. v0.1 needs only the scope/write-authority checks required for Core Authority Smoke.
+Before a product write, the agent asks Core for write authority for the intended operation. Core checks current state, Change Unit scope, Autonomy Boundary where in scope, and any active-stage requirements such as baseline freshness, sensitive-action Approval, Decision Packets, applicable design policy, and surface capability. Engineering Checkpoint needs only the scope/write-authority checks required for Engineering Checkpoint.
 
 Strict behavior: `prepare_write` is owned by [Kernel Reference](../reference/kernel.md#prepare_write). Public request and response shapes are owned by [`harness.prepare_write`](../reference/mcp-api-and-schemas.md#harnessprepare_write).
 
@@ -89,7 +89,7 @@ Strict behavior: Run recording and authorization consumption are owned by [recor
 
 ### 7. Run -> Evidence and artifacts
 
-Evidence maps completion claims or success criteria to supporting owner records and registered artifact refs. v0.1 needs one artifact/evidence ref and owner link. v0.2 needs an evidence summary. Full Evidence Manifest behavior is later-profile scope. Raw artifacts hold durable evidence bytes; artifact records and refs carry identity, integrity, redaction, retention, and owner relation.
+Evidence maps completion claims or success criteria to supporting owner records and registered artifact refs. Engineering Checkpoint needs one artifact/evidence ref and owner link. MVP-1 needs an evidence summary. Full Evidence Manifest behavior is later-profile scope. Raw artifacts hold durable evidence bytes; artifact records and refs carry identity, integrity, redaction, retention, and owner relation.
 
 Strict behavior: evidence and gate semantics are owned by [Evidence Manifest](../reference/kernel.md#evidence-manifest), [Evidence Gate](../reference/kernel.md#evidence-gate), and [Artifact](../reference/kernel.md#artifact). Artifact storage and DDL details are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
@@ -101,14 +101,14 @@ Strict behavior: projection authority, managed blocks, human-editable sections, 
 
 ### 9. Status/blocker output or projection -> close blocker or close
 
-Near completion, `close_task` checks close-relevant state when its stage is in scope and either closes the Task or returns structured blockers. v0.1 may use only a narrow close/status blocker smoke and does not prove full close semantics. v0.2 needs a close blocker summary, not detached verification by default. Verification is required only when the active profile, user request, task type, or risk profile requires it; a verification waiver is needed only when required verification is intentionally skipped. Close Readiness is a user-facing summary of blockers, not a new gate.
+Near completion, `close_task` checks close-relevant state when its stage is in scope and either closes the Task or returns structured blockers. Engineering Checkpoint may use only a narrow close/status blocker smoke and does not prove full close semantics. MVP-1 needs a close blocker summary, not detached verification by default. Verification is required only when the active profile, user request, task type, or risk profile requires it; a verification waiver is needed only when required verification is intentionally skipped. Close Readiness is a user-facing summary of blockers, not a new gate.
 
 Strict behavior: completion checks are owned by [`close_task`](../reference/kernel.md#close_task), close result wording by [Close result semantics](../reference/kernel.md#close-result-semantics), and public error precedence by [MCP API And Schemas](../reference/mcp-api-and-schemas.md#primary-error-code-precedence).
 
 ## First implementation boundary
 
-For v0.1 Core Authority Smoke, keep the path narrow: one local project registration, one active Task, one scoped boundary, `prepare_write`, one single-use Write Authorization consumed by `record_run`, one artifact/evidence ref, and structured status/blocker output. Treat any projection-like output as status/blocker output; do not require full projection support.
+For Engineering Checkpoint, keep the path narrow: one local project registration, one active Task, one scoped boundary, `prepare_write`, one single-use Write Authorization consumed by `record_run`, one artifact/evidence ref, and structured status/blocker output. Treat any projection-like output as status/blocker output; do not require full projection support.
 
-For v0.2 First User-Value Slice, add the user-visible value path: ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria summary, separate product/UX and architecture judgment presentation, minimal user judgment request/record, small direct change versus tracked-work distinction, status/next output, evidence summary, close blocker summary, residual-risk visibility, compact Core-derived status card, and separate display of sensitive Approval, work acceptance, and risk acceptance.
+For MVP-1 User Work Loop, add the user-visible value path: ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria summary, separate product/UX and architecture judgment presentation, minimal user judgment request/record, small direct change versus tracked-work distinction, status/next output, evidence summary, close blocker summary, residual-risk visibility, compact Core-derived status card, and separate display of sensitive Approval, work acceptance, and risk acceptance.
 
 The staged order and Kernel Smoke boundary are summarized in [Staged Delivery Plan](mvp-plan.md). Exact fixture body shape and assertion rules stay in [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format).

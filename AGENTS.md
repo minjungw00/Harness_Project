@@ -26,7 +26,7 @@ This repo is in pre-MVP Harness documentation redesign / feedback incorporation 
 ## Documentation Redesign Compass
 
 - The repository is in documentation review/redesign only; runtime/server implementation is not being started by these documentation edits.
-- The redesign may change terminology, MVP staging, schema structure, projection structure, security wording, and document organization.
+- The redesign may change terminology, the stage/profile model, schema structure, projection structure, security wording, and document organization.
 - Do not preserve existing prose merely for continuity if it conflicts with the clarified product thesis or implementation feasibility.
 - Feel free to rewrite, move, merge, shrink, or delete old prose when it conflicts with the clarified product thesis, owner boundaries, Korean quality rules, or implementation feasibility.
 - Preserve the product thesis: Harness is not a prompt pack; it is a local authority record for scope, user-owned judgment, evidence, and close readiness. User-owned judgments, evidence/verification/QA/acceptance/risk boundaries, and Core-owned state/artifact authority must stay distinct.

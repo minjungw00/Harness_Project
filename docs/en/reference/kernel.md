@@ -21,7 +21,7 @@ Read [Concepts](../learn/concepts.md) or [Harness in One Task](../learn/harness-
 
 Harness is a local authority-record and user-judgment-routing layer. The Kernel makes Core-owned local state, not chat or Markdown, the operational authority for product work. It keeps scope, write authority, user-owned judgments, evidence, verification, QA, acceptance, residual risk, and close readiness in separate routes so one kind of support cannot silently replace another.
 
-The active stage and profile decide which gates are required for a specific operation. A field or gate appearing in this reference does not make the full future behavior required for v0.1, v0.2, or a small direct change.
+The active stage and profile decide which gates are required for a specific operation. A field or gate appearing in this reference does not make the full future behavior required for Engineering Checkpoint, MVP-1, or a small direct change.
 
 ## Contract map
 
@@ -59,7 +59,7 @@ These are the small Core invariants the rest of the Kernel contract serves:
 5. Tracked work keeps scope, blockers, evidence, user judgment, and close readiness visible until the Task can close.
 6. `prepare_write` is the product-write authorization decision point.
 7. `record_run` records what happened and consumes compatible write authority for product-write Runs.
-8. Decision Packets record user-owned judgment. In minimum v0.2, approval-shaped Decision Packets can record sensitive-action permission; later Approval records add a hardened committed lifecycle.
+8. Decision Packets record user-owned judgment. In minimum MVP-1, approval-shaped Decision Packets can record sensitive-action permission; later Approval records add a hardened committed lifecycle.
 9. `close_task` is the completion decision point and checks only the gates required by the active profile and close intent.
 10. Projections help humans read state, but Core state, events, and registered artifact refs remain the authority.
 
@@ -75,7 +75,7 @@ These are the small Core invariants the rest of the Kernel contract serves:
 
 3. What user judgment is still blocking progress?
 
-   Blocking user-owned judgment is represented by Decision Packet state and the aggregate `decision_gate`. Sensitive-action permission is represented separately by `approval_gate`; in minimum v0.2 the gate may derive from an approval-shaped Decision Packet, and in later profiles it may derive from committed Approval state.
+   Blocking user-owned judgment is represented by Decision Packet state and the aggregate `decision_gate`. Sensitive-action permission is represented separately by `approval_gate`; in minimum MVP-1 the gate may derive from an approval-shaped Decision Packet, and in later profiles it may derive from committed Approval state.
 
 4. Can this Task close?
 
@@ -201,8 +201,8 @@ Stage/profile support:
 
 | Stage/profile | What it can represent |
 |---|---|
-| v0.1 Core Authority Smoke / Kernel Smoke | The narrow internal authority loop: local project registration, active Task, scoped work boundary, `prepare_write`, one single-use Write Authorization, one compatible Run, one artifact/evidence ref, and one structured status/blocker response. Verification, Manual QA, work acceptance, residual-risk acceptance, full Evidence Manifest, and profile-specific Decision Packet quality are not v0.1 requirements unless the named smoke path explicitly includes them. |
-| v0.2 First User-Value Slice | User-facing status for scope, pending user judgments, evidence summary, close readiness, work acceptance when required, and residual-risk visibility when close-relevant risk exists. v0.2 must not imply detached verification is always required. |
+| Engineering Checkpoint / Kernel Smoke | The narrow internal authority loop: local project registration, active Task, scoped work boundary, `prepare_write`, one single-use Write Authorization, one compatible Run, one artifact/evidence ref, and one structured status/blocker response. Verification, Manual QA, work acceptance, residual-risk acceptance, full Evidence Manifest, and profile-specific Decision Packet quality are not Engineering Checkpoint requirements unless the named smoke path explicitly includes them. |
+| MVP-1 User Work Loop | User-facing status for scope, pending user judgments, evidence summary, close readiness, work acceptance when required, and residual-risk visibility when close-relevant risk exists. MVP-1 must not imply detached verification is always required. |
 | Later assurance and operations profiles | Detached verification independence, richer Manual QA, stewardship, feedback-loop/TDD policy, projection/reconcile operations, export/recover, and handoff behavior. These are blockers only when the active profile or owner doc enables them. |
 
 ## Reference scope
@@ -281,7 +281,7 @@ A Run is an execution or observation attempt. It records actor, surface, mode, C
 
 ### Approval
 
-Approval is scoped sensitive-action permission. In minimum v0.2 it can be represented by a resolved approval-shaped Decision Packet with `judgment_route=approve-sensitive-action` and `judgment_payload.approval_scope`. In later Approval/Agency Assurance profiles it can also be represented by a committed Approval record. It can cover paths, tools, commands, network targets, secret scope, sensitive categories, baseline, expiry, and user judgment for that sensitive action.
+Approval is scoped sensitive-action permission. In minimum MVP-1 it can be represented by a resolved approval-shaped Decision Packet with `judgment_route=approve-sensitive-action` and `judgment_payload.approval_scope`. In later Approval/Assurance Profiles it can also be represented by a committed Approval record. It can cover paths, tools, commands, network targets, secret scope, sensitive categories, baseline, expiry, and user judgment for that sensitive action.
 
 Approval does not prove correctness, choose product direction, choose technical architecture, create evidence, satisfy QA, verify work, accept a result, accept residual risk, or authorize a product write by itself.
 
@@ -355,7 +355,7 @@ Shared Design, Domain Term, Module Map Item, Interface Contract, Feedback Loop, 
 
 Gates are canonical Kernel fields used by future status, write, run, and close decisions. A gate can exist in the reference model without being required for every stage or every Task.
 
-The active profile controls requiredness. v0.1 proves the narrow authority loop. v0.2 shows user-facing judgment, evidence summary, close readiness, work acceptance when required, and residual-risk visibility when relevant. Later assurance profiles can require detached verification, Manual QA, stewardship, feedback-loop/TDD, operations, or export/recover behavior.
+The active profile controls requiredness. Engineering Checkpoint proves the narrow authority loop. MVP-1 shows user-facing judgment, evidence summary, close readiness, work acceptance when required, and residual-risk visibility when relevant. Later assurance profiles can require detached verification, Manual QA, stewardship, feedback-loop/TDD, operations, or export/recover behavior.
 
 ### Close Readiness Separation
 
@@ -418,7 +418,7 @@ A stored gate value that disagrees with recomputation is stale and must be repai
 not_required | required | pending | granted | denied | expired
 ```
 
-`approval_gate` applies only when sensitive categories are present. The gate can summarize whether sensitive-action permission is needed, pending, granted, denied, or expired. In minimum v0.2, `granted` means a compatible resolved approval-shaped Decision Packet covers the sensitive scope. In later Approval profiles, it may derive from committed Approval records. It is not Write Authorization, product judgment, evidence, verification, QA, work acceptance, or residual-risk acceptance.
+`approval_gate` applies only when sensitive categories are present. The gate can summarize whether sensitive-action permission is needed, pending, granted, denied, or expired. In minimum MVP-1, `granted` means a compatible resolved approval-shaped Decision Packet covers the sensitive scope. In later Approval profiles, it may derive from committed Approval records. It is not Write Authorization, product judgment, evidence, verification, QA, work acceptance, or residual-risk acceptance.
 
 ### Design Gate
 
@@ -754,7 +754,7 @@ The following combinations are invalid or require repair:
 | Work acceptance recorded before residual-risk visibility | Reject or repair; show residual risk or confirmed absence first. |
 | Residual-risk accepted close with hidden or unaccepted close-relevant risk | Block close until risk is visible and accepted. |
 | Projection prose used as canonical state | Create reconcile item or reject as state mutation. |
-| Future-profile validator treated as current v0.1/v0.2 requirement without active profile | Qualify it as later-profile or disable it for the current profile. |
+| Future-profile validator treated as current Engineering Checkpoint / MVP-1 requirement without active profile | Qualify it as later-profile or disable it for the current profile. |
 
 ### Close eligibility
 

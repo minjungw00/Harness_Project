@@ -18,17 +18,17 @@ Staged delivery is owned by [Build: Staged Delivery Plan](build/mvp-plan.md). Fo
 
 Current stage names are:
 
-- v0.1 Core Authority Smoke
-- v0.2 First User-Value Slice
-- v0.3 Agency Assurance Pack
-- v0.4 Operations & Handoff Pack
-- v1+ Expansion
+- Engineering Checkpoint
+- MVP-1 User Work Loop
+- Assurance Profile
+- Operations Profile
+- Roadmap
 
 ## Main idea
 
 Roadmap items are candidates, not staged-delivery commitments. Listing an item here does not create authority, conformance, implementation readiness, user acceptance, QA completion, verification satisfaction, residual-risk acceptance, security guarantees, or runtime behavior.
 
-A roadmap candidate stays outside v0.1 through v0.4 unless a future owner document explicitly promotes it. When promoted, it must still preserve user-owned judgment, route durable state and artifacts through Core-owned authority paths, keep evidence/verification/QA/work acceptance/residual risk separate, and use honest security wording for the capability actually proven.
+A roadmap candidate stays outside Engineering Checkpoint through Operations Profile unless a future owner document explicitly promotes it. When promoted, it must still preserve user-owned judgment, route durable state and artifacts through Core-owned authority paths, keep evidence/verification/QA/work acceptance/residual risk separate, and use honest security wording for the capability actually proven.
 
 ## Roadmap Boundary
 
@@ -52,7 +52,7 @@ A candidate cannot enter staged delivery unless a future owner decision defines 
 - a fixture or conformance target for the promoted behavior
 - fallback behavior for unsupported surfaces, missing capability, unavailable tools, stale data, or partial capture
 - no dependency on treating projections, dashboards, indexes, connector output, or generated documents as canonical state
-- an early-stage inflation check showing that the candidate does not add requirements to v0.1 through v0.4 or make unsupported surfaces fail earlier stages by default
+- an early-stage inflation check showing that the candidate does not add requirements to Engineering Checkpoint through Operations Profile or make unsupported surfaces fail earlier stages by default
 
 If any criterion is missing, the item remains a roadmap candidate.
 

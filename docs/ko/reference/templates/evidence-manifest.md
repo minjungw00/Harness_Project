@@ -6,7 +6,7 @@
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: Future/diagnostic projections입니다. v0.2 compact status card는 evidence summary/gap만 보여주며, full detailed Evidence Manifest projection은 later/profile scope입니다.
+구현 계층: Future/diagnostic projections입니다. MVP-1 compact status card는 evidence summary/gap만 보여주며, full detailed Evidence Manifest projection은 later/profile scope입니다.
 
 ## 기준 기록
 
@@ -80,7 +80,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 ## Authority And Close Refs
 - compact refs: write={write_authorization_ref|none}; decision={decision_packet_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
-- approval refs는 minimum v0.2에서 `none`입니다. Approval 형태 민감 동작 coverage는 later Approval owner profile이 active가 아닌 한 `decision_packet_refs`로 나타납니다.
+- approval refs는 minimum MVP-1에서 `none`입니다. Approval 형태 민감 동작 coverage는 later Approval owner profile이 active가 아닌 한 `decision_packet_refs`로 나타납니다.
 - redaction state:
 - projection freshness:
 
@@ -117,7 +117,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 `Coverage / 관문 표시 상태`는 이 manifest의 evidence coverage 또는 close와 관련된 관문 표시 상태입니다. 이 column의 `pending` 같은 값은 `ValidatorResult.status` 값이 아닙니다.
 
 ## Approval Refs
-- Later Approval owner profile이 active일 때만 채웁니다. Minimum v0.2의 Approval 형태 민감 동작 coverage는 Decision Packet refs에 둡니다.
+- Later Approval owner profile이 active일 때만 채웁니다. Minimum MVP-1의 Approval 형태 민감 동작 coverage는 Decision Packet refs에 둡니다.
 - APR-0001:
 
 ## Evidence Refs

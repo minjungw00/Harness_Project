@@ -32,7 +32,7 @@ Canonical operational meaning flows through Core-owned state-changing paths. Pro
 
 Security display must match the real control. Cooperative and detective surfaces can hold by instruction or detect after action. Preventive wording requires fixture-proven pre-tool blocking for the covered operation, and isolated wording requires a documented and proven separation boundary. High-risk work must not rely on cooperative-only claims when the work requires preventive or isolated controls.
 
-Early local Harness stages do not automatically provide operating-system permissions, sandbox arbitrary tools, make local files tamper-proof, or convert cooperative agent behavior into preventive security. v0.1 and v0.2 may refuse Core state-changing actions that lack authority, record state, validate the minimal artifact/evidence refs required by the active Core path, report stale or mismatched facts, and display honest guarantee limits. A structured blocker means Core or a connected surface reports that the Harness authority path cannot proceed; it is not a claim that Harness physically stopped a process before execution. User-facing wording should distinguish "not allowed by Harness authority state" or "held by instruction" from "physically prevented by runtime." Preventive controls are future/profile-specific until owner docs and conformance prove the exact covered operation; isolated controls are future/profile-specific until they prove the exact separation boundary.
+Early local Harness stages do not automatically provide operating-system permissions, sandbox arbitrary tools, make local files tamper-proof, or convert cooperative agent behavior into preventive security. Engineering Checkpoint and MVP-1 may refuse Core state-changing actions that lack authority, record state, validate the minimal artifact/evidence refs required by the active Core path, report stale or mismatched facts, and display honest guarantee limits. A structured blocker means Core or a connected surface reports that the Harness authority path cannot proceed; it is not a claim that Harness physically stopped a process before execution. User-facing wording should distinguish "not allowed by Harness authority state" or "held by instruction" from "physically prevented by runtime." Preventive controls are future/profile-specific until owner docs and conformance prove the exact covered operation; isolated controls are future/profile-specific until they prove the exact separation boundary.
 
 Operator entrypoints inherit the same guarantee level as the stage and connector profile that introduced them. A later recover, export, reconcile, artifact check, conformance run, or release handoff surface must not be described as preventing or enforcing more than its proven cooperative, detective, preventive, or isolated capability allows.
 
@@ -44,17 +44,17 @@ These are the default staged guarantees for the local reference path. A concrete
 
 | Stage | Default guarantee posture | Honest claim boundary |
 |---|---|---|
-| v0.1 Core Authority Smoke | Cooperative plus limited detective behavior. | Core can refuse unauthorized state-changing calls, produce structured status/blocker output, consume one compatible Write Authorization, record one Run, and validate the minimal artifact/evidence ref required by the active path. It does not stop a local process or agent from editing files outside Harness unless a separate preventive profile is proven. |
-| v0.2 First User-Value Slice | Cooperative plus user-visible blockers/status and limited detective behavior. | Users can see missing scope, missing decisions, missing evidence, close blockers, MCP availability, and honest guarantee status. Product/runtime/code writes hold by instruction when authority cannot be checked. This is still not default pre-tool blocking or isolation. |
-| v0.3 Agency Assurance Pack | Cooperative/detective assurance with stronger separation of verification, QA, residual risk, work acceptance, and sensitive-action Approval. | Harness can record and report assurance gaps, stale evidence, missing independence, QA blockers, waiver/risk/acceptance boundaries, and context-hygiene findings. It does not become preventive or isolated unless a specific profile proves that capability. |
-| v0.4 Operations & Handoff Pack | Detective operational behavior around recover, export, readiness, artifact integrity, projection freshness, and handoff reporting. | Operator surfaces can diagnose, report, repair through owner paths, export safe bundles, and check artifact integrity. They do not make Runtime Home tamper-proof, make projections authoritative, or isolate arbitrary tools by default. |
-| v1+ Expansion | Preventive or isolated candidates only when promoted by owner docs and proven for the covered operation or boundary. | Stronger claims require exact contracts, covered operations, fixture proof, fallback behavior, and, for isolation, a real named separation boundary such as a proven sandbox, permission boundary, locked-down runner, process boundary, or container boundary. |
+| Engineering Checkpoint | Cooperative plus limited detective behavior. | Core can refuse unauthorized state-changing calls, produce structured status/blocker output, consume one compatible Write Authorization, record one Run, and validate the minimal artifact/evidence ref required by the active path. It does not stop a local process or agent from editing files outside Harness unless a separate preventive profile is proven. |
+| MVP-1 User Work Loop | Cooperative plus user-visible blockers/status and limited detective behavior. | Users can see missing scope, missing decisions, missing evidence, close blockers, MCP availability, and honest guarantee status. Product/runtime/code writes hold by instruction when authority cannot be checked. This is still not default pre-tool blocking or isolation. |
+| Assurance Profile | Cooperative/detective assurance with stronger separation of verification, QA, residual risk, work acceptance, and sensitive-action Approval. | Harness can record and report assurance gaps, stale evidence, missing independence, QA blockers, waiver/risk/acceptance boundaries, and context-hygiene findings. It does not become preventive or isolated unless a specific profile proves that capability. |
+| Operations Profile | Detective operational behavior around recover, export, readiness, artifact integrity, projection freshness, and handoff reporting. | Operator surfaces can diagnose, report, repair through owner paths, export safe bundles, and check artifact integrity. They do not make Runtime Home tamper-proof, make projections authoritative, or isolate arbitrary tools by default. |
+| Roadmap | Preventive or isolated candidates only when promoted by owner docs and proven for the covered operation or boundary. | Stronger claims require exact contracts, covered operations, fixture proof, fallback behavior, and, for isolation, a real named separation boundary such as a proven sandbox, permission boundary, locked-down runner, process boundary, or container boundary. |
 
 The stage map does not lower Core authority. Core may always refuse an invalid state transition, deny Write Authorization, mark a gate or derived view stale/blocked, or report a structured blocker according to the active owner contract. The map only limits security wording about whether Harness can physically stop an action before it happens or isolate the action behind a security boundary.
 
-## v0.1/v0.2 feasible control baseline
+## Engineering Checkpoint / MVP-1 feasible control baseline
 
-The v0.1 and v0.2 reference path can use these controls without claiming a preventive or isolated runtime boundary:
+The Engineering Checkpoint and MVP-1 reference path can use these controls without claiming a preventive or isolated runtime boundary:
 
 - local-only posture display for the registered project surface
 - clear Product Repository / Harness Server / Harness Runtime Home separation
@@ -84,7 +84,7 @@ Until promoted that way, references to guards, freeze modes, careful modes, side
 
 ## Scenario posture by stage
 
-| Scenario | v0.1 Core Authority Smoke | v0.2 First User-Value Slice | v0.3 Agency Assurance Pack | v0.4 Operations & Handoff Pack | v1+ Expansion |
+| Scenario | Engineering Checkpoint | MVP-1 User Work Loop | Assurance Profile | Operations Profile | Roadmap |
 |---|---|---|---|---|---|
 | MCP unavailable | Authority-dependent calls fail or hold; no Core state, Write Authorization, evidence, acceptance, residual-risk acceptance, or close claim is invented from chat or cached text. | The user sees an availability blocker/status and the next reconnect or diagnosis action. Product/runtime/code writes hold by instruction unless a proven stronger profile covers the operation. | Assurance paths report that verification, QA, waiver, risk, or acceptance state cannot be trusted through the unavailable path. | `serve mcp`, `doctor`, and `recover` distinguish `MCP_SERVER_UNAVAILABLE` from `SURFACE_MCP_UNAVAILABLE` and preserve the public `MCP_UNAVAILABLE`/capability error boundary. | A promoted guard may stop a covered write before execution, or a promoted isolation profile may route work through a real boundary, only for the proven path. |
 | Out-of-scope write | `prepare_write` can refuse Write Authorization and return a structured blocker; external edits are only detected if the active path observes them. | The user sees what is outside scope and can narrow or deliberately expand scope through the proper decision path. | Autonomy, approval, evidence, and changed-path checks can mark the run, evidence, verification, or close readiness stale/blocked/insufficient. | Doctor, recover, and reconcile can report changed-path or generated-file drift and route repair through owner paths. | A preventive profile may block covered paths/commands/network/secrets before execution only when fixture proof covers that operation. |
@@ -121,11 +121,11 @@ This document does not own:
 
 ## Baseline assumptions
 
-The v0.1 Core Authority Smoke and staged-delivery default are local-first. The expected baseline is a user-controlled Product Repository, a local Harness Server / Installation, a Harness Runtime Home, an MCP server exposed only through the registered local connector posture, and one or more connected agent surfaces.
+The Engineering Checkpoint and staged-delivery default are local-first. The expected baseline is a user-controlled Product Repository, a local Harness Server / Installation, a Harness Runtime Home, an MCP server exposed only through the registered local connector posture, and one or more connected agent surfaces.
 
 Local-first does not mean every local process is trusted. Another process, stale connector configuration, broad file permissions, a forwarded port, a hand-edited generated file, or stale chat context may still affect what an agent sees or does. Harness therefore treats nearby surfaces as separate trust zones and accepts operational meaning only through owner paths.
 
-Remote or shared MCP exposure remains outside the v0.1 baseline and staged delivery unless owner documentation and conformance promote and prove a specific connector posture. A promoted posture must still show the access-control contract, secret/PII handling, redaction or omission behavior, honest guarantee display, and Core validation that remain in force.
+Remote or shared MCP exposure remains outside the Engineering Checkpoint baseline and staged delivery unless owner documentation and conformance promote and prove a specific connector posture. A promoted posture must still show the access-control contract, secret/PII handling, redaction or omission behavior, honest guarantee display, and Core validation that remain in force.
 
 ## Security assets
 
@@ -176,7 +176,7 @@ Remote or shared MCP exposure remains outside the v0.1 baseline and staged deliv
 
 ### MCP local access and caller boundaries
 
-The v0.1 baseline and staged-delivery default MCP posture is local-only for a registered project surface. Local-only means local process, local socket, localhost-loopback, in-process/stdio, process-scoped configuration material, a per-project token or handle, or an equivalent local IPC/control path for the expected local user/profile.
+The Engineering Checkpoint baseline and staged-delivery default MCP posture is local-only for a registered project surface. Local-only means local process, local socket, localhost-loopback, in-process/stdio, process-scoped configuration material, a per-project token or handle, or an equivalent local IPC/control path for the expected local user/profile.
 
 Where a transport has an origin, caller identity, authentication token, socket path, filesystem permission, or bind address, the connector profile and operations display must make the access-control class visible without printing raw secrets. Non-loopback binding, forwarded or tunneled endpoints, shared sockets, cloud/CI relays, cross-user paths, remote callers, and stale access material are off-profile unless a connector owner has promoted and proven that posture.
 

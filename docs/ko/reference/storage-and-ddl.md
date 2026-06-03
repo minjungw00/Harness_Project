@@ -8,7 +8,7 @@ Storage authority, Runtime Home identity, staged SQLite table 필요 범위, eve
 
 ## 이런 때 읽기
 
-- v0.1 또는 v0.2에 어떤 storage table이 필요한지 확인할 때.
+- 내부 엔지니어링 점검 또는 MVP-1에 어떤 storage table이 필요한지 확인할 때.
 - Core-owned state와 chat, Markdown projection, connector output, tool output을 분리할 때.
 - Runtime Home risk, artifact poisoning control, event/audit behavior, JSON validation, enum hardening, future schema candidate를 확인할 때.
 - later profile table이 첫 server batch를 부풀리지 않게 점검할 때.
@@ -96,7 +96,7 @@ default_checks:
 
 Runtime Home은 local operational authority와 민감한 support data를 담습니다. Broad write access는 tampering과 artifact poisoning risk입니다. Broad read access는 secret, PII, token, log, screenshot, diff, verification bundle, export를 노출할 수 있습니다.
 
-v0.1과 v0.2 storage는 다른 profile이 더 강한 control을 증명하기 전까지 cooperative/detective입니다. File permission, owner check, hash, `doctor` finding은 방어적 보강입니다. 그 자체로 OS-level sandboxing, arbitrary-tool control, tamper-proof storage, pre-execution blocking을 만들지 않습니다.
+내부 엔지니어링 점검과 MVP-1 storage는 다른 profile이 더 강한 control을 증명하기 전까지 cooperative/detective입니다. File permission, owner check, hash, `doctor` finding은 방어적 보강입니다. 그 자체로 OS-level sandboxing, arbitrary-tool control, tamper-proof storage, pre-execution blocking을 만들지 않습니다.
 
 | 관찰 사항 | Storage 의미 |
 |---|---|
@@ -107,46 +107,46 @@ v0.1과 v0.2 storage는 다른 profile이 더 강한 control을 증명하기 전
 
 ## Table-To-Stage Matrix
 
-이 matrix가 main table list입니다. 작은 v0.1/v0.2 storage와 later profile candidate를 분리합니다.
+이 matrix가 main table list입니다. 작은 내부 엔지니어링 점검 / MVP-1 storage와 later profile candidate를 분리합니다.
 
-Public API ref는 [MCP API와 스키마](mcp-api-and-schemas.md#artifactref)가 담당합니다. Minimum v0.2 storage slice에서는 `evidence_summaries.evidence_summary_id`를 `StateRecordRef.record_kind=evidence_summary`로, `close_readiness.close_readiness_id`를 `StateRecordRef.record_kind=close_readiness`로 가리킬 수 있습니다. Approval 형태 민감 동작 승인은 `StateRecordRef.record_kind=decision_packet`으로 참조합니다. `StateRecordRef.record_kind=approval`은 `approvals` table이 명시적으로 승격되기 전까지 later-profile입니다. `change_unit_dependencies`는 future/diagnostic storage로 남으므로 `record_kind=change_unit_dependency`는 v0.2 active public ref가 아닙니다.
+Public API ref는 [MCP API와 스키마](mcp-api-and-schemas.md#artifactref)가 담당합니다. Minimum MVP-1 storage slice에서는 `evidence_summaries.evidence_summary_id`를 `StateRecordRef.record_kind=evidence_summary`로, `close_readiness.close_readiness_id`를 `StateRecordRef.record_kind=close_readiness`로 가리킬 수 있습니다. Approval 형태 민감 동작 승인은 `StateRecordRef.record_kind=decision_packet`으로 참조합니다. `StateRecordRef.record_kind=approval`은 `approvals` table이 명시적으로 승격되기 전까지 later-profile입니다. `change_unit_dependencies`는 future/diagnostic storage로 남으므로 `record_kind=change_unit_dependency`는 MVP-1 active public ref가 아닙니다.
 
 | Table | Purpose | First active stage | Authority or auxiliary | User-facing or internal | Later status |
 |---|---|---|---|---|---|
-| `registry_meta` | Runtime Home id와 registry schema version | v0.1 | auxiliary identity | internal | active early |
-| `projects` | Registered project identity와 state location | v0.1 | registration authority | project selection에서 user-facing | active early |
-| `project_surfaces` | Surface/capability declaration과 guarantee display, surface profile이 설치된 경우 | v0.3/v0.4 또는 profile-promoted | auxiliary capability state | internal/user-facing diagnostics | future/later |
-| `project_state` | Project-local clock과 active Task pointer | v0.1 | authority | internal | active early |
-| `tasks` | Current Task record와 task state clock | v0.1 | authority | user-facing summary | active early |
-| `change_units` | Write를 위한 minimal scoped work boundary | v0.1 | authority | scope 설명 시 user-facing | active early |
-| `write_authorizations` | Durable single-use `prepare_write` allow record | v0.1 | authority | internal, blocker는 user-visible | active early |
-| `runs` | Committed observed Run record | v0.1 | authority | evidence/status ref로 user-facing | active early |
-| `artifacts` | Registered artifact/evidence file metadata | v0.1 | artifact metadata authority | ref를 통해 surfaced | active early |
-| `artifact_links` | Artifact와 Task/Run/owner record의 compatible link | v0.1 | artifact owner-link authority | internal | active early |
-| `task_blockers` | Structured status/blocker row | v0.1 | stored blocker authority | user-facing | active early |
-| `task_events` | Append-only audit와 event-order trail | v0.1 | audit trail, projection support | mostly internal | active early |
-| `tool_invocations` | Committed idempotency replay row | v0.1 | replay support | internal | active early |
-| `task_intake` | Ordinary-language intake와 tracked clarification state | v0.2 | auxiliary shaping state | user-facing | not v0.1 |
-| `decision_packets` | Simplified user judgment record와 recorded answer | v0.2 | user judgment authority | user-facing | not v0.1 |
-| `decision_requests` | Decision Packet에 link되는 optional prompt routing, replay, handoff metadata | v0.2 optional | auxiliary routing state | internal/user-facing prompt support | optional, not authority by itself |
-| `residual_risks` | Minimal visible residual-risk row | v0.2 | stored residual risk authority | user-facing | not v0.1 |
-| `evidence_summaries` | Artifact/run ref 위의 minimal evidence summary | v0.2 | authority ref 위의 auxiliary summary | user-facing | not v0.1 |
-| `close_readiness` | Minimal close readiness와 close-blocker snapshot | v0.2 | auxiliary display/check snapshot | user-facing | not v0.1 |
-| `projection_status_cards` | Projection job system 없는 optional freshness/status card state | v0.2 optional | auxiliary derived display state | user-facing | optional, not authority |
-| `approvals` | Sensitive-action approval lifecycle | v0.3 또는 profile-promoted | profile active 시 authority | user-facing | future/later |
-| `baselines` | Repository baseline capture | v0.3 또는 profile-promoted | assurance support | internal | future/later |
-| `evidence_manifests` | Full criteria-to-evidence coverage | v0.3 또는 profile-promoted | full evidence profile authority | user-facing summary | future/later |
-| `evals` | Detached verification/eval record | v0.3 또는 profile-promoted | profile active 시 authority | user-facing summary | future/later |
-| `manual_qa_records` | Manual QA profile, result, finding | v0.3 또는 profile-promoted | profile active 시 authority | user-facing summary | future/later |
-| `validator_runs` | Persisted validator result | v0.3 또는 profile-promoted | diagnostic state | internal/user-facing finding | future/later |
-| `feedback_loops` | Feedback-loop policy record | v0.3 또는 profile-promoted | policy support | internal/user-facing summary | future/later |
-| `tdd_traces` | TDD trace record | v0.3 또는 profile-promoted | policy/evidence support | internal/user-facing summary | future/later |
-| `projection_jobs` | Durable projection outbox와 rendered-output freshness | v0.4 또는 profile-promoted | auxiliary derived-view job state | internal/user-facing freshness | future/later |
-| `reconcile_items` | Human-editable projection drift/proposal handling | v0.4 또는 profile-promoted | Core에 accept되기 전까지 auxiliary | user-facing | future/later |
-| `connector_manifests` | Connector-managed file manifest와 drift state | v0.4 또는 profile-promoted | diagnostic/support | internal | future/later |
-| `persistent_locks` | Process lock만으로 부족할 때 durable lock/recovery metadata | v0.4 또는 profile-promoted | auxiliary | internal | future/later |
-| `export_manifests` | Export/recover package manifest | v0.4 또는 profile-promoted | auxiliary support | internal/user-facing report | future/later |
-| `recover_items` | Recovery finding과 repair plan state | v0.4 또는 profile-promoted | diagnostic/support | internal/user-facing report | future/later |
+| `registry_meta` | Runtime Home id와 registry schema version | 내부 엔지니어링 점검 | auxiliary identity | internal | active early |
+| `projects` | Registered project identity와 state location | 내부 엔지니어링 점검 | registration authority | project selection에서 user-facing | active early |
+| `project_surfaces` | Surface/capability declaration과 guarantee display, surface profile이 설치된 경우 | 보증 프로필/운영 프로필 또는 profile-promoted | auxiliary capability state | internal/user-facing diagnostics | future/later |
+| `project_state` | Project-local clock과 active Task pointer | 내부 엔지니어링 점검 | authority | internal | active early |
+| `tasks` | Current Task record와 task state clock | 내부 엔지니어링 점검 | authority | user-facing summary | active early |
+| `change_units` | Write를 위한 minimal scoped work boundary | 내부 엔지니어링 점검 | authority | scope 설명 시 user-facing | active early |
+| `write_authorizations` | Durable single-use `prepare_write` allow record | 내부 엔지니어링 점검 | authority | internal, blocker는 user-visible | active early |
+| `runs` | Committed observed Run record | 내부 엔지니어링 점검 | authority | evidence/status ref로 user-facing | active early |
+| `artifacts` | Registered artifact/evidence file metadata | 내부 엔지니어링 점검 | artifact metadata authority | ref를 통해 surfaced | active early |
+| `artifact_links` | Artifact와 Task/Run/owner record의 compatible link | 내부 엔지니어링 점검 | artifact owner-link authority | internal | active early |
+| `task_blockers` | Structured status/blocker row | 내부 엔지니어링 점검 | stored blocker authority | user-facing | active early |
+| `task_events` | Append-only audit와 event-order trail | 내부 엔지니어링 점검 | audit trail, projection support | mostly internal | active early |
+| `tool_invocations` | Committed idempotency replay row | 내부 엔지니어링 점검 | replay support | internal | active early |
+| `task_intake` | Ordinary-language intake와 tracked clarification state | MVP-1 | auxiliary shaping state | user-facing | not 내부 엔지니어링 점검 |
+| `decision_packets` | Simplified user judgment record와 recorded answer | MVP-1 | user judgment authority | user-facing | not 내부 엔지니어링 점검 |
+| `decision_requests` | Decision Packet에 link되는 optional prompt routing, replay, handoff metadata | MVP-1 optional | auxiliary routing state | internal/user-facing prompt support | optional, not authority by itself |
+| `residual_risks` | Minimal visible residual-risk row | MVP-1 | stored residual risk authority | user-facing | not 내부 엔지니어링 점검 |
+| `evidence_summaries` | Artifact/run ref 위의 minimal evidence summary | MVP-1 | authority ref 위의 auxiliary summary | user-facing | not 내부 엔지니어링 점검 |
+| `close_readiness` | Minimal close readiness와 close-blocker snapshot | MVP-1 | auxiliary display/check snapshot | user-facing | not 내부 엔지니어링 점검 |
+| `projection_status_cards` | Projection job system 없는 optional freshness/status card state | MVP-1 optional | auxiliary derived display state | user-facing | optional, not authority |
+| `approvals` | Sensitive-action approval lifecycle | 보증 프로필 또는 profile-promoted | profile active 시 authority | user-facing | future/later |
+| `baselines` | Repository baseline capture | 보증 프로필 또는 profile-promoted | assurance support | internal | future/later |
+| `evidence_manifests` | Full criteria-to-evidence coverage | 보증 프로필 또는 profile-promoted | full evidence profile authority | user-facing summary | future/later |
+| `evals` | Detached verification/eval record | 보증 프로필 또는 profile-promoted | profile active 시 authority | user-facing summary | future/later |
+| `manual_qa_records` | Manual QA profile, result, finding | 보증 프로필 또는 profile-promoted | profile active 시 authority | user-facing summary | future/later |
+| `validator_runs` | Persisted validator result | 보증 프로필 또는 profile-promoted | diagnostic state | internal/user-facing finding | future/later |
+| `feedback_loops` | Feedback-loop policy record | 보증 프로필 또는 profile-promoted | policy support | internal/user-facing summary | future/later |
+| `tdd_traces` | TDD trace record | 보증 프로필 또는 profile-promoted | policy/evidence support | internal/user-facing summary | future/later |
+| `projection_jobs` | Durable projection outbox와 rendered-output freshness | 운영 프로필 또는 profile-promoted | auxiliary derived-view job state | internal/user-facing freshness | future/later |
+| `reconcile_items` | Human-editable projection drift/proposal handling | 운영 프로필 또는 profile-promoted | Core에 accept되기 전까지 auxiliary | user-facing | future/later |
+| `connector_manifests` | Connector-managed file manifest와 drift state | 운영 프로필 또는 profile-promoted | diagnostic/support | internal | future/later |
+| `persistent_locks` | Process lock만으로 부족할 때 durable lock/recovery metadata | 운영 프로필 또는 profile-promoted | auxiliary | internal | future/later |
+| `export_manifests` | Export/recover package manifest | 운영 프로필 또는 profile-promoted | auxiliary support | internal/user-facing report | future/later |
+| `recover_items` | Recovery finding과 repair plan state | 운영 프로필 또는 profile-promoted | diagnostic/support | internal/user-facing report | future/later |
 | `task_spine_entries` | Journey/spine continuity record | future/diagnostic | supplemental | user-facing | non-stage-required |
 | `journey_cards` | Journey view를 위한 render/cache support가 필요할 때 | future/diagnostic | derived display support | user-facing | non-stage-required |
 | `shared_designs` | Design-support profile이 승격될 때 shared design basis record | future/diagnostic | policy support | user-facing summary | non-stage-required |
@@ -155,9 +155,9 @@ Public API ref는 [MCP API와 스키마](mcp-api-and-schemas.md#artifactref)가 
 | `module_map_items` | Module map/stewardship record | future/diagnostic | policy support | internal/user-facing summary | non-stage-required |
 | `interface_contracts` | Interface contract/stewardship record | future/diagnostic | policy support | internal/user-facing summary | non-stage-required |
 
-## v0.1 Physical Schema
+## 내부 엔지니어링 점검 Physical Schema
 
-v0.1은 Core Authority Smoke입니다. 의도적으로 작습니다. Project 등록, Task 하나 생성 또는 load, scoped work boundary 하나 정의, write 하나 authorize, Run 하나 기록, artifact/evidence ref 하나 등록, event append, structured blocker return에 충분해야 합니다.
+내부 엔지니어링 점검은 내부 authority-loop checkpoint입니다. 의도적으로 작습니다. Project 등록, Task 하나 생성 또는 load, scoped work boundary 하나 정의, write 하나 authorize, Run 하나 기록, artifact/evidence ref 하나 등록, event append, structured blocker return에 충분해야 합니다.
 
 아래 DDL은 planning을 위한 reference fragment입니다. Migration runner가 이미 존재한다는 증거가 아닙니다.
 
@@ -165,15 +165,17 @@ v0.1은 Core Authority Smoke입니다. 의도적으로 작습니다. Project 등
 
 | Profile | Stage | Required for | 이 profile에 required가 아닌 것 |
 |---|---|---|---|
-| Core Authority Smoke schema | v0.1 | 좁은 local authority loop | Decision Packet, Evidence Manifest, Manual QA, Eval, residual-risk acceptance, projection job, reconcile, validator, Journey, stewardship map |
-| First User-Value Slice schema | v0.2 | 첫 user-value record와 readable status | detached verification, full Manual QA, full projection job system, export/recover, broad operations |
-| Agency Assurance schema | v0.3 또는 promoted profile | verification, QA, approval, feedback/TDD, validator support | promoted되지 않은 v0.1/v0.2 exit |
-| Operations schema | v0.4 또는 promoted profile | projection job, reconcile, connector manifest, recover/export | promoted되지 않은 v0.1/v0.2 exit |
+| 내부 엔지니어링 점검 schema | 내부 엔지니어링 점검 | 좁은 local authority loop | Decision Packet, Evidence Manifest, Manual QA, Eval, residual-risk acceptance, projection job, reconcile, validator, Journey, stewardship map |
+| MVP-1 사용자 작업 루프 schema | MVP-1 | 첫 user-value record와 readable status | detached verification, full Manual QA, full projection job system, export/recover, broad operations |
+| 보증 프로필 schema | 보증 프로필 또는 promoted profile | verification, QA, approval, feedback/TDD, validator support | promoted되지 않은 내부 엔지니어링 점검 / MVP-1 exit |
+| Operations schema | 운영 프로필 또는 promoted profile | projection job, reconcile, connector manifest, recover/export | promoted되지 않은 내부 엔지니어링 점검 / MVP-1 exit |
 | Future / diagnostic schema | future/diagnostic | journey/spine, domain/module/interface diagnostic | promoted되지 않은 모든 current stage exit |
 
-### Core Authority Smoke schema
+<a id="core-authority-smoke-schema"></a>
 
-Main v0.1 table count: total 12 tables입니다. `registry.sqlite`에 2개, project `state.sqlite`에 10개입니다. 첫 구현 조각에 맞게 작게 유지한 수입니다.
+### 내부 엔지니어링 점검 schema
+
+Main 내부 엔지니어링 점검 table count: total 12 tables입니다. `registry.sqlite`에 2개, project `state.sqlite`에 10개입니다. 첫 구현 조각에 맞게 작게 유지한 수입니다.
 
 #### `registry.sqlite`
 
@@ -195,7 +197,7 @@ CREATE TABLE projects (
 );
 ```
 
-v0.1에서 required `registry_meta` key는 `runtime_home_id`와 `schema_version`입니다. 이후 구현이 더 formal한 metadata table을 선택할 수 있지만, v0.1은 durable identity와 version fact만 필요합니다.
+내부 엔지니어링 점검에서 required `registry_meta` key는 `runtime_home_id`와 `schema_version`입니다. 이후 구현이 더 formal한 metadata table을 선택할 수 있지만, 내부 엔지니어링 점검은 durable identity와 version fact만 필요합니다.
 
 #### `state.sqlite`
 
@@ -326,7 +328,7 @@ CREATE TABLE tool_invocations (
 );
 ```
 
-Recommended v0.1 indexes:
+Recommended 내부 엔지니어링 점검 indexes:
 
 ```sql
 CREATE INDEX idx_tasks_project_phase ON tasks(project_id, lifecycle_phase);
@@ -340,11 +342,11 @@ CREATE INDEX idx_task_blockers_task_status ON task_blockers(task_id, status);
 CREATE INDEX idx_task_events_task_seq ON task_events(task_id, event_seq);
 ```
 
-v0.1은 full natural-language intake system 없이 narrow owner-valid setup path로 initial task creation을 저장할 수 있습니다. Status/blocker output은 `tasks`, `change_units`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `task_blockers`에서 직접 반환할 수 있습니다.
+내부 엔지니어링 점검은 full natural-language intake system 없이 narrow owner-valid setup path로 initial task creation을 저장할 수 있습니다. Status/blocker output은 `tasks`, `change_units`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `task_blockers`에서 직접 반환할 수 있습니다.
 
 ### Artifact directory layout
 
-Directory layout은 staged입니다. v0.1은 실제로 쓰는 directory만 필요합니다. 보통 `artifacts/tmp/`, `artifacts/diffs/`, `artifacts/logs/`, 필요하면 `artifacts/bundles/` 정도입니다. Reference layout의 나머지 directory는 허용되지만 v0.1 requirement는 아닙니다.
+Directory layout은 staged입니다. 내부 엔지니어링 점검은 실제로 쓰는 directory만 필요합니다. 보통 `artifacts/tmp/`, `artifacts/diffs/`, `artifacts/logs/`, 필요하면 `artifacts/bundles/` 정도입니다. Reference layout의 나머지 directory는 허용되지만 내부 엔지니어링 점검 requirement는 아닙니다.
 
 ### Artifact Kind Storage Notes
 
@@ -363,13 +365,13 @@ State를 support하는 committed artifact에는 다음이 필요합니다.
 
 Compatible owner link가 없는 `artifacts` row만으로는 evidence, QA, verification, projection, export, close-related check를 만족할 수 없습니다.
 
-## v0.2 Additions
+## MVP-1 Additions
 
-v0.2는 첫 사용자 가치 조각(First User-Value Slice)입니다. 사람이 작업을 이해하는 데 필요한 record를 추가합니다. Intake state, simplified user judgment, Approval 형태 민감 동작 Decision Packet, visible residual risk, evidence summary, close blocker/readiness, optional status-card freshness가 핵심입니다. 그래도 committed Approval lifecycle storage, full assurance, projection job, reconciliation, operations system은 피합니다.
+MVP-1은 첫 사용자 가치 조각(MVP-1 사용자 작업 루프)입니다. 사람이 작업을 이해하는 데 필요한 record를 추가합니다. Intake state, simplified user judgment, Approval 형태 민감 동작 Decision Packet, visible residual risk, evidence summary, close blocker/readiness, optional status-card freshness가 핵심입니다. 그래도 committed Approval lifecycle storage, full assurance, projection job, reconciliation, operations system은 피합니다.
 
-### First User-Value Slice schema
+### MVP-1 사용자 작업 루프 schema
 
-Main v0.2 addition count: 5 tables입니다. Optional `decision_requests`와 `projection_status_cards` table을 추가할 수 있습니다. 이 table들은 v0.1 schema 위에 놓입니다.
+Main MVP-1 addition count: 5 tables입니다. Optional `decision_requests`와 `projection_status_cards` table을 추가할 수 있습니다. 이 table들은 내부 엔지니어링 점검 schema 위에 놓입니다.
 
 ```sql
 CREATE TABLE task_intake (
@@ -443,9 +445,9 @@ CREATE TABLE close_readiness (
 );
 ```
 
-Optional v0.2 prompt routing table:
+Optional MVP-1 prompt routing table:
 
-이 v0.2 addition의 public ref는 의도적으로 작게 유지합니다. `evidence_summaries`와 `close_readiness`는 `StateRecordRef`의 `evidence_summary`, `close_readiness`로 surface될 수 있습니다. 둘은 authority ref를 요약하거나 close check를 보조할 뿐이며, full `evidence_manifests`, verification, 수동 QA, projection, report/export profile이 active라는 뜻이 아닙니다.
+이 MVP-1 addition의 public ref는 의도적으로 작게 유지합니다. `evidence_summaries`와 `close_readiness`는 `StateRecordRef`의 `evidence_summary`, `close_readiness`로 surface될 수 있습니다. 둘은 authority ref를 요약하거나 close check를 보조할 뿐이며, full `evidence_manifests`, verification, 수동 QA, projection, report/export profile이 active라는 뜻이 아닙니다.
 
 ```sql
 CREATE TABLE decision_requests (
@@ -462,9 +464,9 @@ CREATE TABLE decision_requests (
 
 `decision_requests`는 그 자체로 judgment, gate, waiver, residual-risk acceptance, close condition을 satisfy하지 않습니다. Compatible `decision_packets` row를 위한 routing 또는 replay metadata일 뿐입니다.
 
-`judgment_route=approve-sensitive-action`에서 minimum v0.2는 요청된 `judgment_payload.approval_scope`를 `decision_packets.judgment_payload_json`에 저장하고, 사용자의 grant, denial, expiry를 Decision Packet에서 해소합니다. `approvals` row, Approval `StateRecordRef`, `approval_id`, `approval_refs`, `APR` projection은 요구하지 않습니다.
+`judgment_route=approve-sensitive-action`에서 minimum MVP-1은 요청된 `judgment_payload.approval_scope`를 `decision_packets.judgment_payload_json`에 저장하고, 사용자의 grant, denial, expiry를 Decision Packet에서 해소합니다. `approvals` row, Approval `StateRecordRef`, `approval_id`, `approval_refs`, `APR` projection은 요구하지 않습니다.
 
-Optional v0.2 status-card freshness table:
+Optional MVP-1 status-card freshness table:
 
 ```sql
 CREATE TABLE projection_status_cards (
@@ -479,39 +481,39 @@ CREATE TABLE projection_status_cards (
 );
 ```
 
-`projection_status_cards`는 projection job system이 아닙니다. Status 또는 next-action card를 위한 optional display/freshness cache입니다. 생략한다면 v0.2는 current `tasks.state_version`과 read response의 source version을 비교해 freshness를 직접 계산할 수 있습니다.
+`projection_status_cards`는 projection job system이 아닙니다. Status 또는 next-action card를 위한 optional display/freshness cache입니다. 생략한다면 MVP-1은 current `tasks.state_version`과 read response의 source version을 비교해 freshness를 직접 계산할 수 있습니다.
 
 ## Future / Later Profile Schema Candidates
 
-이 절은 유용한 future schema candidate를 보존하되 v0.1/v0.2 implementation path에 올리지 않습니다. 이 inventory를 required DDL bundle로 취급하지 않습니다.
+이 절은 유용한 future schema candidate를 보존하되 내부 엔지니어링 점검 / MVP-1 implementation path에 올리지 않습니다. 이 inventory를 required DDL bundle로 취급하지 않습니다.
 
-### Agency Assurance schema
+### 보증 프로필 schema
 
-Agency Assurance profile storage는 v0.3 또는 profile-promoted 범위입니다. v0.1/v0.2가 아닙니다. Candidate table:
+보증 프로필 storage는 보증 프로필 또는 profile-promoted 범위입니다. 내부 엔지니어링 점검 / MVP-1이 아닙니다. Candidate table:
 
 | Candidate table | 나중에 필요한 이유 | Required가 아닌 범위 |
 |---|---|---|
-| `approvals` | Sensitive-action approval lifecycle과 drift handling | v0.1 authority loop, Approval 형태 Decision Packet을 포함한 ordinary v0.2 judgment display |
-| `baselines` | Assurance, approval, verification freshness를 위한 repository baseline capture | promoted profile이 baseline check를 요구하지 않는 v0.1/v0.2 |
-| `evidence_manifests` | Full criteria-to-evidence coverage | v0.1 single artifact/evidence ref, v0.2 evidence summary |
-| `evals` | Detached verification 또는 evaluator review | v0.1/v0.2 |
-| `manual_qa_records` | Manual QA result, finding, setup, evidence refs | v0.1/v0.2 |
-| `validator_runs` | Persisted `ValidatorResult` row | narrow owner가 validator를 승격하지 않은 v0.1/v0.2 |
-| `feedback_loops` | Selected feedback loop를 위한 policy support | v0.1/v0.2 |
-| `tdd_traces` | TDD profile이 선택될 때 red/green/refactor evidence | v0.1/v0.2 |
+| `approvals` | Sensitive-action approval lifecycle과 drift handling | 내부 엔지니어링 점검 authority loop, Approval 형태 Decision Packet을 포함한 ordinary MVP-1 judgment display |
+| `baselines` | Assurance, approval, verification freshness를 위한 repository baseline capture | promoted profile이 baseline check를 요구하지 않는 내부 엔지니어링 점검 / MVP-1 |
+| `evidence_manifests` | Full criteria-to-evidence coverage | 내부 엔지니어링 점검 single artifact/evidence ref, MVP-1 evidence summary |
+| `evals` | Detached verification 또는 evaluator review | 내부 엔지니어링 점검 / MVP-1 |
+| `manual_qa_records` | Manual QA result, finding, setup, evidence refs | 내부 엔지니어링 점검 / MVP-1 |
+| `validator_runs` | Persisted `ValidatorResult` row | narrow owner가 validator를 승격하지 않은 내부 엔지니어링 점검 / MVP-1 |
+| `feedback_loops` | Selected feedback loop를 위한 policy support | 내부 엔지니어링 점검 / MVP-1 |
+| `tdd_traces` | TDD profile이 선택될 때 red/green/refactor evidence | 내부 엔지니어링 점검 / MVP-1 |
 
 ### Operations schema
 
-Operations profile storage는 v0.4 또는 profile-promoted 범위입니다. Candidate table:
+Operations profile storage는 운영 프로필 또는 profile-promoted 범위입니다. Candidate table:
 
 | Candidate table | 나중에 필요한 이유 | Required가 아닌 범위 |
 |---|---|---|
-| `projection_jobs` | Rendered Markdown 또는 managed output을 위한 durable outbox | v0.1/v0.2, optional status card는 이 table을 요구하지 않음 |
-| `reconcile_items` | Human edit 또는 projection drift를 Core decision으로 라우팅 | v0.1/v0.2 |
-| `connector_manifests` | Connector-managed file과 drift 추적 | v0.1/v0.2 |
-| `persistent_locks` | Process lock만으로 부족할 때 durable lock/recovery metadata | v0.1/v0.2 |
-| `export_manifests` | Release handoff 또는 export package metadata | v0.1/v0.2 |
-| `recover_items` | Recovery finding, repair plan, operator follow-up | v0.1/v0.2 |
+| `projection_jobs` | Rendered Markdown 또는 managed output을 위한 durable outbox | 내부 엔지니어링 점검 / MVP-1, optional status card는 이 table을 요구하지 않음 |
+| `reconcile_items` | Human edit 또는 projection drift를 Core decision으로 라우팅 | 내부 엔지니어링 점검 / MVP-1 |
+| `connector_manifests` | Connector-managed file과 drift 추적 | 내부 엔지니어링 점검 / MVP-1 |
+| `persistent_locks` | Process lock만으로 부족할 때 durable lock/recovery metadata | 내부 엔지니어링 점검 / MVP-1 |
+| `export_manifests` | Release handoff 또는 export package metadata | 내부 엔지니어링 점검 / MVP-1 |
+| `recover_items` | Recovery finding, repair plan, operator follow-up | 내부 엔지니어링 점검 / MVP-1 |
 
 ### Future / diagnostic schema
 
@@ -522,19 +524,19 @@ Future 또는 diagnostic schema candidate는 owner가 승격하기 전까지 non
 - Rich design support: `shared_designs`, `change_unit_dependencies`
 - Diagnostics and polish: metrics, dashboard, context index, connector analytics, export/recover detail table, richer projection cache
 
-이 record들은 유용할 수 있지만 v0.1 Core Authority Smoke나 v0.2 First User-Value Slice의 전제 조건이 되어서는 안 됩니다.
+이 record들은 유용할 수 있지만 내부 엔지니어링 점검나 MVP-1 사용자 작업 루프의 전제 조건이 되어서는 안 됩니다.
 
 ### Baseline capture format
 
-Baseline capture는 future assurance/profile feature입니다. 승격되면 approval, verification, evidence freshness에 사용한 repository state를 증명할 만큼 기록해야 합니다. 그 profile이 active가 되기 전까지 v0.1/v0.2에는 `baselines` table이나 baseline capture runner가 필요하지 않습니다.
+Baseline capture는 future assurance/profile feature입니다. 승격되면 approval, verification, evidence freshness에 사용한 repository state를 증명할 만큼 기록해야 합니다. 그 profile이 active가 되기 전까지 내부 엔지니어링 점검 / MVP-1에는 `baselines` table이나 baseline capture runner가 필요하지 않습니다.
 
 ### Verification Bundle Shape
 
-Verification bundle은 future assurance/profile artifact입니다. Verification profile이 활성 상태일 때 baseline ref, run ref, artifact ref, evaluator input, validation output을 묶을 수 있습니다. v0.1 Run 또는 v0.2 evidence summary를 기록하기 위한 requirement가 아닙니다.
+Verification bundle은 future assurance/profile artifact입니다. Verification profile이 활성 상태일 때 baseline ref, run ref, artifact ref, evaluator input, validation output을 묶을 수 있습니다. 내부 엔지니어링 점검 Run 또는 MVP-1 evidence summary를 기록하기 위한 requirement가 아닙니다.
 
 ### Projection job table
 
-`projection_jobs`는 Operations profile storage입니다. Full projection support가 enabled일 때 projection rendering을 위한 durable outbox입니다. v0.1의 일부가 아니며 v0.2 status 또는 next-action card에도 required가 아닙니다.
+`projection_jobs`는 Operations profile storage입니다. Full projection support가 enabled일 때 projection rendering을 위한 durable outbox입니다. 내부 엔지니어링 점검의 일부가 아니며 MVP-1 status 또는 next-action card에도 required가 아닙니다.
 
 승격되면 projection job은 `projection_kind`, `target_ref`, `source_state_version`, job status, output location 또는 artifact ref, failure information을 기록해야 합니다. 이 field들은 derived output freshness를 설명합니다. Rendered Markdown을 authoritative하게 만들지 않습니다.
 
@@ -544,7 +546,7 @@ Projection worker는 committed Core state를 읽고 derived file 또는 card를 
 
 ### Validator runner skeleton
 
-Persisted `validator_runs`는 owner가 좁은 validator를 명시적으로 earlier stage에 승격하지 않는 한 Agency Assurance profile behavior입니다. v0.1/v0.2는 persisted validator-run storage를 만들지 않고 structured blocker를 반환할 수 있습니다.
+Persisted `validator_runs`는 owner가 좁은 validator를 명시적으로 earlier stage에 승격하지 않는 한 보증 프로필 behavior입니다. 내부 엔지니어링 점검 / MVP-1은 persisted validator-run storage를 만들지 않고 structured blocker를 반환할 수 있습니다.
 
 ### Evidence and Verification Profile Implementation Notes
 
@@ -554,12 +556,12 @@ Full evidence sufficiency, detached verification, Manual QA, validator-backed as
 
 ### `task_events`
 
-`task_events`는 append-only audit trail과 event-order support table입니다. Core가 무엇을 어떤 순서로 commit했는지 기록합니다. 일반 동작에서 current state의 authority source가 아니며, v0.1/v0.2 state는 보통 event replay로 재구성하지 않습니다.
+`task_events`는 append-only audit trail과 event-order support table입니다. Core가 무엇을 어떤 순서로 commit했는지 기록합니다. 일반 동작에서 current state의 authority source가 아니며, 내부 엔지니어링 점검 / MVP-1 state는 보통 event replay로 재구성하지 않습니다.
 
 Current state table이 authoritative합니다.
 
-- `tasks`, `change_units`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `task_blockers`는 v0.1 authority record입니다.
-- `decision_packets`, `residual_risks`와 그 밖의 v0.2 row는 해당 profile이 활성 상태일 때 자신의 record family에 대해서만 authority가 됩니다.
+- `tasks`, `change_units`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, `task_blockers`는 내부 엔지니어링 점검 authority record입니다.
+- `decision_packets`, `residual_risks`와 그 밖의 MVP-1 row는 해당 profile이 활성 상태일 때 자신의 record family에 대해서만 authority가 됩니다.
 - Event는 audit, debugging, idempotency explanation, projection freshness, recovery history를 support합니다.
 
 Deterministic event order는 `state.sqlite` 안에서 ascending `event_seq`입니다. Task-scoped reader는 `task_id`로 filter합니다. `created_at`은 audit metadata이며 여러 event가 같은 timestamp를 가질 때 ordering에 충분하지 않습니다.
@@ -568,20 +570,20 @@ Required event emission:
 
 | Stage | Mutation | Event expectation |
 |---|---|---|
-| v0.1 | Project registration 또는 project path/config update | Project state가 바뀌면 project 또는 task-scoped event를 emit합니다. Registry-only event는 `task_id=NULL`을 사용할 수 있습니다. |
-| v0.1 | Task create/update/close state change | New state version과 함께 event를 emit합니다. |
-| v0.1 | Change Unit 또는 task boundary create/update | Event를 emit하고 affected state version을 update합니다. |
-| v0.1 | `prepare_write` allow가 Write Authorization을 create 또는 refresh | authorization-created 또는 authorization-updated event를 emit합니다. |
-| v0.1 | `prepare_write`가 block하고 structured blocker를 store/update | blocker-opened 또는 blocker-updated event를 emit합니다. |
-| v0.1 | `record_run`이 Run을 commit | run-recorded event를 emit합니다. Write Authorization을 consume한다면 같은 transaction 또는 payload에서 authorization-consumed relation을 남깁니다. |
-| v0.1 | Artifact registration/link commit | artifact-registered event를 emit하거나 owning mutation event에 artifact refs를 포함합니다. |
-| v0.1 | Blocker resolved 또는 superseded | blocker-resolved 또는 blocker-superseded event를 emit합니다. |
-| v0.1 | Idempotent replay가 existing committed response를 return | 새 semantic event를 append하지 않습니다. Original event가 committed audit fact로 남습니다. |
-| v0.2 | Intake state create/update | Persisted라면 intake-updated event를 emit합니다. |
-| v0.2 | User judgment requested, answered, expired, superseded | `decision_packets` row와 연결된 decision event를 emit합니다. |
-| v0.2 | Residual risk opened, changed, accepted, mitigated, deferred, superseded | residual-risk event를 emit합니다. |
-| v0.2 | Evidence summary 또는 close readiness changes | Persisted라면 evidence-summary-updated 또는 close-readiness-updated event를 emit합니다. |
-| v0.2 optional | Projection/status-card freshness changes | Optional table이 installed된 경우에만 freshness/status-card event를 emit합니다. |
+| 내부 엔지니어링 점검 | Project registration 또는 project path/config update | Project state가 바뀌면 project 또는 task-scoped event를 emit합니다. Registry-only event는 `task_id=NULL`을 사용할 수 있습니다. |
+| 내부 엔지니어링 점검 | Task create/update/close state change | New state version과 함께 event를 emit합니다. |
+| 내부 엔지니어링 점검 | Change Unit 또는 task boundary create/update | Event를 emit하고 affected state version을 update합니다. |
+| 내부 엔지니어링 점검 | `prepare_write` allow가 Write Authorization을 create 또는 refresh | authorization-created 또는 authorization-updated event를 emit합니다. |
+| 내부 엔지니어링 점검 | `prepare_write`가 block하고 structured blocker를 store/update | blocker-opened 또는 blocker-updated event를 emit합니다. |
+| 내부 엔지니어링 점검 | `record_run`이 Run을 commit | run-recorded event를 emit합니다. Write Authorization을 consume한다면 같은 transaction 또는 payload에서 authorization-consumed relation을 남깁니다. |
+| 내부 엔지니어링 점검 | Artifact registration/link commit | artifact-registered event를 emit하거나 owning mutation event에 artifact refs를 포함합니다. |
+| 내부 엔지니어링 점검 | Blocker resolved 또는 superseded | blocker-resolved 또는 blocker-superseded event를 emit합니다. |
+| 내부 엔지니어링 점검 | Idempotent replay가 existing committed response를 return | 새 semantic event를 append하지 않습니다. Original event가 committed audit fact로 남습니다. |
+| MVP-1 | Intake state create/update | Persisted라면 intake-updated event를 emit합니다. |
+| MVP-1 | User judgment requested, answered, expired, superseded | `decision_packets` row와 연결된 decision event를 emit합니다. |
+| MVP-1 | Residual risk opened, changed, accepted, mitigated, deferred, superseded | residual-risk event를 emit합니다. |
+| MVP-1 | Evidence summary 또는 close readiness changes | Persisted라면 evidence-summary-updated 또는 close-readiness-updated event를 emit합니다. |
+| MVP-1 optional | Projection/status-card freshness changes | Optional table이 installed된 경우에만 freshness/status-card event를 emit합니다. |
 
 Malformed request, dry run, pre-commit state conflict, state를 mutate하지 않는 invalid request에는 `task_events` row가 필요하지 않습니다. Blocked request가 stored blocker를 create/update한다면 그 blocker mutation이 event-worthy state change입니다.
 
@@ -589,9 +591,9 @@ Malformed request, dry run, pre-commit state conflict, state를 mutate하지 않
 
 Projection freshness는 readable output의 `source_state_version`과 current Core state를 비교한 값입니다. Readable output을 state authority로 만들지 않습니다.
 
-- v0.1은 projection freshness table이 없어도 됩니다. Read는 current state를 직접 반환할 수 있습니다.
-- v0.2는 status 또는 next-action card를 위해 optional `projection_status_cards`를 저장할 수 있습니다.
-- v0.4 또는 promoted profile은 durable rendering을 위해 `projection_jobs`를 추가할 수 있습니다.
+- 내부 엔지니어링 점검은 projection freshness table이 없어도 됩니다. Read는 current state를 직접 반환할 수 있습니다.
+- MVP-1은 status 또는 next-action card를 위해 optional `projection_status_cards`를 저장할 수 있습니다.
+- 운영 프로필 또는 promoted profile은 durable rendering을 위해 `projection_jobs`를 추가할 수 있습니다.
 
 모든 stage에서 stale Markdown 또는 stale card는 owner path를 통해 warning 또는 trust blocker가 될 수 있습니다. 하지만 write를 authorize하거나, evidence를 satisfy하거나, acceptance를 record하거나, residual risk를 accept하거나, Task를 close할 수는 없습니다.
 
@@ -681,10 +683,10 @@ Future migration은 다음을 지켜야 합니다.
 - Unknown owner-bound enum/status value가 있으면 owner가 소유하지 않은 fallback meaning을 만들지 말고 stop합니다.
 - Projection/card/job freshness는 derived state로 취급하고 canonical state로 취급하지 않습니다.
 
-이 note는 v0.1에 특정 migration runner, migration file format, CLI command를 요구하지 않습니다.
+이 note는 내부 엔지니어링 점검에 특정 migration runner, migration file format, CLI command를 요구하지 않습니다.
 
 ### Lock policy
 
-Runtime mutation은 [런타임 아키텍처](runtime-architecture.md#state-transaction-flow)가 담당하는 Core transaction order를 통해 serialize해야 합니다. v0.1은 ordinary SQLite transaction과 필요 시 process/project lock으로 충분할 수 있습니다. `persistent_locks`는 later Operations candidate이지 v0.1 table이 아닙니다.
+Runtime mutation은 [런타임 아키텍처](runtime-architecture.md#state-transaction-flow)가 담당하는 Core transaction order를 통해 serialize해야 합니다. 내부 엔지니어링 점검은 ordinary SQLite transaction과 필요 시 process/project lock으로 충분할 수 있습니다. `persistent_locks`는 later Operations candidate이지 내부 엔지니어링 점검 table이 아닙니다.
 
 Lock은 concurrent write를 보호합니다. OS sandboxing, artifact integrity, tamper-proof storage를 제공하지 않습니다.

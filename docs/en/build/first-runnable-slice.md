@@ -2,33 +2,33 @@
 
 ## What this document helps you do
 
-This document turns the Build overview into the v0.1 Core Authority Smoke an implementer should plan first.
+This document turns the Build overview into the Engineering Checkpoint an implementer should plan first.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is v0.1 Core Authority Smoke, with Kernel Smoke as a narrow future smoke-check authoring label. It is an internal smoke milestone, not a product MVP. The first user-value target is v0.2 First User-Value Slice.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is Engineering Checkpoint, with Kernel Smoke as a narrow future smoke-check authoring label. It is an internal smoke milestone, not a product MVP. The first user-value target is MVP-1 User Work Loop.
 
 ## Read this when
 
-- You are planning v0.1 Core Authority Smoke.
+- You are planning Engineering Checkpoint.
 - You need a checklist for the first end-to-end authority path.
 - You want to review whether a proposed first slice is small enough to run without becoming a product MVP or the first user-value slice.
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md) first, including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status). That handoff table is the Build entry gate; until maintainers accept implementation-planning readiness for the first runtime batch, this slice remains planning-only. For storage and DDL details, use [Storage And DDL](../reference/storage-and-ddl.md). For staged delivery after this slice, use [Staged Delivery Plan](mvp-plan.md). For v1+ Expansion candidates, use the [Roadmap](../roadmap.md).
+Read [Implementation Overview](implementation-overview.md) first, including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status). That handoff table is the Build entry gate; until maintainers accept implementation-planning readiness for the first runtime batch, this slice remains planning-only. For storage and DDL details, use [Storage And DDL](../reference/storage-and-ddl.md). For staged delivery after this slice, use [Staged Delivery Plan](mvp-plan.md). For Roadmap candidates, use the [Roadmap](../roadmap.md).
 
 ## Main idea
 
 Prove one Task can move through the smallest Core authority record: local project registration, one active Task, one scoped boundary represented by the Change Unit owner shape only where the reference contract requires it, one write authorization decision, one authorized Run, one artifact/evidence reference, and one structured status/blocker response.
 
-The first slice should show that Harness state is local, durable, and authoritative without trying to prove the whole user-facing product. It keeps `prepare_write` as the product-write authorization decision point, Write Authorization as durable and single-use, `record_run` as the place where one compatible Run consumes authority, and status/blocker output as the place where missing scope, missing write authority, or missing artifact/evidence support can be reported as structured blockers. A `close_task` smoke may be used if the owner path already makes that the simplest blocker response, but v0.1 does not prove work acceptance, residual-risk acceptance, or full close semantics.
+The first slice should show that Harness state is local, durable, and authoritative without trying to prove the whole user-facing product. It keeps `prepare_write` as the product-write authorization decision point, Write Authorization as durable and single-use, `record_run` as the place where one compatible Run consumes authority, and status/blocker output as the place where missing scope, missing write authority, or missing artifact/evidence support can be reported as structured blockers. A `close_task` smoke may be used if the owner path already makes that the simplest blocker response, but Engineering Checkpoint does not prove work acceptance, residual-risk acceptance, or full close semantics.
 
 Use [Kernel Reference](../reference/kernel.md#prepare_write) and [MCP API And Schemas](../reference/mcp-api-and-schemas.md#public-tools) for the exact contracts.
 
-For API staging, start from the MCP API [Stage Profile Manifest](../reference/mcp-api-and-schemas.md#stage-profile-manifest) and use only its v0.1 surface: minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, one owner-valid Task/scope setup path, and optional minimal `harness.next` or narrow `harness.close_task` blocker smoke. Later-profile fields remain exact when their profiles are active, but they are not first-slice exit criteria.
+For API staging, start from the MCP API [Stage Profile Manifest](../reference/mcp-api-and-schemas.md#stage-profile-manifest) and use only its Engineering Checkpoint surface: minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, one owner-valid Task/scope setup path, and optional minimal `harness.next` or narrow `harness.close_task` blocker smoke. Later-profile fields remain exact when their profiles are active, but they are not first-slice exit criteria.
 
 ## Goal
 
-Plan v0.1 Core Authority Smoke: the smallest Harness path that can prove local authority over one Task.
+Plan Engineering Checkpoint: the smallest Harness path that can prove local authority over one Task.
 
 The slice should create or seed:
 
@@ -43,13 +43,13 @@ The slice should create or seed:
 
 This is a command-independent implementation guide. It describes capabilities and observable behavior, not CLI syntax. Do not include or duplicate full DDL here. Storage details and DDL are owned by [Storage And DDL](../reference/storage-and-ddl.md).
 
-For storage planning, use only the [Core Authority Smoke schema](../reference/storage-and-ddl.md#core-authority-smoke-schema) for v0.1. Later storage profiles such as Decision Packets, Approvals, Evidence Manifests, Manual QA, Eval, projection jobs, reconcile items, validator runs, Journey records, and diagnostics are not first-slice requirements.
+For storage planning, use only the [Engineering Checkpoint schema](../reference/storage-and-ddl.md#core-authority-smoke-schema) for Engineering Checkpoint. Later storage profiles such as Decision Packets, Approvals, Evidence Manifests, Manual QA, Eval, projection jobs, reconcile items, validator runs, Journey records, and diagnostics are not first-slice requirements.
 
-The first slice is deliberately not the First User-Value Slice, a product MVP, the hardened local reference target as a whole, natural-language intake, full Discovery, full Decision Packet, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, work-acceptance semantics, projection rendering, a projection-template-polish milestone, multiple projection kinds, dashboard or hosted-workflow-UI milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, operations/export/recover path, release handoff path, conformance runner, broad operator-entrypoint path, future fixture catalog, or parallel automation path.
+The first slice is deliberately not the MVP-1 User Work Loop, a product MVP, the hardened local reference target as a whole, natural-language intake, full Discovery, full Decision Packet, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, work-acceptance semantics, projection rendering, a projection-template-polish milestone, multiple projection kinds, dashboard or hosted-workflow-UI milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, operations/export/recover path, release handoff path, conformance runner, broad operator-entrypoint path, future fixture catalog, or parallel automation path.
 
 ## Success story
 
-After a future v0.1 implementation exists, an implementer should be able to run a local Harness process against a temporary product repository and observe this story:
+After a future Engineering Checkpoint implementation exists, an implementer should be able to run a local Harness process against a temporary product repository and observe this story:
 
 1. Harness registers one local project.
 2. A Task exists in Core-owned state.
@@ -61,11 +61,11 @@ After a future v0.1 implementation exists, an implementer should be able to run 
 8. Status/blocker output shows current Task, scope, write authority, artifact/evidence support, and blockers without mutating state.
 9. Status or a close-task smoke returns a structured blocker when scope, write authority, or artifact/evidence support is missing.
 
-Passing this story means v0.1 Core Authority Smoke works. It does not mean users have experienced Harness value yet. v0.2 First User-Value Slice begins when ordinary requests can start or resume tracked work and be summarized as scope, non-goals, success criteria, user-owned judgment, evidence summary, close blockers, work acceptance display, and residual-risk visibility.
+Passing this story means Engineering Checkpoint works. It does not mean users have experienced Harness value yet. MVP-1 User Work Loop begins when ordinary requests can start or resume tracked work and be summarized as scope, non-goals, success criteria, user-owned judgment, evidence summary, close blockers, work acceptance display, and residual-risk visibility.
 
 ## Doc-level acceptance checks
 
-Use these checks to review the planned v0.1 Core Authority Smoke before executable fixtures exist, and again when mapping the slice to the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). They are planning checks, not fixture body fields, schema additions, DDL, or runtime authorization.
+Use these checks to review the planned Engineering Checkpoint before executable fixtures exist, and again when mapping the slice to the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). They are planning checks, not fixture body fields, schema additions, DDL, or runtime authorization.
 
 A proposed first runnable slice is acceptable when:
 
@@ -74,9 +74,9 @@ A proposed first runnable slice is acceptable when:
 - It proves exactly one scoped write path: active Task, one scoped boundary, `prepare_write` allow/block, durable single-use Write Authorization, `record_run` consumption, artifact/evidence ref, and structured status/blocker response.
 - It blocks or refuses missing authority: missing scope, out-of-scope intended path, missing Write Authorization for product-write Runs, reuse of a consumed Write Authorization, or missing artifact/evidence support.
 - It keeps status reads, generated prose, and any projection output downstream from Core records; none of them authorize writes, satisfy evidence, close work, repair state, or become conformance truth by being read.
-- It treats projection-like output as status/blocker output for v0.1; no full projection renderer, multiple projection kinds, or detailed templates are required.
+- It treats projection-like output as status/blocker output for Engineering Checkpoint; no full projection renderer, multiple projection kinds, or detailed templates are required.
 - It links any future strict fixture body shape, assertion modes, primary errors, artifact refs, optional projection assertions, and seed validation to [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format) instead of copying those contracts here.
-- It names excluded capabilities as not yet proven by v0.1 Core Authority Smoke, not as failed first-slice requirements.
+- It names excluded capabilities as not yet proven by Engineering Checkpoint, not as failed first-slice requirements.
 
 The build order below is a post-acceptance, post-readiness planning sequence. The headings use implementation verbs so the future runtime batch is easy to execute, but this document still does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision.
 
@@ -98,7 +98,7 @@ Done when:
 - Core can resolve the current project for all later Task-scoped actions.
 - Status can distinguish an unregistered or idle project from an active Task.
 
-Owner contracts: runtime home layout and the v0.1 Core Authority Smoke schema are owned by [Storage And DDL](../reference/storage-and-ddl.md#core-authority-smoke-schema); local spaces and guarantee-level placement are owned by [Runtime Architecture Reference](../reference/runtime-architecture.md), guarantee-level meanings by [Security Threat Model Reference](../reference/security-threat-model.md#honest-guarantee-display), and connector reporting by [Agent Integration Reference](../reference/agent-integration.md).
+Owner contracts: runtime home layout and the Engineering Checkpoint schema are owned by [Storage And DDL](../reference/storage-and-ddl.md#core-authority-smoke-schema); local spaces and guarantee-level placement are owned by [Runtime Architecture Reference](../reference/runtime-architecture.md), guarantee-level meanings by [Security Threat Model Reference](../reference/security-threat-model.md#honest-guarantee-display), and connector reporting by [Agent Integration Reference](../reference/agent-integration.md).
 
 ### 2. One Task Record
 
@@ -108,7 +108,7 @@ Planning focus:
 
 - Create or seed exactly one active Task through an owner-valid path.
 - Keep enough current state for status and later Core actions to refer to the Task.
-- Keep mode policy depth, intake quality, and procedural budget routing for v0.2 First User-Value Slice.
+- Keep mode policy depth, intake quality, and procedural budget routing for MVP-1 User Work Loop.
 
 Done when:
 
@@ -126,7 +126,7 @@ Planning focus:
 - Attach one owner-valid scope to the active Task.
 - Make the selected intended write checkable against that scope.
 - Keep only the artifact/evidence support needed for the first authority-loop claim.
-- Keep full Discovery and user-facing procedural budget routing for v0.2 First User-Value Slice.
+- Keep full Discovery and user-facing procedural budget routing for MVP-1 User Work Loop.
 
 Done when:
 
@@ -174,7 +174,7 @@ Owner contracts: Run semantics are owned by [Kernel Reference: record_run](../re
 
 ### 6. Artifact Or Evidence Link
 
-Register one durable evidence file or equivalent evidence ref through the owner path. v0.1 needs the reference and owner link, not the full Evidence Manifest model or rendered `EVIDENCE-MANIFEST` output.
+Register one durable evidence file or equivalent evidence ref through the owner path. Engineering Checkpoint needs the reference and owner link, not the full Evidence Manifest model or rendered `EVIDENCE-MANIFEST` output.
 
 Planning focus:
 
@@ -223,20 +223,20 @@ The first runnable slice proves:
 
 ## What this does not prove yet
 
-This slice does not prove the items below. They are stage boundaries, not failed v0.1 requirements.
+This slice does not prove the items below. They are stage boundaries, not failed Engineering Checkpoint requirements.
 
-| Later stage | Not yet proven by v0.1 Core Authority Smoke |
+| Later stage | Not yet proven by Engineering Checkpoint |
 |---|---|
-| v0.2 First User-Value Slice | Ordinary-language start/resume, work-shape classification, natural-language intake quality, scope/non-goals/success criteria summary, minimal user judgment request/record, product/UX versus architecture judgment presentation, small direct vs tracked-work budgets, evidence summary, close blocker summary, residual-risk visibility, work-acceptance display, sensitive approval display, risk-acceptance display, compact Core-derived status card sufficiency. |
-| v0.3 Agency Assurance Pack | Profile-specific Decision Packet quality, full Approval lifecycle and drift handling, detached verification independence, Manual QA policy matrix, residual-risk accepted close, work-acceptance separation, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
-| v0.4 Operations & Handoff Pack | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage, full projection/reconcile operations. |
-| v1+ Expansion | Dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification automation, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow. |
+| MVP-1 User Work Loop | Ordinary-language start/resume, work-shape classification, natural-language intake quality, scope/non-goals/success criteria summary, minimal user judgment request/record, product/UX versus architecture judgment presentation, small direct vs tracked-work budgets, evidence summary, close blocker summary, residual-risk visibility, work-acceptance display, sensitive approval display, risk-acceptance display, compact Core-derived status card sufficiency. |
+| Assurance Profile | Profile-specific Decision Packet quality, full Approval lifecycle and drift handling, detached verification independence, Manual QA policy matrix, residual-risk accepted close, work-acceptance separation, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
+| Operations Profile | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage, full projection/reconcile operations. |
+| Roadmap | Dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification automation, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow. |
 
 ## Future Smoke Checks
 
-After documentation acceptance and implementation-planning readiness handoff, map the Core Authority Smoke to the smallest Kernel Smoke checks that drive Core behavior and assert the minimal owner records, artifact/evidence ref, structured blocker/status response, and errors. Do not assert success by matching rendered prose or polished projection output. These rows are future authoring candidates; they do not imply executable fixture files exist now, and they are not a full conformance suite.
+After documentation acceptance and implementation-planning readiness handoff, map the Engineering Checkpoint to the smallest Kernel Smoke checks that drive Core behavior and assert the minimal owner records, artifact/evidence ref, structured blocker/status response, and errors. Do not assert success by matching rendered prose or polished projection output. These rows are future authoring candidates; they do not imply executable fixture files exist now, and they are not a full conformance suite.
 
-Build owns the v0.1 scope intent: local project registration, one active Task, one scoped boundary, `prepare_write` allow/block, one single-use Write Authorization, one `record_run` consume/block, one artifact/evidence ref, and one structured status/blocker output. Projection polish, detailed templates, full Evidence Manifest behavior, conformance runner behavior, and broad fixture catalogs are not v0.1 requirements. The exact future fixture queue, body fields, active-path seed boundary, assertion modes, stable events, artifact/projection assertions, and primary-error expectations are owned by the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) and [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format); later-profile shorthand and examples remain in [Future Fixture Catalog](../reference/future-fixture-catalog.md).
+Build owns the Engineering Checkpoint scope intent: local project registration, one active Task, one scoped boundary, `prepare_write` allow/block, one single-use Write Authorization, one `record_run` consume/block, one artifact/evidence ref, and one structured status/blocker output. Projection polish, detailed templates, full Evidence Manifest behavior, conformance runner behavior, and broad fixture catalogs are not Engineering Checkpoint requirements. The exact future fixture queue, body fields, active-path seed boundary, assertion modes, stable events, artifact/projection assertions, and primary-error expectations are owned by the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) and [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format); later-profile shorthand and examples remain in [Future Fixture Catalog](../reference/future-fixture-catalog.md).
 
 Do not add fields to the fixture body to express suite stage, authoring order, or docs-maintenance results.
 
@@ -248,4 +248,4 @@ Do not add fields to the fixture body to express suite stage, authoring order, o
 - [Storage And DDL](../reference/storage-and-ddl.md): runtime layout, staged schema profiles, migrations, locks, artifacts, and later-profile baseline, projection-job, and validator-run candidates.
 - [Operations And Conformance Reference](../reference/operations-and-conformance.md): operator semantics and conformance staging.
 - [Conformance Fixtures Reference](../reference/conformance-fixtures.md): core conformance model, fixture format, execution, assertion rules, and the reduced Kernel Smoke queue.
-- [Future Fixture Catalog](../reference/future-fixture-catalog.md): detailed later scenario candidates that are not v0.1 requirements.
+- [Future Fixture Catalog](../reference/future-fixture-catalog.md): detailed later scenario candidates that are not Engineering Checkpoint requirements.

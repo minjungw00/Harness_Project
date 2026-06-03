@@ -76,8 +76,8 @@ AI 지원 개발 세션을 하네스 기준으로 진행하거나 설명할 때 
 Build 문서는 이 순서로 읽습니다.
 
 1. [구현 개요](build/implementation-overview.md): 현재 상태, 유지보수자 인계, 향후 시스템 모양.
-2. [MVP 계획](build/mvp-plan.md): v0.1부터 v0.4까지의 단계 계획과 서버 코딩 전 결정 기록.
-3. [첫 실행 가능한 조각](build/first-runnable-slice.md): v0.1 구현 순서.
+2. [MVP 계획](build/mvp-plan.md): 내부 엔지니어링 점검부터 운영 프로필까지의 단계 계획과 서버 코딩 전 결정 기록.
+3. [첫 실행 가능한 조각](build/first-runnable-slice.md): 내부 엔지니어링 점검 구현 순서.
 4. [Runtime Walkthrough](build/runtime-walkthrough.md): request-to-close runtime path.
 5. [커널 참조](reference/kernel.md): Core 권한, gate, 쓰기 권한, 닫기 의미.
 6. [MCP API와 스키마](reference/mcp-api-and-schemas.md): public tool/resource, envelope, schema, error.
