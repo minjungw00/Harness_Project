@@ -331,7 +331,7 @@ The agent should stop and ask when a choice changes what users, callers, or futu
 - scope expansion
 - QA or verification waivers
 - accepting known residual risk
-- accepting the final result when that judgment is required
+- work acceptance when that judgment is required
 
 Useful phrases:
 
