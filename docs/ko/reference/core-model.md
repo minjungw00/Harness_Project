@@ -263,7 +263,7 @@ Autonomy Boundary는 scope, Approval, 쓰기 전 범위 확인, evidence, verifi
 
 ### User Judgment
 
-User Judgment는 사용자 소유 판단을 위한 기준 상태 기록입니다. 기준 record family는 `user_judgment`이고, 질문, `judgment_type`, `presentation`, `display_label`, status, options 또는 selected outcome, affected scope, related refs, 필요한 경우 deferral effect, 그리고 민감 동작 승인, waiver, 작업 수락, 잔여 위험 수용, reconcile에 필요한 route별 context를 기록합니다.
+`user_judgment`는 사용자 소유 판단을 위한 기준 기록군입니다. 각 기록은 질문, `judgment_type`, `presentation`, `display_label`, status, options 또는 selected outcome, affected scope, related refs, 필요한 경우 deferral effect, 그리고 민감 동작 승인, waiver, 작업 수락, 잔여 위험 수용, reconcile에 필요한 route별 context를 저장합니다.
 
 User Judgment는 `decision_gate`에 반영됩니다. 차단하는 사용자 소유 판단은 chat text, broad approval, projection prose만으로 충족될 수 없습니다. 기록된 User Judgment와 그 resolution, deferral, rejection, blocked state, supersession이 그 판단의 기준입니다.
 
