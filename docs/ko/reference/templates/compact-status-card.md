@@ -4,18 +4,20 @@
 
 - Projection은 Core가 소유한 상태 기록과 아티팩트 참조에서 파생됩니다.
 - Projection은 Core 상태가 아닙니다.
+- 사용자 상태 카드와 에이전트 맥락 패킷은 Core 상태에서 파생된 보기이지 Core 상태가 아닙니다.
+- 렌더링된 template은 민감 동작 승인, 작업 수락, 잔여 위험 수용, 근거, 닫기 준비 상태, Write Authorization을 만들 수 없습니다.
 - 사용자가 Projection을 편집해도 그 내용이 자동으로 받아들여진 상태가 되지는 않습니다.
 - Chat과 Markdown은 Core 상태를 덮어쓸 수 없습니다.
 
 ## 사용 시점
 
-현재 Core 상태를 사용자가 읽기 쉽게, 또는 에이전트가 간결하게 참고할 수 있게 보여줄 때 Compact Status Card를 사용합니다. 이 card는 MVP-1 사용자 작업 루프 projection shape입니다. Core 상태와 ref에서 파생한 하나의 작은 card입니다.
+현재 Core 상태를 사용자가 읽기 쉽게, 또는 에이전트가 간결하게 참고할 수 있게 보여줄 때 Compact Status Card를 사용합니다. 사용자에게는 상태 카드이고, 에이전트에게는 에이전트 맥락 패킷의 바탕이 될 수 있습니다. 이 card는 MVP-1 사용자 작업 루프 projection shape입니다. Core 상태와 ref에서 파생한 하나의 작은 card입니다.
 
 경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
 구현 계층: MVP-1 사용자 작업 루프 projection입니다. 내부 엔지니어링 점검 Core status output은 이 card 대신 plain structured status/blocker output을 반환해도 됩니다. 이 template은 persisted state record가 아니며 full projection renderer support의 증거도 아닙니다.
 
-Card는 평범한 말을 먼저 쓰고, 정확한 Harness label은 권한 경계를 분명히 할 때만 붙입니다. Status, 다음 행동, 이어가기 턴에서 부담 없이 읽을 만큼 작아야 합니다.
+Card는 평범한 말을 먼저 쓰고, 정확한 Harness label은 권한 경계를 분명히 할 때만 붙입니다. Status, 다음 행동, 이어가기 턴에서 부담 없이 읽을 만큼 작아야 하며, 오래된 상태 카드를 Core 상태처럼 취급하면 안 됩니다.
 
 ## 필수 내용
 
@@ -46,7 +48,7 @@ Card는 평범한 말을 먼저 쓰고, 정확한 Harness label은 권한 경계
 
 이 card의 summary placeholder는 위 기록에서 파생한 표시 binding입니다. Judgment, evidence, close-blocker, residual-risk, freshness summary는 ref 또는 명시적인 absence를 보여줘야 하며 사용자 판단 맥락이나 권한을 만들지 않습니다.
 
-Card에는 schema dump, 전체 DDL, 전체 event log, 읽기용 요약 전체 본문, full artifact contents, raw log/screenshot/diff/trace, full reference doc, 관련 없는 template, future catalog material, full Evidence Manifest, full Eval body, full 수동 QA record, report body를 넣지 않습니다.
+Card에는 schema dump, 전체 DDL, complete history, 전체 event log, 읽기용 요약 전체 본문, full artifact contents, raw log/screenshot/diff/trace, full reference doc, 전체 template, 관련 없는 template, future catalog material, full Evidence Manifest, full Eval body, full 수동 QA record, report body를 넣지 않습니다.
 
 ## 사용자 대상 framing
 
@@ -70,7 +72,7 @@ Task 요약: {task_summary}
 출처/최신성: state={source_state_version|unknown}; refs={source_refs_summary|none}; rendered={updated_at|unknown}; freshness={projection_freshness}
 ````
 
-## Agent compact framing
+## 에이전트 맥락 패킷 framing
 
 소비자가 agent context/reference payload일 때는 이 shape를 사용합니다. Public schema가 아니며 context API가 구현되어 있음을 증명하지 않습니다. Compact 목표를 보여주는 예시입니다.
 
@@ -97,9 +99,9 @@ freshness:
 
 ## 메모
 
-이 template은 렌더링 결과인 카드 형태일 뿐 기준 상태가 아닙니다. Current source record와 ref에서 렌더링되며, 오래된 chat memory에서 렌더링하지 않습니다. Gate value는 기준 상태가 계속 담당하고, projection freshness는 읽기용 보기의 최신성만 뜻합니다. 정확한 권한 없음 규칙은 [projection/report 경계](../document-projection.md#projection-principles)를 사용합니다.
+이 template은 렌더링 결과인 카드 형태일 뿐 기준 상태가 아닙니다. Current source record와 ref에서 렌더링되며, 오래된 chat memory에서 렌더링하지 않습니다. 오래된 상태 카드는 권한이 아닙니다. Gate value는 기준 상태가 계속 담당하고, projection freshness는 읽기용 보기의 최신성만 뜻합니다. 정확한 권한 없음 규칙은 [projection/report 경계](../document-projection.md#projection-principles)를 사용합니다.
 
-이 card의 status/next recommendation은 read-only guidance입니다. 사용자 판단 요청, 선택적 full-format Decision Packet presentation, `prepare_write`, 근거 수집, 검증, 수동 QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 close하지 않습니다.
+이 card의 status/next recommendation은 read-only guidance입니다. 사용자 판단 요청, 선택적 full-format Decision Packet presentation, `prepare_write`, 근거 수집, 검증, 수동 QA, reconcile, close attempt를 가리킬 수는 있지만, state를 mutate하거나, write를 허가하거나, gate를 충족하거나, 근거를 만들거나, 민감 동작 승인을 만들거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, 닫기 준비 상태를 만들거나, Task를 close하지 않습니다.
 
 Authority line은 refs-first이고 profile-aware여야 합니다. Card가 write allowed라고 말하면 Write Authorization ref를 cite합니다. Minimum MVP-1에서 민감 동작 permission이 granted라고 말하면 `judgment_type=sensitive_action_approval`인 resolved `user_judgment`를 cite합니다. Later Approval profile이 active일 때만 Approval ref를 cite합니다. MVP-1 근거 표시는 "알려진 근거", "현재 알려진 근거", "근거 공백", "evidence ref가 뒷받침함" 같은 표현을 우선하고, 있을 때 `evidence_ref`, Run refs, ArtifactRefs, 보이는 gaps를 cite합니다. "근거가 충분하다"는 active owner path가 충분성을 세울 수 있을 때만 사용합니다. Full Evidence Manifest profile이 active이면 full criteria-to-evidence sufficiency에 Evidence Manifest ref를 cite합니다. 분리 검증이 passed라고 말하면 해당 profile이 active일 때 Eval ref를 cite합니다. 수동 QA가 passed 또는 waived라고 말하면 해당 profile이 active일 때 수동 QA record 또는 waiver path를 cite합니다. 작업 수락이 recorded라고 말하면 작업 수락 user judgment path를 cite합니다. 잔여 위험 표시가 clear라고 말하면 blocker/user-judgment ref 또는 명시적 `ResidualRiskSummary.status=none`을 cite합니다. MVP-1에서 잔여 위험 수용이 recorded라고 말하면 residual-risk acceptance user judgment와 관련 blocker/evidence ref를 cite합니다. Rich Residual Risk ref는 해당 later profile이 active일 때만 cite합니다. Source ref가 없으면 claim을 unsupported 또는 not yet recorded로 렌더링합니다.
 

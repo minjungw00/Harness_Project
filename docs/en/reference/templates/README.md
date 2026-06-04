@@ -8,6 +8,8 @@ Authority rule:
 
 - Projection is derived from Core-owned state records and artifact references.
 - Projection is not Core state.
+- User status cards, agent context packets, and rendered templates are derived views from Core state, not Core state.
+- A rendered template cannot create approval, acceptance, residual-risk acceptance, evidence, close readiness, Write Authorization, or close.
 - User edits to a projection are input only; they are not automatically accepted state.
 - Chat and Markdown cannot override Core state.
 
@@ -21,8 +23,8 @@ Keep these audiences separate:
 
 | Audience | Shape | Rule |
 |---|---|---|
-| User-facing compact card | [Compact Status Card](compact-status-card.md) | The MVP-1 User Work Loop projection: one small current-state card. |
-| Agent compact context/reference payload | Structured refs, blocker labels, source clocks, freshness, and next-action hints | Derived support payload. Compact by default; no full report bodies unless pulled for a phase-specific reason. |
+| User status card | [Compact Status Card](compact-status-card.md) | The MVP-1 User Work Loop projection: one small current-state card for the user. |
+| Agent context packet/reference payload | Structured refs, blocker labels, source clocks, freshness, and next-action hints | Derived support payload for the agent's next safe action. Compact by default; no full report bodies unless pulled for a phase-specific reason. |
 | Future/diagnostic reports | `TASK`, Journey Card/Spine, Run Summary, detailed Evidence Manifest, detailed Eval, full Manual QA, TDD Trace, Domain Language, Module Map, Interface Contract, Design, Export, full Approval Card, and other polished reports | Later/profile or diagnostic output. Display-only, never authority. |
 
 ## MVP-1 User Work Loop projection
@@ -41,13 +43,13 @@ The MVP-1 User Work Loop projection is one compact status card. It must show:
 - guarantee level
 - source/freshness references
 
-The card must be readable for users and compact for agents. It should not dump schema fields, DDL, event logs, full artifacts, full reference docs, full Evidence Manifests, or full report bodies.
+The card must be readable for users and compact for agents. It should not dump schema fields, DDL, complete history, event logs, full artifacts, full reference docs, full templates, unrelated templates, future catalogs, full Evidence Manifests, or full report bodies.
 
 ## Template-to-stage matrix
 
 | Template | Audience | First active stage | Authority status | Notes |
 |---|---|---|---|---|
-| [Compact Status Card](compact-status-card.md) | User-facing compact card; agent compact context source | MVP-1 User Work Loop projection; optional as Engineering Checkpoint status rendering | Derived display only | The only MVP-1 User Work Loop projection shape. Plain structured output is still enough for Engineering Checkpoint. |
+| [Compact Status Card](compact-status-card.md) | User-facing compact card; agent context packet source | MVP-1 User Work Loop projection; optional as Engineering Checkpoint status rendering | Derived display only | The only MVP-1 User Work Loop projection shape. Plain structured output is still enough for Engineering Checkpoint. |
 | [Decision Packet display](decision-packet.md) | Full-format user judgment presentation | Later/profile or complex-judgment display when user judgment flow is active | Derived display over `state.sqlite.user_judgments`; not standalone authority | Required judgments usually appear through compact status/next or user-judgment resources. Standalone `DEC` Markdown is optional later. |
 | [TASK](task.md) | Continuity/reference report | Later/profile or diagnostic | Derived display only | Not the MVP-1 User Work Loop projection. Expanded continuity sections are later polish. |
 | [DIRECT-RESULT](direct-result.md) | Compact direct-work result | Later/profile when direct-work display is active | Derived display only | Optional convenience shape; not needed for the compact status card MVP. |
@@ -75,7 +77,7 @@ Rendered placeholders, labels, table columns, and example front matter keys are 
 
 Compact authority displays should prefer a short refs line when several sources are relevant: `write=`, `judgment=`, `approval=`, `evidence=`, `eval=`, `manual_qa=`, `acceptance=`, `residual_risk=`, `artifacts=`, `redaction=`, and `freshness=`. These labels point to existing refs, redaction state, and projection freshness only; they are not schema fields or authority records.
 
-Derived display summaries include approval boundary lines such as `approval_covers`, `approval_does_not_cover`, and `secret_exposure_boundary`; close context, close blockers, waiver path, projection freshness, redaction availability, compact context, Journey Card, Review Stages, and judgment-context-related summaries. These names are not new canonical records, schema fields, DDL columns, `ProjectionKind` values, gates, authority inputs, or authority paths. The labels themselves must not be used as validator inputs; validators consume the owner records, refs, gates, artifacts, or user judgments those labels summarize.
+Derived display summaries include approval boundary lines such as `approval_covers`, `approval_does_not_cover`, and `secret_exposure_boundary`; close context, close blockers, waiver path, projection freshness, redaction availability, agent context packet summaries, Journey Card, Review Stages, and judgment-context-related summaries. These names are not new canonical records, schema fields, DDL columns, `ProjectionKind` values, gates, authority inputs, or authority paths. The labels themselves must not be used as validator inputs; validators consume the owner records, refs, gates, artifacts, or user judgments those labels summarize.
 
 Rendered examples should make that boundary visible to the reader. `source_state_version` names the state clock used for the render, `projection_version` or projection status names the render/template/job view, and `updated_at` names when the view was produced. Freshness lines say whether the view still matches its source records; they are not task results, gate values, approval, acceptance, evidence, close readiness, or Core state rollback.
 

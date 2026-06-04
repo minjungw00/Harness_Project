@@ -4,6 +4,8 @@
 
 - Projection is derived from Core-owned state records and artifact references.
 - Projection is not Core state.
+- User status cards, agent context packets, Markdown reports, and rendered templates are derived views or support payloads, not state.
+- Core state is the local authority record and the only operational source of truth.
 - User edits to a projection are input only; they are not automatically accepted state.
 - Chat and Markdown cannot override Core state.
 
@@ -20,7 +22,7 @@ This is reference documentation for future Harness behavior. Current repository 
 - You need to implement or review Markdown projection behavior.
 - You are confirming that a report, status card, or Journey Card is not canonical state.
 - You are deciding how a human edit to projected Markdown can become state.
-- You need to separate user-readable summaries, agent compact context, and reference or diagnostic projections.
+- You need to separate user-readable summaries, agent context packets, and reference or diagnostic projections.
 - You are diagnosing stale, failed, or drifted projections.
 
 ## Before you read
@@ -30,6 +32,12 @@ Use [Kernel Reference](kernel.md) for canonical state and gate authority, [API S
 ## Main idea
 
 Projections are readable derived views. They are generated from Core-owned state and artifact references, can display current state, refs, freshness, and proposed edits, and do not replace Core-owned state. Human edits to projections are not state changes unless a future Core/reconcile path accepts them through a state-changing action.
+
+Use this three-part model when deciding what to render or retrieve:
+
+- User status card: the short readable current-state view for users.
+- Agent context packet: the minimal state, refs, freshness, and owner-section pointers needed for the agent's next safe action.
+- Core state: the local authority record and only operational source of truth.
 
 ## Projection in plain language
 
@@ -47,14 +55,14 @@ Harness keeps derived-output tiers aligned with staged delivery:
 |---|---|---|
 | Core status output | Engineering Checkpoint | Minimal structured status/blocker output from current Core state. It may be plain API text or a compact card; it does not require persisted Markdown, a projection job, multiple `ProjectionKind` values, or a full renderer. |
 | MVP-1 User Work Loop projection | MVP-1 User Work Loop | One compact status card derived from Core state and refs. It shows current Task summary, work shape, scope/non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, visible residual risk, guarantee level, and source/freshness refs. It does not require `TASK`, Journey, Run Summary, Evidence Manifest, Eval, Manual QA, Export, or report polish. |
-| Agent compact context/reference payload | MVP-1 support surface and later | A compact machine-readable or prompt-sized payload derived from the same Core state and refs. It may carry ids, refs, blocker labels, and freshness for the next action, but it is not user-facing authority and should not include full projection bodies by default. |
+| Agent context packet/reference payload | MVP-1 support surface and later | A compact machine-readable or prompt-sized payload derived from the same Core state and refs. It may carry ids, refs, blocker labels, and freshness for the next action, but it is not user-facing authority and should not include full projection bodies by default. |
 | Assurance Profile reports | Assurance Profile profiles | Compact approval, Manual QA, verification, waiver, and assurance displays when those profiles are enabled. They are report/card views over owner records and refs, not first-slice or minimum MVP requirements. |
 | Operations/export reports | Operations Profile profiles | Projection freshness, reconcile/readiness, export, release-handoff, artifact-integrity, and operator report views when operations support is enabled. They do not replace Core state or artifact authority. |
 | Future/diagnostic projections | Owner-promoted later profiles or diagnostics | Detailed Journey Card or Journey Spine views, Run Summary, TDD Trace, Module Map, Interface Contract, standalone full-format Decision Packet Markdown, detailed Evidence Manifest, detailed Eval, design/domain-language maps, and other diagnostic views. Pull on demand or enable only through a promoted profile. |
 
-MCP read-only resource staging follows the same tiers. Engineering Checkpoint resources expose current project/current task/status output for the first authority loop. MVP-1 resources may expose the compact status card, user-judgment prompt context, and agent compact context/reference payloads. Evidence Manifest, reports, bundles, Journey/Spine, and design/domain resources remain later-profile or diagnostic reads unless an owner profile explicitly promotes them. Resource reads over projections are still reads; they must not create projection jobs or make projections authoritative.
+MCP read-only resource staging follows the same tiers. Engineering Checkpoint resources expose current project/current task/status output for the first authority loop. MVP-1 resources may expose the compact status card, user-judgment prompt context, and agent context packet/reference payloads. Evidence Manifest, reports, bundles, Journey/Spine, and design/domain resources remain later-profile or diagnostic reads unless an owner profile explicitly promotes them. Resource reads over projections are still reads; they must not create projection jobs, create approvals, record acceptance, accept residual risk, create evidence, create close readiness, or make projections authoritative.
 
-Agent compact context is a consumer of current Core status output or the MVP-1 compact card, not a separate authority tier or proof that a context API is implemented. It may use projections as a readable summary only when their `source_state_version` and freshness are suitable for the next action. If state matters and the projection is stale, failed, unknown, or too broad, retrieve current Core state or a state-derived compact context instead. Do not turn Markdown projections, Journey Cards, status cards, old reports, generated summaries, full projection bodies, full artifact contents, unrelated templates, or future catalog material into always-on prompt payloads or authority. Full projection bodies are pull-on-demand for a phase that needs their specific content; by default, push only refs, one-line summaries, and freshness. They can point to current refs to inspect; they cannot authorize writes, satisfy gates, create evidence, perform verification, record Manual QA, accept results, accept residual risk, or close a Task.
+The agent context packet is a consumer of current Core status output or the MVP-1 compact card, not a separate authority tier or proof that a context API is implemented. It may use projections as a readable summary only when their `source_state_version` and freshness are suitable for the next action. If state matters and the projection, status card, or readable summary is stale, failed, unknown, or too broad, retrieve current Core state or a state-derived agent context packet instead. Do not turn Markdown projections, Journey Cards, status cards, old reports, generated summaries, full projection bodies, full artifact contents, full templates, unrelated templates, or future catalog material into always-on prompt payloads or authority. Full projection bodies are pull-on-demand for a phase that needs their specific content; by default, push only refs, one-line summaries, and freshness. They can point to current refs to inspect; they cannot authorize writes, satisfy gates, create evidence, create approval, perform verification, record Manual QA, accept results, accept residual risk, create close readiness, or close a Task.
 
 ### MVP-1 compact status card
 
@@ -78,8 +86,8 @@ Projection audiences stay separate:
 
 | Audience | Shape | Rule |
 |---|---|---|
-| User-facing compact card | Short status card with ordinary language and refs | MVP-1 User Work Loop projection. Display-only; derived from Core state and refs. |
-| Agent compact context/reference payload | Prompt-sized or structured refs, blockers, source clocks, and next-action hints | Derived support payload. It may help the next agent action, but it is not authority and should not carry full Markdown bodies by default. |
+| User status card | Short status card with ordinary language and refs | MVP-1 User Work Loop projection. Display-only; derived from Core state and refs. |
+| Agent context packet | Prompt-sized or structured refs, blockers, source clocks, and next-action hints | Derived support payload. It may help the next agent action, but it is not authority and should not carry full Markdown bodies by default. |
 | Future/diagnostic reports | `TASK`, Journey Card/Spine, Run Summary, detailed Evidence Manifest, detailed Eval, full Manual QA, TDD Trace, Domain Language, Module Map, Interface Contract, Design, Export, full Approval Card, and other polished reports | Later/profile output or diagnostics. A template existing in the repository does not make it required for the current stage. |
 
 The strict boundary is:
@@ -219,7 +227,7 @@ Direct edits inside managed blocks are drift, not accepted state. Direct edits t
 12. User-facing cards may use friendly labels, but canonical gate names remain the kernel fields.
 13. User Judgment, optional full-format Decision Packet, Journey Card, Journey Spine, Autonomy Boundary, Write Authority Summary, Implementation Micro-Plan, Change Unit DAG, Residual Risk, Stewardship Impact, and Review Stage displays are non-canonical projections from owner records and artifact refs.
 
-Projection and report surfaces may display current records, refs, and advisory next actions. They must not authorize writes, create Write Authorization, satisfy gates, create evidence, perform or record verification, record Manual QA, grant Approval, waive QA or verification, record work acceptance, record residual-risk acceptance, refresh projections by assertion alone, declare implementation readiness, close Tasks, or mutate owner records. Any such effect must come from the owner Core/MCP path named in the matrix below.
+Projection and report surfaces may display current records, refs, and advisory next actions. They must not authorize writes, create Write Authorization, satisfy gates, create evidence, perform or record verification, record Manual QA, grant Approval, waive QA or verification, record work acceptance, record residual-risk acceptance, create close readiness, refresh projections by assertion alone, declare implementation readiness, close Tasks, or mutate owner records. A rendered template cannot create approval, acceptance, residual-risk acceptance, evidence, or close readiness. Any such effect must come from the owner Core/MCP path named in the matrix below.
 
 User judgment displays must name the judgment type instead of flattening everything into "Judgment" or "Approval." Render Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, and Residual risk acceptance as the user-facing labels when those judgments are pending. Security/privacy, scope/autonomy, QA waiver, and verification-waiver details may appear as context, affected gates, or owner refs, but they are not additional display categories. If multiple judgments are pending, render separate lines or cards. Residual-risk acceptance displays must name the risk being accepted.
 
@@ -361,8 +369,8 @@ The template catalog is intentionally broader than the early implementation set.
 | Class | Templates or output shapes | Rule |
 |---|---|---|
 | Core status output | Minimal [Compact Status Card](templates/compact-status-card.md) or equivalent status/blocker response shape | Optional rendering for the structured status/blocker output from current Core state in Engineering Checkpoint. A plain structured response is enough; no persisted Markdown projection job or full renderer is required. |
-| MVP-1 User Work Loop projection | [Compact Status Card](templates/compact-status-card.md) | The MVP-1 projection shape is one compact card showing what is happening, scope/non-goals, pending user judgments, known evidence summaries, evidence gaps, close blockers, visible residual risk, next safe action, and source/freshness refs. Work-acceptance and residual-risk facts remain distinct when relevant, but they do not add required projection kinds. |
-| Agent compact context/reference payload | Compact structured refs or prompt-sized state summary | Derived support payload for agents. Keep ids, refs, blocker labels, and freshness compact; do not push full Markdown bodies by default. |
+| MVP-1 user status card / projection | [Compact Status Card](templates/compact-status-card.md) | The MVP-1 projection shape is one compact card showing what is happening, scope/non-goals, pending user judgments, known evidence summaries, evidence gaps, close blockers, visible residual risk, next safe action, and source/freshness refs. Work-acceptance and residual-risk facts remain distinct when relevant, but they do not add required projection kinds. |
+| Agent context packet/reference payload | Compact structured refs or prompt-sized state summary | Derived support payload for agents. Keep ids, refs, blocker labels, and freshness compact; do not push full Markdown bodies by default. |
 | User judgment prompt shape | [Decision Packet](templates/decision-packet.md) display/card shape for user judgment requests | A prompt/display shape when a user-owned judgment is pending, not the MVP-1 User Work Loop projection and not the standalone `DEC` `ProjectionKind`. Standalone persisted `DEC` Markdown remains optional unless the standalone Decision Packet projection feature is enabled. |
 | Assurance Profile reports | [APR](templates/approval.md), [Approval Card](templates/approval-card.md), [MANUAL-QA](templates/manual-qa.md), [Manual QA Card](templates/manual-qa-card.md), and [Verification Result Card](templates/verification-result-card.md) | Use only when the corresponding approval, Manual QA, waiver, verification, or assurance profile is active. These are not Engineering Checkpoint or MVP-1 User Work Loop requirements. |
 | Operations/export reports | [EXPORT](templates/export.md) and release-handoff/export report shapes when that operations profile is enabled | Later operations output. Export reports list refs, hashes, redaction state, omission/block notes, and included projection snapshots without replacing Core state or artifact authority. |
@@ -370,11 +378,11 @@ The template catalog is intentionally broader than the early implementation set.
 
 `Future/diagnostic projections` means later-profile or diagnostic scope, not automatically Roadmap only.
 
-No template class makes a projection canonical state or creates evidence, QA, verification, work acceptance, residual-risk acceptance, close authority, or Write Authorization. If a source record does not exist, the projector must not invent placeholder state to satisfy template completeness.
+No template class makes a projection canonical state or creates evidence, QA, verification, approval, work acceptance, residual-risk acceptance, close readiness, close authority, or Write Authorization. If a source record does not exist, the projector must not invent placeholder state to satisfy template completeness.
 
 The `EXPORT` template is an optional projection output. It does not introduce an `export` state record for artifact links. Export projections list artifact refs, hashes, redaction states, and redaction/omission/block notes; they do not embed large or sensitive artifact bodies by default.
 
-Persisted `JOURNEY-CARD` Markdown, Journey Spine output, `TASK` continuity reports, Direct Result reports, Run Summary, detailed Evidence Manifest, detailed Eval, full Manual QA card, TDD Trace, Domain Language, Module Map, Interface Contract, Design, Export bundles, full Approval Card, and other polished reports are not mandatory early scope. Current-position context for status, next, and resume is satisfied by core status output, the MVP-1 compact status card, or agent compact context/reference payloads.
+Persisted `JOURNEY-CARD` Markdown, Journey Spine output, `TASK` continuity reports, Direct Result reports, Run Summary, detailed Evidence Manifest, detailed Eval, full Manual QA card, TDD Trace, Domain Language, Module Map, Interface Contract, Design, Export bundles, full Approval Card, and other polished reports are not mandatory early scope. Current-position context for status, next, and resume is satisfied by core status output, the MVP-1 compact status card, or agent context packet/reference payloads.
 
 User judgment visibility required by the active stage/profile is provided through status/next responses, judgment-context resources, user-judgment resources, compatibility decision-packet resources when enabled, the compact status card, or a dedicated user judgment prompt. That requirement is for the user judgment request display shape, not the standalone `DEC` `ProjectionKind`. Standalone `DEC` Markdown is optional unless the standalone full-format Decision Packet projection feature is enabled.
 

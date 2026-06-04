@@ -4,18 +4,20 @@
 
 - Projection is derived from Core-owned state records and artifact references.
 - Projection is not Core state.
+- The user status card and agent context packet are derived views from Core state, not Core state.
+- A rendered template cannot create approval, acceptance, residual-risk acceptance, evidence, close readiness, or Write Authorization.
 - User edits to a projection are input only; they are not automatically accepted state.
 - Chat and Markdown cannot override Core state.
 
 ## Used when
 
-Use the compact status card when a short current-state display needs to make Core state readable for a user or compact for an agent. It is the MVP-1 User Work Loop projection shape: one small card derived from Core state and refs.
+Use the compact status card when a short current-state display needs to make Core state readable for a user or compact for an agent. For users, it is the user status card. For agents, it may seed an agent context packet. It is the MVP-1 User Work Loop projection shape: one small card derived from Core state and refs.
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
 Implementation tier: MVP-1 User Work Loop projection. Engineering Checkpoint Core status output may still return plain structured status/blocker output instead of this card. This template is not a persisted state record and is not evidence of full projection renderer support.
 
-The card should use ordinary language first and exact Harness labels only where they clarify the authority boundary. It should be small enough for status, next-action, and resume turns.
+The card should use ordinary language first and exact Harness labels only where they clarify the authority boundary. It should be small enough for status, next-action, and resume turns, and it must not be treated as Core state when stale.
 
 ## Required contents
 
@@ -46,7 +48,7 @@ The card should use ordinary language first and exact Harness labels only where 
 
 Summary placeholders in this card are display bindings derived from the records above. Decision, evidence, close-blocker, residual-risk, and freshness summaries should show refs or explicit absence; they do not create user judgment context or authority.
 
-Do not include schema dumps, full DDL, full event logs, full projection bodies, full artifact contents, raw logs/screenshots/diffs/traces, full reference docs, unrelated templates, future catalog material, full Evidence Manifests, full Eval bodies, full Manual QA records, or report bodies in the card.
+Do not include schema dumps, full DDL, complete history, full event logs, full projection bodies, full artifact contents, raw logs/screenshots/diffs/traces, full reference docs, full templates, unrelated templates, future catalogs, full Evidence Manifests, full Eval bodies, full Manual QA records, or report bodies in the card.
 
 ## User-facing framing
 
@@ -70,7 +72,7 @@ Guarantee level: {guarantee_level}; {guarantee_limit_summary}
 Sources/freshness: state={source_state_version|unknown}; refs={source_refs_summary|none}; rendered={updated_at|unknown}; freshness={projection_freshness}
 ````
 
-## Agent compact framing
+## Agent Context Packet Framing
 
 Use this shape when the consumer is an agent context/reference payload. This is not a public schema and not evidence that a context API is implemented; it is an example of the compactness target.
 
@@ -97,9 +99,9 @@ freshness:
 
 ## Notes
 
-This template is a rendered card shape, not canonical state. It is rendered from current source records and refs, not stale chat memory. Gate values remain owned by canonical state, and projection freshness is readable-view freshness only. Use the [projection/report boundary](../document-projection.md#projection-principles) for the exact non-authority rule.
+This template is a rendered card shape, not canonical state. It is rendered from current source records and refs, not stale chat memory. Stale status cards are not authority. Gate values remain owned by canonical state, and projection freshness is readable-view freshness only. Use the [projection/report boundary](../document-projection.md#projection-principles) for the exact non-authority rule.
 
-Status/next recommendations in this card are read-only guidance. They may point to a user judgment prompt, optional full-format Decision Packet presentation, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
+Status/next recommendations in this card are read-only guidance. They may point to a user judgment prompt, optional full-format Decision Packet presentation, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, create evidence, create approval, accept results, accept residual risk, create close readiness, or close the Task.
 
 Authority lines must be refs-first and profile-aware. If the card says writes are allowed, cite the Write Authorization ref. If it says sensitive-action permission was granted in minimum MVP-1, cite the resolved `user_judgment` with `judgment_type=sensitive_action_approval`; cite an Approval ref only when the later Approval profile is active. For MVP-1 evidence display, prefer "known evidence," "evidence currently known," "evidence gap," or "supported by evidence ref," and cite `evidence_ref` when present, Run refs, ArtifactRefs, and visible gaps. Reserve "evidence is sufficient" for an active owner path that can establish sufficiency; when the full Evidence Manifest profile is active, cite the Evidence Manifest ref for full criteria-to-evidence sufficiency. If it says detached verification passed, cite the Eval ref when that profile is active. If it says Manual QA passed or was waived, cite the Manual QA record or waiver path when that profile is active. If it says work acceptance was recorded, cite the work-acceptance user judgment path; if it says residual-risk visibility is clear, cite blocker/user-judgment refs or explicit `ResidualRiskSummary.status=none`; if it says residual-risk acceptance was recorded in MVP-1, cite the residual-risk acceptance user judgment plus related blocker/evidence refs. Cite rich Residual Risk refs only when that later profile is active. If the source ref is absent, render the claim as unsupported or not yet recorded.
 

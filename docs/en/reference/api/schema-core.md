@@ -45,6 +45,8 @@ This manifest filters the API schemas by stage/profile. A field or enum existing
 
 MCP resources are read-only views. They must not create Tasks, user judgments, projection jobs, reconciliations, evidence, QA, work acceptance, residual-risk acceptance, Write Authorizations, or close state.
 
+Read-only resources use the three-part context model. `harness://status/card` is a user status card: a short readable view over current Core state and refs. Agent surfaces may use read-only resources to build an agent context packet: the minimal state, refs, freshness, and owner-section pointers needed for the next safe action. Core state remains the local authority record and only operational source of truth. Stale cards or projections are not authority, and rendered templates cannot create approval, acceptance, residual-risk acceptance, evidence, or close readiness.
+
 ### Engineering Checkpoint resources
 
 | Resource | Profile meaning |
@@ -53,7 +55,7 @@ MCP resources are read-only views. They must not create Tasks, user judgments, p
 | `harness://task/active` | Active Task pointer, or explicit `none` / `unknown`, without creating a Task. |
 | `harness://task/{task_id}` | Current Task state for the narrow authority loop. |
 | `harness://task/{task_id}/summary` | Optional compact Task status/blocker summary. |
-| `harness://status/card` | Optional compact current-position card derived from Core state. |
+| `harness://status/card` | Optional compact current-position user status card derived from current Core state and refs. |
 
 ### MVP-1 resources
 
@@ -170,7 +172,7 @@ StateSummary:
 | Operations/export reports | `EXPORT` | Only when export, release-handoff, or operations report profile is active. |
 | Future/diagnostic projections | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `JOURNEY-CARD` | Enable only when an owner-promoted later profile is in scope. |
 
-Projection support never creates state, evidence, QA, verification, work acceptance, residual-risk acceptance, close authority, or Write Authorization.
+Projection support never creates state, evidence, QA, verification, approval, work acceptance, residual-risk acceptance, close readiness, close authority, or Write Authorization.
 
 ## Sensitive Categories
 
@@ -291,6 +293,8 @@ StateRecordRef:
 `record_kind=user_judgment` is the canonical MVP-1 ref kind for user-owned judgments, including sensitive-action approval, work acceptance, and residual-risk acceptance judgments. MVP-1 evidence and blockers use `record_kind=evidence_ref` and `record_kind=blocker`. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=evidence_summary`, `record_kind=close_readiness`, and `record_kind=projection` are later/profile-promoted or derived-view refs unless their owner profile is active. There is no standalone accepted-risk ref kind.
 
 For `record_kind=projection`, `record_id` is the projection job identity when the Operations/projection profile is active. `projection_path` is optional display/recovery metadata, not an alternate key.
+
+Derived-view refs such as `projection` or `close_readiness` identify a readable view or later/profile-promoted display record. They do not replace the owner records behind the view. A stale derived-view ref must be refreshed or reconciled before a caller relies on it for a state-dependent action.
 
 ## Evidence and pre-write scope schemas
 

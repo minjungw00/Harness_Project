@@ -14,6 +14,8 @@ MVP-1 exposes a small local MCP surface for the user work loop: intake ordinary 
 
 This API does not claim OS-level blocking, arbitrary-tool sandboxing, tamper-proof files, or pre-tool prevention. `harness.prepare_write` is a cooperative pre-write scope check against Core state. Any Write Authorization it returns is a Harness-level record/check, not OS permission, sandboxing, tamper-proof enforcement, or preventive blocking. Stronger preventive or isolated claims require an owner-promoted profile and proof in the relevant security and connector docs.
 
+Status output follows the three-part model: `harness.status.status_card` is the user status card, agent surfaces may derive an agent context packet from current status and refs, and Core state is the only operational source of truth. Status cards, next-action text, rendered templates, and projections are read-only views; stale views are not authority.
+
 ## MVP-1 method set
 
 | Method | MVP-1 role |
@@ -124,6 +126,8 @@ StatusResponse:
     notes: string[]
 ```
 
+`status_card` is a short readable view over current Core state and refs. It should stay compact, show source/freshness information, and avoid full schemas, DDL, history, templates, projection bodies, artifact bodies, logs, and future catalogs. It is not Core state and cannot create approval, acceptance, residual-risk acceptance, evidence, close readiness, Write Authorization, or close.
+
 `next_actions` is the MVP-1 next-safe-action surface. It should name the smallest useful next action or unblocker in ordinary language, with exact enum values as secondary detail.
 
 MVP-1 active `NextActionSummary.action_kind` values:
@@ -134,7 +138,7 @@ ask_user | prepare_write | implement | request_acceptance | close_task | idle
 
 Verification, Eval, Manual QA, reconcile, export/recover, and operations next-action kinds are later/profile-gated.
 
-Status is read-only. It must not create state, make product writes compatible, create a Write Authorization, satisfy gates, accept work, accept residual risk, enqueue projection repair, or close a Task.
+Status is read-only. It must not create state, make product writes compatible, create a Write Authorization, satisfy gates, create evidence, create approval, accept work, accept residual risk, create close readiness, enqueue projection repair, or close a Task.
 
 <a id="harnessprepare_write"></a>
 

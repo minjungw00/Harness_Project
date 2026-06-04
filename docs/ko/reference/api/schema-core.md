@@ -45,6 +45,8 @@ Storage validation은 별도 소유권 경계입니다. API payload와 API-shape
 
 MCP resource는 read-only view입니다. Task, user judgment, projection job, reconciliation, evidence, QA, work acceptance, residual-risk acceptance, Write Authorization, close state를 만들면 안 됩니다.
 
+Read-only resource도 세 부분 맥락 모델을 따릅니다. `harness://status/card`는 사용자 상태 카드입니다. Current Core state와 ref에서 만든 짧은 읽기용 보기입니다. Agent 접점은 read-only resource를 사용해 다음 안전한 행동에 필요한 최소 state, ref, freshness, owner-section pointer를 담은 에이전트 맥락 패킷을 만들 수 있습니다. Core 상태가 로컬 권한 기록이며 유일한 운영 기준입니다. 오래된 card나 projection은 authority가 아니며, 렌더링된 template은 민감 동작 승인, 작업 수락, 잔여 위험 수용, 근거, 닫기 준비 상태를 만들 수 없습니다.
+
 ### 내부 엔지니어링 점검 resources
 
 | Resource | Profile meaning |
@@ -53,7 +55,7 @@ MCP resource는 read-only view입니다. Task, user judgment, projection job, re
 | `harness://task/active` | Task를 만들지 않고 active Task pointer 또는 explicit `none` / `unknown`을 반환합니다. |
 | `harness://task/{task_id}` | Narrow authority loop를 위한 current Task state. |
 | `harness://task/{task_id}/summary` | Optional compact Task status/blocker summary. |
-| `harness://status/card` | Core state에서 파생한 optional compact current-position card. |
+| `harness://status/card` | Current Core state와 ref에서 파생한 optional compact current-position 사용자 상태 카드. |
 
 ### MVP-1 resources
 
@@ -170,7 +172,7 @@ StateSummary:
 | Operations/export reports | `EXPORT` | Export, release-handoff, operations report profile이 active일 때만 사용합니다. |
 | Future/diagnostic projections | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `JOURNEY-CARD` | Owner-promoted later profile이 scope에 있을 때만 enable합니다. |
 
-Projection support는 state, evidence, QA, verification, work acceptance, residual-risk acceptance, close authority, Write Authorization을 만들지 않습니다.
+Projection support는 state, evidence, QA, verification, 민감 동작 승인, work acceptance, residual-risk acceptance, close readiness, close authority, Write Authorization을 만들지 않습니다.
 
 ## Sensitive Categories
 
@@ -291,6 +293,8 @@ StateRecordRef:
 `record_kind=user_judgment`는 sensitive-action approval, work acceptance, residual-risk acceptance judgment를 포함한 사용자 소유 판단의 canonical MVP-1 ref kind입니다. MVP-1 evidence와 blocker는 `record_kind=evidence_ref`, `record_kind=blocker`를 사용합니다. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=evidence_summary`, `record_kind=close_readiness`, `record_kind=projection`은 owner profile이 active가 아닌 한 later/profile-promoted 또는 derived-view ref입니다. Standalone accepted-risk ref kind는 없습니다.
 
 `record_kind=projection`에서 `record_id`는 운영/projection profile이 active일 때 projection job identity입니다. `projection_path`는 optional display/recovery metadata이지 alternate key가 아닙니다.
+
+`projection` 또는 `close_readiness` 같은 derived-view ref는 읽기용 보기 또는 later/profile-promoted display record를 가리킵니다. 그 보기 뒤의 owner record를 대체하지 않습니다. 오래된 derived-view ref는 state-dependent action에 사용하기 전에 refresh 또는 reconcile해야 합니다.
 
 ## Evidence and pre-write scope schemas
 

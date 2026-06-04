@@ -22,7 +22,7 @@ Read [User Guide](user-guide.md) first if you want the user-facing version.
 
 Show only the work, scope, judgment, evidence, check or verification, and close details that affect the user's next decision.
 
-Agents translate ordinary user requests into Harness procedures. Do not require users to say Discovery, Change Unit, Decision Packet, Write Authorization, Evidence Manifest, Projection, Autonomy Boundary, or `task_events` before the work can proceed. Use those internal terms where agent/runtime behavior needs precision, and place them after the plain-language explanation when showing user-facing status.
+Agents translate ordinary user requests into Harness procedures. Do not require users to say Discovery, Change Unit, Decision Packet, Write Authorization, Evidence Manifest, Autonomy Boundary, `task_events`, or status-card/report internals before the work can proceed. Use those internal terms where agent/runtime behavior needs precision, and place them after the plain-language explanation when showing user-facing status.
 
 Treat requests like these as complete user input, not as invitations to demand Harness terminology:
 
@@ -72,24 +72,30 @@ A useful status or next-action response answers four questions in ordinary langu
 
 Render gate state through four user-facing display groups: Scope, User Judgments, Evidence, and Close Readiness. Explain the easy concept first, then add exact internal terms or refs only when they clarify a boundary, blocker, source ref, or runtime rule. User Judgments is structured, not one broad judgment bucket: label each item as Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance. These are display groups only; they do not replace kernel gates, add schema fields, change recompute rules, create Write Authorization records, make writes compatible, satisfy gates, accept residual risk, or close the Task. Exact gate values, recompute behavior, and close semantics are owned by [Kernel Reference](../reference/kernel.md#gates) and [`close_task`](../reference/kernel.md#close_task).
 
-The turn context should stay compact, current, and profile-filtered. The always-on context budget should fit on one screen or less and include only current Task summary, work shape, scope and non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, residual-risk summary, guarantee level, and source refs/freshness. A field may be `none` or `unknown`, but token savings must not hide a close-relevant blocker, judgment, evidence gap, or residual risk.
+Keep three surfaces separate:
 
-Do not always inject full reference docs, full schemas, full Storage DDL, full historical event logs, full projection bodies, full artifact contents, raw logs/screenshots/diffs/traces, unrelated templates, future catalog material, old task history, or unrelated Roadmap material. Those stay pull-on-demand for the exact next action that needs them.
+- User status card: a short readable current-state view for the user. It can show the current position, blockers, next safe action, refs, and freshness, but it is not state.
+- Agent context packet: the minimal current state, refs, and owner-section pointers needed for the agent's next safe action. It is compact support for action, not a full report or complete memory.
+- Core state: the local authority record and the only operational source of truth for scope, gates, user judgments, evidence refs, write checks, work acceptance, residual-risk acceptance, and close.
+
+The agent context packet should stay compact, current, and profile-filtered. The always-on context budget should fit on one screen or less and include only current Task summary, work shape, scope and non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, residual-risk summary, guarantee level, and source refs/freshness. A field may be `none` or `unknown`, but token savings must not hide a close-relevant blocker, judgment, evidence gap, or residual risk.
+
+Do not always inject full reference docs, full schemas, full Storage DDL, complete history, full historical event logs, full readable-view or report bodies, full artifact contents, raw logs/screenshots/diffs/traces, full templates, unrelated templates, future catalogs, old task history, or unrelated Roadmap material. Those stay pull-on-demand for the exact next action that needs them.
 
 Use progressive context loading instead of reading the whole documentation set into the agent prompt. The detailed context contract is in [Agent Integration Reference](../reference/agent-integration.md#context-pushpull-principles); in this user-facing flow, keep the context profile narrow and pull only the owner section that explains the next action:
 
 | Context profile | Show now | Minimal owner docs or refs to pull | Do not load by default |
 |---|---|---|---|
-| Session start | Current status or compact current-position summary, likely work shape, scope/non-goals when known, active blockers, pending user judgments, next safe action, evidence gaps, close blockers, residual-risk summary, guarantee level, source/freshness refs. | [Session start](#session-start), [Resume](#resume), current `harness.status` / `status.next_actions`, and projection freshness rules only if the readable view is stale or used for the next action. A separate `harness.next` output appears only when the later/compatibility profile includes it. | Full task history, full Reference docs, full schemas, old projections, unrelated templates, unrelated Roadmap, future catalog. |
+| Session start | Current status or compact current-position summary, likely work shape, scope/non-goals when known, active blockers, pending user judgments, next safe action, evidence gaps, close blockers, residual-risk summary, guarantee level, source/freshness refs. | [Session start](#session-start), [Resume](#resume), current `harness.status` / `status.next_actions`, and readable-view freshness rules only if the status card or summary is stale or used for the next action. A separate `harness.next` output appears only when the later/compatibility profile includes it. | Full task history, full Reference docs, full schemas, old status cards or reports, unrelated templates, unrelated Roadmap, future catalog. |
 | Planning/clarification (`Discovery` internally) | Goal, user value, scope and non-goals, acceptance criteria, answerable facts inspected from repo/docs/current state, missing information, blocking questions, useful non-blocking questions, tracked uncertainty, user-owned judgment candidates, QA/verification expectations, and safe next-work candidate or work split. | [User Guide: What the agent should answer first](user-guide.md#what-the-agent-should-answer-first), [Intake](#intake), [Scope and write boundary](#scope-and-write-boundary), and relevant current Task/Change Unit/Shared Design refs. | Whole module maps, old PRDs/designs, design-policy catalogs, full Storage DDL, full Conformance catalog, unrelated templates, future catalog. |
 | Write preparation | Active scope or Change Unit, Autonomy Boundary, intended paths/tools/commands summary, sensitive-action permission status, later Approval status only when that profile is active, active user judgments, pre-write scope-check summary / WriteAuthoritySummary, baseline/freshness. | [Product writes](#product-writes), [Kernel: prepare_write](../reference/kernel.md#prepare_write), and [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write) for the intended write. | Full Kernel/reference docs, unrelated schemas, historical event logs, large diffs/logs, full Storage DDL, future catalog. |
-| Execution/run recording | Run summary, changed-path summary, consumed internal Write Authorization record or no-write basis, artifact refs, redaction/integrity notes, and immediate next action. | [Evidence and checks](#evidence-and-checks), [Kernel: record_run](../reference/kernel.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run), and artifact-ref display rules only when display or repair needs them. | Full logs, raw diffs, screenshots, traces, bundles, artifact inventories, full projection bodies, full Template set, future catalog. |
-| Evidence review | Known evidence summary, `evidence_ref` when present, Run refs, ArtifactRefs, visible evidence gaps, stale or insufficient support, affected acceptance criteria or claims, redaction/integrity notes, and next evidence action. Include an Evidence Manifest ref only when the full Evidence Manifest profile is active. | [Evidence and checks](#evidence-and-checks), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run), artifact-ref display rules, and [Kernel: Evidence Manifest](../reference/kernel.md#evidence-manifest) only when that profile is active. | Full evidence bodies, full logs, raw diffs, screenshots, traces, bundles, artifact inventories, full projection bodies, full Template set, future catalog. |
-| Close readiness | Close readiness summary, blockers, sensitive-action permission status, evidence/verification/QA/work acceptance status, residual-risk visibility or accepted refs, projection freshness, smallest unblocker. | [Close](#close), [Verification, Manual QA, residual risk, work acceptance](#verification-manual-qa-residual-risk-work-acceptance), [Kernel: close_task](../reference/kernel.md#close_task), and [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task). | Generic all-done rollups, full report bodies, full historical logs, unrelated templates, full Conformance catalog, full projection bodies, future catalog. |
-| User judgment request | Exact user-owned judgment, options or selected outcome, consequences, uncertainty, affected scope, relevant refs, what the agent is not deciding for the user, what the answer does not settle, and next action after the answer. Full profiles also show recommendation, affected gates/acceptance criteria, and consequence of deferral. Use full-format Decision Packet presentation only when a complex judgment needs it. | [Blocking User-Owned Judgments](#blocking-user-owned-judgments), [User Judgment](../reference/kernel.md#user-judgment), and the specific MCP method only if exact fields are needed. | Broad approval language, unrelated judgments, full evidence bodies, full logs, full schema references, full Template set, future catalog. |
+| Execution/run recording | Run summary, changed-path summary, consumed internal Write Authorization record or no-write basis, artifact refs, redaction/integrity notes, and immediate next action. | [Evidence and checks](#evidence-and-checks), [Kernel: record_run](../reference/kernel.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run), and artifact-ref display rules only when display or repair needs them. | Full logs, raw diffs, screenshots, traces, bundles, artifact inventories, full report bodies, full Template set, future catalog. |
+| Evidence review | Known evidence summary, `evidence_ref` when present, Run refs, ArtifactRefs, visible evidence gaps, stale or insufficient support, affected acceptance criteria or claims, redaction/integrity notes, and next evidence action. Include an Evidence Manifest ref only when the full Evidence Manifest profile is active. | [Evidence and checks](#evidence-and-checks), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run), artifact-ref display rules, and [Kernel: Evidence Manifest](../reference/kernel.md#evidence-manifest) only when that profile is active. | Full evidence bodies, full logs, raw diffs, screenshots, traces, bundles, artifact inventories, full report bodies, full Template set, future catalog. |
+| Close readiness | Close readiness summary, blockers, sensitive-action permission status, evidence/verification/QA/work acceptance status, residual-risk visibility or accepted refs, status-card/readable-view freshness, smallest unblocker. | [Close](#close), [Verification, Manual QA, residual risk, work acceptance](#verification-manual-qa-residual-risk-work-acceptance), [Kernel: close_task](../reference/kernel.md#close_task), and [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task). | Generic all-done rollups, full report bodies, full historical logs, unrelated templates, full Conformance catalog, future catalog. |
+| User judgment request | Exact user-owned judgment, concise options or selected outcome, consequences, uncertainty, and what the agent is not deciding for the user. Show only the affected scope and refs needed to understand that decision. Use full-format Decision Packet presentation only when a complex judgment needs it. | [Blocking User-Owned Judgments](#blocking-user-owned-judgments), [User Judgment](../reference/kernel.md#user-judgment), and the specific MCP method only if exact fields are needed. | Broad approval language, unrelated judgments, full evidence bodies, full logs, full schema references, full Template set, future catalog. |
 | Recovery/error | Primary error or blocker, owner, last safe/current state known, stale or unavailable source, affected authority claims, next recovery action, and whether writes or close must hold. | [Resume](#resume), [Reading status and blockers](#reading-status-and-blockers), [Agent Integration: Fallback Semantics](../reference/agent-integration.md#fallback-semantics), and the specific recovery or error owner section. | Historical event logs, stack traces, full artifacts, unrelated status, full Storage DDL, full Conformance catalog, unrelated Roadmap. |
 
-Agent memory, chat history, retrieved context, indexed context, and projections stay read-only. They can suggest what to inspect, but they cannot create Write Authorization records, make writes compatible, satisfy gates, create evidence, perform verification, accept risk, close a Task, or make any other authority claim. When state matters, retrieve current Core state or state-derived compact context before acting. Token savings must not hide user-owned decisions, blockers, scope limits, safety boundaries, evidence gaps, close blockers, or close-relevant residual risk. A judgment request must include the decision, options, consequences, uncertainty, and what the agent is not deciding for the user.
+Agent memory, chat history, retrieved context, indexed context, status cards, summaries, rendered templates, and generated reports stay read-only. They can suggest what to inspect, but they cannot create Write Authorization records, make writes compatible, satisfy gates, create evidence, create approval, perform verification, accept work, accept residual risk, create close readiness, close a Task, or make any other authority claim. When state matters, retrieve current Core state or a state-derived agent context packet before acting. Stale status cards or generated reports are not authority. Token savings must not hide user-owned decisions, blockers, scope limits, safety boundaries, evidence gaps, close blockers, or close-relevant residual risk. A judgment request must include only the decision, options, consequences, uncertainty, and what the agent is not deciding for the user, plus the smallest refs needed to identify the affected scope.
 
 ## Session start
 
@@ -120,7 +126,7 @@ Show:
 - pre-write scope-check status when writes are possible or near
 - guarantee level and what the surface can actually block or only detect, as display and risk context rather than sensitive-action Approval, verification, work acceptance, or a gate
 - optional raw gate names or refs only when they clarify a boundary; do not make the user read the full gate taxonomy to understand the next action
-- projection freshness status
+- status card or readable-view freshness status
 - when guard, freeze, or careful mode is relevant, what can actually be blocked before execution and what can only be detected after action
 
 Do not begin product writes from a broad natural-language request alone. First establish scope and a compatible pre-write scope check for the intended change.
@@ -137,9 +143,9 @@ A good resume response says:
 I found the active task. Current scope is X. The next safe action is Y. Product writes have not passed the pre-write scope check yet. One decision is pending: Z.
 ```
 
-If projection, `source_state_version`, or readable status is stale or unknown, say that and refresh or reconcile before depending on it. If canonical state is available directly, the agent may continue from that state while warning that the readable projection is not the source of authority.
+If the status card, `source_state_version`, or readable status is stale or unknown, say that and refresh or reconcile before depending on it. If canonical state is available directly, the agent may continue from that state while warning that the readable view is not the source of authority.
 
-Keep display failures separate. A stale projection means the readable card/report may lag and needs refresh or reconcile before it becomes dependable context. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient and may block writes or close. MCP unavailable means the agent cannot reach the required Harness/Core capability; do not claim authoritative state changes, Approval, work acceptance (Acceptance), residual-risk acceptance, gate updates, projection repairs, or close until that capability is available again.
+Keep display failures separate. A stale readable view means the status card or report may lag and needs refresh or reconcile before it becomes dependable context. Stale state, baseline, or evidence means the underlying inputs moved or became insufficient and may block writes or close. MCP unavailable means the agent cannot reach the required Harness/Core capability; do not claim authoritative state changes, Approval, work acceptance (Acceptance), residual-risk acceptance, gate updates, readable-view repairs, or close until that capability is available again.
 
 If Core itself is unreachable, the display issue is `MCP_SERVER_UNAVAILABLE`: say Core cannot be reached and reconnect or diagnose before claiming state changed. If Core or the operator can tell that the current surface lacks usable MCP, the display issue is `SURFACE_MCP_UNAVAILABLE`: say this surface cannot use the required Harness tools, then hold writes by instruction or switch to a capable surface. Surface name alone does not prove capability. Only say execution was blocked before action when a preventive guard has proven pre-tool blocking for that covered operation.
 
@@ -212,7 +218,7 @@ Common display examples:
 | `WRITE_AUTHORIZATION_REQUIRED` or `WRITE_AUTHORIZATION_INVALID` | Pre-write scope check is missing or stale. | Retry `harness.prepare_write` for the exact intended write. |
 | `DECISION_REQUIRED` or `DECISION_UNRESOLVED` | A user-owned judgment is needed. | Show a focused judgment request; include a full-format Decision Packet only when a ref or exact contract helps. |
 | `APPROVAL_REQUIRED`, `APPROVAL_DENIED`, or `APPROVAL_EXPIRED` | Sensitive-action permission is needed or unusable. | Request or resolve a Sensitive action approval judgment in minimum MVP-1; renew or repair an Approval only when the later Approval profile is active, then retry the write check. |
-| `PROJECTION_STALE` | The readable status view is stale. | Refresh or reconcile the projection before relying on that view. |
+| `PROJECTION_STALE` | The readable status view is stale. | Refresh or reconcile the readable view before relying on it. |
 | `ARTIFACT_MISSING` | An artifact is missing or failed integrity. | Reattach, regenerate, or replace the artifact before using it as evidence. |
 
 Prefer the plain phrase first and the exact Harness term in parentheses only when it helps: "Pre-write scope check is stale (`WRITE_AUTHORIZATION_INVALID`). Smallest unblocker: rerun `harness.prepare_write` for the current file list."
@@ -231,14 +237,14 @@ The intake route is:
 User request -> check what the repository, docs, and current Harness state can answer -> classify the work shape -> identify missing information -> separate blocking questions from useful non-blocking questions -> identify user-owned judgments -> present options, consequences, uncertainty, and a recommendation when user judgment is required -> propose the next safe action -> prepare_write path when product writes are intended
 ```
 
-Treat requirements-clarification outputs, including Discovery support, as support or projection concepts that feed existing owner paths unless an owner reference already records the underlying fact:
+Treat requirements-clarification outputs, including Discovery support, as support or readable-summary concepts that feed existing owner paths unless an owner reference already records the underlying fact:
 
 - Requirements brief (`Discovery Brief` internally): compact summary of goal, user value, scope, non-goals, acceptance criteria, answerable facts already inspected from repo/docs/tests/current Harness state/accepted decisions/current task artifacts, missing information, judgments only the user can make, Product/UX judgment candidates, Technical judgment candidates, Sensitive action approval needs, QA and verification expectations, open assumptions, remaining uncertainty, and a safe next-work candidate or work split.
 - Question Queue: ordered open items classified as answerable facts to inspect, blocking questions, or useful non-blocking questions.
 - Assumption Register: assumptions the agent is using, with source, confidence, owner, and what would change if the assumption fails.
 - Safe next-work scope candidate (`First Safe Change Unit Candidate` internally): the internal Change Unit-shaped version of a safe next-work candidate when product writes are near. It is an advanced/support concept, not the only Discovery output or primary stop condition.
 
-Plain phrases such as "safe next-work candidate" and "work split" are proposal/support phrases, not standalone schema fields, canonical record types, gate values, projection kinds, or record/check paths.
+Plain phrases such as "safe next-work candidate" and "work split" are proposal/support phrases, not standalone schema fields, canonical record types, gate values, display kinds, or record/check paths.
 
 Route requirements-clarification results into Shared Design, judgment request candidates, optional full-format Decision Packet presentations, and Change Unit shaping. Do not treat a requirements brief, Question Queue, Assumption Register, or safe next-work scope candidate as scope authority, sensitive-action approval, Acceptance, residual-risk acceptance, evidence, close readiness, or Write Authorization.
 
@@ -373,7 +379,7 @@ When a prompt or status uses the word "approved," name the exact Harness record/
 Examples:
 
 - Dependency install sensitive-action permission: permission to run the install or update dependency files does not decide that the new dependency is the right architecture choice. If that choice affects compatibility, rollback, cost, or maintenance, use a judgment request.
-- Secret access sensitive-action permission: permission to read or use a secret inside the requested scope does not permit exposing secret values in artifacts, projections, exports, logs, screenshots, or summaries.
+- Secret access sensitive-action permission: permission to read or use a secret inside the requested scope does not permit exposing secret values in artifacts, status cards, reports, exports, logs, screenshots, or summaries.
 - Auth/system change sensitive-action permission: permission to touch auth files, permissions, or system configuration does not choose the identity-provider or session/storage model, such as local session cookie, bearer token/JWT, OAuth/OIDC sign-in, or social-login provider integration; it also does not decide role model, lockout behavior, or user notice.
 - Public API change decision: resolving the API direction decides the contract choice for the Task; it is not deployment authority, merge authority, or a reusable Write Authorization.
 - Work acceptance (Acceptance): accepting the result does not make more writes compatible, approve new sensitive actions, accept known residual risk, or retroactively satisfy missing evidence, QA, verification, waiver, or Write Authorization.
@@ -389,24 +395,19 @@ Inside the Autonomy Boundary, the agent may decide ordinary implementation detai
 
 When user-owned Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance blocks progress, show a user judgment request. Full-format Decision Packet presentation is reserved for complex/later-profile judgments; ordinary prompts should start with the judgment, options, consequence, and next action. When a named sensitive action blocks progress, use Sensitive action approval. Do not replace any of these with broad approval or a vague "continue?" prompt.
 
-The word "approved" or a casual "go ahead," "proceed," "looks good," "진행해," or "좋아" is not enough when the underlying choice is a Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, Residual risk acceptance, waiver, or simple continuation. Those phrases must not automatically become sensitive-action approval, work acceptance, or residual-risk acceptance. The prompt must name the judgment type, what the user is deciding, what is not being decided, the relevant scope and refs, what the agent may decide without the user, and the close or write impact.
+The word "approved" or a casual "go ahead," "proceed," "looks good," "진행해," or "좋아" is not enough when the underlying choice is a Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, Residual risk acceptance, waiver, or simple continuation. Those phrases must not automatically become sensitive-action approval, work acceptance, or residual-risk acceptance. The active prompt or nearby status must make the judgment type unambiguous, but the question itself stays compact.
 
 Token saving must not remove the context the user needs to decide. Even a compact judgment request must show the decision, options or selected outcome, consequences, uncertainty, and what the agent is not deciding for the user.
 
-A user-facing judgment request should include:
+By default, a user-facing judgment request should include only:
 
-- judgment title
-- judgment type: Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance
-- why the decision is needed now
-- what the user is deciding / exact choice
+- the decision or exact choice
 - options or selected outcome
-- trade-offs, recommendation, uncertainty, and deferral consequence when the judgment needs them
-- residual risk when relevant
-- affected gates and affected acceptance criteria
-- source refs and evidence, risk, or design refs when available or relevant
-- what the agent may decide without the user
-- what the answer does not settle
-- follow-up when relevant
+- consequences
+- uncertainty
+- what the agent is not deciding for the user
+
+Use a short title, judgment type, or one source ref only when needed to disambiguate the active prompt. Trade-offs, recommendation, deferral effect, affected gates or acceptance criteria, evidence/risk/design refs, and follow-up belong in pull/drill-down or full-format presentation when the active profile and complexity require them.
 
 If more than one user-owned judgment is pending, render separate prompts or separate lines in one prompt. Do not merge "approve install," "accept the result," and "accept the named risk" into one approval request. Use concise wording for simple unblockers and fuller prompts when the choice is complex, high-risk, or close-relevant.
 
@@ -644,7 +645,7 @@ Do not ask for work acceptance (Acceptance) from a generic "all good?" prompt. T
 
 If close is blocked, say exactly why and name the smallest next unblocker. A user-readable close blocker display should show what judgment remains, what evidence is missing or stale, whether verification or Manual QA is required by the active profile, whether work acceptance is required, what residual risk is visible or still not visible enough, and the next smallest resolving action.
 
-When more than one category blocks close, lead with the primary blocker but keep the others visible. Do not compress evidence, verification, Manual QA, work acceptance, the residual-risk visibility line, residual-risk acceptance, and projection freshness into one "not done" or "done" line.
+When more than one category blocks close, lead with the primary blocker but keep the others visible. Do not compress evidence, verification, Manual QA, work acceptance, the residual-risk visibility line, residual-risk acceptance, and readable-view freshness into one "not done" or "done" line.
 
 ## Good and bad agent response examples
 
@@ -746,7 +747,7 @@ Good MCP-unavailable hold:
 I cannot reach Harness/Core from this surface, so I am holding product writes and will not claim state changes, gate updates, Approval, work acceptance (Acceptance), residual-risk acceptance, or close. Smallest unblocker: reconnect Core or continue from a capable surface.
 ```
 
-Good projection-stale recovery:
+Good stale-view recovery:
 
 ```text
 The readable status view is stale, but Core state is current. I will refresh or reconcile the readable view, then continue from Core state instead of treating the old Markdown as authority.

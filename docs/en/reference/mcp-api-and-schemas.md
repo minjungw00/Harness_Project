@@ -11,6 +11,8 @@ Use the split documents instead of loading one large schema file:
 | Later/profile-gated methods and future schema material | [API Schema Later](api/schema-later.md) |
 | Error taxonomy, primary precedence, idempotency, state conflict behavior | [API Errors](api/errors.md) |
 
+API readers should keep the same context/projection split used elsewhere: `harness.status` and `harness://status/card` return a user status card or compact current-position summary; agent surfaces may derive an agent context packet from current Core state and refs; Core state remains the only operational source of truth. Status cards, read-only resources, rendered templates, and projections are not state and do not create approval, acceptance, residual-risk acceptance, evidence, close readiness, Write Authorization, or close.
+
 ## MVP-1 shortcut
 
 The MVP-1 public tool surface is intentionally small:
