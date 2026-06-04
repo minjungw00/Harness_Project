@@ -157,6 +157,8 @@ flowchart LR
 
 ### 표시 깊이
 
+이 값은 표시 세부 정도를 설명하는 metadata입니다. `display_depth` schema field를 되살리는 것이 아닙니다. 새 예시는 `presentation=short` 또는 `presentation=full`을 사용합니다.
+
 | 표시 깊이 | 사용하는 경우 | 최소 표시 내용 |
 |---|---|---|
 | `simple` | 결과 영향이 낮고 좁은 막힘을 푸는 판단. | 정확한 질문, scope, 선택지 또는 requested outcome, 답변이 해결하지 않는 것. |
@@ -167,7 +169,7 @@ flowchart LR
 ### 기준 schema 방향
 
 - `user_judgment`가 기준 기록 family입니다.
-- `harness.request_user_judgment`가 기준 action입니다.
+- `harness.request_user_judgment`가 기준 요청 action이고, `harness.record_user_judgment`는 호환되는 사용자 답변을 기록합니다.
 - `judgment_type`은 compact 내부 판단 유형을 저장합니다. MVP-1 예시는 `product_choice`, `technical_choice`, `sensitive_action_approval`, `work_acceptance`, `residual_risk_acceptance`입니다.
 - 사용자에게 보이는 표시는 제품/UX 판단, 기술 판단, 민감 동작 승인, 작업 수락, 잔여 위험 수용으로 제한됩니다.
 - `presentation=short`는 작은 막힘과 한 화면 prompt의 기본값입니다.
@@ -176,9 +178,9 @@ flowchart LR
 - Route-like detail과 depth-like detail은 validation 또는 presentation metadata입니다. 사용자가 별도 concept으로 배워야 하는 항목이 아닙니다.
 - `affected_gates`, owner ref, user judgment status가 그 판단이 무엇에 영향을 줄 수 있는지 정합니다.
 
-`request_user_decision`, `judgment_domain`, `decision_kind`, `decision_profile`, `judgment_category`, `judgment_route`, `display_depth`는 compatibility 또는 legacy 용어입니다. 새 예시, fixture, public docs에서는 기준 이름을 우선합니다.
+`request_user_decision`, `record_user_decision`, `judgment_domain`, `decision_kind`, `decision_profile`, `judgment_category`, `judgment_route`, `display_depth`는 compatibility 또는 legacy 용어입니다. 새 예시, fixture, public docs에서는 위 기준 이름을 우선합니다.
 
-모호한 동의는 좁게 해석합니다. "proceed", "go ahead", "looks good", "좋아", "진행해" 같은 문구는 민감 동작 승인, 작업 수락, 잔여 위험 수용으로 자동 해석되면 안 됩니다. 하나의 사용자 답변이 여러 판단을 만족하려면 질문이 그 판단들을 명시했고 답변이 각각과 호환되어야 합니다. 기록 payload도 scope, consequence, close/write impact를 이름 붙여야 합니다. 그렇지 않으면 Core나 agent가 다시 확인해야 합니다.
+모호한 동의는 좁게 해석합니다. "proceed", "go ahead", "looks good", "좋아", "진행해" 같은 문구만으로 민감 동작 승인을 부여하거나, 제품/기술 방향을 고르거나, 작업을 수락하거나, 잔여 위험을 수용하거나, requirement를 waive하거나, deferral을 선택지처럼 처리하면 안 됩니다. 하나의 사용자 답변이 여러 판단을 만족하려면 질문이 그 판단들을 명시했고 답변이 각각과 호환되어야 합니다. 기록 payload도 scope, consequence, close/write impact를 이름 붙여야 합니다. 그렇지 않으면 Core나 agent가 다시 확인해야 합니다.
 
 ## 근거, 검증, 수동 QA, 작업 수락, 위험
 

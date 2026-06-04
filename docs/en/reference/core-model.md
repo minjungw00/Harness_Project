@@ -153,6 +153,8 @@ Each route remains separate after recording: Approval does not choose product di
 
 ### Display depth
 
+These values describe presentation detail. They do not revive `display_depth` as a schema field; new examples should use `presentation=short` or `presentation=full`.
+
 | Display depth | Use for | Minimum display |
 |---|---|---|
 | `simple` | A narrow unblocker with low consequence. | Exact question, scope, options or requested outcome, what the answer does not settle. |
@@ -160,15 +162,21 @@ Each route remains separate after recording: Approval does not choose product di
 | `high-risk` | Security/privacy, sensitive categories, public API, migration, dependency, or costly rollback. | Trade-offs plus risk, evidence refs when available, approval boundary when relevant, rollback/follow-up effect. |
 | `close-affecting` | Acceptance, waiver, residual-risk acceptance, or a decision whose deferral affects close. | Close basis, blockers, residual risk visibility, affected gates, required refs, and the exact close impact. |
 
-Canonical schema direction for this model:
+### Canonical schema direction
 
+- `user_judgment` is the canonical record family.
+- `harness.request_user_judgment` is the canonical request action, and `harness.record_user_judgment` records the compatible user answer.
 - `judgment_type` stores the compact internal type. MVP-1 examples are `product_choice`, `technical_choice`, `sensitive_action_approval`, `work_acceptance`, and `residual_risk_acceptance`.
 - User-facing display is limited to Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, and Residual risk acceptance.
+- `presentation=short` is the default for small unblockers and one-screen prompts.
+- `presentation=full` is full-format Decision Packet-style presentation for complex, high-risk, or close-affecting judgments.
+- `display_label` is the user-facing label. Allowed labels are Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, and Residual risk acceptance.
 - Route-like and depth-like details are validation or presentation metadata, not separate concepts users must learn.
 - `affected_gates`, owner refs, and the user judgment status determine what the judgment can influence.
-- Legacy fields such as `judgment_domain`, `decision_kind`, and `decision_profile` may appear only in migration or compatibility notes.
 
-Ambiguous consent is deliberately narrow. Phrases such as "proceed," "go ahead," "looks good," "좋아," or "진행해" cannot resolve incompatible routes by default. A single user reply may satisfy multiple routes only when the request made those routes explicit, the reply is compatible with each route, and the recorded payload names the scope, consequence, and affected close/write impact for each route. Otherwise Core or the agent must clarify.
+`request_user_decision`, `record_user_decision`, `judgment_domain`, `decision_kind`, `decision_profile`, `judgment_category`, `judgment_route`, and `display_depth` are compatibility or legacy terms. New examples, fixtures, and public docs should prefer the canonical names above.
+
+Ambiguous consent is deliberately narrow. Phrases such as "proceed," "go ahead," "looks good," "좋아," or "진행해" do not by themselves grant sensitive-action permission, choose product or technical direction, accept work, accept residual risk, waive a requirement, or convert deferral into a chosen option. A single user reply may satisfy multiple routes only when the request made those routes explicit, the reply is compatible with each route, and the recorded payload names the scope, consequence, and affected close/write impact for each route. Otherwise Core or the agent must clarify.
 
 ## Evidence, verification, QA, work acceptance, and risk
 
