@@ -2,7 +2,7 @@
 
 This is the English routing page for the Harness documentation set.
 
-Harness is a local work-authority server for AI-assisted product work. Its job is to keep fragile conversation context from becoming the source of truth. It preserves the local basis for scope, user-owned judgment, evidence, verification expectations, work acceptance, close readiness, and residual risk. When an agent should not decide, Harness routes that decision back to the user.
+Harness is a local work-authority server for AI-assisted product work. Its job is to keep fragile work criteria out of chat-only memory. It preserves the local basis for scope, user-owned judgment, evidence, verification expectations, work acceptance, close readiness, and residual risk. When an agent should not decide, Harness routes that decision back to the user.
 
 | Harness is not | Harness does |
 |---|---|
@@ -19,10 +19,11 @@ This repository is documentation-only today and its intended future role is the 
 Use this path when you do not know where to start:
 
 1. [Overview](learn/overview.md) for the first mental model.
-2. [User Guide](use/user-guide.md) for how users and agents interact during work.
-3. [Concepts](learn/concepts.md) only when terminology starts appearing in examples or reference docs.
-4. [Implementation Overview](build/implementation-overview.md) only if you are reviewing or planning future Harness Server implementation.
-5. [Reference Index](reference/README.md) only when you need exact contracts.
+2. [One Task](learn/one-task.md) for the feel of one user work loop.
+3. [Concepts](learn/concepts.md) for the minimum vocabulary.
+4. [User Guide](use/user-guide.md) for practical user and agent interaction.
+5. [Implementation Overview](build/implementation-overview.md) only if you are reviewing or planning future Harness Server implementation.
+6. [Reference Index](reference/README.md) only when you need exact contracts.
 
 This path is intentionally small. First-time readers do not need to read large Reference docs before they understand what Harness is for.
 
@@ -30,7 +31,7 @@ This path is intentionally small. First-time readers do not need to read large R
 
 | Reader | Start here | Then use |
 |---|---|---|
-| General user | [Overview](learn/overview.md) | [User Guide](use/user-guide.md); [One Task](learn/one-task.md) for a full work story; [Concepts](learn/concepts.md) only when terms need names. |
+| General user | [Overview](learn/overview.md) | [One Task](learn/one-task.md) for the work-loop feel; [User Guide](use/user-guide.md) for practical session behavior; [Concepts](learn/concepts.md) only when terms need names. |
 | Agent instruction writer | [Agent Guide](use/agent-guide.md) | [Agent Integration Reference](reference/agent-integration.md), [Surface Cookbook](reference/surface-cookbook.md), and the specific API owner only when exact fields are needed. |
 | Server implementer | [Implementation Overview](build/implementation-overview.md) | [MVP-1 User Work Loop](build/mvp-user-work-loop.md) -> [MVP API](reference/api/mvp-api.md) -> [Storage](reference/storage.md). Use [Engineering Checkpoint](build/engineering-checkpoint.md) for the first internal smoke and [Runtime Walkthrough](build/runtime-walkthrough.md) for the request-to-close path. |
 | Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md), [Rewrite Plan](maintain/rewrite-plan.md), and Reference owners only when checking strict meaning. |
@@ -55,11 +56,11 @@ Use Learn when you want the authority-boundary mental model before exact contrac
 
 | Page | Distinct role |
 |---|---|
-| [Overview](learn/overview.md) | Primary first read: authority boundaries, three spaces, what Harness tracks, and what Harness is not. |
-| [Purpose and Principles](learn/purpose-and-principles.md) | Values, non-goals, failure model, work shapes, and MVP boundary. Use it to check whether wording or scope still matches the thesis. |
-| [Concepts](learn/concepts.md) | Vocabulary bridge from ordinary user language to optional/internal implementation labels. |
-| [Harness in 15 Minutes](learn/harness-in-15-minutes.md) | Short scenario sampler for advice/read-only work, small direct change, tracked work, and non-substitution rules. |
-| [One Task](learn/one-task.md) | Fuller tutorial walkthrough showing the three work shapes inside one task story. |
+| [Overview](learn/overview.md) | Primary first read: what Harness is, why it exists, what it keeps separate, and what it is not. |
+| [One Task](learn/one-task.md) | Primary Learn walkthrough: one ordinary request through clarification, scope, evidence, checks, residual risk, acceptance, and close. |
+| [Concepts](learn/concepts.md) | Minimum vocabulary for first-time readers, with internal labels kept optional. |
+| [Harness in 15 Minutes](learn/harness-in-15-minutes.md) | Shortened old-link route that points readers to the active Learn path. |
+| [Purpose and Principles](learn/purpose-and-principles.md) | Optional thesis check for reviewers: values, failure model, non-goals, and MVP boundary. |
 
 ## Use
 

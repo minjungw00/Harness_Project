@@ -1,8 +1,8 @@
 # Harness Documentation / 하네스 문서
 
-Harness is a local work-authority server for AI-assisted product work. Its job is to keep fragile conversation context from becoming the source of truth. It preserves the local basis for scope, user-owned judgment, evidence, verification expectations, work acceptance, close readiness, and residual risk, and routes decisions back to the user when the agent should not decide.
+Harness is a local work-authority server for AI-assisted product work. Its job is to keep fragile work criteria out of chat-only memory. It preserves the local basis for scope, user-owned judgment, evidence, verification expectations, work acceptance, close readiness, and residual risk, and routes decisions back to the user when the agent should not decide.
 
-하네스는 AI 지원 제품 작업을 위한 로컬 작업 권한 서버입니다. 대화의 깨지기 쉬운 맥락이 기준 기록처럼 굳어지지 않게 하는 것이 하네스의 역할입니다. 하네스는 범위, 사용자 소유 판단, 근거, 확인과 검증 기대, 작업 수락, 닫기 가능 여부, 잔여 위험의 로컬 근거를 보존합니다. 에이전트가 판단하면 안 되는 일은 사용자에게 다시 돌려보냅니다.
+하네스는 AI 지원 제품 작업을 위한 로컬 작업 권한 서버입니다. 대화에만 남아 있으면 쉽게 흔들리는 작업 기준을 대화 밖에 두는 것이 하네스의 역할입니다. 하네스는 범위, 사용자 소유 판단, 근거, 확인과 검증 기대, 작업 수락, 닫기 가능 여부, 잔여 위험의 로컬 근거를 보존합니다. 에이전트가 판단하면 안 되는 일은 사용자에게 다시 돌려보냅니다.
 
 | Harness is not / 하네스가 아닌 것 | Harness does / 하네스가 하는 일 |
 |---|---|
@@ -26,8 +26,9 @@ This repository is documentation-only today and its intended future role is the 
 | Step / 순서 | English | 한국어 |
 |---|---|---|
 | 1 | [Overview](en/learn/overview.md) | [개요](ko/learn/overview.md) |
-| 2 | [User Guide](en/use/user-guide.md) | [사용자 가이드](ko/use/user-guide.md) |
-| 3, only if terms are unclear / 용어가 필요할 때만 | [Concepts](en/learn/concepts.md) | [핵심 개념](ko/learn/concepts.md) |
+| 2 | [One Task](en/learn/one-task.md) | [하나의 작업](ko/learn/one-task.md) |
+| 3 | [Concepts](en/learn/concepts.md) | [핵심 개념](ko/learn/concepts.md) |
+| 4 | [User Guide](en/use/user-guide.md) | [사용자 가이드](ko/use/user-guide.md) |
 | Implementers only / 구현자만 | [Implementation Overview](en/build/implementation-overview.md), then [MVP-1 User Work Loop](en/build/mvp-user-work-loop.md) | [구현 개요](ko/build/implementation-overview.md), 그다음 [MVP-1 사용자 작업 루프](ko/build/mvp-user-work-loop.md) |
 | Lookup only / 찾아볼 때만 | [Reference Index](en/reference/README.md) | [Reference 색인](ko/reference/README.md) |
 
@@ -39,7 +40,7 @@ This first-read path intentionally stops before large Reference docs. Use Refere
 
 | Reader / 독자 | English path | 한국어 경로 |
 |---|---|---|
-| General user / 일반 사용자 | [Overview](en/learn/overview.md) -> [User Guide](en/use/user-guide.md); use [One Task](en/learn/one-task.md) for a fuller walkthrough. | [개요](ko/learn/overview.md) -> [사용자 가이드](ko/use/user-guide.md); 더 긴 흐름은 [하나의 작업](ko/learn/one-task.md). |
+| General user / 일반 사용자 | [Overview](en/learn/overview.md) -> [One Task](en/learn/one-task.md) -> [User Guide](en/use/user-guide.md). | [개요](ko/learn/overview.md) -> [하나의 작업](ko/learn/one-task.md) -> [사용자 가이드](ko/use/user-guide.md). |
 | Agent instruction writer / 에이전트 지침 작성자 | [Agent Guide](en/use/agent-guide.md); then [Agent Integration Reference](en/reference/agent-integration.md) only for exact connector/context contracts. | [에이전트 가이드](ko/use/agent-guide.md); 정확한 connector/context 계약이 필요할 때만 [Agent 통합 참조](ko/reference/agent-integration.md). |
 | Server implementer / 서버 구현자 | [Implementation Overview](en/build/implementation-overview.md) -> [MVP-1 User Work Loop](en/build/mvp-user-work-loop.md) -> [MVP API](en/reference/api/mvp-api.md) -> [Storage](en/reference/storage.md). Use [Engineering Checkpoint](en/build/engineering-checkpoint.md) for the first internal smoke. | [구현 개요](ko/build/implementation-overview.md) -> [MVP-1 사용자 작업 루프](ko/build/mvp-user-work-loop.md) -> [MVP API](ko/reference/api/mvp-api.md) -> [Storage](ko/reference/storage.md). 첫 내부 점검은 [내부 엔지니어링 점검](ko/build/engineering-checkpoint.md). |
 | Documentation maintainer / 문서 유지보수자 | [Authoring Guide](en/maintain/authoring-guide.md) -> [Translation Guide](en/maintain/translation-guide.md) -> [Rewrite Plan](en/maintain/rewrite-plan.md), with owner docs only for strict meaning. | [문서 작성 가이드](ko/maintain/authoring-guide.md) -> [번역 가이드](ko/maintain/translation-guide.md) -> [재작성 계획](ko/maintain/rewrite-plan.md), 엄격한 의미 확인에는 owner 문서만. |

@@ -2,174 +2,117 @@
 
 ## Start With One Normal Request
 
-This tutorial follows one feature request through the three user-visible work shapes:
+This page follows one future Harness-assisted task. It is a learning story, not a runtime transcript. This repository is documentation-only and does not contain a running Harness Server.
 
-- advice/read-only work;
-- small direct change;
-- tracked work.
-
-Users can ask in ordinary language. The agent's job is to show the authority boundary through six plain concepts: work, scope, judgment or thing to decide, evidence, check or verification, and close.
-
-This repository is documentation-only. The examples describe the intended future Harness behavior; they are not runtime transcripts from an implementation in this repo.
-
-## Main Idea
-
-Harness keeps AI-assisted product work grounded in local Core-owned state by tracking work, scope, user-owned judgments, evidence, checks or verification, and close outside the chat.
-
-The task story below keeps returning to the same non-substitution rules:
-
-- Chat is not state.
-- Readable Markdown is not state.
-- Tool output is not user judgment.
-- Sensitive-action approval is not work acceptance.
-- Test pass is not manual QA.
-- Self-check is not detached verification.
-- "Proceed" or "looks good" does not automatically resolve every pending judgment.
-
-## Step 1: Advice/Read-Only Planning
-
-The user starts with:
+The user asks:
 
 ```text
-Help me clarify the plan before implementation.
+Add remember-me behavior to login, but clarify the plan before implementation.
 ```
 
-The agent should not start by changing product files. It should inspect, separate facts from choices, and show a safe next step.
+The user does not need to know internal labels. The agent should make the work understandable through plain questions: what is the work, what is in scope, what does the user need to decide, what evidence will support the result, what was checked, and what still blocks close?
+
+## 1. Clarify Before Writing
+
+The agent should not start by changing files when the request still hides product or security choices.
 
 ```text
 What I can inspect:
 - current login form structure;
-- current session lifetime configuration;
-- existing tests around login state.
+- current session lifetime settings;
+- existing tests around sign-in and sign-out.
 
 What you likely need to decide:
-- Product: should "remember me" keep the user signed in, remember the email, or both?
-- Security: if it keeps the user signed in, what session lifetime is acceptable?
+- should "remember me" keep the user signed in, remember the email, or both?
+- if it keeps the user signed in, what session lifetime and storage risk are acceptable?
 
 Safe next step:
-Inspect auth shape and return a narrow plan. No product writes yet.
+Inspect the auth shape and return a narrow plan. No product writes yet.
 ```
 
-The authority boundary is important: the plan is useful, but it is not permission to implement and not acceptance of any risk.
+The plan is useful, but it is not permission to implement and not acceptance of any risk.
 
-## Step 2: Scope Becomes Concrete
+## 2. Separate Facts From User Judgment
 
-After inspection, the agent reports:
+After inspection, the agent can summarize:
 
 ```text
-Current facts:
-- Login form can add a checkbox without a layout rewrite.
+Confirmed facts:
+- The login form can add a checkbox without a layout rewrite.
 - Session lifetime is controlled server-side.
 - Tests already cover sign-in and sign-out.
 
-Open choices:
-- Product meaning of "remember me."
-- Session lifetime and storage approach if the meaning is longer session.
+Still yours to decide:
+- the product meaning of "remember me";
+- the acceptable session lifetime if sessions are extended.
 ```
 
-The user replies:
+If the user says:
 
 ```text
 Show what I need to decide and what you can check yourself.
 ```
 
-The agent should show the split:
+the agent should keep that split visible:
 
 ```text
-Product decision:
-Should "remember me" mean email memory, longer session, or both?
+User decision:
+Should "remember me" mean remembered email, longer session, or both?
 
-Technical decision:
-If longer session is selected, should the implementation use the existing server-side session mechanism or introduce a separate persistent token?
-
-Recommendation:
-Choose product meaning first. Then decide whether the existing session mechanism is enough.
+Agent-checkable:
+Whether the existing session mechanism can support the selected behavior.
 ```
 
-Tool output helped find facts. It did not make the user-owned decisions.
+Tool output can inform the choice. It does not make the user's choice.
 
-## Step 3: A Small Direct Change Stays Small
+## 3. Name The Scope
 
-During planning, the user notices a separate typo:
-
-```text
-Tell me if the scope is getting bigger: keep this as a small change and rename the login button from "Sign in" to "Log in."
-```
-
-This is a small direct change if the label is local and the meaning stays the same.
-
-```text
-Scope:
-Login button label and directly related copy test, if one exists.
-
-Out of scope:
-Authentication behavior, session lifetime, remember-me UI, localization strategy, and broader copy cleanup.
-```
-
-A compact result is enough:
-
-```text
-Changed the login button label to "Log in."
-Checked the directly related copy path.
-Small-change boundary held: no behavior or shared-contract change found.
-No known close-relevant residual risk for this small change.
-```
-
-If the agent discovers that the label comes from a shared phrase used across account creation, password reset, and marketing pages, it should stop and explain that the scope grew. Small direct change is a work shape, not a license to ignore wider impact.
-
-## Step 4: The Feature Becomes Tracked Work
-
-The user returns to the feature:
-
-```text
-Add remember-me behavior to login.
-```
-
-Because this affects product behavior, security expectations, tests, and user experience, it should be tracked work.
-
-The first useful boundary is:
+Once the user chooses longer sessions, the agent should name the work boundary before implementing:
 
 ```text
 In scope:
-Login form checkbox, chosen remember-me behavior, focused tests, and directly related copy.
+Login checkbox, selected longer-session behavior, focused tests, and directly related copy.
 
 Out of scope:
 Passwordless login, account recovery, global session redesign, unrelated auth cleanup.
 
-Still user-owned:
-Meaning of "remember me"; acceptable session lifetime and storage risk if sessions are extended.
+Still user-owned if it matters:
+Session lifetime, storage risk, QA expectation, residual-risk acceptance, and final work acceptance.
 ```
 
-The agent then asks the named product question:
+If a small side request appears, such as renaming the login button from "Sign in" to "Log in," the agent can keep it light only while the boundary holds. If the label turns out to be shared across unrelated flows, the agent should stop and say the scope grew.
+
+## 4. Ask Specific Questions
+
+Harness should not turn every uncertainty into a heavy ceremony. It should ask the specific question that blocks honest progress.
 
 ```text
-Should "remember me" extend the login session on this device, remember the email address, or both?
+Decision needed:
+How long should a remembered session last on this device?
+
+Recommendation:
+Use the existing session mechanism with a shorter remembered-session lifetime before adding a separate persistent token.
+
+Uncertainty:
+I still need to confirm how the current session cleanup handles extended lifetime.
 ```
 
-If the user answers:
+A broad "go ahead" should not be stretched to cover unrelated product, technical, QA, acceptance, or risk decisions.
 
-```text
-Extend the login session on this device.
-```
+## 5. Keep Sensitive Permission Narrow
 
-that answers the product meaning. It does not automatically answer the technical storage decision, manual QA expectation, residual risk, or work acceptance.
-
-## Step 5: A Sensitive Step Is Not Work Acceptance
-
-Suppose the chosen implementation needs to read a local secret or update a dependency lockfile. The agent may need permission for that sensitive step.
-
-The prompt should be specific:
+If the chosen approach requires a sensitive step, the prompt should say exactly what permission covers.
 
 ```text
 Sensitive step permission needed:
-May I update the dependency lockfile to add the session helper required by the chosen approach?
+May I update the dependency lockfile to add the session helper required by this approach?
 
-This permission only covers that step. It does not accept the final result, waive QA, or accept residual risk.
+This only covers that step. It does not accept the finished result, waive QA, or accept residual risk.
 ```
 
-If the user says "proceed," that permission applies to the named sensitive step. It should not be stretched into work acceptance for the completed feature.
+Permission for a named step is not work acceptance.
 
-## Step 6: Evidence Supports Claims
+## 6. Show Evidence And Checks
 
 After implementation, the agent should connect claims to support:
 
@@ -177,42 +120,21 @@ After implementation, the agent should connect claims to support:
 Claim:
 Remembered sessions survive browser restart.
 
-Evidence references:
-- diff for login form and session behavior;
+Evidence:
+- changed login form and session paths;
 - focused test output for remembered and non-remembered sessions;
-- implementation run notes.
+- notes from inspecting the session cleanup path.
+
+Checks:
+- focused automated tests passed;
+- login flow still needs human QA for copy, keyboard behavior, and error-state layout.
 ```
 
-Evidence is not the agent saying "done." It is the durable support that lets a future reader ask what backs the claim.
+Evidence, verification, and manual QA are related but separate. A test pass does not prove the human experience, and a self-check is weaker than a genuinely separate verification path.
 
-A readable Markdown summary can display the evidence references, but the Markdown text is not the evidence record.
+## 7. Show Residual Risk Before Acceptance
 
-## Step 7: Verification And Manual QA Stay Separate
-
-A useful tracked-work status distinguishes checks:
-
-```text
-Automated check:
-Focused session tests passed.
-
-Verification:
-Separate review confirmed remembered and non-remembered session behavior from current evidence.
-
-Manual QA:
-A person still needs to inspect the login screen flow, checkbox copy, keyboard behavior, and error-state layout.
-```
-
-The boundary matters:
-
-- test pass is not manual QA;
-- self-check is not detached verification;
-- a QA waiver is not the same thing as QA passing.
-
-If manual QA is waived, the skipped surface and close impact should be named. If verification is waived, the remaining verification risk should stay visible.
-
-## Step 8: Residual Risk Before Work Acceptance
-
-Before asking the user to accept the result, the agent should show known remaining uncertainty:
+Before asking the user to accept the work, the agent should show known remaining uncertainty:
 
 ```text
 Residual risk:
@@ -225,48 +147,41 @@ If the user says:
 Looks good.
 ```
 
-that phrase should not automatically accept every unresolved risk or judgment. The agent should connect it to the specific work acceptance request:
+the agent should connect that phrase to the named judgment:
 
 ```text
-To close this tracked work, please confirm:
-Do you accept the remember-me result with the shown residual risk?
+To close this work, please confirm:
+Do you accept the remember-me result with the residual risk shown above?
 ```
 
-Work acceptance is the user's result judgment. It is separate from sensitive-action permission, test output, manual QA, and verification.
+Work acceptance is the user's result judgment. It is separate from sensitive-step permission, evidence, tests, manual QA, verification, and residual-risk visibility.
 
-## Step 9: Close Readiness
+## 8. Close Honestly
 
-A close-ready summary should be short and grounded:
+A useful close summary is short and grounded:
 
 ```text
 Close readiness:
-- Scope stayed within login form, selected session behavior, focused tests, and related copy.
-- Product meaning was decided: extend login session on this device.
-- Evidence references cover remembered and non-remembered session behavior.
-- Verification and manual QA are handled, or their waivers and risks are visible.
-- Residual risk was shown.
-- Work acceptance was requested for the named result and risk.
+- Scope stayed within login checkbox, selected session behavior, focused tests, and related copy.
+- User-owned product meaning was decided.
+- Evidence supports remembered and non-remembered session behavior.
+- Manual QA is handled, or its waiver and impact are visible.
+- Residual risk was shown before work acceptance.
 ```
 
-If anything is missing, the summary should name the smallest unblocker:
+If something is missing, close should name the smallest unblocker:
 
 ```text
 Close blocked:
 Manual QA for the login screen has not passed or been explicitly waived.
 ```
 
-## What The User Should Learn
+## What To Remember
 
-The learning path is not a feature list. It is an authority-boundary model:
-
-- advice can guide work without authorizing writes;
-- a small direct change can stay light while the boundary holds;
-- tracked work makes judgment, evidence, checks or verification, work acceptance, remaining risk, and close visible;
-- chat, Markdown, tool output, tests, sensitive-action permission, and self-checks are useful, but none of them silently substitutes for another authority.
+Harness should make one task easier to trust, not harder to start. Users speak normally. Agents clarify when needed. User-owned judgments stay with the user. Evidence, verification, manual QA, work acceptance, residual risk, and close readiness stay distinct.
 
 ## Where To Go Next
 
-- Read [Harness in 15 Minutes](harness-in-15-minutes.md) for shorter examples.
-- Read [Concepts](concepts.md) when internal labels start appearing.
-- Read [User Guide](../use/user-guide.md) for the user-facing session flow.
-- Use [Core Model Reference](../reference/core-model.md) only when you need exact future contracts.
+- Read [Concepts](concepts.md) for the minimum vocabulary.
+- Read [User Guide](../use/user-guide.md) for practical session behavior.
+- Use [Core Model Reference](../reference/core-model.md) only when exact future contracts are needed.

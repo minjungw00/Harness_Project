@@ -351,8 +351,9 @@ Use this map for broad document routing. For strict Reference contracts, use the
 | Subject | Active owner |
 |---|---|
 | Repo and docs entrypoints, reader routes, language choice, document list, target tree summary | repo root `README.md`; docs root `docs/README.md`; language entrypoints `docs/en/README.md` and `docs/ko/README.md` |
-| Shared reader mental model and three-space overview | `learn/overview.md` |
-| Fast first-reader practical tour and short usage scenarios | `learn/harness-in-15-minutes.md` |
+| Shared reader mental model and first-reader authority overview | `learn/overview.md` |
+| First-reader practical tour and single work-loop story | `learn/one-task.md` |
+| Old short-tour compatibility route | `learn/harness-in-15-minutes.md` |
 | Small core concept introduction | `learn/concepts.md` |
 | Project purpose, target users, values, scope, non-goals, automation philosophy | `learn/purpose-and-principles.md` |
 | Strategic thesis, failure model, MVP boundary, principle groups | `learn/purpose-and-principles.md` for reader explanation; `reference/design-quality-policies.md` and `reference/core-model.md` for exact contract impact |

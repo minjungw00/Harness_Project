@@ -2,133 +2,95 @@
 
 ## Start Here
 
-Read this after [Overview](overview.md) when Harness terms start appearing in examples, status summaries, or reference docs.
+Read this after [Overview](overview.md) and [One Task](one-task.md), or when a status summary starts using Harness vocabulary.
 
-This page gives the smallest vocabulary for the learning path. It starts with six ordinary user-facing concepts, then marks implementation labels as optional/internal. Users should not need those labels to ask for useful Harness behavior.
+This page keeps only the minimum concepts for first-time readers. It describes intended future Harness behavior in a documentation-only repository. It does not mean runtime records already exist here.
 
-This page describes vocabulary for the design/review documentation and future Harness behavior. It does not mean these runtime records exist in this repository today.
+## Six Questions
 
-## Main Idea
+Harness is easiest to read through six ordinary questions:
 
-Harness vocabulary is built around authority boundaries.
-
-Start with six ordinary questions:
-
-- What work are we trying to do?
-- What is in scope, and what is out of scope?
-- What judgment or thing to decide belongs to the user?
-- What evidence supports the claim?
-- What check or verification has happened, or is still needed?
-- What still prevents close?
-
-The reference docs give exact names to records and APIs so future implementations can be precise. In learning docs, the plain questions come first.
-
-## Six Plain Concepts
-
-Use these concepts first in user-facing explanations.
-
-| Concept | Plain meaning |
+| Question | Plain concept |
 |---|---|
-| Work | The thing the user wants completed, answered, investigated, or decided. |
-| Scope | What may change, what stays out, and where the agent should stop before continuing. |
-| Judgment or thing to decide | A choice the user owns, such as product direction, UX behavior, architecture trade-off, security/privacy call, permission for a sensitive step, QA waiver, work acceptance, or acceptance of a named remaining risk. |
-| Evidence | Durable support for a claim: changed paths, diffs, logs, test output, screenshots, inspection notes, or other artifacts. |
-| Check or verification | An ordinary confirmation such as a test, diff review, inspection, or source lookup; when the work needs a stronger boundary, a recorded correctness check or human QA expectation. |
-| Close | The visible answer to "can this honestly finish?" It includes blockers, required work acceptance, and remaining risk when they matter. |
+| What are we trying to do? | Work |
+| What may change, and what is out of bounds? | Scope |
+| What must the user decide, accept, waive, or defer? | User-owned judgment |
+| What supports the claim? | Evidence |
+| What was checked, and what still needs checking? | Check, verification, or manual QA |
+| Can this honestly finish, and what still blocks it? | Close readiness |
 
-## User-Visible Work Shapes
+Users do not need to say these words exactly. They can ask in ordinary language:
+
+```text
+Help me clarify the plan before implementation.
+Tell me before the work scope expands.
+Show what evidence supports the result.
+What still blocks closing this?
+```
+
+## Three Work Shapes
 
 Harness should usually feel like one of three work shapes.
 
-| Work shape | Use when | What to show |
+| Shape | Feels like | Boundary |
 |---|---|---|
-| Advice/read-only work | The user asks for explanation, planning, comparison, investigation, or recommendation. | What was inspected or cited, what is fact versus recommendation, and what decisions still belong to the user. |
-| Small direct change | The user asks for a narrow edit with clear scope and low risk. | The small scope, changed paths, focused check or self-check, and whether anything made the scope grow. |
-| Tracked work | The work has meaningful scope, user-owned judgment, evidence, QA, verification, work acceptance, or residual risk. | Scope, pending judgments, evidence, check/verification state, close blockers, work acceptance, and remaining risk. |
+| Advice/read-only work | Explanation, planning, comparison, investigation, recommendation. | Advice can guide work, but it does not authorize product writes or accept risk. |
+| Small direct change | A narrow typo, copy, or leaf fix with low risk. | Keep it light while the scope holds; stop if meaning, risk, UX, sensitive action, or shared-contract impact appears. |
+| Tracked work | Meaningful scope, user choices, evidence, QA, verification, acceptance, or residual risk. | Keep scope, judgments, evidence, checks, remaining risk, and close blockers visible. |
 
-The user does not need to name these shapes. The agent should infer them from the task and explain scope growth when it happens.
-
-## How Users Can Speak
-
-Ordinary language is enough. Users can name the goal, ask for clarification, set a boundary, request evidence, or ask what still blocks close without using internal labels.
-
-The [User Guide](../use/user-guide.md) owns the practical request examples. This concepts page keeps the vocabulary small: the plain question comes first, and an internal label appears only when it helps explain a real boundary or reference link.
+The agent should infer the shape from the request and explain when the shape changes.
 
 ## Non-Substitution Rules
 
-These rules keep one kind of signal from being treated as another kind of authority.
+These are the rules that make the concepts matter:
 
 | Rule | Meaning |
 |---|---|
-| Chat is not state. | Chat can coordinate and summarize, but it is not the durable operating record. |
-| Readable report is not state. | A readable report can display state, but editing it does not change Core-owned state. Exact internal labels for readable views belong in optional/internal or Reference sections. |
-| Tool output is not user judgment. | A log, diff, connector response, or test result can inform a decision; it cannot make the user's decision. |
-| Sensitive-action approval is not work acceptance. | Permission to do a named sensitive step does not mean the completed result is accepted. |
-| Test pass is not manual QA. | Automated checks do not prove human experience, copy, accessibility, or visual quality. |
-| Self-check is not detached verification. | The same agent/session reviewing its own work can be useful, but it is weaker than an independent enough check. |
-| "Proceed" or "looks good" does not automatically resolve every pending judgment. | A general phrase must not be stretched to cover unrelated product, technical, QA, work acceptance, or risk decisions. |
+| Chat is not state. | Chat can coordinate, but it is not the durable operating record. |
+| Readable summaries are not state. | A report can display status, but editing report text does not change the future Harness record. |
+| Tool output is not user judgment. | Logs, diffs, tests, screenshots, and connector responses can inform choices; they do not make choices. |
+| Sensitive-step permission is not work acceptance. | Permission for a named action does not accept the finished result. |
+| Evidence is not verification. | Evidence supports a claim; verification says what was checked and how. |
+| Test pass is not manual QA. | Automated checks do not prove copy, accessibility, visual quality, or user experience. |
+| Residual-risk visibility is not residual-risk acceptance. | Showing a known remaining risk does not mean the user accepted it. |
+| "Proceed" or "looks good" is not every answer. | A broad phrase should not resolve unrelated judgments by implication. |
 
-## Display Questions
+## Labels You May See Later
 
-User-facing status should normally group details under the same six concepts:
+Internal labels are lookup tools, not first-use concepts. Learn and Use pages should explain the plain situation first.
 
-| Concept | Question |
+| Label | Plain reading |
 |---|---|
-| Work | What are we trying to do now? |
-| Scope | What may change, and what is out of bounds? |
-| Judgment | What must the user decide, accept, waive, or defer? |
-| Evidence | What supports the claim, and what support is missing or stale? |
-| Check or verification | What was checked, what still needs checking, and whether a stronger review boundary or human QA is needed? |
-| Close | What still prevents finish or close? |
+| Task | The durable unit for a piece of work. |
+| Change Unit | The bounded product-write scope. It does not authorize a write by itself. |
+| Decision Packet | A fuller display for a specific user-owned judgment. |
+| Approval | Permission for a named sensitive action, not work acceptance. |
+| Evidence Manifest | A detailed evidence list. |
+| Verification / Manual QA / Acceptance / Residual Risk | Separate records or judgments that must not collapse into one "done." |
+| Projection | A readable view derived from Harness records, not authority by itself. |
 
-These display questions are a reading aid. They do not create schema fields, readiness labels, authority paths, or close rules. Exact rules live in Reference docs.
-
-## Optional/Internal Labels
-
-The labels below are implementation or reference labels. Users do not need to use them in prompts. Learn and Use docs should introduce them only when they clarify a real boundary.
-
-| Optional/internal label | Plain explanation |
-|---|---|
-| Task | Internal durable unit for the work the user wants completed, answered, investigated, or decided. |
-| Discovery | Optional/internal label for clarifying blurry work before implementation planning. Users can simply ask for clarification in ordinary language. |
-| Shared Design | Internal record of shared understanding for goal, value, scope, non-goals, assumptions, decisions, and safe next work. |
-| Change Unit | Optional/internal label for bounded product-write scope. It names what may change, but does not authorize a write by itself. |
-| Autonomy Boundary | Internal label for choices the agent may make inside the active scope without asking again. |
-| Decision Packet | Optional/internal label for a full-format presentation of a specific user-owned judgment. Users can simply answer the named judgment request. |
-| Approval | Permission for a named sensitive action. It is not work acceptance for the completed work. |
-| Write Authorization | Internal record that a specific product-write attempt is compatible with current Harness authority. |
-| Evidence Manifest | Internal record mapping completion conditions or acceptance criteria to evidence references. |
-| Eval | Internal verification result record. |
-| Gate | Internal readiness or compatibility condition. User-facing status should usually show the blocker or check first. |
-| Verification | Recorded correctness check, with stronger meaning when it crosses an independent enough boundary. |
-| Manual QA | Human inspection for UX, copy, accessibility, visual quality, workflow, or other human-judgment surfaces. |
-| Acceptance | User's work acceptance judgment when required. |
-| Residual Risk | Known remaining uncertainty, limitation, trade-off, or consequence. |
-| Projection | Readable view derived from Harness state. It displays state but does not replace it. |
-| Journey Card / Journey Spine | Later continuity display. It can help orientation when enabled and fresh, but it is not authority by itself. |
-| Reconcile | Deliberate path for handling human edits or drift in a readable view. |
-| task_events | Low-level internal event history for implementers and diagnostics. |
+Exact definitions, API shapes, storage rules, and state transitions live in Reference docs, not in Learn.
 
 ## Stable Anchors For Older Links
 
-These anchors keep links stable. They do not make the terms required user vocabulary.
+These anchors keep older links from drifting. They do not make the terms required user vocabulary.
 
-- <a id="task"></a>Task: optional/internal label for the durable work unit.
-- <a id="shared-design"></a>Shared Design: optional/internal label for recorded shared understanding.
-- <a id="change-unit"></a>Change Unit: optional/internal label for bounded product-write scope.
-- <a id="autonomy-boundary"></a>Autonomy Boundary: optional/internal label for in-scope agent choices.
-- <a id="decision-packet"></a>Decision Packet: optional/internal label for full-format presentation of a specific user-owned judgment.
-- <a id="evidence"></a>Evidence: support for a completion or correctness claim.
-- <a id="approval"></a>Approval: permission for a named sensitive action.
-- <a id="write-authorization"></a>Write Authorization: optional/internal label for a compatible write attempt.
-- <a id="gate"></a>Gate: optional/internal label for a readiness or compatibility condition.
-- <a id="verification"></a>Verification: recorded correctness check.
-- <a id="manual-qa"></a>Manual QA: human inspection where human judgment matters.
-- <a id="acceptance"></a>Acceptance: work acceptance judgment when required.
-- <a id="residual-risk"></a>Residual Risk: known remaining uncertainty, limitation, trade-off, or consequence.
-- <a id="projection"></a>Projection: readable view derived from state, not authority itself.
-- <a id="reconcile"></a>Reconcile: path for readable-view drift or human edits.
+- <a id="task"></a>Task
+- <a id="shared-design"></a>Shared Design
+- <a id="change-unit"></a>Change Unit
+- <a id="autonomy-boundary"></a>Autonomy Boundary
+- <a id="decision-packet"></a>Decision Packet
+- <a id="evidence"></a>Evidence
+- <a id="approval"></a>Approval
+- <a id="write-authorization"></a>Write Authorization
+- <a id="gate"></a>Gate
+- <a id="verification"></a>Verification
+- <a id="manual-qa"></a>Manual QA
+- <a id="acceptance"></a>Acceptance
+- <a id="residual-risk"></a>Residual Risk
+- <a id="projection"></a>Projection
+- <a id="reconcile"></a>Reconcile
 
 ## Where Exact Rules Live
 
-Strict kernel definitions live in [Core Model Reference](../reference/core-model.md), public MVP API definitions live in [MVP API](../reference/api/mvp-api.md), and readable document rules live in [Projection And Templates Reference](../reference/projection-and-templates.md).
+Use [Core Model Reference](../reference/core-model.md) for exact authority rules, [MVP API](../reference/api/mvp-api.md) for public future tool behavior, [API Schema Core](../reference/api/schema-core.md) for shared shapes, and [Projection And Templates Reference](../reference/projection-and-templates.md) for readable-view rules.

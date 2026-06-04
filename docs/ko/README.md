@@ -2,7 +2,7 @@
 
 이 문서는 하네스 한국어 문서 세트의 길잡이입니다.
 
-하네스는 AI 지원 제품 작업을 위한 로컬 작업 권한 서버입니다. 대화의 깨지기 쉬운 맥락이 기준 기록처럼 굳어지지 않게 하는 것이 하네스의 역할입니다. 하네스는 범위, 사용자 소유 판단, 근거, 확인과 검증 기대, 작업 수락, 닫기 가능 여부, 잔여 위험의 로컬 근거를 보존합니다. 에이전트가 판단하면 안 되는 일은 사용자에게 다시 돌려보냅니다.
+하네스는 AI 지원 제품 작업을 위한 로컬 작업 권한 서버입니다. 대화에만 남아 있으면 쉽게 흔들리는 작업 기준을 대화 밖에 두는 것이 하네스의 역할입니다. 하네스는 범위, 사용자 소유 판단, 근거, 확인과 검증 기대, 작업 수락, 닫기 가능 여부, 잔여 위험의 로컬 근거를 보존합니다. 에이전트가 판단하면 안 되는 일은 사용자에게 다시 돌려보냅니다.
 
 | 하네스가 아닌 것 | 하네스가 하는 일 |
 |---|---|
@@ -19,10 +19,11 @@
 어디서 시작해야 할지 모를 때는 이 순서로 읽습니다.
 
 1. [개요](learn/overview.md)에서 첫 번째 이해 모델을 잡습니다.
-2. [사용자 가이드](use/user-guide.md)에서 사용자와 에이전트가 작업 중 상호작용하는 법을 봅니다.
-3. 예시나 참조 문서에서 용어가 나오기 시작할 때만 [핵심 개념](learn/concepts.md)을 봅니다.
-4. 향후 하네스 서버 구현을 검토하거나 계획할 때만 [구현 개요](build/implementation-overview.md)를 봅니다.
-5. 정확한 계약이 필요할 때만 [Reference 색인](reference/README.md)을 봅니다.
+2. [하나의 작업](learn/one-task.md)에서 사용자 작업 하나가 어떻게 느껴지는지 봅니다.
+3. [핵심 개념](learn/concepts.md)에서 최소 어휘를 봅니다.
+4. [사용자 가이드](use/user-guide.md)에서 실제 사용자와 에이전트 상호작용을 봅니다.
+5. 향후 하네스 서버 구현을 검토하거나 계획할 때만 [구현 개요](build/implementation-overview.md)를 봅니다.
+6. 정확한 계약이 필요할 때만 [Reference 색인](reference/README.md)을 봅니다.
 
 이 경로는 일부러 짧게 잡았습니다. 하네스를 처음 이해하기 위해 큰 Reference 문서부터 읽을 필요는 없습니다.
 
@@ -30,7 +31,7 @@
 
 | 독자 | 먼저 읽기 | 이어서 보기 |
 |---|---|---|
-| 일반 사용자 | [개요](learn/overview.md) | [사용자 가이드](use/user-guide.md); 전체 작업 흐름은 [하나의 작업](learn/one-task.md); 용어 이름이 필요할 때만 [핵심 개념](learn/concepts.md). |
+| 일반 사용자 | [개요](learn/overview.md) | 작업 흐름의 느낌은 [하나의 작업](learn/one-task.md); 실제 세션 동작은 [사용자 가이드](use/user-guide.md); 용어 이름이 필요할 때만 [핵심 개념](learn/concepts.md). |
 | 에이전트 지침 작성자 | [에이전트 가이드](use/agent-guide.md) | 정확한 connector/context 계약이 필요할 때만 [Agent 통합 참조](reference/agent-integration.md)와 [Surface Cookbook](reference/surface-cookbook.md). |
 | 서버 구현자 | [구현 개요](build/implementation-overview.md) | [MVP-1 사용자 작업 루프](build/mvp-user-work-loop.md) -> [MVP API](reference/api/mvp-api.md) -> [Storage](reference/storage.md). 첫 내부 점검은 [내부 엔지니어링 점검](build/engineering-checkpoint.md), request-to-close 흐름은 [Runtime Walkthrough](build/runtime-walkthrough.md)를 사용합니다. |
 | 문서 유지보수자 | [문서 작성 가이드](maintain/authoring-guide.md) | [번역 가이드](maintain/translation-guide.md), [재작성 계획](maintain/rewrite-plan.md), 엄격한 의미를 확인할 때만 Reference 담당 문서. |
@@ -55,11 +56,11 @@ Learn, Use, Build, Reference, Later, Maintain 문서는 서로 다른 일을 담
 
 | 문서 | 고유 역할 |
 |---|---|
-| [개요](learn/overview.md) | 가장 먼저 읽는 문서입니다. 권한 경계, 세 공간, 하네스가 추적하는 것, 하네스가 아닌 것을 설명합니다. |
-| [목적과 원칙](learn/purpose-and-principles.md) | 가치, 비목표, 실패 모델, 작업 모양, MVP 경계입니다. 문구나 범위가 제품 명제와 맞는지 확인할 때 사용합니다. |
-| [핵심 개념](learn/concepts.md) | 평소 말에서 선택적/내부 구현 라벨로 넘어가는 어휘 다리입니다. |
-| [15분 만에 보는 하네스](learn/harness-in-15-minutes.md) | 조언/읽기 전용 작업, 작은 직접 변경, 추적되는 작업, 대체 금지 규칙을 짧게 보여 주는 시나리오 모음입니다. |
-| [하나의 작업](learn/one-task.md) | 하나의 작업 이야기 안에서 세 작업 모양을 따라가는 더 긴 튜토리얼입니다. |
+| [개요](learn/overview.md) | 가장 먼저 읽는 문서입니다. 하네스가 무엇이고 왜 필요한지, 무엇을 분리하는지, 하네스가 아닌 것을 설명합니다. |
+| [하나의 작업](learn/one-task.md) | 기본 학습 흐름입니다. 평소 요청 하나를 구체화, 범위, 근거, 확인, 잔여 위험, 작업 수락, 닫기까지 따라갑니다. |
+| [핵심 개념](learn/concepts.md) | 처음 읽는 사람에게 필요한 최소 어휘입니다. 내부 라벨은 선택 사항으로 둡니다. |
+| [15분 만에 보는 하네스](learn/harness-in-15-minutes.md) | 오래된 링크를 위한 짧아진 경로입니다. 현재 학습 경로로 안내합니다. |
+| [목적과 원칙](learn/purpose-and-principles.md) | 검토자를 위한 선택 문서입니다. 가치, 실패 모델, 비목표, MVP 경계를 확인할 때 사용합니다. |
 
 ## 사용 문서
 

@@ -4,121 +4,98 @@
 
 Read this first if Harness is new to you.
 
-Harness is easiest to understand as a local work-authority server for AI-assisted product work. Its job is to keep fragile conversation context from becoming the source of truth.
+Harness is a local work-authority server for AI-assisted product work. Its job is to keep fragile work criteria out of chat-only memory. Scope, user-owned judgment, evidence, checks, work acceptance, close readiness, and residual risk should not live only in a confident message or a generated report.
 
-Harness preserves the local basis for scope, user-owned judgment, evidence, verification expectations, work acceptance, close readiness, and residual risk. When the agent should not decide, Harness routes that decision back to the user instead of letting a confident summary, tool result, or generated report stand in for judgment.
+Users can speak normally:
 
-This repository is documentation-only today. It is being prepared for a possible future role as the Harness Server source repository, but no Harness Server or runtime implementation exists here yet. It is not a Product Repository and not a Harness Runtime Home.
+```text
+Help me clarify the plan before implementation.
+Tell me if the scope is getting bigger.
+Show what I need to decide and what you can verify.
+```
+
+The agent should answer in the same ordinary language. When requirements are blurry, it should clarify before acting. When the agent should not decide, Harness routes that judgment back to the user instead of letting tool output, tests, or summaries silently decide.
+
+This repository is documentation-only today. It describes intended future Harness behavior, but no Harness Server or runtime implementation exists here yet. This repository is not a Product Repository and not a Harness Runtime Home.
 
 ## Why Harness Exists
 
-AI-assisted work often moves faster than the record around it. A small request becomes a larger change. A product choice gets made inside implementation. A test pass is treated as proof of the whole experience. A user says "looks good" and the agent assumes every unresolved judgment has been answered.
+AI-assisted work can move faster than the record around it. A small request grows. A product choice gets buried in implementation. A test pass is treated as proof of the whole experience. A user says "looks good" and the agent assumes every unresolved judgment is settled.
 
-Harness exists to stop those substitutions.
+Harness exists to stop those substitutions. It keeps the working basis local and explicit enough that a future reader can see what was in scope, what the user decided, what evidence supports the claim, what was checked, what still needs human judgment, and whether the work can honestly close.
 
-It does not make conversation less useful. It makes conversation less dangerous as a source of authority. The user and agent can still plan, debate, implement, inspect, and report in ordinary language. Harness keeps the parts that affect scope, judgment, evidence, close readiness, work acceptance, and risk in local Core-owned state.
+## How It Feels
 
-## Authority Boundaries
+In one task, Harness should feel less like a procedure and more like a careful working memory.
 
-Harness separates the surfaces people use from the records that carry authority.
+The user might ask:
 
-| Surface | Useful for | Not authority for |
-|---|---|---|
-| Chat | Coordination, questions, explanation, summaries, proposed next steps. | Durable state, work acceptance, residual-risk acceptance, or resolving every pending judgment by implication. |
-| Product files | Source code, tests, product docs, project assets, generated readable files. | Harness operational state. |
-| Tool output | Checks, logs, diffs, screenshots, connector responses, search results. | User judgment or work acceptance by itself. |
-| Readable reports | Human-readable status and reports derived from recorded facts. | Core state, evidence records, work acceptance, or close eligibility. |
-| Core-owned local state | Work, scope, user-owned judgments, evidence, checks or verification, and close. | A replacement for source control, tests, code review, or product specifications. |
-
-The practical rule is simple: read surfaces for context, but treat Core-owned state and artifact references as the operating record.
-
-## Three Spaces
-
-The future Harness system keeps three local spaces distinct.
-
-| Space | Plain meaning |
-|---|---|
-| Product Repository | The user's real project workspace: code, tests, product docs, assets, and generated readable files. |
-| Harness Server / Installation | The future local Harness program and tool surface that will mediate Harness requests and maintain authority records. This implementation does not exist in this repository yet. |
-| Harness Runtime Home | The future local data home for registered project state and durable evidence artifacts. This repository is not that runtime home. |
-
-This design-contract diagram gives first-time readers the location of Harness without requiring the architecture reference. It describes the intended future runtime shape, not an implemented server in this repository.
-
-```mermaid
-flowchart LR
-  Product["Product Repository<br/>product work and readable views"]
-  Server["Harness Server / Installation<br/>future local authority layer"]
-  Home["Harness Runtime Home<br/>Core state and artifacts"]
-
-  Product -->|requests and product facts| Server
-  Server -->|scoped writes and readable projections| Product
-  Server -->|Core state changes and ArtifactRefs| Home
-  Home -->|current records and events| Server
+```text
+Add remember-me behavior to login, but clarify the plan before changing files.
 ```
 
-Core state and artifact refs live in the Runtime Home. Product files, chat, and projections remain outside authority unless routed through Core.
+A useful agent response names the boundary:
 
-This separation matters because generated reports should not become state, chat should not become state, and product files should not be confused with Harness's operating record.
+```text
+I can inspect the login form, session settings, and focused tests.
 
-## What Harness Tracks
+You likely need to decide:
+- whether "remember me" means longer session, remembered email, or both;
+- what session risk is acceptable if the login lasts longer.
 
-Harness tracks the parts of AI-assisted work that need to survive the conversation:
+Safe next step:
+Inspect and return a narrow plan. No product writes yet.
+```
 
-- what work is being attempted;
-- what is in scope and out of scope;
-- which choices belong to the user;
-- which evidence references support completion or correctness claims;
-- what checking or verification is expected;
-- whether required work acceptance has been given;
-- whether close is possible and what still blocks it;
-- which residual risks are known, visible, or accepted.
+The user did not need to say an internal mode name. The agent clarified because the request affected product behavior, security expectations, tests, and user-owned judgment.
 
-Reference docs give these records exact implementation names. You do not need those names for the first mental model.
+## What Harness Keeps Separate
+
+Harness is built around a few separations. Learn these before learning any internal labels.
+
+| Keep separate | Why it matters |
+|---|---|
+| Scope | The agent should know what may change and where to stop. |
+| User-owned judgment | Product, UX, technical, QA, acceptance, and risk choices stay with the user when they matter. |
+| Evidence | Evidence supports claims; it does not make the user's decision. |
+| Checks and verification | A test, review, inspection, or stronger verification says what was checked, not that every human concern is done. |
+| Manual QA | Human experience, copy, accessibility, and visual quality may need human inspection even when tests pass. |
+| Work acceptance | Accepting the finished result is different from permitting a sensitive step. |
+| Residual risk | Known remaining uncertainty should be visible before work acceptance or close. |
+| Close readiness | Close should say what is handled and what still blocks an honest finish. |
+
+The learning rule is simple: one kind of support should not silently substitute for another.
+
+## Authority Boundary
+
+Harness separates useful surfaces from the record that carries authority.
+
+| Surface | Good for | Not enough for |
+|---|---|---|
+| Chat | Coordination, explanation, questions, summaries. | Durable state or broad implied acceptance. |
+| Tool output | Logs, diffs, tests, screenshots, connector responses. | User judgment by itself. |
+| Product files | The actual product result. | Harness operating state. |
+| Readable summaries | Human-readable status and reports. | The source of authority if edited by hand. |
+| Local Harness record | The future operating record for scope, judgments, evidence, checks, close, and risk. | A replacement for tests, review, product specs, or source control. |
+
+Reference docs give the future record exact implementation names. First-time readers do not need those names.
 
 ## Harness Is Not
 
 | Harness is not | Harness does |
 |---|---|
 | A prompt pack or chat script. | Keeps work authority outside prompts and conversation. |
-| MCP itself or an API wrapper. | May use MCP/API surfaces as implementation mechanisms. |
+| MCP itself or an API wrapper. | May use MCP/API surfaces as mechanisms. |
 | A workflow engine, report generator, or dashboard. | Records the basis for work and can derive readable views from that record. |
 | A hosted agent platform. | Is designed around a local Harness Server / Installation. |
-| A sandbox or OS permission system. | Preserves authority boundaries without claiming OS-level isolation or arbitrary-tool permission control. |
+| A sandbox or OS permission system. | Does not claim OS-level isolation or arbitrary-tool permission control. |
 
-Harness may integrate with prompts, MCP/API surfaces, workflows, tests, reviews, reports, dashboards, and specs. It does not let any of them replace the local work-authority record or the user's judgment.
+## First Learn Path
 
-## Non-Substitution Rules
+The Learn path is intentionally short:
 
-These are the learning-path rules to keep close:
+1. [Overview](overview.md): what Harness is and why it exists.
+2. [One Task](one-task.md): how one user work loop feels.
+3. [Concepts](concepts.md): the minimum concepts and optional labels.
 
-- Chat is not state.
-- A readable report is not state.
-- Tool output is not user judgment.
-- Sensitive-action approval is not work acceptance.
-- Test pass is not manual QA.
-- Self-check is not detached verification.
-- "Proceed" or "looks good" does not automatically resolve every pending judgment.
-
-The point is not to distrust every surface. The point is to avoid treating one kind of signal as another kind of authority.
-
-## Three Work Shapes
-
-Users should not need to request internal modes. In ordinary work, Harness should make three visible shapes easy to recognize.
-
-| Work shape | What it feels like | Authority boundary |
-|---|---|---|
-| Advice/read-only work | The user asks for explanation, planning, comparison, investigation, or a recommendation. | The agent may inspect and cite, but product writes, work acceptance, and risk acceptance do not happen just because advice was given. |
-| Small direct change | The user asks for a narrow, clear edit, such as a typo fix, focused copy change, or leaf bug fix. | Scope stays small; if meaning, risk, public behavior, UX, sensitive action, or shared contract impact appears, the work must be reshaped before continuing. |
-| Tracked work | The work has meaningful scope, user-owned judgment, evidence, QA, verification, work acceptance, or residual risk. | Harness keeps the boundary visible until blockers are handled and close readiness is clear. |
-
-Users can speak normally: name the goal, any known boundary, and whether they want clarification, a small change, or close status. The [User Guide](../use/user-guide.md) owns the practical phrase list and user-facing flow.
-
-Internal labels can appear later in reference docs or status details, but they are optional vocabulary for users.
-
-## Where To Go Next
-
-- Read [User Guide](../use/user-guide.md) to see the user-facing flow.
-- Read [Harness in 15 Minutes](harness-in-15-minutes.md) for short examples of the three work shapes.
-- Read [Harness in One Task](one-task.md) for a fuller task story.
-- Read [Concepts](concepts.md) when vocabulary starts appearing in examples or reference docs.
-- Read [Purpose and Principles](purpose-and-principles.md) when reviewing product thesis, non-goals, or MVP boundaries.
+After that, use [User Guide](../use/user-guide.md) for practical session behavior or [Reference](../reference/README.md) only when exact future contracts are needed. [Purpose and Principles](purpose-and-principles.md) is an optional thesis check for reviewers.
