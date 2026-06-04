@@ -117,20 +117,18 @@ Markdown 보고서는 evidence link를 제공하고 상태를 요약할 수 있�
 
 ```mermaid
 flowchart LR
-  Chat["chat, connector, tool output"]
-  Projection["Markdown projection"]
-  Edit["사람 edit 또는 proposal"]
-  Reconcile["reconcile candidate"]
-  CorePath["Core state-changing path"]
-  Records["Core current records"]
-  Events["state.sqlite.task_events"]
-  Artifacts["artifact store와 ArtifactRefs"]
-  Projector["Projector"]
+  Chat["chat과 도구 출력"]
+  Projection["Markdown 상태 보기"]
+  Reconcile["reconcile 후보"]
+  CorePath["Core 상태 변경 경로"]
+  Records["Core records"]
+  Events["task_events"]
+  Artifacts["artifact refs"]
+  Projector["projector"]
 
-  Chat -. 입력일 뿐 .-> CorePath
-  Projection -. 읽기용 보기 .-> Chat
-  Projection -. edit input .-> Edit
-  Edit -. candidate .-> Reconcile
+  Chat -. 입력 .-> CorePath
+  Projection -. 읽기 .-> Chat
+  Projection -. 편집 .-> Reconcile
   Reconcile --> CorePath
   CorePath --> Records
   CorePath --> Events

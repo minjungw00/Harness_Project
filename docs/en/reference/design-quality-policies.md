@@ -234,18 +234,19 @@ Autonomy Boundary summary: the boundary separates low-risk implementation latitu
 
 ```mermaid
 flowchart TD
-  Intent["agent work intent"] --> Boundary["active Change Unit Autonomy Boundary"]
-  Boundary --> MayDo["agent may do: low-risk implementation details inside scope"]
-  Boundary --> UserJudgment["requires user judgment: product or material technical direction, residual-risk acceptance, public/module commitments, material migration/dependency direction, policy waivers"]
+  Intent["work intent"] --> Boundary["Autonomy Boundary"]
+  Boundary --> MayDo["low-risk details in scope"]
+  Boundary --> UserJudgment["user-owned judgment"]
   Boundary --> Stops["stop conditions"]
   Boundary --> Prepare["prepare_write"]
 
-  UserJudgment --> Packet["user judgment path"]
+  MayDo --> Prepare
+  UserJudgment --> Hold["hold for judgment"]
   Stops --> StopTriggered{"triggered?"}
-  StopTriggered -- yes --> Hold["hold, resolve, defer, or accept with recorded risk"]
-  StopTriggered -- no --> Prepare
-  Prepare --> Blockers["blockers: scope gap, approval gap, capability gap, boundary gap"]
-  Prepare --> WriteAuth["compatible Write Authorization when all write checks pass"]
+  StopTriggered -->|yes| Hold
+  StopTriggered -->|no| Prepare
+  Prepare -->|blocked| Blockers["scope/approval/capability/boundary blocker"]
+  Prepare -->|compatible| WriteAuth["Write Authorization"]
 ```
 
 ### Vertical Slice (`vertical_slice`)
@@ -526,17 +527,17 @@ Policy waiver summary: a policy waiver can affect only the policy-owned impact t
 
 ```mermaid
 flowchart TD
-  Gap["policy requirement unmet"] --> Allowed{"policy contract allows waiver?"}
-  Allowed -- no --> KeepImpact["keep gate, write, close, or decision impact"]
-  Allowed -- yes --> Record["record policy, Task/Change Unit, reason, accepted risk, actor, expiry/follow-up, affected impact"]
-  Record --> Kernel["kernel authority blockers still apply"]
-  Record --> Decision{"verification, QA, public API/interface, scope, technical/architecture, dependency/schema/module boundary, or known risk?"}
-  Decision -- yes --> Quality["decision_quality_check required"]
-  Decision -- yes --> Boundary["respect active autonomy_boundary"]
-  Decision -- no --> Waived["policy-owned impact may be waived"]
-  Quality --> Conditions["all required waiver conditions satisfied together"]
+  Gap["policy gap"] --> Allowed{"waiver allowed?"}
+  Allowed -->|no| KeepImpact["keep policy impact"]
+  Allowed -->|yes| Record["record scoped waiver"]
+  Record --> Kernel["kernel blockers stay separate"]
+  Record --> Decision{"needs user judgment?"}
+  Decision -->|yes| Quality["decision_quality_check"]
+  Decision -->|yes| Boundary["Autonomy Boundary"]
+  Decision -->|no| Waived["waive policy-owned impact"]
+  Quality --> Conditions["waiver conditions met"]
   Boundary --> Conditions
-  Kernel --> Separate["not waived by policy waiver"]
+  Kernel --> Separate["not waived"]
   Conditions --> Waived
 ```
 

@@ -24,20 +24,21 @@ MVP-1 adds user-visible behavior around that loop: ordinary-language start/resum
 
 ```mermaid
 flowchart LR
-  Request["ordinary request"] --> Clarify["clarify work"]
-  Clarify --> Judgment["user judgment if needed"]
-  Clarify --> Scope["scope"]
-  Judgment --> Scope
+  Request["ordinary request"] --> Clarify["clarify goal and risk"]
+  Clarify --> Judgment{"judgment needed?"}
+  Judgment -->|yes| Ask["request user judgment"]
+  Judgment -->|no| Scope["scope work"]
+  Ask --> Scope
   Scope --> Prepare["prepare_write"]
-  Prepare -->|allowed| Auth["Write Authorization"]
-  Prepare -->|blocked| Blocker["structured blocker"]
+  Prepare -->|compatible| Auth["Write Authorization"]
+  Prepare -->|blocked| Blocker["blocker"]
   Auth --> Run["record_run"]
-  Run --> Evidence["artifact/evidence refs"]
-  Evidence --> Status["status and compact views"]
+  Run --> Evidence["evidence refs"]
+  Evidence --> Status["status view"]
   Blocker --> Status
-  Status --> CloseCheck["close check"]
+  Status --> CloseCheck["close_task"]
   CloseCheck -->|blocked| CloseBlocker["close blocker"]
-  CloseCheck -->|ready| Closed["closed task"]
+  CloseCheck -->|ready| Closed["closed"]
 ```
 
 This diagram is a reader aid. Exact state transitions, schemas, DDL, errors, and projection rules stay in the Reference owners.

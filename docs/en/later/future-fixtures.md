@@ -80,21 +80,7 @@ Status/next recommendations, including Role Lens recommendations, are fixture-ob
 
 `browser-qa-candidate` recommendations are subject to the same read-only rule. A recommendation may name Browser QA Capture as useful for a `T6 QA Capture` surface, but the recommendation alone must not mutate state, enqueue projections, create artifacts, create or satisfy evidence, perform or record verification, record QA, waive QA or verification, accept residual risk, accept the result, close a Task, or upgrade assurance. If the surface does not support browser capture, the recommendation should name the fallback of human Manual QA notes and manually supplied artifacts rather than treating unsupported capture as a staged-delivery failure. Actual artifacts, Manual QA records, QA gate updates, Eval results, or close effects require a later public mutation through Core.
 
-Future suite map summary: these are catalog-only Assurance Profile suite families and concerns; they are not runnable fixtures or early MVP requirements by being listed here.
-
-```mermaid
-flowchart LR
-  Suites["Assurance Profile suites"] --> Agency["agency"]
-  Suites --> Stewardship["stewardship"]
-  Suites --> Context["context-hygiene"]
-  Agency --> A1["user judgment and decision gate"]
-  Agency --> A2["approval, residual risk, Autonomy Boundary"]
-  Stewardship --> S1["design-quality validators and policy composition"]
-  Stewardship --> S2["domain, module, interface, feedback loop"]
-  Stewardship --> S3["two-stage review routing"]
-  Context --> C1["current Task state and current-position refs"]
-  Context --> C2["stale context is pull-only until reconciled"]
-```
+Future suite map summary: the table above is the catalog-only map of Assurance Profile suite families and concerns; they are not runnable fixtures or early MVP requirements by being listed here.
 
 ### Catalog-Only Fixture Skeleton Guidance
 

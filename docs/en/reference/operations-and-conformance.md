@@ -162,15 +162,7 @@ Minimum report fields:
 
 Check categories should reference, not restate, the [Authoring Guide docs-maintenance checks](../maintain/authoring-guide.md#docs-maintenance-checks), including the required categories, review-output expectations, pass/warn/fail meanings, and owner-first drift resolution flow. Operator output may name those categories, but it must not turn Maintain guidance into runtime fixture semantics.
 
-Docs-maintenance summary: this documentation-check layer reads Markdown and emits an ephemeral report only; it does not create Harness runtime state, artifacts, projections, QA, acceptance, risk, or close facts.
-
-```mermaid
-flowchart LR
-  Start["documentation checks"] --> Check["check Markdown docs"]
-  Check --> Report["category result"]
-  Report --> Output["ephemeral output"]
-  Output --> Hold["no task_events, artifacts, projections, QA, work acceptance, or close state"]
-```
+Docs-maintenance summary: this documentation-check layer reads Markdown and emits an ephemeral report only; it does not create Harness runtime state, artifacts, projections, QA, acceptance, risk, or close facts. The bullet list above is the reporting shape.
 
 ## connect
 
@@ -195,24 +187,7 @@ Later connector/operator profile behavior, required only when the active stage o
 - confirm MCP configuration can reach the harness server
 - run a profile-specific smoke check or print the command to run it
 
-Connect sequence summary: registration links a Product Repository, Runtime Home, surface profile, optional MCP reachability check, and stage/profile check without treating generated files as state.
-
-```mermaid
-sequenceDiagram
-  participant Op as Operator
-  participant Repo as Product Repository
-  participant Runtime as Harness Runtime Home
-  participant Surface as Reference Surface
-  participant MCP as MCP Config
-  participant Core as Stage Check
-  Op->>Repo: identify repository root
-  Op->>Runtime: register or reuse project
-  Runtime->>Runtime: initialize state and artifact storage
-  Op->>Surface: register profile if needed
-  Op->>Repo: refresh managed files if required
-  Runtime->>MCP: check local reachability if stage needs MCP
-  Op->>Core: run profile check if needed
-```
+Connect sequence summary: registration links a Product Repository, Runtime Home, surface profile, optional MCP reachability check, and stage/profile check without treating generated files as state. The ordered bullets above carry the sequence.
 
 When connector-managed files or managed blocks are in scope, connect must report generated/managed manifest drift instead of overwriting human edits silently. This includes generated files, managed blocks, MCP config snippets, and stale capability profile freshness. The existing file or managed block stays unchanged until reconcile or an explicit reconnect decision chooses replacement; the edited generated file is not Task state. Surface-specific generated file names belong in the surface cookbook.
 
@@ -247,25 +222,7 @@ Full doctor/readiness categories:
 | agency/stewardship/context | User Judgment and decision gate readiness, Autonomy Boundary readiness, residual-risk visibility, codebase stewardship, context freshness, stale chat/pull-only context not treated as authority |
 | security/threat model | local binding/access expectation, registered project/task/surface consistency, connector drift, sensitive-category side effects, redaction, omission, or block coverage that cuts across runtime home, artifact store, reference surface, and MCP availability; threat concepts are owned by [Security Reference](security.md) |
 
-Doctor summary: `doctor` reads readiness categories and reports diagnostic levels; it does not repair, mutate, or certify runtime state by the diagram alone.
-
-```mermaid
-flowchart TD
-  Doctor["harness doctor"] --> Runtime["runtime home"]
-  Doctor --> State["project state"]
-  Doctor --> MCP["MCP availability"]
-  Doctor --> Surface["reference surface"]
-  Doctor --> Artifacts["artifact store"]
-  Doctor --> Projections["projections"]
-  Doctor --> Reconcile["reconcile"]
-  Doctor --> Validators["validators/checks"]
-  Doctor --> Agency["agency/stewardship/context"]
-  Doctor --> Security["security/threat model"]
-  Runtime --> Perms["storage and permission posture"]
-  State --> JSON["JSON TEXT parse and shape validity"]
-  Projections --> Freshness["freshness and failed renders"]
-  Validators --> Stable["stable ValidatorResult IDs and Core checks"]
-```
+Doctor summary: `doctor` reads readiness categories and reports diagnostic levels; it does not repair, mutate, or certify runtime state. The table above is the category map.
 
 Output levels:
 
@@ -353,13 +310,12 @@ MCP serving summary: the server path is usable only when Core can reach Runtime 
 
 ```mermaid
 flowchart TD
-  Start["harness serve mcp"] --> Server["server can reach runtime state and artifact storage?"]
-  Server -- no --> ServerFail["diagnostic<br/>MCP_SERVER_UNAVAILABLE<br/>no authoritative Core response"]
-  Server -- yes --> Core["Core reachable for public tools"]
-  Core --> Resources["read resources exposed without mutation"]
-  Resources --> Surface["connected surface can use required MCP tools?"]
-  Surface -- yes --> Ready["MCP server ready for this surface"]
-  Surface -- no --> SurfaceFail["diagnostic<br/>SURFACE_MCP_UNAVAILABLE<br/>surface cannot use required MCP tools"]
+  Serve["harness serve mcp"] --> Runtime{"Core can reach Runtime Home?"}
+  Runtime -->|no| ServerFail["MCP_SERVER_UNAVAILABLE"]
+  Runtime -->|yes| Tools["public tools route through Core"]
+  Tools --> Surface{"surface can call required tools?"}
+  Surface -->|no| SurfaceFail["SURFACE_MCP_UNAVAILABLE"]
+  Surface -->|yes| Ready["ready for this surface"]
 ```
 
 If MCP is unavailable, operations must distinguish diagnostic condition `MCP_SERVER_UNAVAILABLE` from diagnostic condition `SURFACE_MCP_UNAVAILABLE`. These labels are not additional public `ErrorCode` values. When either condition is surfaced through `ToolError`, operations must use the API-owned error selection and details shape: `MCP_UNAVAILABLE` remains the stable public availability code, while surface-side availability or capability cases may use `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` with `details.mcp_unavailable_kind` according to context. With `MCP_SERVER_UNAVAILABLE`, a tool call cannot reach Core and no authoritative Core response is possible; the next action is server diagnosis or reconnect before any state-change claim. With `SURFACE_MCP_UNAVAILABLE`, Core or an operator can observe that the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required MCP tools. Cooperative surfaces must hold product/runtime/code writes by instruction; stronger profiles may enforce the hold preventively only when fixture-proven blocking covers the operation, or through a proven isolation boundary. Operations must still report the actual guarantee level.
@@ -400,15 +356,15 @@ Projection refresh summary: refresh renders from committed records and artifact 
 
 ```mermaid
 flowchart TD
-  Target["select refresh target"] --> Latest["render latest projection version"]
-  Latest --> Preserve["preserve human-editable sections"]
-  Preserve --> Hash["compare managed block hash"]
-  Hash -- hash drift --> Reconcile["create reconcile item"]
-  Hash -- matches --> Write["write derived Markdown view"]
-  Reconcile --> Skipped["mark job skipped or pending"]
-  Write --> Completed["mark job completed"]
-  Latest -- render error --> Failed["mark job failed"]
-  Completed --> Separate["keep projection status separate from Task result"]
+  Target["refresh target"] --> Latest["render from Core records"]
+  Latest --> Preserve["preserve editable sections"]
+  Preserve --> Hash{"managed hash drift?"}
+  Hash -->|yes| Reconcile["create reconcile item"]
+  Hash -->|no| Write["write derived view"]
+  Reconcile --> Skipped["job skipped or pending"]
+  Write --> Completed["job completed"]
+  Latest -->|render error| Failed["job failed"]
+  Completed --> Separate["projection status only"]
   Failed --> Separate
   Skipped --> Separate
 ```
@@ -457,18 +413,18 @@ Reconcile summary: human edits and generated drift become explicit reconcile ite
 
 ```mermaid
 flowchart TD
-  Input["human edit or managed/generated drift"] --> Item["create reconcile item"]
-  Item --> Review["review against canonical state and owner docs"]
-  Review --> Merge["merge"]
+  Input["human edit or generated drift"] --> Item["reconcile item"]
+  Item --> Review["review against Core records"]
+  Review --> Merge["merge through Core"]
   Review --> Reject["reject"]
-  Review --> Note["convert_to_note"]
-  Review --> Decision["create_decision"]
+  Review --> Note["keep as note"]
+  Review --> Decision["request judgment"]
   Review --> Defer["defer"]
-  Merge --> Core["apply through Core and append state history"]
-  Reject --> Refresh["canonical state unchanged; refresh if needed"]
-  Note --> Human["preserve as human note"]
+  Merge --> Core["append state history"]
+  Reject --> Refresh["state unchanged"]
+  Note --> Human["human note only"]
   Decision --> Pending["pending user judgment"]
-  Defer --> Open["reconcile item remains open"]
+  Defer --> Open["item stays open"]
 ```
 
 Reconcile must not treat edited Markdown as canonical state by itself.
@@ -497,36 +453,7 @@ Required recovery classes:
 | surface capability mismatch | report or emit `surface_capability_check` where the owner path allows it, reduce guarantee display, and hold or fail unsafe writes with existing `CAPABILITY_INSUFFICIENT`, `MCP_UNAVAILABLE`, or blocked-reason paths rather than claiming preventive blocking |
 | local security posture weak or unknown | report the same `OK`/`WARN`/`FAIL`/`MANUAL` posture classes as doctor for Runtime Home permissions, artifact directory exposure, MCP reachability, stale MCP config, or broad local file access; hold write-capable or close-relevant recovery until the posture is diagnosed |
 
-Recovery summary: recover classifies the failure, records compensating facts when needed, and keeps failed projections, interrupted writes, stale baselines, and missing artifacts from becoming success claims.
-
-```mermaid
-flowchart TD
-  Scenario["failure scenario"] --> Classify["classify recovery path"]
-  Classify --> Interrupted["interrupted agent write<br/>runs.status=interrupted"]
-  Classify --> Baseline["baseline drift"]
-  Classify --> Approval["approval drift"]
-  Classify --> Eval["evaluator repo drift"]
-  Classify --> Evidence["artifact missing or hash mismatch"]
-  Classify --> Projection["projection failure or managed Markdown direct edit"]
-  Classify --> Storage["malformed or schema-incompatible storage JSON"]
-  Classify --> Replay["idempotency replay mismatch"]
-  Classify --> Lock["expired lock"]
-  Classify --> MCP["MCP unavailable"]
-  Classify --> Capability["surface capability mismatch"]
-  Classify --> Security["local security posture weak or unknown"]
-  Interrupted --> Event["append compensating event"]
-  Baseline --> Stale["mark affected readiness stale/blocked"]
-  Approval --> Reapprove["expire, narrow, or re-request approval"]
-  Eval --> Verify["mark verification blocked until fresh bundle/path"]
-  Evidence --> Artifact["preserve hash; restore exact bytes or register replacement"]
-  Projection --> Recon["retry, fail, or create reconcile guidance"]
-  Storage --> Repair["repair only from canonical state or raw artifacts"]
-  Replay --> Conflict["preserve original replay and report STATE_CONFLICT"]
-  Lock --> Release["release or reacquire by policy"]
-  MCP --> Hold["hold product/runtime/code writes and diagnose"]
-  Capability --> Hold
-  Security --> Hold
-```
+Recovery summary: recover classifies the failure, records compensating facts when needed, and keeps failed projections, interrupted writes, stale baselines, and missing artifacts from becoming success claims. The table above is the recovery-class map.
 
 Recovery may append compensating events. It must not silently delete evidence, rewrite event history, make projections authoritative, fabricate successful run evidence, set verification or QA passed, accept results, accept residual risk, or close a Task.
 
@@ -559,20 +486,7 @@ Required contents:
 - retention status for included refs, including retained raw files copied into the bundle and expired or unavailable artifacts omitted from the bundle
 - redaction, omission, and block notes for omitted secrets, sensitive logs, screenshots, network traces, telemetry/logging content, and PII
 
-Export summary: export bundles are derived from Core state, event-version facts, registered artifacts, projection snapshots, and redaction/omission metadata; they are not a new authority space.
-
-```mermaid
-flowchart TD
-  Export["Task export bundle"] --> Manifest["export manifest"]
-  Export --> State["state snapshots"]
-  Export --> Decisions["User judgments"]
-  Export --> Risks["residual risks and accepted-risk refs"]
-  Export --> Journey["Journey Spine or continuity refs"]
-  Export --> Projections["report projection snapshots"]
-  Export --> Artifacts["artifact refs, retention, and allowed raw files"]
-  Export --> Integrity["artifact integrity manifest"]
-  Export --> Redaction["redaction, omission, and block notes"]
-```
+Export summary: export bundles are derived from Core state, event-version facts, registered artifacts, projection snapshots, and redaction/omission metadata; they are not a new authority space. The list above names the bundle contents.
 
 Exported projection snapshots may have hashes, but that does not make the Markdown projection the canonical evidence. Raw evidence remains the artifact files and their registered refs.
 
@@ -667,25 +581,7 @@ Required checks:
 - retention class is valid, and retained bytes or expired/unavailable refs are reported without treating expired or unavailable bytes as current evidence
 - projection or evidence refs resolve
 
-Artifact check summary: artifact integrity compares registered records with stored files and marks dependent evidence, projection freshness, or close readiness stale or blocked when the registered bytes cannot be trusted.
-
-```mermaid
-flowchart TD
-  Check["artifact integrity check"] --> Record["artifact record exists and links resolve"]
-  Check --> File["stored file exists"]
-  Check --> Hash["hash and size match"]
-  Check --> Type["content type and redaction state valid"]
-  Check --> Relation["task/run or artifact-link relation valid"]
-  Check --> Retention["retention class valid"]
-  Check --> ProjectionRefs["projection or evidence refs resolve"]
-  Record --> Consequence["mark related evidence, projection freshness, or close readiness stale/blocked on failure"]
-  File --> Consequence
-  Hash --> Consequence
-  Type --> Consequence
-  Relation --> Consequence
-  Retention --> Consequence
-  ProjectionRefs --> Consequence
-```
+Artifact check summary: artifact integrity compares registered records with stored files and marks dependent evidence, projection freshness, or close readiness stale or blocked when the registered bytes cannot be trusted. The checklist above is the integrity contract.
 
 Failures should mark related evidence, projection freshness, or close readiness stale/blocked according to Core rules. Missing artifacts are not fixed by editing Markdown reports.
 

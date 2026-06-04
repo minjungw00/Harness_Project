@@ -131,21 +131,21 @@ This route map is the design contract for user-owned judgment. The route verb is
 
 ```mermaid
 flowchart LR
-  Need["user-owned judgment needed"]
-  Need --> Choose["choose<br/>product/UX or technical"]
-  Need --> Approve["approve-sensitive-action<br/>sensitive permission only"]
-  Need --> Waive["waive<br/>named requirement only"]
-  Need --> Accept["accept-result<br/>work acceptance"]
-  Need --> Risk["accept-risk<br/>visible Residual Risk"]
-  Need --> Reconcile["reconcile<br/>projection or generated drift"]
-  Need --> Defer["defer<br/>recorded effect"]
+  Need["user-owned judgment"] --> Choose["product or technical choice"]
+  Need --> Approve["sensitive-action permission"]
+  Need --> Waive["named waiver"]
+  Need --> Accept["work acceptance"]
+  Need --> Risk["residual-risk acceptance"]
+  Need --> Reconcile["reconcile drift"]
+  Need --> Defer["defer with effect"]
 
-  Choose --> Decision["user_judgment route"]
-  Waive --> Decision
-  Accept --> Decision
-  Risk --> Decision
-  Defer --> Decision
-  Approve --> Approval["Approval route"]
+  Choose --> Judgment["user_judgment"]
+  Approve --> Judgment
+  Waive --> Judgment
+  Accept --> Judgment
+  Risk --> Judgment
+  Defer --> Judgment
+  Approve -. later profile .-> Approval["Approval record"]
   Reconcile --> CorePath["Core or reconcile path"]
 ```
 
@@ -564,16 +564,14 @@ This pre-write scope-check sequence is the Kernel design contract. Scope, requir
 
 ```mermaid
 flowchart LR
-  Scope["scoped Task / Change Unit"] --> Prepare["prepare_write"]
-  Judgment["required user judgment<br/>record if needed"] --> Prepare
-  Approval["sensitive-action permission<br/>if needed"] --> Prepare
+  Scope["active scope"] --> Prepare["prepare_write"]
+  Judgment["resolved judgments"] --> Prepare
+  Approval["sensitive permission"] --> Prepare
   Prepare -->|compatible| Auth["single-use Write Authorization"]
-  Prepare -->|not compatible| Blocker["structured blocker"]
-  Auth --> Run["product-write Run"]
-  Run --> Record["record_run"]
-  Record --> Artifacts["artifacts and evidence refs"]
-  Record --> Status["status or blockers"]
-  Blocker --> Status
+  Prepare -->|blocked| Blocker["blocker"]
+  Auth --> Record["record_run"]
+  Record --> State["state and evidence refs"]
+  Blocker --> State
 ```
 
 ## prepare_write
@@ -645,16 +643,13 @@ This close-decision flow is a design-contract summary. Verification, Manual QA, 
 
 ```mermaid
 flowchart TD
-  Intent["close_task intent"] --> Safe["no unsafe open Run"]
-  Safe --> Judgments["blocking judgments and Approval"]
-  Judgments --> Evidence["evidence when required"]
-  Evidence --> Verify["verification when required"]
-  Verify --> QA["Manual QA when required"]
-  QA --> Acceptance["work acceptance when required"]
-  Acceptance --> Risk["residual risk visible and accepted when required"]
-  Risk --> Ready{"all required close facts compatible?"}
-  Ready -->|no| Blockers["return close blockers"]
-  Ready -->|yes| Close["record close result"]
+  Intent["close_task"] --> Safe["no unsafe open Run"]
+  Safe --> Gates["scope, judgments, Approval"]
+  Gates --> Proof["required evidence, verification, QA"]
+  Proof --> Acceptance["acceptance and risk when required"]
+  Acceptance --> Ready{"compatible to close?"}
+  Ready -->|no| Blockers["return blockers"]
+  Ready -->|yes| Close["record close"]
   Close --> Events["append close events"]
 ```
 

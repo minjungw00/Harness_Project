@@ -117,20 +117,18 @@ This source-of-truth map is a design contract for future projection behavior. Co
 
 ```mermaid
 flowchart LR
-  Chat["chat, connector, and tool output"]
-  Projection["Markdown projection"]
-  Edit["human edit or proposal"]
+  Chat["chat and tool output"]
+  Projection["Markdown/status view"]
   Reconcile["reconcile candidate"]
   CorePath["Core state-changing path"]
-  Records["Core current records"]
-  Events["state.sqlite.task_events"]
-  Artifacts["artifact store and ArtifactRefs"]
-  Projector["Projector"]
+  Records["Core records"]
+  Events["task_events"]
+  Artifacts["artifact refs"]
+  Projector["projector"]
 
-  Chat -. input only .-> CorePath
-  Projection -. readable view .-> Chat
-  Projection -. edit input .-> Edit
-  Edit -. candidate .-> Reconcile
+  Chat -. input .-> CorePath
+  Projection -. read .-> Chat
+  Projection -. edit .-> Reconcile
   Reconcile --> CorePath
   CorePath --> Records
   CorePath --> Events

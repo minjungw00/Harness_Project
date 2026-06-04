@@ -24,20 +24,21 @@ MVP-1은 그 loop 주변의 사용자 표시 동작을 더합니다. Ordinary-la
 
 ```mermaid
 flowchart LR
-  Request["ordinary request"] --> Clarify["clarify work"]
-  Clarify --> Judgment["user judgment if needed"]
-  Clarify --> Scope["scope"]
-  Judgment --> Scope
+  Request["평소 요청"] --> Clarify["목표와 위험 구체화"]
+  Clarify --> Judgment{"판단 필요?"}
+  Judgment -->|예| Ask["판단 요청"]
+  Judgment -->|아니오| Scope["범위 정하기"]
+  Ask --> Scope
   Scope --> Prepare["prepare_write"]
-  Prepare -->|allowed| Auth["Write Authorization"]
-  Prepare -->|blocked| Blocker["structured blocker"]
+  Prepare -->|호환됨| Auth["Write Authorization"]
+  Prepare -->|막힘| Blocker["막힘"]
   Auth --> Run["record_run"]
-  Run --> Evidence["artifact/evidence refs"]
-  Evidence --> Status["status and compact views"]
+  Run --> Evidence["근거 참조"]
+  Evidence --> Status["상태 보기"]
   Blocker --> Status
-  Status --> CloseCheck["close check"]
-  CloseCheck -->|blocked| CloseBlocker["close blocker"]
-  CloseCheck -->|ready| Closed["closed task"]
+  Status --> CloseCheck["close_task"]
+  CloseCheck -->|막힘| CloseBlocker["닫기 막힘"]
+  CloseCheck -->|가능| Closed["닫힘"]
 ```
 
 이 diagram은 reader aid입니다. Exact state transition, schema, DDL, error, projection rule은 Reference 담당 문서에 남습니다.

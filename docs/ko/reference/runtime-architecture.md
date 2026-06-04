@@ -71,14 +71,14 @@
 
 ```mermaid
 flowchart LR
-  Repo["제품 저장소<br/>제품 파일과 projection"]
-  Server["하네스 서버/설치<br/>MCP, Core, validator, projector, reconcile"]
-  Home["하네스 런타임 홈<br/>registry, state.sqlite, artifact store"]
+  Repo["제품 저장소"]
+  Server["하네스 서버/설치"]
+  Home["하네스 런타임 홈"]
 
-  Repo -->|요청과 사실| Server
-  Server -->|범위가 정해진 쓰기와 projection| Repo
-  Server -->|Core 상태 변경과 ArtifactRef| Home
-  Home -->|현재 기록과 events| Server
+  Repo -->|요청, 사실| Server
+  Server -->|범위 있는 쓰기, projection| Repo
+  Server -->|Core 상태, ArtifactRef| Home
+  Home -->|기록, events, artifacts| Server
 ```
 
 이 분리는 대화, Markdown 보고서, 생성된 connector 파일, operator output, MCP caller claim, 제품 소스 파일을 기준 운영 상태 밖에 둡니다. Core 상태 변경 경로만 기준 운영 상태를 commit할 수 있습니다.
@@ -319,17 +319,14 @@ Architecture 관점의 stage default는 다음과 같습니다. 내부 엔지니
 
 ```mermaid
 flowchart TB
-  Operation["의도한 작업"] --> Profile["보장 표시"]
-  Profile --> Cooperative["cooperative"]
-  Profile --> Detective["detective"]
-  Profile --> Preventive["preventive"]
-  Profile --> Isolated["isolated"]
-  Operation --> Core["Core 권한 확인"]
-  Core --> Decision{"허용"}
-  Decision -->|예| Authorization["쓰기 허가"]
+  Operation["의도한 작업"] --> Core["Core 권한 확인"]
+  Profile["연결된 프로필"] --> Level["보고된 보장 수준"]
+  Core --> Decision{"호환됨?"}
+  Decision -->|예| Authorization["Write Authorization"]
   Authorization --> Run["record_run"]
   Run --> Records["소유 기록"]
   Decision -->|아니오| Blocker["보류 또는 막힘"]
+  Level -. 보류 설명 .-> Blocker
   Blocker --> Records
 ```
 

@@ -71,14 +71,14 @@ The diagram below is the implementation-facing version of the three-space design
 
 ```mermaid
 flowchart LR
-  Repo["Product Repository<br/>product files and projections"]
-  Server["Harness Server / Installation<br/>MCP, Core, validators, projector, reconcile"]
-  Home["Harness Runtime Home<br/>registry, state.sqlite, artifact store"]
+  Repo["Product Repository"]
+  Server["Harness Server / Installation"]
+  Home["Harness Runtime Home"]
 
-  Repo -->|requests and facts| Server
-  Server -->|scoped writes and projections| Repo
-  Server -->|Core state changes and ArtifactRefs| Home
-  Home -->|current records and events| Server
+  Repo -->|requests, facts| Server
+  Server -->|scoped writes, projections| Repo
+  Server -->|Core state, ArtifactRefs| Home
+  Home -->|records, events, artifacts| Server
 ```
 
 This split keeps chat, Markdown reports, generated connector files, operator output, MCP caller claims, and product source files outside canonical operational state. Only a Core state-changing path can commit canonical operational state.
@@ -313,17 +313,14 @@ This diagram shows where the guarantee label changes control behavior and where 
 
 ```mermaid
 flowchart TB
-  Operation["intended operation"] --> Profile["connected profile<br/>guarantee display"]
-  Profile --> Cooperative["cooperative"]
-  Profile --> Detective["detective"]
-  Profile --> Preventive["preventive"]
-  Profile --> Isolated["isolated"]
-  Operation --> Core["Core authority check"]
-  Core --> Decision{"allowed"}
+  Operation["intended operation"] --> Core["Core authority check"]
+  Profile["connected profile"] --> Level["reported guarantee level"]
+  Core --> Decision{"compatible?"}
   Decision -->|yes| Authorization["Write Authorization"]
   Authorization --> Run["record_run"]
   Run --> Records["owner records"]
   Decision -->|no| Blocker["hold or blocker"]
+  Level -. describes hold .-> Blocker
   Blocker --> Records
 ```
 

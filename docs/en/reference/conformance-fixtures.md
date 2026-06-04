@@ -170,30 +170,7 @@ expected_projection: object
 expected_error: object | null
 ```
 
-Fixture shape summary: suite metadata can group fixtures, but the fixture body keeps one exact action-and-expectation shape for future executable conformance.
-
-```mermaid
-classDiagram
-  class FixtureBody {
-    scenario_id
-    initial_state
-    input
-    action
-    expected_state
-    expected_events
-    expected_artifacts
-    expected_projection
-    expected_error
-  }
-  class SuiteCatalogMetadata {
-    suite
-    earliest_delivery_stage
-    tags
-    assertion_modes
-    fixtures
-  }
-  SuiteCatalogMetadata ..> FixtureBody : groups exact-shape fixtures
-```
+Fixture shape summary: suite metadata can group fixtures, but the fixture body keeps one exact action-and-expectation shape for future executable conformance. The YAML block above is the contract summary.
 
 Future fixture files and suite catalogs may carry metadata outside the fixture body. The fixture body itself uses only the fields above so conformance runners can compare behavior consistently. Do not add fixture-body fields for suite delivery stage, assertion mode, docs-maintenance result, prose status, or authoring notes; those belong in suite catalog metadata, docs-maintenance reports, or surrounding documentation.
 
@@ -232,22 +209,7 @@ Future runtime fixture execution semantics:
 6. Compare the captured results with `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error`; empty expected sections mean the fixture asserts no relevant effect for that section.
 7. Report fixture id, pass/fail, observed state summary, observed events, artifact integrity result, projection freshness, and error comparison.
 
-Runner sequence summary: a future runner loads an exact fixture body, seeds an isolated runtime, executes through Core, compares state/events/artifacts/projection/errors, and emits a report.
-
-```mermaid
-sequenceDiagram
-  participant Runner as Conformance Runner
-  participant Fixture as Fixture YAML
-  participant Runtime as Isolated Runtime
-  participant Core as Core Entrypoint
-  participant Report as Conformance Report
-  Runner->>Fixture: load and validate exact body shape
-  Runner->>Runtime: seed state, artifacts, projections, manifests
-  Runner->>Core: execute action
-  Core-->>Runner: state, events, artifacts, projection status, error
-  Runner->>Runner: compare expected_state/events/artifacts/projection/error
-  Runner->>Report: emit fixture id, pass/fail, observed summaries
-```
+Runner sequence summary: the numbered sequence above is the contract summary. A future runner loads an exact fixture body, seeds an isolated runtime, executes through Core, compares state/events/artifacts/projection/errors, and emits a report.
 
 When a fixture action includes `expected_state_version`, the runner compares it according to the Core-resolved primary Task, not only `ToolEnvelope.task_id`. Task-scoped actions compare against the seeded or Core-resolved primary Task State Version; project-scoped actions with no resolved primary Task compare against the Project State Version. Captured response and `task_events` `state_version` values are compared as resulting affected-scope versions. Read-only fixtures may assert the unchanged version for the primary read scope. This clarifies comparison semantics without changing fixture body shape.
 
