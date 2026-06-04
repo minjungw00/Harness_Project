@@ -190,9 +190,9 @@ Status: scriptable checks plus targeted spot checks. Do not treat this as runtim
 
 Checks actually run during this review:
 
-- Local relative link and anchor checker over all repository Markdown entrypoints and docs, including explicit `<a id="...">` / `<a name="...">` anchors: checked 131 Markdown files, 2,284 local Markdown links outside fenced blocks, and 867 anchor links; no unresolved relative links or anchors were reported.
+- Local relative link and anchor checker over top-level repository Markdown entrypoints and `docs/**/*.md`, including explicit `<a id="...">` / `<a name="...">` anchors: checked 131 Markdown files, 2,284 inline/reference-style local Markdown links outside fenced blocks, and 867 fragment/anchor links. The checker did not count raw autolinks or links inside fenced examples. No unresolved relative links or anchors were reported.
 - English/Korean active file-map check for `docs/en` and `docs/ko`: 64 Markdown files on each side; no active file-map differences were reported.
-- Fenced code block balance check over the same 131 Markdown files: 464 fenced code blocks checked; no unclosed fenced code blocks were reported.
+- Fenced code block balance check over the same 131 Markdown files: 462 fenced code blocks checked; no unclosed fenced code blocks were reported.
 - Legacy stage/fixture term check using `rg` for `v01`, `v02`, `CORE-v01`, `MVP-v02`, `v0.1`, `v0.2`, `Core Authority Smoke`, and `First User-Value Slice`: no active misuse was found; remaining matches are legacy-label guidance or this review's own check text.
 - Decision Packet authority-path wording check using `rg` plus manual review of the Core Model and later-profile Decision Packet template: no checked wording describes Decision Packet as the authority path for user-owned judgment. It remains a full-format/later-profile or legacy presentation label for `user_judgment`.
 - Security wording spot check over Security Reference and Implementation Overview: checked cooperative/detective/preventive/isolated wording and local-access non-claims; checked wording does not claim OS permission, arbitrary-tool sandboxing, tamper-proof storage, default pre-tool blocking, permission isolation, or security isolation for early stages.
