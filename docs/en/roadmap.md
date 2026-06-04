@@ -14,7 +14,7 @@ This is roadmap documentation. It does not authorize runtime/server implementati
 
 ## Before you read
 
-Staged delivery is owned by [Build: Staged Delivery Plan](build/mvp-plan.md). For current handoff and implementation planning, start with [Build: Implementation Overview](build/implementation-overview.md#maintainer-handoff-summary), then check [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding), [Build: First Runnable Slice](build/first-runnable-slice.md), and [Build: Staged Delivery Plan](build/mvp-plan.md). For exact contracts, use the Reference docs.
+Staged delivery is owned by [Build: MVP-1 User Work Loop](build/mvp-user-work-loop.md). For current handoff and implementation planning, start with [Build: Implementation Overview](build/implementation-overview.md#maintainer-handoff-summary), then check [Implementation decisions needed before server coding](build/mvp-user-work-loop.md#implementation-decisions-needed-before-server-coding), [Build: Engineering Checkpoint](build/engineering-checkpoint.md), and [Build: MVP-1 User Work Loop](build/mvp-user-work-loop.md). For exact contracts, use the Reference docs.
 
 Current stage names are:
 
@@ -72,4 +72,4 @@ These examples describe candidate areas only. They do not add stage requirements
 | Advanced exports, release/deployment/canary/rollback/merge/production-monitoring automation | May become future integration work. Release handoff remains a report/export boundary unless owner docs promote more; deployment, merge, rollback, and production authority stay external until explicitly scoped and proven. |
 | Advanced validators and language or interface checks | May become future stewardship or diagnostic coverage. Must not become early-stage fixture failure, acceptance, QA, or close criteria until owner docs define the exact policy, severity, waiver, and fixture behavior. |
 
-Use [Build: Staged Delivery Plan](build/mvp-plan.md#roadmap-scoped-v1-expansion-candidates) for the staged-delivery boundary, and use this page only to track candidates that remain outside staged delivery until promoted.
+Use [Build: MVP-1 User Work Loop](build/mvp-user-work-loop.md#roadmap-scoped-v1-expansion-candidates) for the staged-delivery boundary, and use this page only to track candidates that remain outside staged delivery until promoted.

@@ -185,13 +185,13 @@ Evidence: sufficient
 
 | 필요 | 담당 문서 |
 |---|---|
-| 범위, 사용자 소유 판단, 근거, 검증, QA, 작업 수락, 잔여 위험, 닫기 규칙 | [Kernel Reference](../reference/kernel.md) |
+| 범위, 사용자 소유 판단, 근거, 검증, QA, 작업 수락, 잔여 위험, 닫기 규칙 | [Core Model Reference](../reference/core-model.md) |
 | 공개 도구 형태와 schema 세부사항 | [MVP API](../reference/api/mvp-api.md)와 [API Schema Core](../reference/api/schema-core.md) |
-| 읽기용 문서 경계와 최신성 | [문서 Projection 참조](../reference/document-projection.md) |
-| 사용자에게 보이는 세션 동작 | [사용자 가이드](../use/user-guide.md), [에이전트 세션 흐름](../use/agent-session-flow.md) |
+| 읽기용 문서 경계와 최신성 | [Projection과 Template 참조](../reference/projection-and-templates.md) |
+| 사용자에게 보이는 세션 동작 | [사용자 가이드](../use/user-guide.md), [에이전트 가이드](../use/agent-guide.md) |
 
 ## 다음에 읽을 문서
 
-- 더 긴 흐름은 [하나의 작업으로 보는 하네스](harness-in-one-task.md)를 봅니다.
+- 더 긴 흐름은 [하나의 작업으로 보는 하네스](one-task.md)를 봅니다.
 - 내부 라벨이 보이기 시작하면 [핵심 개념](concepts.md)을 봅니다.
 - 사용자에게 보이는 세션 흐름은 [사용자 가이드](../use/user-guide.md)를 봅니다.

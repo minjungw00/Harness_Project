@@ -97,16 +97,16 @@ These labels may appear in roadmap, reference, template, or diagnostic material.
 
 | Term family | Reference owner |
 |---|---|
-| Task, Change Unit, gates, close, sensitive-action approval, work acceptance, verification, QA, residual risk, write authority | [Kernel Reference](kernel.md) |
+| Task, Change Unit, gates, close, sensitive-action approval, work acceptance, verification, QA, residual risk, write authority | [Core Model Reference](core-model.md) |
 | MCP resources, MCP tools, public schemas, errors, `ValidatorResult`, `ProjectionKind` | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), and [API Schema Later](api/schema-later.md) |
-| SQLite records, artifact layout, enum hardening, `tree_hash`, `request_hash` storage use | [Storage And DDL](storage-and-ddl.md) |
-| Projections, managed blocks, projection freshness, Markdown reports, template bodies | [Document Projection Reference](document-projection.md); [Template Reference](templates/README.md) |
+| SQLite records, artifact layout, enum hardening, `tree_hash`, `request_hash` storage use | [Storage](storage.md) |
+| Projections, managed blocks, projection freshness, Markdown reports, template bodies | [Projection And Templates Reference](projection-and-templates.md); [Template Reference](templates/README.md) |
 | Discovery and Shared Design, design quality, stewardship, Feedback Loop finding routing, context hygiene, severity composition, policy contracts | [Design Quality Policies](design-quality-policies.md) |
 | Surface capability, guarantee display, connector behavior | [Agent Integration Reference](agent-integration.md) |
-| Security assets, trust boundaries, threat categories, high-risk control expectations, guarantee-level meanings | [Security Threat Model Reference](security-threat-model.md) |
+| Security assets, trust boundaries, threat categories, high-risk control expectations, guarantee-level meanings | [Security Reference](security.md) |
 | Operator procedures, conformance run overview, docs-maintenance reporting | [Operations And Conformance Reference](operations-and-conformance.md) |
 | Core conformance model, fixture body shape, runner behavior, assertion semantics, fixture profiles, and reduced Kernel Smoke queue | [Conformance Fixtures Reference](conformance-fixtures.md) |
-| Detailed future scenario candidates, future fixture examples, staged fixture coverage maps, fixture suite family summaries, and catalog-only future candidates | [Future Fixture Catalog](future-fixture-catalog.md) |
+| Detailed future scenario candidates, future fixture examples, staged fixture coverage maps, fixture suite family summaries, and catalog-only future candidates | [Future Fixtures](../later/future-fixtures.md) |
 
 ## Official Terms
 
@@ -120,7 +120,7 @@ The user's final judgment that the result of the work is acceptable after eviden
 
 ### Acceptance Gate
 
-The kernel gate for required work acceptance. Its value set and compatibility meaning are owned by [Acceptance Gate](kernel.md#acceptance-gate). Acceptance cannot substitute for QA or verification.
+The kernel gate for required work acceptance. Its value set and compatibility meaning are owned by [Acceptance Gate](core-model.md#acceptance-gate). Acceptance cannot substitute for QA or verification.
 
 Required Acceptance in the current reference model is recorded through a Work acceptance user judgment, `task_gates.acceptance_gate`, and `state.sqlite.task_events`; there is no separate acceptance record or table.
 
@@ -142,13 +142,13 @@ A recorded output used for evidence, recovery, or audit. See Raw Artifact for th
 
 ### Artifact Reference
 
-A structured pointer to a raw artifact file registered in the artifact store, including identity, kind, URI or path, hash, size, content type, redaction state, and task/run relationship. `ArtifactRef` is the exact schema name for this pointer shape. In [Storage And DDL](storage-and-ddl.md), artifact refs and `artifact_links` are Task-scoped. Artifact kinds such as `bundle`, `manifest`, or `export_component` describe files; owner links still point to existing state or Task-scoped projection records.
+A structured pointer to a raw artifact file registered in the artifact store, including identity, kind, URI or path, hash, size, content type, redaction state, and task/run relationship. `ArtifactRef` is the exact schema name for this pointer shape. In [Storage](storage.md), artifact refs and `artifact_links` are Task-scoped. Artifact kinds such as `bundle`, `manifest`, or `export_component` describe files; owner links still point to existing state or Task-scoped projection records.
 
 ### Autonomy Boundary
 
 The Change Unit semantics that record the user-owned judgment boundary inside which an agent may proceed without asking for additional user judgment. In plain terms, it says what the agent may decide alone inside the active Change Unit. Routine implementation details may be inside the boundary; public API or module contract changes, security or privacy trade-offs, UX or product behavior trade-offs, material dependency or migration direction, scope expansion, and residual-risk acceptance require explicit user judgment and must not be inferred from broad autonomy.
 
-It is not a scope grant or write authority and does not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A user judgment may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible Change Unit scope and sensitive-action approval when sensitive categories apply. Exact kernel behavior is owned by [Autonomy Boundary](kernel.md#autonomy-boundary), with policy placement in [Design Quality Policies](design-quality-policies.md#autonomy-boundary-autonomy_boundary).
+It is not a scope grant or write authority and does not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A user judgment may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible Change Unit scope and sensitive-action approval when sensitive categories apply. Exact kernel behavior is owned by [Autonomy Boundary](core-model.md#autonomy-boundary), with policy placement in [Design Quality Policies](design-quality-policies.md#autonomy-boundary-autonomy_boundary).
 
 ### Assurance
 
@@ -170,7 +170,7 @@ A specific condition that prevents progress, write, close, or another requested 
 
 ### `tree_hash`
 
-The deterministic hash of a baseline file snapshot, computed from sorted NFC-normalized relative POSIX paths after ignored paths are excluded, with file bytes, size, executable bit, and symlink target handling defined by [Storage And DDL](storage-and-ddl.md).
+The deterministic hash of a baseline file snapshot, computed from sorted NFC-normalized relative POSIX paths after ignored paths are excluded, with file bytes, size, executable bit, and symlink target handling defined by [Storage](storage.md).
 
 ### Capability Profile
 
@@ -232,7 +232,7 @@ A later read-only context provider that may surface relevant projections, artifa
 
 ### Decision Gate
 
-The Task-level aggregate gate for blocking user-owned judgment before progress, write, or close can continue. The canonical field is `decision_gate`; its value set and recompute rule are owned by [Decision Gate](kernel.md#decision-gate). It is recomputed from relevant blocking user judgments and detected blockers, and it does not substitute for sensitive-action approval, verification, Manual QA, work acceptance, or residual-risk acceptance.
+The Task-level aggregate gate for blocking user-owned judgment before progress, write, or close can continue. The canonical field is `decision_gate`; its value set and recompute rule are owned by [Decision Gate](core-model.md#decision-gate). It is recomputed from relevant blocking user judgments and detected blockers, and it does not substitute for sensitive-action approval, verification, Manual QA, work acceptance, or residual-risk acceptance.
 
 ### User Judgment
 
@@ -330,7 +330,7 @@ Recorded support for claims about the work, such as diffs, logs, tests, run summ
 
 ### Evidence Gate
 
-The kernel gate for required evidence coverage. Its value set and close meaning are owned by [Evidence Gate](kernel.md#evidence-gate).
+The kernel gate for required evidence coverage. Its value set and close meaning are owned by [Evidence Gate](core-model.md#evidence-gate).
 
 ### Evidence Manifest
 
@@ -354,7 +354,7 @@ A canonical support record and recorded path from checks and findings back into 
 
 ### Finding
 
-An observed issue, gap, risk, blocker, or noteworthy result from a Run, Eval, Manual QA record, validator, review display, operator diagnostic, or conformance check. A finding is not a standalone authority path and does not affect gates or close by staying in chat or report prose. It becomes state-relevant only when routed through existing owner records or structured results, such as Evidence Manifest gaps, user judgment candidates or records, Change Unit updates, Feedback Loop or TDD Trace updates, Manual QA or Eval records, Residual Risk records, reconcile items, close blockers, or follow-up Task/Change Unit records. The routing contract is owned by [Design Quality Policies](design-quality-policies.md#finding-routing) and [Kernel Reference](kernel.md#finding-routing).
+An observed issue, gap, risk, blocker, or noteworthy result from a Run, Eval, Manual QA record, validator, review display, operator diagnostic, or conformance check. A finding is not a standalone authority path and does not affect gates or close by staying in chat or report prose. It becomes state-relevant only when routed through existing owner records or structured results, such as Evidence Manifest gaps, user judgment candidates or records, Change Unit updates, Feedback Loop or TDD Trace updates, Manual QA or Eval records, Residual Risk records, reconcile items, close blockers, or follow-up Task/Change Unit records. The routing contract is owned by [Design Quality Policies](design-quality-policies.md#finding-routing) and [Core Model Reference](core-model.md#finding-routing).
 
 ### First Safe Change Unit Candidate
 
@@ -396,7 +396,7 @@ The honest enforcement strength available for a connected surface or runtime pat
 cooperative | detective | preventive | isolated
 ```
 
-Capability affects validator results, blocked reasons, and display; it is not Approval, Write Authorization, verification, QA, work acceptance, residual-risk acceptance, close readiness, or a kernel gate. Exact level meanings are owned by [Security Threat Model](security-threat-model.md#honest-guarantee-display).
+Capability affects validator results, blocked reasons, and display; it is not Approval, Write Authorization, verification, QA, work acceptance, residual-risk acceptance, close readiness, or a kernel gate. Exact level meanings are owned by [Security Threat Model](security.md#honest-guarantee-display).
 
 ### Guard
 
@@ -462,7 +462,7 @@ Later diagnostic-only metrics derived from local records such as `state.sqlite.t
 
 ### Manual QA
 
-Human inspection of experiential product quality such as UX, workflow, copy, visual output, accessibility, and product fit. Manual QA is recorded through the Manual QA record or a valid QA waiver path when required; browser smoke, screenshots, Browser QA artifacts, tests, or verifier notes may support context but are not Manual QA judgment by themselves. Exact gate behavior is owned by [QA Gate](kernel.md#qa-gate), with policy requirements in [Design Quality Policies](design-quality-policies.md#manual-qa-manual_qa).
+Human inspection of experiential product quality such as UX, workflow, copy, visual output, accessibility, and product fit. Manual QA is recorded through the Manual QA record or a valid QA waiver path when required; browser smoke, screenshots, Browser QA artifacts, tests, or verifier notes may support context but are not Manual QA judgment by themselves. Exact gate behavior is owned by [QA Gate](core-model.md#qa-gate), with policy requirements in [Design Quality Policies](design-quality-policies.md#manual-qa-manual_qa).
 
 ### Manual Bundle
 
@@ -470,7 +470,7 @@ A verification handoff package for a human or separate evaluator. It includes ta
 
 ### Manual QA Record
 
-A record-level Manual QA result, including performer, profile, result, artifacts, findings, waiver reason when applicable, and next action. Its result value set is owned by [QA Gate](kernel.md#qa-gate) and later/profile-gated [`harness.record_manual_qa`](api/schema-later.md#harnessrecord_manual_qa). Pending required QA is represented by `qa_gate=pending`; it is not a Manual QA record result.
+A record-level Manual QA result, including performer, profile, result, artifacts, findings, waiver reason when applicable, and next action. Its result value set is owned by [QA Gate](core-model.md#qa-gate) and later/profile-gated [`harness.record_manual_qa`](api/schema-later.md#harnessrecord_manual_qa). Pending required QA is represented by `qa_gate=pending`; it is not a Manual QA record result.
 
 ### `managed_hash`
 
@@ -534,7 +534,7 @@ The API enum for projection job and template kinds. Support classes, active valu
 
 ### Projection Freshness
 
-The relationship between a projection and its source records, managed hash, artifact refs, and projection job state. Its value set is owned by [API Schema Core](api/schema-core.md#projectionkind-support) and [Document Projection Reference](document-projection.md).
+The relationship between a projection and its source records, managed hash, artifact refs, and projection job state. Its value set is owned by [API Schema Core](api/schema-core.md#projectionkind-support) and [Projection And Templates Reference](projection-and-templates.md).
 
 ### Projection Job
 
@@ -580,7 +580,7 @@ A non-authoritative skill or playbook surface that lets a user ask for a product
 
 A Markdown report generated from state records and artifact references, such as a Task report, approval report, run summary, evidence manifest report, Eval report, or direct-result report.
 
-The named report projection kinds are projections generated from state records and artifact refs; state authority stays with Core records and evidence-file authority stays with registered artifact files. Exact projection rules are owned by [Document Projection Reference](document-projection.md), and full rendered bodies are owned by [Template Reference](templates/README.md).
+The named report projection kinds are projections generated from state records and artifact refs; state authority stays with Core records and evidence-file authority stays with registered artifact files. Exact projection rules are owned by [Projection And Templates Reference](projection-and-templates.md), and full rendered bodies are owned by [Template Reference](templates/README.md).
 
 ### Review Stages
 
@@ -604,7 +604,7 @@ An execution attempt by an agent, evaluator, operator, or other actor against a 
 
 ### Scope Gate
 
-The kernel gate requiring product writes to be covered by an active scoped Change Unit. Scope is required for write-capable direct and work modes even when approval is not required. Scope Gate does not grant sensitive-action Approval, resolve user-owned judgment, or create Write Authorization; exact values and compatibility are owned by [Scope Gate](kernel.md#scope-gate).
+The kernel gate requiring product writes to be covered by an active scoped Change Unit. Scope is required for write-capable direct and work modes even when approval is not required. Scope Gate does not grant sensitive-action Approval, resolve user-owned judgment, or create Write Authorization; exact values and compatibility are owned by [Scope Gate](core-model.md#scope-gate).
 
 ### Severity Composition
 
@@ -684,11 +684,11 @@ A Direct subprofile for a typo, single docs sentence, or obvious rename where sc
 
 ### Trust Boundary
 
-A separation between Harness surfaces, files, callers, or runtime spaces where input from one side must not be treated as authority on the other side without an owner path. For example, chat text, Product Repository documents, projections, generated connector files, artifact bytes, and MCP caller claims can inform Harness, but they do not become canonical operational state unless Core or another documented owner path accepts their meaning. The trust-boundary map is owned by [Security Threat Model Reference](security-threat-model.md).
+A separation between Harness surfaces, files, callers, or runtime spaces where input from one side must not be treated as authority on the other side without an owner path. For example, chat text, Product Repository documents, projections, generated connector files, artifact bytes, and MCP caller claims can inform Harness, but they do not become canonical operational state unless Core or another documented owner path accepts their meaning. The trust-boundary map is owned by [Security Reference](security.md).
 
 ### Verification
 
-The process of checking whether the result satisfies the relevant criteria. Verification may support assurance when recorded through a valid Eval path and independence profile, but same-session self-check is not detached verification. Verification is separate from approval, Manual QA, work acceptance, and residual-risk acceptance. Exact gate and independence behavior is owned by [Verification Gate](kernel.md#verification-gate) and later/profile-gated [`harness.record_eval`](api/schema-later.md#harnessrecord_eval).
+The process of checking whether the result satisfies the relevant criteria. Verification may support assurance when recorded through a valid Eval path and independence profile, but same-session self-check is not detached verification. Verification is separate from approval, Manual QA, work acceptance, and residual-risk acceptance. Exact gate and independence behavior is owned by [Verification Gate](core-model.md#verification-gate) and later/profile-gated [`harness.record_eval`](api/schema-later.md#harnessrecord_eval).
 
 ### Verification Gate
 
@@ -716,7 +716,7 @@ A durable state record created by `prepare_write` for a specific allowed write a
 
 ### Write Authorization Lifecycle Events
 
-The stable event-name set for Write Authorization creation, return, consumption, expiry, staling, revocation, and violation detection. The exact vocabulary and its relationship to `scope_violation_detected` are owned by the [Kernel Stable Event Catalog](kernel.md#stable-event-catalog).
+The stable event-name set for Write Authorization creation, return, consumption, expiry, staling, revocation, and violation detection. The exact vocabulary and its relationship to `scope_violation_detected` are owned by the [Kernel Stable Event Catalog](core-model.md#stable-event-catalog).
 
 ### Write Authority Summary
 

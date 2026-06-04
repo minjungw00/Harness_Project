@@ -13,8 +13,8 @@
 | Active MVP-1 tools | [MVP API](mvp-api.md) |
 | Error code, precedence, idempotency, stale-state behavior | [Errors](errors.md) |
 | Later/profile-gated schemas and methods | [Schema Later](schema-later.md) |
-| Kernel state semantics | [커널 참조](../kernel.md) |
-| Storage and DDL | [Storage와 DDL](../storage-and-ddl.md) |
+| Kernel state semantics | [Core Model 참조](../core-model.md) |
+| Storage and DDL | [Storage](../storage.md) |
 
 ## Schema notation convention
 
@@ -29,7 +29,7 @@
 - 명시되지 않은 field는 explicit extension container 밖에서 reject됩니다.
 - Later/profile-gated enum value와 branch는 owning profile이 active가 아니면 MVP-1에서 valid하지 않습니다.
 
-Storage validation은 별도 소유권 경계입니다. API payload와 API-shaped stored JSON은 먼저 이 API reference로 validate합니다. Storage-only JSON `TEXT`, DDL nullability, column default, storage hardening은 [Storage와 DDL](../storage-and-ddl.md)이 담당합니다.
+Storage validation은 별도 소유권 경계입니다. API payload와 API-shaped stored JSON은 먼저 이 API reference로 validate합니다. Storage-only JSON `TEXT`, DDL nullability, column default, storage hardening은 [Storage](../storage.md)이 담당합니다.
 
 ## Stage Profile Manifest
 

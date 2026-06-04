@@ -268,11 +268,11 @@
 
 | 필요 | 소유자 |
 |---|---|
-| 내부 사용자 판단 동작과 gate 집계 | [User Judgment](../reference/kernel.md#user-judgment), [Decision Gate](../reference/kernel.md#decision-gate) |
+| 내부 사용자 판단 동작과 gate 집계 | [User Judgment](../reference/core-model.md#user-judgment), [Decision Gate](../reference/core-model.md#decision-gate) |
 | 공개 요청과 응답 형태 | [`harness.request_user_judgment`](../reference/api/mvp-api.md#harnessrequest_user_judgment), [`harness.record_user_judgment`](../reference/api/mvp-api.md#harnessrecord_user_judgment) |
-| 민감 동작 승인(Approval) | [Approval](../reference/kernel.md#approval) |
-| 근거 충분성 | [Evidence Gate](../reference/kernel.md#evidence-gate) |
-| 검증과 검증 면제 영향 | [Verification Gate](../reference/kernel.md#verification-gate) |
-| 수동 QA와 QA 면제 영향 | [QA Gate](../reference/kernel.md#qa-gate) |
-| 작업 수락과 잔여 위험 표시 | [Acceptance Gate](../reference/kernel.md#acceptance-gate), [Residual Risk](../reference/kernel.md#residual-risk) |
-| 닫기 막힘과 닫기 사유 | [`close_task`](../reference/kernel.md#close_task) |
+| 민감 동작 승인(Approval) | [Approval](../reference/core-model.md#approval) |
+| 근거 충분성 | [Evidence Gate](../reference/core-model.md#evidence-gate) |
+| 검증과 검증 면제 영향 | [Verification Gate](../reference/core-model.md#verification-gate) |
+| 수동 QA와 QA 면제 영향 | [QA Gate](../reference/core-model.md#qa-gate) |
+| 작업 수락과 잔여 위험 표시 | [Acceptance Gate](../reference/core-model.md#acceptance-gate), [Residual Risk](../reference/core-model.md#residual-risk) |
+| 닫기 막힘과 닫기 사유 | [`close_task`](../reference/core-model.md#close_task) |

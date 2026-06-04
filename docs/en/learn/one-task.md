@@ -269,4 +269,4 @@ The learning path is not a feature list. It is an authority-boundary model:
 - Read [Harness in 15 Minutes](harness-in-15-minutes.md) for shorter examples.
 - Read [Concepts](concepts.md) when internal labels start appearing.
 - Read [User Guide](../use/user-guide.md) for the user-facing session flow.
-- Use [Kernel Reference](../reference/kernel.md) only when you need exact future contracts.
+- Use [Core Model Reference](../reference/core-model.md) only when you need exact future contracts.

@@ -1,4 +1,4 @@
-# Document Projection Reference
+# Projection And Templates Reference
 
 ## Authority rule
 
@@ -27,7 +27,7 @@ This is reference documentation for future Harness behavior. Current repository 
 
 ## Before you read
 
-Use [Kernel Reference](kernel.md) for canonical state and gate authority, [API Schema Core](api/schema-core.md#projectionkind-support) for `ProjectionKind` and projection refs, [Storage And DDL](storage-and-ddl.md) for MVP-1 storage and later projection job storage when a projection profile is active, and [Template Reference](templates/README.md) for full rendered bodies and display cards only when that owner section is needed. This reading list is not a default context bundle; agents should follow the phase profile map in [Agent Integration: Context Push/Pull Principles](agent-integration.md#context-pushpull-principles).
+Use [Core Model Reference](core-model.md) for canonical state and gate authority, [API Schema Core](api/schema-core.md#projectionkind-support) for `ProjectionKind` and projection refs, [Storage](storage.md) for MVP-1 storage and later projection job storage when a projection profile is active, and [Template Reference](templates/README.md) for full rendered bodies and display cards only when that owner section is needed. This reading list is not a default context bundle; agents should follow the phase profile map in [Agent Integration: Context Push/Pull Principles](agent-integration.md#context-pushpull-principles).
 
 ## Main idea
 
@@ -141,7 +141,7 @@ flowchart LR
   Projector --> Projection
 ```
 
-Strict projection behavior is owned by this reference, especially the [Document authority matrix](#document-authority-matrix), [Managed block rules](#managed-block-rules), and [Freshness and failure rules](#freshness-and-failure-rules). Canonical state and gates are owned by [Kernel Reference](kernel.md), artifact relation storage is owned by [Storage And DDL](storage-and-ddl.md), and public projection refs are owned by [API Schema Core](api/schema-core.md#projectionkind-support). The diagram summarizes authority direction only and does not imply a projection system is implemented in this repository today.
+Strict projection behavior is owned by this reference, especially the [Document authority matrix](#document-authority-matrix), [Managed block rules](#managed-block-rules), and [Freshness and failure rules](#freshness-and-failure-rules). Canonical state and gates are owned by [Core Model Reference](core-model.md), artifact relation storage is owned by [Storage](storage.md), and public projection refs are owned by [API Schema Core](api/schema-core.md#projectionkind-support). The diagram summarizes authority direction only and does not imply a projection system is implemented in this repository today.
 
 Generated reports should make this visible without requiring the reader to know this reference first. In examples and templates, `source_state_version` names the state clock used for the render, `projection_version` or projection status names the rendered view, `updated_at` names when the view was produced, and freshness lines say whether the view still matches its source records. None of those fields make Markdown the owner of Task state, gates, approvals, evidence, verification, Manual QA, user judgments, work acceptance, residual-risk visibility, and residual-risk acceptance.
 
@@ -165,9 +165,9 @@ This document owns:
 
 This document does not own:
 
-- canonical kernel state and transition rules; see [Kernel Reference](kernel.md)
+- canonical kernel state and transition rules; see [Core Model Reference](core-model.md)
 - public MCP request/response schemas; see [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md)
-- SQLite DDL and storage layout; see [Storage And DDL](storage-and-ddl.md)
+- SQLite DDL and storage layout; see [Storage](storage.md)
 - design-quality policy contracts; see [Design Quality Policies](design-quality-policies.md)
 - operator command semantics; see [Operations And Conformance Reference](operations-and-conformance.md)
 - conformance fixture assertion semantics; see [Conformance Fixtures Reference](conformance-fixtures.md#fixture-assertion-semantics)

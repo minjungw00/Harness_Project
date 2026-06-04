@@ -20,7 +20,7 @@ This document does not define MCP schemas, SQLite DDL, state transition tables, 
 
 ## Before you read
 
-Use [Kernel Reference](kernel.md) for lifecycle, gates, and close semantics; [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md) for public request/response shapes and `ValidatorResult`; and [Conformance Fixtures Reference](conformance-fixtures.md#fixture-assertion-semantics) for fixture assertion semantics.
+Use [Core Model Reference](core-model.md) for lifecycle, gates, and close semantics; [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md) for public request/response shapes and `ValidatorResult`; and [Conformance Fixtures Reference](conformance-fixtures.md#fixture-assertion-semantics) for fixture assertion semantics.
 
 ## Main idea
 
@@ -61,11 +61,11 @@ This document owns:
 
 This document does not own:
 
-- kernel lifecycle transitions; see [Kernel Reference](kernel.md)
-- gate enum definitions; see [Kernel Reference](kernel.md) and [API Schema Core](api/schema-core.md)
+- kernel lifecycle transitions; see [Core Model Reference](core-model.md)
+- gate enum definitions; see [Core Model Reference](core-model.md) and [API Schema Core](api/schema-core.md)
 - public MCP request/response schemas; see [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md)
-- SQLite DDL or storage layout; see [Storage And DDL](storage-and-ddl.md)
-- projection template bodies; see [Document Projection Reference](document-projection.md) and [Template Reference](templates/README.md)
+- SQLite DDL or storage layout; see [Storage](storage.md)
+- projection template bodies; see [Projection And Templates Reference](projection-and-templates.md) and [Template Reference](templates/README.md)
 - operator command semantics; see [Operations And Conformance Reference](operations-and-conformance.md)
 - connector capability profiles; see [Agent Integration Reference](agent-integration.md)
 - surface recipes; see [Surface Cookbook](surface-cookbook.md)
@@ -83,7 +83,7 @@ Policy waivers are also limited. They can satisfy a design-quality requirement o
 
 ### Close-support boundaries
 
-Design-quality policies may create findings, evidence needs, QA requirements, verification needs, residual-risk candidates, user judgment needs, or close blockers, but each category stays on its owner path. The exact non-substitution contract for evidence, verification, Manual QA, work acceptance, and residual risk is owned by [Kernel Reference: Evidence, verification, QA, work acceptance, and risk](kernel.md#evidence-verification-qa-work-acceptance-and-risk).
+Design-quality policies may create findings, evidence needs, QA requirements, verification needs, residual-risk candidates, user judgment needs, or close blockers, but each category stays on its owner path. The exact non-substitution contract for evidence, verification, Manual QA, work acceptance, and residual risk is owned by [Core Model Reference: Evidence, verification, QA, work acceptance, and risk](core-model.md#evidence-verification-qa-work-acceptance-and-risk).
 
 For policy authors, the local rule is simple: route the finding to the existing owner record or blocker, then link the kernel rule when the reader needs the precise close-support boundary. Passing tests, a QA waiver, work acceptance, and residual-risk acceptance may affect policy outcomes only through their owner paths; policy prose must not treat one as a substitute for another.
 

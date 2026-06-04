@@ -1,14 +1,14 @@
-# Future Fixture Catalog
+# Later: Future Fixtures
 
 ## What this document helps you do
 
-Use this appendix to review the future fixture catalog separately from the small core conformance model. It collects detailed candidate scenarios for browser QA, cross-surface behavior, export non-leakage, context hygiene, reconcile, stewardship, operations, advanced projection rendering, and future guarantee-level checks.
+Use this page to review future fixture candidates separately from the small core conformance model and the MVP implementation path. It collects detailed candidate scenarios for browser QA, cross-surface behavior, export non-leakage, context hygiene, reconcile, stewardship, operations, advanced projection rendering, and future guarantee-level checks.
 
 This is future design documentation only. The current repository is documentation-only and contains no runnable Harness Server conformance tests; current phase and handoff status are tracked in [Implementation Overview](../build/implementation-overview.md#documentation-acceptance-status).
 
 ## Catalog Boundary
 
-The core conformance model, exact fixture body, execution rules, assertion semantics, and narrow Engineering Checkpoint Kernel Smoke authoring order stay in [Conformance Fixtures Reference](conformance-fixtures.md). This catalog is deliberately downstream of that model. Catalog rows are not fixture bodies, not public API schemas, not DDL, not stage exits, and not proof that fixtures already run.
+The core conformance model, exact fixture body, execution rules, assertion semantics, and narrow Engineering Checkpoint Kernel Smoke authoring order stay in [Conformance Fixtures Reference](../reference/conformance-fixtures.md). This catalog is deliberately downstream of that model. Catalog rows are not fixture bodies, not public API schemas, not DDL, not stage exits, and not proof that fixtures already run.
 
 Future catalog scenarios become executable only after an owner promotes the behavior, identifies the delivery stage or local suite, and materializes exact-shape fixtures that prove Core-owned state and artifact assertions. Projection output may be checked for freshness, readability, and availability, but it must not replace Core state or become conformance truth.
 
@@ -76,7 +76,7 @@ flowchart LR
 
 ### Catalog-Only Fixture Skeleton Guidance
 
-The guidance below is for turning catalog families into exact-shape fixtures. It is catalog-only skeleton guidance, not an executable fixture body, public request schema, DDL extension, or runner design. Delivery-stage mapping belongs in suite catalog metadata, not in the fixture body. "Minimum seeded records" means owner records placed in `initial_state` after expansion and validation by the Storage And DDL rules; public mutations still use the exact MCP request payload under `input`.
+The guidance below is for turning catalog families into exact-shape fixtures. It is catalog-only skeleton guidance, not an executable fixture body, public request schema, DDL extension, or runner design. Delivery-stage mapping belongs in suite catalog metadata, not in the fixture body. "Minimum seeded records" means owner records placed in `initial_state` after expansion and validation by the Storage rules; public mutations still use the exact MCP request payload under `input`.
 
 ### Later-Profile Fixture Shorthand Notes
 
@@ -664,11 +664,11 @@ expected_error:
 
 ## Core Fixture Examples
 
-The examples below are future exact-shape examples for Core behavior broadly. They may exceed the minimal Engineering Checkpoint Kernel Smoke subset; use the [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue) and Build scope when deciding what the first Engineering Checkpoint must prove.
+The examples below are future exact-shape examples for Core behavior broadly. They may exceed the minimal Engineering Checkpoint Kernel Smoke subset; use the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) and Build scope when deciding what the first Engineering Checkpoint must prove.
 
 `prepare_write` allowed examples expect the Task to move from `ready` to `executing` because the kernel transition table owns and defines that transition.
 
-Sensitive-action approval coverage should be materialized as separate exact-shape fixtures or as suite catalog sequencing, not by adding fixture body fields. Minimum MVP-1 fixtures assert the sensitive-action approval user judgment route from [Kernel `prepare_write` State Logic](kernel.md#prepare_write) and [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write). Later Approval-profile fixtures may additionally assert [APR Template source records](templates/later-profile/approval.md#source-records). Do not redefine the lifecycle inside fixture bodies.
+Sensitive-action approval coverage should be materialized as separate exact-shape fixtures or as suite catalog sequencing, not by adding fixture body fields. Minimum MVP-1 fixtures assert the sensitive-action approval user judgment route from [Kernel `prepare_write` State Logic](../reference/core-model.md#prepare_write) and [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write). Later Approval-profile fixtures may additionally assert [APR Template source records](../reference/templates/later-profile/approval.md#source-records). Do not redefine the lifecycle inside fixture bodies.
 
 Fixture authors should keep these observable assertions:
 
@@ -2504,7 +2504,7 @@ Assurance Profile / Operations Profile staged Manual QA coverage remains the exi
 
 ## Fixture Suites
 
-Future suite families group under the fixture profiles in [Conformance Fixtures Reference](conformance-fixtures.md#fixture-profiles-by-proven-behavior). The `core` family below is broader than the Engineering Checkpoint smoke subset; Engineering Checkpoint uses only the minimal authority-loop checks called out in Build and the Kernel Smoke queue.
+Future suite families group under the fixture profiles in [Conformance Fixtures Reference](../reference/conformance-fixtures.md#fixture-profiles-by-proven-behavior). The `core` family below is broader than the Engineering Checkpoint smoke subset; Engineering Checkpoint uses only the minimal authority-loop checks called out in Build and the Kernel Smoke queue.
 
 - core: active status, advisor close, direct close including tiny direct as a Direct profile, write gate, Write Authorization creation/required/invalid coverage, sensitive-action permission required, later Approval lifecycle retry when that owner profile is active, evidence insufficient, artifact integrity effects on evidence/close readiness, same-session verification guard, QA required, acceptance required, residual-risk visibility before acceptance or close, projection failure separation, current-state versus stale-projection distinction, stale projection write guard
 - connector: natural-language intake without a startup phrase, plain-language routing to Harness records, capability profile, connector profile freshness, stale capability profile detection, surface capability mismatch, local security posture severity for doctor/connect/serve-mcp/artifact checks, MCP unavailable hold, generated/managed manifest drift, changed-path detection, artifact capture, manual artifact capture fallback when native capture is unavailable, fallback guarantee display that does not upgrade cooperative, detective, or manual fallback behavior to preventive or isolated, compact current-position context before significant resume, user judgment not broad approval, Autonomy Boundary breach routing, stale chat or PRD context pull-only behavior

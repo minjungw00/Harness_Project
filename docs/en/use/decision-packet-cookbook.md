@@ -263,11 +263,11 @@ Use these Reference owners when exact behavior is needed:
 
 | Need | Owner |
 |---|---|
-| Internal user judgment behavior and gate aggregation | [User Judgment](../reference/kernel.md#user-judgment), [Decision Gate](../reference/kernel.md#decision-gate) |
+| Internal user judgment behavior and gate aggregation | [User Judgment](../reference/core-model.md#user-judgment), [Decision Gate](../reference/core-model.md#decision-gate) |
 | Public request and answer shapes | [`harness.request_user_judgment`](../reference/api/mvp-api.md#harnessrequest_user_judgment), [`harness.record_user_judgment`](../reference/api/mvp-api.md#harnessrecord_user_judgment) |
-| Sensitive-action Approval | [Approval](../reference/kernel.md#approval) |
-| Evidence sufficiency | [Evidence Gate](../reference/kernel.md#evidence-gate) |
-| Verification and verification waiver impact | [Verification Gate](../reference/kernel.md#verification-gate) |
-| Manual QA and QA waiver impact | [QA Gate](../reference/kernel.md#qa-gate) |
-| Work acceptance and residual-risk visibility | [Acceptance Gate](../reference/kernel.md#acceptance-gate), [Residual Risk](../reference/kernel.md#residual-risk) |
-| Close blockers and close reasons | [`close_task`](../reference/kernel.md#close_task) |
+| Sensitive-action Approval | [Approval](../reference/core-model.md#approval) |
+| Evidence sufficiency | [Evidence Gate](../reference/core-model.md#evidence-gate) |
+| Verification and verification waiver impact | [Verification Gate](../reference/core-model.md#verification-gate) |
+| Manual QA and QA waiver impact | [QA Gate](../reference/core-model.md#qa-gate) |
+| Work acceptance and residual-risk visibility | [Acceptance Gate](../reference/core-model.md#acceptance-gate), [Residual Risk](../reference/core-model.md#residual-risk) |
+| Close blockers and close reasons | [`close_task`](../reference/core-model.md#close_task) |

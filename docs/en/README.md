@@ -30,16 +30,15 @@ This path is intentionally small. First-time readers do not need to read large R
 
 | Reader | Start here | Then use |
 |---|---|---|
-| First-time reader | [Overview](learn/overview.md) | [User Guide](use/user-guide.md); [Harness in 15 Minutes](learn/harness-in-15-minutes.md) for quick authority-boundary scenarios; [Concepts](learn/concepts.md) only when terms need names. |
-| User | [User Guide](use/user-guide.md) | [Harness in One Task](learn/harness-in-one-task.md) for a full work story; [user-owned judgment examples](use/decision-packet-cookbook.md) for complex choices. |
-| Agent behavior/integration author | [Agent Session Flow](use/agent-session-flow.md) | [Agent Integration Reference](reference/agent-integration.md), [Surface Cookbook](reference/surface-cookbook.md), and the specific API owner when exact fields are needed. |
-| Implementer | [Implementation Overview](build/implementation-overview.md) | [MVP Plan](build/mvp-plan.md), [First Runnable Slice](build/first-runnable-slice.md), [Runtime Walkthrough](build/runtime-walkthrough.md), then the strict first owner docs: [Kernel](reference/kernel.md), [MVP API](reference/api/mvp-api.md), [API Schema Core](reference/api/schema-core.md), and [Storage/DDL](reference/storage-and-ddl.md). |
-| Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md), [Rewrite Plan](maintain/rewrite-plan.md), [Roadmap](roadmap.md), and Reference owners only when checking strict meaning. |
-| Future/reference reader | [Reference Index](reference/README.md) | Open only the owner doc for the contract you need. Use [Roadmap](roadmap.md), [Future Fixture Catalog](reference/future-fixture-catalog.md), and future/diagnostic projection docs as separated advanced material, not MVP implementation input unless an owner promotes them. |
+| General user | [Overview](learn/overview.md) | [User Guide](use/user-guide.md); [One Task](learn/one-task.md) for a full work story; [Concepts](learn/concepts.md) only when terms need names. |
+| Agent instruction writer | [Agent Guide](use/agent-guide.md) | [Agent Integration Reference](reference/agent-integration.md), [Surface Cookbook](reference/surface-cookbook.md), and the specific API owner only when exact fields are needed. |
+| Server implementer | [Implementation Overview](build/implementation-overview.md) | [MVP-1 User Work Loop](build/mvp-user-work-loop.md) -> [MVP API](reference/api/mvp-api.md) -> [Storage](reference/storage.md). Use [Engineering Checkpoint](build/engineering-checkpoint.md) for the first internal smoke and [Runtime Walkthrough](build/runtime-walkthrough.md) for the request-to-close path. |
+| Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md), [Rewrite Plan](maintain/rewrite-plan.md), and Reference owners only when checking strict meaning. |
+| Later/profile reader | [Assurance Profile](later/assurance-profile.md) | [Operations Profile](later/operations-profile.md), [Future Fixtures](later/future-fixtures.md), and [Roadmap](roadmap.md). These are outside the MVP path unless an owner promotes them. |
 
 ## Document Roles
 
-Learn, Use, Build, Reference, and Maintain do different jobs:
+Learn, Use, Build, Reference, Later, and Maintain do different jobs:
 
 | Family | Role |
 |---|---|
@@ -47,6 +46,7 @@ Learn, Use, Build, Reference, and Maintain do different jobs:
 | Use | How users and agents should interact during Harness-assisted work. |
 | Build | Future implementation sequence, stage boundaries, and maintainer handoff. |
 | Reference | Exact owner contracts: schemas, DDL, gates, state transitions, projection rules, security meanings, conformance semantics, templates, and terminology. |
+| Later | Later assurance, operations, future fixture, and roadmap material kept out of the MVP implementation path. |
 | Maintain | Documentation rules, redesign scope, parity expectations, and drift handling. |
 
 ## Learn
@@ -59,29 +59,29 @@ Use Learn when you want the authority-boundary mental model before exact contrac
 | [Purpose and Principles](learn/purpose-and-principles.md) | Values, non-goals, failure model, work shapes, and MVP boundary. Use it to check whether wording or scope still matches the thesis. |
 | [Concepts](learn/concepts.md) | Vocabulary bridge from ordinary user language to optional/internal implementation labels. |
 | [Harness in 15 Minutes](learn/harness-in-15-minutes.md) | Short scenario sampler for advice/read-only work, small direct change, tracked work, and non-substitution rules. |
-| [Harness in One Task](learn/harness-in-one-task.md) | Fuller tutorial walkthrough showing the three work shapes inside one task story. |
+| [One Task](learn/one-task.md) | Fuller tutorial walkthrough showing the three work shapes inside one task story. |
 
 ## Use
 
 Use this path when you want to run or describe an AI-assisted development session under Harness.
 
 - [User Guide](use/user-guide.md) is the primary user entry.
-- [Agent Session Flow](use/agent-session-flow.md) is agent/integration behavior guidance.
+- [Agent Guide](use/agent-guide.md) is agent/integration behavior guidance.
 - [User-owned judgment examples](use/decision-packet-cookbook.md) are advanced usage and reference-adjacent decision example material.
 
 ## Build
 
 Use Build for implementation orientation and planning review. Until [Documentation Acceptance Status](build/implementation-overview.md#documentation-acceptance-status) explicitly accepts implementation planning readiness, Build pages remain planning guidance and do not authorize runtime/server implementation.
 
-Read Build in this order:
+Server implementer fast path:
 
-1. [Implementation Overview](build/implementation-overview.md) for current status, maintainer handoff, and the future system shape.
-2. [MVP Plan](build/mvp-plan.md) for Engineering Checkpoint through Operations Profile stage plan and server-coding decision log.
-3. [First Runnable Slice](build/first-runnable-slice.md) for the Engineering Checkpoint implementation sequence.
-4. [Runtime Walkthrough](build/runtime-walkthrough.md) for the request-to-close runtime path.
-5. [Kernel Reference](reference/kernel.md) for Core authority, gates, write authority, and close semantics.
-6. [MVP API](reference/api/mvp-api.md) for active MVP-1 public tools, [API Schema Core](reference/api/schema-core.md) for shared resources/envelopes/schemas, and [API Errors](reference/api/errors.md) for errors.
-7. [Storage And DDL](reference/storage-and-ddl.md) for persisted runtime layout, state tables, locks, artifacts, and migrations.
+1. [Implementation Overview](build/implementation-overview.md) for current status, maintainer handoff, and the future repository role.
+2. [MVP-1 User Work Loop](build/mvp-user-work-loop.md) for the first user-value implementation contract and server-coding decision log.
+3. [MVP API](reference/api/mvp-api.md) for active MVP-1 public tools.
+4. [API Schema Core](reference/api/schema-core.md) and [API Errors](reference/api/errors.md) for shared envelopes, refs, resources, errors, idempotency, and state conflicts.
+5. [Storage](reference/storage.md) for persisted runtime layout, state tables, locks, artifacts, and migrations.
+
+[Engineering Checkpoint](build/engineering-checkpoint.md) is the first internal authority-loop smoke and should be read when planning the first runnable slice. [Runtime Walkthrough](build/runtime-walkthrough.md) and [Core Model Reference](reference/core-model.md) help once the implementer needs exact request-to-close behavior.
 
 Keep future/diagnostic material outside the MVP implementation path unless a Build or Reference owner explicitly promotes it for the stage being planned.
 
@@ -91,17 +91,27 @@ Use Reference to look up exact contracts. Do not read the whole Reference set by
 
 | Need | Owner |
 |---|---|
-| Core authority, entities, gates, state transitions, write authority, and close semantics | [Kernel Reference](reference/kernel.md) |
-| Public MCP tools, envelopes, schemas, errors, idempotency, state conflict behavior, shared refs, and validator result schema | [MVP API](reference/api/mvp-api.md), [API Schema Core](reference/api/schema-core.md), [API Errors](reference/api/errors.md), [API Schema Later](reference/api/schema-later.md) |
-| Runtime layout, DDL profiles, storage JSON, locks, artifacts, migrations, baselines, projection job storage, and validator storage | [Storage And DDL](reference/storage-and-ddl.md) |
-| Readable views, projection freshness, managed blocks, and template bodies | [Document Projection Reference](reference/document-projection.md) and [Template Reference](reference/templates/README.md) |
-| Trust boundaries, assets, threat categories, controls, and guarantee-level wording | [Security Threat Model Reference](reference/security-threat-model.md) |
+| Core authority, entities, gates, state transitions, write authority, and close semantics | [Core Model Reference](reference/core-model.md) |
+| MVP public tools, envelopes, schemas, errors, idempotency, state conflict behavior, shared refs, and validator result schema | [MVP API](reference/api/mvp-api.md), [API Schema Core](reference/api/schema-core.md), [API Errors](reference/api/errors.md) |
+| Later/profile-gated API methods and future schema material | [API Schema Later](reference/api/schema-later.md) and [Assurance Profile](later/assurance-profile.md) |
+| Runtime layout, DDL profiles, storage JSON, locks, artifacts, migrations, baselines, projection job storage, and validator storage | [Storage](reference/storage.md) |
+| Readable views, projection freshness, managed blocks, and template bodies | [Projection And Templates Reference](reference/projection-and-templates.md) and [Template Reference](reference/templates/README.md) |
+| Trust boundaries, assets, threat categories, controls, and guarantee-level wording | [Security Reference](reference/security.md) |
 | Operator behavior, diagnostics, recover/reconcile/export/artifact checks, and conformance run entrypoint | [Operations And Conformance Reference](reference/operations-and-conformance.md) |
-| Fixture model, fixture body, runner/assertion semantics, Kernel Smoke queue, and later scenario inventory | [Conformance Fixtures Reference](reference/conformance-fixtures.md) and [Future Fixture Catalog](reference/future-fixture-catalog.md) |
+| Fixture model, fixture body, runner/assertion semantics, Kernel Smoke queue, and later scenario inventory | [Conformance Fixtures Reference](reference/conformance-fixtures.md) and [Future Fixtures](later/future-fixtures.md) |
 | Connector profiles, context push/pull, fallback behavior, surface recipes, and user-facing integration patterns | [Agent Integration Reference](reference/agent-integration.md) and [Surface Cookbook](reference/surface-cookbook.md) |
 | Design-quality policies, validator IDs, severity composition, waiver semantics, and policy close impact | [Design Quality Policies](reference/design-quality-policies.md) |
 | Public/internal terminology and owner routing | [Glossary Reference](reference/glossary.md) |
 | Runtime spaces, Core transaction placement, architecture flow, artifacts, projection/reconcile placement, and recovery overview | [Runtime Architecture Reference](reference/runtime-architecture.md) |
+
+## Later
+
+Use Later docs for material that must stay out of the MVP implementation path unless an owner promotes it.
+
+- [Assurance Profile](later/assurance-profile.md)
+- [Operations Profile](later/operations-profile.md)
+- [Future Fixtures](later/future-fixtures.md)
+- [Roadmap](roadmap.md)
 
 ## Maintain
 
@@ -120,7 +130,7 @@ The current status separates documentation review, implementation planning readi
 | Documentation review status | Post-redesign review; documentation acceptance candidate only. Maintainers have not accepted the docs yet. |
 | Implementation planning readiness | Not accepted. Maintainers must confirm the implementation-readiness criteria before first runtime-batch planning. |
 | Runtime implementation status | Not started. No runtime artifacts or conformance results exist here yet. |
-| Implementation decision status | Open server-coding decision-ledger items are recorded in the [MVP Plan](build/mvp-plan.md#implementation-decisions-needed-before-server-coding). No server/runtime implementation decision has been formally accepted for coding. Affected implementation work must wait until the relevant decision is accepted or explicitly deferred with stage impact. |
+| Implementation decision status | Open server-coding decision-ledger items are recorded in the [MVP-1 User Work Loop](build/mvp-user-work-loop.md#implementation-decisions-needed-before-server-coding). No server/runtime implementation decision has been formally accepted for coding. Affected implementation work must wait until the relevant decision is accepted or explicitly deferred with stage impact. |
 
 Documentation acceptance, when it happens, is a maintainer review milestone. It does not by itself start runtime/server implementation or prove runtime conformance.
 
@@ -131,9 +141,9 @@ Before starting Harness Server code, implementers should read:
 1. [Maintainer handoff summary](build/implementation-overview.md#maintainer-handoff-summary).
 2. [Documentation acceptance status](build/implementation-overview.md#documentation-acceptance-status).
 3. [Implementation-readiness criteria](build/implementation-overview.md#implementation-readiness-criteria).
-4. [Implementation decisions needed before server coding](build/mvp-plan.md#implementation-decisions-needed-before-server-coding).
+4. [Implementation decisions needed before server coding](build/mvp-user-work-loop.md#implementation-decisions-needed-before-server-coding).
 
-This handoff says the documentation is available for maintainer acceptance review as a candidate. It also separates documentation acceptance status in the Implementation Overview from the open server-coding decision ledger in the MVP Plan. No server/runtime implementation decisions have been formally accepted for coding yet, and affected implementation work must wait until the relevant decision is accepted or explicitly deferred with stage impact. The handoff does not claim the docs have been accepted, it does not make the docs implementation-ready, and it does not start server/runtime implementation.
+This handoff says the documentation is available for maintainer acceptance review as a candidate. It also separates documentation acceptance status in the Implementation Overview from the open server-coding decision ledger in the MVP-1 User Work Loop. No server/runtime implementation decisions have been formally accepted for coding yet, and affected implementation work must wait until the relevant decision is accepted or explicitly deferred with stage impact. The handoff does not claim the docs have been accepted, it does not make the docs implementation-ready, and it does not start server/runtime implementation.
 
 ## Where Am I?
 
@@ -167,7 +177,7 @@ Harness is not the same kind of thing as agent instructions, MCP, reusable workf
 
 Reader paths are not prompt-loading bundles. Connected agents should keep always-on context to one screen or less: current Task summary, work shape, scope/non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, residual-risk summary, guarantee level, and source refs/freshness.
 
-Use owner sections by phase and pull only what explains the next action. The detailed phase profile map lives in [Agent Integration Reference: Context Push/Pull Principles](reference/agent-integration.md#context-pushpull-principles), with user-facing behavior summarized in [Agent Session Flow](use/agent-session-flow.md).
+Use owner sections by phase and pull only what explains the next action. The detailed phase profile map lives in [Agent Integration Reference: Context Push/Pull Principles](reference/agent-integration.md#context-pushpull-principles), with user-facing behavior summarized in [Agent Guide](use/agent-guide.md).
 
 ## Roadmap
 

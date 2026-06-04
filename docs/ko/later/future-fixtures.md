@@ -1,14 +1,14 @@
-# 향후 Fixture Catalog
+# 이후: 향후 Fixtures
 
 ## 이 문서로 할 수 있는 일
 
-작은 핵심 적합성 모델과 분리해서 향후 fixture catalog를 검토할 때 이 appendix를 사용합니다. Browser QA, cross-surface behavior, export non-leakage, context hygiene, reconcile, stewardship, operations, advanced projection rendering, future guarantee-level check를 위한 detailed candidate scenario를 모아 둡니다.
+작은 핵심 적합성 모델과 MVP 구현 경로에서 분리해서 향후 fixture 후보를 검토할 때 이 문서를 사용합니다. Browser QA, cross-surface behavior, export non-leakage, context hygiene, reconcile, stewardship, operations, advanced projection rendering, future guarantee-level check를 위한 detailed candidate scenario를 모아 둡니다.
 
 이 문서는 향후 설계 문서입니다. 현재 저장소는 문서 전용이며 runnable Harness Server conformance test를 담고 있지 않습니다. 현재 단계와 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-수락-상태)에 있습니다.
 
 ## Catalog 경계
 
-핵심 적합성 모델, 정확한 fixture body, execution rule, assertion semantics, 좁은 내부 엔지니어링 점검 Kernel Smoke 작성 순서는 [Conformance Fixtures 참조](conformance-fixtures.md)에 남습니다. 이 catalog는 의도적으로 그 모델의 downstream입니다. Catalog row는 fixture body, public API schema, DDL, stage exit, 이미 실행되는 fixture의 증거가 아닙니다.
+핵심 적합성 모델, 정확한 fixture body, execution rule, assertion semantics, 좁은 내부 엔지니어링 점검 Kernel Smoke 작성 순서는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md)에 남습니다. 이 catalog는 의도적으로 그 모델의 downstream입니다. Catalog row는 fixture body, public API schema, DDL, stage exit, 이미 실행되는 fixture의 증거가 아닙니다.
 
 향후 catalog scenario는 담당 문서가 동작을 승격하고, delivery stage 또는 local suite를 식별하고, Core-owned state와 artifact assertion을 증명하는 exact-shape fixture로 구체화한 뒤에만 executable이 됩니다. Projection output은 freshness, readability, availability를 확인할 수 있지만 Core state를 대체하거나 conformance truth가 되면 안 됩니다.
 
@@ -76,7 +76,7 @@ flowchart LR
 
 ### Catalog-Only Fixture Skeleton Guidance
 
-아래 지침은 catalog family를 exact-shape fixture로 옮길 때 쓰는 skeleton guidance입니다. 이것은 catalog-only guidance이며 executable fixture body, public request schema, DDL extension, runner design이 아닙니다. Delivery-stage mapping은 suite catalog metadata에 두며 fixture body에 넣지 않습니다. "Minimum seeded records"는 Storage And DDL 규칙으로 expansion 및 validation을 거친 뒤 `initial_state`에 들어가는 owner record를 뜻합니다. Public mutation은 계속 정확한 MCP request payload를 `input`으로 사용합니다.
+아래 지침은 catalog family를 exact-shape fixture로 옮길 때 쓰는 skeleton guidance입니다. 이것은 catalog-only guidance이며 executable fixture body, public request schema, DDL extension, runner design이 아닙니다. Delivery-stage mapping은 suite catalog metadata에 두며 fixture body에 넣지 않습니다. "Minimum seeded records"는 Storage 규칙으로 expansion 및 validation을 거친 뒤 `initial_state`에 들어가는 owner record를 뜻합니다. Public mutation은 계속 정확한 MCP request payload를 `input`으로 사용합니다.
 
 ### Later-Profile Fixture Shorthand Notes
 
@@ -664,11 +664,11 @@ expected_error:
 
 ## Core Fixture 예시
 
-아래 예시는 Core behavior 전반을 위한 향후 exact-shape 예시입니다. Minimal 내부 엔지니어링 점검 Kernel Smoke subset을 넘을 수 있으므로, 첫 내부 엔지니어링 점검이 무엇을 증명해야 하는지는 [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)와 Build scope를 기준으로 판단합니다.
+아래 예시는 Core behavior 전반을 위한 향후 exact-shape 예시입니다. Minimal 내부 엔지니어링 점검 Kernel Smoke subset을 넘을 수 있으므로, 첫 내부 엔지니어링 점검이 무엇을 증명해야 하는지는 [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue)와 Build scope를 기준으로 판단합니다.
 
 `prepare_write` allowed 예시는 Task가 `ready`에서 `executing`으로 이동한다고 기대합니다. 이 transition은 kernel transition table이 소유하고 정의합니다.
 
-민감 동작 approval coverage는 fixture body field를 추가하지 말고 별도의 exact-shape fixture 또는 suite catalog sequencing으로 구체화해야 합니다. Minimum MVP-1 fixture는 [Kernel `prepare_write` State Logic](kernel.md#prepare_write)과 [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write)의 민감 동작 승인 user judgment route를 검증합니다. Later Approval-profile fixture는 [APR Template 기준 기록](templates/later-profile/approval.md#기준-기록)도 추가로 검증할 수 있습니다. Lifecycle을 fixture body 안에서 다시 정의하지 않습니다.
+민감 동작 approval coverage는 fixture body field를 추가하지 말고 별도의 exact-shape fixture 또는 suite catalog sequencing으로 구체화해야 합니다. Minimum MVP-1 fixture는 [Kernel `prepare_write` State Logic](../reference/core-model.md#prepare_write)과 [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write)의 민감 동작 승인 user judgment route를 검증합니다. Later Approval-profile fixture는 [APR Template 기준 기록](../reference/templates/later-profile/approval.md#기준-기록)도 추가로 검증할 수 있습니다. Lifecycle을 fixture body 안에서 다시 정의하지 않습니다.
 
 Fixture authors는 다음 observable assertions를 유지해야 합니다.
 
@@ -2504,7 +2504,7 @@ expected_error: null
 
 ## Fixture Suites
 
-향후 suite family는 [Conformance Fixtures 참조](conformance-fixtures.md#검증-프로파일별-증명-동작)의 검증 프로파일 아래에 묶습니다. 아래 `core` family는 내부 엔지니어링 점검 smoke subset보다 넓습니다. 내부 엔지니어링 점검은 Build와 Kernel Smoke queue가 지정한 minimal authority-loop check만 사용합니다.
+향후 suite family는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#검증-프로파일별-증명-동작)의 검증 프로파일 아래에 묶습니다. 아래 `core` family는 내부 엔지니어링 점검 smoke subset보다 넓습니다. 내부 엔지니어링 점검은 Build와 Kernel Smoke queue가 지정한 minimal authority-loop check만 사용합니다.
 
 - core: 활성 상태 확인, advisor close 처리, tiny direct를 Direct profile로 포함하는 direct close 처리, 쓰기 gate, Write Authorization 생성, 필수 조건, invalid case coverage, 민감 동작 permission 필요 조건, 해당 owner profile이 active일 때 later Approval lifecycle retry, 근거 부족 처리, evidence/close readiness에 대한 artifact integrity 영향, same-session verification guard 확인, QA 필요 조건 처리, 작업 수락 필요 조건 처리, acceptance 또는 close 전 잔여 위험 표시, projection failure 분리 확인, current-state와 stale-projection 구분, stale projection write guard
 - connector: startup phrase 없는 자연어 intake, plain-language 요청을 Harness record로 라우팅, capability profile, connector profile 최신성, 오래된 capability profile 감지, surface capability mismatch, doctor/connect/serve-mcp/artifact check의 local security posture severity, MCP unavailable 보류, generated/managed manifest drift 감지, 변경 경로 감지, artifact 수집, native capture가 없을 때 수동 artifact capture fallback, cooperative/detective/manual fallback 동작을 preventive 또는 isolated로 상향 표시하지 않는 fallback 보장 수준 표시, 중요한 재개 전 간결한 현재 위치 맥락 표시, user judgment를 포괄 동의처럼 다루지 않음, Autonomy Boundary 초과를 user judgment 또는 blocker로 라우팅, stale chat 또는 PRD context의 pull-only 동작

@@ -1,4 +1,4 @@
-# Storage와 DDL
+# Storage
 
 ## 이 문서가 담당하는 것
 
@@ -10,8 +10,8 @@
 이 문서는 MVP-1에 필요한 최소 저장 모델, Runtime Home identity, SQLite schema
 sketch, storage-owned JSON `TEXT` 규칙, enum hardening, artifact/evidence 참조
 저장, persisted record와 파생된 상태 보기의 경계를 담당합니다. Stage 순서와 exit
-criteria는 [Build: MVP 계획](../build/mvp-plan.md)과
-[첫 실행 가능한 조각](../build/first-runnable-slice.md)을 봅니다.
+criteria는 [Build: MVP-1 사용자 작업 루프 계획](../build/mvp-user-work-loop.md)과
+[내부 엔지니어링 점검](../build/engineering-checkpoint.md)을 봅니다.
 
 ## 이런 때 읽기
 
@@ -27,12 +27,12 @@ criteria는 [Build: MVP 계획](../build/mvp-plan.md)과
 |---|---|
 | Public MCP request/response shape | [MVP API](api/mvp-api.md)와 [API Schema Core](api/schema-core.md) |
 | `ArtifactRef`, staged active ref kind, idempotency, state conflict behavior | [API Schema Core](api/schema-core.md#artifactref), [API Schema Core: Stage-Specific Active Value Sets](api/schema-core.md#stage-specific-active-value-sets), [API Errors](api/errors.md) |
-| Task lifecycle, gate, `prepare_write`, `record_run`, `close_task`, stable event | [커널 참조](kernel.md) |
+| Task lifecycle, gate, `prepare_write`, `record_run`, `close_task`, stable event | [Core Model 참조](core-model.md) |
 | Core process model, transaction order, lock, projection/reconcile placement | [런타임 아키텍처 참조](runtime-architecture.md) |
-| Projection authority, freshness, managed block, rendered template | [문서 Projection 참조](document-projection.md)와 [Template 참조](templates/README.md) |
+| Projection authority, freshness, managed block, rendered template | [Projection과 Template 참조](projection-and-templates.md)와 [Template 참조](templates/README.md) |
 | Operator behavior, doctor/recover/export/reconcile/conformance entrypoint | [운영과 Conformance 참조](operations-and-conformance.md) |
 | Fixture format과 assertion semantics | [Conformance Fixtures 참조](conformance-fixtures.md) |
-| Stage sequence와 implementation readiness | [Build: MVP 계획](../build/mvp-plan.md), [구현 개요](../build/implementation-overview.md) |
+| Stage sequence와 implementation readiness | [Build: MVP-1 사용자 작업 루프 계획](../build/mvp-user-work-loop.md), [구현 개요](../build/implementation-overview.md) |
 
 ## MVP-1 저장 목표
 
@@ -505,10 +505,10 @@ Early hardening 대상:
 
 | Field(s) | Owner/value source |
 |---|---|
-| `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result` | [커널 참조](kernel.md) |
+| `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result` | [Core Model 참조](core-model.md) |
 | `change_units.status` | Kernel/Change Unit owner rules |
 | `user_judgments.status`, `judgment_type`, `presentation` | user-judgment API/kernel owners |
-| `write_authorizations.status`, `write_authorizations.decision` | [Kernel `prepare_write`](kernel.md#prepare_write)와 [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) |
+| `write_authorizations.status`, `write_authorizations.decision` | [Kernel `prepare_write`](core-model.md#prepare_write)와 [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) |
 | `runs.kind`, `runs.status` | [`harness.record_run`](api/mvp-api.md#harnessrecord_run)와 storage compatibility notes |
 | `evidence_refs.kind`, `evidence_refs.redaction_state`, `evidence_refs.status` | `ArtifactRef`/evidence owners와 storage compatibility notes |
 | `blockers.status`, `blocked_action`, `blocker_kind` | Kernel/API blocker owners |

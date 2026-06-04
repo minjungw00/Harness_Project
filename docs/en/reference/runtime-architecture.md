@@ -17,7 +17,7 @@ This is reference documentation for future Harness behavior. Current repository 
 
 ## Before you read
 
-Use the [Kernel Reference](kernel.md) for exact state transitions, [API Schema Core](api/schema-core.md) for public tool envelopes, [API Errors](api/errors.md) for replay behavior, [Storage And DDL](storage-and-ddl.md) for storage layout and locks, [Security Threat Model Reference](security-threat-model.md) for security assets, trust boundaries, threats, and controls, and [Operations And Conformance Reference](operations-and-conformance.md) for operator entrypoint semantics.
+Use the [Core Model Reference](core-model.md) for exact state transitions, [API Schema Core](api/schema-core.md) for public tool envelopes, [API Errors](api/errors.md) for replay behavior, [Storage](storage.md) for storage layout and locks, [Security Reference](security.md) for security assets, trust boundaries, threats, and controls, and [Operations And Conformance Reference](operations-and-conformance.md) for operator entrypoint semantics.
 
 ## Main idea
 
@@ -45,13 +45,13 @@ This document owns:
 This document does not own:
 
 - public MCP request/response schemas; see [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md)
-- SQLite DDL; see [Storage And DDL](storage-and-ddl.md)
+- SQLite DDL; see [Storage](storage.md)
 - full CLI command semantics; see [Operations And Conformance Reference](operations-and-conformance.md)
 - conformance fixture format; see [Conformance Fixtures Reference](conformance-fixtures.md)
-- threat-model assets, trust boundaries, threat categories, control categories, and guarantee-level meanings; see [Security Threat Model Reference](security-threat-model.md)
+- threat-model assets, trust boundaries, threat categories, control categories, and guarantee-level meanings; see [Security Reference](security.md)
 - surface-specific connector cookbooks; see [Surface Cookbook](surface-cookbook.md)
 - connector capability profiles; see [Agent Integration Reference](agent-integration.md)
-- kernel transition table; see [Kernel Reference](kernel.md)
+- kernel transition table; see [Core Model Reference](core-model.md)
 - projection template bodies
 
 ## The three spaces, short recap
@@ -87,11 +87,11 @@ This documentation repository maps to the future Harness Server / Installation s
 
 ## Local threat model
 
-Harness is designed as a local authority layer, not as a general operating-system security boundary. Early local Harness does not automatically provide OS permissions, sandbox arbitrary tools, make local files tamper-proof, or turn cooperative agent behavior into preventive security. The full asset map, trust-boundary map, threat categories, and control categories are owned by [Security Threat Model Reference](security-threat-model.md).
+Harness is designed as a local authority layer, not as a general operating-system security boundary. Early local Harness does not automatically provide OS permissions, sandbox arbitrary tools, make local files tamper-proof, or turn cooperative agent behavior into preventive security. The full asset map, trust-boundary map, threat categories, and control categories are owned by [Security Reference](security.md).
 
 The architecture implication is simple: nearby files and callers are separate trust zones. Product files, chat text, generated connector files, operator output, projection Markdown, artifact bytes, external command output, and MCP caller claims can inform Harness, but Core alone commits canonical operational state.
 
-Architecture keeps those boundaries visible by placing Product Repository files and projections as inputs or readable views, MCP and connected surfaces as caller paths into Core, Runtime Home as local control data, the artifact store as untrusted bytes until registration and integrity checks pass, and external tools/network as side-effecting paths bounded by the existing scope, Approval, connector, and operator controls. The full boundary matrix is owned by [Security Threat Model Reference](security-threat-model.md#trust-boundaries).
+Architecture keeps those boundaries visible by placing Product Repository files and projections as inputs or readable views, MCP and connected surfaces as caller paths into Core, Runtime Home as local control data, the artifact store as untrusted bytes until registration and integrity checks pass, and external tools/network as side-effecting paths bounded by the existing scope, Approval, connector, and operator controls. The full boundary matrix is owned by [Security Reference](security.md#trust-boundaries).
 
 Local-only MCP exposure, secret/PII handling, command/path/network allowlists for high-risk work, artifact path validation, stale approval replay, projection tampering, capability overclaiming, and stale context poisoning are threat-model concepts. Their exact API, storage, kernel, connector, and operations contracts remain with the owner documents linked from the threat model.
 
@@ -99,7 +99,7 @@ Local-only MCP exposure, secret/PII handling, command/path/network allowlists fo
 
 At the architecture level, the Engineering Checkpoint baseline and staged-delivery default MCP posture is local-only for a registered project surface. Local-only means the runtime is expected to use a local process, local socket, localhost-loopback, in-process/stdio, process-scoped configuration material, a per-project token or handle, or an equivalent local IPC/control path for the expected local user/profile.
 
-Remote, shared, tunneled, forwarded, non-loopback, cross-user, or cloud/CI relay exposure remains outside the Engineering Checkpoint baseline and staged delivery unless owner docs promote and prove a connector posture. The full asset, trust-boundary, threat, and control model is owned by [Security Threat Model Reference](security-threat-model.md#mcp-local-access-and-caller-boundaries); connector profile reporting stays in [Agent Integration Reference](agent-integration.md#capability-profiles), API validation stays in [API Schema Core](api/schema-core.md#mcp-boundary-and-caller-trust), and operator diagnostics stay in [Operations And Conformance Reference](operations-and-conformance.md#serve-mcp).
+Remote, shared, tunneled, forwarded, non-loopback, cross-user, or cloud/CI relay exposure remains outside the Engineering Checkpoint baseline and staged delivery unless owner docs promote and prove a connector posture. The full asset, trust-boundary, threat, and control model is owned by [Security Reference](security.md#mcp-local-access-and-caller-boundaries); connector profile reporting stays in [Agent Integration Reference](agent-integration.md#capability-profiles), API validation stays in [API Schema Core](api/schema-core.md#mcp-boundary-and-caller-trust), and operator diagnostics stay in [Operations And Conformance Reference](operations-and-conformance.md#serve-mcp).
 
 MCP reachability is not authorization. Public tool calls still rely on Core envelope validation, state-version checks, idempotency, registered project/task/surface compatibility, and the actual connected surface guarantee level.
 
@@ -145,7 +145,7 @@ The MCP server is not a thin wrapper around shell commands. It exposes high-leve
 
 ## Harness Runtime Home
 
-Harness Runtime Home stores local operational authority. The reference location is `~/.harness`, but the exact layout is owned by [Storage And DDL](storage-and-ddl.md).
+Harness Runtime Home stores local operational authority. The reference location is `~/.harness`, but the exact layout is owned by [Storage](storage.md).
 
 Runtime Home contains:
 
@@ -217,7 +217,7 @@ The Assurance Profile and Operations Profile ValidatorResult ID set is API-owned
 
 `feedback_loop_check` reads Feedback Loop support records and related execution evidence; it does not introduce a separate kernel gate. Its consequences flow through `design_gate`, evidence sufficiency, blockers, or display in the same validator placement model as the other design-quality checks.
 
-Core preconditions and mechanical checks such as state/envelope validation, active Task, active Change Unit, changed paths, baseline freshness, approval scope, evidence sufficiency, artifact integrity, verification independence, same-session verification guard, evaluator bundle freshness, and projection freshness may run before or beside these validators. They are not alternate validator IDs unless this section, the MCP API, or [Storage And DDL](storage-and-ddl.md) explicitly promotes them into the stable ValidatorResult-emitting set. Surface capability is intentionally modeled as the `surface_capability_check` capability validator when emitted as a `ValidatorResult`.
+Core preconditions and mechanical checks such as state/envelope validation, active Task, active Change Unit, changed paths, baseline freshness, approval scope, evidence sufficiency, artifact integrity, verification independence, same-session verification guard, evaluator bundle freshness, and projection freshness may run before or beside these validators. They are not alternate validator IDs unless this section, the MCP API, or [Storage](storage.md) explicitly promotes them into the stable ValidatorResult-emitting set. Surface capability is intentionally modeled as the `surface_capability_check` capability validator when emitted as a `ValidatorResult`.
 
 
 Adapters and sidecars translate surface capability into observable facts. They do not create a kernel gate for capability. Capability appears through the `surface_capability_check` validator, `prepare_write` blocked reasons, and guarantee display. The exact capability declaration and refresh triggers for a concrete host/profile are owned by [Agent Integration Reference](agent-integration.md#capability-profiles) and surface-specific paths are named in [Surface Cookbook](surface-cookbook.md).
@@ -255,7 +255,7 @@ An artifact has two parts:
 - the registered artifact ref and artifact state record in `state.sqlite` that name its kind, path, hash, size, redaction state, retention class, and Task-scoped owner relation
 
 
-Core records artifact refs on existing Task-scoped owner records such as runs, evidence manifests, Eval records, Manual QA records, user judgments, and rendered Task-scoped projection refs. In the current Task-scoped artifact model, `artifact_links` to rendered projection refs stay within the artifact's `task_id`; project-level projection jobs may still be tracked by `projection_jobs` metadata where owner docs allow them, but they are not project-scoped artifact links. Export snapshots and components remain artifact files linked back to valid owners or Task-scoped projections. The MCP API, Storage And DDL, Document Projection, and Operations docs own the exact relation rules. Large logs, diffs, screenshots, traces, and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
+Core records artifact refs on existing Task-scoped owner records such as runs, evidence manifests, Eval records, Manual QA records, user judgments, and rendered Task-scoped projection refs. In the current Task-scoped artifact model, `artifact_links` to rendered projection refs stay within the artifact's `task_id`; project-level projection jobs may still be tracked by `projection_jobs` metadata where owner docs allow them, but they are not project-scoped artifact links. Export snapshots and components remain artifact files linked back to valid owners or Task-scoped projections. The MCP API, Storage, Document Projection, and Operations docs own the exact relation rules. Large logs, diffs, screenshots, traces, and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
 
 Raw secrets should not be stored as artifacts. If secret-related evidence is required, Core records a redacted artifact, a secret handle, or an operator note that passed the relevant validator.
 
@@ -303,9 +303,9 @@ Reconcile can merge, reject, convert to note, create a decision, create or updat
 
 ## Guarantee levels
 
-The exact meanings of `cooperative`, `detective`, `preventive`, and `isolated`, plus the staged honest-display rules for those labels, are owned by [Security Threat Model Reference: Honest guarantee display](security-threat-model.md#honest-guarantee-display). This architecture section owns only where the reported label appears in the runtime flow: connector profiles and adapters report it, Core still performs the authority decision, and operator or recovery surfaces use it as display and risk context.
+The exact meanings of `cooperative`, `detective`, `preventive`, and `isolated`, plus the staged honest-display rules for those labels, are owned by [Security Reference: Honest guarantee display](security.md#honest-guarantee-display). This architecture section owns only where the reported label appears in the runtime flow: connector profiles and adapters report it, Core still performs the authority decision, and operator or recovery surfaces use it as display and risk context.
 
-Architecturally, the stage defaults are: Engineering Checkpoint cooperative plus limited detective Core status behavior; MVP-1 cooperative/detective user-visible blockers and status; Assurance Profile cooperative/detective assurance separation for verification, QA, risk, and acceptance; Operations Profile detective operations, recovery, export, and integrity checks; Roadmap preventive or isolated profiles only where a concrete operation or boundary is promoted and proven. The [Security Threat Model stage map](security-threat-model.md#guarantee-levels-by-stage) owns the full table.
+Architecturally, the stage defaults are: Engineering Checkpoint cooperative plus limited detective Core status behavior; MVP-1 cooperative/detective user-visible blockers and status; Assurance Profile cooperative/detective assurance separation for verification, QA, risk, and acceptance; Operations Profile detective operations, recovery, export, and integrity checks; Roadmap preventive or isolated profiles only where a concrete operation or boundary is promoted and proven. The [Security Threat Model stage map](security.md#guarantee-levels-by-stage) owns the full table.
 
 ### Guarantee level behavior map
 
@@ -327,7 +327,7 @@ flowchart TB
   Blocker --> Records
 ```
 
-Preventive labels apply only where the connected profile has fixture-proven coverage for the operation being described. Isolated labels apply only where the connected profile documents and proves the separation boundary being claimed. A fresh evaluator bundle, fresh session, or separate worktree can support verification independence and stale-context control; sandbox, permission layer, locked-down runner, process boundary, or container boundary wording is security-isolation wording only when the profile names and proves that exact mechanism. These labels do not approve work, create Write Authorization, satisfy gates, create evidence, perform verification, accept risk, or close Tasks. Strict `prepare_write` and `record_run` behavior is owned by [Kernel Reference](kernel.md#prepare_write) and [Kernel Reference](kernel.md#record_run). Public response shapes are owned by [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md); error precedence is owned by [API Errors](api/errors.md#primary-error-code-precedence). Concrete profile declarations are owned by [Agent Integration Reference](agent-integration.md#capability-profiles). This diagram is only a control-orientation view.
+Preventive labels apply only where the connected profile has fixture-proven coverage for the operation being described. Isolated labels apply only where the connected profile documents and proves the separation boundary being claimed. A fresh evaluator bundle, fresh session, or separate worktree can support verification independence and stale-context control; sandbox, permission layer, locked-down runner, process boundary, or container boundary wording is security-isolation wording only when the profile names and proves that exact mechanism. These labels do not approve work, create Write Authorization, satisfy gates, create evidence, perform verification, accept risk, or close Tasks. Strict `prepare_write` and `record_run` behavior is owned by [Core Model Reference](core-model.md#prepare_write) and [Core Model Reference](core-model.md#record_run). Public response shapes are owned by [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md); error precedence is owned by [API Errors](api/errors.md#primary-error-code-precedence). Concrete profile declarations are owned by [Agent Integration Reference](agent-integration.md#capability-profiles). This diagram is only a control-orientation view.
 
 
 Guarantee display should name both sides of the boundary: what the connected profile can actually block before execution, and what it can only detect after action. A surface name, product name, recipe name, or friendly mode label is never proof of capability; the declaration must come from the actual host/profile capability profile and its current proof basis. Guard, freeze, and careful-mode labels inherit the connected profile's proven capability; they do not upgrade a cooperative or detective profile into preventive blocking, and they do not create authority tiers.

@@ -185,13 +185,13 @@ This tour intentionally avoids API detail. For exact future contracts, use:
 
 | Need | Owner |
 |---|---|
-| Scope, user-owned judgment, evidence, verification, QA, work acceptance, residual risk, and close rules | [Kernel Reference](../reference/kernel.md) |
+| Scope, user-owned judgment, evidence, verification, QA, work acceptance, residual risk, and close rules | [Core Model Reference](../reference/core-model.md) |
 | Public tool shapes and schema details | [MVP API](../reference/api/mvp-api.md) and [API Schema Core](../reference/api/schema-core.md) |
-| Readable document boundaries and freshness | [Document Projection Reference](../reference/document-projection.md) |
-| User-facing session behavior | [User Guide](../use/user-guide.md) and [Agent Session Flow](../use/agent-session-flow.md) |
+| Readable document boundaries and freshness | [Projection And Templates Reference](../reference/projection-and-templates.md) |
+| User-facing session behavior | [User Guide](../use/user-guide.md) and [Agent Guide](../use/agent-guide.md) |
 
 ## Where To Go Next
 
-- Read [Harness in One Task](harness-in-one-task.md) for a fuller walkthrough.
+- Read [Harness in One Task](one-task.md) for a fuller walkthrough.
 - Read [Concepts](concepts.md) when internal labels start appearing.
 - Read [User Guide](../use/user-guide.md) when you want the user-facing session flow.

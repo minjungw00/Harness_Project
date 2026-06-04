@@ -13,8 +13,8 @@ This document describes future Harness Server behavior for planning and review. 
 | Active MVP-1 tools | [MVP API](mvp-api.md) |
 | Error codes, precedence, idempotency, stale-state behavior | [Errors](errors.md) |
 | Later/profile-gated schemas and methods | [Schema Later](schema-later.md) |
-| Kernel state semantics | [Kernel Reference](../kernel.md) |
-| Storage and DDL | [Storage And DDL](../storage-and-ddl.md) |
+| Kernel state semantics | [Core Model Reference](../core-model.md) |
+| Storage and DDL | [Storage](../storage.md) |
 
 ## Schema notation convention
 
@@ -29,7 +29,7 @@ The YAML-like blocks in these API docs are normative schema notation, not exampl
 - Unlisted fields are rejected outside an explicit extension container.
 - Later/profile-gated enum values and branches are not valid for MVP-1 unless the owning profile is active.
 
-Storage validation is a separate ownership boundary. API payloads and API-shaped stored JSON validate against this API reference first; storage-only JSON `TEXT`, DDL nullability, column defaults, and storage hardening validate against [Storage And DDL](../storage-and-ddl.md).
+Storage validation is a separate ownership boundary. API payloads and API-shaped stored JSON validate against this API reference first; storage-only JSON `TEXT`, DDL nullability, column defaults, and storage hardening validate against [Storage](../storage.md).
 
 ## Stage Profile Manifest
 

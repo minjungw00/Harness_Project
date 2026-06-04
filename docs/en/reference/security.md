@@ -1,4 +1,4 @@
-# Security Threat Model Reference
+# Security Reference
 
 ## What this document helps you do
 
@@ -20,7 +20,7 @@ This is reference documentation for future Harness behavior. Current repository 
 
 Use [Runtime Architecture Reference](runtime-architecture.md) for the runtime spaces, Core process model, transaction ordering, and architecture placement. Use [Agent Integration Reference](agent-integration.md) for connector capability profiles, generated manifests, context push/pull, and fallback display. Use [Operations And Conformance Reference](operations-and-conformance.md) for stage-specific `doctor`, `serve mcp`, artifact checks, recover, and reconcile behavior. Use [Conformance Fixtures Reference](conformance-fixtures.md) for fixture semantics.
 
-Use [API Schema Core](api/schema-core.md) for public tool envelopes and shared shapes, and [API Errors](api/errors.md) for public errors and replay behavior. Use [Storage And DDL](storage-and-ddl.md) for exact storage layout, artifact rows, and DDL. Use [Kernel Reference](kernel.md) for state transitions, gates, Approval, `prepare_write`, Write Authorization, acceptance, residual risk, and close.
+Use [API Schema Core](api/schema-core.md) for public tool envelopes and shared shapes, and [API Errors](api/errors.md) for public errors and replay behavior. Use [Storage](storage.md) for exact storage layout, artifact rows, and DDL. Use [Core Model Reference](core-model.md) for state transitions, gates, Approval, `prepare_write`, Write Authorization, acceptance, residual risk, and close.
 
 This document links to those exact contracts instead of duplicating them.
 
@@ -112,12 +112,12 @@ This document does not own:
 
 - public MCP request/response schemas; see [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md)
 - public error shapes or idempotency/replay contracts; see [API Errors](api/errors.md)
-- SQLite DDL, storage layout, canonical enum hardening, artifact row shape, or exact file layout; see [Storage And DDL](storage-and-ddl.md)
-- kernel state transitions, gates, Approval lifecycle, `prepare_write`, Write Authorization, work acceptance, residual-risk acceptance, or close; see [Kernel Reference](kernel.md)
+- SQLite DDL, storage layout, canonical enum hardening, artifact row shape, or exact file layout; see [Storage](storage.md)
+- kernel state transitions, gates, Approval lifecycle, `prepare_write`, Write Authorization, work acceptance, residual-risk acceptance, or close; see [Core Model Reference](core-model.md)
 - stage-specific operator command semantics, diagnostic severity baselines, or recover/reconcile/export behavior; see [Operations And Conformance Reference](operations-and-conformance.md)
 - fixture assertion semantics; see [Conformance Fixtures Reference](conformance-fixtures.md)
 - connector capability-profile field details, generated-manifest contracts, or surface recipes; see [Agent Integration Reference](agent-integration.md) and [Surface Cookbook](surface-cookbook.md)
-- projection template bodies or managed-block rendering rules; see [Document Projection Reference](document-projection.md)
+- projection template bodies or managed-block rendering rules; see [Projection And Templates Reference](projection-and-templates.md)
 - runtime implementation, generated operational files, executable fixtures, runtime data, or production deployment
 
 ## Baseline assumptions
@@ -132,10 +132,10 @@ Remote or shared MCP exposure remains outside the Engineering Checkpoint baselin
 
 | Asset | Security concern | Boundary |
 |---|---|---|
-| `state.sqlite` | Canonical current operational records can be spoofed, replayed, or corrupted if edited outside Core. | Exact storage layout belongs to [Storage And DDL](storage-and-ddl.md). State-changing meaning must flow through [Kernel Reference](kernel.md) and Core transaction paths. |
+| `state.sqlite` | Canonical current operational records can be spoofed, replayed, or corrupted if edited outside Core. | Exact storage layout belongs to [Storage](storage.md). State-changing meaning must flow through [Core Model Reference](core-model.md) and Core transaction paths. |
 | `state.sqlite.task_events` | Event history can be forged or rewritten if direct file edits are accepted as history. | Events are state-store history, not chat logs or report prose. Recovery adds compensating records rather than treating external edits as authority. |
 | Artifact store | Evidence bytes can leak secrets, be poisoned, be oversized, or mismatch registered metadata. | Artifact refs, hashes, size, content type, redaction state, retention, and ownership are validated through storage and operations owner paths. |
-| Projections | Markdown reports can be stale, tampered with, prompt-injected, or mistaken for state. | Projections are readable views or proposal surfaces. Freshness, managed blocks, and reconcile behavior are owned by [Document Projection Reference](document-projection.md). |
+| Projections | Markdown reports can be stale, tampered with, prompt-injected, or mistaken for state. | Projections are readable views or proposal surfaces. Freshness, managed blocks, and reconcile behavior are owned by [Projection And Templates Reference](projection-and-templates.md). |
 | MCP server | A caller can be unexpected, stale, remote, forwarded, or unable to reach Core while still claiming state changes. | Public tools enter through Core and the API-owned envelope, state-version, idempotency, and error contracts. |
 | Connector-generated files | Generated instructions, manifests, MCP snippets, prompts, or adapter files can drift, be hand-edited, or become malicious context. | Generated or managed files are tracked by connector manifests and drift reporting. They do not create Task state or authority by themselves. |
 | Local repo | Product code, tests, repo docs, AGENTS-style rules, and human-editable areas may contain prompt injection or stale facts. | The Product Repository is a work and input space, not the operational state store. Product writes still require current scope, any needed sensitive-action permission, and the pre-write scope-check / internal Write Authorization record path. |
@@ -234,12 +234,12 @@ Guard, freeze, careful-mode, recipe names, product names, surface names, and fri
 |---|---|
 | MCP tool envelope and `ToolError` shape | [API Schema Core](api/schema-core.md#common-response) |
 | Public errors, idempotency, replay, expected state version | [API Errors](api/errors.md) |
-| Kernel state transitions, gates, Approval, `prepare_write`, Write Authorization, acceptance, residual risk, close | [Kernel Reference](kernel.md) |
-| `state.sqlite`, `task_events`, artifact storage rows, DDL, enum hardening, hashes, storage layout | [Storage And DDL](storage-and-ddl.md) |
+| Kernel state transitions, gates, Approval, `prepare_write`, Write Authorization, acceptance, residual risk, close | [Core Model Reference](core-model.md) |
+| `state.sqlite`, `task_events`, artifact storage rows, DDL, enum hardening, hashes, storage layout | [Storage](storage.md) |
 | Guarantee-level meanings and honest display rules | This document: [Honest guarantee display](#honest-guarantee-display) |
 | Runtime spaces, Core transaction ordering, and artifact/projection architecture placement | [Runtime Architecture Reference](runtime-architecture.md) |
 | Connector capability profiles, generated manifests, context push/pull, fallback display | [Agent Integration Reference](agent-integration.md) |
 | Stage-specific operator diagnostics, severity baselines, `doctor`, `serve mcp`, artifact check, recover, reconcile | [Operations And Conformance Reference](operations-and-conformance.md) |
 | Core fixture mechanics: fixture body shape, runner behavior, assertion semantics, fixture profiles, suite metadata boundaries, reduced Kernel Smoke queue | [Conformance Fixtures Reference](conformance-fixtures.md) |
-| Detailed future scenario candidates, future fixture examples, staged fixture coverage maps, fixture suite family summaries, catalog-only future candidates | [Future Fixture Catalog](future-fixture-catalog.md) |
-| Projection freshness, managed blocks, reconcile behavior, template ownership | [Document Projection Reference](document-projection.md) and [Template Reference](templates/README.md) |
+| Detailed future scenario candidates, future fixture examples, staged fixture coverage maps, fixture suite family summaries, catalog-only future candidates | [Future Fixtures](../later/future-fixtures.md) |
+| Projection freshness, managed blocks, reconcile behavior, template ownership | [Projection And Templates Reference](projection-and-templates.md) and [Template Reference](templates/README.md) |

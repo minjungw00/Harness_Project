@@ -126,6 +126,6 @@ Internal labels can appear later in reference docs or status details, but they a
 
 - Read [User Guide](../use/user-guide.md) to see the user-facing flow.
 - Read [Harness in 15 Minutes](harness-in-15-minutes.md) for short examples of the three work shapes.
-- Read [Harness in One Task](harness-in-one-task.md) for a fuller task story.
+- Read [Harness in One Task](one-task.md) for a fuller task story.
 - Read [Concepts](concepts.md) when vocabulary starts appearing in examples or reference docs.
 - Read [Purpose and Principles](purpose-and-principles.md) when reviewing product thesis, non-goals, or MVP boundaries.

@@ -1,4 +1,4 @@
-# Storage And DDL
+# Storage
 
 ## What This Document Owns
 
@@ -10,8 +10,8 @@ repository phase and implementation handoff status are tracked in
 This page owns the MVP-1 persistence model, Runtime Home identity, SQLite schema
 sketches, storage-owned JSON `TEXT` rules, enum hardening, artifact/evidence
 reference storage, and the boundary between persisted records and derived views.
-Use [Build: MVP Plan](../build/mvp-plan.md) and
-[First Runnable Slice](../build/first-runnable-slice.md) for stage order and exit
+Use [Build: MVP-1 User Work Loop](../build/mvp-user-work-loop.md) and
+[Engineering Checkpoint](../build/engineering-checkpoint.md) for stage order and exit
 criteria.
 
 ## Read This When
@@ -28,12 +28,12 @@ criteria.
 |---|---|
 | Public MCP request/response shapes | [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md) |
 | `ArtifactRef`, staged active ref kinds, idempotency, and state conflict behavior | [API Schema Core](api/schema-core.md#artifactref), [API Schema Core: Stage-Specific Active Value Sets](api/schema-core.md#stage-specific-active-value-sets), and [API Errors](api/errors.md) |
-| Task lifecycle, gates, `prepare_write`, `record_run`, `close_task`, stable events | [Kernel Reference](kernel.md) |
+| Task lifecycle, gates, `prepare_write`, `record_run`, `close_task`, stable events | [Core Model Reference](core-model.md) |
 | Core process model, transaction order, locks, projection/reconcile placement | [Runtime Architecture Reference](runtime-architecture.md) |
-| Projection authority, freshness, managed blocks, rendered templates | [Document Projection Reference](document-projection.md) and [Template Reference](templates/README.md) |
+| Projection authority, freshness, managed blocks, rendered templates | [Projection And Templates Reference](projection-and-templates.md) and [Template Reference](templates/README.md) |
 | Operator behavior, doctor/recover/export/reconcile/conformance entrypoints | [Operations And Conformance Reference](operations-and-conformance.md) |
 | Fixture format and assertion semantics | [Conformance Fixtures Reference](conformance-fixtures.md) |
-| Stage sequence and implementation readiness | [Build: MVP Plan](../build/mvp-plan.md), [Implementation Overview](../build/implementation-overview.md) |
+| Stage sequence and implementation readiness | [Build: MVP-1 User Work Loop](../build/mvp-user-work-loop.md), [Implementation Overview](../build/implementation-overview.md) |
 
 ## MVP-1 Storage Goal
 
@@ -517,10 +517,10 @@ Early hardening should cover:
 
 | Field(s) | Owner/value source |
 |---|---|
-| `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result` | [Kernel Reference](kernel.md) |
+| `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result` | [Core Model Reference](core-model.md) |
 | `change_units.status` | Kernel/Change Unit owner rules |
 | `user_judgments.status`, `judgment_type`, `presentation` | user-judgment API/kernel owners |
-| `write_authorizations.status`, `write_authorizations.decision` | [Kernel `prepare_write`](kernel.md#prepare_write) and [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) |
+| `write_authorizations.status`, `write_authorizations.decision` | [Kernel `prepare_write`](core-model.md#prepare_write) and [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) |
 | `runs.kind`, `runs.status` | [`harness.record_run`](api/mvp-api.md#harnessrecord_run) and storage compatibility notes |
 | `evidence_refs.kind`, `evidence_refs.redaction_state`, `evidence_refs.status` | `ArtifactRef`/evidence owners and storage compatibility notes |
 | `blockers.status`, `blocked_action`, `blocker_kind` | Kernel/API blocker owners |

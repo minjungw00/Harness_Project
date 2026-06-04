@@ -269,4 +269,4 @@
 - 짧은 예시는 [15분 만에 보는 하네스](harness-in-15-minutes.md)를 봅니다.
 - 내부 라벨이 보이기 시작하면 [핵심 개념](concepts.md)을 봅니다.
 - 사용자에게 보이는 세션 흐름은 [사용자 가이드](../use/user-guide.md)를 봅니다.
-- 정확한 향후 계약이 필요할 때만 [Kernel Reference](../reference/kernel.md)를 사용합니다.
+- 정확한 향후 계약이 필요할 때만 [Core Model Reference](../reference/core-model.md)를 사용합니다.

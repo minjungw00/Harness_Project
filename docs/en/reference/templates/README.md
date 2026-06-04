@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use this directory when you need the rendered shape for the small MVP-1 views. The projection rules, authority boundaries, managed-block behavior, artifact-ref rendering, and freshness behavior are owned by [Document Projection Reference](../document-projection.md).
+Use this directory when you need the rendered shape for the small MVP-1 views. The projection rules, authority boundaries, managed-block behavior, artifact-ref rendering, and freshness behavior are owned by [Projection And Templates Reference](../projection-and-templates.md).
 
 Authority rule:
 

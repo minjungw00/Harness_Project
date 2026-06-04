@@ -15,7 +15,7 @@ This is Build documentation. It summarizes the runtime path for implementers and
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md) and [First Runnable Slice](first-runnable-slice.md) for implementation context. Use [Kernel Reference](../reference/kernel.md), [Runtime Architecture Reference](../reference/runtime-architecture.md), [Document Projection Reference](../reference/document-projection.md), [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), [API Errors](../reference/api/errors.md), [Storage And DDL](../reference/storage-and-ddl.md), and [Operations And Conformance](../reference/operations-and-conformance.md) for exact behavior.
+Read [Implementation Overview](implementation-overview.md) and [Engineering Checkpoint](engineering-checkpoint.md) for implementation context. Use [Core Model Reference](../reference/core-model.md), [Runtime Architecture Reference](../reference/runtime-architecture.md), [Projection And Templates Reference](../reference/projection-and-templates.md), [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), [API Errors](../reference/api/errors.md), [Storage](../reference/storage.md), and [Operations And Conformance](../reference/operations-and-conformance.md) for exact behavior.
 
 ## Main idea
 
@@ -45,7 +45,7 @@ flowchart LR
   CloseCheck -->|ready| Close["Task closed"]
 ```
 
-What to notice: the diagram is a reader path, not a second source of truth or a Engineering Checkpoint requirement list. Requirements clarification and projection-like output help shape or read work when their stage is in scope, but write authority is `prepare_write`, execution is recorded by `record_run`, and completion blockers are reported by the close/status owner paths. For Engineering Checkpoint, the readable output can be only status/blocker output. For MVP-1, close-facing output is the compact `close-result` view, supported by the small `status-card`, `agent-context-packet`, `judgment-request`, and `run-evidence-summary` views as needed, not the full later assurance close model. Exact state and gate behavior lives in [Kernel Reference](../reference/kernel.md); active MVP-1 public calls live in [MVP API](../reference/api/mvp-api.md).
+What to notice: the diagram is a reader path, not a second source of truth or a Engineering Checkpoint requirement list. Requirements clarification and projection-like output help shape or read work when their stage is in scope, but write authority is `prepare_write`, execution is recorded by `record_run`, and completion blockers are reported by the close/status owner paths. For Engineering Checkpoint, the readable output can be only status/blocker output. For MVP-1, close-facing output is the compact `close-result` view, supported by the small `status-card`, `agent-context-packet`, `judgment-request`, and `run-evidence-summary` views as needed, not the full later assurance close model. Exact state and gate behavior lives in [Core Model Reference](../reference/core-model.md); active MVP-1 public calls live in [MVP API](../reference/api/mvp-api.md).
 
 ## Step-by-step runtime path
 
@@ -53,13 +53,13 @@ What to notice: the diagram is a reader path, not a second source of truth or a 
 
 The user describes work in ordinary language. In MVP-1 and later, Harness intake classifies the task shape and creates or updates Task state when tracking is useful. Engineering Checkpoint may use an owner-valid seed/setup path instead of natural-language intake.
 
-Strict behavior: Task lifecycle, modes, and state transitions are owned by [Kernel Reference](../reference/kernel.md#lifecycle-and-transitions). Storage layout is owned by [Storage And DDL](../reference/storage-and-ddl.md).
+Strict behavior: Task lifecycle, modes, and state transitions are owned by [Core Model Reference](../reference/core-model.md#lifecycle-and-transitions). Storage layout is owned by [Storage](../reference/storage.md).
 
 ### 2. Task -> requirements clarification
 
 Requirements clarification, internally named Discovery, is MVP-1-and-later behavior, not a Engineering Checkpoint requirement. It is used when the request is ambiguous, risky, multi-step, product-facing, or likely to need user-owned judgment. It clarifies goal, user value, non-goals, success criteria, inspectable facts, assumptions, technical and product choices, security or privacy concerns, QA expectations, remaining uncertainty, and scope boundaries.
 
-Strict behavior: requirements clarification / Discovery is shaping input. It is not Approval, Write Authorization, evidence, verification, QA, work acceptance, residual-risk acceptance, close, scope authority, or a new authority path. Judgment routing is owned by [User Judgment](../reference/kernel.md#user-judgment) and the public judgment call in [MVP API](../reference/api/mvp-api.md#harnessrequest_user_judgment).
+Strict behavior: requirements clarification / Discovery is shaping input. It is not Approval, Write Authorization, evidence, verification, QA, work acceptance, residual-risk acceptance, close, scope authority, or a new authority path. Judgment routing is owned by [User Judgment](../reference/core-model.md#user-judgment) and the public judgment call in [MVP API](../reference/api/mvp-api.md#harnessrequest_user_judgment).
 
 ### 3. Requirements clarification -> scoped next work -> Change Unit
 
@@ -67,43 +67,43 @@ Requirements clarification separates inspectable facts from user-owned judgments
 
 These proposal phrases are not standalone schema fields, canonical record types, gate values, projection kinds, or authority paths.
 
-Strict behavior: Change Unit and Autonomy Boundary semantics are owned by [Kernel Reference](../reference/kernel.md#change-unit) and [Autonomy Boundary](../reference/kernel.md#autonomy-boundary). A Change Unit scopes work, but it does not authorize a write by itself.
+Strict behavior: Change Unit and Autonomy Boundary semantics are owned by [Core Model Reference](../reference/core-model.md#change-unit) and [Autonomy Boundary](../reference/core-model.md#autonomy-boundary). A Change Unit scopes work, but it does not authorize a write by itself.
 
 ### 4. Change Unit -> `prepare_write`
 
 Before a product write, the agent asks Core for write authority for the intended operation. Core checks current state, Change Unit scope, Autonomy Boundary where in scope, and any active-stage requirements such as baseline freshness, sensitive-action Approval, user judgments, applicable design policy, and surface capability. Engineering Checkpoint needs only the scope/write-authority checks required for Engineering Checkpoint. MVP-1 makes this a cooperative pre-write scope check: Core can refuse authority and the connected agent or surface should hold by instruction, but this is not OS-level blocking, arbitrary-tool isolation, or permission isolation.
 
-Strict behavior: `prepare_write` is owned by [Kernel Reference](../reference/kernel.md#prepare_write). Public request and response shapes are owned by [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write).
+Strict behavior: `prepare_write` is owned by [Core Model Reference](../reference/core-model.md#prepare_write). Public request and response shapes are owned by [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write).
 
 ### 5. `prepare_write` -> Write Authorization or blocker
 
 If the checks pass, Core creates or returns a compatible Write Authorization for one specific attempt. If the checks do not pass, the response routes to a blocker, state conflict, sensitive-action Approval path, or user judgment path.
 
-Strict behavior: Write Authorization semantics are owned by [Write Authorization](../reference/kernel.md#write-authorization). Approval and User Judgment non-substitution rules are owned by [Judgment route boundaries](../reference/kernel.md#judgment-route-boundaries).
+Strict behavior: Write Authorization semantics are owned by [Write Authorization](../reference/core-model.md#write-authorization). Approval and User Judgment non-substitution rules are owned by [Judgment route boundaries](../reference/core-model.md#judgment-route-boundaries).
 
 ### 6. Write Authorization -> Run
 
 The implementation or direct write happens, then `record_run` records what happened. A product-write Run consumes one compatible, unexpired, unconsumed Write Authorization. Out-of-scope observations are not normalized by prose; they route to repair, recovery, or blocker handling.
 
-Strict behavior: Run recording and authorization consumption are owned by [record_run](../reference/kernel.md#record_run). Guarantee level behavior is summarized in [Runtime Architecture Reference](../reference/runtime-architecture.md#guarantee-level-behavior-map).
+Strict behavior: Run recording and authorization consumption are owned by [record_run](../reference/core-model.md#record_run). Guarantee level behavior is summarized in [Runtime Architecture Reference](../reference/runtime-architecture.md#guarantee-level-behavior-map).
 
 ### 7. Run -> Evidence and artifacts
 
 Evidence maps completion claims or success criteria to supporting owner records and registered artifact refs. Engineering Checkpoint needs one artifact/evidence ref and owner link. MVP-1 needs an evidence summary. Full Evidence Manifest behavior is later-profile scope. Raw artifacts hold durable evidence bytes; artifact records and refs carry identity, integrity, redaction, retention, and owner relation.
 
-Strict behavior: evidence and gate semantics are owned by [Evidence Manifest](../reference/kernel.md#evidence-manifest), [Evidence Gate](../reference/kernel.md#evidence-gate), and [Artifact](../reference/kernel.md#artifact). Artifact storage and DDL details are owned by [Storage And DDL](../reference/storage-and-ddl.md).
+Strict behavior: evidence and gate semantics are owned by [Evidence Manifest](../reference/core-model.md#evidence-manifest), [Evidence Gate](../reference/core-model.md#evidence-gate), and [Artifact](../reference/core-model.md#artifact). Artifact storage and DDL details are owned by [Storage](../reference/storage.md).
 
 ### 8. Evidence -> status/blocker output or projection
 
 The minimal path can return status/blocker output directly from state records and artifact refs. Later profiles may render readable Markdown and cards from those records. Projection freshness helps people know whether a readable view is current, but Markdown does not become state or evidence authority.
 
-Strict behavior: projection authority, managed blocks, human-editable sections, and freshness rules are owned by [Document Projection Reference](../reference/document-projection.md). Rendered template bodies live in [Template Reference](../reference/templates/README.md).
+Strict behavior: projection authority, managed blocks, human-editable sections, and freshness rules are owned by [Projection And Templates Reference](../reference/projection-and-templates.md). Rendered template bodies live in [Template Reference](../reference/templates/README.md).
 
 ### 9. Status/blocker output or projection -> close blocker or close
 
 Near completion, `close_task` checks close-relevant state when its stage is in scope and either closes the Task or returns structured blockers. Engineering Checkpoint may use only a narrow close/status blocker smoke and does not prove full close semantics. MVP-1 needs a close blocker summary, not detached verification by default. Verification is required only when the active profile, user request, task type, or risk profile requires it; a verification waiver is needed only when required verification is intentionally skipped. Close Readiness is a user-facing summary of blockers, not a new gate.
 
-Strict behavior: completion checks are owned by [`close_task`](../reference/kernel.md#close_task), close result wording by [Close result semantics](../reference/kernel.md#close-result-semantics), and public error precedence by [API Errors](../reference/api/errors.md#primary-error-code-precedence).
+Strict behavior: completion checks are owned by [`close_task`](../reference/core-model.md#close_task), close result wording by [Close result semantics](../reference/core-model.md#close-result-semantics), and public error precedence by [API Errors](../reference/api/errors.md#primary-error-code-precedence).
 
 ## First implementation boundary
 
@@ -111,4 +111,4 @@ For Engineering Checkpoint, keep the path narrow: one local project registration
 
 For MVP-1 User Work Loop, add the user-visible value path: ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria summary, separate product/UX and architecture judgment presentation, minimal user judgment request/record, cooperative pre-write scope checking, small direct change versus tracked-work distinction, status/next output, run/evidence reference recording, evidence summary, close blocker summary, next safe action, residual-risk visibility, five compact Core-derived views, and separate display of sensitive Approval, work acceptance, and risk acceptance.
 
-The staged order and Kernel Smoke boundary are summarized in [Staged Delivery Plan](mvp-plan.md). Exact fixture body shape and assertion rules stay in [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format).
+The staged order and Kernel Smoke boundary are summarized in [MVP-1 User Work Loop](mvp-user-work-loop.md). Exact fixture body shape and assertion rules stay in [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format).

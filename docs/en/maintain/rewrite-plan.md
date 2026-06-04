@@ -34,7 +34,7 @@ Use these categories for rewrite findings and batch notes.
 | `shrink` | The text is directionally right but too long, repetitive, too internal, or too contract-heavy for its document family. | Compress to the reader-visible consequence and link to the owner document for exact rules. |
 | `move` | The text belongs in another document family or owner Reference document. | Move the meaning to the owner path, replace the old location with a short route or remove it, and update English/Korean links together. |
 | `delete` | The text is obsolete, misleading, duplicative, or conflicts with the product thesis, current delivery model, owner boundary, Korean quality rules, or security guarantee level. | Remove it. Do not keep prose only for continuity. |
-| `decision-needed` | The rewrite exposes a real unresolved choice about schema, state, API, stage boundary, security guarantee, fixture semantics, terminology, or implementation readiness. | Route the decision to the owning document. Major server-coding decisions belong in the MVP Plan decision-log sections, not scattered TODOs. |
+| `decision-needed` | The rewrite exposes a real unresolved choice about schema, state, API, stage boundary, security guarantee, fixture semantics, terminology, or implementation readiness. | Route the decision to the owning document. Major server-coding decisions belong in the MVP-1 User Work Loop decision-log sections, not scattered TODOs. |
 
 ## Principles to preserve
 

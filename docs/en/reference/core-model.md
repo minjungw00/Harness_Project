@@ -1,8 +1,8 @@
-# Kernel Reference
+# Core Model Reference
 
 ## What this document helps you do
 
-Use this reference to check the future Harness Kernel contract for Core authority, work shape, pre-write scope checks and internal Write Authorization records, user judgment routing, evidence, verification, QA, acceptance, residual risk, and close behavior.
+Use this reference to check the future Harness Core model contract for Core authority, work shape, pre-write scope checks and internal Write Authorization records, user judgment routing, evidence, verification, QA, acceptance, residual risk, and close behavior.
 
 This is reference documentation for a future local Harness Server. No Harness runtime or server implementation exists in this repository today. Current repository phase and implementation handoff status are tracked in [Implementation Overview](../build/implementation-overview.md#documentation-acceptance-status).
 
@@ -15,7 +15,7 @@ This is reference documentation for a future local Harness Server. No Harness ru
 
 ## Before you read
 
-Read [Concepts](../learn/concepts.md) or [Harness in One Task](../learn/harness-in-one-task.md) first if you want examples before exact rules. Active MVP-1 public methods are owned by [MVP API](api/mvp-api.md), shared API shapes by [API Schema Core](api/schema-core.md), and API errors by [API Errors](api/errors.md). Storage tables are owned by [Storage And DDL](storage-and-ddl.md). Connector capability wording is owned by [Agent Integration Reference](agent-integration.md).
+Read [Concepts](../learn/concepts.md) or [Harness in One Task](../learn/one-task.md) first if you want examples before exact rules. Active MVP-1 public methods are owned by [MVP API](api/mvp-api.md), shared API shapes by [API Schema Core](api/schema-core.md), and API errors by [API Errors](api/errors.md). Storage tables are owned by [Storage](storage.md). Connector capability wording is owned by [Agent Integration Reference](agent-integration.md).
 
 ## Main idea
 
@@ -30,7 +30,7 @@ The active stage and profile decide which gates are required for a specific oper
 | Core invariants | [Kernel invariants](#kernel-invariants) | This document. |
 | Work shape and mode meaning | [Work modes](#work-modes) | API enum values stay in [API Schema Core](api/schema-core.md#shared-schemas). |
 | User judgment types and routes | [Judgment route boundaries](#judgment-route-boundaries), [User Judgment](#user-judgment), [Decision Gate](#decision-gate) | Public request fields stay in [`harness.request_user_judgment`](api/mvp-api.md#harnessrequest_user_judgment). |
-| Entity relationship semantics | [Entity model](#entity-model) | Physical tables stay in [Storage And DDL](storage-and-ddl.md). |
+| Entity relationship semantics | [Entity model](#entity-model) | Physical tables stay in [Storage](storage.md). |
 | Gate meaning | [Gates](#gates), [Gate Rule Map](#gate-rule-map) | Public blockers and errors stay in [API Errors](api/errors.md#primary-error-code-precedence). |
 | Pre-write scope checks / Write Authorization | [`prepare_write`](#prepare_write), [Write Authorization](#write-authorization), [`record_run`](#record_run) | Public request/response shape stays in [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) and [`harness.record_run`](api/mvp-api.md#harnessrecord_run). |
 | Close semantics | [`close_task`](#close_task), [Close matrix by work shape and active profile](#close-matrix-by-work-shape-and-active-profile), [Close result semantics](#close-result-semantics) | Public close response shape stays in [`harness.close_task`](api/mvp-api.md#harnessclose_task). |
@@ -219,9 +219,9 @@ This document owns:
 This document does not own:
 
 - full public MCP request/response schemas; see [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), and [API Schema Later](api/schema-later.md)
-- SQLite DDL and storage layout; see [Storage And DDL](storage-and-ddl.md)
+- SQLite DDL and storage layout; see [Storage](storage.md)
 - full projection template bodies
-- document projection rules; see [Document Projection Reference](document-projection.md)
+- document projection rules; see [Projection And Templates Reference](projection-and-templates.md)
 - detailed design-quality policy tables; see [Design Quality Policies](design-quality-policies.md)
 - connector capability profiles; see [Agent Integration Reference](agent-integration.md)
 - operator command syntax; see [Operations And Conformance Reference](operations-and-conformance.md)
@@ -329,7 +329,7 @@ A Reconcile Item is the candidate record for human-editable or generated/project
 
 ### Design Support Records
 
-Shared Design, Domain Term, Module Map Item, Interface Contract, Feedback Loop, and TDD Trace records can support scope, evidence, and design policy when their profiles are enabled. Their policy details are owned by [Design Quality Policies](design-quality-policies.md), and their storage shape is owned by [Storage And DDL](storage-and-ddl.md).
+Shared Design, Domain Term, Module Map Item, Interface Contract, Feedback Loop, and TDD Trace records can support scope, evidence, and design policy when their profiles are enabled. Their policy details are owned by [Design Quality Policies](design-quality-policies.md), and their storage shape is owned by [Storage](storage.md).
 
 ## Boundaries and non-substitutions
 

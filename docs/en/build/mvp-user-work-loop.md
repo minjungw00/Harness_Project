@@ -1,8 +1,8 @@
-# Build: Staged Delivery Plan
+# Build: MVP-1 User Work Loop
 
 ## What this document helps you do
 
-This document turns the broad early-stage planning material into a deliberately smaller delivery model. Engineering Checkpoint is an internal authority-loop smoke for Core-owned state, not a product MVP. MVP-1 User Work Loop is the first user-value milestone: the first narrow user-facing loop where ordinary work can be tracked, explained, and blocked honestly without becoming a full assurance, QA, evaluation, reporting, or operations system.
+This document owns the MVP-1 User Work Loop plan and the surrounding staged delivery boundary. Engineering Checkpoint is an internal authority-loop smoke for Core-owned state, not a product MVP. MVP-1 User Work Loop is the first user-value milestone: the first narrow user-facing loop where ordinary work can be tracked, explained, and blocked honestly without becoming a full assurance, QA, evaluation, reporting, or operations system.
 
 This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is Engineering Checkpoint, with Kernel Smoke as a narrow future smoke-check authoring label. The first user-value target is MVP-1 User Work Loop. Assurance Profile and Operations Profile harden agency assurance, operations, and handoff behavior later. Roadmap remains future scope unless owner docs promote and prove it.
 
@@ -16,7 +16,7 @@ Use this when you need to plan what to build after documentation acceptance and 
 
 ## Before you read
 
-Read [Implementation Overview](implementation-overview.md), including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status), before using this stage plan. Use [First Runnable Slice](first-runnable-slice.md) for the Engineering Checkpoint smoke sequence and [Runtime Walkthrough](runtime-walkthrough.md) for the request-to-close runtime path.
+Read [Implementation Overview](implementation-overview.md), including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status), before using this stage plan. Use [Engineering Checkpoint](engineering-checkpoint.md) for the Engineering Checkpoint smoke sequence and [Runtime Walkthrough](runtime-walkthrough.md) for the request-to-close runtime path.
 
 For exact contracts, use the [Reference Index](../reference/README.md) and pick the owner for the question in front of you. For Roadmap candidates and promotion criteria, use the [Roadmap](../roadmap.md).
 
@@ -105,7 +105,7 @@ The hardened local reference target is only the aggregate target reached by Assu
 
 ### Security guarantee staging
 
-Build staging does not upgrade security guarantees by itself. Security wording follows the [Security Threat Model stage map](../reference/security-threat-model.md#guarantee-levels-by-stage):
+Build staging does not upgrade security guarantees by itself. Security wording follows the [Security Threat Model stage map](../reference/security.md#guarantee-levels-by-stage):
 
 | Stage | Guarantee posture to plan for |
 |---|---|
@@ -169,7 +169,7 @@ Engineering Checkpoint must prove:
 - one registered `ArtifactRef` or equivalent evidence reference owned by Core/API contracts
 - one structured status/blocker response for missing scope, missing pre-write scope check, or missing artifact/evidence support
 
-The matching storage path is the minimal authority subset of [Storage And DDL: MVP-1 minimal storage schema](../reference/storage-and-ddl.md#mvp-1-minimal-storage-schema): project identity, one Task, one task-scope/Change Unit row, one cooperative write-check / Write Authorization path, one Run, one evidence ref, and structured blockers. User-facing judgment records are added for MVP-1 user value, but Approval records, detailed Evidence Manifest, Manual QA, Eval, residual-risk lifecycle tables, projection jobs, reconcile items, validator runs, Journey records, and diagnostic/stewardship tables remain later-profile storage unless a profile owner explicitly promotes them.
+The matching storage path is the minimal authority subset of [Storage: MVP-1 minimal storage schema](../reference/storage.md#mvp-1-minimal-storage-schema): project identity, one Task, one task-scope/Change Unit row, one cooperative write-check / Write Authorization path, one Run, one evidence ref, and structured blockers. User-facing judgment records are added for MVP-1 user value, but Approval records, detailed Evidence Manifest, Manual QA, Eval, residual-risk lifecycle tables, projection jobs, reconcile items, validator runs, Journey records, and diagnostic/stewardship tables remain later-profile storage unless a profile owner explicitly promotes them.
 
 Engineering Checkpoint explicitly excludes natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, Product/UX judgment versus Technical judgment presentation, stewardship, feedback-loop policy, projection rendering, conformance runner, operations/export/recover, dashboards, connectors, broad operator entrypoints, future fixture catalog, and release handoff. Those are later stages or future scope.
 
@@ -183,9 +183,9 @@ Reference schemas may list fields that become necessary only when the related ca
 
 | Stage | Build reading rule | Owner contracts to apply |
 |---|---|---|
-| Engineering Checkpoint | Use only the owner-defined fields needed to prove the narrow authority loop in the [MVP-1 minimal storage schema](../reference/storage-and-ddl.md#mvp-1-minimal-storage-schema). Avoid creating future-profile records just to satisfy a broad checklist; if a minimal seeded blocker uses an owner ref, apply only the valid shape for that owner path, not profile-specific user-facing judgment presentation quality. | [Kernel Reference](../reference/kernel.md), [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), [Storage And DDL](../reference/storage-and-ddl.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
-| MVP-1 User Work Loop | Add the fields and display summaries needed for users to understand current work shape, scope/non-goals/success criteria, pending user judgments, evidence summary, close blockers, next safe action, residual-risk visibility, and separated approval/work-acceptance/risk-acceptance displays. Work-acceptance and residual-risk facts stay distinct when relevant, but they fit inside the five compact MVP views. | [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), [Kernel Reference](../reference/kernel.md), [Document Projection Reference](../reference/document-projection.md), [Template Reference](../reference/templates/README.md). |
-| Assurance Profile / Operations Profile | Add verification, QA, residual-risk, work-acceptance, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, and release-handoff profiles only where owner docs define them. | [Design Quality Policies](../reference/design-quality-policies.md), [Operations And Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md), [Future Fixture Catalog](../reference/future-fixture-catalog.md), [Storage And DDL](../reference/storage-and-ddl.md). |
+| Engineering Checkpoint | Use only the owner-defined fields needed to prove the narrow authority loop in the [MVP-1 minimal storage schema](../reference/storage.md#mvp-1-minimal-storage-schema). Avoid creating future-profile records just to satisfy a broad checklist; if a minimal seeded blocker uses an owner ref, apply only the valid shape for that owner path, not profile-specific user-facing judgment presentation quality. | [Core Model Reference](../reference/core-model.md), [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), [Storage](../reference/storage.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
+| MVP-1 User Work Loop | Add the fields and display summaries needed for users to understand current work shape, scope/non-goals/success criteria, pending user judgments, evidence summary, close blockers, next safe action, residual-risk visibility, and separated approval/work-acceptance/risk-acceptance displays. Work-acceptance and residual-risk facts stay distinct when relevant, but they fit inside the five compact MVP views. | [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), [Core Model Reference](../reference/core-model.md), [Projection And Templates Reference](../reference/projection-and-templates.md), [Template Reference](../reference/templates/README.md). |
+| Assurance Profile / Operations Profile | Add verification, QA, residual-risk, work-acceptance, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, and release-handoff profiles only where owner docs define them. | [Design Quality Policies](../reference/design-quality-policies.md), [Operations And Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures Reference](../reference/conformance-fixtures.md), [Future Fixtures](../later/future-fixtures.md), [Storage](../reference/storage.md). |
 
 Required in an API schema therefore means required when that tool call, record, or profile is active or used. It does not make a future-profile field part of the smallest runnable slice by itself.
 
@@ -258,7 +258,7 @@ flowchart LR
   Blocker --> Status
 ```
 
-Exact state and blocker behavior is owned by [Kernel Reference](../reference/kernel.md), public tool shapes by [MVP API](../reference/api/mvp-api.md), shared API shapes by [API Schema Core](../reference/api/schema-core.md), API errors by [API Errors](../reference/api/errors.md), and active-path fixture body/assertion mechanics by [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format). Later-profile scenario and shorthand catalogs stay in [Future Fixture Catalog](../reference/future-fixture-catalog.md) and do not add requirements to this flow. This flow does not add pack gates, projection-renderer requirements, or fixture body requirements.
+Exact state and blocker behavior is owned by [Core Model Reference](../reference/core-model.md), public tool shapes by [MVP API](../reference/api/mvp-api.md), shared API shapes by [API Schema Core](../reference/api/schema-core.md), API errors by [API Errors](../reference/api/errors.md), and active-path fixture body/assertion mechanics by [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format). Later-profile scenario and shorthand catalogs stay in [Future Fixtures](../later/future-fixtures.md) and do not add requirements to this flow. This flow does not add pack gates, projection-renderer requirements, or fixture body requirements.
 
 For future smoke authoring order, use the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). It maps candidate checks to this internal slice without implying executable fixture files already exist or that Engineering Checkpoint requires a full conformance suite.
 

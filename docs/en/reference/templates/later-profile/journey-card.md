@@ -126,7 +126,7 @@ This template is a rendered shape, not canonical state. It is rendered from curr
 
 Status/next recommendations shown in or near this card are read-only guidance. They may point to a user judgment prompt, optional full-format Decision Packet presentation, `prepare_write`, evidence collection, verification, QA, reconcile, or close attempt, but they do not mutate state, authorize writes, satisfy gates, accept results, accept residual risk, or close the Task.
 
-Close context in a Journey Card is compact status/resume display. `TASK` owns the continuity Close Summary for active or recently closed `work` tasks, while `DIRECT-RESULT` owns the low-ceremony close impact summary for direct work. These displays follow the [projection/report boundary](../../document-projection.md#projection-principles); close and gate effects still come from owner records.
+Close context in a Journey Card is compact status/resume display. `TASK` owns the continuity Close Summary for active or recently closed `work` tasks, while `DIRECT-RESULT` owns the low-ceremony close impact summary for direct work. These displays follow the [projection/report boundary](../../projection-and-templates.md#projection-principles); close and gate effects still come from owner records.
 
 The blocker lines translate API and state records into user-facing status. The primary blocker should be the first blocker the next action must resolve, and the owner label should make clear whether the next move is user-owned, agent-resolvable, or surface/system-owned. The owner may render as `none` or be omitted when there is no primary blocker. Secondary blockers stay visible only when they affect the follow-on path. Do not expose raw `ErrorCode` values as the only explanation.
 
