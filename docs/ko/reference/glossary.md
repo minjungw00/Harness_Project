@@ -123,7 +123,7 @@ Active delivery label은 일관되게 씁니다.
 | Security asset, trust boundary, threat category, high-risk control expectation, guarantee-level 의미 | [보안 참조](security.md) |
 | Operator procedure, conformance run overview, docs-maintenance 보고 | [운영과 Conformance 참조](operations-and-conformance.md) |
 | 핵심 적합성 모델, 정확한 fixture body, runner 동작, assertion semantics, fixture profile, 축소된 Kernel Smoke 작성 순서 | [Conformance Fixtures 참조](conformance-fixtures.md) |
-| 향후 상세 scenario 후보, 향후 fixture example, 단계별 fixture coverage map, fixture suite family summary, catalog-only future candidate | [향후 Fixtures](../later/future-fixtures.md) |
+| 간결한 향후 scenario family 목록, 승격 조건, suite-family label, catalog-only future candidate | [향후 Fixtures](../later/future-fixtures.md) |
 
 ## 공식 용어
 

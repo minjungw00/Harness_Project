@@ -123,7 +123,7 @@ Use the active delivery labels consistently.
 | Security assets, trust boundaries, threat categories, high-risk control expectations, guarantee-level meanings | [Security Reference](security.md) |
 | Operator procedures, conformance run overview, docs-maintenance reporting | [Operations And Conformance Reference](operations-and-conformance.md) |
 | Core conformance model, fixture body shape, runner behavior, assertion semantics, fixture profiles, and reduced Kernel Smoke queue | [Conformance Fixtures Reference](conformance-fixtures.md) |
-| Detailed future scenario candidates, future fixture examples, staged fixture coverage maps, fixture suite family summaries, and catalog-only future candidates | [Future Fixtures](../later/future-fixtures.md) |
+| Compact future scenario-family inventory, promotion criteria, suite-family labels, and catalog-only future candidates | [Future Fixtures](../later/future-fixtures.md) |
 
 ## Official Terms
 
