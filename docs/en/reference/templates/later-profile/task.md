@@ -103,7 +103,6 @@ updated_at: 2026-05-06T09:30:15+09:00
     - related user judgment refs:
   - acceptance:
     - work acceptance:
-    - residual-risk acceptance:
   - risk acceptance:
     - residual-risk acceptance:
     - named risk being accepted:
@@ -450,7 +449,6 @@ Change Unit block sub-template:
   - work acceptance:
   - residual-risk acceptance:
   - public interface or compatibility commitment:
-  - residual-risk acceptance:
 - AFK stop conditions:
   - boundary exceeded:
   - evidence cannot be produced:
