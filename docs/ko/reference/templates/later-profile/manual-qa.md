@@ -17,7 +17,7 @@
 - human inspector 또는 role과 확인한 품질이나 workflow
 - screenshot, browser log, `qa_capture`, video, workflow recording, 수동 제공 note artifact 참조와 `redaction_state`
 - QA waiver 또는 failure와 관련된 waiver reason, 필요한 경우 QA waiver user judgment refs, Residual Risk refs
-- 표시되는 claim이 있을 때 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 작업 수락 맥락, 민감 동작 승인(Approval), 아티팩트 참조, redaction state, 읽기용 보기 최신성(projection freshness)
+- 표시되는 claim이 있을 때 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 작업 수락 맥락, 민감 동작 승인(Approval), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)
 - `manual_qa` 관련 design-quality validator 결과
 - 읽기용 보기 최신성(projection freshness) 입력
 
@@ -68,28 +68,28 @@ updated_at: 2026-05-06T10:05:00+09:00
 - 작업 수락 맥락:
 - Residual Risk:
 - 아티팩트 참조:
-- redaction state:
+- 가림 상태:
 - 보기 최신성:
 
 ## 준비 사항
-- build/run command:
-- test account/data:
+- build/run 명령:
+- 테스트 계정/데이터:
 - route 또는 screen:
-- browser capture support: supported | unsupported | not applicable
+- 브라우저 캡처 지원: supported | unsupported | not applicable
 
 ## 확인 목록
-- [ ] primary workflow works
-- [ ] errors are understandable
-- [ ] visual layout acceptable
-- [ ] accessibility smoke check
-- [ ] no obvious regression
+- [ ] 주요 workflow가 동작함
+- [ ] 오류가 이해 가능함
+- [ ] 시각적 layout이 수용 가능함
+- [ ] 접근성 smoke check
+- [ ] 명백한 regression 없음
 
 ## 결과
-- 기록 결과: passed | failed | waived | null when no record exists
+- 기록 결과: passed | failed | waived | 기록이 없으면 null
 - qa_gate: not_required | required | pending | passed | failed | waived
 - qa_gate note: 기준 close-relevant gate; 이 projection은 표시 전용
 - QA waiver 표시: `qa_gate=waived`와 수동 QA record 또는 waiver reason, 필요한 경우 QA waiver user judgment
-- 자동 check 상태: {supporting refs only; 수동 QA 결과 아님}
+- 자동 check 상태: {뒷받침 참조만; 수동 QA 결과 아님}
 - 검증 상태: {별도 Eval(분리 검증 결과)/gate status; 이 template이 만들지 않음}
 - 작업 수락 상태: {별도 사용자 판단; 이 template이 만들지 않음}
 - 사람의 확인 요약:
@@ -113,13 +113,13 @@ updated_at: 2026-05-06T10:05:00+09:00
 | minor | | | |
 
 ## 근거 참조
-- screenshot:
+- 스크린샷:
 - qa_capture:
-- browser log:
-- video:
-- note:
-- manually supplied artifact:
-- unsupported-surface fallback note:
+- 브라우저 로그:
+- 비디오:
+- 메모:
+- 수동 제공 아티팩트:
+- 지원되지 않는 접점의 대체 메모:
 
 ## Redaction과 사용 가능성
 | 아티팩트 참조 | 가림 상태 | QA 영향 | 메모 |

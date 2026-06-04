@@ -80,7 +80,7 @@ TASK-{id} {title}
 - 허용 tool: {allowed_tools}
 - 허용 command: {allowed_commands}
 - 허용 network target: {allowed_network_targets}
-- secret scope: {secret_scope}
+- 비밀 정보 범위: {secret_scope}
 - 민감 category: {sensitive_categories}
 - 민감 동작 승인 상태: {approval_status}
 - baseline: {baseline_ref|none}

@@ -16,7 +16,7 @@
 - 범위 밖 또는 유지된 범위 요약
 - 실행한 확인
 - 표시되는 claim이 있을 때 사용자 판단(User Judgment) refs, 민감 동작 승인 user judgment refs, later 민감 동작 승인(Approval) refs, `evidence_ref` ref와 파생 근거 요약, full evidence profile이 활성화된 경우의 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락 user judgment refs, Residual Risk, 아티팩트 참조
-- redaction state와 availability를 포함한 artifact 참조
+- 가림 상태와 사용 가능성을 포함한 artifact 참조
 - 읽기용 보기 최신성(projection freshness) 입력
 - escalation flag
 - 닫기 보장 수준
@@ -69,7 +69,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 ## 결과
 - 결과 요약:
-- close reason:
+- 닫기 이유:
 
 ## 변경된 범위
 - 변경된 파일: `path/to/file`
@@ -80,8 +80,8 @@ updated_at: 2026-05-06T09:40:00+09:00
 - 자체 확인:
 - tests/build:
 - validator 결과:
-- 아티팩트 참조와 redaction state:
-- artifact availability:
+- 아티팩트 참조와 가림 상태:
+- 아티팩트 사용 가능성:
 
 ## 보장 수준(Assurance)
 - assurance_level:
@@ -104,7 +104,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 - 작업 수락 user judgment:
 - 잔여 위험(Residual Risk):
 - 아티팩트 참조:
-- redaction state:
+- 가림 상태:
 - 보기 최신성:
 
 ## 닫기 영향 요약

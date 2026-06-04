@@ -60,18 +60,18 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 호환성 영향: none | minor | breaking
 
 ## 영향받는 호출자
-- caller:
+- 호출자:
 
 ## 테스트 경계
-- boundary tests:
-- integration tests:
-- contract tests:
+- 경계 테스트:
+- 통합 테스트:
+- 계약 테스트:
 
 ## 검토
 - review_status: pending | reviewed
 - 검토한 사람:
 - decision:
-- waiver reason:
+- 면제 사유:
 
 ## 참조
 - TASK:

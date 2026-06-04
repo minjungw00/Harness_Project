@@ -57,7 +57,7 @@ updated_at: 2026-05-06T09:45:10+09:00
 
 ## Run 식별 정보
 - run_id:
-- actor kind:
+- 행위자 유형:
 - surface:
 - baseline_ref:
 - state_version:
@@ -72,7 +72,7 @@ updated_at: 2026-05-06T09:45:10+09:00
 - 허용 tool:
 - 허용 command:
 - 허용 network target:
-- secret scope:
+- 비밀 정보 범위:
 - 민감 category:
 - 민감 동작 승인 참조(later Approval profile이 활성화된 경우에만; 그 외에는 none):
 
@@ -110,33 +110,33 @@ npm test -- --runInBand
 - note: run-local 검토 표시 전용입니다. Record, `ProjectionKind` value, 민감 동작 승인(Approval), evidence, verification, QA, 작업 수락, 잔여 위험 수용, close, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다. Review-stage 경계는 [Design Quality Policies](../../design-quality-policies.md#two-stage-review-display)가 담당합니다. 발견 사항은 기존 ref, gate, blocker로 연결합니다.
 
 ### 명세 준수 검토
-- 수용 기준 coverage:
+- 수용 기준 뒷받침 범위:
 - Change Unit 완료 조건:
-- 범위 / 쓰기 권한 compatibility:
-- User judgment compatibility:
-- 근거 coverage:
+- 범위 / 쓰기 권한 호환성:
+- 사용자 판단 호환성:
+- 근거 뒷받침 범위:
 - 잔여 위험 표시:
-- 결과 refs(existing path/ref only):
+- 결과 refs(기존 path/ref only):
 
 ### 코드 품질 / Stewardship 검토
-- domain language:
-- module / interface boundary:
-- vertical slice shape:
+- 도메인 언어:
+- module / interface 경계:
+- vertical slice 형태:
 - feedback loop / TDD:
-- codebase stewardship:
-- context hygiene:
+- 코드베이스 stewardship:
+- context 정돈:
 - 후속 위험:
-- 결과 refs(existing path/ref only):
+- 결과 refs(기존 path/ref only):
 
 ## TDD trace 요약
-- required:
-- feedback loop ref:
-- RED target / plan:
-- RED evidence (actual):
-- green evidence:
-- refactor notes:
-- waiver / alternate loop:
-- trace ref:
+- 필수 여부:
+- feedback loop 참조:
+- RED 대상 / 계획:
+- RED 근거(실제):
+- GREEN 근거:
+- refactor 메모:
+- waiver / 대체 loop:
+- trace 참조:
 
 ## 주요 변경
 -
@@ -160,7 +160,7 @@ npm test -- --runInBand
 - 로그:
 - bundle:
 - checkpoint:
-- omitted or blocked artifact impact:
+- 생략되거나 차단된 아티팩트 영향:
 ````
 
 ## 메모

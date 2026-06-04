@@ -19,7 +19,7 @@
 - 예상 screenshot, walkthrough note, browser log, Browser QA artifact, 수동 제공 artifact 근거
 - QA가 면제되거나 미뤄질 때 waiver reason, 필요한 경우 QA waiver user judgment refs, Residual Risk refs
 - 검증, 작업 수락, 닫기 영향 요약
-- 수동 QA record, QA waiver user judgment, 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, redaction state, 읽기용 보기 최신성(projection freshness)을 위한 간결한 참조
+- 수동 QA record, QA waiver user judgment, 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)을 위한 간결한 참조
 
 닫기 맥락과 waiver placeholder는 QA 기록, `qa_gate`, 관련 gate 상태, user judgment ref, Residual Risk ref에서 파생한 표시 전용 요약입니다. Waiver path는 그런 ref를 렌더링하거나 아직 기록이 필요하다고 표시해야 합니다.
 
@@ -58,11 +58,11 @@
 - 승격되고 지원될 때 qa_capture artifact
 - 관련 있을 때 browser log
 - browser capture가 지원되지 않을 때 수동 제공 artifact 또는 사람이 작성한 note
-- 근거를 원본 content로 기록할 수 없을 때의 redaction/omission/block note
+- 근거를 원본 content로 기록할 수 없을 때의 가림/생략/차단 메모
 
 닫기 맥락:
 - 자동 검사: {check_refs|none; 수동 QA 결과 아님}
-- Browser QA artifacts: {artifact_refs|none; 뒷받침 refs only}
+- Browser QA 아티팩트: {artifact_refs|none; 뒷받침 refs only}
 - QA waiver 표시: {qa_gate=waived with waiver refs|none}
 - 검증 영향: {verification_impact}
 - 작업 수락 영향: {acceptance_impact; 이 card가 기록하지 않음}

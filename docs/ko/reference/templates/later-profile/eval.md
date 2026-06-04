@@ -19,8 +19,8 @@
 - 수행한 확인
 - 검토한 근거(evidence)
 - 막힘
-- artifact ref와 redaction state, input availability
-- 표시되는 claim이 있을 때 관련 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), 수동 QA, 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, redaction state, 읽기용 보기 최신성(projection freshness)
+- 아티팩트 참조와 가림 상태, 입력 사용 가능성
+- 표시되는 claim이 있을 때 관련 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), 수동 QA, 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)
 
 ## 렌더링 섹션
 
@@ -63,7 +63,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - 작업 수락 맥락:
 - 잔여 위험(Residual Risk):
 - 아티팩트 참조:
-- redaction state:
+- 가림 상태:
 - 보기 최신성:
 
 ## 대상
@@ -76,24 +76,24 @@ updated_at: 2026-05-06T10:05:00+09:00
 - verdict: passed | failed | blocked | inconclusive
 - assurance 영향:
 - verification gate 영향:
-- detached candidate 상태:
+- 분리 검증 후보 상태:
 - 자체 확인과 분리 검증 경계:
 - 수동 QA 영향:
 - 작업 수락 영향:
 - 다음 행동:
 
 ## 환경과 독립성
-- fresh run:
-- evaluator surface:
-- context independence: same_session | subagent_context | fresh_session | fresh_worktree | sandbox | manual_bundle
-- same-session self-review guard:
-- write capable:
-- product file write allowed:
-- baseline verified:
-- bundle freshness:
-- repo drift observed:
-- source input: chat_history | task_summary | bundle | allowed_raw_artifacts | refs_with_redaction_notes
-- source bundle:
+- 새 실행:
+- evaluator 접점:
+- 맥락 독립성: same_session | subagent_context | fresh_session | fresh_worktree | sandbox | manual_bundle
+- 같은 세션 자체 검토 guard:
+- 쓰기 가능 여부:
+- 제품 파일 쓰기 허용 여부:
+- baseline 확인:
+- bundle 최신성:
+- repo drift 관찰:
+- 출처 입력: chat_history | task_summary | bundle | allowed_raw_artifacts | refs_with_redaction_notes
+- 출처 bundle:
 - parent run:
 
 ## 확인과 Validator 결과
@@ -133,7 +133,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - domain term 참조:
 - module map item 참조:
 - interface contract 참조:
-- run summary:
+- 실행 요약:
 - feedback loop:
 - TDD trace:
 - 수동 QA:
@@ -163,8 +163,8 @@ updated_at: 2026-05-06T10:05:00+09:00
 - feedback loop:
 - TDD trace:
 - module/interface:
-- architecture drift:
-- domain language consistency:
+- 아키텍처 drift:
+- 도메인 언어 일관성:
 
 ## 근거 설명
 -
@@ -188,4 +188,4 @@ Evaluator bundle, baseline, included artifacts, 근거 목록(Evidence Manifest)
 
 Eval(분리 검증 결과) projection은 생략되었거나 차단된 원본 bytes를 검토한 것처럼 암시하면 안 됩니다. `secret_omitted` evidence는 보이는 nonsecret claim만 뒷받침할 수 있습니다. Eval이 `blocked` payload에 의존한다면 replacement, waiver, user judgment outcome, 받아들인 위험, documented fallback이 verification 경로를 해소할 때까지 result는 `blocked` 또는 `inconclusive`로 남거나 `EVIDENCE_INSUFFICIENT`를 반환해야 합니다.
 
-Eval(분리 검증 결과) template은 검토한 근거 ref를 간결하게 유지해야 합니다. 큰 log, bundle, screenshot, diff, trace는 redaction state와 availability가 있는 ArtifactRef ref로 남깁니다. Eval 본문은 무엇을 검토했는지 기록할 뿐이며 원본 evidence payload를 붙여 넣지 않습니다.
+Eval(분리 검증 결과) template은 검토한 근거 ref를 간결하게 유지해야 합니다. 큰 log, bundle, screenshot, diff, trace는 가림 상태와 사용 가능성이 있는 ArtifactRef ref로 남깁니다. Eval 본문은 무엇을 검토했는지 기록할 뿐이며 원본 evidence payload를 붙여 넣지 않습니다.

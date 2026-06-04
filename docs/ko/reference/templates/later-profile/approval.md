@@ -17,7 +17,7 @@
 - 민감 category
 - 허용된 path, tool, command, network target, secret
 - baseline, 만료 조건, 대안, decision note
-- 경계 맥락으로 표시될 때 관련 쓰기 허가 기록(Write Authorization), 아티팩트 참조, redaction state, 읽기용 보기 최신성(projection freshness)
+- 경계 맥락으로 표시될 때 관련 쓰기 허가 기록(Write Authorization), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)
 
 `prepare_write`가 반환한 상태를 변경하지 않는 `approval_request_candidate`는 `APR` source가 아닙니다. 표시가 필요하면 candidate 표시로만 보여줍니다.
 
@@ -58,7 +58,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 요청 요약
 - 제안된 동작:
-- 승인하려는 sensitive action:
+- 승인하려는 민감 동작:
 - 여기서 'approved'가 의미하는 것:
 
 ## 출처 참조
@@ -66,7 +66,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 관련 user judgment:
 - 관련 쓰기 허가 기록(Write Authorization):
 - 아티팩트 참조:
-- redaction state:
+- 가림 상태:
 - 보기 최신성:
 
 ## 경계 요약
@@ -111,7 +111,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - user/operations:
 - security/privacy:
 - cost/deployment:
-- domain language:
+- 도메인 언어:
 - module/interface:
 
 ## 위험
@@ -136,7 +136,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 결정
 - status: pending | granted | denied | expired
-- decision note:
+- 결정 메모:
 - 결정한 사람:
 - 결정 시각:
 - 넓은 승인 확인: 이 결정은 위의 민감 동작 승인만 기록하며, "go ahead", "proceed", "looks good", "좋아", "진행해" 같은 표현이 이를 넓히지 않는다.

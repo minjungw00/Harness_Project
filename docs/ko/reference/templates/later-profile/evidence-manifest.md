@@ -16,10 +16,10 @@
 - 변경 파일 coverage
 - design-quality coverage
 - 민감 동작 승인 참조(later Approval profile이 활성화된 경우에만; 그 외에는 none)
-- hash, size, redaction state, retention/availability, owner relation, 후속 evidence 영향을 포함한 artifact 참조
+- hash, size, 가림 상태, 보존/사용 가능성, owner 관계, 후속 근거 영향을 포함한 artifact 참조
 - 관련 Run, Eval(분리 검증 결과), Feedback Loop, 수동 QA, TDD trace 참조
 - 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, 수동 QA, 작업 수락, 잔여 위험 요약
-- 닫기 맥락으로 렌더링할 때 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, redaction state, 읽기용 보기 최신성(projection freshness)을 보여주는 간결한 권한 참조
+- 닫기 맥락으로 렌더링할 때 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)을 보여주는 간결한 권한 참조
 
 ## 렌더링 섹션
 
@@ -27,10 +27,10 @@
 - 요약
 - 닫기 영향 요약
 - 권한과 닫기 참조
-- 수용 기준 coverage
-- 완료 조건 coverage
-- 변경 파일 coverage
-- 설계 품질 coverage
+- 수용 기준 뒷받침 범위
+- 완료 조건 뒷받침 범위
+- 변경 파일 뒷받침 범위
+- 설계 품질 뒷받침 범위
 - 민감 동작 승인 참조
 - 근거 참조
 - Redaction과 사용 가능성
@@ -81,28 +81,28 @@ updated_at: 2026-05-06T09:50:00+09:00
 ## 권한과 닫기 참조
 - 간결한 참조: write={write_authorization_ref|none}; judgment={user_judgment_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
 - 민감 동작 승인 참조(`approval_refs`)는 minimum MVP-1에서 `none`입니다. 민감 동작 coverage는 later Approval owner profile이 활성화되지 않은 한 `judgment_type=sensitive_action_approval`인 `user_judgment_refs`로 나타납니다.
-- redaction state:
+- 가림 상태:
 - 보기 최신성:
 
-## 수용 기준 coverage
-| AC ID | 진술 | Coverage 상태 | Run refs | ArtifactRef 참조 | 뒷받침 state refs | 메모 |
+## 수용 기준 뒷받침 범위
+| AC ID | 진술 | 뒷받침 상태 | Run 참조 | ArtifactRef 참조 | 뒷받침 상태 참조 | 메모 |
 |---|---|---|---|---|---|---|
 | AC-01 | | supported | RUN-0001 | ART-TEST-0001, ART-DIFF-0001 | FBL-0001 | |
 | AC-02 | | unsupported | | | | |
 
-## 완료 조건 coverage
-| 조건 | Coverage 상태 | Run refs | ArtifactRef 참조 | 뒷받침 state refs | 메모 |
+## 완료 조건 뒷받침 범위
+| 조건 | 뒷받침 상태 | Run 참조 | ArtifactRef 참조 | 뒷받침 상태 참조 | 메모 |
 |---|---|---|---|---|---|
 | | supported | RUN-0001 | ART-0001 | | |
 | | unsupported | | | | |
 
-## 변경 파일 coverage
-| Path | 뒷받침하는 기준 | 근거 참조 |
+## 변경 파일 뒷받침 범위
+| 경로 | 뒷받침하는 기준 | 근거 참조 |
 |---|---|---|
 | `src/...` | AC-01 | DIFF-0001, LOG-0001 |
 
-## 설계 품질 coverage
-| 항목 | Coverage / 관문 표시 상태 | 근거 참조 | 메모 |
+## 설계 품질 뒷받침 범위
+| 항목 | 뒷받침 범위 / 관문 표시 상태 | 근거 참조 | 메모 |
 |---|---|---|---|
 | vertical_slice_shape | passed | CU-01 | |
 | decision_quality_check | passed | UJ-0001 | |
@@ -114,14 +114,14 @@ updated_at: 2026-05-06T09:50:00+09:00
 | residual_risk_visibility_check | pending | RR-0001 | |
 | manual_qa_required | pending | qa_gate; no satisfying 수동 QA record yet | |
 
-`Coverage / 관문 표시 상태`는 이 manifest의 evidence coverage 또는 close와 관련된 관문 표시 상태입니다. 이 column의 `pending` 같은 값은 `ValidatorResult.status` 값이 아닙니다.
+`뒷받침 범위 / 관문 표시 상태`는 이 manifest의 evidence coverage 또는 close와 관련된 관문 표시 상태입니다. 이 column의 `pending` 같은 값은 `ValidatorResult.status` 값이 아닙니다.
 
 ## 민감 동작 승인 참조
 - Later Approval owner profile이 활성화된 경우에만 채웁니다. Minimum MVP-1의 민감 동작 coverage는 `judgment_type=sensitive_action_approval`인 `user_judgment_refs`에 둡니다.
 - APR-0001:
 
 ## 근거 참조
-- run summary:
+- 실행 요약:
 - feedback loop:
 - TDD trace:
 - TDD RED target / plan:
@@ -160,7 +160,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 커버리지 매핑 예시:
 
-| 기준 / 조건 | Run refs | ArtifactRef 참조 | 뒷받침 state refs | 충분성 메모 |
+| 기준 / 조건 | Run 참조 | ArtifactRef 참조 | 뒷받침 상태 참조 | 충분성 메모 |
 |---|---|---|---|---|
 | AC-01 의미 변경 없이 docs typo 수정 | RUN-DOCS-001 | ART-DIFF-001 | | Changed doc path와 self-check가 stated docs-only condition을 cover할 때만 sufficient입니다. |
 | AC-02 로그인 폼이 이메일을 제출함 | RUN-FEATURE-001 | ART-DIFF-002, ART-TEST-002 | FBL-001 | Run, diff, test/log refs가 Task 전체가 아니라 이 AC에 map될 때 supported입니다. |
@@ -176,6 +176,6 @@ Coverage row는 큰 근거 본문을 붙여 넣는 대신 owner record와 Artifa
 
 Chat text와 Markdown report prose는 evidence story를 설명할 수 있지만, 관련 criteria가 compatible owner records와 registered ArtifactRef refs를 가리키지 않는 한 sufficiency를 증명하기에는 충분하지 않습니다.
 
-Large log, diff, screenshot, trace, bundle은 짧은 결과와 함께 registered ArtifactRef ref로 남겨야 합니다. Manifest는 reader가 artifact body를 열어 보기 전에 redaction state와 availability를 먼저 보여줘야 합니다.
+큰 log, diff, screenshot, trace, bundle은 짧은 결과와 함께 등록된 ArtifactRef ref로 남겨야 합니다. Manifest는 reader가 artifact body를 열어 보기 전에 가림 상태와 사용 가능성을 먼저 보여줘야 합니다.
 
 `secret_omitted` artifact는 secret이 아닌 evidence가 보이는 주장만 뒷받침할 수 있으며, 생략된 값이 필요한 주장은 뒷받침하지 못합니다. `blocked` artifact는 커밋된 metadata-only notice이지 사용 가능한 원본 근거가 아닙니다. 의존하는 criteria는 replacement, waiver, user judgment outcome, 받아들인 위험, documented fallback이 evidence 경로를 해소할 때까지 unsupported, insufficient, blocked 중 적절한 상태로 남습니다. 이 template은 생략된 secret/PII 값 또는 차단된 payload를 포함하면 안 됩니다.

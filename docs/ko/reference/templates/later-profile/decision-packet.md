@@ -26,7 +26,7 @@
 - later profile이 활성화된 경우 관련 reconcile records
 - 잔여 위험 참조
 - minimum MVP-1의 근거 요약, Run 참조, ArtifactRef 참조, 보이는 근거 공백. 전체 근거 목록(Evidence Manifest) profile이 활성화된 경우에만 근거 목록 참조
-- 관련 권한 맥락으로 표시될 때 쓰기 허가 기록(Write Authorization), 민감 동작 허가, Eval(분리 검증 결과), 수동 QA, 작업 수락 맥락, 잔여 위험 참조, ArtifactRef 참조, redaction state, 읽기용 보기 최신성(projection freshness)
+- 관련 권한 맥락으로 표시될 때 쓰기 허가 기록(Write Authorization), 민감 동작 허가, Eval(분리 검증 결과), 수동 QA, 작업 수락 맥락, 잔여 위험 참조, ArtifactRef 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)
 - 영향받는 범위 표시 input: product areas, screens/flows, modules, interfaces, paths, acceptance criteria, gates, sensitive categories
 - 읽기용 보기 최신성(projection freshness) inputs
 
@@ -282,6 +282,6 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 이 template은 rendered shape이지 canonical state가 아닙니다. 활성 stage/profile이 요구하는 user judgment visibility는 상태 카드, 판단 요청, status/next response, judgment-context resource, user-judgment resource를 통해 제공될 수 있습니다. Standalone `DEC` projection은 optional입니다.
 
-Decision Packet projection은 권한 맥락 참조를 간결하고 명시적으로 유지해야 합니다. 이 template에 쓰기 허가 기록(Write Authorization), 민감 동작 허가 참조, 근거 요약, 해당 profile이 활성화된 경우의 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락, 잔여 위험 표시, 잔여 위험 수용, artifact, redaction, freshness ref를 표시하더라도 prose가 그 record의 authority가 되지는 않습니다.
+Decision Packet projection은 권한 맥락 참조를 간결하고 명시적으로 유지해야 합니다. 이 template에 쓰기 허가 기록(Write Authorization), 민감 동작 허가 참조, 근거 요약, 해당 profile이 활성화된 경우의 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락, 잔여 위험 표시, 잔여 위험 수용, 아티팩트, 가림 상태, 최신성 ref를 표시하더라도 prose가 그 record의 authority가 되지는 않습니다.
 
 Decision Packet card는 한 번에 하나의 judgment type만 표시해야 합니다. 민감 동작 승인 질문은 승인 언어를 쓰고, 작업 수락 질문은 작업 수락 언어를 쓰며, 잔여 위험 수용 질문은 수용하는 구체적 위험을 이름 붙입니다.

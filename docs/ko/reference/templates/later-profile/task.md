@@ -26,7 +26,7 @@
 - 쓰기 허가 기록(Write Authorization)과 쓰기 권한 요약 표시 input
 - 사용자 판단(User Judgment) 기록과 잔여 위험(Residual Risk), 해당 profile이 켜졌을 때 full-format 판단 패킷(Decision Packet) 표시 field
 - 최신 Run, 근거 요약, ArtifactRef 참조, 그리고 matching profile이 활성화된 경우 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA 기록, 민감 동작 승인 기록
-- 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인 user judgment refs, later 민감 동작 승인(Approval) refs, `evidence_ref` ref와 파생 근거 요약, 활성화된 경우 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, redaction state, 읽기용 보기 최신성(projection freshness) 권한 claim을 표시할 때 필요한 간결한 출처 refs
+- 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인 사용자 판단 참조, later 민감 동작 승인(Approval) 참조, `evidence_ref` 참조와 파생 근거 요약, 활성화된 경우 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness) 권한 주장을 표시할 때 필요한 간결한 출처 참조
 - 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 summary
 - changed scope, 민감 동작 승인, 근거, 검증, 수동 QA, 잔여 위험 표시, 잔여 위험 수용, 작업 수락, 면제 판단 상태, close reason을 포함하는 닫기 요약 표시 input
 - Journey Spine 기준 기록
@@ -125,7 +125,7 @@ updated_at: 2026-05-06T09:30:15+09:00
   - 잔여 위험 표시:
   - 잔여 위험 수용:
   - 면제 상태:
-  - 닫기 막힘 / close reason:
+  - 닫기 막힘 / 닫기 이유:
   - 가장 작은 해소 방법:
 - note: 이 항목들은 표시 그룹일 뿐입니다. 정확한 gate 값, recompute rule, close semantics는 Core Model Reference가 담당합니다.
 
@@ -133,7 +133,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - mode:
 - lifecycle phase:
 - result:
-- close reason:
+- 닫기 이유:
 - assurance:
 - 범위 요약:
 - 범위 밖:
@@ -150,11 +150,11 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 위험:
 - gate 표시 그룹: 범위=; 사용자 판단=; 근거=; 닫기 준비 상태=
 - 보장 수준:
-- kernel gate detail: scope=; decision=; approval=; design=; evidence=; verification=; 수동 QA=; acceptance=
+- 커널 gate 상세: scope=; decision=; approval=; design=; evidence=; verification=; 수동 QA=; acceptance=
 - 활성 Change Unit:
 - 쓰기 권한 요약:
 - 권한 출처 참조: write=; decision=; sensitive_action_permission=; evidence_summary=; evidence_manifest_when_active=; eval=; manual_qa=; work_acceptance=; residual_risk=; artifacts=
-- redaction state:
+- 가림 상태:
 - 최신 보고서:
 - 보기 최신성:
 
@@ -207,14 +207,14 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 작업 수락 user judgment:
 - 작업 수락 맥락:
 - 잔여 위험(Residual Risk):
-- 아티팩트 참조와 redaction state:
+- 아티팩트 참조와 가림 상태:
 - 보기 최신성:
 
 ## 자율성 경계(Autonomy Boundary)
-- profile:
+- 프로필:
 - agent가 할 수 있는 일:
 - 필요한 사용자 판단:
-- AFK stop conditions:
+- AFK 중단 조건:
 - 경계 상태:
 
 ## 쓰기 권한 요약
@@ -224,7 +224,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 허용 tool:
 - 허용 command:
 - 허용 network target:
-- secret scope:
+- 비밀 정보 범위:
 - 민감 category:
 - 민감 동작 승인 상태:
 - baseline:
@@ -233,49 +233,49 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 구현 마이크로 계획
 - note: 실행 보조 정보일 뿐입니다. 활성 Change Unit 범위가 write를 제한하고 `prepare_write`가 쓰기 허가 기록(Write Authorization)을 만듭니다.
-- TDD note: required이면 selected feedback loop, RED target, GREEN target, non-test implementation이 actual RED evidence 또는 waiver를 기다리는지 표시한다.
+- TDD 메모: required이면 선택된 feedback loop, RED target, GREEN target, non-test implementation이 actual RED evidence 또는 waiver를 기다리는지 표시한다.
 
-| 단계 / 조각 | 목적 | 활성 Change Unit 범위 / 예상 path | Feedback Loop / TDD | 예상 근거 | 멈추고 사용자에게 물을 때 |
+| 단계 / 조각 | 목적 | 활성 Change Unit 범위 / 예상 경로 | Feedback Loop / TDD | 예상 근거 | 멈추고 사용자에게 물을 때 |
 |---|---|---|---|---|---|
 | 1 | | | | | |
 
 ## 검토 단계
-- note: 관리되는 표시 전용입니다. Role Lens/playbook 라벨은 gate, record, `ProjectionKind` value, 민감 동작 승인, 근거, 검증, 수동 QA, 작업 수락, 잔여 위험 수용, close, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다. Same-session review는 분리 검증이 아닙니다. 발견 사항은 기존 owner record, ref, gate, blocker로 연결합니다.
+- note: 관리되는 표시 전용입니다. Role Lens/playbook 라벨은 gate, record, `ProjectionKind` value, 민감 동작 승인, 근거, 검증, 수동 QA, 작업 수락, 잔여 위험 수용, close, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다. 같은 세션 review는 분리 검증이 아닙니다. 발견 사항은 기존 owner record, ref, gate, blocker로 연결합니다.
 
 ### 명세 준수 검토
-- 수용 기준 coverage:
+- 수용 기준 뒷받침 범위:
 - Change Unit 완료 조건:
-- 범위 / 쓰기 권한 compatibility:
-- User judgment compatibility:
-- 근거 coverage:
+- 범위 / 쓰기 권한 호환성:
+- 사용자 판단 호환성:
+- 근거 뒷받침 범위:
 - 잔여 위험 표시:
-- 라우팅된 결과(existing path/ref only):
+- 라우팅된 결과(기존 path/ref only):
 
 ### 코드 품질 / Stewardship 검토
-- domain language:
-- module / interface boundary:
-- vertical slice shape:
+- 도메인 언어:
+- module / interface 경계:
+- vertical slice 형태:
 - feedback loop / TDD:
-- codebase stewardship:
-- context hygiene:
+- 코드베이스 stewardship:
+- context 정돈:
 - 후속 위험:
-- 라우팅된 결과(existing path/ref only):
+- 라우팅된 결과(기존 path/ref only):
 
 ## 다음 근거
 - 다음 근거 행동:
 - 근거가 필요한 이유:
-- TDD RED target / plan:
-- TDD RED evidence:
-- TDD GREEN evidence:
-- TDD refactor/check evidence:
-- 예상 artifact refs:
-- 생략/차단 artifact 영향:
+- TDD RED 대상 / 계획:
+- TDD RED 근거:
+- TDD GREEN 근거:
+- TDD refactor/check 근거:
+- 예상 아티팩트 refs:
+- 생략/차단 아티팩트 영향:
 - stale 또는 missing evidence:
 
 ## 잔여 위험
 - close 관련 위험:
 - 표시 상태:
-- status value:
+- status 값:
 - 수용하는 named risk:
 - 잔여 위험 수용 status:
 - 받아들인 residual-risk refs:
@@ -295,29 +295,29 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 면제 상태:
 - 권한 출처 참조:
 - 표시 상태 라벨(plain text, schema value 아님):
-- self-check refs:
+- 자체 확인 refs:
 - 분리 검증 Eval ref:
 - 검증 면제 판단 ref:
 - QA 면제 판단 ref:
 - 받아들인 residual-risk refs:
-- close reason:
+- 닫기 이유:
 - 남은 후속 작업:
 
 ## Stewardship 영향
-- summary shape: StewardshipImpactSummary
+- 요약 형태: StewardshipImpactSummary
 - domain_language_impact: none | updated | conflict | unresolved
 - module_boundary_impact: none | local | public_boundary | unresolved
 - interface_contract_impact: none | compatible | breaking | unresolved
 - feedback_loop_status: defined | missing | waived
 - future_change_risk: none | visible | accepted | unresolved
 - close_impact: none | blocks_close | requires_decision | residual_risk
-- refs:
-  - domain term refs:
-  - module map item refs:
-  - interface contract refs:
-  - feedback loop refs:
-  - TDD trace refs when selected:
-  - residual risk:
+- 참조:
+  - domain term 참조:
+  - module map item 참조:
+  - interface contract 참조:
+  - feedback loop 참조:
+  - 선택된 경우 TDD trace 참조:
+  - 잔여 위험:
   - 사용자 판단:
 
 ## 목표
@@ -355,7 +355,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 판단 요청(Decision):
 - Diff:
 - 로그:
-- redaction state가 있는 아티팩트 참조:
+- 가림 상태가 있는 아티팩트 참조:
 - 보기 최신성:
 <!-- HARNESS:END managed -->
 
@@ -381,17 +381,17 @@ updated_at: 2026-05-06T09:30:15+09:00
   - 용어:
 
 ## Module과 Interface 참조
-- module map item refs:
-- interface contract refs:
-- 표시되는 경우 렌더링 projection refs: MODULE-MAP, INTERFACE-CONTRACT
+- module map item 참조:
+- interface contract 참조:
+- 표시되는 경우 렌더링된 상태 보기 참조: MODULE-MAP, INTERFACE-CONTRACT
 - DESIGN:
 
 ## Change Unit 의존성
-| ID | blocked_by | unblocks | parallelizable_with | merge risk |
+| ID | blocked_by | unblocks | parallelizable_with | merge 위험 |
 |---|---|---|---|---|
 
 ## 구현 마이크로 계획 상세
-- 출처 정렬: current Task, 활성 Change Unit, gates, related refs
+- 출처 정렬: 현재 Task, 활성 Change Unit, gates, 관련 refs
 - 경계: 기준 상태 아님, 범위 권한 아님, 민감 동작 승인(Approval) 아님, 쓰기 허가 기록(Write Authorization) 아님. 활성 Change Unit이 범위의 기준 출처로 남음
 
 ### Step Queue(단계 대기열)
@@ -412,15 +412,15 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 용어 / 의미 / code representation:
 
 ### Module / Interface 영향
-- module / 영향 / interface / test boundary:
+- module / 영향 / interface / 테스트 경계:
 
 ### 거절한 options
 - option / 이유 / DEC:
 
 ### Watchpoints(주의 지점)
-- regression:
+- 회귀:
 - security/performance/operations:
-- architecture drift:
+- 아키텍처 drift:
 
 ### 이어가기 메모
 - 다음 session이 알아야 할 것:
@@ -438,7 +438,7 @@ Change Unit block 하위 템플릿:
 - 조각 유형: vertical | enabling | cleanup | horizontal-exception
 - horizontal exception 이유:
 - 후속 vertical CU:
-- autonomy profile:
+- 자율성 프로필:
 - agent가 할 수 있는 일:
   - 구현 세부사항:
   - 범위 안의 local refactor:
@@ -451,16 +451,16 @@ Change Unit block 하위 템플릿:
   - 잔여 위험 수용:
   - public interface 또는 호환성 약속:
   - 잔여 위험 수용:
-- AFK stop conditions:
+- AFK 중단 조건:
   - 경계 초과:
   - 근거를 만들 수 없음:
   - close 관련 위험 발견:
-- end-to-end path:
-  - trigger / input:
-  - domain logic:
-  - persistence:
+- end-to-end 경로:
+  - 트리거 / 입력:
+  - 도메인 로직:
+  - 영속화:
   - API / 호출자 경계:
-  - UI / observable output:
+  - UI / 관찰 가능한 출력:
 - 허용 path:
   - `src/...`
   - `tests/...`
@@ -489,10 +489,10 @@ Change Unit block 하위 템플릿:
 - TDD:
   - trace 상태: required | recorded | waived | not_required
   - 요구/출처:
-  - RED target / plan:
-  - RED evidence (actual):
-  - green evidence:
-  - non-TDD justification:
+  - RED 대상 / 계획:
+  - RED 근거(실제):
+  - GREEN 근거:
+  - Non-TDD 근거:
 - 수동 QA:
   - required: yes | no
   - profile: ui_quality | workflow | copy | accessibility | browser_smoke | none
@@ -500,7 +500,7 @@ Change Unit block 하위 템플릿:
   - blocked_by:
   - unblocks:
   - parallelizable_with:
-  - merge risk:
+  - merge 위험:
 - 완료 조건:
   - [ ]
 - evaluator 초점:

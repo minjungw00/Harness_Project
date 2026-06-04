@@ -46,7 +46,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## 요약
 - architecture 상태:
 - 최근 review:
-- stale conditions:
+- 오래된 것으로 보는 조건:
 
 ## 모듈
 | 모듈 | 역할 | 공개 interface | 내부 복잡도 | 의존성 | 테스트 경계 | 소유자 판단 | 주의 지점 |
@@ -58,10 +58,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 |---|---|---|---|---|
 
 ## Module watchpoint 모음
-- source: `module_map_items.watchpoints_json`
-- canonical owner: Module Map Item; 전용 architecture watchpoint ref는 later DDL batch가 정의한 경우에만 사용한다
-- shallow module growth:
-- dependency direction risk:
+- 출처: `module_map_items.watchpoints_json`
+- 기준 owner: Module Map Item; 전용 architecture watchpoint ref는 later DDL batch가 정의한 경우에만 사용한다
+- 얕은 module 성장:
+- 의존성 방향 위험:
 - public interface drift:
 <!-- HARNESS:END managed -->
 

@@ -52,50 +52,50 @@ updated_at: 2026-05-06T09:40:00+09:00
 - change_unit_id:
 - trace 상태: required | recorded | waived | not_required
 - 요구/출처:
-- feedback loop ref:
-- 근거 목록(Evidence Manifest) coverage ref:
+- feedback loop 참조:
+- 근거 목록(Evidence Manifest) coverage 참조:
 
 ## Red(실패 단계)
-- target / plan:
-- failing test ref:
-- command:
-- result: failed_as_expected | failed_unexpectedly | missing
+- 대상 / 계획:
+- 실패 테스트 ref:
+- 명령:
+- 결과: failed_as_expected | failed_unexpectedly | missing
 - log ref:
-- recorded before non-test implementation: yes | no | waived
-- target / plan은 근거 목록(Evidence Manifest) coverage로 계산됨: no
+- non-test 구현 전 기록 여부: yes | no | waived
+- 대상 / 계획은 근거 목록(Evidence Manifest) coverage로 계산됨: no
 
 ## Green(통과 단계)
-- command:
-- result: passed | failed | missing
+- 명령:
+- 결과: passed | failed | missing
 - log ref:
 
 ## Refactor(정리 단계)
-- performed: yes | no
-- notes:
-- verification command:
+- 수행 여부: yes | no
+- 메모:
+- verification 명령:
 - log ref:
 
 ## Non-TDD 근거
 - 이유:
-- feedback loop ref:
-- alternate feedback loop:
-- waiver recorded before non-test implementation: yes | no
+- feedback loop 참조:
+- 대체 feedback loop:
+- non-test 구현 전 waiver 기록 여부: yes | no
 
 ## 근거 참조
 - test:
-- red log:
-- green log:
+- RED log:
+- GREEN log:
 - refactor/check log:
 - 근거 목록(Evidence Manifest):
 - diff:
 
 ## Finding 라우팅
-- evidence gaps or support:
-- User judgment 후보 또는 refs:
-- Change Unit update 또는 follow-up:
-- residual-risk 후보 또는 refs:
+- 근거 공백 또는 뒷받침:
+- 사용자 판단 후보 또는 refs:
+- Change Unit 업데이트 또는 후속 조치:
+- 잔여 위험 후보 또는 refs:
 - 수동 QA 또는 Eval(분리 검증 결과) refs:
-- close blockers:
+- 닫기 막힘:
 ````
 
 ## 메모
