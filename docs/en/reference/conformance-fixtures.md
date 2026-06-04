@@ -65,7 +65,7 @@ This reference does not own operator command procedures, docs-maintenance report
 | The exact fixture body fields | [Conformance Fixture Format](#conformance-fixture-format) |
 | How a runner loads, seeds, executes, captures, and compares | [Conformance Execution](#conformance-execution) |
 | Default comparison modes for `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error` | [Fixture Assertion Semantics](#fixture-assertion-semantics) |
-| Small MVP behavior examples | [Engineering Checkpoint Behavior Examples](#v01-core-authority-smoke-fixture-set), [MVP-1 User Work Loop Behavior Examples](#v02-first-user-value-slice-fixture-set), and [Clarification Quality Behavior Examples](#clarification-quality-fixture-group) |
+| Small MVP behavior examples | [Engineering Checkpoint Behavior Examples](#engineering-checkpoint-behavior-examples), [MVP-1 User Work Loop Behavior Examples](#mvp-1-user-work-loop-behavior-examples), and [Clarification Quality Behavior Examples](#clarification-quality-fixture-group) |
 | Suite intent and authoring order | [Conformance staging](operations-and-conformance.md#conformance-staging), [Kernel Smoke Authoring Queue](#kernel-smoke-authoring-queue), and [Future Fixtures: Fixture Suites](../later/future-fixtures.md#fixture-suites) |
 | Core model and current-phase boundary | [Core Conformance Model](#core-conformance-model) and [Fixture Current-Phase Status](#fixture-current-phase-status) |
 | Future fixture examples by concern | [Future Fixtures](../later/future-fixtures.md) |
@@ -94,12 +94,13 @@ The hardened local reference target is an umbrella target reached through Assura
 | Engineering Checkpoint fixtures, with Kernel Smoke as the authoring label | Engineering Checkpoint | Minimal authority loop only: project/Task/scope setup, in-scope `prepare_write` allow, out-of-scope write block from Harness authority state, durable single-use Write Authorization, compatible `record_run` consumption/linking, missing artifact/evidence blocker/status, and non-mutating status read. | MVP-1 User Work Loop value, profile-specific user judgment quality, full Evidence Manifest, projection renderer support, multiple projection kinds, residual-risk acceptance semantics, work acceptance semantics, Manual QA, detached verification, export/recover, release handoff, full conformance suite, future fixture catalog, higher guard guarantees, and broad operations. |
 | MVP-1 User Work Loop fixtures | MVP-1 User Work Loop | Ordinary requests become tracked work without Harness vocabulary; clarification quality, judgment separation, evidence blockers, residual-risk visibility, honest authority/fallback behavior, and derived-summary non-authority are visible through Core-owned state and structured responses. | Full agency assurance hardening, detached verification independence, full Manual QA matrix, stewardship policy suite, TDD/module/interface catalogs, export/recover, release handoff, and automation beyond the MVP-1 user-value path. |
 | Assurance Profile fixtures | Assurance Profile | User-owned judgment, Approval, Write Authorization, Manual QA, verification, work acceptance, residual-risk acceptance, stewardship, design-quality, context-hygiene, TDD, and feedback-loop boundaries stay separate and fixture-proven through Core records. | Operator recovery/export completeness, release handoff, broad operations coverage, dashboard/hosted workflow UI, broad connector automation, and unproven preventive or isolated guarantee claims. |
-| Operations Profile / promoted-expansion fixtures | Operations Profile and Roadmap | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, and any promoted future higher guarantee level or automation profile. | Any stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, or automation claim until owner docs define the mechanism and fixtures prove the covered behavior. |
+| Operations Profile / promoted Roadmap fixtures | Operations Profile and Roadmap | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, and any promoted future higher guarantee level or automation profile. | Any stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, or automation claim until owner docs define the mechanism and fixtures prove the covered behavior. |
 
 ## MVP Behavior Examples
 
 These behavior examples are design targets for the active MVP path. They are intentionally short and testable so future conformance can stay focused on Harness differentiation: local authority state, user-owned judgment routing, evidence and risk visibility, and honest guarantee wording. They are not executable fixtures yet, not generated runtime artifacts, and not current pass/fail criteria. They do not require the broad future catalog to satisfy Engineering Checkpoint or MVP-1.
 
+<a id="engineering-checkpoint-behavior-examples"></a>
 <a id="v01-core-authority-smoke-fixture-set"></a>
 
 ### Engineering Checkpoint Behavior Examples
@@ -116,6 +117,7 @@ Engineering Checkpoint behavior examples describe only the first local authority
 | `CORE-v01-missing-artifact-evidence-ref-blocker` | `harness.status`, narrow `harness.close_task` smoke, or owner blocker read | Missing required artifact/evidence support is reported as structured status/blocker state such as `ARTIFACT_MISSING` or `EVIDENCE_INSUFFICIENT`; rendered prose or Markdown cannot satisfy the missing ref. |
 | `CORE-v01-status-read-no-mutation` | `harness.status` read, including `status.next_actions` when present | Status returns current Task, scope, write-authority summary, evidence/artifact support, blockers, next actions, and state version without appending events, creating artifacts, enqueueing projections, authorizing writes, satisfying evidence, or closing work. |
 
+<a id="mvp-1-user-work-loop-behavior-examples"></a>
 <a id="v02-first-user-value-slice-fixture-set"></a>
 
 ### MVP-1 User Work Loop Behavior Examples
@@ -311,7 +313,7 @@ Detailed future catalog scenarios live in [Future Fixtures](../later/future-fixt
 
 ## Kernel Smoke Authoring Queue
 
-Use this queue as future authoring guidance for the [Engineering Checkpoint Behavior Examples](#v01-core-authority-smoke-fixture-set). Kernel Smoke is the narrow authoring label for the first internal authority loop, not the first user-value slice, not a full conformance suite, and not the future fixture catalog. These rows do not imply executable fixture files already exist. They are a compact authoring order; a first implementation plan may materialize only the smallest subset that proves the one authority loop named by Build.
+Use this queue as future authoring guidance for the [Engineering Checkpoint Behavior Examples](#engineering-checkpoint-behavior-examples). Kernel Smoke is the narrow authoring label for the first internal authority loop, not the first user-value slice, not a full conformance suite, and not the future fixture catalog. These rows do not imply executable fixture files already exist. They are a compact authoring order; a first implementation plan may materialize only the smallest subset that proves the one authority loop named by Build.
 
 Kernel Smoke defaults to no projection requirement. A fixture may assert projection freshness or enqueue/failure facts only when the minimal owner path already produces those facts and they help prove the target behavior. Projection-template polish, detailed report templates, multiple projection kinds, browser QA capture, export/recover, reconcile, stewardship, context hygiene, full operations, and future guarantee-level fixtures stay outside Engineering Checkpoint unless owner docs later promote a specific narrow path.
 

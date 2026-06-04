@@ -559,6 +559,8 @@ flowchart LR
   Blocker --> State
 ```
 
+<a id="prepare_write"></a>
+
 ## prepare_write
 
 `prepare_write`는 제품 파일 쓰기에 대한 유일한 쓰기 전 범위 확인과 호환성 판단 지점입니다. Approval, user judgment resolution, `record_run`, `close_task`, report, projection, agent prose는 input 또는 context가 될 수 있습니다. 하지만 consumable Write Authorization record를 만들거나 product-file write를 스스로 compatible하게 만들지는 않습니다.
@@ -589,6 +591,8 @@ Cooperative-only surface에서 MCP가 unavailable이면 product write는 instruc
 
 External side effect도 authority 의미가 같습니다. 실행 전에는 `prepare_write`가 intended side effect를 평가합니다. 실행 뒤에는 `record_run`이 실제로 일어난 일을 기록합니다. `record_run`은 compatible scope, Approval, user judgment coverage, Write Authorization 없이 일어난 effect를 사후 compatible하게 만들 수 없습니다.
 
+<a id="record_run"></a>
+
 ## record_run
 
 `record_run`은 Run, artifact, evidence recording point입니다. 쓰기 전 범위 확인 판단 지점이 아니며 product-file write를 사후 compatible하게 만들 수 없습니다.
@@ -598,6 +602,8 @@ Product-file write를 보고하는 implementation/direct Run은 compatible, unex
 Out-of-scope change, missing Write Authorization, stale Write Authorization, consumed Write Authorization, incompatible Write Authorization은 case에 따라 rejection, violation, recovery, stale/blocker state가 됩니다. 이런 Run은 relevant owner record를 통해 repair되기 전까지 affected scope의 evidence sufficiency, verification, QA, work acceptance, residual-risk acceptance, close readiness를 만족하지 않습니다.
 
 Read-only와 shaping-only Run은 product-file change를 보고하지 않을 때만 Write Authorization 없이 기록할 수 있습니다.
+
+<a id="close_task"></a>
 
 ## close_task
 

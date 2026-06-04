@@ -2503,7 +2503,7 @@ expected_error: null
 
 이 catalog entries는 future candidates이지 내부 엔지니어링 점검, MVP-1 사용자 작업 루프, 보증 프로필, 운영 프로필, 커널 스모크(Kernel Smoke) 요구사항이 아닙니다. Browser QA Capture capability profile, redaction 및 secret/PII policy, test environment, artifact retention, fixture 또는 conformance target, fallback 의미, projection-as-canonical 의존성 없음이 정의된 뒤에만 실행 가능해집니다.
 
-에이전시 보증 팩 / 운영과 인계 팩의 staged 수동 QA 적용 범위는 기존 수동 QA record 또는 valid QA waiver, `qa_gate` behavior, Core owner path를 통해 제공된 registered artifact refs입니다. Automated Browser QA Capture는 승격 이후에 유용한 capture 보조 수단이지만, staged 수동 QA 또는 artifact coverage를 충족하기 위해 요구되지 않습니다.
+보증 프로필 / 운영 프로필의 staged 수동 QA 적용 범위는 기존 수동 QA record 또는 valid QA waiver, `qa_gate` behavior, Core owner path를 통해 제공된 registered artifact refs입니다. Automated Browser QA Capture는 승격 이후에 유용한 capture 보조 수단이지만, staged 수동 QA 또는 artifact coverage를 충족하기 위해 요구되지 않습니다.
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|

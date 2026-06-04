@@ -457,7 +457,7 @@ Connected profile의 actual enforcement 또는 detection layer를 적용하는 u
 
 MVP-1 사용자 작업 루프 이후 담당 문서가 정의한 보증 프로필과 운영 프로필을 완료해 도달하는 로컬 기준 동작 전체입니다. 별도 delivery stage도, 첫 구현 batch도, fixture profile이나 suite name도 아닙니다.
 
-강화된 로컬 기준 목표는 내부 엔지니어링 점검, MVP-1 사용자 작업 루프, 로드맵 경계를 대체하지 않습니다. Conformance는 내부 엔지니어링 점검 fixtures, MVP-1 사용자 작업 루프 fixtures, 보증 프로필 fixtures, 운영 프로필 또는 promoted-expansion fixtures라는 이름의 fixture profile로 증명합니다.
+강화된 로컬 기준 목표는 내부 엔지니어링 점검, MVP-1 사용자 작업 루프, 로드맵 경계를 대체하지 않습니다. Conformance는 내부 엔지니어링 점검 fixtures, MVP-1 사용자 작업 루프 fixtures, 보증 프로필 fixtures, 운영 프로필 또는 승격된 로드맵 fixtures라는 이름의 fixture profile로 증명합니다.
 
 ### Harness Core
 

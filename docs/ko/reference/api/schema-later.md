@@ -122,6 +122,8 @@ JourneyCardSummary:
 
 Recommended playbook과 route field는 display/routing metadata입니다. 이것만으로 state transition, event, projection, gate, write, evidence, verification, QA, risk, acceptance, close effect가 생기지 않습니다.
 
+<a id="later-harnessrecord_run-branches"></a>
+
 ## Later `harness.record_run` branches
 
 이 branch는 owner profile이 active일 때만 [MVP `harness.record_run`](mvp-api.md#harnessrecord_run)을 확장합니다.

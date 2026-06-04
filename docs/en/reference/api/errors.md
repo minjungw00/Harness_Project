@@ -133,6 +133,8 @@ Public tool responses carry one primary `ToolError.code` even when Core observes
 | 26 | `ARTIFACT_MISSING` | A referenced artifact file is missing or failed integrity checks. |
 | 27 | `VALIDATOR_FAILED` | Generic validator fallback selected only when no more specific typed blocker applies. |
 
+<a id="harnessclose_task-close-blockers"></a>
+
 ## `harness.close_task` Close Blockers
 
 `harness.close_task` may return multiple close blockers. The primary `ToolError` in `CloseTaskResponse.base.errors` uses the precedence above, and `CloseTaskResponse.blockers` must include observed close blockers as structured results in the same relative order. Prose-only status text, reports, Journey views, or agent summaries are not close-blocker results.

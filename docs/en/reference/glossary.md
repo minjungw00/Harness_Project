@@ -429,7 +429,7 @@ A user-facing safety control that applies the connected profile's actual enforce
 
 The aggregate local reference behavior reached after MVP-1 User Work Loop by completing the owner-defined Assurance Profile and Operations Profile profiles. It is an umbrella target, not a separate delivery stage, not the first implementation batch, and not a fixture profile or suite name.
 
-The hardened local reference target does not replace the boundaries for Engineering Checkpoint, MVP-1 User Work Loop, or Roadmap. Conformance is still proven through the named fixture profiles: Engineering Checkpoint fixtures, MVP-1 User Work Loop fixtures, Assurance Profile fixtures, and Operations Profile or promoted-expansion fixtures.
+The hardened local reference target does not replace the boundaries for Engineering Checkpoint, MVP-1 User Work Loop, or Roadmap. Conformance is still proven through the named fixture profiles: Engineering Checkpoint fixtures, MVP-1 User Work Loop fixtures, Assurance Profile fixtures, and Operations Profile or promoted Roadmap fixtures.
 
 ### Harness Core
 

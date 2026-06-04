@@ -574,6 +574,8 @@ flowchart LR
   Blocker --> State
 ```
 
+<a id="prepare_write"></a>
+
 ## prepare_write
 
 `prepare_write` is the unique product-write pre-write scope-check and compatibility decision point. Approval, user judgment resolution, `record_run`, `close_task`, reports, projections, and agent prose can provide inputs or context, but none of them create a consumable Write Authorization record or make a product-file write compatible by themselves.
@@ -604,6 +606,8 @@ If MCP is unavailable on a cooperative-only surface, product writes are held by 
 
 External side effects keep the same authority meaning. Before execution, `prepare_write` evaluates the intended side effect. After execution, `record_run` records what happened. `record_run` cannot retroactively make an effect compatible when it lacked compatible scope, Approval, user judgment coverage, or Write Authorization.
 
+<a id="record_run"></a>
+
 ## record_run
 
 `record_run` is the Run, artifact, and evidence recording point. It is not a pre-write scope-check decision point and cannot retroactively make product-file writes compatible.
@@ -613,6 +617,8 @@ Implementation and direct Runs that report product-file writes must consume a co
 Out-of-scope changes, missing Write Authorization, stale Write Authorization, consumed Write Authorization, or incompatible Write Authorization become rejection, violation, recovery, or stale/blocker state according to the case. Such Runs do not satisfy evidence sufficiency, verification, QA, work acceptance, residual-risk acceptance, or close readiness for the affected scope until repaired through the relevant owner records.
 
 Read-only and shaping-only Runs may be recorded without Write Authorization only when they do not report product-file changes.
+
+<a id="close_task"></a>
 
 ## close_task
 

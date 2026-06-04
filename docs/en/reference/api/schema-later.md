@@ -122,6 +122,8 @@ JourneyCardSummary:
 
 Recommended playbooks and route fields are display/routing metadata. They have no state transition, event, projection, gate, write, evidence, verification, QA, risk, acceptance, or close effect by themselves.
 
+<a id="later-harnessrecord_run-branches"></a>
+
 ## Later `harness.record_run` branches
 
 These branches extend [MVP `harness.record_run`](mvp-api.md#harnessrecord_run) only when their owner profile is active.

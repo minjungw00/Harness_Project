@@ -133,6 +133,8 @@ Core가 여러 blocker를 관찰해도 public tool response는 하나의 primary
 | 26 | `ARTIFACT_MISSING` | Referenced artifact file이 missing이거나 integrity check가 failed입니다. |
 | 27 | `VALIDATOR_FAILED` | 더 specific한 typed blocker가 없을 때만 generic validator fallback으로 선택합니다. |
 
+<a id="harnessclose_task-close-blockers"></a>
+
 ## `harness.close_task` Close Blockers
 
 `harness.close_task`는 여러 close blocker를 반환할 수 있습니다. `CloseTaskResponse.base.errors`의 primary `ToolError`는 위 precedence를 사용하고, `CloseTaskResponse.blockers`는 observed close blocker를 같은 상대 순서의 structured result로 포함해야 합니다. Prose-only status text, report, Journey view, agent summary는 close-blocker result가 아닙니다.
