@@ -259,7 +259,7 @@ The Autonomy Boundary is not scope, Approval, a pre-write scope check, evidence,
 
 ### User Judgment
 
-A `user_judgment` record is the canonical state record for user-owned judgment. It records the question, judgment type, status, options or selected outcome, affected scope, related refs, deferral effect when relevant, and route-specific context for sensitive-action approval, waiver, work acceptance, residual-risk acceptance, or reconcile.
+A `user_judgment` record is the canonical state record for user-owned judgment. It records the question, `judgment_type`, `presentation`, `display_label`, status, options or selected outcome, affected scope, related refs, deferral effect when relevant, and route-specific context for sensitive-action approval, waiver, work acceptance, residual-risk acceptance, or reconcile.
 
 User judgment records feed `decision_gate`. Blocking user-owned judgment cannot be satisfied by chat text, broad approval, or projection prose alone. The recorded `user_judgment` and its resolution, deferral, rejection, blocked state, or supersession are the authority for that judgment.
 
