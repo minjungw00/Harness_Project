@@ -34,6 +34,7 @@ The repository is still in documentation review/redesign. The current docs are a
 - [ ] Verify Korean prose is natural Korean and preserves exact identifiers, file paths, schema/API names, enum values, error codes, validator IDs, and code-like strings.
 - [ ] Verify moved, renamed, split, merged, or deleted content has updated links, anchors, README routes, paired-language links, and old title/path references in the same batch.
 - [ ] Run the relevant docs-maintenance checks you can run locally, or state which checks were not run.
+- [ ] Before final documentation acceptance or a major review handoff, use [Documentation Checks](documentation-checks.md) and report whether each check was manual, scriptable, or future-runtime-only.
 - [ ] Route any remaining issue as documentation drift, schema/design decision, stage boundary decision, implementation-readiness criterion, or future Roadmap item. Do not leave vague TODOs scattered through active docs.
 - [ ] Report changed files and any residual risks or unresolved checks in the handoff.
 
@@ -220,6 +221,8 @@ Do not call a finding non-blocking unless you name what stage it does not block 
 
 Docs-maintenance checks are editorial quality checks. They may report documentation drift, owner mismatch, link integrity problems, terminology consistency problems, stage-boundary drift, security wording drift, user-language issues, English/Korean parity issues, duplicate normative text outside the owner, broken links or anchors, and open-marker hygiene problems.
 
+For the final reviewer-facing checklist with what to inspect, common failures, pass meanings, and review type labels, use [Documentation Checks](documentation-checks.md).
+
 Docs-maintenance is not runtime conformance or implementation readiness. It does not execute fixture actions, seed runtime state, compare runtime state/events/artifacts/projections/errors, count toward runtime fixture pass/fail, or create/update canonical state, runtime state, `task_events`, evidence artifacts, Evidence Manifests, QA results, Manual QA records, Acceptance records, residual-risk acceptance, Residual Risk records, close readiness, projection refreshes, generated conformance artifacts, generated operational reports, or implementation readiness.
 
 A docs-maintenance review or future checker should report:
@@ -259,7 +262,7 @@ Required check categories:
 
 ### Final pre-acceptance review
 
-Before maintainers accept the documentation set for implementation planning, do one final docs-maintenance pass. Check English/Korean active file map parity, semantic section parity in paired files, broken links and anchors, owner-boundary drift, non-owner duplicate contracts, terminology drift for Approval, Decision Packet, Evidence, Verification, Manual QA, Acceptance, Residual Risk, Projection, and Guarantee Level, and open-marker hygiene.
+Before maintainers accept the documentation set for implementation planning, do one final docs-maintenance pass. Use [Documentation Checks](documentation-checks.md) as the practical validation checklist. Check English/Korean active file map parity, semantic section parity in paired files, broken links and anchors, owner-boundary drift, non-owner duplicate contracts, terminology drift for Approval, Decision Packet, Evidence, Verification, Manual QA, Acceptance, Residual Risk, Projection, and Guarantee Level, and open-marker hygiene.
 
 Also check the implementation-readiness criteria in [Implementation Overview](../build/implementation-overview.md#implementation-readiness-criteria): repository identity, user-facing flow without internal-term burden, Discovery as requirements clarification rather than premature Change Unit convergence, canonical `user_judgment` naming with mapped legacy aliases, proportional judgment prompts, Approval/work acceptance/residual-risk acceptance separation, coherent stages, Core Model/API/storage/reference agreement, staged Storage/API scope, staged projection/template scope, honest security guarantee wording, agent context strategy, staged future-oriented conformance fixture plan, staged operations surface, Korean user-facing readability, and clean links/terminology/open markers.
 
@@ -324,7 +327,7 @@ For boundaries that are easy to repeat, use these owners:
 | Role Lens | [Agent Integration: Role Lens Behavior](../reference/agent-integration.md#role-lens-behavior) |
 | Review Stages | [Design Quality Policies: Two-stage Review Display](../reference/design-quality-policies.md#two-stage-review-display) |
 | Release Handoff and export | [Operations And Conformance: Release Handoff Export Profile](../reference/operations-and-conformance.md#release-handoff-export-profile); rendered shape in the later-profile [EXPORT Template](../reference/templates/later-profile/export.md) |
-| Docs-maintenance | [Authoring Guide: Docs-maintenance checks](#docs-maintenance-checks) for rule bodies; [Operations And Conformance: Docs-maintenance profile](../reference/operations-and-conformance.md#docs-maintenance-profile) for operator reporting |
+| Docs-maintenance | [Authoring Guide: Docs-maintenance checks](#docs-maintenance-checks) for rule bodies; [Documentation Checks](documentation-checks.md) for the final validation checklist; [Operations And Conformance: Docs-maintenance profile](../reference/operations-and-conformance.md#docs-maintenance-profile) for operator reporting |
 | Projection and report surfaces | [Projection And Templates Reference](../reference/projection-and-templates.md); rendered shapes in [Template Reference](../reference/templates/README.md) |
 | Security assets, trust boundaries, threat categories, control categories, guarantee-level meanings, and high-risk cooperative/detective/preventive/isolated security expectations | [Security Reference](../reference/security.md) for threat concepts and honest guarantee display; exact API, storage, Core, connector, operations, and conformance behavior stays with those owners |
 
