@@ -102,7 +102,7 @@ Code block 안의 code, method name, API method name, enum value, field name, DD
 
 전달 라벨을 한국어 prose에서 쓸 때는 자연스러운 한국어를 우선합니다. 기준 표현은 `내부 엔지니어링 점검`, `MVP-1 사용자 작업 루프`, `보증 프로필`, `운영 프로필`, `로드맵`입니다. `커널 스모크(Kernel Smoke)`는 단계가 아니라 내부 엔지니어링 점검 아래의 좁은 future smoke-check 작성 라벨입니다.
 
-Reference heading, 표, 구현 lookup에서 정밀도가 필요할 때만 active English label을 괄호로 덧붙입니다. 예전 English label인 `v0.1 Core Authority Smoke`, `v0.2 First User-Value Slice`, `v0.3 Agency Assurance Pack`, `v0.4 Operations & Handoff Pack`, `v1+ Expansion`은 오래된 문서를 연결해야 할 때만 별칭으로 씁니다. 이때도 한국어 설명 뒤 괄호나 명시적인 별칭 표에 둡니다.
+Reference heading, 표, 구현 lookup에서 정밀도가 필요할 때만 active English label을 괄호로 덧붙입니다. 예전 English label인 `v0.1 Core Authority Smoke`, `v0.2 First User-Value Slice`, `v0.3 Agency Assurance Pack`, `v0.4 Operations & Handoff Pack`, `v1+ Expansion`은 현재 단계 이름이 아니며 오래된 문서를 연결해야 할 때만 별칭으로 씁니다. 이때도 한국어 설명 뒤 괄호나 명시적인 별칭 표에 둡니다.
 
 `강화된 로컬 기준 목표(hardened local reference target)`는 단계 라벨이 아닙니다. MVP-1 이후 보증 프로필과 운영 프로필의 담당 문서 정의 profile을 완료해 도달하는 용어집 정의 상위 목표를 가리킬 때만 쓰고, 추가 단계나 fixture profile, suite name으로 쓰지 않습니다. 세 공간 모델을 한국어 prose로 설명할 때는 `제품 저장소`, 이 저장소의 향후 source 역할을 가리킬 때는 `하네스 서버 소스 저장소`, 운영 데이터 공간은 `하네스 런타임 홈`을 사용합니다. Architecture term을 구분해야 할 때만 영어 라벨을 괄호로 덧붙입니다.
 

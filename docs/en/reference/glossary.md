@@ -108,7 +108,7 @@ Use the active delivery labels consistently.
 | Operations Profile | Later hardening for operations and handoff behavior. |
 | Roadmap | Future scope unless owner docs promote and prove an item. |
 
-`Kernel Smoke` is not a stage. Keep it only as the narrow future smoke-check authoring label under Engineering Checkpoint. Legacy labels such as `v0.1 Core Authority Smoke`, `v0.2 First User-Value Slice`, `v0.3 Agency Assurance Pack`, `v0.4 Operations & Handoff Pack`, and `v1+ Expansion` may appear only as legacy aliases.
+`Kernel Smoke` is not a stage. Keep it only as the narrow future smoke-check authoring label under Engineering Checkpoint. Historical legacy labels such as `v0.1 Core Authority Smoke`, `v0.2 First User-Value Slice`, `v0.3 Agency Assurance Pack`, `v0.4 Operations & Handoff Pack`, and `v1+ Expansion` are not current stage names and may appear only as legacy aliases.
 
 ## Owner map
 

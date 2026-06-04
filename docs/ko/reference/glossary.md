@@ -108,7 +108,7 @@ Active delivery label은 일관되게 씁니다.
 | 운영 프로필(Operations Profile) | 이후 운영과 handoff 동작을 단단하게 하는 범위입니다. |
 | 로드맵(Roadmap) | Owner 문서가 승격하고 증명하기 전까지 future scope입니다. |
 
-`Kernel Smoke`는 stage가 아닙니다. 내부 엔지니어링 점검 아래의 좁은 future smoke-check 작성 라벨로만 씁니다. `v0.1 Core Authority Smoke`, `v0.2 First User-Value Slice`, `v0.3 Agency Assurance Pack`, `v0.4 Operations & Handoff Pack`, `v1+ Expansion` 같은 legacy label은 오래된 alias로만 남길 수 있습니다.
+`Kernel Smoke`는 stage가 아닙니다. 내부 엔지니어링 점검 아래의 좁은 future smoke-check 작성 라벨로만 씁니다. `v0.1 Core Authority Smoke`, `v0.2 First User-Value Slice`, `v0.3 Agency Assurance Pack`, `v0.4 Operations & Handoff Pack`, `v1+ Expansion` 같은 예전 label은 현재 단계 이름이 아니며 오래된 별칭으로만 남길 수 있습니다.
 
 ## 담당 문서 지도
 
