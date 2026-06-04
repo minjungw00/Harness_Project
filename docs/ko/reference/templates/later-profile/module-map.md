@@ -2,11 +2,11 @@
 
 ## 사용 시점
 
-모듈 역할, 공개 interface, 내부 복잡도, 의존성, 테스트 경계, 소유자 판단, watchpoint를 읽기 쉬운 projection으로 확인해야 할 때 `MODULE-MAP`을 사용합니다.
+모듈 역할, 공개 interface, 내부 복잡도, 의존성, 테스트 경계, 소유자 판단, watchpoint를 읽기 쉬운 상태 보기(projection)로 확인해야 할 때 `MODULE-MAP`을 사용합니다.
 
-경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
+경계: 상태 보기 템플릿(projection template)일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 향후/진단용 projections입니다. Module Map output은 later stewardship/reference view이며 첫 implementation slice나 MVP-1 다섯 가지 보기 세트에 필요하지 않습니다.
+구현 계층: 향후/진단용 상태 보기(projection)입니다. Module Map output은 later stewardship/reference view이며 첫 implementation slice나 MVP-1 다섯 가지 보기 세트에 필요하지 않습니다.
 
 ## 기준 기록
 
@@ -40,7 +40,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # Module Map(모듈 맵)
 
-> Projection 보기: `module_map_items`와 관련 ref를 `source_state_version` / `updated_at` 기준으로 렌더링한 보기입니다. Managed section은 생성된 표시 영역이며, reconcile 입력은 `사용자 메모와 제안`에 적습니다.
+> 상태 보기(Projection): `module_map_items`와 관련 ref를 `source_state_version` / `updated_at` 기준으로 렌더링한 보기입니다. 관리 섹션(Managed section)은 생성된 표시 영역이며, reconcile 입력은 `사용자 메모와 제안`에 적습니다.
 
 <!-- HARNESS:BEGIN managed -->
 ## 요약
@@ -72,6 +72,6 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 메모
 
-이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. 기준 module 참조는 `StateRecordRef.record_kind=module_map_item`을 사용합니다. Review, watchpoint, stewardship rollup text는 owner record 위의 display이며 Approval, evidence, QA, verification, 작업 수락, 잔여 위험 수용, close, Write Authorization을 만들지 않습니다.
+이 template은 렌더링 결과일 뿐 기준 상태가 아닙니다. 기준 module 참조는 `StateRecordRef.record_kind=module_map_item`을 사용합니다. Review, watchpoint, stewardship rollup text는 owner record 위의 display이며 민감 동작 승인(Approval), evidence, QA, verification, 작업 수락, 잔여 위험 수용, close, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다.
 
 제안된 module boundary change가 product commitment, public interface, caller obligation, dependency direction, architecture direction을 바꾸면 해당 판단은 기존 design-quality 및 user judgment 경로로 라우팅합니다. Proposal을 여기에 렌더링하는 것만으로 `design_gate`, `decision_gate`, close impact가 해소되지는 않습니다.

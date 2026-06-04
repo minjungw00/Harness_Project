@@ -2,15 +2,15 @@
 
 ## 사용 시점
 
-나중의 Approval 프로필이 Approval request record를 commit한 뒤, 민감한 행동 요청과 결정을 읽기 쉽게 보여줘야 할 때 `APR`을 사용합니다. `APR`은 민감 동작 승인 범위를 보여줄 뿐이며 사용자 소유의 제품/UX 판단이나 기술 판단, 정확성, 작업 수락, 잔여 위험 수용, QA 면제 판단, 검증 면제 판단, 배포, merge, Write Authorization을 결정하지 않습니다.
+나중의 민감 동작 승인(Approval) 프로필이 민감 동작 승인 요청 record를 commit한 뒤, 민감한 행동 요청과 결정을 읽기 쉽게 보여줘야 할 때 `APR`을 사용합니다. `APR`은 민감 동작 승인 범위를 보여줄 뿐이며 사용자 소유의 제품/UX 판단이나 기술 판단, 정확성, 작업 수락, 잔여 위험 수용, QA 면제 판단, 검증 면제 판단, 배포, merge, 쓰기 허가 기록(Write Authorization)을 결정하지 않습니다.
 
-경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
+경계: 상태 보기 템플릿(projection template)일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 보증 프로필 보고서입니다. `APR`은 commit된 민감 동작 Approval 지원이 active일 때만 사용하며 내부 엔지니어링 점검이나 MVP-1 다섯 가지 보기 세트의 일부가 아닙니다.
+구현 계층: 보증 프로필 보고서입니다. `APR`은 commit된 민감 동작 승인(Approval) 지원이 활성화된 경우에만 사용하며 내부 엔지니어링 점검이나 MVP-1 다섯 가지 보기 세트의 일부가 아닙니다.
 
 ## 기준 기록
 
-- committed Approval 기록
+- committed 민감 동작 승인(Approval) 기록
 - 관련 민감 동작 승인 `user_judgment`
 - 구현이 유지하는 경우 선택적 user-judgment request 라우팅/replay 기록
 - Change Unit 범위
@@ -21,7 +21,7 @@
 
 `prepare_write`가 반환한 상태를 변경하지 않는 `approval_request_candidate`는 `APR` source가 아닙니다. 표시가 필요하면 candidate 표시로만 보여줍니다.
 
-경계 요약은 Approval 범위, 연결된 Approval 기록, 관련 user judgment ref, 현재 쓰기 또는 닫기 맥락에서 파생한 표시 block입니다. 나중의 Approval 프로필에서 사용자에게 경계를 다시 알려주는 표시이며, 독립된 권한 출처나 gate가 아닙니다.
+경계 요약은 민감 동작 승인(Approval) 범위, 연결된 Approval 기록, 관련 user judgment ref, 현재 쓰기 또는 닫기 맥락에서 파생한 표시 block입니다. 나중의 Approval 프로필에서 사용자에게 경계를 다시 알려주는 표시이며, 독립된 권한 출처나 gate가 아닙니다.
 
 ## 렌더링 섹션
 
@@ -54,7 +54,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # APR-0001 민감 동작 승인 요청
 
-> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 Approval 요청과 경계를 표시합니다. Approval은 sensitive-action permission일 뿐입니다. Approval은 여전히 기준 Approval 결정 경로를 거쳐야 하며, write에는 호환되는 `prepare_write`가 필요합니다.
+> 상태 보기(Projection): `source_state_version`와 `updated_at` 기준으로 렌더링되며 민감 동작 승인(Approval) 요청과 경계를 표시합니다. Approval은 sensitive-action permission일 뿐입니다. Approval은 여전히 기준 Approval 결정 경로를 거쳐야 하며, write에는 호환되는 `prepare_write`가 필요합니다.
 
 ## 요청 요약
 - 제안된 동작:
@@ -62,9 +62,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 여기서 'approved'가 의미하는 것:
 
 ## 출처 참조
-- Approval 기록:
+- 민감 동작 승인(Approval) 기록:
 - 관련 user judgment:
-- 관련 Write Authorization:
+- 관련 쓰기 허가 기록(Write Authorization):
 - 아티팩트 참조:
 - redaction state:
 - 보기 최신성:
@@ -98,9 +98,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## 만료와 사용
 - 만료 시각:
 - 만료 조건:
-- Approval 재사용:
+- 민감 동작 승인(Approval) 재사용:
 - 해당되는 경우 1회 사용 동작:
-- Write Authorization 경계:
+- 쓰기 허가 기록(Write Authorization) 경계:
 
 ## 필요한 이유
 - 목적:
@@ -139,22 +139,22 @@ updated_at: 2026-05-06T09:30:15+09:00
 - decision note:
 - 결정한 사람:
 - 결정 시각:
-- 넓은 approval 확인: 이 decision은 위의 민감 동작 승인만 기록하며, "go ahead", "proceed", "looks good", "좋아", "진행해" 같은 표현이 이를 넓히지 않는다.
+- 넓은 승인 확인: 이 결정은 위의 민감 동작 승인만 기록하며, "go ahead", "proceed", "looks good", "좋아", "진행해" 같은 표현이 이를 넓히지 않는다.
 
 ## 경계
-- Approval은 사용자 소유의 제품/UX 판단이나 기술 판단을 해소하지 않고, correctness를 증명하지 않고, verification이나 수동 QA를 대체하지 않고, 작업 수락을 암시하지 않으며, 잔여 위험 수용을 대신하지 않는다.
-- Approval은 QA 또는 검증을 면제하지 않는다. 면제 판단은 policy가 허용할 때 별도의 scoped waiver path가 필요하다.
-- Approval은 Write Authorization이 아니다. 이후 호환되는 `prepare_write` retry가 write를 allow해야 implementation 또는 direct `record_run`이 authorization을 consume할 수 있다.
-- dependency install Approval은 그 dependency를 사용하는 architecture 방향을 결정하지 않는다.
-- secret access Approval은 secret 값을 artifacts, projections, exports, logs, screenshots, summaries에 노출해도 된다는 뜻이 아니다.
-- auth, permission, system-change Approval은 session auth, JWT, social login, role model, lockout behavior, user notice를 결정하지 않는다.
+- 민감 동작 승인(Approval)은 사용자 소유의 제품/UX 판단이나 기술 판단을 해소하지 않고, 정확성을 증명하지 않고, 검증이나 수동 QA를 대체하지 않고, 작업 수락을 암시하지 않으며, 잔여 위험 수용을 대신하지 않는다.
+- 민감 동작 승인(Approval)은 QA 또는 검증을 면제하지 않는다. 면제 판단은 정책이 허용할 때 별도의 범위 지정 waiver path가 필요하다.
+- 민감 동작 승인(Approval)은 쓰기 허가 기록(Write Authorization)이 아니다. 이후 호환되는 `prepare_write` 재시도가 쓰기를 허용해야 implementation 또는 direct `record_run`이 authorization을 consume할 수 있다.
+- 의존성 설치 승인(Approval)은 그 의존성을 사용하는 architecture 방향을 결정하지 않는다.
+- secret 접근 승인(Approval)은 secret 값을 artifacts, projections, exports, logs, screenshots, summaries에 노출해도 된다는 뜻이 아니다.
+- auth, permission, system-change 승인(Approval)은 session auth, JWT, social login, role model, lockout behavior, user notice를 결정하지 않는다.
 - public API 방향, deployment, merge, 작업 수락, 잔여 위험 수용, 면제 판단, 추가 write attempt에는 필요한 경우 각각 적용되는 기록된 decision 또는 authority가 필요하다.
 ````
 
 ## 메모
 
-이 template은 렌더링 projection일 뿐 Approval 권한이 아닙니다. Approval 기록과 Approval decision path가 계속 기준이며, 이 Markdown은 request, decision, boundary를 표시만 합니다.
+이 template은 렌더링 projection일 뿐 민감 동작 승인(Approval) 권한이 아닙니다. 민감 동작 승인(Approval) 기록과 승인 결정 경로(Approval decision path)가 계속 기준이며, 이 Markdown은 request, decision, boundary를 표시만 합니다.
 
 경계 section은 사용자에게 보이는 안내입니다. User-judgment request 라우팅 기록만으로는 판단 권한이 생기지 않으며, 연결된 compatible `user_judgment`를 통하지 않고는 `decision_gate`에 영향을 줄 수 없습니다.
 
-Approval wording은 broad answer를 유도하면 안 됩니다. 사용자가 "go ahead", "proceed", "looks good", "좋아", "진행해"라고 말하더라도 rendered decision은 이름 붙은 sensitive action과 scope만 승인됐음을 계속 보여줘야 합니다. 그 답변이 작업 수락, 잔여 위험 수용, QA 면제 판단, 검증 면제 판단, 다른 pending user judgment도 가리킬 수 있으면 기록하기 전에 다시 확인합니다.
+민감 동작 승인(Approval) wording은 broad answer를 유도하면 안 됩니다. 사용자가 "go ahead", "proceed", "looks good", "좋아", "진행해"라고 말하더라도 rendered decision은 이름 붙은 sensitive action과 scope만 승인됐음을 계속 보여줘야 합니다. 그 답변이 작업 수락, 잔여 위험 수용, QA 면제 판단, 검증 면제 판단, 다른 pending user judgment도 가리킬 수 있으면 기록하기 전에 다시 확인합니다.

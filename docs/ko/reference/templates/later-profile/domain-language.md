@@ -2,11 +2,11 @@
 
 ## 사용 시점
 
-현재 domain term의 의미, code representation, 대기 중인 용어 판단, 폐기된 용어, 사람이 제안한 변경 사항을 읽기 쉬운 projection으로 볼 때 `DOMAIN-LANGUAGE`를 사용합니다.
+현재 domain term의 의미, code representation, 대기 중인 용어 판단, 폐기된 용어, 사람이 제안한 변경 사항을 읽기 쉬운 상태 보기(projection)로 볼 때 `DOMAIN-LANGUAGE`를 사용합니다.
 
-경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
+경계: 상태 보기 템플릿(projection template)일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 향후/진단용 projections입니다. Domain-language map은 stewardship profile용으로 유지하며 초기 필수 projection이 아닙니다.
+구현 계층: 향후/진단용 상태 보기(projection)입니다. Domain-language map은 stewardship profile용으로 유지하며 초기 필수 projection이 아닙니다.
 
 ## 기준 기록
 
@@ -40,7 +40,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # Domain Language(도메인 언어)
 
-> Projection 보기: `domain_terms`와 관련 ref를 `source_state_version` / `updated_at` 기준으로 렌더링한 보기입니다. Managed section은 생성된 표시 영역이며, reconcile 입력은 `사용자 메모와 제안`에 적습니다.
+> 상태 보기(Projection): `domain_terms`와 관련 ref를 `source_state_version` / `updated_at` 기준으로 렌더링한 보기입니다. 관리 섹션(Managed section)은 생성된 표시 영역이며, reconcile 입력은 `사용자 메모와 제안`에 적습니다.
 
 <!-- HARNESS:BEGIN managed -->
 ## 요약

@@ -2,9 +2,9 @@
 
 ## 사용 시점
 
-특정 `user_judgment` record에 대해 standalone full-format Decision Packet presentation이 켜져 있을 때만 `DEC`를 사용합니다. 일반 MVP-1 경로는 status, next-action, user-judgment resource를 통한 간결한 판단 요청입니다. 작은 unblocker는 한 화면에 들어가야 하며, 사용자가 drill-down을 요청하지 않는 한 이 full template을 노출하지 않습니다.
+특정 `user_judgment` record에 대해 standalone full-format 판단 패킷(Decision Packet) 표시가 켜져 있을 때만 `DEC`를 사용합니다. 일반 MVP-1 경로는 status, next-action, user-judgment resource를 통한 간결한 판단 요청입니다. 작은 막힘 해소 질문은 한 화면에 들어가야 하며, 사용자가 drill-down을 요청하지 않는 한 이 full template을 노출하지 않습니다.
 
-지원하는 user-facing display label은 다음 다섯 가지뿐입니다.
+사용자에게 보이는 표시 라벨(`display_label`)은 다음 다섯 가지뿐입니다.
 
 - 제품/UX 판단
 - 기술 판단
@@ -12,31 +12,31 @@
 - 작업 수락
 - 잔여 위험 수용
 
-경계: projection template일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
+경계: 상태 보기 템플릿(projection template)일 뿐이며 runtime/server 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 phase와 projection 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 선택적 full-format 판단 presentation입니다. Standalone persisted `DEC` Markdown projection은 standalone Decision Packet projection 기능이 켜진 경우에만 선택적으로 사용합니다. "Decision Packet"은 presentation label이고, `user_judgment`가 canonical record family입니다.
+구현 계층: 선택적 full-format 판단 표시입니다. Standalone persisted `DEC` Markdown projection은 standalone Decision Packet projection 기능이 켜진 경우에만 선택적으로 사용합니다. "Decision Packet"은 표시 형식 라벨이고, `user_judgment`가 canonical record family입니다.
 
 ## 기준 기록
 
 - `state.sqlite.user_judgments`
-- 관련 Task와 Change Unit refs
+- 관련 Task와 Change Unit 참조
 - `judgment_type`, `presentation`, `display_label`
 - 관련 `decision_gate` state와 user-judgment events
-- `judgment_type=sensitive_action_approval`의 `approval_scope`, 그리고 later Approval profile이 active일 때만 Approval records
-- later profile이 active일 때 관련 reconcile records
-- residual risk refs
-- minimum MVP-1의 evidence summaries, Run refs, ArtifactRefs, visible evidence gaps; full Evidence Manifest profile이 active일 때만 Evidence Manifest refs
-- 관련 권한 맥락으로 표시될 때 쓰기 허가 기록(Write Authorization), 민감 동작 permission, Eval, Manual QA, 작업 수락 context, residual-risk refs, ArtifactRefs, redaction state, 읽기용 보기 최신성(projection freshness)
+- `judgment_type=sensitive_action_approval`의 `approval_scope`, 그리고 later 민감 동작 승인(Approval) profile이 활성화된 경우에만 민감 동작 승인 기록
+- later profile이 활성화된 경우 관련 reconcile records
+- 잔여 위험 참조
+- minimum MVP-1의 근거 요약, Run 참조, ArtifactRef 참조, 보이는 근거 공백. 전체 근거 목록(Evidence Manifest) profile이 활성화된 경우에만 근거 목록 참조
+- 관련 권한 맥락으로 표시될 때 쓰기 허가 기록(Write Authorization), 민감 동작 허가, Eval(분리 검증 결과), 수동 QA, 작업 수락 맥락, 잔여 위험 참조, ArtifactRef 참조, redaction state, 읽기용 보기 최신성(projection freshness)
 - 영향받는 범위 표시 input: product areas, screens/flows, modules, interfaces, paths, acceptance criteria, gates, sensitive categories
 - 읽기용 보기 최신성(projection freshness) inputs
 
 `decision_packet_id`, `judgment_category`, `judgment_route`, `display_depth` 같은 legacy 이름은 migration note 또는 compatibility drill-down에서만 나타날 수 있습니다. 새 template, example, fixture는 `user_judgment_id`, `judgment_type`, `presentation`, `display_label`, `record_kind=user_judgment`를 사용해야 합니다.
 
-민감 동작 승인 display의 "포괄하는 것", "포괄하지 않는 것", "secret 노출 경계"는 `judgment_payload.approval_scope`, 관련 `user_judgment` ref, later profile이 active일 때만의 linked Approval record, 현재 write/close context에서 파생한 표시용 요약입니다. 경계만 설명하며 별도 사용자 판단을 확정하거나 Write Authorization을 만들거나 minimum MVP-1에서 committed Approval record를 암시하지 않습니다. 민감 동작 승인 display는 작업 수락이나 잔여 위험 수용처럼 보여서는 안 됩니다.
+민감 동작 승인 표시의 "포괄하는 것", "포괄하지 않는 것", "secret 노출 경계"는 `judgment_payload.approval_scope`, 관련 `user_judgment` ref, later profile이 활성화된 경우에만의 linked 민감 동작 승인(Approval) record, 현재 write/close context에서 파생한 표시용 요약입니다. 경계만 설명하며 별도 사용자 판단을 확정하거나 쓰기 허가 기록(Write Authorization)을 만들거나 minimum MVP-1에서 committed 민감 동작 승인(Approval) record를 암시하지 않습니다. 민감 동작 승인 표시는 작업 수락이나 잔여 위험 수용처럼 보여서는 안 됩니다.
 
 Resolved user judgment가 민감 동작 permission을 부여하는 경우는 `judgment_type=sensitive_action_approval`이고 compatible `approval_scope`를 가진 경우뿐입니다. 다른 user judgment resolution은 제품/UX 판단, 기술 판단, 작업 수락, 잔여 위험 수용, later-profile waiver/reconcile choice를 확정할 수 있지만 민감 동작 permission을 부여하지 않습니다.
 
-`presentation=short`는 simple unblocker와 compact prompt의 기본값입니다. `presentation=full`은 복잡하거나 high-risk이거나 close-affecting이거나 reconcile/later-profile 판단을 위한 full-format Decision Packet-style presentation입니다. Presentation은 렌더링되는 context 양만 바꾸며 authority를 바꾸지 않습니다.
+`presentation=short`는 간단한 막힘 해소 질문과 compact prompt의 기본값입니다. `presentation=full`은 복잡하거나 high-risk이거나 close-affecting이거나 reconcile/later-profile 판단을 위한 full-format 판단 패킷(Decision Packet) 스타일 표시입니다. Presentation은 렌더링되는 맥락 양만 바꾸며 권한을 바꾸지 않습니다.
 
 ## 렌더링 섹션
 
@@ -57,19 +57,19 @@ Resolved user judgment가 민감 동작 permission을 부여하는 경우는 `ju
 - 후속 조치
 - 참조
 
-충분한 렌더링 Decision Packet은 하나의 사용자 소유 판단에 답합니다. 넓은 permission을 묻지 않습니다. 정확한 public request/response field는 [`harness.request_user_judgment`](../../api/mvp-api.md#harnessrequest_user_judgment)가 소유하고, canonical authority rule은 [사용자 판단(User Judgment)](../../core-model.md#user-judgment)와 [Decision Gate](../../core-model.md#decision-gate)가 소유합니다. 이 template은 existing user judgment fields를 요약할 수 있지만 schema field, gate, alternate authority를 추가하면 안 됩니다.
+충분한 렌더링 판단 요청(Decision Packet)은 하나의 사용자 소유 판단에 답합니다. 넓은 허가를 묻지 않습니다. 정확한 public request/response field는 [`harness.request_user_judgment`](../../api/mvp-api.md#harnessrequest_user_judgment)가 소유하고, canonical authority rule은 [사용자 판단(User Judgment)](../../core-model.md#user-judgment)와 [Decision Gate](../../core-model.md#decision-gate)가 소유합니다. 이 template은 existing user judgment fields를 요약할 수 있지만 schema field, gate, alternate authority를 추가하면 안 됩니다.
 
-사용자에게 보이는 질문은 판단을 직접 물어야 합니다. 선택지를 고를지, 명시된 결과를 감수하고 defer할지, 해당 path를 reject할지, 민감 동작 승인을 grant/deny할지, 결과를 accept/reject할지, 이름 붙은 잔여 위험을 accept/reject할지, later-profile waiver/reconcile outcome을 기록할지처럼 기록될 값을 분명히 말합니다. "approve"나 "승인"은 민감 동작 승인 또는 later Approval record에만 씁니다. 여러 판단이 pending이면 별도 prompt 또는 별도 줄로 렌더링합니다. 민감 동작 승인, 작업 수락, 잔여 위험 수용을 하나의 답변으로 합치면 안 됩니다.
+사용자에게 보이는 질문은 판단을 직접 물어야 합니다. 선택지를 고를지, 명시된 결과를 감수하고 defer할지, 해당 path를 reject할지, 민감 동작 승인을 grant/deny할지, 결과를 accept/reject할지, 이름 붙은 잔여 위험을 accept/reject할지, later-profile waiver/reconcile outcome을 기록할지처럼 기록될 값을 분명히 말합니다. "approve"나 "승인"은 민감 동작 승인 또는 later 민감 동작 승인(Approval) record에만 씁니다. 여러 판단이 pending이면 별도 질문 또는 별도 줄로 렌더링합니다. 민감 동작 승인, 작업 수락, 잔여 위험 수용을 하나의 답변으로 합치면 안 됩니다.
 
 **예시 단서:**
 
 아래의 일반적인 full-format user judgment 형태에는 같은 rendered section을 사용합니다. 이 단서들은 추가 template section이 아닙니다.
 
-- Tiny unblocker(`judgment_type=product_choice`, `presentation=short`): 이미 범위가 정해진 settings copy change 안에서 button label을 "Save"로 할지 "Update"로 할지 고릅니다. 간결한 선택, 범위, refs, non-effects를 `사용자가 판단하는 것`과 `참조`에 둡니다. Full architecture-tradeoff layout을 강제하지 않습니다.
+- 작은 막힘 해소 질문(`judgment_type=product_choice`, `presentation=short`): 이미 범위가 정해진 settings copy change 안에서 button label을 "Save"로 할지 "Update"로 할지 고릅니다. 간결한 선택, 범위, 참조, 효과가 아닌 것을 `사용자가 판단하는 것`과 `참조`에 둡니다. Full architecture-tradeoff layout을 강제하지 않습니다.
 - 제품/UX 판단(`judgment_type=product_choice`): failed-login feedback을 inline layer, toast, modal 중에서 고르거나 failed-login wording을 generic, specific, hybrid 중에서 정합니다. Flow, interruption, accessibility, copy, product tone, user-risk 차이는 `선택지`와 `추천`에 둡니다.
 - 기술 판단(`judgment_type=technical_choice`): session cookie, bearer/JWT token, OAuth/OIDC provider, social-login provider integration 중에서 session model을 고릅니다. Revocation, CSRF/XSS exposure, client compatibility, implementation cost, identity-provider boundary, migration impact는 `선택지`와 `판단에 필요한 최소 맥락`에 둡니다.
-- 기술 판단(`judgment_type=technical_choice`): dependency adoption, schema/data-model migration, public API/interface direction, module boundary change, privacy/logging policy, QA expectation, verification expectation, waiver, scope/autonomy expansion, later profile이 active일 때의 reconcile choice를 다룹니다.
-- 민감 동작 승인(`judgment_type=sensitive_action_approval`): dependency install, secret access, network write, destructive write 또는 다른 scoped sensitive step입니다. Approval boundary는 `민감 동작 승인 맥락`에 두고, 제품/UX 판단이나 기술 판단을 해소한 것으로 취급하지 않습니다.
+- 기술 판단(`judgment_type=technical_choice`): dependency adoption, schema/data-model migration, public API/interface direction, module boundary change, privacy/logging policy, QA expectation, verification expectation, waiver, scope/autonomy expansion, later profile이 활성화된 경우의 reconcile choice를 다룹니다.
+- 민감 동작 승인(`judgment_type=sensitive_action_approval`): dependency install, secret access, network write, destructive write 또는 다른 scoped sensitive step입니다. 민감 동작 승인 경계는 `민감 동작 승인 맥락`에 두고, 제품/UX 판단이나 기술 판단을 해소한 것으로 취급하지 않습니다.
 - 작업 수락(`judgment_type=work_acceptance`): final result, evidence status, Manual QA와 verification status, close-relevant residual-risk visibility를 `현재 상태`와 `판단에 필요한 최소 맥락`에 둡니다. 작업 수락을 새 sensitive action, 추가 write, deployment, merge를 허가하거나 잔여 위험 수용을 대신하는 판단처럼 취급하지 않습니다.
 - 잔여 위험 수용(`judgment_type=residual_risk_acceptance`): visible limitation, existing evidence, 사용자에게 수용 여부를 묻는 risk refs, remaining follow-up을 `현재 상태`, `판단에 필요한 최소 맥락`, `잔여 위험 수용`, `후속 조치`에 둡니다.
 - Broad "go ahead" answers: prompt가 이 특정 judgment type과 option을 묻는 이유를 보여줍니다. Generic consent phrase는 이 prompt가 그 정확한 judgment를 기록하는 경우가 아니면 제품/UX 판단, 기술 판단, 민감 동작 승인, 작업 수락, 잔여 위험 수용을 해소하지 않습니다.
@@ -97,7 +97,7 @@ Resolved user judgment가 민감 동작 permission을 부여하는 경우는 `ju
 표시 형식: short
 표시 라벨: 민감 동작 승인
 질문: 이 Task에 대해 이름 붙은 dependency install/update 동작을 허가하시겠습니까?
-Approval 범위: 이름 붙은 install command 또는 dependency-file update, 이름 붙은 manifest/lockfile path, 현재 Task와 approval window만 포함.
+민감 동작 승인(Approval) 범위: 이름 붙은 install command 또는 dependency-file update, 이름 붙은 manifest/lockfile path, 현재 Task와 approval window만 포함.
 포괄하는 것: scoped sensitive action.
 포괄하지 않는 것: dependency가 올바른 architecture 방향인지, 향후 install, 관련 없는 제품 파일 쓰기, QA/verification waiver, 작업 수락, 잔여 위험 수용.
 별도 판단 필요: dependency choice 자체가 사용자 소유 기술 판단이면 `judgment_type=technical_choice`를 사용합니다.
@@ -140,7 +140,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 # UJ-0001 판단 요청 제목
 
-> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링되며 state의 `user_judgment_id`와 관련 refs를 표시합니다. 이 Markdown을 편집해도 judgment는 해소되지 않습니다. 답변은 `harness.record_user_judgment`를 통해 기록합니다.
+> 상태 보기(Projection): `source_state_version`와 `updated_at` 기준으로 렌더링되며 state의 `user_judgment_id`와 관련 refs를 표시합니다. 이 Markdown을 편집해도 judgment는 해소되지 않습니다. 답변은 `harness.record_user_judgment`를 통해 기록합니다.
 
 ## 지금 필요한 이유
 - trigger:
@@ -150,16 +150,16 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 현재 상태
 - Task 상태:
-- active Change Unit:
+- 활성 Change Unit:
 - 현재 gate:
 - 최신 근거:
-- residual risk:
+- 잔여 위험:
 - 출처 참조: judgment={user_judgment_id}; write={write_authorization_ref|none}; sensitive_action_permission={user_judgment_ref|approval_ref_when_profile_active|none}; evidence={evidence_ref|evidence_manifest_ref_when_profile_active|none}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={work_acceptance_user_judgment_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_availability_summary|none}; freshness={projection_freshness}
 
 ## 판단 유형과 표시 형식
-- judgment_type: product_choice | technical_choice | sensitive_action_approval | work_acceptance | residual_risk_acceptance
-- presentation: short | full
-- display_label: 제품/UX 판단 | 기술 판단 | 민감 동작 승인 | 작업 수락 | 잔여 위험 수용
+- `judgment_type`: product_choice | technical_choice | sensitive_action_approval | work_acceptance | residual_risk_acceptance
+- `presentation`: short | full
+- 표시 라벨(`display_label`): 제품/UX 판단 | 기술 판단 | 민감 동작 승인 | 작업 수락 | 잔여 위험 수용
 - 최종 기록 답변:
 - 이 판단이 기록할 수 있는 것:
 - 이 판단이 기록할 수 없는 것:
@@ -167,25 +167,25 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 해당되는 경우 민감 동작 승인 맥락
 - 카드 라벨: 민감 동작 승인
-- judgment_type=sensitive_action_approval scope:
-- 연결된 approval record(later profile only):
+- `judgment_type=sensitive_action_approval` 범위:
+- 연결된 민감 동작 승인 기록(approval record; later profile only):
 - 민감 category:
-- 이 approval이 포괄하는 것:
-- 이 approval이 포괄하지 않는 것:
+- 이 민감 동작 승인이 포괄하는 것:
+- 이 민감 동작 승인이 포괄하지 않는 것:
 - 렌더링하면 안 되는 형태: 작업 수락 또는 잔여 위험 수용
 - 여전히 필요한 별도 사용자 소유 판단:
-- approval 경계:
-- write authorization 경계:
+- 민감 동작 승인 경계:
+- 쓰기 허가 기록 경계:
 - secret 노출 경계:
 
 ## 사용자가 판단하는 것
-- judgment type:
-- display label:
+- 판단 유형:
+- 표시 라벨:
 - 사용자에게 보이는 질문:
 - decision:
 - 이 decision이 확정하는 것:
 - 이 decision이 확정하지 않는 것:
-- 넓은 approval이 부족한 이유:
+- 넓은 민감 동작 승인이 부족한 이유:
 
 ## 에이전트가 사용자 없이 결정해도 되는 것
 - 구현 세부사항:
@@ -196,7 +196,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ## 해당되는 경우 자율성 경계 영향
 - 현재 boundary 영향:
 - 제안된 boundary update:
-- 필요한 user judgment:
+- 필요한 사용자 판단:
 
 ## 영향받는 범위와 경계
 - 범위 안:
@@ -269,19 +269,19 @@ updated_at: 2026-05-06T09:30:15+09:00
 - task:
 - change unit:
 - user judgment:
-- write authority:
+- 쓰기 권한 참조:
 - evidence:
 - verification:
 - Manual QA:
-- residual risk:
+- 잔여 위험:
 - artifacts:
 - 보기 최신성:
 ````
 
 ## 메모
 
-이 template은 rendered shape이지 canonical state가 아닙니다. Active stage/profile이 요구하는 user judgment visibility는 상태 카드, 판단 요청, status/next response, judgment-context resource, user-judgment resource를 통해 제공될 수 있습니다. Standalone `DEC` projection은 optional입니다.
+이 template은 rendered shape이지 canonical state가 아닙니다. 활성 stage/profile이 요구하는 user judgment visibility는 상태 카드, 판단 요청, status/next response, judgment-context resource, user-judgment resource를 통해 제공될 수 있습니다. Standalone `DEC` projection은 optional입니다.
 
-Decision Packet projection은 authority context refs를 간결하고 명시적으로 유지해야 합니다. 이 template에 Write Authorization, 민감 동작 permission ref, evidence summary, 해당 profile이 active일 때의 Evidence Manifest, Eval, Manual QA, 작업 수락, 잔여 위험 표시, 잔여 위험 수용, artifact, redaction, freshness ref를 표시하더라도 prose가 그 record의 authority가 되지는 않습니다.
+Decision Packet projection은 권한 맥락 참조를 간결하고 명시적으로 유지해야 합니다. 이 template에 쓰기 허가 기록(Write Authorization), 민감 동작 허가 참조, 근거 요약, 해당 profile이 활성화된 경우의 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락, 잔여 위험 표시, 잔여 위험 수용, artifact, redaction, freshness ref를 표시하더라도 prose가 그 record의 authority가 되지는 않습니다.
 
-Decision Packet card는 한 번에 하나의 judgment type만 표시해야 합니다. 민감 동작 승인 prompt는 승인 언어를 쓰고, 작업 수락 prompt는 작업 수락 언어를 쓰며, 잔여 위험 수용 prompt는 수용하는 구체적 위험을 이름 붙입니다.
+Decision Packet card는 한 번에 하나의 judgment type만 표시해야 합니다. 민감 동작 승인 질문은 승인 언어를 쓰고, 작업 수락 질문은 작업 수락 언어를 쓰며, 잔여 위험 수용 질문은 수용하는 구체적 위험을 이름 붙입니다.
