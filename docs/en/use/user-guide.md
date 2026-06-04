@@ -430,7 +430,7 @@ You may see stricter labels when a tool, report, or reference page needs precisi
 
 | Reference label | Plain meaning |
 |---|---|
-| Evidence summary / Evidence Manifest when active | Minimum MVP-1 can show `evidence_ref` refs, derived evidence summaries, Run refs, ArtifactRefs, and visible gaps. A full Evidence Manifest appears only on the later/profile owner path. |
+| Run/evidence summary / Evidence Manifest when active | Minimum MVP-1 can show the short `run-evidence-summary` view with `evidence_ref` refs, derived evidence summaries, Run refs, ArtifactRefs, and visible gaps. A full Evidence Manifest appears only on the later/profile owner path. |
 | Verification or Eval | A check from the required review boundary; an Eval is one implementation form of that check. |
 | Manual QA record | The saved human QA result or waiver context. |
 | Acceptance | The saved user judgment that the completed result is good enough, when required. |
@@ -450,14 +450,14 @@ You can skip this section until an agent shows one of these labels. They are use
 | Autonomy Boundary | The decisions the agent may make alone inside that scope. |
 | User Judgment | The internal record family behind a user judgment request. It records the user's answer for `judgment_type` values such as `product_choice`, `technical_choice`, `sensitive_action_approval`, `work_acceptance`, or `residual_risk_acceptance`. |
 | `judgment_type` | Internal judgment type. It should be shown through a plain label first, not as a taxonomy the user must learn. |
-| `presentation` | Prompt/detail shape. `short` is the compact default; `full` is the optional Decision Packet-style presentation for complex judgments. |
+| `presentation` | Prompt/detail shape. `short` is the compact default behind the `judgment-request` view; `full` is the optional Decision Packet-style presentation for later-profile or complex judgments. |
 | `display_label` | User-facing label: Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance. |
-| Decision Packet | Optional full-format or legacy presentation label for a `user_judgment`; not the default mechanism for every small judgment. |
+| Decision Packet | Optional later-profile full-format or legacy presentation label for a `user_judgment`; not the default mechanism for every small judgment. |
 | Approval | Permission for a named sensitive action; not generic agreement or work acceptance. |
 | Pre-write scope check / Write Authorization | The user-facing check before a product write. The internal `Write Authorization` record is a one-attempt cooperative Harness record/check that the intended product write fits the current task, scope, user judgments, and sensitive-action permissions. It is not OS permission, sandboxing, tamper-proof enforcement, or a preventive block. |
-| Evidence Manifest | The later/profile record that maps completion claims to supporting evidence. Minimum MVP-1 can use `evidence_ref` refs, derived evidence summaries, Run refs, ArtifactRefs, and visible gaps without a full Evidence Manifest. |
+| Evidence Manifest | The later/profile record that maps completion claims to supporting evidence. Minimum MVP-1 can use the short `run-evidence-summary` view with `evidence_ref` refs, derived evidence summaries, Run refs, ArtifactRefs, and visible gaps without a full Evidence Manifest. |
 | Gate | An internal readiness or compatibility condition. User-facing status should show the blocker or check first. |
-| Projection | A readable summary derived from owner records and related files or artifacts. Early use may be compact status text or a card, not a full Markdown report; it helps orientation and is not authority by itself. |
+| Projection | A readable summary derived from owner records and related files or artifacts. MVP-1 uses only five compact views: `status-card`, `agent-context-packet`, `judgment-request`, `run-evidence-summary`, and `close-result`; it helps orientation and is not authority by itself. |
 | Journey Card / Journey Spine | Later continuity display. It can help orientation when enabled and fresh, but it is not authority by itself. |
 | ProjectionJob | The internal job that creates or refreshes a readable projection. |
 | `task_events` | Low-level event history for implementers and diagnostics. |

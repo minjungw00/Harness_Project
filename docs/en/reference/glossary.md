@@ -538,7 +538,7 @@ The relationship between a projection and its source records, managed hash, arti
 
 ### Projection Job
 
-A later/profile-promoted durable outbox record that asks the projector to render a Markdown projection from committed state records and artifact refs. MVP-1 compact status/card output does not require a `projection_jobs` table. When the projection job profile is active, `record_kind=projection` identity is `projection_jobs.projection_job_id`; project-level projection jobs do not by themselves create project-scoped artifact links in the current Task-scoped artifact DDL.
+A later/profile-promoted durable outbox record that asks the projector to render a Markdown projection from committed state records and artifact refs. MVP-1 compact view output does not require a `projection_jobs` table. When the projection job profile is active, `record_kind=projection` identity is `projection_jobs.projection_job_id`; project-level projection jobs do not by themselves create project-scoped artifact links in the current Task-scoped artifact DDL.
 
 ### Question Queue
 

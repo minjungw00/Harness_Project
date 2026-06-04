@@ -576,7 +576,7 @@ Projection과 source record, managed hash, 아티팩트 참조, projection job s
 
 ### Projection Job
 
-Committed state records와 아티팩트 참조에서 Markdown 읽기용 요약을 렌더링하도록 projector에 요청하는 later/profile-promoted 지속 outbox record입니다. MVP-1 compact status/card output에는 `projection_jobs` table이 필요하지 않습니다. Projection job profile이 active일 때 `record_kind=projection` identity는 `projection_jobs.projection_job_id`입니다. Project-level projection jobs는 현재 Task-scoped artifact DDL에서 그 자체로 project-scoped artifact links를 만들지 않습니다.
+Committed state records와 아티팩트 참조에서 Markdown 읽기용 요약을 렌더링하도록 projector에 요청하는 later/profile-promoted 지속 outbox record입니다. MVP-1의 작은 보기 output에는 `projection_jobs` table이 필요하지 않습니다. Projection job profile이 active일 때 `record_kind=projection` identity는 `projection_jobs.projection_job_id`입니다. Project-level projection jobs는 현재 Task-scoped artifact DDL에서 그 자체로 project-scoped artifact links를 만들지 않습니다.
 
 ### Question Queue
 

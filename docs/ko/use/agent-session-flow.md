@@ -78,6 +78,8 @@ flowchart LR
 - 에이전트 맥락 패킷: 다음 안전한 행동에 필요한 최소 현재 상태, 참조, 소유자 섹션 포인터입니다. 행동을 돕는 작은 맥락이지 전체 보고서나 완전한 기억이 아닙니다.
 - Core 상태: 로컬 권한 기록이며 유일한 운영 기준입니다. 범위, gate, 사용자 판단, 근거 참조, 쓰기 확인, 작업 수락, 잔여 위험 수용, 닫기는 Core 상태가 기준입니다.
 
+Minimum MVP-1은 상태 카드, 에이전트 맥락 패킷, 판단 요청, 실행/근거 요약, 닫기 결과라는 다섯 가지 작은 보기만 렌더링합니다. 이들은 소유자 기록 위의 보기일 뿐 권한 기록이 아닙니다. 상세 assurance, diagnostic, report, export, continuity 템플릿은 later-profile 자료입니다.
+
 에이전트 맥락 패킷은 작고 최신이어야 하며, 단계에 맞는 내용만 담아야 합니다. 항상 주입되는 운영 맥락은 한 화면 안팎으로 제한합니다. 현재 Task 요약, 작업 모양, 범위와 하지 않을 일, 대기 중인 사용자 판단, 활성 막힘, 다음 안전한 행동, 근거 공백, 닫기 막힘, 잔여 위험 요약, 보장 수준, 출처 참조와 최신성만 포함합니다. 항목은 `none`이나 `unknown`일 수 있지만, 토큰을 아낀다는 이유로 닫기에 영향을 주는 막힘, 판단, 근거 공백, 잔여 위험을 숨기면 안 됩니다.
 
 전체 reference docs, 전체 schema, 전체 Storage DDL, complete history, 전체 historical event log, 읽기용 요약 전체 본문, full artifact contents, raw log/screenshot/diff/trace, 전체 template, 관련 없는 template, future catalog 자료, 오래된 작업 이력, 관련 없는 Roadmap 자료를 항상 주입하면 안 됩니다. 그런 자료는 정확한 다음 행동에 필요할 때만 pull-on-demand로 가져옵니다.
@@ -89,10 +91,10 @@ flowchart LR
 | 세션 시작 | 현재 상태 또는 간결한 요약, 예상 작업 모양, 알려진 범위/하지 않을 일, 활성 막힘, 대기 중인 사용자 판단, 다음 안전한 행동, 근거 공백, 닫기 막힘, 잔여 위험 요약, 보장 수준, 출처/최신성 참조. | [세션 시작](#세션-시작), [이어가기](#이어가기), 현재 `harness.status` / `status.next_actions`, 상태 카드나 요약이 오래됐거나 다음 행동에 쓰일 때만 읽기용 보기 최신성 규칙. 별도 `harness.next` output은 later/compatibility profile이 포함할 때만 나타납니다. | 전체 작업 이력, 전체 참조 문서, 전체 schema, 오래된 상태 카드나 보고서, 관련 없는 template, 관련 없는 Roadmap, future catalog. |
 | 계획/구체화(`Discovery` 내부 라벨) | 목표, 사용자 가치, 범위와 비목표, 수용 기준, 저장소/문서/현재 상태에서 확인한 확인 가능한 사실, 빠진 정보, 막히는 질문, 참고 질문, 추적되는 불확실성, 사용자 소유 판단 후보, QA/검증 기대 수준, 안전한 다음 작업 후보 또는 작업 분할 제안. | [사용자 가이드: 에이전트가 처음 답해야 할 것](user-guide.md#에이전트가-처음-답해야-할-것), [요청 정리](#요청-정리), [범위와 쓰기 경계](#범위와-쓰기-경계), 관련 현재 Task/Change Unit/Shared Design 참조. | 전체 module map, 오래된 PRD/design, design-policy catalog, 전체 Storage DDL, 전체 Conformance 카탈로그, 관련 없는 template, future catalog. |
 | 쓰기 준비 | 활성 범위 또는 Change Unit, Autonomy Boundary, 의도한 경로/도구/명령 요약, 민감 동작 permission 상태, later Approval profile이 active일 때만 Approval 상태, 활성 사용자 판단, 쓰기 전 범위 확인 요약 / WriteAuthoritySummary, 기준선/최신성. | [제품 파일 쓰기](#제품-파일-쓰기), [커널: prepare_write](../reference/kernel.md#prepare_write), intended write에 필요한 [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write). | 전체 Kernel/reference 문서, 관련 없는 schema, historical event log, 큰 diff/log, 전체 Storage DDL, future catalog. |
-| 실행 / Run 기록 | 실행 요약, 변경 경로 요약, 소비된 내부 Write Authorization record 또는 no-write basis, 아티팩트 참조, 가림/무결성 메모, 즉시 필요한 다음 행동. | [근거와 확인](#근거와-확인), [커널: record_run](../reference/kernel.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run), 표시나 복구에 필요할 때만 artifact-ref 표시 규칙. | 전체 log, raw diff, 화면 캡처, trace, bundle, artifact inventory, 전체 보고서 본문, 전체 Template 세트, future catalog. |
-| 근거 검토 | 알려진 근거 요약, 있을 때 `evidence_ref`, Run refs, ArtifactRefs, 보이는 근거 공백, 오래됐거나 부족한 뒷받침, 영향을 받는 수용 기준 또는 주장, 가림/무결성 메모, 다음 근거 행동. Full Evidence Manifest profile이 active일 때만 Evidence Manifest 참조를 포함합니다. | [근거와 확인](#근거와-확인), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run), artifact-ref 표시 규칙, 해당 profile이 active일 때만 [커널: Evidence Manifest](../reference/kernel.md#evidence-manifest). | 전체 evidence body, 전체 log, raw diff, 화면 캡처, trace, bundle, artifact inventory, 전체 보고서 본문, 전체 Template 세트, future catalog. |
-| 닫기 준비 상태 | 닫기 준비 요약, 막힘, 민감 동작 permission 상태, 근거/검증/수동 QA/작업 수락 상태, 잔여 위험 표시 또는 수용된 참조, 상태 카드/읽기용 보기 최신성, 가장 작은 해소 방법. | [닫기](#닫기), [검증, 수동 QA, 잔여 위험, 작업 수락](#검증-수동-qa-잔여-위험-작업-수락), [커널: close_task](../reference/kernel.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task). | 일반적인 all-done rollup, 전체 report 본문, 전체 historical log, 관련 없는 template, 전체 Conformance 카탈로그, 읽기용 요약 전체 본문, future catalog. |
-| 사용자 판단 요청 | 사용자 소유 판단, 간결한 선택지 또는 선택된 결과, 결과 영향, 불확실성, 에이전트가 사용자 대신 판단하지 않는 것. 그 판단을 식별하는 데 필요한 최소 범위와 참조만 보여줍니다. 복잡한 판단이 필요할 때만 full-format Decision Packet presentation을 사용합니다. | [사용자 소유 판단으로 막힐 때](#사용자-소유-판단으로-막힐-때), [User Judgment](../reference/kernel.md#user-judgment), 정확한 field가 필요할 때만 특정 MCP 메서드. | 포괄적 approval 표현, 관련 없는 판단, 전체 근거 본문, 전체 log, 전체 schema reference, 전체 Template 세트, future catalog. |
+| 실행 / Run 기록 | 실행 요약, 변경 경로 요약, 소비된 내부 Write Authorization record 또는 no-write basis, 아티팩트 참조, 가림/무결성 메모, 즉시 필요한 다음 행동. MVP-1 사용자에게 렌더링할 때는 실행/근거 요약 보기가 됩니다. | [근거와 확인](#근거와-확인), [커널: record_run](../reference/kernel.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run), 표시나 복구에 필요할 때만 artifact-ref 표시 규칙. | 전체 log, raw diff, 화면 캡처, trace, bundle, artifact inventory, 전체 보고서 본문, 전체 Template 세트, future catalog. |
+| 근거 검토 | 알려진 근거 요약, 있을 때 `evidence_ref`, Run refs, ArtifactRefs, 보이는 근거 공백, 오래됐거나 부족한 뒷받침, 영향을 받는 수용 기준 또는 주장, 가림/무결성 메모, 다음 근거 행동. MVP-1에서는 이때도 실행/근거 요약 보기를 사용합니다. Full Evidence Manifest profile이 active일 때만 Evidence Manifest 참조를 포함합니다. | [근거와 확인](#근거와-확인), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run), artifact-ref 표시 규칙, 해당 profile이 active일 때만 [커널: Evidence Manifest](../reference/kernel.md#evidence-manifest). | 전체 evidence body, 전체 log, raw diff, 화면 캡처, trace, bundle, artifact inventory, 전체 보고서 본문, 전체 Template 세트, future catalog. |
+| 닫기 준비 상태 | 닫기 준비 요약, 막힘, 민감 동작 permission 상태, 근거/검증/수동 QA/작업 수락 상태, 잔여 위험 표시 또는 수용된 참조, 상태 카드/읽기용 보기 최신성, 가장 작은 해소 방법. MVP-1 사용자에게 렌더링할 때는 닫기 결과 보기가 됩니다. | [닫기](#닫기), [검증, 수동 QA, 잔여 위험, 작업 수락](#검증-수동-qa-잔여-위험-작업-수락), [커널: close_task](../reference/kernel.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task). | 일반적인 all-done rollup, 전체 report 본문, 전체 historical log, 관련 없는 template, 전체 Conformance 카탈로그, 읽기용 요약 전체 본문, future catalog. |
+| 사용자 판단 요청 | 사용자 소유 판단, 간결한 선택지 또는 선택된 결과, 결과 영향, 불확실성, 에이전트가 사용자 대신 판단하지 않는 것. MVP-1에서는 판단 요청 보기입니다. 그 판단을 식별하는 데 필요한 최소 범위와 참조만 보여줍니다. 복잡한 later-profile 판단이 필요할 때만 full-format Decision Packet presentation을 사용합니다. | [사용자 소유 판단으로 막힐 때](#사용자-소유-판단으로-막힐-때), [User Judgment](../reference/kernel.md#user-judgment), 정확한 field가 필요할 때만 특정 MCP 메서드. | 포괄적 approval 표현, 관련 없는 판단, 전체 근거 본문, 전체 log, 전체 schema reference, 전체 Template 세트, future catalog. |
 | 복구/오류 | 주요 오류 또는 막힘, 소유자, 마지막으로 안전하게 아는 현재 상태, 오래됐거나 사용할 수 없는 출처, 영향을 받는 권한 주장, 다음 복구 행동, 쓰기나 닫기를 보류해야 하는지. | [이어가기](#이어가기), [상태와 막힘 읽기](#상태와-막힘-읽기), [Agent 통합: Fallback Semantics](../reference/agent-integration.md#fallback-semantics), 특정 복구 또는 오류 소유자 섹션. | 과거 event log, stack trace, 전체 artifact, 관련 없는 status, 전체 Storage DDL, 전체 Conformance 카탈로그, 관련 없는 Roadmap. |
 
 에이전트 메모리, 대화 이력, 검색된 맥락, 색인된 맥락, 상태 카드, 요약, 렌더링된 template, 읽기용 요약은 읽기 전용으로 남습니다. 무엇을 살펴볼지 제안할 수는 있지만 쓰기를 허가하거나, `gate`를 충족하거나, 근거를 만들거나, 민감 동작 승인을 만들거나, 검증을 수행하거나, 작업을 수락하거나, 잔여 위험을 받아들이거나, 닫기 준비 상태를 만들거나, Task를 닫거나, 다른 권한 주장을 만들 수 없습니다. 상태가 중요하면 행동하기 전에 현재 Core 상태 또는 상태에서 만든 에이전트 맥락 패킷을 가져옵니다. 오래된 상태 카드나 읽기용 요약은 권한이 아닙니다. 토큰을 아낀다는 이유로 사용자 소유 판단, 막힘, 범위 제한, 안전 경계, 근거 공백, 닫기 막힘, 닫기 관련 잔여 위험을 숨기면 안 됩니다. 사용자 판단 요청은 판단 내용, 선택지, 결과 영향, 불확실성, 에이전트가 사용자 대신 판단하지 않는 것만 포함하고, 영향을 받는 범위를 식별하는 최소 참조만 덧붙입니다.
@@ -174,7 +176,7 @@ MCP 결과를 기준으로 삼되, 사용자에게는 이해하기 쉬운 말로
 - `harness.record_run`은 "무슨 일이 일어났고, 어떤 근거가 바뀌었으며, 다음은 무엇인가?"라는 뜻입니다.
 - `harness.close_task`는 "이 Task를 지금 끝내거나 취소할 수 있는가?"라는 뜻입니다.
 
-`harness.status`, `status.next_actions`, later/compatibility `harness.next`, 간결한 상태 카드, 추천 줄은 읽기 전용 표시입니다. 판단 요청, full-format Decision Packet view, `prepare_write`, 근거 수집, 작업 수락 요청, 검증, 수동 QA, 조정(`reconcile`), 닫기 시도를 추천할 수는 있지만, 추천 자체가 상태를 변경하거나, 쓰기를 허가하거나, `gate`를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 닫지 않습니다.
+`harness.status`, `status.next_actions`, later/compatibility `harness.next`, 상태 카드, 에이전트 맥락 패킷, 판단 요청, 실행/근거 요약, 닫기 결과, 추천 줄은 읽기 전용 표시입니다. 판단 요청, full-format Decision Packet view, `prepare_write`, 근거 수집, 작업 수락 요청, 검증, 수동 QA, 조정(`reconcile`), 닫기 시도를 추천할 수는 있지만, 추천 자체가 상태를 변경하거나, 쓰기를 허가하거나, `gate`를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 닫지 않습니다.
 
 `status.next_actions` 또는 later/compatibility `harness.next`가 `action_kind`를 반환하면 enum보다 쉬운 행동을 먼저 보여줍니다. 정확한 enum 값은 고급 세부사항이 도움이 되거나 경계를 설명할 때만 보여줍니다. 이 표는 display superset입니다. Minimum MVP-1은 작업 수락이 required일 때 `request_acceptance`를 포함한 baseline row를 사용할 수 있고, `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile`은 matching owner profile이 enabled될 때만 나타납니다.
 
@@ -626,7 +628,7 @@ AFK stop을 보여줄 때는 보장 수준을 이름 붙입니다. 협력형 또
 
 추적되는 작업의 닫기 요약은 닫을 수 있는 근거를 보여줘야 합니다. 적용된 변경 범위, 민감 동작 permission, 근거 범위, 검증, 수동 QA, 잔여 위험 표시, 잔여 위험 수용, 작업 수락, 닫기 이유를 해당되는 만큼 표시합니다. Gate가 `waived`, `not_required`, `failed`, `pending`, `blocked` 중 하나라면 일반적인 성공 문장에 묻지 말고 그대로 말해야 합니다.
 
-작업 모양에 맞는 닫기 표시를 사용합니다. `DIRECT-RESULT`는 작은 변경의 간결한 결과 표시이고, `TASK` Close Summary는 진행 중이거나 최근 닫힌 추적되는 작업의 이어가기 표시이며, Journey Card close context는 later profile에서 켜졌을 때 compact status/resume 표시입니다. 이 표시들은 state, gate, 작업 수락, QA, 검증, 잔여 위험 수용, 닫기, 쓰기 전 범위 확인 기록을 만들지 않습니다.
+MVP-1 닫기 표시는 닫기 결과를 사용합니다. 작은 변경에는 짧게, 추적되는 작업에는 조금 더 자세히 쓸 수 있지만 닫기 준비 상태, 작업 수락, 잔여 위험, 막힘은 보여야 합니다. 상세 `DIRECT-RESULT`, `TASK` Close Summary, Journey Card close context는 later-profile 또는 compatibility 표시입니다. 이 표시들은 state, gate, 작업 수락, QA, 검증, 잔여 위험 수용, 닫기, 쓰기 전 범위 확인 기록을 만들지 않습니다.
 
 닫기 표시는 같은 여섯 가지 사용자용 개념을 먼저 사용해야 합니다. 작업은 닫으려는 결과, 범위는 변경 범위, 판단은 작업 수락, 잔여 위험 수용, QA 면제 판단, 검증 면제 판단, 관련 있을 때 민감 동작 permission을 보여줍니다. 근거는 뒷받침하는 참조, 확인 또는 검증은 테스트, 검증, 수동 QA, 면제 상태를 보여줍니다. 마무리 또는 닫기는 닫기 막힘, 닫기 이유, 남은 위험, 다음 안전한 행동을 보여줍니다. 내부 `gate` 이름은 막힘을 설명할 때 뒤에 붙일 수 있지만, 정확한 `gate` 값과 닫기 의미는 커널이 담당합니다.
 
@@ -721,7 +723,7 @@ AFK stop을 보여줄 때는 보장 수준을 이름 붙입니다. 협력형 또
 좋은 추적되는 작업 닫기 결과:
 
 ```text
-닫기 요약:
+닫기 결과:
 범위: 변경 범위는 로그인 폼, 로그인 API 호출, 세션 저장 안에 머물렀습니다.
 사용자 판단: 표시된 mobile Safari 위험에 대한 잔여 위험 수용은 DEC-022에 기록됐고, 작업 수락은 별도로 DEC-023에 기록되었습니다.
 근거: evidence summary EVS-009가 RUN-018과 ART-TEST-018을 근거로 AC-01과 AC-02를 뒷받침합니다. Full evidence profile이 active이면 Evidence Manifest EM-009가 criteria-to-evidence map을 담습니다.

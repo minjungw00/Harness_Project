@@ -6,7 +6,7 @@ Use `EVIDENCE-MANIFEST` when Harness needs a readable map from acceptance criter
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: Future/diagnostic projections. The MVP-1 compact status card shows evidence summary/gaps; the full detailed Evidence Manifest projection is later/profile scope.
+Implementation tier: Future/diagnostic projections. MVP-1 shows evidence through the status card or run/evidence summary; the full detailed Evidence Manifest projection is later/profile scope.
 
 ## Source records
 

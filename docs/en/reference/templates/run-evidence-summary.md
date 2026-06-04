@@ -1,0 +1,51 @@
+# Run Evidence Summary Template
+
+## Used when
+
+Use `run-evidence-summary` after advice, a run, a check, or a change needs a minimal summary of what happened and what evidence now supports the current claim.
+
+Implementation tier: MVP-1 User Work Loop view. Detailed [RUN-SUMMARY](later-profile/run-summary.md) and [EVIDENCE-MANIFEST](later-profile/evidence-manifest.md) reports are later/full-profile templates.
+
+Boundary: this template displays Run and evidence refs only. It is not the evidence itself, not a full Evidence Manifest, not verification, not Manual QA, not work acceptance, and not close readiness authority.
+
+## Source records
+
+- Run refs and command/check summaries
+- changed paths or no-file outcome
+- consumed Write Authorization ref or no-write basis when relevant
+- ArtifactRefs, `evidence_ref` refs, redaction state, and integrity or availability notes
+- acceptance criteria, completion claims, or close-relevant claims supported by the evidence
+- evidence gaps, stale inputs, or unresolved support
+- next evidence action
+
+## Rendered sections
+
+- run or action
+- changed paths
+- checks
+- evidence refs
+- supported claims
+- gaps or stale support
+- redaction and availability
+- next evidence action
+
+## Full template
+
+````text
+Run/evidence summary
+Display only: refs and summaries; not evidence, verification, QA, acceptance, or close.
+
+Action: {run_or_action_summary}
+Changed paths: {changed_paths|none}
+Checks: {checks_run_or_reason_not_run}
+Evidence refs: {evidence_refs|none}
+Artifact refs: {artifact_refs|none}; redaction={redaction_summary|none}
+Supports: {supported_claims_or_criteria|none}
+Still missing or stale: {evidence_gaps_or_stale_inputs|none}
+Next evidence action: {next_evidence_action|none}
+Sources/freshness: state={source_state_version}; refs={source_refs}; rendered={updated_at}; freshness={freshness_state}
+````
+
+## Notes
+
+Evidence sufficiency is coverage, not volume. If a claim has no current supporting ref, show the gap instead of treating a long artifact list or report prose as proof.

@@ -444,12 +444,12 @@ These records are deliberately outside the MVP-1 storage path:
 
 | Record family | MVP-1 replacement | Later location |
 |---|---|---|
-| Journey, Journey Card, Journey Spine, Spine entries | Compact status/next output derived from Task, scope, judgments, evidence refs, and blockers | Future/diagnostic projections or owner-promoted continuity support |
+| Journey, Journey Card, Journey Spine, Spine entries | MVP-1 compact views derived from Task, scope, judgments, evidence refs, and blockers | Future/diagnostic projections or owner-promoted continuity support |
 | Detailed Evidence Manifest | `evidence_refs` plus derived evidence summary | Assurance Profile full evidence coverage |
 | Eval / detached verification records | Run/evidence refs and self-check labels when applicable | Assurance Profile verification |
 | Manual QA detailed records | User judgment, blocker, or profile-specific prompt when QA is required but not implemented | Assurance Profile Manual QA |
 | Export, report, and bundle tables | Evidence refs and optional artifact pointers only | Operations/export profile |
-| Projection job tables | Ephemeral or read-time status/card freshness | Operations Profile projection rendering |
+| Projection job tables | Ephemeral or read-time compact-view freshness | Operations Profile projection rendering |
 | Future validation/conformance tables | Direct blockers and owner-field validation | Assurance/conformance profiles after executable runtime suites exist |
 | Committed Approval table | `user_judgment` with `judgment_type=sensitive_action_approval` | Approval/Assurance Profile |
 | Separate `task_intake` table | `tasks.user_request`, `tasks.summary`, and `change_units` scope fields | Later intake workflow profile if needed |

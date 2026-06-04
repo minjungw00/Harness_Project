@@ -11,7 +11,7 @@
 | Later/profile-gated methods and future schema material | [API Schema Later](api/schema-later.md) |
 | Error taxonomy, primary precedence, idempotency, state conflict behavior | [API Errors](api/errors.md) |
 
-API를 읽을 때도 같은 맥락/읽기용 보기 분리를 유지합니다. `harness.status`와 `harness://status/card`는 사용자 상태 카드 또는 간결한 현재 위치 요약을 반환합니다. Agent 접점은 current Core state와 ref에서 에이전트 맥락 패킷을 만들 수 있습니다. Core 상태가 유일한 운영 기준입니다. 상태 카드, read-only resource, 렌더링된 template, Projection은 상태가 아니며 민감 동작 승인, 작업 수락, 잔여 위험 수용, 근거, 닫기 준비 상태, Write Authorization, close를 만들지 않습니다.
+API를 읽을 때도 같은 맥락/읽기용 보기 분리를 유지합니다. `harness.status`와 `harness://status/card`는 사용자 상태 카드 또는 간결한 현재 위치 요약을 반환합니다. Agent 접점은 current Core state와 ref에서 에이전트 맥락 패킷을 만들 수 있습니다. 사용자 판단, 실행/근거, 닫기 표시는 필요할 때 작은 MVP-1 보기 세트를 사용합니다. Core 상태가 유일한 운영 기준입니다. 상태 카드, read-only resource, 렌더링된 template, Projection은 상태가 아니며 민감 동작 승인, 작업 수락, 잔여 위험 수용, 근거, 닫기 준비 상태, Write Authorization, close를 만들지 않습니다.
 
 ## MVP-1 shortcut
 

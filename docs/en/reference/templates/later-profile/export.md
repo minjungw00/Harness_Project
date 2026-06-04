@@ -51,7 +51,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 
 # EXPORT-0001 Harness Export
 
-> Projection view: rendered from `source_state_version` at `updated_at`; this export is a report snapshot. The Release Handoff/export authority boundary is owned by [Operations And Conformance](../operations-and-conformance.md#release-handoff-export-profile).
+> Projection view: rendered from `source_state_version` at `updated_at`; this export is a report snapshot. The Release Handoff/export authority boundary is owned by [Operations And Conformance](../../operations-and-conformance.md#release-handoff-export-profile).
 
 ## Scope
 - project_id:

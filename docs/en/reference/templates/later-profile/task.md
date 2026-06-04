@@ -13,7 +13,7 @@ Use `TASK` as a later/profile continuity or reference projection for active work
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: Future/diagnostic projections. `TASK` is not the MVP-1 User Work Loop projection. MVP-1 uses the [Compact Status Card](compact-status-card.md) for user-facing status; a compact `user_judgment` prompt or resource handles user judgments when needed. A standalone Decision Packet is an optional full-format presentation for complex judgments. The fuller `TASK` body is later profile polish.
+Implementation tier: Future/diagnostic projections. `TASK` is not the MVP-1 User Work Loop projection. MVP-1 uses the [status-card](../status-card.md) for user-facing status and [judgment-request](../judgment-request.md) when a user judgment is needed. A standalone Decision Packet is an optional full-format presentation for complex judgments. The fuller `TASK` body is later profile polish.
 
 A `TASK` template existing in this repository does not mean full `TASK` Markdown is required for the current stage.
 
@@ -68,7 +68,7 @@ Long-running `work` tasks may also render expanded managed sections for shared d
 
 ## Full template
 
-This is a future/profile report shape, not the MVP compact card and not source of truth.
+This is a future/profile report shape, not the MVP status card and not source of truth.
 
 ````md
 ---
@@ -511,13 +511,13 @@ Change Unit block sub-template:
 
 Stewardship Impact in `TASK` is the `StewardshipImpactSummary` display derived from owner records, validator results, and refs. It does not replace Domain Language, Module Map, Interface Contract, Feedback Loop, TDD Trace, residual-risk, or User Judgment owner records.
 
-Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from or aligned with current Task and Change Unit state. It stays within the projection/report boundary in [Document Projection Reference](../document-projection.md#projection-principles) and never replaces `prepare_write` or owner state changes.
+Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from or aligned with current Task and Change Unit state. It stays within the projection/report boundary in [Document Projection Reference](../../document-projection.md#projection-principles) and never replaces `prepare_write` or owner state changes.
 
-Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. Their exact non-authority rule is owned by [Design Quality Policies](../design-quality-policies.md#two-stage-review-display) and [Agent Integration](../agent-integration.md#role-lens-behavior). They do not create canonical records, `ProjectionKind` values, Approval, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or Write Authorization; findings must route to existing owner paths.
+Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. Their exact non-authority rule is owned by [Design Quality Policies](../../design-quality-policies.md#two-stage-review-display) and [Agent Integration](../../agent-integration.md#role-lens-behavior). They do not create canonical records, `ProjectionKind` values, Approval, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or Write Authorization; findings must route to existing owner paths.
 
 Generated summaries should use ordinary user-facing language first and exact Harness terms as labels or refs where useful. They should not turn the projection into a command language or imply that display text created state.
 
-Gate Group Summary is the first managed section so readers see the practical blocker story before raw gate detail. Scope, User Judgments, Evidence, and Close Readiness are display groups derived from existing owner records, gates, blockers, and refs. They are not canonical fields, aliases for exact gate values, new gates, recompute inputs, close semantics, or authority paths. User Judgments is structured and must not be rendered as one broad judgment or approval bucket. Exact gate values and recompute rules remain in [Kernel Reference](../kernel.md#gates), and close behavior remains in [`close_task`](../kernel.md#close_task).
+Gate Group Summary is the first managed section so readers see the practical blocker story before raw gate detail. Scope, User Judgments, Evidence, and Close Readiness are display groups derived from existing owner records, gates, blockers, and refs. They are not canonical fields, aliases for exact gate values, new gates, recompute inputs, close semantics, or authority paths. User Judgments is structured and must not be rendered as one broad judgment or approval bucket. Exact gate values and recompute rules remain in [Kernel Reference](../../kernel.md#gates), and close behavior remains in [`close_task`](../../kernel.md#close_task).
 
 User Judgment display in `TASK` should keep canonical schema fields separate from rendered labels: `judgment_type` names the internal judgment type, `presentation` controls compact or full display depth, and `display_label` is one of Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance. Examples of `judgment_type` include `product_choice`, `technical_choice`, `sensitive_action_approval`, `work_acceptance`, and `residual_risk_acceptance`. If a judgment is cross-cutting, render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the label as exclusive. Legacy fields such as `judgment_category`, `judgment_route`, and `display_depth` may appear only in migration notes or compatibility drill-down; they are not new payload branch selectors, gates, status values, gate recompute inputs, close aggregation rules, authority paths, or replacements for `judgment_type`. Friendly labels derived from `presentation` or `display_label` are not validator inputs and must not blur the owner contracts for sensitive-action approval, work acceptance, QA, residual-risk acceptance, close, or Write Authorization.
 
@@ -535,6 +535,6 @@ Close Summary in `TASK` is a continuity display summary for active or recently c
 
 Close Summary must not collapse sensitive-action approval, evidence, verification, Manual QA, work acceptance, residual-risk visibility, and residual-risk acceptance into a single "done" flag. If tests pass but sensitive-action approval, Manual QA, work acceptance, or residual-risk acceptance is still pending, the close display should show that exact category as the blocker.
 
-Direct work uses `DIRECT-RESULT` for its low-ceremony close impact summary, and Journey Card close context is compact status/resume display. `TASK` Close Summary remains a continuity display under the [projection/report boundary](../document-projection.md#projection-principles); close and gate effects still come from owner records.
+Direct work uses `DIRECT-RESULT` for its low-ceremony close impact summary, and Journey Card close context is compact status/resume display. `TASK` Close Summary remains a continuity display under the [projection/report boundary](../../document-projection.md#projection-principles); close and gate effects still come from owner records.
 
 Artifact refs shown in `TASK`, Journey, evidence, and report sections must preserve redaction state. `secret_omitted` refs may support only visible nonsecret evidence; `blocked` refs show committed metadata-only notices and unavailable input rather than raw content.

@@ -107,7 +107,7 @@ npm test -- --runInBand
 - manual_qa_required:
 
 ## Review Stages
-- note: run-local review display only. It does not create records, `ProjectionKind` values, Approval, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or Write Authorization. The review-stage boundary is owned by [Design Quality Policies](../design-quality-policies.md#two-stage-review-display); route findings to existing refs, gates, or blockers.
+- note: run-local review display only. It does not create records, `ProjectionKind` values, Approval, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or Write Authorization. The review-stage boundary is owned by [Design Quality Policies](../../design-quality-policies.md#two-stage-review-display); route findings to existing refs, gates, or blockers.
 
 ### Spec Compliance Review
 - acceptance criteria coverage:
@@ -165,6 +165,6 @@ npm test -- --runInBand
 
 ## Notes
 
-Raw logs and diffs stay as artifacts; the report links to them. Same-session review content in a `RUN-SUMMARY` is self-check or stewardship signal only and follows the [review-stage boundary](../design-quality-policies.md#two-stage-review-display). Findings route to existing gate, user judgment, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit update, or close-blocker refs; the report does not create those records or authorities by itself.
+Raw logs and diffs stay as artifacts; the report links to them. Same-session review content in a `RUN-SUMMARY` is self-check or stewardship signal only and follows the [review-stage boundary](../../design-quality-policies.md#two-stage-review-display). Findings route to existing gate, user judgment, evidence, Eval, Manual QA, Residual Risk, Approval, Change Unit update, or close-blocker refs; the report does not create those records or authorities by itself.
 
 Evidence refs in this report must preserve `redaction_state`. `secret_omitted` refs may support only visible nonsecret evidence, and `blocked` refs are committed metadata-only notices for unavailable input, not raw logs, diffs, screenshots, or bundles.

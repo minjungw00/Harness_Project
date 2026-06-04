@@ -64,7 +64,7 @@ Read-only resources use the three-part context model. `harness://status/card` is
 | `harness://task/{task_id}/user-judgments` | Active, resolved, deferred, and blocked `user_judgment` summaries. |
 | `harness://task/{task_id}/judgment-context` | Minimum current context needed for a user judgment. |
 
-The MVP-1 evidence and close-readiness path can also be satisfied by `harness.status`, `harness://task/{task_id}/summary`, or `harness://status/card` when the output is derived from current Core state and refs.
+The MVP-1 evidence and close-readiness path can also be satisfied by `run-evidence-summary`, `close-result`, `harness.status`, `harness://task/{task_id}/summary`, or `harness://status/card` when the output is derived from current Core state and refs.
 
 ### Later resources
 
@@ -167,7 +167,7 @@ StateSummary:
 | Support class | Values | Requirement |
 |---|---|---|
 | Core status output | none required | Engineering Checkpoint can expose status/blocker output without persisted Markdown projection jobs. |
-| MVP-1 summaries | `TASK` when persisted projection support is used; `DIRECT-RESULT` for direct-work compact result display | Equivalent status/card output may satisfy MVP-1 without full template rendering. |
+| MVP-1 compact views | No persisted `ProjectionKind` is required; view names are `status-card`, `agent-context-packet`, `judgment-request`, `run-evidence-summary`, and `close-result`. | These views may satisfy MVP-1 without full template rendering. `TASK` and `DIRECT-RESULT` are later/full-profile or compatibility projections. |
 | Assurance reports | `APR`, `MANUAL-QA` | Only when the matching approval, Manual QA, waiver, verification, or assurance profile is active. |
 | Operations/export reports | `EXPORT` | Only when export, release-handoff, or operations report profile is active. |
 | Future/diagnostic projections | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `JOURNEY-CARD` | Enable only when an owner-promoted later profile is in scope. |

@@ -51,7 +51,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 
 # EXPORT-0001 Harness Export
 
-> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링된 report snapshot입니다. Release Handoff/export 권한 경계는 [Operations And Conformance](../operations-and-conformance.md#release-handoff-export-profile)가 담당합니다.
+> Projection 보기: `source_state_version`와 `updated_at` 기준으로 렌더링된 report snapshot입니다. Release Handoff/export 권한 경계는 [Operations And Conformance](../../operations-and-conformance.md#release-handoff-export-profile)가 담당합니다.
 
 ## Scope
 - project_id:

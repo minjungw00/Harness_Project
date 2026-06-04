@@ -2,133 +2,74 @@
 
 ## Used when
 
-Use these files when you need the rendered Markdown shape for projection templates and display cards. The projection rules, authority boundaries, and freshness behavior are defined in [Document Projection Reference](../document-projection.md).
+Use this directory when you need the rendered shape for the small MVP-1 views. The projection rules, authority boundaries, managed-block behavior, artifact-ref rendering, and freshness behavior are owned by [Document Projection Reference](../document-projection.md).
 
 Authority rule:
 
-- Projection is derived from Core-owned state records and artifact references.
-- Projection is not Core state.
-- User status cards, agent context packets, and rendered templates are derived views from Core state, not Core state.
-- A rendered template cannot create approval, acceptance, residual-risk acceptance, evidence, close readiness, Write Authorization, or close.
-- User edits to a projection are input only; they are not automatically accepted state.
-- Chat and Markdown cannot override Core state.
+- Templates are views, not authority state.
+- User templates optimize readability.
+- Agent templates optimize compact, accurate next-action context.
+- Rendered views cannot create approval, work acceptance, residual-risk acceptance, evidence, close readiness, Write Authorization, or close.
+- Chat, Markdown, status cards, agent packets, and reports cannot override Core state.
+- A template existing in this repository does not make it required for MVP-1.
 
-Owner boundary: templates are rendered shapes, not canonical state. Current repository phase and implementation handoff status are tracked in [Implementation Overview](../../build/implementation-overview.md#documentation-acceptance-status).
+Owner boundary: this directory owns rendered template bodies and display card shapes. It does not define canonical kernel state, MCP schemas, SQLite DDL, gates, artifact storage, conformance, operations behavior, or implementation readiness. Current repository phase and handoff status are tracked in [Implementation Overview](../../build/implementation-overview.md#documentation-acceptance-status).
 
-This directory is a catalog of shapes, not a stage checklist. A template existing in the repository does not mean that template is required in the current stage.
+## Output tiers
 
-## Projection audiences
-
-Keep these audiences separate:
-
-| Audience | Shape | Rule |
+| Tier | Template scope | Rule |
 |---|---|---|
-| User status card | [Compact Status Card](compact-status-card.md) | The MVP-1 User Work Loop projection: one small current-state card for the user. |
-| Agent context packet/reference payload | Structured refs, blocker labels, source clocks, freshness, and next-action hints | Derived support payload for the agent's next safe action. Compact by default; no full report bodies unless pulled for a phase-specific reason. |
-| Future/diagnostic reports | `TASK`, Journey Card/Spine, Run Summary, detailed Evidence Manifest, detailed Eval, full Manual QA, TDD Trace, Domain Language, Module Map, Interface Contract, Design, Export, full Approval Card, and other polished reports | Later/profile or diagnostic output. Display-only, never authority. |
+| Engineering Checkpoint status | Plain structured status/blocker output; optional [status-card](status-card.md) rendering | No projection job or full renderer is required. |
+| MVP-1 User Work Loop views | [status-card](status-card.md), [agent-context-packet](agent-context-packet.md), [judgment-request](judgment-request.md), [run-evidence-summary](run-evidence-summary.md), [close-result](close-result.md) | This is the complete MVP-1 template/view set. Each view is derived from Core state and refs. |
+| Later/full-profile templates | [later-profile/](later-profile/README.md) | Detailed assurance, diagnostic, operations, export, stewardship, and full-report templates stay later-profile unless an owner profile explicitly promotes them. |
 
-## MVP-1 User Work Loop projection
+## Template implementation classes
 
-The MVP-1 User Work Loop projection is one compact status card. It must show:
+| Class | Templates | First active stage | Notes |
+|---|---|---|---|
+| User status | [status-card](status-card.md) | MVP-1 User Work Loop | Short user-visible current state. It is the default user-readable current-state view. |
+| Agent next-action context | [agent-context-packet](agent-context-packet.md) | MVP-1 support view | Compact refs, blockers, source clocks, freshness, and owner-section pointers for the next safe action. |
+| User-owned judgment prompt | [judgment-request](judgment-request.md) | MVP-1 User Work Loop | Concise prompt for Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance. Full Decision Packet display is later/full-profile. |
+| Run and evidence summary | [run-evidence-summary](run-evidence-summary.md) | MVP-1 User Work Loop | Minimal Run, check, evidence ref, artifact ref, redaction, and gap summary. Detailed Run Summary and Evidence Manifest are later/full-profile. |
+| Close display | [close-result](close-result.md) | MVP-1 User Work Loop | Close readiness, acceptance, residual risk, blockers, smallest unblocker, and close result display. Detailed Journey, direct-result, export, and release-handoff reports are later/full-profile. |
 
-- current Task summary
-- work shape
-- current scope and non-goals
-- pending user judgments
-- active blockers
-- next safe actions
-- known evidence or evidence gaps
-- close blockers
-- visible residual risk
-- guarantee level
-- source/freshness references
+## MVP-1 Template Set
 
-The card must be readable for users and compact for agents. It should not dump schema fields, DDL, complete history, event logs, full artifacts, full reference docs, full templates, unrelated templates, future catalogs, full Evidence Manifests, or full report bodies.
+MVP-1 templates/views are limited to:
 
-## Template-to-stage matrix
+- [status-card](status-card.md): short user-visible current state.
+- [agent-context-packet](agent-context-packet.md): compact context for the next safe action.
+- [judgment-request](judgment-request.md): user-owned judgment request.
+- [run-evidence-summary](run-evidence-summary.md): minimal run and evidence summary.
+- [close-result](close-result.md): close readiness, acceptance, residual risk, and blockers.
 
-| Template | Audience | First active stage | Authority status | Notes |
-|---|---|---|---|---|
-| [Compact Status Card](compact-status-card.md) | User-facing compact card; agent context packet source | MVP-1 User Work Loop projection; optional as Engineering Checkpoint status rendering | Derived display only | The only MVP-1 User Work Loop projection shape. Plain structured output is still enough for Engineering Checkpoint. |
-| [Decision Packet display](decision-packet.md) | Full-format user judgment presentation | Later/profile or complex-judgment display when user judgment flow is active | Derived display over `state.sqlite.user_judgments`; not standalone authority | Required judgments usually appear through compact status/next or user-judgment resources. Standalone `DEC` Markdown is optional later. |
-| [TASK](task.md) | Continuity/reference report | Later/profile or diagnostic | Derived display only | Not the MVP-1 User Work Loop projection. Expanded continuity sections are later polish. |
-| [DIRECT-RESULT](direct-result.md) | Compact direct-work result | Later/profile when direct-work display is active | Derived display only | Optional convenience shape; not needed for the compact status card MVP. |
-| [APR](approval.md) | Sensitive-action approval report | Assurance Profile | Displays committed Approval and related user judgment refs; does not grant approval | Use only after committed Approval support/profile is active. Minimum MVP-1 uses a compact sensitive-action approval user judgment display. |
-| [Approval Card](approval-card.md) | Sensitive-action approval prompt/card | Assurance Profile | Displays committed approval boundary; does not authorize writes | Full approval card is not MVP-1 User Work Loop; the MVP-1 path can use a compact sensitive-action approval judgment prompt. |
-| [MANUAL-QA](manual-qa.md) | Manual QA report | Assurance Profile | Displays `manual_qa_records`/`qa_gate`; does not perform QA | Full Manual QA projection is later/profile scope. |
-| [Manual QA Card](manual-qa-card.md) | Manual QA prompt/card | Assurance Profile | Displays QA requirement/waiver refs; does not record QA | Full Manual QA card is later/profile scope. |
-| [Verification Result Card](verification-result-card.md) | Verification/Eval display | Assurance Profile | Displays Eval/gate refs; does not verify by itself | Compact assurance display when verification profile is active. |
-| [RUN-SUMMARY](run-summary.md) | Diagnostic run report | Future/diagnostic or owner-promoted profile | Derived display over Run/artifact refs | Not required for MVP-1. |
-| [EVIDENCE-MANIFEST](evidence-manifest.md) | Detailed evidence report | Future/diagnostic or owner-promoted profile | Displays evidence records and artifact refs; not evidence itself | MVP-1 card shows evidence summary/gaps only. |
-| [EVAL](eval.md) | Detailed verification report | Future/diagnostic or owner-promoted profile | Displays Eval refs; does not create assurance | Detailed Eval is not MVP-1. |
-| [TDD-TRACE](tdd-trace.md) | TDD diagnostic/reference | Future/diagnostic or owner-promoted profile | Displays TDD refs; not a gate by itself | Later policy/profile output. |
-| [DOMAIN-LANGUAGE](domain-language.md) | Stewardship/reference report | Future/diagnostic or owner-promoted profile | Displays `domain_terms`; not term authority | Later reference view. |
-| [MODULE-MAP](module-map.md) | Stewardship/reference report | Future/diagnostic or owner-promoted profile | Displays `module_map_items`; not module authority | Later reference view. |
-| [INTERFACE-CONTRACT](interface-contract.md) | Stewardship/reference report | Future/diagnostic or owner-promoted profile | Displays `interface_contracts`; not contract authority | Later reference view. |
-| [DESIGN](design.md) | Design/reference report | Future/diagnostic or owner-promoted profile | Displays design records/proposals; not design authority | Later standalone projection. |
-| [JOURNEY-CARD](journey-card.md) | Journey/resume diagnostic card | Future/diagnostic or owner-promoted profile | Derived current-position display only | MVP-1 uses compact status card instead. |
-| [EXPORT](export.md) | Operations/export report | Operations Profile operations/export profile | Lists snapshots and artifact refs; not Core state or artifact authority | Optional handoff/report output. |
+These five views can be returned as structured payloads, compact text, cards, or Markdown snippets depending on the surface. MVP-1 does not require persisted Markdown projection jobs, a full renderer, or every detailed report template.
 
-`Future/diagnostic projections` means later-profile or diagnostic scope, not automatically Roadmap only.
+## Later/Full-Profile Templates
 
-`TASK`, `APR`, `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `DIRECT-RESULT`, and other report projections are readable views from owner records and refs. They must not redefine kernel fields, MCP schemas, SQLite DDL, gate behavior, or artifact integrity rules.
+Detailed templates are kept in [later-profile/](later-profile/README.md). They are useful for Assurance Profile, Operations Profile, diagnostics, export, release handoff, stewardship, or owner-promoted later profiles, but they are not MVP-1 requirements:
 
-Rendered placeholders, labels, table columns, and example front matter keys are template bindings for display. A binding must either show an existing owner record field or ref, or be a derived display summary from the source records named by the template. If the source record or ref does not exist, render `none`, `unknown`, `not_required`, or an unavailable/blocking note instead of inventing state.
-
-Compact authority displays should prefer a short refs line when several sources are relevant: `write=`, `judgment=`, `approval=`, `evidence=`, `eval=`, `manual_qa=`, `acceptance=`, `residual_risk=`, `artifacts=`, `redaction=`, and `freshness=`. These labels point to existing refs, redaction state, and projection freshness only; they are not schema fields or authority records.
-
-Derived display summaries include approval boundary lines such as `approval_covers`, `approval_does_not_cover`, and `secret_exposure_boundary`; close context, close blockers, waiver path, projection freshness, redaction availability, agent context packet summaries, Journey Card, Review Stages, and judgment-context-related summaries. These names are not new canonical records, schema fields, DDL columns, `ProjectionKind` values, gates, authority inputs, or authority paths. The labels themselves must not be used as validator inputs; validators consume the owner records, refs, gates, artifacts, or user judgments those labels summarize.
-
-Rendered examples should make that boundary visible to the reader. `source_state_version` names the state clock used for the render, `projection_version` or projection status names the render/template/job view, and `updated_at` names when the view was produced. Freshness lines say whether the view still matches its source records; they are not task results, gate values, approval, acceptance, evidence, close readiness, or Core state rollback.
-
-Managed blocks are projector-owned display. Direct edits inside managed blocks are drift and should become reconcile candidates, not state changes. Human-editable sections such as `User Notes and Proposals` are proposal surfaces: they become state only through proposal -> reconcile item -> accepted Core state-changing action with the relevant `state.sqlite.task_events` row, or they remain rejected, deferred, or note-only content.
-
-Any template that renders artifact refs must preserve `redaction_state`. Large logs, diffs, traces, screenshots, bundles, recordings, and sensitive artifact bodies are referenced by `ArtifactRef`, not embedded by default. `secret_omitted` entries may show safe notes or handles and may support only visible nonsecret evidence; `blocked` entries show the committed metadata-only notice as unavailable input. Templates must not inline, reconstruct, summarize, or export omitted secret/PII values or blocked raw payload bytes.
-
-Display fields such as `redaction_availability_summary`, omitted or blocked impact lines, and `Downstream Effect` columns are rendered summaries only. They are derived from `ArtifactRef.redaction_state`, owner records, and downstream gate, evidence, QA, verification, projection, export, or Release Handoff status.
-
-User judgment visibility does not depend on a standalone `DEC` Markdown projection. Required surfaces can show active user judgments through the compact status card, status/next responses, user-judgment resources, or a dedicated prompt. `TASK` may also show them when a later continuity profile is active. Standalone `DEC` is only an optional full-format rendered view when that projection is enabled.
-
-User judgment displays may include canonical schema fields and reader-facing shape fields such as judgment title, `judgment_type`, `presentation`, `display_label`, why this is needed now, what the user is judging, concise options or detailed trade-offs, recommendation, uncertainty, deferral consequence, and residual risk when relevant. `presentation=short` is the default compact prompt; `presentation=full` is the optional Decision Packet-style display for complex judgments. `display_label` is limited to Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance. Examples of `judgment_type` include `product_choice`, `technical_choice`, `sensitive_action_approval`, `work_acceptance`, and `residual_risk_acceptance`. If a judgment is cross-cutting, templates should render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the display label as exclusive. Friendly labels derived from `presentation` or `display_label` help readers, but they are not schema fields, `ProjectionKind` values, gates, owner records, validator inputs, close aggregation rules, authority paths, or replacements for `judgment_type`.
-
-Display cards should distinguish three different problems: a stale projection means the readable view may lag behind its source records, stale state or stale evidence means the underlying state, baseline, or artifact inputs have moved or become insufficient, and MCP unavailable means the surface cannot reach the required Harness/Core capability. Only the owner records and Core transitions can change state.
-
-Close and assurance displays must keep distinct labels for self-checked work, `detached_verified` assurance, waived verification, QA waiver, and residual-risk accepted `completed_with_risk_accepted` close. They may appear in the same compact card, but should not be collapsed into "done," "verified," or "accepted" without the owner refs that support each state.
-
-## Future/Diagnostic Projection Templates
-
-- [DESIGN](design.md)
-- [DIRECT-RESULT](direct-result.md)
-- [DOMAIN-LANGUAGE](domain-language.md)
-- [EVIDENCE-MANIFEST](evidence-manifest.md)
-- [EVAL](eval.md)
-- [INTERFACE-CONTRACT](interface-contract.md)
-- [JOURNEY-CARD](journey-card.md)
-- [MODULE-MAP](module-map.md)
-- [RUN-SUMMARY](run-summary.md)
-- [TASK](task.md)
-- [TDD-TRACE](tdd-trace.md)
-
-## Core Status Output
-
-- [Compact Status Card](compact-status-card.md)
-
-## User Judgment Prompt Shapes
-
-- [Decision Packet user judgment request display shape](decision-packet.md), not standalone `DEC` Markdown
-
-## Assurance Profile Report Shapes
-
-- [APR](approval.md)
-- [Approval Card](approval-card.md)
-- [MANUAL-QA](manual-qa.md)
-- [Manual QA Card](manual-qa-card.md)
-- [Verification Result Card](verification-result-card.md)
-
-## Operations/Export Report Shapes
-
-- [EXPORT](export.md)
+- [APR](later-profile/approval.md)
+- [Approval Card](later-profile/approval-card.md)
+- [DEC / Decision Packet](later-profile/decision-packet.md)
+- [DESIGN](later-profile/design.md)
+- [DIRECT-RESULT](later-profile/direct-result.md)
+- [DOMAIN-LANGUAGE](later-profile/domain-language.md)
+- [EVIDENCE-MANIFEST](later-profile/evidence-manifest.md)
+- [EVAL](later-profile/eval.md)
+- [EXPORT](later-profile/export.md)
+- [INTERFACE-CONTRACT](later-profile/interface-contract.md)
+- [JOURNEY-CARD](later-profile/journey-card.md)
+- [MANUAL-QA](later-profile/manual-qa.md)
+- [Manual QA Card](later-profile/manual-qa-card.md)
+- [MODULE-MAP](later-profile/module-map.md)
+- [RUN-SUMMARY](later-profile/run-summary.md)
+- [TASK](later-profile/task.md)
+- [TDD-TRACE](later-profile/tdd-trace.md)
+- [Verification Result Card](later-profile/verification-result-card.md)
 
 ## Notes
 
-This directory is the active reference location for projection template bodies and display card shapes.
+If a source record or ref does not exist, render `none`, `unknown`, `not_required`, or a blocking/unavailable note. Do not invent placeholder state to satisfy a template.
+
+Large logs, diffs, traces, screenshots, recordings, bundles, export components, and sensitive artifact bodies should be referenced by `ArtifactRef`, not embedded by default. Preserve `redaction_state` and show omission/block notes without reconstructing omitted or blocked raw values.

@@ -57,7 +57,7 @@ A resolved user judgment grants sensitive-action permission only when it uses `j
 - Follow-Up
 - References
 
-A sufficient rendered Decision Packet answers one user-owned judgment, not broad permission. The exact public request and response fields are owned by [`harness.request_user_judgment`](../api/mvp-api.md#harnessrequest_user_judgment), and the canonical authority rules are owned by [User Judgment](../kernel.md#user-judgment) and [Decision Gate](../kernel.md#decision-gate). This template may summarize existing user judgment fields, but it must not add schema fields, gates, or alternate authority.
+A sufficient rendered Decision Packet answers one user-owned judgment, not broad permission. The exact public request and response fields are owned by [`harness.request_user_judgment`](../../api/mvp-api.md#harnessrequest_user_judgment), and the canonical authority rules are owned by [User Judgment](../../kernel.md#user-judgment) and [Decision Gate](../../kernel.md#decision-gate). This template may summarize existing user judgment fields, but it must not add schema fields, gates, or alternate authority.
 
 The user-facing question should ask for the judgment directly: choose an option, defer it with the stated consequence, reject the path, grant or deny sensitive action approval, accept or reject the result, accept or reject a named residual risk, or record a later-profile waiver/reconcile outcome when enabled. Use "approve" only for Sensitive action approval or a later Approval record. If several judgments are pending, render separate prompts or separate lines; do not combine approval, work acceptance, and residual risk acceptance into one answer.
 
@@ -280,7 +280,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Notes
 
-This template is a rendered shape, not canonical state. User judgment visibility required by the active stage/profile can come through compact status cards, status/next responses, judgment-context resources, user-judgment resources, or a dedicated prompt. Standalone `DEC` projection remains optional.
+This template is a rendered shape, not canonical state. User judgment visibility required by the active stage/profile can come through the status card, judgment request, status/next responses, judgment-context resources, or user-judgment resources. Standalone `DEC` projection remains optional.
 
 Decision Packet projections should keep authority context refs compact and explicit. Displaying a Write Authorization, sensitive-action permission ref, evidence summary, Evidence Manifest when its profile is active, Eval, Manual QA, work acceptance, residual-risk visibility, residual-risk acceptance, artifact, redaction, or freshness ref in this template does not make the prose authoritative for that record.
 
