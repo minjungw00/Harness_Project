@@ -27,6 +27,8 @@ Do not read the whole Reference set by default. Choose the owner for the questio
 | Public/internal terminology definitions, capitalization, record-name orientation, and owner routing | [Glossary Reference](glossary.md) |
 | Runtime spaces, Core process placement, Core-only mutation authority, transaction ordering, artifacts, projection/reconcile placement, and recovery overview | [Runtime Architecture Reference](runtime-architecture.md) |
 
+This map identifies strict contract owners. For known pre-implementation repair axes that cross owner families, use the [Authoring Guide repair-target owner map](../maintain/authoring-guide.md#pre-implementation-repair-target-owner-map). That map is docs-maintenance guidance only; it does not decide documentation acceptance or implementation readiness.
+
 ## Reader Shortcuts
 
 - If you are implementing the future server, use [Implementation Overview](../build/implementation-overview.md), then [MVP-1 User Work Loop](../build/mvp-user-work-loop.md) -> [MVP API](api/mvp-api.md) -> [Storage](storage.md). Pull other Reference owners only for exact questions.

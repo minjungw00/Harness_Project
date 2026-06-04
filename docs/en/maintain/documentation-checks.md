@@ -79,6 +79,13 @@ Use these labels when reporting a check result.
 - Common failure examples: A Use page repeats a full gate matrix. A Build page defines an enum table owned by Reference. A Maintain page gives a second normative definition of projection freshness. A glossary definition is copied and changed outside the Glossary owner.
 - Pass means: Each strict contract is defined in one owner document. Non-owner docs use a short reader-facing summary, the local consequence, and an owner link.
 
+### Repair-Target Owner Map Check
+
+- Review type: `manual`.
+- What to inspect: The known pre-implementation repair axes in [Authoring Guide: Pre-implementation repair target owner map](authoring-guide.md#pre-implementation-repair-target-owner-map), including owner contract, API/schema, Storage/DDL, Core transition, stage/profile, evidence/close, security/local-access, conformance proof, user-output/context, and design-quality drift.
+- Common failure examples: A later-profile API branch is written as an MVP requirement. A status card is treated as gate authority. A design-quality validator becomes a blocker outside its owner activation rule. Documentation checks are described as runtime conformance. Security wording claims pre-tool blocking without a proven owner path.
+- Pass means: Each observed repair axis routes to the canonical owner family, and non-owner docs keep only a short local summary plus owner link. Listed `FAIL` symptoms are reported as docs-maintenance failures only; this check does not decide documentation acceptance or implementation readiness.
+
 ### Projection/State Check
 
 - Review type: `manual`.

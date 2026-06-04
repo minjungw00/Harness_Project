@@ -79,6 +79,13 @@
 - 자주 실패하는 예: Use 문서가 full gate matrix를 반복합니다. Build 문서가 Reference owner의 enum table을 정의합니다. Maintain 문서가 projection freshness를 두 번째 규범 정의로 설명합니다. Glossary owner 밖에서 glossary definition을 복사해 바꿉니다.
 - 통과 의미: Strict contract 하나는 owner 문서 하나에서 정의합니다. Owner가 아닌 문서는 짧은 독자용 요약, local consequence, owner link를 둡니다.
 
+### 정비 대상 owner 지도 점검
+
+- 점검 유형: `manual`.
+- 볼 것: [문서 작성 가이드: 사전 구현 문서 정비 대상 owner 지도](authoring-guide.md#사전-구현-문서-정비-대상-owner-지도)의 알려진 사전 구현 정비 축을 봅니다. Owner contract, API/schema, Storage/DDL, Core transition, stage/profile, evidence/close, security/local-access, conformance proof, user-output/context, design-quality drift가 포함됩니다.
+- 자주 실패하는 예: Later-profile API branch가 MVP requirement처럼 쓰입니다. Status card가 gate authority처럼 다뤄집니다. Design-quality validator가 owner activation rule 밖에서 blocker가 됩니다. Documentation check가 runtime conformance처럼 설명됩니다. 보안 문구가 증명된 owner path 없이 pre-tool blocking을 주장합니다.
+- 통과 의미: 관찰된 정비 축이 기준 owner 문서군으로 라우팅됩니다. Owner가 아닌 문서는 짧은 local summary와 owner link만 둡니다. 표의 `FAIL` 증상은 docs-maintenance 실패로만 보고합니다. 이 점검은 문서 수락이나 implementation readiness를 결정하지 않습니다.
+
 ### Projection/상태 점검
 
 - 점검 유형: `manual`.

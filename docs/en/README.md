@@ -34,7 +34,7 @@ This path is intentionally small. First-time readers do not need to read large R
 | General user | [Overview](learn/overview.md) | [One Task](learn/one-task.md) for the work-loop feel; [User Guide](use/user-guide.md) for practical session behavior; [Concepts](learn/concepts.md) only when terms need names. |
 | Agent instruction writer | [Agent Guide](use/agent-guide.md) | [Agent Integration Reference](reference/agent-integration.md), [Surface Cookbook](reference/surface-cookbook.md), and the specific API owner only when exact fields are needed. |
 | Server implementer | [Implementation Overview](build/implementation-overview.md) | [Engineering Checkpoint](build/engineering-checkpoint.md) -> [MVP-1 User Work Loop](build/mvp-user-work-loop.md) -> [MVP API](reference/api/mvp-api.md) -> [Storage](reference/storage.md) -> [Security Reference](reference/security.md). Use [Runtime Walkthrough](build/runtime-walkthrough.md) only for the intended request-to-close design path. |
-| Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md), [Rewrite Plan](maintain/rewrite-plan.md), [Rewrite Acceptance Review](maintain/rewrite-acceptance-review.md), and Reference owners only when checking strict meaning. |
+| Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Documentation Checks](maintain/documentation-checks.md), [Translation Guide](maintain/translation-guide.md), [Rewrite Plan](maintain/rewrite-plan.md), [Rewrite Acceptance Review](maintain/rewrite-acceptance-review.md), and Reference owners only when checking strict meaning. |
 | Later/profile reader | [Assurance Profile](later/assurance-profile.md) | [Operations Profile](later/operations-profile.md), [Future Fixtures](later/future-fixtures.md), and [Roadmap](roadmap.md). These are outside the MVP path unless an owner promotes them. |
 
 ## Document Roles
@@ -120,6 +120,7 @@ Use Later docs for material that must stay out of the MVP implementation path un
 Use Maintain to keep the docs and future Harness system coherent over time. Maintain docs govern documentation maintenance, not runtime behavior.
 
 - [Authoring Guide](maintain/authoring-guide.md)
+- [Documentation Checks](maintain/documentation-checks.md)
 - [Translation Guide](maintain/translation-guide.md)
 - [Rewrite Plan](maintain/rewrite-plan.md)
 - [Rewrite Acceptance Review](maintain/rewrite-acceptance-review.md)
