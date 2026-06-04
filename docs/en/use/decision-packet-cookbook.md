@@ -44,19 +44,38 @@ A judgment request is not a general requirements questionnaire. If the decision 
 
 Use this when a small user-visible choice is real but does not need a full trade-off prompt.
 
+User request:
+
 ```text
-Judgment request: choose the settings form button label.
-
-Options:
-- "Save"
-- "Update"
-
-Why now: the scoped copy change needs one label before the agent updates the text and related snapshot.
-
-This settles only the label for this settings form. It does not settle the broader settings workflow, localization strategy, work acceptance, residual-risk acceptance, or write authority.
+Show a message after clicking Save.
 ```
 
-Why this works: it asks for one bounded product/UX judgment without pretending the answer approves every later step.
+Good agent response:
+
+```text
+Judgment request: choose the Save feedback pattern.
+
+Options:
+- Inline message near the saved form.
+- Toast that confirms the save without blocking the flow.
+- Modal that interrupts the flow.
+
+Recommendation: use a toast for a non-blocking success message. Use inline text instead if the message is tied to a specific field or error.
+
+If you defer: save-state wiring can continue, but final UI behavior, screenshots, and human QA should wait.
+
+This settles only the Save feedback pattern. It does not settle broader settings workflow, localization strategy, work acceptance, residual-risk acceptance, or write authority.
+```
+
+Why this is good: it asks for one bounded product/UX judgment without pretending the answer approves every later step.
+
+Bad agent response:
+
+```text
+I will add a modal after Save because it is the safest way to make users notice the message.
+```
+
+Why this is bad: it silently chooses a disruptive UX pattern and does not check whether inline or toast behavior fits the product.
 
 ## Product/UX Judgment: Inline Message Vs Toast Vs Modal
 
@@ -85,6 +104,14 @@ Why this works: it asks for the UX choice instead of asking the user to "approve
 
 Use this when an authentication direction affects storage, revocation, client behavior, migration, or security posture.
 
+User request:
+
+```text
+Build a login feature.
+```
+
+Good agent response:
+
 ```text
 Judgment request: choose the login session architecture.
 
@@ -103,7 +130,15 @@ If you defer: the agent can inspect current auth code and draft a narrow work sl
 This does not settle: failed-login UX, audit logging, rate limits, work acceptance, or permission to install dependencies.
 ```
 
-Why this works: it separates identity-provider choice from session/storage strategy. OAuth/OIDC may still need a local session or token strategy.
+Why this is good: it separates identity-provider choice from session/storage strategy. OAuth/OIDC may still need a local session or token strategy.
+
+Bad agent response:
+
+```text
+I will use JWTs and add social login now; those are the modern defaults.
+```
+
+Why this is bad: it makes a material technical decision without checking the current app, deployment, revocation needs, or user-owned scope.
 
 ## Technical Judgment: PII Logging
 
@@ -127,6 +162,39 @@ This does not settle: permission for any sensitive command, artifact redaction e
 ```
 
 Why this works: it treats privacy as a user-owned technical judgment, not a hidden implementation detail.
+
+## Security/Privacy Judgment: API Key Handling
+
+Use this when the user asks where a secret should live or proposes putting a key in source code.
+
+User request:
+
+```text
+Can I put the API key in the code?
+```
+
+Good agent response:
+
+```text
+No. Do not put a raw API key in source code.
+
+Safe next action:
+- inspect the repo's config, deployment docs, and ignored local files;
+- recommend the existing secret path if one exists, such as environment variables, a platform secret, a local ignored secret file, or a secret manager;
+- flag any current committed key as a security issue that needs rotation guidance.
+
+This does not settle: permission to change deployment settings, proof that a key has not leaked, residual-risk acceptance, or any claim that Harness provides OS-level secret isolation or tamper-proof storage.
+```
+
+Why this is good: it gives clear security guidance while keeping the local mechanism and remaining risk visible.
+
+Bad agent response:
+
+```text
+Yes. Hard-code the key and rely on Harness to keep it safe.
+```
+
+Why this is bad: it creates a secret leak risk and overclaims Harness security guarantees.
 
 ## Sensitive Action Approval: Dependency Install
 
@@ -172,6 +240,34 @@ This does not settle: evidence sufficiency, verification, work acceptance, or re
 ```
 
 Why this works: it names the skipped human inspection. A QA waiver does not prove QA passed.
+
+### Deferred User Testing
+
+Use this when the user says they will test later.
+
+User request:
+
+```text
+I will test it later.
+```
+
+Good agent response:
+
+```text
+I will show Manual QA as deferred, not passed. The implementation can remain ready for your later check, but close stays blocked unless the active path allows a QA waiver and any visible residual risk is handled separately.
+
+This does not settle: work acceptance, Manual QA pass, verification, or residual-risk acceptance.
+```
+
+Why this is good: it preserves the evidence gap instead of turning future testing into current evidence.
+
+Bad agent response:
+
+```text
+Great. I will mark Manual QA complete and close the work.
+```
+
+Why this is bad: later testing is not evidence that QA passed.
 
 ## Technical Judgment: Verification Expectation Or Waiver
 
@@ -256,6 +352,28 @@ Choose inline failed-login feedback. Keep the message generic, do not add a moda
 That kind of answer resolves the named judgment without granting every other authority. The agent still needs the normal owner paths for write authority, evidence, QA, verification, work acceptance, residual-risk acceptance, and close.
 
 If you answer "proceed," "go ahead," "looks good," "진행해," or "좋아," the agent must not automatically treat that phrase as sensitive action approval, work acceptance, or residual risk acceptance. If more than one judgment is pending, or if the phrase could mean permission, acceptance, risk acceptance, waiver, scope confirmation, or simple continuation, the agent should ask which judgment you mean before recording it.
+
+User request:
+
+```text
+Looks good, go ahead.
+```
+
+Good agent response:
+
+```text
+I will apply that to the one active judgment: use inline failed-login feedback. This does not grant sensitive-action approval, work acceptance, QA waiver, or residual-risk acceptance.
+```
+
+Why this is good: it maps the user's short reply only to the named pending judgment.
+
+Bad agent response:
+
+```text
+I will treat that as approval for implementation, acceptance of the result, QA waiver, and residual-risk acceptance.
+```
+
+Why this is bad: one broad phrase cannot collapse separate judgment routes.
 
 ## Exact Owners
 

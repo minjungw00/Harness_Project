@@ -7,30 +7,43 @@ This page follows one future Harness-assisted task. It is a learning story, not 
 The user asks:
 
 ```text
-Add remember-me behavior to login, but clarify the plan before implementation.
+Build a login feature.
 ```
 
 The user does not need to know internal labels. The agent should make the work understandable through plain questions: what is the work, what is in scope, what does the user need to decide, what evidence will support the result, what was checked, and what still blocks close?
 
 ## 1. Clarify Before Writing
 
-The agent should not start by changing files when the request still hides product or security choices.
+The agent should not start by changing files when the request still hides product, technical, or security choices.
+
+Good agent response:
 
 ```text
+This is larger than a direct edit, so I need to clarify before implementation.
+
 What I can inspect:
-- current login form structure;
-- current session lifetime settings;
-- existing tests around sign-in and sign-out.
+- current auth routes and middleware;
+- current session handling;
+- existing login, logout, and user tests;
+- UI patterns for forms, errors, and save feedback.
 
 What you likely need to decide:
-- should "remember me" keep the user signed in, remember the email, or both?
-- if it keeps the user signed in, what session lifetime and storage risk are acceptable?
+- login experience: email/password, magic link, OAuth/OIDC, social login, or another path;
+- technical direction: server-side session cookie, JWT/bearer token, external identity provider, or a hybrid;
+- product behavior: signup, password reset, failed-login feedback, and account recovery scope;
+- QA expectations for the user-facing login flow.
 
 Safe next step:
-Inspect the auth shape and return a narrow plan. No product writes yet.
+Inspect the current auth shape and return a narrow plan. No product writes yet.
 ```
 
-The plan is useful, but it is not permission to implement and not acceptance of any risk.
+Bad agent response:
+
+```text
+I will build login with JWTs, social login, reset, signup, and modal errors, then mark it done when tests pass.
+```
+
+The good response is useful because it separates the broad request into facts the agent can inspect and decisions the user owns. The bad response silently chooses architecture, UX, and scope.
 
 ## 2. Separate Facts From User Judgment
 
@@ -38,49 +51,35 @@ After inspection, the agent can summarize:
 
 ```text
 Confirmed facts:
-- The login form can add a checkbox without a layout rewrite.
-- Session lifetime is controlled server-side.
-- Tests already cover sign-in and sign-out.
+- The app already has server-side session middleware.
+- The existing UI uses inline form errors and toast messages for non-blocking success feedback.
+- Tests already cover logout but not failed-login copy or account lockout.
 
 Still yours to decide:
-- the product meaning of "remember me";
-- the acceptable session lifetime if sessions are extended.
-```
-
-If the user says:
-
-```text
-Show what I need to decide and what you can check yourself.
-```
-
-the agent should keep that split visible:
-
-```text
-User decision:
-Should "remember me" mean remembered email, longer session, or both?
-
-Agent-checkable:
-Whether the existing session mechanism can support the selected behavior.
+- whether this first slice is email/password only;
+- whether sessions should stay server-side or move to JWT/bearer tokens;
+- whether OAuth/OIDC or social login belongs in this task or a later one;
+- whether failed-login feedback should be inline, toast, or modal.
 ```
 
 Tool output can inform the choice. It does not make the user's choice.
 
 ## 3. Name The Scope
 
-Once the user chooses longer sessions, the agent should name the work boundary before implementing:
+Once the user chooses an email/password first slice with server-side session cookies, the agent should name the work boundary before implementing:
 
 ```text
 In scope:
-Login checkbox, selected longer-session behavior, focused tests, and directly related copy.
+Email/password login, server-side session cookie integration, inline failed-login message, focused tests, and directly related copy.
 
 Out of scope:
-Passwordless login, account recovery, global session redesign, unrelated auth cleanup.
+Account creation, password reset, OAuth/OIDC, social login, global session redesign, unrelated auth cleanup, and hard-coded secrets.
 
 Still user-owned if it matters:
-Session lifetime, storage risk, QA expectation, residual-risk acceptance, and final work acceptance.
+Session lifetime, secret handling policy, Manual QA expectation, residual-risk acceptance, and final work acceptance.
 ```
 
-If a small side request appears, such as renaming the login button from "Sign in" to "Log in," the agent can keep it light only while the boundary holds. If the label turns out to be shared across unrelated flows, the agent should stop and say the scope grew.
+If the user says "Show a message after clicking Save" inside this work, the agent should treat that as a product/UX choice, not a hidden default. A toast may be right for non-blocking success feedback; inline text may be right for field-specific errors; a modal should be chosen only when interrupting the flow is intentional.
 
 ## 4. Ask Specific Questions
 
@@ -88,13 +87,19 @@ Harness should not turn every uncertainty into a heavy ceremony. It should ask t
 
 ```text
 Decision needed:
-How long should a remembered session last on this device?
+Which login session architecture should this first slice use?
+
+Options:
+- Server-side session cookie for first-party web login.
+- JWT or bearer token handled by the client.
+- OAuth/OIDC identity provider with a local session or token strategy when needed.
+- Social login provider integration with account-linking implications.
 
 Recommendation:
-Use the existing session mechanism with a shorter remembered-session lifetime before adding a separate persistent token.
+Use the existing server-side session cookie for the first slice unless you already need third-party identity, non-browser clients, or SSO.
 
 Uncertainty:
-I still need to confirm how the current session cleanup handles extended lifetime.
+I still need to confirm session expiration and rotation behavior before claiming the implementation is complete.
 ```
 
 A broad "go ahead" should not be stretched to cover unrelated product, technical, QA, acceptance, or risk decisions.
@@ -105,12 +110,26 @@ If the chosen approach requires a sensitive step, the prompt should say exactly 
 
 ```text
 Sensitive step permission needed:
-May I update the dependency lockfile to add the session helper required by this approach?
+May I update the dependency lockfile to add the named session helper for this task?
 
-This only covers that step. It does not accept the finished result, waive QA, or accept residual risk.
+This only covers that dependency action. It does not decide the architecture by itself, accept the finished result, waive QA, or accept residual risk.
 ```
 
 Permission for a named step is not work acceptance.
+
+If the user asks:
+
+```text
+Can I put the API key in the code?
+```
+
+the agent should answer plainly:
+
+```text
+No. Do not put a raw API key in source code. I will check the project's existing secret path and recommend that instead, such as an environment variable, ignored local secret file, platform secret, or secret manager.
+```
+
+That answer is a security/privacy judgment. It should not claim Harness provides OS-level secret isolation or tamper-proof storage unless that exact mechanism exists.
 
 ## 6. Show Evidence And Checks
 
@@ -118,19 +137,31 @@ After implementation, the agent should connect claims to support:
 
 ```text
 Claim:
-Remembered sessions survive browser restart.
+Email/password login creates a server-side session and shows inline feedback for failed login.
 
 Evidence:
-- changed login form and session paths;
-- focused test output for remembered and non-remembered sessions;
-- notes from inspecting the session cleanup path.
+- changed login form, auth route, and session middleware paths;
+- focused test output for valid login, invalid login, and logout;
+- diff review showing password reset, signup, OAuth/OIDC, and social login were not added.
 
 Checks:
 - focused automated tests passed;
-- login flow still needs human QA for copy, keyboard behavior, and error-state layout.
+- login flow still needs human QA for copy, keyboard behavior, screen-reader announcement, and visual layout.
 ```
 
-Evidence, verification, and manual QA are related but separate. A test pass does not prove the human experience, and a self-check is weaker than a genuinely separate verification path.
+Evidence, verification, and Manual QA are related but separate. A test pass does not prove the human experience, and a self-check is weaker than a genuinely separate verification path.
+
+If the user says:
+
+```text
+I will test it later.
+```
+
+the agent should not hide the gap:
+
+```text
+I will show Manual QA as deferred, not passed. The implementation can wait for your later check, but close remains blocked unless the active path allows a QA waiver and any visible residual risk is handled separately.
+```
 
 ## 7. Show Residual Risk Before Acceptance
 
@@ -138,23 +169,22 @@ Before asking the user to accept the work, the agent should show known remaining
 
 ```text
 Residual risk:
-Remembered-session behavior was checked in the local browser path, but not across every supported browser policy combination.
+The focused tests cover the main login path, but manual browser QA has not confirmed small-screen layout, keyboard flow, or screen-reader announcements.
 ```
 
 If the user says:
 
 ```text
-Looks good.
+Looks good, go ahead.
 ```
 
 the agent should connect that phrase to the named judgment:
 
 ```text
-To close this work, please confirm:
-Do you accept the remember-me result with the residual risk shown above?
+I can apply "go ahead" to the one pending choice if you mean the inline failed-login message. It does not accept the finished work, waive Manual QA, grant new sensitive-step permission, or accept the residual risk shown above.
 ```
 
-Work acceptance is the user's result judgment. It is separate from sensitive-step permission, evidence, tests, manual QA, verification, and residual-risk visibility.
+Work acceptance is the user's result judgment. It is separate from sensitive-step permission, evidence, tests, Manual QA, verification, and residual-risk visibility.
 
 ## 8. Close Honestly
 
@@ -162,9 +192,9 @@ A useful close summary is short and grounded:
 
 ```text
 Close readiness:
-- Scope stayed within login checkbox, selected session behavior, focused tests, and related copy.
-- User-owned product meaning was decided.
-- Evidence supports remembered and non-remembered session behavior.
+- Scope stayed within email/password login, server-side sessions, inline failed-login feedback, focused tests, and related copy.
+- User-owned product and technical choices were named.
+- Evidence supports the main login and logout behavior.
 - Manual QA is handled, or its waiver and impact are visible.
 - Residual risk was shown before work acceptance.
 ```
@@ -176,9 +206,31 @@ Close blocked:
 Manual QA for the login screen has not passed or been explicitly waived.
 ```
 
+## Smaller Requests Should Stay Smaller
+
+The same behavior scales down.
+
+```text
+User request: Only fix typos in this document.
+Good agent response: I will edit typo-level issues only and do a diff review for unintended meaning changes.
+Bad agent response: I will rewrite the section and add new examples.
+```
+
+```text
+User request: Fix this bug.
+Good agent response: I will inspect the failing behavior and nearby tests first, then make the smallest fix or ask for the missing repro detail.
+Bad agent response: I will refactor the whole module and call it fixed if tests pass.
+```
+
+```text
+User request: Clean up all these files.
+Good agent response: I will inspect first and propose a narrow cleanup slice before deleting, renaming, or reorganizing.
+Bad agent response: I will delete unused-looking files and restructure the folder.
+```
+
 ## What To Remember
 
-Harness should make one task easier to trust, not harder to start. Users speak normally. Agents clarify when needed. User-owned judgments stay with the user. Evidence, verification, manual QA, work acceptance, residual risk, and close readiness stay distinct.
+Harness should make one task easier to trust, not harder to start. Users speak normally. Agents clarify when needed. User-owned judgments stay with the user. Evidence, verification, Manual QA, work acceptance, residual risk, and close readiness stay distinct.
 
 ## Where To Go Next
 

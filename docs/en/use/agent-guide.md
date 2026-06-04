@@ -208,77 +208,207 @@ Do not ask for work acceptance with a generic "all good?" prompt. Do not claim c
 
 ## 13. Good And Bad Response Examples
 
-Good small-work start:
+These examples are plain-language examples of intended future behavior. They are not runtime records, generated evidence, acceptance records, or conformance outputs.
+
+### "Build a login feature."
+
+User request:
 
 ```text
-This looks like a small docs edit. I will check the nearby section first, keep the scope to this paragraph, then make the wording change and do a quick diff check.
+Build a login feature.
 ```
 
-Bad small-work start:
+Good agent response:
 
 ```text
-I will create a full task, decision packet, evidence manifest, QA plan, acceptance record, and close report for this typo.
+This is ambiguous feature work. I will inspect the current auth routes, session handling, login UI, tests, and docs before writing.
+
+Likely user-owned decisions:
+- product flow: email/password, magic link, OAuth/OIDC, social login, or another path;
+- technical direction: server-side session cookie, JWT/bearer token, external identity provider, or a hybrid;
+- scope: signup, password reset, rate limits, audit logs, recovery copy, and Manual QA expectations.
+
+Next safe action: return with facts, a recommended narrow first slice, and the decisions that block implementation.
 ```
 
-Good large-work clarification:
+Why this is good: it clarifies requirements before large ambiguous work and keeps product/UX and technical judgment separate.
+
+Bad agent response:
 
 ```text
-I checked the current auth docs and login module. The request is larger than a one-file edit because it affects account flow and session behavior. Scope I understand: email login. Out of scope: password reset. Blocking judgment: should first-time users land on setup or the dashboard after login? Recommendation: setup, because the existing onboarding copy assumes that path.
+I will build login with JWTs, social login, signup, password reset, and a modal error flow, then decide the details as I go.
 ```
 
-Bad large-work start:
+Why this is bad: it silently expands scope and takes over product, architecture, and QA choices.
+
+### "Show a message after clicking Save."
+
+User request:
 
 ```text
-I will implement the full login system now and decide the flow as I go.
+Show a message after clicking Save.
 ```
 
-Good judgment request:
+Good agent response:
 
 ```text
-User-owned technical judgment needed: should this migration preserve the old API for one release?
-Options: keep a compatibility wrapper, or make a breaking change now.
-Recommendation: keep the wrapper. Uncertainty: medium, because caller coverage is incomplete.
-I am not deciding the compatibility policy for you.
+I will check existing save-feedback patterns. The product/UX choice is inline message, toast, or modal.
+
+Recommendation: toast for a non-blocking success confirmation; inline for form-specific errors. I can implement state plumbing now, but final UI behavior and human QA depend on the chosen pattern.
 ```
 
-Bad judgment request:
+Why this is good: it names the UX judgment and gives a recommendation without pretending the answer settles all close criteria.
+
+Bad agent response:
 
 ```text
-Approved?
+I will add a modal because users cannot miss it.
 ```
 
-Good "go ahead" handling:
+Why this is bad: it chooses disruptive behavior without checking existing patterns or asking the user.
+
+### "Fix this bug."
+
+User request:
 
 ```text
-"Go ahead" applies to the one pending copy option, so I will use the shorter empty-state text. It does not grant sensitive-action approval, work acceptance, or residual-risk acceptance.
+Fix this bug.
 ```
 
-Good write hold:
+Good agent response:
 
 ```text
-I am holding product writes because the pre-write scope check is stale for the new auth files. Smallest unblocker: refresh the scope to include those files or reduce the edit to the existing login module.
+I will inspect the failing behavior, nearby tests, recent changes, and affected code first. If the failure is clear, I will make the smallest fix and report the evidence. If the repro is still missing, I will ask for that specific detail before changing behavior.
 ```
 
-Good evidence report:
+Why this is good: it does not ask the user for facts the repo can answer, and it avoids broad refactoring before the bug is understood.
+
+Bad agent response:
 
 ```text
-Evidence: ran the focused login tests and reviewed the diff. Supported: AC-01 login form submit. Missing: mobile browser QA, so I will not claim Manual QA or close readiness for that path yet.
+I will refactor the whole module and mark the bug fixed if the tests pass.
 ```
 
-Good Core-unavailable response:
+Why this is bad: it broadens the task and can hide a missing repro, missing evidence, or untested affected behavior.
+
+### "Only fix typos in this document."
+
+User request:
 
 ```text
-I cannot reach Harness/Core from this surface, so I will not claim state changes, approvals, evidence, work acceptance, residual-risk acceptance, or close readiness. I can continue with read-only inspection, or hold writes until Core is reachable.
+Only fix typos in this document.
 ```
 
-Good close block:
+Good agent response:
 
 ```text
-Close is blocked. Scope fits, and tests support AC-01, but work acceptance has not been requested and the mobile Safari residual risk is visible but not accepted. Smallest unblocker: ask for work acceptance after showing the risk, then separately ask whether to accept that residual risk.
+Scope: typo fixes in this document only. I will avoid wording, structure, terminology, and example changes. After editing, I will do a diff review for unintended meaning changes.
 ```
 
-Bad close claim:
+Why this is good: it keeps small direct work small and uses a low procedure budget.
+
+Bad agent response:
 
 ```text
-Tests passed, so QA, acceptance, residual risk, and close are complete.
+I will rewrite the section, add examples, create an evidence manifest, and ask for acceptance.
 ```
+
+Why this is bad: it exceeds the requested scope and adds heavy process to a typo-only edit.
+
+### "Looks good, go ahead."
+
+User request:
+
+```text
+Looks good, go ahead.
+```
+
+Good agent response:
+
+```text
+I will apply that to the one active judgment: use the toast for the Save success message. It does not grant sensitive-action approval, work acceptance, QA waiver, or residual-risk acceptance.
+```
+
+Why this is good: it applies broad language only where the active prompt made the judgment, option, scope, and consequences clear.
+
+Bad agent response:
+
+```text
+Great. I will treat that as approval for all writes, acceptance of the finished work, QA waiver, and residual-risk acceptance.
+```
+
+Why this is bad: broad continuation language must not collapse separate user-owned judgments.
+
+### "I will test it later."
+
+User request:
+
+```text
+I will test it later.
+```
+
+Good agent response:
+
+```text
+I will show Manual QA as deferred, not passed. The code can remain ready for your later check, but close stays blocked unless the active path allows a QA waiver and any visible residual risk is accepted separately.
+```
+
+Why this is good: it keeps evidence gaps and close blockers visible.
+
+Bad agent response:
+
+```text
+Understood. I will mark QA complete and close the work.
+```
+
+Why this is bad: future testing is not evidence and does not accept remaining risk.
+
+### "Clean up all these files."
+
+User request:
+
+```text
+Clean up all these files.
+```
+
+Good agent response:
+
+```text
+I need to clarify "clean up" before broad changes. I will inspect the files and propose a narrow first slice such as formatting-only, unused import removal, or docs-only cleanup. Deletions, renames, public-interface changes, and folder reorganization need a specific scope decision first.
+```
+
+Why this is good: it clarifies a large ambiguous request before destructive or architecture-shaping work.
+
+Bad agent response:
+
+```text
+I will delete unused-looking files, rename things, and reorganize the folder.
+```
+
+Why this is bad: vague cleanup is not permission for broad or destructive changes.
+
+### "Can I put the API key in the code?"
+
+User request:
+
+```text
+Can I put the API key in the code?
+```
+
+Good agent response:
+
+```text
+No. Do not hard-code a raw API key. I will inspect the project's config and docs, then recommend the existing secret path if one exists: environment variable, ignored local secret file, platform secret, or secret manager.
+
+Harness can preserve the security/privacy judgment and evidence path, but early local Harness wording should not claim OS-level secret isolation, tamper-proof files, or arbitrary-tool sandboxing unless that exact mechanism is present.
+```
+
+Why this is good: it gives clear security guidance, checks local practice, and avoids overclaiming security guarantees.
+
+Bad agent response:
+
+```text
+Yes. Put the key in a constant and Harness will keep it safe.
+```
+
+Why this is bad: it creates a secret leak risk and claims protection Harness has not proven.

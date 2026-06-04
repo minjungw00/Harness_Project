@@ -247,7 +247,216 @@ Common status messages should be direct and non-alarming. Exact condition behavi
 | Close is blocked. | The work cannot be closed yet; the agent should show the smallest unblocker. |
 | Residual risk remains. | A known remaining risk must be visible, and some close paths require you to accept that risk separately. |
 
-## 11. What Harness does not guarantee
+## 11. Everyday scenario examples
+
+These examples are written as ordinary user requests. They are examples of intended future Harness behavior, not runtime records from this documentation repository.
+
+### "Build a login feature."
+
+User request:
+
+```text
+Build a login feature.
+```
+
+Good agent response:
+
+```text
+This is larger than a direct edit, so I need to clarify before implementation. I will inspect the existing auth routes, session handling, login UI, tests, and docs first.
+
+Likely decisions for you:
+- product flow: email/password, magic link, OAuth/OIDC, social login, or another login path;
+- technical direction: server-side session cookie, JWT/bearer token, external identity provider, or a hybrid;
+- scope: account creation, password reset, rate limiting, audit logging, and recovery copy.
+
+Next safe action: inspect the current auth shape and come back with facts, a recommended narrow slice, and the decisions that still block writing.
+```
+
+Why this is good: it does not turn an ambiguous feature request into silent architecture and UX choices. It lets the agent inspect facts first and keeps session-cookie, JWT, OAuth/OIDC, and social-login decisions visible.
+
+Bad agent response:
+
+```text
+I will build the full login system with JWTs, social login, reset, signup, and modals, then mark it done when tests pass.
+```
+
+Why this is bad: it expands scope, chooses architecture and product behavior for the user, and treats tests as enough for completion.
+
+### "Show a message after clicking Save."
+
+User request:
+
+```text
+Show a message after clicking Save.
+```
+
+Good agent response:
+
+```text
+I will check the existing save feedback patterns first. The product choice is where the message should appear: inline near the form, as a toast, or as a modal.
+
+Recommendation: use a toast for a non-blocking success message, and use inline text for form-specific errors. I can wire the save state now, but final UI behavior and QA depend on that choice.
+```
+
+Why this is good: it treats inline, toast, and modal as a user-visible UX judgment instead of hiding the decision in implementation.
+
+Bad agent response:
+
+```text
+I will add a modal after every Save click because it is the most noticeable.
+```
+
+Why this is bad: it picks a disruptive UX without checking local patterns or asking whether the message should block the flow.
+
+### "Fix this bug."
+
+User request:
+
+```text
+Fix this bug.
+```
+
+Good agent response:
+
+```text
+I need the failing behavior or a repro before I can safely fix it. I will first inspect the error, nearby tests, recent changes, and affected files. If the bug is obvious from those sources, I will make the smallest fix and show the evidence. If the symptom is still ambiguous, I will ask for the missing repro detail.
+```
+
+Why this is good: it asks for clarification only after checking what the agent can discover, and it keeps the fix narrow until the bug is understood.
+
+Bad agent response:
+
+```text
+I will refactor the whole module and call it fixed once the test suite passes.
+```
+
+Why this is bad: it turns an ambiguous bug into broad work and may hide missing evidence about the actual failure.
+
+### "Only fix typos in this document."
+
+User request:
+
+```text
+Only fix typos in this document.
+```
+
+Good agent response:
+
+```text
+Scope: typo fixes in this document only.
+Out of scope: wording changes, structure changes, terminology changes, and new examples.
+I will make only typo-level edits and do a quick diff review for unintended meaning changes.
+```
+
+Why this is good: it uses a low procedure budget and keeps small direct work small.
+
+Bad agent response:
+
+```text
+I will rewrite the section, add examples, update terminology, create a full evidence report, and ask for acceptance.
+```
+
+Why this is bad: it ignores the user's narrow scope and adds ceremony the small edit does not need.
+
+### "Looks good, go ahead."
+
+User request:
+
+```text
+Looks good, go ahead.
+```
+
+Good agent response:
+
+```text
+I will apply that to the one pending choice: use the toast for the Save success message. This does not grant sensitive-action approval, accept the finished work, waive QA, or accept any residual risk.
+```
+
+Why this is good: it maps broad language only to the active, clearly named judgment.
+
+Bad agent response:
+
+```text
+Great. I will treat that as approval for all writes, work acceptance, QA waiver, and residual-risk acceptance.
+```
+
+Why this is bad: "go ahead" is not automatically every approval and acceptance path.
+
+### "I will test it later."
+
+User request:
+
+```text
+I will test it later.
+```
+
+Good agent response:
+
+```text
+I will record this as Manual QA deferred, not passed. The implementation can remain available for your later test, but close is still blocked unless the active path allows a QA waiver and any remaining risk is shown and accepted separately.
+```
+
+Why this is good: it keeps evidence gaps and residual risk visible instead of converting future testing into proof.
+
+Bad agent response:
+
+```text
+Sounds good. I will mark QA complete and close the task.
+```
+
+Why this is bad: future testing is not evidence that testing passed, and it does not accept remaining risk.
+
+### "Clean up all these files."
+
+User request:
+
+```text
+Clean up all these files.
+```
+
+Good agent response:
+
+```text
+"Clean up" could mean formatting, dead-code removal, renaming, deleting files, or changing structure. I will inspect the files first and propose a narrow cleanup slice. Before deleting files, changing public interfaces, or broadening scope, I will ask for the specific decision.
+```
+
+Why this is good: it clarifies a large ambiguous request before broad or destructive work.
+
+Bad agent response:
+
+```text
+I will delete anything that looks unused, rename files as I see fit, and reorganize the folder.
+```
+
+Why this is bad: it treats vague cleanup as permission for destructive and architectural changes.
+
+### "Can I put the API key in the code?"
+
+User request:
+
+```text
+Can I put the API key in the code?
+```
+
+Good agent response:
+
+```text
+No. Do not put a raw API key in source code. Use the project's existing secret path if one exists, such as environment variables, a local secret file excluded from version control, or a secret manager. I will inspect the repo's config and docs before recommending the exact path.
+
+Security note: Harness can make this security/privacy judgment visible and preserve the decision path, but early local Harness wording should not claim OS-level secret isolation or tamper-proof storage unless that exact mechanism is present.
+```
+
+Why this is good: it gives a clear security/privacy recommendation, checks local practice, and does not overclaim enforcement.
+
+Bad agent response:
+
+```text
+Yes. Hard-code it for now and Harness will keep it safe.
+```
+
+Why this is bad: it creates a secret leak risk and overclaims what Harness guarantees.
+
+## 12. What Harness does not guarantee
 
 Harness makes AI-assisted work easier to inspect and route. It does not replace the surrounding engineering process.
 
@@ -267,7 +476,7 @@ It does not:
 
 If the agent says something is blocked, read that as "we cannot honestly proceed or close under the current record" unless it also names an actual preventive control. Early local Harness wording should be cooperative or detective unless a stronger mechanism is explicitly documented.
 
-## 12. Advanced internal terms, only after the main flow
+## 13. Advanced internal terms, only after the main flow
 
 You can skip this section until an agent or reference page shows one of these labels. They are useful for precision, but they should not be the first way a normal task is explained.
 
