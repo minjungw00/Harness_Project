@@ -35,6 +35,7 @@ The repository is still in documentation review/redesign. The current docs are a
 - [ ] Verify moved, renamed, split, merged, or deleted content has updated links, anchors, README routes, paired-language links, and old title/path references in the same batch.
 - [ ] Run the relevant docs-maintenance checks you can run locally, or state which checks were not run.
 - [ ] Before final documentation acceptance or a major review handoff, use [Documentation Checks](documentation-checks.md) and report whether each check was manual, scriptable, or future-runtime-only.
+- [ ] For final redesign handoff, create or update [Rewrite Acceptance Review](rewrite-acceptance-review.md) without claiming runtime conformance or implementation readiness.
 - [ ] Route any remaining issue as documentation drift, schema/design decision, stage boundary decision, implementation-readiness criterion, or future Roadmap item. Do not leave vague TODOs scattered through active docs.
 - [ ] Report changed files and any residual risks or unresolved checks in the handoff.
 
@@ -262,7 +263,7 @@ Required check categories:
 
 ### Final pre-acceptance review
 
-Before maintainers accept the documentation set for implementation planning, do one final docs-maintenance pass. Use [Documentation Checks](documentation-checks.md) as the practical validation checklist. Check English/Korean active file map parity, semantic section parity in paired files, broken links and anchors, owner-boundary drift, non-owner duplicate contracts, terminology drift for Approval, Decision Packet, Evidence, Verification, Manual QA, Acceptance, Residual Risk, Projection, and Guarantee Level, and open-marker hygiene.
+Before maintainers accept the documentation set for implementation planning, do one final docs-maintenance pass. Use [Documentation Checks](documentation-checks.md) as the practical validation checklist, and summarize the final redesign handoff in [Rewrite Acceptance Review](rewrite-acceptance-review.md). Check English/Korean active file map parity, semantic section parity in paired files, broken links and anchors, owner-boundary drift, non-owner duplicate contracts, terminology drift for Approval, Decision Packet, Evidence, Verification, Manual QA, Acceptance, Residual Risk, Projection, and Guarantee Level, and open-marker hygiene.
 
 Also check the implementation-readiness criteria in [Implementation Overview](../build/implementation-overview.md#implementation-readiness-criteria): repository identity, user-facing flow without internal-term burden, Discovery as requirements clarification rather than premature Change Unit convergence, canonical `user_judgment` naming with mapped legacy aliases, proportional judgment prompts, Approval/work acceptance/residual-risk acceptance separation, coherent stages, Core Model/API/storage/reference agreement, staged Storage/API scope, staged projection/template scope, honest security guarantee wording, agent context strategy, staged future-oriented conformance fixture plan, staged operations surface, Korean user-facing readability, and clean links/terminology/open markers.
 
@@ -384,3 +385,4 @@ Use this map for broad document routing. For strict Reference contracts, use the
 | Documentation authoring rules | `maintain/authoring-guide.md` |
 | Translation and bilingual prose rules | `maintain/translation-guide.md` |
 | Rewrite planning categories and redesign triage | `maintain/rewrite-plan.md` |
+| Final redesign acceptance review | `maintain/rewrite-acceptance-review.md` |

@@ -34,7 +34,7 @@ This path is intentionally small. First-time readers do not need to read large R
 | General user | [Overview](learn/overview.md) | [One Task](learn/one-task.md) for the work-loop feel; [User Guide](use/user-guide.md) for practical session behavior; [Concepts](learn/concepts.md) only when terms need names. |
 | Agent instruction writer | [Agent Guide](use/agent-guide.md) | [Agent Integration Reference](reference/agent-integration.md), [Surface Cookbook](reference/surface-cookbook.md), and the specific API owner only when exact fields are needed. |
 | Server implementer | [Implementation Overview](build/implementation-overview.md) | [Engineering Checkpoint](build/engineering-checkpoint.md) -> [MVP-1 User Work Loop](build/mvp-user-work-loop.md) -> [MVP API](reference/api/mvp-api.md) -> [Storage](reference/storage.md) -> [Security Reference](reference/security.md). Use [Runtime Walkthrough](build/runtime-walkthrough.md) only for the intended request-to-close design path. |
-| Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md), [Rewrite Plan](maintain/rewrite-plan.md), and Reference owners only when checking strict meaning. |
+| Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md), [Rewrite Plan](maintain/rewrite-plan.md), [Rewrite Acceptance Review](maintain/rewrite-acceptance-review.md), and Reference owners only when checking strict meaning. |
 | Later/profile reader | [Assurance Profile](later/assurance-profile.md) | [Operations Profile](later/operations-profile.md), [Future Fixtures](later/future-fixtures.md), and [Roadmap](roadmap.md). These are outside the MVP path unless an owner promotes them. |
 
 ## Document Roles
@@ -122,6 +122,7 @@ Use Maintain to keep the docs and future Harness system coherent over time. Main
 - [Authoring Guide](maintain/authoring-guide.md)
 - [Translation Guide](maintain/translation-guide.md)
 - [Rewrite Plan](maintain/rewrite-plan.md)
+- [Rewrite Acceptance Review](maintain/rewrite-acceptance-review.md)
 
 ## Current Status Model
 
@@ -142,8 +143,9 @@ Before starting Harness Server code, implementers should read:
 
 1. [Maintainer handoff summary](build/implementation-overview.md#maintainer-handoff-summary).
 2. [Documentation acceptance status](build/implementation-overview.md#documentation-acceptance-status).
-3. [Implementation-readiness criteria](build/implementation-overview.md#implementation-readiness-criteria).
-4. [Implementation decisions needed before server coding](build/mvp-user-work-loop.md#implementation-decisions-needed-before-server-coding).
+3. [Rewrite Acceptance Review](maintain/rewrite-acceptance-review.md).
+4. [Implementation-readiness criteria](build/implementation-overview.md#implementation-readiness-criteria).
+5. [Implementation decisions needed before server coding](build/mvp-user-work-loop.md#implementation-decisions-needed-before-server-coding).
 
 This handoff says the documentation is available for maintainer acceptance review as a candidate. It also separates documentation acceptance status in the Implementation Overview from the open server-coding decision ledger in the MVP-1 User Work Loop. No server/runtime implementation decisions have been formally accepted for coding yet, and affected implementation work must wait until the relevant decision is accepted or explicitly deferred with stage impact. The handoff does not claim the docs have been accepted, it does not make the docs implementation-ready, and it does not start server/runtime implementation.
 
