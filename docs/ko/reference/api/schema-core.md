@@ -117,7 +117,9 @@ ToolError:
   details: object
 ```
 
-`dry_run=true`는 validate하고 diagnostics 또는 transition plan을 반환하지만 record 변경, event append, artifact 등록, consumable Write Authorization 생성, projection job enqueue, idempotency replay row create/update를 하지 않습니다.
+내부 엔지니어링 점검과 MVP-1에서 `projection_jobs`는 envelope compatibility를 위해 present하며 보통 `[]`입니다. 이 field가 `projection_jobs` storage table을 요구하지 않습니다. Durable projection job은 운영 프로필 또는 profile-promoted storage입니다.
+
+`dry_run=true`는 validate하고 diagnostics 또는 transition plan을 반환하지만 record 변경, event append, artifact 등록, consumable Write Authorization 생성, later-profile projection job enqueue, idempotency replay row create/update를 하지 않습니다.
 
 State-changing operation에서 `state_version`은 Core가 primary Task를 resolve하면 resulting Task State Version이고, 그렇지 않으면 Project State Version입니다. Read-only와 dry-run response는 primary read/affected scope의 current version을 반환합니다.
 
@@ -241,8 +243,8 @@ Reference implementation에서 `uri`는 `harness-artifact://{project_id}/{artifa
 
 | Field | 내부 엔지니어링 점검 active owner kinds | MVP-1 active owner kinds | Later-profile owner kinds | Future candidates |
 |---|---|---|---|---|
-| `ArtifactInput.relation.record_kind` | `task`, `change_unit`, `run` | `task`, `change_unit`, `run`, `user_judgment`, `residual_risk` | `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection` | `journey_spine_entry` |
-| `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `residual_risk`, `evidence_summary`, `close_readiness` | `approval`, `shared_design`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `reconcile_item`, `projection` | `change_unit_dependency`, `journey_spine_entry`, `domain_term`, `module_map_item`, `interface_contract` |
+| `ArtifactInput.relation.record_kind` | `task`, `change_unit`, `run`, `evidence_ref`, `blocker` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_ref`, `blocker` | `residual_risk`, `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection` | `journey_spine_entry` |
+| `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `evidence_ref`, `blocker` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_ref`, `blocker` | `approval`, `residual_risk`, `evidence_summary`, `close_readiness`, `shared_design`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `reconcile_item`, `projection` | `change_unit_dependency`, `journey_spine_entry`, `domain_term`, `module_map_item`, `interface_contract` |
 
 MVP-1 sensitive-action approval은 `record_kind=user_judgment`를 사용합니다. Committed `approval` ref는 Approval owner profile이 active일 때만 later-profile입니다.
 
@@ -261,7 +263,7 @@ ArtifactInput:
   relation:
     task_id: string
     run_id: string | null
-    record_kind: task | change_unit | run | user_judgment | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
+    record_kind: task | change_unit | run | user_judgment | evidence_ref | blocker | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
     record_id_hint: string | null
   description: string | null
 
@@ -281,14 +283,14 @@ StagedArtifactSource:
 
 ```yaml
 StateRecordRef:
-  record_kind: task | change_unit | run | approval | write_authorization | user_judgment | residual_risk | evidence_summary | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
+  record_kind: task | change_unit | run | approval | write_authorization | user_judgment | evidence_ref | blocker | residual_risk | evidence_summary | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
   record_id: string
   projection_path: string | null
 ```
 
-`record_kind=user_judgment`는 sensitive-action approval judgment를 포함한 사용자 소유 판단의 canonical MVP-1 ref kind입니다. `record_kind=approval`은 later-profile입니다. Public accepted-risk ref는 `record_kind=residual_risk`를 사용합니다. Standalone accepted-risk ref kind는 없습니다.
+`record_kind=user_judgment`는 sensitive-action approval, work acceptance, residual-risk acceptance judgment를 포함한 사용자 소유 판단의 canonical MVP-1 ref kind입니다. MVP-1 evidence와 blocker는 `record_kind=evidence_ref`, `record_kind=blocker`를 사용합니다. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=evidence_summary`, `record_kind=close_readiness`, `record_kind=projection`은 owner profile이 active가 아닌 한 later/profile-promoted 또는 derived-view ref입니다. Standalone accepted-risk ref kind는 없습니다.
 
-`record_kind=projection`에서 `record_id`는 projection job identity입니다. `projection_path`는 optional display/recovery metadata이지 alternate key가 아닙니다.
+`record_kind=projection`에서 `record_id`는 운영/projection profile이 active일 때 projection job identity입니다. `projection_path`는 optional display/recovery metadata이지 alternate key가 아닙니다.
 
 ## Evidence and write authority schemas
 
@@ -456,7 +458,7 @@ AcceptanceJudgment:
   does_not_replace: string[]
 
 ResidualRiskAcceptanceJudgment:
-  residual_risk_refs: StateRecordRef[]
+  risk_refs: StateRecordRef[]
   accepted_scope: string[]
   acceptance_consequence: string
   follow_up_required: boolean
@@ -511,7 +513,7 @@ ResidualRiskSummary:
 AcceptanceVisibilityContext:
   residual_risk_summary: ResidualRiskSummary | null
   unaccepted_close_relevant_risk_refs: StateRecordRef[]
-  evidence_summary_refs: StateRecordRef[]
+  evidence_refs: StateRecordRef[]
   verification_status: not_required | required | pending | passed | failed | waived_by_user | blocked
   qa_status: not_required | required | pending | passed | failed | waived
   acceptance_status: not_required | required | pending | accepted | rejected
@@ -519,6 +521,8 @@ AcceptanceVisibilityContext:
 ```
 
 `ResidualRiskSummary.status=none`은 현재 Task/requested action에서 Core가 known close-relevant residual risk를 모른다는 뜻입니다. Known close-relevant risk가 있지만 충분한 context로 보이지 않은 `not_visible`과 다릅니다.
+
+MVP-1에서 residual-risk summary ref는 보통 `blocker`와 `user_judgment` record를 가리킵니다. Rich `residual_risk` record는 later/profile-promoted storage입니다.
 
 Autonomy Boundary summary는 judgment latitude를 설명합니다. Write authority가 아닙니다. Active scope와 required sensitive-action permission 밖의 path, tool, command, network target, secret access, sensitive category를 허가하지 않습니다.
 

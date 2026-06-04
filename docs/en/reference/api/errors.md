@@ -106,7 +106,7 @@ Public tool responses carry one primary `ToolError.code` even when Core observes
 
 `harness.close_task` may return multiple close blockers. The primary `ToolError` in `CloseTaskResponse.base.errors` uses the precedence above, and `CloseTaskResponse.blockers` must include observed close blockers as structured results in the same relative order. Prose-only status text, reports, Journey views, or agent summaries are not close-blocker results.
 
-Visible-but-unaccepted close-relevant risk is not returned as `RESIDUAL_RISK_NOT_VISIBLE`. If the requested close path requires risk acceptance, public close/API responses use primary `DECISION_REQUIRED` when a residual-risk acceptance user judgment must be requested, or `DECISION_UNRESOLVED` when a relevant residual-risk acceptance user judgment exists but is pending, rejected, blocked, stale, deferred without coverage, or incompatible. The structured close blocker category must be `residual_risk_acceptance`, with refs to the relevant `residual_risk` or `user_judgment` records.
+Visible-but-unaccepted close-relevant risk is not returned as `RESIDUAL_RISK_NOT_VISIBLE`. If the requested close path requires risk acceptance, public close/API responses use primary `DECISION_REQUIRED` when a residual-risk acceptance user judgment must be requested, or `DECISION_UNRESOLVED` when a relevant residual-risk acceptance user judgment exists but is pending, rejected, blocked, stale, deferred without coverage, or incompatible. The structured close blocker category must be `residual_risk_acceptance`, with refs to the relevant `blocker` and `user_judgment` records in MVP-1; rich `residual_risk` refs are later/profile-promoted.
 
 ## Idempotency
 

@@ -117,7 +117,9 @@ ToolError:
   details: object
 ```
 
-`dry_run=true` validates and returns diagnostics or a transition plan but does not mutate records, append events, register artifacts, create consumable Write Authorizations, enqueue projection jobs, or create/update idempotency replay rows.
+In Engineering Checkpoint and MVP-1, `projection_jobs` is present for envelope compatibility and is normally `[]`. It does not require a `projection_jobs` storage table. Durable projection jobs are Operations Profile or profile-promoted storage.
+
+`dry_run=true` validates and returns diagnostics or a transition plan but does not mutate records, append events, register artifacts, create consumable Write Authorizations, enqueue later-profile projection jobs, or create/update idempotency replay rows.
 
 For state-changing operations, `state_version` is the resulting Task State Version when Core resolves a primary Task; otherwise it is the Project State Version. Read-only and dry-run responses return the current version for the primary read/affected scope.
 
@@ -241,8 +243,8 @@ These tables are the active validator sets for staged implementations. Full late
 
 | Field | Engineering Checkpoint active owner kinds | MVP-1 active owner kinds | Later-profile owner kinds | Future candidates |
 |---|---|---|---|---|
-| `ArtifactInput.relation.record_kind` | `task`, `change_unit`, `run` | `task`, `change_unit`, `run`, `user_judgment`, `residual_risk` | `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection` | `journey_spine_entry` |
-| `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `residual_risk`, `evidence_summary`, `close_readiness` | `approval`, `shared_design`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `reconcile_item`, `projection` | `change_unit_dependency`, `journey_spine_entry`, `domain_term`, `module_map_item`, `interface_contract` |
+| `ArtifactInput.relation.record_kind` | `task`, `change_unit`, `run`, `evidence_ref`, `blocker` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_ref`, `blocker` | `residual_risk`, `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection` | `journey_spine_entry` |
+| `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `evidence_ref`, `blocker` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_ref`, `blocker` | `approval`, `residual_risk`, `evidence_summary`, `close_readiness`, `shared_design`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `reconcile_item`, `projection` | `change_unit_dependency`, `journey_spine_entry`, `domain_term`, `module_map_item`, `interface_contract` |
 
 MVP-1 sensitive-action approval uses `record_kind=user_judgment`. Committed `approval` refs are later-profile unless the Approval owner profile is active.
 
@@ -261,7 +263,7 @@ ArtifactInput:
   relation:
     task_id: string
     run_id: string | null
-    record_kind: task | change_unit | run | user_judgment | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
+    record_kind: task | change_unit | run | user_judgment | evidence_ref | blocker | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
     record_id_hint: string | null
   description: string | null
 
@@ -281,14 +283,14 @@ StagedArtifactSource:
 
 ```yaml
 StateRecordRef:
-  record_kind: task | change_unit | run | approval | write_authorization | user_judgment | residual_risk | evidence_summary | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
+  record_kind: task | change_unit | run | approval | write_authorization | user_judgment | evidence_ref | blocker | residual_risk | evidence_summary | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
   record_id: string
   projection_path: string | null
 ```
 
-`record_kind=user_judgment` is the canonical MVP-1 ref kind for user-owned judgments, including sensitive-action approval judgments. `record_kind=approval` is later-profile. Public accepted-risk refs use `record_kind=residual_risk`; there is no standalone accepted-risk ref kind.
+`record_kind=user_judgment` is the canonical MVP-1 ref kind for user-owned judgments, including sensitive-action approval, work acceptance, and residual-risk acceptance judgments. MVP-1 evidence and blockers use `record_kind=evidence_ref` and `record_kind=blocker`. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=evidence_summary`, `record_kind=close_readiness`, and `record_kind=projection` are later/profile-promoted or derived-view refs unless their owner profile is active. There is no standalone accepted-risk ref kind.
 
-For `record_kind=projection`, `record_id` is the projection job identity. `projection_path` is optional display/recovery metadata, not an alternate key.
+For `record_kind=projection`, `record_id` is the projection job identity when the Operations/projection profile is active. `projection_path` is optional display/recovery metadata, not an alternate key.
 
 ## Evidence and write authority schemas
 
@@ -456,7 +458,7 @@ AcceptanceJudgment:
   does_not_replace: string[]
 
 ResidualRiskAcceptanceJudgment:
-  residual_risk_refs: StateRecordRef[]
+  risk_refs: StateRecordRef[]
   accepted_scope: string[]
   acceptance_consequence: string
   follow_up_required: boolean
@@ -511,7 +513,7 @@ ResidualRiskSummary:
 AcceptanceVisibilityContext:
   residual_risk_summary: ResidualRiskSummary | null
   unaccepted_close_relevant_risk_refs: StateRecordRef[]
-  evidence_summary_refs: StateRecordRef[]
+  evidence_refs: StateRecordRef[]
   verification_status: not_required | required | pending | passed | failed | waived_by_user | blocked
   qa_status: not_required | required | pending | passed | failed | waived
   acceptance_status: not_required | required | pending | accepted | rejected
@@ -519,6 +521,8 @@ AcceptanceVisibilityContext:
 ```
 
 `ResidualRiskSummary.status=none` means Core has no known close-relevant residual risk for the current Task/requested action. It is different from `not_visible`, which means known close-relevant risk exists but has not been shown with enough context.
+
+In MVP-1, residual-risk summary refs usually point to `blocker` and `user_judgment` records. Rich `residual_risk` records are later/profile-promoted storage.
 
 Autonomy Boundary summaries describe judgment latitude, not write authority. They do not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside active scope and required sensitive-action permission.
 

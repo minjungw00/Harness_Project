@@ -326,7 +326,7 @@ A canonical structured record in `domain_terms` that stores a product term, mean
 
 ### Evidence
 
-Recorded support for claims about the work, such as diffs, logs, tests, run summaries, screenshots, Eval records, Manual QA records, evidence summaries, and registered artifact refs. Minimum MVP-1 evidence display can use `evidence_summary_ref`, Run refs, ArtifactRefs, and visible gaps. The full Evidence Manifest profile adds criteria-to-evidence mapping through Evidence Manifest records. Evidence is not the agent merely saying the work is done, and it is not made sufficient by Markdown report prose alone.
+Recorded support for claims about the work, such as diffs, logs, tests, run summaries, screenshots, Eval records, Manual QA records, evidence summaries, and registered artifact refs. Minimum MVP-1 evidence display uses `evidence_ref`, Run refs, ArtifactRefs, and visible gaps; evidence summaries are derived from those refs. The full Evidence Manifest profile adds criteria-to-evidence mapping through Evidence Manifest records. Evidence is not the agent merely saying the work is done, and it is not made sufficient by Markdown report prose alone.
 
 ### Evidence Gate
 
@@ -538,7 +538,7 @@ The relationship between a projection and its source records, managed hash, arti
 
 ### Projection Job
 
-A durable outbox record that asks the projector to render a Markdown projection from committed state records and artifact refs. `record_kind=projection` identity is `projection_jobs.projection_job_id`; project-level projection jobs do not by themselves create project-scoped artifact links in the current Task-scoped artifact DDL.
+A later/profile-promoted durable outbox record that asks the projector to render a Markdown projection from committed state records and artifact refs. MVP-1 compact status/card output does not require a `projection_jobs` table. When the projection job profile is active, `record_kind=projection` identity is `projection_jobs.projection_job_id`; project-level projection jobs do not by themselves create project-scoped artifact links in the current Task-scoped artifact DDL.
 
 ### Question Queue
 
@@ -596,7 +596,7 @@ A canonical close-relevant support record for known remaining uncertainty, trade
 
 ### Risk Accepted Close
 
-A successful close where the user accepts visible close-relevant residual risk, including verification risk when verification was waived. It uses `close_reason=completed_with_risk_accepted`, requires accepted Residual Risk refs, and must not display `assurance_level=detached_verified`. User-facing summaries must keep it distinct from normal `completed_verified` or `completed_self_checked` close.
+A successful close where the user accepts visible close-relevant residual risk, including verification risk when verification was waived. It uses `close_reason=completed_with_risk_accepted`, requires a compatible residual-risk acceptance `user_judgment` and visible blocker/evidence refs in MVP-1, and must not display `assurance_level=detached_verified`. Rich Residual Risk refs are later/profile-promoted. User-facing summaries must keep this close reason distinct from normal `completed_verified` or `completed_self_checked` close.
 
 ### Run
 
@@ -616,7 +616,7 @@ The minimum recorded shared understanding of a task before implementation harden
 
 ### Source-of-truth
 
-The authoritative source for a fact. In Harness, operational state is canonical in `state.sqlite` current records plus `state.sqlite.task_events`, raw evidence files are canonical in the artifact store, and Markdown documents are projections. Product repository files remain the source for product content; they do not become Harness operational state unless an existing Core, reconcile, artifact-registration, or owner-record path records the relevant Harness fact.
+The authoritative source for a fact. In Harness, operational state is canonical in `state.sqlite` current records; `state.sqlite.task_events` is audit and ordering history, not the normal current-state source. Raw evidence files are canonical in the artifact store, and Markdown documents are projections. Product repository files remain the source for product content; they do not become Harness operational state unless an existing Core, reconcile, artifact-registration, or owner-record path records the relevant Harness fact.
 
 ### `state.sqlite.task_events`
 

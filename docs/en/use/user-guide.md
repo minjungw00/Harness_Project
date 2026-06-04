@@ -430,7 +430,7 @@ You may see stricter labels when a tool, report, or reference page needs precisi
 
 | Reference label | Plain meaning |
 |---|---|
-| Evidence summary / Evidence Manifest when active | Minimum MVP-1 can show known evidence summaries, Run refs, ArtifactRefs, and visible gaps. A full Evidence Manifest appears only on the later/profile owner path. |
+| Evidence summary / Evidence Manifest when active | Minimum MVP-1 can show `evidence_ref` refs, derived evidence summaries, Run refs, ArtifactRefs, and visible gaps. A full Evidence Manifest appears only on the later/profile owner path. |
 | Verification or Eval | A check from the required review boundary; an Eval is one implementation form of that check. |
 | Manual QA record | The saved human QA result or waiver context. |
 | Acceptance | The saved user judgment that the completed result is good enough, when required. |
@@ -455,7 +455,7 @@ You can skip this section until an agent shows one of these labels. They are use
 | Decision Packet | Optional full-format or legacy presentation label for a `user_judgment`; not the default mechanism for every small judgment. |
 | Approval | Permission for a named sensitive action; not generic agreement or work acceptance. |
 | Write Authorization | A one-attempt check that the intended product write fits the current task, scope, user judgments, and sensitive-action permissions. |
-| Evidence Manifest | The later/profile record that maps completion claims to supporting evidence. Minimum MVP-1 can use evidence summaries, Run refs, ArtifactRefs, and visible gaps without a full Evidence Manifest. |
+| Evidence Manifest | The later/profile record that maps completion claims to supporting evidence. Minimum MVP-1 can use `evidence_ref` refs, derived evidence summaries, Run refs, ArtifactRefs, and visible gaps without a full Evidence Manifest. |
 | Gate | An internal readiness or compatibility condition. User-facing status should show the blocker or check first. |
 | Projection | A readable summary derived from owner records and related files or artifacts. Early use may be compact status text or a card, not a full Markdown report; it helps orientation and is not authority by itself. |
 | Journey Card / Journey Spine | Later continuity display. It can help orientation when enabled and fresh, but it is not authority by itself. |

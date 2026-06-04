@@ -106,7 +106,7 @@ Core가 여러 blocker를 관찰해도 public tool response는 하나의 primary
 
 `harness.close_task`는 여러 close blocker를 반환할 수 있습니다. `CloseTaskResponse.base.errors`의 primary `ToolError`는 위 precedence를 사용하고, `CloseTaskResponse.blockers`는 observed close blocker를 같은 상대 순서의 structured result로 포함해야 합니다. Prose-only status text, report, Journey view, agent summary는 close-blocker result가 아닙니다.
 
-Visible-but-unaccepted close-relevant risk는 `RESIDUAL_RISK_NOT_VISIBLE`로 반환하지 않습니다. Requested close path가 risk acceptance를 요구하면, residual-risk acceptance user judgment를 새로 request해야 할 때 public close/API response는 primary `DECISION_REQUIRED`를 사용합니다. Relevant residual-risk acceptance user judgment가 있지만 pending, rejected, blocked, stale, deferred without coverage, incompatible이면 `DECISION_UNRESOLVED`를 사용합니다. Structured close blocker category는 `residual_risk_acceptance`여야 하며, relevant `residual_risk` 또는 `user_judgment` record refs를 포함해야 합니다.
+Visible-but-unaccepted close-relevant risk는 `RESIDUAL_RISK_NOT_VISIBLE`로 반환하지 않습니다. Requested close path가 risk acceptance를 요구하면, residual-risk acceptance user judgment를 새로 request해야 할 때 public close/API response는 primary `DECISION_REQUIRED`를 사용합니다. Relevant residual-risk acceptance user judgment가 있지만 pending, rejected, blocked, stale, deferred without coverage, incompatible이면 `DECISION_UNRESOLVED`를 사용합니다. Structured close blocker category는 `residual_risk_acceptance`여야 하며, MVP-1에서는 relevant `blocker`와 `user_judgment` record refs를 포함합니다. Rich `residual_risk` ref는 later/profile-promoted입니다.
 
 ## Idempotency
 

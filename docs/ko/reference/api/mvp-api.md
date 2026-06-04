@@ -114,8 +114,8 @@ StatusResponse:
   autonomy_boundary_summary: AutonomyBoundarySummary | null
   write_authority_summary: WriteAuthoritySummary | null
   residual_risk_summary: ResidualRiskSummary | null
-  evidence_summary_refs: StateRecordRef[]
-  close_readiness_refs: StateRecordRef[]
+  evidence_refs: StateRecordRef[]
+  blocker_refs: StateRecordRef[]
   projection_freshness:
     status: current | stale | failed | unknown
     stale_refs: StateRecordRef[]
@@ -225,7 +225,7 @@ RecordRunResponse:
   run_id: string | null
   state: StateSummary
   write_authorization_ref: StateRecordRef | null
-  evidence_summary_ref: StateRecordRef | null
+  evidence_ref: StateRecordRef | null
   run_summary_ref: StateRecordRef | null
   direct_result_ref: StateRecordRef | null
   registered_artifacts: ArtifactRef[]
@@ -324,7 +324,7 @@ RecordUserJudgmentResponse:
 
 `judgment_type`은 저장된 `UserJudgment`와 일치해야 합니다. `go ahead`, `looks good`, `진행해` 같은 free-form note는 pending judgment가 그 judgment type을 명시적으로 묻고 answer가 allowed value와 맞을 때만 approval, acceptance, risk acceptance, waiver, write authority와 연결될 수 있습니다.
 
-`accepted_risk_refs`는 `record_kind=residual_risk`인 `StateRecordRef`만 포함합니다. 별도 accepted-risk record kind는 없습니다.
+MVP-1에서 `accepted_risk_refs`는 해당 close path에서 risk가 보였고 받아들여졌음을 보여주는 `user_judgment`와 `blocker` ref를 포함합니다. Rich `residual_risk` ref는 later/profile-promoted입니다. 별도 accepted-risk record kind는 없습니다.
 
 <a id="harnessclose_task"></a>
 
@@ -372,8 +372,8 @@ CloseTaskResponse:
   artifact_refs: ArtifactRef[]
 ```
 
-MVP-1 close는 core close state, blockers, residual-risk visibility, required work-acceptance state, evidence/close-readiness refs를 사용합니다. Verification, Manual QA, projection/report, operations refs는 해당 profile이 enabled일 때만 active입니다.
+MVP-1 close는 core close state, blocker, residual-risk visibility, required work-acceptance state, evidence ref를 사용합니다. Close readiness와 evidence summary는 current record에서 파생됩니다. Verification, Manual QA, projection/report, operations ref는 해당 profile이 enabled일 때만 active입니다.
 
-`CloseTaskRequest`는 accepted-risk refs를 싣지 않습니다. `completed_with_risk_accepted`에서는 Core가 visible close-relevant Residual Risk record에 이미 기록된 accepted state를 읽고, 그 상태가 없으면 block합니다.
+`CloseTaskRequest`는 accepted-risk refs를 싣지 않습니다. `completed_with_risk_accepted`에서는 Core가 close-relevant risk를 보여 주는 blocker와 residual-risk acceptance `user_judgment`의 accepted state를 읽고, 그 상태가 없으면 block합니다. Rich Residual Risk record는 해당 later profile이 active일 때만 필요합니다.
 
 Successful close는 Task를 terminal state로 옮깁니다. Failed close는 Task를 open 상태로 남기고 structured blockers를 반환합니다. 같은 idempotency key의 repeated successful close는 같은 terminal response를 반환하고, conflicting close intent는 `STATE_CONFLICT`를 반환합니다.

@@ -269,11 +269,11 @@ The lifecycle is intentionally small: draft or detect a needed judgment, ask the
 
 ### Journey Spine
 
-Journey Spine is derived continuity over Task state, Change Units, Runs, user judgments, Approvals, evidence, verification, QA, acceptance state, residual risk, close events, artifact refs, and `state.sqlite.task_events`. It is not a separate source of truth.
+Journey Spine is later/diagnostic derived continuity over Task state, Change Units, Runs, user judgments, Approvals, evidence, verification, QA, acceptance state, residual risk, close events, artifact refs, and `state.sqlite.task_events`. It is not a separate source of truth and is not required for MVP-1 storage.
 
 ### Journey Spine Entry
 
-A Journey Spine Entry is a durable continuity annotation only when the note cannot be reconstructed from existing state and events. It supplements owner records; it does not replace Task, Change Unit, Run, user judgment, evidence, verification, QA, risk, acceptance, close, or artifact state.
+A Journey Spine Entry is a later/diagnostic durable continuity annotation only when the note cannot be reconstructed from existing state and events. It supplements owner records; it does not replace Task, Change Unit, Run, user judgment, evidence, verification, QA, risk, acceptance, close, or artifact state.
 
 ### Run
 
@@ -470,7 +470,7 @@ not_required | required | pending | accepted | rejected
 
 `acceptance_gate` records work acceptance when required. Acceptance can be recorded only after the close basis is visible: evidence status, verification status when applicable, Manual QA status when applicable, and residual-risk visibility or confirmed absence.
 
-Residual-risk visibility is separate. If no known close-relevant risk exists, `ResidualRiskSummary.status=none` satisfies visibility. If known close-relevant risk exists, it must be visible before work acceptance or successful close. A risk-accepted close additionally requires accepted Residual Risk refs through the `accept-risk` route.
+Residual-risk visibility is separate. If no known close-relevant risk exists, `ResidualRiskSummary.status=none` satisfies visibility. If known close-relevant risk exists, it must be visible before work acceptance or successful close. In MVP-1, a risk-accepted close records the acceptance through a residual-risk acceptance `user_judgment` and the relevant blocker/evidence refs; rich Residual Risk refs are later/profile-promoted.
 
 ### Capability Boundary
 
@@ -635,7 +635,7 @@ The decision algorithm checks the close intent and required gates:
 9. Check evidence when evidence is required.
 10. Check verification only when verification is required.
 11. Check Manual QA only when Manual QA is required.
-12. Check residual-risk visibility; if risk-accepted close is requested or required, check accepted Residual Risk refs.
+12. Check residual-risk visibility; if risk-accepted close is requested or required, check a residual-risk acceptance `user_judgment` plus the relevant blocker/evidence refs. Rich Residual Risk refs apply only when that profile is active.
 13. Check work acceptance only when work acceptance is required.
 14. Assign result, close reason, assurance level, residual-risk state, and acceptance state as separate facts.
 15. Report projection freshness when projection support is enabled.
@@ -668,7 +668,7 @@ Structured close blockers must name the category that blocks close, such as open
 | Small direct change | No open Run; active scope covered any product writes; compatible Write Authorization was consumed for writes; lightweight evidence or self-check supports the narrow completion claim; required user judgments, Approval, QA, acceptance, or risk handling are satisfied if triggered. | Normally `not_required`. Optional qualifying Eval may support `detached_verified`; required verification follows the required-verification row. | Usually `result=passed`, `assurance_level=self_checked`, `close_reason=completed_self_checked`. |
 | Tracked work with no required detached verification | No open Run; Change Unit is complete, explicitly deferred, or superseded; scope, required user judgments, Approval, evidence, QA when required, residual-risk visibility, and acceptance when required are satisfied. | `verification_gate=not_required` or non-detached self-check evidence is shown as applicable. No verification waiver is needed. | `result=passed`, `assurance_level=self_checked` when checked by the implementing path, `close_reason=completed_self_checked`. |
 | Tracked work with required detached verification | All tracked-work requirements above plus `verification_gate=passed` from a qualifying Eval with valid independence and current inputs. | If required verification is intentionally skipped, record a verification waiver and use the risk-accepted path; do not call it verified. | With passed verification: `result=passed`, `assurance_level=detached_verified`, `close_reason=completed_verified`. |
-| Tracked work with residual risk acceptance required | All other required gates for the active profile are satisfied, close-relevant residual risk is visible, and accepted Residual Risk refs are recorded through `accept-risk`. | Verification may be not required, passed, or waived only if the required-verification waiver/risk path is satisfied. | `result=passed`, `close_reason=completed_with_risk_accepted`, `assurance_level=none` or `self_checked`; do not display as `detached_verified`. |
+| Tracked work with residual risk acceptance required | All other required gates for the active profile are satisfied, close-relevant residual risk is visible, and a compatible residual-risk acceptance `user_judgment` records the accepted risk with related blocker/evidence refs. | Verification may be not required, passed, or waived only if the required-verification waiver/risk path is satisfied. | `result=passed`, `close_reason=completed_with_risk_accepted`, `assurance_level=none` or `self_checked`; do not display as `detached_verified`. |
 
 ### Close result semantics
 
@@ -699,7 +699,7 @@ Not allowed:
 - evidence waiver where evidence is required for completion
 - work acceptance waiver where acceptance is required
 
-Verification waiver is not detached verification. If the waived verification gap is close-relevant, close requires visible and accepted Residual Risk refs and uses `completed_with_risk_accepted`. QA waiver is not Manual QA pass, verification, work acceptance, or assurance upgrade. Decision deferral is not waiver.
+Verification waiver is not detached verification. If the waived verification gap is close-relevant, close requires visible residual risk plus a compatible residual-risk acceptance `user_judgment` and uses `completed_with_risk_accepted`. QA waiver is not Manual QA pass, verification, work acceptance, or assurance upgrade. Decision deferral is not waiver.
 
 ## Invariant enforcement mapping
 

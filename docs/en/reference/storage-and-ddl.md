@@ -2,23 +2,32 @@
 
 ## What This Document Owns
 
-This is reference documentation for a future local Harness Server. No database, migration runner, server, or runtime exists in this repository yet. Current repository phase and implementation handoff status are tracked in [Implementation Overview](../build/implementation-overview.md#documentation-acceptance-status).
+This is reference documentation for a future local Harness Server. No database,
+migration runner, server, or runtime exists in this repository yet. Current
+repository phase and implementation handoff status are tracked in
+[Implementation Overview](../build/implementation-overview.md#documentation-acceptance-status).
 
-Use this page to review storage authority, Runtime Home identity, staged SQLite table needs, event semantics, artifact registration, and migration/validation constraints. Use [Build: MVP Plan](../build/mvp-plan.md) and [First Runnable Slice](../build/first-runnable-slice.md) for stage order and exit criteria.
+This page owns the MVP-1 persistence model, Runtime Home identity, SQLite schema
+sketches, storage-owned JSON `TEXT` rules, enum hardening, artifact/evidence
+reference storage, and the boundary between persisted records and derived views.
+Use [Build: MVP Plan](../build/mvp-plan.md) and
+[First Runnable Slice](../build/first-runnable-slice.md) for stage order and exit
+criteria.
 
 ## Read This When
 
-- You need to know which storage tables are required for Engineering Checkpoint or MVP-1.
-- You are separating Core-owned state from chat, Markdown projections, connector output, and tool output.
-- You are checking Runtime Home risks, artifact poisoning controls, event/audit behavior, JSON validation, enum hardening, or future schema candidates.
-- You are making sure later profile tables do not inflate the first server batch.
+- You need the smallest storage model needed for MVP-1.
+- You are separating Core-owned state from chat, Markdown projections, connector
+  output, tool output, and report text.
+- You are checking which fields are needed to calculate close blockers.
+- You are making sure later-profile tables do not become MVP-1 requirements.
 
 ## Related Owners
 
 | Concern | Owner |
 |---|---|
 | Public MCP request/response shapes | [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md) |
-| `ArtifactRef`, `ValidatorResult`, idempotency and state conflict behavior | [API Schema Core](api/schema-core.md#artifactref), [API Schema Later](api/schema-later.md#validatorresult-stable-ids), and [API Errors](api/errors.md) |
+| `ArtifactRef`, staged active ref kinds, idempotency, and state conflict behavior | [API Schema Core](api/schema-core.md#artifactref), [API Schema Core: Stage-Specific Active Value Sets](api/schema-core.md#stage-specific-active-value-sets), and [API Errors](api/errors.md) |
 | Task lifecycle, gates, `prepare_write`, `record_run`, `close_task`, stable events | [Kernel Reference](kernel.md) |
 | Core process model, transaction order, locks, projection/reconcile placement | [Runtime Architecture Reference](runtime-architecture.md) |
 | Projection authority, freshness, managed blocks, rendered templates | [Document Projection Reference](document-projection.md) and [Template Reference](templates/README.md) |
@@ -26,26 +35,40 @@ Use this page to review storage authority, Runtime Home identity, staged SQLite 
 | Fixture format and assertion semantics | [Conformance Fixtures Reference](conformance-fixtures.md) |
 | Stage sequence and implementation readiness | [Build: MVP Plan](../build/mvp-plan.md), [Implementation Overview](../build/implementation-overview.md) |
 
-## Storage Role And Authority Model
+## MVP-1 Storage Goal
 
-Harness storage keeps local Core-owned operational state. It records scope, write authorization, user-owned judgments, evidence references, close readiness, acceptance, and residual risk as durable records when the active stage needs them. Storage does not make every useful future feature mandatory in the first implementation slice.
+MVP-1 storage keeps the smallest local authority record that lets a user and an
+agent understand current work without trusting chat memory or generated
+Markdown. It stores project identity, one or more tracked Tasks, task scope,
+user-owned judgments, cooperative write-check results, Runs, evidence pointers,
+and blockers.
 
-Authority boundaries:
+MVP-1 storage is not a Journey system, report system, projection job system,
+conformance runner, QA database, Eval store, export pipeline, or dashboard data
+model. Those records may be useful later, but they are outside MVP-1 unless an
+owner profile explicitly promotes them.
 
-- Core-owned state tables are the authority for current Harness state.
-- `task_events` is an append-only audit and ordering trail, not the normal source used to reconstruct current state.
-- Artifact files are not evidence authority until Core registers them and links them to a compatible owner record.
-- Chat, Markdown projections, generated reports, connector manifests, tool output, and operator output are not authority unless a Core mutation records an owner-valid state row or artifact link.
-- Projections and status cards are readable derived views. They can be stale, failed, or absent without changing canonical state.
-- Future/profile tables become required only when the owning profile or tool path is active or used.
+MVP-1 storage must preserve these authority boundaries:
 
-The first server batch should prove a narrow local authority loop: project identity, one Task, one scoped boundary, `prepare_write`, one single-use Write Authorization, one Run, one artifact/evidence reference, task events, and structured blockers. It should not build dozens of tables just because later profile contracts are documented.
+- Core-owned state rows are the source of truth for current Harness state.
+- `task_events`, when retained, is an audit and ordering trail. It is not the
+  normal source used to reconstruct current state.
+- Evidence pointers are not evidence authority until Core records them and links
+  them to a compatible owner record.
+- Chat, Markdown projections, generated reports, connector manifests, tool
+  output, and operator output are not authority unless a Core mutation records an
+  owner-valid state row or evidence ref.
+- Status cards, task summaries, close readiness, evidence summaries, next
+  actions, and projection freshness are derived status/views. They can be stale,
+  failed, absent, or recomputed without changing the persisted state records.
+- Future/profile tables become required only when the owning profile or tool path
+  is active or used.
 
 ## Runtime Home Identity And Risks
 
-Harness keeps one local Runtime Home and one state database per registered project. The default reference location is `~/.harness`, but the implementation may choose a configured equivalent.
-
-### Runtime home layout
+Harness keeps one local Runtime Home and one state database per registered
+project. The default reference location is `~/.harness`, but the implementation
+may choose a configured equivalent.
 
 Reference layout:
 
@@ -56,30 +79,21 @@ Reference layout:
     PRJ-0001/
       project.yaml
       state.sqlite
-      artifacts/
-        bundles/
+      evidence/
+        tmp/
         diffs/
         logs/
         screenshots/
         checkpoints/
-        manifests/
-        qa/
-        tdd/
-        designs/
-        prototypes/
-        architecture/
-        decisions/
-        exports/
-        tmp/
 ```
 
-`registry.sqlite` stores Runtime Home identity and project registration. `project.yaml` stores static project configuration only. `state.sqlite` stores project-local Core state. Artifact directories store registered files after Core applies the artifact registration boundary.
+`registry.sqlite` stores Runtime Home identity and project registration.
+`project.yaml` stores static project configuration only. `state.sqlite` stores
+project-local Core state. Evidence directories store registered files or
+pointers after Core applies the evidence registration boundary.
 
-Runtime Home identity should not depend only on a path. A copied or moved Runtime Home may keep the same stored `runtime_home_id`; a new Runtime Home should get a new id. `doctor` and recovery flows can use that identity to report suspicious copies, duplicate registrations, or path drift, but the id does not provide tamper-proofing.
-
-### `project.yaml`
-
-`project.yaml` is static project configuration. It must not store current Task state, current gates, write authority, evidence sufficiency, acceptance, or residual risk.
+`project.yaml` must not store current Task state, current gates, write authority,
+evidence sufficiency, work acceptance, or residual-risk acceptance.
 
 ```yaml
 project_id: PRJ-0001
@@ -93,92 +107,73 @@ default_checks:
   build: []
 ```
 
-### Runtime home permissions and tampering
+Runtime Home identity should not depend only on a path. A copied or moved Runtime
+Home may keep the same stored `runtime_home_id`; a new Runtime Home should get a
+new id. `doctor` and recovery flows can use that identity to report suspicious
+copies, duplicate registrations, or path drift, but the id does not provide
+tamper-proofing.
 
-Runtime Home contains local operational authority and sensitive support data. Broad write access is a tampering and artifact-poisoning risk. Broad read access can expose secrets, PII, tokens, logs, screenshots, diffs, verification bundles, and exports.
+Runtime Home contains local operational authority and sensitive support data.
+Broad write access is a tampering and evidence-poisoning risk. Broad read access
+can expose secrets, PII, tokens, logs, screenshots, diffs, verification bundles,
+and exports.
 
-Engineering Checkpoint and MVP-1 storage are cooperative/detective unless a later profile proves stronger controls. File permissions, owner checks, hashes, and `doctor` findings are defense in depth; they do not create OS-level sandboxing, arbitrary-tool control, tamper-proof storage, or pre-execution blocking by themselves.
+Engineering Checkpoint and MVP-1 storage are cooperative/detective unless a
+later profile proves stronger controls. File permissions, owner checks, hashes,
+and `doctor` findings are defense in depth; they do not create OS-level
+sandboxing, arbitrary-tool control, tamper-proof storage, or pre-execution
+blocking by themselves.
 
 | Observation | Storage meaning |
 |---|---|
 | Runtime Home or project storage owner/mode cannot be determined. | Report unknown or weak local file posture. Do not claim an OS-level guarantee. |
-| Runtime Home, `state.sqlite`, `registry.sqlite`, or artifact directories are writable by unrelated users, shared groups, shared containers, or broad local processes. | Report tampering and artifact-poisoning risk. Core must still validate rows, owner links, hashes, and artifact registration before trusting meaning. |
-| Artifact storage or exports are readable by unrelated users, shared groups, shared containers, or broad local processes. | Report confidentiality risk without echoing sensitive values. |
-| A registered artifact hash, size, owner link, or path no longer matches storage metadata. | Treat as artifact integrity failure or recovery input, not as projection drift. |
+| Runtime Home, `state.sqlite`, `registry.sqlite`, or evidence directories are writable by unrelated users, shared groups, shared containers, or broad local processes. | Report tampering and evidence-poisoning risk. Core must still validate rows, owner links, hashes, and evidence registration before trusting meaning. |
+| Evidence storage or exports are readable by unrelated users, shared groups, shared containers, or broad local processes. | Report confidentiality risk without echoing sensitive values. |
+| A registered evidence hash, size, owner link, or path no longer matches storage metadata. | Treat as evidence integrity failure or recovery input, not as projection drift. |
 
-## Table-To-Stage Matrix
+## Core Records
 
-This matrix is the main table list. It separates small Engineering Checkpoint / MVP-1 storage from later profile candidates.
+MVP-1 has a small set of persisted records. A future implementation may choose a
+slightly different physical table layout, but it must not turn later-profile
+records into MVP-1 requirements.
 
-Public API refs are owned by [API Schema Core](api/schema-core.md#artifactref). For the minimum MVP-1 storage slice, `evidence_summaries.evidence_summary_id` is addressable as `StateRecordRef.record_kind=evidence_summary`, and `close_readiness.close_readiness_id` is addressable as `StateRecordRef.record_kind=close_readiness`. Sensitive-action permission is addressable through the canonical user judgment family as `StateRecordRef.record_kind=user_judgment`; `StateRecordRef.record_kind=decision_packet` is a legacy compatibility alias or full-format projection label only. `StateRecordRef.record_kind=approval` remains later-profile unless the `approvals` table is explicitly promoted. `change_unit_dependencies` remains future/diagnostic storage, so `record_kind=change_unit_dependency` is not a MVP-1 active public ref.
+| Record | Minimal persisted purpose | Notes |
+|---|---|---|
+| `project` | Local project identity, Runtime Home registration, state database location, active Task pointer. | Stored across `registry_meta`, `projects`, and `project_state` in the sketch below. |
+| `task` | Tracked work item: user request, current summary, lifecycle, result, active scope, and state clock. | A Task is the user-value unit. It is not a report, Journey, or projection. |
+| `task_scope` / `change_unit` | Current scope, non-goals, success criteria, allowed paths, denied paths, and scoped-write status. | Existing Kernel/API names use `Change Unit` and `record_kind=change_unit`; MVP-1 storage only needs a single active task-scope row or equivalent Task scope fields, not a DAG. |
+| `user_judgment` | User-owned product/UX choice, technical choice, sensitive-action approval, work acceptance, and residual-risk acceptance. | Full-format Decision Packet is presentation, not a separate authority table. Committed `approvals` are later-profile. |
+| `write_check` / `write_authorization` | Cooperative `prepare_write` result for the exact proposed write. Allowed results create a single-use Write Authorization; blocked results create blockers. | This is Harness authority for a Core path, not OS-level permission or arbitrary-tool prevention. |
+| `run` | Agent work run or observed execution result, linked to Task, scope, optional Write Authorization, and evidence refs. | A Run can support evidence only through registered refs. It does not prove verification, QA, acceptance, or close by itself. |
+| `evidence_ref` | Pointer and short summary for evidence such as a diff, log, screenshot, checkpoint, or existing artifact ref. | MVP-1 does not need a detailed Evidence Manifest. Large bytes remain referenced, not embedded in state. |
+| `blocker` | Close blocker or next-action blocker with owner refs and the smallest required next action. | Close readiness is derived from open blockers and owner records; it does not require a separate `close_readiness` table in MVP-1. |
 
-| Table | Purpose | First active stage | Authority or auxiliary | User-facing or internal | Later status |
-|---|---|---|---|---|---|
-| `registry_meta` | Runtime Home id and registry schema version | Engineering Checkpoint | auxiliary identity | internal | active early |
-| `projects` | Registered project identity and state location | Engineering Checkpoint | authority for registration | user-facing via project selection | active early |
-| `project_surfaces` | Surface/capability declaration and guarantee display when surface profiles are installed | Assurance Profile/Operations Profile or profile-promoted | auxiliary capability state | internal/user-facing diagnostics | future/later |
-| `project_state` | Project-local clock and active Task pointer | Engineering Checkpoint | authority | internal | active early |
-| `tasks` | Current Task record and task state clock | Engineering Checkpoint | authority | user-facing summary | active early |
-| `change_units` | Minimal scoped work boundary for writes | Engineering Checkpoint | authority | user-facing when scope is explained | active early |
-| `write_authorizations` | Durable single-use `prepare_write` allow record | Engineering Checkpoint | authority | internal with user-visible blockers | active early |
-| `runs` | Committed observed Run record | Engineering Checkpoint | authority | user-facing evidence/status refs | active early |
-| `artifacts` | Registered artifact/evidence file metadata | Engineering Checkpoint | artifact metadata authority | internal, surfaced by refs | active early |
-| `artifact_links` | Compatible link from artifact to Task/Run/owner record | Engineering Checkpoint | artifact owner-link authority | internal | active early |
-| `task_blockers` | Structured status/blocker rows | Engineering Checkpoint | authority for stored blockers | user-facing | active early |
-| `task_events` | Append-only audit and event-order trail | Engineering Checkpoint | audit trail and projection support | mostly internal | active early |
-| `tool_invocations` | Committed idempotency replay row | Engineering Checkpoint | replay support | internal | active early |
-| `task_intake` | Ordinary-language intake and tracked clarification state | MVP-1 | auxiliary shaping state | user-facing | not Engineering Checkpoint |
-| `user_judgments` | Simplified user judgment records and recorded answers | MVP-1 | authority for user judgments | user-facing | not Engineering Checkpoint |
-| `user_judgment_requests` | Optional prompt routing, replay, or handoff metadata linked to user judgments | MVP-1 optional | auxiliary routing state | internal/user-facing prompt support | optional, not authority by itself |
-| `residual_risks` | Minimal visible residual-risk rows | MVP-1 | authority for stored residual risks | user-facing | not Engineering Checkpoint |
-| `evidence_summaries` | Minimal evidence summary over artifact/run refs | MVP-1 | auxiliary summary over authority refs | user-facing | not Engineering Checkpoint |
-| `close_readiness` | Minimal close readiness and close-blocker snapshot | MVP-1 | auxiliary display/check snapshot | user-facing | not Engineering Checkpoint |
-| `projection_status_cards` | Optional freshness/status card state without a projection job system | MVP-1 optional | auxiliary derived display state | user-facing | optional, not authority |
-| `approvals` | Sensitive-action approval lifecycle | Assurance Profile or profile-promoted | authority when profile is active | user-facing | future/later |
-| `baselines` | Repository baseline capture | Assurance Profile or profile-promoted | auxiliary support for assurance | internal | future/later |
-| `evidence_manifests` | Full criteria-to-evidence coverage | Assurance Profile or profile-promoted | authority for full evidence profile | user-facing summary | future/later |
-| `evals` | Detached verification/eval records | Assurance Profile or profile-promoted | authority when profile is active | user-facing summary | future/later |
-| `manual_qa_records` | Manual QA profile, result, findings | Assurance Profile or profile-promoted | authority when profile is active | user-facing summary | future/later |
-| `validator_runs` | Persisted validator results | Assurance Profile or profile-promoted | diagnostic state | internal/user-facing findings | future/later |
-| `feedback_loops` | Feedback-loop policy records | Assurance Profile or profile-promoted | policy support | internal/user-facing summary | future/later |
-| `tdd_traces` | TDD trace records | Assurance Profile or profile-promoted | policy/evidence support | internal/user-facing summary | future/later |
-| `projection_jobs` | Durable projection outbox and rendered-output freshness | Operations Profile or profile-promoted | auxiliary derived-view job state | internal/user-facing freshness | future/later |
-| `reconcile_items` | Human-editable projection drift/proposal handling | Operations Profile or profile-promoted | auxiliary until accepted through Core | user-facing | future/later |
-| `connector_manifests` | Connector-managed file manifest and drift state | Operations Profile or profile-promoted | diagnostic/support | internal | future/later |
-| `persistent_locks` | Durable lock/recovery metadata if process locks are insufficient | Operations Profile or profile-promoted | auxiliary | internal | future/later |
-| `export_manifests` | Export/recover package manifest | Operations Profile or profile-promoted | auxiliary support | internal/user-facing report | future/later |
-| `recover_items` | Recovery findings and repair plan state | Operations Profile or profile-promoted | diagnostic/support | internal/user-facing report | future/later |
-| `task_spine_entries` | Journey/spine continuity records | future/diagnostic | supplemental | user-facing | non-stage-required |
-| `journey_cards` | Render/cache support for journey views, if ever stored | future/diagnostic | derived display support | user-facing | non-stage-required |
-| `shared_designs` | Shared design basis records when design-support profiles are promoted | future/diagnostic | policy support | user-facing summary | non-stage-required |
-| `change_unit_dependencies` | Dependency/ordering visibility between Change Units | future/diagnostic | policy support | internal/user-facing summary | non-stage-required |
-| `domain_terms` | Domain language/stewardship terms | future/diagnostic | policy support | user-facing summary | non-stage-required |
-| `module_map_items` | Module map/stewardship records | future/diagnostic | policy support | internal/user-facing summary | non-stage-required |
-| `interface_contracts` | Interface contract/stewardship records | future/diagnostic | policy support | internal/user-facing summary | non-stage-required |
+Support rows such as `tool_invocations` and `task_events` help replay,
+idempotency, audit, and ordering. They are not user-facing domain records and do
+not expand the MVP-1 product surface.
 
-## Engineering Checkpoint Physical Schema
+## Persisted State Vs Derived Status/View
 
-Engineering Checkpoint is the internal authority-loop checkpoint. It is intentionally small. It should be enough to register a project, create or load one Task, define one scoped work boundary, authorize one write, record one Run, register one artifact/evidence ref, append events, and return structured blockers.
+Persisted MVP-1 state is the set of rows Core commits. Derived status/view is
+what Core or a renderer computes from those rows for users, agents, or operators.
 
-The DDL below is a reference fragment for planning. It is not proof that a migration runner exists.
+| Derived output | Source records | MVP-1 storage rule |
+|---|---|---|
+| Status card / task summary | `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `evidence_refs`, `blockers` | Derived view. It may be recomputed on read; no `projection_status_cards` or `projection_jobs` table is required. |
+| Next safe actions | Open blockers, pending user judgments, write-check state, evidence refs, Task lifecycle | Derived view. It does not create a Task, judgment, Run, evidence, or Write Authorization. |
+| Evidence summary | `runs` and `evidence_refs` | Derived summary. MVP-1 stores refs and short summaries, not a full `evidence_summaries` or `evidence_manifests` authority table. |
+| Close readiness | Task lifecycle, scope state, pending user judgments, evidence refs, open blockers, work-acceptance and residual-risk user judgments | Derived check. MVP-1 stores the blockers and owner records used by the check, not a separate `close_readiness` source of truth. |
+| Projection freshness | Current state version compared with a returned/read view source version | Derived diagnostic. Full `projection_jobs` storage is Operations Profile or profile-promoted. |
 
-### Schema profile metadata
+## Minimal DDL Or Schema Sketch
 
-| Profile | Stage | Required for | Explicitly not required for this profile |
-|---|---|---|---|
-| Engineering Checkpoint schema | Engineering Checkpoint | narrow local authority loop | user judgments, Evidence Manifests, Manual QA, Eval, residual-risk acceptance, projection jobs, reconcile, validators, Journey, stewardship maps |
-| MVP-1 User Work Loop schema | MVP-1 | first user-value records and readable status | detached verification, full Manual QA, full projection job system, export/recover, broad operations |
-| Assurance Profile schema | Assurance Profile or promoted profile | verification, QA, approval, feedback/TDD, validator support | Engineering Checkpoint / MVP-1 exit unless promoted |
-| Operations schema | Operations Profile or promoted profile | projection jobs, reconcile, connector manifests, recover/export | Engineering Checkpoint / MVP-1 exit unless promoted |
-| Future / diagnostic schema | future/diagnostic | journey/spine, domain/module/interface diagnostics | all current stage exits unless promoted |
+The DDL below is a reference sketch for planning. It is not proof that a migration
+runner exists. It keeps MVP-1 focused on the minimal records above.
 
 <a id="core-authority-smoke-schema"></a>
+<a id="mvp-1-minimal-storage-schema"></a>
 
-### Engineering Checkpoint schema
-
-Main Engineering Checkpoint table count: 12 tables total, with 2 in `registry.sqlite` and 10 in project `state.sqlite`. This count is intentionally small enough for a first implementation slice.
-
-#### `registry.sqlite`
+### `registry.sqlite`
 
 ```sql
 CREATE TABLE registry_meta (
@@ -198,9 +193,10 @@ CREATE TABLE projects (
 );
 ```
 
-Required `registry_meta` keys for Engineering Checkpoint are `runtime_home_id` and `schema_version`. A later implementation may replace this with a more formal metadata table, but Engineering Checkpoint only needs durable identity and version facts.
+Required `registry_meta` keys for MVP-1 are `runtime_home_id` and
+`schema_version`.
 
-#### `state.sqlite`
+### `state.sqlite`
 
 ```sql
 CREATE TABLE project_state (
@@ -216,12 +212,13 @@ CREATE TABLE tasks (
   task_id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
   title TEXT NOT NULL,
+  user_request TEXT NOT NULL,
   mode TEXT NOT NULL,
   lifecycle_phase TEXT NOT NULL,
-  result TEXT,
+  result TEXT NOT NULL DEFAULT 'none',
+  summary TEXT NOT NULL DEFAULT '',
   active_change_unit_id TEXT,
   state_version INTEGER NOT NULL DEFAULT 0,
-  status_summary_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   closed_at TEXT
@@ -230,11 +227,34 @@ CREATE TABLE tasks (
 CREATE TABLE change_units (
   change_unit_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  summary TEXT NOT NULL,
-  status TEXT NOT NULL,
+  scope_summary TEXT NOT NULL,
+  non_goals_json TEXT NOT NULL DEFAULT '[]',
+  success_criteria_json TEXT NOT NULL DEFAULT '[]',
   allowed_paths_json TEXT NOT NULL DEFAULT '[]',
   denied_paths_json TEXT NOT NULL DEFAULT '[]',
-  touched_paths_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE user_judgments (
+  user_judgment_id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  change_unit_id TEXT REFERENCES change_units(change_unit_id),
+  judgment_type TEXT NOT NULL,
+  presentation TEXT NOT NULL,
+  display_label TEXT NOT NULL,
+  status TEXT NOT NULL,
+  question TEXT NOT NULL,
+  options_json TEXT NOT NULL DEFAULT '[]',
+  selected_option_json TEXT,
+  judgment_payload_json TEXT NOT NULL DEFAULT '{}',
+  affected_scope_json TEXT NOT NULL DEFAULT '{}',
+  affected_gates_json TEXT NOT NULL DEFAULT '[]',
+  context_refs_json TEXT NOT NULL DEFAULT '[]',
+  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  expires_at TEXT,
+  resolved_at TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -244,9 +264,12 @@ CREATE TABLE write_authorizations (
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
   change_unit_id TEXT NOT NULL REFERENCES change_units(change_unit_id),
   status TEXT NOT NULL,
+  decision TEXT NOT NULL,
   basis_state_version INTEGER NOT NULL,
+  intended_operation TEXT NOT NULL,
   allowed_paths_json TEXT NOT NULL DEFAULT '[]',
   denied_paths_json TEXT NOT NULL DEFAULT '[]',
+  related_user_judgment_refs_json TEXT NOT NULL DEFAULT '[]',
   blocker_refs_json TEXT NOT NULL DEFAULT '[]',
   consumed_by_run_id TEXT,
   expires_at TEXT,
@@ -264,34 +287,29 @@ CREATE TABLE runs (
   summary TEXT NOT NULL,
   observed_changes_json TEXT NOT NULL DEFAULT '[]',
   command_results_json TEXT NOT NULL DEFAULT '[]',
-  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
+  evidence_ref_ids_json TEXT NOT NULL DEFAULT '[]',
   created_at TEXT NOT NULL
 );
 
-CREATE TABLE artifacts (
-  artifact_id TEXT PRIMARY KEY,
+CREATE TABLE evidence_refs (
+  evidence_ref_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
+  run_id TEXT REFERENCES runs(run_id),
+  owner_record_kind TEXT NOT NULL,
+  owner_record_id TEXT NOT NULL,
   kind TEXT NOT NULL,
   uri TEXT NOT NULL,
-  sha256 TEXT NOT NULL,
-  size_bytes INTEGER NOT NULL,
+  summary TEXT NOT NULL,
+  sha256 TEXT,
+  size_bytes INTEGER,
   content_type TEXT,
   redaction_state TEXT NOT NULL,
-  retention_class TEXT NOT NULL,
-  created_at TEXT NOT NULL
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
 );
 
-CREATE TABLE artifact_links (
-  artifact_link_id TEXT PRIMARY KEY,
-  artifact_id TEXT NOT NULL REFERENCES artifacts(artifact_id),
-  task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  record_kind TEXT NOT NULL,
-  record_id TEXT NOT NULL,
-  relation TEXT NOT NULL,
-  created_at TEXT NOT NULL
-);
-
-CREATE TABLE task_blockers (
+CREATE TABLE blockers (
   blocker_id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
   blocked_action TEXT NOT NULL,
@@ -299,6 +317,8 @@ CREATE TABLE task_blockers (
   status TEXT NOT NULL,
   message TEXT NOT NULL,
   owner_ref_json TEXT NOT NULL DEFAULT '{}',
+  related_refs_json TEXT NOT NULL DEFAULT '[]',
+  required_next_action TEXT NOT NULL,
   created_at TEXT NOT NULL,
   resolved_at TEXT
 );
@@ -329,300 +349,169 @@ CREATE TABLE tool_invocations (
 );
 ```
 
-Recommended Engineering Checkpoint indexes:
+Recommended MVP-1 indexes:
 
 ```sql
 CREATE INDEX idx_tasks_project_phase ON tasks(project_id, lifecycle_phase);
 CREATE INDEX idx_change_units_task_status ON change_units(task_id, status);
+CREATE INDEX idx_user_judgments_task_status ON user_judgments(task_id, status);
 CREATE INDEX idx_write_authorizations_task_status ON write_authorizations(task_id, status);
 CREATE UNIQUE INDEX uq_runs_write_authorization_consumed
   ON runs(write_authorization_id)
   WHERE write_authorization_id IS NOT NULL;
-CREATE INDEX idx_artifact_links_record ON artifact_links(record_kind, record_id);
-CREATE INDEX idx_task_blockers_task_status ON task_blockers(task_id, status);
+CREATE INDEX idx_evidence_refs_owner ON evidence_refs(owner_record_kind, owner_record_id);
+CREATE INDEX idx_blockers_task_status ON blockers(task_id, status);
 CREATE INDEX idx_task_events_task_seq ON task_events(task_id, event_seq);
 ```
 
-Engineering Checkpoint may store initial task creation through a narrow owner-valid setup path instead of a full natural-language intake system. It may return status/blocker output directly from `tasks`, `change_units`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, and `task_blockers`.
+If an implementation keeps separate `artifacts` and `artifact_links` tables in
+MVP-1, those tables are only a physical representation of `evidence_ref` storage.
+They do not create the full artifact-integrity, export, projection-linking, or
+Evidence Manifest profiles.
 
-### Artifact directory layout
+## Fields Needed For Close-Blocker Calculation
 
-The directory layout is staged. Engineering Checkpoint needs only the directories it actually writes, usually `artifacts/tmp/`, `artifacts/diffs/`, `artifacts/logs/`, and possibly `artifacts/bundles/`. Other directories in the reference layout are allowed but not Engineering Checkpoint requirements.
+MVP-1 close-blocker calculation reads current persisted records and derives the
+close result. It does not need Journey, Spine, detailed Evidence Manifest, Eval,
+Manual QA, export/report tables, projection jobs, or validator-run storage.
 
-### Artifact Kind Storage Notes
+| Blocker or close fact | Minimum source fields |
+|---|---|
+| Active Task exists and is closeable | `project_state.active_task_id`, `tasks.lifecycle_phase`, `tasks.result`, `tasks.closed_at` |
+| Scope is present and current | `tasks.active_change_unit_id`, `change_units.status`, `change_units.scope_summary`, `change_units.non_goals_json`, `change_units.success_criteria_json` |
+| User-owned judgment is unresolved | `user_judgments.judgment_type`, `user_judgments.status`, `user_judgments.affected_gates_json`, `user_judgments.context_refs_json` |
+| Sensitive-action permission is missing or denied | `user_judgments` rows with `judgment_type=sensitive_action_approval`, plus current `write_authorizations.related_user_judgment_refs_json` when a write is involved |
+| Write authority is missing, stale, or already consumed | `write_authorizations.status`, `write_authorizations.basis_state_version`, `write_authorizations.consumed_by_run_id`, current `tasks.state_version` |
+| Run or evidence support is missing | `runs.status`, `runs.evidence_ref_ids_json`, `evidence_refs.status`, `evidence_refs.owner_record_kind`, `evidence_refs.owner_record_id` |
+| Work acceptance is required but missing | `user_judgments` rows with `judgment_type=work_acceptance` and compatible `status` / `selected_option_json` |
+| Residual risk is not visible or not accepted | `blockers` rows with residual-risk blocker kinds, plus `user_judgments` rows with `judgment_type=residual_risk_acceptance` when acceptance is required |
+| A blocker is still open | `blockers.status`, `blockers.blocker_kind`, `blockers.blocked_action`, `blockers.related_refs_json`, `blockers.required_next_action` |
+| Readable status is stale | Current `tasks.state_version` compared with the source version returned by the read/card response; later `projection_jobs` only when Operations Profile is active |
 
-Artifact kind names describe registered files, not authority by themselves. A `diff`, `log`, `screenshot`, `bundle`, `manifest`, `checkpoint`, `qa`, `tdd`, `design`, `architecture`, `decision`, or `export_component` file becomes meaningful only after the `artifacts` row and compatible `artifact_links` row are committed.
+The close response may expose a compact close-readiness summary, evidence
+summary, and next action. Those are derived outputs. Persisting a
+`close_readiness`, `evidence_summary`, or status-card cache is optional/later
+unless an owner profile promotes it.
 
-### Artifact Registration Contract
+## Later-Profile Storage
 
-Artifact registration is the storage boundary for artifact poisoning. A staged path, captured file, declared content type, and requested owner relation are untrusted until Core validates the path, rejects traversal or symlink escape, computes stored-byte integrity, applies redaction or omission rules, writes the `artifacts` row, and links it to a compatible owner record.
+Later-profile storage is useful design inventory. It must not be read as an
+MVP-1 DDL bundle.
 
-A committed artifact that supports state needs:
+### Assurance Profile
 
-- a registered `ArtifactRef` shape, using the active stage value sets, owned by [API Schema Core](api/schema-core.md#artifactref)
-- an `artifacts` row with `sha256`, `size_bytes`, `redaction_state`, and `retention_class`
-- at least one compatible `artifact_links` row for the Task-scoped owner record
-- a `task_events` row for the committed artifact registration or the state mutation that registered it
+Assurance Profile or profile-promoted storage may add:
 
-An `artifacts` row without a compatible owner link is not enough to satisfy evidence, QA, verification, projection, export, or close-related checks.
-
-## MVP-1 Additions
-
-MVP-1 means the MVP-1 User Work Loop. It should add records that help a person understand the work: intake state, simplified user judgments, sensitive-action approval user judgments, visible residual risk, evidence summaries, close blockers/readiness, and optional status-card freshness. It should still avoid committed Approval lifecycle storage, full assurance, projection job, reconciliation, and operations systems.
-
-### MVP-1 User Work Loop schema
-
-Main MVP-1 addition count: 5 tables, plus optional `user_judgment_requests` and `projection_status_cards` tables. These tables build on the Engineering Checkpoint schema.
-
-```sql
-CREATE TABLE task_intake (
-  intake_id TEXT PRIMARY KEY,
-  task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  user_request TEXT NOT NULL,
-  clarified_summary TEXT,
-  open_questions_json TEXT NOT NULL DEFAULT '[]',
-  status TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
-
-CREATE TABLE user_judgments (
-  user_judgment_id TEXT PRIMARY KEY,
-  task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  judgment_type TEXT NOT NULL,
-  presentation TEXT NOT NULL,
-  display_label TEXT NOT NULL,
-  judgment_payload_json TEXT NOT NULL DEFAULT '{}',
-  status TEXT NOT NULL,
-  question TEXT NOT NULL,
-  options_json TEXT NOT NULL DEFAULT '[]',
-  selected_option_json TEXT,
-  affected_scope_json TEXT NOT NULL DEFAULT '{}',
-  affected_gates_json TEXT NOT NULL DEFAULT '[]',
-  context_refs_json TEXT NOT NULL DEFAULT '[]',
-  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
-  expires_at TEXT,
-  resolved_at TEXT,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
-
-CREATE TABLE residual_risks (
-  residual_risk_id TEXT PRIMARY KEY,
-  task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  status TEXT NOT NULL,
-  visibility_status TEXT NOT NULL,
-  summary TEXT NOT NULL,
-  impact TEXT,
-  mitigation TEXT,
-  related_user_judgment_id TEXT REFERENCES user_judgments(user_judgment_id),
-  accepted_at TEXT,
-  accepted_by TEXT,
-  accepted_risk_json TEXT NOT NULL DEFAULT '{}',
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
-
-CREATE TABLE evidence_summaries (
-  evidence_summary_id TEXT PRIMARY KEY,
-  task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  status TEXT NOT NULL,
-  summary TEXT NOT NULL,
-  run_refs_json TEXT NOT NULL DEFAULT '[]',
-  artifact_refs_json TEXT NOT NULL DEFAULT '[]',
-  gaps_json TEXT NOT NULL DEFAULT '[]',
-  updated_at TEXT NOT NULL
-);
-
-CREATE TABLE close_readiness (
-  close_readiness_id TEXT PRIMARY KEY,
-  task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  status TEXT NOT NULL,
-  blocker_refs_json TEXT NOT NULL DEFAULT '[]',
-  evidence_summary_id TEXT REFERENCES evidence_summaries(evidence_summary_id),
-  residual_risk_refs_json TEXT NOT NULL DEFAULT '[]',
-  checked_state_version INTEGER NOT NULL,
-  updated_at TEXT NOT NULL
-);
-```
-
-Optional MVP-1 prompt routing table:
-
-Public refs for these MVP-1 additions are intentionally small. `evidence_summaries` and `close_readiness` may be surfaced through `StateRecordRef` as `evidence_summary` and `close_readiness`; they summarize or check authority refs and do not imply the full `evidence_manifests`, verification, Manual QA, projection, or report/export profiles are active.
-
-```sql
-CREATE TABLE user_judgment_requests (
-  user_judgment_request_id TEXT PRIMARY KEY,
-  task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  user_judgment_id TEXT REFERENCES user_judgments(user_judgment_id),
-  status TEXT NOT NULL,
-  request_payload_json TEXT NOT NULL DEFAULT '{}',
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  expires_at TEXT
-);
-```
-
-`user_judgment_requests` never satisfies a judgment, gate, waiver, residual-risk acceptance, or close condition by itself. It is only routing or replay metadata for a compatible `user_judgments` row.
-
-For `judgment_type=sensitive_action_approval`, minimum MVP-1 stores the requested `judgment_payload.approval_scope` in `user_judgments.judgment_payload_json` and resolves the user's grant, denial, or expiry on the user judgment. It does not require a row in `approvals`, an Approval `StateRecordRef`, `approval_id`, `approval_refs`, or an `APR` projection.
-
-Older storage drafts may have used `decision_packets` and `decision_requests`. Those names are migration aliases only: new DDL, fixtures, examples, and public refs should use `user_judgments`, `user_judgment_requests`, and `record_kind=user_judgment`. A full-format Decision Packet view, when enabled, is a presentation/projection over a user judgment, not a separate authority table.
-
-Optional MVP-1 status-card freshness table:
-
-```sql
-CREATE TABLE projection_status_cards (
-  card_id TEXT PRIMARY KEY,
-  task_id TEXT NOT NULL REFERENCES tasks(task_id),
-  card_kind TEXT NOT NULL,
-  source_state_version INTEGER NOT NULL,
-  rendered_state_version INTEGER,
-  status TEXT NOT NULL,
-  summary_json TEXT NOT NULL DEFAULT '{}',
-  updated_at TEXT NOT NULL
-);
-```
-
-`projection_status_cards` is not a projection job system. It is an optional display/freshness cache for status or next-action cards. If omitted, MVP-1 can compute freshness directly by comparing current `tasks.state_version` with the source version returned in a read response.
-
-## Future / Later Profile Schema Candidates
-
-This section preserves useful future schema candidates without putting them on the Engineering Checkpoint / MVP-1 implementation path. Do not treat this inventory as a required DDL bundle.
-
-### Assurance Profile schema
-
-Assurance Profile storage is Assurance Profile or profile-promoted, not Engineering Checkpoint / MVP-1. Candidate tables:
-
-| Candidate table | Why it may matter later | Not required for |
+| Candidate table | Why it may matter later | Not required for MVP-1 |
 |---|---|---|
-| `approvals` | Sensitive-action approval lifecycle and drift handling | Engineering Checkpoint authority loop, ordinary MVP-1 sensitive-action approval user judgments |
-| `baselines` | Repository baseline capture for assurance, approval, and verification freshness | Engineering Checkpoint / MVP-1 unless a promoted profile needs baseline checks |
-| `evidence_manifests` | Full criteria-to-evidence coverage | Engineering Checkpoint single artifact/evidence ref, MVP-1 evidence summary |
-| `evals` | Detached verification or evaluator review | Engineering Checkpoint / MVP-1 |
-| `manual_qa_records` | Manual QA result, findings, setup, evidence refs | Engineering Checkpoint / MVP-1 |
-| `validator_runs` | Persisted `ValidatorResult` rows | Engineering Checkpoint / MVP-1 unless a narrow owner promotes a validator |
-| `feedback_loops` | Policy support for selected feedback loop | Engineering Checkpoint / MVP-1 |
-| `tdd_traces` | Red/green/refactor evidence when TDD profile is selected | Engineering Checkpoint / MVP-1 |
+| `approvals` | Committed sensitive-action approval lifecycle and drift handling | MVP-1 sensitive-action approval user judgments |
+| `baselines` | Repository baseline capture for assurance, approval, and verification freshness | MVP-1 write checks unless a promoted profile needs baseline checks |
+| `residual_risks` | Rich residual-risk lifecycle separate from blocker rows | MVP-1 residual-risk visibility or acceptance prompts |
+| `evidence_manifests` | Full criteria-to-evidence coverage | MVP-1 evidence refs and evidence summaries derived from refs |
+| `evals` | Detached verification or evaluator review | MVP-1 status, close blockers, or self-checked evidence |
+| `manual_qa_records` | Manual QA result, findings, setup, evidence refs | MVP-1 unless profile or user request requires Manual QA support |
+| `validator_runs` | Persisted `ValidatorResult` rows | MVP-1 blockers unless a narrow owner explicitly promotes validator storage |
+| `feedback_loops` | Feedback-loop policy support | MVP-1 unless a profile is selected |
+| `tdd_traces` | Red/green/refactor evidence when TDD profile is selected | MVP-1 |
 
-### Operations schema
+### Operations Profile
 
-Operations profile storage is Operations Profile or profile-promoted. Candidate tables:
+Operations Profile or profile-promoted storage may add:
 
-| Candidate table | Why it may matter later | Not required for |
+| Candidate table | Why it may matter later | Not required for MVP-1 |
 |---|---|---|
-| `projection_jobs` | Durable outbox for rendered Markdown or managed outputs | Engineering Checkpoint / MVP-1; optional status cards do not require it |
-| `reconcile_items` | Route human edits or projection drift into Core decisions | Engineering Checkpoint / MVP-1 |
-| `connector_manifests` | Track connector-managed files and drift | Engineering Checkpoint / MVP-1 |
-| `persistent_locks` | Durable lock/recovery metadata if needed beyond process locks | Engineering Checkpoint / MVP-1 |
-| `export_manifests` | Release handoff or export package metadata | Engineering Checkpoint / MVP-1 |
-| `recover_items` | Recovery findings, repair plan, and operator follow-up | Engineering Checkpoint / MVP-1 |
+| `projection_jobs` | Durable outbox for rendered Markdown or managed outputs | MVP-1 status cards or next-action summaries |
+| `reconcile_items` | Route human edits or projection drift into Core decisions | MVP-1 |
+| `connector_manifests` | Track connector-managed files and drift | MVP-1 |
+| `persistent_locks` | Durable lock/recovery metadata if needed beyond process locks | MVP-1 |
+| `export_manifests` | Release handoff or export package metadata | MVP-1 |
+| `recover_items` | Recovery findings, repair plan, and operator follow-up | MVP-1 |
 
-### Future / diagnostic schema
+### Future Or Diagnostic
 
-Future or diagnostic schema candidates are non-stage-required until an owner promotes them:
+Future or diagnostic candidates stay outside MVP-1 until an owner promotes them:
 
-- Journey/spine: `task_spine_entries`, `journey_cards`
-- Domain and stewardship: `domain_terms`, `module_map_items`, `interface_contracts`
+- Journey/spine continuity: `task_spine_entries`, `journey_cards`
+- Domain and stewardship: `domain_terms`, `module_map_items`,
+  `interface_contracts`
 - Rich design support: `shared_designs`, `change_unit_dependencies`
-- Diagnostics and polish: metrics, dashboards, context indexes, connector analytics, export/recover detail tables, richer projection caches
+- Diagnostics and polish: metrics, dashboards, context indexes, connector
+  analytics, richer projection caches, export/recover detail tables
 
-These records may be useful, but they must not become prerequisites for Engineering Checkpoint or MVP-1 User Work Loop.
+## Removed Or Relocated Future Records
 
-### Baseline capture format
+These records are deliberately outside the MVP-1 storage path:
 
-Baseline capture is a future assurance/profile feature. When promoted, baseline storage should record enough data to prove the repository state used for approval, verification, or evidence freshness. Until that profile is active, Engineering Checkpoint / MVP-1 do not need a `baselines` table or a baseline capture runner.
-
-### Verification Bundle Shape
-
-Verification bundles are future assurance/profile artifacts. They may combine baseline refs, run refs, artifact refs, evaluator inputs, and validation output after the verification profile is active. They are not required to record a Engineering Checkpoint Run or a MVP-1 evidence summary.
-
-### Projection job table
-
-`projection_jobs` is Operations profile storage. It is the durable outbox for projection rendering when full projection support is enabled. It is not part of Engineering Checkpoint and is not required for MVP-1 status or next-action cards.
-
-When promoted, projection jobs should record `projection_kind`, `target_ref`, `source_state_version`, job status, output location or artifact ref, and failure information. These fields describe derived output freshness; they do not make rendered Markdown authoritative.
-
-### Projection Worker Execution
-
-Projection workers consume committed Core state and produce derived files or cards. Projection failure must not roll back committed Core state. A worker may update freshness/job state through Core-compatible ordering, but stale or failed projection output cannot authorize writes, satisfy evidence, satisfy acceptance, or close a Task.
-
-### Validator runner skeleton
-
-Persisted `validator_runs` are Assurance Profile behavior unless an owner explicitly promotes a narrow validator earlier. Engineering Checkpoint / MVP-1 can return structured blockers without creating persisted validator-run storage.
-
-### Evidence and Verification Profile Implementation Notes
-
-Full evidence sufficiency, detached verification, Manual QA, and validator-backed assurance read committed state and registered artifacts from the profiles that are installed. They must not be simulated through Markdown, chat, or unregistered tool output.
+| Record family | MVP-1 replacement | Later location |
+|---|---|---|
+| Journey, Journey Card, Journey Spine, Spine entries | Compact status/next output derived from Task, scope, judgments, evidence refs, and blockers | Future/diagnostic projections or owner-promoted continuity support |
+| Detailed Evidence Manifest | `evidence_refs` plus derived evidence summary | Assurance Profile full evidence coverage |
+| Eval / detached verification records | Run/evidence refs and self-check labels when applicable | Assurance Profile verification |
+| Manual QA detailed records | User judgment, blocker, or profile-specific prompt when QA is required but not implemented | Assurance Profile Manual QA |
+| Export, report, and bundle tables | Evidence refs and optional artifact pointers only | Operations/export profile |
+| Projection job tables | Ephemeral or read-time status/card freshness | Operations Profile projection rendering |
+| Future validation/conformance tables | Direct blockers and owner-field validation | Assurance/conformance profiles after executable runtime suites exist |
+| Committed Approval table | `user_judgment` with `judgment_type=sensitive_action_approval` | Approval/Assurance Profile |
+| Separate `task_intake` table | `tasks.user_request`, `tasks.summary`, and `change_units` scope fields | Later intake workflow profile if needed |
+| Separate `evidence_summaries` / `close_readiness` / `projection_status_cards` tables | Derived status/view from `runs`, `evidence_refs`, `blockers`, and current state version | Optional profile-promoted caches only |
 
 ## Event Semantics
 
-### `task_events`
-
-`task_events` is an append-only audit trail and event-order support table. It records what Core committed and in what order. It is not the normal authority source for current state, and Engineering Checkpoint / MVP-1 state should not be reconstructed by replaying events during ordinary operation.
+`task_events` is an append-only audit trail and event-order support table when
+the implementation retains it. It records what Core committed and in what order.
+It is not the normal authority source for current state, and MVP-1 state should
+not be reconstructed by replaying events during ordinary operation.
 
 Current state tables are authoritative:
 
-- `tasks`, `change_units`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, and `task_blockers` are Engineering Checkpoint authority records.
-- `user_judgments`, `residual_risks`, and other MVP-1 rows become authority only for their own record family when their profile is active.
-- Events support audit, debugging, idempotency explanation, projection freshness, and recovery history.
+- `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`,
+  `evidence_refs`, and `blockers` are MVP-1 current records.
+- Events support audit, debugging, idempotency explanation, projection freshness,
+  and recovery history.
 
-Deterministic event order is ascending `event_seq` in `state.sqlite`. Task-scoped readers filter by `task_id`. `created_at` is audit metadata; it is not enough for ordering when events share a timestamp.
-
-Required event emission:
-
-| Stage | Mutation | Event expectation |
-|---|---|---|
-| Engineering Checkpoint | Project registration or project path/config update | Emit a project or task-scoped event if the project state changes; registry-only events may use `task_id=NULL`. |
-| Engineering Checkpoint | Task create/update/close state change | Emit an event with the new state version. |
-| Engineering Checkpoint | Change Unit or task boundary create/update | Emit an event and update affected state version. |
-| Engineering Checkpoint | `prepare_write` allow creates or refreshes a Write Authorization | Emit authorization-created or authorization-updated event. |
-| Engineering Checkpoint | `prepare_write` blocks and stores/updates a structured blocker | Emit blocker-opened or blocker-updated event. |
-| Engineering Checkpoint | `record_run` commits a Run | Emit run-recorded event. If a Write Authorization is consumed, emit the authorization-consumed relation in the same transaction or payload. |
-| Engineering Checkpoint | Artifact registration/link commit | Emit artifact-registered or include artifact refs in the owning mutation event. |
-| Engineering Checkpoint | Blocker resolved or superseded | Emit blocker-resolved or blocker-superseded event. |
-| Engineering Checkpoint | Idempotent replay returning an existing committed response | Do not append a new semantic event. The original event remains the committed audit fact. |
-| MVP-1 | Intake state create/update | Emit intake-updated event when persisted. |
-| MVP-1 | User judgment requested, answered, expired, or superseded | Emit user-judgment event tied to the `user_judgments` row. |
-| MVP-1 | Residual risk opened, changed, accepted, mitigated, deferred, or superseded | Emit residual-risk event. |
-| MVP-1 | Evidence summary or close readiness changes | Emit evidence-summary-updated or close-readiness-updated event when persisted. |
-| MVP-1 optional | Projection/status-card freshness changes | Emit freshness/status-card event only if that optional table is installed. |
-
-Malformed requests, dry runs, pre-commit state conflicts, and invalid requests that do not mutate state do not need `task_events` rows. If a blocked request creates or updates a stored blocker, that blocker mutation is the event-worthy state change.
-
-### Projection freshness without projection authority
-
-Projection freshness is a comparison between a readable output's `source_state_version` and current Core state. It does not make the readable output a state authority.
-
-- Engineering Checkpoint may have no projection freshness table. Reads can return current state directly.
-- MVP-1 may store optional `projection_status_cards` for status or next-action cards.
-- Operations Profile or a promoted profile may add `projection_jobs` for durable rendering.
-
-In every stage, stale Markdown or a stale card can warn or block user trust through the owner path, but it cannot authorize writes, satisfy evidence, record acceptance, accept residual risk, or close a Task.
+Required event emission applies only to committed state mutations. Malformed
+requests, dry runs, pre-commit state conflicts, and invalid requests that do not
+mutate state do not need `task_events` rows. If a blocked request creates or
+updates a stored blocker, that blocker mutation is the event-worthy state change.
 
 ## Migration And Validation Notes
 
-No migration runner exists in this repository. The notes below describe constraints a future implementation must satisfy when it chooses a migration mechanism.
+No migration runner exists in this repository. The notes below describe
+constraints a future implementation must satisfy when it chooses a migration
+mechanism.
 
-### Storage hardening as an authority boundary
+### Storage Hardening As An Authority Boundary
 
-SQLite can store malformed rows unless Core and migrations prevent them. A row is authoritative only when it matches the owner schema, owner value set, state-version basis, idempotency key, and artifact owner-link contract.
+SQLite can store malformed rows unless Core and migrations prevent them. A row
+is authoritative only when it matches the owner schema, owner value set,
+state-version basis, idempotency key, and evidence owner-link contract.
 
-`doctor`, `recover`, artifact checks, and conformance runners should report malformed JSON, unknown owner-bound values, mismatched replay rows, stale state-version claims, artifact hash mismatch, and invalid owner links as storage integrity findings, not projection drift.
+`doctor`, `recover`, evidence checks, and conformance runners should report
+malformed JSON, unknown owner-bound values, mismatched replay rows, stale
+state-version claims, evidence hash mismatch, and invalid owner links as storage
+integrity findings, not projection drift.
 
-### JSON TEXT validation
+### JSON `TEXT` Validation
 
-JSON `TEXT` columns are storage flexibility, not permission to store arbitrary JSON. Before Core commits a JSON `TEXT` value, it must parse the value and validate the parsed shape against the owner:
+JSON `TEXT` columns are storage flexibility, not permission to store arbitrary
+JSON. Before Core commits a JSON `TEXT` value, it must parse the value and
+validate the parsed shape against the owner:
 
-- API-shaped payloads validate against [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md).
-- Storage-only JSON validates against this page or the owner document named by this page.
-- SQLite defaults such as `'{}'` and `'[]'` are storage representation rules; they do not make public API fields optional.
+- API-shaped payloads validate against [MVP API](api/mvp-api.md) and
+  [API Schema Core](api/schema-core.md).
+- Storage-only JSON validates against this page or the owner document named by
+  this page.
+- SQLite defaults such as `'{}'` and `'[]'` are storage representation rules;
+  they do not make public API fields optional.
 
-Malformed JSON and schema-incompatible JSON are invalid state. If a SQLite build supports JSON checks, migrations may add `CHECK (json_valid(column_name))` as defense in depth, but Core shape validation before commit still owns meaning.
+Malformed JSON and schema-incompatible JSON are invalid state. If a SQLite build
+supports JSON checks, migrations may add `CHECK (json_valid(column_name))` as
+defense in depth, but Core shape validation before commit still owns meaning.
 
-### Canonical enum hardening
+### Canonical Enum Hardening
 
-Status-like `TEXT` columns are not open strings. Core validation owns allowed values; database `CHECK` constraints or lookup tables are defense in depth.
+Status-like `TEXT` columns are not open strings. Core validation owns allowed
+values; database `CHECK` constraints or lookup tables are defense in depth.
 
 Early hardening should cover:
 
@@ -630,66 +519,63 @@ Early hardening should cover:
 |---|---|
 | `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result` | [Kernel Reference](kernel.md) |
 | `change_units.status` | Kernel/Change Unit owner rules |
-| `write_authorizations.status` | [Kernel `prepare_write`](kernel.md#prepare_write) and [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) |
-| `runs.kind`, `runs.status` | [`harness.record_run`](api/mvp-api.md#harnessrecord_run) and storage compatibility notes |
-| `task_blockers.status`, `blocked_action`, `blocker_kind` | Kernel/API blocker owners |
-| `tool_invocations.status` | storage idempotency replay semantics |
 | `user_judgments.status`, `judgment_type`, `presentation` | user-judgment API/kernel owners |
-| `residual_risks.status`, `visibility_status` | close and residual-risk owners |
-| `evidence_summaries.status`, `close_readiness.status` | evidence/close-readiness owner behavior |
-| Future `projection_jobs.status`, `projection_jobs.projection_kind` | Projection/API owners when Operations profile is active |
+| `write_authorizations.status`, `write_authorizations.decision` | [Kernel `prepare_write`](kernel.md#prepare_write) and [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) |
+| `runs.kind`, `runs.status` | [`harness.record_run`](api/mvp-api.md#harnessrecord_run) and storage compatibility notes |
+| `evidence_refs.kind`, `evidence_refs.redaction_state`, `evidence_refs.status` | `ArtifactRef`/evidence owners and storage compatibility notes |
+| `blockers.status`, `blocked_action`, `blocker_kind` | Kernel/API blocker owners |
+| `tool_invocations.status` | storage idempotency replay semantics |
+| Future `projection_jobs.status`, `projection_jobs.projection_kind` | Projection/API owners when Operations Profile is active |
 | Future `validator_runs.status` | `ValidatorResult` owner when assurance profile is active |
-| Future `project_surfaces.guarantee_level`, `write_authorizations.guarantee_level`, `validator_runs.guarantee_level` | Security threat model and agent-integration guarantee-level owners when the relevant profile is active |
 | Future `approvals.status` | Approval lifecycle owner when approval profile is active |
 | Future `evidence_manifests.status` | Evidence profile owner when full Evidence Manifest profile is active |
-| Future `feedback_loops.loop_kind`, `feedback_loops.status`, `tdd_traces.status` | Design-quality/API owners when feedback/TDD profiles are active |
-| Future `connector_manifests.status`, `baselines.status`, `user_judgment_requests.status`, `task_spine_entries.status`, `change_unit_dependencies.status`, `shared_designs.status`, `reconcile_items.status`, `domain_terms.status`, `module_map_items.status`, `interface_contracts.review_status` | Storage compatibility values below, only when the optional/future table is retained, seeded, or active |
 
-Unknown owner-bound values are invalid state unless a fixture explicitly exercises invalid-state recovery. Migrations must stop before tightening if unknown values are present; they must not silently map unknown values to fallback values that no owner defines.
+Unknown owner-bound values are invalid state unless a fixture explicitly
+exercises invalid-state recovery. Migrations must stop before tightening if
+unknown values are present; they must not silently map unknown values to fallback
+values that no owner defines.
 
 Storage-owned compatibility values promoted here:
 
 | Field | Durable values | Meaning |
 |---|---|---|
 | `runs.status` | `completed`, `interrupted`, `blocked`, `violation` | A committed Run row. Only `completed` can support evidence through normal owner refs. Other values are audit/recovery records and do not satisfy evidence, QA, verification, acceptance, or close readiness by themselves. |
-| `change_units.status` | `planned`, `active`, `completed`, `deferred`, `superseded` | Scope lifecycle. Only the active compatible Change Unit scopes new writes. |
+| `change_units.status` | `planned`, `active`, `completed`, `deferred`, `superseded` | Scope lifecycle. Only the active compatible scope row scopes new writes. |
+| `user_judgments.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` | User judgment lifecycle. A resolved judgment affects only the judgment type and payload it records. |
 | `write_authorizations.status` | `active`, `consumed`, `expired`, `revoked`, `blocked` | Durable authorization lifecycle. Only `active` and compatible rows can be consumed by `record_run`. |
-| `task_blockers.status` | `open`, `resolved`, `superseded` | Stored blocker lifecycle. Open blockers remain visible until Core resolves or supersedes them. |
+| `write_authorizations.decision` | `allowed`, `blocked`, `approval_required`, `decision_required`, `state_conflict` | Cooperative `prepare_write` decision. It does not imply OS-level authority. |
+| `evidence_refs.status` | `available`, `missing`, `stale`, `blocked` | Evidence pointer availability. It is a pointer/status fact, not full evidence sufficiency. |
+| `blockers.status` | `open`, `resolved`, `superseded` | Stored blocker lifecycle. Open blockers remain visible until Core resolves or supersedes them. |
 | `tool_invocations.status` | `committed` | A row exists only for a committed replayable response. |
-| `residual_risks.status` | `open`, `accepted`, `mitigated`, `deferred`, `superseded` | Residual-risk lifecycle. Accepted risk remains separate from work acceptance. |
 
-Profile-only compatibility values retained for future seed loaders and optional profile implementations:
-
-| Field | Durable values | Meaning |
-|---|---|---|
-| `baselines.status` | `captured`, `stale` | Baseline freshness for assurance profiles. |
-| `connector_manifests.status` | `current`, `drifted` | Connector-managed file state; drift must route through the owning reconcile/operations path. |
-| `user_judgment_requests.status` | `open`, `linked`, `closed`, `expired`, `cancelled`, `superseded` | Prompt routing lifecycle only; authority comes through linked `user_judgments`. |
-| `task_spine_entries.status` | `current`, `superseded` | Journey/spine continuity support, not current state authority. |
-| `change_unit_dependencies.status` | `open`, `satisfied`, `blocked`, `deferred`, `superseded` | Dependency visibility; not a scheduler or parallel-lane authority. |
-| `shared_designs.status` | `proposed`, `active`, `stale`, `deferred`, `superseded` | Design-support basis; not Approval, work acceptance, or residual-risk acceptance. |
-| `reconcile_items.status` | `pending`, `merged`, `rejected`, `converted_to_note`, `decision_created`, `deferred` | Reconcile outcome state; only accepted Core mutations change authority. |
-| `domain_terms.status` | `active`, `conflict` | Domain-language support. Conflicts remain visible until resolved by the owner path. |
-| `module_map_items.status` | `active` | Current usable module-map support record when that profile is active. |
-| `interface_contracts.review_status` | `pending`, `reviewed` | Interface review support; does not waive risk or override gates. |
-
-Future table value sets should be used only when the table's owner profile is active, a fixture explicitly seeds that optional table, or the owner document explicitly promotes the values.
+Future table value sets should be used only when the table's owner profile is
+active, a fixture explicitly seeds that optional table, or the owner document
+explicitly promotes the values.
 
 ### Migrations
 
 Future migrations should:
 
-- Record schema/profile version in `registry_meta` and `project_state` or an equivalent chosen metadata mechanism.
+- Record schema/profile version in `registry_meta` and `project_state` or an
+  equivalent chosen metadata mechanism.
 - Validate JSON and owner-bound status values before tightening constraints.
-- Preserve `task_events.event_seq` order and never rewrite historical ordering.
-- Preserve artifact hashes and owner links, or mark affected artifacts invalid for recovery.
-- Stop on unknown owner-bound enum/status values instead of inventing fallback meanings.
-- Treat projection/card/job freshness as derived state, not as canonical state.
+- Preserve `task_events.event_seq` order when `task_events` is retained.
+- Preserve evidence hashes and owner links, or mark affected refs invalid for
+  recovery.
+- Stop on unknown owner-bound enum/status values instead of inventing fallback
+  meanings.
+- Treat status cards, projection/card/job freshness, evidence summaries, and
+  close readiness as derived state, not canonical state.
 
-These notes do not require a specific migration runner, migration file format, or CLI command in Engineering Checkpoint.
+These notes do not require a specific migration runner, migration file format, or
+CLI command in MVP-1.
 
-### Lock policy
+### Lock Policy
 
-Runtime mutations should serialize through the Core transaction order owned by [Runtime Architecture](runtime-architecture.md#state-transaction-flow). Engineering Checkpoint can use ordinary SQLite transactions plus a process/project lock if needed. `persistent_locks` is a later Operations candidate, not a Engineering Checkpoint table.
+Runtime mutations should serialize through the Core transaction order owned by
+[Runtime Architecture](runtime-architecture.md#state-transaction-flow). MVP-1 can
+use ordinary SQLite transactions plus a process/project lock if needed.
+`persistent_locks` is a later Operations candidate, not an MVP-1 table.
 
-Locks protect concurrent writes; they do not provide OS sandboxing, artifact integrity, or tamper-proof storage.
+Locks protect concurrent writes; they do not provide OS sandboxing, evidence
+integrity, or tamper-proof storage.

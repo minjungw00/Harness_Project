@@ -542,7 +542,7 @@ Captured recovery artifacts can explain what was observed during interruption or
 
 ## export
 
-Export creates a review or archival bundle for a Task.
+Export creates a review or archival bundle for a Task. It is a later/reporting profile, not part of the MVP-1 storage minimum.
 
 Required contents:
 
@@ -656,10 +656,10 @@ Required checks:
 - content type is known or explicitly `other`
 - redaction state is valid
 - task/run or artifact-link relation is valid
-- linked state owner exists in the same Task scope as the artifact link, or `record_kind=projection` resolves to a completed same-Task `projection_jobs` row
+- linked state owner exists in the same Task scope as the artifact link, or, when the projection job profile is active, `record_kind=projection` resolves to a completed same-Task `projection_jobs` row
 - no unregistered staging path or arbitrary `staged_uri` is accepted as a committed artifact
 - owner-link relation semantics are compatible with the artifact's kind, including artifacts whose kind is `bundle`, `manifest`, or `export_component`
-- for projection artifact links, `artifact_links.record_id` must equal `projection_jobs.projection_job_id`; integrity validates that job/output identity through the same Task scope as the artifact link, `target_ref`, `status=completed`, and `output_path` or a documented projection ref instead of looking for a separate `projections` table. Project-level projection jobs are not project-scoped artifact links in the current Task-scoped artifact API.
+- for projection artifact links when the projection job profile is active, `artifact_links.record_id` must equal `projection_jobs.projection_job_id`; integrity validates that job/output identity through the same Task scope as the artifact link, `target_ref`, `status=completed`, and `output_path` or a documented projection ref instead of looking for a separate `projections` table. Project-level projection jobs are not project-scoped artifact links in the current Task-scoped artifact API.
 - bundle, manifest, and export-component artifacts are validated through their artifact row and owner links; the check must not look for nonexistent `verification_bundle` or `export` state tables
 - secret/PII handling is compatible with `redaction_state` and any export or capture notes
 - `secret_omitted` artifacts include omission notes or handles and no raw omitted values

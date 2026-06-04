@@ -114,8 +114,8 @@ StatusResponse:
   autonomy_boundary_summary: AutonomyBoundarySummary | null
   write_authority_summary: WriteAuthoritySummary | null
   residual_risk_summary: ResidualRiskSummary | null
-  evidence_summary_refs: StateRecordRef[]
-  close_readiness_refs: StateRecordRef[]
+  evidence_refs: StateRecordRef[]
+  blocker_refs: StateRecordRef[]
   projection_freshness:
     status: current | stale | failed | unknown
     stale_refs: StateRecordRef[]
@@ -225,7 +225,7 @@ RecordRunResponse:
   run_id: string | null
   state: StateSummary
   write_authorization_ref: StateRecordRef | null
-  evidence_summary_ref: StateRecordRef | null
+  evidence_ref: StateRecordRef | null
   run_summary_ref: StateRecordRef | null
   direct_result_ref: StateRecordRef | null
   registered_artifacts: ArtifactRef[]
@@ -324,7 +324,7 @@ RecordUserJudgmentResponse:
 
 `judgment_type` must match the stored `UserJudgment`. Free-form notes such as "go ahead" or "looks good" cannot broaden the answer into approval, acceptance, risk acceptance, waiver, or write authority unless the pending judgment explicitly asks for that judgment type and the answer matches its allowed value.
 
-`accepted_risk_refs` contain `StateRecordRef` entries with `record_kind=residual_risk`; there is no standalone accepted-risk record kind.
+In MVP-1, `accepted_risk_refs` contain the `user_judgment` and `blocker` refs that show the risk was visible and accepted for this close path. Rich `residual_risk` refs are later/profile-promoted; there is no standalone accepted-risk record kind.
 
 <a id="harnessclose_task"></a>
 
@@ -372,8 +372,8 @@ CloseTaskResponse:
   artifact_refs: ArtifactRef[]
 ```
 
-MVP-1 close uses the core close state, blockers, residual-risk visibility, work-acceptance state when required, and evidence/close-readiness refs. Verification, Manual QA, projection/report, and operations refs are active only when their profiles are enabled.
+MVP-1 close uses the core close state, blockers, residual-risk visibility, work-acceptance state when required, and evidence refs. Close readiness and evidence summaries are derived from current records. Verification, Manual QA, projection/report, and operations refs are active only when their profiles are enabled.
 
-`CloseTaskRequest` does not carry accepted-risk refs. For `completed_with_risk_accepted`, Core reads already-recorded accepted state from visible close-relevant Residual Risk records and blocks when that accepted state is missing.
+`CloseTaskRequest` does not carry accepted-risk refs. For `completed_with_risk_accepted`, Core reads accepted state from the blocker that made the close-relevant risk visible and the residual-risk acceptance `user_judgment`; rich Residual Risk records are needed only when that later profile is active.
 
 Successful close moves the Task to a terminal state. Failed close leaves it open and returns structured blockers. Repeated successful close with the same idempotency key returns the same terminal response; a conflicting close intent returns `STATE_CONFLICT`.

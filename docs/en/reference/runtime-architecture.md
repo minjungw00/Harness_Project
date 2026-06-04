@@ -23,7 +23,7 @@ Use the [Kernel Reference](kernel.md) for exact state transitions, [API Schema C
 
 In the future target design, Harness runs as a local authority layer beside the user's product repository. The product repository stays the place where product work happens; Harness Runtime Home stores operational authority; the Harness Server / Installation connects the two through Core, validators, projection, reconcile, and public MCP tools.
 
-The important rule is separation. Core alone changes canonical operational state. Product source files, chat text, generated Markdown, connector files, operator output, and MCP caller claims can inform the system, but canonical operational state lives in `state.sqlite` current records plus `state.sqlite.task_events`, and raw evidence lives in the artifact store.
+The important rule is separation. Core alone changes canonical operational state. Product source files, chat text, generated Markdown, connector files, operator output, and MCP caller claims can inform the system, but canonical operational state lives in `state.sqlite` current records. `state.sqlite.task_events` is audit and ordering history, not the normal current-state source. Raw evidence lives in the artifact store.
 
 ## Reference scope
 
@@ -204,9 +204,9 @@ Core can run as a single local process in the first slices. The full server may 
 | Connector adapter | reference surface registration, capability reporting, and capture hints |
 
 
-Core is the only component that updates canonical operational state. Agents, MCP tools, CLI commands, projectors, and reconnect/recovery flows must enter through Core logic or use recovery code that preserves the same state compatibility rules. They may present, diagnose, recover, or derive from Core records, but they must not maintain a second canonical state model. Operator command names and flags are display/entrypoint choices; the behavior is defined by Core state records, `state.sqlite.task_events`, artifacts, projection jobs, and API-owned errors or documented diagnostics.
+Core is the only component that updates canonical operational state. Agents, MCP tools, CLI commands, projectors, and reconnect/recovery flows must enter through Core logic or use recovery code that preserves the same state compatibility rules. They may present, diagnose, recover, or derive from Core records, but they must not maintain a second canonical state model. Operator command names and flags are display/entrypoint choices; the behavior is defined by Core state records, audit/order facts in `state.sqlite.task_events`, evidence/artifact refs, projection jobs only when that profile is active, and API-owned errors or documented diagnostics.
 
-Decision, Journey, and Autonomy/Boundary modules do not create a new authority tier. Their canonical records live in `state.sqlite` current records plus `state.sqlite.task_events`, their raw evidence lives in the artifact store, and their Markdown views remain projections or proposal surfaces.
+Decision, Journey, and Autonomy/Boundary modules do not create a new authority tier. Their canonical current records live in `state.sqlite`; `state.sqlite.task_events` records audit and ordering history. Their raw evidence lives in the artifact store, and their Markdown views remain projections or proposal surfaces.
 
 
 ### Validators and adapter placement
