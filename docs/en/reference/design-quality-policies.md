@@ -104,7 +104,7 @@ Same-session review is not detached verification. A passed two-stage review may 
 
 Findings from Runs, Eval records, Manual QA, design-quality validators, same-session review displays, operator diagnostics, or conformance examples must not disappear into chat or report prose. A finding becomes close-relevant only through an existing owner path, such as an Evidence Manifest gap or support row, user judgment candidate or record, Change Unit scope/completion/Autonomy Boundary update, Feedback Loop or TDD Trace update, Manual QA or Eval result, Residual Risk candidate or record, structured close blocker, reconcile item, or follow-up Task/Change Unit/Journey Spine Entry when the owner docs already define that route.
 
-This section does not create a finding schema, DDL table, gate, validator ID, or authority path. It names how policy findings are routed back to the existing records owned by Kernel, MCP API, Storage, Document Projection, and Operations.
+This section does not create a finding schema, DDL table, gate, validator ID, or authority path. It names how policy findings are routed back to existing records owned by [Core Model Reference](core-model.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [Storage](storage.md), [Projection And Templates Reference](projection-and-templates.md), and [Operations And Conformance Reference](operations-and-conformance.md).
 
 | Finding source | Route through existing owner paths |
 |---|---|
@@ -129,7 +129,7 @@ Each policy uses the same fields:
 | `evidence` | Evidence or projection refs expected by the policy. |
 | `close_impact` | How unmet requirements affect close or gates. |
 
-Policy validators return the validator result schema owned by the MCP API document.
+Policy validators return the `ValidatorResult` schema owned by [API Schema Core](api/schema-core.md#validatorresult) and the later-profile stable ID set owned by [API Schema Later](api/schema-later.md#validatorresult-stable-ids).
 
 The table above is the source of truth for field names. The field order helps readers scan from applicability through the requirement, waiver, record, validator, evidence, and close impact.
 

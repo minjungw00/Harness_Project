@@ -104,7 +104,7 @@ Same-session review는 분리 검증이 아닙니다. 통과한 two-stage review
 
 Run, Eval record, 수동 QA, design-quality validator, 같은 세션 review display, operator diagnostic, conformance example에서 나온 finding은 chat이나 report prose 안에서 사라지면 안 됩니다. Finding이 close-relevant해지는 것은 기존 owner path를 통할 때뿐입니다. 예를 들어 Evidence Manifest의 gap 또는 support row, user judgment candidate 또는 record, Change Unit scope/completion/Autonomy Boundary update, Feedback Loop 또는 TDD Trace update, 수동 QA 또는 Eval result, Residual Risk candidate 또는 record, structured close blocker, reconcile item, 또는 owner 문서가 이미 정의한 follow-up Task/Change Unit/Journey Spine Entry가 그 경로입니다.
 
-이 section은 finding schema, DDL table, gate, validator ID, authority path를 만들지 않습니다. Policy finding을 Kernel, MCP API, Storage, Document Projection, Operations가 소유하는 기존 기록으로 되돌리는 방법을 이름 붙입니다.
+이 section은 finding schema, DDL table, gate, validator ID, authority path를 만들지 않습니다. Policy finding을 [Core Model 참조](core-model.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [Storage](storage.md), [Projection과 Template 참조](projection-and-templates.md), [운영과 Conformance 참조](operations-and-conformance.md)가 소유하는 기존 기록으로 되돌리는 방법을 이름 붙입니다.
 
 | Finding source | 기존 owner path로 라우팅 |
 |---|---|
@@ -129,7 +129,7 @@ Run, Eval record, 수동 QA, design-quality validator, 같은 세션 review disp
 | `evidence` | Policy가 기대하는 근거 또는 projection ref. |
 | `close_impact` | 충족되지 않은 요구사항이 close 또는 gate에 미치는 영향. |
 
-Policy validator는 MCP API document가 담당하는 validator 결과 형식에 맞춰 결과를 반환합니다.
+Policy validator는 [API Schema Core](api/schema-core.md#validatorresult)가 담당하는 `ValidatorResult` schema와 [API Schema Later](api/schema-later.md#validatorresult-stable-ids)가 담당하는 later-profile stable ID set에 맞춰 결과를 반환합니다.
 
 위 표가 field 이름의 기준입니다. Field 순서는 적용 조건에서 요구사항, waiver, 기록, validator, 근거, close 영향까지 훑어보기 쉽게 정리한 것입니다.
 

@@ -1,4 +1,4 @@
-# MCP API와 스키마
+# 분리된 API 참조 라우터
 
 이 페이지는 분리된 API 참조로 안내하는 routing page입니다. 이 문서는 향후 하네스 서버 동작을 계획하고 검토하기 위한 참조이며, 현재 저장소에 MCP server나 runtime 구현이 있다는 뜻이 아닙니다.
 
@@ -11,23 +11,13 @@
 | Later/profile-gated methods and future schema material | [API Schema Later](api/schema-later.md) |
 | Error taxonomy, primary precedence, idempotency, state conflict behavior | [API Errors](api/errors.md) |
 
-API를 읽을 때도 같은 맥락/읽기용 보기 분리를 유지합니다. `harness.status`와 `harness://status/card`는 사용자 상태 카드 또는 간결한 현재 위치 요약을 반환합니다. Agent 접점은 current Core state와 ref에서 에이전트 맥락 패킷을 만들 수 있습니다. 사용자 판단, 실행/근거, 닫기 표시는 필요할 때 작은 MVP-1 보기 세트를 사용합니다. Core 상태가 유일한 운영 기준입니다. 상태 카드, read-only resource, 렌더링된 template, Projection은 상태가 아니며 민감 동작 승인, 작업 수락, 잔여 위험 수용, 근거, 닫기 준비 상태, Write Authorization, close를 만들지 않습니다.
+API를 읽을 때도 같은 권한 분리를 유지합니다. Public API call은 active method 계약을 통해서만 Core가 소유한 상태를 보여 주거나 변경합니다. 상태 카드, read-only resource, 렌더링된 template, Projection은 파생 보기입니다. 정확한 상태 권한은 [Core Model 참조](core-model.md)가 담당하고, 정확한 보기 동작은 [Projection과 Template 참조](projection-and-templates.md)가 담당합니다.
 
 ## MVP-1 shortcut
 
-MVP-1 public tool surface는 의도적으로 작습니다.
+Active MVP-1 method set은 [MVP API](api/mvp-api.md#mvp-1-method-set)가 담당합니다. MVP-1의 다음 안전한 행동 출력은 `harness.status` 안에 있습니다. 별도 `harness.next` compatibility path는 [Schema Later](api/schema-later.md#harnessnext)가 담당합니다.
 
-- `harness.intake`
-- `status.next_actions`를 포함한 `harness.status`
-- `harness.prepare_write`
-- `harness.record_run`
-- `harness.request_user_judgment`
-- `harness.record_user_judgment`
-- `harness.close_task`
-
-`harness.next`는 별도 MVP-1 method가 아닙니다. [Schema Later](api/schema-later.md#harnessnext)의 later/compatibility material로 남습니다.
-
-`harness.prepare_write`는 MVP-1의 쓰기 전 범위 확인입니다. 내부 Write Authorization record를 만들 수 있지만, 이 record는 하네스 수준의 협력형 기록/확인입니다. OS 권한, sandboxing, 변조 방지 storage, 사전 차단을 주장하지 않습니다.
+`harness.prepare_write` 뒤의 쓰기 전 범위 확인은 하네스 수준의 협력형 확인입니다. 정확한 method field는 [MVP API: `harness.prepare_write`](api/mvp-api.md#harnessprepare_write)가, Core 상태 동작은 [Core Model 참조: `prepare_write`](core-model.md#prepare_write)가, 보장 표현은 [보안 참조](security.md#정직한-guarantee-display)가 담당합니다.
 
 ## Legacy anchor map
 

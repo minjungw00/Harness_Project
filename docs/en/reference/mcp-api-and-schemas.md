@@ -1,4 +1,4 @@
-# MCP API And Schemas
+# Split API Reference Router
 
 This page is now a routing page for the split API reference. It describes future Harness Server behavior for planning and review; it does not mean an MCP server or runtime implementation exists in this repository today.
 
@@ -11,23 +11,13 @@ Use the split documents instead of loading one large schema file:
 | Later/profile-gated methods and future schema material | [API Schema Later](api/schema-later.md) |
 | Error taxonomy, primary precedence, idempotency, state conflict behavior | [API Errors](api/errors.md) |
 
-API readers should keep the same context/projection split used elsewhere: `harness.status` and `harness://status/card` return a user status card or compact current-position summary; agent surfaces may derive an agent context packet from current Core state and refs; user judgment, run/evidence, and close displays use the compact MVP-1 view set when needed. Core state remains the only operational source of truth. Status cards, read-only resources, rendered templates, and projections are not state and do not create approval, acceptance, residual-risk acceptance, evidence, close readiness, Write Authorization, or close.
+API readers should keep the same authority split used elsewhere: public API calls expose or change Core-owned state only through the active method contracts, while status cards, read-only resources, rendered templates, and projections remain derived views. Exact state authority is owned by [Core Model Reference](core-model.md); exact view behavior is owned by [Projection And Templates Reference](projection-and-templates.md).
 
 ## MVP-1 shortcut
 
-The MVP-1 public tool surface is intentionally small:
+The active MVP-1 method set is owned by [MVP API](api/mvp-api.md#mvp-1-method-set). MVP-1 next-safe-action output is part of `harness.status`; the separate `harness.next` compatibility path is owned by [Schema Later](api/schema-later.md#harnessnext).
 
-- `harness.intake`
-- `harness.status`, including `status.next_actions`
-- `harness.prepare_write`
-- `harness.record_run`
-- `harness.request_user_judgment`
-- `harness.record_user_judgment`
-- `harness.close_task`
-
-`harness.next` is not a separate MVP-1 method. It remains later/compatibility material in [Schema Later](api/schema-later.md#harnessnext).
-
-`harness.prepare_write` is the MVP-1 pre-write scope check. It may produce internal Write Authorization records, but those records are cooperative Harness records/checks. They do not claim OS permission, sandboxing, tamper-proof storage, or preventive blocking.
+The pre-write scope-check behavior behind `harness.prepare_write` is a cooperative Harness check. Exact method fields are owned by [MVP API: `harness.prepare_write`](api/mvp-api.md#harnessprepare_write), Core state behavior by [Core Model Reference: `prepare_write`](core-model.md#prepare_write), and guarantee wording by [Security Reference](security.md#honest-guarantee-display).
 
 ## Legacy anchor map
 

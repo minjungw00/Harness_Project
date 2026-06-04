@@ -13,7 +13,7 @@
 
 이 참조 문서는 하네스가 Core 소유 상태 기록과 아티팩트 참조를 바탕으로 읽기용 요약을 어떻게 생성하는지 확인할 때 사용합니다.
 
-Projection의 권한 경계, managed block 동작, 사람이 편집할 수 있는 영역, 아티팩트 참조 표시 방식, 산출물 계층, 템플릿 구현 계층, projection 최신성 규칙을 정의합니다. 기준 kernel state, MCP request/response schema, SQLite DDL, 설계 품질 정책 요구사항, 전체 template 본문은 이 문서가 정의하지 않습니다. 전체 template 본문과 표시 카드 형태는 [Template 참조](templates/README.md)에 있으며, 현재 projection 또는 display repair에 특정 template이 필요할 때만 불러옵니다.
+Projection의 권한 경계, managed block 동작, 사람이 편집할 수 있는 영역, 아티팩트 참조 표시 방식, 산출물 계층, 템플릿 구현 계층, projection 최신성 규칙을 정의합니다. Core 상태, public API request/response schema, SQLite DDL, 설계 품질 정책 요구사항, 전체 template 본문은 이 문서가 정의하지 않습니다. 전체 template 본문과 표시 카드 형태는 [Template 참조](templates/README.md)에 있으며, 현재 projection 또는 display repair에 특정 template이 필요할 때만 불러옵니다.
 
 이 문서는 향후 Harness 동작을 위한 참조 문서입니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-수락-상태)에 있습니다.
 
@@ -165,8 +165,8 @@ flowchart LR
 
 이 문서는 다음을 담당하지 않습니다.
 
-- 기준 kernel state와 transition rules. [Core Model Reference](core-model.md)를 봅니다.
-- public MCP request/response schemas. [MVP API](api/mvp-api.md)와 [API Schema Core](api/schema-core.md)를 봅니다.
+- Core 상태와 transition rules. [Core Model Reference](core-model.md)를 봅니다.
+- public API request/response schemas. [MVP API](api/mvp-api.md)와 [API Schema Core](api/schema-core.md)를 봅니다.
 - SQLite DDL과 storage layout. [Storage](storage.md)를 봅니다.
 - 설계 품질 정책 계약. [설계 품질 정책](design-quality-policies.md)을 봅니다.
 - operator command 의미. [Operations And Conformance](operations-and-conformance.md)를 봅니다.
@@ -349,7 +349,7 @@ Reference/diagnostic output은 더 자세한 artifact inventory, hash, retention
 
 ## Artifact reference 렌더링
 
-Markdown 보고서는 artifact reference를 compact하고 consistent하게 표시합니다. Payload shape는 MCP API document가 담당하며, projection은 presentation rule만 담당합니다.
+Markdown 보고서는 artifact reference를 compact하고 consistent하게 표시합니다. Payload shape는 [API Schema Core: ArtifactRef](api/schema-core.md#artifactref)가 담당하며, projection은 presentation rule만 담당합니다.
 
 권장 display:
 

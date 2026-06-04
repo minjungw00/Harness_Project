@@ -13,7 +13,7 @@
 
 Use this reference to check how Harness renders readable derived views from Core-owned state records and artifact references.
 
-It defines projection authority boundaries, managed block behavior, human-editable sections, artifact reference rendering, output tiers, template implementation classes, and projection freshness rules. It does not define canonical kernel state, MCP request/response schemas, SQLite DDL, design-quality policy requirements, or full template bodies. Full template bodies and display card shapes live in the [Template Reference](templates/README.md) and should be loaded only when the current projection or display repair needs a specific template.
+It defines projection authority boundaries, managed block behavior, human-editable sections, artifact reference rendering, output tiers, template implementation classes, and projection freshness rules. It does not define Core state, public API request/response schemas, SQLite DDL, design-quality policy requirements, or full template bodies. Full template bodies and display card shapes live in the [Template Reference](templates/README.md) and should be loaded only when the current projection or display repair needs a specific template.
 
 This is reference documentation for future Harness behavior. Current repository phase and implementation handoff status are tracked in [Implementation Overview](../build/implementation-overview.md#documentation-acceptance-status).
 
@@ -165,8 +165,8 @@ This document owns:
 
 This document does not own:
 
-- canonical kernel state and transition rules; see [Core Model Reference](core-model.md)
-- public MCP request/response schemas; see [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md)
+- Core state and transition rules; see [Core Model Reference](core-model.md)
+- public API request/response schemas; see [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md)
 - SQLite DDL and storage layout; see [Storage](storage.md)
 - design-quality policy contracts; see [Design Quality Policies](design-quality-policies.md)
 - operator command semantics; see [Operations And Conformance Reference](operations-and-conformance.md)
@@ -349,7 +349,7 @@ Reference/diagnostic outputs may list richer artifact inventories, hashes, reten
 
 ## Artifact reference rendering
 
-Markdown reports render artifact references compactly and consistently. The payload shape is owned by the MCP API document; projection owns only presentation rules.
+Markdown reports render artifact references compactly and consistently. The payload shape is owned by [API Schema Core: ArtifactRef](api/schema-core.md#artifactref); projection owns only presentation rules.
 
 Recommended display:
 

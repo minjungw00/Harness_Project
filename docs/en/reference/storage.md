@@ -141,7 +141,7 @@ records into MVP-1 requirements.
 |---|---|---|
 | `project` | Local project identity, Runtime Home registration, state database location, active Task pointer. | Stored across `registry_meta`, `projects`, and `project_state` in the sketch below. |
 | `task` | Tracked work item: user request, current summary, lifecycle, result, active scope, and state clock. | A Task is the user-value unit. It is not a report, Journey, or projection. |
-| `task_scope` / `change_unit` | Current scope, non-goals, success criteria, allowed paths, denied paths, and scoped-write status. | Existing Kernel/API names use `Change Unit` and `record_kind=change_unit`; MVP-1 storage only needs a single active task-scope row or equivalent Task scope fields, not a DAG. |
+| `task_scope` / `change_unit` | Current scope, non-goals, success criteria, allowed paths, denied paths, and scoped-write status. | Existing Core/API names use `Change Unit` and `record_kind=change_unit`; MVP-1 storage only needs a single active task-scope row or equivalent Task scope fields, not a DAG. |
 | `user_judgment` | User-owned product/UX choice, technical choice, sensitive-action approval, work acceptance, and residual-risk acceptance. | Full-format Decision Packet is presentation, not a separate authority table. Committed `approvals` are later-profile. |
 | `write_check` / `write_authorization` | Cooperative `prepare_write` result for the exact proposed write. Allowed results create a single-use Write Authorization; blocked results create blockers. | This is Harness authority for a Core path, not OS-level permission or arbitrary-tool prevention. |
 | `run` | Agent work run or observed execution result, linked to Task, scope, optional Write Authorization, and evidence refs. | A Run can support evidence only through registered refs. It does not prove verification, QA, acceptance, or close by itself. |
@@ -518,12 +518,12 @@ Early hardening should cover:
 | Field(s) | Owner/value source |
 |---|---|
 | `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result` | [Core Model Reference](core-model.md) |
-| `change_units.status` | Kernel/Change Unit owner rules |
+| `change_units.status` | Core Model / Change Unit owner rules |
 | `user_judgments.status`, `judgment_type`, `presentation` | user-judgment API/kernel owners |
-| `write_authorizations.status`, `write_authorizations.decision` | [Kernel `prepare_write`](core-model.md#prepare_write) and [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) |
+| `write_authorizations.status`, `write_authorizations.decision` | [Core Model `prepare_write`](core-model.md#prepare_write) and [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) |
 | `runs.kind`, `runs.status` | [`harness.record_run`](api/mvp-api.md#harnessrecord_run) and storage compatibility notes |
 | `evidence_refs.kind`, `evidence_refs.redaction_state`, `evidence_refs.status` | `ArtifactRef`/evidence owners and storage compatibility notes |
-| `blockers.status`, `blocked_action`, `blocker_kind` | Kernel/API blocker owners |
+| `blockers.status`, `blocked_action`, `blocker_kind` | Core Model and API blocker owners |
 | `tool_invocations.status` | storage idempotency replay semantics |
 | Future `projection_jobs.status`, `projection_jobs.projection_kind` | Projection/API owners when Operations Profile is active |
 | Future `validator_runs.status` | `ValidatorResult` owner when assurance profile is active |

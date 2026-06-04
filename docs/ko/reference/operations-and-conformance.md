@@ -78,7 +78,7 @@ Conformance fixture body shape, fixture assertion semantics, detailed future sce
 | 운영 프로필 | Full local operations profile입니다. Doctor/readiness category, projection refresh, reconcile, recover, export, artifact integrity check, 담당 문서가 정의한 release handoff report/export profile, materialized runtime suite에 대한 conformance run을 포함합니다. | Dashboard, hosted workflow UI, broad connector ecosystem, remote/shared operations, Browser QA Capture automation, Cross-Surface Verification automation, team workflow, orchestration은 별도로 승격하기 전까지 제외합니다. |
 | 로드맵 | Owner docs가 exact contract를 정의하고 증명한 뒤 승격한 broader connector automation, remote/shared access profile, richer UI/operator dashboard, higher automation 같은 roadmap operations입니다. | 승격되지 않은 것은 staged delivery 밖에 남습니다. |
 
-Operator guarantee posture는 [보안 위협 모델의 단계별 guarantee level](security.md#단계별-guarantee-level)을 따릅니다.
+Operator guarantee posture는 [보안 참조의 단계별 guarantee level](security.md#단계별-guarantee-level)을 따릅니다.
 
 | 단계 | Operator surface에서 허용되는 보안 표현 |
 |---|---|

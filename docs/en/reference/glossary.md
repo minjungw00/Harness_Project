@@ -396,7 +396,7 @@ The honest enforcement strength available for a connected surface or runtime pat
 cooperative | detective | preventive | isolated
 ```
 
-Capability affects validator results, blocked reasons, and display; it is not Approval, Write Authorization, verification, QA, work acceptance, residual-risk acceptance, close readiness, or a kernel gate. Exact level meanings are owned by [Security Threat Model](security.md#honest-guarantee-display).
+Capability affects validator results, blocked reasons, and display; it is not Approval, Write Authorization, verification, QA, work acceptance, residual-risk acceptance, close readiness, or a kernel gate. Exact level meanings are owned by [Security Reference](security.md#honest-guarantee-display).
 
 ### Guard
 
@@ -648,11 +648,13 @@ The user's durable authority to understand the work journey and make or withhold
 
 ### Secret Handle
 
-A display-safe reference to sensitive material such as credentials, tokens, certificates, keys, or other secret values. A secret handle may support evidence or approval scope without storing the raw secret in artifacts, connector manifests, projections, exports, screenshots, logs, summaries, or prompt context. Exact storage and API behavior stays with the storage and MCP/API owners.
+A display-safe reference to sensitive material such as credentials, tokens, certificates, keys, or other secret values. A secret handle may support evidence or approval scope without storing the raw secret in artifacts, connector manifests, projections, exports, screenshots, logs, summaries, or prompt context. Exact storage behavior stays with [Storage](storage.md), and exact API behavior stays with [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md).
 
-### Security Threat Model
+<a id="security-threat-model"></a>
 
-The reference owner for Harness security assets, trust boundaries, threat categories, and control expectations. It explains risks such as prompt injection in repo docs, projection tampering, stale approval replay, out-of-scope writes, MCP-unavailable state claims, secret leakage through evidence artifacts, artifact hash mismatch, malicious generated connector files, capability overclaiming, and stale context poisoning. It does not own exact DDL, public API schemas, or kernel transitions.
+### Security Reference
+
+The reference owner for Harness security assets, trust boundaries, threat categories, control expectations, guarantee levels, and honest security wording. It explains risks such as prompt injection in repo docs, projection tampering, stale approval replay, out-of-scope writes, MCP-unavailable state claims, secret leakage through evidence artifacts, artifact hash mismatch, malicious generated connector files, capability overclaiming, and stale context poisoning. It does not own exact DDL, public API schemas, or Core Model transitions.
 
 ### Surface Capability Check
 
@@ -716,7 +718,7 @@ A durable state record created by `prepare_write` for a specific allowed write a
 
 ### Write Authorization Lifecycle Events
 
-The stable event-name set for Write Authorization creation, return, consumption, expiry, staling, revocation, and violation detection. The exact vocabulary and its relationship to `scope_violation_detected` are owned by the [Kernel Stable Event Catalog](core-model.md#stable-event-catalog).
+The stable event-name set for Write Authorization creation, return, consumption, expiry, staling, revocation, and violation detection. The exact vocabulary and its relationship to `scope_violation_detected` are owned by the [Core Model Stable Event Catalog](core-model.md#stable-event-catalog).
 
 ### Write Authority Summary
 

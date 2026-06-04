@@ -8,20 +8,24 @@ Do not read the whole Reference set by default. Choose the owner for the questio
 
 ## Owner-Contract Map
 
-| Question | Contract owner |
+| Contract area | Owner |
 |---|---|
-| What is the authoritative Core state behavior? | [Core Model Reference](core-model.md) owns entities, gates, state transitions, write authority, `prepare_write`, `record_run`, `close_task`, and close semantics. |
-| What is the MVP public API or schema shape? | [MVP API](api/mvp-api.md) owns active MVP-1 methods, [API Schema Core](api/schema-core.md) owns shared envelopes/refs/resources, and [API Errors](api/errors.md) owns errors/idempotency/state conflict behavior. |
-| What is later/profile-gated API material? | [API Schema Later](api/schema-later.md) owns later-profile methods and future schema material; use [Assurance Profile](../later/assurance-profile.md) for the later reader path. |
-| Where is runtime state stored? | [Storage](storage.md) owns runtime layout, DDL profiles, storage JSON, locks, artifacts, migrations, baselines, projection jobs, and validator storage. |
-| How do readable documents work? | [Projection And Templates Reference](projection-and-templates.md) owns projection rules, freshness, managed blocks, and authority boundaries; [Template Reference](templates/README.md) owns rendered Markdown shapes. |
-| What security guarantee can Harness claim? | [Security Reference](security.md) owns assets, trust boundaries, threats, controls, guarantee levels, and honest security wording. |
-| How should agent surfaces integrate? | [Agent Integration Reference](agent-integration.md) owns connector profiles, context push/pull, fallback behavior, and generated-manifest boundaries; [Surface Cookbook](surface-cookbook.md) owns surface recipes. |
-| What do operators and conformance authors use? | [Operations And Conformance Reference](operations-and-conformance.md) owns operator behavior and conformance run entrypoints; [Conformance Fixtures Reference](conformance-fixtures.md) owns fixture mechanics and Kernel Smoke queue. Use [Operations Profile](../later/operations-profile.md) for the later reader path. |
-| Where do later fixture scenarios live? | [Future Fixtures](../later/future-fixtures.md) owns detailed future scenarios, coverage maps, and catalog-only candidates. |
-| What governs design-quality checks? | [Design Quality Policies](design-quality-policies.md) owns policies, validator IDs, severity composition, waiver semantics, and close impact. |
-| What does a term mean? | [Glossary Reference](glossary.md) owns public/internal terminology definitions and owner routing. |
-| How do runtime pieces fit together? | [Runtime Architecture Reference](runtime-architecture.md) owns runtime spaces, Core transaction placement, architecture flow, artifacts, projection/reconcile placement, and recovery overview. |
+| Task, scope/Change Unit, `user_judgment`, `evidence_ref`, blocker and close-readiness meaning, gates, state transitions, `prepare_write`, `record_run`, `close_task`, state invariants, and non-substitution rules | [Core Model Reference](core-model.md) |
+| Active MVP-1 public methods and per-method request/response behavior | [MVP API](api/mvp-api.md) |
+| MVP-1 shared schemas, envelopes, read-only resources, refs, `ArtifactRef`, `ValidatorResult`, staged active value sets, and API-owned enums | [API Schema Core](api/schema-core.md) |
+| Error taxonomy, user-facing error labels, primary error precedence, close-blocker error mapping, idempotency, and state conflict behavior | [API Errors](api/errors.md) |
+| Later/profile-gated API methods, schema branches, enum extensions, and future validator IDs | [API Schema Later](api/schema-later.md); use [Assurance Profile](../later/assurance-profile.md) for the later reader path. |
+| Runtime home layout, persisted state model, DDL profiles, storage-owned JSON `TEXT`, artifact storage, migrations, locks, baseline capture, projection-job storage, and validator-run storage | [Storage](storage.md) |
+| Derived views, status cards, agent context packets, managed blocks, human-editable projection sections, template implementation classes, artifact-ref rendering, and freshness/failure behavior | [Projection And Templates Reference](projection-and-templates.md) |
+| Full rendered template bodies and display card shapes | [Template Reference](templates/README.md) |
+| Guarantee levels, threat model, assets, trust boundaries, threat/control categories, and honest security wording | [Security Reference](security.md) |
+| How agents interact with Core/API without overloading context: connector profiles, generated manifests, context push/pull, fallback behavior, Role Lens, and reference-surface behavior | [Agent Integration Reference](agent-integration.md); [Surface Cookbook](surface-cookbook.md) owns surface recipes. |
+| Operator behavior, diagnostics, conformance run entrypoints, recovery/export/reconcile operations, and docs-maintenance reporting | [Operations And Conformance Reference](operations-and-conformance.md); use [Operations Profile](../later/operations-profile.md) for the later reader path. |
+| Fixture body shape, runner behavior, assertion semantics, fixture profiles, suite metadata boundaries, current-phase fixture status, and the reduced Kernel Smoke queue | [Conformance Fixtures Reference](conformance-fixtures.md) |
+| Detailed future fixture scenarios, staged coverage maps, suite-family summaries, and catalog-only candidates | [Future Fixtures](../later/future-fixtures.md) |
+| Design-quality policies, validator IDs, severity composition, waiver semantics, evidence expectations, and close impact | [Design Quality Policies](design-quality-policies.md) |
+| Public/internal terminology definitions, capitalization, record-name orientation, and owner routing | [Glossary Reference](glossary.md) |
+| Runtime spaces, Core process placement, Core-only mutation authority, transaction ordering, artifacts, projection/reconcile placement, and recovery overview | [Runtime Architecture Reference](runtime-architecture.md) |
 
 ## Reader Shortcuts
 

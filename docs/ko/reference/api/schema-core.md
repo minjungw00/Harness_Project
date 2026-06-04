@@ -13,7 +13,7 @@
 | Active MVP-1 tools | [MVP API](mvp-api.md) |
 | Error code, precedence, idempotency, stale-state behavior | [Errors](errors.md) |
 | Later/profile-gated schemas and methods | [Schema Later](schema-later.md) |
-| Kernel state semantics | [Core Model 참조](../core-model.md) |
+| Core Model state semantics | [Core Model 참조](../core-model.md) |
 | Storage and DDL | [Storage](../storage.md) |
 
 ## Schema notation convention

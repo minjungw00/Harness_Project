@@ -137,7 +137,7 @@ layout을 선택할 수 있습니다. 그래도 later-profile record를 MVP-1 re
 |---|---|---|
 | `project` | Local project identity, Runtime Home registration, state database location, active Task pointer. | 아래 sketch에서는 `registry_meta`, `projects`, `project_state`에 나뉘어 저장됩니다. |
 | `task` | Tracked work item입니다. User request, current summary, lifecycle, result, active scope, state clock을 저장합니다. | Task는 user-value unit입니다. Report, Journey, projection이 아닙니다. |
-| `task_scope` / `change_unit` | Current scope, non-goals, success criteria, allowed paths, denied paths, scoped-write status. | 기존 Kernel/API 이름은 `Change Unit`과 `record_kind=change_unit`을 씁니다. MVP-1 storage에는 active task-scope row 하나 또는 같은 의미의 Task scope field면 충분합니다. DAG는 필요하지 않습니다. |
+| `task_scope` / `change_unit` | Current scope, non-goals, success criteria, allowed paths, denied paths, scoped-write status. | 기존 Core/API 이름은 `Change Unit`과 `record_kind=change_unit`을 씁니다. MVP-1 storage에는 active task-scope row 하나 또는 같은 의미의 Task scope field면 충분합니다. DAG는 필요하지 않습니다. |
 | `user_judgment` | 사용자 소유 제품/UX 판단, 기술 판단, 민감 동작 승인, 작업 수락, 잔여 위험 수용. | Full-format Decision Packet은 presentation이지 별도 authority table이 아닙니다. Committed `approvals`는 later-profile입니다. |
 | `write_check` / `write_authorization` | 정확한 proposed write에 대한 cooperative `prepare_write` result. Allowed result는 single-use Write Authorization을 만들고, blocked result는 blocker를 만듭니다. | Core path에 대한 Harness authority입니다. OS-level permission이나 arbitrary-tool prevention이 아닙니다. |
 | `run` | Task, scope, optional Write Authorization, evidence refs에 연결되는 agent work run 또는 observed execution result. | Run은 registered ref를 통해서만 evidence를 support할 수 있습니다. 그 자체로 verification, QA, acceptance, close를 증명하지 않습니다. |
@@ -506,12 +506,12 @@ Early hardening 대상:
 | Field(s) | Owner/value source |
 |---|---|
 | `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result` | [Core Model 참조](core-model.md) |
-| `change_units.status` | Kernel/Change Unit owner rules |
+| `change_units.status` | Core Model / Change Unit owner rules |
 | `user_judgments.status`, `judgment_type`, `presentation` | user-judgment API/kernel owners |
-| `write_authorizations.status`, `write_authorizations.decision` | [Kernel `prepare_write`](core-model.md#prepare_write)와 [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) |
+| `write_authorizations.status`, `write_authorizations.decision` | [Core Model `prepare_write`](core-model.md#prepare_write)와 [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) |
 | `runs.kind`, `runs.status` | [`harness.record_run`](api/mvp-api.md#harnessrecord_run)와 storage compatibility notes |
 | `evidence_refs.kind`, `evidence_refs.redaction_state`, `evidence_refs.status` | `ArtifactRef`/evidence owners와 storage compatibility notes |
-| `blockers.status`, `blocked_action`, `blocker_kind` | Kernel/API blocker owners |
+| `blockers.status`, `blocked_action`, `blocker_kind` | Core Model과 API blocker owners |
 | `tool_invocations.status` | storage idempotency replay semantics |
 | Future `projection_jobs.status`, `projection_jobs.projection_kind` | Operations Profile active 시 Projection/API owners |
 | Future `validator_runs.status` | assurance profile active 시 `ValidatorResult` owner |

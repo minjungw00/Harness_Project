@@ -78,7 +78,7 @@ Stage-specific operator behavior:
 | Operations Profile | Full local operations profile: doctor/readiness categories, projection refresh, reconcile, recover, export, artifact integrity check, release handoff report/export profile where defined, and conformance run over materialized runtime suites. | Dashboard, hosted workflow UI, broad connector ecosystems, remote/shared operations, Browser QA Capture automation, Cross-Surface Verification automation, team workflow, and orchestration unless separately promoted. |
 | Roadmap | Promoted roadmap operations such as broader connector automation, remote/shared access profiles, richer UI/operator dashboards, and higher automation only after owner docs define and prove exact contracts. | Anything not promoted remains outside staged delivery. |
 
-Operator guarantee posture follows the [Security Threat Model stage map](security.md#guarantee-levels-by-stage):
+Operator guarantee posture follows the [Security Reference stage map](security.md#guarantee-levels-by-stage):
 
 | Stage | Security wording allowed for operator surfaces |
 |---|---|
