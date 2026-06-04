@@ -43,11 +43,11 @@ Documentation files are source material for understanding and eventually impleme
 | Documentation review / 문서 검토 | Post-redesign review; documentation acceptance candidate only. Maintainers have not accepted the docs yet. / 재설계 이후 검토 상태이며 문서 수락 후보입니다. 유지보수자가 아직 문서를 수락하지 않았습니다. |
 | Implementation planning / 구현 계획 | Not accepted. Maintainers must confirm implementation-readiness criteria before first runtime-batch planning. / 아직 수락되지 않았습니다. 첫 런타임 배치 계획 전에 유지보수자가 구현 준비 조건을 확인해야 합니다. |
 | Runtime implementation / 런타임 구현 | Not started. No runtime artifacts or conformance results exist here. / 시작하지 않았습니다. 런타임 아티팩트나 conformance 결과가 없습니다. |
-| Server-coding decisions / 서버 코딩 결정 | Open decision-ledger items are recorded in the MVP Plan. No server/runtime implementation decision has been formally accepted for coding. / 서버 코딩 전 열린 결정은 MVP 계획에 기록되어 있습니다. 서버/런타임 구현 결정은 코드 작성용으로 공식 수락되지 않았습니다. |
+| Server-coding decisions / 서버 코딩 결정 | Open decision-ledger items are recorded in the MVP-1 User Work Loop plan. No server/runtime implementation decision has been formally accepted for coding. / 서버 코딩 전 열린 결정은 MVP-1 사용자 작업 루프 계획에 기록되어 있습니다. 서버/런타임 구현 결정은 코드 작성용으로 공식 수락되지 않았습니다. |
 
-Detailed handoff status lives in [Implementation Overview](docs/en/build/implementation-overview.md#maintainer-handoff-summary) / [구현 개요](docs/ko/build/implementation-overview.md#문서-인계-요약). Server-coding decisions live in [MVP Plan](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) / [MVP 계획](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정).
+Detailed handoff status lives in [Implementation Overview](docs/en/build/implementation-overview.md#maintainer-handoff-summary) / [구현 개요](docs/ko/build/implementation-overview.md#문서-인계-요약). Server-coding decisions live in [MVP-1 User Work Loop](docs/en/build/mvp-user-work-loop.md#implementation-decisions-needed-before-server-coding) / [MVP-1 사용자 작업 루프 계획](docs/ko/build/mvp-user-work-loop.md#서버-코딩-전-필요한-구현-결정).
 
-상세 인계 상태는 [Implementation Overview](docs/en/build/implementation-overview.md#maintainer-handoff-summary) / [구현 개요](docs/ko/build/implementation-overview.md#문서-인계-요약)가 담당합니다. 서버 코딩 전 결정은 [MVP Plan](docs/en/build/mvp-plan.md#implementation-decisions-needed-before-server-coding) / [MVP 계획](docs/ko/build/mvp-plan.md#서버-코딩-전-필요한-구현-결정)에 둡니다.
+상세 인계 상태는 [Implementation Overview](docs/en/build/implementation-overview.md#maintainer-handoff-summary) / [구현 개요](docs/ko/build/implementation-overview.md#문서-인계-요약)가 담당합니다. 서버 코딩 전 결정은 [MVP-1 User Work Loop](docs/en/build/mvp-user-work-loop.md#implementation-decisions-needed-before-server-coding) / [MVP-1 사용자 작업 루프 계획](docs/ko/build/mvp-user-work-loop.md#서버-코딩-전-필요한-구현-결정)에 둡니다.
 
 ## Start Here / 시작하기
 

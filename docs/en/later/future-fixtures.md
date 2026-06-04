@@ -2,15 +2,15 @@
 
 ## What this document helps you do
 
-Use this page to review future fixture candidates separately from the small core conformance model and the MVP implementation path. It collects detailed candidate scenarios for browser QA, cross-surface behavior, export non-leakage, context hygiene, reconcile, stewardship, operations, advanced projection rendering, and future guarantee-level checks.
+Use this page to review future fixture candidates separately from the small core conformance model, the active MVP behavior examples, and the MVP implementation path. It collects detailed candidate scenarios for browser QA, cross-surface behavior, export non-leakage, context hygiene, reconcile, stewardship, operations, advanced projection rendering, and future guarantee-level checks.
 
-This is future design documentation only. The current repository is documentation-only and contains no runnable Harness Server conformance tests; current phase and handoff status are tracked in [Implementation Overview](../build/implementation-overview.md#documentation-acceptance-status).
+This is future design documentation only. The current repository is documentation-only and contains no runnable Harness Server conformance tests, generated conformance artifacts, or executable fixture catalog files; current phase and handoff status are tracked in [Implementation Overview](../build/implementation-overview.md#documentation-acceptance-status).
 
 ## Catalog Boundary
 
-The core conformance model, exact fixture body, execution rules, assertion semantics, and narrow Engineering Checkpoint Kernel Smoke authoring order stay in [Conformance Fixtures Reference](../reference/conformance-fixtures.md). This catalog is deliberately downstream of that model. Catalog rows are not fixture bodies, not public API schemas, not DDL, not stage exits, and not proof that fixtures already run.
+The core conformance model, MVP behavior examples, exact future fixture body, execution rules, assertion semantics, and narrow Engineering Checkpoint Kernel Smoke authoring order stay in [Conformance Fixtures Reference](../reference/conformance-fixtures.md). This catalog is deliberately downstream of that model and outside the active MVP path. Catalog rows are not fixture bodies, not public API schemas, not DDL, not stage exits, not generated runtime artifacts, and not proof that fixtures already run.
 
-Future catalog scenarios become executable only after an owner promotes the behavior, identifies the delivery stage or local suite, and materializes exact-shape fixtures that prove Core-owned state and artifact assertions. Projection output may be checked for freshness, readability, and availability, but it must not replace Core state or become conformance truth.
+Future catalog scenarios become executable only after an owner promotes the behavior, identifies the delivery stage or local suite, and materializes exact-shape fixtures that prove Core-owned state and artifact assertions. Until then, they are design inventory rather than MVP behavior examples or runtime conformance results. Projection output may be checked for freshness, readability, and availability, but it must not replace Core state or become conformance truth.
 
 ## Catalog-Only Future Families
 
@@ -43,7 +43,7 @@ These catalog rows are future scenario guidance. They become executable only whe
 
 ## Agency, Stewardship, Context, And Design-Quality Suites
 
-Agency, stewardship, context hygiene, and design-quality are Assurance Profile suites. They test state behavior through Core entrypoints such as `prepare_write`, `request_user_judgment`, `record_user_judgment`, `record_manual_qa`, `record_eval`, `close_task`, `next`, and operator actions that call Core. They must not pass by matching Journey Card, user judgment, residual-risk, review-stage, or status prose.
+Agency, stewardship, context hygiene, and design-quality are catalog-only Assurance Profile suite candidates until owner docs promote them. After promotion and fixture materialization, they test state behavior through Core entrypoints such as `prepare_write`, `request_user_judgment`, `record_user_judgment`, `record_manual_qa`, `record_eval`, `close_task`, `next`, and operator actions that call Core. They must not pass by matching Journey Card, user judgment, residual-risk, review-stage, or status prose.
 
 Catalog suite responsibilities after owner promotion:
 

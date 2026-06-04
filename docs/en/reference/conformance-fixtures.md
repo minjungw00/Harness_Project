@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference to look up the core conformance model for future Harness Server runtime tests: what conformance proves, the small Engineering Checkpoint and MVP-1 fixture sets, exact fixture body shape, runner execution behavior, fixture assertion semantics, current-phase status, and the boundary to the future fixture catalog.
+Use this reference to look up the three-layer boundary for Harness conformance material: documentation checks, MVP behavior examples, and future runtime conformance. It explains what future conformance will prove, the small Engineering Checkpoint and MVP-1 behavior examples, exact future fixture body shape, future runner execution behavior, fixture assertion semantics, current-phase status, and the boundary to the future fixture catalog.
 
 This is a lookup document for conformance authors, implementers, and maintainers. It is not an operator procedure; use [Operations And Conformance Reference](operations-and-conformance.md) for operator entrypoints and the `harness conformance run` overview.
 
@@ -13,7 +13,7 @@ This is reference documentation for future conformance work. The current reposit
 - You are writing or reviewing the future fixture-based conformance design.
 - You need the exact fixture body fields, fixture shorthand boundary, `ToolEnvelope` expansion convention, or runner isolation behavior.
 - You need fixture assertion modes for state, events, artifacts, projections, errors, validators, close blockers, and redaction effects.
-- You need the small Engineering Checkpoint fixture set, the MVP-1 User Work Loop fixture set, the clarification-quality group, or the boundary between these sets and the future fixture catalog.
+- You need the small Engineering Checkpoint behavior examples, the MVP-1 User Work Loop behavior examples, the clarification-quality examples, or the boundary between those examples and the future fixture catalog.
 
 ## Before you read
 
@@ -21,9 +21,15 @@ Use [Operations And Conformance Reference](operations-and-conformance.md#conform
 
 ## Main idea
 
-Today this document is a future conformance design, not a set of runnable tests. It defines candidate fixture IDs and required behavior for later implementation planning; it does not create fixture files, runner code, generated outputs, runtime state, or a runnable Harness Server conformance suite. Do not create actual fixture files from these examples during the documentation-only phase.
+Today this document is a future conformance design, not a set of runnable tests. It defines behavior-example IDs and required behavior for later implementation planning; it does not create fixture files, runner code, generated outputs, runtime state, or a runnable Harness Server conformance suite. Do not create actual fixture files from these examples during the documentation-only phase.
 
-Conformance has two conceptual layers: the core conformance model and small delivery fixture sets in this file, and the [Future Fixtures](../later/future-fixtures.md) for detailed later scenarios. The core model stays small enough to explain Engineering Checkpoint Kernel Smoke and MVP-1 user-facing value without making later catalog coverage look like an early implementation requirement.
+Keep three layers separate:
+
+- Documentation checks are editorial checks over Markdown docs: link integrity, terminology consistency, stage boundaries, security wording, user-language checks, owner-boundary drift, and English/Korean parity. They do not execute fixture actions or create runtime results.
+- MVP behavior examples are compact design examples for Engineering Checkpoint and MVP-1. They describe expected behavior but are not executable fixtures yet and are not generated runtime artifacts.
+- Runtime conformance is future Harness Server implementation work. Only after server implementation and fixture materialization will exact-shape fixtures run through Core or operator entrypoints and produce runtime pass/fail results.
+
+The core model and small MVP behavior examples stay in this file. Detailed later scenarios stay in [Future Fixtures](../later/future-fixtures.md). This keeps Engineering Checkpoint Kernel Smoke and MVP-1 user-facing value understandable without making later catalog coverage look like an early implementation requirement.
 
 After implementation begins, conformance will prove Harness behavior with executable fixtures. A passing runtime fixture will drive a Core or operator action and compare captured Core/API or operator results against structured expectations.
 
@@ -44,7 +50,7 @@ This document owns:
 - isolated fixture execution behavior
 - fixture assertion semantics and comparison modes
 - suite catalog metadata boundaries
-- fixture profiles by behavior proved, the reduced Engineering Checkpoint / MVP-1 fixture sets, and the reduced Kernel Smoke authoring queue
+- future fixture profiles by behavior proved, the reduced Engineering Checkpoint / MVP-1 behavior examples, and the reduced Kernel Smoke authoring queue
 - current-phase status and the boundary between runtime conformance and docs-maintenance checks
 - links to the future-oriented catalog without making its scenarios Engineering Checkpoint or MVP-1 requirements
 
@@ -59,7 +65,7 @@ This reference does not own operator command procedures, docs-maintenance report
 | The exact fixture body fields | [Conformance Fixture Format](#conformance-fixture-format) |
 | How a runner loads, seeds, executes, captures, and compares | [Conformance Execution](#conformance-execution) |
 | Default comparison modes for `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error` | [Fixture Assertion Semantics](#fixture-assertion-semantics) |
-| Small delivery fixture sets | [Engineering Checkpoint Fixture Set](#v01-core-authority-smoke-fixture-set), [MVP-1 User Work Loop Fixture Set](#v02-first-user-value-slice-fixture-set), and [Clarification Quality Fixture Group](#clarification-quality-fixture-group) |
+| Small MVP behavior examples | [Engineering Checkpoint Behavior Examples](#v01-core-authority-smoke-fixture-set), [MVP-1 User Work Loop Behavior Examples](#v02-first-user-value-slice-fixture-set), and [Clarification Quality Behavior Examples](#clarification-quality-fixture-group) |
 | Suite intent and authoring order | [Conformance staging](operations-and-conformance.md#conformance-staging), [Kernel Smoke Authoring Queue](#kernel-smoke-authoring-queue), and [Future Fixtures: Fixture Suites](../later/future-fixtures.md#fixture-suites) |
 | Core model and current-phase boundary | [Core Conformance Model](#core-conformance-model) and [Fixture Current-Phase Status](#fixture-current-phase-status) |
 | Future fixture examples by concern | [Future Fixtures](../later/future-fixtures.md) |
@@ -90,17 +96,17 @@ The hardened local reference target is an umbrella target reached through Assura
 | Assurance Profile fixtures | Assurance Profile | User-owned judgment, Approval, Write Authorization, Manual QA, verification, work acceptance, residual-risk acceptance, stewardship, design-quality, context-hygiene, TDD, and feedback-loop boundaries stay separate and fixture-proven through Core records. | Operator recovery/export completeness, release handoff, broad operations coverage, dashboard/hosted workflow UI, broad connector automation, and unproven preventive or isolated guarantee claims. |
 | Operations Profile / promoted-expansion fixtures | Operations Profile and Roadmap | Export/recover, artifact integrity, release handoff, operator readiness, reconcile, broader conformance coverage, and any promoted future higher guarantee level or automation profile. | Any stronger security, isolation, preventive guard, browser-capture, remote/shared MCP, or automation claim until owner docs define the mechanism and fixtures prove the covered behavior. |
 
-## Small Staged Fixture Sets
+## MVP Behavior Examples
 
-The fixture sets below are documentation/specification targets for future executable fixtures. They are intentionally short and testable so early conformance stays focused on Harness differentiation: local authority state, user-owned judgment routing, evidence and risk visibility, and honest guarantee wording. They are not fixture files today, and they do not require the broad future catalog to pass Engineering Checkpoint or MVP-1.
+These behavior examples are design targets for the active MVP path. They are intentionally short and testable so future conformance can stay focused on Harness differentiation: local authority state, user-owned judgment routing, evidence and risk visibility, and honest guarantee wording. They are not executable fixtures yet, not generated runtime artifacts, and not current pass/fail criteria. They do not require the broad future catalog to satisfy Engineering Checkpoint or MVP-1.
 
 <a id="v01-core-authority-smoke-fixture-set"></a>
 
-### Engineering Checkpoint Fixture Set
+### Engineering Checkpoint Behavior Examples
 
-Engineering Checkpoint fixtures prove only the first local authority loop. Each candidate must assert Core-owned state, events when stable owner events exist, artifact refs where relevant, and structured errors or blockers. Projection assertions default to no requirement.
+Engineering Checkpoint behavior examples describe only the first local authority loop. If a future owner materializes them as fixtures, each fixture must assert Core-owned state, events when stable owner events exist, artifact refs where relevant, and structured errors or blockers. Projection assertions default to no requirement.
 
-| Fixture ID | Primary action | Required behavior assertion |
+| Example ID | Behavior path | Required behavior assertion |
 |---|---|---|
 | `CORE-v01-project-task-scope-setup` | owner setup path, `harness.intake`, or validated seed path | One local project, one active Task, and one scoped work boundary exist in Core-owned state; setup alone creates no Write Authorization and no product-write Run. |
 | `CORE-v01-prepare-write-in-scope-allowed` | `harness.prepare_write` | A compatible in-scope product-write request returns no primary error and creates one durable Write Authorization tied to the Task, scope/Change Unit, intended operation, and basis state version. |
@@ -112,11 +118,11 @@ Engineering Checkpoint fixtures prove only the first local authority loop. Each 
 
 <a id="v02-first-user-value-slice-fixture-set"></a>
 
-### MVP-1 User Work Loop Fixture Set
+### MVP-1 User Work Loop Behavior Examples
 
-MVP-1 fixtures prove user-visible Harness value without growing into the broad assurance or operations catalog. These candidates may use `harness.intake`, `harness.status` with `status.next_actions`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.prepare_write`, `harness.record_run`, and `harness.close_task` where those methods are active for the stage. A separate `harness.next` fixture belongs to later/compatibility material.
+MVP-1 behavior examples describe user-visible Harness value without growing into the broad assurance or operations catalog. If future fixtures materialize these examples, they may use `harness.intake`, `harness.status` with `status.next_actions`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.prepare_write`, `harness.record_run`, and `harness.close_task` where those methods are active for the stage. A separate `harness.next` fixture belongs to later/compatibility material.
 
-| Fixture ID | Required behavior assertion |
+| Example ID | Required behavior assertion |
 |---|---|
 | `MVP-v02-natural-language-starts-tracked-work` | Ordinary user language starts or resumes tracked work without requiring "Harness," `Task`, `Change Unit`, `Decision Packet`, or another startup phrase; the request alone does not authorize product writes. |
 | `MVP-v02-codebase-answerable-facts-checked-before-question` | Current seeded repo/codebase refs, Harness state refs, or connector/session facts are used before asking the user to repeat facts that are already answerable; unresolved user-owned judgments still route to focused questions. |
@@ -131,11 +137,13 @@ MVP-1 fixtures prove user-visible Harness value without growing into the broad a
 | `MVP-v02-projection-template-output-not-state` | Projection, template, status-card, or Markdown output remains derived; reading or editing it cannot create state, satisfy gates, authorize writes, attach evidence, accept work/risk, or close a Task. |
 | `MVP-v02-detached-verification-not-claimed-unless-recorded` | Detached verification is not claimed unless the active profile requires it and a compatible recorded Eval or owner verification path exists; same-session review or prose alone does not upgrade assurance. |
 
-### Clarification Quality Fixture Group
+<a id="clarification-quality-fixture-group"></a>
 
-Clarification-quality fixtures belong to the MVP-1 User Work Loop path when they prove that Harness asks for user judgment without substituting for it. Deeper policy-specific user judgment coverage remains Assurance Profile unless a MVP-1 path needs a minimal blocker.
+### Clarification Quality Behavior Examples
 
-| Fixture ID | Required behavior assertion |
+Clarification-quality behavior examples belong to the MVP-1 User Work Loop path when they show that Harness should ask for user judgment without substituting for it. Deeper policy-specific user judgment coverage remains Assurance Profile unless an MVP-1 path needs a minimal blocker.
+
+| Example ID | Required behavior assertion |
 |---|---|
 | `CLARIFY-codebase-answerable-question-not-asked` | The system does not ask the user for facts already available in current seeded repo/codebase refs, Harness state refs, or connector/session facts. |
 | `CLARIFY-unclear-requirements-not-one-superficial-question` | When requirements remain materially unclear, the system does not stop after one superficial question or proceed as if scope is settled. |
@@ -146,7 +154,7 @@ Clarification-quality fixtures belong to the MVP-1 User Work Loop path when they
 
 ## Conformance Fixture Format
 
-Future runtime conformance is fixture-based. A scenario table is not enough; each materialized test fixture must drive an action and assert state, events, artifacts, projection status when relevant, and errors.
+Future runtime conformance is fixture-based after Harness Server implementation and fixture materialization. A behavior-example table is not enough; each materialized test fixture must drive an action and assert state, events, artifacts, projection status when relevant, and errors.
 
 Each fixture must include this shape:
 
@@ -331,7 +339,7 @@ Fixture runners must use the same canonicalization rules as the reference implem
 
 This repository is documentation-only. No executable fixture files, executable fixture catalog files, generated projections, runtime state, databases, or Harness Server conformance tests are being created by this documentation batch.
 
-Fixture examples and queues are future authoring plans. They become runnable only after documentation acceptance, a separate implementation-planning readiness decision, Harness Server implementation, and a deliberate fixture-materialization step. Documentation maintenance checks may report Markdown drift, but they are not runtime conformance and do not create Core fixture results.
+MVP behavior examples, fixture examples, and queues are future authoring plans. They become runnable only after documentation acceptance, a separate implementation-planning readiness decision, Harness Server implementation, and a deliberate fixture-materialization step. Documentation checks may report Markdown drift, but they are not runtime conformance and do not create Core fixture results.
 
 ## Catalog-Only Fixture Skeleton Guidance
 
@@ -341,7 +349,7 @@ Detailed future catalog scenarios live in [Future Fixtures](../later/future-fixt
 
 ## Kernel Smoke Authoring Queue
 
-Use this queue as future authoring guidance for the [Engineering Checkpoint Fixture Set](#v01-core-authority-smoke-fixture-set). Kernel Smoke is the narrow authoring label for the first internal authority loop, not the first user-value slice, not a full conformance suite, and not the future fixture catalog. These rows do not imply executable fixture files already exist. They are a compact authoring order; a first implementation plan may materialize only the smallest subset that proves the one authority loop named by Build.
+Use this queue as future authoring guidance for the [Engineering Checkpoint Behavior Examples](#v01-core-authority-smoke-fixture-set). Kernel Smoke is the narrow authoring label for the first internal authority loop, not the first user-value slice, not a full conformance suite, and not the future fixture catalog. These rows do not imply executable fixture files already exist. They are a compact authoring order; a first implementation plan may materialize only the smallest subset that proves the one authority loop named by Build.
 
 Kernel Smoke defaults to no projection requirement. A fixture may assert projection freshness or enqueue/failure facts only when the minimal owner path already produces those facts and they help prove the target behavior. Projection-template polish, detailed report templates, multiple projection kinds, browser QA capture, export/recover, reconcile, stewardship, context hygiene, full operations, and future guarantee-level fixtures stay outside Engineering Checkpoint unless owner docs later promote a specific narrow path.
 

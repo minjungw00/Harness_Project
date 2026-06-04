@@ -2,19 +2,19 @@
 
 ## 이 문서로 할 수 있는 일
 
-작은 핵심 적합성 모델과 MVP 구현 경로에서 분리해서 향후 fixture 후보를 검토할 때 이 문서를 사용합니다. Browser QA, cross-surface behavior, export non-leakage, context hygiene, reconcile, stewardship, operations, advanced projection rendering, future guarantee-level check를 위한 detailed candidate scenario를 모아 둡니다.
+작은 핵심 적합성 모델, active MVP 동작 예시, MVP 구현 경로에서 분리해서 향후 fixture 후보를 검토할 때 이 문서를 사용합니다. Browser QA, cross-surface behavior, export non-leakage, context hygiene, reconcile, stewardship, operations, advanced projection rendering, future guarantee-level check를 위한 detailed candidate scenario를 모아 둡니다.
 
-이 문서는 향후 설계 문서입니다. 현재 저장소는 문서 전용이며 runnable Harness Server conformance test를 담고 있지 않습니다. 현재 단계와 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-수락-상태)에 있습니다.
+이 문서는 향후 설계 문서입니다. 현재 저장소는 문서 전용이며 실행 가능한 Harness Server 적합성 테스트, generated conformance artifact, 실행 가능한 fixture catalog file을 담고 있지 않습니다. 현재 단계와 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-수락-상태)에 있습니다.
 
 ## Catalog 경계
 
-핵심 적합성 모델, 정확한 fixture body, execution rule, assertion semantics, 좁은 내부 엔지니어링 점검 Kernel Smoke 작성 순서는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md)에 남습니다. 이 catalog는 의도적으로 그 모델의 downstream입니다. Catalog row는 fixture body, public API schema, DDL, stage exit, 이미 실행되는 fixture의 증거가 아닙니다.
+핵심 적합성 모델, MVP 동작 예시, exact future fixture body, execution rule, assertion semantics, 좁은 내부 엔지니어링 점검 Kernel Smoke 작성 순서는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md)에 남습니다. 이 catalog는 의도적으로 그 모델의 downstream이며 active MVP path 밖에 있습니다. Catalog row는 fixture body, public API schema, DDL, stage exit, generated runtime artifact, 이미 실행되는 fixture의 증거가 아닙니다.
 
-향후 catalog scenario는 담당 문서가 동작을 승격하고, delivery stage 또는 local suite를 식별하고, Core-owned state와 artifact assertion을 증명하는 exact-shape fixture로 구체화한 뒤에만 executable이 됩니다. Projection output은 freshness, readability, availability를 확인할 수 있지만 Core state를 대체하거나 conformance truth가 되면 안 됩니다.
+향후 catalog scenario는 담당 문서가 동작을 승격하고, delivery stage 또는 local suite를 식별하고, Core-owned state와 artifact assertion을 증명하는 exact-shape fixture로 구체화한 뒤에만 실행 가능해집니다. 그 전까지는 MVP 동작 예시나 runtime conformance result가 아니라 design inventory입니다. Projection output은 freshness, readability, availability를 확인할 수 있지만 Core state를 대체하거나 conformance truth가 되면 안 됩니다.
 
 ## Catalog 전용 Future Families
 
-아래 family는 의도적으로 이 catalog에 둡니다. 내부 엔지니어링 점검이나 MVP-1 사용자 작업 루프의 요구사항이 아니며, catalog에 나열되어 있다는 사실만으로 이후 단계의 필수 항목이 되지도 않습니다. 어떤 row가 executable conformance가 되려면 향후 담당 owner가 exact behavior, stage, fallback, security wording, exact-shape fixture를 먼저 승격해야 합니다.
+아래 family는 의도적으로 이 catalog에 둡니다. 내부 엔지니어링 점검이나 MVP-1 사용자 작업 루프의 요구사항이 아니며, catalog에 나열되어 있다는 사실만으로 이후 단계의 필수 항목이 되지도 않습니다. 어떤 row가 실행 가능한 conformance가 되려면 향후 담당 owner가 exact behavior, stage, fallback, security wording, exact-shape fixture를 먼저 승격해야 합니다.
 
 | Future family | Catalog boundary |
 |---|---|
@@ -29,7 +29,7 @@
 
 ## Artifact Redaction And Export Non-Leakage Catalog Entries
 
-이 catalog row들은 향후 scenario guidance입니다. 담당 owner path가 artifact metadata, owner link, redaction state, integrity, downstream state effect를 assert하면서 omitted secret 또는 PII value를 노출하지 않는 exact-shape fixture로 구체화할 때에만 executable이 됩니다.
+이 catalog row들은 향후 scenario guidance입니다. 담당 owner path가 artifact metadata, owner link, redaction state, integrity, downstream state effect를 assert하면서 omitted secret 또는 PII value를 노출하지 않는 exact-shape fixture로 구체화할 때에만 실행 가능해집니다.
 
 
 | Scenario ID | Action | Required assertions |
@@ -43,7 +43,7 @@
 
 ## Agency, Stewardship, Context, Design-Quality Suite
 
-Agency, stewardship, context hygiene, design-quality는 보증 프로필의 suite입니다. 이 suite들은 `prepare_write`, `request_user_judgment`, `record_user_judgment`, `record_manual_qa`, `record_eval`, `close_task`, `next` 같은 Core entrypoint와 Core를 호출하는 operator action을 통해 state behavior를 검증합니다. Journey Card, user judgment, residual-risk, review-stage, status prose의 문구가 맞는지만 보고 통과 처리하면 안 됩니다.
+Agency, stewardship, context hygiene, design-quality는 owner 문서가 승격하기 전까지 catalog-only 보증 프로필 suite candidate입니다. 승격과 fixture materialization 이후 이 suite들은 `prepare_write`, `request_user_judgment`, `record_user_judgment`, `record_manual_qa`, `record_eval`, `close_task`, `next` 같은 Core entrypoint와 Core를 호출하는 operator action을 통해 state behavior를 검증합니다. Journey Card, user judgment, residual-risk, review-stage, status prose의 문구가 맞는지만 보고 통과 처리하면 안 됩니다.
 
 담당 문서가 승격한 뒤의 catalog suite 책임:
 
@@ -58,7 +58,7 @@ Status/next recommendations는 Role Lens recommendations를 포함해 read respo
 
 `browser-qa-candidate` recommendation도 같은 read-only rule을 따릅니다. Recommendation은 `T6 QA Capture` 접점에서 Browser QA Capture가 유용하다고 이름 붙일 수 있지만, recommendation alone으로 상태를 변경하거나, projection을 대기열에 넣거나, artifact를 만들거나, evidence를 만들거나 충족하거나, verification을 수행 또는 기록하거나, QA를 기록하거나, QA 또는 verification을 면제하거나, 잔여 위험을 받아들이거나, 결과를 수락하거나, Task를 닫거나, assurance를 올리면 안 됩니다. 접점이 browser capture를 지원하지 않으면 unsupported capture를 staged-delivery failure로 다루는 대신 사람이 작성한 수동 QA notes와 수동 제공 artifacts fallback을 이름 붙여야 합니다. Actual artifacts, 수동 QA records, QA gate updates, Eval results, close effects에는 이후 Core를 통한 public mutation이 필요합니다.
 
-향후 suite 지도 요약: 이 항목들은 catalog-only 보증 프로필 suite family와 concern입니다. 여기에 나열됐다는 이유만으로 runnable fixture나 초기 MVP requirement가 되지 않습니다.
+향후 suite 지도 요약: 이 항목들은 catalog-only 보증 프로필 suite family와 concern입니다. 여기에 나열됐다는 이유만으로 실행 가능한 fixture나 초기 MVP requirement가 되지 않습니다.
 
 ```mermaid
 flowchart LR
@@ -76,23 +76,23 @@ flowchart LR
 
 ### Catalog-Only Fixture Skeleton Guidance
 
-아래 지침은 catalog family를 exact-shape fixture로 옮길 때 쓰는 skeleton guidance입니다. 이것은 catalog-only guidance이며 executable fixture body, public request schema, DDL extension, runner design이 아닙니다. Delivery-stage mapping은 suite catalog metadata에 두며 fixture body에 넣지 않습니다. "Minimum seeded records"는 Storage 규칙으로 expansion 및 validation을 거친 뒤 `initial_state`에 들어가는 owner record를 뜻합니다. Public mutation은 계속 정확한 MCP request payload를 `input`으로 사용합니다.
+아래 지침은 catalog family를 exact-shape fixture로 옮길 때 쓰는 skeleton guidance입니다. 이것은 catalog-only guidance이며 실행 가능한 fixture body, public request schema, DDL extension, runner design이 아닙니다. Delivery-stage mapping은 suite catalog metadata에 두며 fixture body에 넣지 않습니다. "Minimum seeded records"는 Storage 규칙으로 expansion 및 validation을 거친 뒤 `initial_state`에 들어가는 owner record를 뜻합니다. Public mutation은 계속 정확한 MCP request payload를 `input`으로 사용합니다.
 
 ### Later-Profile Fixture Shorthand Notes
 
-이 note는 catalog-only future guidance입니다. 내부 엔지니어링 점검나 MVP-1 사용자 작업 루프의 stage requirement가 아니며, 현재 문서 전용 저장소의 executable runner contract도 아니고, 두 번째 API도 아닙니다. 향후 owner가 관련 later profile을 승격하고 public mutation이 계속 public request schema를 통과하는 exact-shape fixture를 구체화한 뒤에만 사용할 수 있습니다.
+이 note는 catalog-only future guidance입니다. 내부 엔지니어링 점검나 MVP-1 사용자 작업 루프의 stage requirement가 아니며, 현재 문서 전용 저장소의 실행 가능한 runner contract도 아니고, 두 번째 API도 아닙니다. 향후 owner가 관련 later profile을 승격하고 public mutation이 계속 public request schema를 통과하는 exact-shape fixture를 구체화한 뒤에만 사용할 수 있습니다.
 
-Later-profile catalog example은 `owner_records`, `stewardship_findings`, selected-loop shorthand, full 수동 QA/Eval owner records, TDD Trace records, accepted residual risk state 같은 compact `initial_state` 또는 suite metadata shorthand를 사용할 수 있습니다. 어떤 fixture가 executable이 되기 전에는 이 shorthand가 DDL/API 문서가 명시적으로 소유하는 owner record, validator run, residual-risk record, 또는 다른 state로 expand되어야 합니다. Fixture-only storage row나 alternate request payload branch를 만들면 안 됩니다.
+Later-profile catalog example은 `owner_records`, `stewardship_findings`, selected-loop shorthand, full 수동 QA/Eval owner records, TDD Trace records, accepted residual risk state 같은 compact `initial_state` 또는 suite metadata shorthand를 사용할 수 있습니다. 어떤 fixture가 실행 가능해지기 전에는 이 shorthand가 DDL/API 문서가 명시적으로 소유하는 owner record, validator run, residual-risk record, 또는 다른 state로 expand되어야 합니다. Fixture-only storage row나 alternate request payload branch를 만들면 안 됩니다.
 
 Public mutation example은 계속 documented public request branch를 사용합니다. `close_task`의 `input`은 `ToolEnvelope` expansion 이후에도 `CloseTaskRequest`입니다. Evidence profile, changed paths, artifact refs, acceptance-criteria support, self-check summary, full 수동 QA record, Eval record, risk-acceptance state는 `initial_state`에 seed하거나 `record_run`, `record_eval`, `record_manual_qa`, `record_user_judgment` 같은 preceding public mutation fixture에서 record해야 합니다.
 
-Later feedback-loop와 TDD example에서 bare `FBL-*` ref 같은 shorthand는 catalog example 안에서만 나타날 수 있습니다. 향후 executable fixture는 이를 `StateRecordRef { record_kind: feedback_loop, record_id: ... }`로 매핑하고, documented schema를 통해 underlying owner record를 store 또는 mutate해야 합니다. Public mutation fixture는 definition change를 `record_run.payload.shaping_update.feedback_loop_updates` 아래의 `FeedbackLoopUpdate`로, execution/status change를 `evidence_updates.feedback_loop_updates`로, 수동 QA execution을 public `record_manual_qa` request branch로 표현합니다. Catalog row가 loop id와 status만 나열한다면, 향후 seed loader는 insert 또는 public request construction 전에 surrounding Task, Change Unit, selected-loop, evidence context에서 required owner field를 제공해야 합니다.
+Later feedback-loop와 TDD example에서 bare `FBL-*` ref 같은 shorthand는 catalog example 안에서만 나타날 수 있습니다. 향후 실행 가능한 fixture는 이를 `StateRecordRef { record_kind: feedback_loop, record_id: ... }`로 매핑하고, documented schema를 통해 underlying owner record를 store 또는 mutate해야 합니다. Public mutation fixture는 definition change를 `record_run.payload.shaping_update.feedback_loop_updates` 아래의 `FeedbackLoopUpdate`로, execution/status change를 `evidence_updates.feedback_loop_updates`로, 수동 QA execution을 public `record_manual_qa` request branch로 표현합니다. Catalog row가 loop id와 status만 나열한다면, 향후 seed loader는 insert 또는 public request construction 전에 surrounding Task, Change Unit, selected-loop, evidence context에서 required owner field를 제공해야 합니다.
 
 Accepted-risk shorthand는 later-profile state이며 seeded `residual_risk` record 위에 존재합니다. Standalone accepted-risk record가 아닙니다. Catalog example에서 `visible_refs`, `accepted_refs`, `not_visible_refs`, `unaccepted_refs`, `residual_risk_refs` 같은 곳에 있는 bare `RISK-*` 값은 실행 전에 `StateRecordRef { record_kind: residual_risk, record_id: ... }`로 매핑해야 합니다. 향후 staged-delivery fixture는 standalone `ARISK-*` record를 요구하면 안 됩니다.
 
 ### Intake와 Decision Catalog Entries
 
-이 항목들은 fixture body가 아닙니다. 평범한 사용자 언어 동작과 user judgment 품질을 다루되, exact fixture shape와 향후 executable fixture가 Core state, events, artifacts, projections, errors로 behavior를 증명해야 한다는 규칙은 유지합니다.
+이 항목들은 fixture body가 아닙니다. 평범한 사용자 언어 동작과 user judgment 품질을 다루되, exact fixture shape와 향후 실행 가능한 fixture가 Core state, events, artifacts, projections, errors로 behavior를 증명해야 한다는 규칙은 유지합니다.
 
 | Scenario ID | Core action | Required assertions |
 |---|---|---|
@@ -107,9 +107,9 @@ Accepted-risk shorthand는 later-profile state이며 seeded `residual_risk` reco
 
 ## Staged Fixture Coverage
 
-아래 row는 evidence, verification, connector, stewardship, projection, reconcile, operations, assurance 동작을 위한 향후 catalog candidate입니다. 담당 문서가 해당 동작을 구현 단계나 local suite로 승격한 뒤에만 executable requirement가 됩니다. Suite catalog는 planning을 위해 scenario ID를 candidate stage에 매핑할 수 있지만, 그 metadata는 fixture body의 일부가 아니며 그 자체로 내부 엔지니어링 점검 또는 MVP-1 exit criterion을 만들지 않습니다.
+아래 row는 evidence, verification, connector, stewardship, projection, reconcile, operations, assurance 동작을 위한 향후 catalog candidate입니다. 담당 문서가 해당 동작을 구현 단계나 local suite로 승격한 뒤에만 실행 가능한 requirement가 됩니다. Suite catalog는 planning을 위해 scenario ID를 candidate stage에 매핑할 수 있지만, 그 metadata는 fixture body의 일부가 아니며 그 자체로 내부 엔지니어링 점검 또는 MVP-1 exit criterion을 만들지 않습니다.
 
-아래 YAML block은 planning을 위한 향후 fixture 예시입니다. 현재 저장소의 fixture file이 아니며 runnable Harness Server conformance test가 이미 존재한다는 증거도 아닙니다. Assertion shape와 owner boundary를 보여 주기 위한 예시로 사용하고, promoted owner path가 target behavior를 증명하는 데 필요하지 않은 detailed template, renderer output, broad scenario coverage를 필수로 만들지 않습니다.
+아래 YAML block은 planning을 위한 향후 fixture 예시입니다. 현재 저장소의 fixture file이 아니며 실행 가능한 Harness Server 적합성 테스트가 이미 존재한다는 증거도 아닙니다. Assertion shape와 owner boundary를 보여 주기 위한 예시로 사용하고, promoted owner path가 target behavior를 증명하는 데 필요하지 않은 detailed template, renderer output, broad scenario coverage를 필수로 만들지 않습니다.
 
 ```yaml
 scenario_id: CORE-evidence-direct-docs-only-sufficient
@@ -2492,7 +2492,7 @@ expected_error: null
 
 ### 로드맵 Browser QA Capture Candidate Entries
 
-이 catalog entries는 future candidates이지 내부 엔지니어링 점검, MVP-1 사용자 작업 루프, 보증 프로필, 운영 프로필, 커널 스모크(Kernel Smoke) 요구사항이 아닙니다. Browser QA Capture capability profile, redaction 및 secret/PII policy, test environment, artifact retention, fixture 또는 conformance target, fallback 의미, projection-as-canonical 의존성 없음이 정의된 뒤에만 executable이 됩니다.
+이 catalog entries는 future candidates이지 내부 엔지니어링 점검, MVP-1 사용자 작업 루프, 보증 프로필, 운영 프로필, 커널 스모크(Kernel Smoke) 요구사항이 아닙니다. Browser QA Capture capability profile, redaction 및 secret/PII policy, test environment, artifact retention, fixture 또는 conformance target, fallback 의미, projection-as-canonical 의존성 없음이 정의된 뒤에만 실행 가능해집니다.
 
 에이전시 보증 팩 / 운영과 인계 팩의 staged 수동 QA 적용 범위는 기존 수동 QA record 또는 valid QA waiver, `qa_gate` behavior, Core owner path를 통해 제공된 registered artifact refs입니다. Automated Browser QA Capture는 승격 이후에 유용한 capture 보조 수단이지만, staged 수동 QA 또는 artifact coverage를 충족하기 위해 요구되지 않습니다.
 

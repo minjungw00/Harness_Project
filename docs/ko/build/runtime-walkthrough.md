@@ -4,7 +4,7 @@
 
 사용자 요청에서 close outcome까지 Harness work item 하나가 어떻게 지나가는지, 모든 엄격한 contract를 먼저 읽지 않고 따라갈 수 있게 합니다.
 
-이 문서는 Build 문서입니다. 구현자와 reviewer를 위해 runtime path를 요약하지만, 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, 런타임 데이터, 새 schema를 만들라는 뜻이 아닙니다. 첫 실행 목표는 내부 엔지니어링 점검이며, 커널 스모크(Kernel Smoke)는 좁은 향후 smoke-check 작성 라벨입니다. 첫 사용자 가치 목표는 MVP-1 사용자 작업 루프입니다. 보증 프로필과 운영 프로필은 agency assurance, 운영, 인계 동작을 단단하게 만들고, 로드맵은 owner 문서가 승격하고 증명하기 전까지 향후 범위에 남습니다.
+이 문서는 Build 문서입니다. 구현자와 reviewer를 위해 runtime path를 요약하지만, 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, 런타임 데이터, 새 schema를 만들라는 뜻이 아닙니다. 첫 향후 구현 목표는 내부 엔지니어링 점검이며, 커널 스모크(Kernel Smoke)는 좁은 향후 smoke-check 작성 라벨입니다. 첫 사용자 가치 목표는 MVP-1 사용자 작업 루프입니다. 보증 프로필과 운영 프로필은 agency assurance, 운영, 인계 동작을 단단하게 만들고, 로드맵은 owner 문서가 승격하고 증명하기 전까지 향후 범위에 남습니다.
 
 ## 읽는 경우
 

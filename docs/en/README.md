@@ -81,7 +81,7 @@ Server implementer fast path:
 4. [API Schema Core](reference/api/schema-core.md) and [API Errors](reference/api/errors.md) for shared envelopes, refs, resources, errors, idempotency, and state conflicts.
 5. [Storage](reference/storage.md) for persisted runtime layout, state tables, locks, artifacts, and migrations.
 
-[Engineering Checkpoint](build/engineering-checkpoint.md) is the first internal authority-loop smoke and should be read when planning the first runnable slice. [Runtime Walkthrough](build/runtime-walkthrough.md) and [Core Model Reference](reference/core-model.md) help once the implementer needs exact request-to-close behavior.
+[Engineering Checkpoint](build/engineering-checkpoint.md) is the first internal authority-loop smoke and should be read when planning the first implementation slice. [Runtime Walkthrough](build/runtime-walkthrough.md) and [Core Model Reference](reference/core-model.md) help once the implementer needs exact request-to-close behavior.
 
 Keep future/diagnostic material outside the MVP implementation path unless a Build or Reference owner explicitly promotes it for the stage being planned.
 

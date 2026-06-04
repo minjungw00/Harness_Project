@@ -4,7 +4,13 @@
 
 This document owns the MVP-1 User Work Loop plan and the surrounding staged delivery boundary. Engineering Checkpoint is an internal authority-loop smoke for Core-owned state, not a product MVP. MVP-1 User Work Loop is the first user-value milestone: the first narrow user-facing loop where ordinary work can be tracked, explained, and blocked honestly without becoming a full assurance, QA, evaluation, reporting, or operations system.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is Engineering Checkpoint, with Kernel Smoke as a narrow future smoke-check authoring label. The first user-value target is MVP-1 User Work Loop. Assurance Profile and Operations Profile harden agency assurance, operations, and handoff behavior later. Roadmap remains future scope unless owner docs promote and prove it.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first future implementation target is Engineering Checkpoint, with Kernel Smoke as a narrow future smoke-check authoring label. The first user-value target is MVP-1 User Work Loop. Assurance Profile and Operations Profile harden agency assurance, operations, and handoff behavior later. Roadmap remains future scope unless owner docs promote and prove it.
+
+Use three layers when reading this plan:
+
+- Documentation checks keep this documentation set coherent: link integrity, terminology consistency, stage boundaries, security wording, and user-language checks.
+- MVP behavior examples describe expected Engineering Checkpoint and MVP-1 behavior, but they are not executable fixtures yet and are not generated runtime artifacts.
+- Runtime conformance is future server implementation work through materialized fixture tests/runners, not active in this documentation-only phase.
 
 Use this when you need to plan what to build after documentation acceptance and a separate implementation-planning readiness decision. Use the reference docs for exact contracts.
 
@@ -39,7 +45,7 @@ The early output model is intentionally small:
 
 ## MVP-1 User Work Loop implementation contract
 
-MVP-1 User Work Loop is the first user-value implementation contract. It is reached after Engineering Checkpoint and must not be pulled into the first runnable internal smoke. Its target statement is:
+MVP-1 User Work Loop is the first user-value implementation contract. It is reached after Engineering Checkpoint and must not be pulled into the first internal authority smoke. Its target statement is:
 
 When a user starts work in plain language, Harness preserves a local basis for the work scope, pending user judgments, evidence summary, close blockers, next safe action, and minimal separation between work acceptance and residual-risk acceptance.
 
@@ -71,7 +77,7 @@ This contract is deliberately user-visible but small. It does not require detach
 
 | Concept | What it proves | What it does not prove |
 |---|---|---|
-| Engineering Checkpoint | A first runnable internal Core authority loop over one local project registration, one active Task, one scoped boundary, one `prepare_write` pre-write scope-check path, one single-use internal Write Authorization record, one recorded Run, one artifact/evidence ref, and one structured status/blocker response. | User-facing product value, natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, operations/export/recover, dashboards, and connectors. |
+| Engineering Checkpoint | The first future internal Core authority loop over one local project registration, one active Task, one scoped boundary, one `prepare_write` pre-write scope-check path, one single-use internal Write Authorization record, one recorded Run, one artifact/evidence ref, and one structured status/blocker response. | User-facing product value, natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, operations/export/recover, dashboards, and connectors. |
 | MVP-1 User Work Loop | Users can start or resume tracked work in ordinary language and see Core-derived scope, non-goals, success criteria, judgment requests/records, status/next output, evidence summary, close blockers, residual-risk visibility, and separated sensitive approval / work acceptance / risk acceptance display through the five compact views: `status-card`, `agent-context-packet`, `judgment-request`, `run-evidence-summary`, and `close-result`. | Dashboard, hosted UI, full Decision Packet output for every judgment, OS-level sandbox or permission isolation, detailed Evidence Manifest, full report/export, runtime conformance suite, operations/recovery/handoff pack, full detached verification unless an active profile requires it, full Manual QA matrix, full waiver machinery, polished Journey/Spine/reporting, detailed Eval, TDD Trace, Module Map, Interface Contract, broad connectors, and operations suite. |
 | Assurance Profile | The MVP-1 user-value path is hardened with verification, QA, residual-risk, work-acceptance, and stewardship profiles. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
 | Operations Profile | The same Core model supports doctor/readiness, recover/export, artifact integrity, release handoff, and broader conformance coverage. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
@@ -97,9 +103,9 @@ flowchart LR
   Ops -. roadmap .-> Expansion["Roadmap"]
 ```
 
-Kernel Smoke remains a narrow future authoring label for Engineering Checkpoint checks. The label does not make Engineering Checkpoint a product MVP, and it does not require a full conformance suite, conformance runner, or future fixture catalog before the internal Core authority path is proven.
+Kernel Smoke remains a narrow future authoring label for Engineering Checkpoint checks. The label does not make Engineering Checkpoint a product MVP, and it does not require a full conformance suite, conformance runner, generated conformance artifacts, or future fixture catalog before the internal Core authority path is proven.
 
-Conformance fixture profiles follow the same boundaries: Engineering Checkpoint fixtures for Engineering Checkpoint, MVP-1 User Work Loop fixtures for MVP-1 User Work Loop, Assurance Profile fixtures for Assurance Profile, and Operations Profile or promoted-expansion fixtures for Operations Profile and promoted Roadmap candidates.
+Future runtime conformance profiles follow the same boundaries after fixtures are materialized: Engineering Checkpoint fixtures for Engineering Checkpoint, MVP-1 User Work Loop fixtures for MVP-1 User Work Loop, Assurance Profile fixtures for Assurance Profile, and Operations Profile or promoted-expansion fixtures for Operations Profile and promoted Roadmap candidates. Before that point, the active MVP path uses behavior examples, not executable fixtures.
 
 The hardened local reference target is only the aggregate target reached by Assurance Profile and Operations Profile, not a profile name or separate delivery stage.
 
@@ -171,9 +177,9 @@ Engineering Checkpoint must prove:
 
 The matching storage path is the minimal authority subset of [Storage: MVP-1 minimal storage schema](../reference/storage.md#mvp-1-minimal-storage-schema): project identity, one Task, one task-scope/Change Unit row, one cooperative write-check / Write Authorization path, one Run, one evidence ref, and structured blockers. User-facing judgment records are added for MVP-1 user value, but Approval records, detailed Evidence Manifest, Manual QA, Eval, residual-risk lifecycle tables, projection jobs, reconcile items, validator runs, Journey records, and diagnostic/stewardship tables remain later-profile storage unless a profile owner explicitly promotes them.
 
-Engineering Checkpoint explicitly excludes natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, Product/UX judgment versus Technical judgment presentation, stewardship, feedback-loop policy, projection rendering, conformance runner, operations/export/recover, dashboards, connectors, broad operator entrypoints, future fixture catalog, and release handoff. Those are later stages or future scope.
+Engineering Checkpoint explicitly excludes natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, Product/UX judgment versus Technical judgment presentation, stewardship, feedback-loop policy, projection rendering, conformance runner, generated conformance artifacts, operations/export/recover, dashboards, connectors, broad operator entrypoints, future fixture catalog, and release handoff. Those are later stages or future scope.
 
-Kernel Smoke candidates for Engineering Checkpoint should assert only the minimal authority loop through Core state, the required owner records for that loop, artifact/evidence refs, and structured blockers. Projection polish, detailed templates, renderer output, and broad fixture catalogs are not first-slice conformance truth.
+Kernel Smoke behavior-example candidates for Engineering Checkpoint should cover only the minimal authority loop through Core state, the required owner records for that loop, artifact/evidence refs, and structured blockers. Projection polish, detailed templates, renderer output, and broad fixture catalogs are not first-slice conformance truth.
 
 At this point, an implementer can observe that Core owns the minimal state, a scoped write is compatible or rejected with a structured blocker, one internal Write Authorization record is consumed once, an artifact/evidence ref is linked to the recorded Run, and status/blocker output can return structured blockers. This is implementer confidence, not proof that users experience Harness value.
 
@@ -258,7 +264,7 @@ flowchart LR
   Blocker --> Status
 ```
 
-Exact state and blocker behavior is owned by [Core Model Reference](../reference/core-model.md), public tool shapes by [MVP API](../reference/api/mvp-api.md), shared API shapes by [API Schema Core](../reference/api/schema-core.md), API errors by [API Errors](../reference/api/errors.md), and active-path fixture body/assertion mechanics by [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format). Later-profile scenario and shorthand catalogs stay in [Future Fixtures](../later/future-fixtures.md) and do not add requirements to this flow. This flow does not add pack gates, projection-renderer requirements, or fixture body requirements.
+Exact state and blocker behavior is owned by [Core Model Reference](../reference/core-model.md), public tool shapes by [MVP API](../reference/api/mvp-api.md), shared API shapes by [API Schema Core](../reference/api/schema-core.md), API errors by [API Errors](../reference/api/errors.md), and future runtime fixture body/assertion mechanics by [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format). Later-profile scenario and shorthand catalogs stay in [Future Fixtures](../later/future-fixtures.md) and do not add requirements to this flow. This flow does not add pack gates, projection-renderer requirements, fixture body requirements, or generated conformance artifacts.
 
 For future smoke authoring order, use the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). It maps candidate checks to this internal slice without implying executable fixture files already exist or that Engineering Checkpoint requires a full conformance suite.
 
@@ -296,7 +302,7 @@ Evidence records, readable summaries, and projection freshness support this expe
 
 MVP-1 explicitly excludes dashboard, hosted UI, full Decision Packet output for every judgment, OS-level sandbox or permission isolation, detailed Evidence Manifest, full report/export, runtime conformance suite, operations/recovery/handoff pack, full detached verification independence unless an active profile requires it, the full Manual QA matrix, full waiver machinery, polished Journey/Spine/reporting, detailed Eval, TDD Trace, Module Map, Interface Contract, broad connectors, operations suite, stewardship validators, feedback-loop policy, release handoff, Browser QA Capture, Cross-Surface Verification automation, Context Index, metrics, team workflow, and orchestration.
 
-Passing MVP-1 means a user can see why Harness is more than a write-check wrapper: it keeps the work's scope, judgments, evidence summary, close blockers, acceptance boundaries, and risk visibility locally inspectable.
+Meeting the MVP-1 exit criteria means a user can see why Harness is more than a write-check wrapper: it keeps the work's scope, judgments, evidence summary, close blockers, acceptance boundaries, and risk visibility locally inspectable.
 
 ## Assurance Profile
 
@@ -313,9 +319,9 @@ Focus on:
 - TDD trace behavior where policy requires it
 - feedback-loop policy where policy requires it
 - context-hygiene validators and current-state versus stale-context boundaries
-- Assurance Profile conformance fixtures that prove judgment, QA, verification, residual-risk, and acceptance separation through Core state, events, artifacts, projection/freshness facts, and errors
+- future Assurance Profile conformance fixtures that prove judgment, QA, verification, residual-risk, and acceptance separation through Core state, events, artifacts, projection/freshness facts, and errors after runtime suites are materialized
 
-Passing this profile means the user-value path is agency-preserving, policy-aware, and honest about verification, QA, residual risk, acceptance, and stewardship boundaries. It does not promote Roadmap automation into staged delivery.
+Meeting this profile means the user-value path is agency-preserving, policy-aware, and honest about verification, QA, residual risk, acceptance, and stewardship boundaries. It does not promote Roadmap automation into staged delivery.
 
 ## Operations Profile
 
@@ -328,7 +334,7 @@ Focus on:
 - export behavior for state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, and retained, expired, or unavailable artifact status
 - artifact integrity checks
 - release handoff report/export profile where owner docs define it
-- operator smoke over the Operations Profile: connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifacts check, and conformance run, with earlier stages retaining only their smaller subsets
+- future operator smoke over the Operations Profile: connect, doctor, serve MCP, projection refresh, reconcile, recover, export, artifacts check, and conformance run after runtime suites are materialized, with earlier stages retaining only their smaller subsets
 - operations/future fixture coverage for export/recover, artifact integrity, release handoff, operator readiness, and higher guarantee levels only where owner docs define and prove them
 - later-boundary checks that keep roadmap items in Roadmap unless separately proven and promoted
 
@@ -401,13 +407,13 @@ Use these as implementation-readable checklists for future runtime planning afte
 
 ### Assurance Profile exit checklist
 
-- User judgment quality and routing are fixture-proven.
+- User judgment quality and routing are fixture-proven after Assurance Profile runtime fixtures are materialized.
 - Sensitive-action Approval does not substitute for User Judgments, Write Authorization, Manual QA, verification, work acceptance, or residual-risk acceptance.
-- Detached verification independence and same-session verification guard behavior are fixture-proven.
-- Manual QA policy matrix and QA blockers are fixture-proven where policy requires them.
+- Detached verification independence and same-session verification guard behavior are fixture-proven after the relevant Assurance Profile runtime fixtures are materialized.
+- Manual QA policy matrix and QA blockers are fixture-proven where policy requires them after the relevant runtime fixtures are materialized.
 - Risk-accepted close cites residual-risk acceptance user-judgment refs and later rich Residual Risk refs only when that owner profile is active.
 - Stewardship validators, feedback-loop policy, TDD trace behavior, and context-hygiene behavior are covered where policy requires them.
-- Agency conformance proves Journey visibility, user-judgment routing, Autonomy Boundary respect, distinct judgment categories/routes, and residual-risk handling.
+- Future agency conformance proves Journey visibility, user-judgment routing, Autonomy Boundary respect, distinct judgment categories/routes, and residual-risk handling after runtime suites are materialized.
 
 ### Operations Profile exit checklist
 

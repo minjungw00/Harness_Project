@@ -4,7 +4,7 @@
 
 이 문서는 Build 개요를 구현자가 가장 먼저 계획해야 하는 내부 엔지니어링 점검으로 바꿉니다. 이 점검은 첫 내부 authority-loop smoke입니다.
 
-이 문서는 구현 계획 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture, fixture 파일, 런타임 데이터를 만들라는 뜻이 아닙니다. Conformance fixture 문서는 향후 적합성 검증 계획이며, 현재 문서 전용 저장소에는 실행 가능한 Harness Server conformance test가 없습니다. 첫 실행 목표는 내부 엔지니어링 점검이며, 커널 스모크(Kernel Smoke)는 좁은 향후 smoke-check 작성 라벨입니다. 이것은 내부 smoke 단계이지 제품 MVP가 아닙니다. 첫 사용자 가치 목표는 MVP-1 사용자 작업 루프입니다.
+이 문서는 구현 계획 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture, fixture 파일, 런타임 데이터를 만들라는 뜻이 아닙니다. Conformance fixture 문서는 향후 적합성 검증 계획이며, 현재 문서 전용 저장소에는 실행 가능한 Harness Server conformance test가 없습니다. 첫 향후 구현 목표는 내부 엔지니어링 점검이며, 커널 스모크(Kernel Smoke)는 좁은 향후 smoke-check 작성 라벨입니다. 이것은 내부 smoke 단계이지 제품 MVP가 아닙니다. 첫 사용자 가치 목표는 MVP-1 사용자 작업 루프입니다.
 
 ## 이런 때 읽기
 
@@ -234,7 +234,7 @@ Owner contract: status와 `status.next_actions` schema는 [`harness.status`](../
 
 ## 향후 Smoke Checks
 
-문서 수락과 구현 계획 준비 인계 이후에는 Core 동작을 실행하고 minimal owner record, artifact/evidence ref, structured status/blocker 응답, errors를 확인하는 가장 작은 Kernel Smoke check로 내부 엔지니어링 점검을 매핑합니다. Rendered prose나 polished projection output matching만으로 success를 검증하지 않습니다. 이 행들은 future authoring candidate이며 executable fixture file이 지금 존재한다거나 전체 conformance suite가 필요하다고 암시하지 않습니다.
+문서 수락과 구현 계획 준비 인계 이후에는 Core 동작을 실행하고 minimal owner record, artifact/evidence ref, structured status/blocker 응답, errors를 확인하는 가장 작은 Kernel Smoke check로 내부 엔지니어링 점검을 매핑합니다. Rendered prose나 polished projection output matching만으로 success를 검증하지 않습니다. 이 행들은 future authoring candidate이며 실행 가능한 fixture file이 지금 존재한다거나 전체 conformance suite가 필요하다고 암시하지 않습니다.
 
 Build는 내부 엔지니어링 점검 scope intent만 담당합니다. 범위는 local project registration, active Task 하나, scoped boundary 하나, `prepare_write` allow/block, 한 번만 쓰는 Write Authorization 하나, `record_run` consume/block, artifact/evidence ref 하나, structured status/blocker 출력 하나입니다. Projection polish, detailed template, full Evidence Manifest behavior, conformance runner behavior, broad fixture catalog는 내부 엔지니어링 점검 requirement가 아닙니다. Exact future fixture queue, body field, active-path seed boundary, assertion mode, stable event, artifact/projection assertion, primary-error expectation은 [커널 스모크(Kernel Smoke) Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue)와 [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format)이 담당하며, later-profile shorthand와 example은 [향후 Fixtures](../later/future-fixtures.md)에 남습니다.
 

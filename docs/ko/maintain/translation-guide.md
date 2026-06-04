@@ -4,7 +4,7 @@
 
 영어와 한국어 하네스 문서를 함께 고칠 때 이 가이드를 사용합니다.
 
-이 문서는 이중 언어 문서 유지보수를 위한 Maintain 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 런타임/서버 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, 런타임 데이터, 제품 상태 변경을 허가하지 않으며, conformance pass/fail, 근거, QA, 작업 수락, 닫기 준비 상태, 구현 준비 상태를 정의하지 않습니다. 첫 실행 목표는 내부 엔지니어링 점검입니다. 이는 제품 MVP가 아니라 내부 authority-loop smoke입니다. 커널 스모크(Kernel Smoke)는 이 점검 아래의 좁은 future smoke-check 작성 라벨일 뿐입니다. 첫 사용자 가치 목표는 MVP-1 사용자 작업 루프입니다. 보증 프로필과 운영 프로필은 이후 assurance와 operations를 단단하게 만듭니다. MVP-1 이후 이 프로필들을 완료하면 용어집이 정의하는 강화된 로컬 기준 목표(hardened local reference target)에 도달합니다. 이 강화된 로컬 기준 목표 자체는 상위 목표일 뿐, 추가 단계나 fixture profile, suite name이 아닙니다. 로드맵은 담당 문서가 승격하고 증명하기 전까지 향후 범위에 남습니다.
+이 문서는 이중 언어 문서 유지보수를 위한 Maintain 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 런타임/서버 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, 런타임 데이터, 제품 상태 변경을 허가하지 않으며, conformance pass/fail, 근거, QA, 작업 수락, 닫기 준비 상태, 구현 준비 상태를 정의하지 않습니다. 첫 향후 구현 목표는 내부 엔지니어링 점검입니다. 이는 제품 MVP가 아니라 내부 authority-loop smoke입니다. 커널 스모크(Kernel Smoke)는 이 점검 아래의 좁은 future smoke-check 작성 라벨일 뿐입니다. 첫 사용자 가치 목표는 MVP-1 사용자 작업 루프입니다. 보증 프로필과 운영 프로필은 이후 assurance와 operations를 단단하게 만듭니다. MVP-1 이후 이 프로필들을 완료하면 용어집이 정의하는 강화된 로컬 기준 목표(hardened local reference target)에 도달합니다. 이 강화된 로컬 기준 목표 자체는 상위 목표일 뿐, 추가 단계나 fixture profile, suite name이 아닙니다. 로드맵은 담당 문서가 승격하고 증명하기 전까지 향후 범위에 남습니다.
 
 ## 이런 때 읽기
 

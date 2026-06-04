@@ -4,7 +4,7 @@
 
 This document turns the Build overview into the Engineering Checkpoint an implementer should plan first: the first internal authority-loop smoke.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first runnable target is Engineering Checkpoint, with Kernel Smoke as a narrow future smoke-check authoring label. It is an internal smoke milestone, not a product MVP. The first user-value target is MVP-1 User Work Loop.
+This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first future implementation target is Engineering Checkpoint, with Kernel Smoke as a narrow future smoke-check authoring label. It is an internal smoke milestone, not a product MVP. The first user-value target is MVP-1 User Work Loop.
 
 ## Read this when
 
@@ -67,7 +67,7 @@ Passing this story means Engineering Checkpoint works. It does not mean users ha
 
 Use these checks to review the planned Engineering Checkpoint before executable fixtures exist, and again when mapping the slice to the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). They are planning checks, not fixture body fields, schema additions, DDL, or runtime authorization.
 
-A proposed first runnable slice is acceptable when:
+A proposed first implementation slice is acceptable when:
 
 - It remains local, single-project, and focused on one Task authority loop.
 - It stays planning-only until the [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status) explicitly marks implementation-planning readiness as accepted for the first runtime batch.
@@ -209,7 +209,7 @@ Owner contracts: status and `status.next_actions` schemas are owned by [`harness
 
 ## What this proves
 
-The first runnable slice proves:
+The first implementation slice proves:
 
 - Core can own state transitions.
 - A scoped record is required for product writes.

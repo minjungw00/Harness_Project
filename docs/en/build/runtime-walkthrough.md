@@ -4,7 +4,7 @@
 
 Follow one Harness work item from user request to close outcome without reading every strict contract first.
 
-This is Build documentation. It summarizes the runtime path for implementers and reviewers, but it does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or new schemas before documentation acceptance and a separate implementation-planning readiness decision. The first runnable target is Engineering Checkpoint, with Kernel Smoke as a narrow future smoke-check authoring label. The first user-value target is MVP-1 User Work Loop. Assurance Profile and Operations Profile harden agency assurance, operations, and handoff behavior, and Roadmap remains future scope unless owner docs promote and prove it.
+This is Build documentation. It summarizes the runtime path for implementers and reviewers, but it does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or new schemas before documentation acceptance and a separate implementation-planning readiness decision. The first future implementation target is Engineering Checkpoint, with Kernel Smoke as a narrow future smoke-check authoring label. The first user-value target is MVP-1 User Work Loop. Assurance Profile and Operations Profile harden agency assurance, operations, and handoff behavior, and Roadmap remains future scope unless owner docs promote and prove it.
 
 ## Read this when
 
