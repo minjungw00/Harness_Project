@@ -1,437 +1,172 @@
 # Build: MVP-1 사용자 작업 루프
 
-## 이 문서로 할 수 있는 일
+## 이 문서가 도와주는 일
 
-이 문서는 MVP-1 사용자 작업 루프 계획과 그 주변의 단계 경계를 담당합니다. 내부 엔지니어링 점검은 Core가 권한 상태를 소유한다는 사실을 확인하는 좁은 내부 smoke 단계이며 제품 MVP가 아닙니다. MVP-1 사용자 작업 루프는 첫 사용자 가치 이정표입니다. 사용자가 평범한 말로 작업을 시작하거나 이어 가며 범위, 판단 요청, 근거 요약, 닫기 막힘, 다음 안전한 행동, 잔여 위험을 볼 수 있는 최소 경로이지 전체 보증, QA, Eval, 보고, 운영, 대시보드 시스템이 아닙니다.
+이 문서는 첫 사용자 가치 구현 이정표인 MVP-1 사용자 작업 루프를 계획할 때 사용합니다. 서버 코딩을 아직 막는 구현 결정도 이 문서에 중앙화합니다.
 
-이 문서는 구현 계획 문서입니다. 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture, fixture 파일, 런타임 데이터를 만들라는 뜻이 아닙니다. Conformance fixture 문서는 향후 적합성 검증 계획이며, 현재 문서 전용 저장소에는 실행 가능한 Harness Server conformance test가 없습니다. 첫 향후 구현 목표는 내부 엔지니어링 점검이며, 커널 스모크(Kernel Smoke)는 좁은 향후 smoke-check 작성 라벨입니다. 첫 사용자 가치 목표는 MVP-1 사용자 작업 루프입니다. 보증 프로필과 운영 프로필은 agency assurance, 운영, 인계 동작을 나중에 단단하게 만듭니다. 로드맵은 담당 문서가 승격하고 증명하기 전까지 향후 범위에 둡니다.
+내부 엔지니어링 점검이 먼저이며, 그 점검은 내부 Core authority loop를 증명합니다. MVP-1 사용자 작업 루프는 그 뒤에 옵니다. 사용자의 평소 작업을 추적하고, 설명하고, 정직하게 막고, 보이는 권한 경계 안에서 닫거나 보류할 수 있음을 증명합니다.
 
-이 계획을 읽을 때는 세 층을 구분합니다.
+이 문서는 계획 문서입니다. [구현 개요](implementation-overview.md#문서-수락-상태)의 handoff gate가 수락되기 전에는 런타임/서버 구현, generated operational artifact, executable fixture file, runtime data, product code, conformance runner를 허가하지 않습니다.
 
-- 문서 점검은 link integrity, terminology consistency, stage boundary, security wording, user-language check로 문서 세트가 일관적인지 확인합니다.
-- MVP 동작 예시는 내부 엔지니어링 점검과 MVP-1의 기대 동작을 설명하지만 아직 실행 가능한 fixture가 아님. Generated runtime artifact도 아닙니다.
-- 향후 런타임 적합성은 materialized fixture test/runner를 통한 future server implementation work이며, 현재 문서 전용 단계에서는 active하지 않습니다.
+## 이런 때 읽기
 
-문서 수락과 별도의 구현 계획 준비 결정 이후 무엇을 만들지 계획할 때 이 문서를 사용합니다. 정확한 contract는 Reference 문서를 사용합니다.
-
-## 읽는 경우
-
-- 첫 내부 권한 증명과 첫 사용자 가치 조각을 분리해야 할 때.
-- 첫 implementation batch를 키우지 않으면서 단계별 전달 범위를 검토해야 할 때.
-- 구현 순서를 storage, schema, fixture, template detail과 분리해서 보고 싶을 때.
-
-## 먼저 읽을 것
-
-[구현 개요](implementation-overview.md)와 그 [문서 수락 상태](implementation-overview.md#문서-수락-상태)를 먼저 읽은 뒤 이 단계 계획을 사용합니다. 내부 엔지니어링 점검 구현 순서는 [내부 엔지니어링 점검](engineering-checkpoint.md)을, request-to-close runtime path는 [Runtime Walkthrough](runtime-walkthrough.md)를 사용합니다.
-
-정확한 계약은 [Reference 색인](../reference/README.md)에서 지금 필요한 질문의 owner를 골라 확인합니다. 로드맵 후보와 승격 기준은 [로드맵](../roadmap.md)을 사용합니다.
+- 내부 checkpoint 범위와 첫 사용자 가치 조각을 구분해야 할 때.
+- MVP-1에 무엇이 포함되고 제외되는지 알아야 할 때.
+- MVP-1 API, storage, security 담당 문서를 exact contract 중복 없이 찾아야 할 때.
+- 서버 코딩 전 중앙 결정 기록이 필요할 때.
 
 ## 핵심 생각
 
-하네스의 가치는 단지 쓰기 전 범위 확인 루프가 있다는 데 있지 않습니다. 하네스는 범위, 사용자 소유 판단, 근거 참조, 닫기 준비 상태, 수락 경계, 잔여 위험을 로컬 권한 기록에 보존해야 합니다. 그래서 초기 전달에는 두 단계가 있습니다.
+MVP-1 사용자 작업 루프의 목표는 다음과 같습니다.
 
-- 내부 엔지니어링 점검은 가장 작은 내부 Core 권한 루프를 증명합니다.
-- MVP-1 사용자 작업 루프는 사용자가 평범한 말로 추적되는 작업을 시작하거나 이어 가고, 범위와 판단 경계, 근거 요약, 닫기 막힘, 다음 안전한 행동, 잔여 위험 표시를 볼 수 있음을 증명합니다.
+> 사용자가 평소 말로 작업을 시작하거나 이어갈 때, 하네스는 범위, 대기 중인 사용자 판단, 근거 요약, 닫기 막힘, 다음 안전한 행동, 작업 수락, 잔여 위험 표시의 로컬 근거를 보존한다.
 
-첫 조각은 의도적으로 좁게 유지합니다. 로컬 프로젝트 등록 하나, active Task 하나, scoped boundary 하나, `prepare_write` 쓰기 전 범위 확인 경로 하나, 한 번만 쓰는 내부 Write Authorization record 하나, 기록된 Run 하나, artifact/evidence 참조 하나, 구조화된 상태/막힘 응답 하나를 증명합니다. 이것은 제품 MVP가 아닙니다. MVP-1은 일반적인 작업을 범위, 하지 않을 일, 성공 기준, 사용자 소유 판단, 근거 요약, 닫기 막힘, 잔여 위험 표시로 바꾸고 민감 동작 승인, 작업 수락, 잔여 위험 수용을 혼동하지 않게 만드는 첫 사용자 가치 단계입니다.
+MVP-1은 일부러 좁습니다. 하네스가 prompt pack이나 pre-write wrapper보다 크다는 점을 보여 주기에는 충분해야 합니다. 하지만 full assurance system, QA matrix, evaluation harness, reporting suite, operations suite, dashboard, hosted UI, connector platform은 아닙니다.
 
-읽기용 요약(Projection) 템플릿 다듬기, 상세 보고서, dashboard 또는 hosted workflow UI, index, broad connector ecosystem 또는 marketplace, team workflow, surface-specific connector automation, metric, parallel orchestration, broad automation은 authority record와 user-facing value path가 존재한 뒤 유용해질 수 있습니다. 첫 조각의 요구사항은 아닙니다.
+## MVP-1에 포함되는 것
 
-초기 output model은 의도적으로 작게 둡니다.
+MVP-1에는 아래가 포함됩니다.
 
-- 내부 엔지니어링 점검은 Core state에서 오는 최소 상태/막힘 출력만 필요합니다. 전체 읽기용 요약 renderer는 필요하지 않습니다.
-- MVP-1은 Core에서 파생한 다섯 가지 작은 보기만 필요합니다. 상태 카드, 에이전트 맥락 패킷, 판단 요청, 실행/근거 요약, 닫기 결과입니다. 이 보기들은 현재 작업 상태, 다음 안전한 행동, 사용자 소유 판단, 최소 실행/근거 요약, 닫기 준비 상태, 작업 수락, 잔여 위험 표시, 막힘, 민감 동작 승인 / 작업 수락 / 잔여 위험 수용의 분리 표시를 함께 다룹니다. 이것은 full projection/reporting system이 아닙니다.
-- Journey Card, Journey Spine, Run Summary, TDD Trace, Module Map, Interface Contract, Export, detailed Evidence Manifest, detailed Eval output은 담당 profile이 명시적으로 승격하지 않는 한 Future/diagnostic projections 또는 다른 later-profile scope로 남습니다.
+- 추적할 작업을 평소 말로 시작하거나 이어가기
+- 작은 직접 변경과 추적 작업을 구분하는 작업 형태 분류
+- 범위, 하지 않을 일, 성공 기준 요약
+- 사용자에게 다시 묻기 전에 codebase-answerable 또는 state-answerable fact 확인
+- 담당 API 경로를 통한 minimal user judgment request와 record
+- 관련 경로가 있을 때 Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, Residual risk acceptance를 분리해서 표시
+- Core와 `prepare_write`를 통한 cooperative pre-write scope checking
+- `record_run`과 registered artifact/evidence ref 또는 minimum evidence summary path
+- `status`와 next-safe-action output
+- 근거 요약과 근거 gap 표시
+- Required evidence나 required user judgment가 없을 때 close blocker summary
+- 닫기와 관련된 risk가 있을 때 acceptance나 close 전에 residual-risk visibility
+- MVP-1 path를 위한 compact Core-derived view: `status-card`, `agent-context-packet`, `judgment-request`, `run-evidence-summary`, `close-result`
+- Honest MCP/Core unavailable behavior. Core에 닿을 수 없으면 authority state를 만들어 내지 않습니다.
 
-## MVP-1 사용자 작업 루프 구현 계약
+## MVP-1에서 제외되는 것
 
-MVP-1 사용자 작업 루프는 첫 사용자 가치 구현 계약입니다. 내부 엔지니어링 점검 뒤에 도달하는 목표이며, 첫 내부 권한 smoke 안으로 끌어오면 안 됩니다. 목표 문장은 다음과 같습니다.
+MVP-1에는 아래가 포함되지 않습니다.
 
-사용자가 평범한 말로 작업을 시작하면, 하네스는 작업 범위, 대기 중인 판단 요청, 근거 요약, 닫기 막힘, 다음 안전한 행동, 그리고 작업 수락과 잔여 위험 수용 사이의 최소 분리를 로컬 기준으로 보존합니다.
+- Dashboard, hosted UI, artifact dashboard, rich card expansion
+- 모든 판단에 대한 full Decision Packet output
+- OS-level sandboxing, arbitrary-tool isolation, permission isolation, tamper-proof local storage, default preventive pre-tool blocking
+- Detailed Evidence Manifest와 full report/export
+- Runtime conformance suite, conformance runner, generated conformance artifact, executable fixture catalog
+- 넓은 operations, recover/export, release handoff, projection refresh/reconcile suite, doctor/readiness suite
+- Active profile, user request, task type, risk profile이 요구하지 않는 full detached verification
+- Full Manual QA matrix, full waiver machinery, full Approval lifecycle hardening, rich residual-risk lifecycle, stewardship validator, TDD trace, feedback-loop policy, broad context-hygiene validator
+- Journey/Spine/reporting polish, detailed Eval, Module Map, Interface Contract, broad connector, marketplace, team workflow, orchestration, metrics, Browser QA Capture, Cross-Surface Verification automation, 그 밖의 Roadmap 후보
 
-MVP-1에 포함되는 것은 다음입니다.
+유용하지만 제외 목록에 있는 기능은 담당 문서가 더 좁은 동작을 stage impact와 함께 명시적으로 승격하기 전까지 later/profile item으로 둡니다.
 
-- 평범한 말로 작업을 시작하고 이어 가기
-- 범위, 하지 않을 일, 성공 기준
-- `harness.request_user_judgment`와 `harness.record_user_judgment`를 통한 판단 요청과 판단 기록
-- Core와 `prepare_write`를 통한 협력형 사전 쓰기 범위 확인. OS-level 차단이나 임의 도구 격리가 아닙니다.
-- `record_run`과 아티팩트 참조 경로를 통한 실행 및 근거 참조 기록
-- 다섯 가지 작은 MVP-1 보기. 현재 상태와 다음 안전한 행동을 위한 상태 카드와 에이전트 맥락 패킷, 사용자 소유 판단을 위한 판단 요청, Run/근거 참조와 공백을 위한 실행/근거 요약, 닫기 준비 상태와 작업 수락, 잔여 위험, 막힘을 위한 닫기 결과입니다. 별도 `harness.next` method는 later/compatibility material이며 MVP-1 requirement가 아닙니다.
-- 상태 또는 close response를 통한 닫기 막힘 표시
-- 필요한 경우 사용자 판단 기록과 잔여 위험 기록을 통한 작업 수락과 잔여 위험 수용의 최소 분리
+## MVP-1 담당 문서
 
-MVP-1에서 제외되는 것은 다음입니다.
+Build 문서는 exact schema, DDL, API definition을 중복하지 않습니다. 아래 담당 문서를 사용합니다.
 
-- 대시보드
-- 호스팅 UI
-- 모든 판단 요청에 대한 full-format Decision Packet 출력
-- OS-level sandbox 또는 권한 격리
-- 상세 Evidence Manifest
-- 전체 report/export
-- runtime conformance suite
-- 운영, 복구, 인계 pack
-
-이 계약은 사용자가 볼 수 있는 가치를 작게 정의합니다. 기본적으로 분리 검증, 전체 수동 QA matrix, 전체 Approval 생명주기 강화, projection job 기반 구조, 넓은 connector 지원, 운영 도구, roadmap 자동화를 요구하지 않습니다. 이후 profile은 담당 계약을 통해서만 그런 동작을 추가할 수 있습니다.
-
-## 전달 모델
-
-| 개념 | 증명하는 것 | 아직 증명하지 않는 것 |
-|---|---|---|
-| 내부 엔지니어링 점검 | 로컬 프로젝트 등록 하나, active Task 하나, scoped boundary 하나, `prepare_write` 쓰기 전 범위 확인 경로 하나, 한 번만 쓰는 내부 Write Authorization record 하나, 기록된 Run 하나, artifact/evidence ref 하나, 구조화된 상태/막힘 응답 하나로 구성된 첫 향후 내부 Core 권한 루프. | 사용자 대상 제품 가치, natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, operations/export/recover, dashboards, connectors. |
-| MVP-1 사용자 작업 루프 | 사용자가 평범한 말로 작업을 시작하거나 이어 가고 Core에서 파생한 범위, 하지 않을 일, 성공 기준, 판단 요청/기록, 상태/다음 행동 출력, 근거 요약, 닫기 막힘, 잔여 위험 표시, 민감 동작 승인 / 작업 수락 / 잔여 위험 수용 분리 표시를 상태 카드, 에이전트 맥락 패킷, 판단 요청, 실행/근거 요약, 닫기 결과라는 다섯 가지 작은 보기로 볼 수 있습니다. | 대시보드, 호스팅 UI, 모든 판단 요청에 대한 full-format Decision Packet 출력, OS-level sandbox 또는 권한 격리, 상세 Evidence Manifest, 전체 report/export, runtime conformance suite, 운영/복구/인계 pack, active profile이 요구하지 않는 full detached verification independence, full Manual QA matrix, full waiver machinery, polished Journey/Spine/reporting, detailed Eval, TDD Trace, Module Map, Interface Contract, broad connectors, operations suite. |
-| 보증 프로필 | MVP-1 사용자 가치 경로를 verification, QA, residual-risk, work-acceptance, stewardship profile로 단단하게 만듭니다. | Operator recovery/export completeness, release handoff, broad operations coverage, roadmap automation. |
-| 운영 프로필 | 같은 Core model로 doctor/readiness, recover/export, artifact integrity, release handoff, 더 넓은 conformance coverage를 지원합니다. | Dashboard, hosted workflow UI, broad connectors, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, team workflow, orchestration. |
-| 로드맵 | 담당 문서가 exact contract, guarantee level, fixture, fallback behavior, 읽기용 요약을 기준 상태로 삼지 않는다는 조건을 정의한 뒤에만 향후 확장 후보를 승격할 수 있습니다. | 명시적으로 승격하지 않은 로드맵 후보는 내부 엔지니어링 점검, MVP-1 사용자 작업 루프, 보증 프로필, 운영 프로필의 요구사항이 아닙니다. |
-
-예전 라벨은 오래된 문서를 읽을 때 연결하기 위한 별칭으로만 사용합니다.
-
-| 현재 개념 | 예전 라벨 |
+| 필요한 것 | 담당 문서 |
 |---|---|
-| 내부 엔지니어링 점검 | `v0.1 Core Authority Smoke` |
-| MVP-1 사용자 작업 루프 | `v0.2 First User-Value Slice` |
-| 보증 프로필 | `v0.3 Agency Assurance Pack` |
-| 운영 프로필 | `v0.4 Operations & Handoff Pack` |
-| 로드맵 | `v1+ Expansion` |
+| MVP-1 public tool과 resource | [MVP API](../reference/api/mvp-api.md). |
+| Shared envelope, ref, compact view, staged value, resource | [API Schema Core](../reference/api/schema-core.md). |
+| Error, idempotency, replay, stale-state, state conflict behavior | [API Errors](../reference/api/errors.md). |
+| Task, scope, user judgment, `prepare_write`, Write Authorization, `record_run`, evidence gate, blocker, close semantics | [Core Model 참조](../reference/core-model.md). |
+| Runtime home layout, minimal storage profile, lock, migration, artifact, later-profile storage boundary | [Storage](../reference/storage.md). |
+| MVP-1 보안 보장 표현과 local-access posture | [보안 참조](../reference/security.md). |
+| Compact derived view, projection authority boundary, freshness, template ownership | [Projection과 Template 참조](../reference/projection-and-templates.md), [Template 참조](../reference/templates/README.md). |
+| Connector capability profile과 user-facing surface behavior | [Agent 통합 참조](../reference/agent-integration.md), [Surface Cookbook](../reference/surface-cookbook.md). |
+| Future conformance model과 future smoke authoring | [Conformance Fixtures 참조](../reference/conformance-fixtures.md). |
 
-전달 지도 요약: 단계별 전달은 좁은 Core 권한 smoke 루프에서 첫 사용자 가치로, 그다음 assurance와 operations/handoff로 확장됩니다. 로드맵은 승격 전까지 향후 범위에 남습니다.
+## MVP-1에 필요한 API 문서
 
-```mermaid
-flowchart LR
-  Core["내부 엔지니어링 점검"] --> Value["MVP-1 사용자 작업 루프"]
-  Value --> Assurance["보증 프로필"]
-  Assurance --> Ops["운영 프로필"]
-  Ops -. roadmap .-> Expansion["로드맵"]
-```
+구현자는 아래 순서로 읽는 것이 좋습니다.
 
-커널 스모크(Kernel Smoke)는 내부 엔지니어링 점검을 위한 좁은 향후 작성 라벨로 남습니다. 이 라벨은 내부 엔지니어링 점검이 제품 MVP라는 뜻이 아니며, 전체 conformance suite, conformance runner, generated conformance artifact, 향후 fixture catalog가 있어야 내부 Core 기록/확인 경로를 확인할 수 있다는 뜻도 아닙니다.
+1. [MVP API](../reference/api/mvp-api.md): active MVP-1 public tool과 resource.
+2. [API Schema Core](../reference/api/schema-core.md): envelope, `ArtifactRef`, shared ref, compact view name, staged value set, read-only resource.
+3. [API Errors](../reference/api/errors.md): public error, idempotency, replay, unavailable Core/MCP behavior, state conflict.
+4. [API Schema Later](../reference/api/schema-later.md): 어떤 method나 field가 later/profile-gated라서 MVP-1 밖에 남아야 하는지 확인할 때만 사용합니다.
 
-향후 런타임 적합성 프로파일은 fixture가 구체화된 뒤 같은 stage boundary를 따릅니다. 내부 엔지니어링 점검 fixture 프로파일은 내부 엔지니어링 점검에, MVP-1 사용자 작업 루프 fixture 프로파일은 MVP-1 사용자 작업 루프에, 보증 프로필 fixture 프로파일은 보증 프로필에 대응합니다. 운영 프로필 fixture 프로파일 또는 승격된 로드맵 후보 fixture 프로파일은 운영 프로필과 승격된 로드맵 후보에 대응합니다. 그 전까지 active MVP path는 실행 가능한 fixture가 아니라 동작 예시를 사용합니다.
+MVP-1의 next-safe-action output은 `harness.status.next_actions`로 만족해야 합니다. 별도 `harness.next` method는 담당 문서가 승격하기 전까지 later/compatibility material입니다.
 
-강화된 로컬 기준 목표(hardened local reference target)는 보증 프로필과 운영 프로필을 거쳐 도달하는 종합 목표일 뿐, profile name이나 별도 delivery stage가 아닙니다.
+## MVP-1에 필요한 Storage 문서
 
-### 보안 guarantee 단계 구분
+Exact DDL, runtime home layout, artifact storage, lock, migration, staged storage profile은 [Storage](../reference/storage.md)를 사용합니다.
 
-Build staging 자체가 security guarantee를 올려 주지는 않습니다. Security wording은 [보안 참조의 단계별 guarantee level](../reference/security.md#단계별-guarantee-level)을 따릅니다.
+MVP-1 planning에서 storage는 local project state, Task/scope state, user judgment, write authorization, run, evidence ref 또는 evidence summary, blocker, minimal replay/audit support에 필요한 owner-approved record로 제한합니다. Rich Approval lifecycle, detailed Evidence Manifest, Manual QA, Eval, projection job, reconcile item, recover/export, validator run, Journey record, broad diagnostic을 위한 later-profile storage는 owner가 특정 동작을 승격하기 전까지 MVP-1 exit에 필요하지 않습니다.
 
-| 단계 | 계획할 guarantee posture |
+## MVP-1 보안 보장
+
+MVP-1은 cooperative plus limited detective wording을 사용합니다.
+
+할 수 있는 일:
+
+- Harness-compatible product write를 기록하기 전에 Core-compatible record를 요구한다.
+- Missing scope, missing judgment, missing evidence, stale state, unavailable Core/MCP, close blocker에는 structured blocker를 반환한다.
+- Honest guarantee status와 evidence/risk gap을 보여 준다.
+- Harness record/check path가 unavailable 또는 incompatible이면 연결된 agent나 surface가 instruction으로 hold하도록 요청한다.
+
+주장하면 안 되는 일:
+
+- OS-level permission control
+- arbitrary-tool sandboxing
+- tamper-proof local file
+- default pre-tool blocking
+- permission isolation이나 security isolation
+- future promoted owner profile이 exact covered operation을 증명하기 전의 preventive 또는 isolated behavior
+
+Guarantee level은 [보안 참조](../reference/security.md#단계별-guarantee-level)를 사용하고, unavailable 또는 mismatch behavior의 사용자 표시 방식은 [API Errors](../reference/api/errors.md)를 사용합니다.
+
+## 서버 코딩 전 필요한 구현 결정
+
+이 섹션은 중앙 서버 코딩 전 결정 기록입니다. Review나 첫 runtime-batch planning에서 발견된 큰 구현 결정은 active docs에 흩어진 open marker가 아니라 이곳에 둡니다.
+
+### 문서 기준에서 해소된 MVP-1 결정
+
+아래 결정은 문서 기준선에서 해소되었습니다. 그래도 코딩 전에는 maintainer acceptance가 필요합니다.
+
+| 결정 | 문서 기준선 | 코딩 경계 |
+|---|---|---|
+| Judgment naming | `UserJudgment` / `user_judgment`, `harness.request_user_judgment`, `harness.record_user_judgment`, `judgment_type`, `presentation`, `display_label`을 사용합니다. | Compatibility alias가 추가 authority path를 만들면 안 됩니다. |
+| Next action | MVP-1 next-safe-action output은 `harness.status.next_actions`를 사용합니다. | 별도 `harness.next` method는 승격 전까지 later/compatibility입니다. |
+| MVP-1 compact views | `status-card`, `agent-context-packet`, `judgment-request`, `run-evidence-summary`, `close-result`를 compact Core-derived view로 사용합니다. | 이 view는 write를 authorize하거나 evidence를 satisfy하거나 acceptance를 record하거나 risk를 accept하거나 task를 close하거나 canonical state가 되지 않습니다. |
+| Minimal storage boundary | MVP-1 storage는 user work loop에 필요한 minimal active owner record로 제한합니다. | Later-profile table/record는 owner docs가 승격하기 전까지 제외합니다. |
+| Acceptance boundaries | Sensitive action approval, work acceptance, residual-risk acceptance를 분리합니다. | Work acceptance는 Approval이 아니며, residual-risk acceptance는 work acceptance가 아닙니다. |
+| Small direct changes | Small change도 explicit scope, compatible `prepare_write`, `record_run`, required evidence support가 필요합니다. | Small-change label이 authority, user judgment, evidence, risk visibility를 우회하면 안 됩니다. |
+| Local access and errors | Local access, unavailable Core/MCP, state conflict, display-safe detail은 API, Operations, Security 담당 계약을 사용합니다. | Build 문서는 새 public error code나 precedence를 정의하지 않습니다. |
+
+### 아직 열려 있는 구현 결정
+
+| 결정 항목 | 현재 상태 | Readiness를 막는 것 |
+|---|---|---|
+| 구현 준비 판단 | 수락되지 않았습니다. | Readiness criteria가 충족되거나 재분류된 뒤 maintainer가 [구현 개요: 문서 수락 상태](implementation-overview.md#문서-수락-상태)를 갱신해야 합니다. |
+| Public API coding acceptance | 코드 작성용으로 수락되지 않았습니다. | 영향을 받는 tool/resource를 코딩하기 전 maintainer가 active MVP-1 surface와 later/profile exclusion을 포함한 API 담당 문서를 수락해야 합니다. |
+| Storage/DDL coding acceptance | 코드 작성용으로 수락되지 않았습니다. | DDL이나 runtime data file을 만들기 전 maintainer가 Storage owner profile과 migration을 수락해야 합니다. |
+| Core transition acceptance | 코드 작성용으로 수락되지 않았습니다. | 영향을 받는 path를 코딩하기 전 maintainer가 active Core state transition, blocker semantics, close/status behavior를 수락해야 합니다. |
+| Security/local-access acceptance | 코드 작성용으로 수락되지 않았습니다. | API/MCP surface를 노출하기 전 maintainer가 local-only posture와 cooperative/detective guarantee wording을 수락해야 합니다. |
+| 새 owner conflict | 현재 기록된 항목은 없습니다. | Review에서 schema/design, stage-boundary, guarantee-level, fixture-semantics, storage/API conflict가 실제로 발견되면 owner, stage impact, options, coding 전 필요한 decision을 이곳에 추가합니다. |
+
+결정을 추가할 때는 owner document, affected behavior or field, affected stage, options considered, decision needed, 그리고 documentation acceptance, implementation planning, server coding, later stage 중 무엇을 막는지 적습니다.
+
+## 아직 만들지 않을 이후 프로필
+
+아래 항목은 MVP-1 prerequisite로 만들지 않습니다.
+
+| 이후 영역 | MVP-1 밖에 둘 것 |
 |---|---|
-| 내부 엔지니어링 점검 | 지시 기반/협력적 behavior에 제한된 탐지 가능 behavior가 더해진 수준입니다. Core는 invalid state change를 거부하고 구조화된 막힘을 반환할 수 있지만, reference path가 기본으로 arbitrary local process를 멈추거나 tool을 격리하지는 않습니다. |
-| MVP-1 사용자 작업 루프 | 사용자에게 보이는 막힘, MCP availability, evidence gap, close readiness, 정직한 보장 표시를 갖춘 협력형 확인과 제한된 사후 확인 behavior입니다. 사전 차단 또는 권한 격리 behavior를 주장하지 않습니다. |
-| 보증 프로필 | Verification, 수동 QA, residual risk, 작업 수락, Approval, stewardship 주변의 더 강한 분리와 탐지 가능 assurance입니다. |
-| 운영 프로필 | Doctor/readiness, recover/export, artifact integrity, projection freshness, release handoff 주변의 탐지 가능 operations입니다. |
-| 로드맵 | Owner docs가 exact covered operation 또는 real isolation boundary를 정의하고 승격하며 conformance가 증명한 뒤의 preventive 또는 isolated candidate만 포함합니다. |
-
-### Stage별 API surface
-
-API reference는 문서화한 모든 method의 정확한 schema를 정의합니다. Staged delivery는 method/profile이 언제 active인지 결정합니다. API [Stage Profile Manifest](../reference/api/schema-core.md#stage-profile-manifest)를 owner table로 사용하고, artifact와 owner-ref enum validation에는 [stage-specific active value sets](../reference/api/schema-core.md#stage-specific-active-value-sets)를 사용합니다. Later-profile field는 해당 profile에서 exact하게 남지만 더 이른 stage exit에 들어가지 않습니다.
-
-| Stage | Active API surface | Stage exit에 넣지 않을 later-profile fields |
-|---|---|---|
-| 내부 엔지니어링 점검 | Minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, owner-valid active Task/scope setup path 하나, optional narrow `harness.close_task` blocker smoke. | Natural-language intake, full Discovery, full-format user judgment presentation, Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, 별도 `harness.next`, reconcile, export/recover, broad operations. |
-| MVP-1 사용자 작업 루프 | 사용자에게 보이는 작업 시작/이어가기, 작업 형태 분류, `harness.status.next_actions`를 통한 next-safe-action output, 최소 `harness.request_user_judgment` / `harness.record_user_judgment`, `harness.record_run`을 통한 근거 요약, `harness.close_task`를 통한 닫기 막힘 요약, Core에서 파생한 다섯 가지 작은 MVP 보기. | 별도 `harness.next`, active profile/user request/task type/risk profile이 요구하지 않는 full detached verification independence, full Manual QA matrix, full waiver machinery, Approval hardening, detailed Eval, TDD Trace, Module Map, Interface Contract, export/recover, broad operations. |
-| 보증 프로필 | `harness.launch_verify`, `harness.record_eval`, `harness.record_manual_qa`, judgment method의 assurance/waiver/approval/risk profiles, `harness.record_run`의 evidence/feedback/TDD profiles, ValidatorResult-emitting assurance paths. | Operator recover/export completeness, broad projection/reconcile operations, release handoff. |
-| 운영 프로필 | API response의 projection freshness, reconcile judgment profile, Operations가 담당하는 operator readiness/recover/export/artifact-integrity/conformance surfaces. | Dashboard, hosted workflow UI, broad connectors, automation, team workflow, orchestration은 later promotion 전까지 제외합니다. |
-
-### Stage별 read-only MCP resources
-
-MCP resource는 읽기 전용이며 public tool과 같은 staged delivery boundary를 따릅니다. Resource를 읽는 행위는 Task record, decision, projection job, reconcile item을 만들거나 상태 변경을 일으키면 안 됩니다.
-
-| Stage | Stage 범위의 resource | Stage exit에 넣지 않을 것 |
-|---|---|---|
-| 내부 엔지니어링 점검 | Current state, blocker, 쓰기 전 범위 확인 상태, 최소 Run/artifact/evidence ref를 위한 `harness://project/current`, `harness://task/active`, `harness://task/{task_id}`, optional `harness://task/{task_id}/summary` / `harness://status/card`. | Journey, Spine, full user judgment storage/presentation, Evidence Manifest, bundle, report, design/domain map, module map, interface contract, projection job, full projection rendering. |
-| MVP-1 사용자 작업 루프 | 내부 엔지니어링 점검 resource에 더해 현재 작업의 최소 판단 맥락. 근거 요약, 닫기 막힘 요약, 작업 수락 표시, 민감 동작 승인 표시, 잔여 위험 표시는 상태 카드, 판단 요청, 실행/근거 요약, 닫기 결과 또는 task summary output 안에 나타날 수 있습니다. 에이전트 맥락 패킷은 다음 안전한 행동을 돕습니다. | Detailed Evidence Manifest resource, profile-required가 아닌 detached verification/QA resource, report, bundle, Journey/Spine polish, design map, module map, interface contract, export/recover. |
-| 보증 프로필 | Evidence/assurance support가 켜졌을 때 `harness://policy/sensitive-categories`, `harness://task/{task_id}/evidence-manifest` 같은 profile-gated assurance read. | Operator report/export completeness와 넓은 operations resource. |
-| 운영 프로필 | Connector freshness, report, export, recover, handoff profile이 범위에 있을 때 broad `harness://project/surfaces`, `harness://task/{task_id}/reports/latest`, `harness://task/{task_id}/bundle/current` 같은 operations read. | Dashboard, hosted workflow UI, broad connector automation, later promotion 전 roadmap resource. |
-| Future/diagnostic | Owner가 승격한 `harness://task/{task_id}/spine`, `harness://task/{task_id}/journey`, `harness://task/{task_id}/change-unit-dag`, `harness://design/domain-language`, `harness://design/module-map`, `harness://design/interface-contracts` 같은 read. | Diagnostic resource를 내부 엔지니어링 점검 또는 minimum MVP-1 요구사항처럼 취급하는 것. |
-
-### 단계별 운영자 surface
-
-Operator command는 예시적인 구현 선택지입니다. Stage boundary는 최종 command spelling이 아니라 동작입니다.
-
-| Stage | 범위에 들어오는 운영자 동작 | Stage 밖에 남기는 운영자 동작 |
-|---|---|---|
-| 내부 엔지니어링 점검 | 최소 local connect/register, 기본 상태 또는 진단 읽기, 첫 조각이 그 boundary를 요구할 때만 local API/MCP exposure. | Projection refresh, reconcile, recover, export, artifacts check, conformance runner, release handoff, broad doctor/readiness. |
-| MVP-1 사용자 작업 루프 | 같은 최소 surface에 더해 현재 작업, 사용자 판단, 근거 상태, 닫기 막힘, 잔여 위험 표시, 민감 동작 승인 / 작업 수락 / 잔여 위험 수용 분리 표시를 위한 user-facing status/next diagnostic입니다. | Assurance operations, recover/export, release handoff, broad projection/reconcile operations, full conformance run, broad operations coverage. |
-| 보증 프로필 | Owner path를 통한 verification, Manual QA, residual-risk, 작업 수락, stewardship, context-hygiene behavior의 assurance-profile support. | Operator recover/export completeness, release handoff, broad projection/reconcile operations, full operations conformance. |
-| 운영 프로필 | Full local operations support입니다. Doctor/readiness, projection refresh, reconcile, recover, export, artifacts check, 담당 문서가 정의한 release handoff, runtime suite가 materialized된 뒤 conformance run을 포함합니다. | Remote/shared operations, dashboard, hosted workflow UI, broad connector automation, team workflow, orchestration은 later promotion 전까지 제외합니다. |
-| 로드맵 | Owner docs가 exact contract, guarantee level, fixture, fallback behavior를 정의한 뒤 승격한 roadmap operations만 포함합니다. | 승격되지 않은 roadmap candidate는 staged delivery 밖에 남습니다. |
-
-### 단계별 전달 이후의 경계: 로드맵
-
-로드맵은 로드맵 범위이며 Build가 소유하는 staged delivery phase가 아닙니다. Dashboard, hosted workflow UI, Browser QA Capture automation, Cross-Surface Verification automation, Context Index, broader connectors, metrics, team workflow, orchestration 같은 후보는 담당 문서가 future item을 명시적으로 승격하고 증명하기 전까지 내부 엔지니어링 점검부터 운영 프로필 밖에 둡니다.
-
-## 내부 엔지니어링 점검
-
-내부 엔지니어링 점검은 구현자 확신을 위한 내부 Core authority smoke slice입니다. 하네스가 chat memory나 generated Markdown이 아니라 로컬 권한 기록임을 보여 주는 가장 작은 coherent loop만 증명해야 합니다. 사용자 가치 검증 단계가 아니며 제품 MVP라고 부르면 안 됩니다.
-
-내부 엔지니어링 점검은 다음을 증명해야 합니다.
-
-- local project registration 하나
-- Core가 소유한 상태 안의 active Task 하나
-- intended change를 위한 scoped boundary 하나. Reference 계약상 필요한 경우에만 Change Unit 소유자 형태로 표현된다.
-- `prepare_write` compatible/structured-blocker path 하나
-- 지속적이며 한 번만 쓸 수 있는 내부 Write Authorization record 하나
-- 그 내부 Write Authorization record를 consume하는 `record_run` 하나
-- Core/API contract가 소유하는 registered `ArtifactRef` 또는 equivalent evidence reference 하나
-- missing scope, missing 쓰기 전 범위 확인, 또는 missing artifact/evidence support를 위한 구조화된 상태/막힘 응답 하나
-
-이에 맞는 storage path는 [Storage: MVP-1 minimal storage schema](../reference/storage.md#mvp-1-minimal-storage-schema)의 최소 authority subset입니다. Project identity 하나, Task 하나, task-scope/Change Unit row 하나, cooperative write-check / Write Authorization path 하나, Run 하나, evidence ref 하나, structured blocker가 핵심입니다. MVP-1 사용자 가치를 위해 user judgment record를 더하지만, Approval record, 상세 Evidence Manifest, Manual QA, Eval, residual-risk lifecycle table, projection job, reconcile item, validator run, Journey record, diagnostic/stewardship table은 profile owner가 명시적으로 승격하기 전까지 later-profile storage로 남습니다.
-
-내부 엔지니어링 점검은 natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, 제품/UX 판단과 기술 판단의 presentation, stewardship, feedback-loop policy, projection rendering, conformance runner, generated conformance artifact, operations/export/recover, dashboards, connectors, 넓은 operator entrypoint, 향후 fixture catalog, release handoff를 증명하면 안 됩니다. 이것들은 이후 단계 또는 향후 범위입니다.
-
-내부 엔지니어링 점검 Kernel Smoke 동작 예시 candidate는 Core state, 그 루프에 필요한 owner record, artifact/evidence refs, structured blocker를 통해 minimal authority loop만 확인해야 합니다. 읽기용 요약 다듬기, detailed template, renderer output, 넓은 fixture catalog는 first-slice conformance truth가 아닙니다.
-
-이 시점에 implementer는 Core가 최소 상태를 소유하고, scoped write가 호환되거나 구조화된 막힘으로 거부되며, 내부 Write Authorization record 하나가 한 번 소비되고, artifact/evidence ref가 기록된 Run에 연결되며, 상태/막힘 출력이 구조화된 막힘을 반환할 수 있음을 관찰할 수 있습니다. 이것은 구현자 확신이지 사용자가 Harness 가치를 경험했다는 증명이 아닙니다.
-
-### 계약 필드 단계 구분
-
-Reference schema에는 관련 capability가 범위에 들어올 때만 필요한 field도 포함됩니다. Build는 field requiredness를 다시 정의하지 않습니다. 어떤 capability가 어느 stage에 들어오는지만 말합니다. Field는 owner contract와 active stage를 함께 보고 읽습니다.
-
-| Stage | Build 읽기 규칙 | 적용할 owner contract |
-|---|---|---|
-| 내부 엔지니어링 점검 | [MVP-1 minimal storage schema](../reference/storage.md#mvp-1-minimal-storage-schema) 안에서 좁은 authority loop를 증명하는 데 필요한 owner-defined field만 사용합니다. 넓은 checklist를 만족하려고 future-profile record를 만들지 않습니다. Minimal seeded blocker가 owner ref를 사용한다면, profile별 user-facing judgment presentation 품질이 아니라 그 owner path의 valid shape만 적용합니다. | [Core Model 참조](../reference/core-model.md), [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), [Storage](../reference/storage.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). |
-| MVP-1 사용자 작업 루프 | 사용자가 현재 작업 형태, 범위/하지 않을 일/성공 기준, 대기 중인 사용자 판단, 근거 요약, 닫기 막힘, 다음 안전한 행동, 잔여 위험 표시, 민감 동작 승인 / 작업 수락 / 잔여 위험 수용 분리 표시를 이해하는 데 필요한 field와 display summary를 추가합니다. 작업 수락과 잔여 위험 사실은 관련 있을 때 구분해 남기되 다섯 가지 작은 MVP 보기 안에 둡니다. | [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), [Core Model 참조](../reference/core-model.md), [읽기용 요약(Projection) 참조](../reference/projection-and-templates.md), [Template 참조](../reference/templates/README.md). |
-| 보증 프로필 / 운영 프로필 | Verification, QA, 잔여 위험, 작업 수락, stewardship, projection/reconcile, operations, export/recover, artifact-integrity, release-handoff profile은 담당 문서가 정의한 곳에서만 추가합니다. | [설계 품질 정책](../reference/design-quality-policies.md), [운영과 Conformance](../reference/operations-and-conformance.md), [Conformance Fixtures 참조](../reference/conformance-fixtures.md), [향후 Fixtures](../later/future-fixtures.md), [Storage](../reference/storage.md). |
-
-따라서 API schema에서 required라는 말은 해당 tool call, record, profile이 활성 상태이거나 사용될 때 required라는 뜻입니다. 그 자체로 future-profile field가 가장 작은 구현 slice의 일부가 되지는 않습니다.
-
-### 서버 코딩 전 필요한 구현 결정
-
-이 섹션은 maintainer review나 첫 runtime batch planning에서 발견되는 구현 시작 전 결정을 기록하는 중앙 기록입니다. 큰 구현 선택을 흩어진 `TODO_DECISION`이나 막연한 follow-up으로 남기지 않습니다.
-
-#### 문서 기준에서 해소된 MVP-1 결정
-
-아래 항목은 현재 문서 기준에서 해소되었습니다. 서버 코딩 전에는 전체 문서와 함께 maintainer acceptance가 필요하지만, 더 이상 Build 범위의 열린 질문은 아닙니다.
-
-| 결정 기록 항목 | 문서 기준 결정 | 코딩 경계 |
-|---|---|---|
-| 단순화된 판단 모델과 이름 | 기준 문서는 `UserJudgment` / `user_judgment`, `harness.request_user_judgment`, `harness.record_user_judgment`, `judgment_type`, `presentation`, `display_label`을 사용합니다. Decision Packet은 optional full-format 표시 형식이지 기본 record family가 아닙니다. | Maintainer가 API/DDL 코딩 전에 명시적으로 다시 열지 않는 한 이 이름을 보존합니다. |
-| `request_user_decision` vs `request_user_judgment` | `harness.request_user_judgment`와 `harness.record_user_judgment`가 기준 이름입니다. `harness.request_user_decision`과 `harness.record_user_decision`은 compatibility alias일 뿐입니다. | Compatibility alias는 추가 method, state path, authority를 만들면 안 됩니다. |
-| `harness.next` 별도 method vs `status.next_actions` | `harness.status.next_actions`가 MVP-1의 다음 안전한 행동 출력입니다. `harness.next`는 같은 Core state에서 파생되는 later/compatibility material로 이동했습니다. | Status가 다음 안전한 행동과 가장 작은 해소 방법을 분명히 반환하면 MVP-1 minimum next-action requirement를 만족합니다. |
-| MVP-1 storage minimum | MVP-1은 작은 persistence model을 사용합니다. `projects` / `project_state`, `tasks`, task-scope field 또는 `change_units`, `user_judgments`, cooperative `write_authorizations`, `runs`, `evidence_refs`, `blockers`가 핵심이고, `tool_invocations` / `task_events`는 replay/audit support일 뿐입니다. | Owner profile이 승격하지 않는 한 later-profile `task_intake`, `residual_risks`, `evidence_summaries`, `close_readiness`, `projection_status_cards`, `approvals`, `evidence_manifests`, 수동 QA, Eval, projection job, reconcile, export/recover, validator-run, Journey, operations table을 MVP-1 exit에 넣지 않습니다. |
-| Local access error taxonomy | 초기 API-visible failure는 [API Errors](../reference/api/errors.md)가 담당하는 error taxonomy와 precedence를 따릅니다. Caller/profile 맥락은 [API Schema Core](../reference/api/schema-core.md)가, guarantee wording은 [보안 참조](../reference/security.md)가 담당합니다. Operations는 operations owner path를 통해서만 diagnostic distinction을 추가할 수 있습니다. | Build 문서는 새 error code나 precedence를 정의하지 않습니다. Exact value와 display-safe detail은 API, Operations, Security owner 계약을 사용합니다. |
-| MVP-1 작은 보기 범위 | MVP-1 output은 상태 카드, 에이전트 맥락 패킷, 판단 요청, 실행/근거 요약, 닫기 결과라는 Core에서 파생한 다섯 가지 보기로 제한됩니다. 이 보기들은 현재 작업 형태, 범위/하지 않을 일/성공 기준, 대기 중인 판단, 근거 요약 또는 공백, 닫기 막힘, 잔여 위험 요약, 다음 안전한 행동, 보장 수준, 출처/최신성 참조를 함께 보여줍니다. 렌더링된 보기의 optional persistence는 필요하지 않습니다. | 이 보기들은 Write Authorization record를 만들거나, 쓰기를 호환되게 하거나, 근거를 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 닫거나, canonical state가 되면 안 됩니다. 최신성이 stale/failed/unknown이면 표시해야 합니다. |
-| 작은 직접 변경의 근거 요구 | 작은 직접 변경도 명시된 범위, 호환되는 `prepare_write`, `record_run`을 사용합니다. 근거는 가벼울 수 있지만 completion claim은 active path가 요구하는 Run/artifact/evidence ref 또는 근거 요약으로 뒷받침되어야 합니다. | 필요한 근거가 없으면 close가 막힙니다. Small-change label은 쓰기 전 범위 확인, 사용자 판단, 근거, 위험 표시를 우회하지 못합니다. 상세 Evidence Manifest는 later-profile 범위입니다. |
-| 작업 수락과 잔여 위험 최소 기록 | MVP-1은 필요한 경우 `user_judgment` 기록으로 민감 동작 승인, 작업 수락, 잔여 위험 수용을 분리합니다. 보이는 잔여 위험은 `blockers`와 관련 judgment/evidence ref로 표현할 수 있습니다. Rich `residual_risks` row는 later-profile입니다. | 작업 수락은 민감 동작 승인이 아니고, 잔여 위험 수용은 작업 수락이 아닙니다. Committed Approval lifecycle, full residual-risk lifecycle metadata, assurance hardening은 승격 전까지 later-profile입니다. |
-
-#### 아직 열려 있는 구현 결정
-
-위의 예전 MVP-1 범위 항목 중 Build 계약 질문으로 남은 것은 없습니다. 남아 있는 항목은 구현 준비와 향후 review gate이며, 흩어진 product-contract TODO가 아닙니다.
-
-| 결정 기록 항목 | 현재 상태 | 결정 조건 |
-|---|---|---|
-| 구현 준비 판단 | 수락되지 않았습니다. | Maintainer가 구현 준비 조건이 충족되었거나 남은 blocker가 재분류되었다고 판단한 뒤 [구현 개요: 문서 수락 상태](implementation-overview.md#문서-수락-상태)를 의도적으로 갱신해야 합니다. |
-| Public API/DDL 코딩 수락 | 코드 작성용으로 수락되지 않았습니다. 문서 기준은 내부 엔지니어링 점검과 MVP-1 계약을 기록하지만, server code, DDL, migration, fixture, runtime data를 만들기 전 maintainer acceptance가 필요합니다. | Behavior를 코딩하기 전에 maintainer가 관련 owner 문서를 수락하거나 stage impact와 함께 behavior를 명시적으로 미뤄야 합니다. |
-| 새로 발견되는 owner-contract conflict | 현재 Build 결정 기록에는 없습니다. | Maintainer review나 runtime-batch planning에서 schema/design, stage boundary, guarantee level, fixture semantics, storage/API conflict가 드러나면 영향을 받는 behavior를 코딩하기 전에 stage impact와 함께 여기에 추가합니다. |
-| 문서 drift | 기본적으로 server-coding decision이 아닙니다. | Docs-maintenance finding이 실제 owner-contract decision이나 stage blocker를 드러내면 stage impact와 함께 이 기록으로 승격합니다. 그렇지 않으면 문서 작성 가이드 risk/regression checks로 routing합니다. |
-
-확인된 결정이 추가되면 다음을 기록합니다.
-
-- 담당 문서 또는 담당 section
-- 영향을 받는 behavior, field, table, fixture semantics, guarantee level, stage boundary
-- 영향을 받는 stage
-- 검토한 option
-- server code나 DDL 변경 전에 필요한 결정
-- 이 항목이 문서 수락, 구현 계획, 서버 코딩, 또는 이후 stage만 막는지
-
-### 구현 준비 체크리스트
-
-이 체크리스트는 아직 수락되지 않았습니다. 첫 runtime batch planning이나 server coding 전에 maintainer가 각 항목을 수락하거나 stage impact와 함께 명시적으로 미뤄야 합니다.
-
-- 내부 엔지니어링 점검 API subset accepted.
-- 내부 엔지니어링 점검 DDL accepted.
-- State transitions accepted.
-- 내부 Write Authorization lifecycle accepted.
-- Artifact/evidence ref shape accepted.
-- Structured blocker shape accepted.
-- Local access posture accepted.
-- MVP-1 promotion criteria accepted.
-
-### 내부 엔지니어링 점검 흐름
-
-내부 엔지니어링 점검 요약: 이 계획 흐름은 project/Task setup, scope, `prepare_write`, 내부 Write Authorization record, `record_run`, artifact/evidence ref, structured status/blocker output으로 이루어진 하나의 authority loop를 검토하기 위한 것입니다. 이 저장소에 구현된 runtime flow를 뜻하지 않습니다.
-
-```mermaid
-flowchart LR
-  Register["프로젝트 등록"] --> Task["Task"]
-  Task --> Scope["범위"]
-  Scope --> Check["prepare_write"]
-  Check -->|호환됨| Authorization["Write Authorization"]
-  Authorization --> Run["record_run"]
-  Run --> Evidence["ArtifactRef"]
-  Check -->|호환 안 됨| Blocker["구조화된 막힘"]
-  Evidence --> Status["상태 / 다음 행동<br/>또는 막힘"]
-  Blocker --> Status
-```
-
-정확한 state와 blocker behavior는 [Core Model 참조](../reference/core-model.md)가, public tool shape는 [MVP API](../reference/api/mvp-api.md)가, shared API shape는 [API Schema Core](../reference/api/schema-core.md)가, API error는 [API Errors](../reference/api/errors.md)가, 향후 runtime fixture body/assertion mechanics는 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#conformance-fixture-format)가 담당합니다. Later-profile scenario와 shorthand catalog는 [향후 Fixtures](../later/future-fixtures.md)에 남고 이 흐름에 requirement를 추가하지 않습니다. 이 흐름은 pack gate, projection renderer requirement, fixture body requirement, generated conformance artifact를 추가하지 않습니다.
-
-향후 smoke 작성 순서는 [커널 스모크(Kernel Smoke) Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue)를 사용합니다. 이 queue는 candidate check를 이 내부 조각에 매핑하지만 실행 가능한 fixture file이 이미 존재하거나 내부 엔지니어링 점검에 전체 conformance suite가 필요하다고 암시하지 않습니다.
-
-## MVP-1 사용자 작업 루프
-
-MVP-1은 첫 사용자 가치 조각입니다. 전체 제품 MVP, assurance system, QA matrix, Eval harness, reporting suite, operations suite, dashboard, hosted UI가 아닙니다. 사용자가 평범한 말로 작업을 시작하거나 이어 가고, 하네스가 범위, 대기 중인 판단 요청, 근거 요약, 닫기 막힘, 다음 안전한 행동, 작업 수락, 잔여 위험을 Core-owned local state에 보존한다는 것을 볼 수 있는 가장 작은 경험으로 정의합니다.
-
-이 조각은 다음을 보여야 합니다.
-
-- 평범한 말로 추적되는 작업을 시작하거나 이어 가는 것이 Harness vocabulary 없이 가능하다
-- 작업 형태 분류가 있고 작은 직접 변경과 추적되는 작업을 구분한다
-- 범위, 하지 않을 일, 성공 기준 요약을 제공한다
-- Codebase-answerable 또는 state-answerable fact는 사용자에게 반복 질문하기 전에 확인된다
-- Clarification은 긴 questionnaire를 쏟아내지 않으면서 다음 safe action을 unblock할 만큼 충분히 묻는다
-- 제품/UX 판단과 기술 판단이 서로 분리되고, 민감 동작 승인, 작업 수락, 잔여 위험 수용과도 분리되어 제시될 수 있다
-- 최소 판단 요청과 기록이 있다
-- 작은 변경과 추적되는 작업이 서로 다른 절차 예산을 가지되, small-change label이 쓰기 전 범위 확인을 우회하지 않는다
-- Ambiguous feature request는 premature implementation이 아니라 clarification으로 들어간다
-- 상태와 다음 행동 출력이 현재 범위, 빠진 판단, 근거 상태, 닫기 막힘, 잔여 위험 표시, 다음 안전한 행동을 설명한다
-- 쓰기 전 범위 확인은 `prepare_write`를 통한 협력형 Core 기록/확인 behavior입니다. OS-level 차단, 임의 도구 격리, 권한 격리, tamper-proof local storage가 아닙니다.
-- 실행과 근거 참조는 `record_run`, registered artifact, 또는 최소 근거 요약 path로 기록됩니다.
-- 근거 요약이 있다
-- 필요한 근거 또는 필요한 사용자 판단이 없으면 닫기 막힘 요약을 보고한다
-- 알려진 close-relevant risk가 있으면 acceptance와 close 전에 residual risk가 보인다
-- 민감 동작 승인, 작업 수락, 잔여 위험 수용이 분리되어 표시된다
-- chat이나 rendered Markdown이 아니라 Core state에서 파생된 다섯 가지 작은 MVP 보기가 있다
-- "go ahead" 또는 "looks good" 같은 ambiguous consent는 ambiguous judgment route를 해소하거나, evidence를 waive하거나, residual risk를 accept하거나, out-of-scope work를 compatible하게 만들지 않는다
-- MCP/Core unavailable status는 authority state를 만들어내지 않는다
-- Projection/template output은 derived 상태로 남고 state가 될 수 없다
-- verification은 active profile, user request, task type, risk profile이 요구할 때만 필요하다
-- verification waiver는 required verification을 일부러 건너뛸 때만 필요하다
-- 다섯 가지 작은 MVP 보기가 현재 작업 상태, 판단 요청, 실행/근거 요약, 닫기 결과, 막힘을 보여 주지만, template polish가 source of truth가 되지는 않는다
-
-근거 기록, 읽기 쉬운 요약, projection 최신성은 이 경험을 지원합니다. 이것들이 단계의 정체성은 아니며, compact user-readable path를 넘어서는 projection polish는 범위 밖에 둡니다.
-
-MVP-1은 대시보드, 호스팅 UI, 모든 판단 요청에 대한 full-format Decision Packet 출력, OS-level sandbox 또는 권한 격리, 상세 Evidence Manifest, 전체 report/export, runtime conformance suite, 운영/복구/인계 pack, active profile이 요구하지 않는 full detached verification independence, full Manual QA matrix, full waiver machinery, polished Journey/Spine/reporting, detailed Eval, TDD Trace, Module Map, Interface Contract, broad connectors, operations suite, stewardship validators, feedback-loop policy, release handoff, Browser QA Capture, Cross-Surface Verification automation, Context Index, metrics, team workflow, orchestration을 명시적으로 제외합니다.
-
-MVP-1 종료 기준을 만족한다는 것은 사용자가 하네스가 단순 쓰기 확인 wrapper 이상임을 볼 수 있다는 뜻입니다. 작업의 범위, 판단 요청, 근거 요약, 닫기 막힘, 다음 안전한 행동, 작업 수락 경계, 잔여 위험 표시가 로컬에서 확인 가능하게 유지됩니다.
-
-## 보증 프로필
-
-보증 프로필은 MVP-1 user-value path를 강화하여 로컬 reference path가 검증, QA, 잔여 위험, 작업 수락, stewardship을 정직한 경계 안에서 route할 수 있게 합니다.
-
-중점:
-
-- profile별 user judgment 품질과 routing
-- sensitive-action Approval, User Judgment, Write Authorization, 작업 수락, 잔여 위험 수용 분리
-- same-session verification guard behavior를 포함한 분리 검증 독립성
-- 수동 QA 정책 매트릭스, 수동 QA 막힘 조건, 유효한 QA 면제 판단
-- 잔여 위험 수용 close의 전체 의미
-- stewardship validators와 codebase stewardship coverage
-- policy가 요구하는 TDD trace behavior
-- policy가 요구하는 feedback-loop policy
-- context-hygiene validators와 현재 상태/오래된 context 경계
-- Runtime suite가 materialized된 뒤 Core state, events, artifacts, projection/freshness facts, errors를 통해 judgment, QA, verification, 잔여 위험, 작업 수락의 분리를 증명하는 future 보증 프로필 conformance fixtures
-
-이 프로필 기준을 만족하면 user-value path가 agency-preserving하고 policy-aware하며 검증, QA, 잔여 위험, 작업 수락, stewardship 경계를 정직하게 다룬다는 뜻입니다. 로드맵 automation을 staged delivery로 승격하지는 않습니다.
-
-## 운영 프로필
-
-운영 프로필은 같은 Core state model 위에서 로컬 운영 증명을 완성합니다.
-
-중점:
-
-- 하네스 런타임 홈, project state, artifact store, reference surface, MCP availability, projections, reconcile, validators/checks, agency/stewardship/context에 대한 doctor/readiness categories
-- interrupted 또는 drifted operational state에 대한 recover handling
-- state snapshots, report projection snapshots, artifact refs, redaction status, omitted-secret notes, retained/expired/unavailable artifact status에 대한 export behavior
-- artifact integrity checks
-- 담당 문서가 정의하는 release handoff report/export profile
-- 운영 프로필에 대한 향후 operator smoke. Runtime suite가 materialized된 뒤 connect, doctor, serve MCP, 읽기용 요약 refresh, reconcile, recover, export, artifacts check, conformance run이 포함되며, 초기 단계는 더 작은 subset만 유지합니다
-- export/recover, artifact integrity, release handoff, operator readiness, 그리고 담당 문서가 정의하고 증명한 higher guarantee level에 대한 operations/future fixture coverage
-- 별도로 증명하고 승격하기 전까지 roadmap item을 로드맵에 두는 later-boundary checks
-
-Operator command를 위한 두 번째 state model을 만들면 안 됩니다. Operator는 같은 Core state model 위에서 diagnose, repair, export, fixture run을 수행합니다.
-
-Docs-maintenance는 별도의 읽기 전용 문서 profile로 남습니다. Documentation drift를 보고할 수 있지만 내부 엔지니어링 점검도, MVP-1 사용자 작업 루프도, 보증 프로필 또는 operations runtime conformance도, 구현 준비 상태 신호도 아닙니다.
-
-## 로드맵 범위의 후보
-
-아래 항목은 향후 계획이 담당 문서를 통해 [로드맵 단계 승격 조건](../roadmap.md#단계-승격-조건)을 만족시켜 승격하기 전까지 staged delivery 밖에 둡니다. 승격하려면 사용자 소유 판단을 보존하고, Core 권한을 우회하지 않으며, 단계에 맞는 보안 보장 표현을 사용하고, 근거/검증/QA/작업 수락/잔여 위험에 미치는 영향을 밝히며, 내부 엔지니어링 점검부터 운영 프로필까지의 범위를 부풀리지 않아야 합니다. 또한 필요한 능력 프로필, 정확한 계약, redaction/secret/PII 정책, 런타임 접점 캡처 시 아티팩트 보존 규칙과 test environment 규칙, fixture 또는 적합성 목표, fallback 동작, 읽기용 요약을 기준 상태로 삼지 않는다는 조건을 담당 문서가 정의해야 합니다.
-
-| 후보 | 단계 경계 |
-|---|---|
-| 대시보드, 호스팅된 작업 UI, 아티팩트 대시보드, 풍부한 카드 확장 | 상태를 표시할 수는 있지만 권한, 구현 준비 상태, 닫기 준비 상태, 작업 수락, 잔여 위험 수용이 되면 안 됩니다. |
-| 넓은 커넥터 시장 또는 접점 생태계 | 나중에 접점을 확장할 수 있지만 첫 Core 권한 루프 증명을 대체하거나 MCP 노출을 기본적으로 넓히면 안 됩니다. |
-| 브라우저 QA 캡처 자동화 | 승격 뒤 수동 QA를 보조할 수 있지만 사람의 QA 판단, 작업 수락, profile-required detached verification을 대체하면 안 됩니다. |
-| 여러 접점 검증 자동화 | 승격 뒤 evaluator routing을 자동화할 수 있지만 Core 소유 반환 기록과 active profile이 요구하는 독립성 의미 없이 Eval 또는 assurance를 충족하면 안 됩니다. |
-| 예방적 가드 확장, 네이티브 후크, 고급 사이드카 워처 | 증명된 pre-tool blocking 또는 관찰 경로가 있을 때 접점을 강화할 수 있지만 label만으로 주장하면 안 됩니다. |
-| 맥락 색인, 로컬 파생 지표, 장기 지표 | 읽기 전용 검색이나 진단을 제공할 수 있지만 write를 compatible하게 만들거나, gate를 충족하거나, 읽기용 요약을 refresh하거나, Task를 close하면 안 됩니다. |
-| 팀 작업 흐름, 권한, 오케스트레이션, 병렬 lane | 향후 작업을 조율할 수 있지만 staged delivery나 single-project local authority의 필수 요소가 되면 안 됩니다. |
-| 배포, canary, rollback, merge, production monitoring | 향후 통합 작업이 될 수 있습니다. Release handoff는 담당 문서가 더 많은 권한을 승격하기 전까지 report/export boundary로 남습니다. |
-
-구현 중 향후 기능이 유용해 보이더라도 담당 문서가 기록/확인 경로를 정의하고 증명하기 전까지는 읽기 전용 표시, 메타데이터, 아티팩트 후보, fixture 후보로 유지합니다. Build 문서는 단계별 전달을 소유하고, 로드맵은 후보 예시만 추적합니다.
-
-## 단계별 종료 기준
-
-문서 수락과 별도의 구현 계획 준비 결정 이후 향후 런타임 계획을 위한 구현자가 읽을 수 있는 점검 목록으로 사용합니다. 이들은 staged exit을 다시 말할 뿐이며 schema, fixture, DDL, new runtime requirement를 추가하지 않습니다. [문서 수락 상태](implementation-overview.md#문서-수락-상태)가 첫 런타임 배치 계획을 막고 있는 동안 구현을 허가하지 않습니다.
-
-### 내부 엔지니어링 점검 종료 점검 목록
-
-- local project 하나가 등록된다.
-- active Task 하나가 Core-owned state 안에 존재한다.
-- scoped boundary 하나가 intended change boundary를 이름 붙인다.
-- Compatible scope 없는 product write는 Core가 구조화된 막힘으로 거부합니다. 이것은 기본 도구 실행 전 보안 차단이 아닙니다.
-- Out-of-scope intended write는 Core가 구조화된 막힘으로 거부합니다. 이것은 기본 도구 실행 전 보안 차단이 아닙니다.
-- 호환되는 `prepare_write`는 지속적이며 한 번만 쓸 수 있는 내부 Write Authorization record를 만든다.
-- Compatible `record_run`은 내부 Write Authorization record를 한 번 consume한다.
-- 두 번째 distinct product-write Run은 consumed internal Write Authorization record를 재사용할 수 없다.
-- Artifact/evidence ref 하나가 등록되어 Run 또는 minimal owner relation에 연결된다.
-- 상태/막힘 출력이 상태를 변경하지 않고 현재 상태 또는 blocker를 반환한다.
-- Structured blocker/status response가 missing scope, missing 쓰기 전 범위 확인, 또는 missing artifact/evidence support를 보고한다.
-
-### MVP-1 사용자 작업 루프 종료 점검 목록
-
-- 평범한 사용자 언어가 Harness vocabulary를 요구하지 않고 추적되는 작업을 시작하거나 이어 갈 수 있다.
-- User-facing path가 작업 형태를 분류하고 작은 직접 변경과 추적되는 작업을 구분한다.
-- User-facing path가 범위, 하지 않을 일, 성공 기준, 근거 기대, 닫기 준비 상태, 판단 경계를 summary로 보여 준다.
-- Codebase-answerable 또는 state-answerable fact는 사용자에게 반복 질문하기 전에 확인된다.
-- Clarification quality가 다음 safe action에 충분하다. 얕은 질문 하나에서 멈추지 않고, 긴 questionnaire를 쏟아내지 않으며, blocking question과 useful-but-not-blocking question을 분리하고, user-owned judgment에는 choices와 consequences를 준다.
-- 제품/UX 판단과 기술 판단을 서로 분리하고, 민감 동작 승인, 작업 수락, 잔여 위험 수용과도 분리해 제시할 수 있다.
-- MVP-1 판단을 위한 최소 판단 요청과 기록이 있으며 full-format judgment presentation machinery를 요구하지 않는다.
-- 작은 직접 변경과 추적되는 작업이 쓰기 전 범위 확인, 근거, 필요한 사용자 판단을 우회하지 않으면서 서로 다른 절차 예산을 사용한다.
-- 쓰기 전 범위 확인은 Core와 `prepare_write`를 통한 협력형 하네스 기록/확인 behavior이며, 변경 경로나 기록 불일치가 관찰되는 경우 제한된 사후 확인 behavior를 가질 수 있다. MVP-1은 OS-level 차단, 권한 격리, 임의 도구 sandboxing, 변조 방지 enforcement, 사전 차단, isolated behavior를 주장하지 않는다.
-- 실행/근거 참조는 `record_run`, registered artifact, 또는 최소 근거 요약 path로 기록된다.
-- Ambiguous feature request는 premature implementation이 아니라 clarification으로 들어간다.
-- Status/next output이 현재 범위, 빠진 판단, 근거 요약, 잔여 위험 표시, 닫기 막힘, next output, 다음 안전한 행동을 설명한다.
-- 필요한 근거가 없으면 닫기 막힘 요약이 막힘을 보고한다.
-- 필요한 사용자 판단이 missing 또는 unresolved이면 close가 막힘을 보고한다.
-- 알려진 닫기 관련 위험이 있으면 작업 수락 또는 close 전에 잔여 위험이 보인다.
-- "go ahead", "looks good", "좋아", "진행해" 같은 ambiguous consent phrase는 ambiguous route를 해소하거나, evidence를 waive하거나, residual risk를 accept하거나, out-of-scope work를 compatible하게 만들지 않는다.
-- MCP/Core unavailable status는 authority access가 없음을 보고하고 Task state, Write Authorization, evidence, approval, acceptance, close readiness를 만들어내지 않는다.
-- 사용자의 작업 수락이 sensitive-action Approval과 잔여 위험 수용과 별도로 기록되거나 표현된다.
-- 잔여 위험 수용을 지원하는 경우, 이것이 작업 수락과 뚜렷하게 구분되어 보인다.
-- 다섯 가지 작은 MVP 보기는 Core record에서 파생되며, template polish를 기준 권한으로 만들지 않고 MVP-1 path에 충분하다.
-- 대시보드, 호스팅 UI, 상세 Evidence Manifest, 전체 report/export, runtime conformance suite, 운영/복구/인계 pack은 MVP-1 종료 요구사항이 아니다.
-- Projection/template output은 state가 되지 않는다.
-- Detached verification은 기본 요구사항이 아니다.
-- Verification은 active profile, user request, task type, risk profile이 요구할 때만 필요하다.
-- Verification waiver는 required verification을 일부러 건너뛸 때만 필요하다.
-
-### 보증 프로필 종료 점검 목록
-
-- User judgment quality와 routing은 보증 프로필 runtime fixture가 materialized된 뒤 fixture로 증명된다.
-- Sensitive-action Approval이 User Judgment, Write Authorization, 수동 QA, verification, 작업 수락, 잔여 위험 수용을 대체하지 않는다.
-- 분리 검증 독립성과 same-session verification guard behavior는 관련 보증 프로필 runtime fixture가 materialized된 뒤 fixture로 증명된다.
-- Policy가 요구하는 곳에서 수동 QA 정책 매트릭스와 QA blocker는 관련 runtime fixture가 materialized된 뒤 fixture로 증명된다.
-- 위험 수용 close는 residual-risk acceptance user-judgment ref를 인용하고, rich Residual Risk ref는 해당 owner profile이 active일 때만 인용한다.
-- Policy가 요구하는 곳에서 stewardship validators, feedback-loop policy, TDD trace behavior, context-hygiene behavior가 cover된다.
-- Runtime suite가 materialized된 뒤 future agency conformance가 Journey visibility, user-judgment routing, Autonomy Boundary respect, distinct judgment categories/routes, 잔여 위험 처리를 증명한다.
-
-### 운영 프로필 종료 점검 목록
-
-- Doctor/readiness가 하네스 런타임 홈, project state, artifact store, reference surface, MCP availability, projections, reconcile, validators/checks, agency/stewardship/context category를 보고한다.
-- Recover는 recovery artifact를 successful completion proof로 취급하지 않으면서 interrupted 또는 drifted 운영 상태를 처리한다.
-- Export는 state snapshot, report projection snapshot, artifact refs, redaction status, omitted-secret notes, retained/expired/unavailable artifact status를 포함한다.
-- Artifact integrity check는 missing 또는 mismatched artifact를 기존 diagnostics로 보고한다.
-- Release handoff report/export behavior는 deployment, merge, rollback, production authority를 가져오지 않고 담당 profile을 따른다.
-- Operations/future fixture coverage가 export/recover, artifact integrity, release handoff, operator readiness, 승격된 higher guarantee level을 prose가 아니라 exact-shape fixture로 증명한다.
-- 후속 경계 확인은 담당 문서가 승격하고 증명하기 전까지 로드맵 item을 staged delivery 밖에 둔다.
-
-## 단계별 관찰 가능 항목
-
-| 단계 | 사용자 또는 operator가 볼 수 있는 것 |
-|---|---|
-| 내부 엔지니어링 점검 | Implementer는 로컬 Task 하나가 scoped work boundary, `prepare_write`, 내부 Write Authorization record, `record_run`, artifact/evidence ref, 구조화된 상태/막힘 출력을 통과하는 것을 볼 수 있습니다. |
-| MVP-1 사용자 작업 루프 | 사용자는 평범한 작업이 범위, 하지 않을 일, 성공 기준, 사용자 판단, 근거 요약, 닫기 막힘, 다음 안전한 행동, 작업 수락 표시, 잔여 위험 표시로 정리되고 필요한 근거 또는 필요한 사용자 판단이 없으면 close가 막힘을 보고하며 작업 수락과 잔여 위험 수용이 분리되는 것을 볼 수 있습니다. |
-| 보증 프로필 | Local path가 verification, 수동 QA, 잔여 위험 수용, 작업 수락, stewardship, TDD, feedback, context hygiene, close behavior를 Core record와 fixture로 설명합니다. |
-| 운영 프로필 | Operator는 같은 Core state 위에서 diagnose, recover, reconcile, export, artifact check, conformance run, release handoff 준비를 수행할 수 있습니다. |
-
-단계별 전달 이후에는 promoted roadmap item이 담당 문서가 exact contract와 fixture coverage를 정의한 뒤에만 authority loop를 읽고, 표시하고, 감싸고, 확장할 수 있습니다.
+| 보증 프로필 | Detached verification hardening, Manual QA matrix, full Approval lifecycle, rich residual risk, work-acceptance hardening, stewardship validator, TDD trace, feedback-loop policy, context-hygiene validator. |
+| 운영 프로필 | Doctor/readiness suite, recover/export, artifact integrity operations, release handoff, projection refresh/reconcile operations, conformance runner, broad operator surface. |
+| 로드맵 | Dashboard, hosted UI, connector marketplace, Browser QA Capture, Cross-Surface Verification, Context Index, metrics, preventive guard expansion, hook, team workflow, permission, orchestration, deployment, canary, rollback, production monitoring. |
+
+## 종료 점검
+
+MVP-1 사용자 작업 루프는 사용자가 아래를 볼 수 있을 때만 complete로 볼 수 있습니다.
+
+- Harness internal label을 몰라도 평소 작업을 시작하거나 이어갈 수 있음
+- 범위, 하지 않을 일, 성공 기준, work shape
+- 필요할 때 choices와 consequences를 포함하는 pending user judgment
+- Product/technical judgment, sensitive approval, work acceptance, residual-risk acceptance의 분리 표시
+- Core를 통한 compatible pre-write scope check
+- Recorded Run과 evidence ref 또는 evidence summary
+- Current status, next safe action, evidence gap, close blocker, residual-risk visibility
+- Required evidence나 required user judgment가 없으면 close가 hold됨
+- MCP/Core unavailable 상태에서 authority를 만들어 내지 않음
+- Core record에서 파생된 compact view와, 필요한 경우 stale/failed freshness 표시
+
+이 checklist 통과는 보증 프로필, 운영 프로필, 로드맵 범위, runtime conformance suite를 수락한다는 뜻이 아닙니다.

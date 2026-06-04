@@ -33,7 +33,7 @@
 |---|---|---|
 | 일반 사용자 | [개요](learn/overview.md) | 작업 흐름의 느낌은 [하나의 작업](learn/one-task.md); 실제 세션 동작은 [사용자 가이드](use/user-guide.md); 용어 이름이 필요할 때만 [핵심 개념](learn/concepts.md). |
 | 에이전트 지침 작성자 | [에이전트 가이드](use/agent-guide.md) | 정확한 connector/context 계약이 필요할 때만 [Agent 통합 참조](reference/agent-integration.md)와 [Surface Cookbook](reference/surface-cookbook.md). |
-| 서버 구현자 | [구현 개요](build/implementation-overview.md) | [MVP-1 사용자 작업 루프](build/mvp-user-work-loop.md) -> [MVP API](reference/api/mvp-api.md) -> [Storage](reference/storage.md). 첫 내부 점검은 [내부 엔지니어링 점검](build/engineering-checkpoint.md), request-to-close 흐름은 [Runtime Walkthrough](build/runtime-walkthrough.md)를 사용합니다. |
+| 서버 구현자 | [구현 개요](build/implementation-overview.md) | [내부 엔지니어링 점검](build/engineering-checkpoint.md) -> [MVP-1 사용자 작업 루프](build/mvp-user-work-loop.md) -> [MVP API](reference/api/mvp-api.md) -> [Storage](reference/storage.md) -> [보안 참조](reference/security.md). [런타임 설계 흐름](build/runtime-walkthrough.md)은 의도한 request-to-close 설계 경로를 볼 때만 사용합니다. |
 | 문서 유지보수자 | [문서 작성 가이드](maintain/authoring-guide.md) | [번역 가이드](maintain/translation-guide.md), [재작성 계획](maintain/rewrite-plan.md), 엄격한 의미를 확인할 때만 Reference 담당 문서. |
 | 이후 프로필 독자 | [보증 프로필](later/assurance-profile.md) | [운영 프로필](later/operations-profile.md), [향후 Fixtures](later/future-fixtures.md), [로드맵](roadmap.md). Owner가 승격하기 전까지 MVP 경로 밖에 둡니다. |
 
@@ -77,12 +77,13 @@ AI 지원 개발 세션을 하네스 기준으로 진행하거나 설명할 때 
 서버 구현자 빠른 경로:
 
 1. [구현 개요](build/implementation-overview.md): 현재 상태, 유지보수자 인계, 향후 저장소 역할.
-2. [MVP-1 사용자 작업 루프](build/mvp-user-work-loop.md): 첫 사용자 가치 구현 계약과 서버 코딩 전 결정 기록.
-3. [MVP API](reference/api/mvp-api.md): active MVP-1 public tool.
-4. [API Schema Core](reference/api/schema-core.md)와 [API Errors](reference/api/errors.md): shared envelope, ref, resource, error, idempotency, state conflict.
-5. [Storage](reference/storage.md): 저장되는 runtime layout, state table, lock, artifact, migration.
+2. [내부 엔지니어링 점검](build/engineering-checkpoint.md): 제품 MVP가 아닌 첫 내부 authority-loop smoke.
+3. [MVP-1 사용자 작업 루프](build/mvp-user-work-loop.md): 첫 사용자 가치 구현 계획과 서버 코딩 전 결정 기록.
+4. [MVP API](reference/api/mvp-api.md), [API Schema Core](reference/api/schema-core.md), [API Errors](reference/api/errors.md): active MVP-1 tool, shared shape, resource, error, idempotency, state conflict.
+5. [Storage](reference/storage.md): runtime layout, staged storage profile, lock, artifact, migration.
+6. [보안 참조](reference/security.md): MVP-1의 cooperative/limited-detective guarantee wording과 local-access boundary.
 
-[내부 엔지니어링 점검](build/engineering-checkpoint.md)은 첫 내부 authority-loop smoke를 계획할 때 읽습니다. 정확한 request-to-close 동작이 필요하면 [Runtime Walkthrough](build/runtime-walkthrough.md)와 [Core Model 참조](reference/core-model.md)를 사용합니다.
+[런타임 설계 흐름](build/runtime-walkthrough.md)은 의도한 동작의 설계 walkthrough이며 런타임이 존재한다는 증거가 아닙니다. 정확한 request-to-close state behavior는 [Core Model 참조](reference/core-model.md)가 담당합니다.
 
 Future/diagnostic material은 Build 또는 Reference owner가 해당 단계로 명시적으로 승격하기 전까지 MVP 구현 경로 밖에 둡니다.
 

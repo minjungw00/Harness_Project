@@ -2,250 +2,94 @@
 
 ## What this document helps you do
 
-This document turns the Build overview into the Engineering Checkpoint an implementer should plan first: the first internal authority-loop smoke.
+Use this page to plan the first internal Harness Server implementation slice: Engineering Checkpoint. It is a smoke of the local Core authority loop. It is not the product MVP, not MVP-1 User Work Loop, and not evidence that a runtime exists today.
 
-This is planning documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, fixture files, or runtime data before documentation acceptance and a separate implementation-planning readiness decision. Conformance fixture documentation is a future verification plan; the current documentation-only repository does not contain runnable Harness Server conformance tests. The first future implementation target is Engineering Checkpoint, with Kernel Smoke as a narrow future smoke-check authoring label. It is an internal smoke milestone, not a product MVP. The first user-value target is MVP-1 User Work Loop.
+This is planning documentation only. Runtime/server implementation may start only after documentation acceptance and a separate implementation-planning readiness decision in [Implementation Overview](implementation-overview.md#documentation-acceptance-status).
 
 ## Read this when
 
-- You are planning Engineering Checkpoint.
-- You need a checklist for the first end-to-end authority path.
-- You want to review whether a proposed first slice is small enough to run without becoming a product MVP or the first user-value slice.
-
-## Before you read
-
-Read [Implementation Overview](implementation-overview.md) first, including its [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status). That handoff table is the Build entry gate; until maintainers accept implementation-planning readiness for the first runtime batch, this slice remains planning-only. For storage and DDL details, use [Storage](../reference/storage.md). For staged delivery after this slice, use [MVP-1 User Work Loop](mvp-user-work-loop.md). For Roadmap candidates, use the [Roadmap](../roadmap.md).
+- You need the smallest future runnable slice.
+- You are checking that the first batch has not become user-value MVP scope.
+- You need owner links for the checkpoint without copying API, DDL, or fixture definitions.
 
 ## Main idea
 
-Prove one Task can move through the smallest Core authority record: local project registration, one active Task, one scoped boundary represented by the Change Unit owner shape only where the reference contract requires it, one write authorization decision, one authorized Run, one artifact/evidence reference, and one structured status/blocker response.
+Engineering Checkpoint proves that Harness can keep one local authority record alive through Core:
 
-The first slice should show that Harness state is local, durable, and authoritative without trying to prove the whole user-facing product. It keeps `prepare_write` as the product-write authorization decision point, Write Authorization as durable and single-use, `record_run` as the place where one compatible Run consumes authority, and status/blocker output as the place where missing scope, missing write authority, or missing artifact/evidence support can be reported as structured blockers. A `close_task` smoke may be used if the owner path already makes that the simplest blocker response, but Engineering Checkpoint does not prove work acceptance, residual-risk acceptance, or full close semantics.
-
-Use [Core Model Reference](../reference/core-model.md#prepare_write), [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), and [API Errors](../reference/api/errors.md) for the exact contracts.
-
-For API staging, start from the API [Stage Profile Manifest](../reference/api/schema-core.md#stage-profile-manifest) and use only its Engineering Checkpoint surface: minimal `harness.status` status/blocker read, `harness.prepare_write`, `harness.record_run`, one owner-valid Task/scope setup path, and optional narrow `harness.close_task` blocker smoke. A separate `harness.next` method is later/compatibility material, not a first-slice exit criterion. Later-profile fields remain exact when their profiles are active, but they are not first-slice exit criteria.
-
-## Goal
-
-Plan Engineering Checkpoint: the smallest Harness path that can prove local authority over one Task.
-
-The slice should create or seed:
-
-- one local project registration
-- one active Task
-- one basic scope for the intended change
-- one allowed `prepare_write` decision and at least one blocked decision
-- one durable single-use Write Authorization
-- one compatible recorded Run that consumes the authorization
-- one artifact/evidence ref linked to the Run or minimal owner relation
-- one structured status/blocker response when scope, write authority, or artifact/evidence support is missing
-
-This is a command-independent implementation guide. It describes capabilities and observable behavior, not CLI syntax. Do not include or duplicate full DDL here. Storage details and DDL are owned by [Storage](../reference/storage.md).
-
-For storage planning, use only the minimal authority subset of [MVP-1 minimal storage schema](../reference/storage.md#mvp-1-minimal-storage-schema) for Engineering Checkpoint. Later storage profiles such as full Approval records, Evidence Manifests, Manual QA, Eval, projection jobs, reconcile items, validator runs, Journey records, and diagnostics are not first-slice requirements.
-
-The first slice is deliberately not the MVP-1 User Work Loop, a product MVP, the hardened local reference target as a whole, natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, detached verification, work-acceptance semantics, projection rendering, a projection-template-polish milestone, multiple projection kinds, dashboard or hosted-workflow-UI milestone, broad connector ecosystem or marketplace milestone, multi-surface connector expansion, Context Index, Browser QA Capture system, Cross-Surface Verification path, hook expansion, preventive guard expansion, Advanced Sidecar Watcher, Local Derived Metrics surface, team workflow, operations/export/recover path, release handoff path, conformance runner, broad operator-entrypoint path, future fixture catalog, or parallel automation path.
-
-## Success story
-
-After a future Engineering Checkpoint implementation exists, an implementer should be able to run a local Harness process against a temporary product repository and observe this story:
-
-1. Harness registers one local project.
-2. A Task exists in Core-owned state.
-3. A scoped work boundary names the intended product change.
-4. `prepare_write` blocks a missing or incompatible scope.
-5. `prepare_write` allows one compatible scoped write and creates a durable single-use Write Authorization.
+1. One local project is known.
+2. One active Task exists.
+3. One scope boundary exists for an intended write.
+4. `prepare_write` refuses incompatible work and allows compatible work.
+5. One durable, single-use Write Authorization is created.
 6. `record_run` records one compatible Run and consumes that authorization once.
-7. One artifact/evidence ref is registered and linked to the Run or minimal owner relation.
-8. Status/blocker output shows current Task, scope, write authority, artifact/evidence support, and blockers without mutating state.
-9. Status or a close-task smoke returns a structured blocker when scope, write authority, or artifact/evidence support is missing.
+7. One artifact/evidence ref is registered and linked through an owner path.
+8. Status/blocker output reads current Core state without mutating it.
 
-Passing this story means Engineering Checkpoint works. It does not mean users have experienced Harness value yet. MVP-1 User Work Loop begins when ordinary requests can start or resume tracked work and Harness preserves a local basis for scope, non-goals, success criteria, pending user judgments, evidence summary, close blockers, next safe action, and minimal separation between work acceptance and residual-risk acceptance.
+That is all. The checkpoint exists to prove the authority loop before user-facing value is added.
 
-## Doc-level acceptance checks
+## Not product MVP
 
-Use these checks to review the planned Engineering Checkpoint before executable fixtures exist, and again when mapping the slice to the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue). They are planning checks, not fixture body fields, schema additions, DDL, or runtime authorization.
+Engineering Checkpoint explicitly does not include:
 
-A proposed first implementation slice is acceptable when:
+- ordinary-language intake or full requirements clarification
+- full user judgment presentation
+- detailed Evidence Manifest behavior
+- detached verification, Eval, Manual QA, work acceptance, residual-risk acceptance, or full close semantics
+- projection renderer, detailed templates, dashboards, hosted UI, reports, export, or recover
+- conformance runner or executable fixture catalog
+- broad connector ecosystem, team workflow, orchestration, metrics, hook expansion, preventive guard expansion, or Roadmap automation
 
-- It remains local, single-project, and focused on one Task authority loop.
-- It stays planning-only until the [Documentation Acceptance Status](implementation-overview.md#documentation-acceptance-status) explicitly marks implementation-planning readiness as accepted for the first runtime batch.
-- It proves exactly one scoped write path: active Task, one scoped boundary, `prepare_write` allow/block, durable single-use Write Authorization, `record_run` consumption, artifact/evidence ref, and structured status/blocker response.
-- It blocks or refuses missing authority: missing scope, out-of-scope intended path, missing Write Authorization for product-write Runs, reuse of a consumed Write Authorization, or missing artifact/evidence support.
-- It keeps status reads, generated prose, and any projection output downstream from Core records; none of them authorize writes, satisfy evidence, close work, repair state, or become conformance truth by being read.
-- It treats projection-like output as status/blocker output for Engineering Checkpoint; no full projection renderer, multiple projection kinds, or detailed templates are required.
-- It links any future strict fixture body shape, assertion modes, primary errors, artifact refs, optional projection assertions, and seed validation to [Conformance Fixtures Reference](../reference/conformance-fixtures.md#conformance-fixture-format) instead of copying those contracts here.
-- It names excluded capabilities as not yet proven by Engineering Checkpoint, not as failed first-slice requirements.
-
-The build order below is a post-acceptance, post-readiness planning sequence. The headings use implementation verbs so the future runtime batch is easy to execute, but this document still does not authorize runtime/server implementation, generated operational files, executable fixtures, or runtime data before documentation acceptance and a separate implementation-planning readiness decision.
+If a proposed first slice needs those capabilities to pass, it is no longer Engineering Checkpoint.
 
 ## Build order
 
-### 1. Runtime Home And Project Registration
+Use this as an implementation planning order after readiness is accepted. It names capabilities, not command names or schema details.
 
-Plan enough runtime home support to create local Harness authority outside chat history and generated Markdown, then register exactly one local product repository.
+| Step | Implementer goal | Done when | Owner docs |
+|---|---|---|---|
+| 1. Runtime home and project registration | Resolve one local product repository through the future Harness runtime home. | Status can distinguish unregistered, registered-idle, and active-work states. | [Runtime Architecture Reference](../reference/runtime-architecture.md), [Storage](../reference/storage.md), [Security Reference](../reference/security.md). |
+| 2. One Task record | Create or seed one active Task through an owner-valid path. | Status can show the active Task and state version; stale state-changing calls are rejected where required. | [Core Model Reference](../reference/core-model.md), [API Errors](../reference/api/errors.md). |
+| 3. One basic scope | Attach the smallest scope boundary that can constrain one intended product write. | Product writes without compatible scope cannot receive write authority. | [Core Model Reference](../reference/core-model.md). |
+| 4. `prepare_write` allow/block | Route the intended write through the owner pre-write scope check. | Missing or out-of-scope work blocks; compatible work returns a Write Authorization ref. | [Core Model Reference](../reference/core-model.md#prepare_write), [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write), [API Errors](../reference/api/errors.md). |
+| 5. `record_run` | Record one compatible Run and consume the authorization. | A compatible Run succeeds once; reuse of the consumed authorization fails. | [Core Model Reference](../reference/core-model.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run). |
+| 6. Artifact/evidence ref | Register one durable artifact or evidence ref through the owner path. | A Run or minimal owner relation can cite that registered ref. | [API Schema Core](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md). |
+| 7. Status and blockers | Expose current state and blockers without mutation. | Repeated reads do not change state, and blockers are structured enough for future smoke checks. | [`harness.status`](../reference/api/mvp-api.md#harnessstatus), [Core Model Reference](../reference/core-model.md), [API Schema Core](../reference/api/schema-core.md). |
 
-Planning focus:
+For API staging, use the [Stage Profile Manifest](../reference/api/schema-core.md#stage-profile-manifest). For storage planning, use [Storage](../reference/storage.md) and apply only the owner-approved minimal subset needed by this checkpoint.
 
-- Make one local project resolvable for later Task-scoped actions.
-- Keep the runtime home, registry, project state, artifact store, and static project configuration in the storage owner path.
-- Provide a read-only status that can report an unregistered, registered-idle, or active-work state.
+## Doc-level acceptance checks
 
-Done when:
+A future Engineering Checkpoint plan is acceptable when:
 
-- A fresh environment can be initialized repeatedly without creating duplicate authority records.
-- Core can resolve the current project for all later Task-scoped actions.
-- Status can distinguish an unregistered or idle project from an active Task.
+- It is local, single-project, and focused on one Task authority loop.
+- It remains planning-only until [Documentation acceptance status](implementation-overview.md#documentation-acceptance-status) accepts implementation planning readiness.
+- It proves one scoped write path through `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref, and structured status/blocker output.
+- It refuses missing scope, out-of-scope intended work, missing Write Authorization for product-write Runs, reuse of a consumed Write Authorization, and missing artifact/evidence support where the active path requires support.
+- It treats all status text, generated prose, and projection-like output as downstream reads from Core records.
+- It does not require full projection rendering, multiple projection kinds, detailed templates, operations, conformance runner, or later-profile storage to pass.
+- It links strict fixture format and assertions to [Conformance Fixtures Reference](../reference/conformance-fixtures.md) instead of defining them here.
 
-Owner contracts: runtime home layout and the minimal storage schema are owned by [Storage](../reference/storage.md#mvp-1-minimal-storage-schema); local spaces and guarantee-level placement are owned by [Runtime Architecture Reference](../reference/runtime-architecture.md), guarantee-level meanings by [Security Reference](../reference/security.md#honest-guarantee-display), and connector reporting by [Agent Integration Reference](../reference/agent-integration.md).
+## Future smoke checks
 
-### 2. One Task Record
+Kernel Smoke is only the narrow future authoring label for Engineering Checkpoint checks. It is not a stage name, not a full suite, and not a current executable fixture set.
 
-Create the first Task through Core or a fixture seed path that uses the same validation rules.
+When runtime implementation exists, future smoke checks should assert owner records, state transitions, artifact/evidence refs, structured blockers, and errors. They should not prove success by matching rendered prose, generated Markdown, or polished templates.
 
-Planning focus:
-
-- Create or seed exactly one active Task through an owner-valid path.
-- Keep enough current state for status and later Core actions to refer to the Task.
-- Keep mode policy depth, intake quality, and procedural budget routing for MVP-1 User Work Loop.
-
-Done when:
-
-- The system can show one active Task and its state version.
-- A state-changing request with a stale expected state version is rejected or returns a state conflict where the owner contract requires it.
-
-Owner contracts: Task lifecycle and state conflict behavior are owned by [Core Model Reference](../reference/core-model.md#task), [Lifecycle and transitions](../reference/core-model.md#lifecycle-and-transitions), and [API Errors](../reference/api/errors.md#state-conflict-behavior).
-
-### 3. One Basic Scope
-
-Add the smallest scope record that can constrain one intended product write. A Change Unit may be the owner shape, but the first slice should not expand into dependency graphs, full Autonomy Boundary policy, or multi-lane orchestration.
-
-Planning focus:
-
-- Attach one owner-valid scope to the active Task.
-- Make the selected intended write checkable against that scope.
-- Keep only the artifact/evidence support needed for the first authority-loop claim.
-- Keep full Discovery and user-facing procedural budget routing for MVP-1 User Work Loop.
-
-Done when:
-
-- Status can explain what may change.
-- Product writes without an active compatible scope cannot receive write authority.
-
-Owner contracts: Change Unit and Autonomy Boundary semantics are owned by [Core Model Reference](../reference/core-model.md#change-unit) and [Autonomy Boundary](../reference/core-model.md#autonomy-boundary).
-
-### 4. `prepare_write` Allow/Block
-
-Implement the first meaningful write gate.
-
-Planning focus:
-
-- Route the selected product-write attempt through the owner `prepare_write` path.
-- Allow exactly one compatible scoped write or return an owner-shaped blocker.
-- Keep candidate Approval or user judgment material as candidate context until the owning path commits it.
-
-Done when:
-
-- Missing scope blocks.
-- Out-of-scope intended paths block.
-- A compatible scoped write returns a Write Authorization ref.
-- No product write can be recorded by a product-write Run without that ref.
-
-Owner contracts: write-gate semantics are owned by [Core Model Reference: prepare_write](../reference/core-model.md#prepare_write); public request/response shape and error precedence are owned by [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write) and [Primary Error Code Precedence](../reference/api/errors.md#primary-error-code-precedence).
-
-### 5. `record_run`
-
-Record one direct Run or implementation Run and consume the Write Authorization.
-
-Planning focus:
-
-- Record one owner-valid Run for the selected direct or implementation write.
-- Consume the compatible Write Authorization once.
-- Keep observed changes, artifacts, events, and state updates in the Core transaction model.
-
-Done when:
-
-- `record_run` without write authority is blocked.
-- `record_run` with compatible authority succeeds once.
-- A second distinct Run cannot reuse the consumed authorization.
-
-Owner contracts: Run semantics are owned by [Core Model Reference: record_run](../reference/core-model.md#record_run); public schema is owned by [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run); transaction ordering is owned by [State transaction flow](../reference/runtime-architecture.md#state-transaction-flow).
-
-### 6. Artifact Or Evidence Link
-
-Register one durable evidence file or equivalent evidence ref through the owner path. Engineering Checkpoint needs the reference and owner link, not the full Evidence Manifest model or rendered `EVIDENCE-MANIFEST` output.
-
-Planning focus:
-
-- Register one artifact or evidence ref through an owner path.
-- Link it to the Run, evidence relation, or other owner record that uses it.
-- Preserve redaction, omission, integrity, and retention boundaries through the storage/API owners.
-
-Done when:
-
-- A Run can cite a registered artifact or evidence ref.
-- Raw secrets are omitted or blocked rather than stored as evidence.
-
-Owner contracts: artifact refs are owned by [ArtifactRef](../reference/api/schema-core.md#artifactref); storage layout and registration details are owned by [Artifact directory layout](../reference/storage.md#artifact-directory-layout) and [Artifact Registration Contract](../reference/storage.md#artifact-registration-contract).
-
-### 7. Status And Structured Blockers
-
-Expose current work state without mutation, and return structured blockers when the first slice cannot proceed.
-
-Planning focus:
-
-- Return current Task, scope, write-authority summary, artifact/evidence support, and blockers from canonical records.
-- Keep blocker identity structured enough for smoke checks without making prose authoritative.
-- Do not append events, enqueue projections, create artifacts, satisfy gates, authorize writes, or close the Task from a read.
-
-Done when:
-
-- Repeated status reads return the same state version unless another action changed state.
-- The structured blocker can be compared without matching prose.
-- Close/status results are based on canonical records, not rendered reports.
-
-Owner contracts: status and `status.next_actions` schemas are owned by [`harness.status`](../reference/api/mvp-api.md#harnessstatus); separate [`harness.next`](../reference/api/schema-later.md#harnessnext) is later/compatibility material. Close behavior is owned by [Core Model Reference: close_task](../reference/core-model.md#close_task).
+Use [Conformance Fixtures Reference: Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) for future authoring order and [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format) for exact future fixture shape.
 
 ## What this proves
 
-The first implementation slice proves:
+Engineering Checkpoint proves:
 
-- Core can own state transitions.
-- A scoped record is required for product writes.
-- `prepare_write` is the product-write authorization decision point.
+- Core can own one local state transition path.
+- Scope is required before product-write authority.
 - Write Authorization is durable and single-use.
-- `record_run` consumes write authority once and records observed work.
-- One artifact/evidence link can support the recorded Run.
-- Artifact/evidence support can be missing without relying on chat.
-- Status/blocker reads are read-only.
-- Structured blockers can report missing scope, missing write authority, or missing artifact/evidence support.
+- `record_run` consumes write authority and records observed work.
+- At least one registered artifact/evidence ref can support the recorded Run.
+- Status/blocker reads can explain missing authority without becoming authority.
 
-## What this does not prove yet
+## What remains for MVP-1
 
-This slice does not prove the items below. They are stage boundaries, not failed Engineering Checkpoint requirements.
+MVP-1 User Work Loop starts after this checkpoint. It adds ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria, minimal user judgment, evidence summary, close blocker summary, next safe action, residual-risk visibility, and separate display of sensitive approval, work acceptance, and risk acceptance.
 
-| Later stage | Not yet proven by Engineering Checkpoint |
-|---|---|
-| MVP-1 User Work Loop | Ordinary-language start/resume, work-shape classification, natural-language intake quality, scope/non-goals/success criteria summary, minimal user judgment request/record, product/UX versus architecture judgment presentation, cooperative pre-write scope checking, small direct vs tracked-work budgets, run/evidence reference recording, evidence summary, close blocker summary, next safe action, residual-risk visibility, work-acceptance display, sensitive approval display, risk-acceptance display, compact Core-derived status card sufficiency. |
-| Assurance Profile | Profile-specific user judgment quality, full Approval lifecycle and drift handling, detached verification independence, Manual QA policy matrix, residual-risk accepted close, work-acceptance separation, feedback-loop policy, TDD trace, codebase stewardship, stewardship validators, context hygiene. |
-| Operations Profile | Release handoff, recover, export, artifact integrity operations, broad operator smoke, broader fixture suite coverage, full projection/reconcile operations. |
-| Roadmap | Dashboard, hosted workflow UI, Context Index, connector marketplace, Browser QA Capture, Cross-Surface Verification automation, native hook expansion, Advanced Sidecar Watcher, Local Derived Metrics, preventive guard expansion, parallel orchestration, team workflow. |
-
-## Future Smoke Checks
-
-After documentation acceptance and implementation-planning readiness handoff, map the Engineering Checkpoint to the smallest Kernel Smoke checks that drive Core behavior and assert the minimal owner records, artifact/evidence ref, structured blocker/status response, and errors. Do not assert success by matching rendered prose or polished projection output. These rows are future authoring candidates; they do not imply executable fixture files exist now, and they are not a full conformance suite.
-
-Build owns the Engineering Checkpoint scope intent: local project registration, one active Task, one scoped boundary, `prepare_write` allow/block, one single-use Write Authorization, one `record_run` consume/block, one artifact/evidence ref, and one structured status/blocker output. Projection polish, detailed templates, full Evidence Manifest behavior, conformance runner behavior, and broad fixture catalogs are not Engineering Checkpoint requirements. The exact future fixture queue, body fields, active-path seed boundary, assertion modes, stable events, artifact/projection assertions, and primary-error expectations are owned by the [Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) and [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format); later-profile shorthand and examples remain in [Future Fixtures](../later/future-fixtures.md).
-
-Do not add fields to the fixture body to express suite stage, authoring order, or docs-maintenance results.
-
-## Reference docs to consult
-
-- [Core Model Reference](../reference/core-model.md): Task, Change Unit, User Judgment, gates, `prepare_write`, Write Authorization, `record_run` semantics, and `close_task`.
-- [Runtime Architecture Reference](../reference/runtime-architecture.md): three spaces, Core process model, transaction flow, artifact store, projection/reconcile, guarantee levels, and failure handling.
-- [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), and [API Errors](../reference/api/errors.md): public resources, tool envelopes, request/response schemas, error taxonomy, artifact refs, and `ProjectionKind`.
-- [Storage](../reference/storage.md): runtime layout, staged schema profiles, migrations, locks, artifacts, and later-profile baseline, projection-job, and validator-run candidates.
-- [Operations And Conformance Reference](../reference/operations-and-conformance.md): operator semantics and conformance staging.
-- [Conformance Fixtures Reference](../reference/conformance-fixtures.md): core conformance model, fixture format, execution, assertion rules, and the reduced Kernel Smoke queue.
-- [Future Fixtures](../later/future-fixtures.md): detailed later scenario candidates that are not Engineering Checkpoint requirements.
+Use [MVP-1 User Work Loop](mvp-user-work-loop.md) for that plan.

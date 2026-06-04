@@ -1,114 +1,111 @@
-# Build: Runtime Walkthrough
+# Build: 런타임 설계 흐름
 
-## 이 문서로 할 수 있는 일
+## 이 문서가 도와주는 일
 
-사용자 요청에서 close outcome까지 Harness work item 하나가 어떻게 지나가는지, 모든 엄격한 contract를 먼저 읽지 않고 따라갈 수 있게 합니다.
+이 문서는 의도한 하네스 런타임 동작을 설계 흐름으로 보여 줍니다. 구현자는 사용자 평소 요청 하나가 어떻게 scope, write authority, evidence, status, close outcome으로 이어져야 하는지 볼 수 있습니다.
 
-이 문서는 Build 문서입니다. 구현자와 reviewer를 위해 runtime path를 요약하지만, 문서 수락과 별도의 구현 계획 준비 결정 전에는 runtime/server 구현, 생성된 운영 파일, 실행 가능한 fixture 파일, 런타임 데이터, 새 schema를 만들라는 뜻이 아닙니다. 첫 향후 구현 목표는 내부 엔지니어링 점검이며, 커널 스모크(Kernel Smoke)는 좁은 향후 smoke-check 작성 라벨입니다. 첫 사용자 가치 목표는 MVP-1 사용자 작업 루프입니다. 보증 프로필과 운영 프로필은 agency assurance, 운영, 인계 동작을 단단하게 만들고, 로드맵은 owner 문서가 승격하고 증명하기 전까지 향후 범위에 남습니다.
+이 문서는 런타임이 존재한다는 증거가 아닙니다. [구현 개요](implementation-overview.md#문서-수락-상태)의 handoff gate가 수락되기 전에는 server/runtime 구현, generated operational artifact, executable fixture, runtime data, new schema를 허가하지 않습니다.
 
-## 읽는 경우
+## 이런 때 읽기
 
-- Reference 계약에 들어가기 전에 runtime 관점의 개념 지도가 필요할 때.
-- 요구사항이 어떻게 scoped work가 되는지 확인할 때.
-- state, artifact, projection, 닫기 막힘의 차이를 설명해야 할 때.
-- 내부 엔지니어링 점검 path를 MVP-1 사용자 작업 루프로 키우지 않고 리뷰할 때.
-
-## 먼저 읽을 것
-
-구현 맥락은 [구현 개요](implementation-overview.md)와 [내부 엔지니어링 점검](engineering-checkpoint.md)을 읽습니다. 정확한 동작은 [Core Model 참조](../reference/core-model.md), [런타임 아키텍처 참조](../reference/runtime-architecture.md), [Projection과 Template 참조](../reference/projection-and-templates.md), [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), [API Errors](../reference/api/errors.md), [Storage](../reference/storage.md), [운영과 Conformance](../reference/operations-and-conformance.md)를 사용합니다.
+- 모든 Reference 계약을 읽기 전에 request-to-close 이해 모델이 필요할 때.
+- 제안된 구현 경로가 state, artifact, projection, blocker를 분리하는지 확인할 때.
+- 어떤 부분이 내부 엔지니어링 점검이고 어떤 부분이 MVP-1 또는 이후 범위인지 보고 싶을 때.
 
 ## 핵심 생각
 
-쓰기 가능한 추적 작업에서는 하네스가 Task와 초기 범위를 알고, stage가 요구하는 요구사항 구체화나 사용자 소유 판단이 기록된 뒤에야 요청이 안전한 제품 작업이 됩니다. 제품 파일 쓰기는 그다음 `prepare_write`를 통과해야 하며, 이때 한 번만 쓸 수 있는 Write Authorization이 만들어질 수 있습니다. Run은 그 권한을 소비하고, 근거와 artifact는 주장을 뒷받침하며, status/blocker 출력은 현재 상태를 사람이 읽을 수 있게 만듭니다. 이후 단계의 user-value, assurance, projection, close path는 해당 stage가 범위에 있을 때만 blocker를 설명하거나 Task를 닫을 수 있습니다.
+하네스 런타임 동작은 Core가 소유한 상태와 artifact ref를 통해 로컬 권한을 보존해야 합니다. Chat text, generated Markdown, connector output, projection view는 작업을 읽는 데 도움을 줄 수 있지만 authority가 되지 않습니다.
 
-이 walkthrough는 staged reader path를 보여 줍니다. 내부 엔지니어링 점검의 설계 목표는 그중 가장 작은 내부 부분만 다룹니다. 즉 local project registration 하나, active Task 하나, Reference 계약이 요구하는 경우에만 Change Unit owner shape로 표현되는 scoped boundary 하나, `prepare_write` authority path 하나, 한 번만 쓰는 Write Authorization 하나, 기록된 Run 하나, artifact/evidence ref 하나, structured status/blocker 응답 하나입니다. 내부 엔지니어링 점검은 natural-language intake, full Discovery, full-format user judgment presentation, full Evidence Manifest, Eval, Manual QA, Acceptance, residual-risk acceptance, full close semantics, projection rendering, conformance runner, recover/export, operations suite, dashboards, connectors, detached verification을 요구하지 않습니다. MVP-1 사용자 작업 루프는 평범한 말로 작업 시작/이어가기, 작업 형태 분류, 범위/하지 않을 일/성공 기준 요약, 최소 판단 요청/기록, 협력형 사전 쓰기 범위 확인, small direct work와 tracked work의 구분, status/next output, 실행/근거 참조 기록, 근거 요약, 닫기 막힘 요약, 다음 안전한 행동, 잔여 위험 표시, 민감 동작 승인 / 작업 수락 / 잔여 위험 수용의 분리 표시, Core에서 파생한 다섯 가지 작은 보기를 추가합니다.
+내부 엔지니어링 점검은 이 경로의 내부 가운데만 구현합니다. Project, Task, scope, `prepare_write`, single-use Write Authorization, `record_run`, artifact/evidence ref 하나, status/blocker output입니다.
 
-## 한눈에 보는 walkthrough
+MVP-1은 그 loop 주변의 사용자 표시 동작을 더합니다. Ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria, minimal user judgment, evidence summary, close blocker, next safe action, residual-risk visibility, approval/acceptance/risk 분리 표시입니다.
 
-Walkthrough 요약: 이 계획 도식은 의도한 request-to-close path 하나를 따라가는 독자용 지도입니다. 두 번째 source of truth도 아니고 구현된 runtime의 증거도 아닙니다.
+## 한눈에 보는 의도한 경로
 
 ```mermaid
 flowchart LR
-  Request["일상 요청"] --> Clarify["요구사항 구체화"]
-  Clarify --> Decision["사용자 판단"]
-  Clarify --> Scope["범위 정한 작업"]
-  Decision --> Scope
+  Request["ordinary request"] --> Clarify["clarify work"]
+  Clarify --> Judgment["user judgment if needed"]
+  Clarify --> Scope["scope"]
+  Judgment --> Scope
   Scope --> Prepare["prepare_write"]
-  Prepare -->|허용| Authorization["Write Authorization"]
-  Prepare -->|막힘| Blocker["구조화된 막힘"]
-  Authorization --> Run["record_run"]
-  Run --> Evidence["Run과 근거 기록"]
-  Evidence --> Readable["상태/막힘 출력"]
-  Blocker --> Readable
-  Readable --> CloseCheck["닫기 준비"]
-  CloseCheck -->|막힘| CloseBlocker["닫기 막힘"]
-  CloseCheck -->|준비| Close["Task 닫힘"]
+  Prepare -->|allowed| Auth["Write Authorization"]
+  Prepare -->|blocked| Blocker["structured blocker"]
+  Auth --> Run["record_run"]
+  Run --> Evidence["artifact/evidence refs"]
+  Evidence --> Status["status and compact views"]
+  Blocker --> Status
+  Status --> CloseCheck["close check"]
+  CloseCheck -->|blocked| CloseBlocker["close blocker"]
+  CloseCheck -->|ready| Closed["closed task"]
 ```
 
-눈여겨볼 점은 이 도식이 reader path이며 두 번째 source of truth나 내부 엔지니어링 점검 requirement list가 아니라는 것입니다. 요구사항 구체화와 projection-like output은 stage가 범위에 있을 때 work를 구체화하거나 읽는 데 도움을 주지만, 쓰기 권한은 `prepare_write`, 실행 기록은 `record_run`, 완료 막힘은 close/status owner path가 담당합니다. 내부 엔지니어링 점검에서 readable output은 status/blocker 출력만으로 충분합니다. MVP-1의 close-facing output은 full later assurance close model이 아니라 닫기 결과 보기이며, 필요할 때 상태 카드, 에이전트 맥락 패킷, 판단 요청, 실행/근거 요약이 이를 받칩니다. 정확한 state와 gate behavior는 [Core Model 참조](../reference/core-model.md)에 있고, active MVP-1 public call은 [MVP API](../reference/api/mvp-api.md)에 있습니다.
+이 diagram은 reader aid입니다. Exact state transition, schema, DDL, error, projection rule은 Reference 담당 문서에 남습니다.
 
-## 단계별 runtime path
+## 단계별 설계 경로
 
 ### 1. Request -> Task
 
-사용자는 평소 말로 원하는 일을 설명합니다. MVP-1 이후에는 tracking이 유용할 때 Harness intake가 작업 형태를 분류하고 Task 상태를 만들거나 갱신합니다. 내부 엔지니어링 점검은 natural-language intake 대신 owner-valid seed/setup path를 사용할 수 있습니다.
+사용자는 평소 언어로 작업을 설명합니다. MVP-1은 tracked work를 시작하거나 이어갈지 판단하고 work shape를 분류해야 합니다. 내부 엔지니어링 점검은 natural-language intake 대신 owner-valid setup 또는 seed path를 사용할 수 있습니다.
 
-엄격한 동작: Task lifecycle, mode, state transition은 [Core Model 참조](../reference/core-model.md#lifecycle-and-transitions)가 담당합니다. Storage layout은 [Storage](../reference/storage.md)이 담당합니다.
+담당 문서: [Core Model 참조](../reference/core-model.md), [MVP API](../reference/api/mvp-api.md), [Storage](../reference/storage.md).
 
-### 2. Task -> 요구사항 구체화
+### 2. Task -> 구체화
 
-요구사항 구체화(내부 이름 Discovery)는 MVP-1 이후 동작이며 내부 엔지니어링 점검 requirement가 아닙니다. 요청이 모호하거나, 위험하거나, 여러 단계이거나, 제품 표면에 닿거나, 사용자 소유 판단이 필요할 가능성이 있을 때 사용합니다. 이 구체화는 goal, user value, non-goals, success criteria, 확인 가능한 사실, assumption, technical/product choice, security/privacy concern, QA expectation, 남은 불확실성, scope boundary를 정리합니다.
+요청이 모호하거나, 위험하거나, 제품-facing이거나, 사용자 판단이 필요할 가능성이 있으면 하네스는 goal, non-goal, success criteria, inspectable fact, assumption, likely judgment boundary를 구체화합니다. 이것은 shaping input입니다. Evidence, Approval, Write Authorization, work acceptance, residual-risk acceptance, close가 아닙니다.
 
-엄격한 동작: 요구사항 구체화(Discovery)는 shaping input입니다. Approval, Write Authorization, evidence, verification, QA, 작업 수락, 잔여 위험을 받아들이는 판단, close, scope authority, 새 authority path가 아닙니다. Judgment routing은 [User Judgment](../reference/core-model.md#user-judgment)와 [MVP API](../reference/api/mvp-api.md#harnessrequest_user_judgment)의 public judgment call이 담당합니다.
+담당 문서: [Core Model 참조: User Judgment](../reference/core-model.md#user-judgment), [`harness.request_user_judgment`](../reference/api/mvp-api.md#harnessrequest_user_judgment).
 
-### 3. 요구사항 구체화 -> 안전한 다음 작업 -> Change Unit
+### 3. 구체화 -> scope
 
-요구사항 구체화는 에이전트가 확인할 수 있는 사실과 사용자 소유 판단을 분리하고 남은 불확실성을 추적한 뒤, 목표, 비목표, 수용 기준, 중요한 판단 후보가 충분히 분명해졌을 때 안전한 다음 작업, 더 작은 범위, 또는 작업 분할을 제안합니다. 제품 쓰기가 가까워지면 그 제안이 Change Unit candidate가 될 수 있습니다. Active Change Unit은 무엇이 바뀔 수 있는지, 무엇이 범위 밖인지, agent가 그 scope 안에서 어떤 판단을 직접 할 수 있는지를 이름 붙입니다.
+다음 안전한 작업 경계가 제품 변경의 scope가 됩니다. Scope는 무엇이 바뀔 수 있고 무엇이 범위 밖인지 말합니다. Scope record 자체는 write를 authorize하지 않습니다.
 
-이런 제안 표현은 standalone schema field, canonical record type, gate value, projection kind, authority path가 아닙니다.
+담당 문서: [Core Model 참조: Change Unit](../reference/core-model.md#change-unit), [Autonomy Boundary](../reference/core-model.md#autonomy-boundary).
 
-엄격한 동작: Change Unit과 Autonomy Boundary 의미는 [Core Model 참조의 Change Unit](../reference/core-model.md#change-unit)과 [Autonomy Boundary](../reference/core-model.md#autonomy-boundary)가 담당합니다. Change Unit은 work를 scope하지만, 그 자체로 write를 authorize하지 않습니다.
+### 4. Scope -> `prepare_write`
 
-### 4. Change Unit -> `prepare_write`
+Product write 전에 agent 또는 surface는 intended write가 현재 record와 compatible한지 Core에 묻습니다. MVP-1에서 이것은 cooperative pre-write scope check입니다. OS-level blocking이나 tool isolation이 아닙니다.
 
-제품 파일을 쓰기 전에 agent는 intended operation에 대한 쓰기 권한을 Core에 요청합니다. Core는 현재 상태, Change Unit scope, 범위에 들어온 Autonomy Boundary, 그리고 active stage가 요구하는 baseline freshness, sensitive-action Approval, user judgment, 적용되는 design policy, surface capability 같은 조건을 확인합니다. 내부 엔지니어링 점검은 내부 엔지니어링 점검에 필요한 scope/write-authority check만 요구합니다. MVP-1의 이 확인은 협력형 사전 쓰기 범위 확인입니다. Core는 권한을 거절할 수 있고 연결된 agent나 surface는 instruction에 따라 보류해야 하지만, 이것이 OS-level 차단, 임의 도구 격리, 권한 격리는 아닙니다.
-
-엄격한 동작: `prepare_write`는 [Core Model 참조](../reference/core-model.md#prepare_write)가 담당합니다. Public request/response shape는 [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write)가 담당합니다.
+담당 문서: [Core Model 참조: `prepare_write`](../reference/core-model.md#prepare_write), [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write), [보안 참조](../reference/security.md).
 
 ### 5. `prepare_write` -> Write Authorization 또는 blocker
 
-확인이 통과하면 Core는 specific attempt 하나에 맞는 Write Authorization을 만들거나 반환합니다. 통과하지 못하면 response는 blocker, state conflict, sensitive-action Approval path, user judgment path로 이어집니다.
+Check를 통과하면 Core는 한 번의 attempt에 맞는 Write Authorization을 돌려줍니다. 실패하면 blocker, state conflict, missing judgment path, local-access error, 또는 owner-defined response를 돌려줍니다.
 
-엄격한 동작: Write Authorization 의미는 [Write Authorization](../reference/core-model.md#write-authorization)이 담당합니다. Approval과 User Judgment의 non-substitution rule은 [판단 경로 경계](../reference/core-model.md#판단-경로-경계)가 담당합니다.
+담당 문서: [Core Model 참조: Write Authorization](../reference/core-model.md#write-authorization), [API Errors](../reference/api/errors.md).
 
 ### 6. Write Authorization -> Run
 
-Implementation 또는 direct write가 일어난 뒤 `record_run`이 실제로 일어난 일을 기록합니다. Product-write Run은 compatible, unexpired, unconsumed Write Authorization 하나를 consume합니다. 범위 밖 observation은 prose로 정상화되지 않으며 repair, recovery, blocker handling으로 라우팅됩니다.
+Product write나 direct work 뒤에는 `record_run`이 무엇이 일어났는지 기록합니다. Product-write Run은 compatible하고 expired되지 않았고 unconsumed인 Write Authorization 하나를 소비합니다.
 
-엄격한 동작: Run recording과 authorization consumption은 [record_run](../reference/core-model.md#record_run)이 담당합니다. Guarantee level behavior는 [런타임 아키텍처 참조](../reference/runtime-architecture.md#보장-수준-동작-지도)에 요약되어 있습니다.
+담당 문서: [Core Model 참조: `record_run`](../reference/core-model.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run), [런타임 아키텍처 참조](../reference/runtime-architecture.md#state-transaction-flow).
 
-### 7. Run -> Evidence와 artifact
+### 7. Run -> evidence와 artifact 연결
 
-Evidence는 completion claim 또는 success criteria를 supporting owner records와 등록된 artifact ref에 매핑합니다. 내부 엔지니어링 점검은 artifact/evidence ref 하나와 owner link 하나만 필요합니다. MVP-1은 evidence summary가 필요합니다. Full Evidence Manifest behavior는 later-profile scope입니다. Raw artifact는 지속적으로 보관할 evidence bytes를 담고, artifact record와 ref는 identity, integrity, redaction, retention, owner relation을 담습니다.
+Evidence는 claim을 registered artifact ref 또는 owner record에 연결합니다. 내부 엔지니어링 점검에는 ref 하나가 필요합니다. MVP-1에는 evidence summary와 visible gap이 필요합니다. Detailed Evidence Manifest behavior는 승격 전까지 later-profile scope입니다.
 
-엄격한 동작: evidence와 gate 의미는 [Evidence Manifest](../reference/core-model.md#evidence-manifest), [Evidence Gate](../reference/core-model.md#evidence-gate), [Artifact](../reference/core-model.md#artifact)가 담당합니다. Artifact storage와 DDL detail은 [Storage](../reference/storage.md)이 담당합니다.
+담당 문서: [Core Model 참조: Evidence Manifest](../reference/core-model.md#evidence-manifest), [API Schema Core: ArtifactRef](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md).
 
-### 8. Evidence -> status/blocker output 또는 projection
+### 8. Evidence -> status와 compact view
 
-Minimal path는 state record와 artifact ref에서 상태/막힘 출력을 직접 반환할 수 있습니다. 이후 profile은 그 기록에서 읽기용 Markdown과 카드를 렌더링할 수 있습니다. 읽기용 요약(Projection)의 최신성은 읽기용 보기가 최신인지 판단하는 데 도움을 주지만, Markdown이 상태 또는 근거 권한이 되지는 않습니다.
+Status와 compact view는 Core state와 artifact ref를 읽습니다. 사용자가 scope, pending judgment, evidence gap, blocker, next safe action, acceptance, residual risk를 볼 수 있게 돕습니다. Write를 authorize하거나, evidence를 satisfy하거나, work를 close하지 않습니다.
 
-엄격한 동작: projection authority, managed block, human-editable section, freshness rule은 [Projection과 Template 참조](../reference/projection-and-templates.md)가 담당합니다. Rendered template body는 [Template 참조](../reference/templates/README.md)에 있습니다.
+담당 문서: [`harness.status`](../reference/api/mvp-api.md#harnessstatus), [API Schema Core](../reference/api/schema-core.md), [Projection과 Template 참조](../reference/projection-and-templates.md).
 
-### 9. Status/blocker output 또는 projection -> 닫기 막힘 또는 close
+### 9. Status -> close blocker 또는 close
 
-완료에 가까워지면 해당 stage가 범위에 있을 때 `close_task`가 close-relevant 상태를 확인하고 Task를 닫거나 structured blocker를 반환합니다. 내부 엔지니어링 점검은 narrow close/status blocker smoke만 사용할 수 있으며 full close semantics를 증명하지 않습니다. MVP-1은 닫기 막힘 요약이 필요하지만 detached verification을 기본으로 요구하지 않습니다. Verification은 active profile, 사용자 요청, task type, risk profile이 요구할 때만 필요합니다. Verification waiver는 요구된 verification을 의도적으로 건너뛸 때만 필요합니다. Close Readiness는 그런 blocker를 사용자가 볼 수 있게 요약한 것이지 새 gate가 아닙니다.
+Close가 stage 범위에 있으면 Core는 close-relevant state를 확인하고 Task를 close하거나 blocker를 반환합니다. 내부 엔지니어링 점검은 좁은 status/close blocker smoke만 사용할 수 있습니다. MVP-1에는 close blocker display와 work acceptance/residual-risk acceptance 분리가 필요합니다. Full assurance close semantics는 later-profile scope입니다.
 
-엄격한 동작: completion check는 [`close_task`](../reference/core-model.md#close_task)가, close result wording은 [Close result semantics](../reference/core-model.md#close-result-semantics)가, public error precedence는 [API Errors](../reference/api/errors.md#primary-error-code-precedence)가 담당합니다.
+담당 문서: [Core Model 참조: `close_task`](../reference/core-model.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task), [API Errors](../reference/api/errors.md).
 
-## 첫 구현 경계
+## 단계 경계
 
-내부 엔지니어링 점검에서는 path를 좁게 유지합니다. 하나의 local project registration, 하나의 active Task, 하나의 scoped boundary, `prepare_write`, `record_run`이 소비하는 single-use Write Authorization 하나, artifact/evidence ref 하나, structured status/blocker 출력이 범위입니다. Projection-like output은 status/blocker 출력으로 취급하고 full projection support를 요구하지 않습니다.
+| 단계 | Walkthrough에서 범위에 들어오는 부분 |
+|---|---|
+| 내부 엔지니어링 점검 | Project, Task, scope, `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref 하나, status/blocker output. |
+| MVP-1 사용자 작업 루프 | 내부 엔지니어링 점검에 ordinary-language start/resume, work-shape classification, minimal user judgment, evidence summary, close blocker summary, next safe action, residual-risk visibility, compact view를 더합니다. |
+| 보증 프로필 | Verification, Manual QA, richer work acceptance/residual-risk behavior, stewardship, TDD, feedback-loop, context-hygiene hardening. |
+| 운영 프로필 | Doctor/readiness, recover/export, artifact integrity, release handoff, projection/reconcile operations, suite가 존재한 뒤 conformance runner. |
+| 로드맵 | Dashboard, hosted UI, broad connector, automation, metrics, team workflow, promoted future candidate. |
 
-MVP-1 사용자 작업 루프에서는 사용자가 볼 수 있는 가치 경로를 추가합니다. 즉 평범한 말로 작업 시작/이어가기, 작업 형태 분류, 범위/하지 않을 일/성공 기준 요약, 제품/UX 판단과 아키텍처 판단의 분리된 제시, 최소 판단 요청/기록, 협력형 사전 쓰기 범위 확인, small direct change와 tracked work의 구분, status/next output, 실행/근거 참조 기록, 근거 요약, 닫기 막힘 요약, 다음 안전한 행동, 잔여 위험 표시, Core에서 파생한 상태 카드, 에이전트 맥락 패킷, 판단 요청, 실행/근거 요약, 닫기 결과, 민감 동작 승인 / 작업 수락 / 잔여 위험 수용의 분리 표시입니다.
-
-Staged order와 커널 스모크(Kernel Smoke) boundary는 [MVP-1 사용자 작업 루프 계획](mvp-user-work-loop.md)에 요약되어 있습니다. Exact fixture body shape와 assertion rule은 [Conformance Fixtures 참조](../reference/conformance-fixtures.md#conformance-fixture-format)에 둡니다.
+첫 내부 smoke는 [내부 엔지니어링 점검](engineering-checkpoint.md)을 사용하고, 첫 사용자 가치 계획은 [MVP-1 사용자 작업 루프](mvp-user-work-loop.md)를 사용합니다.

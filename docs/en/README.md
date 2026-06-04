@@ -33,7 +33,7 @@ This path is intentionally small. First-time readers do not need to read large R
 |---|---|---|
 | General user | [Overview](learn/overview.md) | [One Task](learn/one-task.md) for the work-loop feel; [User Guide](use/user-guide.md) for practical session behavior; [Concepts](learn/concepts.md) only when terms need names. |
 | Agent instruction writer | [Agent Guide](use/agent-guide.md) | [Agent Integration Reference](reference/agent-integration.md), [Surface Cookbook](reference/surface-cookbook.md), and the specific API owner only when exact fields are needed. |
-| Server implementer | [Implementation Overview](build/implementation-overview.md) | [MVP-1 User Work Loop](build/mvp-user-work-loop.md) -> [MVP API](reference/api/mvp-api.md) -> [Storage](reference/storage.md). Use [Engineering Checkpoint](build/engineering-checkpoint.md) for the first internal smoke and [Runtime Walkthrough](build/runtime-walkthrough.md) for the request-to-close path. |
+| Server implementer | [Implementation Overview](build/implementation-overview.md) | [Engineering Checkpoint](build/engineering-checkpoint.md) -> [MVP-1 User Work Loop](build/mvp-user-work-loop.md) -> [MVP API](reference/api/mvp-api.md) -> [Storage](reference/storage.md) -> [Security Reference](reference/security.md). Use [Runtime Walkthrough](build/runtime-walkthrough.md) only for the intended request-to-close design path. |
 | Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md), [Rewrite Plan](maintain/rewrite-plan.md), and Reference owners only when checking strict meaning. |
 | Later/profile reader | [Assurance Profile](later/assurance-profile.md) | [Operations Profile](later/operations-profile.md), [Future Fixtures](later/future-fixtures.md), and [Roadmap](roadmap.md). These are outside the MVP path unless an owner promotes them. |
 
@@ -77,12 +77,13 @@ Use Build for implementation orientation and planning review. Until [Documentati
 Server implementer fast path:
 
 1. [Implementation Overview](build/implementation-overview.md) for current status, maintainer handoff, and the future repository role.
-2. [MVP-1 User Work Loop](build/mvp-user-work-loop.md) for the first user-value implementation contract and server-coding decision log.
-3. [MVP API](reference/api/mvp-api.md) for active MVP-1 public tools.
-4. [API Schema Core](reference/api/schema-core.md) and [API Errors](reference/api/errors.md) for shared envelopes, refs, resources, errors, idempotency, and state conflicts.
-5. [Storage](reference/storage.md) for persisted runtime layout, state tables, locks, artifacts, and migrations.
+2. [Engineering Checkpoint](build/engineering-checkpoint.md) for the first internal authority-loop smoke, explicitly not product MVP.
+3. [MVP-1 User Work Loop](build/mvp-user-work-loop.md) for the first user-value implementation plan and server-coding decision log.
+4. [MVP API](reference/api/mvp-api.md), [API Schema Core](reference/api/schema-core.md), and [API Errors](reference/api/errors.md) for active MVP-1 tools, shared shapes, resources, errors, idempotency, and state conflicts.
+5. [Storage](reference/storage.md) for runtime layout, staged storage profiles, locks, artifacts, and migrations.
+6. [Security Reference](reference/security.md) for MVP-1 cooperative/limited-detective guarantee wording and local-access boundaries.
 
-[Engineering Checkpoint](build/engineering-checkpoint.md) is the first internal authority-loop smoke and should be read when planning the first implementation slice. [Runtime Walkthrough](build/runtime-walkthrough.md) and [Core Model Reference](reference/core-model.md) help once the implementer needs exact request-to-close behavior.
+[Runtime Walkthrough](build/runtime-walkthrough.md) is a design walkthrough of intended behavior, not proof that runtime exists. [Core Model Reference](reference/core-model.md) owns exact request-to-close state behavior.
 
 Keep future/diagnostic material outside the MVP implementation path unless a Build or Reference owner explicitly promotes it for the stage being planned.
 

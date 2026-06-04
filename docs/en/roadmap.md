@@ -72,4 +72,4 @@ These examples describe candidate areas only. They do not add stage requirements
 | Advanced exports, release/deployment/canary/rollback/merge/production-monitoring automation | May become future integration work. Release handoff remains a report/export boundary unless owner docs promote more; deployment, merge, rollback, and production authority stay external until explicitly scoped and proven. |
 | Advanced validators and language or interface checks | May become future stewardship or diagnostic coverage. Must not become early-stage fixture failure, acceptance, QA, or close criteria until owner docs define the exact policy, severity, waiver, and fixture behavior. |
 
-Use [Build: MVP-1 User Work Loop](build/mvp-user-work-loop.md#roadmap-scoped-v1-expansion-candidates) for the staged-delivery boundary, and use this page only to track candidates that remain outside staged delivery until promoted.
+Use [Build: MVP-1 User Work Loop](build/mvp-user-work-loop.md#later-profiles-not-to-build-yet) for the staged-delivery boundary, and use this page only to track candidates that remain outside staged delivery until promoted.
