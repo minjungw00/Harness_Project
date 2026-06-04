@@ -173,34 +173,41 @@ Artifacts are treated as references registered through owner paths, not as free-
 
 ## Targeted Cleanup Review
 
-Status: targeted checks updated for the latest cleanup; not a full validation pass.
+Status: targeted checks refreshed for this final validation pass; not a full documentation acceptance pass.
 
 | Area | Current review finding |
 |---|---|
 | Later-profile Decision Packet template parity | Manually checked `docs/en/reference/templates/later-profile/decision-packet.md` and `docs/ko/reference/templates/later-profile/decision-packet.md`. The pair is semantically aligned: `DEC` is an optional full-format presentation for a specific `user_judgment`, the ordinary MVP-1 path remains a compact judgment request, the five display labels match, legacy names such as `decision_packet_id`, `judgment_category`, `judgment_route`, and `display_depth` are limited to migration or compatibility context, and `presentation=short` / `presentation=full` changes rendered context rather than authority. |
-| Core Model judgment routes and display-depth semantics | Manually checked `docs/en/reference/core-model.md` and `docs/ko/reference/core-model.md`. The route boundary is aligned: route verbs are internal owner-path metadata, broad approval is absent from the user-facing model, display depth is presentation metadata, users see the same five display types, and the canonical-schema bullets now name the same `user_judgment`, request/record actions, `judgment_type`, `presentation`, `display_label`, and compatibility/legacy terms. |
-| v01/v02 and legacy fixture identifiers | Checked with `rg` for `v0.1`, `v0.2`, `v01`, `v02`, and old scenario-prefix patterns. No active v01/v02 fixture identifiers were found. Historical `v0.x` stage labels remain only as legacy-label guidance in translation/glossary docs. Current behavior-example IDs use `ENG-CHECK-*`, `MVP1-*`, and `CLARIFY-*`; the illustrative `CORE-active-status-no-task` appears only in a suite metadata example, not as a current executable fixture. |
-| Implementation-readiness wording | Checked in README, Build handoff, MVP-1 decision log, Maintain guidance, and this review. The docs distinguish documentation redesign review, pending documentation acceptance, not-yet-accepted implementation-planning readiness, not-yet-accepted server-coding decisions, and not-started runtime implementation. |
-| Future fixture catalog scope pressure | Checked in [Conformance Fixtures Reference](../reference/conformance-fixtures.md) and [Future Fixtures](../later/future-fixtures.md). The future catalog is now a compact scenario-family inventory. Old long pseudo-fixture payloads and fixture skeletons are removed from the catalog, and catalog rows are not Engineering Checkpoint, MVP-1, current conformance, or implementation tasks. |
+| Korean later-profile template localization spot check | Spot-checked `docs/ko/reference/templates/later-profile/README.md`, `decision-packet.md`, `task.md`, `direct-result.md`, `run-summary.md`, and `eval.md`. Most rendered section headings and user-facing display labels are natural Korean while preserving exact template IDs, schema/API names, field names, and refs. Remaining localization polish exists in a few user-visible cue labels or table labels, such as `Rendered example: ...`, `Display label`, `User Judgment`, `Close Summary`, and similar English labels in template examples. Treat this as a documentation-drift follow-up, not as runtime conformance or server-coding status. |
+| Core Model judgment routes and display-depth semantics | Manually checked `docs/en/reference/core-model.md` and `docs/ko/reference/core-model.md`. The route boundary is aligned: route verbs are internal owner-path metadata, broad approval is absent from the user-facing model, display depth is presentation metadata, users see the same five display types, and the canonical-schema bullets name the same `user_judgment`, request/record actions, `judgment_type`, `presentation`, `display_label`, and compatibility/legacy terms. The old Core Model canonical-schema wording mismatch is resolved in this targeted spot check. |
+| v01/v02 and legacy fixture identifiers | Checked with `rg` for `v0.1`, `v0.2`, `v01`, `v02`, `CORE-v01`, `MVP-v02`, `Core Authority Smoke`, and `First User-Value Slice`. Remaining matches are legacy-label guidance in translation/glossary docs plus this review's own check description. No active stage name, current fixture identifier, executable fixture claim, or current conformance result used those legacy labels. |
+| Implementation-readiness wording | Checked `docs/en/build/implementation-overview.md`, `docs/ko/build/implementation-overview.md`, the MVP-1 decision-log links from those pages, Maintain guidance, and this review. The docs distinguish documentation redesign review, pending documentation acceptance, not-yet-accepted implementation-planning readiness, not-yet-accepted server-coding decisions, not-started runtime implementation, and future runtime conformance. |
+| Future fixture catalog scope pressure | Not re-run in this final validation pass beyond link, anchor, fence, file-map, and legacy-term coverage. This review therefore does not refresh any prior manual conclusion about the full future fixture catalog contents. |
 
 ## Link, Diagram, And Bilingual Review Status
 
-Status: scriptable link/anchor check plus targeted spot checks. Do not treat this as runtime validation or a full manual documentation acceptance pass.
+Status: scriptable checks plus targeted spot checks. Do not treat this as runtime validation, runtime conformance, server-coding acceptance, implementation-planning readiness, or a full manual documentation acceptance pass.
 
 Checks actually run during this review:
 
-- Full local relative link and anchor checker over `AGENTS.md` and Markdown under `docs`: checked 130 Markdown files; no unresolved relative links or anchors were reported.
-- English/Korean active file-map spot check using `rg --files` and `comm`: no differences reported.
-- Mermaid inventory using `rg -n '```mermaid' docs/en docs/ko`: Mermaid blocks were found in paired Reference and Build docs, but syntax rendering was not run.
-- Open-marker spot check using `rg` for `TODO_DECISION`, `TODO_IMPLEMENT`, and `TODO_REWRITE`: no scattered implementation-decision TODOs were found outside Maintain guidance references.
-- User-language/internal-term scan using `rg` over Learn and Use docs: expected glossary, cookbook, and agent-guide uses were found; no full manual user-language audit was run.
+- Local relative link and anchor checker over `AGENTS.md` and Markdown under `docs`, including explicit `<a id="...">` / `<a name="...">` anchors: checked 130 Markdown files; no unresolved relative links or anchors were reported.
+- English/Korean active file-map check for `docs/en` and `docs/ko`: 64 Markdown files on each side; no active file-map differences were reported.
+- Fenced code block balance check over the same 130 Markdown files: no unclosed fenced code blocks were reported.
+- Legacy stage/fixture term check using `rg` for `v01`, `v02`, `CORE-v01`, `MVP-v02`, `v0.1`, `v0.2`, `Core Authority Smoke`, and `First User-Value Slice`: no active misuse was found; remaining matches are legacy-label guidance or this review's own check text.
+- User-language/internal-term scan using `rg` over Learn and Use docs, followed by spot review of the Learn concepts page, User Guide opening and advanced-terms section, Agent Guide guidance, and Judgment Request Cookbook opening. Internal labels appear in explicit lookup, advanced, reference-link, stable-anchor, or "do not require this startup language" contexts, not as required user startup language in the scanned openings.
+- Korean later-profile template localization spot check: mostly localized rendered headings/prose, with minor remaining English-like cue labels listed above as follow-up.
+- Core Model English/Korean judgment schema wording spot check: the current wording is aligned on `user_judgment`, `harness.request_user_judgment`, `harness.record_user_judgment`, `judgment_type`, `presentation`, `display_label`, and compatibility/legacy terms.
+- Mermaid inventory and basic fence review: found 24 actual Mermaid fences in paired Build/Reference docs; all actual fences begin with `flowchart LR`, `flowchart TD`, or `flowchart TB`. Mermaid rendering or parser validation was not run because `mmdc` was not available in `PATH`.
+- Open-marker spot check using `rg` for `TODO_DECISION`, `TODO_IMPLEMENT`, and `TODO_REWRITE`: matches were limited to Maintain guidance and this review's own check description; no scattered implementation-decision TODOs were found.
 
 Checks not run:
 
-- Mermaid parser or renderer. `mmdc` was not available in `PATH` during this review.
+- Mermaid parser or renderer. `mmdc` was not available in `PATH` during this review, so Mermaid syntax/rendering was not validated.
 - Full bilingual semantic review of every paired file.
-- Full user-language audit across all Learn and Use docs.
+- Full user-language audit across every Learn and Use sentence.
 - Full owner-boundary duplicate-contract audit across all docs.
+- Full Korean later-profile template localization audit beyond the targeted spot check.
+- Runtime conformance, executable fixture execution, conformance-runner checks, generated projection checks, generated operational artifact checks, or runtime state checks. Those do not exist in this documentation-only repository phase.
 
 ## Unresolved Blockers And Risks
 
@@ -211,8 +218,8 @@ Known blockers before implementation planning or coding:
 - Maintainer documentation acceptance is still pending.
 - Implementation-planning readiness is not accepted.
 - API, Storage/DDL, Core transition, and Security/local-access coding acceptances are not accepted.
-- Mermaid syntax rendering, full paired-file semantic review, full manual user-language audit, and full owner-boundary duplicate-contract audit were not run in this review batch.
-- Core Model canonical-schema bullet wording was normalized after this targeted review note; this does not refresh the broader acceptance status.
+- Mermaid syntax rendering, full paired-file semantic review, full manual user-language audit, full owner-boundary duplicate-contract audit, and full Korean later-profile template localization audit were not run in this review batch.
+- Minor Korean later-profile template localization polish remains for some English-like user-visible cue labels and table labels in examples. Route this as documentation drift/localization follow-up, not as a runtime or server-coding blocker.
 
 These blockers should be handled by maintainer acceptance review, not by creating runtime artifacts or conformance reports.
 
