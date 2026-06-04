@@ -6,7 +6,7 @@
 
 경계: 상태 보기 템플릿(projection template)일 뿐이며 하네스 서버/런타임 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 단계와 상태 보기 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 향후/진단용 상태 보기(projection)입니다. MVP-1은 상태 카드 또는 실행/근거 요약으로 근거 요약과 공백을 보여주며, 상세 근거 목록(Evidence Manifest) 상태 보기는 later-profile 범위입니다.
+구현 계층: 향후/진단용 상태 보기(projection)입니다. MVP-1은 상태 카드 또는 실행/근거 요약으로 근거 요약과 공백을 보여주며, 상세 근거 목록(Evidence Manifest) 상태 보기는 나중 프로필 범위입니다.
 
 ## 기준 기록
 
@@ -17,7 +17,7 @@
 - 설계 품질 뒷받침 범위
 - 민감 동작 승인 참조(나중의 민감 동작 승인(Approval) 프로필이 활성화된 경우에만; 그 외에는 none)
 - 해시(hash), 크기(size), 가림 상태, 보존/사용 가능성, owner 관계, 후속 근거 영향을 포함한 아티팩트 참조
-- 관련 실행(Run), Eval(분리 검증 결과), 피드백 루프, 수동 QA, TDD trace 참조
+- 관련 실행(Run), Eval(분리 검증 결과), 피드백 루프, 수동 QA, TDD 트레이스 참조
 - 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, 수동 QA, 작업 수락, 잔여 위험 요약
 - 닫기 맥락으로 렌더링할 때 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)을 보여주는 간결한 권한 참조
 
@@ -57,8 +57,8 @@ updated_at: 2026-05-06T09:50:00+09:00
 - task_id:
 - change_unit_id:
 - baseline_ref:
-- run_summary:
-- latest_eval:
+- 실행 요약(`run_summary`):
+- 최신 Eval(`latest_eval`):
 
 ## 요약
 - 근거 상태:
@@ -108,7 +108,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 | decision_quality_check | passed | UJ-0001 | |
 | autonomy_boundary_check | passed | CU-01 | |
 | feedback_loop_check | passed | FBL-0001, TDD-0001, LOG-0001 | |
-| tdd_trace_required | passed | TDD-0001, RED-LOG-0001, GREEN-LOG-0001 | RED, GREEN, 관련 refactor/check 뒷받침 범위가 수용 기준 및 변경 파일로 연결된다. |
+| tdd_trace_required | passed | TDD-0001, RED-LOG-0001, GREEN-LOG-0001 | RED, GREEN, 관련 리팩터/확인 뒷받침 범위가 수용 기준 및 변경 파일로 연결된다. |
 | module_interface_review | passed | module_map_item: MMI-0001, interface_contract: IFACE-0001, UJ-0001 | |
 | codebase_stewardship_check | passed | domain_term: TERM-0001, module_map_item: MMI-0001, interface_contract: IFACE-0001, feedback_loop: FBL-0001 | |
 | residual_risk_visibility_check | pending | RR-0001 | |
@@ -123,11 +123,11 @@ updated_at: 2026-05-06T09:50:00+09:00
 ## 근거 참조
 - 실행 요약:
 - 피드백 루프:
-- TDD trace:
+- TDD 트레이스:
 - TDD RED 대상 / 계획:
-- TDD red:
-- TDD green:
-- TDD refactor/check:
+- TDD RED:
+- TDD GREEN:
+- TDD 리팩터/확인:
 - 수동 QA:
 - 변경 차이:
 - 로그:
@@ -137,7 +137,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 - 빌드:
 
 ## 가림과 사용 가능성
-| 아티팩트 참조 | 해시(Hash) / 크기 | 가림 상태 | 보존 / 사용 가능성 | 근거 영향 | 메모 |
+| 아티팩트 참조 | 해시 / 크기 | 가림 상태 | 보존 / 사용 가능성 | 근거 영향 | 메모 |
 |---|---|---|---|---|---|
 | ART-0001 | sha256:abc123... / 12 KB | secret_omitted | 보존된 참조; 원본 비밀 정보 생략 | 보이는 비밀 정보가 아닌 사실만 지원 | |
 | ART-0002 | sha256:def456... / 1 KB | blocked | 메타데이터 전용 알림(metadata-only notice) | 사용할 수 없는 입력; 주장은 해소 전까지 `insufficient` | |
@@ -162,9 +162,9 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 | 기준 / 조건 | 실행(Run) 참조 | ArtifactRef 참조 | 뒷받침 상태 참조 | 충분성 메모 |
 |---|---|---|---|---|
-| AC-01 의미 변경 없이 docs typo 수정 | RUN-DOCS-001 | ART-DIFF-001 | | 변경된 문서 경로와 자체 확인이 명시된 문서 전용 조건을 뒷받침할 때만 `sufficient`입니다. |
-| AC-02 로그인 폼이 이메일을 제출함 | RUN-FEATURE-001 | ART-DIFF-002, ART-TEST-002 | FBL-001 | 실행(Run), 변경 차이, 테스트/로그(test/log) 참조가 Task 전체가 아니라 이 AC에 대응될 때 `supported`입니다. |
-| AC-03 최종 버튼 문구가 대상 viewport에서 읽을 수 있음 | RUN-UI-001 | ART-SCREENSHOT-001, ART-DIFF-003 | QA-0001 | 수동 QA가 `required`이면 스크린샷(screenshot)이나 브라우저 스모크(browser smoke)만으로 QA 경로를 충족하지 않습니다. |
+| AC-01 의미 변경 없이 문서 오타 수정 | RUN-DOCS-001 | ART-DIFF-001 | | 변경된 문서 경로와 자체 확인이 명시된 문서 전용 조건을 뒷받침할 때만 `sufficient`입니다. |
+| AC-02 로그인 폼이 이메일을 제출함 | RUN-FEATURE-001 | ART-DIFF-002, ART-TEST-002 | FBL-001 | 실행(Run), 변경 차이, 테스트/로그 참조가 Task 전체가 아니라 이 AC에 대응될 때 `supported`입니다. |
+| AC-03 최종 버튼 문구가 대상 뷰포트(viewport)에서 읽을 수 있음 | RUN-UI-001 | ART-SCREENSHOT-001, ART-DIFF-003 | QA-0001 | 수동 QA가 `required`이면 스크린샷이나 브라우저 스모크만으로 QA 경로를 충족하지 않습니다. |
 | AC-04 내보내기가 승인된 가림 처리 필드만 포함함 | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | `APR-0001`은 나중의 민감 동작 승인(Approval) 프로필이 활성화된 경우에만 있습니다. 민감 동작 승인(Approval)과 판단 요청(Decision) 참조는 범위 또는 사용자 판단 맥락을 보여줍니다. 가림 처리된 아티팩트 참조는 여전히 비밀 정보가 아닌 주장을 증명해야 합니다. |
 | 완료 조건: 변경 범위를 독립 검증자가 검토함 | RUN-VERIFY-001 | ART-BUNDLE-001 | EVAL-0001 | Eval이 현재 참조를 검토했고 요청된 닫기에 필요한 독립성이 있을 때만 유효합니다. |
 

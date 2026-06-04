@@ -2,22 +2,22 @@
 
 ## 사용 시점
 
-작업 조각(Change Unit)에서 TDD가 필요하거나 선택 또는 기록된 상태이고 RED, GREEN, refactor/check, 면제, 근거 참조를 읽기 쉬운 상태 보기(projection)로 볼 때 `TDD-TRACE`를 사용합니다.
+작업 조각(Change Unit)에서 TDD가 필요하거나 선택 또는 기록된 상태이고 RED, GREEN, 리팩터/확인, 면제, 근거 참조를 읽기 쉬운 상태 보기(projection)로 볼 때 `TDD-TRACE`를 사용합니다.
 
 경계: 상태 보기 템플릿(projection template)일 뿐이며 하네스 서버/런타임 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 단계와 상태 보기 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 향후/진단용 상태 보기(projection)입니다. TDD Trace 출력은 나중 정책 또는 진단 프로필용이며 첫 구현 범위를 키우면 안 됩니다.
+구현 계층: 향후/진단용 상태 보기(projection)입니다. TDD 트레이스 출력은 나중 정책 또는 진단 프로필용이며 첫 구현 범위를 키우면 안 됩니다.
 
 ## 기준 기록
 
 - `tdd_traces`
 - 선택된 `feedback_loops`
 - Task와 작업 조각(Change Unit) 참조
-- RED, GREEN, refactor/check 아티팩트 참조
+- RED, GREEN, 리팩터/확인 아티팩트 참조
 - 근거 목록(Evidence Manifest) 뒷받침 범위 참조
-- 면제 또는 non-TDD 근거 참조
-- 해당되는 경우 근거 목록(Evidence Manifest), 사용자 판단(User Judgment), 작업 조각(Change Unit), 잔여 위험(Residual Risk), 수동 QA, Eval(분리 검증 결과), 닫기 막힘(close blocker), 후속 조치 참조(follow-up ref)를 통한 발견 사항 라우팅(finding route)
-- `tdd_trace` 관련 design-quality validator 결과
+- 면제 또는 비 TDD 근거 참조
+- 해당되는 경우 근거 목록(Evidence Manifest), 사용자 판단(User Judgment), 작업 조각(Change Unit), 잔여 위험(Residual Risk), 수동 QA, Eval(분리 검증 결과), 닫기 막힘, 후속 조치 참조를 통한 발견 사항 라우팅
+- `tdd_trace` 관련 design-quality 검증기 결과
 - 읽기용 보기 최신성(projection freshness) 입력
 
 ## 렌더링 섹션
@@ -28,7 +28,7 @@
 - 정리 단계(Refactor)
 - 비 TDD(Non-TDD) 근거
 - 근거 참조
-- 발견 사항 라우팅(Finding route)
+- 발견 사항 라우팅
 
 ## 전체 템플릿
 
@@ -50,14 +50,14 @@ updated_at: 2026-05-06T09:40:00+09:00
 ## 식별 정보
 - task_id:
 - change_unit_id:
-- trace 상태: required | recorded | waived | not_required
+- 트레이스 상태: required | recorded | waived | not_required
 - 요구/출처:
 - 피드백 루프 참조:
 - 근거 목록(Evidence Manifest) 뒷받침 범위 참조:
 
 ## 실패 단계(Red)
 - 대상 / 계획:
-- 실패 테스트 ref:
+- 실패 테스트 참조:
 - 명령:
 - 결과: failed_as_expected | failed_unexpectedly | missing
 - 로그 참조:
@@ -79,17 +79,17 @@ updated_at: 2026-05-06T09:40:00+09:00
 - 이유:
 - 피드백 루프 참조:
 - 대체 피드백 루프:
-- non-test 구현 전 면제 기록 여부: yes | no
+- 테스트 외 구현 전 면제 기록 여부: yes | no
 
 ## 근거 참조
 - 테스트:
 - RED 로그:
 - GREEN 로그:
-- refactor/check 로그:
+- 리팩터/확인 로그:
 - 근거 목록(Evidence Manifest):
 - 변경 차이:
 
-## 발견 사항 라우팅(Finding route)
+## 발견 사항 라우팅
 - 근거 공백 또는 뒷받침:
 - 사용자 판단 후보 또는 참조:
 - 작업 조각(Change Unit) 업데이트 또는 후속 조치:
@@ -100,6 +100,6 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 ## 메모
 
-이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. RED 대상(target) 또는 계획(plan)은 계획 맥락이며, 실제 RED 근거는 여전히 기록된 아티팩트 또는 결과 참조에서 나와야 합니다.
+이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. RED 대상 또는 계획은 계획 맥락이며, 실제 RED 근거는 여전히 기록된 아티팩트 또는 결과 참조에서 나와야 합니다.
 
-TDD가 권고(advisory)일 뿐 `required` 또는 `selected`가 아니라면 TDD 면제는 필요하지 않습니다. `required`, `selected`, `recorded`, `waived` TDD는 owner 기록에서만 렌더링하고, 발견 사항(finding)은 템플릿 전용 상태를 추가하지 말고 기존 owner 참조로 라우팅합니다.
+TDD가 권고(advisory)일 뿐 `required` 또는 `selected`가 아니라면 TDD 면제는 필요하지 않습니다. `required`, `selected`, `recorded`, `waived` TDD는 owner 기록에서만 렌더링하고, 발견 사항은 템플릿 전용 상태를 추가하지 말고 기존 owner 참조로 라우팅합니다.

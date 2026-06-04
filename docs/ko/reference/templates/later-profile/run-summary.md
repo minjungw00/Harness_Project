@@ -2,11 +2,11 @@
 
 ## 사용 시점
 
-`record_run`으로 실행(Run)이 기록된 뒤, 무엇을 실행했고 무엇이 바뀌었는지, 확인 또는 validator가 무엇을 보고했는지, 원본 근거가 어떤 아티팩트에 남았는지 요약해야 할 때 `RUN-SUMMARY`를 사용합니다.
+`record_run`으로 실행(Run)이 기록된 뒤, 무엇을 실행했고 무엇이 바뀌었는지, 확인 또는 검증기가 무엇을 보고했는지, 원본 근거가 어떤 아티팩트에 남았는지 요약해야 할 때 `RUN-SUMMARY`를 사용합니다.
 
 경계: 상태 보기 템플릿(projection template)일 뿐이며 하네스 서버/런타임 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 단계와 상태 보기 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 향후/진단용 상태 보기(projection)입니다. later-profile을 위한 상세 실행(Run) 보기로 유지하며 초기 필수 범위가 아닙니다.
+구현 계층: 향후/진단용 상태 보기(projection)입니다. 나중 프로필을 위한 상세 실행(Run) 보기로 유지하며 초기 필수 범위가 아닙니다.
 
 ## 기준 기록
 
@@ -17,7 +17,7 @@
 - 있는 경우 소비된 쓰기 허가 기록(Write Authorization) 참조
 - 변경된 경로
 - 명령 결과
-- validator 결과
+- 검증기 결과
 - 기록된 경우 기존 owner 참조로 연결된 검토 단계 표시 발견 사항
 - 아티팩트 참조
 - 근거 업데이트와 후속 작업
@@ -28,9 +28,9 @@
 - 범위
 - 변경된 파일
 - 명령과 확인
-- 확인과 Validator 결과
+- 확인과 검증기 결과
 - 검토 단계
-- TDD trace 요약
+- TDD 트레이스 요약
 - 주요 변경
 - 이슈와 후속 조치
 - 이어가기 축(Journey Spine) 업데이트
@@ -84,7 +84,7 @@ updated_at: 2026-05-06T09:45:10+09:00
 npm test -- --runInBand
 ```
 
-## 확인과 Validator 결과
+## 확인과 검증기 결과
 ### Core 확인과 명령 확인
 - changed_paths:
 - approval_scope:
@@ -107,7 +107,7 @@ npm test -- --runInBand
 - manual_qa_required:
 
 ## 검토 단계
-- 메모: 실행 로컬(run-local) 검토 표시 전용입니다. 기록(Record), `ProjectionKind` value, 민감 동작 승인(Approval), 근거, 검증, QA, 작업 수락, 잔여 위험 수용, 닫기, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다. 검토 단계(review-stage) 경계는 [Design Quality Policies](../../design-quality-policies.md#two-stage-review-display)가 담당합니다. 발견 사항은 기존 참조, 관문, 막힘으로 연결합니다.
+- 메모: 실행 로컬(run-local) 검토 표시 전용입니다. 기록(Record), `ProjectionKind` value, 민감 동작 승인(Approval), 근거, 검증, QA, 작업 수락, 잔여 위험 수용, 닫기, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다. 검토 단계(review-stage) 경계는 [설계 품질 정책(Design Quality Policies)](../../design-quality-policies.md#two-stage-review-display)이 담당합니다. 발견 사항은 기존 참조, 관문, 막힘으로 연결합니다.
 
 ### 명세 준수 검토
 - 수용 기준 뒷받침 범위:
@@ -128,7 +128,7 @@ npm test -- --runInBand
 - 후속 위험:
 - 결과 참조(기존 경로/참조만):
 
-## TDD trace 요약
+## TDD 트레이스 요약
 - 필수 여부:
 - 피드백 루프 참조:
 - RED 대상 / 계획:
@@ -154,7 +154,7 @@ npm test -- --runInBand
 
 ## 근거 참조
 - 근거 목록(Evidence Manifest):
-- TDD trace:
+- TDD 트레이스:
 - 수동 QA:
 - 변경 차이:
 - 로그:

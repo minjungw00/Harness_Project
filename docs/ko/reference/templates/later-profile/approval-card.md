@@ -44,7 +44,7 @@
 
 ````text
 민감 동작 승인이 필요합니다.
-표시 전용: 민감 동작 승인(Approval)은 여전히 기준 Approval 결정 경로를 통해 기록되어야 합니다.
+표시 전용: 민감 동작 승인(Approval)은 여전히 기준 민감 동작 승인(Approval) 결정 경로를 통해 기록되어야 합니다.
 민감 동작 승인만 묻습니다. 사용자 소유의 제품/UX 판단이나 기술 판단, 정확성, 작업 수락, 잔여 위험 수용, QA 면제 판단, 검증 면제 판단, 쓰기 허가 기록(Write Authorization)이 아닙니다.
 참조: 민감동작승인={approval_id}; 판단={user_judgment_ref|none}; 쓰기={write_authorization_ref|none}; 아티팩트={artifact_refs|none}; 가림={redaction_availability_summary|none}; 최신성={projection_freshness}
 
@@ -93,8 +93,8 @@ expires={expires_at|scope_drift|none}; single_use={single_use_behavior|not_appli
 
 ## 메모
 
-이 템플릿은 렌더링 결과인 카드 형태일 뿐 민감 동작 승인(Approval) 권한 자체가 아닙니다. 커밋된 민감 동작 승인(Approval) 기록은 later-profile이며, 최소 MVP-1의 민감 동작 승인 요청은 간결한 판단 요청으로 보여줄 수 있습니다.
+이 템플릿은 렌더링 결과인 카드 형태일 뿐 민감 동작 승인(Approval) 권한 자체가 아닙니다. 커밋된 민감 동작 승인(Approval) 기록은 나중 프로필 범위이며, 최소 MVP-1의 민감 동작 승인 요청은 간결한 판단 요청으로 보여줄 수 있습니다.
 
 민감 동작 승인(Approval)은 사용자 소유의 제품/UX 판단이나 기술 판단을 해소하지 않고, 정확성을 증명하지 않으며, 검증이나 수동 QA를 대체하지 않고, 작업 수락을 암시하지 않으며, 잔여 위험 수용을 대신하지 않고, QA나 검증을 면제하지 않고, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다. 실제 쓰기에는 이후 호환되는 `prepare_write`와 쓰기 허가 기록(Write Authorization)이 여전히 필요합니다.
 
-민감 동작 승인 카드(Approval Card)는 민감 동작 승인 경계를 명시해야 합니다. 예를 들어 의존성 설치 승인(Approval)은 아키텍처 결정이 아니고, 비밀 정보 접근 승인(Approval)은 비밀 정보 값 노출 허가가 아니며, 인증 또는 시스템 변경 승인(Approval)은 session/JWT/social-login 선택이 아니고, 작업 수락은 추가 쓰기 허가가 아니며, 잔여 위험 수용이나 면제 판단은 별도의 범위 지정 판단 경로가 필요합니다.
+민감 동작 승인 카드(Approval Card)는 민감 동작 승인 경계를 명시해야 합니다. 예를 들어 의존성 설치 승인(Approval)은 아키텍처 결정이 아니고, 비밀 정보 접근 승인(Approval)은 비밀 정보 값 노출 허가가 아니며, 인증 또는 시스템 변경 승인(Approval)은 세션/JWT/소셜 로그인 선택이 아니고, 작업 수락은 추가 쓰기 허가가 아니며, 잔여 위험 수용이나 면제 판단은 별도의 범위 지정 판단 경로가 필요합니다.

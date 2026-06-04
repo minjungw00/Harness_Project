@@ -28,7 +28,7 @@
 - 대상
 - 판정
 - 환경과 독립성
-- 확인과 Validator 결과
+- 확인과 검증기 결과
 - 검토한 근거
 - 수용 기준 검토
 - 설계 품질 검토
@@ -96,7 +96,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - 출처 번들:
 - 상위 실행(Run):
 
-## 확인과 Validator 결과
+## 확인과 검증기 결과
 ### Core 확인과 전제 조건
 - [ ] changed_paths
 - [ ] approval_scope
@@ -135,7 +135,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - 인터페이스 계약 참조:
 - 실행 요약:
 - 피드백 루프:
-- TDD trace:
+- TDD 트레이스:
 - 수동 QA:
 - 근거 목록(Evidence Manifest):
 - 변경 차이:
@@ -161,7 +161,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - 자율성 경계(Autonomy Boundary):
 - 잔여 위험(Residual Risk):
 - 피드백 루프:
-- TDD trace:
+- TDD 트레이스:
 - 모듈/인터페이스:
 - 아키텍처 drift:
 - 도메인 언어 일관성:
@@ -182,7 +182,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 
 Eval 판정(verdict)만으로는 보장 수준을 높일 수 없습니다. `detached_verified`에는 유효한 독립성, 통과한 검증, 최신 기준선과 번들(bundle) 입력, 같은 세션 자체 검토 위반 부재가 필요합니다.
 
-독립성이 유효하지 않거나 같은 세션 자체 확인(self-check)에 그치는 검토라면 그 경계를 명시하고 분리 검증 보장 수준은 그대로 둡니다. `subagent_context` 검토는 기본적으로 detached가 아닙니다. 기록된 맥락이 `fresh_session`, `fresh_worktree`, `sandbox`, `manual_bundle` 요구를 충족할 때만 detached 후보(candidate)로 렌더링합니다.
+독립성이 유효하지 않거나 같은 세션 자체 확인(self-check)에 그치는 검토라면 그 경계를 명시하고 분리 검증 보장 수준은 그대로 둡니다. `subagent_context` 검토는 기본적으로 분리 검증 상태가 아닙니다. 기록된 맥락이 `fresh_session`, `fresh_worktree`, `sandbox`, `manual_bundle` 요구를 충족할 때만 분리 검증 후보로 렌더링합니다.
 
 평가자 번들(Evaluator bundle), 기준선, 포함된 아티팩트, 근거 목록(Evidence Manifest), 민감 동작 승인/사용자 판단 참조, 닫기 관련 잔여 위험(Residual Risk) 참조가 오래되었으면 오래된 입력으로 렌더링하고 대체 근거 또는 호환되는 재검증이 기록될 때까지 보장 수준을 그대로 둡니다.
 
