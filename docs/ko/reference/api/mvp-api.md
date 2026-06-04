@@ -8,19 +8,19 @@
 
 ## 핵심 생각
 
-MVP-1은 작은 local MCP surface만 노출합니다. 평범한 작업 요청을 받아들이고, 현재 상태와 다음 안전한 행동을 보여 주고, 제안된 쓰기가 현재 범위에 맞는지 협력형으로 확인하고, 실행과 근거 ref를 기록하고, 사용자 소유 판단을 요청하고, 사용자의 답을 기록하고, 최소 계약이 허용할 때만 닫습니다.
+MVP-1은 작은 local MCP surface만 노출합니다. 평소 작업 요청을 받아들이고, 현재 상태와 다음 안전한 행동을 보여 주고, 제안된 쓰기가 현재 범위에 맞는지 협력형으로 확인하고, 실행과 근거 ref를 기록하고, 사용자 소유 판단을 요청하고, 사용자의 답을 기록하고, 최소 계약이 허용할 때만 닫습니다.
 
 MVP-1에서는 별도 `harness.next` method를 두지 않습니다. 다음 안전한 행동은 `harness.status.next_actions`에서 읽습니다. 별도 `harness.next`는 [Schema Later](schema-later.md#harnessnext)의 later/compatibility material입니다.
 
 이 API는 OS-level blocking, arbitrary-tool sandboxing, tamper-proof file, pre-tool prevention을 주장하지 않습니다. `harness.prepare_write`는 Core state를 기준으로 하는 협력형 쓰기 전 범위 확인입니다. 반환되는 Write Authorization은 하네스 수준의 기록/확인이지 OS 권한, sandboxing, 변조 방지 enforcement, 사전 차단이 아닙니다. 더 강한 preventive 또는 isolated 주장은 관련 보안/connector 문서에서 owner-promoted profile과 증명이 필요합니다.
 
-Status output은 세 부분 모델을 따릅니다. `harness.status.status_card`는 사용자 상태 카드입니다. Agent 접점은 current status와 ref에서 에이전트 맥락 패킷을 만들 수 있습니다. Core 상태가 유일한 운영 기준입니다. 상태 카드, next-action text, 렌더링된 template, Projection은 read-only view이며 오래된 view는 authority가 아닙니다.
+Status output은 세 부분 모델을 따릅니다. `harness.status.status_card`는 사용자 상태 카드입니다. Agent 접점은 current status와 ref에서 에이전트 맥락 패킷을 만들 수 있습니다. Core 상태가 유일한 운영 기준입니다. 상태 카드, next-action text, 렌더링된 template, Projection은 read-only view이며 오래된 view는 권한 근거가 아닙니다.
 
 ## MVP-1 method set
 
 | Method | MVP-1 역할 |
 |---|---|
-| [`harness.intake`](#harnessintake) | 평범한 말로 들어온 작업을 시작하거나 이어가고, advice/read-only, small direct work, tracked work로 분류합니다. |
+| [`harness.intake`](#harnessintake) | 평소 말로 들어온 작업을 시작하거나 이어가고, advice/read-only, small direct work, tracked work로 분류합니다. |
 | [`harness.status`](#harnessstatus) | 현재 범위, 막힘, 대기 중인 판단, 근거 요약, 다음 행동, 닫기 준비 상태를 반환합니다. |
 | [`harness.prepare_write`](#harnessprepare_write) | 제안된 제품 파일 쓰기를 현재 Task, 범위, baseline, 민감 동작 permission, 사용자 판단 coverage와 비교하는 쓰기 전 범위 확인을 실행합니다. |
 | [`harness.record_run`](#harnessrecord_run) | shaping, implementation, direct run과 최소 artifact/evidence ref를 기록합니다. |
@@ -53,7 +53,7 @@ Error code, MVP-1 status/error condition name, 사용자 표시 문구 pattern, 
 
 작업을 시작하거나, 분류하거나, 이어갈 때 이 method를 사용합니다.
 
-Stage meaning: 내부 엔지니어링 점검에서는 선택적인 minimal setup path입니다. MVP-1에서는 평범한 말로 시작/이어가기 behavior가 active입니다. Full discovery, design-support routing, broad planning workflow는 명시적으로 승격되기 전까지 later material입니다.
+Stage meaning: 내부 엔지니어링 점검에서는 선택적인 minimal setup path입니다. MVP-1에서는 평소 말로 시작/이어가기 behavior가 active입니다. Full discovery, design-support routing, broad planning workflow는 명시적으로 승격되기 전까지 later material입니다.
 
 Allowed actors: `user`, `lead_agent`, `operator`.
 

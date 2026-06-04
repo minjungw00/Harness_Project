@@ -49,7 +49,7 @@ Judgment, write-authority, close-impact, residual-risk, freshness placeholder는
 
 ````text
 TASK-{id} {title}
-표시 전용: 현재 위치를 보여주는 읽기용 보기이며 기준 상태나 쓰기 권한이 아닙니다.
+표시 전용: 현재 위치를 보여주는 읽기용 보기이며 기준 상태나 쓰기 허가 기록이 아닙니다.
 현재 위치: {mode} / {lifecycle_phase} / {current_position}
 범위: {scope_summary|none}
 범위 밖: {out_of_bounds_summary|none}
@@ -85,7 +85,7 @@ Write Authority Summary:
 - approval status: {approval_status}
 - baseline: {baseline_ref|none}
 - 보장 수준: {guarantee_display}
-- note: Autonomy Boundary는 판단 재량이지 쓰기 권한이 아니다.
+- note: Autonomy Boundary는 판단 재량이지 쓰기 전 범위 확인이나 쓰기 허가 기록이 아니다.
 
 근거와 확인:
 - 행동: {next_evidence_action}

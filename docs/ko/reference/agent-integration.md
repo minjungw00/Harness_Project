@@ -221,16 +221,16 @@ AFK, unattended, 또는 "내가 없는 동안 계속해" 지시는 새 권한을
 
 ## 기준 접점 계약
 
-내부 엔지니어링 점검은 하나의 로컬 프로젝트 등록과 Core authority path를 확인하는 데 필요한 기준 접점 support만 사용합니다. 이 섹션의 later bullet은 profile target이지 내부 엔지니어링 점검 requirement가 아닙니다.
+내부 엔지니어링 점검은 하나의 로컬 프로젝트 등록과 Core 권한 경로를 확인하는 데 필요한 기준 접점 support만 사용합니다. 이 섹션의 later bullet은 profile target이지 내부 엔지니어링 점검 requirement가 아닙니다.
 
 내부 엔지니어링 점검의 최소 기준 기대:
 
-- 첫 authority loop에 필요한 public tool/resource subset을 위한 `T2 MCP`
+- 첫 권한 루프에 필요한 public tool/resource subset을 위한 `T2 MCP`
 - local-only 또는 owner-approved access posture
 - 제품 파일 쓰기 전 cooperative `prepare_write`, write-capable `record_run` 전 compatible Write Authorization
 - run 뒤 changed-path와 artifact validation을 사후 확인
 - 기본 OS sandbox, arbitrary-tool sandboxing, tamper-proof local file, pre-tool blocking claim 없음
-- 최소 authority loop를 위한 run summary와 수동 제공 또는 capture된 artifact/evidence ref 하나 이상
+- 최소 권한 루프를 위한 run summary와 수동 제공 또는 capture된 artifact/evidence ref 하나 이상
 - guard, freeze, careful-mode label을 표시할 때 pre-action stop과 after-action detection을 정직하게 구분
 
 Later profile target에는 user-readable status/next card, 작은 사용자 판단 표시, 근거와 닫기 준비 상태 요약, Evidence Manifest support, manual verification bundle 또는 fresh evaluator instructions, 수동 QA note/artifact support, connector manifest, projection freshness, reconcile flow, operator diagnostics가 포함됩니다.

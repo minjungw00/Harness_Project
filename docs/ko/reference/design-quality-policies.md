@@ -139,7 +139,7 @@ Policy validator는 [API Schema Core](api/schema-core.md#validatorresult)가 담
 
 ### Shared Design (`shared_design`)
 
-요구사항 구체화는 구현 계획과 쓰기 권한 전에 에이전트가 수행하는 조건부 Shared Design 요청 정리 자세입니다. `Discovery`는 이 자세의 안정적인 내부 이름이지 사용자가 외워야 하는 명령어가 아닙니다. 구체화가 필요할 때 사용하는 것이며 모든 작업에 필요한 의식이 아닙니다. "구현 전에 계획을 먼저 구체화해줘" 또는 "코드를 바꾸기 전에 필요한 걸 물어봐" 같은 평범한 요청으로도 같은 행동이 시작될 수 있습니다. 흐름은 사용자 요청, 저장소·문서·현재 하네스 상태에서 확인 가능한 사실 확인, 작업 모양 분류, 빠진 정보 식별, 막히는 질문과 참고 질문 분리, 사용자 소유 판단 식별, 사용자 판단이 필요할 때 선택지·결과·불확실성·추천 제시, 다음 안전한 행동 제안입니다. 여러 targeted question을 물을 수 있고 Question Queue를 유지할 수 있지만, 긴 질문지가 되면 안 되며 중지 조건은 단순히 First Safe Change Unit Candidate를 찾는 것이 아닙니다. 확인 가능한 사실과 사용자 소유 판단을 분리하고, 목표, 비목표, 수용 기준, 중요한 판단 후보가 충분히 분명하며, 해소되지 않은 사용자 소유 판단을 숨기지 않은 채 안전한 다음 작업, 더 작은 범위, 또는 작업 분할을 제안할 수 있고, 남은 불확실성이 명시되면 shaping을 잠시 멈추거나 진행할 수 있습니다. 출력은 Shared Design, user judgment candidate, Change Unit shaping으로 라우팅합니다. Standalone schema, canonical record field list, approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, 작업 수락, 잔여 위험 수용, close, scope authority, 새 authority path가 아닙니다.
+요구사항 구체화는 구현 계획과 쓰기 전 범위 확인 전에 에이전트가 수행하는 조건부 Shared Design 요청 정리 자세입니다. `Discovery`는 이 자세의 안정적인 내부 이름이지 사용자가 외워야 하는 명령어가 아닙니다. 구체화가 필요할 때 사용하는 것이며 모든 작업에 필요한 의식이 아닙니다. "구현 전에 계획을 먼저 구체화해줘" 또는 "코드를 바꾸기 전에 필요한 걸 물어봐" 같은 평범한 요청으로도 같은 행동이 시작될 수 있습니다. 흐름은 사용자 요청, 저장소·문서·현재 하네스 상태에서 확인 가능한 사실 확인, 작업 모양 분류, 빠진 정보 식별, 막히는 질문과 참고 질문 분리, 사용자 소유 판단 식별, 사용자 판단이 필요할 때 선택지·결과·불확실성·추천 제시, 다음 안전한 행동 제안입니다. 여러 targeted question을 물을 수 있고 Question Queue를 유지할 수 있지만, 긴 질문지가 되면 안 되며 중지 조건은 단순히 First Safe Change Unit Candidate를 찾는 것이 아닙니다. 확인 가능한 사실과 사용자 소유 판단을 분리하고, 목표, 비목표, 수용 기준, 중요한 판단 후보가 충분히 분명하며, 해소되지 않은 사용자 소유 판단을 숨기지 않은 채 안전한 다음 작업, 더 작은 범위, 또는 작업 분할을 제안할 수 있고, 남은 불확실성이 명시되면 shaping을 잠시 멈추거나 진행할 수 있습니다. 출력은 Shared Design, user judgment candidate, Change Unit shaping으로 라우팅합니다. Standalone schema, canonical record field list, approval, sensitive-action Approval, Write Authorization, evidence, verification, QA, 작업 수락, 잔여 위험 수용, close, scope authority, 새 authority path가 아닙니다.
 
 Tiny direct profile은 edit가 typo, 문서 한 문장, obvious rename이고 meaning, product, technical, security, privacy, public-interface, UX workflow, sensitive-category judgment가 없을 때만 Shared Design threshold 아래에 있습니다. Tiny direct도 여전히 `mode=direct`이며 scope, Approval, evidence, security boundary를 면제하지 않습니다.
 
@@ -230,7 +230,7 @@ Shared Design은 기록된 shared understanding이지 final approval, sensitive-
 | `evidence` | User request ref, task constraint, policy ref, user judgment ref, stop-condition event, user response ref. |
 | `close_impact` | `prepare_write`에서 발생한 중지 조건 또는 경계 공백은 write를 차단한다. 사용자 소유 판단 gap은 user judgment를 요청하거나 참조해야 하며 `decision_gate`에 영향을 준다. Design-quality gap은 `design_gate`에 영향을 줄 수 있다. Scope, sensitive-action Approval, capability gap은 각자의 blocker로 남는다. 해소되지 않은 중지 조건은 해소되거나, deferred되거나, recorded risk로 accepted될 때까지 close를 차단할 수 있다. |
 
-Autonomy Boundary 요약: 이 경계는 scope 안의 낮은 위험 구현 재량과 사용자 소유 판단, 중지 조건, `prepare_write` blocker를 나눕니다. 그 자체로 쓰기 권한을 주지는 않습니다.
+Autonomy Boundary 요약: 이 경계는 scope 안의 낮은 위험 구현 재량과 사용자 소유 판단, 중지 조건, `prepare_write` blocker를 나눕니다. 그 자체로 쓰기 전 범위 확인이나 쓰기 허가 기록을 주지는 않습니다.
 
 ```mermaid
 flowchart TD
@@ -384,7 +384,7 @@ TDD execution loop:
 
 #### Domain 및 boundary 라우팅 예시
 
-이 예시들은 기존 policy, user judgment, gate, evidence, close path로 라우팅합니다. 새 schema, DDL, validator ID, gate, authority record를 만들지 않습니다.
+이 예시들은 기존 policy, user judgment, gate, evidence, close path로 라우팅합니다. 새 schema, DDL, validator ID, gate, 권한 기록을 만들지 않습니다.
 
 | Concern | Existing route | Gate 또는 close 영향 |
 |---|---|---|
@@ -470,7 +470,7 @@ Domain term, module map item, interface contract, Feedback Loop records, TDD가 
 
 예시: Task가 일주일 뒤 resume되면 current status 또는 현재 위치 맥락을 먼저 읽고, Journey Card는 해당 projection/profile이 활성화되어 있고 최신일 때만 사용합니다. 그다음 active 계획/구체화, 쓰기 준비, 실행/Run 기록, 근거 검토, 닫기 준비 상태, 사용자 판단 요청, 복구/오류 맥락 프로필을 고른 뒤, 해당 프로필이 필요로 하는 refs-first summary만 보여줍니다. 항상 주입되는 envelope는 현재 Task 요약, 작업 모양, 범위/하지 않을 일, 대기 중인 사용자 판단, 활성 막힘, 다음 안전한 행동, 근거 공백, 닫기 막힘, 잔여 위험 요약, 보장 수준, 출처 refs/최신성으로 제한합니다. Old PRD, old projection, log, screenshot, diff, raw artifact, module map, full artifact contents, future catalog material은 다음 safe action이 inspection을 요구할 때만 가져오고 최신이 아닌 input으로 표시합니다.
 
-Retrieved, indexed, remembered, summarized context는 context hygiene input이지 권한 출처가 아닙니다. Agent가 compact status, pull ref, source excerpt를 찾는 데 도움을 줄 수는 있지만 write authority, gate, evidence, verification, QA, 작업 수락, 잔여 위험을 받아들이는 판단, projection 최신성, 구현 준비 상태, close effect는 여전히 해당 owner record가 결정합니다. Context Index는 로드맵 후보로 남습니다. [로드맵: 후보 항목 목록](../roadmap.md#후보-항목-목록)을 보고, connector 처리는 [Agent Integration](agent-integration.md#context-pushpull-principles)을 봅니다.
+Retrieved, indexed, remembered, summarized context는 context hygiene input이지 권한 출처가 아닙니다. Agent가 compact status, pull ref, source excerpt를 찾는 데 도움을 줄 수는 있지만 쓰기 전 범위 확인 / Write Authorization, gate, evidence, verification, QA, 작업 수락, 잔여 위험을 받아들이는 판단, projection 최신성, 구현 준비 상태, close effect는 여전히 해당 owner record가 결정합니다. Context Index는 로드맵 후보로 남습니다. [로드맵: 후보 항목 목록](../roadmap.md#후보-항목-목록)을 보고, connector 처리는 [Agent Integration](agent-integration.md#context-pushpull-principles)을 봅니다.
 
 | Field | Contract |
 |---|---|

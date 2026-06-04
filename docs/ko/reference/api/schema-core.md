@@ -53,7 +53,7 @@ Read-only resource도 세 부분 맥락 모델을 따릅니다. `harness://statu
 |---|---|
 | `harness://project/current` | Current registered project identity와 local MCP availability facts. |
 | `harness://task/active` | Task를 만들지 않고 active Task pointer 또는 explicit `none` / `unknown`을 반환합니다. |
-| `harness://task/{task_id}` | Narrow authority loop를 위한 current Task state. |
+| `harness://task/{task_id}` | 좁은 권한 루프를 위한 current Task state. |
 | `harness://task/{task_id}/summary` | Optional compact Task status/blocker summary. |
 | `harness://status/card` | Current Core state와 ref에서 파생한 optional compact current-position 사용자 상태 카드. |
 

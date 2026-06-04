@@ -6,7 +6,7 @@ MVP-1에서 사용자가 현재 상태를 짧게 읽어야 할 때 `status-card`
 
 구현 계층: MVP-1 사용자 작업 루프 보기입니다. 내부 엔지니어링 점검은 이 카드 대신 plain structured status/blocker output을 반환해도 됩니다.
 
-경계: 이 템플릿은 렌더링된 표시일 뿐입니다. Core 상태, 근거, 민감 동작 승인, 작업 수락, 잔여 위험 수용, Write Authorization, 닫기 준비 상태 권한이 아닙니다. 오래된 대화가 아니라 현재 Core 소유 상태와 참조에서 렌더링해야 합니다.
+경계: 이 템플릿은 렌더링된 표시일 뿐입니다. Core 상태, 근거, 민감 동작 승인, 작업 수락, 잔여 위험 수용, Write Authorization, 닫기 준비 상태가 아닙니다. 오래된 대화가 아니라 현재 Core 소유 상태와 참조에서 렌더링해야 합니다.
 
 ## 기준 기록
 
@@ -33,7 +33,7 @@ MVP-1에서 사용자가 현재 상태를 짧게 읽어야 할 때 `status-card`
 
 ````text
 {task_id} {title}
-표시 전용: Core 상태와 ref에서 파생된 보기이며 Core 상태나 쓰기 권한이 아닙니다.
+표시 전용: Core 상태와 ref에서 파생된 보기이며 Core 상태나 쓰기 허가 기록이 아닙니다.
 
 작업: {work_shape}. {current_task_summary}
 범위: {scope_summary}

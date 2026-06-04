@@ -81,7 +81,7 @@ Display label: 제품/UX 판단
 Question: 이 scoped settings label을 "Save"로 할까요, "Update"로 할까요?
 Scope/refs: settings form copy in CU-04; source ref TASK-012/CU-04; 민감 동작 또는 close-risk ref 없음.
 Choice to record: Save | Update
-Does not settle: broader settings flow behavior, localization strategy, 작업 수락, 잔여 위험 수용, write authority.
+Does not settle: broader settings flow behavior, localization strategy, 작업 수락, 잔여 위험 수용, 쓰기 전 범위 확인 / Write Authorization.
 ```
 
 **Rendered example: sensitive action approval**
@@ -193,7 +193,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - task:
 - change unit:
 - user judgment:
-- write authority:
+- pre-write scope check / Write Authorization:
 - evidence:
 - verification:
 - Manual QA:

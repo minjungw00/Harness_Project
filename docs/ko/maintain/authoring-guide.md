@@ -41,7 +41,7 @@
 
 용어, schema, 문서 구조, stage boundary는 바뀔 수 있습니다. 그래도 아래 원칙은 유지합니다.
 
-- 하네스는 prompt 묶음이 아닙니다. Scope, 사용자 소유 판단, 근거, 검증, QA 기대치, 작업 수락, 잔여 위험 상태, 닫기 준비 상태를 다루는 local authority record입니다.
+- 하네스는 prompt 묶음이 아닙니다. Scope, 사용자 소유 판단, 근거, 검증, QA 기대치, 작업 수락, 잔여 위험 상태, 닫기 준비 상태를 다루는 로컬 기준 기록입니다.
 - 사용자 소유 판단은 사용자에게 남습니다. Product decision, material technical decision, QA expectation, waiver, work acceptance, residual-risk acceptance를 agent에게 조용히 넘기지 않습니다.
 - Evidence, Verification, Manual QA, work acceptance, close readiness, residual risk는 서로 다른 기록과 판단입니다. 서로를 대신하지 않습니다.
 - Chat, connector output, Markdown-rendered projection, generated document는 operational truth가 아닙니다. 향후 운영 기준은 Core-owned local state와 artifact reference입니다.
@@ -261,7 +261,7 @@ Result 의미는 다음과 같습니다.
 
 Maintainer가 문서 세트를 implementation planning에 사용할 수 있다고 받아들이기 전, 마지막 docs-maintenance pass를 수행합니다. English/Korean active file map parity, paired file의 semantic section parity, broken link와 anchor, owner-boundary drift, non-owner duplicate contract, Approval, Decision Packet, Evidence, Verification, Manual QA, Acceptance, Residual Risk, Projection, Guarantee Level terminology drift, open-marker hygiene를 확인합니다.
 
-[구현 개요](../build/implementation-overview.md#하네스-서버-구현-준비-조건)의 implementation-readiness criteria도 확인합니다. Repository identity, 내부 용어 부담 없는 user-facing flow, premature Change Unit convergence가 아닌 requirements clarification으로서의 Discovery, canonical `user_judgment` naming과 mapped legacy alias, proportional judgment prompt, Approval/work acceptance/residual-risk acceptance separation, coherent stage, Core Model/API/storage/reference agreement, staged Storage/API scope, staged projection/template scope, honest security guarantee wording, agent context strategy, staged future-oriented conformance fixture plan, staged operations surface, Korean user-facing readability, clean links/terminology/open markers를 봅니다.
+[구현 개요](../build/implementation-overview.md#하네스-서버-구현-준비-조건)의 implementation-readiness criteria도 확인합니다. Repository identity, 내부 용어 부담 없는 사용자 표시 흐름, premature Change Unit convergence가 아닌 요구사항 구체화로서의 Discovery, canonical `user_judgment` naming과 mapped legacy alias, proportional judgment prompt, Approval/work acceptance/residual-risk acceptance separation, coherent stage, Core Model/API/storage/reference agreement, staged Storage/API scope, staged projection/template scope, honest security guarantee wording, agent context strategy, staged future-oriented conformance fixture plan, staged operations surface, Korean user-facing readability, clean links/terminology/open markers를 봅니다.
 
 이 최종 리뷰도 editorial review입니다. Maintainer handoff에 사용할 만큼 문서가 일관적인지 요약할 뿐입니다. Runtime conformance, canonical state, evidence, QA, Acceptance, residual-risk acceptance, close readiness, implementation readiness를 만들지 않습니다.
 

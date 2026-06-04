@@ -61,7 +61,7 @@ Projection은 secret/PII를 보호하는 표시 경계이기도 합니다. Proje
 | Operations/export reports | 운영 프로필 profile | Operations support가 켜졌을 때의 projection freshness, reconcile/readiness, export, release-handoff, artifact-integrity, operator report view입니다. Core 상태나 artifact 권한을 대체하지 않습니다. |
 | Future/diagnostic projections | Owner가 승격한 later profile 또는 diagnostic | Detailed Journey Card 또는 Journey Spine view, Run Summary, TDD Trace, Module Map, Interface Contract, standalone full-format Decision Packet Markdown, detailed Evidence Manifest, detailed Eval, design/domain-language map, 기타 diagnostic view입니다. 필요할 때만 가져오거나 승격된 profile을 통해서만 켭니다. |
 
-MCP read-only resource staging도 같은 계층을 따릅니다. 내부 엔지니어링 점검 resource는 첫 authority loop를 위한 current project/current task/status output을 노출합니다. MVP-1 resource는 위 다섯 작은 보기를 노출할 수 있습니다. Evidence Manifest, reports, bundles, Journey/Spine, design/domain resource는 owner profile이 명시적으로 승격하기 전까지 later-profile 또는 diagnostic read로 남습니다. Projection을 읽는 resource도 여전히 read입니다. Projection job을 만들거나, 민감 동작 승인, 작업 수락, 잔여 위험 수용, 근거, 닫기 준비 상태를 만들거나, projection을 authority로 만들면 안 됩니다.
+MCP read-only resource staging도 같은 계층을 따릅니다. 내부 엔지니어링 점검 resource는 첫 권한 루프를 위한 current project/current task/status output을 노출합니다. MVP-1 resource는 위 다섯 작은 보기를 노출할 수 있습니다. Evidence Manifest, reports, bundles, Journey/Spine, design/domain resource는 owner profile이 명시적으로 승격하기 전까지 later-profile 또는 diagnostic read로 남습니다. Projection을 읽는 resource도 여전히 read입니다. Projection job을 만들거나, 민감 동작 승인, 작업 수락, 잔여 위험 수용, 근거, 닫기 준비 상태를 만들거나, projection을 authority로 만들면 안 됩니다.
 
 에이전트 맥락 패킷은 별도 권한 계층이 아니며 context API가 구현되어 있음을 증명하지도 않습니다. Current Core status output과 current owner ref를 소비하는 쪽입니다. `source_state_version`과 최신성이 다음 행동에 맞을 때만 projection을 읽기용 요약으로 사용할 수 있습니다. 상태가 중요하고 projection, 상태 카드, 읽기용 요약이 stale, failed, unknown이거나 너무 넓다면 current Core state 또는 state-derived agent context packet을 가져와야 합니다. Markdown projection, Journey Card, status card, old report, generated summary, 읽기용 요약 전체 본문, full artifact contents, 전체 template, 관련 없는 template, future catalog material을 항상 주입되는 prompt payload나 authority로 만들면 안 됩니다. 읽기용 요약 전체 본문은 특정 단계가 그 내용을 요구할 때만 pull-on-demand로 읽고, 기본으로는 ref, 한 줄 summary, freshness만 push합니다. 이들은 살펴볼 current ref를 가리킬 수는 있지만 write를 허가하거나, gate를 충족하거나, 근거를 만들거나, 민감 동작 승인을 만들거나, 검증을 수행하거나, 수동 QA를 기록하거나, 결과를 수락하거나, 잔여 위험을 받아들이거나, 닫기 준비 상태를 만들거나, Task를 close할 수 없습니다.
 
@@ -179,7 +179,7 @@ flowchart LR
 
 ```text
 TASK-0001 Add Import Preview
-표시 전용: Core 상태와 ref에서 파생된 보기이며 Core 상태나 쓰기 권한이 아닙니다.
+표시 전용: Core 상태와 ref에서 파생된 보기이며 Core 상태나 쓰기 허가 기록이 아닙니다.
 하는 일: import preview slice의 근거 검토를 준비합니다.
 현재 범위: import 전에 CSV row를 미리 보여줍니다. 데이터 write는 하지 않습니다.
 하지 않을 일: bulk import 실행, account migration, production deploy.

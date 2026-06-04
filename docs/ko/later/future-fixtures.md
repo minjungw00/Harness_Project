@@ -1447,7 +1447,7 @@ expected_state:
           guarantee_display:
             level: cooperative
             notes: []
-          note: "Autonomy Boundary는 판단 재량이지 쓰기 권한이 아니다."
+          note: "Autonomy Boundary는 판단 재량이지 쓰기 전 범위 확인이나 쓰기 허가 기록이 아니다."
         active_user_judgment_refs:
           - record_kind: user_judgment
             record_id: UJ-RESUME-001

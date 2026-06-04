@@ -89,7 +89,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Scope:
   - what may change:
   - out of bounds:
-  - write authority:
+  - pre-write scope check / Write Authorization:
   - blocker / smallest unblocker:
   - source refs:
 - 사용자 판단:
@@ -229,7 +229,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - approval status:
 - baseline:
 - guarantee:
-- note: Autonomy Boundary는 판단 재량이지 쓰기 권한이 아니다.
+- note: Autonomy Boundary는 판단 재량이지 쓰기 전 범위 확인이나 쓰기 허가 기록이 아니다.
 
 ## Implementation Micro-Plan
 - note: execution aid only; active Change Unit scope bounds writes and `prepare_write` creates Write Authorization.
