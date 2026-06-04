@@ -50,19 +50,9 @@ The user does not need to name these shapes. The agent should infer them from th
 
 ## How Users Can Speak
 
-Ordinary language is enough:
+Ordinary language is enough. Users can name the goal, ask for clarification, set a boundary, request evidence, or ask what still blocks close without using internal labels.
 
-```text
-Help me clarify the plan before implementation.
-Show what I need to decide and what you can check yourself.
-Tell me if the scope is getting bigger.
-Show what still blocks closing this work.
-What evidence supports the completion claim?
-Show the remaining risks before I accept.
-Inspect the current auth shape before recommending sessions, magic links, or OAuth/OIDC.
-```
-
-The agent may mention an internal label only when it helps explain a real boundary or reference link. The user should not have to start with that label.
+The [User Guide](../use/user-guide.md) owns the practical request examples. This concepts page keeps the vocabulary small: the plain question comes first, and an internal label appears only when it helps explain a real boundary or reference link.
 
 ## Non-Substitution Rules
 
@@ -100,7 +90,7 @@ The labels below are implementation or reference labels. Users do not need to us
 | Optional/internal label | Plain explanation |
 |---|---|
 | Task | Internal durable unit for the work the user wants completed, answered, investigated, or decided. |
-| Discovery | Optional/internal label for clarifying blurry work before implementation planning. Users can simply ask, "help me clarify the plan before implementation." |
+| Discovery | Optional/internal label for clarifying blurry work before implementation planning. Users can simply ask for clarification in ordinary language. |
 | Shared Design | Internal record of shared understanding for goal, value, scope, non-goals, assumptions, decisions, and safe next work. |
 | Change Unit | Optional/internal label for bounded product-write scope. It names what may change, but does not authorize a write by itself. |
 | Autonomy Boundary | Internal label for choices the agent may make inside the active scope without asking again. |

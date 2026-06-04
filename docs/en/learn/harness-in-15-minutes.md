@@ -1,15 +1,8 @@
 # Harness in 15 Minutes
 
-## Start With Ordinary Requests
+## Start With The Feel Of A Session
 
-Harness should not require users to speak in internal labels. These requests are enough:
-
-```text
-Help me clarify the plan before implementation.
-Show what I need to decide and what you can check yourself.
-Tell me if the scope is getting bigger.
-Show me what still prevents closing this work.
-```
+Harness should not require users to speak in internal labels. This tour focuses on what a session should feel like; the [User Guide](../use/user-guide.md) owns the exact practical request examples.
 
 Harness keeps AI-assisted product work grounded in local Core-owned state by tracking six plain things outside the chat: work, scope, user-owned judgments, evidence, checks or verification, and close.
 
@@ -23,11 +16,7 @@ Chat can coordinate. Tool output can support claims. Markdown can summarize. Pro
 
 ## Scenario 1: Advice/Read-Only Work
 
-The user says:
-
-```text
-Help me clarify the plan before implementation.
-```
+The user asks the agent to clarify a remember-me change before implementation.
 
 The useful shape is read-only:
 

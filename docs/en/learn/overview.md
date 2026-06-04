@@ -111,14 +111,7 @@ Users should not need to request internal modes. In ordinary work, Harness shoul
 | Small direct change | The user asks for a narrow, clear edit, such as a typo fix, focused copy change, or leaf bug fix. | Scope stays small; if meaning, risk, public behavior, UX, sensitive action, or shared contract impact appears, the work must be reshaped before continuing. |
 | Tracked work | The work has meaningful scope, user-owned judgment, evidence, QA, verification, work acceptance, or residual risk. | Harness keeps the boundary visible until blockers are handled and close readiness is clear. |
 
-The user can speak normally:
-
-```text
-Help me clarify the plan before implementation.
-Show what I need to decide and what you can check yourself.
-Tell me if the scope is getting bigger.
-Show me what still prevents closing this work.
-```
+Users can speak normally: name the goal, any known boundary, and whether they want clarification, a small change, or close status. The [User Guide](../use/user-guide.md) owns the practical phrase list and user-facing flow.
 
 Internal labels can appear later in reference docs or status details, but they are optional vocabulary for users.
 

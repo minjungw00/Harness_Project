@@ -78,14 +78,7 @@ Small direct change is for narrow, clear edits. It can stay light when scope and
 
 Tracked work is for meaningful product changes, multi-step delivery, user-owned decisions, evidence mapping, QA, verification, work acceptance, or residual risk. It keeps blockers visible until close readiness is clear.
 
-Users can ask for these shapes in ordinary language:
-
-```text
-Help me clarify the plan before implementation.
-Show what I need to decide and what you can check yourself.
-Tell me if the scope is getting bigger.
-Show me what still prevents closing this work.
-```
+Users can ask for these shapes in ordinary language. This principles page names why the shapes exist; the [User Guide](../use/user-guide.md) owns the practical request phrasing and session flow.
 
 ## MVP Boundary
 

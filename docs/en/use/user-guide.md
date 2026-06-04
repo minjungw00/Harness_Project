@@ -1,475 +1,278 @@
 # User Guide
 
-## Start with ordinary requests
+## 1. What Harness helps with
 
-Speak normally. Start with the work, not Harness vocabulary:
+Harness helps an AI-assisted work session keep track of the parts that should not disappear into chat: what the work is, what is in scope, what only you can decide, what evidence supports a claim, what was checked, and whether the work can honestly be closed.
 
-```text
-Help me clarify the plan before implementation.
-Show what I need to decide and what you can check yourself.
-Tell me if the scope is getting bigger.
-Show what still blocks closing this work.
-```
+It is meant to let you speak normally. You should not have to learn internal Harness labels before asking for help.
 
-Other good requests sound just as ordinary:
+Status note: this guide describes the intended Harness-assisted user flow for a future local Harness Server. This repository is documentation-only today. It is not the user's Product Repository or a Harness Runtime Home, and no Harness runtime/server implementation exists here yet.
 
-```text
-I want to add an email login flow. Keep password reset out of scope for now and help me clarify the decisions first.
-```
+Harness is useful when you want the agent to:
 
-```text
-Review this feature idea and ask the questions needed before implementation.
-```
+- clarify blurry work before implementation
+- keep small work small
+- separate facts it can inspect from judgments only you can make
+- show when scope is growing
+- tie completion claims to evidence and checks
+- keep product/UX judgment separate from technical judgment
+- show what still blocks closing the work
 
-```text
-Make a small copy change, but tell me if it turns into a broader product decision.
-```
-
-Status note: this guide describes the intended Harness-assisted user flow for a future local Harness Server. This repository is documentation-only today; it is not the user's Product Repository or a Harness Runtime Home.
-
-You can describe the work you want, the boundary you already know, and how cautious you want the agent to be. The agent should translate that into work, scope, facts it can inspect, judgments only you can make, evidence, checks or verification, and close status. You should not need to learn internal record names, readiness labels, or tool names before starting.
-
-The primary user-facing model has six plain concepts: work, scope, judgment or thing to decide, evidence, check or verification, and close. Internal Harness labels are optional and advanced. The agent can show exact labels later when they clarify a boundary, source record, or reference contract.
-
-The agent should:
-
-- clarify the work and scope before important writes
-- inspect the repository, existing docs, tests, current Harness state, accepted decisions, and current task artifacts before asking questions it can answer itself
-- separate answerable facts from missing information before asking you
-- identify decisions that only you can own
-- separate blocking questions from useful non-blocking questions
-- separate Product/UX judgment from Technical judgment when that distinction matters
-- gather or explain the evidence needed to support completion claims
-- run or explain the checks and verification that matter for the work
-- show what still blocks close and the next safe action
-
-Harness helps preserve scope, user-owned judgment, evidence, verification, QA expectations, work acceptance, and residual-risk status outside fragile chat context. It should make AI-assisted work easier to follow, not turn every task into a management ritual. Small work should stay small. Larger or riskier work should gain structure only when scope, user-owned judgment, evidence, QA, verification, work acceptance, or residual risk actually matter.
-
-You should expect to see plain work facts: what the work is, what is in scope, what only you can decide, what evidence exists, what was checked or verified, and whether close is blocked. QA, work acceptance, and remaining risk still matter, but they should be shown as part of the judgment, check, evidence, or close story instead of as extra vocabulary a new user must memorize.
-
-Harness also does not replace the surrounding engineering process. Source control still records product-file history, tests still check executable behavior, review still reviews changes, and user-owned product or material technical judgment still belongs to the user.
-
-You can be more explicit if you want:
-
-```text
-Run this work under the harness.
-```
-
-But the agent should infer Harness use from the task shape. You should not have to start with internal labels.
-
-## Three everyday work shapes
-
-Most requests should be explained with plain work shapes:
-
-| Work shape | Use it when | What you should see |
-|---|---|---|
-| Read/advice work | The agent is reading, explaining, comparing, reviewing, or helping decide without changing product files. | The answer, sources or caveats when useful, and any decision or follow-up that matters. |
-| Small change | The requested change is narrow, low risk, and has an obvious result, such as a typo, copy-only edit, or focused fix. | A short scope, changed path or no-file result, what was checked, and whether anything forced escalation. |
-| Tracked work | The request has unclear scope, multiple parts, Product/UX or Technical judgment, security/privacy impact, meaningful evidence needs, QA, verification, work acceptance, or close-relevant risk. | Scope, pending user judgments, evidence, close readiness, next safe action, and the smallest blocker. |
-
-The agent may record more internal detail than it displays. User-facing messages should show the detail that helps you decide, trust, or unblock the work, not a lifecycle checklist for every tiny edit.
-
-## What the agent should answer first
-
-For non-trivial work, the first useful response is not a full plan, a pile of internal state, or a long intake form. It should be a short translation of the request into plain working facts, followed by inspection or the smallest blocking question.
-
-Example:
-
-```text
-Understood scope: add email login only. Password reset, account creation, social login, and global auth redesign stay out of scope.
-
-I can inspect: existing login routes, session handling, auth tests, UI form patterns, validation helpers, and docs for current auth behavior.
-
-Only you can decide: whether email login should use password credentials, one-time codes, magic links, or an external identity provider; what failed-login UX and copy are acceptable; whether any security or UX trade-off is worth the cost.
-
-Next safe action: inspect the current auth flow, then come back with what the codebase answers, what only you can decide, and a scoped next-work proposal.
-```
-
-A good clarification response should separate:
-
-- goal
-- user value
-- non-goals
-- acceptance criteria
-- answerable facts the agent can inspect from the repo, docs, or current Harness state
-- missing information
-- judgments only the user can make
-- blocking questions
-- useful non-blocking questions
-- product or UX judgment candidates
-- technical judgment candidates, including security or privacy considerations when relevant
-- human review and verification expectations
-- remaining uncertainty
-- safe next-work candidate or work-splitting candidate
-
-Clarification is enough to proceed only when:
-
-- the goal can be summarized in one sentence
-- at least one non-goal or boundary is known when a boundary matters
-- success criteria, acceptance criteria, or the desired end state are known
-- answerable facts from the repository, existing docs, tests, current Harness state, accepted decisions, or current task artifacts have been checked before asking you
-- user-only judgments are separated from facts the agent can check
-- blocking questions are separated from useful non-blocking questions
-- the next safe action is classified as advice/read-only work, a small direct change, or tracked work
-- remaining uncertainty is visible instead of hidden inside a confident plan
-
-If those conditions are not met, the agent should either inspect the available sources, ask the smallest blocking question, park useful non-blocking questions, or propose a smaller safe slice that avoids the unresolved area. Larger requests may take several short clarification turns; that is fine as long as each turn checks available context first and moves toward the next safe action instead of becoming a questionnaire.
-
-When the request needs a user-owned judgment, the agent should show a user judgment request instead of asking for broad approval. User-facing labels are Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, and Residual risk acceptance. Security/privacy, scope/autonomy, QA waiver, and verification-waiver details may appear as context, affected gates, or owner refs, but they should not become extra display categories the user has to learn. Small judgments can be asked as short, explicit prompts; complex or risky judgments should include fuller trade-offs and evidence. Any internal saved-record label should stay behind the plain question unless it helps explain a real boundary or source link.
-
-Product or UX judgment:
-
-```text
-Judgment request: choose the failed-login experience.
-Options: inline layer, toast, or modal.
-Recommendation: inline layer near the form because it is persistent and easier to make accessible.
-What can continue if you defer: API wiring and tests that do not commit to final UI behavior.
-What cannot close yet: final UX, copy, and the human check of the login screen.
-```
-
-Technical architecture judgment:
-
-```text
-Judgment request: choose the login architecture.
-Options: session cookie, bearer/JWT, OAuth/OIDC, or social-login provider integration.
-Recommendation: inspect existing session and user model first; do not choose until we know what the codebase already supports or what identity-provider requirement exists.
-What can continue if you defer: read-only inspection and a scoped implementation proposal.
-What cannot close yet: implementation, security evidence, and acceptance criteria for the chosen auth path.
-```
-
-Evidence needed:
-
-```text
-Evidence needed before "done": changed paths, focused auth tests, failure-path tests, any security-sensitive redaction notes, and a human QA note for the login form copy and error states if the UI changes.
-```
-
-Why work cannot close yet:
-
-```text
-Cannot close yet: the failed-login UX is not chosen, no implementation evidence exists, and the expected human check for the login screen is not settled.
-Smallest unblocker: choose the failed-login pattern, or ask me to propose a smaller slice that avoids final UI behavior for now.
-```
+## 2. Start in normal language
 
 <a id="first-read-path"></a>
 <a id="phrase-reference"></a>
 
-## Useful things you can ask
-
-Use these as ordinary requests. They are not commands you must memorize.
+Say what you want in ordinary words. These are enough:
 
 ```text
-Help me clarify the plan before implementation.
-Show what I need to decide and what you can check yourself.
-Separate answerable facts, blocking questions, and useful non-blocking questions.
-Ask what you need before changing code.
-Start with goals, non-goals, and acceptance criteria.
-Show the current status and next safe action.
-Resume from the current state, not old chat.
-What is blocking this task now?
-What one decision or check would unblock it?
-Show close readiness in plain language.
-Show close-relevant residual risk before I accept.
-What evidence is still missing?
-Separate product decisions from technical decisions.
-Tell me if the scope is getting bigger.
-Keep this small unless it turns into a product or technical decision.
-After you inspect, show the safe next work or work split.
+Help me clarify this before implementation.
+Separate what I need to decide from what you can check.
+Tell me if the scope is expanding.
+Fix only typos in this document.
+Before building login, show the product and technical decisions.
 ```
 
-## Planning examples
-
-For product planning, you can say:
+You can also add boundaries:
 
 ```text
-We need to improve onboarding for new workspace owners. First, inspect what exists, separate product choices from facts, and ask only the questions you cannot answer from the repo.
+Add email login, but keep password reset and account creation out of scope for now.
 ```
 
-A useful response should identify the user value, non-goals, answerable facts inspected from the repo or docs, product/UX judgment candidates such as checklist versus setup prompt, QA expectations for the flow, remaining uncertainty, and a safe next-work or work-splitting proposal.
-
-For technical planning, you can say:
+Or ask for a light touch:
 
 ```text
-I want to replace our login approach, but I do not know whether sessions, magic links, or OAuth/OIDC fit best. Inspect the current auth shape first and show the decisions before implementation.
+Keep this as a small copy change unless it turns into a product or technical decision.
 ```
 
-A useful response should inspect existing auth, session, user model, tests, and docs before asking; separate technical choices from security/privacy considerations; name verification and human QA expectations; and propose either a safe investigation slice or a work split. It should not treat the first plausible implementation path as enough to stop clarifying if acceptance criteria, major judgment candidates, or remaining uncertainty are still unclear.
+The agent should translate your request into plain working facts: goal, scope, non-goals, facts it can inspect, choices you own, evidence needed, checks to run, and what would still block close.
 
-## Small work should stay light
+## 3. What the agent should clarify first
 
-Harness should not make a tiny change feel heavy. If the user says:
+<a id="what-the-agent-should-answer-first"></a>
+
+For anything beyond an obvious tiny edit, the agent should first answer:
+
+- What result are we trying to get?
+- What is known to be in scope?
+- What is known to be out of scope?
+- What can the agent inspect before asking you?
+- What decisions belong to you?
+- What question, if any, blocks the next safe action?
+- What can safely continue while a non-blocking question waits?
+
+A useful first response is short and specific:
 
 ```text
-Fix the typo in the settings toast: "Succesful" -> "Successful."
+Scope I heard: add email login only.
+Out of scope for now: password reset, account creation, social login, and a full authentication redesign.
+
+I can inspect: current login routes, session handling, auth tests, login form patterns, and validation helpers.
+
+You may need to decide: password credentials, magic link, one-time code, or external identity provider; failed-login UX; security and privacy trade-offs.
+
+Next safe action: inspect the current auth shape, then return with facts, open decisions, and the smallest safe implementation slice.
 ```
 
-The agent should keep the visible flow compact:
+If the agent can answer something by reading the repo, docs, tests, prior saved context, or current files, it should inspect first. It should not turn agent-resolvable uncertainty into a user questionnaire.
+
+## 4. How small work is handled
+
+Small work should stay light. If you say:
 
 ```text
-Scope: settings toast typo only.
-Out of scope: account behavior, layout, localization strategy, and broader copy cleanup.
-I will edit the target component and any directly related copy test if one exists.
+Fix only typos in this document.
 ```
 
-After the change, the result can be just as small:
+the agent should keep the visible flow compact:
+
+```text
+Scope: typos in this document only.
+Out of scope: wording changes, structure changes, terminology changes, and new examples.
+I will edit only typo-level issues and tell you if I find anything broader.
+```
+
+After the work, a compact result is enough:
 
 ```text
 Done.
-Changed: settings toast typo to "Successful."
-Checked: related copy test and diff review.
-Pre-write scope check: compatible for this focused change.
-No broader product decision appeared, and no close-relevant residual risk is known for this small change.
+Changed: typo fixes only.
+Checked: diff review for unintended wording changes.
+No scope expansion found.
 ```
 
-The light display does not mean the agent bypasses Harness internally. If product files may change, the scope, pre-write scope check, evidence, and close boundary still matters. The agent still keeps scope narrow, uses the appropriate internal write checks, records what changed, preserves the evidence needed for the claim, and reports if the work grows beyond the original request. You should not need to see internal boundary labels for every tiny edit unless a label helps explain a boundary or blocker.
+Small work should stop being treated as small when it changes meaning, behavior, UX, public API, security/privacy posture, localization strategy, architecture, or QA expectations. When that happens, the agent should pause, show the scope change, and ask for the smallest necessary decision.
 
-Small work should escalate when it stops being small. Escalate to tracked work when scope is unclear; multiple files, product areas, or subsystems are involved; a Product/UX judgment is needed; an important Technical judgment is needed; a public interface or API may be affected; security or privacy may be affected; a sensitive action is needed; QA or verification requirements increase; evidence is insufficient; residual risk is non-trivial; or multi-step delivery is needed.
+## 5. How larger work is clarified
 
-Examples:
+Larger work needs more structure because product behavior, implementation choices, evidence, QA, and remaining risk can all matter.
 
-- A typo or copy-only change can stay lightweight when it touches one obvious surface and does not change meaning, behavior, localization strategy, security posture, or required QA.
-- "Make Enter submit this modal instead of closing it" should escalate if it changes UI behavior, accessibility expectations, or product workflow. That is a product/UX decision, not just a small edit.
-- "Change login to magic links" should escalate because it changes authentication architecture and security/privacy behavior. The agent can inspect first, but implementation needs tracked scope, user-owned Technical judgment, evidence, and likely QA/verification.
-
-## Larger work gets more structure
-
-If the user says:
+If you say:
 
 ```text
-I want to add an email login flow. Keep password reset out of scope for now and help me clarify the decisions first.
+Before building login, show the product and technical decisions.
 ```
 
-The agent should add structure because the work may involve product behavior, security, UI, tests, evidence, QA, and close-relevant risk.
-
-A good early response:
+the agent should separate planning from implementation:
 
 ```text
-Scope I heard: add email login. Out of scope for now: password reset, account creation, social login, and global auth redesign.
+Product decisions likely needed:
+- Which login experience: password, magic link, one-time code, or external identity provider.
+- What failed-login feedback should look like.
+- What recovery path and copy should users see.
 
-I will inspect: existing auth routes, user/session model, login UI patterns, validation and error handling, current tests, and docs.
+Technical decisions likely needed:
+- Session or token strategy.
+- Password handling or identity-provider path.
+- Rate limiting, account-enumeration risk, logging, redaction, and secret handling.
+- Tests and manual QA expectations.
 
-Likely user-owned decisions:
-- Product / UX: credential flow, failed-login behavior, login copy, and recovery messaging.
-- Technical judgment: session model, token/cookie strategy, password storage or identity-provider path, migration impact, dependency choices, account-enumeration risk, audit logging, rate limiting or lockout behavior, redaction, and secret handling.
-
-Evidence likely needed: focused tests for success and failure paths, changed-path summary, security-sensitive notes, and a human QA note if the login screen changes.
-
-Close cannot happen yet because scope, required user-owned decisions, evidence, human-review expectations, and residual risk are not settled.
+I will inspect the current auth code, UI patterns, tests, and docs before recommending an implementation path.
 ```
 
-As the work progresses, the agent should keep the same shape visible:
+Clarification can take more than one turn. That is fine when each turn does one of these things: inspects available facts, names a blocking question, parks useful non-blocking questions, narrows the work, or proposes a safe split.
 
-- what is in scope and what remains out of scope
-- what the agent can decide inside the agreed scope
-- what only the user can decide
-- what was changed and checked
-- what evidence supports each completion claim
-- whether verification or a human QA check is needed
-- what residual risk remains
-- what still blocks work acceptance or close
-
-The larger the blast radius, the more important this separation becomes. A security-sensitive feature should not be closed just because tests pass. A UI feature should not treat screenshots or browser smoke as work acceptance. A dependency install approval should not be treated as a decision to adopt that dependency as the architecture direction.
-
-<a id="the-four-display-groups"></a>
-
-## Six everyday status concepts
-
-Most status should fit into six plain concepts. The agent may save precise records behind the scenes, but the first display should answer these questions in ordinary language.
-
-| Concept | What it answers | What the agent should show |
-|---|---|---|
-| Work | What are we trying to do? | The requested result, current work shape, affected area, and next safe action. |
-| Scope | What may change, and what stays out? | Included behavior, excluded items, affected paths or areas, and whether the next action still fits the agreed scope. |
-| Judgment | What must you decide? | Each pending choice separately, using Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance. |
-| Evidence | What supports the current claim? | Changed paths, command output, logs, screenshots, human QA notes, evidence links, recorded runs, related files or artifacts, and anything missing or stale. |
-| Check or verification | What was checked, and from what review boundary? | Focused tests, diff review, inspection, source lookup, verification result, or required human QA expectation. |
-| Close | Can this honestly finish? | The remaining blocker, the smallest unblocker, whether work acceptance is required, and any known remaining risk or residual-risk acceptance need. |
-
-These concepts are readable summaries, not a new checklist. The agent should show what helps you decide, trust, or unblock the work. It should not make you read internal record names before you understand the status.
-
-Useful status:
-
-```text
-Work:
-Add email login support.
-
-Scope:
-Login form and login API call. Password reset and account creation remain out of scope.
-
-Judgment:
-Choose the failed-login feedback pattern.
-
-Evidence:
-Repository inspection notes are saved. No implementation evidence exists yet.
-
-Check or verification:
-No implementation check has run yet. Human QA expectations for the login screen are still unsettled.
-
-Close:
-Blocked until the UX choice, implementation evidence, human QA expectation, and remaining-risk review are handled.
-
-Next safe action:
-Choose the failed-login pattern, or ask me to propose a smaller slice.
-```
-
-When several decisions are pending, the agent should split them instead of asking for broad approval:
-
-```text
-What must you decide?
-- Product/UX: choose the failed-login feedback pattern.
-- Sensitive step: allow or deny installing the auth helper package.
-- Remaining risk: accept or reject the named mobile Safari wrapping risk.
-```
-
-## Plain links to saved work
-
-You may see links or IDs in a status summary. They should be described by what they help you inspect:
-
-- evidence link: support for a claim, such as a diff, command output, test result, screenshot, or QA note
-- recorded run: the saved result of a command, test, check, or verifier
-- saved decision: the specific user-owned choice that was recorded
-- related file or artifact: a changed file, generated support file, screenshot, report, or other object relevant to the work
-
-The exact record type matters to implementers, but ordinary status should start with the plain meaning. "Evidence link from the focused auth test" is more useful than making a raw record ID the center of the sentence.
+## 6. When the user must decide
 
 <a id="judgment"></a>
 
-## What the agent can decide
+The agent can choose routine implementation details inside an agreed scope: following local naming, reusing an existing helper, adding a focused test, or taking the conservative local pattern.
 
-Once scope is clear, the agent can usually decide routine implementation details without asking every small question. Examples include reusing an existing helper, splitting a private function, adding a focused test, following local naming conventions, or choosing the conservative internal approach that best fits the agreed result.
+The agent should ask you when a choice affects:
 
-The agent should stop and ask when a choice changes what users, callers, or future work can rely on:
-
-- product behavior or UX
-- public API or module contracts
-- security, privacy, audit, retention, or redaction choices
-- material dependency, migration, or architecture direction
+- product behavior, UX, copy, user flow, or accessibility trade-offs
+- public API, module contracts, or compatibility
+- architecture, dependencies, migrations, or data model direction
+- security, privacy, audit, retention, redaction, or secrets
 - scope expansion
-- QA or verification waivers
-- accepting known residual risk
-- work acceptance when that judgment is required
+- permission for a named sensitive step
+- QA or verification expectations, including waivers
+- accepting the finished result
+- accepting a known remaining risk
 
-Useful phrases:
-
-```text
-Help me clarify the plan before implementation.
-Show what I need to decide and what you can check yourself.
-If scope needs to grow, show me the options and impact first.
-Separate product decisions from technical decisions.
-Tell me what evidence would be enough before you claim this is done.
-Tell me if the scope is getting bigger.
-Show what still blocks closing this work.
-```
-
-## Security guarantee level, briefly
-
-Harness makes security-sensitive AI work easier to see and route, but early local Harness is not a sandbox. It does not automatically change OS permissions, sandbox arbitrary tools, make local files tamper-proof, or turn an instructed agent into preventive security.
-
-You may see four guarantee levels. `cooperative` means the agent or tool follows the documented procedure. `detective` means a mismatch or record inconsistency can be detected or recorded after the fact. `preventive` means a proven control blocks the operation before it happens. `isolated` means work or verification runs behind a documented separation boundary; a worktree or fresh evaluator bundle is not automatically an OS sandbox, permission boundary, or tamper-proof security. For MVP-1 and other early local use, expect cooperative plus limited detective wording unless the agent can name the exact blocking control or exact proven separation boundary in use.
-
-When a status says something is blocked, read it as "Harness cannot honestly proceed or close under the current record" unless the agent also names a proven preventive control. Early local Harness may reveal, record, or hold by instruction; it should say plainly when it can stop something before it happens and when it can only report it.
-
-## When blocked
-
-A blocker should be concrete. It should say who owns the next move and what the smallest unblocker is.
+The question should name the specific decision. It should not ask for broad approval when several different decisions are pending.
 
 ```text
-Blocked.
-What are we doing? The requested copy edit appears to affect account behavior outside the original label.
-What must you decide? Whether to keep this label-only or expand the product behavior.
-What do we know? I can inspect call sites and show the affected screens.
-Why can't we close this? Close is blocked until scope is either narrowed back to the label or expanded deliberately.
-Smallest unblocker: choose whether to keep this as a label-only change or include account behavior.
+Decision needed: choose the failed-login feedback pattern.
+Options: inline message, toast, or modal.
+Recommendation: inline message near the form because it stays visible and is easier to make accessible.
+Can continue if deferred: backend validation work that does not claim final UI behavior.
+Cannot close yet: final UX, copy, and human QA for the login screen.
 ```
 
-Do not let the agent turn an agent-resolvable issue into a user burden. If the agent can inspect code, refresh status, rerun a test, collect missing evidence, or narrow the work without changing your judgment, it should say what it will do next.
+## 7. Product/UX judgment examples
 
-Close blockers should be readable without knowing internal readiness labels. A close blocker display should show:
+Product and UX judgments decide what the user experience should be. The agent can recommend, but it should not silently choose for you.
 
-- what user judgment remains, if any
-- what evidence is missing, stale, or insufficient
-- whether verification or human QA is required by the active profile
-- whether work acceptance is required
-- what residual risk is visible, not yet visible, accepted, or still unresolved
-- the next smallest resolving action
+Examples:
 
-## Before close
+| Situation | What you decide | What the agent can check |
+|---|---|---|
+| Login failure | Inline message, toast, modal, or another pattern. | Existing error UI, accessibility patterns, design-system components, and current copy. |
+| Onboarding | Checklist, setup prompt, guided flow, or empty-state education. | Current screens, analytics notes if available, docs, and prior patterns. |
+| Copy tone | Plain warning, softer guidance, or more specific error text. | Existing product voice, support docs, localization constraints, and account-enumeration risk. |
+| Workflow friction | Require confirmation, allow undo, or proceed directly. | Existing destructive-action patterns, user roles, and current UI conventions. |
 
-Before close, ask:
+A good prompt shows options, recommendation, uncertainty, what can continue if you defer, and what cannot be honestly finished yet.
+
+## 8. Technical judgment examples
+
+Technical judgments decide material implementation direction. The agent should inspect first, then show the trade-off plainly.
+
+Examples:
+
+| Situation | What you decide | What the agent can check |
+|---|---|---|
+| Login architecture | Session cookie, bearer token, magic link, OAuth/OIDC, or provider integration. | Existing auth model, dependencies, tests, security notes, and deployment constraints. |
+| Dependency choice | Add a package, avoid it, or replace an existing one. | Current dependency policy, licenses, maintenance status, bundle impact, and local alternatives. |
+| Migration path | In-place change, staged migration, compatibility shim, or follow-up task. | Existing data shape, callers, tests, release constraints, and rollback options. |
+| API contract | Preserve current contract, add a versioned path, or change callers together. | Existing callers, docs, tests, compatibility risks, and public surface area. |
+| Verification expectation | Focused test, broader regression run, independent review, manual QA, or waiver. | Available tests, past failures, affected surfaces, and what remains untested. |
+
+Technical judgment is not the same as permission for a sensitive step. For example, allowing the agent to install an auth helper package is not the same as deciding that package is the architecture direction.
+
+## 9. How to read evidence and checks
+
+<a id="the-four-display-groups"></a>
+
+Evidence is support for a claim. Checks are actions that examine whether the claim is true.
+
+Useful evidence can include changed paths, diffs, command output, test results, screenshots, logs, source links, inspection notes, or human QA notes. Useful checks can include focused tests, diff review, source lookup, browser inspection, accessibility checks, or an independent enough review when the work requires it.
+
+Read evidence and checks separately:
+
+| Plain item | What it means | What it does not replace |
+|---|---|---|
+| Evidence | Support for a completion or correctness claim. | Your decision, work acceptance, or remaining-risk acceptance. |
+| Automated check | A test, command, or mechanical review of a specific behavior. | Human QA, broad confidence, or product judgment. |
+| Human QA | A person inspected an experience where judgment matters. | Automated tests or screenshots alone. |
+| Source lookup | The agent checked docs, code, or current files before claiming something. | A decision you own. |
+| Missing evidence | The claim is not yet well supported. | A reason to invent confidence. |
+
+If the agent says "done," it should also be able to say what changed, what supports that claim, what was checked, and what was not checked.
+
+## 10. What to confirm before closing work
+
+Before closing larger work, ask:
 
 ```text
 Show what changed, what was checked, what risks remain, and what still blocks close.
 ```
 
-For larger work, also ask:
+The agent should show:
 
-```text
-Show close-relevant residual risk before I accept.
-```
+- scope that actually stayed in bounds
+- decisions you made and decisions still unresolved
+- changed paths or no-file result
+- evidence supporting each important completion claim
+- checks that passed, failed, were skipped, or were not applicable
+- human QA expectations and results, when the work needs them
+- whether you need to accept the finished result
+- known remaining risks and whether they were accepted
+- the smallest action that would unblock close
 
-The agent should keep these separate:
+Tests can pass while close is still blocked. A UI change may still need human QA. A security-sensitive change may still need a risk decision. A broad "looks good" should only count when the agent has clearly named the thing you are accepting.
 
-| Plain item | Job | Not a substitute for |
-|---|---|---|
-| Evidence | Supports the claim that a result or criterion was met. | The agent saying "done" or the user accepting the result. |
-| Verification | Checks correctness from the appropriate review boundary. | Human QA or broad confidence. |
-| Human QA | Captures a person's inspection where judgment matters. | Automated tests or screenshots alone. |
-| Work acceptance | Captures the user's result judgment when required. | Evidence, verification, QA, permission for a sensitive step, waiver, or risk acceptance. |
-| Remaining risk | Names known uncertainty, limitation, unchecked condition, or trade-off. | Evidence, verification, QA, work acceptance, or sensitive-step permission. |
-| Accepting remaining risk | Captures that the user accepts an identified known remaining risk. | Work acceptance, verification, QA, sensitive-step permission, or generic consent. |
-| Permission for a sensitive step | Allows a named sensitive step to proceed. | Product judgment, correctness, work acceptance, risk acceptance, or waiver. |
+## 11. What Harness does not guarantee
 
-That separation is why work can still be blocked after tests pass. Tests can support evidence or verification, but close may still need human QA for the real experience, your work acceptance, or your explicit acceptance of a known remaining risk.
+Harness makes AI-assisted work easier to inspect and route. It does not replace the surrounding engineering process.
 
-Residual-risk wording should be precise. "No known close-relevant residual risk" means the system has no known close-relevant risk for this requested action. "Risk not visible yet" means known risk exists but has not been shown clearly enough for acceptance or close.
+It does not:
 
-A casual "go ahead," "proceed," "looks good," "진행해," or "좋아" is only usable when the agent has already named the exact thing you are deciding. It must not automatically resolve every pending judgment. If the response could mean approval for a sensitive step, work acceptance, residual-risk acceptance, or simple continuation, the agent should route or clarify before recording it. It is not enough for product trade-offs, architecture choices, QA or verification waivers, accepting the result, or accepting residual risk unless the prompt shows the choice, consequences, relevant evidence links or saved decisions, and what remains outside that decision. If the phrase could apply to more than one pending judgment, the agent should ask which one you mean.
+- replace source control, tests, review, product specs, or team process
+- prove a product decision is correct
+- turn tool output into user judgment
+- turn test pass into human QA
+- turn permission for a sensitive step into work acceptance
+- treat generated readable summaries as operating state
+- automatically change OS permissions
+- sandbox arbitrary tools
+- make local files tamper-proof
+- provide pre-execution blocking unless a specific proven blocking control is named
+- provide security isolation unless the exact separation boundary is named and proven
 
-## Advanced: exact close labels
+If the agent says something is blocked, read that as "we cannot honestly proceed or close under the current record" unless it also names an actual preventive control. Early local Harness wording should be cooperative or detective unless a stronger mechanism is explicitly documented.
 
-You may see stricter labels when a tool, report, or reference page needs precision.
+## 12. Advanced internal terms, only after the main flow
 
-| Reference label | Plain meaning |
+You can skip this section until an agent or reference page shows one of these labels. They are useful for precision, but they should not be the first way a normal task is explained.
+
+| Internal label | Plain meaning |
 |---|---|
-| Run/evidence summary / Evidence Manifest when active | Minimum MVP-1 can show the short `run-evidence-summary` view with `evidence_ref` refs, derived evidence summaries, Run refs, ArtifactRefs, and visible gaps. A full Evidence Manifest appears only on the later/profile owner path. |
-| Verification or Eval | A check from the required review boundary; an Eval is one implementation form of that check. |
-| Manual QA record | The saved human QA result or waiver context. |
-| Acceptance | The saved user judgment that the completed result is good enough, when required. |
-| Residual Risk or ResidualRiskSummary | The saved statement of known remaining risk. |
-| Approval | Permission for a named sensitive step; not broad agreement. |
-
-For exact contracts, use the Reference docs: [Core Model Reference](../reference/core-model.md), [MVP API](../reference/api/mvp-api.md), and [Operations and Conformance Reference](../reference/operations-and-conformance.md).
-
-## Advanced: Harness labels you may see
-
-You can skip this section until an agent shows one of these labels. They are useful for precision, but they should not be the first way a normal task is explained.
-
-| Harness label | Plain meaning |
-|---|---|
-| Discovery | The internal name for the agent's requirements-clarification behavior before implementation planning. Users can ask for this as "help me clarify the plan before implementation." |
-| Change Unit | The bounded work area that may change for this task. |
-| Autonomy Boundary | The decisions the agent may make alone inside that scope. |
-| User Judgment | The internal record family behind a user judgment request. It records the user's answer for `judgment_type` values such as `product_choice`, `technical_choice`, `sensitive_action_approval`, `work_acceptance`, or `residual_risk_acceptance`. |
-| `judgment_type` | Internal judgment type. It should be shown through a plain label first, not as a taxonomy the user must learn. |
-| `presentation` | Prompt/detail shape. `short` is the compact default behind the `judgment-request` view; `full` is the optional Decision Packet-style presentation for later-profile or complex judgments. |
-| `display_label` | User-facing label: Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance. |
-| Decision Packet | Optional later-profile full-format or legacy presentation label for a `user_judgment`; not the default mechanism for every small judgment. |
-| Approval | Permission for a named sensitive action; not generic agreement or work acceptance. |
-| Pre-write scope check / Write Authorization | The user-facing check before a product write. The internal `Write Authorization` record is a one-attempt cooperative Harness record/check that the intended product write fits the current task, scope, user judgments, and sensitive-action permissions. It is not OS permission, sandboxing, tamper-proof enforcement, or a preventive block. |
-| Evidence Manifest | The later/profile record that maps completion claims to supporting evidence. Minimum MVP-1 can use the short `run-evidence-summary` view with `evidence_ref` refs, derived evidence summaries, Run refs, ArtifactRefs, and visible gaps without a full Evidence Manifest. |
+| Discovery | The internal name for requirements clarification before implementation planning. Users can simply ask for clarification in ordinary language. |
+| Change Unit | The bounded work area that may change for a product-write attempt. It is scope, not broad permission. |
+| Decision Packet | A fuller presentation for a specific user-owned judgment. It should not be required for every small choice. |
+| Write Authorization | A cooperative internal record/check that a specific write attempt fits the current scope and recorded permissions. It is not OS permission, sandboxing, tamper-proof enforcement, or generic approval. |
+| Evidence Manifest | A fuller record that maps completion claims or criteria to evidence references when that profile is active. Small work may only need a short evidence summary. |
+| Projection | A readable summary derived from saved records. It helps orientation, but it is not the operating record itself. |
 | Gate | An internal readiness or compatibility condition. User-facing status should show the blocker or check first. |
-| Projection | A readable summary derived from owner records and related files or artifacts. MVP-1 uses only five compact views: `status-card`, `agent-context-packet`, `judgment-request`, `run-evidence-summary`, and `close-result`; it helps orientation and is not authority by itself. |
-| Journey Card / Journey Spine | Later continuity display. It can help orientation when enabled and fresh, but it is not authority by itself. |
-| ProjectionJob | The internal job that creates or refreshes a readable projection. |
+| User Judgment | The saved record behind a named user decision, such as product/UX judgment, technical judgment, sensitive-step permission, work acceptance, or remaining-risk acceptance. |
+| Approval | Permission for a named sensitive action. It is not product judgment, work acceptance, or remaining-risk acceptance. |
+| Manual QA | Human inspection for UX, copy, accessibility, visual quality, workflow, or other human-judgment surfaces. |
+| Acceptance | The user's work-acceptance judgment when the work path requires it. |
+| Residual Risk | Known remaining uncertainty, limitation, trade-off, or consequence. |
 | `task_events` | Low-level event history for implementers and diagnostics. |
 
-These labels do not collapse into each other. Approval is not work acceptance. Work acceptance does not erase residual risk. A decision is not a pre-write scope check. A readable summary is not state. Passing tests does not mean Manual QA happened. Accepting residual risk does not make the risk disappear.
+These labels do not collapse into each other. A decision is not a write check. Permission for a sensitive action is not work acceptance. Work acceptance does not erase remaining risk. A readable summary is not state. Passing tests does not mean human QA happened.
 
-For exact contracts, use the Reference docs only when needed: [Core Model Reference](../reference/core-model.md), [MVP API](../reference/api/mvp-api.md), and [Agent Integration Reference](../reference/agent-integration.md).
-
-## Where to go next
-
-Read [Concepts](../learn/concepts.md) for the vocabulary behind the user-facing words.
-
-Use [Judgment Request Cookbook](decision-packet-cookbook.md) when a product, UX, architecture, security, QA, verification, work acceptance, risk, or scope judgment needs a focused prompt.
-
-Agent integrators should read [Agent Guide](agent-guide.md). Ordinary users do not need it for the primary path.
+For exact contracts, use the Reference docs when needed: [Core Model Reference](../reference/core-model.md), [MVP API](../reference/api/mvp-api.md), [Agent Integration Reference](../reference/agent-integration.md), and [Projection And Templates Reference](../reference/projection-and-templates.md).
