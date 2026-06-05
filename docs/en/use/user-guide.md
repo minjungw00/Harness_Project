@@ -46,7 +46,7 @@ Harness turns ordinary requests into a visible working basis. You do not need to
 | "Show what happened and what proves it." | A run/evidence recording path. In owner terms, meaningful execution is summarized through `record_run` and evidence refs when that path is active. | What ran or changed, what supports the claim, what is missing, and what was not checked. |
 | "Can we call this done?" | Close readiness. In owner terms, `close_task` returns close blockers or a close result. | Whether close is available, why it is blocked or available, what risk remains, and the smallest unblocker. |
 
-Readable summaries help you understand the work. They are not the operating record themselves. Editing a status summary, a generated report, or chat text does not create a user decision, write authority, evidence, final acceptance, residual-risk acceptance, or close readiness.
+Readable summaries help you understand the work. They are not the operating record themselves. Editing a status summary, a generated report, or chat text does not create a user decision, pre-write scope check, Write Authorization, evidence, final acceptance, residual-risk acceptance, or close readiness.
 
 ## 3. What the agent should clarify first
 
@@ -149,7 +149,7 @@ You should see:
 
 This check is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that Harness can prevent every tool from acting. It is a cooperative Harness record/check for the intended write. If the intended paths, command, sensitive category, scope, or state changes, the check should be refreshed before writing.
 
-If Core or Harness authority cannot answer, the agent should say that. It should not claim current write authority from old chat, cached summaries, stale projections, or user enthusiasm.
+If Core or Harness authority cannot answer, the agent should say that. It should not claim current write compatibility or a Write Authorization from old chat, cached summaries, stale projections, or user enthusiasm.
 
 ## 7. After execution, read evidence and checks separately
 

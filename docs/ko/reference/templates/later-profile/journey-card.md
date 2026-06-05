@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-작업의 현재 위치, 범위와 범위 밖, 다음 움직임을 막는 것, 대기 중인 사용자 판단, 자율성 경계(Autonomy Boundary), 쓰기 권한 요약, 수용 기준, 증거와 확인, 잔여 위험, 닫기 맥락, 관문, 읽기용 보기 최신성을 현재 위치 카드로 보여줄 때 `JOURNEY-CARD`를 사용합니다.
+작업의 현재 위치, 범위와 범위 밖, 다음 움직임을 막는 것, 대기 중인 사용자 판단, 자율성 경계(Autonomy Boundary), `Write Authority Summary`, 수용 기준, 증거와 확인, 잔여 위험, 닫기 맥락, 관문, 읽기용 보기 최신성을 현재 위치 카드로 보여줄 때 `JOURNEY-CARD`를 사용합니다.
 
 경계: 상태 보기 템플릿(projection template)일 뿐이며 하네스 서버/런타임 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 단계와 상태 보기 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
@@ -27,7 +27,7 @@
 - 읽기용 보기 최신성(projection freshness) 입력
 - 상태, 기준선, 증거, MCP, 기능(capability) 최신성/차단 사유 표시 요약
 
-판단, 쓰기 권한, 닫기 영향, 잔여 위험, 최신성 자리표시자는 위 기록에서 파생한 표시 바인딩입니다. 실제 사용자 판단이 필요하면 이 카드를 사용자 판단 맥락 출처로 취급하지 말고 간결한 판단 요청 또는 선택적 전체 형식 판단 패킷(Decision Packet) 표시를 렌더링합니다.
+판단, `Write Authority Summary`, 닫기 영향, 잔여 위험, 최신성 자리표시자는 위 기록에서 파생한 표시 바인딩입니다. 실제 사용자 판단이 필요하면 이 카드를 사용자 판단 맥락 출처로 취급하지 말고 간결한 판단 요청 또는 선택적 전체 형식 판단 패킷(Decision Packet) 표시를 렌더링합니다.
 
 ## 렌더링 섹션
 
@@ -37,7 +37,7 @@
 - 현재 막는 것
 - 판단 맥락
 - 자율성 경계(Autonomy Boundary)
-- 쓰기 권한 요약
+- `Write Authority Summary`
 - 증거와 확인
 - 잔여 위험
 - 닫기 맥락
@@ -73,7 +73,7 @@ TASK-{id} {title}
 - 필요한 사용자 판단: {user_judgment_required}
 - AFK 중단 조건: {afk_stop_conditions}
 
-쓰기 권한 요약:
+Write Authority Summary:
 - 활성 작업 조각(Change Unit): {active_change_unit_ref|none}
 - 쓰기 승인 기록(Write Authorization): {write_authorization_ref|none}
 - 허용 경로: {allowed_paths}
@@ -85,7 +85,7 @@ TASK-{id} {title}
 - 민감 동작 승인 상태: {approval_status}
 - 기준선: {baseline_ref|none}
 - 보장 수준: {guarantee_display}
-- 메모: 자율성 경계(Autonomy Boundary)는 판단 재량이지 쓰기 전 범위 확인이나 쓰기 승인 기록이 아니다.
+- 메모: 자율성 경계(Autonomy Boundary)는 판단 재량이지 Write Authorization이나 제품 쓰기 호환성이 아니다.
 
 증거와 확인:
 - 행동: {next_evidence_action}

@@ -9,7 +9,7 @@
 
 ## 사용 시점
 
-전체 보고서가 명시적으로 유용한 나중 프로필(later-profile) 단계에서, 진행 중인 작업을 이어서 파악할 수 있는 연속성 보기 또는 참조 상태 보기가 필요할 때 `TASK`를 사용합니다. 이 템플릿은 범위, 사용자 판단, 증거, 닫기 준비 상태, 작업의 현재 위치, 사용자 판단 맥락, 차단 사유 소유자, 자율성 경계(Autonomy Boundary), 쓰기 권한 요약, 구현 마이크로 계획, 검토 단계, 스튜어드십 영향, 다음 증거, 잔여 위험, 닫기 요약, 필요할 때의 커널 관문 상세, 활성 작업 조각(Change Unit), 대기 중인 판단, 관련 보고서 참조, 읽기용 보기 최신성을 보여줄 수 있습니다.
+전체 보고서가 명시적으로 유용한 나중 프로필(later-profile) 단계에서, 진행 중인 작업을 이어서 파악할 수 있는 연속성 보기 또는 참조 상태 보기가 필요할 때 `TASK`를 사용합니다. 이 템플릿은 범위, 사용자 판단, 증거, 닫기 준비 상태, 작업의 현재 위치, 사용자 판단 맥락, 차단 사유 소유자, 자율성 경계(Autonomy Boundary), `Write Authority Summary`, 구현 마이크로 계획, 검토 단계, 스튜어드십 영향, 다음 증거, 잔여 위험, 닫기 요약, 필요할 때의 커널 관문 상세, 활성 작업 조각(Change Unit), 대기 중인 판단, 관련 보고서 참조, 읽기용 보기 최신성을 보여줄 수 있습니다.
 
 경계: 상태 보기 템플릿(projection template)일 뿐이며 하네스 서버/런타임 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 단계와 상태 보기 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
@@ -23,7 +23,7 @@
 - 활성 작업 조각(Change Unit)과 작업 조각 의존성(Change Unit dependency)
 - `mode`, `lifecycle`, 다음 행동(next action), 가장 먼저 해소할 차단 사유, 가장 작은 해소 방법, 보장 수준, 읽기용 보기 최신성(projection freshness)을 위한 현재 상태 표시 입력
 - 기존 owner 기록, 관문, 차단 사유, 참조에서 파생되는 범위, 사용자 판단, 증거, 닫기 준비 상태 표시 그룹 입력
-- 쓰기 승인 기록(Write Authorization)과 쓰기 권한 요약 표시 입력
+- 쓰기 승인 기록(Write Authorization)과 `Write Authority Summary` 표시 입력
 - 사용자 판단(User Judgment) 기록과 잔여 위험(Residual Risk), 해당 프로필이 켜졌을 때 전체 형식 판단 패킷(Decision Packet) 표시 필드
 - 최신 실행(Run), 증거 요약, ArtifactRef 참조, 그리고 일치하는 프로필이 활성화된 경우 증거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA 기록, 민감 동작 승인 기록
 - 쓰기 승인 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인 사용자 판단 참조, 나중의 민감 동작 승인(Approval) 참조, `evidence_ref` 참조와 파생 증거 요약, 활성화된 경우 증거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, `redaction_state`, 읽기용 보기 최신성(projection freshness) 권한 주장을 표시할 때 필요한 간결한 출처 참조
@@ -49,7 +49,7 @@
 - 사용자 판단 맥락
 - 권한 출처 참조
 - 자율성 경계(Autonomy Boundary)
-- 쓰기 권한 요약
+- `Write Authority Summary`
 - 구현 마이크로 계획
 - 검토 단계
 - 다음 증거
@@ -151,7 +151,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 보장 수준:
 - 커널 관문 상세: scope=; decision=; approval=; design=; evidence=; verification=; 수동 QA=; acceptance=
 - 활성 작업 조각(Change Unit):
-- 쓰기 권한 요약:
+- Write Authority Summary:
 - 권한 출처 참조: 쓰기=; 판단=; 민감동작승인=; 증거요약=; 활성증거목록=; Eval=; 수동QA=; 최종수락=; 잔여위험=; 아티팩트=
 - `redaction_state`:
 - 최신 보고서:
@@ -216,7 +216,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - AFK 중단 조건:
 - 경계 상태:
 
-## 쓰기 권한 요약
+## Write Authority Summary
 - 활성 작업 조각(Change Unit):
 - 쓰기 승인 기록:
 - 허용 경로:
@@ -244,7 +244,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ### 명세 준수 검토
 - 수용 기준 뒷받침 범위:
 - 작업 조각(Change Unit) 완료 조건:
-- 범위 / 쓰기 권한 호환성:
+- 범위 / Write Authorization 호환성:
 - 사용자 판단 호환성:
 - 증거 뒷받침 범위:
 - 잔여 위험 표시:
@@ -521,7 +521,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 대기 중인 사용자 판단은 한 줄로 합치면 안 됩니다. 민감 동작 승인, 최종 수락, 잔여 위험 수락이 모두 대기 중이면 세 가지 라벨로 세 항목을 렌더링합니다. 민감 동작 승인 카드(Approval Card)는 최종 수락처럼 보이면 안 되고, 잔여 위험 수락은 수락하는 위험을 이름 붙여야 합니다.
 
-`TASK`의 권한 주장은 출처 참조 또는 명시적 부재로 해소되어야 합니다. 쓰기 권한 주장은 compatible하게 소비된 쓰기 승인 기록(Write Authorization) 참조를 가리킵니다. Attempted invalid authorization ref는 violation/audit 또는 validator-finding context로만 나타날 수 있습니다. 민감 동작 승인은 최소 MVP-1에서는 `judgment_kind=sensitive_approval`인 해소된 `user_judgment`를 가리키고, 나중의 민감 동작 승인(Approval) 프로필이 활성화된 경우에만 Approval 참조를 가리킵니다. 최소 MVP-1 증거 표시는 있을 때 `evidence_ref`, 실행(Run) 참조, ArtifactRef 참조, 보이는 공백 요약을 가리킵니다. 활성 담당 경로가 전체 증거 충분성을 세울 수 없으면 충분성을 주장하지 않아야 합니다. 전체 기준-증거 충분성은 증거 목록(Evidence Manifest) 프로필이 활성화된 경우에만 증거 목록 참조를 가리킵니다. 분리 검증은 해당 프로필이 활성화된 경우에만 Eval(분리 검증 결과) 참조를 가리킵니다. 수동 QA는 해당 프로필이 활성화된 경우에만 수동 QA 기록 또는 유효한 면제 참조를 가리킵니다. 최종 수락은 최종 수락 사용자 판단 경로를 가리킵니다. MVP-1에서 잔여 위험 표시는 차단 사유/사용자 판단 참조 또는 `ResidualRiskSummary.status=none`을 가리키고, 풍부한 Residual Risk 참조는 해당 프로필이 활성화된 경우에만 가리킵니다. MVP-1에서 잔여 위험 수락은 잔여 위험 수락 사용자 판단과 관련 차단 사유/증거 참조를 가리키고, 수락된 Residual Risk 참조는 해당 나중 프로필이 활성화된 경우에만 가리킵니다. 참조가 없으면 완료된 권한이 아니라 빠진 뒷받침으로 렌더링해야 합니다.
+`TASK`의 권한 주장은 출처 참조 또는 명시적 부재로 해소되어야 합니다. 제품 쓰기 호환성 주장은 compatible하게 소비된 쓰기 승인 기록(Write Authorization) 참조를 가리킵니다. Attempted invalid authorization ref는 violation/audit 또는 validator-finding context로만 나타날 수 있습니다. 민감 동작 승인은 최소 MVP-1에서는 `judgment_kind=sensitive_approval`인 해소된 `user_judgment`를 가리키고, 나중의 민감 동작 승인(Approval) 프로필이 활성화된 경우에만 Approval 참조를 가리킵니다. 최소 MVP-1 증거 표시는 있을 때 `evidence_ref`, 실행(Run) 참조, ArtifactRef 참조, 보이는 공백 요약을 가리킵니다. 활성 담당 경로가 전체 증거 충분성을 세울 수 없으면 충분성을 주장하지 않아야 합니다. 전체 기준-증거 충분성은 증거 목록(Evidence Manifest) 프로필이 활성화된 경우에만 증거 목록 참조를 가리킵니다. 분리 검증은 해당 프로필이 활성화된 경우에만 Eval(분리 검증 결과) 참조를 가리킵니다. 수동 QA는 해당 프로필이 활성화된 경우에만 수동 QA 기록 또는 유효한 면제 참조를 가리킵니다. 최종 수락은 최종 수락 사용자 판단 경로를 가리킵니다. MVP-1에서 잔여 위험 표시는 차단 사유/사용자 판단 참조 또는 `ResidualRiskSummary.status=none`을 가리키고, 풍부한 Residual Risk 참조는 해당 프로필이 활성화된 경우에만 가리킵니다. MVP-1에서 잔여 위험 수락은 잔여 위험 수락 사용자 판단과 관련 차단 사유/증거 참조를 가리키고, 수락된 Residual Risk 참조는 해당 나중 프로필이 활성화된 경우에만 가리킵니다. 참조가 없으면 완료된 권한이 아니라 빠진 뒷받침으로 렌더링해야 합니다.
 
 잔여 위험 표시는 `status=none`과 `not_visible`을 구분해야 합니다. `status=none`은 요청된 행동에 대해 알려진 닫기 관련 잔여 위험이 없다는 뜻입니다. `not_visible`은 알려진 닫기 관련 위험이 있지만 최종 수락 또는 닫기에 충분히 보이지 않았다는 뜻이므로, 위험과 참조가 보일 때까지 차단 사유 또는 다음 행동으로 남아야 합니다.
 

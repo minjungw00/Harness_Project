@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this page as a design walkthrough of intended Harness runtime behavior. It helps implementers see how one request should move from ordinary user language to scope, write authority, evidence, status, and close outcome.
+Use this page as a design walkthrough of intended Harness runtime behavior. It helps implementers see how one request should move from ordinary user language to scope, pre-write scope checking, evidence, status, and close outcome.
 
 This page is not evidence that runtime exists. It does not authorize server/runtime implementation, generated operational artifacts, executable fixtures, runtime data, or new schemas before the handoff gates in [Implementation Overview](implementation-overview.md#documentation-acceptance-status) are accepted.
 

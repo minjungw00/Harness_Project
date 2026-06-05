@@ -16,9 +16,9 @@ Keep user-owned judgment with the user. Do not decide product behavior, importan
 
 Use procedure in proportion to the work. Tiny edits and read-only answers should stay light. Ambiguous, large, sensitive, cross-boundary, or close-relevant work needs visible scope, focused judgment, a compatible pre-write check before product writes, evidence after execution, and close blockers or close result before completion.
 
-Template output is not state. Status cards, generated reports, rendered templates, recommendations, chat memory, and retrieved context can summarize or point to owner refs, but they do not create sensitive-action approval, evidence, final acceptance, residual-risk acceptance, write authority, or close readiness.
+Template output is not state. Status cards, generated reports, rendered templates, recommendations, chat memory, and retrieved context can summarize or point to owner refs, but they do not create sensitive-action approval, evidence, final acceptance, residual-risk acceptance, a Write Authorization, or close readiness.
 
-If Core or Harness authority is unavailable, do not invent task state, user judgments, sensitive-action approval, evidence, final acceptance, residual-risk acceptance, readable-view freshness, write authority, or close readiness. Hold product writes by instruction and reconnect, diagnose, or move to a capable surface. Proceed outside Harness only if the user explicitly chooses that mode.
+If Core or Harness authority is unavailable, do not invent task state, user judgments, sensitive-action approval, evidence, final acceptance, residual-risk acceptance, readable-view freshness, Write Authorization, write compatibility, or close readiness. Hold product writes by instruction and reconnect, diagnose, or move to a capable surface. Proceed outside Harness only if the user explicitly chooses that mode.
 
 ## 2. Treat normal language as enough
 
@@ -28,7 +28,7 @@ The agent translates ordinary requests into work shape, scope, user judgment, ev
 |---|---|
 | "Turn this feature idea into an implementable plan." | Start intake and requirement clarification. Inspect available facts, separate goal/scope/non-goals, then ask the most important blocking question if needed. |
 | "Ask me first about the parts only I can decide." | Identify user-owned product, technical, scope, sensitive-action, QA, acceptance, or risk decisions; ask one focused judgment at a time. |
-| "Before changing files, confirm which files you expect to touch." | Prepare a product-write scope check. Do not claim write authority unless Core/Harness returns a compatible response for the intended write. |
+| "Before changing files, confirm which files you expect to touch." | Prepare a product-write scope check. Do not claim the write is compatible unless Core/Harness returns a compatible response for the intended write. |
 | "Before you say it is done, show the evidence and remaining risks." | After execution, summarize what ran or changed, evidence and gaps, checks, residual risk, and close blockers/result. |
 | "Looks good" or "go ahead." | Apply it only to the one active prompt if the judgment type, scope, option, and consequences were unambiguous. Otherwise clarify. |
 | "Can we close this?" | Read current state, evidence, verification/QA status, final acceptance need, residual-risk visibility, and close blockers before claiming readiness. |
@@ -49,7 +49,7 @@ Escalate from small change to tracked work when you discover scope drift, new fi
 
 ## 4. Clarify without endless planning loops
 
-Clarification is the agent behavior before implementation planning when the next safe action is not clear. It is not sensitive-action approval, evidence, write authority, final acceptance, residual-risk acceptance, or close.
+Clarification is the agent behavior before implementation planning when the next safe action is not clear. It is not sensitive-action approval, evidence, a pre-write scope check, a Write Authorization, final acceptance, residual-risk acceptance, or close.
 
 Before asking, inspect what is available: repository files, docs, tests, current state, active scope, accepted decisions, and current artifacts. Then ask only the question that changes the next safe action.
 
@@ -94,7 +94,7 @@ Do not treat "yes, do it," "looks good," "approved," "go ahead," or "continue" a
 
 Before product/code/file writes in Harness-connected work, check that the exact intended write fits current scope and state. In owner terms this is the `prepare_write` / Write Authorization path.
 
-Do not claim write authority without a compatible Core/Harness response for the intended write. Do not treat a plan, status card, generated summary, old chat reply, broad user enthusiasm, or stale projection as write authority.
+Do not claim a write is compatible without a compatible Core/Harness response for the intended write. Do not treat a plan, status card, generated summary, old chat reply, broad user enthusiasm, or stale projection as a Write Authorization or compatibility basis.
 
 Show the user:
 
@@ -149,7 +149,7 @@ The exact MVP-1 status/error condition taxonomy is owned by [API Errors: MVP-1 g
 
 | Condition | Agent behavior |
 |---|---|
-| Core unavailable | Say Harness/Core authority is unavailable; reconnect or diagnose; do not claim state, sensitive-action approval, user judgment, evidence, final acceptance, residual-risk acceptance, write authority, or close readiness. |
+| Core unavailable | Say Harness/Core authority is unavailable; reconnect or diagnose; do not claim state, sensitive-action approval, user judgment, evidence, final acceptance, residual-risk acceptance, Write Authorization, write compatibility, or close readiness. |
 | Local access denied | Say local access is unavailable or denied; do not guess file contents or command results; move to a capable surface or narrow to accessible paths. |
 | Stale state | Refresh current state, baseline, readable view, or pre-write scope check before relying on it. |
 | Unsupported surface | Say the behavior is outside the current stage or surface; offer a supported fallback instead of emulating later-profile authority. |
@@ -273,6 +273,6 @@ I will treat that as all write permission, final acceptance, QA waiver, verifica
 - Do not loop forever on blockers; inspect or ask the one focused question that changes the next safe action.
 - Do not treat "looks good" or "go ahead" as sensitive approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, cancellation, or scope change.
 - Do not present template output, status cards, readable summaries, generated reports, recommendations, or chat memory as state.
-- Do not invent Core state, write authority, user judgments, evidence, final acceptance, residual-risk acceptance, or close readiness when Core/Harness authority is unavailable.
+- Do not invent Core state, Write Authorization, write compatibility, user judgments, evidence, final acceptance, residual-risk acceptance, or close readiness when Core/Harness authority is unavailable.
 - Do not imply cooperative or detective surfaces can prevent execution unless a proven preventive path covers that operation.
 - Do not bury the user's next decision under schemas, logs, full templates, full DDL, complete history, or unrelated reference material.

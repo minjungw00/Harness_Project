@@ -108,12 +108,12 @@ npm test -- --runInBand
 
 ## 검토 단계
 - 메모: 실행 로컬(run-local) 검토 표시 전용입니다. 기록(Record), `ProjectionKind` value, 민감 동작 승인(Approval), 증거, 검증, QA, 최종 수락, 잔여 위험 수락, 닫기, 쓰기 승인 기록(Write Authorization)을 만들지 않습니다. 검토 단계(review-stage) 경계는 [설계 품질 정책(Design Quality Policies)](../../design-quality-policies.md#two-stage-review-display)이 담당합니다. 발견 사항은 기존 참조, 관문, 차단 사유로 연결합니다.
-- 쓰기 권한 메모: attempted invalid authorization ref는 validator finding, violation payload, event payload에만 나타날 수 있습니다. Consumed Write Authorization이 아니며 completion evidence로 쓰면 안 됩니다.
+- Write Authorization 메모: attempted invalid authorization ref는 validator finding, violation payload, event payload에만 나타날 수 있습니다. Consumed Write Authorization이 아니며 완료 증거로 쓰면 안 됩니다.
 
 ### 명세 준수 검토
 - 수용 기준 뒷받침 범위:
 - 작업 조각(Change Unit) 완료 조건:
-- 범위 / 쓰기 권한 호환성:
+- 범위 / Write Authorization 호환성:
 - 사용자 판단 호환성:
 - 증거 뒷받침 범위:
 - 잔여 위험 표시:

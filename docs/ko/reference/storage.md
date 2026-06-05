@@ -263,11 +263,12 @@ Close-required coverage item이 missing artifact, 없는 `sha256` / `size_bytes`
 bytes, 또는 `hash_mismatch` 같은 integrity failure에 의존하면 storage는 그 사실을 Core에
 노출합니다. Evidence state는 `sufficient`가 아니라 `stale` 또는 `blocked`로 남습니다.
 
-Write Authorization row는 close-readiness row가 아닙니다. Stale, blocked, missing,
-expired, revoked, invalid authorization은 그 영향이 닿는 현재 Run, scope, artifact,
+Write Authorization row는 close-readiness row가 아닙니다. Stale, missing, expired,
+revoked, consumed, incompatible authorization이나 authorization row를 만들지 않은
+blocked `prepare_write` decision은 그 영향이 닿는 현재 Run, scope, artifact,
 evidence summary, blocker record를 통해서만 close에 영향을 줍니다. Storage는
-authorization lifecycle value를 close result로 바꾸면 안 되며, attempted invalid
-authorization ref를 evidence support로 쓰면 안 됩니다.
+authorization lifecycle value나 차단된 write-check response를 close result로 바꾸면 안
+되며, attempted invalid authorization ref를 evidence support로 쓰면 안 됩니다.
 
 ## Later/Profile 저장
 

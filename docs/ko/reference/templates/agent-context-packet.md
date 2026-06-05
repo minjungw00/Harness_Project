@@ -14,7 +14,7 @@
 - active Change Unit 참조, 범위 요약, 하지 않을 일, allowed paths/tools/commands
 - 활성 차단 사유와 blocker 참조
 - 활성 사용자 판단, 대기 중인 판단 참조, 판단 요청 참조
-- 쓰기 권한 요약. 있을 때 Write Authorization 참조
+- `WriteAuthoritySummary` / Write Authorization 맥락. 있을 때 Write Authorization 참조
 - 증거 요약, 증거 참조, Run 참조, ArtifactRefs, `redaction_state`, 증거 공백
 - 닫기 차단 사유, 잔여 위험 상태, 최종 수락 필요 여부/상태, 관련 owner 참조
 - 보장 수준, MCP/Core availability, source clock, 최신성 상태
@@ -26,7 +26,7 @@
 - active Change Unit과 허용된 행동 경계
 - 활성 사용자 판단
 - 차단 사유
-- 쓰기 권한
+- 쓰기 전 범위 확인 / Write Authorization 맥락
 - 증거 상태
 - 닫기와 잔여 위험 상태
 - 다음 안전한 행동
@@ -70,5 +70,7 @@ agent_context_packet:
 ## 메모
 
 에이전트 맥락 패킷은 한 화면 안팎으로 유지합니다. 전체 schema, 전체 Reference 문서, 전체 historical event log, 등록된 아티팩트 파일 본문, 전체 report body, 전체 template, 관련 없는 template, full design-quality catalog, future catalog material을 기본으로 넣지 않습니다.
+
+`write_authority` key는 내부 compact-context label입니다. Ref와 호환성 요약만 담으며 work를 승인하지 않습니다.
 
 `guarantee_level` 필드는 필수 맥락입니다. Core/MCP가 unavailable이면 unavailable/capability condition을 넣고, refresh 전까지 하네스에 의존하는 state, write, evidence, 최종 수락, 잔여 위험, close claim을 unavailable로 다룹니다.

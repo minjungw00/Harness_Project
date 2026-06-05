@@ -14,7 +14,7 @@ Boundary: this packet is support context only. It cannot authorize writes, satis
 - active Change Unit ref, scope summary, non-goals, and allowed paths/tools/commands
 - active blockers and blocker refs
 - active user judgments, pending judgment refs, and judgment request refs
-- write authority summary, including Write Authorization refs when present
+- `WriteAuthoritySummary` / Write Authorization context, including Write Authorization refs when present
 - evidence summary, evidence refs, Run refs, ArtifactRefs, `redaction_state`, and evidence gaps
 - close blockers, residual-risk status, final-acceptance need/status, and relevant owner refs
 - guarantee level, MCP/Core availability, source clocks, and freshness state
@@ -26,7 +26,7 @@ Boundary: this packet is support context only. It cannot authorize writes, satis
 - active Change Unit and allowed action boundary
 - active user judgments
 - blockers
-- write authority
+- pre-write / Write Authorization context
 - evidence state
 - close and residual-risk state
 - next safe action
@@ -70,5 +70,7 @@ agent_context_packet:
 ## Notes
 
 Keep the packet one screen or less. Do not include full schemas, full reference docs, full historical event logs, registered artifact file bodies, full report bodies, full templates, unrelated templates, full design-quality catalogs, or future catalog material by default.
+
+The `write_authority` key is an internal compact-context label. It carries refs and compatibility summary only; it does not authorize work.
 
 The `guarantee_level` field is required context. If Core/MCP is unavailable, set it to the unavailable/capability condition and treat Harness-dependent state, write, evidence, acceptance, residual-risk, and close claims as unavailable until refreshed.

@@ -27,7 +27,7 @@ Implementation tier: Future/diagnostic projections. Persisted Journey Card Markd
 - projection freshness inputs
 - state, baseline, evidence, MCP, and capability freshness/blocker display summaries
 
-Judgment, write-authority, close-impact, residual-risk, and freshness placeholders are display bindings derived from the records above. If a user judgment is actually needed, render a compact user judgment prompt or optional full-format Decision Packet presentation rather than treating this card as the judgment context source.
+Judgment, Write Authority Summary, close-impact, residual-risk, and freshness placeholders are display bindings derived from the records above. If a user judgment is actually needed, render a compact user judgment prompt or optional full-format Decision Packet presentation rather than treating this card as the judgment context source.
 
 ## Rendered sections
 
@@ -49,7 +49,7 @@ Judgment, write-authority, close-impact, residual-risk, and freshness placeholde
 
 ````text
 TASK-{id} {title}
-Display only: current-position view, not canonical state or write authority.
+Display only: current-position view, not canonical state or a Write Authorization.
 Where we are: {mode} / {lifecycle_phase} / {current_position}
 Scope: {scope_summary|none}
 Out of bounds: {out_of_bounds_summary|none}
@@ -85,7 +85,7 @@ Write Authority Summary:
 - approval status: {approval_status}
 - baseline: {baseline_ref|none}
 - guarantee: {guarantee_display}
-- note: Autonomy Boundary is judgment latitude, not write authority.
+- note: Autonomy Boundary is judgment latitude, not a Write Authorization or product-write compatibility.
 
 Evidence and checks:
 - action: {next_evidence_action}

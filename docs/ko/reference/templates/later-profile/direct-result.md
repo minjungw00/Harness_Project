@@ -137,13 +137,13 @@ updated_at: 2026-05-06T09:40:00+09:00
 
 ## 메모
 
-정책 또는 사용자가 분리 검증 또는 다른 관문을 요구하지 않으면 직접 작업은 기본적으로 자체 확인(self-checked) 상태로 닫힐 수 있습니다. 소비된 쓰기 승인 기록(Write Authorization) 참조를 표시할 수 있지만, 상태 보기가 기준 승인 기록이 되는 것은 아닙니다. Attempted invalid authorization ref는 violation/audit 또는 validator-finding context로만 보여야 하며, consumed authority나 completion evidence처럼 보여주면 안 됩니다.
+정책 또는 사용자가 분리 검증 또는 다른 관문을 요구하지 않으면 직접 작업은 기본적으로 자체 확인(self-checked) 상태로 닫힐 수 있습니다. 소비된 쓰기 승인 기록(Write Authorization) 참조를 표시할 수 있지만, 상태 보기가 기준 승인 기록이 되는 것은 아닙니다. Attempted invalid authorization ref는 violation/audit 또는 validator-finding context로만 보여야 하며, consumed Write Authorization이나 완료 증거처럼 보여주면 안 됩니다.
 
 직접 작업 결과(Direct Result)는 자체 확인(self-checked), `detached_verified`, `verification_gate=waived_by_user`, QA 면제 판단, 잔여 위험 수락 닫기 상태를 별도 줄로 표시해야 합니다. 면제 줄은 면제 참조를 가리키거나 아직 기록되지 않았다고 말하며, 검증 또는 QA가 되지 않습니다. 잔여 위험 수락 닫기는 분리 검증됨(detached verified)처럼 보이지 않게, MVP-1에서는 잔여 위험 수락 사용자 판단과 관련 차단 사유/증거 참조를 가리키고, 수락된 Residual Risk 참조는 해당 나중 프로필이 활성화된 경우에만 가리킵니다.
 
 직접 작업 결과(Direct Result)의 확인과 테스트는 증거 또는 자체 확인(self-check) 맥락입니다. 조건을 충족하는 Eval(분리 검증 결과) 없이는 분리 검증이 되지 않고, 수동 QA 결과 또는 유효한 면제 없이는 수동 QA가 되지 않으며, 최종 수락을 암시하지도 않습니다. 직접 작업이 잔여 위험 수락으로 닫힌다면 닫기 영향 요약은 결과를 분리 검증됨(detached verified)처럼 보여주는 대신 잔여 위험 수락 사용자 판단, 관련 차단 사유/증거 참조, 프로필이 활성화된 경우의 나중 수락된 Residual Risk 참조, 후속 작업을 가리켜야 합니다. 알려진 닫기 관련 위험이 없다면 관문 목록을 덧붙이기보다 그 사실을 직접 말합니다.
 
-직접 작업 결과(Direct Result)의 권한 주장은 출처 참조 또는 명시적인 부재를 인용해야 합니다. 쓰기 승인은 쓰기 승인 기록(Write Authorization)을 사용합니다. 최소 MVP-1 민감 동작 승인에는 `judgment_kind=sensitive_approval`인 해소된 `user_judgment`를 사용하고, 나중의 민감 동작 승인(Approval) 프로필이 활성화된 경우에만 Approval 참조를 사용합니다. MVP-1 증거 표시는 있을 때 `evidence_ref`, 실행(Run) 참조, ArtifactRef 참조, 보이는 공백 요약을 사용합니다. 결과가 전체 기준-증거 충분성을 주장하고 전체 증거 프로필이 활성화된 경우에만 증거 목록(Evidence Manifest)을 사용합니다. 분리 검증은 해당 프로필이 활성화된 경우 Eval(분리 검증 결과)을, QA는 해당 프로필이 활성화된 경우 수동 QA 기록 또는 면제 경로를, 최종 수락은 최종 수락 사용자 판단 경로를 사용합니다. MVP-1 잔여 위험 표시는 차단 사유/사용자 판단 참조 또는 `ResidualRiskSummary.status=none`을 사용하고, MVP-1 잔여 위험 수락은 잔여 위험 수락 사용자 판단과 관련 차단 사유/증거 참조를 사용합니다. 풍부한 Residual Risk 참조는 해당 나중 프로필이 활성화된 경우에만 사용합니다. `not_visible` 잔여 위험을 "none"처럼 렌더링하면 안 됩니다.
+직접 작업 결과(Direct Result)의 권한 주장은 출처 참조 또는 명시적인 부재를 인용해야 합니다. 제품 쓰기 호환성은 해당 참조가 있을 때 쓰기 승인 기록(Write Authorization) 참조로 표시합니다. 최소 MVP-1 민감 동작 승인에는 `judgment_kind=sensitive_approval`인 해소된 `user_judgment`를 사용하고, 나중의 민감 동작 승인(Approval) 프로필이 활성화된 경우에만 Approval 참조를 사용합니다. MVP-1 증거 표시는 있을 때 `evidence_ref`, 실행(Run) 참조, ArtifactRef 참조, 보이는 공백 요약을 사용합니다. 결과가 전체 기준-증거 충분성을 주장하고 전체 증거 프로필이 활성화된 경우에만 증거 목록(Evidence Manifest)을 사용합니다. 분리 검증은 해당 프로필이 활성화된 경우 Eval(분리 검증 결과)을, QA는 해당 프로필이 활성화된 경우 수동 QA 기록 또는 면제 경로를, 최종 수락은 최종 수락 사용자 판단 경로를 사용합니다. MVP-1 잔여 위험 표시는 차단 사유/사용자 판단 참조 또는 `ResidualRiskSummary.status=none`을 사용하고, MVP-1 잔여 위험 수락은 잔여 위험 수락 사용자 판단과 관련 차단 사유/증거 참조를 사용합니다. 풍부한 Residual Risk 참조는 해당 나중 프로필이 활성화된 경우에만 사용합니다. `not_visible` 잔여 위험을 "none"처럼 렌더링하면 안 됩니다.
 
 `DIRECT-RESULT`는 직접 작업을 위한 가벼운 닫기 영향 표시입니다. `TASK`는 진행 중이거나 최근 닫힌 `work` Task의 이어가기용 닫기 요약 표시를 담당하고, 이어가기 카드(Journey Card) 닫기 맥락은 간결한 상태/이어가기 표시입니다. 이 표시들은 [projection/report 경계](../../projection-and-templates.md#projection-principles)를 따르며, 닫기와 관문 영향은 여전히 owner 기록에서 옵니다.
 

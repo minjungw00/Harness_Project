@@ -108,12 +108,12 @@ npm test -- --runInBand
 
 ## Review Stages
 - note: run-local review display only. It does not create records, `ProjectionKind` values, Approval, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or Write Authorization. The review-stage boundary is owned by [Design Quality Policies](../../design-quality-policies.md#two-stage-review-display); route findings to existing refs, gates, or blockers.
-- write authority note: an attempted invalid authorization ref may appear in validator findings, violation payloads, or event payloads only. It is not a consumed Write Authorization and must not be used as completion evidence.
+- Write Authorization note: an attempted invalid authorization ref may appear in validator findings, violation payloads, or event payloads only. It is not a consumed Write Authorization and must not be used as completion evidence.
 
 ### Spec Compliance Review
 - acceptance criteria coverage:
 - Change Unit completion conditions:
-- scope / Write Authority compatibility:
+- scope / Write Authorization compatibility:
 - User judgment compatibility:
 - evidence coverage:
 - residual-risk visibility:

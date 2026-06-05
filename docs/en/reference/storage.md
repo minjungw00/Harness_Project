@@ -274,11 +274,13 @@ unresolved relation owner, unavailable bytes, or an integrity failure such as
 `hash_mismatch`, storage exposes that fact to Core and the evidence state stays
 `stale` or `blocked` instead of `sufficient`.
 
-Write Authorization rows are not close-readiness rows. A stale, blocked, missing,
-expired, revoked, or invalid authorization affects close only through the current
-Run, scope, artifact, evidence summary, or blocker record that depends on it.
-Storage must not turn an authorization lifecycle value into a close result, and
-must not use an attempted invalid authorization ref as evidence support.
+Write Authorization rows are not close-readiness rows. A stale, missing,
+expired, revoked, consumed, or incompatible authorization, or a blocked
+`prepare_write` decision that created no authorization row, affects close only
+through the current Run, scope, artifact, evidence summary, or blocker record
+that depends on it. Storage must not turn an authorization lifecycle value or
+blocked write-check response into a close result, and must not use an attempted
+invalid authorization ref as evidence support.
 
 ## Later/Profile Storage
 

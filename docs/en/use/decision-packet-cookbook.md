@@ -70,7 +70,7 @@ Recommendation: use a toast for a non-blocking success message. Use inline text 
 
 If you defer: save-state wiring can continue, but final UI behavior, screenshots, and human QA should wait.
 
-This settles only the Save feedback pattern. It does not settle broader settings workflow, localization strategy, final acceptance, residual-risk acceptance, or write authority.
+This settles only the Save feedback pattern. It does not settle broader settings workflow, localization strategy, final acceptance, residual-risk acceptance, or the pre-write scope check / Write Authorization path.
 ```
 
 Why this is good: it asks for one bounded product decision without pretending the answer approves every later step.
@@ -355,7 +355,7 @@ Answer in ordinary language and add the boundary you care about:
 Choose inline failed-login feedback. Keep the message generic, do not add a modal, and keep account recovery out of scope for this task.
 ```
 
-That kind of answer resolves the named judgment without granting every other authority. The agent still needs the normal owner paths for write authority, evidence, QA, verification, final acceptance, residual-risk acceptance, and close.
+That kind of answer resolves the named judgment without granting every other authority. The agent still needs the normal owner paths for the pre-write scope check / Write Authorization path, evidence, QA, verification, final acceptance, residual-risk acceptance, and close.
 
 If you answer "yes, do it," "proceed," "go ahead," "looks good," "진행해," or "좋아," the agent must not automatically treat that phrase as sensitive action approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, cancellation, or scope change. If more than one judgment is pending, or if the phrase could mean permission, final acceptance, residual-risk acceptance, waiver, scope confirmation, cancellation, or simple continuation, the agent should ask which judgment you mean before recording it.
 

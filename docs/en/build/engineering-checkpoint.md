@@ -19,7 +19,7 @@ Engineering Checkpoint is designed to prove that future Harness can keep one loc
 1. Status can report no active Task without mutating state.
 2. An owner-valid setup/intake path can create exactly one active Task.
 3. One reference `capability_profile` is registered for `surface_id=reference-local-mcp`.
-4. One active Change Unit or equivalent owner-approved scope boundary is required before product-write authority.
+4. One active Change Unit or equivalent owner-approved scope boundary is required before a compatible product-write check can succeed.
 5. `harness.prepare_write` returns structured blockers for missing or out-of-scope work, creates one durable active Write Authorization only for a compatible non-dry-run decision, creates no authorization for dry-run, and replays without duplicating authorization.
 6. `harness.record_run` records one compatible Run and consumes that authorization once.
 7. Consumed, missing, or stale authorization blocks `record_run` without creating completion evidence.
@@ -52,8 +52,8 @@ Use this as an implementation planning order after readiness is accepted. It nam
 |---|---|---|---|
 | 1. Runtime home, project registration, and reference surface profile | Resolve one local product repository through the future Harness runtime home and register the reference `capability_profile`. | Status can distinguish unregistered, registered-idle, and active-work states, and can display that the reference profile is cooperative/detective with no pre-tool blocking or isolation claim. | [Runtime Architecture Reference](../reference/runtime-architecture.md), [Storage](../reference/storage.md), [Security Reference](../reference/security.md), [Agent Integration Reference](../reference/agent-integration.md#capability-profiles). |
 | 2. One Task record | Create or seed one active Task through an owner-valid path. | Status can show the active Task and state version; stale state-changing calls are rejected where required. | [Core Model Reference](../reference/core-model.md), [API Errors](../reference/api/errors.md). |
-| 3. One active Change Unit/scope boundary | Attach the smallest active Change Unit or owner-approved scope boundary that can constrain one intended product write. | Product writes without compatible scope cannot receive write authority. | [Core Model Reference](../reference/core-model.md). |
-| 4. `prepare_write` decision | Route the intended write through the owner pre-write scope check. | Missing or out-of-scope work returns a structured Harness blocker or denial; compatible work returns a Write Authorization ref with honest guarantee display. This is not OS permission or physical pre-tool blocking. | [Core Model Reference](../reference/core-model.md#prepare_write), [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write), [API Errors](../reference/api/errors.md). |
+| 3. One active Change Unit/scope boundary | Attach the smallest active Change Unit or owner-approved scope boundary that can constrain one intended product write. | Product writes without compatible scope cannot receive a Write Authorization. | [Core Model Reference](../reference/core-model.md). |
+| 4. `prepare_write` decision | Route the intended write through the owner pre-write scope check. | Missing or out-of-scope work returns a structured Harness blocker or non-`allowed` response; compatible work returns a Write Authorization ref with honest guarantee display. This is not OS permission or physical pre-tool blocking. | [Core Model Reference](../reference/core-model.md#prepare_write), [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write), [API Errors](../reference/api/errors.md). |
 | 5. `record_run` | Record one compatible Run and consume the authorization. | A compatible Run succeeds once; reuse of the consumed authorization fails. | [Core Model Reference](../reference/core-model.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run). |
 | 6. Artifact/evidence ref | Register one durable artifact or evidence ref through the owner path. | A Run or minimal owner relation can cite that registered ref, including hash, size, content type, redaction, owner, and availability metadata where the owner path requires it. | [API Schema Core](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md). |
 | 7. Status and blockers | Expose current state and blockers without mutation. | Repeated reads do not change state, and blockers are structured enough for future smoke checks. | [`harness.status`](../reference/api/mvp-api.md#harnessstatus), [Core Model Reference](../reference/core-model.md), [API Schema Core](../reference/api/schema-core.md). |
@@ -69,7 +69,7 @@ A future Engineering Checkpoint plan is ready for maintainer planning review whe
 - It uses one registered reference `capability_profile`, not a connector platform or registry.
 - It remains planning-only until [Documentation acceptance status](implementation-overview.md#documentation-acceptance-status) accepts implementation planning readiness.
 - It demonstrates one scoped Harness authority path through `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref, structured status/blocker output, and a narrow close-blocker check.
-- It returns structured denials or blockers for missing scope, out-of-scope intended work, missing Write Authorization for product-write Runs, reuse of a consumed Write Authorization, and missing artifact/evidence support where the active path requires support.
+- It returns structured blockers or non-`allowed` responses for missing scope, out-of-scope intended work, missing Write Authorization for product-write Runs, reuse of a consumed Write Authorization, and missing artifact/evidence support where the active path requires support.
 - It treats all status text, generated prose, and projection-like output as downstream reads from Core records, not fixture proof.
 - Its future smoke checks assert Core-owned state, `task_events` when stable events exist, returned errors, storage rows, artifact refs, evidence state, close blockers, and guarantee display facts.
 - It does not require full projection rendering, multiple projection kinds, detailed templates, operations, conformance runner, broad connector ecosystem, hosted connector registry, cross-surface orchestration, or later-profile storage to pass.
@@ -90,9 +90,9 @@ Use [Conformance Fixtures Reference: Kernel Smoke Authoring Queue](../reference/
 Engineering Checkpoint proves:
 
 - Core can own one local state transition path.
-- Scope is required before Harness-compatible product-write authority.
+- Scope is required before a Harness-compatible Write Authorization can be created.
 - Write Authorization is durable and single-use.
-- `record_run` consumes write authority and records observed work.
+- `record_run` consumes the Write Authorization and records observed work.
 - At least one registered artifact/evidence ref can support the recorded Run.
 - Status/blocker reads can explain missing authority without becoming authority.
 - A close-blocker check can report missing support without full close semantics or generated close reports.

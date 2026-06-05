@@ -89,7 +89,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Scope:
   - what may change:
   - out of bounds:
-  - write authority:
+  - pre-write / Write Authorization:
   - blocker / smallest unblocker:
   - source refs:
 - User Judgments:
@@ -153,7 +153,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - guarantee level:
 - kernel gate detail: scope=; decision=; approval=; design=; evidence=; verification=; Manual QA=; acceptance=
 - active change unit:
-- write authority summary:
+- Write Authority Summary:
 - authority source refs: write=; decision=; sensitive_action_permission=; evidence_summary=; evidence_manifest_when_active=; eval=; manual_qa=; final_acceptance=; residual_risk=; artifacts=
 - `redaction_state`:
 - latest report:
@@ -230,7 +230,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - approval status:
 - baseline:
 - guarantee:
-- note: Autonomy Boundary is judgment latitude, not write authority.
+- note: Autonomy Boundary is judgment latitude, not a Write Authorization or product-write compatibility.
 
 ## Implementation Micro-Plan
 - note: execution aid only; active Change Unit scope bounds writes and `prepare_write` creates Write Authorization.
@@ -246,7 +246,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 ### Spec Compliance Review
 - acceptance criteria coverage:
 - Change Unit completion conditions:
-- scope / Write Authority compatibility:
+- scope / Write Authorization compatibility:
 - User judgment compatibility:
 - evidence coverage:
 - residual-risk visibility:
@@ -526,7 +526,7 @@ User Judgment display in `TASK` should keep canonical schema fields separate fro
 
 Pending user judgments must not be merged into one line. If sensitive-action approval, final acceptance, and residual-risk acceptance are all pending, render three items with three labels. Approval cards should not look like final acceptance, and residual-risk acceptance should name the risk being accepted.
 
-Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to compatible consumed Write Authorization refs; attempted invalid authorization refs may appear only as violation/audit or validator-finding context. Sensitive-action permission points to a resolved `user_judgment` with `judgment_kind=sensitive_approval` in minimum MVP-1, and to an Approval ref only when the later Approval profile is active. Minimum MVP-1 evidence display points to `evidence_ref` when present, Run refs, ArtifactRefs, and visible gap summaries; it should not claim full evidence sufficiency unless the active owner path can establish it. Full criteria-to-evidence sufficiency points to Evidence Manifest refs only when the Evidence Manifest profile is active. Detached verification points to Eval refs only when that profile is active. Manual QA points to Manual QA records or valid waiver refs when that profile is active. Final acceptance points to the final-acceptance user judgment path. Residual-risk visibility points to blocker/user-judgment refs or `ResidualRiskSummary.status=none` in MVP-1, and to rich Residual Risk refs only when that profile is active. Residual-risk acceptance points to the residual-risk acceptance user judgment plus related blocker/evidence refs in MVP-1, and to accepted Residual Risk refs only when that later profile is active. Missing refs should render as missing support, not as completed authority.
+Authority claims in `TASK` must resolve to source refs or explicit absence. Product-write compatibility claims point to compatible consumed Write Authorization refs; attempted invalid authorization refs may appear only as violation/audit or validator-finding context. Sensitive-action permission points to a resolved `user_judgment` with `judgment_kind=sensitive_approval` in minimum MVP-1, and to an Approval ref only when the later Approval profile is active. Minimum MVP-1 evidence display points to `evidence_ref` when present, Run refs, ArtifactRefs, and visible gap summaries; it should not claim full evidence sufficiency unless the active owner path can establish it. Full criteria-to-evidence sufficiency points to Evidence Manifest refs only when the Evidence Manifest profile is active. Detached verification points to Eval refs only when that profile is active. Manual QA points to Manual QA records or valid waiver refs when that profile is active. Final acceptance points to the final-acceptance user judgment path. Residual-risk visibility points to blocker/user-judgment refs or `ResidualRiskSummary.status=none` in MVP-1, and to rich Residual Risk refs only when that profile is active. Residual-risk acceptance points to the residual-risk acceptance user judgment plus related blocker/evidence refs in MVP-1, and to accepted Residual Risk refs only when that later profile is active. Missing refs should render as missing support, not as completed authority.
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means no known close-relevant residual risk exists for the requested action. `not_visible` means known close-relevant risk exists but has not been made visible enough for acceptance or close; it should remain a blocker or next action until the risk and refs are shown.
 

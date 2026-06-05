@@ -93,7 +93,7 @@ Display label: Product decision
 Question: Should this scoped settings label say "Save" or "Update"?
 Scope/refs: settings form copy in CU-04; source ref TASK-012/CU-04; no sensitive action or close-risk ref.
 Choice to record: Save | Update
-Does not settle: broader settings flow behavior, localization strategy, final acceptance, residual-risk acceptance, or write authority.
+Does not settle: broader settings flow behavior, localization strategy, final acceptance, residual-risk acceptance, or the pre-write scope check / Write Authorization path.
 ```
 
 **Rendered example: sensitive action approval**
@@ -277,7 +277,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - task:
 - change unit:
 - user judgment:
-- write authority:
+- Write Authorization / pre-write scope check:
 - evidence:
 - verification:
 - Manual QA:

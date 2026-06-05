@@ -277,7 +277,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 작업(Task):
 - 작업 조각(Change Unit):
 - 사용자 판단:
-- 쓰기 권한 참조:
+- Write Authorization / 쓰기 전 범위 확인:
 - 증거:
 - 검증:
 - 수동 QA:

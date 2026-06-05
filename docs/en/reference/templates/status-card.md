@@ -36,7 +36,7 @@ Boundary: this template is rendered display only. It is not Core state, not evid
 
 ````text
 {task_id} {title}
-Display only: derived from Core state and refs; not Core state or write authority.
+Display only: derived from Core state and refs; not Core state or a Write Authorization.
 
 Work: {work_shape}. {current_task_summary}
 Scope: {scope_summary}

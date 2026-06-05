@@ -38,7 +38,7 @@
 행동: {run_or_action_summary}
 변경 경로: {changed_paths|none}
 확인: {checks_run_or_reason_not_run}
-쓰기 권한: {consumed_write_authorization_ref|no_product_write|attempted_invalid_ref_only|none}
+Write Authorization 맥락: {consumed_write_authorization_ref|no_product_write|attempted_invalid_ref_only|none}
 증거 요약: status={evidence_summary.status}; summary={evidence_summary.summary}
 증거 참조: {evidence_refs|none}
 아티팩트 참조: {artifact_refs|none}; integrity={sha256_size_content_type_summary|none}; redaction={redaction_summary|none}
@@ -52,4 +52,4 @@
 
 증거 충분성은 양이 아니라 coverage입니다. 현재 뒷받침하는 참조가 없거나 critical artifact ref에 owner relation, `sha256`, `size_bytes`, `content_type`, `redaction_state`가 없으면 공백과 `evidence_summary.status`로 보여줘야 합니다. 긴 artifact 목록이나 report 문장을 증명처럼 취급하면 안 됩니다.
 
-Product-write Run의 쓰기 권한으로 표시할 수 있는 것은 compatible하게 소비된 Write Authorization뿐입니다. Attempted invalid authorization ref는 violation/audit 또는 validator-finding context로만 보여줄 수 있으며, consumed authority나 completion evidence처럼 렌더링하면 안 됩니다.
+Product-write Run의 제품 쓰기 호환성 기록으로 표시할 수 있는 것은 compatible하게 소비된 Write Authorization뿐입니다. Attempted invalid authorization ref는 violation/audit 또는 validator-finding context로만 보여줄 수 있으며, consumed Write Authorization이나 완료 증거처럼 렌더링하면 안 됩니다.
