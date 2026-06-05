@@ -2,9 +2,9 @@
 
 ## 이 문서가 도와주는 일
 
-이 문서는 의도한 하네스 런타임 동작을 설계 흐름으로 보여 줍니다. 구현자는 사용자 평소 요청 하나가 어떻게 범위, 쓰기 기준 확인, 근거, 상태, 닫기 결과로 이어져야 하는지 볼 수 있습니다.
+이 문서는 의도한 하네스 런타임 동작을 설계 흐름으로 보여 줍니다. 구현자는 사용자 평소 요청 하나가 어떻게 범위, 쓰기 기준 확인, 증거, 상태, 닫기 결과로 이어져야 하는지 볼 수 있습니다.
 
-이 문서는 런타임이 존재한다는 증거가 아닙니다. [구현 개요](implementation-overview.md#문서-수락-상태)의 handoff gate가 수락되기 전에는 서버/런타임 구현, 생성된 운영 산출물, 실행 가능한 fixture, 런타임 데이터, 새 schema를 허가하지 않습니다.
+이 문서는 런타임이 존재한다는 증거가 아닙니다. [구현 개요](implementation-overview.md#문서-수락-상태)의 handoff gate가 수락되기 전에는 서버/런타임 구현, 생성된 운영 산출물, 실행 가능한 fixture, 런타임 데이터, 새 schema를 승인하지 않습니다.
 
 ## 이런 때 읽기
 
@@ -33,19 +33,19 @@ flowchart LR
   Ask --> Scope
   Scope --> Prepare["prepare_write"]
   Prepare -->|호환됨| Auth["Write Authorization"]
-  Prepare -->|막힘| Blocker["막힘"]
+  Prepare -->|차단 사유| Blocker["차단 사유"]
   Auth --> Run["record_run"]
-  Run --> Evidence["근거 참조"]
+  Run --> Evidence["증거 참조"]
   Evidence --> Status["상태 보기"]
   Blocker --> Status
   Status --> CloseCheck["close_task"]
-  CloseCheck -->|막힘| CloseBlocker["닫기 막힘"]
+  CloseCheck -->|차단 사유| CloseBlocker["닫기 차단 사유"]
   CloseCheck -->|가능| Closed["닫힘"]
 ```
 
 이 diagram은 reader aid입니다. Exact state transition, schema, DDL, error, projection rule은 Reference 담당 문서에 남습니다.
 
-이 diagram의 `호환됨`과 `막힘`은 하네스 권한 결과입니다. Active profile이 더 강한 mechanism을 이름 붙이고 증명하지 않는 한 OS 권한, 임의 도구 차단, sandbox 격리, 물리적 도구 실행 전 차단을 뜻하지 않습니다. Status와 쓰기 확인 output은 현재 보장 수준이나 분명한 unavailable/capability condition을 보여줘야 합니다.
+이 diagram의 `호환됨`과 `차단 사유`은 하네스 권한 결과입니다. Active profile이 더 강한 mechanism을 이름 붙이고 증명하지 않는 한 OS 권한, 임의 도구 차단, sandbox 격리, 물리적 도구 실행 전 차단을 뜻하지 않습니다. Status와 쓰기 확인 output은 현재 보장 수준이나 분명한 unavailable/capability condition을 보여줘야 합니다.
 
 ## 단계별 설계 경로
 
@@ -91,9 +91,9 @@ Evidence는 claim을 등록된 아티팩트 참조 또는 owner record에 연결
 
 담당 문서: [Core Model 참조: Evidence Manifest](../reference/core-model.md#evidence-manifest), [API Schema Core: ArtifactRef](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md).
 
-### 8. 근거 -> 상태와 작은 출력
+### 8. 증거 -> 상태와 작은 출력
 
-상태와 작은 출력은 Core 상태와 artifact ref를 읽습니다. 사용자용 출력은 사용자가 범위, 대기 중인 판단, 근거 공백, 막힘, 다음 안전한 행동, 최종 수락, 잔여 위험을 볼 수 있게 돕습니다. 에이전트용 패킷은 다음 행동에 필요한 참조를 작게 유지합니다. 이 출력들은 쓰기를 허가하거나, 근거를 충족하거나, 작업을 닫지 않습니다.
+상태와 작은 출력은 Core 상태와 artifact ref를 읽습니다. 사용자용 출력은 사용자가 범위, 대기 중인 판단, 증거 공백, 차단 사유, 다음 안전한 행동, 최종 수락, 잔여 위험을 볼 수 있게 돕습니다. 에이전트용 패킷은 다음 행동에 필요한 참조를 작게 유지합니다. 이 출력들은 쓰기를 승인하거나, 증거를 충족하거나, 작업을 닫지 않습니다.
 
 담당 문서: [`harness.status`](../reference/api/mvp-api.md#harnessstatus), [API Schema Core](../reference/api/schema-core.md), [Projection과 Template 참조](../reference/projection-and-templates.md).
 

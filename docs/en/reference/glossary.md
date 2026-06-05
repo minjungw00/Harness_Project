@@ -37,7 +37,7 @@ Use these six concepts first in user-facing docs, prompts, and status summaries.
 
 User-facing docs should explain the plain concept first. More specific phrases such as requirement clarification, judgment request, judgment summary, evidence reference, evidence list, status view, status card, Manual QA, final acceptance, residual risk, close blocker, close readiness, and next safe action may appear when useful, but they should support one of the six concepts rather than becoming a required concept model. Add exact Harness labels in parentheses only when they help explain a boundary, blocker, source ref, or reference link.
 
-Korean user-facing prose should usually use `요구사항 구체화` for Discovery, `범위` or `작업 조각` for Change Unit, `판단 요청` or `판단 요약` for Decision Packet, `쓰기 전 범위 확인` for Write Authorization, `상태 보기`, `요약`, or `상태 카드` for Projection, `근거 목록` for Evidence Manifest, `닫기 가능 여부` or `닫기 준비 상태` for Close Readiness, and `잔여 위험` or `남은 위험` for Residual Risk. Use the exact English label only when a record, schema, API, file path, heading, stable product identifier, or owner link needs that precision.
+Korean user-facing prose should usually use `요구사항 구체화` for Discovery, `범위` or `작업 조각` for Change Unit, `판단 요청` or `판단 요약` for Decision Packet, `쓰기 전 범위 확인` for Write Authorization, `상태 보기`, `요약`, or `상태 카드` for Projection, `증거 목록` for Evidence Manifest, `닫기 가능 여부` or `닫기 준비 상태` for Close Readiness, and `잔여 위험` or `남은 위험` for Residual Risk. Use the exact English label only when a record, schema, API, file path, heading, stable product identifier, or owner link needs that precision.
 
 ## User-Facing Term Rules
 

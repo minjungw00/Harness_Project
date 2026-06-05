@@ -2,7 +2,7 @@
 
 Harness is a future local work-authority server for AI-assisted product work. It is meant to keep fragile chat context from becoming the source of truth for scope, user-owned judgment, evidence, verification expectations, final acceptance, close readiness, and residual risk.
 
-하네스는 AI 지원 제품 작업을 위한 향후 로컬 작업 권한 서버입니다. 대화의 쉽게 흔들리는 맥락이 범위, 사용자 소유 판단, 근거, 확인과 검증 기대, 최종 수락, 닫기 가능 여부, 잔여 위험의 기준 기록처럼 굳어지지 않게 하는 것이 목표입니다.
+하네스는 AI 지원 제품 작업을 위한 향후 로컬 작업 권한 서버입니다. 대화의 쉽게 흔들리는 맥락이 범위, 사용자 소유 판단, 증거, 확인과 검증 기대, 최종 수락, 닫기 가능 여부, 잔여 위험의 기준 기록처럼 굳어지지 않게 하는 것이 목표입니다.
 
 ## Repository State / 저장소 상태
 
@@ -16,7 +16,7 @@ It is not the user's Product Repository. It is not a Harness Runtime Home. No ru
 
 Documentation acceptance, when it happens, is only a maintainer documentation milestone. Server/runtime implementation still requires a separate implementation-planning readiness decision. Documentation files are source material, not Harness runtime state, evidence, QA, acceptance, residual-risk, projection, or close records.
 
-문서가 수락되더라도 그것은 유지보수자의 문서 검토 이정표일 뿐입니다. 서버/런타임 구현에는 별도의 구현 계획 준비 결정이 필요합니다. 문서 파일은 원천 자료이지 하네스 런타임 상태, 근거, QA, 수락, 잔여 위험, 읽기용 보기, 닫기 기록이 아닙니다.
+문서가 수락되더라도 그것은 유지보수자의 문서 검토 이정표일 뿐입니다. 서버/런타임 구현에는 별도의 구현 계획 준비 결정이 필요합니다. 문서 파일은 원천 자료이지 하네스 런타임 상태, 증거, QA, 수락, 잔여 위험, 읽기용 보기, 닫기 기록이 아닙니다.
 
 ## Start Here / 시작하기
 
@@ -39,7 +39,7 @@ Use [docs/README.md](docs/README.md) for the compact bilingual route.
 |---|---|
 | README | Repository identity and reading paths. It does not claim implementation readiness or treat docs as runtime state. / 저장소 정체성과 읽기 경로를 안내합니다. 구현 준비 상태를 주장하거나 문서를 런타임 상태로 다루지 않습니다. |
 | Build | Future implementation sequence, active slice, first proof, active/later boundary, and exclusions. Exact schemas, DDL, transition tables, fixture bodies, and threat catalogs stay in Reference. / 향후 구현 순서, 활성 조각, 첫 증명, 활성/이후 경계, 제외 범위를 설명합니다. 정확한 schema, DDL, 전이 표, fixture body, threat catalog는 Reference에 남습니다. |
-| Use | User and agent behavior in ordinary language: examples, judgment requests, write checks, evidence summaries, and close flow. It does not define canonical enums, DDL, or full transition tables. / 평소 말로 보는 사용자와 에이전트 동작을 설명합니다. 예시, 판단 요청, 쓰기 전 확인, 근거 요약, 닫기 흐름을 다루며 canonical enum, DDL, 전체 전이 표는 정의하지 않습니다. |
+| Use | User and agent behavior in ordinary language: examples, judgment requests, write checks, evidence summaries, and close flow. It does not define canonical enums, DDL, or full transition tables. / 평소 말로 보는 사용자와 에이전트 동작을 설명합니다. 예시, 판단 요청, 쓰기 전 확인, 증거 요약, 닫기 흐름을 다루며 canonical enum, DDL, 전체 전이 표는 정의하지 않습니다. |
 | Reference | Exact contracts: Core transitions, API schemas, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, and related owner contracts. / Core 전이, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary와 관련 owner 계약을 정확히 둡니다. |
 | Maintain | Documentation authoring, translation, review, drift, and owner-boundary rules. It does not decide runtime readiness or acceptance. / 문서 작성, 번역, 검토, drift, owner 경계를 관리합니다. 런타임 준비나 수락 판단을 결정하지 않습니다. |
 

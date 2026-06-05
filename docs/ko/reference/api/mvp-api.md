@@ -8,7 +8,7 @@
 
 ## 핵심 생각
 
-MVP-1은 작은 local MCP surface만 노출합니다. 평소 작업 요청을 받아들이고, 현재 상태와 다음 안전한 행동을 보여 주고, 제안된 쓰기가 현재 범위에 맞는지 협력형으로 확인하고, 실행과 근거 ref를 기록하고, 사용자 소유 판단을 요청하고, 사용자의 답을 기록하고, 최소 계약이 허용할 때만 닫습니다.
+MVP-1은 작은 local MCP surface만 노출합니다. 평소 작업 요청을 받아들이고, 현재 상태와 다음 안전한 행동을 보여 주고, 제안된 쓰기가 현재 범위에 맞는지 협력형으로 확인하고, 실행과 증거 ref를 기록하고, 사용자 소유 판단을 요청하고, 사용자의 답을 기록하고, 최소 계약이 허용할 때만 닫습니다.
 
 MVP-1에서는 별도 `harness.next` method를 두지 않습니다. 다음 안전한 행동은 `harness.status.next_actions`에서 읽습니다. 별도 `harness.next`는 [Schema Later](schema-later.md#harnessnext)의 later/compatibility material입니다.
 
@@ -22,13 +22,13 @@ Status output은 세 부분 모델을 따릅니다. `harness.status.status_card`
 
 | Method | MVP-1 역할 |
 |---|---|
-| [`harness.status`](#harnessstatus) | 현재 범위, 막힘, 대기 중인 판단, 근거 요약, 다음 행동, 닫기 준비 상태를 반환합니다. |
+| [`harness.status`](#harnessstatus) | 현재 범위, 차단 사유, 대기 중인 판단, 증거 요약, 다음 행동, 닫기 준비 상태를 반환합니다. |
 | [`harness.intake`](#harnessintake) | 평소 말로 들어온 작업을 시작하거나 이어가고, advice/read-only, small direct work, tracked work로 분류합니다. |
 | [`harness.request_user_judgment`](#harnessrequest_user_judgment) | 집중된 사용자 판단 요청을 만듭니다. |
 | [`harness.record_user_judgment`](#harnessrecord_user_judgment) | 대기 중인 사용자 판단에 대한 사용자의 답을 기록합니다. |
-| [`harness.prepare_write`](#harnessprepare_write) | 제안된 제품 파일 쓰기를 현재 Task, 범위, baseline, 민감 동작 permission, 사용자 판단 coverage와 비교하는 쓰기 전 범위 확인을 실행합니다. |
+| [`harness.prepare_write`](#harnessprepare_write) | 제안된 제품 파일 쓰기를 현재 Task, 범위, baseline, 민감 동작 승인, 사용자 판단 coverage와 비교하는 쓰기 전 범위 확인을 실행합니다. |
 | [`harness.record_run`](#harnessrecord_run) | shaping, implementation, direct run과 최소 artifact/evidence ref를 기록합니다. |
-| [`harness.close_task`](#harnessclose_task) | 닫기 준비 상태를 확인하고, 막힘이 허용할 때만 complete, cancel, supersede합니다. |
+| [`harness.close_task`](#harnessclose_task) | 닫기 준비 상태를 확인하고, 차단 사유와 close intent가 허용하는 경우에만 complete, cancel, supersede합니다. |
 
 ## MVP-1이 아닌 것
 
@@ -92,7 +92,7 @@ Core는 Task를 만들거나 이어가고, work mode를 설정하며, write-capa
 
 현재 어디에 있고, 무엇이 막고 있고, 다음 안전한 행동이 무엇인지 답할 때 이 method를 사용합니다.
 
-Stage meaning: 내부 엔지니어링 점검에서는 minimal status/blocker output이 active입니다. MVP-1에서는 현재 위치, 대기 중인 사용자 판단, 근거 요약, 닫기 준비 상태, `next_actions`가 active입니다.
+Stage meaning: 내부 엔지니어링 점검에서는 minimal status/blocker output이 active입니다. MVP-1에서는 현재 위치, 대기 중인 사용자 판단, 증거 요약, 닫기 준비 상태, `next_actions`가 active입니다.
 
 Allowed actors: `user`, `lead_agent`, `evaluator`, `operator`.
 
@@ -131,7 +131,7 @@ StatusResponse:
     notes: string[]
 ```
 
-`status_card`는 current Core state와 ref에서 만든 짧은 읽기용 보기입니다. Compact하게 유지하고 source/freshness 정보를 보여줘야 합니다. 전체 schema, DDL, history, template, projection body, artifact body, log, future catalog를 넣으면 안 됩니다. Core 상태가 아니며 민감 동작 승인, 최종 수락, 잔여 위험 수락, 근거, 닫기 준비 상태, Write Authorization, close를 만들 수 없습니다.
+`status_card`는 current Core state와 ref에서 만든 짧은 읽기용 보기입니다. Compact하게 유지하고 source/freshness 정보를 보여줘야 합니다. 전체 schema, DDL, history, template, projection body, artifact body, log, future catalog를 넣으면 안 됩니다. Core 상태가 아니며 민감 동작 승인, 최종 수락, 잔여 위험 수락, 증거, 닫기 준비 상태, Write Authorization, close를 만들 수 없습니다.
 
 Core가 답할 수 있으면 `StatusResponse`는 항상 `guarantee_display.level`을 보여줘야 합니다. `include.guarantees=false`는 optional note나 확장 capability detail을 줄일 수 있지만, active guarantee level을 숨기면 안 됩니다. Core가 답할 수 없으면 authoritative state mutation claim을 할 수 없다는 분명한 `MCP_UNAVAILABLE`/capability condition을 보여줘야 합니다.
 
@@ -139,7 +139,7 @@ Core가 답할 수 있으면 `StatusResponse`는 항상 `guarantee_display.level
 
 `evidence_summary`는 Core가 소유한 compact MVP-1 evidence summary입니다. `evidence_refs`는 active minimal evidence coverage ref를 담습니다. 보통 `StateRecordRef.record_kind=evidence_summary`를 사용하며, nested schema가 허용하는 곳에서는 artifact ref도 함께 둡니다. 이 field들은 full Evidence Manifest table이나 report가 아니며, verification, 수동 QA, 최종 수락, 잔여 위험 수락, close를 대신하지 않습니다.
 
-Status가 Core에 닿지 못하거나, stale state를 보고하거나, unsupported surface를 이름 붙이거나, 범위 밖 작업, 필요한 사용자 판단, 부족한 근거, 닫기 막힘, 남은 잔여 위험 같은 blocker를 보여줄 때는 [Errors: MVP-1 guarantee와 상태/error taxonomy](errors.md#mvp-1-guarantee-and-status-taxonomy)의 canonical condition 동작을 사용합니다.
+Status가 Core에 닿지 못하거나, stale state를 보고하거나, unsupported surface를 이름 붙이거나, 범위 밖 작업, 필요한 사용자 판단, 부족한 증거, 닫기 차단 사유, 남은 잔여 위험 같은 blocker를 보여줄 때는 [Errors: MVP-1 guarantee와 상태/error taxonomy](errors.md#mvp-1-guarantee-and-status-taxonomy)의 canonical condition 동작을 사용합니다.
 
 MVP-1 active `NextActionSummary.action_kind` values:
 
@@ -149,7 +149,7 @@ ask_user | prepare_write | implement | request_acceptance | close_task | idle
 
 Verification, Eval, Manual QA, reconcile, export/recover, operations next-action kind는 later/profile-gated입니다.
 
-Status는 read-only입니다. State를 만들거나, 제품 파일 쓰기를 compatible하게 만들거나, Write Authorization을 만들거나, gate를 충족하거나, 근거를 만들거나, 민감 동작 승인을 만들거나, 최종 수락을 기록하거나, 잔여 위험을 수락하거나, 닫기 준비 상태를 만들거나, projection repair를 enqueue하거나, Task를 close하면 안 됩니다.
+Status는 read-only입니다. State를 만들거나, 제품 파일 쓰기를 compatible하게 만들거나, Write Authorization을 만들거나, gate를 충족하거나, 증거를 만들거나, 민감 동작 승인을 만들거나, 최종 수락을 기록하거나, 잔여 위험을 수락하거나, 닫기 준비 상태를 만들거나, projection repair를 enqueue하거나, Task를 close하면 안 됩니다.
 
 <a id="harnessprepare_write"></a>
 
@@ -157,7 +157,7 @@ Status는 read-only입니다. State를 만들거나, 제품 파일 쓰기를 com
 
 에이전트가 제품 파일을 쓰기 전에, 그 정확한 쓰기가 현재 Core state에 맞는지 확인할 때 이 method를 사용합니다. 결과는 compatible internal single-use Write Authorization record이거나 structured blocker입니다. 이것은 하네스 수준의 협력형 확인이지 OS 권한, sandboxing, 사전 차단이 아닙니다.
 
-Stage meaning: 내부 엔지니어링 점검과 MVP-1에서 active입니다. MVP-1에서 sensitive-action permission은 `judgment_kind=sensitive_approval`인 compatible `user_judgment`로 표현합니다. Committed Approval record는 later-profile material입니다.
+Stage meaning: 내부 엔지니어링 점검과 MVP-1에서 active입니다. MVP-1에서 민감 동작 승인은 `judgment_kind=sensitive_approval`인 compatible `user_judgment`로 표현합니다. Committed Approval record는 later-profile material입니다.
 
 Connected surface `capability_profile`만으로 `decision=allowed`가 되지는 않습니다. Active Task, active Change Unit, current state, compatible `prepare_write`, durable Write Authorization은 계속 Core에서 나옵니다. Recognized surface가 native artifact capture, command observation, secret-access observation, pre-tool blocking, isolation 같은 required capability를 갖지 못하면 product write가 조용히 진행되면 안 됩니다.
 
@@ -214,7 +214,7 @@ Core가 답할 수 있으면 `PrepareWriteResponse`는 항상 `guarantee_display
 
 Committed `dry_run=false` `decision=allowed` response를 exact idempotent replay하면 original response와 original `write_authorization_ref`를 `authorization_effect=returned`로 반환합니다. 두 번째 Write Authorization을 만들거나 event를 다시 append하면 안 됩니다. 같은 key를 다른 canonical request hash로 replay하면 `STATE_CONFLICT`를 반환합니다.
 
-Public transition summary: `harness.prepare_write`는 envelope를 검증하고, idempotency를 검증하며 exact committed replay가 있으면 새 side effect 전에 반환합니다. Shared request rule에 따라 primary Task를 resolve합니다. Primary Task가 있으면 `tasks.state_version`, 없으면 `project_state.state_version`에 대해 `expected_state_version`을 확인한 뒤 active Change Unit을 resolve합니다. 그다음 intended operation/path/tool/command/network/secret/sensitive-category compatibility, baseline freshness, sensitive-action permission, user judgment와 decision-gate coverage, Autonomy Boundary, surface capability, active design-policy precondition을 확인한 뒤 `decision`을 계산합니다. `dry_run=false`이고 `decision=allowed`일 때만 `write_authorizations.status=active`를 만들며, committed `dry_run=false` result는 반환 전에 task event를 append합니다.
+Public transition summary: `harness.prepare_write`는 envelope를 검증하고, idempotency를 검증하며 exact committed replay가 있으면 새 side effect 전에 반환합니다. Shared request rule에 따라 primary Task를 resolve합니다. Primary Task가 있으면 `tasks.state_version`, 없으면 `project_state.state_version`에 대해 `expected_state_version`을 확인한 뒤 active Change Unit을 resolve합니다. 그다음 intended operation/path/tool/command/network/secret/sensitive-category compatibility, baseline freshness, 민감 동작 승인, user judgment와 decision-gate coverage, Autonomy Boundary, surface capability, active design-policy precondition을 확인한 뒤 `decision`을 계산합니다. `dry_run=false`이고 `decision=allowed`일 때만 `write_authorizations.status=active`를 만들며, committed `dry_run=false` result는 반환 전에 task event를 append합니다.
 
 <a id="harnessrecord_run"></a>
 
@@ -321,7 +321,7 @@ RequestUserJudgmentResponse:
   user_visible_summary: string
 ```
 
-Minimum MVP-1에서는 `approval_id`가 `null`입니다. Sensitive-action approval judgment는 `harness.record_user_judgment`가 resolve한 뒤에만 scoped permission을 기록합니다. 이것은 Write Authorization이 아니며 제품 판단, 기술 판단, 범위 판단, QA 면제 판단, 검증 위험 수락, 최종 수락, 잔여 위험 수락을 대신하지 않습니다.
+Minimum MVP-1에서는 `approval_id`가 `null`입니다. Sensitive-action approval judgment는 `harness.record_user_judgment`가 resolve한 뒤에만 범위 있는 승인을 기록합니다. 이것은 Write Authorization이 아니며 제품 판단, 기술 판단, 범위 판단, QA 면제 판단, 검증 위험 수락, 최종 수락, 잔여 위험 수락을 대신하지 않습니다.
 
 <a id="harnessrecord_user_judgment"></a>
 <a id="harnessrecord_user_decision"></a>

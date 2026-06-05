@@ -2,21 +2,21 @@
 
 ## 사용 시점
 
-다음 안전한 행동에 필요한 현재 맥락을 에이전트가 작고 정확하게 받아야 할 때 `agent-context-packet`을 사용합니다. 이 보기는 사용자용 문장이나 전체 보고서가 아니라 최신성, Core 기반 참조, 허용된 행동 경계, 막힘, 다음 행동에 최적화됩니다.
+다음 안전한 행동에 필요한 현재 맥락을 에이전트가 작고 정확하게 받아야 할 때 `agent-context-packet`을 사용합니다. 이 보기는 사용자용 문장이나 전체 보고서가 아니라 최신성, Core 기반 참조, 허용된 행동 경계, 차단 사유, 다음 행동에 최적화됩니다.
 
 구현 계층: MVP-1 지원 보기입니다. Structured payload나 prompt 크기의 text로 반환할 수 있습니다. Persisted Markdown projection이 필수는 아닙니다.
 
-경계: 에이전트 맥락 패킷은 행동을 돕는 맥락일 뿐입니다. 쓰기를 허가하거나, gate를 충족하거나, 근거를 만들거나, 민감 동작 승인을 부여하거나, 최종 수락을 기록하거나, 잔여 위험을 수락하거나, 닫기 준비 상태를 만들거나, Task를 닫을 수 없습니다.
+경계: 에이전트 맥락 패킷은 행동을 돕는 맥락일 뿐입니다. 쓰기를 승인하거나, gate를 충족하거나, 증거를 만들거나, 민감 동작 승인을 부여하거나, 최종 수락을 기록하거나, 잔여 위험을 수락하거나, 닫기 준비 상태를 만들거나, Task를 닫을 수 없습니다.
 
 ## 기준 기록
 
 - Task id, Task 요약, 작업 모양, lifecycle, state version
 - active Change Unit 참조, 범위 요약, 하지 않을 일, allowed paths/tools/commands
-- 활성 막힘과 blocker 참조
+- 활성 차단 사유와 blocker 참조
 - 활성 사용자 판단, 대기 중인 판단 참조, 판단 요청 참조
 - 쓰기 권한 요약. 있을 때 Write Authorization 참조
-- 근거 요약, 근거 참조, Run 참조, ArtifactRefs, `redaction_state`, 근거 공백
-- 닫기 막힘, 잔여 위험 상태, 최종 수락 필요 여부/상태, 관련 owner 참조
+- 증거 요약, 증거 참조, Run 참조, ArtifactRefs, `redaction_state`, 증거 공백
+- 닫기 차단 사유, 잔여 위험 상태, 최종 수락 필요 여부/상태, 관련 owner 참조
 - 보장 수준, MCP/Core availability, source clock, 최신성 상태
 - 정확히 하나의 작은 다음 행동과 그 행동에 필요한 owner 문서 또는 owner section pointer
 
@@ -25,9 +25,9 @@
 - 현재 Task
 - active Change Unit과 허용된 행동 경계
 - 활성 사용자 판단
-- 막힘
+- 차단 사유
 - 쓰기 권한
-- 근거 상태
+- 증거 상태
 - 닫기와 잔여 위험 상태
 - 다음 안전한 행동
 - 최신성과 출처 참조

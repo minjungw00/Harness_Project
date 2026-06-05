@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-수동 QA가 필요할 때 기록, 관문, 프로필, 대상, 확인 목록, 기록할 근거, 면제와 위험 표시를 사람이 확인하기 쉬운 간결한 안내 카드로 보여주기 위해 수동 QA 카드를 사용합니다.
+수동 QA가 필요할 때 기록, 관문, 프로필, 대상, 확인 목록, 기록할 증거, 면제와 위험 표시를 사람이 확인하기 쉬운 간결한 안내 카드로 보여주기 위해 수동 QA 카드를 사용합니다.
 
 경계: 상태 보기 템플릿(projection template)일 뿐이며 하네스 서버/런타임 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 단계와 상태 보기 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
@@ -16,10 +16,10 @@
 - 사람 검사자 또는 역할과 요청되는 사람의 판단
 - 대상 화면 또는 흐름
 - 확인 목록 항목
-- 예상 스크린샷, 워크스루 메모, 브라우저 로그, 브라우저 QA 아티팩트, 수동 제공 아티팩트 근거
+- 예상 스크린샷, 워크스루 메모, 브라우저 로그, 브라우저 QA 아티팩트, 수동 제공 아티팩트 증거
 - QA가 면제되거나 미뤄질 때 면제 사유, 필요한 경우 QA 면제 사용자 판단 참조, 잔여 위험(Residual Risk) 참조
 - 검증, 최종 수락, 닫기 영향 요약
-- 수동 QA 기록, QA 면제 사용자 판단, 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, `redaction_state`, 읽기용 보기 최신성(projection freshness)을 위한 간결한 참조
+- 수동 QA 기록, QA 면제 사용자 판단, 증거 목록(Evidence Manifest), Eval(분리 검증 결과), 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, `redaction_state`, 읽기용 보기 최신성(projection freshness)을 위한 간결한 참조
 
 닫기 맥락과 면제 자리표시자는 QA 기록, `qa_gate`, 관련 관문 상태, 사용자 판단 참조, 잔여 위험(Residual Risk) 참조에서 파생한 표시 전용 요약입니다. 면제 경로는 그런 참조를 렌더링하거나 아직 기록이 필요하다고 표시해야 합니다.
 
@@ -31,7 +31,7 @@
 - 프로필
 - 대상
 - 확인 목록
-- 기록할 근거
+- 기록할 증거
 - 닫기 맥락
 - 면제 기록
 - 결과 안내
@@ -46,19 +46,19 @@
 
 기록: {manual_qa_record_id|recorded 전까지 none}
 관문(Gate): {qa_gate display: not_required|required|pending|passed|failed|waived}
-참조: 수동QA={manual_qa_record_id|none}; QA면제판단={qa_waiver_user_judgment_ref|none}; 근거={evidence_manifest_ref|none}; Eval={eval_ref|none}; 최종수락={acceptance_context_ref|none}; 잔여위험={residual_risk_refs|none}; 아티팩트={artifact_refs|none}; 가림={redaction_availability_summary|none}; 최신성={projection_freshness}
+참조: 수동QA={manual_qa_record_id|none}; QA면제판단={qa_waiver_user_judgment_ref|none}; 증거={evidence_manifest_ref|none}; Eval={eval_ref|none}; 최종수락={acceptance_context_ref|none}; 잔여위험={residual_risk_refs|none}; 아티팩트={artifact_refs|none}; 가림={redaction_availability_summary|none}; 최신성={projection_freshness}
 프로필: {profile}
 요청되는 사람의 확인: {human_inspection_summary}
 대상: {screen_or_flow}
 확인 목록:
 - {checklist_item}
 
-기록할 근거:
+기록할 증거:
 - 스크린샷 또는 워크스루 메모
 - 승격되고 지원될 때 qa_capture 아티팩트
 - 관련 있을 때 브라우저 로그
 - 브라우저 캡처가 지원되지 않을 때 수동 제공 아티팩트 또는 사람이 작성한 메모
-- 근거를 원본 내용으로 기록할 수 없을 때의 가림/생략/차단 메모
+- 증거를 원본 내용으로 기록할 수 없을 때의 가림/생략/차단 메모
 
 닫기 맥락:
 - 자동 검사: {check_refs|none; 수동 QA 결과 아님}
@@ -90,4 +90,4 @@
 
 결과 안내는 수동 QA 결과 또는 QA 면제 경로만 물어야 합니다. 최종 수락이나 잔여 위험 수락을 같은 답변처럼 요청하면 안 됩니다.
 
-아티팩트가 `secret_omitted` 또는 `blocked`라면 이 카드는 대체 근거 또는 면제 기록을 요청할 수 있지만, 생략된 값 또는 차단된 원본 캡처 내용을 표시하면 안 됩니다. 브라우저 캡처가 해당 접점에서 지원되지 않으면 이 카드는 캡처 부재를 QA 결과로 다루지 말고 사람이 작성한 수동 QA 메모와 수동 제공 아티팩트를 요청해야 합니다.
+아티팩트가 `secret_omitted` 또는 `blocked`라면 이 카드는 대체 증거 또는 면제 기록을 요청할 수 있지만, 생략된 값 또는 차단된 원본 캡처 내용을 표시하면 안 됩니다. 브라우저 캡처가 해당 접점에서 지원되지 않으면 이 카드는 캡처 부재를 QA 결과로 다루지 말고 사람이 작성한 수동 QA 메모와 수동 제공 아티팩트를 요청해야 합니다.

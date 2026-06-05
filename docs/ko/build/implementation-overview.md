@@ -23,7 +23,7 @@ Build에는 네 개의 active page가 있습니다.
 | [구현 개요](implementation-overview.md) | 현재 저장소 상태, 구현 접근, 인계 상태, 준비 조건, 읽기 경로. |
 | [내부 엔지니어링 점검](engineering-checkpoint.md) | 첫 내부 권한 루프 smoke. 제품 MVP도 아니고 사용자 가치 검증도 아닙니다. |
 | [MVP-1 사용자 작업 루프](mvp-user-work-loop.md) | 첫 사용자 가치 구현 계획, MVP-1 포함/제외 범위, 담당 문서 링크, 중앙 서버 코딩 전 결정 기록. |
-| [런타임 설계 흐름](runtime-walkthrough.md) | 의도한 request-to-close 동작의 설계 walkthrough. 런타임이 존재한다는 근거가 아닙니다. |
+| [런타임 설계 흐름](runtime-walkthrough.md) | 의도한 request-to-close 동작의 설계 walkthrough. 런타임이 존재한다는 증거가 아닙니다. |
 
 구현 경로는 일부러 단계화되어 있습니다.
 
@@ -75,11 +75,11 @@ Persisted Journey Card, full Evidence Manifest, Eval report, Manual QA report, T
 
 ## 문서 인계 요약
 
-이 인계는 현재 문서가 무엇을 정의하고 무엇이 아직 구현 준비를 막는지 말합니다. 런타임 상태, conformance evidence, 구현 허가, 생성된 출력이 아닙니다.
+이 인계는 현재 문서가 무엇을 정의하고 무엇이 아직 구현 준비를 막는지 말합니다. 런타임 상태, conformance evidence, 구현 승인, 생성된 출력이 아닙니다.
 
 이 문서 기준선이 정의하는 것:
 
-- 제품 명제: 하네스는 범위, 사용자 소유 판단, 근거, 검증 기대, QA 기대, 최종 수락, 잔여 위험, 닫기 준비 상태를 위한 로컬 기준 기록입니다.
+- 제품 명제: 하네스는 범위, 사용자 소유 판단, 증거, 검증 기대, QA 기대, 최종 수락, 잔여 위험, 닫기 준비 상태를 위한 로컬 기준 기록입니다.
 - 단계별 Build 경로: 내부 엔지니어링 점검을 먼저 만들고, 그다음 MVP-1 사용자 작업 루프, 이후 보증 프로필과 운영 프로필.
 - 담당 문서 경계: Core, API, storage, projection/template, security, operations, conformance, agent integration, glossary, runtime architecture, design quality의 exact contract는 Reference 문서에 있습니다.
 - 문서 유지보수 규칙: owner boundary, 이중 언어 의미 일치, status wording, link hygiene, drift routing은 Maintain 문서에 있습니다.
@@ -94,7 +94,7 @@ Persisted Journey Card, full Evidence Manifest, Eval report, Manual QA report, T
 현재 전달 의미:
 
 - 내부 엔지니어링 점검은 가장 작은 로컬 Core 권한 루프를 증명합니다. 내부 구현 신뢰를 위한 점검이지 제품 MVP가 아닙니다.
-- MVP-1 사용자 작업 루프는 첫 사용자 가치를 증명합니다. 평소 작업을 추적하고, 범위를 잡고, 설명하고, 정직하게 막고, 근거/판단/위험 경계를 보이면서 닫거나 보류할 수 있어야 합니다.
+- MVP-1 사용자 작업 루프는 첫 사용자 가치를 증명합니다. 평소 작업을 추적하고, 범위를 잡고, 설명하고, 정직하게 막고, 증거/판단/위험 경계를 보이면서 닫거나 보류할 수 있어야 합니다.
 - 보증 프로필과 운영 프로필은 이후 hardening입니다. 담당 문서가 좁은 항목을 명시적으로 승격하기 전까지 내부 점검이나 최소 MVP-1에 넣지 않습니다.
 - 로드맵은 Roadmap 기준과 담당 계약을 통해 승격되기 전까지 향후 범위입니다.
 
@@ -108,7 +108,7 @@ Persisted Journey Card, full Evidence Manifest, Eval report, Manual QA report, T
 |---|---|---|
 | 저장소 정체성 | 문서가 이 저장소를 현재 문서 전용, 이후 하네스 서버 소스 저장소라고 일관되게 말합니다. | 이 문서, README, Maintain guides. |
 | 단계 경계 | 내부 엔지니어링 점검, MVP-1 사용자 작업 루프, 보증 프로필, 운영 프로필, 로드맵이 섞이지 않습니다. | 이 문서, [MVP-1 사용자 작업 루프](mvp-user-work-loop.md), [로드맵](../roadmap.md). |
-| MVP-1 범위 | MVP-1은 사용자에게 보이는 범위, 판단, Core-owned evidence summary, 닫기 막힘, 다음 행동, 필요한 최종 수락, 잔여 위험 표시, 명시적 residual-risk acceptance를 통한 accepted-risk close를 포함하고 이후 프로필은 제외합니다. | [MVP-1 사용자 작업 루프](mvp-user-work-loop.md#mvp-1에-포함되는-것). |
+| MVP-1 범위 | MVP-1은 사용자에게 보이는 범위, 판단, Core-owned evidence summary, 닫기 차단 사유, 다음 행동, 필요한 최종 수락, 잔여 위험 표시, 명시적 residual-risk acceptance를 통한 accepted-risk close를 포함하고 이후 프로필은 제외합니다. | [MVP-1 사용자 작업 루프](mvp-user-work-loop.md#mvp-1에-포함되는-것). |
 | Reference surface scope | 활성 MVP는 reference `capability_profile` 하나를 대상으로 합니다. Capability label은 write authority를 부여하지 않고, unsupported field는 guarantee claim을 낮추거나 막습니다. Broad connector ecosystem, hosted connector registry, cross-surface orchestration은 later/profile에 남습니다. | [Agent 통합 참조](../reference/agent-integration.md#capability-profiles), [Surface Cookbook](../reference/surface-cookbook.md#reference-local-surface). |
 | 설계 품질 차단 경계 | 활성 MVP design-quality blocker는 Autonomy Boundary exceeded, unresolved user judgment, missing active scope, missing required evidence, stale context affecting write/close, surface capability insufficient for a claimed guarantee로 제한됩니다. 더 넓은 policy catalog는 기본적으로 Routed candidate 또는 Advisory/later입니다. | [설계 품질 정책](../reference/design-quality-policies.md#활성-mvp-차단-집합). |
 | API 담당 문서 합의 | Active MVP-1 API, shared schema, resource, error, idempotency, state conflict behavior는 해당 API 구현을 시작하기 전에 담당 문서 합의가 수락되어 있어야 합니다. | [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), [API Errors](../reference/api/errors.md). |

@@ -73,13 +73,13 @@ later/profile record를 활성 범위로 끌어오면 안 됩니다.
 - `tool_invocations`는 committed idempotency replay를 지원합니다. 별도 user-facing
   domain record가 아닙니다.
 - `artifacts`는 integrity, redaction, producer, retention, availability fact를 가진
-  등록된 근거 바이트 또는 안전한 메타데이터를 저장합니다. Core가 owner-valid row로
+  등록된 증거 바이트 또는 안전한 메타데이터를 저장합니다. Core가 owner-valid row로
   연결하기 전까지 sufficiency를 증명하지 않습니다.
 - `artifact_links`는 artifact를 owner record에 연결합니다. Link 자체는 report,
   projection, QA result, Eval, final acceptance, residual-risk acceptance가 아닙니다.
 - `evidence_summaries`는 MVP-1을 위한 최소 coverage와 gap record입니다. Full Evidence
   Manifest report table이 아닙니다.
-- Raw secret, token, full sensitive log는 valid 근거 바이트가 아닙니다. 대신 redacted
+- Raw secret, token, full sensitive log는 valid 증거 바이트가 아닙니다. 대신 redacted
   byte, `secret_omitted` / `blocked` notice, safe handle, 또는 owner가 허용한 safe
   representation을 저장합니다.
 - Chat, Markdown projection, generated report, connector manifest, tool output,
@@ -146,7 +146,7 @@ write access는 tampering과 evidence poisoning risk입니다. Broad read access
 PII, token, log, screenshot, diff, verification bundle, export를 노출할 수 있습니다.
 
 내부 엔지니어링 점검과 MVP-1 storage는 다른 profile이 더 강한 control을 증명하기 전까지
-cooperative/detective입니다. File permission, owner check, hash, `doctor` finding은
+cooperative/detective입니다. File 승인, owner check, hash, `doctor` finding은
 방어적 보강입니다. 그 자체로 OS-level sandboxing, arbitrary-tool control,
 tamper-proof storage, pre-execution blocking을 만들지 않습니다.
 
@@ -173,9 +173,9 @@ tamper-proof storage, pre-execution blocking을 만들지 않습니다.
 | `user_judgments` | Product decision, technical decision, scope decision, sensitive approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, cancellation을 위한 사용자 소유 판단 기록. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `display_label`, `status`, `question`, `options_json`, `selected_option_json`, `judgment_payload_json`, `affected_scope_json`, `context_refs_json`, `artifact_refs_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
 | `write_authorizations` | `dry_run=false`인 `prepare_write.decision=allowed`일 때만 생기는 durable single-use cooperative record. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `intended_operation`, `intended_paths_json`, `intended_tools_json`, `sensitive_categories_json`, `related_user_judgment_refs_json`, `guarantee_level`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`. |
 | `runs` | Product write가 있었다면 compatible write consumption까지 포함하는 committed execution 또는 observation record. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `summary`, `observed_changes_json`, `command_results_json`, `created_at`. |
-| `artifacts` | Integrity와 redaction fact를 가진 registered durable 근거 바이트 또는 안전한 메타데이터. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
+| `artifacts` | Integrity와 redaction fact를 가진 registered durable 증거 바이트 또는 안전한 메타데이터. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
 | `artifact_links` | Artifact가 지원하는 Core/API owner record로 가는 owner relation. | `artifact_link_id`, `artifact_id`, `task_id`, `owner_record_kind`, `owner_record_id`, `relation`, `created_at`. |
-| `evidence_summaries` | MVP-1 status와 close에 필요한 최소 근거 coverage와 gap record입니다. 활성 범위에서는 full Evidence Manifest table을 대체합니다. | `evidence_summary_id`, `task_id`, `change_unit_id`, `coverage_state`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
+| `evidence_summaries` | MVP-1 status와 close에 필요한 최소 증거 coverage와 gap record입니다. 활성 범위에서는 full Evidence Manifest table을 대체합니다. | `evidence_summary_id`, `task_id`, `change_unit_id`, `coverage_state`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
 | `blockers` | Next action, write compatibility, evidence gap, close readiness, recovery를 위한 structured blocker. | `blocker_id`, `task_id`, `blocked_action`, `blocker_kind`, `status`, `message`, `owner_ref_json`, `related_refs_json`, `required_next_action`, `created_at`, `resolved_at`. |
 | `tool_invocations` | `dry_run=false`인 state-changing tool response의 committed idempotency replay row. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
 
@@ -236,7 +236,7 @@ metrics, connector ecosystem table이 필요하지 않습니다.
 | Active Task exists and is closeable | `project_state.active_task_id`, `tasks.lifecycle_phase`, `tasks.result`, `tasks.closed_at` |
 | Scope is present and current | `tasks.active_change_unit_id`, `change_units.status`, `change_units.scope_summary`, `change_units.non_goals_json`, `change_units.success_criteria_json` |
 | User-owned judgment is unresolved | `user_judgments.judgment_kind`, `user_judgments.status`, `user_judgments.affected_scope_json`, `user_judgments.context_refs_json` |
-| Sensitive-action permission is missing or denied | `judgment_kind=sensitive_approval`인 `user_judgments` row와 write가 관련될 때 current `write_authorizations.related_user_judgment_refs_json` |
+| 민감 동작 승인이 없거나 거부됨 | `judgment_kind=sensitive_approval`인 `user_judgments` row와 write가 관련될 때 current `write_authorizations.related_user_judgment_refs_json` |
 | Write Authorization is missing, expired, stale, revoked, consumed, or incompatible | `write_authorizations.status`, `write_authorizations.basis_state_version`, `write_authorizations.consumed_by_run_id`, current `tasks.state_version` |
 | Run 또는 artifact support가 missing 또는 stale입니다 | `runs.status`, `artifacts.status`, `artifacts.sha256`, `artifacts.size_bytes`, `artifacts.content_type`, `artifacts.redaction_state`, `artifact_links.owner_record_kind`, `artifact_links.owner_record_id` |
 | Evidence coverage가 missing, insufficient, stale 중 하나입니다 | `evidence_summaries.coverage_state`, `evidence_summaries.coverage_items_json`, `evidence_summaries.supporting_artifact_link_ids_json`, `evidence_summaries.gap_blocker_ids_json` |
@@ -361,7 +361,7 @@ Early hardening 대상:
 | Future `validator_runs.status` | assurance 또는 conformance profile active 시 `ValidatorResult` owner |
 | Future `evidence_manifests.status` | Full Evidence Manifest profile이 active일 때 Evidence profile owner |
 
-Storage-owned compatibility value:
+Storage-owned compatibility values:
 
 | Field | Durable values | Meaning |
 |---|---|---|
@@ -370,7 +370,7 @@ Storage-owned compatibility value:
 | `user_judgments.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` | User judgment lifecycle입니다. Resolved judgment는 기록한 judgment type과 payload에만 영향을 줍니다. |
 | `write_authorizations.status` | `active`, `consumed`, `expired`, `stale`, `revoked` | Core/API owner value set과 일치하는 durable authorization lifecycle입니다. `active`이고 compatible한 row만 `record_run`이 consume할 수 있습니다. |
 | `artifacts.status` | `available`, `missing`, `stale`, `blocked` | Artifact availability입니다. Storage와 integrity fact이지 full evidence sufficiency가 아닙니다. |
-| `evidence_summaries.coverage_state` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` | MVP-1 status와 close에 쓰는 최소 근거 coverage state입니다. Evidence가 close-required이면 `sufficient`가 필요합니다. |
+| `evidence_summaries.coverage_state` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` | MVP-1 status와 close에 쓰는 최소 증거 coverage state입니다. Evidence가 close-required이면 `sufficient`가 필요합니다. |
 | `blockers.status` | `open`, `resolved`, `superseded` | Stored blocker lifecycle입니다. Open blocker는 Core가 resolve 또는 supersede할 때까지 visible 상태로 남습니다. |
 | `tool_invocations.status` | `committed` | Committed replayable `dry_run=false` response에 대해서만 row가 존재합니다. |
 

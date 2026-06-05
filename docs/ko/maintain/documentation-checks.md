@@ -2,7 +2,7 @@
 
 최종 문서 수락 전이나 큰 리뷰 인계 전에 이 점검표를 사용합니다. Markdown 문서만 보는 실무용 docs-maintenance 점검표입니다. 즉 읽기 전용 문서 품질 점검 profile입니다.
 
-이 점검표는 runtime conformance suite가 아닙니다. Fixture를 실행하지 않습니다. Runtime state를 seed하지 않습니다. Runtime state/events/artifacts/projections/errors를 비교하지 않습니다. `task_events`를 append하지 않습니다. artifact를 만들지 않고, projection을 refresh하지 않으며, generated operational artifact나 conformance report를 만들지 않습니다. QA 또는 acceptance state를 만들지 않습니다. 근거, QA, Acceptance, Residual Risk, close를 기록하지 않습니다. close readiness에 영향을 주지 않고 implementation readiness도 증명하지 않습니다.
+이 점검표는 runtime conformance suite가 아닙니다. Fixture를 실행하지 않습니다. Runtime state를 seed하지 않습니다. Runtime state/events/artifacts/projections/errors를 비교하지 않습니다. `task_events`를 append하지 않습니다. artifact를 만들지 않고, projection을 refresh하지 않으며, generated operational artifact나 conformance report를 만들지 않습니다. QA 또는 acceptance state를 만들지 않습니다. 증거, QA, Acceptance, Residual Risk, close를 기록하지 않습니다. close readiness에 영향을 주지 않고 implementation readiness도 증명하지 않습니다.
 
 docs-maintenance의 `PASS`, `WARN`, `FAIL` label은 manual review가 다음에 볼 것과 고칠 것을 정하는 데 도움이 될 수 있습니다. 하지만 manual acceptance, final acceptance, close readiness, implementation readiness, runtime fixture result가 아닙니다.
 
@@ -32,7 +32,7 @@ runtime conformance는 별도입니다. 구현된 Core/API/storage/surface behav
 - 점검 유형: `manual`.
 - 볼 것: Learn과 Use 문서의 예시, 제목, 요약, 상태 설명에서 internal label이 기본 사용자 언어처럼 쓰이는지 봅니다.
 - 자주 실패하는 예: 사용자용 문서가 평소 사용자 상황을 설명하기 전에 `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, `task_events`로 시작합니다. 사용자가 내부 라벨을 말해야 도움을 받을 수 있는 것처럼 보입니다.
-- 통과 의미: 사용자용 prose는 평소 말에서 시작합니다. 내부 라벨은 보이는 경계, 막힘, record, API, template, Reference link를 설명할 때만 씁니다.
+- 통과 의미: 사용자용 prose는 평소 말에서 시작합니다. 내부 라벨은 보이는 경계, 차단 사유, record, API, template, Reference link를 설명할 때만 씁니다.
 
 ### 단계 점검
 
@@ -60,7 +60,7 @@ runtime conformance는 별도입니다. 구현된 Core/API/storage/surface behav
 - 점검 유형: `manual`.
 - 볼 것: 사용자용 문서의 opening, 예시, 사용자가 말할 수 있는 요청, 상태 설명, 판단 질문, close 설명, recovery text.
 - 자주 실패하는 예: Use 문서가 사용자가 할 수 있는 요청보다 record taxonomy로 시작합니다. 판단 질문이 선택과 결과보다 `Decision Packet`을 먼저 보여줍니다. Status view 설명이 보이는 요약보다 `ProjectionKind`를 먼저 말합니다.
-- 통과 의미: 사용자 문서는 평소 작업, 질문, 보이는 막힘, 필요한 판단, 있는 근거, close 결과에서 시작합니다. 내부 라벨은 그 라벨이 해결하는 문제가 먼저 보인 뒤 소개합니다.
+- 통과 의미: 사용자 문서는 평소 작업, 질문, 보이는 차단 사유, 필요한 판단, 있는 증거, close 결과에서 시작합니다. 내부 라벨은 그 라벨이 해결하는 문제가 먼저 보인 뒤 소개합니다.
 
 ### Mermaid 점검
 

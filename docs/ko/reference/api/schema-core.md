@@ -46,7 +46,7 @@ Storage validation은 별도 소유권 경계입니다. API payload와 API-shape
 
 MCP resource는 read-only view입니다. Task, user judgment, projection job, reconciliation, evidence, QA, final acceptance, residual-risk acceptance, Write Authorization, close state를 만들면 안 됩니다.
 
-Read-only resource도 세 부분 맥락 모델을 따릅니다. `harness://status/card`는 사용자 상태 카드입니다. Current Core state와 ref에서 만든 짧은 읽기용 보기입니다. Agent 접점은 read-only resource를 사용해 다음 안전한 행동에 필요한 최소 state, ref, freshness, owner-section pointer를 담은 에이전트 맥락 패킷을 만들 수 있습니다. Core 상태가 로컬 권한 기록이며 유일한 운영 기준입니다. 오래된 card나 projection은 authority가 아니며, 렌더링된 template은 민감 동작 승인, 최종 수락, 잔여 위험 수락, 근거, 닫기 준비 상태를 만들 수 없습니다.
+Read-only resource도 세 부분 맥락 모델을 따릅니다. `harness://status/card`는 사용자 상태 카드입니다. Current Core state와 ref에서 만든 짧은 읽기용 보기입니다. Agent 접점은 read-only resource를 사용해 다음 안전한 행동에 필요한 최소 state, ref, freshness, owner-section pointer를 담은 에이전트 맥락 패킷을 만들 수 있습니다. Core 상태가 로컬 권한 기록이며 유일한 운영 기준입니다. 오래된 card나 projection은 authority가 아니며, 렌더링된 template은 민감 동작 승인, 최종 수락, 잔여 위험 수락, 증거, 닫기 준비 상태를 만들 수 없습니다.
 
 ### 내부 엔지니어링 점검 resources
 
@@ -88,7 +88,7 @@ ToolEnvelope:
   dry_run: boolean
 ```
 
-Envelope field는 routing과 audit claim입니다. `surface_id`는 capability나 write authority를 부여하지 않습니다. Surface가 Core 밖에서 state를 바꾸도록 허가하지 않으며, user judgment, sensitive-action permission, final acceptance, Manual QA, detached verification independence를 증명하지도 않습니다.
+Envelope field는 routing과 audit claim입니다. `surface_id`는 capability나 write authority를 부여하지 않습니다. Surface가 Core 밖에서 state를 바꾸도록 승인하지 않으며, user judgment, 민감 동작 승인, final acceptance, Manual QA, detached verification independence를 증명하지도 않습니다.
 
 Primary Task가 필요한 request에서 Core는 tool-specific `task_id`, `ToolEnvelope.task_id`, active Task resolution 순서로 primary Task를 찾습니다. Task-scoped mutation은 `expected_state_version`을 `tasks.state_version`과 비교합니다. Resolved primary Task가 없는 project-scoped mutation은 `project_state.state_version`과 비교합니다.
 
@@ -207,7 +207,7 @@ model_or_prompt_policy_change
 policy_override
 ```
 
-하나의 intended write가 여러 category를 가질 수 있습니다. Category는 왜 sensitive-action permission이 필요한지 설명할 뿐이며 product, architecture, security, QA, verification, final acceptance, residual-risk acceptance, policy judgment를 해결하지 않습니다.
+하나의 intended write가 여러 category를 가질 수 있습니다. Category는 왜 민감 동작 승인이 필요한지 설명할 뿐이며 product, architecture, security, QA, verification, final acceptance, residual-risk acceptance, policy judgment를 해결하지 않습니다.
 
 ## ArtifactRef
 
@@ -307,7 +307,7 @@ CaptureAdapterArtifactSource:
 
 `source_kind=staged_file`은 `staged`를 요구하고 `existing_artifact_ref=null`, `capture=null`이어야 합니다. `source_kind=capture_adapter`는 `capture`를 요구하고 `staged=null`, `existing_artifact_ref=null`이어야 합니다. `source_kind=existing_artifact`는 이미 commit된 `ArtifactRef`를 요구하고 `staged=null`, `capture=null`이어야 합니다.
 
-허용되는 artifact source는 Harness staging location, approved capture adapter output, 이미 commit된 artifact ref뿐입니다. `staged_uri`는 Harness staging locator이지 임의 파일을 읽을 permission이 아닙니다. `capture_ref`는 capture-adapter handle이지 caller가 넘긴 path가 아닙니다. Tool response는 committed `ArtifactRef` value를 반환하며, staged locator나 capture handle을 authority로 반환하지 않습니다.
+허용되는 artifact source는 Harness staging location, approved capture adapter output, 이미 commit된 artifact ref뿐입니다. `staged_uri`는 Harness staging locator이지 임의 파일을 읽을 승인이 아닙니다. `capture_ref`는 capture-adapter handle이지 caller가 넘긴 path가 아닙니다. Tool response는 committed `ArtifactRef` value를 반환하며, staged locator나 capture handle을 authority로 반환하지 않습니다.
 
 Critical 또는 close-relevant evidence는 supporting Core state와 각 required `ArtifactRef`가 current owner relation, availability, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, `retention_class` metadata를 가질 때만 sufficient로 취급할 수 있습니다. Artifact가 missing이거나 relation owner가 resolve되지 않았거나 integrity metadata가 없거나 `hash_mismatch` 같은 integrity failure가 있으면 affected evidence는 `stale` 또는 `blocked`가 됩니다. Required evidence가 affected이면 close는 계속 blocked입니다.
 
@@ -320,7 +320,7 @@ StateRecordRef:
   projection_path: string | null
 ```
 
-`record_kind=user_judgment`는 sensitive-action approval, final acceptance, residual-risk acceptance judgment를 포함한 사용자 소유 판단의 canonical MVP-1 ref kind입니다. MVP-1 evidence coverage와 blocker는 `record_kind=evidence_summary`, `record_kind=blocker`를 사용합니다. Durable 근거 바이트는 `ArtifactRef`를 사용합니다. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=close_readiness`, `record_kind=projection`은 owner profile이 active가 아닌 한 later/profile-promoted 또는 derived-view ref입니다. Standalone accepted-risk ref kind는 없습니다.
+`record_kind=user_judgment`는 sensitive-action approval, final acceptance, residual-risk acceptance judgment를 포함한 사용자 소유 판단의 canonical MVP-1 ref kind입니다. MVP-1 evidence coverage와 blocker는 `record_kind=evidence_summary`, `record_kind=blocker`를 사용합니다. Durable 증거 바이트는 `ArtifactRef`를 사용합니다. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=close_readiness`, `record_kind=projection`은 owner profile이 active가 아닌 한 later/profile-promoted 또는 derived-view ref입니다. Standalone accepted-risk ref kind는 없습니다.
 
 `record_kind=projection`에서 `record_id`는 운영/projection profile이 active일 때 projection job identity입니다. `projection_path`는 optional display/recovery metadata이지 alternate key가 아닙니다.
 
@@ -616,7 +616,7 @@ AcceptanceVisibilityContext:
 
 MVP-1에서 residual-risk summary ref는 보통 `blocker`와 `user_judgment` record를 가리킵니다. Rich `residual_risk` record는 later/profile-promoted storage입니다.
 
-Autonomy Boundary summary는 judgment latitude를 설명합니다. 쓰기 전 범위 확인 호환성이 아닙니다. Write Authorization record를 만들거나 path, tool, command, network target, secret access, sensitive category를 compatible하게 만들거나 active scope와 required sensitive-action permission을 넓히지 않습니다.
+Autonomy Boundary summary는 judgment latitude를 설명합니다. 쓰기 전 범위 확인 호환성이 아닙니다. Write Authorization record를 만들거나 path, tool, command, network target, secret access, sensitive category를 compatible하게 만들거나 active scope와 required 민감 동작 승인을 넓히지 않습니다.
 
 ## ValidatorResult
 

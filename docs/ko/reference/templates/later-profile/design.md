@@ -12,11 +12,11 @@
 
 - 공유 설계 기록과 이벤트
 - Task와 작업 조각(Change Unit) 참조
-- 관련 사용자 판단과 민감 동작 허가 참조
+- 관련 사용자 판단과 민감 동작 승인 참조
 - `domain_terms`
 - `module_map_items`
 - `interface_contracts`
-- 피드백 루프, TDD, 수동 QA, 근거 참조
+- 피드백 루프, TDD, 수동 QA, 증거 참조
 - 표시되는 경우 기존 owner 경로로 라우팅된 설계 품질 또는 스튜어드십 발견 사항. Impact class와 routed action 하나를 함께 표시합니다.
 - 읽기용 보기 최신성(projection freshness) 입력
 
@@ -105,7 +105,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 선택된 피드백 루프:
 - 필요한 TDD 트레이스:
 - 필요한 수동 QA:
-- 필요한 근거:
+- 필요한 증거:
 
 ## 설계 품질 라우팅
 | Finding | 영향 분류 | Routed action | Owner ref | 다음 행동 |
@@ -128,4 +128,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 메모
 
-이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 설계 지원 owner 참조와 라우팅된 스튜어드십 발견 사항을 요약할 수 있지만 owner 기록이나 검토 단계(Review Stages)가 가리키는 owner 경로를 대체하지 않습니다. 닫기를 충족하거나 차단하지 않고, 민감 동작 승인(Approval)을 부여하지 않으며, 근거 생성, QA 또는 검증 기록, 최종 수락, 잔여 위험 수락, 쓰기 허가 기록(Write Authorization) 생성을 하지 않습니다. 활성 MVP blocker는 여전히 작은 Core-backed design-quality set에서만 나옵니다. 전체 보고서는 Advisory/later catalog finding을 보여줄 수 있지만 그것만으로 close requirement를 만들지 않습니다.
+이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 설계 지원 owner 참조와 라우팅된 스튜어드십 발견 사항을 요약할 수 있지만 owner 기록이나 검토 단계(Review Stages)가 가리키는 owner 경로를 대체하지 않습니다. 닫기를 충족하거나 차단하지 않고, 민감 동작 승인(Approval)을 부여하지 않으며, 증거 생성, QA 또는 검증 기록, 최종 수락, 잔여 위험 수락, 쓰기 승인 기록(Write Authorization) 생성을 하지 않습니다. 활성 MVP blocker는 여전히 작은 Core-backed design-quality set에서만 나옵니다. 전체 보고서는 Advisory/later catalog finding을 보여줄 수 있지만 그것만으로 close requirement를 만들지 않습니다.

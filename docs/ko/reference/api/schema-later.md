@@ -29,7 +29,7 @@ MVP-1 path 밖에 두어야 하는 later/profile-gated API material을 확인할
 
 | Resource | Profile meaning |
 |---|---|
-| `harness://policy/sensitive-categories` | Read-only sensitive-action category policy. Sensitive-action permission을 grant하지 않습니다. |
+| `harness://policy/sensitive-categories` | Read-only sensitive-action category policy. 민감 동작 승인을 grant하지 않습니다. |
 | `harness://task/{task_id}/evidence-manifest` | Evidence/assurance profile이 enabled일 때 evidence coverage와 manifest-oriented read. |
 | `harness://project/surfaces` | Operations profile을 위한 surface/profile inventory와 connector-operational status. |
 | `harness://task/{task_id}/reports/latest` | Operations/readiness를 위한 latest report refs와 freshness. |

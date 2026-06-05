@@ -261,7 +261,7 @@ Use these result meanings:
 
 | Result | Meaning |
 |---|---|
-| `FAIL` | Drift can make active docs contradictory or non-actionable, such as broken owner links, schema/DDL/enum/stable event/`ValidatorResult`/`ProjectionKind` mismatch, missing paired active files, missing semantic section coverage, or non-owner text redefining an owner contract. |
+| `FAIL` | Drift can make active docs contradictory or non-actionable, such as broken owner links, enum mismatch, API field mismatch, lifecycle status mismatch, schema/DDL/table/column/stable event/`ValidatorResult`/`ProjectionKind` mismatch, owner document mismatch, later/profile material presented or translated as active material, missing paired active files, missing semantic section coverage, or non-owner text redefining an owner contract. |
 | `WARN` | Drift should be cleaned up but does not yet contradict an owner contract, such as minor glossary phrasing drift, duplicate explanatory prose that is not normative, stale cross-reference wording whose affected stage is explicit, or understandable but incomplete open-marker metadata. |
 | `PASS` | No relevant drift is found for the category. |
 
@@ -271,6 +271,7 @@ Required check categories:
 |---|---|
 | English/Korean file structure parity | `docs/en` and `docs/ko` keep the same active document paths, README entries, and paired route expectations unless an exception is explicitly documented. |
 | English/Korean semantic section parity | Paired files keep the same reader purpose, semantic section coverage, owner links, stable identifiers, and contractual detail. |
+| Contract identifier and lifecycle parity | API method names, enum values, field names, table names, column names, stable event names, validator IDs, projection/template kind names, record ID prefixes, lifecycle statuses, and file paths remain exact in both languages. Enum mismatch, API field mismatch, lifecycle status mismatch, table/column mismatch, owner document mismatch, and later/profile material translated or presented as active material are `FAIL`. |
 | Opening convention compliance | Active docs make the reader's next useful step clear near the top. Learn and Use may use workflow-first openings; Reference, Build, and Maintain may use structured openings; template references use template-specific openings. |
 | Broken cross-reference detection | Markdown links, heading anchors, template/reference links, same-language README routes, paired-language entry links, and owner-section links resolve to active docs and current anchors. |
 | Owner-boundary drift | Exact contracts and active owner concepts stay in their active owners. Non-owner docs summarize and link instead of redefining those contracts. |

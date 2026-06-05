@@ -6,7 +6,7 @@ This directory contains bilingual design documentation for a future local Harnes
 
 It is not the user's Product Repository and not a Harness Runtime Home. Documentation files are source material, not runtime state, generated projections, evidence, QA, final acceptance, residual-risk, or close records. Documentation acceptance does not by itself authorize server/runtime implementation.
 
-사용자의 제품 저장소도, 하네스 런타임 홈도 아닙니다. 문서 파일은 원천 자료이지 런타임 상태, 생성된 읽기용 보기, 근거, QA, 최종 수락, 잔여 위험, 닫기 기록이 아닙니다. 문서 수락만으로 서버/런타임 구현이 허가되지 않습니다.
+사용자의 제품 저장소도, 하네스 런타임 홈도 아닙니다. 문서 파일은 원천 자료이지 런타임 상태, 생성된 읽기용 보기, 증거, QA, 최종 수락, 잔여 위험, 닫기 기록이 아닙니다. 문서 수락만으로 서버/런타임 구현이 승인되지 않습니다.
 
 ## Choose A Language / 언어 선택
 
@@ -41,7 +41,7 @@ It is not the user's Product Repository and not a Harness Runtime Home. Document
 | Family / 문서군 | Purpose / 목적 | Boundary / 경계 |
 |---|---|---|
 | Learn / 학습 | Why Harness exists and the concepts readers need first. / 하네스가 왜 필요한지와 먼저 알아야 할 개념. | No strict schemas, gates, DDL, implementation sequence, or fixture mechanics. / 엄격한 schema, gate, DDL, 구현 순서, fixture mechanics를 정의하지 않습니다. |
-| Use / 사용 | User and agent usage in ordinary language, including judgment requests, write checks, evidence summaries, and close flow. / 평소 말로 보는 사용자와 에이전트 사용 방식. 판단 요청, 쓰기 전 확인, 근거 요약, 닫기 흐름을 다룹니다. | No canonical enum definitions, DDL, or full transition tables. / canonical enum definition, DDL, 전체 전이 표를 두지 않습니다. |
+| Use / 사용 | User and agent usage in ordinary language, including judgment requests, write checks, evidence summaries, and close flow. / 평소 말로 보는 사용자와 에이전트 사용 방식. 판단 요청, 쓰기 전 확인, 증거 요약, 닫기 흐름을 다룹니다. | No canonical enum definitions, DDL, or full transition tables. / canonical enum definition, DDL, 전체 전이 표를 두지 않습니다. |
 | Build / 구현 | Future implementation sequence, active slice, first proof, active/later boundary, reading path, and exclusions. / 향후 구현 순서, 활성 조각, 첫 증명, 활성/이후 경계, 읽기 경로, 제외 범위. | Exact schemas, DDL, fixture bodies, transition tables, and full threat catalogs are linked, not duplicated. / 정확한 schema, DDL, fixture body, 전이 표, 전체 threat catalog는 중복하지 않고 링크합니다. |
 | Reference / 참조 | Exact owner contracts: Core transition, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, and related owners. / Core 전이, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary와 관련 owner의 정확한 계약. | Not a tutorial or staged implementation plan. / 튜토리얼이나 단계별 구현 계획이 아닙니다. |
 | Later / 이후 | Assurance, operations, future fixture, and roadmap material outside the active MVP path. / 활성 MVP 경로 밖에 두는 보증, 운영, 향후 fixture, 로드맵 자료. | Not active delivery unless promoted by an owner. / 담당 문서가 승격하기 전까지 활성 전달 범위가 아닙니다. |
