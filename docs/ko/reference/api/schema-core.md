@@ -359,23 +359,38 @@ ApprovalScope:
   allowed_paths: string[]
   allowed_tools: string[]
   allowed_commands: string[]
+  allowed_command_classes: string[]
   allowed_network_targets: string[]
   secret_scope: string[]
   baseline_ref: string | null
 
-WriteAuthorizationSummary:
-  write_authorization_id: string
+AuthorizedAttemptScope:
   task_id: string
   change_unit_id: string
   basis_state_version: integer
+  surface_id: string
   intended_operation: string
   intended_paths: string[]
   intended_tools: string[]
+  intended_commands:
+    - command: string
+      command_class: string
+      writes_product_files: boolean
+  product_file_write_intended: boolean
+  intended_network:
+    - target: string
+      direction: read | write
+  intended_secret_scope:
+    - secret_handle: string
+      access_kind: read | write
   sensitive_categories: string[]
   baseline_ref: string | null
-  approval_refs: StateRecordRef[]
-  user_judgment_refs: StateRecordRef[]
+  related_user_judgment_refs: StateRecordRef[]
   guarantee_level: cooperative | detective | preventive | isolated
+
+WriteAuthorizationSummary:
+  write_authorization_id: string
+  attempt_scope: AuthorizedAttemptScope
   status: active | consumed | expired | stale | revoked
   consumed_by_run_id: string | null
   created_at: string
@@ -384,24 +399,19 @@ WriteAuthorizationSummary:
 WriteAuthoritySummary:
   active_change_unit_ref: StateRecordRef | null
   write_authorization_ref: StateRecordRef | null
-  allowed_paths: string[]
-  allowed_tools: string[]
-  allowed_commands: string[]
-  allowed_command_classes: string[]
-  allowed_network_targets: string[]
-  secret_scope: string[]
-  sensitive_categories: string[]
+  active_authorized_attempt_scope: AuthorizedAttemptScope | null
   approval_status: not_required | required | pending | granted | denied | expired | unknown
-  baseline_ref: string | null
   guarantee_display:
     level: cooperative | detective | preventive | isolated
     notes: string[]
   note: "Autonomy Boundary is judgment latitude, not a pre-write scope check."
 ```
 
-Minimum MVP-1에서 `WriteAuthorizationSummary.approval_refs`는 empty입니다. Resolved sensitive-action approval user judgment는 `user_judgment_refs`에 나타납니다. Committed Approval ref는 Approval owner profile이 active일 때만 나타납니다.
+`AuthorizedAttemptScope`는 authorized write attempt scope를 위한 활성 MVP의 유일한 shape입니다. Core는 `harness.prepare_write`의 proposed write와 resolved Core context에서 이 shape를 만듭니다. 여기에는 `task_id`, `change_unit_id`, `basis_state_version`, `surface_id`, related user judgment refs, 표시되는 guarantee level이 포함됩니다. `write_authorizations.attempt_scope_json`, `WriteAuthorizationSummary.attempt_scope`, `record_run` 비교는 모두 같은 shape를 사용합니다.
 
-`WriteAuthorizationSummary`와 `WriteAuthoritySummary`는 API/internal 이름입니다. MVP-1 사용자 표시에서는 먼저 쓰기 전 범위 확인이라고 설명해야 합니다. `allowed_paths`, `allowed_tools`, `decision=allowed`, `status=active`, `surface_id`, `guarantee_display` 같은 field는 협력형 기록/확인에 대한 하네스 호환성과 display context만 뜻합니다. OS 권한, sandboxing, 변조 방지 enforcement, 사전 차단, 권한 격리, surface가 부여한 write authority를 뜻하지 않습니다. `allowed`는 `PrepareWriteResponse.decision`에 속합니다. `blocked`에는 authorization row나 lifecycle value가 없습니다.
+`AuthorizedAttemptScope.related_user_judgment_refs`는 minimum MVP-1에서 민감 동작 승인이 필요할 때 compatible resolved `judgment_kind=sensitive_approval` user judgment를 포함합니다. Committed Approval ref는 later Approval owner profile이 active일 때만 나타납니다.
+
+`WriteAuthorizationSummary`, `WriteAuthoritySummary`, `AuthorizedAttemptScope`는 API/internal 이름입니다. MVP-1 사용자 표시에서는 먼저 쓰기 전 범위 확인이라고 설명해야 합니다. `intended_paths`, `intended_tools`, `decision=allowed`, `status=active`, `surface_id`, `guarantee_display` 같은 field는 협력형 기록/확인에 대한 하네스 호환성과 display context만 뜻합니다. OS 권한, sandboxing, 변조 방지 enforcement, 사전 차단, 권한 격리, surface가 부여한 write authority를 뜻하지 않습니다. `allowed`는 `PrepareWriteResponse.decision`에 속합니다. `blocked`에는 authorization row나 lifecycle value가 없습니다.
 
 `EvidenceSummary`는 활성 MVP-1의 compact evidence contract입니다. `status`는 정확히 `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked`를 사용합니다. Item coverage는 정확히 `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked`를 사용합니다. 이 값은 status와 close check에 쓰는 Core 소유 상태입니다. Full Evidence Manifest, detached verification result, Manual QA record, 최종 수락, 잔여 위험 수락, projection이 아닙니다.
 
@@ -671,6 +681,7 @@ ImplementationPayload:
   observed_changes: ObservedChanges
   command_results: CommandResult[]
   tool_invocations: ToolInvocationSummary[]
+  network_accesses: NetworkAccessObservation[]
   secret_accesses: SecretAccessObservation[]
   evidence_updates: EvidenceUpdates
   implementation_notes: string[]
@@ -683,6 +694,7 @@ DirectPayload:
   observed_changes: ObservedChanges
   command_results: CommandResult[]
   tool_invocations: ToolInvocationSummary[]
+  network_accesses: NetworkAccessObservation[]
   secret_accesses: SecretAccessObservation[]
   evidence_updates: EvidenceUpdates
   user_visible_result: string
@@ -719,6 +731,12 @@ ToolInvocationSummary:
   artifact_input_ids: string[]
   summary: string | null
 
+NetworkAccessObservation:
+  target: string
+  direction: read | write
+  observed: boolean
+  note: string | null
+
 SecretAccessObservation:
   secret_handle: string
   access_kind: read | write
@@ -741,9 +759,11 @@ EvidenceCoverageUpdate:
 
 `ShapingUpdatePayload`는 Discovery와 요구사항 구체화 중 활성 Task, Change Unit, User Judgment 경계에 지속되는 업데이트를 위한 활성 MVP payload입니다. Shared Design, Feedback Loop, TDD Trace, Evidence Manifest, Projection, Approval, Residual Risk 또는 다른 later/profile record를 만들지 않습니다. `task_update`, `change_unit_update`, `user_judgment_candidates` 중 적어도 하나는 비어 있지 않은 업데이트를 담아야 합니다.
 
-`ImplementationPayload`는 Task 또는 Change Unit에 대한 구현 작업을 기록합니다. `product_write=true`이면 `RecordRunRequest.write_authorization_id`가 compatible active Write Authorization을 가리켜야 하고, `observed_changes.changed_paths`는 관찰된 제품 파일 변경을 설명해야 합니다. `observed_changes`, `command_results`, `tool_invocations`, `secret_accesses`, `artifact_inputs`, `evidence_updates`를 포함한 request body는 request 검증과 canonical idempotency hash에 들어갑니다. Storage는 이 payload를 Run row의 `observed_changes_json`, `command_results_json`, linked artifact, evidence-summary update에 매핑합니다.
+`ImplementationPayload`는 Task 또는 Change Unit에 대한 구현 작업을 기록합니다. `product_write=true`이면 `RecordRunRequest.write_authorization_id`가 compatible active Write Authorization을 가리켜야 하고, `observed_changes.changed_paths`는 관찰된 제품 파일 변경을 설명해야 합니다. `observed_changes`, `command_results`, `tool_invocations`, `network_accesses`, `secret_accesses`, `artifact_inputs`, `evidence_updates`를 포함한 request body는 request 검증과 canonical idempotency hash에 들어갑니다. Storage는 이 payload를 Run row의 observed payload JSON field, linked artifact, evidence-summary update에 매핑합니다.
 
 `DirectPayload`는 작은 direct result를 기록합니다. 제품 파일 변경이 없는 직접 답변이나 결과도 포함합니다. `result_kind=product_write`이거나 `product_write=true`이면 `ImplementationPayload`와 같은 Write Authorization, observed-change, artifact, evidence validation rule을 따릅니다. `product_write=false`이면 `write_authorization_id`는 `null`이어야 하고 `observed_changes.no_product_changes`는 `true`여야 합니다.
+
+Product-write Run에서 Core는 observed payload를 stored `AuthorizedAttemptScope`와 비교합니다. 관련 관찰이 unsupported이거나 absent이면 surface가 commands, command classes, network access, secret access, changed paths를 verified로 표시하면 안 됩니다. 결과는 API와 error owner에 따라 narrowed, blocked, 또는 `CAPABILITY_INSUFFICIENT` / insufficient surface capability로 표시해야 합니다.
 
 ## NextActionSummary
 

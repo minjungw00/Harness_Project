@@ -359,23 +359,38 @@ ApprovalScope:
   allowed_paths: string[]
   allowed_tools: string[]
   allowed_commands: string[]
+  allowed_command_classes: string[]
   allowed_network_targets: string[]
   secret_scope: string[]
   baseline_ref: string | null
 
-WriteAuthorizationSummary:
-  write_authorization_id: string
+AuthorizedAttemptScope:
   task_id: string
   change_unit_id: string
   basis_state_version: integer
+  surface_id: string
   intended_operation: string
   intended_paths: string[]
   intended_tools: string[]
+  intended_commands:
+    - command: string
+      command_class: string
+      writes_product_files: boolean
+  product_file_write_intended: boolean
+  intended_network:
+    - target: string
+      direction: read | write
+  intended_secret_scope:
+    - secret_handle: string
+      access_kind: read | write
   sensitive_categories: string[]
   baseline_ref: string | null
-  approval_refs: StateRecordRef[]
-  user_judgment_refs: StateRecordRef[]
+  related_user_judgment_refs: StateRecordRef[]
   guarantee_level: cooperative | detective | preventive | isolated
+
+WriteAuthorizationSummary:
+  write_authorization_id: string
+  attempt_scope: AuthorizedAttemptScope
   status: active | consumed | expired | stale | revoked
   consumed_by_run_id: string | null
   created_at: string
@@ -384,24 +399,19 @@ WriteAuthorizationSummary:
 WriteAuthoritySummary:
   active_change_unit_ref: StateRecordRef | null
   write_authorization_ref: StateRecordRef | null
-  allowed_paths: string[]
-  allowed_tools: string[]
-  allowed_commands: string[]
-  allowed_command_classes: string[]
-  allowed_network_targets: string[]
-  secret_scope: string[]
-  sensitive_categories: string[]
+  active_authorized_attempt_scope: AuthorizedAttemptScope | null
   approval_status: not_required | required | pending | granted | denied | expired | unknown
-  baseline_ref: string | null
   guarantee_display:
     level: cooperative | detective | preventive | isolated
     notes: string[]
   note: "Autonomy Boundary is judgment latitude, not a pre-write scope check."
 ```
 
-`WriteAuthorizationSummary.approval_refs` is empty in minimum MVP-1. Resolved sensitive-action approval user judgments appear in `user_judgment_refs`; committed Approval refs appear only when the Approval owner profile is active.
+`AuthorizedAttemptScope` is the one active MVP shape for the authorized write attempt scope. Core builds it from the proposed write in `harness.prepare_write` plus resolved Core context: `task_id`, `change_unit_id`, `basis_state_version`, `surface_id`, related user judgment refs, and the displayed guarantee level. `write_authorizations.attempt_scope_json`, `WriteAuthorizationSummary.attempt_scope`, and `record_run` comparison use this same shape.
 
-`WriteAuthorizationSummary` and `WriteAuthoritySummary` are API/internal names. MVP-1 user-facing displays should call this a pre-write scope check first. Fields such as `allowed_paths`, `allowed_tools`, `decision=allowed`, `status=active`, `surface_id`, and `guarantee_display` describe Harness compatibility and display context for the cooperative record/check only; they do not mean OS permission, sandboxing, tamper-proof enforcement, preventive blocking, isolation, or surface-granted write authority. `allowed` belongs to `PrepareWriteResponse.decision`. `blocked` has no authorization row or lifecycle value.
+`AuthorizedAttemptScope.related_user_judgment_refs` includes compatible resolved `judgment_kind=sensitive_approval` user judgments when sensitive-action permission is required in minimum MVP-1. Committed Approval refs appear only when a later Approval owner profile is active.
+
+`WriteAuthorizationSummary`, `WriteAuthoritySummary`, and `AuthorizedAttemptScope` are API/internal names. MVP-1 user-facing displays should call this a pre-write scope check first. Fields such as `intended_paths`, `intended_tools`, `decision=allowed`, `status=active`, `surface_id`, and `guarantee_display` describe Harness compatibility and display context for the cooperative record/check only; they do not mean OS permission, sandboxing, tamper-proof enforcement, preventive blocking, isolation, or surface-granted write authority. `allowed` belongs to `PrepareWriteResponse.decision`. `blocked` has no authorization row or lifecycle value.
 
 `EvidenceSummary` is the active MVP-1 compact evidence contract. `status` uses exactly `not_required`, `none`, `partial`, `sufficient`, `stale`, and `blocked`; item coverage uses exactly `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, and `blocked`. It is Core-owned state used by status and close checks. It is not a full Evidence Manifest, detached verification result, Manual QA record, final acceptance, residual-risk acceptance, or projection.
 
@@ -671,6 +681,7 @@ ImplementationPayload:
   observed_changes: ObservedChanges
   command_results: CommandResult[]
   tool_invocations: ToolInvocationSummary[]
+  network_accesses: NetworkAccessObservation[]
   secret_accesses: SecretAccessObservation[]
   evidence_updates: EvidenceUpdates
   implementation_notes: string[]
@@ -683,6 +694,7 @@ DirectPayload:
   observed_changes: ObservedChanges
   command_results: CommandResult[]
   tool_invocations: ToolInvocationSummary[]
+  network_accesses: NetworkAccessObservation[]
   secret_accesses: SecretAccessObservation[]
   evidence_updates: EvidenceUpdates
   user_visible_result: string
@@ -719,6 +731,12 @@ ToolInvocationSummary:
   artifact_input_ids: string[]
   summary: string | null
 
+NetworkAccessObservation:
+  target: string
+  direction: read | write
+  observed: boolean
+  note: string | null
+
 SecretAccessObservation:
   secret_handle: string
   access_kind: read | write
@@ -741,9 +759,11 @@ EvidenceCoverageUpdate:
 
 `ShapingUpdatePayload` is the active MVP payload for Discovery and requirements-shaping updates that persist into active Task, Change Unit, or User Judgment boundaries. It does not create Shared Design, Feedback Loop, TDD Trace, Evidence Manifest, Projection, Approval, Residual Risk, or other later/profile records. At least one of `task_update`, `change_unit_update`, or `user_judgment_candidates` must carry a non-empty update.
 
-`ImplementationPayload` records implementation work against a Task or Change Unit. When `product_write=true`, `RecordRunRequest.write_authorization_id` must name a compatible active Write Authorization and `observed_changes.changed_paths` must describe the observed product-file changes. The request body, including `observed_changes`, `command_results`, `tool_invocations`, `secret_accesses`, `artifact_inputs`, and `evidence_updates`, is part of request validation and the canonical idempotency hash. Storage maps the payload into the Run row's `observed_changes_json`, `command_results_json`, linked artifacts, and evidence-summary updates.
+`ImplementationPayload` records implementation work against a Task or Change Unit. When `product_write=true`, `RecordRunRequest.write_authorization_id` must name a compatible active Write Authorization and `observed_changes.changed_paths` must describe the observed product-file changes. The request body, including `observed_changes`, `command_results`, `tool_invocations`, `network_accesses`, `secret_accesses`, `artifact_inputs`, and `evidence_updates`, is part of request validation and the canonical idempotency hash. Storage maps the payload into the Run row's observed payload JSON fields, linked artifacts, and evidence-summary updates.
 
 `DirectPayload` records a small direct result, including direct no-change or answer-only work. If `result_kind=product_write` or `product_write=true`, it follows the same Write Authorization, observed-change, artifact, and evidence validation rules as `ImplementationPayload`. If `product_write=false`, `write_authorization_id` must be `null` and `observed_changes.no_product_changes` must be `true`.
+
+For product-write runs, Core compares the observed payload with the stored `AuthorizedAttemptScope`. A surface must not mark commands, command classes, network access, secret access, or changed paths as verified when the relevant observation is unsupported or absent; the result must instead be narrowed, blocked, or marked as `CAPABILITY_INSUFFICIENT` / insufficient surface capability according to the API and error owners.
 
 ## NextActionSummary
 

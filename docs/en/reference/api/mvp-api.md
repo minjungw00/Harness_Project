@@ -155,11 +155,11 @@ Status is read-only. It must not create state, make product writes compatible, c
 
 ## `harness.prepare_write`
 
-Use this before an agent writes product files. It checks the exact proposed write against current Core state and returns either a compatible internal single-use Write Authorization record or structured blockers. This is a cooperative Harness check, not OS permission, sandboxing, or preventive blocking.
+Use this before an agent writes product files. It checks the proposed `AuthorizedAttemptScope` against current Core state and returns either a compatible internal single-use Write Authorization record or structured blockers. This is a cooperative Harness check, not OS permission, sandboxing, or preventive blocking.
 
 Stage meaning: active for Engineering Checkpoint and MVP-1. In MVP-1, sensitive-action permission is represented through a compatible `user_judgment` with `judgment_kind=sensitive_approval`; committed Approval records are later-profile material.
 
-The connected surface `capability_profile` cannot make `decision=allowed` by itself. Active Task, active Change Unit, current state, compatible `prepare_write`, and a durable Write Authorization still come from Core. Product writes must not proceed silently when the recognized surface lacks a required capability such as native artifact capture, command observation, secret-access observation, pre-tool blocking, or isolation.
+The connected surface `capability_profile` cannot make `decision=allowed` by itself. Active Task, active Change Unit, current state, compatible `prepare_write`, and a durable Write Authorization still come from Core. Product writes must not proceed silently when the recognized surface lacks a required capability such as native artifact capture, command observation, network observation, secret-access observation, pre-tool blocking, or isolation.
 
 Allowed actors: `lead_agent`, `operator`.
 
@@ -175,10 +175,11 @@ PrepareWriteRequest:
     - command: string
       command_class: string
       writes_product_files: boolean
+  product_file_write_intended: boolean
   intended_network:
     - target: string
       direction: read | write
-  intended_secrets:
+  intended_secret_scope:
     - secret_handle: string
       access_kind: read | write
   sensitive_categories: string[]
@@ -205,7 +206,9 @@ PrepareWriteResponse:
     notes: string[]
 ```
 
-`decision=allowed` with `dry_run=false` must include `write_authorization_ref` and an active `write_authorization`; `dry_run=true` may return `authorization_effect=would_create` but creates no authorization. Here `allowed` means compatible with current Harness records for this API path; it does not mean OS permission or pre-execution blocking, and it is not the durable Write Authorization lifecycle status. Any response whose `decision` is not `allowed` must not include a Write Authorization.
+The request fields describe the proposed part of [`AuthorizedAttemptScope`](schema-core.md#evidence-and-pre-write-scope-schemas). Core stamps the resolved `task_id`, `change_unit_id`, `basis_state_version`, `surface_id`, related user judgment refs, and guarantee level before creating a durable Write Authorization. `WriteAuthorizationSummary.attempt_scope`, `write_authorizations.attempt_scope_json`, and `record_run` comparison all use that same scope.
+
+`decision=allowed` with `dry_run=false` must include `write_authorization_ref` and an active `write_authorization` whose `attempt_scope` is the stored `AuthorizedAttemptScope`; `dry_run=true` may return `authorization_effect=would_create` but creates no authorization. Here `allowed` means compatible with current Harness records for this API path; it does not mean OS permission or pre-execution blocking, and it is not the durable Write Authorization lifecycle status. Any response whose `decision` is not `allowed` must not include a Write Authorization.
 
 `PrepareWriteResponse` must include `guarantee_display.level` whenever Core can answer. A cooperative or detective level means the surface must hold by instruction or report after-action detection as applicable; it is not a claim that arbitrary tools were prevented. If Core, required MCP access, or a required surface capability is unavailable, the response follows [Errors](errors.md) and must not create a Write Authorization, task event, artifact, projection job, or any authoritative state-mutation claim. `pre_tool_blocking_supported=false` prevents a `preventive` claim, and `isolation_supported=false` prevents an `isolated` claim.
 
@@ -213,7 +216,7 @@ PrepareWriteResponse:
 
 An exact idempotent replay of a committed non-dry-run `decision=allowed` response returns the original response and original `write_authorization_ref` with `authorization_effect=returned`; it must not create a second Write Authorization or append another event. A same-key replay with a different canonical request hash returns `STATE_CONFLICT`.
 
-Public transition summary: `harness.prepare_write` validates the envelope, validates idempotency and returns exact committed replay before new side effects, resolves the primary Task using the shared request rule, checks `expected_state_version` against `tasks.state_version` or `project_state.state_version` as appropriate, resolves the active Change Unit, checks intended operation/path/tool/command/network/secret/sensitive-category compatibility, checks baseline freshness, sensitive-action permission, user judgment and decision-gate coverage, Autonomy Boundary, surface capability, and active design-policy preconditions, then calculates `decision`. Only `dry_run=false` with `decision=allowed` creates `write_authorizations.status=active`; committed non-dry-run results append task events before returning.
+Public transition summary: `harness.prepare_write` validates the envelope, validates idempotency and returns exact committed replay before new side effects, resolves the primary Task using the shared request rule, checks `expected_state_version` against `tasks.state_version` or `project_state.state_version` as appropriate, resolves the active Change Unit, builds the candidate `AuthorizedAttemptScope`, checks intended operation/path/tool/command and command-class/product-file-write/network/secret/sensitive-category compatibility, checks baseline freshness, sensitive-action permission, user judgment and decision-gate coverage, Autonomy Boundary, surface capability, and active design-policy preconditions, then calculates `decision`. Only `dry_run=false` with `decision=allowed` creates `write_authorizations.status=active` and stores the full `attempt_scope_json`; committed non-dry-run results append task events before returning.
 
 <a id="harnessrecord_run"></a>
 
@@ -223,7 +226,7 @@ Use this after a shaping update, direct result, or implementation run. Implement
 
 Stage meaning: active for Engineering Checkpoint with one compatible run and one artifact/evidence ref; active in MVP-1 for evidence summaries. Verification input, Feedback Loop updates, TDD Trace updates, and full Evidence Manifest behavior are later/profile-gated.
 
-`record_run` records what the active path can honestly support. When the reference `capability_profile` has `artifact_capture_supported=false`, `command_observation_supported=false`, or `secret_access_observation_supported=false`, native capture, command-observation, and secret-access claims must be blocked, narrowed, or marked unverified. Manual artifact refs can support evidence only after the owner path registers them.
+`record_run` records what the active path can honestly support. When the reference `capability_profile` has `artifact_capture_supported=false`, `command_observation_supported=false`, `network_observation_supported=false`, or `secret_access_observation_supported=false`, native capture, command-observation, network-observation, and secret-access claims must be blocked, narrowed, or marked unverified. Manual artifact refs can support evidence only after the owner path registers them.
 
 `artifact_inputs` accept only the sources defined by `ArtifactInput`: Harness staging, an approved capture adapter, or an existing committed `ArtifactRef`. Caller-supplied arbitrary absolute paths, raw secrets, tokens, and full sensitive logs must not be registered as evidence artifacts. Critical evidence without current owner relation, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, and `retention_class` metadata cannot make `evidence_summary.status=sufficient`.
 
@@ -267,7 +270,7 @@ RecordRunResponse:
 
 An exact idempotent replay of a committed `record_run` response returns the original response before current freshness checks, authorization consumption, Run creation, artifact registration, blocker/gate updates, projection enqueue, or event append. It must not consume a Write Authorization twice.
 
-Public transition summary: `harness.record_run` validates the envelope, checks idempotency replay and returns exact committed replay before new side effects, resolves the primary Task using the shared request rule, checks `expected_state_version` against `tasks.state_version` or `project_state.state_version` as appropriate, checks `kind`, detects product writes, requires a compatible active Write Authorization for product writes, validates observed changed paths, commands, tools, and secret access, consumes the authorization when compatible, creates the Run record, registers or links allowed `ArtifactRef` records, updates evidence summary and blockers/gates, appends a task event, and returns the response.
+Public transition summary: `harness.record_run` validates the envelope, checks idempotency replay and returns exact committed replay before new side effects, resolves the primary Task using the shared request rule, checks `expected_state_version` against `tasks.state_version` or `project_state.state_version` as appropriate, checks `kind`, detects product writes, requires a compatible active Write Authorization for product writes, loads its stored `AuthorizedAttemptScope`, and compares observed product-file writes, changed paths, tools, commands, command classes, network accesses, secret accesses, sensitive categories, `baseline_ref`, `task_id`, `change_unit_id`, `basis_state_version`, `surface_id`, related user judgment refs, and guarantee level where the active surface can observe or attest them. It then classifies the result as compatible observed attempt, missing required authorization, stale authorization, observed attempt outside authorized scope, or insufficient surface capability. Only a compatible observed attempt consumes the authorization, creates the Run record, registers or links allowed `ArtifactRef` records, updates evidence summary and blockers/gates, appends a task event, and returns the committed response.
 
 If an already registered artifact is missing, has missing required integrity/redaction metadata, or fails integrity validation with a diagnostic such as `hash_mismatch`, Core marks related evidence `stale` or `blocked`. If required evidence is affected, the close path remains blocked until replacement, recovery, waiver/risk handling, or another owner-approved resolution applies.
 

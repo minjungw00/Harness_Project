@@ -74,6 +74,7 @@ capability_profile_fields:
   artifact_capture_supported: false
   manual_artifact_attachment_supported: true
   command_observation_supported: false
+  network_observation_supported: false
   secret_access_observation_supported: false
   pre_tool_blocking_supported: false
   isolation_supported: false
@@ -100,7 +101,7 @@ common_fallbacks:
   - hold product writes by instruction when MCP/Core or required capability is unavailable
 conformance_risks:
   - conformance_smoke_status must not be reported as passed before runtime fixtures are materialized and run
-  - native artifact capture, command observation, secret access observation, pre-tool blocking, and isolation are unsupported
+  - native artifact capture, command observation, network observation, secret access observation, pre-tool blocking, and isolation are unsupported
   - unsupported capabilities must lower guarantee display or return CAPABILITY_INSUFFICIENT / structured blocked reasons
   - product writes must not proceed silently when the required Harness record/check path or required capability is unavailable
 ```

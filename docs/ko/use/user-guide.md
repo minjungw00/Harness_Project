@@ -147,7 +147,7 @@
 - 현재 보장 수준. 답할 수 없으면 사용 불가/역량 조건(unavailable/capability condition)
 - 쓰기를 막는 가장 작은 해소 방법
 
-이 확인은 OS 권한, 샌드박스, 변조 방지 장치, 임의 도구 격리, 모든 도구 실행을 막는 증명이 아닙니다. 의도한 쓰기가 현재 하네스 기록에 맞는지 남기는 협력형 확인입니다. 의도한 경로, 명령, 민감 범주, 범위, 상태가 바뀌면 쓰기 전에 다시 확인해야 합니다.
+이 확인은 OS 권한, 샌드박스, 변조 방지 장치, 임의 도구 격리, 모든 도구 실행을 막는 증명이 아닙니다. Owner 용어에서 stored boundary는 `AuthorizedAttemptScope`입니다. Operation, paths, tools, commands와 command classes, product-file-write intent, network targets, secret scope, sensitive categories, baseline, Task, Change Unit, state, surface, related judgments, guarantee level을 포함합니다. 그중 하나라도 바뀌거나 active surface에서 관찰할 수 없으면 쓰기 전에 확인을 새로 하거나 unverified/blocked로 다뤄야 합니다.
 
 Core 또는 하네스 권한이 답할 수 없으면 에이전트는 그렇게 말해야 합니다. 오래된 대화, 캐시된 요약, 오래된 읽기용 보기, 사용자의 넓은 호응을 현재 쓰기 호환성이나 Write Authorization처럼 말하면 안 됩니다.
 
@@ -335,7 +335,7 @@ JWT, 소셜 로그인, 비밀번호 재설정, 회원가입, 모달까지 포함
 | Discovery | 구현 계획 전에 요구사항을 구체화하는 내부 이름입니다. 사용자는 평소 말로 구체화를 요청하면 됩니다. |
 | Change Unit | 제품 쓰기 시도에서 바뀔 수 있는 제한된 작업 영역입니다. 범위이지 넓은 승인이 아닙니다. |
 | Decision Packet | 특정 사용자 판단을 더 자세히 보여주는 형식입니다. 모든 작은 선택에 필요하면 안 됩니다. |
-| Write Authorization | 특정 쓰기 시도가 현재 범위와 기록된 승인에 맞는지 확인하는 협력형 내부 기록입니다. OS 권한, 샌드박스, 변조 방지 장치, 일반 승인이 아닙니다. |
+| Write Authorization | Core가 `record_run`에서 비교하는 stored `AuthorizedAttemptScope` 하나에 대한 협력형 내부 기록입니다. OS 권한, 샌드박스, 변조 방지 장치, 일반 승인이 아닙니다. |
 | Evidence Manifest | 해당 프로필이 활성일 때 완료 주장이나 기준을 증거 참조와 연결하는 더 자세한 기록입니다. 작은 작업에는 짧은 증거 요약만 필요할 수 있습니다. |
 | Projection | 저장된 기록에서 나온 읽기용 요약입니다. 방향을 잡는 데 도움을 주지만 운영 기록 자체는 아닙니다. |
 | Gate | 내부 준비 상태 또는 호환성 조건입니다. 사용자에게는 먼저 차단 사유나 확인을 쉬운 말로 보여줘야 합니다. |

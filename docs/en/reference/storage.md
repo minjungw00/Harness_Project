@@ -178,8 +178,8 @@ Core](api/schema-core.md).
 | `task_events` | Append-only audit/order trail for committed Core mutations. | `event_id`, `task_id` or project scope, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
 | `change_units` | Current scoped work boundary for product writes and close basis. | `change_unit_id`, `task_id`, `scope_summary`, `non_goals_json`, `success_criteria_json`, `allowed_paths_json`, `denied_paths_json`, `status`, `created_at`, `updated_at`. |
 | `user_judgments` | User-owned judgment record for product decision, technical decision, scope decision, sensitive approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, and cancellation. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `display_label`, `status`, `question`, `options_json`, `selected_option_json`, `judgment_payload_json`, `affected_scope_json`, `context_refs_json`, `artifact_refs_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
-| `write_authorizations` | Durable single-use cooperative record created only by non-dry-run `prepare_write.decision=allowed`. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `intended_operation`, `intended_paths_json`, `intended_tools_json`, `sensitive_categories_json`, `related_user_judgment_refs_json`, `guarantee_level`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`. |
-| `runs` | Committed execution or observation record, including compatible write consumption when a product write happened. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `summary`, `observed_changes_json`, `command_results_json`, `created_at`. |
+| `write_authorizations` | Durable single-use cooperative record created only by non-dry-run `prepare_write.decision=allowed`. The row preserves the full active MVP `AuthorizedAttemptScope` used by Core comparison. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`. |
+| `runs` | Committed execution or observation record, including compatible write consumption when a product write happened. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `summary`, `observed_changes_json`, `command_results_json`, `tool_invocations_json`, `network_accesses_json`, `secret_accesses_json`, `created_at`. |
 | `artifacts` | Registered durable evidence bytes or safe metadata with integrity and redaction facts. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
 | `artifact_links` | Owner relation from an artifact to the Core/API record it supports. | `artifact_link_id`, `artifact_id`, `task_id`, `owner_record_kind`, `owner_record_id`, `relation`, `created_at`. |
 | `evidence_summaries` | Minimal evidence coverage and gap record for MVP-1 status and close. It replaces full Evidence Manifest tables in the active slice. | `evidence_summary_id`, `task_id`, `change_unit_id`, `coverage_state`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
@@ -189,6 +189,17 @@ Core](api/schema-core.md).
 `tool_invocations` rows exist only for committed replayable non-dry-run
 responses. Dry runs and pre-commit conflicts do not reserve idempotency keys in
 storage.
+
+`write_authorizations.attempt_scope_json` is the storage serialization of
+`AuthorizedAttemptScope` from [API Schema Core](api/schema-core.md#evidence-and-pre-write-scope-schemas).
+It must preserve the intended operation, intended paths, intended tools,
+intended commands and command classes, product-file-write intent, intended
+network targets, intended secret handles/scope, sensitive categories,
+`baseline_ref`, `task_id`, `change_unit_id`, `basis_state_version`,
+`surface_id`, related user judgment refs, and `guarantee_level`. The top-level
+`task_id`, `change_unit_id`, `surface_id`, and `basis_state_version` columns are
+query/index fields; Core comparison uses the stored attempt scope as the
+authoritative authorization boundary.
 
 State clocks are scoped, not global. Task-scoped mutations use
 `tasks.state_version`; project-scoped mutations with no Core-resolved primary
@@ -247,9 +258,9 @@ broad validator-run archives, long-term metrics, or connector ecosystem tables.
 | Active Task exists and is closeable | `project_state.active_task_id`, `tasks.lifecycle_phase`, `tasks.result`, `tasks.closed_at` |
 | Scope is present and current | `tasks.active_change_unit_id`, `change_units.status`, `change_units.scope_summary`, `change_units.non_goals_json`, `change_units.success_criteria_json` |
 | User-owned judgment is unresolved | `user_judgments.judgment_kind`, `user_judgments.status`, `user_judgments.affected_scope_json`, `user_judgments.context_refs_json` |
-| Sensitive-action permission is missing or denied | `user_judgments` rows with `judgment_kind=sensitive_approval`, plus current `write_authorizations.related_user_judgment_refs_json` when a write is involved |
-| Write Authorization is missing, expired, stale, revoked, consumed, or incompatible | `write_authorizations.status`, `write_authorizations.basis_state_version`, `write_authorizations.consumed_by_run_id`, current `tasks.state_version` |
-| Run or artifact support is missing or stale | `runs.status`, `artifacts.status`, `artifacts.sha256`, `artifacts.size_bytes`, `artifacts.content_type`, `artifacts.redaction_state`, `artifact_links.owner_record_kind`, `artifact_links.owner_record_id` |
+| Sensitive-action permission is missing or denied | `user_judgments` rows with `judgment_kind=sensitive_approval`, plus current `write_authorizations.attempt_scope_json.related_user_judgment_refs` when a write is involved |
+| Write Authorization is missing, expired, stale, revoked, consumed, or incompatible | `write_authorizations.status`, `write_authorizations.basis_state_version`, `write_authorizations.attempt_scope_json`, `write_authorizations.consumed_by_run_id`, current `tasks.state_version`, current `tasks.active_change_unit_id`, and the current surface/profile facts |
+| Run or artifact support is missing or stale | `runs.status`, `runs.observed_changes_json`, `runs.command_results_json`, `runs.tool_invocations_json`, `runs.network_accesses_json`, `runs.secret_accesses_json`, `artifacts.status`, `artifacts.sha256`, `artifacts.size_bytes`, `artifacts.content_type`, `artifacts.redaction_state`, `artifact_links.owner_record_kind`, `artifact_links.owner_record_id` |
 | Evidence coverage is missing, insufficient, or stale | `evidence_summaries.coverage_state`, `evidence_summaries.coverage_items_json`, `evidence_summaries.supporting_artifact_link_ids_json`, `evidence_summaries.gap_blocker_ids_json` |
 | Final acceptance is required but missing | `user_judgments` rows with `judgment_kind=final_acceptance` and compatible `status` / `selected_option_json` |
 | Residual risk is not visible or not accepted | `blockers` rows with residual-risk blocker kinds, plus `user_judgments` rows with `judgment_kind=residual_risk_acceptance` when acceptance is required |

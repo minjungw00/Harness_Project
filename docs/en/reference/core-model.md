@@ -315,7 +315,7 @@ Approval does not prove correctness, choose product direction, choose technical 
 
 ### Write Authorization
 
-A Write Authorization is the durable single-use state record created only by a non-dry-run `prepare_write.decision=allowed` for an exact product-file write compatible with current Core records. It records the Task, Change Unit, `basis_state_version` used for the allow decision, intended operation, intended write surface, relevant sensitive-action coverage and decisions, guarantee level, lifecycle status, and consumption by a compatible Run. `basis_state_version` is the compatibility basis, not necessarily the resulting `ToolResponseBase.state_version`. It is a Harness-level cooperative record/check, not OS permission, sandboxing, tamper-proof storage, preventive blocking, or isolation.
+A Write Authorization is the durable single-use state record created only by a non-dry-run `prepare_write.decision=allowed` for a proposed `AuthorizedAttemptScope` compatible with current Core records. The stored scope preserves the Task, Change Unit, `basis_state_version`, `surface_id`, intended operation, intended paths/tools/commands and command classes, product-file-write intent, intended network targets, intended secret handles/scope, sensitive categories, baseline, related user judgments, and guarantee level used for the allow decision. `basis_state_version` is the compatibility basis, not necessarily the resulting `ToolResponseBase.state_version`. The record also carries lifecycle status and consumption by one compatible Run. It is a Harness-level cooperative record/check, not OS permission, sandboxing, tamper-proof storage, preventive blocking, or isolation.
 
 Write Authorization status is record-level:
 
@@ -633,7 +633,7 @@ The Core transition order is:
 3. Resolve the primary Task in the canonical order: tool-specific `task_id`, envelope `task_id`, then active Task resolution.
 4. Check `expected_state_version` against `tasks.state_version` for a task-scoped mutation, or against `project_state.state_version` when no primary Task exists.
 5. Resolve the active Change Unit.
-6. Check intended operation, path, tool, command, network, secret, and sensitive category compatibility against scope.
+6. Build the candidate `AuthorizedAttemptScope` and check intended operation, path, tool, command, command class, product-file-write intent, network, secret, and sensitive category compatibility against scope.
 7. Check baseline freshness.
 8. Check sensitive-action approval or permission when sensitive categories apply.
 9. Check blocking user judgment and decision-gate requirements.
@@ -641,7 +641,7 @@ The Core transition order is:
 11. Check connected surface capability.
 12. Check active design-policy preconditions.
 13. Calculate `prepare_write.decision`.
-14. If `dry_run=false` and `decision=allowed`, create `write_authorizations.status=active` for this exact attempt.
+14. If `dry_run=false` and `decision=allowed`, create `write_authorizations.status=active` with the full `AuthorizedAttemptScope` preserved in storage for this attempt.
 15. If `dry_run=false`, append the task event for the committed decision and any committed blocker or authorization state.
 16. Return the response.
 
@@ -653,7 +653,7 @@ A replayed `prepare_write` with the same idempotency key and canonical request h
 
 If MCP is unavailable on a cooperative-only surface, product writes are held by instruction. Preventive or isolated claims require a proven guard or documented separation boundary for the covered operation.
 
-External side effects keep the same authority meaning. Before execution, `prepare_write` evaluates the intended side effect. After execution, `record_run` records what happened. `record_run` cannot retroactively make an effect compatible when it lacked compatible scope, Approval, user judgment coverage, or Write Authorization.
+External side effects keep the same authority meaning. Before execution, `prepare_write` evaluates the intended side effect and stores the resulting `AuthorizedAttemptScope` only when it is compatible. After execution, `record_run` records what happened. `record_run` cannot retroactively make an effect compatible when it lacked compatible scope, sensitive-action permission, user judgment coverage, or Write Authorization.
 
 <a id="record_run"></a>
 
@@ -669,19 +669,22 @@ The Core transition order is:
 4. Check `expected_state_version` against `tasks.state_version` for a task-scoped mutation, or against `project_state.state_version` when no primary Task exists.
 5. Check the Run kind.
 6. Detect whether the Run reports a product write.
-7. If a product write exists, require a compatible active Write Authorization.
-8. Validate observed changed paths, commands, tools, and secret access against the authorization and active scope.
-9. If compatible, consume the authorization.
-10. Create the Run record.
-11. Register or link `ArtifactRef` records only from Harness staging, an approved capture adapter, or an existing committed artifact ref; reject caller-supplied arbitrary absolute paths and forbidden raw secret or full sensitive-log payloads.
-12. Update the evidence summary or evidence refs required by the active path.
-13. Update blockers and gates affected by the recorded Run.
-14. Append the task event.
-15. Return the response.
+7. If a product write exists, require a compatible active Write Authorization and load its stored `AuthorizedAttemptScope`.
+8. Compare observed changed paths, tool use, commands, command classes, product-file-write behavior, network accesses, secret accesses, sensitive categories, baseline, Task, Change Unit, basis state version, surface, related user judgments, and guarantee level against the stored `AuthorizedAttemptScope` and current active scope where the active surface can observe or attest those facts.
+9. Classify the write attempt as one of: compatible observed attempt, missing required authorization, stale authorization, observed attempt outside authorized scope, or insufficient surface capability.
+10. If the attempt is compatible, consume the authorization.
+11. Create the Run record.
+12. Register or link `ArtifactRef` records only from Harness staging, an approved capture adapter, or an existing committed artifact ref; reject caller-supplied arbitrary absolute paths and forbidden raw secret or full sensitive-log payloads.
+13. Update the evidence summary or evidence refs required by the active path.
+14. Update blockers and gates affected by the recorded Run.
+15. Append the task event.
+16. Return the response.
 
-Implementation and direct Runs that report product-file writes must consume a compatible Write Authorization whose lifecycle status is `active`. Core verifies observed changed paths and other observed side effects against both the consumed Write Authorization and the active Change Unit when those observations are available.
+Implementation and direct Runs that report product-file writes must consume a Write Authorization whose lifecycle status is `active` and whose stored `AuthorizedAttemptScope` is compatible with the observed attempt. Core verifies only observations the active surface can honestly provide. Missing command, network, secret, or other observation capability is not a successful verification; when that capability is required for the attempted scope, Core must block, narrow the claim, mark the fact unverified, or return/report insufficient surface capability rather than consuming the authorization as fully compatible.
 
-Out-of-scope changes, missing Write Authorization, expired Write Authorization, stale Write Authorization, revoked Write Authorization, consumed Write Authorization, or incompatible Write Authorization become rejection, violation, recovery, or stale/blocker state according to the case. Core must not record an invalid authorization as successfully consumed. A violation or audit Run may be recorded when the active contract supports recording observed behavior, but it does not count as completion evidence and does not satisfy evidence sufficiency, verification, QA, final acceptance, residual-risk acceptance, or close readiness for the affected scope until repaired through the relevant owner records. Attempted authorization refs may appear only in validator findings, violation payloads, or event payloads.
+`missing required authorization` means a product-write Run has no required authorization ref or no current matching row. `stale authorization` means the row is expired, revoked, already consumed, explicitly stale, or based on a state version, baseline, scope, surface, or related judgment set that is no longer current for the attempted write. `observed attempt outside authorized scope` means observed paths, tools, commands, command classes, product-file-write behavior, network targets, secret handles, sensitive categories, baseline, Task, Change Unit, or surface exceed or differ from the stored `AuthorizedAttemptScope`. `insufficient surface capability` means Core cannot honestly compare a required part of the attempted scope because the connected surface lacks the needed observation, capture, blocking, or isolation capability.
+
+Out-of-scope changes, missing Write Authorization, expired Write Authorization, stale Write Authorization, revoked Write Authorization, consumed Write Authorization, incompatible Write Authorization, or insufficient surface capability become rejection, violation, recovery, or stale/blocker state according to the case. Core must not record an invalid authorization as successfully consumed. A violation or audit Run may be recorded when the active contract supports recording observed behavior, but it does not count as completion evidence and does not satisfy evidence sufficiency, verification, QA, final acceptance, residual-risk acceptance, or close readiness for the affected scope until repaired through the relevant owner records. Attempted authorization refs may appear only in validator findings, violation payloads, or event payloads.
 
 Read-only and shaping-only Runs may be recorded without Write Authorization only when they do not report product-file changes.
 

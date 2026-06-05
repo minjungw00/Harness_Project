@@ -73,6 +73,7 @@ capability_profile_fields:
   artifact_capture_supported: false
   manual_artifact_attachment_supported: true
   command_observation_supported: false
+  network_observation_supported: false
   secret_access_observation_supported: false
   pre_tool_blocking_supported: false
   isolation_supported: false
@@ -99,7 +100,7 @@ common_fallbacks:
   - MCP/Core 또는 required capability가 unavailable이면 product write를 instruction으로 hold
 conformance_risks:
   - runtime fixture가 materialize되고 실행되기 전에는 conformance_smoke_status를 passed로 보고하지 않음
-  - native artifact capture, command observation, secret access observation, pre-tool blocking, isolation은 unsupported
+  - native artifact capture, command observation, network observation, secret access observation, pre-tool blocking, isolation은 unsupported
   - unsupported capability는 guarantee display를 낮추거나 CAPABILITY_INSUFFICIENT / structured blocked reason을 반환해야 함
   - required Harness record/check path 또는 required capability가 unavailable이면 product write가 조용히 진행되면 안 됨
 ```

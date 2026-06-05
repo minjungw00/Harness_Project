@@ -108,6 +108,7 @@ capability_profile:
   artifact_capture_supported: false
   manual_artifact_attachment_supported: true
   command_observation_supported: false
+  network_observation_supported: false
   secret_access_observation_supported: false
   pre_tool_blocking_supported: false
   isolation_supported: false
@@ -147,7 +148,7 @@ Guard, freeze, careful-mode label은 실제 profile 위의 표시 label입니다
 | `cooperative_prepare_write_supported=true` | 접점이 협력형 `prepare_write` path에 참여할 수 있습니다. 그래도 Core가 결정하고, Write Authorization은 Core에서만 나옵니다. |
 | `changed_path_detection_supported=true` | 행동 뒤 changed-path validation을 사후 확인으로 지원할 수 있습니다. 도구 실행 전 차단 증명이 아닙니다. |
 | `artifact_capture_supported=false`와 `manual_artifact_attachment_supported=true` | Native artifact capture claim은 막거나 낮춰야 합니다. Manual artifact attachment는 owner path가 등록한 뒤에만 evidence ref를 support할 수 있습니다. |
-| `command_observation_supported=false` 또는 `secret_access_observation_supported=false` | Command 또는 secret-access 관찰에 의존하는 claim은 막거나, 줄이거나, 미검증으로 표시해야 합니다. |
+| `command_observation_supported=false`, `network_observation_supported=false`, 또는 `secret_access_observation_supported=false` | Command, network, secret-access 관찰에 의존하는 claim은 막거나, 줄이거나, 미검증으로 표시해야 합니다. |
 | `pre_tool_blocking_supported=false` | `preventive` display는 사용할 수 없습니다. Product write가 지원하지 않는 capability에 의존하면 지시로 보류합니다. |
 | `isolation_supported=false` | `isolated` display는 사용할 수 없습니다. 승격된 증명 없이 worktree나 bundle을 보안 격리라고 부르면 안 됩니다. |
 

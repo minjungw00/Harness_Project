@@ -71,7 +71,7 @@ Core unavailable rule: if Harness/Core authority is unavailable, the agent must 
 | `BASELINE_STALE` | Baseline no longer matches the repository state required by the operation. |
 | `VALIDATOR_FAILED` | Fallback when required validators or close/blocker checks failed, the finding's routed action is Core blocking, and no more specific typed code applies. Advisory or routed-candidate design-quality findings do not select this code by themselves. |
 
-`WRITE_AUTHORIZATION_REQUIRED` and `WRITE_AUTHORIZATION_INVALID` are only for missing or invalid Write Authorization records. Scope problems still use `SCOPE_VIOLATION` when observed paths, tools, commands, network targets, secrets, or sensitive categories exceed the Write Authorization record or active scope.
+`WRITE_AUTHORIZATION_REQUIRED` and `WRITE_AUTHORIZATION_INVALID` are only for missing or invalid Write Authorization records. Scope problems still use `SCOPE_VIOLATION` when observed paths, tools, commands, network targets, secrets, or sensitive categories exceed the stored `AuthorizedAttemptScope` or active scope. When the required comparison cannot be made because the connected surface cannot observe or attest a needed command, network, secret, capture, blocking, or isolation fact, use `CAPABILITY_INSUFFICIENT` or a tool-specific blocker instead of treating the fact as verified.
 
 When either error carries an invalid-authorization reason in `ToolError.details.authorization_reason`, the reason vocabulary is exactly:
 
@@ -123,7 +123,7 @@ Public tool responses carry one primary `ToolError.code` even when Core observes
 | 6 | `NO_ACTIVE_CHANGE_UNIT` | The operation is write-capable or close-relevant and no active scoped Change Unit applies. |
 | 7 | `BASELINE_STALE` | The requested operation depends on a stale baseline. |
 | 8 | `SCOPE_REQUIRED` | Scope must be confirmed before the requested operation can proceed. |
-| 9 | `SCOPE_VIOLATION` | Intended or observed paths, tools, commands, network, secrets, or categories exceed scope. |
+| 9 | `SCOPE_VIOLATION` | Intended or observed paths, tools, commands, network, secrets, or categories exceed scope or the stored `AuthorizedAttemptScope`. |
 | 10 | `WRITE_AUTHORIZATION_REQUIRED` | A write-capable Run is missing a required Write Authorization. |
 | 11 | `WRITE_AUTHORIZATION_INVALID` | The supplied Write Authorization is missing, stale, expired, revoked, consumed (outside replay), or incompatible. |
 | 12 | `APPROVAL_DENIED` | Relevant sensitive-action permission was denied. |
@@ -132,7 +132,7 @@ Public tool responses carry one primary `ToolError.code` even when Core observes
 | 15 | `DECISION_UNRESOLVED` | Existing relevant user judgment is pending, rejected, stale, or incompatible. |
 | 16 | `AUTONOMY_BOUNDARY_EXCEEDED` | Intended operation exceeds the active Autonomy Boundary. |
 | 17 | `DECISION_REQUIRED` | Blocking user-owned judgment needs a user judgment request. |
-| 18 | `CAPABILITY_INSUFFICIENT` | The connected surface cannot satisfy a required capability or enforcement condition. |
+| 18 | `CAPABILITY_INSUFFICIENT` | The connected surface cannot satisfy a required capability, observation, or enforcement condition. |
 | 19 | `EVIDENCE_INSUFFICIENT` | Required evidence coverage is absent, partial, stale, or blocked. |
 | 20 | `VERIFY_NOT_DETACHED` | Verification cannot count as detached verification. |
 | 21 | `QA_REQUIRED` | Required Manual QA is pending, failed, missing, or not validly waived. |

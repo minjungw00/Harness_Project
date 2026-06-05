@@ -155,11 +155,11 @@ Status는 read-only입니다. State를 만들거나, 제품 파일 쓰기를 com
 
 ## `harness.prepare_write`
 
-에이전트가 제품 파일을 쓰기 전에, 그 정확한 쓰기가 현재 Core state에 맞는지 확인할 때 이 method를 사용합니다. 결과는 compatible internal single-use Write Authorization record이거나 structured blocker입니다. 이것은 하네스 수준의 협력형 확인이지 OS 권한, sandboxing, 사전 차단이 아닙니다.
+에이전트가 제품 파일을 쓰기 전에, 제안된 `AuthorizedAttemptScope`가 현재 Core state에 맞는지 확인할 때 이 method를 사용합니다. 결과는 compatible internal single-use Write Authorization record이거나 structured blocker입니다. 이것은 하네스 수준의 협력형 확인이지 OS 권한, sandboxing, 사전 차단이 아닙니다.
 
 Stage meaning: 내부 엔지니어링 점검과 MVP-1에서 active입니다. MVP-1에서 민감 동작 승인은 `judgment_kind=sensitive_approval`인 compatible `user_judgment`로 표현합니다. Committed Approval record는 later-profile material입니다.
 
-Connected surface `capability_profile`만으로 `decision=allowed`가 되지는 않습니다. Active Task, active Change Unit, current state, compatible `prepare_write`, durable Write Authorization은 계속 Core에서 나옵니다. Recognized surface가 native artifact capture, command observation, secret-access observation, pre-tool blocking, isolation 같은 required capability를 갖지 못하면 product write가 조용히 진행되면 안 됩니다.
+Connected surface `capability_profile`만으로 `decision=allowed`가 되지는 않습니다. Active Task, active Change Unit, current state, compatible `prepare_write`, durable Write Authorization은 계속 Core에서 나옵니다. Recognized surface가 native artifact capture, command observation, network observation, secret-access observation, pre-tool blocking, isolation 같은 required capability를 갖지 못하면 product write가 조용히 진행되면 안 됩니다.
 
 Allowed actors: `lead_agent`, `operator`.
 
@@ -175,10 +175,11 @@ PrepareWriteRequest:
     - command: string
       command_class: string
       writes_product_files: boolean
+  product_file_write_intended: boolean
   intended_network:
     - target: string
       direction: read | write
-  intended_secrets:
+  intended_secret_scope:
     - secret_handle: string
       access_kind: read | write
   sensitive_categories: string[]
@@ -205,7 +206,9 @@ PrepareWriteResponse:
     notes: string[]
 ```
 
-`decision=allowed`이고 `dry_run=false`이면 `write_authorization_ref`와 active `write_authorization`이 있어야 합니다. `dry_run=true`에서는 `authorization_effect=would_create`를 반환할 수 있지만 authorization을 만들지 않습니다. 여기서 `allowed`는 이 API path에서 현재 하네스 기록과 맞는다는 뜻이지 OS 권한이나 실행 전 차단이 아니며, durable Write Authorization lifecycle status도 아닙니다. `decision`이 `allowed`가 아닌 response는 Write Authorization을 포함하면 안 됩니다.
+Request fields는 [`AuthorizedAttemptScope`](schema-core.md#evidence-and-pre-write-scope-schemas)의 proposed 부분을 설명합니다. Core는 durable Write Authorization을 만들기 전에 resolved `task_id`, `change_unit_id`, `basis_state_version`, `surface_id`, related user judgment refs, guarantee level을 찍습니다. `WriteAuthorizationSummary.attempt_scope`, `write_authorizations.attempt_scope_json`, `record_run` 비교는 모두 같은 scope를 사용합니다.
+
+`decision=allowed`이고 `dry_run=false`이면 `write_authorization_ref`와 stored `AuthorizedAttemptScope`를 `attempt_scope`로 가진 active `write_authorization`이 있어야 합니다. `dry_run=true`에서는 `authorization_effect=would_create`를 반환할 수 있지만 authorization을 만들지 않습니다. 여기서 `allowed`는 이 API path에서 현재 하네스 기록과 맞는다는 뜻이지 OS 권한이나 실행 전 차단이 아니며, durable Write Authorization lifecycle status도 아닙니다. `decision`이 `allowed`가 아닌 response는 Write Authorization을 포함하면 안 됩니다.
 
 Core가 답할 수 있으면 `PrepareWriteResponse`는 항상 `guarantee_display.level`을 포함해야 합니다. `cooperative` 또는 `detective` level은 접점이 지시로 보류하거나 가능한 경우 사후 탐지를 보고해야 한다는 뜻입니다. 임의 도구를 예방적으로 차단했다는 주장이 아닙니다. Core, 필요한 MCP access, required surface capability를 사용할 수 없으면 response는 [Errors](errors.md)를 따르며, Write Authorization, task event, artifact, projection job, authoritative state-mutation claim을 만들면 안 됩니다. `pre_tool_blocking_supported=false`이면 `preventive` claim을 할 수 없고, `isolation_supported=false`이면 `isolated` claim을 할 수 없습니다.
 
@@ -213,7 +216,7 @@ Core가 답할 수 있으면 `PrepareWriteResponse`는 항상 `guarantee_display
 
 Committed `dry_run=false` `decision=allowed` response를 exact idempotent replay하면 original response와 original `write_authorization_ref`를 `authorization_effect=returned`로 반환합니다. 두 번째 Write Authorization을 만들거나 event를 다시 append하면 안 됩니다. 같은 key를 다른 canonical request hash로 replay하면 `STATE_CONFLICT`를 반환합니다.
 
-Public transition summary: `harness.prepare_write`는 envelope를 검증하고, idempotency를 검증하며 exact committed replay가 있으면 새 side effect 전에 반환합니다. Shared request rule에 따라 primary Task를 resolve합니다. Primary Task가 있으면 `tasks.state_version`, 없으면 `project_state.state_version`에 대해 `expected_state_version`을 확인한 뒤 active Change Unit을 resolve합니다. 그다음 intended operation/path/tool/command/network/secret/sensitive-category compatibility, baseline freshness, 민감 동작 승인, user judgment와 decision-gate coverage, Autonomy Boundary, surface capability, active design-policy precondition을 확인한 뒤 `decision`을 계산합니다. `dry_run=false`이고 `decision=allowed`일 때만 `write_authorizations.status=active`를 만들며, committed `dry_run=false` result는 반환 전에 task event를 append합니다.
+Public transition summary: `harness.prepare_write`는 envelope를 검증하고, idempotency를 검증하며 exact committed replay가 있으면 새 side effect 전에 반환합니다. Shared request rule에 따라 primary Task를 resolve합니다. Primary Task가 있으면 `tasks.state_version`, 없으면 `project_state.state_version`에 대해 `expected_state_version`을 확인한 뒤 active Change Unit을 resolve합니다. 그다음 candidate `AuthorizedAttemptScope`를 만들고 intended operation/path/tool/command와 command-class/product-file-write/network/secret/sensitive-category compatibility, baseline freshness, 민감 동작 승인, user judgment와 decision-gate coverage, Autonomy Boundary, surface capability, active design-policy precondition을 확인한 뒤 `decision`을 계산합니다. `dry_run=false`이고 `decision=allowed`일 때만 `write_authorizations.status=active`를 만들고 full `attempt_scope_json`을 저장하며, committed `dry_run=false` result는 반환 전에 task event를 append합니다.
 
 <a id="harnessrecord_run"></a>
 
@@ -223,7 +226,7 @@ Shaping update, direct result, implementation run 뒤에 이 method를 사용합
 
 Stage meaning: 내부 엔지니어링 점검에서는 compatible run 하나와 artifact/evidence ref 하나가 active입니다. MVP-1에서는 evidence summary에 active입니다. Verification input, Feedback Loop update, TDD Trace update, full Evidence Manifest behavior는 later/profile-gated입니다.
 
-`record_run`은 active path가 정직하게 지원할 수 있는 내용만 기록합니다. Reference `capability_profile`에서 `artifact_capture_supported=false`, `command_observation_supported=false`, `secret_access_observation_supported=false`이면 native capture, command-observation, secret-access claim은 blocked, narrowed, 또는 unverified로 표시해야 합니다. Manual artifact ref는 owner path가 등록한 뒤에만 evidence를 뒷받침할 수 있습니다.
+`record_run`은 active path가 정직하게 지원할 수 있는 내용만 기록합니다. Reference `capability_profile`에서 `artifact_capture_supported=false`, `command_observation_supported=false`, `network_observation_supported=false`, `secret_access_observation_supported=false`이면 native capture, command-observation, network-observation, secret-access claim은 blocked, narrowed, 또는 unverified로 표시해야 합니다. Manual artifact ref는 owner path가 등록한 뒤에만 evidence를 뒷받침할 수 있습니다.
 
 `artifact_inputs`는 `ArtifactInput`이 정의한 source만 받습니다. 즉 Harness staging, approved capture adapter, 이미 commit된 `ArtifactRef`입니다. Caller-supplied arbitrary absolute path, raw secret, token, full sensitive log는 evidence artifact로 등록하면 안 됩니다. Current owner relation, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, `retention_class` metadata가 없는 critical evidence는 `evidence_summary.status=sufficient`를 만들 수 없습니다.
 
@@ -267,7 +270,7 @@ RecordRunResponse:
 
 Committed `record_run` response를 exact idempotent replay하면 current freshness check, authorization consumption, Run creation, artifact registration, blocker/gate update, projection enqueue, event append 전에 original response를 반환합니다. Write Authorization을 두 번 소비하면 안 됩니다.
 
-Public transition summary: `harness.record_run`은 envelope를 검증하고, idempotency replay를 확인하며 exact committed replay가 있으면 새 side effect 전에 반환합니다. Shared request rule에 따라 primary Task를 resolve합니다. Primary Task가 있으면 `tasks.state_version`, 없으면 `project_state.state_version`에 대해 `expected_state_version`을 확인합니다. 그다음 `kind`를 확인하고 product write를 감지합니다. Product write에는 compatible active Write Authorization을 요구하고, observed changed paths, commands, tools, secret access를 검증합니다. Compatible하면 authorization을 소비하고, Run record를 만들고, 허용된 `ArtifactRef`를 등록하거나 연결하고, evidence summary와 blockers/gates를 업데이트하고, task event를 append한 뒤 response를 반환합니다.
+Public transition summary: `harness.record_run`은 envelope를 검증하고, idempotency replay를 확인하며 exact committed replay가 있으면 새 side effect 전에 반환합니다. Shared request rule에 따라 primary Task를 resolve합니다. Primary Task가 있으면 `tasks.state_version`, 없으면 `project_state.state_version`에 대해 `expected_state_version`을 확인합니다. 그다음 `kind`를 확인하고 product write를 감지합니다. Product write에는 compatible active Write Authorization을 요구하고, stored `AuthorizedAttemptScope`를 load합니다. Active surface가 관찰하거나 attest할 수 있는 범위에서 observed product-file write, changed paths, tools, commands, command classes, network accesses, secret accesses, sensitive categories, `baseline_ref`, `task_id`, `change_unit_id`, `basis_state_version`, `surface_id`, related user judgment refs, guarantee level을 비교합니다. 그 결과를 compatible observed attempt, missing required authorization, stale authorization, observed attempt outside authorized scope, insufficient surface capability로 분류합니다. Compatible observed attempt일 때만 authorization을 소비하고, Run record를 만들고, 허용된 `ArtifactRef`를 등록하거나 연결하고, evidence summary와 blockers/gates를 업데이트하고, task event를 append한 뒤 committed response를 반환합니다.
 
 이미 등록된 artifact가 missing이거나 required integrity/redaction metadata가 없거나 `hash_mismatch` 같은 diagnostic으로 integrity validation에 실패하면 Core는 related evidence를 `stale` 또는 `blocked`로 표시합니다. Required evidence가 affected이면 replacement, recovery, waiver/risk handling, 또는 다른 owner-approved resolution이 생길 때까지 close path는 blocked로 남습니다.
 

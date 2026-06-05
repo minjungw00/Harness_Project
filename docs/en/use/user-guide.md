@@ -147,7 +147,7 @@ You should see:
 - current guarantee level, or a clear unavailable/capability condition
 - the smallest action that would unblock the write
 
-This check is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that Harness can prevent every tool from acting. It is a cooperative Harness record/check for the intended write. If the intended paths, command, sensitive category, scope, or state changes, the check should be refreshed before writing.
+This check is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that Harness can prevent every tool from acting. In owner terms, the stored boundary is `AuthorizedAttemptScope`: operation, paths, tools, commands and command classes, product-file-write intent, network targets, secret scope, sensitive categories, baseline, Task, Change Unit, state, surface, related judgments, and guarantee level. If any part changes or cannot be observed on the active surface, the check should be refreshed or treated as unverified/blocked before writing.
 
 If Core or Harness authority cannot answer, the agent should say that. It should not claim current write compatibility or a Write Authorization from old chat, cached summaries, stale projections, or user enthusiasm.
 
@@ -335,7 +335,7 @@ You can skip this section until an agent or Reference page shows one of these la
 | Discovery | The internal name for requirements clarification before implementation planning. Users can simply ask for clarification in ordinary language. |
 | Change Unit | The bounded work area that may change for a product-write attempt. It is scope, not broad permission. |
 | Decision Packet | A fuller presentation for a specific user-owned judgment. It should not be required for every small choice. |
-| Write Authorization | A cooperative internal record/check that a specific write attempt fits the current scope and recorded permissions. It is not OS permission, sandboxing, tamper-proof enforcement, or generic approval. |
+| Write Authorization | A cooperative internal record/check for one stored `AuthorizedAttemptScope`, the boundary Core compares during `record_run`. It is not OS permission, sandboxing, tamper-proof enforcement, or generic approval. |
 | Evidence Manifest | A fuller record that maps completion claims or criteria to evidence references when that profile is active. Small work may only need a short evidence summary. |
 | Projection | A readable summary derived from saved records. It helps orientation, but it is not the operating record itself. |
 | Gate | An internal readiness or compatibility condition. User-facing status should show the blocker or check first. |

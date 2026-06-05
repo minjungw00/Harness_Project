@@ -171,8 +171,8 @@ tamper-proof storage, pre-execution blocking을 만들지 않습니다.
 | `task_events` | Committed Core mutation의 append-only audit/order trail. | `event_id`, `task_id` 또는 project scope, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
 | `change_units` | Product write와 close basis를 위한 current scoped work boundary. | `change_unit_id`, `task_id`, `scope_summary`, `non_goals_json`, `success_criteria_json`, `allowed_paths_json`, `denied_paths_json`, `status`, `created_at`, `updated_at`. |
 | `user_judgments` | Product decision, technical decision, scope decision, sensitive approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, cancellation을 위한 사용자 소유 판단 기록. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `display_label`, `status`, `question`, `options_json`, `selected_option_json`, `judgment_payload_json`, `affected_scope_json`, `context_refs_json`, `artifact_refs_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
-| `write_authorizations` | `dry_run=false`인 `prepare_write.decision=allowed`일 때만 생기는 durable single-use cooperative record. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `intended_operation`, `intended_paths_json`, `intended_tools_json`, `sensitive_categories_json`, `related_user_judgment_refs_json`, `guarantee_level`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`. |
-| `runs` | Product write가 있었다면 compatible write consumption까지 포함하는 committed execution 또는 observation record. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `summary`, `observed_changes_json`, `command_results_json`, `created_at`. |
+| `write_authorizations` | `dry_run=false`인 `prepare_write.decision=allowed`일 때만 생기는 durable single-use cooperative record입니다. Row는 Core 비교에 쓰는 full active MVP `AuthorizedAttemptScope`를 보존합니다. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`. |
+| `runs` | Product write가 있었다면 compatible write consumption까지 포함하는 committed execution 또는 observation record. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `summary`, `observed_changes_json`, `command_results_json`, `tool_invocations_json`, `network_accesses_json`, `secret_accesses_json`, `created_at`. |
 | `artifacts` | Integrity와 redaction fact를 가진 registered durable 증거 바이트 또는 안전한 메타데이터. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
 | `artifact_links` | Artifact가 지원하는 Core/API owner record로 가는 owner relation. | `artifact_link_id`, `artifact_id`, `task_id`, `owner_record_kind`, `owner_record_id`, `relation`, `created_at`. |
 | `evidence_summaries` | MVP-1 status와 close에 필요한 최소 증거 coverage와 gap record입니다. 활성 범위에서는 full Evidence Manifest table을 대체합니다. | `evidence_summary_id`, `task_id`, `change_unit_id`, `coverage_state`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
@@ -181,6 +181,16 @@ tamper-proof storage, pre-execution blocking을 만들지 않습니다.
 
 `tool_invocations` row는 committed replayable `dry_run=false` response에 대해서만 존재합니다.
 Dry run과 pre-commit conflict는 storage에서 `idempotency_key`를 예약하지 않습니다.
+
+`write_authorizations.attempt_scope_json`은 [API Schema Core](api/schema-core.md#evidence-and-pre-write-scope-schemas)의
+`AuthorizedAttemptScope`를 storage에 serialized한 값입니다. 이 값은 intended operation,
+intended paths, intended tools, intended commands와 command classes,
+product-file-write intent, intended network targets, intended secret handles/scope,
+sensitive categories, `baseline_ref`, `task_id`, `change_unit_id`,
+`basis_state_version`, `surface_id`, related user judgment refs, `guarantee_level`을
+보존해야 합니다. Top-level `task_id`, `change_unit_id`, `surface_id`,
+`basis_state_version` column은 query/index field입니다. Core comparison은 stored
+attempt scope를 authoritative authorization boundary로 사용합니다.
 
 State clock은 global clock이 아니라 scope별 clock입니다. Task-scoped mutation은
 `tasks.state_version`을 사용합니다. Core-resolved primary Task가 없는 project-scoped
@@ -236,9 +246,9 @@ metrics, connector ecosystem table이 필요하지 않습니다.
 | Active Task exists and is closeable | `project_state.active_task_id`, `tasks.lifecycle_phase`, `tasks.result`, `tasks.closed_at` |
 | Scope is present and current | `tasks.active_change_unit_id`, `change_units.status`, `change_units.scope_summary`, `change_units.non_goals_json`, `change_units.success_criteria_json` |
 | User-owned judgment is unresolved | `user_judgments.judgment_kind`, `user_judgments.status`, `user_judgments.affected_scope_json`, `user_judgments.context_refs_json` |
-| 민감 동작 승인이 없거나 거부됨 | `judgment_kind=sensitive_approval`인 `user_judgments` row와 write가 관련될 때 current `write_authorizations.related_user_judgment_refs_json` |
-| Write Authorization is missing, expired, stale, revoked, consumed, or incompatible | `write_authorizations.status`, `write_authorizations.basis_state_version`, `write_authorizations.consumed_by_run_id`, current `tasks.state_version` |
-| Run 또는 artifact support가 missing 또는 stale입니다 | `runs.status`, `artifacts.status`, `artifacts.sha256`, `artifacts.size_bytes`, `artifacts.content_type`, `artifacts.redaction_state`, `artifact_links.owner_record_kind`, `artifact_links.owner_record_id` |
+| 민감 동작 승인이 없거나 거부됨 | `judgment_kind=sensitive_approval`인 `user_judgments` row와 write가 관련될 때 current `write_authorizations.attempt_scope_json.related_user_judgment_refs` |
+| Write Authorization is missing, expired, stale, revoked, consumed, or incompatible | `write_authorizations.status`, `write_authorizations.basis_state_version`, `write_authorizations.attempt_scope_json`, `write_authorizations.consumed_by_run_id`, current `tasks.state_version`, current `tasks.active_change_unit_id`, current surface/profile facts |
+| Run 또는 artifact support가 missing 또는 stale입니다 | `runs.status`, `runs.observed_changes_json`, `runs.command_results_json`, `runs.tool_invocations_json`, `runs.network_accesses_json`, `runs.secret_accesses_json`, `artifacts.status`, `artifacts.sha256`, `artifacts.size_bytes`, `artifacts.content_type`, `artifacts.redaction_state`, `artifact_links.owner_record_kind`, `artifact_links.owner_record_id` |
 | Evidence coverage가 missing, insufficient, stale 중 하나입니다 | `evidence_summaries.coverage_state`, `evidence_summaries.coverage_items_json`, `evidence_summaries.supporting_artifact_link_ids_json`, `evidence_summaries.gap_blocker_ids_json` |
 | Final acceptance is required but missing | `judgment_kind=final_acceptance`인 `user_judgments` row와 compatible `status` / `selected_option_json` |
 | Residual risk is not visible or not accepted | Residual-risk blocker kind를 가진 `blockers` row와, acceptance가 required일 때 `judgment_kind=residual_risk_acceptance`인 `user_judgments` row |

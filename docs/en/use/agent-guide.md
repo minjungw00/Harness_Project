@@ -105,7 +105,7 @@ Show the user:
 - current guarantee level, or unavailable/capability condition when Core cannot answer
 - the smallest unblocker
 
-A compatible pre-write scope check is not OS permission, sandboxing, tamper-proof storage, arbitrary-tool isolation, or proof of pre-execution blocking. It is a Harness authority record/check for the intended write. If the intended paths, command, sensitive category, scope, or state changes, refresh the check before writing.
+A compatible pre-write scope check is not OS permission, sandboxing, tamper-proof storage, arbitrary-tool isolation, or proof of pre-execution blocking. In owner terms, the stored boundary is `AuthorizedAttemptScope`: operation, paths, tools, commands and command classes, product-file-write intent, network targets, secret scope, sensitive categories, baseline, Task, Change Unit, state, surface, related judgments, and guarantee level. If any part changes or cannot be observed on the active surface, refresh the check or treat the claim as unverified/blocked before writing.
 
 ## 7. Record evidence after meaningful action
 

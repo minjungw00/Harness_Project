@@ -108,6 +108,7 @@ capability_profile:
   artifact_capture_supported: false
   manual_artifact_attachment_supported: true
   command_observation_supported: false
+  network_observation_supported: false
   secret_access_observation_supported: false
   pre_tool_blocking_supported: false
   isolation_supported: false
@@ -147,7 +148,7 @@ Field mapping for the active reference surface:
 | `cooperative_prepare_write_supported=true` | The surface can participate in the cooperative `prepare_write` path, but Core still decides and any Write Authorization still comes only from Core. |
 | `changed_path_detection_supported=true` | The surface may support detective changed-path validation after action; it does not prove pre-tool blocking. |
 | `artifact_capture_supported=false` with `manual_artifact_attachment_supported=true` | Native artifact capture claims must be blocked or lowered; manual artifact attachment can support evidence refs only after the owner path registers them. |
-| `command_observation_supported=false` or `secret_access_observation_supported=false` | Claims that depend on command or secret-access observation must be blocked, narrowed, or marked unverified. |
+| `command_observation_supported=false`, `network_observation_supported=false`, or `secret_access_observation_supported=false` | Claims that depend on command, network, or secret-access observation must be blocked, narrowed, or marked unverified. |
 | `pre_tool_blocking_supported=false` | `preventive` display is unavailable; product writes hold by instruction when unsupported. |
 | `isolation_supported=false` | `isolated` display is unavailable; worktrees or bundles cannot be called security isolation without a promoted proof. |
 
