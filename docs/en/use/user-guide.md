@@ -31,6 +31,8 @@ Keep this as a small copy change unless it turns into a product or technical dec
 
 Status note: this guide describes the intended Harness-assisted user flow for a future local Harness Server. This repository is documentation-only today. It is not the user's Product Repository or a Harness Runtime Home, and no Harness runtime/server implementation exists here yet.
 
+This Use guide stays at the visible user and agent behavior layer. Exact enum values, DDL, full state transitions, API schemas, and projection/template bodies are owned by the [Reference Index](../reference/README.md).
+
 ## 2. What Harness does with a normal request
 
 Harness turns ordinary requests into a visible working basis. You do not need to name these parts, but the agent should preserve them.

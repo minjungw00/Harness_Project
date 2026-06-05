@@ -1,18 +1,12 @@
 # Harness Documentation / 하네스 문서
 
-Harness is a local work-authority server for AI-assisted product work. Its job is to keep fragile work criteria out of chat-only memory. It preserves the local basis for scope, user-owned judgment, evidence, verification expectations, work acceptance, close readiness, and residual risk, and routes decisions back to the user when the agent should not decide.
+This directory contains bilingual design documentation for a future local Harness Server. The repository is documentation-only today, in post-redesign review, and not a running Harness instance.
 
-하네스는 AI 지원 제품 작업을 위한 로컬 작업 권한 서버입니다. 대화에만 남아 있으면 쉽게 흔들리는 작업 기준을 대화 밖에 두는 것이 하네스의 역할입니다. 하네스는 범위, 사용자 소유 판단, 근거, 확인과 검증 기대, 작업 수락, 닫기 가능 여부, 잔여 위험의 로컬 근거를 보존합니다. 에이전트가 판단하면 안 되는 일은 사용자에게 다시 돌려보냅니다.
+이 디렉터리는 향후 로컬 하네스 서버를 위한 이중 언어 설계 문서를 담고 있습니다. 이 저장소는 현재 문서 전용이고 재설계 이후 검토 상태이며, 실행 중인 하네스 인스턴스가 아닙니다.
 
-| Harness is not / 하네스가 아닌 것 | Harness does / 하네스가 하는 일 |
-|---|---|
-| A prompt pack, MCP itself, or an API wrapper. / 프롬프트 묶음, MCP 자체, API 래퍼. | May use MCP/API surfaces while keeping authority in local records. / MCP/API 접점을 사용할 수 있지만 권한은 로컬 기록에 둡니다. |
-| A workflow engine, report generator, dashboard, or hosted agent platform. / 워크플로 엔진, 보고서 생성기, 대시보드, 호스팅 에이전트 플랫폼. | Preserves the basis for work and can derive readable views from it. / 작업의 근거를 보존하고 그 기록에서 읽기용 보기를 만들 수 있습니다. |
-| A sandbox or OS permission system. / 샌드박스나 OS 권한 시스템. | Preserves authority boundaries without claiming OS-level isolation. / OS 수준 격리를 주장하지 않고 권한 경계를 보존합니다. |
+It is not the user's Product Repository and not a Harness Runtime Home. Documentation files are source material, not runtime state, generated projections, evidence, QA, final acceptance, residual-risk, or close records. Documentation acceptance does not by itself authorize server/runtime implementation.
 
-This repository is documentation-only today and its intended future role is the Harness Server source repository. It is not the user's Product Repository and not a Harness Runtime Home. No Harness Server, runtime, generated projection system, conformance runner, runtime data, product implementation code, or generated operational artifact exists here yet. Documentation acceptance does not authorize implementation by itself; server/runtime implementation may start only after documentation acceptance and a separate implementation-planning readiness decision.
-
-이 저장소는 현재 문서 전용이며 향후 역할은 하네스 서버 소스 저장소입니다. 사용자의 제품 저장소가 아니고 하네스 런타임 홈도 아닙니다. 아직 하네스 서버, 런타임, 생성된 읽기용 요약 시스템, conformance runner, 런타임 데이터, 제품 구현 코드, 생성된 운영 아티팩트는 없습니다. 문서 수락만으로 구현은 허가되지 않으며, 서버/런타임 구현은 문서 수락과 별도의 구현 계획 준비 결정 이후에만 시작할 수 있습니다.
+사용자의 제품 저장소도, 하네스 런타임 홈도 아닙니다. 문서 파일은 원천 자료이지 런타임 상태, 생성된 읽기용 보기, 근거, QA, 최종 수락, 잔여 위험, 닫기 기록이 아닙니다. 문서 수락만으로 서버/런타임 구현이 허가되지 않습니다.
 
 ## Choose A Language / 언어 선택
 
@@ -29,49 +23,39 @@ This repository is documentation-only today and its intended future role is the 
 | 2 | [One Task](en/learn/one-task.md) | [하나의 작업](ko/learn/one-task.md) |
 | 3 | [Concepts](en/learn/concepts.md) | [핵심 개념](ko/learn/concepts.md) |
 | 4 | [User Guide](en/use/user-guide.md) | [사용자 가이드](ko/use/user-guide.md) |
-| Implementers only / 구현자만 | [Implementation Overview](en/build/implementation-overview.md), then [MVP-1 User Work Loop](en/build/mvp-user-work-loop.md) | [구현 개요](ko/build/implementation-overview.md), 그다음 [MVP-1 사용자 작업 루프](ko/build/mvp-user-work-loop.md) |
+| Implementers only / 구현자만 | [Implementation Overview](en/build/implementation-overview.md), then [Engineering Checkpoint](en/build/engineering-checkpoint.md) and [MVP-1 User Work Loop](en/build/mvp-user-work-loop.md) | [구현 개요](ko/build/implementation-overview.md), 그다음 [내부 엔지니어링 점검](ko/build/engineering-checkpoint.md)과 [MVP-1 사용자 작업 루프](ko/build/mvp-user-work-loop.md) |
 | Lookup only / 찾아볼 때만 | [Reference Index](en/reference/README.md) | [Reference 색인](ko/reference/README.md) |
-
-This first-read path intentionally stops before large Reference docs. Use Reference only when you need an exact owner contract.
-
-이 첫 읽기 경로는 큰 Reference 문서를 먼저 읽지 않도록 설계되어 있습니다. 정확한 owner 계약이 필요할 때만 Reference를 엽니다.
 
 ## Reader Paths / 독자별 경로
 
 | Reader / 독자 | English path | 한국어 경로 |
 |---|---|---|
 | General user / 일반 사용자 | [Overview](en/learn/overview.md) -> [One Task](en/learn/one-task.md) -> [User Guide](en/use/user-guide.md). | [개요](ko/learn/overview.md) -> [하나의 작업](ko/learn/one-task.md) -> [사용자 가이드](ko/use/user-guide.md). |
-| Agent instruction writer / 에이전트 지침 작성자 | [Agent Guide](en/use/agent-guide.md); then [Agent Integration Reference](en/reference/agent-integration.md) only for exact connector/context contracts. | [에이전트 가이드](ko/use/agent-guide.md); 정확한 connector/context 계약이 필요할 때만 [Agent 통합 참조](ko/reference/agent-integration.md). |
-| Server implementer / 서버 구현자 | [Implementation Overview](en/build/implementation-overview.md) -> [MVP-1 User Work Loop](en/build/mvp-user-work-loop.md) -> [MVP API](en/reference/api/mvp-api.md) -> [Storage](en/reference/storage.md). Use [Engineering Checkpoint](en/build/engineering-checkpoint.md) for the first internal smoke. | [구현 개요](ko/build/implementation-overview.md) -> [MVP-1 사용자 작업 루프](ko/build/mvp-user-work-loop.md) -> [MVP API](ko/reference/api/mvp-api.md) -> [Storage](ko/reference/storage.md). 첫 내부 점검은 [내부 엔지니어링 점검](ko/build/engineering-checkpoint.md). |
-| Documentation maintainer / 문서 유지보수자 | [Authoring Guide](en/maintain/authoring-guide.md) -> [Documentation Checks](en/maintain/documentation-checks.md) -> [Translation Guide](en/maintain/translation-guide.md) -> [Rewrite Plan](en/maintain/rewrite-plan.md) -> [Rewrite Acceptance Review](en/maintain/rewrite-acceptance-review.md), with owner docs only for strict meaning. | [문서 작성 가이드](ko/maintain/authoring-guide.md) -> [문서 점검표](ko/maintain/documentation-checks.md) -> [번역 가이드](ko/maintain/translation-guide.md) -> [재작성 계획](ko/maintain/rewrite-plan.md) -> [재작성 수락 리뷰](ko/maintain/rewrite-acceptance-review.md), 엄격한 의미 확인에는 owner 문서만. |
-| Later/profile reader / 이후 프로필 독자 | [Assurance Profile](en/later/assurance-profile.md), [Operations Profile](en/later/operations-profile.md), [Future Fixtures](en/later/future-fixtures.md), and [Roadmap](en/roadmap.md). These are not the MVP implementation path unless an owner promotes them. | [보증 프로필](ko/later/assurance-profile.md), [운영 프로필](ko/later/operations-profile.md), [향후 Fixtures](ko/later/future-fixtures.md), [로드맵](ko/roadmap.md). Owner가 승격하기 전까지 MVP 구현 경로가 아닙니다. |
+| Agent instruction writer / 에이전트 지침 작성자 | [Agent Guide](en/use/agent-guide.md); use [Agent Integration Reference](en/reference/agent-integration.md) only for exact connector/context contracts. | [에이전트 가이드](ko/use/agent-guide.md); 정확한 connector/context 계약이 필요할 때만 [Agent 통합 참조](ko/reference/agent-integration.md). |
+| Future server implementer / 향후 서버 구현자 | [Implementation Overview](en/build/implementation-overview.md) -> [Engineering Checkpoint](en/build/engineering-checkpoint.md) -> [MVP-1 User Work Loop](en/build/mvp-user-work-loop.md) -> [Reference Index](en/reference/README.md). | [구현 개요](ko/build/implementation-overview.md) -> [내부 엔지니어링 점검](ko/build/engineering-checkpoint.md) -> [MVP-1 사용자 작업 루프](ko/build/mvp-user-work-loop.md) -> [Reference 색인](ko/reference/README.md). |
+| Documentation maintainer / 문서 유지보수자 | [Authoring Guide](en/maintain/authoring-guide.md) -> [Translation Guide](en/maintain/translation-guide.md) -> [Documentation Checks](en/maintain/documentation-checks.md). | [문서 작성 가이드](ko/maintain/authoring-guide.md) -> [번역 가이드](ko/maintain/translation-guide.md) -> [문서 점검표](ko/maintain/documentation-checks.md). |
+| Later/profile reader / 이후 프로필 독자 | [Assurance Profile](en/later/assurance-profile.md), [Operations Profile](en/later/operations-profile.md), [Future Fixtures](en/later/future-fixtures.md), and [Roadmap](en/roadmap.md). | [보증 프로필](ko/later/assurance-profile.md), [운영 프로필](ko/later/operations-profile.md), [향후 Fixtures](ko/later/future-fixtures.md), [로드맵](ko/roadmap.md). |
+
+## Layer Responsibilities / 문서층 역할
+
+| Family / 문서군 | Purpose / 목적 | Boundary / 경계 |
+|---|---|---|
+| Learn / 학습 | Why Harness exists and the concepts readers need first. / 하네스가 왜 필요한지와 먼저 알아야 할 개념. | No strict schemas, gates, DDL, implementation sequence, or fixture mechanics. / 엄격한 schema, gate, DDL, 구현 순서, fixture mechanics를 정의하지 않습니다. |
+| Use / 사용 | User and agent usage in ordinary language, including judgment requests, write checks, evidence summaries, and close flow. / 평소 말로 보는 사용자와 에이전트 사용 방식. 판단 요청, 쓰기 전 확인, 근거 요약, 닫기 흐름을 다룹니다. | No canonical enum definitions, DDL, or full transition tables. / canonical enum definition, DDL, 전체 전이 표를 두지 않습니다. |
+| Build / 구현 | Future implementation sequence, active slice, first proof, active/later boundary, reading path, and exclusions. / 향후 구현 순서, 활성 조각, 첫 증명, 활성/이후 경계, 읽기 경로, 제외 범위. | Exact schemas, DDL, fixture bodies, transition tables, and full threat catalogs are linked, not duplicated. / 정확한 schema, DDL, fixture body, 전이 표, 전체 threat catalog는 중복하지 않고 링크합니다. |
+| Reference / 참조 | Exact owner contracts: Core transition, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, and related owners. / Core 전이, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary와 관련 owner의 정확한 계약. | Not a tutorial or staged implementation plan. / 튜토리얼이나 단계별 구현 계획이 아닙니다. |
+| Later / 이후 | Assurance, operations, future fixture, and roadmap material outside the active MVP path. / 활성 MVP 경로 밖에 두는 보증, 운영, 향후 fixture, 로드맵 자료. | Not active delivery unless promoted by an owner. / 담당 문서가 승격하기 전까지 활성 전달 범위가 아닙니다. |
+| Maintain / 유지보수 | Documentation writing, translation, review, drift, owner-boundary, and link rules. / 문서 작성, 번역, 검토, drift, owner 경계, 링크 규칙. | No runtime readiness decision or acceptance judgment. / 런타임 준비 결정이나 수락 판단을 하지 않습니다. |
 
 ## Status And Handoff / 상태와 인계
 
-Detailed status belongs in the language READMEs and Build handoff docs:
+Detailed status belongs in Build and Maintain owner docs:
 
-- [English documentation acceptance status](en/build/implementation-overview.md#documentation-acceptance-status)
-- [한국어 문서 수락 상태](ko/build/implementation-overview.md#문서-수락-상태)
-- [English rewrite acceptance review](en/maintain/rewrite-acceptance-review.md)
-- [한국어 재작성 수락 리뷰](ko/maintain/rewrite-acceptance-review.md)
 - [English maintainer handoff summary](en/build/implementation-overview.md#maintainer-handoff-summary)
 - [한국어 문서 인계 요약](ko/build/implementation-overview.md#문서-인계-요약)
 - [English implementation decisions before server coding](en/build/mvp-user-work-loop.md#implementation-decisions-needed-before-server-coding)
 - [한국어 서버 코딩 전 필요한 구현 결정](ko/build/mvp-user-work-loop.md#서버-코딩-전-필요한-구현-결정)
+- [English Authoring Guide](en/maintain/authoring-guide.md)
+- [한국어 문서 작성 가이드](ko/maintain/authoring-guide.md)
 
-상세 상태는 언어별 README와 Build 인계 문서가 담당합니다. 문서 수락만으로 런타임 구현이 시작되거나 런타임 conformance가 증명되지는 않습니다.
-
-## Document Families / 문서군
-
-| Family / 문서군 | Purpose / 목적 |
-|---|---|
-| Learn / 학습 | Why Harness exists and the core concepts. / 하네스가 왜 필요한지와 핵심 개념. |
-| Use / 사용 | How users and agents interact during work. / 사용자와 에이전트가 작업 중 상호작용하는 법. |
-| Build / 구현 | Future implementation sequence and staged plan. / 향후 구현 순서와 단계별 계획. |
-| Reference / 참조 | Exact owner contracts, schemas, gates, DDL, projection, security, and conformance meanings. / 정확한 owner 계약, 스키마, gate, DDL, projection, 보안, conformance 의미. |
-| Later / 이후 | Assurance, operations, future fixtures, and roadmap candidates kept outside the MVP path. / MVP 경로 밖에 두는 보증, 운영, 향후 fixtures, 로드맵 후보. |
-| Maintain / 유지보수 | Documentation rules, redesign scope, parity, and drift handling. / 문서 규칙, 재설계 범위, 의미 일치, drift 처리. |
-
-Maintainer review risks are checked in the [English Authoring Guide](en/maintain/authoring-guide.md#known-redesign-issues-and-regression-checks), [English Documentation Checks](en/maintain/documentation-checks.md), [Korean Authoring Guide](ko/maintain/authoring-guide.md#알려진-재설계-위험과-회귀-점검), and [Korean Documentation Checks](ko/maintain/documentation-checks.md). These docs-maintenance checks are read-only Markdown quality checks, not runtime conformance, manual acceptance, close readiness, or implementation readiness. Rewrite triage categories are in the [English Rewrite Plan](en/maintain/rewrite-plan.md) and [Korean Rewrite Plan](ko/maintain/rewrite-plan.md). The final redesign recommendation is summarized in the [English Rewrite Acceptance Review](en/maintain/rewrite-acceptance-review.md) and [Korean Rewrite Acceptance Review](ko/maintain/rewrite-acceptance-review.md). Server-coding decisions belong in the MVP-1 User Work Loop plan.
-
-유지보수자 검토 위험은 [영어 문서 작성 가이드](en/maintain/authoring-guide.md#known-redesign-issues-and-regression-checks), [영어 Documentation Checks](en/maintain/documentation-checks.md), [한국어 문서 작성 가이드](ko/maintain/authoring-guide.md#알려진-재설계-위험과-회귀-점검), [한국어 문서 점검표](ko/maintain/documentation-checks.md)로 확인합니다. 이 docs-maintenance 점검은 Markdown 문서 품질을 보는 읽기 전용 점검이며 runtime conformance, manual acceptance, close readiness, implementation readiness가 아닙니다. 재작성 분류 값은 [영어 Rewrite Plan](en/maintain/rewrite-plan.md)과 [한국어 재작성 계획](ko/maintain/rewrite-plan.md)에 둡니다. 최종 재설계 권고는 [영어 Rewrite Acceptance Review](en/maintain/rewrite-acceptance-review.md)와 [한국어 재작성 수락 리뷰](ko/maintain/rewrite-acceptance-review.md)에 요약합니다. 서버 코딩 전 결정은 MVP-1 사용자 작업 루프 계획에 기록합니다.
+상세 상태는 Build와 Maintain 담당 문서가 관리합니다. 이 경로들은 문서 검토를 돕기 위한 것이며 런타임 conformance, 최종 수락, close readiness, implementation readiness를 만들지 않습니다.
