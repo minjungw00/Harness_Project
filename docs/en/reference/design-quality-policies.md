@@ -14,9 +14,9 @@ This document does not define MCP schemas, SQLite DDL, state transition tables, 
 
 - You are shaping work and need to know which design-quality records matter.
 - You are writing or reviewing conformance fixtures that assert design-quality validator results.
-- You need to understand why a task has `design_gate`, `decision_gate`, or `qa_gate` impact.
+- You need to understand why a design-quality finding affects `design_gate`, `decision_gate`, evidence, or a later/profile `qa_gate`.
 - You are deciding whether a policy waiver is allowed.
-- You are reviewing close blockers, user judgment needs, Manual QA requirements, or stewardship findings.
+- You are reviewing close blockers, user judgment needs, Manual QA boundaries, or stewardship findings.
 
 ## Before you read
 
@@ -24,7 +24,43 @@ Use [Core Model Reference](core-model.md) for lifecycle, gates, and close semant
 
 ## Main idea
 
-Design-quality policies make stewardship, product-design, and context-quality expectations visible through existing Harness owner paths. They can affect findings, gate impact, blockers, evidence needs, and user judgment routing, but they do not create new kernel transitions, schemas, or substitute authority.
+Design-quality policies make stewardship, product-design, and context-quality expectations visible through existing Harness owner paths. They can route findings to a Core blocker, focused user judgment, evidence request, residual-risk marker, advisory next action, or no action, but they do not create new kernel transitions, schemas, or substitute authority.
+
+Active MVP policy handling is intentionally small. Default blocking is limited to conditions that protect scope, user-owned judgment, evidence, stale authority context, and honest guarantee display. The broader policy catalog stays useful as routed candidate or advisory/later material until an owner profile explicitly promotes a narrower behavior.
+
+## Impact classes and allowed routes
+
+Every design-quality finding must be classified into exactly one impact class:
+
+| Impact class | Meaning | Allowed routes |
+|---|---|---|
+| Core blocking | The finding may block a write or close only because an existing Core gate, blocker, or API error path is affected. | `block write`, `block close`, or the focused unblocker action exposed by that Core blocker: `ask one focused user judgment`, `request evidence`, or `mark residual risk`. A Core gate/blocker/error ref and one next action are required. |
+| Routed candidate | The finding needs one focused follow-up but is not automatically blocking. | `ask one focused user judgment`, `request evidence`, `mark residual risk`, or `show advisory next action`. |
+| Advisory/later | The finding is advice, a later/profile candidate, or a catalog item outside active MVP authority. | `show advisory next action` or `no action`. |
+
+Every finding must route to exactly one of these actions:
+
+```text
+block write | block close | ask one focused user judgment |
+request evidence | mark residual risk | show advisory next action | no action
+```
+
+One blocker must produce one next action. A policy finding must not create an open-ended review loop, a checklist that must be exhausted before ordinary work can continue, or a chain of follow-up questions when one focused judgment, one evidence request, one residual-risk marker, or one advisory next action is enough.
+
+### Active MVP blocking set
+
+In active MVP, design-quality findings may block write or close by default only for these conditions:
+
+| Default blocking condition | Core owner path |
+|---|---|
+| Autonomy boundary exceeded | `autonomy_boundary_check` through `prepare_write`, `decision_gate`, or close blocker when the exceeded boundary affects the requested operation. |
+| Unresolved user judgment | `decision_quality_check` and `decision_gate`, including focused `user_judgment` request/record paths. |
+| Missing active scope | Core scope gate or `NO_ACTIVE_CHANGE_UNIT` / `SCOPE_REQUIRED` / `SCOPE_VIOLATION`; design policy may point to the gap but does not own it. |
+| Missing required evidence | Core `evidence_summary`, `evidence_gate`, `EVIDENCE_INSUFFICIENT`, or artifact availability blocker. |
+| Stale context affecting write or close | `context_hygiene_check` only when stale state, baseline, projection, or source refs make scope, evidence, acceptance criteria, or close basis unsafe to rely on. |
+| Surface capability insufficient for claimed guarantee | Capability boundary, `CAPABILITY_INSUFFICIENT`, or guarantee display when the connected surface cannot support the claimed operation or guarantee level. |
+
+Everything else is routed candidate or advisory/later by default in active MVP. In particular, full domain-language consistency, full module/interface review, full TDD trace, full codebase-stewardship suite, full feedback-loop audit, detailed Manual QA policy, and detached verification profile do not automatically block MVP write or close. They may still surface focused judgments, evidence requests, residual-risk markers, or advisory next actions when a concrete owner path needs them.
 
 ## Policies in plain language
 
@@ -35,7 +71,7 @@ Design-quality policies make stewardship, product-design, and context-quality ex
 | `autonomy_boundary` | What may the agent do alone, and where must it stop for user judgment? |
 | `vertical_slice` | Is the work shaped as a thin end-to-end slice, or is a horizontal exception recorded? |
 | `feedback_loop` | How will the agent learn whether the change works before and after writing? |
-| `tdd_trace` | When TDD is required or best fit, is RED, GREEN, and related check evidence recorded? |
+| `tdd_trace` | When TDD is selected or required by an active owner path, is RED, GREEN, and related check evidence recorded? |
 | `domain_language` | Are product terms and code terms still aligned? |
 | `deep_module_interface` | Are module roles, public interfaces, compatibility, and callers understood? |
 | `codebase_stewardship` | Does local task completion hide future maintenance, testability, domain, or boundary damage? |
@@ -50,12 +86,12 @@ This document owns:
 - design-quality policy contracts
 - policy-to-validator mapping
 - stable design-quality validator IDs
-- severity composition rule
+- impact-class and routed-action composition rule
 - policy waiver semantics
 - policy evidence expectations
 - policy close impact
 - two-stage review display relationship to policy validators and owner records
-- when design-quality policies affect `decision_gate`, `design_gate`, `qa_gate`, evidence sufficiency, `prepare_write` blockers, or close blockers
+- when design-quality policies affect `decision_gate`, `design_gate`, evidence sufficiency, `prepare_write` blockers, close blockers, or later/profile `qa_gate`
 
 ## Not covered here
 
@@ -75,17 +111,17 @@ This document does not own:
 
 The kernel owns lifecycle, gate transitions, close semantics, blocker mechanics, state transitions, `prepare_write`, and `close_task`.
 
-Design-quality policies are policy contracts layered on top of that kernel. A policy can say when `decision_gate`, `design_gate`, `qa_gate`, evidence sufficiency, `prepare_write` blockers, or close blockers may be affected. It does not create a new kernel transition, a new canonical source of truth, or a substitute for scope, sensitive-action Approval, evidence, verification, final acceptance, or residual-risk rules.
+Design-quality policies are policy contracts layered on top of that kernel. A policy can say when `decision_gate`, `design_gate`, evidence sufficiency, `prepare_write` blockers, or close blockers may be affected, and later profiles may also connect policy to `qa_gate` or richer assurance gates. It does not create a new kernel transition, a new canonical source of truth, or a substitute for scope, sensitive-action Approval, evidence, verification, final acceptance, or residual-risk rules.
 
-Keep the authority paths distinct. Product decision and material technical decision route through user judgments when they block progress, writes, waivers, final acceptance, or close. Policy validators report design-quality findings and gate impact. Kernel authority still decides whether state changes, product writes, final acceptance, residual-risk acceptance, or close may proceed.
+Keep the authority paths distinct. Product decision and material technical decision route through user judgments when they block progress, writes, waivers, final acceptance, or close. Policy validators report design-quality findings, their impact class, and the single routed action. Kernel authority still decides whether state changes, product writes, final acceptance, residual-risk acceptance, or close may proceed.
 
 Policy waivers are also limited. They can satisfy a design-quality requirement only where the policy contract allows it. They do not waive product-write scope, sensitive-action Approval, required evidence coverage, required final acceptance, or verification independence.
 
 ### Close-support boundaries
 
-Design-quality policies may create findings, evidence needs, QA requirements, verification needs, residual-risk candidates, user judgment needs, or close blockers, but each category stays on its owner path. The exact non-substitution contract for evidence, verification, Manual QA, final acceptance, and residual risk is owned by [Core Model Reference: Evidence, verification, QA, final acceptance, and risk](core-model.md#evidence-verification-qa-final-acceptance-and-risk).
+Design-quality policies may create findings, evidence needs, residual-risk candidates, user judgment needs, advisory next actions, and close blockers when a Core owner path supports the blocker. Later profiles may add detailed QA or verification requirements. Each category stays on its owner path. The exact non-substitution contract for evidence, verification, Manual QA, final acceptance, and residual risk is owned by [Core Model Reference: Evidence, verification, QA, final acceptance, and risk](core-model.md#evidence-verification-qa-final-acceptance-and-risk).
 
-For policy authors, the local rule is simple: route the finding to the existing owner record or blocker, then link the kernel rule when the reader needs the precise close-support boundary. Passing tests, a QA waiver, final acceptance, and residual-risk acceptance may affect policy outcomes only through their owner paths; policy prose must not treat one as a substitute for another.
+For policy authors, the local rule is simple: choose the impact class, choose exactly one routed action, route the finding to the existing owner record or blocker, and link the kernel rule when the reader needs the precise close-support boundary. Passing tests, a QA waiver, final acceptance, and residual-risk acceptance may affect policy outcomes only through their owner paths; policy prose must not treat one as a substitute for another.
 
 ## Two-stage review model
 
@@ -102,16 +138,16 @@ Same-session review is not detached verification. A passed two-stage review may 
 
 ## Finding routing
 
-Findings from Runs, Eval records, Manual QA, design-quality validators, same-session review displays, operator diagnostics, or conformance examples must not disappear into chat or report prose. A finding becomes close-relevant only through an existing owner path, such as an Evidence Manifest gap or support row, user judgment candidate or record, Change Unit scope/completion/Autonomy Boundary update, Feedback Loop or TDD Trace update, Manual QA or Eval result, Residual Risk candidate or record, structured close blocker, reconcile item, or follow-up Task/Change Unit/Journey Spine Entry when the owner docs already define that route.
+Findings from Runs, Eval records, Manual QA, design-quality validators, same-session review displays, operator diagnostics, or conformance examples must not disappear into chat or report prose. A finding becomes close-relevant only through an existing owner path, such as Core evidence summary or Evidence Manifest coverage when active, user judgment candidate or record, Change Unit scope/completion/Autonomy Boundary update, Residual Risk candidate or record, structured close blocker, reconcile item, or follow-up Task/Change Unit when the owner docs already define that route. Feedback Loop, TDD Trace, Manual QA, Eval, Journey, and full stewardship routes are later/profile unless the active owner profile explicitly enables them.
 
 This section does not create a finding schema, DDL table, gate, validator ID, or authority path. It names how policy findings are routed back to existing records owned by [Core Model Reference](core-model.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [Storage](storage.md), [Projection And Templates Reference](projection-and-templates.md), and [Operations And Conformance Reference](operations-and-conformance.md).
 
 | Finding source | Route through existing owner paths |
 |---|---|
-| Run or selected feedback-loop execution | Attach logs/artifacts to the Run and Feedback Loop execution, update Evidence Manifest coverage, and route failed or missing checks to a design/evidence blocker, rework Change Unit, residual-risk candidate, or close blocker when applicable. |
-| Eval or verification review | Record the Eval verdict, reviewed refs, independence/freshness blockers, and artifact refs; route missing reviewed evidence to Evidence Manifest coverage, invalid independence to verification gate or close blocker, and user-owned waiver/risk choices to user judgment and Residual Risk paths. |
-| Manual QA | Record Manual QA result, findings, evidence refs, waiver reason, and `qa_gate` effect; route failed or waived human-inspection risk to rework, user judgment, Residual Risk, close blocker, or follow-up work as policy requires. |
-| Design-quality or stewardship review | Record validator results and owner refs; route design-quality gaps through `design_gate` or evidence sufficiency as applicable, product or material technical decision through user judgments and `decision_gate`, Manual QA findings through Manual QA records and `qa_gate`, scope/completion/autonomy gaps to Change Unit update recommendations, stale or missing support to evidence/reconcile paths, and close-relevant risk to Residual Risk candidates or structured close blockers. |
+| Run or selected feedback-loop execution | Attach logs/artifacts to the Run and evidence summary path; in active MVP, route failed or missing checks to `request evidence`, `mark residual risk`, `show advisory next action`, or a Core evidence blocker when required evidence is missing. Full Feedback Loop execution/audit routing is later/profile unless enabled. |
+| Eval or verification review | In active MVP, treat same-session review or optional verification as self-check/advisory unless required evidence or a user-requested verification route is active. Detached verification, Eval independence, and verification-gate blockers are later/profile unless enabled. |
+| Manual QA | In active MVP, route human-inspection concerns to `show advisory next action`, `request evidence`, `ask one focused user judgment` for a QA waiver/risk choice, or `mark residual risk`. Detailed Manual QA records and automatic `qa_gate` close blockers are later/profile unless enabled or explicitly required by the active owner path. |
+| Design-quality or stewardship review | Record validator results and owner refs; route each finding to exactly one allowed action. Active MVP blocks only for the six blocking conditions listed above. Full domain-language, module/interface, TDD, feedback-loop, codebase-stewardship, and review-display findings are routed candidate or advisory/later by default. |
 | Operator or conformance finding | Assert the finding through existing state, events, artifacts, projection freshness, errors, reconcile/recover paths, or docs-maintenance report labels. Docs-maintenance findings keep runtime effect `none`. |
 
 ## Policy contract shape
@@ -130,6 +166,8 @@ Each policy uses the same fields:
 | `close_impact` | How unmet requirements affect close or gates. |
 
 Policy validators return the `ValidatorResult` schema owned by [API Schema Core](api/schema-core.md#validatorresult) and the later-profile stable ID set owned by [API Schema Later](api/schema-later.md#validatorresult-stable-ids).
+
+Policy validator findings must also carry or derive an impact class and routed action from [Impact classes and allowed routes](#impact-classes-and-allowed-routes). The policy contract may describe possible close impact, but active MVP blocking still requires one of the [active MVP blocking conditions](#active-mvp-blocking-set) and a Core owner path.
 
 The table above is the source of truth for field names. The field order helps readers scan from applicability through the requirement, waiver, record, validator, evidence, and close impact.
 
@@ -168,7 +206,7 @@ Shared Design is a recorded shared understanding, not broad approval, sensitive-
 | `required_record` | Shared Design record, Task shaping fields, user judgment records, and optionally `DESIGN` or `DEC` projections. Discovery Brief, Question Queue, Assumption Register, and First Safe Change Unit Candidate are support/projection concepts unless an existing owner path records the underlying fact. |
 | `validator` | `shared_design_alignment` |
 | `evidence` | Shared Design refs, Task shaping refs, acceptance criteria, user judgment refs, rejected option refs, product-area, user-facing-flow, module, interface, and sensitive-category notes, verification or Manual QA expectation refs, risk notes, risk candidates, residual-risk refs where applicable, and domain/module/interface impact refs. Discovery Brief, Question Queue, Assumption Register, and First Safe Change Unit Candidate remain shaping support or projections; by themselves they do not satisfy the Harness Evidence Manifest or close evidence. |
-| `close_impact` | If required and absent, set or keep `design_gate=pending` or `partial`. If risk is high and no waiver exists, block close. A valid waiver may allow `design_gate=waived`. |
+| `close_impact` | Active MVP default: routed candidate. If required Shared Design support is absent, show one advisory next action, ask one focused user judgment, or request evidence. It may block write or close only when the gap is also missing active scope, unresolved user judgment, missing required evidence, stale context affecting write/close, or surface capability insufficient for the claimed guarantee. A valid waiver may allow `design_gate=waived` for policy-owned impact only. |
 
 ### Decision Quality (`decision_quality`)
 
@@ -206,7 +244,7 @@ Sensitive category labels such as `secret_access`, `data_export`, or `policy_ove
 | `required_record` | User judgment records and optionally `DEC` projection when rendered. |
 | `validator` | `decision_quality_check` |
 | `evidence` | User judgment refs, option refs, evidence manifest refs, risk/waiver refs, residual-risk state refs when residual-risk acceptance is involved, and final-acceptance refs when user judgment is required. |
-| `close_impact` | Missing required decision quality for blocking user-owned judgment sets or keeps `decision_gate=required`, `pending`, or `blocked`. Keep `design_gate` impact only when the decision affects design quality. Unresolved user judgment, invalid deferral, or unaccepted residual risk blocks affected writes or close. Valid recorded acceptance may allow close with residual risk preserved in state refs. |
+| `close_impact` | Active MVP default: Core blocking only for unresolved user judgment, invalid deferral affecting the current operation, or missing required residual-risk acceptance. Set or keep `decision_gate=required`, `pending`, or `blocked` through the user judgment owner path. Non-blocking decision-quality concerns ask one focused user judgment or show one advisory next action. Valid recorded final acceptance may allow close only for the final-acceptance route; it does not replace residual-risk acceptance. |
 
 <a id="autonomy-boundary-autonomy_boundary"></a>
 
@@ -230,7 +268,7 @@ Example: The agent may refactor local helper names inside scope, but must stop b
 | `required_record` | Canonical Autonomy Boundary record on the active Change Unit; Task or Shared Design shaping/proposed boundary refs before a Change Unit exists; user judgment records for user-judgment items; and stop-condition refs when triggered. |
 | `validator` | `autonomy_boundary_check` |
 | `evidence` | User request refs, task constraints, policy refs, user judgment refs, stop-condition events, user response refs. |
-| `close_impact` | At `prepare_write`, triggered stop conditions or boundary gaps block the write. User-owned judgment gaps should request or reference a user judgment and affect `decision_gate`; design-quality gaps may affect `design_gate`. Scope, sensitive-action Approval, and capability gaps remain visible as their own blockers. Unresolved stop conditions can block close until resolved, deferred, or accepted with recorded risk. |
+| `close_impact` | Active MVP default: Core blocking when the intended operation exceeds the Autonomy Boundary for write or close. At `prepare_write`, triggered stop conditions or boundary gaps block the affected write and route to one next action: narrow scope, ask one focused user judgment, request evidence, or mark residual risk. Scope, sensitive-action Approval, and capability gaps remain visible as their own blockers. |
 
 Autonomy Boundary summary: the boundary separates low-risk implementation latitude from user-owned judgment, stop conditions, and `prepare_write` blockers; it does not grant write authority by itself.
 
@@ -271,7 +309,7 @@ Example: For a notification feature, prefer a slice from trigger through domain 
 | `required_record` | Change Unit fields: `slice_type`, end-to-end path, completion conditions, follow-up vertical Change Unit, and validator results. |
 | `validator` | `vertical_slice_shape` |
 | `evidence` | Change Unit record, run summary, evidence manifest, tests, Manual QA refs if user-visible. |
-| `close_impact` | If vertical slice is required and neither satisfied nor waived, set `design_gate=partial` or `blocked`. A justified horizontal exception may allow close only when the follow-up risk is recorded. |
+| `close_impact` | Active MVP default: routed candidate or advisory/later. Missing vertical-slice shape shows an advisory next action or marks residual risk; it does not automatically block write or close. It becomes Core blocking only if it exposes missing active scope, unresolved user judgment, missing required evidence, or close-relevant residual risk that the active close path requires to be visible/accepted. |
 
 ### Feedback Loop (`feedback_loop`)
 
@@ -288,12 +326,12 @@ Example: Before changing parser behavior, define a small loop: failing parser fi
 |---|---|
 | `name` | `feedback_loop` |
 | `applies_when` | Before implementation starts, before a behavior-affecting write, when TDD is waived, when Manual QA is expected, or when the agent needs a credible way to learn whether the change works. |
-| `default_requirement` | Define the feedback loop before implementation: test, typecheck, lint, build, browser smoke, Manual QA, or an explicit alternate loop. The selected loop should be the smallest credible loop for the risk. When TDD is required for a Change Unit or behavior slice, define the loop and the intended RED check before non-test implementation begins. TDD trace is one implementation of this policy, not the only implementation. Findings from the loop must route back to Evidence Manifest coverage, user judgment candidates, Change Unit updates, Residual Risk candidates, Manual QA or Eval records, close blockers, or follow-up work where applicable. |
+| `default_requirement` | Define the feedback loop before implementation: test, typecheck, lint, build, browser smoke, Manual QA, or an explicit alternate loop. The selected loop should be the smallest credible loop for the risk. When an active owner path requires TDD for a Change Unit or behavior slice, define the loop and the intended RED check before non-test implementation begins. TDD trace is one implementation of this policy, not the only implementation. Findings from the loop must route to exactly one allowed action and the corresponding active owner path, such as evidence summary, user judgment candidate, Change Unit update, Residual Risk candidate, close blocker, or follow-up work where applicable. Full Feedback Loop audit routing to Manual QA or Eval records is later/profile unless enabled. |
 | `allowed_waiver` | Allowed for docs-only edits, comments, formatting, or advisory work with no implementation or product behavior impact. Waiver must record why no executable, browser, Manual QA, or alternate loop is useful. |
-| `required_record` | A canonical `feedback_loops` record referenced with `record_kind=feedback_loop`, selected-loop refs, validator results, refs to existing owner records that carry routed findings when findings exist, `tdd_traces` when TDD is selected, Manual QA record when Manual QA is selected and performed, `qa_gate=pending` when required QA has no satisfying record yet, and evidence manifest refs when executed. |
+| `required_record` | A canonical `feedback_loops` record referenced with `record_kind=feedback_loop`, selected-loop refs, validator results, refs to existing owner records that carry routed findings when findings exist, `tdd_traces` when TDD is selected, Manual QA record when Manual QA is selected and performed under an active Manual QA path, later/profile `qa_gate=pending` when required QA has no satisfying record yet, and evidence refs when executed. |
 | `validator` | `feedback_loop_check` |
-| `evidence` | Feedback Loop refs, planned loop refs, test/typecheck/lint/build/browser smoke logs, Manual QA refs, alternate-loop justification, TDD trace refs when used, and existing owner refs for findings that affect evidence, decisions, scope, risk, close blockers, or follow-up work. |
-| `close_impact` | Missing feedback loop definition keeps `design_gate=pending` or `partial`. Missing execution evidence can make evidence insufficient. Manual QA loop failures affect `qa_gate` through the Manual QA policy. Missing required TDD RED/GREEN/refactor coverage is handled through `tdd_trace_required` and can also make evidence manifest coverage insufficient. |
+| `evidence` | Feedback Loop refs, planned loop refs, test/typecheck/lint/build/browser smoke logs, Manual QA refs when active, alternate-loop justification, TDD trace refs when used, and existing owner refs for findings that affect evidence, decisions, scope, risk, close blockers, or follow-up work. |
+| `close_impact` | Active MVP default: routed candidate. Missing feedback-loop definition shows an advisory next action or requests evidence. It blocks write or close only when the missing loop means required evidence is missing, stale, or blocked under the Core evidence path. Full feedback-loop audits and loop-completeness blockers are later/profile unless enabled. |
 
 Public mutation path: selected-loop definitions and waivers are recorded with `FeedbackLoopUpdate` during `record_run(kind=shaping_update)`. Execution refs and status are updated with `EvidenceUpdates.feedback_loop_updates` during implementation/direct runs, or with `record_manual_qa.feedback_loop_ref` when Manual QA is the selected loop.
 
@@ -321,19 +359,19 @@ Requirement levels:
 |---|---|
 | `name` | `tdd_trace` |
 | `applies_when` | Domain logic, service module, bug fix, parser/validator, state transition, deep module internals, or edge-case-heavy behavior. Recommended for API/caller boundaries and integration behavior. |
-| `default_requirement` | Use TDD as the selected feedback loop when it is the best fit or when the Change Unit, behavior slice, policy, or user/operator marks `tdd_trace_required`. Normal execution order is: define the feedback loop and RED target, write or run the RED check, record actual RED evidence, perform non-test implementation only after actual RED evidence exists or a valid waiver exists, record GREEN evidence, record refactor/check evidence when relevant, and link the TDD trace to Evidence Manifest coverage. |
+| `default_requirement` | Use TDD as the selected feedback loop when it is the best fit and proportionate, or when the Change Unit, behavior slice, active policy/profile, user, or operator marks `tdd_trace_required`. Normal execution order for an enabled required-TDD path is: define the feedback loop and RED target, write or run the RED check, record actual RED evidence, perform non-test implementation only after actual RED evidence exists or a valid waiver exists, record GREEN evidence, record refactor/check evidence when relevant, and link the TDD trace to evidence coverage. |
 | `allowed_waiver` | Allowed for docs, typos, throwaway prototypes, exploratory UI prototypes, initial scaffolds, or when the user/operator records a non-TDD justification and alternate feedback loop. A waiver must name why TDD is not useful or proportionate for this slice and must reference or define the alternate loop that will provide credible feedback. |
 | `required_record` | `tdd_traces` records and `TDD-TRACE` projection when rendered. |
 | `validator` | `tdd_trace_required` |
 | `evidence` | Actual failing test artifact/log/result or another explicit policy-recognized failing-check evidence, passing test log, refactor check log when relevant, diff refs, Evidence Manifest coverage refs, non-TDD justification and alternate feedback loop when waived. RED targets or RED plans are planning records, not evidence. |
-| `close_impact` | Missing required TDD trace makes `design_gate=partial` and may make evidence insufficient. Missing RED evidence before non-test implementation can block `prepare_write`. Missing GREEN or relevant refactor/check evidence can block close through evidence sufficiency or design-quality blockers. A valid non-TDD justification may satisfy design policy but does not by itself prove behavior. |
+| `close_impact` | Active MVP default: advisory/later unless the user, active profile, or owner path explicitly selects TDD as required evidence. Missing TDD Trace may request evidence or show an advisory next action; it blocks write or close only when required evidence is missing under the Core evidence path. Full RED/GREEN/refactor trace enforcement is later/profile unless enabled. |
 
 TDD execution loop:
 
 1. Define the selected feedback loop before implementation. For required TDD, the Feedback Loop record should identify the behavior slice or acceptance criterion, the RED target or plan, and the expected GREEN check.
 2. Record RED evidence before non-test implementation writes. RED evidence means an actual failing test artifact/log/result or another explicit policy-recognized failing-check evidence. A RED target or plan does not satisfy this precondition and does not satisfy Evidence Manifest coverage.
 3. Allow test-path writes that create the RED check when active Change Unit scope, baseline, sensitive-action Approval, Autonomy Boundary, and other gates allow. A RED target or plan may support this scoped test-path write. These writes are still product writes when they touch product files, but the `tdd_trace_required` policy should not block them merely because actual RED evidence is not recorded yet.
-4. Block non-test implementation writes when TDD is required and neither RED evidence nor a valid TDD waiver exists. `prepare_write` may return a design-policy blocker with `tdd_trace_required` failed or blocked; public error selection still follows API precedence.
+4. When an active owner path explicitly requires TDD as write-precondition evidence, block non-test implementation writes if neither RED evidence nor a valid TDD waiver exists. In active MVP, TDD is not a default write blocker; absent TDD normally routes to evidence request or advisory next action unless the Core evidence path requires it. `prepare_write` may return a design-policy blocker with `tdd_trace_required` failed or blocked only for the enabled required-TDD path; public error selection still follows API precedence.
 5. Record GREEN evidence after implementation, then record refactor/check evidence when a refactor step is performed or when the slice risk requires an additional check.
 6. Link the TDD trace, Feedback Loop, run logs, and artifacts to Evidence Manifest acceptance-criteria and changed-file coverage.
 
@@ -360,7 +398,7 @@ Example: If the product calls a concept "Journey Card" but code introduces `sess
 | `required_record` | `domain_terms` records referenced with `record_kind=domain_term`; `DOMAIN-LANGUAGE` is only a projection/proposal surface. |
 | `validator` | `domain_language_consistency` |
 | `evidence` | Domain term refs, code refs, test naming refs, reconcile item refs for proposals. |
-| `close_impact` | If required terms are missing or conflicting, mark `design_gate=partial` or `stale`; block close when the mismatch affects acceptance criteria, public behavior, public documentation or caller expectations, module responsibility, or verification confidence. If the mismatch depends on user-owned judgment, keep or set the relevant `decision_gate` impact until the user judgment route is compatible. |
+| `close_impact` | Active MVP default: routed candidate or advisory/later. Full domain-language consistency is not an automatic write or close blocker. A term conflict may ask one focused user judgment, request evidence, mark residual risk, or show an advisory next action. It blocks write or close only when the conflict is also unresolved user judgment, missing required evidence, stale context affecting write/close, or an active public-scope commitment that Core represents through scope/decision/evidence blockers. |
 
 ### Deep Module / Interface (`deep_module_interface`)
 
@@ -382,7 +420,7 @@ Example: Before changing an evidence manifest schema, record the interface contr
 | `required_record` | `module_map_items` and `interface_contracts` records referenced with `record_kind=module_map_item` and `record_kind=interface_contract`, decision records, and optionally `MODULE-MAP` / `INTERFACE-CONTRACT` projections. |
 | `validator` | `module_interface_review` |
 | `evidence` | Module map item refs, including module-local watchpoints when relevant; interface contract refs, caller impact list, boundary tests, design decisions, compatibility notes. |
-| `close_impact` | Missing required review keeps `design_gate=pending` or `partial`; public interface, module boundary, caller-impact, or compatibility risk without review can block close or require explicit residual-risk acceptance. If the boundary choice is still user-owned, keep or set the relevant `decision_gate` impact. |
+| `close_impact` | Active MVP default: routed candidate or advisory/later. Full module/interface review is not an automatic write or close blocker. Boundary concerns may ask one focused user judgment, request evidence, mark residual risk, or show an advisory next action. They block write or close only when Core already has missing scope, unresolved user judgment, missing required evidence, stale context, or surface capability insufficiency for the claimed guarantee. |
 
 #### Domain and boundary routing examples
 
@@ -390,10 +428,10 @@ These examples route through existing policy, user judgment, gate, evidence, and
 
 | Concern | Existing route | Gate or close effect |
 |---|---|---|
-| A local code name drifts from a stable product term, but the meaning is clear and no public contract changes. | Update or reference `domain_terms`; `domain_language_consistency` may report a warning or `design_gate=partial` until reconciled. | Usually no user judgment. Close blocks only if the mismatch affects acceptance criteria or verification confidence. |
-| "Account" and "Profile" conflict across product copy, API names, and docs, and the choice changes what users or callers can rely on. | Use `domain_language_consistency` for the term conflict and `decision_quality_check` for the user-owned product or material technical choice. Record the compatible user judgment before acting on the chosen meaning. | `design_gate` stays partial or stale while the term conflict is unresolved; `decision_gate` stays required, pending, or blocked while the user-owned choice is unresolved; close can block if the conflict affects public behavior, docs, acceptance, or verification confidence. |
-| A compatible public interface extension has clear caller impact, boundary tests, and no user-owned trade-off. | Record or update `interface_contracts` and related `module_map_items`; `module_interface_review` carries the design-quality impact. | `design_gate` may be pending or partial until review and evidence exist. No user judgment is needed unless compatibility, public commitment, or material technical decision becomes user-owned. |
-| A breaking interface cleanup or module-responsibility move is simpler but shifts caller obligations or future architecture direction. | Use `module_interface_review` and `decision_quality_check`; record affected callers, compatibility, migration or rollback cost, boundary tests, and a user judgment for the breaking or architecture choice. | Affected writes are blocked until the decision route, scope, sensitive-action Approval when applicable, and policy requirements are compatible. Close can block on unresolved interface review, missing evidence, unaccepted residual risk, or unresolved user judgment state. |
+| A local code name drifts from a stable product term, but the meaning is clear and no public contract changes. | Update or reference `domain_terms`; `domain_language_consistency` reports advisory/later or routed-candidate guidance. | Usually `show advisory next action` or `no action`; no default MVP blocker. |
+| "Account" and "Profile" conflict across product copy, API names, and docs, and the choice changes what users or callers can rely on. | Use `domain_language_consistency` for the term conflict and `decision_quality_check` for the user-owned product or material technical choice. Ask one focused judgment before acting on the chosen meaning. | `ask one focused user judgment`; write or close blocks only through unresolved `decision_gate`, missing scope, or missing required evidence. |
+| A compatible public interface extension has clear caller impact, boundary tests, and no user-owned trade-off. | Record or update `interface_contracts` and related `module_map_items` when that profile is active; otherwise summarize the impact and evidence. | `request evidence` or `show advisory next action`; no user judgment unless compatibility, public commitment, or material technical decision becomes user-owned. |
+| A breaking interface cleanup or module-responsibility move is simpler but shifts caller obligations or future architecture direction. | Use `module_interface_review` and `decision_quality_check`; record affected callers, compatibility, migration or rollback cost, boundary tests, and a user judgment for the breaking or architecture choice. | `ask one focused user judgment`; affected writes block only through `decision_gate`, scope, sensitive-action Approval when applicable, required evidence, or capability blockers. |
 
 ### Codebase Stewardship (`codebase_stewardship`)
 
@@ -415,7 +453,7 @@ Example: A task passes tests but spreads a domain concept across three modules w
 | `required_record` | Task or Change Unit stewardship refs, `domain_terms`, `module_map_items` records with module-local watchpoints when relevant, `interface_contracts` records, `feedback_loops` records, `tdd_traces` refs when TDD is used, decision records, Task/Change Unit watchpoints, Journey Spine Entry refs, and reconcile items for drift. Dedicated architecture watchpoint refs may be used only if a later DDL batch defines them. Canonical design-support refs use `record_kind=domain_term`, `record_kind=module_map_item`, `record_kind=interface_contract`, and `record_kind=feedback_loop`; Markdown projection refs are optional display/proposal refs. |
 | `validator` | `codebase_stewardship_check` |
 | `evidence` | Domain term refs, module map item refs including module-local watchpoints, interface contract refs, feedback loop refs, TDD trace refs when used, Task/Change Unit watchpoints, Journey Spine Entry refs, deep-module notes, reconcile item refs, and dedicated architecture watchpoint refs only if later defined. |
-| `close_impact` | Missing required stewardship review keeps `design_gate=pending`, `partial`, or `stale`; unresolved drift can block close when it affects public behavior, module boundaries, acceptance criteria, or verification confidence. |
+| `close_impact` | Active MVP default: advisory/later. Full codebase-stewardship review is not an automatic write or close blocker. Stewardship findings route to one advisory next action, one evidence request, one focused user judgment, or residual-risk marking. They block only when they expose one of the active MVP blocking conditions. |
 
 #### StewardshipImpactSummary display shape
 
@@ -458,7 +496,7 @@ Example: A settings page copy change passes tests, but a person still needs to i
 | `required_record` | `manual_qa_records`; `qa_gate` is the canonical aggregate gate. |
 | `validator` | `manual_qa_required` |
 | `evidence` | Manual QA record refs, screenshot refs, notes, browser log refs, walkthrough refs, and finding refs. These refs support the human inspection record; they do not become automated verification, detached assurance, or final acceptance. |
-| `close_impact` | If Manual QA is required, `qa_gate=pending` or `failed` blocks successful close even when tests pass. `qa_gate=waived` requires a waiver reason and, when user/product risk is involved, the compatible QA waiver user judgment and residual-risk handling. QA failed should create rework, block close, or require an explicit follow-up path. |
+| `close_impact` | Active MVP default: routed candidate or advisory/later. Detailed Manual QA policy is not an automatic close blocker. Human-inspection concerns may request evidence, ask one focused QA waiver/risk judgment, mark residual risk, or show an advisory next action. `qa_gate` blocks close only when an active profile, user request, or owner-promoted path explicitly requires Manual QA for the close. |
 
 ### Context Hygiene (`context_hygiene`)
 
@@ -482,7 +520,7 @@ Retrieved, indexed, remembered, or summarized context is a context-hygiene input
 | `required_record` | Source records used to render the envelope or context profile come from existing owners such as current Task state, acceptance criteria, Change Unit, Autonomy Boundary, user judgments, gate states, Write Authority summary, approval status, surface capability/guarantee summary, projection freshness and `source_state_version` when known, Evidence Manifest, Run, Eval, Manual QA, ArtifactRef, report, residual-risk, reconcile items, and validator results. The compact envelope and context profile are rendered/derived context display, not a canonical record, schema field, DDL value, authority input, gate, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or storage object. |
 | `validator` | `context_hygiene_check` |
 | `evidence` | Current projection refs, freshness state, `source_state_version`, stale refs, retrieved/indexed context freshness notes, missing profile-relevant context material, reconcile item refs, and evaluator bundle contents. Stale or over-broad critical context is reported as a context-hygiene finding; the finding itself is not evidence unless an existing owner path records supporting refs. |
-| `close_impact` | Stale or over-broad critical context, stale projection freshness, stale retrieved/indexed context, or missing profile-relevant context material may warn, mark stale, or block write/close only through existing owner paths and gates. It can block write or close when the agent cannot safely determine scope, evidence, current acceptance criteria, or whether the readable projection matches canonical state. |
+| `close_impact` | Active MVP default: Core blocking only when stale context affects write or close. Stale or over-broad critical context, stale projection freshness, stale retrieved/indexed context, or missing profile-relevant context material may warn, mark stale, request evidence, or show an advisory next action. It blocks write or close only when the agent cannot safely determine scope, required evidence, current acceptance criteria, close basis, or whether the readable projection matches canonical state. |
 
 ### Two-stage Review Display
 
@@ -505,9 +543,9 @@ Example: A final review can pass Spec Compliance because acceptance criteria and
 | `required_record` | Existing owner records, validator results, evidence refs, user judgment refs, sensitive-action approval user judgment refs, Eval or verification refs, Manual QA refs, later Approval refs when active, residual-risk refs, close blocker refs, and follow-up Task/Change Unit refs where applicable. The review display itself is derived display, not canonical state. |
 | `validator` | No standalone validator ID. Spec Compliance Review reads acceptance/evidence state plus `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, and close-related residual-risk checks where applicable. Code Quality / Stewardship Review reads `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, and `context_hygiene_check`. |
 | `evidence` | Existing validator result refs, `evidence_ref` refs and derived evidence summaries, Run refs, ArtifactRefs, Evidence Manifest refs when the full evidence profile is active, eval/manual QA refs, owner-record refs, sensitive-action approval user judgment refs, later Approval refs when active, residual-risk refs, close blocker refs, and follow-up refs. |
-| `close_impact` | Review display does not by itself satisfy or block close. Underlying policy validators, evidence sufficiency, QA, verification, final acceptance, residual-risk visibility, residual-risk acceptance, sensitive-action permission / Approval, scope, close blockers, and Write Authorization determine the actual close impact through their owner paths. |
+| `close_impact` | Review display does not by itself satisfy or block close. Underlying Core-backed routes determine actual impact: scope, unresolved user judgment, required evidence, stale close context, capability for a claimed guarantee, QA/verification/final acceptance/residual-risk paths only when active, sensitive-action permission / Approval, close blockers, and Write Authorization. |
 
-Review display findings route to existing paths: `design_gate`, `decision_gate`, `qa_gate`, evidence sufficiency, user judgment, Eval or verification, Manual QA, residual risk, sensitive-action permission / Approval, Change Unit update recommendation, follow-up work, or structured close blocker. They are not new canonical records. Same-session review content is self-check or stewardship signal unless a qualifying independent Eval or verification record provides detached assurance.
+Review display findings route to existing paths and one allowed action: block write, block close, ask one focused user judgment, request evidence, mark residual risk, show advisory next action, or no action. They are not new canonical records. Same-session review content is self-check or stewardship signal unless a qualifying independent Eval or verification record provides detached assurance. Full review displays stay later/profile unless an active owner path promotes them.
 
 ## Waiver rules
 
@@ -543,66 +581,71 @@ flowchart TD
   Conditions --> Waived
 ```
 
-## Reference severity defaults
+## Active MVP impact defaults
 
-This matrix is the default reference severity router for policy validators. It tells the reference runner which findings are advisory and which findings affect gates for common task shapes. It does not weaken `applies_when`, `default_requirement`, `allowed_waiver`, or `close_impact`; if a policy contract applies more strongly than this matrix, the policy contract wins.
+This section is the default router for active MVP design-quality findings. It supersedes broad task-shape matrices for MVP behavior. Later profiles may add stricter requirements only when an owner promotes the behavior with scope, fallback behavior, and proof expectations.
 
-Default impact vocabulary:
+Default routing:
 
-- `not_required`: the policy need not emit a finding unless its `applies_when` is independently true.
-- `warning`: emit a visible validator finding, but do not block write or close by default.
-- `design_gate=pending` or `design_gate=partial`: shaping, owner records, evidence, or waiver is incomplete. `prepare_write` blocks only when this matrix or the policy contract says the gap is write-blocking.
-- `blocking before write`: `prepare_write` must not authorize affected product writes while the issue is unresolved. Creating or routing to a user judgment or Approval request only records the blocker path; it does not authorize the write. Authorization requires the issue to be resolved or validly waived, any relevant user judgment to be resolved or otherwise compatible for the affected operation, and any required sensitive-action Approval to be granted before a later compatible `prepare_write` creates Write Authorization.
-- `close blocker`: successful close waits for a pass or compatible waiver. Accepted residual risk helps only where the kernel and the relevant policy contract allow a risk-accepted close path; it never replaces evidence sufficiency, required QA, sensitive-action Approval, or final acceptance.
-- `user judgment required`: use the user judgment state path and set or keep `decision_gate=required`, `pending`, or `blocked` as applicable.
+| Finding kind | Active MVP impact class | Default routed action |
+|---|---|---|
+| Autonomy boundary exceeded | Core blocking | `block write` or `block close`, then ask one focused user judgment or narrow scope. |
+| Unresolved user judgment | Core blocking | `ask one focused user judgment`; block only the dependent write or close through `decision_gate`. |
+| Missing active scope | Core blocking | `block write`; narrow scope or ask one focused scope judgment. |
+| Missing required evidence | Core blocking | `request evidence`; block close when the Core evidence path requires that evidence. |
+| Stale context affecting write or close | Core blocking | `block write` or `block close`; refresh/reconcile the stale source, then retry the dependent write or close. |
+| Surface capability insufficient for claimed guarantee | Core blocking | `block write` or `block close`; move to a capable surface, reduce the guarantee claim, or choose a supported path. |
+| Product, technical, scope, waiver, acceptance, or risk trade-off | Routed candidate unless already unresolved and blocking | `ask one focused user judgment`. |
+| Evidence/check concern that is not required by Core | Routed candidate | `request evidence` or `show advisory next action`. |
+| Known limitation or risk that does not independently block | Routed candidate | `mark residual risk`. |
+| Full domain-language consistency | Advisory/later by default | `show advisory next action` or `no action`. |
+| Full module/interface review | Advisory/later by default | `show advisory next action`, `request evidence`, or `ask one focused user judgment` only for a concrete owner-owned choice. |
+| Full TDD trace | Advisory/later by default | `show advisory next action` or `request evidence` only when the active evidence path needs it. |
+| Full codebase-stewardship suite | Advisory/later by default | `show advisory next action` or `mark residual risk`. |
+| Full feedback-loop audit | Advisory/later by default | `show advisory next action` or `request evidence`. |
+| Detailed Manual QA policy | Advisory/later by default | `show advisory next action`, `request evidence`, `ask one focused QA waiver/risk judgment`, or `mark residual risk`; no default MVP close block. |
+| Detached verification profile | Advisory/later by default | `show advisory next action`; do not claim `detached_verified` unless an active owner path records qualifying verification. |
 
-This is policy impact vocabulary, not the API `ValidatorResult.findings.severity` enum. Validator findings still use `info`, `warning`, `error`, or `blocker`; merged policy impact is exposed through gates, blocked reasons, close blockers, user judgment needs, waiver eligibility, or fixture-observed derived state.
+The default API `ValidatorResult.findings.severity` enum remains `info`, `warning`, `error`, or `blocker`. The impact class and routed action are policy interpretation over validator results; they do not add error codes, gates, schemas, or fixture fields.
 
 ### Severity composition rule
 
-When more than one task shape, policy contract, or validator finding applies, policy evaluators compose impacts by keeping the strongest applicable impact for the same affected concern, not the weakest. "Same affected concern" is not the whole Task and not merely the same validator ID. It means the same policy-relevant target, including the affected gate, check, or blocker target; affected operation phase; affected scope or record refs; and close, write, or decision concern. Different concerns are preserved by union; only competing impacts for the same concern use the strongest-impact rule. The default policy-impact order is:
+When more than one policy contract or validator finding applies to the same affected concern, compose the result by keeping the strongest action for that same concern while preserving separate concerns. "Same affected concern" means the same affected operation phase, scope or record refs, gate/check/blocker target, and write/close/judgment/evidence/risk concern.
 
-`not_required` < `warning` < gate impact such as `design_gate=pending`, `design_gate=partial`, `design_gate=stale`, or `qa_gate=pending` < `blocking before write` < `close blocker` < `user judgment required`.
+The action order for the same affected concern is:
 
-Read this order from weakest to strongest. It is the complete ordering for competing impacts on the same affected concern.
+```text
+no action < show advisory next action < mark residual risk <
+request evidence < ask one focused user judgment < block close < block write
+```
 
-This order decides whether a weaker default can be ignored for the same concern. It does not collapse different affected gates. If one finding affects `design_gate` and another affects `qa_gate`, `decision_gate`, evidence sufficiency, or residual-risk visibility, the merged result keeps all affected gates, blockers, and refs. `user judgment required` is a judgment-routing impact, not a replacement for write blockers, close blockers, evidence sufficiency, required QA, required sensitive-action Approval, or residual-risk visibility. A user judgment may resolve the user-judgment part of a finding, while any independent write blocker or close blocker remains until its own policy or kernel condition is satisfied.
+This order does not turn advisory/later catalog findings into blockers. A stronger action is valid only when that action is allowed by the finding's impact class and the active owner path. For example, a full TDD trace finding can remain visible as advisory even if a separate missing-required-evidence finding blocks close. The TDD finding must not inherit the evidence blocker unless the active Core evidence path names that TDD evidence as required.
 
-Validators should report all relevant findings. The composition rule decides the merged gate, write-blocker, close-blocker, waiver, and user judgment impact; it must not hide weaker findings from validator results, evidence, status, or conformance output. Primary public `ToolError` selection remains owned by API [Primary Error Code Precedence](api/errors.md#primary-error-code-precedence); this policy rule does not redefine error-code precedence or suppress secondary errors.
+Validators should report all relevant findings. The composition rule decides the merged impact class and routed action for each affected concern; it must not hide weaker findings from validator results, status, evidence summaries, or conformance output. Primary public `ToolError` selection remains owned by API [Primary Error Code Precedence](api/errors.md#primary-error-code-precedence); this policy rule does not redefine error-code precedence or suppress secondary errors.
 
-Severity can be raised above the matrix default by explicit user request, sensitive category, public commitment, public API/interface or schema impact, final acceptance with known risk, residual-risk visibility, stale critical context, or a conformance fixture that asserts the case as blocking. Severity can be lowered only through an allowed waiver recorded under the relevant policy contract, and only for policy-owned impacts that the contract permits waiving. Policy waivers do not lower Kernel Authority blockers such as missing scope, missing sensitive-action Approval, required evidence insufficiency, required final acceptance, or Write Authorization requirements. They also do not change API primary error precedence. This rule affects policy-contract interpretation, validators, gates, write blockers, close blockers, and user judgment needs; it does not make Design Stewardship Defaults into Kernel Authority Invariants.
-
-| Task shape | Warning or `not_required` default | Gate/write default | Close/decision default |
-|---|---|---|---|
-| Direct docs-only | `vertical_slice_shape`, `tdd_trace_required`, `manual_qa_required`, `module_interface_review`, and `codebase_stewardship_check` are `not_required` unless the docs change product commitments, policy contracts, domain terms, public behavior, or interface meaning. `context_hygiene_check` and `domain_language_consistency` may warn for stale projections or terminology drift. | No design-quality write blocker by default. `shared_design_alignment` becomes `design_gate=pending` for ambiguous scope or design/policy contract edits. `autonomy_boundary_check` or `decision_quality_check` blocks only when user judgment, sensitive content, public commitment, or residual risk is involved. | No close blocker by default. Close can block if docs drift affects acceptance, verification confidence, public commitment, or required projection freshness. `user judgment required` for policy commitment changes, public commitments, or known residual-risk acceptance. |
-| Direct code | `shared_design_alignment`, `vertical_slice_shape`, and `manual_qa_required` are `not_required` for obvious leaf/internal edits. `codebase_stewardship_check` may warn for minor maintainability concerns. | `feedback_loop_check` is `design_gate=pending` before behavior-affecting writes. `tdd_trace_required`, `domain_language_consistency`, and `module_interface_review` become `design_gate=partial` only when their policy contracts apply. `autonomy_boundary_check` blocks scope or authority gaps; `feedback_loop_check` blocks when no credible loop exists for a behavior-affecting write. | Missing run evidence, required TDD/domain/interface records, or unresolved behavior risk can become a `close blocker` when acceptance or verification confidence is affected. `user judgment required` for user-owned judgment, waiver with known risk, or scope expansion. |
-| Ordinary work feature | `manual_qa_required` is `not_required` unless the feature is user-visible, workflow-affecting, or browser/product-taste dependent. `tdd_trace_required` may warn unless domain logic, service behavior, bug repair, state transition, or edge-heavy behavior is involved. | `shared_design_alignment`, `vertical_slice_shape`, `feedback_loop_check`, and `codebase_stewardship_check` default to `design_gate=pending` or `design_gate=partial` until records exist. `domain_language_consistency` and `module_interface_review` join the design gate when their contracts apply. Missing Autonomy Boundary, unresolved decisions, or missing feedback loop can be `blocking before write`. | Required vertical-slice, feedback, stewardship, and evidence gaps can be `close blocker`. `user judgment required` for scope expansion, horizontal exception, user-owned product or material technical trade-off, or residual-risk acceptance. |
-| UI/UX/copy work | `tdd_trace_required` is `not_required` by default when an alternate credible loop exists. `module_interface_review` is a warning unless schema, auth, public interface, or compatibility is touched. | `shared_design_alignment`, `feedback_loop_check`, and copy-relevant `domain_language_consistency` default to `design_gate=pending` or `design_gate=partial`. `manual_qa_required` selects the QA path and may set `qa_gate=pending`. `autonomy_boundary_check` blocks unclear product-taste authority or stop conditions. | `manual_qa_required` sets `qa_gate=pending` or `failed`; that is a `close blocker` unless validly waived. `user judgment required` for material UX/copy trade-offs, QA waiver with known user/product risk, or public commitments. |
-| Sensitive work | Unrelated policies remain `not_required`, but applicable policies are not warning-only once the sensitive category affects scope, sensitive-action Approval, user harm, privacy, legal, safety, security, secrets, irreversible action, or external side effects. | Applicable design policies start at `design_gate=pending` until records, Approvals, and waivers exist. `autonomy_boundary_check`, `decision_quality_check`, Approval/scope Core checks, and any required `feedback_loop_check` or `manual_qa_required` are `blocking before write` for the affected sensitive path. | Evidence, QA, residual-risk visibility, unresolved Approval, or unaccepted risk is a `close blocker`. `user judgment required` for Approval context, user-owned judgment, waiver, or residual-risk acceptance. |
-| Public API/interface work | `manual_qa_required` is `not_required` unless UI/workflow docs or browser-visible behavior are affected. `tdd_trace_required` may warn unless behavior, domain, compatibility, or edge-heavy logic is involved. | `shared_design_alignment`, `module_interface_review`, `feedback_loop_check`, `codebase_stewardship_check`, and relevant `domain_language_consistency` default to `design_gate=pending` or `design_gate=partial`. `decision_quality_check`, `module_interface_review`, and `autonomy_boundary_check` are `blocking before write` for public commitments, compatibility risk, breaking change, or boundary ambiguity. | Unresolved compatibility, interface review, public commitment, or evidence gap is a `close blocker`. `user judgment required` for breaking, irreversible, compatibility, or residual-risk choices. |
-| Broad structural/refactor work | `manual_qa_required` is `not_required` unless user-visible behavior is affected. `tdd_trace_required` may use an alternate loop only with justification and evidence. | `shared_design_alignment`, `vertical_slice_shape` or a recorded horizontal exception, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, and relevant `domain_language_consistency` default to `design_gate=pending` or `design_gate=partial`. `decision_quality_check` and `autonomy_boundary_check` are `blocking before write` for architecture direction, dependency direction, scope expansion, or unclear authority. | Stewardship drift, missing follow-up vertical slice, missing evidence, unresolved module/interface risk, or unaccepted residual risk can be a `close blocker`. `user judgment required` for architecture choices, horizontal exceptions, and accepted residual risk. |
+Impact can be raised to Core blocking only by an active Core-backed condition: autonomy boundary exceeded, unresolved user judgment, missing active scope, missing required evidence, stale context affecting write/close, or surface capability insufficient for the claimed guarantee. Impact can be lowered only through an allowed waiver recorded under the relevant policy contract, and only for policy-owned impacts the contract permits waiving. Policy waivers do not lower Kernel Authority blockers such as missing scope, missing sensitive-action Approval, required evidence insufficiency, required final acceptance, residual-risk acceptance when required, or Write Authorization requirements.
 
 ## Policy-to-validator mapping
 
-| Policy | Validator | Primary gate or state impact |
+| Policy | Validator | Active MVP default impact |
 |---|---|---|
-| `shared_design` | `shared_design_alignment` | `design_gate` pending/partial/passed/waived |
-| `decision_quality` | `decision_quality_check` | `decision_gate` required/pending/blocked/resolved; `design_gate` where applicable |
-| `autonomy_boundary` | `autonomy_boundary_check` | `prepare_write` blockers, `decision_gate`, `design_gate` |
-| `domain_language` | `domain_language_consistency` | `design_gate` partial/stale/passed |
-| `vertical_slice` | `vertical_slice_shape` | `design_gate` partial/blocked/passed |
-| `feedback_loop` | `feedback_loop_check` | `design_gate` and evidence sufficiency |
-| `tdd_trace` | `tdd_trace_required` | `design_gate` and evidence sufficiency |
-| `deep_module_interface` | `module_interface_review` | `design_gate` partial/blocked/passed |
-| `codebase_stewardship` | `codebase_stewardship_check` | `design_gate` pending/partial/stale/passed and close blockers |
-| `manual_qa` | `manual_qa_required` | `qa_gate` pending/passed/failed/waived |
-| `context_hygiene` | `context_hygiene_check` | projection freshness, reconcile, evidence/design stale |
+| `shared_design` | `shared_design_alignment` | Routed candidate by default; Core blocking only through missing scope, unresolved judgment, missing required evidence, stale context, or capability insufficiency. |
+| `decision_quality` | `decision_quality_check` | Routed candidate until a required user judgment is unresolved; then `decision_gate` owns the Core blocking impact. |
+| `autonomy_boundary` | `autonomy_boundary_check` | Core blocking when exceeded for the affected write or close; otherwise routed candidate. |
+| `domain_language` | `domain_language_consistency` | Advisory/later by default; routed candidate only for a concrete user judgment, evidence request, or residual-risk marker. |
+| `vertical_slice` | `vertical_slice_shape` | Advisory/later or routed candidate; no default MVP blocker. |
+| `feedback_loop` | `feedback_loop_check` | Routed candidate by default; Core blocking only when required evidence is missing. |
+| `tdd_trace` | `tdd_trace_required` | Advisory/later by default; routed evidence request only when active evidence path requires TDD evidence. |
+| `deep_module_interface` | `module_interface_review` | Advisory/later by default; routed candidate for concrete public-boundary judgment, evidence, or risk. |
+| `codebase_stewardship` | `codebase_stewardship_check` | Advisory/later by default; routed candidate for one next action or residual-risk marker. |
+| `manual_qa` | `manual_qa_required` | Advisory/later by default; routed candidate unless Manual QA is explicitly required by active owner path/profile/user request. |
+| `context_hygiene` | `context_hygiene_check` | Routed candidate by default; Core blocking when stale context affects write or close. |
 
 Review-stage displays compose these existing policy validators; they do not introduce new validator IDs or `ProjectionKind` values.
 
 | Review stage | Validator relationship | Possible routed outcomes |
 |---|---|---|
-| Spec Compliance Review | Reads acceptance/evidence state plus `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, and close-related residual-risk checks where applicable. | Validator result refs, evidence gaps, user judgment candidates, Eval or verification needs, Manual QA needs, sensitive-action permission needs, later Approval needs when active, Change Unit update recommendations, residual-risk candidates, or close blockers. |
-| Code Quality / Stewardship Review | Reads `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, and `context_hygiene_check`. | Stewardship validator findings, reconcile items, owner-record update recommendations, Eval or verification needs, Manual QA needs where relevant, sensitive-action permission needs where relevant, later Approval needs when active, follow-up Change Unit recommendations, residual-risk candidates, or close blockers. |
+| Spec Compliance Review | Reads acceptance/evidence state plus `shared_design_alignment`, `decision_quality_check`, `autonomy_boundary_check`, `feedback_loop_check`, `tdd_trace_required`, `manual_qa_required`, `context_hygiene_check`, and close-related residual-risk checks where applicable. | Core blockers only for the active MVP blocking set; otherwise one focused user judgment, evidence request, residual-risk marker, advisory next action, or no action. |
+| Code Quality / Stewardship Review | Reads `domain_language_consistency`, `vertical_slice_shape`, `module_interface_review`, `codebase_stewardship_check`, `feedback_loop_check`, `tdd_trace_required`, and `context_hygiene_check`. | Advisory/later by default; may route one concrete judgment, evidence request, residual-risk marker, or next action without creating default MVP blockers. |
 
-Staged delivery may implement minimal validators first, but it should use the reference severity defaults as the task-shape router for warning versus blocker behavior and keep validator IDs stable so conformance fixtures can grow without changing policy names.
+Staged delivery may implement minimal validators first, but it should use [Active MVP impact defaults](#active-mvp-impact-defaults) as the warning-versus-blocker router and keep validator IDs stable so conformance fixtures can grow without changing policy names.

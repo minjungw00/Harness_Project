@@ -414,7 +414,7 @@ Close readiness는 하나의 "done" bit가 아니어야 합니다. 아래 dimens
 | [Scope Gate](#scope-gate) | Active scope가 requested write 또는 close-relevant work를 cover하는지. |
 | [Decision Gate](#decision-gate) | User-owned judgment가 progress, write, close를 막는지. |
 | [Approval Gate](#approval-gate) | Sensitive-action permission이 missing, pending, granted, denied, expired, drifted 중 어디인지. |
-| [Design Gate](#design-gate) | Enabled design-quality policy가 progress를 막는지. |
+| [Design Gate](#design-gate) | Enabled design-quality policy가 finding을 어떻게 라우팅하고 Core-backed blocker에 닿는지. |
 | [Evidence Gate](#evidence-gate) | Required evidence가 absent, partial, sufficient, stale, blocked 중 어디인지. |
 | [Verification Gate](#verification-gate) | Required verification이 passed, pending, failed, waived, blocked 중 어디인지. |
 | [QA Gate](#qa-gate) | Required Manual QA가 passed, failed, waived, pending 중 어디인지. |
@@ -466,6 +466,8 @@ not_required | required | pending | passed | partial | waived | stale | blocked
 
 `design_gate`는 enabled design-quality policy가 applicable하게 만들 때만 적용됩니다. Detailed design validator는 active profile이 명시적으로 켜기 전까지 later-profile material입니다.
 
+활성 MVP에서 design-quality policy가 기본으로 write 또는 close를 차단하는 경우는 [설계 품질 정책: 활성 MVP 차단 집합](design-quality-policies.md#활성-mvp-차단-집합)이 소유하는 작은 Core-backed 집합뿐입니다. Autonomy Boundary exceeded, unresolved user judgment, missing active scope, missing required evidence, stale context affecting write or close, surface capability insufficient for the claimed guarantee가 그 집합입니다. Full domain-language consistency, full module/interface review, full TDD trace, full codebase stewardship, full feedback-loop audit, detailed Manual QA policy, detached verification profile은 기본적으로 Routed candidate 또는 Advisory/later입니다.
+
 ### Evidence Gate
 
 ```text
@@ -500,7 +502,7 @@ Verification은 active profile, user request, task type, security/criticality pr
 not_required | required | pending | passed | failed | waived
 ```
 
-`qa_gate`는 profile, policy, user request, task type, changed surface, detected risk가 Manual QA를 required로 만들 때만 적용됩니다. Browser capture, screenshot, log, automated check는 QA context를 support할 수 있지만 사람의 QA judgment가 되지 않습니다.
+`qa_gate`는 active profile, explicit user request, owner-promoted policy path, active task/close criterion이 Manual QA를 required로 만들 때만 적용됩니다. Browser capture, screenshot, log, automated check는 QA context를 support할 수 있지만 사람의 QA judgment가 되지 않습니다. Detailed Manual QA policy는 기본적으로 later/profile이며, 활성 MVP close blocker가 자동으로 되지 않습니다.
 
 ### Acceptance Gate
 
@@ -717,7 +719,7 @@ Decision algorithm은 close intent와 required gate를 확인합니다.
 5. Scope를 확인합니다.
 6. Blocking user judgment와 `decision_gate`를 확인합니다.
 7. Sensitive categories가 적용됐으면 sensitive-action permission을 확인합니다.
-8. Enabled design policy를 확인합니다.
+8. Enabled design policy는 active impact routing으로만 확인합니다. 활성 MVP는 작은 Core-backed design-quality 집합에서만 차단합니다.
 9. Evidence가 required이면 evidence를 확인합니다.
 10. Verification이 required일 때만 verification을 확인합니다.
 11. Manual QA가 required일 때만 Manual QA를 확인합니다.

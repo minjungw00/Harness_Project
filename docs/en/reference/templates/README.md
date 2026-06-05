@@ -45,6 +45,8 @@ MVP-1 templates/views are limited exactly to:
 
 These five views can be returned as structured payloads, compact text, cards, or Markdown snippets depending on the surface. MVP-1 does not require persisted Markdown projection jobs, a full renderer, or every detailed report template.
 
+MVP-1 views may show design-quality findings only through the routed action owned by [Design Quality Policies](../design-quality-policies.md#impact-classes-and-allowed-routes): block write, block close, ask one focused user judgment, request evidence, mark residual risk, show advisory next action, or no action. Do not render the full policy catalog as a default close checklist.
+
 ## Later/Full-Profile Templates
 
 Detailed templates are kept in [later-profile/](later-profile/README.md). They are useful for later profiles, but they are not MVP-1 requirements and their presence does not mean the runtime implements them.

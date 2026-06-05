@@ -313,11 +313,11 @@ Legacy name for User Judgment Request. Use only in migration notes or old payloa
 
 ### Design Gate
 
-The kernel gate for required design-quality preconditions such as shared design, domain language, TDD trace, module/interface review, or other policy-pack requirements.
+The kernel gate surface where enabled design-quality policy findings are routed. In active MVP, write or close blocks by default only for the small Core-backed set in [Design Quality Policies: Active MVP blocking set](design-quality-policies.md#active-mvp-blocking-set); broader domain-language, TDD, module/interface, stewardship, feedback-loop, Manual QA, and detached-verification catalog findings are candidate or advisory/later unless an active owner path promotes them.
 
 ### Design-Quality Policy Pack
 
-The owner document for design-quality policy contracts and severity composition. It covers shared design, decision quality, autonomy boundary, domain language, vertical slice, feedback loop, TDD trace, module/interface review, codebase stewardship, Manual QA, and context hygiene. It influences gates, validators, evidence, write blockers, and close blockers but does not redefine the kernel state machine.
+The owner document for design-quality policy contracts, impact classes, routed actions, and severity composition. It covers shared design, decision quality, autonomy boundary, domain language, vertical slice, feedback loop, TDD trace, module/interface review, codebase stewardship, Manual QA, and context hygiene. Findings influence gates, validators, evidence, user judgment requests, residual-risk markers, advisory next actions, write blockers, or close blockers only through the allowed route and active owner path; the document does not redefine the kernel state machine.
 
 ### Detached Verification
 

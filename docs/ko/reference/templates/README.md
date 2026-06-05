@@ -45,6 +45,8 @@ MVP-1 템플릿/보기는 정확히 다음 다섯 개로 제한됩니다.
 
 이 다섯 보기는 접점에 따라 structured payload, 짧은 text, card, Markdown snippet으로 반환될 수 있습니다. MVP-1은 persisted Markdown projection job, full renderer, 모든 상세 report template을 요구하지 않습니다.
 
+MVP-1 보기에는 [설계 품질 정책](../design-quality-policies.md#영향-분류와-허용-라우트)이 소유하는 routed action을 통해서만 design-quality finding을 표시할 수 있습니다. Action은 block write, block close, ask one focused user judgment, request evidence, mark residual risk, show advisory next action, no action 중 하나입니다. Full policy catalog를 기본 close checklist로 렌더링하지 않습니다.
+
 ## Later/Full-Profile 템플릿
 
 상세 템플릿은 [later-profile/](later-profile/README.md)에 둡니다. 상태: MVP-1 요구사항 아님, 구현된 런타임 아님. Later profile에서 유용할 수 있지만, 존재한다고 해서 런타임이 구현했다는 뜻도 아닙니다.

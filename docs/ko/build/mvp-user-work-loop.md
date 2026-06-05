@@ -62,6 +62,7 @@ MVP-1에는 아래가 포함됩니다.
 - 근거 요약과 근거 gap 표시
 - 필요한 근거가 부족하거나, 필요한 사용자 판단이 unresolved 또는 blocked이거나, 필요한 최종 수락이 없거나, 잔여 위험이 required 상태로 보이지 않거나 수락되지 않았을 때 close blocker summary
 - 닫기와 관련된 위험이 있을 때 최종 수락이나 close 전에 잔여 위험 표시
+- 작은 활성 MVP 차단 집합을 통해 라우팅되는 design-quality finding: Autonomy Boundary exceeded, unresolved user judgment, missing active scope, missing required evidence, stale context affecting write/close, surface capability insufficient for a claimed guarantee
 - MVP-1 path를 위한 compact Core-derived view. 정확한 view set은 [Projection과 Template 참조](../reference/projection-and-templates.md#mvp-1-보기-세트)와 [Template 참조](../reference/templates/README.md#mvp-1-템플릿-세트)가 담당하는 set으로 제한됩니다.
 - MCP/Core를 사용할 수 없을 때 정직하게 동작하기. Core에 닿을 수 없으면 권한 상태를 만들어 내지 않습니다.
 
@@ -71,7 +72,7 @@ MVP-1에는 아래 향후 버킷이 포함되지 않습니다.
 
 | 버킷 | MVP-1 밖에 둘 것 |
 |---|---|
-| 보증 프로필 | 활성 최소 경로를 넘는 검증 강화, full detached verification, detached Eval system, full Manual QA matrix, detailed Evidence Manifest, detailed Eval output, full waiver machinery, full Approval lifecycle hardening, 풍부한 잔여 위험 lifecycle, 위험 검토 hardening, stewardship validator, TDD trace, feedback-loop policy, broad context-hygiene validator. |
+| 보증 프로필 | 활성 최소 경로를 넘는 검증 강화, full detached verification, detached Eval system, full Manual QA matrix, detailed Evidence Manifest, detailed Eval output, full waiver machinery, full Approval lifecycle hardening, 풍부한 잔여 위험 lifecycle, 위험 검토 hardening, stewardship validator, full TDD trace, full feedback-loop audit, detailed Manual QA policy, full module/interface and domain-language review, broad context-hygiene validator. |
 | 운영 프로필 | Full report/export, recover/export suite, release handoff, artifact integrity operations, projection refresh/reconcile suite, doctor/readiness suite, broad operator surface, runtime conformance suite, conformance runner, generated conformance artifact, executable fixture catalog, Export report. |
 | 로드맵 | Dashboard, hosted workflow UI, artifact dashboard, rich card expansion, broader connector, connector marketplace, team workflow, parallel orchestration, metrics, automated Browser QA Capture, Cross-Surface Verification automation, hosted/remote workflow, preventive guard expansion, hook, deployment, canary, rollback, production monitoring, 그 밖의 향후 확장 후보. |
 | 보안 non-claim | OS-level sandboxing, arbitrary-tool isolation, permission isolation, tamper-proof local storage, default preventive pre-tool blocking. |
@@ -151,6 +152,7 @@ Guarantee level은 [보안 참조](../reference/security.md#단계별-guarantee-
 | Minimal storage boundary | MVP-1 storage는 user work loop에 필요한 최소 active owner record로 제한합니다. | Later-profile table/record는 owner docs가 승격하기 전까지 제외합니다. |
 | Acceptance boundaries | Sensitive action approval, final acceptance, residual-risk acceptance를 분리합니다. | Final acceptance는 Approval이 아니며, residual-risk acceptance는 final acceptance가 아닙니다. |
 | Minimal evidence and close contract | Core-owned `evidence_summary`를 사용합니다. Successful close에는 필요한 evidence가 sufficient이고, 필요한 judgment가 resolved이며, 필요한 최종 수락이 기록되어 있고, close-relevant residual risk가 visible해야 합니다. Accepted-risk close에는 명시적 residual-risk acceptance가 필요합니다. | Full Evidence Manifest, detached Eval, full Manual QA, rich residual-risk lifecycle은 owner scope, policy, profile이 활성화하기 전까지 later/profile에 남습니다. |
+| Design-quality MVP boundary | [설계 품질 정책: 활성 MVP 차단 집합](../reference/design-quality-policies.md#활성-mvp-차단-집합)을 사용합니다. | Full domain language consistency, full module/interface review, full TDD trace, full codebase stewardship suite, full feedback-loop audit, detailed Manual QA policy, detached verification profile은 기본적으로 Routed candidate 또는 Advisory/later입니다. |
 | Small direct changes | Small change도 explicit scope, compatible `prepare_write`, `record_run`, required evidence support가 필요합니다. | Small-change label이 authority, user judgment, evidence, risk visibility를 우회하면 안 됩니다. |
 | Local access and errors | Local access, unavailable Core/MCP, state conflict, display-safe detail은 API, Operations, Security 담당 계약을 사용합니다. | Build 문서는 새 public error code나 precedence를 정의하지 않습니다. |
 
@@ -173,7 +175,7 @@ Guarantee level은 [보안 참조](../reference/security.md#단계별-guarantee-
 
 | 이후 영역 | MVP-1 밖에 둘 것 |
 |---|---|
-| [보증 프로필](../later/assurance-profile.md) | 검증 강화, 수동 QA, 상세 근거, 위험 검토, 상세 평가 출력, full Approval lifecycle, stewardship validator, TDD trace, feedback-loop policy, context-hygiene validator. |
+| [보증 프로필](../later/assurance-profile.md) | 검증 강화, detailed Manual QA, detailed evidence, risk review, detailed evaluation output, full Approval lifecycle, stewardship validator, full TDD trace, full feedback-loop audit, full module/interface and domain-language review, stale write/close context를 넘는 context-hygiene validator. |
 | [운영 프로필](../later/operations-profile.md) | Export, recovery, handoff, operator readiness, doctor/readiness surface, artifact integrity operations, projection refresh/reconcile operations, conformance runner, broad operator surface. |
 | [로드맵](../roadmap.md) | Dashboard, hosted workflow, team workflow, broader connector, automated Browser QA Capture, Cross-Surface Verification, Context Index, metrics, preventive guard expansion, hook, permission, parallel orchestration, deployment, canary, rollback, production monitoring, 그 밖의 확장 향후 후보. |
 

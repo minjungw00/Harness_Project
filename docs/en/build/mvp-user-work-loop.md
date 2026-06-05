@@ -62,6 +62,7 @@ MVP-1 includes:
 - evidence summary and evidence-gap display
 - close blocker summary when required evidence is insufficient, required user judgment is unresolved or blocked, required final acceptance is missing, or residual risk is not visible/accepted as required
 - residual-risk visibility before acceptance or close when close-relevant risk exists
+- design-quality findings routed through the small active MVP blocking set: Autonomy Boundary exceeded, unresolved user judgment, missing active scope, missing required evidence, stale context affecting write/close, and surface capability insufficient for a claimed guarantee
 - compact Core-derived views for the MVP-1 path, using exactly the set owned by [Projection And Templates Reference](../reference/projection-and-templates.md#mvp-1-view-set) and [Template Reference](../reference/templates/README.md#mvp-1-template-set)
 - honest MCP/Core unavailable behavior: no fabricated authority state when Core cannot be reached
 
@@ -71,7 +72,7 @@ MVP-1 excludes these future buckets:
 
 | Bucket | Keep out of MVP-1 |
 |---|---|
-| Assurance Profile | Verification strengthening beyond the active minimal path, full detached verification, detached Eval system, full Manual QA matrix, detailed Evidence Manifest, detailed Eval output, full waiver machinery, full Approval lifecycle hardening, rich residual-risk lifecycle, risk-review hardening, stewardship validators, TDD trace, feedback-loop policy, and broad context-hygiene validators. |
+| Assurance Profile | Verification strengthening beyond the active minimal path, full detached verification, detached Eval system, full Manual QA matrix, detailed Evidence Manifest, detailed Eval output, full waiver machinery, full Approval lifecycle hardening, rich residual-risk lifecycle, risk-review hardening, stewardship validators, full TDD trace, full feedback-loop audit, detailed Manual QA policy, full module/interface and domain-language review, and broad context-hygiene validators. |
 | Operations Profile | Full report/export, recover/export suite, release handoff, artifact integrity operations, projection refresh/reconcile suite, doctor/readiness suite, broad operator surface, runtime conformance suite, conformance runner, generated conformance artifacts, executable fixture catalog, and Export report. |
 | Roadmap | Dashboard, hosted workflow UI, artifact dashboard, rich card expansion, broad connectors, connector marketplace, team workflow, parallel orchestration, metrics, automated Browser QA Capture, Cross-Surface Verification automation, hosted/remote workflows, preventive guard expansion, hooks, deployment, canary, rollback, production monitoring, and other expansion candidates. |
 | Security non-claims | OS-level sandboxing, arbitrary-tool isolation, permission isolation, tamper-proof local storage, or default preventive pre-tool blocking. |
@@ -151,6 +152,7 @@ These decisions are resolved in the documentation baseline but still require mai
 | Minimal storage boundary | Keep MVP-1 storage to the minimal active owner records needed for the user work loop. | Later-profile tables/records stay out unless owner docs promote them. |
 | Acceptance boundaries | Sensitive action approval, final acceptance, and residual-risk acceptance stay separate. | Final acceptance is not Approval, and residual-risk acceptance is not final acceptance. |
 | Minimal evidence and close contract | Use Core-owned `evidence_summary`; successful close requires sufficient required evidence, resolved required judgment, recorded required final acceptance, visible close-relevant residual risk, and explicit residual-risk acceptance for accepted-risk close. | Full Evidence Manifest, detached Eval, full Manual QA, and rich residual-risk lifecycle stay later/profile unless activated by owner scope, policy, or profile. |
+| Design-quality MVP boundary | Use [Design Quality Policies: Active MVP blocking set](../reference/design-quality-policies.md#active-mvp-blocking-set). | Full domain language consistency, full module/interface review, full TDD trace, full codebase stewardship suite, full feedback-loop audit, detailed Manual QA policy, and detached verification profile are routed candidate or advisory/later by default. |
 | Small direct changes | Small changes still need explicit scope, compatible `prepare_write`, `record_run`, and required evidence support. | Small-change labeling must not bypass authority, user judgment, evidence, or risk visibility. |
 | Local access and errors | Use the API, Operations, and Security owner contracts for local access, unavailable Core/MCP, state conflict, and display-safe details. | Build docs do not define new public error codes or precedence. |
 
@@ -173,7 +175,7 @@ Do not build these as MVP-1 prerequisites:
 
 | Later area | Keep out of MVP-1 |
 |---|---|
-| [Assurance Profile](../later/assurance-profile.md) | Verification strengthening, Manual QA, detailed evidence, risk review, detailed evaluation output, full Approval lifecycle, stewardship validators, TDD trace, feedback-loop policy, and context-hygiene validators. |
+| [Assurance Profile](../later/assurance-profile.md) | Verification strengthening, detailed Manual QA, detailed evidence, risk review, detailed evaluation output, full Approval lifecycle, stewardship validators, full TDD trace, full feedback-loop audit, full module/interface and domain-language review, and context-hygiene validators beyond stale write/close context. |
 | [Operations Profile](../later/operations-profile.md) | Export, recovery, handoff, operator readiness, doctor/readiness surfaces, artifact integrity operations, projection refresh/reconcile operations, conformance runner, and broad operator surface. |
 | [Roadmap](../roadmap.md) | Dashboard, hosted workflows, team workflows, broader connectors, automated Browser QA Capture, Cross-Surface Verification, Context Index, metrics, preventive guard expansion, hooks, permissions, parallel orchestration, deployment, canary, rollback, production monitoring, and other expansion candidates. |
 

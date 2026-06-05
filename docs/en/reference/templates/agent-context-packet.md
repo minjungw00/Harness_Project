@@ -15,6 +15,7 @@ Boundary: this packet is support context only. It cannot authorize writes, satis
 - pending user judgments and judgment request refs
 - evidence refs, Run refs, ArtifactRefs, redaction state, and evidence gaps
 - close blockers, residual-risk summary, final-acceptance need/status, and relevant owner refs
+- design-quality routed action and owner refs when the next safe action depends on them
 - source clocks, freshness state, MCP/Core availability, and guarantee level
 - owner document or owner-section pointers needed for the next action
 
@@ -43,6 +44,7 @@ agent_context_packet:
   pending_judgments: {pending_user_judgment_refs|none}
   active_blockers: {active_blockers|none}
   evidence: {evidence_refs_and_gaps}
+  design_quality: {design_quality_routed_action|none}
   close: {close_blockers_and_acceptance_state}
   residual_risk: {residual_risk_summary}
   next_safe_action: {next_safe_action}
@@ -57,4 +59,4 @@ agent_context_packet:
 
 ## Notes
 
-Keep the packet one screen or less. Do not include full schemas, full reference docs, full historical event logs, raw artifacts, full report bodies, full templates, unrelated templates, or future catalog material by default.
+Keep the packet one screen or less. Do not include full schemas, full reference docs, full historical event logs, raw artifacts, full report bodies, full templates, unrelated templates, full design-quality catalogs, or future catalog material by default.

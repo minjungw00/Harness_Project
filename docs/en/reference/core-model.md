@@ -408,7 +408,7 @@ Close readiness must not be represented as one "done" bit. Keep these dimensions
 | [Scope Gate](#scope-gate) | Whether active scope covers the requested write or close-relevant work. |
 | [Decision Gate](#decision-gate) | Whether user-owned judgment blocks progress, write, or close. |
 | [Approval Gate](#approval-gate) | Whether sensitive-action permission is missing, pending, granted, denied, expired, or drifted. |
-| [Design Gate](#design-gate) | Whether enabled design-quality policy blocks progress. |
+| [Design Gate](#design-gate) | Whether enabled design-quality policy routes a finding, and whether it reaches a Core-backed blocker. |
 | [Evidence Gate](#evidence-gate) | Whether required evidence is absent, partial, sufficient, stale, or blocked. |
 | [Verification Gate](#verification-gate) | Whether required verification has passed, is pending, failed, waived, or blocked. |
 | [QA Gate](#qa-gate) | Whether required Manual QA passed, failed, was waived, or remains pending. |
@@ -460,6 +460,8 @@ not_required | required | pending | passed | partial | waived | stale | blocked
 
 `design_gate` applies only when an enabled design-quality policy makes it applicable. Detailed design validators are later-profile material unless the active profile explicitly enables them.
 
+For active MVP, design-quality policy blocks write or close by default only for the small Core-backed set owned by [Design Quality Policies: Active MVP blocking set](design-quality-policies.md#active-mvp-blocking-set): Autonomy Boundary exceeded, unresolved user judgment, missing active scope, missing required evidence, stale context affecting write or close, or surface capability insufficient for the claimed guarantee. Full domain-language consistency, full module/interface review, full TDD trace, full codebase stewardship, full feedback-loop audit, detailed Manual QA policy, and detached verification profile are routed candidate or advisory/later by default.
+
 ### Evidence Gate
 
 ```text
@@ -494,7 +496,7 @@ Detailed independence profiles, evaluator bundles, same-session guards, and cros
 not_required | required | pending | passed | failed | waived
 ```
 
-`qa_gate` applies only when Manual QA is required by profile, policy, user request, task type, changed surface, or detected risk. Browser captures, screenshots, logs, and automated checks can support QA context but do not become the human QA judgment.
+`qa_gate` applies only when Manual QA is required by an active profile, explicit user request, owner-promoted policy path, or active task/close criterion. Browser captures, screenshots, logs, and automated checks can support QA context but do not become the human QA judgment. Detailed Manual QA policy is later/profile by default and is not an automatic active MVP close blocker.
 
 ### Acceptance Gate
 
@@ -711,7 +713,7 @@ The decision algorithm checks the close intent and required gates:
 5. Check scope.
 6. Check blocking user judgments and `decision_gate`.
 7. Check sensitive-action permission when sensitive categories applied.
-8. Check enabled design policy.
+8. Check enabled design policy only through the active impact routing; active MVP blocks only on the small Core-backed design-quality set.
 9. Check evidence when evidence is required.
 10. Check verification only when verification is required.
 11. Check Manual QA only when Manual QA is required.

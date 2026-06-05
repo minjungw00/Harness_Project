@@ -6,7 +6,7 @@
 
 경계: 상태 보기 템플릿(projection template)일 뿐이며 하네스 서버/런타임 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 단계와 상태 보기 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 
-구현 계층: 향후/진단용 상태 보기(projection)입니다. 독립형 설계 상태 보기는 나중 프로필 범위이며 초기 사용자 판단 맥락은 사용자 판단 요청 표시에서 나타날 수 있습니다.
+구현 계층: 향후/진단용 상태 보기(projection)입니다. 독립형 설계 상태 보기는 나중 프로필 범위이며 초기 사용자 판단 맥락은 사용자 판단 요청 표시에서 나타날 수 있습니다. 활성 MVP는 이 전체 설계 보고서가 아니라 compact routed design-quality action을 사용합니다.
 
 ## 기준 기록
 
@@ -17,7 +17,7 @@
 - `module_map_items`
 - `interface_contracts`
 - 피드백 루프, TDD, 수동 QA, 근거 참조
-- 표시되는 경우 기존 owner 경로로 라우팅된 설계 품질 또는 스튜어드십 발견 사항
+- 표시되는 경우 기존 owner 경로로 라우팅된 설계 품질 또는 스튜어드십 발견 사항. Impact class와 routed action 하나를 함께 표시합니다.
 - 읽기용 보기 최신성(projection freshness) 입력
 
 ## 렌더링 섹션
@@ -33,6 +33,7 @@
 - 대안
 - 추천
 - 검증 고려사항
+- 설계 품질 라우팅
 - 참조
 
 ## 전체 템플릿
@@ -106,6 +107,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 필요한 수동 QA:
 - 필요한 근거:
 
+## 설계 품질 라우팅
+| Finding | 영향 분류 | Routed action | Owner ref | 다음 행동 |
+|---|---|---|---|---|
+
 ## 참조
 - TASK:
 - DEC:
@@ -123,4 +128,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 메모
 
-이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 설계 지원 owner 참조와 라우팅된 스튜어드십 발견 사항을 요약할 수 있지만 owner 기록이나 검토 단계(Review Stages)가 가리키는 owner 경로를 대체하지 않습니다. 닫기를 충족하거나 차단하지 않고, 민감 동작 승인(Approval)을 부여하지 않으며, 근거 생성, QA 또는 검증 기록, 최종 수락, 잔여 위험 수락, 쓰기 허가 기록(Write Authorization) 생성을 하지 않습니다.
+이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 설계 지원 owner 참조와 라우팅된 스튜어드십 발견 사항을 요약할 수 있지만 owner 기록이나 검토 단계(Review Stages)가 가리키는 owner 경로를 대체하지 않습니다. 닫기를 충족하거나 차단하지 않고, 민감 동작 승인(Approval)을 부여하지 않으며, 근거 생성, QA 또는 검증 기록, 최종 수락, 잔여 위험 수락, 쓰기 허가 기록(Write Authorization) 생성을 하지 않습니다. 활성 MVP blocker는 여전히 작은 Core-backed design-quality set에서만 나옵니다. 전체 보고서는 Advisory/later catalog finding을 보여줄 수 있지만 그것만으로 close requirement를 만들지 않습니다.

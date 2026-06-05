@@ -6,7 +6,7 @@ Use `DESIGN` when shared design, domain language impact, module/interface planni
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
-Implementation tier: Future/diagnostic projections. Standalone design projection is later-profile scope; early user judgment context can appear in the user judgment request display.
+Implementation tier: Future/diagnostic projections. Standalone design projection is later-profile scope; early user judgment context can appear in the user judgment request display. Active MVP uses compact routed design-quality actions, not this full design report.
 
 ## Source records
 
@@ -17,7 +17,7 @@ Implementation tier: Future/diagnostic projections. Standalone design projection
 - `module_map_items`
 - `interface_contracts`
 - feedback loop, TDD, Manual QA, and evidence refs
-- design-quality or stewardship findings routed through existing owner paths, when displayed
+- design-quality or stewardship findings routed through existing owner paths, when displayed, with impact class and one routed action
 - projection freshness inputs
 
 ## Rendered sections
@@ -106,6 +106,10 @@ updated_at: 2026-05-06T09:30:15+09:00
 - required Manual QA:
 - required evidence:
 
+## Design Quality Routing
+| Finding | Impact class | Routed action | Owner ref | Next action |
+|---|---|---|---|---|
+
 ## References
 - TASK:
 - DEC:
@@ -123,4 +127,4 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## Notes
 
-This template is a rendered shape, not canonical state. It may summarize design-support owner refs and routed stewardship findings, but it must not replace those owner records or the owner paths that Review Stages point to. It does not satisfy or block close, grant Approval, create evidence, record QA or verification, accept results, accept residual risk, or create Write Authorization.
+This template is a rendered shape, not canonical state. It may summarize design-support owner refs and routed stewardship findings, but it must not replace those owner records or the owner paths that Review Stages point to. It does not satisfy or block close, grant Approval, create evidence, record QA or verification, accept results, accept residual risk, or create Write Authorization. Active MVP blockers still come only from the small Core-backed design-quality set; the full report may show advisory/later catalog findings without turning them into close requirements.

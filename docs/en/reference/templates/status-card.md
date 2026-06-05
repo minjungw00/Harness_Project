@@ -15,6 +15,7 @@ Boundary: this template is rendered display only. It is not Core state, not evid
 - pending `user_judgment` refs and compact judgment summaries
 - run refs, `evidence_ref` refs, ArtifactRefs, redaction state, and evidence gaps
 - close blockers, final-acceptance need/status, residual-risk visibility, and residual-risk acceptance refs when relevant
+- design-quality routed action when relevant, using the active MVP impact classes rather than the full policy catalog
 - guarantee level and capability/fallback status
 - `source_state_version`, render time, and freshness state
 
@@ -43,6 +44,7 @@ Evidence: status={evidence_summary.status}; summary={known_evidence_summary|none
 Evidence gaps: {evidence_gaps|none}
 Check or verification: {check_or_verification_summary|none}
 Close: {close_readiness_summary}; blockers={close_blockers|none}
+Design quality: {design_quality_routed_action|none}
 Residual risk: {residual_risk_visibility|none}
 Next safe action: {next_safe_action}
 Guarantee: {guarantee_level}; {guarantee_note}
@@ -54,3 +56,5 @@ Sources/freshness: state={source_state_version}; refs={source_refs}; rendered={u
 Keep this card readable. Do not dump schemas, DDL, event logs, full artifacts, full report bodies, full templates, future catalogs, detailed Evidence Manifest bodies, detailed Eval bodies, or full Manual QA records.
 
 When a field has no source record, render `none`, `unknown`, `not_required`, or an explicit blocker instead of inventing state.
+
+Design-quality content should fit one line: the current routed action and, when blocking, the single next action. Do not list full domain-language, module/interface, TDD, stewardship, feedback-loop, Manual QA, or detached-verification catalogs in the MVP-1 status card.

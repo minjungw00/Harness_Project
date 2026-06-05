@@ -15,6 +15,7 @@
 - 대기 중인 사용자 판단과 판단 요청 참조
 - 근거 참조, Run 참조, ArtifactRefs, `redaction_state`, 근거 공백
 - 닫기 막힘, 잔여 위험 요약, 최종 수락 필요 여부/상태, 관련 owner 참조
+- 다음 안전한 행동이 의존할 때 design-quality routed action과 owner ref
 - source clock, 최신성 상태, MCP/Core availability, 보장 수준
 - 다음 행동에 필요한 owner 문서 또는 owner section pointer
 
@@ -43,6 +44,7 @@ agent_context_packet:
   pending_judgments: {pending_user_judgment_refs|none}
   active_blockers: {active_blockers|none}
   evidence: {evidence_refs_and_gaps}
+  design_quality: {design_quality_routed_action|none}
   close: {close_blockers_and_acceptance_state}
   residual_risk: {residual_risk_summary}
   next_safe_action: {next_safe_action}
@@ -57,4 +59,4 @@ agent_context_packet:
 
 ## 메모
 
-에이전트 맥락 패킷은 한 화면 안팎으로 유지합니다. 전체 schema, 전체 Reference 문서, 전체 historical event log, raw artifact, 전체 report body, 전체 template, 관련 없는 template, future catalog material을 기본으로 넣지 않습니다.
+에이전트 맥락 패킷은 한 화면 안팎으로 유지합니다. 전체 schema, 전체 Reference 문서, 전체 historical event log, raw artifact, 전체 report body, 전체 template, 관련 없는 template, full design-quality catalog, future catalog material을 기본으로 넣지 않습니다.

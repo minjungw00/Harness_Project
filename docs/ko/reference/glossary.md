@@ -333,11 +333,11 @@ User Judgment Request의 legacy name입니다. Migration note 또는 old payload
 
 ### Design Gate
 
-Shared design, domain language, TDD trace, module/interface review 또는 기타 policy-pack requirements 같은 required design-quality preconditions를 위한 kernel gate입니다.
+Enabled design-quality policy finding을 라우팅하는 kernel gate surface입니다. 활성 MVP에서 write 또는 close를 기본 차단하는 finding은 [설계 품질 정책: 활성 MVP 차단 집합](design-quality-policies.md#활성-mvp-차단-집합)의 작은 Core-backed 집합뿐입니다. 더 넓은 domain-language, TDD, module/interface, stewardship, feedback-loop, Manual QA, detached-verification catalog finding은 active owner path가 승격하지 않는 한 candidate 또는 advisory/later입니다.
 
 ### Design-Quality Policy Pack
 
-Design-quality policy contracts와 severity composition의 담당 문서입니다. Shared design, decision quality, autonomy 경계, domain language, vertical slice, feedback loop, TDD trace, module/interface review, Codebase Stewardship, 수동 QA, context hygiene를 다룹니다. Gates, validators, evidence, write blockers, close blockers에 영향을 주지만 kernel state machine을 재정의하지 않습니다.
+Design-quality policy contract, impact class, routed action, severity composition의 담당 문서입니다. Shared design, decision quality, autonomy 경계, domain language, vertical slice, feedback loop, TDD trace, module/interface review, Codebase Stewardship, 수동 QA, context hygiene를 다룹니다. Finding은 허용 route와 active owner path를 통해서만 gate, validator, evidence, user judgment request, residual-risk marker, advisory next action, write blocker, close blocker에 영향을 줄 수 있습니다. Kernel state machine을 재정의하지 않습니다.
 
 ### Detached Verification
 
