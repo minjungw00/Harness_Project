@@ -94,7 +94,7 @@ Build 문서는 exact schema, DDL, API definition을 중복하지 않습니다. 
 | MVP-1 보안 보장 표현과 local-access posture | [보안 참조](../reference/security.md). |
 | Compact derived view, projection authority boundary, freshness, template ownership | [Projection과 Template 참조](../reference/projection-and-templates.md), [Template 참조](../reference/templates/README.md). |
 | Reference surface `capability_profile`과 user-facing surface behavior | [Agent 통합 참조](../reference/agent-integration.md), [Surface Cookbook](../reference/surface-cookbook.md). |
-| Future conformance model과 future smoke authoring | [Conformance Fixtures 참조](../reference/conformance-fixtures.md). |
+| Future state-assertion conformance example과 smoke authoring | [Conformance Fixtures 참조](../reference/conformance-fixtures.md). |
 
 ## MVP-1에 필요한 API 문서
 
@@ -198,6 +198,6 @@ MVP-1 사용자 작업 루프는 사용자가 아래를 볼 수 있을 때만 co
 - Unsupported behavior에 claim이 의존할 때 reference `capability_profile` limit이 보임
 - Required evidence가 `sufficient`가 아니거나, required user judgment가 unresolved 또는 blocked이거나, required final acceptance가 없거나, residual risk가 required 상태로 보이지 않거나 수락되지 않으면 close가 hold됨
 - MCP/Core를 사용할 수 없을 때 권한 상태를 만들어 내지 않음
-- Core record에서 파생된 네 가지 사용자용 작은 출력과 에이전트용 패킷 하나, 필요한 경우 stale/failed freshness 표시
+- Core record에서 파생된 네 가지 사용자용 작은 출력과 에이전트용 패킷 하나, 필요한 경우 stale/failed freshness 표시. 이 출력은 conformance proof가 아님
 
 이 checklist 통과는 보증 프로필, 운영 프로필, 로드맵 범위, runtime conformance suite를 수락한다는 뜻이 아닙니다.

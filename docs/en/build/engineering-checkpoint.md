@@ -16,16 +16,17 @@ This is planning documentation only. Runtime/server implementation may start onl
 
 Engineering Checkpoint is designed to prove that future Harness can keep one local authority record alive through Core:
 
-1. One local project is known.
-2. One reference `capability_profile` is registered for `surface_id=reference-local-mcp`.
-3. One active Task exists.
-4. One active Change Unit or equivalent owner-approved scope boundary exists for an intended write.
-5. `harness.prepare_write` returns a structured blocker for incompatible work and a Harness-compatible decision for compatible work.
-6. One durable, single-use internal Write Authorization record is created only for the compatible non-dry-run decision.
-7. `harness.record_run` records one compatible Run and consumes that authorization once.
-8. One artifact/evidence ref is registered and linked through an owner path.
-9. Status/blocker output reads current Core state without mutating it and shows the reference surface guarantee limit.
-10. A narrow `harness.close_task` blocker check can show close is blocked when required support is missing.
+1. Status can report no active Task without mutating state.
+2. An owner-valid setup/intake path can create exactly one active Task.
+3. One reference `capability_profile` is registered for `surface_id=reference-local-mcp`.
+4. One active Change Unit or equivalent owner-approved scope boundary is required before product-write authority.
+5. `harness.prepare_write` returns structured blockers for missing or out-of-scope work, creates one durable active Write Authorization only for a compatible non-dry-run decision, creates no authorization for dry-run, and replays without duplicating authorization.
+6. `harness.record_run` records one compatible Run and consumes that authorization once.
+7. Consumed, missing, or stale authorization blocks `record_run` without creating completion evidence.
+8. Artifact/evidence refs record hash and redaction metadata through an owner path.
+9. Evidence summary can show partial or sufficient state from registered refs.
+10. Status/blocker output reads current Core state without mutating it and shows the reference surface guarantee limit.
+11. Narrow `harness.close_task` blocker checks can show close is blocked by missing evidence or unresolved user judgment, and can show residual risk before acceptance without implementing full close semantics.
 
 That is all. The checkpoint exists to prove the authority loop before user-facing value is added.
 
@@ -54,9 +55,9 @@ Use this as an implementation planning order after readiness is accepted. It nam
 | 3. One active Change Unit/scope boundary | Attach the smallest active Change Unit or owner-approved scope boundary that can constrain one intended product write. | Product writes without compatible scope cannot receive write authority. | [Core Model Reference](../reference/core-model.md). |
 | 4. `prepare_write` decision | Route the intended write through the owner pre-write scope check. | Missing or out-of-scope work returns a structured Harness blocker or denial; compatible work returns a Write Authorization ref with honest guarantee display. This is not OS permission or physical pre-tool blocking. | [Core Model Reference](../reference/core-model.md#prepare_write), [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write), [API Errors](../reference/api/errors.md). |
 | 5. `record_run` | Record one compatible Run and consume the authorization. | A compatible Run succeeds once; reuse of the consumed authorization fails. | [Core Model Reference](../reference/core-model.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run). |
-| 6. Artifact/evidence ref | Register one durable artifact or evidence ref through the owner path. | A Run or minimal owner relation can cite that registered ref. | [API Schema Core](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md). |
+| 6. Artifact/evidence ref | Register one durable artifact or evidence ref through the owner path. | A Run or minimal owner relation can cite that registered ref, including hash, size, content type, redaction, owner, and availability metadata where the owner path requires it. | [API Schema Core](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md). |
 | 7. Status and blockers | Expose current state and blockers without mutation. | Repeated reads do not change state, and blockers are structured enough for future smoke checks. | [`harness.status`](../reference/api/mvp-api.md#harnessstatus), [Core Model Reference](../reference/core-model.md), [API Schema Core](../reference/api/schema-core.md). |
-| 8. Narrow close blocker check | Check whether close is blocked by the missing active support in this authority loop. | A blocked close returns a structured blocker without creating final acceptance, residual-risk acceptance, full assurance close semantics, or generated reports. | [Core Model Reference](../reference/core-model.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task), [API Errors](../reference/api/errors.md). |
+| 8. Narrow close blocker check | Check whether close is blocked by missing evidence, unresolved user judgment, or visible residual risk in this authority loop. | A blocked close returns structured blockers without creating final acceptance, residual-risk acceptance, full assurance close semantics, or generated reports. | [Core Model Reference](../reference/core-model.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task), [API Errors](../reference/api/errors.md). |
 
 For API staging, use the [Stage Profile Manifest](../reference/api/schema-core.md#stage-profile-manifest). For storage planning, use [Storage](../reference/storage.md) and apply only the owner-approved minimal subset needed by this checkpoint.
 
@@ -69,7 +70,8 @@ A future Engineering Checkpoint plan is acceptable when:
 - It remains planning-only until [Documentation acceptance status](implementation-overview.md#documentation-acceptance-status) accepts implementation planning readiness.
 - It demonstrates one scoped Harness authority path through `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref, structured status/blocker output, and a narrow close-blocker check.
 - It returns structured denials or blockers for missing scope, out-of-scope intended work, missing Write Authorization for product-write Runs, reuse of a consumed Write Authorization, and missing artifact/evidence support where the active path requires support.
-- It treats all status text, generated prose, and projection-like output as downstream reads from Core records.
+- It treats all status text, generated prose, and projection-like output as downstream reads from Core records, not fixture proof.
+- Its future smoke checks assert Core-owned state, `task_events` when stable events exist, returned errors, storage rows, artifact refs, evidence state, close blockers, and guarantee display facts.
 - It does not require full projection rendering, multiple projection kinds, detailed templates, operations, conformance runner, broad connector ecosystem, hosted connector registry, cross-surface orchestration, or later-profile storage to pass.
 - It links strict fixture format and assertions to [Conformance Fixtures Reference](../reference/conformance-fixtures.md) instead of defining them here.
 
@@ -77,7 +79,7 @@ A future Engineering Checkpoint plan is acceptable when:
 
 Kernel Smoke is only the narrow future authoring label for Engineering Checkpoint checks. It is not a stage name, not a full suite, and not a current executable fixture set.
 
-When runtime implementation exists, future smoke checks should assert owner records, state transitions, artifact/evidence refs, structured blockers, and errors. They should not prove success by matching rendered prose, generated Markdown, or polished templates.
+When runtime implementation exists, future smoke checks should assert owner records, state transitions, storage rows, `task_events` when stable events exist, artifact/evidence refs, structured blockers, primary errors, and guarantee display facts. They should not prove success by matching rendered prose, generated Markdown, or polished templates.
 
 Use [Conformance Fixtures Reference: Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue) for future authoring order and [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format) for exact future fixture shape.
 

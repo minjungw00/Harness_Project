@@ -94,7 +94,7 @@ Build docs do not duplicate exact schemas, DDL, or API definitions. Use these ow
 | MVP-1 security guarantee wording and local-access posture | [Security Reference](../reference/security.md). |
 | Compact derived views, projection authority boundaries, freshness, and template ownership | [Projection And Templates Reference](../reference/projection-and-templates.md), [Template Reference](../reference/templates/README.md). |
 | Reference surface `capability_profile` and user-facing surface behavior | [Agent Integration Reference](../reference/agent-integration.md), [Surface Cookbook](../reference/surface-cookbook.md). |
-| Future conformance model and future smoke authoring | [Conformance Fixtures Reference](../reference/conformance-fixtures.md). |
+| Future state-assertion conformance examples and smoke authoring | [Conformance Fixtures Reference](../reference/conformance-fixtures.md). |
 
 ## API docs needed for MVP-1
 
@@ -198,6 +198,6 @@ MVP-1 User Work Loop can be considered complete only when a user can observe:
 - reference `capability_profile` limits visible when a claim depends on unsupported behavior
 - close held when required evidence is not `sufficient`, required user judgment is unresolved or blocked, required final acceptance is missing, or residual risk is not visible/accepted as required
 - no fabricated authority when MCP/Core is unavailable
-- four user-facing compact outputs and one agent-facing packet derived from Core records, with stale or failed freshness visible where applicable
+- four user-facing compact outputs and one agent-facing packet derived from Core records, with stale or failed freshness visible where applicable; these outputs are not conformance proof
 
 Passing this checklist does not accept Assurance Profile, Operations Profile, Roadmap scope, or runtime conformance suites.

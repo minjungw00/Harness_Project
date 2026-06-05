@@ -110,7 +110,7 @@ Close가 stage 범위에 있으면 Core는 close-relevant state를 확인하고 
 | 내부 엔지니어링 점검 | Project state, registered reference `capability_profile` 하나, 활성 Task, 활성 Change Unit/scope boundary, `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref 하나, status/blocker output, 좁은 close-blocker check. |
 | MVP-1 사용자 작업 루프 | 내부 엔지니어링 점검에 평소 말로 시작/이어가기, work-shape classification, minimal user judgment, evidence summary, close result/blocker display, `harness.status.next_actions`를 통한 다음 안전한 행동, 잔여 위험 표시, honest reference-surface guarantee display, 네 가지 사용자용 작은 출력, 에이전트용 맥락 패킷 하나를 더합니다. |
 | 보증 프로필 | Verification, Manual QA, richer final acceptance/residual-risk behavior, stewardship, TDD, feedback-loop, context-hygiene hardening. |
-| 운영 프로필 | Doctor/readiness, recover/export, artifact integrity, release handoff, projection/reconcile operations, suite가 존재한 뒤 conformance runner. |
+| 운영 프로필 | Doctor/readiness, recover/export, artifact integrity, release handoff, projection/reconcile operations, 실행 가능한 state-assertion suite가 존재한 뒤 conformance runner. |
 | 로드맵 | Dashboard, hosted UI, broad connector, hosted connector registry, automation, metrics, team workflow, cross-surface orchestration, parallel orchestration, promoted future candidate. |
 
 첫 내부 smoke는 [내부 엔지니어링 점검](engineering-checkpoint.md)을 사용하고, 첫 사용자 가치 계획은 [MVP-1 사용자 작업 루프](mvp-user-work-loop.md)를 사용합니다.

@@ -14,11 +14,11 @@ Harness 운영자 절차, Conformance staging과 향후 run entrypoint behavior,
 - Conformance run entrypoint overview, staged suite boundary, runtime/docs-maintenance 분리가 필요할 때.
 - Runtime Core fixture conformance와 docs-only maintenance check를 구분해야 할 때.
 - State, artifact, projection, MCP availability, generated file 사이의 운영 불일치를 진단할 때.
-- Future fixture body shape나 assertion semantics가 필요할 때. Overview는 여기서 시작하고 core detail과 작은 내부 엔지니어링 점검 / MVP-1 동작 예시는 [Conformance Fixtures 참조](conformance-fixtures.md)를, 간결한 향후 scenario family 목록은 [향후 Fixtures](../later/future-fixtures.md)를 사용합니다.
+- Future fixture body shape나 assertion semantics가 필요할 때. Overview는 여기서 시작하고 core detail과 활성 state-assertion 동작 예시는 [Conformance Fixtures 참조](conformance-fixtures.md)를, 간결한 향후 scenario family 목록은 [향후 Fixtures](../later/future-fixtures.md)를 사용합니다.
 
 ## 읽기 전에
 
-핵심 적합성 모델, 작은 내부 엔지니어링 점검 / MVP-1 동작 예시, future fixture body shape, execution, assertion semantics, 현재 단계 상태, Kernel Smoke 작성 순서는 [Conformance Fixtures 참조](conformance-fixtures.md)를 사용합니다. Catalog listing만으로 stage-required가 되지 않는 간결한 향후 scenario family 목록은 [향후 Fixtures](../later/future-fixtures.md)를 사용합니다. Core transaction order는 [Runtime Architecture](runtime-architecture.md#state-transaction-flow)를, security asset, trust boundary, threat, control은 [보안 참조](security.md)를, public tool schema와 replay 동작은 [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md)를, storage layout은 [Storage](storage.md)를, 상태 전이 의미는 [Core Model 참조](core-model.md)를 사용합니다.
+핵심 적합성 모델, 활성 state-assertion 동작 예시, future fixture body shape, execution, assertion semantics, 현재 단계 상태, Kernel Smoke 작성 순서는 [Conformance Fixtures 참조](conformance-fixtures.md)를 사용합니다. Catalog listing만으로 stage-required가 되지 않는 간결한 향후 scenario family 목록은 [향후 Fixtures](../later/future-fixtures.md)를 사용합니다. Core transaction order는 [Runtime Architecture](runtime-architecture.md#state-transaction-flow)를, security asset, trust boundary, threat, control은 [보안 참조](security.md)를, public tool schema와 replay 동작은 [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md)를, storage layout은 [Storage](storage.md)를, 상태 전이 의미는 [Core Model 참조](core-model.md)를 사용합니다.
 
 ## 핵심 생각
 
@@ -36,7 +36,7 @@ Runtime suite pass/fail은 실행 가능한 상태 비교에 기반합니다. Ru
 
 Rendered prose, status text, Journey Card text, close report, agent summary는 독자에게 도움이 될 수 있지만, 그것만 맞춰서는 conformance를 통과할 수 없습니다. Finding과 close blocker는 prose-only report text가 아니라 structured Core/API result, owner-record ref, validator result, event, artifact, projection freshness, 또는 문서화된 docs-maintenance report label로 assert해야 합니다.
 
-이 문서는 향후 구현을 위한 operator-facing procedure와 conformance overview를 담당합니다. [Conformance Fixtures 참조](conformance-fixtures.md)는 핵심 적합성 모델, exact future fixture body shape, assertion semantics, suite catalog metadata boundary, 검증 프로파일별 증명 동작, 작은 내부 엔지니어링 점검 / MVP-1 동작 예시, 축소된 Kernel Smoke queue를 담당합니다. [향후 Fixtures](../later/future-fixtures.md)는 승격 전까지 catalog-only로 남는 간결한 향후 scenario family 목록을 담당합니다.
+이 문서는 향후 구현을 위한 operator-facing procedure와 conformance overview를 담당합니다. [Conformance Fixtures 참조](conformance-fixtures.md)는 핵심 적합성 모델, exact future fixture body shape, assertion semantics, suite catalog metadata boundary, 검증 프로파일별 증명 동작, 활성 Kernel Smoke, MVP-1 user-loop, security/capability, artifact/evidence 동작 예시, 축소된 Kernel Smoke queue를 담당합니다. [향후 Fixtures](../later/future-fixtures.md)는 승격 전까지 catalog-only로 남는 간결한 향후 scenario family 목록을 담당합니다.
 
 ## 담당하는 참조 범위
 
@@ -61,7 +61,7 @@ Conformance fixture body shape, fixture assertion semantics, 향후 scenario 목
 | Operator command 의미 | [운영자 entrypoint](#운영자-entrypoint), 그리고 해당 command section: [connect](#connect), [doctor](#doctor), [serve mcp](#serve-mcp), [projection refresh](#projection-refresh), [reconcile](#reconcile), [recover](#recover), [export](#export), [artifacts check](#artifacts-check), [conformance run](#conformance-run) | Core 상태 권한은 [Core Model 참조](core-model.md)에 남고, transaction order는 [Runtime Architecture](runtime-architecture.md#state-transaction-flow)에 남습니다. |
 | Operator 진단과 runtime-effect 경계 | [운영 진단은 새 상태가 아니라 사실을 보고합니다](#운영-진단은-새-상태가-아니라-사실을-보고합니다), [docs-maintenance 프로필](#docs-maintenance-프로필), [Release Handoff Export Profile](#release-handoff-export-profile) | Docs-maintenance rule body는 [문서 작성 가이드](../maintain/authoring-guide.md#docs-maintenance-checks)에 남습니다. |
 | Fixture body shape와 runner behavior | [Conformance Fixtures 참조: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format), [Conformance Execution](conformance-fixtures.md#conformance-execution), [Fixture Assertion Semantics](conformance-fixtures.md#fixture-assertion-semantics) | Public request schema는 [MVP API](api/mvp-api.md)와 [API Schema Core](api/schema-core.md)에 남습니다. Idempotency와 state conflict behavior는 [API Errors](api/errors.md)에 남습니다. Storage seeding detail은 [Storage](storage.md)에 남습니다. |
-| MVP 동작 예시, future fixture 작성 순서, future suite label | [Conformance staging](#conformance-staging), 그다음 [검증 프로파일별 증명 동작](conformance-fixtures.md#검증-프로파일별-증명-동작), [내부 엔지니어링 점검 동작 예시](conformance-fixtures.md#engineering-checkpoint-behavior-examples), [MVP-1 사용자 작업 루프 동작 예시](conformance-fixtures.md#mvp-1-user-work-loop-behavior-examples), [Clarification Quality 동작 예시](conformance-fixtures.md#clarification-quality-fixture-group), [커널 스모크(Kernel Smoke) Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), [향후 Fixtures: Fixture Suites](../later/future-fixtures.md#fixture-suites) | Kernel gate와 event name은 [Core Model 참조](core-model.md)에 남습니다. Future catalog suite label은 listing만으로 early-stage requirement가 되지 않습니다. |
+| 활성 동작 예시, future fixture 작성 순서, future suite label | [Conformance staging](#conformance-staging), 그다음 [검증 프로파일별 증명 동작](conformance-fixtures.md#검증-프로파일별-증명-동작), [Kernel Smoke 동작 예시](conformance-fixtures.md#engineering-checkpoint-behavior-examples), [MVP-1 사용자 작업 루프 동작 예시](conformance-fixtures.md#mvp-1-user-work-loop-behavior-examples), [Security And Capability 동작 예시](conformance-fixtures.md#security-and-capability-behavior-examples), [Artifact And Evidence 동작 예시](conformance-fixtures.md#artifact-and-evidence-behavior-examples), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), [향후 Fixtures: Fixture Suites](../later/future-fixtures.md#fixture-suites) | Kernel gate와 event name은 [Core Model 참조](core-model.md)에 남습니다. Future catalog suite label은 listing만으로 early-stage requirement가 되지 않습니다. |
 | Concern별 향후 scenario 목록 | [향후 Fixtures: 시나리오 묶음 목록](../later/future-fixtures.md#fixture-예시-지도), 그다음 해당 inventory section | Catalog row는 fixture body, public input example, 현재 runtime conformance case가 아닙니다. |
 | Artifact integrity, export, recover, reconcile check | [artifacts check](#artifacts-check), [export](#export), [recover](#recover), [reconcile](#reconcile) | Artifact layout과 DDL은 [Storage](storage.md)에 남습니다. |
 | Security와 threat-model 진단 category | [doctor](#doctor), [serve mcp](#serve-mcp), [artifacts check](#artifacts-check) | Threat-model concept은 [보안 참조](security.md)에 남습니다. API, storage, kernel detail은 각 owner에 남습니다. |
@@ -126,11 +126,11 @@ Conformance는 runtime implementation이 존재한 뒤 단계적으로 실행할
 
 Build 문서는 첫 implementation slice와 stage exit를 계획하기 위한 문서 수준 수락 점검을 제공할 수 있습니다. 이 문서 점검은 reviewer가 내부 엔지니어링 점검을 좁게 유지하도록 돕지만 fixture field, suite metadata, public request schema, storage row, primary error, generated conformance artifact, runner comparison mode가 아닙니다. 향후 runtime pass/fail은 [Conformance Fixtures 참조](conformance-fixtures.md)의 exact body shape와 assertion semantics를 사용하는 실행 가능한 fixture에서만 나옵니다.
 
-내부 엔지니어링 점검은 첫 향후 내부 authority-loop target이며, 커널 스모크(Kernel Smoke)는 구현이 시작된 뒤 그 좁은 경로를 실행하는 향후 smoke-check label입니다. Stage exit criteria는 Build의 [내부 엔지니어링 점검](../build/engineering-checkpoint.md)이 담당합니다. Exact future runtime fixture queue는 [Conformance Fixtures 참조: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)가 담당합니다. Materialized된 뒤 최소 Kernel Smoke subset은 첫 내부 Core 권한 경로만 증명합니다. 전체 conformance suite를 요구하지 않고 MVP-1 사용자 작업 루프 fixtures, 보증 프로필 fixtures, operations conformance를 주장하지 않습니다.
+내부 엔지니어링 점검은 첫 향후 내부 authority-loop target이며, Kernel Smoke는 구현이 시작된 뒤 그 좁은 경로를 실행하는 향후 smoke-check label입니다. Stage exit criteria는 Build의 [내부 엔지니어링 점검](../build/engineering-checkpoint.md)이 담당합니다. Exact future runtime fixture queue는 [Conformance Fixtures 참조: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)가 담당합니다. Materialized된 뒤 최소 Kernel Smoke subset은 첫 내부 Core 권한 경로만 증명합니다. 전체 conformance suite를 요구하지 않고 MVP-1 사용자 작업 루프 fixtures, 보증 프로필 fixtures, operations conformance를 주장하지 않습니다.
 
 Reference-surface smoke expectation은 이 좁은 Kernel Smoke 작성 target에 속하지만, 현재 문서 전용 단계에서는 pass claim이 아닙니다. 예상 active profile은 `surface_id=reference-local-mcp`, `mcp_available=true`, `max_guarantee_level=detective`, unsupported pre-tool blocking과 isolation field, runtime fixture가 materialize되고 실행되기 전까지 `conformance_smoke_status=planned_not_run` 또는 equivalent planned/not-run state를 보고합니다.
 
-MVP-1 사용자 작업 루프는 [Conformance Fixtures 참조](conformance-fixtures.md#mvp-1-user-work-loop-behavior-examples)의 작은 user-value 동작 예시와 [Clarification Quality 동작 예시](conformance-fixtures.md#clarification-quality-fixture-group)을 사용합니다. 이 예시는 아직 실행 가능한 fixture가 아님. MVP-1은 broad future catalog, full Manual QA, Eval systems, TDD trace, module map, interface contract, Journey/Spine projection, export/recover, dashboard/team/orchestration, advanced connector/security fixture를 실행해야 하는 단계가 아닙니다.
+MVP-1 사용자 작업 루프는 [Conformance Fixtures 참조](conformance-fixtures.md#mvp-1-user-work-loop-behavior-examples)의 활성 user-value 동작 예시를 사용합니다. User loop에 영향을 주는 경우 [Security And Capability 동작 예시](conformance-fixtures.md#security-and-capability-behavior-examples)와 [Artifact And Evidence 동작 예시](conformance-fixtures.md#artifact-and-evidence-behavior-examples)도 함께 봅니다. 이 예시는 아직 실행 가능한 fixture가 아니며, 향후 각 fixture는 rendered prose가 아니라 Core state, event, error, storage row, artifact ref, projection freshness를 assert해야 합니다. MVP-1은 broad future catalog, full Manual QA, Eval systems, TDD trace, module map, interface contract, Journey/Spine projection, export/recover, dashboard/team/orchestration, later advanced connector/security fixture를 실행해야 하는 단계가 아닙니다.
 
 이후 conformance profile은 [MVP-1 사용자 작업 루프 계획](../build/mvp-user-work-loop.md)의 stage name을 따릅니다. 보증 프로필 fixtures는 보증 프로필에, 운영 프로필 또는 승격된 로드맵 fixtures는 운영 프로필과 승격된 로드맵 candidate에 대응합니다. Exact policy, API, storage, projection, connector, fixture requirement는 각 Reference owner에 남습니다. Suite catalog metadata는 runner selection과 reporting을 위해 scenario를 suite, delivery stage, tag로 group할 수 있지만 Core에 전달되지 않습니다. 향후 실행 가능한 fixture는 여전히 Core state, events, artifacts, projections/freshness, errors를 통해 검증해야 합니다.
 
@@ -374,7 +374,7 @@ flowchart TD
 
 MVP-1 사용자 작업 루프 계획에서 user judgment visibility는 status/next responses, judgment-context resources, user-judgment resources, enabled compatibility decision-packet resources, owner가 정의한 MVP-1 판단 보기로 렌더링합니다. 현재 위치 맥락은 먼저 owner가 정의한 compact MVP view로 렌더링합니다.
 
-Standalone full-format judgment, design, export, journey, detailed run, detailed evidence, Eval, TDD trace, module map, interface-contract projection을 위한 dedicated refresh target은 기능이 켜져 있을 때만 사용하는 profile-gated Future/diagnostic projections 또는 Operations/export reports이며, 커널 스모크(Kernel Smoke) 필수 대상이 아닙니다.
+Standalone full-format judgment, design, export, journey, detailed run, detailed evidence, Eval, TDD trace, module map, interface-contract projection을 위한 dedicated refresh target은 기능이 켜져 있을 때만 사용하는 profile-gated Future/diagnostic projections 또는 Operations/export reports이며, Kernel Smoke 필수 대상이 아닙니다.
 
 Projection support는 source-backed입니다. MVP-1은 [Projection과 Template 참조](projection-and-templates.md#mvp-1-보기-세트)와 [Template 참조](templates/README.md#mvp-1-템플릿-세트)가 소유한 네 가지 사용자용 작은 출력으로 persisted projection support 없이 사용자 읽기용 output을 충족할 수 있습니다. 에이전트용 맥락은 별도 `agent-context-packet`을 사용합니다. Later/full-profile, assurance, operations/export, diagnostic report kind는 owner profile이 승격하지 않는 한 projection/template owner에 남습니다. Projection refresh는 template을 채우기 위해 state를 만들지 말고 source record가 없음을 unavailable 또는 not applicable로 보고해야 합니다.
 
@@ -386,7 +386,7 @@ Projection refresh status 예시:
 | `TASK stale source_state_version=41 current_task_state_version=44` | State가 렌더링된 view보다 앞서 이동했습니다. Task result가 failed된 것이 아니며, view에 refresh 또는 reconcile이 필요합니다. |
 | `RUN-SUMMARY failed projection_job_id=PJOB-088` | Latest render가 failed입니다. Committed Run은 자기 `runs.status`를 유지하며 projection failure는 별도로 보고됩니다. |
 | `APR skipped managed_block_drift reconcile_item=REC-019` | Projector가 변경된 managed block을 overwrite하지 않고 drift를 reconcile로 보냈습니다. |
-| optional `EXPORT` projection enabled: `EXPORT stale artifact ART-204 unavailable` | Optional `EXPORT` projection/report surface가 켜진 경우에만 해당합니다. `EXPORT`를 커널 스모크(Kernel Smoke) 또는 초기 필수 refresh target으로 만들지 않으며, underlying Task state가 failed했다는 증거도 아닙니다. |
+| optional `EXPORT` projection enabled: `EXPORT stale artifact ART-204 unavailable` | Optional `EXPORT` projection/report surface가 켜진 경우에만 해당합니다. `EXPORT`를 Kernel Smoke 또는 초기 필수 refresh target으로 만들지 않으며, underlying Task state가 failed했다는 증거도 아닙니다. |
 
 ## reconcile
 
@@ -617,10 +617,10 @@ Compact artifact check 예시:
 |---|---|
 | `harness conformance run` entrypoint, runtime/docs-maintenance 분리, operator reporting boundary | 이 section과 [docs-maintenance 프로필](#docs-maintenance-프로필) |
 | 정확한 fixture body field, runner loading/execution, default comparison mode | [Conformance Fixtures 참조](conformance-fixtures.md#conformance-탐색-지도) |
-| Suite intent와 작성 순서 | [Conformance staging](#conformance-staging), 그다음 [검증 프로파일별 증명 동작](conformance-fixtures.md#검증-프로파일별-증명-동작), [내부 엔지니어링 점검 동작 예시](conformance-fixtures.md#engineering-checkpoint-behavior-examples), [MVP-1 사용자 작업 루프 동작 예시](conformance-fixtures.md#mvp-1-user-work-loop-behavior-examples), [Clarification Quality 동작 예시](conformance-fixtures.md#clarification-quality-fixture-group), [커널 스모크(Kernel Smoke) Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), [향후 Fixtures: Fixture Suites](../later/future-fixtures.md#fixture-suites) |
+| Suite intent와 작성 순서 | [Conformance staging](#conformance-staging), 그다음 [검증 프로파일별 증명 동작](conformance-fixtures.md#검증-프로파일별-증명-동작), [Kernel Smoke 동작 예시](conformance-fixtures.md#engineering-checkpoint-behavior-examples), [MVP-1 사용자 작업 루프 동작 예시](conformance-fixtures.md#mvp-1-user-work-loop-behavior-examples), [Security And Capability 동작 예시](conformance-fixtures.md#security-and-capability-behavior-examples), [Artifact And Evidence 동작 예시](conformance-fixtures.md#artifact-and-evidence-behavior-examples), [Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue), [향후 Fixtures: Fixture Suites](../later/future-fixtures.md#fixture-suites) |
 | 향후 scenario 목록과 catalog-only future candidate | [향후 Fixtures: 시나리오 묶음 목록](../later/future-fixtures.md#fixture-예시-지도) |
 
-Operator boundary: 이 문서는 operator entrypoint, runtime/docs-maintenance profile 분리, conformance overview를 담당합니다. [Conformance Fixtures 참조](conformance-fixtures.md)는 fixture body shape, assertion semantics, suite catalog metadata boundary, 검증 프로파일, 작은 내부 엔지니어링 점검 / MVP-1 동작 예시, 축소된 Kernel Smoke queue를 담당합니다. [향후 Fixtures](../later/future-fixtures.md)는 간결한 향후 scenario 목록과 catalog-only candidate를 담당합니다. Runtime conformance가 구체화되면 runtime suite pass/fail은 계속 실행 상태 기반이며, rendered prose만으로는 conformance를 통과할 수 없습니다.
+Operator boundary: 이 문서는 operator entrypoint, runtime/docs-maintenance profile 분리, conformance overview를 담당합니다. [Conformance Fixtures 참조](conformance-fixtures.md)는 fixture body shape, assertion semantics, suite catalog metadata boundary, 검증 프로파일, 활성 state-assertion 동작 예시, 축소된 Kernel Smoke queue를 담당합니다. [향후 Fixtures](../later/future-fixtures.md)는 간결한 향후 scenario 목록과 catalog-only candidate를 담당합니다. Runtime conformance가 구체화되면 runtime suite pass/fail은 계속 실행 상태 기반이며, rendered prose만으로는 conformance를 통과할 수 없습니다.
 
 ### Conformance Fixture Format
 
@@ -644,9 +644,7 @@ Operator boundary: 이 문서는 operator entrypoint, runtime/docs-maintenance p
 
 #### Kernel Smoke Authoring Queue
 
-한국어 표현: 커널 스모크 작성 순서.
-
-[Conformance Fixtures 참조: 커널 스모크(Kernel Smoke) Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)로 이동했습니다. 이 queue는 fixture 작성 순서이지 fixture-body metadata가 아닙니다.
+[Conformance Fixtures 참조: Kernel Smoke Authoring Queue](conformance-fixtures.md#kernel-smoke-authoring-queue)로 이동했습니다. 이 queue는 fixture 작성 순서이지 fixture-body metadata가 아닙니다.
 
 #### Intake와 Decision Catalog Entries
 

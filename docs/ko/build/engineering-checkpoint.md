@@ -16,16 +16,17 @@
 
 내부 엔지니어링 점검은 향후 하네스가 Core를 통해 로컬 기준 기록 하나를 유지할 수 있음을 증명하도록 설계된 조각입니다.
 
-1. Local project 하나를 안다.
-2. `surface_id=reference-local-mcp`인 reference `capability_profile` 하나가 등록되어 있다.
-3. 활성 Task 하나가 있다.
-4. 의도한 쓰기를 위한 활성 Change Unit 또는 owner-approved scope boundary 하나가 있다.
-5. `harness.prepare_write`가 맞지 않는 작업에는 구조화된 막힘을 반환하고, 맞는 작업에는 하네스 호환 decision을 반환한다.
-6. 호환되는 non-dry-run decision에 대해서만 오래 남고 한 번만 쓰는 내부 Write Authorization record 하나가 만들어진다.
-7. `harness.record_run`이 호환되는 Run 하나를 기록하고 authorization을 한 번 소비한다.
-8. Artifact/evidence ref 하나가 owner path로 등록되고 연결된다.
-9. 상태/막힘 출력이 Core 상태를 변경하지 않고 읽으며 reference surface guarantee limit을 보여준다.
-10. 좁은 `harness.close_task` blocker check가 필요한 지원 기록이 없을 때 닫기 차단 사유를 보여줄 수 있다.
+1. Status가 active Task 없음 상태를 state 변경 없이 보고할 수 있다.
+2. Owner-valid setup/intake path가 정확히 active Task 하나를 만들 수 있다.
+3. `surface_id=reference-local-mcp`인 reference `capability_profile` 하나가 등록되어 있다.
+4. 제품 쓰기 authority 전에 활성 Change Unit 또는 owner-approved scope boundary 하나가 필요하다.
+5. `harness.prepare_write`는 missing scope나 out-of-scope work에 structured blocker를 반환하고, compatible non-dry-run decision에 대해서만 durable active Write Authorization 하나를 만들며, dry-run에는 authorization을 만들지 않고 replay에서는 authorization을 중복 생성하지 않는다.
+6. `harness.record_run`이 compatible Run 하나를 기록하고 authorization을 한 번 소비한다.
+7. Consumed, missing, stale authorization은 completion evidence를 만들지 않고 `record_run`을 막는다.
+8. Artifact/evidence ref가 owner path를 통해 hash와 redaction metadata를 기록한다.
+9. Evidence summary가 registered ref에서 partial 또는 sufficient state를 보여줄 수 있다.
+10. 상태/막힘 출력이 Core state를 변경하지 않고 읽으며 reference surface guarantee limit을 보여준다.
+11. 좁은 `harness.close_task` blocker check가 missing evidence 또는 unresolved user judgment 때문에 close가 막혔음을 보여주고, full close semantics 없이 acceptance 전 residual risk를 보여줄 수 있다.
 
 여기까지입니다. 이 checkpoint는 사용자에게 보이는 가치를 더하기 전에 권한 루프가 살아 있는지 확인하기 위해 존재합니다.
 
@@ -54,9 +55,9 @@ Readiness가 수락된 뒤 구현 계획 순서로 사용합니다. 여기서는
 | 3. 활성 Change Unit/scope boundary 하나 | 의도한 제품 쓰기 하나를 제한할 수 있는 가장 작은 활성 Change Unit 또는 owner-approved scope boundary를 붙입니다. | Compatible scope가 없으면 product write가 Write Authorization을 받을 수 없습니다. | [Core Model 참조](../reference/core-model.md). |
 | 4. `prepare_write` decision | 의도한 쓰기를 owner가 정의한 쓰기 전 범위 확인으로 보냅니다. | Missing scope나 out-of-scope work는 구조화된 하네스 막힘 또는 거절을 반환하고, compatible work는 정직한 guarantee display와 함께 Write Authorization ref를 돌려줍니다. 이는 OS 권한이나 물리적 도구 실행 전 차단이 아닙니다. | [Core Model 참조](../reference/core-model.md#prepare_write), [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write), [API Errors](../reference/api/errors.md). |
 | 5. `record_run` | Compatible Run 하나를 기록하고 authorization을 소비합니다. | Compatible Run은 한 번 성공하고, 소비된 authorization 재사용은 실패합니다. | [Core Model 참조](../reference/core-model.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run). |
-| 6. Artifact/evidence ref | Durable artifact 또는 evidence ref 하나를 owner path로 등록합니다. | Run 또는 minimal owner relation이 등록된 ref를 cite할 수 있습니다. | [API Schema Core](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md). |
+| 6. Artifact/evidence ref | Durable artifact 또는 evidence ref 하나를 owner path로 등록합니다. | Run 또는 minimal owner relation이 등록된 ref를 cite할 수 있습니다. Owner path가 요구하는 경우 hash, size, content type, redaction, owner, availability metadata도 포함합니다. | [API Schema Core](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md). |
 | 7. Status와 blocker | 현재 상태와 blocker를 mutation 없이 노출합니다. | 반복 read가 state를 바꾸지 않고, blocker가 향후 smoke check에서 비교할 만큼 구조화되어 있습니다. | [`harness.status`](../reference/api/mvp-api.md#harnessstatus), [Core Model 참조](../reference/core-model.md), [API Schema Core](../reference/api/schema-core.md). |
-| 8. 좁은 close blocker check | 이 권한 루프에서 필요한 지원 기록이 없어서 close가 막히는지 확인합니다. | 막힌 close는 최종 수락, 잔여 위험 수락, full assurance close semantics, generated report를 만들지 않고 structured blocker를 반환합니다. | [Core Model 참조](../reference/core-model.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task), [API Errors](../reference/api/errors.md). |
+| 8. 좁은 close blocker check | 이 권한 루프에서 missing evidence, unresolved user judgment, visible residual risk 때문에 close가 막히는지 확인합니다. | 막힌 close는 최종 수락, 잔여 위험 수락, full assurance close semantics, generated report를 만들지 않고 structured blocker를 반환합니다. | [Core Model 참조](../reference/core-model.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task), [API Errors](../reference/api/errors.md). |
 
 API 단계 구분은 [Stage Profile Manifest](../reference/api/schema-core.md#stage-profile-manifest)를 사용합니다. Storage 계획은 [Storage](../reference/storage.md)를 사용하고, 이 checkpoint에 필요한 owner-approved minimal subset만 적용합니다.
 
@@ -69,15 +70,16 @@ API 단계 구분은 [Stage Profile Manifest](../reference/api/schema-core.md#st
 - [문서 수락 상태](implementation-overview.md#문서-수락-상태)가 구현 계획 준비 상태를 수락하기 전까지 계획 전용으로 남는다.
 - `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref, structured status/blocker output, 좁은 close-blocker check를 지나는 scoped Harness authority path 하나를 보여준다.
 - Active path에서 support가 필요한 경우 missing scope, out-of-scope intended work, product-write Run의 missing Write Authorization, consumed Write Authorization 재사용, missing artifact/evidence support에 대해 구조화된 거절이나 막힘을 반환한다.
-- Status text, generated prose, projection-like output은 모두 Core record에서 파생된 read로 취급한다.
+- Status text, generated prose, projection-like output은 모두 Core record에서 파생된 read로 취급하며 fixture proof로 보지 않는다.
+- Future smoke check는 Core-owned state, stable event가 있을 때의 `task_events`, returned error, storage row, artifact ref, evidence state, close blocker, guarantee display fact를 assert한다.
 - 통과 조건에 full projection rendering, multiple projection kind, detailed template, operations, conformance runner, broad connector ecosystem, hosted connector registry, cross-surface orchestration, later-profile storage를 요구하지 않는다.
 - Strict fixture format과 assertion은 여기서 정의하지 않고 [Conformance Fixtures 참조](../reference/conformance-fixtures.md)로 연결한다.
 
 ## 향후 smoke check
 
-커널 스모크(Kernel Smoke)는 내부 엔지니어링 점검 check를 위한 좁은 향후 작성 라벨일 뿐입니다. Stage name도 아니고 full suite도 아니며 현재 실행 가능한 fixture set도 아닙니다.
+Kernel Smoke는 내부 엔지니어링 점검 check를 위한 좁은 향후 작성 라벨일 뿐입니다. Stage name도 아니고 full suite도 아니며 현재 실행 가능한 fixture set도 아닙니다.
 
-런타임 구현이 생긴 뒤 future smoke check는 owner record, state transition, artifact/evidence ref, structured blocker, error를 확인해야 합니다. Rendered prose, generated Markdown, polished template matching만으로 success를 증명하면 안 됩니다.
+런타임 구현이 생긴 뒤 future smoke check는 owner record, state transition, storage row, stable event가 있을 때의 `task_events`, artifact/evidence ref, structured blocker, primary error, guarantee display fact를 확인해야 합니다. Rendered prose, generated Markdown, polished template matching만으로 success를 증명하면 안 됩니다.
 
 향후 작성 순서는 [Conformance Fixtures 참조: Kernel Smoke Authoring Queue](../reference/conformance-fixtures.md#kernel-smoke-authoring-queue)를 사용하고, 정확한 future fixture shape은 [Conformance Fixture Format](../reference/conformance-fixtures.md#conformance-fixture-format)을 사용합니다.
 
