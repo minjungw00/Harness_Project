@@ -63,4 +63,4 @@ Dashboard, hosted workflow, team workflow, broader connector, automation, and an
 
 If a source record or ref does not exist, render `none`, `unknown`, `not_required`, or a blocking/unavailable note. Do not invent placeholder state to satisfy a template.
 
-Large logs, diffs, traces, screenshots, recordings, bundles, export components, and sensitive artifact bodies should be referenced by `ArtifactRef`, not embedded by default. Preserve `redaction_state` and show omission/block notes without reconstructing omitted or blocked raw values.
+Large logs, diffs, traces, screenshots, recordings, bundles, export components, and sensitive artifact bodies should be referenced by `ArtifactRef`, not embedded by default. Show integrity metadata such as `sha256`, `size_bytes`, `content_type`, owner relation, availability, and `redaction_state`; show omission/block notes without reconstructing omitted or blocked raw values.

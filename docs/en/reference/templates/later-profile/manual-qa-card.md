@@ -19,7 +19,7 @@ Implementation tier: Assurance Profile reports. Use when a Manual QA profile is 
 - expected screenshot, walkthrough note, browser log, Browser QA artifact, or manually supplied artifact evidence
 - waiver reason, QA waiver user judgment refs when required, and Residual Risk refs when QA is waived or deferred
 - verification, final acceptance, and close-impact summaries
-- compact refs for Manual QA record, QA waiver user judgment, Evidence Manifest, Eval, acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness
+- compact refs for Manual QA record, QA waiver user judgment, Evidence Manifest, Eval, acceptance context, Residual Risk, Artifact refs, `redaction_state`, and projection freshness
 
 Close context and waiver placeholders are derived display summaries from QA records, `qa_gate`, related gate states, user judgment refs, and Residual Risk refs. Waiver paths should render those refs or say that recording is still needed.
 

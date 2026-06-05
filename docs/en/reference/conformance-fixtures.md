@@ -37,7 +37,7 @@ Assertion authority is layered:
 
 - Prose scenario descriptions, comments, rendered Markdown, Journey Card prose, status text, close report prose, and agent summaries are explanatory only.
 - Captured Core state, `task_events`, validator results, returned primary errors, and structured tool-specific blocker fields are authoritative for fixture pass/fail.
-- Artifact reference, owner-link, hash, size, content-type, redaction, and file-integrity assertions are authoritative where the scenario depends on artifacts or evidence bytes.
+- Artifact reference, owner-link, `sha256`, `size_bytes`, `content_type`, `redaction_state`, relation owner, retention, availability, and file-integrity assertions are authoritative where the scenario depends on artifacts or evidence bytes.
 - Projection output may be checked for freshness, source-state-version display, readability, and availability when projection support is in scope, but renderer output must not replace Core state, satisfy evidence, authorize writes, close work, accept results, accept risk, or become the source of conformance truth. Engineering Checkpoint does not require projection assertions beyond an empty or "no projection requirement" field.
 
 ## Reference scope
@@ -77,7 +77,7 @@ The core conformance model defines what future runtime conformance proves and wh
 Assertion types remain deliberately small:
 
 - State assertions compare Core-owned records, `task_events`, validator results, returned primary errors, structured blockers, owner refs, and state-version behavior.
-- Artifact assertions compare registered artifact identity, owner links, hash, size, content type, redaction state, availability, and file-integrity facts where the scenario depends on evidence bytes.
+- Artifact assertions compare registered artifact identity, owner links, `sha256`, `size_bytes`, `content_type`, `redaction_state`, relation owner, retention class, availability, and file-integrity facts where the scenario depends on evidence bytes.
 - Projection assertions compare freshness, enqueue or job status, source-state-version display, readability, and availability only when projection support is in scope. They never replace Core state or satisfy authority, evidence, close, acceptance, or risk judgments.
 - Error assertions compare the API-owned primary `ErrorCode` and optional details according to public schema precedence.
 
@@ -140,6 +140,7 @@ MVP-1 behavior examples describe user-visible Harness value without growing into
 | `MVP1-ambiguous-feature-enters-clarification` | An ambiguous feature request enters clarification or user judgment routing instead of premature implementation or broad approval. |
 | `MVP1-unresolved-user-judgment-blocks-write-or-close` | When a relevant product, technical, scope, sensitive approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, or cancellation judgment is missing, pending, rejected, blocked, stale, or incompatible, affected write or close is blocked through structured Core/API results with `required_judgment_kind` and the judgment refs that need action. |
 | `MVP1-missing-evidence-blocks-close-when-required` | When evidence is required and `evidence_summary.status` is `none`, `partial`, `stale`, or `blocked`, close is blocked with `category=evidence` or `artifact_availability` as applicable; report prose, status-card text, or Markdown cannot satisfy the gap. |
+| `MVP1-artifact-integrity-metadata-required-for-sufficient-evidence` | Critical artifact evidence cannot make `evidence_summary.status=sufficient` unless the supporting `ArtifactRef` has current owner relation, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, `retention_class`, and availability metadata. Missing metadata, missing bytes, unresolved owner links, raw secret/full sensitive-log storage, or `hash_mismatch` marks affected evidence `stale` or `blocked`; close is blocked when required evidence is affected. |
 | `MVP1-residual-risk-visible-before-final-acceptance-risk-close` | Known close-relevant residual risk is visible before successful final acceptance or close; hidden or stale risk blocks the relevant route through `residual_risk_visibility`. |
 | `MVP1-accepted-risk-close-requires-explicit-risk-acceptance` | `completed_with_risk_accepted` succeeds only when the risk is visible and a compatible `judgment_kind=residual_risk_acceptance` user judgment records acceptance with related blocker/evidence refs; final acceptance or broad "go ahead" text does not satisfy it. |
 | `MVP1-ambiguous-go-ahead-does-not-resolve-route` | Ambiguous consent phrases such as "yes, do it," "go ahead," "looks good," "좋아," or "진행해" do not resolve ambiguous user-judgment routes, waive QA, accept verification risk, accept residual risk, cancel work, or authorize out-of-scope work. |

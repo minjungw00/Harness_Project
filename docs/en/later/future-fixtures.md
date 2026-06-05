@@ -99,7 +99,7 @@ The sections below replace the old staged coverage map and long fixture example 
 | Secret or PII omitted, visible evidence only | Evidence, QA, Eval, projection, or report views can cite visible nonsecret material while omitted values remain unavailable. | Promote through artifact, evidence, redaction, and export owners. |
 | Blocked input as metadata-only notice | Blocked payloads may leave safe metadata and unresolved downstream effects without exposing forbidden bytes. | Promote only after artifact storage and redaction behavior are exact. |
 | Untrusted staged URI and task-scoped refs | Arbitrary paths, traversal, symlink escape, or cross-Task artifact relations cannot become trusted artifact evidence. | Promote through storage and ArtifactRef owners. |
-| Artifact integrity affects dependent claims | Missing files, hash mismatch, size mismatch, or owner-link mismatch blocks dependent evidence, QA, Eval, projection, export, or close readiness. | Promote through artifact integrity and operations owners. |
+| Artifact integrity affects dependent claims | Missing files, missing `sha256` or `size_bytes`, `hash_mismatch`, or owner-link mismatch blocks dependent evidence, QA, Eval, projection, export, or close readiness. | Promote through artifact integrity and operations owners. |
 | Export and Release Handoff non-leakage | Exported snapshots and handoff reports show omission/block notes without leaking raw omitted values or blocked payloads. | Promote through Operations Profile, export, and security owners. |
 
 <a id="agency-fixture-examples"></a>

@@ -13,7 +13,7 @@ Boundary: this template is rendered display only. It is not Core state, not evid
 - current Task state, work shape, lifecycle, and next safe action
 - scope, non-goals, active Change Unit summary, and stop conditions when relevant
 - pending `user_judgment` refs and compact judgment summaries
-- run refs, `evidence_ref` refs, ArtifactRefs, redaction state, and evidence gaps
+- run refs, `evidence_ref` refs, ArtifactRefs, `redaction_state`, and evidence gaps
 - close blockers, final-acceptance need/status, residual-risk visibility, and residual-risk acceptance refs when relevant
 - design-quality routed action when relevant, using the active MVP impact classes rather than the full policy catalog
 - guarantee level and capability/fallback status

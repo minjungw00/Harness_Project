@@ -63,4 +63,4 @@ Dashboard, hosted workflow, team workflow, broader connector, automation, analyt
 
 Source record나 ref가 없으면 `none`, `unknown`, `not_required`, 또는 blocking/unavailable note로 렌더링합니다. Template completeness를 맞추려고 placeholder state를 만들면 안 됩니다.
 
-큰 log, diff, trace, screenshot, recording, bundle, export component, 민감한 artifact body는 기본적으로 본문에 embed하지 말고 `ArtifactRef`로 참조합니다. `redaction_state`를 보존하고, 생략/차단 note는 보여주되 생략되거나 차단된 원본 값을 재구성하지 않습니다.
+큰 log, diff, trace, screenshot, recording, bundle, export component, 민감한 artifact body는 기본적으로 본문에 embed하지 말고 `ArtifactRef`로 참조합니다. `sha256`, `size_bytes`, `content_type`, owner relation, availability, `redaction_state` 같은 integrity metadata를 보여줍니다. 생략/차단 note는 보여주되 생략되거나 차단된 원본 값을 재구성하지 않습니다.

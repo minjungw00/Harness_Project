@@ -200,6 +200,8 @@
 
 유용한 근거에는 변경 경로, 변경 차이, 명령 출력, 테스트 결과, 화면 캡처, 로그, 출처 링크, 조사 메모, 수동 QA 메모가 포함될 수 있습니다. 유용한 확인에는 집중 테스트, 변경 차이 검토, 출처 확인, 브라우저 확인, 접근성 확인, 필요한 경우 충분히 독립적인 검토가 포함될 수 있습니다.
 
+근거가 아티팩트를 사용할 때는 크거나 민감한 본문을 붙여 넣기보다 참조와 무결성/가림 정보를 기대해야 합니다. 유용한 artifact line은 `ArtifactRef`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, availability, 그리고 어떤 owner record를 뒷받침하는지 보여줄 수 있습니다. Raw secret, token, full sensitive log는 저장하거나 붙여 넣지 말고 redacted, omitted, blocked, 또는 safe handle로 표현해야 합니다.
+
 근거와 확인은 따로 읽어야 합니다.
 
 | 항목 | 뜻 | 대신할 수 없는 것 |
@@ -209,6 +211,8 @@
 | 수동 QA | 판단이 중요한 경험을 사람이 확인했습니다. | 자동 테스트나 화면 캡처만 있는 상태. |
 | 출처 확인 | 에이전트가 주장하기 전에 문서, 코드, 현재 파일을 확인했습니다. | 사용자가 소유한 결정. |
 | 빠진 근거 | 주장이 아직 충분히 뒷받침되지 않습니다. | 자신감을 만들어 내는 이유. |
+
+Required artifact가 missing이거나 `hash_mismatch`가 있거나 integrity/redaction metadata가 없으면 affected evidence는 stale 또는 blocked일 수 있습니다. Markdown summary가 완성돼 보이더라도 그 이유로 close가 계속 blocked일 수 있습니다.
 
 에이전트가 "완료"라고 말한다면 무엇이 바뀌었는지, 무엇이 그 주장을 뒷받침하는지, 무엇을 확인했는지, 무엇을 확인하지 않았는지도 말할 수 있어야 합니다.
 

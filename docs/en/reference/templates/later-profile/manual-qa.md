@@ -15,9 +15,9 @@ Implementation tier: Assurance Profile reports. Render only when a Manual QA rec
 - `qa_gate`
 - Manual QA profile, setup, checklist, result, waiver, and findings
 - human inspector or role and the inspected quality or workflow
-- screenshot, browser log, `qa_capture`, video, workflow recording, or manually supplied note artifact refs with redaction state
+- screenshot, browser log, `qa_capture`, video, workflow recording, or manually supplied note artifact refs with `redaction_state`
 - waiver reason, QA waiver user judgment refs when required, and Residual Risk refs related to QA waiver or failure
-- Evidence Manifest, Eval, acceptance context, Approval, Artifact refs, redaction state, and projection freshness when those claims are displayed
+- Evidence Manifest, Eval, acceptance context, Approval, Artifact refs, `redaction_state`, and projection freshness when those claims are displayed
 - design-quality validator results related to `manual_qa`
 - projection freshness inputs
 
@@ -68,7 +68,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - Acceptance context:
 - Residual Risk:
 - Artifact refs:
-- redaction state:
+- `redaction_state`:
 - projection freshness:
 
 ## Setup
@@ -122,7 +122,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - unsupported-surface fallback note:
 
 ## Redaction And Availability
-| Artifact Ref | Redaction State | QA Effect | Note |
+| Artifact Ref | `redaction_state` | QA Effect | Note |
 |---|---|---|---|
 | ART-QA-0001 | secret_omitted | supports observable finding only | |
 | ART-QA-0002 | blocked | capture unavailable; QA path unresolved unless replaced or validly waived; `qa_gate` stays pending/failed or `waived` as applicable | |

@@ -16,10 +16,10 @@
 - 변경 파일 뒷받침 범위
 - 설계 품질 뒷받침 범위
 - 민감 동작 승인 참조(나중의 민감 동작 승인(Approval) 프로필이 활성화된 경우에만; 그 외에는 none)
-- 해시(hash), 크기(size), 가림 상태, 보존/사용 가능성, owner 관계, 후속 근거 영향을 포함한 아티팩트 참조
+- `sha256`, `size_bytes`, `content_type`, `redaction_state`, 보존/사용 가능성, owner 관계, 후속 근거 영향을 포함한 아티팩트 참조
 - 관련 실행(Run), Eval(분리 검증 결과), 피드백 루프, 수동 QA, TDD 트레이스 참조
 - 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, 수동 QA, 최종 수락, 잔여 위험 요약
-- 닫기 맥락으로 렌더링할 때 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)을 보여주는 간결한 권한 참조
+- 닫기 맥락으로 렌더링할 때 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, `redaction_state`, 읽기용 보기 최신성(projection freshness)을 보여주는 간결한 권한 참조
 
 ## 렌더링 섹션
 
@@ -81,7 +81,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 ## 권한과 닫기 참조
 - 간결한 참조: 쓰기={write_authorization_ref|none}; 판단={user_judgment_refs|none}; 민감동작승인={approval_refs|none}; 근거={evidence_manifest_id}; Eval={eval_ref|none}; 수동QA={manual_qa_ref|none}; 최종수락={acceptance_context_ref|none}; 잔여위험={residual_risk_refs|none}; 아티팩트={artifact_refs|none}
 - 민감 동작 승인 참조(`approval_refs`)는 최소 MVP-1에서 `none`입니다. 민감 동작 뒷받침 범위는 나중의 민감 동작 승인(Approval) 담당 프로필이 활성화되지 않은 한 `judgment_kind=sensitive_approval`인 `user_judgment_refs`로 나타납니다.
-- 가림 상태:
+- `redaction_state`:
 - 보기 최신성:
 
 ## 수용 기준 뒷받침 범위
@@ -137,7 +137,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 - 빌드:
 
 ## 가림과 사용 가능성
-| 아티팩트 참조 | 해시 / 크기 | 가림 상태 | 보존 / 사용 가능성 | 근거 영향 | 메모 |
+| 아티팩트 참조 | `sha256` / `size_bytes` | `redaction_state` | 보존 / 사용 가능성 | 근거 영향 | 메모 |
 |---|---|---|---|---|---|
 | ART-0001 | sha256:abc123... / 12 KB | secret_omitted | 보존된 참조; 원본 비밀 정보 생략 | 보이는 비밀 정보가 아닌 사실만 지원 | |
 | ART-0002 | sha256:def456... / 1 KB | blocked | 메타데이터 전용 알림(metadata-only notice) | 사용할 수 없는 입력; 주장은 해소 전까지 `insufficient` | |
@@ -147,7 +147,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 - 뒷받침하는 실행(Run) 또는 Eval 이후 변경 파일이 수정됨
 - 민감 동작 승인(Approval) 범위가 만료되거나 달라짐
 - 뒷받침하는 아티팩트가 `missing`, `blocked`, 또는 `integrity_failure` 상태가 됨
-- 뒷받침하는 아티팩트 해시(hash) 또는 크기(size)가 등록된 참조와 더 이상 일치하지 않음
+- 뒷받침하는 아티팩트가 registered ref와 비교해 `hash_mismatch` 또는 `size_bytes` mismatch 상태가 됨
 - 관련 설정 변경
 - 관련 공유 설계, 도메인 용어, 모듈 맵 항목, 인터페이스 계약 기록 변경
 ````
@@ -176,6 +176,6 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 채팅 문장과 Markdown 보고서 문장은 근거 이야기를 설명할 수 있지만, 관련 기준이 호환되는 owner 기록과 등록된 ArtifactRef 참조를 가리키지 않는 한 충분성을 증명하기에는 충분하지 않습니다.
 
-큰 로그, 변경 차이, 스크린샷, 트레이스(trace), 번들(bundle)은 짧은 결과와 함께 등록된 ArtifactRef 참조로 남겨야 합니다. 근거 목록은 독자가 아티팩트 본문을 열어 보기 전에 가림 상태와 사용 가능성을 먼저 보여줘야 합니다.
+큰 로그, 변경 차이, 스크린샷, 트레이스(trace), 번들(bundle)은 짧은 결과와 함께 등록된 `ArtifactRef` 참조로 남겨야 합니다. 근거 목록은 독자가 아티팩트 본문을 열어 보기 전에 `sha256`, `size_bytes`, `content_type`, `redaction_state`, 사용 가능성을 먼저 보여줘야 합니다.
 
-`secret_omitted` 아티팩트는 비밀 정보가 아닌 근거가 보이는 주장만 뒷받침할 수 있으며, 생략된 값이 필요한 주장은 뒷받침하지 못합니다. `blocked` 아티팩트는 커밋된 메타데이터 전용 알림(metadata-only notice)이지 사용 가능한 원본 근거가 아닙니다. 의존하는 기준은 대체 근거, 면제, 사용자 판단 결과, 수락한 위험, 문서화된 대체 경로(fallback)가 근거 경로를 해소할 때까지 `unsupported`, `insufficient`, `blocked` 중 적절한 상태로 남습니다. 이 템플릿은 생략된 비밀 정보/PII 값 또는 차단된 페이로드(payload)를 포함하면 안 됩니다.
+`secret_omitted` 아티팩트는 비밀 정보가 아닌 근거가 보이는 주장만 뒷받침할 수 있으며, 생략된 값이 필요한 주장은 뒷받침하지 못합니다. `blocked` 아티팩트는 커밋된 메타데이터 전용 알림(metadata-only notice)이지 사용할 수 있는 근거 바이트가 아닙니다. 의존하는 기준은 대체 근거, 면제, 사용자 판단 결과, 수락한 위험, 문서화된 대체 경로(fallback)가 근거 경로를 해소할 때까지 `unsupported`, `insufficient`, `blocked` 중 적절한 상태로 남습니다. 이 템플릿은 생략된 비밀 정보/PII 값 또는 차단된 페이로드(payload)를 포함하면 안 됩니다.

@@ -16,10 +16,10 @@ Implementation tier: Future/diagnostic projections. MVP-1 shows evidence through
 - changed file coverage
 - design-quality coverage
 - approval refs (later Approval profile only; otherwise none)
-- artifact refs with hash, size, redaction state, retention/availability, owner relation, and downstream evidence impact
+- artifact refs with `sha256`, `size_bytes`, `content_type`, `redaction_state`, retention/availability, owner relation, and downstream evidence impact
 - related Run, Eval, Feedback Loop, Manual QA, and TDD trace refs
 - close-relevant verification, Manual QA, final acceptance, and Residual Risk summaries when rendered with close context
-- compact authority refs for Write Authorization, User Judgment, Approval, Evidence Manifest, Eval, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when rendered with close context
+- compact authority refs for Write Authorization, User Judgment, Approval, Evidence Manifest, Eval, Manual QA, Acceptance context, Residual Risk, Artifact refs, `redaction_state`, and projection freshness when rendered with close context
 
 ## Rendered sections
 
@@ -81,7 +81,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 ## Authority And Close Refs
 - compact refs: write={write_authorization_ref|none}; judgment={user_judgment_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
 - approval refs are `none` in minimum MVP-1; sensitive-action coverage appears through `user_judgment_refs` with `judgment_kind=sensitive_approval` unless a later Approval owner profile is active.
-- redaction state:
+- `redaction_state`:
 - projection freshness:
 
 ## Acceptance Criteria Coverage
@@ -137,7 +137,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 - build:
 
 ## Redaction And Availability
-| Artifact Ref | Hash / Size | Redaction State | Retention / Availability | Evidence Effect | Note |
+| Artifact Ref | `sha256` / `size_bytes` | `redaction_state` | Retention / Availability | Evidence Effect | Note |
 |---|---|---|---|---|---|
 | ART-0001 | sha256:abc123... / 12 KB | secret_omitted | retained ref; raw secret omitted | supports visible nonsecret facts only | |
 | ART-0002 | sha256:def456... / 1 KB | blocked | metadata-only notice | unavailable input; claim remains insufficient until resolved | |
@@ -147,7 +147,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 - changed files are modified after supporting Run or Eval
 - approval scope expires or drifts
 - supporting artifact is missing, blocked, or fails integrity
-- supporting artifact hash or size no longer matches its registered ref
+- supporting artifact has `hash_mismatch` or `size_bytes` mismatch against its registered ref
 - relevant config changes
 - relevant Shared Design, domain term, module map item, or interface contract records change
 ````
@@ -176,6 +176,6 @@ Coverage rows should point to owner records and ArtifactRef refs rather than emb
 
 Chat text and Markdown report prose may explain the evidence story, but they are not enough to prove sufficiency unless they point to compatible owner records and registered ArtifactRef refs.
 
-Large logs, diffs, screenshots, traces, and bundles should stay as registered ArtifactRef refs with short outcomes. The manifest should show redaction state and availability before any reader drills into the artifact body.
+Large logs, diffs, screenshots, traces, and bundles should stay as registered `ArtifactRef` refs with short outcomes. The manifest should show `sha256`, `size_bytes`, `content_type`, `redaction_state`, and availability before any reader drills into the artifact body.
 
-`secret_omitted` artifacts may support claims whose nonsecret evidence remains visible, but not claims that require omitted values. `blocked` artifacts are committed metadata-only notices, not available raw evidence; dependent criteria remain unsupported, insufficient, or blocked until a replacement, waiver, user judgment outcome, accepted risk, or documented fallback resolves the evidence path. This template must not include omitted secret/PII values or blocked payload bytes.
+`secret_omitted` artifacts may support claims whose nonsecret evidence remains visible, but not claims that require omitted values. `blocked` artifacts are committed metadata-only notices, not available evidence bytes; dependent criteria remain unsupported, insufficient, or blocked until a replacement, waiver, user judgment outcome, accepted risk, or documented fallback resolves the evidence path. This template must not include omitted secret/PII values or blocked payload bytes.

@@ -17,7 +17,7 @@ Implementation tier: Assurance Profile reports. `APR` is used only after committ
 - sensitive categories
 - allowed paths, tools, commands, network targets, and secrets
 - baseline, expiry, alternatives, and decision note
-- related Write Authorization, artifact refs, redaction state, and projection freshness when displayed as boundary context
+- related Write Authorization, artifact refs, `redaction_state`, and projection freshness when displayed as boundary context
 
 A non-mutating `approval_request_candidate` returned by `prepare_write` is not an `APR` source and must be displayed, if at all, as candidate display.
 
@@ -66,7 +66,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - User judgment:
 - related Write Authorization:
 - artifact refs:
-- redaction state:
+- `redaction_state`:
 - projection freshness:
 
 ## Boundary Summary

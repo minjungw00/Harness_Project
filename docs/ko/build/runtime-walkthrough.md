@@ -87,7 +87,7 @@ Product write나 direct work 뒤에는 `record_run`이 무엇이 일어났는지
 
 ### 7. Run -> evidence와 artifact 연결
 
-Evidence는 claim을 registered artifact ref 또는 owner record에 연결합니다. 내부 엔지니어링 점검에는 ref 하나가 필요합니다. MVP-1에는 gap이 보이는 Core-owned `evidence_summary`가 필요합니다. Evidence가 close에 required이면 `sufficient`가 필요합니다. Detailed Evidence Manifest behavior는 승격 전까지 later-profile scope입니다.
+Evidence는 claim을 등록된 아티팩트 참조 또는 owner record에 연결합니다. 내부 엔지니어링 점검에는 ref 하나가 필요합니다. MVP-1에는 gap이 보이는 Core-owned `evidence_summary`가 필요합니다. Evidence가 close에 required이면 `sufficient`가 필요합니다. Detailed Evidence Manifest behavior는 승격 전까지 later-profile scope입니다.
 
 담당 문서: [Core Model 참조: Evidence Manifest](../reference/core-model.md#evidence-manifest), [API Schema Core: ArtifactRef](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md).
 

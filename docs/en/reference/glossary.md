@@ -155,11 +155,11 @@ A Discovery or Shared Design support/projection list of assumptions the agent is
 
 ### Artifact
 
-A recorded output used for evidence, recovery, or audit. See Raw Artifact for the canonical evidence-file boundary.
+A registered output used for evidence, recovery, or audit after Core accepts it from an allowed source and records integrity, redaction, owner, and retention metadata. See Raw Artifact for the evidence-file boundary.
 
 ### Artifact Reference
 
-A structured pointer to a raw artifact file registered in the artifact store, including identity, kind, URI or path, hash, size, content type, redaction state, and task/run relationship. `ArtifactRef` is the exact schema name for this pointer shape. In [Storage](storage.md), artifact refs and `artifact_links` are Task-scoped. Artifact kinds such as `bundle`, `manifest`, or `export_component` describe files; owner links still point to existing state or Task-scoped projection records.
+A structured pointer to a registered artifact file or safe metadata notice in the artifact store. It includes artifact identity, owner scope, kind, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, relation owner, `retention_class`, and availability metadata. `ArtifactRef` is the exact schema name for this pointer shape; it is not an arbitrary caller-supplied path. In [Storage](storage.md), artifact refs and `artifact_links` are Task-scoped. Artifact kinds such as `bundle`, `manifest`, or `export_component` describe files; owner links still point to existing state or Task-scoped projection records.
 
 ### Autonomy Boundary
 
@@ -525,7 +525,7 @@ A public MCP operation that asks Core to validate, record, transition, or close 
 
 ### Markdown Report
 
-A human-readable document generated from state records and artifact references. A Markdown report is not a raw artifact by default and does not become canonical state.
+A human-readable document generated from state records and artifact references. A Markdown report is a projection by default and does not become canonical state or canonical evidence.
 
 ### Natural-Language Consent
 
@@ -577,7 +577,7 @@ The canonical kernel gate for required Manual QA. `manual_qa_record.result` is r
 
 ### Raw Artifact
 
-A durable evidence file in the artifact store, such as a diff, log, bundle, screenshot, checkpoint, or manifest file. Raw artifacts are distinct from state records and Markdown reports.
+A durable evidence file in the artifact store, such as a diff, log, bundle, screenshot, checkpoint, or manifest file, after registration from Harness staging, an approved capture adapter, or an existing committed artifact ref. Registered artifact files are distinct from state records and Markdown reports; they need `ArtifactRef`, owner relation, integrity, redaction, and retention metadata before close-relevant evidence can rely on them.
 
 ### Reconcile
 
@@ -681,7 +681,7 @@ A display-safe reference to sensitive material such as credentials, tokens, cert
 
 ### Security Reference
 
-The reference owner for Harness security assets, trust boundaries, threat categories, control expectations, guarantee levels, and honest security wording. It explains risks such as prompt injection in repo docs, projection tampering, stale approval replay, out-of-scope writes, MCP-unavailable state claims, secret leakage through evidence artifacts, artifact hash mismatch, malicious generated connector files, capability overclaiming, and stale context poisoning. It does not own exact DDL, public API schemas, or Core Model transitions.
+The reference owner for Harness security assets, trust boundaries, threat categories, control expectations, guarantee levels, and honest security wording. It explains risks such as prompt injection in repo docs, projection tampering, stale approval replay, out-of-scope writes, MCP-unavailable state claims, secret leakage through evidence artifacts, artifact `hash_mismatch`, malicious generated connector files, capability overclaiming, and stale context poisoning. It does not own exact DDL, public API schemas, or Core Model transitions.
 
 ### Surface Capability Check
 

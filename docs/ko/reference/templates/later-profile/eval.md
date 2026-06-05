@@ -19,8 +19,8 @@
 - 수행한 확인
 - 검토한 근거
 - 막힘
-- 아티팩트 참조와 가림 상태, 입력 사용 가능성
-- 표시되는 주장이 있을 때 관련 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), 수동 QA, 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)
+- 아티팩트 참조와 `redaction_state`, 입력 사용 가능성
+- 표시되는 주장이 있을 때 관련 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), 수동 QA, 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, `redaction_state`, 읽기용 보기 최신성(projection freshness)
 
 ## 렌더링 섹션
 
@@ -63,7 +63,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - 최종 수락 맥락:
 - 잔여 위험(Residual Risk):
 - 아티팩트 참조:
-- 가림 상태:
+- `redaction_state`:
 - 보기 최신성:
 
 ## 대상
@@ -146,7 +146,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - 판단 참조:
 
 ## 가림과 사용 가능성
-| 아티팩트 참조 | 가림 상태 | 검증 영향 | 메모 |
+| 아티팩트 참조 | `redaction_state` | 검증 영향 | 메모 |
 |---|---|---|---|
 | ART-EVAL-0001 | secret_omitted | 보이는 비밀 정보가 아닌 사실 검토; 생략된 값은 증명 안 됨 | |
 | ART-EVAL-0002 | blocked | 사용할 수 없는 입력; 판정(verdict)이 원본 페이로드(payload)에 의존하면 안 됨 | |
@@ -188,4 +188,4 @@ Eval 판정(verdict)만으로는 보장 수준을 높일 수 없습니다. `deta
 
 Eval(분리 검증 결과) 상태 보기는 생략되었거나 차단된 원본 바이트(bytes)를 검토한 것처럼 암시하면 안 됩니다. `secret_omitted` 근거는 보이는 비밀 정보가 아닌 주장만 뒷받침할 수 있습니다. Eval이 `blocked` 페이로드(payload)에 의존한다면 대체 근거, 면제, 사용자 판단 결과, 수락한 위험, 문서화된 대체 경로(fallback)가 검증 경로를 해소할 때까지 결과는 `blocked` 또는 `inconclusive`로 남거나 `EVIDENCE_INSUFFICIENT`를 반환해야 합니다.
 
-Eval(분리 검증 결과) 템플릿은 검토한 근거 참조를 간결하게 유지해야 합니다. 큰 로그, 번들(bundle), 스크린샷, 변경 차이, 트레이스(trace)는 가림 상태와 사용 가능성이 있는 ArtifactRef 참조로 남깁니다. Eval 본문은 무엇을 검토했는지 기록할 뿐이며 원본 근거 페이로드(payload)를 붙여 넣지 않습니다.
+Eval(분리 검증 결과) 템플릿은 검토한 근거 참조를 간결하게 유지해야 합니다. 큰 로그, 번들(bundle), 스크린샷, 변경 차이, 트레이스(trace)는 `redaction_state`와 사용 가능성이 있는 `ArtifactRef` 참조로 남깁니다. Eval 본문은 무엇을 검토했는지 기록할 뿐이며 evidence payload body를 붙여 넣지 않습니다.

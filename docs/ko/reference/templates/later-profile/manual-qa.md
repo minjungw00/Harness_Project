@@ -17,7 +17,7 @@
 - 사람 검사자 또는 역할과 확인한 품질이나 워크플로
 - 스크린샷, 브라우저 로그, `qa_capture`, 비디오, 워크플로 기록, 수동 제공 메모 아티팩트 참조와 `redaction_state`
 - QA 면제 또는 실패와 관련된 면제 사유, 필요한 경우 QA 면제 사용자 판단 참조, 잔여 위험(Residual Risk) 참조
-- 표시되는 주장이 있을 때 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 최종 수락 맥락, 민감 동작 승인(Approval), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)
+- 표시되는 주장이 있을 때 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 최종 수락 맥락, 민감 동작 승인(Approval), 아티팩트 참조, `redaction_state`, 읽기용 보기 최신성(projection freshness)
 - `manual_qa` 관련 design-quality 검증기 결과
 - 읽기용 보기 최신성(projection freshness) 입력
 
@@ -68,7 +68,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - 최종 수락 맥락:
 - 잔여 위험(Residual Risk):
 - 아티팩트 참조:
-- 가림 상태:
+- `redaction_state`:
 - 보기 최신성:
 
 ## 준비 사항
@@ -122,7 +122,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - 지원되지 않는 접점의 대체 메모:
 
 ## 가림과 사용 가능성
-| 아티팩트 참조 | 가림 상태 | QA 영향 | 메모 |
+| 아티팩트 참조 | `redaction_state` | QA 영향 | 메모 |
 |---|---|---|---|
 | ART-QA-0001 | secret_omitted | 관찰 가능한 발견 사항만 지원 | |
 | ART-QA-0002 | blocked | 캡처 사용 불가; 대체되거나 유효하게 면제되기 전까지 QA 경로는 미해결이며 `qa_gate`는 상황에 따라 `pending`/`failed` 또는 `waived` | |

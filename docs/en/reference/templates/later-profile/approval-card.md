@@ -16,7 +16,7 @@ Implementation tier: Assurance Profile reports. Use only when committed sensitiv
 - allowed paths, tools, commands, network targets, and secrets
 - baseline ref
 - risks, alternatives, and recommendation
-- related Write Authorization boundary, artifact refs, redaction state, and projection freshness when displayed
+- related Write Authorization boundary, artifact refs, `redaction_state`, and projection freshness when displayed
 
 Coverage placeholders such as `{approval_covers}` and `{approval_does_not_cover}` are derived display summaries from approval scope, related user judgment refs, linked Approval records when that profile is active, and current write or close context. They show the approval boundary only; the active owner path remains authoritative.
 

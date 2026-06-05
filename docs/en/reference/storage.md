@@ -76,12 +76,16 @@ Active storage preserves these authority boundaries:
   normal source used to reconstruct current state.
 - `tool_invocations` supports committed idempotency replay. It is not a separate
   user-facing domain record.
-- `artifacts` store registered evidence bytes or safe metadata. They do not
-  prove sufficiency until Core links them through owner-valid rows.
+- `artifacts` store registered evidence bytes or safe metadata with integrity,
+  redaction, producer, retention, and availability facts. They do not prove
+  sufficiency until Core links them through owner-valid rows.
 - `artifact_links` connect artifacts to owner records. A link is not a report,
   projection, QA result, Eval, final acceptance, or residual-risk acceptance.
 - `evidence_summaries` is the minimal coverage and gap record for MVP-1. It is
   not a full Evidence Manifest report table.
+- Raw secrets, tokens, and full sensitive logs are not valid evidence bytes.
+  Store redacted bytes, `secret_omitted` / `blocked` notices, safe handles, or
+  other owner-approved safe representations instead.
 - Chat, Markdown projections, generated reports, connector manifests, tool
   output, and operator output are not authority unless a Core mutation records an
   owner-valid state row, artifact, or artifact link.
@@ -157,7 +161,7 @@ blocking by themselves.
 | Runtime Home or project storage owner/mode cannot be determined. | Report unknown or weak local file posture. Do not claim an OS-level guarantee. |
 | Runtime Home, `state.sqlite`, `registry.sqlite`, or artifact directories are writable by unrelated users, shared groups, shared containers, or broad local processes. | Report tampering and evidence-poisoning risk. Core must still validate rows, owner links, hashes, and artifact registration before trusting meaning. |
 | Artifact storage or exports are readable by unrelated users, shared groups, shared containers, or broad local processes. | Report confidentiality risk without echoing sensitive values. |
-| A registered artifact hash, size, owner link, or path no longer matches storage metadata. | Treat as evidence integrity failure or recovery input, not projection drift. |
+| A registered artifact `sha256`, `size_bytes`, `content_type`, `redaction_state`, owner link, or resolved storage location no longer matches storage metadata. | Treat as evidence integrity failure or recovery input, not projection drift. Missing bytes or a diagnostic such as `hash_mismatch` makes related evidence stale or blocked. |
 
 ## Active Record Contracts
 
@@ -203,6 +207,15 @@ MVP-1 storage uses three small records for evidence linkage:
 | `artifact_links` | Link an artifact to a Task, Change Unit, Run, user judgment, blocker, or minimal evidence summary. | Creating the owner record, satisfying a gate by itself, rendering a report. |
 | `evidence_summaries` | Persist the minimal coverage/gap result Core needs for status, run/evidence summary, and close. | Full criteria matrix, Evidence Manifest report tables, detached verification, Manual QA matrix, long-term analytics. |
 
+The evidence-eligible artifact contract is the combination of `artifacts` and
+`artifact_links`. Together they must provide `artifact_id`, Task or equivalent
+owner scope, kind, `uri`, `sha256`, `size_bytes`, `content_type`,
+`redaction_state`, `produced_by`, relation owner, and `retention_class`.
+Critical or close-relevant evidence missing any required metadata, owner link,
+availability fact, or integrity match cannot be `sufficient`; Core marks the
+affected coverage `stale` or `blocked`, and close remains blocked when required
+evidence is affected.
+
 An implementation may name the minimal coverage record differently only if it
 preserves the same role and owner links. The active slice must not require full
 Evidence Manifest storage when `evidence_summaries` or an equivalent minimal
@@ -236,8 +249,8 @@ broad validator-run archives, long-term metrics, or connector ecosystem tables.
 | User-owned judgment is unresolved | `user_judgments.judgment_kind`, `user_judgments.status`, `user_judgments.affected_scope_json`, `user_judgments.context_refs_json` |
 | Sensitive-action permission is missing or denied | `user_judgments` rows with `judgment_kind=sensitive_approval`, plus current `write_authorizations.related_user_judgment_refs_json` when a write is involved |
 | Write Authorization is missing, expired, stale, revoked, consumed, or incompatible | `write_authorizations.status`, `write_authorizations.basis_state_version`, `write_authorizations.consumed_by_run_id`, current `tasks.state_version` |
-| Run or artifact support is missing | `runs.status`, `artifacts.status`, `artifact_links.owner_record_kind`, `artifact_links.owner_record_id` |
-| Evidence coverage is missing or insufficient | `evidence_summaries.coverage_state`, `evidence_summaries.coverage_items_json`, `evidence_summaries.supporting_artifact_link_ids_json`, `evidence_summaries.gap_blocker_ids_json` |
+| Run or artifact support is missing or stale | `runs.status`, `artifacts.status`, `artifacts.sha256`, `artifacts.size_bytes`, `artifacts.content_type`, `artifacts.redaction_state`, `artifact_links.owner_record_kind`, `artifact_links.owner_record_id` |
+| Evidence coverage is missing, insufficient, or stale | `evidence_summaries.coverage_state`, `evidence_summaries.coverage_items_json`, `evidence_summaries.supporting_artifact_link_ids_json`, `evidence_summaries.gap_blocker_ids_json` |
 | Final acceptance is required but missing | `user_judgments` rows with `judgment_kind=final_acceptance` and compatible `status` / `selected_option_json` |
 | Residual risk is not visible or not accepted | `blockers` rows with residual-risk blocker kinds, plus `user_judgments` rows with `judgment_kind=residual_risk_acceptance` when acceptance is required |
 | A blocker is still open | `blockers.status`, `blockers.blocker_kind`, `blockers.blocked_action`, `blockers.related_refs_json`, `blockers.required_next_action` |
@@ -255,6 +268,11 @@ is present, each item's `coverage_state` uses exactly `supported`, `unsupported`
 is the only evidence state that can satisfy close when evidence is required.
 Full Evidence Manifest rows, detached Eval rows, and Manual QA matrices are not
 needed for this active storage slice unless their owner profiles are active.
+If a close-required coverage item depends on a missing artifact, absent
+`sha256` / `size_bytes` / `content_type` / `redaction_state` metadata,
+unresolved relation owner, unavailable bytes, or an integrity failure such as
+`hash_mismatch`, storage exposes that fact to Core and the evidence state stays
+`stale` or `blocked` instead of `sufficient`.
 
 Write Authorization rows are not close-readiness rows. A stale, blocked, missing,
 expired, revoked, or invalid authorization affects close only through the current

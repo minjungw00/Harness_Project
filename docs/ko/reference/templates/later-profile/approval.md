@@ -17,7 +17,7 @@
 - 민감 범주
 - 허용 경로, 도구, 명령, 네트워크 대상, 필요한 비밀 정보
 - 기준선, 만료 조건, 대안, 결정 메모
-- 경계 맥락으로 표시될 때 관련 쓰기 허가 기록(Write Authorization), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)
+- 경계 맥락으로 표시될 때 관련 쓰기 허가 기록(Write Authorization), 아티팩트 참조, `redaction_state`, 읽기용 보기 최신성(projection freshness)
 
 `prepare_write`가 반환한 상태를 변경하지 않는 `approval_request_candidate`는 `APR` 출처가 아닙니다. 표시가 필요하면 후보 표시로만 보여줍니다.
 
@@ -66,7 +66,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 관련 사용자 판단:
 - 관련 쓰기 허가 기록(Write Authorization):
 - 아티팩트 참조:
-- 가림 상태:
+- `redaction_state`:
 - 보기 최신성:
 
 ## 경계 요약

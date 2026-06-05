@@ -13,7 +13,7 @@ Boundary: this packet is support context only. It cannot authorize writes, satis
 - current Task, work shape, lifecycle, and next safe action
 - active scope, non-goals, Change Unit refs, and write-preparation blockers
 - pending user judgments and judgment request refs
-- evidence refs, Run refs, ArtifactRefs, redaction state, and evidence gaps
+- evidence refs, Run refs, ArtifactRefs, `redaction_state`, and evidence gaps
 - close blockers, residual-risk summary, final-acceptance need/status, and relevant owner refs
 - design-quality routed action and owner refs when the next safe action depends on them
 - source clocks, freshness state, MCP/Core availability, and guarantee level
@@ -59,6 +59,6 @@ agent_context_packet:
 
 ## Notes
 
-Keep the packet one screen or less. Do not include full schemas, full reference docs, full historical event logs, raw artifacts, full report bodies, full templates, unrelated templates, full design-quality catalogs, or future catalog material by default.
+Keep the packet one screen or less. Do not include full schemas, full reference docs, full historical event logs, registered artifact file bodies, full report bodies, full templates, unrelated templates, full design-quality catalogs, or future catalog material by default.
 
 The guarantee field is required context. If Core/MCP is unavailable, set it to the unavailable/capability condition and treat Harness-dependent state, write, evidence, acceptance, residual-risk, and close claims as unavailable until refreshed.

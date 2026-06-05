@@ -30,7 +30,7 @@ Implementation tier: optional full-format judgment presentation. A standalone pe
 - related reconcile records, if applicable and enabled by a later profile
 - residual risk refs
 - evidence summaries, Run refs, ArtifactRefs, and visible evidence gaps in minimum MVP-1; Evidence Manifest refs only when the full Evidence Manifest profile is active
-- Write Authorization, sensitive-action permission, Eval, Manual QA, final-acceptance context, residual-risk refs, ArtifactRefs, redaction state, and projection freshness when displayed as related authority context
+- Write Authorization, sensitive-action permission, Eval, Manual QA, final-acceptance context, residual-risk refs, ArtifactRefs, `redaction_state`, and projection freshness when displayed as related authority context
 - affected scope display inputs: product areas, screens or flows, modules, interfaces, paths, acceptance criteria, gates, and sensitive categories
 - projection freshness inputs
 

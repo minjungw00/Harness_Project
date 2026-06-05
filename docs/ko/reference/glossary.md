@@ -159,13 +159,13 @@ Required 최종 수락을 위한 kernel gate입니다. Value set과 compatibilit
 
 ### Artifact
 
-근거, 복구, 감사에 사용하는 recorded output입니다. 기준 evidence-file 경계는 Raw Artifact를 참고합니다.
+Core가 허용된 source에서 받아들이고 integrity, redaction, owner, retention metadata를 기록한 뒤 근거, 복구, 감사에 사용하는 registered output입니다. Evidence-file 경계는 Raw Artifact를 참고합니다.
 
 ### Artifact Reference
 
 한국어 기준 표현: 아티팩트 참조.
 
-Artifact store에 등록된 raw artifact file을 가리키는 구조화된 포인터입니다. identity, kind, URI 또는 path, hash, size, content type, redaction state, task/run 관계를 포함합니다. `ArtifactRef`는 이 pointer shape의 정확한 schema name입니다. [Storage](storage.md)에서 아티팩트 참조와 `artifact_links`는 Task-scoped입니다. `bundle`, `manifest`, `export_component` 같은 artifact kind는 file을 설명합니다. Owner link는 여전히 기존 상태 또는 Task-scoped projection record를 가리킵니다.
+Artifact store에 등록된 artifact file 또는 안전한 메타데이터 알림을 가리키는 구조화된 포인터입니다. Artifact identity, owner scope, kind, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, relation owner, `retention_class`, availability metadata를 포함합니다. `ArtifactRef`는 이 pointer shape의 정확한 schema name이며 caller가 넘긴 임의 path가 아닙니다. [Storage](storage.md)에서 아티팩트 참조와 `artifact_links`는 Task-scoped입니다. `bundle`, `manifest`, `export_component` 같은 artifact kind는 file을 설명합니다. Owner link는 여전히 기존 상태 또는 Task-scoped projection record를 가리킵니다.
 
 ### Autonomy Boundary
 
@@ -565,7 +565,7 @@ Core에 상태를 검증, 기록, 전이, 닫기 처리하도록 요청하는 pu
 
 ### Markdown Report
 
-State records와 아티팩트 참조에서 generated된 human-readable document입니다. Markdown 보고서는 기본적으로 raw artifact가 아니며 기준 상태가 되지 않습니다.
+State records와 아티팩트 참조에서 generated된 human-readable document입니다. Markdown 보고서는 기본적으로 projection이며 기준 상태나 기준 근거가 되지 않습니다.
 
 ### Natural-Language Consent
 
@@ -625,7 +625,7 @@ Required 수동 QA를 위한 기준 kernel gate입니다. `manual_qa_record.resu
 
 ### Raw Artifact
 
-Diff, log, bundle, 화면 캡처, checkpoint, 매니페스트 파일처럼 아티팩트 저장소에 있는 지속 근거 파일입니다. Raw artifacts는 state records와 Markdown 보고서와 구분됩니다.
+Harness staging, approved capture adapter, 또는 이미 commit된 artifact ref에서 등록된 뒤 artifact store에 보관되는 지속 근거 파일입니다. Diff, log, bundle, 화면 캡처, checkpoint, 매니페스트 파일이 여기에 속할 수 있습니다. 등록된 아티팩트 파일은 state records와 Markdown 보고서와 구분됩니다. Close-relevant evidence가 의존하려면 `ArtifactRef`, owner relation, integrity, redaction, retention metadata가 필요합니다.
 
 ### Reconcile
 
@@ -655,7 +655,7 @@ External PR, review, deployment, rollback, monitoring process를 위한 release 
 
 Task 보고서, approval 보고서, run summary, 근거 목록 보고서, Eval 보고서, direct-result 보고서처럼 state records와 아티팩트 참조에서 생성되는 Markdown 보고서입니다.
 
-이름 있는 보고서 ProjectionKind 값은 state records와 아티팩트 참조에서 생성되는 Projection입니다. State authority는 Core records에 남고, evidence-file authority는 registered artifact files에 남습니다. 정확한 Projection rule은 [Projection과 Template 참조](projection-and-templates.md)가 담당하며, 전체 rendered body는 [Template 참조](templates/README.md)가 담당합니다.
+이름 있는 보고서 ProjectionKind 값은 state records와 아티팩트 참조에서 생성되는 Projection입니다. State authority는 Core records에 남고, evidence-file authority는 등록된 아티팩트 파일에 남습니다. 정확한 Projection rule은 [Projection과 Template 참조](projection-and-templates.md)가 담당하며, 전체 rendered body는 [Template 참조](templates/README.md)가 담당합니다.
 
 ### Review Stages
 
@@ -731,7 +731,7 @@ Credential, token, certificate, key, 기타 secret value 같은 민감한 materi
 
 ### 보안 참조
 
-하네스 security asset, trust boundary, threat category, control expectation, guarantee level, 정직한 보안 표현을 담당하는 reference owner입니다. Repo docs의 prompt injection, projection tampering, stale approval replay, out-of-scope write, MCP unavailable 상태에서의 state claim, evidence artifact를 통한 secret leakage, artifact hash mismatch, 악성 generated connector 파일, capability overclaiming, stale context poisoning 같은 위험을 설명합니다. Exact DDL, 공개 API 스키마, Core Model transition은 담당하지 않습니다.
+하네스 security asset, trust boundary, threat category, control expectation, guarantee level, 정직한 보안 표현을 담당하는 reference owner입니다. Repo docs의 prompt injection, projection tampering, stale approval replay, out-of-scope write, MCP unavailable 상태에서의 state claim, evidence artifact를 통한 secret leakage, artifact `hash_mismatch`, 악성 generated connector 파일, capability overclaiming, stale context poisoning 같은 위험을 설명합니다. Exact DDL, 공개 API 스키마, Core Model transition은 담당하지 않습니다.
 
 ### Surface Capability Check
 

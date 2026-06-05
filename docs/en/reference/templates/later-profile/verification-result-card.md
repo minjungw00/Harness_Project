@@ -18,7 +18,7 @@ Implementation tier: Assurance Profile reports. Use when verification/Eval displ
 - blockers or rework
 - user follow-up
 - Manual QA, final acceptance and Residual Risk, verification-waiver user judgment refs, and `verification_gate` status when close context is rendered
-- compact refs for Eval, Evidence Manifest, Manual QA, final acceptance context, Residual Risk, verification-waiver user judgment, Artifact refs, redaction state, and projection freshness
+- compact refs for Eval, Evidence Manifest, Manual QA, final acceptance context, Residual Risk, verification-waiver user judgment, Artifact refs, `redaction_state`, and projection freshness
 
 Close context and verification-waiver placeholders are derived display summaries from Eval records, gate state, QA/final acceptance status, Residual Risk refs, and waiver user judgment refs. Waiver paths should render those refs or say that recording is still needed.
 

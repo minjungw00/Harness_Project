@@ -19,8 +19,8 @@ Implementation tier: Future/diagnostic projections. Use this for detailed Evalua
 - checks performed
 - evidence reviewed
 - blockers
-- artifact refs with redaction state and input availability
-- related User Judgment, Approval, Evidence Manifest, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
+- artifact refs with `redaction_state` and input availability
+- related User Judgment, Approval, Evidence Manifest, Manual QA, Acceptance context, Residual Risk, Artifact refs, `redaction_state`, and projection freshness when those claims are displayed
 
 ## Rendered sections
 
@@ -63,7 +63,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - Acceptance context:
 - Residual Risk:
 - Artifact refs:
-- redaction state:
+- `redaction_state`:
 - projection freshness:
 
 ## Target
@@ -146,7 +146,7 @@ updated_at: 2026-05-06T10:05:00+09:00
 - decisions:
 
 ## Redaction And Availability
-| Artifact Ref | Redaction State | Verification Effect | Note |
+| Artifact Ref | `redaction_state` | Verification Effect | Note |
 |---|---|---|---|
 | ART-EVAL-0001 | secret_omitted | visible nonsecret facts reviewed; omitted value not proven | |
 | ART-EVAL-0002 | blocked | unavailable input; verdict cannot depend on raw payload | |
@@ -188,4 +188,4 @@ If the evaluator bundle, baseline, included artifacts, Evidence Manifest, approv
 
 Eval projections must not imply omitted or blocked raw bytes were reviewed. `secret_omitted` evidence can support only visible nonsecret claims. If the Eval depends on a `blocked` payload, the result must remain `blocked` or `inconclusive`, or surface `EVIDENCE_INSUFFICIENT`, until a replacement, waiver, user judgment outcome, accepted risk, or documented fallback resolves the verification path.
 
-Eval templates should keep reviewed evidence refs compact. Large logs, bundles, screenshots, diffs, and traces stay as ArtifactRef refs with redaction state and availability; the Eval body records what was reviewed, not the raw evidence payload.
+Eval templates should keep reviewed evidence refs compact. Large logs, bundles, screenshots, diffs, and traces stay as `ArtifactRef` refs with `redaction_state` and availability; the Eval body records what was reviewed, not the evidence payload body.

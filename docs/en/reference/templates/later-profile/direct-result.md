@@ -16,7 +16,7 @@ Implementation tier: Future/diagnostic projections. Use as an optional compact d
 - out-of-bounds or unchanged scope summary
 - checks performed
 - User Judgment refs, sensitive-action approval user judgment refs, later Approval refs, `evidence_ref` refs and derived evidence summaries, Evidence Manifest when the full evidence profile is active, Eval, Manual QA, final-acceptance user judgment refs, Residual Risk, and Artifact refs when those claims are displayed
-- artifact refs with redaction state and availability
+- artifact refs with `redaction_state` and availability
 - projection freshness inputs
 - escalation flag
 - close assurance
@@ -80,7 +80,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 - self-check:
 - tests/build:
 - validator outcomes:
-- artifact refs and redaction state:
+- artifact refs and `redaction_state`:
 - artifact availability:
 
 ## Assurance
@@ -104,7 +104,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 - Final acceptance user judgment:
 - Residual Risk:
 - Artifact refs:
-- redaction state:
+- `redaction_state`:
 - projection freshness:
 
 ## Close Summary
@@ -147,4 +147,4 @@ Authority claims in a Direct Result should cite source refs or explicit absence:
 
 `DIRECT-RESULT` is the low-ceremony close impact display for direct work. `TASK` owns continuity Close Summary display for active or recently closed `work` tasks, and Journey Card close context is compact status/resume display. These displays follow the [projection/report boundary](../../projection-and-templates.md#projection-principles); close and gate effects still come from owner records.
 
-Direct result artifact refs must keep redaction state visible. `secret_omitted` supports only visible nonsecret evidence, and `blocked` means the raw input is unavailable until resolved by a replacement, waiver, user judgment outcome, accepted risk, or documented fallback.
+Direct result artifact refs must keep `redaction_state` visible. `secret_omitted` supports only visible nonsecret evidence, and `blocked` means the raw input is unavailable until resolved by a replacement, waiver, user judgment outcome, accepted risk, or documented fallback.

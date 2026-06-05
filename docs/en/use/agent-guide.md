@@ -136,15 +136,18 @@ A compatible pre-write scope check is not OS permission, sandboxing, tamper-proo
 
 Record evidence after meaningful runs, checks, reviews, or artifact-producing work. Use refs and short summaries by default; pull full bodies only when the next action needs them.
 
+Register artifact evidence only through Harness staging, an approved capture adapter, or an existing committed `ArtifactRef`. Do not treat arbitrary absolute paths, raw secrets, tokens, or full sensitive logs as evidence. Prefer refs and safe summaries; show redaction or omission explicitly.
+
 Evidence display should say:
 
 - what was checked or run
 - what changed
 - which criteria or claims the evidence supports
 - which refs or artifacts support the claim
+- for artifact refs, the owner relation, `sha256`, `size_bytes`, `content_type`, `redaction_state`, and availability when the claim depends on them
 - what is missing, stale, redacted, omitted, blocked, or insufficient
 
-Do not call evidence sufficient unless the active owner path can establish sufficiency. Tests, screenshots, logs, or generated summaries do not automatically satisfy verification, Manual QA, final acceptance, residual-risk acceptance, or close.
+Do not call evidence sufficient unless the active owner path can establish sufficiency. Tests, screenshots, logs, or generated summaries do not automatically satisfy verification, Manual QA, final acceptance, residual-risk acceptance, or close. Missing artifact metadata, missing bytes, or `hash_mismatch` makes the affected support stale or blocked; if required evidence is affected, close stays blocked.
 
 ## 10. Report Status
 

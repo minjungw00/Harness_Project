@@ -200,6 +200,8 @@ Evidence is support for a claim. Checks are actions that examine whether the cla
 
 Useful evidence can include changed paths, diffs, command output, test results, screenshots, logs, source links, inspection notes, or human QA notes. Useful checks can include focused tests, diff review, source lookup, browser inspection, accessibility checks, or an independent enough review when the work requires it.
 
+When evidence uses artifacts, expect refs plus integrity and redaction facts, not pasted large or sensitive bodies. A useful artifact line may show `ArtifactRef`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, availability, and what owner record it supports. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles instead of stored or pasted.
+
 Read evidence and checks separately:
 
 | Plain item | What it means | What it does not replace |
@@ -209,6 +211,8 @@ Read evidence and checks separately:
 | Human QA | A person inspected an experience where judgment matters. | Automated tests or screenshots alone. |
 | Source lookup | The agent checked docs, code, or current files before claiming something. | A decision you own. |
 | Missing evidence | The claim is not yet well supported. | A reason to invent confidence. |
+
+If a required artifact is missing, has `hash_mismatch`, or is missing integrity/redaction metadata, the affected evidence may be stale or blocked. Close can stay blocked for that reason even when a Markdown summary looks complete.
 
 If the agent says "done," it should also be able to say what changed, what supports that claim, what was checked, and what was not checked.
 

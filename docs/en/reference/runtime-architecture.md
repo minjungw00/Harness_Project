@@ -23,7 +23,7 @@ Use the [Core Model Reference](core-model.md) for exact state transitions, [API 
 
 In the future target design, Harness runs as a local authority layer beside the user's product repository. The product repository stays the place where product work happens; Harness Runtime Home stores operational authority; the Harness Server / Installation connects the two through Core, validators, projection, reconcile, and public MCP tools.
 
-The important rule is separation. Core alone changes canonical operational state. Product source files, chat text, generated Markdown, connector files, operator output, and MCP caller claims can inform the system, but canonical operational state lives in `state.sqlite` current records. `state.sqlite.task_events` is audit and ordering history, not the normal current-state source. Raw evidence lives in the artifact store.
+The important rule is separation. Core alone changes canonical operational state. Product source files, chat text, generated Markdown, connector files, operator output, and MCP caller claims can inform the system, but canonical operational state lives in `state.sqlite` current records. `state.sqlite.task_events` is audit and ordering history, not the normal current-state source. Artifact evidence lives in registered artifact bytes or safe metadata notices plus their refs, owner relations, and integrity/redaction metadata.
 
 The active MVP architecture registers one reference surface `capability_profile` for `surface_id=reference-local-mcp`. That profile is not write authority and does not replace Core gates. It only informs validator results, blocked reasons, fallback behavior, and guarantee display. Broad connector ecosystems, hosted connector registries, and cross-surface orchestration are later/profile scope unless an owner explicitly promotes a narrower path.
 
@@ -209,7 +209,7 @@ Core can run as a single local process in the first slices. The full server may 
 
 Core is the only component that updates canonical operational state. Agents, MCP tools, CLI commands, projectors, and reconnect/recovery flows must enter through Core logic or use recovery code that preserves the same state compatibility rules. They may present, diagnose, recover, or derive from Core records, but they must not maintain a second canonical state model. Operator command names and flags are display/entrypoint choices; the behavior is defined by Core state records, audit/order facts in `state.sqlite.task_events`, evidence/artifact refs, projection jobs only when that profile is active, and API-owned errors or documented diagnostics.
 
-Decision, Journey, and Autonomy/Boundary modules do not create a new authority tier. Their canonical current records live in `state.sqlite`; `state.sqlite.task_events` records audit and ordering history. Their raw evidence lives in the artifact store, and their Markdown views remain projections or proposal surfaces.
+Decision, Journey, and Autonomy/Boundary modules do not create a new authority tier. Their canonical current records live in `state.sqlite`; `state.sqlite.task_events` records audit and ordering history. Their artifact evidence lives in registered artifact records and artifact-store bytes or safe metadata notices, and their Markdown views remain projections or proposal surfaces.
 
 
 ### Validators and adapter placement
@@ -250,34 +250,36 @@ Projection freshness is a derived-read fact. A status, next-action, export, or o
 
 ## Artifact store architecture
 
-The artifact store holds durable evidence files, but it is not a loose file dump. Raw artifacts include files such as diffs, logs, screenshots, traces, checkpoints, bundles, captured manifests, exported bundle components, and other evidence files that are stored only after registration with integrity metadata and an owner relation.
+The artifact store holds durable evidence files and safe metadata notices, but it is not a loose file dump. Artifact files such as diffs, logs, screenshots, traces, checkpoints, bundles, captured manifests, exported bundle components, and other evidence files are stored only after registration from Harness staging, an approved capture adapter, or an existing committed artifact ref, with integrity metadata and an owner relation.
 
 An artifact has two parts:
 
-- the raw file in the artifact store
-- the registered artifact ref and artifact state record in `state.sqlite` that name its kind, path, hash, size, redaction state, retention class, and Task-scoped owner relation
+- the registered file or safe metadata notice in the artifact store
+- the registered artifact ref and artifact state record in `state.sqlite` that name its kind, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, `retention_class`, and Task-scoped owner relation
 
 
-Core records artifact refs on existing Task-scoped owner records such as runs, evidence manifests, Eval records, Manual QA records, user judgments, and rendered Task-scoped projection refs. In the current Task-scoped artifact model, `artifact_links` to rendered projection refs stay within the artifact's `task_id`; project-level projection jobs may still be tracked by `projection_jobs` metadata where owner docs allow them, but they are not project-scoped artifact links. Export snapshots and components remain artifact files linked back to valid owners or Task-scoped projections. Exact relation rules stay with [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [Storage](storage.md), [Projection And Templates Reference](projection-and-templates.md), and [Operations And Conformance Reference](operations-and-conformance.md). Large logs, diffs, screenshots, traces, and patches should stay as raw artifacts; Markdown reports should link to artifact refs instead of embedding unbounded evidence.
+Core records artifact refs on existing Task-scoped owner records such as runs, evidence manifests, Eval records, Manual QA records, user judgments, and rendered Task-scoped projection refs. In the current Task-scoped artifact model, `artifact_links` to rendered projection refs stay within the artifact's `task_id`; project-level projection jobs may still be tracked by `projection_jobs` metadata where owner docs allow them, but they are not project-scoped artifact links. Export snapshots and components remain artifact files linked back to valid owners or Task-scoped projections. Exact relation rules stay with [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [Storage](storage.md), [Projection And Templates Reference](projection-and-templates.md), and [Operations And Conformance Reference](operations-and-conformance.md). Large logs, diffs, screenshots, traces, and patches should stay as registered artifact refs when allowed, or as redacted, `secret_omitted`, or `blocked` refs when sensitivity prevents storing the full body; Markdown reports should link to refs instead of embedding unbounded evidence.
 
-Raw secrets should not be stored as artifacts. If secret-related evidence is required, Core records a redacted artifact, a secret handle, or an operator note that passed the relevant validator.
+Raw secrets, tokens, and full sensitive logs should not be stored as artifacts. If secret-related evidence is required, Core records a redacted artifact, a `secret_omitted` or `blocked` metadata notice, a secret handle, or an operator note that passed the relevant validator.
+
+Critical evidence cannot become sufficient from Markdown prose or a path-shaped caller claim. If a required artifact is missing, lacks `sha256` / `size_bytes` / `content_type` / `redaction_state` metadata, has no owner relation, or fails integrity validation such as `hash_mismatch`, Core marks the related evidence `stale` or `blocked` and close remains blocked when that evidence is required.
 
 Large logs, diffs, screenshots, traces, and similar bulky evidence should be linked as registered artifact refs. Markdown reports and exports may summarize what the ref supports, display redaction and availability state, and include safe notes, but they should not paste large evidence bodies or recreate omitted secret values.
 
-Exports are derived bundles, not a fourth authority space. An export may include Core state snapshots, safe state/event version facts, report projection snapshots, artifact refs, allowed raw artifact files, artifact integrity results, redaction status, omitted-secret notes, and retention/availability facts for retained, expired, unavailable, `secret_omitted`, or `blocked` artifacts. Export components that become durable files remain artifacts linked to valid owner records or Task-scoped projection refs. Export must not infer success from recovery artifacts, stale projections, Markdown prose, chat text, staging paths, or operator console output.
+Exports are derived bundles, not a fourth authority space. An export may include Core state snapshots, safe state/event version facts, report projection snapshots, artifact refs, allowed registered artifact files, artifact integrity results, `redaction_state`, omitted-secret notes, and retention/availability facts for retained, expired, unavailable, `secret_omitted`, or `blocked` artifacts. Export components that become durable files remain artifacts linked to valid owner records or Task-scoped projection refs. Export must not infer success from recovery artifacts, stale projections, Markdown prose, chat text, staging paths, or operator console output.
 
-### Raw artifacts, state records, and Markdown reports
+### Registered artifacts, state records, and Markdown reports
 
 The boundary is:
 
 | Item | Authority | Examples |
 |---|---|---|
-| Raw artifact | Durable evidence file in artifact store | diff, log, screenshot, checkpoint, bundle, manifest file |
+| Registered artifact file | Durable evidence file or safe metadata notice in the artifact store with `ArtifactRef` metadata | diff, log, screenshot, checkpoint, bundle, manifest file, metadata-only notice |
 | State record | Canonical structured record in `state.sqlite` | Task, Change Unit, User Judgment, Journey Spine Entry, Residual Risk, Run, Approval, Eval, Manual QA record, Evidence Manifest, Shared Design, Artifact record |
 | Markdown report | Human-readable projection from records and artifact refs | MVP-1 compact views and later/full-profile reports owned by [Projection And Templates Reference](projection-and-templates.md) and [Template Reference](templates/README.md). |
 
 
-These named report kinds are projections generated from state records and artifact refs by default. They may refer to evidence files in the artifact store, and an export may include snapshots of them, but that does not make the Markdown report the canonical evidence file or canonical state.
+These named report kinds are projections generated from state records and artifact refs by default. They may refer to evidence files in the artifact store, and an export may include snapshots of them, but that does not make the Markdown report canonical evidence or canonical state.
 
 ## Projection and reconcile flow
 
@@ -348,7 +350,7 @@ Failures are recorded rather than hidden:
 | Baseline drift | mark baseline-dependent write, verification, evidence, approval, or close-readiness paths stale or blocked until a fresh baseline or compatible owner path exists |
 | Approval drift | expire, narrow, or re-request approval when scope, baseline, sensitive category, expiry, or actor context no longer matches; do not turn a stale approval into broad authorization |
 | Evaluator observes repo drift | mark verification blocked or stale; require a fresh baseline, evaluator bundle, or Eval path, and do not set detached verification passed from the drifted observation |
-| Artifact file missing or hash mismatch | mark the artifact and dependent evidence, projection, export, or close-readiness view stale or blocked; rescan, restore the exact registered bytes, or register a replacement through recovery |
+| Artifact file missing or `hash_mismatch` | mark the artifact and dependent evidence, projection, export, or close-readiness view stale or blocked; rescan, restore the exact registered bytes, or register a replacement through recovery |
 | Projection job failed | keep state current; mark projection failed and retry or reconcile; do not roll back Core state, fail the Task result, or fabricate state from rendered Markdown |
 | Managed Markdown edited directly | create reconcile item; do not mutate state directly |
 | Stale PRD, chat memory, or evaluator bundle | treat stale context as pull-only input; do not let it authorize writes, replace current Task state, satisfy gates, accept results, record detached verification, or close until the owner path refreshes, reconciles, or supersedes it |
@@ -356,4 +358,4 @@ Failures are recorded rather than hidden:
 | Surface capability mismatch | record validator result, adjust guarantee display, and decline Write Authorization or show the write as not allowed by Harness authority state when required checks cannot be satisfied; cooperative surfaces hold by instruction, and pre-execution physical blocking still depends on fixture-proven connected profile coverage |
 
 
-Recovery tools may repair projection freshness, rescan artifacts, interrupt stale runs, expire drifted sensitive-action permissions or later Approval records, or create reconcile items. They must preserve the same authority rules: `state.sqlite` is operational state, `state.sqlite.task_events` is the event history inside that state store, raw evidence lives in the artifact store, and Markdown reports remain projections. Recovery artifacts and compensating events explain what recovery observed or changed; they do not prove successful implementation, satisfy evidence, pass verification or QA, accept results or residual risk, or close a Task by themselves.
+Recovery tools may repair projection freshness, rescan artifacts, interrupt stale runs, expire drifted sensitive-action permissions or later Approval records, or create reconcile items. They must preserve the same authority rules: `state.sqlite` is operational state, `state.sqlite.task_events` is the event history inside that state store, artifact evidence depends on registered artifact bytes or safe metadata notices plus refs and integrity/redaction metadata, and Markdown reports remain projections. Recovery artifacts and compensating events explain what recovery observed or changed; they do not prove successful implementation, satisfy evidence, pass verification or QA, accept results or residual risk, or close a Task by themselves.

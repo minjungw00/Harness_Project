@@ -58,7 +58,7 @@ MVP-1에는 아래가 포함됩니다.
 - 담당 API 경로를 통한 minimal user judgment request와 record
 - 관련 경로가 있을 때 제품 판단, 기술 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락을 분리해서 표시
 - Core와 `prepare_write`를 통한 협력형 쓰기 전 범위 확인
-- `record_run`과 registered artifact/evidence ref 또는 minimum evidence summary path
+- `record_run`, 등록된 아티팩트 참조 또는 evidence ref, minimum evidence summary path
 - fallback, blocked reason, validator result, guarantee display에 사용하는 reference `capability_profile` 하나
 - 최소 state `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked`를 쓰는 Core-owned `evidence_summary`
 - `harness.status.next_actions`를 통한 status와 next-safe-action output

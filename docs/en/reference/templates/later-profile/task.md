@@ -26,7 +26,7 @@ A `TASK` template existing in this repository does not mean full `TASK` Markdown
 - Write Authorization records and Write Authority Summary display inputs
 - User Judgment records and Residual Risks, including full-format Decision Packet presentation fields when that profile is enabled
 - latest Run, evidence summary, ArtifactRefs, and, when the matching profile is active, Evidence Manifest, Eval, Manual QA record, and sensitive-action approval records
-- compact authority source refs for Write Authorization, User Judgment, sensitive-action approval user judgment refs, later Approval refs, `evidence_ref` refs and derived evidence summaries, Evidence Manifest when active, Eval, Manual QA, final-acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
+- compact authority source refs for Write Authorization, User Judgment, sensitive-action approval user judgment refs, later Approval refs, `evidence_ref` refs and derived evidence summaries, Evidence Manifest when active, Eval, Manual QA, final-acceptance context, Residual Risk, Artifact refs, `redaction_state`, and projection freshness when those claims are displayed
 - primary blocker, secondary blocker, and smallest unblocker display summaries
 - close summary display inputs, including changed scope, sensitive-action approval, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, waivers, and close reason
 - Journey Spine source records
@@ -155,7 +155,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - active change unit:
 - write authority summary:
 - authority source refs: write=; decision=; sensitive_action_permission=; evidence_summary=; evidence_manifest_when_active=; eval=; manual_qa=; final_acceptance=; residual_risk=; artifacts=
-- redaction state:
+- `redaction_state`:
 - latest report:
 - projection freshness:
 
@@ -208,7 +208,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Final acceptance user judgment:
 - Acceptance context:
 - Residual Risk:
-- Artifact refs and redaction state:
+- Artifact refs and `redaction_state`:
 - Projection freshness:
 
 ## Autonomy Boundary
@@ -356,7 +356,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Decision:
 - Diff:
 - Logs:
-- Artifact refs with redaction state:
+- Artifact refs with `redaction_state`:
 - Projection freshness:
 <!-- HARNESS:END managed -->
 
@@ -540,4 +540,4 @@ Close Summary must not collapse sensitive-action approval, evidence, verificatio
 
 Direct work uses `DIRECT-RESULT` for its low-ceremony close impact summary, and Journey Card close context is compact status/resume display. `TASK` Close Summary remains a continuity display under the [projection/report boundary](../../projection-and-templates.md#projection-principles); close and gate effects still come from owner records.
 
-Artifact refs shown in `TASK`, Journey, evidence, and report sections must preserve redaction state. `secret_omitted` refs may support only visible nonsecret evidence; `blocked` refs show committed metadata-only notices and unavailable input rather than raw content.
+Artifact refs shown in `TASK`, Journey, evidence, and report sections must preserve `redaction_state`. `secret_omitted` refs may support only visible nonsecret evidence; `blocked` refs show committed metadata-only notices and unavailable input rather than raw content.

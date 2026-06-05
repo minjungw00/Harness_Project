@@ -361,6 +361,8 @@ Residual Risk record는 risk를 보이게 합니다. Work를 verify하거나, ev
 
 Artifact는 diff, log, screenshot, manifest, bundle, export component처럼 integrity metadata가 있는 durable evidence file 또는 bundle입니다. Artifact ref는 Markdown report나 state record와 다릅니다.
 
+`ArtifactRef`는 Core가 허용된 source에서 등록하고, Task 또는 equivalent owner scope를 resolve하고, relation owner를 기록하며, current `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, `retention_class` metadata를 보존한 뒤에만 evidence에 사용할 수 있습니다. Evidence를 완성해 보이게 하려고 raw secret, token, full sensitive log를 저장하면 안 됩니다. 대신 redaction, `secret_omitted`, `blocked`, safe handle, 또는 owner가 허용한 note를 사용합니다.
+
 ### Reconcile Item
 
 Reconcile Item은 human-editable 또는 generated/projection drift를 위한 candidate record입니다. Reconcile은 merge, reject, convert to note, user judgment create, defer를 할 수 있습니다. Markdown이나 generated text는 accepted reconcile/owner path를 통해서만 state가 됩니다.
@@ -374,7 +376,7 @@ Shared Design, Domain Term, Module Map Item, Interface Contract, Feedback Loop, 
 - Chat text는 state가 아닙니다.
 - Generated Markdown은 canonical state가 아닙니다.
 - 사람이 고친 projection은 reconcile 전까지 input입니다.
-- Raw artifact는 evidence file입니다. 그것을 link하는 Markdown은 readable projection입니다.
+- 등록된 아티팩트 파일 또는 안전한 메타데이터 알림은 `ArtifactRef`, owner relation, integrity/redaction metadata를 통해서만 evidence를 support할 수 있습니다. 그것을 link하는 Markdown은 readable projection입니다.
 - Review display와 future Review Stages는 owner record로 라우팅되기 전까지 procedure 또는 display입니다.
 - Autonomy Boundary는 judgment latitude만 기록합니다. Scope나 쓰기 전 범위 확인이 아닙니다.
 - Approval과 User Judgment authority는 분리됩니다.
@@ -477,6 +479,8 @@ not_required | none | partial | sufficient | stale | blocked
 `evidence_gate`는 Core가 소유한 `evidence_summary`에서 파생됩니다. Evidence가 required이면 successful close에는 `evidence_gate=sufficient`가 필요합니다. Evidence가 required인데 missing, stale, blocked, 또는 partial coverage이면 `not_required`를 쓰면 안 됩니다.
 
 활성 MVP-1 evidence path는 작습니다. Core는 status와 close를 판단할 수 있을 만큼의 summary state, coverage ref, supporting Run ref, supporting `ArtifactRef` link, gap blocker를 보관합니다. Full Evidence Manifest table, detailed criteria matrix, detached Eval output, full Manual QA evidence matrix는 owner profile이 명시적으로 활성화하기 전까지 later/profile material입니다.
+
+Critical 또는 close-relevant artifact support는 Core 소유 evidence summary와 supporting artifact ref가 storage integrity 및 owner-link metadata와 맞을 때만 current입니다. Artifact byte가 missing이거나 `sha256` / `size_bytes` / `content_type` / `redaction_state` metadata가 없거나 relation owner가 resolve되지 않았거나 `hash_mismatch` 같은 integrity finding이 있으면 affected coverage는 `stale` 또는 `blocked`가 됩니다. Affected coverage가 close에 required이면 `evidence_gate=sufficient`를 사용할 수 없고 close는 blocked입니다.
 
 ### Evidence Sufficiency Profiles
 
@@ -675,7 +679,7 @@ Core 전이 순서는 다음과 같습니다.
 8. Observed changed paths, commands, tools, secret access를 authorization과 active scope에 맞춰 검증합니다.
 9. Compatible하면 authorization을 소비합니다.
 10. Run record를 만듭니다.
-11. `ArtifactRef`를 등록하거나 연결합니다.
+11. Harness staging, approved capture adapter, 또는 이미 commit된 artifact ref에서 온 `ArtifactRef`만 등록하거나 연결합니다. Caller-supplied arbitrary absolute path와 금지된 raw secret 또는 full sensitive-log payload는 reject합니다.
 12. Active path가 요구하는 evidence summary 또는 evidence refs를 업데이트합니다.
 13. Recorded Run이 영향을 주는 blockers와 gates를 업데이트합니다.
 14. Task event를 append합니다.

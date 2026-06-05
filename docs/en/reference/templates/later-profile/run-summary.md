@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use `RUN-SUMMARY` when `record_run` commits an execution run and Harness needs a readable summary of what ran, what changed, what checks or validators reported, and which artifacts hold the raw evidence.
+Use `RUN-SUMMARY` when `record_run` commits an execution run and Harness needs a readable summary of what ran, what changed, what checks or validators reported, and which registered artifact refs carry supporting evidence and integrity/redaction metadata.
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 

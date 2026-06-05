@@ -224,12 +224,22 @@ ArtifactRef:
   redaction_state: none | redacted | secret_omitted | blocked
   task_id: string
   run_id: string | null
+  relation_owner: ArtifactRelationOwner
   created_at: string
   produced_by: lead_agent | evaluator | operator | harness
   retention_class: task | project | export | temporary
+
+ArtifactRelationOwner:
+  task_id: string
+  run_id: string | null
+  record_kind: task | change_unit | run | user_judgment | evidence_summary | blocker | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
+  record_id: string
+  relation: string
 ```
 
 For the reference implementation, `uri` uses `harness-artifact://{project_id}/{artifact_id}`. The local file path is resolved through storage, not by trusting an absolute path in the API payload.
+
+`ArtifactRef` carries the contract-level artifact identity, owner scope, kind, URI, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, relation owner, and `retention_class`. Storage may persist the relation through `artifact_links`, but API callers must be able to see which Core-owned record the artifact supports.
 
 `redaction_state` meanings:
 
@@ -240,7 +250,9 @@ For the reference implementation, `uri` uses `harness-artifact://{project_id}/{a
 | `secret_omitted` | Secret values or PII are intentionally omitted or replaced by handles. |
 | `blocked` | Raw-payload storage was blocked; only a metadata notice may be exposed. |
 
-For `redacted`, `secret_omitted`, and `blocked`, hashes and sizes describe the committed safe stored bytes, not a hidden original.
+For `redacted`, `secret_omitted`, and `blocked`, `sha256` and `size_bytes` describe the committed safe stored bytes, not a hidden original.
+
+Raw secrets, tokens, and full sensitive logs must not be stored as evidence artifacts. If secret-related evidence is needed, the registered ref must point to redacted bytes, an omission/blocked metadata notice, or another safe owner-approved representation.
 
 ## Stage-Specific Active Value Sets
 
@@ -252,7 +264,7 @@ These tables are the active validator sets for staged implementations. Full late
 
 | Field | Engineering Checkpoint active owner kinds | MVP-1 active owner kinds | Later-profile owner kinds | Future candidates |
 |---|---|---|---|---|
-| `ArtifactInput.relation.record_kind` | `task`, `change_unit`, `run`, `evidence_summary`, `blocker` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` | `residual_risk`, `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection` | `journey_spine_entry` |
+| `ArtifactInput.relation.record_kind`, `ArtifactRef.relation_owner.record_kind` | `task`, `change_unit`, `run`, `evidence_summary`, `blocker` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` | `residual_risk`, `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection` | `journey_spine_entry` |
 | `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `evidence_summary`, `blocker` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` | `approval`, `residual_risk`, `close_readiness`, `shared_design`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `reconcile_item`, `projection` | `change_unit_dependency`, `journey_spine_entry`, `domain_term`, `module_map_item`, `interface_contract` |
 
 MVP-1 sensitive-action approval uses `record_kind=user_judgment`. Committed `approval` refs are later-profile unless the Approval owner profile is active.
@@ -262,9 +274,10 @@ MVP-1 sensitive-action approval uses `record_kind=user_judgment`. Committed `app
 ```yaml
 ArtifactInput:
   input_id: string
-  source_kind: staged_file | existing_artifact
+  source_kind: staged_file | capture_adapter | existing_artifact
   existing_artifact_ref: ArtifactRef | null
   staged: StagedArtifactSource | null
+  capture: CaptureAdapterArtifactSource | null
   kind: diff | log | screenshot | checkpoint | bundle | manifest | qa_capture | export_component | design_probe | prototype | architecture_scan | decision_context | other
   redaction_state: none | redacted | secret_omitted | blocked
   produced_by: lead_agent | evaluator | operator | harness
@@ -282,11 +295,21 @@ StagedArtifactSource:
   content_type: string
   expected_sha256: string | null
   expected_size_bytes: integer | null
+
+CaptureAdapterArtifactSource:
+  adapter_id: string
+  capture_ref: string
+  display_name: string | null
+  content_type: string
+  expected_sha256: string | null
+  expected_size_bytes: integer | null
 ```
 
-`source_kind=existing_artifact` requires `existing_artifact_ref` and `staged=null`. `source_kind=staged_file` requires `staged` and `existing_artifact_ref=null`.
+`source_kind=staged_file` requires `staged` and `existing_artifact_ref=null` and `capture=null`. `source_kind=capture_adapter` requires `capture` and `staged=null` and `existing_artifact_ref=null`. `source_kind=existing_artifact` requires an existing committed `ArtifactRef` and `staged=null` and `capture=null`.
 
-`staged_uri` is a Harness staging locator or registered capture-adapter output, not permission to read arbitrary files. Tool responses return committed `ArtifactRef` values, never staged locators as authority.
+The only allowed artifact sources are a Harness staging location, an approved capture adapter output, or an existing committed artifact ref. `staged_uri` is a Harness staging locator, not permission to read arbitrary files. `capture_ref` is a capture-adapter handle, not a caller-supplied path. Tool responses return committed `ArtifactRef` values, never staged locators or capture handles as authority.
+
+Critical or close-relevant evidence cannot be treated as sufficient unless the supporting Core state and each required `ArtifactRef` have current owner relation, availability, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, and `retention_class` metadata. A missing artifact, unresolved relation owner, missing integrity metadata, or integrity failure such as diagnostic `hash_mismatch` makes the affected evidence `stale` or `blocked`; if required evidence is affected, close remains blocked.
 
 ## StateRecordRef
 

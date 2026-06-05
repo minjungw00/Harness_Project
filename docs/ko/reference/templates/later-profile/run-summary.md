@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-`record_run`으로 실행(Run)이 기록된 뒤, 무엇을 실행했고 무엇이 바뀌었는지, 확인 또는 검증기가 무엇을 보고했는지, 원본 근거가 어떤 아티팩트에 남았는지 요약해야 할 때 `RUN-SUMMARY`를 사용합니다.
+`record_run`으로 실행(Run)이 기록된 뒤, 무엇을 실행했고 무엇이 바뀌었는지, 확인 또는 검증기가 무엇을 보고했는지, 어떤 등록된 아티팩트 참조가 supporting evidence와 integrity/redaction metadata를 담는지 요약해야 할 때 `RUN-SUMMARY`를 사용합니다.
 
 경계: 상태 보기 템플릿(projection template)일 뿐이며 하네스 서버/런타임 구현이나 생성된 운영 산출물에 권한을 주지 않습니다. 공통 단계와 상태 보기 규칙은 [템플릿 참조](README.md#사용-시점)를 따릅니다.
 

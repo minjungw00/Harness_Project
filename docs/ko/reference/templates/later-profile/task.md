@@ -26,7 +26,7 @@
 - 쓰기 허가 기록(Write Authorization)과 쓰기 권한 요약 표시 입력
 - 사용자 판단(User Judgment) 기록과 잔여 위험(Residual Risk), 해당 프로필이 켜졌을 때 전체 형식 판단 패킷(Decision Packet) 표시 필드
 - 최신 실행(Run), 근거 요약, ArtifactRef 참조, 그리고 일치하는 프로필이 활성화된 경우 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA 기록, 민감 동작 승인 기록
-- 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인 사용자 판단 참조, 나중의 민감 동작 승인(Approval) 참조, `evidence_ref` 참조와 파생 근거 요약, 활성화된 경우 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness) 권한 주장을 표시할 때 필요한 간결한 출처 참조
+- 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인 사용자 판단 참조, 나중의 민감 동작 승인(Approval) 참조, `evidence_ref` 참조와 파생 근거 요약, 활성화된 경우 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, `redaction_state`, 읽기용 보기 최신성(projection freshness) 권한 주장을 표시할 때 필요한 간결한 출처 참조
 - 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 요약
 - 변경된 범위, 민감 동작 승인, 근거, 검증, 수동 QA, 잔여 위험 표시, 잔여 위험 수락, 최종 수락, 면제 판단 상태, 닫기 이유를 포함하는 닫기 요약 표시 입력
 - 이어가기 축(Journey Spine) 기준 기록
@@ -153,7 +153,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 활성 작업 조각(Change Unit):
 - 쓰기 권한 요약:
 - 권한 출처 참조: 쓰기=; 판단=; 민감동작허가=; 근거요약=; 활성근거목록=; Eval=; 수동QA=; 최종수락=; 잔여위험=; 아티팩트=
-- 가림 상태:
+- `redaction_state`:
 - 최신 보고서:
 - 보기 최신성:
 
@@ -206,7 +206,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 최종 수락 사용자 판단:
 - 최종 수락 맥락:
 - 잔여 위험(Residual Risk):
-- 아티팩트 참조와 가림 상태:
+- 아티팩트 참조와 `redaction_state`:
 - 보기 최신성:
 
 ## 자율성 경계(Autonomy Boundary)
@@ -354,7 +354,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 판단 요청(Decision):
 - 변경 차이:
 - 로그:
-- 가림 상태가 있는 아티팩트 참조:
+- `redaction_state`가 있는 아티팩트 참조:
 - 보기 최신성:
 <!-- HARNESS:END managed -->
 

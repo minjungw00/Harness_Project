@@ -355,6 +355,8 @@ Residual Risk records make risk visible. They do not verify work, replace eviden
 
 An Artifact is a durable evidence file or bundle with integrity metadata, such as a diff, log, screenshot, manifest, bundle, or export component. Artifact refs are distinct from Markdown reports and state records.
 
+An `ArtifactRef` is evidence-eligible only after Core registers it from an allowed source, resolves the Task or equivalent owner scope, records the relation owner, and preserves current `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, and `retention_class` metadata. Raw secrets, tokens, and full sensitive logs must not be stored to make evidence look complete; use redaction, `secret_omitted`, `blocked`, safe handles, or an owner-approved note instead.
+
 ### Reconcile Item
 
 A Reconcile Item is the candidate record for human-editable or generated/projection drift. Reconcile may merge, reject, convert to note, create a user judgment, or defer. Markdown or generated text becomes state only through the accepted reconcile/owner path.
@@ -368,7 +370,7 @@ Shared Design, Domain Term, Module Map Item, Interface Contract, Feedback Loop, 
 - Chat text is not state.
 - Generated Markdown is not canonical state.
 - Human-edited projections are input until reconciled.
-- Raw artifacts are evidence files; Markdown that links to them is a readable projection.
+- Registered artifact files or safe metadata notices can support evidence only through `ArtifactRef`, owner relation, and integrity/redaction metadata; Markdown that links to them is a readable projection.
 - Review displays and future Review Stages are procedure or display unless routed through owner records.
 - Autonomy Boundary records judgment latitude only; it is not scope or a pre-write scope check.
 - Sensitive-action approval and other user judgments are separate.
@@ -471,6 +473,8 @@ not_required | none | partial | sufficient | stale | blocked
 `evidence_gate` is derived from the Core-owned `evidence_summary`. When evidence is required, successful close needs `evidence_gate=sufficient`. `not_required` must not be used when evidence is required but missing, stale, blocked, or only partially covered.
 
 The active MVP-1 evidence path is compact: Core keeps enough summary state, coverage refs, supporting Run refs, supporting `ArtifactRef` links, and gap blockers to decide status and close. Full Evidence Manifest tables, detailed criteria matrices, detached Eval outputs, and full Manual QA evidence matrices are later/profile material unless an owner profile explicitly activates them.
+
+Critical or close-relevant artifact support is current only when the Core-owned evidence summary and the supporting artifact refs agree with storage integrity and owner-link metadata. Missing artifact bytes, absent `sha256` / `size_bytes` / `content_type` / `redaction_state` metadata, an unresolved relation owner, or an integrity finding such as `hash_mismatch` makes the affected coverage `stale` or `blocked`. If the affected coverage is required for close, `evidence_gate=sufficient` is unavailable and close is blocked.
 
 ### Evidence Sufficiency Profiles
 
@@ -669,7 +673,7 @@ The Core transition order is:
 8. Validate observed changed paths, commands, tools, and secret access against the authorization and active scope.
 9. If compatible, consume the authorization.
 10. Create the Run record.
-11. Register or link `ArtifactRef` records.
+11. Register or link `ArtifactRef` records only from Harness staging, an approved capture adapter, or an existing committed artifact ref; reject caller-supplied arbitrary absolute paths and forbidden raw secret or full sensitive-log payloads.
 12. Update the evidence summary or evidence refs required by the active path.
 13. Update blockers and gates affected by the recorded Run.
 14. Append the task event.

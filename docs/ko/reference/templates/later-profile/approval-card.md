@@ -16,7 +16,7 @@
 - 허용 경로, 도구, 명령, 네트워크 대상, 필요한 비밀 정보
 - 기준선 참조
 - 위험, 대안, 추천안
-- 표시될 때 관련 쓰기 허가 기록(Write Authorization) 경계, 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)
+- 표시될 때 관련 쓰기 허가 기록(Write Authorization) 경계, 아티팩트 참조, `redaction_state`, 읽기용 보기 최신성(projection freshness)
 
 `{approval_covers}`, `{approval_does_not_cover}` 같은 포괄 범위 자리표시자는 민감 동작 승인(Approval) 범위, 관련 사용자 판단 참조, 해당 프로필이 활성화된 경우의 연결된 민감 동작 승인(Approval) 기록, 현재 쓰기 또는 닫기 맥락에서 파생한 표시 전용 요약입니다. 민감 동작 승인 경계만 보여주며, 활성 담당 경로가 계속 기준 출처입니다.
 

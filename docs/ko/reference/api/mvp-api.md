@@ -226,6 +226,8 @@ Stage meaning: 내부 엔지니어링 점검에서는 compatible run 하나와 a
 
 `record_run`은 active path가 정직하게 지원할 수 있는 내용만 기록합니다. Reference `capability_profile`에서 `artifact_capture_supported=false`, `command_observation_supported=false`, `secret_access_observation_supported=false`이면 native capture, command-observation, secret-access claim은 blocked, narrowed, 또는 unverified로 표시해야 합니다. Manual artifact ref는 owner path가 등록한 뒤에만 evidence를 뒷받침할 수 있습니다.
 
+`artifact_inputs`는 `ArtifactInput`이 정의한 source만 받습니다. 즉 Harness staging, approved capture adapter, 이미 commit된 `ArtifactRef`입니다. Caller-supplied arbitrary absolute path, raw secret, token, full sensitive log는 evidence artifact로 등록하면 안 됩니다. Current owner relation, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, `retention_class` metadata가 없는 critical evidence는 `evidence_summary.status=sufficient`를 만들 수 없습니다.
+
 Allowed actors: `lead_agent`, `evaluator`, `operator`.
 
 ```yaml
@@ -261,11 +263,13 @@ RecordRunResponse:
 
 `payload` branch는 `kind`와 일치해야 합니다. MVP-1은 `shaping_update`, `implementation`, `direct`를 허용합니다. `verification_input`은 later-profile only입니다.
 
-`evidence_ref`는 active minimal evidence coverage record를 가리킵니다. 보통 `StateRecordRef.record_kind=evidence_summary`를 사용합니다. `evidence_summary`는 Run이 기록된 뒤의 current Core-owned compact summary를 반환합니다. 같은 operation이 반환하는 durable byte는 `registered_artifacts`에 나타납니다.
+`evidence_ref`는 active minimal evidence coverage record를 가리킵니다. 보통 `StateRecordRef.record_kind=evidence_summary`를 사용합니다. `evidence_summary`는 Run이 기록된 뒤의 current Core-owned compact summary를 반환합니다. 같은 operation이 반환하는 durable byte는 `registered_artifacts`에 나타납니다. Markdown summary나 projection text는 canonical evidence state가 아닙니다.
 
 Committed `record_run` response를 exact idempotent replay하면 current freshness check, authorization consumption, Run creation, artifact registration, blocker/gate update, projection enqueue, event append 전에 original response를 반환합니다. Write Authorization을 두 번 소비하면 안 됩니다.
 
-Public transition summary: `harness.record_run`은 envelope를 검증하고, idempotency replay를 확인하며 exact committed replay가 있으면 새 side effect 전에 반환합니다. Shared request rule에 따라 primary Task를 resolve합니다. Primary Task가 있으면 `tasks.state_version`, 없으면 `project_state.state_version`에 대해 `expected_state_version`을 확인합니다. 그다음 `kind`를 확인하고 product write를 감지합니다. Product write에는 compatible active Write Authorization을 요구하고, observed changed paths, commands, tools, secret access를 검증합니다. Compatible하면 authorization을 소비하고, Run record를 만들고, `ArtifactRef`를 등록하거나 연결하고, evidence summary와 blockers/gates를 업데이트하고, task event를 append한 뒤 response를 반환합니다.
+Public transition summary: `harness.record_run`은 envelope를 검증하고, idempotency replay를 확인하며 exact committed replay가 있으면 새 side effect 전에 반환합니다. Shared request rule에 따라 primary Task를 resolve합니다. Primary Task가 있으면 `tasks.state_version`, 없으면 `project_state.state_version`에 대해 `expected_state_version`을 확인합니다. 그다음 `kind`를 확인하고 product write를 감지합니다. Product write에는 compatible active Write Authorization을 요구하고, observed changed paths, commands, tools, secret access를 검증합니다. Compatible하면 authorization을 소비하고, Run record를 만들고, 허용된 `ArtifactRef`를 등록하거나 연결하고, evidence summary와 blockers/gates를 업데이트하고, task event를 append한 뒤 response를 반환합니다.
+
+이미 등록된 artifact가 missing이거나 required integrity/redaction metadata가 없거나 `hash_mismatch` 같은 diagnostic으로 integrity validation에 실패하면 Core는 related evidence를 `stale` 또는 `blocked`로 표시합니다. Required evidence가 affected이면 replacement, recovery, waiver/risk handling, 또는 다른 owner-approved resolution이 생길 때까지 close path는 blocked로 남습니다.
 
 Core가 write-capable run을 commit 전에 거절하면 `run_id`는 `null`이고 artifact는 등록되지 않으며 response는 Run이 존재한다고 암시하면 안 됩니다. Core는 invalid authorization을 consumed로 표시하면 안 됩니다. Violation/audit Run은 제품 쓰기가 이미 관찰된 뒤 Core가 의도적으로 기록할 때만 생길 수 있습니다. Attempted authorization ref는 validator finding, violation payload, event payload에만 나타날 수 있으며 evidence, QA, verification, final acceptance, close readiness를 충족하지 않습니다.
 
@@ -412,7 +416,7 @@ CloseTaskResponse:
 
 MVP-1 close는 core close state, blocker, residual-risk visibility, required final-acceptance state, artifact availability, Core가 소유한 `evidence_summary`를 사용합니다. Close readiness는 current record에서 파생됩니다. Verification, Manual QA, projection/report, operations ref는 해당 profile이 enabled일 때만 active입니다.
 
-`intent=complete`에서 closed response가 되려면 Task state가 close intent와 호환되고, close와 관련해 unresolved active Run이 없고, required user judgment가 unresolved 또는 blocked 상태가 아니며, evidence가 required이면 `evidence_summary.status=sufficient`여야 합니다. Final acceptance가 required이면 `judgment_kind=final_acceptance`가 기록되어야 합니다. Close-relevant residual risk는 visible해야 하며, `completed_with_risk_accepted`에는 명시적인 residual-risk acceptance가 필요합니다. Stale 또는 blocked Write Authorization fact는 그 영향이 닿는 current Run, scope, artifact, evidence, blocker record를 통해서만 close에 영향을 줍니다. Projection freshness는 display freshness이지 canonical close state가 아닙니다. Caller는 stale projection prose에서 close하면 안 됩니다.
+`intent=complete`에서 closed response가 되려면 Task state가 close intent와 호환되고, close와 관련해 unresolved active Run이 없고, required user judgment가 unresolved 또는 blocked 상태가 아니며, evidence가 required이면 `evidence_summary.status=sufficient`여야 합니다. Final acceptance가 required이면 `judgment_kind=final_acceptance`가 기록되어야 합니다. Close-relevant residual risk는 visible해야 하며, `completed_with_risk_accepted`에는 명시적인 residual-risk acceptance가 필요합니다. Close-required artifact ref는 여전히 available이어야 하고 required owner relation, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, `retention_class` metadata와 일치해야 합니다. Missing artifact나 `hash_mismatch` 같은 integrity failure는 affected evidence를 stale 또는 blocked로 만듭니다. Stale 또는 blocked Write Authorization fact는 그 영향이 닿는 current Run, scope, artifact, evidence, blocker record를 통해서만 close에 영향을 줍니다. Projection freshness는 display freshness이지 canonical close state가 아닙니다. Caller는 stale projection prose에서 close하면 안 됩니다.
 
 `CloseTaskRequest`는 accepted-risk refs를 싣지 않습니다. `completed_with_risk_accepted`에서는 Core가 close-relevant risk를 보여 주는 blocker와 residual-risk acceptance `user_judgment`의 accepted state를 읽고, 그 상태가 없으면 block합니다. Rich Residual Risk record는 해당 later profile이 active일 때만 필요합니다.
 

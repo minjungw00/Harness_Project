@@ -19,7 +19,7 @@
 - 예상 스크린샷, 워크스루 메모, 브라우저 로그, 브라우저 QA 아티팩트, 수동 제공 아티팩트 근거
 - QA가 면제되거나 미뤄질 때 면제 사유, 필요한 경우 QA 면제 사용자 판단 참조, 잔여 위험(Residual Risk) 참조
 - 검증, 최종 수락, 닫기 영향 요약
-- 수동 QA 기록, QA 면제 사용자 판단, 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)을 위한 간결한 참조
+- 수동 QA 기록, QA 면제 사용자 판단, 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, `redaction_state`, 읽기용 보기 최신성(projection freshness)을 위한 간결한 참조
 
 닫기 맥락과 면제 자리표시자는 QA 기록, `qa_gate`, 관련 관문 상태, 사용자 판단 참조, 잔여 위험(Residual Risk) 참조에서 파생한 표시 전용 요약입니다. 면제 경로는 그런 참조를 렌더링하거나 아직 기록이 필요하다고 표시해야 합니다.
 

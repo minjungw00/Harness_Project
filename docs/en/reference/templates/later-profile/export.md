@@ -19,10 +19,10 @@ Implementation tier: Operations/export reports. Export and handoff bundles are l
 - Manual QA records
 - reconcile items
 - report projection snapshots and projection freshness
-- artifact refs, owner relations, redaction status, retention/availability, and integrity metadata
+- artifact refs, owner relations, `redaction_state`, retention/availability, and integrity metadata
 - redaction, omission, and blocked-artifact summaries
 - omitted-secret notes and retained/expired artifact summaries
-- compact authority refs for Write Authorization, User Judgment, Approval, Evidence Manifest, Eval, Manual QA, final acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when included in review or Release Handoff display
+- compact authority refs for Write Authorization, User Judgment, Approval, Evidence Manifest, Eval, Manual QA, final acceptance context, Residual Risk, Artifact refs, `redaction_state`, and projection freshness when included in review or Release Handoff display
 - export profile boundary and non-deployment/non-merge reminder display
 
 ## Rendered sections
@@ -31,7 +31,7 @@ Implementation tier: Operations/export reports. Export and handoff bundles are l
 - State Snapshots
 - Report Projection Snapshots
 - Artifact Refs
-- Redaction Status Summary
+- `redaction_state` Summary
 - Omitted Or Blocked Content
 - Integrity
 - Release Handoff
@@ -84,22 +84,22 @@ updated_at: 2026-05-06T10:30:00+09:00
 - optional design projections:
 
 ## Artifact Refs
-| Artifact ID | Kind | Owner Record | URI | SHA256 | Size | Redaction Status | Retention / Availability | Export Treatment | Omission/Block Note |
+| `artifact_id` | Kind | Owner Record | `uri` | `sha256` | `size_bytes` | `redaction_state` | Retention / Availability | Export Treatment | Omission/Block Note |
 |---|---|---|---|---|---|---|---|---|---|
 
-## Redaction Status Summary
+## `redaction_state` Summary
 - secrets omitted:
 - PII omitted:
-- redaction status by artifact ref:
+- `redaction_state` by artifact ref:
 - redacted artifacts:
 - blocked artifacts:
 - omission notes preserved:
-- retained raw files included:
+- retained registered files included:
 - expired or unavailable artifact refs:
-- raw files excluded by policy, expiry, unavailability, omission, or block:
+- registered files excluded by policy, expiry, unavailability, omission, or block:
 
 ## Omitted Or Blocked Content
-| Artifact ID | Affected Owner Or Display | Redaction Status | Downstream Effect | Note |
+| `artifact_id` | Affected Owner Or Display | `redaction_state` | Downstream Effect | Note |
 |---|---|---|---|---|
 
 ## Integrity
@@ -135,8 +135,8 @@ Release Handoff display in `EXPORT` should keep self-checked work, `detached_ver
 
 `EXPORT` must not embed raw secrets, PII, sensitive logs, network traces, screenshots, or other sensitive artifact bodies by default. Large or sensitive artifacts are listed by `ArtifactRef`; raw files are included only when policy and retention allow them, and `secret_omitted` or `blocked` entries stay represented by refs and notes.
 
-If the export profile omits a report projection snapshot, raw artifact, or state snapshot, show the omission and its review or Release Handoff impact rather than implying the bundle is complete. Retained artifacts may be copied only when their owner relation, integrity, redaction status, retention policy, and export profile allow raw inclusion. Expired, unavailable, `secret_omitted`, or `blocked` artifacts stay represented by refs, safe metadata, and omission/block notes; export must not recreate their raw bytes from projections, Markdown reports, chat text, or staging paths.
+If the export profile omits a report projection snapshot, registered artifact file, or state snapshot, show the omission and its review or Release Handoff impact rather than implying the bundle is complete. Retained artifacts may be copied only when their owner relation, integrity, `redaction_state`, retention policy, and export profile allow file inclusion. Expired, unavailable, `secret_omitted`, or `blocked` artifacts stay represented by refs, safe metadata, and omission/block notes; export must not recreate their raw bytes from projections, Markdown reports, chat text, or staging paths.
 
-For `secret_omitted`, export may include safe omission notes or handles and hashes over safe stored bytes, but not omitted values. For `blocked`, export may include the committed metadata-only notice artifact and its hash, size, and content type; those fields describe the notice bytes, never the forbidden raw payload. Release Handoff sections must show the same omission or block impact as unavailable, insufficient, or unresolved input unless a documented replacement, waiver, user judgment outcome, accepted risk, or fallback resolved it before export.
+For `secret_omitted`, export may include safe omission notes or handles and `sha256` over safe stored bytes, but not omitted values. For `blocked`, export may include the committed metadata-only notice artifact and its `sha256`, `size_bytes`, and `content_type`; those fields describe the notice bytes, never the forbidden raw payload. Release Handoff sections must show the same omission or block impact as unavailable, insufficient, or unresolved input unless a documented replacement, waiver, user judgment outcome, accepted risk, or fallback resolved it before export.
 
 If recovery artifacts appear in an export, label them as recovery observations. They do not prove successful completion and must not be counted as evidence, verification, QA, final acceptance, or close proof unless a separate owner record already resolved that path.
