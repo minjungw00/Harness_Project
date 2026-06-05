@@ -343,7 +343,7 @@ Manual QA is a human inspection record. Automated checks and capture artifacts c
 
 ### Finding routing
 
-Findings from commands, Runs, Evals, QA, reviews, validators, or diagnostics are not a separate authority path. They affect state only when routed through existing owner records: Evidence Manifest, user judgment, Change Unit, Approval, Eval, Manual QA, Residual Risk, Reconcile Item, structured close blocker, or another enabled owner path.
+Findings from commands, Runs, Evals, QA, reviews, validators, or diagnostics are not a separate authority path. They affect state only when routed through an active owner path. In active MVP-1 that means paths such as user judgment, Change Unit, evidence summary, blocker, or close blocker; later/profile owners such as Evidence Manifest, Approval, Eval, Manual QA, Residual Risk, or Reconcile Item apply only when enabled.
 
 ### Residual Risk
 

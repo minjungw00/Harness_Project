@@ -349,7 +349,7 @@ Eval은 verification result record입니다. Target, verdict, checks performed, 
 
 ### Finding 라우팅
 
-Command, Run, Eval, QA, review, validator, diagnostic에서 나온 finding은 별도 record/check path가 아닙니다. Existing owner record를 통해 라우팅될 때만 state에 영향을 줍니다. 예를 들면 Evidence Manifest, User Judgment, Change Unit, Approval, Eval, Manual QA, Residual Risk, Reconcile Item, structured close blocker, enabled owner path입니다.
+Command, Run, Eval, QA, review, validator, diagnostic에서 나온 finding은 별도 record/check path가 아닙니다. Active owner path를 통해 라우팅될 때만 state에 영향을 줍니다. 활성 MVP-1에서는 user judgment, Change Unit, evidence summary, blocker, close blocker 같은 경로를 사용합니다. Evidence Manifest, Approval, Eval, Manual QA, Residual Risk, Reconcile Item 같은 later/profile owner는 enabled일 때만 적용됩니다.
 
 ### Residual Risk
 

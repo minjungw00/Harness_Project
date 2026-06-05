@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference for the shared API shapes that support the MVP-1 methods in [MVP API](mvp-api.md): request envelopes, common responses, read-only resource schemas, shared refs, artifact inputs, user-judgment payloads, next-action summaries, and API staged value sets.
+Use this reference for the shared API shapes that support the MVP-1 methods in [MVP API](mvp-api.md): request envelopes, common responses, read-only resource schemas, shared refs, artifact inputs, user-judgment payloads, next-action summaries, and active MVP-1 value sets.
 
 This document describes future Harness Server behavior for planning and review. It does not mean the current documentation repository implements an MCP server.
 
@@ -28,13 +28,13 @@ The YAML-like blocks in these API docs are normative schema notation, not exampl
 - `one_of:` means exactly one listed branch is present.
 - `a | b | c` is a closed enum unless the section explicitly labels it extensible.
 - Unlisted fields are rejected outside an explicit extension container.
-- Later/profile-gated enum values and branches are not valid for MVP-1 unless the owning profile is active.
+- Later/profile-gated enum values and branches are not valid for MVP-1 and are not part of the active schema blocks below. They are defined in [Schema Later](schema-later.md).
 
 Storage validation is a separate ownership boundary. API payloads and API-shaped stored JSON validate against this API reference first; storage-only JSON `TEXT`, DDL nullability, column defaults, and storage hardening validate against [Storage](../storage.md).
 
 ## Stage Profile Manifest
 
-This manifest filters the API schemas by stage/profile. A field or enum existing in this reference does not make it active in an earlier stage.
+The schema blocks in this document define the active MVP-1 API shape. The Engineering Checkpoint may use narrower subsets of those values, but later/profile values are defined in [Schema Later](schema-later.md) instead of being listed here and gated only by prose.
 
 | Stage/profile | Active API slice | Not active in that slice |
 |---|---|---|
@@ -216,7 +216,7 @@ An artifact ref points to a durable evidence file registered in the artifact sto
 ```yaml
 ArtifactRef:
   artifact_id: string
-  kind: diff | log | screenshot | checkpoint | bundle | manifest | qa_capture | export_component | design_probe | prototype | architecture_scan | decision_context | other
+  kind: diff | log | screenshot | checkpoint | other
   uri: string
   sha256: string
   size_bytes: integer
@@ -227,12 +227,12 @@ ArtifactRef:
   relation_owner: ArtifactRelationOwner
   created_at: string
   produced_by: lead_agent | evaluator | operator | harness
-  retention_class: task | project | export | temporary
+  retention_class: task | project | temporary
 
 ArtifactRelationOwner:
   task_id: string
   run_id: string | null
-  record_kind: task | change_unit | run | user_judgment | evidence_summary | blocker | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
+  record_kind: task | change_unit | run | user_judgment | evidence_summary | blocker
   record_id: string
   relation: string
 ```
@@ -256,18 +256,21 @@ Raw secrets, tokens, and full sensitive logs must not be stored as evidence arti
 
 ## Stage-Specific Active Value Sets
 
-These tables are the active validator sets for staged implementations. Full later values stay exact in [Schema Later](schema-later.md), but callers and validators accept only values enabled by the active stage/profile.
+These tables summarize the separated schemas. The active MVP-1 values in the left column are already present in the normative schema blocks in this document; they are not a prose-only filter over a broader enum. Later/profile values are owned by [Schema Later](schema-later.md) and must be rejected by an MVP-1 validator.
 
-| Field | Engineering Checkpoint / MVP-1 active values | Later-profile values | Future candidates |
-|---|---|---|---|
-| `ArtifactRef.kind`, `ArtifactInput.kind` | `diff`, `log`, `screenshot`, `checkpoint`, `other` | `bundle`, `manifest`, `qa_capture`, `export_component` | `design_probe`, `prototype`, `architecture_scan`, `decision_context` |
+| Field | Active MVP-1 schema values | Later/profile extension values owned by Schema Later |
+|---|---|---|
+| `ArtifactRef.kind`, `ArtifactInput.kind` | `diff`, `log`, `screenshot`, `checkpoint`, `other` | `bundle`, `manifest`, `qa_capture`, `export_component`, `design_probe`, `prototype`, `architecture_scan`, `decision_context` |
+| `ArtifactRef.retention_class`, `ArtifactInput.retention_class` | `task`, `project`, `temporary` | `export` |
 
-| Field | Engineering Checkpoint active owner kinds | MVP-1 active owner kinds | Later-profile owner kinds | Future candidates |
-|---|---|---|---|---|
-| `ArtifactInput.relation.record_kind`, `ArtifactRef.relation_owner.record_kind` | `task`, `change_unit`, `run`, `evidence_summary`, `blocker` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` | `residual_risk`, `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection` | `journey_spine_entry` |
-| `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `evidence_summary`, `blocker` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` | `approval`, `residual_risk`, `close_readiness`, `shared_design`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `reconcile_item`, `projection` | `change_unit_dependency`, `journey_spine_entry`, `domain_term`, `module_map_item`, `interface_contract` |
+| Field | Active MVP-1 schema values | Later/profile extension values owned by Schema Later |
+|---|---|---|
+| `ArtifactInput.relation.record_kind`, `ArtifactRef.relation_owner.record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` | `residual_risk`, `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection`, `journey_spine_entry` |
+| `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` | `approval`, `residual_risk`, `close_readiness`, `shared_design`, `domain_term`, `module_map_item`, `interface_contract`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `change_unit_dependency`, `reconcile_item`, `projection` |
 
 MVP-1 sensitive-action approval uses `record_kind=user_judgment`. Committed `approval` refs are later-profile unless the Approval owner profile is active.
+
+The Engineering Checkpoint can further restrict these active MVP-1 lists, for example by omitting `user_judgment` where the stored judgment path is not active. It does not add values beyond the active schema.
 
 ## ArtifactInput
 
@@ -278,14 +281,14 @@ ArtifactInput:
   existing_artifact_ref: ArtifactRef | null
   staged: StagedArtifactSource | null
   capture: CaptureAdapterArtifactSource | null
-  kind: diff | log | screenshot | checkpoint | bundle | manifest | qa_capture | export_component | design_probe | prototype | architecture_scan | decision_context | other
+  kind: diff | log | screenshot | checkpoint | other
   redaction_state: none | redacted | secret_omitted | blocked
   produced_by: lead_agent | evaluator | operator | harness
-  retention_class: task | project | export | temporary
+  retention_class: task | project | temporary
   relation:
     task_id: string
     run_id: string | null
-    record_kind: task | change_unit | run | user_judgment | evidence_summary | blocker | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
+    record_kind: task | change_unit | run | user_judgment | evidence_summary | blocker
     record_id_hint: string | null
   description: string | null
 
@@ -315,16 +318,13 @@ Critical or close-relevant evidence cannot be treated as sufficient unless the s
 
 ```yaml
 StateRecordRef:
-  record_kind: task | change_unit | run | approval | write_authorization | user_judgment | evidence_summary | blocker | residual_risk | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
+  record_kind: task | change_unit | run | write_authorization | user_judgment | evidence_summary | blocker
   record_id: string
-  projection_path: string | null
 ```
 
-`record_kind=user_judgment` is the canonical MVP-1 ref kind for user-owned judgments, including sensitive-action approval, final acceptance, and residual-risk acceptance judgments. MVP-1 evidence coverage and blockers use `record_kind=evidence_summary` and `record_kind=blocker`; durable evidence bytes use `ArtifactRef`. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=close_readiness`, and `record_kind=projection` are later/profile-promoted or derived-view refs unless their owner profile is active. There is no standalone accepted-risk ref kind.
+`record_kind=user_judgment` is the canonical MVP-1 ref kind for user-owned judgments, including sensitive-action approval, final acceptance, and residual-risk acceptance judgments. MVP-1 evidence coverage and blockers use `record_kind=evidence_summary` and `record_kind=blocker`; durable evidence bytes use `ArtifactRef`. There is no standalone accepted-risk ref kind.
 
-For `record_kind=projection`, `record_id` is the projection job identity when the Operations/projection profile is active. `projection_path` is optional display/recovery metadata, not an alternate key.
-
-Derived-view refs such as `projection` or `close_readiness` identify a readable view or later/profile-promoted display record. They do not replace the owner records behind the view. A stale derived-view ref must be refreshed or reconciled before a caller relies on it for a state-dependent action.
+Later/profile-only ref kinds such as `approval`, `residual_risk`, `close_readiness`, `shared_design`, `domain_term`, `module_map_item`, `interface_contract`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `change_unit_dependency`, `reconcile_item`, and `projection` are defined in [Schema Later](schema-later.md#later-profile-ref-and-artifact-values), not accepted by this active schema. Projection-specific metadata such as `projection_path` is also later/profile material.
 
 ## Evidence and pre-write scope schemas
 
@@ -563,20 +563,14 @@ For `judgment_kind=sensitive_approval`, `approval_scope` is required. For `judgm
 
 ```yaml
 NextActionSummary:
-  action_kind: ask_user | prepare_write | implement | launch_verify | record_eval | record_manual_qa | request_acceptance | close_task | reconcile | idle
+  action_kind: ask_user | prepare_write | implement | request_acceptance | close_task | idle
   summary: string
   required_tool: string | null
   related_refs: StateRecordRef[]
   blocker_code: ErrorCode | null
 ```
 
-MVP-1 uses `harness.status.next_actions`, not a separate `harness.next` method. Active MVP-1 values are:
-
-```text
-ask_user | prepare_write | implement | request_acceptance | close_task | idle
-```
-
-Later values `launch_verify`, `record_eval`, `record_manual_qa`, and `reconcile` are valid only when their owner profiles are active.
+MVP-1 uses `harness.status.next_actions`, not a separate `harness.next` method. The schema block above is the complete active MVP-1 enum. Later/profile action kinds such as `launch_verify`, `record_eval`, `record_manual_qa`, and `reconcile` are defined in [Schema Later](schema-later.md#later-next-action-values) and must be rejected by an MVP-1 validator.
 
 ## Current-position display schemas
 
@@ -620,12 +614,12 @@ Autonomy Boundary summaries describe judgment latitude, not pre-write scope-chec
 
 ## ValidatorResult
 
-`ValidatorResult` is profile-gated. It is included here because common responses can carry validator results, but MVP-1 does not require broad validator emission unless an owner profile promotes a specific check. Active reference-surface capability findings may appear through a narrow `surface_capability_check`; they affect blocked reasons, fallback behavior, and guarantee display, not Core write authority by themselves.
+`ValidatorResult` is included here because common responses can carry validator results. Active MVP-1 keeps this schema narrow: the only active validator kind is `capability`, and the active stable validator ID is `surface_capability_check`. It affects blocked reasons, fallback behavior, and guarantee display, not Core write authority by itself. Broader validator kinds and IDs are later/profile material.
 
 ```yaml
 ValidatorResult:
   validator_id: string
-  validator_kind: state | scope | decision | approval | evidence | verification | qa | acceptance | design | autonomy_boundary | residual_risk | artifact | projection | connector | capability
+  validator_kind: capability
   status: passed | warning | failed | blocked | skipped
   guarantee_level: cooperative | detective | preventive | isolated
   checked_at: string
@@ -645,4 +639,4 @@ ValidatorResult:
   suggested_next_action: string | null
 ```
 
-Stable later-profile validator IDs are listed in [Schema Later](schema-later.md#validatorresult-stable-ids).
+For active MVP-1, `validator_id` is `surface_capability_check`. Additional validator kinds and stable IDs are listed in [Schema Later](schema-later.md#validatorresult-stable-ids).

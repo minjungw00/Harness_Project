@@ -47,7 +47,7 @@ Status output은 세 부분 모델을 따릅니다. `harness.status.status_card`
 
 Method가 tool-specific `task_id`와 `ToolEnvelope.task_id`를 모두 가지면 tool-specific `task_id`가 첫 primary Task 후보입니다. Core는 tool-specific `task_id`, envelope `task_id`, active Task resolution 순서로 primary Task를 찾습니다. Primary Task가 없으면 그 mutation은 `expected_state_version`과 `ToolResponseBase.state_version`에 대해 project-scoped mutation입니다.
 
-MVP-1 request validator는 [Schema Core](schema-core.md#stage-specific-active-value-sets)의 active value set을 사용합니다. [Schema Later](schema-later.md)에 존재하는 later enum value나 extension branch는 그 자체로 MVP-1에서 유효해지지 않습니다.
+MVP-1 request validator는 [Schema Core](schema-core.md#stage-specific-active-value-sets)의 활성 schema block과 value-set summary를 사용합니다. Later enum value와 extension branch는 [Schema Later](schema-later.md)에 따로 정의되며, 활성 MVP-1 validator에서 valid하지 않습니다.
 
 Error code, MVP-1 status/error condition name, 사용자 표시 문구 pattern, primary error precedence, idempotency replay, stale-state behavior는 [Errors](errors.md)가 담당합니다. Guarantee level의 보안 의미는 [보안 참조: 정직한 guarantee display](../security.md#정직한-guarantee-display)가 담당합니다. 모든 state-changing tool에서 `dry_run=true`는 기준 권한이 아닙니다. Validation diagnostic 또는 would-change summary를 반환할 수 있지만 current record, `task_events` row, artifact, consumable Write Authorization, projection job, idempotency replay row를 만들지 않습니다.
 

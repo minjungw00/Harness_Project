@@ -47,7 +47,7 @@ All methods use [`ToolEnvelope`](schema-core.md#tool-envelope) and [`ToolRespons
 
 When a method has both a tool-specific `task_id` and `ToolEnvelope.task_id`, the tool-specific `task_id` is the first primary Task candidate. Core resolves the primary Task in this order: tool-specific `task_id`, envelope `task_id`, then active Task resolution. If no primary Task exists, the mutation is project-scoped for `expected_state_version` and `ToolResponseBase.state_version`.
 
-MVP-1 request validators use the active value sets in [Schema Core](schema-core.md#stage-specific-active-value-sets). Later enum values and extension branches are not valid merely because they exist in [Schema Later](schema-later.md).
+MVP-1 request validators use the active schema blocks and value-set summaries in [Schema Core](schema-core.md#stage-specific-active-value-sets). Later enum values and extension branches are defined separately in [Schema Later](schema-later.md) and are not valid for the active MVP-1 validator.
 
 Error codes, MVP-1 status/error condition names, user-facing message patterns, primary error precedence, idempotency replay, and stale-state behavior are owned by [Errors](errors.md). Security meanings for guarantee levels are owned by [Security Reference: Honest guarantee display](../security.md#honest-guarantee-display). `dry_run=true` is non-authoritative for every state-changing tool: it may return validation diagnostics or a would-change summary, but it creates no current record, `task_events` row, artifact, consumable Write Authorization, projection job, or idempotency replay row.
 

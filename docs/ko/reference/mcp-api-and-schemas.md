@@ -7,7 +7,7 @@
 | 필요한 것 | Owner |
 |---|---|
 | MVP-1 active public API | [MVP API](api/mvp-api.md) |
-| Shared core schemas, read-only resources, artifact refs, staged value sets | [API Schema Core](api/schema-core.md) |
+| 활성 MVP-1 shared schemas, read-only resources, artifact refs, value sets | [API Schema Core](api/schema-core.md) |
 | Later/profile-gated methods and future schema material | [API Schema Later](api/schema-later.md) |
 | Error taxonomy, MVP-1 status/error condition, primary precedence, idempotency, state conflict behavior | [API Errors](api/errors.md) |
 

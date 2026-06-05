@@ -345,11 +345,11 @@ A read-only documentation maintenance check profile that detects drift in biling
 
 ### Domain Language
 
-The product's canonical vocabulary and meanings. The canonical source is `domain_terms`; Markdown domain-language documents are projections and proposal surfaces. A term conflict can affect `design_gate` through policy validation, and it routes to a user judgment when choosing the meaning is user-owned Product decision or material Technical decision.
+The product's canonical vocabulary and meanings for the later design/stewardship profile. The canonical source is `domain_terms`; Markdown domain-language documents are projections and proposal surfaces. A term conflict can affect `design_gate` through policy validation when that profile is active, and it routes to a user judgment when choosing the meaning is user-owned Product decision or material Technical decision.
 
 ### Domain Term
 
-A canonical structured record in `domain_terms` that stores a product term, meaning, code representation, related terms, source, status, and boundaries such as "not this." Public state refs use `record_kind=domain_term`.
+A later/profile canonical structured record in `domain_terms` that stores a product term, meaning, code representation, related terms, source, status, and boundaries such as "not this." Public state refs use `record_kind=domain_term` only when the owning design/stewardship profile is active.
 
 ### Evidence
 
@@ -377,7 +377,7 @@ A verification result record with verdict, checks performed, evidence reviewed, 
 
 ### Feedback Loop
 
-A canonical support record and recorded path from checks and findings back into state, scope, design, evidence, follow-up work, or close status. Inputs can include tests, typecheck, lint, build, browser smoke, TDD red/green/refactor traces, Manual QA, Eval findings, user judgments, operational findings, and residual-risk decisions. Public refs use `StateRecordRef.record_kind=feedback_loop`; public mutation uses `FeedbackLoopUpdate` on `record_run` or a Manual QA execution link. Feedback loops keep findings from vanishing into chat by routing them to existing owner paths such as Evidence Manifest coverage, user judgments, Change Unit updates, Residual Risk records, Manual QA or Eval records, close blockers, or follow-up Task/Change Unit records where applicable.
+A later/profile canonical support record and recorded path from checks and findings back into state, scope, design, evidence, follow-up work, or close status. Inputs can include tests, typecheck, lint, build, browser smoke, TDD red/green/refactor traces, Manual QA, Eval findings, user judgments, operational findings, and residual-risk decisions. Public refs use `StateRecordRef.record_kind=feedback_loop`, and public mutation uses `FeedbackLoopUpdate` on `record_run` or a Manual QA execution link, only when the owning profile is active. Feedback loops keep findings from vanishing into chat by routing them to existing owner paths such as Evidence Manifest coverage, user judgments, Change Unit updates, Residual Risk records, Manual QA or Eval records, close blockers, or follow-up Task/Change Unit records where applicable.
 
 ### Finding
 
@@ -477,7 +477,7 @@ A canonical support record for durable continuity annotations that cannot be ful
 
 ### Interface Contract
 
-The canonical record of a module or external boundary's public interface, inputs, outputs, errors, compatibility impact, callers, and boundary tests. The canonical source is `interface_contracts`. Public state refs use `record_kind=interface_contract`. The record documents the interface understanding; it is not Approval, final acceptance, residual-risk acceptance, or Write Authorization. Public interface or compatibility choices route through the existing design-quality and user judgment paths when user-owned judgment is required.
+The later/profile canonical record of a module or external boundary's public interface, inputs, outputs, errors, compatibility impact, callers, and boundary tests. The canonical source is `interface_contracts`. Public state refs use `record_kind=interface_contract` only when the owning design/stewardship profile is active. The record documents the interface understanding; it is not Approval, final acceptance, residual-risk acceptance, or Write Authorization. Public interface or compatibility choices route through the existing design-quality and user judgment paths when user-owned judgment is required.
 
 ### JSON `TEXT` Field
 
@@ -533,11 +533,11 @@ A user utterance such as "yes, do it," "go ahead," "proceed," or "looks good" th
 
 ### Module Map
 
-The product's map of modules, responsibilities, public interfaces, dependency direction, internal complexity, test boundaries, owner decisions, and watchpoints. The canonical source is `module_map_items`. A module boundary update records the shared technical understanding; it does not approve writes or accept residual risk. Boundary changes that shift product commitments, caller obligations, or architecture direction route through design-quality policy and user judgment paths when user-owned judgment is required.
+The product's later/profile map of modules, responsibilities, public interfaces, dependency direction, internal complexity, test boundaries, owner decisions, and watchpoints. The canonical source is `module_map_items`. A module boundary update records the shared technical understanding; it does not approve writes or accept residual risk. Boundary changes that shift product commitments, caller obligations, or architecture direction route through design-quality policy and user judgment paths when user-owned judgment is required.
 
 ### Module Map Item
 
-A canonical structured record in `module_map_items` that stores a module's role, public interface, dependencies, internal complexity, test boundary, owner decision, and watchpoints. Public state refs use `record_kind=module_map_item`.
+A later/profile canonical structured record in `module_map_items` that stores a module's role, public interface, dependencies, internal complexity, test boundary, owner decision, and watchpoints. Public state refs use `record_kind=module_map_item` only when the owning design/stewardship profile is active.
 
 ### Policy Contract
 

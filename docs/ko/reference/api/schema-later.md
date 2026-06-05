@@ -21,7 +21,7 @@ MVP-1 path 밖에 두어야 하는 later/profile-gated API material을 확인할
 
 ## Profile rule
 
-아래 schema block은 owner profile이 active일 때만 exact합니다. Public validator는 matching profile을 owner 문서가 승격하지 않는 한 Engineering Checkpoint와 minimum MVP-1에서 이 method, enum value, extension branch를 reject해야 합니다.
+아래 schema block은 owner profile이 active일 때만 exact합니다. Public validator는 matching profile을 owner 문서가 승격하지 않는 한 Engineering Checkpoint와 minimum MVP-1에서 이 method, enum value, extension branch를 reject해야 합니다. [Schema Core](schema-core.md)의 활성 MVP-1 schema block은 이 later value를 의도적으로 포함하지 않습니다. 그래야 generated MVP-1 validator와 client가 해당 값을 실수로 accept하지 않습니다.
 
 ## Later read-only resources
 
@@ -73,7 +73,18 @@ NextResponse:
 
 `harness.next`는 read-only입니다. State를 변경하거나, Write Authorization record를 만들거나, product write를 compatible하게 하거나, user judgment를 기록하거나, gate를 충족하거나, work를 accept하거나, residual risk를 accept하거나, Task를 close하지 않습니다.
 
-Later/profile-gated `NextActionSummary.action_kind` values에는 matching owner profile이 active일 때만 `launch_verify`, `record_eval`, `record_manual_qa`, `reconcile`이 포함됩니다.
+<a id="later-next-action-values"></a>
+
+### Later next-action values
+
+Later/profile-gated `NextActionSummary.action_kind` extension values는 다음과 같습니다.
+
+```yaml
+NextActionSummary.action_kind later-profile extension:
+  launch_verify | record_eval | record_manual_qa | reconcile
+```
+
+이 값은 matching owner profile이 active일 때만 valid합니다. Minimum MVP-1 validator는 reject해야 합니다.
 
 ## Recommended playbooks and judgment context
 
@@ -204,26 +215,43 @@ ReconcileJudgment:
 
 Waiver는 skipped check를 수행하지 않고, detached verification, Manual QA pass, evidence satisfaction, final acceptance, unrelated residual risk acceptance를 만들지 않습니다. Reconcile display는 owner path가 compatible outcome을 commit하기 전까지 state가 되지 않습니다.
 
-## Full profile-gated ref values
+<a id="later-profile-ref-and-artifact-values"></a>
 
-아래 full enum은 reference stability를 위해 보존됩니다. Active value는 [Schema Core: Stage-Specific Active Value Sets](schema-core.md#stage-specific-active-value-sets)로 filter합니다.
+## Later-profile ref and artifact values
+
+아래 enum extension은 reference stability를 보존하되 활성 MVP-1 schema를 closed enum으로 유지하기 위한 것입니다. Matching owner profile이 active schema를 명시적으로 확장하지 않는 한 [Schema Core](schema-core.md)는 이 값을 accept하지 않습니다.
 
 ```yaml
-ArtifactRef.kind:
-  diff | log | screenshot | checkpoint | bundle | manifest | qa_capture | export_component | design_probe | prototype | architecture_scan | decision_context | other
+ArtifactRef.kind / ArtifactInput.kind later-profile extension:
+  bundle | manifest | qa_capture | export_component | design_probe | prototype | architecture_scan | decision_context
 
-ArtifactInput.relation.record_kind:
-  task | change_unit | run | user_judgment | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | journey_spine_entry | projection
+ArtifactRef.retention_class / ArtifactInput.retention_class later-profile extension:
+  export
 
-StateRecordRef.record_kind:
-  task | change_unit | run | approval | write_authorization | user_judgment | residual_risk | evidence_summary | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
+ArtifactRef.relation_owner.record_kind / ArtifactInput.relation.record_kind later-profile extension:
+  residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
+
+StateRecordRef.record_kind later-profile extension:
+  approval | residual_risk | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
+
+StateRecordRef projection-profile extension:
+  projection_path: string | null
 ```
+
+`record_kind=projection`에서 `record_id`는 운영/projection profile이 active일 때 projection job identity입니다. `projection_path`는 optional display/recovery metadata이지 alternate key가 아닙니다. `projection` 또는 `close_readiness` 같은 derived-view ref는 읽기용 보기 또는 later/profile-promoted display record를 가리킵니다. 그 보기 뒤의 owner record를 대체하지 않습니다.
 
 `decision_packet`은 user-judgment/full-format presentation material을 위한 legacy compatibility alias입니다. 새 payload는 `user_judgment`를 사용해야 합니다.
 
 ## ValidatorResult stable IDs
 
-Validator emission은 owner가 특정 check를 승격하지 않는 한 later/profile-gated입니다. Stable IDs:
+추가 validator kind는 owner가 특정 check를 승격하지 않는 한 later/profile-gated입니다.
+
+```yaml
+ValidatorResult.validator_kind later-profile extension:
+  state | scope | decision | approval | evidence | verification | qa | acceptance | design | autonomy_boundary | residual_risk | artifact | projection | connector
+```
+
+활성 MVP-1의 `capability` validator kind와 `surface_capability_check` ID는 [Schema Core: ValidatorResult](schema-core.md#validatorresult)가 소유합니다. Later/profile stable IDs:
 
 - `decision_gate_check`
 - `decision_quality_check`
@@ -238,7 +266,6 @@ Validator emission은 owner가 특정 check를 승격하지 않는 한 later/pro
 - `module_interface_review`
 - `manual_qa_required`
 - `context_hygiene_check`
-- `surface_capability_check`
 
 Core check는 transition을 block하거나, gate를 update하거나, blocked reason을 채우거나, fixture assertion에 나타날 수 있습니다. 여기에 listed되었거나 validator owner가 승격하지 않는 한 validator ID가 아닙니다.
 

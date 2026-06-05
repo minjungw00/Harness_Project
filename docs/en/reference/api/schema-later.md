@@ -21,7 +21,7 @@ This document preserves reference shapes for future Harness behavior. It does no
 
 ## Profile rule
 
-The schema blocks below are exact only when their owner profile is active. Public validators must reject these methods, enum values, and extension branches in Engineering Checkpoint and minimum MVP-1 unless an owner document promotes the matching profile.
+The schema blocks below are exact only when their owner profile is active. Public validators must reject these methods, enum values, and extension branches in Engineering Checkpoint and minimum MVP-1 unless an owner document promotes the matching profile. The active MVP-1 schema blocks in [Schema Core](schema-core.md) intentionally omit these later values so generated MVP-1 validators and clients do not accept them by accident.
 
 ## Later read-only resources
 
@@ -73,7 +73,18 @@ NextResponse:
 
 `harness.next` is read-only. It does not mutate state, create Write Authorization records, make product writes compatible, record user judgment, satisfy gates, accept work, accept residual risk, or close a Task.
 
-Later/profile-gated `NextActionSummary.action_kind` values include `launch_verify`, `record_eval`, `record_manual_qa`, and `reconcile` only when the matching owner profile is active.
+<a id="later-next-action-values"></a>
+
+### Later next-action values
+
+Later/profile-gated `NextActionSummary.action_kind` extension values are:
+
+```yaml
+NextActionSummary.action_kind later-profile extension:
+  launch_verify | record_eval | record_manual_qa | reconcile
+```
+
+These values are valid only when the matching owner profile is active. Minimum MVP-1 validators must reject them.
 
 ## Recommended playbooks and judgment context
 
@@ -204,26 +215,43 @@ ReconcileJudgment:
 
 Waivers do not perform the skipped check, create detached verification, create Manual QA pass, satisfy evidence, accept work, or accept unrelated residual risk. Reconcile display does not become state until the owner path commits a compatible outcome.
 
-## Full profile-gated ref values
+<a id="later-profile-ref-and-artifact-values"></a>
 
-These full enums preserve reference stability. Active values are filtered by [Schema Core: Stage-Specific Active Value Sets](schema-core.md#stage-specific-active-value-sets).
+## Later-profile ref and artifact values
+
+These enum extensions preserve reference stability while keeping active MVP-1 schemas closed. They are not accepted by [Schema Core](schema-core.md) unless a matching owner profile is active and explicitly extends the active schema.
 
 ```yaml
-ArtifactRef.kind:
-  diff | log | screenshot | checkpoint | bundle | manifest | qa_capture | export_component | design_probe | prototype | architecture_scan | decision_context | other
+ArtifactRef.kind / ArtifactInput.kind later-profile extension:
+  bundle | manifest | qa_capture | export_component | design_probe | prototype | architecture_scan | decision_context
 
-ArtifactInput.relation.record_kind:
-  task | change_unit | run | user_judgment | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | journey_spine_entry | projection
+ArtifactRef.retention_class / ArtifactInput.retention_class later-profile extension:
+  export
 
-StateRecordRef.record_kind:
-  task | change_unit | run | approval | write_authorization | user_judgment | residual_risk | evidence_summary | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
+ArtifactRef.relation_owner.record_kind / ArtifactInput.relation.record_kind later-profile extension:
+  residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
+
+StateRecordRef.record_kind later-profile extension:
+  approval | residual_risk | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
+
+StateRecordRef projection-profile extension:
+  projection_path: string | null
 ```
+
+`record_kind=projection` uses `record_id` as the projection job identity when the Operations/projection profile is active. `projection_path` is optional display/recovery metadata, not an alternate key. Derived-view refs such as `projection` or `close_readiness` identify a readable view or later/profile-promoted display record; they do not replace the owner records behind the view.
 
 `decision_packet` is a legacy compatibility alias for user-judgment/full-format presentation material. New payloads should use `user_judgment`.
 
 ## ValidatorResult stable IDs
 
-Validator emission is later/profile-gated unless an owner promotes a specific check. Stable IDs are:
+Additional validator kinds are later/profile-gated unless an owner promotes a specific check:
+
+```yaml
+ValidatorResult.validator_kind later-profile extension:
+  state | scope | decision | approval | evidence | verification | qa | acceptance | design | autonomy_boundary | residual_risk | artifact | projection | connector
+```
+
+The active MVP-1 `capability` validator kind and `surface_capability_check` ID are owned by [Schema Core: ValidatorResult](schema-core.md#validatorresult). Later/profile stable IDs are:
 
 - `decision_gate_check`
 - `decision_quality_check`
@@ -238,7 +266,6 @@ Validator emission is later/profile-gated unless an owner promotes a specific ch
 - `module_interface_review`
 - `manual_qa_required`
 - `context_hygiene_check`
-- `surface_capability_check`
 
 Core checks may still block transitions, update gates, populate blocked reasons, or appear in fixture assertions. They are not validator IDs unless listed here or promoted by the validator owner.
 
