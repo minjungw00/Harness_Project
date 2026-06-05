@@ -139,7 +139,7 @@ layout을 선택할 수 있습니다. 그래도 later-profile record를 MVP-1 re
 | `task` | Tracked work item입니다. User request, current summary, lifecycle, result, active scope, state clock을 저장합니다. | Task는 user-value unit입니다. Report, Journey, projection이 아닙니다. |
 | `task_scope` / `change_unit` | Current scope, non-goals, success criteria, allowed paths, denied paths, scoped-write status. | 기존 Core/API 이름은 `Change Unit`과 `record_kind=change_unit`을 씁니다. MVP-1 storage에는 active task-scope row 하나 또는 같은 의미의 Task scope field면 충분합니다. DAG는 필요하지 않습니다. |
 | `user_judgment` | 사용자 소유 제품/UX 판단, 기술 판단, 민감 동작 승인, 작업 수락, 잔여 위험 수용. | Full-format Decision Packet은 presentation이지 별도 authority table이 아닙니다. Committed `approvals`는 later-profile입니다. |
-| `write_check` / `write_authorization` | 정확한 proposed write에 대한 cooperative `prepare_write` result. Allowed result는 single-use Write Authorization을 만들고, blocked result는 blocker를 만듭니다. | Core path에 대한 Harness 기록/확인입니다. OS-level permission이나 arbitrary-tool prevention이 아닙니다. |
+| `write_check` / `write_authorization` | 정확한 proposed write에 대한 cooperative `prepare_write` decision과, `decision=allowed`일 때만 생기는 durable Write Authorization row입니다. Blocked, approval-required, decision-required, state-conflict result는 blocker, validator finding, error, replayable response를 만들 수 있지만 authorization row를 만들지 않습니다. | Core path에 대한 Harness 기록/확인입니다. OS-level permission이나 arbitrary-tool prevention이 아닙니다. |
 | `run` | Task, scope, optional Write Authorization, evidence refs에 연결되는 agent work run 또는 observed execution result. | Run은 registered ref를 통해서만 evidence를 support할 수 있습니다. 그 자체로 verification, QA, acceptance, close를 증명하지 않습니다. |
 | `evidence_ref` | Diff, log, screenshot, checkpoint, existing artifact ref 같은 evidence의 pointer와 short summary. | MVP-1에는 detailed Evidence Manifest가 필요하지 않습니다. 큰 byte는 state에 embed하지 않고 참조합니다. |
 | `blocker` | Owner refs와 smallest required next action을 가진 close blocker 또는 next-action blocker. | Close readiness는 open blocker와 owner record에서 파생됩니다. MVP-1에 별도 `close_readiness` table이 필요하지 않습니다. |
@@ -258,7 +258,6 @@ CREATE TABLE write_authorizations (
   task_id TEXT NOT NULL REFERENCES tasks(task_id),
   change_unit_id TEXT NOT NULL REFERENCES change_units(change_unit_id),
   status TEXT NOT NULL,
-  decision TEXT NOT NULL,
   basis_state_version INTEGER NOT NULL,
   intended_operation TEXT NOT NULL,
   allowed_paths_json TEXT NOT NULL DEFAULT '[]',
@@ -374,7 +373,7 @@ table, projection job, validator-run storage가 필요하지 않습니다.
 | Scope is present and current | `tasks.active_change_unit_id`, `change_units.status`, `change_units.scope_summary`, `change_units.non_goals_json`, `change_units.success_criteria_json` |
 | User-owned judgment is unresolved | `user_judgments.judgment_type`, `user_judgments.status`, `user_judgments.affected_gates_json`, `user_judgments.context_refs_json` |
 | Sensitive-action permission is missing or denied | `judgment_type=sensitive_action_approval`인 `user_judgments` row와 write가 관련될 때 current `write_authorizations.related_user_judgment_refs_json` |
-| Write authority is missing, stale, or already consumed | `write_authorizations.status`, `write_authorizations.basis_state_version`, `write_authorizations.consumed_by_run_id`, current `tasks.state_version` |
+| Write authority is missing, expired, stale, revoked, consumed, or incompatible | `write_authorizations.status`, `write_authorizations.basis_state_version`, `write_authorizations.consumed_by_run_id`, current `tasks.state_version` |
 | Run or evidence support is missing | `runs.status`, `runs.evidence_ref_ids_json`, `evidence_refs.status`, `evidence_refs.owner_record_kind`, `evidence_refs.owner_record_id` |
 | Work acceptance is required but missing | `judgment_type=work_acceptance`인 `user_judgments` row와 compatible `status` / `selected_option_json` |
 | Residual risk is not visible or not accepted | Residual-risk blocker kind를 가진 `blockers` row와, acceptance가 required일 때 `judgment_type=residual_risk_acceptance`인 `user_judgments` row |
@@ -508,7 +507,7 @@ Early hardening 대상:
 | `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result` | [Core Model 참조](core-model.md) |
 | `change_units.status` | Core Model / Change Unit owner rules |
 | `user_judgments.status`, `judgment_type`, `presentation` | user-judgment API/kernel owners |
-| `write_authorizations.status`, `write_authorizations.decision` | [Core Model `prepare_write`](core-model.md#prepare_write)와 [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) |
+| `write_authorizations.status` | [Core Model `prepare_write`](core-model.md#prepare_write), [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write), [`harness.record_run`](api/mvp-api.md#harnessrecord_run) |
 | `runs.kind`, `runs.status` | [`harness.record_run`](api/mvp-api.md#harnessrecord_run)와 storage compatibility notes |
 | `evidence_refs.kind`, `evidence_refs.redaction_state`, `evidence_refs.status` | `ArtifactRef`/evidence owners와 storage compatibility notes |
 | `blockers.status`, `blocked_action`, `blocker_kind` | Core Model과 API blocker owners |
@@ -529,11 +528,14 @@ Storage-owned compatibility value:
 | `runs.status` | `completed`, `interrupted`, `blocked`, `violation` | Committed Run row입니다. `completed`만 normal owner ref를 통해 evidence를 support할 수 있습니다. 다른 값은 audit/recovery record이며 그 자체로 evidence, QA, verification, acceptance, close readiness를 satisfy하지 않습니다. |
 | `change_units.status` | `planned`, `active`, `completed`, `deferred`, `superseded` | Scope lifecycle입니다. Active compatible scope row만 new write를 scope합니다. |
 | `user_judgments.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` | User judgment lifecycle입니다. Resolved judgment는 기록한 judgment type과 payload에만 영향을 줍니다. |
-| `write_authorizations.status` | `allowed`, `consumed`, `expired`, `stale`, `revoked` | Core/API owner value set과 일치하는 durable authorization lifecycle입니다. `allowed`이고 compatible한 row만 `record_run`이 consume할 수 있습니다. |
-| `write_authorizations.decision` | `allowed`, `blocked`, `approval_required`, `decision_required`, `state_conflict` | Cooperative `prepare_write` decision입니다. OS-level authority를 뜻하지 않습니다. |
+| `write_authorizations.status` | `active`, `consumed`, `expired`, `stale`, `revoked` | Core/API owner value set과 일치하는 durable authorization lifecycle입니다. `active`이고 compatible한 row만 `record_run`이 consume할 수 있습니다. |
 | `evidence_refs.status` | `available`, `missing`, `stale`, `blocked` | Evidence pointer availability입니다. Full evidence sufficiency가 아닙니다. |
 | `blockers.status` | `open`, `resolved`, `superseded` | Stored blocker lifecycle입니다. Open blocker는 Core가 resolve 또는 supersede할 때까지 visible 상태로 남습니다. |
 | `tool_invocations.status` | `committed` | Committed replayable response에 대해서만 row가 존재합니다. |
+
+`prepare_write.decision`은 durable authorization lifecycle column과 별도입니다. Canonical `prepare_write.decision` 값은 `allowed`, `blocked`, `approval_required`, `decision_required`, `state_conflict`입니다. `decision=allowed`일 때만 durable authorization row를 만들거나 반환할 수 있습니다.
+
+새 row는 `write_authorizations.status=active`로 시작합니다. 다른 decision은 response decision, blocker, validator finding, error, 필요한 경우 idempotency replay state로 표현합니다.
 
 Future table value set은 해당 table의 owner profile이 active이거나, fixture가 optional
 table을 명시적으로 seed하거나, owner document가 값을 명시적으로 승격할 때만 사용해야

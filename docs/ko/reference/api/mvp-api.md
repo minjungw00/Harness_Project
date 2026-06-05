@@ -194,7 +194,7 @@ PrepareWriteResponse:
     notes: string[]
 ```
 
-`decision=allowed`이고 `dry_run=false`이면 `write_authorization_ref`가 있어야 합니다. `dry_run=true`에서는 `authorization_effect=would_create`를 반환할 수 있지만 authorization을 만들지 않습니다. 여기서 `allowed`는 이 API path에서 현재 하네스 기록과 맞는다는 뜻이지 OS 권한이나 실행 전 차단이 아닙니다. Blocked 또는 judgment-required response는 Write Authorization을 포함하면 안 됩니다.
+`decision=allowed`이고 `dry_run=false`이면 `write_authorization_ref`와 active `write_authorization`이 있어야 합니다. `dry_run=true`에서는 `authorization_effect=would_create`를 반환할 수 있지만 authorization을 만들지 않습니다. 여기서 `allowed`는 이 API path에서 현재 하네스 기록과 맞는다는 뜻이지 OS 권한이나 실행 전 차단이 아니며, durable Write Authorization lifecycle status도 아닙니다. `decision`이 `allowed`가 아닌 response는 Write Authorization을 포함하면 안 됩니다.
 
 `approval_request_candidate`와 `user_judgment_candidate`는 non-mutating candidate payload입니다. 이것만으로 user judgment, Approval record, Write Authorization, projection을 만들지 않습니다.
 

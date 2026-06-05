@@ -328,7 +328,7 @@ WriteAuthorizationSummary:
   approval_refs: StateRecordRef[]
   user_judgment_refs: StateRecordRef[]
   guarantee_level: cooperative | detective | preventive | isolated
-  status: allowed | consumed | expired | stale | revoked
+  status: active | consumed | expired | stale | revoked
   consumed_by_run_id: string | null
   created_at: string
   consumed_at: string | null
@@ -353,7 +353,7 @@ WriteAuthoritySummary:
 
 `WriteAuthorizationSummary.approval_refs` is empty in minimum MVP-1. Resolved sensitive-action approval user judgments appear in `user_judgment_refs`; committed Approval refs appear only when the Approval owner profile is active.
 
-`WriteAuthorizationSummary` and `WriteAuthoritySummary` are API/internal names. MVP-1 user-facing displays should call this a pre-write scope check first. Fields such as `allowed_paths`, `allowed_tools`, and `status=allowed` describe Harness compatibility for the cooperative record/check only; they do not mean OS permission, sandboxing, tamper-proof enforcement, preventive blocking, or isolation.
+`WriteAuthorizationSummary` and `WriteAuthoritySummary` are API/internal names. MVP-1 user-facing displays should call this a pre-write scope check first. Fields such as `allowed_paths`, `allowed_tools`, `decision=allowed`, and `status=active` describe Harness compatibility for the cooperative record/check only; they do not mean OS permission, sandboxing, tamper-proof enforcement, preventive blocking, or isolation. `allowed` belongs to `PrepareWriteResponse.decision`. `blocked` has no authorization row or lifecycle value.
 
 ## UserJudgment
 

@@ -48,7 +48,7 @@ Core unavailable rule: if Harness/Core authority is unavailable, the agent must 
 | `SCOPE_REQUIRED` | Scope confirmation is required before the requested write can proceed. |
 | `SCOPE_VIOLATION` | Intended paths, tools, commands, network, secrets, or categories exceed scope. |
 | `WRITE_AUTHORIZATION_REQUIRED` | A write-capable run is missing a required Write Authorization from `harness.prepare_write`. |
-| `WRITE_AUTHORIZATION_INVALID` | The supplied Write Authorization is absent, expired, stale, revoked, already consumed outside idempotent replay, or incompatible. |
+| `WRITE_AUTHORIZATION_INVALID` | The supplied Write Authorization is missing, expired, stale, revoked, consumed (outside idempotent replay), or incompatible. |
 | `DECISION_REQUIRED` | Blocking user-owned judgment requires a user judgment request before the requested action can proceed. |
 | `DECISION_UNRESOLVED` | A relevant user judgment is pending, deferred without coverage, rejected, blocked, stale, or incompatible. |
 | `AUTONOMY_BOUNDARY_EXCEEDED` | The intended operation exceeds the active Change Unit Autonomy Boundary. |
@@ -70,6 +70,14 @@ Core unavailable rule: if Harness/Core authority is unavailable, the agent must 
 | `VALIDATOR_FAILED` | Fallback when required validators or close/blocker checks failed and no more specific typed code applies. |
 
 `WRITE_AUTHORIZATION_REQUIRED` and `WRITE_AUTHORIZATION_INVALID` are only for missing or invalid Write Authorization records. Scope problems still use `SCOPE_VIOLATION` when observed paths, tools, commands, network targets, secrets, or sensitive categories exceed the Write Authorization record or active scope.
+
+When either error carries an invalid-authorization reason in `ToolError.details.authorization_reason`, the reason vocabulary is exactly:
+
+```text
+missing | expired | stale | revoked | consumed | incompatible
+```
+
+Use `missing` when no authorization id/ref is supplied or the supplied ref cannot be resolved. Use `expired`, `stale`, `revoked`, `consumed`, or `incompatible` for a row that exists but cannot be consumed. No other reason values are valid.
 
 MCP availability, local access/profile mismatch, and capability insufficiency are distinct:
 
@@ -115,7 +123,7 @@ Public tool responses carry one primary `ToolError.code` even when Core observes
 | 8 | `SCOPE_REQUIRED` | Scope must be confirmed before the requested operation can proceed. |
 | 9 | `SCOPE_VIOLATION` | Intended or observed paths, tools, commands, network, secrets, or categories exceed scope. |
 | 10 | `WRITE_AUTHORIZATION_REQUIRED` | A write-capable Run is missing a required Write Authorization. |
-| 11 | `WRITE_AUTHORIZATION_INVALID` | The supplied Write Authorization is stale, expired, revoked, consumed outside replay, or incompatible. |
+| 11 | `WRITE_AUTHORIZATION_INVALID` | The supplied Write Authorization is missing, stale, expired, revoked, consumed (outside replay), or incompatible. |
 | 12 | `APPROVAL_DENIED` | Relevant sensitive-action permission was denied. |
 | 13 | `APPROVAL_EXPIRED` | Relevant sensitive-action permission expired or drifted. |
 | 14 | `APPROVAL_REQUIRED` | A sensitive change needs sensitive-action permission and no compatible grant exists. |

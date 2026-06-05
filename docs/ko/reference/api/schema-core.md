@@ -328,7 +328,7 @@ WriteAuthorizationSummary:
   approval_refs: StateRecordRef[]
   user_judgment_refs: StateRecordRef[]
   guarantee_level: cooperative | detective | preventive | isolated
-  status: allowed | consumed | expired | stale | revoked
+  status: active | consumed | expired | stale | revoked
   consumed_by_run_id: string | null
   created_at: string
   consumed_at: string | null
@@ -353,7 +353,7 @@ WriteAuthoritySummary:
 
 Minimum MVP-1에서 `WriteAuthorizationSummary.approval_refs`는 empty입니다. Resolved sensitive-action approval user judgment는 `user_judgment_refs`에 나타납니다. Committed Approval ref는 Approval owner profile이 active일 때만 나타납니다.
 
-`WriteAuthorizationSummary`와 `WriteAuthoritySummary`는 API/internal 이름입니다. MVP-1 사용자 표시에서는 먼저 쓰기 전 범위 확인이라고 설명해야 합니다. `allowed_paths`, `allowed_tools`, `status=allowed` 같은 field는 협력형 기록/확인에 대한 하네스 호환성만 뜻합니다. OS 권한, sandboxing, 변조 방지 enforcement, 사전 차단, 권한 격리를 뜻하지 않습니다.
+`WriteAuthorizationSummary`와 `WriteAuthoritySummary`는 API/internal 이름입니다. MVP-1 사용자 표시에서는 먼저 쓰기 전 범위 확인이라고 설명해야 합니다. `allowed_paths`, `allowed_tools`, `decision=allowed`, `status=active` 같은 field는 협력형 기록/확인에 대한 하네스 호환성만 뜻합니다. OS 권한, sandboxing, 변조 방지 enforcement, 사전 차단, 권한 격리를 뜻하지 않습니다. `allowed`는 `PrepareWriteResponse.decision`에 속합니다. `blocked`에는 authorization row나 lifecycle value가 없습니다.
 
 ## UserJudgment
 

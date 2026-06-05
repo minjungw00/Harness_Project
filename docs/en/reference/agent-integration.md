@@ -245,7 +245,7 @@ Engineering Checkpoint connector checks include:
 - compact current-position status before significant resume when required by the Use procedure
 - basic scope checking for the selected path/tool/command
 - `prepare_write` allowed and blocked paths
-- Write Authorization created for allowed writes and consumed by write-capable `record_run`
+- Write Authorization created only after `prepare_write.decision=allowed` and consumed by write-capable `record_run`
 - `record_run` with a minimal artifact/evidence ref
 - local-only MCP default or owner-approved alternative
 - MCP-unavailable product-write hold

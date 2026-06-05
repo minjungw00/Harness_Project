@@ -295,13 +295,17 @@ Approval does not prove correctness, choose product direction, choose technical 
 
 ### Write Authorization
 
-A Write Authorization is the durable single-use state record created when `prepare_write` finds an exact product-file write compatible with current Core records. It records the Task, Change Unit, compatibility basis, intended operation, intended write surface, relevant sensitive-action coverage and decisions, guarantee level, status, and consumption by a compatible Run. It is a Harness-level cooperative record/check, not OS permission, sandboxing, tamper-proof storage, preventive blocking, or isolation.
+A Write Authorization is the durable single-use state record created only when `prepare_write.decision=allowed` for an exact product-file write compatible with current Core records. It records the Task, Change Unit, compatibility basis, intended operation, intended write surface, relevant sensitive-action coverage and decisions, guarantee level, lifecycle status, and consumption by a compatible Run. It is a Harness-level cooperative record/check, not OS permission, sandboxing, tamper-proof storage, preventive blocking, or isolation.
 
 Write Authorization status is record-level:
 
 ```text
-allowed | consumed | expired | stale | revoked
+active | consumed | expired | stale | revoked
 ```
+
+`allowed` is a `prepare_write` decision, not a durable lifecycle status. `blocked` is not a Write Authorization lifecycle status. A blocked, approval-required, decision-required, or state-conflict write creates no consumable authorization row; Core represents it through `prepare_write.decision`, blockers, validator findings, or errors.
+
+`active` means a consumable authorization row exists and has not been consumed, expired, revoked, or marked stale. `consumed` means exactly one committed compatible implementation or direct `record_run` consumed it. `stale` means the compatibility basis changed before consumption. `expired` means expiry conditions elapsed before consumption. `revoked` means Core, policy, or explicit user decision revoked it before consumption.
 
 A Write Authorization is not reusable scope. It records compatibility for one exact write attempt under the current compatibility basis and is consumed by one compatible implementation or direct `record_run`, except for idempotent replay of the same committed request.
 
@@ -575,8 +579,8 @@ flowchart LR
   Scope["active scope"] --> Prepare["prepare_write"]
   Judgment["resolved judgments"] --> Prepare
   Approval["sensitive permission"] --> Prepare
-  Prepare -->|compatible| Auth["single-use Write Authorization"]
-  Prepare -->|blocked| Blocker["blocker"]
+  Prepare -->|decision=allowed| Auth["active single-use Write Authorization"]
+  Prepare -->|blocked / required / conflict| Blocker["blocker"]
   Auth --> Record["record_run"]
   Record --> State["state and evidence refs"]
   Blocker --> State
@@ -606,9 +610,9 @@ The decision checks only the gates and preconditions that apply to the Task, int
 8. Check sensitive-action permission when sensitive categories apply.
 9. Check required user judgments.
 10. Check enabled design/policy and capability preconditions.
-11. If all required checks pass, create or return the compatible single-use Write Authorization record and record the decision.
+11. If all required checks pass, return `decision=allowed`, create or return the compatible active single-use Write Authorization record, and record the decision through the response/idempotency path.
 
-Blocked, approval-required, decision-required, or state-conflict results must not create a consumable Write Authorization. Approval-required means sensitive-action permission is missing or unusable; it must not be converted into broad approval or product judgment. Decision-required means user-owned judgment is needed; it must not be converted into sensitive-action permission.
+`blocked`, `approval_required`, `decision_required`, and `state_conflict` results must not create a consumable Write Authorization row. `approval_required` means sensitive-action permission is missing or unusable; it must not be converted into broad approval or product judgment. `decision_required` means user-owned judgment is needed; it must not be converted into sensitive-action permission.
 
 If MCP is unavailable on a cooperative-only surface, product writes are held by instruction. Preventive or isolated claims require a proven guard or documented separation boundary for the covered operation.
 
@@ -620,9 +624,9 @@ External side effects keep the same authority meaning. Before execution, `prepar
 
 `record_run` is the Run, artifact, and evidence recording point. It is not a pre-write scope-check decision point and cannot retroactively make product-file writes compatible.
 
-Implementation and direct Runs that report product-file writes must consume a compatible, unexpired, unconsumed Write Authorization. Core verifies observed changed paths and other observed side effects against both the consumed Write Authorization and the active Change Unit when those observations are available.
+Implementation and direct Runs that report product-file writes must consume a compatible Write Authorization whose lifecycle status is `active`. Core verifies observed changed paths and other observed side effects against both the consumed Write Authorization and the active Change Unit when those observations are available.
 
-Out-of-scope changes, missing Write Authorization, stale Write Authorization, consumed Write Authorization, or incompatible Write Authorization become rejection, violation, recovery, or stale/blocker state according to the case. Such Runs do not satisfy evidence sufficiency, verification, QA, work acceptance, residual-risk acceptance, or close readiness for the affected scope until repaired through the relevant owner records.
+Out-of-scope changes, missing Write Authorization, expired Write Authorization, stale Write Authorization, revoked Write Authorization, consumed Write Authorization, or incompatible Write Authorization become rejection, violation, recovery, or stale/blocker state according to the case. Such Runs do not satisfy evidence sufficiency, verification, QA, work acceptance, residual-risk acceptance, or close readiness for the affected scope until repaired through the relevant owner records.
 
 Read-only and shaping-only Runs may be recorded without Write Authorization only when they do not report product-file changes.
 
@@ -715,7 +719,7 @@ Verification waiver is not detached verification. If the waived verification gap
 | Kernel invariant | Enforcement points |
 |---|---|
 | Core state is authority. | State-changing actions create Core records and events; projections and chat cannot mutate state without an owner path. |
-| Product writes require explicit scope and a compatible pre-write scope check. | `prepare_write` blocks missing scope and creates a single-use Write Authorization record only when required checks pass; `record_run` consumes it. |
+| Product writes require explicit scope and a compatible pre-write scope check. | `prepare_write` blocks missing scope and creates an active single-use Write Authorization record only when `decision=allowed`; `record_run` consumes the active row. |
 | User-owned judgment cannot be replaced by agent judgment. | User judgment records and `decision_gate` block affected writes or close until compatible resolution, deferral, or risk handling is recorded. |
 | Sensitive-action approval is separate. | Sensitive-action approval user judgments, later Approval records, and `approval_gate` cover sensitive permission only. |
 | Evidence, verification, QA, acceptance, and residual risk stay separate. | Separate gates, refs, and close blockers prevent substitution. |
@@ -751,8 +755,8 @@ The following combinations are invalid or require repair:
 |---|---|
 | Product write attempted with no active Task, no active Change Unit, out-of-scope path/tool/command/network/secret, or incompatible Autonomy Boundary | Block `prepare_write`; request scope or user judgment when appropriate. |
 | Product write attempted in `advisor` mode | Block `prepare_write`. |
-| Product write attempted without required sensitive-action permission | Return approval-required; do not create Write Authorization. |
-| Product write attempted with unresolved user-owned judgment | Return decision-required or decision-unresolved. |
+| Product write attempted without required sensitive-action permission | Return `approval_required`; do not create Write Authorization. |
+| Product write attempted with unresolved user-owned judgment | Return `decision_required`; do not create Write Authorization. |
 | Implementation/direct Run recorded without compatible unconsumed Write Authorization | Reject or record violation/recovery state without treating authority as consumed. |
 | Sensitive-action approval used as product/UX or technical judgment | Reject or repair through user judgment. |
 | Generic "go ahead" used to satisfy incompatible routes | Clarify or split routes before recording state. |

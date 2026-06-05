@@ -194,7 +194,7 @@ PrepareWriteResponse:
     notes: string[]
 ```
 
-`decision=allowed` with `dry_run=false` must include `write_authorization_ref`; `dry_run=true` may return `authorization_effect=would_create` but creates no authorization. Here `allowed` means compatible with current Harness records for this API path; it does not mean OS permission or pre-execution blocking. Blocked or judgment-required responses must not include a Write Authorization.
+`decision=allowed` with `dry_run=false` must include `write_authorization_ref` and an active `write_authorization`; `dry_run=true` may return `authorization_effect=would_create` but creates no authorization. Here `allowed` means compatible with current Harness records for this API path; it does not mean OS permission or pre-execution blocking, and it is not the durable Write Authorization lifecycle status. Any response whose `decision` is not `allowed` must not include a Write Authorization.
 
 `approval_request_candidate` and `user_judgment_candidate` are non-mutating candidate payloads. They do not create user judgments, Approval records, Write Authorizations, or projections.
 
