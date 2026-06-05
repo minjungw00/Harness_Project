@@ -2,16 +2,16 @@
 
 ## What this document helps you do
 
-Use this reference to check surface-specific connector recipes for Codex, Claude Code, Gemini, GitHub Copilot, and Cursor.
+Use this reference to check the active reference local surface recipe and to keep other surface notes out of MVP scope until an owner promotes them.
 
-This document owns local setup notes, generated file names, MCP configuration hints, capture/guard/isolation options, common fallbacks, and conformance risks that vary by surface. The common connector contract lives in [Agent Integration Reference](agent-integration.md).
+This document owns local setup notes, generated file names, MCP configuration hints, capture/guard/isolation options, common fallbacks, and conformance risks that vary by surface. The common surface contract and the active reference `capability_profile` live in [Agent Integration Reference](agent-integration.md).
 
 This is reference documentation for future Harness behavior. Current repository phase and implementation handoff status are tracked in [Implementation Overview](../build/implementation-overview.md#documentation-acceptance-status).
 
 ## Read this when
 
-- You are writing or reviewing a connector recipe for a specific agent surface.
-- You need to keep surface-specific setup separate from the common connector contract.
+- You are writing or reviewing the active reference local surface recipe.
+- You need to keep later surface notes separate from the common surface contract.
 - You need to describe capture, guard, isolation, fallback, or conformance risks without overstating guarantee level.
 
 ## Before you read
@@ -20,15 +20,15 @@ Read [Agent Integration Reference](agent-integration.md) for the common connecto
 
 ## Main idea
 
-A surface name never implies a guarantee level. Every connector still declares a capability profile for the actual host/profile/configuration in use, and the profile's proven capabilities determine the guarantee level.
+A surface name never implies a guarantee level. The active MVP targets one reference local surface profile, and that profile's proven fields determine the guarantee level.
 
 For generic capability profile rules, see [Agent Integration Reference](agent-integration.md#capability-profiles).
 
-Surface recipes do not define local-access public error codes or OS-level security guarantees. They inherit the Engineering Checkpoint/default reference local-only MCP posture from [Runtime Architecture](runtime-architecture.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), [Security Reference](security.md), and [Agent Integration](agent-integration.md). Early recipes should default to cooperative/detective wording; preventive and isolated options remain future/profile-specific until the concrete profile is promoted and proven. A recipe may name the surface-specific local transport, config snippet, setup hint, access-control material class, hook, wrapper, or isolation option, but recipe text does not upgrade the guarantee level. Agent Integration capability profiles and conformance decide whether the surface is cooperative, detective, preventive, or isolated. A recipe must not expose raw token, secret, or private configuration values, and remote, shared, non-loopback, forwarded, or tunneled MCP exposure is never implied by the surface name. If MCP/Core cannot be reached, route through `MCP_UNAVAILABLE` or operations diagnostics such as `MCP_SERVER_UNAVAILABLE`; if a reachable local caller or access mode is outside the registered profile, use `LOCAL_ACCESS_MISMATCH` with display-safe diagnostic detail; if a recognized surface/profile cannot satisfy a required capability, use `CAPABILITY_INSUFFICIENT`; and use normal state-conflict/scope/capability checks for mismatched project, Task, surface, Run, or actor claims. If the MCP server cannot be reached, no authoritative Core response is available from that call path; cooperative recipes hold writes by instruction, preventive wording is allowed only when a fixture-proven guard covers the operation, and isolated wording is allowed only when the connector profile names and proves the exact separation boundary. Do not introduce a surface-specific `UNAUTHORIZED` public code; the current reference API uses `LOCAL_ACCESS_MISMATCH` for classified local-access/profile mismatches and does not add an `UNAUTHORIZED` code for that case.
+Surface recipes do not define local-access public error codes or OS-level security guarantees. They inherit the Engineering Checkpoint/default reference local-only MCP posture from [Runtime Architecture](runtime-architecture.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), [Security Reference](security.md), and [Agent Integration](agent-integration.md). The active recipe uses cooperative/detective wording only; preventive and isolated options remain future/profile-specific until a concrete profile is promoted and proven. Recipe text does not upgrade the guarantee level. A recipe must not expose raw token, secret, or private configuration values, and remote, shared, non-loopback, forwarded, or tunneled MCP exposure is never implied by the surface name. If MCP/Core cannot be reached, route through `MCP_UNAVAILABLE` or operations diagnostics such as `MCP_SERVER_UNAVAILABLE`; if a reachable local caller or access mode is outside the registered profile, use `LOCAL_ACCESS_MISMATCH` with display-safe diagnostic detail; if a recognized surface/profile cannot satisfy a required capability, use `CAPABILITY_INSUFFICIENT`. Do not introduce a surface-specific `UNAUTHORIZED` public code.
 
 ## Recipe shape
 
-Each recipe should keep only surface-specific material:
+Each active recipe should keep only surface-specific material:
 
 - target profiles that are plausible for the surface
 - generated files or instructions
@@ -49,232 +49,76 @@ The `guarantee_boundary` blocks below are recipe documentation notes, not public
 
 When a recipe lists a manual verification bundle under `fallback_isolation`, read it as verification/evaluator fallback input. A manual verification bundle does not by itself upgrade the connected surface to `preventive` or `isolated`. An `isolated` guarantee still requires a documented and proven separation boundary. Worktrees or fresh bundles can support verification independence or stale-context control; OS sandboxing, permission isolation, hard process/container isolation, or tamper-proof security requires the connector profile to name and prove that exact mechanism. Isolation remains separate from Approval, QA, final acceptance, residual-risk acceptance, close, and verification results.
 
-## Codex
+## Reference Local Surface
 
 ```yaml
-surface_kind: codex
+surface_kind: reference_local_mcp
 target_profiles:
-  - local_cli
-  - ide_chat
-  - custom_agent
+  - local_mcp_reference
 generated_files_or_instructions:
-  - AGENTS.md or a managed Harness section inside AGENTS.md
-  - local skill or command instructions when supported
+  - a short managed agent-instruction block only when the selected surface needs one
   - MCP config snippet
   - connector manifest entry
 mcp_configuration_hints:
-  - prefer direct MCP tool calls for T2 or higher profiles
-  - record generated MCP config paths, managed hashes, and profile freshness in the connector manifest
+  - local-only registered project posture
+  - use only the public tools and resources listed in the active capability_profile
+  - record generated MCP config paths, managed hashes, and capability_profile freshness in the connector manifest
+capability_profile_fields:
+  surface_id: reference-local-mcp
+  surface_name: Reference local MCP surface
+  mcp_available: true
+  public_tools_available: active MVP-1 method set, with Engineering Checkpoint using a subset
+  resources_available: Engineering Checkpoint and MVP-1 read-only resource subset
+  cooperative_prepare_write_supported: true
+  changed_path_detection_supported: true
+  artifact_capture_supported: false
+  manual_artifact_attachment_supported: true
+  command_observation_supported: false
+  secret_access_observation_supported: false
+  pre_tool_blocking_supported: false
+  isolation_supported: false
+  max_guarantee_level: detective
+  conformance_smoke_status: planned_not_run
 guarantee_boundary:
-  default_level: cooperative for AGENTS.md, skill, or command wording alone
-  can_block_before_execution: only covered operations through a wrapper, sidecar, host permission, or host hook that is available and fixture-proven for the concrete Codex profile
-  can_detect_after_action: changed paths, run/artifact gaps, and generated-file drift when validators or sidecars are active
-  native_capture: wrapper or explicit record_run discipline when configured
-  fallback_capture: manual artifact capture for diffs, logs, screenshots, command output, and QA notes
-  fallback_isolation: manual verification bundle or fresh worktree/evaluator profile when configured
+  default_level: cooperative
+  max_level: detective only for supported after-action observation
+  can_block_before_execution: false
+  can_detect_after_action: changed paths and artifact gaps when the owner path observes them
+  native_capture: none in the minimum reference profile
+  fallback_capture: manual artifact attachment for diffs, logs, screenshots, command output, and QA notes
+  fallback_isolation: not supported by the active reference profile
 capture_guard_isolation_options:
-  - sidecar changed-file watcher
   - changed_paths validator
-  - wrapper or explicit record_run discipline for command output and artifacts
-  - manual artifact capture when wrapper or structured capture is unavailable
-  - manual verification bundle when fresh evaluator support is unavailable
+  - explicit record_run discipline for summaries and artifact refs
+  - manual artifact attachment when native capture is unavailable
+  - no pre-tool blocking claim
+  - no isolation claim
 common_fallbacks:
-  - cooperative prepare_write discipline unless pre-tool guard is fixture-proven
+  - cooperative prepare_write discipline
   - detective changed-path validation
-  - manual artifact capture
-  - manual verification bundle
-  - non-runtime docs-maintenance edits only when explicitly in scope under the Authoring Guide, with path allowlists and batch boundaries treated as maintainer editing controls
+  - manual artifact attachment
+  - hold product writes by instruction when MCP/Core or required capability is unavailable
 conformance_risks:
-  - pre-tool guard strength depends on host environment and must be fixture-proven
-  - artifact capture may need a wrapper or explicit record_run discipline
-  - long AGENTS.md files can bury current Harness status and authority context
-  - document rewrite sessions can sprawl without batch boundaries
+  - conformance_smoke_status must not be reported as passed before runtime fixtures are materialized and run
+  - native artifact capture, command observation, secret access observation, pre-tool blocking, and isolation are unsupported
+  - unsupported capabilities must lower guarantee display or return CAPABILITY_INSUFFICIENT / structured blocked reasons
+  - product writes must not proceed silently when the required Harness record/check path or required capability is unavailable
 ```
 
-Codex connector work should keep `AGENTS.md` short enough to scan every turn. Treat it as an always-on compass, not a procedure manual, schema reference, project history, or full context bundle. The injected current-state context should fit the [Agent Integration](agent-integration.md#context-pushpull-principles) budget: current task summary, work shape, scope/non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, residual-risk summary, guarantee level, and source refs/freshness. Put procedural depth in a skill, command, or MCP resource, and pull longer references only when the current profile needs them.
+The reference local surface is enough for the active MVP path because it exercises the kernel through MCP, Core authority checks, Write Authorization, `record_run`, manual artifacts, and honest guarantee display. It is deliberately not a broad connector platform.
 
-Codex-facing wording may expose phrases such as "freeze this task to these paths" or "show what can actually be blocked and what can only be detected later." For profiles without fixture-proven pre-tool blocking, describe freeze as a cooperative scope hold or stricter next-action posture plus detective changed-path validation when available, not as preventive guard.
+Reference-surface wording may expose phrases such as "hold this task to these paths" or "show what can actually be blocked and what can only be detected later." Because `pre_tool_blocking_supported=false`, describe the hold as cooperative scope discipline plus detective changed-path validation when available, not as preventive guard.
 
-## Claude Code
+## Later Surface Notes
 
-```yaml
-surface_kind: claude_code
-target_profiles:
-  - local_cli
-  - ide_chat
-  - custom_agent
-generated_files_or_instructions:
-  - CLAUDE.md or managed Harness section inside CLAUDE.md
-  - skill-style procedure files when supported
-  - hook configuration snippets
-  - MCP config snippet
-  - connector manifest entry
-mcp_configuration_hints:
-  - keep MCP tool and resource availability explicit per host profile
-  - record hook paths, MCP generated paths, managed hashes, and profile freshness in the connector manifest
-guarantee_boundary:
-  default_level: cooperative for CLAUDE.md or skill wording alone
-  can_block_before_execution: only covered operations through configured and fixture-proven PreToolUse hooks, wrappers, sidecars, or permissions
-  can_detect_after_action: changed files, command output, log artifacts, and stop summaries through PostToolUse or Stop hooks when configured
-  native_capture: hook, wrapper, or structured run summary when configured
-  fallback_capture: manual artifact capture for diffs, logs, screenshots, command output, and QA notes
-  fallback_isolation: read-only evaluator, fresh worktree evaluator, or manual verification bundle
-capture_guard_isolation_options:
-  - SessionStart hook for Journey Card or status card injection
-  - UserPromptSubmit hook for intake and shaping guidance
-  - PreToolUse hook for covered edit, command, network, or secret guard when configured and fixture-proven
-  - PostToolUse hook for changed files, command output, and log artifact candidates
-  - Stop hook for run summary and verify/QA needs
-  - PreCompact hook for Task summary and artifact refs
-  - read-only evaluator or fresh worktree evaluator profile
-common_fallbacks:
-  - read-only evaluator profile
-  - fresh worktree evaluator
-  - manual artifact capture
-  - manual verification bundle
-  - stop-hook report draft
-  - cooperative scope hold or careful-mode instruction when hooks are absent or not fixture-proven
-conformance_risks:
-  - hook behavior is version and configuration dependent
-  - read-only verification profile must be tested by conformance
-  - PreToolUse can claim preventive guard only for covered operations it is fixture-proven to block before execution
-```
+The named surfaces below are not active MVP requirements. They are later notes for future owner promotion.
 
-Claude Code recipes may map "guard" to `PreToolUse` only when that hook is configured and fixture coverage proves it can block the covered operation before execution. Otherwise, freeze and careful mode remain cooperative scope-hold or stricter next-action instructions plus any available post-tool capture.
+| Surface note | Later-only boundary |
+|---|---|
+| Codex | May use `AGENTS.md`, skills, commands, or MCP snippets in a future profile. Instruction text alone stays cooperative; pre-tool blocking, native capture, and isolation require exact profile proof. |
+| Claude Code | May use hook concepts such as `PreToolUse` only after a promoted profile proves covered behavior for the concrete host/version. Until then, guard/freeze wording stays cooperative or detective. |
+| Gemini | May use extension or CLI-wrapper notes later. Extension wording alone is not a guard, and context must stay compact. |
+| GitHub Copilot | IDE and cloud behavior must not be blurred. Task wrappers or cloud policy paths need separate promoted profiles and proof. |
+| Cursor | Project rules are instruction context. IDE permission or sidecar behavior must be proven before any preventive claim. |
 
-## Gemini
-
-```yaml
-surface_kind: gemini
-target_profiles:
-  - local_cli
-  - extension
-  - ide_chat
-  - custom_agent
-generated_files_or_instructions:
-  - extension instruction package or prompt package
-  - local CLI wrapper instructions when applicable
-  - sidecar configuration when used
-  - MCP config snippet
-  - connector manifest entry
-mcp_configuration_hints:
-  - keep extension context small and let the agent pull longer references through MCP resources
-  - record extension, wrapper, sidecar, MCP generated paths, managed hashes, and profile freshness in the connector manifest
-guarantee_boundary:
-  default_level: cooperative for extension or prompt package wording alone
-  can_block_before_execution: only covered paths or commands through a fixture-proven CLI wrapper, sidecar-controlled run, policy layer, or host permission
-  can_detect_after_action: changed paths, command output, artifact gaps, and generated-file drift when wrapper, sidecar, or validators are active
-  native_capture: CLI wrapper, sidecar, or host capture when configured
-  fallback_capture: manual artifact capture for diffs, logs, screenshots, command output, and QA notes
-  fallback_isolation: isolated evaluator bundle or manual verification bundle
-capture_guard_isolation_options:
-  - CLI wrapper for command and artifact capture
-  - sidecar-controlled run for covered paths and commands
-  - manual artifact capture when native capture is unavailable
-  - Manual QA note artifact when browser capture is unavailable
-  - isolated evaluator bundle when host capture is weak
-common_fallbacks:
-  - CLI wrapper
-  - sidecar-controlled run
-  - manual artifact capture
-  - Manual QA note artifact
-  - manual verification bundle
-  - cooperative hold or narrowed boundary when only extension wording is available
-conformance_risks:
-  - extension context can become too large
-  - capture and guard behavior varies by host profile and must be fixture-proven for covered operations
-  - extension wording alone must not be reported as a guard
-```
-
-Gemini connectors should push only the profile-relevant compact context: current Harness status, active user judgment summary, Autonomy Boundary summary, Change Unit scope, and residual-risk summary near close. Longer standards, domain language, module maps, interface contracts, schemas, and templates should be pulled through MCP resources only when the current profile needs them.
-
-## GitHub Copilot
-
-```yaml
-surface_kind: github_copilot
-target_profiles:
-  - vscode_chat
-  - vscode_agent
-  - cloud_agent
-  - custom_agent
-generated_files_or_instructions:
-  - workspace custom instructions
-  - VS Code task or terminal wrapper configuration
-  - approval card display instructions when supported
-  - MCP config snippet for MCP-capable profiles
-  - connector manifest entry
-mcp_configuration_hints:
-  - distinguish VS Code local profiles from cloud profiles
-  - prefer task or terminal wrappers when command output must become a run artifact
-  - record generated custom instruction, task, wrapper, MCP paths, managed hashes, and profile freshness in the connector manifest
-guarantee_boundary:
-  default_level: cooperative for custom instruction or chat wording alone
-  can_block_before_execution: only covered operations through a fixture-proven VS Code task wrapper, terminal wrapper, sidecar, host permission, or cloud policy path
-  can_detect_after_action: task output, changed files, command logs, artifact gaps, and generated-file drift when wrapper, sidecar, or validators are active
-  native_capture: VS Code task, terminal wrapper, sidecar, or profile-specific capture when configured
-  fallback_capture: manual artifact capture for diffs, logs, screenshots, command output, and QA notes
-  fallback_isolation: fresh worktree/evaluator profile or manual verification bundle
-capture_guard_isolation_options:
-  - VS Code task wrapper for owned task capture
-  - sidecar adapter for changed-file or command observation
-  - manual artifact capture when task, wrapper, or sidecar capture is unavailable
-  - profile-specific guard only when the host is fixture-proven to block covered operations before execution
-  - explicit Approval Card display for sensitive actions
-common_fallbacks:
-  - VS Code task wrapper
-  - sidecar adapter
-  - manual artifact capture
-  - manual verification bundle
-  - explicit Approval Card
-  - cooperative chat instruction for profiles without wrapper or sidecar support
-conformance_risks:
-  - cloud and IDE profiles may differ materially
-  - write guard coverage and artifact capture need profile-specific verification
-  - user-facing freeze cards must show allowed paths and what can actually be blocked versus detected later
-```
-
-Copilot recipes should not blur IDE and cloud behavior. A VS Code task wrapper may support detective capture or preventive blocking for tasks it owns when fixture coverage proves that behavior, while chat instructions alone remain cooperative.
-
-## Cursor
-
-```yaml
-surface_kind: cursor
-target_profiles:
-  - ide_agent
-  - local_cli
-  - custom_agent
-generated_files_or_instructions:
-  - Cursor project rules or managed Harness section inside project rules
-  - skill/playbook instructions when supported
-  - sidecar configuration when used
-  - MCP config snippet
-  - connector manifest entry
-mcp_configuration_hints:
-  - keep project rules short and use MCP resources for longer references
-  - record generated rule, sidecar, MCP paths, managed hashes, and profile freshness in the connector manifest
-guarantee_boundary:
-  default_level: cooperative for Cursor project-rule wording alone
-  can_block_before_execution: only covered operations through fixture-proven IDE permission support, wrapper, sidecar, or policy path
-  can_detect_after_action: changed files, generated-file drift, artifact gaps, and validator findings when sidecar or validators are active
-  native_capture: sidecar, wrapper, or IDE capture when configured
-  fallback_capture: manual artifact capture for diffs, logs, screenshots, command output, and QA notes
-  fallback_isolation: manual verification bundle or fresh worktree/evaluator profile when configured
-capture_guard_isolation_options:
-  - sidecar changed-file detection
-  - generated file drift detection
-  - IDE permission support when available and fixture-proven
-  - manual artifact capture when native capture is unavailable
-  - manual verification bundle
-common_fallbacks:
-  - sidecar changed-file detection
-  - generated file drift detection
-  - manual artifact capture
-  - manual verification bundle
-  - cooperative project-rule instruction when IDE permissions are not fixture-proven
-conformance_risks:
-  - project rules can become too verbose
-  - guard coverage depends on IDE profile and fixture-proven permissions
-  - generated project rules must become reconcile candidates when locally edited
-```
-
-Cursor connectors should keep project rules short and use the skill/playbook plus MCP for procedural depth and profile-based context retrieval. Project-rule wording alone is cooperative; IDE permission or sidecar fixture proof is required before claiming preventive guard behavior.
+These notes are not a connector marketplace, hosted connector registry, broad connector ecosystem, or cross-surface orchestration plan. If a later profile promotes one of them, it must define exact `capability_profile` fields, fallback behavior, conformance expectations, redaction/secret handling when needed, and the rule that connector output never replaces Core authority.

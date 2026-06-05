@@ -2,19 +2,19 @@
 
 ## What this document helps you do
 
-Use this reference when connecting an agent surface to future Harness behavior without overstating what that surface can enforce.
+Use this reference when connecting the active reference agent surface to future Harness behavior without overstating what that surface can enforce.
 
-This reference owns the common connector contract: capability tiers, capability profiles, generated manifest expectations, context push/pull principles, fallback semantics, Role Lens behavior, reference-surface expectations, and connector conformance overview.
+This reference owns the common surface contract: capability tiers, the active reference `capability_profile`, generated manifest expectations, context push/pull principles, fallback semantics, Role Lens behavior, reference-surface expectations, and later connector conformance overview.
 
 For what the agent says and does in a user session, read [Agent Guide](../use/agent-guide.md). For surface-specific setup notes, read [Surface Cookbook](surface-cookbook.md). Current repository phase and implementation handoff status are tracked in [Implementation Overview](../build/implementation-overview.md#documentation-acceptance-status).
 
 ## Read this when
 
-- You are implementing or reviewing a connector for an agent surface.
-- You need to declare, refresh, or audit a surface capability profile.
+- You are implementing or reviewing the one active reference surface profile.
+- You need to declare, refresh, or audit a surface `capability_profile`.
 - You need to display guarantee level, guard, freeze, fallback, or MCP availability honestly.
-- You are writing connector conformance coverage.
-- You need to know what belongs in this common contract instead of a surface recipe.
+- You are writing future reference-surface smoke or later connector conformance coverage.
+- You need to know what belongs in this common contract instead of a surface recipe or later connector note.
 
 ## Before you read
 
@@ -24,9 +24,9 @@ This reference is not an instruction to load all Reference docs into agent conte
 
 ## Main idea
 
-A connector gives the agent small current context, routes state-changing actions through Harness, captures what happened when the surface can do so, and reports only guarantees proven for the actual surface profile in use.
+The active MVP path targets one reference surface profile. That profile gives the agent small current context, routes state-changing actions through Harness, records what happened when the surface can do so, and reports only guarantees proven for the actual `capability_profile` in use.
 
-Surface name is not capability. A connector may claim cooperative, detective, preventive, or isolated behavior only for the concrete host, profile, version/configuration, workspace policy, MCP posture, capture path, guard path, or separation boundary that has been declared and checked.
+Surface name is not capability. A profile may claim cooperative, detective, preventive, or isolated behavior only for the concrete host, profile, version/configuration, workspace policy, MCP posture, capture path, guard path, or separation boundary that has been declared and checked. Broad connector ecosystems, hosted connector registries, cross-surface orchestration, remote/shared MCP exposure, and multi-surface automation are later/profile or Roadmap scope unless an owner explicitly promotes a narrower path.
 
 ## Integration In Plain Language
 
@@ -40,7 +40,8 @@ user conversation surface
   -> Harness skill, command, or playbook
   -> Harness MCP server
   -> Harness Core
-  -> adapter, hook, sidecar, validator, capture path, or isolation layer
+  -> reference surface adapter and validators
+  -> later/profile hook, sidecar, capture path, or isolation layer only when promoted
 ```
 
 Always-on connector rules should stay short: when to use Harness, where to read current status or an agent context packet, that product writes use `prepare_write`, that user-owned judgment routes through judgment requests, that clarification checks repo/docs/current state before asking, that status must show what can actually be blocked or only detected later, and that product writes hold when authoritative MCP is unavailable.
@@ -71,48 +72,55 @@ The session procedure belongs in [Agent Guide](../use/agent-guide.md). Connector
 | `T5 Isolation` | Surface can run verification or risky work behind a documented separation boundary. | worktree, sandbox, fresh process, isolated runner |
 | `T6 QA Capture` | Surface can structure browser, screenshot, walkthrough, workflow-recording, or Manual QA artifacts. | browser runner, screenshot capture, console/network capture, accessibility snapshot, QA note capture |
 
-Engineering Checkpoint and MVP-1 connectors should assume cooperative or detective behavior unless a concrete profile proves a stronger capability. `T4` and `T5` do not imply default OS isolation, arbitrary-tool sandboxing, tamper-proof files, or pre-tool blocking.
+Engineering Checkpoint and MVP-1 target the one reference surface profile. That profile should assume cooperative or limited detective behavior unless a concrete owner-promoted profile proves a stronger capability. `T4` and `T5` do not imply default OS isolation, arbitrary-tool sandboxing, tamper-proof files, or pre-tool blocking.
 
 ## Capability Profiles
 
-Connectors must use a capability profile instead of assuming behavior from a product name, surface name, or mode label. A profile is scoped to the actual host/profile that will run the work.
+Surfaces must use a `capability_profile` instead of assuming behavior from a product name, surface name, or mode label. A profile is scoped to the actual host/profile that will run the work.
 
-Every profile must include, in connector-owned field names:
+A `capability_profile` is not write authority, not a first-class replacement for Core gates, and not a way to bypass active Task, active Change Unit, `prepare_write`, durable Write Authorization, or `record_run`. Capability affects validator results, blocked reasons, fallback behavior, and guarantee display. Unsupported capabilities must lower the displayed guarantee or block the claim. Product writes must not proceed silently on an unsupported surface.
 
-- surface id, surface kind, target profile, detected version when available, profile version, and last verified time
-- support tier and guarantee level
-- MCP tool/resource availability and local exposure posture
-- access-control material class without raw secrets or private configuration values
-- capture, QA capture, guard, isolation, changed-path detection, redaction, and artifact-retention behavior
-- known risks and fallbacks
-- the conformance result or operator check that made the declaration current
-
-Example shape:
+The active MVP reference profile uses these fields:
 
 ```yaml
-surface_id: SURF-0001
-surface_kind: generic_agent
-target_profile: local_cli
-detected_version: optional string
-capability_profile_version: 1
-last_verified_at: 2026-05-06T10:05:00+09:00
-support_tier: T2
-guarantee_level: cooperative
-capabilities:
-  mcp_tools: true
-  mcp_resources: true
-  structured_output: false
-  artifact_capture: manual
-  pre_tool_guard: false
-  changed_path_detection: validator
-  worktree_isolation: false
-risks:
-  - no proven pre-tool guard
-fallbacks:
-  - cooperative prepare_write discipline
-  - changed-path validation
-  - manual artifact capture
+capability_profile:
+  surface_id: reference-local-mcp
+  surface_name: Reference local MCP surface
+  mcp_available: true
+  public_tools_available:
+    - harness.status
+    - harness.intake
+    - harness.request_user_judgment
+    - harness.record_user_judgment
+    - harness.prepare_write
+    - harness.record_run
+    - harness.close_task
+  resources_available:
+    - harness://project/current
+    - harness://task/active
+    - harness://task/{task_id}
+    - harness://task/{task_id}/summary
+    - harness://status/card
+    - harness://task/{task_id}/user-judgments
+    - harness://task/{task_id}/judgment-context
+  cooperative_prepare_write_supported: true
+  changed_path_detection_supported: true
+  artifact_capture_supported: false
+  manual_artifact_attachment_supported: true
+  command_observation_supported: false
+  secret_access_observation_supported: false
+  pre_tool_blocking_supported: false
+  isolation_supported: false
+  max_guarantee_level: detective
+  unsupported_behavior:
+    - lower guarantee display when a claim depends on an unsupported field
+    - return CAPABILITY_INSUFFICIENT or a structured blocked reason when the missing capability is required
+    - hold product writes by instruction instead of silently continuing
+  fallback_instruction: "Use cooperative prepare_write, validate changed paths after action, and attach manual artifacts before making evidence or guarantee claims."
+  conformance_smoke_status: planned_not_run
 ```
+
+`max_guarantee_level` is a ceiling, not the default for every action. The reference profile can display `detective` only for behavior supported by `changed_path_detection_supported` or other observable after-action facts. Because `pre_tool_blocking_supported=false` and `isolation_supported=false`, it must not claim `preventive` or `isolated` behavior.
 
 Refresh the profile when version, MCP config, hooks, permissions, workspace policy, generated files, managed blocks, conformance result, capture method, QA capture method, redaction policy, artifact retention, access-control material class, local bind/reachability posture, guard wrapper, or isolation wrapper changes.
 
@@ -130,6 +138,18 @@ Guarantee level display follows [Security Reference](security.md#honest-guarante
 | `isolated` | Name the documented separation boundary. Do not imply OS sandboxing, permission isolation, or tamper-proof storage unless the profile proves that exact mechanism. |
 
 Guard, freeze, and careful-mode labels are display labels over the actual profile. They must say what can actually be blocked before execution and what can only be detected later. They are not approval, verification, final acceptance, residual-risk acceptance, close readiness, or a kernel gate.
+
+Field mapping for the active reference surface:
+
+| Capability field | Guarantee effect |
+|---|---|
+| `mcp_available=false` | Core authority is unavailable from that surface; use `MCP_UNAVAILABLE` behavior and do not claim state mutation. |
+| `cooperative_prepare_write_supported=true` | The surface can participate in the cooperative `prepare_write` path, but Core still decides and any Write Authorization still comes only from Core. |
+| `changed_path_detection_supported=true` | The surface may support detective changed-path validation after action; it does not prove pre-tool blocking. |
+| `artifact_capture_supported=false` with `manual_artifact_attachment_supported=true` | Native artifact capture claims must be blocked or lowered; manual artifact attachment can support evidence refs only after the owner path registers them. |
+| `command_observation_supported=false` or `secret_access_observation_supported=false` | Claims that depend on command or secret-access observation must be blocked, narrowed, or marked unverified. |
+| `pre_tool_blocking_supported=false` | `preventive` display is unavailable; product writes hold by instruction when unsupported. |
+| `isolation_supported=false` | `isolated` display is unavailable; worktrees or bundles cannot be called security isolation without a promoted proof. |
 
 ## Generated Manifest Expectations
 
@@ -221,37 +241,41 @@ Stop and show the smallest unblocker before scope expansion, new sensitive actio
 
 ## Reference Surface Contract
 
-Engineering Checkpoint uses only the reference-surface support needed to exercise one local project registration and the Core authority path. Later bullets in this section are profile targets, not Engineering Checkpoint requirements.
+Engineering Checkpoint and MVP-1 use only the reference-surface support needed to exercise one local project registration and the Core authority path. Later bullets in this section are profile targets, not Engineering Checkpoint or MVP-1 requirements.
 
 Engineering Checkpoint minimum reference expectations:
 
-- `T2 MCP` for the public tool/resource subset needed by the first authority loop
+- one registered `capability_profile` for `surface_id=reference-local-mcp`
+- `mcp_available=true` for the public tool/resource subset needed by the first authority loop
 - local-only or owner-approved access posture
 - cooperative `prepare_write` before product writes and compatible Write Authorization before write-capable `record_run`
 - detective changed-path and artifact validation after runs
-- no default OS sandbox, arbitrary-tool sandboxing, tamper-proof local files, or pre-tool blocking claim
-- a run summary and at least one manually supplied or captured artifact/evidence ref for the minimal authority loop
+- no default OS sandbox, arbitrary-tool sandboxing, tamper-proof local files, isolation, or pre-tool blocking claim
+- a run summary and at least one manually supplied artifact/evidence ref for the minimal authority loop
 - honest display of pre-action stop versus after-action detection when guard, freeze, or careful-mode labels are shown
 
-Later profile targets include user-readable status/next cards, compact user judgment display, evidence and close readiness summaries, evidence manifest support, manual verification bundles or fresh evaluator instructions, Manual QA note/artifact support, connector manifests, projection freshness, reconcile flow, and operator diagnostics.
+Later profile targets include user-readable status/next cards, compact user judgment display, evidence and close readiness summaries, evidence manifest support, manual verification bundles or fresh evaluator instructions, Manual QA note/artifact support, connector manifests, projection freshness, reconcile flow, and operator diagnostics. Broad connector ecosystems, hosted connector registries, and cross-surface orchestration stay later/profile or Roadmap until promoted.
 
 ## Connector Conformance Overview
 
-Connector conformance should prove that a profile can uphold the common contract at its declared capability tier. Scenario lists are aggregate profile maps, not a single Engineering Checkpoint checklist.
+Connector conformance should prove that a profile can uphold the common contract at its declared capability tier. Scenario lists are aggregate profile maps, not a single Engineering Checkpoint checklist. The active smoke target is the reference `capability_profile`, not a connector ecosystem.
 
-Engineering Checkpoint connector checks include:
+Engineering Checkpoint reference-surface checks include:
 
 - status with and without an active Task
 - compact current-position status before significant resume when required by the Use procedure
+- one registered reference `capability_profile` with `conformance_smoke_status` reported as planned or not run until runtime fixtures exist
+- guarantee display derived from the actual profile fields, with no `preventive` or `isolated` claim when `pre_tool_blocking_supported=false` and `isolation_supported=false`
 - basic scope checking for the selected path/tool/command
 - `prepare_write` allowed and blocked paths
 - Write Authorization created only after `prepare_write.decision=allowed` and consumed by write-capable `record_run`
 - `record_run` with a minimal artifact/evidence ref
 - local-only MCP default or owner-approved alternative
 - MCP-unavailable product-write hold
+- `CAPABILITY_INSUFFICIENT` or an equivalent blocked reason when a requested write or guarantee depends on an unsupported capability
 - read-only status recommendations unless a recommended action later follows a Core mutation path
 - honest guarantee display for guard, freeze, or careful-mode labels
 
-Later profile scenarios include user judgment routing with options and consequences, sensitive-action permission paths, full Change Unit handling, evidence and artifact integrity, verification bundles, Manual QA, final acceptance, residual-risk visibility and acceptance, stale projection/reconcile flow, generated-file drift, capability fallback, stale context refusal, and surface capability mismatch handling.
+Later profile scenarios include user judgment routing with options and consequences, sensitive-action permission paths, full Change Unit handling, evidence and artifact integrity, verification bundles, Manual QA, final acceptance, residual-risk visibility and acceptance, stale projection/reconcile flow, generated-file drift, capability fallback, stale context refusal, surface capability mismatch handling, broader connectors, hosted connector registries, and cross-surface orchestration only after promotion.
 
 Exact fixture format is owned by [Conformance Fixtures Reference](conformance-fixtures.md), and operational commands are owned by [Operations And Conformance Reference](operations-and-conformance.md).

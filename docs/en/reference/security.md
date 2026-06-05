@@ -30,6 +30,8 @@ Harness is a local authority layer, not a general operating-system security boun
 
 Canonical operational meaning flows through Core-owned state-changing paths. Product repository documents, chat text, generated connector files, projections, artifacts, external command output, MCP caller claims, and remembered context are inputs until the relevant owner path accepts them.
 
+The active MVP security baseline uses one registered reference surface `capability_profile`. Capability labels do not grant write authority and do not replace active Task, active Change Unit, `prepare_write`, durable Write Authorization, or `record_run`. Unsupported fields in that profile lower the displayed guarantee or block the claim; product writes must not proceed silently on an unsupported surface.
+
 Security display must match the real control. `cooperative` means the agent or tool follows the documented procedure. `detective` means Harness can detect a mismatch or record inconsistency after the fact. `preventive` means a proven control blocks the covered action before it happens. `isolated` means the claim names a defined and proven isolation boundary. High-risk work must not rely on cooperative-only claims when the work requires preventive or isolated controls.
 
 Early local Harness stages do not automatically provide operating-system permissions, sandbox arbitrary tools, make local files tamper-proof, or convert cooperative agent behavior into preventive security. Engineering Checkpoint and MVP-1 may refuse Core state-changing actions that do not match owner records, record state, validate the minimal artifact/evidence refs required by the active Core path, report stale or mismatched facts, and display honest guarantee limits. A structured blocker means Core or a connected surface reports that the Harness record/check path cannot proceed; it is not a claim that Harness physically stopped a process before execution. User-facing wording should distinguish "not compatible with the current Harness record," "held by instruction," and "physically prevented by runtime." Preventive controls are future/profile-specific until owner docs and conformance prove the exact covered operation; isolated controls are future/profile-specific until they prove the exact separation boundary.
@@ -58,6 +60,7 @@ The stage map does not lower Core authority. Core may always refuse an invalid s
 
 The Engineering Checkpoint and MVP-1 reference path can use these controls without claiming a preventive or isolated runtime boundary:
 
+- one registered reference `capability_profile` with `surface_id=reference-local-mcp`, `max_guarantee_level=detective`, `pre_tool_blocking_supported=false`, and `isolation_supported=false`
 - local-only posture display for the registered project surface
 - clear Product Repository / Harness Server / Harness Runtime Home separation
 - raw secret and token response prohibition, with display-safe handles, redaction, omission, or blocked-payload notices
@@ -125,7 +128,7 @@ This document does not own:
 
 ## Baseline assumptions
 
-The Engineering Checkpoint and staged-delivery default are local-first. The expected baseline is a user-controlled Product Repository, a local Harness Server / Installation, a Harness Runtime Home, an MCP server exposed only through the registered local connector posture, and one or more connected agent surfaces.
+The Engineering Checkpoint and staged-delivery default are local-first. The active MVP baseline is a user-controlled Product Repository, a local Harness Server / Installation, a Harness Runtime Home, an MCP server exposed only through the registered reference local connector posture, and one connected reference agent surface. Additional connected surfaces, hosted connector registries, and cross-surface orchestration are later/profile scope unless owner documentation promotes and proves them.
 
 Local-first does not mean every local process is trusted. Another process, stale connector configuration, broad file permissions, a forwarded port, a hand-edited generated file, or stale chat context may still affect what an agent sees or does. Harness therefore treats nearby surfaces as separate trust zones and accepts operational meaning only through owner paths.
 
@@ -150,7 +153,7 @@ Remote or shared MCP exposure remains outside the Engineering Checkpoint baselin
 | Boundary | Trust risk | Required posture |
 |---|---|---|
 | User conversation surface | Chat may contain intent, approval-like words, stale memory, or malicious pasted content. | Treat conversation as input. Authority-affecting user-owned judgment must be recorded through the documented `user_judgment` / owner path, including sensitive-action approval, final acceptance, or residual-risk acceptance paths when those specific routes apply; Decision Packet is only an optional full-format presentation. |
-| Agent surface | The surface may skip MCP, overclaim capability, continue from stale context, or perform actions outside scope. | Capability must be declared for the actual host/profile and displayed honestly. Product/runtime/code writes hold when the required Harness record/check cannot be reached or confirmed. |
+| Agent surface | The surface may skip MCP, overclaim capability, continue from stale context, or perform actions outside scope. | Capability must be declared for the actual host/profile and displayed honestly. In the active MVP, the reference `capability_profile` controls guarantee display and capability blockers only; it does not grant write authority. Product/runtime/code writes hold when the required Harness record/check or required capability cannot be reached or confirmed. |
 | Harness Server / Installation | The local control-plane process, connector adapter, projector, reconciler, or operator entrypoint may be stale, misconfigured, or asked to trust inputs that bypass Core. | Treat the installation as the control plane, not as a general OS sandbox. State-changing effects go through Core owner paths; adapters and tools report capability, diagnostics, or proposals rather than creating authority. |
 | Local process | A shell, editor, test runner, package manager, sidecar, or other local process may mutate files, read secrets, or call local endpoints outside the intended profile. | Local execution is not trust by itself. Bound process behavior through scope, Approval, connector capability, least-privilege tool choice, and stronger controls when cooperative/detective posture is insufficient. |
 | Local socket or API surface | Local endpoints can be reached by the wrong caller, stale configuration, forwarded ports, weak socket/config permissions, or off-profile access material. | Use local process, local socket, localhost-loopback, in-process/stdio, or a promoted connector posture with documented access control. Validate public envelopes through Core, and do not treat reachability as permission or a valid Harness record/check. |

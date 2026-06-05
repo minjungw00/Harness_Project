@@ -2,19 +2,19 @@
 
 ## 이 문서로 할 수 있는 일
 
-향후 하네스 동작에 에이전트 접점을 연결할 때, 그 접점이 실제로 보장할 수 있는 수준을 과장하지 않도록 이 참조를 사용합니다.
+향후 하네스 동작에 활성 기준 에이전트 접점을 연결할 때, 그 접점이 실제로 보장할 수 있는 수준을 과장하지 않도록 이 참조를 사용합니다.
 
-이 참조는 공통 커넥터 계약을 담당합니다. Capability tier, capability profile, generated manifest 기대사항, Context Push/Pull Principles, Fallback Semantics, Role Lens 동작, 기준 접점 기대사항, connector conformance 개요를 다룹니다.
+이 참조는 공통 접점 계약을 담당합니다. Capability tier, 활성 기준 `capability_profile`, generated manifest 기대사항, Context Push/Pull Principles, Fallback Semantics, Role Lens 동작, 기준 접점 기대사항, 이후 connector conformance 개요를 다룹니다.
 
 사용자 세션에서 에이전트가 무엇을 말하고 어떻게 행동해야 하는지는 [에이전트 가이드](../use/agent-guide.md)를 봅니다. 접점별 설정 메모는 [Surface Cookbook](surface-cookbook.md)을 봅니다. 현재 저장소 단계와 구현 인계 상태는 [구현 개요](../build/implementation-overview.md#문서-수락-상태)가 담당합니다.
 
 ## 이런 때 읽기
 
-- 에이전트 접점용 커넥터를 구현하거나 검토할 때.
-- 접점 capability profile을 선언, 갱신, 점검할 때.
+- 활성 기준 접점 profile을 구현하거나 검토할 때.
+- 접점 `capability_profile`을 선언, 갱신, 점검할 때.
 - 보장 수준, guard, freeze, fallback, MCP availability를 정직하게 표시해야 할 때.
-- Connector conformance coverage를 작성할 때.
-- 공통 계약과 접점별 recipe의 경계를 확인해야 할 때.
+- 향후 reference-surface smoke 또는 이후 connector conformance coverage를 작성할 때.
+- 공통 계약과 접점별 recipe 또는 이후 connector note의 경계를 확인해야 할 때.
 
 ## 읽기 전에
 
@@ -24,9 +24,9 @@
 
 ## 핵심 생각
 
-커넥터는 에이전트에게 작고 최신인 맥락을 주고, 상태를 바꾸는 행동은 하네스로 라우팅하고, 접점이 할 수 있으면 실제로 일어난 일을 캡처하며, 실제 사용 중인 접점 프로필에서 입증된 보장만 보고합니다.
+활성 MVP 경로는 하나의 기준 접점 profile만 대상으로 합니다. 이 profile은 에이전트에게 작고 최신인 맥락을 주고, 상태를 바꾸는 행동은 하네스로 라우팅하며, 접점이 할 수 있는 범위에서 실제로 일어난 일을 기록합니다. 보고할 수 있는 보장은 실제 사용 중인 `capability_profile`이 입증한 수준으로 제한됩니다.
 
-접점 이름은 capability가 아닙니다. 협력형, 사후 확인, 사전 차단, 격리형 동작은 실제 host, profile, version/configuration, workspace policy, MCP posture, capture path, guard path, separation boundary가 선언되고 확인된 범위에서만 주장할 수 있습니다.
+접점 이름은 capability가 아닙니다. 협력형, 사후 확인, 사전 차단, 격리형 동작은 실제 host, profile, version/configuration, workspace policy, MCP posture, capture path, guard path, separation boundary가 선언되고 확인된 범위에서만 주장할 수 있습니다. Broad connector ecosystem, hosted connector registry, 여러 접점 orchestration, remote/shared MCP exposure, 여러 접점 automation은 owner가 좁은 경로를 명시적으로 승격하기 전까지 이후/profile 또는 로드맵 범위입니다.
 
 ## 통합을 쉬운 말로 설명하면
 
@@ -40,7 +40,8 @@ user conversation surface
   -> Harness skill, command, or playbook
   -> Harness MCP server
   -> Harness Core
-  -> adapter, hook, sidecar, validator, capture path, or isolation layer
+  -> reference surface adapter and validators
+  -> later/profile hook, sidecar, capture path, or isolation layer only when promoted
 ```
 
 항상 적용되는 커넥터 규칙은 짧아야 합니다. 언제 하네스를 쓰는지, current status 또는 에이전트 맥락 패킷을 어디서 읽는지, 제품 파일 쓰기에는 `prepare_write`를 쓴다는 점, 사용자 소유 판단은 판단 요청으로 라우팅한다는 점, 요구사항 구체화는 사용자에게 묻기 전에 repo/docs/current state를 확인한다는 점, 상태가 실제로 실행 전에 막을 수 있는 것과 나중에 감지할 수 있는 것을 구분해야 한다는 점, authoritative MCP를 사용할 수 없으면 제품 파일 쓰기를 보류한다는 점이면 충분합니다.
@@ -71,48 +72,55 @@ user conversation surface
 | `T5 Isolation` | 접점이 검증 또는 위험한 작업을 문서화된 separation boundary 뒤에서 실행할 수 있습니다. | worktree, sandbox, fresh process, isolated runner |
 | `T6 QA Capture` | 접점이 browser, screenshot, walkthrough, workflow-recording, 수동 QA artifact를 구조화할 수 있습니다. | browser runner, screenshot capture, console/network capture, accessibility snapshot, QA note capture |
 
-내부 엔지니어링 점검과 MVP-1 커넥터는 구체적인 프로필이 더 강한 capability를 입증하지 않는 한 협력형 또는 사후 확인 동작을 전제로 삼아야 합니다. `T4`와 `T5`는 기본 OS 격리, 임의 도구 sandboxing, 변조 방지 파일, 도구 실행 전 차단을 뜻하지 않습니다.
+내부 엔지니어링 점검과 MVP-1은 하나의 기준 접점 profile을 대상으로 합니다. 구체적인 owner-promoted profile이 더 강한 capability를 입증하지 않는 한 협력형 또는 제한된 사후 확인 동작을 전제로 삼아야 합니다. `T4`와 `T5`는 기본 OS 격리, 임의 도구 sandboxing, 변조 방지 파일, 도구 실행 전 차단을 뜻하지 않습니다.
 
 ## Capability Profiles
 
-커넥터는 제품명, 접점 이름, mode label에서 동작을 가정하지 않고 capability profile을 사용해야 합니다. Profile은 실제 작업을 실행할 host/profile에 한정됩니다.
+접점은 제품명, 접점 이름, mode label에서 동작을 가정하지 않고 `capability_profile`을 사용해야 합니다. Profile은 실제 작업을 실행할 host/profile에 한정됩니다.
 
-모든 profile은 커넥터가 소유한 field 이름으로 다음 사실을 담아야 합니다.
+`capability_profile`은 쓰기 권한이 아닙니다. Core gate를 대체하는 first-class 수단도 아닙니다. Active Task, active Change Unit, `prepare_write`, durable Write Authorization, `record_run`을 우회할 수 없습니다. Capability는 validator result, blocked reason, fallback behavior, guarantee display에 영향을 줍니다. 지원하지 않는 capability는 표시 보장 수준을 낮추거나 claim을 막아야 합니다. Product write는 지원하지 않는 접점에서 조용히 진행되면 안 됩니다.
 
-- surface id, surface kind, target profile, 사용할 수 있으면 detected version, profile version, last verified time
-- support tier와 guarantee level
-- MCP tool/resource availability와 local exposure posture
-- raw secret이나 private configuration value가 없는 access-control material class
-- capture, QA capture, guard, isolation, changed-path detection, redaction, artifact-retention behavior
-- 알려진 risk와 fallback
-- 선언을 최신으로 만든 conformance result 또는 operator check
-
-예시 모양:
+활성 MVP 기준 profile은 아래 field를 사용합니다.
 
 ```yaml
-surface_id: SURF-0001
-surface_kind: generic_agent
-target_profile: local_cli
-detected_version: optional string
-capability_profile_version: 1
-last_verified_at: 2026-05-06T10:05:00+09:00
-support_tier: T2
-guarantee_level: cooperative
-capabilities:
-  mcp_tools: true
-  mcp_resources: true
-  structured_output: false
-  artifact_capture: manual
-  pre_tool_guard: false
-  changed_path_detection: validator
-  worktree_isolation: false
-risks:
-  - no proven pre-tool guard
-fallbacks:
-  - cooperative prepare_write discipline
-  - changed-path validation
-  - manual artifact capture
+capability_profile:
+  surface_id: reference-local-mcp
+  surface_name: Reference local MCP surface
+  mcp_available: true
+  public_tools_available:
+    - harness.status
+    - harness.intake
+    - harness.request_user_judgment
+    - harness.record_user_judgment
+    - harness.prepare_write
+    - harness.record_run
+    - harness.close_task
+  resources_available:
+    - harness://project/current
+    - harness://task/active
+    - harness://task/{task_id}
+    - harness://task/{task_id}/summary
+    - harness://status/card
+    - harness://task/{task_id}/user-judgments
+    - harness://task/{task_id}/judgment-context
+  cooperative_prepare_write_supported: true
+  changed_path_detection_supported: true
+  artifact_capture_supported: false
+  manual_artifact_attachment_supported: true
+  command_observation_supported: false
+  secret_access_observation_supported: false
+  pre_tool_blocking_supported: false
+  isolation_supported: false
+  max_guarantee_level: detective
+  unsupported_behavior:
+    - lower guarantee display when a claim depends on an unsupported field
+    - return CAPABILITY_INSUFFICIENT or a structured blocked reason when the missing capability is required
+    - hold product writes by instruction instead of silently continuing
+  fallback_instruction: "Use cooperative prepare_write, validate changed paths after action, and attach manual artifacts before making evidence or guarantee claims."
+  conformance_smoke_status: planned_not_run
 ```
+
+`max_guarantee_level`은 상한입니다. 모든 action의 기본값이 아닙니다. 기준 profile은 `changed_path_detection_supported` 또는 관찰 가능한 사후 사실이 뒷받침하는 경우에만 `detective`로 표시할 수 있습니다. `pre_tool_blocking_supported=false`와 `isolation_supported=false`이므로 `preventive` 또는 `isolated` behavior를 주장하면 안 됩니다.
 
 Version, MCP config, hook, permission, workspace policy, generated file, managed block, conformance result, capture method, QA capture method, redaction policy, artifact retention, access-control material class, local bind/reachability posture, guard wrapper, isolation wrapper가 바뀌면 profile을 갱신합니다.
 
@@ -130,6 +138,18 @@ Local 범위를 넘는 MCP 노출은 owner docs가 승격하고 증명하기 전
 | `isolated` | 문서화된 separation boundary를 이름 붙입니다. 해당 profile이 정확한 mechanism을 입증하지 않으면 OS sandboxing, 권한 격리, 변조 방지 저장소를 암시하지 않습니다. |
 
 Guard, freeze, careful-mode label은 실제 profile 위의 표시 label입니다. 무엇을 실행 전에 실제로 막을 수 있고 무엇을 나중에만 감지할 수 있는지 말해야 합니다. 이것들은 민감 동작 승인, 검증, 최종 수락, 잔여 위험 수락, 닫기 준비 상태, kernel gate가 아닙니다.
+
+활성 기준 접점에서 field가 보장 표시에 주는 영향은 다음과 같습니다.
+
+| Capability field | Guarantee effect |
+|---|---|
+| `mcp_available=false` | 해당 접점에서 Core 권한을 사용할 수 없습니다. `MCP_UNAVAILABLE` 동작을 사용하고 state mutation을 주장하지 않습니다. |
+| `cooperative_prepare_write_supported=true` | 접점이 협력형 `prepare_write` path에 참여할 수 있습니다. 그래도 Core가 결정하고, Write Authorization은 Core에서만 나옵니다. |
+| `changed_path_detection_supported=true` | 행동 뒤 changed-path validation을 사후 확인으로 지원할 수 있습니다. 도구 실행 전 차단 증명이 아닙니다. |
+| `artifact_capture_supported=false`와 `manual_artifact_attachment_supported=true` | Native artifact capture claim은 막거나 낮춰야 합니다. Manual artifact attachment는 owner path가 등록한 뒤에만 evidence ref를 support할 수 있습니다. |
+| `command_observation_supported=false` 또는 `secret_access_observation_supported=false` | Command 또는 secret-access 관찰에 의존하는 claim은 막거나, 줄이거나, 미검증으로 표시해야 합니다. |
+| `pre_tool_blocking_supported=false` | `preventive` display는 사용할 수 없습니다. Product write가 지원하지 않는 capability에 의존하면 지시로 보류합니다. |
+| `isolation_supported=false` | `isolated` display는 사용할 수 없습니다. 승격된 증명 없이 worktree나 bundle을 보안 격리라고 부르면 안 됩니다. |
 
 ## Generated Manifest 기대사항
 
@@ -221,37 +241,41 @@ AFK, unattended, 또는 "내가 없는 동안 계속해" 지시는 새 권한을
 
 ## 기준 접점 계약
 
-내부 엔지니어링 점검은 하나의 로컬 프로젝트 등록과 Core 권한 경로를 확인하는 데 필요한 기준 접점 support만 사용합니다. 이 섹션의 later bullet은 profile target이지 내부 엔지니어링 점검 requirement가 아닙니다.
+내부 엔지니어링 점검과 MVP-1은 하나의 로컬 프로젝트 등록과 Core 권한 경로를 확인하는 데 필요한 기준 접점 support만 사용합니다. 이 섹션의 later bullet은 profile target이지 내부 엔지니어링 점검이나 MVP-1 requirement가 아닙니다.
 
 내부 엔지니어링 점검의 최소 기준 기대:
 
-- 첫 권한 루프에 필요한 public tool/resource subset을 위한 `T2 MCP`
+- `surface_id=reference-local-mcp`인 등록된 `capability_profile` 하나
+- 첫 권한 루프에 필요한 public tool/resource subset을 위한 `mcp_available=true`
 - local-only 또는 owner-approved access posture
 - 제품 파일 쓰기 전 cooperative `prepare_write`, write-capable `record_run` 전 compatible Write Authorization
 - run 뒤 changed-path와 artifact validation을 사후 확인
-- 기본 OS sandbox, arbitrary-tool sandboxing, tamper-proof local file, pre-tool blocking claim 없음
-- 최소 권한 루프를 위한 run summary와 수동 제공 또는 capture된 artifact/evidence ref 하나 이상
+- 기본 OS sandbox, arbitrary-tool sandboxing, tamper-proof local file, isolation, pre-tool blocking claim 없음
+- 최소 권한 루프를 위한 run summary와 수동 제공 artifact/evidence ref 하나 이상
 - guard, freeze, careful-mode label을 표시할 때 pre-action stop과 after-action detection을 정직하게 구분
 
-Later profile target에는 user-readable status/next card, 작은 사용자 판단 표시, 근거와 닫기 준비 상태 요약, Evidence Manifest support, manual verification bundle 또는 fresh evaluator instructions, 수동 QA note/artifact support, connector manifest, projection freshness, reconcile flow, operator diagnostics가 포함됩니다.
+Later profile target에는 user-readable status/next card, 작은 사용자 판단 표시, 근거와 닫기 준비 상태 요약, Evidence Manifest support, manual verification bundle 또는 fresh evaluator instructions, 수동 QA note/artifact support, connector manifest, projection freshness, reconcile flow, operator diagnostics가 포함됩니다. Broad connector ecosystem, hosted connector registry, 여러 접점 orchestration은 승격 전까지 이후/profile 또는 로드맵에 남습니다.
 
 ## Connector Conformance 개요
 
-Connector conformance는 profile이 선언한 capability tier에서 공통 계약을 지킬 수 있음을 증명해야 합니다. Scenario list는 aggregate profile map이지 하나의 내부 엔지니어링 점검 checklist가 아닙니다.
+Connector conformance는 profile이 선언한 capability tier에서 공통 계약을 지킬 수 있음을 증명해야 합니다. Scenario list는 aggregate profile map이지 하나의 내부 엔지니어링 점검 checklist가 아닙니다. 활성 smoke 대상은 connector ecosystem이 아니라 기준 `capability_profile`입니다.
 
-내부 엔지니어링 점검 connector check에는 다음이 포함됩니다.
+내부 엔지니어링 점검 reference-surface check에는 다음이 포함됩니다.
 
 - active Task가 있을 때와 없을 때 status
 - Use procedure가 요구하는 경우 significant resume 전 compact current-position status
+- `conformance_smoke_status`가 runtime fixture가 생기기 전까지 planned 또는 not run으로 보고되는 등록된 기준 `capability_profile` 하나
+- 실제 profile field에서 파생되는 guarantee display. `pre_tool_blocking_supported=false`와 `isolation_supported=false`이면 `preventive` 또는 `isolated` claim 없음
 - 선택된 path/tool/command에 대한 basic scope checking
 - `prepare_write` allowed/blocked path
 - `prepare_write.decision=allowed` 뒤에만 생성되는 Write Authorization과 write-capable `record_run`의 소비
 - minimal artifact/evidence ref가 있는 `record_run`
 - local-only MCP default 또는 owner-approved alternative
 - MCP unavailable product-write hold
+- requested write 또는 guarantee가 unsupported capability에 의존할 때 `CAPABILITY_INSUFFICIENT` 또는 동등한 blocked reason
 - 추천 action이 이후 Core mutation path를 따르기 전까지 read-only status recommendation
 - guard, freeze, careful-mode label에 대한 honest guarantee display
 
-Later profile scenario에는 선택지와 결과가 있는 사용자 판단 라우팅, 민감 동작 permission path, full Change Unit handling, evidence와 artifact integrity, verification bundle, 수동 QA, 최종 수락, 잔여 위험 표시와 수용, stale projection/reconcile flow, generated-file drift, capability fallback, stale context refusal, surface capability mismatch handling이 포함됩니다.
+Later profile scenario에는 선택지와 결과가 있는 사용자 판단 라우팅, 민감 동작 permission path, full Change Unit handling, evidence와 artifact integrity, verification bundle, 수동 QA, 최종 수락, 잔여 위험 표시와 수용, stale projection/reconcile flow, generated-file drift, capability fallback, stale context refusal, surface capability mismatch handling, broader connector, hosted connector registry, 여러 접점 orchestration이 승격 뒤에 포함됩니다.
 
 Exact fixture format은 [Conformance Fixtures 참조](conformance-fixtures.md)가 담당하고, operational command는 [Operations And Conformance 참조](operations-and-conformance.md)가 담당합니다.

@@ -14,6 +14,8 @@ MVP-1 exposes a small local MCP surface for the user work loop: intake ordinary 
 
 This API does not claim OS-level blocking, arbitrary-tool sandboxing, tamper-proof files, or pre-tool prevention. `harness.prepare_write` is a cooperative pre-write scope check against Core state. Any Write Authorization it returns is a Harness-level record/check, not OS permission, sandboxing, tamper-proof enforcement, or preventive blocking. Stronger preventive or isolated claims require an owner-promoted profile and proof in the relevant security and connector docs.
 
+Active MVP-1 uses one registered reference `capability_profile` for `surface_id=reference-local-mcp`. The profile is routing and capability context, not write authority and not a replacement for Core gates. It affects validator results, blocked reasons, fallback behavior, and guarantee display. If a requested write or guarantee claim depends on an unsupported profile field, the API must lower the display, return `CAPABILITY_INSUFFICIENT` or a structured blocker, and avoid creating write authority.
+
 Status output follows the three-part model: `harness.status.status_card` is the user status card, agent surfaces may derive an agent context packet from current status and refs, and Core state is the only operational source of truth. Status cards, next-action text, rendered templates, and projections are read-only views; stale views are not authority. The active compact view set is exactly `status-card`, `agent-context-packet`, `judgment-request`, `run-evidence-summary`, and `close-result`; detailed report surfaces stay later/profile.
 
 ## MVP-1 method set
@@ -157,6 +159,8 @@ Use this before an agent writes product files. It checks the exact proposed writ
 
 Stage meaning: active for Engineering Checkpoint and MVP-1. In MVP-1, sensitive-action permission is represented through a compatible `user_judgment` with `judgment_kind=sensitive_approval`; committed Approval records are later-profile material.
 
+The connected surface `capability_profile` cannot make `decision=allowed` by itself. Active Task, active Change Unit, current state, compatible `prepare_write`, and a durable Write Authorization still come from Core. Product writes must not proceed silently when the recognized surface lacks a required capability such as native artifact capture, command observation, secret-access observation, pre-tool blocking, or isolation.
+
 Allowed actors: `lead_agent`, `operator`.
 
 ```yaml
@@ -204,7 +208,7 @@ PrepareWriteResponse:
 
 `decision=allowed` with `dry_run=false` must include `write_authorization_ref` and an active `write_authorization`; `dry_run=true` may return `authorization_effect=would_create` but creates no authorization. Here `allowed` means compatible with current Harness records for this API path; it does not mean OS permission or pre-execution blocking, and it is not the durable Write Authorization lifecycle status. Any response whose `decision` is not `allowed` must not include a Write Authorization.
 
-`PrepareWriteResponse` must include `guarantee_display.level` whenever Core can answer. A cooperative or detective level means the surface must hold by instruction or report after-action detection as applicable; it is not a claim that arbitrary tools were prevented. If Core or required MCP access is unavailable, the response follows [Errors](errors.md) and must not create a Write Authorization, task event, artifact, projection job, or any authoritative state-mutation claim.
+`PrepareWriteResponse` must include `guarantee_display.level` whenever Core can answer. A cooperative or detective level means the surface must hold by instruction or report after-action detection as applicable; it is not a claim that arbitrary tools were prevented. If Core, required MCP access, or a required surface capability is unavailable, the response follows [Errors](errors.md) and must not create a Write Authorization, task event, artifact, projection job, or any authoritative state-mutation claim. `pre_tool_blocking_supported=false` prevents a `preventive` claim, and `isolation_supported=false` prevents an `isolated` claim.
 
 `approval_request_candidate` and `user_judgment_candidate` are non-mutating candidate payloads. They do not create user judgments, Approval records, Write Authorizations, or projections.
 
@@ -219,6 +223,8 @@ Public transition summary: `harness.prepare_write` validates the envelope, valid
 Use this after a shaping update, direct result, or implementation run. Implementation and direct product-write runs consume a compatible internal Write Authorization record returned by `harness.prepare_write`.
 
 Stage meaning: active for Engineering Checkpoint with one compatible run and one artifact/evidence ref; active in MVP-1 for evidence summaries. Verification input, Feedback Loop updates, TDD Trace updates, and full Evidence Manifest behavior are later/profile-gated.
+
+`record_run` records what the active path can honestly support. When the reference `capability_profile` has `artifact_capture_supported=false`, `command_observation_supported=false`, or `secret_access_observation_supported=false`, native capture, command-observation, and secret-access claims must be blocked, narrowed, or marked unverified. Manual artifact refs can support evidence only after the owner path registers them.
 
 Allowed actors: `lead_agent`, `evaluator`, `operator`.
 

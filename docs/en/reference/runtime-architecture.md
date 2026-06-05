@@ -25,6 +25,8 @@ In the future target design, Harness runs as a local authority layer beside the 
 
 The important rule is separation. Core alone changes canonical operational state. Product source files, chat text, generated Markdown, connector files, operator output, and MCP caller claims can inform the system, but canonical operational state lives in `state.sqlite` current records. `state.sqlite.task_events` is audit and ordering history, not the normal current-state source. Raw evidence lives in the artifact store.
 
+The active MVP architecture registers one reference surface `capability_profile` for `surface_id=reference-local-mcp`. That profile is not write authority and does not replace Core gates. It only informs validator results, blocked reasons, fallback behavior, and guarantee display. Broad connector ecosystems, hosted connector registries, and cross-surface orchestration are later/profile scope unless an owner explicitly promotes a narrower path.
+
 ## Reference scope
 
 This document owns:
@@ -61,7 +63,8 @@ Product Repository:
   product code, tests, human-readable projections, and human-editable proposal areas
 
 Harness Server / Installation:
-  MCP server, Core, validators, connectors, projector, reconcile worker, and operator tools
+  MCP server, Core, validators, reference connector adapter, projector,
+  reconcile worker, and operator tools
 
 Harness Runtime Home:
   registry.sqlite, project.yaml, state.sqlite, and the artifact store
@@ -185,7 +188,7 @@ Native hooks, sidecars, command wrappers, file watchers, and worktree isolation 
 
 ### Core modules
 
-Core can run as a single local process in the first slices. The full server may grow into the internal responsibilities below, but Engineering Checkpoint is not required to implement them as separate modules. Its implementation can collapse everything outside local registration, one Task, one active Change Unit or scoped work boundary, `prepare_write`, one single-use Write Authorization, one `record_run`, one artifact/evidence ref, one structured status/blocker response, and a narrow close-blocker check into stubs, absent paths, or later-profile scope.
+Core can run as a single local process in the first slices. The full server may grow into the internal responsibilities below, but Engineering Checkpoint is not required to implement them as separate modules. Its implementation can collapse everything outside local registration, one registered reference `capability_profile`, one Task, one active Change Unit or scoped work boundary, `prepare_write`, one single-use Write Authorization, one `record_run`, one artifact/evidence ref, one structured status/blocker response, and a narrow close-blocker check into stubs, absent paths, or later-profile scope.
 
 | Module | Runtime responsibility |
 |---|---|
@@ -201,7 +204,7 @@ Core can run as a single local process in the first slices. The full server may 
 | Reconcile module | human-editable proposals, managed drift, and accepted-state routing |
 | Validator runner | core, decision, autonomy/boundary, design-quality, artifact, projection, and connector checks |
 | Autonomy/Boundary validator responsibility | Autonomy Boundary compatibility, agent latitude, user-judgment requirements, AFK stop conditions, and boundary drift findings |
-| Connector adapter | reference surface registration, capability reporting, and capture hints |
+| Connector adapter | reference surface registration for `surface_id=reference-local-mcp`, capability reporting, and capture hints; broad connector ecosystem support is later/profile scope |
 
 
 Core is the only component that updates canonical operational state. Agents, MCP tools, CLI commands, projectors, and reconnect/recovery flows must enter through Core logic or use recovery code that preserves the same state compatibility rules. They may present, diagnose, recover, or derive from Core records, but they must not maintain a second canonical state model. Operator command names and flags are display/entrypoint choices; the behavior is defined by Core state records, audit/order facts in `state.sqlite.task_events`, evidence/artifact refs, projection jobs only when that profile is active, and API-owned errors or documented diagnostics.
@@ -220,7 +223,7 @@ The Assurance Profile and Operations Profile ValidatorResult ID set is API-owned
 Core preconditions and mechanical checks such as state/envelope validation, active Task, active Change Unit, changed paths, baseline freshness, approval scope, evidence sufficiency, artifact integrity, verification independence, same-session verification guard, evaluator bundle freshness, and projection freshness may run before or beside these validators. They are not alternate validator IDs unless this section, [API Schema Core](api/schema-core.md#validatorresult), [API Schema Later](api/schema-later.md#validatorresult-stable-ids), or [Storage](storage.md) explicitly promotes them into the stable ValidatorResult-emitting set. Surface capability is intentionally modeled as the `surface_capability_check` capability validator when emitted as a `ValidatorResult`.
 
 
-Adapters and sidecars translate surface capability into observable facts. They do not create a kernel gate for capability. Capability appears through the `surface_capability_check` validator, `prepare_write` blocked reasons, and guarantee display. The exact capability declaration and refresh triggers for a concrete host/profile are owned by [Agent Integration Reference](agent-integration.md#capability-profiles) and surface-specific paths are named in [Surface Cookbook](surface-cookbook.md).
+Adapters and sidecars translate surface capability into observable facts. They do not create a kernel gate for capability. Capability appears through the `surface_capability_check` validator, `prepare_write` blocked reasons, fallback behavior, and guarantee display. Unsupported fields in the active reference `capability_profile` must lower the displayed guarantee or block the claim; product writes must not continue silently when the required surface capability is missing. The exact capability declaration and refresh triggers for a concrete host/profile are owned by [Agent Integration Reference](agent-integration.md#capability-profiles) and surface-specific paths are named in [Surface Cookbook](surface-cookbook.md).
 
 ## State transaction flow
 

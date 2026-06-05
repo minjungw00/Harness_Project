@@ -23,6 +23,8 @@ MVP-1 사용자 작업 루프의 목표는 다음과 같습니다.
 
 MVP-1은 일부러 좁습니다. 하네스가 prompt pack이나 pre-write wrapper보다 크다는 점을 보여 주기에는 충분해야 합니다. 하지만 full assurance system, QA matrix, evaluation harness, reporting suite, operations suite, dashboard, hosted UI, connector platform은 아닙니다.
 
+활성 MVP-1 surface target은 `surface_id=reference-local-mcp`인 registered reference `capability_profile` 하나입니다. Capability label은 write authority를 부여하지 않습니다. Unsupported field는 guarantee display를 낮추거나 claim을 막으며, product write에는 계속 active scope, `prepare_write`, durable Write Authorization, `record_run`이 필요합니다.
+
 활성 MVP-1 method set은 정확히 다음 일곱 개입니다.
 
 - `harness.status`
@@ -57,6 +59,7 @@ MVP-1에는 아래가 포함됩니다.
 - 관련 경로가 있을 때 제품 판단, 기술 판단, 민감 동작 승인, 최종 수락, 잔여 위험 수락을 분리해서 표시
 - Core와 `prepare_write`를 통한 협력형 쓰기 전 범위 확인
 - `record_run`과 registered artifact/evidence ref 또는 minimum evidence summary path
+- fallback, blocked reason, validator result, guarantee display에 사용하는 reference `capability_profile` 하나
 - 최소 state `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked`를 쓰는 Core-owned `evidence_summary`
 - `harness.status.next_actions`를 통한 status와 next-safe-action output
 - status와 `prepare_write` output에 보장 수준을 표시하기. Core가 답할 수 없으면 unavailable/capability 상태를 분명히 보여줍니다.
@@ -75,7 +78,7 @@ MVP-1에는 아래 향후 버킷이 포함되지 않습니다.
 |---|---|
 | 보증 프로필 | 활성 최소 경로를 넘는 검증 강화, full detached verification, detached Eval system, full Manual QA matrix, detailed Evidence Manifest, detailed Eval output, full waiver machinery, full Approval lifecycle hardening, 풍부한 잔여 위험 lifecycle, 위험 검토 hardening, stewardship validator, full TDD trace, full feedback-loop audit, detailed Manual QA policy, full module/interface and domain-language review, broad context-hygiene validator. |
 | 운영 프로필 | Full report/export, recover/export suite, release handoff, artifact integrity operations, projection refresh/reconcile suite, doctor/readiness suite, broad operator surface, runtime conformance suite, conformance runner, generated conformance artifact, executable fixture catalog, Export report. |
-| 로드맵 | Dashboard, hosted workflow UI, artifact dashboard, rich card expansion, broader connector, connector marketplace, team workflow, parallel orchestration, metrics, automated Browser QA Capture, Cross-Surface Verification automation, hosted/remote workflow, preventive guard expansion, hook, deployment, canary, rollback, production monitoring, 그 밖의 향후 확장 후보. |
+| 로드맵 | Dashboard, hosted workflow UI, artifact dashboard, rich card expansion, broader connector, connector marketplace, hosted connector registry, team workflow, parallel orchestration, cross-surface orchestration, metrics, automated Browser QA Capture, Cross-Surface Verification automation, hosted/remote workflow, preventive guard expansion, hook, deployment, canary, rollback, production monitoring, 그 밖의 향후 확장 후보. |
 | 보안 non-claim | OS-level sandboxing, arbitrary-tool isolation, permission isolation, tamper-proof local storage, default preventive pre-tool blocking. |
 
 유용하지만 제외 버킷에 있는 기능은 담당 문서가 더 좁은 동작을 stage impact와 함께 명시적으로 승격하기 전까지 [보증 프로필](../later/assurance-profile.md), [운영 프로필](../later/operations-profile.md), [향후 Fixtures](../later/future-fixtures.md), [로드맵](../roadmap.md)에 둡니다.
@@ -93,7 +96,7 @@ Build 문서는 exact schema, DDL, API definition을 중복하지 않습니다. 
 | Runtime home layout, minimal storage profile, lock, migration, artifact, later-profile storage boundary | [Storage](../reference/storage.md). |
 | MVP-1 보안 보장 표현과 local-access posture | [보안 참조](../reference/security.md). |
 | Compact derived view, projection authority boundary, freshness, template ownership | [Projection과 Template 참조](../reference/projection-and-templates.md), [Template 참조](../reference/templates/README.md). |
-| Connector capability profile과 user-facing surface behavior | [Agent 통합 참조](../reference/agent-integration.md), [Surface Cookbook](../reference/surface-cookbook.md). |
+| Reference surface `capability_profile`과 user-facing surface behavior | [Agent 통합 참조](../reference/agent-integration.md), [Surface Cookbook](../reference/surface-cookbook.md). |
 | Future conformance model과 future smoke authoring | [Conformance Fixtures 참조](../reference/conformance-fixtures.md). |
 
 ## MVP-1에 필요한 API 문서
@@ -126,6 +129,7 @@ MVP-1은 cooperative plus limited detective wording을 사용합니다.
 - 정직한 guarantee status와 evidence/risk gap을 보여 준다.
 - 사용자에게 보이는 status와 쓰기 확인 response에 active guarantee level 또는 분명한 unavailable/capability equivalent를 포함한다.
 - Harness record/check path를 사용할 수 없거나 맞지 않으면 연결된 agent나 surface가 지시로 보류하도록 요청한다.
+- Reference `capability_profile`에 required capability가 없으면 claim을 막거나 낮춘다. Unsupported surface에서 product write가 조용히 진행되면 안 된다.
 
 주장하면 안 되는 일:
 
@@ -150,6 +154,7 @@ Guarantee level은 [보안 참조](../reference/security.md#단계별-guarantee-
 |---|---|---|
 | Judgment naming | `UserJudgment` / `user_judgment`, `harness.request_user_judgment`, `harness.record_user_judgment`, `judgment_kind`, `presentation`, `display_label`을 사용합니다. | Compatibility alias가 추가 authority path를 만들면 안 됩니다. |
 | Next action | MVP-1 next-safe-action output은 `harness.status.next_actions`를 사용합니다. | 별도 `harness.next` method는 승격 전까지 later/compatibility입니다. |
+| Reference surface scope | `surface_id=reference-local-mcp`인 reference `capability_profile` 하나를 사용합니다. | Broad connector ecosystem, hosted connector registry, cross-surface orchestration은 명시적으로 승격되기 전까지 later/profile입니다. |
 | MVP-1 compact views | [Projection과 Template 참조](../reference/projection-and-templates.md#mvp-1-보기-세트)와 [Template 참조](../reference/templates/README.md#mvp-1-템플릿-세트)가 소유한 `status-card`, `agent-context-packet`, `judgment-request`, `run-evidence-summary`, `close-result`만 사용합니다. | 이 view는 쓰기를 허가하거나 근거를 충족하거나 수락을 기록하거나 위험을 수용하거나 task를 close하거나 canonical state가 되지 않습니다. |
 | Minimal storage boundary | MVP-1 storage는 user work loop에 필요한 최소 active owner record로 제한합니다. | Later-profile table/record는 owner docs가 승격하기 전까지 제외합니다. |
 | Acceptance boundaries | Sensitive action approval, final acceptance, residual-risk acceptance를 분리합니다. | Final acceptance는 Approval이 아니며, residual-risk acceptance는 final acceptance가 아닙니다. |
@@ -179,7 +184,7 @@ Guarantee level은 [보안 참조](../reference/security.md#단계별-guarantee-
 |---|---|
 | [보증 프로필](../later/assurance-profile.md) | 검증 강화, detailed Manual QA, detailed evidence, risk review, detailed evaluation output, full Approval lifecycle, stewardship validator, full TDD trace, full feedback-loop audit, full module/interface and domain-language review, stale write/close context를 넘는 context-hygiene validator. |
 | [운영 프로필](../later/operations-profile.md) | Export, recovery, handoff, operator readiness, doctor/readiness surface, artifact integrity operations, projection refresh/reconcile operations, conformance runner, broad operator surface. |
-| [로드맵](../roadmap.md) | Dashboard, hosted workflow, team workflow, broader connector, automated Browser QA Capture, Cross-Surface Verification, Context Index, metrics, preventive guard expansion, hook, permission, parallel orchestration, deployment, canary, rollback, production monitoring, 그 밖의 확장 향후 후보. |
+| [로드맵](../roadmap.md) | Dashboard, hosted workflow, team workflow, broader connector, hosted connector registry, cross-surface orchestration, automated Browser QA Capture, Cross-Surface Verification, Context Index, metrics, preventive guard expansion, hook, permission, parallel orchestration, deployment, canary, rollback, production monitoring, 그 밖의 확장 향후 후보. |
 
 ## 종료 점검
 
@@ -193,6 +198,7 @@ MVP-1 사용자 작업 루프는 사용자가 아래를 볼 수 있을 때만 co
 - Recorded Run과 evidence ref 또는 evidence summary
 - 현재 상태, 다음 안전한 행동, 근거 공백, close blocker, 잔여 위험 표시
 - 현재 status 또는 쓰기 확인 result에 보장 수준이나 unavailable/capability 상태가 표시됨
+- Unsupported behavior에 claim이 의존할 때 reference `capability_profile` limit이 보임
 - Required evidence가 `sufficient`가 아니거나, required user judgment가 unresolved 또는 blocked이거나, required final acceptance가 없거나, residual risk가 required 상태로 보이지 않거나 수락되지 않으면 close가 hold됨
 - MCP/Core를 사용할 수 없을 때 권한 상태를 만들어 내지 않음
 - Core record에서 파생된 compact view와, 필요한 경우 stale/failed freshness 표시

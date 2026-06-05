@@ -38,8 +38,8 @@ This manifest filters the API schemas by stage/profile. A field or enum existing
 
 | Stage/profile | Active API slice | Not active in that slice |
 |---|---|---|
-| Engineering Checkpoint | Minimal status/blocker read, one owner-valid setup path, active Task, active Change Unit/scope boundary, `harness.prepare_write`, one compatible `harness.record_run`, one artifact/evidence ref, structured status/blocker output, and narrow close-blocker check. | Full natural-language intake, stored user judgment path, full Evidence Manifest, detached verification, Manual QA, final acceptance, residual-risk acceptance, rich projections, export/recover, broad operations. |
-| MVP-1 User Work Loop | Active method set owned by [MVP API](mvp-api.md#mvp-1-method-set), with next-safe-action output carried by `harness.status.next_actions`. The method set is exactly `harness.status`, `harness.intake`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.prepare_write`, `harness.record_run`, and `harness.close_task`. | Separate `harness.next`, detached verification launch/Eval, full Manual QA matrix, committed Approval hardening, export/recover, advanced connector APIs, broad operations, and detailed diagnostic projections. |
+| Engineering Checkpoint | Minimal status/blocker read, one owner-valid setup path, one registered reference `capability_profile`, active Task, active Change Unit/scope boundary, `harness.prepare_write`, one compatible `harness.record_run`, one artifact/evidence ref, structured status/blocker output, and narrow close-blocker check. | Full natural-language intake, stored user judgment path, full Evidence Manifest, detached verification, Manual QA, final acceptance, residual-risk acceptance, rich projections, export/recover, broad connector APIs, hosted connector registry, cross-surface orchestration, and broad operations. |
+| MVP-1 User Work Loop | Active method set owned by [MVP API](mvp-api.md#mvp-1-method-set), with next-safe-action output carried by `harness.status.next_actions`, and the same one reference `capability_profile` controlling guarantee display and capability blockers. The method set is exactly `harness.status`, `harness.intake`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.prepare_write`, `harness.record_run`, and `harness.close_task`. | Separate `harness.next`, detached verification launch/Eval, full Manual QA matrix, committed Approval hardening, export/recover, advanced connector APIs, hosted connector registry, cross-surface orchestration, broad operations, and detailed diagnostic projections. |
 | Assurance Profile, Operations Profile, or later | Verification, Eval, Manual QA, waiver, full residual-risk acceptance, reconcile, validators, projection/report/export/recover, operations, and advanced connectors when owner docs promote them. | Not Engineering Checkpoint or minimum MVP-1 requirements. |
 
 ## Read-only resources
@@ -52,7 +52,7 @@ Read-only resources use the three-part context model. `harness://status/card` is
 
 | Resource | Profile meaning |
 |---|---|
-| `harness://project/current` | Current registered project identity and local MCP availability facts. |
+| `harness://project/current` | Current registered project identity, reference `capability_profile` availability facts, and local MCP availability facts. |
 | `harness://task/active` | Active Task pointer, or explicit `none` / `unknown`, without creating a Task. |
 | `harness://task/{task_id}` | Current Task state for the narrow authority loop. |
 | `harness://task/{task_id}/summary` | Optional compact Task status/blocker summary. |
@@ -88,17 +88,17 @@ ToolEnvelope:
   dry_run: boolean
 ```
 
-Envelope fields are routing and audit claims. They do not authorize a surface to change state outside Core, and they do not prove user judgment, sensitive-action permission, final acceptance, Manual QA, or detached verification independence.
+Envelope fields are routing and audit claims. `surface_id` does not grant capability or write authority. Envelope fields do not authorize a surface to change state outside Core, and they do not prove user judgment, sensitive-action permission, final acceptance, Manual QA, or detached verification independence.
 
 For any request that needs a primary Task, Core resolves it in this order: tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task resolution. Task-scoped mutations compare `expected_state_version` against `tasks.state_version`. Project-scoped mutations with no resolved primary Task compare it against `project_state.state_version`.
 
 ## MCP boundary and caller trust
 
-The Engineering Checkpoint/default posture is local-only exposure for a registered project surface. Local-only means a local process, local socket, or localhost-loopback connection for the expected local user/profile. It excludes unauthenticated shared endpoints, non-loopback binds, forwarded/tunneled endpoints, cloud/CI relays, cross-user sockets/directories, and remote callers unless a registered connector profile proves a stronger posture.
+The Engineering Checkpoint/default posture is local-only exposure for one registered reference project surface. Local-only means a local process, local socket, or localhost-loopback connection for the expected local user/profile. It excludes unauthenticated shared endpoints, non-loopback binds, forwarded/tunneled endpoints, cloud/CI relays, cross-user sockets/directories, and remote callers unless a registered connector profile proves a stronger posture.
 
-Public schemas may carry display-safe access material class, bind/reachability posture, freshness, profile refs, conformance/operator-check refs, or safe handles/fingerprints. They must not carry raw tokens, secrets, private configuration values, omitted secret values, or blocked payload bytes.
+Public schemas may carry display-safe access material class, bind/reachability posture, freshness, profile refs, conformance/operator-check refs, or safe handles/fingerprints. They carry profile facts for display, validation, and diagnostics, not a hosted connector registry. They must not carry raw tokens, secrets, private configuration values, omitted secret values, or blocked payload bytes.
 
-If Core cannot be reached, no authoritative Core response exists; report `MCP_UNAVAILABLE` or diagnostic `MCP_SERVER_UNAVAILABLE`. If Core or an operator can classify a reachable local caller/access path as outside the registered profile, use `LOCAL_ACCESS_MISMATCH` with display-safe details. User-facing behavior for Core unavailable, local access denied, unsupported surface, and stale state is owned by [Errors: MVP-1 guarantee and status taxonomy](errors.md#mvp-1-guarantee-and-status-taxonomy).
+If Core cannot be reached, no authoritative Core response exists; report `MCP_UNAVAILABLE` or diagnostic `MCP_SERVER_UNAVAILABLE`. If Core or an operator can classify a reachable local caller/access path as outside the registered profile, use `LOCAL_ACCESS_MISMATCH` with display-safe details. If the recognized profile lacks a required capability, use `CAPABILITY_INSUFFICIENT` or an equivalent structured blocked reason and lower the guarantee display. User-facing behavior for Core unavailable, local access denied, unsupported surface, and stale state is owned by [Errors: MVP-1 guarantee and status taxonomy](errors.md#mvp-1-guarantee-and-status-taxonomy).
 
 ## Common response
 
@@ -377,7 +377,7 @@ WriteAuthoritySummary:
 
 `WriteAuthorizationSummary.approval_refs` is empty in minimum MVP-1. Resolved sensitive-action approval user judgments appear in `user_judgment_refs`; committed Approval refs appear only when the Approval owner profile is active.
 
-`WriteAuthorizationSummary` and `WriteAuthoritySummary` are API/internal names. MVP-1 user-facing displays should call this a pre-write scope check first. Fields such as `allowed_paths`, `allowed_tools`, `decision=allowed`, and `status=active` describe Harness compatibility for the cooperative record/check only; they do not mean OS permission, sandboxing, tamper-proof enforcement, preventive blocking, or isolation. `allowed` belongs to `PrepareWriteResponse.decision`. `blocked` has no authorization row or lifecycle value.
+`WriteAuthorizationSummary` and `WriteAuthoritySummary` are API/internal names. MVP-1 user-facing displays should call this a pre-write scope check first. Fields such as `allowed_paths`, `allowed_tools`, `decision=allowed`, `status=active`, `surface_id`, and `guarantee_display` describe Harness compatibility and display context for the cooperative record/check only; they do not mean OS permission, sandboxing, tamper-proof enforcement, preventive blocking, isolation, or surface-granted write authority. `allowed` belongs to `PrepareWriteResponse.decision`. `blocked` has no authorization row or lifecycle value.
 
 `EvidenceSummary` is the active MVP-1 compact evidence contract. `status` uses exactly `not_required`, `none`, `partial`, `sufficient`, `stale`, and `blocked`; item coverage uses exactly `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, and `blocked`. It is Core-owned state used by status and close checks. It is not a full Evidence Manifest, detached verification result, Manual QA record, final acceptance, residual-risk acceptance, or projection.
 
@@ -597,7 +597,7 @@ Autonomy Boundary summaries describe judgment latitude, not pre-write scope-chec
 
 ## ValidatorResult
 
-`ValidatorResult` is profile-gated. It is included here because common responses can carry validator results, but MVP-1 does not require broad validator emission unless an owner profile promotes a specific check.
+`ValidatorResult` is profile-gated. It is included here because common responses can carry validator results, but MVP-1 does not require broad validator emission unless an owner profile promotes a specific check. Active reference-surface capability findings may appear through a narrow `surface_capability_check`; they affect blocked reasons, fallback behavior, and guarantee display, not Core write authority by themselves.
 
 ```yaml
 ValidatorResult:
