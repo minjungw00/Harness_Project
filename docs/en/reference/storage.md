@@ -182,15 +182,15 @@ The method-by-method index for which API call creates or updates these rows is
 |---|---|---|
 | `project_state` | Project-local state header, state clock, active Task pointer, and active/default surface pointer. | `project_id`, `schema_version`, `storage_profile`, `state_version`, `active_task_id`, `default_surface_id`, `created_at`, `updated_at`. |
 | `surfaces` | Reference surface registration for the local caller/display path. This records what surface Core believes it is talking to; it is not a broad connector ecosystem table. | `surface_id`, `project_id`, `surface_kind`, `display_name`, `registration_source`, `local_access_posture`, `capability_profile_json`, `guarantee_level`, `status`, `created_at`, `updated_at`. |
-| `tasks` | User-value work unit, task-scoped state clock, and active requirements-shaping summary. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `result`, `summary`, `confirmed_facts_json`, `remaining_uncertainties_json`, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
+| `tasks` | User-value work unit, task-scoped state clock, and active requirements-shaping summary. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `result`, `summary`, `success_criteria_json`, `non_goals_json`, `affected_areas_json`, `affected_path_candidates_json`, `constraints_json`, `confirmed_facts_json`, `remaining_uncertainties_json`, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
 | `task_events` | Append-only audit/order trail for committed Core mutations. | `event_id`, `task_id` or project scope, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
-| `change_units` | Proposed or current scoped work boundary for product writes and close basis. | `change_unit_id`, `task_id`, `scope_summary`, `affected_areas_json`, `affected_path_candidates_json`, `non_goals_json`, `success_criteria_json`, `allowed_paths_json`, `denied_paths_json`, `status`, `created_at`, `updated_at`. |
-| `user_judgments` | User-owned judgment record for product decision, technical decision, scope decision, sensitive approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, and cancellation. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, `question`, `options_json`, `selected_option_json`, `judgment_payload_json`, `affected_scope_json`, `context_refs_json`, `artifact_refs_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
-| `write_authorizations` | Durable single-use cooperative record created only by non-dry-run `prepare_write.decision=allowed`. The row preserves the full active MVP `AuthorizedAttemptScope` used by Core comparison. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`. |
-| `runs` | Committed execution or observation record, including compatible write consumption when a product write happened. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `summary`, `observed_changes_json`, `command_results_json`, `tool_invocations_json`, `network_accesses_json`, `secret_accesses_json`, `created_at`. |
+| `change_units` | Proposed or current scoped work boundary for product writes and close basis. | `change_unit_id`, `task_id`, `scope_summary`, `affected_areas_json`, `affected_path_candidates_json`, `non_goals_json`, `success_criteria_json`, `allowed_paths_json`, `denied_paths_json`, `sensitive_categories_json`, `baseline_ref`, `autonomy_boundary_json`, `status`, `created_at`, `updated_at`. |
+| `user_judgments` | User-owned judgment record for product decision, technical decision, scope decision, sensitive approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, and cancellation. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, `state_summary_at_request_json`, `question`, `judgment_context_json`, `boundary_text_json`, `options_json`, `recommendation_json`, `selected_option_json`, `judgment_payload_json`, `affected_scope_json`, `affected_gates_json`, `affected_acceptance_criteria_json`, `context_refs_json`, `artifact_refs_json`, `resolution_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
+| `write_authorizations` | Durable single-use cooperative record created only by non-dry-run `prepare_write.decision=allowed`. The row preserves the full active MVP `AuthorizedAttemptScope` used by Core comparison. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`, `consumed_at`. |
+| `runs` | Committed execution or observation record, including compatible write consumption when a product write happened. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `product_write`, `baseline_ref`, `summary`, `observed_attempt_json`, `observed_changes_json`, `command_results_json`, `tool_invocations_json`, `network_accesses_json`, `secret_accesses_json`, `evidence_updates_json`, `observation_capability_json`, `created_at`. |
 | `artifacts` | Registered durable evidence bytes or safe metadata with integrity and redaction facts. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
 | `artifact_links` | Owner relation from an artifact to the Core/API record it supports. | `artifact_link_id`, `artifact_id`, `task_id`, `owner_record_kind`, `owner_record_id`, `relation`, `created_at`. |
-| `evidence_summaries` | Minimal evidence coverage and gap record for MVP-1 status and close. It replaces full Evidence Manifest tables in the active slice. | `evidence_summary_id`, `task_id`, `change_unit_id`, `coverage_state`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
+| `evidence_summaries` | Minimal evidence coverage and gap record for MVP-1 status and close. It replaces full Evidence Manifest tables in the active slice. | `evidence_summary_id`, `task_id`, `change_unit_id`, `status`, `coverage_items_json`, `summary`, `supporting_run_ids_json`, `supporting_artifact_link_ids_json`, `gap_blocker_ids_json`, `updated_at`. |
 | `blockers` | Structured blocker for next action, write compatibility, evidence gaps, close readiness, or recovery. | `blocker_id`, `task_id`, `blocked_action`, `blocker_kind`, `status`, `message`, `owner_ref_json`, `related_refs_json`, `required_next_action`, `created_at`, `resolved_at`. |
 | `tool_invocations` | Committed idempotency replay row for non-dry-run state-changing tool responses. | `invocation_id`, `project_id`, `tool_name`, `idempotency_key`, `request_hash`, `task_id`, `basis_state_version`, `response_json`, `status`, `created_at`. |
 
@@ -199,16 +199,21 @@ responses. Dry runs and pre-commit conflicts do not reserve idempotency keys in
 storage.
 
 `tasks.user_request` stores the original user request. Shaping updates clarify
-the current goal, confirmed facts, remaining uncertainties, blocking question,
-and next safe action without replacing the original wording. A blocking question
-that belongs to the user becomes a `UserJudgmentCandidate` and then a
-`user_judgments` row when requested/recorded; a non-judgment blocker uses the
-active `blockers` path.
+the current goal, success criteria, non-goals, affected areas, path candidates,
+constraints, confirmed facts, remaining uncertainties, blocking question, and
+next safe action without replacing the original wording. `tasks.constraints_json`
+preserves the active `TaskShapingUpdate.constraints` content, currently allowed
+paths and sensitive categories. A blocking question that belongs to the user
+becomes a `UserJudgmentCandidate` and then a `user_judgments` row when
+requested/recorded; a non-judgment blocker uses the active `blockers` path.
 
 `change_units.status` may represent a proposed candidate or active/superseded
 scope according to the Core/API owner rules. A "First Safe Change Unit
 Candidate" is a proposed Change Unit boundary carried by this record family, not
-a separate active table or ref kind.
+a separate active table or ref kind. `change_units` stores the active
+`ChangeUnitShapingUpdate` scope content, including affected areas and path
+candidates, allowed and denied paths, non-goals, success criteria, sensitive
+categories, `baseline_ref`, and the compact `autonomy_boundary_json`.
 
 `user_judgments.judgment_kind` is the stored judgment identity. Display labels
 are derived at read/render time from `judgment_kind` and locale; active storage
@@ -225,6 +230,20 @@ network targets, intended secret handles/scope, sensitive categories,
 `task_id`, `change_unit_id`, `surface_id`, and `basis_state_version` columns are
 query/index fields; Core comparison uses the stored attempt scope as the
 authoritative authorization boundary.
+
+`runs.observed_attempt_json` is the normalized storage bundle for
+`record_run` compatibility comparison. It preserves the reported product-write
+flag, baseline, observed changed paths, command and command-class observations,
+tool use, network observations, secret-access observations, sensitive categories
+when observed, Task/Change Unit/surface context, and the comparison outcome. The
+more specific JSON columns keep the active `RecordRunPayload` branches available
+for evidence and read responses. `observation_capability_json` records fields
+the active surface could not honestly observe or attest. Unsupported or absent
+observation is stored as unsupported/unknown, not as verified success; if a
+required comparison fact is unsupported, Core must narrow the claim, block,
+record a violation/audit path when explicitly supported, or return/report
+insufficient surface capability rather than consuming the authorization as fully
+compatible.
 
 State clocks are scoped, not global. Task-scoped mutations use
 `tasks.state_version`; project-scoped mutations with no Core-resolved primary
@@ -285,8 +304,8 @@ broad validator-run archives, long-term metrics, or connector ecosystem tables.
 | User-owned judgment is unresolved | `user_judgments.judgment_kind`, `user_judgments.status`, `user_judgments.affected_scope_json`, `user_judgments.context_refs_json` |
 | Sensitive-action permission is missing or denied | `user_judgments` rows with `judgment_kind=sensitive_approval`, plus current `write_authorizations.attempt_scope_json.related_user_judgment_refs` when a write is involved |
 | Write Authorization is missing, expired, stale, revoked, consumed, or incompatible | `write_authorizations.status`, `write_authorizations.basis_state_version`, `write_authorizations.attempt_scope_json`, `write_authorizations.consumed_by_run_id`, current `tasks.state_version`, current `tasks.active_change_unit_id`, and the current surface/profile facts |
-| Run or artifact support is missing or stale | `runs.status`, `runs.observed_changes_json`, `runs.command_results_json`, `runs.tool_invocations_json`, `runs.network_accesses_json`, `runs.secret_accesses_json`, `artifacts.status`, `artifacts.sha256`, `artifacts.size_bytes`, `artifacts.content_type`, `artifacts.redaction_state`, `artifact_links.owner_record_kind`, `artifact_links.owner_record_id` |
-| Evidence coverage is missing, insufficient, or stale | `evidence_summaries.coverage_state`, `evidence_summaries.coverage_items_json`, `evidence_summaries.supporting_artifact_link_ids_json`, `evidence_summaries.gap_blocker_ids_json` |
+| Run or artifact support is missing or stale | `runs.status`, `runs.product_write`, `runs.baseline_ref`, `runs.observed_attempt_json`, `runs.observation_capability_json`, `runs.observed_changes_json`, `runs.command_results_json`, `runs.tool_invocations_json`, `runs.network_accesses_json`, `runs.secret_accesses_json`, `artifacts.status`, `artifacts.sha256`, `artifacts.size_bytes`, `artifacts.content_type`, `artifacts.redaction_state`, `artifact_links.owner_record_kind`, `artifact_links.owner_record_id` |
+| Evidence coverage is missing, insufficient, or stale | `evidence_summaries.status`, `evidence_summaries.coverage_items_json`, `evidence_summaries.supporting_artifact_link_ids_json`, `evidence_summaries.gap_blocker_ids_json` |
 | Final acceptance is required but missing | `user_judgments` rows with `judgment_kind=final_acceptance` and compatible `status` / `selected_option_json` |
 | Residual risk is not visible or not accepted | `blockers` rows with residual-risk blocker kinds, plus `user_judgments` rows with `judgment_kind=residual_risk_acceptance` when acceptance is required |
 | A blocker is still open | `blockers.status`, `blockers.blocker_kind`, `blockers.blocked_action`, `blockers.related_refs_json`, `blockers.required_next_action` |
@@ -297,10 +316,10 @@ summary, and next action. Those are derived outputs over active records.
 Persisting a `close_readiness`, status-card cache, projection cache, or full
 report table is optional/later unless an owner profile promotes it.
 
-For MVP-1, `evidence_summaries.coverage_state` uses exactly `not_required`,
+For MVP-1, `evidence_summaries.status` uses exactly `not_required`,
 `none`, `partial`, `sufficient`, `stale`, and `blocked`. If `coverage_items_json`
 is present, each item's `coverage_state` uses exactly `supported`, `unsupported`,
-`partial`, `not_applicable`, `stale`, and `blocked`. `coverage_state=sufficient`
+`partial`, `not_applicable`, `stale`, and `blocked`. `status=sufficient`
 is the only evidence state that can satisfy close when evidence is required.
 Full Evidence Manifest rows, detached Eval rows, and Manual QA matrices are not
 needed for this active storage slice unless their owner profiles are active.
@@ -326,7 +345,7 @@ DDL bundle or first-implementation prerequisite.
 | Later/profile table family | Why it may matter later | Active-slice replacement |
 |---|---|---|
 | Full Eval system, including `evals` and evaluator bundles | Detached verification and independence hardening | Runs, artifacts, artifact links, evidence summaries, and blockers; no detached assurance claim unless the owner profile is active |
-| Full Manual QA matrix, including `manual_qa_records` | Human inspection workflows, findings, setup, and QA evidence refs | User judgment, blocker, and evidence summary visibility when QA is required but the full QA profile is not active |
+| Full Manual QA matrix, including `manual_qa_records` | Human inspection workflows, findings, setup, and QA evidence refs | User judgment, blocker, and evidence summary visibility for active user-owned QA waiver/risk questions; no Manual QA pass, matrix, or close blocker unless the owner profile is active |
 | Full Evidence Manifest report tables, including detailed `evidence_manifests` | Criteria-to-evidence matrices and rich reports | `evidence_summaries` or equivalent minimal evidence coverage plus artifact links |
 | Shared Design/design-support records, including `shared_designs` and full design artifacts | Rich requirements/design history and later-profile design review | Active Task shaping fields, proposed or active Change Units, user-judgment candidates/records, blockers, and evidence summaries as needed |
 | Projection job system, including `projection_jobs` and durable projection caches | Durable outbox for rendered Markdown or managed outputs | Read-time compact views and source-version freshness display |
@@ -419,7 +438,7 @@ Early hardening should cover:
 | `runs.kind`, `runs.status` | [`harness.record_run`](api/mvp-api.md#harnessrecord_run) and storage compatibility notes |
 | `artifacts.kind`, `artifacts.redaction_state`, `artifacts.retention_class`, `artifacts.status` | `ArtifactRef`/artifact owners and storage compatibility notes |
 | `artifact_links.owner_record_kind`, `artifact_links.relation` | API `StateRecordRef`, `ArtifactInput.relation`, and storage owner-link rules |
-| `evidence_summaries.coverage_state` | Core evidence gate and API evidence summary owners |
+| `evidence_summaries.status` | Core evidence gate and API evidence summary owners |
 | `blockers.status`, `blocked_action`, `blocker_kind` | Core Model and API blocker owners |
 | `task_events.event_type` | Core stable event semantics |
 | `tool_invocations.status` | storage idempotency replay semantics |
@@ -436,7 +455,8 @@ Storage-owned compatibility values promoted here:
 | `user_judgments.status` | `proposed`, `pending_user`, `resolved`, `deferred`, `rejected`, `blocked`, `superseded` | User judgment lifecycle. A resolved judgment affects only the judgment type and payload it records. |
 | `write_authorizations.status` | `active`, `consumed`, `expired`, `stale`, `revoked` | Durable authorization lifecycle, matching the Core/API owner value set. Only `active` and compatible rows can be consumed by `record_run`. |
 | `artifacts.status` | `available`, `missing`, `stale`, `blocked` | Artifact availability. It is a storage and integrity fact, not full evidence sufficiency. |
-| `evidence_summaries.coverage_state` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` | Minimal evidence coverage state used by MVP-1 status and close. `sufficient` is required when evidence is close-required. |
+| `evidence_summaries.status` | `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked` | Minimal evidence coverage state used by MVP-1 status and close. `sufficient` is required when evidence is close-required. |
+| `blockers.blocker_kind` | `task`, `open_run`, `scope`, `user_judgment`, `sensitive_approval`, `design_policy`, `write_compatibility`, `baseline`, `surface_capability`, `evidence`, `artifact_availability`, `final_acceptance`, `residual_risk_visibility`, `residual_risk_acceptance`, `cancellation`, `supersession`, `recovery` | Active blocker categories used by status, write compatibility, run recording, close, and recovery. Close responses expose the close-category subset owned by the MVP API. Verification, Manual QA, projection/report freshness, export, operations, full Approval, full Residual Risk, Evidence Manifest, Eval, and detached-verification blocker categories are later/profile-only. |
 | `blockers.status` | `open`, `resolved`, `superseded` | Stored blocker lifecycle. Open blockers remain visible until Core resolves or supersedes them. |
 | `tool_invocations.status` | `committed` | A row exists only for a committed replayable non-dry-run response. |
 
