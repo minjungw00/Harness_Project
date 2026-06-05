@@ -245,7 +245,7 @@ Adapters와 sidecars는 접점 capability를 observable facts로 번역합니다
 ```
 
 
-이 transaction 안에서 Core는 current-record update의 일부로 affected scope clock을 증가시킵니다. Task-scoped changes는 `tasks.state_version`을 증가시키고, `task_id=null`인 project-scoped changes는 `project_state.state_version`을 증가시킵니다. Event rows는 각 affected scope의 resulting state version을 기록합니다. State conflict와 idempotency replay 동작은 [API Errors: Idempotency](api/errors.md#idempotency)와 [State conflict behavior](api/errors.md#state-conflict-behavior)에 드러나는 public API 계약입니다.
+이 transaction 안에서 Core는 current-record update의 일부로 affected scope clock을 증가시킵니다. Task-scoped changes는 `tasks.state_version`을 증가시키고, Core-resolved primary Task가 없는 project-scoped changes는 `project_state.state_version`을 증가시킵니다. Event rows는 각 affected scope의 resulting state version을 기록합니다. State conflict와 idempotency replay 동작은 [API Errors: Idempotency](api/errors.md#idempotency)와 [State conflict behavior](api/errors.md#state-conflict-behavior)에 드러나는 public API 계약입니다.
 
 Projection 렌더링은 transaction 이후에 일어납니다. Projection failure는 state-isolated입니다. Projection 최신성 또는 job status를 `stale` 또는 `failed`로 표시하고 커밋된 상태는 그대로 둡니다. Projection은 transaction을 roll back하거나, `state.sqlite.task_events`를 rewrite하거나, passed task를 failed task로 바꾸거나, 나중의 reconcile decision 없이 기준 상태를 repair할 수 없습니다.
 

@@ -151,9 +151,9 @@ Visible-but-unaccepted close-relevant risk is not returned as `RESIDUAL_RISK_NOT
 
 ## Idempotency
 
-Idempotency keys are scoped to `(project_id, tool_name, idempotency_key)`. Repeating the same payload with the same key returns the original committed response. Reusing a key with a different payload returns `STATE_CONFLICT`.
+Every committed state-changing tool call requires an `idempotency_key`. Idempotency keys are scoped to `(project_id, tool_name, idempotency_key)`. Repeating the same canonical request hash with the same key returns the original committed response. Reusing the same key with a different canonical request hash returns `STATE_CONFLICT`.
 
-`request_hash` is computed from canonical JSON encoded as UTF-8. The canonical input includes `tool_name`, the schema-normalized request body, and every `ToolEnvelope` field except `request_id` and `idempotency_key`.
+`request_hash` is computed from canonical JSON encoded as UTF-8. The canonical input includes `tool_name`, the schema-normalized request body, and every `ToolEnvelope` field except `request_id` and `idempotency_key`. Core stores this hash in `tool_invocations` or an equivalent committed replay record with the original response.
 
 For state-changing tools, Core checks an existing committed replay row before treating the call as a new mutation attempt. A matching hash returns the original committed response without re-running current freshness checks, appending events, registering artifacts, enqueueing projections, or updating the replay row. A different hash returns `STATE_CONFLICT` and preserves the original replay row.
 
@@ -163,9 +163,9 @@ When a key is reused with a different canonical request payload, `ToolError.deta
 
 ## State conflict behavior
 
-For state-changing tools with no committed replay row for the supplied idempotency scope, Core compares `expected_state_version` with current project/task state before mutation. A mismatch returns `STATE_CONFLICT`. No current records, events, artifacts, projection jobs, or replay rows are created for that conflicting new attempt.
+For state-changing tools with no committed replay row for the supplied idempotency scope, Core resolves the primary Task before the freshness check. Resolution order is tool-specific `task_id`, then `ToolEnvelope.task_id`, then active Task resolution. Task-scoped mutations compare `expected_state_version` with `tasks.state_version`; project-scoped mutations with no resolved primary Task compare it with `project_state.state_version`. A mismatch returns `STATE_CONFLICT`. No current records, events, artifacts, projection jobs, or replay rows are created for that conflicting new attempt.
 
-Core first resolves the primary addressed Task from `ToolEnvelope.task_id`, any tool-specific `task_id`, or active Task resolution. Task-scoped tools compare against `tasks.state_version`; project-scoped tools with no resolved primary Task compare against `project_state.state_version`.
+`WriteAuthorization.basis_state_version` is the affected-scope version used as the compatibility basis for the allow decision. It is not necessarily the resulting `ToolResponseBase.state_version`.
 
 `STATE_CONFLICT.details` should include:
 

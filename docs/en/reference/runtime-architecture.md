@@ -239,7 +239,7 @@ Every state-changing operation uses one SQLite transaction for current records, 
 ```
 
 
-Within that transaction, Core increments the affected scope clock as part of the current-record update. Task-scoped changes increment `tasks.state_version`; project-scoped changes with `task_id=null` increment `project_state.state_version`. Event rows record the resulting state version for their affected scope. State conflict and idempotency replay behavior are exposed through the public API contract in [API Errors: Idempotency](api/errors.md#idempotency) and [State conflict behavior](api/errors.md#state-conflict-behavior).
+Within that transaction, Core increments the affected scope clock as part of the current-record update. Task-scoped changes increment `tasks.state_version`; project-scoped changes with no Core-resolved primary Task increment `project_state.state_version`. Event rows record the resulting state version for their affected scope. State conflict and idempotency replay behavior are exposed through the public API contract in [API Errors: Idempotency](api/errors.md#idempotency) and [State conflict behavior](api/errors.md#state-conflict-behavior).
 
 Projection rendering happens after the transaction. A projection failure is state-isolated: it marks projection freshness or job status as stale or failed and leaves the committed state intact. Projection cannot roll back the transaction, rewrite `state.sqlite.task_events`, turn a passed task into a failed task, or repair canonical state without a later reconcile decision.
 

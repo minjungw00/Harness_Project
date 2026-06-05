@@ -90,6 +90,8 @@ ToolEnvelope:
 
 Envelope fields are routing and audit claims. They do not authorize a surface to change state outside Core, and they do not prove user judgment, sensitive-action permission, work acceptance, Manual QA, or detached verification independence.
 
+For any request that needs a primary Task, Core resolves it in this order: tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task resolution. Task-scoped mutations compare `expected_state_version` against `tasks.state_version`. Project-scoped mutations with no resolved primary Task compare it against `project_state.state_version`.
+
 ## MCP boundary and caller trust
 
 The Engineering Checkpoint/default posture is local-only exposure for a registered project surface. Local-only means a local process, local socket, or localhost-loopback connection for the expected local user/profile. It excludes unauthenticated shared endpoints, non-loopback binds, forwarded/tunneled endpoints, cloud/CI relays, cross-user sockets/directories, and remote callers unless a registered connector profile proves a stronger posture.
@@ -124,9 +126,9 @@ ToolError:
 
 In Engineering Checkpoint and MVP-1, `projection_jobs` is present for envelope compatibility and is normally `[]`. It does not require a `projection_jobs` storage table. Durable projection jobs are Operations Profile or profile-promoted storage.
 
-`dry_run=true` validates and returns diagnostics or a transition plan but does not mutate current records, append events, register artifacts, create consumable Write Authorizations, enqueue projection jobs, or create/update idempotency replay rows.
+`dry_run=true` validates and returns diagnostics or a transition plan but does not mutate current records, append events, register artifacts, create consumable Write Authorizations, enqueue projection jobs, create/update idempotency replay rows, or reserve an `idempotency_key`.
 
-For state-changing operations, `state_version` is the resulting Task State Version when Core resolves a primary Task; otherwise it is the Project State Version. Read-only and dry-run responses return the current version for the primary read/affected scope.
+For state-changing operations, `ToolResponseBase.state_version` is the primary affected scope's resulting version: `tasks.state_version` after a task-scoped mutation, or `project_state.state_version` after a project-scoped mutation with no resolved primary Task. Read-only and dry-run responses return the current version for the primary read scope or would-be affected scope.
 
 ## Shared schemas
 
@@ -160,6 +162,8 @@ StateSummary:
     qa_gate: not_required | required | pending | passed | failed | waived
     acceptance_gate: not_required | required | pending | accepted | rejected
 ```
+
+`EventRef.state_version` is the affected-scope resulting version after that event. It is not an event ordering key; event ordering uses `event_seq`.
 
 `StateSummary.mode` values stay `advisor`, `direct`, and `work`. User-facing surfaces may render them as advice/read-only work, small direct work, and tracked work. Those labels are display text, not enum values.
 

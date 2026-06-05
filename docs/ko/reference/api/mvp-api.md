@@ -43,9 +43,11 @@ Status output은 세 부분 모델을 따릅니다. `harness.status.status_card`
 
 모든 method는 [`ToolEnvelope`](schema-core.md#tool-envelope)와 [`ToolResponseBase`](schema-core.md#common-response)를 사용합니다. State-changing tool은 non-null `idempotency_key`와 current `expected_state_version`을 요구합니다. Read-only tool은 같은 envelope를 tracing에 사용할 수 있고 `expected_state_version`을 `null`로 둘 수 있습니다.
 
+Method가 tool-specific `task_id`와 `ToolEnvelope.task_id`를 모두 가지면 tool-specific `task_id`가 첫 primary Task 후보입니다. Core는 tool-specific `task_id`, envelope `task_id`, active Task resolution 순서로 primary Task를 찾습니다. Primary Task가 없으면 그 mutation은 `expected_state_version`과 `ToolResponseBase.state_version`에 대해 project-scoped mutation입니다.
+
 MVP-1 request validator는 [Schema Core](schema-core.md#stage-specific-active-value-sets)의 active value set을 사용합니다. [Schema Later](schema-later.md)에 존재하는 later enum value나 extension branch는 그 자체로 MVP-1에서 유효해지지 않습니다.
 
-Error code, MVP-1 status/error condition name, 사용자 표시 문구 pattern, primary error precedence, idempotency replay, stale-state behavior는 [Errors](errors.md)가 담당합니다. Guarantee level의 보안 의미는 [보안 참조: 정직한 guarantee display](../security.md#정직한-guarantee-display)가 담당합니다. 모든 state-changing tool에서 `dry_run=true`는 authoritative하지 않습니다. Validation diagnostic 또는 would-change summary를 반환할 수 있지만 current record, `task_events` row, artifact, consumable Write Authorization, projection job, idempotency replay row를 만들지 않습니다.
+Error code, MVP-1 status/error condition name, 사용자 표시 문구 pattern, primary error precedence, idempotency replay, stale-state behavior는 [Errors](errors.md)가 담당합니다. Guarantee level의 보안 의미는 [보안 참조: 정직한 guarantee display](../security.md#정직한-guarantee-display)가 담당합니다. 모든 state-changing tool에서 `dry_run=true`는 기준 권한이 아닙니다. Validation diagnostic 또는 would-change summary를 반환할 수 있지만 current record, `task_events` row, artifact, consumable Write Authorization, projection job, idempotency replay row를 만들지 않습니다.
 
 <a id="harnessintake"></a>
 
@@ -198,7 +200,9 @@ PrepareWriteResponse:
 
 `approval_request_candidate`와 `user_judgment_candidate`는 non-mutating candidate payload입니다. 이것만으로 user judgment, Approval record, Write Authorization, projection을 만들지 않습니다.
 
-Public transition summary: `harness.prepare_write`는 envelope를 검증하고, idempotency를 검증하고, `expected_state_version`을 확인하고, active Task와 active Change Unit을 resolve합니다. 그다음 intended operation/path/tool/command/network/secret/sensitive-category compatibility, baseline freshness, sensitive-action permission, user judgment와 decision-gate coverage, Autonomy Boundary, surface capability, active design-policy precondition을 확인한 뒤 `decision`을 계산합니다. `dry_run=false`이고 `decision=allowed`일 때만 `write_authorizations.status=active`를 만들며, committed `dry_run=false` result는 반환 전에 task event를 append합니다.
+Committed `dry_run=false` `decision=allowed` response를 exact idempotent replay하면 original response와 original `write_authorization_ref`를 `authorization_effect=returned`로 반환합니다. 두 번째 Write Authorization을 만들거나 event를 다시 append하면 안 됩니다. 같은 key를 다른 canonical request hash로 replay하면 `STATE_CONFLICT`를 반환합니다.
+
+Public transition summary: `harness.prepare_write`는 envelope를 검증하고, idempotency를 검증하며 exact committed replay가 있으면 새 side effect 전에 반환합니다. Shared request rule에 따라 primary Task를 resolve합니다. Primary Task가 있으면 `tasks.state_version`, 없으면 `project_state.state_version`에 대해 `expected_state_version`을 확인한 뒤 active Change Unit을 resolve합니다. 그다음 intended operation/path/tool/command/network/secret/sensitive-category compatibility, baseline freshness, sensitive-action permission, user judgment와 decision-gate coverage, Autonomy Boundary, surface capability, active design-policy precondition을 확인한 뒤 `decision`을 계산합니다. `dry_run=false`이고 `decision=allowed`일 때만 `write_authorizations.status=active`를 만들며, committed `dry_run=false` result는 반환 전에 task event를 append합니다.
 
 <a id="harnessrecord_run"></a>
 
@@ -242,7 +246,9 @@ RecordRunResponse:
 
 `payload` branch는 `kind`와 일치해야 합니다. MVP-1은 `shaping_update`, `implementation`, `direct`를 허용합니다. `verification_input`은 later-profile only입니다.
 
-Public transition summary: `harness.record_run`은 envelope를 검증하고, idempotency replay를 확인하고, `expected_state_version`을 확인하고, `kind`를 확인하고, product write를 감지합니다. Product write에는 compatible active Write Authorization을 요구하고, observed changed paths, commands, tools, secret access를 검증합니다. Compatible하면 authorization을 소비하고, Run record를 만들고, `ArtifactRef`를 등록하거나 연결하고, evidence summary와 blockers/gates를 업데이트하고, task event를 append한 뒤 response를 반환합니다.
+Committed `record_run` response를 exact idempotent replay하면 current freshness check, authorization consumption, Run creation, artifact registration, blocker/gate update, projection enqueue, event append 전에 original response를 반환합니다. Write Authorization을 두 번 소비하면 안 됩니다.
+
+Public transition summary: `harness.record_run`은 envelope를 검증하고, idempotency replay를 확인하며 exact committed replay가 있으면 새 side effect 전에 반환합니다. Shared request rule에 따라 primary Task를 resolve합니다. Primary Task가 있으면 `tasks.state_version`, 없으면 `project_state.state_version`에 대해 `expected_state_version`을 확인합니다. 그다음 `kind`를 확인하고 product write를 감지합니다. Product write에는 compatible active Write Authorization을 요구하고, observed changed paths, commands, tools, secret access를 검증합니다. Compatible하면 authorization을 소비하고, Run record를 만들고, `ArtifactRef`를 등록하거나 연결하고, evidence summary와 blockers/gates를 업데이트하고, task event를 append한 뒤 response를 반환합니다.
 
 Core가 write-capable run을 commit 전에 거절하면 `run_id`는 `null`이고 artifact는 등록되지 않으며 response는 Run이 존재한다고 암시하면 안 됩니다. Core는 invalid authorization을 consumed로 표시하면 안 됩니다. Violation/audit Run은 제품 쓰기가 이미 관찰된 뒤 Core가 의도적으로 기록할 때만 생길 수 있습니다. Attempted authorization ref는 validator finding, violation payload, event payload에만 나타날 수 있으며 evidence, QA, verification, work acceptance, close readiness를 충족하지 않습니다.
 

@@ -43,6 +43,8 @@ These surfaces remain later/profile-gated unless an owner document promotes them
 
 All methods use [`ToolEnvelope`](schema-core.md#tool-envelope) and [`ToolResponseBase`](schema-core.md#common-response). State-changing tools require a non-null `idempotency_key` and a current `expected_state_version`. Read-only tools may set `expected_state_version` to `null`.
 
+When a method has both a tool-specific `task_id` and `ToolEnvelope.task_id`, the tool-specific `task_id` is the first primary Task candidate. Core resolves the primary Task in this order: tool-specific `task_id`, envelope `task_id`, then active Task resolution. If no primary Task exists, the mutation is project-scoped for `expected_state_version` and `ToolResponseBase.state_version`.
+
 MVP-1 request validators use the active value sets in [Schema Core](schema-core.md#stage-specific-active-value-sets). Later enum values and extension branches are not valid merely because they exist in [Schema Later](schema-later.md).
 
 Error codes, MVP-1 status/error condition names, user-facing message patterns, primary error precedence, idempotency replay, and stale-state behavior are owned by [Errors](errors.md). Security meanings for guarantee levels are owned by [Security Reference: Honest guarantee display](../security.md#honest-guarantee-display). `dry_run=true` is non-authoritative for every state-changing tool: it may return validation diagnostics or a would-change summary, but it creates no current record, `task_events` row, artifact, consumable Write Authorization, projection job, or idempotency replay row.
@@ -198,7 +200,9 @@ PrepareWriteResponse:
 
 `approval_request_candidate` and `user_judgment_candidate` are non-mutating candidate payloads. They do not create user judgments, Approval records, Write Authorizations, or projections.
 
-Public transition summary: `harness.prepare_write` validates the envelope, validates idempotency, checks `expected_state_version`, resolves the active Task and active Change Unit, checks intended operation/path/tool/command/network/secret/sensitive-category compatibility, checks baseline freshness, sensitive-action permission, user judgment and decision-gate coverage, Autonomy Boundary, surface capability, and active design-policy preconditions, then calculates `decision`. Only `dry_run=false` with `decision=allowed` creates `write_authorizations.status=active`; committed non-dry-run results append task events before returning.
+An exact idempotent replay of a committed non-dry-run `decision=allowed` response returns the original response and original `write_authorization_ref` with `authorization_effect=returned`; it must not create a second Write Authorization or append another event. A same-key replay with a different canonical request hash returns `STATE_CONFLICT`.
+
+Public transition summary: `harness.prepare_write` validates the envelope, validates idempotency and returns exact committed replay before new side effects, resolves the primary Task using the shared request rule, checks `expected_state_version` against `tasks.state_version` or `project_state.state_version` as appropriate, resolves the active Change Unit, checks intended operation/path/tool/command/network/secret/sensitive-category compatibility, checks baseline freshness, sensitive-action permission, user judgment and decision-gate coverage, Autonomy Boundary, surface capability, and active design-policy preconditions, then calculates `decision`. Only `dry_run=false` with `decision=allowed` creates `write_authorizations.status=active`; committed non-dry-run results append task events before returning.
 
 <a id="harnessrecord_run"></a>
 
@@ -242,7 +246,9 @@ RecordRunResponse:
 
 The payload branch must match `kind`. MVP-1 accepts `shaping_update`, `implementation`, and `direct`; `verification_input` is later-profile only.
 
-Public transition summary: `harness.record_run` validates the envelope, checks idempotency replay, checks `expected_state_version`, checks `kind`, detects product writes, requires a compatible active Write Authorization for product writes, validates observed changed paths, commands, tools, and secret access, consumes the authorization when compatible, creates the Run record, registers or links `ArtifactRef` records, updates evidence summary and blockers/gates, appends a task event, and returns the response.
+An exact idempotent replay of a committed `record_run` response returns the original response before current freshness checks, authorization consumption, Run creation, artifact registration, blocker/gate updates, projection enqueue, or event append. It must not consume a Write Authorization twice.
+
+Public transition summary: `harness.record_run` validates the envelope, checks idempotency replay and returns exact committed replay before new side effects, resolves the primary Task using the shared request rule, checks `expected_state_version` against `tasks.state_version` or `project_state.state_version` as appropriate, checks `kind`, detects product writes, requires a compatible active Write Authorization for product writes, validates observed changed paths, commands, tools, and secret access, consumes the authorization when compatible, creates the Run record, registers or links `ArtifactRef` records, updates evidence summary and blockers/gates, appends a task event, and returns the response.
 
 If Core rejects a write-capable run before commit, `run_id` is `null`, no artifacts are registered, and the response must not imply a Run exists. Core must not mark an invalid authorization as consumed. A violation/audit Run may be recorded only when Core deliberately records observed behavior after a product write; attempted authorization refs may appear in validator findings, violation payloads, or event payloads, but they do not satisfy evidence, QA, verification, work acceptance, or close readiness.
 

@@ -44,11 +44,12 @@ These are the small Core invariants the rest of the Kernel contract serves:
 2. Chat, Markdown projections, generated documents, reports, and cards are not authority.
 3. Scope boundaries must be explicit before a product write can pass the pre-write scope check.
 4. Product-file writes require a compatible internal Write Authorization record for the exact write attempt.
-5. User-owned judgments cannot be silently replaced by agent judgment.
-6. Sensitive-action approval, work acceptance, verification waiver, and residual-risk acceptance are separate routes.
-7. Evidence, verification, Manual QA, acceptance, and residual risk do not substitute for one another.
-8. Close must expose blockers and residual risk instead of collapsing them into a single "done" flag.
-9. The active stage and profile determine which gates are required for the requested operation.
+5. State-changing Core tools must be protected by idempotency and affected-scope `expected_state_version` checks; dry-run results are non-authoritative.
+6. User-owned judgments cannot be silently replaced by agent judgment.
+7. Sensitive-action approval, work acceptance, verification waiver, and residual-risk acceptance are separate routes.
+8. Evidence, verification, Manual QA, acceptance, and residual risk do not substitute for one another.
+9. Close must expose blockers and residual risk instead of collapsing them into a single "done" flag.
+10. The active stage and profile determine which gates are required for the requested operation.
 
 ## Kernel in 10 sentences
 
@@ -295,7 +296,7 @@ Approval does not prove correctness, choose product direction, choose technical 
 
 ### Write Authorization
 
-A Write Authorization is the durable single-use state record created only by a non-dry-run `prepare_write.decision=allowed` for an exact product-file write compatible with current Core records. It records the Task, Change Unit, compatibility basis, intended operation, intended write surface, relevant sensitive-action coverage and decisions, guarantee level, lifecycle status, and consumption by a compatible Run. It is a Harness-level cooperative record/check, not OS permission, sandboxing, tamper-proof storage, preventive blocking, or isolation.
+A Write Authorization is the durable single-use state record created only by a non-dry-run `prepare_write.decision=allowed` for an exact product-file write compatible with current Core records. It records the Task, Change Unit, `basis_state_version` used for the allow decision, intended operation, intended write surface, relevant sensitive-action coverage and decisions, guarantee level, lifecycle status, and consumption by a compatible Run. `basis_state_version` is the compatibility basis, not necessarily the resulting `ToolResponseBase.state_version`. It is a Harness-level cooperative record/check, not OS permission, sandboxing, tamper-proof storage, preventive blocking, or isolation.
 
 Write Authorization status is record-level:
 
@@ -601,9 +602,9 @@ allowed | blocked | approval_required | decision_required | state_conflict
 The Core transition order is:
 
 1. Validate the request envelope.
-2. Validate the idempotency key and replay state.
-3. Check `expected_state_version`.
-4. Resolve the active Task.
+2. Validate the idempotency key and replay state. Exact committed replay returns the original response before any new state-version check, event, or authorization creation; same-key/different-hash replay returns `STATE_CONFLICT`.
+3. Resolve the primary Task in the canonical order: tool-specific `task_id`, envelope `task_id`, then active Task resolution.
+4. Check `expected_state_version` against `tasks.state_version` for a task-scoped mutation, or against `project_state.state_version` when no primary Task exists.
 5. Resolve the active Change Unit.
 6. Check intended operation, path, tool, command, network, secret, and sensitive category compatibility against scope.
 7. Check baseline freshness.
@@ -618,6 +619,8 @@ The Core transition order is:
 16. Return the response.
 
 `dry_run=true` validates and returns the decision or candidates, but creates no authoritative row: no current record, `task_events` row, artifact, consumable Write Authorization, projection job, or idempotency replay row.
+
+A replayed `prepare_write` with the same idempotency key and canonical request hash returns the original committed response. It must not create a second Write Authorization, advance the affected-scope state clock, or append a duplicate event.
 
 `blocked`, `approval_required`, `decision_required`, and `state_conflict` results must not create a consumable Write Authorization row. `approval_required` means sensitive-action permission is missing or unusable; it must not be converted into broad approval or product judgment. `decision_required` means user-owned judgment is needed; it must not be converted into sensitive-action permission.
 
@@ -634,19 +637,20 @@ External side effects keep the same authority meaning. Before execution, `prepar
 The Core transition order is:
 
 1. Validate the request envelope.
-2. Check idempotency replay state.
-3. Check `expected_state_version`.
-4. Check the Run kind.
-5. Detect whether the Run reports a product write.
-6. If a product write exists, require a compatible active Write Authorization.
-7. Validate observed changed paths, commands, tools, and secret access against the authorization and active scope.
-8. If compatible, consume the authorization.
-9. Create the Run record.
-10. Register or link `ArtifactRef` records.
-11. Update the evidence summary or evidence refs required by the active path.
-12. Update blockers and gates affected by the recorded Run.
-13. Append the task event.
-14. Return the response.
+2. Check idempotency replay state. Exact committed replay returns the original response before any new state-version check, authorization consumption, Run creation, artifact registration, gate/blocker update, projection enqueue, or event append; same-key/different-hash replay returns `STATE_CONFLICT`.
+3. Resolve the primary Task in the canonical order: tool-specific `task_id`, envelope `task_id`, then active Task resolution.
+4. Check `expected_state_version` against `tasks.state_version` for a task-scoped mutation, or against `project_state.state_version` when no primary Task exists.
+5. Check the Run kind.
+6. Detect whether the Run reports a product write.
+7. If a product write exists, require a compatible active Write Authorization.
+8. Validate observed changed paths, commands, tools, and secret access against the authorization and active scope.
+9. If compatible, consume the authorization.
+10. Create the Run record.
+11. Register or link `ArtifactRef` records.
+12. Update the evidence summary or evidence refs required by the active path.
+13. Update blockers and gates affected by the recorded Run.
+14. Append the task event.
+15. Return the response.
 
 Implementation and direct Runs that report product-file writes must consume a compatible Write Authorization whose lifecycle status is `active`. Core verifies observed changed paths and other observed side effects against both the consumed Write Authorization and the active Change Unit when those observations are available.
 
@@ -655,6 +659,8 @@ Out-of-scope changes, missing Write Authorization, expired Write Authorization, 
 Read-only and shaping-only Runs may be recorded without Write Authorization only when they do not report product-file changes.
 
 For `dry_run=true`, `record_run` validates the request and reports the planned or blocked effects without consuming authorization, creating a Run, registering artifacts, updating evidence or blockers/gates, appending `task_events`, enqueueing projection jobs, or creating an idempotency replay row.
+
+A replayed committed `record_run` with the same idempotency key and canonical request hash returns the original committed response. It must not consume the Write Authorization twice, create a second Run, register duplicate artifacts, advance the affected-scope state clock, or append a duplicate event.
 
 <a id="close_task"></a>
 

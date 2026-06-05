@@ -90,6 +90,8 @@ ToolEnvelope:
 
 Envelope field는 routing과 audit claim입니다. Surface가 Core 밖에서 state를 바꾸도록 허가하지 않으며, user judgment, sensitive-action permission, work acceptance, Manual QA, detached verification independence를 증명하지도 않습니다.
 
+Primary Task가 필요한 request에서 Core는 tool-specific `task_id`, `ToolEnvelope.task_id`, active Task resolution 순서로 primary Task를 찾습니다. Task-scoped mutation은 `expected_state_version`을 `tasks.state_version`과 비교합니다. Resolved primary Task가 없는 project-scoped mutation은 `project_state.state_version`과 비교합니다.
+
 ## MCP boundary and caller trust
 
 내부 엔지니어링 점검/default posture는 registered project surface에 대한 local-only exposure입니다. Local-only는 예상 local user/profile의 local process, local socket, localhost-loopback connection을 뜻합니다. Unauthenticated shared endpoint, non-loopback bind, forwarded/tunneled endpoint, cloud/CI relay, cross-user socket/directory, remote caller는 registered connector profile이 stronger posture를 증명하기 전까지 제외합니다.
@@ -124,9 +126,9 @@ MVP-1 status/error condition이 적용될 때 `ToolError.message`는 [Errors](er
 
 내부 엔지니어링 점검과 MVP-1에서 `projection_jobs`는 envelope compatibility를 위해 present하며 보통 `[]`입니다. 이 field가 `projection_jobs` storage table을 요구하지 않습니다. Durable projection job은 운영 프로필 또는 profile-promoted storage입니다.
 
-`dry_run=true`는 validate하고 diagnostics 또는 transition plan을 반환하지만 current record 변경, event append, artifact 등록, consumable Write Authorization 생성, projection job enqueue, idempotency replay row create/update를 하지 않습니다.
+`dry_run=true`는 validate하고 diagnostics 또는 transition plan을 반환하지만 current record 변경, event append, artifact 등록, consumable Write Authorization 생성, projection job enqueue, idempotency replay row create/update, `idempotency_key` 예약을 하지 않습니다.
 
-State-changing operation에서 `state_version`은 Core가 primary Task를 resolve하면 resulting Task State Version이고, 그렇지 않으면 Project State Version입니다. Read-only와 dry-run response는 primary read/affected scope의 current version을 반환합니다.
+State-changing operation에서 `ToolResponseBase.state_version`은 primary affected scope의 resulting version입니다. Task-scoped mutation 뒤에는 `tasks.state_version`이고, resolved primary Task가 없는 project-scoped mutation 뒤에는 `project_state.state_version`입니다. Read-only와 dry-run response는 primary read scope 또는 변경될 affected scope의 current version을 반환합니다.
 
 ## Shared schemas
 
@@ -160,6 +162,8 @@ StateSummary:
     qa_gate: not_required | required | pending | passed | failed | waived
     acceptance_gate: not_required | required | pending | accepted | rejected
 ```
+
+`EventRef.state_version`은 해당 event 이후 affected-scope resulting version입니다. Event ordering key가 아니며 event ordering은 `event_seq`를 사용합니다.
 
 `StateSummary.mode` values는 `advisor`, `direct`, `work`로 유지합니다. 사용자 접점은 이를 advice/read-only work, small direct work, tracked work로 표시할 수 있습니다. 그 label은 display text이지 enum value가 아닙니다.
 

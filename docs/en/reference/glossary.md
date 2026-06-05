@@ -655,7 +655,7 @@ A canonical structured record in kernel state, such as a Task, Change Unit, User
 
 ### State Version
 
-An optimistic-concurrency clock for a Core-resolved state scope. Core resolves the primary Task from the envelope, tool-specific input, or active Task when one applies. `expected_state_version`, `ToolResponseBase.state_version`, `EventRef.state_version`, and `task_events.state_version` are interpreted by that affected scope, not as one global event-store sequence.
+An optimistic-concurrency clock for a Core-resolved state scope. Core resolves the primary Task from tool-specific `task_id`, then `ToolEnvelope.task_id`, then active Task resolution when one applies. `expected_state_version`, `ToolResponseBase.state_version`, `EventRef.state_version`, and `task_events.state_version` are interpreted by that affected scope, not as one global event-store sequence.
 
 ### Project State Version
 

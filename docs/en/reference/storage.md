@@ -154,6 +154,13 @@ not expand the MVP-1 product surface. A `tool_invocations` row exists only for a
 committed replayable non-dry-run response; dry runs and pre-commit conflicts do
 not reserve idempotency keys in storage.
 
+State clocks are scoped, not global. Task-scoped mutations use
+`tasks.state_version`; project-scoped mutations with no Core-resolved primary Task
+use `project_state.state_version`. `tool_invocations.basis_state_version` stores
+the affected-scope version used as the compatibility basis before the committed
+mutation; `response_json` stores the original response, including the resulting
+`ToolResponseBase.state_version`.
+
 ## Persisted State Vs Derived Status/View
 
 Persisted MVP-1 state is the set of rows Core commits. Derived status/view is
@@ -338,6 +345,7 @@ CREATE TABLE task_events (
 
 CREATE TABLE tool_invocations (
   invocation_id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL,
   idempotency_key TEXT NOT NULL,
   request_hash TEXT NOT NULL,
   tool_name TEXT NOT NULL,
@@ -346,7 +354,7 @@ CREATE TABLE tool_invocations (
   response_json TEXT NOT NULL,
   status TEXT NOT NULL,
   created_at TEXT NOT NULL,
-  UNIQUE(tool_name, idempotency_key)
+  UNIQUE(project_id, tool_name, idempotency_key)
 );
 ```
 
@@ -462,6 +470,9 @@ These records are deliberately outside the MVP-1 storage path:
 the implementation retains it. It records what Core committed and in what order.
 It is not the normal authority source for current state, and MVP-1 state should
 not be reconstructed by replaying events during ordinary operation.
+`task_events.state_version` is the affected-scope resulting version after the
+event. It is not a global event-store sequence; deterministic event order is
+`event_seq`.
 
 Current state tables are authoritative:
 

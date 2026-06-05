@@ -151,9 +151,9 @@ Visible-but-unaccepted close-relevant risk는 `RESIDUAL_RISK_NOT_VISIBLE`로 반
 
 ## Idempotency
 
-Idempotency key는 `(project_id, tool_name, idempotency_key)` scope를 가집니다. 같은 key와 같은 payload를 반복하면 original committed response를 반환합니다. 같은 key를 다른 payload로 재사용하면 `STATE_CONFLICT`를 반환합니다.
+커밋되는 state-changing tool call은 모두 `idempotency_key`를 요구합니다. Idempotency key는 `(project_id, tool_name, idempotency_key)` scope를 가집니다. 같은 key와 같은 canonical request hash로 반복 호출하면 original committed response를 반환합니다. 같은 key를 다른 canonical request hash로 재사용하면 `STATE_CONFLICT`를 반환합니다.
 
-`request_hash`는 UTF-8 canonical JSON에서 계산합니다. Canonical input은 `tool_name`, schema-normalized request body, 그리고 `request_id`와 `idempotency_key`를 제외한 모든 `ToolEnvelope` field를 포함합니다.
+`request_hash`는 UTF-8 canonical JSON에서 계산합니다. Canonical input은 `tool_name`, schema-normalized request body, 그리고 `request_id`와 `idempotency_key`를 제외한 모든 `ToolEnvelope` field를 포함합니다. Core는 이 hash를 original response와 함께 `tool_invocations` 또는 equivalent committed replay record에 저장합니다.
 
 State-changing tool에서 Core는 call을 new mutation attempt로 다루기 전에 existing committed replay row를 확인합니다. Matching hash는 current freshness check를 다시 실행하거나, event를 append하거나, artifact를 register하거나, projection을 enqueue하거나, replay row를 update하지 않고 original committed response를 반환합니다. Different hash는 `STATE_CONFLICT`를 반환하고 original replay row를 보존합니다.
 
@@ -163,9 +163,9 @@ Key가 different canonical request payload로 재사용되면 `ToolError.details
 
 ## State conflict behavior
 
-Supplied idempotency scope에 committed replay row가 없는 state-changing tool에서 Core는 mutation 전에 `expected_state_version`을 current project/task state와 비교합니다. Mismatch는 `STATE_CONFLICT`를 반환합니다. 그 conflicting new attempt에 대해 current records, events, artifacts, projection jobs, replay rows를 만들지 않습니다.
+Supplied idempotency scope에 committed replay row가 없는 state-changing tool에서 Core는 freshness check 전에 primary Task를 resolve합니다. Resolution order는 tool-specific `task_id`, `ToolEnvelope.task_id`, active Task resolution 순서입니다. Task-scoped mutation은 `expected_state_version`을 `tasks.state_version`과 비교합니다. Resolved primary Task가 없는 project-scoped mutation은 `project_state.state_version`과 비교합니다. Mismatch는 `STATE_CONFLICT`를 반환합니다. 그 conflicting new attempt에 대해 current records, events, artifacts, projection jobs, replay rows를 만들지 않습니다.
 
-Core는 먼저 `ToolEnvelope.task_id`, tool-specific `task_id`, active Task resolution에서 primary addressed Task를 resolve합니다. Task-scoped tool은 `tasks.state_version`과 비교하고, resolved primary Task가 없는 project-scoped tool은 `project_state.state_version`과 비교합니다.
+`WriteAuthorization.basis_state_version`은 allow decision의 compatibility basis로 사용된 affected-scope version입니다. 반드시 resulting `ToolResponseBase.state_version`과 같지는 않습니다.
 
 `STATE_CONFLICT.details` should include:
 

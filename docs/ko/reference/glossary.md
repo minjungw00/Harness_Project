@@ -705,7 +705,7 @@ Kernel state 안의 기준 structured record입니다. Task, Change Unit, User J
 
 ### State Version
 
-Core-resolved state scope를 위한 optimistic-concurrency clock입니다. 적용되는 경우 Core는 envelope, tool-specific input, 또는 active Task에서 primary Task를 찾습니다. `expected_state_version`, `ToolResponseBase.state_version`, `EventRef.state_version`, `task_events.state_version`은 하나의 global event-store sequence가 아니라 해당 영향받는 scope에 따라 해석됩니다.
+Core-resolved state scope를 위한 optimistic-concurrency clock입니다. 적용되는 경우 Core는 tool-specific `task_id`, `ToolEnvelope.task_id`, active Task resolution 순서로 primary Task를 찾습니다. `expected_state_version`, `ToolResponseBase.state_version`, `EventRef.state_version`, `task_events.state_version`은 하나의 global event-store sequence가 아니라 해당 영향받는 scope에 따라 해석됩니다.
 
 ### Project State Version
 
