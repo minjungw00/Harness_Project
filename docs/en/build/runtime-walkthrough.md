@@ -18,7 +18,7 @@ Harness runtime behavior should preserve local authority through Core-owned stat
 
 Engineering Checkpoint implements only the internal authority loop in this path: project state, one registered reference `capability_profile`, active Task, active Change Unit/scope boundary, `prepare_write`, single-use Write Authorization, `record_run`, one artifact/evidence ref, status/blocker output, and a narrow close-blocker check.
 
-MVP-1 adds user-visible behavior around that loop: ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria, minimal user judgment, evidence summary, close result/blockers, next safe action through `harness.status.next_actions`, residual-risk visibility, separate sensitive-action approval/final-acceptance/risk displays, and honest guarantee display from the same reference surface profile.
+MVP-1 adds user-visible behavior around that loop: ordinary-language start/resume, work-shape classification, requirements shaping into active Task, Change Unit, and user-judgment boundaries, scope/non-goals/success criteria, minimal user judgment, evidence summary, close result/blockers, next safe action through `harness.status.next_actions`, residual-risk visibility, separate sensitive-action approval/final-acceptance/risk displays, and honest guarantee display from the same reference surface profile.
 
 Later/profile scope adds full Manual QA matrix, detached Eval, export/recover, dashboard or hosted UI, broad connectors, hosted connector registry, automated Browser QA Capture, preventive guard expansion, cross-surface orchestration, parallel orchestration, and detailed reports only after owner docs promote the relevant profile.
 
@@ -57,13 +57,13 @@ Owner docs: [Core Model Reference](../reference/core-model.md), [MVP API](../ref
 
 ### 2. Task -> clarification
 
-When the request is ambiguous, risky, product-facing, or likely to need user judgment, Harness clarifies the goal, non-goals, success criteria, inspectable facts, assumptions, and likely judgment boundaries. This is shaping input; it is not evidence, Approval, Write Authorization, final acceptance, residual-risk acceptance, or close.
+When the request is ambiguous, risky, product-facing, or likely to need user judgment, Harness clarifies the original request, current goal summary, scope, non-goals, success criteria, confirmed facts, remaining uncertainties, blocking question, likely judgment boundaries, and next safe action. In MVP-1 this shaping output persists through active Task, proposed or active Change Unit, and user-judgment candidate/record boundaries. It is not a committed Shared Design record, Discovery Brief record, Question Queue record, Assumption Register record, First Safe Change Unit Candidate record, evidence, Approval, Write Authorization, final acceptance, residual-risk acceptance, or close.
 
 Owner docs: [Core Model Reference: User Judgment](../reference/core-model.md#user-judgment), [`harness.request_user_judgment`](../reference/api/mvp-api.md#harnessrequest_user_judgment).
 
 ### 3. Clarification -> scope
 
-The next safe work boundary becomes scope for product changes. Scope says what may change and what remains out of bounds. A scope record does not authorize a write by itself.
+The next safe work boundary becomes a proposed or active Change Unit for product changes. Scope says what may change and what remains out of bounds. A first safe slice is a Change Unit candidate, not a separate active record. A scope record does not authorize a write by itself.
 
 Owner docs: [Core Model Reference: Change Unit](../reference/core-model.md#change-unit), [Autonomy Boundary](../reference/core-model.md#autonomy-boundary).
 
@@ -108,7 +108,7 @@ Owner docs: [Core Model Reference: `close_task`](../reference/core-model.md#clos
 | Stage | Walkthrough portion in scope |
 |---|---|
 | Engineering Checkpoint | Project state, one registered reference `capability_profile`, active Task, active Change Unit/scope boundary, `prepare_write`, Write Authorization, `record_run`, one artifact/evidence ref, status/blocker output, and narrow close-blocker check. |
-| MVP-1 User Work Loop | Engineering Checkpoint plus ordinary-language start/resume, work-shape classification, minimal user judgment, evidence summary, close result/blocker display, next safe action through `harness.status.next_actions`, residual-risk visibility, honest reference-surface guarantee display, four user-facing compact outputs, and one agent-facing context packet. |
+| MVP-1 User Work Loop | Engineering Checkpoint plus ordinary-language start/resume, work-shape classification, requirements shaping through Task/Change Unit/user-judgment boundaries, minimal user judgment, evidence summary, close result/blocker display, next safe action through `harness.status.next_actions`, residual-risk visibility, honest reference-surface guarantee display, four user-facing compact outputs, and one agent-facing context packet. |
 | Assurance Profile | Verification, Manual QA, richer final acceptance and residual-risk behavior, stewardship, TDD, feedback-loop, and context-hygiene hardening. |
 | Operations Profile | Doctor/readiness, recover/export, artifact integrity, release handoff, projection/reconcile operations, and conformance runner after executable state-assertion suites exist. |
 | Roadmap | Dashboards, hosted UI, broad connectors, hosted connector registry, automation, metrics, team workflow, cross-surface orchestration, parallel orchestration, and other promoted future candidates. |

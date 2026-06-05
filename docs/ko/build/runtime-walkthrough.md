@@ -18,7 +18,7 @@
 
 내부 엔지니어링 점검은 이 경로의 내부 권한 루프만 구현합니다. Project state, registered reference `capability_profile` 하나, 활성 Task, 활성 Change Unit/scope boundary, `prepare_write`, single-use Write Authorization, `record_run`, artifact/evidence ref 하나, status/blocker output, 좁은 close-blocker check입니다.
 
-MVP-1은 그 loop 주변의 사용자 표시 동작을 더합니다. 평소 말로 시작/이어가기, work-shape classification, scope/non-goals/success criteria, minimal user judgment, evidence summary, close result/blocker, `harness.status.next_actions`를 통한 다음 안전한 행동, 잔여 위험 표시, 민감 동작 승인/최종 수락/위험 수락 분리 표시, 같은 reference surface profile에서 나온 정직한 guarantee display입니다.
+MVP-1은 그 loop 주변의 사용자 표시 동작을 더합니다. 평소 말로 시작/이어가기, work-shape classification, active Task/Change Unit/user judgment 경계로 이어지는 요구사항 구체화, scope/non-goals/success criteria, minimal user judgment, evidence summary, close result/blocker, `harness.status.next_actions`를 통한 다음 안전한 행동, 잔여 위험 표시, 민감 동작 승인/최종 수락/위험 수락 분리 표시, 같은 reference surface profile에서 나온 정직한 guarantee display입니다.
 
 후속/profile 범위는 owner 문서가 해당 profile을 승격한 뒤에만 full Manual QA matrix, detached Eval, export/recover, dashboard 또는 hosted UI, broad connector, hosted connector registry, automated Browser QA Capture, preventive guard expansion, cross-surface orchestration, parallel orchestration, detailed report를 더합니다.
 
@@ -57,13 +57,13 @@ flowchart LR
 
 ### 2. Task -> 구체화
 
-요청이 모호하거나, 위험하거나, 제품-facing이거나, 사용자 판단이 필요할 가능성이 있으면 하네스는 goal, non-goal, success criteria, inspectable fact, assumption, likely judgment boundary를 구체화합니다. 이것은 작업을 다듬는 입력입니다. Evidence, Approval, Write Authorization, final acceptance, residual-risk acceptance, close가 아닙니다.
+요청이 모호하거나, 위험하거나, 제품-facing이거나, 사용자 판단이 필요할 가능성이 있으면 하네스는 original request, current goal summary, scope, non-goals, success criteria, confirmed facts, remaining uncertainties, blocking question, likely judgment boundary, next safe action을 구체화합니다. MVP-1에서 이 shaping 출력은 active Task, proposed 또는 active Change Unit, user judgment 후보/기록 경계에 지속됩니다. Committed Shared Design record, Discovery Brief record, Question Queue record, Assumption Register record, First Safe Change Unit Candidate record, evidence, Approval, Write Authorization, final acceptance, residual-risk acceptance, close가 아닙니다.
 
 담당 문서: [Core Model 참조: User Judgment](../reference/core-model.md#user-judgment), [`harness.request_user_judgment`](../reference/api/mvp-api.md#harnessrequest_user_judgment).
 
 ### 3. 구체화 -> scope
 
-다음 안전한 작업 경계가 제품 변경의 scope가 됩니다. Scope는 무엇이 바뀔 수 있고 무엇이 범위 밖인지 말합니다. Scope record 자체는 write를 authorize하지 않습니다.
+다음 안전한 작업 경계는 제품 변경을 위한 proposed 또는 active Change Unit이 됩니다. Scope는 무엇이 바뀔 수 있고 무엇이 범위 밖인지 말합니다. 첫 안전한 조각은 Change Unit candidate이지 별도 active record가 아닙니다. Scope record 자체는 write를 authorize하지 않습니다.
 
 담당 문서: [Core Model 참조: Change Unit](../reference/core-model.md#change-unit), [Autonomy Boundary](../reference/core-model.md#autonomy-boundary).
 
@@ -108,7 +108,7 @@ Close가 stage 범위에 있으면 Core는 close-relevant state를 확인하고 
 | 단계 | Walkthrough에서 범위에 들어오는 부분 |
 |---|---|
 | 내부 엔지니어링 점검 | Project state, registered reference `capability_profile` 하나, 활성 Task, 활성 Change Unit/scope boundary, `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref 하나, status/blocker output, 좁은 close-blocker check. |
-| MVP-1 사용자 작업 루프 | 내부 엔지니어링 점검에 평소 말로 시작/이어가기, work-shape classification, minimal user judgment, evidence summary, close result/blocker display, `harness.status.next_actions`를 통한 다음 안전한 행동, 잔여 위험 표시, honest reference-surface guarantee display, 네 가지 사용자용 작은 출력, 에이전트용 맥락 패킷 하나를 더합니다. |
+| MVP-1 사용자 작업 루프 | 내부 엔지니어링 점검에 평소 말로 시작/이어가기, work-shape classification, Task/Change Unit/user judgment 경계를 통한 요구사항 구체화, minimal user judgment, evidence summary, close result/blocker display, `harness.status.next_actions`를 통한 다음 안전한 행동, 잔여 위험 표시, honest reference-surface guarantee display, 네 가지 사용자용 작은 출력, 에이전트용 맥락 패킷 하나를 더합니다. |
 | 보증 프로필 | Verification, Manual QA, richer final acceptance/residual-risk behavior, stewardship, TDD, feedback-loop, context-hygiene hardening. |
 | 운영 프로필 | Doctor/readiness, recover/export, artifact integrity, release handoff, projection/reconcile operations, 실행 가능한 state-assertion suite가 존재한 뒤 conformance runner. |
 | 로드맵 | Dashboard, hosted UI, broad connector, hosted connector registry, automation, metrics, team workflow, cross-surface orchestration, parallel orchestration, promoted future candidate. |

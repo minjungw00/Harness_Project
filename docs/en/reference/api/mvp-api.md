@@ -57,7 +57,7 @@ Error codes, MVP-1 status/error condition names, user-facing message patterns, p
 
 Use this to start, classify, or resume ordinary user work.
 
-Stage meaning: not required for the internal Engineering Checkpoint, which may use an owner-valid setup path instead; active in MVP-1 for plain-language start/resume behavior. Full discovery, design-support routing, and broad planning workflows are later material unless explicitly promoted.
+Stage meaning: not required for the internal Engineering Checkpoint, which may use an owner-valid setup path instead; active in MVP-1 for plain-language start/resume behavior. MVP-1 requirements shaping persists through Task, Change Unit, and user-judgment boundaries. Committed Shared Design records, full design-support routing, and broad planning workflows are later material unless explicitly promoted.
 
 Allowed actors: `user`, `lead_agent`, `operator`.
 
@@ -265,6 +265,8 @@ RecordRunResponse:
 ```
 
 `RecordRunPayload`, `ShapingUpdatePayload`, `ImplementationPayload`, and `DirectPayload` are defined in [Schema Core: Record-run payloads](schema-core.md#record-run-payloads). `RecordRunRequest.kind`, `RecordRunPayload.kind`, and the one non-null payload branch must match one-to-one. MVP-1 accepts exactly `shaping_update`, `implementation`, and `direct`; `verification_input` is later-profile only.
+
+For `kind=shaping_update`, MVP-1 stores Discovery and requirements-shaping output only as active Task updates, proposed or active Change Unit updates, and user-judgment candidates or records. The active API must not accept or return `record_kind=shared_design`, a committed Shared Design record, a required Shared Design projection, a Discovery Brief record, a Question Queue record, an Assumption Register record, or a First Safe Change Unit Candidate record.
 
 `evidence_ref` points to the active minimal evidence coverage record, normally `StateRecordRef.record_kind=evidence_summary`, and `evidence_summary` returns the current Core-owned compact summary after the Run is recorded. Durable bytes returned by the same operation appear in `registered_artifacts`; Markdown summaries or projection text do not become canonical evidence state.
 

@@ -76,6 +76,11 @@ Active storage preserves these authority boundaries:
   normal source used to reconstruct current state.
 - `tool_invocations` supports committed idempotency replay. It is not a separate
   user-facing domain record.
+- Requirements shaping output is stored on active `tasks`, `change_units`,
+  `user_judgments`, `evidence_summaries`, and `blockers` as needed. MVP-1 has no
+  committed `shared_designs` table, Discovery Brief table, Question Queue table,
+  Assumption Register table, First Safe Change Unit Candidate table, or required
+  Shared Design projection cache.
 - `artifacts` store registered evidence bytes or safe metadata with integrity,
   redaction, producer, retention, and availability facts. They do not prove
   sufficiency until Core links them through owner-valid rows.
@@ -174,9 +179,9 @@ Core](api/schema-core.md).
 |---|---|---|
 | `project_state` | Project-local state header, state clock, active Task pointer, and active/default surface pointer. | `project_id`, `schema_version`, `storage_profile`, `state_version`, `active_task_id`, `default_surface_id`, `created_at`, `updated_at`. |
 | `surfaces` | Reference surface registration for the local caller/display path. This records what surface Core believes it is talking to; it is not a broad connector ecosystem table. | `surface_id`, `project_id`, `surface_kind`, `display_name`, `registration_source`, `local_access_posture`, `capability_profile_json`, `guarantee_level`, `status`, `created_at`, `updated_at`. |
-| `tasks` | User-value work unit and task-scoped state clock. | `task_id`, `project_id`, `title`, `user_request`, `mode`, `lifecycle_phase`, `result`, `summary`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
+| `tasks` | User-value work unit, task-scoped state clock, and active requirements-shaping summary. | `task_id`, `project_id`, `title`, `user_request`, `current_goal_summary`, `mode`, `lifecycle_phase`, `result`, `summary`, `confirmed_facts_json`, `remaining_uncertainties_json`, `blocking_question`, `next_safe_action`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
 | `task_events` | Append-only audit/order trail for committed Core mutations. | `event_id`, `task_id` or project scope, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
-| `change_units` | Current scoped work boundary for product writes and close basis. | `change_unit_id`, `task_id`, `scope_summary`, `non_goals_json`, `success_criteria_json`, `allowed_paths_json`, `denied_paths_json`, `status`, `created_at`, `updated_at`. |
+| `change_units` | Proposed or current scoped work boundary for product writes and close basis. | `change_unit_id`, `task_id`, `scope_summary`, `affected_areas_json`, `affected_path_candidates_json`, `non_goals_json`, `success_criteria_json`, `allowed_paths_json`, `denied_paths_json`, `status`, `created_at`, `updated_at`. |
 | `user_judgments` | User-owned judgment record for product decision, technical decision, scope decision, sensitive approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, and cancellation. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `status`, `question`, `options_json`, `selected_option_json`, `judgment_payload_json`, `affected_scope_json`, `context_refs_json`, `artifact_refs_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
 | `write_authorizations` | Durable single-use cooperative record created only by non-dry-run `prepare_write.decision=allowed`. The row preserves the full active MVP `AuthorizedAttemptScope` used by Core comparison. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `attempt_scope_json`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`. |
 | `runs` | Committed execution or observation record, including compatible write consumption when a product write happened. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `summary`, `observed_changes_json`, `command_results_json`, `tool_invocations_json`, `network_accesses_json`, `secret_accesses_json`, `created_at`. |
@@ -189,6 +194,18 @@ Core](api/schema-core.md).
 `tool_invocations` rows exist only for committed replayable non-dry-run
 responses. Dry runs and pre-commit conflicts do not reserve idempotency keys in
 storage.
+
+`tasks.user_request` stores the original user request. Shaping updates clarify
+the current goal, confirmed facts, remaining uncertainties, blocking question,
+and next safe action without replacing the original wording. A blocking question
+that belongs to the user becomes a `UserJudgmentCandidate` and then a
+`user_judgments` row when requested/recorded; a non-judgment blocker uses the
+active `blockers` path.
+
+`change_units.status` may represent a proposed candidate or active/superseded
+scope according to the Core/API owner rules. A "First Safe Change Unit
+Candidate" is a proposed Change Unit boundary carried by this record family, not
+a separate active table or ref kind.
 
 `user_judgments.judgment_kind` is the stored judgment identity. Display labels
 are derived at read/render time from `judgment_kind` and locale; active storage
@@ -308,6 +325,7 @@ DDL bundle or first-implementation prerequisite.
 | Full Eval system, including `evals` and evaluator bundles | Detached verification and independence hardening | Runs, artifacts, artifact links, evidence summaries, and blockers; no detached assurance claim unless the owner profile is active |
 | Full Manual QA matrix, including `manual_qa_records` | Human inspection workflows, findings, setup, and QA evidence refs | User judgment, blocker, and evidence summary visibility when QA is required but the full QA profile is not active |
 | Full Evidence Manifest report tables, including detailed `evidence_manifests` | Criteria-to-evidence matrices and rich reports | `evidence_summaries` or equivalent minimal evidence coverage plus artifact links |
+| Shared Design/design-support records, including `shared_designs` and full design artifacts | Rich requirements/design history and later-profile design review | Active Task shaping fields, proposed or active Change Units, user-judgment candidates/records, blockers, and evidence summaries as needed |
 | Projection job system, including `projection_jobs` and durable projection caches | Durable outbox for rendered Markdown or managed outputs | Read-time compact views and source-version freshness display |
 | Export/recover tables, including `export_manifests`, `recover_items`, and release-handoff bundles | Operations, handoff, recovery, and export packages | Active artifacts and blockers only, unless Operations Profile is active |
 | Broad validator run archive, including `validator_runs` | Persisted validator history and diagnostic trend analysis | Current blockers, API `ValidatorResult` response data, and owner-field validation |
@@ -328,7 +346,7 @@ promotes them:
 - Journey/spine continuity records such as `task_spine_entries` and
   `journey_cards`
 - design/stewardship records such as `domain_terms`, `module_map_items`,
-  `interface_contracts`, `shared_designs`, and `change_unit_dependencies`
+  `interface_contracts`, and `change_unit_dependencies`
 
 ## Event And Idempotency Semantics
 

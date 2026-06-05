@@ -53,16 +53,18 @@ Clarification is the agent behavior before implementation planning when the next
 
 Before asking, inspect what is available: repository files, docs, tests, current state, active scope, accepted decisions, and current artifacts. Then ask only the question that changes the next safe action.
 
+In MVP-1, clarification output should land in the active working boundary: the Task's current goal and shaping summary, a proposed or active Change Unit, and user-judgment candidates or records. Do not invent a separate committed Discovery Brief, Question Queue, Assumption Register, First Safe Change Unit Candidate, Shared Design record, full Decision Packet, or full design artifact.
+
 A useful clarification response shows:
 
 - what the agent already checked
-- likely goal and user value
+- original request and current goal
 - proposed scope and non-goals
-- facts still missing
+- confirmed facts and remaining uncertainties
 - the one blocking question, if there is one
 - useful non-blocking questions parked for later
 - user-owned judgment candidates
-- the next safe action or first safe slice
+- the next safe action or proposed Change Unit
 
 Do not start ambiguous large implementation from a broad request alone. Also do not expand blockers into endless planning loops. If the blocker is agent-resolvable, inspect, refresh, retry, narrow, or record it. If the blocker is user-owned, ask the most important focused question. If nothing can proceed safely, say that and name the smallest unblocker.
 
@@ -270,6 +272,7 @@ I will treat that as all write permission, final acceptance, QA waiver, verifica
 - Do not decide user-owned product, technical, security/privacy, QA waiver, final-acceptance, or residual-risk choices.
 - Do not apply the full protocol to tiny edits.
 - Do not start ambiguous large implementation without clarification.
+- Do not treat a Discovery Brief, Question Queue, Assumption Register, First Safe Change Unit Candidate, Shared Design projection, full Decision Packet, or full design artifact as a required active MVP committed record.
 - Do not loop forever on blockers; inspect or ask the one focused question that changes the next safe action.
 - Do not treat "looks good" or "go ahead" as sensitive approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, cancellation, or scope change.
 - Do not present template output, status cards, readable summaries, generated reports, recommendations, or chat memory as state.

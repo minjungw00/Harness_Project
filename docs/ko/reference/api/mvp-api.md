@@ -57,7 +57,7 @@ Error code, MVP-1 status/error condition name, 사용자 표시 문구 pattern, 
 
 작업을 시작하거나, 분류하거나, 이어갈 때 이 method를 사용합니다.
 
-Stage meaning: 내부 엔지니어링 점검에는 필요하지 않습니다. 내부 점검은 owner-valid setup path를 사용할 수 있습니다. MVP-1에서는 평소 말로 시작/이어가기 behavior가 active입니다. Full discovery, design-support routing, broad planning workflow는 명시적으로 승격되기 전까지 later material입니다.
+Stage meaning: 내부 엔지니어링 점검에는 필요하지 않습니다. 내부 점검은 owner-valid setup path를 사용할 수 있습니다. MVP-1에서는 평소 말로 시작/이어가기 behavior가 active입니다. MVP-1 요구사항 구체화는 Task, Change Unit, user judgment 경계로 지속됩니다. Committed Shared Design record, full design-support routing, broad planning workflow는 명시적으로 승격되기 전까지 later material입니다.
 
 Allowed actors: `user`, `lead_agent`, `operator`.
 
@@ -265,6 +265,8 @@ RecordRunResponse:
 ```
 
 `RecordRunPayload`, `ShapingUpdatePayload`, `ImplementationPayload`, `DirectPayload`는 [Schema Core: Record-run payloads](schema-core.md#record-run-payloads)가 정의합니다. `RecordRunRequest.kind`, `RecordRunPayload.kind`, non-null payload branch는 서로 일대일로 맞아야 합니다. MVP-1은 정확히 `shaping_update`, `implementation`, `direct`만 허용합니다. `verification_input`은 later-profile only입니다.
+
+`kind=shaping_update`일 때 MVP-1은 Discovery와 요구사항 구체화 출력을 active Task update, proposed 또는 active Change Unit update, user judgment 후보 또는 기록으로만 저장합니다. Active API는 `record_kind=shared_design`, committed Shared Design record, required Shared Design projection, Discovery Brief record, Question Queue record, Assumption Register record, First Safe Change Unit Candidate record를 accept하거나 반환하면 안 됩니다.
 
 `evidence_ref`는 active minimal evidence coverage record를 가리킵니다. 보통 `StateRecordRef.record_kind=evidence_summary`를 사용합니다. `evidence_summary`는 Run이 기록된 뒤의 current Core-owned compact summary를 반환합니다. 같은 operation이 반환하는 durable byte는 `registered_artifacts`에 나타납니다. Markdown summary나 projection text는 canonical evidence state가 아닙니다.
 

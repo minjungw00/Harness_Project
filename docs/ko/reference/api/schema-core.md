@@ -323,7 +323,7 @@ StateRecordRef:
   record_id: string
 ```
 
-`record_kind=user_judgment`는 sensitive-action approval, final acceptance, residual-risk acceptance judgment를 포함한 사용자 소유 판단의 canonical MVP-1 ref kind입니다. MVP-1 evidence coverage와 blocker는 `record_kind=evidence_summary`, `record_kind=blocker`를 사용합니다. Durable 증거 바이트는 `ArtifactRef`를 사용합니다. Standalone accepted-risk ref kind는 없습니다.
+`record_kind=user_judgment`는 sensitive-action approval, final acceptance, residual-risk acceptance judgment를 포함한 사용자 소유 판단의 canonical MVP-1 ref kind입니다. MVP-1 evidence coverage와 blocker는 `record_kind=evidence_summary`, `record_kind=blocker`를 사용합니다. Durable 증거 바이트는 `ArtifactRef`를 사용합니다. Standalone accepted-risk ref kind도 없고 active MVP-1 `shared_design` ref kind도 없습니다. Discovery와 요구사항 구체화 ref는 상황에 맞게 `task`, `change_unit`, `user_judgment`, `evidence_summary`, `blocker` owner path를 가리킵니다.
 
 `approval`, `residual_risk`, `close_readiness`, `shared_design`, `domain_term`, `module_map_item`, `interface_contract`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `change_unit_dependency`, `reconcile_item`, `projection` 같은 later/profile-only ref kind는 [Schema Later](schema-later.md#later-profile-ref-and-artifact-values)에 정의합니다. 이 활성 schema는 해당 값을 accept하지 않습니다. `projection_path` 같은 projection-specific metadata도 later/profile material입니다.
 
@@ -640,26 +640,33 @@ ShapingUpdatePayload:
   task_update: TaskShapingUpdate | null
   change_unit_update: ChangeUnitShapingUpdate | null
   user_judgment_candidates: UserJudgmentCandidate[]
-  discovered_facts: string[]
-  assumptions: string[]
-  open_questions: string[]
+  confirmed_facts: string[]
+  remaining_uncertainties: string[]
+  blocking_question: string | null
+  useful_non_blocking_questions: string[]
+  next_safe_action: string | null
   source_refs: StateRecordRef[]
   evidence_refs: EvidenceRefs
 
 TaskShapingUpdate:
   title: string | null
-  goal: string | null
+  original_user_request: string | null
+  current_goal_summary: string | null
   mode: advisor | direct | work | null
-  acceptance_criteria: string[]
+  success_criteria: string[]
+  non_goals: string[]
+  affected_areas: string[]
+  affected_path_candidates: string[]
   constraints:
     allowed_paths: string[]
-    non_goals: string[]
     sensitive_categories: string[]
 
 ChangeUnitShapingUpdate:
   change_unit_id: string | null
   operation: propose | activate | update | supersede
   scope_summary: string
+  affected_areas: string[]
+  affected_path_candidates: string[]
   allowed_paths: string[]
   denied_paths: string[]
   non_goals: string[]
@@ -757,7 +764,11 @@ EvidenceCoverageUpdate:
   note: string | null
 ```
 
-`ShapingUpdatePayload`는 Discovery와 요구사항 구체화 중 활성 Task, Change Unit, User Judgment 경계에 지속되는 업데이트를 위한 활성 MVP payload입니다. Shared Design, Feedback Loop, TDD Trace, Evidence Manifest, Projection, Approval, Residual Risk 또는 다른 later/profile record를 만들지 않습니다. `task_update`, `change_unit_update`, `user_judgment_candidates` 중 적어도 하나는 비어 있지 않은 업데이트를 담아야 합니다.
+`ShapingUpdatePayload`는 Discovery와 요구사항 구체화 중 활성 Task, Change Unit, User Judgment 경계에 지속되는 업데이트를 위한 활성 MVP payload입니다. Shared Design, Feedback Loop, TDD Trace, Evidence Manifest, Projection, Approval, Residual Risk, Discovery Brief, Question Queue, Assumption Register, First Safe Change Unit Candidate, full Decision Packet, full design artifact 또는 다른 later/profile record를 만들지 않습니다. `task_update`, `change_unit_update`, `user_judgment_candidates`, `confirmed_facts`, `remaining_uncertainties`, `blocking_question`, `next_safe_action` 중 적어도 하나는 비어 있지 않은 업데이트를 담아야 합니다.
+
+`TaskShapingUpdate.original_user_request`는 Task에 저장된 사용자의 원래 표현입니다. 이후 shaping update는 보통 이 값을 바꾸지 않습니다. `current_goal_summary`는 구체화된 현재 목표입니다. `confirmed_facts`는 사용 가능한 최신 source로 확인한 사실입니다. Source가 unavailable 또는 stale이면 confirmed fact에 넣지 말고 `remaining_uncertainties`에 둡니다. `blocking_question`은 있을 때 다음 안전한 행동을 바꾸는 질문 하나입니다. 그 질문이 user-owned이면 `UserJudgmentCandidate` 또는 이후 `user_judgment` record로도 나타나야 합니다. `useful_non_blocking_questions`는 나중에 참고할 context이며 blocker가 아닙니다.
+
+`ChangeUnitShapingUpdate.operation=propose`는 제품 쓰기가 가까울 때 first safe implementation slice를 포함한 Change Unit candidate를 담습니다. `operation=activate` 또는 `update`는 Core state rule에 따라 active Change Unit을 만들거나 바꿉니다. 별도 active First Safe Change Unit Candidate record는 없습니다.
 
 `ImplementationPayload`는 Task 또는 Change Unit에 대한 구현 작업을 기록합니다. `product_write=true`이면 `RecordRunRequest.write_authorization_id`가 compatible active Write Authorization을 가리켜야 하고, `observed_changes.changed_paths`는 관찰된 제품 파일 변경을 설명해야 합니다. `observed_changes`, `command_results`, `tool_invocations`, `network_accesses`, `secret_accesses`, `artifact_inputs`, `evidence_updates`를 포함한 request body는 request 검증과 canonical idempotency hash에 들어갑니다. Storage는 이 payload를 Run row의 observed payload JSON field, linked artifact, evidence-summary update에 매핑합니다.
 

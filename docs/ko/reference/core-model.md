@@ -263,6 +263,16 @@ MVP-1 `evidence_summary`는 Run, blocker, user judgment, `ArtifactRef`를 참조
 
 이 entity note는 관계 의미만 정의합니다. Table, field, DDL, API body를 추가하지 않습니다.
 
+### MVP-1 shaping boundary
+
+Discovery와 요구사항 구체화는 MVP-1에서 별도 active entity가 아닙니다. 기준 출력은 활성 owner path에만 지속됩니다.
+
+- Task: original user request, current goal summary, work mode와 lifecycle, confirmed facts, remaining uncertainties, blocking question 또는 current blocker summary, next safe action, active Change Unit pointer.
+- Change Unit: proposed 또는 active scope boundary, non-goals, success criteria, affected area 또는 affected path candidates, allowed/denied paths, sensitive categories, completion conditions, 필요한 경우 Autonomy Boundary.
+- `UserJudgmentCandidate`와 `user_judgment`: commit 전후의 사용자 소유 제품, 기술, 범위, 민감 동작, QA waiver, verification-risk, final-acceptance, residual-risk, cancellation 선택.
+
+Discovery Brief, Question Queue, Assumption Register, First Safe Change Unit Candidate, Shared Design projection, full Decision Packet, full design artifact는 support/display 이름이거나 later/profile material입니다. Later/profile owner가 명시적으로 켜기 전에는 active MVP committed record가 아니며 operational authority로 취급하면 안 됩니다. Proposed first safe slice는 Change Unit candidate이지 standalone record가 아닙니다.
+
 ### Task
 
 Task는 사용자 가치 단위입니다. Current mode, lifecycle phase, result, close reason, assurance level, active Change Unit, gate state, user judgment refs, evidence/artifact refs, residual-risk state, acceptance state, latest Run state, projection이 켜진 경우 projection freshness를 가집니다.
@@ -369,7 +379,7 @@ Reconcile Item은 human-editable 또는 generated/projection drift를 위한 can
 
 ### Design Support Records
 
-Shared Design, Domain Term, Module Map Item, Interface Contract, Feedback Loop, TDD Trace는 profile이 켜졌을 때 scope, evidence, design policy를 support할 수 있습니다. Policy detail은 [설계 품질 정책](design-quality-policies.md)이 담당하고, storage shape는 [Storage](storage.md)이 담당합니다.
+Shared Design, Domain Term, Module Map Item, Interface Contract, Feedback Loop, TDD Trace record는 later/profile owner가 켰을 때만 scope, evidence, design policy를 support할 수 있습니다. 활성 MVP-1에는 committed Shared Design record가 없습니다. 요구사항 구체화는 Task, Change Unit, user judgment 경계로 라우팅합니다. Policy detail은 [설계 품질 정책](design-quality-policies.md)이 담당하고, storage shape는 [Storage](storage.md)이 담당합니다.
 
 ## Boundaries and non-substitutions
 

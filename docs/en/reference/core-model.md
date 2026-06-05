@@ -259,6 +259,16 @@ This document does not own:
 
 These entity notes define relationship semantics only. They do not add tables, fields, DDL, or API bodies.
 
+### MVP-1 shaping boundary
+
+Discovery and requirements shaping are not a separate active entity in MVP-1. Their canonical output persists only through active owner paths:
+
+- Task: original user request, current goal summary, work mode and lifecycle, confirmed facts, remaining uncertainties, blocking question or current blocker summary, next safe action, and active Change Unit pointer.
+- Change Unit: proposed or active scope boundary, non-goals, success criteria, affected area or affected path candidates, allowed and denied paths, sensitive categories, completion conditions, and Autonomy Boundary when needed.
+- `UserJudgmentCandidate` and `user_judgment`: user-owned product, technical, scope, sensitive-action, QA waiver, verification-risk, final-acceptance, residual-risk, and cancellation choices before and after commit.
+
+Discovery Brief, Question Queue, Assumption Register, First Safe Change Unit Candidate, Shared Design projection, full Decision Packet, and full design artifact are support/display names or later/profile material. They are not active MVP committed records and must not be treated as operational authority unless a later/profile owner explicitly enables them. A proposed first safe slice is a Change Unit candidate, not a standalone record.
+
 ### Task
 
 A Task is the user value unit. It carries current mode, lifecycle phase, result, close reason, assurance level, active Change Unit, gate states, user judgment refs, evidence and artifact refs, residual-risk state, acceptance state, latest Run state, and projection freshness when enabled.
@@ -363,7 +373,7 @@ A Reconcile Item is the candidate record for human-editable or generated/project
 
 ### Design Support Records
 
-Shared Design, Domain Term, Module Map Item, Interface Contract, Feedback Loop, and TDD Trace records can support scope, evidence, and design policy when their profiles are enabled. Their policy details are owned by [Design Quality Policies](design-quality-policies.md), and their storage shape is owned by [Storage](storage.md).
+Shared Design, Domain Term, Module Map Item, Interface Contract, Feedback Loop, and TDD Trace records can support scope, evidence, and design policy only when their later/profile owners enable them. Active MVP-1 does not have a committed Shared Design record; requirements shaping routes through Task, Change Unit, and user-judgment boundaries. Policy details are owned by [Design Quality Policies](design-quality-policies.md), and storage shape is owned by [Storage](storage.md).
 
 ## Boundaries and non-substitutions
 

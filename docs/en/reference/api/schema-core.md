@@ -323,7 +323,7 @@ StateRecordRef:
   record_id: string
 ```
 
-`record_kind=user_judgment` is the canonical MVP-1 ref kind for user-owned judgments, including sensitive-action approval, final acceptance, and residual-risk acceptance judgments. MVP-1 evidence coverage and blockers use `record_kind=evidence_summary` and `record_kind=blocker`; durable evidence bytes use `ArtifactRef`. There is no standalone accepted-risk ref kind.
+`record_kind=user_judgment` is the canonical MVP-1 ref kind for user-owned judgments, including sensitive-action approval, final acceptance, and residual-risk acceptance judgments. MVP-1 evidence coverage and blockers use `record_kind=evidence_summary` and `record_kind=blocker`; durable evidence bytes use `ArtifactRef`. There is no standalone accepted-risk ref kind and no active MVP-1 `shared_design` ref kind. Discovery and requirements shaping refs point to `task`, `change_unit`, `user_judgment`, `evidence_summary`, or `blocker` owner paths as applicable.
 
 Later/profile-only ref kinds such as `approval`, `residual_risk`, `close_readiness`, `shared_design`, `domain_term`, `module_map_item`, `interface_contract`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `change_unit_dependency`, `reconcile_item`, and `projection` are defined in [Schema Later](schema-later.md#later-profile-ref-and-artifact-values), not accepted by this active schema. Projection-specific metadata such as `projection_path` is also later/profile material.
 
@@ -640,26 +640,33 @@ ShapingUpdatePayload:
   task_update: TaskShapingUpdate | null
   change_unit_update: ChangeUnitShapingUpdate | null
   user_judgment_candidates: UserJudgmentCandidate[]
-  discovered_facts: string[]
-  assumptions: string[]
-  open_questions: string[]
+  confirmed_facts: string[]
+  remaining_uncertainties: string[]
+  blocking_question: string | null
+  useful_non_blocking_questions: string[]
+  next_safe_action: string | null
   source_refs: StateRecordRef[]
   evidence_refs: EvidenceRefs
 
 TaskShapingUpdate:
   title: string | null
-  goal: string | null
+  original_user_request: string | null
+  current_goal_summary: string | null
   mode: advisor | direct | work | null
-  acceptance_criteria: string[]
+  success_criteria: string[]
+  non_goals: string[]
+  affected_areas: string[]
+  affected_path_candidates: string[]
   constraints:
     allowed_paths: string[]
-    non_goals: string[]
     sensitive_categories: string[]
 
 ChangeUnitShapingUpdate:
   change_unit_id: string | null
   operation: propose | activate | update | supersede
   scope_summary: string
+  affected_areas: string[]
+  affected_path_candidates: string[]
   allowed_paths: string[]
   denied_paths: string[]
   non_goals: string[]
@@ -757,7 +764,11 @@ EvidenceCoverageUpdate:
   note: string | null
 ```
 
-`ShapingUpdatePayload` is the active MVP payload for Discovery and requirements-shaping updates that persist into active Task, Change Unit, or User Judgment boundaries. It does not create Shared Design, Feedback Loop, TDD Trace, Evidence Manifest, Projection, Approval, Residual Risk, or other later/profile records. At least one of `task_update`, `change_unit_update`, or `user_judgment_candidates` must carry a non-empty update.
+`ShapingUpdatePayload` is the active MVP payload for Discovery and requirements-shaping updates that persist into active Task, Change Unit, or User Judgment boundaries. It does not create Shared Design, Feedback Loop, TDD Trace, Evidence Manifest, Projection, Approval, Residual Risk, Discovery Brief, Question Queue, Assumption Register, First Safe Change Unit Candidate, full Decision Packet, full design artifact, or other later/profile records. At least one of `task_update`, `change_unit_update`, `user_judgment_candidates`, `confirmed_facts`, `remaining_uncertainties`, `blocking_question`, or `next_safe_action` must carry a non-empty update.
+
+`TaskShapingUpdate.original_user_request` is the user's original wording stored on the Task; later shaping updates normally leave it unchanged. `current_goal_summary` is the clarified current goal. `confirmed_facts` are facts checked against available current sources; unavailable or stale sources belong in `remaining_uncertainties`, not in confirmed facts. `blocking_question` is the single question that changes the next safe action when one exists. If the question is user-owned, it must also appear as a `UserJudgmentCandidate` or later `user_judgment` record. `useful_non_blocking_questions` are parked context, not blockers.
+
+`ChangeUnitShapingUpdate.operation=propose` carries a Change Unit candidate, including the first safe implementation slice when product writes are near. `operation=activate` or `update` makes or changes the active Change Unit according to Core state rules. There is no separate active First Safe Change Unit Candidate record.
 
 `ImplementationPayload` records implementation work against a Task or Change Unit. When `product_write=true`, `RecordRunRequest.write_authorization_id` must name a compatible active Write Authorization and `observed_changes.changed_paths` must describe the observed product-file changes. The request body, including `observed_changes`, `command_results`, `tool_invocations`, `network_accesses`, `secret_accesses`, `artifact_inputs`, and `evidence_updates`, is part of request validation and the canonical idempotency hash. Storage maps the payload into the Run row's observed payload JSON fields, linked artifacts, and evidence-summary updates.
 

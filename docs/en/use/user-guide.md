@@ -39,7 +39,7 @@ Harness turns ordinary requests into a visible working basis. You do not need to
 
 | What you ask for | What Harness should route internally | What you should see |
 |---|---|---|
-| "Make this concrete before coding." | Intake and requirement clarification. | Goal, known facts, likely scope, non-goals, and the next safe action. |
+| "Make this concrete before coding." | Intake and requirement clarification, stored through the active Task, proposed or active Change Unit, and user-decision boundaries. | Original request, current goal, confirmed facts, likely scope, non-goals, remaining uncertainties, and the next safe action. |
 | "Ask me before deciding the UX." | Focused user judgment through the user-owned judgment path. | One specific question with choices, recommendation, uncertainty, and consequence if deferred. |
 | "Keep reset out of scope." | Active scope, internally represented by the bounded work area or Change Unit when a product write is involved. | What may change, what is out of bounds, and when scope expansion needs a decision. |
 | "Before changing files, tell me what you will touch." | A pre-write scope check. In owner terms, product writes go through `prepare_write` and a compatible Write Authorization result when Harness is connected. | Intended paths or operation, scope match or mismatch, pending decisions, stale or unavailable authority, and the smallest unblocker. |
@@ -54,10 +54,12 @@ Readable summaries help you understand the work. They are not the operating reco
 
 For anything beyond an obvious tiny edit, the agent should first answer:
 
+- What did you originally ask for, and what is the current goal?
 - What result are we trying to get?
 - What is in scope?
 - What is out of scope?
 - What can the agent inspect before asking you?
+- What facts are confirmed, and what uncertainty remains?
 - What decisions belong to you?
 - What question blocks the next safe action, if any?
 - What can safely continue while non-blocking questions wait?
@@ -72,10 +74,12 @@ I can inspect: current login routes, session handling, auth tests, login form pa
 
 Likely decisions for you: password credentials, magic link, one-time code, or external identity provider; failed-login feedback; security and privacy trade-offs.
 
-Next safe action: inspect the current auth shape, then return with facts, open decisions, and the smallest safe implementation slice.
+Next safe action: inspect the current auth shape, then return with confirmed facts, open decisions, and a proposed smallest safe implementation slice.
 ```
 
 If the answer is available in files, tests, docs, saved Harness context, or current project state, the agent should inspect first. It should not turn agent-resolvable uncertainty into a questionnaire.
+
+For MVP-1, this clarification does not create a separate Shared Design record, Discovery Brief record, Question Queue record, Assumption Register record, or First Safe Change Unit Candidate record. The result should become an updated Task summary, a proposed or active Change Unit when product writes are near, and focused user-decision prompts when the choice belongs to you.
 
 ## 4. Keep small work small
 
@@ -332,7 +336,8 @@ You can skip this section until an agent or Reference page shows one of these la
 
 | Internal label | Plain meaning |
 |---|---|
-| Discovery | The internal name for requirements clarification before implementation planning. Users can simply ask for clarification in ordinary language. |
+| Discovery | The internal name for requirements clarification before implementation planning. Users can simply ask for clarification in ordinary language. In MVP-1, its output is stored through Task, Change Unit, and User Judgment paths, not a committed Shared Design record. |
+| Shared Design | A later/profile design-support record or projection label. In active MVP-1, requirements shaping uses Task, Change Unit, and User Judgment instead. |
 | Change Unit | The bounded work area that may change for a product-write attempt. It is scope, not broad permission. |
 | Decision Packet | A fuller presentation for a specific user-owned judgment. It should not be required for every small choice. |
 | Write Authorization | A cooperative internal record/check for one stored `AuthorizedAttemptScope`, the boundary Core compares during `record_run`. It is not OS permission, sandboxing, tamper-proof enforcement, or generic approval. |
