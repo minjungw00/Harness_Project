@@ -36,6 +36,8 @@ It is not the user's Product Repository and not a Harness Runtime Home. Document
 | Documentation maintainer / 문서 유지보수자 | [Authoring Guide](en/maintain/authoring-guide.md) -> [Translation Guide](en/maintain/translation-guide.md) -> [Documentation Checks](en/maintain/documentation-checks.md). | [문서 작성 가이드](ko/maintain/authoring-guide.md) -> [번역 가이드](ko/maintain/translation-guide.md) -> [문서 점검표](ko/maintain/documentation-checks.md). |
 | Later/profile reader / 이후 프로필 독자 | [Assurance Profile](en/later/assurance-profile.md), [Operations Profile](en/later/operations-profile.md), [Future Fixtures](en/later/future-fixtures.md), and [Roadmap](en/roadmap.md). | [보증 프로필](ko/later/assurance-profile.md), [운영 프로필](ko/later/operations-profile.md), [향후 Fixtures](ko/later/future-fixtures.md), [로드맵](ko/roadmap.md). |
 
+[Documentation Checks](en/maintain/documentation-checks.md) / [문서 점검표](ko/maintain/documentation-checks.md)는 사전 구현 문서 일관성을 수동으로 검토하기 위한 보조 자료입니다. `PASS`, `WARN`, `FAIL` 라벨은 문서 수락, 구현 준비, 개발 준비, runtime conformance, server coding 시작 허가를 결정하지 않습니다.
+
 ## Layer Responsibilities / 문서층 역할
 
 | Family / 문서군 | Purpose / 목적 | Boundary / 경계 |
@@ -57,5 +59,7 @@ Detailed status belongs in Build and Maintain owner docs:
 - [한국어 서버 코딩 전 필요한 구현 결정](ko/build/mvp-user-work-loop.md#서버-코딩-전-필요한-구현-결정)
 - [English Authoring Guide](en/maintain/authoring-guide.md)
 - [한국어 문서 작성 가이드](ko/maintain/authoring-guide.md)
+- [English manual pre-implementation consistency checklist](en/maintain/documentation-checks.md#final-pre-implementation-consistency-checklist)
+- [한국어 최종 사전 구현 일관성 점검표](ko/maintain/documentation-checks.md#최종-사전-구현-일관성-점검표)
 
 상세 상태는 Build와 Maintain 담당 문서가 관리합니다. 이 경로들은 문서 검토를 돕기 위한 것이며 런타임 conformance, 최종 수락, close readiness, implementation readiness를 만들지 않습니다.

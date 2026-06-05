@@ -66,6 +66,8 @@ If review finds a major schema/design, stage-boundary, guarantee-level, storage/
 
 This table is the maintainer-updated handoff marker. Do not infer acceptance from surrounding prose or from completed checklists.
 
+For a manual pre-implementation consistency sweep, use [Documentation Checks](../maintain/documentation-checks.md#final-pre-implementation-consistency-checklist). That checklist is a manual aid; its `PASS`, `WARN`, and `FAIL` results do not update this status table, accept documentation, prove implementation readiness, prove development readiness, or authorize server coding.
+
 | Status category | Current status | Boundary |
 |---|---|---|
 | Documentation review status | Post-redesign review; documentation acceptance candidate only. | Maintainer acceptance is still pending. Documentation acceptance does not start server/runtime implementation. |

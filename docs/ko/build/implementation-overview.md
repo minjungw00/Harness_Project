@@ -66,6 +66,8 @@ Persisted Journey Card, full Evidence Manifest, Eval report, Manual QA report, T
 
 이 표는 유지보수자가 갱신하는 인계 표시입니다. 주변 설명이나 checklist 완료만 보고 수락을 추론하면 안 됩니다.
 
+사전 구현 일관성을 수동으로 훑을 때는 [문서 점검표](../maintain/documentation-checks.md#최종-사전-구현-일관성-점검표)를 사용합니다. 이 점검표는 수동 보조 자료입니다. `PASS`, `WARN`, `FAIL` 결과는 이 상태 표를 바꾸거나, 문서를 수락하거나, implementation readiness나 development readiness를 증명하거나, server coding을 승인하지 않습니다.
+
 | 상태 범주 | 현재 상태 | 경계 |
 |---|---|---|
 | 문서 검토 상태 | 재설계 이후 검토 상태이며 문서 수락 후보입니다. | 유지보수자 수락은 아직 대기 중입니다. 문서 수락만으로 서버/런타임 구현이 시작되지 않습니다. |
