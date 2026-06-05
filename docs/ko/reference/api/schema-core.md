@@ -252,8 +252,8 @@ Reference implementation에서 `uri`는 `harness-artifact://{project_id}/{artifa
 
 | Field | 내부 엔지니어링 점검 active owner kinds | MVP-1 active owner kinds | Later-profile owner kinds | Future candidates |
 |---|---|---|---|---|
-| `ArtifactInput.relation.record_kind` | `task`, `change_unit`, `run`, `evidence_ref`, `blocker` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_ref`, `blocker` | `residual_risk`, `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection` | `journey_spine_entry` |
-| `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `evidence_ref`, `blocker` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_ref`, `blocker` | `approval`, `residual_risk`, `evidence_summary`, `close_readiness`, `shared_design`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `reconcile_item`, `projection` | `change_unit_dependency`, `journey_spine_entry`, `domain_term`, `module_map_item`, `interface_contract` |
+| `ArtifactInput.relation.record_kind` | `task`, `change_unit`, `run`, `evidence_summary`, `blocker` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` | `residual_risk`, `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection` | `journey_spine_entry` |
+| `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `evidence_summary`, `blocker` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` | `approval`, `residual_risk`, `close_readiness`, `shared_design`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `reconcile_item`, `projection` | `change_unit_dependency`, `journey_spine_entry`, `domain_term`, `module_map_item`, `interface_contract` |
 
 MVP-1 sensitive-action approval은 `record_kind=user_judgment`를 사용합니다. Committed `approval` ref는 Approval owner profile이 active일 때만 later-profile입니다.
 
@@ -272,7 +272,7 @@ ArtifactInput:
   relation:
     task_id: string
     run_id: string | null
-    record_kind: task | change_unit | run | user_judgment | evidence_ref | blocker | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
+    record_kind: task | change_unit | run | user_judgment | evidence_summary | blocker | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
     record_id_hint: string | null
   description: string | null
 
@@ -292,12 +292,12 @@ StagedArtifactSource:
 
 ```yaml
 StateRecordRef:
-  record_kind: task | change_unit | run | approval | write_authorization | user_judgment | evidence_ref | blocker | residual_risk | evidence_summary | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
+  record_kind: task | change_unit | run | approval | write_authorization | user_judgment | evidence_summary | blocker | residual_risk | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
   record_id: string
   projection_path: string | null
 ```
 
-`record_kind=user_judgment`는 sensitive-action approval, work acceptance, residual-risk acceptance judgment를 포함한 사용자 소유 판단의 canonical MVP-1 ref kind입니다. MVP-1 evidence와 blocker는 `record_kind=evidence_ref`, `record_kind=blocker`를 사용합니다. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=evidence_summary`, `record_kind=close_readiness`, `record_kind=projection`은 owner profile이 active가 아닌 한 later/profile-promoted 또는 derived-view ref입니다. Standalone accepted-risk ref kind는 없습니다.
+`record_kind=user_judgment`는 sensitive-action approval, work acceptance, residual-risk acceptance judgment를 포함한 사용자 소유 판단의 canonical MVP-1 ref kind입니다. MVP-1 evidence coverage와 blocker는 `record_kind=evidence_summary`, `record_kind=blocker`를 사용합니다. Durable evidence byte는 `ArtifactRef`를 사용합니다. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=close_readiness`, `record_kind=projection`은 owner profile이 active가 아닌 한 later/profile-promoted 또는 derived-view ref입니다. Standalone accepted-risk ref kind는 없습니다.
 
 `record_kind=projection`에서 `record_id`는 운영/projection profile이 active일 때 projection job identity입니다. `projection_path`는 optional display/recovery metadata이지 alternate key가 아닙니다.
 

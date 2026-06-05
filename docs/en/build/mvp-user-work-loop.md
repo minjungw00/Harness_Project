@@ -108,9 +108,9 @@ The active method list for MVP-1 remains exactly `harness.status`, `harness.inta
 
 ## Storage docs needed for MVP-1
 
-Use [Storage](../reference/storage.md) for exact DDL, runtime home layout, artifact storage, locks, migrations, and staged storage profiles.
+Use [Storage](../reference/storage.md) for the active first implementation storage slice, runtime home layout, artifact storage and links, locks, storage validation, and later/profile storage boundaries.
 
-For MVP-1 planning, storage should be limited to the owner-approved records needed for local project state, Task/scope state, user judgments, write authorizations, runs, evidence refs or evidence summaries, blockers, and minimal replay/audit support. Later-profile storage for rich Approval lifecycle, detailed Evidence Manifests, Manual QA, Eval, projection jobs, reconcile items, recover/export, validator runs, Journey records, and broad diagnostics should not be required for MVP-1 exit unless an owner promotes the specific behavior.
+For MVP-1 planning, storage should be limited to the owner-approved active records needed for `project_state`, a reference `surfaces` registration, `tasks`, `task_events`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, minimal `evidence_summaries`, `blockers`, and `tool_invocations`. Later-profile storage for a rich Approval lifecycle, full Evidence Manifest tables, full Manual QA matrix, full Eval system, projection jobs, reconcile items, recover/export, broad validator run archives, Journey records, long-term metrics, connector ecosystem tables, and broad diagnostics should not be required for MVP-1 exit unless an owner promotes the specific behavior.
 
 ## Security guarantees for MVP-1
 

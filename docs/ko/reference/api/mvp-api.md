@@ -132,6 +132,8 @@ StatusResponse:
 
 `next_actions`가 MVP-1의 다음 안전한 행동 surface입니다. 사용자에게는 가장 작은 useful next action이나 unblocker를 쉬운 말로 보여 주고, exact enum value는 secondary detail로 둡니다.
 
+`evidence_refs`는 active minimal evidence coverage ref를 담습니다. 보통 `StateRecordRef.record_kind=evidence_summary`를 사용하며, nested schema가 허용하는 곳에서는 artifact ref도 함께 둡니다. Full Evidence Manifest table이나 report가 아닙니다.
+
 Status가 Core에 닿지 못하거나, stale state를 보고하거나, unsupported surface를 이름 붙이거나, 범위 밖 작업, 필요한 사용자 판단, 부족한 근거, 닫기 막힘, 남은 잔여 위험 같은 blocker를 보여줄 때는 [Errors: MVP-1 guarantee와 상태/error taxonomy](errors.md#mvp-1-guarantee-and-status-taxonomy)의 canonical condition 동작을 사용합니다.
 
 MVP-1 active `NextActionSummary.action_kind` values:
@@ -245,6 +247,8 @@ RecordRunResponse:
 ```
 
 `payload` branch는 `kind`와 일치해야 합니다. MVP-1은 `shaping_update`, `implementation`, `direct`를 허용합니다. `verification_input`은 later-profile only입니다.
+
+`evidence_ref`는 active minimal evidence coverage record를 가리킵니다. 보통 `StateRecordRef.record_kind=evidence_summary`를 사용합니다. 같은 operation이 반환하는 durable byte는 `registered_artifacts`에 나타납니다.
 
 Committed `record_run` response를 exact idempotent replay하면 current freshness check, authorization consumption, Run creation, artifact registration, blocker/gate update, projection enqueue, event append 전에 original response를 반환합니다. Write Authorization을 두 번 소비하면 안 됩니다.
 
@@ -388,7 +392,7 @@ CloseTaskResponse:
   artifact_refs: ArtifactRef[]
 ```
 
-MVP-1 close는 core close state, blocker, residual-risk visibility, required work-acceptance state, evidence ref를 사용합니다. Close readiness와 evidence summary는 current record에서 파생됩니다. Verification, Manual QA, projection/report, operations ref는 해당 profile이 enabled일 때만 active입니다.
+MVP-1 close는 core close state, blocker, residual-risk visibility, required work-acceptance state, artifact availability, minimal evidence coverage ref를 사용합니다. Close readiness는 current record에서 파생됩니다. Verification, Manual QA, projection/report, operations ref는 해당 profile이 enabled일 때만 active입니다.
 
 `CloseTaskRequest`는 accepted-risk refs를 싣지 않습니다. `completed_with_risk_accepted`에서는 Core가 close-relevant risk를 보여 주는 blocker와 residual-risk acceptance `user_judgment`의 accepted state를 읽고, 그 상태가 없으면 block합니다. Rich Residual Risk record는 해당 later profile이 active일 때만 필요합니다.
 

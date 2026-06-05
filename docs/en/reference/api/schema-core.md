@@ -252,8 +252,8 @@ These tables are the active validator sets for staged implementations. Full late
 
 | Field | Engineering Checkpoint active owner kinds | MVP-1 active owner kinds | Later-profile owner kinds | Future candidates |
 |---|---|---|---|---|
-| `ArtifactInput.relation.record_kind` | `task`, `change_unit`, `run`, `evidence_ref`, `blocker` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_ref`, `blocker` | `residual_risk`, `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection` | `journey_spine_entry` |
-| `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `evidence_ref`, `blocker` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_ref`, `blocker` | `approval`, `residual_risk`, `evidence_summary`, `close_readiness`, `shared_design`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `reconcile_item`, `projection` | `change_unit_dependency`, `journey_spine_entry`, `domain_term`, `module_map_item`, `interface_contract` |
+| `ArtifactInput.relation.record_kind` | `task`, `change_unit`, `run`, `evidence_summary`, `blocker` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` | `residual_risk`, `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection` | `journey_spine_entry` |
+| `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `evidence_summary`, `blocker` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` | `approval`, `residual_risk`, `close_readiness`, `shared_design`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `reconcile_item`, `projection` | `change_unit_dependency`, `journey_spine_entry`, `domain_term`, `module_map_item`, `interface_contract` |
 
 MVP-1 sensitive-action approval uses `record_kind=user_judgment`. Committed `approval` refs are later-profile unless the Approval owner profile is active.
 
@@ -272,7 +272,7 @@ ArtifactInput:
   relation:
     task_id: string
     run_id: string | null
-    record_kind: task | change_unit | run | user_judgment | evidence_ref | blocker | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
+    record_kind: task | change_unit | run | user_judgment | evidence_summary | blocker | residual_risk | shared_design | evidence_manifest | eval | manual_qa_record | feedback_loop | tdd_trace | projection | journey_spine_entry
     record_id_hint: string | null
   description: string | null
 
@@ -292,12 +292,12 @@ StagedArtifactSource:
 
 ```yaml
 StateRecordRef:
-  record_kind: task | change_unit | run | approval | write_authorization | user_judgment | evidence_ref | blocker | residual_risk | evidence_summary | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
+  record_kind: task | change_unit | run | approval | write_authorization | user_judgment | evidence_summary | blocker | residual_risk | close_readiness | shared_design | domain_term | module_map_item | interface_contract | feedback_loop | evidence_manifest | eval | manual_qa_record | tdd_trace | change_unit_dependency | reconcile_item | projection
   record_id: string
   projection_path: string | null
 ```
 
-`record_kind=user_judgment` is the canonical MVP-1 ref kind for user-owned judgments, including sensitive-action approval, work acceptance, and residual-risk acceptance judgments. MVP-1 evidence and blockers use `record_kind=evidence_ref` and `record_kind=blocker`. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=evidence_summary`, `record_kind=close_readiness`, and `record_kind=projection` are later/profile-promoted or derived-view refs unless their owner profile is active. There is no standalone accepted-risk ref kind.
+`record_kind=user_judgment` is the canonical MVP-1 ref kind for user-owned judgments, including sensitive-action approval, work acceptance, and residual-risk acceptance judgments. MVP-1 evidence coverage and blockers use `record_kind=evidence_summary` and `record_kind=blocker`; durable evidence bytes use `ArtifactRef`. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=close_readiness`, and `record_kind=projection` are later/profile-promoted or derived-view refs unless their owner profile is active. There is no standalone accepted-risk ref kind.
 
 For `record_kind=projection`, `record_id` is the projection job identity when the Operations/projection profile is active. `projection_path` is optional display/recovery metadata, not an alternate key.
 

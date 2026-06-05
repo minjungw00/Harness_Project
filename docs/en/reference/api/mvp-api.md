@@ -132,6 +132,8 @@ StatusResponse:
 
 `next_actions` is the MVP-1 next-safe-action surface. It should name the smallest useful next action or unblocker in ordinary language, with exact enum values as secondary detail.
 
+`evidence_refs` carries active minimal evidence coverage refs, normally `StateRecordRef.record_kind=evidence_summary`, plus artifact refs where the nested schema permits them. It is not a full Evidence Manifest table or report.
+
 When status cannot reach Core, reports stale state, names an unsupported surface, or shows blockers such as out-of-scope work, missing judgment, missing evidence, close blocked, or residual risk present, it uses the canonical condition behavior in [Errors: MVP-1 guarantee and status taxonomy](errors.md#mvp-1-guarantee-and-status-taxonomy).
 
 MVP-1 active `NextActionSummary.action_kind` values:
@@ -245,6 +247,8 @@ RecordRunResponse:
 ```
 
 The payload branch must match `kind`. MVP-1 accepts `shaping_update`, `implementation`, and `direct`; `verification_input` is later-profile only.
+
+`evidence_ref` points to the active minimal evidence coverage record, normally `StateRecordRef.record_kind=evidence_summary`. Durable bytes returned by the same operation appear in `registered_artifacts`.
 
 An exact idempotent replay of a committed `record_run` response returns the original response before current freshness checks, authorization consumption, Run creation, artifact registration, blocker/gate updates, projection enqueue, or event append. It must not consume a Write Authorization twice.
 
@@ -388,7 +392,7 @@ CloseTaskResponse:
   artifact_refs: ArtifactRef[]
 ```
 
-MVP-1 close uses the core close state, blockers, residual-risk visibility, work-acceptance state when required, and evidence refs. Close readiness and evidence summaries are derived from current records. Verification, Manual QA, projection/report, and operations refs are active only when their profiles are enabled.
+MVP-1 close uses the core close state, blockers, residual-risk visibility, work-acceptance state when required, artifact availability, and minimal evidence coverage refs. Close readiness is derived from current records. Verification, Manual QA, projection/report, and operations refs are active only when their profiles are enabled.
 
 `CloseTaskRequest` does not carry accepted-risk refs. For `completed_with_risk_accepted`, Core reads accepted state from the blocker that made the close-relevant risk visible and the residual-risk acceptance `user_judgment`; rich Residual Risk records are needed only when that later profile is active.
 

@@ -108,9 +108,9 @@ MVP-1의 활성 method list는 계속 정확히 `harness.status`, `harness.intak
 
 ## MVP-1에 필요한 Storage 문서
 
-Exact DDL, runtime home layout, artifact storage, lock, migration, staged storage profile은 [Storage](../reference/storage.md)를 사용합니다.
+활성 첫 구현 저장 범위, runtime home layout, artifact storage와 link, lock, storage validation, later/profile storage boundary는 [Storage](../reference/storage.md)를 사용합니다.
 
-MVP-1 계획에서 storage는 local project state, Task/scope state, user judgment, write authorization, run, evidence ref 또는 evidence summary, blocker, 최소 replay/audit support에 필요한 owner-approved record로 제한합니다. Rich Approval lifecycle, detailed Evidence Manifest, Manual QA, Eval, projection job, reconcile item, recover/export, validator run, Journey record, broad diagnostic을 위한 later-profile storage는 owner가 특정 동작을 승격하기 전까지 MVP-1 exit에 필요하지 않습니다.
+MVP-1 계획에서 storage는 `project_state`, reference `surfaces` registration, `tasks`, `task_events`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, minimal `evidence_summaries`, `blockers`, `tool_invocations`에 필요한 owner-approved active record로 제한합니다. Rich Approval lifecycle, full Evidence Manifest table, full Manual QA matrix, full Eval system, projection job, reconcile item, recover/export, broad validator run archive, Journey record, long-term metrics, connector ecosystem table, broad diagnostic을 위한 later-profile storage는 owner가 특정 동작을 승격하기 전까지 MVP-1 exit에 필요하지 않습니다.
 
 ## MVP-1 보안 보장
 
@@ -167,7 +167,7 @@ Guarantee level은 [보안 참조](../reference/security.md#단계별-guarantee-
 
 ## 아직 만들지 않을 이후 프로필
 
-아래 항목은 MVP-1 prerequisite로 만들지 않습니다.
+아래 항목은 MVP-1 선결 조건으로 만들지 않습니다.
 
 | 이후 영역 | MVP-1 밖에 둘 것 |
 |---|---|
