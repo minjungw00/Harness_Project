@@ -35,7 +35,7 @@ Engineering Checkpoint explicitly does not include:
 - ordinary-language intake or full requirements clarification
 - full user judgment presentation
 - detailed Evidence Manifest behavior
-- detached verification, Eval, Manual QA, work acceptance, residual-risk acceptance, or full close semantics
+- detached verification, Eval, Manual QA, final acceptance, residual-risk acceptance, or full close semantics
 - projection renderer, detailed templates, dashboards, hosted UI, reports, export, or recover
 - conformance runner or executable fixture catalog
 - broad connector ecosystem, team workflow, orchestration, metrics, hook expansion, preventive guard expansion, or Roadmap automation
@@ -55,7 +55,7 @@ Use this as an implementation planning order after readiness is accepted. It nam
 | 5. `record_run` | Record one compatible Run and consume the authorization. | A compatible Run succeeds once; reuse of the consumed authorization fails. | [Core Model Reference](../reference/core-model.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run). |
 | 6. Artifact/evidence ref | Register one durable artifact or evidence ref through the owner path. | A Run or minimal owner relation can cite that registered ref. | [API Schema Core](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md). |
 | 7. Status and blockers | Expose current state and blockers without mutation. | Repeated reads do not change state, and blockers are structured enough for future smoke checks. | [`harness.status`](../reference/api/mvp-api.md#harnessstatus), [Core Model Reference](../reference/core-model.md), [API Schema Core](../reference/api/schema-core.md). |
-| 8. Narrow close blocker check | Check whether close is blocked by the missing active support in this authority loop. | A blocked close returns a structured blocker without creating work acceptance, residual-risk acceptance, full assurance close semantics, or generated reports. | [Core Model Reference](../reference/core-model.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task), [API Errors](../reference/api/errors.md). |
+| 8. Narrow close blocker check | Check whether close is blocked by the missing active support in this authority loop. | A blocked close returns a structured blocker without creating final acceptance, residual-risk acceptance, full assurance close semantics, or generated reports. | [Core Model Reference](../reference/core-model.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task), [API Errors](../reference/api/errors.md). |
 
 For API staging, use the [Stage Profile Manifest](../reference/api/schema-core.md#stage-profile-manifest). For storage planning, use [Storage](../reference/storage.md) and apply only the owner-approved minimal subset needed by this checkpoint.
 
@@ -93,6 +93,6 @@ Engineering Checkpoint proves:
 
 ## What remains for MVP-1
 
-MVP-1 User Work Loop starts after this checkpoint. It adds ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria, minimal user judgment, evidence summary, user-facing close result/blocker display, next safe action, residual-risk visibility, and separate display of sensitive approval, work acceptance, and risk acceptance.
+MVP-1 User Work Loop starts after this checkpoint. It adds ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria, minimal user judgment, evidence summary, user-facing close result/blocker display, next safe action, residual-risk visibility, and separate display of sensitive approval, final acceptance, and risk acceptance.
 
 Use [MVP-1 User Work Loop](mvp-user-work-loop.md) for that plan.

@@ -22,7 +22,7 @@ Implementation tier: Future/diagnostic projections. Persisted Journey Card Markd
 - blocker owner display summary
 - evidence coverage, verification, and Manual QA summaries
 - residual-risk summary and refs
-- work acceptance, residual-risk acceptance, and close-reason summaries
+- final acceptance, residual-risk acceptance, and close-reason summaries
 - latest evidence, Eval, Manual QA, and report refs
 - projection freshness inputs
 - state, baseline, evidence, MCP, and capability freshness/blocker display summaries
@@ -103,7 +103,7 @@ Residual risk:
 
 Close context:
 - blockers: {close_blockers|none}
-- work acceptance: {acceptance_summary|not_required}
+- final acceptance: {acceptance_summary|not_required}
 - residual-risk acceptance: {accepted_residual_risk_record_refs|none}
 - close reason: {close_reason|none}
 

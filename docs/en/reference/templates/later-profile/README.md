@@ -6,7 +6,7 @@ Use these templates only when a later owner profile, diagnostic path, Assurance 
 
 The MVP-1 template set is limited to [status-card](../status-card.md), [agent-context-packet](../agent-context-packet.md), [judgment-request](../judgment-request.md), [run-evidence-summary](../run-evidence-summary.md), and [close-result](../close-result.md).
 
-Authority rule: all templates in this folder are rendered views only. They do not create state, evidence, approval, work acceptance, residual-risk acceptance, QA, verification, Write Authorization, close readiness, or close.
+Authority rule: all templates in this folder are rendered views only. They do not create state, evidence, approval, final acceptance, residual-risk acceptance, QA, verification, Write Authorization, close readiness, or close.
 
 ## Output tiers
 

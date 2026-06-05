@@ -75,8 +75,8 @@ The sections below replace the old staged coverage map and long fixture example 
 |---|---|---|
 | Natural-language intake and plain routing | Harness-shaped work can begin or resume without a startup phrase, and ordinary user language maps to the compatible Task, scope, user judgment, or next safe action. | Promote only through the Core/API intake owner, with explicit non-authorization wording for product writes. |
 | Tiny direct without authority bypass | Very small obvious work may stay in Direct mode without introducing a `tiny` mode or bypassing scope, user judgment, sensitive-action permission, or Write Authorization. | Promote only after the active Direct profile defines the narrow behavior and escalation path. |
-| Codebase-answerable before user question | Current refs and provided facts are used before asking the user to repeat information, while unresolved product or material technical judgment still routes to the user. | Promote with context-source freshness rules owned by Agent Integration or Core owners. |
-| User judgment quality and separation | Product/UX judgment, technical judgment, sensitive-action permission, Manual QA, work acceptance, and residual-risk acceptance remain distinct. | Promote through user judgment and gate owners; do not reintroduce broad approval. |
+| Codebase-answerable before user question | Current refs and provided facts are used before asking the user to repeat information, while unresolved product or material technical decision still routes to the user. | Promote with context-source freshness rules owned by Agent Integration or Core owners. |
+| User judgment quality and separation | Product decision, technical decision, sensitive-action permission, Manual QA, final acceptance, and residual-risk acceptance remain distinct. | Promote through user judgment and gate owners; do not reintroduce broad approval. |
 | Residual risk visibility before acceptance or close | Known close-relevant residual risk must be visible before acceptance or close. `ResidualRiskSummary.status=none` is valid only when no known close-relevant risk exists. | Promote through Core Model and residual-risk owners before any executable fixture is written. |
 
 <a id="core-fixture-examples"></a>
@@ -87,7 +87,7 @@ The sections below replace the old staged coverage map and long fixture example 
 |---|---|---|
 | Write scope and Write Authorization lifecycle | No active Change Unit blocks writes; compatible `prepare_write` creates a durable Write Authorization; missing, consumed, stale, or violated authorizations block or stale dependent claims. | Promote through [Core Model Reference](../reference/core-model.md) and [MVP API](../reference/api/mvp-api.md). |
 | Evidence and close readiness | Direct docs-only work can close only when evidence is sufficient; missing acceptance-criteria support, pending verification, or pending QA blocks close. | Promote through Core and evidence/close owners, not through report text. |
-| Detached verification boundary | Manual bundle review, subagent review, same-session review, verification waiver, and visible accepted risk stay distinct assurance paths. | Promote through Eval/verification owners; same-session self-review must not create detached assurance. |
+| Detached verification boundary | Manual bundle review, subagent review, same-session review, verification-risk acceptance, and visible accepted risk stay distinct assurance paths. | Promote through Eval/verification owners; same-session self-review must not create detached assurance. |
 | Projection failure with current state | Current Core state remains authoritative when a projection is stale, skipped, or failed. | Promote through Projection and Core owners; never let rendered Markdown satisfy gates. |
 
 <a id="artifact-redaction-and-export-non-leakage-catalog-entries"></a>
@@ -108,10 +108,10 @@ The sections below replace the old staged coverage map and long fixture example 
 
 | Scenario family | Later capability it would test or illustrate | Promotion notes |
 |---|---|---|
-| User judgment before product or technical trade-off writes | Writes that depend on user-owned product or material technical judgment are held until a compatible judgment exists. | Promote through user judgment, Change Unit, and `prepare_write` owners. |
-| Sensitive-action permission is not judgment or close | Approval-shaped permission does not satisfy product judgment, evidence, verification, QA, work acceptance, residual-risk acceptance, or close. | Promote with exact separation between MVP sensitive-action judgment and later Approval profile records. |
+| User judgment before product or technical trade-off writes | Writes that depend on user-owned product or material technical decision are held until a compatible judgment exists. | Promote through user judgment, Change Unit, and `prepare_write` owners. |
+| Sensitive-action permission is not judgment or close | Approval-shaped permission does not satisfy product decision, evidence, verification, QA, final acceptance, residual-risk acceptance, or close. | Promote with exact separation between MVP sensitive-action judgment and later Approval profile records. |
 | AFK Autonomy Boundary stop conditions | AFK or high-autonomy work stops or routes to judgment when product, public API, security, privacy, or other stop conditions are triggered. | Promote through agency and connector capability owners with honest guarantee wording. |
-| Acceptance and residual-risk sequencing | Work acceptance and residual-risk acceptance are separate user judgments, and known close-relevant risks must be visible first. | Promote through close, acceptance, and residual-risk owners. |
+| Acceptance and residual-risk sequencing | Final acceptance and residual-risk acceptance are separate user judgments, and known close-relevant risks must be visible first. | Promote through close, acceptance, and residual-risk owners. |
 
 <a id="connector-fixture-examples"></a>
 <a id="connector-agency-catalog-entries"></a>
@@ -124,7 +124,7 @@ The sections below replace the old staged coverage map and long fixture example 
 | MCP unavailable or capability mismatch holds unsafe writes | Missing MCP, stale capability profile, missing artifact capture, missing QA capture, weak redaction, or weaker guard capability holds affected write or close-relevant paths. | Promote through API error precedence and connector capability owners. |
 | Generated file or managed instruction drift routes to reconcile | Generated connector files and managed blocks are detected and routed to reconcile without silently rewriting owner records. | Promote through Projection/Reconcile and connector manifest owners. |
 | Current-position context before significant resume | Resume reads current Task state, refs, pending judgments, residual risk, and projection freshness before producing an instruction bundle. | Promote through context-push/pull profile owners. |
-| Guard, freeze, and careful mode do not create authority | These labels may narrow behavior or hold writes, but they do not create a stronger guarantee, Write Authorization, Approval, verification, QA, acceptance, risk acceptance, close, or assurance upgrade by themselves. | Promote only with exact surface capability proof and fallback behavior. |
+| Guard, freeze, and careful mode do not create authority | These labels may narrow behavior or hold writes, but they do not create a stronger guarantee, Write Authorization, Approval, verification, QA, final acceptance, residual-risk acceptance, close, or assurance upgrade by themselves. | Promote only with exact surface capability proof and fallback behavior. |
 | Local-only MCP and local security posture | Non-loopback, forwarded, tunneled, unauthenticated, or weak local exposure is reported honestly and does not create authority. | Promote through Security and Operations owners. |
 
 <a id="design-quality-fixture-examples"></a>
@@ -138,7 +138,7 @@ The sections below replace the old staged coverage map and long fixture example 
 | Shared Design required and continued while unknowns remain | Ambiguous work keeps design shaping open until goals, non-goals, acceptance criteria, affected flow, module/interface impact, verification, QA, and risks are inspectable or routed to user judgment. | Promote through Design Quality and Shared Design owners. |
 | Codebase-answerable stewardship facts first | Module ownership, domain language, public interface impact, affected paths, and test/QA affordances already present in current refs are used before asking the user. | Promote with source freshness and owner-record rules. |
 | Horizontal exceptions, feedback loops, and TDD trace | Horizontal exception reasons, behavior feedback loops, RED/GREEN traces, and non-test write guards become assurance checks only after policy owners define exact behavior. | Promote through Design Quality Policies, not this catalog. |
-| Manual QA required or waived through owner paths | Manual QA requirement, waiver reason, product-risk waiver judgment, and QA gate effects remain separate from work acceptance and verification. | Promote through Manual QA and user judgment owners. |
+| Manual QA required or waived through owner paths | Manual QA requirement, waiver reason, product-risk waiver judgment, and QA gate effects remain separate from final acceptance and verification. | Promote through Manual QA and user judgment owners. |
 | Public interface, module, and domain language stewardship | Public boundary changes, interface-contract review, future-change risk, and domain-language conflicts route through owner records and close blockers. | Promote through stewardship, module map, and interface contract owners. |
 | Findings route to existing owner paths | Run, Eval, Manual QA, and design-quality findings affect evidence, user judgment, feedback loop, Manual QA, Eval, residual risk, validator results, gates, or close blockers without creating a new finding schema here. | Promote only in the relevant owner contract. |
 | Review Stage display is not authority | Spec Compliance Review and Code Quality / Stewardship Review can be displayed separately, but display text cannot close work, accept risk, create evidence, satisfy QA or verification, create Approval, or create Write Authorization. | Promote through projection/display owners with Core non-substitution rules. |
@@ -150,7 +150,7 @@ The sections below replace the old staged coverage map and long fixture example 
 
 | Scenario family | Later capability it would test or illustrate | Promotion notes |
 |---|---|---|
-| Stale PRD, stale projection, or old design doc is pull-only | Stale context may point to refs worth inspecting, but it cannot replace current Task state, acceptance criteria, Change Unit scope, product judgment, or gate state. | Promote through context hygiene, projection freshness, and Core owners. |
+| Stale PRD, stale projection, or old design doc is pull-only | Stale context may point to refs worth inspecting, but it cannot replace current Task state, acceptance criteria, Change Unit scope, product decision, or gate state. | Promote through context hygiene, projection freshness, and Core owners. |
 | Resume uses current state, not chat memory | Significant resume uses Core state, current-position refs, evidence refs, active user judgments, residual-risk summary, and projection freshness instead of stale chat memory. | Promote through Agent Integration and context profile owners. |
 | Compact context by phase | Always-on context stays refs-first, current, one screen or less, and profile-relevant; full docs, schemas, logs, artifact contents, and future catalog material remain pull-on-demand. | Promote through Agent Integration Reference. |
 | Retrieved or indexed context is non-authority | Search, memory, or indexed context can supply refs or excerpts but cannot authorize writes, satisfy gates, accept work, accept risk, update projection freshness, or close tasks. | Promote only after Context Index or equivalent Roadmap owner is promoted. |
@@ -185,7 +185,7 @@ Browser QA Capture is a Roadmap candidate, not an Engineering Checkpoint, MVP-1 
 | Scenario family | Later capability it would test or illustrate | Promotion notes |
 |---|---|---|
 | Browser capture artifacts attach to Manual QA | Screenshots, QA capture, logs, console logs, network traces, accessibility snapshots, or workflow recordings support a Manual QA record when the surface can capture them. | Promote through Browser QA Capture and Manual QA owners. |
-| Capture is not work acceptance or detached verification | Browser artifacts can support evidence but do not replace human Manual QA judgment, work acceptance, residual-risk acceptance, or detached verification. | Promote through QA, acceptance, residual-risk, and Eval owners. |
+| Capture is not final acceptance or detached verification | Browser artifacts can support evidence but do not replace human Manual QA judgment, final acceptance, residual-risk acceptance, or detached verification. | Promote through QA, acceptance, residual-risk, and Eval owners. |
 | Unsupported surface falls back to human notes | A surface without capture support reports missing capability and recommends human Manual QA notes or manually supplied artifacts without failing staged delivery solely for lacking automation. | Promote through connector capability and fallback owners. |
 
 <a id="agency-stewardship-context-and-design-quality-suites"></a>
@@ -225,7 +225,7 @@ Future suite names are planning labels, not a required file set. They group inve
 | `context-hygiene` | Compact current context, stale projection/PRD/chat handling, retrieved context non-authority, evaluator bundle freshness, and resume from Core state. |
 | `design-quality` | Policy-pack smoke coverage that composes existing validators and gate behavior without redefining kernel authority, duplicating validator IDs, hiding lower-severity findings, or adding new gates. |
 | `operations` | Export, recover, handoff, artifact integrity, readiness, diagnostics, and future conformance-run entrypoints after Operations Profile promotion. |
-| `browser-qa-capture` | Roadmap-only capture automation, artifact mapping, Manual QA attachment, detached-verification boundary, work-acceptance boundary, and unsupported-surface fallback. |
+| `browser-qa-capture` | Roadmap-only capture automation, artifact mapping, Manual QA attachment, detached-verification boundary, final-acceptance boundary, and unsupported-surface fallback. |
 
 ## Retired Detail Boundary
 

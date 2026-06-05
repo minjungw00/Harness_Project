@@ -6,7 +6,7 @@ Use this plan when you classify future Harness documentation rewrite work.
 
 It gives maintainers and agents a shared way to decide whether old prose should be preserved, shrunk, moved, deleted, or routed for a real decision.
 
-This is Maintain documentation. It governs documentation rewrite planning only. It does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, product-state changes, conformance results, evidence records, QA records, work acceptance, close readiness, or residual-risk records.
+This is Maintain documentation. It governs documentation rewrite planning only. It does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, product-state changes, conformance results, evidence records, QA records, final acceptance, close readiness, or residual-risk records.
 
 ## Read this when
 
@@ -40,9 +40,9 @@ Use these categories for rewrite findings and batch notes.
 
 All rewrite categories must preserve these principles:
 
-- Harness is a local authority record for scope, user-owned judgment, evidence, verification expectations, work acceptance, close readiness, and residual risk.
+- Harness is a local authority record for scope, user-owned judgment, evidence, verification expectations, final acceptance, close readiness, and residual risk.
 - Users should not need to know Harness-internal terms to use it.
-- Agents must not silently replace user-owned product, technical, security/privacy, work-acceptance, or residual-risk judgments.
+- Agents must not silently replace user-owned product, technical, security/privacy, final-acceptance, or residual-risk judgments.
 - Rendered Markdown, projections, summaries, and conversation history are not the operational source of truth.
 - Early Harness documentation must not imply sandboxing, OS permission isolation, tamper-proof files, or pre-execution security blocking unless a proven mechanism is documented.
 

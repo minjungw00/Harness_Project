@@ -10,15 +10,15 @@ This is a principles page, not an implementation status report. This repository 
 
 Harness exists to make AI-assisted product work followable while preserving user judgment.
 
-Users should be able to begin in ordinary language. Agents should clarify, inspect, recommend, implement when appropriate, check, and report. The fragile part is authority: scope, user-owned decisions, evidence, verification, QA expectations, work acceptance, close readiness, and residual risk should not leak into chat phrasing, generated Markdown, connector output, test logs, or agent confidence.
+Users should be able to begin in ordinary language. Agents should clarify, inspect, recommend, implement when appropriate, check, and report. The fragile part is authority: scope, user-owned decisions, evidence, verification, QA expectations, final acceptance, close readiness, and residual risk should not leak into chat phrasing, generated Markdown, connector output, test logs, or agent confidence.
 
 ## Principles
 
 Harness keeps authority local. The durable work basis should not depend on a remote chat transcript or a generated report.
 
-Harness separates unlike things. Scope, sensitive-step permission, product judgment, technical judgment, evidence, verification, manual QA, work acceptance, and residual-risk acceptance answer different questions.
+Harness separates unlike things. Scope, sensitive-step permission, product decision, technical decision, evidence, verification, manual QA, final acceptance, and residual-risk acceptance answer different questions.
 
-Harness preserves user agency. The user owns goals, scope, Product/UX judgment, material technical judgment, QA expectations, work acceptance, and residual-risk acceptance.
+Harness preserves user agency. The user owns goals, scope, product decisions, material technical decisions, QA expectations, final acceptance, and residual-risk acceptance.
 
 Harness is honest about support. It should say what was checked, what kind of check it was, what evidence supports the claim, what remains unverified, and what still needs a person.
 
@@ -32,7 +32,7 @@ Harness is designed around recurring failures in AI-assisted work:
 
 - scope becomes implicit;
 - user judgment is silently replaced by implementation;
-- evidence, verification, QA, acceptance, and risk collapse into one "done";
+- evidence, verification, QA, final acceptance, residual-risk visibility, and residual-risk acceptance collapse into one "done";
 - chat, tool output, or Markdown looks authoritative because it is well written.
 
 Harness responds by making boundaries visible and keeping each kind of support in its own lane.
@@ -49,6 +49,6 @@ Harness can use instructions, tool output, tests, reviews, reports, dashboards, 
 
 The first future implementation work is about proving the local work-authority model, not building a broad platform.
 
-The early slices should show that ordinary AI-assisted work can be represented as local scope, user-owned judgment, evidence references, close readiness, work acceptance, and residual risk without confusing those records with chat, Markdown, tool output, or product files.
+The early slices should show that ordinary AI-assisted work can be represented as local scope, user-owned judgment, evidence references, close readiness, final acceptance, and residual risk without confusing those records with chat, Markdown, tool output, or product files.
 
 Broader automation, richer readable views, connector ecosystems, hosted workflows, dashboards, analytics, and large conformance suites stay outside the first user-value thesis unless owner docs promote them later.

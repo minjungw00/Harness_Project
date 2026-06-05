@@ -4,7 +4,7 @@
 
 Use this guide when editing English and Korean Harness documentation together.
 
-This is maintenance documentation for bilingual documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or product state changes before documentation acceptance and a separate implementation-planning readiness decision, and it does not define conformance pass/fail, evidence, QA, work acceptance, close readiness, or implementation readiness. The first future implementation target is Engineering Checkpoint, an internal authority-loop smoke that is not a product MVP. Kernel Smoke is only a narrow future smoke-check authoring label under that checkpoint. The first user-value target is MVP-1 User Work Loop. Assurance Profile and Operations Profile harden assurance and operations later. Completing those profiles after MVP-1 reaches the glossary-defined hardened local reference target; the target itself is an umbrella target only, not an additional stage, fixture profile, or suite name. Roadmap remains future scope unless owner docs promote and prove an item.
+This is maintenance documentation for bilingual documentation. It does not authorize runtime/server implementation, generated operational files, executable fixtures, runtime data, or product state changes before documentation acceptance and a separate implementation-planning readiness decision, and it does not define conformance pass/fail, evidence, QA, final acceptance, close readiness, or implementation readiness. The first future implementation target is Engineering Checkpoint, an internal authority-loop smoke that is not a product MVP. Kernel Smoke is only a narrow future smoke-check authoring label under that checkpoint. The first user-value target is MVP-1 User Work Loop. Assurance Profile and Operations Profile harden assurance and operations later. Completing those profiles after MVP-1 reaches the glossary-defined hardened local reference target; the target itself is an umbrella target only, not an additional stage, fixture profile, or suite name. Roadmap remains future scope unless owner docs promote and prove an item.
 
 ## Read this when
 
@@ -24,11 +24,11 @@ English docs define the reference meaning for the bilingual documentation set. K
 
 The goal is semantic parity, not sentence-by-sentence translation. Korean should read like natural technical Korean while preserving official identifiers, exact contracts, code-like names, and stable product terms.
 
-In user-facing Korean, prefer the natural public concept first: `작업`, `범위` or `작업 조각`, `판단` or `결정할 것`, `근거`, `확인` or `검증`, and `마무리` or `닫기`. More specific phrases such as `요구사항 구체화`, `쓰기 전 범위 확인`, `판단 요청`, `판단 요약`, `근거 목록`, `상태 보기`, `요약`, `상태 카드`, `수동 QA`, `작업 수락`, `잔여 위험` or `남은 위험`, `닫기 가능 여부`, `닫기 준비 상태`, `닫기 막힘`, and `다음 안전한 행동` may appear when they support those concepts. Add labels such as `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Residual Risk`, `Manual QA`, `detached verification`, or `Acceptance` in parentheses only when both the reader-friendly phrase and the Harness label matter. Reference Korean may preserve exact schema identifiers, enum values, field names, API terms, and stable product labels whenever precision matters.
+In user-facing Korean, prefer the natural public concept first: `작업`, `범위` or `작업 조각`, `판단` or `결정할 것`, `근거`, `확인` or `검증`, and `마무리` or `닫기`. More specific phrases such as `요구사항 구체화`, `쓰기 전 범위 확인`, `판단 요청`, `판단 요약`, `근거 목록`, `상태 보기`, `요약`, `상태 카드`, `수동 QA`, `최종 수락`, `잔여 위험` or `남은 위험`, `닫기 가능 여부`, `닫기 준비 상태`, `닫기 막힘`, and `다음 안전한 행동` may appear when they support those concepts. Add labels such as `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Residual Risk`, `Manual QA`, `detached verification`, or `Acceptance` in parentheses only when both the reader-friendly phrase and the Harness label matter. Reference Korean may preserve exact schema identifiers, enum values, field names, API terms, and stable product labels whenever precision matters.
 
 ## User-Facing Vocabulary Rule
 
-Korean user-facing docs should primarily use natural public concepts: `작업`, `범위` or `작업 조각`, `판단` or `결정할 것`, `근거`, `확인` or `검증`, `마무리` or `닫기`. Supporting phrases such as `요구사항 구체화`, `범위 밖`, `쓰기 전 범위 확인`, `판단 요청`, `판단 요약`, `근거 목록`, `상태 보기`, `요약`, `상태 카드`, `수동 QA`, `작업 수락`, `잔여 위험`, `남은 위험`, `닫기 가능 여부`, `닫기 준비 상태`, `닫기 막힘`, and `다음 안전한 행동` are useful when they explain those concepts, but they should not become a larger required concept model for new users. Stable English identifiers should be preserved mainly in reference docs, schema/API contexts, exact record names, code-like strings, anchors, and tables that intentionally teach implementation terms.
+Korean user-facing docs should primarily use natural public concepts: `작업`, `범위` or `작업 조각`, `판단` or `결정할 것`, `근거`, `확인` or `검증`, `마무리` or `닫기`. Supporting phrases such as `요구사항 구체화`, `범위 밖`, `쓰기 전 범위 확인`, `판단 요청`, `판단 요약`, `근거 목록`, `상태 보기`, `요약`, `상태 카드`, `수동 QA`, `최종 수락`, `잔여 위험`, `남은 위험`, `닫기 가능 여부`, `닫기 준비 상태`, `닫기 막힘`, and `다음 안전한 행동` are useful when they explain those concepts, but they should not become a larger required concept model for new users. Stable English identifiers should be preserved mainly in reference docs, schema/API contexts, exact record names, code-like strings, anchors, and tables that intentionally teach implementation terms.
 
 When a user-facing page needs an internal implementation term, explain the Korean concept first and add the exact English label in parentheses only when it clarifies a real boundary, blocker, source ref, or reference link. Avoid Korean sentences that are mostly English nouns joined by Korean particles. User examples should start with ordinary user language, not record labels or procedure names.
 
@@ -79,7 +79,16 @@ Keep these exact when they refer to literal identifiers, schema/API values, file
 - task_events
 - user_judgment
 - UserJudgment
-- judgment_type
+- judgment_kind
+- product_decision
+- technical_decision
+- scope_decision
+- sensitive_approval
+- qa_waiver
+- verification_risk_acceptance
+- final_acceptance
+- residual_risk_acceptance
+- cancellation
 - presentation
 - display_label
 - request_user_judgment
@@ -125,17 +134,21 @@ Use these as the preferred terms in Korean prose. Keep exact English strings whe
 | judgment | 판단 | Use for user-owned choices. Add `Decision Packet` only when naming optional full-format presentation or legacy/compatibility material. |
 | judgment request | 판단 요청 | Use for the ordinary user-facing prompt. Prefer `무엇을 결정해야 하나요?` or another natural question when that reads better. |
 | user-owned judgment | 사용자 소유 판단 | Use for the broad agency-preserving principle. Do not replace it globally with `사용자 결정`. |
-| Product/UX judgment | 제품/UX 판단 | Use for product behavior, copy, flow, and UX choices owned by the user. |
-| Technical judgment | 기술 판단 | Use for architecture, dependency, migration, interface, security/privacy, scope/autonomy, QA/verification expectation, waiver, or other material technical direction choices owned by the user. |
-| Sensitive action approval | 민감 동작 승인 | Use for scoped permission for a named sensitive step. Keep distinct from product/UX judgment, technical judgment, work acceptance, and residual-risk acceptance. |
-| Work acceptance | 작업 수락 | Use for the user's result judgment when the work path requires acceptance. |
-| Residual risk acceptance | 잔여 위험 수용 | Use for explicit acceptance of a named visible remaining risk. |
+| Product decision | 제품 판단 | Use for product behavior, copy, flow, and UX choices owned by the user. |
+| Technical decision | 기술 판단 | Use for architecture, dependency, migration, interface, security/privacy, QA/verification expectation, or other material technical direction choices owned by the user. |
+| Scope decision | 범위 판단 | Use for scope expansion, non-goal removal, Change Unit boundary, or Autonomy Boundary choices owned by the user. |
+| Sensitive action approval | 민감 동작 승인 | Use for scoped permission for a named sensitive step. Keep distinct from product decision, technical decision, scope decision, final acceptance, and residual-risk acceptance. |
+| QA waiver | QA 면제 판단 | Use only for a scoped QA waiver where policy allows it. It is not QA evidence or a passed QA result. |
+| Verification risk acceptance | 검증 위험 수락 | Use when the user accepts the risk of missing or waived verification. It does not create detached verification. |
+| Final acceptance | 최종 수락 | Use for the user's result judgment when the work path requires acceptance. |
+| Residual risk acceptance | 잔여 위험 수락 | Use for explicit acceptance of a named visible remaining risk. |
+| Cancellation | 취소 판단 | Use when the user decides to stop the task without a successful result. |
 | `user_judgment` | 사용자 판단 기록 | Canonical record family. Preserve the identifier in schema/API/reference contexts. |
 | `UserJudgment` | UserJudgment | Canonical schema shape. Preserve exact. |
-| `judgment_type` | 판단 유형 | Canonical compact type field. Preserve field name and enum-like values in schema/API/reference contexts. |
+| `judgment_kind` | 판단 종류 | Canonical compact kind field. Preserve field name and enum values in schema/API/reference contexts. Values are `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `qa_waiver`, `verification_risk_acceptance`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`. |
 | `presentation` | 표시 형식 | Canonical prompt/detail field. Use `short` for compact prompts and `full` for full-format Decision Packet presentation. Preserve exact in schema/API contexts. |
-| `display_label` | 표시 라벨 | User-facing label field. Allowed labels are `제품/UX 판단`, `기술 판단`, `민감 동작 승인`, `작업 수락`, and `잔여 위험 수용`. |
-| `judgment_category`, `judgment_route`, `display_depth` | legacy 판단 field | Legacy or implementation routing terms from older Decision Packet drafts. Preserve exact only in old schema/API/reference compatibility contexts. New examples should prefer `judgment_type`, `presentation`, and `display_label`. |
+| `display_label` | 표시 라벨 | User-facing label field. Allowed labels include `제품 판단`, `기술 판단`, `범위 판단`, `민감 동작 승인`, `QA 면제 판단`, `검증 위험 수락`, `최종 수락`, `잔여 위험 수락`, and `취소 판단`. |
+| `judgment_category`, `judgment_route`, `display_depth` | legacy 판단 field | Legacy or implementation routing terms from older Decision Packet drafts. Preserve exact only in old schema/API/reference compatibility contexts. New examples should prefer `judgment_kind`, `presentation`, and `display_label`. |
 | `judgment_domain`, `decision_kind`, `decision_profile` | legacy 판단 alias | Compatibility aliases for older request shapes. Preserve exact only in old payloads or migration notes. |
 | Decision Packet | 판단 요청 / 판단 요약 | Treat `Decision Packet` as the full judgment presentation label. Keep it when naming optional full-format presentation, legacy refs, template files, anchors, or migration notes. In user-facing prose, use `판단 요청` or `판단 요약` first, or omit the label when it does not help. |
 | pre-write scope check | 쓰기 전 범위 확인 | Preferred user-facing phrase for the check before a product write. Use this before internal labels such as `Write Authorization`. |
@@ -145,14 +158,14 @@ Use these as the preferred terms in Korean prose. Keep exact English strings whe
 | check | 확인 | Use for ordinary tests, diff review, inspection, or source lookup. Use `검증` only when the formal Verification path is intended. |
 | Verification | 검증 | Use for recorded correctness checking. Use `확인` for ordinary checking only when the formal Verification concept is not meant. |
 | Manual QA | 수동 QA | Keep `Manual QA` in exact template/schema/API contexts. |
-| work acceptance / Acceptance | 작업 수락 | Use for the user's result-acceptance judgment when the task path requires it. Do not use it for sensitive-action permission. If source or legacy English says `final acceptance`, prefer `work acceptance` in English and `작업 수락` in Korean; explain finality in surrounding prose instead of using generic `최종 수락`. |
-| Approval | 민감 동작 승인 | Use for the canonical Approval concept in public Korean. `허가` may explain permission in prose, but it is not a second canonical term. Do not use generic `승인` for work acceptance, product judgment, QA waiver, residual-risk acceptance, or Write Authorization. Keep `Approval` in reference/schema contexts. |
+| final acceptance / Acceptance | 최종 수락 | Use for the user's result-acceptance judgment when the task path requires it. Do not use it for sensitive-action permission. In schema/API contexts preserve `final_acceptance`; in Korean prose use `최종 수락`. |
+| Approval | 민감 동작 승인 | Use for the canonical Approval concept in public Korean. `허가` may explain permission in prose, but it is not a second canonical term. Do not use generic `승인` for final acceptance, product decision, QA waiver, residual-risk acceptance, or Write Authorization. Keep `Approval` in reference/schema contexts. |
 | Residual Risk | 잔여 위험 / 남은 위험 | Use `잔여 위험` consistently when naming the product concept. `남은 위험` or explanatory wording such as `남은 불확실성` is acceptable when plain prose reads better. |
-| residual-risk acceptance | 잔여 위험 수용 | Use for the user's explicit acceptance of a named remaining risk. Keep it distinct from `작업 수락(Acceptance)`. |
+| residual-risk acceptance | 잔여 위험 수락 | Use for the user's explicit acceptance of a named remaining risk. Keep it distinct from `최종 수락(Acceptance)`. |
 | close / Close | 마무리 / 닫기 | Use as the plain concept for whether work can honestly finish. `마무리` often reads natural in user requests; `닫기` is useful when matching Harness close status or close blockers. Keep exact identifiers such as `close_task`. |
 | close readiness | 닫기 가능 여부 / 닫기 준비 상태 | Use for the public summary of whether close can proceed and what remains. Keep `Close Readiness` only when mirroring the English display-group label or exact docs heading. |
 | close blocker | 닫기 막힘 | Use for a concrete reason close cannot proceed. API/reference contexts may keep `close blocker` or exact schema names. |
-| next safe action | 다음 안전한 행동 | Use for the next action that can proceed without hiding unresolved judgment, scope, evidence, QA, verification, acceptance, or risk. |
+| next safe action | 다음 안전한 행동 | Use for the next action that can proceed without hiding unresolved judgment, scope, evidence, QA, verification, final acceptance, or risk. |
 | blocker | 막힘 | User-facing prose may use `막힘` for the thing preventing progress or close. API/reference contexts should keep `blocker`, or explain it as `차단 조건(blocker)` when clarity helps. Do not translate exact field names, template keys, enum-like values, or schema names such as `blockers` or `CloseBlockerCategory`. |
 | ArtifactRef | `ArtifactRef` / 아티팩트 참조 | Keep the schema name exact. In prose, use `아티팩트 참조`; in evidence contexts, `근거 아티팩트 참조` is also acceptable. |
 | artifact ref | 아티팩트 참조 | In evidence contexts, `근거 아티팩트 참조` is also acceptable. Keep the `ArtifactRef` schema name exact. |
@@ -179,12 +192,12 @@ Use the term that fits the sentence and reader context.
 | surface | Choose the concrete meaning: `interface`, `view`, `entrypoint`, `display area`, or the Korean equivalent by context. User-facing Korean often wants `접점`, `화면`, or `표시 영역`. |
 | evidence | Use `evidence` only when it is a product term. Use `근거` or `증거` in Korean prose. |
 | evidence manifest / detailed evidence list | Use `근거 목록` in user-facing prose. Use `Evidence Manifest` only for the internal record, template, schema/API context, or owner reference. |
-| acceptance / final acceptance | When this means the user's judgment that the result is acceptable, use `work acceptance` in English and prefer `작업 수락` in Korean. If source English emphasizes finality, explain that in surrounding prose instead of switching to generic `최종 수락`. |
+| acceptance / final acceptance | When this means the user's judgment that the result is acceptable, use `final acceptance` in English and `최종 수락` in Korean. Preserve `final_acceptance` in schema/API contexts. |
 | acceptance criteria | Use `수용 기준` for formal acceptance criteria. Use `완료 기준` when the sentence is about task completion rather than formal criteria. Do not use `수락 기준`. |
-| residual-risk acceptance / accepted risk | Use `잔여 위험 수용` for the canonical route. In explanatory prose, `잔여 위험을 받아들이는 판단` or `잔여 위험을 받아들이다` is also acceptable. Keep exact enum/field names in schema/reference contexts. Do not translate this concept with generic `수락` phrasing. Keep it distinct from `작업 수락(Acceptance)`. |
+| residual-risk acceptance / accepted risk | Use `잔여 위험 수락` for the canonical route. In explanatory prose, use `잔여 위험을 수락하는 판단` or `잔여 위험을 수락하다`. Keep exact enum/field names in schema/reference contexts. Do not translate this concept with generic `승인` phrasing. Keep it distinct from `최종 수락(Acceptance)`. |
 | Acceptance Gate / acceptance_gate | Keep exact identifiers such as `Acceptance Gate` or `acceptance_gate` where needed. Explain the meaning in Korean prose instead of inventing a new unstable term. |
 | residual risk | Use `잔여 위험` as the canonical term. Plain explanatory wording may describe the uncertainty, but keep terminology consistent. |
-| approval / Approval | Use `민감 동작 승인` in user-facing prose for the sensitive-action permission concept. Use `Approval` when naming the canonical Harness status, gate, record, schema, or exact reference term. Generic `승인` must not mean work acceptance, product judgment, QA waiver, residual-risk acceptance, or Write Authorization. |
+| approval / Approval | Use `민감 동작 승인` in user-facing prose for the sensitive-action permission concept. Use `Approval` when naming the canonical Harness status, gate, record, schema, or exact reference term. Generic `승인` must not mean final acceptance, product decision, QA waiver, residual-risk acceptance, or Write Authorization. |
 | write authority | In user-facing prose, prefer `쓰기 전 범위 확인`. Use `쓰기 허가 기록(Write Authorization)` only when naming the Harness record produced by `prepare_write`. Do not imply OS-level permission, sandboxing, or tamper-proof enforcement. |
 | projection / derived view | In user-facing prose, choose the visible shape: `상태 보기`, `요약`, or `상태 카드`. Keep `Projection`, `ProjectionKind`, and projection-related field names exact in reference/schema contexts. |
 | sandbox | Use `샌드박스` or `격리 환경` only when an exact mechanism is being named. MVP-1 should say it is not a sandbox or permission-isolated boundary. |
@@ -216,7 +229,7 @@ Prefer natural phrases that preserve the technical meaning:
 - `화면에 보여준다`
 - `projection이 최신인지 표시한다`
 - `결과를 수락한다`
-- `잔여 위험을 받아들인다`
+- `잔여 위험을 수락한다`
 - `수용 기준을 확인한다`
 - `하네스 상태를 지속 로컬 상태와 아티팩트 참조에 둔다`
 - `분리 검증(detached verification)을 기록한다`
@@ -233,10 +246,10 @@ Use patterns like these when polishing Korean prose:
 | `Operations는 projection freshness를 report한다.` | `Operations는 projection이 최신인지 표시한다.` |
 | `canonical source를 update한다.` | `기준 기록을 업데이트한다.` |
 | `context를 잃지 않도록 한다.` | `맥락을 잃지 않도록 한다.` |
-| `acceptance가 필요하다.` | `작업 수락이 필요하다.` |
-| `risk를 accept한다.` | `잔여 위험을 받아들인다.` |
+| `acceptance가 필요하다.` | `최종 수락이 필요하다.` |
+| `risk를 accept한다.` | `잔여 위험을 수락한다.` |
 | `acceptance criteria를 수락 기준으로 쓴다.` | `수용 기준` 또는 문맥에 따라 `완료 기준`을 쓴다. |
-| `residual-risk acceptance를 작업 수락처럼 쓴다.` | `잔여 위험 수용`처럼 작업 수락과 구분한다. |
+| `residual-risk acceptance를 최종 수락처럼 쓴다.` | `잔여 위험 수락`처럼 최종 수락과 구분한다. |
 | `acceptance_gate를 수락 게이트로 새로 번역한다.` | `acceptance_gate`를 유지하고 한국어 문장으로 의미를 설명한다. |
 | `surface capability를 확인한다.` | `접점이 실제로 할 수 있는 일을 확인한다.` |
 | `Harness 상태는 local state와 artifact ref에 있다.` | `하네스 상태는 지속 로컬 상태와 아티팩트 참조에 있다.` |
@@ -264,5 +277,5 @@ Heading order and document meaning should remain aligned with the English docume
 [ ] In user-facing docs, do natural Korean phrases appear before Harness labels when both are needed?
 [ ] Are headings idiomatic while preserving the same document structure and scope?
 [ ] Were English and Korean link changes made in the same batch?
-[ ] Does the review avoid treating translation drift as runtime state, evidence, QA, work acceptance, close readiness, or implementation readiness?
+[ ] Does the review avoid treating translation drift as runtime state, evidence, QA, final acceptance, close readiness, or implementation readiness?
 ```

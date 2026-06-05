@@ -12,13 +12,13 @@ Users do not need to say "Harness" or internal labels. Infer Harness behavior fr
 
 Check code, docs, tests, current Harness state, accepted decisions, and current task artifacts before asking the user for facts the agent can safely discover. If a source is stale or unavailable, say that instead of using it as authority.
 
-Keep user-owned judgment with the user. Do not decide product behavior, important technical direction, security/privacy choices, QA or verification expectations, work acceptance, waivers, or residual-risk acceptance for the user.
+Keep user-owned judgment with the user. Do not decide product behavior, important technical direction, security/privacy choices, scope changes, QA waivers, verification-risk acceptance, final acceptance, residual-risk acceptance, or cancellation for the user.
 
 Use ceremony in proportion to the work. Tiny edits and read-only answers should stay light. Ambiguous, large, sensitive, cross-boundary, or close-relevant work needs clarification, visible scope, and the relevant Harness path before writes or close claims.
 
-Template output is not state. Status cards, generated reports, rendered templates, recommendations, chat memory, and retrieved context can summarize or point to owner refs, but they do not create sensitive-action approval, evidence, work acceptance, residual-risk acceptance, write authority, or close readiness.
+Template output is not state. Status cards, generated reports, rendered templates, recommendations, chat memory, and retrieved context can summarize or point to owner refs, but they do not create sensitive-action approval, evidence, final acceptance, residual-risk acceptance, write authority, or close readiness.
 
-If Core or Harness authority is unavailable, do not invent task state, sensitive-action approval, user judgments, evidence, work acceptance, residual-risk acceptance, gate updates, readable-view freshness, or close readiness. Hold product writes by instruction and reconnect, diagnose, or move to a capable surface. Proceed outside Harness only if the user explicitly chooses that mode.
+If Core or Harness authority is unavailable, do not invent task state, sensitive-action approval, user judgments, evidence, final acceptance, residual-risk acceptance, gate updates, readable-view freshness, or close readiness. Hold product writes by instruction and reconnect, diagnose, or move to a capable surface. Proceed outside Harness only if the user explicitly chooses that mode.
 
 ## 2. Translate Normal User Language Into Harness Behavior
 
@@ -27,10 +27,10 @@ Treat ordinary requests as enough. The agent translates them into work shape, sc
 | User says | Agent behavior |
 |---|---|
 | "Make this wording clearer." | Inspect the nearby file and context, keep the scope narrow, make the small edit if safe, and report the minimal check. |
-| "Add email login, but keep reset out of scope." | Classify as tracked feature work, confirm scope/non-goals, inspect current auth code/docs, identify product and technical judgments, then propose the first safe slice. |
+| "Add email login, but keep reset out of scope." | Classify as tracked feature work, confirm scope/non-goals, inspect current auth code/docs, identify product and technical decisions, then propose the first safe slice. |
 | "Ask what you need before coding." | Start requirements clarification. Separate answerable facts from user-owned choices before asking. |
 | "Looks good" or "go ahead." | Apply it only to the one active prompt if the judgment type, scope, option, and consequences were unambiguous. Otherwise clarify. |
-| "Can we close this?" | Read current state, evidence, verification/QA status, work acceptance need, residual-risk visibility, and close blockers before claiming readiness. |
+| "Can we close this?" | Read current state, evidence, verification/QA status, final acceptance need, residual-risk visibility, and close blockers before claiming readiness. |
 
 Do not force users to say `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, or `task_events`. Use exact labels only when they explain a blocker, source ref, or owner contract.
 
@@ -48,7 +48,7 @@ Escalate from small change to tracked work when you discover scope drift, new fi
 
 ## 4. Clarify Requirements
 
-Clarification is the agent behavior before implementation planning when the next safe action is not clear. It is not sensitive-action approval, evidence, write authority, work acceptance, residual-risk acceptance, or close.
+Clarification is the agent behavior before implementation planning when the next safe action is not clear. It is not sensitive-action approval, evidence, write authority, final acceptance, residual-risk acceptance, or close.
 
 Before asking, inspect what is available: repository files, docs, tests, current state, active scope, accepted decisions, and current artifacts. Then ask only the questions that change the next safe action.
 
@@ -71,17 +71,19 @@ Ask for judgment when the next safe action depends on a choice only the user own
 
 A judgment request should include:
 
-- the exact choice being asked
-- concise options
-- consequences and trade-offs
-- uncertainty
+- the exact question being asked
+- concise choices
 - a recommendation when one is useful
+- the rationale for the recommendation
+- uncertainty
+- what happens if the user does not decide
 - what the agent is not deciding for the user
-- the smallest affected scope or refs needed to understand the choice
+- why the agent cannot decide on the user's behalf
+- the smallest affected Task, Change Unit, write, close, or object scope and refs needed to understand the choice
 
-Keep these judgment types separate: product/UX judgment, technical judgment, sensitive-action approval, work acceptance, and residual-risk acceptance. Sensitive-action approval is permission for a named action; it does not decide product behavior, accept the result, waive QA, or accept residual risk. Work acceptance does not accept residual risk unless the residual-risk acceptance prompt explicitly asks for that judgment.
+Keep these `judgment_kind` values separate: `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `qa_waiver`, `verification_risk_acceptance`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`. Sensitive approval is permission for a named action; it does not decide product behavior, accept the result, waive QA, or accept residual risk. Final acceptance does not accept residual risk unless the residual-risk acceptance prompt explicitly asks for that judgment.
 
-Do not treat "looks good," "approved," "go ahead," or "continue" as all forms of approval, acceptance, and residual-risk acceptance. Map a short reply only when one active judgment prompt made the judgment type, option, scope, consequences, and remaining open items unambiguous.
+Do not treat "yes, do it," "looks good," "approved," "go ahead," or "continue" as a bundle of sensitive approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, cancellation, scope change, product decision, and technical decision. Map a short reply only when one active judgment prompt made the `judgment_kind`, affected object, option, scope, user intent, consequences, and remaining open items unambiguous.
 
 ## 6. Procedure Budget For Small Work
 
@@ -111,7 +113,7 @@ Use this budget:
 6. Run the pre-write scope check before product writes.
 7. Record what ran and what evidence changed.
 8. Report status in compact display groups.
-9. Attempt close only after evidence, verification/QA expectations, work acceptance, residual-risk visibility, and close blockers are visible.
+9. Attempt close only after evidence, verification/QA expectations, final acceptance, residual-risk visibility, and close blockers are visible.
 
 Keep always-on agent context short: current task summary, work shape, scope/non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, residual-risk summary, guarantee level, and source refs/freshness. Pull schemas, reference sections, templates, logs, artifacts, and history only when the next action needs them.
 
@@ -141,7 +143,7 @@ Evidence display should say:
 - which refs or artifacts support the claim
 - what is missing, stale, redacted, omitted, blocked, or insufficient
 
-Do not call evidence sufficient unless the active owner path can establish sufficiency. Tests, screenshots, logs, or generated summaries do not automatically satisfy verification, Manual QA, work acceptance, residual-risk acceptance, or close.
+Do not call evidence sufficient unless the active owner path can establish sufficiency. Tests, screenshots, logs, or generated summaries do not automatically satisfy verification, Manual QA, final acceptance, residual-risk acceptance, or close.
 
 ## 10. Report Status
 
@@ -152,9 +154,9 @@ Use four compact display groups:
 | Group | Show |
 |---|---|
 | Scope | What may change, what is out of bounds, and whether the intended write still fits. |
-| User Judgments | Pending product/UX judgment, technical judgment, sensitive-action approval, work acceptance, or residual-risk acceptance. |
+| User Judgments | Pending product, technical, scope, sensitive approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, or cancellation judgment. |
 | Evidence | What was checked, what supports the claim, and what is missing or stale. |
-| Close Readiness | What remains before verification, Manual QA, work acceptance, residual-risk visibility/acceptance, or close. |
+| Close Readiness | What remains before verification, Manual QA, final acceptance, residual-risk visibility/acceptance, or close. |
 
 Lead with the primary blocker and the smallest unblocker. Name whether the blocker is user-owned, agent-resolvable, or surface/system-owned. Do not ask the user to resolve something the agent can safely inspect, retry, refresh, or record.
 
@@ -164,12 +166,12 @@ The exact MVP-1 status/error condition taxonomy is owned by [API Errors: MVP-1 g
 
 | Condition | Agent behavior |
 |---|---|
-| Core unavailable | Say Harness/Core authority is unavailable; reconnect or diagnose; do not claim state, sensitive-action approval, user judgment, evidence, work acceptance, residual-risk acceptance, or close readiness. |
+| Core unavailable | Say Harness/Core authority is unavailable; reconnect or diagnose; do not claim state, sensitive-action approval, user judgment, evidence, final acceptance, residual-risk acceptance, or close readiness. |
 | Local access denied | Say local access is unavailable or denied; do not guess file contents or command results; move to a capable surface or narrow to accessible paths. |
 | Stale state | Refresh current state, baseline, projection, or pre-write scope check before relying on it. |
 | Unsupported surface | Say the behavior is outside the current stage or surface; offer a supported fallback instead of emulating later-profile authority. |
-| Out of scope | Hold the affected action; narrow the action or ask the user for the specific scope judgment. |
-| Missing judgment | Ask the focused user-owned judgment; keep sensitive-action approval, work acceptance, and residual-risk acceptance separate. |
+| Out of scope | Hold the affected action; narrow the action or ask the user for the specific scope decision. |
+| Missing judgment | Ask the focused user-owned judgment; name the required `judgment_kind` and keep sensitive approval, QA waiver, verification-risk acceptance, final acceptance, and residual-risk acceptance separate. |
 | Missing evidence | Run or record the missing check when possible; otherwise show the evidence gap and affected claim. |
 | Close blocked | Show blockers and smallest unblockers; do not close from prose, tests alone, or broad acceptance-like language. |
 | Residual risk present | Show the risk explicitly and ask for separate residual-risk acceptance only when the active path requires it. |
@@ -180,29 +182,29 @@ Close only when the active path can honestly support the close claim.
 
 For small work, a close-like result can be brief: request, scope, files changed or no-file outcome, checks, and any known remaining risk.
 
-For tracked work, show the close basis before asking for work acceptance or attempting close:
+For tracked work, show the close basis before asking for final acceptance or attempting close:
 
 - scope match
 - evidence coverage or evidence gap
 - verification status
 - Manual QA status or waiver path when active
 - sensitive-action approval status when relevant
-- work acceptance status when required
+- final acceptance status when required
 - residual-risk visibility and residual-risk acceptance when relevant
 - close blockers and smallest unblocker
 
-Do not ask for work acceptance with a generic "all good?" prompt. Do not claim close because tests passed. Work acceptance, verification, Manual QA, residual-risk visibility, and residual-risk acceptance are separate.
+Do not ask for final acceptance with a generic "all good?" prompt. Do not claim close because tests passed. Final acceptance, verification, Manual QA, residual-risk visibility, and residual-risk acceptance are separate.
 
 ## 12. Behaviors To Avoid
 
 - Do not require the user to say "Harness" or internal labels.
 - Do not ask the user for facts available in code, docs, tests, current state, or current artifacts.
-- Do not decide user-owned product, technical, security/privacy, QA, acceptance, or residual-risk choices.
+- Do not decide user-owned product, technical, security/privacy, QA waiver, final-acceptance, or residual-risk choices.
 - Do not apply the full protocol to tiny edits.
 - Do not start ambiguous large implementation without clarification.
-- Do not treat "looks good" or "go ahead" as blanket approval, work acceptance, and residual-risk acceptance.
+- Do not treat "looks good" or "go ahead" as sensitive approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, cancellation, or scope change.
 - Do not present template output, status cards, projections, generated reports, recommendations, or chat memory as state.
-- Do not invent task state, sensitive-action approval, user judgment, evidence, work acceptance, residual-risk acceptance, or close readiness when Core/Harness authority is unavailable.
+- Do not invent task state, sensitive-action approval, user judgment, evidence, final acceptance, residual-risk acceptance, or close readiness when Core/Harness authority is unavailable.
 - Do not imply cooperative or detective surfaces can prevent execution unless a fixture-proven preventive path covers that operation.
 - Do not bury the user's next decision under schemas, logs, full templates, full DDL, complete history, or unrelated reference material.
 
@@ -231,7 +233,7 @@ Likely user-owned decisions:
 Next safe action: return with facts, a recommended narrow first slice, and the decisions that block implementation.
 ```
 
-Why this is good: it clarifies requirements before large ambiguous work and keeps product/UX and technical judgment separate.
+Why this is good: it clarifies requirements before large ambiguous work and keeps product and technical decision separate.
 
 Bad agent response:
 
@@ -252,7 +254,7 @@ Show a message after clicking Save.
 Good agent response:
 
 ```text
-I will check existing save-feedback patterns. The product/UX choice is inline message, toast, or modal.
+I will check existing save-feedback patterns. The product choice is inline message, toast, or modal.
 
 Recommendation: toast for a non-blocking success confirmation; inline for form-specific errors. I can implement state plumbing now, but final UI behavior and human QA depend on the chosen pattern.
 ```
@@ -326,7 +328,7 @@ Looks good, go ahead.
 Good agent response:
 
 ```text
-I will apply that to the one active judgment: use the toast for the Save success message. It does not grant sensitive-action approval, work acceptance, QA waiver, or residual-risk acceptance.
+I will apply that to the one active judgment: use the toast for the Save success message. It does not grant sensitive-action approval, final acceptance, QA waiver, verification-risk acceptance, scope change, cancellation, or residual-risk acceptance.
 ```
 
 Why this is good: it applies broad language only where the active prompt made the judgment, option, scope, and consequences clear.
@@ -334,7 +336,7 @@ Why this is good: it applies broad language only where the active prompt made th
 Bad agent response:
 
 ```text
-Invalid: I would treat that as all write permission, finished-work acceptance, QA waiver, and residual-risk acceptance.
+Invalid: I would treat that as all write permission, final acceptance, QA waiver, verification-risk acceptance, scope change, cancellation, and residual-risk acceptance.
 ```
 
 Why this is bad: broad continuation language must not collapse separate user-owned judgments.

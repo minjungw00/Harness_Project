@@ -6,7 +6,7 @@ Use `agent-context-packet` when an agent needs compact, current context for the 
 
 Implementation tier: MVP-1 support view. It can be returned as a structured payload or prompt-sized text. It is not a required persisted Markdown projection.
 
-Boundary: this packet is support context only. It cannot authorize writes, satisfy gates, create evidence, grant approval, record work acceptance, accept residual risk, create close readiness, or close a Task.
+Boundary: this packet is support context only. It cannot authorize writes, satisfy gates, create evidence, grant approval, record final acceptance, accept residual risk, create close readiness, or close a Task.
 
 ## Source records
 
@@ -14,7 +14,7 @@ Boundary: this packet is support context only. It cannot authorize writes, satis
 - active scope, non-goals, Change Unit refs, and write-preparation blockers
 - pending user judgments and judgment request refs
 - evidence refs, Run refs, ArtifactRefs, redaction state, and evidence gaps
-- close blockers, residual-risk summary, work-acceptance need/status, and relevant owner refs
+- close blockers, residual-risk summary, final-acceptance need/status, and relevant owner refs
 - source clocks, freshness state, MCP/Core availability, and guarantee level
 - owner document or owner-section pointers needed for the next action
 

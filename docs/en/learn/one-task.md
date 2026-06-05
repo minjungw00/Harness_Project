@@ -76,10 +76,10 @@ Out of scope:
 Account creation, password reset, OAuth/OIDC, social login, global session redesign, unrelated auth cleanup, and hard-coded secrets.
 
 Still user-owned if it matters:
-Session lifetime, secret handling policy, Manual QA expectation, residual-risk acceptance, and final work acceptance.
+Session lifetime, secret handling policy, Manual QA expectation, residual-risk acceptance, and final acceptance.
 ```
 
-If the user says "Show a message after clicking Save" inside this work, the agent should treat that as a product/UX choice, not a hidden default. A toast may be right for non-blocking success feedback; inline text may be right for field-specific errors; a modal should be chosen only when interrupting the flow is intentional.
+If the user says "Show a message after clicking Save" inside this work, the agent should treat that as a product choice, not a hidden default. A toast may be right for non-blocking success feedback; inline text may be right for field-specific errors; a modal should be chosen only when interrupting the flow is intentional.
 
 ## 4. Ask Specific Questions
 
@@ -102,7 +102,7 @@ Uncertainty:
 I still need to confirm session expiration and rotation behavior before claiming the implementation is complete.
 ```
 
-A broad "go ahead" should not be stretched to cover unrelated product, technical, QA, acceptance, or risk decisions.
+A broad "go ahead" should not be stretched to cover unrelated product decision, technical decision, QA waiver, final acceptance, or residual-risk acceptance.
 
 ## 5. Keep Sensitive Permission Narrow
 
@@ -115,7 +115,7 @@ May I update the dependency lockfile to add the named session helper for this ta
 This only covers that dependency action. It does not decide the architecture by itself, accept the finished result, waive QA, or accept residual risk.
 ```
 
-Permission for a named step is not work acceptance.
+Permission for a named step is not final acceptance.
 
 If the user asks:
 
@@ -184,7 +184,7 @@ the agent should connect that phrase to the named judgment:
 I can apply "go ahead" to the one pending choice if you mean the inline failed-login message. It does not accept the finished work, waive Manual QA, grant new sensitive-step permission, or accept the residual risk shown above.
 ```
 
-Work acceptance is the user's result judgment. It is separate from sensitive-step permission, evidence, tests, Manual QA, verification, and residual-risk visibility.
+Final acceptance is the user's result judgment. It is separate from sensitive-step permission, evidence, tests, Manual QA, verification, and residual-risk visibility.
 
 ## 8. Close Honestly
 
@@ -196,7 +196,7 @@ Close readiness:
 - User-owned product and technical choices were named.
 - Evidence supports the main login and logout behavior.
 - Manual QA is handled, or its waiver and impact are visible.
-- Residual risk was shown before work acceptance.
+- Residual risk was shown before final acceptance.
 ```
 
 If something is missing, close should name the smallest unblocker:
@@ -230,7 +230,7 @@ Bad agent response: I will delete unused-looking files and restructure the folde
 
 ## What To Remember
 
-Harness should make one task easier to trust, not harder to start. Users speak normally. Agents clarify when needed. User-owned judgments stay with the user. Evidence, verification, Manual QA, work acceptance, residual risk, and close readiness stay distinct.
+Harness should make one task easier to trust, not harder to start. Users speak normally. Agents clarify when needed. User-owned judgments stay with the user. Evidence, verification, Manual QA, final acceptance, residual risk, and close readiness stay distinct.
 
 ## Where To Go Next
 

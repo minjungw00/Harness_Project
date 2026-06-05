@@ -22,7 +22,7 @@
 - 막힘 소유자 표시 요약
 - 근거 뒷받침 범위, 검증, 수동 QA 요약
 - 잔여 위험 요약과 참조
-- 작업 수락, 잔여 위험 수용, 닫기 이유 요약
+- 최종 수락, 잔여 위험 수락, 닫기 이유 요약
 - 최신 근거, Eval(분리 검증 결과), 수동 QA, 보고서 참조
 - 읽기용 보기 최신성(projection freshness) 입력
 - 상태, 기준선, 근거, MCP, 기능(capability) 최신성/막힘 표시 요약
@@ -99,12 +99,12 @@ TASK-{id} {title}
 잔여 위험:
 - 상태: {residual_risk_status}
 - 닫기 영향: {residual_risk_close_impact}
-- 받아들인 잔여 위험 기록 참조: {accepted_residual_risk_record_refs|none}
+- 수락한 잔여 위험 기록 참조: {accepted_residual_risk_record_refs|none}
 
 닫기 맥락:
 - 닫기 막힘: {close_blockers|none}
-- 작업 수락: {acceptance_summary|not_required}
-- 잔여 위험 수용: {accepted_residual_risk_record_refs|none}
+- 최종 수락: {acceptance_summary|not_required}
+- 잔여 위험 수락: {accepted_residual_risk_record_refs|none}
 - 닫기 이유: {close_reason|none}
 
 관문(Gates):
@@ -114,7 +114,7 @@ TASK-{id} {title}
 - 근거(evidence): {evidence_gate}
 - 검증(verification): {verification_gate}
 - 수동 QA: {qa_gate display: not_required|required|pending|passed|failed|waived}
-- 작업 수락(acceptance): {acceptance_gate}
+- 최종 수락(acceptance): {acceptance_gate}
 
 읽기용 보기 최신성(projection freshness): {projection_freshness}; source_state_version={source_state_version|unknown} (읽기용 보기의 최신성, Task 결과 아님)
 상태/입력 최신성: {state_baseline_evidence_freshness_summary|current or none}
@@ -124,7 +124,7 @@ TASK-{id} {title}
 
 이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 현재 출처 기록과 참조에서 렌더링되며, 오래된 채팅 기억에서 렌더링하지 않습니다. 저장된 `JOURNEY-CARD` Markdown은 향후/진단용 상태 보기 범위입니다. `status`, `next`, 중요한 이어가기(resume) 흐름의 초기 현재 위치 맥락은 간결한 상태 출력을 사용할 수 있습니다.
 
-이 카드 안이나 주변에 표시되는 `status`/`next` 추천은 읽기 전용 안내입니다. 사용자 판단 요청, 선택적 전체 형식 판단 패킷(Decision Packet) 표시, `prepare_write`, 근거 수집, 검증, QA, 조정(reconcile), 닫기 시도를 가리킬 수는 있지만, 상태를 변경하거나, 쓰기를 허가하거나, 관문을 충족하거나, 작업 수락을 기록하거나, 잔여 위험을 받아들이거나, Task를 닫지 않습니다.
+이 카드 안이나 주변에 표시되는 `status`/`next` 추천은 읽기 전용 안내입니다. 사용자 판단 요청, 선택적 전체 형식 판단 패킷(Decision Packet) 표시, `prepare_write`, 근거 수집, 검증, QA, 조정(reconcile), 닫기 시도를 가리킬 수는 있지만, 상태를 변경하거나, 쓰기를 허가하거나, 관문을 충족하거나, 최종 수락을 기록하거나, 잔여 위험을 수락하거나, Task를 닫지 않습니다.
 
 이어가기 카드(Journey Card)의 닫기 맥락(Close context)은 간결한 상태/이어가기 표시입니다. `TASK`는 진행 중이거나 최근 닫힌 `work` Task의 이어가기용 닫기 요약을 담당하고, `DIRECT-RESULT`는 직접 작업의 가벼운 닫기 영향 요약을 담당합니다. 이 표시들은 [projection/report 경계](../../projection-and-templates.md#projection-principles)를 따르며, 닫기와 관문 영향은 여전히 owner 기록에서 옵니다.
 

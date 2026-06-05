@@ -49,7 +49,7 @@ These are the rules that make the concepts matter:
 | Chat is not state. | Chat can coordinate, but it is not the durable operating record. |
 | Readable summaries are not state. | A report can display status, but editing report text does not change the future Harness record. |
 | Tool output is not user judgment. | Logs, diffs, tests, screenshots, and connector responses can inform choices; they do not make choices. |
-| Sensitive-step permission is not work acceptance. | Permission for a named action does not accept the finished result. |
+| Sensitive-step permission is not final acceptance. | Permission for a named action does not accept the finished result. |
 | Evidence is not verification. | Evidence supports a claim; verification says what was checked and how. |
 | Test pass is not manual QA. | Automated checks do not prove copy, accessibility, visual quality, or user experience. |
 | Residual-risk visibility is not residual-risk acceptance. | Showing a known remaining risk does not mean the user accepted it. |
@@ -64,7 +64,7 @@ Internal labels are lookup tools, not first-use concepts. Learn and Use pages sh
 | Task | The durable unit for a piece of work. |
 | Change Unit | The bounded product-write scope. It does not authorize a write by itself. |
 | Decision Packet | A fuller display for a specific user-owned judgment. |
-| Approval | Permission for a named sensitive action, not work acceptance. |
+| Approval | Permission for a named sensitive action, not final acceptance. |
 | Evidence Manifest | A detailed evidence list. |
 | Verification / Manual QA / Acceptance / Residual Risk | Separate records or judgments that must not collapse into one "done." |
 | Projection | A readable view derived from Harness records, not authority by itself. |

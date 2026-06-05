@@ -6,7 +6,7 @@
 
 MVP-1 템플릿 세트는 [상태 카드](../status-card.md), [에이전트 맥락 패킷](../agent-context-packet.md), [판단 요청](../judgment-request.md), [실행/근거 요약](../run-evidence-summary.md), [닫기 결과](../close-result.md)로 제한됩니다.
 
-권한 규칙: 이 폴더의 모든 템플릿은 렌더링된 보기일 뿐입니다. 상태, 근거, 민감 동작 승인, 작업 수락, 잔여 위험 수용, QA, 검증, 쓰기 허가 기록(Write Authorization), 닫기 준비 상태, 닫기를 만들 수 없습니다.
+권한 규칙: 이 폴더의 모든 템플릿은 렌더링된 보기일 뿐입니다. 상태, 근거, 민감 동작 승인, 최종 수락, 잔여 위험 수락, QA, 검증, 쓰기 허가 기록(Write Authorization), 닫기 준비 상태, 닫기를 만들 수 없습니다.
 
 ## 산출물 계층
 

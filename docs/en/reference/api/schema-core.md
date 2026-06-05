@@ -38,15 +38,15 @@ This manifest filters the API schemas by stage/profile. A field or enum existing
 
 | Stage/profile | Active API slice | Not active in that slice |
 |---|---|---|
-| Engineering Checkpoint | Minimal status/blocker read, one owner-valid setup path, active Task, active Change Unit/scope boundary, `harness.prepare_write`, one compatible `harness.record_run`, one artifact/evidence ref, structured status/blocker output, and narrow close-blocker check. | Full natural-language intake, stored user judgment path, full Evidence Manifest, detached verification, Manual QA, work acceptance, residual-risk acceptance, rich projections, export/recover, broad operations. |
+| Engineering Checkpoint | Minimal status/blocker read, one owner-valid setup path, active Task, active Change Unit/scope boundary, `harness.prepare_write`, one compatible `harness.record_run`, one artifact/evidence ref, structured status/blocker output, and narrow close-blocker check. | Full natural-language intake, stored user judgment path, full Evidence Manifest, detached verification, Manual QA, final acceptance, residual-risk acceptance, rich projections, export/recover, broad operations. |
 | MVP-1 User Work Loop | Active method set owned by [MVP API](mvp-api.md#mvp-1-method-set), with next-safe-action output carried by `harness.status.next_actions`. The method set is exactly `harness.status`, `harness.intake`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.prepare_write`, `harness.record_run`, and `harness.close_task`. | Separate `harness.next`, detached verification launch/Eval, full Manual QA matrix, committed Approval hardening, export/recover, advanced connector APIs, broad operations, and detailed diagnostic projections. |
 | Assurance Profile, Operations Profile, or later | Verification, Eval, Manual QA, waiver, full residual-risk acceptance, reconcile, validators, projection/report/export/recover, operations, and advanced connectors when owner docs promote them. | Not Engineering Checkpoint or minimum MVP-1 requirements. |
 
 ## Read-only resources
 
-MCP resources are read-only views. They must not create Tasks, user judgments, projection jobs, reconciliations, evidence, QA, work acceptance, residual-risk acceptance, Write Authorizations, or close state.
+MCP resources are read-only views. They must not create Tasks, user judgments, projection jobs, reconciliations, evidence, QA, final acceptance, residual-risk acceptance, Write Authorizations, or close state.
 
-Read-only resources use the three-part context model. `harness://status/card` is a user status card: a short readable view over current Core state and refs. Agent surfaces may use read-only resources to build an agent context packet: the minimal state, refs, freshness, and owner-section pointers needed for the next safe action. Core state remains the local authority record and only operational source of truth. Stale cards or projections are not authority, and rendered templates cannot create approval, acceptance, residual-risk acceptance, evidence, or close readiness.
+Read-only resources use the three-part context model. `harness://status/card` is a user status card: a short readable view over current Core state and refs. Agent surfaces may use read-only resources to build an agent context packet: the minimal state, refs, freshness, and owner-section pointers needed for the next safe action. Core state remains the local authority record and only operational source of truth. Stale cards or projections are not authority, and rendered templates cannot create sensitive-action approval, final acceptance, residual-risk acceptance, evidence, or close readiness.
 
 ### Engineering Checkpoint resources
 
@@ -88,7 +88,7 @@ ToolEnvelope:
   dry_run: boolean
 ```
 
-Envelope fields are routing and audit claims. They do not authorize a surface to change state outside Core, and they do not prove user judgment, sensitive-action permission, work acceptance, Manual QA, or detached verification independence.
+Envelope fields are routing and audit claims. They do not authorize a surface to change state outside Core, and they do not prove user judgment, sensitive-action permission, final acceptance, Manual QA, or detached verification independence.
 
 For any request that needs a primary Task, Core resolves it in this order: tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task resolution. Task-scoped mutations compare `expected_state_version` against `tasks.state_version`. Project-scoped mutations with no resolved primary Task compare it against `project_state.state_version`.
 
@@ -179,7 +179,7 @@ StateSummary:
 | Operations/export reports | `EXPORT` | Only when export, release-handoff, or operations report profile is active. |
 | Future/diagnostic projections | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `JOURNEY-CARD` | Enable only when an owner-promoted later profile is in scope. |
 
-Projection support never creates state, evidence, QA, verification, approval, work acceptance, residual-risk acceptance, close readiness, close authority, or Write Authorization.
+Projection support never creates state, evidence, QA, verification, approval, final acceptance, residual-risk acceptance, close readiness, close authority, or Write Authorization.
 
 ## Sensitive Categories
 
@@ -207,7 +207,7 @@ model_or_prompt_policy_change
 policy_override
 ```
 
-A single intended write may carry more than one category. The category explains why sensitive-action permission may be needed; it does not resolve product, architecture, security, QA, verification, work acceptance, residual-risk acceptance, or policy judgment.
+A single intended write may carry more than one category. The category explains why sensitive-action permission may be needed; it does not resolve product, architecture, security, QA, verification, final acceptance, residual-risk acceptance, or policy judgment.
 
 ## ArtifactRef
 
@@ -297,7 +297,7 @@ StateRecordRef:
   projection_path: string | null
 ```
 
-`record_kind=user_judgment` is the canonical MVP-1 ref kind for user-owned judgments, including sensitive-action approval, work acceptance, and residual-risk acceptance judgments. MVP-1 evidence coverage and blockers use `record_kind=evidence_summary` and `record_kind=blocker`; durable evidence bytes use `ArtifactRef`. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=close_readiness`, and `record_kind=projection` are later/profile-promoted or derived-view refs unless their owner profile is active. There is no standalone accepted-risk ref kind.
+`record_kind=user_judgment` is the canonical MVP-1 ref kind for user-owned judgments, including sensitive-action approval, final acceptance, and residual-risk acceptance judgments. MVP-1 evidence coverage and blockers use `record_kind=evidence_summary` and `record_kind=blocker`; durable evidence bytes use `ArtifactRef`. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=close_readiness`, and `record_kind=projection` are later/profile-promoted or derived-view refs unless their owner profile is active. There is no standalone accepted-risk ref kind.
 
 For `record_kind=projection`, `record_id` is the projection job identity when the Operations/projection profile is active. `projection_path` is optional display/recovery metadata, not an alternate key.
 
@@ -379,11 +379,11 @@ WriteAuthoritySummary:
 
 `WriteAuthorizationSummary` and `WriteAuthoritySummary` are API/internal names. MVP-1 user-facing displays should call this a pre-write scope check first. Fields such as `allowed_paths`, `allowed_tools`, `decision=allowed`, and `status=active` describe Harness compatibility for the cooperative record/check only; they do not mean OS permission, sandboxing, tamper-proof enforcement, preventive blocking, or isolation. `allowed` belongs to `PrepareWriteResponse.decision`. `blocked` has no authorization row or lifecycle value.
 
-`EvidenceSummary` is the active MVP-1 compact evidence contract. `status` uses exactly `not_required`, `none`, `partial`, `sufficient`, `stale`, and `blocked`; item coverage uses exactly `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, and `blocked`. It is Core-owned state used by status and close checks. It is not a full Evidence Manifest, detached verification result, Manual QA record, work acceptance, residual-risk acceptance, or projection.
+`EvidenceSummary` is the active MVP-1 compact evidence contract. `status` uses exactly `not_required`, `none`, `partial`, `sufficient`, `stale`, and `blocked`; item coverage uses exactly `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, and `blocked`. It is Core-owned state used by status and close checks. It is not a full Evidence Manifest, detached verification result, Manual QA record, final acceptance, residual-risk acceptance, or projection.
 
 ## UserJudgment
 
-The MVP-1 judgment model is small. Users see one of five display labels; API payloads carry compact `judgment_type` and `presentation`.
+The MVP-1 judgment model is small but explicit. Users see one focused question; API payloads carry compact `judgment_kind` and `presentation`.
 
 ```yaml
 UserJudgment:
@@ -391,15 +391,18 @@ UserJudgment:
   task_id: string
   change_unit_id: string | null
   status: proposed | pending_user | resolved | deferred | rejected | blocked | superseded
-  judgment_type: product_choice | technical_choice | sensitive_action_approval | work_acceptance | residual_risk_acceptance
+  judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation
   presentation: short | full
-  display_label: Product/UX judgment | Technical judgment | Sensitive action approval | Work acceptance | Residual risk acceptance
+  display_label: Product decision | Technical decision | Scope decision | Sensitive action approval | QA waiver | Verification risk acceptance | Final acceptance | Residual risk acceptance | Cancellation
   context:
     why_now: string
     source_refs: StateRecordRef[]
     evidence_refs: EvidenceRefs
   state_summary_at_request: StateSummary
+  question: string
   what_user_is_judging: string
+  why_agent_cannot_decide: string
+  no_decision_consequence: string
   what_agent_may_decide_without_user: string[]
   affected_scope: UserJudgmentScope
   affected_gates: UserJudgmentGateRef[]
@@ -412,6 +415,11 @@ UserJudgment:
   resolved_at: string | null
 
 UserJudgmentScope:
+  task_ref: StateRecordRef
+  change_unit_ref: StateRecordRef | null
+  affected_object_refs: StateRecordRef[]
+  write_refs: StateRecordRef[]
+  close_refs: StateRecordRef[]
   scope_refs: StateRecordRef[]
   product_areas: string[]
   files_or_paths: string[]
@@ -439,9 +447,11 @@ Legacy fields and methods map to the canonical names:
 | Legacy | Canonical |
 |---|---|
 | `harness.request_user_decision` / `harness.record_user_decision` | `harness.request_user_judgment` / `harness.record_user_judgment` |
-| `judgment_domain` | `judgment_type` plus display label |
-| `decision_kind` | `judgment_type` plus route-specific validation |
+| `judgment_type` | `judgment_kind` |
+| `judgment_domain` | `judgment_kind` plus display label |
+| `decision_kind` | `judgment_kind` plus route-specific validation |
 | `decision_profile` | `presentation` |
+| `product_choice` / `technical_choice` / `sensitive_action_approval` / `work_acceptance` | `product_decision` / `technical_decision` / `sensitive_approval` / `final_acceptance` |
 
 ### UserJudgment payload
 
@@ -473,6 +483,7 @@ JudgmentUserContext:
 UserJudgmentPayload:
   options: JudgmentOption[]
   recommendation: JudgmentRecommendation | null
+  rationale: string
   uncertainty: string | null
   deferral_consequence: string | null
   user_context: JudgmentUserContext | null
@@ -480,7 +491,10 @@ UserJudgmentPayload:
   covers: string[]
   does_not_cover: string[]
   acceptance: AcceptanceJudgment | null
+  qa_waiver: QAWaiverJudgment | null
+  verification_risk_acceptance: VerificationRiskAcceptanceJudgment | null
   residual_risk_acceptance: ResidualRiskAcceptanceJudgment | null
+  cancellation: CancellationJudgment | null
   separate_judgments_required: string[]
 
 AcceptanceJudgment:
@@ -499,9 +513,28 @@ ResidualRiskAcceptanceJudgment:
   follow_up_required: boolean
   follow_up: string | null
   evidence_refs: EvidenceRefs
+
+QAWaiverJudgment:
+  qa_requirement_ref: StateRecordRef | null
+  waiver_allowed_by_ref: StateRecordRef | null
+  skipped_qa: string
+  risk_summary: string
+  does_not_create_evidence: boolean
+
+VerificationRiskAcceptanceJudgment:
+  verification_requirement_ref: StateRecordRef | null
+  missing_or_waived_verification: string
+  risk_refs: StateRecordRef[]
+  acceptance_consequence: string
+  does_not_create_detached_verification: boolean
+
+CancellationJudgment:
+  cancellation_scope: string
+  close_effect: string
+  follow_up: string | null
 ```
 
-For `judgment_type=sensitive_action_approval`, `approval_scope` is required. For `judgment_type=work_acceptance`, `acceptance` is required. For `judgment_type=residual_risk_acceptance`, `residual_risk_acceptance` is required. Later waiver and reconcile branches live in [Schema Later](schema-later.md#later-user-judgment-branches).
+For `judgment_kind=sensitive_approval`, `approval_scope` is required. For `judgment_kind=qa_waiver`, `qa_waiver` is required and policy must allow the waiver. For `judgment_kind=verification_risk_acceptance`, `verification_risk_acceptance` is required and must not set `assurance_level=detached_verified`. For `judgment_kind=final_acceptance`, `acceptance` is required. For `judgment_kind=residual_risk_acceptance`, `residual_risk_acceptance` is required. For `judgment_kind=cancellation`, `cancellation` is required. Later reconcile branches live in [Schema Later](schema-later.md#later-user-judgment-branches).
 
 ## NextActionSummary
 

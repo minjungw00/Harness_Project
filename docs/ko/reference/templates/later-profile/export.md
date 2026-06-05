@@ -22,7 +22,7 @@
 - 아티팩트 참조, 소유자(owner) 관계, 가림 상태, 보존/사용 가능성, 무결성 메타데이터(metadata)
 - 가림, 생략, 차단된 아티팩트 요약
 - 생략된 비밀 정보 메모와 보존/만료 아티팩트 요약
-- 검토 또는 릴리스 인계(Release Handoff) 표시에 포함될 때 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)을 보여주는 간결한 권한 참조
+- 검토 또는 릴리스 인계(Release Handoff) 표시에 포함될 때 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)을 보여주는 간결한 권한 참조
 - 내보내기 프로필 경계와 배포/병합이 아님을 알리는 안내 표시
 
 ## 렌더링 섹션
@@ -110,8 +110,8 @@ updated_at: 2026-05-06T10:30:00+09:00
 ## 릴리스 인계(Release Handoff)
 - 닫기 준비 상태:
 - 닫기 막힘:
-- 권한 참조: 쓰기={write_authorization_refs|none}; 판단={user_judgment_refs|none}; 민감동작승인={approval_refs|none}; 근거={evidence_manifest_refs|none}; Eval={eval_refs|none}; 수동QA={manual_qa_refs|none}; 작업수락={acceptance_context_refs|none}; 잔여위험={residual_risk_refs|none}; 아티팩트={artifact_refs|none}; 가림={redaction_status_summary}; 최신성={projection_freshness}
-- 민감 동작 승인 참조(`approval_refs`)는 최소 MVP-1에서 `none`입니다. 민감 동작 뒷받침 범위는 나중의 민감 동작 승인(Approval) 담당 프로필이 활성화되지 않은 한 `judgment_type=sensitive_action_approval`인 `user_judgment_refs`로 나타납니다.
+- 권한 참조: 쓰기={write_authorization_refs|none}; 판단={user_judgment_refs|none}; 민감동작승인={approval_refs|none}; 근거={evidence_manifest_refs|none}; Eval={eval_refs|none}; 수동QA={manual_qa_refs|none}; 최종수락={acceptance_context_refs|none}; 잔여위험={residual_risk_refs|none}; 아티팩트={artifact_refs|none}; 가림={redaction_status_summary}; 최신성={projection_freshness}
+- 민감 동작 승인 참조(`approval_refs`)는 최소 MVP-1에서 `none`입니다. 민감 동작 뒷받침 범위는 나중의 민감 동작 승인(Approval) 담당 프로필이 활성화되지 않은 한 `judgment_kind=sensitive_approval`인 `user_judgment_refs`로 나타납니다.
 - 근거 참조:
 - 검증 참조:
 - 수동 QA 참조:
@@ -124,19 +124,19 @@ updated_at: 2026-05-06T10:30:00+09:00
 - 제안 PR 점검표:
 - 제안 배포 점검표:
 - 제안 롤백 또는 모니터링 메모:
-- 외부 권한 안내: 배포, 병합, 민감 동작 승인(Approval), 운영 모니터링(production monitoring), QA 또는 검증 면제, 관문 충족, 작업 수락, 잔여 위험 수용, 보장 수준 상승, Task 닫기는 이 보고서 밖에 남는다.
+- 외부 권한 안내: 배포, 병합, 민감 동작 승인(Approval), 운영 모니터링(production monitoring), QA 면제 판단, 검증 위험 수락, 관문 충족, 최종 수락, 잔여 위험 수락, 보장 수준 상승, Task 닫기는 이 보고서 밖에 남는다.
 ````
 
 ## 메모
 
 이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. `EXPORT`는 `ProjectionKind`일 뿐이며, 내보내기 스냅샷과 구성 요소는 owner 기록 또는 상태 보기(projection) 참조에 연결된 아티팩트로 남습니다.
 
-`EXPORT`의 릴리스 인계(Release Handoff) 표시는 자체 확인된 작업, `detached_verified`, 검증 면제, QA 면제, 잔여 위험 수용 닫기를 참조 또는 명시적인 부재와 함께 분리해서 보여줘야 합니다. `EXPORT`는 이런 표시를 보존할 수 있지만 민감 동작 승인(Approval)을 부여하거나, 관문을 충족하거나, 작업 수락을 기록하거나, 잔여 위험 수용을 기록하거나, QA 또는 검증을 면제하거나, 보장 수준을 높이거나, Task를 닫지 않습니다.
+`EXPORT`의 릴리스 인계(Release Handoff) 표시는 자체 확인된 작업, `detached_verified`, `verification_gate=waived_by_user`, QA 면제 판단, 잔여 위험 수락 닫기를 참조 또는 명시적인 부재와 함께 분리해서 보여줘야 합니다. `EXPORT`는 이런 표시를 보존할 수 있지만 민감 동작 승인(Approval)을 부여하거나, 관문을 충족하거나, 최종 수락을 기록하거나, 잔여 위험 수락을 기록하거나, QA 면제 판단을 기록하거나, 검증 위험 수락을 기록하거나, 보장 수준을 높이거나, Task를 닫지 않습니다.
 
 `EXPORT`는 기본적으로 원본 비밀 정보, PII, 민감 로그, 네트워크 트레이스, 스크린샷, 기타 민감 아티팩트 본문을 포함하면 안 됩니다. 크거나 민감한 아티팩트는 `ArtifactRef`로 나열합니다. 원본 파일은 정책과 보존 정책(retention)이 허용할 때만 포함하고, `secret_omitted` 또는 `blocked` 항목은 참조와 메모로만 표현합니다.
 
 `EXPORT` 프로필이 보고서 상태 보기 스냅샷, 원본 아티팩트, 상태 스냅샷을 생략한다면 번들(bundle)이 완전한 것처럼 암시하지 말고 무엇이 빠졌는지와 검토 또는 릴리스 인계(Release Handoff)에 미치는 영향을 보여줍니다. 보존된 아티팩트는 소유자(owner) 관계, 무결성(integrity), 가림 상태, 보존 정책(retention policy), `EXPORT` 프로필이 원본 포함을 허용할 때만 복사할 수 있습니다. 만료되었거나 사용할 수 없거나 `secret_omitted` 또는 `blocked`인 아티팩트는 참조, 안전한 메타데이터(safe metadata), 생략/차단 메모로만 남습니다. `EXPORT`는 상태 보기(projection), Markdown 보고서, 채팅 텍스트, 스테이징 경로(staging path)에서 원본 바이트(raw bytes)를 다시 만들면 안 됩니다.
 
-`secret_omitted`에서는 `EXPORT`가 안전한 생략 메모 또는 핸들(handle), 안전하게 저장된 바이트(bytes)에 대한 해시(hash)를 포함할 수 있지만 생략된 값을 포함하면 안 됩니다. `blocked`에서는 `EXPORT`가 커밋된 메타데이터 전용 알림 아티팩트(metadata-only notice artifact)와 그 해시(hash), 크기(size), 콘텐츠 유형(content type)을 포함할 수 있습니다. 이 필드들은 금지된 원본 페이로드(payload)가 아니라 알림 바이트(notice bytes)를 설명합니다. 릴리스 인계(Release Handoff) 섹션은 내보내기 전에 문서화된 대체 근거, 면제, 사용자 판단 결과, 받아들인 위험, 대체 경로(fallback)로 해소되지 않은 생략 또는 차단 영향을 `unavailable`, `insufficient`, `unresolved input` 중 적절한 상태로 표시해야 합니다.
+`secret_omitted`에서는 `EXPORT`가 안전한 생략 메모 또는 핸들(handle), 안전하게 저장된 바이트(bytes)에 대한 해시(hash)를 포함할 수 있지만 생략된 값을 포함하면 안 됩니다. `blocked`에서는 `EXPORT`가 커밋된 메타데이터 전용 알림 아티팩트(metadata-only notice artifact)와 그 해시(hash), 크기(size), 콘텐츠 유형(content type)을 포함할 수 있습니다. 이 필드들은 금지된 원본 페이로드(payload)가 아니라 알림 바이트(notice bytes)를 설명합니다. 릴리스 인계(Release Handoff) 섹션은 내보내기 전에 문서화된 대체 근거, 면제, 사용자 판단 결과, 수락한 위험, 대체 경로(fallback)로 해소되지 않은 생략 또는 차단 영향을 `unavailable`, `insufficient`, `unresolved input` 중 적절한 상태로 표시해야 합니다.
 
-복구 아티팩트가 `EXPORT`에 나타나면 복구 관찰로 라벨링합니다. 별도의 owner 기록이 이미 그 경로를 해결한 경우가 아니면, 복구 아티팩트는 성공적 완료의 증거가 아니며 근거, 검증, QA, 작업 수락, 닫기 증명으로 계산하면 안 됩니다.
+복구 아티팩트가 `EXPORT`에 나타나면 복구 관찰로 라벨링합니다. 별도의 owner 기록이 이미 그 경로를 해결한 경우가 아니면, 복구 아티팩트는 성공적 완료의 증거가 아니며 근거, 검증, QA, 최종 수락, 닫기 증명으로 계산하면 안 됩니다.

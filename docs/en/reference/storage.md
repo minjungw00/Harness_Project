@@ -79,7 +79,7 @@ Active storage preserves these authority boundaries:
 - `artifacts` store registered evidence bytes or safe metadata. They do not
   prove sufficiency until Core links them through owner-valid rows.
 - `artifact_links` connect artifacts to owner records. A link is not a report,
-  projection, QA result, Eval, work acceptance, or residual-risk acceptance.
+  projection, QA result, Eval, final acceptance, or residual-risk acceptance.
 - `evidence_summaries` is the minimal coverage and gap record for MVP-1. It is
   not a full Evidence Manifest report table.
 - Chat, Markdown projections, generated reports, connector manifests, tool
@@ -120,7 +120,7 @@ stores project-local Core state. Artifact directories store registered files or
 safe metadata after Core applies the artifact registration boundary.
 
 `project.yaml` must not store current Task state, current gates, Write
-Authorization state, evidence sufficiency, work acceptance, or residual-risk
+Authorization state, evidence sufficiency, final acceptance, or residual-risk
 acceptance.
 
 ```yaml
@@ -173,7 +173,7 @@ Core](api/schema-core.md).
 | `tasks` | User-value work unit and task-scoped state clock. | `task_id`, `project_id`, `title`, `user_request`, `mode`, `lifecycle_phase`, `result`, `summary`, `active_change_unit_id`, `state_version`, `created_at`, `updated_at`, `closed_at`. |
 | `task_events` | Append-only audit/order trail for committed Core mutations. | `event_id`, `task_id` or project scope, `event_seq`, `event_type`, `state_version`, `actor_kind`, `surface_id`, `payload_json`, `created_at`. |
 | `change_units` | Current scoped work boundary for product writes and close basis. | `change_unit_id`, `task_id`, `scope_summary`, `non_goals_json`, `success_criteria_json`, `allowed_paths_json`, `denied_paths_json`, `status`, `created_at`, `updated_at`. |
-| `user_judgments` | User-owned judgment record for Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, and Residual risk acceptance. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_type`, `presentation`, `display_label`, `status`, `question`, `options_json`, `selected_option_json`, `judgment_payload_json`, `affected_scope_json`, `context_refs_json`, `artifact_refs_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
+| `user_judgments` | User-owned judgment record for product decision, technical decision, scope decision, sensitive approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, and cancellation. | `user_judgment_id`, `task_id`, `change_unit_id`, `judgment_kind`, `presentation`, `display_label`, `status`, `question`, `options_json`, `selected_option_json`, `judgment_payload_json`, `affected_scope_json`, `context_refs_json`, `artifact_refs_json`, `expires_at`, `resolved_at`, `created_at`, `updated_at`. |
 | `write_authorizations` | Durable single-use cooperative record created only by non-dry-run `prepare_write.decision=allowed`. | `write_authorization_id`, `task_id`, `change_unit_id`, `surface_id`, `status`, `basis_state_version`, `intended_operation`, `intended_paths_json`, `intended_tools_json`, `sensitive_categories_json`, `related_user_judgment_refs_json`, `guarantee_level`, `consumed_by_run_id`, `expires_at`, `created_at`, `updated_at`. |
 | `runs` | Committed execution or observation record, including compatible write consumption when a product write happened. | `run_id`, `task_id`, `change_unit_id`, `write_authorization_id`, `surface_id`, `kind`, `status`, `summary`, `observed_changes_json`, `command_results_json`, `created_at`. |
 | `artifacts` | Registered durable evidence bytes or safe metadata with integrity and redaction facts. | `artifact_id`, `project_id`, `task_id`, `run_id`, `kind`, `uri`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `retention_class`, `produced_by`, `status`, `created_at`, `updated_at`. |
@@ -199,7 +199,7 @@ MVP-1 storage uses three small records for evidence linkage:
 
 | Record | Active responsibility | Not responsible for |
 |---|---|---|
-| `artifacts` | Register durable bytes or safe metadata and integrity facts. | Evidence sufficiency, QA, Eval, acceptance, risk acceptance, export bundles, report prose. |
+| `artifacts` | Register durable bytes or safe metadata and integrity facts. | Evidence sufficiency, QA, Eval, final acceptance, residual-risk acceptance, export bundles, report prose. |
 | `artifact_links` | Link an artifact to a Task, Change Unit, Run, user judgment, blocker, or minimal evidence summary. | Creating the owner record, satisfying a gate by itself, rendering a report. |
 | `evidence_summaries` | Persist the minimal coverage/gap result Core needs for status, run/evidence summary, and close. | Full criteria matrix, Evidence Manifest report tables, detached verification, Manual QA matrix, long-term analytics. |
 
@@ -219,7 +219,7 @@ operators.
 | Status card / task summary | `project_state`, `surfaces`, `tasks`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `evidence_summaries`, `blockers` | Derived view. It may be recomputed on read; no `projection_status_cards` or `projection_jobs` table is required. |
 | Next safe actions | Open blockers, pending user judgments, write-check state, evidence summaries, Task lifecycle | Derived view. It does not create a Task, judgment, Run, evidence summary, artifact, or Write Authorization. |
 | Run/evidence summary | `runs`, `artifacts`, `artifact_links`, `evidence_summaries`, `blockers` | Derived view over active records. It is not a full Evidence Manifest or report projection. |
-| Close readiness | Task lifecycle, scope state, pending user judgments, evidence coverage, artifact availability, open blockers, work-acceptance and residual-risk user judgments | Derived check. Active storage keeps the owner records and blockers used by the check, not a separate `close_readiness` source of truth. |
+| Close readiness | Task lifecycle, scope state, pending user judgments, evidence coverage, artifact availability, open blockers, final-acceptance and residual-risk user judgments | Derived check. Active storage keeps the owner records and blockers used by the check, not a separate `close_readiness` source of truth. |
 | Projection freshness | Current state version compared with the source version returned by the read/view response | Derived diagnostic. Full `projection_jobs` storage is Operations Profile or profile-promoted storage. |
 
 ## Fields Needed For Close-Blocker Calculation
@@ -233,13 +233,13 @@ broad validator-run archives, long-term metrics, or connector ecosystem tables.
 |---|---|
 | Active Task exists and is closeable | `project_state.active_task_id`, `tasks.lifecycle_phase`, `tasks.result`, `tasks.closed_at` |
 | Scope is present and current | `tasks.active_change_unit_id`, `change_units.status`, `change_units.scope_summary`, `change_units.non_goals_json`, `change_units.success_criteria_json` |
-| User-owned judgment is unresolved | `user_judgments.judgment_type`, `user_judgments.status`, `user_judgments.affected_scope_json`, `user_judgments.context_refs_json` |
-| Sensitive-action permission is missing or denied | `user_judgments` rows with `judgment_type=sensitive_action_approval`, plus current `write_authorizations.related_user_judgment_refs_json` when a write is involved |
+| User-owned judgment is unresolved | `user_judgments.judgment_kind`, `user_judgments.status`, `user_judgments.affected_scope_json`, `user_judgments.context_refs_json` |
+| Sensitive-action permission is missing or denied | `user_judgments` rows with `judgment_kind=sensitive_approval`, plus current `write_authorizations.related_user_judgment_refs_json` when a write is involved |
 | Write Authorization is missing, expired, stale, revoked, consumed, or incompatible | `write_authorizations.status`, `write_authorizations.basis_state_version`, `write_authorizations.consumed_by_run_id`, current `tasks.state_version` |
 | Run or artifact support is missing | `runs.status`, `artifacts.status`, `artifact_links.owner_record_kind`, `artifact_links.owner_record_id` |
 | Evidence coverage is missing or insufficient | `evidence_summaries.coverage_state`, `evidence_summaries.coverage_items_json`, `evidence_summaries.supporting_artifact_link_ids_json`, `evidence_summaries.gap_blocker_ids_json` |
-| Work acceptance is required but missing | `user_judgments` rows with `judgment_type=work_acceptance` and compatible `status` / `selected_option_json` |
-| Residual risk is not visible or not accepted | `blockers` rows with residual-risk blocker kinds, plus `user_judgments` rows with `judgment_type=residual_risk_acceptance` when acceptance is required |
+| Final acceptance is required but missing | `user_judgments` rows with `judgment_kind=final_acceptance` and compatible `status` / `selected_option_json` |
+| Residual risk is not visible or not accepted | `blockers` rows with residual-risk blocker kinds, plus `user_judgments` rows with `judgment_kind=residual_risk_acceptance` when acceptance is required |
 | A blocker is still open | `blockers.status`, `blockers.blocker_kind`, `blockers.blocked_action`, `blockers.related_refs_json`, `blockers.required_next_action` |
 | Readable status is stale | Current `tasks.state_version` compared with the source version returned by the read/card response; later `projection_jobs` only when Operations Profile is active |
 
@@ -348,7 +348,7 @@ Early hardening should cover:
 | `tasks.mode`, `tasks.lifecycle_phase`, `tasks.result` | [Core Model Reference](core-model.md) |
 | `surfaces.status`, `surfaces.guarantee_level`, `surfaces.local_access_posture` | [Agent Integration Reference](agent-integration.md), [Security Reference](security.md), and storage registration rules on this page |
 | `change_units.status` | Core Model / Change Unit owner rules |
-| `user_judgments.status`, `judgment_type`, `presentation` | user-judgment API/Core owners |
+| `user_judgments.status`, `judgment_kind`, `presentation` | user-judgment API/Core owners |
 | `write_authorizations.status` | [Core Model `prepare_write`](core-model.md#prepare_write), [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write), and [`harness.record_run`](api/mvp-api.md#harnessrecord_run) |
 | `runs.kind`, `runs.status` | [`harness.record_run`](api/mvp-api.md#harnessrecord_run) and storage compatibility notes |
 | `artifacts.kind`, `artifacts.redaction_state`, `artifacts.retention_class`, `artifacts.status` | `ArtifactRef`/artifact owners and storage compatibility notes |

@@ -6,7 +6,7 @@
 
 구현 계층: MVP-1 사용자 작업 루프 보기입니다. 상세 [RUN-SUMMARY](later-profile/run-summary.md)와 [EVIDENCE-MANIFEST](later-profile/evidence-manifest.md) 보고서는 later/full-profile 템플릿입니다.
 
-경계: 이 템플릿은 Run과 근거 참조를 표시할 뿐입니다. 근거 자체, 전체 Evidence Manifest, 검증, 수동 QA, 작업 수락, 닫기 준비 상태 권한이 아닙니다.
+경계: 이 템플릿은 Run과 근거 참조를 표시할 뿐입니다. 근거 자체, 전체 Evidence Manifest, 검증, 수동 QA, 최종 수락, 닫기 준비 상태 권한이 아닙니다.
 
 ## 기준 기록
 
@@ -33,7 +33,7 @@
 
 ````text
 실행/근거 요약
-표시 전용: ref와 요약일 뿐이며 근거, 검증, QA, 작업 수락, 닫기가 아닙니다.
+표시 전용: ref와 요약일 뿐이며 근거, 검증, QA, 최종 수락, 닫기가 아닙니다.
 
 행동: {run_or_action_summary}
 변경 경로: {changed_paths|none}

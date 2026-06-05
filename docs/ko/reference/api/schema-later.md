@@ -202,7 +202,7 @@ ReconcileJudgment:
   options: JudgmentOption[]
 ```
 
-Waiver는 skipped check를 수행하지 않고, detached verification, Manual QA pass, evidence satisfaction, work acceptance, unrelated residual risk acceptance를 만들지 않습니다. Reconcile display는 owner path가 compatible outcome을 commit하기 전까지 state가 되지 않습니다.
+Waiver는 skipped check를 수행하지 않고, detached verification, Manual QA pass, evidence satisfaction, final acceptance, unrelated residual risk acceptance를 만들지 않습니다. Reconcile display는 owner path가 compatible outcome을 commit하기 전까지 state가 되지 않습니다.
 
 ## Full profile-gated ref values
 

@@ -35,7 +35,7 @@
 - 평소 언어 intake나 전체 요구사항 구체화
 - 전체 사용자 판단 표시
 - detailed Evidence Manifest behavior
-- detached verification, Eval, Manual QA, 작업 수락, 잔여 위험 수용, full close semantics
+- detached verification, Eval, Manual QA, 최종 수락, 잔여 위험 수락, full close semantics
 - projection renderer, detailed template, dashboard, hosted UI, report, export, recover
 - conformance runner나 실행 가능한 fixture catalog
 - broad connector ecosystem, team workflow, orchestration, metrics, hook expansion, preventive guard expansion, Roadmap automation
@@ -55,7 +55,7 @@ Readiness가 수락된 뒤 구현 계획 순서로 사용합니다. 여기서는
 | 5. `record_run` | Compatible Run 하나를 기록하고 authorization을 소비합니다. | Compatible Run은 한 번 성공하고, 소비된 authorization 재사용은 실패합니다. | [Core Model 참조](../reference/core-model.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run). |
 | 6. Artifact/evidence ref | Durable artifact 또는 evidence ref 하나를 owner path로 등록합니다. | Run 또는 minimal owner relation이 등록된 ref를 cite할 수 있습니다. | [API Schema Core](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md). |
 | 7. Status와 blocker | 현재 상태와 blocker를 mutation 없이 노출합니다. | 반복 read가 state를 바꾸지 않고, blocker가 향후 smoke check에서 비교할 만큼 구조화되어 있습니다. | [`harness.status`](../reference/api/mvp-api.md#harnessstatus), [Core Model 참조](../reference/core-model.md), [API Schema Core](../reference/api/schema-core.md). |
-| 8. 좁은 close blocker check | 이 권한 루프에서 필요한 지원 기록이 없어서 close가 막히는지 확인합니다. | 막힌 close는 작업 수락, 잔여 위험 수용, full assurance close semantics, generated report를 만들지 않고 structured blocker를 반환합니다. | [Core Model 참조](../reference/core-model.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task), [API Errors](../reference/api/errors.md). |
+| 8. 좁은 close blocker check | 이 권한 루프에서 필요한 지원 기록이 없어서 close가 막히는지 확인합니다. | 막힌 close는 최종 수락, 잔여 위험 수락, full assurance close semantics, generated report를 만들지 않고 structured blocker를 반환합니다. | [Core Model 참조](../reference/core-model.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task), [API Errors](../reference/api/errors.md). |
 
 API 단계 구분은 [Stage Profile Manifest](../reference/api/schema-core.md#stage-profile-manifest)를 사용합니다. Storage 계획은 [Storage](../reference/storage.md)를 사용하고, 이 checkpoint에 필요한 owner-approved minimal subset만 적용합니다.
 
@@ -93,6 +93,6 @@ API 단계 구분은 [Stage Profile Manifest](../reference/api/schema-core.md#st
 
 ## MVP-1에 남는 것
 
-MVP-1 사용자 작업 루프는 이 checkpoint 이후에 시작합니다. 거기에는 평소 말로 시작/이어가기, work-shape classification, scope/non-goals/success criteria, minimal user judgment, evidence summary, 사용자에게 보이는 close result/blocker display, 다음 안전한 행동, 잔여 위험 표시, 민감 동작 승인/작업 수락/잔여 위험 수용의 분리 표시가 추가됩니다.
+MVP-1 사용자 작업 루프는 이 checkpoint 이후에 시작합니다. 거기에는 평소 말로 시작/이어가기, work-shape classification, scope/non-goals/success criteria, minimal user judgment, evidence summary, 사용자에게 보이는 close result/blocker display, 다음 안전한 행동, 잔여 위험 표시, 민감 동작 승인/최종 수락/잔여 위험 수락의 분리 표시가 추가됩니다.
 
 [MVP-1 사용자 작업 루프](mvp-user-work-loop.md)를 사용합니다.

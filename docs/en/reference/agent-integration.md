@@ -30,7 +30,7 @@ Surface name is not capability. A connector may claim cooperative, detective, pr
 
 ## Integration In Plain Language
 
-An agent surface is where the user talks to an agent. Harness is the local authority layer that keeps scope, user judgment, write checks, evidence refs, work acceptance, residual-risk acceptance, and close readiness outside the chat transcript.
+An agent surface is where the user talks to an agent. Harness is the local authority layer that keeps scope, user judgment, write checks, evidence refs, final acceptance, residual-risk acceptance, and close readiness outside the chat transcript.
 
 The common path is:
 
@@ -129,7 +129,7 @@ Guarantee level display follows [Security Reference](security.md#honest-guarante
 | `preventive` | Name the fixture-proven hook, wrapper, permission layer, policy engine, or sidecar path and the covered operations it can block before execution. |
 | `isolated` | Name the documented separation boundary. Do not imply OS sandboxing, permission isolation, or tamper-proof storage unless the profile proves that exact mechanism. |
 
-Guard, freeze, and careful-mode labels are display labels over the actual profile. They must say what can actually be blocked before execution and what can only be detected later. They are not approval, verification, work acceptance, residual-risk acceptance, close readiness, or a kernel gate.
+Guard, freeze, and careful-mode labels are display labels over the actual profile. They must say what can actually be blocked before execution and what can only be detected later. They are not approval, verification, final acceptance, residual-risk acceptance, close readiness, or a kernel gate.
 
 ## Generated Manifest Expectations
 
@@ -195,11 +195,11 @@ Fallbacks are described by guarantee level and risk, not by surface name.
 | Cooperative | The surface can follow instructions but cannot enforce them. | Hold product writes by instruction when authoritative MCP or write scope checks are unavailable. |
 | Detective | Harness can observe changed files, logs, artifacts, projection drift, or artifact gaps after action. | Mark state stale, partial, blocked, or failed and require repair, reconcile, or fresh evidence. |
 | Preventive | A fixture-proven hook, permission layer, wrapper, policy engine, or sidecar can block before execution. | Claim only the operations covered by the proven blocking path. |
-| Isolated | Risk requires separation. | Use the documented boundary named by the profile. Separation alone is not approval, verification, acceptance, risk acceptance, close, or assurance upgrade. |
+| Isolated | Risk requires separation. | Use the documented boundary named by the profile. Separation alone is not approval, verification, final acceptance, residual-risk acceptance, close, or assurance upgrade. |
 
 If MCP is unavailable, the connector must not claim authoritative state updates. `MCP_SERVER_UNAVAILABLE` means the call path cannot reach Core. `SURFACE_MCP_UNAVAILABLE` means the connected surface lacks usable MCP, has stale MCP configuration, or cannot call required tools. These are diagnostic conditions; `MCP_UNAVAILABLE` remains the stable public availability code.
 
-While Core is unreachable, do not invent Core state, Write Authorization, gate status, approvals, evidence, work acceptance, residual-risk acceptance, projection repair, or close readiness from chat memory, generated files, cached projections, old status text, or operator prose.
+While Core is unreachable, do not invent Core state, Write Authorization, gate status, approvals, evidence, final acceptance, residual-risk acceptance, projection repair, or close readiness from chat memory, generated files, cached projections, old status text, or operator prose.
 
 Projection staleness is separate from Core state. A connector may continue from current Core state if it can read it directly, but actions depending on stale readable projections must refresh or reconcile first.
 
@@ -217,7 +217,7 @@ Same-session review is self-checking context. It is not detached verification an
 
 AFK, unattended, or "continue while I am away" instructions do not create new authority. Product writes must stay inside active scope, active autonomy boundaries, granted sensitive-action permission when needed, and compatible `prepare_write` / Write Authorization.
 
-Stop and show the smallest unblocker before scope expansion, new sensitive action, QA or verification waiver, work acceptance, residual-risk acceptance, public API or module contract change, release/support promise, documentation promise that changes reader reliance, or another public commitment that needs user-owned product or material technical judgment.
+Stop and show the smallest unblocker before scope expansion, new sensitive action, QA waiver or verification-risk acceptance, final acceptance, residual-risk acceptance, public API or module contract change, release/support promise, documentation promise that changes reader reliance, or another public commitment that needs user-owned product or material technical decision.
 
 ## Reference Surface Contract
 
@@ -252,6 +252,6 @@ Engineering Checkpoint connector checks include:
 - read-only status recommendations unless a recommended action later follows a Core mutation path
 - honest guarantee display for guard, freeze, or careful-mode labels
 
-Later profile scenarios include user judgment routing with options and consequences, sensitive-action permission paths, full Change Unit handling, evidence and artifact integrity, verification bundles, Manual QA, work acceptance, residual-risk visibility and acceptance, stale projection/reconcile flow, generated-file drift, capability fallback, stale context refusal, and surface capability mismatch handling.
+Later profile scenarios include user judgment routing with options and consequences, sensitive-action permission paths, full Change Unit handling, evidence and artifact integrity, verification bundles, Manual QA, final acceptance, residual-risk visibility and acceptance, stale projection/reconcile flow, generated-file drift, capability fallback, stale context refusal, and surface capability mismatch handling.
 
 Exact fixture format is owned by [Conformance Fixtures Reference](conformance-fixtures.md), and operational commands are owned by [Operations And Conformance Reference](operations-and-conformance.md).

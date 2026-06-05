@@ -243,7 +243,7 @@ Within that transaction, Core increments the affected scope clock as part of the
 
 Projection rendering happens after the transaction. A projection failure is state-isolated: it marks projection freshness or job status as stale or failed and leaves the committed state intact. Projection cannot roll back the transaction, rewrite `state.sqlite.task_events`, turn a passed task into a failed task, or repair canonical state without a later reconcile decision.
 
-Projection freshness is a derived-read fact. A status, next-action, export, or operator command may check it and report that a readable view is stale, failed, or unknown, but Core state, structured blockers, evidence records, work acceptance, residual-risk acceptance, and Write Authorization remain authoritative in their owner records. Engineering Checkpoint may expose freshness or read facts without proving the full projection worker; MVP-1 needs enough derived output for current work status, user judgment request, evidence summary, and close readiness/blocker comprehension; hardened or operational profiles own the complete projection/reconcile and diagnostic report path.
+Projection freshness is a derived-read fact. A status, next-action, export, or operator command may check it and report that a readable view is stale, failed, or unknown, but Core state, structured blockers, evidence records, final acceptance, residual-risk acceptance, and Write Authorization remain authoritative in their owner records. Engineering Checkpoint may expose freshness or read facts without proving the full projection worker; MVP-1 needs enough derived output for current work status, user judgment request, evidence summary, and close readiness/blocker comprehension; hardened or operational profiles own the complete projection/reconcile and diagnostic report path.
 
 ## Artifact store architecture
 
@@ -331,7 +331,7 @@ Guarantee display should name both sides of the boundary: what the connected pro
 
 Current reference behavior is cooperative/detective unless the connected surface has a concrete, fixture-proven pre-tool guard for covered operations or a documented and proven separation boundary. In Engineering Checkpoint and MVP-1, "blocked" means the Harness authority path cannot proceed or the surface is instructed to hold; it does not mean the runtime physically prevented arbitrary file writes unless a preventive profile proves that exact operation. Native hook expansion, advanced sidecar watching, and broad isolated execution are later roadmap items unless explicitly promoted for the reference surface. Until promoted through owner docs, they may improve observation, freshness, or display only; they do not authorize writes, satisfy gates, grant Approval, prove verification or QA, record acceptance, or replace Core authority.
 
-Guarantee level is display and risk context. It is not Approval, Write Authorization, verification, QA, work acceptance, residual-risk acceptance, close readiness, or a kernel gate.
+Guarantee level is display and risk context. It is not Approval, Write Authorization, verification, QA, final acceptance, residual-risk acceptance, close readiness, or a kernel gate.
 
 ## Failure and recovery overview
 

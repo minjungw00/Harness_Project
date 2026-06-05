@@ -72,6 +72,6 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 메모
 
-이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 기준 모듈 참조는 `StateRecordRef.record_kind=module_map_item`을 사용합니다. 검토, 주의 지점, 스튜어드십 모음 문구는 owner 기록 위의 표시이며 민감 동작 승인(Approval), 근거, QA, 검증, 작업 수락, 잔여 위험 수용, 닫기, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다.
+이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 기준 모듈 참조는 `StateRecordRef.record_kind=module_map_item`을 사용합니다. 검토, 주의 지점, 스튜어드십 모음 문구는 owner 기록 위의 표시이며 민감 동작 승인(Approval), 근거, QA, 검증, 최종 수락, 잔여 위험 수락, 닫기, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다.
 
 제안된 모듈 경계 변경이 제품 약속, 공개 인터페이스, 호출자 의무, 의존성 방향, 아키텍처 방향을 바꾸면 해당 판단은 기존 설계 품질 및 사용자 판단 경로로 라우팅합니다. 제안을 여기에 렌더링하는 것만으로 `design_gate`, `decision_gate`, 닫기 영향이 해소되지는 않습니다.

@@ -17,10 +17,10 @@ Implementation tier: Assurance Profile reports. Use when verification/Eval displ
 - reviewed task, run, Evidence Manifest, TDD trace, diff, log, approval, and design refs
 - blockers or rework
 - user follow-up
-- Manual QA, work acceptance and Residual Risk, verification-waiver user judgment refs, and `verification_gate` status when close context is rendered
-- compact refs for Eval, Evidence Manifest, Manual QA, work acceptance context, Residual Risk, verification-waiver user judgment, Artifact refs, redaction state, and projection freshness
+- Manual QA, final acceptance and Residual Risk, verification-waiver user judgment refs, and `verification_gate` status when close context is rendered
+- compact refs for Eval, Evidence Manifest, Manual QA, final acceptance context, Residual Risk, verification-waiver user judgment, Artifact refs, redaction state, and projection freshness
 
-Close context and verification-waiver placeholders are derived display summaries from Eval records, gate state, QA/work acceptance status, Residual Risk refs, and waiver user judgment refs. Waiver paths should render those refs or say that recording is still needed.
+Close context and verification-waiver placeholders are derived display summaries from Eval records, gate state, QA/final acceptance status, Residual Risk refs, and waiver user judgment refs. Waiver paths should render those refs or say that recording is still needed.
 
 ## Rendered sections
 
@@ -50,7 +50,7 @@ User-facing verification status: {self-checked|detached candidate|detached verif
 Verification independence: {verification_independence}
 Self-check vs detached boundary: {self_check_or_detached_boundary}
 Manual QA: {manual_qa_impact}
-Work acceptance: {acceptance_impact; separate user judgment, not recorded by this card}
+Final acceptance: {acceptance_impact; separate user judgment, not recorded by this card}
 
 Evidence reviewed:
 - task summary: {task_summary_ref}
@@ -70,11 +70,11 @@ Close context:
 - bundle or baseline freshness: {current|stale|not_applicable}
 - Manual QA: {manual_qa_status_or_needed}
 - QA waiver display: {qa_gate=waived with Manual QA or waiver refs|none}
-- acceptance: {acceptance_status_or_needed}
+- final acceptance: {acceptance_status_or_needed}
 - residual risk: {residual_risk_summary|none}
-- verification waiver display: {user judgment ref when required; `verification_gate=waived_by_user` when waived|none}
-- relevant refs: {verification_waiver_refs|none}
-- close impact: {verification_waiver_close_impact|none}
+- verification-risk acceptance display: {user judgment ref when required; `verification_gate=waived_by_user` when waived|none}
+- relevant refs: {verification_risk_acceptance_refs|none}
+- close impact: {verification_risk_acceptance_close_impact|none}
 
 Remaining work:
 {blockers_or_rework}
@@ -87,9 +87,9 @@ User follow-up:
 
 This template is a rendered card shape, not verification authority. Eval records and gate state remain canonical.
 
-Verification checks correctness from the recorded review boundary. It does not record Manual QA, imply work acceptance, or accept residual risk. Same-session self-review may be shown as a self-check or review note, but it must not be rendered as detached verification. A verification waiver should show the user judgment that records the user-owned waiver when required, `verification_gate=waived_by_user`, skipped check, accepted risk, follow-up, relevant refs, and close impact; it does not create detached verification or upgrade assurance.
+Verification checks correctness from the recorded review boundary. It does not record Manual QA, imply final acceptance, or accept residual risk. Same-session self-review may be shown as a self-check or review note, but it must not be rendered as detached verification. A verification-risk acceptance display should show the user judgment that records the user-owned risk path when required, `verification_gate=waived_by_user`, skipped check, accepted verification risk, follow-up, relevant refs, and close impact; it does not create detached verification or upgrade assurance.
 
-Passing verification does not mean the user accepted the result. If work acceptance is required, this card may show the work acceptance status or needed action, but work acceptance remains on the user judgment path.
+Passing verification does not mean the user accepted the result. If final acceptance is required, this card may show the final acceptance status or needed action, but final acceptance remains on the user judgment path.
 
 If QA is waived while verification is displayed, keep the QA waiver separate from the Eval verdict and assurance line. QA waiver display cites `qa_gate=waived`, the Manual QA record or waiver reason, and a QA waiver user judgment when required; it is not a passed Manual QA result or detached verification.
 

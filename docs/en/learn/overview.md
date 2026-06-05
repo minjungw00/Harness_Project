@@ -4,7 +4,7 @@
 
 Read this first if Harness is new to you.
 
-Harness is a local work-authority server for AI-assisted product work. Its job is to keep fragile work criteria out of chat-only memory. Scope, user-owned judgment, evidence, checks, work acceptance, close readiness, and residual risk should not live only in a confident message or a generated report.
+Harness is a local work-authority server for AI-assisted product work. Its job is to keep fragile work criteria out of chat-only memory. Scope, user-owned judgment, evidence, checks, final acceptance, close readiness, and residual risk should not live only in a confident message or a generated report.
 
 Users can speak normally:
 
@@ -56,12 +56,12 @@ Harness is built around a few separations. Learn these before learning any inter
 | Keep separate | Why it matters |
 |---|---|
 | Scope | The agent should know what may change and where to stop. |
-| User-owned judgment | Product, UX, technical, QA, acceptance, and risk choices stay with the user when they matter. |
+| User-owned judgment | Product, technical, scope, QA waiver, final acceptance, and residual-risk choices stay with the user when they matter. |
 | Evidence | Evidence supports claims; it does not make the user's decision. |
 | Checks and verification | A test, review, inspection, or stronger verification says what was checked, not that every human concern is done. |
 | Manual QA | Human experience, copy, accessibility, and visual quality may need human inspection even when tests pass. |
-| Work acceptance | Accepting the finished result is different from permitting a sensitive step. |
-| Residual risk | Known remaining uncertainty should be visible before work acceptance or close. |
+| Final acceptance | Accepting the finished result is different from permitting a sensitive step. |
+| Residual risk | Known remaining uncertainty should be visible before final acceptance or close. |
 | Close readiness | Close should say what is handled and what still blocks an honest finish. |
 
 The learning rule is simple: one kind of support should not silently substitute for another.

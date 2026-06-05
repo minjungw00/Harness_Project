@@ -87,6 +87,6 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 ## 메모
 
-이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 기준 인터페이스 참조는 `StateRecordRef.record_kind=interface_contract`를 사용합니다. `검토` 섹션은 인터페이스, 검증기, 판단 참조 위의 상태 보기 표시이며 민감 동작 승인(Approval), 근거, QA, 검증, 작업 수락, 잔여 위험 수용, 닫기, 쓰기 허가 기록(Write Authorization)이 아닙니다.
+이 템플릿은 렌더링 결과일 뿐 기준 상태가 아닙니다. 기준 인터페이스 참조는 `StateRecordRef.record_kind=interface_contract`를 사용합니다. `검토` 섹션은 인터페이스, 검증기, 판단 참조 위의 상태 보기 표시이며 민감 동작 승인(Approval), 근거, QA, 검증, 최종 수락, 잔여 위험 수락, 닫기, 쓰기 허가 기록(Write Authorization)이 아닙니다.
 
 공개 인터페이스 변경, 호환성 위험, 호환성 깨짐 변경(breaking change), 호출자 영향 선택에 사용자 소유 제품 판단이나 기술 판단이 필요하면 기존 설계 품질 및 사용자 판단 경로로 라우팅합니다. 계약을 여기에 렌더링하는 것만으로 `design_gate`, `decision_gate`, 닫기 영향이 해소되지는 않습니다.

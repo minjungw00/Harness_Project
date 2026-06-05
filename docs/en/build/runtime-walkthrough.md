@@ -18,7 +18,7 @@ Harness runtime behavior should preserve local authority through Core-owned stat
 
 Engineering Checkpoint implements only the internal authority loop in this path: project state, active Task, active Change Unit/scope boundary, `prepare_write`, single-use Write Authorization, `record_run`, one artifact/evidence ref, status/blocker output, and a narrow close-blocker check.
 
-MVP-1 adds user-visible behavior around that loop: ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria, minimal user judgment, evidence summary, close result/blockers, next safe action through `harness.status.next_actions`, residual-risk visibility, and separate sensitive-action approval/work-acceptance/risk displays.
+MVP-1 adds user-visible behavior around that loop: ordinary-language start/resume, work-shape classification, scope/non-goals/success criteria, minimal user judgment, evidence summary, close result/blockers, next safe action through `harness.status.next_actions`, residual-risk visibility, and separate sensitive-action approval/final-acceptance/risk displays.
 
 Later/profile scope adds full Manual QA matrix, detached Eval, export/recover, dashboard or hosted UI, broad connectors, automated Browser QA Capture, preventive guard expansion, parallel orchestration, and detailed reports only after owner docs promote the relevant profile.
 
@@ -55,7 +55,7 @@ Owner docs: [Core Model Reference](../reference/core-model.md), [MVP API](../ref
 
 ### 2. Task -> clarification
 
-When the request is ambiguous, risky, product-facing, or likely to need user judgment, Harness clarifies the goal, non-goals, success criteria, inspectable facts, assumptions, and likely judgment boundaries. This is shaping input; it is not evidence, Approval, Write Authorization, work acceptance, residual-risk acceptance, or close.
+When the request is ambiguous, risky, product-facing, or likely to need user judgment, Harness clarifies the goal, non-goals, success criteria, inspectable facts, assumptions, and likely judgment boundaries. This is shaping input; it is not evidence, Approval, Write Authorization, final acceptance, residual-risk acceptance, or close.
 
 Owner docs: [Core Model Reference: User Judgment](../reference/core-model.md#user-judgment), [`harness.request_user_judgment`](../reference/api/mvp-api.md#harnessrequest_user_judgment).
 
@@ -97,7 +97,7 @@ Owner docs: [`harness.status`](../reference/api/mvp-api.md#harnessstatus), [API 
 
 ### 9. Status -> close blocker or close
 
-When close is in scope, Core checks close-relevant state and either closes the Task or returns blockers. Engineering Checkpoint may use only a narrow status/close blocker smoke. MVP-1 needs close blocker display, sufficient required evidence, unresolved-judgment blockers, residual-risk visibility, explicit residual-risk acceptance for accepted-risk close, and separation between work acceptance and residual-risk acceptance. Full assurance close semantics are later-profile scope.
+When close is in scope, Core checks close-relevant state and either closes the Task or returns blockers. Engineering Checkpoint may use only a narrow status/close blocker smoke. MVP-1 needs close blocker display, sufficient required evidence, unresolved-judgment blockers, residual-risk visibility, explicit residual-risk acceptance for accepted-risk close, and separation between final acceptance and residual-risk acceptance. Full assurance close semantics are later-profile scope.
 
 Owner docs: [Core Model Reference: `close_task`](../reference/core-model.md#close_task), [`harness.close_task`](../reference/api/mvp-api.md#harnessclose_task), [API Errors](../reference/api/errors.md).
 
@@ -107,7 +107,7 @@ Owner docs: [Core Model Reference: `close_task`](../reference/core-model.md#clos
 |---|---|
 | Engineering Checkpoint | Project state, active Task, active Change Unit/scope boundary, `prepare_write`, Write Authorization, `record_run`, one artifact/evidence ref, status/blocker output, and narrow close-blocker check. |
 | MVP-1 User Work Loop | Engineering Checkpoint plus ordinary-language start/resume, work-shape classification, minimal user judgment, evidence summary, close result/blocker display, next safe action through `harness.status.next_actions`, residual-risk visibility, and the five compact views. |
-| Assurance Profile | Verification, Manual QA, richer work acceptance and residual-risk behavior, stewardship, TDD, feedback-loop, and context-hygiene hardening. |
+| Assurance Profile | Verification, Manual QA, richer final acceptance and residual-risk behavior, stewardship, TDD, feedback-loop, and context-hygiene hardening. |
 | Operations Profile | Doctor/readiness, recover/export, artifact integrity, release handoff, projection/reconcile operations, and conformance runner after suites exist. |
 | Roadmap | Dashboards, hosted UI, broad connectors, automation, metrics, team workflow, parallel orchestration, and other promoted future candidates. |
 

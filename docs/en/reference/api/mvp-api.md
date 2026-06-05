@@ -129,11 +129,11 @@ StatusResponse:
     notes: string[]
 ```
 
-`status_card` is a short readable view over current Core state and refs. It should stay compact, show source/freshness information, and avoid full schemas, DDL, history, templates, projection bodies, artifact bodies, logs, and future catalogs. It is not Core state and cannot create approval, acceptance, residual-risk acceptance, evidence, close readiness, Write Authorization, or close.
+`status_card` is a short readable view over current Core state and refs. It should stay compact, show source/freshness information, and avoid full schemas, DDL, history, templates, projection bodies, artifact bodies, logs, and future catalogs. It is not Core state and cannot create sensitive-action approval, final acceptance, residual-risk acceptance, evidence, close readiness, Write Authorization, or close.
 
 `next_actions` is the MVP-1 next-safe-action surface. It should name the smallest useful next action or unblocker in ordinary language, with exact enum values as secondary detail.
 
-`evidence_summary` is the Core-owned compact MVP-1 evidence summary. `evidence_refs` carries the active minimal evidence coverage refs, normally `StateRecordRef.record_kind=evidence_summary`, plus artifact refs where the nested schema permits them. These fields are not a full Evidence Manifest table or report and do not replace verification, Manual QA, work acceptance, residual-risk acceptance, or close.
+`evidence_summary` is the Core-owned compact MVP-1 evidence summary. `evidence_refs` carries the active minimal evidence coverage refs, normally `StateRecordRef.record_kind=evidence_summary`, plus artifact refs where the nested schema permits them. These fields are not a full Evidence Manifest table or report and do not replace verification, Manual QA, final acceptance, residual-risk acceptance, or close.
 
 When status cannot reach Core, reports stale state, names an unsupported surface, or shows blockers such as out-of-scope work, missing judgment, missing evidence, close blocked, or residual risk present, it uses the canonical condition behavior in [Errors: MVP-1 guarantee and status taxonomy](errors.md#mvp-1-guarantee-and-status-taxonomy).
 
@@ -153,7 +153,7 @@ Status is read-only. It must not create state, make product writes compatible, c
 
 Use this before an agent writes product files. It checks the exact proposed write against current Core state and returns either a compatible internal single-use Write Authorization record or structured blockers. This is a cooperative Harness check, not OS permission, sandboxing, or preventive blocking.
 
-Stage meaning: active for Engineering Checkpoint and MVP-1. In MVP-1, sensitive-action permission is represented through a compatible `user_judgment` with `judgment_type=sensitive_action_approval`; committed Approval records are later-profile material.
+Stage meaning: active for Engineering Checkpoint and MVP-1. In MVP-1, sensitive-action permission is represented through a compatible `user_judgment` with `judgment_kind=sensitive_approval`; committed Approval records are later-profile material.
 
 Allowed actors: `lead_agent`, `operator`.
 
@@ -192,6 +192,7 @@ PrepareWriteResponse:
     - code: string
       message: string
       related_error: ErrorCode
+      required_judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation | null
   approval_request_candidate: ApprovalRequestCandidate | null
   user_judgment_candidate: UserJudgmentCandidate | null
   guarantee_display:
@@ -256,7 +257,7 @@ An exact idempotent replay of a committed `record_run` response returns the orig
 
 Public transition summary: `harness.record_run` validates the envelope, checks idempotency replay and returns exact committed replay before new side effects, resolves the primary Task using the shared request rule, checks `expected_state_version` against `tasks.state_version` or `project_state.state_version` as appropriate, checks `kind`, detects product writes, requires a compatible active Write Authorization for product writes, validates observed changed paths, commands, tools, and secret access, consumes the authorization when compatible, creates the Run record, registers or links `ArtifactRef` records, updates evidence summary and blockers/gates, appends a task event, and returns the response.
 
-If Core rejects a write-capable run before commit, `run_id` is `null`, no artifacts are registered, and the response must not imply a Run exists. Core must not mark an invalid authorization as consumed. A violation/audit Run may be recorded only when Core deliberately records observed behavior after a product write; attempted authorization refs may appear in validator findings, violation payloads, or event payloads, but they do not satisfy evidence, QA, verification, work acceptance, or close readiness.
+If Core rejects a write-capable run before commit, `run_id` is `null`, no artifacts are registered, and the response must not imply a Run exists. Core must not mark an invalid authorization as consumed. A violation/audit Run may be recorded only when Core deliberately records observed behavior after a product write; attempted authorization refs may appear in validator findings, violation payloads, or event payloads, but they do not satisfy evidence, QA, verification, final acceptance, or close readiness.
 
 <a id="harnessrequest_user_judgment"></a>
 <a id="harnessrequest_user_decision"></a>
@@ -265,9 +266,9 @@ If Core rejects a write-capable run before commit, `run_id` is `null`, no artifa
 
 Compatibility alias: `harness.request_user_decision`.
 
-Use this to create a focused user judgment request when user-owned judgment, sensitive-action permission, work acceptance, or residual-risk acceptance blocks progress or close.
+Use this to create a focused user judgment request when user-owned product decision, technical decision, scope decision, sensitive-action approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, or cancellation blocks progress or close.
 
-Stage meaning: not active in Engineering Checkpoint; active in MVP-1. Full-format Decision Packet presentation, committed Approval record lifecycle, waiver, reconcile, and full residual-risk profiles are later/profile-gated unless explicitly active.
+Stage meaning: not active in Engineering Checkpoint; active in MVP-1. Full-format Decision Packet presentation, committed Approval record lifecycle, reconcile, and rich residual-risk profiles are later/profile-gated unless explicitly active.
 
 Allowed actors: `lead_agent`, `evaluator`, `operator`.
 
@@ -276,15 +277,18 @@ RequestUserJudgmentRequest:
   envelope: ToolEnvelope
   task_id: string
   change_unit_id: string | null
-  judgment_type: product_choice | technical_choice | sensitive_action_approval | work_acceptance | residual_risk_acceptance
+  judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation
   presentation: short | full
-  display_label: Product/UX judgment | Technical judgment | Sensitive action approval | Work acceptance | Residual risk acceptance
+  display_label: Product decision | Technical decision | Scope decision | Sensitive action approval | QA waiver | Verification risk acceptance | Final acceptance | Residual risk acceptance | Cancellation
   context:
     why_now: string
     source_refs: StateRecordRef[]
     evidence_refs: EvidenceRefs
   state_summary_at_request: StateSummary | null
+  question: string
   what_user_is_judging: string
+  why_agent_cannot_decide: string
+  no_decision_consequence: string
   what_agent_may_decide_without_user: string[]
   affected_scope: UserJudgmentScope
   affected_gates: UserJudgmentGateRef[]
@@ -303,7 +307,7 @@ RequestUserJudgmentResponse:
   user_visible_summary: string
 ```
 
-`approval_id` is `null` in minimum MVP-1. A sensitive-action approval judgment records scoped permission only after `harness.record_user_judgment` resolves it; it is not Write Authorization and does not settle product, technical, work-acceptance, or residual-risk judgment.
+`approval_id` is `null` in minimum MVP-1. A sensitive-action approval judgment records scoped permission only after `harness.record_user_judgment` resolves it; it is not Write Authorization and does not settle product, technical, scope, final-acceptance, waiver, or residual-risk judgment.
 
 <a id="harnessrecord_user_judgment"></a>
 <a id="harnessrecord_user_decision"></a>
@@ -314,7 +318,7 @@ Compatibility alias: `harness.record_user_decision`.
 
 Use this to record the user's answer to an existing canonical `UserJudgment`.
 
-Stage meaning: not active in Engineering Checkpoint; active in MVP-1 for user-owned judgments, sensitive-action approval judgment resolutions, and work acceptance when required. Committed Approval updates, waivers, reconcile outcomes, and richer residual-risk metadata are later/profile-gated unless explicitly active.
+Stage meaning: not active in Engineering Checkpoint; active in MVP-1 for user-owned judgments, sensitive-action approval judgment resolutions, QA waiver/risk paths when policy allows them, verification-risk acceptance when required verification is waived, final acceptance when required, residual-risk acceptance when required, and cancellation. Committed Approval updates, reconcile outcomes, and richer residual-risk metadata are later/profile-gated unless explicitly active.
 
 Allowed actors: `user`, `operator`.
 
@@ -322,7 +326,7 @@ Allowed actors: `user`, `operator`.
 RecordUserJudgmentRequest:
   envelope: ToolEnvelope
   user_judgment_id: string
-  judgment_type: product_choice | technical_choice | sensitive_action_approval | work_acceptance | residual_risk_acceptance
+  judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation
   selected_option_id: string | null
   judgment: RecordUserJudgmentPayload
   note: string
@@ -330,7 +334,7 @@ RecordUserJudgmentRequest:
   accepted_risks: AcceptedRiskInput[]
 
 RecordUserJudgmentPayload:
-  value: selected | rejected | deferred | granted | denied | expired | accepted
+  value: selected | rejected | deferred | granted | denied | expired | waived | accepted | cancelled
   value_note: string | null
 
 RecordUserJudgmentResponse:
@@ -344,7 +348,7 @@ RecordUserJudgmentResponse:
   next_action: string
 ```
 
-`judgment_type` must match the stored `UserJudgment`. Free-form notes such as "go ahead" or "looks good" cannot broaden the answer into approval, acceptance, risk acceptance, waiver, or pre-write scope-check compatibility unless the pending judgment explicitly asks for that judgment type and the answer matches its allowed value.
+`judgment_kind` must match the stored `UserJudgment`. Free-form notes such as "yes, do it," "go ahead," or "looks good" cannot broaden the answer into sensitive-action approval, final acceptance, residual-risk acceptance, QA waiver, verification-risk acceptance, cancellation, scope change, or pre-write scope-check compatibility unless the pending judgment explicitly asks for that `judgment_kind`, the affected object and scope match, and the recorded user intent matches its allowed value.
 
 In MVP-1, `accepted_risk_refs` contain the `user_judgment` and `blocker` refs that show the risk was visible and accepted for this close path. Rich `residual_risk` refs are later/profile-promoted; there is no standalone accepted-risk record kind.
 
@@ -387,7 +391,8 @@ CloseTaskResponse:
   state: StateSummary
   blockers:
     - code: ErrorCode
-      category: open_run | scope | user_judgment | sensitive_action_approval | design_policy | evidence | verification | manual_qa | residual_risk_visibility | residual_risk_acceptance | work_acceptance | projection_freshness | artifact_availability
+      category: open_run | scope | user_judgment | sensitive_approval | design_policy | evidence | verification | manual_qa | residual_risk_visibility | residual_risk_acceptance | final_acceptance | projection_freshness | artifact_availability
+      required_judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation | null
       message: string
       required_next_action: string
       related_refs: StateRecordRef[]
@@ -395,9 +400,9 @@ CloseTaskResponse:
   artifact_refs: ArtifactRef[]
 ```
 
-MVP-1 close uses the core close state, blockers, residual-risk visibility, work-acceptance state when required, artifact availability, and the Core-owned `evidence_summary`. Close readiness is derived from current records. Verification, Manual QA, projection/report, and operations refs are active only when their profiles are enabled.
+MVP-1 close uses the core close state, blockers, residual-risk visibility, final-acceptance state when required, artifact availability, and the Core-owned `evidence_summary`. Close readiness is derived from current records. Verification, Manual QA, projection/report, and operations refs are active only when their profiles are enabled.
 
-For `intent=complete`, a closed response requires a Task state compatible with the close intent, no unresolved close-relevant active Run, no unresolved or blocked required user judgment, `evidence_summary.status=sufficient` when evidence is required, recorded work acceptance when acceptance is required, visible close-relevant residual risk, and explicit residual-risk acceptance for `completed_with_risk_accepted`. Stale or blocked Write Authorization facts affect close only through the current Run, scope, artifact, evidence, or blocker records they affect; they are not close results by themselves. Projection freshness is display freshness, not canonical close state; callers must not close from stale projection prose.
+For `intent=complete`, a closed response requires a Task state compatible with the close intent, no unresolved close-relevant active Run, no unresolved or blocked required user judgment, `evidence_summary.status=sufficient` when evidence is required, recorded `judgment_kind=final_acceptance` when final acceptance is required, visible close-relevant residual risk, and explicit residual-risk acceptance for `completed_with_risk_accepted`. Stale or blocked Write Authorization facts affect close only through the current Run, scope, artifact, evidence, or blocker records they affect; they are not close results by themselves. Projection freshness is display freshness, not canonical close state; callers must not close from stale projection prose.
 
 `CloseTaskRequest` does not carry accepted-risk refs. For `completed_with_risk_accepted`, Core reads accepted state from the blocker that made the close-relevant risk visible and the residual-risk acceptance `user_judgment`; rich Residual Risk records are needed only when that later profile is active.
 

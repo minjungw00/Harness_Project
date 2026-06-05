@@ -18,8 +18,8 @@
 - 민감 동작 승인 참조(나중의 민감 동작 승인(Approval) 프로필이 활성화된 경우에만; 그 외에는 none)
 - 해시(hash), 크기(size), 가림 상태, 보존/사용 가능성, owner 관계, 후속 근거 영향을 포함한 아티팩트 참조
 - 관련 실행(Run), Eval(분리 검증 결과), 피드백 루프, 수동 QA, TDD 트레이스 참조
-- 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, 수동 QA, 작업 수락, 잔여 위험 요약
-- 닫기 맥락으로 렌더링할 때 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)을 보여주는 간결한 권한 참조
+- 닫기 맥락으로 렌더링할 때 닫기에 영향을 주는 검증, 수동 QA, 최종 수락, 잔여 위험 요약
+- 닫기 맥락으로 렌더링할 때 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인(Approval), 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness)을 보여주는 간결한 권한 참조
 
 ## 렌더링 섹션
 
@@ -69,18 +69,18 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 ## 닫기 영향 요약
 - 근거가 뒷받침하는 것:
-- 근거가 대체하지 않는 것: 검증, 수동 QA, 작업 수락, 잔여 위험 표시, 잔여 위험 수용
+- 근거가 대체하지 않는 것: 검증, 수동 QA, 최종 수락, 잔여 위험 표시, 잔여 위험 수락
 - 검증 상태:
 - 수동 QA 상태:
-- 작업 수락 상태:
+- 최종 수락 상태:
 - 잔여 위험 표시:
-- 잔여 위험 수용:
+- 잔여 위험 수락:
 - 닫기/보장 표시 구분:
 - 다음 닫기 조치:
 
 ## 권한과 닫기 참조
-- 간결한 참조: 쓰기={write_authorization_ref|none}; 판단={user_judgment_refs|none}; 민감동작승인={approval_refs|none}; 근거={evidence_manifest_id}; Eval={eval_ref|none}; 수동QA={manual_qa_ref|none}; 작업수락={acceptance_context_ref|none}; 잔여위험={residual_risk_refs|none}; 아티팩트={artifact_refs|none}
-- 민감 동작 승인 참조(`approval_refs`)는 최소 MVP-1에서 `none`입니다. 민감 동작 뒷받침 범위는 나중의 민감 동작 승인(Approval) 담당 프로필이 활성화되지 않은 한 `judgment_type=sensitive_action_approval`인 `user_judgment_refs`로 나타납니다.
+- 간결한 참조: 쓰기={write_authorization_ref|none}; 판단={user_judgment_refs|none}; 민감동작승인={approval_refs|none}; 근거={evidence_manifest_id}; Eval={eval_ref|none}; 수동QA={manual_qa_ref|none}; 최종수락={acceptance_context_ref|none}; 잔여위험={residual_risk_refs|none}; 아티팩트={artifact_refs|none}
+- 민감 동작 승인 참조(`approval_refs`)는 최소 MVP-1에서 `none`입니다. 민감 동작 뒷받침 범위는 나중의 민감 동작 승인(Approval) 담당 프로필이 활성화되지 않은 한 `judgment_kind=sensitive_approval`인 `user_judgment_refs`로 나타납니다.
 - 가림 상태:
 - 보기 최신성:
 
@@ -117,7 +117,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 `뒷받침 범위 / 관문 표시 상태`는 이 근거 목록의 근거 뒷받침 범위 또는 닫기와 관련된 관문 표시 상태입니다. 이 열의 `pending` 같은 값은 `ValidatorResult.status` 값이 아닙니다.
 
 ## 민감 동작 승인 참조
-- 나중의 민감 동작 승인(Approval) 담당 프로필이 활성화된 경우에만 채웁니다. 최소 MVP-1의 민감 동작 뒷받침 범위는 `judgment_type=sensitive_action_approval`인 `user_judgment_refs`에 둡니다.
+- 나중의 민감 동작 승인(Approval) 담당 프로필이 활성화된 경우에만 채웁니다. 최소 MVP-1의 민감 동작 뒷받침 범위는 `judgment_kind=sensitive_approval`인 `user_judgment_refs`에 둡니다.
 - APR-0001:
 
 ## 근거 참조
@@ -168,9 +168,9 @@ updated_at: 2026-05-06T09:50:00+09:00
 | AC-04 내보내기가 승인된 가림 처리 필드만 포함함 | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | `APR-0001`은 나중의 민감 동작 승인(Approval) 프로필이 활성화된 경우에만 있습니다. 민감 동작 승인(Approval)과 판단 요청(Decision) 참조는 범위 또는 사용자 판단 맥락을 보여줍니다. 가림 처리된 아티팩트 참조는 여전히 비밀 정보가 아닌 주장을 증명해야 합니다. |
 | 완료 조건: 변경 범위를 독립 검증자가 검토함 | RUN-VERIFY-001 | ART-BUNDLE-001 | EVAL-0001 | Eval이 현재 참조를 검토했고 요청된 닫기에 필요한 독립성이 있을 때만 유효합니다. |
 
-근거 목록(Evidence Manifest)은 주장을 뒷받침하지만 그 자체로 정확성을 증명하거나 분리 검증을 만들거나 수동 QA를 기록하거나 작업 수락을 암시하거나 잔여 위험을 보이게 하거나 잔여 위험을 수용하지 않습니다. 이 템플릿에서 닫기 영향 요약을 렌더링할 때는 테스트 통과, 자체 확인(self-check), QA 면제 판단, 사용자의 작업 수락이 서로 다른 닫기 조건으로 오해되지 않도록 각 줄을 분리해 보여줘야 합니다.
+근거 목록(Evidence Manifest)은 주장을 뒷받침하지만 그 자체로 정확성을 증명하거나 분리 검증을 만들거나 수동 QA를 기록하거나 최종 수락을 암시하거나 잔여 위험을 보이게 하거나 잔여 위험을 수락하지 않습니다. 이 템플릿에서 닫기 영향 요약을 렌더링할 때는 테스트 통과, 자체 확인(self-check), QA 면제 판단, 사용자의 최종 수락이 서로 다른 닫기 조건으로 오해되지 않도록 각 줄을 분리해 보여줘야 합니다.
 
-닫기 맥락을 보여줄 때 근거 목록은 잔여 위험 수용 닫기, 검증 면제, QA 면제, self-checked, `detached_verified`를 owner 참조 또는 명시적인 부재와 함께 서로 다른 표시 상태로 렌더링해야 합니다. 이 라벨은 owner 기록을 읽기 쉽게 요약할 뿐이며 근거 목록(Evidence Manifest) 권한이 아닙니다.
+닫기 맥락을 보여줄 때 근거 목록은 잔여 위험 수락 닫기, `verification_gate=waived_by_user`/검증 위험 수락, QA 면제, self-checked, `detached_verified`를 owner 참조 또는 명시적인 부재와 함께 서로 다른 표시 상태로 렌더링해야 합니다. 이 라벨은 owner 기록을 읽기 쉽게 요약할 뿐이며 근거 목록(Evidence Manifest) 권한이 아닙니다.
 
 뒷받침 범위 행은 큰 근거 본문을 붙여 넣는 대신 owner 기록과 아티팩트 참조(ArtifactRef)를 가리켜야 합니다. 어떤 기준, 조건, 주장을 뒷받침하는 참조가 없다면 문장으로 빈틈을 메우지 말고 `unsupported`, `insufficient`, `stale`, `blocked` 중 적절한 상태로 보여줍니다.
 
@@ -178,4 +178,4 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 큰 로그, 변경 차이, 스크린샷, 트레이스(trace), 번들(bundle)은 짧은 결과와 함께 등록된 ArtifactRef 참조로 남겨야 합니다. 근거 목록은 독자가 아티팩트 본문을 열어 보기 전에 가림 상태와 사용 가능성을 먼저 보여줘야 합니다.
 
-`secret_omitted` 아티팩트는 비밀 정보가 아닌 근거가 보이는 주장만 뒷받침할 수 있으며, 생략된 값이 필요한 주장은 뒷받침하지 못합니다. `blocked` 아티팩트는 커밋된 메타데이터 전용 알림(metadata-only notice)이지 사용 가능한 원본 근거가 아닙니다. 의존하는 기준은 대체 근거, 면제, 사용자 판단 결과, 받아들인 위험, 문서화된 대체 경로(fallback)가 근거 경로를 해소할 때까지 `unsupported`, `insufficient`, `blocked` 중 적절한 상태로 남습니다. 이 템플릿은 생략된 비밀 정보/PII 값 또는 차단된 페이로드(payload)를 포함하면 안 됩니다.
+`secret_omitted` 아티팩트는 비밀 정보가 아닌 근거가 보이는 주장만 뒷받침할 수 있으며, 생략된 값이 필요한 주장은 뒷받침하지 못합니다. `blocked` 아티팩트는 커밋된 메타데이터 전용 알림(metadata-only notice)이지 사용 가능한 원본 근거가 아닙니다. 의존하는 기준은 대체 근거, 면제, 사용자 판단 결과, 수락한 위험, 문서화된 대체 경로(fallback)가 근거 경로를 해소할 때까지 `unsupported`, `insufficient`, `blocked` 중 적절한 상태로 남습니다. 이 템플릿은 생략된 비밀 정보/PII 값 또는 차단된 페이로드(payload)를 포함하면 안 됩니다.

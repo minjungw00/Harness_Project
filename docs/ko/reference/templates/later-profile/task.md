@@ -26,9 +26,9 @@
 - 쓰기 허가 기록(Write Authorization)과 쓰기 권한 요약 표시 입력
 - 사용자 판단(User Judgment) 기록과 잔여 위험(Residual Risk), 해당 프로필이 켜졌을 때 전체 형식 판단 패킷(Decision Packet) 표시 필드
 - 최신 실행(Run), 근거 요약, ArtifactRef 참조, 그리고 일치하는 프로필이 활성화된 경우 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA 기록, 민감 동작 승인 기록
-- 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인 사용자 판단 참조, 나중의 민감 동작 승인(Approval) 참조, `evidence_ref` 참조와 파생 근거 요약, 활성화된 경우 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 작업 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness) 권한 주장을 표시할 때 필요한 간결한 출처 참조
+- 쓰기 허가 기록(Write Authorization), 사용자 판단(User Judgment), 민감 동작 승인 사용자 판단 참조, 나중의 민감 동작 승인(Approval) 참조, `evidence_ref` 참조와 파생 근거 요약, 활성화된 경우 근거 목록(Evidence Manifest), Eval(분리 검증 결과), 수동 QA, 최종 수락 맥락, 잔여 위험(Residual Risk), 아티팩트 참조, 가림 상태, 읽기용 보기 최신성(projection freshness) 권한 주장을 표시할 때 필요한 간결한 출처 참조
 - 가장 먼저 해소할 막힘, 추가 막힘, 가장 작은 해소 방법 표시 요약
-- 변경된 범위, 민감 동작 승인, 근거, 검증, 수동 QA, 잔여 위험 표시, 잔여 위험 수용, 작업 수락, 면제 판단 상태, 닫기 이유를 포함하는 닫기 요약 표시 입력
+- 변경된 범위, 민감 동작 승인, 근거, 검증, 수동 QA, 잔여 위험 표시, 잔여 위험 수락, 최종 수락, 면제 판단 상태, 닫기 이유를 포함하는 닫기 요약 표시 입력
 - 이어가기 축(Journey Spine) 기준 기록
 - `domain_terms`, `module_map_items`, `interface_contracts`, `feedback_loops`
 - TDD가 선택된 경우 `tdd_traces`
@@ -37,7 +37,7 @@
 - 기존 owner 기록과 참조에서 온 검토 단계(Review Stage) 표시 입력
 - 아티팩트 참조 및 읽기용 보기 최신성(projection freshness)
 
-`TASK`의 생성된 관문 그룹 요약(gate group summary), 사용자 판단 표시 문구, 닫기, 면제, 검토 단계(review-stage), 스튜어드십(stewardship), 보기 최신성(projection-freshness) 항목은 표시 바인딩입니다. 위에 나열한 owner 기록, 관문, 아티팩트, 참조로 해소되어야 하며, 그런 출처가 없으면 명시적인 부재/막힘 상태로 렌더링해야 합니다. 제품/UX 판단 또는 작업 수락 같은 라벨을 렌더링해도 기준 기록, 관문, `ProjectionKind` value, 근거, 수동 QA, 검증, 작업 수락, 잔여 위험 수용, 닫기, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다.
+`TASK`의 생성된 관문 그룹 요약(gate group summary), 사용자 판단 표시 문구, 닫기, 면제, 검토 단계(review-stage), 스튜어드십(stewardship), 보기 최신성(projection-freshness) 항목은 표시 바인딩입니다. 위에 나열한 owner 기록, 관문, 아티팩트, 참조로 해소되어야 하며, 그런 출처가 없으면 명시적인 부재/막힘 상태로 렌더링해야 합니다. 제품 판단 또는 최종 수락 같은 라벨을 렌더링해도 기준 기록, 관문, `ProjectionKind` value, 근거, 수동 QA, 검증, 최종 수락, 잔여 위험 수락, 닫기, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다.
 
 ## 렌더링 섹션
 
@@ -95,17 +95,17 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 사용자 판단:
   - 대기 중인 항목(판단마다 한 줄, 병합하지 않음):
   - 판단 요청:
-    - 제품/UX 판단:
+    - 제품 판단:
     - 기술 판단:
   - 권한:
     - 민감 동작 승인:
   - 면제:
     - 관련 사용자 판단 참조:
   - 수락:
-    - 작업 수락:
-  - 위험 수용:
-    - 잔여 위험 수용:
-    - 수용하는 이름 붙은 위험:
+    - 최종 수락:
+  - 위험 수락:
+    - 잔여 위험 수락:
+    - 수락하는 이름 붙은 위험:
   - 판단 / 민감 동작 승인 / 면제 / 수락 / 위험 참조:
   - 막힘 / 가장 작은 해소 방법:
   - 에이전트가 계속할 수 있는 것:
@@ -114,15 +114,15 @@ updated_at: 2026-05-06T09:30:15+09:00
   - 뒷받침 참조:
   - 빠졌거나 오래된 뒷받침:
   - 아티팩트 가림 또는 생략 상태:
-  - 대체하지 않는 것: 검증, 수동 QA, 작업 수락, 잔여 위험 수용
+  - 대체하지 않는 것: 검증, 수동 QA, 최종 수락, 잔여 위험 수락
   - 다음 근거 행동:
 - 닫기 준비 상태:
   - 검증:
   - 수동 QA:
   - 민감 동작 승인:
-  - 작업 수락:
+  - 최종 수락:
   - 잔여 위험 표시:
-  - 잔여 위험 수용:
+  - 잔여 위험 수락:
   - 면제 상태:
   - 닫기 막힘 / 닫기 이유:
   - 가장 작은 해소 방법:
@@ -152,7 +152,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 커널 관문 상세: scope=; decision=; approval=; design=; evidence=; verification=; 수동 QA=; acceptance=
 - 활성 작업 조각(Change Unit):
 - 쓰기 권한 요약:
-- 권한 출처 참조: 쓰기=; 판단=; 민감동작허가=; 근거요약=; 활성근거목록=; Eval=; 수동QA=; 작업수락=; 잔여위험=; 아티팩트=
+- 권한 출처 참조: 쓰기=; 판단=; 민감동작허가=; 근거요약=; 활성근거목록=; Eval=; 수동QA=; 최종수락=; 잔여위험=; 아티팩트=
 - 가림 상태:
 - 최신 보고서:
 - 보기 최신성:
@@ -175,7 +175,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - user_judgment_ref:
 - 판단 유형:
 - 판단 제목:
-- judgment_type:
+- judgment_kind:
 - presentation:
 - 표시 라벨:
 - 지금 필요한 이유:
@@ -186,7 +186,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 불확실성:
 - 미룰 때의 영향:
 - 해당되는 경우 잔여 위험:
-- 수용하는 이름 붙은 위험:
+- 수락하는 이름 붙은 위험:
 - 에이전트가 사용자 없이 결정해도 되는 것:
 - 이 판단이 확정하지 않는 것:
 - 일반 동의 표현 처리:
@@ -203,8 +203,8 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 근거 요약 / 활성화된 경우 근거 목록(Evidence Manifest):
 - Eval(분리 검증 결과):
 - 수동 QA:
-- 작업 수락 사용자 판단:
-- 작업 수락 맥락:
+- 최종 수락 사용자 판단:
+- 최종 수락 맥락:
 - 잔여 위험(Residual Risk):
 - 아티팩트 참조와 가림 상태:
 - 보기 최신성:
@@ -239,7 +239,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 | 1 | | | | | |
 
 ## 검토 단계
-- 메모: 관리되는 표시 전용입니다. 역할 렌즈(Role Lens)/playbook 라벨은 관문, 기록, `ProjectionKind` value, 민감 동작 승인, 근거, 검증, 수동 QA, 작업 수락, 잔여 위험 수용, 닫기, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다. 같은 세션 검토는 분리 검증이 아닙니다. 발견 사항은 기존 owner 기록, 참조, 관문, 막힘으로 연결합니다.
+- 메모: 관리되는 표시 전용입니다. 역할 렌즈(Role Lens)/playbook 라벨은 관문, 기록, `ProjectionKind` value, 민감 동작 승인, 근거, 검증, 수동 QA, 최종 수락, 잔여 위험 수락, 닫기, 쓰기 허가 기록(Write Authorization)을 만들지 않습니다. 같은 세션 검토는 분리 검증이 아닙니다. 발견 사항은 기존 owner 기록, 참조, 관문, 막힘으로 연결합니다.
 
 ### 명세 준수 검토
 - 수용 기준 뒷받침 범위:
@@ -275,9 +275,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 닫기 관련 위험:
 - 표시 상태:
 - 상태 값:
-- 수용하는 이름 붙은 위험:
-- 잔여 위험 수용 상태:
-- 받아들인 잔여 위험 참조:
+- 수락하는 이름 붙은 위험:
+- 잔여 위험 수락 상태:
+- 수락한 잔여 위험 참조:
 - 후속 작업 필요:
 - 닫기 영향:
 
@@ -288,17 +288,17 @@ updated_at: 2026-05-06T09:30:15+09:00
 - 수동 QA:
 - 민감 동작 승인:
 - 잔여 위험 표시:
-- 잔여 위험 수용:
-- 작업 수락:
-- 작업 수락이 대체하지 않는 것:
+- 잔여 위험 수락:
+- 최종 수락:
+- 최종 수락이 대체하지 않는 것:
 - 면제 상태:
 - 권한 출처 참조:
 - 표시 상태 라벨(일반 문구, schema 값 아님):
 - 자체 확인 참조:
 - 분리 검증 Eval 참조:
-- 검증 면제 판단 참조:
+- 검증 위험 수락 참조:
 - QA 면제 판단 참조:
-- 받아들인 잔여 위험 참조:
+- 수락한 잔여 위험 참조:
 - 닫기 이유:
 - 남은 후속 작업:
 
@@ -339,9 +339,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 | CU-01 | | | vertical | trace 상태: required \| recorded \| waived \| not_required; RED/GREEN ref 표시 | pending | |
 
 ## 대기 중인 사용자 판단
-| 표시 라벨 | 질문 | `judgment_type` / 참조 | 상태 | 다음 행동 |
+| 표시 라벨 | 질문 | `judgment_kind` / 참조 | 상태 | 다음 행동 |
 |---|---|---|---|---|
-| 제품/UX 판단 \| 기술 판단 \| 민감 동작 승인 \| 작업 수락 \| 잔여 위험 수용 | | | | |
+| 제품 판단 \| 기술 판단 \| 민감 동작 승인 \| 최종 수락 \| 잔여 위험 수락 | | | | |
 
 ## 근거와 보고서
 - 근거 요약 / 활성화된 경우 근거 목록(Evidence Manifest):
@@ -443,11 +443,11 @@ updated_at: 2026-05-06T09:30:15+09:00
   - 범위 안의 로컬 리팩터:
   - 근거 수집:
 - 필요한 사용자 판단:
-  - 제품/UX 판단:
+  - 제품 판단:
   - 기술 판단:
   - 민감 동작 승인:
-  - 작업 수락:
-  - 잔여 위험 수용:
+  - 최종 수락:
+  - 잔여 위험 수락:
   - 공개 인터페이스 또는 호환성 약속:
 - AFK 중단 조건:
   - 경계 초과:
@@ -511,27 +511,27 @@ updated_at: 2026-05-06T09:30:15+09:00
 
 `TASK`의 구현 마이크로 계획(Implementation Micro-Plan)은 현재 Task와 작업 조각(Change Unit) 상태에서 생성되거나 그 상태와 정렬된 가벼운 실행 보조 정보입니다. [상태 보기와 템플릿 참조(Projection And Templates Reference)](../../projection-and-templates.md#projection-principles)의 상태 보기/보고서(projection/report) 경계 안에 머물며, `prepare_write`나 owner 상태 변경을 대체하지 않습니다.
 
-`TASK`의 검토 단계(Review Stages)는 역할 렌즈(Role Lens), playbook, 2단계 검토 지침(two-stage review guidance)을 위한 관리되는 표시 섹션입니다. 정확한 권한 없음 규칙은 [설계 품질 정책(Design Quality Policies)](../../design-quality-policies.md#two-stage-review-display)과 [에이전트 통합(Agent Integration)](../../agent-integration.md#role-lens-동작)이 담당합니다. 기준 기록, `ProjectionKind` value, 민감 동작 승인, 근거, 검증, 수동 QA, 작업 수락, 잔여 위험 수용, 닫기, 쓰기 허가 기록(Write Authorization)을 만들지 않으며, 발견 사항은 기존 owner 경로로 연결해야 합니다.
+`TASK`의 검토 단계(Review Stages)는 역할 렌즈(Role Lens), playbook, 2단계 검토 지침(two-stage review guidance)을 위한 관리되는 표시 섹션입니다. 정확한 권한 없음 규칙은 [설계 품질 정책(Design Quality Policies)](../../design-quality-policies.md#two-stage-review-display)과 [에이전트 통합(Agent Integration)](../../agent-integration.md#role-lens-동작)이 담당합니다. 기준 기록, `ProjectionKind` value, 민감 동작 승인, 근거, 검증, 수동 QA, 최종 수락, 잔여 위험 수락, 닫기, 쓰기 허가 기록(Write Authorization)을 만들지 않으며, 발견 사항은 기존 owner 경로로 연결해야 합니다.
 
 생성된 요약은 사용자가 읽기 쉬운 평범한 말을 먼저 쓰고, 정확한 Harness 용어는 유용한 라벨이나 참조로 붙입니다. 상태 보기가 명령어처럼 보이거나 표시 문구만으로 상태가 만들어진 것처럼 암시하면 안 됩니다.
 
 관문 그룹 요약은 읽는 사람이 원시 관문 상세(gate detail)보다 실제 막힘 이야기를 먼저 보도록 첫 관리 섹션으로 둡니다. 범위, 사용자 판단, 근거, 닫기 준비 상태는 기존 owner 기록, 관문, 막힘, 참조에서 파생되는 표시 그룹입니다. 기준 필드(field), 정확한 관문 값(gate value)의 별칭(alias), 새 관문(gate), 재계산 입력(recompute input), 닫기 의미(close semantics), 권한 경로(authority path)가 아닙니다. 사용자 판단은 구조화되어 있으며 하나의 넓은 판단 또는 승인 묶음처럼 렌더링하면 안 됩니다. 정확한 관문(gate) 값과 재계산 규칙(recompute rule)은 [Core Model 참조](../../core-model.md#gates)가 담당하고, 닫기 동작은 [`close_task`](../../core-model.md#close_task)가 담당합니다.
 
-`TASK`의 사용자 판단(User Judgment) 표시는 기준 schema field와 렌더링 라벨을 분리해야 합니다. `judgment_type`은 내부 판단 유형이고, `presentation`은 compact 또는 full 표시 깊이를 제어하며, `display_label`은 제품/UX 판단, 기술 판단, 민감 동작 승인, 작업 수락, 잔여 위험 수용 중 하나입니다. `judgment_type` 예시는 `product_choice`, `technical_choice`, `sensitive_action_approval`, `work_acceptance`, `residual_risk_acceptance`입니다. 판단이 여러 영역에 걸쳐 있으면 라벨을 배타적으로 다루지 말고 부차적인 고려사항을 장단점, 영향받는 관문, 위험, 근거, 후속 조치에 렌더링해야 합니다. `judgment_category`, `judgment_route`, `display_depth` 같은 레거시 필드는 마이그레이션 메모나 호환성 세부 보기에서만 나타날 수 있습니다. 이런 필드는 새 payload branch selector, gate, status value, gate recompute input, close aggregation rule, authority path, `judgment_type`의 대체물이 아닙니다. `presentation` 또는 `display_label`에서 파생한 표시용 라벨은 validator input이 아니며 민감 동작 승인, 작업 수락, QA, 잔여 위험 수용, 닫기, 쓰기 허가 기록(Write Authorization)의 owner contract를 흐리면 안 됩니다.
+`TASK`의 사용자 판단(User Judgment) 표시는 기준 schema field와 렌더링 라벨을 분리해야 합니다. `judgment_kind`은 내부 판단 유형이고, `presentation`은 compact 또는 full 표시 깊이를 제어하며, `display_label`은 제품 판단, 기술 판단, 범위 판단, 민감 동작 승인, QA 면제 판단, 검증 위험 수락, 최종 수락, 잔여 위험 수락, 취소 판단 중 하나입니다. 지원하는 `judgment_kind` 값은 `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `qa_waiver`, `verification_risk_acceptance`, `final_acceptance`, `residual_risk_acceptance`, `cancellation`입니다. 판단이 여러 영역에 걸쳐 있으면 라벨을 배타적으로 다루지 말고 부차적인 고려사항을 장단점, 영향받는 관문, 위험, 근거, 후속 조치에 렌더링해야 합니다. `judgment_category`, `judgment_route`, `display_depth` 같은 레거시 필드는 마이그레이션 메모나 호환성 세부 보기에서만 나타날 수 있습니다. 이런 필드는 새 payload branch selector, gate, status value, gate recompute input, close aggregation rule, authority path, `judgment_kind`의 대체물이 아닙니다. `presentation` 또는 `display_label`에서 파생한 표시용 라벨은 validator input이 아니며 민감 동작 승인, 최종 수락, QA 면제 판단, 검증 위험 수락, 잔여 위험 수락, 닫기, 쓰기 허가 기록(Write Authorization)의 owner contract를 흐리면 안 됩니다.
 
-대기 중인 사용자 판단은 한 줄로 합치면 안 됩니다. 민감 동작 승인, 작업 수락, 잔여 위험 수용이 모두 대기 중이면 세 가지 라벨로 세 항목을 렌더링합니다. 민감 동작 승인 카드(Approval Card)는 작업 수락처럼 보이면 안 되고, 잔여 위험 수용은 수용하는 위험을 이름 붙여야 합니다.
+대기 중인 사용자 판단은 한 줄로 합치면 안 됩니다. 민감 동작 승인, 최종 수락, 잔여 위험 수락이 모두 대기 중이면 세 가지 라벨로 세 항목을 렌더링합니다. 민감 동작 승인 카드(Approval Card)는 최종 수락처럼 보이면 안 되고, 잔여 위험 수락은 수락하는 위험을 이름 붙여야 합니다.
 
-`TASK`의 권한 주장은 출처 참조 또는 명시적 부재로 해소되어야 합니다. 쓰기 권한 주장은 compatible하게 소비된 쓰기 허가 기록(Write Authorization) 참조를 가리킵니다. Attempted invalid authorization ref는 violation/audit 또는 validator-finding context로만 나타날 수 있습니다. 민감 동작 허가는 최소 MVP-1에서는 `judgment_type=sensitive_action_approval`인 해소된 `user_judgment`를 가리키고, 나중의 민감 동작 승인(Approval) 프로필이 활성화된 경우에만 Approval 참조를 가리킵니다. 최소 MVP-1 근거 표시는 있을 때 `evidence_ref`, 실행(Run) 참조, ArtifactRef 참조, 보이는 공백 요약을 가리킵니다. 활성 담당 경로가 전체 근거 충분성을 세울 수 없으면 충분성을 주장하지 않아야 합니다. 전체 기준-근거 충분성은 근거 목록(Evidence Manifest) 프로필이 활성화된 경우에만 근거 목록 참조를 가리킵니다. 분리 검증은 해당 프로필이 활성화된 경우에만 Eval(분리 검증 결과) 참조를 가리킵니다. 수동 QA는 해당 프로필이 활성화된 경우에만 수동 QA 기록 또는 유효한 면제 참조를 가리킵니다. 작업 수락은 작업 수락 사용자 판단 경로를 가리킵니다. MVP-1에서 잔여 위험 표시는 막힘/사용자 판단 참조 또는 `ResidualRiskSummary.status=none`을 가리키고, 풍부한 Residual Risk 참조는 해당 프로필이 활성화된 경우에만 가리킵니다. MVP-1에서 잔여 위험 수용은 잔여 위험 수용 사용자 판단과 관련 막힘/근거 참조를 가리키고, 수락된 Residual Risk 참조는 해당 나중 프로필이 활성화된 경우에만 가리킵니다. 참조가 없으면 완료된 권한이 아니라 빠진 뒷받침으로 렌더링해야 합니다.
+`TASK`의 권한 주장은 출처 참조 또는 명시적 부재로 해소되어야 합니다. 쓰기 권한 주장은 compatible하게 소비된 쓰기 허가 기록(Write Authorization) 참조를 가리킵니다. Attempted invalid authorization ref는 violation/audit 또는 validator-finding context로만 나타날 수 있습니다. 민감 동작 허가는 최소 MVP-1에서는 `judgment_kind=sensitive_approval`인 해소된 `user_judgment`를 가리키고, 나중의 민감 동작 승인(Approval) 프로필이 활성화된 경우에만 Approval 참조를 가리킵니다. 최소 MVP-1 근거 표시는 있을 때 `evidence_ref`, 실행(Run) 참조, ArtifactRef 참조, 보이는 공백 요약을 가리킵니다. 활성 담당 경로가 전체 근거 충분성을 세울 수 없으면 충분성을 주장하지 않아야 합니다. 전체 기준-근거 충분성은 근거 목록(Evidence Manifest) 프로필이 활성화된 경우에만 근거 목록 참조를 가리킵니다. 분리 검증은 해당 프로필이 활성화된 경우에만 Eval(분리 검증 결과) 참조를 가리킵니다. 수동 QA는 해당 프로필이 활성화된 경우에만 수동 QA 기록 또는 유효한 면제 참조를 가리킵니다. 최종 수락은 최종 수락 사용자 판단 경로를 가리킵니다. MVP-1에서 잔여 위험 표시는 막힘/사용자 판단 참조 또는 `ResidualRiskSummary.status=none`을 가리키고, 풍부한 Residual Risk 참조는 해당 프로필이 활성화된 경우에만 가리킵니다. MVP-1에서 잔여 위험 수락은 잔여 위험 수락 사용자 판단과 관련 막힘/근거 참조를 가리키고, 수락된 Residual Risk 참조는 해당 나중 프로필이 활성화된 경우에만 가리킵니다. 참조가 없으면 완료된 권한이 아니라 빠진 뒷받침으로 렌더링해야 합니다.
 
-잔여 위험 표시는 `status=none`과 `not_visible`을 구분해야 합니다. `status=none`은 요청된 행동에 대해 알려진 닫기 관련 잔여 위험이 없다는 뜻입니다. `not_visible`은 알려진 닫기 관련 위험이 있지만 작업 수락 또는 닫기에 충분히 보이지 않았다는 뜻이므로, 위험과 참조가 보일 때까지 막힘 또는 다음 행동으로 남아야 합니다.
+잔여 위험 표시는 `status=none`과 `not_visible`을 구분해야 합니다. `status=none`은 요청된 행동에 대해 알려진 닫기 관련 잔여 위험이 없다는 뜻입니다. `not_visible`은 알려진 닫기 관련 위험이 있지만 최종 수락 또는 닫기에 충분히 보이지 않았다는 뜻이므로, 위험과 참조가 보일 때까지 막힘 또는 다음 행동으로 남아야 합니다.
 
-`TASK`의 닫기와 보증 표시는 자체 확인된 작업, `detached_verified`, 검증 면제 판단, QA 면제 판단, 잔여 위험 수용 닫기를 눈에 보이게 분리해야 합니다. 잔여 위험 수용 닫기는 MVP-1에서는 잔여 위험 수용 사용자 판단과 관련 막힘/근거 참조를 가리키고, 수락된 Residual Risk 참조는 해당 나중 프로필이 활성화된 경우에만 가리켜야 합니다. 검증 면제 판단은 `verification_gate=waived_by_user`와 필요한 경우 그 사용자 판단을, QA 면제 판단은 `qa_gate=waived`, 수동 QA 기록 또는 면제 사유, 필요한 경우 QA 면제 사용자 판단을 가리켜야 합니다.
+`TASK`의 닫기와 보증 표시는 자체 확인된 작업, `detached_verified`, `verification_gate=waived_by_user`, QA 면제 판단, 잔여 위험 수락 닫기를 눈에 보이게 분리해야 합니다. 잔여 위험 수락 닫기는 MVP-1에서는 잔여 위험 수락 사용자 판단과 관련 막힘/근거 참조를 가리키고, 수락된 Residual Risk 참조는 해당 나중 프로필이 활성화된 경우에만 가리켜야 합니다. 검증을 면제한 표시는 `verification_gate=waived_by_user`와 필요한 경우 검증 위험 수락 사용자 판단을, QA 면제 판단은 `qa_gate=waived`, 수동 QA 기록 또는 면제 사유, 필요한 경우 QA 면제 사용자 판단을 가리켜야 합니다.
 
-`TASK`의 면제 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 또는 검증 면제 판단은 면제를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA 면제 판단은 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA 면제 사용자 판단을, 검증 면제 판단은 `verification_gate=waived_by_user`와 필요한 경우 그 사용자 판단을 가리킵니다. 정책 또는 관문, Task와 작업 조각(Change Unit), 생략한 확인이나 대상, 사유, 행위자, 필요할 때 만료 또는 잔여 위험 후속 작업, 관련 참조, 닫기 영향, 그리고 필요할 때 잔여 위험 경로로 보여주거나 수용해야 하는 닫기 관련 잔여 위험도 함께 보여줘야 합니다. QA 면제 판단은 수동 QA가 되지 않고, 검증 면제 판단은 분리 검증을 만들지 않습니다.
+`TASK`의 면제 표시는 요약일 뿐입니다. 닫기에 영향을 주는 QA 면제 판단이나 `verification_gate=waived_by_user` 상태는 그 경로를 유효하게 만드는 기존 기록을 가리켜야 합니다. QA 면제 판단은 `manual_qa_records`/`qa_gate=waived`와 필요한 경우 QA 면제 사용자 판단을, `verification_gate=waived_by_user` 상태는 필요한 경우 검증 위험 수락 사용자 판단을 가리킵니다. 정책 또는 관문, Task와 작업 조각(Change Unit), 생략한 확인이나 대상, 사유, 행위자, 필요할 때 만료 또는 잔여 위험 후속 작업, 관련 참조, 닫기 영향, 그리고 필요할 때 잔여 위험 경로로 보여주거나 수락해야 하는 닫기 관련 잔여 위험도 함께 보여줘야 합니다. QA 면제 판단은 수동 QA가 되지 않고, 검증 위험 수락은 분리 검증을 만들지 않습니다.
 
-`TASK`의 닫기 요약은 진행 중이거나 최근 닫힌 `work` Task를 위한 이어가기 표시 요약입니다. 관문(Gate) 상태나 잔여 위험을 숨기면 안 됩니다. 닫기가 성공했거나, 막혔거나, 취소됐거나, 잔여 위험 수용으로 닫혔을 때 변경된 범위, 민감 동작 승인, 근거, 검증, 수동 QA, 잔여 위험 표시, 잔여 위험 수용, 작업 수락, 면제 판단 상태, 닫기 이유, 잔여 위험 후속 작업을 해당되는 만큼 보여주고 owner 기록으로 돌아가는 참조를 포함해야 합니다. 민감 동작 승인, 작업 수락, 잔여 위험 수용은 반드시 별도 줄로 유지합니다. 민감 동작 승인은 이름 붙은 민감 동작에 대한 허가이고, 작업 수락은 사용자의 결과 판단이며, 잔여 위험 수용은 수용한 위험을 이름 붙이고 MVP-1에서는 잔여 위험 수용 사용자 판단과 관련 막힘/근거 참조를 인용해야 합니다. 수락된 Residual Risk 참조는 해당 나중 프로필이 활성화된 경우에만 인용합니다.
+`TASK`의 닫기 요약은 진행 중이거나 최근 닫힌 `work` Task를 위한 이어가기 표시 요약입니다. 관문(Gate) 상태나 잔여 위험을 숨기면 안 됩니다. 닫기가 성공했거나, 막혔거나, 취소됐거나, 잔여 위험 수락으로 닫혔을 때 변경된 범위, 민감 동작 승인, 근거, 검증, 수동 QA, 잔여 위험 표시, 잔여 위험 수락, 최종 수락, 면제 판단 상태, 닫기 이유, 잔여 위험 후속 작업을 해당되는 만큼 보여주고 owner 기록으로 돌아가는 참조를 포함해야 합니다. 민감 동작 승인, 최종 수락, 잔여 위험 수락은 반드시 별도 줄로 유지합니다. 민감 동작 승인은 이름 붙은 민감 동작에 대한 허가이고, 최종 수락은 사용자의 결과 판단이며, 잔여 위험 수락은 수락한 위험을 이름 붙이고 MVP-1에서는 잔여 위험 수락 사용자 판단과 관련 막힘/근거 참조를 인용해야 합니다. 수락된 Residual Risk 참조는 해당 나중 프로필이 활성화된 경우에만 인용합니다.
 
-닫기 요약은 민감 동작 승인, 근거, 검증, 수동 QA, 작업 수락, 잔여 위험 표시, 잔여 위험 수용을 하나의 "완료" 표시로 합치면 안 됩니다. 테스트가 통과했지만 민감 동작 승인, 수동 QA, 작업 수락, 잔여 위험 수용이 대기 중이면 닫기 표시는 정확히 그 범주를 막힘으로 보여줘야 합니다.
+닫기 요약은 민감 동작 승인, 근거, 검증, 수동 QA, 최종 수락, 잔여 위험 표시, 잔여 위험 수락을 하나의 "완료" 표시로 합치면 안 됩니다. 테스트가 통과했지만 민감 동작 승인, 수동 QA, 최종 수락, 잔여 위험 수락이 대기 중이면 닫기 표시는 정확히 그 범주를 막힘으로 보여줘야 합니다.
 
 직접 작업은 `DIRECT-RESULT`에서 가벼운 닫기 영향 요약을 보여주고, 이어가기 카드(Journey Card) 닫기 맥락은 간결한 상태/이어가기 표시입니다. `TASK` 닫기 요약은 [projection/report 경계](../../projection-and-templates.md#projection-principles) 안의 이어가기 표시이며, 닫기와 관문 영향은 여전히 owner 기록에서 옵니다.
 

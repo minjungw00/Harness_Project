@@ -14,13 +14,18 @@ Before asking, the agent should check what the repository, docs, tests, current 
 
 Use a judgment request when the next safe action depends on one of these user-owned choices:
 
-- Product/UX judgment
-- Technical judgment
+- Product decision
+- Technical decision
+- Scope decision
 - Sensitive action approval
-- Work acceptance
+- QA waiver
+- Verification risk acceptance
+- Final acceptance
 - Residual risk acceptance
+- Cancellation
+- Cancellation
 
-Do not merge these into one "approve?" prompt. Permission to install a dependency is not the same as adopting that dependency as the architecture. Work acceptance is not the same as accepting known residual risk. A QA waiver is not evidence that QA passed.
+Do not merge these into one "approve?" prompt. Permission to install a dependency is not the same as adopting that dependency as the architecture. A scope decision is not a write authorization. Final acceptance is not the same as accepting known residual risk. A QA waiver is not evidence that QA passed. Verification-risk acceptance is not detached verification.
 
 ## Good Shape
 
@@ -35,6 +40,7 @@ A good judgment request normally answers:
 - what can continue if the user defers
 - what does not get settled by the answer
 - what evidence, QA, verification, acceptance, or residual risk may be affected
+- why the agent cannot decide this on the user's behalf
 
 Small unblockers can stay short. Complex, security-sensitive, close-relevant, or architecture-shaping choices need fuller trade-offs.
 
@@ -64,10 +70,10 @@ Recommendation: use a toast for a non-blocking success message. Use inline text 
 
 If you defer: save-state wiring can continue, but final UI behavior, screenshots, and human QA should wait.
 
-This settles only the Save feedback pattern. It does not settle broader settings workflow, localization strategy, work acceptance, residual-risk acceptance, or write authority.
+This settles only the Save feedback pattern. It does not settle broader settings workflow, localization strategy, final acceptance, residual-risk acceptance, or write authority.
 ```
 
-Why this is good: it asks for one bounded product/UX judgment without pretending the answer approves every later step.
+Why this is good: it asks for one bounded product decision without pretending the answer approves every later step.
 
 Bad agent response:
 
@@ -77,7 +83,7 @@ I will add a modal after Save because it is the safest way to make users notice 
 
 Why this is bad: it silently chooses a disruptive UX pattern and does not check whether inline or toast behavior fits the product.
 
-## Product/UX Judgment: Inline Message Vs Toast Vs Modal
+## Product Judgment: Inline Message Vs Toast Vs Modal
 
 Use this when user-visible behavior must be chosen before implementation or QA can finish.
 
@@ -95,7 +101,7 @@ Uncertainty: the agent still needs to confirm existing design-system support for
 
 If you defer: API error mapping and state plumbing can continue, but final UI behavior, final copy, screenshots, and human QA should wait.
 
-This does not settle: login architecture, account recovery, work acceptance, residual-risk acceptance, or permission for sensitive steps.
+This does not settle: login architecture, account recovery, final acceptance, residual-risk acceptance, or permission for sensitive steps.
 ```
 
 Why this works: it asks for the UX choice instead of asking the user to "approve the login change."
@@ -127,7 +133,7 @@ Uncertainty: current client mix, existing auth middleware, revocation requiremen
 
 If you defer: the agent can inspect current auth code and draft a narrow work slice, but should not commit to storage, token lifetime, middleware behavior, or identity-provider integration.
 
-This does not settle: failed-login UX, audit logging, rate limits, work acceptance, or permission to install dependencies.
+This does not settle: failed-login UX, audit logging, rate limits, final acceptance, or permission to install dependencies.
 ```
 
 Why this is good: it separates identity-provider choice from session/storage strategy. OAuth/OIDC may still need a local session or token strategy.
@@ -158,10 +164,10 @@ Uncertainty: support requirements, retention policy, compliance obligations, and
 
 If you defer: implementation can continue without PII logging, but diagnostics that require user identifiers should wait.
 
-This does not settle: permission for any sensitive command, artifact redaction evidence, work acceptance, or residual-risk acceptance.
+This does not settle: permission for any sensitive command, artifact redaction evidence, final acceptance, or residual-risk acceptance.
 ```
 
-Why this works: it treats privacy as a user-owned technical judgment, not a hidden implementation detail.
+Why this works: it treats privacy as a user-owned technical decision, not a hidden implementation detail.
 
 ## Security/Privacy Judgment: API Key Handling
 
@@ -213,10 +219,10 @@ Options:
 - Deny it and continue with a no-new-dependency path if one exists.
 - Ask for a separate architecture judgment before any install approval.
 
-This does not settle: whether the dependency is the right architecture direction, future installs, product writes outside scope, QA or verification waiver, work acceptance, or residual-risk acceptance.
+This does not settle: whether the dependency is the right architecture direction, future installs, product writes outside scope, QA waiver or verification-risk acceptance, final acceptance, or residual-risk acceptance.
 ```
 
-Why this works: sensitive action approval is separate from the technical judgment to adopt a dependency.
+Why this works: sensitive action approval is separate from the technical decision to adopt a dependency.
 
 ## Technical Judgment: QA Expectation Or Waiver
 
@@ -236,7 +242,7 @@ Uncertainty: small-screen layout, keyboard flow, screen-reader interpretation, a
 
 If you defer: implementation can remain complete, but close should stay blocked until Manual QA passes or a valid waiver and any required residual-risk acceptance are recorded.
 
-This does not settle: evidence sufficiency, verification, work acceptance, or residual-risk acceptance.
+This does not settle: evidence sufficiency, verification, final acceptance, or residual-risk acceptance.
 ```
 
 Why this works: it names the skipped human inspection. A QA waiver does not prove QA passed.
@@ -256,7 +262,7 @@ Good agent response:
 ```text
 I will show Manual QA as deferred, not passed. The implementation can remain ready for your later check, but close stays blocked unless the active path allows a QA waiver and any visible residual risk is handled separately.
 
-This does not settle: work acceptance, Manual QA pass, verification, or residual-risk acceptance.
+This does not settle: final acceptance, Manual QA pass, verification, or residual-risk acceptance.
 ```
 
 Why this is good: it preserves the evidence gap instead of turning future testing into current evidence.
@@ -287,17 +293,17 @@ Uncertainty: same-session bias, unreviewed export edge cases, stale bundle risk,
 
 If you defer: the task cannot close as detached verified. Close either waits or uses the documented risk-accepted path when allowed.
 
-This does not settle: work acceptance, Manual QA, or acceptance of any named residual risk.
+This does not settle: final acceptance, Manual QA, or acceptance of any named residual risk.
 ```
 
 Why this works: it keeps assurance language honest. A waiver does not create verification.
 
-## Work Acceptance
+## Final Acceptance
 
 Use this when the task path requires the user to accept the result after the close basis is visible.
 
 ```text
-Judgment request: decide whether you accept the completed result for this task.
+Judgment request: decide whether you give final acceptance for the completed result of this task.
 
 Shown before you answer:
 - scope that was completed
@@ -311,10 +317,10 @@ Options:
 - Do not accept it; name what must change.
 - Defer acceptance until one listed blocker is resolved.
 
-This does not settle: new writes, new sensitive-step permission, missing evidence, verification or QA waiver, or acceptance of named residual risk.
+This does not settle: new writes, new sensitive-step permission, missing evidence, verification risk, QA waiver, or acceptance of named residual risk.
 ```
 
-Why this works: work acceptance is a result judgment after the close basis is visible. It is not proof, permission, or risk acceptance.
+Why this works: final acceptance is a result judgment after the close basis is visible. It is not proof, permission, scope approval, QA waiver, verification-risk acceptance, or residual-risk acceptance.
 
 ## Residual Risk Acceptance
 
@@ -334,9 +340,9 @@ Recommendation: accept only if legacy encoding is rare, documented, and has an o
 
 Uncertainty: real customer frequency, support impact, and whether existing imports include legacy files.
 
-If you defer: work acceptance or close may remain blocked until the risk is resolved, made non-close-relevant, or accepted through the owner path.
+If you defer: final acceptance or close may remain blocked until the risk is resolved, made non-close-relevant, or accepted through the owner path.
 
-This does not settle: work acceptance, verification, QA, or proof that the risk is harmless.
+This does not settle: final acceptance, verification, QA, or proof that the risk is harmless.
 ```
 
 Why this works: it makes the remaining limitation visible before acceptance and asks about the named risk, not a vague "looks good."
@@ -349,9 +355,9 @@ Answer in ordinary language and add the boundary you care about:
 Choose inline failed-login feedback. Keep the message generic, do not add a modal, and keep account recovery out of scope for this task.
 ```
 
-That kind of answer resolves the named judgment without granting every other authority. The agent still needs the normal owner paths for write authority, evidence, QA, verification, work acceptance, residual-risk acceptance, and close.
+That kind of answer resolves the named judgment without granting every other authority. The agent still needs the normal owner paths for write authority, evidence, QA, verification, final acceptance, residual-risk acceptance, and close.
 
-If you answer "proceed," "go ahead," "looks good," "진행해," or "좋아," the agent must not automatically treat that phrase as sensitive action approval, work acceptance, or residual risk acceptance. If more than one judgment is pending, or if the phrase could mean permission, acceptance, risk acceptance, waiver, scope confirmation, or simple continuation, the agent should ask which judgment you mean before recording it.
+If you answer "yes, do it," "proceed," "go ahead," "looks good," "진행해," or "좋아," the agent must not automatically treat that phrase as sensitive action approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, cancellation, or scope change. If more than one judgment is pending, or if the phrase could mean permission, final acceptance, residual-risk acceptance, waiver, scope confirmation, cancellation, or simple continuation, the agent should ask which judgment you mean before recording it.
 
 User request:
 
@@ -362,7 +368,7 @@ Looks good, go ahead.
 Good agent response:
 
 ```text
-I will apply that to the one active judgment: use inline failed-login feedback. This does not grant sensitive-action approval, work acceptance, QA waiver, or residual-risk acceptance.
+I will apply that to the one active judgment: use inline failed-login feedback. This does not grant sensitive approval, final acceptance, QA waiver, verification-risk acceptance, scope change, cancellation, or residual-risk acceptance.
 ```
 
 Why this is good: it maps the user's short reply only to the named pending judgment.
@@ -385,7 +391,7 @@ Use these Reference owners when exact behavior is needed:
 | Public request and answer shapes | [`harness.request_user_judgment`](../reference/api/mvp-api.md#harnessrequest_user_judgment), [`harness.record_user_judgment`](../reference/api/mvp-api.md#harnessrecord_user_judgment) |
 | Sensitive-action Approval | [Approval](../reference/core-model.md#approval) |
 | Evidence sufficiency | [Evidence Gate](../reference/core-model.md#evidence-gate) |
-| Verification and verification waiver impact | [Verification Gate](../reference/core-model.md#verification-gate) |
+| Verification and verification-risk acceptance impact | [Verification Gate](../reference/core-model.md#verification-gate) |
 | Manual QA and QA waiver impact | [QA Gate](../reference/core-model.md#qa-gate) |
-| Work acceptance and residual-risk visibility | [Acceptance Gate](../reference/core-model.md#acceptance-gate), [Residual Risk](../reference/core-model.md#residual-risk) |
+| Final acceptance and residual-risk visibility | [Acceptance Gate](../reference/core-model.md#acceptance-gate), [Residual Risk](../reference/core-model.md#residual-risk) |
 | Close blockers and close reasons | [`close_task`](../reference/core-model.md#close_task) |

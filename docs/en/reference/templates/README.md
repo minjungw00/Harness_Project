@@ -9,7 +9,7 @@ Authority rule:
 - Templates are views, not authority state.
 - User templates optimize readability.
 - Agent templates optimize compact, accurate next-action context.
-- Rendered views cannot create approval, work acceptance, residual-risk acceptance, evidence, close readiness, Write Authorization, or close.
+- Rendered views cannot create approval, final acceptance, residual-risk acceptance, evidence, close readiness, Write Authorization, or close.
 - Chat, Markdown, status cards, agent packets, and reports cannot override Core state.
 - A template existing in this repository does not make it required for MVP-1.
 
@@ -29,7 +29,7 @@ Owner boundary: this directory owns rendered template bodies and display card sh
 |---|---|---|---|
 | User status | [status-card](status-card.md) | MVP-1 User Work Loop | Short user-visible current state. It is the default user-readable current-state view. |
 | Agent next-action context | [agent-context-packet](agent-context-packet.md) | MVP-1 support view | Compact refs, blockers, source clocks, freshness, and owner-section pointers for the next safe action. |
-| User-owned judgment prompt | [judgment-request](judgment-request.md) | MVP-1 User Work Loop | Concise prompt for Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance. Full Decision Packet display is later/full-profile. |
+| User-owned judgment prompt | [judgment-request](judgment-request.md) | MVP-1 User Work Loop | Concise prompt for Product decision, Technical decision, Scope decision, Sensitive action approval, QA waiver, Verification risk acceptance, Final acceptance, Residual risk acceptance, or Cancellation. Full Decision Packet display is later/full-profile. |
 | Run and evidence summary | [run-evidence-summary](run-evidence-summary.md) | MVP-1 User Work Loop | Minimal Run, check, evidence ref, artifact ref, redaction, and gap summary. Detailed Run Summary and Evidence Manifest are later/full-profile. |
 | Close display | [close-result](close-result.md) | MVP-1 User Work Loop | Close readiness, acceptance, residual risk, blockers, smallest unblocker, and close result display. Detailed Journey, direct-result, export, and release-handoff reports are later/full-profile. |
 

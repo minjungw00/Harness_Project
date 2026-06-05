@@ -6,7 +6,7 @@ Use `status-card` when MVP-1 needs a short user-visible current-state view. It s
 
 Implementation tier: MVP-1 User Work Loop view. Engineering Checkpoint may return plain structured status/blocker output instead of this card.
 
-Boundary: this template is rendered display only. It is not Core state, not evidence, not approval, not work acceptance, not residual-risk acceptance, not Write Authorization, and not close readiness authority. It must be rendered from current Core-owned state and refs, not stale chat.
+Boundary: this template is rendered display only. It is not Core state, not evidence, not approval, not final acceptance, not residual-risk acceptance, not Write Authorization, and not close readiness authority. It must be rendered from current Core-owned state and refs, not stale chat.
 
 ## Source records
 
@@ -14,7 +14,7 @@ Boundary: this template is rendered display only. It is not Core state, not evid
 - scope, non-goals, active Change Unit summary, and stop conditions when relevant
 - pending `user_judgment` refs and compact judgment summaries
 - run refs, `evidence_ref` refs, ArtifactRefs, redaction state, and evidence gaps
-- close blockers, work-acceptance need/status, residual-risk visibility, and residual-risk acceptance refs when relevant
+- close blockers, final-acceptance need/status, residual-risk visibility, and residual-risk acceptance refs when relevant
 - guarantee level and capability/fallback status
 - `source_state_version`, render time, and freshness state
 

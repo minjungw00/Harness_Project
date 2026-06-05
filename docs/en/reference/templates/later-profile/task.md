@@ -26,9 +26,9 @@ A `TASK` template existing in this repository does not mean full `TASK` Markdown
 - Write Authorization records and Write Authority Summary display inputs
 - User Judgment records and Residual Risks, including full-format Decision Packet presentation fields when that profile is enabled
 - latest Run, evidence summary, ArtifactRefs, and, when the matching profile is active, Evidence Manifest, Eval, Manual QA record, and sensitive-action approval records
-- compact authority source refs for Write Authorization, User Judgment, sensitive-action approval user judgment refs, later Approval refs, `evidence_ref` refs and derived evidence summaries, Evidence Manifest when active, Eval, Manual QA, work-acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
+- compact authority source refs for Write Authorization, User Judgment, sensitive-action approval user judgment refs, later Approval refs, `evidence_ref` refs and derived evidence summaries, Evidence Manifest when active, Eval, Manual QA, final-acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when those claims are displayed
 - primary blocker, secondary blocker, and smallest unblocker display summaries
-- close summary display inputs, including changed scope, sensitive-action approval, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, work acceptance, waivers, and close reason
+- close summary display inputs, including changed scope, sensitive-action approval, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, waivers, and close reason
 - Journey Spine source records
 - `domain_terms`, `module_map_items`, `interface_contracts`, and `feedback_loops`
 - `tdd_traces` when TDD is selected
@@ -37,7 +37,7 @@ A `TASK` template existing in this repository does not mean full `TASK` Markdown
 - Review Stage display inputs from existing owner records and refs
 - artifact refs and projection freshness
 
-Generated gate group summaries, user judgment display text, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists. Rendering labels such as Product/UX judgment or Work acceptance does not create canonical records, gates, `ProjectionKind` values, evidence, QA, verification, work acceptance, residual-risk acceptance, close, or Write Authorization.
+Generated gate group summaries, user judgment display text, close, waiver, review-stage, stewardship, and projection-freshness entries in `TASK` are display bindings. They should resolve to the owner records, gates, artifacts, and refs named above, or render an explicit absence/blocking state when no such source exists. Rendering labels such as Product decision or Final acceptance does not create canonical records, gates, `ProjectionKind` values, evidence, QA, verification, final acceptance, residual-risk acceptance, close, or Write Authorization.
 
 ## Rendered sections
 
@@ -95,14 +95,16 @@ updated_at: 2026-05-06T09:30:15+09:00
 - User Judgments:
   - pending items (one line per judgment; do not merge):
   - judgment requests:
-    - Product/UX judgment:
-    - Technical judgment:
+    - Product decision:
+    - Technical decision:
+    - Scope decision:
   - permission:
     - sensitive-action approval:
   - waivers:
-    - related user judgment refs:
+    - QA waiver:
+    - verification-risk acceptance:
   - acceptance:
-    - work acceptance:
+    - final acceptance:
   - risk acceptance:
     - residual-risk acceptance:
     - named risk being accepted:
@@ -114,13 +116,13 @@ updated_at: 2026-05-06T09:30:15+09:00
   - supporting refs:
   - missing or stale support:
   - artifact redaction or omission state:
-  - does not replace: verification, Manual QA, work acceptance, or residual-risk acceptance
+  - does not replace: verification, Manual QA, final acceptance, or residual-risk acceptance
   - next evidence action:
 - Close Readiness:
   - verification:
   - Manual QA:
   - sensitive-action approval:
-  - work acceptance:
+  - final acceptance:
   - residual-risk visibility:
   - residual-risk acceptance:
   - waiver status:
@@ -152,7 +154,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - kernel gate detail: scope=; decision=; approval=; design=; evidence=; verification=; Manual QA=; acceptance=
 - active change unit:
 - write authority summary:
-- authority source refs: write=; decision=; sensitive_action_permission=; evidence_summary=; evidence_manifest_when_active=; eval=; manual_qa=; work_acceptance=; residual_risk=; artifacts=
+- authority source refs: write=; decision=; sensitive_action_permission=; evidence_summary=; evidence_manifest_when_active=; eval=; manual_qa=; final_acceptance=; residual_risk=; artifacts=
 - redaction state:
 - latest report:
 - projection freshness:
@@ -175,7 +177,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - user_judgment_ref:
 - judgment type:
 - judgment title:
-- judgment_type:
+- judgment_kind:
 - presentation:
 - display label:
 - why needed now:
@@ -203,7 +205,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 - Evidence summary / Evidence Manifest when active:
 - Eval:
 - Manual QA:
-- Work acceptance user judgment:
+- Final acceptance user judgment:
 - Acceptance context:
 - Residual Risk:
 - Artifact refs and redaction state:
@@ -239,7 +241,7 @@ updated_at: 2026-05-06T09:30:15+09:00
 | 1 | | | | | |
 
 ## Review Stages
-- note: managed display only; Role Lens/playbook labels do not create gates, records, `ProjectionKind` values, Approval, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or Write Authorization. Same-session review is not detached verification. Route findings to existing owner records, refs, gates, or blockers.
+- note: managed display only; Role Lens/playbook labels do not create gates, records, `ProjectionKind` values, Approval, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or Write Authorization. Same-session review is not detached verification. Route findings to existing owner records, refs, gates, or blockers.
 
 ### Spec Compliance Review
 - acceptance criteria coverage:
@@ -289,14 +291,14 @@ updated_at: 2026-05-06T09:30:15+09:00
 - sensitive-action approval:
 - residual-risk visibility:
 - residual-risk acceptance:
-- work acceptance:
-- what work acceptance does not replace:
+- final acceptance:
+- what final acceptance does not replace:
 - waiver status:
 - authority source refs:
 - display state label (plain text, not a schema value):
 - self-check refs:
 - detached verification Eval ref:
-- verification waiver ref:
+- verification-risk acceptance ref:
 - QA waiver ref:
 - accepted residual-risk refs:
 - close reason:
@@ -339,9 +341,9 @@ updated_at: 2026-05-06T09:30:15+09:00
 | CU-01 | | | vertical | trace status: required \| recorded \| waived \| not_required; show RED/GREEN refs | pending | |
 
 ## Pending User Judgments
-| Display label | Question | `judgment_type` / refs | Status | Next action |
+| Display label | Question | `judgment_kind` / refs | Status | Next action |
 |---|---|---|---|---|
-| Product/UX judgment \| Technical judgment \| Sensitive action approval \| Work acceptance \| Residual risk acceptance | | | | |
+| Product decision \| Technical decision \| Scope decision \| Sensitive action approval \| QA waiver \| Verification risk acceptance \| Final acceptance \| Residual risk acceptance \| Cancellation | | | | |
 
 ## Evidence And Reports
 - Evidence summary / Evidence Manifest when active:
@@ -443,10 +445,13 @@ Change Unit block sub-template:
   - local refactor inside scope:
   - evidence collection:
 - user judgment required:
-  - Product/UX judgment:
-  - Technical judgment:
+  - Product decision:
+  - Technical decision:
+  - Scope decision:
   - sensitive-action approval:
-  - work acceptance:
+  - QA waiver:
+  - verification-risk acceptance:
+  - final acceptance:
   - residual-risk acceptance:
   - public interface or compatibility commitment:
 - AFK stop conditions:
@@ -511,27 +516,27 @@ Stewardship Impact in `TASK` is the `StewardshipImpactSummary` display derived f
 
 Implementation Micro-Plan in `TASK` is a lightweight execution aid rendered from or aligned with current Task and Change Unit state. It stays within the projection/report boundary in [Projection And Templates Reference](../../projection-and-templates.md#projection-principles) and never replaces `prepare_write` or owner state changes.
 
-Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. Their exact non-authority rule is owned by [Design Quality Policies](../../design-quality-policies.md#two-stage-review-display) and [Agent Integration](../../agent-integration.md#role-lens-behavior). They do not create canonical records, `ProjectionKind` values, Approval, evidence, verification, QA, work acceptance, residual-risk acceptance, close, or Write Authorization; findings must route to existing owner paths.
+Review Stages in `TASK` are managed display sections for Role Lens, playbook, or two-stage review guidance. Their exact non-authority rule is owned by [Design Quality Policies](../../design-quality-policies.md#two-stage-review-display) and [Agent Integration](../../agent-integration.md#role-lens-behavior). They do not create canonical records, `ProjectionKind` values, Approval, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or Write Authorization; findings must route to existing owner paths.
 
 Generated summaries should use ordinary user-facing language first and exact Harness terms as labels or refs where useful. They should not turn the projection into a command language or imply that display text created state.
 
 Gate Group Summary is the first managed section so readers see the practical blocker story before raw gate detail. Scope, User Judgments, Evidence, and Close Readiness are display groups derived from existing owner records, gates, blockers, and refs. They are not canonical fields, aliases for exact gate values, new gates, recompute inputs, close semantics, or authority paths. User Judgments is structured and must not be rendered as one broad judgment or approval bucket. Exact gate values and recompute rules remain in [Core Model Reference](../../core-model.md#gates), and close behavior remains in [`close_task`](../../core-model.md#close_task).
 
-User Judgment display in `TASK` should keep canonical schema fields separate from rendered labels: `judgment_type` names the internal judgment type, `presentation` controls compact or full display depth, and `display_label` is one of Product/UX judgment, Technical judgment, Sensitive action approval, Work acceptance, or Residual risk acceptance. Examples of `judgment_type` include `product_choice`, `technical_choice`, `sensitive_action_approval`, `work_acceptance`, and `residual_risk_acceptance`. If a judgment is cross-cutting, render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the label as exclusive. Legacy fields such as `judgment_category`, `judgment_route`, and `display_depth` may appear only in migration notes or compatibility drill-down; they are not new payload branch selectors, gates, status values, gate recompute inputs, close aggregation rules, authority paths, or replacements for `judgment_type`. Friendly labels derived from `presentation` or `display_label` are not validator inputs and must not blur the owner contracts for sensitive-action approval, work acceptance, QA, residual-risk acceptance, close, or Write Authorization.
+User Judgment display in `TASK` should keep canonical schema fields separate from rendered labels: `judgment_kind` names the internal judgment type, `presentation` controls compact or full display depth, and `display_label` is one of Product decision, Technical decision, Scope decision, Sensitive action approval, QA waiver, Verification risk acceptance, Final acceptance, Residual risk acceptance, or Cancellation. Supported `judgment_kind` values are `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `qa_waiver`, `verification_risk_acceptance`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`. If a judgment is cross-cutting, render secondary considerations in trade-offs, affected gates, risk, evidence, or follow-up instead of treating the label as exclusive. Legacy fields such as `judgment_category`, `judgment_route`, and `display_depth` may appear only in migration notes or compatibility drill-down; they are not new payload branch selectors, gates, status values, gate recompute inputs, close aggregation rules, authority paths, or replacements for `judgment_kind`. Friendly labels derived from `presentation` or `display_label` are not validator inputs and must not blur the owner contracts for sensitive-action approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, close, or Write Authorization.
 
-Pending user judgments must not be merged into one line. If sensitive-action approval, work acceptance, and residual-risk acceptance are all pending, render three items with three labels. Approval cards should not look like work acceptance, and residual-risk acceptance should name the risk being accepted.
+Pending user judgments must not be merged into one line. If sensitive-action approval, final acceptance, and residual-risk acceptance are all pending, render three items with three labels. Approval cards should not look like final acceptance, and residual-risk acceptance should name the risk being accepted.
 
-Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to compatible consumed Write Authorization refs; attempted invalid authorization refs may appear only as violation/audit or validator-finding context. Sensitive-action permission points to a resolved `user_judgment` with `judgment_type=sensitive_action_approval` in minimum MVP-1, and to an Approval ref only when the later Approval profile is active. Minimum MVP-1 evidence display points to `evidence_ref` when present, Run refs, ArtifactRefs, and visible gap summaries; it should not claim full evidence sufficiency unless the active owner path can establish it. Full criteria-to-evidence sufficiency points to Evidence Manifest refs only when the Evidence Manifest profile is active. Detached verification points to Eval refs only when that profile is active. Manual QA points to Manual QA records or valid waiver refs when that profile is active. Work acceptance points to the work-acceptance user judgment path. Residual-risk visibility points to blocker/user-judgment refs or `ResidualRiskSummary.status=none` in MVP-1, and to rich Residual Risk refs only when that profile is active. Residual-risk acceptance points to the residual-risk acceptance user judgment plus related blocker/evidence refs in MVP-1, and to accepted Residual Risk refs only when that later profile is active. Missing refs should render as missing support, not as completed authority.
+Authority claims in `TASK` must resolve to source refs or explicit absence. Write authority claims point to compatible consumed Write Authorization refs; attempted invalid authorization refs may appear only as violation/audit or validator-finding context. Sensitive-action permission points to a resolved `user_judgment` with `judgment_kind=sensitive_approval` in minimum MVP-1, and to an Approval ref only when the later Approval profile is active. Minimum MVP-1 evidence display points to `evidence_ref` when present, Run refs, ArtifactRefs, and visible gap summaries; it should not claim full evidence sufficiency unless the active owner path can establish it. Full criteria-to-evidence sufficiency points to Evidence Manifest refs only when the Evidence Manifest profile is active. Detached verification points to Eval refs only when that profile is active. Manual QA points to Manual QA records or valid waiver refs when that profile is active. Final acceptance points to the final-acceptance user judgment path. Residual-risk visibility points to blocker/user-judgment refs or `ResidualRiskSummary.status=none` in MVP-1, and to rich Residual Risk refs only when that profile is active. Residual-risk acceptance points to the residual-risk acceptance user judgment plus related blocker/evidence refs in MVP-1, and to accepted Residual Risk refs only when that later profile is active. Missing refs should render as missing support, not as completed authority.
 
 Residual-risk display must distinguish `status=none` from `not_visible`. `status=none` means no known close-relevant residual risk exists for the requested action. `not_visible` means known close-relevant risk exists but has not been made visible enough for acceptance or close; it should remain a blocker or next action until the risk and refs are shown.
 
-Close and assurance display in `TASK` must keep self-checked work, `detached_verified`, verification waiver, QA waiver, and residual-risk accepted close visibly separate. A residual-risk accepted close should cite the residual-risk acceptance user judgment plus related blocker/evidence refs in MVP-1, and accepted Residual Risk refs only when that later profile is active; a verification waiver should cite `verification_gate=waived_by_user` and its user judgment when required; a QA waiver should cite `qa_gate=waived`, the Manual QA record or waiver reason, and the QA waiver user judgment when required.
+Close and assurance display in `TASK` must keep self-checked work, `detached_verified`, `verification_gate=waived_by_user`, QA waiver, and residual-risk accepted close visibly separate. A residual-risk accepted close should cite the residual-risk acceptance user judgment plus related blocker/evidence refs in MVP-1, and accepted Residual Risk refs only when that later profile is active; a waived verification display should cite `verification_gate=waived_by_user` and the verification-risk acceptance user judgment when required; a QA waiver should cite `qa_gate=waived`, the Manual QA record or waiver reason, and the QA waiver user judgment when required.
 
-Waiver displays in `TASK` are summaries only. Close-relevant QA or verification waivers should point to the existing record that makes the waiver valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver user judgment when required, or `verification_gate=waived_by_user` and its user judgment when required. They should also show the policy or gate, Task and Change Unit, skipped check or surface, reason, actor, expiry or residual-risk follow-up when needed, relevant refs, close impact, and any close-relevant residual risk that must be visible or accepted through the residual-risk path when required. A QA waiver does not become Manual QA, and a verification waiver does not create detached verification.
+Waiver displays in `TASK` are summaries only. Close-relevant QA waivers or waived verification statuses should point to the existing record that makes the path valid: `manual_qa_records`/`qa_gate=waived` and a QA waiver user judgment when required, or `verification_gate=waived_by_user` and a verification-risk acceptance user judgment when required. They should also show the policy or gate, Task and Change Unit, skipped check or surface, reason, actor, expiry or residual-risk follow-up when needed, relevant refs, close impact, and any close-relevant residual risk that must be visible or accepted through the residual-risk path when required. A QA waiver does not become Manual QA, and verification-risk acceptance does not create detached verification.
 
-Close Summary in `TASK` is a continuity display summary for active or recently closed `work` tasks. It must not hide gate status or residual risk. When close is successful, blocked, canceled, or residual-risk accepted, the summary should show changed scope, sensitive-action approval, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, work acceptance, waiver status, close reason, and residual-risk follow-up as applicable, with refs back to owner records. Sensitive-action approval, work acceptance, and residual-risk acceptance must remain separate lines: approval is permission for the named sensitive action, work acceptance is the user's result judgment, and residual-risk acceptance must identify the accepted risk and cite the residual-risk acceptance user judgment plus related blocker/evidence refs in MVP-1, or accepted Residual Risk refs only when that later profile is active.
+Close Summary in `TASK` is a continuity display summary for active or recently closed `work` tasks. It must not hide gate status or residual risk. When close is successful, blocked, canceled, or residual-risk accepted, the summary should show changed scope, sensitive-action approval, evidence, verification, Manual QA, residual-risk visibility, residual-risk acceptance, final acceptance, waiver status, close reason, and residual-risk follow-up as applicable, with refs back to owner records. Sensitive-action approval, final acceptance, and residual-risk acceptance must remain separate lines: approval is permission for the named sensitive action, final acceptance is the user's result judgment, and residual-risk acceptance must identify the accepted risk and cite the residual-risk acceptance user judgment plus related blocker/evidence refs in MVP-1, or accepted Residual Risk refs only when that later profile is active.
 
-Close Summary must not collapse sensitive-action approval, evidence, verification, Manual QA, work acceptance, residual-risk visibility, and residual-risk acceptance into a single "done" flag. If tests pass but sensitive-action approval, Manual QA, work acceptance, or residual-risk acceptance is still pending, the close display should show that exact category as the blocker.
+Close Summary must not collapse sensitive-action approval, evidence, verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance into a single "done" flag. If tests pass but sensitive-action approval, Manual QA, final acceptance, or residual-risk acceptance is still pending, the close display should show that exact category as the blocker.
 
 Direct work uses `DIRECT-RESULT` for its low-ceremony close impact summary, and Journey Card close context is compact status/resume display. `TASK` Close Summary remains a continuity display under the [projection/report boundary](../../projection-and-templates.md#projection-principles); close and gate effects still come from owner records.
 

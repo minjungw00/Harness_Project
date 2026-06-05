@@ -6,7 +6,7 @@ Use `run-evidence-summary` after advice, a run, a check, or a change needs a min
 
 Implementation tier: MVP-1 User Work Loop view. Detailed [RUN-SUMMARY](later-profile/run-summary.md) and [EVIDENCE-MANIFEST](later-profile/evidence-manifest.md) reports are later/full-profile templates.
 
-Boundary: this template displays Run and evidence refs only. It is not the evidence itself, not a full Evidence Manifest, not verification, not Manual QA, not work acceptance, and not close readiness authority.
+Boundary: this template displays Run and evidence refs only. It is not the evidence itself, not a full Evidence Manifest, not verification, not Manual QA, not final acceptance, and not close readiness authority.
 
 ## Source records
 
@@ -33,7 +33,7 @@ Boundary: this template displays Run and evidence refs only. It is not the evide
 
 ````text
 Run/evidence summary
-Display only: refs and summaries; not evidence, verification, QA, acceptance, or close.
+Display only: refs and summaries; not evidence, verification, QA, final acceptance, residual-risk acceptance, or close.
 
 Action: {run_or_action_summary}
 Changed paths: {changed_paths|none}

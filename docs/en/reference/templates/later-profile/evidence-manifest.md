@@ -18,7 +18,7 @@ Implementation tier: Future/diagnostic projections. MVP-1 shows evidence through
 - approval refs (later Approval profile only; otherwise none)
 - artifact refs with hash, size, redaction state, retention/availability, owner relation, and downstream evidence impact
 - related Run, Eval, Feedback Loop, Manual QA, and TDD trace refs
-- close-relevant verification, Manual QA, work acceptance, and Residual Risk summaries when rendered with close context
+- close-relevant verification, Manual QA, final acceptance, and Residual Risk summaries when rendered with close context
 - compact authority refs for Write Authorization, User Judgment, Approval, Evidence Manifest, Eval, Manual QA, Acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when rendered with close context
 
 ## Rendered sections
@@ -69,10 +69,10 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 ## Close Summary
 - evidence supports:
-- evidence does not replace: verification, Manual QA, work acceptance, residual-risk visibility, and residual-risk acceptance
+- evidence does not replace: verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance
 - verification status:
 - Manual QA status:
-- work acceptance status:
+- final acceptance status:
 - residual-risk visibility:
 - residual-risk acceptance:
 - close/assurance display distinction:
@@ -80,7 +80,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 
 ## Authority And Close Refs
 - compact refs: write={write_authorization_ref|none}; judgment={user_judgment_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_id}; eval={eval_ref|none}; manual_qa={manual_qa_ref|none}; acceptance={acceptance_context_ref|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}
-- approval refs are `none` in minimum MVP-1; sensitive-action coverage appears through `user_judgment_refs` with `judgment_type=sensitive_action_approval` unless a later Approval owner profile is active.
+- approval refs are `none` in minimum MVP-1; sensitive-action coverage appears through `user_judgment_refs` with `judgment_kind=sensitive_approval` unless a later Approval owner profile is active.
 - redaction state:
 - projection freshness:
 
@@ -117,7 +117,7 @@ updated_at: 2026-05-06T09:50:00+09:00
 `Coverage / Gate Display` is the evidence coverage or close-relevant gate display state for this manifest. Values such as `pending` in this column are not `ValidatorResult.status` values.
 
 ## Approval Refs
-- Populate only when a later Approval owner profile is active. In minimum MVP-1, sensitive-action coverage belongs under `user_judgment_refs` with `judgment_type=sensitive_action_approval`.
+- Populate only when a later Approval owner profile is active. In minimum MVP-1, sensitive-action coverage belongs under `user_judgment_refs` with `judgment_kind=sensitive_approval`.
 - APR-0001:
 
 ## Evidence Refs
@@ -168,7 +168,7 @@ Example coverage mappings:
 | AC-04 export contains only approved redacted fields | RUN-EXPORT-001 | ART-EXPORT-MANIFEST-001, ART-LOG-001 | APR-0001, DEC-0001 | `APR-0001` is present only when a later Approval profile is active. Approval and Decision refs show scope or user judgment context; redacted artifact refs still need to prove the nonsecret claim. |
 | Completion condition: independent verifier reviewed the changed scope | RUN-VERIFY-001 | ART-BUNDLE-001 | EVAL-0001 | Valid only when the Eval reviewed current refs and has the required independence for the requested close. |
 
-Evidence Manifest supports claims; it does not prove correctness by itself, create detached verification, record Manual QA, imply work acceptance, make residual risk visible, or accept residual risk. When a close summary is rendered from this template, it should keep those lines separate so a passing test, a self-check, a QA waiver, or work acceptance is not mistaken for another close condition.
+Evidence Manifest supports claims; it does not prove correctness by itself, create detached verification, record Manual QA, imply final acceptance, make residual risk visible, or accept residual risk. When a close summary is rendered from this template, it should keep those lines separate so a passing test, a self-check, a QA waiver, or final acceptance is not mistaken for another close condition.
 
 When close context is shown, the manifest should render risk-accepted close, waived verification, QA waiver, self-checked, and `detached_verified` as distinct display states with owner refs or explicit absence. Those labels are readable summaries of owner records, not Evidence Manifest authority.
 

@@ -38,15 +38,15 @@ Storage validation은 별도 소유권 경계입니다. API payload와 API-shape
 
 | Stage/profile | Active API slice | 해당 slice에서 active가 아닌 것 |
 |---|---|---|
-| 내부 엔지니어링 점검 | Minimal status/blocker read, owner-valid setup path 하나, active Task, active Change Unit/scope boundary, `harness.prepare_write`, compatible `harness.record_run` 하나, artifact/evidence ref 하나, structured status/blocker output, 좁은 close-blocker check. | Full natural-language intake, stored user judgment path, full Evidence Manifest, detached verification, Manual QA, work acceptance, residual-risk acceptance, rich projections, export/recover, broad operations. |
+| 내부 엔지니어링 점검 | Minimal status/blocker read, owner-valid setup path 하나, active Task, active Change Unit/scope boundary, `harness.prepare_write`, compatible `harness.record_run` 하나, artifact/evidence ref 하나, structured status/blocker output, 좁은 close-blocker check. | Full natural-language intake, stored user judgment path, full Evidence Manifest, detached verification, Manual QA, final acceptance, residual-risk acceptance, rich projections, export/recover, broad operations. |
 | MVP-1 사용자 작업 루프 | Active method set은 [MVP API](mvp-api.md#mvp-1-method-set)가 담당하며, 다음 안전한 행동 output은 `harness.status.next_actions`에 담깁니다. Method set은 정확히 `harness.status`, `harness.intake`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.prepare_write`, `harness.record_run`, `harness.close_task`입니다. | 별도 `harness.next`, detached verification launch/Eval, full Manual QA matrix, committed Approval hardening, export/recover, advanced connector APIs, broad operations, detailed diagnostic projections. |
 | 보증 프로필, 운영 프로필, later | Owner docs가 승격할 때 verification, Eval, Manual QA, waiver, full residual-risk acceptance, reconcile, validators, projection/report/export/recover, operations, advanced connectors. | 내부 엔지니어링 점검이나 minimum MVP-1 requirement가 아닙니다. |
 
 ## Read-only resources
 
-MCP resource는 read-only view입니다. Task, user judgment, projection job, reconciliation, evidence, QA, work acceptance, residual-risk acceptance, Write Authorization, close state를 만들면 안 됩니다.
+MCP resource는 read-only view입니다. Task, user judgment, projection job, reconciliation, evidence, QA, final acceptance, residual-risk acceptance, Write Authorization, close state를 만들면 안 됩니다.
 
-Read-only resource도 세 부분 맥락 모델을 따릅니다. `harness://status/card`는 사용자 상태 카드입니다. Current Core state와 ref에서 만든 짧은 읽기용 보기입니다. Agent 접점은 read-only resource를 사용해 다음 안전한 행동에 필요한 최소 state, ref, freshness, owner-section pointer를 담은 에이전트 맥락 패킷을 만들 수 있습니다. Core 상태가 로컬 권한 기록이며 유일한 운영 기준입니다. 오래된 card나 projection은 authority가 아니며, 렌더링된 template은 민감 동작 승인, 작업 수락, 잔여 위험 수용, 근거, 닫기 준비 상태를 만들 수 없습니다.
+Read-only resource도 세 부분 맥락 모델을 따릅니다. `harness://status/card`는 사용자 상태 카드입니다. Current Core state와 ref에서 만든 짧은 읽기용 보기입니다. Agent 접점은 read-only resource를 사용해 다음 안전한 행동에 필요한 최소 state, ref, freshness, owner-section pointer를 담은 에이전트 맥락 패킷을 만들 수 있습니다. Core 상태가 로컬 권한 기록이며 유일한 운영 기준입니다. 오래된 card나 projection은 authority가 아니며, 렌더링된 template은 민감 동작 승인, 최종 수락, 잔여 위험 수락, 근거, 닫기 준비 상태를 만들 수 없습니다.
 
 ### 내부 엔지니어링 점검 resources
 
@@ -88,7 +88,7 @@ ToolEnvelope:
   dry_run: boolean
 ```
 
-Envelope field는 routing과 audit claim입니다. Surface가 Core 밖에서 state를 바꾸도록 허가하지 않으며, user judgment, sensitive-action permission, work acceptance, Manual QA, detached verification independence를 증명하지도 않습니다.
+Envelope field는 routing과 audit claim입니다. Surface가 Core 밖에서 state를 바꾸도록 허가하지 않으며, user judgment, sensitive-action permission, final acceptance, Manual QA, detached verification independence를 증명하지도 않습니다.
 
 Primary Task가 필요한 request에서 Core는 tool-specific `task_id`, `ToolEnvelope.task_id`, active Task resolution 순서로 primary Task를 찾습니다. Task-scoped mutation은 `expected_state_version`을 `tasks.state_version`과 비교합니다. Resolved primary Task가 없는 project-scoped mutation은 `project_state.state_version`과 비교합니다.
 
@@ -179,7 +179,7 @@ StateSummary:
 | Operations/export reports | `EXPORT` | Export, release-handoff, operations report profile이 active일 때만 사용합니다. |
 | Future/diagnostic projections | `RUN-SUMMARY`, `EVIDENCE-MANIFEST`, `EVAL`, `TDD-TRACE`, `DOMAIN-LANGUAGE`, `MODULE-MAP`, `INTERFACE-CONTRACT`, `DEC`, `DESIGN`, `JOURNEY-CARD` | Owner-promoted later profile이 scope에 있을 때만 enable합니다. |
 
-Projection support는 state, evidence, QA, verification, 민감 동작 승인, work acceptance, residual-risk acceptance, close readiness, close authority, Write Authorization을 만들지 않습니다.
+Projection support는 state, evidence, QA, verification, 민감 동작 승인, final acceptance, residual-risk acceptance, close readiness, close authority, Write Authorization을 만들지 않습니다.
 
 ## Sensitive Categories
 
@@ -207,7 +207,7 @@ model_or_prompt_policy_change
 policy_override
 ```
 
-하나의 intended write가 여러 category를 가질 수 있습니다. Category는 왜 sensitive-action permission이 필요한지 설명할 뿐이며 product, architecture, security, QA, verification, work acceptance, residual-risk acceptance, policy judgment를 해결하지 않습니다.
+하나의 intended write가 여러 category를 가질 수 있습니다. Category는 왜 sensitive-action permission이 필요한지 설명할 뿐이며 product, architecture, security, QA, verification, final acceptance, residual-risk acceptance, policy judgment를 해결하지 않습니다.
 
 ## ArtifactRef
 
@@ -297,7 +297,7 @@ StateRecordRef:
   projection_path: string | null
 ```
 
-`record_kind=user_judgment`는 sensitive-action approval, work acceptance, residual-risk acceptance judgment를 포함한 사용자 소유 판단의 canonical MVP-1 ref kind입니다. MVP-1 evidence coverage와 blocker는 `record_kind=evidence_summary`, `record_kind=blocker`를 사용합니다. Durable evidence byte는 `ArtifactRef`를 사용합니다. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=close_readiness`, `record_kind=projection`은 owner profile이 active가 아닌 한 later/profile-promoted 또는 derived-view ref입니다. Standalone accepted-risk ref kind는 없습니다.
+`record_kind=user_judgment`는 sensitive-action approval, final acceptance, residual-risk acceptance judgment를 포함한 사용자 소유 판단의 canonical MVP-1 ref kind입니다. MVP-1 evidence coverage와 blocker는 `record_kind=evidence_summary`, `record_kind=blocker`를 사용합니다. Durable evidence byte는 `ArtifactRef`를 사용합니다. `record_kind=approval`, `record_kind=residual_risk`, `record_kind=close_readiness`, `record_kind=projection`은 owner profile이 active가 아닌 한 later/profile-promoted 또는 derived-view ref입니다. Standalone accepted-risk ref kind는 없습니다.
 
 `record_kind=projection`에서 `record_id`는 운영/projection profile이 active일 때 projection job identity입니다. `projection_path`는 optional display/recovery metadata이지 alternate key가 아닙니다.
 
@@ -379,11 +379,11 @@ Minimum MVP-1에서 `WriteAuthorizationSummary.approval_refs`는 empty입니다.
 
 `WriteAuthorizationSummary`와 `WriteAuthoritySummary`는 API/internal 이름입니다. MVP-1 사용자 표시에서는 먼저 쓰기 전 범위 확인이라고 설명해야 합니다. `allowed_paths`, `allowed_tools`, `decision=allowed`, `status=active` 같은 field는 협력형 기록/확인에 대한 하네스 호환성만 뜻합니다. OS 권한, sandboxing, 변조 방지 enforcement, 사전 차단, 권한 격리를 뜻하지 않습니다. `allowed`는 `PrepareWriteResponse.decision`에 속합니다. `blocked`에는 authorization row나 lifecycle value가 없습니다.
 
-`EvidenceSummary`는 활성 MVP-1의 compact evidence contract입니다. `status`는 정확히 `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked`를 사용합니다. Item coverage는 정확히 `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked`를 사용합니다. 이 값은 status와 close check에 쓰는 Core 소유 상태입니다. Full Evidence Manifest, detached verification result, Manual QA record, 작업 수락, 잔여 위험 수용, projection이 아닙니다.
+`EvidenceSummary`는 활성 MVP-1의 compact evidence contract입니다. `status`는 정확히 `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked`를 사용합니다. Item coverage는 정확히 `supported`, `unsupported`, `partial`, `not_applicable`, `stale`, `blocked`를 사용합니다. 이 값은 status와 close check에 쓰는 Core 소유 상태입니다. Full Evidence Manifest, detached verification result, Manual QA record, 최종 수락, 잔여 위험 수락, projection이 아닙니다.
 
 ## UserJudgment
 
-MVP-1 judgment model은 작게 유지합니다. 사용자는 다섯 display label 중 하나를 보고, API payload는 compact `judgment_type`과 `presentation`을 가집니다.
+MVP-1 judgment model은 작지만 명시적입니다. 사용자는 초점이 분명한 질문 하나를 보고, API payload는 compact `judgment_kind`와 `presentation`을 가집니다.
 
 ```yaml
 UserJudgment:
@@ -391,15 +391,18 @@ UserJudgment:
   task_id: string
   change_unit_id: string | null
   status: proposed | pending_user | resolved | deferred | rejected | blocked | superseded
-  judgment_type: product_choice | technical_choice | sensitive_action_approval | work_acceptance | residual_risk_acceptance
+  judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation
   presentation: short | full
-  display_label: Product/UX judgment | Technical judgment | Sensitive action approval | Work acceptance | Residual risk acceptance
+  display_label: Product decision | Technical decision | Scope decision | Sensitive action approval | QA waiver | Verification risk acceptance | Final acceptance | Residual risk acceptance | Cancellation
   context:
     why_now: string
     source_refs: StateRecordRef[]
     evidence_refs: EvidenceRefs
   state_summary_at_request: StateSummary
+  question: string
   what_user_is_judging: string
+  why_agent_cannot_decide: string
+  no_decision_consequence: string
   what_agent_may_decide_without_user: string[]
   affected_scope: UserJudgmentScope
   affected_gates: UserJudgmentGateRef[]
@@ -412,6 +415,11 @@ UserJudgment:
   resolved_at: string | null
 
 UserJudgmentScope:
+  task_ref: StateRecordRef
+  change_unit_ref: StateRecordRef | null
+  affected_object_refs: StateRecordRef[]
+  write_refs: StateRecordRef[]
+  close_refs: StateRecordRef[]
   scope_refs: StateRecordRef[]
   product_areas: string[]
   files_or_paths: string[]
@@ -439,9 +447,11 @@ Legacy field와 method는 canonical name으로 매핑됩니다.
 | Legacy | Canonical |
 |---|---|
 | `harness.request_user_decision` / `harness.record_user_decision` | `harness.request_user_judgment` / `harness.record_user_judgment` |
-| `judgment_domain` | `judgment_type` plus display label |
-| `decision_kind` | `judgment_type` plus route-specific validation |
+| `judgment_type` | `judgment_kind` |
+| `judgment_domain` | `judgment_kind` plus display label |
+| `decision_kind` | `judgment_kind` plus route-specific validation |
 | `decision_profile` | `presentation` |
+| `product_choice` / `technical_choice` / `sensitive_action_approval` / `work_acceptance` | `product_decision` / `technical_decision` / `sensitive_approval` / `final_acceptance` |
 
 ### UserJudgment payload
 
@@ -473,6 +483,7 @@ JudgmentUserContext:
 UserJudgmentPayload:
   options: JudgmentOption[]
   recommendation: JudgmentRecommendation | null
+  rationale: string
   uncertainty: string | null
   deferral_consequence: string | null
   user_context: JudgmentUserContext | null
@@ -480,7 +491,10 @@ UserJudgmentPayload:
   covers: string[]
   does_not_cover: string[]
   acceptance: AcceptanceJudgment | null
+  qa_waiver: QAWaiverJudgment | null
+  verification_risk_acceptance: VerificationRiskAcceptanceJudgment | null
   residual_risk_acceptance: ResidualRiskAcceptanceJudgment | null
+  cancellation: CancellationJudgment | null
   separate_judgments_required: string[]
 
 AcceptanceJudgment:
@@ -499,9 +513,28 @@ ResidualRiskAcceptanceJudgment:
   follow_up_required: boolean
   follow_up: string | null
   evidence_refs: EvidenceRefs
+
+QAWaiverJudgment:
+  qa_requirement_ref: StateRecordRef | null
+  waiver_allowed_by_ref: StateRecordRef | null
+  skipped_qa: string
+  risk_summary: string
+  does_not_create_evidence: boolean
+
+VerificationRiskAcceptanceJudgment:
+  verification_requirement_ref: StateRecordRef | null
+  missing_or_waived_verification: string
+  risk_refs: StateRecordRef[]
+  acceptance_consequence: string
+  does_not_create_detached_verification: boolean
+
+CancellationJudgment:
+  cancellation_scope: string
+  close_effect: string
+  follow_up: string | null
 ```
 
-`judgment_type=sensitive_action_approval`에서는 `approval_scope`가 required입니다. `judgment_type=work_acceptance`에서는 `acceptance`가 required입니다. `judgment_type=residual_risk_acceptance`에서는 `residual_risk_acceptance`가 required입니다. Later waiver와 reconcile branch는 [Schema Later](schema-later.md#later-user-judgment-branches)에 있습니다.
+`judgment_kind=sensitive_approval`에서는 `approval_scope`가 required입니다. `judgment_kind=qa_waiver`에서는 `qa_waiver`가 required이고 policy가 waiver를 허용해야 합니다. `judgment_kind=verification_risk_acceptance`에서는 `verification_risk_acceptance`가 required이며 `assurance_level=detached_verified`를 만들면 안 됩니다. `judgment_kind=final_acceptance`에서는 `acceptance`가 required입니다. `judgment_kind=residual_risk_acceptance`에서는 `residual_risk_acceptance`가 required입니다. `judgment_kind=cancellation`에서는 `cancellation`이 required입니다. Later reconcile branch는 [Schema Later](schema-later.md#later-user-judgment-branches)에 있습니다.
 
 ## NextActionSummary
 

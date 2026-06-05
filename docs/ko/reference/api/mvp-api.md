@@ -129,11 +129,11 @@ StatusResponse:
     notes: string[]
 ```
 
-`status_card`는 current Core state와 ref에서 만든 짧은 읽기용 보기입니다. Compact하게 유지하고 source/freshness 정보를 보여줘야 합니다. 전체 schema, DDL, history, template, projection body, artifact body, log, future catalog를 넣으면 안 됩니다. Core 상태가 아니며 민감 동작 승인, 작업 수락, 잔여 위험 수용, 근거, 닫기 준비 상태, Write Authorization, close를 만들 수 없습니다.
+`status_card`는 current Core state와 ref에서 만든 짧은 읽기용 보기입니다. Compact하게 유지하고 source/freshness 정보를 보여줘야 합니다. 전체 schema, DDL, history, template, projection body, artifact body, log, future catalog를 넣으면 안 됩니다. Core 상태가 아니며 민감 동작 승인, 최종 수락, 잔여 위험 수락, 근거, 닫기 준비 상태, Write Authorization, close를 만들 수 없습니다.
 
 `next_actions`가 MVP-1의 다음 안전한 행동 surface입니다. 사용자에게는 가장 작은 useful next action이나 unblocker를 쉬운 말로 보여 주고, exact enum value는 secondary detail로 둡니다.
 
-`evidence_summary`는 Core가 소유한 compact MVP-1 evidence summary입니다. `evidence_refs`는 active minimal evidence coverage ref를 담습니다. 보통 `StateRecordRef.record_kind=evidence_summary`를 사용하며, nested schema가 허용하는 곳에서는 artifact ref도 함께 둡니다. 이 field들은 full Evidence Manifest table이나 report가 아니며, verification, 수동 QA, 작업 수락, 잔여 위험 수용, close를 대신하지 않습니다.
+`evidence_summary`는 Core가 소유한 compact MVP-1 evidence summary입니다. `evidence_refs`는 active minimal evidence coverage ref를 담습니다. 보통 `StateRecordRef.record_kind=evidence_summary`를 사용하며, nested schema가 허용하는 곳에서는 artifact ref도 함께 둡니다. 이 field들은 full Evidence Manifest table이나 report가 아니며, verification, 수동 QA, 최종 수락, 잔여 위험 수락, close를 대신하지 않습니다.
 
 Status가 Core에 닿지 못하거나, stale state를 보고하거나, unsupported surface를 이름 붙이거나, 범위 밖 작업, 필요한 사용자 판단, 부족한 근거, 닫기 막힘, 남은 잔여 위험 같은 blocker를 보여줄 때는 [Errors: MVP-1 guarantee와 상태/error taxonomy](errors.md#mvp-1-guarantee-and-status-taxonomy)의 canonical condition 동작을 사용합니다.
 
@@ -145,7 +145,7 @@ ask_user | prepare_write | implement | request_acceptance | close_task | idle
 
 Verification, Eval, Manual QA, reconcile, export/recover, operations next-action kind는 later/profile-gated입니다.
 
-Status는 read-only입니다. State를 만들거나, 제품 파일 쓰기를 compatible하게 만들거나, Write Authorization을 만들거나, gate를 충족하거나, 근거를 만들거나, 민감 동작 승인을 만들거나, work acceptance를 기록하거나, residual risk를 받아들이거나, 닫기 준비 상태를 만들거나, projection repair를 enqueue하거나, Task를 close하면 안 됩니다.
+Status는 read-only입니다. State를 만들거나, 제품 파일 쓰기를 compatible하게 만들거나, Write Authorization을 만들거나, gate를 충족하거나, 근거를 만들거나, 민감 동작 승인을 만들거나, 최종 수락을 기록하거나, 잔여 위험을 수락하거나, 닫기 준비 상태를 만들거나, projection repair를 enqueue하거나, Task를 close하면 안 됩니다.
 
 <a id="harnessprepare_write"></a>
 
@@ -153,7 +153,7 @@ Status는 read-only입니다. State를 만들거나, 제품 파일 쓰기를 com
 
 에이전트가 제품 파일을 쓰기 전에, 그 정확한 쓰기가 현재 Core state에 맞는지 확인할 때 이 method를 사용합니다. 결과는 compatible internal single-use Write Authorization record이거나 structured blocker입니다. 이것은 하네스 수준의 협력형 확인이지 OS 권한, sandboxing, 사전 차단이 아닙니다.
 
-Stage meaning: 내부 엔지니어링 점검과 MVP-1에서 active입니다. MVP-1에서 sensitive-action permission은 `judgment_type=sensitive_action_approval`인 compatible `user_judgment`로 표현합니다. Committed Approval record는 later-profile material입니다.
+Stage meaning: 내부 엔지니어링 점검과 MVP-1에서 active입니다. MVP-1에서 sensitive-action permission은 `judgment_kind=sensitive_approval`인 compatible `user_judgment`로 표현합니다. Committed Approval record는 later-profile material입니다.
 
 Allowed actors: `lead_agent`, `operator`.
 
@@ -192,6 +192,7 @@ PrepareWriteResponse:
     - code: string
       message: string
       related_error: ErrorCode
+      required_judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation | null
   approval_request_candidate: ApprovalRequestCandidate | null
   user_judgment_candidate: UserJudgmentCandidate | null
   guarantee_display:
@@ -256,7 +257,7 @@ Committed `record_run` response를 exact idempotent replay하면 current freshne
 
 Public transition summary: `harness.record_run`은 envelope를 검증하고, idempotency replay를 확인하며 exact committed replay가 있으면 새 side effect 전에 반환합니다. Shared request rule에 따라 primary Task를 resolve합니다. Primary Task가 있으면 `tasks.state_version`, 없으면 `project_state.state_version`에 대해 `expected_state_version`을 확인합니다. 그다음 `kind`를 확인하고 product write를 감지합니다. Product write에는 compatible active Write Authorization을 요구하고, observed changed paths, commands, tools, secret access를 검증합니다. Compatible하면 authorization을 소비하고, Run record를 만들고, `ArtifactRef`를 등록하거나 연결하고, evidence summary와 blockers/gates를 업데이트하고, task event를 append한 뒤 response를 반환합니다.
 
-Core가 write-capable run을 commit 전에 거절하면 `run_id`는 `null`이고 artifact는 등록되지 않으며 response는 Run이 존재한다고 암시하면 안 됩니다. Core는 invalid authorization을 consumed로 표시하면 안 됩니다. Violation/audit Run은 제품 쓰기가 이미 관찰된 뒤 Core가 의도적으로 기록할 때만 생길 수 있습니다. Attempted authorization ref는 validator finding, violation payload, event payload에만 나타날 수 있으며 evidence, QA, verification, work acceptance, close readiness를 충족하지 않습니다.
+Core가 write-capable run을 commit 전에 거절하면 `run_id`는 `null`이고 artifact는 등록되지 않으며 response는 Run이 존재한다고 암시하면 안 됩니다. Core는 invalid authorization을 consumed로 표시하면 안 됩니다. Violation/audit Run은 제품 쓰기가 이미 관찰된 뒤 Core가 의도적으로 기록할 때만 생길 수 있습니다. Attempted authorization ref는 validator finding, violation payload, event payload에만 나타날 수 있으며 evidence, QA, verification, final acceptance, close readiness를 충족하지 않습니다.
 
 <a id="harnessrequest_user_judgment"></a>
 <a id="harnessrequest_user_decision"></a>
@@ -265,9 +266,9 @@ Core가 write-capable run을 commit 전에 거절하면 `run_id`는 `null`이고
 
 Compatibility alias: `harness.request_user_decision`.
 
-사용자 소유 판단, sensitive-action permission, work acceptance, residual-risk acceptance가 progress나 close를 막을 때 focused user judgment request를 만들기 위해 이 method를 사용합니다.
+사용자 소유의 제품 판단, 기술 판단, 범위 판단, 민감 동작 승인, QA 면제 판단, 검증 위험 수락, 최종 수락, 잔여 위험 수락, 취소 판단이 진행이나 close를 막을 때 초점 있는 user judgment request를 만들기 위해 이 method를 사용합니다.
 
-Stage meaning: 내부 엔지니어링 점검에서는 active가 아닙니다. MVP-1에서 active입니다. Full-format Decision Packet presentation, committed Approval record lifecycle, waiver, reconcile, full residual-risk profile은 명시적으로 active가 되기 전까지 later/profile-gated입니다.
+Stage meaning: 내부 엔지니어링 점검에서는 active가 아닙니다. MVP-1에서 active입니다. Full-format Decision Packet presentation, committed Approval record lifecycle, reconcile, rich residual-risk profile은 명시적으로 active가 되기 전까지 later/profile-gated입니다.
 
 Allowed actors: `lead_agent`, `evaluator`, `operator`.
 
@@ -276,15 +277,18 @@ RequestUserJudgmentRequest:
   envelope: ToolEnvelope
   task_id: string
   change_unit_id: string | null
-  judgment_type: product_choice | technical_choice | sensitive_action_approval | work_acceptance | residual_risk_acceptance
+  judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation
   presentation: short | full
-  display_label: Product/UX judgment | Technical judgment | Sensitive action approval | Work acceptance | Residual risk acceptance
+  display_label: Product decision | Technical decision | Scope decision | Sensitive action approval | QA waiver | Verification risk acceptance | Final acceptance | Residual risk acceptance | Cancellation
   context:
     why_now: string
     source_refs: StateRecordRef[]
     evidence_refs: EvidenceRefs
   state_summary_at_request: StateSummary | null
+  question: string
   what_user_is_judging: string
+  why_agent_cannot_decide: string
+  no_decision_consequence: string
   what_agent_may_decide_without_user: string[]
   affected_scope: UserJudgmentScope
   affected_gates: UserJudgmentGateRef[]
@@ -303,7 +307,7 @@ RequestUserJudgmentResponse:
   user_visible_summary: string
 ```
 
-Minimum MVP-1에서는 `approval_id`가 `null`입니다. Sensitive-action approval judgment는 `harness.record_user_judgment`가 resolve한 뒤에만 scoped permission을 기록합니다. 이것은 Write Authorization이 아니며 product, technical, work-acceptance, residual-risk judgment를 대신하지 않습니다.
+Minimum MVP-1에서는 `approval_id`가 `null`입니다. Sensitive-action approval judgment는 `harness.record_user_judgment`가 resolve한 뒤에만 scoped permission을 기록합니다. 이것은 Write Authorization이 아니며 제품 판단, 기술 판단, 범위 판단, QA 면제 판단, 검증 위험 수락, 최종 수락, 잔여 위험 수락을 대신하지 않습니다.
 
 <a id="harnessrecord_user_judgment"></a>
 <a id="harnessrecord_user_decision"></a>
@@ -314,7 +318,7 @@ Compatibility alias: `harness.record_user_decision`.
 
 이미 존재하는 canonical `UserJudgment`에 대한 사용자의 답을 기록할 때 이 method를 사용합니다.
 
-Stage meaning: 내부 엔지니어링 점검에서는 active가 아닙니다. MVP-1에서는 사용자 소유 판단, sensitive-action approval judgment resolution, required work acceptance에 active입니다. Committed Approval update, waiver, reconcile outcome, richer residual-risk metadata는 명시적으로 active가 되기 전까지 later/profile-gated입니다.
+Stage meaning: 내부 엔지니어링 점검에서는 active가 아닙니다. MVP-1에서는 사용자 소유 판단, sensitive-action approval judgment resolution, policy가 허용하는 QA waiver/risk path, required verification이 waived된 경우의 verification-risk acceptance, required final acceptance, required residual-risk acceptance, cancellation에 active입니다. Committed Approval update, reconcile outcome, richer residual-risk metadata는 명시적으로 active가 되기 전까지 later/profile-gated입니다.
 
 Allowed actors: `user`, `operator`.
 
@@ -322,7 +326,7 @@ Allowed actors: `user`, `operator`.
 RecordUserJudgmentRequest:
   envelope: ToolEnvelope
   user_judgment_id: string
-  judgment_type: product_choice | technical_choice | sensitive_action_approval | work_acceptance | residual_risk_acceptance
+  judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation
   selected_option_id: string | null
   judgment: RecordUserJudgmentPayload
   note: string
@@ -330,7 +334,7 @@ RecordUserJudgmentRequest:
   accepted_risks: AcceptedRiskInput[]
 
 RecordUserJudgmentPayload:
-  value: selected | rejected | deferred | granted | denied | expired | accepted
+  value: selected | rejected | deferred | granted | denied | expired | waived | accepted | cancelled
   value_note: string | null
 
 RecordUserJudgmentResponse:
@@ -344,9 +348,9 @@ RecordUserJudgmentResponse:
   next_action: string
 ```
 
-`judgment_type`은 저장된 `UserJudgment`와 일치해야 합니다. `go ahead`, `looks good`, `진행해` 같은 free-form note는 pending judgment가 그 judgment type을 명시적으로 묻고 answer가 allowed value와 맞을 때만 approval, acceptance, risk acceptance, waiver, 쓰기 전 범위 확인 호환성과 연결될 수 있습니다.
+`judgment_kind`는 저장된 `UserJudgment`와 일치해야 합니다. "yes, do it", "go ahead", "looks good", "진행해" 같은 free-form note는 pending judgment가 그 `judgment_kind`를 명시적으로 묻고, affected object와 scope가 맞으며, 기록된 사용자 intent가 allowed value와 맞을 때만 민감 동작 승인, 최종 수락, 잔여 위험 수락, QA 면제 판단, 검증 위험 수락, 취소 판단, 범위 변경, 쓰기 전 범위 확인 호환성과 연결될 수 있습니다.
 
-MVP-1에서 `accepted_risk_refs`는 해당 close path에서 risk가 보였고 받아들여졌음을 보여주는 `user_judgment`와 `blocker` ref를 포함합니다. Rich `residual_risk` ref는 later/profile-promoted입니다. 별도 accepted-risk record kind는 없습니다.
+MVP-1에서 `accepted_risk_refs`는 해당 close path에서 risk가 보였고 수락됐음을 보여주는 `user_judgment`와 `blocker` ref를 포함합니다. Rich `residual_risk` ref는 later/profile-promoted입니다. 별도 accepted-risk record kind는 없습니다.
 
 <a id="harnessclose_task"></a>
 
@@ -387,7 +391,8 @@ CloseTaskResponse:
   state: StateSummary
   blockers:
     - code: ErrorCode
-      category: open_run | scope | user_judgment | sensitive_action_approval | design_policy | evidence | verification | manual_qa | residual_risk_visibility | residual_risk_acceptance | work_acceptance | projection_freshness | artifact_availability
+      category: open_run | scope | user_judgment | sensitive_approval | design_policy | evidence | verification | manual_qa | residual_risk_visibility | residual_risk_acceptance | final_acceptance | projection_freshness | artifact_availability
+      required_judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation | null
       message: string
       required_next_action: string
       related_refs: StateRecordRef[]
@@ -395,9 +400,9 @@ CloseTaskResponse:
   artifact_refs: ArtifactRef[]
 ```
 
-MVP-1 close는 core close state, blocker, residual-risk visibility, required work-acceptance state, artifact availability, Core가 소유한 `evidence_summary`를 사용합니다. Close readiness는 current record에서 파생됩니다. Verification, Manual QA, projection/report, operations ref는 해당 profile이 enabled일 때만 active입니다.
+MVP-1 close는 core close state, blocker, residual-risk visibility, required final-acceptance state, artifact availability, Core가 소유한 `evidence_summary`를 사용합니다. Close readiness는 current record에서 파생됩니다. Verification, Manual QA, projection/report, operations ref는 해당 profile이 enabled일 때만 active입니다.
 
-`intent=complete`에서 closed response가 되려면 Task state가 close intent와 호환되고, close와 관련해 unresolved active Run이 없고, required user judgment가 unresolved 또는 blocked 상태가 아니며, evidence가 required이면 `evidence_summary.status=sufficient`여야 합니다. Acceptance가 required이면 작업 수락이 기록되어야 합니다. Close-relevant residual risk는 visible해야 하며, `completed_with_risk_accepted`에는 명시적인 residual-risk acceptance가 필요합니다. Stale 또는 blocked Write Authorization fact는 그 영향이 닿는 current Run, scope, artifact, evidence, blocker record를 통해서만 close에 영향을 줍니다. Projection freshness는 display freshness이지 canonical close state가 아닙니다. Caller는 stale projection prose에서 close하면 안 됩니다.
+`intent=complete`에서 closed response가 되려면 Task state가 close intent와 호환되고, close와 관련해 unresolved active Run이 없고, required user judgment가 unresolved 또는 blocked 상태가 아니며, evidence가 required이면 `evidence_summary.status=sufficient`여야 합니다. Final acceptance가 required이면 `judgment_kind=final_acceptance`가 기록되어야 합니다. Close-relevant residual risk는 visible해야 하며, `completed_with_risk_accepted`에는 명시적인 residual-risk acceptance가 필요합니다. Stale 또는 blocked Write Authorization fact는 그 영향이 닿는 current Run, scope, artifact, evidence, blocker record를 통해서만 close에 영향을 줍니다. Projection freshness는 display freshness이지 canonical close state가 아닙니다. Caller는 stale projection prose에서 close하면 안 됩니다.
 
 `CloseTaskRequest`는 accepted-risk refs를 싣지 않습니다. `completed_with_risk_accepted`에서는 Core가 close-relevant risk를 보여 주는 blocker와 residual-risk acceptance `user_judgment`의 accepted state를 읽고, 그 상태가 없으면 block합니다. Rich Residual Risk record는 해당 later profile이 active일 때만 필요합니다.
 

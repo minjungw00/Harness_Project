@@ -6,7 +6,7 @@
 
 구현 계층: MVP-1 지원 보기입니다. Structured payload나 prompt 크기의 text로 반환할 수 있습니다. Persisted Markdown projection이 필수는 아닙니다.
 
-경계: 에이전트 맥락 패킷은 행동을 돕는 맥락일 뿐입니다. 쓰기를 허가하거나, gate를 충족하거나, 근거를 만들거나, 민감 동작 승인을 부여하거나, 작업 수락을 기록하거나, 잔여 위험을 수용하거나, 닫기 준비 상태를 만들거나, Task를 닫을 수 없습니다.
+경계: 에이전트 맥락 패킷은 행동을 돕는 맥락일 뿐입니다. 쓰기를 허가하거나, gate를 충족하거나, 근거를 만들거나, 민감 동작 승인을 부여하거나, 최종 수락을 기록하거나, 잔여 위험을 수락하거나, 닫기 준비 상태를 만들거나, Task를 닫을 수 없습니다.
 
 ## 기준 기록
 
@@ -14,7 +14,7 @@
 - active scope, 하지 않을 일, Change Unit 참조, 쓰기 준비 막힘
 - 대기 중인 사용자 판단과 판단 요청 참조
 - 근거 참조, Run 참조, ArtifactRefs, `redaction_state`, 근거 공백
-- 닫기 막힘, 잔여 위험 요약, 작업 수락 필요 여부/상태, 관련 owner 참조
+- 닫기 막힘, 잔여 위험 요약, 최종 수락 필요 여부/상태, 관련 owner 참조
 - source clock, 최신성 상태, MCP/Core availability, 보장 수준
 - 다음 행동에 필요한 owner 문서 또는 owner section pointer
 

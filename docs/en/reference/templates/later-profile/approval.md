@@ -2,7 +2,7 @@
 
 ## Used when
 
-Use `APR` after a later Approval profile has committed an Approval request record and Harness needs a readable approval request and decision record for a sensitive action. `APR` shows sensitive-action permission scope; it does not decide user-owned product or material technical judgment, correctness, work acceptance, residual-risk acceptance, QA waiver, verification waiver, deployment, merge, or Write Authorization.
+Use `APR` after a later Approval profile has committed an Approval request record and Harness needs a readable approval request and decision record for a sensitive action. `APR` shows sensitive-action permission scope; it does not decide user-owned product decision, technical decision, scope decision, correctness, final acceptance, residual-risk acceptance, QA waiver, verification-risk acceptance, deployment, merge, or Write Authorization.
 
 Boundary: projection template only; it does not authorize runtime/server implementation or generated operational outputs. Shared phase and projection rules live in [Template Reference](README.md#used-when).
 
@@ -73,14 +73,14 @@ updated_at: 2026-05-06T09:30:15+09:00
 - this request covers:
 - this request does not decide:
 - if granted, still requires later:
-- work acceptance boundary:
+- final acceptance boundary:
 - residual-risk acceptance boundary:
 - waiver boundary:
 - secret exposure boundary:
 
 ## Related User Judgment
 - Sensitive action approval judgment:
-- separate Product/UX or Technical judgment, if required:
+- separate `product_decision`, `technical_decision`, or `scope_decision`, if required:
 - decision gate impact:
 - approval gate impact:
 
@@ -142,13 +142,13 @@ updated_at: 2026-05-06T09:30:15+09:00
 - broad approval check: this decision records only the sensitive-action Approval above; any "go ahead", "proceed", or "looks good" wording does not expand it.
 
 ## Boundary
-- approval does not resolve user-owned product or material technical judgment, prove correctness, replace verification, replace Manual QA, imply work acceptance, or accept residual risk.
-- approval does not waive QA or verification; waivers need their own scoped waiver path when policy allows them.
+- approval does not resolve user-owned product decision, technical decision, or scope decision; prove correctness; replace verification; replace Manual QA; imply final acceptance; or accept residual risk.
+- approval does not record QA waiver or verification-risk acceptance; each needs its own scoped judgment path when policy allows it.
 - approval is not Write Authorization; a later compatible `prepare_write` retry must allow the write before implementation or direct `record_run` can consume authorization.
 - dependency install approval does not decide the architecture direction for using that dependency.
 - secret access approval does not permit exposing secret values in artifacts, projections, exports, logs, screenshots, or summaries.
 - auth, permission, or system-change approval does not decide session auth, JWT, social login, role model, lockout behavior, or user notice.
-- public API direction, deployment, merge, work acceptance, residual-risk acceptance, waivers, and additional write attempts each need their own applicable recorded decision or authority when required.
+- public API direction, deployment, merge, final acceptance, residual-risk acceptance, QA waiver, verification-risk acceptance, and additional write attempts each need their own applicable recorded decision or authority when required.
 ````
 
 ## Notes
@@ -157,4 +157,4 @@ This template is a rendered projection, not approval authority. The Approval rec
 
 The Boundary section is the user-facing reminder. User-judgment request routing records are not judgment authority and cannot affect `decision_gate` except through a linked compatible `user_judgment`.
 
-The approval wording should not invite a broad answer. If the user says "go ahead," "proceed," or "looks good," the rendered decision must still show that only the named sensitive action and scope were approved. If that answer could also refer to work acceptance, residual-risk acceptance, QA waiver, verification waiver, or another pending user judgment, clarify before recording it.
+The approval wording should not invite a broad answer. If the user says "go ahead," "proceed," or "looks good," the rendered decision must still show that only the named sensitive action and scope were approved. If that answer could also refer to product decision, technical decision, scope decision, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, or another pending user judgment, clarify before recording it.

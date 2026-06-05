@@ -77,8 +77,8 @@ Stage-specific operator behavior:
 | Stage | Operator behavior introduced by the stage | Later behavior kept out |
 |---|---|---|
 | Engineering Checkpoint | Minimal local project registration or reconnect; basic status/diagnostic read over the active Core state; local API/MCP exposure only if the first slice uses that boundary; optional pointer to the narrow Kernel Smoke check after runtime tooling exists. | Projection refresh, reconcile, recover, export, artifacts check, full conformance run, release handoff, remote/shared MCP exposure, and broad connector automation. |
-| MVP-1 User Work Loop | User-facing support around the same minimal operator surface: status/next diagnostics for current work, missing user judgments, evidence state, close blockers, work-acceptance need/status, and residual-risk visibility. | Detached assurance operations, full doctor/readiness categories, projection refresh as an operator surface, reconcile, recover, export, artifacts check, full conformance run, and release handoff. |
-| Assurance Profile | Assurance-oriented support for verification, Manual QA, residual-risk, work-acceptance, stewardship, and context-hygiene profiles through the owner paths that are active in this stage. | Operator recovery/export completeness, broad projection/reconcile operations, release handoff, and the full operations conformance profile. |
+| MVP-1 User Work Loop | User-facing support around the same minimal operator surface: status/next diagnostics for current work, missing user judgments, evidence state, close blockers, final-acceptance need/status, and residual-risk visibility. | Detached assurance operations, full doctor/readiness categories, projection refresh as an operator surface, reconcile, recover, export, artifacts check, full conformance run, and release handoff. |
+| Assurance Profile | Assurance-oriented support for verification, Manual QA, residual-risk, final-acceptance, stewardship, and context-hygiene profiles through the owner paths that are active in this stage. | Operator recovery/export completeness, broad projection/reconcile operations, release handoff, and the full operations conformance profile. |
 | Operations Profile | Full local operations profile: doctor/readiness categories, projection refresh, reconcile, recover, export, artifact integrity check, release handoff report/export profile where defined, and conformance run over materialized runtime suites. | Dashboard, hosted workflow UI, broad connector ecosystems, remote/shared operations, Browser QA Capture automation, Cross-Surface Verification automation, team workflow, and orchestration unless separately promoted. |
 | Roadmap | Promoted roadmap operations such as broader connector automation, remote/shared access profiles, richer UI/operator dashboards, and higher automation only after owner docs define and prove exact contracts. | Anything not promoted remains outside staged delivery. |
 
@@ -88,7 +88,7 @@ Operator guarantee posture follows the [Security Reference stage map](security.m
 |---|---|
 | Engineering Checkpoint | Cooperative/local diagnostic wording plus limited detective reporting for the active Core path. Structured blockers are Core/API results, not proof of pre-action tool blocking. |
 | MVP-1 User Work Loop | User-visible status and blocker wording may explain what cannot proceed under Harness authority and what only the user can decide. It must still say when the surface can only hold by instruction or detect later. |
-| Assurance Profile | Assurance diagnostics may report missing verification independence, Manual QA, residual-risk acceptance, work acceptance, or stewardship evidence without implying isolation or prevention. |
+| Assurance Profile | Assurance diagnostics may report missing verification independence, Manual QA, residual-risk acceptance, final acceptance, or stewardship evidence without implying isolation or prevention. |
 | Operations Profile | Doctor, recover, export, artifact check, projection refresh, and reconcile are primarily detective/repair/report surfaces unless an exact profile proves stronger coverage. |
 | Roadmap | Preventive or isolated operator claims require promoted owner docs, exact covered operations, fixture proof, and fallback behavior. |
 
@@ -330,7 +330,7 @@ When the access mode is unknown or weaker than the registered profile, operation
 
 ## projection refresh
 
-Projection refresh regenerates Product Repository Markdown from committed state records and artifact refs. It is a derived-view operation: it may report freshness, failed jobs, and reconcile needs, but it must not replace Core state, structured blockers, evidence authority, work acceptance, residual-risk acceptance, or Write Authorization.
+Projection refresh regenerates Product Repository Markdown from committed state records and artifact refs. It is a derived-view operation: it may report freshness, failed jobs, and reconcile needs, but it must not replace Core state, structured blockers, evidence authority, final acceptance, residual-risk acceptance, or Write Authorization.
 
 Behavior required when projection refresh is in scope, normally Operations Profile unless an owner profile explicitly promotes a narrower earlier path:
 
@@ -469,7 +469,7 @@ not done    no earlier task_events rewritten; no evidence silently deleted
 not done    no Markdown projection edited into canonical state
 ```
 
-Captured recovery artifacts can explain what was observed during interruption or repair. They do not prove the interrupted implementation completed successfully and cannot satisfy evidence, verification, QA, work acceptance, residual-risk acceptance, or close by themselves.
+Captured recovery artifacts can explain what was observed during interruption or repair. They do not prove the interrupted implementation completed successfully and cannot satisfy evidence, verification, QA, final acceptance, residual-risk acceptance, or close by themselves.
 
 ## export
 

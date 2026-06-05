@@ -15,12 +15,12 @@ Implementation tier: Future/diagnostic projections. Use as an optional compact d
 - changed paths
 - out-of-bounds or unchanged scope summary
 - checks performed
-- User Judgment refs, sensitive-action approval user judgment refs, later Approval refs, `evidence_ref` refs and derived evidence summaries, Evidence Manifest when the full evidence profile is active, Eval, Manual QA, work-acceptance user judgment refs, Residual Risk, and Artifact refs when those claims are displayed
+- User Judgment refs, sensitive-action approval user judgment refs, later Approval refs, `evidence_ref` refs and derived evidence summaries, Evidence Manifest when the full evidence profile is active, Eval, Manual QA, final-acceptance user judgment refs, Residual Risk, and Artifact refs when those claims are displayed
 - artifact refs with redaction state and availability
 - projection freshness inputs
 - escalation flag
 - close assurance
-- evidence, verification, Manual QA, work acceptance, residual-risk visibility, and residual-risk acceptance close summaries when applicable
+- evidence, verification, Manual QA, final acceptance, residual-risk visibility, and residual-risk acceptance close summaries when applicable
 
 Close Summary lines are derived display summaries from existing gate and owner-record refs. Direct work does not create additional close fields beyond the records it summarizes.
 
@@ -89,7 +89,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 - detached verify needed:
 - self-check refs:
 - detached verification Eval ref:
-- verification waiver ref:
+- verification-risk acceptance ref:
 - QA waiver ref:
 - risk-accepted close refs:
 
@@ -101,7 +101,7 @@ updated_at: 2026-05-06T09:40:00+09:00
 - Evidence Manifest (full evidence profile only):
 - Eval:
 - Manual QA:
-- Work acceptance user judgment:
+- Final acceptance user judgment:
 - Residual Risk:
 - Artifact refs:
 - redaction state:
@@ -112,10 +112,10 @@ updated_at: 2026-05-06T09:40:00+09:00
 - evidence:
 - verification:
 - Manual QA:
-- work acceptance:
+- final acceptance:
 - residual-risk visibility:
 - residual-risk acceptance:
-- verification waiver ref:
+- verification-risk acceptance ref:
 - QA waiver ref:
 - follow-up:
 
@@ -141,9 +141,9 @@ Direct work may close self-checked by default unless policy or the user requires
 
 Direct Result should display self-checked, `detached_verified`, verification-waived, QA-waived, and risk-accepted-close states as separate lines. A waiver line points to the waiver ref or says it is not recorded; it does not become verification or QA. A risk-accepted close points to the residual-risk acceptance user judgment plus related blocker/evidence refs in MVP-1, and accepted Residual Risk refs only when that later profile is active, instead of being rendered as detached verified.
 
-Checks and tests in a Direct Result are evidence or self-check context. They do not become detached verification without a qualifying Eval, do not become Manual QA without a Manual QA result or valid waiver, and do not imply work acceptance. If direct work closes with accepted risk, the Close Summary should point to the residual-risk acceptance user judgment, related blocker/evidence refs, later accepted Residual Risk refs when active, and follow-up instead of presenting the result as detached verified. If no close-relevant risk is known, say that directly rather than adding gate inventory.
+Checks and tests in a Direct Result are evidence or self-check context. They do not become detached verification without a qualifying Eval, do not become Manual QA without a Manual QA result or valid waiver, and do not imply final acceptance. If direct work closes with accepted risk, the Close Summary should point to the residual-risk acceptance user judgment, related blocker/evidence refs, later accepted Residual Risk refs when active, and follow-up instead of presenting the result as detached verified. If no close-relevant risk is known, say that directly rather than adding gate inventory.
 
-Authority claims in a Direct Result should cite source refs or explicit absence: Write Authorization for write permission; a resolved `user_judgment` with `judgment_type=sensitive_action_approval` for minimum MVP-1 sensitive-action permission; an Approval ref only when the later Approval profile is active; `evidence_ref` when present, Run refs, ArtifactRefs, and visible gap summaries for MVP-1 evidence display; Evidence Manifest only when the full evidence profile is active and the result claims full criteria-to-evidence sufficiency; Eval for detached verification when that profile is active; Manual QA record or waiver path for QA when that profile is active; the work-acceptance user judgment path for work acceptance; blocker/user-judgment refs or `ResidualRiskSummary.status=none` for MVP-1 residual-risk visibility; residual-risk acceptance user judgment plus related blocker/evidence refs for MVP-1 residual-risk acceptance; and rich Residual Risk refs only when that later profile is active. Do not render `not_visible` residual risk as "none."
+Authority claims in a Direct Result should cite source refs or explicit absence: Write Authorization for write permission; a resolved `user_judgment` with `judgment_kind=sensitive_approval` for minimum MVP-1 sensitive-action permission; an Approval ref only when the later Approval profile is active; `evidence_ref` when present, Run refs, ArtifactRefs, and visible gap summaries for MVP-1 evidence display; Evidence Manifest only when the full evidence profile is active and the result claims full criteria-to-evidence sufficiency; Eval for detached verification when that profile is active; Manual QA record or waiver path for QA when that profile is active; the final-acceptance user judgment path for final acceptance; blocker/user-judgment refs or `ResidualRiskSummary.status=none` for MVP-1 residual-risk visibility; residual-risk acceptance user judgment plus related blocker/evidence refs for MVP-1 residual-risk acceptance; and rich Residual Risk refs only when that later profile is active. Do not render `not_visible` residual risk as "none."
 
 `DIRECT-RESULT` is the low-ceremony close impact display for direct work. `TASK` owns continuity Close Summary display for active or recently closed `work` tasks, and Journey Card close context is compact status/resume display. These displays follow the [projection/report boundary](../../projection-and-templates.md#projection-principles); close and gate effects still come from owner records.
 

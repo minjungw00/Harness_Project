@@ -47,7 +47,7 @@ Generated 또는 managed recipe output은 [Agent 통합 참조](agent-integratio
 
 아래 `guarantee_boundary` block은 recipe 문서용 설명일 뿐 public schema, DDL shape, canonical Capability Profile field가 아닙니다. Connector는 [Agent 통합 참조](agent-integration.md) contract에 맞는 경우에만 같은 사실을 Capability Profile 또는 Connector Manifest에 기록할 수 있습니다. Surface Cookbook은 접점별 path와 예시를 이름 붙일 뿐 guarantee level을 다시 정의하지 않습니다.
 
-Recipe가 `fallback_isolation` 아래에 manual verification bundle을 적을 때는 verification/evaluator 입력으로 쓰는 fallback이라는 뜻입니다. Manual verification bundle만으로 연결된 surface가 `preventive` 또는 `isolated`로 올라가지 않습니다. `isolated` guarantee에는 여전히 문서화되고 입증된 separation boundary가 필요합니다. Worktree 또는 fresh bundle은 verification independence나 stale-context control을 뒷받침할 수 있습니다. OS sandbox 격리, 권한 격리, hard process/container isolation, 변조 불가능한 보안 경계는 connector profile이 exact mechanism을 이름 붙이고 증명해야 합니다. Isolation은 Approval, QA, 작업 수락, 잔여 위험 수용, close, verification result와 분리됩니다.
+Recipe가 `fallback_isolation` 아래에 manual verification bundle을 적을 때는 verification/evaluator 입력으로 쓰는 fallback이라는 뜻입니다. Manual verification bundle만으로 연결된 surface가 `preventive` 또는 `isolated`로 올라가지 않습니다. `isolated` guarantee에는 여전히 문서화되고 입증된 separation boundary가 필요합니다. Worktree 또는 fresh bundle은 verification independence나 stale-context control을 뒷받침할 수 있습니다. OS sandbox 격리, 권한 격리, hard process/container isolation, 변조 불가능한 보안 경계는 connector profile이 exact mechanism을 이름 붙이고 증명해야 합니다. Isolation은 Approval, QA, 최종 수락, 잔여 위험 수락, close, verification result와 분리됩니다.
 
 ## Codex
 

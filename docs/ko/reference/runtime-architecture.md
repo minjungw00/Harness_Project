@@ -249,7 +249,7 @@ Adapters와 sidecars는 접점 capability를 observable facts로 번역합니다
 
 Projection 렌더링은 transaction 이후에 일어납니다. Projection failure는 state-isolated입니다. Projection 최신성 또는 job status를 `stale` 또는 `failed`로 표시하고 커밋된 상태는 그대로 둡니다. Projection은 transaction을 roll back하거나, `state.sqlite.task_events`를 rewrite하거나, passed task를 failed task로 바꾸거나, 나중의 reconcile decision 없이 기준 상태를 repair할 수 없습니다.
 
-Projection freshness는 파생 read fact입니다. Status, next-action, export, operator command가 이를 확인해 readable view가 stale, failed, unknown이라고 보고할 수는 있지만, Core state, structured blockers, evidence records, 작업 수락, 잔여 위험 수용, Write Authorization의 authority는 각 owner record에 남습니다. 내부 엔지니어링 점검은 full projection worker를 증명하지 않고 freshness 또는 read fact를 노출할 수 있습니다. MVP-1은 현재 작업 상태, 사용자 판단 요청, 근거 요약, 닫기 준비 상태/blocker를 사용자가 이해할 만큼의 derived output이 필요하고, hardened 또는 operational profile은 complete projection/reconcile 및 diagnostic report path를 담당합니다.
+Projection freshness는 파생 read fact입니다. Status, next-action, export, operator command가 이를 확인해 readable view가 stale, failed, unknown이라고 보고할 수는 있지만, Core state, structured blockers, evidence records, 최종 수락, 잔여 위험 수락, Write Authorization의 authority는 각 owner record에 남습니다. 내부 엔지니어링 점검은 full projection worker를 증명하지 않고 freshness 또는 read fact를 노출할 수 있습니다. MVP-1은 현재 작업 상태, 사용자 판단 요청, 근거 요약, 닫기 준비 상태/blocker를 사용자가 이해할 만큼의 derived output이 필요하고, hardened 또는 operational profile은 complete projection/reconcile 및 diagnostic report path를 담당합니다.
 
 ## Artifact store architecture
 
@@ -311,7 +311,7 @@ Reconcile은 merge, reject, note로 convert, decision 생성, design support rec
 
 `cooperative`, `detective`, `preventive`, `isolated`의 정확한 의미와 이 label의 staged honest-display rule은 [보안 참조: 정직한 guarantee display](security.md#정직한-guarantee-display)가 담당합니다. 이 architecture section은 reported label이 runtime flow의 어디에 나타나는지만 담당합니다. Connector profile과 adapter가 이를 보고하고, Core는 여전히 authority decision을 수행하며, operator 또는 recovery surface는 이를 display와 risk context로 사용합니다.
 
-Architecture 관점의 stage default는 다음과 같습니다. 내부 엔지니어링 점검은 cooperative에 제한된 detective Core status behavior를 더한 수준, MVP-1은 사용자에게 보이는 blocker와 status를 포함한 cooperative/detective 수준, 보증 프로필은 verification, QA, risk, 작업 수락 분리를 위한 cooperative/detective assurance 수준, 운영 프로필은 operations, recovery, export, integrity check를 위한 detective 수준, 로드맵은 concrete operation 또는 boundary가 승격되고 증명된 곳에서만 preventive 또는 isolated profile입니다. 전체 표는 [보안 참조의 단계별 guarantee level](security.md#단계별-guarantee-level)이 담당합니다.
+Architecture 관점의 stage default는 다음과 같습니다. 내부 엔지니어링 점검은 cooperative에 제한된 detective Core status behavior를 더한 수준, MVP-1은 사용자에게 보이는 blocker와 status를 포함한 cooperative/detective 수준, 보증 프로필은 verification, QA, risk, 최종 수락 분리를 위한 cooperative/detective assurance 수준, 운영 프로필은 operations, recovery, export, integrity check를 위한 detective 수준, 로드맵은 concrete operation 또는 boundary가 승격되고 증명된 곳에서만 preventive 또는 isolated profile입니다. 전체 표는 [보안 참조의 단계별 guarantee level](security.md#단계별-guarantee-level)이 담당합니다.
 
 ### 보장 수준 동작 지도
 
@@ -337,7 +337,7 @@ Preventive label은 connected profile이 설명 중인 operation에 대한 fixtu
 
 Current reference behavior는 연결된 접점이 covered operation에 대해 구체적으로 fixture로 입증된 도구 실행 전 guard나 문서화되고 입증된 separation boundary를 갖는 경우가 아니라면 cooperative/detective입니다. 내부 엔지니어링 점검과 MVP-1에서 "blocked"는 Harness 권한 경로가 진행할 수 없거나 surface가 지시에 따라 보류한다는 뜻입니다. Preventive profile이 exact operation을 증명하지 않는 한 runtime이 임의의 파일 쓰기를 물리적으로 막았다는 뜻이 아닙니다. Native hook expansion, advanced sidecar watching, broad isolated execution은 reference 접점을 위해 명시적으로 구현되지 않는 한 later roadmap items입니다. Owner 문서를 통해 승격되기 전까지 이 항목들은 관찰, freshness, 표시를 개선할 수 있을 뿐이며, write를 authorize하거나, gate를 충족하거나, Approval을 부여하거나, verification 또는 QA를 증명하거나, acceptance를 기록하거나, Core 권한을 대체하지 않습니다.
 
-보장 수준은 표시와 risk context입니다. Approval, Write Authorization, verification, QA, 작업 수락, 잔여 위험 수용, close readiness, kernel gate가 아닙니다.
+보장 수준은 표시와 risk context입니다. Approval, Write Authorization, verification, QA, 최종 수락, 잔여 위험 수락, close readiness, kernel gate가 아닙니다.
 
 ## Failure and recovery overview
 
@@ -352,9 +352,9 @@ Failures는 숨기지 않고 기록합니다.
 | artifact file missing 또는 hash mismatch | artifact와 dependent evidence, projection, export, close-readiness view를 `stale` 또는 blocked로 표시합니다. Recovery를 통해 다시 scan하거나, 등록된 정확한 bytes를 restore하거나, replacement를 등록합니다 |
 | Projection job failed | state는 current로 유지하고 projection을 failed로 표시한 뒤 retry 또는 reconcile합니다. Core state를 roll back하거나 Task result를 fail로 만들거나 rendered Markdown에서 state를 만들어내지 않습니다 |
 | Managed Markdown edited directly | reconcile item을 만들고 기준 상태를 직접 바꾸지 않습니다 |
-| Stale PRD, chat memory, evaluator bundle | stale context는 pull-only input으로 취급합니다. Owner path가 refresh, reconcile, supersede하기 전까지 write authorization, current Task state replacement, gate satisfaction, 작업 수락, 분리 검증 기록, close에 사용할 수 없습니다 |
+| Stale PRD, chat memory, evaluator bundle | stale context는 pull-only input으로 취급합니다. Owner path가 refresh, reconcile, supersede하기 전까지 write authorization, current Task state replacement, gate satisfaction, 최종 수락, 분리 검증 기록, close에 사용할 수 없습니다 |
 | MCP unavailable | `MCP_SERVER_UNAVAILABLE`은 tool 호출이 Core에 닿을 수 없어 authoritative Core response가 불가능한 진단 조건이고, `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 연결된 접점에서 사용할 수 있는 MCP가 없거나 MCP configuration이 최신이 아니거나 required tools를 호출할 수 없음을 관찰할 수 있는 진단 조건입니다. `MCP_UNAVAILABLE`은 stable public availability code로 남습니다. Product/runtime/code writes는 cooperative 접점에서는 instruction으로 보류되고, 가능한 detective path에서는 실행 뒤에 감지되며, covered operation에 대해 fixture로 입증된 preventive guard가 있을 때만 실행 전에 차단됩니다 |
 | Surface capability mismatch | validator result를 기록하고 보장 수준 표시를 조정하며, required checks를 충족할 수 없으면 Write Authorization을 거부하거나 Harness 권한 상태상 write가 허용되지 않음을 표시합니다. Cooperative surface는 지시로 보류하며, 실행 전 물리적 차단은 여전히 connected profile에서 fixture로 입증된 coverage에 달려 있습니다 |
 
 
-Recovery tools는 projection 최신성 repair, artifact rescan, 최신이 아닌 runs interrupt, drifted 민감 동작 permission 또는 later Approval record expire, reconcile items create를 수행할 수 있습니다. 다만 같은 권한 규칙을 보존해야 합니다. `state.sqlite`는 운영 상태이고, `state.sqlite.task_events`는 그 state store 안의 event 이력이며, 원본 근거는 artifact store에 있고, Markdown 보고서는 projection으로 남습니다. Recovery artifact와 compensating event는 recovery가 관찰하거나 변경한 내용을 설명합니다. 그 자체로 successful implementation을 증명하거나, evidence를 충족하거나, verification 또는 QA를 pass하거나, 작업 수락이나 잔여 위험 수용을 기록하거나, Task를 close하지 않습니다.
+Recovery tools는 projection 최신성 repair, artifact rescan, 최신이 아닌 runs interrupt, drifted 민감 동작 permission 또는 later Approval record expire, reconcile items create를 수행할 수 있습니다. 다만 같은 권한 규칙을 보존해야 합니다. `state.sqlite`는 운영 상태이고, `state.sqlite.task_events`는 그 state store 안의 event 이력이며, 원본 근거는 artifact store에 있고, Markdown 보고서는 projection으로 남습니다. Recovery artifact와 compensating event는 recovery가 관찰하거나 변경한 내용을 설명합니다. 그 자체로 successful implementation을 증명하거나, evidence를 충족하거나, verification 또는 QA를 pass하거나, 최종 수락이나 잔여 위험 수락을 기록하거나, Task를 close하지 않습니다.

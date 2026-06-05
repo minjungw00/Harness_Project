@@ -15,7 +15,7 @@ Harness is useful when you want the agent to:
 - separate facts it can inspect from judgments only you can make
 - show when scope is growing
 - tie completion claims to evidence and checks
-- keep product/UX judgment separate from technical judgment
+- keep product decision separate from technical decision
 - show what still blocks closing the work
 
 ## 2. Start in normal language
@@ -146,11 +146,12 @@ The agent should ask you when a choice affects:
 - security, privacy, audit, retention, redaction, or secrets
 - scope expansion
 - permission for a named sensitive step
-- QA or verification expectations, including waivers
-- accepting the finished result
+- QA waiver or verification-risk acceptance
+- final acceptance of the finished result
 - accepting a known remaining risk
+- cancellation
 
-The question should name the specific decision. It should not ask for broad approval when several different decisions are pending.
+The question should name the specific decision, choices, recommendation, rationale, uncertainty, affected scope, what happens if you do not decide, and why the agent cannot decide for you. It should not ask for broad approval when several different decisions are pending.
 
 ```text
 Decision needed: choose the failed-login feedback pattern.
@@ -160,7 +161,7 @@ Can continue if deferred: backend validation work that does not claim final UI b
 Cannot close yet: final UX, copy, and human QA for the login screen.
 ```
 
-## 7. Product/UX judgment examples
+## 7. Product decision examples
 
 Product and UX judgments decide what the user experience should be. The agent can recommend, but it should not silently choose for you.
 
@@ -175,9 +176,9 @@ Examples:
 
 A good prompt shows options, recommendation, uncertainty, what can continue if you defer, and what cannot be honestly finished yet.
 
-## 8. Technical judgment examples
+## 8. Technical decision examples
 
-Technical judgments decide material implementation direction. The agent should inspect first, then show the trade-off plainly.
+Technical decisions decide material implementation direction. The agent should inspect first, then show the trade-off plainly.
 
 Examples:
 
@@ -189,7 +190,7 @@ Examples:
 | API contract | Preserve current contract, add a versioned path, or change callers together. | Existing callers, docs, tests, compatibility risks, and public surface area. |
 | Verification expectation | Focused test, broader regression run, independent review, manual QA, or waiver. | Available tests, past failures, affected surfaces, and what remains untested. |
 
-Technical judgment is not the same as permission for a sensitive step. For example, allowing the agent to install an auth helper package is not the same as deciding that package is the architecture direction.
+Technical decision is not the same as permission for a sensitive step. For example, allowing the agent to install an auth helper package is not the same as deciding that package is the architecture direction.
 
 ## 9. How to read evidence and checks
 
@@ -203,8 +204,8 @@ Read evidence and checks separately:
 
 | Plain item | What it means | What it does not replace |
 |---|---|---|
-| Evidence | Support for a completion or correctness claim. | Your decision, work acceptance, or remaining-risk acceptance. |
-| Automated check | A test, command, or mechanical review of a specific behavior. | Human QA, broad confidence, or product judgment. |
+| Evidence | Support for a completion or correctness claim. | Your decision, final acceptance, or remaining-risk acceptance. |
+| Automated check | A test, command, or mechanical review of a specific behavior. | Human QA, broad confidence, or product decision. |
 | Human QA | A person inspected an experience where judgment matters. | Automated tests or screenshots alone. |
 | Source lookup | The agent checked docs, code, or current files before claiming something. | A decision you own. |
 | Missing evidence | The claim is not yet well supported. | A reason to invent confidence. |
@@ -237,7 +238,7 @@ Common status messages should be direct and non-alarming. Exact condition behavi
 
 | Message | What it means for you |
 |---|---|
-| Harness/Core authority is unavailable. | The agent cannot confirm current Harness state, evidence, work acceptance, residual-risk acceptance, or close readiness. It can reconnect, diagnose, or continue outside Harness only if you explicitly choose that mode. |
+| Harness/Core authority is unavailable. | The agent cannot confirm current Harness state, evidence, final acceptance, residual-risk acceptance, or close readiness. It can reconnect, diagnose, or continue outside Harness only if you explicitly choose that mode. |
 | Local access is unavailable or denied. | The current surface cannot inspect or change the requested local files or system path. |
 | Current state or view may be stale. | The agent should refresh before relying on the status, baseline, projection, or pre-write scope check. |
 | This is outside the current Harness stage or surface. | The requested behavior is not available in the current stage/profile; the agent should offer a supported fallback. |
@@ -369,7 +370,7 @@ Looks good, go ahead.
 Good agent response:
 
 ```text
-I will apply that to the one pending choice: use the toast for the Save success message. This does not grant sensitive-action approval, accept the finished work, waive QA, or accept any residual risk.
+I will apply that to the one pending choice: use the toast for the Save success message. This does not grant sensitive approval, accept the finished work, waive QA, accept verification risk, change scope, cancel the task, or accept any residual risk.
 ```
 
 Why this is good: it maps broad language only to the active, clearly named judgment.
@@ -377,10 +378,10 @@ Why this is good: it maps broad language only to the active, clearly named judgm
 Bad agent response:
 
 ```text
-Invalid: I would treat that as all write permission, work acceptance, QA waiver, and residual-risk acceptance.
+Invalid: I would treat that as all write permission, final acceptance, QA waiver, verification-risk acceptance, scope change, and residual-risk acceptance.
 ```
 
-Why this is bad: "go ahead" is not automatically every approval and acceptance path.
+Why this is bad: "go ahead" is not automatically sensitive approval, QA waiver, verification-risk acceptance, scope change, cancellation, final acceptance, or residual-risk acceptance.
 
 ### "I will test it later."
 
@@ -466,7 +467,7 @@ It does not:
 - prove a product decision is correct
 - turn tool output into user judgment
 - turn test pass into human QA
-- turn permission for a sensitive step into work acceptance
+- turn permission for a sensitive step into final acceptance
 - treat generated readable summaries as operating state
 - automatically change OS permissions
 - sandbox arbitrary tools
@@ -489,13 +490,13 @@ You can skip this section until an agent or reference page shows one of these la
 | Evidence Manifest | A fuller record that maps completion claims or criteria to evidence references when that profile is active. Small work may only need a short evidence summary. |
 | Projection | A readable summary derived from saved records. It helps orientation, but it is not the operating record itself. |
 | Gate | An internal readiness or compatibility condition. User-facing status should show the blocker or check first. |
-| User Judgment | The saved record behind a named user decision, such as product/UX judgment, technical judgment, sensitive-step permission, work acceptance, or remaining-risk acceptance. |
-| Approval | Permission for a named sensitive action. It is not product judgment, work acceptance, or remaining-risk acceptance. |
+| User Judgment | The saved record behind a named user decision, such as product decision, technical decision, scope decision, sensitive approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, or cancellation. |
+| Approval | Permission for a named sensitive action. It is not product decision, technical decision, scope decision, final acceptance, QA waiver, verification-risk acceptance, or residual-risk acceptance. |
 | Manual QA | Human inspection for UX, copy, accessibility, visual quality, workflow, or other human-judgment surfaces. |
-| Acceptance | The user's work-acceptance judgment when the work path requires it. |
+| Acceptance | The user's final acceptance judgment when the work path requires it. |
 | Residual Risk | Known remaining uncertainty, limitation, trade-off, or consequence. |
 | `task_events` | Low-level event history for implementers and diagnostics. |
 
-These labels do not collapse into each other. A decision is not a write check. Permission for a sensitive action is not work acceptance. Work acceptance does not erase remaining risk. A readable summary is not state. Passing tests does not mean human QA happened.
+These labels do not collapse into each other. A decision is not a write check. Permission for a sensitive action is not final acceptance. Final acceptance does not erase remaining risk. A QA waiver is not QA evidence. A readable summary is not state. Passing tests does not mean human QA happened.
 
 For exact contracts, use the Reference docs when needed: [Core Model Reference](../reference/core-model.md), [MVP API](../reference/api/mvp-api.md), [Agent Integration Reference](../reference/agent-integration.md), and [Projection And Templates Reference](../reference/projection-and-templates.md).

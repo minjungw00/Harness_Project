@@ -22,7 +22,7 @@ Implementation tier: Operations/export reports. Export and handoff bundles are l
 - artifact refs, owner relations, redaction status, retention/availability, and integrity metadata
 - redaction, omission, and blocked-artifact summaries
 - omitted-secret notes and retained/expired artifact summaries
-- compact authority refs for Write Authorization, User Judgment, Approval, Evidence Manifest, Eval, Manual QA, work acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when included in review or Release Handoff display
+- compact authority refs for Write Authorization, User Judgment, Approval, Evidence Manifest, Eval, Manual QA, final acceptance context, Residual Risk, Artifact refs, redaction state, and projection freshness when included in review or Release Handoff display
 - export profile boundary and non-deployment/non-merge reminder display
 
 ## Rendered sections
@@ -111,7 +111,7 @@ updated_at: 2026-05-06T10:30:00+09:00
 - close readiness:
 - close blockers:
 - authority refs: write={write_authorization_refs|none}; judgment={user_judgment_refs|none}; approval={approval_refs|none}; evidence={evidence_manifest_refs|none}; eval={eval_refs|none}; manual_qa={manual_qa_refs|none}; acceptance={acceptance_context_refs|none}; residual_risk={residual_risk_refs|none}; artifacts={artifact_refs|none}; redaction={redaction_status_summary}; freshness={projection_freshness}
-- approval refs are `none` in minimum MVP-1; sensitive-action coverage appears through `user_judgment_refs` with `judgment_type=sensitive_action_approval` unless a later Approval owner profile is active.
+- approval refs are `none` in minimum MVP-1; sensitive-action coverage appears through `user_judgment_refs` with `judgment_kind=sensitive_approval` unless a later Approval owner profile is active.
 - evidence refs:
 - verification refs:
 - Manual QA refs:
@@ -124,14 +124,14 @@ updated_at: 2026-05-06T10:30:00+09:00
 - suggested PR checklist:
 - suggested deploy checklist:
 - suggested rollback or monitoring notes:
-- external authority reminder: Deployment, merge, Approval, production monitoring, QA or verification waiver, gate satisfaction, work acceptance, residual-risk acceptance, assurance upgrade, and Task close remain outside this report.
+- external authority reminder: Deployment, merge, Approval, production monitoring, QA waiver, verification-risk acceptance, gate satisfaction, final acceptance, residual-risk acceptance, assurance upgrade, and Task close remain outside this report.
 ````
 
 ## Notes
 
 This template is a rendered shape, not canonical state. `EXPORT` is a `ProjectionKind` only; export snapshots and components remain artifacts linked to owner records or projection refs.
 
-Release Handoff display in `EXPORT` should keep self-checked work, `detached_verified`, verification waiver, QA waiver, and risk-accepted close separate, with refs or explicit absence. The export may preserve those displays, but it does not grant Approval, satisfy gates, accept results, accept residual risk, waive QA or verification, upgrade assurance, or close the Task.
+Release Handoff display in `EXPORT` should keep self-checked work, `detached_verified`, `verification_gate=waived_by_user`, QA waiver, and risk-accepted close separate, with refs or explicit absence. The export may preserve those displays, but it does not grant Approval, satisfy gates, record final acceptance, record residual-risk acceptance, record QA waiver, record verification-risk acceptance, upgrade assurance, or close the Task.
 
 `EXPORT` must not embed raw secrets, PII, sensitive logs, network traces, screenshots, or other sensitive artifact bodies by default. Large or sensitive artifacts are listed by `ArtifactRef`; raw files are included only when policy and retention allow them, and `secret_omitted` or `blocked` entries stay represented by refs and notes.
 
@@ -139,4 +139,4 @@ If the export profile omits a report projection snapshot, raw artifact, or state
 
 For `secret_omitted`, export may include safe omission notes or handles and hashes over safe stored bytes, but not omitted values. For `blocked`, export may include the committed metadata-only notice artifact and its hash, size, and content type; those fields describe the notice bytes, never the forbidden raw payload. Release Handoff sections must show the same omission or block impact as unavailable, insufficient, or unresolved input unless a documented replacement, waiver, user judgment outcome, accepted risk, or fallback resolved it before export.
 
-If recovery artifacts appear in an export, label them as recovery observations. They do not prove successful completion and must not be counted as evidence, verification, QA, work acceptance, or close proof unless a separate owner record already resolved that path.
+If recovery artifacts appear in an export, label them as recovery observations. They do not prove successful completion and must not be counted as evidence, verification, QA, final acceptance, or close proof unless a separate owner record already resolved that path.

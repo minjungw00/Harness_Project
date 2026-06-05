@@ -16,10 +16,10 @@
 
 | 보증 버킷 | 여기에 속하는 것 | 승격 전까지 밖에 둘 것 |
 |---|---|---|
-| 검증 강화 | 분리 검증 정책, 독립성 표시, 검증 면제 라우팅, 검증 공백, owner 기록으로 뒷받침되는 더 강한 보증 주장. | 여러 접점 검증 자동화와 evaluator orchestration은 승격 전까지 로드맵 향후 후보입니다. |
+| 검증 강화 | 분리 검증 정책, 독립성 표시, 검증 위험 수락 라우팅, 검증 공백, owner 기록으로 뒷받침되는 더 강한 보증 주장. | 여러 접점 검증 자동화와 evaluator orchestration은 승격 전까지 로드맵 향후 후보입니다. |
 | 수동 QA | 전체 수동 QA 기대치, QA 면제 상세, QA 근거 참조, QA의 닫기 영향. | Browser QA Capture 자동화와 QA dashboard는 승격 전까지 로드맵 향후 후보입니다. |
 | 상세 근거 | 상세 Evidence Manifest 동작, 아티팩트 참조, 근거 충분성 상세, redaction/omission 표시, 근거 공백. | 전체 export bundle과 release handoff packaging은 운영 프로필에 속합니다. |
-| 위험 검토 | 풍부한 잔여 위험 lifecycle, 작업 수락 또는 닫기 전 표시, 잔여 위험 수용 라우팅, 위험 검토 요약. | Team risk workflow, policy dashboard, hosted review flow는 로드맵 향후 후보입니다. |
+| 위험 검토 | 풍부한 잔여 위험 lifecycle, 최종 수락 또는 닫기 전 표시, 잔여 위험 수락 라우팅, 위험 검토 요약. | Team risk workflow, policy dashboard, hosted review flow는 로드맵 향후 후보입니다. |
 | 상세 평가 출력 | Eval result 상세, Verification Result Card 표시, 상세 `EVAL` projection 출력, Eval owner path가 active일 때의 assurance-level 설명. | Eval을 orchestration으로 취급하는 metrics product, analytics, automation은 로드맵 향후 후보입니다. |
 
 Design-quality, stewardship, TDD trace, feedback-loop, context-hygiene 내용은 위 보증 버킷 중 하나를 지원할 때만 여기에 속합니다. Dashboard, hosted workflow, team workflow, broader connector, orchestration, preventive security, isolation은 owner가 구체적인 mechanism을 승격하고 증명하기 전까지 [로드맵](../roadmap.md) 향후 후보로 남습니다.
@@ -30,7 +30,7 @@ Design-quality, stewardship, TDD trace, feedback-loop, context-hygiene 내용은
 
 | 필요한 것 | 담당 문서 |
 |---|---|
-| Core gate, 사용자 판단, 닫기, waiver, 작업 수락, 잔여 위험 의미 | [Core Model 참조](../reference/core-model.md) |
+| Core gate, 사용자 판단, 닫기, waiver, 최종 수락, 잔여 위험 의미 | [Core Model 참조](../reference/core-model.md) |
 | 이후/profile-gated API method와 schema material | [API Schema Later](../reference/api/schema-later.md) |
 | 설계 품질 정책, validator ID, severity composition, waiver 영향 | [설계 품질 정책](../reference/design-quality-policies.md) |
 | Fixture mechanics와 profile 증명 모델 | [Conformance Fixtures 참조](../reference/conformance-fixtures.md) |
@@ -39,6 +39,6 @@ Design-quality, stewardship, TDD trace, feedback-loop, context-hygiene 내용은
 
 ## 경계
 
-보증 프로필은 report text만으로 권한을 만들지 않습니다. 검증, 수동 QA, 상세 근거, 위험 검토, 상세 Eval 표시는 각각 별도의 owner 기록, 참조, 파생 보기입니다. 어느 것도 작업 수락, 잔여 위험 수용, 닫기 준비 상태, Core state를 대신하지 않습니다.
+보증 프로필은 report text만으로 권한을 만들지 않습니다. 검증, 수동 QA, 상세 근거, 위험 검토, 상세 Eval 표시는 각각 별도의 owner 기록, 참조, 파생 보기입니다. 어느 것도 최종 수락, 잔여 위험 수락, 닫기 준비 상태, Core state를 대신하지 않습니다.
 
 여기에 이름이 있다고 해서 MVP-1 요구사항이 되거나, 구현된 런타임 동작이 되거나, 실행 가능한 conformance가 되지는 않습니다. 향후 fixture row는 owner가 정확한 동작을 승격하고 exact-shape fixture를 materialize하기 전까지 [향후 Fixtures](future-fixtures.md)에 남습니다.
