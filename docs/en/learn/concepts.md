@@ -22,10 +22,10 @@ Harness is easiest to read through six ordinary questions:
 Users do not need to say these words exactly. They can ask in ordinary language:
 
 ```text
-Help me clarify the plan before implementation.
-Tell me before the work scope expands.
-Show what evidence supports the result.
-What still blocks closing this?
+Turn this feature idea into an implementable plan.
+Ask me first about the parts only I can decide.
+Before changing files, confirm which files you expect to touch.
+Before you say it is done, show the evidence and remaining risks.
 ```
 
 ## Three Work Shapes
@@ -65,6 +65,7 @@ Internal labels are lookup tools, not first-use concepts. Learn and Use pages sh
 | Change Unit | The bounded product-write scope. It does not authorize a write by itself. |
 | Decision Packet | A fuller display for a specific user-owned judgment. |
 | Approval | Permission for a named sensitive action, not final acceptance. |
+| Write Authorization | The internal record/check behind pre-write scope confirmation. It is not OS permission or sandboxing. |
 | Evidence Manifest | A detailed evidence list. |
 | Verification / Manual QA / Acceptance / Residual Risk | Separate records or judgments that must not collapse into one "done." |
 | Projection | A readable view derived from Harness records, not authority by itself. |

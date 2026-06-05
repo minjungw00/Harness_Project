@@ -1,51 +1,50 @@
 # User Guide
 
-## 1. What Harness helps with
-
-Harness helps an AI-assisted work session keep track of the parts that should not disappear into chat: what the work is, what is in scope, what only you can decide, what evidence supports a claim, what was checked, and whether the work can honestly be closed.
-
-It is meant to let you speak normally. You should not have to learn internal Harness labels before asking for help.
-
-Status note: this guide describes the intended Harness-assisted user flow for a future local Harness Server. This repository is documentation-only today. It is not the user's Product Repository or a Harness Runtime Home, and no Harness runtime/server implementation exists here yet.
-
-Harness is useful when you want the agent to:
-
-- clarify blurry work before implementation
-- keep small work small
-- separate facts it can inspect from judgments only you can make
-- show when scope is growing
-- tie completion claims to evidence and checks
-- keep product decision separate from technical decision
-- show what still blocks closing the work
-
-## 2. Start in normal language
+## 1. Start with ordinary requests
 
 <a id="first-read-path"></a>
 <a id="phrase-reference"></a>
 
-Say what you want in ordinary words. These are enough:
+Harness is meant to let you ask for help in normal language. You should not have to say "Discovery," "Change Unit," "Decision Packet," or any other internal label to get careful behavior.
+
+Useful requests can be as simple as:
 
 ```text
-Help me clarify this before implementation.
-Separate what I need to decide from what you can check.
-Tell me if the scope is expanding.
-Fix only typos in this document.
-Before building login, show the product and technical decisions.
+Turn this feature idea into an implementable plan.
+Ask me first about the parts only I can decide.
+Before changing files, confirm which files you expect to touch.
+Before you say it is done, show the evidence and remaining risks.
 ```
 
-You can also add boundaries:
+You can also set a boundary:
 
 ```text
 Add email login, but keep password reset and account creation out of scope for now.
 ```
 
-Or ask for a light touch:
+Or keep the work intentionally small:
 
 ```text
+Fix only typos in this document.
 Keep this as a small copy change unless it turns into a product or technical decision.
 ```
 
-The agent should translate your request into plain working facts: goal, scope, non-goals, facts it can inspect, choices you own, evidence needed, checks to run, and what would still block close.
+Status note: this guide describes the intended Harness-assisted user flow for a future local Harness Server. This repository is documentation-only today. It is not the user's Product Repository or a Harness Runtime Home, and no Harness runtime/server implementation exists here yet.
+
+## 2. What Harness does with a normal request
+
+Harness turns ordinary requests into a visible working basis. You do not need to name these parts, but the agent should preserve them.
+
+| What you ask for | What Harness should route internally | What you should see |
+|---|---|---|
+| "Make this concrete before coding." | Intake and requirement clarification. | Goal, known facts, likely scope, non-goals, and the next safe action. |
+| "Ask me before deciding the UX." | Focused user judgment through the user-owned judgment path. | One specific question with choices, recommendation, uncertainty, and consequence if deferred. |
+| "Keep reset out of scope." | Active scope, internally represented by the bounded work area or Change Unit when a product write is involved. | What may change, what is out of bounds, and when scope expansion needs a decision. |
+| "Before changing files, tell me what you will touch." | A pre-write scope check. In owner terms, product writes go through `prepare_write` and a compatible Write Authorization result when Harness is connected. | Intended paths or operation, scope match or mismatch, pending decisions, stale or unavailable authority, and the smallest unblocker. |
+| "Show what happened and what proves it." | A run/evidence recording path. In owner terms, meaningful execution is summarized through `record_run` and evidence refs when that path is active. | What ran or changed, what supports the claim, what is missing, and what was not checked. |
+| "Can we call this done?" | Close readiness. In owner terms, `close_task` returns close blockers or a close result. | Whether close is available, why it is blocked or available, what risk remains, and the smallest unblocker. |
+
+Readable summaries help you understand the work. They are not the operating record themselves. Editing a status summary, a generated report, or chat text does not create a user decision, write authority, evidence, final acceptance, residual-risk acceptance, or close readiness.
 
 ## 3. What the agent should clarify first
 
@@ -54,14 +53,14 @@ The agent should translate your request into plain working facts: goal, scope, n
 For anything beyond an obvious tiny edit, the agent should first answer:
 
 - What result are we trying to get?
-- What is known to be in scope?
-- What is known to be out of scope?
+- What is in scope?
+- What is out of scope?
 - What can the agent inspect before asking you?
 - What decisions belong to you?
-- What question, if any, blocks the next safe action?
-- What can safely continue while a non-blocking question waits?
+- What question blocks the next safe action, if any?
+- What can safely continue while non-blocking questions wait?
 
-A useful first response is short and specific:
+A useful first response is short:
 
 ```text
 Scope I heard: add email login only.
@@ -69,14 +68,14 @@ Out of scope for now: password reset, account creation, social login, and a full
 
 I can inspect: current login routes, session handling, auth tests, login form patterns, and validation helpers.
 
-You may need to decide: password credentials, magic link, one-time code, or external identity provider; failed-login UX; security and privacy trade-offs.
+Likely decisions for you: password credentials, magic link, one-time code, or external identity provider; failed-login feedback; security and privacy trade-offs.
 
 Next safe action: inspect the current auth shape, then return with facts, open decisions, and the smallest safe implementation slice.
 ```
 
-If the agent can answer something by reading the repo, docs, tests, prior saved context, or current files, it should inspect first. It should not turn agent-resolvable uncertainty into a user questionnaire.
+If the answer is available in files, tests, docs, saved Harness context, or current project state, the agent should inspect first. It should not turn agent-resolvable uncertainty into a questionnaire.
 
-## 4. How small work is handled
+## 4. Keep small work small
 
 Small work should stay light. If you say:
 
@@ -84,7 +83,7 @@ Small work should stay light. If you say:
 Fix only typos in this document.
 ```
 
-the agent should keep the visible flow compact:
+the agent should keep the flow compact:
 
 ```text
 Scope: typos in this document only.
@@ -92,7 +91,7 @@ Out of scope: wording changes, structure changes, terminology changes, and new e
 I will edit only typo-level issues and tell you if I find anything broader.
 ```
 
-After the work, a compact result is enough:
+Afterward, a compact result is enough:
 
 ```text
 Done.
@@ -101,57 +100,27 @@ Checked: diff review for unintended wording changes.
 No scope expansion found.
 ```
 
-Small work should stop being treated as small when it changes meaning, behavior, UX, public API, security/privacy posture, localization strategy, architecture, or QA expectations. When that happens, the agent should pause, show the scope change, and ask for the smallest necessary decision.
+Small work stops being small when it changes meaning, behavior, UX, public API, security/privacy posture, localization strategy, architecture, QA expectations, or any decision you own. Then the agent should pause, show the scope change, and ask the smallest necessary question.
 
-## 5. How larger work is clarified
-
-Larger work needs more structure because product behavior, implementation choices, evidence, QA, and remaining risk can all matter.
-
-If you say:
-
-```text
-Before building login, show the product and technical decisions.
-```
-
-the agent should separate planning from implementation:
-
-```text
-Product decisions likely needed:
-- Which login experience: password, magic link, one-time code, or external identity provider.
-- What failed-login feedback should look like.
-- What recovery path and copy should users see.
-
-Technical decisions likely needed:
-- Session or token strategy.
-- Password handling or identity-provider path.
-- Rate limiting, account-enumeration risk, logging, redaction, and secret handling.
-- Tests and manual QA expectations.
-
-I will inspect the current auth code, UI patterns, tests, and docs before recommending an implementation path.
-```
-
-Clarification can take more than one turn. That is fine when each turn does one of these things: inspects available facts, names a blocking question, parks useful non-blocking questions, narrows the work, or proposes a safe split.
-
-## 6. When the user must decide
+## 5. User decisions are specific
 
 <a id="judgment"></a>
 
-The agent can choose routine implementation details inside an agreed scope: following local naming, reusing an existing helper, adding a focused test, or taking the conservative local pattern.
+The agent can choose routine implementation details inside an agreed scope, such as following local naming, reusing an existing helper, adding a focused test, or taking the conservative local pattern.
 
 The agent should ask you when a choice affects:
 
 - product behavior, UX, copy, user flow, or accessibility trade-offs
 - public API, module contracts, or compatibility
-- architecture, dependencies, migrations, or data model direction
-- security, privacy, audit, retention, redaction, or secrets
-- scope expansion
+- architecture, dependencies, migrations, data model, security, privacy, audit, retention, redaction, or secrets
+- scope expansion or non-goal removal
 - permission for a named sensitive step
 - QA waiver or verification-risk acceptance
 - final acceptance of the finished result
-- accepting a known remaining risk
+- acceptance of a known remaining risk
 - cancellation
 
-The question should name the specific decision, choices, recommendation, rationale, uncertainty, affected scope, what happens if you do not decide, and why the agent cannot decide for you. It should not ask for broad approval when several different decisions are pending.
+The question should be focused. It should name the decision, choices, recommendation, rationale, uncertainty, affected scope, what happens if you defer, and what the agent is not deciding for you.
 
 ```text
 Decision needed: choose the failed-login feedback pattern.
@@ -161,48 +130,36 @@ Can continue if deferred: backend validation work that does not claim final UI b
 Cannot close yet: final UX, copy, and human QA for the login screen.
 ```
 
-## 7. Product decision examples
+A broad "yes, do it," "looks good," or "go ahead" applies only to the one active, clearly named decision. It does not automatically grant sensitive-action approval, accept the finished work, waive QA, accept verification risk, change scope, cancel the task, or accept residual risk.
 
-Product and UX judgments decide what the user experience should be. The agent can recommend, but it should not silently choose for you.
+## 6. Before files change
 
-Examples:
+Before a product write in a Harness-connected session, the agent should confirm that the intended write still fits the current scope and state. Internally, that is the `prepare_write` / Write Authorization path.
 
-| Situation | What you decide | What the agent can check |
-|---|---|---|
-| Login failure | Inline message, toast, modal, or another pattern. | Existing error UI, accessibility patterns, design-system components, and current copy. |
-| Onboarding | Checklist, setup prompt, guided flow, or empty-state education. | Current screens, analytics notes if available, docs, and prior patterns. |
-| Copy tone | Plain warning, softer guidance, or more specific error text. | Existing product voice, support docs, localization constraints, and account-enumeration risk. |
-| Workflow friction | Require confirmation, allow undo, or proceed directly. | Existing destructive-action patterns, user roles, and current UI conventions. |
+You should see:
 
-A good prompt shows options, recommendation, uncertainty, what can continue if you defer, and what cannot be honestly finished yet.
+- intended paths or operation summary
+- why the write fits, or why it does not
+- pending product, technical, scope, sensitive-action, QA, verification-risk, final-acceptance, or residual-risk decisions
+- stale state, stale baseline, or unavailable Core/Harness authority
+- current guarantee level, or a clear unavailable/capability condition
+- the smallest action that would unblock the write
 
-## 8. Technical decision examples
+This check is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that Harness can prevent every tool from acting. It is a cooperative Harness record/check for the intended write. If the intended paths, command, sensitive category, scope, or state changes, the check should be refreshed before writing.
 
-Technical decisions decide material implementation direction. The agent should inspect first, then show the trade-off plainly.
+If Core or Harness authority cannot answer, the agent should say that. It should not claim current write authority from old chat, cached summaries, stale projections, or user enthusiasm.
 
-Examples:
-
-| Situation | What you decide | What the agent can check |
-|---|---|---|
-| Login architecture | Session cookie, bearer token, magic link, OAuth/OIDC, or provider integration. | Existing auth model, dependencies, tests, security notes, and deployment constraints. |
-| Dependency choice | Add a package, avoid it, or replace an existing one. | Current dependency policy, licenses, maintenance status, bundle impact, and local alternatives. |
-| Migration path | In-place change, staged migration, compatibility shim, or follow-up task. | Existing data shape, callers, tests, release constraints, and rollback options. |
-| API contract | Preserve current contract, add a versioned path, or change callers together. | Existing callers, docs, tests, compatibility risks, and public surface area. |
-| Verification expectation | Focused test, broader regression run, independent review, manual QA, or waiver. | Available tests, past failures, affected surfaces, and what remains untested. |
-
-Technical decision is not the same as permission for a sensitive step. For example, allowing the agent to install an auth helper package is not the same as deciding that package is the architecture direction.
-
-## 9. How to read evidence and checks
+## 7. After execution, read evidence and checks separately
 
 <a id="the-four-display-groups"></a>
 
 Evidence is support for a claim. Checks are actions that examine whether the claim is true.
 
-Useful evidence can include changed paths, diffs, command output, test results, screenshots, logs, source links, inspection notes, or human QA notes. Useful checks can include focused tests, diff review, source lookup, browser inspection, accessibility checks, or an independent enough review when the work requires it.
+Useful evidence can include changed paths, diffs, command output, test results, screenshots, logs, source links, inspection notes, or human QA notes. Useful checks can include focused tests, diff review, source lookup, browser inspection, accessibility checks, or independent enough review when the work requires it.
 
-When evidence uses artifacts, expect refs plus integrity and redaction facts, not pasted large or sensitive bodies. A useful artifact line may show `ArtifactRef`, `sha256`, `size_bytes`, `content_type`, `redaction_state`, availability, and what owner record it supports. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles instead of stored or pasted.
+After meaningful work, the agent should summarize the execution and evidence. Internally, that means the future `record_run` path or a run/evidence summary when that path is active.
 
-Read evidence and checks separately:
+Read the summary this way:
 
 | Plain item | What it means | What it does not replace |
 |---|---|---|
@@ -212,22 +169,11 @@ Read evidence and checks separately:
 | Source lookup | The agent checked docs, code, or current files before claiming something. | A decision you own. |
 | Missing evidence | The claim is not yet well supported. | A reason to invent confidence. |
 
-If a required artifact is missing, has `hash_mismatch`, or is missing integrity/redaction metadata, the affected evidence may be stale or blocked. Close can stay blocked for that reason even when a Markdown summary looks complete.
+When evidence uses artifacts, expect refs plus integrity and redaction facts, not pasted large or sensitive bodies. Raw secrets, tokens, and full sensitive logs should be redacted, omitted, blocked, or represented by safe handles instead of stored or pasted.
 
 If the agent says "done," it should also be able to say what changed, what supports that claim, what was checked, and what was not checked.
 
-For MVP-1, the compact outputs meant for you are:
-
-| Output | What it answers |
-|---|---|
-| `status-card` | Where are we now, what is blocked, what must I decide, and what can the agent safely do next? |
-| `judgment-request` | What exact decision belongs to me, what are the choices, and what happens if I defer? |
-| `run-evidence-summary` | What ran or changed, what evidence supports the claim, and what is still missing or stale? |
-| `close-result` | Is close available, why is it blocked or available, what risk remains, and what is the smallest unblocker? |
-
-`agent-context-packet` is for the agent, not for user-facing status. It should carry compact refs and allowed-action context for the next safe action, not replace the four user-readable outputs.
-
-## 10. What to confirm before closing work
+## 8. Before completion, ask what still blocks close
 
 Before closing larger work, ask:
 
@@ -247,37 +193,45 @@ The agent should show:
 - known remaining risks and whether they were accepted
 - the smallest action that would unblock close
 
-Tests can pass while close is still blocked. A UI change may still need human QA. A security-sensitive change may still need a risk decision. A broad "looks good" should only count when the agent has clearly named the thing you are accepting.
+Tests can pass while close is still blocked. A UI change may still need human QA. A security-sensitive change may still need a risk decision. A broad "looks good" counts only when the agent has clearly named what you are accepting.
 
-Common status messages should be direct and non-alarming. Exact condition behavior is owned by [API Errors: MVP-1 guarantee and status taxonomy](../reference/api/errors.md#mvp-1-guarantee-and-status-taxonomy), but as a user you can read them this way:
+In owner terms, `close_task` should return blockers or a close result. In user terms, the agent should not claim completion until evidence, required checks, user decisions, final acceptance, residual-risk visibility, and close blockers have been handled or honestly reported.
 
-Status cards and pre-write checks should always show the active guarantee level, or a clear unavailable/capability condition when Core or required MCP cannot answer. In MVP-1, cooperative means the agent is being instructed to hold or proceed through the Harness record path; detective means Harness can report a mismatch after the surface observes it. Neither means Harness is automatically an OS sandbox.
+## 9. Understand the MVP guarantee limits
+
+Status cards and pre-write checks should show the active guarantee level, or a clear unavailable/capability condition when Core or required MCP cannot answer.
+
+For the early MVP path:
+
+| Guarantee level | What it means | What it does not mean |
+|---|---|---|
+| Cooperative | The agent is instructed to hold, ask, refresh, or proceed through the Harness record path. | Harness is not automatically stopping every tool at the OS level. |
+| Detective | Harness or a surface can report a mismatch after observing state, output, or a recorded action. | The action was not necessarily blocked before it happened. |
+| Preventive | A specific proven mechanism blocks a covered action before it occurs. | Do not assume this unless the exact mechanism and covered operation are named. |
+| Isolated | A documented separation boundary exists. | Do not assume broader OS sandboxing, arbitrary-tool isolation, or tamper-proof storage. |
+
+If the agent says an action is blocked, read that as "we cannot honestly proceed or close under the current Harness record" unless it also names an actual preventive control.
+
+Common messages should be plain:
 
 | Message | What it means for you |
 |---|---|
 | Harness/Core authority is unavailable. | The agent cannot confirm current Harness state, evidence, final acceptance, residual-risk acceptance, or close readiness. It can reconnect, diagnose, or continue outside Harness only if you explicitly choose that mode. |
 | Local access is unavailable or denied. | The current surface cannot inspect or change the requested local files or system path. |
-| Current state or view may be stale. | The agent should refresh before relying on the status, baseline, projection, or pre-write scope check. |
-| This is outside the current Harness stage or surface. | The requested behavior is not available in the current stage/profile; the agent should offer a supported fallback. |
+| Current state or view may be stale. | The agent should refresh before relying on the status, baseline, readable view, or pre-write scope check. |
 | This is outside the current scope. | The agent should narrow the action or ask whether you want to change the scope. |
-| User judgment is needed. | A decision belongs to you before the affected action can continue. |
+| User judgment is needed. | A specific decision belongs to you before the affected action can continue. |
 | Evidence is insufficient. | The claim needs more support before the agent can honestly rely on it. |
 | Close is blocked. | The work cannot be closed yet; the agent should show the smallest unblocker. |
 | Residual risk remains. | A known remaining risk must be visible, and some close paths require you to accept that risk separately. |
 
-## 11. Everyday scenario examples
+## 10. Everyday scenario examples
 
-These examples are written as ordinary user requests. They are examples of intended future Harness behavior, not runtime records from this documentation repository.
+These examples are ordinary-language examples of intended future Harness behavior. They are not runtime records, generated evidence, acceptance records, or conformance outputs from this documentation repository.
 
 ### "Build a login feature."
 
-User request:
-
-```text
-Build a login feature.
-```
-
-Good agent response:
+Good response:
 
 ```text
 This is larger than a direct edit, so I need to clarify before implementation. I will inspect the existing auth routes, session handling, login UI, tests, and docs first.
@@ -285,30 +239,20 @@ This is larger than a direct edit, so I need to clarify before implementation. I
 Likely decisions for you:
 - product flow: email/password, magic link, OAuth/OIDC, social login, or another login path;
 - technical direction: server-side session cookie, JWT/bearer token, external identity provider, or a hybrid;
-- scope: account creation, password reset, rate limiting, audit logging, and recovery copy.
+- scope: account creation, password reset, rate limiting, audit logging, recovery copy, and Manual QA expectations.
 
 Next safe action: inspect the current auth shape and come back with facts, a recommended narrow slice, and the decisions that still block writing.
 ```
 
-Why this is good: it does not turn an ambiguous feature request into silent architecture and UX choices. It lets the agent inspect facts first and keeps session-cookie, JWT, OAuth/OIDC, and social-login decisions visible.
-
-Bad agent response:
+Bad response:
 
 ```text
 I will build the full login system with JWTs, social login, reset, signup, and modals, then mark it done when tests pass.
 ```
 
-Why this is bad: it expands scope, chooses architecture and product behavior for the user, and treats tests as enough for completion.
-
 ### "Show a message after clicking Save."
 
-User request:
-
-```text
-Show a message after clicking Save.
-```
-
-Good agent response:
+Good response:
 
 ```text
 I will check the existing save feedback patterns first. The product choice is where the message should appear: inline near the form, as a toast, or as a modal.
@@ -316,187 +260,73 @@ I will check the existing save feedback patterns first. The product choice is wh
 Recommendation: use a toast for a non-blocking success message, and use inline text for form-specific errors. I can wire the save state now, but final UI behavior and QA depend on that choice.
 ```
 
-Why this is good: it treats inline, toast, and modal as a user-visible UX judgment instead of hiding the decision in implementation.
-
-Bad agent response:
+Bad response:
 
 ```text
 I will add a modal after every Save click because it is the most noticeable.
 ```
 
-Why this is bad: it picks a disruptive UX without checking local patterns or asking whether the message should block the flow.
-
 ### "Fix this bug."
 
-User request:
+Good response:
 
 ```text
-Fix this bug.
+I will inspect the failing behavior, nearby tests, recent changes, and affected files first. If the bug is clear from those sources, I will make the smallest fix and show the evidence. If the symptom is still ambiguous, I will ask for the missing repro detail.
 ```
 
-Good agent response:
-
-```text
-I need the failing behavior or a repro before I can safely fix it. I will first inspect the error, nearby tests, recent changes, and affected files. If the bug is obvious from those sources, I will make the smallest fix and show the evidence. If the symptom is still ambiguous, I will ask for the missing repro detail.
-```
-
-Why this is good: it asks for clarification only after checking what the agent can discover, and it keeps the fix narrow until the bug is understood.
-
-Bad agent response:
+Bad response:
 
 ```text
 I will refactor the whole module and call it fixed once the test suite passes.
 ```
 
-Why this is bad: it turns an ambiguous bug into broad work and may hide missing evidence about the actual failure.
-
-### "Only fix typos in this document."
-
-User request:
-
-```text
-Only fix typos in this document.
-```
-
-Good agent response:
-
-```text
-Scope: typo fixes in this document only.
-Out of scope: wording changes, structure changes, terminology changes, and new examples.
-I will make only typo-level edits and do a quick diff review for unintended meaning changes.
-```
-
-Why this is good: it uses a low procedure budget and keeps small direct work small.
-
-Bad agent response:
-
-```text
-I will rewrite the section, add examples, update terminology, create a full evidence report, and ask for acceptance.
-```
-
-Why this is bad: it ignores the user's narrow scope and adds ceremony the small edit does not need.
-
 ### "Looks good, go ahead."
 
-User request:
-
-```text
-Looks good, go ahead.
-```
-
-Good agent response:
+Good response:
 
 ```text
 I will apply that to the one pending choice: use the toast for the Save success message. This does not grant sensitive approval, accept the finished work, waive QA, accept verification risk, change scope, cancel the task, or accept any residual risk.
 ```
 
-Why this is good: it maps broad language only to the active, clearly named judgment.
-
-Bad agent response:
+Bad response:
 
 ```text
-Invalid: I would treat that as all write permission, final acceptance, QA waiver, verification-risk acceptance, scope change, and residual-risk acceptance.
+Great. I will treat that as write permission, final acceptance, QA waiver, verification-risk acceptance, scope change, and residual-risk acceptance.
 ```
-
-Why this is bad: "go ahead" is not automatically sensitive approval, QA waiver, verification-risk acceptance, scope change, cancellation, final acceptance, or residual-risk acceptance.
 
 ### "I will test it later."
 
-User request:
+Good response:
 
 ```text
-I will test it later.
+I will show Manual QA as deferred, not passed. The implementation can remain available for your later test, but close is still blocked unless the active path allows a QA waiver and any remaining risk is shown and accepted separately.
 ```
 
-Good agent response:
-
-```text
-I will record this as Manual QA deferred, not passed. The implementation can remain available for your later test, but close is still blocked unless the active path allows a QA waiver and any remaining risk is shown and accepted separately.
-```
-
-Why this is good: it keeps evidence gaps and residual risk visible instead of converting future testing into proof.
-
-Bad agent response:
+Bad response:
 
 ```text
 Sounds good. I will mark QA complete and close the task.
 ```
 
-Why this is bad: future testing is not evidence that testing passed, and it does not accept remaining risk.
-
-### "Clean up all these files."
-
-User request:
-
-```text
-Clean up all these files.
-```
-
-Good agent response:
-
-```text
-"Clean up" could mean formatting, dead-code removal, renaming, deleting files, or changing structure. I will inspect the files first and propose a narrow cleanup slice. Before deleting files, changing public interfaces, or broadening scope, I will ask for the specific decision.
-```
-
-Why this is good: it clarifies a large ambiguous request before broad or destructive work.
-
-Bad agent response:
-
-```text
-I will delete anything that looks unused, rename files as I see fit, and reorganize the folder.
-```
-
-Why this is bad: it treats vague cleanup as permission for destructive and architectural changes.
-
 ### "Can I put the API key in the code?"
 
-User request:
+Good response:
 
 ```text
-Can I put the API key in the code?
-```
-
-Good agent response:
-
-```text
-No. Do not put a raw API key in source code. Use the project's existing secret path if one exists, such as environment variables, a local secret file excluded from version control, or a secret manager. I will inspect the repo's config and docs before recommending the exact path.
+No. Do not put a raw API key in source code. I will inspect the repo's config and docs before recommending the exact secret path, such as an environment variable, an ignored local secret file, a platform secret, or a secret manager.
 
 Security note: Harness can make this security/privacy judgment visible and preserve the decision path, but early local Harness wording should not claim OS-level secret isolation or tamper-proof storage unless that exact mechanism is present.
 ```
 
-Why this is good: it gives a clear security/privacy recommendation, checks local practice, and does not overclaim enforcement.
-
-Bad agent response:
+Bad response:
 
 ```text
 Yes. Hard-code it for now and Harness will keep it safe.
 ```
 
-Why this is bad: it creates a secret leak risk and overclaims what Harness guarantees.
+## 11. Advanced internal terms, only after the main flow
 
-## 12. What Harness does not guarantee
-
-Harness makes AI-assisted work easier to inspect and route. It does not replace the surrounding engineering process.
-
-It does not:
-
-- replace source control, tests, review, product specs, or team process
-- prove a product decision is correct
-- turn tool output into user judgment
-- turn test pass into human QA
-- turn permission for a sensitive step into final acceptance
-- treat generated readable summaries as operating state
-- automatically change OS permissions
-- sandbox arbitrary tools
-- make local files tamper-proof
-- provide pre-execution blocking unless a specific proven blocking control is named
-- provide security isolation unless the exact separation boundary is named and proven
-
-If the agent says something is blocked, read that as "we cannot honestly proceed or close under the current record" unless it also names an actual preventive control. Early local Harness wording should be cooperative or detective unless a stronger mechanism is explicitly documented.
-
-## 13. Advanced internal terms, only after the main flow
-
-You can skip this section until an agent or reference page shows one of these labels. They are useful for precision, but they should not be the first way a normal task is explained.
+You can skip this section until an agent or Reference page shows one of these labels. They are useful for precision, but they should not be the first way a normal task is explained.
 
 | Internal label | Plain meaning |
 |---|---|

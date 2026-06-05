@@ -2,39 +2,40 @@
 
 ## What this document helps you do
 
-Use this guide when writing or reviewing agent behavior for a future Harness-connected session. It tells the agent what to inspect, what to ask, when to stay light, when to stop, how to report status, and how to close work honestly.
+Use this guide when writing or reviewing agent behavior for a future Harness-connected session. It tells the agent how to turn ordinary user requests into careful work: inspect first, clarify only what matters, preserve user judgment, check scope before writes, summarize evidence after execution, and close honestly.
 
 This is Use documentation. It is not a connector contract, schema reference, template catalog, conformance fixture, or proof that this documentation-only repository already contains a Harness Server/runtime implementation. For connector capability profiles and fallback behavior, read [Agent Integration Reference](../reference/agent-integration.md). For exact state, write, and close contracts, read the relevant owner section in [Core Model Reference](../reference/core-model.md) and [MVP API](../reference/api/mvp-api.md).
 
-## 1. Core Principles
+## 1. Core principles
 
-Users do not need to say "Harness" or internal labels. Infer Harness behavior from the work shape: scope risk, product writes, user-owned judgment, evidence, verification, QA, acceptance, residual risk, or close readiness.
+Users do not need to say "Harness" or internal labels. Infer the Harness route from the work shape: scope risk, product writes, user-owned judgment, evidence, verification, QA, final acceptance, residual risk, or close readiness.
 
 Check code, docs, tests, current Harness state, accepted decisions, and current task artifacts before asking the user for facts the agent can safely discover. If a source is stale or unavailable, say that instead of using it as authority.
 
 Keep user-owned judgment with the user. Do not decide product behavior, important technical direction, security/privacy choices, scope changes, QA waivers, verification-risk acceptance, final acceptance, residual-risk acceptance, or cancellation for the user.
 
-Use ceremony in proportion to the work. Tiny edits and read-only answers should stay light. Ambiguous, large, sensitive, cross-boundary, or close-relevant work needs clarification, visible scope, and the relevant Harness path before writes or close claims.
+Use procedure in proportion to the work. Tiny edits and read-only answers should stay light. Ambiguous, large, sensitive, cross-boundary, or close-relevant work needs visible scope, focused judgment, a compatible pre-write check before product writes, evidence after execution, and close blockers or close result before completion.
 
 Template output is not state. Status cards, generated reports, rendered templates, recommendations, chat memory, and retrieved context can summarize or point to owner refs, but they do not create sensitive-action approval, evidence, final acceptance, residual-risk acceptance, write authority, or close readiness.
 
-If Core or Harness authority is unavailable, do not invent task state, sensitive-action approval, user judgments, evidence, final acceptance, residual-risk acceptance, gate updates, readable-view freshness, or close readiness. Hold product writes by instruction and reconnect, diagnose, or move to a capable surface. Proceed outside Harness only if the user explicitly chooses that mode.
+If Core or Harness authority is unavailable, do not invent task state, user judgments, sensitive-action approval, evidence, final acceptance, residual-risk acceptance, readable-view freshness, write authority, or close readiness. Hold product writes by instruction and reconnect, diagnose, or move to a capable surface. Proceed outside Harness only if the user explicitly chooses that mode.
 
-## 2. Translate Normal User Language Into Harness Behavior
+## 2. Treat normal language as enough
 
-Treat ordinary requests as enough. The agent translates them into work shape, scope, user judgment, evidence, and next safe action.
+The agent translates ordinary requests into work shape, scope, user judgment, evidence, and next safe action.
 
 | User says | Agent behavior |
 |---|---|
-| "Make this wording clearer." | Inspect the nearby file and context, keep the scope narrow, make the small edit if safe, and report the minimal check. |
-| "Add email login, but keep reset out of scope." | Classify as tracked feature work, confirm scope/non-goals, inspect current auth code/docs, identify product and technical decisions, then propose the first safe slice. |
-| "Ask what you need before coding." | Start requirements clarification. Separate answerable facts from user-owned choices before asking. |
+| "Turn this feature idea into an implementable plan." | Start intake and requirement clarification. Inspect available facts, separate goal/scope/non-goals, then ask the most important blocking question if needed. |
+| "Ask me first about the parts only I can decide." | Identify user-owned product, technical, scope, sensitive-action, QA, acceptance, or risk decisions; ask one focused judgment at a time. |
+| "Before changing files, confirm which files you expect to touch." | Prepare a product-write scope check. Do not claim write authority unless Core/Harness returns a compatible response for the intended write. |
+| "Before you say it is done, show the evidence and remaining risks." | After execution, summarize what ran or changed, evidence and gaps, checks, residual risk, and close blockers/result. |
 | "Looks good" or "go ahead." | Apply it only to the one active prompt if the judgment type, scope, option, and consequences were unambiguous. Otherwise clarify. |
 | "Can we close this?" | Read current state, evidence, verification/QA status, final acceptance need, residual-risk visibility, and close blockers before claiming readiness. |
 
 Do not force users to say `Discovery`, `Change Unit`, `Decision Packet`, `Write Authorization`, `Evidence Manifest`, `Projection`, `Gate`, or `task_events`. Use exact labels only when they explain a blocker, source ref, or owner contract.
 
-## 3. Classify Work Shape
+## 3. Classify the work shape
 
 Classify before choosing procedure weight.
 
@@ -46,11 +47,11 @@ Classify before choosing procedure weight.
 
 Escalate from small change to tracked work when you discover scope drift, new files or interfaces, security/privacy impact, destructive risk, dependency/migration choices, QA/verification expectations, acceptance criteria, residual risk, or a user-owned decision.
 
-## 4. Clarify Requirements
+## 4. Clarify without endless planning loops
 
 Clarification is the agent behavior before implementation planning when the next safe action is not clear. It is not sensitive-action approval, evidence, write authority, final acceptance, residual-risk acceptance, or close.
 
-Before asking, inspect what is available: repository files, docs, tests, current state, active scope, accepted decisions, and current artifacts. Then ask only the questions that change the next safe action.
+Before asking, inspect what is available: repository files, docs, tests, current state, active scope, accepted decisions, and current artifacts. Then ask only the question that changes the next safe action.
 
 A useful clarification response shows:
 
@@ -58,14 +59,16 @@ A useful clarification response shows:
 - likely goal and user value
 - proposed scope and non-goals
 - facts still missing
-- the next blocking question
+- the one blocking question, if there is one
 - useful non-blocking questions parked for later
 - user-owned judgment candidates
 - the next safe action or first safe slice
 
-Do not start ambiguous large implementation from a broad request alone. If several questions are needed, ask the most blocking one first and explain what can still proceed if that answer is deferred.
+Do not start ambiguous large implementation from a broad request alone. Also do not expand blockers into endless planning loops. If the blocker is agent-resolvable, inspect, refresh, retry, narrow, or record it. If the blocker is user-owned, ask the most important focused question. If nothing can proceed safely, say that and name the smallest unblocker.
 
-## 5. Request User Judgment
+When possible, end status with one next safe action, not a menu of unrelated possibilities.
+
+## 5. Request user judgment narrowly
 
 Ask for judgment when the next safe action depends on a choice only the user owns. Keep the request focused and proportional.
 
@@ -73,53 +76,25 @@ A judgment request should include:
 
 - the exact question being asked
 - concise choices
-- a recommendation when one is useful
+- a recommendation when useful
 - the rationale for the recommendation
 - uncertainty
 - what happens if the user does not decide
 - what the agent is not deciding for the user
 - why the agent cannot decide on the user's behalf
-- the smallest affected Task, Change Unit, write, close, or object scope and refs needed to understand the choice
+- the smallest affected task, bounded scope, write, close, or object refs needed to understand the choice
 
-Keep these `judgment_kind` values separate: `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `qa_waiver`, `verification_risk_acceptance`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`. Sensitive approval is permission for a named action; it does not decide product behavior, accept the result, waive QA, or accept residual risk. Final acceptance does not accept residual risk unless the residual-risk acceptance prompt explicitly asks for that judgment.
+Keep these `judgment_kind` values separate when using the owner API path: `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `qa_waiver`, `verification_risk_acceptance`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`.
 
-Do not treat "yes, do it," "looks good," "approved," "go ahead," or "continue" as a bundle of sensitive approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, cancellation, scope change, product decision, and technical decision. Map a short reply only when one active judgment prompt made the `judgment_kind`, affected object, option, scope, user intent, consequences, and remaining open items unambiguous.
+Sensitive approval is permission for a named action. It does not decide product behavior, accept the result, waive QA, accept verification risk, change scope, cancel the task, or accept residual risk. Final acceptance does not accept residual risk unless the residual-risk acceptance prompt explicitly asks for that judgment.
 
-## 6. Procedure Budget For Small Work
+Do not treat "yes, do it," "looks good," "approved," "go ahead," or "continue" as a bundle of every pending judgment. Map a short reply only when one active judgment prompt made the kind, affected object, option, scope, user intent, consequences, and remaining open items unambiguous.
 
-Small work should feel small.
+## 6. Check scope before product writes
 
-Use this budget:
+Before product/code/file writes in Harness-connected work, check that the exact intended write fits current scope and state. In owner terms this is the `prepare_write` / Write Authorization path.
 
-1. Inspect the local context needed to avoid a blind edit.
-2. State or imply the narrow scope.
-3. Make the minimal change or give the read-only answer.
-4. Run a proportionate check, such as a diff review, link check, targeted test, or source inspection.
-5. Report the result, changed files, check, and any reason it did not stay small.
-
-Do not create a full task narrative, long decision packet, evidence manifesto, status taxonomy, or close ritual for a typo, one obvious docs sentence, or a small read-only answer. If the tiny edit touches sensitive behavior, public contracts, security/privacy, API compatibility, or user-owned product meaning, stop treating it as tiny.
-
-## 7. Procedure Budget For Larger Work
-
-Large work needs visible control without becoming an encyclopedia.
-
-Use this budget:
-
-1. Read current status or the current state-derived agent context packet if Harness is connected.
-2. Inspect repo/docs/current state before asking for facts.
-3. Classify the work shape and propose scope/non-goals.
-4. Clarify blocking requirements and user-owned judgments.
-5. Split the work into the first safe slice when the full request is broad.
-6. Run the pre-write scope check before product writes.
-7. Record what ran and what evidence changed.
-8. Report status in compact display groups.
-9. Attempt close only after evidence, verification/QA expectations, final acceptance, residual-risk visibility, and close blockers are visible.
-
-Keep always-on agent context short: task id, state version, current task summary, work shape, active Change Unit, scope/non-goals, allowed paths/tools/commands, pending or active user judgments, active blockers, write authority summary, evidence summary and gaps, close blockers, residual-risk status, guarantee level or unavailable/capability condition, source refs/freshness, and one compact next safe action. Pull schemas, reference sections, templates, logs, artifacts, and history only when the next action needs them.
-
-## 8. Pre-Write Scope Check
-
-Before product/runtime/code writes in Harness-connected work, check that the exact intended write fits current scope and state. In owner terms this is the `prepare_write` / Write Authorization path.
+Do not claim write authority without a compatible Core/Harness response for the intended write. Do not treat a plan, status card, generated summary, old chat reply, broad user enthusiasm, or stale projection as write authority.
 
 Show the user:
 
@@ -132,11 +107,11 @@ Show the user:
 
 A compatible pre-write scope check is not OS permission, sandboxing, tamper-proof storage, arbitrary-tool isolation, or proof of pre-execution blocking. It is a Harness authority record/check for the intended write. If the intended paths, command, sensitive category, scope, or state changes, refresh the check before writing.
 
-## 9. Record Evidence
+## 7. Record evidence after meaningful action
 
-Record evidence after meaningful runs, checks, reviews, or artifact-producing work. Use refs and short summaries by default; pull full bodies only when the next action needs them.
+After meaningful runs, checks, reviews, or artifact-producing work, summarize what happened and what supports the claim. In owner terms this may use `record_run` and evidence refs when that path is active.
 
-Register artifact evidence only through Harness staging, an approved capture adapter, or an existing committed `ArtifactRef`. Do not treat arbitrary absolute paths, raw secrets, tokens, or full sensitive logs as evidence. Prefer refs and safe summaries; show redaction or omission explicitly.
+Use refs and short summaries by default; pull full bodies only when the next action needs them. Do not treat arbitrary absolute paths, raw secrets, tokens, full sensitive logs, screenshots alone, or generated summaries as sufficient evidence.
 
 Evidence display should say:
 
@@ -144,18 +119,17 @@ Evidence display should say:
 - what changed
 - which criteria or claims the evidence supports
 - which refs or artifacts support the claim
-- for artifact refs, the owner relation, `sha256`, `size_bytes`, `content_type`, `redaction_state`, and availability when the claim depends on them
 - what is missing, stale, redacted, omitted, blocked, or insufficient
 
-Do not call evidence sufficient unless the active owner path can establish sufficiency. Tests, screenshots, logs, or generated summaries do not automatically satisfy verification, Manual QA, final acceptance, residual-risk acceptance, or close. Missing artifact metadata, missing bytes, or `hash_mismatch` makes the affected support stale or blocked; if required evidence is affected, close stays blocked.
+Do not call evidence sufficient unless the active owner path can establish sufficiency. Tests, screenshots, logs, or generated summaries do not automatically satisfy verification, Manual QA, final acceptance, residual-risk acceptance, or close.
 
-## 10. Report Status
+## 8. Report status for the user's next decision
 
 Status should answer the user's next question, not dump all Harness machinery.
 
-Use the four user-facing compact outputs when a rendered shape is useful: `status-card`, `judgment-request`, `run-evidence-summary`, and `close-result`. Use `agent-context-packet` only as agent support context; do not present it as the user's status card or as authority.
+Use compact user-facing shapes when helpful: status, focused judgment request, run/evidence summary, and close result. Use `agent-context-packet` only as agent support context; do not present it as the user's status card or as authority.
 
-Within those user-facing outputs, keep these five status display groups compact:
+Keep these display groups compact:
 
 | Group | Show |
 |---|---|
@@ -167,25 +141,29 @@ Within those user-facing outputs, keep these five status display groups compact:
 
 Lead with the primary blocker and the smallest unblocker. Name whether the blocker is user-owned, agent-resolvable, or surface/system-owned. Do not ask the user to resolve something the agent can safely inspect, retry, refresh, or record.
 
-If Core/Harness authority is unavailable, say what is unavailable and which claims are now held. Do not use old chat, cached status, generated templates, or stale projections as state.
+Keep always-on agent context short: current task summary, work shape, active bounded scope, scope/non-goals, allowed paths/tools/commands, pending or active user judgments, active blockers, write-check summary, evidence summary and gaps, close blockers, residual-risk status, guarantee level or unavailable/capability condition, source refs/freshness, and one compact next safe action. Pull schemas, reference sections, templates, logs, artifacts, and history only when the next action needs them.
 
-The exact MVP-1 status/error condition taxonomy is owned by [API Errors: MVP-1 guarantee and status taxonomy](../reference/api/errors.md#mvp-1-guarantee-and-status-taxonomy). In session flow, handle these visible conditions plainly:
+## 9. Handle unavailable or limited capability honestly
+
+The exact MVP-1 status/error condition taxonomy is owned by [API Errors: MVP-1 guarantee and status taxonomy](../reference/api/errors.md#mvp-1-guarantee-and-status-taxonomy). In session flow, handle visible conditions plainly.
 
 | Condition | Agent behavior |
 |---|---|
-| Core unavailable | Say Harness/Core authority is unavailable; reconnect or diagnose; do not claim state, sensitive-action approval, user judgment, evidence, final acceptance, residual-risk acceptance, or close readiness. |
+| Core unavailable | Say Harness/Core authority is unavailable; reconnect or diagnose; do not claim state, sensitive-action approval, user judgment, evidence, final acceptance, residual-risk acceptance, write authority, or close readiness. |
 | Local access denied | Say local access is unavailable or denied; do not guess file contents or command results; move to a capable surface or narrow to accessible paths. |
-| Stale state | Refresh current state, baseline, projection, or pre-write scope check before relying on it. |
+| Stale state | Refresh current state, baseline, readable view, or pre-write scope check before relying on it. |
 | Unsupported surface | Say the behavior is outside the current stage or surface; offer a supported fallback instead of emulating later-profile authority. |
 | Out of scope | Hold the affected action; narrow the action or ask the user for the specific scope decision. |
-| Missing judgment | Ask the focused user-owned judgment; name the required `judgment_kind` and keep sensitive approval, QA waiver, verification-risk acceptance, final acceptance, and residual-risk acceptance separate. |
+| Missing judgment | Ask the focused user-owned judgment; name the required judgment kind when using the owner path and keep sensitive approval, QA waiver, verification-risk acceptance, final acceptance, and residual-risk acceptance separate. |
 | Missing evidence | Run or record the missing check when possible; otherwise show the evidence gap and affected claim. |
 | Close blocked | Show blockers and smallest unblockers; do not close from prose, tests alone, or broad acceptance-like language. |
 | Residual risk present | Show the risk explicitly and ask for separate residual-risk acceptance only when the active path requires it. |
 
-## 11. Close Work
+Cooperative means the agent is being instructed to hold, ask, refresh, or proceed through the Harness record path. Detective means Harness or a surface can report a mismatch after observing it. Neither means automatic OS sandboxing, arbitrary-tool isolation, tamper-proof files, or universal pre-tool blocking. Use preventive or isolated wording only when the exact mechanism and covered operation are documented and proven.
 
-Close only when the active path can honestly support the close claim.
+## 10. Close work honestly
+
+Close only when the active path can support the close claim.
 
 For small work, a close-like result can be brief: request, scope, files changed or no-file outcome, checks, and any known remaining risk.
 
@@ -200,32 +178,13 @@ For tracked work, show the close basis before asking for final acceptance or att
 - residual-risk visibility and residual-risk acceptance when relevant
 - close blockers and smallest unblocker
 
-Do not ask for final acceptance with a generic "all good?" prompt. Do not claim close because tests passed. Final acceptance, verification, Manual QA, residual-risk visibility, and residual-risk acceptance are separate.
+In owner terms, `close_task` should return blockers or a close result. Do not ask for final acceptance with a generic "all good?" prompt. Do not claim close because tests passed. Final acceptance, verification, Manual QA, residual-risk visibility, and residual-risk acceptance are separate.
 
-## 12. Behaviors To Avoid
-
-- Do not require the user to say "Harness" or internal labels.
-- Do not ask the user for facts available in code, docs, tests, current state, or current artifacts.
-- Do not decide user-owned product, technical, security/privacy, QA waiver, final-acceptance, or residual-risk choices.
-- Do not apply the full protocol to tiny edits.
-- Do not start ambiguous large implementation without clarification.
-- Do not treat "looks good" or "go ahead" as sensitive approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, cancellation, or scope change.
-- Do not present template output, status cards, projections, generated reports, recommendations, or chat memory as state.
-- Do not invent task state, sensitive-action approval, user judgment, evidence, final acceptance, residual-risk acceptance, or close readiness when Core/Harness authority is unavailable.
-- Do not imply cooperative or detective surfaces can prevent execution unless a fixture-proven preventive path covers that operation.
-- Do not bury the user's next decision under schemas, logs, full templates, full DDL, complete history, or unrelated reference material.
-
-## 13. Good And Bad Response Examples
+## 11. Good and bad response examples
 
 These examples are plain-language examples of intended future behavior. They are not runtime records, generated evidence, acceptance records, or conformance outputs.
 
 ### "Build a login feature."
-
-User request:
-
-```text
-Build a login feature.
-```
 
 Good agent response:
 
@@ -240,23 +199,13 @@ Likely user-owned decisions:
 Next safe action: return with facts, a recommended narrow first slice, and the decisions that block implementation.
 ```
 
-Why this is good: it clarifies requirements before large ambiguous work and keeps product and technical decision separate.
-
 Bad agent response:
 
 ```text
 I will build login with JWTs, social login, signup, password reset, and a modal error flow, then decide the details as I go.
 ```
 
-Why this is bad: it silently expands scope and takes over product, architecture, and QA choices.
-
 ### "Show a message after clicking Save."
-
-User request:
-
-```text
-Show a message after clicking Save.
-```
 
 Good agent response:
 
@@ -266,23 +215,13 @@ I will check existing save-feedback patterns. The product choice is inline messa
 Recommendation: toast for a non-blocking success confirmation; inline for form-specific errors. I can implement state plumbing now, but final UI behavior and human QA depend on the chosen pattern.
 ```
 
-Why this is good: it names the UX judgment and gives a recommendation without pretending the answer settles all close criteria.
-
 Bad agent response:
 
 ```text
 I will add a modal because users cannot miss it.
 ```
 
-Why this is bad: it chooses disruptive behavior without checking existing patterns or asking the user.
-
 ### "Fix this bug."
-
-User request:
-
-```text
-Fix this bug.
-```
 
 Good agent response:
 
@@ -290,23 +229,13 @@ Good agent response:
 I will inspect the failing behavior, nearby tests, recent changes, and affected code first. If the failure is clear, I will make the smallest fix and report the evidence. If the repro is still missing, I will ask for that specific detail before changing behavior.
 ```
 
-Why this is good: it does not ask the user for facts the repo can answer, and it avoids broad refactoring before the bug is understood.
-
 Bad agent response:
 
 ```text
 I will refactor the whole module and mark the bug fixed if the tests pass.
 ```
 
-Why this is bad: it broadens the task and can hide a missing repro, missing evidence, or untested affected behavior.
-
 ### "Only fix typos in this document."
-
-User request:
-
-```text
-Only fix typos in this document.
-```
 
 Good agent response:
 
@@ -314,23 +243,13 @@ Good agent response:
 Scope: typo fixes in this document only. I will avoid wording, structure, terminology, and example changes. After editing, I will do a diff review for unintended meaning changes.
 ```
 
-Why this is good: it keeps small direct work small and uses a low procedure budget.
-
 Bad agent response:
 
 ```text
-I will rewrite the section, add examples, create an evidence manifest, and ask for acceptance.
+I will rewrite the section, add examples, create a full evidence report, and ask for acceptance.
 ```
-
-Why this is bad: it exceeds the requested scope and adds heavy process to a typo-only edit.
 
 ### "Looks good, go ahead."
-
-User request:
-
-```text
-Looks good, go ahead.
-```
 
 Good agent response:
 
@@ -338,86 +257,22 @@ Good agent response:
 I will apply that to the one active judgment: use the toast for the Save success message. It does not grant sensitive-action approval, final acceptance, QA waiver, verification-risk acceptance, scope change, cancellation, or residual-risk acceptance.
 ```
 
-Why this is good: it applies broad language only where the active prompt made the judgment, option, scope, and consequences clear.
-
 Bad agent response:
 
 ```text
-Invalid: I would treat that as all write permission, final acceptance, QA waiver, verification-risk acceptance, scope change, cancellation, and residual-risk acceptance.
+I will treat that as all write permission, final acceptance, QA waiver, verification-risk acceptance, scope change, cancellation, and residual-risk acceptance.
 ```
 
-Why this is bad: broad continuation language must not collapse separate user-owned judgments.
+## 12. Behaviors to avoid
 
-### "I will test it later."
-
-User request:
-
-```text
-I will test it later.
-```
-
-Good agent response:
-
-```text
-I will show Manual QA as deferred, not passed. The code can remain ready for your later check, but close stays blocked unless the active path allows a QA waiver and any visible residual risk is accepted separately.
-```
-
-Why this is good: it keeps evidence gaps and close blockers visible.
-
-Bad agent response:
-
-```text
-Understood. I will mark QA complete and close the work.
-```
-
-Why this is bad: future testing is not evidence and does not accept remaining risk.
-
-### "Clean up all these files."
-
-User request:
-
-```text
-Clean up all these files.
-```
-
-Good agent response:
-
-```text
-I need to clarify "clean up" before broad changes. I will inspect the files and propose a narrow first slice such as formatting-only, unused import removal, or docs-only cleanup. Deletions, renames, public-interface changes, and folder reorganization need a specific scope decision first.
-```
-
-Why this is good: it clarifies a large ambiguous request before destructive or architecture-shaping work.
-
-Bad agent response:
-
-```text
-I will delete unused-looking files, rename things, and reorganize the folder.
-```
-
-Why this is bad: vague cleanup is not permission for broad or destructive changes.
-
-### "Can I put the API key in the code?"
-
-User request:
-
-```text
-Can I put the API key in the code?
-```
-
-Good agent response:
-
-```text
-No. Do not hard-code a raw API key. I will inspect the project's config and docs, then recommend the existing secret path if one exists: environment variable, ignored local secret file, platform secret, or secret manager.
-
-Harness can preserve the security/privacy judgment and evidence path, but early local Harness wording should not claim OS-level secret isolation, tamper-proof files, or arbitrary-tool sandboxing unless that exact mechanism is present.
-```
-
-Why this is good: it gives clear security guidance, checks local practice, and avoids overclaiming security guarantees.
-
-Bad agent response:
-
-```text
-Yes. Put the key in a constant and Harness will keep it safe.
-```
-
-Why this is bad: it creates a secret leak risk and claims protection Harness has not proven.
+- Do not require the user to say "Harness" or internal labels.
+- Do not ask the user for facts available in code, docs, tests, current state, or current artifacts.
+- Do not decide user-owned product, technical, security/privacy, QA waiver, final-acceptance, or residual-risk choices.
+- Do not apply the full protocol to tiny edits.
+- Do not start ambiguous large implementation without clarification.
+- Do not loop forever on blockers; inspect or ask the one focused question that changes the next safe action.
+- Do not treat "looks good" or "go ahead" as sensitive approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, cancellation, or scope change.
+- Do not present template output, status cards, readable summaries, generated reports, recommendations, or chat memory as state.
+- Do not invent Core state, write authority, user judgments, evidence, final acceptance, residual-risk acceptance, or close readiness when Core/Harness authority is unavailable.
+- Do not imply cooperative or detective surfaces can prevent execution unless a proven preventive path covers that operation.
+- Do not bury the user's next decision under schemas, logs, full templates, full DDL, complete history, or unrelated reference material.
