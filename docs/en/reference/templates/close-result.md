@@ -6,7 +6,7 @@ Use `close-result` when the user needs a compact close-readiness, close-blocker,
 
 Implementation tier: MVP-1 User Work Loop view. Detailed continuity, Journey, direct-result, release-handoff, or export reports are later/full-profile templates.
 
-Boundary: this template displays close status. It does not close a Task, record final acceptance, accept residual risk, record verification or Manual QA, create evidence, or change gate values. Close authority remains with the Core close path.
+Boundary: this template displays close status. It does not close a Task, record final acceptance, accept residual risk, record verification or QA, create evidence, or change gate values. Close authority remains with the Core close path.
 
 ## Source records
 
@@ -36,24 +36,25 @@ Boundary: this template displays close status. It does not close a Task, record 
 ## Full template
 
 ````text
-Close availability: {ready|blocked|closed|not_requested}
+Close status: {ready|blocked|closed|not requested}
 Display only: Core close state and owner refs remain authoritative.
 
 Scope: {scope_summary}
-Evidence: status={evidence_summary.status}; summary={evidence_summary.summary}; gaps={evidence_gaps|none}
-Artifacts: {artifact_availability_summary}
+Evidence: {evidence_status}. {evidence_summary}; gaps={evidence_gaps|none}
+Artifact availability: {artifact_availability_summary}
 Self-check basis: {self_check_summary|none}
-Judgment and acceptance: final_acceptance={final_acceptance_status}; sensitive_action_permission={sensitive_permission_status|not_applicable}
-Design quality: {design_quality_close_action|none}
-Residual risk visibility: {residual_risk_visibility}
-Residual risk acceptance: {residual_risk_acceptance_status|not_applicable}
-Why close is unavailable: {close_blockers|none}
+Final acceptance: {final_acceptance_status}
+Sensitive-action permission: {sensitive_permission_status|not_needed}
+Design quality action: {design_quality_close_action|none}
+Residual risk: {residual_risk_visibility}
+Residual risk acceptance: {residual_risk_acceptance_status|not_needed}
+Why close is blocked: {close_blockers|none}
 Smallest unblocker: {smallest_unblocker|none}
 Close basis or reason: {close_reason|not_applicable}
-Agent can safely do next: {next_safe_action|none}
-Sources/freshness: state={source_state_version}; refs={source_refs}; rendered={updated_at}; freshness={freshness_state}
+Next safe action: {next_safe_action|none}
+Sources/freshness: {source_freshness_summary}
 ````
 
 ## Notes
 
-Do not collapse evidence summary, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, blockers, design-quality routed actions, and readable-view freshness into one "done" line. MVP-1 close-result output does not display detached verification or Manual QA rows; later/profile templates may add them when the owner profile is active. If close is blocked, name the primary blocker and the single next action, and keep secondary blockers visible only when they affect the next path. If the readable close view is stale or failed, fetch a current Core close result instead of closing from this template's prose.
+Do not collapse evidence summary, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, blockers, design-quality routed actions, and readable-view freshness into one "done" line. MVP-1 close-result output shows only active MVP close semantics; later assurance and detailed QA rows stay in later/profile templates. If close is blocked, name the primary blocker and the single next action, and keep secondary blockers visible only when they affect the next path. If the readable close view is stale or failed, fetch a current Core close result instead of closing from this template's prose.

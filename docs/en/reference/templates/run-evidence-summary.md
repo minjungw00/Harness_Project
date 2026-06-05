@@ -4,17 +4,17 @@
 
 Use `run-evidence-summary` after advice, a run, a check, or a change needs a minimal summary of what happened and what evidence now supports the current claim.
 
-Implementation tier: MVP-1 User Work Loop view. Detailed [RUN-SUMMARY](later-profile/run-summary.md) and [EVIDENCE-MANIFEST](later-profile/evidence-manifest.md) reports are later/full-profile templates.
+Implementation tier: MVP-1 User Work Loop view. Detailed run reports and detailed evidence catalogs are later/full-profile templates.
 
-Boundary: this template displays Run and evidence refs only. It is not the evidence itself, not a full Evidence Manifest, not verification, not Manual QA, not final acceptance, not residual-risk acceptance, and not close readiness authority.
+Boundary: this template displays Run and evidence refs only. It is not the evidence itself, not a detailed evidence catalog, not verification, not QA, not final acceptance, not residual-risk acceptance, and not close readiness authority.
 
 ## Source records
 
 - Run refs and command/check summaries
 - changed paths or no-file outcome
 - consumed Write Authorization ref, no-write basis, or attempted invalid authorization context when relevant
-- ArtifactRefs, `evidence_ref` refs, `redaction_state`, and integrity or availability notes
-- acceptance criteria, completion claims, or close-relevant claims supported by the evidence
+- evidence refs, artifact refs, redaction, and availability notes
+- completion claims, acceptance criteria, or close-relevant claims supported by the evidence
 - evidence gaps, stale inputs, or unresolved support
 - next safe evidence action
 
@@ -38,18 +38,21 @@ Display only: refs and summaries; not evidence, verification, QA, final acceptan
 Action: {run_or_action_summary}
 Changed paths: {changed_paths|none}
 Checks: {checks_run_or_reason_not_run}
-Write Authorization context: {consumed_write_authorization_ref|no_product_write|attempted_invalid_ref_only|none}
-Evidence summary: status={evidence_summary.status}; summary={evidence_summary.summary}
+Write check: {write_check_summary|no product write}
+Evidence: {evidence_status}. {evidence_summary}
 Evidence refs: {evidence_refs|none}
-Artifact refs: {artifact_refs|none}; integrity={sha256_size_content_type_summary|none}; redaction={redaction_summary|none}
+Artifact refs: {artifact_ref_summary|none}
+Redaction or availability: {redaction_availability_summary|none}
 Supports: {supported_claims_or_criteria|none}
 Still missing or stale: {evidence_gaps_or_stale_inputs|none}
-Agent can safely do next: {next_evidence_action|none}
-Sources/freshness: state={source_state_version}; refs={source_refs}; rendered={updated_at}; freshness={freshness_state}
+Next safe evidence action: {next_evidence_action|none}
+Sources/freshness: {source_freshness_summary}
 ````
 
 ## Notes
 
-Evidence sufficiency is coverage, not volume. If a claim has no current supporting ref, or a critical artifact ref lacks owner relation, `sha256`, `size_bytes`, `content_type`, or `redaction_state`, show the gap and `evidence_summary.status` instead of treating a long artifact list or report prose as proof.
+Evidence sufficiency is coverage, not volume. If a claim has no current supporting ref, or a critical artifact ref lacks owner relation, integrity metadata, redaction state, or availability, show the gap and current evidence status instead of treating a long artifact list or report prose as proof.
 
 Only a compatible consumed Write Authorization may be displayed as the product-write compatibility record for a product-write Run. Attempted invalid authorization refs may be shown only as violation/audit or validator-finding context, and they must not be rendered as a consumed Write Authorization or completion evidence.
+
+Keep this summary intentionally smaller than a full evidence report. Show the evidence refs and visible gaps needed for the user's next decision; do not expand full artifact inventories or raw artifact bodies.

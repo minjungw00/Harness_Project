@@ -6,7 +6,7 @@
 
 구현 계층: MVP-1 사용자 작업 루프 보기입니다. 상세 continuity, Journey, direct-result, release-handoff, export 보고서는 later/full-profile 템플릿입니다.
 
-경계: 이 템플릿은 닫기 상태를 표시합니다. Task를 닫거나, 최종 수락을 기록하거나, 잔여 위험을 수락하거나, verification 또는 Manual QA를 기록하거나, 증거를 만들거나, gate 값을 바꾸지 않습니다. 닫기 권한은 Core close path에 남습니다.
+경계: 이 템플릿은 닫기 상태를 표시합니다. Task를 닫거나, 최종 수락을 기록하거나, 잔여 위험을 수락하거나, 검증 또는 QA를 기록하거나, 증거를 만들거나, gate 값을 바꾸지 않습니다. 닫기 권한은 Core close path에 남습니다.
 
 ## 기준 기록
 
@@ -36,24 +36,25 @@
 ## 전체 템플릿
 
 ````text
-닫기 가능 여부: {ready|blocked|closed|not_requested}
+닫기 상태: {ready|blocked|closed|not requested}
 표시 전용: Core close state와 owner ref가 기준입니다.
 
 범위: {scope_summary}
-증거: status={evidence_summary.status}; summary={evidence_summary.summary}; 공백={evidence_gaps|none}
-Artifacts: {artifact_availability_summary}
-Self-check basis: {self_check_summary|none}
-판단과 최종 수락: final_acceptance={final_acceptance_status}; sensitive_action_permission={sensitive_permission_status|not_applicable}
-설계 품질: {design_quality_close_action|none}
-잔여 위험 표시: {residual_risk_visibility}
-잔여 위험 수락: {residual_risk_acceptance_status|not_applicable}
-닫기 불가 이유: {close_blockers|none}
+증거: {evidence_status}. {evidence_summary}; 공백={evidence_gaps|none}
+아티팩트 가용성: {artifact_availability_summary}
+자체 확인 근거: {self_check_summary|none}
+최종 수락: {final_acceptance_status}
+민감 동작 승인: {sensitive_permission_status|not_needed}
+설계 품질 조치: {design_quality_close_action|none}
+잔여 위험: {residual_risk_visibility}
+잔여 위험 수락: {residual_risk_acceptance_status|not_needed}
+닫기 차단 사유: {close_blockers|none}
 가장 작은 해소 방법: {smallest_unblocker|none}
-닫기 증거 또는 이유: {close_reason|not_applicable}
-에이전트가 안전하게 할 수 있는 다음 행동: {next_safe_action|none}
-출처/최신성: state={source_state_version}; refs={source_refs}; rendered={updated_at}; freshness={freshness_state}
+닫기 근거 또는 이유: {close_reason|not_applicable}
+다음 안전한 행동: {next_safe_action|none}
+출처/최신성: {source_freshness_summary}
 ````
 
 ## 메모
 
-증거 요약, 아티팩트 가용성, 최종 수락, 잔여 위험 표시, 잔여 위험 수락, blocker, design-quality routed action, 읽기용 보기 최신성을 하나의 "완료" 줄로 뭉개지 않습니다. MVP-1 `close-result` 출력은 detached verification 또는 Manual QA row를 표시하지 않습니다. Later/profile 템플릿은 owner profile이 active일 때 그 row를 추가할 수 있습니다. 닫기가 막혔으면 primary blocker와 다음 행동 하나를 말하고, 다음 경로에 영향을 주는 secondary blocker만 보이게 둡니다. 읽기용 close view가 stale 또는 failed이면 이 템플릿의 prose에서 close하지 말고 current Core close result를 가져와야 합니다.
+증거 요약, 아티팩트 가용성, 최종 수락, 잔여 위험 표시, 잔여 위험 수락, 차단 사유, design-quality routed action, 읽기용 보기 최신성을 하나의 "완료" 줄로 뭉개지 않습니다. MVP-1 `close-result` 출력은 활성 MVP 닫기 의미만 보여줍니다. Later assurance와 상세 QA 줄은 later/profile 템플릿에 남습니다. 닫기가 막혔으면 primary blocker와 다음 행동 하나를 말하고, 다음 경로에 영향을 주는 secondary blocker만 보이게 둡니다. 읽기용 close view가 stale 또는 failed이면 이 템플릿의 prose에서 close하지 말고 current Core close result를 가져와야 합니다.
