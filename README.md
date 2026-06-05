@@ -1,8 +1,8 @@
 # Harness Project / 하네스 프로젝트
 
-Harness is a future local work-authority server for AI-assisted product work. It is meant to keep fragile chat context from becoming the source of truth for scope, user-owned judgment, evidence, verification expectations, final acceptance, close readiness, and residual risk.
+Harness is a future local work-authority server for AI-assisted product work. Here, work authority means authority over Harness records and state transitions: scope, user-owned judgment, evidence, verification expectations, final acceptance, close readiness, and residual risk. It is not operating-system permission control, arbitrary-tool sandboxing, tamper-proof storage, default pre-tool blocking, or security isolation.
 
-하네스는 AI 지원 제품 작업을 위한 향후 로컬 작업 권한 서버입니다. 대화의 쉽게 흔들리는 맥락이 범위, 사용자 소유 판단, 증거, 확인과 검증 기대, 최종 수락, 닫기 가능 여부, 잔여 위험의 기준 기록처럼 굳어지지 않게 하는 것이 목표입니다.
+하네스는 AI 지원 제품 작업을 위한 향후 로컬 작업 권한 서버입니다. 여기서 작업 권한은 범위, 사용자 소유 판단, 증거, 확인과 검증 기대, 최종 수락, 닫기 가능 여부, 잔여 위험에 대한 하네스 기록과 상태 전이의 권한을 뜻합니다. 운영체제 권한 제어, 임의 도구 샌드박스, 변조 방지 저장소, 기본 도구 실행 전 차단, 보안 격리를 뜻하지 않습니다.
 
 ## Repository State / 저장소 상태
 

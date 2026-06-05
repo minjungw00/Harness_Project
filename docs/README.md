@@ -4,6 +4,10 @@ This directory contains bilingual design documentation for a future local Harnes
 
 이 디렉터리는 향후 로컬 하네스 서버를 위한 이중 언어 설계 문서를 담고 있습니다. 이 저장소는 현재 문서 전용이고 재설계 이후 검토 상태이며, 실행 중인 하네스 인스턴스가 아닙니다.
 
+Harness authority means authority over Harness records and state transitions: scope, user-owned judgment, evidence, verification expectations, final acceptance, close readiness, and residual risk. It does not mean operating-system permission control, arbitrary-tool sandboxing, tamper-proof storage, default pre-tool blocking, or security isolation.
+
+하네스 권한은 범위, 사용자 소유 판단, 증거, 확인과 검증 기대, 최종 수락, 닫기 가능 여부, 잔여 위험에 대한 하네스 기록과 상태 전이의 권한을 뜻합니다. 운영체제 권한 제어, 임의 도구 샌드박스, 변조 방지 저장소, 기본 도구 실행 전 차단, 보안 격리를 뜻하지 않습니다.
+
 It is not the user's Product Repository and not a Harness Runtime Home. Documentation files are source material, not runtime state, generated projections, evidence, QA, final acceptance, residual-risk, or close records. Documentation acceptance does not by itself authorize server/runtime implementation.
 
 사용자의 제품 저장소도, 하네스 런타임 홈도 아닙니다. 문서 파일은 원천 자료이지 런타임 상태, 생성된 읽기용 보기, 증거, QA, 최종 수락, 잔여 위험, 닫기 기록이 아닙니다. 문서 수락만으로 서버/런타임 구현이 승인되지 않습니다.

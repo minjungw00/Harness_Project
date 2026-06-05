@@ -26,11 +26,13 @@ Public tool envelope와 shared shape는 [API Schema Core](api/schema-core.md)를
 
 ## 핵심 생각
 
-Harness는 로컬 권한 계층이지 일반적인 운영체제 보안 경계가 아닙니다. 로컬 파일, local process, generated connector output, external command, agent surface가 Harness에 영향을 주려고 할 수 있지만, 가까이에 있다는 이유만으로 권한 근거가 되지는 않습니다.
+Harness는 하네스 기록과 상태 전이를 위한 로컬 권한 계층이지 일반적인 운영체제 보안 경계가 아닙니다. 여기서 권한은 범위, 사용자 소유 판단 기록, 증거와 아티팩트 참조, 검증과 QA 기대, 최종 수락, 잔여 위험 상태, 닫기 가능 여부에 대한 Core 소유 권한을 뜻합니다. 로컬 파일, local process, generated connector output, external command, agent surface가 Harness에 영향을 주려고 할 수 있지만, 가까이에 있다는 이유만으로 권한 근거가 되지는 않습니다.
 
 Canonical operational meaning은 Core가 소유한 state-changing path를 통해서만 흐릅니다. Product repository document, chat text, generated connector file, projection, artifact, external command output, MCP caller claim, remembered context는 관련 owner path가 받아들이기 전까지 입력입니다.
 
-활성 MVP security baseline은 등록된 reference surface `capability_profile` 하나를 사용합니다. Capability label은 write authority를 부여하지 않으며 active Task, active Change Unit, `prepare_write`, durable Write Authorization, `record_run`을 대체하지 않습니다. 공유 active write-attempt boundary는 `AuthorizedAttemptScope`입니다. 이는 Core/API/storage comparison record이지 permission token이 아닙니다. Surface profile의 unsupported field는 표시되는 guarantee를 낮추거나, comparison을 unverified로 표시하거나, claim을 막습니다. Unsupported surface에서 product write가 조용히 진행되면 안 됩니다.
+활성 MVP security baseline은 등록된 reference surface `capability_profile` 하나를 사용합니다. Capability label은 write authority를 부여하지 않으며 active Task, active Change Unit, `prepare_write`, 한 번만 쓰는 협력형 Write Authorization record, `record_run`을 대체하지 않습니다. 공유 active write-attempt boundary는 `AuthorizedAttemptScope`입니다. 이는 Core/API/storage comparison record이지 permission token이 아닙니다. Surface profile의 unsupported field는 표시되는 guarantee를 낮추거나, comparison을 unverified로 표시하거나, claim을 막습니다. Unsupported surface에서 product write가 조용히 진행되면 안 됩니다.
+
+Harness 응답에서 `allowed`는 현재 Harness 상태, owner record, active surface capability와 호환된다는 뜻입니다. 운영체제가 그 action을 물리적으로 허용하거나 거부한다는 뜻이 아닙니다. `blocked`는 Harness protocol, state, owner record, active capability상 허용되지 않는다는 뜻입니다. 그 자체로 process가 실행 전에 물리적으로 멈췄다는 뜻은 아닙니다.
 
 Security display는 실제 control과 일치해야 합니다. `cooperative`는 agent나 tool이 문서화된 절차를 따를 때 동작하는 협력형 확인입니다. `detective`는 Harness가 mismatch나 record inconsistency를 사후 확인할 수 있다는 뜻입니다. `preventive`는 입증된 control이 covered action을 실행 전에 차단한다는 뜻입니다. `isolated`는 주장이 정의되고 입증된 isolation boundary를 이름 붙인다는 뜻입니다. Preventive 또는 isolated control이 필요한 high-risk work는 cooperative-only claim에 의존하면 안 됩니다.
 
@@ -48,7 +50,7 @@ Core unavailable, local access denied, stale state, unsupported surface, 범위 
 
 | 단계 | 기본 guarantee posture | 정직한 주장 경계 |
 |---|---|---|
-| 내부 엔지니어링 점검 | 협력형 확인(cooperative) + 제한된 사후 확인(detective) behavior. | Core는 현재 owner record와 맞지 않는 state-changing call을 거부하고, 구조화된 상태/차단 사유 출력을 만들고, 호환되는 내부 Write Authorization record 하나를 만들고 consume하며, Run 하나를 기록하고, active path에 필요한 최소 artifact/evidence ref를 검증할 수 있습니다. 이 내부 기록은 OS 권한이 아니며, 별도의 preventive profile이 증명되지 않는 한 local process나 agent가 Harness 밖에서 file을 edit하는 것을 멈추지 않습니다. |
+| 내부 엔지니어링 점검 | 협력형 확인(cooperative) + 제한된 사후 확인(detective) behavior. | Core는 현재 owner record와 맞지 않는 state-changing call을 거부하고, 구조화된 상태/차단 사유 출력을 만들고, 호환되는 한 번만 쓰는 협력형 내부 Write Authorization record 하나를 만들고 consume하며, Run 하나를 기록하고, active path에 필요한 최소 artifact/evidence ref를 검증할 수 있습니다. 이 내부 기록은 OS 권한이 아니며, 별도의 preventive profile이 증명되지 않는 한 local process나 agent가 Harness 밖에서 file을 edit하는 것을 멈추지 않습니다. |
 | MVP-1 사용자 작업 루프 | 협력형 확인(cooperative) + 사용자에게 보이는 blocker/status와 제한된 사후 확인(detective) behavior. | 사용자는 missing scope, missing decision, missing evidence, close blocker, MCP availability, 정직한 보장 상태를 볼 수 있습니다. 필요한 Harness 기록/확인에 닿을 수 없거나 확인할 수 없으면 product/runtime/code write는 지시로 보류됩니다. 이것은 여전히 기본 도구 실행 전 차단이나 권한 격리가 아닙니다. |
 | 보증 프로필 | Verification, QA, residual risk, 최종 수락, sensitive-action Approval 분리를 더 강하게 보여 주는 cooperative/detective assurance. | Harness는 assurance gap, stale evidence, missing independence, QA blocker, waiver/risk/acceptance boundary, context-hygiene finding을 기록하고 보고할 수 있습니다. 특정 profile이 capability를 증명하지 않는 한 preventive 또는 isolated가 되지 않습니다. |
 | 운영 프로필 | Recover, export, readiness, artifact integrity, projection freshness, handoff reporting 주변의 탐지 가능(detective) operational behavior. | Operator surface는 진단, 보고, owner path를 통한 repair, safe bundle export, artifact integrity check를 수행할 수 있습니다. 기본적으로 Runtime Home을 변조 불가능하게 만들거나, projection을 authoritative하게 만들거나, 임의 도구를 격리하지 않습니다. |
@@ -66,7 +68,7 @@ Core unavailable, local access denied, stale state, unsupported surface, 범위 
 - raw secret과 token 응답 금지, 표시해도 안전한 handle, redaction, omission, blocked-payload notice 사용
 - active owner path가 요구하는 artifact 경로 검증, owner 관계 확인, 기본 fingerprint/hash 확인
 - 상태 변경 호출을 위한 `expected_state_version` freshness check와 idempotency key
-- `prepare_write`가 반환하고 compatible `record_run`이 consume하는 1회용 내부 Write Authorization record. Stored `AuthorizedAttemptScope`는 하네스 수준의 협력형 기록/확인이지 OS 권한이나 sandboxing이 아닙니다.
+- `prepare_write`가 반환하고 compatible `record_run`이 consume하는 한 번만 쓰는 협력형 Write Authorization record. Stored `AuthorizedAttemptScope`는 하네스 수준의 기록/확인이지 OS 권한, sandboxing, 변조 방지 enforcement, isolation이 아닙니다.
 - 오래된 민감 동작 승인 또는 later Approval record, projection, baseline, connector profile, evaluator bundle, retrieved context에 대한 stale context blocker 또는 warning
 - MCP/Core를 사용할 수 없을 때 authority claim을 fail closed로 처리
 - status와 `prepare_write` output에 실제 guarantee level을 표시하고, Core가 답할 수 없으면 분명한 unavailable/capability condition을 표시

@@ -42,11 +42,11 @@
 | "코딩 전에 구체화해줘." | 처음 요청을 정리하고 요구사항을 구체화합니다. 그 결과는 active Task, proposed 또는 active Change Unit, 사용자 결정 경계로 이어집니다. | Original request, current goal, confirmed facts, 예상 범위, 비목표, remaining uncertainties, 다음 안전한 행동. |
 | "UX는 내가 결정하게 먼저 물어봐." | 사용자 소유 판단 경로로 집중된 판단을 요청합니다. | 하나의 구체적인 질문, 선택지, 추천, 불확실성, 미루면 생기는 일. |
 | "비밀번호 재설정은 범위 밖이야." | 제품 쓰기가 있으면 내부의 제한된 작업 범위, 즉 Change Unit에 해당하는 경계를 유지합니다. | 무엇이 바뀔 수 있고, 무엇이 범위 밖이며, 범위가 커질 때 어떤 판단이 필요한지. |
-| "파일 바꾸기 전에 어디를 만질지 알려줘." | 쓰기 전 범위 확인을 합니다. 소유자 용어로는 하네스가 연결된 제품 쓰기 전에 `prepare_write`와 호환되는 Write Authorization 결과를 확인합니다. | 의도한 경로나 작업, 범위 일치/불일치, 남은 판단, 오래됐거나 사용할 수 없는 권한, 가장 작은 해소 방법. |
+| "파일 바꾸기 전에 어디를 만질지 알려줘." | 쓰기 전 범위 확인을 합니다. 소유자 용어로는 하네스가 연결된 제품 쓰기 전에 `prepare_write`를 사용합니다. `allowed` 응답은 한 번만 쓰는 협력형 Write Authorization record를 만들 수 있습니다. | 의도한 경로나 작업, 범위 일치/불일치, 남은 판단, 오래됐거나 사용할 수 없는 권한, 가장 작은 해소 방법. |
 | "무엇을 했고 증거가 뭔지 보여줘." | 실행과 증거를 요약합니다. 소유자 용어로는 활성 경로에서 `record_run`과 증거 참조를 사용할 수 있습니다. | 무엇을 실행했거나 바꿨는지, 무엇이 주장을 뒷받침하는지, 무엇이 빠졌는지, 무엇을 확인하지 않았는지. |
 | "이제 끝났다고 해도 돼?" | 닫기 가능 여부를 확인합니다. 소유자 용어로는 `close_task`가 닫기 차단 사유나 닫기 결과를 돌려줍니다. | 닫을 수 있는지, 왜 막혔거나 가능한지, 어떤 위험이 남았는지, 가장 작은 해소 방법. |
 
-읽기용 요약은 이해를 돕습니다. 하지만 그 자체가 운영 기록은 아닙니다. 상태 요약, 생성된 보고서, 대화 문장을 고쳤다고 해서 사용자 판단, 쓰기 전 범위 확인, Write Authorization, 증거, 최종 수락, 잔여 위험 수락, 닫기 준비 상태가 생기지는 않습니다.
+읽기용 요약은 이해를 돕습니다. 하지만 그 자체가 운영 기록은 아닙니다. 상태 요약, 생성된 보고서, 대화 문장을 고쳤다고 해서 사용자 판단, 쓰기 전 범위 확인, Write Authorization, 증거, 최종 수락, 잔여 위험 수락, 닫기 준비 상태가 생기지는 않습니다. 하네스가 어떤 쓰기를 allowed 또는 blocked라고 말하면, 이는 현재 하네스 상태와 active surface capability에 대한 호환성 결과이지 운영체제가 물리적으로 허용하거나 거부했다는 뜻이 아닙니다.
 
 ## 3. 에이전트가 먼저 구체화해야 할 것
 
@@ -140,7 +140,7 @@ MVP-1에서 이 구체화는 별도 Shared Design record, Discovery Brief record
 
 ## 6. 파일을 바꾸기 전에 확인할 것
 
-하네스에 연결된 세션에서 제품 파일을 쓰기 전에는 의도한 쓰기가 현재 범위와 상태에 맞는지 확인해야 합니다. 내부적으로는 `prepare_write` / Write Authorization 경로입니다.
+하네스에 연결된 세션에서 제품 파일을 쓰기 전에는 의도한 쓰기가 현재 범위, 상태, active surface capability에 맞는지 확인해야 합니다. 내부적으로는 `prepare_write` / Write Authorization 경로입니다.
 
 사용자에게 보여야 할 것:
 
@@ -151,7 +151,7 @@ MVP-1에서 이 구체화는 별도 Shared Design record, Discovery Brief record
 - 현재 보장 수준. 답할 수 없으면 사용 불가/역량 조건(unavailable/capability condition)
 - 쓰기를 막는 가장 작은 해소 방법
 
-이 확인은 OS 권한, 샌드박스, 변조 방지 장치, 임의 도구 격리, 모든 도구 실행을 막는 증명이 아닙니다. Owner 용어에서 stored boundary는 `AuthorizedAttemptScope`입니다. Operation, paths, tools, commands와 command classes, product-file-write intent, network targets, secret scope, sensitive categories, baseline, Task, Change Unit, state, surface, related judgments, guarantee level을 포함합니다. 그중 하나라도 바뀌거나 active surface에서 관찰할 수 없으면 쓰기 전에 확인을 새로 하거나 unverified/blocked로 다뤄야 합니다.
+`allowed` 결과는 의도한 쓰기가 현재 Harness 상태와 active surface capability에 맞는다는 뜻입니다. `blocked` 결과는 Harness protocol, state, capability상 그 claim을 계속 진행할 수 없다는 뜻입니다. 이 확인은 OS 권한, 샌드박스, 변조 방지 장치, 임의 도구 격리, 모든 도구 실행을 막는 증명이 아닙니다. Owner 용어에서 stored boundary는 `AuthorizedAttemptScope`입니다. Operation, paths, tools, commands와 command classes, product-file-write intent, network targets, secret scope, sensitive categories, baseline, Task, Change Unit, state, surface, related judgments, guarantee level을 포함합니다. Write Authorization은 이 stored boundary에 대한 한 번만 쓰는 협력형 record입니다. 그중 하나라도 바뀌거나 active surface에서 관찰할 수 없으면 쓰기 전에 확인을 새로 하거나 unverified/blocked로 다뤄야 합니다.
 
 Core 또는 하네스 권한이 답할 수 없으면 에이전트는 그렇게 말해야 합니다. 오래된 대화, 캐시된 요약, 오래된 읽기용 보기, 사용자의 넓은 호응을 현재 쓰기 호환성이나 Write Authorization처럼 말하면 안 됩니다.
 
@@ -340,7 +340,7 @@ JWT, 소셜 로그인, 비밀번호 재설정, 회원가입, 모달까지 포함
 | Shared Design | Later/profile design-support record 또는 projection label입니다. Active MVP-1에서는 요구사항 구체화가 Task, Change Unit, User Judgment를 사용합니다. |
 | Change Unit | 제품 쓰기 시도에서 바뀔 수 있는 제한된 작업 영역입니다. 범위이지 넓은 승인이 아닙니다. |
 | Decision Packet | 특정 사용자 판단을 더 자세히 보여주는 형식입니다. 모든 작은 선택에 필요하면 안 됩니다. |
-| Write Authorization | Core가 `record_run`에서 비교하는 stored `AuthorizedAttemptScope` 하나에 대한 협력형 내부 기록입니다. OS 권한, 샌드박스, 변조 방지 장치, 일반 승인이 아닙니다. |
+| Write Authorization | Core가 `record_run`에서 비교하는 stored `AuthorizedAttemptScope` 하나에 대한 한 번만 쓰는 협력형 내부 기록입니다. OS 권한, 샌드박스, 변조 방지 장치, isolation, permission token, 일반 승인이 아닙니다. |
 | Evidence Manifest | 해당 프로필이 활성일 때 완료 주장이나 기준을 증거 참조와 연결하는 더 자세한 기록입니다. 작은 작업에는 짧은 증거 요약만 필요할 수 있습니다. |
 | Projection | 저장된 기록에서 나온 읽기용 요약입니다. 방향을 잡는 데 도움을 주지만 운영 기록 자체는 아닙니다. |
 | Gate | 내부 준비 상태 또는 호환성 조건입니다. 사용자에게는 먼저 차단 사유나 확인을 쉬운 말로 보여줘야 합니다. |

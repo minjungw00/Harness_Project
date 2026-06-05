@@ -8,7 +8,7 @@ This is Use documentation. It is not a connector contract, schema reference, tem
 
 ## 1. Core principles
 
-Users do not need to say "Harness" or internal labels. Infer the Harness route from the work shape: scope risk, product writes, user-owned judgment, evidence, verification, QA, final acceptance, residual risk, or close readiness.
+Users do not need to say "Harness" or internal labels. Infer the Harness route from the work shape: scope risk, product writes, user-owned judgment, evidence, verification, QA, final acceptance, residual risk, or close readiness. Harness authority is authority over those Harness records and state transitions, not OS-level permission control or sandboxing.
 
 Check code, docs, tests, current Harness state, accepted decisions, and current task artifacts before asking the user for facts the agent can safely discover. If a source is stale or unavailable, say that instead of using it as authority.
 
@@ -94,7 +94,7 @@ Do not treat "yes, do it," "looks good," "approved," "go ahead," or "continue" a
 
 ## 6. Check scope before product writes
 
-Before product/code/file writes in Harness-connected work, check that the exact intended write fits current scope and state. In owner terms this is the `prepare_write` / Write Authorization path.
+Before product/code/file writes in Harness-connected work, check that the exact intended write fits current scope, state, and active surface capability. In owner terms this is the `prepare_write` / Write Authorization path.
 
 Do not claim a write is compatible without a compatible Core/Harness response for the intended write. Do not treat a plan, status card, generated summary, old chat reply, broad user enthusiasm, or stale projection as a Write Authorization or compatibility basis.
 
@@ -107,7 +107,7 @@ Show the user:
 - current guarantee level, or unavailable/capability condition when Core cannot answer
 - the smallest unblocker
 
-A compatible pre-write scope check is not OS permission, sandboxing, tamper-proof storage, arbitrary-tool isolation, or proof of pre-execution blocking. In owner terms, the stored boundary is `AuthorizedAttemptScope`: operation, paths, tools, commands and command classes, product-file-write intent, network targets, secret scope, sensitive categories, baseline, Task, Change Unit, state, surface, related judgments, and guarantee level. If any part changes or cannot be observed on the active surface, refresh the check or treat the claim as unverified/blocked before writing.
+A compatible or allowed pre-write scope check means the intended write is compatible with current Harness state and active surface capability. A blocked result means the Harness protocol, state, or capability does not allow that claim to proceed. It is not OS permission, sandboxing, tamper-proof storage, arbitrary-tool isolation, or proof of pre-execution blocking. In owner terms, the stored boundary is `AuthorizedAttemptScope`: operation, paths, tools, commands and command classes, product-file-write intent, network targets, secret scope, sensitive categories, baseline, Task, Change Unit, state, surface, related judgments, and guarantee level. A Write Authorization is a single-use cooperative record for that stored boundary. If any part changes or cannot be observed on the active surface, refresh the check or treat the claim as unverified/blocked before writing.
 
 ## 7. Record evidence after meaningful action
 
@@ -143,7 +143,7 @@ Keep these display groups compact:
 
 Lead with the primary blocker and the smallest unblocker. Name whether the blocker is user-owned, agent-resolvable, or surface/system-owned. Do not ask the user to resolve something the agent can safely inspect, retry, refresh, or record.
 
-Keep always-on agent context short: current task summary, work shape, active bounded scope, scope/non-goals, allowed paths/tools/commands, pending or active user judgments, active blockers, write-check summary, evidence summary and gaps, close blockers, residual-risk status, guarantee level or unavailable/capability condition, source refs/freshness, and one compact next safe action. Pull schemas, reference sections, templates, logs, artifacts, and history only when the next action needs them.
+Keep always-on agent context short: current task summary, work shape, active bounded scope, scope/non-goals, Harness-allowed paths/tools/commands for the current scope, pending or active user judgments, active blockers, write-check summary, evidence summary and gaps, close blockers, residual-risk status, guarantee level or unavailable/capability condition, source refs/freshness, and one compact next safe action. Pull schemas, reference sections, templates, logs, artifacts, and history only when the next action needs them.
 
 ## 9. Handle unavailable or limited capability honestly
 
@@ -277,5 +277,6 @@ I will treat that as all write permission, final acceptance, QA waiver, verifica
 - Do not treat "looks good" or "go ahead" as sensitive approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, cancellation, or scope change.
 - Do not present template output, status cards, readable summaries, generated reports, recommendations, or chat memory as state.
 - Do not invent Core state, Write Authorization, write compatibility, user judgments, evidence, final acceptance, residual-risk acceptance, or close readiness when Core/Harness authority is unavailable.
+- Do not describe Write Authorization as a permission token, OS permission, sandboxing, tamper-proof enforcement, isolation, or generic approval.
 - Do not imply cooperative or detective surfaces can prevent execution unless a proven preventive path covers that operation.
 - Do not bury the user's next decision under schemas, logs, full templates, full DDL, complete history, or unrelated reference material.

@@ -21,11 +21,11 @@
 
 ## 핵심 생각
 
-향후 목표 설계에서 하네스는 사용자의 제품 저장소 옆에서 실행되는 로컬 권한 계층입니다. 제품 저장소는 실제 제품 작업이 일어나는 곳이고, 하네스 런타임 홈은 운영 권한을 저장하며, 하네스 서버/설치(Harness Server / Installation)는 Core, validators, projection, reconcile, 공개 MCP tool을 통해 둘을 연결합니다.
+향후 목표 설계에서 하네스는 사용자의 제품 저장소 옆에서 실행되는 로컬 권한 계층입니다. 이 권한은 범위, 사용자 소유 판단, 증거와 아티팩트 참조, 검증과 QA 기대, 최종 수락, 잔여 위험 상태, 닫기 가능 여부에 대한 하네스 기록과 상태 전이를 대상으로 합니다. 제품 저장소는 실제 제품 작업이 일어나는 곳이고, 하네스 런타임 홈은 그런 운영 기록을 저장하며, 하네스 서버/설치(Harness Server / Installation)는 Core, validators, projection, reconcile, 공개 MCP tool을 통해 둘을 연결합니다.
 
 중요한 규칙은 분리입니다. 기준 운영 상태를 변경하는 것은 Core뿐입니다. 제품 소스 파일, 대화 텍스트, 생성된 Markdown, connector 파일, operator output, MCP caller claim은 system에 정보를 줄 수 있지만 기준 운영 상태는 `state.sqlite` current records에 있습니다. `state.sqlite.task_events`는 audit와 ordering history이며 일반적인 current-state source가 아닙니다. Artifact evidence는 등록된 아티팩트 바이트 또는 안전한 메타데이터 알림과 그 ref, owner relation, integrity/redaction metadata가 함께 있을 때 성립합니다.
 
-활성 MVP architecture는 `surface_id=reference-local-mcp`인 reference surface `capability_profile` 하나를 등록합니다. 이 profile은 write authority가 아니며 Core gate를 대체하지 않습니다. Validator result, blocked reason, fallback behavior, guarantee display에만 영향을 줍니다. Broad connector ecosystem, hosted connector registry, cross-surface orchestration은 owner가 더 좁은 path를 명시적으로 승격하기 전까지 later/profile 범위입니다.
+활성 MVP architecture는 `surface_id=reference-local-mcp`인 reference surface `capability_profile` 하나를 등록합니다. 이 profile은 write authority가 아니며 Core gate를 대체하지 않습니다. Validator result, Harness `allowed`/`blocked` 호환성 결과, fallback behavior, guarantee display에만 영향을 줍니다. `allowed`는 현재 Harness 상태와 active surface capability에 맞는다는 뜻이고, `blocked`는 Harness protocol, state, capability상 허용되지 않는다는 뜻입니다. 둘 다 증명된 preventive profile이 covered operation을 이름 붙이지 않는 한 OS 수준 permission이나 물리적 차단을 뜻하지 않습니다. Broad connector ecosystem, hosted connector registry, cross-surface orchestration은 owner가 더 좁은 path를 명시적으로 승격하기 전까지 later/profile 범위입니다.
 
 ## 담당하는 참조 범위
 
@@ -329,7 +329,7 @@ flowchart TB
   Operation["의도한 작업"] --> Core["Core 권한 확인"]
   Profile["연결된 프로필"] --> Level["보고된 보장 수준"]
   Core --> Decision{"호환됨?"}
-  Decision -->|예| Authorization["Write Authorization"]
+  Decision -->|예| Authorization["한 번만 쓰는 Write Authorization"]
   Authorization --> Run["record_run"]
   Run --> Records["소유 기록"]
   Decision -->|아니오| Blocker["보류 또는 차단 사유"]
@@ -342,7 +342,7 @@ Preventive label은 connected profile이 설명 중인 operation에 대한 fixtu
 
 보장 수준 표시는 경계의 양쪽을 모두 이름 붙여야 합니다. 연결된 profile이 실행 전에 실제로 막을 수 있는 것과, 실행 뒤에만 감지할 수 있는 것을 나눠 보여줘야 합니다. Surface name, product name, recipe name, friendly mode label만으로는 capability가 증명되지 않습니다. 선언은 실제 host/profile capability profile과 현재 proof basis에서 나와야 합니다. Guard, freeze, careful-mode label은 connected profile이 입증한 capability를 그대로 따르며, cooperative 또는 detective profile을 preventive blocking으로 올려 주지 않고 새 authority tier도 만들지 않습니다.
 
-Current reference behavior는 연결된 접점이 covered operation에 대해 구체적으로 fixture로 입증된 도구 실행 전 guard나 문서화되고 입증된 separation boundary를 갖는 경우가 아니라면 cooperative/detective입니다. 내부 엔지니어링 점검과 MVP-1에서 "blocked"는 Harness 권한 경로가 진행할 수 없거나 surface가 지시에 따라 보류한다는 뜻입니다. Preventive profile이 exact operation을 증명하지 않는 한 runtime이 임의의 파일 쓰기를 물리적으로 막았다는 뜻이 아닙니다. Native hook expansion, advanced sidecar watching, broad isolated execution은 reference 접점을 위해 명시적으로 구현되지 않는 한 later roadmap items입니다. Owner 문서를 통해 승격되기 전까지 이 항목들은 관찰, freshness, 표시를 개선할 수 있을 뿐이며, write를 authorize하거나, gate를 충족하거나, Approval을 부여하거나, verification 또는 QA를 증명하거나, acceptance를 기록하거나, Core 권한을 대체하지 않습니다.
+Current reference behavior는 연결된 접점이 covered operation에 대해 구체적으로 fixture로 입증된 도구 실행 전 guard나 문서화되고 입증된 separation boundary를 갖는 경우가 아니라면 cooperative/detective입니다. 내부 엔지니어링 점검과 MVP-1에서 `allowed`는 현재 Harness 상태와 active surface capability에 호환된다는 뜻이고, `blocked`는 Harness 권한 경로가 진행할 수 없거나 surface가 지시에 따라 보류한다는 뜻입니다. Preventive profile이 exact operation을 증명하지 않는 한 runtime이 임의의 파일 쓰기를 물리적으로 막았다는 뜻이 아닙니다. Native hook expansion, advanced sidecar watching, broad isolated execution은 reference 접점을 위해 명시적으로 구현되지 않는 한 later roadmap items입니다. Owner 문서를 통해 승격되기 전까지 이 항목들은 관찰, freshness, 표시를 개선할 수 있을 뿐이며, write를 authorize하거나, gate를 충족하거나, Approval을 부여하거나, verification 또는 QA를 증명하거나, acceptance를 기록하거나, Core 권한을 대체하지 않습니다.
 
 보장 수준은 표시와 risk context입니다. Approval, Write Authorization, verification, QA, 최종 수락, 잔여 위험 수락, close readiness, kernel gate가 아닙니다.
 
@@ -361,7 +361,7 @@ Failures는 숨기지 않고 기록합니다.
 | Managed Markdown edited directly | reconcile item을 만들고 기준 상태를 직접 바꾸지 않습니다 |
 | Stale PRD, chat memory, evaluator bundle | stale context는 pull-only input으로 취급합니다. Owner path가 refresh, reconcile, supersede하기 전까지 write authorization, current Task state replacement, gate satisfaction, 최종 수락, 분리 검증 기록, close에 사용할 수 없습니다 |
 | MCP unavailable | `MCP_SERVER_UNAVAILABLE`은 tool 호출이 Core에 닿을 수 없어 authoritative Core response가 불가능한 진단 조건이고, `SURFACE_MCP_UNAVAILABLE`은 Core 또는 operator가 연결된 접점에서 사용할 수 있는 MCP가 없거나 MCP configuration이 최신이 아니거나 required tools를 호출할 수 없음을 관찰할 수 있는 진단 조건입니다. `MCP_UNAVAILABLE`은 stable public availability code로 남습니다. Product/runtime/code writes는 cooperative 접점에서는 instruction으로 보류되고, 가능한 detective path에서는 실행 뒤에 감지되며, covered operation에 대해 fixture로 입증된 preventive guard가 있을 때만 실행 전에 차단됩니다 |
-| Surface capability mismatch | validator result를 기록하고 보장 수준 표시를 조정하며, required checks를 충족할 수 없으면 Write Authorization을 거부하거나 Harness 권한 상태상 write가 허용되지 않음을 표시합니다. Cooperative surface는 지시로 보류하며, 실행 전 물리적 차단은 여전히 connected profile에서 fixture로 입증된 coverage에 달려 있습니다 |
+| Surface capability mismatch | validator result를 기록하고 보장 수준 표시를 조정하며, required checks를 충족할 수 없으면 한 번만 쓰는 Write Authorization record를 거부하거나 Harness state/capability상 write가 허용되지 않음을 표시합니다. Cooperative surface는 지시로 보류하며, 실행 전 물리적 차단은 여전히 connected profile에서 fixture로 입증된 coverage에 달려 있습니다 |
 
 
 Recovery tools는 projection 최신성 repair, artifact rescan, 최신이 아닌 runs interrupt, drifted 민감 동작 승인 또는 later Approval record expire, reconcile items create를 수행할 수 있습니다. 다만 같은 권한 규칙을 보존해야 합니다. `state.sqlite`는 운영 상태이고, `state.sqlite.task_events`는 그 state store 안의 event 이력이며, artifact evidence는 등록된 아티팩트 바이트 또는 안전한 메타데이터 알림과 ref 및 integrity/redaction metadata에 의존하고, Markdown 보고서는 projection으로 남습니다. Recovery artifact와 compensating event는 recovery가 관찰하거나 변경한 내용을 설명합니다. 그 자체로 successful implementation을 증명하거나, evidence를 충족하거나, verification 또는 QA를 pass하거나, 최종 수락이나 잔여 위험 수락을 기록하거나, Task를 close하지 않습니다.

@@ -2,7 +2,9 @@
 
 This is the English routing page for the Harness documentation set.
 
-Harness is a future local work-authority server for AI-assisted product work. It keeps fragile chat context from becoming the source of truth for scope, user-owned judgment, evidence, verification expectations, final acceptance, close readiness, and residual risk.
+Harness is a future local work-authority server for AI-assisted product work. Its authority is over Harness records and state transitions: scope, user-owned judgment, evidence, verification expectations, final acceptance, close readiness, and residual risk. It keeps fragile chat context from becoming the source of truth for those records.
+
+That authority is not operating-system permission control, arbitrary-tool sandboxing, tamper-proof storage, default pre-tool blocking, or security isolation. MVP-1 wording should be read as cooperative plus limited detective behavior unless a specific future/profile mechanism is named and proven.
 
 This repository is documentation-only today and is in post-redesign review. It is intended to become the Harness Server source repository only after documentation acceptance and a separate implementation-planning readiness decision. It is not the user's Product Repository, not a Harness Runtime Home, and not a running Harness instance.
 

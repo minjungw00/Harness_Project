@@ -42,11 +42,11 @@ Harness turns ordinary requests into a visible working basis. You do not need to
 | "Make this concrete before coding." | Intake and requirement clarification, stored through the active Task, proposed or active Change Unit, and user-decision boundaries. | Original request, current goal, confirmed facts, likely scope, non-goals, remaining uncertainties, and the next safe action. |
 | "Ask me before deciding the UX." | Focused user judgment through the user-owned judgment path. | One specific question with choices, recommendation, uncertainty, and consequence if deferred. |
 | "Keep reset out of scope." | Active scope, internally represented by the bounded work area or Change Unit when a product write is involved. | What may change, what is out of bounds, and when scope expansion needs a decision. |
-| "Before changing files, tell me what you will touch." | A pre-write scope check. In owner terms, product writes go through `prepare_write` and a compatible Write Authorization result when Harness is connected. | Intended paths or operation, scope match or mismatch, pending decisions, stale or unavailable authority, and the smallest unblocker. |
+| "Before changing files, tell me what you will touch." | A pre-write scope check. In owner terms, product writes go through `prepare_write`; an allowed response may create one single-use cooperative Write Authorization record when Harness is connected. | Intended paths or operation, scope match or mismatch, pending decisions, stale or unavailable authority, and the smallest unblocker. |
 | "Show what happened and what proves it." | A run/evidence recording path. In owner terms, meaningful execution is summarized through `record_run` and evidence refs when that path is active. | What ran or changed, what supports the claim, what is missing, and what was not checked. |
 | "Can we call this done?" | Close readiness. In owner terms, `close_task` returns close blockers or a close result. | Whether close is available, why it is blocked or available, what risk remains, and the smallest unblocker. |
 
-Readable summaries help you understand the work. They are not the operating record themselves. Editing a status summary, a generated report, or chat text does not create a user decision, pre-write scope check, Write Authorization, evidence, final acceptance, residual-risk acceptance, or close readiness.
+Readable summaries help you understand the work. They are not the operating record themselves. Editing a status summary, a generated report, or chat text does not create a user decision, pre-write scope check, Write Authorization, evidence, final acceptance, residual-risk acceptance, or close readiness. When Harness says a write is allowed or blocked, read that as a compatibility result against current Harness state and active surface capability, not as a physical operating-system permission result.
 
 ## 3. What the agent should clarify first
 
@@ -140,7 +140,7 @@ A broad "yes, do it," "looks good," or "go ahead" applies only to the one active
 
 ## 6. Before files change
 
-Before a product write in a Harness-connected session, the agent should confirm that the intended write still fits the current scope and state. Internally, that is the `prepare_write` / Write Authorization path.
+Before a product write in a Harness-connected session, the agent should confirm that the intended write still fits the current scope, state, and active surface capability. Internally, that is the `prepare_write` / Write Authorization path.
 
 You should see:
 
@@ -151,7 +151,7 @@ You should see:
 - current guarantee level, or a clear unavailable/capability condition
 - the smallest action that would unblock the write
 
-This check is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that Harness can prevent every tool from acting. In owner terms, the stored boundary is `AuthorizedAttemptScope`: operation, paths, tools, commands and command classes, product-file-write intent, network targets, secret scope, sensitive categories, baseline, Task, Change Unit, state, surface, related judgments, and guarantee level. If any part changes or cannot be observed on the active surface, the check should be refreshed or treated as unverified/blocked before writing.
+An allowed result means the intended write is compatible with the current Harness state and active surface capability. A blocked result means the Harness protocol, state, or capability does not allow that claim to proceed. This check is not OS permission, sandboxing, tamper-proof enforcement, arbitrary-tool isolation, or proof that Harness can prevent every tool from acting. In owner terms, the stored boundary is `AuthorizedAttemptScope`: operation, paths, tools, commands and command classes, product-file-write intent, network targets, secret scope, sensitive categories, baseline, Task, Change Unit, state, surface, related judgments, and guarantee level. A Write Authorization is a single-use cooperative record for that stored boundary. If any part changes or cannot be observed on the active surface, the check should be refreshed or treated as unverified/blocked before writing.
 
 If Core or Harness authority cannot answer, the agent should say that. It should not claim current write compatibility or a Write Authorization from old chat, cached summaries, stale projections, or user enthusiasm.
 
@@ -340,7 +340,7 @@ You can skip this section until an agent or Reference page shows one of these la
 | Shared Design | A later/profile design-support record or projection label. In active MVP-1, requirements shaping uses Task, Change Unit, and User Judgment instead. |
 | Change Unit | The bounded work area that may change for a product-write attempt. It is scope, not broad permission. |
 | Decision Packet | A fuller presentation for a specific user-owned judgment. It should not be required for every small choice. |
-| Write Authorization | A cooperative internal record/check for one stored `AuthorizedAttemptScope`, the boundary Core compares during `record_run`. It is not OS permission, sandboxing, tamper-proof enforcement, or generic approval. |
+| Write Authorization | A single-use cooperative internal record/check for one stored `AuthorizedAttemptScope`, the boundary Core compares during `record_run`. It is not OS permission, sandboxing, tamper-proof enforcement, isolation, a permission token, or generic approval. |
 | Evidence Manifest | A fuller record that maps completion claims or criteria to evidence references when that profile is active. Small work may only need a short evidence summary. |
 | Projection | A readable summary derived from saved records. It helps orientation, but it is not the operating record itself. |
 | Gate | An internal readiness or compatibility condition. User-facing status should show the blocker or check first. |

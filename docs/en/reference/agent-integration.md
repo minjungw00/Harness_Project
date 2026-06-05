@@ -30,7 +30,7 @@ Surface name is not capability. A profile may claim cooperative, detective, prev
 
 ## Integration In Plain Language
 
-An agent surface is where the user talks to an agent. Harness is the local authority layer that keeps scope, user judgment, write checks, evidence refs, final acceptance, residual-risk acceptance, and close readiness outside the chat transcript.
+An agent surface is where the user talks to an agent. Harness is the local authority layer for Harness records and state transitions. It keeps scope, user judgment, write checks, evidence refs, final acceptance, residual-risk acceptance, and close readiness outside the chat transcript without claiming OS-level permission control, arbitrary-tool sandboxing, tamper-proof storage, default pre-tool blocking, or security isolation.
 
 The common path is:
 
@@ -78,7 +78,7 @@ Engineering Checkpoint and MVP-1 target the one reference surface profile. That 
 
 Surfaces must use a `capability_profile` instead of assuming behavior from a product name, surface name, or mode label. A profile is scoped to the actual host/profile that will run the work.
 
-A `capability_profile` is not write authority, not a first-class replacement for Core gates, and not a way to bypass active Task, active Change Unit, `prepare_write`, durable Write Authorization, or `record_run`. Capability affects validator results, blocked reasons, fallback behavior, and guarantee display. Unsupported capabilities must lower the displayed guarantee or block the claim. Product writes must not proceed silently on an unsupported surface.
+A `capability_profile` is not write authority, not a first-class replacement for Core gates, and not a way to bypass active Task, active Change Unit, `prepare_write`, the single-use cooperative Write Authorization record, or `record_run`. Capability affects validator results, Harness `allowed`/`blocked` compatibility outcomes, fallback behavior, and guarantee display. Here `allowed` means compatible with current Harness state and active surface capability; `blocked` means not allowed by the Harness protocol, state, or capability. Neither word means OS-level permission or physical prevention unless a proven preventive profile names the covered operation. Product writes must not proceed silently on an unsupported surface.
 
 The active MVP reference profile uses these fields:
 
@@ -249,7 +249,7 @@ Engineering Checkpoint minimum reference expectations:
 - one registered `capability_profile` for `surface_id=reference-local-mcp`
 - `mcp_available=true` for the public tool/resource subset needed by the first authority loop
 - local-only or owner-approved access posture
-- cooperative `prepare_write` before product writes and compatible Write Authorization before write-capable `record_run`
+- cooperative `prepare_write` before product writes and a compatible single-use Write Authorization record before write-capable `record_run`
 - detective changed-path and artifact validation after runs
 - no default OS sandbox, arbitrary-tool sandboxing, tamper-proof local files, isolation, or pre-tool blocking claim
 - a run summary and at least one manually supplied artifact/evidence ref for the minimal authority loop
@@ -268,8 +268,8 @@ Engineering Checkpoint reference-surface checks include:
 - one registered reference `capability_profile` with `conformance_smoke_status` reported as planned or not run until runtime fixtures exist
 - guarantee display derived from the actual profile fields, with no `preventive` or `isolated` claim when `pre_tool_blocking_supported=false` and `isolation_supported=false`
 - basic scope checking for the selected path/tool/command
-- `prepare_write` allowed and blocked paths
-- Write Authorization created only after `prepare_write.decision=allowed` and consumed by write-capable `record_run`
+- `prepare_write` allowed and blocked paths, where allowed/blocked are Harness compatibility outcomes rather than OS permission or physical prevention
+- single-use cooperative Write Authorization created only after `prepare_write.decision=allowed` and consumed by write-capable `record_run`
 - `record_run` with a minimal artifact/evidence ref
 - local-only MCP default or owner-approved alternative
 - MCP-unavailable product-write hold
