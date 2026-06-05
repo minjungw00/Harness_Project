@@ -340,9 +340,11 @@ active | consumed | expired | stale | revoked
 
 A Write Authorization is not reusable scope. It records compatibility for one exact write attempt under the current compatibility basis and is consumed by one compatible implementation or direct `record_run`, except for idempotent replay of the same committed request.
 
-### Evidence Manifest
+### Evidence Summary and Evidence Manifest
 
-An Evidence Manifest maps claims, criteria, or completion conditions to supporting refs. It may reference Runs, artifacts, Evals, Manual QA records, design records, or other owner records. Evidence sufficiency is criteria-based, not artifact-count-based.
+In active MVP-1, the Core-owned `evidence_summary` is the active evidence contract for status and close. It maps close-relevant claims, criteria, or completion conditions to supporting Runs, blockers, user judgments, and `ArtifactRef` values. Evidence sufficiency is criteria-based, not artifact-count-based.
+
+A full Evidence Manifest is later/profile material unless an owner profile enables it. When enabled, it may reference Runs, artifacts, Evals, Manual QA records, design records, or other owner records, but it still does not replace final acceptance, residual-risk acceptance, or close.
 
 ### Eval
 
@@ -358,7 +360,7 @@ Findings from commands, Runs, Evals, QA, reviews, validators, or diagnostics are
 
 ### Residual Risk
 
-Residual Risk is a close-relevant state record for known remaining uncertainty, limitation, unchecked condition, or trade-off. It records source refs, affected scope, visibility, accepted-risk metadata when accepted, follow-up, and close impact.
+In minimum MVP-1, residual-risk state is represented through `ResidualRiskSummary`, close-relevant `blocker` refs, and `user_judgment` refs for residual-risk acceptance. Rich Residual Risk records are later/profile material for known remaining uncertainty, limitation, unchecked condition, or trade-off. When that profile is active, those records carry source refs, affected scope, visibility, accepted-risk metadata when accepted, follow-up, and close impact.
 
 Residual Risk records make risk visible. They do not verify work, replace evidence, waive QA, grant Approval, imply final acceptance, or close a Task.
 
@@ -370,7 +372,7 @@ An `ArtifactRef` is evidence-eligible only after Core registers it from an allow
 
 ### Reconcile Item
 
-A Reconcile Item is the candidate record for human-editable or generated/projection drift. Reconcile may merge, reject, convert to note, create a user judgment, or defer. Markdown or generated text becomes state only through the accepted reconcile/owner path.
+A Reconcile Item is a later/profile candidate record for human-editable or generated/projection drift. Reconcile may merge, reject, convert to note, create a user judgment, or defer only when that owner path is active. Markdown or generated text becomes state only through the accepted reconcile/owner path.
 
 ### Design Support Records
 
@@ -525,7 +527,7 @@ Residual-risk visibility is separate. If no known close-relevant risk exists, `R
 
 ### Capability Boundary
 
-Capability is not a first-class Kernel gate. Surface capability can affect blocked reasons, validator results, and guarantee display. Cooperative and detective surfaces must not claim preventive blocking unless a proven guard covers the operation.
+Capability is not a first-class Kernel gate. Surface capability can affect blocked reasons, validator results, and guarantee display. Cooperative and detective surfaces must not claim preventive blocking unless a proven guard covers the operation. When a required observation, capture path, local access, pre-tool blocking claim, isolation claim, or other capability is unsupported, Core must route the affected write, status, or close claim through `CAPABILITY_INSUFFICIENT` or an equivalent structured blocker instead of treating the fact as verified.
 
 ## Lifecycle and transitions
 
@@ -697,9 +699,9 @@ The Core transition order is:
 
 Implementation and direct Runs that report product-file writes must consume a Write Authorization whose lifecycle status is `active` and whose stored `AuthorizedAttemptScope` is compatible with the observed attempt. Core verifies only observations the active surface can honestly provide. Missing command, network, secret, or other observation capability is not a successful verification; when that capability is required for the attempted scope, Core must block, narrow the claim, mark the fact unverified, or return/report insufficient surface capability rather than consuming the authorization as fully compatible.
 
-`missing required authorization` means a product-write Run has no required authorization ref or no current matching row. `stale authorization` means the row is expired, revoked, already consumed, explicitly stale, or based on a state version, baseline, scope, surface, or related judgment set that is no longer current for the attempted write. `observed attempt outside authorized scope` means observed paths, tools, commands, command classes, product-file-write behavior, network targets, secret handles, sensitive categories, baseline, Task, Change Unit, or surface exceed or differ from the stored `AuthorizedAttemptScope`. `insufficient surface capability` means Core cannot honestly compare a required part of the attempted scope because the connected surface lacks the needed observation, capture, blocking, or isolation capability.
+`missing required authorization` means a product-write Run has no required authorization ref or no current matching row and maps to `WRITE_AUTHORIZATION_REQUIRED`. `stale authorization` means the row is expired, revoked, already consumed, explicitly stale, or based on a state version, baseline, scope, surface, or related judgment set that is no longer current for the attempted write and maps to `WRITE_AUTHORIZATION_INVALID`. `observed attempt outside authorized scope` means observed paths, tools, commands, command classes, product-file-write behavior, network targets, secret handles, sensitive categories, baseline, Task, Change Unit, or surface exceed or differ from the stored `AuthorizedAttemptScope` and maps to `SCOPE_VIOLATION`. `insufficient surface capability` means Core cannot honestly compare a required part of the attempted scope because the connected surface lacks the needed observation, capture, blocking, or isolation capability and maps to `CAPABILITY_INSUFFICIENT`.
 
-Out-of-scope changes, missing Write Authorization, expired Write Authorization, stale Write Authorization, revoked Write Authorization, consumed Write Authorization, incompatible Write Authorization, or insufficient surface capability become rejection, violation, recovery, or stale/blocker state according to the case. Core must not record an invalid authorization as successfully consumed. A violation or audit Run may be recorded when the active contract supports recording observed behavior, but it does not count as completion evidence and does not satisfy evidence sufficiency, verification, QA, final acceptance, residual-risk acceptance, or close readiness for the affected scope until repaired through the relevant owner records. Attempted authorization refs may appear only in validator findings, violation payloads, or event payloads.
+Out-of-scope changes, missing Write Authorization, expired Write Authorization, stale Write Authorization, revoked Write Authorization, consumed Write Authorization, incompatible Write Authorization, or insufficient surface capability become rejection, violation, recovery, or stale/blocker state according to the case. Core must not record an invalid authorization as successfully consumed. A violation or audit Run may be recorded when the active contract supports recording observed behavior, but it does not count as completion evidence and does not satisfy evidence sufficiency, final acceptance, residual-risk acceptance, close readiness, or later/profile QA or verification requirements for the affected scope until repaired through the relevant owner records. Attempted authorization refs may appear only in validator findings, violation payloads, or event payloads.
 
 For a pre-commit rejected `record_run`, Core creates no Run, artifact, artifact link, evidence summary, authorization consumption, blocker/gate update, task event, projection job, state-version advance, or replay row unless the explicit committed violation/audit exception above applies.
 

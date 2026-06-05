@@ -313,6 +313,8 @@ CaptureAdapterArtifactSource:
 
 허용되는 artifact source는 Harness staging location, approved capture adapter output, 이미 commit된 artifact ref뿐입니다. `staged_uri`는 Harness staging locator이지 임의 파일을 읽을 승인이 아닙니다. `capture_ref`는 capture-adapter handle이지 caller가 넘긴 path가 아닙니다. Tool response는 committed `ArtifactRef` value를 반환하며, staged locator나 capture handle을 authority로 반환하지 않습니다.
 
+`record_run`은 unsupported `ArtifactInput` shape, caller가 넘긴 arbitrary path, forbidden raw secret payload, token, full sensitive log를 mutation 전에 reject해야 합니다. Commit 뒤에 redacted로 표시하는 방식으로 rejected input을 고칠 수 없습니다. 이 경우의 public error mapping은 [Errors: Error taxonomy](errors.md#error-taxonomy)가 담당합니다.
+
 Critical 또는 close-relevant evidence는 supporting Core state와 각 required `ArtifactRef`가 current owner relation, availability, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, `retention_class` metadata를 가질 때만 sufficient로 취급할 수 있습니다. Artifact가 missing이거나 relation owner가 resolve되지 않았거나 integrity metadata가 없거나 `hash_mismatch` 같은 integrity failure가 있으면 affected evidence는 `stale` 또는 `blocked`가 됩니다. Required evidence가 affected이면 close는 계속 blocked입니다.
 
 ## StateRecordRef
@@ -772,7 +774,7 @@ EvidenceCoverageUpdate:
 
 `DirectPayload`는 작은 direct result를 기록합니다. 제품 파일 변경이 없는 직접 답변이나 결과도 포함합니다. `result_kind=product_write`이거나 `product_write=true`이면 `ImplementationPayload`와 같은 Write Authorization, observed-change, artifact, evidence validation rule을 따릅니다. `product_write=false`이면 `write_authorization_id`는 `null`이어야 하고 `observed_changes.no_product_changes`는 `true`여야 합니다.
 
-Product-write Run에서 Core는 observed payload를 stored `AuthorizedAttemptScope`와 비교합니다. 관련 관찰이 unsupported이거나 absent이면 surface가 commands, command classes, network access, secret access, changed paths를 verified로 표시하면 안 됩니다. 결과는 API와 error owner에 따라 narrowed, blocked, 또는 `CAPABILITY_INSUFFICIENT` / insufficient surface capability로 표시해야 합니다.
+Product-write Run에서 Core는 observed payload를 stored `AuthorizedAttemptScope`와 비교합니다. 관련 관찰이나 capability가 unsupported이거나 absent이면 surface가 commands, command classes, network access, secret access, artifact capture, pre-tool blocking, isolation, changed paths를 verified로 표시하면 안 됩니다. 결과는 API와 error owner에 따라 narrowed, blocked, 또는 `CAPABILITY_INSUFFICIENT` / insufficient surface capability로 표시해야 합니다.
 
 ## NextActionSummary
 

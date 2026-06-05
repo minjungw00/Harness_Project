@@ -313,6 +313,8 @@ CaptureAdapterArtifactSource:
 
 The only allowed artifact sources are a Harness staging location, an approved capture adapter output, or an existing committed artifact ref. `staged_uri` is a Harness staging locator, not permission to read arbitrary files. `capture_ref` is a capture-adapter handle, not a caller-supplied path. Tool responses return committed `ArtifactRef` values, never staged locators or capture handles as authority.
 
+`record_run` must reject unsupported `ArtifactInput` shapes, caller-supplied arbitrary paths, forbidden raw secret payloads, tokens, and full sensitive logs before mutation. Such rejected input cannot be repaired by marking it redacted after commit. Public error mapping for these cases is owned by [Errors: Error taxonomy](errors.md#error-taxonomy).
+
 Critical or close-relevant evidence cannot be treated as sufficient unless the supporting Core state and each required `ArtifactRef` have current owner relation, availability, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, and `retention_class` metadata. A missing artifact, unresolved relation owner, missing integrity metadata, or integrity failure such as diagnostic `hash_mismatch` makes the affected evidence `stale` or `blocked`; if required evidence is affected, close remains blocked.
 
 ## StateRecordRef
@@ -772,7 +774,7 @@ EvidenceCoverageUpdate:
 
 `DirectPayload` records a small direct result, including direct no-change or answer-only work. If `result_kind=product_write` or `product_write=true`, it follows the same Write Authorization, observed-change, artifact, and evidence validation rules as `ImplementationPayload`. If `product_write=false`, `write_authorization_id` must be `null` and `observed_changes.no_product_changes` must be `true`.
 
-For product-write runs, Core compares the observed payload with the stored `AuthorizedAttemptScope`. A surface must not mark commands, command classes, network access, secret access, or changed paths as verified when the relevant observation is unsupported or absent; the result must instead be narrowed, blocked, or marked as `CAPABILITY_INSUFFICIENT` / insufficient surface capability according to the API and error owners.
+For product-write runs, Core compares the observed payload with the stored `AuthorizedAttemptScope`. A surface must not mark commands, command classes, network access, secret access, artifact capture, pre-tool blocking, isolation, or changed paths as verified when the relevant observation or capability is unsupported or absent; the result must instead be narrowed, blocked, or marked as `CAPABILITY_INSUFFICIENT` / insufficient surface capability according to the API and error owners.
 
 ## NextActionSummary
 
