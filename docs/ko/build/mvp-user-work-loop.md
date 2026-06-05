@@ -59,6 +59,7 @@ MVP-1에는 아래가 포함됩니다.
 - `record_run`과 registered artifact/evidence ref 또는 minimum evidence summary path
 - 최소 state `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked`를 쓰는 Core-owned `evidence_summary`
 - `harness.status.next_actions`를 통한 status와 next-safe-action output
+- status와 `prepare_write` output에 보장 수준을 표시하기. Core가 답할 수 없으면 unavailable/capability 상태를 분명히 보여줍니다.
 - 근거 요약과 근거 gap 표시
 - 필요한 근거가 부족하거나, 필요한 사용자 판단이 unresolved 또는 blocked이거나, 필요한 최종 수락이 없거나, 잔여 위험이 required 상태로 보이지 않거나 수락되지 않았을 때 close blocker summary
 - 닫기와 관련된 위험이 있을 때 최종 수락이나 close 전에 잔여 위험 표시
@@ -123,6 +124,7 @@ MVP-1은 cooperative plus limited detective wording을 사용합니다.
 - Harness-compatible product write를 기록하기 전에 Core-compatible record를 요구한다.
 - Missing scope, missing judgment, missing evidence, stale state, unavailable Core/MCP, close blocker에는 structured blocker를 반환한다.
 - 정직한 guarantee status와 evidence/risk gap을 보여 준다.
+- 사용자에게 보이는 status와 쓰기 확인 response에 active guarantee level 또는 분명한 unavailable/capability equivalent를 포함한다.
 - Harness record/check path를 사용할 수 없거나 맞지 않으면 연결된 agent나 surface가 지시로 보류하도록 요청한다.
 
 주장하면 안 되는 일:
@@ -190,6 +192,7 @@ MVP-1 사용자 작업 루프는 사용자가 아래를 볼 수 있을 때만 co
 - Core를 통한 compatible 쓰기 전 범위 확인
 - Recorded Run과 evidence ref 또는 evidence summary
 - 현재 상태, 다음 안전한 행동, 근거 공백, close blocker, 잔여 위험 표시
+- 현재 status 또는 쓰기 확인 result에 보장 수준이나 unavailable/capability 상태가 표시됨
 - Required evidence가 `sufficient`가 아니거나, required user judgment가 unresolved 또는 blocked이거나, required final acceptance가 없거나, residual risk가 required 상태로 보이지 않거나 수락되지 않으면 close가 hold됨
 - MCP/Core를 사용할 수 없을 때 권한 상태를 만들어 내지 않음
 - Core record에서 파생된 compact view와, 필요한 경우 stale/failed freshness 표시

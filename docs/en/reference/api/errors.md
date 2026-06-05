@@ -37,7 +37,7 @@ MVP-1 defaults to cooperative behavior with limited detective reporting where th
 
 Design-quality validator findings do not become primary public errors merely because a validator ID exists. In active MVP, design-quality findings use the impact classes and routed actions owned by [Design Quality Policies](../design-quality-policies.md#impact-classes-and-allowed-routes). Public errors or close blockers appear only when the routed action reaches an existing Core/API path: missing scope, unresolved user judgment, missing required evidence, stale write/close context, Autonomy Boundary exceeded, or surface capability insufficient for the claimed guarantee. Broader domain-language, module/interface, TDD, stewardship, feedback-loop, Manual QA, or detached-verification findings are candidate/advisory by default unless an active owner profile promotes the behavior.
 
-Core unavailable rule: if Harness/Core authority is unavailable, the agent must not invent task state, sensitive approval, user judgment, evidence, final acceptance, residual-risk acceptance, or close readiness. It may only report that authority is unavailable and proceed outside Harness if the user explicitly chooses that mode.
+Core unavailable rule: if Harness/Core authority is unavailable, the agent must not invent task state, sensitive approval, user judgment, evidence, final acceptance, residual-risk acceptance, or close readiness. If the connected surface cannot access MCP, a cooperative surface must hold Harness-dependent writes and close rather than inventing state from chat, cached status, generated files, or projections. The agent may only report that authority is unavailable and proceed outside Harness if the user explicitly chooses that mode.
 
 ## Error taxonomy
 

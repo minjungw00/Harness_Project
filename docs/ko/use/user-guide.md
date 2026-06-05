@@ -236,6 +236,8 @@
 
 자주 보이는 상태 문구는 직접적이되 불필요하게 불안하게 쓰지 않습니다. 정확한 condition 동작은 [API Errors: MVP-1 guarantee와 상태/error taxonomy](../reference/api/errors.md#mvp-1-guarantee-and-status-taxonomy)가 담당합니다. 사용자 입장에서는 아래처럼 읽으면 됩니다.
 
+상태 카드와 쓰기 전 범위 확인은 항상 활성 보장 수준을 보여줘야 합니다. Core 또는 필요한 MCP가 답할 수 없으면 분명한 unavailable/capability condition을 보여줘야 합니다. MVP-1에서 `cooperative`는 에이전트가 지시로 보류하거나 하네스 기록 경로를 따라 진행한다는 뜻입니다. `detective`는 접점이 관찰한 뒤 mismatch를 보고할 수 있다는 뜻입니다. 둘 다 하네스가 자동으로 OS sandbox처럼 동작한다는 뜻이 아닙니다.
+
 | 문구 | 사용자에게 뜻하는 것 |
 |---|---|
 | 하네스 기준 상태에 접근할 수 없습니다. | 에이전트가 현재 하네스 상태, 근거, 최종 수락, 잔여 위험 수락, 닫기 준비 상태를 확인했다고 말할 수 없습니다. 다시 연결하거나 진단할 수 있고, 하네스 밖에서 계속하려면 사용자가 그 방식을 명시적으로 선택해야 합니다. |

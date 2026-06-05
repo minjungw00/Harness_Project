@@ -47,7 +47,7 @@ This document owns:
 - conformance fixture body shape
 - fixture shorthand boundary for the active Engineering Checkpoint / MVP-1 path
 - `ToolEnvelope` expansion convention for examples
-- isolated fixture execution behavior
+- isolated fixture execution behavior for test hygiene, which is not an `isolated` security guarantee
 - fixture assertion semantics and comparison modes
 - suite catalog metadata boundaries
 - future fixture profiles by behavior proved, the reduced Engineering Checkpoint / MVP-1 behavior examples, and the reduced Kernel Smoke authoring queue
@@ -213,14 +213,14 @@ Future `harness conformance run` will execute fixtures through the same Core ent
 Future runtime fixture execution semantics:
 
 1. Load fixture YAML files and validate the exact fixture body shape.
-2. Create a fresh isolated runtime home and temporary Product Repository for the fixture, unless the fixture explicitly targets an existing read-only sample. The runner must not reuse the developer's real Harness Runtime Home or Product Repository for state-changing fixture execution.
+2. Create a fresh fixture-only runtime home and temporary Product Repository for the fixture, unless the fixture explicitly targets an existing read-only sample. This fixture isolation is test hygiene for deterministic comparison; it is not an `isolated` guarantee level, OS sandboxing, permission isolation, or tamper-proof storage claim. The runner must not reuse the developer's real Harness Runtime Home or Product Repository for state-changing fixture execution.
 3. Seed `registry.sqlite`, `project.yaml`, `state.sqlite`, artifact files, projection files when the fixture requires them, and connector manifests from `initial_state`.
 4. Execute `action` through Core. MCP tool actions use the public request schema; after any documented `ToolEnvelope` expansion, fixture `input` must be the same request payload a surface would send to that MCP tool. Operator actions such as `projection_refresh`, `doctor_surface`, `recover`, and `artifacts_check` use the operator semantics in [Operations And Conformance Reference](operations-and-conformance.md).
 5. Capture resulting state summaries, appended owner events, validator results when emitted, artifact registry/file integrity, projection job status when relevant, reconcile items when relevant, and returned error code.
 6. Compare the captured results with `expected_state`, `expected_events`, `expected_artifacts`, `expected_projection`, and `expected_error`; empty expected sections mean the fixture asserts no relevant effect for that section.
 7. Report fixture id, pass/fail, observed state summary, observed events, artifact integrity result, projection freshness, and error comparison.
 
-Runner sequence summary: the numbered sequence above is the contract summary. A future runner loads an exact fixture body, seeds an isolated runtime, executes through Core, compares state/events/artifacts/projection/errors, and emits a report.
+Runner sequence summary: the numbered sequence above is the contract summary. A future runner loads an exact fixture body, seeds a fixture-only runtime home, executes through Core, compares state/events/artifacts/projection/errors, and emits a report.
 
 When a fixture action includes `expected_state_version`, the runner compares it according to the Core-resolved primary Task, not only `ToolEnvelope.task_id`. Primary Task resolution order is tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task resolution. Task-scoped actions compare against the seeded or Core-resolved primary Task State Version; project-scoped actions with no resolved primary Task compare against the Project State Version. Captured response, `EventRef.state_version`, and `task_events.state_version` values are compared as resulting affected-scope versions. Read-only fixtures may assert the unchanged version for the primary read scope. This clarifies comparison semantics without changing fixture body shape.
 
@@ -228,7 +228,7 @@ A stale `expected_state_version` fixture is a stale-authority test, not only a c
 
 Fixture execution should be deterministic. Network access, wall-clock-sensitive expiry, and external tool output must be stubbed or represented as seeded fixture inputs unless a suite explicitly declares itself an integration smoke.
 
-Isolation is part of the pass condition. A fixture may seed files into its temporary Product Repository and runtime home, execute one Core or operator action there, and compare the captured result. It must not depend on existing local runtime records, generated operational files, or prose reports from a previous run.
+Fixture isolation is part of the pass condition. A fixture may seed files into its temporary Product Repository and runtime home, execute one Core or operator action there, and compare the captured result. This does not upgrade the product guarantee level. The fixture must not depend on existing local runtime records, generated operational files, or prose reports from a previous run.
 
 Seed validation happens before action execution, and captured-state validation happens after action execution. Both sides of the comparison use owner-defined state loaders and value sets rather than fixture-local string labels.
 
@@ -330,7 +330,7 @@ In the table, `None` means the existing fixture field stays empty or `expected_e
 
 | Queue | Fixture candidate | Intended Core or operator action | Minimum seeded records | Main expected state assertion | Expected stable event assertion | Expected artifact assertion | Expected projection assertion | Expected primary error |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `ENG-CHECK-project-task-scope-setup` | Owner setup path or validated seed path | Registered local project, or empty isolated runtime home if the setup action registers it | One local project, one active Task, and one active Change Unit or scoped work boundary exist; setup alone creates no Write Authorization or product-write Run | Owner-promoted setup events only | None | No projection requirement | None |
+| 1 | `ENG-CHECK-project-task-scope-setup` | Owner setup path or validated seed path | Registered local project, or empty fixture-only runtime home if the setup action registers it | One local project, one active Task, and one active Change Unit or scoped work boundary exist; setup alone creates no Write Authorization or product-write Run | Owner-promoted setup events only | None | No projection requirement | None |
 | 2 | `ENG-CHECK-prepare-write-in-scope-allowed` | `harness.prepare_write` | Active Task, compatible scope, compatible baseline if required, compatible surface guarantee, no unresolved required judgment, `dry_run=false` | `decision=allowed`; one durable Write Authorization is created for the compatible Task, scope/Change Unit, intended operation, `basis_state_version`, `status=active`, and `consumed_by_run_id=null` | `prepare_write_allowed`, `write_authorization_created` only when stable events are promoted | None | No projection requirement; `TASK` stale/enqueued is allowed only if the owner path already invalidates projections | None |
 | 3 | `ENG-CHECK-prepare-write-out-of-scope-blocked` | `harness.prepare_write` | Active Task with scoped boundary that excludes the requested path/tool/operation | Out-of-scope intended write is blocked by Harness authority state; no Write Authorization, Run, artifact, or state-authorizing side effect is created | No stable event for pre-commit rejection unless owner catalog promotes one | None | No projection job for pre-commit rejection | `SCOPE_VIOLATION` or owner-equivalent structured blocker/error |
 | 4 | `ENG-CHECK-write-authorization-single-use` | `harness.record_run` | Active Task, compatible scope, compatible Write Authorization consumed by a prior Run | Reuse of a consumed authorization is blocked; the original consumed relation remains unchanged and no second Run is committed | No stable event for pre-commit reuse rejection unless owner catalog promotes one | None | No projection job for pre-commit rejection | `WRITE_AUTHORIZATION_INVALID` with `authorization_reason=consumed`, or owner-equivalent error |

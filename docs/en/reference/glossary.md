@@ -545,7 +545,7 @@ The standard form used by design-quality policies: `name`, `applies_when`, `defa
 
 ### Preventive Guarantee
 
-A guarantee level where the harness or connector can block a violating action before it executes.
+A guarantee level where Harness or a connector can block a covered violating action before it executes, with an owner-defined mechanism and fixture proof for that exact path. The label must name what is covered; it does not imply arbitrary-tool prevention, OS sandboxing, permission isolation, tamper-proof storage, or broader authority.
 
 ### Product Repository
 

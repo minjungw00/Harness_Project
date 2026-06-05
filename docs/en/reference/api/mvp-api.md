@@ -131,6 +131,8 @@ StatusResponse:
 
 `status_card` is a short readable view over current Core state and refs. It should stay compact, show source/freshness information, and avoid full schemas, DDL, history, templates, projection bodies, artifact bodies, logs, and future catalogs. It is not Core state and cannot create sensitive-action approval, final acceptance, residual-risk acceptance, evidence, close readiness, Write Authorization, or close.
 
+`StatusResponse` must show `guarantee_display.level` whenever Core can answer. `include.guarantees=false` may reduce optional notes or expanded capability details, but it must not hide the active guarantee level or, when Core cannot answer, the clear `MCP_UNAVAILABLE`/capability condition that no authoritative state mutation claim can be made.
+
 `next_actions` is the MVP-1 next-safe-action surface. It should name the smallest useful next action or unblocker in ordinary language, with exact enum values as secondary detail.
 
 `evidence_summary` is the Core-owned compact MVP-1 evidence summary. `evidence_refs` carries the active minimal evidence coverage refs, normally `StateRecordRef.record_kind=evidence_summary`, plus artifact refs where the nested schema permits them. These fields are not a full Evidence Manifest table or report and do not replace verification, Manual QA, final acceptance, residual-risk acceptance, or close.
@@ -201,6 +203,8 @@ PrepareWriteResponse:
 ```
 
 `decision=allowed` with `dry_run=false` must include `write_authorization_ref` and an active `write_authorization`; `dry_run=true` may return `authorization_effect=would_create` but creates no authorization. Here `allowed` means compatible with current Harness records for this API path; it does not mean OS permission or pre-execution blocking, and it is not the durable Write Authorization lifecycle status. Any response whose `decision` is not `allowed` must not include a Write Authorization.
+
+`PrepareWriteResponse` must include `guarantee_display.level` whenever Core can answer. A cooperative or detective level means the surface must hold by instruction or report after-action detection as applicable; it is not a claim that arbitrary tools were prevented. If Core or required MCP access is unavailable, the response follows [Errors](errors.md) and must not create a Write Authorization, task event, artifact, projection job, or any authoritative state-mutation claim.
 
 `approval_request_candidate` and `user_judgment_candidate` are non-mutating candidate payloads. They do not create user judgments, Approval records, Write Authorizations, or projections.
 

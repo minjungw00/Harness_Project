@@ -14,13 +14,13 @@
 
 ## 핵심 생각
 
-내부 엔지니어링 점검은 하네스가 Core를 통해 로컬 기준 기록 하나를 유지할 수 있음을 증명합니다.
+내부 엔지니어링 점검은 향후 하네스가 Core를 통해 로컬 기준 기록 하나를 유지할 수 있음을 증명하도록 설계된 조각입니다.
 
 1. Local project 하나를 안다.
 2. 활성 Task 하나가 있다.
 3. 의도한 쓰기를 위한 활성 Change Unit 또는 owner-approved scope boundary 하나가 있다.
-4. `harness.prepare_write`가 맞지 않는 작업은 거절하고 맞는 작업은 허용한다.
-5. 오래 남고 한 번만 쓰는 Write Authorization 하나가 만들어진다.
+4. `harness.prepare_write`가 맞지 않는 작업에는 구조화된 막힘을 반환하고, 맞는 작업에는 하네스 호환 decision을 반환한다.
+5. 호환되는 non-dry-run decision에 대해서만 오래 남고 한 번만 쓰는 내부 Write Authorization record 하나가 만들어진다.
 6. `harness.record_run`이 호환되는 Run 하나를 기록하고 authorization을 한 번 소비한다.
 7. Artifact/evidence ref 하나가 owner path로 등록되고 연결된다.
 8. 상태/막힘 출력이 Core 상태를 변경하지 않고 읽는다.
@@ -51,7 +51,7 @@ Readiness가 수락된 뒤 구현 계획 순서로 사용합니다. 여기서는
 | 1. Runtime home과 project registration | 미래 하네스 런타임 홈을 통해 local product repository 하나를 resolve합니다. | Status가 unregistered, registered-idle, active-work 상태를 구분합니다. | [런타임 아키텍처 참조](../reference/runtime-architecture.md), [Storage](../reference/storage.md), [보안 참조](../reference/security.md). |
 | 2. Task record 하나 | Owner-valid path로 active Task 하나를 만들거나 seed합니다. | Status가 active Task와 state version을 보여 주고, 필요한 곳에서 stale state-changing call을 거절합니다. | [Core Model 참조](../reference/core-model.md), [API Errors](../reference/api/errors.md). |
 | 3. 활성 Change Unit/scope boundary 하나 | 의도한 제품 쓰기 하나를 제한할 수 있는 가장 작은 활성 Change Unit 또는 owner-approved scope boundary를 붙입니다. | Compatible scope가 없으면 product write가 Write Authorization을 받을 수 없습니다. | [Core Model 참조](../reference/core-model.md). |
-| 4. `prepare_write` allow/block | 의도한 쓰기를 owner가 정의한 쓰기 전 범위 확인으로 보냅니다. | Missing scope나 out-of-scope work는 block되고, compatible work는 Write Authorization ref를 돌려줍니다. | [Core Model 참조](../reference/core-model.md#prepare_write), [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write), [API Errors](../reference/api/errors.md). |
+| 4. `prepare_write` decision | 의도한 쓰기를 owner가 정의한 쓰기 전 범위 확인으로 보냅니다. | Missing scope나 out-of-scope work는 구조화된 하네스 막힘 또는 거절을 반환하고, compatible work는 정직한 guarantee display와 함께 Write Authorization ref를 돌려줍니다. 이는 OS 권한이나 물리적 도구 실행 전 차단이 아닙니다. | [Core Model 참조](../reference/core-model.md#prepare_write), [`harness.prepare_write`](../reference/api/mvp-api.md#harnessprepare_write), [API Errors](../reference/api/errors.md). |
 | 5. `record_run` | Compatible Run 하나를 기록하고 authorization을 소비합니다. | Compatible Run은 한 번 성공하고, 소비된 authorization 재사용은 실패합니다. | [Core Model 참조](../reference/core-model.md#record_run), [`harness.record_run`](../reference/api/mvp-api.md#harnessrecord_run). |
 | 6. Artifact/evidence ref | Durable artifact 또는 evidence ref 하나를 owner path로 등록합니다. | Run 또는 minimal owner relation이 등록된 ref를 cite할 수 있습니다. | [API Schema Core](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md). |
 | 7. Status와 blocker | 현재 상태와 blocker를 mutation 없이 노출합니다. | 반복 read가 state를 바꾸지 않고, blocker가 향후 smoke check에서 비교할 만큼 구조화되어 있습니다. | [`harness.status`](../reference/api/mvp-api.md#harnessstatus), [Core Model 참조](../reference/core-model.md), [API Schema Core](../reference/api/schema-core.md). |
@@ -65,8 +65,8 @@ API 단계 구분은 [Stage Profile Manifest](../reference/api/schema-core.md#st
 
 - Local, single-project, one Task 권한 루프에 집중한다.
 - [문서 수락 상태](implementation-overview.md#문서-수락-상태)가 구현 계획 준비 상태를 수락하기 전까지 계획 전용으로 남는다.
-- `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref, structured status/blocker output, 좁은 close-blocker check를 지나는 scoped write path 하나를 증명한다.
-- Active path에서 support가 필요한 경우 missing scope, out-of-scope intended work, product-write Run의 missing Write Authorization, consumed Write Authorization 재사용, missing artifact/evidence support를 거절한다.
+- `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref, structured status/blocker output, 좁은 close-blocker check를 지나는 scoped Harness authority path 하나를 보여준다.
+- Active path에서 support가 필요한 경우 missing scope, out-of-scope intended work, product-write Run의 missing Write Authorization, consumed Write Authorization 재사용, missing artifact/evidence support에 대해 구조화된 거절이나 막힘을 반환한다.
 - Status text, generated prose, projection-like output은 모두 Core record에서 파생된 read로 취급한다.
 - 통과 조건에 full projection rendering, multiple projection kind, detailed template, operations, conformance runner, later-profile storage를 요구하지 않는다.
 - Strict fixture format과 assertion은 여기서 정의하지 않고 [Conformance Fixtures 참조](../reference/conformance-fixtures.md)로 연결한다.
@@ -84,7 +84,7 @@ API 단계 구분은 [Stage Profile Manifest](../reference/api/schema-core.md#st
 내부 엔지니어링 점검은 아래를 증명합니다.
 
 - Core가 local state transition path 하나를 소유할 수 있다.
-- 제품 쓰기에 대한 하네스 기준 확인 전에 scope가 필요하다.
+- 하네스와 호환되는 제품 쓰기 권한 경로를 만들기 전에 scope가 필요하다.
 - Write Authorization은 durable하고 single-use다.
 - `record_run`은 Write Authorization을 소비하고 observed work를 기록한다.
 - Registered artifact/evidence ref 하나가 recorded Run을 support할 수 있다.

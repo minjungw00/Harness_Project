@@ -66,6 +66,7 @@ The Engineering Checkpoint and MVP-1 reference path can use these controls witho
 - single-use internal Write Authorization record returned by `prepare_write` and consumed by a compatible `record_run`; this is a cooperative Harness record/check, not OS-level permission or sandboxing
 - stale context blockers or warnings for stale projections, stale sensitive-action permissions or later Approval records, stale baselines, stale connector profiles, stale evaluator bundles, and stale retrieved context
 - fail-closed authority claims when MCP/Core is unavailable
+- status and `prepare_write` outputs that display the actual guarantee level, or a clear unavailable/capability condition when Core cannot answer
 - cooperative/detective blocker display that says what Core cannot confirm against current scope/state or what the surface can detect, without implying physical pre-tool enforcement
 
 These controls can refuse Core state changes, keep authority claims from being invented, or make inconsistencies visible. By default they do not physically prevent arbitrary local processes or tools from writing files.

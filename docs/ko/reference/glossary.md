@@ -587,7 +587,7 @@ Design-quality policies가 사용하는 standard form입니다. `name`, `applies
 
 ### Preventive Guarantee
 
-하네스 또는 connector가 violating action을 execution 전에 block할 수 있는 예방형(preventive) guarantee level입니다.
+하네스 또는 connector가 covered violating action을 실행 전에 차단할 수 있는 예방형(preventive) guarantee level입니다. 해당 exact path에 대한 owner-defined mechanism과 fixture proof가 있어야 합니다. 이 label은 무엇이 covered인지 이름 붙여야 하며, 임의 도구 차단, OS sandboxing, 권한 격리, 변조 방지 storage, 더 넓은 authority를 뜻하지 않습니다.
 
 ### Product Repository
 

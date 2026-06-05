@@ -66,6 +66,7 @@ Core unavailable, local access denied, stale state, unsupported surface, 범위 
 - `prepare_write`가 반환하고 compatible `record_run`이 consume하는 1회용 내부 Write Authorization record. 이는 하네스 수준의 협력형 확인 기록이며 OS 권한이나 sandboxing이 아닙니다.
 - 오래된 민감 동작 permission 또는 later Approval record, projection, baseline, connector profile, evaluator bundle, retrieved context에 대한 stale context blocker 또는 warning
 - MCP/Core를 사용할 수 없을 때 authority claim을 fail closed로 처리
+- status와 `prepare_write` output에 실제 guarantee level을 표시하고, Core가 답할 수 없으면 분명한 unavailable/capability condition을 표시
 - Core가 현재 범위/상태와 맞는지 확인할 수 없는 것 또는 surface가 탐지할 수 있는 것을 보여 주되 물리적 pre-tool enforcement를 암시하지 않는 cooperative/detective blocker display
 
 이 통제들은 Core state change를 거부하거나, authority claim이 만들어지지 않게 하거나, inconsistency를 보이게 할 수 있습니다. 기본 reference path에서는 임의의 로컬 프로세스나 도구가 파일을 쓰는 일을 물리적으로 막지 않습니다.

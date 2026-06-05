@@ -164,7 +164,7 @@ Always-on agent context should fit on one screen or less and include only:
 - evidence gaps
 - close blockers
 - residual-risk summary
-- guarantee level
+- guarantee level, or the unavailable/capability condition when Core or required MCP cannot answer
 - source refs and freshness
 
 Do not push by default: full Reference docs, full schemas, full Storage DDL, complete history, historical event logs, full projection bodies, full artifact contents, raw logs/screenshots/diffs/traces, full templates, unrelated templates, future catalogs, old task history, or unrelated Roadmap material.

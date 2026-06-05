@@ -45,6 +45,8 @@ flowchart LR
 
 이 diagram은 reader aid입니다. Exact state transition, schema, DDL, error, projection rule은 Reference 담당 문서에 남습니다.
 
+이 diagram의 `호환됨`과 `막힘`은 하네스 권한 결과입니다. Active profile이 더 강한 mechanism을 이름 붙이고 증명하지 않는 한 OS 권한, 임의 도구 차단, sandbox 격리, 물리적 도구 실행 전 차단을 뜻하지 않습니다. Status와 쓰기 확인 output은 현재 보장 수준이나 분명한 unavailable/capability condition을 보여줘야 합니다.
+
 ## 단계별 설계 경로
 
 ### 1. Request -> Task

@@ -115,7 +115,7 @@ Use this budget:
 8. Report status in compact display groups.
 9. Attempt close only after evidence, verification/QA expectations, final acceptance, residual-risk visibility, and close blockers are visible.
 
-Keep always-on agent context short: current task summary, work shape, scope/non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, residual-risk summary, guarantee level, and source refs/freshness. Pull schemas, reference sections, templates, logs, artifacts, and history only when the next action needs them.
+Keep always-on agent context short: current task summary, work shape, scope/non-goals, pending user judgments, active blockers, next safe actions, evidence gaps, close blockers, residual-risk summary, guarantee level or unavailable/capability condition, and source refs/freshness. Pull schemas, reference sections, templates, logs, artifacts, and history only when the next action needs them.
 
 ## 8. Pre-Write Scope Check
 
@@ -127,6 +127,7 @@ Show the user:
 - scope match or mismatch
 - pending user judgments or sensitive-action approvals
 - stale state, stale baseline, or unavailable authority
+- current guarantee level, or unavailable/capability condition when Core cannot answer
 - the smallest unblocker
 
 A compatible pre-write scope check is not OS permission, sandboxing, tamper-proof storage, arbitrary-tool isolation, or proof of pre-execution blocking. It is a Harness authority record/check for the intended write. If the intended paths, command, sensitive category, scope, or state changes, refresh the check before writing.
@@ -149,7 +150,7 @@ Do not call evidence sufficient unless the active owner path can establish suffi
 
 Status should answer the user's next question, not dump all Harness machinery.
 
-Use four compact display groups:
+Use five compact display groups:
 
 | Group | Show |
 |---|---|
@@ -157,6 +158,7 @@ Use four compact display groups:
 | User Judgments | Pending product, technical, scope, sensitive approval, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, or cancellation judgment. |
 | Evidence | What was checked, what supports the claim, and what is missing or stale. |
 | Close Readiness | What remains before verification, Manual QA, final acceptance, residual-risk visibility/acceptance, or close. |
+| Guarantee | The active guarantee level, or the unavailable/capability condition when Core or required MCP cannot answer. |
 
 Lead with the primary blocker and the smallest unblocker. Name whether the blocker is user-owned, agent-resolvable, or surface/system-owned. Do not ask the user to resolve something the agent can safely inspect, retry, refresh, or record.
 

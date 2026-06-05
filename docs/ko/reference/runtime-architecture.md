@@ -247,7 +247,7 @@ Adapters와 sidecars는 접점 capability를 observable facts로 번역합니다
 
 이 transaction 안에서 Core는 current-record update의 일부로 affected scope clock을 증가시킵니다. Task-scoped changes는 `tasks.state_version`을 증가시키고, Core-resolved primary Task가 없는 project-scoped changes는 `project_state.state_version`을 증가시킵니다. Event rows는 각 affected scope의 resulting state version을 기록합니다. State conflict와 idempotency replay 동작은 [API Errors: Idempotency](api/errors.md#idempotency)와 [State conflict behavior](api/errors.md#state-conflict-behavior)에 드러나는 public API 계약입니다.
 
-Projection 렌더링은 transaction 이후에 일어납니다. Projection failure는 state-isolated입니다. Projection 최신성 또는 job status를 `stale` 또는 `failed`로 표시하고 커밋된 상태는 그대로 둡니다. Projection은 transaction을 roll back하거나, `state.sqlite.task_events`를 rewrite하거나, passed task를 failed task로 바꾸거나, 나중의 reconcile decision 없이 기준 상태를 repair할 수 없습니다.
+Projection 렌더링은 transaction 이후에 일어납니다. Projection failure는 transaction 의미에서만 state-isolated입니다. Projection 최신성 또는 job status를 `stale` 또는 `failed`로 표시하고 커밋된 상태는 그대로 둡니다. 이것은 `isolated` 보안 보장이 아닙니다. Projection은 transaction을 roll back하거나, `state.sqlite.task_events`를 rewrite하거나, passed task를 failed task로 바꾸거나, 나중의 reconcile decision 없이 기준 상태를 repair할 수 없습니다.
 
 Projection freshness는 파생 read fact입니다. Status, next-action, export, operator command가 이를 확인해 readable view가 stale, failed, unknown이라고 보고할 수는 있지만, Core state, structured blockers, evidence records, 최종 수락, 잔여 위험 수락, Write Authorization의 authority는 각 owner record에 남습니다. 내부 엔지니어링 점검은 full projection worker를 증명하지 않고 freshness 또는 read fact를 노출할 수 있습니다. MVP-1은 현재 작업 상태, 사용자 판단 요청, 근거 요약, 닫기 준비 상태/blocker를 사용자가 이해할 만큼의 derived output이 필요하고, hardened 또는 operational profile은 complete projection/reconcile 및 diagnostic report path를 담당합니다.
 
@@ -312,6 +312,8 @@ Reconcile은 merge, reject, note로 convert, decision 생성, design support rec
 `cooperative`, `detective`, `preventive`, `isolated`의 정확한 의미와 이 label의 staged honest-display rule은 [보안 참조: 정직한 guarantee display](security.md#정직한-guarantee-display)가 담당합니다. 이 architecture section은 reported label이 runtime flow의 어디에 나타나는지만 담당합니다. Connector profile과 adapter가 이를 보고하고, Core는 여전히 authority decision을 수행하며, operator 또는 recovery surface는 이를 display와 risk context로 사용합니다.
 
 Architecture 관점의 stage default는 다음과 같습니다. 내부 엔지니어링 점검은 cooperative에 제한된 detective Core status behavior를 더한 수준, MVP-1은 사용자에게 보이는 blocker와 status를 포함한 cooperative/detective 수준, 보증 프로필은 verification, QA, risk, 최종 수락 분리를 위한 cooperative/detective assurance 수준, 운영 프로필은 operations, recovery, export, integrity check를 위한 detective 수준, 로드맵은 concrete operation 또는 boundary가 승격되고 증명된 곳에서만 preventive 또는 isolated profile입니다. 전체 표는 [보안 참조의 단계별 guarantee level](security.md#단계별-guarantee-level)이 담당합니다.
+
+Runtime 배치 요구사항은 status, 에이전트 맥락, `prepare_write` 접점이 current guarantee label을 담는 것입니다. Core가 답할 수 없으면 분명한 unavailable/capability condition을 담아야 합니다. 이 표시는 caller를 위한 risk context이며, authority를 만들거나 cooperative/detective path를 예방적 차단으로 올려 주지 않습니다.
 
 ### 보장 수준 동작 지도
 

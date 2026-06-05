@@ -47,7 +47,7 @@ MVP-1에서 사용자가 현재 상태를 짧게 읽어야 할 때 `status-card`
 설계 품질: {design_quality_routed_action|none}
 잔여 위험: {residual_risk_visibility|none}
 다음 안전한 행동: {next_safe_action}
-보장 수준: {guarantee_level}; {guarantee_note}
+보장 수준: {guarantee_level_or_unavailable}; {guarantee_note}
 출처/최신성: state={source_state_version}; refs={source_refs}; rendered={updated_at}; freshness={freshness_state}
 ````
 
@@ -56,5 +56,7 @@ MVP-1에서 사용자가 현재 상태를 짧게 읽어야 할 때 `status-card`
 상태 카드는 읽기 쉬워야 합니다. Schema, DDL, event log, 전체 artifact, 전체 report body, 전체 template, future catalog, 상세 Evidence Manifest 본문, 상세 Eval 본문, 전체 수동 QA record를 쏟아내지 않습니다.
 
 기준 기록이 없으면 상태를 만들어내지 말고 `none`, `unknown`, `not_required`, 또는 명시적인 막힘으로 렌더링합니다.
+
+보장 수준 줄은 항상 렌더링합니다. MVP-1 기본 동작에서는 실제 한계가 협력적 경계이면 지시로 보류한다고, 탐지적 검증이면 사후 보고라고 note에 적어야 합니다. Core/MCP가 unavailable이면 stale하거나 추측한 guarantee 대신 unavailable condition을 렌더링합니다.
 
 Design-quality 내용은 한 줄에 맞춥니다. 현재 routed action과, 차단일 때는 하나의 다음 행동만 보여줍니다. MVP-1 status card에는 full domain-language, module/interface, TDD, stewardship, feedback-loop, Manual QA, detached-verification catalog를 나열하지 않습니다.

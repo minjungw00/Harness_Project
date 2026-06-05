@@ -164,7 +164,7 @@ Manifest는 다음을 해야 합니다.
 - 근거 공백
 - 닫기 막힘
 - 잔여 위험 요약
-- 보장 수준
+- 보장 수준. Core 또는 필요한 MCP가 답할 수 없으면 unavailable/capability condition
 - 출처 참조와 최신성
 
 기본으로 push하지 않는 것: 전체 Reference 문서, 전체 schema, 전체 Storage DDL, complete history, historical event log, 읽기용 요약 전체 본문, artifact 전체 본문, raw log/screenshot/diff/trace, 전체 template, 관련 없는 template, future catalog, 오래된 task history, 관련 없는 Roadmap material.

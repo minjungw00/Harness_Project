@@ -236,6 +236,8 @@ Tests can pass while close is still blocked. A UI change may still need human QA
 
 Common status messages should be direct and non-alarming. Exact condition behavior is owned by [API Errors: MVP-1 guarantee and status taxonomy](../reference/api/errors.md#mvp-1-guarantee-and-status-taxonomy), but as a user you can read them this way:
 
+Status cards and pre-write checks should always show the active guarantee level, or a clear unavailable/capability condition when Core or required MCP cannot answer. In MVP-1, cooperative means the agent is being instructed to hold or proceed through the Harness record path; detective means Harness can report a mismatch after the surface observes it. Neither means Harness is automatically an OS sandbox.
+
 | Message | What it means for you |
 |---|---|
 | Harness/Core authority is unavailable. | The agent cannot confirm current Harness state, evidence, final acceptance, residual-risk acceptance, or close readiness. It can reconnect, diagnose, or continue outside Harness only if you explicitly choose that mode. |

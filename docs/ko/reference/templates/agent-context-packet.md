@@ -48,7 +48,7 @@ agent_context_packet:
   close: {close_blockers_and_acceptance_state}
   residual_risk: {residual_risk_summary}
   next_safe_action: {next_safe_action}
-  guarantee: {guarantee_level}
+  guarantee: {guarantee_level_or_unavailable}
   sources:
     state_version: {source_state_version}
     refs: {source_refs}
@@ -60,3 +60,5 @@ agent_context_packet:
 ## 메모
 
 에이전트 맥락 패킷은 한 화면 안팎으로 유지합니다. 전체 schema, 전체 Reference 문서, 전체 historical event log, raw artifact, 전체 report body, 전체 template, 관련 없는 template, full design-quality catalog, future catalog material을 기본으로 넣지 않습니다.
+
+보장 수준 field는 필수 맥락입니다. Core/MCP가 unavailable이면 unavailable/capability condition을 넣고, refresh 전까지 하네스에 의존하는 state, write, evidence, 최종 수락, 잔여 위험, close claim을 unavailable로 다룹니다.

@@ -131,6 +131,8 @@ StatusResponse:
 
 `status_card`는 current Core state와 ref에서 만든 짧은 읽기용 보기입니다. Compact하게 유지하고 source/freshness 정보를 보여줘야 합니다. 전체 schema, DDL, history, template, projection body, artifact body, log, future catalog를 넣으면 안 됩니다. Core 상태가 아니며 민감 동작 승인, 최종 수락, 잔여 위험 수락, 근거, 닫기 준비 상태, Write Authorization, close를 만들 수 없습니다.
 
+Core가 답할 수 있으면 `StatusResponse`는 항상 `guarantee_display.level`을 보여줘야 합니다. `include.guarantees=false`는 optional note나 확장 capability detail을 줄일 수 있지만, active guarantee level을 숨기면 안 됩니다. Core가 답할 수 없으면 authoritative state mutation claim을 할 수 없다는 분명한 `MCP_UNAVAILABLE`/capability condition을 보여줘야 합니다.
+
 `next_actions`가 MVP-1의 다음 안전한 행동 surface입니다. 사용자에게는 가장 작은 useful next action이나 unblocker를 쉬운 말로 보여 주고, exact enum value는 secondary detail로 둡니다.
 
 `evidence_summary`는 Core가 소유한 compact MVP-1 evidence summary입니다. `evidence_refs`는 active minimal evidence coverage ref를 담습니다. 보통 `StateRecordRef.record_kind=evidence_summary`를 사용하며, nested schema가 허용하는 곳에서는 artifact ref도 함께 둡니다. 이 field들은 full Evidence Manifest table이나 report가 아니며, verification, 수동 QA, 최종 수락, 잔여 위험 수락, close를 대신하지 않습니다.
@@ -201,6 +203,8 @@ PrepareWriteResponse:
 ```
 
 `decision=allowed`이고 `dry_run=false`이면 `write_authorization_ref`와 active `write_authorization`이 있어야 합니다. `dry_run=true`에서는 `authorization_effect=would_create`를 반환할 수 있지만 authorization을 만들지 않습니다. 여기서 `allowed`는 이 API path에서 현재 하네스 기록과 맞는다는 뜻이지 OS 권한이나 실행 전 차단이 아니며, durable Write Authorization lifecycle status도 아닙니다. `decision`이 `allowed`가 아닌 response는 Write Authorization을 포함하면 안 됩니다.
+
+Core가 답할 수 있으면 `PrepareWriteResponse`는 항상 `guarantee_display.level`을 포함해야 합니다. `cooperative` 또는 `detective` level은 접점이 지시로 보류하거나 가능한 경우 사후 탐지를 보고해야 한다는 뜻입니다. 임의 도구를 예방적으로 차단했다는 주장이 아닙니다. Core 또는 필요한 MCP access를 사용할 수 없으면 response는 [Errors](errors.md)를 따르며, Write Authorization, task event, artifact, projection job, authoritative state-mutation claim을 만들면 안 됩니다.
 
 `approval_request_candidate`와 `user_judgment_candidate`는 non-mutating candidate payload입니다. 이것만으로 user judgment, Approval record, Write Authorization, projection을 만들지 않습니다.
 

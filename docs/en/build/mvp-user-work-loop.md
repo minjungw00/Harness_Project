@@ -59,6 +59,7 @@ MVP-1 includes:
 - `record_run` plus registered artifact/evidence refs or the minimum evidence summary path
 - Core-owned `evidence_summary` with the minimum states `not_required`, `none`, `partial`, `sufficient`, `stale`, and `blocked`
 - status and next-safe-action output through `harness.status.next_actions`
+- guarantee display in status and `prepare_write` output, or a clear unavailable/capability equivalent when Core cannot answer
 - evidence summary and evidence-gap display
 - close blocker summary when required evidence is insufficient, required user judgment is unresolved or blocked, required final acceptance is missing, or residual risk is not visible/accepted as required
 - residual-risk visibility before acceptance or close when close-relevant risk exists
@@ -123,6 +124,7 @@ It can:
 - require Core-compatible records before Harness-compatible product writes are recorded
 - return structured blockers for missing scope, missing judgment, missing evidence, stale state, unavailable Core/MCP, or close blockers
 - show honest guarantee status and evidence/risk gaps
+- include the active guarantee level or clear unavailable/capability equivalent in user-visible status and write-check responses
 - ask connected agents or surfaces to hold by instruction when the Harness record/check path is unavailable or incompatible
 
 It must not claim:
@@ -190,6 +192,7 @@ MVP-1 User Work Loop can be considered complete only when a user can observe:
 - compatible pre-write scope checks through Core
 - recorded Run and evidence refs or evidence summaries
 - current status, next safe action, evidence gaps, close blockers, and residual-risk visibility
+- guarantee level or unavailable/capability status shown in the current status or write-check result
 - close held when required evidence is not `sufficient`, required user judgment is unresolved or blocked, required final acceptance is missing, or residual risk is not visible/accepted as required
 - no fabricated authority when MCP/Core is unavailable
 - compact views derived from Core records, with stale or failed freshness visible where applicable

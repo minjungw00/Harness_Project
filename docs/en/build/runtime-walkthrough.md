@@ -45,6 +45,8 @@ flowchart LR
 
 This diagram is a reader aid. Exact state transitions, schemas, DDL, errors, and projection rules stay in the Reference owners.
 
+In the diagram, `compatible` and `blocked` are Harness authority results. They do not mean OS permission, arbitrary-tool prevention, sandbox isolation, or physical pre-tool blocking unless the active profile names and proves that stronger mechanism. Status and write-check outputs should show the current guarantee level or the clear unavailable/capability condition.
+
 ## Step-by-step design path
 
 ### 1. Request -> Task

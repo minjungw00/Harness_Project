@@ -47,7 +47,7 @@ Close: {close_readiness_summary}; blockers={close_blockers|none}
 Design quality: {design_quality_routed_action|none}
 Residual risk: {residual_risk_visibility|none}
 Next safe action: {next_safe_action}
-Guarantee: {guarantee_level}; {guarantee_note}
+Guarantee: {guarantee_level_or_unavailable}; {guarantee_note}
 Sources/freshness: state={source_state_version}; refs={source_refs}; rendered={updated_at}; freshness={freshness_state}
 ````
 
@@ -56,5 +56,7 @@ Sources/freshness: state={source_state_version}; refs={source_refs}; rendered={u
 Keep this card readable. Do not dump schemas, DDL, event logs, full artifacts, full report bodies, full templates, future catalogs, detailed Evidence Manifest bodies, detailed Eval bodies, or full Manual QA records.
 
 When a field has no source record, render `none`, `unknown`, `not_required`, or an explicit blocker instead of inventing state.
+
+Always render the guarantee line. For MVP-1 default behavior, the note should say cooperative hold or detective reporting when that is the actual limit. If Core/MCP is unavailable, render the unavailable condition instead of a stale or guessed guarantee.
 
 Design-quality content should fit one line: the current routed action and, when blocking, the single next action. Do not list full domain-language, module/interface, TDD, stewardship, feedback-loop, Manual QA, or detached-verification catalogs in the MVP-1 status card.

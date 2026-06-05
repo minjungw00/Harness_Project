@@ -48,7 +48,7 @@ agent_context_packet:
   close: {close_blockers_and_acceptance_state}
   residual_risk: {residual_risk_summary}
   next_safe_action: {next_safe_action}
-  guarantee: {guarantee_level}
+  guarantee: {guarantee_level_or_unavailable}
   sources:
     state_version: {source_state_version}
     refs: {source_refs}
@@ -60,3 +60,5 @@ agent_context_packet:
 ## Notes
 
 Keep the packet one screen or less. Do not include full schemas, full reference docs, full historical event logs, raw artifacts, full report bodies, full templates, unrelated templates, full design-quality catalogs, or future catalog material by default.
+
+The guarantee field is required context. If Core/MCP is unavailable, set it to the unavailable/capability condition and treat Harness-dependent state, write, evidence, acceptance, residual-risk, and close claims as unavailable until refreshed.
