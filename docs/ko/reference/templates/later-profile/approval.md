@@ -19,7 +19,7 @@
 - 기준선, 만료 조건, 대안, 결정 메모
 - 경계 맥락으로 표시될 때 관련 쓰기 승인 기록(Write Authorization), 아티팩트 참조, `redaction_state`, 읽기용 보기 최신성(projection freshness)
 
-`prepare_write`가 반환한 상태를 변경하지 않는 `approval_request_candidate`는 `APR` 출처가 아닙니다. 표시가 필요하면 후보 표시로만 보여줍니다.
+`prepare_write`가 반환한 `judgment_kind=sensitive_approval`의 상태를 변경하지 않는 `user_judgment_candidate`는 `APR` 출처가 아닙니다. 표시가 필요하면 후보 표시로만 보여줍니다.
 
 경계 요약은 민감 동작 승인(Approval) 범위, 연결된 민감 동작 승인(Approval) 기록, 관련 사용자 판단 참조, 현재 쓰기 또는 닫기 맥락에서 파생한 표시 블록입니다. 나중의 민감 동작 승인(Approval) 프로필에서 사용자에게 경계를 다시 알려주는 표시이며, 독립된 권한 출처나 관문이 아닙니다.
 

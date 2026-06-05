@@ -144,6 +144,7 @@ RecordRunRequest later-profile extension:
   kind: verification_input
 
 RecordRunPayload later-profile extensions:
+  kind: verification_input
   verification_input: VerificationInputPayload | null
 
 ShapingUpdatePayload later-profile extensions:
@@ -191,14 +192,22 @@ RecordRunResponse later-profile extensions:
   updated_feedback_loop_refs: StateRecordRef[]
 ```
 
+나중 프로필이 `verification_input`을 활성화해도 [Schema Core: Record-run payloads](schema-core.md#record-run-payloads)의 일대일 branch rule은 그대로 적용됩니다. `RecordRunRequest.kind`, `RecordRunPayload.kind`, non-null branch가 서로 맞아야 합니다.
+
 ## Later user judgment branches
 
-이 branch는 waiver, reconcile, richer assurance profile이 active일 때만 `UserJudgmentPayload`를 확장합니다.
+이 branch는 waiver, reconcile, residual-risk, 더 풍부한 assurance profile이 active일 때만 `UserJudgmentPayload`와 활성 residual-risk acceptance input을 확장합니다.
 
 ```yaml
 UserJudgmentPayload later-profile extensions:
   waiver: WaiverJudgment | null
   reconcile: ReconcileJudgment | null
+
+AcceptedRiskInput later-profile extensions:
+  residual_risk_ref: StateRecordRef | null
+  residual_risk_status: visible | accepted | blocked | superseded | stale | null
+  owner_review_refs: StateRecordRef[]
+  expires_at: string | null
 
 WaiverJudgment:
   skipped_check: string

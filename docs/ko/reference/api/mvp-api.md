@@ -199,7 +199,6 @@ PrepareWriteResponse:
       message: string
       related_error: ErrorCode
       required_judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation | null
-  approval_request_candidate: ApprovalRequestCandidate | null
   user_judgment_candidate: UserJudgmentCandidate | null
   guarantee_display:
     level: cooperative | detective | preventive | isolated
@@ -210,7 +209,7 @@ PrepareWriteResponse:
 
 Core가 답할 수 있으면 `PrepareWriteResponse`는 항상 `guarantee_display.level`을 포함해야 합니다. `cooperative` 또는 `detective` level은 접점이 지시로 보류하거나 가능한 경우 사후 탐지를 보고해야 한다는 뜻입니다. 임의 도구를 예방적으로 차단했다는 주장이 아닙니다. Core, 필요한 MCP access, required surface capability를 사용할 수 없으면 response는 [Errors](errors.md)를 따르며, Write Authorization, task event, artifact, projection job, authoritative state-mutation claim을 만들면 안 됩니다. `pre_tool_blocking_supported=false`이면 `preventive` claim을 할 수 없고, `isolation_supported=false`이면 `isolated` claim을 할 수 없습니다.
 
-`approval_request_candidate`와 `user_judgment_candidate`는 non-mutating candidate payload입니다. 이것만으로 user judgment, Approval record, Write Authorization, projection을 만들지 않습니다.
+`user_judgment_candidate`는 상태를 변경하지 않는 [`UserJudgmentCandidate`](schema-core.md#userjudgmentcandidate)입니다. 이것만으로 user judgment, Approval record, Write Authorization, projection을 만들지 않습니다. 민감 동작 승인이 필요하면 MVP-1은 `judgment_kind=sensitive_approval`와 `judgment_payload.approval_scope`를 가진 `user_judgment_candidate`를 반환합니다. 활성 MVP-1에는 `ApprovalRequestCandidate` field나 committed Approval request lifecycle이 없습니다.
 
 Committed `dry_run=false` `decision=allowed` response를 exact idempotent replay하면 original response와 original `write_authorization_ref`를 `authorization_effect=returned`로 반환합니다. 두 번째 Write Authorization을 만들거나 event를 다시 append하면 안 됩니다. 같은 key를 다른 canonical request hash로 replay하면 `STATE_CONFLICT`를 반환합니다.
 
@@ -244,6 +243,7 @@ RecordRunRequest:
   payload: RecordRunPayload
 
 RecordRunPayload:
+  kind: shaping_update | implementation | direct
   shaping_update: ShapingUpdatePayload | null
   implementation: ImplementationPayload | null
   direct: DirectPayload | null
@@ -261,7 +261,7 @@ RecordRunResponse:
   next_action: string
 ```
 
-`payload` branch는 `kind`와 일치해야 합니다. MVP-1은 `shaping_update`, `implementation`, `direct`를 허용합니다. `verification_input`은 later-profile only입니다.
+`RecordRunPayload`, `ShapingUpdatePayload`, `ImplementationPayload`, `DirectPayload`는 [Schema Core: Record-run payloads](schema-core.md#record-run-payloads)가 정의합니다. `RecordRunRequest.kind`, `RecordRunPayload.kind`, non-null payload branch는 서로 일대일로 맞아야 합니다. MVP-1은 정확히 `shaping_update`, `implementation`, `direct`만 허용합니다. `verification_input`은 later-profile only입니다.
 
 `evidence_ref`는 active minimal evidence coverage record를 가리킵니다. 보통 `StateRecordRef.record_kind=evidence_summary`를 사용합니다. `evidence_summary`는 Run이 기록된 뒤의 current Core-owned compact summary를 반환합니다. 같은 operation이 반환하는 durable byte는 `registered_artifacts`에 나타납니다. Markdown summary나 projection text는 canonical evidence state가 아닙니다.
 
@@ -365,6 +365,8 @@ RecordUserJudgmentResponse:
 `judgment_kind`는 저장된 `UserJudgment`와 일치해야 합니다. "yes, do it", "go ahead", "looks good", "진행해" 같은 free-form note는 pending judgment가 그 `judgment_kind`를 명시적으로 묻고, affected object와 scope가 맞으며, 기록된 사용자 intent가 allowed value와 맞을 때만 민감 동작 승인, 최종 수락, 잔여 위험 수락, QA 면제 판단, 검증 위험 수락, 취소 판단, 범위 변경, 쓰기 전 범위 확인 호환성과 연결될 수 있습니다.
 
 MVP-1에서 `accepted_risk_refs`는 해당 close path에서 risk가 보였고 수락됐음을 보여주는 `user_judgment`와 `blocker` ref를 포함합니다. Rich `residual_risk` ref는 later/profile-promoted입니다. 별도 accepted-risk record kind는 없습니다.
+
+`accepted_risks`는 `judgment_kind=residual_risk_acceptance`일 때만 [`AcceptedRiskInput`](schema-core.md#acceptedriskinput)을 사용합니다. 다른 모든 judgment kind에서는 `[]`여야 합니다. Rich residual-risk lifecycle metadata는 later/profile-gated로 남습니다.
 
 <a id="harnessclose_task"></a>
 

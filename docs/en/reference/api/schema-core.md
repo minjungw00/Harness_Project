@@ -267,6 +267,7 @@ These tables summarize the separated schemas. The active MVP-1 values in the lef
 |---|---|---|
 | `ArtifactInput.relation.record_kind`, `ArtifactRef.relation_owner.record_kind` | `task`, `change_unit`, `run`, `user_judgment`, `evidence_summary`, `blocker` | `residual_risk`, `shared_design`, `evidence_manifest`, `eval`, `manual_qa_record`, `feedback_loop`, `tdd_trace`, `projection`, `journey_spine_entry` |
 | `StateRecordRef.record_kind` | `task`, `change_unit`, `run`, `write_authorization`, `user_judgment`, `evidence_summary`, `blocker` | `approval`, `residual_risk`, `close_readiness`, `shared_design`, `domain_term`, `module_map_item`, `interface_contract`, `feedback_loop`, `evidence_manifest`, `eval`, `manual_qa_record`, `tdd_trace`, `change_unit_dependency`, `reconcile_item`, `projection` |
+| `RecordRunRequest.kind`, `RecordRunPayload.kind` | `shaping_update`, `implementation`, `direct` | `verification_input` |
 
 MVP-1 sensitive-action approval uses `record_kind=user_judgment`. Committed `approval` refs are later-profile unless the Approval owner profile is active.
 
@@ -558,6 +559,191 @@ CancellationJudgment:
 ```
 
 For `judgment_kind=sensitive_approval`, `approval_scope` is required. For `judgment_kind=qa_waiver`, `qa_waiver` is required and policy must allow the waiver. For `judgment_kind=verification_risk_acceptance`, `verification_risk_acceptance` is required and must not set `assurance_level=detached_verified`. For `judgment_kind=final_acceptance`, `acceptance` is required. For `judgment_kind=residual_risk_acceptance`, `residual_risk_acceptance` is required. For `judgment_kind=cancellation`, `cancellation` is required. Later reconcile branches live in [Schema Later](schema-later.md#later-user-judgment-branches).
+
+<a id="userjudgmentcandidate"></a>
+
+### UserJudgmentCandidate
+
+`UserJudgmentCandidate` is a non-mutating candidate returned by read or validation paths when a user-owned judgment is needed before progress, write compatibility, or close can continue. It is not a committed `user_judgment` record, has no `StateRecordRef`, does not satisfy `decision_gate` or `approval_gate`, and does not create sensitive-action permission, final acceptance, residual-risk acceptance, evidence, Write Authorization, projection, or close state.
+
+```yaml
+UserJudgmentCandidate:
+  candidate_id: string
+  task_id: string
+  change_unit_id: string | null
+  judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation
+  presentation: short | full
+  display_label: Product decision | Technical decision | Scope decision | Sensitive action approval | QA waiver | Verification risk acceptance | Final acceptance | Residual risk acceptance | Cancellation
+  context:
+    why_now: string
+    source_refs: StateRecordRef[]
+    evidence_refs: EvidenceRefs
+  state_summary_at_request: StateSummary | null
+  question: string
+  what_user_is_judging: string
+  why_agent_cannot_decide: string
+  no_decision_consequence: string
+  what_agent_may_decide_without_user: string[]
+  affected_scope: UserJudgmentScope
+  affected_gates: UserJudgmentGateRef[]
+  affected_acceptance_criteria: UserJudgmentCriterionRef[]
+  judgment_payload: UserJudgmentPayload
+  expires_at: string | null
+```
+
+The candidate body is the schema-normalized draft for a subsequent `harness.request_user_judgment` call after the caller supplies a fresh `ToolEnvelope` and Core revalidates current state. For `judgment_kind=sensitive_approval`, the candidate uses `judgment_payload.approval_scope`; there is no active MVP-1 `ApprovalRequestCandidate` or committed Approval request lifecycle.
+
+<a id="acceptedriskinput"></a>
+
+### AcceptedRiskInput
+
+`AcceptedRiskInput` is accepted only by `harness.record_user_judgment` when `judgment_kind=residual_risk_acceptance`. It records the user's explicit acceptance of named close-relevant risk that was already visible in the pending `UserJudgment` context. It is not a standalone accepted-risk record kind and does not create rich Residual Risk lifecycle metadata in minimum MVP-1.
+
+```yaml
+AcceptedRiskInput:
+  visible_risk_ref: StateRecordRef
+  risk_summary: string
+  accepted_scope: string[]
+  acceptance_consequence: string
+  evidence_refs: EvidenceRefs
+  follow_up_required: boolean
+  follow_up: string | null
+```
+
+For active MVP-1, `visible_risk_ref.record_kind` must be `blocker`. The blocker must be close-relevant, visible in the pending residual-risk acceptance `UserJudgment`, and scoped to the same Task. `accepted_risks` must be `[]` for every other `judgment_kind`. Rich residual-risk owner refs, lifecycle status, review metadata, and accepted-risk metadata are later/profile material in [Schema Later](schema-later.md#later-user-judgment-branches).
+
+<a id="record-run-payloads"></a>
+
+## Record-run payloads
+
+These are the active payload branches for `harness.record_run`. The top-level `RecordRunRequest.kind`, `RecordRunPayload.kind`, and the non-null payload branch must match one-to-one. Exactly one of `shaping_update`, `implementation`, or `direct` is non-null. The other branch fields must be `null`. No other branch kind is valid in active MVP-1.
+
+```yaml
+RecordRunPayload:
+  kind: shaping_update | implementation | direct
+  shaping_update: ShapingUpdatePayload | null
+  implementation: ImplementationPayload | null
+  direct: DirectPayload | null
+
+ShapingUpdatePayload:
+  shaping_kind: requirements | scope | acceptance_criteria | constraint | judgment_routing
+  task_update: TaskShapingUpdate | null
+  change_unit_update: ChangeUnitShapingUpdate | null
+  user_judgment_candidates: UserJudgmentCandidate[]
+  discovered_facts: string[]
+  assumptions: string[]
+  open_questions: string[]
+  source_refs: StateRecordRef[]
+  evidence_refs: EvidenceRefs
+
+TaskShapingUpdate:
+  title: string | null
+  goal: string | null
+  mode: advisor | direct | work | null
+  acceptance_criteria: string[]
+  constraints:
+    allowed_paths: string[]
+    non_goals: string[]
+    sensitive_categories: string[]
+
+ChangeUnitShapingUpdate:
+  change_unit_id: string | null
+  operation: propose | activate | update | supersede
+  scope_summary: string
+  allowed_paths: string[]
+  denied_paths: string[]
+  non_goals: string[]
+  success_criteria: string[]
+  sensitive_categories: string[]
+  baseline_ref: string | null
+  autonomy_boundary: AutonomyBoundaryUpdate | null
+
+AutonomyBoundaryUpdate:
+  autonomy_profile: human_in_loop | afk_eligible | evaluator_only | read_only_advisor | null
+  what_agent_may_do: string[]
+  what_agent_may_decide_without_user: string[]
+  what_requires_user_judgment: string[]
+  stop_conditions: string[]
+
+ImplementationPayload:
+  outcome: completed | partial | blocked | failed
+  product_write: boolean
+  observed_changes: ObservedChanges
+  command_results: CommandResult[]
+  tool_invocations: ToolInvocationSummary[]
+  secret_accesses: SecretAccessObservation[]
+  evidence_updates: EvidenceUpdates
+  implementation_notes: string[]
+  follow_up_needed: string[]
+
+DirectPayload:
+  result_kind: answer | product_write | no_change | blocked
+  product_write: boolean
+  direct_summary: string
+  observed_changes: ObservedChanges
+  command_results: CommandResult[]
+  tool_invocations: ToolInvocationSummary[]
+  secret_accesses: SecretAccessObservation[]
+  evidence_updates: EvidenceUpdates
+  user_visible_result: string
+  follow_up_needed: string[]
+
+ObservedChanges:
+  changed_paths: ChangedPath[]
+  diff_artifact_input_ids: string[]
+  no_product_changes: boolean
+
+ChangedPath:
+  path: string
+  change_kind: added | modified | deleted | moved | copied | permission_changed | unknown
+  product_file: boolean
+  within_change_unit: boolean
+  before_sha256: string | null
+  after_sha256: string | null
+
+CommandResult:
+  command: string
+  command_class: string
+  exit_code: integer | null
+  status: succeeded | failed | blocked | skipped | unknown
+  writes_product_files: boolean
+  started_at: string | null
+  completed_at: string | null
+  artifact_input_ids: string[]
+  summary: string | null
+
+ToolInvocationSummary:
+  tool_name: string
+  purpose: string
+  status: succeeded | failed | blocked | skipped | unknown
+  artifact_input_ids: string[]
+  summary: string | null
+
+SecretAccessObservation:
+  secret_handle: string
+  access_kind: read | write
+  observed: boolean
+  approved_by_ref: StateRecordRef | null
+  note: string | null
+
+EvidenceUpdates:
+  coverage_updates: EvidenceCoverageUpdate[]
+  gap_blocker_refs: StateRecordRef[]
+  summary: string
+
+EvidenceCoverageUpdate:
+  claim_or_criterion: string
+  coverage_state: supported | unsupported | partial | not_applicable | stale | blocked
+  supporting_state_refs: StateRecordRef[]
+  supporting_artifact_input_ids: string[]
+  note: string | null
+```
+
+`ShapingUpdatePayload` is the active MVP payload for Discovery and requirements-shaping updates that persist into active Task, Change Unit, or User Judgment boundaries. It does not create Shared Design, Feedback Loop, TDD Trace, Evidence Manifest, Projection, Approval, Residual Risk, or other later/profile records. At least one of `task_update`, `change_unit_update`, or `user_judgment_candidates` must carry a non-empty update.
+
+`ImplementationPayload` records implementation work against a Task or Change Unit. When `product_write=true`, `RecordRunRequest.write_authorization_id` must name a compatible active Write Authorization and `observed_changes.changed_paths` must describe the observed product-file changes. The request body, including `observed_changes`, `command_results`, `tool_invocations`, `secret_accesses`, `artifact_inputs`, and `evidence_updates`, is part of request validation and the canonical idempotency hash. Storage maps the payload into the Run row's `observed_changes_json`, `command_results_json`, linked artifacts, and evidence-summary updates.
+
+`DirectPayload` records a small direct result, including direct no-change or answer-only work. If `result_kind=product_write` or `product_write=true`, it follows the same Write Authorization, observed-change, artifact, and evidence validation rules as `ImplementationPayload`. If `product_write=false`, `write_authorization_id` must be `null` and `observed_changes.no_product_changes` must be `true`.
 
 ## NextActionSummary
 

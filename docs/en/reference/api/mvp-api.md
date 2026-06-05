@@ -199,7 +199,6 @@ PrepareWriteResponse:
       message: string
       related_error: ErrorCode
       required_judgment_kind: product_decision | technical_decision | scope_decision | sensitive_approval | qa_waiver | verification_risk_acceptance | final_acceptance | residual_risk_acceptance | cancellation | null
-  approval_request_candidate: ApprovalRequestCandidate | null
   user_judgment_candidate: UserJudgmentCandidate | null
   guarantee_display:
     level: cooperative | detective | preventive | isolated
@@ -210,7 +209,7 @@ PrepareWriteResponse:
 
 `PrepareWriteResponse` must include `guarantee_display.level` whenever Core can answer. A cooperative or detective level means the surface must hold by instruction or report after-action detection as applicable; it is not a claim that arbitrary tools were prevented. If Core, required MCP access, or a required surface capability is unavailable, the response follows [Errors](errors.md) and must not create a Write Authorization, task event, artifact, projection job, or any authoritative state-mutation claim. `pre_tool_blocking_supported=false` prevents a `preventive` claim, and `isolation_supported=false` prevents an `isolated` claim.
 
-`approval_request_candidate` and `user_judgment_candidate` are non-mutating candidate payloads. They do not create user judgments, Approval records, Write Authorizations, or projections.
+`user_judgment_candidate` is a non-mutating [`UserJudgmentCandidate`](schema-core.md#userjudgmentcandidate). It does not create a user judgment, Approval record, Write Authorization, or projection. If sensitive-action permission is required, MVP-1 returns a `user_judgment_candidate` with `judgment_kind=sensitive_approval` and `judgment_payload.approval_scope`; there is no active MVP-1 `ApprovalRequestCandidate` field or committed Approval request lifecycle.
 
 An exact idempotent replay of a committed non-dry-run `decision=allowed` response returns the original response and original `write_authorization_ref` with `authorization_effect=returned`; it must not create a second Write Authorization or append another event. A same-key replay with a different canonical request hash returns `STATE_CONFLICT`.
 
@@ -244,6 +243,7 @@ RecordRunRequest:
   payload: RecordRunPayload
 
 RecordRunPayload:
+  kind: shaping_update | implementation | direct
   shaping_update: ShapingUpdatePayload | null
   implementation: ImplementationPayload | null
   direct: DirectPayload | null
@@ -261,7 +261,7 @@ RecordRunResponse:
   next_action: string
 ```
 
-The payload branch must match `kind`. MVP-1 accepts `shaping_update`, `implementation`, and `direct`; `verification_input` is later-profile only.
+`RecordRunPayload`, `ShapingUpdatePayload`, `ImplementationPayload`, and `DirectPayload` are defined in [Schema Core: Record-run payloads](schema-core.md#record-run-payloads). `RecordRunRequest.kind`, `RecordRunPayload.kind`, and the one non-null payload branch must match one-to-one. MVP-1 accepts exactly `shaping_update`, `implementation`, and `direct`; `verification_input` is later-profile only.
 
 `evidence_ref` points to the active minimal evidence coverage record, normally `StateRecordRef.record_kind=evidence_summary`, and `evidence_summary` returns the current Core-owned compact summary after the Run is recorded. Durable bytes returned by the same operation appear in `registered_artifacts`; Markdown summaries or projection text do not become canonical evidence state.
 
@@ -365,6 +365,8 @@ RecordUserJudgmentResponse:
 `judgment_kind` must match the stored `UserJudgment`. Free-form notes such as "yes, do it," "go ahead," or "looks good" cannot broaden the answer into sensitive-action approval, final acceptance, residual-risk acceptance, QA waiver, verification-risk acceptance, cancellation, scope change, or pre-write scope-check compatibility unless the pending judgment explicitly asks for that `judgment_kind`, the affected object and scope match, and the recorded user intent matches its allowed value.
 
 In MVP-1, `accepted_risk_refs` contain the `user_judgment` and `blocker` refs that show the risk was visible and accepted for this close path. Rich `residual_risk` refs are later/profile-promoted; there is no standalone accepted-risk record kind.
+
+`accepted_risks` uses [`AcceptedRiskInput`](schema-core.md#acceptedriskinput) only when `judgment_kind=residual_risk_acceptance`; it must be `[]` for every other judgment kind. Rich residual-risk lifecycle metadata stays later/profile-gated.
 
 <a id="harnessclose_task"></a>
 

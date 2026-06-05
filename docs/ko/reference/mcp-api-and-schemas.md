@@ -85,6 +85,15 @@ Sensitive Categories: [Schema Core: Sensitive Categories](api/schema-core.md#sen
 <a id="artifactref"></a>
 ArtifactRef: [Schema Core: ArtifactRef](api/schema-core.md#artifactref).
 
+<a id="userjudgmentcandidate"></a>
+UserJudgmentCandidate: [Schema Core: UserJudgmentCandidate](api/schema-core.md#userjudgmentcandidate).
+
+<a id="acceptedriskinput"></a>
+AcceptedRiskInput: [Schema Core: AcceptedRiskInput](api/schema-core.md#acceptedriskinput).
+
+<a id="record-run-payloads"></a>
+Record-run payloads: [Schema Core: Record-run payloads](api/schema-core.md#record-run-payloads).
+
 <a id="validatorresult"></a>
 ValidatorResult: [Schema Core: ValidatorResult](api/schema-core.md#validatorresult).
 

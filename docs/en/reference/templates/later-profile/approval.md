@@ -19,7 +19,7 @@ Implementation tier: Assurance Profile reports. `APR` is used only after committ
 - baseline, expiry, alternatives, and decision note
 - related Write Authorization, artifact refs, `redaction_state`, and projection freshness when displayed as boundary context
 
-A non-mutating `approval_request_candidate` returned by `prepare_write` is not an `APR` source and must be displayed, if at all, as candidate display.
+A non-mutating `user_judgment_candidate` with `judgment_kind=sensitive_approval` returned by `prepare_write` is not an `APR` source and must be displayed, if at all, as candidate display.
 
 Boundary Summary is a derived display block from approval scope, linked Approval records, related user judgment refs, and current write or close context. It is a user-facing boundary reminder, not an independent authority source or gate.
 

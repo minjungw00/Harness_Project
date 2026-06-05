@@ -205,7 +205,7 @@ Use the term that fits the sentence and reader context.
 | preventive control | Use `사전 차단 통제` or `사전 차단 장치`; for MVP-1 non-claims, prefer `사전 차단 아님`. |
 | gate | In user-facing flow, prefer `관문`, `확인`, `닫기 확인`, or `차단 사유` by context. Reference docs may retain `gate` for kernel fields or strict contracts. |
 
-Capitalization rule: `Approval` is the canonical Harness permission concept for sensitive actions. Lowercase `approval` may remain only in stable identifiers, enum values, schema names, intentionally fixed phrases, or quoted legacy/user wording, such as `approval_gate`, `decision_kind=approval`, `approval_request_candidate`, `approval_scope`, `approval-shaped`, and approval drift.
+Capitalization rule: `Approval` is the canonical Harness permission concept for sensitive actions. Lowercase `approval` may remain only in stable identifiers, enum values, schema names, intentionally fixed phrases, or quoted legacy/user wording, such as `approval_gate`, `decision_kind=approval`, `approval_scope`, `approval-shaped`, and approval drift.
 
 ## Avoid examples
 

@@ -144,6 +144,7 @@ RecordRunRequest later-profile extension:
   kind: verification_input
 
 RecordRunPayload later-profile extensions:
+  kind: verification_input
   verification_input: VerificationInputPayload | null
 
 ShapingUpdatePayload later-profile extensions:
@@ -191,14 +192,22 @@ RecordRunResponse later-profile extensions:
   updated_feedback_loop_refs: StateRecordRef[]
 ```
 
+When a later profile enables `verification_input`, the same one-to-one branch rule from [Schema Core: Record-run payloads](schema-core.md#record-run-payloads) still applies: `RecordRunRequest.kind`, `RecordRunPayload.kind`, and the one non-null branch must match.
+
 ## Later user judgment branches
 
-These branches extend `UserJudgmentPayload` only when waiver, reconcile, or richer assurance profiles are active.
+These branches extend `UserJudgmentPayload` and active residual-risk acceptance input only when waiver, reconcile, residual-risk, or richer assurance profiles are active.
 
 ```yaml
 UserJudgmentPayload later-profile extensions:
   waiver: WaiverJudgment | null
   reconcile: ReconcileJudgment | null
+
+AcceptedRiskInput later-profile extensions:
+  residual_risk_ref: StateRecordRef | null
+  residual_risk_status: visible | accepted | blocked | superseded | stale | null
+  owner_review_refs: StateRecordRef[]
+  expires_at: string | null
 
 WaiverJudgment:
   skipped_check: string
