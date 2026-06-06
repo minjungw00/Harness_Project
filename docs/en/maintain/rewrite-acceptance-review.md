@@ -201,6 +201,25 @@ This is a concise maintenance note for the known contract-cleanup areas only. It
 | Minimal structured fixture draft | Present in [Conformance Fixtures Reference](../reference/conformance-fixtures.md) as active non-executable structured fixture drafts and exact future fixture body shape. The drafts are not executable fixtures, current pass/fail criteria, generated artifacts, or runtime conformance results. |
 | Links, anchors, Mermaid, and bilingual parity | Checked at source-audit level in this review: local links/anchors, active file-map parity, fenced code balance, Mermaid inventory/basic fence form, targeted Korean localization, and targeted English/Korean semantic parity were reviewed. Mermaid rendering and full paired-file semantic review were not run. |
 
+## Final Fixture-Contract Consistency Record
+
+This is a final documentation-maintenance record for known fixture-contract consistency areas. It records source-level checks only. It does not state or imply that executable conformance fixtures exist, that a conformance runner passed, that generated conformance artifacts exist, or that implementation readiness has been accepted. Readiness, handoff, documentation acceptance, implementation-planning readiness, and coding acceptance remain maintainer decisions in the Build owner docs.
+
+| Fixture-related area checked | Final consistency record |
+|---|---|
+| Public API/schema canonical values | Checked: active fixture drafts route values through `conformance-fixtures.md` owner guidance and the public owners `mvp-api.md`, `schema-core.md`, `core-model.md`, `storage.md`, and `errors.md`; no fixture-only dialect is recorded for the known active draft areas. |
+| `lifecycle_phase` fixture values | Checked: active fixture drafts use the active lifecycle enum values `intake`, `shaping`, `ready`, `executing`, `waiting_user`, `blocked`, `completed`, and `cancelled`; status words such as `active`, `open`, or `terminal` are not lifecycle values. |
+| `RecordRunPayload.kind` fixture values | Checked: active `RecordRunPayload.kind` branches remain `shaping_update`, `implementation`, and `direct`; later/profile branches such as `verification_input` stay outside active MVP fixture bodies. |
+| `CloseTaskRequest.intent` fixture values | Checked: active close fixture bodies use `complete`, `cancel`, or `supersede`; accepted-risk completion stays under `intent=complete` with the close reason and compatible Core state rather than a new intent value. |
+| `ArtifactRef.redaction_state` fixture values | Checked: active artifact assertions use `none`, `redacted`, `secret_omitted`, or `blocked`; alternate display words are not redaction states. |
+| Blocker and error fixture values | Checked: active blocker and error assertions route through Core/API owners, active blocker categories, and API `ErrorCode` precedence. Prose-only expectations, rendered text, or validator finding codes are not primary API errors. |
+| Storage row fixture values | Checked: active `expected_storage_rows` stay within the active storage profile and owner row shapes; later table families remain later/profile material unless promoted by Storage and the relevant profile owner. |
+| Write Authorization scope assertions | Checked: committed allowed Write Authorization fixtures assert the same resolved `AuthorizedAttemptScope` across `request.payload`, `expected_response.write_authorization.attempt_scope`, and `expected_storage_rows.write_authorizations.attempt_scope_json`. |
+| Judgment display labels | Checked: judgment fixtures do not treat `display_label` or localized labels as canonical state, storage identity, validator keys, gate keys, blocker keys, compatibility inputs, or close aggregation keys. |
+| Later/profile fixture separation | Checked: later/profile fixture material is separated from active MVP fixture bodies, and future catalog rows remain inventory rather than MVP-1 requirements, active API/DDL, executable suites, or current conformance results. |
+| Korean conformance prose | Checked: Korean conformance prose and this paired review wording were reviewed for natural Korean technical writing while preserving exact identifiers and file names. |
+| Links, anchors, and Mermaid blocks | Rechecked at source-audit level: local links/anchors, fenced code balance, Mermaid inventory/basic fence form, and bilingual file-map parity remain review checks only. Mermaid parser/rendering and full bilingual semantic review were not run. |
+
 ## Link, Diagram, And Bilingual Review Status
 
 Status: scriptable checks plus targeted spot checks. Do not treat this as runtime validation, runtime conformance, server-coding acceptance, implementation-planning readiness, or a full manual documentation acceptance pass.
