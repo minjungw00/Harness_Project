@@ -20,7 +20,7 @@ It does not own:
 - MCP request/response schemas, `ValidatorResult`, public errors, or active/later schema values; see [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md)
 - SQLite DDL, persisted tables, validator-run storage, or artifact storage; see [Storage](storage.md)
 - projection template bodies, status cards, or rendered reports; see [Projection And Templates Reference](projection-and-templates.md)
-- full policy-to-validator mapping, steward profiles, full review-stage procedure, operations/reporting material, or future conformance catalogs
+- full policy-to-validator mapping, steward policies, full review procedure, operations/reporting candidates, or future conformance catalogs
 
 Documentation in this repository remains planning source material. It does not mean a Harness Server, runtime state, generated evidence, QA record, Acceptance record, residual-risk record, or close record exists here today.
 
@@ -37,7 +37,7 @@ The active role is limited to these effects:
 - keep user-owned product, material technical, QA waiver, verification-risk, final-acceptance, and residual-risk judgments distinct
 - keep evidence, verification, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, and close readiness distinct
 
-Design quality must not turn ordinary work into an open-ended planning loop. Full domain-language audits, full module/interface review, full TDD trace, full feedback-loop audit, full codebase-stewardship review, detailed Manual QA policy, detached verification, two-stage review displays, and steward profiles are not active current MVP blockers unless another active owner path explicitly requires a narrow piece of that work.
+Design quality must not turn ordinary work into an open-ended planning loop. Full domain-language audits, full module/interface review, full TDD trace, full feedback-loop audit, full codebase-stewardship review, detailed Manual QA policy, detached verification, two-stage review displays, and steward policies are not active current MVP blockers unless another active owner path explicitly requires a narrow piece of that work.
 
 <a id="finding-severity"></a>
 ## 3. Finding severity
@@ -126,6 +126,6 @@ This document does not publish a full policy-to-validator mapping. If a current 
 <a id="later-policy-catalog-boundary"></a>
 ## 8. Later policy catalog boundary
 
-The full design-quality policy catalog is not active current MVP scope. Future policy families, steward profiles, detailed review displays, operations/reporting material, full validator mappings, and future conformance fixtures stay in [Later Candidate Index](../later/index.md) until a named owner promotes a narrow behavior with scope, fallback behavior, exact contracts, and proof expectations.
+The full design-quality policy catalog is not active current MVP scope. Future policy families, steward policies, detailed review displays, operations/reporting candidates, full validator mappings, and future conformance fixtures stay in [Later Candidate Index](../later/index.md) until a named owner promotes a narrow behavior with scope, fallback behavior, exact contracts, and proof expectations.
 
 Later candidates may keep names only. They must not be presented as active current MVP requirements, blockers, waiver rules, evidence expectations, validator mappings, fixture requirements, operations reports, or implementation tasks.

@@ -12,7 +12,7 @@ Product Repository는 사용자의 실제 제품 작업 공간입니다. 제품 
 
 Product Repository의 파일은 하네스 기준 상태가 아닙니다. 제품 파일은 입력이거나 변경 대상이거나 제품 내용에 대해 제품 저장소가 소유하는 사실일 수 있습니다. 하지만 하네스 근처에 있다는 이유만으로 하네스 운영 권한이 되지는 않습니다.
 
-활성 profile이 지원하면 Product Repository에는 생성된 읽기용 출력이 있을 수 있습니다. Projection, template, status card, 작은 증거 요약, 닫기 준비 상태 보기, managed Markdown block 같은 것입니다. 이 파일은 사람과 agent가 작업을 읽도록 돕습니다. Core가 소유한 상태가 아니라 파생 표시입니다. 사람이 편집할 수 있는 proposal 영역은 Core state-changing action이 수락하기 전까지 입력일 뿐입니다.
+활성 owner 경로가 지원하면 Product Repository에는 생성된 읽기용 출력이 있을 수 있습니다. Projection, template, status card, 작은 증거 요약, 닫기 준비 상태 보기, managed Markdown block 같은 것입니다. 이 파일은 사람과 agent가 작업을 읽도록 돕습니다. Core가 소유한 상태가 아니라 파생 표시입니다. 사람이 편집할 수 있는 proposal 영역은 Core state-changing action이 수락하기 전까지 입력일 뿐입니다.
 
 이 문서 저장소도 사용자의 Product Repository가 아닙니다. 이 저장소는 문서 전용 계획 저장소입니다. 문서 수락과 별도의 implementation-planning readiness 결정 이후에 향후 Harness Server source repository가 되는 것을 목표로 합니다.
 
@@ -20,7 +20,7 @@ Product Repository의 파일은 하네스 기준 상태가 아닙니다. 제품 
 
 ## 2. Harness Server / Installation
 
-Harness Server / Installation은 향후 로컬 하네스 프로그램 경계입니다. 로컬 tool/resource 호출을 받고, Core가 소유한 권한 확인을 실행하며, Core를 통해 상태 변경 action을 기록합니다. 활성 profile이 요구할 때 validator를 호출하고, artifact를 등록하며, projection support가 범위에 있을 때 파생 표시를 렌더링합니다.
+Harness Server / Installation은 향후 로컬 하네스 프로그램 경계입니다. 로컬 tool/resource 호출을 받고, Core가 소유한 권한 확인을 실행하며, Core를 통해 상태 변경 action을 기록합니다. 활성 owner 경로가 요구할 때 validator를 호출하고, artifact를 등록하며, projection support가 범위에 있을 때 파생 표시를 렌더링합니다.
 
 MVP 경계는 여러 서비스나 자세한 process 분리를 요구하지 않습니다. 하나의 로컬 프로세스와도 호환됩니다. 중요한 것은 권한 경계입니다. 호출자는 요청하고, Core는 판단하고 기록하며, 저장소는 지속 보관하고, 표시는 기록된 상태에서 파생됩니다.
 
@@ -72,8 +72,8 @@ Recovery는 chat, generated Markdown, stale projection, export text, operator co
 
 ## 8. 현재 MVP가 격리하지 않는 것
 
-현재 MVP 경계는 향후 담당 문서가 이름 붙인 동작에 대해 더 강한 profile을 승격하고 증명하기 전까지 협력형과 탐지형 수준입니다. 운영체제 수준 권한, 임의 도구 샌드박스, 권한 강제, 변조 방지 저장소, 보편적 도구 실행 전 차단, 보안 격리를 주장하지 않습니다.
+현재 MVP 경계는 향후 담당 문서가 이름 붙인 동작에 대해 더 강한 메커니즘을 승격하고 증명하기 전까지 협력형과 탐지형 수준입니다. 운영체제 수준 권한, 임의 도구 샌드박스, 권한 강제, 변조 방지 저장소, 보편적 도구 실행 전 차단, 보안 격리를 주장하지 않습니다.
 
-로컬 전용 MCP 도달 가능성은 권한 부여가 아닙니다. 도달 가능한 caller도 valid Core/API state, project/task/surface compatibility, state-version compatibility, active surface capability profile이 필요합니다. `allowed`는 하네스 상태와 활성 surface capability에 맞는다는 뜻입니다. `blocked`는 하네스 권한 경로나 capability check상 진행하면 안 된다는 뜻입니다. 증명된 preventive profile이 정확한 covered operation을 이름 붙이지 않는 한 두 단어 모두 물리적 차단을 뜻하지 않습니다.
+로컬 전용 MCP 도달 가능성은 권한 부여가 아닙니다. 도달 가능한 caller도 valid Core/API state, project/task/surface compatibility, state-version compatibility, active surface capability가 필요합니다. `allowed`는 하네스 상태와 활성 surface capability에 맞는다는 뜻입니다. `blocked`는 하네스 권한 경로나 capability check상 진행하면 안 된다는 뜻입니다. 증명된 preventive mechanism이 정확한 covered operation을 이름 붙이지 않는 한 두 단어 모두 물리적 차단을 뜻하지 않습니다.
 
 Surface name, connector recipe, friendly mode label, Projection, template, status card, artifact, documentation check는 guarantee level을 올려 주지 않습니다. 더 강한 preventive 또는 isolated claim은 관련 Reference owner에서 문서화한 mechanism, covered operation, owner, proof path가 필요합니다.

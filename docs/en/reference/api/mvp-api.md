@@ -1,4 +1,4 @@
-# MVP-1 API
+# Active MVP API
 
 ## What this document helps you do
 
@@ -12,7 +12,7 @@ The active MVP API is a small local MCP surface for one user work loop. It can i
 
 The API does not provide OS permissions, arbitrary-tool sandboxing, tamper-proof files, pre-tool blocking, or security isolation. `harness.prepare_write` returns a cooperative Harness record/check only.
 
-## MVP-1 Method Set
+## Active MVP Method Set
 
 The active method set is exactly:
 

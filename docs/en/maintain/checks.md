@@ -45,9 +45,9 @@ Pass when each strict contract is defined in one owner and non-owner docs use a 
 
 ## 6. Active/later check
 
-Inspect active schemas, API docs, DDL, Build scope wording, Later docs, Roadmap candidates, and examples.
+Inspect active schemas, API docs, DDL, Build scope wording, Later docs, later candidates, and examples.
 
-Pass when active blocks contain only active material and later/profile candidates stay in later/profile owners unless promoted. Fail when later enum values, methods, tables, commands, templates, assurance behavior, operations behavior, or fixture families are presented as active requirements.
+Pass when active blocks contain only active material and later candidates stay in the Later index or promoted owners. Fail when later enum values, methods, tables, commands, templates, assurance behavior, operations behavior, or fixture families are presented as active requirements.
 
 ## 7. Security wording check
 
@@ -69,6 +69,6 @@ Pass when agent-facing docs retrieve only the owner section needed for the next 
 
 ## 10. Stale content check
 
-Inspect Maintain docs and any nearby routes for historical rewrite reviews, resolved issue records, old acceptance records, old stage label explanations, legacy alias history, later-profile localization audit records, past translation problem records, and temporary migration plans.
+Inspect Maintain docs and any nearby routes for historical rewrite reviews, resolved issue records, old acceptance records, old delivery-label explanations, legacy alias history, later-candidate localization audit records, past translation problem records, and temporary migration plans.
 
 Pass when Maintain docs contain only living editing rules and current checks. Fail when old review prose is preserved as active guidance, archive copies are created, or scratch migration files remain after the edit.

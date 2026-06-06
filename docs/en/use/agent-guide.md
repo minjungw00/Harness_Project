@@ -66,7 +66,7 @@ A focused clarification should show:
 - useful non-blocking questions parked for later
 - next safe action
 
-In MVP-1, clarification should update the active task summary, proposed or active Change Unit when product writes are near, and user-judgment candidates or records. Do not create separate active requirements for a committed Discovery Brief, Question Queue, Assumption Register, First Safe Change Unit Candidate, Shared Design record, full Decision Packet, or full design artifact.
+In the active MVP, clarification should update the active task summary, proposed or active Change Unit when product writes are near, and user-judgment candidates or records. Do not create separate active requirements for a committed Discovery Brief, Question Queue, Assumption Register, First Safe Change Unit Candidate, Shared Design record, full Decision Packet, or full design artifact.
 
 ## 4. Do Not Decide User-Owned Judgments
 
@@ -147,9 +147,9 @@ Do not close from prose, tests alone, broad acceptance-like language, a generate
 
 ## 9. Respect The Active/Later Boundary
 
-Active MVP behavior should stay compact. Later/profile presentation formats may be named for contrast or routing, but they must not look like active requirements.
+Active MVP behavior should stay compact. Later candidate presentation formats may be named for contrast or routing, but they must not look like active requirements.
 
-Do not make full Decision Packet presentation, standalone `DEC` projections, full Evidence Manifest display, detached verification, broad Manual QA catalogs, future conformance runners, operations hardening, or Roadmap candidates appear required for ordinary MVP-1 work unless the relevant owner profile has promoted them.
+Do not make full Decision Packet presentation, standalone `DEC` projections, full Evidence Manifest display, detached verification, broad Manual QA catalogs, future conformance runners, operations hardening, or later candidates appear required for ordinary active MVP work unless the relevant owner has promoted them.
 
 Use compact user-facing shapes first: status, focused judgment request, run/evidence summary, and close result. Reference exact contracts only when needed for a visible blocker, source ref, write check, evidence gap, close result, connector behavior, or implementation owner link.
 

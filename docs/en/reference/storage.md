@@ -17,7 +17,7 @@ This document owns the active current MVP persistence boundary:
 - Event and idempotency storage meaning.
 - State-version storage rules.
 - Lock and migration boundaries.
-- The line between active current MVP storage and later/profile storage.
+- The line between active current MVP storage and later candidate storage.
 
 This document does not own:
 
@@ -260,7 +260,7 @@ ordinary SQLite transactions and a process/project lock if needed. The
 authority placement is owned by [Runtime Boundaries Reference](runtime-boundaries.md).
 
 The active current MVP does not require a `persistent_locks` table. Durable
-lock/recovery metadata is later Operations/Profile material until an owner
+lock/recovery metadata is later operations material until an owner
 promotes it.
 
 Locks protect concurrent state writes. They do not provide OS sandboxing,

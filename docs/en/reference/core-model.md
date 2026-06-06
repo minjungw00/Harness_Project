@@ -22,7 +22,7 @@ This document does not own:
 - Rendered projection bodies or template text. Use [Projection And Templates Reference](projection-and-templates.md).
 - Connector capability profiles or surface recipes. Use [Agent Integration Reference](agent-integration.md).
 - Security guarantee vocabulary beyond Core authority consequences. Use [Security Reference](security.md).
-- Later/profile catalogs. Use [Later](../later/index.md) until a profile owner promotes material into active scope.
+- Later candidate catalogs. Use [Later](../later/index.md) until an owner promotes material into active scope.
 
 Exact API request fields and storage table definitions may be named here only by reference. Core state values are discussed only when needed to explain authority and transition meaning.
 
@@ -40,7 +40,7 @@ Exact API request fields and storage table definitions may be named here only by
 8. Product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, and cancellation are distinct.
 9. Evidence, verification, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, and close readiness do not substitute for one another.
 10. `close_task` must not honestly close while close-relevant blockers remain; known residual risk must be visible before a successful close path depends on it.
-11. Active current MVP scope and later/profile material stay separate. A later candidate becomes active only when its owner promotes it with scope, fallback behavior, and proof expectations.
+11. Active current MVP scope and later candidate material stay separate. A later candidate becomes active only when its owner promotes it with scope, fallback behavior, and proof expectations.
 
 <a id="entity-model"></a>
 
@@ -54,10 +54,10 @@ These entities define authority relationships, not storage tables or API bodies.
 - `user_judgment`: the canonical record family for choices the user owns. It feeds decision compatibility but does not create evidence, Write Authorization, or close by itself.
 - <a id="write-authorization"></a>Write Authorization: the durable single-use Core record created only by compatible non-dry-run `prepare_write`. Its lifecycle can be active, consumed, stale, expired, or revoked. `allowed` is a `prepare_write` decision, not a durable authorization status; `blocked` is not an authorization status.
 - Run: an execution or observation record. Product-write Runs must consume compatible active Write Authorization. Read-only or shaping-only Runs do not make later writes compatible.
-- Evidence summary: the active compact Core evidence path for close-relevant claims, Runs, blockers, user judgments, and `ArtifactRef` values. A full Evidence Manifest is not active unless a profile owner enables it.
+- Evidence summary: the active compact Core evidence path for close-relevant claims, Runs, blockers, user judgments, and `ArtifactRef` values. A full Evidence Manifest is not active unless an owner enables it.
 - `ArtifactRef`: the durable evidence reference shape owned by API/Storage. Core treats it as evidence-eligible only when it is registered, integrity-aware, redaction-aware, and linked to an owner record.
 - Blocker: a structured reason progress, write, or close cannot proceed honestly.
-- Residual-risk summary: the active compact visibility path for known remaining uncertainty, unchecked conditions, limits, or trade-offs. Rich residual-risk records are later/profile material until promoted.
+- Residual-risk summary: the active compact visibility path for known remaining uncertainty, unchecked conditions, limits, or trade-offs. Rich residual-risk records are later candidate material until promoted.
 - Projection and templates: derived displays from Core state and refs. They do not become authority by being readable or edited.
 
 Discovery and requirement shaping persist through Task, Change Unit, and `user_judgment` owner paths. Separate shaping briefs, design displays, journey or reconcile records, rich risk records, Eval records, Manual QA records, and full evidence manifests are not active current MVP Core state unless an owner explicitly promotes them.
@@ -110,7 +110,7 @@ These rules apply even when a user-facing surface compresses the display. Compac
 
 ## 6. Gates
 
-Gates are Core compatibility dimensions for progress, write, run recording, and close. A gate can exist in the reference model without being required for every Task. The active stage/profile, user request, task type, policy, sensitivity, and explicit requirements decide requiredness.
+Gates are Core compatibility dimensions for progress, write, run recording, and close. A gate can exist in the reference model without being required for every Task. The active owner path, user request, task type, policy, sensitivity, and explicit requirements decide requiredness.
 
 - <a id="scope-gate"></a>Scope Gate: whether active scope covers the requested write or close-relevant work.
 - <a id="decision-gate"></a>Decision Gate: whether unresolved user-owned judgment blocks progress, write, or close. It does not replace sensitive-action approval, evidence, verification, QA, final acceptance, or residual-risk acceptance.
@@ -173,7 +173,7 @@ Read-only and shaping-only Runs may be recorded without Write Authorization only
 
 For a successful close, Core must confirm the close intent against current Task state, open Runs, scope, user-owned judgments, sensitive-action approval when applicable, active design-policy blockers, required evidence sufficiency, close-relevant artifact availability, final acceptance when required, and residual-risk visibility or acceptance when applicable.
 
-MVP close must keep later assurance material out of active response semantics. Detached verification, `completed_verified`, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance-profile display detail are later/profile behavior unless their owners explicitly activate them.
+MVP close must keep later assurance material out of active response semantics. Detached verification, `completed_verified`, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance display detail are later candidate behavior unless their owners explicitly activate them.
 
 `close_task` must return blockers instead of pretending close is complete when required scope, judgment, evidence, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, or safety conditions remain unresolved. A public response may choose one primary error, but secondary close blockers and refs must remain visible enough for the next safe action.
 
@@ -217,7 +217,7 @@ Residual risk is known remaining uncertainty, an unchecked condition, limitation
 
 Residual-risk acceptance does not verify the work, satisfy evidence, satisfy QA, grant sensitive-action approval, create final acceptance, or make the result no-risk. It records that the user accepts a named visible risk for the requested close.
 
-The active current path uses compact residual-risk summary, blockers, evidence refs, and `user_judgment` refs. Rich residual-risk records, review workflows, handoff reports, and later assurance displays remain later/profile material until promoted.
+The active current path uses compact residual-risk summary, blockers, evidence refs, and `user_judgment` refs. Rich residual-risk records, review workflows, handoff reports, and later assurance displays remain later candidate material until promoted.
 
 ## 14. Cross-owner links
 
@@ -232,4 +232,4 @@ Use these owners when Core authority touches another contract:
 - Connector capability profiles and surface-specific fallback behavior: [Agent Integration Reference](agent-integration.md).
 - Conformance examples, future fixture boundaries, and operations entrypoint candidates: [Conformance Reference](conformance.md), [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families), and [Later Candidate Index: Operations Candidates](../later/index.md#operations-candidates).
 
-If another document needs an exact schema, DDL table, rendered template body, or later/profile catalog, it must link to the owner instead of redefining it here.
+If another document needs an exact schema, DDL table, rendered template body, or later candidate catalog, it must link to the owner instead of redefining it here.

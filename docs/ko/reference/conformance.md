@@ -14,8 +14,8 @@
 
 | 층 | 의미 | 현재 상태 |
 |---|---|---|
-| 문서 점검 | Link, terminology, owner boundary, stage wording, security wording, 영어/한국어 의미 일치를 보는 읽기 전용 Markdown maintenance check. | 현재 문서 유지보수 보조 자료일 뿐입니다. Runtime conformance가 아닙니다. |
-| 동작 예시 | Engineering Checkpoint와 MVP-1에서 기대하는 동작을 작게 보여주는 예시. | 계획 참조일 뿐입니다. Fixture 파일도 아니고 pass/fail 기준도 아닙니다. |
+| 문서 점검 | Link, terminology, owner boundary, active/later wording, security wording, 영어/한국어 의미 일치를 보는 읽기 전용 Markdown maintenance check. | 현재 문서 유지보수 보조 자료일 뿐입니다. Runtime conformance가 아닙니다. |
+| 동작 예시 | 첫 smoke와 현재 MVP에서 기대하는 동작을 작게 보여주는 예시. | 계획 참조일 뿐입니다. Fixture 파일도 아니고 pass/fail 기준도 아닙니다. |
 | runtime conformance | 구현된 Core/API/storage/operator 동작을 대상으로 하는 향후 실행 점검. | 아직 없습니다. |
 
 Conformance는 생성된 prose를 판단하지 않습니다. 향후에는 owner-state effect, response fact, storage effect, 승격된 stable event, artifact ref, blocker, error, forbidden side effect를 판단합니다.
@@ -28,7 +28,7 @@ Conformance는 생성된 prose를 판단하지 않습니다. 향후에는 owner-
 - conformance runner 또는 `harness conformance run` 구현
 - 생성된 conformance artifact, report, projection, runtime state, Harness Runtime Home data
 - 현재 runtime `PASS`, `WARN`, `FAIL` result
-- Engineering Checkpoint, MVP-1, Assurance Profile, Operations Profile, Roadmap 후보를 위한 active fixture suite
+- 현재 MVP 또는 later 후보를 위한 active fixture suite
 - 예방적 차단, OS 권한 제어, 임의 도구 샌드박스, 변조 방지 저장소, 보안 격리에 대한 현재 증명
 
 이 문서의 예시는 구현 계획을 도울 수 있습니다. 하지만 runtime state, acceptance evidence, close readiness, implementation readiness를 만들지 않습니다.
@@ -48,7 +48,7 @@ Conformance는 생성된 prose를 판단하지 않습니다. 향후에는 owner-
 | expected authoritative assertions | Structured response, state, storage, event, artifact, blocker, error, guarantee, forbidden-side-effect fact. |
 | owner links | Exact value를 정의하는 API, Core, Storage, Security, ArtifactRef, policy owner. |
 
-Materialized fixture는 public owner schema를 사용해야 합니다. Fixture-only enum value, pseudo-field, 상태값으로 쓰는 localized display label, prose-only expectation, later/profile-only value를 만들면 안 됩니다.
+Materialized fixture는 public owner schema를 사용해야 합니다. Fixture-only enum value, pseudo-field, 상태값으로 쓰는 localized display label, prose-only expectation, later 후보 전용 value를 만들면 안 됩니다.
 
 ## 5. 주장 권한
 
@@ -100,7 +100,7 @@ Future fixture family는 [Later 후보 색인: Future fixture families](../later
 - Operations diagnostics, export, recover, and handoff
 - Browser QA Capture
 
-Family 이름을 적었다고 Engineering Checkpoint, MVP-1, Assurance Profile, Operations Profile, Roadmap 요구사항이 되지는 않습니다. 향후 owner가 좁은 동작을 scope, fallback behavior, exact contract, proof expectation과 함께 승격해야 실행 가능한 fixture material이 생깁니다.
+Family 이름을 적었다고 현재 MVP나 later 후보 requirement가 되지는 않습니다. 향후 owner가 좁은 동작을 scope, fallback behavior, exact contract, proof expectation과 함께 승격해야 실행 가능한 fixture 자료가 생깁니다.
 
 ## 8. Metrics 경계
 

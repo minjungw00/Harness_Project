@@ -94,7 +94,7 @@ If something is missing, close should name the smallest unblocker, such as a pen
 
 ## Current MVP Guarantee Boundary
 
-The current MVP guarantee boundary is intentionally modest. Read MVP wording as cooperative guidance and limited detective visibility unless a specific future/profile mechanism is named, implemented, and proven.
+The current MVP guarantee boundary is intentionally modest. Read MVP wording as cooperative guidance and limited detective visibility unless a specific future mechanism is named, implemented, and proven.
 
 In the current MVP, Harness does not claim OS-level permissions, arbitrary-tool isolation, tamper-proof local files, default pre-tool blocking, or broad security isolation. A future Write Authorization record is a cooperative scope check, not an operating-system permission or sandbox.
 

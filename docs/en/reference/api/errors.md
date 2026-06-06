@@ -6,9 +6,9 @@ Use this reference for active current MVP public error codes, primary-error prec
 
 This document describes future Harness Server behavior for planning and review. It does not mean the current documentation repository implements an MCP server.
 
-<a id="mvp-1-guarantee-and-status-taxonomy"></a>
+<a id="active-mvp-guarantee-and-status-taxonomy"></a>
 
-## MVP-1 Guarantee And Status Taxonomy
+## Active MVP Guarantee And Status Taxonomy
 
 `guarantee_display.level` uses the exact values `cooperative`, `detective`, `preventive`, and `isolated`. Security meaning is owned by [Security Reference: Honest guarantee display](../security.md#honest-guarantee-display).
 
@@ -16,15 +16,15 @@ This document describes future Harness Server behavior for planning and review. 
 |---|---|
 | `cooperative` | Harness can check and record when the agent or tool follows the documented path. It is not OS permission, sandboxing, tamper-proof storage, or pre-execution blocking. |
 | `detective` | Harness or the connected surface can detect, record, or report an observable mismatch after or during the action. It is not prevention. |
-| `preventive` | A promoted profile has a proven control that blocks the covered operation before it happens. Use only when the exact operation and proof are named. |
-| `isolated` | A promoted profile has a documented and proven separation boundary for the claim. Name the boundary; do not infer broader authority from it. |
+| `preventive` | A promoted mechanism has a proven control that blocks the covered operation before it happens. Use only when the exact operation and proof are named. |
+| `isolated` | A promoted mechanism has a documented and proven separation boundary for the claim. Name the boundary; do not infer broader authority from it. |
 
 Active MVP behavior defaults to cooperative checks with limited detective reporting where the connected surface can honestly observe facts.
 
 | Condition | Public path | Agent rule |
 |---|---|---|
 | `core_unavailable` | `MCP_UNAVAILABLE` | Do not invent Harness state. Hold Harness-dependent writes and close until Core is reachable or the user explicitly chooses to proceed outside Harness. |
-| `local_access_denied` | `LOCAL_ACCESS_MISMATCH` or `CAPABILITY_INSUFFICIENT` | Do not guess local file or command facts. Use a capable local surface, repair the profile, narrow scope, or label input unverified. |
+| `local_access_denied` | `LOCAL_ACCESS_MISMATCH` or `CAPABILITY_INSUFFICIENT` | Do not guess local file or command facts. Use a capable local surface, repair capability registration, narrow scope, or label input unverified. |
 | `stale_state` | `STATE_CONFLICT`, `BASELINE_STALE`, `PROJECTION_STALE`, stale `WRITE_AUTHORIZATION_INVALID` | Refresh current state, baseline, readable view, or pre-write check before relying on it. |
 | `unsupported_surface` | `CAPABILITY_INSUFFICIENT` or `VALIDATION_FAILED` | Reduce the request, move to a capable surface, or return a blocker. Do not emulate unsupported authority with prose. |
 | `out_of_scope` | `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `NO_ACTIVE_CHANGE_UNIT`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | Hold the affected action, show the mismatch, narrow to current scope, or request the specific user-owned scope judgment. |
@@ -166,8 +166,8 @@ These labels are display guidance, not new public error codes.
 | `VALIDATION_FAILED` | invalid request | Fix the payload, enum value, activation rule, or field set before retrying. |
 | `STATE_CONFLICT` | state conflict | Refresh current status and retry with the current state version, or replay the original idempotent request. |
 | `MCP_UNAVAILABLE` | Core unavailable | Reconnect or diagnose Core access before claiming state changes, gate updates, write compatibility, or close. |
-| `LOCAL_ACCESS_MISMATCH` | local access denied or off-profile | Use the registered local surface/profile, repair local access, or move to a capable surface. |
-| `CAPABILITY_INSUFFICIENT` | unsupported or insufficient surface | Use a capable surface/profile, reduce the operation, or choose a path that does not require the missing capability. |
+| `LOCAL_ACCESS_MISMATCH` | local access denied or off capability | Use the registered local surface, repair local access, or move to a capable surface. |
+| `CAPABILITY_INSUFFICIENT` | unsupported or insufficient surface | Use a capable surface, reduce the operation, or choose a path that does not require the missing capability. |
 | `NO_ACTIVE_TASK` | no active Task | Select or create a Task before a Task-scoped action. |
 | `NO_ACTIVE_CHANGE_UNIT`, `SCOPE_REQUIRED`, `SCOPE_VIOLATION`, `AUTONOMY_BOUNDARY_EXCEEDED`, `BASELINE_STALE` | scope, boundary, or baseline issue | Confirm or narrow scope, update the Change Unit or baseline, or request the needed user judgment. |
 | `WRITE_AUTHORIZATION_REQUIRED`, `WRITE_AUTHORIZATION_INVALID` | missing or stale pre-write scope check | Call or retry `harness.prepare_write` for the exact operation, current scope, and current state. |

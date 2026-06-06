@@ -54,7 +54,7 @@ Do not route active docs outside this compact structure. If an old path appears 
 ## Documentation Redesign Compass
 
 - The repository is in documentation review/redesign only; these edits do not start runtime/server implementation.
-- The redesign may change terminology, the stage/profile model, schema structure, projection structure, security wording, and document organization.
+- The redesign may change terminology, the delivery/later-candidate model, schema structure, projection structure, security wording, and document organization.
 - Rewrite, move, merge, shrink, or delete old prose when it conflicts with the product thesis, owner boundaries, Korean quality rules, active/later boundaries, or implementation feasibility.
 - Remove stale improvement goals, resolved review records, old cleanup notes, legacy history, migration notes, and one-language-primacy guidance from active docs.
 - Preserve the product thesis: Harness is not a prompt pack. It is a local authority record for scope, user-owned judgment, evidence, verification expectations, acceptance, close readiness, and residual risk.

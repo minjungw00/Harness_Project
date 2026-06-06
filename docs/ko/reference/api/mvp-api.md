@@ -1,4 +1,4 @@
-# MVP-1 API
+# 현재 MVP API
 
 ## 이 문서로 할 수 있는 일
 
@@ -12,7 +12,7 @@
 
 이 API는 OS 권한, 임의 도구 sandboxing, 변조 방지 파일, 사전 도구 차단, 보안 격리를 제공하지 않습니다. `harness.prepare_write`는 협력형 하네스 기록/확인만 반환합니다.
 
-## MVP-1 method set
+## 현재 MVP method set
 
 활성 method set은 정확히 다음과 같습니다.
 

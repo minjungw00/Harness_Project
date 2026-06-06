@@ -24,7 +24,7 @@ This document does not own:
 - operator command behavior as active Reference scope; future candidates stay in [Later Candidate Index: Operations Candidates](../later/index.md#operations-candidates)
 - conformance fixture assertion behavior; see [Conformance Reference](conformance.md)
 - connector context behavior; see [Agent Integration Reference](agent-integration.md)
-- later-profile template bodies; they are not active documentation
+- later candidate template bodies; they are not active documentation
 
 ## Authority boundary
 
@@ -40,12 +40,12 @@ User edits to a projection are input only. They may become state only through an
 
 Projection is derived display from current Core-owned records and registered `ArtifactRef` metadata. It helps humans and agents read current work, source refs, blockers, evidence gaps, close blockers, freshness, and the next safe action. It is not a second state store.
 
-MVP-1 keeps projection small:
+The active MVP keeps projection small:
 
 - four user-facing compact views: `status-card`, `judgment-request`, `run-evidence-summary`, and `close-result`
 - one agent-facing support packet: `agent-context-packet`
 
-These views may be rendered as compact text, cards, Markdown snippets, or structured payloads depending on the surface. They do not require persisted Markdown projection jobs or a full report renderer. Engineering Checkpoint may return plain structured status/blocker output instead of a rendered card.
+These views may be rendered as compact text, cards, Markdown snippets, or structured payloads depending on the surface. They do not require persisted Markdown projection jobs or a full report renderer. The first internal smoke target may return plain structured status/blocker output instead of a rendered card.
 
 Projection freshness is display over source clocks. A stale, failed, unknown, or too-broad readable view must not become the basis for state-changing work or close. If current state matters, retrieve current Core state or a current state-derived packet.
 
@@ -98,7 +98,7 @@ Rules:
 - A managed block is display, not authority.
 - Direct edits inside a managed block are drift, not accepted state.
 - If projection job storage is active, the projector records source state version, projection version or status, render timestamp, job status, and managed hash through the storage owner path.
-- MVP-1 compact views may instead carry read-time source/freshness text without a persisted projection job.
+- Active MVP compact views may instead carry read-time source/freshness text without a persisted projection job.
 - Managed hash is computed over the projector-owned managed block body, excluding the marker lines, with normalized line endings and the projector's meaningful whitespace rules.
 - Managed hash detects drift; it does not make Markdown state.
 - If a managed block hash differs from the last projected hash before rendering, the projector reports drift or creates an owner-routed repair candidate. It does not silently accept the edited block.
@@ -126,8 +126,8 @@ Do not expand `secret_omitted`, `blocked`, unavailable, or redacted artifact bod
 
 A displayed `ArtifactRef` is a pointer to registered artifact authority. It is not, by itself, evidence sufficiency, verification, QA, final acceptance, residual-risk acceptance, or close readiness. If the ref lacks owner relation, integrity metadata, redaction state, or availability needed for the claim, show the gap.
 
-<a id="mvp-1-view-set"></a>
-<a id="mvp-1-template-set"></a>
+<a id="active-mvp-view-set"></a>
+<a id="active-mvp-template-set"></a>
 ## Active current MVP template set
 
 The active current MVP template set is exactly:
@@ -140,15 +140,15 @@ The active current MVP template set is exactly:
 | User-facing | `close-result` | [Close Result body](#close-result-body) |
 | Agent-facing | `agent-context-packet` | [Agent Context Packet body](#agent-context-packet-body) |
 
-The four user-facing outputs use ordinary language, source refs, and freshness only where they help the user decide, understand a blocker, inspect evidence, or understand close. They should not dump schemas, DDL, event logs, full artifacts, full report bodies, full evidence catalogs, or future/profile catalogs.
+The four user-facing outputs use ordinary language, source refs, and freshness only where they help the user decide, understand a blocker, inspect evidence, or understand close. They should not dump schemas, DDL, event logs, full artifacts, full report bodies, full evidence catalogs, or future catalogs.
 
 The agent-facing packet is a separate audience. It carries only current, next-action-relevant refs, blockers, evidence gaps, close blockers, guarantee level, and one next safe action. It is not user prose and is not authority.
 
 ## Status Card body
 
-Use `status-card` when MVP-1 needs a short user-visible current-state view. It shows what is happening now, what is in scope, what the user must decide, what evidence exists or is missing, what blocks close, and the next safe action.
+Use `status-card` when the active MVP needs a short user-visible current-state view. It shows what is happening now, what is in scope, what the user must decide, what evidence exists or is missing, what blocks close, and the next safe action.
 
-Implementation tier: MVP-1 User Work Loop view. Engineering Checkpoint may return plain structured status/blocker output instead of this card.
+Implementation tier: active MVP user work-loop view. The first internal smoke target may return plain structured status/blocker output instead of this card.
 
 Boundary: this template is rendered display only. It is not Core state, not evidence, not approval, not final acceptance, not residual-risk acceptance, not Write Authorization, and not close readiness authority. It must be rendered from current Core-owned state and refs, not stale chat.
 
@@ -202,15 +202,15 @@ Notes:
 
 - Keep this card readable for a user who does not know Harness internals.
 - When a field has no source record, render `none`, `unknown`, `not_required`, or an explicit blocker instead of inventing state.
-- Always render the guarantee line. For MVP-1 default behavior, the note should say cooperative hold or detective reporting when that is the actual limit. If Core/MCP is unavailable, render the unavailable condition instead of a stale or guessed guarantee.
+- Always render the guarantee line. For active MVP default behavior, the note should say cooperative hold or detective reporting when that is the actual limit. If Core/MCP is unavailable, render the unavailable condition instead of a stale or guessed guarantee.
 - Design-quality content should fit one line: the current routed action and, when blocking, the single next action.
 - Agent-only refs and action-boundary details belong in [Agent Context Packet body](#agent-context-packet-body). Put a ref in the status card only when it helps the user decide, understand a blocker, or inspect source freshness.
 
 ## Judgment Request body
 
-Use `judgment-request` when the user owns a choice that affects progress, scope, sensitive-action permission, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, or cancellation. This is the MVP-1 prompt shape for ordinary user-owned judgments.
+Use `judgment-request` when the user owns a choice that affects progress, scope, sensitive-action permission, QA waiver, verification-risk acceptance, final acceptance, residual-risk acceptance, or cancellation. This is the active MVP prompt shape for ordinary user-owned judgments.
 
-Implementation tier: MVP-1 User Work Loop view. Full-format Decision Packet presentation is later-profile scope and remains only a candidate in [Later Template Candidates](../later/index.md#later-template-candidates).
+Implementation tier: active MVP user work-loop view. Full-format Decision Packet presentation is later candidate scope and remains only a candidate in [Later Template Candidates](../later/index.md#later-template-candidates).
 
 Boundary: this template displays a pending or recorded `user_judgment`; it does not create the judgment record by itself, grant Write Authorization, perform QA or verification, create QA evidence, record final acceptance, accept residual risk, accept verification risk, or close a Task.
 
@@ -272,7 +272,7 @@ Notes:
 
 Use `run-evidence-summary` after advice, a run, a check, or a change needs a minimal summary of what happened and what evidence now supports the current claim.
 
-Implementation tier: MVP-1 User Work Loop view. Detailed run reports and detailed evidence catalogs are later-profile scope.
+Implementation tier: active MVP user work-loop view. Detailed run reports and detailed evidence catalogs are later candidate scope.
 
 Boundary: this template displays Run and evidence refs only. It is not the evidence itself, not a detailed evidence catalog, not verification, not QA, not final acceptance, not residual-risk acceptance, and not close readiness authority.
 
@@ -327,7 +327,7 @@ Notes:
 
 Use `close-result` when the user needs a compact close-readiness, close-blocker, or close-outcome display. It keeps acceptance, residual risk, evidence, artifact availability, self-check basis, and blockers separate.
 
-Implementation tier: MVP-1 User Work Loop view. Detailed continuity, release-handoff, or export reports are later-profile scope.
+Implementation tier: active MVP user work-loop view. Detailed continuity, release-handoff, or export reports are later candidate scope.
 
 Boundary: this template displays close status. It does not close a Task, record final acceptance, accept residual risk, record verification or QA, create evidence, or change gate values. Close authority remains with the Core close path.
 
@@ -381,7 +381,7 @@ Sources/freshness: {source_freshness_summary}
 Notes:
 
 - Do not collapse evidence summary, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, blockers, design-quality routed actions, and readable-view freshness into one "done" line.
-- MVP-1 `close-result` output shows only active MVP close semantics; later assurance and detailed QA rows stay in later-profile scope.
+- Active MVP `close-result` output shows only active MVP close semantics; later assurance and detailed QA rows stay in later candidate scope.
 - If close is blocked, name the primary blocker and the single next action, and keep secondary blockers visible only when they affect the next path.
 - If the readable close view is stale or failed, fetch a current Core close result instead of closing from this template's prose.
 
@@ -389,7 +389,7 @@ Notes:
 
 Use `agent-context-packet` when an agent needs compact, current context for the next safe action. It is optimized for accuracy, freshness, Core-derived refs, active blockers, unresolved user judgments, evidence gaps, close blockers, guarantee level, and one next action, not for user-facing prose or full report detail.
 
-Implementation tier: MVP-1 support view. It can be returned as a structured payload or prompt-sized text. It is not a required persisted Markdown projection.
+Implementation tier: active MVP support view. It can be returned as a structured payload or prompt-sized text. It is not a required persisted Markdown projection.
 
 Boundary: this packet is support context only. It cannot authorize writes, satisfy gates, create evidence, grant approval, record final acceptance, accept residual risk, create close readiness, or close a Task.
 
@@ -449,8 +449,8 @@ Notes:
 
 ## Later template boundary
 
-Later-profile template bodies are not active documentation and are not stored in this reference. Later template candidate names may appear only in [Later Template Candidates](../later/index.md#later-template-candidates), without bodies.
+Later candidate template bodies are not active documentation and are not stored in this reference. Later template candidate names may appear only in [Later Template Candidates](../later/index.md#later-template-candidates), without bodies.
 
-A later candidate listing does not create an MVP-1 requirement, active `ProjectionKind`, schema contract, runtime behavior, template body, generated projection, evidence, verification, QA, final acceptance, residual-risk acceptance, close readiness, implementation task, or acceptance evidence.
+A later candidate listing does not create an active MVP requirement, active `ProjectionKind`, schema contract, runtime behavior, template body, generated projection, evidence, verification, QA, final acceptance, residual-risk acceptance, close readiness, implementation task, or acceptance evidence.
 
-To promote a later template, a future owner must define a narrow stage/profile scope, source records, fallback behavior, non-substitution rules, freshness behavior, proof expectations, and exact owner placement. Until then, active current MVP output remains limited to the five templates in this document.
+To promote a later template, a future owner must define a narrow scope, source records, fallback behavior, non-substitution rules, freshness behavior, proof expectations, and exact owner placement. Until then, active current MVP output remains limited to the five templates in this document.

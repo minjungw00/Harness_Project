@@ -12,13 +12,14 @@ This repository is documentation-only and is still in documentation review. It i
 
 No Harness Server/runtime implementation, runtime state, generated projections, generated operational artifacts, executable fixture files, conformance runner, Harness Runtime Home contents, or product code exists here now. Documentation files are source material, not Harness runtime records.
 
-Server coding must not begin until the open decisions in [Implementation decisions before server coding](#implementation-decisions-before-server-coding) are decided, accepted, or explicitly deferred with stage impact by maintainers.
+Server coding must not begin until the open decisions in [Implementation decisions before server coding](#implementation-decisions-before-server-coding) are decided, accepted, or explicitly deferred with scope impact by maintainers.
 
 ## What exists now
 
-- Bilingual planning documentation for Start, Use, Build, Reference, Later, Maintain, and Roadmap readers.
-- Reference owner documents for Core, API, storage, security, projection/templates, agent integration, runtime architecture, operations/conformance, design quality, and glossary terms.
-- Later/Profile documents that preserve future assurance, operations, fixture, and roadmap material outside the active MVP.
+- Bilingual planning documentation in the compact Start, Use, Build, Reference, Later, and Maintain tree.
+- Reference owner documents for Core, API, storage, runtime boundaries, security, agent integration, projection/templates, conformance, design quality, and glossary terms.
+- A single Later candidate index for future assurance, operations, fixture, template, schema, API, and broad product candidates outside the active MVP.
+- `docs/doc-index.yaml` as documentation metadata for stable `doc_id` retrieval and one-language-per-doc context discipline.
 - This Build plan as the compact implementation-planning route before any future server code is written.
 
 ## What does not exist now
@@ -30,7 +31,7 @@ Server coding must not begin until the open decisions in [Implementation decisio
 - Product Repository code or product implementation changes.
 
 <a id="main-idea"></a>
-<a id="mvp-1-included"></a>
+<a id="active-current-mvp"></a>
 ## Active current MVP slice
 
 The active current MVP is the smallest user work loop that shows Harness is a local authority record for scope, user-owned judgment, evidence, close readiness, and residual-risk visibility.
@@ -52,19 +53,18 @@ It includes:
 
 Current MVP wording is cooperative plus limited detective. It must not imply operating-system permission control, arbitrary-tool sandboxing, tamper-proof storage, default pre-tool blocking, or security isolation.
 
-<a id="mvp-1-excluded"></a>
-<a id="later-profiles-not-to-build-yet"></a>
+<a id="excluded-later-material"></a>
 ## Excluded later material
 
 The following material stays outside the active current MVP unless an owner document explicitly promotes a narrow behavior with scope, fallback behavior, and proof expectations:
 
-- full Evidence Manifest behavior, detailed evidence catalogs, persisted Journey Cards, detailed run reports, TDD Trace, Module Map, Interface Contract, Domain Language, Export report, and later-profile templates
+- full Evidence Manifest behavior, detailed evidence catalogs, persisted Journey Cards, detailed run reports, TDD Trace, Module Map, Interface Contract, Domain Language, Export report, and later candidate templates
 - detached Eval, detached verification hardening, full Manual QA matrix, full waiver machinery, rich Approval lifecycle, rich residual-risk lifecycle, and broad stewardship or context-hygiene validators
 - dashboard, hosted workflow UI, artifact dashboard, hosted connector registry, connector marketplace, broad connector ecosystem, cross-surface orchestration, team workflow, metrics, and automation candidates
-- operations profile material such as doctor/readiness suites, recover/export, artifact integrity operations, release handoff, projection refresh/reconcile operations, broad operator coverage, conformance runner, executable fixture catalog, and generated conformance artifacts
+- later operations candidates such as doctor/readiness suites, recover/export, artifact integrity operations, release handoff, projection refresh/reconcile operations, broad operator coverage, conformance runner, executable fixture catalog, and generated conformance artifacts
 - preventive guard expansion, native hook expansion, broad isolated execution, permission isolation, deployment, canary, rollback, and production monitoring
 
-Reference-schema presence does not expand the active MVP by itself. Required fields apply only when the owning tool, record, or profile is active or used.
+Reference-schema presence does not expand the active MVP by itself. Required fields apply only when the owning tool, record, or later candidate is active or used.
 
 ## First internal smoke target
 
@@ -100,28 +100,28 @@ The loop should keep the next safe action visible. If Core, MCP, or the referenc
 5. Status and compact outputs show current scope, pending judgments, evidence gaps, blockers, next safe action, guarantee level, and residual-risk visibility as derived reads from Core records.
 6. `close_task` either closes through the owner-defined active path or returns close blockers. MVP close must keep final acceptance, residual-risk acceptance, verification, QA, and evidence sufficiency distinct.
 
-`compatible`, `blocked`, and `allowed` are Harness authority results. They do not mean physical OS blocking, arbitrary-tool prevention, sandbox isolation, or permission isolation unless a future promoted profile proves that exact mechanism.
+`compatible`, `blocked`, and `allowed` are Harness authority results. They do not mean physical OS blocking, arbitrary-tool prevention, sandbox isolation, or permission isolation unless a future promoted mechanism proves that exact behavior.
 
 <a id="implementation-decisions-needed-before-server-coding"></a>
 <a id="implementation-decisions-still-open"></a>
 ## Implementation decisions before server coding
 
-Server coding must not begin until each row is accepted, decided, or deferred with explicit stage impact by maintainers.
+Server coding must not begin until each row is accepted, decided, or deferred with explicit scope impact by maintainers.
 
 | Decision item | Current status | What must be decided before coding |
 |---|---|---|
-| Implementation-planning readiness | Not accepted. | Maintainers must accept that the documentation planning set is ready for first runtime-batch planning, or name the blocker and affected stage. |
-| Public API coding acceptance | Not accepted for coding. | The active MVP method set, shared schemas, resources, errors, idempotency/replay behavior, unavailable Core/MCP behavior, and later/profile exclusions must be accepted in the API owners before affected tools or resources are coded. |
-| Storage/DDL coding acceptance | Not accepted for coding. | The minimal storage profile, runtime home layout, locks, artifacts, migrations, replay/audit needs, and later-profile storage boundary must be accepted before DDL, runtime data files, or artifact storage are created. |
+| Implementation-planning readiness | Not accepted. | Maintainers must accept that the documentation planning set is ready for first runtime-batch planning, or name the blocker and affected scope. |
+| Public API coding acceptance | Not accepted for coding. | The active MVP method set, shared schemas, resources, errors, idempotency/replay behavior, unavailable Core/MCP behavior, and later-candidate exclusions must be accepted in the API owners before affected tools or resources are coded. |
+| Storage/DDL coding acceptance | Not accepted for coding. | The minimal storage profile, runtime home layout, locks, artifacts, migrations, replay/audit needs, and later candidate storage boundary must be accepted before DDL, runtime data files, or artifact storage are created. |
 | Core transition acceptance | Not accepted for coding. | Active Task/scope, `user_judgment`, `prepare_write`, Write Authorization, `record_run`, blocker, status, evidence summary, and `close_task` semantics must be accepted for the active MVP paths. |
 | Security and local-access acceptance | Not accepted for coding. | The local-only posture and cooperative/limited-detective guarantee wording must be accepted before API/MCP exposure. MVP must not claim OS sandboxing, arbitrary-tool isolation, tamper-proof storage, default pre-tool blocking, permission isolation, or security isolation. |
 | Surface and compact-output boundary | Not accepted for coding. | The one reference `capability_profile`, compact user-facing views, compact agent-facing packet, freshness/unavailable behavior, and projection-as-derived-read boundary must be accepted before display code is implemented. |
-| Newly discovered owner conflict | None currently recorded. | If review finds a real schema/design, stage-boundary, guarantee-level, fixture-semantics, or storage/API conflict, add it here with owner, stage impact, options, and decision needed before coding. |
+| Newly discovered owner conflict | None currently recorded. | If review finds a real schema/design, active/later boundary, guarantee-level, fixture-semantics, or storage/API conflict, add it here with owner, scope impact, options, and decision needed before coding. |
 
-<a id="mvp-1-owner-docs"></a>
-<a id="api-docs-needed-for-mvp-1"></a>
-<a id="storage-docs-needed-for-mvp-1"></a>
-<a id="security-guarantees-for-mvp-1"></a>
+<a id="active-mvp-owner-docs"></a>
+<a id="api-docs-needed-for-active-mvp"></a>
+<a id="storage-docs-needed-for-active-mvp"></a>
+<a id="security-guarantees-for-active-mvp"></a>
 ## Reference owners
 
 Build summarizes sequence and scope only. Use these Reference owners for exact contracts:
@@ -132,7 +132,7 @@ Build summarizes sequence and scope only. Use these Reference owners for exact c
 | Shared envelopes, refs, staged API values, resources, and active schema shapes | [API Schema Core](../reference/api/schema-core.md). |
 | Public errors, idempotency, replay, stale-state, and state conflict behavior | [API Errors](../reference/api/errors.md). |
 | Task, scope, user judgment, `prepare_write`, Write Authorization, `record_run`, evidence gates, blockers, status, and close semantics | [Core Model Reference](../reference/core-model.md). |
-| Runtime home layout, minimal storage profile, locks, migrations, artifacts, and later-profile storage boundaries | [Storage](../reference/storage.md). |
+| Runtime home layout, minimal storage profile, locks, migrations, artifacts, and later candidate storage boundaries | [Storage](../reference/storage.md). |
 | MVP security guarantee wording and local-access posture | [Security Reference](../reference/security.md). |
 | Compact derived views, projection authority boundaries, freshness, and active template ownership | [Projection And Templates Reference](../reference/projection-and-templates.md). |
 | Reference surface `capability_profile` and user-facing surface behavior | [Agent Integration Reference](../reference/agent-integration.md). |
@@ -147,11 +147,11 @@ Build summarizes sequence and scope only. Use these Reference owners for exact c
 Documentation planning can exit only when maintainers have explicitly confirmed:
 
 - this single Build plan is confirmed as the active Build entry point
-- the current MVP boundary and later/profile exclusions are accepted or any remaining boundary issue is reclassified with stage impact
-- the server-coding decisions above are decided, accepted, or deferred with named stage impact
+- the current MVP boundary and later-candidate exclusions are accepted or any remaining boundary issue is reclassified with scope impact
+- the server-coding decisions above are decided, accepted, or deferred with named scope impact
 - Reference owners agree on the active API, Core, Storage, Security, projection/template, and surface boundaries needed for the active MVP
 - English and Korean Build pages preserve the same implementation decisions and active MVP boundary
-- no later/profile material is presented as required for the active MVP
+- no later-candidate material is presented as required for the active MVP
 - documentation remains source material only and no server/runtime code, generated runtime state, executable fixture, conformance result, generated operational artifact, or product implementation output has been created
 
 Passing these documentation-planning criteria does not itself implement Harness, prove runtime conformance, or close any future product work.

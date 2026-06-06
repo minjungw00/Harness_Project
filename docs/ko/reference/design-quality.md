@@ -20,7 +20,7 @@
 - MCP request/response schema, `ValidatorResult`, public error, active/later schema value. [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md)를 봅니다.
 - SQLite DDL, persisted table, validator-run storage, artifact storage. [Storage](storage.md)를 봅니다.
 - projection template body, status card, rendered report. [Projection과 Template 참조](projection-and-templates.md)를 봅니다.
-- 전체 policy-to-validator mapping, steward profile, 전체 review-stage 절차, operations/reporting 자료, 향후 conformance 목록.
+- 전체 policy-to-validator mapping, steward policy, 전체 review 절차, operations/reporting 자료, 향후 conformance 목록.
 
 이 저장소의 문서는 계획용 자료입니다. 지금 이 저장소에 하네스 서버, 런타임 상태, 생성된 증거, QA record, Acceptance record, residual-risk record, close record가 있다는 뜻이 아닙니다.
 
@@ -37,7 +37,7 @@
 - 사용자 소유 제품 판단, 중요한 기술 판단, QA 면제, 검증 위험, 최종 수락, 잔여 위험 판단을 구분합니다.
 - 증거, 검증, 수동 QA, 최종 수락, 잔여 위험 표시, 잔여 위험 수락, 닫기 준비 상태를 구분합니다.
 
-설계 품질은 평범한 작업을 끝없는 계획 반복으로 만들면 안 됩니다. 전체 domain-language 점검, 전체 module/interface review, 전체 TDD trace, 전체 feedback-loop audit, 전체 codebase-stewardship review, detailed Manual QA policy, detached verification, two-stage review display, steward profile은 다른 활성 owner 경로가 좁은 일부를 명시적으로 요구하지 않는 한 활성 현재 MVP blocker가 아닙니다.
+설계 품질은 평범한 작업을 끝없는 계획 반복으로 만들면 안 됩니다. 전체 domain-language 점검, 전체 module/interface review, 전체 TDD trace, 전체 feedback-loop audit, 전체 codebase-stewardship review, detailed Manual QA policy, detached verification, two-stage review display, steward policy는 다른 활성 owner 경로가 좁은 일부를 명시적으로 요구하지 않는 한 활성 현재 MVP blocker가 아닙니다.
 
 <a id="finding-severity"></a>
 ## 3. 발견 사항 심각도
@@ -126,6 +126,6 @@ Validator ID는 보고용 라벨입니다. Core invariant, gate, 닫기 blocker,
 <a id="later-policy-catalog-boundary"></a>
 ## 8. Later 정책 후보 경계
 
-전체 설계 품질 later 정책 후보 목록은 활성 현재 MVP scope가 아닙니다. 향후 정책 후보, steward profile, detailed review display, operations/reporting material, full validator mapping, future conformance fixture는 이름 있는 owner가 범위, 대체 동작, exact contract, 증명 기대와 함께 좁은 동작을 승격하기 전까지 [Later 후보 색인](../later/index.md)에 남습니다.
+전체 설계 품질 later 정책 후보 목록은 활성 현재 MVP scope가 아닙니다. 향후 정책 후보, steward policy, detailed review display, operations/reporting 후보, full validator mapping, future conformance fixture는 이름 있는 owner가 범위, 대체 동작, exact contract, 증명 기대와 함께 좁은 동작을 승격하기 전까지 [Later 후보 색인](../later/index.md)에 남습니다.
 
 Later 후보는 이름만 유지할 수 있습니다. 이를 활성 현재 MVP requirement, blocker, 면제 규칙, 증거 기대치, validator mapping, fixture requirement, operations report, implementation task처럼 제시하면 안 됩니다.

@@ -206,7 +206,7 @@ docs:
       en: docs/en/later/index.md
       ko: docs/ko/later/index.md
     default_for_agent: en
-    owns: "Later/profile candidates, promotion rule, roadmap candidates, and explicitly retired material."
+    owns: "Later candidates, promotion rule, broad future candidates, and explicitly retired material."
     does_not_own: "Active current MVP scope, active API/schema contracts, or implementation readiness."
 
   - doc_id: maintain.authoring-guide

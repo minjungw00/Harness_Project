@@ -2,7 +2,7 @@
 
 Use this glossary to check Harness terms, capitalization, exact identifiers, and owner routing. It is source documentation for planned Harness behavior only; this repository is still documentation-only, and current repository status stays in [MVP Plan](../build/mvp-plan.md#documentation-acceptance-status).
 
-This page is a compact lookup aid. It does not define Core behavior, API schemas, storage DDL, security guarantees, projection templates, connector contracts, conformance fixtures, or later-profile contracts. Follow the owner links for exact behavior.
+This page is a compact lookup aid. It does not define Core behavior, API schemas, storage DDL, security guarantees, projection templates, connector contracts, conformance fixtures, or later candidate contracts. Follow the owner links for exact behavior.
 
 ## Public terms
 
@@ -32,8 +32,8 @@ Use these terms first in user-facing docs, prompts, and status summaries. Add ex
 | next safe action | The next action that can proceed without hiding unresolved scope, judgment, evidence, QA, verification, acceptance, or risk. | [API Schema Core](api/schema-core.md#nextactionsummary) |
 | authority boundary | The line between what creates Harness authority and what only informs it. Chat, projections, and reports are not authority. | [Runtime Boundaries](runtime-boundaries.md#4-core-mutation-authority) |
 | derived display | User-visible output rendered from owner records, such as a status card or projection. It does not replace Core-owned state. | [Projection And Templates](projection-and-templates.md#authority-boundary) |
-| current MVP | The active planned MVP reference scope, not proof that runtime/server implementation exists. | [MVP Plan](../build/mvp-plan.md#active-current-mvp-slice) |
-| later candidate | Future or profile material outside active MVP scope until an owner promotes it with scope, fallback behavior, and proof expectations. | [Later Candidate Index](../later/index.md#boundary) |
+| current MVP | The active planned MVP reference scope, not proof that runtime/server implementation exists. | [MVP Plan](../build/mvp-plan.md#active-current-mvp) |
+| later candidate | Future material outside active MVP scope until an owner promotes it with scope, fallback behavior, and proof expectations. | [Later Candidate Index](../later/index.md#boundary) |
 
 ## Core terms
 
@@ -70,7 +70,7 @@ Keep these exact in schemas, API docs, records, examples, file paths, diagnostic
 | `RunSummary` / `ObservedChanges` | Public run result and observed change summary shapes. |
 | Judgment shapes | `UserJudgment`, `UserJudgmentCandidate`, `RecordUserJudgmentPayload`, and `AcceptedRiskInput` represent a judgment request, candidate, resolution, or residual-risk acceptance input. |
 | `judgment_kind` | Canonical user judgment kind field. Active values include `product_decision`, `technical_decision`, `scope_decision`, `sensitive_approval`, `qa_waiver`, `verification_risk_acceptance`, `final_acceptance`, `residual_risk_acceptance`, and `cancellation`. |
-| `presentation` | Active MVP prompt/detail field. `short` is active; `full` Decision Packet presentation is later/profile material. |
+| `presentation` | Active MVP prompt/detail field. `short` is active; `full` Decision Packet presentation is later candidate material. |
 | `CloseBlocker` | Structured close/progress blocker result. Prose-only report text is not a blocker result. |
 | `ValidatorResult` | Structured validator output. Active stable validator ID: `surface_capability_check`. |
 | Sensitive categories | Exact sensitive-category values such as `auth_change`, `destructive_write`, `secret_access`, `privacy_or_pii_change`, and `policy_override` are owned by API Schema Core. |
@@ -122,20 +122,13 @@ Agent and connector terms explain how a surface should use owner records with lo
 
 ## Later terms
 
-Later terms are candidates or delivery labels. They are not active API/schema/storage contracts, fixture bodies, runtime behavior, generated artifacts, or MVP-1 requirements unless an owner promotes them.
+Later terms are candidates or delivery labels. They are not active API/schema/storage contracts, fixture bodies, runtime behavior, generated artifacts, or active MVP requirements unless an owner promotes them.
 
 | Later term | Current status | Owner route |
 |---|---|---|
-| Engineering Checkpoint | First future internal authority-loop smoke. It is not the product MVP. | [MVP Plan](../build/mvp-plan.md#first-internal-smoke-target) |
-| `Kernel Smoke` | Narrow future smoke-check authoring label under Engineering Checkpoint; not a stage name. | [MVP Plan](../build/mvp-plan.md#first-internal-smoke-target) |
-| MVP-1 User Work Loop | First narrow user-value milestone after the internal smoke target. | [MVP Plan](../build/mvp-plan.md#user-work-loop) |
-| Assurance Profile | Later hardening for assurance behavior. | [Later](../later/index.md#assurance-candidates) |
-| Operations Profile | Later hardening for operations and handoff behavior. | [Later](../later/index.md#operations-candidates) |
-| Roadmap | Future scope unless owner docs promote and prove an item. | [Later](../later/index.md#roadmap-candidates) |
-| hardened local reference target | Umbrella target reached after MVP-1 by completing owner-defined Assurance Profile and Operations Profile work; not an extra stage or suite. | [Translation Guide](../maintain/translation-guide.md) |
-| Context Index | Later read-only retrieval support. It cannot authorize writes, satisfy gates, accept risk, or close work. | [Later](../later/index.md#roadmap-candidates) |
+| Context Index | Later read-only retrieval support. It cannot authorize writes, satisfy gates, accept risk, or close work. | [Later](../later/index.md#broad-future-candidates) |
 | Journey Card / Journey Spine | Later continuity display. It helps orientation when enabled and fresh, but it is not Core-owned state. | [Later](../later/index.md#later-template-candidates) |
-| Browser QA Capture | Roadmap capture support candidate. It is not Manual QA, final acceptance, or detached verification by itself. | [Later](../later/index.md#roadmap-candidates) |
+| Browser QA Capture | Later capture support candidate. It is not Manual QA, final acceptance, or detached verification by itself. | [Later](../later/index.md#broad-future-candidates) |
 
 ## Retired / compatibility terms
 
@@ -143,7 +136,7 @@ Keep these only where they prevent confusion with compatibility payloads or labe
 
 | Term | Compatibility note | Current route |
 |---|---|---|
-| Decision Packet | Full-format user-judgment presentation and compatibility label. The active MVP uses compact `presentation=short`; `presentation=full` is later/profile material. | [API Schema Core](api/schema-core.md#userjudgment), [Later](../later/index.md#assurance-candidates) |
+| Decision Packet | Full-format user-judgment presentation and compatibility label. The active MVP uses compact `presentation=short`; `presentation=full` is later candidate material. | [API Schema Core](api/schema-core.md#userjudgment), [Later](../later/index.md#assurance-candidates) |
 | `request_user_decision` / `record_user_decision` | Compatibility aliases for `request_user_judgment` / `record_user_judgment`. | [API Schema Core](api/schema-core.md#stage-specific-active-value-sets) |
 | `judgment_type`, `judgment_domain`, `decision_kind`, `decision_profile` | Compatibility aliases. Prefer `judgment_kind`, route-specific payload validation, and `presentation`. | [API Schema Core](api/schema-core.md#userjudgment) |
 | `display_label` | Compatibility or response-only display label when a surface exposes that name. It is not an active canonical schema/storage field; render labels from `judgment_kind` and locale. | [API Schema Core](api/schema-core.md#userjudgment), [Storage](storage.md#4-tables) |

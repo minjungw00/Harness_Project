@@ -100,7 +100,7 @@ Retrieval-cost rules:
 
 - Do not inject the full Reference set by default.
 - Do not inject full schemas by default.
-- Do not inject full Storage DDL, full templates, full projection bodies, complete histories, full event logs, raw artifact contents, raw logs, raw screenshots, raw traces, or unrelated Roadmap material by default.
+- Do not inject full Storage DDL, full templates, full projection bodies, complete histories, full event logs, raw artifact contents, raw logs, raw screenshots, raw traces, or unrelated later candidate material by default.
 - Do not inject future/later catalog material by default.
 - Pull the owner section needed for the next action, then stop.
 - Choose one language for a normal work prompt. Do not load English and Korean paired docs for the same `doc_id` into one prompt; bilingual review should compare targeted sections rather than pushing both full paired documents.
@@ -127,9 +127,9 @@ Always-on context should fit on one screen or less. Include only current, action
 
 Do not put full reference material, full schemas, full DDL, full projection text, complete artifact bodies, unrelated templates, future catalogs, stale or unrelated task history, or full logs in always-on context.
 
-## 6. Phase-Relevant Context Profiles
+## 6. Phase-Relevant Context Selection
 
-Use the narrowest profile that answers the next question.
+Use the narrowest context that answers the next question.
 
 | Phase | Pull only this |
 |---|---|
@@ -191,12 +191,12 @@ Keep a recipe to:
 - the target `capability_profile`
 - generated or managed instruction/config paths, if any
 - MCP posture and display-safe handles
-- surface-specific capability differences that require profile refresh
-- capture, guard, or isolation facts proven by that profile
+- surface-specific capability differences that require `capability_profile` refresh
+- capture, guard, or isolation facts proven by that `capability_profile`
 - fallback behavior when a required capability is missing
-- conformance status for that profile
+- conformance status for that `capability_profile`
 
-Do not include generic Core rules, public API schemas, full Reference docs, future connector ambitions, hosted-agent assumptions, audit notes, unrelated Roadmap items, full projection bodies, or long setup tutorials.
+Do not include generic Core rules, public API schemas, full Reference docs, future connector ambitions, hosted-agent assumptions, audit notes, unrelated later candidate items, full projection bodies, or long setup tutorials.
 
 <a id="reference-local-surface"></a>
 
@@ -237,8 +237,8 @@ Reference-surface checks include:
 
 - status with and without an active Task
 - compact current-position status before significant resume when the Use procedure requires it
-- guarantee display derived from actual profile fields
-- no `preventive` or `isolated` claim when the profile cannot prove it
+- guarantee display derived from actual `capability_profile` fields
+- no `preventive` or `isolated` claim when the `capability_profile` cannot prove it
 - `prepare_write` allowed/blocked compatibility outcomes without OS-permission wording
 - single-use cooperative Write Authorization only after `prepare_write.decision=allowed`
 - `record_run` with summary and owner-registered artifact refs

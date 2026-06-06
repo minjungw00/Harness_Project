@@ -16,7 +16,7 @@ runtime state, 구현 완료된 DDL이 있다는 뜻이 아닙니다. 현재 저
 - Event와 멱등성 storage 의미.
 - 상태 버전 저장 규칙.
 - 잠금 정책과 마이그레이션 경계.
-- 현재 활성 MVP storage와 later/profile storage의 경계.
+- 현재 활성 MVP storage와 later 후보 storage의 경계.
 
 이 문서는 아래 항목을 담당하지 않습니다.
 
@@ -252,7 +252,7 @@ transaction과 필요한 경우 process/project lock을 사용합니다. Authori
 [런타임 경계 참조](runtime-boundaries.md)가 담당합니다.
 
 현재 활성 MVP는 `persistent_locks` table을 요구하지 않습니다. Durable lock/recovery
-metadata는 owner가 승격하기 전까지 later Operations/Profile material입니다.
+metadata는 owner가 승격하기 전까지 later 운영 자료입니다.
 
 Lock은 concurrent state write를 보호합니다. OS sandboxing, artifact integrity,
 tamper-proof storage, permission isolation, pre-tool blocking을 제공하지 않습니다.

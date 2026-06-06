@@ -72,8 +72,8 @@ Recovery cannot infer successful implementation from chat, generated Markdown, s
 
 ## 8. What the current MVP does not isolate
 
-The current MVP boundary is cooperative and detective unless a future owner promotes and proves a stronger profile for a named operation. It does not claim OS-level permissions, arbitrary-tool sandboxing, permission enforcement, tamper-proof storage, universal pre-tool blocking, or security isolation.
+The current MVP boundary is cooperative and detective unless a future owner promotes and proves a stronger mechanism for a named operation. It does not claim OS-level permissions, arbitrary-tool sandboxing, permission enforcement, tamper-proof storage, universal pre-tool blocking, or security isolation.
 
-Local-only MCP reachability is not authorization. A reachable caller still needs valid Core/API state, project/task/surface compatibility, state-version compatibility, and the active surface capability profile. `allowed` means compatible with Harness state and active surface capability. `blocked` means the Harness authority path or capability check says the action should not proceed. Neither word means physical prevention unless a proven preventive profile names that exact covered operation.
+Local-only MCP reachability is not authorization. A reachable caller still needs valid Core/API state, project/task/surface compatibility, state-version compatibility, and the active surface capability. `allowed` means compatible with Harness state and active surface capability. `blocked` means the Harness authority path or capability check says the action should not proceed. Neither word means physical prevention unless a proven preventive mechanism names that exact covered operation.
 
 No surface name, connector recipe, friendly mode label, projection, template, status card, artifact, or documentation check upgrades the guarantee level. Stronger preventive or isolated claims require a documented mechanism, covered operation, owner, and proof path in the relevant Reference owners.

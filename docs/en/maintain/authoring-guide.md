@@ -36,7 +36,7 @@ Use this owner split:
 |---|---|
 | Core transitions, gates, `prepare_write`, Write Authorization, `record_run`, `close_task`, waivers, and non-substitution rules | [Core Model Reference](../reference/core-model.md) |
 | Public API methods and active request/response shapes | [MVP API](../reference/api/mvp-api.md), [API Schema Core](../reference/api/schema-core.md), [API Errors](../reference/api/errors.md) |
-| Later/profile API and schema candidates | [Later Candidate Index](../later/index.md#later-schema-candidates) |
+| Later candidate API and schema material | [Later Candidate Index](../later/index.md#later-schema-candidates) |
 | Storage layout, DDL, persisted records, locks, artifacts, and migrations | [Storage](../reference/storage.md) |
 | Projection rules, template bodies, freshness, and derived display boundaries | [Projection And Templates Reference](../reference/projection-and-templates.md) |
 | Security assets, trust boundaries, guarantee levels, and honest security wording | [Security Reference](../reference/security.md) |
@@ -51,11 +51,11 @@ When a non-owner repeats a contract, update the owner if needed, then replace th
 
 ## 4. Active/later boundary
 
-Active docs must not turn later/profile, Roadmap, diagnostic, operations, export, rich template, or future conformance-runner material into an active requirement by wording.
+Active docs must not turn later candidates, diagnostic, operations, export, rich template, or future conformance-runner material into an active requirement by wording.
 
 A value, method, table, fixture family, command, template, or security guarantee is active only when its owner promotes it with scope, fallback behavior, and proof expectations. Reference presence alone does not expand active delivery scope.
 
-Keep later material in `docs/*/later/*`, explicitly labeled later/profile sections, or the owner that has promoted it. If an active schema or DDL block contains inactive values, fix the owner boundary rather than relying on nearby prose to explain that those values are not active.
+Keep later material in `docs/*/later/*`, explicitly labeled later candidate sections, or the owner that has promoted it. If an active schema or DDL block contains inactive values, fix the owner boundary rather than relying on nearby prose to explain that those values are not active.
 
 ## 5. User judgment boundary
 
@@ -86,7 +86,7 @@ Prefer owner links over secondary summaries. Do not create archive copies of rem
 
 ## 8. Stale content deletion rule
 
-Maintain docs should guide future editing. They should not preserve historical rewrite reviews, resolved issue records, old acceptance notes, old stage label explanations, legacy alias history, later-profile localization audit records, past translation problem records, or scratch migration plans.
+Maintain docs should guide future editing. They should not preserve historical rewrite reviews, resolved issue records, old acceptance notes, old delivery-label explanations, legacy alias history, later-candidate localization audit records, past translation problem records, or scratch migration plans.
 
 Use these durable triage categories when deciding what to do with old prose:
 

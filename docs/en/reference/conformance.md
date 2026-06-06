@@ -14,8 +14,8 @@ Keep these layers separate:
 
 | Layer | Meaning | Current status |
 |---|---|---|
-| Documentation checks | Read-only Markdown maintenance checks for links, terminology, owner boundaries, stage wording, security wording, and bilingual parity. | Current docs-maintenance aid only; not runtime conformance. |
-| Behavior examples | Compact examples of expected Engineering Checkpoint and MVP-1 behavior. | Planning reference only; not fixture files and not pass/fail criteria. |
+| Documentation checks | Read-only Markdown maintenance checks for links, terminology, owner boundaries, active/later wording, security wording, and bilingual parity. | Current docs-maintenance aid only; not runtime conformance. |
+| Behavior examples | Compact examples of expected first-smoke and active MVP behavior. | Planning reference only; not fixture files and not pass/fail criteria. |
 | Runtime conformance | Future executable checks over implemented Core/API/storage/operator behavior. | Does not exist yet. |
 
 Conformance does not judge generated prose. It will judge owner-state effects, response facts, storage effects, stable events when promoted, artifact refs, blockers, errors, and forbidden side effects.
@@ -28,7 +28,7 @@ The following are future implementation work, not current repository contents:
 - a conformance runner or `harness conformance run` implementation
 - generated conformance artifacts, reports, projections, runtime state, or Harness Runtime Home data
 - current runtime `PASS`, `WARN`, or `FAIL` results
-- active fixture suites for Engineering Checkpoint, MVP-1, Assurance Profile, Operations Profile, or Roadmap candidates
+- active fixture suites for the active MVP or later candidates
 - current proof of preventive blocking, OS permission control, arbitrary-tool sandboxing, tamper-proof storage, or security isolation
 
 Documentation examples here may guide implementation planning, but they do not create runtime state, acceptance evidence, close readiness, or implementation readiness.
@@ -48,7 +48,7 @@ A promoted fixture should include these parts:
 | expected authoritative assertions | Structured response, state, storage, event, artifact, blocker, error, guarantee, or forbidden-side-effect facts. |
 | owner links | The API, Core, Storage, Security, ArtifactRef, and policy owners that define the exact values. |
 
-Materialized fixtures must use public owner schemas. They must not invent fixture-only enum values, pseudo-fields, localized display labels as state, prose-only expectations, or later/profile-only values.
+Materialized fixtures must use public owner schemas. They must not invent fixture-only enum values, pseudo-fields, localized display labels as state, prose-only expectations, or later-candidate-only values.
 
 ## 5. Assertion Authority
 
@@ -100,7 +100,7 @@ Current future family names are:
 - Operations diagnostics, export, recover, and handoff
 - Browser QA Capture
 
-Listing a family does not make it an Engineering Checkpoint, MVP-1, Assurance Profile, Operations Profile, or Roadmap requirement. A future owner must promote a narrow behavior with scope, fallback behavior, exact contracts, and proof expectations before executable fixture material exists.
+Listing a family does not make it an active MVP or later-candidate requirement. A future owner must promote a narrow behavior with scope, fallback behavior, exact contracts, and proof expectations before executable fixture material exists.
 
 ## 8. Metrics Boundary
 

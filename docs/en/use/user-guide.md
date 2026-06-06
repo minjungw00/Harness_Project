@@ -100,7 +100,7 @@ Does not settle: login architecture, account recovery, final acceptance, or resi
 
 A broad reply such as "go ahead," "approved," or "looks good" applies only to the one active, clearly named judgment. It does not automatically grant sensitive-action approval, waive QA, accept verification risk, accept the final result, change scope, cancel the task, or accept residual risk.
 
-The compact active path is a judgment request through the `user_judgment` owner path. A full-format Decision Packet is later/profile presentation material for complex judgments; it is not required for ordinary user decisions.
+The compact active path is a judgment request through the `user_judgment` owner path. A full-format Decision Packet is later candidate presentation material for complex judgments; it is not required for ordinary user decisions.
 
 ## 5. Treat sensitive action approval separately
 
