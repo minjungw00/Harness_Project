@@ -8,7 +8,7 @@
 
 ## 2. 적합성이 뜻하는 것
 
-적합성은 향후 Harness 구현이 특정 동작을 Harness가 소유한 권한 기록에 맞게 증명할 수 있다는 뜻입니다. 향후 점검은 owner가 정의한 Core, API, operator action 하나를 실행하고, captured fact를 structured expectation과 비교해야 합니다.
+적합성은 향후 실행 점검이 특정 동작을 Harness가 소유한 권한 기록에 맞게 보여줄 수 있다는 뜻입니다. 향후 점검은 owner가 정의한 Core, API, operator action 하나를 실행하고, captured fact를 structured expectation과 비교해야 합니다.
 
 아래 세 층을 분리합니다.
 
@@ -60,7 +60,7 @@ Materialized fixture는 public owner schema를 사용해야 합니다. Fixture-o
 - Core가 소유한 Task, Change Unit, user judgment, Write Authorization, Run, evidence summary, blocker, close, residual-risk state
 - Storage가 소유한 row effect, JSON `TEXT` owner field, idempotency/replay fact, state-version effect
 - Core owner가 이름을 승격한 뒤의 stable `task_events`
-- artifact proof가 필요할 때의 `ArtifactRef`, artifact link, `sha256`, `size_bytes`, `content_type`, `redaction_state`, retention, availability, file-integrity fact
+- artifact 무결성 근거가 필요할 때의 `ArtifactRef`, artifact link, `sha256`, `size_bytes`, `content_type`, `redaction_state`, retention, availability, file-integrity fact
 - API/Core owner의 primary `ErrorCode`, error detail, structured blocker field
 - Security와 Agent Integration owner에 맞는 guarantee-level fact
 - durable authorization 없음, Run row 없음, artifact mutation 없음, close-state change 없음 같은 forbidden side effect 부재 assertion

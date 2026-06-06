@@ -22,7 +22,7 @@ This documentation repository is also not the user's Product Repository. It is a
 
 The Harness Server / Installation is the future local Harness program boundary. It receives local tool/resource calls, runs Core-owned authority checks, records state-changing actions through Core, invokes validators where the active profile requires them, registers artifacts, and renders derived display when projection support is in scope.
 
-The MVP boundary does not require a service fleet or detailed process split. It is compatible with one local process as long as the authority boundaries stay clear: callers ask, Core decides and records, storage persists, and display derives from recorded state.
+The MVP boundary does not require a service fleet or detailed process split. It is compatible with one local process as long as the authority boundaries stay clear: callers ask, Core evaluates and records compatible state changes, storage persists, and display derives from recorded state.
 
 The Harness Server / Installation is not the Product Repository and not the Harness Runtime Home. It may read product files, write product files only through the user's chosen work surface and the documented cooperative Harness checks, and persist Harness records only through Runtime Home storage paths owned by [Storage](storage.md).
 
@@ -38,7 +38,7 @@ Runtime Home files should be treated as private local control data, but Harness 
 
 ## 4. Core mutation authority
 
-Canonical Harness state changes occur only through Core state-changing paths. Core owns the authority to create or update Harness records for scope, user-owned judgment, evidence and artifact refs, verification and QA expectations, final acceptance, residual-risk status, and close readiness.
+Canonical Harness state changes occur only through Core state-changing paths. Core owns the Harness-record authority to create or update records for scope, user-owned judgment, evidence and artifact refs, verification and QA expectations, final acceptance, residual-risk status, and close readiness.
 
 Agents, MCP callers, CLI text, operator output, product files, projection Markdown, templates, status cards, artifact bytes, and chat transcripts do not mutate canonical Harness state by themselves. They can provide input or evidence candidates only when the relevant owner path accepts them.
 
@@ -74,6 +74,6 @@ Recovery cannot infer successful implementation from chat, generated Markdown, s
 
 The current MVP boundary is cooperative and detective unless a future owner promotes and proves a stronger mechanism for a named operation. It does not claim OS-level permissions, arbitrary-tool sandboxing, permission enforcement, tamper-proof storage, universal pre-tool blocking, or security isolation.
 
-Local-only MCP reachability is not authorization. A reachable caller still needs valid Core/API state, project/task/surface compatibility, state-version compatibility, and the active surface capability. `allowed` means compatible with Harness state and active surface capability. `blocked` means the Harness authority path or capability check says the action should not proceed. Neither word means physical prevention unless a proven preventive mechanism names that exact covered operation.
+Local-only MCP reachability is not authorization. A reachable caller still needs valid Core/API state, project/task/surface compatibility, state-version compatibility, and the active surface capability. `allowed` means compatible with Harness state and active surface capability. `blocked` means the Harness owner path or capability check says the action should not proceed. Neither word means physical prevention unless a proven preventive mechanism names that exact covered operation.
 
 No surface name, connector recipe, friendly mode label, projection, template, status card, artifact, or documentation check upgrades the guarantee level. Stronger preventive or isolated claims require a documented mechanism, covered operation, owner, and proof path in the relevant Reference owners.

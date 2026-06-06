@@ -31,7 +31,7 @@ This reference does not own:
 - operator commands and diagnostics as active Reference scope; future candidates stay in [Later Candidate Index: Operations Candidates](../later/index.md#operations-candidates)
 - future connector marketplaces, hosted-agent assumptions, broad connector ecosystems, or cross-surface orchestration
 
-Surface recipes in this document are integration guidance. They do not create Core state authority, write authority, evidence, verification, QA, sensitive-action approval, final acceptance, residual-risk acceptance, close readiness, or any new security boundary.
+Surface recipes in this document are integration guidance. They do not create Core state authority, Write Authorization, evidence, verification, QA, sensitive-action approval, final acceptance, residual-risk acceptance, close readiness, or any new security boundary.
 
 <a id="role-lens-behavior"></a>
 
@@ -43,7 +43,7 @@ Role Lens behavior, when present, is read-only posture guidance. A lens may reco
 
 Surface name is not capability. A connector must use a `capability_profile` scoped to the actual host, version/configuration, workspace policy, MCP posture, capture path, guard path, and separation boundary in use.
 
-A `capability_profile` is not write authority and does not bypass active Task scope, active Change Unit scope, `prepare_write`, single-use cooperative Write Authorization, `record_run`, or Core close rules. Capability affects blocked reasons, fallback behavior, validator results, and guarantee display. `allowed` and `blocked` are Harness compatibility outcomes unless a proven preventive profile names the covered operation.
+A `capability_profile` is not a Write Authorization and does not create write compatibility or bypass active Task scope, active Change Unit scope, `prepare_write`, single-use cooperative Write Authorization, `record_run`, or Core close rules. Capability affects blocked reasons, fallback behavior, validator results, and guarantee display. `allowed` and `blocked` are Harness compatibility outcomes unless a proven preventive profile names the covered operation.
 
 The active reference profile is intentionally small:
 
@@ -177,10 +177,10 @@ Fallbacks are described by guarantee level and risk, not by surface brand.
 
 | Fallback | Use when | Boundary |
 |---|---|---|
-| Cooperative | The surface can follow instructions but cannot enforce them. | Hold product writes by instruction when authoritative MCP or write-scope checks are unavailable. |
+| Cooperative | The surface can follow instructions but cannot enforce them. | Hold product writes by instruction when the Core/MCP owner path or write-scope checks are unavailable. |
 | Detective | Harness can observe supported facts after action. | Mark state stale, partial, blocked, or failed and require repair, reconcile, or fresh evidence. |
 | Capability insufficient | A requested write, capture, guard, isolation, or guarantee depends on an unsupported field. | Return `CAPABILITY_INSUFFICIENT` or a structured blocked reason; lower the displayed guarantee. |
-| MCP unavailable | The surface or call path cannot reach authoritative Core. | Use stable public `MCP_UNAVAILABLE` behavior and do not claim state mutation. |
+| MCP unavailable | The surface or call path cannot reach the current Core authority path. | Use stable public `MCP_UNAVAILABLE` behavior and do not claim state mutation. |
 | Local access mismatch | The caller or transport is outside the registered local profile. | Use `LOCAL_ACCESS_MISMATCH` with display-safe diagnostics; do not introduce a surface-specific `UNAUTHORIZED` code. |
 
 `MCP_SERVER_UNAVAILABLE` and `SURFACE_MCP_UNAVAILABLE` are diagnostic conditions. `MCP_UNAVAILABLE` remains the stable public availability code.
@@ -238,7 +238,7 @@ Because `pre_tool_blocking_supported=false`, "hold" language means cooperative s
 
 ## 10. Connector Conformance Boundary
 
-Connector conformance proves that a declared profile can uphold this common contract at its stated capability level. It does not prove a broad connector ecosystem, hosted registry, remote/shared MCP exposure, cross-surface orchestration, implementation readiness, runtime conformance for this documentation repository, or final documentation acceptance.
+Connector conformance is intended to demonstrate that a declared profile can uphold this common contract at its stated capability level. It does not prove a broad connector ecosystem, hosted registry, remote/shared MCP exposure, cross-surface orchestration, implementation readiness, runtime conformance for this documentation repository, or final documentation acceptance.
 
 The active smoke target is the reference `capability_profile`, not a connector marketplace. Until runtime fixtures exist and run, `conformance_smoke_status` must remain `planned_not_run`.
 

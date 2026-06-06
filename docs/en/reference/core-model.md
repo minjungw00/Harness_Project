@@ -31,15 +31,15 @@ Exact API request fields and storage table definitions may be named here only by
 ## 2. Kernel invariants
 
 1. Core-owned state is canonical for Harness operations; chat, reports, generated Markdown, status cards, projections, and template output are derived or contextual.
-2. Harness governs Harness records and state transitions, not OS permissions, arbitrary-tool execution, or permission isolation.
-3. Product writes require explicit compatible scope before `prepare_write` can allow a write attempt.
+2. Harness governs Harness records and state transitions, not OS permissions, arbitrary-tool control or sandboxing, tamper-proof storage, default pre-tool blocking, or security isolation.
+3. Product writes require explicit compatible scope before `prepare_write` can return an allowed compatibility result.
 4. A non-dry-run allowed `prepare_write` path is the only Core path that creates a consumable Write Authorization.
 5. A Write Authorization is single-use for one compatible attempt. It is not reusable scope and not OS permission.
-6. `record_run` records what happened and consumes compatible write authority; it cannot retroactively authorize work that lacked scope, user judgment, sensitive-action approval, or Write Authorization.
+6. `record_run` records what happened and consumes the compatible Write Authorization; it cannot retroactively authorize work that lacked scope, user judgment, sensitive-action approval, or Write Authorization.
 7. User-owned judgment cannot be replaced by agent inference, broad consent, generated prose, evidence, or projection text.
 8. Product judgment, technical judgment, scope judgment, sensitive-action approval, final acceptance, QA waiver, verification-risk acceptance, residual-risk acceptance, and cancellation are distinct.
 9. Evidence, verification, Manual QA, final acceptance, residual-risk visibility, residual-risk acceptance, and close readiness do not substitute for one another.
-10. `close_task` must not honestly close while close-relevant blockers remain; known residual risk must be visible before a successful close path depends on it.
+10. `close_task` must return blockers instead of a successful close while close-relevant blockers remain; known residual risk must be visible before a successful close path depends on it.
 11. Active current MVP scope and later candidate material stay separate. A later candidate becomes active only when its owner promotes it with scope, fallback behavior, and proof expectations.
 
 <a id="entity-model"></a>
@@ -120,7 +120,7 @@ Gates are Core compatibility dimensions for progress, write, run recording, and 
 - <a id="verification-gate"></a>Verification Gate: whether required verification is satisfied, waived through the proper risk path, failed, pending, or blocked. Verification is required only when an active owner path makes it required.
 - <a id="qa-gate"></a>QA Gate: whether required Manual QA is satisfied, waived where allowed, failed, pending, or blocked. Manual QA is not produced by screenshots or automated checks alone.
 - <a id="acceptance-gate"></a>Acceptance Gate: whether final acceptance is required and, if so, recorded after the close basis is visible.
-- <a id="capability-boundary"></a>Capability Boundary: surface capability affects blockers, validator findings, and guarantee display, but it is not a gate that creates authority. Missing capability must narrow the claim, block the action, or produce a capability blocker rather than pretending verification or prevention happened.
+- <a id="capability-boundary"></a>Capability Boundary: surface capability affects blockers, validator findings, and guarantee display, but it is not a gate that creates authority. Missing capability must narrow the claim, hold the action through the owner path, or produce a capability blocker rather than pretending verification or prevention happened.
 
 Gate state exposure in public responses is owned by [API Schema Core](api/schema-core.md) and method owners. Core owns the compatibility meaning and the rule that stale gate summaries must be recomputed before write or close relies on them.
 
@@ -131,7 +131,7 @@ Gate state exposure in public responses is owned by [API Schema Core](api/schema
 The lifecycle is a Core state-transition discipline, not a display script. Active fixture and schema owners may expose exact values, but the Core principles are:
 
 - A Task can be shaped, made ready, executed, wait for user judgment, become blocked, complete, cancel, or be superseded only through owner paths.
-- Advice/read-only work must not produce product-file writes. Write-capable direct and tracked work must pass through compatible scope and write authority.
+- Advice/read-only work must not produce product-file writes. Write-capable direct and tracked work must pass through compatible scope and the Write Authorization path.
 - A product write path moves through scope establishment, user-judgment and sensitive-action checks when applicable, `prepare_write`, one compatible product-write Run, `record_run`, evidence/blocker update, and `close_task`.
 - `close_ready` is derived. It is not a lifecycle phase and does not move a Task to completed; only `close_task` can do that.
 - Idempotency replay must not duplicate state transitions, events, Write Authorizations, Runs, artifacts, evidence updates, or close effects.
@@ -147,7 +147,7 @@ Stable event names are append-only history labels for Core changes, not authorit
 
 `prepare_write` is the unique pre-write compatibility decision point for product-file writes. It checks the intended operation against active Task, Change Unit, scope, baseline, Autonomy Boundary, required user-owned judgment, sensitive-action approval, surface capability, and active design-policy preconditions.
 
-Only a compatible non-dry-run allowed path creates a consumable Write Authorization. Dry-run responses, `blocked`, `approval_required`, `decision_required`, and `state_conflict` remain response, blocker, or error states only. They must not create a consumable authorization row, replay row, evidence record, close state, or write authority.
+Only a compatible non-dry-run allowed path creates a consumable Write Authorization. Dry-run responses, `blocked`, `approval_required`, `decision_required`, and `state_conflict` remain response, blocker, or error states only. They must not create a consumable authorization row, replay row, evidence record, close state, or Harness write-compatibility record.
 
 Write Authorization is a cooperative Harness record. It can tell a connected agent or surface that the intended write is compatible with current Harness state; it does not grant OS permission, enforce a sandbox, prevent arbitrary tools, make storage tamper-proof, or isolate the operation.
 
@@ -175,7 +175,7 @@ For a successful close, Core must confirm the close intent against current Task 
 
 MVP close must keep later assurance material out of active response semantics. Detached verification, `completed_verified`, detailed Manual QA close fields, full Evidence Manifest behavior, and assurance display detail are later candidate behavior unless their owners explicitly activate them.
 
-`close_task` must return blockers instead of pretending close is complete when required scope, judgment, evidence, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, or safety conditions remain unresolved. A public response may choose one primary error, but secondary close blockers and refs must remain visible enough for the next safe action.
+`close_task` must return blockers instead of pretending close is complete when required scope, judgment, evidence, artifact availability, final acceptance, residual-risk visibility, residual-risk acceptance, or owner-defined safety conditions remain unresolved. A public response may choose one primary error, but secondary close blockers and refs must remain visible enough for the next safe action.
 
 Cancellation and supersession are honest terminal paths, not successful completion. Risk-accepted close is successful close with named accepted risk; it is not verified close and not no-risk close.
 

@@ -30,7 +30,7 @@ This document does not own:
 <a id="guarantee-levels-by-stage"></a>
 <a id="honest-guarantee-display"></a>
 
-The current MVP guarantee level is cooperative by default, with limited detective behavior only where the active reference surface can honestly observe the relevant fact. The active reference surface is represented by a registered `capability_profile`; that profile constrains guarantee display and capability blockers, but it does not create write authority.
+The current MVP guarantee level is cooperative by default, with limited detective behavior only where the active reference surface can honestly observe the relevant fact. The active reference surface is represented by a registered `capability_profile`; that profile constrains guarantee display and capability blockers, but it does not create write compatibility or a Write Authorization.
 
 For the current MVP value set, `cooperative` and `detective` are the only default `GuaranteeDisplay.level` values. `preventive` and `isolated` are profile-gated display value names. They require a promoted profile and proof for the covered operation or boundary; they are not default active MVP guarantees.
 

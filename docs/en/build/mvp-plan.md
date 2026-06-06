@@ -68,7 +68,7 @@ Reference-schema presence does not expand the active MVP by itself. Required fie
 
 ## First internal smoke target
 
-The first internal smoke target is not the product MVP. It proves the smallest Core authority loop before the user-facing work loop is broadened.
+The first internal smoke target is not the product MVP. It is intended to exercise the smallest Core record/state-transition loop before the user-facing work loop is broadened.
 
 It should be able to show:
 
@@ -100,7 +100,7 @@ The loop should keep the next safe action visible. If Core, MCP, or the referenc
 5. Status and compact outputs show current scope, pending judgments, evidence gaps, blockers, next safe action, guarantee level, and residual-risk visibility as derived reads from Core records.
 6. `close_task` either closes through the owner-defined active path or returns close blockers. MVP close must keep final acceptance, residual-risk acceptance, verification, QA, and evidence sufficiency distinct.
 
-`compatible`, `blocked`, and `allowed` are Harness authority results. They do not mean physical OS blocking, arbitrary-tool prevention, sandbox isolation, or permission isolation unless a future promoted mechanism proves that exact behavior.
+`compatible`, `blocked`, and `allowed` are Harness record-compatibility results. They do not mean physical OS blocking, arbitrary-tool prevention, sandbox isolation, or permission isolation unless a future promoted mechanism proves that exact behavior.
 
 <a id="implementation-decisions-needed-before-server-coding"></a>
 <a id="implementation-decisions-still-open"></a>

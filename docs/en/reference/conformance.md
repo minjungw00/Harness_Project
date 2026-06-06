@@ -8,7 +8,7 @@ This page is the current conformance owner for planning. It is not a runnable su
 
 ## 2. What Conformance Means
 
-Conformance means a future Harness implementation can prove specific behavior against Harness-owned authority records. A future check must drive an owner-defined Core, API, or operator action and compare captured facts with structured expectations.
+Conformance means future executable checks can demonstrate specific behavior against Harness-owned authority records. A future check must drive an owner-defined Core, API, or operator action and compare captured facts with structured expectations.
 
 Keep these layers separate:
 
@@ -60,7 +60,7 @@ Authoritative future assertions:
 - Core-owned Task, Change Unit, user judgment, Write Authorization, Run, evidence summary, blocker, close, and residual-risk state
 - Storage-owned row effects, JSON `TEXT` owner fields, idempotency/replay facts, and state-version effects
 - stable `task_events` only after the Core owner promotes their names
-- `ArtifactRef`, artifact-link, `sha256`, `size_bytes`, `content_type`, `redaction_state`, retention, availability, and file-integrity facts when artifact proof matters
+- `ArtifactRef`, artifact-link, `sha256`, `size_bytes`, `content_type`, `redaction_state`, retention, availability, and file-integrity facts when artifact integrity matters
 - primary `ErrorCode`, error details, and structured blocker fields from API/Core owners
 - guarantee-level facts that match the Security and Agent Integration owners
 - absence assertions for forbidden side effects, such as no durable authorization, no Run row, no artifact mutation, or no close-state change

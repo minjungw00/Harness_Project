@@ -30,7 +30,7 @@
 <a id="단계별-guarantee-level"></a>
 <a id="정직한-guarantee-display"></a>
 
-현재 MVP 보장 수준은 기본적으로 협력형입니다. 활성 기준 접점이 관련 사실을 정직하게 관찰할 수 있는 곳에서만 제한된 탐지적 동작을 말할 수 있습니다. 활성 기준 접점은 등록된 `capability_profile`로 표현됩니다. 이 프로필은 보장 수준 표시와 역량 차단 사유를 제한하지만 쓰기 권한을 만들지는 않습니다.
+현재 MVP 보장 수준은 기본적으로 협력형입니다. 활성 기준 접점이 관련 사실을 정직하게 관찰할 수 있는 곳에서만 제한된 탐지적 동작을 말할 수 있습니다. 활성 기준 접점은 등록된 `capability_profile`로 표현됩니다. 이 프로필은 보장 수준 표시와 역량 차단 사유를 제한하지만 쓰기 호환성이나 Write Authorization을 만들지는 않습니다.
 
 현재 MVP 값 집합에서 `GuaranteeDisplay.level`의 기본 값은 `cooperative`와 `detective`뿐입니다. `preventive`와 `isolated`는 profile-gated 표시 값 이름입니다. 대상 동작이나 경계에 대한 승격된 profile과 증명이 있어야 사용할 수 있으며, 현재 MVP의 기본 보장이 아닙니다.
 

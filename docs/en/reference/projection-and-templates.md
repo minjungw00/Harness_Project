@@ -30,7 +30,7 @@ This document does not own:
 
 Core-owned state and registered artifact refs are the authority. A projection, status card, Markdown report, rendered template, chat message, connector output, or agent context packet is display or support context only.
 
-Templates cannot override Core state. A rendered view cannot authorize writes, create Write Authorization, satisfy gates, create evidence, perform verification, record QA, grant sensitive-action approval, record final acceptance, accept residual risk, create close readiness, close a Task, or mutate owner records. Those effects must come from the owner Core/MCP path.
+Templates cannot override Core state. A rendered view cannot authorize writes, create Write Authorization, satisfy gates, create evidence, perform verification, record QA, grant sensitive-action approval, record final acceptance, accept residual risk, create close readiness, close a Task, or mutate owner records. Those effects must come from the owner Core/API path.
 
 Display labels are not canonical schema values. A localized label such as a user-readable judgment type is rendered from canonical fields such as `judgment_kind` and locale. If `display_label` appears in compatibility or response-only output, it remains display text and must not be treated as an enum value, storage value, API field owner, or schema category.
 
@@ -105,7 +105,7 @@ Rules:
 - Regeneration must preserve unrelated human-editable sections.
 - Rendering failure or stale source data must display `failed`, `stale`, `unknown`, or unavailable as appropriate. It must not roll back committed Core state, alter events, or change gate values.
 
-Rendered views should include a short boundary notice near the top or managed summary: display only, derived from Core state and refs, not write authority, not close authority.
+Rendered views should include a short boundary notice near the top or managed summary: display only, derived from Core state and refs, not Write Authorization, not close result.
 
 ## ArtifactRef rendering
 
@@ -124,7 +124,7 @@ When useful to the reader or next action, render:
 
 Do not expand `secret_omitted`, `blocked`, unavailable, or redacted artifact bodies into Markdown. Do not reconstruct omitted raw values from metadata or surrounding prose.
 
-A displayed `ArtifactRef` is a pointer to registered artifact authority. It is not, by itself, evidence sufficiency, verification, QA, final acceptance, residual-risk acceptance, or close readiness. If the ref lacks owner relation, integrity metadata, redaction state, or availability needed for the claim, show the gap.
+A displayed `ArtifactRef` is a pointer to a registered artifact record. It is not, by itself, evidence sufficiency, verification, QA, final acceptance, residual-risk acceptance, or close readiness. If the ref lacks owner relation, integrity metadata, redaction state, or availability needed for the claim, show the gap.
 
 <a id="active-mvp-view-set"></a>
 <a id="active-mvp-template-set"></a>
@@ -150,7 +150,7 @@ Use `status-card` when the active MVP needs a short user-visible current-state v
 
 Implementation tier: active MVP user work-loop view. The first internal smoke target may return plain structured status/blocker output instead of this card.
 
-Boundary: this template is rendered display only. It is not Core state, not evidence, not approval, not final acceptance, not residual-risk acceptance, not Write Authorization, and not close readiness authority. It must be rendered from current Core-owned state and refs, not stale chat.
+Boundary: this template is rendered display only. It is not Core state, not evidence, not approval, not final acceptance, not residual-risk acceptance, not Write Authorization, and not a close-readiness record. It must be rendered from current Core-owned state and refs, not stale chat.
 
 Source records:
 
@@ -274,7 +274,7 @@ Use `run-evidence-summary` after advice, a run, a check, or a change needs a min
 
 Implementation tier: active MVP user work-loop view. Detailed run reports and detailed evidence catalogs are later candidate scope.
 
-Boundary: this template displays Run and evidence refs only. It is not the evidence itself, not a detailed evidence catalog, not verification, not QA, not final acceptance, not residual-risk acceptance, and not close readiness authority.
+Boundary: this template displays Run and evidence refs only. It is not the evidence itself, not a detailed evidence catalog, not verification, not QA, not final acceptance, not residual-risk acceptance, and not a close-readiness record.
 
 Source records:
 
@@ -329,7 +329,7 @@ Use `close-result` when the user needs a compact close-readiness, close-blocker,
 
 Implementation tier: active MVP user work-loop view. Detailed continuity, release-handoff, or export reports are later candidate scope.
 
-Boundary: this template displays close status. It does not close a Task, record final acceptance, accept residual risk, record verification or QA, create evidence, or change gate values. Close authority remains with the Core close path.
+Boundary: this template displays close status. It does not close a Task, record final acceptance, accept residual risk, record verification or QA, create evidence, or change gate values. Only the Core close path can produce the close result.
 
 Source records:
 
