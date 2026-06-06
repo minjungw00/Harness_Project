@@ -213,6 +213,8 @@ Invalid state combination은 blocker, rejection, repair path가 되어야 합니
 
 Decision deferral은 waiver가 아닙니다. QA waiver는 QA pass가 아닙니다. Verification-risk acceptance는 verification이 아닙니다. Waiver는 이름 붙인 requirement 하나만, 그리고 그 requirement의 owner path가 허용하는 범위에서만 unblock할 수 있습니다.
 
+<a id="13-residual-risk"></a>
+
 ## 13. 잔여 위험
 
 잔여 위험은 close에 의미가 있는 알려진 남은 불확실성, 확인하지 못한 조건, 한계, trade-off입니다. 알려진 close-relevant residual risk는 successful close 전에 보여야 합니다. Close가 그 risk acceptance에 의존한다면 Core는 visible risk와 related refs에 연결된 compatible residual-risk acceptance `user_judgment`를 요구합니다.

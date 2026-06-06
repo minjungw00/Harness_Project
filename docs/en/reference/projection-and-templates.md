@@ -266,6 +266,8 @@ Notes:
 - Chat phrases such as "yes, do it" satisfy a gate only when the scope, `judgment_kind`, affected object, and recorded user intent match the pending judgment.
 - The displayed `Type` label is rendered from `judgment_kind` and the user's locale. It is display text only; the canonical judgment category remains `judgment_kind`.
 
+<a id="run--evidence-summary-body"></a>
+
 ## Run / Evidence Summary body
 
 Use `run-evidence-summary` after advice, a run, a check, or a change needs a minimal summary of what happened and what evidence now supports the current claim.

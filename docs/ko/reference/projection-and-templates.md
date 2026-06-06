@@ -266,6 +266,8 @@ MVP-1에서 사용자가 현재 상태를 짧게 읽어야 할 때 `status-card`
 - "yes, do it", "진행해", "좋아" 같은 채팅 문구는 scope, `judgment_kind`, affected object, recorded user intent가 pending judgment와 맞을 때만 해당 gate를 만족합니다.
 - 표시되는 `유형` 라벨은 `judgment_kind`와 사용자 locale에서 렌더링합니다. 이 라벨은 표시 문구일 뿐이며, 기준 판단 범주는 `judgment_kind`입니다.
 
+<a id="run--evidence-summary-body"></a>
+
 ## 실행/증거 요약 본문
 
 조언, 실행, 확인, 변경 뒤 무엇이 일어났고 현재 주장에 어떤 증거가 생겼는지 최소한으로 보여줘야 할 때 `run-evidence-summary`를 사용합니다.

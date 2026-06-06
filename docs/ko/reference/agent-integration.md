@@ -162,6 +162,8 @@ Reference 자료 전체, 전체 schema, 전체 DDL, projection 본문 전체, ar
 
 Judgment record는 증거, 검증, 수동 QA, 최종 수락, 잔여 위험, 닫기 준비 상태와 분리됩니다. 어느 하나도 다른 하나를 대신하지 않습니다.
 
+<a id="8-fallback-behavior"></a>
+
 ## 8. 대체 동작
 
 대체 동작은 접점 이름이나 브랜드가 아니라 보장 수준과 risk로 설명합니다.
