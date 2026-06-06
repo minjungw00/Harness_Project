@@ -23,7 +23,7 @@ Exact field, enum value, lifecycle state, DDL, request/response shape, security 
 | 활성 MVP 경로 밖의 이름만 남긴 future fixture family 후보 | [Later 후보 색인: Future fixture families](../later/index.md#future-fixture-families) |
 | Operations, diagnostic, staged operator surface, recovery/export/reconcile operation, artifact check, future conformance run entrypoint, docs-maintenance reporting profile | [운영과 Conformance 참조](operations-and-conformance.md) |
 | 런타임 경계 공간, Product Repository / Harness Server / Runtime Home 분리, Core-only canonical mutation authority, projection/status card의 파생 표시 경계, artifact storage boundary, recovery boundary, 현재 non-isolation claim | [런타임 경계 참조](runtime-boundaries.md) |
-| Design-quality policy, policy-to-validator mapping, stable validator ID, severity composition, waiver semantics, evidence expectation, design-quality close impact | [설계 품질 정책](design-quality-policies.md) |
+| 활성 설계 품질 역할, 발견 사항 심각도, 닫기 blocker 조건, 면제 경계, 증거 기대치, validator ID 경계, later 정책 후보 경계 | [설계 품질](design-quality.md) |
 | 용어, capitalization, official term wording, record-name orientation, owner routing | [용어집 참조](glossary.md) |
 
 문서 작성, 번역, 검토, link hygiene, owner-boundary drift, docs-maintenance 점검은 Maintain이 담당합니다. [문서 작성 가이드](../maintain/authoring-guide.md), [번역 가이드](../maintain/translation-guide.md), [문서 점검표](../maintain/documentation-checks.md)를 사용합니다.

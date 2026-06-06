@@ -115,7 +115,7 @@ Gates are Core compatibility dimensions for progress, write, run recording, and 
 - <a id="scope-gate"></a>Scope Gate: whether active scope covers the requested write or close-relevant work.
 - <a id="decision-gate"></a>Decision Gate: whether unresolved user-owned judgment blocks progress, write, or close. It does not replace sensitive-action approval, evidence, verification, QA, final acceptance, or residual-risk acceptance.
 - <a id="approval-gate"></a>Approval Gate: whether scoped sensitive-action approval is needed, pending, usable, denied, expired, or drifted. It is permission for the sensitive action only.
-- <a id="design-gate"></a>Design Gate: whether enabled design-quality policy routes a finding into a Core-backed blocker. Broad design-quality catalogs are not default active MVP blockers.
+- <a id="design-gate"></a>Design Gate: whether an enabled design-quality finding routes into a Core-backed blocker. Broad design-quality catalogs are not default active MVP blockers.
 - <a id="evidence-gate"></a>Evidence Gate: whether required close-relevant evidence is absent, partial, sufficient, stale, or blocked.
 - <a id="verification-gate"></a>Verification Gate: whether required verification is satisfied, waived through the proper risk path, failed, pending, or blocked. Verification is required only when an active owner path makes it required.
 - <a id="qa-gate"></a>QA Gate: whether required Manual QA is satisfied, waived where allowed, failed, pending, or blocked. Manual QA is not produced by screenshots or automated checks alone.
@@ -228,7 +228,7 @@ Use these owners when Core authority touches another contract:
 - Projection freshness, readable views, managed blocks, human-editable sections, and active rendered template bodies: [Projection And Templates Reference](projection-and-templates.md).
 - Security guarantee language, cooperative/detective/preventive/isolated labels, and local access posture: [Security Reference](security.md).
 - Runtime boundary placement and Core-only mutation authority: [Runtime Boundaries Reference](runtime-boundaries.md).
-- Design-quality policy activation and validator impact routing: [Design Quality Policies](design-quality-policies.md).
+- Design-quality active role and close-impact boundary: [Design Quality](design-quality.md).
 - Connector capability profiles and surface-specific fallback behavior: [Agent Integration Reference](agent-integration.md).
 - Conformance examples, future fixture boundaries, and operations entrypoints: [Conformance Reference](conformance.md), [Operations And Conformance Reference](operations-and-conformance.md), and [Later](../later/index.md).
 

@@ -118,7 +118,7 @@ Use the active delivery labels consistently.
 | MCP resources, MCP tools, public schemas, errors, `ValidatorResult`, `ProjectionKind` | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), and [API Schema Later](../later/index.md#later-schema-candidates) |
 | SQLite records, artifact layout, enum hardening, `tree_hash`, `request_hash` storage use | [Storage](storage.md) |
 | Derived views / Projections, managed blocks, projection freshness, Markdown reports, active template bodies | [Projection And Templates Reference](projection-and-templates.md) |
-| Discovery and Shared Design, design quality, stewardship, Feedback Loop finding routing, context hygiene, severity composition, policy contracts | [Design Quality Policies](design-quality-policies.md) |
+| Active design quality, finding severity, close-blocker conditions, waiver boundary, evidence expectations, validator ID boundary, later policy catalog boundary | [Design Quality](design-quality.md) |
 | Surface capability, guarantee display, connector behavior | [Agent Integration Reference](agent-integration.md) |
 | Security assets, trust boundaries, threat categories, high-risk control expectations, guarantee-level meanings | [Security Reference](security.md) |
 | Operator procedures, conformance run overview, docs-maintenance reporting | [Operations And Conformance Reference](operations-and-conformance.md) |
@@ -165,7 +165,7 @@ A structured pointer to a registered artifact file or safe metadata notice in th
 
 The Change Unit semantics that record the user-owned judgment boundary inside which an agent may proceed without asking for additional user judgment. In plain terms, it says what the agent may decide alone inside the active Change Unit. Routine implementation details may be inside the boundary; public API or module contract changes, security or privacy trade-offs, UX or product behavior trade-offs, material dependency or migration direction, scope expansion, and residual-risk acceptance require explicit user judgment and must not be inferred from broad autonomy.
 
-It is not a scope grant or write authority and does not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A user judgment may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible Change Unit scope and sensitive-action approval when sensitive categories apply. Exact kernel behavior is owned by [Autonomy Boundary](core-model.md#autonomy-boundary), with policy placement in [Design Quality Policies](design-quality-policies.md#autonomy-boundary-autonomy_boundary).
+It is not a scope grant or write authority and does not authorize paths, tools, commands, network targets, secret access, or sensitive categories outside the active Change Unit. A user judgment may authorize updating the Autonomy Boundary or proposing a Change Unit update, but the resulting write still requires compatible Change Unit scope and sensitive-action approval when sensitive categories apply. Exact kernel behavior is owned by [Autonomy Boundary](core-model.md#autonomy-boundary), with close-impact placement summarized in [Design Quality](design-quality.md#when-a-finding-blocks-close).
 
 ### Assurance
 
@@ -313,11 +313,11 @@ Legacy name for User Judgment Request. Use only in migration notes or old payloa
 
 ### Design Gate
 
-The kernel gate surface where enabled design-quality policy findings are routed. In active MVP, write or close blocks by default only for the small Core-backed set in [Design Quality Policies: Active MVP blocking set](design-quality-policies.md#active-mvp-blocking-set); broader domain-language, TDD, module/interface, stewardship, feedback-loop, Manual QA, and detached-verification catalog findings are candidate or advisory/later unless an active owner path promotes them.
+The kernel gate surface where enabled design-quality findings are routed. In active MVP, write or close blocks only for the small Core-backed set in [Design Quality: When a finding blocks close](design-quality.md#when-a-finding-blocks-close); broader domain-language, TDD, module/interface, stewardship, feedback-loop, Manual QA, and detached-verification catalog findings are later candidates unless an active owner path promotes a narrow behavior.
 
-### Design-Quality Policy Pack
+### Design Quality
 
-The owner document for design-quality policy contracts, impact classes, routed actions, and severity composition. It covers shared design, decision quality, autonomy boundary, domain language, vertical slice, feedback loop, TDD trace, module/interface review, codebase stewardship, Manual QA, and context hygiene. Findings influence gates, validators, evidence, user judgment requests, residual-risk markers, advisory next actions, write blockers, or close blockers only through the allowed route and active owner path; the document does not redefine the kernel state machine.
+The owner document for the active current MVP design-quality boundary. It defines the active role, finding severity interpretation, close-blocker conditions, waiver boundary, evidence expectations, validator ID boundary, and later policy catalog boundary. It does not publish a full policy-to-validator mapping or redefine the kernel state machine.
 
 ### Detached Verification
 
@@ -381,7 +381,7 @@ A later/profile canonical support record and recorded path from checks and findi
 
 ### Finding
 
-An observed issue, gap, risk, blocker, or noteworthy result from a Run, Eval, Manual QA record, validator, review display, operator diagnostic, or conformance check. A finding is not a standalone authority path and does not affect gates or close by staying in chat or report prose. It becomes state-relevant only when routed through existing owner records or structured results, such as Evidence Manifest gaps, user judgment candidates or records, Change Unit updates, Feedback Loop or TDD Trace updates, Manual QA or Eval records, Residual Risk records, reconcile items, close blockers, or follow-up Task/Change Unit records. The routing contract is owned by [Design Quality Policies](design-quality-policies.md#finding-routing) and [Core Model Reference](core-model.md#finding-routing).
+An observed issue, gap, risk, blocker, or noteworthy result from a Run, Eval, Manual QA record, validator, review display, operator diagnostic, or conformance check. A finding is not a standalone authority path and does not affect gates or close by staying in chat or report prose. It becomes state-relevant only when routed through existing owner records or structured results, such as Evidence Manifest gaps when active, user judgment candidates or records, Change Unit updates, Manual QA or Eval records when active, Residual Risk records, reconcile items, close blockers, or follow-up Task/Change Unit records. Active close impact is owned by [Design Quality](design-quality.md#when-a-finding-blocks-close) and [Core Model Reference](core-model.md#finding-routing).
 
 ### First Safe Change Unit Candidate
 
@@ -489,7 +489,7 @@ Later diagnostic-only metrics derived from local records such as `state.sqlite.t
 
 ### Manual QA
 
-Human inspection of experiential product quality such as UX, workflow, copy, visual output, accessibility, and product fit. Manual QA is recorded through the Manual QA record or a valid QA waiver path when required; browser smoke, screenshots, Browser QA artifacts, tests, or verifier notes may support context but are not Manual QA judgment by themselves. Exact gate behavior is owned by [QA Gate](core-model.md#qa-gate), with policy requirements in [Design Quality Policies](design-quality-policies.md#manual-qa-manual_qa).
+Human inspection of experiential product quality such as UX, workflow, copy, visual output, accessibility, and product fit. Manual QA is recorded through the Manual QA record or a valid QA waiver path when required; browser smoke, screenshots, Browser QA artifacts, tests, or verifier notes may support context but are not Manual QA judgment by themselves. Exact gate behavior is owned by [QA Gate](core-model.md#qa-gate). Active design-quality waiver and evidence boundaries are summarized in [Design Quality](design-quality.md#waiver-boundary).
 
 ### Manual Bundle
 
@@ -533,7 +533,7 @@ A user utterance such as "yes, do it," "go ahead," "proceed," or "looks good" th
 
 ### Module Map
 
-The product's later/profile map of modules, responsibilities, public interfaces, dependency direction, internal complexity, test boundaries, owner decisions, and watchpoints. The canonical source is `module_map_items`. A module boundary update records the shared technical understanding; it does not approve writes or accept residual risk. Boundary changes that shift product commitments, caller obligations, or architecture direction route through design-quality policy and user judgment paths when user-owned judgment is required.
+The product's later/profile map of modules, responsibilities, public interfaces, dependency direction, internal complexity, test boundaries, owner decisions, and watchpoints. The canonical source is `module_map_items`. A module boundary update records the shared technical understanding; it does not approve writes or accept residual risk. Boundary changes that shift product commitments, caller obligations, or architecture direction route through design-quality and user judgment paths when user-owned judgment is required.
 
 ### Module Map Item
 
@@ -541,7 +541,7 @@ A later/profile canonical structured record in `module_map_items` that stores a 
 
 ### Policy Contract
 
-The standard form used by design-quality policies: `name`, `applies_when`, `default_requirement`, `allowed_waiver`, `required_record`, `validator`, `evidence`, and `close_impact`.
+A later-candidate shape for future design-quality policy families. Active current MVP Design Quality does not publish full policy contract tables or a full policy-to-validator mapping; see [Design Quality](design-quality.md#later-policy-catalog-boundary).
 
 ### Preventive Guarantee
 
@@ -611,7 +611,7 @@ The named report projection kinds are projections generated from state records a
 
 ### Review Stages
 
-A managed display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages can route findings to validator results, evidence gaps, user judgment candidates, Eval or verification needs, Manual QA needs, sensitive-action permission needs, later Approval needs when that profile is active, residual-risk candidates, Change Unit update recommendations, or close blockers. They are not canonical records, `ProjectionKind` values, sensitive-action permission / Approval, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or Write Authorization. Their exact display-only boundary is owned by [Design Quality Policies](design-quality-policies.md#two-stage-review-display); same-session Review Stages do not create `assurance_level=detached_verified`.
+A later display/procedure split that separates Spec Compliance Review from Code Quality / Stewardship Review. Spec Compliance Review asks whether the requested work is complete under current Harness authority. Code Quality / Stewardship Review asks whether the implementation is maintainable inside the codebase. Review Stages are not an active current MVP requirement, canonical records, `ProjectionKind` values, sensitive-action permission / Approval, evidence, verification, QA, final acceptance, residual-risk acceptance, close, or Write Authorization. Names-only later policy placement is in [Design Quality](design-quality.md#later-policy-catalog-boundary) and [Later Candidate Index](../later/index.md#assurance-candidates); same-session Review Stages do not create `assurance_level=detached_verified`.
 
 ### `request_hash`
 
@@ -635,11 +635,11 @@ The kernel gate requiring product writes to be covered by an active scoped Chang
 
 ### Severity Composition
 
-The policy-owned rule for merging multiple applicable task-shape defaults, policy contracts, and validator findings. The same concern is the same policy-relevant target, not the whole Task or merely the same validator ID. The rule keeps all findings visible, preserves impacts across different affected gates or blocker targets, and uses the strongest applicable impact only for competing impacts on the same concern. It affects validators, gates, write blockers, close blockers, waivers, and user judgment needs, while public primary `ToolError` selection remains API-owned. Exact policy behavior is owned by [Severity composition rule](design-quality-policies.md#severity-composition-rule).
+The active design-quality rule for interpreting finding severity without hiding weaker findings. The same concern is the same close/write/judgment/evidence/risk target, not the whole Task or merely the same validator ID. The rule keeps separate concerns separate and uses the strongest valid active action only for competing findings on the same concern. Public primary `ToolError` selection remains API-owned. Active behavior is owned by [Design Quality: Finding severity](design-quality.md#finding-severity).
 
 ### Shared Design
 
-A later/profile design-support record or projection label for recorded shared understanding before implementation hardens into a plan. In active MVP-1, requirements shaping does not create a committed Shared Design record; it persists through Task, Change Unit, and User Judgment owner paths. Discovery Briefs, Question Queues, Assumption Registers, safe next-work candidates or work splits, and First Safe Change Unit Candidates are support/display names unless an owner profile explicitly enables a separate record. Shared Design can support shaping and `design_gate` readiness when enabled, but it is not sensitive-action Approval, final acceptance, residual-risk acceptance, QA judgment, evidence, close readiness, or Write Authorization. Markdown renderings of Shared Design are projections and proposal surfaces. Exact policy requirements are owned by [Design Quality Policies](design-quality-policies.md#shared-design-shared_design).
+A later/profile design-support record or projection label for recorded shared understanding before implementation hardens into a plan. In active MVP-1, requirements shaping does not create a committed Shared Design record; it persists through Task, Change Unit, and User Judgment owner paths. Discovery Briefs, Question Queues, Assumption Registers, safe next-work candidates or work splits, and First Safe Change Unit Candidates are support/display names unless an owner profile explicitly enables a separate record. Shared Design can support shaping and `design_gate` readiness when enabled, but it is not sensitive-action Approval, final acceptance, residual-risk acceptance, QA judgment, evidence, close readiness, or Write Authorization. Markdown renderings of Shared Design are projections and proposal surfaces. Active design-quality boundaries are owned by [Design Quality](design-quality.md#active-current-mvp-design-quality-role).
 
 ### Source-of-truth
 

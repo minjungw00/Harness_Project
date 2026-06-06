@@ -137,7 +137,7 @@ Build summarizes sequence and scope only. Use these Reference owners for exact c
 | Compact derived views, projection authority boundaries, freshness, and active template ownership | [Projection And Templates Reference](../reference/projection-and-templates.md). |
 | Reference surface `capability_profile` and user-facing surface behavior | [Agent Integration Reference](../reference/agent-integration.md). |
 | Runtime boundaries and local Core authority placement | [Runtime Boundaries Reference](../reference/runtime-boundaries.md). |
-| Active design-quality blocking boundary | [Design Quality Policies](../reference/design-quality-policies.md#active-mvp-blocking-set). |
+| Active design-quality blocking boundary | [Design Quality](../reference/design-quality.md#when-a-finding-blocks-close). |
 | Future fixture/conformance and operations material | [Conformance Reference](../reference/conformance.md), [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families), and [Operations And Conformance Reference](../reference/operations-and-conformance.md). |
 
 <a id="implementation-readiness-criteria"></a>

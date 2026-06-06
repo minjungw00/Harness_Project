@@ -36,7 +36,7 @@ Rows here are planning candidates only. They are not MVP-1 requirements, active 
 | Eval / detached verification | Later candidate for independent verification result recording. | Eval owner path, independence semantics, baseline freshness, artifact integrity, and assurance update rules. | none |
 | Decision Packet full-format presentation | Later candidate for expanded user-judgment display. | User-judgment owner must enable `presentation=full` without making it the default MVP path. | none |
 | Risk review and residual-risk visibility | Later candidate for richer risk lifecycle display. | Core/user-judgment owner rules for visible risk, acceptance, expiry, and close impact. | none |
-| Design-quality, stewardship, TDD trace, and context-hygiene assurance checks | Later candidate group. | Policy owners must define exact validators, severity, waiver, evidence, and fixture behavior. | none |
+| Full design-quality policy families | Names only: full `shared_design` profile, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, detailed `manual_qa`, `two_stage_review_display`, detached-verification policy, and steward profiles. | A future owner must promote one narrow family with exact scope, fallback behavior, validator boundaries, waiver and evidence rules, and proof expectations. | none |
 
 <a id="operations-candidates"></a>
 ## 4. Operations Candidates

@@ -39,7 +39,7 @@ This path intentionally stops before large Reference docs. First-time readers do
 | Start | Explains why Harness exists, where authority lives, one ordinary task, the first concepts, and the current guarantee boundary. | Does not define schemas, gates, DDL, implementation sequence, or fixture mechanics. |
 | Use | Explains user and agent usage through ordinary-language examples, agent behavior, judgment request handling, write checks, evidence summaries, and close flow. | Does not define canonical enums, DDL, or full transition tables. |
 | Build | Explains future implementation sequence, active slice, first proof, active/later boundary, build reading path, and excluded areas. | Links to Reference for exact API shapes, schemas, DDL, storage tables, state transitions, fixture bodies, security guarantees, and threat catalogs. |
-| Reference | Owns exact contracts: Core transition, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, runtime architecture, operations, and design-quality policy. | Does not serve as the first-read tutorial or staged implementation plan. |
+| Reference | Owns exact contracts: Core transition, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, runtime architecture, operations, and the design-quality boundary. | Does not serve as the first-read tutorial or staged implementation plan. |
 | Later | Holds future/profile material outside the active MVP path. | Does not become active delivery unless an owner promotes it with scope and proof expectations. |
 | Maintain | Governs documentation writing, translation, review, drift, owner-boundary, and link rules. | Does not decide runtime readiness, final acceptance, close readiness, or implementation readiness. |
 
@@ -61,7 +61,7 @@ Exact user judgment, write, run/evidence, close, projection, and error contracts
 
 ## Reference Route
 
-Use [Reference Index](reference/README.md) when you need exact contracts. It owns the compact map to Core state transitions, API schemas, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, runtime architecture, operations, and design-quality policy.
+Use [Reference Index](reference/README.md) when you need exact contracts. It owns the compact map to Core state transitions, API schemas, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, runtime architecture, operations, and the design-quality boundary.
 
 Do not copy Reference tables into Start, Use, Build, or Maintain pages. Non-owner pages should summarize the reader-visible consequence and link to the owner.
 

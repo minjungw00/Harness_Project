@@ -20,7 +20,7 @@ This document does not own:
 - Core state, lifecycle, gates, `prepare_write`, `record_run`, `close_task`, or user-judgment state changes; see [Core Model Reference](core-model.md)
 - public MCP request/response schemas, `ProjectionKind`, `ArtifactRef`, or error shapes; see [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md)
 - SQLite DDL, storage layout, artifact storage, or projection job storage; see [Storage](storage.md)
-- design-quality policy routing; see [Design Quality Policies](design-quality-policies.md)
+- design-quality close-impact boundary; see [Design Quality](design-quality.md)
 - operator command behavior; see [Operations And Conformance Reference](operations-and-conformance.md)
 - conformance fixture assertion behavior; see [Conformance Reference](conformance.md)
 - connector context behavior; see [Agent Integration Reference](agent-integration.md)

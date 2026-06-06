@@ -36,7 +36,7 @@
 | Eval / detached verification | 독립 검증 결과 기록을 다루는 later 후보입니다. | Eval owner path, independence semantics, baseline freshness, artifact integrity, assurance update rule이 필요합니다. | 없음 |
 | Decision Packet full-format presentation | 확장된 user-judgment display를 위한 later 후보입니다. | User-judgment owner가 `presentation=full`을 켜야 하며, 기본 MVP path로 만들면 안 됩니다. | 없음 |
 | Risk review and residual-risk visibility | 더 풍부한 위험 lifecycle 표시를 위한 later 후보입니다. | Visible risk, acceptance, expiry, close impact에 대한 Core/user-judgment owner rule이 필요합니다. | 없음 |
-| Design-quality, stewardship, TDD trace, and context-hygiene assurance checks | Later 후보 묶음입니다. | Policy owner가 exact validator, severity, waiver, evidence, fixture behavior를 정의해야 합니다. | 없음 |
+| 전체 설계 품질 later 정책 후보 | 이름만 남깁니다: full `shared_design` profile, `domain_language`, `vertical_slice`, `feedback_loop`, `tdd_trace`, `deep_module_interface`, `codebase_stewardship`, detailed `manual_qa`, `two_stage_review_display`, detached-verification policy, steward profile. | 향후 owner가 좁은 family 하나를 exact scope, fallback behavior, validator boundary, 면제와 증거 규칙, proof expectation과 함께 승격해야 합니다. | 없음 |
 
 <a id="operations-candidates"></a>
 ## 4. 운영 후보

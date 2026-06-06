@@ -117,7 +117,7 @@ Gate는 진행, 쓰기, Run 기록, 닫기를 위한 Core compatibility dimensio
 - <a id="scope-gate"></a>Scope Gate: active scope가 요청한 write 또는 close-relevant work를 cover하는지.
 - <a id="decision-gate"></a>Decision Gate: unresolved user-owned judgment가 progress, write, close를 막는지. 민감 동작 승인, evidence, verification, QA, 최종 수락, 잔여 위험 수락을 대신하지 않습니다.
 - <a id="approval-gate"></a>Approval Gate: scoped sensitive-action approval이 needed, pending, usable, denied, expired, drifted 중 어디인지. 민감 동작에 대한 permission일 뿐입니다.
-- <a id="design-gate"></a>Design Gate: enabled design-quality policy가 finding을 Core-backed blocker로 라우팅하는지. Broad design-quality catalog는 기본 active MVP blocker가 아닙니다.
+- <a id="design-gate"></a>Design Gate: enabled design-quality finding이 Core-backed blocker로 라우팅되는지. Broad design-quality catalog는 기본 active MVP blocker가 아닙니다.
 - <a id="evidence-gate"></a>Evidence Gate: required close-relevant evidence가 absent, partial, sufficient, stale, blocked 중 어디인지.
 - <a id="verification-gate"></a>Verification Gate: required verification이 satisfied, proper risk path로 waived, failed, pending, blocked 중 어디인지. Verification은 active owner path가 required로 만들 때만 required입니다.
 - <a id="qa-gate"></a>QA Gate: required Manual QA가 satisfied, allowed waiver로 waived, failed, pending, blocked 중 어디인지. 스크린샷이나 automated check만으로 Manual QA가 만들어지지 않습니다.
@@ -230,7 +230,7 @@ Core 권한이 다른 계약과 닿을 때는 아래 owner를 사용합니다.
 - Projection freshness, readable view, managed block, human-editable section, active rendered template body: [Projection과 Template 참조](projection-and-templates.md).
 - Security guarantee language, cooperative/detective/preventive/isolated label, local access posture: [보안 참조](security.md).
 - 런타임 경계 안의 placement와 Core-only mutation authority: [런타임 경계 참조](runtime-boundaries.md).
-- Design-quality policy activation과 validator impact routing: [설계 품질 정책](design-quality-policies.md).
+- Design-quality 활성 역할과 close-impact 경계: [설계 품질](design-quality.md).
 - Connector capability profile과 surface-specific fallback behavior: [Agent 통합 참조](agent-integration.md).
 - Conformance example, future fixture boundary, operations entrypoint: [적합성 참조](conformance.md), [운영과 Conformance 참조](operations-and-conformance.md), [Later](../later/index.md).
 

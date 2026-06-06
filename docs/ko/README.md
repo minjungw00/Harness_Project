@@ -39,7 +39,7 @@
 | Start | 하네스가 왜 필요한지, 권한이 어디에 있는지, 평소 작업 하나, 첫 개념, 현재 보장 경계를 설명합니다. | schema, gate, DDL, 구현 순서, fixture mechanics를 정의하지 않습니다. |
 | Use | 평소 말 예시, 에이전트 행동, 판단 요청 처리, 쓰기 전 확인, 증거 요약, 닫기 흐름을 통해 사용자와 에이전트 사용 방식을 설명합니다. | canonical enum, DDL, 전체 전이 표를 정의하지 않습니다. |
 | Build | 향후 구현 순서, 활성 조각, 첫 증명, 활성/이후 경계, 구현자 읽기 경로, 제외 범위를 설명합니다. | 정확한 API shape, schema, DDL, storage table, 상태 전이, fixture body, security guarantee, threat catalog는 Reference로 연결합니다. |
-| Reference | Core 전이, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, runtime architecture, operations, design-quality policy의 정확한 계약을 담당합니다. | 첫 읽기 튜토리얼이나 단계별 구현 계획이 아닙니다. |
+| Reference | Core 전이, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, runtime architecture, operations, 설계 품질 경계의 정확한 계약을 담당합니다. | 첫 읽기 튜토리얼이나 단계별 구현 계획이 아닙니다. |
 | Later | 활성 MVP 경로 밖의 향후/profile 자료를 둡니다. | 담당 문서가 범위와 증명 기대를 함께 승격하기 전까지 활성 전달 범위가 아닙니다. |
 | Maintain | 문서 작성, 번역, 검토, drift, owner 경계, link 규칙을 관리합니다. | runtime readiness, 최종 수락, close readiness, implementation readiness를 결정하지 않습니다. |
 
@@ -61,7 +61,7 @@ Use 문서는 사용자와 에이전트가 신뢰 경계에서 실제로 보게 
 
 ## Reference 경로
 
-정확한 계약이 필요할 때 [Reference 색인](reference/README.md)을 사용합니다. Core 상태 전이, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, runtime architecture, operations, design-quality policy의 담당 문서 지도를 제공합니다.
+정확한 계약이 필요할 때 [Reference 색인](reference/README.md)을 사용합니다. Core 상태 전이, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, runtime architecture, operations, 설계 품질 경계의 담당 문서 지도를 제공합니다.
 
 Reference 표를 Start, Use, Build, Maintain 문서로 복사하지 않습니다. Owner가 아닌 문서는 독자에게 보이는 결과만 짧게 요약하고 담당 문서로 연결합니다.
 

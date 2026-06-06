@@ -20,7 +20,7 @@
 - Core 상태, lifecycle, gate, `prepare_write`, `record_run`, `close_task`, 사용자 판단 상태 변경. [Core Model 참조](core-model.md)를 봅니다.
 - Public MCP request/response schema, `ProjectionKind`, `ArtifactRef`, error shape. [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md)를 봅니다.
 - SQLite DDL, storage layout, artifact storage, projection job storage. [Storage](storage.md)를 봅니다.
-- 설계 품질 정책 routing. [설계 품질 정책](design-quality-policies.md)을 봅니다.
+- 설계 품질 close-impact 경계. [설계 품질](design-quality.md)을 봅니다.
 - 운영자 command 동작. [운영과 Conformance 참조](operations-and-conformance.md)를 봅니다.
 - Conformance fixture assertion 동작. [적합성 참조](conformance.md)를 봅니다.
 - Connector 맥락 동작. [Agent 통합 참조](agent-integration.md)를 봅니다.

@@ -23,7 +23,7 @@ The owner is the only place to define exact fields, enum values, lifecycle state
 | Names-only future fixture family candidates outside the MVP path | [Later Candidate Index: Future Fixture Families](../later/index.md#future-fixture-families) |
 | Operations, diagnostics, staged operator surface, recovery/export/reconcile operations, artifact checks, future conformance run entrypoints, and docs-maintenance reporting profile | [Operations And Conformance Reference](operations-and-conformance.md) |
 | Runtime boundary spaces, Product Repository / Harness Server / Runtime Home separation, Core-only canonical mutation authority, derived projection/status-card boundary, artifact storage boundary, recovery boundary, and current non-isolation claims | [Runtime Boundaries Reference](runtime-boundaries.md) |
-| Design-quality policies, policy-to-validator mapping, stable validator IDs, severity composition, waiver semantics, evidence expectations, and design-quality close impact | [Design Quality Policies](design-quality-policies.md) |
+| Active design-quality role, finding severity, close-blocker conditions, waiver boundary, evidence expectations, validator ID boundary, and later policy catalog boundary | [Design Quality](design-quality.md) |
 | Terminology, capitalization, official term wording, record-name orientation, and owner routing | [Glossary Reference](glossary.md) |
 
 Documentation authoring, translation, review, link hygiene, owner-boundary drift, and docs-maintenance checks are Maintain responsibilities: [Authoring Guide](../maintain/authoring-guide.md), [Translation Guide](../maintain/translation-guide.md), and [Documentation Checks](../maintain/documentation-checks.md).
