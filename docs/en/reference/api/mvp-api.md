@@ -4,7 +4,7 @@
 
 Use this reference to look up the active current MVP API surface. It owns the active method list and the method-level request, response, state effect, storage owner, error, and security boundary summaries.
 
-This document describes future Harness Server behavior for planning and review. No Harness runtime or server implementation exists in this repository today. Future API or schema candidates are cataloged in [Later Candidate Index](../../later/index.md), not in this active reference.
+This document describes future Harness Server behavior for planning and review. No Harness runtime or server implementation exists in this repository today. Future API or schema candidates are cataloged in [Later Candidate Index](../../later/index.md), not in this active reference. Storage DDL and full shared schema bodies are owned outside this method reference.
 
 ## Main Idea
 
@@ -14,7 +14,7 @@ The API does not provide OS permissions, arbitrary-tool sandboxing, tamper-proof
 
 ## Active MVP Method Set
 
-The active method set is exactly:
+The active public method set is exactly these seven MCP methods:
 
 ```text
 harness.intake

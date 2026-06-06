@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference for active current MVP shared API shapes: the tool envelope, common response, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization summary, evidence summary, run summary, close blockers, next-action summary, current MVP value sets, and the boundary around profile-gated display value names.
+Use this reference for active current MVP shared API shapes: the tool envelope, common response, `ArtifactRef`, `StateRecordRef`, `UserJudgment`, Write Authorization summary, evidence summary, run summary, close blockers, next-action summary, current MVP value sets, profile-gated display value names, and later candidate value-name boundaries.
 
 This document describes future Harness Server behavior for planning and review. It does not mean the current documentation repository implements an MCP server. Future schema candidates stay in [Later Candidate Index](../../later/index.md#later-schema-candidates).
 
@@ -107,7 +107,7 @@ GuaranteeDisplay:
   notes: string[]
 ```
 
-Rendered labels are not canonical schema values. `GuaranteeDisplay.level` is a display claim about the documented surface capability and proof level; it does not grant permission or state authority. `preventive` and `isolated` are profile-gated display values, not default active MVP guarantees.
+Rendered labels are not canonical schema values. `GuaranteeDisplay.level` is a display claim about the documented surface capability and proof level; it does not grant permission or state authority. The default active MVP guarantee-display values are `cooperative` and `detective`. `preventive` and `isolated` are profile-gated display values, not default active MVP guarantees.
 
 <a id="staterecordref"></a>
 
@@ -473,7 +473,7 @@ These values are valid without a promoted profile. Values not listed here are no
 | `AuthorizedAttemptScope.guarantee_level` | `cooperative`, `detective` |
 | `ValidatorResult.guarantee_level` | `cooperative`, `detective` |
 
-For `GuaranteeDisplay.level`, `cooperative` is the default current MVP value. `detective` may be used only where the active surface can honestly observe the relevant fact.
+For `GuaranteeDisplay.level`, `cooperative` is the default current MVP value. `detective` is also a current MVP value, but only where the active surface can honestly observe the relevant fact. Neither value means OS permission, arbitrary-tool sandboxing, tamper-proof storage, pre-tool blocking, or isolation.
 
 <a id="profile-gated-value-names"></a>
 
@@ -487,3 +487,17 @@ These names may appear only when a promoted profile explicitly supports the corr
 | `GuaranteeDisplay.level` | `isolated` | Requires explicit isolation support for the covered boundary, plus a named boundary, owner-defined behavior, fallback, and proof path. |
 
 Profile-gated display value names do not expand Write Authorization, validator, storage, or error behavior by themselves. Unsupported requests to use or display them remain capability or validation failures; they are not evidence that the stronger guarantee exists.
+
+<a id="later-candidate-value-names"></a>
+
+## Later Candidate Value Names
+
+Later candidate value names stay catalog-only in [Later Candidate Index](../../later/index.md#later-schema-candidates) until a promoted owner adds exact active fields, value sets, validators, fallback behavior, and proof expectations here or in another active owner document.
+
+This active API reference intentionally does not define later schema bodies. A later candidate name is not an active enum member, schema field, storage value, public method, validator requirement, close blocker, or guarantee value merely because it is cataloged for future work.
+
+| Source | Active API boundary |
+|---|---|
+| Later schema extensions | Candidate names only; no active request, response, shared schema, or enum member. |
+| Later ref and artifact values | Candidate names only; no active `ArtifactRef`, `StateRecordRef`, storage, evidence, QA, export, or projection value. |
+| Later template, fixture, conformance, operation, export, and diagnostic names | Candidate names only; no active API payload, runtime operation, error family, conformance-runner behavior, or close effect. |

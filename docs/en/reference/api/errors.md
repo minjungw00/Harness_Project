@@ -12,7 +12,7 @@ This document describes future Harness Server behavior for planning and review. 
 
 `guarantee_display.level` uses the current MVP values `cooperative` and `detective` unless a promoted profile explicitly supports a profile-gated display value. Security meaning is owned by [Security Reference: Honest guarantee display](../security.md#honest-guarantee-display), and the exact value-set boundary is owned by [API Schema Core](schema-core.md#current-mvp-value-sets).
 
-Unsupported requests to require or display a profile-gated guarantee are claim-boundary errors. Use `CAPABILITY_INSUFFICIENT` when the surface lacks the needed blocking, isolation, observation, or proof support. Use `VALIDATION_FAILED` when the requested value is not valid for the active profile or request shape. Neither error proves that the stronger guarantee exists.
+Unsupported requests to require or display a profile-gated guarantee are claim-boundary errors. Use `CAPABILITY_INSUFFICIENT` when the surface lacks the needed blocking, isolation, observation, or proof support. Use `VALIDATION_FAILED` when the requested value is not valid for the active profile or request shape. Neither error proves that the stronger guarantee exists, and neither error implies current runtime enforcement in this documentation-only repository.
 
 | Level or name | Error/status meaning |
 |---|---|
@@ -21,7 +21,7 @@ Unsupported requests to require or display a profile-gated guarantee are claim-b
 | `preventive` | Profile-gated display value name. Without promoted pre-tool blocking support for the covered operation, return a capability or validation error and lower the displayed guarantee. |
 | `isolated` | Profile-gated display value name. Without promoted isolation support for the named boundary, return a capability or validation error and lower the displayed guarantee. |
 
-Active MVP behavior defaults to cooperative checks with limited detective reporting where the connected surface can honestly observe facts.
+Active MVP behavior defaults to cooperative checks with limited detective reporting where the connected surface can honestly observe facts. These security non-claims are separate from close blockers: close blockers are structured task-readiness results, not proof of preventive blocking, isolation, sandboxing, or tamper-proof storage.
 
 | Condition | Public path | Agent rule |
 |---|---|---|
