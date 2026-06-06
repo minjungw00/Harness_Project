@@ -624,7 +624,7 @@ Operator boundary: 이 문서는 operator entrypoint, runtime/docs-maintenance p
 
 ### Conformance Fixture Format
 
-[Conformance Fixtures 참조: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format)으로 이동했습니다. 이 stub은 이전 anchor를 보존합니다. Structured fixture draft body shape, `request.payload` public-schema boundary, active-path shorthand boundary, `ToolEnvelope` expansion convention은 그 문서가 담당합니다. Later-profile shorthand detail은 승격 전까지 [향후 Fixtures: Later-Profile Fixture Shorthand Notes](../later/future-fixtures.md#later-profile-fixture-shorthand-notes)에 남습니다.
+[Conformance Fixtures 참조: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format)으로 이동했습니다. 이 stub은 이전 anchor를 보존합니다. Structured fixture draft body shape, canonical active value boundary, `request.payload` public request schema boundary는 그 문서가 담당합니다. Later-profile shorthand detail은 승격 전까지 [향후 Fixtures: Later-Profile Fixture Shorthand Notes](../later/future-fixtures.md#later-profile-fixture-shorthand-notes)에 남습니다.
 
 ### Conformance Execution
 

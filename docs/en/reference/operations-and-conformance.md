@@ -622,7 +622,7 @@ Operator boundary: this document owns the operator entrypoint, runtime/docs-main
 
 ### Conformance Fixture Format
 
-Moved to [Conformance Fixtures Reference: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format). This stub preserves the old anchor; fixture body shape, active-path shorthand boundary, `request.payload` public-schema boundary, and `ToolEnvelope` expansion convention are owned there. Later-profile shorthand details stay in [Future Fixtures: Later-Profile Fixture Shorthand Notes](../later/future-fixtures.md#later-profile-fixture-shorthand-notes) until promoted.
+Moved to [Conformance Fixtures Reference: Conformance Fixture Format](conformance-fixtures.md#conformance-fixture-format). This stub preserves the old anchor; fixture body shape, canonical active value boundary, and `request.payload` public request schema boundary are owned there. Later-profile shorthand details stay in [Future Fixtures: Later-Profile Fixture Shorthand Notes](../later/future-fixtures.md#later-profile-fixture-shorthand-notes) until promoted.
 
 ### Conformance Execution
 
