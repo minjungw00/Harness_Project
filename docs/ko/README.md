@@ -4,7 +4,7 @@
 
 하네스는 AI 지원 제품 작업을 위한 향후 로컬 작업 권한 서버입니다. 하네스의 권한은 범위, 사용자 소유 판단, 증거, 확인과 검증 기대, 최종 수락, 닫기 가능 여부, 잔여 위험에 대한 하네스 기록과 상태 전이를 대상으로 합니다. 대화의 쉽게 흔들리는 맥락이 그 기록들의 기준처럼 굳어지지 않게 하는 것이 목표입니다.
 
-이 권한은 운영체제 권한 제어, 임의 도구 샌드박스, 변조 방지 저장소, 기본 도구 실행 전 차단, 보안 격리를 뜻하지 않습니다. 구체적인 향후/profile mechanism이 이름 붙고 증명되지 않은 한 MVP-1 표현은 cooperative에 제한된 detective behavior를 더한 수준으로 읽어야 합니다.
+이 권한은 운영체제 권한 제어, 임의 도구 샌드박스, 변조 방지 저장소, 기본 도구 실행 전 차단, 보안 격리를 뜻하지 않습니다. 구체적인 향후 프로필 메커니즘이 이름 붙고 증명되지 않은 한 MVP-1 표현은 cooperative에 제한된 detective behavior를 더한 수준으로 읽어야 합니다.
 
 이 저장소는 현재 문서 전용이며 재설계 이후 검토 상태입니다. 문서 수락과 별도의 구현 계획 준비 결정이 끝난 뒤에만 하네스 서버 소스 저장소가 될 예정입니다. 사용자의 제품 저장소도, 하네스 런타임 홈도, 실행 중인 하네스 인스턴스도 아닙니다.
 
@@ -40,14 +40,14 @@
 |---|---|---|
 | Learn | 하네스가 왜 필요한지, 권한이 어디에 있는지, 엄격한 계약 전에 필요한 개념을 설명합니다. | schema, gate, DDL, 구현 순서, fixture mechanics를 정의하지 않습니다. |
 | Use | 평소 말 예시, 에이전트 행동, 판단 요청 처리, 쓰기 전 확인, 증거 요약, 닫기 흐름을 통해 사용자와 에이전트 사용 방식을 설명합니다. | canonical enum, DDL, 전체 전이 표를 정의하지 않습니다. |
-| Build | 향후 구현 순서, 활성 조각, 첫 증명, 활성/이후 경계, 구현자 읽기 경로, 제외 범위를 설명합니다. | 정확한 schema, DDL, API shape, 상태 전이, fixture body, threat catalog는 Reference로 연결합니다. |
+| Build | 향후 구현 순서, 활성 조각, 첫 증명, 활성/이후 경계, 구현자 읽기 경로, 제외 범위를 설명합니다. | 정확한 API shape, schema, DDL, storage table, 상태 전이, fixture body, security guarantee, threat catalog는 Reference로 연결합니다. |
 | Reference | Core 전이, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, runtime architecture, operations, design-quality policy의 정확한 계약을 담당합니다. | 첫 읽기 튜토리얼이나 단계별 구현 계획이 아닙니다. |
 | Later | 활성 MVP 경로 밖의 향후/profile 자료를 둡니다. | 담당 문서가 범위와 증명 기대를 함께 승격하기 전까지 활성 전달 범위가 아닙니다. |
 | Maintain | 문서 작성, 번역, 검토, drift, owner 경계, link 규칙을 관리합니다. | runtime readiness, 최종 수락, close readiness, implementation readiness를 결정하지 않습니다. |
 
 ## 구현 문서 경로
 
-Build 문서는 문서 수락과 별도의 구현 계획 준비 결정 이후의 향후 구현 방향을 잡기 위한 문서입니다. 순서와 단계 경계를 설명하지만 서버/런타임 구현을 승인하지 않습니다.
+Build 문서는 문서 수락과 별도의 구현 계획 준비 결정 이후의 향후 구현 방향을 잡기 위한 문서입니다. 순서와 단계 경계를 설명하며, 정확한 API, schema, storage, fixture, security contract는 Reference에 남깁니다. Build 문서는 서버/런타임 구현을 승인하지 않습니다.
 
 권장 순서:
 

@@ -25,22 +25,9 @@ MVP-1은 일부러 좁습니다. 하네스가 prompt pack이나 pre-write wrappe
 
 활성 MVP-1 surface target은 `surface_id=reference-local-mcp`인 registered reference `capability_profile` 하나입니다. Capability label은 write authority를 부여하지 않습니다. Unsupported field는 guarantee display를 낮추거나 claim을 막으며, product write에는 계속 active scope, `prepare_write`, durable Write Authorization, `record_run`이 필요합니다.
 
-활성 MVP-1 method set은 정확히 다음 일곱 개입니다.
+활성 MVP-1 public method set과 `harness.next` 제외 경계는 [MVP API](../reference/api/mvp-api.md#mvp-1-method-set)가 담당합니다. Build 계획은 다음 안전한 행동을 담당 문서가 정의한 status surface의 일부로 다루며, Build가 새 method로 다시 정의하지 않습니다.
 
-- `harness.status`
-- `harness.intake`
-- `harness.request_user_judgment`
-- `harness.record_user_judgment`
-- `harness.prepare_write`
-- `harness.record_run`
-- `harness.close_task`
-
-활성 MVP-1에는 `harness.next` method가 없습니다. 다음 안전한 행동은 `harness.status.next_actions`로 반환합니다.
-
-활성 작은 출력 세트는 독자별로 나뉩니다.
-
-- 사용자용: `status-card`, `judgment-request`, `run-evidence-summary`, `close-result`
-- 에이전트용: `agent-context-packet`
+활성 작은 출력 세트는 [Projection과 Template 참조](../reference/projection-and-templates.md#mvp-1-보기-세트)와 [Template 참조](../reference/templates/README.md#mvp-1-템플릿-세트)가 담당합니다. Build 계획은 그 담당 문서가 정한 독자 구분을 사용합니다. 즉 현재 Core 기록에서 파생한 작은 사용자용 보기와 작은 에이전트용 패킷 하나입니다.
 
 Persisted Journey Card, full Evidence Manifest, Eval report, Manual QA report, TDD Trace, Module Map, Interface Contract, Export report 같은 상세 report는 owner가 좁은 non-required display로 명시적으로 승격하기 전까지 후속/profile 범위입니다.
 
@@ -57,14 +44,14 @@ MVP-1에는 아래가 포함됩니다.
 - Core와 `prepare_write`를 통한 협력형 쓰기 전 범위 확인
 - `record_run`, 등록된 아티팩트 참조 또는 evidence ref, minimum evidence summary path
 - fallback, blocked reason, validator result, guarantee display에 사용하는 reference `capability_profile` 하나
-- 최소 state `not_required`, `none`, `partial`, `sufficient`, `stale`, `blocked`를 쓰는 Core-owned `evidence_summary`
+- API/Core 담당 문서가 정의한 Core-owned compact `evidence_summary` status. Full Evidence Manifest가 아닙니다.
 - `harness.status.next_actions`를 통한 status와 next-safe-action output
 - status와 `prepare_write` output에 보장 수준을 표시하기. Core가 답할 수 없으면 unavailable/capability 상태를 분명히 보여줍니다.
 - 증거 요약과 증거 공백 표시
 - 필요한 증거가 부족하거나, 필요한 사용자 판단이 unresolved 또는 blocked이거나, 필요한 최종 수락이 없거나, 잔여 위험이 required 상태로 보이지 않거나 수락되지 않았을 때 close blocker summary
 - 닫기와 관련된 위험이 있을 때 최종 수락이나 close 전에 잔여 위험 표시
-- 작은 활성 MVP 차단 집합을 통해 라우팅되는 design-quality finding: Autonomy Boundary exceeded, unresolved user judgment, missing active scope, missing required evidence, stale context affecting write/close, surface capability insufficient for a claimed guarantee
-- MVP-1 path를 위한 Core 기반 작은 출력. 네 가지 사용자용 출력과 에이전트용 패킷 하나로 나누며, 정확한 세트는 [Projection과 Template 참조](../reference/projection-and-templates.md#mvp-1-보기-세트)와 [Template 참조](../reference/templates/README.md#mvp-1-템플릿-세트)가 담당합니다.
+- [설계 품질 정책](../reference/design-quality-policies.md#활성-mvp-차단-집합)이 담당하는 작은 활성 MVP 차단 집합으로만 라우팅되는 design-quality finding. Full stewardship, TDD, Manual QA, detached verification policy material을 승격하지 않습니다.
+- MVP-1 path를 위한 Core 기반 작은 출력. 정확한 출력 이름과 template body는 [Projection과 Template 참조](../reference/projection-and-templates.md#mvp-1-보기-세트)와 [Template 참조](../reference/templates/README.md#mvp-1-템플릿-세트)가 담당합니다.
 - MCP/Core를 사용할 수 없을 때 정직하게 동작하기. Core에 닿을 수 없으면 권한 상태를 만들어 내지 않습니다.
 
 ## MVP-1에서 제외되는 것
@@ -105,15 +92,13 @@ Build 문서는 exact schema, DDL, API definition을 중복하지 않습니다. 
 3. [API Errors](../reference/api/errors.md): public error, idempotency, replay, unavailable Core/MCP behavior, state conflict.
 4. [API Schema Later](../reference/api/schema-later.md): 어떤 method나 field가 later/profile-gated라서 MVP-1 밖에 남아야 하는지 확인할 때만 사용합니다.
 
-MVP-1의 next-safe-action output은 `harness.status.next_actions`로 만족해야 합니다. 별도 `harness.next` method는 담당 문서가 승격하기 전까지 later/compatibility material입니다.
-
-MVP-1의 활성 method list는 계속 정확히 `harness.status`, `harness.intake`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.prepare_write`, `harness.record_run`, `harness.close_task`입니다.
+활성 MVP-1 method set, 다음 안전한 행동의 위치, 별도 `harness.next` 제외 경계는 [MVP API](../reference/api/mvp-api.md#mvp-1-method-set)가 담당합니다. Build 문서는 request/response contract를 다시 적지 않고 그 담당 문서로 연결합니다.
 
 ## MVP-1에 필요한 Storage 문서
 
 활성 첫 구현 저장 범위, runtime home layout, artifact storage와 link, lock, storage validation, later/profile storage boundary는 [Storage](../reference/storage.md)를 사용합니다.
 
-MVP-1 계획에서 storage는 `project_state`, reference `surfaces` registration, `tasks`, `task_events`, `change_units`, `user_judgments`, `write_authorizations`, `runs`, `artifacts`, `artifact_links`, minimal `evidence_summaries`, `blockers`, `tool_invocations`에 필요한 owner-approved active record로 제한합니다. Rich Approval lifecycle, full Evidence Manifest table, full Manual QA matrix, full Eval system, projection job, reconcile item, recover/export, broad validator run archive, Journey record, long-term metrics, connector ecosystem table, broad diagnostic을 위한 later-profile storage는 owner가 특정 동작을 승격하기 전까지 MVP-1 exit에 필요하지 않습니다.
+MVP-1 계획에서 storage는 [Storage](../reference/storage.md#활성-첫-구현-저장-범위)가 담당하는 active first implementation slice만 사용합니다. 즉 사용자 작업 루프에 필요한 project/task/scope, user judgment, pre-write/run, artifact/evidence summary, blocker, reference-surface, event/audit, committed replay record입니다. Rich Approval lifecycle, full Evidence Manifest, full Manual QA, full Eval, durable projection job, reconcile, recover/export, broad validator archive, Journey record, metrics, connector ecosystem, broad diagnostic을 위한 later-profile storage는 owner가 특정 동작을 승격하기 전까지 MVP-1 exit에 필요하지 않습니다.
 
 ## MVP-1 보안 보장
 
@@ -152,11 +137,11 @@ Guarantee level은 [보안 참조](../reference/security.md#단계별-guarantee-
 | Judgment naming | `UserJudgment` / `user_judgment`, `harness.request_user_judgment`, `harness.record_user_judgment`, `judgment_kind`, `presentation`을 사용하고, 사용자 표시 라벨은 `judgment_kind`와 locale에서 렌더링합니다. | Compatibility alias나 표시 라벨이 추가 authority path를 만들면 안 됩니다. |
 | Next action | MVP-1 next-safe-action output은 `harness.status.next_actions`를 사용합니다. | 별도 `harness.next` method는 승격 전까지 later/compatibility입니다. |
 | Reference surface scope | `surface_id=reference-local-mcp`인 reference `capability_profile` 하나를 사용합니다. | Broad connector ecosystem, hosted connector registry, cross-surface orchestration은 명시적으로 승격되기 전까지 later/profile입니다. |
-| MVP-1 작은 출력 | [Projection과 Template 참조](../reference/projection-and-templates.md#mvp-1-보기-세트)와 [Template 참조](../reference/templates/README.md#mvp-1-템플릿-세트)가 소유한 네 가지 사용자용 출력 `status-card`, `judgment-request`, `run-evidence-summary`, `close-result`와 에이전트용 패킷 `agent-context-packet`만 사용합니다. | 이 출력은 쓰기를 승인하거나 증거를 충족하거나 수락을 기록하거나 위험을 수용하거나 Task를 닫거나 기준 상태가 되지 않습니다. |
+| MVP-1 작은 출력 | [Projection과 Template 참조](../reference/projection-and-templates.md#mvp-1-보기-세트)와 [Template 참조](../reference/templates/README.md#mvp-1-템플릿-세트)가 담당하는 작은 사용자용 출력과 에이전트용 출력을 사용합니다. | 이 출력은 쓰기를 승인하거나 증거를 충족하거나 수락을 기록하거나 위험을 수용하거나 Task를 닫거나 기준 상태가 되지 않습니다. |
 | Minimal storage boundary | MVP-1 storage는 user work loop에 필요한 최소 active owner record로 제한합니다. | Later-profile table/record는 owner docs가 승격하기 전까지 제외합니다. |
 | Acceptance boundaries | Sensitive action approval, final acceptance, residual-risk acceptance를 분리합니다. | Final acceptance는 Approval이 아니며, residual-risk acceptance는 final acceptance가 아닙니다. |
-| Minimal evidence and close contract | Core-owned `evidence_summary`를 사용합니다. Successful close에는 필요한 evidence가 sufficient이고, 필요한 judgment가 resolved이며, 필요한 최종 수락이 기록되어 있고, close-relevant residual risk가 visible해야 합니다. Accepted-risk close에는 명시적 residual-risk acceptance가 필요합니다. | Full Evidence Manifest, detached Eval, full Manual QA, rich residual-risk lifecycle은 owner scope, policy, profile이 활성화하기 전까지 later/profile에 남습니다. |
-| Active close assurance boundary | MVP-1 close는 `assurance_level=none` 또는 `self_checked`와 `completed_self_checked`, `completed_with_risk_accepted`, `cancelled`, `superseded` close reason을 사용합니다. | `completed_verified`, `assurance_level=detached_verified`, `profile_required_verification`, verification close blocker, Manual QA close blocker는 later/profile에 남습니다. |
+| Minimal evidence and close contract | [Core Model 참조](../reference/core-model.md#close_task), [MVP API](../reference/api/mvp-api.md#harnessclose_task), [API Schema Core](../reference/api/schema-core.md#evidence-and-pre-write-scope-schemas)가 담당하는 Core-owned compact evidence summary와 close blocker를 사용합니다. | Full Evidence Manifest, detached Eval, full Manual QA, rich residual-risk lifecycle은 owner scope, policy, profile이 활성화하기 전까지 later/profile에 남습니다. |
+| Active close assurance boundary | MVP-1 close는 담당 문서가 정의한 self-checked/no-detached-verification path에 머뭅니다. | Detached-verified close, profile-required verification, verification close blocker, Manual QA close blocker는 later/profile에 남습니다. |
 | Design-quality MVP boundary | [설계 품질 정책: 활성 MVP 차단 집합](../reference/design-quality-policies.md#활성-mvp-차단-집합)을 사용합니다. | Full domain language consistency, full module/interface review, full TDD trace, full codebase stewardship suite, full feedback-loop audit, detailed Manual QA policy, detached verification profile은 기본적으로 Routed candidate 또는 Advisory/later입니다. |
 | Small direct changes | Small change도 explicit scope, compatible `prepare_write`, `record_run`, required evidence support가 필요합니다. | Small-change label이 authority, user judgment, evidence, risk visibility를 우회하면 안 됩니다. |
 | Local access and errors | Local access, unavailable Core/MCP, state conflict, display-safe detail은 API, Operations, Security 담당 계약을 사용합니다. | Build 문서는 새 public error code나 precedence를 정의하지 않습니다. |
@@ -197,7 +182,7 @@ MVP-1 사용자 작업 루프는 사용자가 아래를 볼 수 있을 때만 co
 - 현재 상태, 다음 안전한 행동, 증거 공백, close blocker, 잔여 위험 표시
 - 현재 status 또는 쓰기 확인 result에 보장 수준이나 unavailable/capability 상태가 표시됨
 - Unsupported behavior에 claim이 의존할 때 reference `capability_profile` limit이 보임
-- Required evidence가 `sufficient`가 아니거나, required user judgment가 unresolved 또는 blocked이거나, required final acceptance가 없거나, residual risk가 required 상태로 보이지 않거나 수락되지 않으면 close가 hold됨
+- Required evidence가 담당 문서 기준에서 충분하지 않거나, required user judgment가 unresolved 또는 blocked이거나, required final acceptance가 없거나, residual risk가 required 상태로 보이지 않거나 수락되지 않으면 close가 hold됨
 - MCP/Core를 사용할 수 없을 때 권한 상태를 만들어 내지 않음
 - Core record에서 파생된 네 가지 사용자용 작은 출력과 에이전트용 패킷 하나, 필요한 경우 stale/failed freshness 표시. 이 출력은 conformance proof가 아님
 

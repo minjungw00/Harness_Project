@@ -18,7 +18,7 @@
 
 내부 엔지니어링 점검은 이 경로의 내부 권한 루프만 구현합니다. Project state, registered reference `capability_profile` 하나, 활성 Task, 활성 Change Unit/scope boundary, `prepare_write`, single-use Write Authorization, `record_run`, artifact/evidence ref 하나, status/blocker output, 좁은 close-blocker check입니다.
 
-MVP-1은 그 loop 주변의 사용자 표시 동작을 더합니다. 평소 말로 시작/이어가기, work-shape classification, active Task/Change Unit/user judgment 경계로 이어지는 요구사항 구체화, scope/non-goals/success criteria, minimal user judgment, evidence summary, close result/blocker, `harness.status.next_actions`를 통한 다음 안전한 행동, 잔여 위험 표시, 민감 동작 승인/최종 수락/위험 수락 분리 표시, 같은 reference surface profile에서 나온 정직한 guarantee display입니다.
+MVP-1은 그 loop 주변의 사용자 표시 동작을 더합니다. 평소 말로 시작/이어가기, work-shape classification, active Task, Change Unit, User Judgment 경계에만 지속되는 Discovery/요구사항 구체화, scope/non-goals/success criteria, minimal user judgment, evidence summary, close result/blocker, 담당 문서가 정의한 status surface를 통한 다음 안전한 행동, 잔여 위험 표시, 민감 동작 승인/최종 수락/위험 수락 분리 표시, 같은 reference surface profile에서 나온 정직한 guarantee display입니다.
 
 후속/profile 범위는 owner 문서가 해당 profile을 승격한 뒤에만 full Manual QA matrix, detached Eval, export/recover, dashboard 또는 hosted UI, broad connector, hosted connector registry, automated Browser QA Capture, preventive guard expansion, cross-surface orchestration, parallel orchestration, detailed report를 더합니다.
 
@@ -57,9 +57,9 @@ flowchart LR
 
 ### 2. Task -> 구체화
 
-요청이 모호하거나, 위험하거나, 제품-facing이거나, 사용자 판단이 필요할 가능성이 있으면 하네스는 original request, current goal summary, scope, non-goals, success criteria, confirmed facts, remaining uncertainties, blocking question, likely judgment boundary, next safe action을 구체화합니다. MVP-1에서 이 shaping 출력은 active Task, proposed 또는 active Change Unit, user judgment 후보/기록 경계에 지속됩니다. Committed Shared Design record, Discovery Brief record, Question Queue record, Assumption Register record, First Safe Change Unit Candidate record, evidence, Approval, Write Authorization, final acceptance, residual-risk acceptance, close가 아닙니다.
+요청이 모호하거나, 위험하거나, 제품-facing이거나, 사용자 판단이 필요할 가능성이 있으면 하네스는 original request, current goal summary, scope, non-goals, success criteria, confirmed facts, remaining uncertainties, blocking question, likely judgment boundary, next safe action을 구체화합니다. MVP-1에서 Discovery와 요구사항 구체화는 active Task update, proposed 또는 active Change Unit update, User Judgment 후보나 기록으로만 지속됩니다. Committed Shared Design record, Discovery Brief record, Question Queue record, Assumption Register record, First Safe Change Unit Candidate record, evidence, Approval, Write Authorization, final acceptance, residual-risk acceptance, close가 아닙니다.
 
-담당 문서: [Core Model 참조: User Judgment](../reference/core-model.md#user-judgment), [`harness.request_user_judgment`](../reference/api/mvp-api.md#harnessrequest_user_judgment).
+담당 문서: [Core Model 참조: MVP-1 shaping boundary](../reference/core-model.md#mvp-1-shaping-boundary), [API Schema Core: `ShapingUpdatePayload`](../reference/api/schema-core.md#record-run-payloads), [`harness.request_user_judgment`](../reference/api/mvp-api.md#harnessrequest_user_judgment).
 
 ### 3. 구체화 -> scope
 
@@ -87,9 +87,9 @@ Product write나 direct work 뒤에는 `record_run`이 무엇이 일어났는지
 
 ### 7. Run -> evidence와 artifact 연결
 
-Evidence는 claim을 등록된 아티팩트 참조 또는 owner record에 연결합니다. 내부 엔지니어링 점검에는 ref 하나가 필요합니다. MVP-1에는 gap이 보이는 Core-owned `evidence_summary`가 필요합니다. Evidence가 close에 required이면 `sufficient`가 필요합니다. Detailed Evidence Manifest behavior는 승격 전까지 later-profile scope입니다.
+Evidence는 claim을 등록된 아티팩트 참조 또는 owner record에 연결합니다. 내부 엔지니어링 점검에는 ref 하나가 필요합니다. MVP-1에는 gap이 보이는 Core-owned compact evidence summary가 필요합니다. Evidence가 close에 required이면 담당 문서가 정의한 충분성 기준이 중요합니다. Detailed Evidence Manifest behavior는 승격 전까지 later-profile scope입니다.
 
-담당 문서: [Core Model 참조: Evidence Manifest](../reference/core-model.md#evidence-manifest), [API Schema Core: ArtifactRef](../reference/api/schema-core.md#artifactref), [Storage](../reference/storage.md).
+담당 문서: [Core Model 참조: 증거, 검증, 수동 QA, 최종 수락, 위험](../reference/core-model.md#증거-검증-수동-qa-최종-수락-위험), [API Schema Core: ArtifactRef](../reference/api/schema-core.md#artifactref), [API Schema Core: Evidence and pre-write scope schemas](../reference/api/schema-core.md#evidence-and-pre-write-scope-schemas), [Storage](../reference/storage.md).
 
 ### 8. 증거 -> 상태와 작은 출력
 
@@ -108,9 +108,9 @@ Close가 stage 범위에 있으면 Core는 close-relevant state를 확인하고 
 | 단계 | Walkthrough에서 범위에 들어오는 부분 |
 |---|---|
 | 내부 엔지니어링 점검 | Project state, registered reference `capability_profile` 하나, 활성 Task, 활성 Change Unit/scope boundary, `prepare_write`, Write Authorization, `record_run`, artifact/evidence ref 하나, status/blocker output, 좁은 close-blocker check. |
-| MVP-1 사용자 작업 루프 | 내부 엔지니어링 점검에 평소 말로 시작/이어가기, work-shape classification, Task/Change Unit/user judgment 경계를 통한 요구사항 구체화, minimal user judgment, evidence summary, close result/blocker display, `harness.status.next_actions`를 통한 다음 안전한 행동, 잔여 위험 표시, honest reference-surface guarantee display, 네 가지 사용자용 작은 출력, 에이전트용 맥락 패킷 하나를 더합니다. |
-| 보증 프로필 | Verification, Manual QA, richer final acceptance/residual-risk behavior, stewardship, TDD, feedback-loop, context-hygiene hardening. |
-| 운영 프로필 | Doctor/readiness, recover/export, artifact integrity, release handoff, projection/reconcile operations, 실행 가능한 state-assertion suite가 존재한 뒤 conformance runner. |
+| MVP-1 사용자 작업 루프 | 내부 엔지니어링 점검에 평소 말로 시작/이어가기, work-shape classification, Task/Change Unit/User Judgment 경계를 통한 Discovery/요구사항 구체화, minimal user judgment, evidence summary, close result/blocker display, 담당 문서가 정의한 status surface를 통한 다음 안전한 행동, 잔여 위험 표시, honest reference-surface guarantee display, 작은 사용자용 출력, 작은 에이전트용 맥락 패킷 하나를 더합니다. |
+| 보증 프로필 | Verification, Manual QA, richer final acceptance/residual-risk behavior, stewardship, TDD, feedback-loop, context-hygiene hardening. 담당 profile이 active일 때만 적용됩니다. |
+| 운영 프로필 | Doctor/readiness, recover/export, artifact integrity, release handoff, projection/reconcile operations, 실행 가능한 state-assertion suite가 존재한 뒤의 conformance runner. |
 | 로드맵 | Dashboard, hosted UI, broad connector, hosted connector registry, automation, metrics, team workflow, cross-surface orchestration, parallel orchestration, promoted future candidate. |
 
 첫 내부 smoke는 [내부 엔지니어링 점검](engineering-checkpoint.md)을 사용하고, 첫 사용자 가치 계획은 [MVP-1 사용자 작업 루프](mvp-user-work-loop.md)를 사용합니다.

@@ -40,14 +40,14 @@ This path intentionally stops before large Reference docs. First-time readers do
 |---|---|---|
 | Learn | Explains why Harness exists, where authority lives, and the concepts readers need before strict contracts. | Does not define schemas, gates, DDL, implementation sequence, or fixture mechanics. |
 | Use | Explains user and agent usage through ordinary-language examples, agent behavior, judgment request handling, write checks, evidence summaries, and close flow. | Does not define canonical enums, DDL, or full transition tables. |
-| Build | Explains future implementation sequence, active slice, first proof, active/later boundary, build reading path, and excluded areas. | Links to Reference for exact schemas, DDL, API shapes, state transitions, fixture bodies, and threat catalogs. |
+| Build | Explains future implementation sequence, active slice, first proof, active/later boundary, build reading path, and excluded areas. | Links to Reference for exact API shapes, schemas, DDL, storage tables, state transitions, fixture bodies, security guarantees, and threat catalogs. |
 | Reference | Owns exact contracts: Core transition, API schema, Storage/DDL, Security, Agent Integration, Projection/Templates, Conformance, Glossary, runtime architecture, operations, and design-quality policy. | Does not serve as the first-read tutorial or staged implementation plan. |
 | Later | Holds future/profile material outside the active MVP path. | Does not become active delivery unless an owner promotes it with scope and proof expectations. |
 | Maintain | Governs documentation writing, translation, review, drift, owner-boundary, and link rules. | Does not decide runtime readiness, final acceptance, close readiness, or implementation readiness. |
 
 ## Build Route
 
-Build pages are for future implementation orientation after documentation acceptance and a separate implementation-planning readiness decision. They describe sequence and stage boundaries; they do not authorize server/runtime implementation.
+Build pages are for future implementation orientation after documentation acceptance and a separate implementation-planning readiness decision. They describe sequence and stage boundaries; exact API, schema, storage, fixture, and security contracts stay in Reference. Build pages do not authorize server/runtime implementation.
 
 Recommended Build order:
 
