@@ -136,7 +136,7 @@ Build summarizes sequence and scope only. Use these Reference owners for exact c
 | MVP security guarantee wording and local-access posture | [Security Reference](../reference/security.md). |
 | Compact derived views, projection authority boundaries, freshness, and template ownership | [Projection And Templates Reference](../reference/projection-and-templates.md) and [Template Reference](../reference/templates/README.md). |
 | Reference surface `capability_profile` and user-facing surface behavior | [Agent Integration Reference](../reference/agent-integration.md) and [Surface Cookbook](../reference/surface-cookbook.md). |
-| Runtime architecture and local Core placement | [Runtime Architecture Reference](../reference/runtime-architecture.md). |
+| Runtime boundaries and local Core authority placement | [Runtime Boundaries Reference](../reference/runtime-boundaries.md). |
 | Active design-quality blocking boundary | [Design Quality Policies](../reference/design-quality-policies.md#active-mvp-blocking-set). |
 | Future fixture/conformance and operations material | [Conformance Fixtures Reference](../reference/conformance-fixtures.md), [Future Fixtures](../later/index.md#future-fixture-families), and [Operations And Conformance Reference](../reference/operations-and-conformance.md). |
 

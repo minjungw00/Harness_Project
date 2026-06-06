@@ -23,7 +23,7 @@ Exact field, enum value, lifecycle state, DDL, request/response shape, security 
 | Conformance model, MVP behavior example, future fixture body shape, future runner/assertion semantics, fixture profile, suite metadata boundary, current-phase fixture status, Kernel Smoke authoring queue | [Conformance Fixtures 참조](conformance-fixtures.md) |
 | 활성 MVP 경로 밖의 향후 scenario family 목록, 승격 조건, suite-family label, catalog-only future candidate | [향후 Fixtures](../later/index.md#future-fixture-families) |
 | Operations, diagnostic, staged operator surface, recovery/export/reconcile operation, artifact check, future conformance run entrypoint, docs-maintenance reporting profile | [운영과 Conformance 참조](operations-and-conformance.md) |
-| Runtime space, Core process placement, Core-only canonical mutation authority, transaction ordering, artifact/projection/reconcile placement, architecture-level recovery overview | [런타임 아키텍처 참조](runtime-architecture.md) |
+| 런타임 경계 공간, Product Repository / Harness Server / Runtime Home 분리, Core-only canonical mutation authority, projection/status card의 파생 표시 경계, artifact storage boundary, recovery boundary, 현재 non-isolation claim | [런타임 경계 참조](runtime-boundaries.md) |
 | Design-quality policy, policy-to-validator mapping, stable validator ID, severity composition, waiver semantics, evidence expectation, design-quality close impact | [설계 품질 정책](design-quality-policies.md) |
 | 용어, capitalization, official term wording, record-name orientation, owner routing | [용어집 참조](glossary.md) |
 

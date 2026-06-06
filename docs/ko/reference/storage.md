@@ -247,10 +247,9 @@ affected-scope version을 저장합니다.
 
 ## 9. 잠금 정책
 
-Runtime mutation은 Core transaction order를 통해 serialize합니다. Ordinary SQLite transaction과
-필요한 경우 process/project lock을 사용합니다. Architecture placement는
-[런타임 아키텍처: State transaction flow](runtime-architecture.md#state-transaction-flow)가
-담당합니다.
+Runtime mutation은 Core-owned state-changing path를 통해 serialize합니다. Ordinary SQLite
+transaction과 필요한 경우 process/project lock을 사용합니다. Authority placement는
+[런타임 경계 참조](runtime-boundaries.md)가 담당합니다.
 
 현재 활성 MVP는 `persistent_locks` table을 요구하지 않습니다. Durable lock/recovery
 metadata는 owner가 승격하기 전까지 later Operations/Profile material입니다.

@@ -23,7 +23,7 @@ The owner is the only place to define exact fields, enum values, lifecycle state
 | Conformance model, MVP behavior examples, future fixture body shape, future runner/assertion semantics, fixture profiles, suite metadata boundaries, current-phase fixture status, and Kernel Smoke authoring queue | [Conformance Fixtures Reference](conformance-fixtures.md) |
 | Future scenario-family inventory, promotion criteria, suite-family labels, and catalog-only future candidates outside the MVP path | [Future Fixtures](../later/index.md#future-fixture-families) |
 | Operations, diagnostics, staged operator surface, recovery/export/reconcile operations, artifact checks, future conformance run entrypoints, and docs-maintenance reporting profile | [Operations And Conformance Reference](operations-and-conformance.md) |
-| Runtime spaces, Core process placement, Core-only canonical mutation authority, transaction ordering, artifact/projection/reconcile placement, and architecture-level recovery overview | [Runtime Architecture Reference](runtime-architecture.md) |
+| Runtime boundary spaces, Product Repository / Harness Server / Runtime Home separation, Core-only canonical mutation authority, derived projection/status-card boundary, artifact storage boundary, recovery boundary, and current non-isolation claims | [Runtime Boundaries Reference](runtime-boundaries.md) |
 | Design-quality policies, policy-to-validator mapping, stable validator IDs, severity composition, waiver semantics, evidence expectations, and design-quality close impact | [Design Quality Policies](design-quality-policies.md) |
 | Terminology, capitalization, official term wording, record-name orientation, and owner routing | [Glossary Reference](glossary.md) |
 

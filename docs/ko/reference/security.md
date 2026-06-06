@@ -18,7 +18,7 @@ Runtime 구현 계획에 들어가기 전에 Harness 보안 자산, trust bounda
 
 ## 읽기 전에
 
-Runtime space, Core process model, transaction ordering, architecture placement는 [런타임 아키텍처 참조](runtime-architecture.md)를 사용합니다. Connector capability profile, generated manifest, context push/pull, fallback display는 [Agent 통합 참조](agent-integration.md)를 사용합니다. 단계별 `doctor`, `serve mcp`, artifact check, recover, reconcile behavior는 [운영과 Conformance 참조](operations-and-conformance.md)를 사용하고, fixture semantics는 [Conformance Fixtures 참조](conformance-fixtures.md)를 사용합니다.
+런타임 경계 공간, Core mutation authority placement, projection/artifact/recovery 경계, 현재 non-isolation claim은 [런타임 경계 참조](runtime-boundaries.md)를 사용합니다. Connector capability profile, generated manifest, context push/pull, fallback display는 [Agent 통합 참조](agent-integration.md)를 사용합니다. 단계별 `doctor`, `serve mcp`, artifact check, recover, reconcile behavior는 [운영과 Conformance 참조](operations-and-conformance.md)를 사용하고, fixture semantics는 [Conformance Fixtures 참조](conformance-fixtures.md)를 사용합니다.
 
 Public tool envelope와 shared shape는 [API Schema Core](api/schema-core.md)를 사용하고, public error, MVP-1 status/error condition 동작, replay behavior는 [API Errors](api/errors.md)를 사용합니다. Exact storage layout, artifact row, DDL은 [Storage](storage.md)를 사용합니다. State transition, gate, Approval, `prepare_write`, Write Authorization, acceptance, residual risk, close는 [Core Model 참조](core-model.md)를 사용합니다.
 
@@ -245,7 +245,7 @@ Guard, freeze, careful-mode, recipe name, product name, surface name, friendly m
 | Kernel state transition, gate, Approval, `prepare_write`, Write Authorization, acceptance, residual risk, close | [Core Model 참조](core-model.md) |
 | `state.sqlite`, `task_events`, artifact storage row, DDL, enum hardening, hash, storage layout | [Storage](storage.md) |
 | Guarantee-level 의미와 honest display rule | 이 문서의 [정직한 guarantee display](#정직한-guarantee-display) |
-| Runtime space, Core transaction ordering, artifact/projection architecture placement | [런타임 아키텍처 참조](runtime-architecture.md) |
+| 런타임 경계 공간, Core mutation authority placement, artifact/projection/recovery boundary, 현재 non-isolation claim | [런타임 경계 참조](runtime-boundaries.md) |
 | Connector capability profile, generated manifest, context push/pull, fallback display | [Agent 통합 참조](agent-integration.md) |
 | 단계별 operator diagnostic, severity baseline, `doctor`, `serve mcp`, artifact check, recover, reconcile | [운영과 Conformance 참조](operations-and-conformance.md) |
 | Core fixture mechanics: 정확한 fixture body, runner 동작, assertion semantics, fixture profile, suite metadata boundary, 축소된 Kernel Smoke 작성 순서 | [Conformance Fixtures 참조](conformance-fixtures.md) |

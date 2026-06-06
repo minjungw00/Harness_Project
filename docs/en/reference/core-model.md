@@ -227,7 +227,7 @@ Use these owners when Core authority touches another contract:
 - Storage tables, DDL, runtime home layout, locks, migrations, artifact storage, and enum hardening: [Storage](storage.md).
 - Projection freshness, readable views, managed blocks, human-editable sections, and rendered template bodies: [Projection And Templates Reference](projection-and-templates.md) and [Template Reference](templates/README.md).
 - Security guarantee language, cooperative/detective/preventive/isolated labels, and local access posture: [Security Reference](security.md).
-- Runtime placement and Core-only mutation authority in the architecture: [Runtime Architecture Reference](runtime-architecture.md).
+- Runtime boundary placement and Core-only mutation authority: [Runtime Boundaries Reference](runtime-boundaries.md).
 - Design-quality policy activation and validator impact routing: [Design Quality Policies](design-quality-policies.md).
 - Connector capability profiles and surface-specific fallback behavior: [Agent Integration Reference](agent-integration.md) and [Surface Cookbook](surface-cookbook.md).
 - Conformance examples, future fixture boundaries, and operations entrypoints: [Conformance Fixtures Reference](conformance-fixtures.md), [Operations And Conformance Reference](operations-and-conformance.md), and [Later](../later/index.md).

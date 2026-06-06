@@ -229,7 +229,7 @@ Core 권한이 다른 계약과 닿을 때는 아래 owner를 사용합니다.
 - Storage table, DDL, runtime home layout, lock, migration, artifact storage, enum hardening: [Storage](storage.md).
 - Projection freshness, readable view, managed block, human-editable section, rendered template body: [Projection과 Template 참조](projection-and-templates.md), [Template 참조](templates/README.md).
 - Security guarantee language, cooperative/detective/preventive/isolated label, local access posture: [보안 참조](security.md).
-- Runtime architecture 안의 placement와 Core-only mutation authority: [런타임 아키텍처 참조](runtime-architecture.md).
+- 런타임 경계 안의 placement와 Core-only mutation authority: [런타임 경계 참조](runtime-boundaries.md).
 - Design-quality policy activation과 validator impact routing: [설계 품질 정책](design-quality-policies.md).
 - Connector capability profile과 surface-specific fallback behavior: [Agent 통합 참조](agent-integration.md), [Surface Cookbook](surface-cookbook.md).
 - Conformance example, future fixture boundary, operations entrypoint: [Conformance Fixtures 참조](conformance-fixtures.md), [운영과 Conformance 참조](operations-and-conformance.md), [Later](../later/index.md).

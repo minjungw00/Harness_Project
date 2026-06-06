@@ -255,10 +255,9 @@ stores the resulting affected-scope version for the committed event.
 
 ## 9. Lock policy
 
-Runtime mutations serialize through Core's transaction order, with ordinary
-SQLite transactions and a process/project lock if needed. The architecture
-placement is owned by
-[Runtime Architecture: State transaction flow](runtime-architecture.md#state-transaction-flow).
+Runtime mutations serialize through Core-owned state-changing paths, with
+ordinary SQLite transactions and a process/project lock if needed. The
+authority placement is owned by [Runtime Boundaries Reference](runtime-boundaries.md).
 
 The active current MVP does not require a `persistent_locks` table. Durable
 lock/recovery metadata is later Operations/Profile material until an owner

@@ -18,7 +18,7 @@ This is reference documentation for future Harness behavior. Current repository 
 
 ## Before you read
 
-Use [Runtime Architecture Reference](runtime-architecture.md) for the runtime spaces, Core process model, transaction ordering, and architecture placement. Use [Agent Integration Reference](agent-integration.md) for connector capability profiles, generated manifests, context push/pull, and fallback display. Use [Operations And Conformance Reference](operations-and-conformance.md) for stage-specific `doctor`, `serve mcp`, artifact checks, recover, and reconcile behavior. Use [Conformance Fixtures Reference](conformance-fixtures.md) for fixture semantics.
+Use [Runtime Boundaries Reference](runtime-boundaries.md) for runtime boundary spaces, Core mutation authority placement, projection/artifact/recovery boundaries, and current non-isolation claims. Use [Agent Integration Reference](agent-integration.md) for connector capability profiles, generated manifests, context push/pull, and fallback display. Use [Operations And Conformance Reference](operations-and-conformance.md) for stage-specific `doctor`, `serve mcp`, artifact checks, recover, and reconcile behavior. Use [Conformance Fixtures Reference](conformance-fixtures.md) for fixture semantics.
 
 Use [API Schema Core](api/schema-core.md) for public tool envelopes and shared shapes, and [API Errors](api/errors.md) for public errors, MVP-1 status/error condition behavior, and replay behavior. Use [Storage](storage.md) for exact storage layout, artifact rows, and DDL. Use [Core Model Reference](core-model.md) for state transitions, gates, Approval, `prepare_write`, Write Authorization, acceptance, residual risk, and close.
 
@@ -245,7 +245,7 @@ Guard, freeze, careful-mode, recipe names, product names, surface names, and fri
 | Kernel state transitions, gates, Approval, `prepare_write`, Write Authorization, acceptance, residual risk, close | [Core Model Reference](core-model.md) |
 | `state.sqlite`, `task_events`, artifact storage rows, DDL, enum hardening, hashes, storage layout | [Storage](storage.md) |
 | Guarantee-level meanings and honest display rules | This document: [Honest guarantee display](#honest-guarantee-display) |
-| Runtime spaces, Core transaction ordering, and artifact/projection architecture placement | [Runtime Architecture Reference](runtime-architecture.md) |
+| Runtime boundary spaces, Core mutation authority placement, artifact/projection/recovery boundaries, and current non-isolation claims | [Runtime Boundaries Reference](runtime-boundaries.md) |
 | Connector capability profiles, generated manifests, context push/pull, fallback display | [Agent Integration Reference](agent-integration.md) |
 | Stage-specific operator diagnostics, severity baselines, `doctor`, `serve mcp`, artifact check, recover, reconcile | [Operations And Conformance Reference](operations-and-conformance.md) |
 | Core fixture mechanics: fixture body shape, runner behavior, assertion semantics, fixture profiles, suite metadata boundaries, reduced Kernel Smoke queue | [Conformance Fixtures Reference](conformance-fixtures.md) |
