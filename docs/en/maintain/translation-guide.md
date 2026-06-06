@@ -105,6 +105,8 @@ Keep these exact when they refer to literal identifiers, schema/API values, file
 
 Do not translate markers such as `HARNESS:BEGIN`, schema names such as `ArtifactRef`, `ProjectionKind`, `decision_kind=approval`, `approval_gate`, `ResidualRiskSummary.status=none`, validator IDs, error codes, file paths, API/tool/schema names, or other exact strings.
 
+Localized display labels are rendering text, not schema identifiers. Korean labels such as `제품 판단`, `기술 판단`, and `범위 판단` may appear in rendered UI, template text, examples, and Korean prose, but they must not replace canonical identifiers such as `product_decision`, `technical_decision`, `scope_decision`, `judgment_kind`, or `UserJudgment`. If `display_label` appears, preserve the exact field name and treat its value as localized response-only or compatibility display text derived from stable identifiers and locale. Do not put localized labels into active schema enum blocks, storage value sets, API method definitions, or owner contract names.
+
 Use the active delivery labels consistently: `Engineering Checkpoint`, `MVP-1 User Work Loop`, `Assurance Profile`, `Operations Profile`, and `Roadmap`. `Kernel Smoke` is not a stage; keep it only as the narrow future smoke-check authoring label under Engineering Checkpoint.
 
 In Korean prose, prefer the natural Korean labels `내부 엔지니어링 점검`, `MVP-1 사용자 작업 루프`, `보증 프로필`, `운영 프로필`, and `로드맵`. Add the active English label in parentheses only when a reference heading, table, or implementation lookup needs it. Historical legacy English labels such as `v0.1 Core Authority Smoke`, `v0.2 First User-Value Slice`, `v0.3 Agency Assurance Pack`, `v0.4 Operations & Handoff Pack`, and `v1+ Expansion` are not current stage names and may appear only as legacy aliases, after the Korean explanation or in an explicit alias table.
@@ -274,6 +276,7 @@ Translation drift checks are documentation-quality checks only. They may reveal 
 [ ] Does the Korean prose read naturally to a Korean technical reader?
 [ ] Are API names, schema names, enum values, DDL names, identifiers, paths, error codes, and validator IDs exact?
 [ ] Are enum values, API fields, lifecycle statuses, table/column names, owner docs, and active-vs-later boundaries free of mismatches that would be `FAIL`?
+[ ] Are Korean labels such as 제품 판단, 기술 판단, and 범위 판단 treated as localized display text rather than schema identifiers or enum values?
 [ ] Are Korean canonical terms consistent in ordinary prose, while exact identifiers remain exact?
 [ ] Are source-of-truth phrases and owner links aligned with the owner Reference docs?
 [ ] Are non-owner duplicate contracts summarized with owner links instead of translated as full contract copies?

@@ -36,6 +36,23 @@
 | `delete` | 문구가 오래되었거나, 오해를 만들거나, 중복되거나, 제품 명제, 현재 단계 모델, 담당 문서 경계, 한국어 품질 규칙, 보안 보장 수준과 충돌할 때. | 삭제합니다. 연속성만을 이유로 문구를 남기지 않습니다. |
 | `decision-needed` | 재작성 중 스키마, 상태, API, 단계 경계, 보안 보장, fixture 의미, 용어, 구현 준비 상태에 대한 실제 미해결 선택이 드러날 때. | 담당 문서로 판단을 보냅니다. 큰 서버 코딩 전 결정은 흩어진 TODO가 아니라 MVP-1 사용자 작업 루프 계획의 결정 기록 섹션에 둡니다. |
 
+### Contract drift 재작성 기준
+
+오래된 문구가 exact-contract drift를 만들면 `move`, `delete`, `decision-needed` 중 하나로 분류합니다. 아래 pattern은 연속성만으로 보존하지 않습니다.
+
+- active schema block에 later/profile enum value가 들어간 경우
+- prose-only stage gating이 실제 schema/API/DDL separation을 대신하는 경우
+- active API 문서가 undefined schema type을 이름 붙이는 경우
+- Write Authorization 같은 shared concept의 API/Core/Storage coverage가 서로 다른 경우
+- `제품 판단`, `기술 판단`, `범위 판단` 같은 locale-specific display label이나 `display_label` string을 canonical schema value처럼 쓰는 경우
+- Discovery 또는 `shared_design` output의 authority class가 모호한 경우
+- MVP `CloseTaskResponse` 표현이 later verification, Manual QA, full Evidence Manifest semantics를 노출하는 경우
+- conformance example이 structured state/storage/event assertion 대신 prose-only expectation에 의존하는 경우
+- Build 문서가 Reference 문서가 소유한 exact schema나 DDL을 다시 정의하는 경우
+- cleanup prose가 readiness, handoff, implementation acceptance, coding acceptance, final documentation acceptance status value를 바꾸는 경우
+
+Active schema shape, stage/profile boundary, close response shape, fixture assertion model, owner field set을 실제로 선택해야 한다면 `decision-needed`로 분류하고 owner로 보냅니다. Owner 정리만 필요하면 `move`, `shrink`, `delete`를 사용합니다.
+
 ## 보존할 원칙
 
 모든 재작성 분류는 아래 원칙을 지켜야 합니다.

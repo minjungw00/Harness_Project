@@ -36,6 +36,23 @@ Use these categories for rewrite findings and batch notes.
 | `delete` | The text is obsolete, misleading, duplicative, or conflicts with the product thesis, current delivery model, owner boundary, Korean quality rules, or security guarantee level. | Remove it. Do not keep prose only for continuity. |
 | `decision-needed` | The rewrite exposes a real unresolved choice about schema, state, API, stage boundary, security guarantee, fixture semantics, terminology, or implementation readiness. | Route the decision to the owning document. Major server-coding decisions belong in the MVP-1 User Work Loop decision-log sections, not scattered TODOs. |
 
+### Contract drift rewrite triggers
+
+Classify a rewrite finding as `move`, `delete`, or `decision-needed` when old prose creates exact-contract drift. Do not preserve these patterns for continuity:
+
+- active schema blocks that include later/profile enum values
+- prose-only stage gating used instead of actual schema/API/DDL separation
+- active API docs that name undefined schema types
+- API/Core/Storage coverage gaps for shared concepts such as Write Authorization
+- locale-specific display labels such as `제품 판단`, `기술 판단`, `범위 판단`, or `display_label` strings used as canonical schema values
+- Discovery or `shared_design` output whose authority class is unclear
+- MVP `CloseTaskResponse` wording that exposes later verification, Manual QA, or full Evidence Manifest semantics
+- conformance examples that rely on prose-only expectations instead of structured state/storage/event assertions
+- Build docs that redefine exact schema or DDL owned by Reference docs
+- cleanup prose that changes readiness, handoff, implementation acceptance, coding acceptance, or final documentation acceptance status values
+
+If the fix requires choosing the active schema shape, stage/profile boundary, close response shape, fixture assertion model, or owner field set, use `decision-needed` and route it to the owner. If the fix is only ownership cleanup, use `move`, `shrink`, or `delete`.
+
 ## Principles to preserve
 
 All rewrite categories must preserve these principles:
