@@ -557,7 +557,7 @@ A derived view generated from Core state records and artifact references, such a
 
 ### ProjectionKind
 
-The API enum for projection job and template kinds. Support classes, active values, and extension rules are owned by [API Schema Core](api/schema-core.md#projectionkind-support); later/profile-gated values stay in [API Schema Later](api/schema-later.md#full-profile-gated-ref-values). Support class labels are not Engineering Checkpoint run obligations; Engineering Checkpoint has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. No ProjectionKind makes a projection canonical state.
+The API enum for projection job and template kinds. Support classes, active values, and extension rules are owned by [API Schema Core](api/schema-core.md#projectionkind-support); later/profile-gated values stay in [API Schema Later](api/schema-later.md#later-profile-ref-and-artifact-values). Support class labels are not Engineering Checkpoint run obligations; Engineering Checkpoint has no projection-rendering exit requirement beyond preserving any owner-produced freshness/read facts. No ProjectionKind makes a projection canonical state.
 
 ### Projection Freshness
 

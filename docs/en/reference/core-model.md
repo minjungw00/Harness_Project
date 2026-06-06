@@ -34,7 +34,7 @@ The active stage and profile decide which gates are required for a specific oper
 | Gate meaning | [Gates](#gates), [Gate Rule Map](#gate-rule-map) | Public blockers and errors stay in [API Errors](api/errors.md#primary-error-code-precedence). |
 | Pre-write scope checks / Write Authorization | [`prepare_write`](#prepare_write), [Write Authorization](#write-authorization), [`record_run`](#record_run) | Public request/response shape stays in [`harness.prepare_write`](api/mvp-api.md#harnessprepare_write) and [`harness.record_run`](api/mvp-api.md#harnessrecord_run). |
 | Active method side effects | [Lifecycle and transitions](#lifecycle-and-transitions), [`prepare_write`](#prepare_write), [`record_run`](#record_run), [`close_task`](#close_task) | The method-by-method API/Core/storage/error matrix lives in [MVP API: Active MVP transition matrix](api/mvp-api.md#active-mvp-transition-matrix). |
-| Close semantics | [`close_task`](#close_task), [Close matrix by work shape and active profile](#close-matrix-by-work-shape-and-active-profile), [Close result semantics](#close-result-semantics) | Public close response shape stays in [`harness.close_task`](api/mvp-api.md#harnessclose_task). |
+| Close semantics | [`close_task`](#close_task), [Active MVP-1 close matrix by work shape](#active-mvp-1-close-matrix-by-work-shape), [Close result semantics](#close-result-semantics) | Public close response shape stays in [`harness.close_task`](api/mvp-api.md#harnessclose_task). |
 | Waivers and invalid combinations | [Waiver semantics](#waiver-semantics), [Invalid state combinations](#invalid-state-combinations) | Design-policy details stay in [Design Quality Policies](design-quality-policies.md). |
 
 ## Kernel invariants

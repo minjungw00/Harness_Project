@@ -194,13 +194,13 @@ Use phase-specific pull context:
 
 | Phase | Minimal pull target |
 |---|---|
-| Session start / resume | Current `harness.status`, current task/status resources, and [Agent Guide: Report Status](../use/agent-guide.md#10-report-status). |
-| Planning / clarification | Current repo/docs/state refs and [Agent Guide: Clarify Requirements](../use/agent-guide.md#4-clarify-requirements). |
-| Work-shape classification | Current scope/status refs and [Agent Guide: Classify Work Shape](../use/agent-guide.md#3-classify-work-shape). |
-| User judgment request | Current judgment refs or candidates and [Agent Guide: Request User Judgment](../use/agent-guide.md#5-request-user-judgment). |
-| Write preparation | Current scope/state and [Agent Guide: Pre-Write Scope Check](../use/agent-guide.md#8-pre-write-scope-check), plus `prepare_write` owner sections only for the intended write. |
-| Execution / evidence | Current run/artifact refs and [Agent Guide: Record Evidence](../use/agent-guide.md#9-record-evidence). |
-| Close readiness | Current owner records and [Agent Guide: Close Work](../use/agent-guide.md#11-close-work). |
+| Session start / resume | Current `harness.status`, current task/status resources, and [Agent Guide: Report status for the user's next decision](../use/agent-guide.md#8-report-status-for-the-users-next-decision). |
+| Planning / clarification | Current repo/docs/state refs and [Agent Guide: Clarify without endless planning loops](../use/agent-guide.md#4-clarify-without-endless-planning-loops). |
+| Work-shape classification | Current scope/status refs and [Agent Guide: Classify the work shape](../use/agent-guide.md#3-classify-the-work-shape). |
+| User judgment request | Current judgment refs or candidates and [Agent Guide: Request user judgment narrowly](../use/agent-guide.md#5-request-user-judgment-narrowly). |
+| Write preparation | Current scope/state and [Agent Guide: Check scope before product writes](../use/agent-guide.md#6-check-scope-before-product-writes), plus `prepare_write` owner sections only for the intended write. |
+| Execution / evidence | Current run/artifact refs and [Agent Guide: Record evidence after meaningful action](../use/agent-guide.md#7-record-evidence-after-meaningful-action). |
+| Close readiness | Current owner records and [Agent Guide: Close work honestly](../use/agent-guide.md#10-close-work-honestly). |
 | Recovery / error | Current availability/freshness state, [Fallback Semantics](#fallback-semantics), and the specific error owner section. |
 
 Status cards, projections, rendered templates, recommendations, retrieved context, and chat memory are read-only. They can point the agent toward refs to inspect, but they cannot authorize writes, satisfy gates, create evidence, resolve user judgments, grant approval, perform verification, record QA, accept work, accept residual risk, repair projection freshness, or close a Task.
