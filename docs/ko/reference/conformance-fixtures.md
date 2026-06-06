@@ -105,6 +105,22 @@ State와 storage assertion은 "request 이후 Core가 무엇을 소유했고 어
 
 Active MVP fixture body는 public owner 문서와 같은 canonical active value를 사용합니다. Fixture-only shorthand, alternate enum value, compact pseudo-field, state value로 쓰는 display label, pseudo event name, pseudo storage row, later/profile-only value를 만들면 안 됩니다. 그래야 향후 runner가 별도 fixture dialect 없이 public contract로 fixture를 검증할 수 있습니다.
 
+#### Active Fixture Value Owners
+
+Conformance fixture draft는 active contract를 소비합니다. 이 문서는 active contract를 다시 정의하지 않습니다. 아래 표는 영어와 한국어 문서 tree에서 fixture value 영역을 owner 문서에 연결합니다. Active fixture draft는 enum value, table shape, request field, blocker category, error code를 만들면 안 됩니다. Fixture가 새 value를 필요로 하는 것처럼 보이면 먼저 owner document를 명확히 해야 하며, fixture document에서 이를 암묵적으로 만들면 안 됩니다. Later/profile-only fixture material은 active MVP fixture set 밖에 둡니다.
+
+| Fixture value 영역 | Active owner contract | Fixture 작성 규칙 |
+|---|---|---|
+| API request shape | [MVP API](api/mvp-api.md) (`docs/*/reference/api/mvp-api.md`) | `request.tool`과 `request.payload`는 public method request shape를 사용합니다. Fixture-only request field를 추가하지 않습니다. |
+| Active schema values | [API Schema Core](api/schema-core.md) (`docs/*/reference/api/schema-core.md`) | Active enum value, shared ref, response field, schema-owned value set은 active schema owner에서 가져옵니다. |
+| Core lifecycle and state transitions | [Core Model 참조](core-model.md) (`docs/*/reference/core-model.md`) | `lifecycle_phase`, gate effect, Core-owned state change, transition outcome은 Core owner value를 사용합니다. |
+| Storage row shape | [Storage](storage.md) (`docs/*/reference/storage.md`) | Table, column, JSON `TEXT` shape, row effect, storage hardening value는 Storage에서 가져옵니다. |
+| Error codes | [API Errors](api/errors.md) (`docs/*/reference/api/errors.md`) | `ErrorCode` value, primary-error precedence, error detail은 API error owner를 따릅니다. |
+| Blocker categories | [API Schema Core](api/schema-core.md) (`docs/*/reference/api/schema-core.md`)와 [Core Model 참조](core-model.md) (`docs/*/reference/core-model.md`) | Blocker category, `required_judgment_kind`, related ref, owner-state blocker fact는 schema와 Core owner value를 사용합니다. |
+| Close semantics | [MVP API](api/mvp-api.md) (`docs/*/reference/api/mvp-api.md`)와 [Core Model 참조](core-model.md) (`docs/*/reference/core-model.md`) | `close_task` request/response shape와 close state effect는 API와 Core owner를 따릅니다. Fixture-local close state를 만들지 않습니다. |
+| Artifact and evidence summary shape | [API Schema Core](api/schema-core.md) (`docs/*/reference/api/schema-core.md`)와 [Storage](storage.md) (`docs/*/reference/storage.md`) | `ArtifactRef`, `ArtifactInput`, artifact relation value, evidence-summary row 또는 JSON shape는 schema와 Storage owner value를 사용합니다. |
+| Later/profile-only fixture material | [API Schema Later](api/schema-later.md) (`docs/*/reference/api/schema-later.md`)와 [향후 Fixtures](../later/future-fixtures.md) 같은 later docs | Later/profile-only value, method, ref, fixture branch, catalog material은 owner가 승격하기 전까지 active MVP fixture body 밖에 둡니다. |
+
 Active 내부 엔지니어링 점검과 MVP-1 fixture body에는 다음 규칙이 적용됩니다.
 
 - `request.payload`는 `request.tool`에 해당하는 public request object여야 합니다. [MVP API](api/mvp-api.md)와 [API Schema Core](api/schema-core.md)의 method request schema가 요구하는 `envelope: ToolEnvelope`와 모든 required field를 포함해야 합니다. 요약하면 `request.payload`는 해당 public method request schema와 일치해야 하며, fixture를 위한 더 좁거나 느슨한 payload dialect는 따로 두지 않습니다. Suite metadata가 author에게 deterministic envelope value를 고르는 데 도움을 줄 수는 있습니다. 하지만 materialized active fixture body는 validation, canonical request hashing, Core execution 전에 public request를 body 안에 확장해 담아야 합니다.

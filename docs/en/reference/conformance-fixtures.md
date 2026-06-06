@@ -105,6 +105,22 @@ These draft families are the active future-authoring target for Engineering Chec
 
 Active MVP fixture bodies use the same canonical active values as the public owner docs. They must not introduce fixture-only shorthand, alternate enum values, compact pseudo-fields, display labels as state values, pseudo event names, pseudo storage rows, or later/profile-only values. This keeps fixture drafts close enough to the public contracts that a future runner can validate them without a separate fixture dialect.
 
+#### Active Fixture Value Owners
+
+Conformance fixture drafts consume active contracts; this document does not redefine active contracts. The table below pins fixture value areas to the owner documents for both language trees. Active fixture drafts must not invent enum values, table shapes, request fields, blocker categories, or error codes. If a fixture appears to need a new value, the owner document must be clarified first; the fixture document must not silently create it. Later/profile-only fixture material belongs outside the active MVP fixture set.
+
+| Fixture value area | Active owner contract | Fixture authoring rule |
+|---|---|---|
+| API request shape | [MVP API](api/mvp-api.md) (`docs/*/reference/api/mvp-api.md`) | `request.tool` and `request.payload` use the public method request shape; fixtures do not add fixture-only request fields. |
+| Active schema values | [API Schema Core](api/schema-core.md) (`docs/*/reference/api/schema-core.md`) | Active enum values, shared refs, response fields, and schema-owned value sets come from the active schema owner. |
+| Core lifecycle and state transitions | [Core Model Reference](core-model.md) (`docs/*/reference/core-model.md`) | `lifecycle_phase`, gate effects, Core-owned state changes, and transition outcomes use the Core owner values. |
+| Storage row shape | [Storage](storage.md) (`docs/*/reference/storage.md`) | Tables, columns, JSON `TEXT` shapes, row effects, and storage hardening values come from Storage. |
+| Error codes | [API Errors](api/errors.md) (`docs/*/reference/api/errors.md`) | `ErrorCode` values, primary-error precedence, and error details follow the API error owner. |
+| Blocker categories | [API Schema Core](api/schema-core.md) (`docs/*/reference/api/schema-core.md`) and [Core Model Reference](core-model.md) (`docs/*/reference/core-model.md`) | Blocker categories, `required_judgment_kind`, related refs, and owner-state blocker facts use schema and Core owner values. |
+| Close semantics | [MVP API](api/mvp-api.md) (`docs/*/reference/api/mvp-api.md`) and [Core Model Reference](core-model.md) (`docs/*/reference/core-model.md`) | `close_task` request/response shape and close state effects follow the API and Core owners; fixtures do not create fixture-local close states. |
+| Artifact and evidence summary shape | [API Schema Core](api/schema-core.md) (`docs/*/reference/api/schema-core.md`) and [Storage](storage.md) (`docs/*/reference/storage.md`) | `ArtifactRef`, `ArtifactInput`, artifact relation values, and evidence-summary row or JSON shapes use schema and Storage owner values. |
+| Later/profile-only fixture material | [API Schema Later](api/schema-later.md) (`docs/*/reference/api/schema-later.md`) and later docs such as [Future Fixtures](../later/future-fixtures.md) | Later/profile-only values, methods, refs, fixture branches, and catalog material stay outside active MVP fixture bodies until an owner promotes them. |
+
 For active Engineering Checkpoint and MVP-1 fixture bodies:
 
 - `request.payload` must be the public request object for `request.tool`, including `envelope: ToolEnvelope` and every required field from the corresponding method request schema in [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md). In short, `request.payload` must match the corresponding public method request schema; fixtures do not get a narrower or looser payload dialect. Suite metadata may help an author choose default envelope values, but a materialized active fixture body must contain the expanded public request before validation, canonical request hashing, or Core execution.
