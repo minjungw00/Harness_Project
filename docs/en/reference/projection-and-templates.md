@@ -169,7 +169,7 @@ This document does not own:
 - operator command semantics; see [Operations And Conformance Reference](operations-and-conformance.md)
 - conformance fixture assertion semantics; see [Conformance Fixtures Reference](conformance-fixtures.md#fixture-assertion-semantics)
 - connector capability profiles; see [Agent Integration Reference](agent-integration.md)
-- surface recipes; see [Surface Cookbook](surface-cookbook.md)
+- surface recipes; see [Agent Integration Reference](agent-integration.md)
 - full template bodies and display card shapes; see [Template Reference](templates/README.md)
 
 ## One Status Card Example

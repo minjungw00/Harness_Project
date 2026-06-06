@@ -17,7 +17,7 @@ Exact field, enum value, lifecycle state, DDL, request/response shape, security 
 | API schema, envelope, shared ref, `ArtifactRef`, `ValidatorResult`, staged value set, read-only resource, public error, idempotency, replay, state conflict | [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), 그리고 위 method owner |
 | Storage layout, SQLite DDL profile, persisted table, storage-owned JSON `TEXT`, lock, migration, artifact, baseline, projection-job storage, validator-run storage | [Storage](storage.md) |
 | Security asset, local access posture, trust boundary, threat/control category, guarantee-level 의미, 정직한 cooperative/detective/preventive/isolated 표현 | [보안 참조](security.md) |
-| Agent integration, connector capability profile, fallback behavior, context push/pull, generated manifest, Role Lens behavior, surface-specific recipe | [Agent 통합 참조](agent-integration.md)와 [Surface Cookbook](surface-cookbook.md) |
+| 에이전트 통합, connector capability profile, 대체 동작, context push/pull, generated manifest, Role Lens behavior, 짧은 surface recipe | [Agent 통합 참조](agent-integration.md) |
 | Projection rule, 읽기용 보기, 권한 경계, freshness/failure behavior, managed block, 사람이 편집할 수 있는 section, template class, artifact-ref rendering | [Projection과 Template 참조](projection-and-templates.md) |
 | 전체 rendered template body, card body, template display shape | [Template 참조](templates/README.md) |
 | Conformance model, MVP behavior example, future fixture body shape, future runner/assertion semantics, fixture profile, suite metadata boundary, current-phase fixture status, Kernel Smoke authoring queue | [Conformance Fixtures 참조](conformance-fixtures.md) |

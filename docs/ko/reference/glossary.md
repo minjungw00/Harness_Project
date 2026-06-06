@@ -737,9 +737,9 @@ Credential, token, certificate, key, 기타 secret value 같은 민감한 materi
 
 연결된 에이전트 접점의 required 하네스 behavior 충족 가능성을 보고하는 validator입니다. Blocked reasons와 guarantee display에 영향을 주지만 kernel gate는 아닙니다.
 
-### Surface Cookbook
+### Surface Recipe
 
-접점별 connector notes, generated file details, profile examples를 담은 reference 문서입니다. Common integration rules는 cookbook이 아니라 에이전트 통합 문서에 둡니다.
+[Agent 통합 참조](agent-integration.md#9-surface-recipes) 안에 있는 짧은 통합 메모입니다. 에이전트가 맥락, 대체 동작, profile별 표시를 고르는 데 도움을 줍니다. Surface recipe는 별도 reference owner가 아니며 Core 상태 권한, 쓰기 권한, 증거, 검증, QA, 최종 수락, 잔여 위험 수락, 닫기 준비 상태, 보안 권한 경계를 만들지 않습니다.
 
 ### Subagent Context
 

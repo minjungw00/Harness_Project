@@ -21,7 +21,7 @@ This document does not own:
 - MCP method contracts, shared schemas, public errors, idempotency, replay, or `allowed` / `blocked` response shapes; see [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md)
 - SQLite DDL, Runtime Home layout, storage locks, artifact rows, hashes, migration rules, or storage-owned JSON; see [Storage](storage.md)
 - Product Repository / Harness Server / Harness Runtime Home separation, projection authority, artifact boundary, or recovery boundary; see [Runtime Boundaries Reference](runtime-boundaries.md)
-- connector `capability_profile` fields, generated manifests, fallback behavior, or surface recipes; see [Agent Integration Reference](agent-integration.md) and [Surface Cookbook](surface-cookbook.md)
+- connector `capability_profile` fields, generated manifests, fallback behavior, or surface recipes; see [Agent Integration Reference](agent-integration.md)
 - operator command semantics or diagnostic output; see [Operations And Conformance Reference](operations-and-conformance.md)
 - executable proof, fixture assertions, runner behavior, or conformance pass/fail; see [Conformance Fixtures Reference](conformance-fixtures.md)
 
@@ -154,7 +154,7 @@ Before adding or accepting a security claim, check the relevant owner:
 | Is this a public method, response field, error code, idempotency, replay, state-version, `allowed`, or `blocked` behavior? | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
 | Is this about Runtime Home layout, `state.sqlite`, artifact rows, locks, hashes, migration, or storage validation? | [Storage](storage.md) |
 | Is this about Product Repository / Harness Server / Harness Runtime Home separation, projection authority, artifact boundary, or recovery boundary? | [Runtime Boundaries Reference](runtime-boundaries.md) |
-| Is this about a surface `capability_profile`, MCP availability from the surface, generated manifests, fallback, context push/pull, or guarantee display? | [Agent Integration Reference](agent-integration.md) and [Surface Cookbook](surface-cookbook.md) |
+| Is this about a surface `capability_profile`, MCP availability from the surface, generated manifests, fallback, context push/pull, or guarantee display? | [Agent Integration Reference](agent-integration.md) |
 | Is this an operator diagnostic, recovery, export, artifact check, or conformance entrypoint? | [Operations And Conformance Reference](operations-and-conformance.md) |
 | Is this runtime proof, fixture assertion behavior, or pass/fail language? | [Conformance Fixtures Reference](conformance-fixtures.md) |
 

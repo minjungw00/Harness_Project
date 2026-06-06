@@ -20,7 +20,7 @@ This document does not own:
 - Public MCP request or response shapes. Use [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md).
 - Storage tables, DDL, runtime home layout, locks, migrations, or persisted JSON layout. Use [Storage](storage.md).
 - Rendered projection bodies or template text. Use [Projection And Templates Reference](projection-and-templates.md) and [Template Reference](templates/README.md).
-- Connector capability profiles or surface recipes. Use [Agent Integration Reference](agent-integration.md) and [Surface Cookbook](surface-cookbook.md).
+- Connector capability profiles or surface recipes. Use [Agent Integration Reference](agent-integration.md).
 - Security guarantee vocabulary beyond Core authority consequences. Use [Security Reference](security.md).
 - Later/profile catalogs. Use [Later](../later/index.md) until a profile owner promotes material into active scope.
 
@@ -229,7 +229,7 @@ Use these owners when Core authority touches another contract:
 - Security guarantee language, cooperative/detective/preventive/isolated labels, and local access posture: [Security Reference](security.md).
 - Runtime boundary placement and Core-only mutation authority: [Runtime Boundaries Reference](runtime-boundaries.md).
 - Design-quality policy activation and validator impact routing: [Design Quality Policies](design-quality-policies.md).
-- Connector capability profiles and surface-specific fallback behavior: [Agent Integration Reference](agent-integration.md) and [Surface Cookbook](surface-cookbook.md).
+- Connector capability profiles and surface-specific fallback behavior: [Agent Integration Reference](agent-integration.md).
 - Conformance examples, future fixture boundaries, and operations entrypoints: [Conformance Fixtures Reference](conformance-fixtures.md), [Operations And Conformance Reference](operations-and-conformance.md), and [Later](../later/index.md).
 
 If another document needs an exact schema, DDL table, rendered template body, or later/profile catalog, it must link to the owner instead of redefining it here.

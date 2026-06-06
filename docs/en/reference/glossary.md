@@ -687,9 +687,9 @@ The reference owner for Harness security assets, trust boundaries, threat catego
 
 A validator that reports whether a connected agent surface can satisfy required harness behavior. It affects blocked reasons and guarantee display, but it is not a kernel gate.
 
-### Surface Cookbook
+### Surface Recipe
 
-The reference document that contains surface-specific connector notes, generated file details, and profile examples. Common integration rules belong in the agent integration document, not the cookbook.
+A compact integration note inside [Agent Integration Reference](agent-integration.md#9-surface-recipes) that helps an agent choose context, fallback behavior, and profile-specific display. A surface recipe is not a separate reference owner and does not create Core state authority, write authority, evidence, verification, QA, final acceptance, residual-risk acceptance, close readiness, or a security boundary.
 
 ### Subagent Context
 

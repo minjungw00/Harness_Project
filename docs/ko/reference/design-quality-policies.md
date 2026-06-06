@@ -104,7 +104,7 @@ request evidence | mark residual risk | show advisory next action | no action
 - projection template 본문. [Projection과 Template 참조](projection-and-templates.md)와 [Template 참조](templates/README.md)를 봅니다.
 - operator command 의미. [운영과 Conformance](operations-and-conformance.md)를 봅니다.
 - connector capability profile. [Agent 통합 참조](agent-integration.md)를 봅니다.
-- surface recipe. [Surface Cookbook](surface-cookbook.md)을 봅니다.
+- surface recipe. [Agent 통합 참조](agent-integration.md)를 봅니다.
 - 사용자가 읽는 session 절차
 
 ## 정책이 커널 불변 규칙이 되지 않고 gate에 영향을 주는 방식

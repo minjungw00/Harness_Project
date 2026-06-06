@@ -104,7 +104,7 @@ This document does not own:
 - projection template bodies; see [Projection And Templates Reference](projection-and-templates.md) and [Template Reference](templates/README.md)
 - operator command semantics; see [Operations And Conformance Reference](operations-and-conformance.md)
 - connector capability profiles; see [Agent Integration Reference](agent-integration.md)
-- surface recipes; see [Surface Cookbook](surface-cookbook.md)
+- surface recipes; see [Agent Integration Reference](agent-integration.md)
 - user-facing session procedure
 
 ## How policies affect gates without becoming kernel invariants

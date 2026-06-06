@@ -26,7 +26,7 @@ This path intentionally stops before large Reference docs. First-time readers do
 | Reader | Start here | Then use |
 |---|---|---|
 | General user | [Start](start.md) | [User Guide](use/user-guide.md) for practical session behavior. |
-| Agent instruction writer | [Agent Guide](use/agent-guide.md) | [Agent Integration Reference](reference/agent-integration.md) and [Surface Cookbook](reference/surface-cookbook.md) only when exact connector or context behavior matters. |
+| Agent instruction writer | [Agent Guide](use/agent-guide.md) | [Agent Integration Reference](reference/agent-integration.md) only when exact connector or context behavior matters. |
 | Future server implementer | [MVP Plan](build/mvp-plan.md) | Use its smoke target, user work loop, request-to-close path, and server-coding decisions, then [Reference Index](reference/README.md) for exact owners. |
 | Exact contract reader | [Reference Index](reference/README.md) | Pick the owner for the specific contract instead of reading the whole Reference set. |
 | Documentation maintainer | [Authoring Guide](maintain/authoring-guide.md) | [Translation Guide](maintain/translation-guide.md), [Documentation Checks](maintain/documentation-checks.md), [Rewrite Plan](maintain/rewrite-plan.md), and [Rewrite Acceptance Review](maintain/rewrite-acceptance-review.md). |

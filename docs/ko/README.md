@@ -26,7 +26,7 @@
 | 독자 | 먼저 읽기 | 이어서 보기 |
 |---|---|---|
 | 일반 사용자 | [시작하기](start.md) | 실제 세션 동작은 [사용자 가이드](use/user-guide.md). |
-| 에이전트 지침 작성자 | [에이전트 가이드](use/agent-guide.md) | 정확한 connector 또는 context 동작이 필요할 때만 [Agent 통합 참조](reference/agent-integration.md)와 [Surface Cookbook](reference/surface-cookbook.md). |
+| 에이전트 지침 작성자 | [에이전트 가이드](use/agent-guide.md) | 정확한 connector 또는 context 동작이 필요할 때만 [Agent 통합 참조](reference/agent-integration.md). |
 | 향후 서버 구현자 | [MVP 계획](build/mvp-plan.md) | 첫 내부 smoke 목표, 사용자 작업 루프, 요청에서 닫기까지의 경로, 서버 코딩 전 결정을 본 뒤 정확한 owner는 [Reference 색인](reference/README.md)에서 확인합니다. |
 | 정확한 계약을 찾는 독자 | [Reference 색인](reference/README.md) | Reference 전체를 읽기보다 필요한 계약의 담당 문서를 고릅니다. |
 | 문서 유지보수자 | [문서 작성 가이드](maintain/authoring-guide.md) | [번역 가이드](maintain/translation-guide.md), [문서 점검표](maintain/documentation-checks.md), [재작성 계획](maintain/rewrite-plan.md), [재작성 수락 리뷰](maintain/rewrite-acceptance-review.md). |

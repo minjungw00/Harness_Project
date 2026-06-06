@@ -191,7 +191,7 @@ Later connector/operator profile behavior, required only when the active stage o
 
 Connect sequence summary: registration links a Product Repository, Runtime Home, surface profile, optional MCP reachability check, and stage/profile check without treating generated files as state. The ordered bullets above carry the sequence.
 
-When connector-managed files or managed blocks are in scope, connect must report generated/managed manifest drift instead of overwriting human edits silently. This includes generated files, managed blocks, MCP config snippets, and stale capability profile freshness. The existing file or managed block stays unchanged until reconcile or an explicit reconnect decision chooses replacement; the edited generated file is not Task state. Surface-specific generated file names belong in the surface cookbook.
+When connector-managed files or managed blocks are in scope, connect must report generated/managed manifest drift instead of overwriting human edits silently. This includes generated files, managed blocks, MCP config snippets, and stale capability profile freshness. The existing file or managed block stays unchanged until reconcile or an explicit reconnect decision chooses replacement; the edited generated file is not Task state. Surface recipe guidance belongs in [Agent Integration Reference](agent-integration.md).
 
 Illustrative connect drift output:
 
