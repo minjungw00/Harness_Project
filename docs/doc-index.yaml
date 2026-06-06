@@ -9,6 +9,16 @@ retrieval_rule:
   allow_korean_when_user_context_is_korean: true
   paired_docs_must_not_be_loaded_together: true
 docs:
+  - doc_id: docs.index
+    status: active
+    family: index
+    paths:
+      en: docs/en/README.md
+      ko: docs/ko/README.md
+    default_for_agent: en
+    owns: "Language-specific documentation entry points, current route overview, and reader guidance."
+    does_not_own: "Product thesis, exact contracts, implementation readiness, or detailed owner routing."
+
   - doc_id: start
     status: active
     family: start
