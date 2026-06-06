@@ -60,7 +60,7 @@ The artifact storage boundary separates durable evidence support from canonical 
 
 Raw paths, caller claims, chat text, Markdown prose, unregistered files, and artifact bytes without an owner relation are not sufficient evidence by themselves. If required artifact metadata is missing, stale, redacted, unavailable, blocked, or fails integrity checks, Core-owned evidence and close-readiness records must reflect that condition.
 
-Artifacts can support evidence, verification, QA, acceptance review, residual-risk visibility, and close-readiness display. They do not prove success, approve work, accept risk, or close work without the separate owner records and user-owned judgments required by Core.
+Artifacts can support evidence, verification, QA, final-acceptance visibility, residual-risk visibility, and close-readiness display. They do not prove success, approve work, accept risk, or close work without the separate owner records and user-owned judgments required by Core.
 
 ## 7. Recovery boundary
 

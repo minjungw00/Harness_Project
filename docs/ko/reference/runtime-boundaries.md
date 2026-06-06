@@ -60,7 +60,7 @@ Managed generated area는 계속 파생 표시입니다. Human-editable area는 
 
 Raw path, caller claim, chat text, Markdown prose, 등록되지 않은 file, owner relation이 없는 artifact bytes는 그 자체로 충분한 증거가 아닙니다. Required artifact metadata가 missing, stale, redacted, unavailable, blocked 상태이거나 integrity check에 실패하면 Core-owned evidence와 닫기 준비 상태 기록은 그 조건을 반영해야 합니다.
 
-Artifact는 evidence, verification, QA, acceptance review, residual-risk visibility, close-readiness display를 뒷받침할 수 있습니다. 그러나 Core가 요구하는 별도 owner records와 사용자 소유 판단 없이 성공을 증명하거나, 작업을 승인하거나, 위험을 수락하거나, 작업을 닫지 않습니다.
+Artifact는 evidence, verification, QA, 최종 수락 표시, residual-risk visibility, close-readiness display를 뒷받침할 수 있습니다. 그러나 Core가 요구하는 별도 owner records와 사용자 소유 판단 없이 성공을 증명하거나, 작업을 승인하거나, 위험을 수락하거나, 작업을 닫지 않습니다.
 
 ## 7. Recovery 경계
 
