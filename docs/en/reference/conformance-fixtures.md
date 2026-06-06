@@ -2,7 +2,7 @@
 
 ## What this document helps you do
 
-Use this reference to look up the three-layer boundary for Harness conformance material: documentation checks, active structured fixture drafts, and future runtime conformance. It explains what future conformance will prove, the active Kernel Smoke, MVP-1 user-loop, security/capability, and artifact/evidence draft families, canonical active fixture-value rules, exact structured fixture draft shape, future runner execution behavior, fixture assertion semantics, current-phase status, and the boundary to the future fixture catalog.
+Use this reference to look up the three-layer boundary for Harness conformance material: documentation checks, active structured fixture drafts, and future runtime conformance. It explains what future conformance will prove, the active Kernel Smoke, MVP-1 user-loop, artifact/evidence draft families, canonical active fixture-value rules, exact structured fixture draft shape, future runner execution behavior, fixture assertion semantics, current-phase status, and the boundary to the future fixture catalog.
 
 This is a lookup document for conformance authors, implementers, and maintainers. It is not an operator procedure; use [Operations And Conformance Reference](operations-and-conformance.md) for operator entrypoints and the `harness conformance run` overview.
 
@@ -11,9 +11,9 @@ This is reference documentation for future conformance work. The current reposit
 ## Read this when
 
 - You are writing or reviewing the future fixture-based conformance design.
-- You need the exact fixture body fields, the canonical active value boundary, the `request.payload` public request schema rule, or runner isolation behavior.
+- You need the exact fixture body fields, the canonical active value boundary, the `request.payload` public request schema rule, or future runner isolation behavior.
 - You need fixture assertion modes for response facts, Core state, storage rows, events, artifacts, blockers, errors, forbidden side effects, and projection facts when promoted.
-- You need the active Kernel Smoke, MVP-1 User Work Loop, security/capability, or artifact/evidence fixture drafts, or the boundary between those drafts and the future fixture catalog.
+- You need the active Kernel Smoke, MVP-1 User Work Loop, or artifact/evidence fixture drafts, or the boundary between those drafts and the future fixture catalog.
 
 ## Before you read
 
@@ -64,9 +64,9 @@ This reference does not own operator command procedures, docs-maintenance report
 | If you are looking for... | Go to |
 |---|---|
 | The exact fixture body fields | [Conformance Fixture Format](#conformance-fixture-format) |
-| How a runner loads, seeds, executes, captures, and compares | [Conformance Execution](#conformance-execution) |
+| How a future runner loads, seeds, executes, captures, and compares | [Conformance Execution](#conformance-execution) |
 | Default comparison modes for `expected_response`, `expected_state_changes`, `expected_storage_rows`, `expected_events`, `expected_artifacts`, `expected_blockers`, `expected_errors`, and `forbidden_side_effects` | [Fixture Assertion Semantics](#fixture-assertion-semantics) |
-| Active structured fixture draft families | [Kernel Smoke Behavior Examples](#engineering-checkpoint-behavior-examples), [MVP-1 User Work Loop Behavior Examples](#mvp-1-user-work-loop-behavior-examples), [Security And Capability Behavior Examples](#security-and-capability-behavior-examples), and [Artifact And Evidence Behavior Examples](#artifact-and-evidence-behavior-examples) |
+| Active structured fixture draft families | [Active Structured Fixture Drafts](#engineering-checkpoint-behavior-examples) |
 | Suite intent and authoring order | [Conformance staging](operations-and-conformance.md#conformance-staging), [Kernel Smoke Authoring Queue](#kernel-smoke-authoring-queue), and [Future Fixtures: Fixture Suites](../later/future-fixtures.md#fixture-suites) |
 | Core model and current-phase boundary | [Core Conformance Model](#core-conformance-model) and [Fixture Current-Phase Status](#fixture-current-phase-status) |
 | Future scenario inventory by concern | [Future Fixtures](../later/future-fixtures.md) |
@@ -99,7 +99,7 @@ The hardened local reference target is an umbrella target reached through Assura
 
 ## Active MVP Fixture Draft Families
 
-These draft families are the active future-authoring target for Engineering Checkpoint and MVP-1. They are not executable fixtures yet, not generated runtime artifacts, and not current pass/fail criteria. The tables below preserve the active scenario IDs and proof intent, but they are not fixture bodies. When a future implementation materializes a fixture body for any row, the body must follow [Conformance Fixture Format](#conformance-fixture-format) and the canonical active value rules below.
+These draft families are the active future-authoring target for Engineering Checkpoint and MVP-1. They are not executable fixtures yet, not generated runtime artifacts, and not current pass/fail criteria. The structured draft bodies below preserve the active scenario IDs, proof intent, public request owner, expected Core/storage effects, and owner links. They remain documentation drafts until future implementation materializes them as executable fixture files.
 
 ### Canonical Active Fixture Values
 
@@ -149,53 +149,1975 @@ For active Engineering Checkpoint and MVP-1 fixture bodies:
 Deterministic IDs such as `task-fixture-001` are acceptable only as ordinary string IDs inside valid owner records and matching refs. A symbolic ID must not stand in for omitted required records, omitted request fields, unsupported schema branches, fixture-local status values, or unexpanded artifact refs.
 
 <a id="engineering-checkpoint-behavior-examples"></a>
-
-### Kernel Smoke Behavior Examples
-
-Kernel Smoke is the narrow authoring label for the first executable authority loop. The rows below define active proof targets, not current fixture files. A future materialized body for any row must use the public request schema named here and active owner values in every expected section.
-
-| Scenario ID | Public request owner | Canonical payload and value notes | Required structured proof |
-|---|---|---|---|
-| `MVP-ACTIVE-task-change-unit-setup` | Owner-valid setup path; if exposed through `harness.intake`, use `IntakeRequest`. | `request.payload` must include `envelope`, `user_request`, `requested_mode`, `resume_policy`, `acceptance_criteria`, `constraints`, and `initial_context_refs`. Scope belongs in active Task/Change Unit fields such as `constraints.allowed_paths`, `change_units.allowed_paths_json`, or owner-defined scope fields, not `initial_scope`. | One current Task pointer, one Change Unit or scope boundary for implementation-ready work, valid `tasks.mode`, `tasks.lifecycle_phase=ready`, no Write Authorization, Run, artifact, evidence, final acceptance, residual-risk acceptance, close, or projection-as-authority effect. |
-| `MVP-ACTIVE-shaping-update-persists` | `harness.record_run` / `RecordRunRequest`. | Use `kind=shaping_update`; `payload.kind=shaping_update`; `payload.shaping_update` is the only non-null branch. Do not use shorthand run-kind values or top-level `shaping_update` outside `payload`. | Shaping updates persist into Task/Change Unit owner fields with `tasks.lifecycle_phase=shaping` and a valid `runs.kind=shaping_update` row without product-write authority. |
-| `MVP-ACTIVE-prepare-write-allowed-authorization` | `harness.prepare_write` / `PrepareWriteRequest`. | Use `product_file_write_intended`, `intended_paths`, `intended_tools`, `intended_commands`, `intended_network`, `intended_secret_scope`, `sensitive_categories`, and `baseline_ref` as defined by the public schema. These request fields are the proposed part of `AuthorizedAttemptScope`; `dry_run` and `expected_state_version` live in `envelope`. | `decision=allowed`, `authorization_effect=created`, `tasks.lifecycle_phase=ready`, active `write_authorizations.status=active`, `WriteAuthorizationSummary.attempt_scope` and `write_authorizations.attempt_scope_json` containing the same resolved `AuthorizedAttemptScope`, replay row only for committed non-dry-run response, and no OS-permission, sandbox, preventive, isolated, evidence, or close claim. |
-| `MVP-ACTIVE-prepare-write-blocked-no-authorization` | `harness.prepare_write` / `PrepareWriteRequest`. | Same public request shape as the allowed case; incompatible paths, missing active scope, or no active Change Unit must be represented through public fields and active Core state. | Structured blocker/error such as `SCOPE_REQUIRED`, `NO_ACTIVE_CHANGE_UNIT`, or `SCOPE_VIOLATION`; Task lifecycle uses `tasks.lifecycle_phase=blocked`; `write_authorization_ref=null`, `write_authorization=null`, and no consumable Write Authorization row, Run, artifact, replay row for pre-commit failure, or projection job. |
-| `MVP-ACTIVE-prepare-write-idempotent-replay` | `harness.prepare_write` / `PrepareWriteRequest`. | The repeated call uses the same public request payload, `envelope.idempotency_key`, and canonical request hash. Do not put `canonical_request_hash` in `request.payload`; the hash is a stored/captured assertion under `tool_invocations`. | Original committed response, original stored `request_hash`, and original `write_authorization_ref` are returned with `authorization_effect=returned`; no duplicate authorization, event, artifact, replay update, projection job, or state-version increment. |
-| `MVP-ACTIVE-idempotency-key-hash-conflict` | Any active state-changing public tool, commonly `harness.prepare_write`. | The conflicting call uses the same `envelope.idempotency_key` with a different canonical public payload and therefore a different canonical request hash. The fixture asserts stored and observed hash facts under storage/comparison fields, not as public request fields. | Primary `STATE_CONFLICT`, preserved original replay row and stored `request_hash`, and no merged response fields, events, artifacts, projection jobs, owner relations, new authorization, or replay row update. |
-| `MVP-ACTIVE-record-run-consumes-authorization` | `harness.record_run` / `RecordRunRequest`. | Use `kind=implementation`; `payload.kind=implementation`; `payload.implementation` is the only non-null branch. `observed_changes.changed_paths[]` uses `ChangedPath` objects, not bare path strings. Observed paths, commands, tools, network, secrets, sensitive categories, `baseline_ref`, Task, Change Unit, surface, and guarantee facts must be compatible with the stored `AuthorizedAttemptScope` where the active surface can observe or attest them. | One compatible Run is recorded with `runs.observed_attempt_json` / active payload comparison marked compatible, the active Write Authorization is consumed exactly once, Task execution assertions use `tasks.lifecycle_phase=executing`, registered evidence/artifact refs use active schemas, and no final acceptance, residual-risk acceptance, later assurance/profile state, or close state is created. |
-| `MVP-ACTIVE-record-run-missing-authorization-blocked` | `harness.record_run` / `RecordRunRequest`. | Use `kind=implementation`; `payload.kind=implementation`; `payload.implementation` is the only non-null branch. The product-write implementation attempt uses `write_authorization_id=null` to test missing authorization. | Primary `WRITE_AUTHORIZATION_REQUIRED`; Task lifecycle uses `tasks.lifecycle_phase=blocked`; no Run, artifact link, evidence update, authorization consumption, projection job, event, state-version advance, or replay row. |
-| `MVP-ACTIVE-record-run-stale-authorization-blocked` | `harness.record_run` / `RecordRunRequest`. | Use `kind=implementation`; `payload.kind=implementation`; `payload.implementation` is the only non-null branch. The product-write implementation attempt supplies an existing Write Authorization whose compatibility basis is stale for the current Task state. | Primary `WRITE_AUTHORIZATION_INVALID` with `authorization_reason=stale` when details assert the reason; Task lifecycle uses `tasks.lifecycle_phase=blocked`; the stale authorization is not consumed, and no Run, artifact link, evidence update, projection job, event, state-version advance, or replay row is created. |
-| `MVP-ACTIVE-record-run-observed-out-of-scope` | `harness.record_run` / `RecordRunRequest`. | Use `kind=implementation`; `payload.kind=implementation`; `payload.implementation` is the only non-null branch. Observed paths, commands, network, secrets, sensitive categories, baseline, Task, Change Unit, or surface use active `ImplementationPayload` observation fields and intentionally exceed or differ from the stored `AuthorizedAttemptScope`. | Primary `SCOPE_VIOLATION`; Task lifecycle uses `tasks.lifecycle_phase=blocked`; the authorization is not consumed as success, and the fixture asserts no Run/artifact/evidence/replay mutation unless it explicitly selects the owner-defined violation/audit exception, which still cannot count as completion evidence or close readiness. |
-| `MVP-ACTIVE-record-run-capability-insufficient` | `harness.record_run` / `RecordRunRequest`. | Use `kind=implementation`; `payload.kind=implementation`; `payload.implementation` is the only non-null branch. The scenario requires a comparison over observed commands, network, secret access, artifact capture, pre-tool blocking, isolation, or changed paths that the connected `capability_profile` cannot observe or attest. | Primary `CAPABILITY_INSUFFICIENT`; unsupported facts are not marked verified, guarantee display is lowered or blocked through active response/state fields, and no Run, artifact link, evidence update, authorization consumption, completion evidence, close readiness, event, state-version advance, or replay row is created for the rejected attempt. |
-
 <a id="mvp-1-user-work-loop-behavior-examples"></a>
-
-### MVP-1 User Work Loop Behavior Examples
-
-MVP-1 behavior examples describe user-visible Harness value without growing into the broad assurance or operations catalog. Future fixtures may use exactly `harness.status`, `harness.intake`, `harness.request_user_judgment`, `harness.record_user_judgment`, `harness.prepare_write`, `harness.record_run`, and `harness.close_task` where those methods are active for the stage. A separate `harness.next` fixture belongs to later/compatibility material.
-
-| Scenario ID | Public request owner | Canonical payload and value notes | Required structured proof |
-|---|---|---|---|
-| `MVP-ACTIVE-evidence-summary-insufficient` | `harness.status` / `StatusRequest`, or a promoted evidence owner read. | `StatusRequest` uses `envelope` plus `include` flags. Status is read-only and does not participate in committed replay. | Existing `evidence_summaries.status` remains an active value such as `partial`, `stale`, or `blocked`; evidence blockers use active `EVIDENCE_INSUFFICIENT` semantics when the close/write path depends on them; Task lifecycle uses `tasks.lifecycle_phase=blocked` for the close/write-blocked status; no mutation occurs. |
-| `MVP-ACTIVE-evidence-summary-sufficient` | `harness.record_run` / `RecordRunRequest`. | Use `kind=implementation`; `payload.kind=implementation`; `payload.implementation` is the only non-null branch. For product-write evidence, seed a compatible active Write Authorization whose stored `AuthorizedAttemptScope` matches the observed attempt. Artifact evidence uses active `ArtifactInput` with `input_id`, `source_kind`, `kind`, `redaction_state`, `produced_by`, `retention_class`, and `relation`; do not use bare `staged_uri` entries in `artifact_inputs`. | Registered `ArtifactRef` values and `artifact_links` support an active `evidence_summaries.status=sufficient` update while the Task remains `tasks.lifecycle_phase=executing` until close; no full Evidence Manifest, later assurance/profile state, final acceptance, or residual-risk acceptance is created. |
-| `MVP-ACTIVE-final-acceptance-missing-close-blocker` | `harness.close_task` / `CloseTaskRequest`. | Use `intent=complete` and `requested_close_reason=completed_self_checked` for this blocker case. Do not use `completed_with_risk_accepted` as an `intent`; close reasons stay in `requested_close_reason`. | Close remains blocked with a structured final-acceptance blocker and primary `ACCEPTANCE_REQUIRED`; Task lifecycle assertions use `tasks.lifecycle_phase=blocked`, and no final_acceptance judgment is fabricated. |
-| `MVP-ACTIVE-residual-risk-visible-not-accepted-blocker` | `harness.close_task` / `CloseTaskRequest`. | Use `intent=complete` and `requested_close_reason=completed_with_risk_accepted` to exercise the missing residual-risk-acceptance blocker. Residual-risk acceptance is read from active blockers and `user_judgments`, not from a rich residual-risk record. | Structured residual-risk-acceptance blocker with `required_judgment_kind=residual_risk_acceptance`; primary `DECISION_REQUIRED` or `DECISION_UNRESOLVED`; Task lifecycle assertions use `tasks.lifecycle_phase=blocked`, and no close state or accepted-risk claim is fabricated. |
-| `MVP-ACTIVE-accepted-risk-close` | `harness.close_task` / `CloseTaskRequest`. | Use `intent=complete` with `requested_close_reason=completed_with_risk_accepted`. The request does not carry accepted-risk refs; Core reads compatible `judgment_kind=residual_risk_acceptance` state and blocker refs. | Task closes with `tasks.lifecycle_phase=completed` and `close_reason=completed_with_risk_accepted`, accepted-risk refs point to active `user_judgment` / `blocker` refs, and no Approval, final acceptance, rich residual-risk row, later assurance/profile state, or assurance upgrade is created. |
-| `MVP-ACTIVE-display-label-not-canonical` | `harness.request_user_judgment` / `RequestUserJudgmentRequest`. | Use a committed `dry_run=false` public request with `judgment_kind=product_decision`, `presentation=short`, and the full `RequestUserJudgmentRequest` fields. A rendered `user_visible_summary` may contain locale-derived wording, but fixture state and assertion keys use `request.payload.judgment_kind` and `expected_response.user_judgment.judgment_kind`, not rendered labels. | One pending `expected_storage_rows.user_judgments` row has `judgment_kind=product_decision`, `presentation=short`, and `status=pending_user`; `expected_response.user_judgment` has the same canonical values; Task lifecycle uses `tasks.lifecycle_phase=waiting_user`; `display_label` is absent from request payload, `expected_response.user_judgment`, expected storage rows, validator/state-compatibility assertions, blocker or gate keys, and close aggregation; no decision is resolved by requesting it. |
-
-<a id="security-and-capability-behavior-examples"></a>
-
-### Security And Capability Behavior Examples
-
-Security and capability examples prove honest local capability display and unavailable-path behavior. Active MVP fixture bodies may assert `CAPABILITY_INSUFFICIENT`, cooperative/detective profile facts, lowered guarantee display, or no-authority unavailable responses through active API/Core/storage fields. They must not include preventive guard expansion, isolated profile claims, OS permission, arbitrary-tool sandboxing, tamper-proof storage, or pre-tool blocking values unless a promoted owner path defines and proves that later/profile behavior.
-
 <a id="artifact-and-evidence-behavior-examples"></a>
 
-### Artifact And Evidence Behavior Examples
+### Active Structured Fixture Drafts
 
-Artifact examples prove registered bytes and metadata, not report wording. Active fixture bodies use `ArtifactInput` and `ArtifactRef` exactly as defined by API Schema Core. A raw secret, token, arbitrary absolute path, unsupported capture source, or full sensitive log in an active artifact input is rejected before mutation with the public error mapping owned by [API Errors](api/errors.md#error-taxonomy), commonly `VALIDATION_FAILED` for forbidden input shape/source or raw secret payload before mutation. `ARTIFACT_MISSING` applies to missing or integrity-failed committed artifact refs. Broader export non-leakage remains later/profile catalog material.
+The active drafts use one uniform shape. They are compact enough for review but still name the public request fields, active storage rows, public error codes, and blocker categories that a future materialized fixture must expand and validate. The evidence summary family has two request paths because insufficiency is read/close-visible state, while sufficiency is created by a committed active `record_run`.
 
-A materialized `MVP-ACTIVE-raw-secret-artifact-blocked` fixture must choose one consistent assertion branch. If Core rejects the raw-secret artifact before mutation, `expected_errors` includes `VALIDATION_FAILED`, `expected_artifacts: []`, `expected_storage_rows` asserts no `artifacts`, `artifact_links`, or evidence-sufficiency mutation, and `forbidden_side_effects` includes no raw secret storage, rendering, or export. If Core commits an owner-approved metadata notice instead, `expected_errors: []`, `expected_artifacts` contains only the committed notice with `redaction_state=blocked` or `redaction_state=secret_omitted`, `expected_storage_rows` asserts only those artifact/link/evidence effects, and `forbidden_side_effects` still forbids raw secret bytes. A fixture must not both block raw-payload storage and expect a stored raw secret artifact.
+```yaml
+scenario_id: MVP-ACTIVE-task-change-unit-setup
+purpose: Active Task / Change Unit setup.
+initial_state:
+  project_state:
+    project_id: PROJ-001
+    state_version: 1
+    active_task_id: null
+    default_surface_id: reference-local-mcp
+  surfaces:
+    - surface_id: reference-local-mcp
+      guarantee_level: cooperative
+      status: active
+request:
+  tool: harness.intake
+  payload:
+    envelope:
+      request_id: REQ-001
+      idempotency_key: IDEMP-001
+      expected_state_version: 1
+      project_id: PROJ-001
+      task_id: null
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: user
+      dry_run: false
+    user_request: "Implement the narrow settings copy change."
+    requested_mode: work
+    resume_policy: create_new
+    acceptance_criteria:
+      - "Settings copy is updated in the allowed path."
+    constraints:
+      allowed_paths: ["app/settings/page.tsx"]
+      non_goals: ["No settings behavior change"]
+      sensitive_categories: []
+    initial_context_refs: []
+expected_response:
+  base:
+    errors: []
+  task_id: TASK-001
+  created: true
+  resumed: false
+  change_unit_id: CU-001
+  state:
+    mode: work
+    lifecycle_phase: ready
+    result: none
+    close_reason: none
+expected_state_changes:
+  project_state:
+    active_task_id: TASK-001
+  tasks:
+    TASK-001:
+      mode: work
+      lifecycle_phase: ready
+      active_change_unit_id: CU-001
+  change_units:
+    CU-001:
+      task_id: TASK-001
+      status: active
+      allowed_paths_json: ["app/settings/page.tsx"]
+expected_storage_rows:
+  project_state:
+    updated:
+      rows:
+        - project_id: PROJ-001
+          active_task_id: TASK-001
+  tasks:
+    inserted:
+      rows:
+        - task_id: TASK-001
+          mode: work
+          lifecycle_phase: ready
+          active_change_unit_id: CU-001
+  change_units:
+    inserted:
+      rows:
+        - change_unit_id: CU-001
+          task_id: TASK-001
+          status: active
+  write_authorizations:
+    inserted:
+      count: 0
+  runs:
+    inserted:
+      count: 0
+  artifacts:
+    inserted:
+      count: 0
+expected_events: []
+expected_artifacts: []
+expected_blockers: []
+expected_errors: []
+forbidden_side_effects:
+  - No Write Authorization, Run, artifact, evidence summary, final acceptance, residual-risk acceptance, close state, or non-active row/effect is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessintake
+  schema: docs/*/reference/api/schema-core.md
+  core: docs/*/reference/core-model.md
+  storage: docs/*/reference/storage.md
+  errors: docs/*/reference/api/errors.md
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-shaping-update-persists
+purpose: Shaping update persisted into active state.
+initial_state:
+  project_state:
+    project_id: PROJ-001
+    state_version: 2
+    active_task_id: TASK-001
+    default_surface_id: reference-local-mcp
+  tasks:
+    - task_id: TASK-001
+      mode: work
+      lifecycle_phase: shaping
+      active_change_unit_id: CU-001
+      state_version: 2
+  change_units:
+    - change_unit_id: CU-001
+      task_id: TASK-001
+      status: active
+request:
+  tool: harness.record_run
+  payload:
+    envelope:
+      request_id: REQ-002
+      idempotency_key: IDEMP-002
+      expected_state_version: 2
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    kind: shaping_update
+    task_id: TASK-001
+    change_unit_id: CU-001
+    run_id: null
+    baseline_ref: BASE-001
+    write_authorization_id: null
+    summary: "Clarified the current goal and first allowed path."
+    artifact_inputs: []
+    payload:
+      kind: shaping_update
+      shaping_update:
+        shaping_kind: scope
+        task_update:
+          title: null
+          original_user_request: null
+          current_goal_summary: "Update the settings copy only."
+          mode: work
+          success_criteria: ["Settings copy is updated."]
+          non_goals: ["No behavior change"]
+          affected_areas: ["settings"]
+          affected_path_candidates: ["app/settings/page.tsx"]
+          constraints:
+            allowed_paths: ["app/settings/page.tsx"]
+            sensitive_categories: []
+        change_unit_update:
+          change_unit_id: CU-001
+          operation: update
+          scope_summary: "Settings copy update."
+          affected_areas: ["settings"]
+          affected_path_candidates: ["app/settings/page.tsx"]
+          allowed_paths: ["app/settings/page.tsx"]
+          denied_paths: []
+          non_goals: ["No behavior change"]
+          success_criteria: ["Settings copy is updated."]
+          sensitive_categories: []
+          baseline_ref: BASE-001
+          autonomy_boundary: null
+        user_judgment_candidates: []
+        confirmed_facts: ["The requested file is inside the active scope."]
+        remaining_uncertainties: []
+        blocking_question: null
+        useful_non_blocking_questions: []
+        next_safe_action: "Run prepare_write for the settings copy change."
+        source_refs:
+          - record_kind: task
+            record_id: TASK-001
+        evidence_refs:
+          state_refs: []
+          artifact_refs: []
+      implementation: null
+      direct: null
+expected_response:
+  base:
+    errors: []
+  run_id: RUN-001
+  state:
+    mode: work
+    lifecycle_phase: shaping
+  write_authorization_ref: null
+  registered_artifacts: []
+expected_state_changes:
+  tasks:
+    TASK-001:
+      lifecycle_phase: shaping
+      current_goal_summary: "Update the settings copy only."
+      next_safe_action: "Run prepare_write for the settings copy change."
+  change_units:
+    CU-001:
+      status: active
+      allowed_paths_json: ["app/settings/page.tsx"]
+  runs:
+    RUN-001:
+      kind: shaping_update
+      status: completed
+      product_write: false
+expected_storage_rows:
+  tasks:
+    updated:
+      rows:
+        - task_id: TASK-001
+          lifecycle_phase: shaping
+          current_goal_summary: "Update the settings copy only."
+  change_units:
+    updated:
+      rows:
+        - change_unit_id: CU-001
+          status: active
+  runs:
+    inserted:
+      rows:
+        - run_id: RUN-001
+          kind: shaping_update
+          status: completed
+          product_write: false
+          write_authorization_id: null
+  write_authorizations:
+    inserted:
+      count: 0
+  artifacts:
+    inserted:
+      count: 0
+expected_events: []
+expected_artifacts: []
+expected_blockers: []
+expected_errors: []
+forbidden_side_effects:
+  - No product-write Run, Write Authorization, final acceptance, residual-risk acceptance, close state, or later/profile planning/evidence row is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessrecord_run
+  schema: docs/*/reference/api/schema-core.md#record-run-payloads
+  core: docs/*/reference/core-model.md#record_run
+  storage: docs/*/reference/storage.md
+  errors: docs/*/reference/api/errors.md
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-prepare-write-allowed-authorization
+purpose: prepare_write allowed creates Write Authorization.
+initial_state:
+  project_state:
+    project_id: PROJ-001
+    active_task_id: TASK-001
+    default_surface_id: reference-local-mcp
+  tasks:
+    - task_id: TASK-001
+      mode: work
+      lifecycle_phase: ready
+      active_change_unit_id: CU-001
+      state_version: 3
+  change_units:
+    - change_unit_id: CU-001
+      task_id: TASK-001
+      status: active
+      allowed_paths_json: ["app/settings/page.tsx"]
+      baseline_ref: BASE-001
+request:
+  tool: harness.prepare_write
+  payload:
+    envelope:
+      request_id: REQ-003
+      idempotency_key: IDEMP-003
+      expected_state_version: 3
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    task_id: TASK-001
+    change_unit_id: CU-001
+    intended_operation: "Update settings copy."
+    intended_paths: ["app/settings/page.tsx"]
+    intended_tools: ["edit"]
+    intended_commands: []
+    product_file_write_intended: true
+    intended_network: []
+    intended_secret_scope: []
+    sensitive_categories: []
+    baseline_ref: BASE-001
+expected_response:
+  base:
+    errors: []
+  decision: allowed
+  state:
+    lifecycle_phase: ready
+  change_unit_id: CU-001
+  baseline_ref: BASE-001
+  write_authorization_ref:
+    record_kind: write_authorization
+    record_id: WA-001
+  write_authorization:
+    write_authorization_id: WA-001
+    status: active
+    attempt_scope:
+      task_id: TASK-001
+      change_unit_id: CU-001
+      basis_state_version: 3
+      surface_id: reference-local-mcp
+      intended_paths: ["app/settings/page.tsx"]
+      product_file_write_intended: true
+      baseline_ref: BASE-001
+      related_user_judgment_refs: []
+      guarantee_level: cooperative
+  authorization_effect: created
+  active_user_judgment_refs: []
+  blocked_reasons: []
+expected_state_changes:
+  write_authorizations:
+    WA-001:
+      status: active
+      basis_state_version: 3
+      consumed_by_run_id: null
+  tasks:
+    TASK-001:
+      lifecycle_phase: ready
+expected_storage_rows:
+  write_authorizations:
+    inserted:
+      rows:
+        - write_authorization_id: WA-001
+          task_id: TASK-001
+          change_unit_id: CU-001
+          surface_id: reference-local-mcp
+          status: active
+          basis_state_version: 3
+          attempt_scope_json:
+            task_id: TASK-001
+            change_unit_id: CU-001
+            basis_state_version: 3
+            surface_id: reference-local-mcp
+            intended_operation: "Update settings copy."
+            intended_paths: ["app/settings/page.tsx"]
+            intended_tools: ["edit"]
+            intended_commands: []
+            product_file_write_intended: true
+            intended_network: []
+            intended_secret_scope: []
+            sensitive_categories: []
+            baseline_ref: BASE-001
+            related_user_judgment_refs: []
+            guarantee_level: cooperative
+  tool_invocations:
+    inserted:
+      rows:
+        - tool_name: harness.prepare_write
+          idempotency_key: IDEMP-003
+          task_id: TASK-001
+          basis_state_version: 3
+          status: committed
+  runs:
+    inserted:
+      count: 0
+expected_events: []
+expected_artifacts: []
+expected_blockers: []
+expected_errors: []
+forbidden_side_effects:
+  - No OS permission, sandboxing, tamper-proof enforcement, preventive blocking, isolated guarantee, Run, artifact, evidence sufficiency, close state, final acceptance, or residual-risk acceptance is claimed or created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessprepare_write
+  schema: docs/*/reference/api/schema-core.md#evidence-and-pre-write-scope-schemas
+  core: docs/*/reference/core-model.md#prepare_write
+  storage: docs/*/reference/storage.md
+  errors: docs/*/reference/api/errors.md
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-prepare-write-blocked-no-authorization
+purpose: prepare_write blocked creates no Write Authorization.
+initial_state:
+  project_state:
+    project_id: PROJ-001
+    active_task_id: TASK-001
+    default_surface_id: reference-local-mcp
+  tasks:
+    - task_id: TASK-001
+      mode: work
+      lifecycle_phase: ready
+      active_change_unit_id: CU-001
+      state_version: 4
+  change_units:
+    - change_unit_id: CU-001
+      task_id: TASK-001
+      status: active
+      allowed_paths_json: ["app/settings/page.tsx"]
+request:
+  tool: harness.prepare_write
+  payload:
+    envelope:
+      request_id: REQ-004
+      idempotency_key: IDEMP-004
+      expected_state_version: 4
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    task_id: TASK-001
+    change_unit_id: CU-001
+    intended_operation: "Update billing copy outside the active scope."
+    intended_paths: ["app/billing/page.tsx"]
+    intended_tools: ["edit"]
+    intended_commands: []
+    product_file_write_intended: true
+    intended_network: []
+    intended_secret_scope: []
+    sensitive_categories: []
+    baseline_ref: BASE-001
+expected_response:
+  base:
+    errors: []
+  decision: blocked
+  write_authorization_ref: null
+  write_authorization: null
+  authorization_effect: none
+  blocked_reasons:
+    - code: out_of_scope
+      related_error: SCOPE_VIOLATION
+      required_judgment_kind: scope_decision
+expected_state_changes:
+  tasks:
+    TASK-001:
+      lifecycle_phase: blocked
+  blockers:
+    - task_id: TASK-001
+      blocked_action: prepare_write
+      blocker_kind: scope
+      status: open
+expected_storage_rows:
+  blockers:
+    inserted:
+      rows:
+        - task_id: TASK-001
+          blocked_action: prepare_write
+          blocker_kind: scope
+          status: open
+  write_authorizations:
+    inserted:
+      count: 0
+  runs:
+    inserted:
+      count: 0
+  artifacts:
+    inserted:
+      count: 0
+expected_events: []
+expected_artifacts: []
+expected_blockers:
+  - code: SCOPE_VIOLATION
+    blocker_kind: scope
+    required_judgment_kind: scope_decision
+expected_errors: []
+forbidden_side_effects:
+  - No consumable Write Authorization row, Run, artifact, evidence summary, close state, final acceptance, residual-risk acceptance, or non-active row/effect is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessprepare_write
+  schema: docs/*/reference/api/schema-core.md#evidence-and-pre-write-scope-schemas
+  core: docs/*/reference/core-model.md#prepare_write
+  storage: docs/*/reference/storage.md
+  errors: docs/*/reference/api/errors.md#error-taxonomy
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-prepare-write-idempotent-replay
+purpose: Idempotent replay returns the original committed prepare_write response.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      lifecycle_phase: ready
+      active_change_unit_id: CU-001
+      state_version: 5
+  write_authorizations:
+    - write_authorization_id: WA-001
+      task_id: TASK-001
+      change_unit_id: CU-001
+      status: active
+      basis_state_version: 5
+  tool_invocations:
+    - tool_name: harness.prepare_write
+      idempotency_key: IDEMP-005
+      request_hash: HASH-ORIGINAL
+      task_id: TASK-001
+      basis_state_version: 5
+      status: committed
+      response_json:
+        decision: allowed
+        write_authorization_ref:
+          record_kind: write_authorization
+          record_id: WA-001
+request:
+  tool: harness.prepare_write
+  payload:
+    envelope:
+      request_id: REQ-005-REPLAY
+      idempotency_key: IDEMP-005
+      expected_state_version: 5
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    task_id: TASK-001
+    change_unit_id: CU-001
+    intended_operation: "Update settings copy."
+    intended_paths: ["app/settings/page.tsx"]
+    intended_tools: ["edit"]
+    intended_commands: []
+    product_file_write_intended: true
+    intended_network: []
+    intended_secret_scope: []
+    sensitive_categories: []
+    baseline_ref: BASE-001
+expected_response:
+  base:
+    errors: []
+  decision: allowed
+  write_authorization_ref:
+    record_kind: write_authorization
+    record_id: WA-001
+  authorization_effect: returned
+expected_state_changes: {}
+expected_storage_rows:
+  write_authorizations:
+    inserted:
+      count: 0
+    updated:
+      count: 0
+  tool_invocations:
+    inserted:
+      count: 0
+    updated:
+      count: 0
+    unchanged:
+      rows:
+        - tool_name: harness.prepare_write
+          idempotency_key: IDEMP-005
+          request_hash: HASH-ORIGINAL
+          status: committed
+expected_events: []
+expected_artifacts: []
+expected_blockers: []
+expected_errors: []
+forbidden_side_effects:
+  - No duplicate Write Authorization, event, artifact, replay-row update, state-version increment, Run, evidence, close, final acceptance, residual-risk acceptance, or non-active row/effect is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessprepare_write
+  schema: docs/*/reference/api/schema-core.md#tool-envelope
+  core: docs/*/reference/core-model.md#prepare_write
+  storage: docs/*/reference/storage.md#event-and-idempotency-semantics
+  errors: docs/*/reference/api/errors.md#idempotency
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-idempotency-key-hash-conflict
+purpose: Same idempotency key with a different canonical request hash returns conflict.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      lifecycle_phase: ready
+      active_change_unit_id: CU-001
+      state_version: 6
+  tool_invocations:
+    - tool_name: harness.prepare_write
+      idempotency_key: IDEMP-006
+      request_hash: HASH-ORIGINAL
+      task_id: TASK-001
+      basis_state_version: 6
+      status: committed
+request:
+  tool: harness.prepare_write
+  payload:
+    envelope:
+      request_id: REQ-006-CONFLICT
+      idempotency_key: IDEMP-006
+      expected_state_version: 6
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    task_id: TASK-001
+    change_unit_id: CU-001
+    intended_operation: "Update a different path with the reused key."
+    intended_paths: ["app/profile/page.tsx"]
+    intended_tools: ["edit"]
+    intended_commands: []
+    product_file_write_intended: true
+    intended_network: []
+    intended_secret_scope: []
+    sensitive_categories: []
+    baseline_ref: BASE-001
+expected_response:
+  base:
+    errors:
+      - code: STATE_CONFLICT
+        retryable: true
+        details:
+          stored_request_hash: HASH-ORIGINAL
+          received_request_hash: HASH-DIFFERENT
+expected_state_changes: {}
+expected_storage_rows:
+  tool_invocations:
+    inserted:
+      count: 0
+    updated:
+      count: 0
+    unchanged:
+      rows:
+        - tool_name: harness.prepare_write
+          idempotency_key: IDEMP-006
+          request_hash: HASH-ORIGINAL
+          status: committed
+  write_authorizations:
+    inserted:
+      count: 0
+expected_events: []
+expected_artifacts: []
+expected_blockers: []
+expected_errors:
+  - code: STATE_CONFLICT
+forbidden_side_effects:
+  - No merged response, new Write Authorization, event, artifact, owner relation, replay-row update, Run, evidence, close, final acceptance, residual-risk acceptance, or non-active row/effect is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessprepare_write
+  schema: docs/*/reference/api/schema-core.md#tool-envelope
+  core: docs/*/reference/core-model.md#prepare_write
+  storage: docs/*/reference/storage.md#event-and-idempotency-semantics
+  errors: docs/*/reference/api/errors.md#idempotency
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-record-run-consumes-authorization
+purpose: record_run consumes a compatible Write Authorization.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      lifecycle_phase: ready
+      active_change_unit_id: CU-001
+      state_version: 7
+  change_units:
+    - change_unit_id: CU-001
+      status: active
+      allowed_paths_json: ["app/settings/page.tsx"]
+  write_authorizations:
+    - write_authorization_id: WA-007
+      task_id: TASK-001
+      change_unit_id: CU-001
+      surface_id: reference-local-mcp
+      status: active
+      basis_state_version: 7
+      attempt_scope_json:
+        task_id: TASK-001
+        change_unit_id: CU-001
+        basis_state_version: 7
+        surface_id: reference-local-mcp
+        intended_paths: ["app/settings/page.tsx"]
+        intended_tools: ["edit"]
+        intended_commands: []
+        product_file_write_intended: true
+        intended_network: []
+        intended_secret_scope: []
+        sensitive_categories: []
+        baseline_ref: BASE-001
+        related_user_judgment_refs: []
+        guarantee_level: cooperative
+request:
+  tool: harness.record_run
+  payload:
+    envelope:
+      request_id: REQ-007
+      idempotency_key: IDEMP-007
+      expected_state_version: 7
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    kind: implementation
+    task_id: TASK-001
+    change_unit_id: CU-001
+    run_id: null
+    baseline_ref: BASE-001
+    write_authorization_id: WA-007
+    summary: "Updated settings copy."
+    artifact_inputs:
+      - input_id: ARTIN-007-DIFF
+        source_kind: staged_file
+        existing_artifact_ref: null
+        staged:
+          staged_uri: harness-staging://PROJ-001/RUN-007/settings.diff
+          display_name: settings.diff
+          content_type: text/x-diff
+          expected_sha256: SHA256-DIFF-007
+          expected_size_bytes: 2048
+        capture: null
+        kind: diff
+        redaction_state: none
+        produced_by: lead_agent
+        retention_class: task
+        relation:
+          task_id: TASK-001
+          run_id: null
+          record_kind: run
+          record_id_hint: RUN-007
+        description: "Diff for settings copy."
+    payload:
+      kind: implementation
+      shaping_update: null
+      implementation:
+        outcome: completed
+        product_write: true
+        observed_changes:
+          changed_paths:
+            - path: app/settings/page.tsx
+              change_kind: modified
+              product_file: true
+              within_change_unit: true
+              before_sha256: SHA256-BEFORE-007
+              after_sha256: SHA256-AFTER-007
+          diff_artifact_input_ids: ["ARTIN-007-DIFF"]
+          no_product_changes: false
+        command_results: []
+        tool_invocations:
+          - tool_name: edit
+            purpose: "Apply settings copy change."
+            status: succeeded
+            artifact_input_ids: ["ARTIN-007-DIFF"]
+            summary: "Changed one scoped file."
+        network_accesses: []
+        secret_accesses: []
+        evidence_updates:
+          coverage_updates:
+            - claim_or_criterion: "Settings copy is updated."
+              coverage_state: supported
+              supporting_state_refs: []
+              supporting_artifact_input_ids: ["ARTIN-007-DIFF"]
+              note: "Diff supports the copy update."
+          gap_blocker_refs: []
+          summary: "Implementation evidence recorded."
+        implementation_notes: []
+        follow_up_needed: []
+      direct: null
+expected_response:
+  base:
+    errors: []
+  run_id: RUN-007
+  state:
+    lifecycle_phase: executing
+  write_authorization_ref:
+    record_kind: write_authorization
+    record_id: WA-007
+  registered_artifacts:
+    - artifact_id: ART-007-DIFF
+      kind: diff
+      redaction_state: none
+      retention_class: task
+expected_state_changes:
+  tasks:
+    TASK-001:
+      lifecycle_phase: executing
+  write_authorizations:
+    WA-007:
+      status: consumed
+      consumed_by_run_id: RUN-007
+  runs:
+    RUN-007:
+      kind: implementation
+      status: completed
+      product_write: true
+expected_storage_rows:
+  runs:
+    inserted:
+      rows:
+        - run_id: RUN-007
+          task_id: TASK-001
+          change_unit_id: CU-001
+          write_authorization_id: WA-007
+          kind: implementation
+          status: completed
+          product_write: true
+  write_authorizations:
+    updated:
+      rows:
+        - write_authorization_id: WA-007
+          status: consumed
+          consumed_by_run_id: RUN-007
+  artifacts:
+    inserted:
+      rows:
+        - artifact_id: ART-007-DIFF
+          kind: diff
+          redaction_state: none
+          retention_class: task
+          status: available
+  artifact_links:
+    inserted:
+      rows:
+        - artifact_id: ART-007-DIFF
+          task_id: TASK-001
+          owner_record_kind: run
+          owner_record_id: RUN-007
+  tool_invocations:
+    inserted:
+      rows:
+        - tool_name: harness.record_run
+          idempotency_key: IDEMP-007
+          status: committed
+expected_events: []
+expected_artifacts:
+  - artifact_id: ART-007-DIFF
+    kind: diff
+    redaction_state: none
+    relation_owner:
+      record_kind: run
+      record_id: RUN-007
+expected_blockers: []
+expected_errors: []
+forbidden_side_effects:
+  - The Write Authorization is not consumed twice.
+  - No final acceptance, residual-risk acceptance, close state, or non-active row/effect is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessrecord_run
+  schema: docs/*/reference/api/schema-core.md#record-run-payloads
+  core: docs/*/reference/core-model.md#record_run
+  storage: docs/*/reference/storage.md
+  errors: docs/*/reference/api/errors.md#error-taxonomy
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-record-run-missing-authorization-blocked
+purpose: record_run rejects a product write without authorization.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      lifecycle_phase: ready
+      active_change_unit_id: CU-001
+      state_version: 8
+  change_units:
+    - change_unit_id: CU-001
+      status: active
+      allowed_paths_json: ["app/settings/page.tsx"]
+request:
+  tool: harness.record_run
+  payload:
+    envelope:
+      request_id: REQ-008
+      idempotency_key: IDEMP-008
+      expected_state_version: 8
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    kind: implementation
+    task_id: TASK-001
+    change_unit_id: CU-001
+    run_id: null
+    baseline_ref: BASE-001
+    write_authorization_id: null
+    summary: "Product file was changed without a pre-write scope check."
+    artifact_inputs: []
+    payload:
+      kind: implementation
+      shaping_update: null
+      implementation:
+        outcome: completed
+        product_write: true
+        observed_changes:
+          changed_paths:
+            - path: app/settings/page.tsx
+              change_kind: modified
+              product_file: true
+              within_change_unit: true
+              before_sha256: SHA256-BEFORE-008
+              after_sha256: SHA256-AFTER-008
+          diff_artifact_input_ids: []
+          no_product_changes: false
+        command_results: []
+        tool_invocations: []
+        network_accesses: []
+        secret_accesses: []
+        evidence_updates:
+          coverage_updates: []
+          gap_blocker_refs: []
+          summary: "Rejected before evidence mutation."
+        implementation_notes: []
+        follow_up_needed: []
+      direct: null
+expected_response:
+  base:
+    errors:
+      - code: WRITE_AUTHORIZATION_REQUIRED
+        details:
+          authorization_reason: missing
+  run_id: null
+  state:
+    lifecycle_phase: ready
+  write_authorization_ref: null
+  registered_artifacts: []
+expected_state_changes: {}
+expected_storage_rows:
+  runs:
+    inserted:
+      count: 0
+  write_authorizations:
+    updated:
+      count: 0
+  artifacts:
+    inserted:
+      count: 0
+  artifact_links:
+    inserted:
+      count: 0
+  evidence_summaries:
+    inserted:
+      count: 0
+    updated:
+      count: 0
+  tool_invocations:
+    inserted:
+      count: 0
+expected_events: []
+expected_artifacts: []
+expected_blockers: []
+expected_errors:
+  - code: WRITE_AUTHORIZATION_REQUIRED
+    details:
+      authorization_reason: missing
+forbidden_side_effects:
+  - No Run, artifact, artifact link, evidence summary mutation, authorization consumption, blocker/gate update, task event, state-version advance, replay row, completion evidence, final acceptance, residual-risk acceptance, close state, or non-active row/effect is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessrecord_run
+  schema: docs/*/reference/api/schema-core.md#record-run-payloads
+  core: docs/*/reference/core-model.md#record_run
+  storage: docs/*/reference/storage.md
+  errors: docs/*/reference/api/errors.md#error-taxonomy
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-record-run-observed-out-of-scope
+purpose: Observed attempt outside authorized scope is rejected.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      lifecycle_phase: ready
+      active_change_unit_id: CU-001
+      state_version: 9
+  write_authorizations:
+    - write_authorization_id: WA-009
+      task_id: TASK-001
+      change_unit_id: CU-001
+      surface_id: reference-local-mcp
+      status: active
+      basis_state_version: 9
+      attempt_scope_json:
+        task_id: TASK-001
+        change_unit_id: CU-001
+        basis_state_version: 9
+        surface_id: reference-local-mcp
+        intended_paths: ["app/settings/page.tsx"]
+        intended_tools: ["edit"]
+        intended_commands: []
+        product_file_write_intended: true
+        intended_network: []
+        intended_secret_scope: []
+        sensitive_categories: []
+        baseline_ref: BASE-001
+        related_user_judgment_refs: []
+        guarantee_level: cooperative
+request:
+  tool: harness.record_run
+  payload:
+    envelope:
+      request_id: REQ-009
+      idempotency_key: IDEMP-009
+      expected_state_version: 9
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    kind: implementation
+    task_id: TASK-001
+    change_unit_id: CU-001
+    run_id: null
+    baseline_ref: BASE-001
+    write_authorization_id: WA-009
+    summary: "Observed change includes a path outside the authorized scope."
+    artifact_inputs: []
+    payload:
+      kind: implementation
+      shaping_update: null
+      implementation:
+        outcome: completed
+        product_write: true
+        observed_changes:
+          changed_paths:
+            - path: app/billing/page.tsx
+              change_kind: modified
+              product_file: true
+              within_change_unit: false
+              before_sha256: SHA256-BEFORE-009
+              after_sha256: SHA256-AFTER-009
+          diff_artifact_input_ids: []
+          no_product_changes: false
+        command_results: []
+        tool_invocations: []
+        network_accesses: []
+        secret_accesses: []
+        evidence_updates:
+          coverage_updates: []
+          gap_blocker_refs: []
+          summary: "Rejected before evidence mutation."
+        implementation_notes: []
+        follow_up_needed: []
+      direct: null
+expected_response:
+  base:
+    errors:
+      - code: SCOPE_VIOLATION
+  run_id: null
+  state:
+    lifecycle_phase: ready
+  write_authorization_ref:
+    record_kind: write_authorization
+    record_id: WA-009
+  registered_artifacts: []
+expected_state_changes: {}
+expected_storage_rows:
+  runs:
+    inserted:
+      count: 0
+  write_authorizations:
+    unchanged:
+      rows:
+        - write_authorization_id: WA-009
+          status: active
+          consumed_by_run_id: null
+  artifacts:
+    inserted:
+      count: 0
+  artifact_links:
+    inserted:
+      count: 0
+  evidence_summaries:
+    inserted:
+      count: 0
+    updated:
+      count: 0
+  tool_invocations:
+    inserted:
+      count: 0
+expected_events: []
+expected_artifacts: []
+expected_blockers: []
+expected_errors:
+  - code: SCOPE_VIOLATION
+forbidden_side_effects:
+  - The active Write Authorization is not consumed as success.
+  - No Run, artifact, artifact link, evidence mutation, replay row, close readiness, completion evidence, final acceptance, residual-risk acceptance, or non-active row/effect is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessrecord_run
+  schema: docs/*/reference/api/schema-core.md#record-run-payloads
+  core: docs/*/reference/core-model.md#record_run
+  storage: docs/*/reference/storage.md
+  errors: docs/*/reference/api/errors.md#error-taxonomy
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-raw-secret-artifact-blocked
+purpose: Raw secret artifact storage is blocked before mutation.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      lifecycle_phase: executing
+      active_change_unit_id: CU-001
+      state_version: 10
+request:
+  tool: harness.record_run
+  payload:
+    envelope:
+      request_id: REQ-010
+      idempotency_key: IDEMP-010
+      expected_state_version: 10
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    kind: direct
+    task_id: TASK-001
+    change_unit_id: CU-001
+    run_id: null
+    baseline_ref: BASE-001
+    write_authorization_id: null
+    summary: "Attempt to register a staged artifact classified as raw secret material."
+    artifact_inputs:
+      - input_id: ARTIN-010-SECRET
+        source_kind: staged_file
+        existing_artifact_ref: null
+        staged:
+          staged_uri: harness-staging://PROJ-001/RUN-010/raw-secret.log
+          display_name: raw-secret.log
+          content_type: text/plain
+          expected_sha256: SHA256-SECRET-STAGED
+          expected_size_bytes: 512
+        capture: null
+        kind: log
+        redaction_state: none
+        produced_by: lead_agent
+        retention_class: task
+        relation:
+          task_id: TASK-001
+          run_id: null
+          record_kind: evidence_summary
+          record_id_hint: EVID-001
+        description: "Rejected because staged bytes are classified as raw secret material."
+    payload:
+      kind: direct
+      shaping_update: null
+      implementation: null
+      direct:
+        result_kind: no_change
+        product_write: false
+        direct_summary: "No product change; artifact registration was rejected."
+        observed_changes:
+          changed_paths: []
+          diff_artifact_input_ids: []
+          no_product_changes: true
+        command_results: []
+        tool_invocations: []
+        network_accesses: []
+        secret_accesses: []
+        evidence_updates:
+          coverage_updates:
+            - claim_or_criterion: "Raw secret log must not be stored."
+              coverage_state: blocked
+              supporting_state_refs: []
+              supporting_artifact_input_ids: ["ARTIN-010-SECRET"]
+              note: "Rejected before artifact commit."
+          gap_blocker_refs: []
+          summary: "Forbidden raw-secret artifact input."
+        user_visible_result: "Artifact storage was blocked."
+        follow_up_needed: ["Provide a redacted or secret-omitted artifact."]
+expected_response:
+  base:
+    errors:
+      - code: VALIDATION_FAILED
+  run_id: null
+  registered_artifacts: []
+expected_state_changes: {}
+expected_storage_rows:
+  runs:
+    inserted:
+      count: 0
+  artifacts:
+    inserted:
+      count: 0
+  artifact_links:
+    inserted:
+      count: 0
+  evidence_summaries:
+    updated:
+      count: 0
+  tool_invocations:
+    inserted:
+      count: 0
+expected_events: []
+expected_artifacts: []
+expected_blockers: []
+expected_errors:
+  - code: VALIDATION_FAILED
+forbidden_side_effects:
+  - No raw secret bytes, token value, full sensitive log, rendered raw-secret content, external package, artifact row, artifact link, evidence sufficiency mutation, authorization consumption, close state, or non-active row/effect is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessrecord_run
+  schema: docs/*/reference/api/schema-core.md#artifactinput
+  core: docs/*/reference/core-model.md#record_run
+  storage: docs/*/reference/storage.md#artifact-and-evidence-boundary
+  errors: docs/*/reference/api/errors.md#error-taxonomy
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-evidence-summary-insufficient
+purpose: Evidence summary insufficient remains visible as an active blocker.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      lifecycle_phase: blocked
+      active_change_unit_id: CU-001
+      state_version: 11
+  evidence_summaries:
+    - evidence_summary_id: EVID-011
+      task_id: TASK-001
+      change_unit_id: CU-001
+      status: partial
+      gap_blocker_ids_json: ["BLK-011"]
+  blockers:
+    - blocker_id: BLK-011
+      task_id: TASK-001
+      blocked_action: close_task
+      blocker_kind: evidence
+      status: open
+request:
+  tool: harness.status
+  payload:
+    envelope:
+      request_id: REQ-011
+      idempotency_key: null
+      expected_state_version: null
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    include:
+      task: true
+      gates: true
+      projections: false
+      pending_user_judgments: true
+      guarantees: true
+      user_judgments: true
+      autonomy_boundary: true
+      write_authority: true
+      residual_risk: true
+expected_response:
+  base:
+    errors: []
+  active_task:
+    lifecycle_phase: blocked
+  evidence_summary:
+    evidence_summary_ref:
+      record_kind: evidence_summary
+      record_id: EVID-011
+    status: partial
+  blocker_refs:
+    - record_kind: blocker
+      record_id: BLK-011
+expected_state_changes: {}
+expected_storage_rows:
+  evidence_summaries:
+    unchanged:
+      rows:
+        - evidence_summary_id: EVID-011
+          status: partial
+  blockers:
+    unchanged:
+      rows:
+        - blocker_id: BLK-011
+          blocker_kind: evidence
+          status: open
+  tool_invocations:
+    inserted:
+      count: 0
+expected_events: []
+expected_artifacts: []
+expected_blockers:
+  - code: EVIDENCE_INSUFFICIENT
+    blocker_kind: evidence
+expected_errors: []
+forbidden_side_effects:
+  - Status prose, Markdown evidence text, readable-view output, or agent summary does not repair missing evidence refs, create evidence, create artifacts, create final acceptance, accept residual risk, or close the Task.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessstatus
+  schema: docs/*/reference/api/schema-core.md#current-position-display-schemas
+  core: docs/*/reference/core-model.md#close_task
+  storage: docs/*/reference/storage.md#fields-needed-for-close-blocker-calculation
+  errors: docs/*/reference/api/errors.md#harnessclose_task-close-blockers
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-evidence-summary-sufficient
+purpose: Evidence summary sufficient is supported by active Run and artifact refs.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      lifecycle_phase: executing
+      active_change_unit_id: CU-001
+      state_version: 12
+  write_authorizations:
+    - write_authorization_id: WA-012
+      task_id: TASK-001
+      change_unit_id: CU-001
+      surface_id: reference-local-mcp
+      status: active
+      basis_state_version: 12
+      attempt_scope_json:
+        task_id: TASK-001
+        change_unit_id: CU-001
+        basis_state_version: 12
+        surface_id: reference-local-mcp
+        intended_paths: ["app/settings/page.tsx"]
+        intended_tools: ["edit"]
+        intended_commands: []
+        product_file_write_intended: true
+        intended_network: []
+        intended_secret_scope: []
+        sensitive_categories: []
+        baseline_ref: BASE-001
+        related_user_judgment_refs: []
+        guarantee_level: cooperative
+request:
+  tool: harness.record_run
+  payload:
+    envelope:
+      request_id: REQ-012
+      idempotency_key: IDEMP-012
+      expected_state_version: 12
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    kind: implementation
+    task_id: TASK-001
+    change_unit_id: CU-001
+    run_id: null
+    baseline_ref: BASE-001
+    write_authorization_id: WA-012
+    summary: "Implemented and checked the scoped copy update."
+    artifact_inputs:
+      - input_id: ARTIN-012-DIFF
+        source_kind: staged_file
+        existing_artifact_ref: null
+        staged:
+          staged_uri: harness-staging://PROJ-001/RUN-012/settings.diff
+          display_name: settings.diff
+          content_type: text/x-diff
+          expected_sha256: SHA256-DIFF-012
+          expected_size_bytes: 4096
+        capture: null
+        kind: diff
+        redaction_state: none
+        produced_by: lead_agent
+        retention_class: task
+        relation:
+          task_id: TASK-001
+          run_id: null
+          record_kind: evidence_summary
+          record_id_hint: EVID-012
+        description: "Diff supporting the required evidence summary."
+    payload:
+      kind: implementation
+      shaping_update: null
+      implementation:
+        outcome: completed
+        product_write: true
+        observed_changes:
+          changed_paths:
+            - path: app/settings/page.tsx
+              change_kind: modified
+              product_file: true
+              within_change_unit: true
+              before_sha256: SHA256-BEFORE-012
+              after_sha256: SHA256-AFTER-012
+          diff_artifact_input_ids: ["ARTIN-012-DIFF"]
+          no_product_changes: false
+        command_results: []
+        tool_invocations:
+          - tool_name: edit
+            purpose: "Apply scoped copy update."
+            status: succeeded
+            artifact_input_ids: ["ARTIN-012-DIFF"]
+            summary: "Changed the allowed file."
+        network_accesses: []
+        secret_accesses: []
+        evidence_updates:
+          coverage_updates:
+            - claim_or_criterion: "Settings copy is updated."
+              coverage_state: supported
+              supporting_state_refs: []
+              supporting_artifact_input_ids: ["ARTIN-012-DIFF"]
+              note: "Diff supports the required claim."
+          gap_blocker_refs: []
+          summary: "Evidence is sufficient for the scoped update."
+        implementation_notes: []
+        follow_up_needed: []
+      direct: null
+expected_response:
+  base:
+    errors: []
+  run_id: RUN-012
+  state:
+    lifecycle_phase: executing
+  evidence_summary:
+    evidence_summary_ref:
+      record_kind: evidence_summary
+      record_id: EVID-012
+    status: sufficient
+  registered_artifacts:
+    - artifact_id: ART-012-DIFF
+      kind: diff
+      redaction_state: none
+expected_state_changes:
+  tasks:
+    TASK-001:
+      lifecycle_phase: executing
+  evidence_summaries:
+    EVID-012:
+      status: sufficient
+  write_authorizations:
+    WA-012:
+      status: consumed
+      consumed_by_run_id: RUN-012
+expected_storage_rows:
+  runs:
+    inserted:
+      rows:
+        - run_id: RUN-012
+          kind: implementation
+          status: completed
+          product_write: true
+          write_authorization_id: WA-012
+  artifacts:
+    inserted:
+      rows:
+        - artifact_id: ART-012-DIFF
+          kind: diff
+          redaction_state: none
+          status: available
+  artifact_links:
+    inserted:
+      rows:
+        - artifact_id: ART-012-DIFF
+          owner_record_kind: evidence_summary
+          owner_record_id: EVID-012
+  evidence_summaries:
+    inserted:
+      rows:
+        - evidence_summary_id: EVID-012
+          task_id: TASK-001
+          change_unit_id: CU-001
+          status: sufficient
+  write_authorizations:
+    updated:
+      rows:
+        - write_authorization_id: WA-012
+          status: consumed
+          consumed_by_run_id: RUN-012
+expected_events: []
+expected_artifacts:
+  - artifact_id: ART-012-DIFF
+    kind: diff
+    redaction_state: none
+    relation_owner:
+      record_kind: evidence_summary
+      record_id: EVID-012
+expected_blockers: []
+expected_errors: []
+forbidden_side_effects:
+  - No final acceptance, residual-risk acceptance, close state, or non-active row/effect is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessrecord_run
+  schema: docs/*/reference/api/schema-core.md#evidence-and-pre-write-scope-schemas
+  core: docs/*/reference/core-model.md#record_run
+  storage: docs/*/reference/storage.md#artifact-and-evidence-boundary
+  errors: docs/*/reference/api/errors.md#error-taxonomy
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-final-acceptance-missing-close-blocker
+purpose: Final acceptance missing is a close blocker.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      mode: work
+      lifecycle_phase: executing
+      result: none
+      active_change_unit_id: CU-001
+      state_version: 13
+  evidence_summaries:
+    - evidence_summary_id: EVID-013
+      task_id: TASK-001
+      change_unit_id: CU-001
+      status: sufficient
+  user_judgments: []
+request:
+  tool: harness.close_task
+  payload:
+    envelope:
+      request_id: REQ-013
+      idempotency_key: IDEMP-013
+      expected_state_version: 13
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    task_id: TASK-001
+    intent: complete
+    requested_close_reason: completed_self_checked
+    user_note: null
+    superseded_by_task_id: null
+expected_response:
+  base:
+    errors:
+      - code: ACCEPTANCE_REQUIRED
+  close_state: blocked
+  closed: false
+  close_reason: none
+  assurance_level: none
+  evidence_summary:
+    evidence_summary_ref:
+      record_kind: evidence_summary
+      record_id: EVID-013
+    status: sufficient
+  acceptance_state:
+    status: required
+    accepted_by_ref: null
+    required_before_close: true
+  blockers:
+    - code: ACCEPTANCE_REQUIRED
+      category: final_acceptance
+      required_judgment_kind: final_acceptance
+expected_state_changes:
+  tasks:
+    TASK-001:
+      lifecycle_phase: executing
+      result: none
+      close_reason: none
+expected_storage_rows:
+  tasks:
+    unchanged:
+      rows:
+        - task_id: TASK-001
+          lifecycle_phase: executing
+          result: none
+  user_judgments:
+    inserted:
+      count: 0
+  blockers:
+    inserted:
+      rows:
+        - task_id: TASK-001
+          blocked_action: close_task
+          blocker_kind: final_acceptance
+          status: open
+expected_events: []
+expected_artifacts: []
+expected_blockers:
+  - code: ACCEPTANCE_REQUIRED
+    category: final_acceptance
+    required_judgment_kind: final_acceptance
+expected_errors:
+  - code: ACCEPTANCE_REQUIRED
+forbidden_side_effects:
+  - No terminal Task update, fabricated final_acceptance judgment, residual-risk acceptance, close record, final report authority, or non-active row/effect is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessclose_task
+  schema: docs/*/reference/api/schema-core.md#userjudgment
+  core: docs/*/reference/core-model.md#close_task
+  storage: docs/*/reference/storage.md#fields-needed-for-close-blocker-calculation
+  errors: docs/*/reference/api/errors.md#harnessclose_task-close-blockers
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-residual-risk-visible-not-accepted-blocker
+purpose: Residual risk visible but not accepted is a close blocker.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      lifecycle_phase: executing
+      active_change_unit_id: CU-001
+      state_version: 14
+  evidence_summaries:
+    - evidence_summary_id: EVID-014
+      task_id: TASK-001
+      status: sufficient
+  blockers:
+    - blocker_id: BLK-RISK-014
+      task_id: TASK-001
+      blocked_action: close_task
+      blocker_kind: residual_risk_visibility
+      status: open
+  user_judgments: []
+request:
+  tool: harness.close_task
+  payload:
+    envelope:
+      request_id: REQ-014
+      idempotency_key: IDEMP-014
+      expected_state_version: 14
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    task_id: TASK-001
+    intent: complete
+    requested_close_reason: completed_with_risk_accepted
+    user_note: null
+    superseded_by_task_id: null
+expected_response:
+  base:
+    errors:
+      - code: DECISION_REQUIRED
+  close_state: blocked
+  closed: false
+  close_reason: none
+  residual_risk_state:
+    status: visible
+    visible_refs:
+      - record_kind: blocker
+        record_id: BLK-RISK-014
+    unaccepted_refs:
+      - record_kind: blocker
+        record_id: BLK-RISK-014
+  blockers:
+    - code: DECISION_REQUIRED
+      category: residual_risk_acceptance
+      required_judgment_kind: residual_risk_acceptance
+      related_refs:
+        - record_kind: blocker
+          record_id: BLK-RISK-014
+expected_state_changes:
+  tasks:
+    TASK-001:
+      lifecycle_phase: executing
+      close_reason: none
+expected_storage_rows:
+  tasks:
+    unchanged:
+      rows:
+        - task_id: TASK-001
+          lifecycle_phase: executing
+  user_judgments:
+    inserted:
+      count: 0
+  blockers:
+    unchanged:
+      rows:
+        - blocker_id: BLK-RISK-014
+          blocker_kind: residual_risk_visibility
+          status: open
+expected_events: []
+expected_artifacts: []
+expected_blockers:
+  - code: DECISION_REQUIRED
+    category: residual_risk_acceptance
+    required_judgment_kind: residual_risk_acceptance
+expected_errors:
+  - code: DECISION_REQUIRED
+forbidden_side_effects:
+  - Visible risk is not treated as accepted risk.
+  - No residual-risk acceptance judgment, final acceptance, terminal Task update, close report authority, or non-active row/effect is fabricated.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessclose_task
+  schema: docs/*/reference/api/schema-core.md#acceptedriskinput
+  core: docs/*/reference/core-model.md#close_task
+  storage: docs/*/reference/storage.md#fields-needed-for-close-blocker-calculation
+  errors: docs/*/reference/api/errors.md#harnessclose_task-close-blockers
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-accepted-risk-close
+purpose: Accepted-risk close succeeds only from active residual-risk acceptance state.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      mode: work
+      lifecycle_phase: executing
+      result: none
+      active_change_unit_id: CU-001
+      state_version: 15
+  evidence_summaries:
+    - evidence_summary_id: EVID-015
+      task_id: TASK-001
+      status: sufficient
+  blockers:
+    - blocker_id: BLK-RISK-015
+      task_id: TASK-001
+      blocked_action: close_task
+      blocker_kind: residual_risk_visibility
+      status: open
+  user_judgments:
+    - user_judgment_id: UJ-RISK-015
+      task_id: TASK-001
+      judgment_kind: residual_risk_acceptance
+      presentation: short
+      status: resolved
+      judgment_payload_json:
+        residual_risk_acceptance:
+          risk_refs:
+            - record_kind: blocker
+              record_id: BLK-RISK-015
+          accepted_scope: ["MVP-1 accepted-risk close path"]
+request:
+  tool: harness.close_task
+  payload:
+    envelope:
+      request_id: REQ-015
+      idempotency_key: IDEMP-015
+      expected_state_version: 15
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    task_id: TASK-001
+    intent: complete
+    requested_close_reason: completed_with_risk_accepted
+    user_note: "Close with the visible accepted risk."
+    superseded_by_task_id: null
+expected_response:
+  base:
+    errors: []
+  close_state: closed
+  closed: true
+  close_reason: completed_with_risk_accepted
+  assurance_level: self_checked
+  residual_risk_state:
+    status: accepted
+    accepted_refs:
+      - record_kind: user_judgment
+        record_id: UJ-RISK-015
+  acceptance_state:
+    status: not_required
+    accepted_by_ref: null
+    required_before_close: false
+  state:
+    lifecycle_phase: completed
+    result: passed
+    close_reason: completed_with_risk_accepted
+  blockers: []
+expected_state_changes:
+  tasks:
+    TASK-001:
+      lifecycle_phase: completed
+      result: passed
+      close_reason: completed_with_risk_accepted
+  blockers:
+    BLK-RISK-015:
+      status: resolved
+expected_storage_rows:
+  tasks:
+    updated:
+      rows:
+        - task_id: TASK-001
+          lifecycle_phase: completed
+          result: passed
+          close_reason: completed_with_risk_accepted
+  blockers:
+    updated:
+      rows:
+        - blocker_id: BLK-RISK-015
+          status: resolved
+  user_judgments:
+    unchanged:
+      rows:
+        - user_judgment_id: UJ-RISK-015
+          judgment_kind: residual_risk_acceptance
+          status: resolved
+  tool_invocations:
+    inserted:
+      rows:
+        - tool_name: harness.close_task
+          idempotency_key: IDEMP-015
+          status: committed
+expected_events: []
+expected_artifacts: []
+expected_blockers: []
+expected_errors: []
+forbidden_side_effects:
+  - Accepted risk does not create Approval, final acceptance, non-active row/effect, or an assurance upgrade beyond active `assurance_level` values.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessclose_task
+  schema: docs/*/reference/api/schema-core.md#acceptedriskinput
+  core: docs/*/reference/core-model.md#close_task
+  storage: docs/*/reference/storage.md#fields-needed-for-close-blocker-calculation
+  errors: docs/*/reference/api/errors.md#harnessclose_task-close-blockers
+```
+
+```yaml
+scenario_id: MVP-ACTIVE-display-label-not-canonical
+purpose: Judgment fixture proving display labels are not canonical state.
+initial_state:
+  tasks:
+    - task_id: TASK-001
+      lifecycle_phase: ready
+      active_change_unit_id: CU-001
+      state_version: 16
+  change_units:
+    - change_unit_id: CU-001
+      task_id: TASK-001
+      status: active
+request:
+  tool: harness.request_user_judgment
+  payload:
+    envelope:
+      request_id: REQ-016
+      idempotency_key: IDEMP-016
+      expected_state_version: 16
+      project_id: PROJ-001
+      task_id: TASK-001
+      surface_id: reference-local-mcp
+      run_id: null
+      actor_kind: lead_agent
+      dry_run: false
+    task_id: TASK-001
+    change_unit_id: CU-001
+    judgment_kind: product_decision
+    presentation: short
+    context:
+      why_now: "A product copy choice is needed before implementation."
+      source_refs:
+        - record_kind: task
+          record_id: TASK-001
+      evidence_refs:
+        state_refs: []
+        artifact_refs: []
+    state_summary_at_request:
+      mode: work
+      lifecycle_phase: ready
+      result: none
+      close_reason: none
+      assurance_level: none
+      gates:
+        scope_gate: passed
+        decision_gate: required
+        approval_gate: not_required
+        design_gate: not_required
+        evidence_gate: not_required
+        acceptance_gate: not_required
+    question: "Which settings copy should be used?"
+    what_user_is_judging: "Product wording for the settings page."
+    why_agent_cannot_decide: "The choice affects product behavior and tone."
+    no_decision_consequence: "Implementation waits."
+    what_agent_may_decide_without_user: ["Prepare the scoped edit after the decision."]
+    affected_scope:
+      task_ref:
+        record_kind: task
+        record_id: TASK-001
+      change_unit_ref:
+        record_kind: change_unit
+        record_id: CU-001
+      affected_object_refs: []
+      write_refs: []
+      close_refs: []
+      scope_refs:
+        - record_kind: change_unit
+          record_id: CU-001
+      product_areas: ["settings"]
+      files_or_paths: ["app/settings/page.tsx"]
+      acceptance_criteria_refs: []
+      note: null
+    affected_gates:
+      - gate: decision_gate
+        blocked_action: prepare_write
+    affected_acceptance_criteria: []
+    judgment_payload:
+      options:
+        - option_id: concise
+          label: "Use concise copy"
+          details: null
+      recommendation:
+        option_id: concise
+        reason: "It keeps the narrow change clear."
+        uncertainty: null
+        when_to_revisit: null
+      rationale: "The user owns product wording."
+      uncertainty: null
+      deferral_consequence: "The write remains blocked."
+      user_context: null
+      approval_scope: null
+      covers: ["Settings copy choice"]
+      does_not_cover: ["Sensitive-action approval", "final acceptance", "residual-risk acceptance"]
+      acceptance: null
+      qa_waiver: null
+      verification_risk_acceptance: null
+      residual_risk_acceptance: null
+      cancellation: null
+      separate_judgments_required: []
+    expires_at: null
+expected_response:
+  base:
+    errors: []
+  user_judgment_id: UJ-016
+  user_judgment_ref:
+    record_kind: user_judgment
+    record_id: UJ-016
+  user_judgment:
+    user_judgment_id: UJ-016
+    task_id: TASK-001
+    judgment_kind: product_decision
+    presentation: short
+    status: pending_user
+  approval_id: null
+  reconcile_item_id: null
+  state:
+    lifecycle_phase: waiting_user
+expected_state_changes:
+  tasks:
+    TASK-001:
+      lifecycle_phase: waiting_user
+  user_judgments:
+    UJ-016:
+      judgment_kind: product_decision
+      presentation: short
+      status: pending_user
+expected_storage_rows:
+  user_judgments:
+    inserted:
+      rows:
+        - user_judgment_id: UJ-016
+          task_id: TASK-001
+          change_unit_id: CU-001
+          judgment_kind: product_decision
+          presentation: short
+          status: pending_user
+  tasks:
+    updated:
+      rows:
+        - task_id: TASK-001
+          lifecycle_phase: waiting_user
+  tool_invocations:
+    inserted:
+      rows:
+        - tool_name: harness.request_user_judgment
+          idempotency_key: IDEMP-016
+          status: committed
+expected_events: []
+expected_artifacts: []
+expected_blockers: []
+expected_errors: []
+forbidden_side_effects:
+  - `display_label` is absent from request payload, `expected_response.user_judgment`, expected storage rows, validator keys, gate keys, blocker keys, state-compatibility inputs, owner refs, and close aggregation.
+  - Localized labels are rendered text only and do not resolve the pending judgment.
+  - No Approval record, Write Authorization, evidence, final acceptance, residual-risk acceptance, close state, or non-active row/effect is created.
+schema_owners:
+  api: docs/*/reference/api/mvp-api.md#harnessrequest_user_judgment
+  schema: docs/*/reference/api/schema-core.md#userjudgment
+  core: docs/*/reference/core-model.md
+  storage: docs/*/reference/storage.md
+  errors: docs/*/reference/api/errors.md
+```
 
 ### Later/Profile Fixture Boundary
 
@@ -209,6 +2131,7 @@ Each structured fixture draft must include this shape:
 
 ```yaml
 scenario_id: string
+purpose: string
 initial_state: object
 request: object
 expected_response: object
@@ -219,11 +2142,12 @@ expected_artifacts: object[]
 expected_blockers: object[]
 expected_errors: object[]
 forbidden_side_effects: string[] | object[]
+schema_owners: object
 ```
 
 Fixture shape summary: suite metadata can group fixtures, but the fixture body keeps one exact request-and-expectation shape for future executable conformance. The YAML block above is the contract summary.
 
-Future fixture files and suite catalogs may carry metadata outside the fixture body. The fixture body itself uses only the fields above so conformance runners can compare behavior consistently. Do not add fixture-body fields for suite delivery stage, assertion mode, docs-maintenance result, prose status, rendered Markdown, or authoring notes; those belong in suite catalog metadata, docs-maintenance reports, display owners, or surrounding documentation.
+Future fixture files and suite catalogs may carry metadata outside the fixture body. The fixture body itself uses only the fields above so a future conformance runner can compare behavior consistently. `purpose` states the behavior being constrained, and `schema_owners` names the active owner docs used to validate public request shape, schema values, Core transitions, storage rows, and errors. They are not public MCP request fields and are not passed to Core. Do not add fixture-body fields for suite delivery stage, assertion mode, docs-maintenance result, prose status, rendered Markdown, or authoring notes; those belong in suite catalog metadata, docs-maintenance reports, display owners, or surrounding documentation.
 
 Fixture body type notation follows the API [Schema notation convention](api/schema-core.md#schema-notation-convention). All top-level fixture body fields above are required. Use `{}` or `[]` when the fixture intentionally supplies an empty object, object map, or array; omitting a required top-level field is an invalid fixture body, not "not asserted." For Engineering Checkpoint and MVP-1 active drafts, projection rendering is normally absent and active `expected_storage_rows` must not require `projection_jobs`. If a later promoted owner requires projection freshness, that promoted later/profile fixture asserts the Core/storage fact in `expected_state_changes.checks`, `expected_storage_rows.projection_jobs`, or another owner-defined structured location, not by matching rendered Markdown.
 
@@ -231,7 +2155,7 @@ For an MCP tool request, future executable fixture `request.tool` names the publ
 
 Fixture shorthand is not a second API. Active Engineering Checkpoint and MVP-1 fixture bodies must not use shorthand values for public requests, seeded owner records, expected state, storage rows, events, artifacts, blockers, errors, or refs. Human-oriented tables in this document may use scenario IDs and compact summaries outside the fixture body, but a materialized active body must expand them to owner-defined records and public schemas. Later-profile shorthand details belong in [Future Fixtures: Later-Profile Fixture Shorthand Notes](../later/future-fixtures.md#later-profile-fixture-shorthand-notes) and are not active requirements for Engineering Checkpoint or MVP-1.
 
-Future executable fixtures that seed `write_authorizations` must produce valid stored rows. Each seeded authorization row must include `basis_state_version` explicitly, or the runner must derive it from the seeded affected-scope state version for the row's Task before inserting into `state.sqlite`. This is a storage-loader derivation rule only; it does not add fixture top-level fields or change the fixture body shape. Partial `expected_state_changes.write_authorizations` or `expected_storage_rows.write_authorizations` assertions may omit `basis_state_version` unless the fixture is testing idempotent replay, stale detection, expiry, or audit behavior. `basis_state_version` is the `decision=allowed` basis, not the resulting `ToolResponseBase.state_version`. Fixture loaders must not seed `blocked`, `approval_required`, `decision_required`, or `state_conflict` outcomes as `write_authorizations` rows; those outcomes use response decisions, blockers, validator findings, or errors.
+Future executable fixtures that seed `write_authorizations` must produce valid stored rows. Each seeded authorization row must include `basis_state_version` explicitly, or the future fixture loader must derive it from the seeded affected-scope state version for the row's Task before inserting into `state.sqlite`. This is a storage-loader derivation rule only; it does not add fixture top-level fields or change the fixture body shape. Partial `expected_state_changes.write_authorizations` or `expected_storage_rows.write_authorizations` assertions may omit `basis_state_version` unless the fixture is testing idempotent replay, stale detection, expiry, or audit behavior. `basis_state_version` is the `decision=allowed` basis, not the resulting `ToolResponseBase.state_version`. Future fixture loaders must not seed `blocked`, `approval_required`, `decision_required`, or `state_conflict` outcomes as `write_authorizations` rows; those outcomes use response decisions, blockers, validator findings, or errors.
 
 Suite catalog metadata is not passed to Core and is not part of a fixture body. It can group exact-shape fixtures by suite, delivery stage, and tags:
 
@@ -244,7 +2168,7 @@ fixtures:
   - AGENCY-residual-risk-visible-before-acceptance
 ```
 
-Runners may use this metadata to choose, order, or report suites. Core receives only `request.tool` and the public `request.payload`; metadata must not change seed expansion, fixture comparison semantics, tool request schemas, or expected owner records.
+A future runner may use this metadata to choose, order, or report suites. Core receives only `request.tool` and the public `request.payload`; metadata must not change seed expansion, fixture comparison semantics, tool request schemas, or expected owner records.
 
 ## Conformance Execution
 
@@ -253,16 +2177,16 @@ Future `harness conformance run` will execute fixtures through the same Core ent
 Future runtime fixture execution semantics:
 
 1. Load fixture YAML files and validate the exact fixture body shape, canonical active values, public `request.payload` schema, and absence of fixture-only shorthand.
-2. Create a fresh fixture-only runtime home and temporary Product Repository for the fixture, unless the fixture explicitly targets an existing read-only sample. This fixture isolation is test hygiene for deterministic comparison; it is not an `isolated` guarantee level, OS sandboxing, permission isolation, or tamper-proof storage claim. The runner must not reuse the developer's real Harness Runtime Home or Product Repository for state-changing fixture execution.
+2. Create a fresh fixture-only runtime home and temporary Product Repository for the fixture, unless the fixture explicitly targets an existing read-only sample. This fixture isolation is test hygiene for deterministic comparison; it is not an `isolated` guarantee level, OS sandboxing, permission isolation, or tamper-proof storage claim. The future runner must not reuse the developer's real Harness Runtime Home or Product Repository for state-changing fixture execution.
 3. Seed `registry.sqlite`, `project.yaml`, `state.sqlite`, artifact files, and connector manifests from `initial_state`; seed projection files only for later/profile fixtures that have promoted projection requirements.
 4. Execute `request.tool` through Core. MCP tool actions use the public request schema; fixture `request.payload` must be the same request payload a surface would send to that MCP tool. Operator actions such as `projection_refresh`, `doctor_surface`, `recover`, and `artifacts_check` use the operator semantics in [Operations And Conformance Reference](operations-and-conformance.md).
 5. Capture returned response facts, resulting state summaries, storage effects, appended owner events, validator results when emitted, artifact registry/file integrity, structured blockers, projection job status when relevant, reconcile items when relevant, and returned error code.
 6. Compare the captured results with `expected_response`, `expected_state_changes`, `expected_storage_rows`, `expected_events`, `expected_artifacts`, `expected_blockers`, `expected_errors`, and `forbidden_side_effects`; empty expected sections mean the fixture asserts no relevant effect for that section.
 7. Report fixture id, pass/fail, observed response/state/storage/event/artifact/blocker/error summary, projection freshness when relevant, and forbidden-side-effect comparison.
 
-Runner sequence summary: the numbered sequence above is the contract summary. A future runner loads an exact fixture body, seeds a fixture-only runtime home, executes the request through Core, compares response/state/storage/events/artifacts/blockers/errors/forbidden side effects, and emits a report.
+Future runner sequence summary: the numbered sequence above is the contract summary. A future runner loads an exact fixture body, seeds a fixture-only runtime home, executes the request through Core, compares response/state/storage/events/artifacts/blockers/errors/forbidden side effects, and emits a report.
 
-When a fixture `request.payload.envelope` includes `expected_state_version`, the runner compares it according to the Core-resolved primary Task, not only `ToolEnvelope.task_id`. Primary Task resolution order is tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task resolution. Task-scoped actions compare against the seeded or Core-resolved primary Task State Version; project-scoped actions with no resolved primary Task compare against the Project State Version. Captured response, `EventRef.state_version`, and `task_events.state_version` values are compared as resulting affected-scope versions. Read-only fixtures may assert the unchanged version for the primary read scope. This clarifies comparison semantics without changing fixture body shape.
+When a fixture `request.payload.envelope` includes `expected_state_version`, the future runner compares it according to the Core-resolved primary Task, not only `ToolEnvelope.task_id`. Primary Task resolution order is tool-specific `task_id`, `ToolEnvelope.task_id`, then active Task resolution. Task-scoped actions compare against the seeded or Core-resolved primary Task State Version; project-scoped actions with no resolved primary Task compare against the Project State Version. Captured response, `EventRef.state_version`, and `task_events.state_version` values are compared as resulting affected-scope versions. Read-only fixtures may assert the unchanged version for the primary read scope. This clarifies comparison semantics without changing fixture body shape.
 
 A stale `expected_state_version` fixture is a stale-authority test, not only a concurrent-write test. Exact idempotent replay is the exception: when a committed replay row exists and the canonical request hash matches, the fixture should assert the original committed response is returned and no current state-version freshness check is re-run. When no replay row exists and a state-changing action conflicts before commit, the fixture should assert that no current records changed, no `task_events` were appended, no artifacts were registered, no projection jobs were enqueued, and no `tool_invocations` replay row was created for the conflicting request unless an owner document explicitly defines a different recovery action. When the same key is reused with a changed canonical request hash, the fixture should assert `STATE_CONFLICT`, preserved original replay row, and no merged artifacts, events, projection jobs, response fields, or owner relations. For `dry_run=true`, fixtures should assert that diagnostics or `would_create` effects are returned without current records, `task_events`, artifacts, consumable Write Authorizations, projection jobs, or `tool_invocations` replay rows, and that the key is not reserved for later non-dry-run use. Replayed `prepare_write` must not create a duplicate authorization; replayed `record_run` must not consume authorization twice.
 
@@ -272,13 +2196,13 @@ Fixture isolation is part of the pass condition. A fixture may seed files into i
 
 Seed validation happens before action execution, and captured-state validation happens after action execution. Both sides of the comparison use owner-defined state loaders and value sets rather than fixture-local string labels.
 
-Conformance runners must seed and inspect JSON `TEXT` fields through the same Core storage loaders used by MCP tools and operator commands. A fixture with malformed JSON or schema-incompatible JSON in `initial_state` must surface invalid state, or a repairable state issue when the fixture action is a recovery path and safe reconstruction is possible. The runner must not skip shape validation by treating JSON fields as opaque strings, and this expectation does not change the fixture body shape.
+Future conformance runners must seed and inspect JSON `TEXT` fields through the same Core storage loaders used by MCP tools and operator commands. A fixture with malformed JSON or schema-incompatible JSON in `initial_state` must surface invalid state, or a repairable state issue when the fixture action is a recovery path and safe reconstruction is possible. The future runner must not skip shape validation by treating JSON fields as opaque strings, and this expectation does not change the fixture body shape.
 
-Conformance runners must also seed and inspect status-like `TEXT` fields through the owner-bound hardening map in [Storage](storage.md#canonical-enum-hardening). For the main Engineering Checkpoint / MVP-1 path, fixture seed loaders validate only the owner values actually present in the active stage's seeded records, and artifact/ref enum assertions use the API [stage-specific active value sets](api/schema-core.md#stage-specific-active-value-sets). Examples include registry/project surface guarantee, Run kind/status, Write Authorization status/guarantee, sensitive-action approval user-judgment status when that active judgment path is present, minimal evidence summary coverage/status when evidence support is active, residual-risk visibility/status when risk visibility is active, and current Task or Change Unit status when those owner records are used. Projection job kind/status belongs only to later/profile fixtures when a projection owner promotes durable projection-job storage. Committed Approval record lifecycle status and full Evidence Manifest status are later/profile-gated. Later-profile status fields stay with promoted owner docs and the future catalog until those profiles are active. Unknown status values remain invalid unless a scenario explicitly tests recovery from invalid state; expected-state status assertions compare captured owner values, not prose labels.
+Future conformance runners must also seed and inspect status-like `TEXT` fields through the owner-bound hardening map in [Storage](storage.md#canonical-enum-hardening). For the main Engineering Checkpoint / MVP-1 path, future fixture seed loaders validate only the owner values actually present in the active stage's seeded records, and artifact/ref enum assertions use the API [stage-specific active value sets](api/schema-core.md#stage-specific-active-value-sets). Examples include registry/project surface guarantee, Run kind/status, Write Authorization status/guarantee, sensitive-action approval user-judgment status when that active judgment path is present, minimal evidence summary coverage/status when evidence support is active, residual-risk visibility/status when risk visibility is active, and current Task or Change Unit status when those owner records are used. Projection job kind/status belongs only to later/profile fixtures when a projection owner promotes durable projection-job storage. Committed Approval record lifecycle status and full Evidence Manifest status are later/profile-gated. Later-profile status fields stay with promoted owner docs and the future catalog until those profiles are active. Unknown status values remain invalid unless a scenario explicitly tests recovery from invalid state; expected-state status assertions compare captured owner values, not prose labels.
 
 ## Fixture Assertion Semantics
 
-Fixture assertion modes are runner defaults or suite catalog metadata. They are not Core input, are not passed to MCP tools, and must not add fields to the fixture body. The fixture body remains exactly `scenario_id`, `initial_state`, `request`, `expected_response`, `expected_state_changes`, `expected_storage_rows`, `expected_events`, `expected_artifacts`, `expected_blockers`, `expected_errors`, and `forbidden_side_effects`.
+Fixture assertion modes are runner defaults or suite catalog metadata. They are not Core input, are not passed to MCP tools, and must not add fields to the fixture body. The fixture body remains exactly `scenario_id`, `purpose`, `initial_state`, `request`, `expected_response`, `expected_state_changes`, `expected_storage_rows`, `expected_events`, `expected_artifacts`, `expected_blockers`, `expected_errors`, `forbidden_side_effects`, and `schema_owners`.
 
 Within partial assertion objects, omission means "not asserted." A listed field with value `null` asserts that the captured field is present and equals JSON `null`. A listed array value `[]` asserts a present empty array. A listed object-map value `{}` asserts a present empty map when the owner schema says that field is a map. For structured objects under `partial_deep`, fixture authors should list at least one child field unless they are deliberately asserting only that the object exists.
 
@@ -301,7 +2225,7 @@ Because `expected_events` defaults to `contains_ordered`, `expected_events: []` 
 
 `expected_events` comparisons are over the [Core Model Stable Event Catalog](core-model.md#stable-event-catalog) projection of captured `task_events`. API tool detail/audit event lists do not expand this set. Non-catalog detail or local-audit events captured in `task_events` must not make a normal staged-delivery fixture fail. When suite metadata sets `expected_events: exact`, exactness applies to the stable-event projection of the captured stream unless a future Roadmap/local suite explicitly opts into implementation-specific detail-event assertions. Validator IDs, Core check names, projection status notes, fixture authoring labels, and scenario catalog IDs are not event names. Prose examples may mention non-catalog event names as illustrative or future extension ideas, but executable staged-delivery fixtures must not require them until the Core Model event catalog promotes them.
 
-Conformance runners order captured `task_events` by `event_seq`. `state_version`, `created_at`, and `event_id` are not tie-breakers for `expected_events` ordering.
+Future conformance runners order captured `task_events` by `event_seq`. `state_version`, `created_at`, and `event_id` are not tie-breakers for `expected_events` ordering.
 
 Fixture authors should use `VALIDATOR_FAILED` as an `expected_errors[].code` only when API precedence selects the generic validator fallback; a more specific active typed code such as `EVIDENCE_INSUFFICIENT`, `PROJECTION_STALE` for a readable-view freshness request, or `ARTIFACT_MISSING` remains primary when it applies. `PROJECTION_STALE` is not an active MVP close blocker, and QA-specific codes stay later/profile material until an owner promotes them.
 
@@ -336,7 +2260,7 @@ fixtures:
 
 Future conformance must prove behavior through captured response fields, Core state, storage rows, `task_events`, validator results, artifact registry/file integrity, projection job or freshness state when promoted, returned error codes, structured blockers, and forbidden-side-effect checks. Matching rendered Markdown, Journey Card prose, status prose, close report prose, or agent prose alone cannot pass a fixture.
 
-Fixture runners must use the same canonicalization rules as the reference implementation for `request_hash`, baseline `tree_hash`, and projection `managed_hash`. The detailed algorithms remain owned by [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [Storage](storage.md), and [Projection And Templates Reference](projection-and-templates.md) as applicable; conformance fixtures assert deterministic behavior without redefining those source-of-truth boundaries.
+Future fixture runners must use the same canonicalization rules as the reference implementation for `request_hash`, baseline `tree_hash`, and projection `managed_hash`. The detailed algorithms remain owned by [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [Storage](storage.md), and [Projection And Templates Reference](projection-and-templates.md) as applicable; conformance fixtures assert deterministic behavior without redefining those source-of-truth boundaries.
 
 ## Fixture Current-Phase Status
 
@@ -360,26 +2284,24 @@ In the table, `None` means the matching draft field stays `[]`, `{}`, or otherwi
 
 | Queue | Fixture draft family | Request path | Minimum seeded records | Required structured assertion | Expected blockers/errors | Forbidden side effects to preserve |
 |---|---|---|---|---|---|---|
-| 1 | `MVP-ACTIVE-task-change-unit-setup` | `harness.intake` | Registered local project with no current Task | Task `tasks.lifecycle_phase=ready`, one Change Unit or scope boundary, current-task pointer, and no write authority. | None | No Run, artifact, evidence, final acceptance, residual-risk acceptance, close, or projection-as-authority effect. |
-| 2 | `MVP-ACTIVE-shaping-update-persists` | `harness.record_run` with `kind=shaping_update`, `payload.kind=shaping_update`, and `product_write=false` represented by the active payload branch | Task `tasks.lifecycle_phase=shaping` and Change Unit | Shaping updates persist into Task/Change Unit state and a `runs.kind=shaping_update` row without product-write authority. | None | No Write Authorization, product-write Run, Evidence Manifest, projection job, final acceptance, or residual-risk acceptance. |
+| 1 | `MVP-ACTIVE-task-change-unit-setup` | `harness.intake` | Registered local project with no current Task | Task `tasks.lifecycle_phase=ready`, one Change Unit or scope boundary, current-task pointer, and no write authority. | None | No Run, artifact, evidence, final acceptance, residual-risk acceptance, close, or authority-rendering effect. |
+| 2 | `MVP-ACTIVE-shaping-update-persists` | `harness.record_run` with `kind=shaping_update`, `payload.kind=shaping_update`, and `product_write=false` represented by the active payload branch | Task `tasks.lifecycle_phase=shaping` and Change Unit | Shaping updates persist into Task/Change Unit state and a `runs.kind=shaping_update` row without product-write authority. | None | No Write Authorization, product-write Run, non-active row/effect, final acceptance, or residual-risk acceptance. |
 | 3 | `MVP-ACTIVE-prepare-write-allowed-authorization` | `harness.prepare_write` | Task `tasks.lifecycle_phase=ready`, compatible scope, current expected state, and proposed attempt-scope fields in the public request | `decision=allowed`, `tasks.lifecycle_phase=ready`, one active Write Authorization whose `attempt_scope_json` matches `WriteAuthorizationSummary.attempt_scope`, replay row, no Run. | None | No OS permission, sandbox, preventive, isolated, evidence, or close claim. |
-| 4 | `MVP-ACTIVE-prepare-write-blocked-no-authorization` | `harness.prepare_write` | Task `tasks.lifecycle_phase=ready` with incompatible requested path or missing compatible scope | Structured blocked response, Task `tasks.lifecycle_phase=blocked`, `write_authorization_ref=null`, `write_authorization=null`, and no consumable Write Authorization row. | `SCOPE_REQUIRED`, `NO_ACTIVE_CHANGE_UNIT`, or `SCOPE_VIOLATION` as owned by the API/Core path. | No authorization, Run, artifact, replay row for pre-commit failure, or projection job. |
-| 5 | `MVP-ACTIVE-prepare-write-idempotent-replay` | `harness.prepare_write` replay | Existing committed replay row, original stored `request_hash`, and original active authorization | Original response, original stored `request_hash`, original `write_authorization_ref`, and `authorization_effect=returned` are returned. | None | No duplicate authorization, event, artifact, replay update, projection job, or state-version increment. |
-| 6 | `MVP-ACTIVE-idempotency-key-hash-conflict` | State-changing tool with same idempotency key and different hash | Existing committed replay row | `STATE_CONFLICT`; original replay row and stored `request_hash` remain unchanged. | `STATE_CONFLICT` | No merged response, new authorization, event, artifact, projection job, owner relation, or replay row update. |
-| 7 | `MVP-ACTIVE-record-run-consumes-authorization` | `harness.record_run` with `kind=implementation`, `payload.kind=implementation`, and only `payload.implementation` non-null | Task `tasks.lifecycle_phase=ready`, compatible scope, active Write Authorization whose stored `AuthorizedAttemptScope` matches the observed attempt | One Run is recorded with compatible `observed_attempt_json`, the authorization is consumed exactly once, and Task execution assertions use `tasks.lifecycle_phase=executing`. | None | No second consumption, final acceptance, residual-risk acceptance, later assurance/profile state, or close. |
-| 8 | `MVP-ACTIVE-record-run-missing-authorization-blocked` | `harness.record_run` with `kind=implementation`, `payload.kind=implementation`, only `payload.implementation` non-null, and `write_authorization_id=null` | Task `tasks.lifecycle_phase=ready` and product-write Run request with no authorization | Product-write Run is blocked before commit and Task lifecycle uses `tasks.lifecycle_phase=blocked`. | `WRITE_AUTHORIZATION_REQUIRED` | No Run, consumption, completion evidence, artifact link, projection job, or replay row. |
-| 9 | `MVP-ACTIVE-record-run-stale-authorization-blocked` | `harness.record_run` with `kind=implementation`, `payload.kind=implementation`, only `payload.implementation` non-null, and a stale existing `write_authorization_id` | Task `tasks.lifecycle_phase=ready`, changed state version or stale authorization basis, and product-write Run request | Product-write Run is blocked before commit and Task lifecycle uses `tasks.lifecycle_phase=blocked`. | `WRITE_AUTHORIZATION_INVALID` with `authorization_reason=stale` when details assert the reason | No Run, consumption, completion evidence, artifact link, projection job, event, state-version advance, or replay row. |
-| 10 | `MVP-ACTIVE-record-run-observed-out-of-scope` | `harness.record_run` with `kind=implementation`, `payload.kind=implementation`, and only `payload.implementation` non-null | Active Write Authorization whose stored `AuthorizedAttemptScope` excludes the observed path, command, network target, secret, sensitive category, baseline, Task, Change Unit, or surface | Out-of-scope observation is rejected, or recorded only through an owner-defined violation/audit path without consuming the authorization as success; Task lifecycle uses `tasks.lifecycle_phase=blocked`. | `SCOPE_VIOLATION` | Invalid authorization is not consumed; no Run/artifact/evidence/replay mutation unless the explicit violation/audit exception is selected; observation is not completion evidence or close readiness. |
-| 11 | `MVP-ACTIVE-record-run-capability-insufficient` | `harness.record_run` with `kind=implementation`, `payload.kind=implementation`, only `payload.implementation` non-null, and a required observation the surface cannot provide | Task `tasks.lifecycle_phase=ready`, product-write Run request, and a `capability_profile` that cannot observe or attest a required comparison fact | Required comparison is blocked or narrowed through active capability semantics; unsupported facts are not marked verified. | `CAPABILITY_INSUFFICIENT` | No Run, authorization consumption, completion evidence, artifact link, projection job, event, state-version advance, or replay row for the rejected attempt. |
-| 12 | `MVP-ACTIVE-raw-secret-artifact-blocked` | `harness.record_run` with `kind=direct`, `payload.kind=direct`, only `payload.direct` non-null, `write_authorization_id=null`, `product_write=false`, and active `ArtifactInput` | Task `tasks.lifecycle_phase=executing`, Run path, and active `ArtifactInput` shape that attempts forbidden raw-secret evidence | Raw secret bytes are rejected before mutation, or only an owner-approved metadata notice with `redaction_state=blocked` or `redaction_state=secret_omitted` is committed. The expected artifact, storage-row, error, and forbidden-side-effect assertions must use the same branch. | `VALIDATION_FAILED` for forbidden input shape/source or raw secret payload before mutation; `ARTIFACT_MISSING` only for missing or integrity-failed committed artifact refs. | No raw secret storage, rendering, export, evidence sufficiency, authorization consumption, or close. |
-| 13 | `MVP-ACTIVE-evidence-summary-insufficient` | `harness.status` or evidence owner read | Task `tasks.lifecycle_phase=blocked` with partial/missing evidence summary | Evidence summary remains insufficient/partial and close-relevant blocker is structured. | `EVIDENCE_INSUFFICIENT` blocker when close/write path depends on it | Status prose or Markdown evidence list does not repair missing refs. |
-| 14 | `MVP-ACTIVE-evidence-summary-sufficient` | `harness.record_run` with `kind=implementation`, `payload.kind=implementation`, only `payload.implementation` non-null, and active `ArtifactInput` | Task `tasks.lifecycle_phase=executing`, compatible authorization whose stored `AuthorizedAttemptScope` matches the observed attempt, and a non-secret staged artifact allowed as `redaction_state=none` unless redaction or omission applies. | Registered artifact refs and evidence summary become sufficient from owner records while Task remains `tasks.lifecycle_phase=executing` until close. | None | No full Evidence Manifest, later assurance/profile state, final acceptance, or residual-risk acceptance. |
-| 15 | `MVP-ACTIVE-final-acceptance-missing-close-blocker` | `harness.close_task` with `intent=complete`, `requested_close_reason=completed_self_checked` | Task with evidence sufficient but required final acceptance missing | Close remains blocked with final-acceptance blocker and Task lifecycle assertions use `tasks.lifecycle_phase=blocked`. | `ACCEPTANCE_REQUIRED` | No `tasks.lifecycle_phase=completed` or `tasks.lifecycle_phase=cancelled`, fabricated acceptance, residual-risk acceptance, later assurance/profile state, or close report authority. |
-| 16 | `MVP-ACTIVE-residual-risk-visible-not-accepted-blocker` | `harness.close_task` with `intent=complete`, `requested_close_reason=completed_with_risk_accepted` | Task with visible close-relevant residual risk and no compatible `judgment_kind=residual_risk_acceptance` user judgment | Residual-risk acceptance remains required and Task lifecycle assertions use `tasks.lifecycle_phase=blocked`. | `DECISION_REQUIRED` or `DECISION_UNRESOLVED` with `required_judgment_kind=residual_risk_acceptance` | Visible risk is not accepted risk; no rich Residual Risk record, later assurance/profile state, or close state is fabricated. |
-| 17 | `MVP-ACTIVE-accepted-risk-close` | `harness.close_task` with `intent=complete`, `requested_close_reason=completed_with_risk_accepted` | Task with sufficient evidence, visible risk, and compatible `judgment_kind=residual_risk_acceptance` | Task closes with `tasks.lifecycle_phase=completed`, accepted-risk close reason, and refs to the user judgment. | None | Accepted risk does not create Approval, final acceptance, later assurance/profile state, or assurance upgrade. |
-| 18 | `MVP-ACTIVE-display-label-not-canonical` | `harness.request_user_judgment` | Task `tasks.lifecycle_phase=ready`, Change Unit, and no preexisting committed user judgment for this request | Committed non-dry-run request creates one pending `user_judgments` row and response `UserJudgment` with `judgment_kind=product_decision`, `presentation=short`, and `status=pending_user`; any label in `user_visible_summary` is rendered text only. | None | `display_label` and localized labels are not canonical state, validator keys, gate keys, blocker keys, storage identity, state-compatibility inputs, or close aggregation keys. |
+| 4 | `MVP-ACTIVE-prepare-write-blocked-no-authorization` | `harness.prepare_write` | Task `tasks.lifecycle_phase=ready` with incompatible requested path or missing compatible scope | Structured blocked response, Task `tasks.lifecycle_phase=blocked`, `write_authorization_ref=null`, `write_authorization=null`, and no consumable Write Authorization row. | `SCOPE_REQUIRED`, `NO_ACTIVE_CHANGE_UNIT`, or `SCOPE_VIOLATION` as owned by the API/Core path. | No authorization, Run, artifact, evidence mutation, non-active effect, close, final acceptance, or residual-risk acceptance. |
+| 5 | `MVP-ACTIVE-prepare-write-idempotent-replay` | `harness.prepare_write` replay | Existing committed replay row, original stored `request_hash`, and original active authorization | Original response, original stored `request_hash`, original `write_authorization_ref`, and `authorization_effect=returned` are returned. | None | No duplicate authorization, event, artifact, replay update, non-active effect, or state-version increment. |
+| 6 | `MVP-ACTIVE-idempotency-key-hash-conflict` | State-changing tool with same idempotency key and different hash | Existing committed replay row | `STATE_CONFLICT`; original replay row and stored `request_hash` remain unchanged. | `STATE_CONFLICT` | No merged response, new authorization, event, artifact, non-active effect, owner relation, or replay row update. |
+| 7 | `MVP-ACTIVE-record-run-consumes-authorization` | `harness.record_run` with `kind=implementation`, `payload.kind=implementation`, and only `payload.implementation` non-null | Task `tasks.lifecycle_phase=ready`, compatible scope, active Write Authorization whose stored `AuthorizedAttemptScope` matches the observed attempt | One Run is recorded with compatible `observed_attempt_json`, the authorization is consumed exactly once, and Task execution assertions use `tasks.lifecycle_phase=executing`. | None | No second consumption, final acceptance, residual-risk acceptance, non-active assurance state, or close. |
+| 8 | `MVP-ACTIVE-record-run-missing-authorization-blocked` | `harness.record_run` with `kind=implementation`, `payload.kind=implementation`, only `payload.implementation` non-null, and `write_authorization_id=null` | Task `tasks.lifecycle_phase=ready` and product-write Run request with no authorization | Product-write Run is rejected before commit and the stored Task state remains unchanged. | `WRITE_AUTHORIZATION_REQUIRED` with `authorization_reason=missing` when details assert the reason | No Run, authorization consumption, completion evidence, artifact link, evidence mutation, non-active effect, event, state-version advance, or replay row. |
+| 9 | `MVP-ACTIVE-record-run-observed-out-of-scope` | `harness.record_run` with `kind=implementation`, `payload.kind=implementation`, and only `payload.implementation` non-null | Active Write Authorization whose stored `AuthorizedAttemptScope` excludes the observed path, command, network target, secret, sensitive category, baseline, Task, Change Unit, or surface | Out-of-scope observation is rejected before commit in the active draft and does not consume the authorization as success. | `SCOPE_VIOLATION` | Authorization is not consumed; no Run, artifact, evidence mutation, replay row, completion evidence, close readiness, or non-active row is created. |
+| 10 | `MVP-ACTIVE-raw-secret-artifact-blocked` | `harness.record_run` with `kind=direct`, `payload.kind=direct`, only `payload.direct` non-null, `write_authorization_id=null`, `product_write=false`, and active `ArtifactInput` | Task `tasks.lifecycle_phase=executing`, Run path, and active `ArtifactInput` shape that attempts forbidden raw-secret evidence | Raw secret bytes are rejected before mutation in the active draft; a separate committed metadata-notice branch would need matching artifact/storage/error assertions. | `VALIDATION_FAILED` for forbidden input shape/source or raw secret payload before mutation; `ARTIFACT_MISSING` only for missing or integrity-failed committed artifact refs. | No raw secret storage, rendering, export, evidence sufficiency, authorization consumption, or close. |
+| 11 | `MVP-ACTIVE-evidence-summary-insufficient` | `harness.status` | Task `tasks.lifecycle_phase=blocked` with partial/missing evidence summary and active evidence blocker | Evidence summary remains `partial` and close-relevant evidence blocker stays visible without mutation. | `EVIDENCE_INSUFFICIENT` blocker when close/write path depends on it | Status prose or Markdown evidence list does not repair missing refs, create artifacts, or close the Task. |
+| 12 | `MVP-ACTIVE-evidence-summary-sufficient` | `harness.record_run` with `kind=implementation`, `payload.kind=implementation`, only `payload.implementation` non-null, and active `ArtifactInput` | Task `tasks.lifecycle_phase=executing`, compatible authorization whose stored `AuthorizedAttemptScope` matches the observed attempt, and a non-secret staged artifact allowed as `redaction_state=none` unless redaction or omission applies. | Registered artifact refs and evidence summary become sufficient from owner records while Task remains `tasks.lifecycle_phase=executing` until close. | None | No non-active evidence/assurance row, final acceptance, residual-risk acceptance, or close state. |
+| 13 | `MVP-ACTIVE-final-acceptance-missing-close-blocker` | `harness.close_task` with `intent=complete`, `requested_close_reason=completed_self_checked` | Task with evidence sufficient but required final acceptance missing | Close remains blocked with a final-acceptance blocker and no terminal Task update. | `ACCEPTANCE_REQUIRED` | No `tasks.lifecycle_phase=completed` or `tasks.lifecycle_phase=cancelled`, fabricated acceptance, residual-risk acceptance, non-active assurance state, or close report authority. |
+| 14 | `MVP-ACTIVE-residual-risk-visible-not-accepted-blocker` | `harness.close_task` with `intent=complete`, `requested_close_reason=completed_with_risk_accepted` | Task with visible close-relevant residual risk and no compatible `judgment_kind=residual_risk_acceptance` user judgment | Residual-risk acceptance remains required and close does not mark the Task terminal. | `DECISION_REQUIRED` or `DECISION_UNRESOLVED` with `required_judgment_kind=residual_risk_acceptance` | Visible risk is not accepted risk; no non-active risk/assurance row or close state is fabricated. |
+| 15 | `MVP-ACTIVE-accepted-risk-close` | `harness.close_task` with `intent=complete`, `requested_close_reason=completed_with_risk_accepted` | Task with sufficient evidence, visible risk, and compatible `judgment_kind=residual_risk_acceptance` | Task closes with `tasks.lifecycle_phase=completed`, accepted-risk close reason, and refs to the user judgment. | None | Accepted risk does not create Approval, final acceptance, non-active assurance state, or assurance upgrade. |
+| 16 | `MVP-ACTIVE-display-label-not-canonical` | `harness.request_user_judgment` | Task `tasks.lifecycle_phase=ready`, Change Unit, and no preexisting committed user judgment for this request | Committed non-dry-run request creates one pending `user_judgments` row and response `UserJudgment` with `judgment_kind=product_decision`, `presentation=short`, and `status=pending_user`; any label in `user_visible_summary` is rendered text only. | None | `display_label` and localized labels are not canonical state, validator keys, gate keys, blocker keys, storage identity, state-compatibility inputs, or close aggregation keys. |
 
-The queue above is intentionally small. Engineering Checkpoint does not require a full conformance suite, broad catalog family coverage, final-acceptance success semantics, later assurance checks, export/recover, reconcile, stewardship, context hygiene, browser QA capture, or future guarantee-level checks. MVP-1 adds the listed user-loop judgment, evidence, close-blocker, and accepted-risk drafts without promoting later assurance checks, full Evidence Manifest, export, or profile fixtures.
+The queue above is intentionally small. Engineering Checkpoint does not require a full conformance suite, broad catalog family coverage, final-acceptance success semantics, later assurance checks, export/recover, reconcile, stewardship, context hygiene, browser QA capture, or future guarantee-level checks. MVP-1 adds the listed user-loop judgment, evidence, close-blocker, and accepted-risk drafts without promoting later assurance checks, export, or profile fixtures.
 
 ## Future Fixtures
 
