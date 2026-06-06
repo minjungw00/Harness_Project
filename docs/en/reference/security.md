@@ -1,253 +1,161 @@
 # Security Reference
 
-## What this document helps you do
+This reference owns the security boundary language for the active Harness MVP plan. The repository is still documentation-only: no Harness Server/runtime implementation, Harness Runtime Home, executable conformance runner, or runtime security proof exists here today. This document describes the boundary future implementation must preserve; it is not evidence that controls are already implemented.
 
-Use this reference to identify Harness security assets, trust boundaries, threat categories, and control expectations before runtime implementation planning.
+Use this page when security wording, local-access posture, threat/control summaries, or guarantee labels need to stay honest. Use the exact owner documents for exact behavior: [Core Model Reference](core-model.md), [Runtime Boundaries Reference](runtime-boundaries.md), [Storage](storage.md), [Agent Integration Reference](agent-integration.md), [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md), [Operations And Conformance Reference](operations-and-conformance.md), and [Conformance Fixtures Reference](conformance-fixtures.md).
 
-It is a lookup document for implementers, operators, connector authors, and conformance authors who need to keep local authority boundaries explicit. It does not replace the architecture, API, storage, kernel, connector, or operations owner documents.
-
-This is reference documentation for future Harness behavior. Current repository phase and implementation handoff status are tracked in [MVP Plan](../build/mvp-plan.md#documentation-acceptance-status).
-
-## Read this when
-
-- You are deciding which files, calls, artifacts, or generated connector outputs are security-sensitive.
-- You need to explain why a repo document, projection, generated file, chat transcript, or caller claim is not operational authority.
-- You are reviewing MCP exposure, artifact handling, connector generation, stale context, approval replay, or capability claims.
-- You need to decide whether cooperative, detective, preventive, or isolated wording is honest for a security-sensitive path.
-- You are writing operator diagnostics or conformance coverage that names security or threat-model findings.
-
-## Before you read
-
-Use [Runtime Boundaries Reference](runtime-boundaries.md) for runtime boundary spaces, Core mutation authority placement, projection/artifact/recovery boundaries, and current non-isolation claims. Use [Agent Integration Reference](agent-integration.md) for connector capability profiles, generated manifests, context push/pull, and fallback display. Use [Operations And Conformance Reference](operations-and-conformance.md) for stage-specific `doctor`, `serve mcp`, artifact checks, recover, and reconcile behavior. Use [Conformance Fixtures Reference](conformance-fixtures.md) for fixture semantics.
-
-Use [API Schema Core](api/schema-core.md) for public tool envelopes and shared shapes, and [API Errors](api/errors.md) for public errors, MVP-1 status/error condition behavior, and replay behavior. Use [Storage](storage.md) for exact storage layout, artifact rows, and DDL. Use [Core Model Reference](core-model.md) for state transitions, gates, Approval, `prepare_write`, Write Authorization, acceptance, residual risk, and close.
-
-This document links to those exact contracts instead of duplicating them.
-
-## Main idea
-
-Harness is a local authority layer for Harness records and state transitions, not a general operating-system security boundary. Authority means Core-owned authority over scope, user-owned judgment records, evidence and artifact references, verification and QA expectations, final acceptance, residual-risk status, and close readiness. A local file, local process, generated connector output, external command, or agent surface can try to influence Harness, but it does not become authority just because it is nearby.
-
-Canonical operational meaning flows through Core-owned state-changing paths. Product repository documents, chat text, generated connector files, projections, artifacts, external command output, MCP caller claims, and remembered context are inputs until the relevant owner path accepts them.
-
-The active MVP security baseline uses one registered reference surface `capability_profile`. Capability labels do not grant write authority and do not replace active Task, active Change Unit, `prepare_write`, the single-use cooperative Write Authorization record, or `record_run`. The shared active write-attempt boundary is `AuthorizedAttemptScope`; it is a Core/API/storage comparison record, not a permission token. Unsupported fields in the surface profile lower the displayed guarantee, mark a comparison unverified, or block the claim; product writes must not proceed silently on an unsupported surface.
-
-In Harness responses, `allowed` means compatible with the current Harness state, owner records, and active surface capability. It does not mean the operating system physically permits or denies the action. `blocked` means not allowed by the Harness protocol, state, owner record, or active capability; it does not by itself mean a process was physically stopped before execution.
-
-Security display must match the real control. `cooperative` means the agent or tool follows the documented procedure. `detective` means Harness can detect a mismatch or record inconsistency after the fact. `preventive` means a proven control blocks the covered action before it happens. `isolated` means the claim names a defined and proven isolation boundary. High-risk work must not rely on cooperative-only claims when the work requires preventive or isolated controls.
-
-Early local Harness stages do not automatically provide operating-system permissions, sandbox arbitrary tools, make local files tamper-proof, or convert cooperative agent behavior into preventive security. Engineering Checkpoint and MVP-1 may refuse Core state-changing actions that do not match owner records, record state, validate the minimal artifact/evidence refs required by the active Core path, report stale or mismatched facts, and display honest guarantee limits. A structured blocker means Core or a connected surface reports that the Harness record/check path cannot proceed; it is not a claim that Harness physically stopped a process before execution. User-facing wording should distinguish "not compatible with the current Harness record," "held by instruction," and "physically prevented by runtime." Preventive controls are future/profile-specific until owner docs and conformance prove the exact covered operation; isolated controls are future/profile-specific until they prove the exact separation boundary.
-
-Operator entrypoints inherit the same guarantee level as the stage and connector profile that introduced them. A later recover, export, reconcile, artifact check, conformance run, or release handoff surface must not be described as preventing or enforcing more than its proven cooperative, detective, preventive, or isolated capability allows.
-
-Isolation claims must name what kind of separation is being claimed. A fresh evaluator bundle, fresh session, or separate worktree can support verification independence, stale-context control, or blast-radius reduction. A sandbox, permission layer, locked-down runner, process boundary, or container boundary can support stronger security isolation only when the connector profile names and proves that exact mechanism.
-
-## Guarantee levels by stage
-
-These are the default staged guarantees for the local reference path. A concrete connector, operator path, or later profile may claim a stronger level only when it names the exact covered operation or separation boundary and points to owner documentation plus conformance proof.
-
-The public API condition names and user-facing message behavior for Core unavailable, local access denied, stale state, unsupported surface, out-of-scope work, missing judgment, missing evidence, close blocked, and residual risk present are owned by [API Errors: MVP-1 guarantee and status taxonomy](api/errors.md#mvp-1-guarantee-and-status-taxonomy). This section owns the security meaning of `cooperative`, `detective`, `preventive`, and `isolated`.
-
-| Stage | Default guarantee posture | Honest claim boundary |
-|---|---|---|
-| Engineering Checkpoint | Cooperative plus limited detective behavior. | Core can refuse state-changing calls that do not match current owner records, produce structured status/blocker output, create and consume one compatible single-use cooperative internal Write Authorization record, record one Run, and validate the minimal artifact/evidence ref required by the active path. It does not stop a local process or agent from editing files outside Harness unless a separate preventive profile is proven. |
-| MVP-1 User Work Loop | Cooperative plus user-visible blockers/status and limited detective behavior. | Users can see missing scope, missing decisions, missing evidence, close blockers, MCP availability, and honest guarantee status. Product/runtime/code writes hold by instruction when the required Harness record/check cannot be reached or confirmed. This is still not default pre-tool blocking or isolation. |
-| Assurance Profile | Cooperative/detective assurance with stronger separation of verification, QA, residual risk, final acceptance, and sensitive-action Approval. | Harness can record and report assurance gaps, stale evidence, missing independence, QA blockers, waiver/risk/acceptance boundaries, and context-hygiene findings. It does not become preventive or isolated unless a specific profile proves that capability. |
-| Operations Profile | Detective operational behavior around recover, export, readiness, artifact integrity, projection freshness, and handoff reporting. | Operator surfaces can diagnose, report, repair through owner paths, export safe bundles, and check artifact integrity. They do not make Runtime Home tamper-proof, make projections authoritative, or isolate arbitrary tools by default. |
-| Roadmap | Preventive or isolated candidates only when promoted by owner docs and proven for the covered operation or boundary. | Stronger claims require exact contracts, covered operations, fixture proof, fallback behavior, and, for isolation, a real named separation boundary such as a proven sandbox, permission boundary, locked-down runner, process boundary, or container boundary. |
-
-The stage map does not lower Core authority. Core may always refuse an invalid state transition, decline to create an internal Write Authorization record, mark a gate or derived view stale/blocked, or report a structured blocker according to the active owner contract. The map only limits security wording about whether Harness can physically stop an action before it happens or isolate the action behind a security boundary.
-
-## Engineering Checkpoint / MVP-1 feasible control baseline
-
-The Engineering Checkpoint and MVP-1 reference path can use these controls without claiming a preventive or isolated runtime boundary:
-
-- one registered reference `capability_profile` with `surface_id=reference-local-mcp`, `max_guarantee_level=detective`, `pre_tool_blocking_supported=false`, and `isolation_supported=false`
-- local-only posture display for the registered project surface
-- clear Product Repository / Harness Server / Harness Runtime Home separation
-- raw secret and token response prohibition, with display-safe handles, redaction, omission, or blocked-payload notices
-- artifact path validation, owner relation checks, and basic fingerprint/hash checks where the active owner path requires them
-- `expected_state_version` freshness checks and idempotency keys for state-changing calls
-- single-use cooperative Write Authorization record returned by `prepare_write` and consumed by a compatible `record_run`; its stored `AuthorizedAttemptScope` is a Harness record/check, not OS-level permission, sandboxing, tamper-proof enforcement, or isolation
-- stale context blockers or warnings for stale projections, stale sensitive-action permissions or later Approval records, stale baselines, stale connector profiles, stale evaluator bundles, and stale retrieved context
-- fail-closed authority claims when MCP/Core is unavailable
-- status and `prepare_write` outputs that display the actual guarantee level, or a clear unavailable/capability condition when Core cannot answer
-- cooperative/detective blocker display that says what Core cannot confirm against current scope/state or what the surface can detect, without implying physical pre-tool enforcement
-
-These controls can refuse Core state changes, keep authority claims from being invented, or make inconsistencies visible when the active surface can observe the relevant fact. By default they do not physically prevent arbitrary local processes or tools from writing files, and they do not prove command, network, or secret behavior that the connected surface cannot observe.
-
-## Future or profile-promoted controls
-
-The following controls are future or profile-specific until an owner document implements the mechanism, names the covered operation or separation boundary, and conformance proves it:
-
-- operating-system sandboxing
-- arbitrary-tool isolation
-- tamper-proof Harness Runtime Home storage
-- preventive pre-tool blocking for product/runtime/code writes
-- hardened multi-user permissions
-- broad connector security model across local, remote, shared, cloud, CI, and cross-user postures
-- full secret manager or data-loss-prevention system
-
-Until promoted that way, references to guards, freeze modes, careful modes, sidecars, hooks, wrappers, worktrees, bundles, or local files are cooperative or detective control descriptions unless the exact preventive or isolated boundary is proven.
-
-## Scenario posture by stage
-
-| Scenario | Engineering Checkpoint | MVP-1 User Work Loop | Assurance Profile | Operations Profile | Roadmap |
-|---|---|---|---|---|---|
-| MCP unavailable | Harness-authority-dependent calls fail or hold; no Core state, internal Write Authorization record, evidence, final acceptance, residual-risk acceptance, or close claim is invented from chat or cached text. | The user sees an availability blocker/status and the next reconnect or diagnosis action. Product/runtime/code writes hold by instruction unless a proven stronger profile covers the operation. | Assurance paths report that verification, QA, waiver, risk, or acceptance state cannot be trusted through the unavailable path. | `serve mcp`, `doctor`, and `recover` distinguish `MCP_SERVER_UNAVAILABLE` from `SURFACE_MCP_UNAVAILABLE` and preserve the public `MCP_UNAVAILABLE`/capability error boundary. | A promoted guard may stop a covered write before execution, or a promoted isolation profile may route work through a real boundary, only for the proven path. |
-| Out-of-scope write | `prepare_write` can decline to create a Write Authorization record and return a structured blocker; external edits are only detected if the active path observes them. | The user sees what is outside scope and can narrow or deliberately expand scope through the proper decision path. | Autonomy, sensitive-action approval, evidence, changed-path checks, and `AuthorizedAttemptScope` comparison can mark the run, evidence, verification, or close readiness stale/blocked/insufficient. Unsupported command/network/secret observation remains unverified instead of being treated as passed. | Doctor, recover, and reconcile can report changed-path or generated-file drift and route repair through owner paths. | A preventive profile may block covered paths/commands/network/secrets before execution only when fixture proof covers that operation. |
-| Sensitive-action approval | Full Approval semantics are outside the minimal slice unless an owner profile promotes a narrow case; sensitive actions outside the active scope are held or treated as unsupported. | The user sees the named sensitive step, whether scoped permission is needed or recorded, and that permission is not final acceptance or residual-risk acceptance. | Approval is separated from User Judgments, Write Authorization, QA/verification-risk acceptances, final acceptance, and residual-risk acceptance. | Operator diagnostics and export/handoff reports can show Approval status without creating external approval or deployment authority. | Policy wrappers or permission systems may become preventive only for exact covered actions with proof. |
-| Stale projection | Persisted projections are not required; stale readable text is not Core state. | Readable summaries/cards may warn about freshness and should not be used as authority when stale. | Assurance and context-hygiene checks can require fresh state, fresh evaluator bundles, or reconcile before verification/QA/close depends on the view. | Projection refresh, reconcile, doctor, export, and recover can report or repair freshness through owner paths while keeping committed state intact. | Richer projection/UI systems remain read-only unless owner docs define and prove a mutation path. |
-| Artifact tampering | Registered artifact refs and minimal integrity facts are checked where active; a direct file edit is not evidence authority. | Evidence and close summaries show missing, stale, or mismatched artifact support. | Evidence, Eval, Manual QA, waiver, risk, and close paths can become stale, insufficient, blocked, or unresolved until replacement or an owner decision resolves the gap. | Artifact checks, recover, and export validate `sha256`, `size_bytes`, retention, `redaction_state`, omitted-secret, and blocked-payload metadata without trusting staged files or Markdown. | Storage hardening or locked artifact handling may be stronger only when a real boundary and conformance proof exists. |
-| Prompt injection | Repo docs, generated files, old projections, and chat are inputs; they cannot create authority or bypass Core. | User-facing status and judgment prompts should show current scope and judgments instead of treating broad approval-like prose as authority. | Context-hygiene, stewardship, evaluator freshness, and User Judgment routes make stale or malicious context visible before assurance claims rely on it. | Doctor and reconcile can report generated-file drift, stale context, projection tampering, and managed-block edits. | Content filters, isolated evaluators, or stronger prompt-containment mechanisms are Roadmap candidates unless proven for the exact boundary. |
-| Secret leakage | Raw secrets should not become artifacts, manifests, projections, or prompt context; minimal evidence paths use redaction, omission, or safe handles when required. | Users see evidence gaps, omitted-secret notes, or safe secret handles without raw values. | Evidence, QA, Eval, waiver, and residual-risk paths account for redaction, omission, and blocked payloads before assurance or close claims rely on them. | Artifact checks and export/handoff preserve omission/block metadata and avoid copying raw staged, omitted, blocked, secret, or PII values. | Secret scanners, permission wrappers, or data-loss-prevention controls are preventive only if they block covered leakage before storage or transmission and prove that path. |
-
-## Reference scope
+## 1. Owns / Does Not Own
 
 This document owns:
 
-- threat-model concepts and vocabulary
-- the security asset map
-- the trust-boundary map
-- the required threat and control categories
-- guarantee-level meanings and honest-display rules
-- the rule that high-risk work cannot depend on cooperative-only claims when preventive or isolated controls are required
-- the non-substitution boundary between threat-model concepts and exact DDL, API schemas, and kernel transitions
-
-## Not covered here
+- security asset categories and trust-boundary categories
+- the meaning of `cooperative`, `detective`, `preventive`, and `isolated` as security guarantee labels
+- the rule that security display must match the proven control
+- the current MVP security non-claims
+- the threat/control summary that keeps Core authority, user-owned judgment, evidence, storage, connectors, and projections distinct
+- cross-owner review checks for security claims
 
 This document does not own:
 
-- public MCP request/response schemas; see [MVP API](api/mvp-api.md) and [API Schema Core](api/schema-core.md)
-- public error shapes or idempotency/replay contracts; see [API Errors](api/errors.md)
-- SQLite DDL, storage layout, canonical enum hardening, artifact row shape, or exact file layout; see [Storage](storage.md)
-- kernel state transitions, gates, Approval lifecycle, `prepare_write`, Write Authorization, final acceptance, residual-risk acceptance, or close; see [Core Model Reference](core-model.md)
-- stage-specific operator command semantics, diagnostic severity baselines, or recover/reconcile/export behavior; see [Operations And Conformance Reference](operations-and-conformance.md)
-- fixture assertion semantics; see [Conformance Fixtures Reference](conformance-fixtures.md)
-- connector capability-profile field details, generated-manifest contracts, or surface recipes; see [Agent Integration Reference](agent-integration.md) and [Surface Cookbook](surface-cookbook.md)
-- projection template bodies or managed-block rendering rules; see [Projection And Templates Reference](projection-and-templates.md)
-- runtime implementation, generated operational files, executable fixtures, runtime data, or production deployment
+- Core state transitions, gates, `prepare_write`, Write Authorization, `record_run`, `close_task`, user judgments, final acceptance, or residual-risk acceptance; see [Core Model Reference](core-model.md)
+- MCP method contracts, shared schemas, public errors, idempotency, replay, or `allowed` / `blocked` response shapes; see [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), and [API Errors](api/errors.md)
+- SQLite DDL, Runtime Home layout, storage locks, artifact rows, hashes, migration rules, or storage-owned JSON; see [Storage](storage.md)
+- Product Repository / Harness Server / Harness Runtime Home separation, projection authority, artifact boundary, or recovery boundary; see [Runtime Boundaries Reference](runtime-boundaries.md)
+- connector `capability_profile` fields, generated manifests, fallback behavior, or surface recipes; see [Agent Integration Reference](agent-integration.md) and [Surface Cookbook](surface-cookbook.md)
+- operator command semantics or diagnostic output; see [Operations And Conformance Reference](operations-and-conformance.md)
+- executable proof, fixture assertions, runner behavior, or conformance pass/fail; see [Conformance Fixtures Reference](conformance-fixtures.md)
 
-## Baseline assumptions
+## 2. Current MVP Guarantee Level
 
-The Engineering Checkpoint and staged-delivery default are local-first. The active MVP baseline is a user-controlled Product Repository, a local Harness Server / Installation, a Harness Runtime Home, an MCP server exposed only through the registered reference local connector posture, and one connected reference agent surface. Additional connected surfaces, hosted connector registries, and cross-surface orchestration are later/profile scope unless owner documentation promotes and proves them.
+<a id="guarantee-levels-by-stage"></a>
+<a id="honest-guarantee-display"></a>
 
-Local-first does not mean every local process is trusted. Another process, stale connector configuration, broad file permissions, a forwarded port, a hand-edited generated file, or stale chat context may still affect what an agent sees or does. Harness therefore treats nearby surfaces as separate trust zones and accepts operational meaning only through owner paths.
+The current MVP guarantee level is cooperative by default, with limited detective behavior only where the active reference surface can honestly observe the relevant fact. The active reference surface is represented by a registered `capability_profile`; that profile constrains guarantee display and capability blockers, but it does not create write authority.
 
-Remote or shared MCP exposure remains outside the Engineering Checkpoint baseline and staged delivery unless owner documentation and conformance promote and prove a specific connector posture. A promoted posture must still show the access-control contract, secret/PII handling, redaction or omission behavior, honest guarantee display, and Core validation that remain in force.
+`allowed` means compatible with current Harness state, owner records, and the active surface capability. It does not mean the operating system permits the action. `blocked` means the Harness protocol, state, owner record, or capability check says the path must not proceed. It does not mean a process was physically stopped before execution.
 
-## Security assets
+The reference `capability_profile` has no default preventive or isolated posture. When `pre_tool_blocking_supported=false`, the MVP must not display `preventive` for product/runtime/code writes. When `isolation_supported=false`, the MVP must not display `isolated` or imply a security-isolation boundary.
 
-| Asset | Security concern | Boundary |
+Write Authorization is a single-use cooperative Harness record created only by the compatible non-dry-run `prepare_write` path and consumed by compatible `record_run`. It is a Harness record/check, not OS permission, sandboxing, tamper-proof enforcement, physical pre-tool blocking, or isolation.
+
+Documentation checks, fixture drafts, examples, and conformance plans do not prove runtime security behavior. They can check wording and future contract intent, but preventive or isolated security claims require an implemented mechanism and proof for the covered operation or boundary.
+
+## 3. Explicit Non-Claims
+
+The current MVP does not provide:
+
+- OS-level permission control
+- arbitrary-tool sandboxing
+- tamper-proof storage
+- default pre-tool blocking
+- security isolation
+
+These are explicit non-claims even when Harness returns a blocker, records a Write Authorization, validates an artifact hash, detects stale context, reports a capability mismatch, or marks a projection stale. Those outcomes may be cooperative or detective. They are not preventive or isolated unless another owner documents and proves that exact mechanism for that exact operation.
+
+The MVP also does not claim that local files are trustworthy because they are local, that MCP reachability is authorization, that chat or generated Markdown can create authority, or that conformance fixture language proves runtime security behavior before implementation exists.
+
+## 4. Assets
+
+Security-sensitive assets include:
+
+| Asset | Why it matters | Owner boundary |
 |---|---|---|
-| `state.sqlite` | Canonical current operational records can be spoofed, replayed, or corrupted if edited outside Core. | Exact storage layout belongs to [Storage](storage.md). State-changing meaning must flow through [Core Model Reference](core-model.md) and Core transaction paths. |
-| `state.sqlite.task_events` | Event history can be forged or rewritten if direct file edits are accepted as history. | Events are state-store history, not chat logs or report prose. Recovery adds compensating records rather than treating external edits as authority. |
-| Artifact store | Evidence bytes can leak secrets, be poisoned, be oversized, or mismatch registered metadata. | Artifact refs, `sha256`, `size_bytes`, `content_type`, `redaction_state`, retention, and ownership are validated through storage and operations owner paths. |
-| Projections | Markdown reports can be stale, tampered with, prompt-injected, or mistaken for state. | Projections are readable views or proposal surfaces. Freshness, managed blocks, and reconcile behavior are owned by [Projection And Templates Reference](projection-and-templates.md). |
-| MCP server | A caller can be unexpected, stale, remote, forwarded, or unable to reach Core while still claiming state changes. | Public tools enter through Core and the API-owned envelope, state-version, idempotency, and error contracts. |
-| Connector-generated files | Generated instructions, manifests, MCP snippets, prompts, or adapter files can drift, be hand-edited, or become malicious context. | Generated or managed files are tracked by connector manifests and drift reporting. They do not create Task state or authority by themselves. |
-| Local repo | Product code, tests, repo docs, AGENTS-style rules, and human-editable areas may contain prompt injection or stale facts. | The Product Repository is a work and input space, not the operational state store. Product writes still require current scope, any needed sensitive-action permission, and the pre-write scope-check / internal Write Authorization record path. |
-| External commands | Shell commands, tools, tests, package managers, deploy tools, and network calls can mutate files, leak data, or create side effects. | High-risk command, path, network, and secret use must be bounded by the relevant Change Unit, Approval, connector capability, and operator controls. |
-| Secret handles | A handle can point to sensitive material without exposing the raw value, but misuse can still leak or broaden access. | Raw secrets, tokens, and full sensitive logs should not become artifacts or projections. Store display-safe handles or omission notes where owner docs allow them; never store raw token or secret values in connector manifests. |
+| Core-owned state | Defines Harness authority over task scope, user-owned judgment, evidence references, write compatibility, close readiness, and residual-risk status. | [Core Model Reference](core-model.md) owns meaning; [Storage](storage.md) owns persistence. |
+| `state.sqlite` and Runtime Home metadata | Persist project registration, current state, event history, surfaces, Write Authorizations, and artifact metadata. | [Storage](storage.md) owns layout and defensive checks; storage is not tamper-proof. |
+| Write Authorization and `AuthorizedAttemptScope` | Records one compatible intended write attempt for one compatible consumption. | [Core Model Reference](core-model.md#write-authorization), [MVP API](api/mvp-api.md), and [Storage](storage.md) own exact behavior. |
+| `user_judgment` records | Preserve user-owned product, technical, scope, sensitive-action, QA/verification-risk, final-acceptance, residual-risk, or cancellation judgments. | Core/API owners decide exact routes; chat text is input until recorded through the owner path. |
+| Artifact refs and evidence metadata | Support evidence and close-readiness claims without trusting raw paths or unregistered bytes. | [API Schema Core](api/schema-core.md), [Storage](storage.md), and [Runtime Boundaries Reference](runtime-boundaries.md) own exact handling. |
+| Connector `capability_profile` | Constrains guarantee display, capability blockers, and fallback behavior for the active surface. | [Agent Integration Reference](agent-integration.md) owns fields and refresh rules. |
+| Product Repository files and generated projections | Can influence agents and users, but are input or derived display from a Harness perspective. | [Runtime Boundaries Reference](runtime-boundaries.md) and [Projection And Templates Reference](projection-and-templates.md) own display boundaries. |
+| Secrets, tokens, PII, and display-safe handles | May leak through artifacts, logs, prompts, projections, manifests, or exports. | Owner paths must prefer redaction, omission, blocked-payload metadata, or display-safe handles. |
 
-## Trust boundaries
+## 5. Trust Boundaries
 
-| Boundary | Trust risk | Required posture |
-|---|---|---|
-| User conversation surface | Chat may contain intent, approval-like words, stale memory, or malicious pasted content. | Treat conversation as input. Authority-affecting user-owned judgment must be recorded through the documented `user_judgment` / owner path, including sensitive-action approval, final acceptance, or residual-risk acceptance paths when those specific routes apply; Decision Packet is only an optional full-format presentation. |
-| Agent surface | The surface may skip MCP, overclaim capability, continue from stale context, or perform actions outside scope. | Capability must be declared for the actual host/profile and displayed honestly. In the active MVP, the reference `capability_profile` controls guarantee display and capability blockers only; it does not grant write authority. Product/runtime/code writes hold when the required Harness record/check or required capability cannot be reached or confirmed. |
-| Harness Server / Installation | The local control-plane process, connector adapter, projector, reconciler, or operator entrypoint may be stale, misconfigured, or asked to trust inputs that bypass Core. | Treat the installation as the control plane, not as a general OS sandbox. State-changing effects go through Core owner paths; adapters and tools report capability, diagnostics, or proposals rather than creating authority. |
-| Local process | A shell, editor, test runner, package manager, sidecar, or other local process may mutate files, read secrets, or call local endpoints outside the intended profile. | Local execution is not trust by itself. Bound process behavior through scope, Approval, connector capability, least-privilege tool choice, and stronger controls when cooperative/detective posture is insufficient. |
-| Local socket or API surface | Local endpoints can be reached by the wrong caller, stale configuration, forwarded ports, weak socket/config permissions, or off-profile access material. | Use local process, local socket, localhost-loopback, in-process/stdio, or a promoted connector posture with documented access control. Validate public envelopes through Core, and do not treat reachability as permission or a valid Harness record/check. |
-| Core | Core is the authority boundary for canonical mutation. | Core alone commits operational state changes and owner-record effects. No report, projection, generated file, or caller claim bypasses Core. |
-| Harness Runtime Home | Local files may be read or written by unrelated users, shared containers, or off-profile automation. | Treat broad read/write access as tampering or confidentiality risk. Direct edits are invalid until Core, recovery, or artifact-integrity paths validate the effect. Do not claim these files are tamper-proof merely because they are local. |
-| Product Repository | Human-editable docs, generated Markdown, product files, and repo rules can influence agent behavior. | Repo files are inputs, product work, or projections. They do not become canonical operational state by being present in the repo. |
-| Artifact store | Staged or committed evidence may contain secrets, be swapped, or fail integrity checks. | Validate source boundary, task/run ownership, `sha256`, `size_bytes`, `content_type`, `redaction_state` / omission / block state, and retention before relying on the bytes. |
-| Generated projections | Managed Markdown, MVP-1 compact views, reports, and generated connector views may be stale, edited, prompt-injected, or confused with authority. | Treat projections as readable views or proposal surfaces. Freshness, managed-block hashes, and reconcile route changes through owner paths before they affect state. |
-| External tools/network | Commands and network calls can affect systems outside Harness and may have irreversible side effects. | Use least-privilege tools and explicit command/path/network/secret bounds for high-risk work. Require stronger controls when cooperative holds are not enough. |
-
-## Threat and control map
-
-| Threat | Typical path | Required controls |
-|---|---|---|
-| Prompt injection in repo docs | A repo document, old projection, or generated instruction tells the agent to ignore Harness or spoof authority. | Keep context refs-first, treat repo docs as input, route authority through Core, and use current status/Journey/projection freshness instead of old prose. |
-| Projection tampering | A managed Markdown report is edited to make a Task look approved, verified, or closed. | Use managed-block hashes, `source_state_version`, projection freshness, and reconcile. Do not accept Markdown edits as state without an owner path. |
-| Stale approval replay | Old approval text or a stale Approval record is reused after scope, baseline, sensitive category, expiry, or actor context changes. | Check scope, baseline/state version, expiry, sensitive category, and actor compatibility through [Core Model Reference](core-model.md), [MVP API](api/mvp-api.md), and [API Schema Core](api/schema-core.md) owner paths before the pre-write scope check can produce a compatible record. |
-| Out-of-scope write | An agent writes a path, runs a command, reaches a network target, or accesses a secret outside the active Change Unit, sensitive-action permission, or stored `AuthorizedAttemptScope`. | Use active scope, `prepare_write`, internal Write Authorization records, changed-path validation, and command/path/network/secret allowlists for high-risk work. These checks do not imply OS permission, sandboxing, physical pre-tool blocking, or successful observation of unsupported command/network/secret behavior unless a preventive or observation-capable profile proves that covered operation. |
-| MCP unavailable but agent claims state update | Core is unreachable, or the surface cannot call required MCP tools, but the agent says state changed. | Fail closed for authority. Distinguish `MCP_SERVER_UNAVAILABLE` from `SURFACE_MCP_UNAVAILABLE`; hold product/runtime/code writes until MCP is reconnected or diagnosed. |
-| Secret leakage through evidence artifacts | Logs, screenshots, traces, exports, or run summaries contain tokens, credentials, PII, or private customer data. | Redact or omit before durable storage, use secret handles or safe notes, and record redaction/omission/block metadata without storing forbidden bytes. |
-| Artifact `hash_mismatch` | Registered artifact metadata and stored bytes disagree, or a staged file is substituted. | Treat the artifact and dependent evidence, projection, export, or close-readiness view as stale or blocked until recovery or replacement validates a new artifact ref. |
-| Malicious generated connector file | A generated instruction, MCP config snippet, manifest, or adapter file is edited to weaken controls or exfiltrate data. | Track generated and managed paths in connector manifests, detect drift, avoid silent overwrite, and route replacement through reconnect or reconcile. |
-| Capability overclaiming | A surface says it can block, capture, isolate, or reach MCP when the actual profile cannot prove it. | Require current capability profiles, `surface_capability_check` or equivalent blocked reasons, and honest cooperative/detective/preventive/isolated display. |
-| Stale context poisoning | Old chat, cached status, stale projections, stale PRDs, or old evaluator bundles steer the agent into unsafe or outdated action. | Treat stale context as pull-only input, display freshness, check baseline/state versions, refresh or reconcile before authority depends on it, and use fresh evaluator bundles for detached verification. |
-
-## Control families
-
-### MCP local access and caller boundaries
-
-The Engineering Checkpoint baseline and staged-delivery default MCP posture is local-only for a registered project surface. Local-only means local process, local socket, localhost-loopback, in-process/stdio, process-scoped configuration material, a per-project token or handle, or an equivalent local IPC/control path for the expected local user/profile.
-
-Where a transport has an origin, caller identity, authentication token, socket path, filesystem permission, or bind address, the connector profile and operations display must make the access-control class visible without printing raw secrets. Non-loopback binding, forwarded or tunneled endpoints, shared sockets, cloud/CI relays, cross-user paths, remote callers, and stale access material are off-profile unless a connector owner has promoted and proven that posture.
-
-MCP reachability is not permission and does not by itself create a valid Harness record/check. Public tool calls still rely on Core envelope validation, `project_id`, `task_id`, `surface_id`, `run_id`, and `actor_kind` compatibility, idempotency, expected state version, and API-owned error handling.
-
-If Core cannot be reached, no authoritative Core response exists and the API-visible path is `MCP_UNAVAILABLE` or an operations diagnostic such as `MCP_SERVER_UNAVAILABLE`. If Core or an operator can classify a reachable local caller or access path as outside the registered local profile, the API-visible path is `LOCAL_ACCESS_MISMATCH` with display-safe details. If the caller is on a recognized profile but the profile lacks a required capability, use `CAPABILITY_INSUFFICIENT`.
-
-### Least privilege and high-risk allowlists
-
-High-risk work should use the smallest tool, command, path, network target, and secret scope that can satisfy the active Change Unit. Sensitive categories such as destructive writes, network writes, external service writes, data export, infrastructure or deployment changes, production configuration changes, CI/CD changes, billing or cost changes, telemetry or logging changes, auth changes, permission model changes, secret access, privacy/PII changes, license/compliance changes, model or prompt policy changes, and policy overrides are not made safe by local execution.
-
-Command/path/network allowlists are a control concept here, not a new schema in this document. The exact Harness record/check path comes from existing owners: Change Unit scope, sensitive-action permission, `prepare_write`, the `AuthorizedAttemptScope` stored by Write Authorization, connector capability profiles, and operator diagnostics. When the risk requires preventive blocking, isolation, or reliable observation of commands/network/secrets, a cooperative-only instruction is insufficient; the work must narrow, wait, use a fixture-proven preventive or observation-capable path, or use the documented and proven separation boundary claimed by the connector profile.
-
-### Redaction before storage
-
-Evidence capture must account for secrets and PII before bytes become durable artifacts, projections, exports, or long-lived summaries. Redaction, omission, and blocked-payload notices are evidence-handling controls, not cosmetic formatting.
-
-Raw secrets, tokens, and full sensitive logs should not be stored as artifacts, connector manifest fields, projections, exported bundle text, or prompt context. When secret-related evidence is required, use a display-safe secret handle, redacted artifact, `secret_omitted` or `blocked` metadata notice, omission note, or operator note allowed by the relevant owner path.
-
-### Artifact path and integrity validation
-
-Artifact inputs are untrusted until registration validates the source boundary, task/run ownership, artifact kind, `sha256`, `size_bytes`, `content_type`, `redaction_state`, `produced_by`, relation owner, and retention/availability facts. The only valid sources are a Harness staging location, an approved capture adapter output, or an existing committed `ArtifactRef`. Path validation must keep a caller-supplied absolute path, staged path outside the approved boundary, traversal, symlink surprise, or off-profile location from becoming trusted evidence by accident.
-
-Artifact `hash_mismatch` is a security and evidence-integrity finding. It does not repair by editing Markdown or copying bytes directly into place. Recovery or replacement must go through the documented artifact registration and recovery paths. If required evidence depends on the affected ref, close stays blocked while that evidence is stale or blocked.
-
-### Freshness, replay, and stale context
-
-Baseline and state-version checks help catch replay and stale context before a Harness record/check depends on them. Old sensitive-action permissions or later Approval records, old status text, old projections, old evaluator bundles, and chat memory cannot support current write checks or close current work. If the current path depends on them, they must be refreshed, reconciled, superseded, or replaced through an owner path.
-
-Expected state version, idempotency, baseline compatibility, approval expiry, projection freshness, and connector profile freshness are separate controls. This document names the threat-model reason for them; their exact fields and behavior stay with the API, kernel, storage, projection, connector, and operations owners.
-
-### Fail closed when authority is unavailable
-
-If the Harness record/check path needed for a state-changing, write-capable, sensitive, verification, QA, final acceptance, residual-risk acceptance, or close-relevant action is unavailable, the action must fail, hold, or report capability insufficiency rather than continuing from chat, stale projection text, generated files, cached context, or operator prose.
-
-For MCP unavailability, operations and connectors use the existing diagnostic distinction between `MCP_SERVER_UNAVAILABLE` and `SURFACE_MCP_UNAVAILABLE`, while API-visible failures use the API-owned `MCP_UNAVAILABLE` or `CAPABILITY_INSUFFICIENT` paths where applicable. The Core-unavailable agent rule is owned by [API Errors](api/errors.md#mvp-1-guarantee-and-status-taxonomy): do not invent task state, sensitive-action approval, user judgment, evidence, final acceptance, residual-risk acceptance, or close readiness when Harness/Core authority cannot be reached.
-
-### Honest guarantee display
-
-Security wording must match the proven control:
-
-| Guarantee | Honest security meaning |
+| Boundary | Security posture |
 |---|---|
-| `cooperative` | The control works when the agent or tool follows the documented procedure. This is instruction-following behavior, not a hard security boundary or a pre-execution block. |
-| `detective` | Harness can detect, record, or report a mismatch or record inconsistency after the action or when it becomes observable. This is after-the-fact checking, not prevention. |
-| `preventive` | A concrete hook, wrapper, permission layer, policy engine, sidecar, or equivalent blocks the covered operation before it happens, with fixture proof for that exact path. |
-| `isolated` | Work or verification runs behind a defined, documented separation boundary for the claim being made. A worktree or fresh evaluator bundle can provide scope, freshness, or blast-radius separation, but it is not automatically an OS sandbox, permission boundary, or tamper-proof security boundary unless the profile proves that exact isolation mechanism. Isolation alone does not approve, verify, accept, accept risk, close, or upgrade assurance. |
+| User conversation and agent surface | Treat chat, memory, pasted text, and approval-like wording as input. User-owned judgments become authority only through the documented `user_judgment` / owner path. |
+| Product Repository | Product files, repository rules, generated Markdown, and projections are product work, inputs, or derived display. They are not Harness operational authority by presence or proximity. |
+| Harness Server / Installation | The future local control-plane program runs Harness authority checks. It is not a general OS sandbox or arbitrary-tool permission system. |
+| Harness Runtime Home | Runtime Home stores Core-owned records and artifacts for future operation. Treat broad local read/write access as tampering and confidentiality risk; do not claim tamper-proof storage. |
+| MCP / local API surface | Reachability is not authorization. Core/API validation, project/task/surface compatibility, idempotency, expected state version, and active capability still apply. |
+| Connector-generated files | Generated manifests, snippets, prompts, or adapter files may drift or be edited. They do not create authority without the owner path and current `capability_profile`. |
+| Artifact store | Artifact bytes are untrusted until registered, related to the owner record, and checked for required integrity/redaction metadata. |
+| External tools, commands, and network calls | Local execution can mutate files, leak data, or affect external systems. Cooperative Harness checks do not physically restrain those tools by default. |
 
-Guard, freeze, careful-mode, recipe names, product names, surface names, and friendly mode labels do not upgrade a guarantee. High-risk work must show the control it actually uses, and it must not depend on cooperative-only claims when preventive or isolated controls are required.
+## 6. Threat/Control Summary
 
-## Owner map for exact contracts
+This summary names the active threat categories without turning the MVP document into a full future threat catalog.
 
-| Threat-model concept | Exact contract owner |
+| Threat category | Common path | MVP control posture |
+|---|---|---|
+| Authority spoofing | Chat, generated Markdown, caller claims, or stale projections pretend to approve, verify, accept, or close work. | Route authority through Core-owned records; fail or hold when MCP/Core authority is unavailable. |
+| Out-of-scope write | A path, command, network target, or secret use exceeds the active Change Unit, user judgment, sensitive-action permission, or stored `AuthorizedAttemptScope`. | Use cooperative `prepare_write`, single-use Write Authorization, compatible `record_run`, and changed-path detection only where the surface can observe. |
+| Stale context or replay | Old status text, approvals, projections, baselines, evaluator bundles, or cached state steer current work. | Check current state version, idempotency, freshness, and owner-record compatibility before relying on the input. |
+| Artifact or evidence tampering | Bytes, paths, hashes, or metadata are swapped, stale, missing, redacted, blocked, or unrelated to the owner record. | Treat evidence as insufficient or blocked until registration, integrity, redaction, and owner relation checks pass. |
+| Secret or PII exposure | Logs, screenshots, traces, prompts, artifacts, projections, manifests, or exports contain sensitive values. | Prefer redaction, omission, blocked-payload notices, display-safe handles, and owner-approved evidence summaries. |
+| Capability overclaim | A surface claims blocking, capture, isolation, or MCP reachability beyond its actual `capability_profile`. | Lower the displayed guarantee, mark the claim unverified, return a capability blocker/error, or hold by instruction. |
+
+## 7. Cooperative Behavior
+
+Cooperative behavior means Harness can guide, record, compare, or refuse Harness state-changing paths when the connected agent or surface follows the documented procedure. It is not a hard security boundary.
+
+Examples of cooperative behavior in the current MVP plan:
+
+- a surface calls `prepare_write` before a product write
+- Core declines to create a Write Authorization when scope, judgment, sensitive-action permission, state version, or capability is incompatible
+- a compatible non-dry-run `prepare_write` creates one consumable Write Authorization
+- `record_run` consumes that Write Authorization only when the observed attempt is compatible to the extent the surface can honestly observe it
+- the agent holds product/runtime/code writes by instruction when MCP/Core authority or required capability is unavailable
+- generated status text tells the user what Harness can and cannot confirm
+
+Cooperative behavior may keep honest agents aligned with Harness, but it does not stop an arbitrary local process, editor, shell, package manager, or network-capable tool by default.
+
+## 8. Detective Behavior
+
+Detective behavior means Harness can detect, record, or report a mismatch after the action or when the relevant fact becomes observable. It is after-the-fact checking, not prevention.
+
+Examples of detective behavior in the current MVP plan:
+
+- changed-path comparison after a run, when the surface supports it
+- artifact `sha256`, `size_bytes`, `content_type`, ownership, availability, redaction, omission, or blocked-payload checks where the owner path requires them
+- stale state, stale projection, stale connector profile, stale baseline, or stale retrieved-context reporting
+- capability mismatch or unsupported-surface reporting
+- generated-file or managed-block drift reporting where the owner path supports it
+
+Detective behavior must say what was observed and what remains unverified. Unsupported command, network, secret, or external-system effects must not be reported as passed merely because nearby Harness checks succeeded.
+
+## 9. Preventive Claims Rule
+
+A preventive claim is allowed only when all of these are true:
+
+- the exact covered operation is named
+- the mechanism that blocks before execution is named, such as a hook, wrapper, permission layer, policy engine, sidecar, or equivalent
+- the owner document for that operation defines the behavior and fallback
+- executable proof exists for that exact path
+- the displayed `capability_profile` supports `preventive` for that operation
+
+The current MVP has no default preventive claim. Do not describe `prepare_write`, Write Authorization, `allowed`, `blocked`, file locks, hashes, status cards, projections, documentation checks, fixture drafts, guard wording, freeze wording, or careful-mode wording as pre-execution blocking unless the exact preventive path above exists.
+
+## 10. Isolation Claims Rule
+
+An isolation claim is allowed only when the security boundary is named and proven for the claim being made. A valid claim must say what is isolated from what, by which mechanism, for which operation, and under which owner/proof path.
+
+A separate worktree, fresh session, fresh evaluator bundle, or separate process may support freshness, verification independence, or blast-radius reduction. It is not automatically OS sandboxing, permission isolation, tamper-proof storage, or security isolation. The current MVP has no default security isolation claim.
+
+Do not use `isolated` merely because files are local, a bundle is fresh, a connector has a friendly mode name, a tool runs in another directory, or a document says to be careful.
+
+## 11. Cross-Owner Checks
+
+Before adding or accepting a security claim, check the relevant owner:
+
+| Question | Owner to check |
 |---|---|
-| MCP tool envelope and `ToolError` shape | [API Schema Core](api/schema-core.md#common-response) |
-| Public errors, idempotency, replay, expected state version | [API Errors](api/errors.md) |
-| Kernel state transitions, gates, Approval, `prepare_write`, Write Authorization, acceptance, residual risk, close | [Core Model Reference](core-model.md) |
-| `state.sqlite`, `task_events`, artifact storage rows, DDL, enum hardening, hashes, storage layout | [Storage](storage.md) |
-| Guarantee-level meanings and honest display rules | This document: [Honest guarantee display](#honest-guarantee-display) |
-| Runtime boundary spaces, Core mutation authority placement, artifact/projection/recovery boundaries, and current non-isolation claims | [Runtime Boundaries Reference](runtime-boundaries.md) |
-| Connector capability profiles, generated manifests, context push/pull, fallback display | [Agent Integration Reference](agent-integration.md) |
-| Stage-specific operator diagnostics, severity baselines, `doctor`, `serve mcp`, artifact check, recover, reconcile | [Operations And Conformance Reference](operations-and-conformance.md) |
-| Core fixture mechanics: fixture body shape, runner behavior, assertion semantics, fixture profiles, suite metadata boundaries, reduced Kernel Smoke queue | [Conformance Fixtures Reference](conformance-fixtures.md) |
-| Compact future scenario-family inventory, promotion criteria, suite-family labels, catalog-only future candidates | [Future Fixtures](../later/index.md#future-fixture-families) |
-| Projection freshness, managed blocks, reconcile behavior, template ownership | [Projection And Templates Reference](projection-and-templates.md) and [Template Reference](templates/README.md) |
+| Is this a Harness state transition, gate, judgment, write, run, close, waiver, or residual-risk rule? | [Core Model Reference](core-model.md) |
+| Is this a public method, response field, error code, idempotency, replay, state-version, `allowed`, or `blocked` behavior? | [MVP API](api/mvp-api.md), [API Schema Core](api/schema-core.md), [API Errors](api/errors.md) |
+| Is this about Runtime Home layout, `state.sqlite`, artifact rows, locks, hashes, migration, or storage validation? | [Storage](storage.md) |
+| Is this about Product Repository / Harness Server / Harness Runtime Home separation, projection authority, artifact boundary, or recovery boundary? | [Runtime Boundaries Reference](runtime-boundaries.md) |
+| Is this about a surface `capability_profile`, MCP availability from the surface, generated manifests, fallback, context push/pull, or guarantee display? | [Agent Integration Reference](agent-integration.md) and [Surface Cookbook](surface-cookbook.md) |
+| Is this an operator diagnostic, recovery, export, artifact check, or conformance entrypoint? | [Operations And Conformance Reference](operations-and-conformance.md) |
+| Is this runtime proof, fixture assertion behavior, or pass/fail language? | [Conformance Fixtures Reference](conformance-fixtures.md) |
+
+If the owner document does not define and prove a stronger control, use cooperative or detective wording, mark the claim unsupported, or state the non-claim explicitly. Do not turn future controls, operations-profile ideas, documentation checks, or conformance planning language into active MVP security guarantees.
