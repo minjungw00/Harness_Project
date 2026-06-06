@@ -146,6 +146,7 @@ Use this as a final manual sweep before maintainers consider documentation accep
   - [ ] Active fixture `request.payload` bodies match the public request schemas in `mvp-api.md`; fixtures do not add fixture-only request fields or omit required public fields.
   - [ ] Active fixture enum values resolve to active value sets in `schema-core.md`; any enum value absent from the active schema owner is a docs-maintenance `FAIL`.
   - [ ] Fixture shorthand is absent from active fixture bodies. Shorthand may appear only as later/profile planning material outside active bodies.
+  - [ ] Active structured fixture draft bodies remain YAML-loadable source drafts; scalars that begin with Markdown or YAML indicator characters, such as backtick-led identifier text, are quoted instead of relying on a fixture-specific dialect.
   - [ ] `expected_storage_rows` matches active tables, columns, JSON `TEXT` shapes, row effects, and owner-bound value sets in `storage.md`.
   - [ ] `expected_state_changes` matches active Core-owned state fields, lifecycle and transition rules, gate effects, and close semantics in `core-model.md`.
   - [ ] `expected_blockers` and `expected_errors` match the active blocker/error taxonomy in `mvp-api.md`, `schema-core.md`, `errors.md`, and the relevant Core/storage owner paths.
@@ -158,7 +159,7 @@ Use this as a final manual sweep before maintainers consider documentation accep
   - [ ] `display_label` and localized labels remain rendered display text. They are not canonical fixture state, state-compatibility inputs, storage identity, blocker keys, gate keys, validator keys, or close aggregation keys.
   - [ ] Korean fixture docs preserve exact identifiers such as `conformance-fixtures.md`, `schema-core.md`, `mvp-api.md`, `storage.md`, `core-model.md`, `errors.md`, `lifecycle_phase`, `RecordRunPayload.kind`, `CloseTaskRequest.intent`, `ArtifactRef.redaction_state`, and `display_label`, while using natural Korean technical prose.
   - [ ] Reporting these checks as `PASS`, `WARN`, or `FAIL` does not change readiness, handoff, implementation acceptance, coding acceptance, documentation acceptance, close readiness, or runtime conformance status.
-- Pass means: Every active fixture draft can be traced to the active public API, schema, Core, Storage, blocker, and error owners without a fixture-only dialect, later/profile leakage, display-label state, or prose-only assertion path.
+- Pass means: Every active fixture draft can be traced to the active public API, schema, Core, Storage, blocker, and error owners without a fixture-only dialect, invalid YAML-like body source, later/profile leakage, display-label state, or prose-only assertion path.
 
 ### Repair-Target Owner Map Check
 

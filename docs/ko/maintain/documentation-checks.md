@@ -146,6 +146,7 @@ runtime conformance는 별도입니다. 구현된 Core/API/storage/surface behav
   - [ ] Active fixture `request.payload` body가 `mvp-api.md`의 public request schema와 맞습니다. Fixture-only request field를 추가하거나 required public field를 빠뜨리지 않습니다.
   - [ ] Active fixture enum value가 `schema-core.md`의 active value set으로 해소됩니다. Active schema owner에 없는 enum value는 docs-maintenance `FAIL`입니다.
   - [ ] Fixture shorthand가 active fixture body 안에 없습니다. Shorthand는 active body 밖의 later/profile planning material로만 나타날 수 있습니다.
+  - [ ] Active structured fixture draft body는 YAML로 읽을 수 있는 source draft로 남습니다. Backtick으로 시작하는 identifier 설명처럼 Markdown이나 YAML indicator로 시작하는 scalar는 fixture-specific dialect에 기대지 않고 따옴표로 감쌉니다.
   - [ ] `expected_storage_rows`가 `storage.md`의 active table, column, JSON `TEXT` shape, row effect, owner-bound value set과 맞습니다.
   - [ ] `expected_state_changes`가 `core-model.md`의 active Core-owned state field, lifecycle과 transition rule, gate effect, close semantics와 맞습니다.
   - [ ] `expected_blockers`와 `expected_errors`가 `mvp-api.md`, `schema-core.md`, `errors.md`, 관련 Core/storage owner path의 active blocker/error taxonomy와 맞습니다.
@@ -158,7 +159,7 @@ runtime conformance는 별도입니다. 구현된 Core/API/storage/surface behav
   - [ ] `display_label`과 localized label은 rendered display text로 남습니다. Canonical fixture state, state-compatibility input, storage identity, blocker key, gate key, validator key, close aggregation key가 아닙니다.
   - [ ] 한국어 fixture 문서는 `conformance-fixtures.md`, `schema-core.md`, `mvp-api.md`, `storage.md`, `core-model.md`, `errors.md`, `lifecycle_phase`, `RecordRunPayload.kind`, `CloseTaskRequest.intent`, `ArtifactRef.redaction_state`, `display_label` 같은 exact identifier를 보존하면서 자연스러운 한국어 기술 문장으로 씁니다.
   - [ ] 이 점검을 `PASS`, `WARN`, `FAIL`로 보고해도 readiness, handoff, implementation acceptance, coding acceptance, documentation acceptance, close readiness, runtime conformance status는 바뀌지 않습니다.
-- 통과 의미: 모든 active fixture draft가 active public API, schema, Core, Storage, blocker, error owner로 추적됩니다. Fixture-only dialect, later/profile leakage, display-label state, prose-only assertion path가 없습니다.
+- 통과 의미: 모든 active fixture draft가 active public API, schema, Core, Storage, blocker, error owner로 추적됩니다. Fixture-only dialect, YAML로 읽을 수 없는 body source, later/profile leakage, display-label state, prose-only assertion path가 없습니다.
 
 ### 정비 대상 owner 지도 점검
 

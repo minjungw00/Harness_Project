@@ -155,7 +155,7 @@ Deterministic IDs such as `task-fixture-001` are acceptable only as ordinary str
 
 ### Active Structured Fixture Drafts
 
-The active drafts use one uniform shape. They are compact enough for review but still name the public request fields, active storage rows, public error codes, and blocker categories that a future materialized fixture must expand and validate. The evidence summary family has two request paths because insufficiency is read/close-visible state, while sufficiency is created by a committed active `record_run`.
+The active drafts use one uniform shape. They are compact enough for review but still name the public request fields, active storage rows, public error codes, and blocker categories that a future materialized fixture must expand and validate. Keep these fenced bodies YAML-loadable as structured source drafts; quoting Markdown-led or YAML-indicator-led scalars is fixture body validity cleanup, not a new fixture contract or runner claim. The evidence summary family has two request paths because insufficiency is read/close-visible state, while sufficiency is created by a committed active `record_run`.
 
 ```yaml
 scenario_id: MVP-ACTIVE-task-change-unit-setup
@@ -2133,7 +2133,7 @@ expected_artifacts: []
 expected_blockers: []
 expected_errors: []
 forbidden_side_effects:
-  - `display_label` is absent from request payload, `expected_response.user_judgment`, expected storage rows, validator keys, gate keys, blocker keys, state-compatibility inputs, owner refs, and close aggregation.
+  - "`display_label` is absent from request payload, `expected_response.user_judgment`, expected storage rows, validator keys, gate keys, blocker keys, state-compatibility inputs, owner refs, and close aggregation."
   - Localized labels are rendered text only and do not resolve the pending judgment.
   - No separate permission record, Write Authorization, evidence, final acceptance, residual-risk acceptance, close state, or non-active row/effect is created.
 schema_owners:
