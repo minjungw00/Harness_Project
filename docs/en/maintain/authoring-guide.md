@@ -55,6 +55,10 @@ Active docs must not turn later candidates, diagnostic, operations, export, rich
 
 A value, method, table, fixture family, command, template, or security guarantee is active only when its owner promotes it with scope, fallback behavior, and proof expectations. Reference presence alone does not expand active delivery scope.
 
+Do not list profile-gated values as default active MVP values. If a value is available only under a named profile, capability, connector mode, or future configuration, keep it out of default active value lists or mark the profile gate in the owning document.
+
+Do not describe later candidates as active MVP requirements, required defaults, required checks, required templates, or server obligations. If an example needs a later candidate, label it as later material and route the normative detail to the owner or Later index.
+
 Keep later material in `docs/*/later/*`, explicitly labeled later candidate sections, or the owner that has promoted it. If an active schema or DDL block contains inactive values, fix the owner boundary rather than relying on nearby prose to explain that those values are not active.
 
 ## 5. User judgment boundary
@@ -76,17 +80,23 @@ Security wording must match the documented guarantee level.
 
 Do not imply early Harness provides OS permissions, arbitrary-tool sandboxing, tamper-proof local files, universal pre-tool blocking, or security isolation unless the exact mechanism is documented and proven. Write Authorization is a cooperative Harness record/check, not OS permission, sandboxing, tamper-proof enforcement, preventive blocking, or isolation.
 
+Do not make unsupported preventive, isolation, sandboxing, tamper-proof, or default tool-blocking claims in user-facing summaries, examples, checklists, or diagrams. A short, honest cooperative or detective claim is better than a stronger claim the current owner cannot prove.
+
 ## 7. Link rule
 
 When you rename, move, split, merge, or delete documentation, update links and anchors in both languages in the same batch.
 
 Before editing, search for old paths, old headings, old anchors, old title text, README routes, owner links, and paired-language links. After editing, search again. Active docs must not point to removed files, stale anchors, inactive routes, migration notes, or old structures.
 
+Do not use deleted routes, legacy route families, or old structure names as active paths. Replace them with the compact active route or delete the stale route wording.
+
 Prefer owner links over secondary summaries. Do not create archive copies of removed maintain pages.
 
 ## 8. Stale content deletion rule
 
 Maintain docs should guide future editing. They should not preserve historical rewrite reviews, resolved issue records, old acceptance notes, old delivery-label explanations, legacy alias history, later-candidate localization audit records, past translation problem records, or scratch migration plans.
+
+When stale review history contains a still-useful rule, extract the rule and delete the historical framing. Do not keep past audit result narrative, issue-resolution records, or old acceptance prose as active maintain guidance.
 
 Use these durable triage categories when deciding what to do with old prose:
 
@@ -107,10 +117,11 @@ Delete temporary migration plans and scratch files before finishing.
 - [ ] Korean prose is natural Korean, not line-by-line English.
 - [ ] Exact identifiers, file paths, schema/API names, enum values, error codes, table names, and validator IDs are preserved.
 - [ ] Strict contracts remain in one owner; non-owner duplicates are summaries with owner links.
-- [ ] Active/later boundaries are not blurred.
+- [ ] Active/later boundaries are not blurred, and profile-gated values are not listed as default active MVP values.
 - [ ] User-owned judgment routes remain distinct.
-- [ ] Security wording matches the documented guarantee level.
+- [ ] Security wording matches the documented guarantee level and does not make unsupported preventive, isolation, sandboxing, tamper-proof, or default tool-blocking claims.
 - [ ] Links, anchors, README routes, and paired-language links resolve.
+- [ ] Deleted routes and old structure names are not used as active paths.
 - [ ] Stale rewrite history, resolved issue records, legacy alias history, and old review prose were deleted instead of archived.
 - [ ] No temporary migration plan or scratch file remains.
 - [ ] Relevant checks in [Checks](checks.md) were run or reported as not run.

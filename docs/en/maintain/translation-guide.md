@@ -21,6 +21,7 @@ Preserve these exactly in both languages:
 - enum values and status values
 - error codes and validator IDs
 - DDL, table names, column names, and storage identifiers
+- template names
 - code identifiers, literal markers, placeholder names, and code-like strings
 
 Do not translate exact strings inside code blocks, schemas, API examples, file paths, or field lists. Localized display labels are rendering text, not canonical identifiers.
@@ -32,10 +33,11 @@ Korean documentation should be natural Korean technical prose.
 - Prefer short, clear sentences.
 - Put the Korean concept first in user-facing prose.
 - Add the exact English identifier only when precision, search, or owner alignment needs it.
+- Do not leave English noun phrases in Korean prose unless they are exact identifiers or intentional Harness labels.
 - Avoid Korean sentences made mostly of English nouns with Korean particles attached.
 - Keep exact identifiers exact even when the surrounding sentence is fully Korean.
 
-Good Korean may rearrange the English sentence. It should not become a literal line-by-line copy.
+Good Korean may rearrange the English sentence, split or combine clauses, and change paragraph rhythm for readability. It should not become a literal line-by-line copy.
 
 ## 4. User-facing terminology
 
@@ -108,8 +110,10 @@ Korean labels such as `제품 판단`, `기술 판단`, and `범위 판단` may 
 - [ ] The paired files keep the same active file path, reader purpose, semantic section coverage, owner links, and active/later boundary.
 - [ ] Korean prose reads naturally to a Korean technical reader.
 - [ ] Exact identifiers, paths, API/schema names, enum values, error codes, table names, and validator IDs are preserved.
+- [ ] Template names and `doc_id` values are preserved exactly.
 - [ ] Korean display labels are treated as localized display text, not schema identifiers.
 - [ ] User-facing Korean uses natural Korean before Harness labels when both are needed.
+- [ ] English noun phrases are not left in Korean prose unless they are exact identifiers or intentional Harness labels.
 - [ ] Non-owner duplicate contracts are summarized with owner links instead of translated as full contract copies.
 - [ ] Link changes were made in both languages in the same batch.
 - [ ] Translation review was not described as runtime state, evidence, QA, acceptance, close readiness, runtime conformance, or implementation readiness.
