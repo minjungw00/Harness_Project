@@ -1984,7 +1984,7 @@ schema_owners:
 
 ```yaml
 scenario_id: MVP-ACTIVE-display-label-not-canonical
-purpose: judgment fixture로 display label이 canonical state가 아님을 증명한다.
+purpose: "`judgment_kind`가 기준 판단 식별자이고 표시 라벨과 지역화된 라벨은 렌더링 문자열일 뿐임을 증명하는 judgment fixture."
 initial_state:
   tasks:
     - task_id: TASK-001
@@ -2133,8 +2133,9 @@ expected_artifacts: []
 expected_blockers: []
 expected_errors: []
 forbidden_side_effects:
-  - "`display_label` is absent from request payload, `expected_response.user_judgment`, expected storage rows, validator keys, gate keys, blocker keys, state-compatibility inputs, owner refs, and close aggregation."
-  - Localized labels are rendered text only and do not resolve the pending judgment.
+  - "`display_label`은 request payload, `expected_response.user_judgment`, expected storage rows, validator keys, gate keys, blocker keys, state-compatibility inputs, owner refs, close aggregation, 모든 기준 식별 field에 나타나지 않습니다."
+  - "지역화된 라벨(`Product decision`, `Technical decision`, `Scope decision`, `제품 판단`, `기술 판단`, `범위 판단`)은 `judgment_kind`에서 파생한 렌더러 출력으로만 나타날 수 있습니다. 요청 입력의 기준값으로 받지 않으며 compatibility check, validator, gate, blocker, storage identity, state compatibility, close aggregation에서 비교값으로 쓰지 않습니다."
+  - "대기 중인 judgment는 `user_judgment_id=UJ-016`, `judgment_kind=product_decision`, `presentation=short`, `status=pending_user`로만 식별합니다. 렌더링된 label로는 이 판단을 resolve하거나 변경하지 않습니다."
   - 별도 permission record, Write Authorization, evidence, final acceptance, residual-risk acceptance, close state, non-active row/effect를 만들지 않습니다.
 schema_owners:
   api: docs/*/reference/api/mvp-api.md#harnessrequest_user_judgment
@@ -2324,7 +2325,7 @@ Kernel Smoke는 projection requirement 없음이 기본입니다. Minimal owner 
 | 13 | `MVP-ACTIVE-final-acceptance-missing-close-blocker` | `harness.close_task` (`intent=complete`, `requested_close_reason=completed_self_checked`) | Evidence는 sufficient지만 required final acceptance가 없는 Task | Close가 final-acceptance blocker로 blocked 상태를 유지하고 terminal Task update를 만들지 않습니다. | `ACCEPTANCE_REQUIRED` | `tasks.lifecycle_phase=completed` 또는 `tasks.lifecycle_phase=cancelled`, fabricated acceptance, residual-risk acceptance, non-active assurance state, close report authority 없음. |
 | 14 | `MVP-ACTIVE-residual-risk-visible-not-accepted-blocker` | `harness.close_task` (`intent=complete`, `requested_close_reason=completed_with_risk_accepted`) | Visible close-relevant residual risk가 있고 compatible `judgment_kind=residual_risk_acceptance` user judgment가 없는 Task | Residual-risk acceptance가 계속 required이고 close가 Task를 terminal로 표시하지 않습니다. | `required_judgment_kind=residual_risk_acceptance`가 있는 `DECISION_REQUIRED` 또는 `DECISION_UNRESOLVED` | Visible risk는 accepted risk가 아님. Non-active risk/assurance row 또는 close state를 fabricate하지 않음. |
 | 15 | `MVP-ACTIVE-accepted-risk-close` | `harness.close_task` (`intent=complete`, `requested_close_reason=completed_with_risk_accepted`) | Sufficient evidence, visible risk, compatible `judgment_kind=residual_risk_acceptance`가 있는 Task | Task가 `tasks.lifecycle_phase=completed`, accepted-risk close reason, user judgment ref로 close됩니다. | None | Accepted risk가 Approval, final acceptance, non-active assurance state, assurance upgrade를 만들지 않음. |
-| 16 | `MVP-ACTIVE-display-label-not-canonical` | `harness.request_user_judgment` | Task `tasks.lifecycle_phase=ready`, Change Unit, 이 request에 대한 기존 committed user judgment 없음 | Committed non-dry-run request가 `judgment_kind=product_decision`, `presentation=short`, `status=pending_user`인 pending `user_judgments` row 하나와 response `UserJudgment`를 만듭니다. `user_visible_summary` 안의 label은 rendered text일 뿐입니다. | None | `display_label`과 localized label은 canonical state, validator key, gate key, blocker key, storage identity, state-compatibility input, close aggregation key가 아님. |
+| 16 | `MVP-ACTIVE-display-label-not-canonical` | `harness.request_user_judgment` | Task `tasks.lifecycle_phase=ready`, Change Unit, 이 request에 대한 기존 committed user judgment 없음 | Committed non-dry-run request가 `judgment_kind=product_decision`, `presentation=short`, `status=pending_user`인 pending `user_judgments` row 하나와 response `UserJudgment`를 만듭니다. `display_label`, Product decision, Technical decision, Scope decision, `제품 판단`, `기술 판단`, `범위 판단` 같은 text는 rendering text일 뿐입니다. | None | `display_label`과 localized label은 authoritative request input, canonical state, validator key, gate key, blocker key, storage identity, state-compatibility input, compatibility check, close aggregation key가 아닙니다. |
 
 위 queue는 의도적으로 작습니다. 내부 엔지니어링 점검은 전체 conformance suite, broad catalog family coverage, final-acceptance success semantics, later/profile 보증 확인, export/recover, reconcile, stewardship, context hygiene, Browser QA Capture, future guarantee-level check를 요구하지 않습니다. MVP-1은 나열된 user-loop judgment, evidence, close-blocker, accepted-risk draft를 더하지만 later/profile 보증 확인, export, profile fixture를 승격하지 않습니다.
 

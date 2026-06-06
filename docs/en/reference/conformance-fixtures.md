@@ -1984,7 +1984,7 @@ schema_owners:
 
 ```yaml
 scenario_id: MVP-ACTIVE-display-label-not-canonical
-purpose: Judgment fixture proving display labels are not canonical state.
+purpose: "Judgment fixture proving `judgment_kind` is the canonical judgment identity and display/localized labels are rendering text only."
 initial_state:
   tasks:
     - task_id: TASK-001
@@ -2133,8 +2133,9 @@ expected_artifacts: []
 expected_blockers: []
 expected_errors: []
 forbidden_side_effects:
-  - "`display_label` is absent from request payload, `expected_response.user_judgment`, expected storage rows, validator keys, gate keys, blocker keys, state-compatibility inputs, owner refs, and close aggregation."
-  - Localized labels are rendered text only and do not resolve the pending judgment.
+  - "`display_label` is absent from request payload, `expected_response.user_judgment`, expected storage rows, validator keys, gate keys, blocker keys, state-compatibility inputs, owner refs, close aggregation, and every canonical identity field."
+  - "Localized labels (`Product decision`, `Technical decision`, `Scope decision`, `제품 판단`, `기술 판단`, `범위 판단`) may appear only as renderer output derived from `judgment_kind`; they are not accepted as authoritative request input and are not compared for compatibility, validators, gates, blockers, storage identity, state compatibility, or close aggregation."
+  - "The pending judgment remains identified only by `user_judgment_id=UJ-016`, `judgment_kind=product_decision`, `presentation=short`, and `status=pending_user`; rendered labels do not resolve or mutate it."
   - No separate permission record, Write Authorization, evidence, final acceptance, residual-risk acceptance, close state, or non-active row/effect is created.
 schema_owners:
   api: docs/*/reference/api/mvp-api.md#harnessrequest_user_judgment
@@ -2324,7 +2325,7 @@ In the table, `None` means the matching draft field stays `[]`, `{}`, or otherwi
 | 13 | `MVP-ACTIVE-final-acceptance-missing-close-blocker` | `harness.close_task` with `intent=complete`, `requested_close_reason=completed_self_checked` | Task with evidence sufficient but required final acceptance missing | Close remains blocked with a final-acceptance blocker and no terminal Task update. | `ACCEPTANCE_REQUIRED` | No `tasks.lifecycle_phase=completed` or `tasks.lifecycle_phase=cancelled`, fabricated acceptance, residual-risk acceptance, non-active assurance state, or close report authority. |
 | 14 | `MVP-ACTIVE-residual-risk-visible-not-accepted-blocker` | `harness.close_task` with `intent=complete`, `requested_close_reason=completed_with_risk_accepted` | Task with visible close-relevant residual risk and no compatible `judgment_kind=residual_risk_acceptance` user judgment | Residual-risk acceptance remains required and close does not mark the Task terminal. | `DECISION_REQUIRED` or `DECISION_UNRESOLVED` with `required_judgment_kind=residual_risk_acceptance` | Visible risk is not accepted risk; no non-active risk/assurance row or close state is fabricated. |
 | 15 | `MVP-ACTIVE-accepted-risk-close` | `harness.close_task` with `intent=complete`, `requested_close_reason=completed_with_risk_accepted` | Task with sufficient evidence, visible risk, and compatible `judgment_kind=residual_risk_acceptance` | Task closes with `tasks.lifecycle_phase=completed`, accepted-risk close reason, and refs to the user judgment. | None | Accepted risk does not create Approval, final acceptance, non-active assurance state, or assurance upgrade. |
-| 16 | `MVP-ACTIVE-display-label-not-canonical` | `harness.request_user_judgment` | Task `tasks.lifecycle_phase=ready`, Change Unit, and no preexisting committed user judgment for this request | Committed non-dry-run request creates one pending `user_judgments` row and response `UserJudgment` with `judgment_kind=product_decision`, `presentation=short`, and `status=pending_user`; any label in `user_visible_summary` is rendered text only. | None | `display_label` and localized labels are not canonical state, validator keys, gate keys, blocker keys, storage identity, state-compatibility inputs, or close aggregation keys. |
+| 16 | `MVP-ACTIVE-display-label-not-canonical` | `harness.request_user_judgment` | Task `tasks.lifecycle_phase=ready`, Change Unit, and no preexisting committed user judgment for this request | Committed non-dry-run request creates one pending `user_judgments` row and response `UserJudgment` with `judgment_kind=product_decision`, `presentation=short`, and `status=pending_user`; any `display_label`, Product decision, Technical decision, Scope decision, `제품 판단`, `기술 판단`, or `범위 판단` text is rendering text only. | None | `display_label` and localized labels are not authoritative request input, canonical state, validator keys, gate keys, blocker keys, storage identity, state-compatibility inputs, compatibility checks, or close aggregation keys. |
 
 The queue above is intentionally small. Engineering Checkpoint does not require a full conformance suite, broad catalog family coverage, final-acceptance success semantics, later assurance checks, export/recover, reconcile, stewardship, context hygiene, browser QA capture, or future guarantee-level checks. MVP-1 adds the listed user-loop judgment, evidence, close-blocker, and accepted-risk drafts without promoting later assurance checks, export, or profile fixtures.
 
